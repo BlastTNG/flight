@@ -89,6 +89,20 @@ extern struct ACSDataStruct ACSData;
 /*  reactComm in motors.c                     */
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
+struct RWMotorDataStruct{ //JAS -- this version for Spider copied from 
+                          //       PivotMotorDataStruct for now
+  double res_rw; // in degrees
+  double current; // drive current read from controller
+  int dps_rw; // filtered RW velocity
+  unsigned int db_stat;  // drive bridge status
+  unsigned int dp_stat;  // drive protection status
+  unsigned int ds1_stat;  // drive system 1 status
+  unsigned short int drive_info; // motorinfo struct
+  unsigned int err_count; // count of serious serial errors
+};
+
+/* Old Old BLAST-Pol RW data struct (RW used a Copley motor controller instead 
+   of AMC)
 struct RWMotorDataStruct{
   double vel_rw; // in degrees per second
   int temp; // drive temperature in deg Celcius
@@ -97,7 +111,7 @@ struct RWMotorDataStruct{
   unsigned int fault_reg; // drive fault register
   unsigned short int drive_info; // motorinfo struct
   unsigned int err_count; // count of serious serial errors
-};
+};*/
 extern struct RWMotorDataStruct RWMotorData[3];
 extern int rw_motor_index; // defined in motors.c
 

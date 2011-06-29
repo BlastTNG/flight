@@ -908,13 +908,16 @@ static void StoreData(int index)
   static struct NiosStruct *velElMcAddr;
 
   /* Motor data read out over serial threads in motors.c */
-  static struct NiosStruct *velRWAddr;
-  static struct NiosStruct *tMCRWAddr;
+  static struct NiosStruct *velSerRWAddr;
+//  static struct NiosStruct *tMCRWAddr; // JAS--afaik, no temp. reading avail. 
+                                         // from AMC controller
   static struct NiosStruct *iSerRWAddr;
-  static struct NiosStruct *stat1RWAddr;
-  static struct NiosStruct *stat2RWAddr;
-  static struct NiosStruct *faultRWAddr;
+//  static struct NiosStruct *stat1RWAddr;// JAS--Old Copley controller data
+//  static struct NiosStruct *stat2RWAddr;
+//  static struct NiosStruct *faultRWAddr;
   static struct NiosStruct *infoRWAddr;
+  static struct NiosStruct *statDrRWAddr;
+  static struct NiosStruct *statS1RWAddr;
   static struct NiosStruct *driveErrCtsRWAddr;
   static struct NiosStruct *elRawEncAddr;
   static struct NiosStruct *tMCElAddr;
@@ -1095,14 +1098,16 @@ static void StoreData(int index)
     dirAzMcAddr = GetNiosAddr("dir_az_mc");
     dirElMcAddr = GetNiosAddr("dir_el_mc");
     dithElAddr = GetNiosAddr("dith_el");
-
-    velRWAddr = GetNiosAddr("vel_rw");
+    /* JAS--comment out irrelevant fields from old RW Copley controller*/
+    velSerRWAddr = GetNiosAddr("vel_ser_rw");
     elRawEncAddr = GetNiosAddr("el_raw_enc");
-    tMCRWAddr = GetNiosAddr("t_mc_rw");
+//  tMCRWAddr = GetNiosAddr("t_mc_rw");
     iSerRWAddr = GetNiosAddr("i_ser_rw");
-    stat1RWAddr = GetNiosAddr("stat_1_rw");
-    stat2RWAddr = GetNiosAddr("stat_2_rw");
-    faultRWAddr = GetNiosAddr("fault_rw");
+//  stat1RWAddr = GetNiosAddr("stat_1_rw");
+//  stat2RWAddr = GetNiosAddr("stat_2_rw");
+//  faultRWAddr = GetNiosAddr("fault_rw");i
+    statDrRWAddr = GetNiosAddr("stat_dr_rw");
+    statS1RWAddr = GetNiosAddr("stat_s1_rw");
     infoRWAddr = GetNiosAddr("drive_info_rw");
     driveErrCtsRWAddr = GetNiosAddr("drive_err_cts_rw");
     tMCElAddr = GetNiosAddr("t_mc_el");
@@ -1144,8 +1149,10 @@ static void StoreData(int index)
   WriteData(sigmaEncAddr,
       (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
 
-  WriteData(velRWAddr,
-      ((long int)(RWMotorData[i_rw_motors].vel_rw/4.0*DEG2I)), NIOS_QUEUE);
+  //WriteData(velRWAddr,
+  //    ((long int)(RWMotorData[i_rw_motors].vel_rw/4.0*DEG2I)), NIOS_QUEUE);
+  WriteData(velSerRWAddr,
+      ((long int)(RWMotorData[i_rw_motors].dps_rw/4.0*DEG2I)), NIOS_QUEUE);
   WriteData(elRawEncAddr,
       ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
 
@@ -1398,16 +1405,23 @@ static void StoreData(int index)
   WriteData(dgpsAntNAddr,(int)(DGPSAtt[i_dgps].ant_N*100), NIOS_QUEUE);
   WriteData(dgpsAntUAddr,(int)(DGPSAtt[i_dgps].ant_U*100), NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
-  WriteData(tMCRWAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
-  WriteData(iSerRWAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);
-  WriteData(stat1RWAddr,(RWMotorData[i_rw_motors].status & 0xffff),NIOS_QUEUE);
-  WriteData(stat2RWAddr,((RWMotorData[i_rw_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
-  WriteData(faultRWAddr,RWMotorData[i_rw_motors].fault_reg,NIOS_QUEUE);
+//WriteData(tMCRWAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
+  WriteData(iSerRWAddr,((int)(RWMotorData[i_rw_motors].current/60.0*32768.0))
+            ,NIOS_QUEUE); // need to check scaling
+//WriteData(stat1RWAddr,(RWMotorData[i_rw_motors].status & 0xffff),
+//          NIOS_QUEUE);
+//WriteData(stat2RWAddr,((RWMotorData[i_rw_motors].status & 0xffff0000)>> 16),
+//          NIOS_QUEUE);
+//WriteData(faultRWAddr,RWMotorData[i_rw_motors].fault_reg,NIOS_QUEUE);
+  WriteData(statDrRWAddr,(RWMotorData[i_rw_motors].db_stat & 0xff)
+            +((RWMotorData[i_rw_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
+  WriteData(statS1RWAddr,RWMotorData[i_rw_motors].ds1_stat,NIOS_QUEUE);
   WriteData(infoRWAddr,RWMotorData[i_rw_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsRWAddr,RWMotorData[i_rw_motors].err_count,NIOS_QUEUE);
   WriteData(tMCElAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
   WriteData(iSerElAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
-  WriteData(stat1ElAddr,(ElevMotorData[i_elev_motors].status & 0xffff),NIOS_QUEUE);
+  WriteData(stat1ElAddr,(ElevMotorData[i_elev_motors].status & 0xffff),
+            NIOS_QUEUE);
   WriteData(stat2ElAddr,((ElevMotorData[i_elev_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   WriteData(faultElAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
   WriteData(iSerPivAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,NIOS_QUEUE);

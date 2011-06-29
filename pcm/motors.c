@@ -674,7 +674,8 @@ static void SetAzScanMode(double az, double left, double right, double v,
       }
     }
     /* SBSC Trigger flag */
-    before_trig = DELAY - v/CommandData.az_accel + CommandData.cam.expTime/2000;
+    before_trig = DELAY - v/CommandData.az_accel 
+    + CommandData.cam.expTime/2000;
     if (az < left + before_trig*v) {
       sbsc_trigger = 1;  
     } else if (az > right - before_trig*v) {
@@ -694,7 +695,8 @@ static void DoAzScanMode(void)
   axes_mode.el_dest = CommandData.pointing_mode.Y;
   axes_mode.el_vel  = 0.0;
 
-  i_point = GETREADINDEX(point_index);
+  i_point = GETREADINDEX(point_index); // JAS - why is i_point not initialized 
+                                       // before applying this macro?
   az = PointingData[i_point].az; 
 
   w = CommandData.pointing_mode.w;
@@ -1666,7 +1668,260 @@ unsigned short int makeMotorField(struct MotorInfoStruct* motorinfo)
 
 void* reactComm(void* arg)
 {
-  //mark1
+
+  /* JAS -- reactComm thread from Spider is a clone of pivotComm thread from 
+     BLAST-Pol, since both motors now have AMC controllers */
+
+  int bridge_flag=0;  // indicates result of attempt to enable or disable drive
+                      // bridge 
+
+  int thread_count=0; // increments once in every run of the infinite
+                      // loop
+
+  int i_serial=0;     // counts number of attempts to open or initialize serial
+                      // port
+
+//long unsigned pos_raw=0;
+  int firsttime=1, resetcount=0;
+  unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
+  short int current_raw=0;
+  int rw_vel_raw=0;
+  unsigned int tmp=0;
+  
+  /* Initialize values in the reactinfo structure */
+                            
+  reactinfo.open=0;
+  reactinfo.init=0;
+  reactinfo.err=0;
+  reactinfo.err_count=0;
+  reactinfo.closing=0;
+  reactinfo.reset=0;
+  reactinfo.disabled=2;
+  reactinfo.bdrate=9600;
+  reactinfo.writeset=0;
+  strncpy(reactinfo.motorstr,"react",6);
+  reactinfo.verbose=0;
+
+  nameThread("RWCom");
+
+  while (!InCharge) {
+    if (firsttime==1) {
+      bprintf(info,
+      "I am not in charge, thus I will not communicate with the RW motor.");
+      firsttime=0;
+    }
+    usleep(20000);
+  }
+
+  bprintf(info,"Bringing the reaction wheel drive online.");
+  firsttime=1;
+
+  i_serial=0;
+
+  /* Initialize RWMotorData structure */
+
+//RWMotorData[0].res_rw=0;
+  RWMotorData[0].current=0;
+  RWMotorData[0].db_stat=0;
+  RWMotorData[0].dp_stat=0;
+  RWMotorData[0].ds1_stat=0;
+  RWMotorData[0].dps_rw=0;
+  RWMotorData[0].drive_info=0;
+  RWMotorData[0].err_count=0;
+
+  /* Try to open the port */
+
+  while (reactinfo.open==0) {
+    reactinfo.verbose=CommandData.verbose_rw;
+    open_amc(REACT_DEVICE, &reactinfo); // sets reactinfo.open=1 if sucessful
+
+    if (i_serial==10) {
+      bputs(err,
+      "RW controller serial port could not be opened after 10 attempts.\n");
+    }
+    i_serial++;
+
+    if (reactinfo.open==1) {
+      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+     "Opened the serial port on attempt number %i",i_serial);
+    }
+    else sleep(1);
+  }
+
+  /* Configure the serial port.  If, after 10 attempts, the port is not 
+     initialized, then the thread enters the main loop, where a reset command 
+     is triggered. */
+  
+  i_serial=0;
+
+  while (reactinfo.init==0 && i_serial<=9) {
+    reactinfo.verbose=CommandData.verbose_rw;
+    configure_amc(&reactinfo);
+    if (reactinfo.init==1) {
+      bprintf(info,"Initialized the controller on attempt number %i"
+              ,i_serial); 
+    } else if (i_serial==9) {
+      bprintf(info,"Could not initialize the controller after %i attempts.",
+              i_serial); 
+    } else {
+
+      sleep(1);
+    }
+    i_serial++;
+  }
+
+  rw_motor_index = 1; // JAS -- this line exists in original RW thread, but not
+                      // in pivot thread. Is it necessary?
+
+  while (1) {
+    reactinfo.verbose=CommandData.verbose_rw;
+    if( (reactinfo.err & AMC_ERR_MASK) > 0 ) {
+      reactinfo.err_count+=1;
+      if(reactinfo.err_count >= AMC_ERR_TIMEOUT) {
+	reactinfo.reset=1;
+      }
+    }
+    if(CommandData.reset_rw==1 ) {
+      reactinfo.reset=1;
+      CommandData.reset_rw=0;
+    }
+    if(CommandData.restore_rw==1 ) { // JAS -- CommandData.restore_rw may not
+                                     // exist. Need to check this.
+      restoreAMC(&reactinfo);
+      CommandData.restore_rw=0;
+    }
+    /* Make bitfield of controller info structure. */
+    RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); 
+    RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) 
+                                          ? 65535: reactinfo.err_count;
+
+    /* If we are still in the start up veto, then make sure the drive is 
+       disabled. */
+
+    if(StartupVeto > 0) {
+      CommandData.disable_az=1;
+    }
+
+    if(reactinfo.closing==1){
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      close_amc(&reactinfo);
+      usleep(10000);      
+    } else if (reactinfo.reset==1){
+      if(resetcount==0) {
+	bprintf(warning,
+        "Resetting serial connection to reaction wheel controller.");
+      } else if ((resetcount % 50)==0) {
+	bprintfverb(warning,reactinfo.verbose,MC_VERBOSE,
+        "reset->Unable to connect to reaction wheel after %i attempts."
+        ,resetcount);
+      }
+      
+      //bprintfverb(warning,reactinfo.verbose,MC_EXTRA_VERBOSE,
+      //"Attempting to reset the reaction wheel controller.",resetcount);
+      //JAS -- it did not make sense to me that resetcount was passed as an 
+      //argument to the above print statement. 
+      
+      bprintfverb(warning,reactinfo.verbose,MC_EXTRA_VERBOSE,
+      "Attempting to reset the reaction wheel controller.");
+      resetcount++;
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      resetAMC(REACT_DEVICE, &reactinfo); // if successful, sets 
+                                          // reactinfo.reset=0
+
+      if (reactinfo.reset==0) {
+	resetcount=0;
+        bprintf(info,"Controller successfully reset!");
+      }
+      usleep(10000);  // give time for motor bits to get written
+
+    } else if (reactinfo.init==1) {
+      if(CommandData.disable_az==0 && reactinfo.disabled == 1) {
+        bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+        "Attempting to enable the reaction wheel motor contoller.");
+        bridge_flag=enableAMC(&reactinfo);
+	if(bridge_flag==0) {
+	  bprintf(info,"Reaction wheel motor is now enabled");
+	  reactinfo.disabled=0;
+	}
+      }
+      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || 
+         reactinfo.disabled==2)) {
+        bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+        "Attempting to disable the reaction wheel motor controller.");
+	bridge_flag=disableAMC(&reactinfo);
+	if(bridge_flag==0){    
+	  bprintf(info,"Reaction wheel motor controller is now disabled.");
+	  reactinfo.disabled=1;
+	}
+      } 
+
+      if(firsttime){
+	firsttime=0;
+	tmp = queryAMCInd(0x32,8,1,&reactinfo);
+	bprintf(info,"Ki = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x24,1,&reactinfo);
+	bprintf(info,"Ks = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x0c,1,&reactinfo);
+	bprintf(info,"d8.0ch = %i",tmp);
+	tmp = queryAMCInd(216,12,1,&reactinfo);
+	bprintf(info,"v2 d8.0ch = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x12,1,&reactinfo);
+	bprintf(info,"d8.12h = %i",tmp);
+	tmp = queryAMCInd(216,18,1,&reactinfo);
+	bprintf(info,"v2 d8.12h = %i",tmp);
+	tmp = queryAMCInd(0xd8,0x13,1,&reactinfo);
+	bprintf(info,"d8.13h = %i",tmp);
+	tmp = queryAMCInd(216,19,1,&reactinfo);
+	bprintf(info,"v2 d8.13h = %i",tmp);
+      }
+
+      /*pos_raw=getAMCResolver(&reactinfo);
+      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Resolver Position is: %i"
+                  ,pos_raw);
+      RWMotorData[rw_motor_index].res_rw=( (double) pos_raw ) 
+                                           / PIV_RES_CTS*360.0; */
+
+      thread_count %= 5;
+      switch(thread_count) {
+      case 0:
+	current_raw=queryAMCInd(16,3,1,&reactinfo);
+        RWMotorData[rw_motor_index].current=((double)current_raw)/8192.0*60.0;
+        // divide by scaling factor which is (2^13 / peak drive current) 
+        // to get units in amps
+	// bprintf(info,"current_raw= %i, current= %f",current_raw,
+        // PivotMotorData[pivot_motor_index].current);
+	break;
+      case 1:
+	db_stat_raw=queryAMCInd(2,0,1,&reactinfo);
+        RWMotorData[rw_motor_index].db_stat=db_stat_raw;
+	break;
+      case 2:
+	dp_stat_raw=queryAMCInd(2,1,1,&reactinfo);
+        RWMotorData[rw_motor_index].dp_stat=dp_stat_raw;
+	break;
+      case 3:
+	ds1_stat_raw=queryAMCInd(2,3,1,&reactinfo);
+        RWMotorData[rw_motor_index].ds1_stat=ds1_stat_raw;
+	break;
+      case 4:
+	rw_vel_raw=((int) queryAMCInd(17,2,2,&reactinfo));
+        RWMotorData[rw_motor_index].dps_rw=rw_vel_raw*0.144;
+	break;
+      }
+      thread_count++;
+      pivot_motor_index=INC_INDEX(pivot_motor_index);
+    } else {
+      reactinfo.reset=1;
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      usleep(10000);
+    }
+  }
+  return NULL;
+
+  /* JAS -- old reactComm thread from BLAST-Pol (when reaction wheel motor had
+      a Copley controller rather than the AMC one being used for Spider)*/
+
+  /*  //mark1
   int n=0, j=0;
   int i=0;
   int temp_raw,curr_raw,stat_raw,faultreg_raw;
@@ -1689,7 +1944,8 @@ void* reactComm(void* arg)
 
   while(!InCharge) {
     if(firsttime==1) {
-      bprintf(info,"I am not incharge thus I will not communicate with the RW motor.");
+      bprintf(info,"I am not incharge thus I will not communicate with the 
+      RW motor.");
       firsttime=0;
     }
     //in case we switch to ICC when serial communications aren't working
@@ -1715,16 +1971,20 @@ void* reactComm(void* arg)
     reactinfo.verbose=CommandData.verbose_rw;
     open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
 
-    if (i==10) bputs(err,"Reaction wheel port could not be opened after 10 attempts.\n");
-
+    if (i==10){
+     bputs(err,
+     "Reaction wheel port could not be opened after 10 attempts.\n");
+    }
     i++;
     if (reactinfo.open==1) {
-      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i); 
+      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+      "Opened the serial port on attempt number %i",i); 
     } else sleep(1);  
   }
 
-  // Configure the serial port.  If after 10 attempts the port is not initialized it enters 
-  // the main loop where it will trigger a reset command.                                             
+  // Configure the serial port. If after 10 attempts the port is not 
+  // initialized it enters the main loop where it will trigger a reset command
+ 
   i=0;
   while (reactinfo.init==0 && i <=9) {
     reactinfo.verbose=CommandData.verbose_rw;
@@ -1732,7 +1992,8 @@ void* reactComm(void* arg)
     if (reactinfo.init==1) {
       bprintf(info,"Initialized the controller on attempt number %i",i); 
     } else if (i==9) {
-      bprintf(info,"Could not initialize the controller after %i attempts.",i); 
+      bprintf(info,"Could not initialize the controller after %i attempts."
+      ,i); 
     } else {
       sleep(1);
     }
@@ -1751,9 +2012,11 @@ void* reactComm(void* arg)
       reactinfo.reset=1;
       CommandData.reset_rw=0;
     }
-
-    RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); // Make bitfield of controller info structure.
-    RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) ? 65535: reactinfo.err_count;
+    
+    // Make bitfield of controller info structure.
+    RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); 
+    RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) 
+                                           ? 65535: reactinfo.err_count;
 
     // If we are still in the start up veto make sure the drive is disabled.
     if(StartupVeto > 0) {
@@ -1768,12 +2031,15 @@ void* reactComm(void* arg)
       if(resetcount==0) {
 	bprintf(warning,"Resetting connection to Reaction Wheel controller.");
       } else if ((resetcount % 10)==0) {
-	//	bprintf(warning,"reset-> Unable to connect to Reaction Wheel after %i attempts.",resetcount);
+	//	bprintf(warning,
+                "reset-> Unable to connect to Reaction Wheel after %i attempts.
+                ",resetcount);
       }
 
       resetcount++;
       rw_motor_index=INC_INDEX(rw_motor_index);
-      resetCopley(REACT_DEVICE,&reactinfo); // if successful sets reactinfo.reset=0
+      resetCopley(REACT_DEVICE,&reactinfo); 
+      // if successful sets reactinfo.reset=0
       usleep(10000);  // give time for motor bits to get written
       if (reactinfo.reset==0) {
 	resetcount=0;
@@ -1782,15 +2048,18 @@ void* reactComm(void* arg)
 
     } else if(reactinfo.init==1){
       if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Attempting to enable the reaction wheel motor controller.");
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+        "Attempting to enable the reaction wheel motor controller.");
 	n=enableCopley(&reactinfo);
 	if(n==0){    
 	  bprintf(info,"Reaction wheel motor controller is now enabled.");
 	  reactinfo.disabled=0;
 	}
       } 
-      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || reactinfo.disabled==2)) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Attempting to disable the reaction wheel motor controller.");
+      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || 
+         reactinfo.disabled==2)) {
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+        "Attempting to disable the reaction wheel motor controller.");
 	n=disableCopley(&reactinfo);
 	if(n==0){    
 	  bprintf(info,"Reaction wheel motor controller is now disabled.");
@@ -1798,8 +2067,9 @@ void* reactComm(void* arg)
 	}
       } 
 
-      vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/sec
-      RWMotorData[rw_motor_index].vel_rw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0; 
+      vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/s
+      RWMotorData[rw_motor_index].vel_rw=((double) vel_raw)/RW_ENC_CTS/10.0
+                                          *360.0; 
       j=j%4;
       switch(j) {
       case 0:
@@ -1808,7 +2078,8 @@ void* reactComm(void* arg)
 	break;
       case 1:
 	curr_raw=queryCopleyInd(COP_IND_CURRENT,&reactinfo);
-        RWMotorData[rw_motor_index].current=((double) (curr_raw))/100.0; // units are Amps
+        RWMotorData[rw_motor_index].current=((double) (curr_raw))/100.0; 
+        // units are Amps
 	break;
       case 2:
 	stat_raw=queryCopleyInd(COP_IND_STATUS,&reactinfo);
@@ -1821,7 +2092,8 @@ void* reactComm(void* arg)
       }      
       j++;
       if (firsttime) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Raw reaction wheel velocity is %i",vel_raw);
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+        "Raw reaction wheel velocity is %i",vel_raw);
 	firsttime=0;
       }
       rw_motor_index=INC_INDEX(rw_motor_index);
@@ -1831,11 +2103,11 @@ void* reactComm(void* arg)
       reactinfo.reset=1;
       usleep(10000);
     }
-    i++;
+    i++; 
   }
   return NULL;
+  */
 }
-
 
 void* elevComm(void* arg)
 {

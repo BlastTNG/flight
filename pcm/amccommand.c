@@ -786,7 +786,8 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
   n = check_amcready(resp,amcinfo);
   if (n < 0)
     {
-      berror(err,"%sComm setWriteAccess: Communication error.",amcinfo->motorstr);
+      berror(err,"%sComm setWriteAccess: Communication error.",
+      amcinfo->motorstr);
       amcinfo->writeset=2;
       return;
     }
@@ -795,11 +796,17 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
     {
       checkAMCStatus(n,amcinfo);
       if(n!=1) {
-	bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
+	bprintfverb(info,amcinfo->verbose,MC_VERBOSE,
+        "%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
 	amcinfo->writeset=2;
       } else {
-	bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
-	amcinfo->writeset=1;
+        /*bprintfverb(info,amcinfo->verbose,MC_VERBOSE,
+        "%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
+         JAS - I think the above statement was an error, because a status byte
+        of 1 means the command was successfully completed */
+	bprintfverb(info,amcinfo->verbose,MC_VERBOSE,
+        "%sComm setWriteAccess: Write access set",amcinfo->motorstr);
+        amcinfo->writeset=1;
       }
     }
 }

@@ -622,17 +622,20 @@ struct ChannelStruct SlowChannels[] = {
   {"minblobs_osc", 'w', LOOP6, 62,                1.0,             0.0, 'u', U_NONE},
   /* LOOP7 0-1 are fast narrow */
   /* LOOP7 2-3 are unused */
-  {"stat_1_rw",    'w', LOOP7,  4,                1.0,             0.0, 'u', U_NONE},  
-  {"stat_2_rw",    'w', LOOP7,  5,                1.0,             0.0, 'u', U_NONE},  
-  {"fault_rw",     'w', LOOP7,  6,                1.0,             0.0, 'u', U_NONE},  
+//{"stat_1_rw",    'w', LOOP7,  4,             1.0,           0.0, 'u', U_NONE},
+//{"stat_2_rw",    'w', LOOP7,  5,             1.0,           0.0, 'u', U_NONE},
+//{"fault_rw",     'w', LOOP7,  6,             1.0,           0.0, 'u', U_NONE},
+  {"stat_dr_rw",   'w', LOOP7,  4,             1.0,           0.0, 'u', U_NONE},
+  {"stat_s1_rw",   'w', LOOP7,  5,             1.0,           0.0, 'u', U_NONE},
+  
   /* LOOP7 0-3 are slow wide0*/
   {"stat_1_el",    'w', LOOP7,  7,                1.0,             0.0, 'u', U_NONE},  
   {"stat_2_el",    'w', LOOP7,  8,                1.0,             0.0, 'u', U_NONE},  
   {"fault_el",     'w', LOOP7,  9,                1.0,             0.0, 'u', U_NONE},  
   {"stat_dr_piv",  'w', LOOP7, 10,                1.0,             0.0, 'u', U_NONE},  
   {"stat_s1_piv",  'w', LOOP7, 11,                1.0,             0.0, 'u', U_NONE},  
-  {"t_mc_rw",      'w', LOOP7, 12,                1.0,             0.0, 's', U_T_C},
-  {"i_ser_rw",     'w', LOOP7, 13,       30.0/32768.0,             0.0, 's', U_I_A},
+//{"t_mc_rw",      'w', LOOP7, 12,             1.0,           0.0, 's', U_T_C},
+  {"i_ser_rw",     'w', LOOP7, 13,    60.0/32768.0,           0.0, 's', U_I_A},
   {"t_mc_el",      'w', LOOP7, 14,                1.0,             0.0, 's', U_T_C},
   {"i_ser_el",     'w', LOOP7, 15,       30.0/32768.0,             0.0, 's', U_I_A},
   {"res_piv",      'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},
@@ -951,7 +954,7 @@ struct ChannelStruct FastChannels[] = {
 
   {"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
   {"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
-  {"vel_rw",       'w', LOOP7,  0,         I2DEG*4.0,             0.0, 's', U_V_DPS},
+  {"vel_ser_rw",   'w', LOOP7,  0,    I2DEG*4.0,             0.0, 's', U_V_DPS},
   {"el_raw_enc",   'w', LOOP7,  2,             I2DEG,             0.0, 'u', U_P_DEG},
   {"el_enc",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},
   {"sigma_enc",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},

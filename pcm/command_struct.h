@@ -235,6 +235,7 @@ struct CommandDataStruct {
   unsigned short reset_piv;
   unsigned short reset_elev;
   unsigned short restore_piv;
+  unsigned short restore_rw;  // JAS--added this in, not sure if we need it yet
 
   unsigned short verbose_rw;
   unsigned short verbose_el;
