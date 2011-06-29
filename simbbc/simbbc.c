@@ -160,18 +160,15 @@ static void timer_callback(unsigned long dummy)
 
   // Check if the rx buffer has been initialized
   if (bbc_rfifo.status & FIFO_ENABLED) {
-
     HandleFrameLogic();
 
-    // BB1    
     while(atomic_read(&bbc_rfifo.n) < BBC_RFIFO_SIZE && !done) {
       done = GetFrameNextWord(data);
       PushFifo(data[0]);	      //loopback of bus word
       if (data[1]) PushFifo(data[1]); //possible read response
     }
-    if (atomic_read(&bbc_rfifo.n))
-      wake_up_interruptible(&bbc_read_wq);
-
+    
+    if (atomic_read(&bbc_rfifo.n)) wake_up_interruptible(&bbc_read_wq);
   } 
 
   // Reset timer callback and exit.
@@ -276,7 +273,7 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
     __copy_from_user((void *)data, in_buf, 2 * BBCPCI_SIZE_UINT);
     in_buf += 2*BBCPCI_SIZE_UINT;
     
-    if(data[0] >= 2*BBCPCI_MAX_FRAME_SIZE) {
+    if(data[0] >= BBCPCI_MAX_FRAME_SIZE) {
       printk(KERN_WARNING "BBC buffer overflow: mcp error\n");
     } else {
       WriteToFrame(data[0], data[1]);
