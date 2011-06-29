@@ -1,19 +1,15 @@
 #!/bin/sh
 module="simbbc_pci"
 device="bbcpci"
-bipdev="bi0_pci"
+bipdev="bbc_bi0"
 
 mode="666"
 
 case "$1" in
   start)
 	modprobe simbbc_pci || exit 1
-  	major=`cat /proc/devices | awk "\\$2==\"$module\" {print \\$1}"`
-	rm -f /dev/${device}
-	rm -f /dev/${bipdev}
-	mknod /dev/${device} c $major 0
-	ln -s /dev/null /dev/${bipdev}	
   	chmod ${mode} /dev/${device}
+	ln -s /dev/null /dev/${bipdev}	
   ;;
 
   stop) 

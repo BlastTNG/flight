@@ -45,7 +45,7 @@
 #include "simbbc.h"
 #include "simdata.h"
 
-#define DRV_NAME    "simbbc"
+#define DRV_NAME    "simbbc_pci"
 #define DRV_VERSION "1.1"
 #define DRV_RELDATE ""
 
@@ -376,7 +376,7 @@ static int bbcpci_start_sysfs() {
   struct device_attribute *dap, **dapp;
   dev_t devnum;
     
-  bbcpci_class = class_create(THIS_MODULE, "bbc_pci");
+  bbcpci_class = class_create(THIS_MODULE, "simbbc_pci");
   if (IS_ERR(bbcpci_class)) return 0;
 
   devnum = bbc_drv.bbc_cdev.dev;
