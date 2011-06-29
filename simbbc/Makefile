@@ -11,7 +11,8 @@ ifneq ($(KERNELRELEASE),)
 # Second pass: inside kernel build system
 # All we need to do here is delcare the module objects.
 # The kernel build system will do everything else.
-obj-m := simbbc.o
+obj-m := simbbc_pci.o
+simbbc_pci-objs := simbbc.o simdata.o
 
 else
 # First pass: normal build
@@ -19,9 +20,9 @@ KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD	:= $(shell pwd)
 CC    	:= gcc -O2 -g 
 
-all: simbbc.ko
+all: simbbc_pci.ko
 
-simbbc.ko: simbbc.c simbbc.h
+simbbc_pci.ko: simbbc.c simbbc.h simdata.c simdata.h
 # invoke kernel build system
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 
@@ -37,8 +38,8 @@ purge:
 
 MODULEDIR ?= /lib/modules/$(shell uname -r)/kernel/drivers/misc
 
-install: simbbc.ko
-	install simbbc.ko -m 644 -D $(MODULEDIR)/simbbc.ko
-	depmod simbbc.ko
-	install simbbc -m 744 /etc/init.d/simbbc
+install: simbbc_pci.ko
+	install simbbc_pci.ko -m 644 -D $(MODULEDIR)/simbbc_pci.ko
+	depmod $(MODULEDIR)/simbbc_pci.ko
+	install simbbc -m 755 /etc/init.d/simbbc
 endif

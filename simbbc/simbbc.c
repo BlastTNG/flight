@@ -12,9 +12,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with bbc_pci; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA 
+ * Or visit http://www.gnu.org/licenses/
  *
  * Written by Enzo Pascale, Sept. 2 2009
+ * Updated University of Toronto, 2011
  */
 
 #include <linux/version.h>
@@ -31,6 +33,8 @@
 #include <linux/sysfs.h>
 #include <linux/string.h>
 #include <linux/cdev.h>
+#include <linux/poll.h>
+#include <linux/sched.h>
 
 #include <asm/atomic.h>
 #include <asm/io.h>
@@ -38,36 +42,48 @@
 #include <asm/uaccess.h>
 
 #include "bbc_pci.h"
-
 #include "simbbc.h"
+#include "simdata.h"
 
+#define DRV_NAME    "simbbc"
+#define DRV_VERSION "1.1"
+#define DRV_RELDATE ""
 
-#define BBCPCI_SIZE_UINT           sizeof(unsigned int)
+#ifndef VERSION_CODE
+#  define VERSION_CODE(vers,rel,seq) ( ((vers)<<16) | ((rel)<<8) | (seq) )
+#endif
+
+#if LINUX_VERSION_CODE < VERSION_CODE(2,6,0)
+# error "This kernel is too old and is not supported" 
+#endif
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,7,0)
+# error "This kernel version is not supported"
+#endif
+//incompatible API change, may have changed before 2.6.27
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,6,27)
+#define USE_NEWER_DEVICE_CREATE
+#endif
+//ioctl removed from fops, may have changed earlier than 2.6.38
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,6,38)
+#define NO_FOPS_IOCTL
+#endif
+
+static int bbc_minor = 0;
 
 #define FIFO_DISABLED 0
 #define FIFO_ENABLED  1
 #define FIFO_EMPTY    2
 #define FIFO_FULL     4
 
-#define DRV_NAME    "simbbc"
-#define DRV_VERSION "1.0"
-#define DRV_RELDATE ""
-
-#define BBC_MAJOR 0
 #define BUFFER_SIZE  (2*BBCPCI_MAX_FRAME_SIZE)
 
-
-#define PARALLEL_BASE 0x378
-
-#define ACS0 23  /* ACS0 node */
-
+DECLARE_WAIT_QUEUE_HEAD(bbc_read_wq);
 
 static struct {
   struct timer_list timer;
 
   int use_count;
   int timer_on;
-  int timer_event;
   struct cdev bbc_cdev;
 } bbc_drv;
 
@@ -81,308 +97,120 @@ static struct {
 } bbc_rfifo;
 
 
-static struct {
-  unsigned framecounter;
-  unsigned bbc_data[2*BBCPCI_MAX_FRAME_SIZE];
-  unsigned *bb1_data;
-  unsigned *bb2_data;
-  unsigned *bb1_ptr;
-  unsigned *bb2_ptr;
+static struct class *bbcpci_class;
+struct device *bbcpci_d;
+
+static long int bbc_compat_ioctl(struct file *filp,
+	unsigned int cmd, unsigned long arg);
+static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, 
+                     unsigned long arg);
+static int bbcpci_start_sysfs(void);
+static void bbcpci_remove_sysfs(void);
+
+//------------------------------------------------------------------------------
+// Procmem.
+//------------------------------------------------------------------------------
+
+int bbc_read_procmem(char *buf, char **start, off_t offset, int count, int *eof,
+                     void *data) {
+  int len;
+  int limit;
+
+  len = 0;
+  limit = count - 80;
+
+  if( (limit - len) >= 80)
+    len += sprintf(buf+len, "           %10s %10s %10s %10s\n", 
+		   "i_in", "i_out", "n", "status");
+
+  if( (limit - len) >= 80)
+    len += sprintf(buf+len, "bbc_rfifo: %10d %10d %10d 0x%08x\n", 
+		   bbc_rfifo.i_in, bbc_rfifo.i_out, 
+		   atomic_read(&bbc_rfifo.n), bbc_rfifo.status);
   
-} bbc_data;
+  *eof = 1;
+  return len;
+}
 
 
-struct ChannelStruct {
-  char node;
-  char addr;
-  unsigned int data;
-};
- 
-static struct {
-  struct ChannelStruct cam0_pulse;
-  struct ChannelStruct cam1_pulse;
-  struct ChannelStruct cam0_trigger;
-  struct ChannelStruct cam1_trigger;
-  struct ChannelStruct gyro1;
-  struct ChannelStruct gyro2;
-  struct ChannelStruct gyro3;
-  /********************************************/
-  unsigned int cam0_index, cam0_counter;
-  unsigned int cam1_index, cam1_counter;
-} aux_data; // these is data we want to simulate on the bus
+//------------------------------------------------------------------------------
+// Is this a bottom half?  (Note to self, -AH.)
+//------------------------------------------------------------------------------
 
-
-
-static int bbc_major = BBC_MAJOR;
-static int bbc_minor = 0;
-
-DECLARE_WAIT_QUEUE_HEAD(bbc_read_wq);
-
-static void PushFifo(unsigned *data) 
+static void PushFifo(unsigned data) 
 {
-
+  /* redundant
   if(atomic_read(&bbc_rfifo.n) >= BBC_RFIFO_SIZE) {
     printk(KERN_WARNING "buffer overrun\n");
     return;
-  }
+  } */
   
-  bbc_rfifo.data[bbc_rfifo.i_in] = *data;
+  bbc_rfifo.data[bbc_rfifo.i_in] = data;
   
-  if(bbc_rfifo.i_in == (BBC_RFIFO_SIZE - 1))
-    bbc_rfifo.i_in = 0;
-  else
-    bbc_rfifo.i_in++;
+  if(bbc_rfifo.i_in == (BBC_RFIFO_SIZE - 1)) bbc_rfifo.i_in = 0;
+  else bbc_rfifo.i_in++;
   
   atomic_inc(&bbc_rfifo.n);
 }
 
-static void InitAuxData(void) {
-  aux_data.cam0_pulse.node = CAM0_PULSE_NODE;
-  aux_data.cam0_pulse.addr = CAM0_PULSE_CH;
-  aux_data.cam0_pulse.data = 0;
-  //
-  aux_data.cam1_pulse.node = CAM1_PULSE_NODE;
-  aux_data.cam1_pulse.addr = CAM1_PULSE_CH;
-  aux_data.cam1_pulse.data = 0;
-  //
-  aux_data.cam0_trigger.node = CAM0_TRIGGER_NODE;
-  aux_data.cam0_trigger.addr = CAM0_TRIGGER_CH;
-  aux_data.cam0_trigger.data = 0;
-  //
-  aux_data.cam1_trigger.node = CAM1_TRIGGER_NODE;
-  aux_data.cam1_trigger.addr = CAM1_TRIGGER_CH;
-  aux_data.cam1_trigger.data = 0;
-  //
-  aux_data.gyro1.node = GYRO1_NODE;
-  aux_data.gyro1.addr = GYRO1_CH;
-  aux_data.gyro1.data = GYRO1_DATA;
-  //
-  aux_data.gyro2.node = GYRO2_NODE;
-  aux_data.gyro2.addr = GYRO2_CH;
-  aux_data.gyro2.data = GYRO2_DATA;
-  //
-  aux_data.gyro3.node = GYRO3_NODE;
-  aux_data.gyro3.addr = GYRO3_CH;
-  aux_data.gyro3.data = GYRO3_DATA;
-
-  /* **************************** */
-  aux_data.cam0_index   = aux_data.cam1_index   = 0;
-  aux_data.cam0_counter = aux_data.cam1_counter = 0;
-  
-  return;
-}
-
-static void HandleAuxData(unsigned *data) 
-{
-  static unsigned auxdata;
-  // Handle aux data
-  auxdata = 0;
-  if(GET_NODE(*data) == aux_data.cam0_trigger.node && 
-     GET_CH(*data)   == aux_data.cam0_trigger.addr) {
-    if((BBC_DATA(*data) & 0xc000) != aux_data.cam0_index) {
-      aux_data.cam0_index   = BBC_DATA(*data) & 0xc000;
-      aux_data.cam0_counter = BBC_DATA(*data) & 0x3fff;
-      if(aux_data.cam0_counter & 1) aux_data.cam0_counter++;
-    }
-    PushFifo(data);
-  } else if(GET_NODE(*data) == aux_data.cam1_trigger.node && 
-	    GET_CH(*data)   == aux_data.cam1_trigger.addr) {
-    if((BBC_DATA(*data) & 0xc000) != aux_data.cam1_index) {
-      aux_data.cam1_index   = BBC_DATA(*data) & 0xc000;
-      aux_data.cam1_counter = BBC_DATA(*data) & 0x3fff;
-      if(aux_data.cam1_counter & 1) aux_data.cam1_counter++;
-    }
-    PushFifo(data);
-  } else if(GET_NODE(*data) == aux_data.cam0_pulse.node && 
-	    GET_CH(*data)   == aux_data.cam0_pulse.addr) {
-    auxdata  = BBC_DATA(aux_data.cam0_pulse.data);
-    auxdata |= BBC_NODE(aux_data.cam0_pulse.node);
-    auxdata |= BBC_CH(aux_data.cam0_pulse.addr);
-    auxdata |= BBC_READ | BBC_WRITE;
-    PushFifo(data);
-    PushFifo(&auxdata);
-  } else if(GET_NODE(*data) == aux_data.cam1_pulse.node && 
-		GET_CH(*data)   == aux_data.cam1_pulse.addr) {
-    auxdata  = BBC_DATA(aux_data.cam1_pulse.data);
-    auxdata |= BBC_NODE(aux_data.cam1_pulse.node);
-    auxdata |= BBC_CH(aux_data.cam1_pulse.addr);
-    auxdata |= BBC_READ | BBC_WRITE;
-    PushFifo(data);
-    PushFifo(&auxdata);
-  } else if(GET_NODE(*data) == aux_data.gyro1.node && 
-		GET_CH(*data)   == aux_data.gyro1.addr) {
-    auxdata  = BBC_DATA(aux_data.gyro1.data);
-    auxdata |= BBC_NODE(aux_data.gyro1.node);
-    auxdata |= BBC_CH(aux_data.gyro1.addr);
-    auxdata |= BBC_READ | BBC_WRITE;
-    PushFifo(data);
-    PushFifo(&auxdata);
-  } else if(GET_NODE(*data) == aux_data.gyro2.node && 
-		GET_CH(*data)   == aux_data.gyro2.addr) {
-    auxdata  = BBC_DATA(aux_data.gyro2.data);
-    auxdata |= BBC_NODE(aux_data.gyro2.node);
-    auxdata |= BBC_CH(aux_data.gyro2.addr);
-    auxdata |= BBC_READ | BBC_WRITE;
-    PushFifo(data);
-    PushFifo(&auxdata);
-  } else if(GET_NODE(*data) == aux_data.gyro3.node && 
-		GET_CH(*data)   == aux_data.gyro3.addr) {
-    auxdata  = BBC_DATA(aux_data.gyro3.data);
-    auxdata |= BBC_NODE(aux_data.gyro3.node);
-    auxdata |= BBC_CH(aux_data.gyro3.addr);
-    auxdata |= BBC_READ | BBC_WRITE;
-    PushFifo(data);
-    PushFifo(&auxdata);
-  } else {
-    PushFifo(data);
-  }
-}
-
 static void timer_callback(unsigned long dummy)
 {
-  static unsigned data;
-  static unsigned wordcount = 0;
-  static unsigned char bout = 0;
-  static int done;
+  int done = 0;
+  unsigned data[2];
 
-  bbc_data.framecounter++;
-  
-  // Check if the tx buffer has been initialized
+  // Check if the rx buffer has been initialized
   if (bbc_rfifo.status & FIFO_ENABLED) {
 
-    /* Handle Camera Trigger */
-    if(aux_data.cam0_counter>0) {
-      aux_data.cam0_counter--;
-      aux_data.cam0_pulse.data = 1;
-    } else {
-      aux_data.cam0_pulse.data = 0;
-    }
-    if(aux_data.cam1_counter>0) {
-      aux_data.cam1_counter--;
-      aux_data.cam1_pulse.data = 1;
-    } else {
-      aux_data.cam1_pulse.data = 0;
-    }
-
-    bout  = aux_data.cam0_pulse.data;
-    bout |= aux_data.cam1_pulse.data << 1; 
-    bout = ~bout & 0x03;
-    outb(bout, PARALLEL_BASE);
-    wmb();
-
+    HandleFrameLogic();
 
     // BB1    
-    done = (*bbc_data.bb1_ptr == BBC_ENDWORD) ? 1 : 0;
     while(atomic_read(&bbc_rfifo.n) < BBC_RFIFO_SIZE && !done) {
-      data =  *bbc_data.bb1_data;
-      if(wordcount == 1) {
-	data = (data & 0xffff0000) | (bbc_data.framecounter & 0x0000ffff); 
-      } else if (wordcount == 2) {
-	data = (data & 0xffff0000) | ((bbc_data.framecounter >> 16) & 0x0000ffff);
-      }
-      
-      HandleAuxData(&data);
-
-      bbc_data.bb1_data++;
-      wordcount++;
-      
-      if(*bbc_data.bb1_data == 0) 
-	bbc_data.bb1_data = bbc_data.bb1_ptr;      
-
-      if(*bbc_data.bb1_data & BBC_FSYNC) {
-	wordcount = 0;
-	done = 1;
-      }
+      done = GetFrameNextWord(data);
+      PushFifo(data[0]);	      //loopback of bus word
+      if (data[1]) PushFifo(data[1]); //possible read response
     }
-
-    // BB2    
-    done = (*bbc_data.bb2_ptr == BBC_ENDWORD) ? 1 : 0;
-    while(atomic_read(&bbc_rfifo.n) < BBC_RFIFO_SIZE && !done) {
-      data =  *bbc_data.bb2_data;
-      
-      PushFifo(&data);
-      
-      bbc_data.bb2_data++;
-      
-      if(*bbc_data.bb2_data == BBC_ENDWORD) 
-	bbc_data.bb2_data = bbc_data.bb2_ptr;
-
-      if(*bbc_data.bb2_data & BBC_FSYNC) 
-	done = 1;
-      
-    }
-  
     if (atomic_read(&bbc_rfifo.n))
       wake_up_interruptible(&bbc_read_wq);
 
   } 
-  
+
+  // Reset timer callback and exit.
   bbc_drv.timer.expires = jiffies + TIME_STEP;
   add_timer(&bbc_drv.timer);
 }
 
-
-int bbc_open(struct inode *inode, struct file *filp)
+//--------------------------------------------------------------------------
+// Poll for readability
+//--------------------------------------------------------------------------
+unsigned int bbc_poll(struct file *filp, poll_table *wait)
 {
-  int k;
+  int minor;
+  unsigned int mask = 0;
 
-  if (bbc_rfifo.status & FIFO_ENABLED) return -ENODEV;
-  
-  bbc_rfifo.i_in = bbc_rfifo.i_out = 0;
-  atomic_set(&bbc_rfifo.n, 0);
-  bbc_rfifo.status |= FIFO_ENABLED;
-  
-
-  bbc_data.bb1_data = bbc_data.bbc_data;
-  bbc_data.bb2_data = bbc_data.bbc_data+BBCPCI_MAX_FRAME_SIZE;
-  bbc_data.bb1_ptr = bbc_data.bbc_data;
-  bbc_data.bb2_ptr = bbc_data.bbc_data+BBCPCI_MAX_FRAME_SIZE;
-  bbc_data.framecounter = 0;
-  
-  for(k = 0; k < BBCPCI_MAX_FRAME_SIZE; k++) {
-    bbc_data.bb1_data[k] = 0;
-    bbc_data.bb2_data[k] = 0;
-  }
-    
-  bbc_drv.use_count++;
-
-  if (bbc_drv.use_count && bbc_drv.timer_on == 0) {
-    // Enable timer.
-    bbc_drv.timer_on = 1;
-    bbc_drv.timer_event = 0;
-    init_timer(&bbc_drv.timer);
-    bbc_drv.timer.function = timer_callback;
-    bbc_drv.timer.expires = jiffies + 1;
-    add_timer(&bbc_drv.timer);
+  minor = *(int *)filp->private_data;
+  if (minor == bbc_minor)
+  {
+    poll_wait (filp, &bbc_read_wq, wait);
+    if (atomic_read(&bbc_rfifo.n) > 0) mask |= POLLIN | POLLRDNORM;
   }
 
-  return 0;
+  return mask;
 }
 
-int bbc_release(struct inode *inode, struct file *filp)
-{
-  bbc_rfifo.status = FIFO_DISABLED;
-  
-  bbc_drv.use_count--;
+//------------------------------------------------------------------------------
+// User read.
+//------------------------------------------------------------------------------
 
-  if(bbc_drv.use_count == 0 && bbc_drv.timer_on) {
-    bbc_drv.timer_on = 0;
-    del_timer_sync(&bbc_drv.timer);
-  }
-
-  return 0;
-}
-
-
-ssize_t bbc_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
-{
+static ssize_t bbc_read(struct file *filp, char __user *buf, size_t count,
+                        loff_t *dummy) {
   size_t i;
   size_t to_read;
   void *out_buf = (void *)buf;
   unsigned long dum;
 
   if (!access_ok(VERIFY_WRITE, (void *)buf, count)) {
-    printk(KERN_WARNING "%s: (read) error accessing user space memory\n", DRV_NAME);
+    printk(KERN_WARNING "%s: (read) error accessing user space memory\n",
+           DRV_NAME);
     return -EFAULT;
   } 
 
@@ -391,9 +219,8 @@ ssize_t bbc_read(struct file *filp, char __user *buf, size_t count, loff_t *f_po
   to_read = count / BBCPCI_SIZE_UINT;
 
   // What to do if no data are available?
-
   while (atomic_read(&bbc_rfifo.n) == 0) {
-    // Non blocking read, return immediately.    
+    // Non blocking read, return immediately.
     if (filp->f_flags & O_NONBLOCK)
       return -EAGAIN;
     
@@ -422,15 +249,19 @@ ssize_t bbc_read(struct file *filp, char __user *buf, size_t count, loff_t *f_po
 
 }
 
-ssize_t bbc_write(struct file *filp, const char __user *buf, 
-		  size_t count, loff_t *f_pos)
-{
+//------------------------------------------------------------------------------
+// User write.
+//------------------------------------------------------------------------------
+
+static ssize_t bbc_write(struct file *filp, const char __user *buf, 
+    size_t count, loff_t *dummy) {
   size_t i;
   size_t to_write;
   unsigned data[2];
 
   void *in_buf = (void *)buf;
-  
+
+
   if (!access_ok(VERIFY_READ, (void *)buf, count)) {
     printk(KERN_WARNING "%s: (write) error accessing user space memory\n", 
            DRV_NAME);
@@ -438,9 +269,8 @@ ssize_t bbc_write(struct file *filp, const char __user *buf,
   }
 
   if (count < 2 * BBCPCI_SIZE_UINT) return 0;
-
   to_write = count / (2 * BBCPCI_SIZE_UINT);
-  
+
   for (i = 0; i < to_write; i++) {
     
     __copy_from_user((void *)data, in_buf, 2 * BBCPCI_SIZE_UINT);
@@ -449,117 +279,250 @@ ssize_t bbc_write(struct file *filp, const char __user *buf,
     if(data[0] >= 2*BBCPCI_MAX_FRAME_SIZE) {
       printk(KERN_WARNING "BBC buffer overflow: mcp error\n");
     } else {
-      bbc_data.bbc_data[data[0]] = data[1];
+      WriteToFrame(data[0], data[1]);
     }
   }
 
   return (2 * i * BBCPCI_SIZE_UINT);
 }
 
-int bbc_ioctl(struct inode *inode, struct file *filp,
-                 unsigned int cmd, unsigned long arg)
-{
-  int retval = 0;
+//------------------------------------------------------------------------------
+// Handler for ioctl.
+//------------------------------------------------------------------------------
 
-  return retval;
+static long int bbc_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+  return bbc_ioctl (filp->f_dentry->d_inode, filp, cmd, arg);
 }
 
-struct file_operations bbc_fops = {
+static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, 
+                     unsigned long arg) {
+  int ret = 0;
+
+  return ret;
+}
+
+
+//------------------------------------------------------------------------------
+// Open the bbc device.
+//------------------------------------------------------------------------------
+
+static int bbc_open(struct inode *inode, struct file *filp) {
+  if (bbc_rfifo.status & FIFO_ENABLED) return -ENODEV;
+  
+  bbc_rfifo.i_in = bbc_rfifo.i_out = 0;
+  atomic_set(&bbc_rfifo.n, 0);
+  bbc_rfifo.status |= FIFO_ENABLED;
+  
+  bbc_drv.use_count++;
+
+  if (bbc_drv.use_count && bbc_drv.timer_on == 0) {
+    // Enable timer.
+    bbc_drv.timer_on = 1;
+    init_timer(&bbc_drv.timer);
+    bbc_drv.timer.function = timer_callback;
+    bbc_drv.timer.expires = jiffies + 1;
+    add_timer(&bbc_drv.timer);
+  }
+
+  return 0;
+}
+
+
+//------------------------------------------------------------------------------
+// Release BBC.
+//------------------------------------------------------------------------------
+
+static int bbc_release(struct inode *inode, struct file *filp)
+{
+  bbc_rfifo.status = FIFO_DISABLED;
+  bbc_drv.use_count--;
+
+  if(bbc_drv.use_count == 0 && bbc_drv.timer_on) {
+    bbc_drv.timer_on = 0;
+    del_timer_sync(&bbc_drv.timer);
+  }
+
+  return 0;
+}
+
+
+//------------------------------------------------------------------------------
+// File operations definitions.
+//------------------------------------------------------------------------------
+
+static struct file_operations bbc_fops = {
   .owner = THIS_MODULE,
   .read  = bbc_read,
   .write = bbc_write,
+#ifndef NO_FOPS_IOCTL
   .ioctl = bbc_ioctl,
+#endif
+  .compat_ioctl = bbc_compat_ioctl,
   .open  = bbc_open,
   .release = bbc_release,
+  .poll = bbc_poll
 };
 
+//------------------------------------------------------------------------------
+// Control the sysfs.
+//------------------------------------------------------------------------------
 
-static int __init bbc_init(void)
-{
-  int result;
-  dev_t dev = 0;
-  struct resource  *res;
+struct device_attribute *da_list_bbcpci[] = {
+  NULL
+};
 
-  if (bbc_major) {
-    dev = MKDEV(bbc_major, bbc_minor);
-    result = register_chrdev_region(dev, 1, DRV_NAME);
-  } else {
-    result = alloc_chrdev_region(&dev, bbc_minor, 1, DRV_NAME);
-    bbc_major = MAJOR(dev);
+static int bbcpci_start_sysfs() {
+  struct device_attribute *dap, **dapp;
+  dev_t devnum;
+    
+  bbcpci_class = class_create(THIS_MODULE, "bbc_pci");
+  if (IS_ERR(bbcpci_class)) return 0;
+
+  devnum = bbc_drv.bbc_cdev.dev;
+#ifndef USE_NEWER_DEVICE_CREATE
+  bbcpci_d = device_create(bbcpci_class, NULL, devnum, "bbcpci");
+#else
+  bbcpci_d = device_create(bbcpci_class, NULL, devnum, NULL, "bbcpci");
+#endif
+  if (IS_ERR(bbcpci_d)) return 0;
+
+  //loop through device attributes and create files
+  //if these are ever used, may need a different set for bi0
+  for (dapp = da_list_bbcpci; *dapp; dapp++) {
+    dap = *dapp;
+    if (device_create_file(bbcpci_d, dap))
+      printk(KERN_ERR "bbc_sync: class_device_create_file failed\n");
+  }
+  
+  return 0;
+}
+
+static void bbcpci_remove_sysfs() {
+  struct device_attribute *dap, **dapp;
+  dev_t devnum;
+
+  for (dapp = da_list_bbcpci; *dapp; dapp++) {
+    dap = *dapp;
+    device_remove_file(bbcpci_d, dap);
   }
 
-  if (result < 0) {
-    printk(KERN_WARNING "simbbc: can't get major %d\n", bbc_major);
-    return result;
-  } 
+  devnum = bbc_drv.bbc_cdev.dev;
+  if (devnum && !IS_ERR(bbcpci_d))
+    device_destroy(bbcpci_class, devnum);
+  class_destroy(bbcpci_class);
+}
 
+//------------------------------------------------------------------------------
+// Define the "PCI" layer.
+//------------------------------------------------------------------------------
 
-  // Register this as a character device
-  dev = MKDEV(bbc_major, bbc_minor);
+static int __devinit bbc_pci_init_one(struct pci_dev *pdev, 
+                                      const struct pci_device_id *ent) {
+  int ret;
+  dev_t devnum;
+#if PARALLEL_BASE
+  struct resource  *res;
+#endif
+
+  //create and register character device
+  //request 1 minor device number at a dynamically allocated major
+  ret = alloc_chrdev_region(&devnum, bbc_minor, 1, DRV_NAME);
+  if (ret < 0) {
+    printk(KERN_WARNING DRV_NAME " can't allocate major\n");
+    return ret;
+  }
   printk(KERN_DEBUG DRV_NAME " major: %d minor: %d dev: %d\n", 
-	 bbc_major, bbc_minor, dev);
-
+      MAJOR(devnum), bbc_minor, devnum);
   cdev_init(&bbc_drv.bbc_cdev, &bbc_fops);
   bbc_drv.bbc_cdev.owner = THIS_MODULE;
-  bbc_drv.bbc_cdev.ops   = &bbc_fops;
-  result = cdev_add(&bbc_drv.bbc_cdev, dev, 1);
-  if (result < 0) {
+  ret = cdev_add(&bbc_drv.bbc_cdev, devnum, 1);
+  if (ret < 0) {
     printk(KERN_WARNING DRV_NAME " -failed to registed the bbc_pci device\n");
-    unregister_chrdev_region(dev, 1);
-    return result;
+    unregister_chrdev_region(devnum, 1);
+    return ret;
   }
 
+#if PARALLEL_BASE
   // Register parallel port
   res = request_region(PARALLEL_BASE, 1, DRV_NAME);
   if(res == NULL) {
-    printk(KERN_WARNING DRV_NAME " failed to registed the parallel port\n");
+    printk(KERN_WARNING DRV_NAME " failed to register the parallel port\n");
     cdev_del(&bbc_drv.bbc_cdev);
-    unregister_chrdev_region(dev, 1);
+    unregister_chrdev_region(devnum, 1);
     return -ENODEV;
   }
+#endif
 
-  // Initialize data
+  // Create /proc entry.
+  create_proc_read_entry(DRV_NAME, 
+                         0,         // Default mode.
+                         NULL,      // Parent dir. 
+                         bbc_read_procmem,
+                         NULL       // Client data.
+                        );
+
   bbc_drv.timer_on = 0;
   bbc_drv.use_count = 0;
   bbc_rfifo.status = FIFO_DISABLED;
+  InitBBCData();
   InitAuxData();
+
+  bbcpci_start_sysfs();
 
   printk(KERN_NOTICE "%s: driver initialized\n", DRV_NAME);
 
   return 0;
 }
 
-static void __exit bbc_cleanup(void)
-{
-  dev_t devno = 0;
 
+//------------------------------------------------------------------------------
+// Remove the device.
+//------------------------------------------------------------------------------
+
+static void __devexit bbc_pci_remove_one(struct pci_dev *pdev) {
+  bbcpci_remove_sysfs();
+  
+#if PARALLEL_BASE
   // Release parallel port
   release_region(PARALLEL_BASE, 1);
-  
-  devno = MKDEV(bbc_major, bbc_minor);
+#endif
   
   cdev_del(&bbc_drv.bbc_cdev);
-  
-  unregister_chrdev_region(devno, 1);
+  unregister_chrdev_region(bbc_drv.bbc_cdev.dev, 1);
 
-  
   printk(KERN_NOTICE "%s: driver removed\n", DRV_NAME); 
-
 }
 
 
+//------------------------------------------------------------------------------
+// More definitions.
+//------------------------------------------------------------------------------
 
-module_init(bbc_init);
-module_exit(bbc_cleanup);
+static int __init bbc_pci_init(void) {
+  //maintain naming despite not using a PCI device
+  return bbc_pci_init_one(NULL, NULL);
+}
+
+static void __exit bbc_pci_cleanup(void) {
+  //maintain naming despite not using a PCI device
+  bbc_pci_remove_one(NULL);
+}
+
+// Declare module init and exit functions.
+module_init(bbc_pci_init);
+module_exit(bbc_pci_cleanup);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Blast 2009");
-MODULE_DESCRIPTION("bbc_pci: a driver to simulates the pci Blast Bus Controller");
-MODULE_ALIAS_CHARDEV_MAJOR(BBC_MAJOR);
+MODULE_DESCRIPTION("bbc_pci: a driver to simulate the pci Blast Bus Controller");
 MODULE_ALIAS("/dev/bbcpci");
 
-module_param(bbc_major, int, S_IRUGO);
+#ifdef module_param
 module_param(bbc_minor, int, S_IRUGO);
+#else
+#warning "using old crufty MODULE_PARM"
+MODULE_PARM(bbc_minor, "i");
+#endif
 
-MODULE_PARM_DESC(bbc_major, " bbc major number");
 MODULE_PARM_DESC(bbc_minor, " bbc minor number");

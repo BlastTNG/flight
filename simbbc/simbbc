@@ -1,5 +1,5 @@
 #!/bin/sh
-module="simbbc"
+module="simbbc_pci"
 device="bbcpci"
 bipdev="bi0_pci"
 
@@ -7,7 +7,7 @@ mode="666"
 
 case "$1" in
   start)
-	modprobe simbbc || exit 1
+	modprobe simbbc_pci || exit 1
   	major=`cat /proc/devices | awk "\\$2==\"$module\" {print \\$1}"`
 	rm -f /dev/${device}
 	rm -f /dev/${bipdev}
@@ -17,7 +17,7 @@ case "$1" in
   ;;
 
   stop) 
-	modprobe -r simbbc
+	modprobe -r simbbc_pci
 	rm -f /dev/${device}
 	rm -f /dev/${bipdev}
   ;;
@@ -35,4 +35,3 @@ case "$1" in
 esac
 
 exit 0
-	
