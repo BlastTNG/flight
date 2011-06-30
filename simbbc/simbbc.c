@@ -63,10 +63,6 @@
 #if LINUX_VERSION_CODE >= VERSION_CODE(2,6,27)
 #define USE_NEWER_DEVICE_CREATE
 #endif
-//ioctl removed from fops, may have changed earlier than 2.6.38
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,6,38)
-#define NO_FOPS_IOCTL
-#endif
 
 static int bbc_minor = 0;
 
@@ -360,10 +356,14 @@ static struct file_operations bbc_fops = {
   .owner = THIS_MODULE,
   .read  = bbc_read,
   .write = bbc_write,
-#ifndef NO_FOPS_IOCTL
+#ifdef HAVE_UNLOCKED_IOCTL  //prefer unlocked_ioctl, when available
+  .unlocked_ioctl = bbc_compat_ioctl,
+#else
   .ioctl = bbc_ioctl,
 #endif
+#ifdef HAVE_COMPAT_IOCTL    //also implement compat_ioctl, when available
   .compat_ioctl = bbc_compat_ioctl,
+#endif
   .open  = bbc_open,
   .release = bbc_release,
   .poll = bbc_poll
