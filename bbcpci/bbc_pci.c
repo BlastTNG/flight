@@ -722,14 +722,20 @@ static int bbc_release(struct inode *inode, struct file *filp)
 //------------------------------------------------------------------------------
 
 static struct file_operations bbc_fops = {
-owner:          THIS_MODULE,
-read:           bbc_read,
-write:          bbc_write,
-ioctl:          bbc_ioctl,
-compat_ioctl:	bbc_compat_ioctl,
-open:           bbc_open,
-release:        bbc_release,
-poll:           bbc_poll
+  .owner =            THIS_MODULE,
+  .read  =            bbc_read,
+  .write =            bbc_write,
+#ifdef HAVE_UNLOCKED_IOCTL  //prefer unlocked_ioctl, when available
+  .unlocked_ioctl =   bbc_compat_ioctl,
+#else
+  .ioctl =            bbc_ioctl,
+#endif
+#ifdef HAVE_COMPAT_IOCTL    //also implement compat_ioctl, when available
+  .compat_ioctl =     bbc_compat_ioctl,
+#endif
+  .open =             bbc_open,
+  .release =          bbc_release,
+  .poll =             bbc_poll
 };
 
 /*
