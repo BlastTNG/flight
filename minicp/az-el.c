@@ -28,8 +28,8 @@ Note:      CM = Cool Muscle (stepper motor type)
 #include "command_struct.h"
 #include "tx.h"
 
-#define CM_DEBUG          // uncomment to see debug info
-#define COMMAND_SIZE 15   // largest expected command string size 
+//#define CM_DEBUG          // uncomment to see debug info
+#define COMMAND_SIZE 50   // largest expected command string size 
 #define MAX_CHARS 10000   // max number of response bytes
 
 #define AZ_DEVICE "/dev/ttyUSB0"
@@ -123,6 +123,7 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
              double a_el)
 { 
 
+  int err_count = 0;
   static int firsttime = 1;
   unsigned int zero_count = 0;
 
@@ -166,18 +167,6 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
   n_s_el = sprintf(speed_cmd_el, "S=%i\r", 0);
   
   /* send the motion commands */
-  if ( (w0_az != 0) && (a_az !=0) ) {
-    write_cm(&azinfo, accel_cmd_az, n_a_az, 
-             " initial acceleration CML command");
-
-    write_cm(&azinfo, speed_cmd_az, n_s_az, 
-  	     " initial speed CML command");
-
-    write_cm(&azinfo, move, strlen(move), 
-      	     " continuous motion CML command");
-
-    write_cm(&azinfo, exec, strlen(exec), " execute motion CML command");
-  }
 
   if ( (w0_el != 0) && (a_el != 0) ) {
     write_cm(&elinfo, accel_cmd_el, n_a_el, 
@@ -191,6 +180,21 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
     
     write_cm(&elinfo, exec, strlen(exec), " execute motion CML command");
   }
+
+  if ( (w0_az != 0) && (a_az !=0) ) {
+    write_cm(&azinfo, accel_cmd_az, n_a_az, 
+             " initial acceleration CML command");
+
+    write_cm(&azinfo, speed_cmd_az, n_s_az, 
+  	     " initial speed CML command");
+
+    write_cm(&azinfo, move, strlen(move), 
+      	     " continuous motion CML command");
+
+    write_cm(&azinfo, exec, strlen(exec), " execute motion CML command");
+  }
+
+  usleep(5000);
 
   while ( !(CommandData.az_el.new_cmd) && (zero_count < 10) ) {
 
@@ -244,6 +248,13 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
       if ( (w0_az != 0) && (a_az != 0) ) {
 	write_cm(&azinfo, accel_cmd_az, n_a_az, " acceleration CML command");
       }
+      /*dx_del = dxdtheta(el_now);
+      a_el_cm = (int)(((1.05*dx_del*a_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
+	    *CM_PULSES)/ACCEL_UNIT);
+      n_a_el = sprintf(accel_cmd_el, "A=%i\r", a_el_cm);
+      if ( (w0_el != 0) && (a_el != 0) ) {
+        write_cm(&elinfo, accel_cmd_el, n_a_el, " acceleration CML command");
+      }*/
       firsttime = 0;
     }
 
@@ -268,12 +279,18 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
     /* re-compute and re-send accel every time, since dx/d(el) is a 
      * function of el */
     dx_del = dxdtheta(el_now);
-    a_el_cm = (int)(((1.2*dx_del*a_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
+    a_el_cm = (int)(((1.5*dx_del*a_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO
 	  *CM_PULSES)/ACCEL_UNIT);
     n_a_el = sprintf(accel_cmd_el, "A=%i\r", a_el_cm);
+    //bprintf(info, "el accel command: %s", accel_cmd_el);
     if ( (w0_el != 0) && (a_el != 0) ) {
-      write_cm(&elinfo, accel_cmd_el, n_a_el, " acceleration CML command");
+      if(write_cm(&elinfo, accel_cmd_el, n_a_el, " acceleration CML command")<0)
+       { err_count++;} else {
+     //    bprintf(info, "err_count: %d", err_count);
+     //    err_count = 0;
+       }
     }
+    usleep(5000);
 
     el_rps = (dx_del*w_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
     if (el_rps>2000.0/60.0) {
@@ -284,12 +301,14 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
     }
 
     w_el_cm = (int)((el_rps*CM_PULSES)/SPEED_UNIT);
+    //n_s_el = sprintf(speed_cmd_el, "A=%i\rS=%i\r", a_el_cm, -w_el_cm); 
     n_s_el = sprintf(speed_cmd_el, "S=%i\r", -w_el_cm); 
+    //bprintf(info, "el speed command: %s", speed_cmd_el);
     if ( (w0_el != 0) && (a_el != 0) ) {
-      write_cm(&elinfo, speed_cmd_el, n_s_el, " speed CML command");
+      write_cm(&elinfo, speed_cmd_el, n_s_el, "speed CML command");
     }
-
-    usleep(10000);
+    
+    usleep(20000);
   }
 
   n_s_el = sprintf(speed_cmd_el, "S=%i\r", 0); 
@@ -515,6 +534,7 @@ int write_cm(struct CMInfoStruct *cminfo, char *cmd, int length,
 
   if (n_bytes < 0) {
     berror(err, "Failed to write %s.", cmd_desc);
+    bprintf(err, "%d %d", errno, EAGAIN);
     return -1;
   } else if (n_bytes != length) {
     bprintf(err,"Wrote incorrect number of bytes for %s", cmd_desc);
@@ -689,7 +709,7 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
     } else { // 0 bytes were read or error
       if (read_flag && (loop_count >= 100)) { 
 	response[bytes_received] = '\0';
-        bprintf(info, "%s", response); 
+        //bprintf(info, "%s", response); 
         data_avail = 0;
       } 
       usleep(10000);
