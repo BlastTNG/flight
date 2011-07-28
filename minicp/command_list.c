@@ -21,7 +21,7 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.8 $";
+const char *command_list_serial = "$Revision: 1.9 $";
 
 //these must correspond to #defines in header
 /*const char *GroupNames[N_GROUPS] = {
@@ -56,29 +56,33 @@ struct scom scommands[N_SCOMMANDS] = {
  * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
-  {COMMAND(bias_ampl), "Set bias signal amplitude", GR_BIAS, 1,
+  {COMMAND(dac_ampl), "Set bias signal amplitude", GR_BIAS, 2,
     {
-      {"Amplitude (full=32767)", 1, 32767, 'i', "bias_ampl"}
+      {"Which (0-31,32=all)", 0, 32, 'i', ""},
+      {"Amplitude (full=32767)", 1, MAX_15BIT, 'i', ""}
     }
   },
-  {COMMAND(lockin_phase1), "Set lock-in phase on card 1", GR_BIAS, 1,
+  {COMMAND(dac_phase), "Set lock-in phase on card 4", GR_BIAS, 1,
     {
-      {"Phase (in 2000ths of a cycle)", 0, 2000, 'i', "adc1_phase"}
+      {"Which (0-31,32=all)", 0, 32, 'i', ""},
+      {"Phase (degrees)", 0, 360, 'f', ""}
     }
   },
-  {COMMAND(lockin_phase2), "Set lock-in phase on card 2", GR_BIAS, 1,
+  {COMMAND(bias_step), "step through different bias levels", GR_BIAS, 5,
     {
-      {"Phase (in 2000ths of a cycle)", 0, 2000, 'i', "adc2_phase"}
+      {"Start (full=32767)", 0, MAX_15BIT, 'i', "STEP_START_BIAS"},
+      {"End (full=32767)", 0, MAX_15BIT, 'i', "STEP_END_BIAS"},
+      {"N steps", 1, MAX_15BIT, 'i', "STEP_NSTEPS_BIAS"},
+      {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_BIAS"},
+      {"Which (0-31,32=all)", 0, 32, 'i', "STEP_WHICH_BIAS"},
     }
   },
-  {COMMAND(lockin_phase3), "Set lock-in phase on card 3", GR_BIAS, 1,
+  {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
     {
-      {"Phase (in 2000ths of a cycle)", 0, 2000, 'i', "adc3_phase"}
-    }
-  },
-  {COMMAND(lockin_phase4), "Set lock-in phase on card 4", GR_BIAS, 1,
-    {
-      {"Phase (in 2000ths of a cycle)", 0, 2000, 'i', "adc4_phase"}
+      {"Start (degrees)", 0, 360, 'f', "STEP_START_PHASE"},
+      {"End (degrees)", 0, 360, 'f', "STEP_END_PHASE"},
+      {"N steps", 1, MAX_15BIT, 'i', "STEP_NSTEPS_PHASE"},
+      {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_PHASE"},
     }
   },
   {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER, 1,
@@ -96,7 +100,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"el raster scan speed (deg/s)", 0.0, 5.0, 'f', "V_EL"},
       {"az raster acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_AZ"},
       {"el raster acceleration (deg/s^2)", 0.0, 5.0, 'f', "A_EL"},
-      {"el raster no. of steps", 0, 32767, 'i', "N_EL"},
+      {"el raster no. of steps", 0, MAX_15BIT, 'i', "N_EL"},
 
     }
   },

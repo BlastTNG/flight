@@ -32,12 +32,38 @@
 /* time (in slow frames) to suppress ADC card watchdog, to induce reset */
 #define	RESET_ADC_LEN	 80
 
+/* parameters for hk dacs */
+#define N_DAC	    32
+#define PHASE_MAX   0xffff
+#define PHASE_MIN   0
+#define DAC_MAX	    0xffff
+#define DAC_ZERO    0x8000
+#define DAC_MIN	    0
+
+struct Step {
+  unsigned short do_step;
+  unsigned short start;
+  unsigned short end;
+  unsigned short nsteps;
+  unsigned short which; // only used for bias
+  unsigned short dt;
+};
+
 struct CommandDataStruct {
   struct {
     unsigned char adc_reset[16];
   } power;
-  int lockin_phase[4];       //phase of locking wave in 2000ths of a cycle
-  int bias_ampl;             //bias amplitude in counts (full scale = 32767)
+
+  struct {
+    unsigned short bias[N_DAC];
+    unsigned char setLevel[N_DAC];
+    struct Step step;
+  } Bias;
+
+  struct {
+    unsigned short phase[N_DAC];
+    struct Step step;
+  } Phase;
 
   unsigned short df;
   unsigned short bbcFifoSize;
@@ -45,7 +71,6 @@ struct CommandDataStruct {
   unsigned short plover;
 
   struct {
-
     int cmd_disable;
     int new_cmd;
 

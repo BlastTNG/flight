@@ -36,7 +36,10 @@
 
 #define NIOS_BUFFER_SIZE 100
 
-void ReadWriteAzEl(int index); // az-el.c
+void ReadWriteAzEl(int index);	// az-el.c
+
+void PhaseControl(void);	//hk.c
+void BiasControl(void);
 
 extern int bbc_fp;
 
@@ -53,9 +56,8 @@ int mcp_initial_controls = 0;
 /* in each superframe.                                           */
 /*****************************************************************/
 //list node numbers for sync, which may have gaps
-#define NUM_SYNC 12
-const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,6,7,8,9,10,11,/*12,13,\
-      14,15,16,17,18,19*/};
+#define NUM_SYNC 4
+const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3};
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
 static void SyncADC (void)
 {
@@ -286,12 +288,12 @@ void UpdateBBCFrame()
 
   /*** do slow Controls ***/
   if (index == 0) {
-    if (!mcp_initial_controls)
-      SyncADC();
+    if (!mcp_initial_controls) SyncADC();
+    PhaseControl();
+    BiasControl();
   }
 
-  if (!mcp_initial_controls)
-    index = (index + 1) % FAST_PER_SLOW;
+  if (!mcp_initial_controls) index = (index + 1) % FAST_PER_SLOW;
 
   //make sure frame is flushed
   RawNiosWrite(-1,-1,NIOS_FLUSH);

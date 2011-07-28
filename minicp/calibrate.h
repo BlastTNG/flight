@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/* BLASTus frame sample rate (TODO this will change!) */
+#define SR (100.16)
+
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */
 #define M_32PRE (10.24/2147483648.0)
 #define B_32PRE	(-2147483648.0)

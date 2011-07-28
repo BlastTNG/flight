@@ -17,7 +17,7 @@
 #include "share/netcmd.h"    /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 2          /* total number of single word cmds */
-#define N_MCOMMANDS 10          /* total number of multiword commands */
+#define N_MCOMMANDS 9           /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
@@ -61,15 +61,16 @@ extern const char *GroupNames[N_GROUPS];
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
-  az_el_disable,     xyzzy
+  az_el_disable,
+  xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
-  bias_ampl,         lockin_phase1,     lockin_phase2,     lockin_phase3,
-  lockin_phase4,     reset_adc,         az_el_goto,        az_el_raster,
-  az_el_set,         plugh
+  dac_ampl,          dac_phase,         bias_step,         phase_step,
+  az_el_raster,      az_el_set,		az_el_goto,        reset_adc,         
+  plugh
 };
 
 extern struct scom scommands[N_SCOMMANDS];

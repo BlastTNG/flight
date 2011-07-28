@@ -202,6 +202,7 @@ static inline void copysvalue(char* dest, const char* src)
 static void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
+  int i;
   //char buf[256];
 
   /* Update CommandData struct with new info
@@ -210,20 +211,36 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
    */
 
   switch(command) {
-    case bias_ampl:
-      CommandData.bias_ampl = ivalues[0];
+    case dac_ampl:
+      if (ivalues[0] < N_DAC) {
+	CommandData.Bias.bias[ivalues[0]] = ivalues[1];
+	CommandData.Bias.setLevel[ivalues[0]] = 1;
+      } else for (i=0; i<N_DAC; i++) {
+	CommandData.Bias.bias[i] = ivalues[1];
+	CommandData.Bias.setLevel[i] = 1;
+      }
       break;
-    case lockin_phase1:
-      CommandData.lockin_phase[0] = ivalues[0];
+    case dac_phase:
+      if (ivalues[0] < N_DAC) {
+	CommandData.Phase.phase[ivalues[0]] = rvalues[1] * 65535.0/360.0;
+      } else for (i=0; i<N_DAC; i++) {
+	CommandData.Phase.phase[i] = rvalues[1] * 65535.0/360.0;
+      }
       break;
-    case lockin_phase2:
-      CommandData.lockin_phase[1] = ivalues[0];
+    case bias_step:
+      CommandData.Bias.step.do_step = 1;
+      CommandData.Bias.step.start = ivalues[0];
+      CommandData.Bias.step.end = ivalues[1];
+      CommandData.Bias.step.nsteps = ivalues[2];
+      CommandData.Bias.step.dt = ivalues[3];
+      CommandData.Bias.step.which = ivalues[4];
       break;
-    case lockin_phase3:
-      CommandData.lockin_phase[2] = ivalues[0];
-      break;
-    case lockin_phase4:
-      CommandData.lockin_phase[3] = ivalues[0];
+    case phase_step:
+      CommandData.Phase.step.do_step=1;
+      CommandData.Phase.step.start=rvalues[0] * 65535.0/360.0;
+      CommandData.Phase.step.end=rvalues[1] * 65535.0/360.0;
+      CommandData.Phase.step.nsteps=ivalues[2];
+      CommandData.Phase.step.dt=ivalues[3];
       break;
     case reset_adc:
       if (ivalues[0] < 64)
@@ -381,8 +398,12 @@ void InitCommandData()
   }
 
   /** stuff here overrides prev_status **/
-  for (i=0; i<16; i++)
-    CommandData.power.adc_reset[i] = 0;
+  for (i=0; i<16; i++) CommandData.power.adc_reset[i] = 0;
+
+  CommandData.Bias.step.do_step = 0;
+  CommandData.Phase.step.do_step = 0;
+  //forces reload of saved bias values
+  for (i=0; i<N_DAC; i++) CommandData.Bias.setLevel[i] = 1;
 
   CommandData.az_el.cmd_disable = 1;
   CommandData.az_el.new_cmd = 0;
@@ -392,7 +413,7 @@ void InitCommandData()
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
-    bprintf(warning, "Commands: prev_status: Wanted %u bytes but got %i.\n",
+    bprintf(warning, "Commands: prev_status: Wanted %lu bytes but got %i.\n",
         sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
     bputs(warning, "Commands: prev_status: Extra bytes found.\n");
@@ -402,7 +423,19 @@ void InitCommandData()
   bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
   /** prev_status overrides this stuff **/
-  CommandData.bias_ampl = 32767;
+  for (i=0; i<N_DAC; i++) CommandData.Bias.bias[i] = DAC_ZERO;
+  CommandData.Bias.step.start = DAC_MIN;
+  CommandData.Bias.step.end = DAC_MAX;
+  CommandData.Bias.step.nsteps = 1000;
+  CommandData.Bias.step.dt = 1000;
+  CommandData.Bias.step.which = 0;
+
+  for (i=0; i<N_DAC; i++) CommandData.Phase.phase[i] = PHASE_MIN;
+  CommandData.Phase.step.start = PHASE_MIN;
+  CommandData.Phase.step.end = PHASE_MAX;
+  CommandData.Phase.step.nsteps = 1000;
+  CommandData.Phase.step.dt = 1000;
+
   CommandData.az_el.az_accel = 1.0;
   CommandData.az_el.el_accel = 1.0;
   CommandData.az_el.az_speed = 1.0;
@@ -413,7 +446,6 @@ void InitCommandData()
   CommandData.az_el.el_Nstep = 10; 
   CommandData.az_el.el_height = 10.0;
 
-  for (i=0; i<4; i++) CommandData.lockin_phase[i] = 0;
   CommandData.plover = 0;
 
   WritePrevStatus();
