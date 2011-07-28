@@ -1046,8 +1046,8 @@ void ReadWriteAzEl(int index)
 
   if (firsttime) {
 
-    elEncAddr = GetBiPhaseAddr("adc1_enc_el");
-    azEncAddr = GetBiPhaseAddr("adc1_enc_az");
+    elEncAddr = GetBiPhaseAddr("enc_el");
+    azEncAddr = GetBiPhaseAddr("enc_az");
     
     azWidthAddr = GetNiosAddr("width_az");
     azVelAddr = GetNiosAddr("v_az");
