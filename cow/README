@@ -1,0 +1,27 @@
+----------------------------------------------------------------------------
+|
+| NARSIL -- "Narsil essenya, macil meletya; Telchar carneron Navarotesse"
+|
+| Adam Hincks, 9 August 2002
+| D. V. Wiebe, 12 September 2002 -- updated location of commands.h
+| D. V. Wiebe, 21 October 2004   -- automatic command list version checking
+| D. V. Wiebe, 14 July 2006      -- add NARSIL_HOST environment
+| Joshua Netterfield, 25 July 2011 -- updated to qt4
+|
+----------------------------------------------------------------------------
+
+Narsil is a wrapper for blastcmd, which is used for sending commands to the
+gondala via the SIP.  
+
+But it is a wrapper in the weakest of senses now, as it doesn't actually call
+the blastcmd executable, but contains its own net client which talks to 
+the blastcmd daemon.  
+
+Narsil no longer uses the kstfile class from kst, but the actual getdata 
+library.  
+
+You can set the host narsil will attempt to connect to by editing narcil4.pro.
+This may be overridden at runtime by setting the NARSIL_HOST environmental variable.
+
+You can also cheat and put the host you want as an argument on the command 
+line.  It is the only argument that narsil allows.  

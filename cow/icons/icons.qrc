@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>narsil.png</file>
+        <file>sword0.jpg</file>
+        <file>sword1.jpg</file>
+        <file>sword2.jpg</file>
+        <file>sword3.jpg</file>
+        <file>cow0.png</file>
+        <file>cow1.png</file>
+        <file>cow2.png</file>
+        <file>cow3.png</file>
+        <file>cow4.png</file>
+        <file>cow5.png</file>
+    </qresource>
+</RCC>
