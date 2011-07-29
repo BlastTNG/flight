@@ -32,7 +32,7 @@
 #ifndef WIDGETS_H
 #define WIDGETS_H
 
-#include "narsil.h"
+#include "cow.h"
 
 #include <QLineEdit>
 #include <QTextEdit>

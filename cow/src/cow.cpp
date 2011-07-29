@@ -77,7 +77,7 @@
 #include <pwd.h>
 
 #include "widgets.h"
-#include "narsil.h"
+#include "cow.h"
 
 #define VERSION "4.0-testing"   // don't remove "testing" until you're sure it works reliably...
 
@@ -1243,7 +1243,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     numframes = 4;
     dir = 1;
 
-    strcpy(tmp, "Common Operations Window " VERSION " @");
+    strcpy(tmp, "Command Operations Window " VERSION " @");
     strcat(tmp, blastcmd_host);
 
     setWindowTitle(tmp);

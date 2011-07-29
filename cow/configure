@@ -1,6 +1,6 @@
 #!/bin/sh
 echo This script ignores all parameters.
 g++ ./configure.cpp -o ./configure.o
-./configure.o 2> ./narsil4.pro
+./configure.o 2> ./cow.pro
 qmake-qt4 .
 echo Great! Now run make!
