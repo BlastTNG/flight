@@ -1,22 +1,22 @@
-/* narsil: GUI commanding front-end
+/* cow: GUI commanding front-end
  *
  * This software is copyright (C) 2002-2006 University of Toronto
  * Parts of this software are copyright 2010 Matthew Truch
  *
- * This file is part of narsil.
+ * This file is part of cow.
  *
- * narsil is free software; you can redistribute it and/or modify
+ * cow is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * narsil is distributed in the hope that it will be useful,
+ * cow is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with narsil; if not, write to the Free Software Foundation, Inc.,
+ * along with cow; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
@@ -161,6 +161,10 @@ public:
         if(input.toDouble(&ok),ok) {
             return QValidator::Acceptable;
         }
+        if(input.toInt(&ok),ok) {
+            return QValidator::Acceptable;
+        }
+        return QValidator::Invalid;
     }
 };
 

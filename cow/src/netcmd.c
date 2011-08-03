@@ -1,16 +1,16 @@
-/* narsil: groundstation BLAST command software
+/* cow: groundstation BLAST command software
  *
  * This software is copyright (C) 2005 University of Toronto
  * Parts of this software are copyright 2010 Matthew Truch
  * 
- * This file is part of narsil.
+ * This file is part of cow.
  * 
- * narsil is free software; you can redistribute it and/or modify
+ * cow is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  * 
- * narsil is distributed in the hope that it will be useful,
+ * cow is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -325,7 +325,7 @@ int NetCmdTakeConn(int silent)
 
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 
-  //narsil didn't wait for a response before. Maybe there was a reason for that
+  //cow didn't wait for a response before. Maybe there was a reason for that
   do {
     ack = NetCmdReceive(silent);
     if ((ack & 0xff) == CMD_CONN) break;
@@ -380,7 +380,7 @@ int NetCmdConnect(const char* host, int silent, int silenter)
   if (the_host == NULL) {
     fprintf(stderr, "host lookup failed for `%s': %s\n", host,
         hstrerror(h_errno));
-    exit(14);
+    return -14;
   }
 
   addr.sin_port = htons(SOCK_PORT);

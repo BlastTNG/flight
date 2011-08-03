@@ -1,6 +1,6 @@
 /* cow (previously known as narsil): GUI commanding front-end
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * This software is copyright (C) 2002-2011 University of Toronto
  * Parts of this software are copyright 2010 Matthew Truch
  *
  * This file is part of cow.
@@ -63,6 +63,9 @@
 #include <QDoubleSpinBox>
 #include <QListWidget>
 #include <QTextStream>
+#include <QInputDialog>
+#include <QSettings>
+#include <QDirModel>
 
 #include <iostream>
 #include <stdio.h>
@@ -81,22 +84,14 @@
 
 #define VERSION "4.0-testing"   // don't remove "testing" until you're sure it works reliably...
 
-#ifndef BLASTCMD_HOST
-#error Run ./configure
-#endif
-
-#ifndef CUR_DIR
-#error Run ./configure
-#endif
-
 #ifndef DATA_ETC_NARSIL_DIR
-#error Run ./configure
+#error Edit cow.pro to define DATA_ETC_NARSIL_DIR !
 #endif
 
 #define PADDING 3
 #define SPACING 3
 
-#define DEF_CURFILE CUR_DIR "/defile.lnk"
+//#define DEF_CURFILE CUR_DIR "/defile.lnk"
 #define LOGFILE DATA_ETC_NARSIL_DIR "/log.txt"
 #define LOGFILEDIR DATA_ETC_NARSIL_DIR "/log/"
 
@@ -109,7 +104,7 @@
 #define PING_TIME 59000
 #define WAIT_TIME 40
 
-const char* blastcmd_host;
+QString blastcmd_host;
 
 /* Defaults class holds the default parameter values */
 Defaults::Defaults()
@@ -361,7 +356,7 @@ void MainForm::ChooseCommand() {
     double indata;
 
     delete _dirfile;
-    _dirfile = new Dirfile(_curFileName, GD_RDONLY);
+    _dirfile = new Dirfile(NCurFile->text().toStdString().c_str(), GD_RDONLY);
 
     // Remember parameter values
     if (lastmcmd != -1) {
@@ -592,6 +587,13 @@ char *MainForm::LongestParam() {
 //-------------------------------------------------------------
 
 void MainForm::Quit() {
+    // Settings should be sticky
+    {
+        QSettings settings;
+        settings.setValue("blastcmd_host",QString(blastcmd_host));
+        settings.setValue("curfile",NCurFile->text());
+    }
+
     int i;
 
     // Remember parameter values
@@ -601,9 +603,6 @@ void MainForm::Quit() {
 
         defaults->Save();
     }
-
-    // Release control of program; give it back to Main()
-    exit(0);
 }
 
 
@@ -683,7 +682,6 @@ void MainForm::TurnOn(void) {
     sending = true;
 
     NGroupsBox->setDisabled(true);
-    NCurFileButton->setDisabled(true);
     NCurFile->setDisabled(true);
     NCommandList->setDisabled(true);
     NAboutLabel->setDisabled(true);
@@ -710,7 +708,6 @@ void MainForm::TurnOff(void) {
     sending = false;
 
     NGroupsBox->setEnabled(true);
-    NCurFileButton->setEnabled(true);
     NCurFile->setEnabled(true);
     NCommandList->setEnabled(true);
     NAboutLabel->setEnabled(true);
@@ -855,54 +852,17 @@ void MainForm::SendCommand() {
     }
 }
 
-
-//-------------------------------------------------------------
-//
-// ChangeSettingsLabel (slot): triggered when user closes
-//      settings dialog. Updates informative new label
-//
-//-------------------------------------------------------------
-
-void MainForm::ChangeSettingsLabel() {
-}
-
-
-//-------------------------------------------------------------
-//
-// ChangeCurFile (slot): triggered when the user enters a new
-//      .cur file in the settings dialog window
-//
-//-------------------------------------------------------------
-
-void MainForm::ChangeCurFile() {
-    QString msg;
-    //as default path, use directory above current dirfile
-    QDir dir(NCurFile->text());
-    dir.cdUp();
-
-    msg = NCurFile->text().toAscii();
-    NCurFile->setText(QFileDialog::getExistingDirectory(this,"Select DirFile", dir.absolutePath(),0));
-    if (!NCurFile->text().isEmpty()) {
-        strcpy(_curFileName, NCurFile->text().toAscii());
-        msg.sprintf("Narsil will now read from %s.", _curFileName);
-        QMessageBox::information(this, "Acknowledgement", msg,
-                                 QMessageBox::Ok | QMessageBox::Default);
+void MainForm::ChangeHost() {
+    bool ok;
+    QString host=QInputDialog::getText(this,windowTitle(),"What host should cow connect to?",QLineEdit::Normal,"",&ok);
+    if(!ok) {
+        return;
     } else {
-        NCurFile->setText(msg);
+        blastcmd_host=host;
+        Quit();
+        qApp->exit(1337);
     }
 }
-
-
-//-------------------------------------------------------------
-//
-// ShowSettings (slot): pops up the settings dialog window
-//
-//-------------------------------------------------------------
-
-void MainForm::ShowSettings()
-{
-}
-
 
 //-------------------------------------------------------------
 //
@@ -924,7 +884,8 @@ void MainForm::WriteCmd(QTextEdit *dest, const char *request) {
     f = fopen(LOGFILE, "a");
 
     if (f == NULL) {
-        fprintf(stderr, "Narsil: could not write log file %s.\n", LOGFILE);
+        QMessageBox::warning(this,"Could not write log","Could not write log. Did you forget to run \"make install\"?");
+        fprintf(stderr, "Cow: could not write log file %s.\n", LOGFILE);
         return;
     }
 
@@ -1090,7 +1051,7 @@ void MainForm::WriteErr(QTextEdit *dest, int retstatus) {
                 "acknowledgement packet.\n";
         break;
     case 10:
-        txt = "  COMMAND NOT SENT: Narsil error: Parameter out of range.\n";
+        txt = "  COMMAND NOT SENT: Cow error: Parameter out of range.\n";
         break;
     case 11:
         txt = "  COMMAND NOT SENT: Command not confirmed by user.\n";
@@ -1109,7 +1070,7 @@ void MainForm::WriteErr(QTextEdit *dest, int retstatus) {
         stream << txt;
         f.close();
     } else {
-        fprintf(stderr, "Narsil: could not write log file %s.\n", LOGFILE);
+        fprintf(stderr, "Cow: could not write log file %s.\n", LOGFILE);
         return;
     }
 
@@ -1120,7 +1081,7 @@ void MainForm::WriteErr(QTextEdit *dest, int retstatus) {
 
 //-------------------------------------------------------------
 //
-// ReadLog (private): read in the log when Narsil starts
+// ReadLog (private): read in the log when Cow starts
 //
 //   *dest: the textbox to write to
 //
@@ -1134,7 +1095,7 @@ void MainForm::ReadLog(QTextEdit *dest) {
     dest->setText(" ");
 
     if (f == NULL) {
-        printf("Narsil:  could not read log file %s.\n", LOGFILE);
+        printf("Cow:  could not read log file %s.\n", LOGFILE);
         return;
     }
 
@@ -1246,7 +1207,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     dir = 1;
 
     strcpy(tmp, "Command Operations Window " VERSION " @");
-    strcat(tmp, blastcmd_host);
+    strcat(tmp, blastcmd_host.toStdString().c_str());
 
     setWindowTitle(tmp);
 
@@ -1369,13 +1330,15 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NCurFile = new QLineEdit(NTopFrame);
     NCurFile->setObjectName("NCurFile");
     NCurFile->setText(tr(curfile.toAscii()));
-    NCurFile->setReadOnly(true);
     NCurFile->adjustSize();
+    QCompleter* completer=new QCompleter;
+    completer->setModel(new QDirModel(completer));
+    NCurFile->setCompleter(completer);
 
-    NCurFileButton = new QPushButton(NTopFrame);
-    NCurFileButton->setText("QCurCaption");
-    NCurFileButton->setText(tr("Change"));
-    NCurFileButton->adjustSize();
+    NHost = new QPushButton(NTopFrame);
+    NHost->setObjectName("NHost");
+    NHost->setText(blastcmd_host);
+    connect(NHost,SIGNAL(clicked()),this,SLOT(ChangeHost()));
 
     NVerbose = new QCheckBox(NTopFrame);
     NVerbose->setObjectName("NVerbose");
@@ -1402,26 +1365,26 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
                 NCurFile->width()*1.5,
                 NCurFile->height());
 
-    NCurFileButton->setGeometry(
-                2*PADDING+NCurFile->width(),
-                NCurFile->y(),
-                NCurFileButton->width(),
+    NHost->setGeometry(
+                3*PADDING+NCurFile->width(),
+                PADDING + 2 * PADDING + h1 + (int((2 + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NCurFile->height(),
+                NCurFile->width()*(1.0/1.5),
                 NCurFile->height());
 
     NSendMethod->setGeometry(
-                3*PADDING+NCurFile->width()+NCurFileButton->width(),
+                4*PADDING+NCurFile->width()+NHost->width(),
                 NCurFile->y(),
                 NSendMethod->width(),
                 NCurFile->height());
 
     NSendRoute->setGeometry(
-                4*PADDING+NCurFile->width()+NCurFileButton->width()+NSendMethod->width(),
+                5*PADDING+NCurFile->width()+NHost->width()+NSendMethod->width(),
                 NCurFile->y(),
                 NSendRoute->width(),
                 NCurFile->height());
 
     NVerbose->setGeometry(
-                5*PADDING+NCurFile->width()+NCurFileButton->width()+NSendMethod->width()+NSendRoute->width(),
+                6*PADDING+NCurFile->width()+NHost->width()+NSendMethod->width()+NSendRoute->width(),
                 NCurFile->y(),
                 NVerbose->width(),
                 NCurFile->height());
@@ -1486,12 +1449,6 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NCommandList->setGeometry(PADDING, PADDING+25, NCommandList->width(), PADDING
                               * 2 + NGroupsBox->height() + NTopFrame->height() + NBotFrame->height()-25-25-PADDING);
 
-
-    if (!curfile.isNull())
-        strcpy(_curFileName, curfile.toAscii());
-    else
-        strcpy(_curFileName, "\0");
-
     timer = new QTimer(this);
     timer->setObjectName("image_timer");
     timer->start(WAIT_TIME);
@@ -1521,7 +1478,6 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     PopulateOmnibox();
 
     connect(NSendButton, SIGNAL(clicked()), this, SLOT(SendCommand()));
-    connect(NCurFileButton, SIGNAL(clicked()), this, SLOT(ChangeCurFile()));
     connect(timer, SIGNAL(timeout()), this, SLOT(Tick()));
     connect(ping_timer, SIGNAL(timeout()), this, SLOT(Ping()));
 
@@ -1552,20 +1508,22 @@ MainForm::~MainForm()
 Defaults *defaults;
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
+    QApplication::setOrganizationName("University of Toronto");
+    QApplication::setApplicationName("cow");
 
-    if (argc > 2) {
+    if (argc > 2||(argc==2&&(QString(argv[1]).contains("help",Qt::CaseInsensitive)||
+                             QString(argv[1]).contains("-h",Qt::CaseInsensitive)))) {
         printf(
-                    "COW " VERSION " doesn't take arguments.  It was compiled at "
-                    __DATE__ "\nand is copyright (C) 2002-2011 University of Toronto.\n\n"
+                    "COW " VERSION " can take one argument: the host to connect to.It was compiled "
+                    "at "__DATE__ "\nand is copyright (C) 2002-2011 University of Toronto.\n\n"
                     "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
                     "FITNESS\n"
                     "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
                     "the GNU\n"
                     "General Public License; see the file named COPYING for details.\n\n"
-                    "What was known as Narsil was written by Adam Hincks. It was later\n"
-                    "poked at a bit by D.V. Wiebe and then further desecrated by cbn.\n"
-                    "Finaly, Joshua Netterfield created COW by fixing the UI, and updating\n"
-                    "to Qt4."
+                    "Narsil was written by Adam Hincks. It was later poked at a bit by\n"
+                    "D.V. Wiebe and then further desecrated by cbn.\n"
+                    "Joshua Netterfield created cow by fixing the UI, and updating it to Qt4."
                     );
         exit(1);
     }
@@ -1575,31 +1533,43 @@ int main(int argc, char* argv[]) {
     {
         blastcmd_host = argv[1];
     }
-    else if ((blastcmd_host = getenv("NARSIL_HOST")) == NULL)
-    {
-        blastcmd_host = BLASTCMD_HOST;
+    else {
+        QSettings settings("University of Toronto","cow");
+        blastcmd_host = settings.value("blastcmd_host",QString("widow\0")).toString();
     }
 
-    /* Client negotiation */
-    if(QString(blastcmd_host)=="widow")
-    {
-        std::cerr<<"Hostname is `widow'. Did you forget to set the NARSIL_HOST variable?\n";
-    }
-    if (NetCmdConnect(blastcmd_host, 1, 0) < 0) {
-        //retry if connection refused (HACK! fixes bug in blastcmd authentication)
-        sleep(1);
-        printf("Trying to connect one more time\n");
-        if (NetCmdConnect(blastcmd_host, 1, 0) < 0)
-            exit(16);
-    }
-    NetCmdGetCmdList();
-    NetCmdGetGroupNames();
+    int retCode=1337;
+    while(retCode==1337) {
+        /* Client negotiation */
+        while (NetCmdConnect(blastcmd_host.toStdString().c_str(), 1, 0) < 0) {
+            //retry if connection refused (HACK! fixes bug in blastcmd authentication)
+            sleep(1);
+            printf("Trying to connect one more time\n");
+            if (NetCmdConnect(blastcmd_host.toStdString().c_str(), 1, 0) < 0) {
+                bool ok;
+                blastcmd_host=QInputDialog::getText(0,"Bad host","Could not connect to "+QString(blastcmd_host)+". Try another hostname.",
+                                                    QLineEdit::Normal,QString(blastcmd_host),&ok).toAscii();
+                if(!ok) {
+                    exit(16);
+                }
+            }
+        }
+        NetCmdGetCmdList();
+        NetCmdGetGroupNames();
 
-    defaults = new Defaults();
+        defaults = new Defaults();
 
-    MainForm moo(DEF_CURFILE, 0, "moo", 0);
-    moo.show();
-    return app.exec();
+        QSettings settings;
+        QString curfile=settings.value("curfile",QString("")).toString();
+        if(curfile.isEmpty()) {
+            curfile=QFileDialog::getExistingDirectory(0,"Choose a curdir");
+            curfile+="/defile.lnk";
+        }
+        MainForm moo(curfile.toStdString().c_str(), 0, "moo", 0);
+        moo.show();
+        retCode= app.exec();
+    }
+    return retCode;
 }
 
 // vim: ts=2 sw=2 et

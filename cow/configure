@@ -1,6 +1,5 @@
 #!/bin/sh
 echo This script ignores all parameters.
-g++ ./configure.cpp -o ./configure.o
-./configure.o 2> ./cow.pro
+echo To change where cow will be installed, edit cow.pro!
 qmake-qt4 .
-echo Great! Now run make!
+echo Great! Now run \"make\" and \"make install\"!

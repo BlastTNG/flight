@@ -102,11 +102,11 @@ public:
     QFrame *NTopFrame;
     QFrame *NBotFrame;
     QLineEdit *NCurFile;
+    QPushButton *NHost;
     QGroupBox *NGroupsBox;
     QRadioButton **NGroups;
     QPushButton *NSendButton;
     //QLabel *NSettingsLabel;
-    QPushButton *NCurFileButton;
     QPushButton *QuitButton;
     NarsilOmniBox* NOmniBox;
     QListWidget *NCommandList;
@@ -162,7 +162,6 @@ private:
     QString curfile;
     //KstFile *DataSource;
     Dirfile *_dirfile;
-    char _curFileName[1024];
 
     int fid;
     bool sending;
@@ -181,10 +180,8 @@ public slots:
     void Quit();
     void SendCommand();
     void Tick();
-    void ChangeCurFile();
-    void ShowSettings();
     void Ping();
-    void ChangeSettingsLabel();
+    void ChangeHost();
 };
 
 #endif
