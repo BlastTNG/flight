@@ -36,6 +36,7 @@
 
 #include <QLineEdit>
 #include <QTextEdit>
+#include <QDebug>
 
 class AbstractNarsilEntry
 {
@@ -63,7 +64,7 @@ public:
     virtual void SetType(char t)=0;
     virtual void SetValue(double d)=0;
     virtual void SetStringValue(QString s)=0;
-    virtual QString Text()=0;
+    virtual QString Text() const=0;
 protected:
     int command, param;
     char type;
@@ -91,7 +92,7 @@ public:
     {
         setText(s);
     }
-    QString Text()
+    QString Text() const
     {
         return text();
     }
@@ -120,7 +121,7 @@ public:
         setValue(d);
     }
 
-    QString Text()
+    QString Text() const
     {
         return text();
     }
@@ -142,6 +143,16 @@ public:
     }
     QValidator::State validate(QString &input, int &pos) const
     {
+        QString t=Text();
+        if(!t.isEmpty()) {
+            t.remove('.');
+            QString v=input;
+            v.remove(0,t.indexOf('.'));
+            if(input.startsWith(t)&&!v.toInt()) {
+                input=Text();
+                return QValidator::Acceptable;
+            }
+        }
         bool ok;
         int i;
         for(i=0;i<input.size();i++) {

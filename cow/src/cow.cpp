@@ -454,6 +454,7 @@ void MainForm::ChooseCommand() {
         }
         OmniParse();
         NOmniBox->setFocus();
+        NOmniBox->setCursorPosition(NOmniBox->text().indexOf(" ")+1);
     }
 }
 
