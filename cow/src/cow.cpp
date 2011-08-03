@@ -1251,7 +1251,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NOmniBox = new NarsilOmniBox(this->centralWidget);
     NOmniBox->setObjectName("NFilter");
     NOmniBox->adjustSize();
-    NOmniBox->setPlaceholderText("Awesome Bar");
+    //NOmniBox->setPlaceholderText("Awesome Bar");
     connect(NOmniBox,SIGNAL(textChanged(QString)),this,SLOT(OmniParse(QString)));
     connect(NOmniBox,SIGNAL(cursorPositionChanged(int,int)),this,SLOT(OmniParse()));
     theHLayout->addWidget(NOmniBox);
