@@ -143,39 +143,12 @@ public:
     }
     QValidator::State validate(QString &input, int &pos) const
     {
-        QString t=Text();
-        if(!t.isEmpty()) {
-            t.remove('.');
-            QString v=input;
-            v.remove(0,t.indexOf('.'));
-            if(input.startsWith(t)&&!v.toInt()) {
-                input=Text();
-                return QValidator::Acceptable;
-            }
+        if(input.indexOf('.')!=-1) {
+            QString x=input;
+            x.remove(0,x.indexOf('.')+1);
+            input.chop(qMax(0,x.size()-decimals()));
         }
-        bool ok;
-        int i;
-        for(i=0;i<input.size();i++) {
-            if(i+2!=input.size()&&input[i+1]!='.'&&input[i]=='0') {
-                input.remove(i--,1);
-                continue;
-            } else if(input[i]=='.') {
-                break;
-            }
-        }
-        for(++i;i<input.size();i++) {
-            if(input[i]=='.') {
-                input.remove(i--,1);
-                continue;
-            }
-        }
-        if(input.toDouble(&ok),ok) {
-            return QValidator::Acceptable;
-        }
-        if(input.toInt(&ok),ok) {
-            return QValidator::Acceptable;
-        }
-        return QValidator::Invalid;
+        return QDoubleSpinBox::validate(input,pos);
     }
 };
 
@@ -198,6 +171,11 @@ protected:
         } else {
             QLineEdit::keyPressEvent(ev);
         }
+    }
+    void mouseDoubleClickEvent(QMouseEvent *) {
+        int a=qMax(0,text().lastIndexOf(" ",cursorPosition())+1);
+        int b=qMin(text().size(),text().indexOf(" ",cursorPosition()));
+        setSelection(a,b-a);
     }
 };
 

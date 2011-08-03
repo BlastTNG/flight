@@ -212,7 +212,7 @@ void MainForm::OmniParse(QString x)
 {
     x=(x=="__AUTODETECT__")?NOmniBox->text():x;
 
-    if(NOmniBox->cursorPosition()&&x[NOmniBox->cursorPosition()-1]==' ') {
+    if(NOmniBox->cursorPosition()&&x[NOmniBox->cursorPosition()-1]==' '&&NOmniBox->hasFocus()) {
         int nxt=NOmniBox->text().indexOf(' ',NOmniBox->cursorPosition()+1);
         NOmniBox->setSelection(NOmniBox->cursorPosition(),(nxt==-1)?999999:nxt-NOmniBox->cursorPosition());
     }
@@ -236,7 +236,11 @@ void MainForm::OmniParse(QString x)
                     words[i].toInt(&ok);
                 }
                 if(ok) {
-                    dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->SetStringValue(words[i]);
+                    if(dynamic_cast<NarsilStringEntry*>(NParamFields[i-1])) {
+                        dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->SetStringValue(words[i]);
+                    } else if(dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->Text().toFloat()!=words[i].toFloat()){
+                        dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->SetStringValue(QString::number(words[i].toFloat()));
+                    }
                 }
             }
         }
@@ -297,7 +301,7 @@ void MainForm::OmniSync()
     for(int i=1;i<words.size();i++) {
         if(NParamFields[i-1]->isVisible()&&!words[i].isEmpty()) {
             words[i].replace("..",".");
-            words[i]=dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->Text();\
+            words[i]=dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->Text();
         }
     }
     int cp=NOmniBox->cursorPosition();
@@ -1322,12 +1326,6 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
         NParamLabels[i]->hide();
     }
 
-    NSendButton = new QPushButton(NTopFrame);
-    NSendButton->setObjectName("NSendButton");
-    NSendButton->setText(tr("Send (Shift+F12)"));
-    NSendButton->adjustSize();
-    NSendButton->setDisabled(true);
-
     NCurFile = new QLineEdit(NTopFrame);
     NCurFile->setObjectName("NCurFile");
     NCurFile->setText(tr(curfile.toAscii()));
@@ -1390,12 +1388,6 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
                 NVerbose->width(),
                 NCurFile->height());
 
-    NSendButton->setGeometry(
-                2*PADDING + NAboutLabel->width() - NSendButton->width(),
-                NCurFile->y(),
-                NSendButton->width(),
-                NCurFile->height());
-
     NTopFrame->adjustSize();
 
     NGroupsBox->adjustSize();
@@ -1417,6 +1409,12 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NBotFrame->setFrameShadow(QFrame::Sunken);
     theVLayout->addWidget(NBotFrame);
 
+    NSendButton = new QPushButton(NBotFrame);
+    NSendButton->setObjectName("NSendButton");
+    NSendButton->setText(tr("Send (Shift+F12)"));
+    NSendButton->adjustSize();
+    NSendButton->setDisabled(true);
+
     NWaitImage = new QLabel(NBotFrame);
     NWaitImage->setText("NWaitImage");
     NWaitImage->setScaledContents(false);
@@ -1425,8 +1423,15 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NWaitImage->setGeometry(
                 NTopFrame->width() - NWaitImage->width() - PADDING,
                 PADDING,
-                NWaitImage->width(),
+                NSendButton->width(),
                 NWaitImage->height());
+
+
+    NSendButton->setGeometry(
+                NTopFrame->width() - NWaitImage->width() - PADDING,
+                PADDING+NWaitImage->height(),
+                NSendButton->width(),
+                NSendButton->height());
 
     NLog = new QTextEdit(NBotFrame);
     NLog->setObjectName("NLog");
@@ -1435,7 +1440,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
                 PADDING,
                 PADDING,
                 NTopFrame->width() - NWaitImage->width() - 3 * PADDING,
-                PADDING + NWaitImage->height());
+                PADDING + NWaitImage->height()+NSendButton->height());
 
     ReadLog(NLog);
 
