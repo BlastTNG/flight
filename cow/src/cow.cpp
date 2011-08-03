@@ -107,7 +107,7 @@
 #endif
 
 #define PING_TIME 59000
-#define WAIT_TIME 200
+#define WAIT_TIME 40
 
 const char* blastcmd_host;
 
@@ -458,6 +458,7 @@ void MainForm::ChooseCommand() {
             }
         }
         OmniParse();
+        NOmniBox->setFocus();
     }
 }
 
@@ -609,7 +610,7 @@ void MainForm::Quit() {
 //-------------------------------------------------------------
 //
 // Tick (slot): triggered by timer.
-//      Animate the cool picture of Strider;
+//      Animate the cool picture of THE COW;
 //      Check for incoming messages and do as appropriate.
 //
 //-------------------------------------------------------------
@@ -628,7 +629,8 @@ void MainForm::Tick() {
         NWaitImage->setPixmap(*Images[framenum]);
     } else {
         if (framenum != 0) {
-            framenum = 0;
+            framenum+=dir;
+            if(framenum==numframes-1) dir=-1;
             NWaitImage->setPixmap(*Images[framenum]);
         }
     }
@@ -1290,7 +1292,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NCommandList = new QListWidget(this->centralWidget);
     NCommandList->setObjectName("NCommandList");
     NCommandList->adjustSize();
-    NCommandList->setGeometry(PADDING, PADDING+120, NCommandList->width() + 80, 0);
+    NCommandList->setGeometry(PADDING, PADDING+120, NCommandList->width(), 0);
     connect(NCommandList, SIGNAL(currentRowChanged(int)), this, SLOT(ChooseCommand()));
     theHLayout->addWidget(NCommandList);
 
@@ -1397,38 +1399,38 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NCurFile->setGeometry(
                 PADDING,
                 PADDING + 2 * PADDING + h1 + (int((2 + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NCurFile->height(),
-                NCurFile->width(),
+                NCurFile->width()*1.5,
                 NCurFile->height());
 
     NCurFileButton->setGeometry(
                 2*PADDING+NCurFile->width(),
-                PADDING + 2 * PADDING + h1 + (int((2 + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NCurFileButton->height(),
+                NCurFile->y(),
                 NCurFileButton->width(),
-                NCurFileButton->height());
-
-    NVerbose->setGeometry(
-                3*PADDING+NCurFile->width()+NCurFileButton->width(),
-                PADDING + 2 * PADDING + h1 + (int((2 + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NCurFileButton->height(),
-                NVerbose->width(),
-                NVerbose->height());
+                NCurFile->height());
 
     NSendMethod->setGeometry(
-                4*PADDING+NCurFile->width()+NCurFileButton->width()+NVerbose->width(),
-                PADDING + 2 * PADDING + h1 + (int((2 + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NCurFileButton->height(),
+                3*PADDING+NCurFile->width()+NCurFileButton->width(),
+                NCurFile->y(),
                 NSendMethod->width(),
-                NSendMethod->height());
+                NCurFile->height());
 
     NSendRoute->setGeometry(
-                5*PADDING+NCurFile->width()+NCurFileButton->width()+NVerbose->width()+NSendMethod->width(),
-                PADDING + 2 * PADDING + h1 + (int((2 + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NCurFileButton->height(),
+                4*PADDING+NCurFile->width()+NCurFileButton->width()+NSendMethod->width(),
+                NCurFile->y(),
                 NSendRoute->width(),
-                NSendRoute->height());
+                NCurFile->height());
+
+    NVerbose->setGeometry(
+                5*PADDING+NCurFile->width()+NCurFileButton->width()+NSendMethod->width()+NSendRoute->width(),
+                NCurFile->y(),
+                NVerbose->width(),
+                NCurFile->height());
 
     NSendButton->setGeometry(
                 2*PADDING + NAboutLabel->width() - NSendButton->width(),
-                PADDING + 2 * PADDING + h1 + (int((2 + MAX_N_PARAMS) / 2)) * (h3 + SPACING) - NSendButton->height(),
+                NCurFile->y(),
                 NSendButton->width(),
-                NSendButton->height());
+                NCurFile->height());
 
     NTopFrame->adjustSize();
 
@@ -1437,7 +1439,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
                 2 * PADDING + NCommandList->width(),
                 PADDING*2+25,
                 NTopFrame->width(),
-                NGroupsBox->height());
+                NGroupsBox->height()+NOmniBox->height()+PADDING);
 
     NTopFrame->setGeometry(
                 2 * PADDING + NCommandList->width(),
