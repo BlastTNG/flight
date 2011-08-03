@@ -40,7 +40,7 @@ INSTALLS += target log \n\
 \n\
 HEADERS += \\ \n\
 src/cow.h \\ \n\
-share/netcmd.h \\ \n\
+src/share/netcmd.h \\ \n\
 src/widgets.h \n\
 \
 SOURCES += \\ \n\
