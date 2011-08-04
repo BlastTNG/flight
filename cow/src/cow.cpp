@@ -102,7 +102,7 @@
 #endif
 
 #define PING_TIME 59000
-#define WAIT_TIME 40
+#define WAIT_TIME 80
 
 QString blastcmd_host;
 
@@ -622,21 +622,10 @@ void MainForm::Quit() {
 void MainForm::Tick() {
     timer->stop();
 
-    if (sending) {
-        if (framenum == 0 && dir == -1)
-            dir = 1;
-        framenum += dir;
-        if (framenum == numframes - 1)
-            dir = -1;
-        if (framenum == 1)
-            dir = 1;
+    if (framenum) {
+        framenum+=dir;
+        if(framenum==numframes-1) dir=-1;
         NWaitImage->setPixmap(*Images[framenum]);
-    } else {
-        if (framenum != 0) {
-            framenum+=dir;
-            if(framenum==numframes-1) dir=-1;
-            NWaitImage->setPixmap(*Images[framenum]);
-        }
     }
 
     ReceivePackets(!verbose, CMD_NONE);
@@ -686,17 +675,19 @@ void MainForm::TurnOn(void) {
 
     sending = true;
 
-    NGroupsBox->setDisabled(true);
-    NCurFile->setDisabled(true);
-    NCommandList->setDisabled(true);
-    NAboutLabel->setDisabled(true);
-    for (i = 0; i < MAX_N_PARAMS; i++) {
-        NParamLabels[i]->setDisabled(true);
-        NParamFields[i]->setDisabled(true);
+    for(int i=0;i<centralWidget->children().size();i++) {
+        QWidget* c=dynamic_cast<QWidget*>(centralWidget->children()[i]);
+        if(c) c->setEnabled(0);
     }
+    for(int i=0;i<NBotFrame->children().size();i++) {
+        QWidget* c=dynamic_cast<QWidget*>(NBotFrame->children()[i]);
+        if(c) c->setEnabled(0);
+    }
+    centralWidget->setEnabled(1);
+    NBotFrame->setEnabled(1);
+    NSendButton->setEnabled(1);
 
     NSendButton->setText(tr("Cancel"));
-    NSendButton->setEnabled(true);
 }
 
 
@@ -708,21 +699,16 @@ void MainForm::TurnOn(void) {
 //-------------------------------------------------------------
 
 void MainForm::TurnOff(void) {
-    int i;
-
     sending = false;
 
-    NGroupsBox->setEnabled(true);
-    NCurFile->setEnabled(true);
-    NCommandList->setEnabled(true);
-    NAboutLabel->setEnabled(true);
-    for (i = 0; i < MAX_N_PARAMS; i++) {
-        NParamLabels[i]->setEnabled(true);
-        NParamFields[i]->setEnabled(true);
+    for(int i=0;i<centralWidget->children().size();i++) {
+        QWidget* c=dynamic_cast<QWidget*>(centralWidget->children()[i]);
+        if(c) c->setEnabled(1);
     }
-
-    if (!NCommandList->currentIndex().isValid() || !NCommandList->hasFocus())
-        NSendButton->setEnabled(true);
+    for(int i=0;i<NBotFrame->children().size();i++) {
+        QWidget* c=dynamic_cast<QWidget*>(NBotFrame->children()[i]);
+        if(c) c->setEnabled(1);
+    }
     NSendButton->setText(tr("Send (Shift+F12)"));
 }
 
@@ -742,6 +728,8 @@ void MainForm::SendCommand() {
 
     if (!sending) {
 
+        framenum=1;
+        dir=1;
         i = 0;
 
         // Select appropiate flags
@@ -1553,7 +1541,7 @@ int main(int argc, char* argv[]) {
             printf("Trying to connect one more time\n");
             if (NetCmdConnect(blastcmd_host.toStdString().c_str(), 1, 0) < 0) {
                 bool ok;
-                blastcmd_host=QInputDialog::getText(0,"Bad host","Could not connect to "+QString(blastcmd_host)+". Try another hostname.",
+                blastcmd_host=QInputDialog::getText(0,"Bad host","Could not connect to "+QString(blastcmd_host)+" or blastcmd daemon. Try another hostname.",
                                                     QLineEdit::Normal,QString(blastcmd_host),&ok).toAscii();
                 if(!ok) {
                     exit(16);

@@ -408,7 +408,7 @@ int NetCmdConnect(const char* host, int silent, int silenter)
 
   if ((i = connect(sock, (struct sockaddr*)&addr, sizeof(addr))) == -1) {
     perror("Unable to connect to blastcmd daemon");
-    exit(14);
+    return -141;
   }
 
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);

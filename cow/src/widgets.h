@@ -37,6 +37,7 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QDebug>
+#include <QCompleter>
 
 class AbstractNarsilEntry
 {
@@ -98,12 +99,23 @@ public:
     }
 };
 #include <iostream>
+class NLineEdit : public QLineEdit
+{
+    Q_OBJECT
+protected:
+    void mouseDoubleClickEvent(QMouseEvent *) {
+        selectAll();
+    }
+};
+
 class NarsilDoubleEntry : public QDoubleSpinBox, public AbstractNarsilEntry
 {
     Q_OBJECT
 public:
     NarsilDoubleEntry(QWidget* parent, QString objName) : QDoubleSpinBox(parent)
     {
+//        delete lineEdit();
+        setLineEdit(new NLineEdit);
         setObjectName(objName);
         setMinimum(-__DBL_MAX__);
         setMaximum(__DBL_MAX__);
