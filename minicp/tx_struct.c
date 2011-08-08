@@ -132,11 +132,11 @@ struct ChannelStruct SlowChannels[] = {
   {"a_az",         'w', LOOP1,    3, 5.0/65535.0,   0.0, 'u',"accel","^o/s^2"},
   {"a_el",         'w', LOOP1,    4, 5.0/65535.0,   0.0, 'u',"accel","^o/s^2"},
   {"n_el",         'w', LOOP1,    5,                0.0,    0.0, 'u', U_NONE},
-  {"height_el",    'w', LOOP1,    6,        99.0/65535.0,   0.0, 'u', U_P_DEG},
+  {"height_el",    'w', LOOP1,    6,        90.0/65535.0,   0.0, 'u', U_P_DEG},
   {"az",           'w', LOOP1,    7,      360.0/65535.0,   0.0, 's', U_P_DEG},
-  {"el",           'w', LOOP1,    8,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
+  {"el",           'w', LOOP1,    8,       90.0/65535.0,  -5.0, 'u', U_P_DEG},
   {"az_ref",       'w', LOOP1,    9,      360.0/65535.0,   0.0, 's', U_P_DEG},
-  {"el_ref",       'w', LOOP1,   10,       99.0/65535.0,  -10.0, 'u', U_P_DEG},
+  {"el_ref",       'w', LOOP1,   10,       96.0/65535.0,  -10.0, 'u', U_P_DEG},
   // LOOP1 channels 12-15 are wide fast channels
   {"step_ena_phase",   'w', LOOP1,16,           1.0,    0.0, 'u',  U_NONE},
   {"step_start_phase", 'w', LOOP1,17, 360.0/65536.0,    0.0, 'u',U_PH_DEG},
@@ -223,7 +223,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"a2_ch24",      'r', ADC1_A2, 48,      CAL32(1.0,          0.0),'U', U_V_V},
 
   {"az_now",       'w', LOOP1,   12,    360.0/4294967295.0, 0.0, 'S', U_P_DEG},
-  {"el_now",       'w', LOOP1,   14,     99.0/4294967295.0,-10.0, 'U', U_P_DEG},
+  {"el_now",       'w', LOOP1,   14,     96.0/4294967295.0,-10.0, 'U', U_P_DEG},
 
   END_OF_CHANNELS
 };
