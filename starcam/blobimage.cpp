@@ -320,6 +320,7 @@ int BlobImage::findBlobs()
 	//find the blobs
 	if (FixBadpix(m_sBadpixFilename) == SBFE_OPEN_ERROR)
 		return -1;
+	highPassFilter(15,3);        
 #if BLOB_IMAGE_DEBUG
 	cout << "[Blob image debug]: running calc_mapstat method..." << endl;
 #endif
@@ -515,7 +516,7 @@ string BlobImage::createFilename()
 
  createDirectory:
  
- creates the directory compnent of the filename used in createFilename
+ creates the directory component of the filename used in createFilename
  
 */
 string BlobImage::createDirectory(string root, int boxflag)
@@ -537,7 +538,7 @@ string BlobImage::createDirectory(string root, int boxflag)
  uses default format
  
 */
-SBIG_FILE_ERROR BlobImage::SaveImageIn(string root/*="/home/steve/starcam/pictures"*/, int boxflag/*=0*/)
+SBIG_FILE_ERROR BlobImage::SaveImageIn(string root/*="/data/rawdir"*/, int boxflag/*=0*/)
 {
 #if BLOB_IMAGE_DEBUG
 	cout << "[Blob image debug]: In SaveImageIn method." << endl;

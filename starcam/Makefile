@@ -35,7 +35,7 @@ QTFLAGS =
 endif
 ################################################################################
 #targets for building all or part of the main program
-all: cam comm view util
+all: cam comm view util test
 cam: $(APP_NAME)
 comm: commtest
 view: scviewer

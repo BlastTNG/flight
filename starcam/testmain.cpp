@@ -4,6 +4,7 @@
 #include <config.h>
 #endif
 
+#include <fstream>
 #include <iostream>
 #include <cstdlib>
 #include <string>
@@ -46,6 +47,7 @@ void* viewerExec(void* arg)
 
 int main(int argc, char *argv[])
 {
+	ifstream sbigfile;
 #if TEST_MODE == 2
 	MyCam cam;
 	LENS_ERROR err = LE_NO_ERROR;
@@ -145,13 +147,20 @@ int main(int argc, char *argv[])
 		if (cerr != CE_NO_ERROR) break;
 		
 #elif TEST_MODE == 3
-		string path = "/data/rawdir/";
-		string names[] = {"1153prog.sbig", "1140ops.sbig", "1143prog.sbig", "1144prog.sbig",
+		string path = "/data/rawdir/03-01/";
+/*		string names[] = {"1153prog.sbig", "1140ops.sbig", "1143prog.sbig", "1144prog.sbig",
 			"1150prog.sbig", "1155prog.sbig", "1159prog.sbig", "1159bprog.sbig", "1200prog.sbig",
 			"1200bprog.sbig", "1211ops.sbig", "1213prog.sbig", "1213bprog.sbig", "1214prog.sbig",
 			"1214bprog.sbig", "1215prog.sbig", "1216prog.sbig", "1217prog.sbig", "1218prog.sbig",
 			"1219prog.sbig"};
-		int num_names = 20;
+*/
+		int num_names = 3;
+		string names[num_names];
+		int read_int=0;
+		sbigfile.open("0301b.txt");
+		while (sbigfile >> names[read_int]){
+			++read_int;
+		}
 		for (int i=0; i<num_names; i++) {
 			string filename = path + names[i];
 			cout << "\n\n\n\nOpening the saved image: " << filename << endl;
@@ -160,37 +169,41 @@ int main(int argc, char *argv[])
 				cout << "An error occured while opening: " << filename << endl;
 				break;
 			}
-			
+/*FIXME	
 			//initialize the image viewer window
 			if (firstTime) {                 //only do this on first loop iteration
 				firstTime = 0;
 //				cout << "Starting Image viewer application" << endl;
-				iv = new ImageViewer(img.GetWidth(), img.GetHeight(), 1000, 0, "viewer");
+  				ImageViewer iv(640, 480, img.GetWidth(), img.GetHeight(), 10, 0, "viewer");
+				//FIXMEiv = new ImageViewer(img.GetWidth(), img.GetHeight(), 1000, 0, "viewer");
 				a.setMainWidget(iv);
 				iv->show();
 				pthread_create(&app_thread, NULL, &viewerExec, (void*)&a);
 			}
-			
+*/			
 //			cout << "Finding blobs" << endl;
 			img.findBlobs();
-			cout << "\nFound " << fblob->get_numblobs() << " blobs, map mean = "
+			if(fblob->get_numblobs() > 7) { 
+				cout << "\nFound " << fblob->get_numblobs() << " blobs, map mean = "
 				<< fblob->get_mapmean() << " sigma = " << fblob->get_sigma() << endl;
+			}
 			if (fblob->get_numblobs()) {
-				cout <<"Their locations, flux and snr  (x y f s) are " << endl;
+				if(fblob->get_numblobs() > 7) cout <<"Their locations, flux and snr  (x y f s) are " << endl;
 				blobs = fblob->getblobs();
 				while (blobs != NULL) {
 					double x = blobs->getx();
 					double y = blobs->gety();
 					double f = blobs->getflux();
 					double s = blobs->getsnr();
-					cout << "\t" << x << " " << y << " " << f << " " << s << endl;
+					//cout << "\t" << x << " " << y << " " << f << " " << s << endl;
+					if (fblob->get_numblobs() > 7) cout << "\t" << x << " " << y << endl;
 					img.drawBox(blobs->getx(), blobs->gety(), 20, true);
 					blobs = blobs->getnextblob();
 				}
 			}
-			
+/*FIXME			
 			iv->load(&img, TRUE);
-
+*/
 			//wait for a bit and observe image
 //			sleep(5);
 			

@@ -34,6 +34,7 @@ using namespace std;
 
 //0=no saving, 1=save raw image, 2=save version with boxes too
 #define SAVE_SC_IMAGES 0
+//#define NUMIMGS 50
 
 //camera and image objects (and associated mutexes)
 MyCam globalCam;
@@ -56,7 +57,7 @@ pthread_cond_t cameraTriggerCond = PTHREAD_COND_INITIALIZER;
 //image viewer
 #if USE_IMAGE_VIEWER
 const char* viewerPath = "/data/etc/current.sbig";
-bool showBoxes = false;
+bool showBoxes = true;
 #endif
 
 //function declarations
@@ -111,6 +112,7 @@ void sclog(loglevel level, char* fmt, ...)
 PAR_ERROR openCameras()
 {
   PAR_ERROR err;
+  static int crashcount = 0;
   sclog(info, "Opening the camera driver.");
   if ((err = globalCam.OpenDriver()) != CE_NO_ERROR)
     return err;
@@ -123,8 +125,15 @@ PAR_ERROR openCameras()
    	cout << "...search for a camera was " << ((qur.camerasFound)?"successful":"unsuccessful") << endl;
 
   sclog(info, "Opening the camera device.");
-  if ((err = globalCam.OpenUSBDevice(0)) != CE_NO_ERROR)
-    return err;
+  if ((err = globalCam.OpenUSBDevice(0)) != CE_NO_ERROR) {
+	crashcount ++;
+	if (crashcount == 5) {
+   		cout << "[Starcam debug]: EXITING!!!!..." << endl;
+      	  	crashcount = 0;
+		exit(1);
+	}
+    	return err;
+  }
   sclog(info, "Attempting to establish link to camera.");
   for (int i=0; i<6; i++) {
     sclog(info, "     ...attempt %d", i);
@@ -283,6 +292,7 @@ void* processingLoop(void* arg)
   sclog(info, "Starting up image processing loop");
   int imageIndex = 0;
   static SBIG_FILE_ERROR err;
+//  static int imgcounter = 0;
   CamCommServer* comm = (CamCommServer*)arg;
 
   while (1) {
@@ -302,10 +312,14 @@ void* processingLoop(void* arg)
     globalImages[imageIndex].AutoBackgroundAndRange();
 #if SAVE_SC_IMAGES
     sclog(debug, "processingLoop: Saving image in: %s", imgPath.c_str());
-    err = globalImages[imageIndex].SaveImageIn(imgPath, 0);
-    if (err != SBFE_NO_ERROR) {
-      sclog(warning, "processingLoop: File error during boxless write: %d", err);
-    }
+//    imgcounter++;
+//    if (imgcounter == NUMIMGS) {
+    	err = globalImages[imageIndex].SaveImageIn(imgPath, 0);
+    	if (err != SBFE_NO_ERROR) {
+    	  sclog(warning, "processingLoop: File error during boxless write: %d", err);
+    	}
+//	imgcounter = 0;
+//    }
 #endif
 #if USE_IMAGE_VIEWER
     if (!showBoxes) {
@@ -410,6 +424,7 @@ string interpretCommand(string cmd)
   string::size_type valPos = cmd.find("=", 0);
   string valStr = "";
   istringstream sin;      //for reading value portion of command
+  int imageIndex = 0;
   if (valPos != string::npos) {      //cmd contains a value part
     valStr = cmd.substr(valPos+1, cmd.length()-(valPos+1));
     sin.str(valStr);
@@ -433,11 +448,14 @@ string interpretCommand(string cmd)
       lock(&imageLock[0], "imageLock", "interpretCommand");
       lock(&imageLock[1], "imageLock", "interpretCommand");
       BlobImage img;
-#if USE_IMAGE_VIEWER
-      err = globalCam.autoFocus(&img, 0, viewerPath);
-#else
-      err = globalCam.autoFocus(&img, 0, NULL);
-#endif
+//#if USE_IMAGE_VIEWER
+      //err = globalCam.autoFocus(&img, 0, viewerPath);
+      //err = globalCam.autoFocus(&globalImages[imageIndex], 0, viewerPath);
+      err = globalCam.autoFocus(&globalImages[imageIndex], 0, imgPath);
+//#else
+//      //err = globalCam.autoFocus(&img, 0, NULL);
+//      err = globalCam.autoFocus(&globalImages[imageIndex], 0, NULL);
+//#endif
       unlock(&imageLock[1], "imageLock", "interpretCommand");
       unlock(&imageLock[0], "imageLock", "interpretCommand");
       unlock(&camLock, "camLock", "interpretCommand");
@@ -452,11 +470,12 @@ string interpretCommand(string cmd)
       lock(&imageLock[0], "imageLock", "interpretCommand");
       lock(&imageLock[1], "imageLock", "interpretCommand");
       BlobImage img;
-#if USE_IMAGE_VIEWER
-      err = globalCam.autoFocus(&img, 1, viewerPath);
-#else
-      err = globalCam.autoFocus(&img, 1, NULL);
-#endif
+//#if USE_IMAGE_VIEWER
+      //err = globalCam.autoFocus(&img, 1, viewerPath);
+      err = globalCam.autoFocus(&img, 1, imgPath);
+//#else
+//      err = globalCam.autoFocus(&img, 1, NULL);
+//#endif
       unlock(&imageLock[1], "imageLock", "interpretCommand");
       unlock(&imageLock[0], "imageLock", "interpretCommand");
       unlock(&camLock, "camLock", "interpretCommand");

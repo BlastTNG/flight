@@ -10,6 +10,7 @@
 #include "clensadapterdefs.h"
 #include "sbigudrv.h"
 #include "csbigimgdefs.h"
+#include "camstruct.h"
 
 using namespace std;
 
@@ -149,7 +150,7 @@ static const MyCamConfigParams defaultCameraParams = {
 		0, 0, 0, 0                      //subframe left, top, width, height
 	},
 	INVALID_USB_NUM,                //USBNum
-	6000,                              //pictureInterval
+	0,                              //pictureInterval
 	100                             //focusResolution
 };
 
@@ -157,8 +158,8 @@ static const BlobImageConfigParams defaultImageParams = {
 	{                               //frame blob params:
 		NULL,                           //map
 		16,                             //bits
-		0,                              //xpix
-		0,                              //ypix
+		CAM_WIDTH,                              //xpix
+		CAM_HEIGHT,                              //ypix
 		9.3/60.0/60.0,                  //platescale
 		1,                              //gain
 		0,                              //readoutOffset
@@ -214,7 +215,7 @@ static const BlobImageConfigParams defaultImageParams = {
     },
 	{                               //viewer params
 		10,                          //refreshTime
-		765, 510                       //width, height
+		1530, 1020                       //width, height
 	},
 	"",                             //badpixFilename
 	0,                              //timeError

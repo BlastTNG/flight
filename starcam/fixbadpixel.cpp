@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
   BlobImage bimg(CAM_HEIGHT, CAM_WIDTH);
   bimg.OpenImage(argv[1]);
   bimg.FixBadpix("/tmp/badpix.txt");	  //don't test already detected blobs
-  //bimg.highPassFilter(box_size, n_boxes);
+  bimg.highPassFilter(box_size, n_boxes);
 
   cout << "Saving corrected image to " << outfilename << endl;
   bimg.SaveImage(outfilename);

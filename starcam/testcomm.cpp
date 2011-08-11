@@ -4,7 +4,8 @@
 #include <string>
 
 //these are reversed because the files are named from starcam perspective
-const char* defaultCommTarget = "burqas.blast";
+const char* defaultCommTarget = "192.168.1.11";
+//const char* defaultCommTarget = "burqas.blast";
 
 #define USE_COMMAND_GUI 1
 

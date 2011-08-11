@@ -340,9 +340,9 @@ int frameblob::load_badpix(const char *fname) {
   
   //printf("badpixels: %i\n",numbadpix);
   while( thisbad != NULL ) {
+
     badpixels[i] = (unsigned int) thisbad->gety()*xpix + 
       (unsigned int) thisbad->getx();
-    
     i++;
     nextbad = thisbad->getnextblob();  // get next blob
     delete thisbad;                    // delete the current one

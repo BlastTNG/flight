@@ -20,6 +20,7 @@ using namespace std;
 /**
 	@author Steve Benton <steve.benton@utoronto.ca>
 */
+
 class MyCam : public CSBIGCam
 {
 private:
@@ -29,6 +30,7 @@ private:
 	unsigned int m_nFocusResolution; //autofocus will step by (totalFocalRange)/m_nFocusResolution
 	unsigned int m_nFocusRange; //autofocus will step through (totalFocalRange)/m_nFocusRange
 	unsigned long int m_iFrame;//frame number, increments each grabImage
+
 	
 public:
 	//constructors/destructor
@@ -48,7 +50,10 @@ public:
 	PAR_ERROR OpenUSBDevice(int num);
 	
 	//lens adapter functions
-	LENS_ERROR autoFocus(BlobImage *img, int forced = 0, const char* path = NULL);
+	//focus images go to viewer:
+	//LENS_ERROR autoFocus(BlobImage *img, int forced = 0, const char* path = NULL);
+	//focus images get saved:
+	LENS_ERROR autoFocus(BlobImage *img, int forced = 0, string path = "/data/rawdir");
 	CLensAdapter* getLensAdapter() { return &m_cAdapter; }
 	
 	//accesors

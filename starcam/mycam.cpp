@@ -21,6 +21,7 @@
 #include "csbigcam.h"
 #include "clensadapter.h"
 #include "blobimage.h"
+#include "focusstruct.h"
 
 #define MYCAM_DEBUG 0
 #define MYCAM_TIMING 0
@@ -118,79 +119,154 @@ PAR_ERROR MyCam::OpenUSBDevice(int num)
  //TODO can add sub-step interpolation of maximum
  
 */
-LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*=NULL*/)
+//LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, const char* path/*=NULL*/)
+LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 {
 	frameblob *blob = img->getFrameBlob();
+    	bloblist* focblobs;
 	if (!forced)  //can actually measure focal range
 		if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
 	int range = (forced)?3270:m_cAdapter.getFocalRange();
 	int step = range / m_nFocusResolution;         //number of motor counts between measurements
+	int numsteps = 30;//m_nFocusResolution/m_nFocusRange; 
+	focusStruct focuser[numsteps];
 	//check if motor "stickiness" may have confused things
 	if (forced && step < MIN_AUTO_STEP) step = MIN_AUTO_STEP;
 #if AUTOFOCUS_DEBUG
 	cout << "[autoFocus debug]: range=" << range <<" res=" << m_nFocusResolution << "step=" << step << endl;
 #endif
-	int decrease_cnt = 0;                  //counts consecutive flux decreases for stopping
-	int remaining = 0;                     //distance remainder from preciseMove
-	int thisFlux, lastFlux = 1;            //brightest blob flux in this, last image
-	int toMax = 0, maxFlux = -1;           //distance to max, and max flux
-	int toInf = 0;                         //distance to infinity
-	
-#if 0
-	int dummy = 0;
-#endif
-	//while (decrease_cnt < 3) {
-	for (int i=0; i < m_nFocusResolution/m_nFocusRange; i++) {
-#if AUTOFOCUS_DEBUG
-		cout << "[autoFocus debug]: taking exposure" << endl;
-#endif
+	int remaining = 0;	//distance remainder returned from preciseMove
+	int toInf = 0;
+	int endpos = 0;
+	int j=0;
+	//focusing stuff:
+	int m=1,n=0,o=0,p=0;
+	int atfocus=0;
+	int nblobhere = 0;
+	int nblobplus = 0;
+	int nblobminus = 0;
+	double xhere = 0;
+	double xplus = 0;
+	double xminus = 0;
+	double yhere = 0;
+	double yplus = 0;
+	double yminus = 0;
+	bool star = false;
+	bool focused = false;
+
+	for (int i=0; i < numsteps; i++) {
+//#if AUTOFOCUS_DEBUG
+//		cout << "[autoFocus debug]: taking exposure" << endl;
+//#endif
 		if (this->GrabImage(img, SBDF_LIGHT_ONLY) != CE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 			cout << "[autoFocus debug]: grabImage failed in autoFocus" << endl;
 #endif
 			return LE_AUTOFOCUS_ERROR;
 		}
-		//if applicable, save image for use by viewer
-		if (path != NULL) {
+
+		img->findBlobs();
+		focuser[i].numblobs = blob->get_numblobs();
+		cout << "autofocus: Found " << blob->get_numblobs() << " blobs" << endl;
+      		if (blob->get_numblobs()) {
+			focblobs = blob->getblobs();
+			while ((focblobs != NULL) && (j<15)) { //keep 15 blobs per images in focusStruct
+				cout << "autofocus:   ..." << focblobs->getx() << " " << focblobs->gety() << " " << focblobs->getflux() << endl;
+				focuser[i].flux[j] = focblobs->getflux();
+				focuser[i].x[j] = focblobs->getx();
+				focuser[i].y[j] = focblobs->gety();
+				img->drawBox(focblobs->getx(), focblobs->gety(), 20);
+				focblobs = focblobs->getnextblob();
+				j++;
+			}
+		j=0;
+		}
+
+		//if applicable, save image for use by viewer, change to img->SaveImage(path)
+		//if (path != NULL) {
 #if AUTOFOCUS_DEBUG
 		  cout << "[autoFocus debug]: saving focus image in : " << path << endl;
 #endif
-		  if (img->SaveImage(path) != SBFE_NO_ERROR) {
+		  if (img->SaveImageIn(path) != SBFE_NO_ERROR) {
+		  //if (img->SaveImage(path) != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
 		  }
-		}
+		//}
 
-		img->findBlobs();
-		thisFlux =  (blob->get_numblobs())?(blob->getblobs()->getflux()):-1;
-		//if (thisFlux == -1 && maxFlux > 0) break;   //no blobs and max found: break
-		
-		//check for decreasing flux
-		if (lastFlux > thisFlux) decrease_cnt++;
-		else decrease_cnt = 0;
-		
+
+		focuser[i].focpos = toInf;
 		//move to next location
 		if (m_cAdapter.preciseMove(-step, remaining, forced) != LE_NO_ERROR)
 			return m_cAdapter.getLastError();
-		
-		if (thisFlux > maxFlux) {         //check for new maximum
-			maxFlux = thisFlux;
-			toMax = step + remaining;    //have just moved away from max
-		}
-		else if (maxFlux > 0) toMax += step + remaining;   //if max found, have moved further from it
+
 		toInf += step + remaining;
-#if AUTOFOCUS_DEBUG
-		cout << "[autoFocus debug]: thisFlux=" << thisFlux << " toMax=" << toMax << endl;
-		cout << "[autoFocus debug]: location is " << toMax << " from max and " << toInf << " from infinity" << endl;
-#endif
-		lastFlux = thisFlux;
+		if (i==(numsteps-1)) endpos = toInf;
 	}
-	
-	//move back to position to max flux
-	if (m_cAdapter.preciseMove(toMax, remaining, forced) != LE_NO_ERROR)
+
+	while ((focused == false) && (m<(numsteps-1))) { //loop over all images
+		cerr << "m=" << m << endl;
+		nblobhere = focuser[m].numblobs;
+		nblobplus = focuser[m+1].numblobs; //#blobs in next img
+		nblobminus = focuser[m-1].numblobs;//#blobs in prev img
+		cerr << " blobs: " << nblobhere << " blobs+: " << nblobplus << " blobs-: " << nblobminus << endl;
+		while ((star == false) && (n<nblobhere)) { //loop over all blobs in this image
+			cerr << "n=" << n << endl;
+			xhere = focuser[m].x[n];
+			yhere = focuser[m].y[n];
+			cerr << " blobhere" << n << " x,y: " << xhere << " " << yhere << endl;
+			while ((star == false) && (o<nblobplus))  { //loop over all blobs in next image
+				cerr << "o=" << o << endl;
+				xplus = focuser[m+1].x[o];
+		     		yplus = focuser[m+1].y[o];
+				cerr << " blob+" << o << " x,y: " << xplus << " " << yplus << endl;
+				if ((abs(xplus-xhere) < 20) && (abs(yplus-yhere) < 20)) { 
+					cerr << "blob+" << o << " is close enough" << endl;
+					//if meets test in next image, check prev image:
+					while ((star == false) && (p<nblobminus)) { //loop over all blobs in prev image	
+						cerr << "p=" << p << endl;
+						xminus = focuser[m-1].x[p];
+						yminus = focuser[m-1].y[p];
+						cerr << " blob-" << p << " x,y: " << xplus << " " << yplus << endl;
+		 				if ((abs(xminus-xhere) < 20) && (abs(yminus-yhere) < 20)) {
+							cerr << "blob-" << p << " is close enough" << endl;
+							cerr << "it's a star" << endl;
+							star = true;//stops blob search, goes to next image if focus test fails
+							if ((focuser[m].flux[n] > focuser[m+1].flux[o]) &&
+							    (focuser[m].flux[n] > focuser[m-1].flux[p])) {
+								atfocus = m;
+								focused = true;//stops image search
+							}
+						}
+						cerr << "try next blob-" << endl;
+						p++;//go to next blob in prev image 
+					//(or loop ends if star=true)
+					}
+				}
+				cerr << "try next blob+" << endl;
+				o++;//go to next blob in next image 
+			//(or loop ends if star=true)
+			}
+			cerr << "try next blobhere" << endl;
+			o=0;
+			p=0;
+			n++;//go to next blob in this image...	
+		//(or loop ends if star=true)
+		}
+		star = false;
+		n=0;
+		m++;//go to next image...		
+	//(or loop ends if found focus)
+	}	
+
+	cerr << "focus position is: " << focuser[atfocus].focpos << endl;
+	//move back to focus position
+	int toFocus = endpos - focuser[atfocus].focpos;
+	if (m_cAdapter.preciseMove(toFocus, remaining, forced) != LE_NO_ERROR)
 		return m_cAdapter.getLastError();
 	return LE_NO_ERROR;
+
 }
 
 //Original autofocus function: needlessly complicated
@@ -343,6 +419,9 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 	GetCCDInfoResults0 gcir;
 	GetCCDInfoParams gcip;
 	double ccdTemp;
+	double foclen;
+	string lens_ret_str, foc_str;
+	double focpos;
 	unsigned short vertNBinning, hBin, vBin;
 	unsigned short rm;
 	string s;
@@ -397,6 +476,16 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 	pImg->setCameraID(this->getSerialNum());
 	pImg->setFrameNum(m_iFrame++);
 	pImg->SetCCDTemperature(ccdTemp);
+	//command returns: "xxxmm,f28", where xxx=foclen
+	if ((m_cAdapter.runCommand(LC_IDENTIFY_LENS, lens_ret_str)) == LE_NO_ERROR){
+		foc_str = lens_ret_str.substr(0,3);
+		foclen = atof(foc_str.c_str());
+		pImg->SetFocalLength(foclen);
+	}
+	if ((m_cAdapter.runCommand(LC_GET_FOCUS_POSITION, lens_ret_str)) == LE_NO_ERROR){
+		focpos = atof(lens_ret_str.c_str());
+		pImg->SetApertureArea(focpos); // change header to put focus position where "Aperture" used to be
+	}
 	pImg->SetEachExposure(CSBIGCam::GetExposureTime());
 	pImg->SetEGain(hex2double(gcir.readoutInfo[rm].gain));
 	pImg->SetPixelHeight(hex2double(gcir.readoutInfo[rm].pixelHeight) * vertNBinning / 1000.0);

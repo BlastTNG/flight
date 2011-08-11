@@ -47,6 +47,7 @@ void* updateImage(void* arg)
     }
     time = stats.st_mtime;
     if (time > oldtime) {  //the image file has been modified
+      usleep(5000); //give starcam a chance to save the file
       nextindex = (imgindex == 0) ? 1 : 0;
       oldtime = time;
       cout << "Image updated, refreshing it" << endl;
