@@ -60,17 +60,6 @@
 /* Seconds in a week */
 #define SEC_IN_WEEK  604800L
 
-/* based on isc_protocol.h */
-#define ISC_SHUTDOWN_NONE     0
-#define ISC_SHUTDOWN_HALT     1
-#define ISC_SHUTDOWN_REBOOT   2
-#define ISC_SHUTDOWN_CAMCYCLE 3
-
-#define ISC_TRIGGER_INT  0
-#define ISC_TRIGGER_EDGE 1
-#define ISC_TRIGGER_POS  2
-#define ISC_TRIGGER_NEG  3
-
 #define EXT_SLOT   0
 #define EXT_ICHUNK 1
 #define EXT_NCHUNK 2
@@ -307,12 +296,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.h = 0;
       break;
 
-    case trim_to_isc:
-      SetTrimToSC(0);
-      break;
-    case trim_to_osc:
-      SetTrimToSC(1);
-      break;
     case reset_trims:
       ClearTrim();
       break;
@@ -362,12 +345,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case pss2_veto:
       CommandData.use_pss2 = 0;
       break;
-    case isc_veto:
-      CommandData.use_isc = 0;
-      break;
-    case osc_veto:
-      CommandData.use_osc = 0;
-      break;
     case mag_veto:
       CommandData.use_mag = 0;
       break;
@@ -389,12 +366,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case pss2_allow:
       CommandData.use_pss2 = 1;
-      break;
-    case isc_allow:
-      CommandData.use_isc = 1;
-      break;
-    case osc_allow:
-      CommandData.use_osc = 1;
       break;
     case mag_allow:
       CommandData.use_mag = 1;
@@ -420,30 +391,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case gps_cycle:
       CommandData.power.gps.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.gps.rst_count = LATCH_PULSE_LEN;
-      break;
-    case isc_off:
-      CommandData.power.isc.set_count = 0;
-      CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
-      break;
-    case isc_on:
-      CommandData.power.isc.rst_count = 0;
-      CommandData.power.isc.set_count = LATCH_PULSE_LEN;
-      break;
-    case isc_cycle:
-      CommandData.power.isc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
-      break;
-    case osc_off:
-      CommandData.power.osc.set_count = 0;
-      CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
-      break;
-    case osc_on:
-      CommandData.power.osc.rst_count = 0;
-      CommandData.power.osc.set_count = LATCH_PULSE_LEN;
-      break;
-    case osc_cycle:
-      CommandData.power.osc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
       break;
     case rw_off:
       CommandData.power.rw.set_count = 0;
@@ -806,23 +753,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.Cryo.autoJFETheat = 1;
       break;
 
-#ifndef BOLOTEST
-    case balance_off:/* Balance pump commanding */
-      CommandData.pumps.mode = bal_rest;
-      CommandData.pumps.level = 0;
-      break;
-    case balance_auto:
-      CommandData.pumps.mode= bal_auto;
-      break;
-    case balance_heat_on:/* Balance pump heating card commanding */
-      CommandData.pumps.heat_on = 1;
-      break;
-    case balance_heat_off:
-      CommandData.pumps.heat_on = 0;
-      break;
-
-#endif
-
     /* Lock */
     case pin_in:
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF | LS_IGNORE_EL;
@@ -852,12 +782,7 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     /* Actuators */
     case actuator_stop:
       CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
-      /* fallthrough */
-    case autofocus_veto:
       CommandData.actbus.tc_mode = TC_MODE_VETOED;
-      break;
-    case autofocus_allow:
-      CommandData.actbus.tc_mode = TC_MODE_ENABLED;
       break;
 
     case hwpr_panic:
@@ -866,115 +791,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
 #ifndef BOLOTEST
-      /***************************************/
-      /********* ISC Commanding  *************/
-    case isc_run:
-      CommandData.ISCState[0].pause = 0;
-      break;
-    case isc_shutdown:
-      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_HALT;
-      break;
-    case isc_reboot:
-      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_REBOOT;
-      break;
-    case isc_cam_cycle:
-      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_CAMCYCLE;
-      break;
-    case isc_pause:
-      CommandData.ISCState[0].pause = 1;
-      break;
-    case isc_abort:
-      CommandData.ISCState[0].abort = 1;
-      break;
-    case isc_reconnect:
-      CommandData.ISCControl[0].reconnect = 1;
-      break;
-    case isc_save_images:
-      CommandData.ISCState[0].save = 1;
-      break;
-    case isc_discard_images:
-      CommandData.ISCState[0].save = 0;
-      break;
-    case isc_full_screen:
-      CommandData.ISCState[0].display_mode = full;
-      break;
-    case isc_trig_int:
-      CommandData.ISCState[0].triggertype = ISC_TRIGGER_INT;
-      break;
-    case isc_trig_ext:
-      CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
-      break;
-    case isc_auto_focus:
-      CommandData.ISCControl[0].autofocus = 10;
-      break;
-    case isc_eye_on:
-      CommandData.ISCState[0].eyeOn = 1;
-      break;
-    case isc_eye_off:
-      CommandData.ISCState[0].eyeOn = 0;
-      break;
-    case isc_no_pyramid:
-      CommandData.ISCState[0].useLost = 0;
-      break;
-    case isc_use_pyramid:
-      CommandData.ISCState[0].useLost = 1;
-      break;
-
-      /***************************************/
-      /********* OSC Commanding  *************/
-      break;
-    case osc_run:
-      CommandData.ISCState[1].pause = 0;
-      break;
-    case osc_shutdown:
-      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_HALT;
-      break;
-    case osc_reboot:
-      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_REBOOT;
-      break;
-    case osc_cam_cycle:
-      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_CAMCYCLE;
-      break;
-    case osc_pause:
-      CommandData.ISCState[1].pause = 1;
-      break;
-    case osc_abort:
-      CommandData.ISCState[1].abort = 1;
-      break;
-    case osc_reconnect:
-      CommandData.ISCControl[1].reconnect = 1;
-      break;
-    case osc_save_images:
-      CommandData.ISCState[1].save = 1;
-      break;
-    case osc_discard_images:
-      CommandData.ISCState[1].save = 0;
-      break;
-    case osc_full_screen:
-      CommandData.ISCState[1].display_mode = full;
-      break;
-    case osc_trig_int:
-      CommandData.ISCState[1].triggertype = ISC_TRIGGER_INT;
-      break;
-    case osc_trig_ext:
-      CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
-      break;
-    case osc_auto_focus:
-      CommandData.ISCControl[1].autofocus = 10;
-      break;
-    case osc_eye_on:
-      CommandData.ISCState[1].eyeOn = 1;
-      break;
-    case osc_eye_off:
-      CommandData.ISCState[1].eyeOn = 0;
-      break;
-    case osc_no_pyramid:
-      CommandData.ISCState[1].useLost = 0;
-      break;
-    case osc_use_pyramid:
-      CommandData.ISCState[1].useLost = 1;
-      break;
-
       /***************************************/
       /********* SBSC Commanding  *************/
     case cam_expose:
@@ -1467,27 +1283,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
           svalues[1]);
       CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
       break;
-    case delta_secondary:
-      CommandData.actbus.focus = ivalues[0];
-      CommandData.actbus.focus_mode = ACTBUS_FM_DELFOC;
-      break;
-    case set_secondary:
-      CommandData.actbus.focus = ivalues[0] + POSITION_FOCUS 
-	+ CommandData.actbus.sf_offset;
-      CommandData.actbus.focus_mode = ACTBUS_FM_FOCUS;
-      break;
-    case thermo_gain:
-      CommandData.actbus.tc_step = ivalues[2];
-      CommandData.actbus.tc_wait = ivalues[3] * 300; /* convert min->5Hz */
-      CommandData.actbus.sf_time = CommandData.actbus.tc_wait - 5;
-      RecalcOffset(rvalues[0], rvalues[1]);
-      CommandData.actbus.g_primary = rvalues[0];
-      CommandData.actbus.g_secondary = rvalues[1];
-      break;
-    case focus_offset:
-      CommandData.actbus.sf_offset = ivalues[0];
-      CommandData.actbus.sf_time = CommandData.actbus.tc_wait - 5;
-      break;
     case actuator_servo:
       CommandData.actbus.goal[0] = ivalues[0] + CommandData.actbus.offset[0];
       CommandData.actbus.goal[1] = ivalues[1] + CommandData.actbus.offset[1];
@@ -1531,11 +1326,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.actbus.lvdt_low = rvalues[1];
         CommandData.actbus.lvdt_high = rvalues[2];
       }
-      break;
-    case thermo_param:
-      CommandData.actbus.tc_spread = rvalues[0];
-      CommandData.actbus.tc_prefp = ivalues[1];
-      CommandData.actbus.tc_prefs = ivalues[2];
       break;
 
     case hwpr_vel:
@@ -1629,22 +1419,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
 #ifndef BOLOTEST
-      /***************************************/
-      /********** Balance System  ************/
-    case balance_gain:
-      CommandData.pumps.level_on_bal = rvalues[0] * 1990.13; /* 1990.13 DAC/Amp*/
-      CommandData.pumps.level_off_bal = rvalues[1] * 1990.13;
-      CommandData.pumps.level_target_bal = rvalues[2] * 1990.13;
-      CommandData.pumps.gain_bal = rvalues[3];
-      break;
-    case balance_manual:
-      CommandData.pumps.level = rvalues[0];
-      CommandData.pumps.mode = bal_manual;
-      break;
-    case balance_tset:
-      CommandData.pumps.heat_tset = rvalues[0];
-      break;
-
       /***************************************/
       /******** Electronics Heaters  *********/
     case t_gyro_set:  /* gyro heater setpoint */
@@ -1768,139 +1542,6 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
 #ifndef BOLOTEST
-      /***************************************/
-      /********* ISC Commanding  *************/
-    case isc_set_focus:
-      CommandData.ISCState[0].focus_pos = ivalues[0];
-      break;
-    case isc_foc_off:
-      CommandData.ISCState[0].focusOffset = ivalues[0];
-      break;
-    case isc_set_aperture:
-      CommandData.ISCState[0].ap_pos = ivalues[0];
-      break;
-    case isc_pixel_centre:
-      CommandData.ISCState[0].roi_x = ivalues[0];
-      CommandData.ISCState[0].roi_y = ivalues[1];
-      CommandData.ISCState[0].display_mode = roi;
-      break;
-    case isc_blob_centre:
-      CommandData.ISCState[0].blob_num = ivalues[0];
-      CommandData.ISCState[0].display_mode = blob;
-      break;
-    case isc_offset:
-      CommandData.ISCState[0].azBDA = rvalues[0] * DEG2RAD;
-      CommandData.ISCState[0].elBDA = rvalues[1] * DEG2RAD;
-      break;
-    case isc_integrate:
-      i = (int)(rvalues[0]/10. + 0.5) ;
-      if (i % 2) i++;
-      CommandData.ISCControl[0].fast_pulse_width = i;
-      i = (int)(rvalues[1]/10. + 0.5) ;
-      if (i % 2) i++;
-      CommandData.ISCControl[0].pulse_width = i;
-      break;
-    case isc_det_set:
-      CommandData.ISCState[0].grid = ivalues[0];
-      CommandData.ISCState[0].sn_threshold = rvalues[1];
-      CommandData.ISCState[0].mult_dist = ivalues[2];
-      break;
-    case isc_blobs:
-      CommandData.ISCState[0].minBlobMatch = ivalues[0];
-      CommandData.ISCState[0].maxBlobMatch = ivalues[1];
-      break;
-    case isc_catalogue:
-      CommandData.ISCState[0].mag_limit = rvalues[0];
-      CommandData.ISCState[0].norm_radius = rvalues[1] * DEG2RAD;
-      CommandData.ISCState[0].lost_radius = rvalues[2] * DEG2RAD;
-      break;
-    case isc_tolerances:
-      CommandData.ISCState[0].tolerance = 
-	(rvalues[0] / 3600. * DEG2RAD);
-      CommandData.ISCState[0].match_tol = (rvalues[1] / 100);
-      CommandData.ISCState[0].quit_tol = (rvalues[2] / 100);
-      CommandData.ISCState[0].rot_tol = (rvalues[3] * DEG2RAD);
-      break;
-    case isc_hold_current:
-      CommandData.ISCState[0].hold_current = ivalues[0];
-      break;
-    case isc_save_period:
-      CommandData.ISCControl[0].save_period = ivalues[0] * 100;
-      break;
-    case isc_gain:
-      CommandData.ISCState[0].gain = rvalues[0];
-      CommandData.ISCState[0].offset = ivalues[1];
-      break;
-    case isc_max_age:
-      CommandData.ISCControl[0].max_age = ivalues[0]/10; //convert from ms to frames
-      break;
-
-      /***************************************/
-      /********* OSC Commanding  *************/
-    case osc_set_focus:
-      CommandData.ISCState[1].focus_pos = ivalues[0];
-      break;
-    case osc_foc_off:
-      CommandData.ISCState[1].focusOffset = ivalues[0];
-      break;
-    case osc_set_aperture:
-      CommandData.ISCState[1].ap_pos = ivalues[0];
-      break;
-    case osc_pixel_centre:
-      CommandData.ISCState[1].roi_x = ivalues[0];
-      CommandData.ISCState[1].roi_y = ivalues[1];
-      CommandData.ISCState[1].display_mode = roi;
-      break;
-    case osc_blob_centre:
-      CommandData.ISCState[1].blob_num = ivalues[0];
-      CommandData.ISCState[1].display_mode = blob;
-      break;
-    case osc_offset:
-      CommandData.ISCState[1].azBDA = rvalues[0] * DEG2RAD;
-      CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
-      break;
-    case osc_integrate:
-      i = (int)(rvalues[0]/10. + 0.5) ;
-      if (i % 2) i++;
-      CommandData.ISCControl[1].fast_pulse_width = i;
-      i = (int)(rvalues[1]/10. + 0.5) ;
-      if (i % 2) i++;
-      CommandData.ISCControl[1].pulse_width = i;
-      break;
-    case osc_det_set:
-      CommandData.ISCState[1].grid = ivalues[0];
-      CommandData.ISCState[1].sn_threshold = rvalues[1];
-      CommandData.ISCState[1].mult_dist = ivalues[2];
-      break;
-    case osc_blobs:
-      CommandData.ISCState[1].minBlobMatch = ivalues[0];
-      CommandData.ISCState[1].maxBlobMatch = ivalues[1];
-      break;
-    case osc_catalogue:
-      CommandData.ISCState[1].mag_limit = rvalues[0];
-      CommandData.ISCState[1].norm_radius = rvalues[1] * DEG2RAD;
-      CommandData.ISCState[1].lost_radius = rvalues[2] * DEG2RAD;
-      break;
-    case osc_tolerances:
-      CommandData.ISCState[1].tolerance = 
-	(rvalues[0] / 3600. * DEG2RAD);
-      CommandData.ISCState[1].match_tol = (rvalues[1] / 100);
-      CommandData.ISCState[1].quit_tol = (rvalues[2] / 100);
-      CommandData.ISCState[1].rot_tol = (rvalues[3] * DEG2RAD);
-      break;
-    case osc_hold_current:
-      CommandData.ISCState[1].hold_current = ivalues[0];
-      break;
-    case osc_save_period:
-      CommandData.ISCControl[1].save_period = ivalues[0] * 100;
-      break;
-    case osc_gain:
-      CommandData.ISCState[1].gain = rvalues[0];
-      CommandData.ISCState[1].offset = ivalues[1];
-      break;
-    case osc_max_age:
-      CommandData.ISCControl[1].max_age = ivalues[0]/10; //convert from ms to frames
-      break;
       /***************************************/
       /********* SBSC Commanding  *************/ 
     case cam_any:
@@ -2711,9 +2352,6 @@ void InitCommandData()
   CommandData.Temporary.setLevel[3] = 1;
   CommandData.Temporary.setLevel[4] = 1;
 
-  CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
-  CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
-
   CommandData.power.sc_tx.rst_count = 0;
   CommandData.power.sc_tx.set_count = 0;
   CommandData.power.das.rst_count = 0;
@@ -2839,8 +2477,6 @@ void InitCommandData()
   CommandData.use_sun = 1;
   CommandData.use_pss1 = 1;
   CommandData.use_pss2 = 1;
-  CommandData.use_isc = 1;
-  CommandData.use_osc = 1;
   CommandData.use_mag = 1;
   CommandData.use_gps = 0;
   CommandData.lat_range = 1;
@@ -2872,14 +2508,6 @@ void InitCommandData()
   CommandData.offset_ifyaw_gy = 0;
   CommandData.gymask = 0x3f;
   
-  CommandData.pumps.level_on_bal = 2.0 * 1990.13;  
-  CommandData.pumps.level_off_bal = 0.5 * 1900.13;
-  CommandData.pumps.level_target_bal = 0.0 * 1990.13;
-  CommandData.pumps.gain_bal = 0.2;
-  CommandData.pumps.mode = bal_auto;
-  CommandData.pumps.heat_on = 1;
-  CommandData.pumps.heat_tset = 20;
-
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;
   CommandData.Temporary.dac_out[2] = 0x8000;
@@ -2967,82 +2595,6 @@ void InitCommandData()
   CommandData.Cryo.calib_pulse = 30; /* = 300 ms @ 100Hz */
   CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
   CommandData.Cryo.calib_repeats = -1;  //indefinitely
-
-  CommandData.ISCState[0].useLost = 1;
-  CommandData.ISCState[0].abort = 0;
-  CommandData.ISCState[0].pause = 0;
-  CommandData.ISCState[0].save = 0;
-  CommandData.ISCState[0].eyeOn = 1;
-  CommandData.ISCState[0].hold_current = 50;
-  CommandData.ISCState[0].autofocus = 0;
-  CommandData.ISCState[0].focus_pos = 0;
-  CommandData.ISCState[0].MCPFrameNum = 0;
-  CommandData.ISCState[0].focusOffset = 0;
-  CommandData.ISCState[0].ap_pos = 495;
-  CommandData.ISCState[0].display_mode = full;
-  /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
-  CommandData.ISCState[0].azBDA = 0.16527 * DEG2RAD;
-  CommandData.ISCState[0].elBDA = 0.81238 * DEG2RAD;
-  CommandData.ISCControl[0].max_age = 200; /* 2000 ms*/
-
-  CommandData.ISCState[0].brightStarMode = 0;
-  CommandData.ISCState[0].grid = 38;
-  CommandData.ISCState[0].minBlobMatch =  3;
-  CommandData.ISCState[0].maxBlobMatch =  7;
-  CommandData.ISCState[0].sn_threshold = 4.5;
-  CommandData.ISCState[0].mult_dist = 30;
-  CommandData.ISCState[0].mag_limit = 9.5;
-  CommandData.ISCState[0].norm_radius = 3. * DEG2RAD;
-  CommandData.ISCState[0].lost_radius = 6. * DEG2RAD;
-  CommandData.ISCState[0].tolerance = 10. / 3600. * DEG2RAD; /* 10 arcsec */
-  CommandData.ISCState[0].match_tol = 0.5;
-  CommandData.ISCState[0].quit_tol = 1;
-  CommandData.ISCState[0].rot_tol = 10 * DEG2RAD;
-  CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
-  CommandData.ISCState[0].gain = 1;
-  CommandData.ISCState[0].offset = 0;
-  CommandData.ISCControl[0].autofocus = 0;
-  CommandData.ISCControl[0].save_period = 12000; /* 120 sec */
-  CommandData.ISCControl[0].pulse_width = 18; /* 180.00 msec */
-  CommandData.ISCControl[0].fast_pulse_width = 8; /* 80.00 msec */
-
-  CommandData.ISCState[1].useLost = 1;
-  CommandData.ISCState[1].abort = 0;
-  CommandData.ISCState[1].pause = 0;
-  CommandData.ISCState[1].save = 0;
-  CommandData.ISCState[1].eyeOn = 1;
-  CommandData.ISCState[1].hold_current = 50;
-  CommandData.ISCState[1].autofocus = 0;
-  CommandData.ISCState[1].focus_pos = 0;
-  CommandData.ISCState[1].MCPFrameNum = 0;
-  CommandData.ISCState[1].focusOffset = 450;
-  CommandData.ISCState[1].ap_pos = 495;
-  CommandData.ISCState[1].display_mode = full;
-  /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
-  CommandData.ISCState[1].azBDA = -0.2862 * DEG2RAD;
-  CommandData.ISCState[1].elBDA = -0.5918 * DEG2RAD;
-  CommandData.ISCControl[1].max_age = 200;  /* 2000 ms*/
-
-  CommandData.ISCState[1].brightStarMode = 0;
-  CommandData.ISCState[1].grid = 38;
-  CommandData.ISCState[1].minBlobMatch =  3;
-  CommandData.ISCState[1].maxBlobMatch =  7;
-  CommandData.ISCState[1].sn_threshold = 4.5;
-  CommandData.ISCState[1].mult_dist = 30;
-  CommandData.ISCState[1].mag_limit = 9.5;
-  CommandData.ISCState[1].norm_radius = 3. * DEG2RAD;
-  CommandData.ISCState[1].lost_radius = 6. * DEG2RAD;
-  CommandData.ISCState[1].tolerance = 10. / 3600. * DEG2RAD; /* 10 arcsec */
-  CommandData.ISCState[1].match_tol = 0.5;
-  CommandData.ISCState[1].quit_tol = 1;
-  CommandData.ISCState[1].rot_tol = 10 * DEG2RAD;
-  CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
-  CommandData.ISCState[1].gain = 1;
-  CommandData.ISCState[1].offset = 0;
-  CommandData.ISCControl[1].autofocus = 0;
-  CommandData.ISCControl[1].save_period = 12000; /* 120 sec */
-  CommandData.ISCControl[1].pulse_width = 18; /* 180.00 msec */
-  CommandData.ISCControl[1].fast_pulse_width = 8; /* 80.00 msec */
 
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;

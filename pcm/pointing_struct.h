@@ -39,9 +39,6 @@
 
 #include <math.h>
 #include <time.h>
-#include "isc_protocol.h"   /* required for ISCData; get updates from
-                               Ed Chapin and/or the ISC computer */
-#include "sss_struct.h"
 
 #define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 #define SEC2RAD (1. / RAD2SEC)
@@ -101,17 +98,6 @@ struct RWMotorDataStruct{ //JAS -- this version for Spider copied from
   unsigned int err_count; // count of serious serial errors
 };
 
-/* Old Old BLAST-Pol RW data struct (RW used a Copley motor controller instead 
-   of AMC)
-struct RWMotorDataStruct{
-  double vel_rw; // in degrees per second
-  int temp; // drive temperature in deg Celcius
-  double current; // drive current read from controller
-  unsigned int status;  // drive status
-  unsigned int fault_reg; // drive fault register
-  unsigned short int drive_info; // motorinfo struct
-  unsigned int err_count; // count of serious serial errors
-};*/
 extern struct RWMotorDataStruct RWMotorData[3];
 extern int rw_motor_index; // defined in motors.c
 
@@ -154,9 +140,6 @@ struct PivotMotorDataStruct{
 };
 extern struct PivotMotorDataStruct PivotMotorData[3];
 extern int pivot_motor_index; // defined in motors.c
-
-extern sss_packet_data SunSensorData[3];
-extern int ss_index;
 
 /**********************************************/
 /*  SIPDataStruct                             */
@@ -248,12 +231,6 @@ struct PointingDataStruct {
   double pss2_elraw; //degrees
   double pss2_snr;
   double pss2_az;   //degrees
-  double isc_az; // degrees
-  double isc_el; // degrees
-  double isc_sigma; // degrees
-  double osc_az; // degrees
-  double osc_el; // degrees
-  double osc_sigma; // degrees
   double enc_el;
   double enc_sigma;
   double clin_el;
@@ -298,21 +275,6 @@ struct DGPSPosStruct{
   int n_sat;  //
 };
 
-struct ISCPulseType {
-  int age; // time since start of last trigger
-  int pulse_index;  // pulse counter index
-  int is_fast; // if a fast pulse is requested: set in motors.c
-  int last_save;  // time since last autosaved image
-  int pulse_req; // the pulse request waiting to be writen
-  int ack_wait; // whether we are waiting for ACK from SC
-  int ack_timeout; // length of time to wait for ACK before giving up
-  int start_wait; // whether we are waiting for data to come back from SC
-  int start_timeout; // length of time to wait for data before giving up
-  int force_sync; // A semaphore to force MCP into lock-step with ISC
-};
-
-extern struct ISCPulseType isc_pulses[2];
-
 struct AxesModeStruct {
   int az_mode;
   int el_mode;
@@ -335,23 +297,3 @@ extern int dgpsatt_index;
 
 extern time_t DGPSTime;
 
-/**********************************************/
-/* ISC Data struct                            */
-/* ISCSolutionStruct is a struct defined in   */
-/* isc_protocol.h which is copied verbatim    */
-/* from the ISC computer.                     */
-/*                                            */
-/*  Purpose: Store isc pointing and blob data */
-/*   Source: isc thread: isc.c                */
-/*     Used: Main thread;                     */
-extern struct ISCSolutionStruct ISCSolution[2][5]; /* isc.c */
-
-/* Read and write indicies must be separate for the ISC, since the
- * data essentially comes in bursts -- the average data rate is about
- * 0.4 isc packets per slow frame, but the burst rate can be ~2 packets
- * per slow frame.  There's also a separate index for the pointing solution
- * which points to the last solution packet sent back from ISC (which can be
- * different than the last packet sent back */
-extern int iscread_index[2];        /* isc.c */
-extern int iscwrite_index[2];       /* isc.c */
-extern int iscpoint_index[2];       /* isc.c */

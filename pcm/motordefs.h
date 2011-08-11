@@ -1,6 +1,5 @@
 /*
- * motordefs.h: Contains any functions or structures used by both
- *              copleycommand.c and pivotcommand.c
+ * motordefs.h: Contains motor controller functions or structures
  *
  */
 

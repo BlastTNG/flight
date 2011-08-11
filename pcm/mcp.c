@@ -502,11 +502,7 @@ static void GetACS()
   static struct BiPhaseStruct* v42PssAddr;
   static struct BiPhaseStruct* potHwprAddr;
 
-
-
-
   unsigned int rx_frame_index = 0;
-  int i_ss;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -558,7 +554,6 @@ static void GetACS()
   pss2_i4 = (double)(slow_data[v42PssAddr->index][v42PssAddr->channel]);
   hwpr_pot = (double)(slow_data[potHwprAddr->index][potHwprAddr->channel]);
 
-  i_ss = ss_index;
   ACSData.clin_elev = (double)(slow_data[elRawIfClinAddr->index][elRawIfClinAddr->channel]);
 
   ACSData.t = mcp_systime(NULL);
@@ -1016,13 +1011,10 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef BOLOTEST
-  pthread_t sunsensor_id;
   pthread_t compression_id;
   pthread_t bi0_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
-  pthread_t isc_id;
-  pthread_t osc_id;
 #endif
 #ifdef USE_XY_THREAD
   pthread_t xy_id;
@@ -1172,13 +1164,8 @@ int main(int argc, char *argv[])
 #endif
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-  if (use_starcams) {
-    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
-    pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
-  }
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
-  pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);

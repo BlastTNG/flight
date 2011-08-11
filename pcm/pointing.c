@@ -34,7 +34,6 @@
 
 #include "share/blast.h"
 #include "mcp.h"
-#include "isc_protocol.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
 #include "share/lut.h"
@@ -59,20 +58,9 @@
 #define FIR_LENGTH (60*30 * SR)
 
 /* Calibrations of the az of each sensor  */
-/*#define MAG_ALIGNMENT	  183.   //(4.2681)
-#define PSS1_ALIGNMENT	   43. // 343 + 60
-#define PSS2_ALIGNMENT	  120. // 135 -15
-#define SSS_ALIGNMENT	  -15.*/
-//#define MAG_ALIGNMENT	   -258.   //(4.2681)
-//#define PSS1_ALIGNMENT	  -153.8 // 343 + 60
-//#define PSS2_ALIGNMENT	  -226.3 // 135 -15
-//#define SSS_ALIGNMENT	  -90.
-//#define DGPS_ALIGNMENT    3.65
-
 #define MAG_ALIGNMENT      -164.6968
 #define PSS1_ALIGNMENT    -60.0
 #define PSS2_ALIGNMENT    -150.0
-#define SSS_ALIGNMENT     1.5532
 #define DGPS_ALIGNMENT    2.0232
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
@@ -593,385 +581,6 @@ static int PSS2Convert(double *azraw_pss2, double *elraw_pss2) {
 #define BUNK_FUDGE_FACTOR 400
 #define MIN_AMP_VAL       2000
 
-#define SSS_ALPHA 2.7
-
-struct sss_fit_data {
-  double t[3];
-  double y[3];
-  double sigma[3];
-};
-
-// SSS fitting function
-
-int cosa_f (const gsl_vector *x, void *sss_fit_data, gsl_vector *f) {
-
-  double  *t, *y, *sigma;
-  double  C;
-  double  phi0;
-  int     i;
-  double  yy, Yi;
-
-  t = ((struct sss_fit_data *)sss_fit_data)->t;
-  y = ((struct sss_fit_data *)sss_fit_data)->y;
-  sigma = ((struct sss_fit_data *)sss_fit_data)->sigma;
-
-  C = gsl_vector_get(x,0);
-  phi0 = gsl_vector_get(x,1);
-
-  for (i = 0; i < 3; i++) {
-    yy = cos(t[i]-phi0);
-    if (yy < 0.) return((int)GSL_ERANGE);
-    Yi = C * pow(yy, SSS_ALPHA);
-    gsl_vector_set (f, i, (Yi - y[i])/sigma[i]);
-  }
-
-  return((int)GSL_SUCCESS);
-
-}
-
-
-int cosa_df (const gsl_vector *x, void *sss_fit_data, gsl_matrix *J) {
-
-  double  *t, *sigma;
-  double  C;
-  double  phi0;
-  int     i;
-  double  s;
-  double  e, f, g;
-
-  t = ((struct sss_fit_data *)sss_fit_data)->t;
-  sigma = ((struct sss_fit_data *)sss_fit_data)->sigma;
-
-  C = gsl_vector_get(x,0);
-  phi0 = gsl_vector_get(x,1);
-
-  for (i = 0; i < 3; i++) {
-     // Jacobian matrix J(i,j) = dfi / dxj,
-     // where fi = (Yi - yi)/sigma[i],
-     //       Yi = C * pow(cos(phi0 - t), SSS_ALPHA)
-     // and the xj parameters are (C, phi0)
-     s = sigma[i];
-     f = cos(phi0-t[i]);
-     e = pow(f, SSS_ALPHA-1.);
-     g = sin(t[i]-phi0);
-     gsl_matrix_set (J, i, 0, e/s);
-     gsl_matrix_set (J, i, 1, C*SSS_ALPHA*e*g/s );   
-  }
-
-return((int)GSL_SUCCESS);
-
-}
-
-
-int cosa_fdf (const gsl_vector *x, void *data, gsl_vector *f, gsl_matrix *J) {
-
-  cosa_f (x, data, f);
-  cosa_df (x, data, J);
-
-  return((int)GSL_SUCCESS);
-
-}
-
-
-static int SSConvert(double *ss_az)
-{
-  int i_point, i_ss;
-  double az;
-  double sun_ra, sun_dec, jd;
-  static int last_i_ss = -1;
-
-  double max, dtmp;
-  double ave;
-  double min;
-  int i;
-  int i_max;
-  double sensors[SS_N_MAX];
-  unsigned int sensor_uint[SS_N_MAX];
-  //  double nominator, denominator;
-  //double t[3], y[3], sigma[3];   // data for fitting function
-
-  const  gsl_multifit_fdfsolver_type *T;
-  gsl_multifit_fdfsolver *s;
-  gsl_matrix  *covar;
-  //  struct sss_fit_data d = {t, y, sigma};
-  struct sss_fit_data d;
-  double x_init[2];    // Initial guesses of C and phi0
-  gsl_vector_view x;
-  const gsl_rng_type *type;
-  gsl_rng *r;
-  unsigned int  iter=0;
-  double  chi, dof, c;
-  int status;
-  struct gsl_multifit_function_fdf_struct  f;
-
-  // These numbers come from "First Technique" in the
-  // Original Sun Sensor Memo 5 March 2010
-  double module_calibration[] =
-  { /* Palestine 2010*/
-    //1. / 0.752,
-    //1. / 0.864,
-    //1. / 0.934,
-    //1. / 0.776,
-    //1. / 0.780,
-    //1. / 0.777,
-    //1. / 0.758,
-    //1. / 0.868,
-    //1. / 0.653,
-    //1. / 1.000,
-    //1. / 0.508,
-    //1. / 0.690
-    // Artificial sun cracked SSS windows.  Replaced.  Recalibrated.
-    // Palestine 30 June 2010 G.T.
-    1. / 0.579,
-    1. / 0.686,
-    1. / 0.739,
-    1. / 0.682,
-    1. / 1.000,
-    1. / 0.612,
-    1. / 0.598,
-    1. / 100.,
-    1. / 100.,
-    1. / 0.698,
-    1. / 0.599,
-    1. / 0.760,
-  };
-
-  // Corrects for slight offsets in angles between modules (not absolutely necessary to use)
-  double module_correction[] = 
-  {
-    0.370417,
-    -0.14058,
-    -0.20658,
-    -0.03258,
-    -0.33858,
-    0.711417,
-    0.004417,
-    -0.33258,
-    -0.08458,
-    0.358417,
-    -0.34658,
-    0.037417
-  };
-
-  // Needs to be modified depending on mounting orientation of sun sensor
-  /*  double module_offsets[] =
-  {
-    360.,
-    330.,
-    300.,
-    270.,
-    240.,
-    210.,
-    180.,
-    150.,
-    120.,
-    90.,
-    60.,
-    30.
-    };*/
-
-   double module_offsets[] = 
-   {
-     0.,
-     30.,
-     60.,
-     90.,
-     120.,
-     150.,
-     180.,
-     210.,
-     240.,
-     270.,
-     300.,
-     330.
-   };
-  
-  i_ss = GETREADINDEX(ss_index);
-  i_point = GETREADINDEX(point_index);
-
-  PointingData[point_index].ss_snr = 10.;
-
-  /* get current sun az, el */
-  jd = GetJulian(PointingData[i_point].t);
-  SunPos(jd, &sun_ra, &sun_dec);
-  sun_ra *= (12.0 / M_PI);
-  sun_dec *= (180.0 / M_PI);
-
-  if (sun_ra < 0)
-    sun_ra += 24;
-
-  radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
-      PointingData[i_point].lat, &sun_az, &sun_el);
-  
-  NormalizeAngle(&sun_az);
-  PointingData[point_index].sun_az = sun_az;
-  PointingData[point_index].sun_el = sun_el;
-
-  if (i_ss == last_i_ss)
-    return (0);
-
-  /* BEGIN NEW SSS RAW CALCULATIONS */
-
-  sensor_uint[0] = SunSensorData[i_ss].m01;
-  sensor_uint[1] = SunSensorData[i_ss].m02;
-  sensor_uint[2] = SunSensorData[i_ss].m03;
-  sensor_uint[3] = SunSensorData[i_ss].m04;
-  sensor_uint[4] = SunSensorData[i_ss].m05;
-  sensor_uint[5] = SunSensorData[i_ss].m06;
-  sensor_uint[6] = SunSensorData[i_ss].m07;
-  sensor_uint[7] = SunSensorData[i_ss].m08;
-  sensor_uint[7] = 1500.;  // This unit is not working
-  sensor_uint[8] = 1500.;  // This unit is suspect 6/30/10 G.T.
-                   //SunSensorData[i_ss].m09;
-  sensor_uint[9] = SunSensorData[i_ss].m10;
-  sensor_uint[10] = SunSensorData[i_ss].m11;
-  sensor_uint[11] = SunSensorData[i_ss].m12;
-
-  /* calibrate modules and determine module with max intensity */
-  max = 0.;  //max sensor value.
-  ave = 0.;
-  min = 1.e300;
-  i_max = -1;
-  for (i = 0; i < SS_N_MAX; i++) {
-    sensors[i] = module_calibration[i] * (double)sensor_uint[i];
-    ave += sensors[i];
-    if (sensors[i] > max) {
-      max = sensors[i];
-      i_max = i;
-    }
-    if (sensors[i] < min) {
-      min= sensors[i];
-    }
-  }
-  ave/=SS_N_MAX;
-
-  //Determine the minimum value of the immediate neighbors of the maximum
-  if (sensors[(i_max + 12 + 1) % 12] < sensors[(i_max + 12 - 1) % 12])
-    dtmp = sensors[(i_max + 12 + 1) % 12];
-  else
-    dtmp = sensors[(i_max + 12 - 1) % 12];
-
-  if (dtmp < min + MIN_AMP_VAL) { //this is a bunk condition
-    PointingData[point_index].ss_snr = 0.05;
-    return 0;
-  }
-
-  // Start to set up fit to cos^alpha function
-  // Not "t" is really "x, but we are following a gsl prototype which uses "t"
-  d.t[0] = (M_PI/180.)*(module_correction[(i_max + 12 - 1) % 12] - 30.);
-  d.t[1] = (M_PI/180.)*module_correction[i_max];
-  d.t[2] = (M_PI/180.)*(module_correction[(i_max + 12 + 1) % 12] + 30.);
-  d.y[0] = sensors[(i_max + 12 - 1) % 12];
-  d.y[1] = sensors[i_max];
-  d.y[2] = sensors[(i_max + 12 + 1) % 12];
-  d.sigma[0] = 1.;
-  d.sigma[1] = 1.;
-  d.sigma[2] = 1.;
-
-  // Software tape
-  // This takes cares of discarding signal when sun is in the gondola shadow
-  // This needs to be adjusted for how sun sensor is mounted
-  // May not need this if sun sensor at top of gondola
-  //if(i_max < 4 || i_max > 8) {
-  //  PointingData[point_index].ss_snr = 0.0;
-  //  return 0;
-  //}
- 
-  // SNR calculation
-  PointingData[point_index].ss_snr = max/ave;
-  if (PointingData[point_index].ss_snr<MIN_SS_SNR)
-    return 0;
-  
-  // Following lines removed 12 June 2010 GST
-  //nominator = sensors[(i_max+12+1)%12] - sensors[(i_max+12-1)%12];
-  //denominator = 2.0*sensors[i_max];
-  //denominator -= sensors[(i_max+12+1)%12] + sensors[(i_max+12-1)%12];
-  //denominator *= 1.732050808; //sqrt(3)
-  ////denominator *= cos(sun_el * (M_PI/180.0));
-//
-  //if (denominator == 0.0) {
-  //  // unphysical solution;
-  //  PointingData[point_index].ss_snr = 0.2;
-  //  return 0;
-  //}
-
-  // Following lines removed 12 June 2010 GST
-  //az = 0.5*atan2(nominator, denominator);
-  //if(aZ < -(1.2*M_PI/12.0) || az > 1.2*M_PI/12.0) {
-  //  // unphysical solution;
-  //  PointingData[point_index].ss_snr = 0.3;
-  //  return 0;
-  //}
-
-  // Fit the data to the cos fitting function using gsl library
-  covar = gsl_matrix_alloc(2, 2);
-  x_init[0] = sensors[i_max];  // initial guess for C
-  x_init[1] = 0.;  // 0 is a good initial guess for the angle
-  x = gsl_vector_view_array (x_init, 2);
-  gsl_rng_env_setup();
-  type = gsl_rng_default;
-  r = gsl_rng_alloc(type);
-
-  f.f = &cosa_f;
-  f.df = &cosa_df;
-  f.fdf = &cosa_fdf;
-  f.n = 3;
-  f.p = 2;
-  f.params =  &d;
-
-  T = gsl_multifit_fdfsolver_lmsder;
-  s = gsl_multifit_fdfsolver_alloc (T, 3, 2);
-  gsl_multifit_fdfsolver_set (s, &f, &x.vector);
-
-  do {
-    iter++;
-    status = gsl_multifit_fdfsolver_iterate(s);
-    if (status) break;
-    status = gsl_multifit_test_delta (s->dx, s->x, 1e-4, 1e-4);
-  } while (status == GSL_CONTINUE && iter < 500);
-
-  gsl_multifit_covar (s->J, 0.0, covar);
-
-  #define  FIT(i)  gsl_vector_get(s->x, i)
-  #define  ERR(i) sqrt(gsl_matrix_get(covar, i, i))
-//  C = FIT(0) +/- c*ERR(0)
-//  phi0 = FIT(1) +/- c*ERR(1)
-
-  chi = gsl_blas_dnrm2(s->f);
-  dof = 1;    // dof = n-p, n = number of points, p = number of parameters
-  c = GSL_MAX_DBL(1, chi / sqrt(dof));
-
-  //bprintf(info, "SSS: iter = %d/500, C = %g +/- %g, phi0 = %g +/- %g\n",
-  //        iter, FIT(0), c*ERR(0), FIT(1), c*ERR(1));
-  
-  az = FIT(1);
-
-  // Convert result from radians to degrees
-  az *= 180.0/M_PI;
-  PointingData[point_index].ss_phase = az;
-  PointingData[point_index].ss_az_rel_sun = -(az + module_offsets[i_max]);
-
-  // Temporary hack!!!! -GT
-  PointingData[point_index].ss_snr = (float)i_max;
-
-  
-  /* END SSS RAW CALCULATIONS */
-
-  *ss_az =  PointingData[point_index].ss_az_rel_sun + sun_az+ SSS_ALIGNMENT  ;
-
-  NormalizeAngle(ss_az);
-
-  gsl_multifit_fdfsolver_free (s);
-  gsl_matrix_free (covar);
-  gsl_rng_free (r);
-
-  return 1;
-
-}
-
-
-
-
 //make history 30s long so that nobody ever exceeds it (with sc_max_age)
 #define GY_HISTORY 3000
 static void RecordHistory(int index)
@@ -1035,6 +644,7 @@ int possible_solution(double az, double el, int i_point) {
 /* #define GYRO_VAR 3.7808641975309e-08
    (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
 #define GYRO_VAR (2.0E-6)
+#if 0	//TODO will eventually want to evolve spider star camera solutions
 static void EvolveSCSolution(struct ElSolutionStruct *e,
     struct AzSolutionStruct *a, double ifel_gy, double off_ifel_gy, 
     double ifroll_gy, double off_ifroll_gy, double ifyaw_gy, 
@@ -1207,6 +817,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
   e->since_last++;
   a->since_last++;
 }
+#endif
 
 /* Gyro noise: 7' / rt(hour) */
 /** the new solution is a weighted mean of:
@@ -1381,13 +992,12 @@ void Pointing(void)
   double ra, dec, az, el;
   static int j=0;
 
-  int ss_ok, mag_ok, dgps_ok;
+  int mag_ok, dgps_ok;
   int pss1_ok, pss2_ok;
   static unsigned dgps_since_ok = 500;
   static unsigned ss_since_ok = 500;
   static unsigned pss1_since_ok = 500;
   static unsigned pss2_since_ok = 500;
-  double ss_az = 0;
   double mag_az;
   double pss1_az = 0;
   double pss1_el = 0;
@@ -1433,28 +1043,6 @@ void Pointing(void)
     0.0001, // filter constant
     0, 0, // n_solutions, since_last
     NULL // firstruct					
-  };
-  static struct ElSolutionStruct ISCEl = {0.0, // starting angle
-    719.9 * 719.9, // starting varience
-    1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0 // n_solutions, since_last
-  };
-  static struct ElSolutionStruct OSCEl = {0.0, // starting angle
-    719.9 * 719.9, // starting varience
-    1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct NullAz = {91.0, // starting angle
     360.0 * 360.0, // starting varience
@@ -1528,30 +1116,6 @@ void Pointing(void)
     0, 0, // n_solutions, since_last
     NULL, NULL
     };
-  static struct AzSolutionStruct ISCAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
-    1.0 / M2DV(0.3), //sample weight
-    M2DV(0.2), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
-  static struct AzSolutionStruct OSCAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
-    1.0 / M2DV(0.3), //sample weight
-    M2DV(0.2), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
 
   if (firsttime) {
     firsttime = 0;
@@ -1701,22 +1265,6 @@ void Pointing(void)
       PointingData[point_index].lon);
 
   /*************************************/
-  /**      do ISC Solution            **/
-  EvolveSCSolution(&ISCEl, &ISCAz,
-      RG.ifel_gy,   PointingData[i_point_read].offset_ifel_gy,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el, 0);
-
-  /*************************************/
-  /**      do OSC Solution            **/
-  EvolveSCSolution(&OSCEl, &OSCAz,
-      RG.ifel_gy,   PointingData[i_point_read].offset_ifel_gy,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el, 1);
-
-  /*************************************/
   /**      do elevation solution      **/
   clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
   PointingData[i_point_read].clin_el_lut = clin_elev;
@@ -1736,13 +1284,6 @@ void Pointing(void)
   if (CommandData.use_elclin) {
     AddElSolution(&ElAtt, &ClinEl, 1);
   }
-  if (CommandData.use_isc) {
-    AddElSolution(&ElAtt, &ISCEl, 0);
-  }
-
-  if (CommandData.use_osc) {
-    AddElSolution(&ElAtt, &OSCEl, 0);
-  }
 
   PointingData[point_index].offset_ifel_gy = (CommandData.el_autogyro)
     ? ElAtt.offset_gy : CommandData.offset_ifel_gy;
@@ -1754,13 +1295,6 @@ void Pointing(void)
   mag_ok = MagConvert(&mag_az);
 
   PointingData[point_index].mag_az_raw = mag_az;
-
-  ss_ok = SSConvert(&ss_az);
-  if (ss_ok) {
-    ss_since_ok = 0;
-  } else {
-    ss_since_ok++;
-  }
 
   pss1_ok = PSS1Convert(&pss1_az, &pss1_el);
   if (pss1_ok) {
@@ -1803,13 +1337,6 @@ void Pointing(void)
       PointingData[point_index].el,
       dgps_az, dgps_ok);
 
-  /** Sun Sensor **/
-  EvolveAzSolution(&SSAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
-      ss_az, ss_ok);
-
   /** PSS1 **/
   EvolveAzSolution(&PSS1Az,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
@@ -1846,12 +1373,6 @@ void Pointing(void)
   }
   if (CommandData.use_gps) {
     AddAzSolution(&AzAtt, &DGPSAz, 1);
-  }
-  if (CommandData.use_isc) {
-    AddAzSolution(&AzAtt, &ISCAz, 0);
-  }
-  if (CommandData.use_osc) {
-    AddAzSolution(&AzAtt, &OSCAz, 0);
   }
 
   //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
@@ -1893,20 +1414,6 @@ void Pointing(void)
   PointingData[point_index].pss1_az = PSS1Az.angle;
   PointingData[point_index].pss2_az = PSS2Az.angle;
 
-
-  PointingData[point_index].isc_az = ISCAz.angle;
-  PointingData[point_index].isc_el = ISCEl.angle;
-  PointingData[point_index].isc_sigma = sqrt(ISCEl.varience + ISCEl.sys_var);
-  PointingData[point_index].offset_ifel_gy_isc = ISCEl.offset_gy;
-  PointingData[point_index].offset_ifroll_gy_isc = ISCAz.offset_ifroll_gy;
-  PointingData[point_index].offset_ifyaw_gy_isc = ISCAz.offset_ifyaw_gy;
-
-  PointingData[point_index].osc_az = OSCAz.angle;
-  PointingData[point_index].osc_el = OSCEl.angle;
-  PointingData[point_index].osc_sigma = sqrt(OSCEl.varience + OSCEl.sys_var);
-  PointingData[point_index].offset_ifel_gy_osc   = OSCEl.offset_gy;
-  PointingData[point_index].offset_ifroll_gy_osc = OSCAz.offset_ifroll_gy;
-  PointingData[point_index].offset_ifyaw_gy_osc  = OSCAz.offset_ifyaw_gy;
 
   /********************/
   /* Set Manual Trims */
@@ -1979,11 +1486,11 @@ void SetTrimToSC(int which)
 
   i_point = GETREADINDEX(point_index);
   if (which == 0) {
-    NewAzEl.az = PointingData[i_point].isc_az;
-    NewAzEl.el = PointingData[i_point].isc_el;
+    //NewAzEl.az = PointingData[i_point].isc_az;
+    //NewAzEl.el = PointingData[i_point].isc_el;
   } else {
-    NewAzEl.az = PointingData[i_point].osc_az;
-    NewAzEl.el = PointingData[i_point].osc_el;
+    //NewAzEl.az = PointingData[i_point].osc_az;
+    //NewAzEl.el = PointingData[i_point].osc_el;
   }
 
   NewAzEl.fresh = 1;

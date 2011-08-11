@@ -34,7 +34,6 @@
 #include "pointing_struct.h"
 #include "command_struct.h"
 #include "mcp.h"
-#include "copleycommand.h"
 #include "amccommand.h"
 #include "motordefs.h"
 
@@ -93,6 +92,11 @@ extern short int sbsc_trigger; /* Semaphore for SBSC trigger */
 #define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_sbsc */
 
 double az_accel = 0.1;
+
+//TODO temporarily declare react and elev structs, formerly in compleycommand
+//should replace with ones properly declared elsewhere
+struct MotorInfoStruct reactinfo;
+struct MotorInfoStruct elevinfo;
 
 /* opens communications with motor controllers */
 void openMotors()
@@ -648,12 +652,13 @@ static void SetAzScanMode(double az, double left, double right, double v,
       axes_mode.az_vel = v + D;
 
     if (az < left) {
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      //TODO: removed isc/osc, but want to keep fast/slow logic for BS cam
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel < v + D)
         axes_mode.az_vel += az_accel;
     } else if (az > right) {
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > -v + D)
         axes_mode.az_vel -= az_accel;
@@ -661,16 +666,20 @@ static void SetAzScanMode(double az, double left, double right, double v,
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > 0) {
         axes_mode.az_vel = v + D;
+#if 0
         if (az > right - 2.0*v) /* within 2 sec of turnaround */
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
         else
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+#endif
       } else {
         axes_mode.az_vel = -v + D;
+#if 0
         if (az < left + 2.0*v) /* within 2 sec of turnaround */
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
         else
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+#endif
       }
     }
     /* SBSC Trigger flag */
@@ -712,12 +721,12 @@ static void DoAzScanMode(void)
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = left;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else if (az > right) {
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = right;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else {
       // once we are within the new az/w range, we can mark this as 'last'.
       last_x = CommandData.pointing_mode.X;
@@ -932,7 +941,7 @@ static void DoRaDecGotoMode(void)
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = cel;
   axes_mode.el_vel = 0.0;
-  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+  //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
   sbsc_trigger = 1;
 }
 
@@ -1011,7 +1020,7 @@ static void DoNewCapMode(void)
       v_el = 0.0;
       targ_el = -r;
       el_next_dir = 1;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   }
@@ -1250,7 +1259,7 @@ static void DoNewBoxMode(void)
       v_el = 0.0;
       targ_el = -h*0.5;
       el_next_dir = 1;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   }
@@ -1444,7 +1453,7 @@ void DoQuadMode(void) // aka radbox
       v_el = 0.0;
       targ_el = 0.0;
       el_next_dir = 1;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   }
@@ -1549,10 +1558,12 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = CommandData.pointing_mode.del;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = CommandData.pointing_mode.vaz;
+#if 0
       isc_pulses[0].is_fast = isc_pulses[1].is_fast =
         (sqrt(CommandData.pointing_mode.vaz * CommandData.pointing_mode.vaz
               + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
          > MAX_ISC_SLOW_PULSE_SPEED) ? 1 : 0;
+#endif
       sbsc_trigger = 1;
       break;
     case P_AZEL_GOTO:
@@ -1562,7 +1573,7 @@ void UpdateAxesMode(void)
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = CommandData.pointing_mode.X;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       sbsc_trigger = 1;
       break;
     case P_AZ_SCAN:
@@ -1592,7 +1603,7 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       sbsc_trigger = 1;
       break;
     default:
@@ -1609,7 +1620,7 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       sbsc_trigger = 1;
       break;
   }
@@ -1918,199 +1929,12 @@ void* reactComm(void* arg)
   }
   return NULL;
 
-  /* JAS -- old reactComm thread from BLAST-Pol (when reaction wheel motor had
-      a Copley controller rather than the AMC one being used for Spider)*/
-
-  /*  //mark1
-  int n=0, j=0;
-  int i=0;
-  int temp_raw,curr_raw,stat_raw,faultreg_raw;
-  int firsttime=1,resetcount=0;
-  long vel_raw=0;
-  // Initialize values in the reactinfo structure.                            
-  reactinfo.open=0;
-  reactinfo.init=0;
-  reactinfo.err=0;
-  reactinfo.err_count=0;
-  reactinfo.closing=0;
-  reactinfo.reset=0;
-  reactinfo.disabled=2;
-  reactinfo.bdrate=9600;
-  reactinfo.writeset=0;
-  reactinfo.verbose=0;
-  strncpy(reactinfo.motorstr,"react",6);
-
-  nameThread("RWCom");
-
-  while(!InCharge) {
-    if(firsttime==1) {
-      bprintf(info,"I am not incharge thus I will not communicate with the 
-      RW motor.");
-      firsttime=0;
-    }
-    //in case we switch to ICC when serial communications aren't working
-    RWMotorData[0].vel_rw=ACSData.vel_rw;
-    RWMotorData[1].vel_rw=ACSData.vel_rw;
-    RWMotorData[2].vel_rw=ACSData.vel_rw;
-    usleep(20000);
-  }
-
-  firsttime=1;
-  bprintf(info,"Bringing the reaction wheel online.");
-  // Initialize structure RWMotorData.  Follows what was done in dgps.c
-  //  RWMotorData[0].vel_rw=0;
-  RWMotorData[0].temp=0;
-  RWMotorData[0].current=0.0;
-  RWMotorData[0].status=0;
-  RWMotorData[0].fault_reg=0;
-  RWMotorData[0].drive_info=0;
-  RWMotorData[0].err_count=0;
-
-  // Try to open the port.
-  while (reactinfo.open==0) {
-    reactinfo.verbose=CommandData.verbose_rw;
-    open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
-
-    if (i==10){
-     bputs(err,
-     "Reaction wheel port could not be opened after 10 attempts.\n");
-    }
-    i++;
-    if (reactinfo.open==1) {
-      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-      "Opened the serial port on attempt number %i",i); 
-    } else sleep(1);  
-  }
-
-  // Configure the serial port. If after 10 attempts the port is not 
-  // initialized it enters the main loop where it will trigger a reset command
- 
-  i=0;
-  while (reactinfo.init==0 && i <=9) {
-    reactinfo.verbose=CommandData.verbose_rw;
-    configure_copley(&reactinfo);
-    if (reactinfo.init==1) {
-      bprintf(info,"Initialized the controller on attempt number %i",i); 
-    } else if (i==9) {
-      bprintf(info,"Could not initialize the controller after %i attempts."
-      ,i); 
-    } else {
-      sleep(1);
-    }
-    i++;
-  }
-  rw_motor_index = 1; // index for writing to the RWMotor data struct
-  while (1){
-    reactinfo.verbose=CommandData.verbose_rw;
-    if((reactinfo.err & COP_ERR_MASK) > 0 ) {
-      reactinfo.err_count+=1;
-      if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT) {
-	reactinfo.reset=1;
-      }
-    }
-    if(CommandData.reset_rw==1 ) {
-      reactinfo.reset=1;
-      CommandData.reset_rw=0;
-    }
-    
-    // Make bitfield of controller info structure.
-    RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); 
-    RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) 
-                                           ? 65535: reactinfo.err_count;
-
-    // If we are still in the start up veto make sure the drive is disabled.
-    if(StartupVeto > 0) {
-      CommandData.disable_az=1;
-    }
-
-    if(reactinfo.closing==1){
-      rw_motor_index=INC_INDEX(rw_motor_index);
-      close_copley(&reactinfo);
-      usleep(10000);      
-    } else if (reactinfo.reset==1){
-      if(resetcount==0) {
-	bprintf(warning,"Resetting connection to Reaction Wheel controller.");
-      } else if ((resetcount % 10)==0) {
-	//	bprintf(warning,
-                "reset-> Unable to connect to Reaction Wheel after %i attempts.
-                ",resetcount);
-      }
-
-      resetcount++;
-      rw_motor_index=INC_INDEX(rw_motor_index);
-      resetCopley(REACT_DEVICE,&reactinfo); 
-      // if successful sets reactinfo.reset=0
-      usleep(10000);  // give time for motor bits to get written
-      if (reactinfo.reset==0) {
-	resetcount=0;
-        bprintf(info,"Controller successfuly reset!");
-      }
-
-    } else if(reactinfo.init==1){
-      if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-        "Attempting to enable the reaction wheel motor controller.");
-	n=enableCopley(&reactinfo);
-	if(n==0){    
-	  bprintf(info,"Reaction wheel motor controller is now enabled.");
-	  reactinfo.disabled=0;
-	}
-      } 
-      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || 
-         reactinfo.disabled==2)) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-        "Attempting to disable the reaction wheel motor controller.");
-	n=disableCopley(&reactinfo);
-	if(n==0){    
-	  bprintf(info,"Reaction wheel motor controller is now disabled.");
-	  reactinfo.disabled=1;
-	}
-      } 
-
-      vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/s
-      RWMotorData[rw_motor_index].vel_rw=((double) vel_raw)/RW_ENC_CTS/10.0
-                                          *360.0; 
-      j=j%4;
-      switch(j) {
-      case 0:
-	temp_raw=queryCopleyInd(COP_IND_TEMP,&reactinfo);
-        RWMotorData[rw_motor_index].temp=temp_raw; // units are deg Cel
-	break;
-      case 1:
-	curr_raw=queryCopleyInd(COP_IND_CURRENT,&reactinfo);
-        RWMotorData[rw_motor_index].current=((double) (curr_raw))/100.0; 
-        // units are Amps
-	break;
-      case 2:
-	stat_raw=queryCopleyInd(COP_IND_STATUS,&reactinfo);
-        RWMotorData[rw_motor_index].status=stat_raw; 
-	break;
-      case 3:
-	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&reactinfo);
-        RWMotorData[rw_motor_index].fault_reg=faultreg_raw; 
-	break;
-      }      
-      j++;
-      if (firsttime) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-        "Raw reaction wheel velocity is %i",vel_raw);
-	firsttime=0;
-      }
-      rw_motor_index=INC_INDEX(rw_motor_index);
-
-    } else {
-      rw_motor_index=INC_INDEX(rw_motor_index);
-      reactinfo.reset=1;
-      usleep(10000);
-    }
-    i++; 
-  }
-  return NULL;
-  */
 }
 
 void* elevComm(void* arg)
 {
+#if 0
+  //SJB: BLAST-Pol version. removed because it depends on copley stuff
 
   int n=0, j=0;
   int i=0;
@@ -2294,6 +2118,8 @@ void* elevComm(void* arg)
       usleep(10000);
     }
   }
+  return NULL;
+#endif
   return NULL;
 }
 

@@ -23,7 +23,6 @@
 #ifndef COMMAND_STRUCT_H
 #define COMMAND_STRUCT_H
 
-#include "isc_protocol.h"
 #include "command_list.h"
 #include "share/channels.h"
 #include <time.h>
@@ -42,8 +41,6 @@
 #define P_LOCK       8
 #define P_VBOX       9
 #define P_QUAD      10
-
-#define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
@@ -189,14 +186,6 @@ struct CommandDataStruct {
   
   enum {vtx_isc, vtx_osc, vtx_sbsc} vtx_sel[2];
 
-  /*
-  double apcu_reg;
-  double  apcu_trim;
-  short int apcu_auto;
-  double dpcu_reg;
-  double dpcu_trim;
-  short int dpcu_auto;
-  */
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
@@ -260,8 +249,6 @@ struct CommandDataStruct {
   unsigned char use_sun;
   unsigned char use_pss1;
   unsigned char use_pss2;
-  unsigned char use_isc;
-  unsigned char use_osc;
   unsigned char use_mag;
   unsigned char use_gps;
 
@@ -316,22 +303,6 @@ struct CommandDataStruct {
 
   int Phase[DAS_CARDS + 1];
   struct Step phaseStep;
-
-  struct {
-    enum {bal_rest, bal_manual, bal_auto} mode;
-    double level;
-
-    // servo parameters
-    double level_on_bal;
-    double level_off_bal;
-    double level_target_bal;
-    double gain_bal;
-
-    // heating card parameters
-    double heat_on;
-    double heat_tset;
-
-  } pumps;
 
   struct {
     int off;
@@ -413,19 +384,6 @@ struct CommandDataStruct {
   double lat;
   double lon;
 
-  /* Integrating Star Camera Stuff */
-  struct ISCStatusStruct ISCState[2];
-
-  struct {
-    int pulse_width;
-    int fast_pulse_width;
-    int reconnect;
-    int autofocus;
-    int save_period;
-    int auto_save;
-    int max_age;    //maximum allowed time between trigger and solution
-    int age;	    //last measured time between trigger and solution
-  } ISCControl[2];
 };
 
 struct ScheduleEvent {

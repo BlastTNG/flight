@@ -25,7 +25,7 @@
 /* NB: As of 7 Sep 2003 this file has been split up into four pieces:
  *
  * auxiliary.c: Auxiliary controls: Lock Motor, Pumps, Electronics Heat, ISC
- * das.c:       DAS, Bias and Cryo controls
+ * hk.c:        Housekeeping, Bias, and Cryo controls
  * motors.c:    Motor commanding and Scan modes
  * tx.c:        Pointing data writeback, ADC sync, and standard Tx frame control
  *
@@ -45,7 +45,6 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "mcp.h"
-#include "sss_struct.h"
 #include "chrgctrl.h"
 
 #define NIOS_BUFFER_SIZE 100
@@ -62,8 +61,6 @@ int EthernetOsc = 3;
 int EthernetSBSC = 3;
 
 extern struct AxesModeStruct axes_mode; /* motors.c */
-
-extern struct ISCStatusStruct ISCSentState[2];  /* isc.c */
 
 extern unsigned int sched_lst; /* sched_lst */
 
@@ -87,11 +84,6 @@ void ControlGyroHeat();
 void CameraTrigger(int which);
 void ControlPower(void);
 void VideoTx(void);
-
-/* in das.c */
-void BiasControl();
-void CryoControl(int index);
-void PhaseControl(void);
 
 /* in motors.c */
 void UpdateAxesMode(void);
@@ -425,334 +417,6 @@ static void SyncADC (void)
 }
 
 #ifndef BOLOTEST
-static struct NiosStruct* GetSCNiosAddr(char* field, int which)
-{
-  char buffer[FIELD_LEN];
-  sprintf(buffer, "%s_%s", field, which ? "osc" : "isc");
-
-  return GetNiosAddr(buffer);
-}
-
-static void StoreStarCameraData(int index, int which)
-{
-  static int firsttime[2] = {1, 1};
-  static int blob_index[2] = {0, 0};
-  static int blob_data[2][15][4];
-
-  int i, i_isc = 0;
-
-  /** isc fields **/
-  static struct NiosStruct* Blob0XAddr[2];
-  static struct NiosStruct* Blob1XAddr[2];
-  static struct NiosStruct* Blob2XAddr[2];
-  static struct NiosStruct* Blob0YAddr[2];
-  static struct NiosStruct* Blob1YAddr[2];
-  static struct NiosStruct* Blob2YAddr[2];
-  static struct NiosStruct* Blob0FAddr[2];
-  static struct NiosStruct* Blob1FAddr[2];
-  static struct NiosStruct* Blob2FAddr[2];
-  static struct NiosStruct* Blob0SAddr[2];
-  static struct NiosStruct* Blob1SAddr[2];
-  static struct NiosStruct* Blob2SAddr[2];
-  static struct NiosStruct* ErrorAddr[2];
-  static struct NiosStruct* MapmeanAddr[2];
-  static struct NiosStruct* FramenumAddr[2];
-  static struct NiosStruct* RdSigmaAddr[2];
-  static struct NiosStruct* RaAddr[2];
-  static struct NiosStruct* DecAddr[2];
-  static struct NiosStruct* HxFlagAddr[2];
-  static struct NiosStruct* McpnumAddr[2];
-  static struct NiosStruct* ApertAddr[2];
-  static struct NiosStruct* MdistAddr[2];
-  static struct NiosStruct* NblobsAddr[2];
-  static struct NiosStruct* FocusAddr[2];
-  static struct NiosStruct* FocOffAddr[2];
-  static struct NiosStruct* ThreshAddr[2];
-  static struct NiosStruct* GridAddr[2];
-  static struct NiosStruct* StateAddr[2];
-  static struct NiosStruct* MinblobsAddr[2];
-  static struct NiosStruct* MaxblobsAddr[2];
-  static struct NiosStruct* MaglimitAddr[2];
-  static struct NiosStruct* NradAddr[2];
-  static struct NiosStruct* LradAddr[2];
-  static struct NiosStruct* TolAddr[2];
-  static struct NiosStruct* MtolAddr[2];
-  static struct NiosStruct* QtolAddr[2];
-  static struct NiosStruct* RtolAddr[2];
-  static struct NiosStruct* FpulseAddr[2];
-  static struct NiosStruct* SpulseAddr[2];
-  static struct NiosStruct* XOffAddr[2];
-  static struct NiosStruct* YOffAddr[2];
-  static struct NiosStruct* IHoldAddr[2];
-  static struct NiosStruct* SavePrdAddr[2];
-  static struct NiosStruct* Temp1Addr[2];
-  static struct NiosStruct* Temp2Addr[2];
-  static struct NiosStruct* Temp3Addr[2];
-  static struct NiosStruct* Temp4Addr[2];
-  static struct NiosStruct* PressureAddr[2];
-  static struct NiosStruct* GainAddr[2];
-  static struct NiosStruct* OffsetAddr[2];
-  static struct NiosStruct* ExposureAddr[2];
-  static struct NiosStruct* TrigTypeAddr[2];
-  static struct NiosStruct* RealTrigAddr[2];
-  static struct NiosStruct* BlobIdxAddr[2];
-  static struct NiosStruct* FieldrotAddr[2];
-  static struct NiosStruct* DiskfreeAddr[2];
-  static struct NiosStruct* MaxslewAddr[2];
-  static struct NiosStruct* MaxAgeAddr[2];
-  static struct NiosStruct* AgeAddr[2];
-  static struct NiosStruct* PosFocusAddr[2];
-
-  if (firsttime[which]) {
-    firsttime[which] = 0;
-    Blob0XAddr[which] = GetSCNiosAddr("blob00_x", which);
-    Blob1XAddr[which] = GetSCNiosAddr("blob01_x", which);
-    Blob2XAddr[which] = GetSCNiosAddr("blob02_x", which);
-    Blob0YAddr[which] = GetSCNiosAddr("blob00_y", which);
-    Blob1YAddr[which] = GetSCNiosAddr("blob01_y", which);
-    Blob2YAddr[which] = GetSCNiosAddr("blob02_y", which);
-    Blob0FAddr[which] = GetSCNiosAddr("blob00_f", which);
-    Blob1FAddr[which] = GetSCNiosAddr("blob01_f", which);
-    Blob2FAddr[which] = GetSCNiosAddr("blob02_f", which);
-    Blob0SAddr[which] = GetSCNiosAddr("blob00_s", which);
-    Blob1SAddr[which] = GetSCNiosAddr("blob01_s", which);
-    Blob2SAddr[which] = GetSCNiosAddr("blob02_s", which);
-    ErrorAddr[which] = GetSCNiosAddr("error", which);
-    MapmeanAddr[which] = GetSCNiosAddr("mapmean", which);
-    RdSigmaAddr[which] = GetSCNiosAddr("rd_sigma", which);
-    FramenumAddr[which] = GetSCNiosAddr("framenum", which);
-    RaAddr[which] = GetSCNiosAddr("ra", which);
-    DecAddr[which] = GetSCNiosAddr("dec", which);
-    NblobsAddr[which] = GetSCNiosAddr("nblobs", which);
-    HxFlagAddr[which] = GetSCNiosAddr("hx_flag", which);
-    McpnumAddr[which] = GetSCNiosAddr("mcpnum", which);
-
-    StateAddr[which] = GetSCNiosAddr("state", which);
-    FocusAddr[which] = GetSCNiosAddr("focus", which);
-    FocOffAddr[which] = GetSCNiosAddr("foc_off", which);
-    ApertAddr[which] = GetSCNiosAddr("apert", which);
-    ThreshAddr[which] = GetSCNiosAddr("thresh", which);
-    GridAddr[which] = GetSCNiosAddr("grid", which);
-    MdistAddr[which] = GetSCNiosAddr("mdist", which);
-    MinblobsAddr[which] = GetSCNiosAddr("minblobs", which);
-    MaxblobsAddr[which] = GetSCNiosAddr("maxblobs", which);
-    MaglimitAddr[which] = GetSCNiosAddr("maglimit", which);
-    NradAddr[which] = GetSCNiosAddr("nrad", which);
-    LradAddr[which] = GetSCNiosAddr("lrad", which);
-    TolAddr[which] = GetSCNiosAddr("tol", which);
-    MtolAddr[which] = GetSCNiosAddr("mtol", which);
-    QtolAddr[which] = GetSCNiosAddr("qtol", which);
-    RtolAddr[which] = GetSCNiosAddr("rtol", which);
-    FpulseAddr[which] = GetSCNiosAddr("fpulse", which);
-    SpulseAddr[which] = GetSCNiosAddr("spulse", which);
-    XOffAddr[which] = GetSCNiosAddr("x_off", which);
-    YOffAddr[which] = GetSCNiosAddr("y_off", which);
-    IHoldAddr[which] = GetSCNiosAddr("i_hold", which);
-    SavePrdAddr[which] = GetSCNiosAddr("save_prd", which);
-    PressureAddr[which] = GetSCNiosAddr("pressure1", which);
-    GainAddr[which] = GetSCNiosAddr("gain", which);
-    OffsetAddr[which] = GetSCNiosAddr("offset", which);
-    ExposureAddr[which] = GetSCNiosAddr("exposure", which);
-    TrigTypeAddr[which] = GetSCNiosAddr("trig_type", which);
-    FieldrotAddr[which] = GetSCNiosAddr("fieldrot", which);
-    RealTrigAddr[which] = GetSCNiosAddr("real_trig", which);
-    BlobIdxAddr[which] = GetSCNiosAddr("blob_idx", which);
-    DiskfreeAddr[which] = GetSCNiosAddr("diskfree", which);
-    MaxslewAddr[which] = GetSCNiosAddr("maxslew", which);
-    MaxAgeAddr[which] = GetSCNiosAddr("max_age", which);
-    AgeAddr[which] = GetSCNiosAddr("age", which);
-    PosFocusAddr[which] = GetSCNiosAddr("pos_focus", which);
-
-    Temp1Addr[0] = GetNiosAddr("t_flange_isc");
-    Temp2Addr[0] = GetNiosAddr("t_heat_isc");
-    Temp3Addr[0] = GetNiosAddr("t_lens_isc");
-    Temp4Addr[0] = GetNiosAddr("t_comp_isc");
-    Temp1Addr[1] = GetNiosAddr("t_flange_osc");
-    Temp2Addr[1] = GetNiosAddr("t_heat_osc");
-    Temp3Addr[1] = GetNiosAddr("t_lens_osc");
-    Temp4Addr[1] = GetNiosAddr("t_comp_osc");
-  }
-
-  /** Increment isc index -- this only happens once per slow frame */
-  if (index == 0)
-    if (((iscread_index[which] + 1) % 5) != iscwrite_index[which]) {
-      iscread_index[which] = (iscread_index[which] + 1) % 5;
-      /* reset blob multiplexing if this is a pointing packet */
-      if (ISCSolution[which][iscread_index[which]].flag == 1)
-        blob_index[which] = 0;
-    }
-
-  i_isc = iscread_index[which];
-
-  /*** State Info ***/
-  WriteData(StateAddr[which], (unsigned int)(ISCSentState[which].save * 0x0001
-        + ISCSentState[which].pause * 0x0002
-        + ISCSentState[which].abort * 0x0004
-        + ISCSentState[which].autofocus * 0x0008
-        + ISCSentState[which].shutdown * 0x0010 /* 2 bits */
-        + ISCSentState[which].eyeOn * 0x0040
-        + ISCSolution[which][i_isc].heaterOn * 0x0080
-        + ISCSentState[which].useLost * 0x0100
-        + ISCSolution[which][i_isc].autofocusOn * 0x0200
-        ), NIOS_QUEUE);
-  WriteData(FocusAddr[which], (unsigned int)ISCSentState[which].focus_pos,
-      NIOS_QUEUE);
-  WriteData(FocOffAddr[which], (unsigned int)ISCSentState[which].focusOffset,
-      NIOS_QUEUE);
-  WriteData(ApertAddr[which], (unsigned int)ISCSentState[which].ap_pos,
-      NIOS_QUEUE);
-  WriteData(ThreshAddr[which], (unsigned int)(ISCSentState[which].sn_threshold
-        * 10.), NIOS_QUEUE);
-  WriteData(GridAddr[which], (unsigned int)ISCSentState[which].grid,
-      NIOS_QUEUE);
-  WriteData(MdistAddr[which], (unsigned int)ISCSentState[which].mult_dist,
-      NIOS_QUEUE);
-  WriteData(MinblobsAddr[which], (unsigned int)ISCSentState[which].minBlobMatch,
-      NIOS_QUEUE);
-  WriteData(MaxblobsAddr[which], (unsigned int)ISCSentState[which].maxBlobMatch,
-      NIOS_QUEUE);
-  WriteData(MaglimitAddr[which], (unsigned int)(ISCSentState[which].mag_limit
-        * 1000.), NIOS_QUEUE);
-  WriteData(NradAddr[which], (unsigned int)(ISCSentState[which].norm_radius
-        * RAD2I), NIOS_QUEUE);
-  WriteData(LradAddr[which], (unsigned int)(ISCSentState[which].lost_radius
-        * RAD2I), NIOS_QUEUE);
-  WriteData(TolAddr[which], (unsigned int)(ISCSentState[which].tolerance
-        * RAD2ARCSEC), NIOS_QUEUE);
-  WriteData(MtolAddr[which], (unsigned int)(ISCSentState[which].match_tol
-        * 65535.), NIOS_QUEUE);
-  WriteData(QtolAddr[which], (unsigned int)(ISCSentState[which].quit_tol
-        * 65535.), NIOS_QUEUE);
-  WriteData(RtolAddr[which], (unsigned int)(ISCSentState[which].rot_tol
-        * RAD2I), NIOS_QUEUE);
-  WriteData(XOffAddr[which], (unsigned int)(ISCSentState[which].azBDA * RAD2I),
-      NIOS_QUEUE);
-  WriteData(YOffAddr[which], (unsigned int)(ISCSentState[which].elBDA * RAD2I),
-      NIOS_QUEUE);
-  WriteData(IHoldAddr[which], (unsigned int)(ISCSentState[which].hold_current),
-      NIOS_QUEUE);
-  WriteData(Temp1Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp1 * 100.), NIOS_QUEUE);
-  WriteData(Temp2Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp2 * 100.), NIOS_QUEUE);
-  WriteData(Temp3Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp3 * 100.), NIOS_QUEUE);
-  WriteData(Temp4Addr[which],
-      (unsigned int)(ISCSolution[which][i_isc].temp4 * 100.), NIOS_QUEUE);
-  WriteData(PressureAddr[which],
-      (unsigned int)(ISCSolution[which][i_isc].pressure1 * 2000.), NIOS_QUEUE);
-  WriteData(GainAddr[which], (unsigned int)(ISCSentState[which].gain * 655.36),
-      NIOS_QUEUE);
-  WriteData(OffsetAddr[which], ISCSentState[which].offset, NIOS_QUEUE);
-  WriteData(ExposureAddr[which], ISCSentState[which].exposure / 100,
-      NIOS_QUEUE);
-  WriteData(TrigTypeAddr[which], ISCSentState[which].triggertype, NIOS_QUEUE);
-  WriteData(MaxslewAddr[which],
-      (unsigned int)ISCSentState[which].maxSlew / RAD2I, NIOS_QUEUE);
-
-  WriteData(FpulseAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].fast_pulse_width),
-      NIOS_QUEUE);
-  WriteData(SpulseAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].pulse_width), NIOS_QUEUE);
-  WriteData(MaxAgeAddr[which], 
-      (unsigned int)(CommandData.ISCControl[which].max_age*10), NIOS_QUEUE);
-  WriteData(AgeAddr[which], 
-      (unsigned int)(CommandData.ISCControl[which].age*10), NIOS_QUEUE);
-  WriteData(SavePrdAddr[which],
-      (unsigned int)(CommandData.ISCControl[which].save_period), NIOS_FLUSH);
-
-  /* The handshake flag -- for handshakes, we only write this. */
-  WriteData(HxFlagAddr[which], (unsigned int)ISCSolution[which][i_isc].flag,
-      NIOS_QUEUE);
-
-  /*** Blobs ***/
-  /* Save current blob data if the current frame is a pointing solution;
-   * we only do this once per slow frame */
-  if (index == 0 && ISCSolution[which][i_isc].flag)
-    for (i = 0; i < 15; ++i) {
-      blob_data[which][i][0] = (int)(ISCSolution[which][i_isc].blob_x[i] * 40.);
-      blob_data[which][i][1] = (int)(ISCSolution[which][i_isc].blob_y[i] * 40.);
-      blob_data[which][i][2] = ISCSolution[which][i_isc].blob_flux[i];
-      blob_data[which][i][3] = (int)(ISCSolution[which][i_isc].blob_sn[i]
-          * 65.536);
-    }
-
-  if (index == 0) {
-    /* When we're writing a handshake packet, these blobs are still from the
-     * previous pointing packet */
-    WriteData(Blob0XAddr[which], blob_data[which][blob_index[which] * 3 + 0][0],
-        NIOS_QUEUE);
-    WriteData(Blob1XAddr[which], blob_data[which][blob_index[which] * 3 + 1][0],
-        NIOS_QUEUE);
-    WriteData(Blob2XAddr[which], blob_data[which][blob_index[which] * 3 + 2][0],
-        NIOS_QUEUE);
-
-    WriteData(Blob0YAddr[which], blob_data[which][blob_index[which] * 3 + 0][1],
-        NIOS_QUEUE);
-    WriteData(Blob1YAddr[which], blob_data[which][blob_index[which] * 3 + 1][1],
-        NIOS_QUEUE);
-    WriteData(Blob2YAddr[which], blob_data[which][blob_index[which] * 3 + 2][1],
-        NIOS_QUEUE);
-
-    WriteData(Blob0FAddr[which], blob_data[which][blob_index[which] * 3 + 0][2],
-        NIOS_QUEUE);
-    WriteData(Blob1FAddr[which], blob_data[which][blob_index[which] * 3 + 1][2],
-        NIOS_QUEUE);
-    WriteData(Blob2FAddr[which], blob_data[which][blob_index[which] * 3 + 2][2],
-        NIOS_QUEUE);
-
-    WriteData(Blob0SAddr[which], blob_data[which][blob_index[which] * 3 + 0][3],
-        NIOS_QUEUE);
-    WriteData(Blob1SAddr[which], blob_data[which][blob_index[which] * 3 + 1][3],
-        NIOS_QUEUE);
-    WriteData(Blob2SAddr[which], blob_data[which][blob_index[which] * 3 + 2][3],
-        NIOS_QUEUE);
-
-    WriteData(BlobIdxAddr[which], blob_index[which], NIOS_QUEUE);
-
-    /* increment blob index once per slow frame */
-    blob_index[which] = (blob_index[which] + 1) % 5;
-  }
-
-  if (!ISCSolution[which][i_isc].flag)
-    return;
-
-  /* Everything after this happens only for pointing packets */
-
-  /*** Solution Info ***/
-  WriteData(FramenumAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].framenum, NIOS_QUEUE);
-  WriteData(RaAddr[which],
-      (unsigned int)(ISCSolution[which][i_isc].ra * RAD2LI), NIOS_QUEUE);
-  WriteData(DecAddr[which], (unsigned int)((ISCSolution[which][i_isc].dec
-          + M_PI / 2) * 2. * RAD2LI), NIOS_QUEUE);
-  WriteData(NblobsAddr[which], (unsigned int)ISCSolution[which][i_isc].n_blobs,
-      NIOS_QUEUE);
-
-  if (ISCSolution[which][i_isc].sigma * RAD2ARCSEC > 65535)
-    WriteData(RdSigmaAddr[which], 65535, NIOS_QUEUE);
-  else
-    WriteData(RdSigmaAddr[which], (unsigned int)(ISCSolution[which][i_isc].sigma
-          * RAD2ARCSEC), NIOS_QUEUE);
-
-  WriteData(FieldrotAddr[which], (unsigned int)(ISCSolution[which][i_isc].rot
-        * RAD2I), NIOS_QUEUE);
-
-  WriteData(McpnumAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].MCPFrameNum, NIOS_QUEUE);
-  WriteData(RealTrigAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].triggertype, NIOS_QUEUE);
-  WriteData(ErrorAddr[which], (unsigned int)ISCSolution[which][i_isc].cameraerr,
-      NIOS_QUEUE);
-  WriteData(MapmeanAddr[which], (unsigned int)ISCSolution[which][i_isc].mapMean,
-      NIOS_QUEUE);
-  WriteData(DiskfreeAddr[which],
-      (unsigned int)ISCSolution[which][i_isc].diskspace / 5, NIOS_QUEUE);
-  WriteData(PosFocusAddr[which], 
-      ISCSolution[which][i_isc].current_focus_pos, NIOS_QUEUE);
-}
-
 /************************************************************************/
 /*                                                                      */
 /*    Store derived acs and pointing data in frame                      */
@@ -942,7 +606,6 @@ static void StoreData(int index)
   int i_rw_motors;
   int i_elev_motors;
   int i_pivot_motors;
-  int i_ss;
   int i_point;
   int i_dgps;
   int sensor_veto;
@@ -1134,7 +797,6 @@ static void StoreData(int index)
    *             Fast Controls                     *
    ************************************************/
   i_point = GETREADINDEX(point_index);
-  i_ss = GETREADINDEX(ss_index);
   i_rw_motors = GETREADINDEX(rw_motor_index);
   i_elev_motors = GETREADINDEX(elev_motor_index);
   i_pivot_motors = GETREADINDEX(pivot_motor_index);
@@ -1164,10 +826,6 @@ static void StoreData(int index)
    ************************************************/
   if (index != 0) return;
 
-  /************ star cameras ************************/
-  StoreStarCameraData(index, 0); /* write ISC data */
-  StoreStarCameraData(index, 1); /* write OSC data */
-
   /* scan modes */
   WriteData(modeAzMcAddr, axes_mode.az_mode, NIOS_QUEUE);
   WriteData(modeElMcAddr, axes_mode.el_mode, NIOS_QUEUE);
@@ -1182,27 +840,6 @@ static void StoreData(int index)
   /********** Sun Sensor Data **********/
   WriteData(phaseSsAddr, PointingData[i_point].ss_phase * DEG2I, NIOS_QUEUE);
   WriteData(snrSsAddr, PointingData[i_point].ss_snr * 1000, NIOS_QUEUE);
-  WriteData(sunTimeSsAddr, SunSensorData[i_ss].sun_time, NIOS_QUEUE);
-  WriteData(tCpuSsAddr, SunSensorData[i_ss].t_cpu * 100, NIOS_QUEUE);
-  WriteData(tHddSsAddr, SunSensorData[i_ss].t_hdd * 100, NIOS_QUEUE);
-  WriteData(tCaseSsAddr, SunSensorData[i_ss].t_case * 100, NIOS_QUEUE);
-  WriteData(tPortSsAddr, SunSensorData[i_ss].t_port * 100, NIOS_QUEUE);
-  WriteData(tStarSsAddr, SunSensorData[i_ss].t_starboard * 100, NIOS_QUEUE);
-  WriteData(v5SsAddr, SunSensorData[i_ss].v5 * 100, NIOS_QUEUE);
-  WriteData(v12SsAddr, SunSensorData[i_ss].v12 * 100, NIOS_QUEUE);
-  WriteData(vBattSsAddr, SunSensorData[i_ss].vbatt * 100, NIOS_QUEUE);
-  WriteData(Raw01SsAddr, SunSensorData[i_ss].m01, NIOS_QUEUE);
-  WriteData(Raw02SsAddr, SunSensorData[i_ss].m02, NIOS_QUEUE);
-  WriteData(Raw03SsAddr, SunSensorData[i_ss].m03, NIOS_QUEUE);
-  WriteData(Raw04SsAddr, SunSensorData[i_ss].m04, NIOS_QUEUE);
-  WriteData(Raw05SsAddr, SunSensorData[i_ss].m05, NIOS_QUEUE);
-  WriteData(Raw06SsAddr, SunSensorData[i_ss].m06, NIOS_QUEUE);
-  WriteData(Raw07SsAddr, SunSensorData[i_ss].m07, NIOS_QUEUE);
-  WriteData(Raw08SsAddr, SunSensorData[i_ss].m08, NIOS_QUEUE);
-  WriteData(Raw09SsAddr, SunSensorData[i_ss].m09, NIOS_QUEUE);
-  WriteData(Raw10SsAddr, SunSensorData[i_ss].m10, NIOS_QUEUE);
-  WriteData(Raw11SsAddr, SunSensorData[i_ss].m11, NIOS_QUEUE);
-  WriteData(Raw12SsAddr, SunSensorData[i_ss].m12, NIOS_QUEUE);
   WriteData(azRelSunSsAddr, PointingData[i_point].ss_az_rel_sun * DEG2I,
       NIOS_QUEUE);
   /********* PSS data *************/
@@ -1297,20 +934,6 @@ static void StoreData(int index)
   WriteData(modeCalAddr, CommandData.Cryo.calibrator, NIOS_QUEUE);
   WriteData(periodCalAddr, CommandData.Cryo.calib_period, NIOS_QUEUE);
 
-  WriteData(azIscAddr,
-      (unsigned int)(PointingData[i_point].isc_az * DEG2I), NIOS_QUEUE);
-  WriteData(elIscAddr,
-      (unsigned int)(PointingData[i_point].isc_el * DEG2I), NIOS_QUEUE);
-  WriteData(sigmaIscAddr,
-      (unsigned int)(PointingData[i_point].isc_sigma * DEG2I), NIOS_QUEUE);
-
-  WriteData(azOscAddr,
-      (unsigned int)(PointingData[i_point].osc_az * DEG2I), NIOS_QUEUE);
-  WriteData(elOscAddr,
-      (unsigned int)(PointingData[i_point].osc_el * DEG2I), NIOS_QUEUE);
-  WriteData(sigmaOscAddr,
-      (unsigned int)(PointingData[i_point].osc_sigma * DEG2I), NIOS_QUEUE);
-
   WriteData(trimEncAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(elClinAddr,
@@ -1358,12 +981,11 @@ static void StoreData(int index)
   WriteData(dec4PAddr, (int)(CommandData.pointing_mode.dec[3] * DEG2I),
       NIOS_QUEUE);
 
-  sensor_veto = (!CommandData.use_sun) | ((!CommandData.use_isc) << 1) |
+  sensor_veto = (!CommandData.use_sun) |
     ((!CommandData.use_elenc) << 2) |
     ((!CommandData.use_mag) << 3) |
     ((!CommandData.use_gps) << 4) |
     ((!CommandData.use_elclin) << 5) |
-    ((!CommandData.use_osc) << 6) |
     ((CommandData.disable_el) << 10) |
     ((CommandData.disable_az) << 11) |
     ((CommandData.force_el) << 12) |
@@ -1613,8 +1235,6 @@ void UpdateBBCFrame()
 #ifdef USE_XY_THREAD
   StoreStageBus(index);
 #endif
-  CryoControl(index);
-  BiasControl();
   WriteChatter(index);
 
   /*** do slow Controls ***/
@@ -1624,7 +1244,6 @@ void UpdateBBCFrame()
     WriteAux();
     StoreActBus();
     SecondaryMirror();
-    PhaseControl();
     StoreHWPRBus();
 #ifndef BOLOTEST
     SetGyroMask();
@@ -1638,11 +1257,6 @@ void UpdateBBCFrame()
   if (!mcp_initial_controls)
     index = (index + 1) % FAST_PER_SLOW;
 
-#ifndef BOLOTEST
-  ControlAuxMotors();
-  CameraTrigger(0); /* isc */
-  CameraTrigger(1); /* osc */
-#endif
   //make sure frame is flushed
   RawNiosWrite(-1,-1,NIOS_FLUSH);
 }
