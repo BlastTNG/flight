@@ -216,6 +216,7 @@ int GetHWPRi(double pot_val)
 
 void ControlHWPR(struct ezbus *bus)
 {
+#if 0	  //BLAST-Pol code, removed to compile with no more CommandData.Cryo
   static int repeat_pos_cnt = 0;
   static int overshooting = 0;
   static int first_time = 1;
@@ -578,6 +579,7 @@ void ControlHWPR(struct ezbus *bus)
       CommandData.Cryo.hwprPos = 50;
     }
   }
+#endif
 }
 
 void DoHWPR(struct ezbus* bus)

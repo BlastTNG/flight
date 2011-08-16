@@ -62,6 +62,9 @@ struct chat_buf {
 #define MAX_LINE_LENGTH 1024
 
 //#define USE_FIFO_CMD
+#ifdef TEST_RUN
+#define USE_FIFO_CMD
+#endif
 
 //#define USE_XY_THREAD
 

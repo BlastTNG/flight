@@ -490,20 +490,22 @@ void DoSched(void)
     /* enable hwpr autostepping */
     event.command = hwpr_step_on;
     ScheduledCommand(&event);
+#if 0	  //BLAST-Pol leftovers
     /* pot_valve_open */
     event.command = pot_valve_open;
     ScheduledCommand(&event);
     event.command = pot_valve_on;
     ScheduledCommand(&event);
+    /* fridge autocylce system active */
+    event.command = auto_cycle;
+    event.is_multi = 0;
+    ScheduledCommand(&event);
+#endif
     /* turn off lock motor hold current */
     event.command = lock_i;
     event.is_multi = 1;
     event.ivalues[0] = 50;
     event.ivalues[1] = 0;
-    ScheduledCommand(&event);
-    /* fridge autocylce system active */
-    event.command = auto_cycle;
-    event.is_multi = 0;
     ScheduledCommand(&event);
 
     // out of sched mode for a while
@@ -545,6 +547,7 @@ void DoSched(void)
   if (!doing_schedule) {
     bputs(info, "Scheduler: *** Entering schedule file mode.  ***\n"
         "Scheduler: *** Running initial schedule controls.  ***\n");
+#if 0	//BLAST-Pol leftovers
     /* bias fixed */
     event.command = fixed;
     event.is_multi = 0;
@@ -555,6 +558,7 @@ void DoSched(void)
     event.ivalues[0] = 130; /* ms */
     event.ivalues[1] = 600; /* s */
     //ScheduledCommand(&event);
+#endif
 
     bputs(info, "Scheduler: *** Searching for current pointing mode. ***\n");
 

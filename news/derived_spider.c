@@ -303,7 +303,8 @@ union DerivedUnion DerivedChannels[] = {
 	   "",
 	   ""
    ),
-  BITFIELD("stat_1_rw",
+  //TODO jamil, you changed the field names, are these bitfields correct?
+  BITFIELD("stat_dr_rw",
 	   "ST_SHORT_CIRC_RW",
 	   "ST_AMP_OVER_T_RW",
 	   "ST_OVER_V_RW",
@@ -321,7 +322,7 @@ union DerivedUnion DerivedChannels[] = {
 	   "ST_MOT_BREAK_ACT_RW",
 	   "ST_PWM_OUT_DISAB_RW"
    ),
-  BITFIELD("stat_2_rw",
+  BITFIELD("stat_s1_rw",
 	   "ST_POS_SOFT_LIM_RW",
 	   "ST_NEG_SOFT_LIM_RW",
 	   "ST_FOLLOW_ERR_RW",
@@ -339,6 +340,21 @@ union DerivedUnion DerivedChannels[] = {
 	   "",
 	   ""
    ),
+#if 0	//removed by jamil, TODO resurrect?
+  BITFIELD("fault_rw",
+	   "ST_F_CRC_RW",
+	   "ST_F_AD_OFF_RANGE_RW",
+	   "ST_F_SHORT_CIRC_RW",
+	   "ST_F_AMP_OVER_T_RW",
+	   "",
+	   "ST_F_OVER_VOLT_RW",
+	   "ST_F_UNDER_VOLT_RW",
+	   "ST_F_FEEDBACK_ERR_RW",
+	   "ST_F_MOT_PHAS_ERR_RW",
+	   "ST_F_FOLL_ERR_RW",
+	   "ST_F_OVER_CURR_RW"
+	   ),
+#endif
   BITFIELD("drive_info_rw",
 	   "DR_INFO_OPEN_RW",
 	   "DR_INFO_RESET_RW",
@@ -428,19 +444,6 @@ union DerivedUnion DerivedChannels[] = {
 	   "ST_F_FOLL_ERR_EL",
 	   "ST_F_OVER_CURR_EL"
 	   ),
-  BITFIELD("fault_rw",
-	   "ST_F_CRC_RW",
-	   "ST_F_AD_OFF_RANGE_RW",
-	   "ST_F_SHORT_CIRC_RW",
-	   "ST_F_AMP_OVER_T_RW",
-	   "",
-	   "ST_F_OVER_VOLT_RW",
-	   "ST_F_UNDER_VOLT_RW",
-	   "ST_F_FEEDBACK_ERR_RW",
-	   "ST_F_MOT_PHAS_ERR_RW",
-	   "ST_F_FOLL_ERR_RW",
-	   "ST_F_OVER_CURR_RW"
-	   ),
   BITFIELD("stat_dr_piv",
 	   "ST_BRIDGE_ENA_PIV",
 	   "ST_DYN_BRAKE_ENA_PIV",
@@ -483,6 +486,7 @@ union DerivedUnion DerivedChannels[] = {
   BITWORD("MOVE_STAT_HWPR","stat_control_hwpr",3,3),
   BITWORD("READ_BEFORE_HWPR","stat_control_hwpr",6,2),
   BITWORD("READ_AFTER_HWPR","stat_control_hwpr",8,2),
+#if 0	  //leftover BLAST_Pol Cryo deriveds. TODO update
   /* CRYO */
 
   COMMENT("Internal (to mcp) reference of the cryo stat"),
@@ -626,8 +630,7 @@ union DerivedUnion DerivedChannels[] = {
 //  COMMENT("Level Sensor"),
 //  LINTERP("HE4_LITRE", "HE4_LEV", "/data/etc/he4_litre.txt"),
 //  LINTERP("HE4_PERCENT", "HE4_LEV", "/data/etc/he4_percent.txt"),
+#endif
 
-  COMMENT("\"Named\" Bolometers"),
-  
   END_OF_DERIVED_CHANNELS
 };

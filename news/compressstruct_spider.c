@@ -18,6 +18,7 @@ struct fieldStreamStruct {
 */
 
 struct fieldStreamStruct streamList[] = {
+#if 0	//TODO BLAST-Pol compressstruct, redo completely once more settled
   {"time",1,1,NOAVG,NODX,8,SLOW},
   {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
   {"framenum",1,1,NOAVG,DX,8,SLOW},
@@ -84,11 +85,13 @@ struct fieldStreamStruct streamList[] = {
   {"el_raw_if_clin", 1, 5, AVG, DX, 8, SLOW},
   {"el_clin", 1, 5, AVG, DX, 8, SLOW},
   
+#endif
 
 END_OF_STREAM
 };
 
 char *frameList[] = {
+#if 0	//TODO BLAST-Pol compressstruct, redo completely once more settled
   "acc_act",
   "accel_az",
   "acc_hwpr",
@@ -99,11 +102,6 @@ char *frameList[] = {
   "alt",
   "alt_dgps",
   "alt_sip",
-  "ampl_250_bias",
-  "ampl_350_bias",
-  "ampl_500_bias",
-  "ampl_rox_bias",
-  "ampl_x_bias",
   "ant_e_dgps",
   "ant_n_dgps",
   "ants_lim_dgps",
@@ -183,9 +181,6 @@ char *frameList[] = {
   "del_p",
   "dest_az_mc",
   "dest_el_mc",
-  "dig21_das",
-  "dig43_das",
-  "dig65_das",
   "dir_az_mc",
   "dir_dgps",
   "dir_el_mc",
@@ -358,19 +353,6 @@ char *frameList[] = {
   "move_tol_sbsc",
   "mtol_isc",
   "mtol_osc",
-  "n13_phase",
-  "n17_phase",
-  "n18_phase",
-  "n19_phase",
-  "n21_phase",
-  "n22_phase",
-  "n23_phase",
-  "n25_phase",
-  "n26_phase",
-  "n27_phase",
-  "n29_phase",
-  "n30_phase",
-  "n31_phase",
   "nblobs_isc",
   "nblobs_osc",
   "nrad_isc",
@@ -415,8 +397,6 @@ char *frameList[] = {
   "pos_hwpr",
   "pos_lock",
   "pot_lock",
-  "pot_raw_hwpr",
-  "pot_ref_hwpr",
   "pref_tp_sf",
   "pref_ts_sf",
   "pressure1_isc",
@@ -429,8 +409,6 @@ char *frameList[] = {
   "ra_2_p",
   "ra_3_p",
   "ra_4_p",
-  "ramp_ampl_bias",
-  "ramp_ena_bias",
   "rate_iridium",
   "rate_tdrss",
   "raw_01_ss",
@@ -523,17 +501,7 @@ char *frameList[] = {
   "t_dac_box",
   "t_port_das",
   "t_dcdc_acs",
-  "td_charcoal",
   "t_dgps",
-  "td_hs_charcoal",
-  "td_hs_pot",
-  "td_jfet",
-  "td_lhe",
-  "td_lhe_filt",
-  "td_ln",
-  "td_ln_filt",
-  "td_vcs_filt",
-  "td_vcs_jfet",
   "t_earth",
   "t_el",
   "t_flange_isc",
@@ -580,14 +548,7 @@ char *frameList[] = {
   "t_push_plate",
   "t_pyr_clin",
   "t_sun",
-  "tr_300mk_strap",
   "t_port_rec",
-  "tr_he3_fridge",
-  "tr_he4_pot",
-  "tr_horn_250",
-  "tr_horn_350",
-  "tr_horn_500",
-  "tr_hwpr",
   "trigger_isc",
   "trigger_osc",
   "trig_l_sbsc",
@@ -686,5 +647,6 @@ char *frameList[] = {
   //"n17c21",
   //"n25c21",
   ""
+#endif
 };
 

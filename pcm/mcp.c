@@ -62,7 +62,7 @@
 /* Define global variables */
 int bbc_fp = -1;
 unsigned int debug = 0;
-short int SouthIAm;
+short int BitsyIAm;
 struct ACSDataStruct ACSData;
 
 unsigned int BBFrameIndex;
@@ -515,7 +515,7 @@ static void GetACS()
     xMagAddr = GetBiPhaseAddr("x_mag");
     yMagAddr = GetBiPhaseAddr("y_mag");
     zMagAddr = GetBiPhaseAddr("z_mag");
-    velRWAddr = GetBiPhaseAddr("vel_rw");
+    velRWAddr = GetBiPhaseAddr("vel_ser_rw");
     resPivAddr = GetBiPhaseAddr("res_piv");
     v11PssAddr = GetBiPhaseAddr("v1_1_pss");
     v21PssAddr = GetBiPhaseAddr("v2_1_pss");
@@ -948,19 +948,21 @@ static int IsNewFrame(unsigned int d)
 }
 
 /* Polarity crisis: am I north or south? */
-static int AmISouth(int *not_cryo_corner)
+static int AmIBitsy()
 {
-  char buffer[2];
-  *not_cryo_corner = 1;
+  char buffer[16];
 
-  if (gethostname(buffer, 1) == -1 && errno != ENAMETOOLONG) {
+  if (gethostname(buffer, 15) == -1 && errno != ENAMETOOLONG) {
     berror(err, "System: Unable to get hostname");
-  } else if (buffer[0] == 'p') {
-    *not_cryo_corner = 0;
-    bprintf(info, "System: Cryo Corner Mode Activated\n");
   }
 
-  return (buffer[0] == 's') ? 1 : 0;
+#ifdef TEST_RUN
+  //check that flight code is not compiled as a test run
+  if (strncmp(buffer, "itsy", 15) == 0 || strncmp(buffer, "bitsy", 15) == 0)
+    bputs(fatal, "Flight code can't be compiled with TEST_RUN\n");
+#endif
+
+  return (buffer[0] == 'b') ? 1 : 0;
 }
 
 /* Signal handler called when we get a hup, int or term */
@@ -1004,7 +1006,6 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
   pthread_t abus_id;
-  int use_starcams = 1;
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -1129,13 +1130,10 @@ int main(int argc, char *argv[])
     memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
   }
 
-  /* Find out whether I'm north or south */
-  SouthIAm = AmISouth(&use_starcams);
-
-  if (SouthIAm)
-    bputs(info, "System: I am South.\n");
-  else
-    bputs(info, "System: I am not South.\n");
+  /* Find out whether I'm itsy or bitsy */
+  BitsyIAm = AmIBitsy();
+  if (BitsyIAm) bputs(info, "System: I am Bitsy.\n");
+  else bputs(info, "System: I am not Bitsy.\n");
 
 #ifndef BOLOTEST
   pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
@@ -1164,10 +1162,11 @@ int main(int argc, char *argv[])
 #endif
 #ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-
+#ifndef TEST_RUN
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
-
-  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
+#endif
+  //TODO CompressionWriter segfaults on (currently) empty compressstruct
+  //pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);

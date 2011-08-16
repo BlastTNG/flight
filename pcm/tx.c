@@ -49,7 +49,7 @@
 
 #define NIOS_BUFFER_SIZE 100
 
-extern short int SouthIAm;
+extern short int BitsyIAm;
 
 extern int StartupVeto;
 
@@ -73,6 +73,10 @@ double round(double x);
 /* in actuators.c */
 void StoreActBus(void);
 void SecondaryMirror(void);
+
+/* in hk.c */
+void PhaseControl(void);	//hk.c
+void BiasControl(void);
 
 /* in hwpr.c */
 void StoreHWPRBus(void);
@@ -126,9 +130,7 @@ static void WriteAux(void)
   static struct NiosStruct* bi0FifoSizeAddr;
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
-  static struct NiosStruct* he4LevOldAddr;
   static struct NiosStruct* statusEthAddr;
-  static struct BiPhaseStruct* he4LevReadAddr;
   static struct NiosStruct* partsSchedAddr;
   static struct NiosStruct* upslotSchedAddr;
   
@@ -145,9 +147,6 @@ static void WriteAux(void)
     firsttime = 0;
     statusMCCAddr = GetNiosAddr("status_mcc");
     statusMCCReadAddr = ExtractBiPhaseAddr(statusMCCAddr);
-
-    he4LevOldAddr = GetNiosAddr("he4_lev_old");
-    he4LevReadAddr = GetBiPhaseAddr("he4_lev");
 
     tChipFlcAddr = GetNiosAddr("t_chip_flc");
     tCpuFlcAddr = GetNiosAddr("t_cpu_flc");
@@ -169,21 +168,15 @@ static void WriteAux(void)
   if (StartupVeto>0) {
     InCharge = 0;
   } else {
-    InCharge = !(SouthIAm
+    InCharge = !(BitsyIAm
 	^ (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] & 0x1));
   }
   if (InCharge != incharge && InCharge) {
-    bprintf(info, "System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
+    bprintf(info, "System: I, %s, have gained control.\n", BitsyIAm ? "Bitsy" : "Itsy");
     CommandData.actbus.force_repoll = 1;
   } else if (InCharge != incharge) {
-    bprintf(info, "System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
+    bprintf(info, "System: I, %s, have lost control.\n", BitsyIAm ? "Bitsy" : "Itsy");
   }
-
-  if (CommandData.Cryo.heliumLevel)
-    CommandData.Cryo.he4_lev_old
-      = slow_data[he4LevReadAddr->index][he4LevReadAddr->channel];
-
-  WriteData(he4LevOldAddr, CommandData.Cryo.he4_lev_old, NIOS_QUEUE);
 
   incharge = InCharge;
 
@@ -229,7 +222,7 @@ static void WriteAux(void)
        NIOS_QUEUE);
 
   mccstatus =        
-    (SouthIAm ? 0x1 : 0x0) +                 //0x01
+    (BitsyIAm ? 0x1 : 0x0) +                 //0x01
     (CommandData.at_float ? 0x2 : 0x0) +     //0x02
     (CommandData.uplink_sched ? 0x08 : 0x00) + //0x08
     (CommandData.sucks ? 0x10 : 0x00) +      //0x10
@@ -346,9 +339,9 @@ void SetGyroMask (void) {
 /* in each superframe.                                           */
 /*****************************************************************/
 //list node numbers for sync, which may have gaps
-#define NUM_SYNC 29
-const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,6,8,9,10,12,13,14,\
-			16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
+#define NUM_SYNC 19
+const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,6,8,9,10,11,12,13,14,\
+			15,16,17,18,19};
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
 static void SyncADC (void)
 {
@@ -556,8 +549,6 @@ static void StoreData(int index)
   static struct NiosStruct *dgpsTrimAddr;
   static struct NiosStruct *trimSsAddr;
 
-  static struct NiosStruct *modeCalAddr;
-  static struct NiosStruct *periodCalAddr;
   static struct NiosStruct *lstSchedAddr;
 
   /* low level scan mode diagnostics */
@@ -686,8 +677,6 @@ static void StoreData(int index)
     elrawPss2Addr = GetNiosAddr("elraw_pss2");
     snrPss2Addr = GetNiosAddr("snr_pss2");
     azPss2Addr = GetNiosAddr("az_pss2");  // evolved az
-    modeCalAddr = GetNiosAddr("mode_cal");
-    periodCalAddr = GetNiosAddr("period_cal");
     azIscAddr = GetNiosAddr("az_isc");
     elIscAddr = GetNiosAddr("el_isc");
     sigmaIscAddr = GetNiosAddr("sigma_isc");
@@ -930,9 +919,6 @@ static void StoreData(int index)
       NIOS_QUEUE);
   WriteData(elSunAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
   WriteData(trimSsAddr, CommandData.ss_az_trim * DEG2I, NIOS_QUEUE);
-
-  WriteData(modeCalAddr, CommandData.Cryo.calibrator, NIOS_QUEUE);
-  WriteData(periodCalAddr, CommandData.Cryo.calib_period, NIOS_QUEUE);
 
   WriteData(trimEncAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
 
@@ -1241,10 +1227,12 @@ void UpdateBBCFrame()
   if (index == 0) {
     if (!mcp_initial_controls)
       SyncADC();
-    WriteAux();
-    StoreActBus();
-    SecondaryMirror();
-    StoreHWPRBus();
+    //WriteAux();
+    //StoreActBus();
+    //SecondaryMirror();
+    //StoreHWPRBus();
+    PhaseControl();
+    BiasControl();
 #ifndef BOLOTEST
     SetGyroMask();
     ChargeController();

@@ -20,7 +20,7 @@
 /* SLOWDL_TAKE_BIT  takes bit numbits, counting from 1 */
 /* "src", type, numbits, min, max */
 struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
-
+#if 0	//TODO old slow_dl, redo completely once more settled
     {"lst",           SLOWDL_FORCE_INT, 16,     0, 24},
     {"status_mcc",    SLOWDL_U_MASK,    16},
     {"lat",           SLOWDL_FORCE_INT, 16, -90.0, -30},
@@ -108,6 +108,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
     {"mask_gy",       SLOWDL_U_MASK,    16},
 
     {"pot_lock",      SLOWDL_U_MASK,    16}
+#endif
 };
 
 void InitSlowDL(void) {

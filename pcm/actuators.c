@@ -701,6 +701,7 @@ static double filterTemp(int num, double data)
 /* decide on primary and secondary temperature, write focus-related fields */
 void SecondaryMirror(void)
 {
+#if 0	//BLAST-Pol leftovers
   static int firsttime = 1;
 
   static struct NiosStruct* correctionSfAddr;
@@ -810,6 +811,7 @@ void SecondaryMirror(void)
   WriteData(correctionSfAddr, correction, NIOS_QUEUE);
   WriteData(ageSfAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
   WriteData(offsetSfAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
+#endif
 }
 
 static char name_buffer[100];
