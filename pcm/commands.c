@@ -92,7 +92,7 @@ extern short InCharge; /* tx.c */
 extern int doing_schedule; /* sched.c */
 
 extern pthread_t watchdog_id;  /* mcp.c */
-extern short int SouthIAm;
+extern short int BitsyIAm;
 pthread_mutex_t mutex;
 
 extern char lst0str[82];
@@ -640,119 +640,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
 
 #endif
 
-    case ramp:
-      CommandData.Bias.biasRamp = 1;
-      break;
-    case fixed:
-      CommandData.Bias.biasRamp = 0;
-      break;
-
-    case level_on:   /* Cryo commanding */
-      CommandData.Cryo.heliumLevel = -1;
-      break;
-    case level_off:
-      CommandData.Cryo.heliumLevel = 0;
-      break;
-    case level_pulse:
-      CommandData.Cryo.heliumLevel = 350;  /* unit is 100Hz frames */
-      break;
-    case hwpr_enc_on:
-      CommandData.Cryo.hwprPos = -1;
-      break;
-    case hwpr_enc_off:
-      CommandData.Cryo.hwprPos = 0;
-      break;
-    case hwpr_enc_pulse:
-      CommandData.Cryo.hwprPos = 50;
-      break;
-    case charcoal_on:
-      CommandData.Cryo.charcoalHeater = 1;
-      CommandData.Cryo.fridgeCycle = 0;
-      break;
-    case charcoal_off:
-      CommandData.Cryo.charcoalHeater = 0;
-      CommandData.Cryo.fridgeCycle = 0;
-      break;
-    case hs_charcoal_on:
-      CommandData.Cryo.hsCharcoal= 1;
-      CommandData.Cryo.fridgeCycle = 0;
-      break;
-    case hs_charcoal_off:
-      CommandData.Cryo.hsCharcoal= 0;
-      CommandData.Cryo.fridgeCycle = 0;
-      break;
-    case auto_cycle:
-      CommandData.Cryo.fridgeCycle = 1;
-      CommandData.Cryo.force_cycle = 0;
-      break;
-    case fridge_cycle:
-      CommandData.Cryo.fridgeCycle = 1;
-      CommandData.Cryo.force_cycle = 1;
-      break;
-    case cal_on:
-      CommandData.Cryo.calibrator = on;
-      break;
-    case cal_off:
-      CommandData.Cryo.calibrator = off;
-      break;
-    case jfet_on:
-      CommandData.Cryo.JFETHeat = 1;
-      CommandData.Cryo.autoJFETheat = 0;
-      break;
-    case jfet_off:
-      CommandData.Cryo.JFETHeat = 0;
-      CommandData.Cryo.autoJFETheat = 0;
-      break;
-    case hs_pot_on:
-      CommandData.Cryo.hsPot = 1;
-      break;
-    case hs_pot_off:
-      CommandData.Cryo.hsPot = 0;
-      break;
-    case bda_on:
-      CommandData.Cryo.BDAHeat = 1;
-      break;
-    case bda_off:
-      CommandData.Cryo.BDAHeat = 0;
-      break;
-    case pot_valve_open:
-      CommandData.Cryo.potvalve_open = 100;
-      CommandData.Cryo.potvalve_close = 0;
-      break;
-    case pot_valve_close:
-      CommandData.Cryo.potvalve_close = 100;
-      CommandData.Cryo.potvalve_open = 0;
-      break;
-    case pot_valve_on:
-      CommandData.Cryo.potvalve_on = 1;
-      break;
-    case pot_valve_off:
-      CommandData.Cryo.potvalve_on = 0;
-      break;
-    case l_valve_open:
-      CommandData.Cryo.lvalve_open = 100;
-      CommandData.Cryo.lvalve_close = 0;
-      break;
-    case l_valve_close:
-      CommandData.Cryo.lvalve_close = 100;
-      CommandData.Cryo.lvalve_open = 0;
-      break;
-    case he_valve_on:
-      CommandData.Cryo.lhevalve_on = 1;
-      break;
-    case he_valve_off:
-      CommandData.Cryo.lhevalve_on = 0;
-      break;
-    case ln_valve_on:
-      CommandData.Cryo.lnvalve_on = 1;
-      break;
-    case ln_valve_off:
-      CommandData.Cryo.lnvalve_on = 0;
-      break;
-    case auto_jfetheat:
-      CommandData.Cryo.autoJFETheat = 1;
-      break;
-
     /* Lock */
     case pin_in:
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF | LS_IGNORE_EL;
@@ -863,18 +750,18 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hwpr.use_pot = 1;
       break;
 
-    case reap_north:  /* Miscellaneous commands */
-    case reap_south:
-      if ((command == reap_north && !SouthIAm) || 
-	  (command == reap_south && SouthIAm)) {
+    case reap_itsy:  /* Miscellaneous commands */
+    case reap_bitsy:
+      if ((command == reap_itsy && !BitsyIAm) || 
+	  (command == reap_bitsy && BitsyIAm)) {
 	bprintf(err, "Commands: Reaping the watchdog tickle on command.");
 	pthread_cancel(watchdog_id);
       }
       break;
-    case north_halt:
-    case south_halt:
-      if ((command == north_halt && !SouthIAm) || 
-	  (command == south_halt && SouthIAm)) {
+    case halt_itsy:
+    case halt_bitsy:
+      if ((command == halt_itsy && !BitsyIAm) || 
+	  (command == halt_bitsy && BitsyIAm)) {
         bputs(warning, "Commands: Halting the MCC\n");
         if (system("/sbin/reboot") < 0)
 	  berror(fatal, "Commands: failed to reboot, dying\n");
@@ -1468,77 +1355,37 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Bias  *****************/
-      /* used to be multiplied by 2 here, but screw up prev_satus */
-      /* need to multiply later instead */
-    case bias_level_500:    /* Set bias 1 (500) */
-      CommandData.Bias.bias[0] = ivalues[0];
-      CommandData.Bias.setLevel[0] = 1;
+    case dac_ampl:
+      if (ivalues[0] < N_DAC) {
+	CommandData.Bias.bias[ivalues[0]] = ivalues[1];
+	CommandData.Bias.setLevel[ivalues[0]] = 1;
+      } else for (i=0; i<N_DAC; i++) {
+	CommandData.Bias.bias[i] = ivalues[1];
+	CommandData.Bias.setLevel[i] = 1;
+      }
       break;
-    case bias_level_350:   /* Set bias 2 (350) */
-      CommandData.Bias.bias[1] = ivalues[0];
-      CommandData.Bias.setLevel[1] = 1;
-      break;
-    case bias_level_250:   /* Set bias 3 (250) */
-      CommandData.Bias.bias[2] = ivalues[0];
-      CommandData.Bias.setLevel[2] = 1;
-      break;
-    case bias_level_rox:   /* Set bias 4 (ROX) */
-      CommandData.Bias.bias[3] = ivalues[0];
-      CommandData.Bias.setLevel[3] = 1;
-      break;
-    case bias_level_x:   /* Set bias 5 (spare) */
-      CommandData.Bias.bias[4] = ivalues[0];
-      CommandData.Bias.setLevel[4] = 1;
-      break;
-    case phase:
-      CommandData.phaseStep.do_step=0;
-      if (ivalues[0] >= DAS_START && ivalues[0] <= DAS_START + DAS_CARDS*4/3
-	  && ivalues[0]%4 != 0)
-        CommandData.Phase[(ivalues[0] - DAS_START)*3/4] = ivalues[1];
-      else if (ivalues[0] == 0)
-        for (i = 0; i < DAS_CARDS; ++i)
-          CommandData.Phase[i] = ivalues[1];
-      else if (ivalues[0] == 13)
-        CommandData.Phase[DAS_CARDS] = ivalues[1];
-      break;
-    case phase_step:
-      CommandData.phaseStep.do_step=1;
-      CommandData.phaseStep.start=ivalues[0];
-      CommandData.phaseStep.end=ivalues[1];
-      CommandData.phaseStep.nsteps=ivalues[2];
-      CommandData.phaseStep.dt=ivalues[3];
+    case dac_phase:
+      CommandData.Phase.step.do_step = 0;
+      if (ivalues[0] < N_DAC) {
+	CommandData.Phase.phase[ivalues[0]] = rvalues[1] * 65535.0/360.0;
+      } else for (i=0; i<N_DAC; i++) {
+	CommandData.Phase.phase[i] = rvalues[1] * 65535.0/360.0;
+      }
       break;
     case bias_step:
-      CommandData.Bias.biasStep.do_step = 1;
-      CommandData.Bias.biasStep.start = ivalues[0];
-      CommandData.Bias.biasStep.end = ivalues[1];
-      CommandData.Bias.biasStep.nsteps = ivalues[2];
-      CommandData.Bias.biasStep.dt = ivalues[3];
-      CommandData.Bias.biasStep.pulse_len = ivalues[4];
-      CommandData.Bias.biasStep.arr_ind = ivalues[5];
+      CommandData.Bias.step.do_step = 1;
+      CommandData.Bias.step.start = ivalues[0];
+      CommandData.Bias.step.end = ivalues[1];
+      CommandData.Bias.step.nsteps = ivalues[2];
+      CommandData.Bias.step.dt = ivalues[3];
+      CommandData.Bias.step.which = ivalues[4];
       break;
-      /***************************************/
-      /*********** Cal Lamp  *****************/
-    case cal_pulse:
-      CommandData.Cryo.calibrator = pulse;
-      CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-      break;
-    case cal_repeat:
-      CommandData.Cryo.calibrator = repeat;
-      CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-      CommandData.Cryo.calib_period = ivalues[1] * 5;
-      if (ivalues[2] > 0)
-	CommandData.Cryo.calib_repeats = ivalues[2];
-      else
-	CommandData.Cryo.calib_repeats = -1;
-      
-      break;
-
-      /***************************************/
-      /********* Cryo heat   *****************/
-    case jfet_set:
-      CommandData.Cryo.JFETSetOn = rvalues[0];
-      CommandData.Cryo.JFETSetOff = rvalues[1];
+    case phase_step:
+      CommandData.Phase.step.do_step=1;
+      CommandData.Phase.step.start=rvalues[0] * 65535.0/360.0;
+      CommandData.Phase.step.end=rvalues[1] * 65535.0/360.0;
+      CommandData.Phase.step.nsteps=ivalues[2];
+      CommandData.Phase.step.dt=ivalues[3];
       break;
 
 #ifndef BOLOTEST
@@ -2324,27 +2171,10 @@ void InitCommandData()
   CommandData.hwpr.force_repoll = 0;
   CommandData.hwpr.repeats = 0;
 
-  CommandData.Bias.biasRamp = 0;
-  CommandData.Bias.biasStep.do_step = 0;
-  CommandData.Bias.biasStep.start = 1;
-  CommandData.Bias.biasStep.end = 32767;
-  CommandData.Bias.biasStep.nsteps = 1000;
-  CommandData.Bias.biasStep.pulse_len = 10;
-  CommandData.Bias.biasStep.dt = 1000;
-  CommandData.Bias.biasStep.arr_ind = 0;
-
-  CommandData.phaseStep.do_step = 0;
-  CommandData.phaseStep.start = 1;
-  CommandData.phaseStep.end = 32767;
-  CommandData.phaseStep.nsteps = 1000;
-  CommandData.phaseStep.dt = 1000;
-
+  CommandData.Bias.step.do_step = 0;
+  CommandData.Phase.step.do_step = 0;
   //forces reload of saved bias values
-  CommandData.Bias.setLevel[0] = 1;
-  CommandData.Bias.setLevel[1] = 1;
-  CommandData.Bias.setLevel[2] = 1;
-  CommandData.Bias.setLevel[3] = 1;
-  CommandData.Bias.setLevel[4] = 1;
+  for (i=0; i<N_DAC; i++) CommandData.Bias.setLevel[i] = 1;
 
   CommandData.Temporary.setLevel[0] = 1;
   CommandData.Temporary.setLevel[1] = 1;
@@ -2389,16 +2219,6 @@ void InitCommandData()
     CommandData.power.adc_reset[i] = 0;
 
   CommandData.gyheat.age = 0;
-
-  CommandData.Cryo.BDAHeat = 0;
-
-  CommandData.Cryo.potvalve_on = 0;
-  CommandData.Cryo.potvalve_open = 0;
-  CommandData.Cryo.potvalve_close = 0;
-  CommandData.Cryo.lhevalve_on = 0;
-  CommandData.Cryo.lvalve_open = 0;
-  CommandData.Cryo.lvalve_close = 0;
-  CommandData.Cryo.lnvalve_on = 0;
 
   /* don't use the fast gy offset calculator */
   CommandData.fast_offset_gy = 0;
@@ -2514,11 +2334,18 @@ void InitCommandData()
   CommandData.Temporary.dac_out[3] = 0x8000;
   CommandData.Temporary.dac_out[4] = 0x8000;
 
-  CommandData.Bias.bias[0] = 10000;   //500um
-  CommandData.Bias.bias[1] = 10000;   //350um
-  CommandData.Bias.bias[2] = 10000;   //250um
-  CommandData.Bias.bias[3] = 1050;   //ROX
-  CommandData.Bias.bias[4] = 16384;  //X
+  for (i=0; i<N_DAC; i++) CommandData.Bias.bias[i] = DAC_ZERO;
+  CommandData.Bias.step.start = DAC_MIN;
+  CommandData.Bias.step.end = DAC_MAX;
+  CommandData.Bias.step.nsteps = 1000;
+  CommandData.Bias.step.dt = 1000;
+  CommandData.Bias.step.which = 0;
+
+  for (i=0; i<N_DAC; i++) CommandData.Phase.phase[i] = PHASE_MIN;
+  CommandData.Phase.step.start = PHASE_MIN;
+  CommandData.Phase.step.end = PHASE_MAX;
+  CommandData.Phase.step.nsteps = 1000;
+  CommandData.Phase.step.dt = 1000;
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */
@@ -2578,24 +2405,6 @@ void InitCommandData()
 
   CommandData.pin_is_in = 1;
 
-  CommandData.Cryo.charcoalHeater = 0;
-  CommandData.Cryo.hsCharcoal = 1;
-  CommandData.Cryo.fridgeCycle = 0;
-  CommandData.Cryo.force_cycle = 0;
-  CommandData.Cryo.hsPot = 0;
-  CommandData.Cryo.heliumLevel = 0;
-  CommandData.Cryo.he4_lev_old = 0;
-  CommandData.Cryo.hwprPos = 0;
-  CommandData.Cryo.hwpr_pos_old = 0;
-  CommandData.Cryo.JFETHeat = 0;
-  CommandData.Cryo.autoJFETheat = 1;
-  CommandData.Cryo.JFETSetOn = 120;
-  CommandData.Cryo.JFETSetOff = 135;
-  CommandData.Cryo.calibrator = repeat;
-  CommandData.Cryo.calib_pulse = 30; /* = 300 ms @ 100Hz */
-  CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
-  CommandData.Cryo.calib_repeats = -1;  //indefinitely
-
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;
   CommandData.temp3 = 0;
@@ -2603,20 +2412,6 @@ void InitCommandData()
 
   CommandData.lat = -77.86;  //McMurdo Building 096
   CommandData.lon = -167.04; //Willy Field Dec 2010
-
-  CommandData.Phase[0] = 27468;
-  CommandData.Phase[1] = 27468;
-  CommandData.Phase[2] = 27468;
-  CommandData.Phase[3] = 27468;
-  CommandData.Phase[4] = 27468;
-  CommandData.Phase[5] = 27468;
-  CommandData.Phase[6] = 10791;
-  CommandData.Phase[7] = 10791;
-  CommandData.Phase[8] = 10791;
-  CommandData.Phase[9] = 10791;
-  CommandData.Phase[10] = 11118;
-  CommandData.Phase[11] = 11118;
-  CommandData.Phase[12] = 11600;    //ROX
 
   WritePrevStatus();
 }

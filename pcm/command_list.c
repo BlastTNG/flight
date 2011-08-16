@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.17 $";
+const char *command_list_serial = "$Revision: 1.18 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        /*"Balance",*/      "Waveplate Rotator",
@@ -156,55 +156,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
   {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
   {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
-  {COMMAND(fixed), "fixed level bias", GR_BIAS},
-  {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
-
-  {COMMAND(auto_jfetheat), "automatically reguate jfet heater level",
-    GR_CRYO_HEAT},
-  {COMMAND(charcoal_on), "charcoal heater on, helium fridge autocycle off",
-    GR_CRYO_HEAT},
-  {COMMAND(charcoal_off), "charcoal heater off, helium fridge autocycle off",
-    GR_CRYO_HEAT},
-  {COMMAND(hs_charcoal_on), "charcoal heat switch on, fridge autocycle off",
-    GR_CRYO_HEAT},
-  {COMMAND(hs_charcoal_off), "charcoal heat switch off, fridge autocycle off",
-    GR_CRYO_HEAT},
-  {COMMAND(auto_cycle), "activate helium fridge autocycle system",
-    GR_CRYO_HEAT},
-  {COMMAND(fridge_cycle),
-    "manually cycle helium fridge now, fridge autocycle on", GR_CRYO_HEAT},
-  {COMMAND(jfet_on), "manually turn JFET heater on, auto control off",
-    GR_CRYO_HEAT},
-  {COMMAND(jfet_off), "manually turn JFET heater off, auto control off",
-    GR_CRYO_HEAT},
-  {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO_HEAT},
-  {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO_HEAT},
-  {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO_HEAT},
-  {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO_HEAT},
-
-  {COMMAND(cal_on), "calibrator on", GR_CRYO_HEAT},
-  {COMMAND(cal_off), "calibrator off", GR_CRYO_HEAT},
-
-  {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
-  {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
-  {COMMAND(level_pulse), "helium level sensor pulse", GR_CRYO_CONTROL},
-  {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO_CONTROL | GR_HWPR},
-  {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO_CONTROL | GR_HWPR},
-  {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO_CONTROL | GR_HWPR},
-  {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO_CONTROL},
-  {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO_CONTROL},
-  {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
-    GR_CRYO_CONTROL},
-  {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
-    GR_CRYO_CONTROL},
-  {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO_CONTROL},
-  {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO_CONTROL},
-  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO_CONTROL | CONFIRM},
-  {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO_CONTROL},
-  {COMMAND(pot_valve_open), "set He4 pot valve direction open",
-    GR_CRYO_CONTROL},
-  {COMMAND(pot_valve_close), "set He4 pot valve direction close",
-    GR_CRYO_CONTROL},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -222,11 +173,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(vtx2_osc), "put OSC video on transmitter #2", GR_TELEM},
   {COMMAND(vtx2_sbsc), "put SBSC video on transmitter #2", GR_TELEM},
 
-  {COMMAND(north_halt), "ask MCP to halt north MCC", GR_MISC | CONFIRM},
-  {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
-  {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", 
+  {COMMAND(halt_itsy), "ask MCP to halt *ITSY* MCC", GR_MISC | CONFIRM},
+  {COMMAND(halt_bitsy), "ask MCP to halt *BITSY* MCC", GR_MISC | CONFIRM},
+  {COMMAND(reap_itsy), "ask MCP to reap the *ITSY* watchdog tickle", 
     GR_MISC | CONFIRM},
-  {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", 
+  {COMMAND(reap_bitsy), "ask MCP to reap the *BITSY* watchdog tickle", 
     GR_MISC | CONFIRM},
   {COMMAND(xy_panic), "stop XY stage motors immediately", GR_STAGE},
 
@@ -670,77 +621,34 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*************** Bias  *****************/
-  {COMMAND(bias_level_250), "bias level 250 micron", GR_BIAS, 1,
+  //TODO make bias commands more specific: ntd ampl/phase, cernox ampl/phase, heat ampls
+  {COMMAND(dac_ampl), "Set bias signal amplitude", GR_BIAS, 2,
     {
-      {"Level", 0, 32767, 'i', "AMPL_250_BIAS"}
+      {"Which (0-31,32=all)", 0, 32, 'i', ""},
+      {"Amplitude (full=32767)", 1, MAX_15BIT, 'i', ""}
     }
   },
-  {COMMAND(bias_level_350), "bias level 350 micron", GR_BIAS, 1,
+  {COMMAND(dac_phase), "Set lock-in phase on card 4", GR_BIAS, 1,
     {
-      {"Level", 0, 32767, 'i', "AMPL_350_BIAS"}
+      {"Which (0-31,32=all)", 0, 32, 'i', ""},
+      {"Phase (degrees)", 0, 360, 'f', ""}
     }
   },
-  {COMMAND(bias_level_500), "bias level 500 micron", GR_BIAS, 1,
+  {COMMAND(bias_step), "step through different bias levels", GR_BIAS, 5,
     {
-      {"Level", 0, 32767, 'i', "AMPL_500_BIAS"}
-    }
-  },
-  {COMMAND(bias_step), "step through different bias levels", GR_BIAS, 6,
-    {
-      {"Start", 0, 32767, 'i', "STEP_START_BIAS"},
-      {"End", 0, 32767, 'i', "STEP_END_BIAS"},
-      {"N steps", 1, 32767, 'i', "step_nsteps_bias"},
-      {"Time per step (ms)", 10, 32767, 'i', "step_time_bias"},
-      {"Cal pulse length (ms)", 0, 32767, 'i', "step_pul_len_bias"},
-      {"Array (250,350,500,0=all)", 0, 32767, 'i', "step_array_bias"},
+      {"Start (full=32767)", 0, MAX_15BIT, 'i', "STEP_START_BIAS"},
+      {"End (full=32767)", 0, MAX_15BIT, 'i', "STEP_END_BIAS"},
+      {"N steps", 1, MAX_15BIT, 'i', "STEP_NSTEPS_BIAS"},
+      {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_BIAS"},
+      {"Which (0-31,32=all)", 0, 32, 'i', "STEP_WHICH_BIAS"},
     }
   },
   {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
     {
-      {"Start", 0, 32767, 'i', "STEP_START_PHASE"},
-      {"End", 0, 32767, 'i', "STEP_END_PHASE"},
-      {"N steps", 1, 32767, 'i', "step_nsteps_phase"},
-      {"Time per step (ms)", 1, 32767, 'i', "step_time_phase"},
-    }
-  },
-  {COMMAND(bias_level_rox), "bias level ROX", GR_BIAS, 1,
-    {
-      {"Level", 0, 32767, 'i', "AMPL_ROX_BIAS"}
-    }
-  },
-  {COMMAND(bias_level_x), "bias level X (unused)", GR_BIAS, 1,
-    {
-      {"Level", 0, 32767, 'i', "ampl_x_bias"}
-    }
-  },
-  {COMMAND(phase), "set phase shift", GR_BIAS, 2,
-    {
-      {"DAS Card (0=all)", 0, 63, 'i', "NONE"},
-      {"Phase",            0, 32767, 'i', "NONE"}
-    }
-  },
-
-  /***************************************/
-  /*********** Cal Lamp  *****************/
-  {COMMAND(cal_pulse), "calibrator single pulse", GR_CRYO_HEAT, 1,
-    {
-      {"Pulse Length (ms)", 0, 8000, 'i', "PULSE_CAL"}
-    }
-  },
-  {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CRYO_HEAT, 3,
-    {
-      {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
-      {"Repeat Delay (s)",  1, 32767, 'i', "PERIOD_CAL"},
-      {"Number of repeats (0=infinity)",  0, 32767, 'i', ""}
-    }
-  },
-
-  /***************************************/
-  /********* Cryo heat   *****************/
-  {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO_HEAT, 2,
-    {
-      {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
-      {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
+      {"Start (degrees)", 0, 360, 'f', "STEP_START_PHASE"},
+      {"End (degrees)", 0, 360, 'f', "STEP_END_PHASE"},
+      {"N steps", 1, MAX_15BIT, 'i', "STEP_NSTEPS_PHASE"},
+      {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_PHASE"},
     }
   },
 

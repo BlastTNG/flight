@@ -16,8 +16,8 @@
 
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 229        /* total number of single word cmds */
-#define N_MCOMMANDS 118        /* total number of multiword commands */
+#define N_SCOMMANDS 136        /* total number of single word cmds */
+#define N_MCOMMANDS  73        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
@@ -58,25 +58,16 @@ extern const char *GroupNames[N_GROUPS];
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
-  az_auto_gyro,       az_off,           az_on,
-  cal_off,          cal_on,
-  charcoal_off,     charcoal_on,        hs_charcoal_off,  hwpr_panic,
-  hs_charcoal_on,   el_off,             el_on,
+  az_auto_gyro,     az_off,             az_on,            hwpr_panic,
+  el_off,	    el_on,              pin_in,           reset_trims,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
-  fixed,            gps_allow,          gps_veto,
-  l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
-  level_off,
-  level_on,         mag_allow,          mag_veto,
-  pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,       
-  pot_valve_open,   ramp,               reset_trims,
+  gps_allow,        gps_veto,           mag_allow,        mag_veto,
   stop,             sun_veto,           sun_allow,        pss1_veto,
   pss1_allow,       pss2_veto,          pss2_allow,
   trim_to_isc,      unlock,             lock_off,         
-  force_el_on,      auto_jfetheat,      auto_cycle,       gps_cycle,
-  actbus_cycle,     rw_cycle,
+  force_el_on,      gps_cycle,          actbus_cycle,     rw_cycle,
   piv_cycle,        elmot_cycle,        hub232_cycle,     das_cycle,
-  gps_off,          gps_on,
-  rw_off,	    rw_on,
+  gps_off,          gps_on,             rw_off,	          rw_on,
   piv_off,	    piv_on,		elmot_off,	  elmot_on,
   vtx_off,	    vtx_on,		bi0_off,	  bi0_on,
   das_off,	    das_on,		rx_off,		  rx_on,
@@ -91,19 +82,13 @@ enum singleCommand {
   ifroll_1_gy_cycle,ifroll_2_gy_cycle,  ifyaw_1_gy_cycle, ifyaw_2_gy_cycle,
   ifel_1_gy_cycle,  ifel_2_gy_cycle,    gybox_off,        gybox_on,
   ss_off,           ss_on,              hub232_off,	  hub232_on,
-  ss_cycle,         gybox_cycle,
-  ln_valve_on,      ln_valve_off,
-  reap_north,       reap_south,
-  xy_panic,
+  ss_cycle,         gybox_cycle,        
+  reap_itsy,        reap_bitsy,         xy_panic,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
-  fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
-  repoll,           
-  north_halt,	    south_halt,		actbus_on,
-  actbus_off,       actuator_stop,      level_pulse,      restore_piv,
-  reset_rw,         reset_piv,
-  reset_elev,       jfet_on,            jfet_off,         hs_pot_on,
-  hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,
-  hwpr_enc_off,     hwpr_enc_pulse,     
+  at_float,         not_at_float,       el_auto_gyro,
+  repoll,           halt_itsy,	        halt_bitsy,	  actbus_on,
+  actbus_off,       actuator_stop,      restore_piv,
+  reset_rw,         reset_piv,          reset_elev,
   vtx1_isc,	    vtx1_osc,		vtx1_sbsc,	  vtx2_isc,
   vtx2_osc,	    vtx2_sbsc,
   sbsc_off,	    sbsc_on,		sbsc_cam_cycle,	  sbsc_cpu_cycle,
@@ -116,34 +101,27 @@ enum singleCommand {
 /* multiCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
-  az_el_goto,        az_gain,           az_scan,          
-  bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
-  bias_level_x,      dac2_level,  
-  box,
-  cal_pulse,         cal_repeat,        cap,
+  az_el_goto,        az_gain,           az_scan,          dac2_level,  
+  box,		     cap,               roll_gain,        az_scan_accel,
   az_el_trim,        drift,             el_gain,
-  inner_level,       hwpr_jump,         hwpr_goto_i,
-  lock,              phase,             act_offset,
+  inner_level,       hwpr_jump,         hwpr_goto_i,      actuator_tol,	       
+  lock,              dac_phase,         dac_ampl,         act_offset,
   pivot_gain,        ra_dec_goto,       ra_dec_set,
-  roll_gain,         az_scan_accel,
   t_gyro_set,        tdrss_bw,          iridium_bw,
   t_gyro_gain,       timeout,           vcap,
   vbox,              slot_sched,        az_gyro_offset,
-  cov_gps,	     hwpr_set_overshoot,
-  jfet_set,          hwpr_vel,          hwpr_i,
+  cov_gps,	     hwpr_set_overshoot,lvdt_limit,        reset_adc,        
   gyro_off,	     gyro_on,           quad,
   el_gyro_offset,    general,           slew_veto,        
   actuator_servo,    xy_goto,           actuator_vel,
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
-  lvdt_limit,        
-  reset_adc,        
   motors_verbose,    bias_step,         phase_step,       hwpr_set_backlash,
   cam_any,	     cam_settrig_timed, cam_exp_params,	  cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     ants_gps,          hwpr_goto_pot,    act_enc_trim,
-  actuator_tol,	       
+  hwpr_vel,          hwpr_i,
   plugh
 };
 

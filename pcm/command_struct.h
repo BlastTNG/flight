@@ -49,6 +49,14 @@
 /* time (in slow frames) to suppress ADC card watchdog, to induce reset */
 #define	RESET_ADC_LEN	 80
 
+/* parameters for hk dacs */
+#define N_DAC	    32
+#define PHASE_MAX   0xffff
+#define PHASE_MIN   0
+#define DAC_MAX	    0xffff
+#define DAC_ZERO    0x8000
+#define DAC_MIN	    0
+
 
 struct GainStruct {
   unsigned short int P;
@@ -139,16 +147,13 @@ struct latch_pulse {
 };
 
 
-enum calmode { on, off, pulse, repeat };
-
 struct Step {
   unsigned short do_step;
   unsigned short start;
   unsigned short end;
   unsigned short nsteps;
-  unsigned short arr_ind; // only used for bias
+  unsigned short which; // only used for bias
   unsigned short dt;
-  unsigned short pulse_len;  // only used for bias
 };
 
 struct SBSCCommandData {
@@ -270,39 +275,15 @@ struct CommandDataStruct {
   double pss2_az_trim;
 
   struct {
-    int biasRamp;
-    unsigned short bias[5];
-    unsigned char setLevel[5];
-    struct Step biasStep;
+    unsigned short bias[N_DAC];
+    unsigned char setLevel[N_DAC];
+    struct Step step;
   } Bias;
-  
+
   struct {
-    unsigned short charcoalHeater;
-    unsigned short hsCharcoal;
-    unsigned short fridgeCycle;
-    unsigned short force_cycle;
-
-    unsigned short BDAHeat;
-    unsigned short hsPot;
-    short heliumLevel;
-    int he4_lev_old;
-    short hwprPos;
-    int hwpr_pos_old;
-
-    unsigned short JFETHeat;
-    unsigned short autoJFETheat;
-    double JFETSetOn, JFETSetOff;
-
-    enum calmode calibrator;
-    unsigned short calib_pulse, calib_period;
-    int calib_repeats;
-
-    unsigned short potvalve_open, potvalve_on, potvalve_close;
-    unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
-  } Cryo;
-
-  int Phase[DAS_CARDS + 1];
-  struct Step phaseStep;
+    unsigned short phase[N_DAC];
+    struct Step step;
+  } Phase;
 
   struct {
     int off;
