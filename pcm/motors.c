@@ -1627,6 +1627,7 @@ void UpdateAxesMode(void)
   last_mode = CommandData.pointing_mode.mode;
 }
 
+// TODO can probably move to blast library, and make bprintf a special case
 // Only prints if verb_level_req >= verb_level_comp
 void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int verb_level_comp, const char* fmt, ...) {
   char message[BUOS_MAX];
