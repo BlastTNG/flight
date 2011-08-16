@@ -2,9 +2,14 @@ CC = gcc
 CPP = g++
 CPPFLAGS = -g -O3 -Wall -D__MCP__ $(BOLOTEST)
 LDFLAGS = -lpthread -lm -lstdc++ -lgsl -lgslcblas
-ifeq ($(DEBUG), 1)
-	CPPFLAGS := $(CPPFLAGS) -g -DDEBUG
-	LDFLAGS := $(LDFLAGS) -g -DDEBUG
+
+#enable to setup a test run on non-flight systems (eg with simbbc)
+#to use 32-bit compilation on 64-bit systmems requires extra packages:
+#  gcc-multilib g++-multilib libc6-dev-i386
+#TEST_RUN = 1
+ifeq ($(TEST_RUN), 1)
+	CPPFLAGS := $(CPPFLAGS) -m32 -DTEST_RUN
+	LDFLAGS := $(LDFLAGS) -m32
 endif
 
 HEADERS = amccommand.h share/bbc_pci.h share/blast.h share/channels.h \
@@ -18,7 +23,7 @@ HEADERS = amccommand.h share/bbc_pci.h share/blast.h share/channels.h \
 
 # These are needed by both bolotest and flight versions
 OBJS = actuators.o share/blast.o share/channels.o command_list.o commands.o \
-       derived.o ezstep.o share/framefile.o hwpr.o share/lut.o mcp.o \
+       derived.o ezstep.o share/framefile.o hk.o hwpr.o share/lut.o mcp.o \
        tx.o tx_struct.o xystage.o
 
 # These are only needed by the flight version
