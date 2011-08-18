@@ -23,7 +23,7 @@
 #define MAX_15BIT (32767.)
 #define MAX_30BIT (1073741823.)
 
-#define N_GROUPS 16
+#define N_GROUPS 24
 
 #define GR_POINT        0x00000001
 //#define GR_BAL          0x00000002	  //unused

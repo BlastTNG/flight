@@ -26,17 +26,17 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.18 $";
+const char *command_list_serial = "$Revision: 1.19 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        /*"Balance",*/      "Waveplate Rotator",
+  "Pointing Modes",        "Balance",          "Waveplate Rotator",
   "Pointing Sensor Trims", "Aux. Electronics", "Bias",
   "Pointing Sensor Vetos", "Actuators",        "SBSC",
-  "Pointing Motor Gains",  /*"Secondary Focus",*/  "Cryo Heat",
+  "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
   "Subsystem Power",       "Lock Motor",       "Cryo Control",
-  "Telemetry",             /*"ISC Housekeeping", "OSC Housekeeping",*/
-  "X-Y Stage",             /*"ISC Modes",        "OSC Modes",*/
-  "Miscellaneous",         /*"ISC Parameters",   "OSC Parameters"*/
+  "Telemetry",             "ISC Housekeeping", "OSC Housekeeping",
+  "X-Y Stage",             "ISC Modes",        "OSC Modes",
+  "Miscellaneous",         "ISC Parameters",   "OSC Parameters"
   };
 
 //echoes as string; makes enum name the command name string
