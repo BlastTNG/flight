@@ -75,8 +75,7 @@ void StoreActBus(void);
 void SecondaryMirror(void);
 
 /* in hk.c */
-void PhaseControl(void);	//hk.c
-void BiasControl(void);
+void HouseKeeping(int);
 
 /* in hwpr.c */
 void StoreHWPRBus(void);
@@ -1222,6 +1221,7 @@ void UpdateBBCFrame()
   StoreStageBus(index);
 #endif
   WriteChatter(index);
+  HouseKeeping(index);
 
   /*** do slow Controls ***/
   if (index == 0) {
@@ -1231,8 +1231,6 @@ void UpdateBBCFrame()
     //StoreActBus();
     //SecondaryMirror();
     //StoreHWPRBus();
-    PhaseControl();
-    BiasControl();
 #ifndef BOLOTEST
     SetGyroMask();
     ChargeController();

@@ -17,7 +17,7 @@
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 136        /* total number of single word cmds */
-#define N_MCOMMANDS  73        /* total number of multiword commands */
+#define N_MCOMMANDS  74        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
@@ -39,7 +39,7 @@
 #define GR_CRYO_HEAT    0x00000800
 #define GR_POWER        0x00001000
 #define GR_LOCK         0x00002000
-#define GR_CRYO_CONTROL 0x00004000
+//#define GR_CRYO_CONTROL 0x00004000	  //unused (for now?)
 #define GR_TELEM        0x00008000
 //#define GR_ISC_HOUSE    0x00010000	  //unused
 //#define GR_OSC_HOUSE    0x00020000	  //unused
@@ -121,7 +121,7 @@ enum multiCommand {
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     ants_gps,          hwpr_goto_pot,    act_enc_trim,
-  hwpr_vel,          hwpr_i,
+  hwpr_vel,          hwpr_i,		hk_heat_set,
   plugh
 };
 

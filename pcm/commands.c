@@ -1388,6 +1388,12 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Phase.step.dt=ivalues[3];
       break;
 
+      /***************************************/
+      /*************** Heat  *****************/
+    case hk_heat_set:
+      CommandData.Heat.bits[ivalues[0]] = ivalues[1];
+      break;
+
 #ifndef BOLOTEST
       /***************************************/
       /********* SBSC Commanding  *************/ 
@@ -2173,6 +2179,8 @@ void InitCommandData()
 
   CommandData.Bias.step.do_step = 0;
   CommandData.Phase.step.do_step = 0;
+  //TODO probably don't want all heater bits to always init to 0
+  for (i=0; i<6; i++) CommandData.Heat.bits[i] = 0;
   //forces reload of saved bias values
   for (i=0; i<N_DAC; i++) CommandData.Bias.setLevel[i] = 1;
 

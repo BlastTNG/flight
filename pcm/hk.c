@@ -35,9 +35,8 @@
 /* PhaseControl: set phase shifts for the bias channels                 */
 /*                                                                      */
 /************************************************************************/
-void PhaseControl()
+static void PhaseControl()
 {
-  static int first_time = 1;
   static struct NiosStruct* NiosAddr[N_DAC];
   static struct NiosStruct* phaseStepEnaAddr;
   static struct NiosStruct* phaseStepStartAddr;
@@ -54,6 +53,7 @@ void PhaseControl()
   static int start = 0;
   int phase = 0;
 
+  static int first_time = 1;
   if (first_time) {
     first_time = 0;
     for(i = 0; i < N_DAC; i++) {
@@ -111,7 +111,7 @@ void PhaseControl()
 /*   BiasControl: Amplitude of HK DAC signals (bias and heat)           */
 /*                                                                      */
 /************************************************************************/
-void BiasControl()
+static void BiasControl()
 {
   static struct NiosStruct* amplBiasAddr[N_DAC];
   static struct NiosStruct* stepEnaBiasAddr;
@@ -194,4 +194,47 @@ void BiasControl()
 	WriteData(amplBiasAddr[i], bias, NIOS_QUEUE);
     }
   } else k = 0;
+}
+
+/************************************************************************/
+/*                                                                      */
+/*   HeatControl: Switching logic for the PWM (digital) heaters         */
+/*                                                                      */
+/************************************************************************/
+static void HeatControl()
+{
+  static struct NiosStruct* heat21Addr;
+  static struct NiosStruct* heat43Addr;
+  static struct NiosStruct* heat65Addr;
+
+  short temp;
+
+  static int first_time = 1;
+  if (first_time) {
+    first_time = 0;
+    heat21Addr = GetNiosAddr("heat_21_hk");
+    heat43Addr = GetNiosAddr("heat_43_hk");
+    heat65Addr = GetNiosAddr("heat_65_hk");
+  }	
+
+  //TODO hk group mapping will need to be rearranged
+  temp = ((CommandData.Heat.bits[1] & 0xff) << 8) 
+	| (CommandData.Heat.bits[0] & 0xff);
+  WriteData(heat21Addr, temp, NIOS_QUEUE);
+  temp = ((CommandData.Heat.bits[3] & 0xff) << 8) 
+	| (CommandData.Heat.bits[2] & 0xff);
+  WriteData(heat43Addr, temp, NIOS_QUEUE);
+  temp = ((CommandData.Heat.bits[5] & 0xff) << 8) 
+	| (CommandData.Heat.bits[4] & 0xff);
+  WriteData(heat65Addr, temp, NIOS_QUEUE);
+
+}
+
+void HouseKeeping(int index)
+{
+  if (index == 0) {
+    BiasControl();
+    PhaseControl();
+    HeatControl();
+  }
 }

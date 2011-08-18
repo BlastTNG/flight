@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.19 $";
+const char *command_list_serial = "$Revision: 1.20 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -652,7 +652,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  //SBSC commands
+  /***************************************/
+  /*************** Heat  *****************/
+  {COMMAND(hk_heat_set), "set a group of heater bits", GR_CRYO_HEAT, 2,
+    {
+      {"Which (1-6)", 1, 6, 'i', ""},
+      {"Bits (0-255)", 0, 255, 'i', ""},
+    }
+  },
+
+  /***************************************/
+  /*************** SBSC  *****************/
   {COMMAND(cam_any), "Execute arbitrary starcam command", GR_SBSC, 1,
     {
       {"Command String", 0, 32, 's', ""}

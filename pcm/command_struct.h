@@ -274,6 +274,7 @@ struct CommandDataStruct {
   double pss1_az_trim;
   double pss2_az_trim;
 
+  //TODO restructure hk (Bias Phase Heat) on a per-telescope basis
   struct {
     unsigned short bias[N_DAC];
     unsigned char setLevel[N_DAC];
@@ -284,6 +285,10 @@ struct CommandDataStruct {
     unsigned short phase[N_DAC];
     struct Step step;
   } Phase;
+
+  struct {
+    unsigned short bits[6];
+  } Heat;
 
   struct {
     int off;
