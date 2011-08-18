@@ -4,9 +4,10 @@ CPPFLAGS = -g -O3 -Wall -D__MCP__ $(BOLOTEST)
 LDFLAGS = -lpthread -lm -lstdc++ -lgsl -lgslcblas
 
 #enable to setup a test run on non-flight systems (eg with simbbc)
+#use test-run-enable target to enable
 #to use 32-bit compilation on 64-bit systmems requires extra packages:
 #  gcc-multilib g++-multilib libc6-dev-i386
-#TEST_RUN = 1
+include Makefile.testing
 ifeq ($(TEST_RUN), 1)
 	CPPFLAGS := $(CPPFLAGS) -m32 -DTEST_RUN
 	LDFLAGS := $(LDFLAGS) -m32
@@ -35,7 +36,7 @@ OBJS := $(OBJS) amccommand.o auxiliary.o chrgctrl.o share/compressfuncs.o \
 		sbsccommunicator.o sched.o slow_dl.o share/starpos.o 
 endif
 
-.PHONEY: fifo install all restart
+.PHONEY: fifo install all restart test-run-enable test-run-disable
 
 all: pcm
 
@@ -43,6 +44,15 @@ clean:
 	rm -f pcm || true;
 	rm -f *.o || true;
 	rm -f share/*.o || true;
+
+Makefile.testing:
+	touch Makefile.testing
+
+test-run-enable: clean
+	echo "TEST_RUN = 1" > Makefile.testing
+
+test-run-disable: clean
+	echo "TEST_RUN = 0" > Makefile.testing
 
 pcm: $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o pcm
