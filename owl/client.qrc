@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/client">
+        <file>PClient.html</file>
+        <file>README.txt</file>
+    </qresource>
+</RCC>

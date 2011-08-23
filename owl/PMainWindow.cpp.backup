@@ -1,0 +1,844 @@
+/* Owl: BLAST status GUI
+ *
+ * This file is part of Owl.
+ *
+ * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ *
+ * Owl is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Owl is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Owl; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include "PMainWindow.h"
+#include "PMdiArea.h"
+#include "PTimeDataItem.h"
+#include "PDirfileDataItem.h"
+#include "PDotPal.h"
+#include "PStyle.h"
+
+#include "ui_PMainWindow.h"
+
+#include <QColorDialog>
+#include <QTextStream>
+#include <QTimer>
+#include <QCompleter>
+#include <QFile>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QColorDialog>
+#include <QFileDialog>
+#include <QDebug>
+
+
+PMainWindow* PMainWindow::me=0;
+
+PMainWindow::PMainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    _currentObject(0),
+    _dirfile(0),
+    styleVersion(0),
+    ui(new Ui::PMainWindow)
+{
+    PStyle::noStyle = PStyle::noStyle?PStyle::noStyle:new PStyle("No style");
+    me=this;
+    ui->setupUi(this);
+    ui->comboBox->addItem("Owl "+idText());
+    ui->lineEditCurFile->setText("/data1/replay/");
+    _mdiArea=new PMdiArea(centralWidget());
+    _mdiArea->adjustSize();
+    centralWidget()->layout()->addWidget(_mdiArea);
+    connect(_mdiArea,SIGNAL(newBox(PBox*)),this,SLOT(uiLogic()));
+    connect(ui->comboBox,SIGNAL(activated(int)),this,SLOT(uiLogic()));
+    connect(ui->actionSave,SIGNAL(activated()),this,SLOT(owlSave()));
+    connect(ui->actionLoad,SIGNAL(activated()),this,SLOT(owlLoad()));
+    connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(currowLogic()));
+
+    curfileLogic("/data1/replay");
+
+    _currowStyle=PStyle::noStyle;
+
+    uiLogic();
+
+    _ut=new QTimer(this);
+    _ut->setInterval(500);
+    connect(_ut,SIGNAL(timeout()),this,SLOT(gdUpdate()));
+    _ut->start();
+
+    _ht=new QTimer(this);
+    _ht->setInterval(1000);
+    connect(_ht,SIGNAL(timeout()),this,SLOT(htmlUpdate()));
+    _ht->start();
+
+    activate();
+}
+
+#define reconnect(a,b,c,d) \
+    disconnect(a,b,c,d); \
+    connect(a,b,c,d)
+
+PMainWindow::~PMainWindow()
+{
+    while(_pboxList.size()) {
+        delete _pboxList.takeFirst();
+    }
+    while(_owlList.size()) {
+        delete _owlList.takeFirst();
+    }
+}
+
+void PMainWindow::writeHtml(QString path)
+{
+    Q_UNUSED(path);
+    QString x;
+    QTextStream out(&x);
+    out<<"<html><META HTTP-EQUIV=\"refresh\" CONTENT=\""<<_ht->interval()/1000<<"\">"<<endl;
+    out<<"<STYLE TYPE=\"text/css\">"
+         "<!--"
+         "TD{font-family: Arial; font-size: 8pt;}"
+         "--->"
+         "</STYLE>"<<endl;
+
+    for(int i=0;i<_owlList.size();i++) {
+        out<<"<DIV style=\"padding: 0px; align:center; position: absolute; border: 0px solid black; line-height:100%; "
+             "top:"<<_owlList[i]->geometry().y()<<"px;"
+             "left:"<<_owlList[i]->geometry().x()<<"px;"
+             "width:"<<_owlList[i]->geometry().width()-10<<"px;"
+             "height:"<<_owlList[i]->geometry().height()-10<<"px;"
+             "background-color: white;"
+             "font-size:10px \">";
+        out<<"<IMG src=\"owl"<<_owlList[i]->stage()<<".png\"></DIV>";
+    }
+
+    for(int i=0;i<_pboxList.size();i++) {
+            out<<"<DIV style=\"padding: 0px; position: absolute; border:2px solid black; line-height:100%; "<<
+                 "top:"<<_pboxList[i]->geometry().y()<<"px;"<<
+                 "left:"<<_pboxList[i]->geometry().x()<<"px;"<<
+                 "width:"<<(_pboxList[i]->geometry().width()-10)<<"px;"<<
+                 "height:"<<_pboxList[i]->geometry().height()-10<<"px;"<<
+                 "background-color: "<<_pboxList[i]->getStyle()->bgColour().name()<<";"<<
+                 "font-size:10px \">";
+
+        out<<"<DIV style=\"background-color: white; padding=10px; text-align:center; line-height:100%;\"\">";
+        out<<_pboxList[i]->boxTitle();
+        out<<"</DIV>";
+        out<<"<table border=\"0\">";
+
+        for(int j=0;j<_pboxList[i]->_dataItems.size();j++) {
+            out<<"<tr><td>";
+            PAbstractDataItem* padi=_pboxList[i]->_dataItems[j];
+
+            if(padi->captionStyle()->isBold()) out<<"<B>";
+            if(padi->captionStyle()->isItalic()) out<<"<I>";
+
+            QColor cbg=padi->captionStyle()->bgColour().name();
+            QString bgstr="";
+            if(cbg!=QColor("white")) {
+                bgstr=" background-color: "+padi->captionStyle()->bgColour().name()+";";
+            }
+
+            out<<"<span style=\"line-height:100%; color: "<<padi->captionStyle()->fgColour().name()<<";"<<bgstr<<"\">";
+            out<<padi->caption();
+
+            if(padi->captionStyle()->isBold()) out<<"</B>";
+            if(padi->captionStyle()->isItalic()) out<<"</I>";
+
+            cbg=padi->_data->palette().color(padi->_data->backgroundRole());
+            bgstr="";
+            if(cbg!=QColor("white")) {
+                bgstr=" background-color: "+cbg.name()+";";
+            }
+
+            QColor cfg=padi->_data->palette().color(padi->_data->foregroundRole());
+
+            out<<"</span></td><td style=\"line-height:100%\"><span line-height:100%; style=\"color: "<<cfg.name()<<";"<<bgstr<<"\">";
+
+            QFont f=padi->_data->font();
+            if(f.bold()) out<<"<B>";
+            if(f.italic()) out<<"<I>";
+
+            out<<padi->data();
+            if(f.bold()) out<<"</B>";
+            if(f.italic()) out<<"</I>";
+            out<<"</span></td></tr>";
+        }
+        out<<"</table>";
+        out<<"</DIV>"<<endl;
+    }
+    QFile file(path);
+    file.open(QFile::WriteOnly);
+    file.write(x.toAscii());
+    file.close();
+}
+
+void PMainWindow::hideEverything()
+{
+    setUpdatesEnabled(0);
+    ui->pstyleCaption->hide();
+    disconnect(ui->pstyleCaption,0,0,0);
+    ui->pstyleData->hide();
+    disconnect(ui->pstyleData,0,0,0);
+    ui->labelCaption->hide();
+    ui->lineEditCaption->hide();
+    disconnect(ui->lineEditCaption,0,0,0);
+    ui->labelColour->hide();
+    ui->labelSource->hide();
+    ui->lineEditSource->hide();
+    disconnect(ui->lineEditSource,0,0,0);
+    ui->labelType->hide();
+    ui->comboBoxType->hide();
+    disconnect(ui->comboBoxType,0,0,0);
+    ui->labelFormat_multi->hide();
+    ui->tableWidgetFormat->hide();
+    disconnect(ui->tableWidgetFormat,0,0,0);
+    ui->label_colour2->hide();
+    ui->pushButtonAddFormat->hide();
+    disconnect(ui->pushButtonAddFormat,0,0,0);
+    ui->pushButtonDelFormat->hide();
+    disconnect(ui->pushButtonDelFormat,0,0,0);
+    ui->labelFormat_num->hide();
+    ui->lineEditFormat->hide();
+    disconnect(ui->lineEditFormat,0,0,0);
+    ui->labelExtrema->hide();
+    ui->comboBoxExtrema->hide();
+    disconnect(ui->comboBoxExtrema,0,0,0);
+    ui->labelName->hide();
+    ui->lineEditExtremaName->hide();
+    disconnect(ui->lineEditExtremaName,0,0,0);
+    ui->labelXHigh->hide();
+    ui->doubleSpinBoxXHigh->hide();
+    disconnect(ui->doubleSpinBoxXHigh,0,0,0);
+    ui->labelHigh->hide();
+    ui->doubleSpinBoxHigh->hide();
+    disconnect(ui->doubleSpinBoxHigh,0,0,0);
+    ui->labelLow->hide();
+    ui->doubleSpinBoxLow->hide();
+    disconnect(ui->doubleSpinBoxLow,0,0,0);
+    ui->labelXLow->hide();
+    ui->doubleSpinBoxXLow->hide();
+    disconnect(ui->doubleSpinBoxXLow,0,0,0);
+    ui->labelCurFile->hide();
+    ui->lineEditCurFile->hide();
+
+    ui->labelCurRow->hide();
+    disconnect(ui->labelCurRow,0,0,0);
+    ui->labelRemove->hide();
+    ui->pushButtonRemove->hide();
+    disconnect(ui->pushButtonRemove,0,0,0);
+
+    ui->pstyleXHigh->hide();
+    disconnect(ui->pstyleXHigh,0,0,0);
+    ui->pstyleHigh->hide();
+    disconnect(ui->pstyleHigh,0,0,0);
+    ui->pstyleLow->hide();
+    disconnect(ui->pstyleLow,0,0,0);
+    ui->pstyleXLow->hide();
+    disconnect(ui->pstyleXLow,0,0,0);
+    ui->pstyleSelected->hide();
+    disconnect(ui->pstyleSelected,0,0,0);
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::addPBox()
+{
+    setUpdatesEnabled(0);
+    ui->comboBox->addItem(_pboxList.back()->boxTitle()+" "+_pboxList.back()->idText());
+    connect(_pboxList.back(),SIGNAL(activated()),this,SLOT(uiLogic()));
+    connect(_pboxList.back(),SIGNAL(newChild(PAbstractDataItem*)),
+            this,SLOT(newLabelLogic(PAbstractDataItem*)));
+    _currentObject=_pboxList.back();
+    ui->comboBox->setCurrentIndex(ui->comboBox->count()-1);
+
+    ui->pstyleCaption->setWidgetStyleRef(_pboxList.back()->_pstyle);
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::setCurrentObject(PBox*obj)
+{
+    setUpdatesEnabled(0);
+    QString x=obj->idText();
+    _currentObject=obj;
+    for(int i=0;i<ui->comboBox->count();i++) {
+        if(ui->comboBox->itemText(i).contains(x)) {
+            ui->comboBox->setCurrentIndex(i);
+        }
+    }
+    ui->pstyleCaption->setWidgetStyleRef(obj->_pstyle);
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::setCurrentObject(PAbstractDataItem*obj)
+{
+    setUpdatesEnabled(0);
+    QString x=obj->idText();
+    _currentObject=obj;
+    for(int i=0;i<ui->comboBox->count();i++) {
+        if(ui->comboBox->itemText(i).contains(x)) {
+            ui->comboBox->setCurrentIndex(i);
+        }
+    }
+
+    ui->labelCaption->show();
+    ui->lineEditCaption->show();
+    reconnect(ui->lineEditCaption,SIGNAL(textChanged(QString)),obj,SLOT(setCaption(QString)));
+    reconnect(obj,SIGNAL(textChanged(QString)),this,SLOT(uiLogic()));
+
+    ui->labelColour->show();
+
+    ui->labelSource->show();
+    ui->lineEditSource->show();
+    reconnect(ui->lineEditSource,SIGNAL(textChanged(QString)),obj,SLOT(setSource(QString)));
+    reconnect(obj,SIGNAL(sourceChanged(QString)),this,SLOT(uiLogic()));
+
+    ui->label_colour2->show();
+    ui->pstyleCaption->show();
+    ui->pstyleCaption->setWidgetStyleRef(obj->_captionStyle);
+
+    ui->labelRemove->show();
+    ui->pushButtonRemove->show();
+    reconnect(ui->pushButtonRemove,SIGNAL(clicked()),this,SLOT(removeCurrentDataItem()));
+
+    ui->pstyleData->show();
+    ui->pstyleData->setWidgetStyleRef(obj->_defaultDataStyle);
+
+    if(dynamic_cast<PNumberDataItem*>(obj)) setCurrentObject(dynamic_cast<PNumberDataItem*>(obj));
+    else if(dynamic_cast<PMultiDataItem*>(obj)) setCurrentObject(dynamic_cast<PMultiDataItem*>(obj));
+    else if(dynamic_cast<PTimeDataItem*>(obj)) setCurrentObject(dynamic_cast<PTimeDataItem*>(obj));
+    else if(dynamic_cast<PDirfileDataItem*>(obj)) {
+        ui->labelSource->hide();
+        ui->lineEditSource->hide();
+    }
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::setCurrentObject(PNumberDataItem*obj)
+{
+    setUpdatesEnabled(0);
+    ui->labelFormat_num->show();
+    ui->lineEditFormat->show();
+    ui->lineEditFormat->setPlaceholderText("printf format str (\"man printf\")");
+    reconnect(ui->lineEditFormat,SIGNAL(textChanged(QString)),obj,SLOT(setFormat(QString)));
+    reconnect(obj,SIGNAL(formatChanged(QString)),this,SLOT(uiLogic()));
+
+    ui->labelExtrema->show();
+    ui->comboBoxExtrema->show();
+    reconnect(ui->comboBoxExtrema,SIGNAL(currentIndexChanged(QString)),this,SLOT(extremaLogic(QString)));
+
+    ui->labelName->show();
+    ui->lineEditExtremaName->show();
+    reconnect(ui->lineEditExtremaName,SIGNAL(textChanged(QString)),this,SLOT(extremaLogic(QString)));
+    ui->lineEditExtremaName->setEnabled(obj->_extrema);
+    if(obj->_extrema) {
+        reconnect(obj->_extrema,SIGNAL(nameChanged(QString)), this,SLOT(extremaLogic(QString)));
+    }
+
+    if(obj->_extrema) {
+        PExtrema* extrema=obj->_extrema;
+        ui->comboBoxExtrema->setCurrentIndex(0);
+        for(int i=0;i<ui->comboBoxExtrema->count();i++) {
+            if(ui->comboBoxExtrema->itemText(i).contains(extrema->idText())) {
+                ui->comboBoxExtrema->setCurrentIndex(i);
+                break;
+            }
+        }
+    } else {
+        ui->comboBoxExtrema->setCurrentIndex(0);
+    }
+
+    ui->labelXHigh->show();
+    ui->doubleSpinBoxXHigh->show();
+    ui->doubleSpinBoxXHigh->setEnabled(obj->_extrema);
+    ui->doubleSpinBoxXHigh->setValue(obj->_extrema?obj->_extrema->_xhigh:0.0f);
+    reconnect(ui->doubleSpinBoxXHigh,SIGNAL(valueChanged(double)),this,SLOT(extremaXHighLogic(double)));
+
+    ui->labelHigh->show();
+    ui->doubleSpinBoxHigh->show();
+    ui->doubleSpinBoxHigh->setEnabled(obj->_extrema);
+    ui->doubleSpinBoxHigh->setValue(obj->_extrema?obj->_extrema->_high:0.0f);
+    reconnect(ui->doubleSpinBoxHigh,SIGNAL(valueChanged(double)),this,SLOT(extremaHighLogic(double)));
+
+    ui->labelLow->show();
+    ui->doubleSpinBoxLow->show();
+    ui->doubleSpinBoxLow->setEnabled(obj->_extrema);
+    ui->doubleSpinBoxLow->setValue(obj->_extrema?obj->_extrema->_low:0.0f);
+    reconnect(ui->doubleSpinBoxLow,SIGNAL(valueChanged(double)),this,SLOT(extremaLowLogic(double)));
+
+    ui->labelXLow->show();
+    ui->doubleSpinBoxXLow->show();
+    ui->doubleSpinBoxXLow->setEnabled(obj->_extrema);
+    ui->doubleSpinBoxXLow->setValue(obj->_extrema?obj->_extrema->_xlow:0.0f);
+    reconnect(ui->doubleSpinBoxXLow,SIGNAL(valueChanged(double)),this,SLOT(extremaXLowLogic(double)));
+
+    ui->pstyleXHigh->show();
+    ui->pstyleXHigh->setEnabled(obj->_extrema);
+    ui->pstyleHigh->show();
+    ui->pstyleHigh->setEnabled(obj->_extrema);
+    ui->pstyleLow->show();
+    ui->pstyleLow->setEnabled(obj->_extrema);
+    ui->pstyleXLow->show();
+    ui->pstyleXLow->setEnabled(obj->_extrema);
+    if(obj->_extrema) {
+        ui->pstyleXHigh->setWidgetStyleRef(obj->_extrema->_sxhigh);
+        ui->pstyleHigh->setWidgetStyleRef(obj->_extrema->_shigh);
+        ui->pstyleLow->setWidgetStyleRef(obj->_extrema->_slow);
+        ui->pstyleXLow->setWidgetStyleRef(obj->_extrema->_sxlow);
+    }
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::setCurrentObject(PMultiDataItem*obj)
+{
+    setUpdatesEnabled(0);
+    disconnect(ui->tableWidgetFormat,0,0,0);
+
+    ui->tableWidgetFormat->clear();
+    while(ui->tableWidgetFormat->rowCount()) {
+        ui->tableWidgetFormat->removeRow(0);
+    }
+    for(int i=0;i<obj->_map->_map.size();i++) {
+        ui->tableWidgetFormat->insertRow(0);
+    }
+    QStringList a,b;
+    for(int i=0;i<obj->_map->_map.size();i++) {
+        a.push_back(QString::number(obj->_map->_map.keys()[i]));
+        b.push_back(obj->_map->_map.values()[i]);
+    }
+
+    for(int i=0;i<a.size();i++) {
+        QTableWidgetItem* twi=new QTableWidgetItem(a[i]);
+        ui->tableWidgetFormat->setItem(i,0,twi);
+        QTableWidgetItem* twii=new QTableWidgetItem(b[i]);
+        ui->tableWidgetFormat->setItem(i,1,twii);
+    }
+
+    ui->pstyleSelected->show();
+    ui->pstyleSelected->setDisabled(1);
+
+    ui->labelCurRow->show();
+
+    ui->labelFormat_multi->show();
+    ui->tableWidgetFormat->show();
+    reconnect(ui->tableWidgetFormat,SIGNAL(itemChanged(QTableWidgetItem*)),this,SLOT(multiLogic()));
+    reconnect(ui->tableWidgetFormat,SIGNAL(currentCellChanged(int,int,int,int)),this,SLOT(multiLogic()));
+    ui->pushButtonAddFormat->show();
+    reconnect(ui->pushButtonAddFormat,SIGNAL(clicked()),this,SLOT(multiLogic()));
+    ui->pushButtonDelFormat->show();
+    reconnect(ui->pushButtonDelFormat,SIGNAL(clicked()),this,SLOT(multiLogic()));
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::setCurrentObject(PTimeDataItem*obj)
+{
+    setUpdatesEnabled(0);
+    ui->labelFormat_num->show();
+    ui->lineEditFormat->show();
+    ui->lineEditFormat->setPlaceholderText("strftime str (\"man strftime\")");
+    reconnect(ui->lineEditFormat,SIGNAL(textChanged(QString)),obj,SLOT(setFormat(QString)));
+    reconnect(obj,SIGNAL(formatChanged(QString)),this,SLOT(uiLogic()));
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::uiLogic()
+{
+    setUpdatesEnabled(0);
+    bool newWidget=sender()!=_currentObject||!sender();
+
+    if(newWidget) {
+        hideEverything();
+
+        if(sender()==_mdiArea) addPBox();
+        else if(dynamic_cast<PBox*>(sender())) setCurrentObject(dynamic_cast<PBox*>(_currentObject=sender()));
+        else if(dynamic_cast<PAbstractDataItem*>(sender())) setCurrentObject(dynamic_cast<PAbstractDataItem*>(_currentObject=sender()));
+        else if(sender()==ui->comboBox) {
+            QString x=ui->comboBox->currentText();
+            x.remove(0,x.indexOf('(')+2);
+            x.remove(x.indexOf(')'),999999999);
+            Q_ASSERT(PObject::_u.size()>x.toInt());
+            Q_ASSERT(PObject::_u[x.toInt()]);
+            PObject::_u[x.toInt()]->activate(); // ==> uiLogic();
+            setUpdatesEnabled(1);
+            return;
+        }
+    }
+
+    _dirty=1;
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::curfileLogic(QString x)
+{
+    setUpdatesEnabled(0);
+    QPalette pal=ui->lineEditCurFile->palette();
+    pal.setColor(ui->lineEditCurFile->foregroundRole(),QFile::exists(x)?"black":"red");
+    ui->lineEditCurFile->setPalette(pal);
+    if(QFile::exists(x)) {
+        delete _dirfile;
+        _dirfileFilename=x;
+        _dirfile = new GetData::Dirfile(_dirfileFilename.toAscii(), GD_RDONLY);
+
+        int flc=_dirfile->NFields();
+        const char** flv=_dirfile->FieldList();
+        QStringList fields;
+        for(int i=0;i<flc;i++) {
+            fields<<flv[i];
+        }
+        delete ui->lineEditSource->completer();
+        QCompleter* completer=new QCompleter(fields);
+        completer->setCaseSensitivity(Qt::CaseInsensitive);
+        ui->lineEditSource->setCompleter(completer);
+    }
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::newLabelLogic(PAbstractDataItem *padi)
+{
+    setUpdatesEnabled(0);
+    ui->comboBox->addItem(padi->caption()+" "+padi->idText());
+    connect(padi,SIGNAL(activated()),this,SLOT(uiLogic()));
+    padi->mousePressEvent(0);   //make it current
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::extremaLogic(QString)
+{
+    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
+    if(!pndi) return;
+
+    setUpdatesEnabled(0);
+    QLineEdit* le=dynamic_cast<QLineEdit*>(sender());
+    QComboBox* cb=dynamic_cast<QComboBox*>(sender());
+    PExtrema* ex=dynamic_cast<PExtrema*>(sender());
+    if(le&&pndi->_extrema) {    //change current extrema name
+        Q_ASSERT(pndi->_extrema);
+        pndi->_extrema->setName(le->text());
+    } else if(cb) {             //change current extrema
+        if(pndi->_extrema) {
+            disconnect(pndi->_extrema,SIGNAL(nameChanged(QString)), this,SLOT(extremaLogic(QString)));
+        }
+        PExtrema* extrema=0;
+        for(int i=0;i<PExtrema::_u.count();i++) {
+            if(cb->currentText().contains(PExtrema::_u[i]->idText())) {
+                extrema=PExtrema::_u[i];
+            }
+        }
+
+        ui->pstyleXHigh->setEnabled(extrema);
+        ui->pstyleHigh->setEnabled(extrema);
+        ui->pstyleLow->setEnabled(extrema);
+        ui->pstyleXLow->setEnabled(extrema);
+
+        if(extrema) {
+            pndi->_extrema=extrema;
+            ui->lineEditExtremaName->setText(extrema->name());
+            ui->lineEditExtremaName->setEnabled(1);
+            ui->doubleSpinBoxXHigh->setEnabled(1);
+            ui->doubleSpinBoxXHigh->setValue(pndi->_extrema->_xhigh);
+            ui->doubleSpinBoxHigh->setEnabled(1);
+            ui->doubleSpinBoxHigh->setValue(pndi->_extrema->_high);
+            ui->doubleSpinBoxLow->setEnabled(1);
+            ui->doubleSpinBoxLow->setValue(pndi->_extrema->_low);
+            ui->doubleSpinBoxXLow->setEnabled(1);
+            ui->doubleSpinBoxXLow->setValue(pndi->_extrema->_xlow);
+            disconnect(pndi->_extrema,SIGNAL(nameChanged(QString)), this,SLOT(extremaLogic(QString)));
+            connect(pndi->_extrema,SIGNAL(nameChanged(QString)), this,SLOT(extremaLogic(QString)));
+
+            ui->pstyleXHigh->setWidgetStyleRef(pndi->_extrema->_sxhigh);
+            ui->pstyleHigh->setWidgetStyleRef(pndi->_extrema->_shigh);
+            ui->pstyleLow->setWidgetStyleRef(pndi->_extrema->_slow);
+            ui->pstyleXLow->setWidgetStyleRef(pndi->_extrema->_sxlow);
+
+        } else if (!extrema) {
+            if(cb->currentText()==tr("No Extrema")) {
+                pndi->_extrema=0;
+                ui->lineEditExtremaName->setText("");
+                ui->lineEditExtremaName->setDisabled(1);
+                ui->doubleSpinBoxXHigh->setDisabled(1);
+                ui->doubleSpinBoxHigh->setDisabled(1);
+                ui->doubleSpinBoxLow->setDisabled(1);
+                ui->doubleSpinBoxXLow->setDisabled(1);
+            } else if(cb->currentText()==tr("New Extrema")) {
+                QString x;
+                while(1) {
+                    x=QInputDialog::getText(this,"New Extrema","Extrema name:");
+                    if(!x.isEmpty()&&!x.contains("(")&&!x.contains(")")) break;
+                    QMessageBox::information(this,"Bad name","Your extrema is poorly named. Try again.");
+                }
+                PExtrema* ext=new PExtrema;
+                ext->setName(x);
+                ui->comboBoxExtrema->addItem(x+" "+ext->idText());
+                ui->comboBoxExtrema->setCurrentIndex(ui->comboBoxExtrema->count()-1);
+            } else {
+                qDebug()<<"Warning: unknown extrema:"<<cb->currentText();
+            }
+        }
+    } else if(ex) {             //change current extrema name
+        ui->lineEditExtremaName->setText(ex->name());
+        ui->comboBoxExtrema->setItemText(ui->comboBoxExtrema->currentIndex(),ex->name()+" "+ex->idText());
+    }
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::extremaXHighLogic(double x)
+{
+    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
+    Q_ASSERT(pndi&&pndi->_extrema);
+    pndi->_extrema->_xhigh=x;
+}
+
+void PMainWindow::extremaHighLogic(double x)
+{
+    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
+    Q_ASSERT(pndi&&pndi->_extrema);
+    pndi->_extrema->_high=x;
+}
+
+void PMainWindow::extremaLowLogic(double x)
+{
+    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
+    Q_ASSERT(pndi&&pndi->_extrema);
+    pndi->_extrema->_low=x;
+}
+
+void PMainWindow::extremaXLowLogic(double x)
+{
+    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
+    Q_ASSERT(pndi&&pndi->_extrema);
+    pndi->_extrema->_xlow=x;
+}
+
+void PMainWindow::multiLogic()
+{
+    setUpdatesEnabled(0);
+    PMultiDataItem* pmdi=dynamic_cast<PMultiDataItem*>(_currentObject);
+    Q_ASSERT(pmdi);
+    bool update=0;
+    if(sender()==ui->pushButtonAddFormat) {
+        ui->tableWidgetFormat->insertRow(ui->tableWidgetFormat->rowCount());
+    } else if(sender()==ui->pushButtonDelFormat) {
+        ui->tableWidgetFormat->removeRow(1);
+        update=1;
+    } else if(sender()==ui->tableWidgetFormat) {
+        update=1;
+    }
+
+    if(update) {
+        pmdi->_map->reset();
+        for(int i=0;i<ui->tableWidgetFormat->rowCount();i++) {
+            if(ui->tableWidgetFormat->item(i,0))
+            {
+                int a=ui->tableWidgetFormat->item(i,0)->data(Qt::EditRole).toInt();
+                QString b;
+                if(ui->tableWidgetFormat->columnCount()>=2&&
+                        ui->tableWidgetFormat->item(i,1) &&
+                        !ui->tableWidgetFormat->item(i,1)->data(Qt::EditRole).isNull()) {
+                    b=ui->tableWidgetFormat->item(i,1)->data(Qt::EditRole).toString();
+                } else {
+                    continue;
+                }
+                pmdi->_map->set(a,b);
+            }
+        }
+
+        if(ui->tableWidgetFormat->currentRow()!=-1&&ui->tableWidgetFormat->item(ui->tableWidgetFormat->currentRow(),0)) {
+            _currowStyle=pmdi->_map->style(ui->tableWidgetFormat->item(
+                                               ui->tableWidgetFormat->currentRow(),0)->text().toInt(),PStyle::noStyle);
+            ui->pstyleSelected->setWidgetStyleRef(_currowStyle);
+            ui->pstyleSelected->setEnabled(1);
+        } else {
+            ui->pstyleSelected->setEnabled(0);
+        }
+    }
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::currowLogic()
+{
+    if(!ui->tableWidgetFormat->isVisible()) return;
+    setUpdatesEnabled(0);
+    if(ui->tableWidgetFormat->selectedItems().size()==1&&
+            ui->tableWidgetFormat->item(ui->tableWidgetFormat->selectedItems()[0]->row(),1))
+    {
+        QString t=ui->tableWidgetFormat->item(ui->tableWidgetFormat->selectedItems()[0]->row(),1)->text();
+        if(t.contains("[style=")) {
+            if(t.indexOf("]",t.indexOf("[style="))) {
+                t.remove(t.indexOf("[style="),t.indexOf("]"));
+            } else {
+                t.remove(t.indexOf("[style="),999999999);
+            }
+        }
+        t.push_back("[style="+_currowStyle->name()+" "+_currowStyle->idText()+"]");
+        ui->tableWidgetFormat->item(ui->tableWidgetFormat->selectedItems()[0]->row(),1)->setText(t);
+    }
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::gdUpdate()
+{
+//    return;
+    setUpdatesEnabled(0);
+    int nFrames = _dirfile->NFrames();
+    for(int i=0;i<_pboxList.size();i++) {
+        _pboxList[i]->gdUpdate(_dirfile,nFrames);
+    }
+    for(int i=0;i<_owlList.size();i++) {
+        _owlList[i]->gdUpdate(_dirfile,nFrames);
+    }
+    if(_dirty) {
+        bool ok=0;
+        for(int i=0;i<_pboxList.size();i++) {
+            for(int j=0;j<ui->comboBox->count();j++) {
+                if(ui->comboBox->itemText(j).contains(_pboxList[i]->idText())) {
+                    ui->comboBox->setItemText(j,_pboxList[i]->boxTitle()+" "+_pboxList[i]->idText());
+                }
+            }
+
+            if(ui->comboBox->currentText().contains(_pboxList[i]->idText())) {
+                Q_ASSERT(!ok);
+                ok=1;
+                ui->lineEditCaption->setText(_pboxList[i]->boxTitle());
+                ui->labelCaption->show();
+                ui->lineEditCaption->show();
+                ui->labelColour->show();
+                ui->pstyleCaption->show();
+                reconnect(ui->lineEditCaption,SIGNAL(textChanged(QString)),_pboxList[i],SLOT(setBoxTitle(QString)));
+                reconnect(_pboxList[i],SIGNAL(textChanged(QString)),this,SLOT(uiLogic()));
+            }
+
+            for(int j=0;j<_pboxList[i]->_dataItems.size();j++) {
+                PAbstractDataItem* padi=_pboxList[i]->_dataItems[j];
+
+                if(ui->comboBox->currentText().contains(padi->idText())) {
+                    Q_ASSERT(!ok);
+                    ok=1;
+                    ui->lineEditCaption->setText(padi->caption());
+                    ui->lineEditSource->setText(padi->source());
+                }
+            }
+        }
+        _dirty=0;
+    }
+    PStyleNotifier::me->notifyChange();
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::htmlUpdate()
+{
+    if(ui->checkboxWeb_server_on->isChecked()) {
+        _ht->setInterval(ui->spinBoxWebServerUpdate->value()*1000);
+        if(QFile::exists(ui->lineEditHtmlPath->text())) {
+            writeHtml(ui->lineEditHtmlPath->text());
+        } else {
+            qDebug()<<"To write to an html page, please make sure it exists _first_.";
+        }
+    }
+}
+
+void PMainWindow::removeCurrentDataItem()
+{
+    PAbstractDataItem* padi=dynamic_cast<PAbstractDataItem*>(_currentObject);
+    Q_ASSERT(padi);
+    for(int i=0;i<_pboxList.size();i++) {
+        _pboxList[i]->_dataItems.removeOne(padi);
+    }
+    obviate(padi);
+    ui->comboBox->setCurrentIndex(0);
+    _currentObject->deleteLater();
+}
+
+void PMainWindow::obviate(PBox *byeBye)
+{
+    _pboxList.removeOne(byeBye);
+    for(int i=0;i<ui->comboBox->count();i++) {
+        if(ui->comboBox->itemText(i).contains(byeBye->idText())) {
+            ui->comboBox->removeItem(i);
+            break;
+        }
+    }
+    for(int j=0;j<byeBye->_dataItems.size();j++) {
+        obviate(byeBye->_dataItems[j]);
+    }
+}
+
+void PMainWindow::obviate(PAbstractDataItem *byeBye)
+{
+    for(int i=0;i<ui->comboBox->count();i++) {
+        if(ui->comboBox->itemText(i).contains(byeBye->idText())) {
+            ui->comboBox->removeItem(i);
+            break;
+        }
+    }
+}
+
+void PMainWindow::recognizeExtrema(PExtrema *e)
+{
+    ui->comboBoxExtrema->addItem(e->name()+" "+e->idText());
+}
+
+void PMainWindow::activate()
+{
+    ui->labelCurFile->show();
+    ui->lineEditCurFile->show();
+    reconnect(ui->lineEditCurFile,SIGNAL(textEdited(QString)),this,SLOT(curfileLogic(QString)));
+}
+
+void PMainWindow::owlSave()
+{
+    QFile file(QFileDialog::getSaveFileName(this,"Save the current owl project","","Owl projects(*.owl)"));
+    file.open(QFile::WriteOnly);
+    QDataStream xds(&file);
+    xds<<*this;
+    file.close();
+}
+
+void PMainWindow::owlLoad()
+{
+    QString filename(QFileDialog::getOpenFileName(0,"Load a pal/owl project","","Pal/Owl projects(*.pal *.owl)"));
+    if(filename.isEmpty()) {
+        return;
+    }
+
+    ///////////////////////////////////////////
+    delete this;
+    PExtrema::_u.clear();
+    PStyle::_u.clear();
+    PObject::_lastId=-1;
+    PObject::_u.clear();
+    PStyleNotifier::me->disable();
+    ///////////////////////////////////////////
+
+    if(filename.endsWith("owl")) {
+        QFile file(filename);
+        file.open(QFile::ReadOnly);
+        QDataStream xds(&file);
+        PMainWindow* evenNewer=new PMainWindow(0);
+        evenNewer->setUpdatesEnabled(0);
+        evenNewer->_ut->stop();
+        xds>>*evenNewer;
+        evenNewer->setWindowTitle(_WINDOW_TITLE_);
+        evenNewer->show();
+        evenNewer->_ut->start();
+        evenNewer->setUpdatesEnabled(1);
+        file.close();
+    } else if(filename.endsWith("pal")) {
+        PMainWindow* newMain=new PMainWindow(0);
+        qApp->setActiveWindow(newMain);
+        PDotPal dotPal(filename);
+        for(int i=0;i<dotPal._pbox.size();i++) {
+            newMain->_mdiArea->createPBox(0,0,dotPal._pbox[i]);
+            newMain->_pboxList.back()->show();
+        }
+        newMain->show();
+    }
+
+    PStyleNotifier::me->enable();
+    PStyleNotifier::me->notifyChange();
+}
