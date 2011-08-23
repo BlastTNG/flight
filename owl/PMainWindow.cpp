@@ -639,7 +639,9 @@ void PMainWindow::currowLogic()
 
 void PMainWindow::gdUpdate()
 {
-//    return;
+    if(!_dirfile) {
+	return;
+    }
     setUpdatesEnabled(0);
     int nFrames = _dirfile->NFrames();
     for(int i=0;i<_pboxList.size();i++) {
