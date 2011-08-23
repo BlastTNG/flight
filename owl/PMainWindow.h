@@ -21,6 +21,7 @@
 
 #include <QMainWindow>
 #include <QDataStream>
+#include <QScrollArea>
 #include <QSystemSemaphore>
 #include "PAbstractDataItem.h"
 #include "PObject.h"
@@ -47,6 +48,7 @@ protected:
     GetData::Dirfile* _dirfile;
     QString _dirfileFilename;
     PMdiArea* _mdiArea;
+    QScrollArea* _scrollArea;
     QString oldStyle;
     QString oldLayout;
     int styleVersion;

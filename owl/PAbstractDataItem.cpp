@@ -32,6 +32,8 @@ PAbstractDataItem::PAbstractDataItem(PBox* parent, QString caption) : QWidget(pa
 {
     connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(pstyleLogic()));
     setLayout(_layout);
+    _layout->setMargin(0);
+    _layout->setSpacing(0);
     _layout->addWidget(_caption);
     _layout->addWidget(_data);
     parent->_dirty=1;

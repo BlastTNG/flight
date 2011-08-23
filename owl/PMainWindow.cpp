@@ -48,6 +48,7 @@ PMainWindow::PMainWindow(QWidget *parent) :
     QMainWindow(parent),
     _currentObject(0),
     _dirfile(0),
+    _scrollArea(new QScrollArea()),
     styleVersion(0),
     layoutVersion(0),
     _server(0),
@@ -58,9 +59,16 @@ PMainWindow::PMainWindow(QWidget *parent) :
     ui->setupUi(this);
     ui->comboBox->addItem("Owl "+idText());
     ui->lineEditCurFile->setText("/data1/replay/");
-    _mdiArea=new PMdiArea(centralWidget());
+    _mdiArea=new PMdiArea;
+    _scrollArea->setParent(centralWidget());
+    _scrollArea->setAutoFillBackground(1);
+    QPalette p=_scrollArea->palette();
+    p.setColor(_scrollArea->backgroundRole(),"white");
+    _scrollArea->setPalette(p);
+    _mdiArea->setMinimumSize(1600,1200);
+    _scrollArea->setWidget(_mdiArea);
     _mdiArea->adjustSize();
-    centralWidget()->layout()->addWidget(_mdiArea);
+    centralWidget()->layout()->addWidget(_scrollArea);
     connect(_mdiArea,SIGNAL(newBox(PBox*)),this,SLOT(uiLogic()));
     connect(ui->comboBox,SIGNAL(activated(int)),this,SLOT(uiLogic()));
     connect(ui->actionSave,SIGNAL(activated()),this,SLOT(owlSave()));

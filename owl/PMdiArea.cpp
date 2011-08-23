@@ -66,7 +66,7 @@ void PMdiArea::createPBox(int x,int y,PBox*c_pbox)
         pbox->setGeometry(x/20*20,y/20*20,pbox->width()/20*20,pbox->height()/20*20);
         pbox->adjustSize();
     }
-    dynamic_cast<PMainWindow*>(parent()->parent())->_pboxList.push_back(pbox);
+    dynamic_cast<PMainWindow*>(PMainWindow::me)->_pboxList.push_back(pbox);
     pbox->show();
     emit newBox(pbox);
 }
@@ -76,6 +76,6 @@ void PMdiArea::createOwl(int x,int y)
     Owl* owl=new Owl();
     owl->setParent(this);
     owl->setGeometry(x/20*20,y/20*20,owl->sizeHint().width()/20*20,owl->sizeHint().height()/20*20);
-    dynamic_cast<PMainWindow*>(parent()->parent())->_owlList.push_back(owl);
+    dynamic_cast<PMainWindow*>(PMainWindow::me)->_owlList.push_back(owl);
     owl->show();
 }
