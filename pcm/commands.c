@@ -1357,10 +1357,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /*************** Bias  *****************/
     case dac_ampl:
       if (ivalues[0] < N_DAC) {
-	CommandData.Bias.bias[ivalues[0]] = ivalues[1];
+	CommandData.Bias.bias[ivalues[0]] = ivalues[1]<<1;
 	CommandData.Bias.setLevel[ivalues[0]] = 1;
       } else for (i=0; i<N_DAC; i++) {
-	CommandData.Bias.bias[i] = ivalues[1];
+	CommandData.Bias.bias[i] = ivalues[1]<<1;
 	CommandData.Bias.setLevel[i] = 1;
       }
       break;
@@ -1391,7 +1391,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /*************** Heat  *****************/
     case hk_heat_set:
-      CommandData.Heat.bits[ivalues[0]] = ivalues[1];
+      if (ivalues[0] < 6) CommandData.Heat.bits[ivalues[0]] = ivalues[1];
+      else if (ivalues[0] == 6)
+	  for (i=0; i<6; i++) CommandData.Heat.bits[i] = ivalues[1];
       break;
 
 #ifndef BOLOTEST
