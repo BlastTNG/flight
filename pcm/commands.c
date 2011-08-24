@@ -901,7 +901,7 @@ static inline void copysvalue(char* dest, const char* src)
 static void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
-  int i;
+  int i, j;
   char buf[256]; //for SBSC Commands
   int is_new;
 
@@ -1355,46 +1355,92 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Bias  *****************/
-    case dac_ampl:
-      if (ivalues[0] < N_DAC) {
-	CommandData.Bias.bias[ivalues[0]] = ivalues[1]<<1;
-	CommandData.Bias.setLevel[ivalues[0]] = 1;
-      } else for (i=0; i<N_DAC; i++) {
-	CommandData.Bias.bias[i] = ivalues[1]<<1;
-	CommandData.Bias.setLevel[i] = 1;
-      }
+    case hk_ampl_ntd:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].ntd.ampl = rvalues[1];
+      else for (i=0; i<6; i++) CommandData.hk[i].ntd.ampl = rvalues[1];
       break;
-    case dac_phase:
-      CommandData.Phase.step.do_step = 0;
-      if (ivalues[0] < N_DAC) {
-	CommandData.Phase.phase[ivalues[0]] = rvalues[1] * 65535.0/360.0;
-      } else for (i=0; i<N_DAC; i++) {
-	CommandData.Phase.phase[i] = rvalues[1] * 65535.0/360.0;
-      }
+    case hk_ampl_cernox:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].cernox.ampl = rvalues[1];
+      else for (i=0; i<6; i++) CommandData.hk[i].cernox.ampl = rvalues[1];
       break;
-    case bias_step:
-      CommandData.Bias.step.do_step = 1;
-      CommandData.Bias.step.start = ivalues[0];
-      CommandData.Bias.step.end = ivalues[1];
-      CommandData.Bias.step.nsteps = ivalues[2];
-      CommandData.Bias.step.dt = ivalues[3];
-      CommandData.Bias.step.which = ivalues[4];
+    case hk_phase_ntd:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].ntd.phase = rvalues[1];
+      else for (i=0; i<6; i++) CommandData.hk[i].ntd.phase = rvalues[1];
       break;
-    case phase_step:
-      CommandData.Phase.step.do_step=1;
-      CommandData.Phase.step.start=rvalues[0] * 65535.0/360.0;
-      CommandData.Phase.step.end=rvalues[1] * 65535.0/360.0;
-      CommandData.Phase.step.nsteps=ivalues[2];
-      CommandData.Phase.step.dt=ivalues[3];
+    case hk_phase_cernox:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].cernox.phase = rvalues[1];
+      else for (i=0; i<6; i++) CommandData.hk[i].cernox.phase= rvalues[1];
       break;
 
       /***************************************/
       /*************** Heat  *****************/
-    case hk_heat_set:
-      if (ivalues[0] < 6) CommandData.Heat.bits[ivalues[0]] = ivalues[1];
-      else if (ivalues[0] == 6)
-	  for (i=0; i<6; i++) CommandData.Heat.bits[i] = ivalues[1];
+    case hk_pump_heat_on:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].pump_heat = 1;
+      else for (i=0; i<6; i++) CommandData.hk[i].pump_heat = 1;
       break;
+    case hk_pump_heat_off:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].pump_heat = 0;
+      else for (i=0; i<6; i++) CommandData.hk[i].pump_heat = 0;
+      break;
+    case hk_heat_switch_on:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].heat_switch = 1;
+      else for (i=0; i<6; i++) CommandData.hk[i].heat_switch = 1;
+      break;
+    case hk_heat_switch_off:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].heat_switch = 0;
+      else for (i=0; i<6; i++) CommandData.hk[i].heat_switch = 0;
+      break;
+    case hk_fphi_heat_on:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].fphi_heat = 1;
+      else for (i=0; i<6; i++) CommandData.hk[i].fphi_heat = 1;
+      break;
+    case hk_fphi_heat_off:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].fphi_heat = 0;
+      else for (i=0; i<6; i++) CommandData.hk[i].fphi_heat = 0;
+      break;
+    case hk_tile_heat_on:
+      CommandData.hk_last = ivalues[0];
+      for (i = ((ivalues[0] < 6) ? ivalues[0]     : 0);
+	   i < ((ivalues[0] < 6) ? ivalues[0] + 1 : 6); i++) {
+	for (j = ((ivalues[1] < 4) ? ivalues[1]     : 0);
+	     j < ((ivalues[1] < 4) ? ivalues[1] + 1 : 4); j++) {
+	  CommandData.hk[i].tile_heat[j] = 1;
+	}
+      }
+      break;
+    case hk_tile_heat_off:
+      CommandData.hk_last = ivalues[0];
+      for (i = ((ivalues[0] < 6) ? ivalues[0]     : 0);
+	   i < ((ivalues[0] < 6) ? ivalues[0] + 1 : 6); i++) {
+	for (j = ((ivalues[1] < 4) ? ivalues[1]     : 0);
+	     j < ((ivalues[1] < 4) ? ivalues[1] + 1 : 4); j++) {
+	  CommandData.hk[i].tile_heat[j] = 0;
+	}
+      }
+      break;
+    case hk_fplo_heat_set:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].fplo_heat = rvalues[1];
+      else if (ivalues[0] == 6)
+	for (i=0; i<6; i++) CommandData.hk[i].fplo_heat = rvalues[1];
+      break;
+    case hk_ssa_heat_set:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] < 6) CommandData.hk[ivalues[0]].ssa_heat = rvalues[1];
+      else if (ivalues[0] == 6)
+	for (i=0; i<6; i++) CommandData.hk[i].ssa_heat = rvalues[1];
+      break;
+
 
 #ifndef BOLOTEST
       /***************************************/
@@ -2148,7 +2194,7 @@ void WatchPort (void* parameter)
 /************************************************************/
 void InitCommandData()
 {
-  int fp, n_read = 0, junk, extra = 0, i;
+  int fp, n_read = 0, junk, extra = 0, i, j;
 
   if ((fp = open("/data/etc/mcp.prev_status", O_RDONLY)) < 0) {
     berror(err, "Commands: Unable to open prev_status file for reading");
@@ -2178,13 +2224,6 @@ void InitCommandData()
   CommandData.hwpr.is_new = 0;
   CommandData.hwpr.force_repoll = 0;
   CommandData.hwpr.repeats = 0;
-
-  CommandData.Bias.step.do_step = 0;
-  CommandData.Phase.step.do_step = 0;
-  //TODO probably don't want all heater bits to always init to 0
-  for (i=0; i<6; i++) CommandData.Heat.bits[i] = 0;
-  //forces reload of saved bias values
-  for (i=0; i<N_DAC; i++) CommandData.Bias.setLevel[i] = 1;
 
   CommandData.Temporary.setLevel[0] = 1;
   CommandData.Temporary.setLevel[1] = 1;
@@ -2344,18 +2383,19 @@ void InitCommandData()
   CommandData.Temporary.dac_out[3] = 0x8000;
   CommandData.Temporary.dac_out[4] = 0x8000;
 
-  for (i=0; i<N_DAC; i++) CommandData.Bias.bias[i] = DAC_ZERO;
-  CommandData.Bias.step.start = DAC_MIN;
-  CommandData.Bias.step.end = DAC_MAX;
-  CommandData.Bias.step.nsteps = 1000;
-  CommandData.Bias.step.dt = 1000;
-  CommandData.Bias.step.which = 0;
+  for (i=0; i<6; i++) {
+    CommandData.hk[i].pump_heat = 0;
+    CommandData.hk[i].heat_switch = 1;	  //heat switch defaults to on
+    CommandData.hk[i].fphi_heat = 0;
+    for (j=0; j<4; j++) CommandData.hk[i].tile_heat[j] = 0;
+    CommandData.hk[i].fplo_heat = 0.0;
+    CommandData.hk[i].ssa_heat = 0.0;
 
-  for (i=0; i<N_DAC; i++) CommandData.Phase.phase[i] = PHASE_MIN;
-  CommandData.Phase.step.start = PHASE_MIN;
-  CommandData.Phase.step.end = PHASE_MAX;
-  CommandData.Phase.step.nsteps = 1000;
-  CommandData.Phase.step.dt = 1000;
+    CommandData.hk[i].cernox.phase = 0.0;
+    CommandData.hk[i].cernox.ampl = 0.0;
+    CommandData.hk[i].ntd.phase = 0.0;
+    CommandData.hk[i].ntd.ampl = 0.0;
+  }
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */

@@ -37,72 +37,25 @@
 /************************************************************************/
 static void PhaseControl()
 {
-  static struct NiosStruct* NiosAddr[N_DAC];
-  static struct NiosStruct* phaseStepEnaAddr;
-  static struct NiosStruct* phaseStepStartAddr;
-  static struct NiosStruct* phaseStepEndAddr;
-  static struct NiosStruct* phaseStepNstepsAddr;
-  static struct NiosStruct* phaseStepTimeAddr;
-
+  static struct NiosStruct* phaseCnxAddr[6];
+  static struct NiosStruct* phaseNtdAddr[6];
   char field[20];
   int i;
-  static int step_size = 1;
-  static unsigned int k = 0;
-  static unsigned int dk = 1;
-  static int end = 0;
-  static int start = 0;
-  int phase = 0;
 
   static int first_time = 1;
   if (first_time) {
     first_time = 0;
-    for(i = 0; i < N_DAC; i++) {
-      sprintf(field, "phase_%02d_hk", i);
-      NiosAddr[i] = GetNiosAddr(field);
+    for(i = 0; i < 6; i++) {
+      sprintf(field, "phase_cnx%1d_hk", i+1);
+      phaseCnxAddr[i] = GetNiosAddr(field);
+      sprintf(field, "phase_ntd%1d_hk", i+1);
+      phaseNtdAddr[i] = GetNiosAddr(field);
     }
-    phaseStepEnaAddr	= GetNiosAddr("step_ena_phase");
-    phaseStepStartAddr	= GetNiosAddr("step_start_phase");
-    phaseStepEndAddr	= GetNiosAddr("step_end_phase");
-    phaseStepNstepsAddr	= GetNiosAddr("step_nsteps_phase");
-    phaseStepTimeAddr	= GetNiosAddr("step_time_phase");
-   
   }	
 
-  if(CommandData.Phase.step.do_step) {
-    if (k == 0) {
-      start = CommandData.Phase.step.start;
-      end = CommandData.Phase.step.end;
-      step_size = (end - start)/CommandData.Phase.step.nsteps;
-
-      if(step_size == 0) { // minimum step size is 1
-	if (end >= start) step_size = 1;
-	if (end < start) step_size = -1;
-      }
-      end += step_size;
-      dk = CommandData.Phase.step.dt*SR/1000/FAST_PER_SLOW;
-      if (dk == 0) dk = 1;
-    }
-
-    phase = start + (k++/dk)*step_size;
-
-    if (step_size > 0) {
-      if (phase > PHASE_MAX) phase = PHASE_MAX;
-      if (phase >= end || phase == PHASE_MAX) CommandData.Phase.step.do_step=0;
-    } else {
-      if (phase < PHASE_MIN) phase = PHASE_MIN;
-      if (phase <= end || phase == PHASE_MIN) CommandData.Phase.step.do_step=0; 
-    }
-
-    WriteData(phaseStepEnaAddr,CommandData.Phase.step.do_step, NIOS_QUEUE);
-    WriteCalData(phaseStepStartAddr,CommandData.Phase.step.start, NIOS_QUEUE);
-    WriteCalData(phaseStepEndAddr,CommandData.Phase.step.end, NIOS_QUEUE);
-    WriteData(phaseStepNstepsAddr,CommandData.Phase.step.nsteps, NIOS_QUEUE);
-    WriteData(phaseStepTimeAddr,CommandData.Phase.step.dt, NIOS_QUEUE);
-    for(i = 0; i < N_DAC; i++) WriteData(NiosAddr[i], phase, NIOS_QUEUE);
-  } else {
-    for(i = 0; i < N_DAC; i++)
-      WriteData(NiosAddr[i], CommandData.Phase.phase[i], NIOS_QUEUE);
-    k = 0;
+  for(i = 0; i < 6; i++) {
+    WriteCalData(phaseCnxAddr[i], CommandData.hk[i].cernox.phase, NIOS_QUEUE);
+    WriteCalData(phaseNtdAddr[i], CommandData.hk[i].ntd.phase, NIOS_QUEUE);
   }
 }
 
@@ -113,87 +66,28 @@ static void PhaseControl()
 /************************************************************************/
 static void BiasControl()
 {
-  static struct NiosStruct* amplBiasAddr[N_DAC];
-  static struct NiosStruct* stepEnaBiasAddr;
-  static struct NiosStruct* stepStartBiasAddr;
-  static struct NiosStruct* stepEndBiasAddr;
-  static struct NiosStruct* stepNBiasAddr;
-  static struct NiosStruct* stepTimeBiasAddr;
-  static struct NiosStruct* stepWhichBiasAddr;
+  static struct NiosStruct* vCnxAddr[6];
+  static struct NiosStruct* vNtdAddr[6];
   char field[20];
-  static unsigned int step_size = 1;
-  static unsigned int k = 0;
-  static unsigned int dk = 1;
-  static int end = 0;
-  static int start = 0;
-  int bias = 0;
-
   int i;
 
-  /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    for (i=0; i<N_DAC; i++) {
-      sprintf(field, "ampl_%02d_hk", i);
-      amplBiasAddr[i] = GetNiosAddr(field);
-    }
-    stepEnaBiasAddr   = GetNiosAddr("step_ena_bias");
-    stepStartBiasAddr = GetNiosAddr("step_start_bias");
-    stepEndBiasAddr   = GetNiosAddr("step_end_bias");
-    stepNBiasAddr     = GetNiosAddr("step_n_bias");
-    stepTimeBiasAddr  = GetNiosAddr("step_time_bias");
-    stepWhichBiasAddr = GetNiosAddr("step_which_bias");
-  }
-
-  /************* Set the Bias Levels *******/
-  //TODO should DAC levels use the same scale for both AC and DC?
-  for (i=0; i<N_DAC; i++) {
-    if (CommandData.Bias.setLevel[i]) {
-      WriteData(amplBiasAddr[i], CommandData.Bias.bias[i], NIOS_QUEUE);
-      CommandData.Bias.setLevel[i] = 0;
-      CommandData.Bias.step.do_step = 0;
+    for (i=0; i<6; i++) {
+      sprintf(field, "v_cnx%1d_hk", i+1);
+      vCnxAddr[i] = GetNiosAddr(field);
+      sprintf(field, "v_ntd%1d_hk", i+1);
+      vNtdAddr[i] = GetNiosAddr(field);
     }
   }
 
-  if (CommandData.Bias.step.do_step) {
-    if (k == 0) {
-      start = CommandData.Bias.step.start;
-      end = CommandData.Bias.step.end;
-      step_size = (end - start)/CommandData.Bias.step.nsteps;
-
-      if(step_size == 0) { // minimum step size is 1
-	if (end >= start) step_size = 1;
-	if (end < start) step_size = -1;
-      }
-      end +=step_size;
-      dk = CommandData.Bias.step.dt*SR/1000/FAST_PER_SLOW;
-      if (dk == 0) dk = 1; 
-    }
-
-    bias = start + (k++/dk)*step_size;
-
-    if (step_size > 0) {
-      if (bias > DAC_MAX) bias = DAC_MAX;
-      if (bias >= end || bias == DAC_MAX) CommandData.Bias.step.do_step=0;
-    } else {
-      if (bias < DAC_MIN) bias = DAC_MIN;
-      if (bias <= end || bias == DAC_MIN) CommandData.Bias.step.do_step=0; 
-    }
-
-    WriteData(stepEnaBiasAddr,CommandData.Bias.step.do_step, NIOS_QUEUE);
-    WriteData(stepStartBiasAddr,CommandData.Bias.step.start, NIOS_QUEUE);
-    WriteData(stepEndBiasAddr,CommandData.Bias.step.end, NIOS_QUEUE);
-    WriteData(stepNBiasAddr,CommandData.Bias.step.nsteps, NIOS_QUEUE);
-    WriteData(stepTimeBiasAddr,CommandData.Bias.step.dt, NIOS_QUEUE);
-    WriteData(stepWhichBiasAddr,CommandData.Bias.step.which, NIOS_QUEUE);
-    if (CommandData.Bias.step.which < N_DAC) {  //just one
-      WriteData(amplBiasAddr[CommandData.Bias.step.which], bias, NIOS_QUEUE);
-    } else {					//all
-      for(i = 0; i <= N_DAC; i++)
-	WriteData(amplBiasAddr[i], bias, NIOS_QUEUE);
-    }
-  } else k = 0;
+  //TODO change DSP to use the same scale for both AC and DC?
+  //otherwise need to change scaling in tx_struct
+  for (i=0; i<6; i++) {
+    WriteCalData(vCnxAddr[i], CommandData.hk[i].cernox.ampl, NIOS_QUEUE);
+    WriteCalData(vNtdAddr[i], CommandData.hk[i].ntd.ampl, NIOS_QUEUE);
+  }
 }
 
 /************************************************************************/
@@ -201,40 +95,84 @@ static void BiasControl()
 /*   HeatControl: Switching logic for the PWM (digital) heaters         */
 /*                                                                      */
 /************************************************************************/
+/* bit positions of hk pwm heaters */
+#define HK_PWM_PUMP   0x01
+#define HK_PWM_HSW    0x02
+#define HK_PWM_TILE3  0x04
+#define HK_PWM_TILE2  0x08
+#define HK_PWM_TILE1  0x10
+#define HK_PWM_FPHI   0x20
+#define HK_PWM_TILE4  0x40
+
 static void HeatControl()
 {
-  static struct NiosStruct* heat21Addr;
-  static struct NiosStruct* heat43Addr;
-  static struct NiosStruct* heat65Addr;
+  static struct NiosStruct* heat13Addr;
+  static struct NiosStruct* heat45Addr;
+  static struct NiosStruct* heat26Addr;
+  static struct NiosStruct* heatSsaAddr[6];
+  static struct NiosStruct* heatFploAddr[6];
 
-  short temp;
+  int i;
+  unsigned short temp;
+  unsigned short bits[6];
+  char buf[16];
 
   static int first_time = 1;
   if (first_time) {
     first_time = 0;
-    heat21Addr = GetNiosAddr("heat_21_hk");
-    heat43Addr = GetNiosAddr("heat_43_hk");
-    heat65Addr = GetNiosAddr("heat_65_hk");
+    heat13Addr = GetNiosAddr("heat_13_hk");
+    heat45Addr = GetNiosAddr("heat_45_hk");
+    heat26Addr = GetNiosAddr("heat_26_hk");
+    for (i=0; i<6; i++) {
+      sprintf(buf, "heat_ssa%1d_hk", i+1);
+      heatSsaAddr[i] = GetNiosAddr(buf);
+    }
+    for (i=0; i<6; i++) {
+      sprintf(buf, "heat_fplo%1d_hk", i+1);
+      heatFploAddr[i] = GetNiosAddr(buf);
+    }
   }	
 
-  //TODO hk group mapping will need to be rearranged
-  temp = ((CommandData.Heat.bits[1] & 0xff) << 8) 
-	| (CommandData.Heat.bits[0] & 0xff);
-  WriteData(heat21Addr, temp, NIOS_QUEUE);
-  temp = ((CommandData.Heat.bits[3] & 0xff) << 8) 
-	| (CommandData.Heat.bits[2] & 0xff);
-  WriteData(heat43Addr, temp, NIOS_QUEUE);
-  temp = ((CommandData.Heat.bits[5] & 0xff) << 8) 
-	| (CommandData.Heat.bits[4] & 0xff);
-  WriteData(heat65Addr, temp, NIOS_QUEUE);
+  //PWM heaters
+  for (i=0; i<6; i++) {
+    bits[i] = 0;
+    if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
+    //NB: heat switch is normally closed, so logic inverted
+    if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
+    if (CommandData.hk[i].fphi_heat) bits[i] |= HK_PWM_FPHI;
+    if (CommandData.hk[i].tile_heat[0]) bits[i] |= HK_PWM_TILE1;
+    if (CommandData.hk[i].tile_heat[1]) bits[i] |= HK_PWM_TILE2;
+    if (CommandData.hk[i].tile_heat[2]) bits[i] |= HK_PWM_TILE3;
+    if (CommandData.hk[i].tile_heat[3]) bits[i] |= HK_PWM_TILE4;
+  }
+  temp = ((bits[0] & 0xff) << 8) | (bits[2] & 0xff);
+  WriteData(heat13Addr, temp, NIOS_QUEUE);
+  temp = ((bits[3] & 0xff) << 8) | (bits[4] & 0xff);
+  WriteData(heat45Addr, temp, NIOS_QUEUE);
+  temp = ((bits[1] & 0xff) << 8) | (bits[5] & 0xff);
+  WriteData(heat26Addr, temp, NIOS_QUEUE);
 
+  //DAC heaters
+  for (i=0; i<6; i++) {
+    WriteCalData(heatSsaAddr[i], CommandData.hk[i].ssa_heat, NIOS_QUEUE);
+    WriteCalData(heatFploAddr[i], CommandData.hk[i].fplo_heat, NIOS_QUEUE);
+  }
 }
 
 void HouseKeeping(int index)
 {
+  static struct NiosStruct* insertLastHkAddr;
+  static int first_time = 1;
+  if (first_time) {
+    first_time = 0;
+    insertLastHkAddr = GetNiosAddr("insert_last_hk");
+  }
+
   if (index == 0) {
     BiasControl();
     PhaseControl();
     HeatControl();
   }
+
+  WriteData(insertLastHkAddr, CommandData.hk_last, NIOS_QUEUE);
 }

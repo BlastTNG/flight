@@ -23,9 +23,10 @@
 #ifndef COMMAND_STRUCT_H
 #define COMMAND_STRUCT_H
 
+#include <stdbool.h>	  //bool type!
+#include <time.h>
 #include "command_list.h"
 #include "share/channels.h"
-#include <time.h>
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -49,13 +50,6 @@
 /* time (in slow frames) to suppress ADC card watchdog, to induce reset */
 #define	RESET_ADC_LEN	 80
 
-/* parameters for hk dacs */
-#define N_DAC	    32
-#define PHASE_MAX   0xffff
-#define PHASE_MIN   0
-#define DAC_MAX	    0xffff
-#define DAC_ZERO    0x8000
-#define DAC_MIN	    0
 
 
 struct GainStruct {
@@ -146,15 +140,6 @@ struct latch_pulse {
   int rst_count;
 };
 
-
-struct Step {
-  unsigned short do_step;
-  unsigned short start;
-  unsigned short end;
-  unsigned short nsteps;
-  unsigned short which; // only used for bias
-  unsigned short dt;
-};
 
 struct SBSCCommandData {
   //camera and lens configuration
@@ -274,21 +259,26 @@ struct CommandDataStruct {
   double pss1_az_trim;
   double pss2_az_trim;
 
-  //TODO restructure hk (Bias Phase Heat) on a per-telescope basis
   struct {
-    unsigned short bias[N_DAC];
-    unsigned char setLevel[N_DAC];
-    struct Step step;
-  } Bias;
+    bool pump_heat;
+    bool heat_switch;
+    bool fphi_heat;
+    bool tile_heat[4];
+    double fplo_heat;
+    double ssa_heat;
 
-  struct {
-    unsigned short phase[N_DAC];
-    struct Step step;
-  } Phase;
+    struct {
+      double phase;
+      double ampl;
+    } cernox;
 
-  struct {
-    unsigned short bits[6];
-  } Heat;
+    struct {
+      double phase;
+      double ampl;
+    } ntd;
+  } hk[6];    //one per insert
+
+  short hk_last;
 
   struct {
     int off;

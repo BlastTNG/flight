@@ -26,13 +26,13 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.22 $";
+const char *command_list_serial = "$Revision: 1.23 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
-  "Pointing Sensor Trims", "Aux. Electronics", "Bias",
+  "Pointing Sensor Trims", "Aux. Electronics", "HK Bias",
   "Pointing Sensor Vetos", "Actuators",        "SBSC",
-  "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
+  "Pointing Motor Gains",  "Secondary Focus",  "HK Heat",
   "Subsystem Power",       "Lock Motor",       "Cryo Control",
   "Telemetry",             "ISC Housekeeping", "OSC Housekeeping",
   "X-Y Stage",             "ISC Modes",        "OSC Modes",
@@ -621,43 +621,95 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*************** Bias  *****************/
-  //TODO make bias commands more specific: ntd ampl/phase, cernox ampl/phase, heat ampls
-  {COMMAND(dac_ampl), "Set bias signal amplitude", GR_BIAS, 2,
+  {COMMAND(hk_ampl_cernox), "Set cernox bias amplitude", GR_BIAS, 2,
     {
-      {"Which (0-31,32=all)", 0, 32, 'i', ""},
-      {"Amplitude (full=32767)", 1, MAX_15BIT, 'i', ""}
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Amplitude (V)", 0.0, 5.0, 'f', ""}
     }
   },
-  {COMMAND(dac_phase), "Set lock-in phase on card 4", GR_BIAS, 1,
+  {COMMAND(hk_ampl_ntd), "Set NTD bias amplitude", GR_BIAS, 2,
     {
-      {"Which (0-31,32=all)", 0, 32, 'i', ""},
-      {"Phase (degrees)", 0, 360, 'f', ""}
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Amplitude (V)", 0.0, 5.0, 'f', ""}
     }
   },
-  {COMMAND(bias_step), "step through different bias levels", GR_BIAS, 5,
+  {COMMAND(hk_phase_cernox), "Set cernox bias phase", GR_BIAS, 2,
     {
-      {"Start (full=32767)", 0, MAX_15BIT, 'i', "STEP_START_BIAS"},
-      {"End (full=32767)", 0, MAX_15BIT, 'i', "STEP_END_BIAS"},
-      {"N steps", 1, MAX_15BIT, 'i', "STEP_NSTEPS_BIAS"},
-      {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_BIAS"},
-      {"Which (0-31,32=all)", 0, 32, 'i', "STEP_WHICH_BIAS"},
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
-  {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
+  {COMMAND(hk_phase_ntd), "Set NTD bias phase", GR_BIAS, 2,
     {
-      {"Start (degrees)", 0, 360, 'f', "STEP_START_PHASE"},
-      {"End (degrees)", 0, 360, 'f', "STEP_END_PHASE"},
-      {"N steps", 1, MAX_15BIT, 'i', "STEP_NSTEPS_PHASE"},
-      {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_PHASE"},
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
 
   /***************************************/
   /*************** Heat  *****************/
-  {COMMAND(hk_heat_set), "set a group of heater bits", GR_CRYO_HEAT, 2,
+  {COMMAND(hk_pump_heat_on), "Turn on the pump (charcoal) heater",
+      GR_CRYO_HEAT, 1,
     {
-      {"Which (0-5,6=all)", 0, 6, 'i', ""},
-      {"Bits (0-255)", 0, 255, 'i', ""},
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_pump_heat_off), "Turn off the pump (charcoal) heater",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_heat_switch_on), "Turn on the heat switch heater",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_heat_switch_off), "Turn off the heat switch heater",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_fphi_heat_on), "Turn on the high-current focal plane heater",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_fphi_heat_off), "Turn off the high-current focal plane heater",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  //TODO should tile and DAC level get default values?
+  {COMMAND(hk_tile_heat_on), "Turn on a detector tile heater",
+      GR_CRYO_HEAT, 2,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Tile (0-3,4=all)", 0, 4, 'i', ""},
+    }
+  },
+  {COMMAND(hk_tile_heat_off), "Turn off a detector tile heater",
+      GR_CRYO_HEAT, 2,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Tile (0-3,4=all)", 0, 4, 'i', ""},
+    }
+  },
+  {COMMAND(hk_ssa_heat_set), "Set SSA heater voltage", GR_CRYO_HEAT, 2,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Level (V)", -5.0, 5.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_fplo_heat_set), "Set low-current focal plane heater voltage",
+      GR_CRYO_HEAT, 2,
+    {
+      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Level (V)", -5.0, 5.0, 'f', ""},
     }
   },
 
