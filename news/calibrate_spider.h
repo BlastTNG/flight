@@ -31,6 +31,9 @@ extern "C" {
 #define M_16T	(4.096E6/2.2E3/32768.0/8.0)  //factor of 8 from maximizing range
 #define B_16T	(0.0)
 
+#define M_DAC (5.0/32768.0)
+#define B_DAC (-32768.0)
+
 /* offset of encoder.  Reset if encoder has been unmounted. */
 /* This is the elevation at which the encoder wraps around */
 #define ENC_RAW_EL_OFFSET (75.3) /* Updated 09-DEC_2010 by lmf */
