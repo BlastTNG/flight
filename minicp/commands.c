@@ -213,10 +213,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
   switch(command) {
     case dac_ampl:
       if (ivalues[0] < N_DAC) {
-	CommandData.Bias.bias[ivalues[0]] = ivalues[1];
+	CommandData.Bias.bias[ivalues[0]] = ivalues[1] << 1;
 	CommandData.Bias.setLevel[ivalues[0]] = 1;
       } else for (i=0; i<N_DAC; i++) {
-	CommandData.Bias.bias[i] = ivalues[1];
+	CommandData.Bias.bias[i] = ivalues[1] << 1;
 	CommandData.Bias.setLevel[i] = 1;
       }
       break;
@@ -229,8 +229,8 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case bias_step:
       CommandData.Bias.step.do_step = 1;
-      CommandData.Bias.step.start = ivalues[0];
-      CommandData.Bias.step.end = ivalues[1];
+      CommandData.Bias.step.start = ivalues[0] << 1;
+      CommandData.Bias.step.end = ivalues[1] << 1;
       CommandData.Bias.step.nsteps = ivalues[2];
       CommandData.Bias.step.dt = ivalues[3];
       CommandData.Bias.step.which = ivalues[4];
