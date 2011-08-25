@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
+#include <limits.h>
 
 #include "share/bbc_pci.h"
 
@@ -1166,9 +1167,29 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 }
 
 //TODO convert suitable WriteData calls to WriteCalData
-void WriteCalData(struct NiosStruct* addr, unsigned int data, int flush_flag)
+void WriteCalData(struct NiosStruct* addr, double data, int flush_flag)
 {
-  WriteData(addr, (unsigned int)(((double)data - addr->b)/addr->m), flush_flag);
+  long long cal = (data - addr->b)/addr->m;
+
+  //check that rounding doesn't lead to over/underflow
+  if (addr->wide) {   //wide
+    if (addr->sign) {   //signed
+      if (cal > INT_MAX) cal = INT_MAX;
+      else if (cal < INT_MIN) cal = INT_MIN;
+    } else {	      //unsigned
+      if (cal > UINT_MAX) cal = UINT_MAX;
+      else if (cal < 0) cal = 0;
+    }
+  } else {	      //narrow
+    if (addr->sign) {   //signed
+      if (cal > SHRT_MAX) cal = SHRT_MAX;
+      else if (cal < SHRT_MIN) cal = SHRT_MIN;
+    } else {	      //unsigned
+      if (cal > USHRT_MAX) cal = USHRT_MAX;
+      else if (cal < 0) cal = 0;
+    }
+  }
+  WriteData(addr, cal, flush_flag);
 }
 
 unsigned int ReadData(struct BiPhaseStruct* addr)

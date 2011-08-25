@@ -36,6 +36,6 @@ void UpdateBBCFrame();
 
 void RawNiosWrite(unsigned int, unsigned int, int);
 void WriteData(struct NiosStruct*, unsigned int, int);
-void WriteCalData(struct NiosStruct*, unsigned int, int);
+void WriteCalData(struct NiosStruct*, double, int);
 unsigned int ReadData(struct BiPhaseStruct*);
 double ReadCalData(struct BiPhaseStruct*);
