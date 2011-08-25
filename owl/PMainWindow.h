@@ -109,6 +109,7 @@ public slots:
 
     void owlSave();
     void owlLoad();
+    void addOwl();
 
 private:
     Ui::PMainWindow *ui;

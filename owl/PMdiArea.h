@@ -54,10 +54,11 @@ protected:
 
 public slots:
     void createPBox(int x=0,int y=0,PBox*c_pbox=0);
-    void createOwl(int x=0,int y=0);
+    void createOwl(int x=0,int y=0,POwlAnimation*c_owl=0);
 
 signals:
     void newBox(PBox*);
+    void newOwl(POwlAnimation*);
 };
 
 #endif // PMDIAREA_H

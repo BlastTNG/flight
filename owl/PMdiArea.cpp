@@ -71,11 +71,14 @@ void PMdiArea::createPBox(int x,int y,PBox*c_pbox)
     emit newBox(pbox);
 }
 
-void PMdiArea::createOwl(int x,int y)
+void PMdiArea::createOwl(int x,int y,POwlAnimation*c_owl)
 {
-    POwlAnimation* owl=new POwlAnimation();
+    POwlAnimation* owl=c_owl?c_owl:new POwlAnimation();
     owl->setParent(this);
-    owl->setGeometry(x/20*20,y/20*20,owl->sizeHint().width()/20*20,owl->sizeHint().height()/20*20);
+    if(!c_owl) {
+        owl->setGeometry(x/20*20,y/20*20,owl->sizeHint().width()/20*20,owl->sizeHint().height()/20*20);
+    }
     dynamic_cast<PMainWindow*>(PMainWindow::me)->_owlList.push_back(owl);
     owl->show();
+    emit newOwl(owl);
 }

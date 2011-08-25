@@ -48,7 +48,7 @@ public:
     void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
     QSize sizeHint();
     const int& stage() const;
-    void mousePressEvent(QMouseEvent *ev) { _moveThingy=mapFromGlobal(ev->globalPos()); }
+    void mousePressEvent(QMouseEvent *ev) { _moveThingy=mapFromGlobal(ev->globalPos()); activate(); }
     void mouseReleaseEvent(QMouseEvent *) { _moveThingy=QPoint(-1,-1); }
     void mouseMoveEvent(QMouseEvent *);
     void activate() { emit activated(); }

@@ -42,6 +42,7 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QDialogButtonBox>
+#include <QFileSystemModel>
 
 PMainWindow* PMainWindow::me=0;
 
@@ -77,6 +78,10 @@ PMainWindow::PMainWindow(QWidget *parent) :
     connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(currowLogic()));
     connect(ui->toolButtonHelp,SIGNAL(clicked()),this,SLOT(webServerHelp()));
     connect(ui->actionHelp,SIGNAL(activated()),this,SLOT(readmeHelp()));
+    connect(_mdiArea,SIGNAL(newOwl(POwlAnimation*)),this,SLOT(addOwl()));
+    QFileSystemModel* fsm=new QFileSystemModel();
+    fsm->setRootPath(QDir::currentPath());
+    ui->lineEditCurFile->setCompleter(new QCompleter(fsm));
 
     curfileLogic("/data1/replay");
 
@@ -90,6 +95,8 @@ PMainWindow::PMainWindow(QWidget *parent) :
     _ut->start();
 
     activate();
+
+    setMinimumSize(1,1);
 }
 
 #define reconnect(a,b,c,d) \
@@ -226,6 +233,12 @@ void PMainWindow::setCurrentObject(POwlAnimation*obj)
 {
     ui->pushButtonRemove->show();
     reconnect(ui->pushButtonRemove,SIGNAL(clicked()),this,SLOT(removeCurrentDataItem()));
+    for(int i=0;i<ui->comboBox->count();i++) {
+        if(ui->comboBox->itemText(i).contains(obj->idText())) {
+            ui->comboBox->setCurrentIndex(i);
+            break;
+        }
+    }
     _currentObject=obj;
 }
 
@@ -421,10 +434,25 @@ void PMainWindow::setCurrentObject(PTimeDataItem*obj)
     setUpdatesEnabled(1);
 }
 
+void PMainWindow::addOwl()
+{
+    qDebug()<<"ADDING OWL!"<<_owlList.back()->idText();
+    setUpdatesEnabled(0);
+    ui->comboBox->addItem("Owl Animation "+_owlList.back()->idText());
+    connect(_owlList.back(),SIGNAL(activated()),this,SLOT(uiLogic()));
+    _currentObject=_owlList.back();
+    ui->comboBox->setCurrentIndex(ui->comboBox->count()-1);
+
+    ui->pushButtonRemove->show();
+    hideEverything();
+    setCurrentObject(dynamic_cast<POwlAnimation*>(_owlList.back()));
+    setUpdatesEnabled(1);
+}
+
 void PMainWindow::uiLogic()
 {
     setUpdatesEnabled(0);
-    bool newWidget=sender()!=_currentObject||!sender();
+    bool newWidget=sender()!=_currentObject||!sender()||dynamic_cast<POwlAnimation*>(sender());
 
     if(newWidget) {
         hideEverything();
@@ -701,8 +729,12 @@ void PMainWindow::gdUpdate()
                 if(ui->comboBox->currentText().contains(padi->idText())) {
                     Q_ASSERT(!ok);
                     ok=1;
+                    int l=ui->lineEditCaption->cursorPosition();
                     ui->lineEditCaption->setText(padi->caption());
+                    ui->lineEditCaption->setCursorPosition(l);
+                    int v=ui->lineEditSource->cursorPosition();
                     ui->lineEditSource->setText(padi->source());
+                    ui->lineEditSource->setCursorPosition(v);
                 }
             }
         }

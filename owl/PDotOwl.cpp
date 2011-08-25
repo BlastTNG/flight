@@ -510,8 +510,9 @@ QDataStream& operator>>(QDataStream&a,PMainWindow&b)
     qint32 owlCount;
     a>>owlCount;
     for(int i=0;i<owlCount;i++) {
-        b._mdiArea->createOwl();
-        a>>*b._owlList.back();
+        POwlAnimation*oa=new POwlAnimation;
+        a>>*oa;
+        b._mdiArea->createOwl(0,0,oa);
     }
 
     qint32 pboxCount;

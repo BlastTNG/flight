@@ -52,7 +52,7 @@ RESOURCES += \
     icons.qrc \
     client.qrc
 
-QMAKE_CXXFLAGS = -O2
+QMAKE_CXXFLAGS = -O0
 
 OTHER_FILES += \
     PClient.html \
