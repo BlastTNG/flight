@@ -66,6 +66,13 @@ union DerivedUnion {
     char source[FIELD_LEN];     /* Source Channel Name */
     int shift;                  /* Phase shift in frames */
   } phase;
+  struct {			/* MULTIPLY or DIVIDE */
+    char type;			/* '*' for multiply, '/' for divide */
+    char field[FIELD_LEN];      /* Derived Channel Name */
+    char source[FIELD_LEN];     /* 1st Source Channel, dividend for divide*/
+    double trash1, trash2;	/* dummy fields, to align with lincom2 */
+    char source2[FIELD_LEN];    /* 2nd Source Channel, divisor for divide */
+  } math;
 };
 
 #define DERIVED_EOC_MARKER '!'
@@ -78,4 +85,6 @@ union DerivedUnion {
 #define COMMENT(c) {.comment = { '#' , c }}
 #define UNITS(s,q,u) {.units = { 'u' , s , q , u}}
 #define PHASE(f,s,p) {.phase = { 'p', f, s, p }}
+#define DIVIDE(f,s1,s2) {.math = { '/', f, s1, 0, 0, s2 }}
+#define MULTIPLY(f,s1,s2) {.math = { '*', f, s1, 0, 0, s2 }}
 #define END_OF_DERIVED_CHANNELS {.comment = { DERIVED_EOC_MARKER , "" }}

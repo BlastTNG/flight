@@ -710,6 +710,8 @@ static void DoSanityChecks(void)
         }
         break;
       case '2': /* lincom2 -- one extra check from lincom */
+      case '/': /* divide  -- ditto */
+      case '*': /* multiply-- ditto */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom2.source2)
             == -1)
           bprintf(fatal, "Channels: Derived channel source %s not found.",
@@ -1351,6 +1353,16 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         snprintf(line, 1024, "%-16s PHASE %-16s %i\n",
             DerivedChannels[i].phase.field, DerivedChannels[i].phase.source,
             DerivedChannels[i].phase.shift);
+        break;
+      case '/': /* divide */
+        snprintf(line, 1024, "%-16s DIVIDE %-16s %-16s\n",
+            DerivedChannels[i].math.field, DerivedChannels[i].math.source,
+            DerivedChannels[i].math.source2);
+        break;
+      case '*': /* multiply */
+        snprintf(line, 1024, "%-16s MULTIPLY %-16s %-16s\n",
+            DerivedChannels[i].math.field, DerivedChannels[i].math.source,
+            DerivedChannels[i].math.source2);
         break;
     }
     if (write(fd, line, strlen(line)) < 0)
