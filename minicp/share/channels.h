@@ -50,6 +50,8 @@ extern "C" {
 #define FIELD_LEN 20
 #define UNITS_LEN 48
 
+#pragma pack(push)
+#pragma pack(4)
   struct ChannelStruct {
     char field[FIELD_LEN]; /* name of channel for FileFormats and CalSpecs */
     char rw;        /* 'r' = read, 'w' = write */
@@ -63,6 +65,7 @@ extern "C" {
     char quantity[UNITS_LEN]; /* eg, "Temperature" or "Angular Velocity" */
     char units[UNITS_LEN]; /* eg, "K" or "^o/s" */
   };
+#pragma pack(pop)
 
   struct NiosStruct {
     unsigned int niosAddr;
