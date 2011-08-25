@@ -31,7 +31,7 @@
 #ifndef OWLBOX_H
 #define OWLBOX_H
 
-class Owl : public QWidget, public PObject
+class POwlAnimation : public QWidget, public PObject
 {
     Q_OBJECT
     int _lastNFrames;
@@ -40,20 +40,23 @@ class Owl : public QWidget, public PObject
     int _stage;
     QPoint _moveThingy;
 public:
-    friend QDataStream& operator<<(QDataStream&a,Owl&b);
-    friend QDataStream& operator>>(QDataStream&a,Owl&b);
+    friend QDataStream& operator<<(QDataStream&a,POwlAnimation&b);
+    friend QDataStream& operator>>(QDataStream&a,POwlAnimation&b);
 
-    Owl();
-    ~Owl();
+    POwlAnimation();
+    ~POwlAnimation();
     void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
     QSize sizeHint();
     const int& stage() const;
     void mousePressEvent(QMouseEvent *ev) { _moveThingy=mapFromGlobal(ev->globalPos()); }
     void mouseReleaseEvent(QMouseEvent *) { _moveThingy=QPoint(-1,-1); }
     void mouseMoveEvent(QMouseEvent *);
+    void activate() { emit activated(); }
+signals:
+    void activated();
 };
 
-QDataStream& operator<<(QDataStream&a,Owl&b);
-QDataStream& operator>>(QDataStream&a,Owl&b);
+QDataStream& operator<<(QDataStream&a,POwlAnimation&b);
+QDataStream& operator>>(QDataStream&a,POwlAnimation&b);
 
 #endif // OWLBOX_H

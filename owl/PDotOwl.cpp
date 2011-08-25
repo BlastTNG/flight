@@ -353,13 +353,13 @@ QDataStream& operator>>(QDataStream&a,PNumberDataItem&b)
     return a;
 }
 
-QDataStream& operator<<(QDataStream&a,Owl&b)
+QDataStream& operator<<(QDataStream&a,POwlAnimation&b)
 {
     a<<(QString)"begin Owl";
     return a<<b.geometry()<<*(PObject*)(&b);
 }
 
-QDataStream& operator>>(QDataStream&a,Owl&b)
+QDataStream& operator>>(QDataStream&a,POwlAnimation&b)
 {
     QString verify;
     a>>verify;

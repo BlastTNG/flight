@@ -25,7 +25,7 @@
 
 #include <QMainWindow>
 
-Owl::Owl() : _lastNFrames(0),_label(new QLabel), _stage(0)
+POwlAnimation::POwlAnimation() : _lastNFrames(0),_label(new QLabel), _stage(0)
 {
     _moveThingy=QPoint(-1,-1);
     for(int i=0;i<4;i++) {
@@ -38,7 +38,7 @@ Owl::Owl() : _lastNFrames(0),_label(new QLabel), _stage(0)
     layout()->setAlignment(_label,Qt::AlignCenter);
 }
 
-Owl::~Owl()
+POwlAnimation::~POwlAnimation()
 {
     for(int i=0;i<5;i++) {
         delete _pixMaps[i];
@@ -47,7 +47,7 @@ Owl::~Owl()
     np->_owlList.removeOne(this);
 }
 
-void Owl::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
+void POwlAnimation::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
 {
     if(lastNFrames!=_lastNFrames) {
         qsrand(dirFile->NFrames());
@@ -60,18 +60,18 @@ void Owl::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
     }
 }
 
-QSize Owl::sizeHint()
+QSize POwlAnimation::sizeHint()
 {
     return QSize(100,200);
 }
 
-const int& Owl::stage() const
+const int& POwlAnimation::stage() const
 {
     return _stage;
 }
 
 
-void Owl::mouseMoveEvent(QMouseEvent *ev)
+void POwlAnimation::mouseMoveEvent(QMouseEvent *ev)
 {
     if(ev->buttons()&Qt::LeftButton&&_moveThingy!=QPoint(-1,-1)) {
         QPoint p1=parentWidget()->mapFromGlobal(ev->globalPos());   //setGeometry refers to parent's (x,y)

@@ -26,6 +26,7 @@
 #include "PDotPal.h"
 #include "PStyle.h"
 #include "PWebServerInfo.h"
+#include "POwlAnimation.h"
 
 #include "ui_PMainWindow.h"
 
@@ -221,6 +222,13 @@ void PMainWindow::addPBox()
     setUpdatesEnabled(1);
 }
 
+void PMainWindow::setCurrentObject(POwlAnimation*obj)
+{
+    ui->pushButtonRemove->show();
+    reconnect(ui->pushButtonRemove,SIGNAL(clicked()),this,SLOT(removeCurrentDataItem()));
+    _currentObject=obj;
+}
+
 void PMainWindow::setCurrentObject(PBox*obj)
 {
     setUpdatesEnabled(0);
@@ -289,6 +297,7 @@ void PMainWindow::setCurrentObject(PNumberDataItem*obj)
     setUpdatesEnabled(0);
     ui->labelFormat_num->show();
     ui->lineEditFormat->show();
+    ui->lineEditFormat->setText(obj->format());
     ui->lineEditFormat->setPlaceholderText("printf format str (\"man printf\")");
     reconnect(ui->lineEditFormat,SIGNAL(textChanged(QString)),obj,SLOT(setFormat(QString)));
     reconnect(obj,SIGNAL(formatChanged(QString)),this,SLOT(uiLogic()));
@@ -405,6 +414,7 @@ void PMainWindow::setCurrentObject(PTimeDataItem*obj)
     setUpdatesEnabled(0);
     ui->labelFormat_num->show();
     ui->lineEditFormat->show();
+    ui->lineEditFormat->setText(obj->format());
     ui->lineEditFormat->setPlaceholderText("strftime str (\"man strftime\")");
     reconnect(ui->lineEditFormat,SIGNAL(textChanged(QString)),obj,SLOT(setFormat(QString)));
     reconnect(obj,SIGNAL(formatChanged(QString)),this,SLOT(uiLogic()));
@@ -422,6 +432,7 @@ void PMainWindow::uiLogic()
         if(sender()==_mdiArea) addPBox();
         else if(dynamic_cast<PBox*>(sender())) setCurrentObject(dynamic_cast<PBox*>(_currentObject=sender()));
         else if(dynamic_cast<PAbstractDataItem*>(sender())) setCurrentObject(dynamic_cast<PAbstractDataItem*>(_currentObject=sender()));
+        else if(dynamic_cast<POwlAnimation*>(sender())) setCurrentObject(dynamic_cast<POwlAnimation*>(_currentObject=sender()));
         else if(sender()==ui->comboBox) {
             QString x=ui->comboBox->currentText();
             x.remove(0,x.indexOf('(')+2);
@@ -532,7 +543,12 @@ void PMainWindow::extremaLogic(QString)
             } else if(cb->currentText()==tr("New Extrema")) {
                 QString x;
                 while(1) {
-                    x=QInputDialog::getText(this,"New Extrema","Extrema name:");
+                    bool ok;
+                    x=QInputDialog::getText(this,"New Extrema","Extrema name:",QLineEdit::Normal,"",&ok);
+                    if(!ok) {
+                        setUpdatesEnabled(1);
+                        return;
+                    }
                     if(!x.isEmpty()&&!x.contains("(")&&!x.contains(")")) break;
                     QMessageBox::information(this,"Bad name","Your extrema is poorly named. Try again.");
                 }
@@ -800,7 +816,20 @@ void PMainWindow::serverUpdate()
 void PMainWindow::removeCurrentDataItem()
 {
     PAbstractDataItem* padi=dynamic_cast<PAbstractDataItem*>(_currentObject);
-    if(!padi) return;
+    POwlAnimation* owl=dynamic_cast<POwlAnimation*>(_currentObject);
+    if(!padi&&!owl) return;
+    else if(owl) {
+        for(int i=0;i<_owlList.size();i++) {
+            if(_owlList[i]==owl) {
+                obviate(owl);
+                ui->comboBox->setCurrentIndex(0);
+                owl->deleteLater();
+                hideEverything();
+                activate();
+            }
+        }
+        return;
+    }
     for(int i=0;i<_pboxList.size();i++) {
         _pboxList[i]->_dataItems.removeOne(padi);
     }
@@ -809,6 +838,17 @@ void PMainWindow::removeCurrentDataItem()
     _currentObject->deleteLater();
     hideEverything();
     ui->comboBox->setCurrentIndex(0);
+    activate();
+}
+
+void PMainWindow::obviate(POwlAnimation *byeBye)
+{
+    for(int i=0;i<ui->comboBox->count();i++) {
+        if(ui->comboBox->itemText(i).contains(byeBye->idText())) {
+            ui->comboBox->removeItem(i);
+            break;
+        }
+    }
     activate();
 }
 

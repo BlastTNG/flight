@@ -2,6 +2,7 @@
 #define PSTYLECHOOSER_H
 
 #include <QWidget>
+#include <QComboBox>
 #include <PStyle.h>
 
 namespace Ui {

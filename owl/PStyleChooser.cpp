@@ -23,6 +23,7 @@ PStyleChooser::PStyleChooser(QWidget *parent) :
 {
     ui->setupUi(this);
     connect(ui->comboBoxStyle,SIGNAL(currentIndexChanged(QString)),this,SLOT(select(QString)));
+    ui->comboBoxStyle->view()->setMinimumWidth(width()*0.8);
     connect(ui->toolButtonB,SIGNAL(toggled(bool)),this,SLOT(boldLogic(bool)));
     connect(ui->toolButtonI,SIGNAL(toggled(bool)),this,SLOT(italicLogic(bool)));
     connect(ui->toolButtonBG,SIGNAL(clicked()),this,SLOT(bgLogic()));

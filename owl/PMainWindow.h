@@ -55,14 +55,14 @@ protected:
     int layoutVersion;
     PStyle* _currowStyle;
     QList<PBox*> _pboxList;
-    QList<Owl*> _owlList;
+    QList<POwlAnimation*> _owlList;
     bool _dirty;
     PServer* _server;
 
 public:
     friend QDataStream& operator<<(QDataStream&a,PMainWindow&b);
     friend QDataStream& operator>>(QDataStream&a,PMainWindow&b);
-    friend class Owl;
+    friend class POwlAnimation;
     friend class PBox;
     friend class PAbstractDataItem;
     friend class PMdiArea;
@@ -81,6 +81,7 @@ public slots:
     void setCurrentObject(PNumberDataItem*);
     void setCurrentObject(PMultiDataItem*);
     void setCurrentObject(PTimeDataItem*);
+    void setCurrentObject(POwlAnimation*);
 
     void uiLogic();
     void curfileLogic(QString x);
@@ -101,6 +102,7 @@ public slots:
     void removeCurrentDataItem();
     void obviate(PBox* byeBye);
     void obviate(PAbstractDataItem* byeBye);
+    void obviate(POwlAnimation* byeBye);
     void recognizeExtrema(PExtrema*);
 
     void activate();
