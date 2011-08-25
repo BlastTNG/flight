@@ -46,9 +46,9 @@ static void PhaseControl()
   if (first_time) {
     first_time = 0;
     for(i = 0; i < 6; i++) {
-      sprintf(field, "phase_cnx%1d_hk", i+1);
+      sprintf(field, "ph_cnx_%1d_hk", i+1);
       phaseCnxAddr[i] = GetNiosAddr(field);
-      sprintf(field, "phase_ntd%1d_hk", i+1);
+      sprintf(field, "ph_ntd_%1d_hk", i+1);
       phaseNtdAddr[i] = GetNiosAddr(field);
     }
   }	
@@ -75,9 +75,9 @@ static void BiasControl()
   if (firsttime) {
     firsttime = 0;
     for (i=0; i<6; i++) {
-      sprintf(field, "v_cnx%1d_hk", i+1);
+      sprintf(field, "v_cnx_%1d_hk", i+1);
       vCnxAddr[i] = GetNiosAddr(field);
-      sprintf(field, "v_ntd%1d_hk", i+1);
+      sprintf(field, "v_ntd_%1d_hk", i+1);
       vNtdAddr[i] = GetNiosAddr(field);
     }
   }
@@ -124,11 +124,11 @@ static void HeatControl()
     heat45Addr = GetNiosAddr("heat_45_hk");
     heat26Addr = GetNiosAddr("heat_26_hk");
     for (i=0; i<6; i++) {
-      sprintf(buf, "heat_ssa%1d_hk", i+1);
+      sprintf(buf, "heat_ssa_%1d_hk", i+1);
       heatSsaAddr[i] = GetNiosAddr(buf);
     }
     for (i=0; i<6; i++) {
-      sprintf(buf, "heat_fplo%1d_hk", i+1);
+      sprintf(buf, "heat_fplo_%1d_hk", i+1);
       heatFploAddr[i] = GetNiosAddr(buf);
     }
   }	
