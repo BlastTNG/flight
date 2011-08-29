@@ -72,7 +72,7 @@ double getlst(time_t t, double lon); // defined in starpos.c
 double GetJulian(time_t t);
 
 /* Functions in the file 'geomag.c' */
-void MagModelInit(int maxdeg);
+void MagModelInit(int maxdeg, const char* wmmFile);
 void GetMagModel(float alt, float glat, float glon, float time,
     float *dec, float *dip, float *ti, float *gv);
 
@@ -200,7 +200,7 @@ static int MagConvert(double *mag_az)
   struct tm now;
   int i_point_read;
   static int firsttime = 1;
-  //static struct LutType magLut = {"/data/etc/mag.lut",0,NULL,NULL,0};
+  //static struct LutType magLut = {"/data/etc/spider/mag.lut",0,NULL,NULL,0};
 
   i_point_read = GETREADINDEX(point_index);
 
@@ -209,7 +209,7 @@ static int MagConvert(double *mag_az)
     /* Initialise magnetic model reader: I'm not sure what the '12' is, but */
     /* I think it has something to do with the accuracy of the modelling -- */
     /* probably shouldn't change this value.  (Adam H.) */
-    MagModelInit(12);
+    MagModelInit(12, "/data/etc/spider/WMM.COF");
     //LutInit(&magLut);
 
     oldt = 1;
@@ -1015,7 +1015,7 @@ void Pointing(void)
   int i_dgpspos, dgpspos_ok = 0;
   int i_point_read;
 
-  static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
+  static struct LutType elClinLut = {"/data/etc/spider/clin_elev.lut",0,NULL,NULL,0};
 
   struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
   struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};

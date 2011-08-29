@@ -36,6 +36,9 @@ OBJS := $(OBJS) amccommand.o auxiliary.o chrgctrl.o share/compressfuncs.o \
 		sbsccommunicator.o sched.o slow_dl.o share/starpos.o 
 endif
 
+ETC_DATA = etc/WMM.COF etc/ephem.2000 etc/sched.library \
+	   etc/*.sch etc/*.lut
+
 .PHONEY: fifo install all restart test-run-enable test-run-disable
 
 all: pcm
@@ -63,8 +66,8 @@ install: pcm
 	install -d -m 777 /data/rawdir
 	install -m 755 pcm /usr/local/bin
 	install -m 755 pcm_inf_loop /usr/local/bin
-	install -m 666 etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library /data/etc
-#	install -m 666 etc/*.aml /data/etc
+	install -d -m 777 /data/etc/spider
+	install -m 666  $(ETC_DATA) /data/etc/spider
 ifeq ($(BOLOTEST),-DBOLOTEST)
 	$(MAKE) fifo
 endif
@@ -78,9 +81,9 @@ ifeq ($(shell hostname),bitsy)
 	killall pcm
 	scp /usr/local/bin/pcm itsy.spider:/tmp/pcm
 	ssh itsy.spider 'install -d -m 666 /tmp/etc'
-	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library itsy.spider:/tmp/etc/
+	scp $(ETC_DATA) itsy.spider:/tmp/etc/
 	ssh itsy.spider 'install -m 755 /tmp/pcm /usr/local/bin'
-	ssh itsy.spider 'install -m 666 /tmp/etc/* /data/etc'
+	ssh itsy.spider 'install -m 666 /tmp/etc/* /data/etc/spider'
 	ssh itsy.spider 'killall pcm'
 else
 ifeq ($(shell hostname),itsy)
@@ -88,9 +91,9 @@ ifeq ($(shell hostname),itsy)
 	killall pcm
 	scp /usr/local/bin/pcm bitsy.spider:/tmp/pcm
 	ssh bitsy.spider 'install -d -m 666 /tmp/etc'
-	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library bitsy.spider:/tmp/etc/
+	scp $(ETC_DATA) bitsy.spider:/tmp/etc/
 	ssh bitsy.spider 'install -m 755 /tmp/pcm /usr/local/bin'
-	ssh bitsy.spider 'install -m 666 /tmp/etc/* /data/etc'
+	ssh bitsy.spider 'install -m 666 /tmp/etc/* /data/etc/spider'
 	ssh bitsy.spider 'killall pcm'
 else
 	@echo "******************** WARNING ******************************"
