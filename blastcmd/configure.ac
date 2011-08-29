@@ -6,7 +6,7 @@ AC_CONFIG_FILES(blastcmd-authorize)
 
 AC_ARG_WITH([data-etc], AS_HELP_STRING([--with-data-etc=DIR],
             [put auxiliary data in DIR [[/data/etc]]]),
-            DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc")
+            DATA_ETC_DIR="${withval}", DATA_ETC_DIR="/data/etc/blastcmd")
 AC_SUBST(DATA_ETC_DIR)
 AC_DEFINE_UNQUOTED(DATA_ETC_DIR, "$DATA_ETC_DIR",
                    [ Define to the path to your data directory ])
