@@ -533,7 +533,7 @@ static void DumpNiosFrame(const char* fname)
 
   fclose(map);
 #ifdef VERBOSE
-  bprintf(info, "Channels: Wrote /data/etc/blast/Nios.map.\n");
+  bprintf(info, "Channels: Wrote %s.\n", fname);
 #endif
 }
 
