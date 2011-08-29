@@ -89,4 +89,4 @@ else
 fi
 AM_CONDITIONAL(INSTALL_DEFILE_CONF, test "$INSTALL_DEFILE_CONF" = "yes")
 
-AC_OUTPUT(Makefile defile.1.in defile.conf.in etc/Makefile)
+AC_OUTPUT(Makefile defile.1.in defile.conf.in etc/Makefile etc/blast/Makefile etc/spider/Makefile)
