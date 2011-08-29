@@ -33,7 +33,7 @@
 #  define CURFILE "/mnt/decom/etc/decom.cur"
 #  define RAWDIR  "/mnt/decom/rawdir"
 #else
-#  define CURFILE "/data/etc/blast/datafile.cur"
+#  define CURFILE "/data/etc/datafile.cur"
 #  define RAWDIR  "/data/rawdir"
 #endif
 
