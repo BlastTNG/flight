@@ -128,7 +128,7 @@ void Read_Coefficients( double Time )
 /**                                                                          **/
 /**==========================================================================**/
 
-int Initialize_Ephemeris( char *fileName )
+int Initialize_Ephemeris( const char *fileName )
 {
   int headerID;
 

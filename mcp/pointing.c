@@ -84,7 +84,7 @@ double getlst(time_t t, double lon); // defined in starpos.c
 double GetJulian(time_t t);
 
 /* Functions in the file 'geomag.c' */
-void MagModelInit(int maxdeg);
+void MagModelInit(int maxdeg, const char* wmmFile);
 void GetMagModel(float alt, float glat, float glon, float time,
     float *dec, float *dip, float *ti, float *gv);
 
@@ -221,7 +221,7 @@ static int MagConvert(double *mag_az)
     /* Initialise magnetic model reader: I'm not sure what the '12' is, but */
     /* I think it has something to do with the accuracy of the modelling -- */
     /* probably shouldn't change this value.  (Adam H.) */
-    MagModelInit(12);
+    MagModelInit(12, "/data/etc/blast/WMM.COF");
     //LutInit(&magLut);
 
     oldt = 1;

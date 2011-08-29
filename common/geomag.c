@@ -35,7 +35,8 @@
 #include "../mcp.h"
 
 static void E0000(int IENTRY, int *maxdeg, float alt, float glat, float glon,
-    float time, float *dec, float *dip, float *ti, float *gv) {
+    float time, float *dec, float *dip, float *ti, float *gv,
+    const char* wmmFile) {
 
   static int maxord, i, icomp, n, m, j, D1, D2, D3, D4;
   static float c[13][13], cd[13][13], tc[13][13], dp[13][13], snorm[169],
@@ -52,7 +53,7 @@ static void E0000(int IENTRY, int *maxdeg, float alt, float glat, float glon,
   switch(IENTRY){case 0: goto GEOMAG; case 1: goto GEOMG1;}
 
 GEOMAG:
-  if ((wmmdat = fopen("/data/etc/blast/WMM.COF", "r")) == NULL) {
+  if ((wmmdat = fopen(wmmFile, "r")) == NULL) {
     berror(err, "World Magnetic Model: Error opening WMM.COF");
     return;
   }
@@ -314,13 +315,13 @@ S50:
 
 /*************************************************************************/
 
-void MagModelInit(int maxdeg)
+void MagModelInit(int maxdeg, const char* wmmFile)
 {
   int dummy;
 
   dummy = maxdeg;
 
-  E0000(0, &dummy, 0.0, 0.0, 0.0, 0.0, NULL, NULL, NULL, NULL);
+  E0000(0, &dummy, 0.0, 0.0, 0.0, 0.0, NULL, NULL, NULL, NULL, wmmFile);
 }
 
 /*************************************************************************/
@@ -328,6 +329,6 @@ void MagModelInit(int maxdeg)
 void GetMagModel(float alt, float glat, float glon, float time,
     float *dec, float *dip, float *ti, float *gv)
 {
-  E0000(1, NULL, alt, glat, glon, time, dec, dip, ti, gv);
+  E0000(1, NULL, alt, glat, glon, time, dec, dip, ti, gv, NULL);
 }
 /*************************************************************************/

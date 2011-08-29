@@ -313,14 +313,14 @@ static struct NiosStruct SetNiosData(const struct ChannelStruct *channel,
 }
 
 /* DumpNiosFrame - writes the constructed nios frame to the map file */
-static void DumpNiosFrame(void)
+static void DumpNiosFrame(const char* fname)
 {
   int bus, m, i, j, n, addr, m0addr;
   FILE* map;
   struct NiosStruct* ReverseMap[2][64][64];
   memset(ReverseMap, 0, 2 * 64 * 64 * sizeof(struct NiosStruct*));
 
-  if ((map = fopen("/data/etc/blast/Nios.map", "w")) == NULL)
+  if ((map = fopen(fname, "w")) == NULL)
     return;
 
   for (bus = 0; bus < 2; ++bus) {
@@ -805,7 +805,7 @@ static void DoSanityChecks(void)
 #endif
 
 /* MakeAddressLookups - fills the nios and biphase address lookup tables */
-void MakeAddressLookups(void)
+void MakeAddressLookups(const char* dump_name)
 {
   int i, mplex, bus, spare_count;
   int slowIndex[2][FAST_PER_SLOW];
@@ -1065,7 +1065,7 @@ void MakeAddressLookups(void)
 
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(4)) >> 16].index = DISCARD_WORD;
 
-  DumpNiosFrame();
+  DumpNiosFrame(dump_name);
 #endif
 }
 

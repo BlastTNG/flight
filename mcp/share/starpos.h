@@ -33,4 +33,4 @@ void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 		            double pi, double rvel, double *ra, double *dec);
 void PlanetPos(double tt, int target, double *ra, double *dec);
 void SunPos(double tt, double *ra, double *dec);
-void ReductionInit();
+void ReductionInit(const char* ephemFile);

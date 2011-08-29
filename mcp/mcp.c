@@ -1072,7 +1072,8 @@ int main(int argc, char *argv[])
   if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
     berror(fatal, "System: Error opening BBC");
 
-  MakeAddressLookups();  //nios addresses, based off of tx_struct, derived
+  //populate nios addresses, based off of tx_struct, derived
+  MakeAddressLookups("/data/etc/blast/Nios.map");
 
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
@@ -1087,7 +1088,7 @@ int main(int argc, char *argv[])
 
 #ifndef BOLOTEST
   /* Initialize the Ephemeris */
-  ReductionInit();
+  ReductionInit("/data/etc/blast/ephem.2000");
 
   bprintf(info, "System: Slow Downlink Initialisation");
   InitSlowDL();

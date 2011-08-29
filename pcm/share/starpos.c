@@ -48,8 +48,6 @@
 
 extern struct ScheduleType _S[2][3]; /* sched.c */
 
-#define EPHEM_FILE "/data/etc/blast/ephem.2000"
-
 #define AU         149597870.691                // in km
 #define DIES       86400.0                      // seconds in a day
 #define PI         3.1415926535897932384626434  // good ol' pi
@@ -324,10 +322,10 @@ void SunPos(double tt, double *ra, double *dec)
 //
 //--------------------------------------------------------
 
-void ReductionInit()
+void ReductionInit(const char* ephemFile)
 {
-  if( Initialize_Ephemeris(EPHEM_FILE)) {
-    berror(fatal, "System: Unable to open Ephemeris File (%s)",EPHEM_FILE);
+  if( Initialize_Ephemeris(ephemFile)) {
+    berror(fatal, "System: Unable to open Ephemeris File (%s)",ephemFile);
   }
 }
 

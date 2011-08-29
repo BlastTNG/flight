@@ -113,7 +113,7 @@ extern "C" {
   extern unsigned int NiosSpares[FAST_PER_SLOW * 2];
   extern unsigned int BBCSpares[FAST_PER_SLOW * 2];
 
-  void MakeAddressLookups(void);
+  void MakeAddressLookups(const char* dump_name); //arg is path to Nios.map dump
   void FPrintDerived(int);
   struct NiosStruct* GetNiosAddr(const char*);
   inline struct BiPhaseStruct* GetBiPhaseAddr(const char*);
