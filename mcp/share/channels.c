@@ -1065,7 +1065,7 @@ void MakeAddressLookups(const char* dump_name)
 
   BiPhaseLookup[(BBC_NODE(SPECIAL) | BBC_CH(4)) >> 16].index = DISCARD_WORD;
 
-  DumpNiosFrame(dump_name);
+  if (dump_name) DumpNiosFrame(dump_name);
 #endif
 }
 

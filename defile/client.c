@@ -196,7 +196,7 @@ int InitClient(char* new_filename)
 
   fclose(stream);
 
-  MakeAddressLookups();
+  MakeAddressLookups(NULL);
   bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
 
   if (OpenDataPort(rc.csock, &rc.dsock))

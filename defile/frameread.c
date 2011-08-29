@@ -162,7 +162,7 @@ int ReconstructChannelLists(const char* chunk, const char *spec_file)
   fclose(stream);
 
   /* Make the Channel Struct */
-  MakeAddressLookups();
+  MakeAddressLookups(NULL);
 
   return DiskFrameSize;
 }
