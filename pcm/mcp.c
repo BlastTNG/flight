@@ -415,11 +415,11 @@ static void Chatter(void* arg)
 
   bprintf(startup, "Thread startup\n");
 
-  fd = open("/data/etc/mcp.log", O_RDONLY|O_NONBLOCK);
+  fd = open("/data/etc/pcm.log", O_RDONLY|O_NONBLOCK);
 
   if (fd == -1)
   {
-    bprintf(tfatal, "Failed to open /data/etc/mcp.log for reading (%d)\n", errno);
+    bprintf(tfatal, "Failed to open /data/etc/pcm.log for reading (%d)\n", errno);
   }
 
   if (fpos == -1) {
@@ -429,10 +429,10 @@ static void Chatter(void* arg)
       {
 	if (lseek(fd, 0, SEEK_SET) == -1)
 	{
-	  bprintf(tfatal, "Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+	  bprintf(tfatal, "Failed to rewind /data/etc/pcm.log (%d)\n", errno);
 	}
       } else {
-	bprintf(tfatal, "Failed to seek /data/etc/mcp.log (%d)\n", errno);
+	bprintf(tfatal, "Failed to seek /data/etc/pcm.log (%d)\n", errno);
       }
     }
   } else {
@@ -440,7 +440,7 @@ static void Chatter(void* arg)
     {
       if (lseek(fd, 0, SEEK_END) == -1)
       {
-	bprintf(tfatal, "Failed to rewind /data/etc/mcp.log (%d)\n", errno);
+	bprintf(tfatal, "Failed to rewind /data/etc/pcm.log (%d)\n", errno);
       }
     }
   }
@@ -458,7 +458,7 @@ static void Chatter(void* arg)
       ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * FAST_PER_SLOW * sizeof(char));
       if (ch_got == -1)
       {
-        bprintf(tfatal, "Error reading from /data/etc/mcp.log (%d)\n", errno);
+        bprintf(tfatal, "Error reading from /data/etc/pcm.log (%d)\n", errno);
       }
       if (ch_got < (2 * FAST_PER_SLOW * sizeof(char)))
       {
@@ -1036,7 +1036,7 @@ int main(int argc, char *argv[])
 
   umask(0);  /* clear umask */
 
-  if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL) {
+  if ((logfile = fopen("/data/etc/pcm.log", "a")) == NULL) {
     berror(err, "System: Can't open log file");
     fstats.st_size = -1;
   } else {
