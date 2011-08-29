@@ -227,7 +227,7 @@ void ControlHWPR(struct ezbus *bus)
 
   int overshoot = 0;
 
-  static struct LutType HwprPotLut = {"/data/etc/hwpr_pot.lut", 0, NULL, NULL, 0};
+  static struct LutType HwprPotLut = {"/data/etc/blast/hwpr_pot.lut", 0, NULL, NULL, 0};
 
   if (HwprPotLut.n == 0)
     LutInit(&HwprPotLut);

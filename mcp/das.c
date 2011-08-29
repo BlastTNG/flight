@@ -238,7 +238,8 @@ static int JFETthermostat(void)
   double jfet_temp;
   static struct BiPhaseStruct* tJfetAddr;
 
-  static struct LutType DiodeLut = {"/data/etc/dt600.txt", 0, NULL, NULL, 0};
+  static struct LutType DiodeLut =
+     {"/data/etc/blast/dt600.txt", 0, NULL, NULL, 0};
 
   static int lasttime = 0;
 
@@ -284,9 +285,12 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
   static struct NiosStruct*    cycleStateWAddr;
   static struct BiPhaseStruct* cycleStateRAddr;
 
-  static struct LutType DiodeLut = {"/data/etc/dt600.txt", 0, NULL, NULL, 0};
-  static struct LutType HSLut = {"/data/etc/dt-simonchase.txt", 0, NULL, NULL, 0};
-  static struct LutType ROXLut = {"/data/etc/rox-raw.txt", 0, NULL, NULL, 0};
+  static struct LutType DiodeLut =
+     {"/data/etc/blast/dt600.txt", 0, NULL, NULL, 0};
+  static struct LutType HSLut =
+      {"/data/etc/blast/dt-simonchase.txt", 0, NULL, NULL, 0};
+  static struct LutType ROXLut =
+      {"/data/etc/blast/rox-raw.txt", 0, NULL, NULL, 0};
 
   double t_lhe, t_he3fridge, t_charcoal, t_he4pot, t_char_hs;
 

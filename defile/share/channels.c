@@ -320,7 +320,7 @@ static void DumpNiosFrame(void)
   struct NiosStruct* ReverseMap[2][64][64];
   memset(ReverseMap, 0, 2 * 64 * 64 * sizeof(struct NiosStruct*));
 
-  if ((map = fopen("/data/etc/Nios.map", "w")) == NULL)
+  if ((map = fopen("/data/etc/blast/Nios.map", "w")) == NULL)
     return;
 
   for (bus = 0; bus < 2; ++bus) {
@@ -533,7 +533,7 @@ static void DumpNiosFrame(void)
 
   fclose(map);
 #ifdef VERBOSE
-  bprintf(info, "Channels: Wrote /data/etc/Nios.map.\n");
+  bprintf(info, "Channels: Wrote /data/etc/blast/Nios.map.\n");
 #endif
 }
 

@@ -48,7 +48,7 @@
 
 extern struct ScheduleType _S[2][3]; /* sched.c */
 
-#define EPHEM_FILE "/data/etc/ephem.2000"
+#define EPHEM_FILE "/data/etc/blast/ephem.2000"
 
 #define AU         149597870.691                // in km
 #define DIES       86400.0                      // seconds in a day

@@ -66,12 +66,12 @@ void ScheduledCommand(struct ScheduleEvent*);
 const char* CommandName(int, int);
 
 static const char filename[2][3][32] = {
-  {"/data/etc/happy.north.sch",
-    "/data/etc/happy.mid.sch",
-    "/data/etc/happy.south.sch"},
-  {"/data/etc/sad.north.sch",
-    "/data/etc/sad.mid.sch",
-    "/data/etc/sad.south.sch"}
+  {"/data/etc/blast/happy.north.sch",
+    "/data/etc/blast/happy.mid.sch",
+    "/data/etc/blast/happy.south.sch"},
+  {"/data/etc/blast/sad.north.sch",
+    "/data/etc/blast/sad.mid.sch",
+    "/data/etc/blast/sad.south.sch"}
 };
 
 int GetLine(FILE *fp, char *line); // defined in lut.c
@@ -334,7 +334,7 @@ int LoadUplinkFile(int slot) {
   }
   
   // check to make sure the file exists
-  sprintf(filename, "/data/etc/%d.sch", slot);
+  sprintf(filename, "/data/etc/blast/%d.sch", slot);
   fp = fopen(filename, "r");
   if (fp == NULL) {
     return(0);

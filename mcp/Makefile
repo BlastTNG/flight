@@ -47,8 +47,9 @@ install: mcp
 	install -d -m 777 /data/rawdir
 	install -m 755 mcp /usr/local/bin
 	install -m 755 mcp_inf_loop /usr/local/bin
-	install -m 666 etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library /data/etc
-#	install -m 666 etc/*.aml /data/etc
+	install -d -m 777 /data/etc/blast
+	install -m 666 etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library /data/etc/blast
+#	install -m 666 etc/*.aml /data/etc/blast
 ifeq ($(BOLOTEST),-DBOLOTEST)
 	$(MAKE) fifo
 endif
@@ -64,7 +65,7 @@ ifeq ($(shell hostname),south)
 	ssh north.blast 'install -d -m 666 /tmp/etc'
 	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library north.blast:/tmp/etc/
 	ssh north.blast 'install -m 755 /tmp/mcp /usr/local/bin'
-	ssh north.blast 'install -m 666 /tmp/etc/* /data/etc'
+	ssh north.blast 'install -m 666 /tmp/etc/* /data/etc/blast'
 	ssh north.blast 'killall mcp'
 else
 ifeq ($(shell hostname),north)
@@ -74,7 +75,7 @@ ifeq ($(shell hostname),north)
 	ssh south.blast 'install -d -m 666 /tmp/etc'
 	scp etc/WMM.COF etc/*.sch etc/*.lut etc/*.txt etc/ephem.2000 etc/sched.library south.blast:/tmp/etc/
 	ssh south.blast 'install -m 755 /tmp/mcp /usr/local/bin'
-	ssh south.blast 'install -m 666 /tmp/etc/* /data/etc'
+	ssh south.blast 'install -m 666 /tmp/etc/* /data/etc/blast'
 	ssh south.blast 'killall mcp'
 else
 	@echo "******************** WARNING ******************************"

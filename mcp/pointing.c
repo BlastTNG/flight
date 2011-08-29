@@ -212,7 +212,7 @@ static int MagConvert(double *mag_az)
   struct tm now;
   int i_point_read;
   static int firsttime = 1;
-  //static struct LutType magLut = {"/data/etc/mag.lut",0,NULL,NULL,0};
+  //static struct LutType magLut = {"/data/etc/blast/mag.lut",0,NULL,NULL,0};
 
   i_point_read = GETREADINDEX(point_index);
 
@@ -1405,7 +1405,7 @@ void Pointing(void)
   int i_dgpspos, dgpspos_ok = 0;
   int i_point_read;
 
-  static struct LutType elClinLut = {"/data/etc/clin_elev.lut",0,NULL,NULL,0};
+  static struct LutType elClinLut = {"/data/etc/blast/clin_elev.lut",0,NULL,NULL,0};
 
   struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
   struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};

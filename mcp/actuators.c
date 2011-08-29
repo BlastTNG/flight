@@ -135,7 +135,7 @@ static void WriteDR()
   int fp, n, i;
 
   /** write the default file */
-  fp = open("/data/etc/act.dr", O_WRONLY|O_CREAT|O_TRUNC, 00666);
+  fp = open("/data/etc/blast/act.dr", O_WRONLY|O_CREAT|O_TRUNC, 00666);
   if (fp < 0) {
     berror(err, "act.dr open()");
     return;
@@ -157,7 +157,7 @@ void ReadDR()
 {
   int fp, n_read = 0, read_fail = 0, i;
 
-  if ((fp = open("/data/etc/act.dr", O_RDONLY)) < 0) {
+  if ((fp = open("/data/etc/blast/act.dr", O_RDONLY)) < 0) {
     read_fail = 1;
     berror(err, "Unable to open act.dr file for reading");
   } else {

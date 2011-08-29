@@ -119,7 +119,7 @@ static void WritePrevStatus()
   int fp, n;
 
   /** write the default file */
-  fp = open("/data/etc/mcp.prev_status", O_WRONLY|O_CREAT|O_TRUNC, 00666);
+  fp = open("/data/etc/blast/mcp.prev_status", O_WRONLY|O_CREAT|O_TRUNC, 00666);
   if (fp < 0) {
     berror(err, "Commands: mcp.prev_status open()");
     return;
@@ -2286,7 +2286,7 @@ void OpenLibrary() {
   int nf;
   int i;
 
-  fp = fopen("/data/etc/sched.library", "r");
+  fp = fopen("/data/etc/blast/sched.library", "r");
   if (fp == NULL) {
     berror(fatal, "Could not open schedule file library.");
     exit(0);
@@ -2351,7 +2351,7 @@ void ProcessUplinkSched(unsigned char *extdat) {
    
     OpenLibrary();
     
-    sprintf(filename, "/data/etc/%d.sch", slot);
+    sprintf(filename, "/data/etc/blast/%d.sch", slot);
     fp = fopen(filename, "w");
     
     fprintf(fp, "%s", lst0str);
@@ -2654,7 +2654,7 @@ void InitCommandData()
 {
   int fp, n_read = 0, junk, extra = 0, i;
 
-  if ((fp = open("/data/etc/mcp.prev_status", O_RDONLY)) < 0) {
+  if ((fp = open("/data/etc/blast/mcp.prev_status", O_RDONLY)) < 0) {
     berror(err, "Commands: Unable to open prev_status file for reading");
   } else {
     if ((n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0)
