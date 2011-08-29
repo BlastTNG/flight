@@ -545,7 +545,7 @@ union DerivedUnion DerivedChannels[] = {
 	   "",
 	   ),
 
-  COMMENT("Housekeeping Thermistor Bias Normalization")
+  COMMENT("Housekeeping Thermistor Bias Normalization"),
 
   DIVIDE("xr_still_2_hk", "VR_STILL_2_HK",  "V_CNX_2_HK"),
   DIVIDE("xr_mux_2_hk",	  "VR_MUX_2_HK",    "V_CNX_2_HK"),
