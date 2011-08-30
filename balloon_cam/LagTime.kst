@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kst version="2.0">
+    <data>
+        <source reader="ASCII file" file="C:/Users/spider/Documents/Mathew/Code/CameraAlignment/laglogSaved.txt" fileRelative="laglogSaved.txt">
+            <properties delimiters="#" columntype="0" headerstart="0" fields="0" readfields="false" usedot="true" columnwidthisconst="false" readunits="false" units="0"/>
+        </source>
+    </data>
+    <variables>
+        <datavector file="C:/Users/spider/Documents/Mathew/Code/CameraAlignment/laglogSaved.txt" fileRelative="laglogSaved.txt" field="INDEX" start="0" count="-1" skip="-1" doAve="false" initialVNum="5" initialXNum="49"/>
+        <datavector file="C:/Users/spider/Documents/Mathew/Code/CameraAlignment/laglogSaved.txt" fileRelative="laglogSaved.txt" field="Column 1" start="0" count="-1" skip="-1" doAve="false" initialVNum="6" initialXNum="61"/>
+        <string value="2011-06-07 16:42:19" initialTNum="21"/>
+        <string value="2011-06-09 12:09:39" initialTNum="22"/>
+        <string value="laglogSaved.txt" initialTNum="23"/>
+        <string value="C:/Users/spider/Documents/Mathew/Code/CameraAlignment" initialTNum="24"/>
+    </variables>
+    <objects/>
+    <relations>
+        <curve xvector="INDEX (V5)" yvector="Column 1 (V6)" color="#105010" headcolor="#000000" haslines="true" linewidth="1" linestyle="0" haspoints="false" pointtype="0" pointdensity="0" hasbars="false" barstyle="0" ignoreautoscale="false" hashead="false" headtype="-7482631" initialCNum="4"/>
+    </relations>
+    <graphics>
+        <view name="View &amp;1" width="793" height="510">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="true" toplabelvisible="true" globalfont="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#000000" showlegend="true" hidebottomaxislabel="false" hidetopaxislabel="false" hideleftaxislabel="false" hiderightaxislabel="false" initialPlotNum="3" name="Plot">
+                <position x="3" y="3"/>
+                <rect x="0" y="0" width="787" height="504"/>
+                <relativesize width="0.991183879093199" height="0.986301369863014" centerx="0.499370277078086" centery="0.499021526418787" posx="0.00377833753148615" posy="0.00587084148727984"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#000000" style="1"/>
+                </pen>
+                <brush color="#ffffff" style="1"/>
+                <legend auto="true" title="" font="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" fontscale="9.6" verticaldisplay="false" name="Legend">
+                    <position x="161" y="65.9814220183486"/>
+                    <rect x="0" y="0" width="118" height="20"/>
+                    <relativesize width="0.184375" height="0.0466744457409568" centerx="0.1421875" centery="0.145814287090662" posx="0.05" posy="0.122477064220183"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="Column 1 vs INDEX (C4)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" interpret="false" interpretation="1" display="4" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="0">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="0"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" interpret="false" interpretation="1" display="4" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="true" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="2" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="1">
+                    <plotmarkers xaxis="false" linecolor="#000000" linestyle="1" linewidth="1" curvemode="0"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="" autolabel="true" font="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="true" overridetext="" autolabel="true" font="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="true" overridetext="" autolabel="true" font="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="" autolabel="true" font="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="true" font="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#000000" fontuseglobal="true"/>
+                <projectionrect x="0" y="-2054939.9" width="88344" height="3265957.8"/>
+            </plot>
+        </view>
+    </graphics>
+</kst>
