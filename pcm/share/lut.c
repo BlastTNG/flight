@@ -49,7 +49,7 @@ int GetLine(FILE *fp, char *line)
       first_char = 0;
       while ((buffer[first_char] == ' ') || (buffer[first_char] == '\t'))
 	first_char++;
-      strncpy(line, &buffer[first_char], MAX_LINE_LENGTH);
+      strncpy(line, &buffer[first_char], MAX_LINE_LENGTH - firstchar);
     }
   } while ((ret_val != NULL) && ((line[0] == '#') || (strlen(line) < 2)));
 
