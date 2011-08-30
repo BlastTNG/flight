@@ -27,10 +27,10 @@ tx_struct_spider.o: tx_struct_spider.c
 	$(CC) $(SPIDER_CFLAGS) -c -o tx_struct_spider.o tx_struct_spider.c
 
 decomd-blast: $(BLAST_OBJS)
-	$(CC) $(LDFLAGS) $(BLAST_OBJS) -o interloquendi-blast
+	$(CC) $(LDFLAGS) $(BLAST_OBJS) -o decomd-blast
 
 decomd-spider: $(SPIDER_OBJS)
-	$(CC) $(LDFLAGS) $(SPIDER_OBJS) -o interloquendi-spider
+	$(CC) $(LDFLAGS) $(SPIDER_OBJS) -o decomd-spider
 
 $(OBJS): $(HEADERS)
 
