@@ -285,7 +285,7 @@ int main(void) {
     berror(fatal, "fatal error opening " DEV);
 
   /* Initialise Channel Lists */
-  MakeAddressLookups();
+  MakeAddressLookups(NULL);
 
   /* Initialise Decom */
   ioctl(decom, DECOM_IOC_RESET);
