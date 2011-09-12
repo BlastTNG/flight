@@ -1287,8 +1287,9 @@ void Pointing(void)
 
   PointingData[point_index].offset_ifel_gy = (CommandData.el_autogyro)
     ? ElAtt.offset_gy : CommandData.offset_ifel_gy;
-  PointingData[point_index].el = ElAtt.el;
-
+  //PointingData[point_index].el = ElAtt.el;
+    PointingData[point_index].el = 45.0; // JAS -- temporarily fix elevation
+                                         //        for Spider testing
   /*******************************/
   /**      do az solution      **/
   /** Convert Sensors **/

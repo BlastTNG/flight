@@ -574,7 +574,7 @@ static void StoreData(int index)
   static struct NiosStruct *statDrRWAddr;
   static struct NiosStruct *statS1RWAddr;
   static struct NiosStruct *driveErrCtsRWAddr;
-  static struct NiosStruct *elRawEncAddr;
+  //static struct NiosStruct *elRawEncAddr;
   static struct NiosStruct *tMCElAddr;
   static struct NiosStruct *iSerElAddr;
   static struct NiosStruct *stat1ElAddr;
@@ -595,7 +595,7 @@ static void StoreData(int index)
   static struct NiosStruct *verbosePivAddr;
 
   int i_rw_motors;
-  int i_elev_motors;
+  //int i_elev_motors;
   int i_pivot_motors;
   int i_point;
   int i_dgps;
@@ -752,7 +752,7 @@ static void StoreData(int index)
     dithElAddr = GetNiosAddr("dith_el");
     /* JAS--comment out irrelevant fields from old RW Copley controller*/
     velSerRWAddr = GetNiosAddr("vel_ser_rw");
-    elRawEncAddr = GetNiosAddr("el_raw_enc");
+    //elRawEncAddr = GetNiosAddr("el_raw_enc");
 //  tMCRWAddr = GetNiosAddr("t_mc_rw");
     iSerRWAddr = GetNiosAddr("i_ser_rw");
 //  stat1RWAddr = GetNiosAddr("stat_1_rw");
@@ -787,7 +787,7 @@ static void StoreData(int index)
    ************************************************/
   i_point = GETREADINDEX(point_index);
   i_rw_motors = GETREADINDEX(rw_motor_index);
-  i_elev_motors = GETREADINDEX(elev_motor_index);
+  //i_elev_motors = GETREADINDEX(elev_motor_index);
   i_pivot_motors = GETREADINDEX(pivot_motor_index);
 
   WriteData(azAddr, (unsigned int)(PointingData[i_point].az * DEG2LI),
@@ -804,8 +804,8 @@ static void StoreData(int index)
   //    ((long int)(RWMotorData[i_rw_motors].vel_rw/4.0*DEG2I)), NIOS_QUEUE);
   WriteData(velSerRWAddr,
       ((long int)(RWMotorData[i_rw_motors].dps_rw/4.0*DEG2I)), NIOS_QUEUE);
-  WriteData(elRawEncAddr,
-      ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
+ // WriteData(elRawEncAddr,
+   //   ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
 
   WriteData(resPivAddr,
       PivotMotorData[i_pivot_motors].res_piv*DEG2I, NIOS_QUEUE);
@@ -1026,20 +1026,20 @@ static void StoreData(int index)
   WriteData(statS1RWAddr,RWMotorData[i_rw_motors].ds1_stat,NIOS_QUEUE);
   WriteData(infoRWAddr,RWMotorData[i_rw_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsRWAddr,RWMotorData[i_rw_motors].err_count,NIOS_QUEUE);
-  WriteData(tMCElAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
-  WriteData(iSerElAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
-  WriteData(stat1ElAddr,(ElevMotorData[i_elev_motors].status & 0xffff),
-            NIOS_QUEUE);
-  WriteData(stat2ElAddr,((ElevMotorData[i_elev_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
-  WriteData(faultElAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
+  //WriteData(tMCElAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
+//  WriteData(iSerElAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
+  //WriteData(stat1ElAddr,(ElevMotorData[i_elev_motors].status & 0xffff),
+//            NIOS_QUEUE);
+  //WriteData(stat2ElAddr,((ElevMotorData[i_elev_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
+  //WriteData(faultElAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
   WriteData(iSerPivAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,NIOS_QUEUE);
   WriteData(statDrPivAddr,(PivotMotorData[i_pivot_motors].db_stat & 0xff)
                  +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
   WriteData(statS1PivAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
   WriteData(velSerPivAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
 
-  WriteData(infoElAddr,ElevMotorData[i_elev_motors].drive_info,NIOS_QUEUE);
-  WriteData(driveErrCtsElAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);
+//  WriteData(infoElAddr,ElevMotorData[i_elev_motors].drive_info,NIOS_QUEUE);
+//  WriteData(driveErrCtsElAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);
   WriteData(infoPivAddr,PivotMotorData[i_pivot_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsPivAddr,PivotMotorData[i_pivot_motors].err_count,NIOS_QUEUE);
   WriteData(verboseRWAddr,CommandData.verbose_rw,NIOS_QUEUE);

@@ -42,6 +42,7 @@
 #define P_LOCK       8
 #define P_VBOX       9
 #define P_QUAD      10
+#define P_SPIDER    11
 
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
@@ -120,6 +121,7 @@ struct PivGainStruct {
 // VCAP        ra    dec  vaz   vel    r
 // CAP         ra    dec  vaz   elstep r
 // BOX         ra    dec  vaz   elstep w    h
+// SPIDER            el                         
 struct PointingModeStruct {
   int nw; /* used for gy-offset veto during slews */
   int mode;
@@ -133,6 +135,7 @@ struct PointingModeStruct {
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
   double dith; // Elevation dither step 
+  double az_accel_max; // max gondola accel in yaw for Spider
 };
 
 struct latch_pulse {

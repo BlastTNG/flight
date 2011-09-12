@@ -21,6 +21,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
+
 #include <math.h>
 #include "share/blast.h"
 #include "amccommand.h"
@@ -29,9 +30,11 @@
 
 #define CRC_POLY 0x1021
 
-struct MotorInfoStruct pivotinfo; /* Contains the status info and file
-                                          * Descriptor
-                                          */
+
+/* Structures containing AMC controller status info and file descriptors */
+struct MotorInfoStruct reactinfo; // JAS -- moved here from copleycommand.c
+struct MotorInfoStruct pivotinfo;
+ 
 #define SELECT_RMUS_OUT 200000 // time out for AMC controller
 
 //#define DEBUG_AMC

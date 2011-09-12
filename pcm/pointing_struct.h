@@ -51,7 +51,7 @@
 /*  Purpose: Store raw pointing info          */
 /*   Source: main thread; GetACS()            */
 /*     Used: Main thread;                     */
-/*  Does not need to be a curcular buffer...  */
+/*  Does not need to be a circular buffer...  */
 struct ACSDataStruct {
   double mag_x;    // counts
   double mag_y;    // counts
@@ -109,7 +109,7 @@ extern int rw_motor_index; // defined in motors.c
 /*  reactComm in motors.c                     */
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
-struct ElevMotorDataStruct{
+/*struct ElevMotorDataStruct{
   double enc_raw_el; // in degrees
   int temp; // drive temperature in deg Celcius
   double current; // drive current read from controller
@@ -119,7 +119,7 @@ struct ElevMotorDataStruct{
   unsigned int err_count; // count of serious serial errors
 };
 extern struct ElevMotorDataStruct ElevMotorData[3];
-extern int elev_motor_index; // defined in motors.c
+extern int elev_motor_index; // defined in motors.c*/
 /**********************************************/
 /*  Pivot Motor Data Struct                   */
 /*  - Stores information read from serial     */

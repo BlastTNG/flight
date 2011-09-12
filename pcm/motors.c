@@ -27,7 +27,6 @@
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 #include "share/channels.h"
 #include "tx.h"
@@ -37,19 +36,22 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
-#define MIN_EL 23.9 
-#define MAX_EL 55
+#define MIN_EL 23.9 // JAS -- 10 for SPIDER
+#define MAX_EL 55 // JAS -- 51 for SPIDER
 
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
+
+#define V_AZ_MIN 0.05 // JAS -- smallest measured az speed we trust given gyro
+                      //        noise/offsets
 
 void nameThread(const char*);	/* mcp.c */
 
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
 int rw_motor_index; 
 
-struct ElevMotorDataStruct ElevMotorData[3]; // defined in point_struct.h
-int elev_motor_index; 
+//struct ElevMotorDataStruct ElevMotorData[3]; // defined in point_struct.h
+//int elev_motor_index; JAS -- no elev motor for Spider
 
 struct PivotMotorDataStruct PivotMotorData[3]; // defined in point_struct.h
 int pivot_motor_index; 
@@ -72,16 +74,16 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     double *max_el, double *az_of_bot );
 
 static pthread_t reactcomm_id;
-static pthread_t elevcomm_id;
+//static pthread_t elevcomm_id;
 static pthread_t pivotcomm_id;
 
 // device node address for the reaction wheel motor controller
 #define REACT_DEVICE "/dev/ttySI9"
-#define ELEV_DEVICE "/dev/ttySI11"
+//#define ELEV_DEVICE "/dev/ttySI11"
 #define PIVOT_DEVICE "/dev/ttySI13"
 
 static void* reactComm(void *arg);
-static void* elevComm(void *arg);
+//static void* elevComm(void *arg);
 static void* pivotComm(void *arg);
 
 extern short int InCharge; /* tx.c */
@@ -103,7 +105,8 @@ void openMotors()
 {
   bprintf(info, "Motors: connecting to motors");
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
-  pthread_create(&elevcomm_id, NULL, &elevComm, NULL);
+//  pthread_create(&elevcomm_id, NULL, &elevComm, NULL); 
+//  JAS -- no elevcomm for Spider
   pthread_create(&pivotcomm_id, NULL, &pivotComm, NULL);
 }
 
@@ -111,10 +114,11 @@ void closeMotors()
 {
   int i=0;
   reactinfo.closing=1;
-  elevinfo.closing=1; // Tell the serial threads to shut down.
+//  elevinfo.closing=1; // Tell the serial threads to shut down.
   pivotinfo.closing=1;
 
-  while(reactinfo.open==1 && elevinfo.open==1 && pivotinfo.open==1 && i++<100) usleep(10000);
+//  while(reactinfo.open==1 && elevinfo.open==1 && pivotinfo.open==1 && i++<100) usleep(10000);
+  while(reactinfo.open==1 && pivotinfo.open==1 && i++<100) usleep(10000);
 }
 
 static int last_mode = -1;
@@ -188,7 +192,8 @@ static double GetVElev(void)
  }
 
   /* correct offset and convert to Gyro Units */
-  vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
+  vel -= (PointingData[i_point].offset_ifel_gy 
+         - PointingData[i_point].ifel_earth_gy);
 
   if (CommandData.use_elenc) {
     el_for_limit = ACSData.enc_raw_el;
@@ -233,20 +238,25 @@ static double GetVElev(void)
 /*   GetVAz: get the current az velocity, given current                 */
 /*   pointing mode, etc..                                               */
 /*                                                                      */
-/*   Units are in 0.1*gyro units                                        */
+/*   Units are in gyro units (1 bit = 0.001 dps)                        */
+/*   Note: was formerly 0.1*gyro units (BLAST-Pol)                      */
 /************************************************************************/
 static double GetVAz(void)
 {
   double vel = 0.0;
-  static double last_vel = 0;
+  static double last_vel = 0.0;
   double dvel;
   int i_point;
-  double vel_offset;
+  //double vel_offset;
   double az, az_dest;
-  double max_dv = 20;
+  double t_bbus;
+  double max_dv;// = 20;
   double dx;
 
   i_point = GETREADINDEX(point_index);
+  
+  t_bbus = 1.0/SR;
+  max_dv = 1.05*(CommandData.pointing_mode.az_accel_max)*t_bbus;
 
   if (axes_mode.az_mode == AXIS_VEL) {
     vel = axes_mode.az_vel;
@@ -264,30 +274,46 @@ static double GetVAz(void)
     //vel = -(az - az_dest) * 0.36;
   }
 
-  vel_offset =
-    -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy)*
-    cos(PointingData[i_point].el * M_PI / 180.0) -
-    (PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy)*
-    sin(PointingData[i_point].el * M_PI / 180.0);
+  /*vel_offset = -(PointingData[i_point].offset_ifroll_gy 
+               - PointingData[i_point].ifroll_earth_gy)
+               * cos(PointingData[i_point].el * M_PI / 180.0) 
+               -(PointingData[i_point].offset_ifyaw_gy 
+               - PointingData[i_point].ifyaw_earth_gy)
+               * sin(PointingData[i_point].el * M_PI / 180.0);*/
 
-  vel -= vel_offset;
+  /* gyros are on the outer frame for Spider...
+ 
+     vel_offset =-(PointingData[i_point].offset_ifyaw_gy 
+                  - PointingData[i_point].ifyaw_earth_gy)
+
+    ...and we don't care about vel_offset anyway */
+
+  //vel -= vel_offset;
   vel *= DPS_TO_GY16;
 
-  /* Limit Maximim speed */
-  if (vel > 2000.0)
+  /* limit maximum speed */
+  /*if (vel > 2000.0)
     vel = 2000.0;
   if (vel < -2000.0)
-    vel = -2000.0;
+    vel = -2000.0;*/
 
-  /* limit Maximum acceleration */
+  /* limit maximum acceleration */
   dvel = vel - last_vel;
-  if (dvel > max_dv)
+  
+  if (dvel > max_dv) {
     vel = last_vel + max_dv;
-  if (dvel < -max_dv)
+  }
+
+  if (dvel < -max_dv) {
     vel = last_vel - max_dv;
+  }
+  
   last_vel = vel;
 
-  return (vel*10.0); // Factor of 10 is to increase dynamic range
+//return (vel*10.0); // Factor of 10 was to increase dynamic range
+
+  return (vel);        // need larger speed range at expense of speed
+                       // resolution for Spider.
 }
 
 /************************************************************************/
@@ -326,7 +352,8 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
     firsttime = 0;
   }
 
-  v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
+  //v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
+  v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS; // Convert to dps 
 
   i_point = GETREADINDEX(point_index);
   p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
@@ -542,7 +569,7 @@ void WriteMot(int TxIndex)
   /***************************************************/
   /**            Azimuth Drive Motors              **/
   v_az = floor(GetVAz() + 0.5);
-  /* Units for v_az are 0.1*(16 bit gyro units)*/
+  /* Units for v_az are 16 bit gyro units*/
   if (v_az > 32767)
     v_az = 32767;
   if (v_az < -32768)
@@ -694,6 +721,108 @@ static void SetAzScanMode(double az, double left, double right, double v,
     }
 }
 
+/* JAS - "modified quad" scan mode for Spider */
+static void DoSpiderMode(void)
+{
+  double az, el;
+  double lst, lat;
+  double c_az[4], c_el[4]; // corner az and corner el
+  double centre, left, right, top, bottom, v_az;
+  double az_of_bot, tmp;
+  double az_accel_max, v_az_max, ampl, turn_around;
+  int i, i_point;
+
+  az_accel_max = CommandData.pointing_mode.az_accel_max;
+
+  axes_mode.el_mode = AXIS_POSITION;
+  axes_mode.el_dest = CommandData.pointing_mode.Y;
+  axes_mode.el_vel = 0.0;
+
+  i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  lat = PointingData[i_point].lat;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;
+
+  /* convert ra/decs to az/el */
+  for (i = 0; i < 4; i++) {
+    radec2azel(CommandData.pointing_mode.ra[i],CommandData.pointing_mode.dec[i],
+               lst, lat, c_az+i, c_el+i);
+  }
+
+  radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top, &az_of_bot);
+
+  centre = (left + right) / 2.0;
+
+  SetSafeDAz(az, &left);     // don't cross sun between here and left
+  SetSafeDAz(left, &right);  // don't cross sun bewteen left and right
+  
+  if (right < left) {
+    tmp = right;
+    right = left;
+    left = tmp;
+  }
+
+  ampl = right - centre;
+  v_az_max = sqrt(az_accel_max * ampl);
+  turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
+
+  if (right-left < MIN_SCAN) {
+    left = centre - MIN_SCAN/2.0; 
+    right = left + MIN_SCAN;
+  }
+
+  axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
+
+  /* case 1: moving into quad from beyond left endpoint: */
+  if (az < left - turn_around) {
+    v_az = sqrt(2.0*az_accel_max*(left-az)) + V_AZ_MIN;
+
+    v_az = (v_az > v_az_max) ? v_az_max : v_az;
+   
+    axes_mode.az_vel = v_az;
+  
+  /* case 2: moving into quad from beyond right endpoint: */
+  } else if (az > right + turn_around) {
+    v_az = -sqrt(2.0*az_accel_max*(az-right)) - V_AZ_MIN;
+
+    v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
+
+    axes_mode.az_vel = v_az;
+
+  /* case 3: moving from left to right endpoints */
+  } else if ( (az > left) && (az < right) 
+             && (PointingData[i_point].v_az > V_AZ_MIN) ) {
+    
+    v_az = sqrt(az_accel_max*ampl)*sin(acos((centre-az)/ampl));
+ 
+    axes_mode.az_vel = v_az;
+
+  /* case 4: moving from right to left endpoints */
+  } else if ( (az > left) && (az < right) 
+              && (PointingData[i_point].v_az < -V_AZ_MIN) ) {
+
+    v_az = sqrt(az_accel_max*ampl)*sin(-acos((centre-az)/ampl)); 
+
+    axes_mode.az_vel = v_az;
+
+  /* case 5: in left turn-around zone */ 
+  } else if ( (az <= left) && (az >= (left-turn_around)) ) {
+    
+    v_az = V_AZ_MIN;
+ 
+    axes_mode.az_vel = v_az;
+
+  /* case 6: in right turn-around zone */   
+  } else if ( (az >= right) && (az <= (right+turn_around)) ) {
+
+    v_az = -V_AZ_MIN;
+    
+    axes_mode.az_vel = v_az;
+  } 
+
+}
+
 static void DoAzScanMode(void)
 {
   static double last_x=0, last_w = 0;
@@ -704,8 +833,8 @@ static void DoAzScanMode(void)
   axes_mode.el_dest = CommandData.pointing_mode.Y;
   axes_mode.el_vel  = 0.0;
 
-  i_point = GETREADINDEX(point_index); // JAS - why is i_point not initialized 
-                                       // before applying this macro?
+  i_point = GETREADINDEX(point_index);
+
   az = PointingData[i_point].az; 
 
   w = CommandData.pointing_mode.w;
@@ -1597,6 +1726,9 @@ void UpdateAxesMode(void)
     case P_QUAD: // aka radbox
       DoQuadMode();
       break;
+    case P_SPIDER:
+      DoSpiderMode();
+      break;
     case P_LOCK:
       axes_mode.el_mode = AXIS_LOCK;
       axes_mode.el_dest = CommandData.pointing_mode.Y;
@@ -1929,10 +2061,202 @@ void* reactComm(void* arg)
     }
   }
   return NULL;
-
 }
+  /* JAS -- old reactComm thread from BLAST-Pol (when reaction wheel motor had
+      a Copley controller rather than the AMC one being used for Spider)*/
 
-void* elevComm(void* arg)
+  /*  //mark1
+  int n=0, j=0;
+  int i=0;
+  int temp_raw,curr_raw,stat_raw,faultreg_raw;
+  int firsttime=1,resetcount=0;
+  long vel_raw=0;
+  // Initialize values in the reactinfo structure.                            
+  reactinfo.open=0;
+  reactinfo.init=0;
+  reactinfo.err=0;
+  reactinfo.err_count=0;
+  reactinfo.closing=0;
+  reactinfo.reset=0;
+  reactinfo.disabled=2;
+  reactinfo.bdrate=9600;
+  reactinfo.writeset=0;
+  reactinfo.verbose=0;
+  strncpy(reactinfo.motorstr,"react",6);
+
+  nameThread("RWCom");
+
+  while(!InCharge) {
+    if(firsttime==1) {
+      bprintf(info,"I am not incharge thus I will not communicate with the 
+      RW motor.");
+      firsttime=0;
+    }
+    //in case we switch to ICC when serial communications aren't working
+    RWMotorData[0].vel_rw=ACSData.vel_rw;
+    RWMotorData[1].vel_rw=ACSData.vel_rw;
+    RWMotorData[2].vel_rw=ACSData.vel_rw;
+    usleep(20000);
+  }
+
+  firsttime=1;
+  bprintf(info,"Bringing the reaction wheel online.");
+  // Initialize structure RWMotorData.  Follows what was done in dgps.c
+  //  RWMotorData[0].vel_rw=0;
+  RWMotorData[0].temp=0;
+  RWMotorData[0].current=0.0;
+  RWMotorData[0].status=0;
+  RWMotorData[0].fault_reg=0;
+  RWMotorData[0].drive_info=0;
+  RWMotorData[0].err_count=0;
+
+  // Try to open the port.
+  while (reactinfo.open==0) {
+    reactinfo.verbose=CommandData.verbose_rw;
+    open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
+
+    if (i==10){
+     bputs(err,
+     "Reaction wheel port could not be opened after 10 attempts.\n");
+    }
+    i++;
+    if (reactinfo.open==1) {
+      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+      "Opened the serial port on attempt number %i",i); 
+    } else sleep(1);  
+  }
+
+  // Configure the serial port. If after 10 attempts the port is not 
+  // initialized it enters the main loop where it will trigger a reset command
+ 
+  i=0;
+  while (reactinfo.init==0 && i <=9) {
+    reactinfo.verbose=CommandData.verbose_rw;
+    configure_copley(&reactinfo);
+    if (reactinfo.init==1) {
+      bprintf(info,"Initialized the controller on attempt number %i",i); 
+    } else if (i==9) {
+      bprintf(info,"Could not initialize the controller after %i attempts."
+      ,i); 
+    } else {
+      sleep(1);
+    }
+    i++;
+  }
+  rw_motor_index = 1; // index for writing to the RWMotor data struct
+  while (1){
+    reactinfo.verbose=CommandData.verbose_rw;
+    if((reactinfo.err & COP_ERR_MASK) > 0 ) {
+      reactinfo.err_count+=1;
+      if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT) {
+	reactinfo.reset=1;
+      }
+    }
+    if(CommandData.reset_rw==1 ) {
+      reactinfo.reset=1;
+      CommandData.reset_rw=0;
+    }
+    
+    // Make bitfield of controller info structure.
+    RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); 
+    RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) 
+                                           ? 65535: reactinfo.err_count;
+
+    // If we are still in the start up veto make sure the drive is disabled.
+    if(StartupVeto > 0) {
+      CommandData.disable_az=1;
+    }
+
+    if(reactinfo.closing==1){
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      close_copley(&reactinfo);
+      usleep(10000);      
+    } else if (reactinfo.reset==1){
+      if(resetcount==0) {
+	bprintf(warning,"Resetting connection to Reaction Wheel controller.");
+      } else if ((resetcount % 10)==0) {
+	//	bprintf(warning,
+                "reset-> Unable to connect to Reaction Wheel after %i attempts.
+                ",resetcount);
+      }
+
+      resetcount++;
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      resetCopley(REACT_DEVICE,&reactinfo); 
+      // if successful sets reactinfo.reset=0
+      usleep(10000);  // give time for motor bits to get written
+      if (reactinfo.reset==0) {
+	resetcount=0;
+        bprintf(info,"Controller successfuly reset!");
+      }
+
+    } else if(reactinfo.init==1){
+      if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+        "Attempting to enable the reaction wheel motor controller.");
+	n=enableCopley(&reactinfo);
+	if(n==0){    
+	  bprintf(info,"Reaction wheel motor controller is now enabled.");
+	  reactinfo.disabled=0;
+	}
+      } 
+      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || 
+         reactinfo.disabled==2)) {
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+        "Attempting to disable the reaction wheel motor controller.");
+	n=disableCopley(&reactinfo);
+	if(n==0){    
+	  bprintf(info,"Reaction wheel motor controller is now disabled.");
+	  reactinfo.disabled=1;
+	}
+      } 
+
+      vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/s
+      RWMotorData[rw_motor_index].vel_rw=((double) vel_raw)/RW_ENC_CTS/10.0
+                                          *360.0; 
+      j=j%4;
+      switch(j) {
+      case 0:
+	temp_raw=queryCopleyInd(COP_IND_TEMP,&reactinfo);
+        RWMotorData[rw_motor_index].temp=temp_raw; // units are deg Cel
+	break;
+      case 1:
+	curr_raw=queryCopleyInd(COP_IND_CURRENT,&reactinfo);
+        RWMotorData[rw_motor_index].current=((double) (curr_raw))/100.0; 
+        // units are Amps
+	break;
+      case 2:
+	stat_raw=queryCopleyInd(COP_IND_STATUS,&reactinfo);
+        RWMotorData[rw_motor_index].status=stat_raw; 
+	break;
+      case 3:
+	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&reactinfo);
+        RWMotorData[rw_motor_index].fault_reg=faultreg_raw; 
+	break;
+      }      
+      j++;
+      if (firsttime) {
+	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+        "Raw reaction wheel velocity is %i",vel_raw);
+	firsttime=0;
+      }
+      rw_motor_index=INC_INDEX(rw_motor_index);
+
+    } else {
+      rw_motor_index=INC_INDEX(rw_motor_index);
+      reactinfo.reset=1;
+      usleep(10000);
+    }
+    i++; 
+  }
+  return NULL;
+}
+  */
+
+// JAS -- Elevation motor serial thread commented out since irrelevant 
+//        for Spider
+
+/*void* elevComm(void* arg)
 {
 #if 0
   //SJB: BLAST-Pol version. removed because it depends on copley stuff
@@ -2120,9 +2444,7 @@ void* elevComm(void* arg)
     }
   }
   return NULL;
-#endif
-  return NULL;
-}
+}*/
 
 void* pivotComm(void* arg) 
 {
