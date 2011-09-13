@@ -1,5 +1,5 @@
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = data etc src
+SUBDIRS = data src
 EXTRA_DIST = lib/libRD.a bootstrap.sh
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data"
 

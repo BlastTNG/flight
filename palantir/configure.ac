@@ -142,4 +142,4 @@ dnl Libraries
 AC_CHECK_LIB(pthread, pthread_create,,AC_MSG_ERROR([*** libpthread not installed -- please install first ***]))
 
 dnl Output
-AC_OUTPUT(data/Makefile etc/Makefile src/Makefile Makefile)
+AC_OUTPUT(data/Makefile src/Makefile Makefile)
