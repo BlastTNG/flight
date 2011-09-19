@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.24 $";
+const char *command_list_serial = "$Revision: 1.25 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -284,7 +284,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
     {
-      {"Az Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"},
+      {"Az Speed (deg/s on sky)", -10.0, 10.0, 'f', "0.0"},
       {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
     }
   },

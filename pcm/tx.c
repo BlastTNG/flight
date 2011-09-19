@@ -170,6 +170,9 @@ static void WriteAux(void)
   } else {
     InCharge = !(BitsyIAm
 	^ (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] & 0x1));
+  //bprintf(info, "BitsyIAm = %d", BitsyIAm);
+  //bprintf(info, "mcc status bit 1 = %d", (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] & 0x1));
+  //bprintf(info, "InCharge = %d", InCharge);
   }
   if (InCharge != incharge && InCharge) {
     bprintf(info, "System: I, %s, have gained control.\n", BitsyIAm ? "Bitsy" : "Itsy");
@@ -566,6 +569,7 @@ static void StoreData(int index)
   static struct NiosStruct *velSerRWAddr;
 //  static struct NiosStruct *tMCRWAddr; // JAS--afaik, no temp. reading avail. 
                                          // from AMC controller
+  static struct NiosStruct *resRWAddr;
   static struct NiosStruct *iSerRWAddr;
 //  static struct NiosStruct *stat1RWAddr;// JAS--Old Copley controller data
 //  static struct NiosStruct *stat2RWAddr;
@@ -754,6 +758,7 @@ static void StoreData(int index)
     velSerRWAddr = GetNiosAddr("vel_ser_rw");
     //elRawEncAddr = GetNiosAddr("el_raw_enc");
 //  tMCRWAddr = GetNiosAddr("t_mc_rw");
+    resRWAddr = GetNiosAddr("res_rw");
     iSerRWAddr = GetNiosAddr("i_ser_rw");
 //  stat1RWAddr = GetNiosAddr("stat_1_rw");
 //  stat2RWAddr = GetNiosAddr("stat_2_rw");
@@ -802,13 +807,11 @@ static void StoreData(int index)
 
   //WriteData(velRWAddr,
   //    ((long int)(RWMotorData[i_rw_motors].vel_rw/4.0*DEG2I)), NIOS_QUEUE);
-  WriteData(velSerRWAddr,
-      ((long int)(RWMotorData[i_rw_motors].dps_rw/4.0*DEG2I)), NIOS_QUEUE);
- // WriteData(elRawEncAddr,
+ 
+  WriteCalData(velSerRWAddr, RWMotorData[i_rw_motors].dps_rw, NIOS_QUEUE);
+// WriteData(elRawEncAddr,
    //   ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
-
-  WriteData(resPivAddr,
-      PivotMotorData[i_pivot_motors].res_piv*DEG2I, NIOS_QUEUE);
+  WriteData(resRWAddr, RWMotorData[i_rw_motors].res_rw*DEG2I, NIOS_QUEUE);
 
   /*************************************************
    *             Slow Controls                     *
@@ -1037,7 +1040,8 @@ static void StoreData(int index)
                  +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
   WriteData(statS1PivAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
   WriteData(velSerPivAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
-
+  WriteData(resPivAddr,
+      PivotMotorData[i_pivot_motors].res_piv*DEG2I, NIOS_QUEUE);
 //  WriteData(infoElAddr,ElevMotorData[i_elev_motors].drive_info,NIOS_QUEUE);
 //  WriteData(driveErrCtsElAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);
   WriteData(infoPivAddr,PivotMotorData[i_pivot_motors].drive_info,NIOS_QUEUE);
@@ -1248,7 +1252,7 @@ void UpdateBBCFrame()
   if (index == 0) {
     if (!mcp_initial_controls)
       SyncADC();
-    //WriteAux();
+    WriteAux();
     //StoreActBus();
     //SecondaryMirror();
     //StoreHWPRBus();

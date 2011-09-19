@@ -200,7 +200,7 @@ void FrameFileWriter(void)
 #ifdef __MCP__
     //Stop writing framefile with less than 200MB of disk space
     if (CommandData.df < 50 && CommandData.df > 0)
-      bputs(tfatal, "Insufficient disk space to write frame file, exiting");
+      bprintf(tfatal, "Insufficient disk space (%d) to write frame file, exiting", CommandData.df);
 #endif
     write_len = 0;
     b_write_to = framefile.b_write_to;

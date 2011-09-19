@@ -276,7 +276,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mode_p",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE},
   {"x_p",          'w', LOOP1, 60,              I2DEG,             0.0, 'u', U_NONE},
   {"y_p",          'w', LOOP1, 61,              I2DEG,             0.0, 's', U_NONE},
-  {"vel_az_p",     'w', LOOP1, 62,              I2VEL,             0.0, 'u', U_NONE},
+  {"vel_az_p",     'w', LOOP1, 62,              I2VEL,             0.0, 's', U_NONE},
   {"del_p",        'w', LOOP1, 63,              I2VEL,             0.0, 'u', U_NONE},
 
   {"blob_idx_isc", 'w', LOOP2,  0,                1.0,             0.0, 'u', U_NONE},
@@ -569,15 +569,13 @@ struct ChannelStruct SlowChannels[] = {
   {"mode_cal",     'w', LOOP6, 60,                1.0,             0.0, 'u', U_NONE},
   {"minblobs_isc", 'w', LOOP6, 61,                1.0,             0.0, 'u', U_NONE},
   {"minblobs_osc", 'w', LOOP6, 62,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP7 0-1 are fast narrow */
-  /* LOOP7 2-3 are unused */
+  /* LOOP7 0-3 are fast narrow */
 //{"stat_1_rw",    'w', LOOP7,  4,             1.0,           0.0, 'u', U_NONE},
 //{"stat_2_rw",    'w', LOOP7,  5,             1.0,           0.0, 'u', U_NONE},
 //{"fault_rw",     'w', LOOP7,  6,             1.0,           0.0, 'u', U_NONE},
   {"stat_dr_rw",   'w', LOOP7,  4,             1.0,           0.0, 'u', U_NONE},
   {"stat_s1_rw",   'w', LOOP7,  5,             1.0,           0.0, 'u', U_NONE},
   
-  /* LOOP7 0-3 are slow wide0*/
   {"stat_1_el",    'w', LOOP7,  7,                1.0,             0.0, 'u', U_NONE},  
   {"stat_2_el",    'w', LOOP7,  8,                1.0,             0.0, 'u', U_NONE},  
   {"fault_el",     'w', LOOP7,  9,                1.0,             0.0, 'u', U_NONE},  
@@ -1039,7 +1037,8 @@ struct ChannelStruct FastChannels[] = {
   {"vel_req_el",   'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"cos_el",       'w',   ACS2_D, 25,         1.0/32768.0,           -1.0, 'u', U_NONE},
   {"sin_el",       'w',   ACS2_D, 26,         1.0/32768.0,           -1.0, 'u', U_NONE},
-  {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
+//{"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
+  {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS,-32768.0*GY16_TO_DPS, 'u', U_V_DPS},
   {"pulse_sc",     'r',   ACS2_D, 50,                 1.0,            0.0, 'u', U_NONE},
   //{"trig_s_sbsc",  'r',   ACS2_D, 51,                1.0,             0.0, 'u', U_NONE},
   //{"trig_l_sbsc",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
@@ -1049,14 +1048,16 @@ struct ChannelStruct FastChannels[] = {
   {"heat_45_hk",   'w',  RTD_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
 
-  {"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
-  {"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
-  {"vel_ser_rw",   'w', LOOP7,  0,    I2DEG*4.0,             0.0, 's', U_V_DPS},
-  {"el_raw_enc",   'w', LOOP7,  2,             I2DEG,             0.0, 'u', U_P_DEG},
-  {"el_enc",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"sigma_enc",    'w', LOOP2, 48,              I2DEG,             0.0, 'u', U_NONE},
-  {"chatter",      'w', LOOP7, 38,              1.0,               0.0, 'u', U_NONE},
-  {"mcp_frame",    'w', LOOP2, 34,              1.0,               0.0, 'u', U_NONE},
+  {"x_stage",      'w', LOOP5, 28,     2.0,        0.0,      'u',      U_NONE},
+  {"y_stage",      'w', LOOP5, 34,     2.0,        0.0,      'u',      U_NONE},
+  {"vel_ser_rw",   'w', LOOP7,  0,     I2DEG*4.0,  0.0,      's',      U_V_DPS},
+  {"vel_rw",       'w', LOOP7,  1,     2400.0/65536.0, -1200.0,  'u',  U_V_DPS},
+  {"el_raw_enc",   'w', LOOP7,  2,     I2DEG,      0.0,      'u',      U_P_DEG},
+  {"res_rw",       'w', LOOP7,  3,     I2DEG,      0.0,      'u',      U_P_DEG},
+  {"el_enc",       'w', LOOP2, 47,     I2DEG,      0.0,      'u',      U_P_DEG},
+  {"sigma_enc",    'w', LOOP2, 48,     I2DEG,      0.0,      'u',      U_NONE},
+  {"chatter",      'w', LOOP7, 38,     1.0,        0.0,      'u',      U_NONE},
+  {"mcp_frame",    'w', LOOP2, 34,     1.0,        0.0,      'u',      U_NONE},
 
   END_OF_CHANNELS
 };

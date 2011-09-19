@@ -2217,6 +2217,7 @@ void InitCommandData()
   }
 
   /** this overrides prev_status **/
+  CommandData.df = 0;
   CommandData.force_el = 0;
 
   CommandData.actbus.off = 0;
@@ -2467,7 +2468,6 @@ void InitCommandData()
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;
   CommandData.temp3 = 0;
-  CommandData.df = 0;
 
   CommandData.lat = -77.86;  //McMurdo Building 096
   CommandData.lon = -167.04; //Willy Field Dec 2010

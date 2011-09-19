@@ -392,7 +392,7 @@ static void SensorReader(void)
       /* vfsbuf.f_bavail is the # of blocks, the blocksize is vfsbuf.f_bsize
        * which, in this case is 4096 bytes, so CommandData.df ends up in units
        * of 4000kb */
-      CommandData.df = vfsbuf.f_bavail / 1000;
+      CommandData.df = vfsbuf.f_bfree / 1000;
     }
 
     if (sensor_error)
@@ -515,7 +515,7 @@ static void GetACS()
     xMagAddr = GetBiPhaseAddr("x_mag");
     yMagAddr = GetBiPhaseAddr("y_mag");
     zMagAddr = GetBiPhaseAddr("z_mag");
-    velRWAddr = GetBiPhaseAddr("vel_ser_rw");
+    velRWAddr = GetBiPhaseAddr("vel_rw");
     resPivAddr = GetBiPhaseAddr("res_piv");
     v11PssAddr = GetBiPhaseAddr("v1_1_pss");
     v21PssAddr = GetBiPhaseAddr("v2_1_pss");
@@ -532,7 +532,7 @@ static void GetACS()
       (RxFrame[2] & 0x0000ffff) << 16);
 
   enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
-  vel_rw = (((double)((short)RxFrame[velRWAddr->channel]))*4.0/DEG2I);
+  vel_rw = (((double)((unsigned short)RxFrame[velRWAddr->channel]))*(2400.0/65536.0)-1200.0);
   ifel_gy = (double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
   ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
   ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
@@ -961,7 +961,6 @@ static int AmIBitsy()
   if (strncmp(buffer, "itsy", 15) == 0 || strncmp(buffer, "bitsy", 15) == 0)
     bputs(fatal, "Flight code can't be compiled with TEST_RUN\n");
 #endif
-
   return (buffer[0] == 'b') ? 1 : 0;
 }
 

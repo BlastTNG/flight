@@ -42,6 +42,9 @@
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
 
+#define RW_BASE 0.95    // base for exponential filter used to compute RW
+                       // speed
+
 #define V_AZ_MIN 0.05 // JAS -- smallest measured az speed we trust given gyro
                       //        noise/offsets
 
@@ -155,6 +158,64 @@ static double calcVPiv(void)
   j++;
   return vpiv;
 }
+
+/* calcVRW(): compute filtered RW velocity from RW resolver position read 
+              from AMC controller over RS-232 */
+static double calcVRW(void)
+{
+
+//v -- velocity input to filter
+//u -- velocity output from filter
+
+  double v, u, x, dx; 
+  static double last_u = 0.0, last_x = 0.0;
+  static double last_v = 0.0;
+  int i_rw;
+  static int frame_count = 0;
+  //static int since_last = 0;
+
+  frame_count++;
+
+  /*if (++since_last < 30) {
+    return last_u;
+  }
+  since_last = 0;*/
+
+  i_rw = GETREADINDEX(rw_motor_index);
+
+  x = RWMotorData[i_rw].res_rw;
+
+  dx = x - last_x;
+
+  if ( dx > 180.0 ) {
+    dx -= 360.0;
+  } else if (dx < -180.0) {
+    dx += 360.0;
+  }
+   
+  if (dx==0.0) {
+    if (frame_count>100) {
+      v = 0.0;
+    } else {
+      v = last_v;  
+    }
+  } else {
+    v = dx*(SR/((double)frame_count));
+    frame_count = 0; 
+  }  
+
+  last_x = x;
+  last_v = v;
+
+  u = ( RW_BASE*last_u + (1-RW_BASE)*v );
+  last_u = u;
+//bprintf(info, "i_rw = %d, x = %f deg, v = %f dps, u = %f dps", i_rw, x, v, u);
+
+  return u;
+
+}
+
+
 /************************************************************************/
 /*                                                                      */
 /*   GetVElev: get the current elevation velocity, given current        */
@@ -257,6 +318,7 @@ static double GetVAz(void)
   
   t_bbus = 1.0/SR;
   max_dv = 1.05*(CommandData.pointing_mode.az_accel_max)*t_bbus;
+max_dv = 1000;
 
   if (axes_mode.az_mode == AXIS_VEL) {
     vel = axes_mode.az_vel;
@@ -311,7 +373,6 @@ static double GetVAz(void)
   last_vel = vel;
 
 //return (vel*10.0); // Factor of 10 was to increase dynamic range
-
   return (vel);        // need larger speed range at expense of speed
                        // resolution for Spider.
 }
@@ -472,6 +533,7 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* frictOffPivAddr;
   static struct NiosStruct* dacPivAddr;
   static struct NiosStruct* velCalcPivAddr;
+  static struct NiosStruct* velRWAddr;
   static struct NiosStruct* accelAzAddr;
  
   // Used only for Lab Controller tests
@@ -483,6 +545,7 @@ void WriteMot(int TxIndex)
   unsigned int usin_el;
 
   int v_elev, v_az, i_piv, elGainP, elGainI;
+  double v_rw;
   int azGainP, azGainI, pivGainRW, pivGainErr;
   double pivFrictOff;
   int i_point;
@@ -508,6 +571,7 @@ void WriteMot(int TxIndex)
     setRWAddr = GetNiosAddr("set_rw");
     frictOffPivAddr = GetNiosAddr("frict_off_piv");
     velCalcPivAddr = GetNiosAddr("vel_calc_piv");
+    velRWAddr = GetNiosAddr("vel_rw");
     accelAzAddr = GetNiosAddr("accel_az");
 
     dacAmplAddr[0] = GetNiosAddr("v_pump_bal");    // is now ifpm_ampl
@@ -576,6 +640,9 @@ void WriteMot(int TxIndex)
     v_az = -32768;
   WriteData(velReqAzAddr, 32768 + v_az, NIOS_QUEUE);
 
+  v_rw = calcVRW();
+
+  WriteData(velRWAddr, v_rw*(65535.0/2400.0) + 32768.0, NIOS_QUEUE);
 
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
@@ -1825,7 +1892,7 @@ void* reactComm(void* arg)
   int i_serial=0;     // counts number of attempts to open or initialize serial
                       // port
 
-//long unsigned pos_raw=0;
+  long unsigned res_rw = 0;
   int firsttime=1, resetcount=0;
   unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
   short int current_raw=0;
@@ -1864,7 +1931,7 @@ void* reactComm(void* arg)
 
   /* Initialize RWMotorData structure */
 
-//RWMotorData[0].res_rw=0;
+  RWMotorData[0].res_rw=0;
   RWMotorData[0].current=0;
   RWMotorData[0].db_stat=0;
   RWMotorData[0].dp_stat=0;
@@ -2019,11 +2086,11 @@ void* reactComm(void* arg)
 	bprintf(info,"v2 d8.13h = %i",tmp);
       }
 
-      /*pos_raw=getAMCResolver(&reactinfo);
+      res_rw = getAMCResolver(&reactinfo);
       bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Resolver Position is: %i"
-                  ,pos_raw);
-      RWMotorData[rw_motor_index].res_rw=( (double) pos_raw ) 
-                                           / PIV_RES_CTS*360.0; */
+                  ,res_rw);
+      RWMotorData[rw_motor_index].res_rw = fmod((((double) res_rw)/PIV_RES_CTS)
+                                           *360.0*4.0, 360.0);
 
       thread_count %= 5;
       switch(thread_count) {
@@ -2050,10 +2117,11 @@ void* reactComm(void* arg)
       case 4:
 	rw_vel_raw=((int) queryAMCInd(17,2,2,&reactinfo));
         RWMotorData[rw_motor_index].dps_rw=rw_vel_raw*0.144;
+        //bprintf(info, "RW Speed = %d", RWMotorData[rw_motor_index].dps_rw);
 	break;
       }
       thread_count++;
-      pivot_motor_index=INC_INDEX(pivot_motor_index);
+      rw_motor_index=INC_INDEX(rw_motor_index);
     } else {
       reactinfo.reset=1;
       rw_motor_index=INC_INDEX(rw_motor_index);
