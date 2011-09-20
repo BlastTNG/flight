@@ -48,10 +48,10 @@ def usage():
   print './rtdlutgen.py lut [path]'
   print 'to generate ntd and cnx lookup files, optional path (default ".")'
   print
-  print './rtdlutgen.py cal key Rpcm Rmeas'
+  print './rtdlutgen.py cal key Rmeas Rpcm'
   print 'produces voltage calibration gain for device type "key" (ntd or cnx)'
-  print 'Rpcm is pcm-reported resistance (Mohm for ntd, kohm for cnx)'
   print 'Rmeas is measured pot value on test board (ohm for ntd, kohm for cnx)'
+  print 'Rpcm is pcm-reported resistance (Mohm for ntd, kohm for cnx)'
   print
   print './rtdlutgen.py R key x'
   print 'evaluate the function R for set "key" at value x'
@@ -77,8 +77,8 @@ if sys.argv[1] == "lut":
 
 elif sys.argv[1] == "cal" and len(sys.argv) == 5:
   key = sys.argv[2]
-  Rpcm = float(sys.argv[3])
-  Rmeas = float(sys.argv[4])
+  Rmeas = float(sys.argv[3])
+  Rpcm = float(sys.argv[4])
 
   if key == "ntd":
     #real ntd versions
