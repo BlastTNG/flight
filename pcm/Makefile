@@ -6,7 +6,7 @@ LDFLAGS = -lpthread -lm -lstdc++ -lgsl -lgslcblas
 #enable to setup a test run on non-flight systems (eg with simbbc)
 #use test-run-enable target to enable
 #to use 32-bit compilation on 64-bit systmems requires extra packages:
-#  gcc-multilib g++-multilib libc6-dev-i386
+#  gcc-multilib g++-multilib libc6-dev-i386 ia32-libs
 include Makefile.testing
 ifeq ($(TEST_RUN), 1)
 	CPPFLAGS := $(CPPFLAGS) -m32 -DTEST_RUN
