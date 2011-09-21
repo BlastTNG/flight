@@ -87,6 +87,7 @@
 #define U_T_MS  "Time","ms"
 #define U_R_O   "Resistance","Ohms"
 #define U_RATE "Rate", "bps"
+#define U_F_HZ "Frequency", "Hz"
 
 struct ChannelStruct WideSlowChannels[] = {
   {"time",         'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE}, 
@@ -173,6 +174,9 @@ struct ChannelStruct SlowChannels[] = {
   {"ph_ntd_6_hk",   'w', RTD_A1, 17,  360.0/65536.0,          0.0,'u',U_PH_DEG},
   {"ph_cnx_5_hk",   'w', RTD_A1, 20,  360.0/65536.0,          0.0,'u',U_PH_DEG},
   {"ph_ntd_5_hk",   'w', RTD_A1, 21,  360.0/65536.0,          0.0,'u',U_PH_DEG},
+
+  //commanded bias. use f_bias_hk to see what this really corresponds to
+  {"f_bias_cmd_hk", 'w', RTD_C,   0,            1.0,          0.0, 'u', U_F_HZ},
 
   {"v_cnx_2_hk",    'w', RTD_D,   0, CALDAC(    1.0,         0.0), 'u',  U_V_V},
   {"v_ntd_2_hk",    'w', RTD_D,   1, CALDAC(    1.0,         0.0), 'u',  U_V_V},
@@ -740,7 +744,8 @@ struct ChannelStruct SlowChannels[] = {
   {"blob04_f_sbsc",  'w', LOOP9,  32,                1.0,             0.0, 'u', U_NONE},
   {"blob04_s_sbsc",  'w', LOOP9,  33,          1.0/100.0,             0.0, 'u', U_NONE},
   {"insert_last_hk", 'w', LOOP9,  34,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP9 35-49 are unused */
+  {"f_bias_hk",      'w', LOOP9,  35,      400.0/65535.0,             0.0, 'u', U_F_HZ},
+  /* LOOP9 36-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  

@@ -1384,6 +1384,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] < 6) CommandData.hk[ivalues[0]].cernox.phase = rvalues[1];
       else for (i=0; i<6; i++) CommandData.hk[i].cernox.phase= rvalues[1];
       break;
+    case hk_bias_freq:
+      //TODO consider scaling phases as fixed time delay, when freq changes
+      CommandData.hk_bias_freq = ivalues[0];
+      break;
 
       /***************************************/
       /*************** Heat  *****************/
@@ -2406,6 +2410,8 @@ void InitCommandData()
     CommandData.hk[i].ntd.phase = 0.0;
     CommandData.hk[i].ntd.ampl = 0.0;
   }
+  CommandData.hk_last = 0;
+  CommandData.hk_bias_freq = 50;
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */

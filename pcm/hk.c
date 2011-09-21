@@ -68,8 +68,11 @@ static void BiasControl()
 {
   static struct NiosStruct* vCnxAddr[6];
   static struct NiosStruct* vNtdAddr[6];
+  static struct NiosStruct* fBiasCmdHkAddr;
+  static struct NiosStruct* fBiasHkAddr;
   char field[20];
   int i;
+  unsigned short period;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -80,6 +83,8 @@ static void BiasControl()
       sprintf(field, "v_ntd_%1d_hk", i+1);
       vNtdAddr[i] = GetNiosAddr(field);
     }
+    fBiasCmdHkAddr = GetNiosAddr("f_bias_cmd_hk");
+    fBiasHkAddr = GetNiosAddr("f_bias_hk");
   }
 
   //TODO change DSP to use the same scale for both AC and DC?
@@ -88,6 +93,9 @@ static void BiasControl()
     WriteCalData(vCnxAddr[i], CommandData.hk[i].cernox.ampl, NIOS_QUEUE);
     WriteCalData(vNtdAddr[i], CommandData.hk[i].ntd.ampl, NIOS_QUEUE);
   }
+  WriteData(fBiasCmdHkAddr, CommandData.hk_bias_freq, NIOS_QUEUE);
+  period = ADC_SR/CommandData.hk_bias_freq; //cast as short important here!
+  WriteCalData(fBiasHkAddr, ADC_SR/period, NIOS_QUEUE);
 }
 
 /************************************************************************/

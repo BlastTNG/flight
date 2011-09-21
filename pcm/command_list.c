@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.25 $";
+const char *command_list_serial = "$Revision: 1.26 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -658,6 +658,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
+    }
+  },
+  {COMMAND(hk_bias_freq), "Set NTD & cernox bias frequency", GR_BIAS, 1,
+    {
+      {"Frequency (Hz)", 10, 400, 'i', "F_BIAS_CMD_HK"}
     }
   },
 

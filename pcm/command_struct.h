@@ -282,6 +282,7 @@ struct CommandDataStruct {
   } hk[6];    //one per insert
 
   short hk_last;
+  unsigned short hk_bias_freq;
 
   struct {
     int off;
