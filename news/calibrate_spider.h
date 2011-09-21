@@ -20,7 +20,9 @@
 extern "C" {
 #endif
 
-/* BLASTBus frame sample rate */
+/* BLASTBus ADC sample rate. Always clock rate / 384.0 */
+#define ADC_SR (4.0e6/384.0)
+/* BLASTBus frame sample rate (ADC_SR/104.0) */
 #define SR (100.16)
 
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */
