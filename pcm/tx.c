@@ -1215,7 +1215,9 @@ unsigned int ReadData(struct BiPhaseStruct* addr)
 double ReadCalData(struct BiPhaseStruct* addr)
 {
   if (addr->nios->sign) {   //signed
-    return ((double)(int)ReadData(addr) * addr->nios->m + addr->nios->b);
+    if (addr->nios->wide)
+      return ((double)(int)ReadData(addr) * addr->nios->m + addr->nios->b);
+    else return ((double)(short)ReadData(addr) * addr->nios->m + addr->nios->b);
   } else {		    //unsigned
     return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
   }
