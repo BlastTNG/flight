@@ -17,7 +17,7 @@
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 136        /* total number of single word cmds */
-#define N_MCOMMANDS  87        /* total number of multiword commands */
+#define N_MCOMMANDS  90        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -119,7 +119,8 @@ enum multiCommand {
   actuator_i,        lock_vel,          lock_i,            actuator_delta,
   motors_verbose,    hwpr_set_backlash,
   cam_any,	     cam_settrig_timed, cam_exp_params,	   cam_focus_params,
-  cam_bad_pix,	     cam_blob_params,	cam_lens_any,	   cam_lens_move, 
+  cam_bad_pix,	     cam_blob_params,	cam_lens_any,	   cam_lens_move,
+  table_move,	     table_move_g,	table_gain, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,       hwpr_define_pos,
   hwpr_goto,	     ants_gps,          hwpr_goto_pot,     act_enc_trim,
   hwpr_vel,          hwpr_i,

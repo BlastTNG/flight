@@ -96,6 +96,9 @@ void WriteMot(int TxIndex);
 /* in sbsc.cpp */
 void cameraFields();        
 
+/* in table.cpp */
+void updateTableSpeed();
+
 /* in sched.c */
 void DoSched();
 
@@ -1243,6 +1246,7 @@ void UpdateBBCFrame()
   StoreData(index);
   ControlGyroHeat();
   WriteMot(index);
+  updateTableSpeed();
 #endif
 #ifdef USE_XY_THREAD
   StoreStageBus(index);

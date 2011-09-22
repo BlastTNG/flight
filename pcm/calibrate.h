@@ -43,6 +43,8 @@ extern "C" {
  * 'u' for 135 <= ENC_EL_RAW_OFFSET < 315 and 's' otherwise */
 #define ENC_ELEV_TYPE 's'
 
+#define ENC_TABLE_OFFSET 0.0 
+
 #define ROX_C2V   (5.43736e-07/256.0)
 #define ROX_OFFSET (-1.1403)
 

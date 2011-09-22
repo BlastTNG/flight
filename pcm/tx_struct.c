@@ -261,12 +261,13 @@ struct ChannelStruct SlowChannels[] = {
   {"level_off_bal",'w', LOOP1, 30,           1./1990.13,             0.0, 'u', U_I_A},
   {"level_target_bal",'w', LOOP1, 31,           1./1990.13,            -5.0, 'u', U_I_A},
   /* LOOP1 32-33 are wide */
-  /* LOOP1 34-36 are unused */
+  /* LOOP1 34 is fast */
+  /* LOOP1 35-36 are unused */
   {"alt_sip",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"mapmean_isc",  'w', LOOP1, 42,                 1.,             0.0, 'u', U_NONE},
-  //{"pitch_dgps",   'w', LOOP1, 43,              I2DEG,             0.0, 's', U_P_DEG},
-  //{"roll_dgps",    'w', LOOP1, 44,              I2DEG,             0.0, 's', U_P_DEG},
+  {"g_table_move", 'w', LOOP1, 43,     100.0/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"table_move",   'w', LOOP1, 44,           1.0/10.0,             0.0, 's', U_NONE}, 
   {"lat_sip",      'w', LOOP1, 45,              I2DEG,             0.0, 's', U_LA_DEG},
   {"lon_sip",      'w', LOOP1, 46,              I2DEG,             0.0, 's', U_LO_DEG},
   {"lat_dgps",     'w', LOOP1, 47,              I2DEG,             0.0, 's', U_LA_DEG},
@@ -276,7 +277,9 @@ struct ChannelStruct SlowChannels[] = {
   {"dir_dgps",     'w', LOOP1, 51,              I2DEG,             0.0, 'u', U_D_DEG},
   {"climb_dgps",   'w', LOOP1, 52,             1./100,             0.0, 's', U_V_MPS},
   {"att_ok_dgps",  'w', LOOP1, 53,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP1 54-56 are unused */
+  {"g_p_table",    'w', LOOP1, 54,         1.0/1000.0,             0.0, 'u', U_NONE},
+  {"g_i_table",    'w', LOOP1, 55,        1.0/10000.0,             0.0, 'u', U_NONE},
+  {"g_d_table",    'w', LOOP1, 56,          1.0/100.0,             0.0, 'u', U_NONE},
   {"n_sat_dgps",   'w', LOOP1, 57,                1.0,             0.0, 'u', U_NONE},
   {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u', U_NONE},
   {"mode_p",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE},
@@ -867,12 +870,13 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"ifyaw_1_gy",  'r',  ACS2_D,  0, -DGY32_TO_DPS, DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifyaw_2_gy", 'r',  ACS2_D,  2, -DGY32_TO_DPS, DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifroll_1_gy",  'r',  ACS2_D,  4, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifroll_2_gy",   'r',  ACS2_D,  6, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifyaw_1_gy",  'r',  ACS2_D,  0, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifyaw_2_gy",  'r',  ACS2_D,  2, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifroll_1_gy", 'r',  ACS2_D,  4, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifroll_2_gy", 'r',  ACS2_D,  6, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"ifel_2_gy",   'r',  ACS2_D,  8, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifel_1_gy", 'r',  ACS2_D, 10, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifel_1_gy",   'r',  ACS2_D, 10, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"enc_table",   'r',  ACS2_D, 53,     360.0/144000.0,             0.0, 'U', U_P_DEG},
 #endif
 
   {"az",          'w', LOOP2,   51,             LI2DEG,             0.0, 'U', U_P_DEG},
@@ -1071,6 +1075,7 @@ struct ChannelStruct FastChannels[] = {
   {"pulse_sc",     'r',   ACS2_D, 50,                 1.0,            0.0, 'u', U_NONE},
   //{"trig_s_sbsc",  'r',   ACS2_D, 51,                1.0,             0.0, 'u', U_NONE},
   //{"trig_l_sbsc",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
+  {"dps_table",    'w',    LOOP1, 34,  	     70.0/32767.0,            0.0, 's', U_V_DPS},
 
 #endif
   {"heat_13_hk",   'w',  RTD_D,  50,            1.0,          0.0, 'u', U_NONE},

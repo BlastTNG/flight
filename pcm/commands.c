@@ -1512,6 +1512,19 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendSBSCCommand(buf);
       CommandData.cam.moveTol = ivalues[0];
       break;
+    case table_move:
+      CommandData.table.RelMove += rvalues[0];
+      break;
+    case table_move_g:
+      CommandData.table.MoveGain = rvalues[0];
+      break;
+    case table_gain:  /* rotary table gains */
+      //TODO PID loop performed in controller, figure out how to set gains
+      CommandData.table.tableGain.P = ivalues[0];
+      CommandData.table.tableGain.I = ivalues[1];
+      CommandData.table.tableGain.D = ivalues[2];
+      break;
+
 #endif
     default:
       bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
@@ -2239,6 +2252,8 @@ void InitCommandData()
   CommandData.hwpr.force_repoll = 0;
   CommandData.hwpr.repeats = 0;
 
+  CommandData.table.RelMove = 0;
+
   CommandData.Temporary.setLevel[0] = 1;
   CommandData.Temporary.setLevel[1] = 1;
   CommandData.Temporary.setLevel[2] = 1;
@@ -2354,6 +2369,11 @@ void InitCommandData()
   CommandData.gyheat.gain.P = 30;
   CommandData.gyheat.gain.I = 10;
   CommandData.gyheat.gain.D = 3;
+
+  CommandData.table.MoveGain = 10.0;
+  CommandData.table.tableGain.P = 6652;  //thousandths
+  CommandData.table.tableGain.I = 302;   //ten-thousandths
+  CommandData.table.tableGain.D = 13520; //hundredths
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;

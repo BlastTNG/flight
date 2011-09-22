@@ -138,6 +138,9 @@ struct chat_buf chatter_buffer;
 void openMotors();    // motors.c
 void closeMotors();
 
+void openTable();     // table.cpp
+void closeTable();
+
 void startChrgCtrl(); // chrgctrl.c
 void endChrgCtrl();
 #endif
@@ -474,6 +477,8 @@ static void Chatter(void* arg)
 static void GetACS()
 {
   double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
+  double enc_table;
+  unsigned int uTab;
   double x_comp, y_comp, z_comp;
   double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
   double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
@@ -501,6 +506,7 @@ static void GetACS()
   static struct BiPhaseStruct* v32PssAddr;
   static struct BiPhaseStruct* v42PssAddr;
   static struct BiPhaseStruct* potHwprAddr;
+  static struct BiPhaseStruct* encTableAddr;
 
   unsigned int rx_frame_index = 0;
 
@@ -526,6 +532,7 @@ static void GetACS()
     v32PssAddr = GetBiPhaseAddr("v3_2_pss");
     v42PssAddr = GetBiPhaseAddr("v4_2_pss");
     potHwprAddr = GetBiPhaseAddr("pot_hwpr");
+    encTableAddr = GetBiPhaseAddr("enc_table");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
@@ -554,6 +561,12 @@ static void GetACS()
   pss2_i4 = (double)(slow_data[v42PssAddr->index][v42PssAddr->channel]);
   hwpr_pot = (double)(slow_data[potHwprAddr->index][potHwprAddr->channel]);
 
+  uTab = (RxFrame[encTableAddr->channel+1] << 16 | 
+      RxFrame[encTableAddr->channel]);
+  if ((enc_table = ((double)uTab * (360.0 / 144000.0) + ENC_TABLE_OFFSET)) < 0)
+    enc_table += 360;
+  else if (enc_table > 360.0) enc_table -= 360;
+
   ACSData.clin_elev = (double)(slow_data[elRawIfClinAddr->index][elRawIfClinAddr->channel]);
 
   ACSData.t = mcp_systime(NULL);
@@ -577,7 +590,7 @@ static void GetACS()
   ACSData.pss2_i4 = pss2_i4;
   ACSData.hwpr_pot = hwpr_pot; // keep this as an integer, 
                                // so it can be read in one atomic cycle...
-
+  ACSData.enc_table = enc_table;
 }
 
 /* sole purpose of following function is to add a field that reads the total current */
@@ -970,6 +983,7 @@ static void CloseBBC(int signo)
   bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
 #ifndef BOLOTEST
   closeMotors();
+  closeTable(); //table.cpp
 
   endChrgCtrl();  // is this needed?
 #endif
@@ -1141,6 +1155,8 @@ int main(int argc, char *argv[])
   InitSched();
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
+  openTable();	// opens communications and creates thread in table.cpp
+
   openSBSC();  // SBSC - creates thread in sbsc.cpp
 
 

@@ -160,6 +160,12 @@ struct SBSCCommandData {
   int minBlobDist;   //min dist (pix) between blobs
 };
 
+struct TableStruct {
+  double RelMove;	//relative angle to move table by (deg)
+  double MoveGain;	//P
+  struct GainStruct tableGain;	//PID
+};
+
 struct CommandDataStruct {
   struct {
     unsigned short dac_out[5];
@@ -184,7 +190,8 @@ struct CommandDataStruct {
   struct PivGainStruct pivot_gain;
 
   struct SBSCCommandData cam;
-  
+  struct TableStruct table;
+
   struct {
     struct latch_pulse sc_tx;
     struct latch_pulse das;

@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.26 $";
+const char *command_list_serial = "$Revision: 1.27 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -786,6 +786,24 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(cam_lens_params), "set starcam lens params", GR_SBSC, 1,
     {
       {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_sbsc"}
+    }
+  },
+  {COMMAND(table_move), "move star camera by relative angle", GR_SBSC, 1,
+    {
+      {"Relative angle (deg)", -360, 360, 'd', "table_move"}
+    }
+  },
+  {COMMAND(table_move_g), "Gains to find move velocity from length",
+    GR_SBSC, 1,
+    {
+      {"P", 0, 100, 'f', "g_table_move"}
+    }
+  },
+  {COMMAND(table_gain), "starcam rotary table gains", GR_SBSC, 2,
+    {
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_table"},
+      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_table"},
+      {"Derivative Gain",   0, MAX_15BIT, 'i', "g_d_table"}
     }
   },
   {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,

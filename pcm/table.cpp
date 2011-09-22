@@ -63,7 +63,7 @@ extern "C" {
 /*opens communications with table motor controller*/
 void openTable()
 {
-  bprintf(info, "connecting to the Rotary Table");
+  bprintf(info, "connecting to the rotary table");
   tableComm = new DriveCommunicator(TABLE_DEVICE);
   if (tableComm->getError() != DC_NO_ERROR) {
 	bprintf(err, "Table: rotary table initialization gave error code: %d", tableComm->getError());
