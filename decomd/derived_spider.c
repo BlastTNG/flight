@@ -660,8 +660,8 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_4K_4_HK",	 "VD_00_4_HK",	"/data/etc/spider/d_4k_4.lut"),
   T_HK("TD_CP_4_HK",	 "VD_01_4_HK",	"/data/etc/spider/d_cp_4.lut"),
   T_HK("TD_BP_4_HK",	 "VD_04_4_HK",	"/data/etc/spider/D75322.lut"),
-  T_HK("TD_PUMP_4_HK",	 "VD_02_4_HK",	"/data/etc/spider/simonchase.lut"),
-  T_HK("TD_HSW_4_HK",	 "VD_03_4_HK",	"/data/etc/spider/simonchase.lut"),
+  T_HK("TD_PUMP_4_HK",	 "VD_02_4_HK",	"/data/etc/spider/d_simonchase.lut"),
+  T_HK("TD_HSW_4_HK",	 "VD_03_4_HK",	"/data/etc/spider/d_simonchase.lut"),
 
 
   END_OF_DERIVED_CHANNELS
