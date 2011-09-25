@@ -545,123 +545,40 @@ union DerivedUnion DerivedChannels[] = {
 	   "",
 	   ),
 
-  COMMENT("Housekeeping Thermistor Bias Normalization"),
 
-  DIVIDE("xr_still_2_hk", "VR_STILL_2_HK",  "V_CNX_2_HK"),
-  DIVIDE("xr_mux_2_hk",	  "VR_MUX_2_HK",    "V_CNX_2_HK"),
-  DIVIDE("xr_fp_2_hk",	  "VR_FP_2_HK",	    "V_CNX_2_HK"),
-  DIVIDE("xr_ssa_2_hk",	  "VR_SSA_2_HK",    "V_CNX_2_HK"),
-  DIVIDE("xr_still_3_hk", "VR_STILL_3_HK",  "V_CNX_3_HK"),
-  DIVIDE("xr_mux_3_hk",	  "VR_MUX_3_HK",    "V_CNX_3_HK"),
-  DIVIDE("xr_fp_3_hk",	  "VR_FP_3_HK",	    "V_CNX_3_HK"),
-  DIVIDE("xr_ssa_3_hk",	  "VR_SSA_3_HK",    "V_CNX_3_HK"),
-  DIVIDE("xr_still_1_hk", "VR_STILL_1_HK",  "V_CNX_1_HK"),
-  DIVIDE("xr_mux_1_hk",	  "VR_MUX_1_HK",    "V_CNX_1_HK"),
-  DIVIDE("xr_fp_1_hk",	  "VR_FP_1_HK",	    "V_CNX_1_HK"),
-  DIVIDE("xr_ssa_1_hk",	  "VR_SSA_1_HK",    "V_CNX_1_HK"),
-  DIVIDE("xr_still_5_hk", "VR_STILL_5_HK",  "V_CNX_5_HK"),
-  DIVIDE("xr_mux_5_hk",	  "VR_MUX_5_HK",    "V_CNX_5_HK"),
-  DIVIDE("xr_fp_5_hk",	  "VR_FP_5_HK",	    "V_CNX_5_HK"),
-  DIVIDE("xr_ssa_5_hk",	  "VR_SSA_5_HK",    "V_CNX_5_HK"),
-  DIVIDE("xr_still_6_hk", "VR_STILL_6_HK",  "V_CNX_6_HK"),
-  DIVIDE("xr_mux_6_hk",	  "VR_MUX_6_HK",    "V_CNX_6_HK"),
-  DIVIDE("xr_fp_6_hk",	  "VR_FP_6_HK",	    "V_CNX_6_HK"),
-  DIVIDE("xr_ssa_6_hk",	  "VR_SSA_6_HK",    "V_CNX_6_HK"),
-  DIVIDE("xr_still_4_hk", "VR_STILL_4_HK",  "V_CNX_4_HK"),
-  DIVIDE("xr_mux_4_hk",	  "VR_MUX_4_HK",    "V_CNX_4_HK"),
-  DIVIDE("xr_fp_4_hk",	  "VR_FP_4_HK",	    "V_CNX_4_HK"),
-  DIVIDE("xr_ssa_4_hk",	  "VR_SSA_4_HK",    "V_CNX_4_HK"),
+#define LUT_DIR "/data/etc/spider/"
+#define NTD_LUT	LUT_DIR "r_ntd.lut"
+#define CNX_LUT	LUT_DIR "r_cernox.lut"
 
-  DIVIDE("xr_ntd1_2_hk",  "VR_NTD1_2_HK",   "V_NTD_2_HK"),
-  DIVIDE("xr_ntd4_2_hk",  "VR_NTD4_2_HK",   "V_NTD_2_HK"),
-  DIVIDE("xr_ntd3_2_hk",  "VR_NTD3_2_HK",   "V_NTD_2_HK"),
-  DIVIDE("xr_ntd2_2_hk",  "VR_NTD2_2_HK",   "V_NTD_2_HK"),
-  DIVIDE("xr_ntd1_3_hk",  "VR_NTD1_3_HK",   "V_NTD_3_HK"),
-  DIVIDE("xr_ntd4_3_hk",  "VR_NTD4_3_HK",   "V_NTD_3_HK"),
-  DIVIDE("xr_ntd3_3_hk",  "VR_NTD3_3_HK",   "V_NTD_3_HK"),
-  DIVIDE("xr_ntd2_3_hk",  "VR_NTD2_3_HK",   "V_NTD_3_HK"),
-  DIVIDE("xr_ntd1_1_hk",  "VR_NTD1_1_HK",   "V_NTD_1_HK"),
-  DIVIDE("xr_ntd4_1_hk",  "VR_NTD4_1_HK",   "V_NTD_1_HK"),
-  DIVIDE("xr_ntd3_1_hk",  "VR_NTD3_1_HK",   "V_NTD_1_HK"),
-  DIVIDE("xr_ntd2_1_hk",  "VR_NTD2_1_HK",   "V_NTD_1_HK"),
-  DIVIDE("xr_ntd1_5_hk",  "VR_NTD1_5_HK",   "V_NTD_5_HK"),
-  DIVIDE("xr_ntd4_5_hk",  "VR_NTD4_5_HK",   "V_NTD_5_HK"),
-  DIVIDE("xr_ntd3_5_hk",  "VR_NTD3_5_HK",   "V_NTD_5_HK"),
-  DIVIDE("xr_ntd2_5_hk",  "VR_NTD2_5_HK",   "V_NTD_5_HK"),
-  DIVIDE("xr_ntd1_6_hk",  "VR_NTD1_6_HK",   "V_NTD_6_HK"),
-  DIVIDE("xr_ntd4_6_hk",  "VR_NTD4_6_HK",   "V_NTD_6_HK"),
-  DIVIDE("xr_ntd3_6_hk",  "VR_NTD3_6_HK",   "V_NTD_6_HK"),
-  DIVIDE("xr_ntd2_6_hk",  "VR_NTD2_6_HK",   "V_NTD_6_HK"),
-  DIVIDE("xr_ntd1_4_hk",  "VR_NTD1_4_HK",   "V_NTD_4_HK"),
-  DIVIDE("xr_ntd4_4_hk",  "VR_NTD4_4_HK",   "V_NTD_4_HK"),
-  DIVIDE("xr_ntd3_4_hk",  "VR_NTD3_4_HK",   "V_NTD_4_HK"),
-  DIVIDE("xr_ntd2_4_hk",  "VR_NTD2_4_HK",   "V_NTD_4_HK"),
+//T_HK: Alias for LINTERP that sets UNITS. Use directly for diodes
+#define T_HK(tch, rch, lut) \
+    LINTERP(tch, rch, lut), \
+    UNITS(tch, "Temperature", "K")
+//NTD_HK, CNX_HK: create fields required to calibrate NTD and CNX thermistors
+//  ch:	  all-caps channel name
+//  i:	  insert number
+//  lut:  filename of lut file converting R [ohm] to T [K]
+#define NTD_HK(ch, i, lut) \
+    DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_NTD_"#i"_HK"), \
+    LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", NTD_LUT), \
+    UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega"), \
+    T_HK("TR_"#ch"_"#i"_HK", "R_"#ch"_"#i"_HK", lut)
+#define CNX_HK(ch, i, lut) \
+    DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_CNX_"#i"_HK"), \
+    LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", CNX_LUT), \
+    UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega"), \
+    T_HK("TR_"#ch"_"#i"_HK", "R_"#ch"_"#i"_HK", lut)
 
-  COMMENT("Housekeeping Thermistor Resistance Calibration"),
-#define R_RTD(ch, src, lut) LINTERP(ch, src, lut), \
-	UNITS(ch, "Resistance", "\\\\Omega")
-
-  R_RTD("R_STILL_2_HK", "xr_still_2_hk","/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_MUX_2_HK",   "xr_mux_2_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_FP_2_HK",    "xr_fp_2_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_SSA_2_HK",   "xr_ssa_2_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_STILL_3_HK", "xr_still_3_hk","/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_MUX_3_HK",   "xr_mux_3_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_FP_3_HK",    "xr_fp_3_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_SSA_3_HK",   "xr_ssa_3_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_STILL_1_HK", "xr_still_1_hk","/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_MUX_1_HK",   "xr_mux_1_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_FP_1_HK",    "xr_fp_1_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_SSA_1_HK",   "xr_ssa_1_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_STILL_5_HK", "xr_still_5_hk","/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_MUX_5_HK",   "xr_mux_5_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_FP_5_HK",    "xr_fp_5_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_SSA_5_HK",   "xr_ssa_5_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_STILL_6_HK", "xr_still_6_hk","/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_MUX_6_HK",   "xr_mux_6_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_FP_6_HK",    "xr_fp_6_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_SSA_6_HK",   "xr_ssa_6_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_STILL_4_HK", "xr_still_4_hk","/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_MUX_4_HK",   "xr_mux_4_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_FP_4_HK",    "xr_fp_4_hk",	"/data/etc/spider/r_cernox.lut"),
-  R_RTD("R_SSA_4_HK",   "xr_ssa_4_hk",	"/data/etc/spider/r_cernox.lut"),
-
-  R_RTD("R_NTD1_2_HK", "xr_ntd1_2_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD4_2_HK", "xr_ntd4_2_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD3_2_HK", "xr_ntd3_2_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD2_2_HK", "xr_ntd2_2_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD1_3_HK", "xr_ntd1_3_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD4_3_HK", "xr_ntd4_3_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD3_3_HK", "xr_ntd3_3_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD2_3_HK", "xr_ntd2_3_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD1_1_HK", "xr_ntd1_1_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD4_1_HK", "xr_ntd4_1_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD3_1_HK", "xr_ntd3_1_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD2_1_HK", "xr_ntd2_1_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD1_5_HK", "xr_ntd1_5_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD4_5_HK", "xr_ntd4_5_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD3_5_HK", "xr_ntd3_5_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD2_5_HK", "xr_ntd2_5_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD1_6_HK", "xr_ntd1_6_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD4_6_HK", "xr_ntd4_6_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD3_6_HK", "xr_ntd3_6_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD2_6_HK", "xr_ntd2_6_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD1_4_HK", "xr_ntd1_4_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD4_4_HK", "xr_ntd4_4_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD3_4_HK", "xr_ntd3_4_hk",  "/data/etc/spider/r_ntd.lut"),
-  R_RTD("R_NTD2_4_HK", "xr_ntd2_4_hk",  "/data/etc/spider/r_ntd.lut"),
 
   COMMENT("Housekeeping Cernox Temperature Calibration"),
-#define T_HK(tch, rch, lut) LINTERP(tch, rch, lut), \
-	UNITS(tch, "Temperature", "K")
-  T_HK("TR_STILL_4_HK", "R_STILL_4_HK",  "/data/etc/spider/c_still_4.lut"),
+  CNX_HK(STILL,	4, LUT_DIR "c_still_4.lut"),
 
   COMMENT("Housekeeping Diode Temperature Calibration"),
-  T_HK("TD_4K_4_HK",	 "VD_00_4_HK",	"/data/etc/spider/d_4k_4.lut"),
-  T_HK("TD_CP_4_HK",	 "VD_01_4_HK",	"/data/etc/spider/d_cp_4.lut"),
-  T_HK("TD_BP_4_HK",	 "VD_04_4_HK",	"/data/etc/spider/D75322.lut"),
-  T_HK("TD_PUMP_4_HK",	 "VD_02_4_HK",	"/data/etc/spider/d_simonchase.lut"),
-  T_HK("TD_HSW_4_HK",	 "VD_03_4_HK",	"/data/etc/spider/d_simonchase.lut"),
+  T_HK("TD_4K_4_HK",	 "VD_00_4_HK",	LUT_DIR "d_4k_4.lut"),
+  T_HK("TD_CP_4_HK",	 "VD_01_4_HK",	LUT_DIR "d_cp_4.lut"),
+  T_HK("TD_BP_4_HK",	 "VD_04_4_HK",	LUT_DIR "D75322.lut"),
+  T_HK("TD_PUMP_4_HK",	 "VD_02_4_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_HSW_4_HK",	 "VD_03_4_HK",	LUT_DIR "d_simonchase.lut"),
 
 
   END_OF_DERIVED_CHANNELS
