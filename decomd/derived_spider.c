@@ -599,7 +599,7 @@ union DerivedUnion DerivedChannels[] = {
 
   COMMENT("Housekeeping Thermistor Resistance Calibration"),
 #define R_RTD(ch, src, lut) LINTERP(ch, src, lut), \
-	UNITS(ch, "Resistance", "\\Omega")
+	UNITS(ch, "Resistance", "\\\\Omega")
 
   R_RTD("R_STILL_2_HK", "xr_still_2_hk","/data/etc/spider/r_cernox.lut"),
   R_RTD("R_MUX_2_HK",   "xr_mux_2_hk",	"/data/etc/spider/r_cernox.lut"),
@@ -650,6 +650,18 @@ union DerivedUnion DerivedChannels[] = {
   R_RTD("R_NTD4_4_HK", "xr_ntd4_4_hk",  "/data/etc/spider/r_ntd.lut"),
   R_RTD("R_NTD3_4_HK", "xr_ntd3_4_hk",  "/data/etc/spider/r_ntd.lut"),
   R_RTD("R_NTD2_4_HK", "xr_ntd2_4_hk",  "/data/etc/spider/r_ntd.lut"),
+
+  COMMENT("Housekeeping Cernox Temperature Calibration"),
+#define T_HK(tch, rch, lut) LINTERP(tch, rch, lut), \
+	UNITS(tch, "Temperature", "K")
+  T_HK("TR_STILL_4_HK", "R_STILL_4_HK",  "/data/etc/spider/c_still_4.lut"),
+
+  COMMENT("Housekeeping Diode Temperature Calibration"),
+  T_HK("TD_4K_4_HK",	 "VD_00_4_HK",	"/data/etc/spider/d_4k_4.lut"),
+  T_HK("TD_CP_4_HK",	 "VD_01_4_HK",	"/data/etc/spider/d_cp_4.lut"),
+  T_HK("TD_BP_4_HK",	 "VD_04_4_HK",	"/data/etc/spider/D75322.lut"),
+  T_HK("TD_PUMP_4_HK",	 "VD_02_4_HK",	"/data/etc/spider/simonchase.lut"),
+  T_HK("TD_HSW_4_HK",	 "VD_03_4_HK",	"/data/etc/spider/simonchase.lut"),
 
 
   END_OF_DERIVED_CHANNELS
