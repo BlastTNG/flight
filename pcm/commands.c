@@ -2428,7 +2428,7 @@ void InitCommandData()
     CommandData.hk[i].cernox.phase = 5.0;
     CommandData.hk[i].cernox.ampl = 0.3;
     CommandData.hk[i].ntd.phase = 5.0;
-    CommandData.hk[i].ntd.ampl = 0.5;
+    CommandData.hk[i].ntd.ampl = 0.3;
   }
   CommandData.hk_last = 0;
   CommandData.hk_bias_freq = 50;
