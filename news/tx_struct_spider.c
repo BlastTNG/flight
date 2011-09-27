@@ -876,7 +876,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"ifroll_2_gy", 'r',  ACS2_D,  6, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"ifel_2_gy",   'r',  ACS2_D,  8, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"ifel_1_gy",   'r',  ACS2_D, 10, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"enc_table",   'r',  ACS2_D, 53,     360.0/144000.0,             0.0, 'U', U_P_DEG},
+  {"enc_table",   'r',  ACS2_D, 54,     360.0/144000.0,             0.0, 'U', U_P_DEG},
 #endif
 
   {"az",          'w', LOOP2,   51,             LI2DEG,             0.0, 'U', U_P_DEG},
