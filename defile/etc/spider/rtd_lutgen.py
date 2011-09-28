@@ -18,7 +18,7 @@ import numpy as np
 #define size of bias bridges. tmax should be highest value of Rt in the table
 R = { 
       #"ntd" test board coniguration
-      #"ntd": { "1": 4700., "2": 220., "b": 3300., "tmax": 1100.},
+      "ntd-test": { "1": 4700., "2": 220., "b": 3300., "tmax": 1100.},
       #"ntd" proper coniguration
       "ntd": { "1": 4700., "2": 220., "b": 30.e6, "tmax": 10.e6},
       "cnx": { "1": 12.e3, "2": 100., "b": 33.e4, "tmax": 15.e4}
@@ -49,9 +49,10 @@ def usage():
   print 'to generate ntd and cnx lookup files, optional path (default ".")'
   print
   print './rtdlutgen.py cal key Rmeas Rpcm'
-  print 'produces voltage calibration gain for device type "key" (ntd or cnx)'
-  print 'Rmeas is measured pot value on test board (ohm for ntd, kohm for cnx)'
-  print 'Rpcm is pcm-reported resistance (Mohm for ntd, kohm for cnx)'
+  print 'produces voltage calibration gain'
+  print 'key is ntd, ntd-test (for a fake-insert ntd), or cnx (for cernox)'
+  print 'Rmeas is a calibrated measurement of the resistance'
+  print 'Rpcm is pcm-reported resistance'
   print
   print './rtdlutgen.py R key x'
   print 'evaluate the function R for set "key" at value x'
@@ -74,29 +75,19 @@ if sys.argv[1] == "lut":
   print 'Generating luts (in path "%s")' % path
   writefile(path + "/r_cernox.lut", "cnx", 100)
   writefile(path + "/r_ntd.lut", "ntd", 100)
+  writefile(path + "/r_ntd-test.lut", "ntd-test", 100)
 
 elif sys.argv[1] == "cal" and len(sys.argv) == 5:
   key = sys.argv[2]
   Rmeas = float(sys.argv[3])
   Rpcm = float(sys.argv[4])
 
-  if key == "ntd":
-    #real ntd versions
-    #testcal = 1.0e6/110.0
-    #Rpcm *= 1.0e6
-    #test ntd versions
-    testcal = 1.0
-    Rpcm *= 1.0
-  elif key == "cnx":
-    testcal = 1.0e3
-    Rpcm *= 1.0e3
-  else:
-    usage()
+  if key not in R:
+    print 'unknown calibration key: %s' % key
     sys.exit(1)
 
-  Rreal = Rmeas*testcal
-  print 'Calibrating %s: Rpcm %e, Rmeas %e (means %e)' % (key,Rpcm,Rmeas,Rreal)
-  print 'Gain: %s' % (get_x(R[key],Rreal) / get_x(R[key],Rpcm))
+  print 'Calibrating %s: Rpcm %e, Rmeas %e' % (key,Rpcm,Rmeas)
+  print 'Gain: %s' % (get_x(R[key],Rmeas) / get_x(R[key],Rpcm))
 
 elif sys.argv[1] == "R" and len(sys.argv) == 4:
   key = sys.argv[2]
