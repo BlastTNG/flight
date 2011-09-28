@@ -1366,22 +1366,22 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /*************** Bias  *****************/
     case hk_ampl_ntd:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].ntd.ampl = rvalues[1];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].ntd.ampl = rvalues[1];
       else for (i=0; i<6; i++) CommandData.hk[i].ntd.ampl = rvalues[1];
       break;
     case hk_ampl_cernox:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].cernox.ampl = rvalues[1];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].cernox.ampl = rvalues[1];
       else for (i=0; i<6; i++) CommandData.hk[i].cernox.ampl = rvalues[1];
       break;
     case hk_phase_ntd:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].ntd.phase = rvalues[1];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].ntd.phase = rvalues[1];
       else for (i=0; i<6; i++) CommandData.hk[i].ntd.phase = rvalues[1];
       break;
     case hk_phase_cernox:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].cernox.phase = rvalues[1];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].cernox.phase = rvalues[1];
       else for (i=0; i<6; i++) CommandData.hk[i].cernox.phase= rvalues[1];
       break;
     case hk_bias_freq:
@@ -1393,41 +1393,41 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /*************** Heat  *****************/
     case hk_pump_heat_on:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].pump_heat = 1;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].pump_heat = 1;
       else for (i=0; i<6; i++) CommandData.hk[i].pump_heat = 1;
       break;
     case hk_pump_heat_off:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].pump_heat = 0;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].pump_heat = 0;
       else for (i=0; i<6; i++) CommandData.hk[i].pump_heat = 0;
       break;
     case hk_heat_switch_on:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].heat_switch = 1;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].heat_switch = 1;
       else for (i=0; i<6; i++) CommandData.hk[i].heat_switch = 1;
       break;
     case hk_heat_switch_off:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].heat_switch = 0;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].heat_switch = 0;
       else for (i=0; i<6; i++) CommandData.hk[i].heat_switch = 0;
       break;
     case hk_fphi_heat_on:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].fphi_heat = 1;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = 1;
       else for (i=0; i<6; i++) CommandData.hk[i].fphi_heat = 1;
       break;
     case hk_fphi_heat_off:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].fphi_heat = 0;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = 0;
       else for (i=0; i<6; i++) CommandData.hk[i].fphi_heat = 0;
       break;
     case hk_tile_heat_on:
       CommandData.hk_last = ivalues[0];
       CommandData.hk_tile_last = ivalues[1];
-      for (i = ((ivalues[0] > 0) ? ivalues[0]     : 0);
-	   i < ((ivalues[0] > 0) ? ivalues[0] + 1 : 6); i++) {
-	for (j = ((ivalues[1] < 4) ? ivalues[1]     : 0);
-	     j < ((ivalues[1] < 4) ? ivalues[1] + 1 : 4); j++) {
+      for (i = ((ivalues[0] > 0) ? ivalues[0] - 1 : 0);
+	   i < ((ivalues[0] > 0) ? ivalues[0]     : 6); i++) {
+	for (j = ((ivalues[1] > 0) ? ivalues[1] - 1 : 0);
+	     j < ((ivalues[1] > 0) ? ivalues[1]     : 4); j++) {
 	  CommandData.hk[i].tile_heat[j] = -1;
 	}
       }
@@ -1435,10 +1435,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case hk_tile_heat_off:
       CommandData.hk_last = ivalues[0];
       CommandData.hk_tile_last = ivalues[1];
-      for (i = ((ivalues[0] > 0) ? ivalues[0]     : 0);
-	   i < ((ivalues[0] > 0) ? ivalues[0] + 1 : 6); i++) {
-	for (j = ((ivalues[1] > 0) ? ivalues[1]     : 0);
-	     j < ((ivalues[1] > 0) ? ivalues[1] + 1 : 4); j++) {
+      for (i = ((ivalues[0] > 0) ? ivalues[0] - 1 : 0);
+	   i < ((ivalues[0] > 0) ? ivalues[0]     : 6); i++) {
+	for (j = ((ivalues[1] > 0) ? ivalues[1] - 1 : 0);
+	     j < ((ivalues[1] > 0) ? ivalues[1]     : 4); j++) {
 	  CommandData.hk[i].tile_heat[j] = 0;
 	}
       }
@@ -1447,10 +1447,10 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_last = ivalues[0];
       CommandData.hk_tile_last = ivalues[1];
       CommandData.hk_pulse_last = ivalues[2];
-      for (i = ((ivalues[0] > 0) ? ivalues[0]     : 0);
-	   i < ((ivalues[0] > 0) ? ivalues[0] + 1 : 6); i++) {
-	for (j = ((ivalues[1] > 0) ? ivalues[1]     : 0);
-	     j < ((ivalues[1] > 0) ? ivalues[1] + 1 : 4); j++) {
+      for (i = ((ivalues[0] > 0) ? ivalues[0] - 1 : 0);
+	   i < ((ivalues[0] > 0) ? ivalues[0]     : 6); i++) {
+	for (j = ((ivalues[1] > 0) ? ivalues[1] - 1 : 0);
+	     j < ((ivalues[1] > 0) ? ivalues[1]     : 4); j++) {
 	  CommandData.hk[i].tile_heat[j] = ivalues[2];
 	}
       }
@@ -1458,16 +1458,14 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case hk_fplo_heat_set:
       CommandData.hk_last = ivalues[0];
       CommandData.hk_vheat_last = rvalues[1];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].fplo_heat = rvalues[1];
-      else if (ivalues[0] == 6)
-	for (i=0; i<6; i++) CommandData.hk[i].fplo_heat = rvalues[1];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fplo_heat = rvalues[1];
+      else for (i=0; i<6; i++) CommandData.hk[i].fplo_heat = rvalues[1];
       break;
     case hk_ssa_heat_set:
       CommandData.hk_last = ivalues[0];
       CommandData.hk_vheat_last = rvalues[1];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]].ssa_heat = rvalues[1];
-      else if (ivalues[0] == 6)
-	for (i=0; i<6; i++) CommandData.hk[i].ssa_heat = rvalues[1];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].ssa_heat = rvalues[1];
+      else for (i=0; i<6; i++) CommandData.hk[i].ssa_heat = rvalues[1];
       break;
 
 
@@ -2447,6 +2445,9 @@ void InitCommandData()
     CommandData.hk[i].ntd.ampl = 0.3;
   }
   CommandData.hk_last = 0;
+  CommandData.hk_tile_last = 0;
+  CommandData.hk_pulse_last = 0;
+  CommandData.hk_vheat_last = 0.0;
   CommandData.hk_bias_freq = 50;
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;

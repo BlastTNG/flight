@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.28 $";
+const char *command_list_serial = "$Revision: 1.29 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -720,11 +720,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(hk_tile_heat_pulse), "Pulse on a detector tile heater",
-      GR_CRYO_HEAT, 2,
+      GR_CRYO_HEAT, 3,
     {
       {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
       {"Tile (1-4,0=all)", 0, 4, 'i', "TILE_LAST_HK"},
-      //TODO default value for pulse length?
       {"On Time (# of 0.2s frames)", 0, MAX_15BIT, 'i', "PULSE_LAST_HK"},
     }
   },
