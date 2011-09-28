@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.27 $";
+const char *command_list_serial = "$Revision: 1.28 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -638,25 +638,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {COMMAND(hk_ampl_cernox), "Set cernox bias amplitude", GR_BIAS, 2,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
       {"Amplitude (V)", 0.0, 5.0, 'f', ""}
     }
   },
   {COMMAND(hk_ampl_ntd), "Set NTD bias amplitude", GR_BIAS, 2,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
       {"Amplitude (V)", 0.0, 5.0, 'f', ""}
     }
   },
   {COMMAND(hk_phase_cernox), "Set cernox bias phase", GR_BIAS, 2,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
   {COMMAND(hk_phase_ntd), "Set NTD bias phase", GR_BIAS, 2,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
@@ -671,65 +671,74 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(hk_pump_heat_on), "Turn on the pump (charcoal) heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
     }
   },
   {COMMAND(hk_pump_heat_off), "Turn off the pump (charcoal) heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
     }
   },
   {COMMAND(hk_heat_switch_on), "Turn on the heat switch heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
     }
   },
   {COMMAND(hk_heat_switch_off), "Turn off the heat switch heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
     }
   },
   {COMMAND(hk_fphi_heat_on), "Turn on the high-current focal plane heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
     }
   },
   {COMMAND(hk_fphi_heat_off), "Turn off the high-current focal plane heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
     }
   },
   //TODO should tile and DAC level get default values?
   {COMMAND(hk_tile_heat_on), "Turn on a detector tile heater",
       GR_CRYO_HEAT, 2,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
-      {"Tile (0-3,4=all)", 0, 4, 'i', ""},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Tile (1-4,0=all)", 0, 4, 'i', "TILE_LAST_HK"},
     }
   },
   {COMMAND(hk_tile_heat_off), "Turn off a detector tile heater",
       GR_CRYO_HEAT, 2,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
-      {"Tile (0-3,4=all)", 0, 4, 'i', ""},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Tile (1-4,0=all)", 0, 4, 'i', "TILE_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_tile_heat_pulse), "Pulse on a detector tile heater",
+      GR_CRYO_HEAT, 2,
+    {
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Tile (1-4,0=all)", 0, 4, 'i', "TILE_LAST_HK"},
+      //TODO default value for pulse length?
+      {"On Time (# of 0.2s frames)", 0, MAX_15BIT, 'i', "PULSE_LAST_HK"},
     }
   },
   {COMMAND(hk_ssa_heat_set), "Set SSA heater voltage", GR_CRYO_HEAT, 2,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
-      {"Level (V)", -5.0, 5.0, 'f', ""},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},
     }
   },
   {COMMAND(hk_fplo_heat_set), "Set low-current focal plane heater voltage",
       GR_CRYO_HEAT, 2,
     {
-      {"Insert (0-5,6=all)", 0, 6, 'i', "INSERT_LAST_HK"},
-      {"Level (V)", -5.0, 5.0, 'f', ""},
+      {"Insert (1-6,0=all)", 0, 6, 'i', "INSERT_LAST_HK"},
+      {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},
     }
   },
 

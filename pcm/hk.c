@@ -149,9 +149,13 @@ static void HeatControl()
     if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
     if (CommandData.hk[i].fphi_heat) bits[i] |= HK_PWM_FPHI;
     if (CommandData.hk[i].tile_heat[0]) bits[i] |= HK_PWM_TILE1;
+    if (CommandData.hk[i].tile_heat[0] > 0) CommandData.hk[i].tile_heat[0]--;
     if (CommandData.hk[i].tile_heat[1]) bits[i] |= HK_PWM_TILE2;
+    if (CommandData.hk[i].tile_heat[1] > 0) CommandData.hk[i].tile_heat[1]--;
     if (CommandData.hk[i].tile_heat[2]) bits[i] |= HK_PWM_TILE3;
+    if (CommandData.hk[i].tile_heat[2] > 0) CommandData.hk[i].tile_heat[2]--;
     if (CommandData.hk[i].tile_heat[3]) bits[i] |= HK_PWM_TILE4;
+    if (CommandData.hk[i].tile_heat[3] > 0) CommandData.hk[i].tile_heat[3]--;
   }
   temp = ((bits[0] & 0xff) << 8) | (bits[2] & 0xff);
   WriteData(heat13Addr, temp, NIOS_QUEUE);
@@ -170,10 +174,16 @@ static void HeatControl()
 void HouseKeeping(int index)
 {
   static struct NiosStruct* insertLastHkAddr;
+  static struct NiosStruct* tileLastHkAddr;
+  static struct NiosStruct* pulseLastHkAddr;
+  static struct NiosStruct* vHeatLastHkAddr;
   static int first_time = 1;
   if (first_time) {
     first_time = 0;
     insertLastHkAddr = GetNiosAddr("insert_last_hk");
+    tileLastHkAddr = GetNiosAddr("tile_last_hk");
+    pulseLastHkAddr = GetNiosAddr("pulse_last_hk");
+    vHeatLastHkAddr = GetNiosAddr("v_heat_last_hk");
   }
 
   if (index == 0) {
@@ -183,4 +193,7 @@ void HouseKeeping(int index)
   }
 
   WriteData(insertLastHkAddr, CommandData.hk_last, NIOS_QUEUE);
+  WriteData(tileLastHkAddr, CommandData.hk_tile_last, NIOS_QUEUE);
+  WriteData(pulseLastHkAddr, CommandData.hk_pulse_last, NIOS_QUEUE);
+  WriteCalData(vHeatLastHkAddr, CommandData.hk_vheat_last, NIOS_QUEUE);
 }

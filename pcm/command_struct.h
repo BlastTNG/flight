@@ -273,7 +273,7 @@ struct CommandDataStruct {
     bool pump_heat;
     bool heat_switch;
     bool fphi_heat;
-    bool tile_heat[4];
+    int tile_heat[4];
     double fplo_heat;
     double ssa_heat;
 
@@ -289,6 +289,9 @@ struct CommandDataStruct {
   } hk[6];    //one per insert
 
   short hk_last;
+  short hk_tile_last;
+  short hk_pulse_last;
+  double hk_vheat_last;
   unsigned short hk_bias_freq;
 
   struct {

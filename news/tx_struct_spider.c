@@ -748,7 +748,10 @@ struct ChannelStruct SlowChannels[] = {
   {"blob04_s_sbsc",  'w', LOOP9,  33,          1.0/100.0,             0.0, 'u', U_NONE},
   {"insert_last_hk", 'w', LOOP9,  34,                1.0,             0.0, 'u', U_NONE},
   {"f_bias_hk",      'w', LOOP9,  35,      400.0/65535.0,             0.0, 'u', U_F_HZ},
-  /* LOOP9 36-49 are unused */
+  {"tile_last_hk",   'w', LOOP9,  36,                1.0,             0.0, 'u', U_NONE},
+  {"v_heat_last_hk", 'w', LOOP9,  37,         CALDAC(1.0,            0.0), 'u', U_V_V},
+  {"pulse_last_hk",  'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP9 39-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
