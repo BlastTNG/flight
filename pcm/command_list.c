@@ -26,7 +26,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.29 $";
+const char *command_list_serial = "$Revision: 1.30 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -257,7 +257,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Az centre (deg)",       -180, 360, 'f', "AZ"},
       {"El centre (deg)",         15,  65, 'f', "EL"},
       {"Width (deg on sky)",       0, 360, 'f', "NONE"},
-      {"Az Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
+      {"Az Scan Speed (deg az/s)", 0,   10, 'f', "NONE"}
     }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",

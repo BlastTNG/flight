@@ -604,7 +604,7 @@ struct ChannelStruct SlowChannels[] = {
   {"vel_dps_az",   'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
   /* LOOP7 24 unassigned */
   /* LOOP7 25-26 are unused */
-  {"vel_ser_piv",  'w', LOOP7, 27,           1.0/0.144,             0.0, 's', U_NONE},
+  {"vel_ser_piv",  'w', LOOP7, 27,   2000.0/65536.0,         0.0, 's', U_V_DPS},
   {"vel_calc_piv", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
   {"age_isc",      'w', LOOP7, 29,                 1.0,             0.0, 'u', U_T_MS},
   {"age_osc",      'w', LOOP7, 30,                 1.0,             0.0, 'u', U_T_MS},
@@ -1068,7 +1068,7 @@ struct ChannelStruct FastChannels[] = {
 
   {"x_stage",      'w', LOOP5, 28,     2.0,        0.0,      'u',      U_NONE},
   {"y_stage",      'w', LOOP5, 34,     2.0,        0.0,      'u',      U_NONE},
-  {"vel_ser_rw",   'w', LOOP7,  0,     I2DEG*4.0,  0.0,      's',      U_V_DPS},
+  {"vel_ser_rw",   'w', LOOP7,  0,     2400.0/65536.0,  0.0, 's',      U_V_DPS},
   {"vel_rw",       'w', LOOP7,  1,     2400.0/65536.0, -1200.0,  'u',  U_V_DPS},
   {"el_raw_enc",   'w', LOOP7,  2,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"res_rw",       'w', LOOP7,  3,     I2DEG,      0.0,      'u',      U_P_DEG},

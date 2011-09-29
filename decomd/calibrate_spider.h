@@ -83,7 +83,7 @@ extern "C" {
 #define RAD2I (65536.0/2/M_PI)
 #define H2I (65536.0/24.0)
 #define I2H (1.0/H2I)
-#define VEL2I (65536.0/10.0)
+#define VEL2I (65536.0/20.0)
 #define I2VEL (1.0/VEL2I)
 
 /* Cryo preamp channel Voltage calibration */

@@ -483,6 +483,7 @@ static void GetACS()
   double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
   double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
   double vel_rw;
+//short vel_rw;
   double res_piv;
   int hwpr_pot;
 
@@ -521,7 +522,8 @@ static void GetACS()
     xMagAddr = GetBiPhaseAddr("x_mag");
     yMagAddr = GetBiPhaseAddr("y_mag");
     zMagAddr = GetBiPhaseAddr("z_mag");
-    velRWAddr = GetBiPhaseAddr("vel_rw");
+    //velRWAddr = GetBiPhaseAddr("vel_rw");
+    velRWAddr = GetBiPhaseAddr("vel_ser_rw");
     resPivAddr = GetBiPhaseAddr("res_piv");
     v11PssAddr = GetBiPhaseAddr("v1_1_pss");
     v21PssAddr = GetBiPhaseAddr("v2_1_pss");
@@ -539,7 +541,12 @@ static void GetACS()
       (RxFrame[2] & 0x0000ffff) << 16);
 
   enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
-  vel_rw = (((double)((unsigned short)RxFrame[velRWAddr->channel]))*(2400.0/65536.0)-1200.0);
+  //vel_rw = (((double)((unsigned short)RxFrame[velRWAddr->channel]))*(2400.0/65536.0)-1200.0);
+  //vel_rw = (double)ReadData(velRWAddr)*(2400.0/65536.0);
+  vel_rw = ReadCalData(velRWAddr); 
+  /*if (vel_rw >1200.0) {
+    vel_rw -= 2400.0;
+  }*/
   ifel_gy = (double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
   ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
   ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
@@ -579,6 +586,7 @@ static void GetACS()
   ACSData.mag_y = y_comp;
   ACSData.mag_z = z_comp;
   ACSData.vel_rw = vel_rw;
+  //ACSData.vel_rw = (double)vel_rw*(2400.0/65536.0);
   ACSData.res_piv = res_piv;
   ACSData.pss1_i1 = pss1_i1;
   ACSData.pss1_i2 = pss1_i2;

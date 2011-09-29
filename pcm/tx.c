@@ -92,6 +92,7 @@ void VideoTx(void);
 /* in motors.c */
 void UpdateAxesMode(void);
 void WriteMot(int TxIndex);
+double calcVSerRW(void);
 
 /* in sbsc.cpp */
 void cameraFields();        
@@ -811,7 +812,8 @@ static void StoreData(int index)
   //WriteData(velRWAddr,
   //    ((long int)(RWMotorData[i_rw_motors].vel_rw/4.0*DEG2I)), NIOS_QUEUE);
  
-  WriteCalData(velSerRWAddr, RWMotorData[i_rw_motors].dps_rw, NIOS_QUEUE);
+  //WriteCalData(velSerRWAddr, RWMotorData[i_rw_motors].dps_rw, NIOS_QUEUE);
+  WriteCalData(velSerRWAddr, calcVSerRW(), NIOS_QUEUE);
 // WriteData(elRawEncAddr,
    //   ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
   WriteData(resRWAddr, RWMotorData[i_rw_motors].res_rw*DEG2I, NIOS_QUEUE);
@@ -1042,7 +1044,9 @@ static void StoreData(int index)
   WriteData(statDrPivAddr,(PivotMotorData[i_pivot_motors].db_stat & 0xff)
                  +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
   WriteData(statS1PivAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
-  WriteData(velSerPivAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
+  //WriteData(velSerPivAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
+  WriteCalData(velSerPivAddr, PivotMotorData[i_pivot_motors].dps_piv, 
+               NIOS_QUEUE);
   WriteData(resPivAddr,
       PivotMotorData[i_pivot_motors].res_piv*DEG2I, NIOS_QUEUE);
 //  WriteData(infoElAddr,ElevMotorData[i_elev_motors].drive_info,NIOS_QUEUE);

@@ -43,7 +43,7 @@
 #define FPIV_FILTER_LEN 1000
 
 #define RW_BASE 0.95    // base for exponential filter used to compute RW
-                       // speed
+                        // speed
 
 #define V_AZ_MIN 0.05 // JAS -- smallest measured az speed we trust given gyro
                       //        noise/offsets
@@ -215,6 +215,23 @@ static double calcVRW(void)
 
 }
 
+double calcVSerRW(void)
+{
+
+  double w, w_filt; // filtered/unfiltered ang. velocity respectively
+  static double last_w_filt = 0.0;
+  int i_rw;
+
+  i_rw = GETREADINDEX(rw_motor_index);
+  w = RWMotorData[i_rw].dps_rw;
+
+  w_filt = ( RW_BASE*last_w_filt + (1-RW_BASE)*w );
+  last_w_filt = w_filt;
+
+  return w_filt;
+  //return w;
+}
+
 
 /************************************************************************/
 /*                                                                      */
@@ -317,11 +334,14 @@ static double GetVAz(void)
   i_point = GETREADINDEX(point_index);
   
   t_bbus = 1.0/SR;
-  max_dv = 1.05*(CommandData.pointing_mode.az_accel_max)*t_bbus;
-max_dv = 1000;
+  //max_dv = 1.05*(CommandData.pointing_mode.az_accel_max)*t_bbus;
+  max_dv = 1000;
 
   if (axes_mode.az_mode == AXIS_VEL) {
-    vel = axes_mode.az_vel;
+  /* TODO: JAS -- temporary negative sign below since az = yaw, whereas all of
+           the velocity request calculations assume az = -yaw */ 
+    vel = -axes_mode.az_vel;
+    //bprintf(info, "vel according to axes_mode: %f", vel);
   } else if (axes_mode.az_mode == AXIS_POSITION) {
     az = PointingData[i_point].az;
     az_dest = axes_mode.az_dest;
@@ -332,7 +352,11 @@ max_dv = 1000;
     } else {
       vel = sqrt(dx);
     }
-    vel *= (double)CommandData.azi_gain.PT/10000.0;
+    //bprintf(info, "az_dest: %f, az: %f, dx: %f, vel: %f", az_dest, az, dx, vel);
+    /* TODO: JAS -- temporary negative sign below since az = yaw, whereas all of
+             the velocity request calculations assume az = -yaw */ 
+    //vel *= (double)CommandData.azi_gain.PT/10000.0;
+    vel *= -(double)CommandData.azi_gain.PT/10000.0;
     //vel = -(az - az_dest) * 0.36;
   }
 
@@ -352,7 +376,7 @@ max_dv = 1000;
 
   //vel -= vel_offset;
   vel *= DPS_TO_GY16;
-
+  //bprintf(info, "vel intermediate from GetVAz() (gyro units): %f", vel);
   /* limit maximum speed */
   /*if (vel > 2000.0)
     vel = 2000.0;
@@ -373,6 +397,8 @@ max_dv = 1000;
   last_vel = vel;
 
 //return (vel*10.0); // Factor of 10 was to increase dynamic range
+  
+  //bprintf(info, "vel output from GetVAz() (gyro units): %f", vel);
   return (vel);        // need larger speed range at expense of speed
                        // resolution for Spider.
 }
@@ -418,6 +444,9 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 
   i_point = GETREADINDEX(point_index);
   p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
+  /*if (ACSData.vel_rw != 0.0) {
+    bprintf(info, "measured rw vel (read from frame): %f", ACSData.vel_rw);
+  }*/
   p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
   I_req = p_rw_term+p_err_term;
 
@@ -633,6 +662,7 @@ void WriteMot(int TxIndex)
   /***************************************************/
   /**            Azimuth Drive Motors              **/
   v_az = floor(GetVAz() + 0.5);
+  //bprintf(info, "GetVAz() output after casting to int = %d", v_az);
   /* Units for v_az are 16 bit gyro units*/
   if (v_az > 32767)
     v_az = 32767;
@@ -806,8 +836,13 @@ static void DoSpiderMode(void)
   axes_mode.el_vel = 0.0;
 
   i_point = GETREADINDEX(point_index);
-  lst = PointingData[i_point].lst;
-  lat = PointingData[i_point].lat;
+  //lst = PointingData[i_point].lst;
+  /* input unchanging lst for testing purposes */
+  lst = 0;
+  //lat = PointingData[i_point].lat;
+  /* input unchanging latitude for testing purposes: 
+     McMurdo station at 71 deg. 51 arcmin S */
+  lat = -71.85;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
 
@@ -846,16 +881,19 @@ static void DoSpiderMode(void)
     v_az = sqrt(2.0*az_accel_max*(left-az)) + V_AZ_MIN;
 
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
-   
-    axes_mode.az_vel = v_az;
+  
+    /* TODO: temporary - sign to correct that az = yaw instead of
+             az = -yaw as assumed by DSP */ 
+    axes_mode.az_vel = -v_az;
   
   /* case 2: moving into quad from beyond right endpoint: */
   } else if (az > right + turn_around) {
     v_az = -sqrt(2.0*az_accel_max*(az-right)) - V_AZ_MIN;
 
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
-
-    axes_mode.az_vel = v_az;
+    
+    /* TODO get rid of temp. - sign */
+    axes_mode.az_vel = -v_az;
 
   /* case 3: moving from left to right endpoints */
   } else if ( (az > left) && (az < right) 
@@ -863,7 +901,8 @@ static void DoSpiderMode(void)
     
     v_az = sqrt(az_accel_max*ampl)*sin(acos((centre-az)/ampl));
  
-    axes_mode.az_vel = v_az;
+    /* TODO get rid of temp. - sign */
+    axes_mode.az_vel = -v_az;
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > left) && (az < right) 
@@ -871,21 +910,24 @@ static void DoSpiderMode(void)
 
     v_az = sqrt(az_accel_max*ampl)*sin(-acos((centre-az)/ampl)); 
 
-    axes_mode.az_vel = v_az;
+    /* TODO get rid of temp. - sign */
+    axes_mode.az_vel = -v_az;
 
   /* case 5: in left turn-around zone */ 
   } else if ( (az <= left) && (az >= (left-turn_around)) ) {
     
     v_az = V_AZ_MIN;
  
-    axes_mode.az_vel = v_az;
+    /* TODO get rid of temp. - sign */
+    axes_mode.az_vel = -v_az;
 
   /* case 6: in right turn-around zone */   
   } else if ( (az >= right) && (az <= (right+turn_around)) ) {
 
     v_az = -V_AZ_MIN;
     
-    axes_mode.az_vel = v_az;
+    /* TODO get rid of temp. - sign */
+    axes_mode.az_vel = -v_az;
   } 
 
 }
@@ -1896,7 +1938,7 @@ void* reactComm(void* arg)
   int firsttime=1, resetcount=0;
   unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
   short int current_raw=0;
-  int rw_vel_raw=0;
+  int rw_vel_raw = 0;
   unsigned int tmp=0;
   
   /* Initialize values in the reactinfo structure */
@@ -2115,8 +2157,10 @@ void* reactComm(void* arg)
         RWMotorData[rw_motor_index].ds1_stat=ds1_stat_raw;
 	break;
       case 4:
-	rw_vel_raw=((int) queryAMCInd(17,2,2,&reactinfo));
-        RWMotorData[rw_motor_index].dps_rw=rw_vel_raw*0.144;
+	rw_vel_raw=((int) queryAMCInd(17,2,2,&reactinfo)); 
+        RWMotorData[rw_motor_index].dps_rw = rw_vel_raw*(20000.0/131072.0)
+                                             *(360.0/4096.0);
+        //RWMotorData[rw_motor_index].dps_rw=rw_vel_raw*0.144;
         //bprintf(info, "RW Speed = %d", RWMotorData[rw_motor_index].dps_rw);
 	break;
       }
@@ -2704,7 +2748,10 @@ void* pivotComm(void* arg)
 	break;
       case 4:
 	piv_vel_raw=((int) queryAMCInd(17,2,2,&pivotinfo));
-        PivotMotorData[pivot_motor_index].dps_piv=piv_vel_raw*0.144;
+        PivotMotorData[pivot_motor_index].dps_piv = piv_vel_raw
+                                                    *(20000.0/131072.0)
+                                                    *(360.0/16384.0);
+
 	break;
       }
       j++;
