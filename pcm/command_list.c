@@ -1,4 +1,3 @@
-
 /* command_list.c: BLAST command specification file
  *
  * This software is copyright (C) 2002-20010 University of Toronto
@@ -26,7 +25,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.30 $";
+const char *command_list_serial = "$Revision: 1.31 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -342,7 +341,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"RA of Corner 4 (h)",        0, 24, 'f', "NONE"},
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Max Scan Accel (deg/s^2)",  0,  2, 'f', "NONE"},
-      {"Elevation (deg)",          28, 40, 'f', "EL"}
+      {"Elevation (deg)",          28, 40, 'f', "NONE"}
     }
   },
   {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,

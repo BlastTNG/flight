@@ -334,8 +334,9 @@ static double GetVAz(void)
   i_point = GETREADINDEX(point_index);
   
   t_bbus = 1.0/SR;
-  //max_dv = 1.05*(CommandData.pointing_mode.az_accel_max)*t_bbus;
-  max_dv = 1000;
+  max_dv = 1.05*(CommandData.pointing_mode.az_accel_max)*t_bbus;
+  max_dv *= DPS_TO_GY16;
+  //max_dv = 1000;
 
   if (axes_mode.az_mode == AXIS_VEL) {
   /* TODO: JAS -- temporary negative sign below since az = yaw, whereas all of
@@ -828,7 +829,7 @@ static void DoSpiderMode(void)
   double az_of_bot, tmp;
   double az_accel_max, v_az_max, ampl, turn_around;
   int i, i_point;
-
+  
   az_accel_max = CommandData.pointing_mode.az_accel_max;
 
   axes_mode.el_mode = AXIS_POSITION;
@@ -838,13 +839,13 @@ static void DoSpiderMode(void)
   i_point = GETREADINDEX(point_index);
   //lst = PointingData[i_point].lst;
   /* input unchanging lst for testing purposes */
-  lst = 0;
+  lst = 23400.0;
   //lat = PointingData[i_point].lat;
   /* input unchanging latitude for testing purposes: 
      McMurdo station at 71 deg. 51 arcmin S */
   lat = -71.85;
   az = PointingData[i_point].az;
-  el = PointingData[i_point].el;
+  el = PointingData[i_point].el + 28.0;
 
   /* convert ra/decs to az/el */
   for (i = 0; i < 4; i++) {
@@ -853,8 +854,9 @@ static void DoSpiderMode(void)
   }
 
   radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top, &az_of_bot);
-
-  centre = (left + right) / 2.0;
+  bprintf(info, "az/el corner points are: (%f,%f), (%f,%f), (%f,%f), (%f,%f)",
+          c_az[0], c_el[0], c_az[1], c_el[1], c_az[2], c_el[2], c_az[3], c_el[3]
+         );
 
   SetSafeDAz(az, &left);     // don't cross sun between here and left
   SetSafeDAz(left, &right);  // don't cross sun bewteen left and right
@@ -865,10 +867,13 @@ static void DoSpiderMode(void)
     left = tmp;
   }
 
+  centre = (left + right) / 2.0;
+  
   ampl = right - centre;
   v_az_max = sqrt(az_accel_max * ampl);
   turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
-
+  //turn_around = 1.0;
+  bprintf(info, "left = %f, right = %f, centre = %f, ampl = %f, v_az_max = %f, turn_around = %f", left, right, centre, ampl, v_az_max, turn_around);
   if (right-left < MIN_SCAN) {
     left = centre - MIN_SCAN/2.0; 
     right = left + MIN_SCAN;
@@ -882,9 +887,8 @@ static void DoSpiderMode(void)
 
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
   
-    /* TODO: temporary - sign to correct that az = yaw instead of
-             az = -yaw as assumed by DSP */ 
-    axes_mode.az_vel = -v_az;
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm beyond the left endpoint.");
   
   /* case 2: moving into quad from beyond right endpoint: */
   } else if (az > right + turn_around) {
@@ -892,17 +896,16 @@ static void DoSpiderMode(void)
 
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
     
-    /* TODO get rid of temp. - sign */
-    axes_mode.az_vel = -v_az;
-
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm beyond the right endpoint.");
   /* case 3: moving from left to right endpoints */
   } else if ( (az > left) && (az < right) 
              && (PointingData[i_point].v_az > V_AZ_MIN) ) {
     
     v_az = sqrt(az_accel_max*ampl)*sin(acos((centre-az)/ampl));
  
-    /* TODO get rid of temp. - sign */
-    axes_mode.az_vel = -v_az;
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm in between the endpoints and moving right.");
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > left) && (az < right) 
@@ -910,26 +913,26 @@ static void DoSpiderMode(void)
 
     v_az = sqrt(az_accel_max*ampl)*sin(-acos((centre-az)/ampl)); 
 
-    /* TODO get rid of temp. - sign */
-    axes_mode.az_vel = -v_az;
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm in between the endpoints and moving left.");
 
   /* case 5: in left turn-around zone */ 
   } else if ( (az <= left) && (az >= (left-turn_around)) ) {
     
     v_az = V_AZ_MIN;
  
-    /* TODO get rid of temp. - sign */
-    axes_mode.az_vel = -v_az;
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm in the left turn-around zone.");
 
   /* case 6: in right turn-around zone */   
   } else if ( (az >= right) && (az <= (right+turn_around)) ) {
 
     v_az = -V_AZ_MIN;
     
-    /* TODO get rid of temp. - sign */
-    axes_mode.az_vel = -v_az;
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm in the right turn-around zone.");
   } 
-
+ bprintf(info, "v_az req = %f", v_az);
 }
 
 static void DoAzScanMode(void)

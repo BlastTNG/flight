@@ -1770,7 +1770,7 @@ static int DataQSize(int index)
 void WatchFIFO ()
 {
   unsigned char buf[1];
-  char command[100];
+  char command[500];
   char pbuf[30];
   int fifo;
 
@@ -1808,7 +1808,6 @@ void WatchFIFO ()
     index = -1;
     while((command[++index] != ' ') && command[index]);
     command[index++] = 0;
-
     pindex = 0;
     mcommand_count = 0;
     do {
