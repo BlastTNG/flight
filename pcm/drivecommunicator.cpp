@@ -96,12 +96,12 @@ void DriveCommunicator::openConnection(string deviceName,
   synchronize();
 
   //try seeing if controller is running at low speed (shouldn't)
-  if (!highspeed && err != DC_NO_ERROR) {
-#if DRIVE_COMM_DEBUG
-    cout << "[DriveComm debug]: synchronize failed, trying low speed" << endl;
-#endif
-    openConnection(deviceName,false);
-  }
+//  if (!highspeed && err != DC_NO_ERROR) {
+//#if DRIVE_COMM_DEBUG
+//    cout << "[DriveComm debug]: synchronize failed, trying low speed" << endl;
+//#endif
+//    openConnection(deviceName,false);
+//  }
 
   this->highspeed = highspeed;
 }
