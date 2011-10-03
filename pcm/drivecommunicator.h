@@ -35,7 +35,7 @@ public:
 	bool isOpen() { return portFD > 0; }
 	
 	
-	void openConnection(string deviceName, bool highspeed=false);  //same as above except when highspeed==true use higher speed
+	void openConnection(string deviceName, bool highspeed=true);  //same as above except when highspeed==true use higher speed
 	void closeConnection();                    //closes connection, turn of drive power stage if possible
 	void synchronize();                        //send synchronization character and check reply
 	//maxCommSpeed now done in controller startup
