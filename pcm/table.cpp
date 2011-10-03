@@ -85,8 +85,8 @@ void closeTable()
  */
 void updateTableSpeed()
 {
-  double vel, azVel, dt;
-  static double targVel, relVel;
+  double vel, dt;
+  static double targVel;
   timeval timestruct;
   static double lastTime, lastPos;
   double thisTime, thisPos;
@@ -105,10 +105,6 @@ void updateTableSpeed()
     return;
   }
 
-  //find gondola az rotation rate
-  //TODO replace this naive version once there is a pointing solution
-  azVel = -ACSData.ifyaw_gy;
-
   //find table speed
   gettimeofday(&timestruct, NULL);
   thisTime = (double)timestruct.tv_sec + timestruct.tv_usec/1000000.0;
@@ -126,30 +122,8 @@ void updateTableSpeed()
   int data = (int)((vel/70.0)*32767.0); //allow much room to avoid overflow
   WriteData(dpsAddr, data, NIOS_QUEUE);
 
-  //update the remaining relative move, find relVel needed to move it
-  CommandData.table.RelMove -= (vel - azVel) * dt;
-  while (CommandData.table.RelMove > 360) CommandData.table.RelMove -= 360;
-  while (CommandData.table.RelMove < -360) CommandData.table.RelMove += 360;
-  if (fabs(CommandData.table.RelMove) < MIN_TABLE_MOVE)
-    CommandData.table.RelMove = 0;
-  relVel = CommandData.table.RelMove * CommandData.table.MoveGain;
-  if (relVel > MAX_TABLE_SPEED) relVel = MAX_TABLE_SPEED;
-  else if (relVel < -MAX_TABLE_SPEED) relVel = -MAX_TABLE_SPEED;
-  //if going too fast in one direction, reverse direction of move
-#if 0      //this causes annoying spins around...fix or leave out
-  if (fabs(CommandData.table.RelMove) > 40) { //only do this for large moves
-    if (azVel > MAX_TABLE_SPEED/2 && relVel > azVel) { //too fast +
-      CommandData.table.RelMove -= 360; //go in -'ve direction
-      relVel = 0;   //find new relVel next time
-    } else if (azVel < -MAX_TABLE_SPEED/2 && relVel < azVel) { //too fast -
-      CommandData.table.RelMove += 360; //go in +'ve direction
-      relVel = 0;
-    }
-  }
-#endif
-
   //find new target velocity
-  targVel = azVel + relVel;
+  targVel = -ACSData.ifyaw_gy;
   if (targVel > MAX_TABLE_SPEED) targVel = MAX_TABLE_SPEED;
   else if (targVel < -MAX_TABLE_SPEED) targVel = -MAX_TABLE_SPEED;
   tableSpeed = (int)(targVel/MAX_TABLE_SPEED * (INT_MAX-1));
@@ -168,7 +142,6 @@ void* rotaryTableComm(void* arg)
   timeval time;
   static double lastTime=0;
   double thisTime;
-
   //perform initialization
   while (!tableComm->isOpen()) {  //needed when original open fails
     sleep(1);
@@ -198,9 +171,8 @@ void* rotaryTableComm(void* arg)
         //may also need to resend volatile memory commands (if I use any)
         bprintf(info, "Motors: successful reconnection to rotary table");
       }
-      
-      //can also put queries here for (eg) motor temperature
 
+      //can also put queries here for (eg) motor temperature
       gettimeofday(&time, NULL);
       thisTime = time.tv_sec + time.tv_usec/1000000.0;
 //      bprintf(info, "table update time is: %gs", (thisTime-lastTime));
