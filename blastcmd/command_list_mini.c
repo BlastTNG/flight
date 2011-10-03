@@ -21,7 +21,7 @@
 
 #include "command_list.h"
 
-const char *command_list_serial = "$Revision: 1.10 $";
+const char *command_list_serial = "$Revision: 1.11 $";
 
 //these must correspond to #defines in header
 /*const char *GroupNames[N_GROUPS] = {
@@ -62,7 +62,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Amplitude (full=32767)", 1, MAX_15BIT, 'i', ""}
     }
   },
-  {COMMAND(dac_phase), "Set lock-in phase on card 4", GR_BIAS, 1,
+  {COMMAND(dac_phase), "Set lock-in phase on card 4", GR_BIAS, 2,
     {
       {"Which (0-31,32=all)", 0, 32, 'i', ""},
       {"Phase (degrees)", 0, 360, 'f', ""}
