@@ -12,7 +12,7 @@ HEADERS = share/bbc_pci.h share/blast.h share/channels.h share/derived.h \
 
 OBJS = az-el.o share/blast.o share/channels.o derived.o share/framefile.o hk.o \
        mcp.o tx.o commands.o command_list.o tx_struct.o
-.PHONEY: fifo install all
+.PHONEY: fifo clean install all
 
 all: minicp
 
@@ -26,8 +26,9 @@ minicp: $(OBJS)
 
 $(OBJS): $(HEADERS)
 
-install: minicp
-	@echo "No installation is implemented right now."
+install: minicp fifo
+	install -m 755 minicp /usr/local/bin
+	install -d -m 777 /data/etc/minicp
 
 fifo:
 	[ -e /data/etc/SIPSS.FIFO ] || mkfifo -m 0777 /data/etc/SIPSS.FIFO
