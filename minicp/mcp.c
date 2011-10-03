@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
 
   umask(0);  /* clear umask */
 
-  if ((logfile = fopen("/data/etc/mcp.log", "a")) == NULL) {
+  if ((logfile = fopen("/data/etc/minicp/minicp.log", "a")) == NULL) {
     berror(err, "System: Can't open log file");
     fstats.st_size = -1;
   } else {
@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
   if (startup_test < 0)
     bprintf(fatal, "System: BBC failed to set synchronization mode");
 
-  MakeAddressLookups();  //nios addresses, based off of tx_struct, derived
+  MakeAddressLookups("/data/etc/minicp/Nios.map");
 
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
@@ -437,7 +437,7 @@ int main(int argc, char *argv[])
 
   InitialiseFrameFile(argv[1][0]);
   pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  startAzEl();
+  //startAzEl();
 
   signal(SIGHUP, CloseBBC);
   signal(SIGINT, CloseBBC);

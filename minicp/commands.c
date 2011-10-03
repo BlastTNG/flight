@@ -58,7 +58,7 @@ static void WritePrevStatus()
   int fp, n;
 
   /** write the default file */
-  fp = open("/data/etc/mcp.prev_status", O_WRONLY|O_CREAT|O_TRUNC, 00666);
+  fp = open("/data/etc/minicp/minicp.prev_status", O_WRONLY|O_CREAT|O_TRUNC, 00666);
   if (fp < 0) {
     berror(err, "Commands: mcp.prev_status open()");
     return;
@@ -386,7 +386,7 @@ void InitCommandData()
 {
   int fp, n_read = 0, junk, extra = 0, i;
 
-  if ((fp = open("/data/etc/mcp.prev_status", O_RDONLY)) < 0) {
+  if ((fp = open("/data/etc/minicp/minicp.prev_status", O_RDONLY)) < 0) {
     berror(err, "Commands: Unable to open prev_status file for reading");
   } else {
     if ((n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0)
