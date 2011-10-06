@@ -16,13 +16,16 @@
 
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 136        /* total number of single word cmds */
+#define N_SCOMMANDS 152        /* total number of single word cmds */
 #define N_MCOMMANDS  91        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
 #define MAX_30BIT (1073741823.)
+
+//maximum insert number for hk commands. TODO-theo temporarily set to 4
+#define	HK_MAX  4
 
 #define N_GROUPS 24
 
@@ -40,7 +43,7 @@
 #define GR_CRYO_HEAT    0x00000800
 #define GR_POWER        0x00001000
 #define GR_LOCK         0x00002000
-//#define GR_CRYO_CONTROL 0x00004000	  //unused (for now?)
+#define GR_THEO_HEAT	0x00004000
 #define GR_TELEM        0x00008000
 //#define GR_ISC_HOUSE    0x00010000	  //unused
 //#define GR_OSC_HOUSE    0x00020000	  //unused
@@ -96,6 +99,11 @@ enum singleCommand {
   cam_expose,	     cam_autofocus,	cam_settrig_ext,   cam_force_lens, 
   cam_unforce_lens,  hwpr_step,         hwpr_pot_is_dead,  hwpr_pot_is_alive,
   hwpr_step_off,     hwpr_step_on,
+  //theo heater commands. TODO-theo assign non-temporary names
+  hk_t0_heat_on,     hk_t0_heat_off,    hk_t1_heat_on,     hk_t1_heat_off,
+  hk_t2_heat_on,     hk_t2_heat_off,    hk_t3_heat_on,     hk_t3_heat_off,
+  hk_t4_heat_on,     hk_t4_heat_off,    hk_t5_heat_on,     hk_t5_heat_off,
+  hk_t6_heat_on,     hk_t6_heat_off,    hk_t7_heat_on,     hk_t7_heat_off,
   xyzzy	    //xyzzy should be at the end of the list
 };
 
