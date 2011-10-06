@@ -64,7 +64,6 @@
 #define CALDAC(m,b) ((m)*M_DAC), ((b) + B_DAC*(m)*M_DAC)
 
 /* Housekeeping calibrations (D)iode, (C)ernox, (N)TD*/
-//TODO reenable hk calibration gains
 /* factor 0.994 is rough ADC gain calibration for all these channels */
 #define CAL32D(m,b) CAL32((m) / 0.994, (b))
 #define CAL32C(m,b) CAL32((m) / 0.994 / 991.0, (b))
@@ -937,7 +936,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"vr_ntd3_4_hk",   'r', RTD_A2, 44, CAL32N(       1.129,           0.0), 'U', U_V_V},
   {"vr_ntd2_4_hk",   'r', RTD_A2, 46, CAL32N(       1.129,           0.0), 'U', U_V_V},
 
-  //TODO check pinouts and name the diodes
+  //TODO name the diode voltages. Must change derived.c to match
   {"vd_00_2_hk",   'r', DIOD_A1,  0, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_01_2_hk",   'r', DIOD_A1,  2, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_02_2_hk",   'r', DIOD_A1,  4, CAL32D(         1.0,           0.0), 'U', U_V_V},

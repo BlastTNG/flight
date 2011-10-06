@@ -87,7 +87,6 @@ static void BiasControl()
     fBiasHkAddr = GetNiosAddr("f_bias_hk");
   }
 
-  //TODO change DSP to use the same scale for both AC and DC?
   //otherwise need to change scaling in tx_struct
   for (i=0; i<6; i++) {
     WriteCalData(vCnxAddr[i], CommandData.hk[i].cernox.ampl, NIOS_QUEUE);
