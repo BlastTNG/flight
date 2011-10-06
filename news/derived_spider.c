@@ -580,6 +580,26 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_PUMP_4_HK",	 "VD_02_4_HK",	LUT_DIR "d_simonchase.lut"),
   T_HK("TD_HSW_4_HK",	 "VD_03_4_HK",	LUT_DIR "d_simonchase.lut"),
 
+  //theo didoe calibrations. TODO-theo: these temporarily use insert 5, 6
+  T_HK("TD_00_T_HK",	 "VD_00_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_01_T_HK",	 "VD_01_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_02_T_HK",	 "VD_02_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_03_T_HK",	 "VD_03_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_04_T_HK",	 "VD_04_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_05_T_HK",	 "VD_05_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_06_T_HK",	 "VD_06_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_07_T_HK",	 "VD_07_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_08_T_HK",	 "VD_08_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_09_T_HK",	 "VD_09_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_10_T_HK",	 "VD_10_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_11_T_HK",	 "VD_11_6_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_12_T_HK",	 "VD_00_5_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_13_T_HK",	 "VD_01_5_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_14_T_HK",	 "VD_02_5_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_15_T_HK",	 "VD_03_5_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_16_T_HK",	 "VD_04_5_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_17_T_HK",	 "VD_05_5_HK",	LUT_DIR "d_simonchase.lut"),
+
 
   END_OF_DERIVED_CHANNELS
 };
