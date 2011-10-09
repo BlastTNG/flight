@@ -571,35 +571,44 @@ union DerivedUnion DerivedChannels[] = {
 
 
   COMMENT("Housekeeping Cernox Temperature Calibration"),
-  CNX_HK(STILL,	4, LUT_DIR "c_still_4.lut"),
-
+  // CNX_HK(STILL,	4, LUT_DIR "c_still_4.lut"),
+  CNX_HK(STILL,	3, LUT_DIR "c_still_3.lut"),
+  CNX_HK(FP,	3, LUT_DIR "c_fp_3.lut"),
+  
+  COMMENT("Housekeeping NTD Temperature Calibration"),
+  NTD_HK(NTD3,	3, LUT_DIR "n_ntd3_3.lut"),
+  
   COMMENT("Housekeeping Diode Temperature Calibration"),
-  T_HK("TD_4K_4_HK",	 "VD_00_4_HK",	LUT_DIR "d_4k_4.lut"),
-  T_HK("TD_CP_4_HK",	 "VD_01_4_HK",	LUT_DIR "d_cp_4.lut"),
-  T_HK("TD_BP_4_HK",	 "VD_04_4_HK",	LUT_DIR "D75322.lut"),
-  T_HK("TD_PUMP_4_HK",	 "VD_02_4_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_HSW_4_HK",	 "VD_03_4_HK",	LUT_DIR "d_simonchase.lut"),
-
+  // T_HK("TD_4K_4_HK",	 "VD_00_4_HK",	LUT_DIR "d_4k_4.lut"),
+  // T_HK("TD_CP_4_HK",	 "VD_01_4_HK",	LUT_DIR "d_cp_4.lut"),
+  // T_HK("TD_BP_4_HK",	 "VD_04_4_HK",	LUT_DIR "D75322.lut"),
+  // T_HK("TD_PUMP_4_HK",	 "VD_02_4_HK",	LUT_DIR "d_simonchase.lut"),
+  // T_HK("TD_HSW_4_HK",	 "VD_03_4_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_4K_3_HK",	 "VD_00_3_HK",	LUT_DIR "d_4k_3.lut"),
+  T_HK("TD_CP_3_HK",	 "VD_01_3_HK",	LUT_DIR "d_cp_3.lut"),
+  T_HK("TD_BP_3_HK",	 "VD_04_3_HK",	LUT_DIR "D87587.lut"),
+  T_HK("TD_PUMP_3_HK",	 "VD_02_3_HK",	LUT_DIR "d_simonchase.lut"),
+  T_HK("TD_HSW_3_HK",	 "VD_03_3_HK",	LUT_DIR "d_simonchase.lut"),
+  
   //theo didoe calibrations. TODO-theo: these temporarily use insert 5, 6
-  T_HK("TD_00_T_HK",	 "VD_00_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_01_T_HK",	 "VD_01_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_02_T_HK",	 "VD_02_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_03_T_HK",	 "VD_03_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_04_T_HK",	 "VD_04_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_05_T_HK",	 "VD_05_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_06_T_HK",	 "VD_06_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_07_T_HK",	 "VD_07_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_08_T_HK",	 "VD_08_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_09_T_HK",	 "VD_09_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_10_T_HK",	 "VD_10_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_11_T_HK",	 "VD_11_6_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_12_T_HK",	 "VD_00_5_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_13_T_HK",	 "VD_01_5_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_14_T_HK",	 "VD_02_5_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_15_T_HK",	 "VD_03_5_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_16_T_HK",	 "VD_04_5_HK",	LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_17_T_HK",	 "VD_05_5_HK",	LUT_DIR "d_simonchase.lut"),
-
-
+  // T_HK("TD_00_T_HK",	 "VD_00_6_HK",	LUT_DIR "d_curve10.lut"), // not used
+  T_HK("TD_VCS1_BOT1_T_HK",	 "VD_01_6_HK",	LUT_DIR "d_curve10.lut"),
+  // T_HK("TD_SFT_MID_T_HK",	 "VD_02_6_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS2_TOP3_T_HK",	 "VD_03_6_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS1_TOP1_T_HK",	 "VD_04_6_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS2_BOT1_T_HK",	 "VD_05_6_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS1_TOP2_T_HK",	 "VD_06_6_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS2_TOP4_T_HK",	 "VD_07_6_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS2_TOP1_T_HK",	 "VD_08_6_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_MT_BLO_T_HK",	 "VD_09_6_HK",	LUT_DIR "D75551.lut"),
+  T_HK("TD_MT_BHI_T_HK",	 "VD_10_6_HK",	LUT_DIR "D78016.lut"),
+  T_HK("TD_SFT_BOT_T_HK",	 "VD_11_6_HK",	LUT_DIR "D77239.lut"),
+  T_HK("TD_VCS1_TOP3_T_HK",	 "VD_00_5_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_MT_TOP_T_HK",	 "VD_01_5_HK",	LUT_DIR "D78317.lut"),
+  // T_HK("TD_SFT_TOP_T_HK",	 "VD_02_5_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS2_TOP2_T_HK",	 "VD_03_5_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS1_FLX1_T_HK",	 "VD_04_5_HK",	LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS1_TOP4_T_HK",	 "VD_05_5_HK",	LUT_DIR "d_curve10.lut"),
+  
   END_OF_DERIVED_CHANNELS
 };
