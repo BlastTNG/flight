@@ -334,7 +334,7 @@ static double GetVAz(void)
   i_point = GETREADINDEX(point_index);
   
   t_bbus = 1.0/SR;
-  max_dv = 1.05*(CommandData.pointing_mode.az_accel_max)*t_bbus;
+  max_dv = 1.05*(CommandData.az_accel_max)*t_bbus;
   max_dv *= DPS_TO_GY16;
   //max_dv = 1000;
 
@@ -827,11 +827,9 @@ static void DoSpiderMode(void)
   double c_az[4], c_el[4]; // corner az and corner el
   double centre, left, right, top, bottom, v_az;
   double az_of_bot, tmp;
-  double az_accel_max, v_az_max, ampl, turn_around;
+  double v_az_max, ampl, turn_around;
   int i, i_point;
   
-  az_accel_max = CommandData.pointing_mode.az_accel_max;
-
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = CommandData.pointing_mode.Y;
   axes_mode.el_vel = 0.0;
@@ -870,7 +868,7 @@ static void DoSpiderMode(void)
   centre = (left + right) / 2.0;
   
   ampl = right - centre;
-  v_az_max = sqrt(az_accel_max * ampl);
+  v_az_max = sqrt(az_accel * ampl);
   turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
   //turn_around = 1.0;
   bprintf(info, "left = %f, right = %f, centre = %f, ampl = %f, v_az_max = %f, turn_around = %f", left, right, centre, ampl, v_az_max, turn_around);
@@ -883,7 +881,7 @@ static void DoSpiderMode(void)
 
   /* case 1: moving into quad from beyond left endpoint: */
   if (az < left - turn_around) {
-    v_az = sqrt(2.0*az_accel_max*(left-az)) + V_AZ_MIN;
+    v_az = sqrt(2.0*az_accel*(left-az)) + V_AZ_MIN;
 
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
   
@@ -892,7 +890,7 @@ static void DoSpiderMode(void)
   
   /* case 2: moving into quad from beyond right endpoint: */
   } else if (az > right + turn_around) {
-    v_az = -sqrt(2.0*az_accel_max*(az-right)) - V_AZ_MIN;
+    v_az = -sqrt(2.0*az_accel*(az-right)) - V_AZ_MIN;
 
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
     
@@ -902,7 +900,7 @@ static void DoSpiderMode(void)
   } else if ( (az > left) && (az < right) 
              && (PointingData[i_point].v_az > V_AZ_MIN) ) {
     
-    v_az = sqrt(az_accel_max*ampl)*sin(acos((centre-az)/ampl));
+    v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
  
     axes_mode.az_vel = v_az;
     bprintf(info, "I'm in between the endpoints and moving right.");
@@ -911,7 +909,7 @@ static void DoSpiderMode(void)
   } else if ( (az > left) && (az < right) 
               && (PointingData[i_point].v_az < -V_AZ_MIN) ) {
 
-    v_az = sqrt(az_accel_max*ampl)*sin(-acos((centre-az)/ampl)); 
+    v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
 
     axes_mode.az_vel = v_az;
     bprintf(info, "I'm in between the endpoints and moving left.");

@@ -135,7 +135,6 @@ struct PointingModeStruct {
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
   double dith; // Elevation dither step 
-  double az_accel_max; // max gondola accel in yaw for Spider
 };
 
 struct latch_pulse {
@@ -259,6 +258,7 @@ struct CommandDataStruct {
   unsigned int slew_veto;
 
   double az_accel;
+  double az_accel_max; // max gondola accel in az
 
   double clin_el_trim;
   double enc_el_trim;

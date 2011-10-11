@@ -1123,12 +1123,13 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.pointing_mode.ra[i] = rvalues[i*2];
         CommandData.pointing_mode.dec[i] = rvalues[i*2 + 1];        
       }
-      CommandData.pointing_mode.az_accel_max = rvalues[8];
+      CommandData.az_accel = rvalues[8];
       CommandData.pointing_mode.Y = rvalues[9];
       CommandData.pointing_mode.mode = P_SPIDER;
       break;
-    case az_scan_accel:
+    case set_az_accel:
       CommandData.az_accel = rvalues[0];
+      CommandData.az_accel_max = rvalues[1];
       break;
 
       /***************************************/
@@ -2403,6 +2404,7 @@ void InitCommandData()
   CommandData.pointing_mode.dith = 0.0;
 
   CommandData.az_accel = 0.4; 
+  CommandData.az_accel_max = 100.0;
 
   CommandData.ele_gain.I = 5000; /* was 8000 */
   CommandData.ele_gain.P = 5000; /* was 1200 */
