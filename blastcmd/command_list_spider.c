@@ -25,7 +25,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.33 $";
+const char *command_list_serial = "$Revision: 1.34 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -268,7 +268,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(set_az_accel), "set az scan turnaround & gondola max accelerations", 
    GR_GAIN, 2,
     {
-      {"Az Scan Acceleration (deg/s^2)", 0.1,   2.0, 'f', "accel_az"},
+      {"Az Scan Acceleration (deg/s^2)", 0.1,  10.0, 'f', "accel_az"},
       {"Az MAX Acceleration (deg/s^2)",  0.0, 100.0, 'f', "NONE"}
     }
   },
