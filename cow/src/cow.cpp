@@ -671,7 +671,6 @@ void MainForm::Ping(void) {
 //-------------------------------------------------------------
 
 void MainForm::TurnOn(void) {
-    int i;
 
     sending = true;
 
@@ -1505,6 +1504,8 @@ int main(int argc, char* argv[]) {
     QApplication::setOrganizationName("University of Toronto");
     QApplication::setApplicationName("cow");
 
+    qDebug() << "starting cow";
+
     if (argc > 2||(argc==2&&(QString(argv[1]).contains("help",Qt::CaseInsensitive)||
                              QString(argv[1]).contains("-h",Qt::CaseInsensitive)))) {
         printf(
@@ -1556,8 +1557,8 @@ int main(int argc, char* argv[]) {
         QSettings settings;
         QString curfile=settings.value("curfile",QString("")).toString();
         if(curfile.isEmpty()) {
-            curfile=QFileDialog::getExistingDirectory(0,"Choose a curdir");
-            curfile+="/defile.lnk";
+            curfile= "/data/etc/defile.lnk"; //QFileDialog::getExistingDirectory(0,"Choose a curdir");
+            //curfile+="/defile.lnk";
         }
         MainForm moo(curfile.toStdString().c_str(), 0, "moo", 0);
         moo.show();
