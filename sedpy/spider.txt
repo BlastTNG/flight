@@ -107,10 +107,14 @@ CABLE &C6 "ACS1_D1 Jumper"
 ACS2 "Attitude Control System Motherboard #2" < ACS
     JACK &J9 "Backplane" DIN41612/M -> ACSBP/&J9
     JACK &J31 "Daughter 1" HEADER/F -> ACS2_A1/&J31
+    JACK &J15 "Daughter 2" HEADER/F -> ACS2_A2/&J15
     JACK &J32 "Daughter 3" HEADER/F -> ACS2_D1/&J32
 ACS2_A1 "ACS2 Analog Daughter #1" < ACS2
     JACK &J31 "Motherboard" HEADER/M -> ACS2/&J31
     JACK &J34 "Analog" MDM51/M -> &C7/&J34
+ACS2_A2 "ACS2 Analog Daughter #2" < ACS2
+    JACK &J15 "Motherboard" HEADER/M -> ACS2/&J15
+    JACK &J30 "Analog" MDM51/M -> &C59/&J30
 ACS2_D1 "ACS2 Digital Daughter #1" < ACS2
     JACK &J32 "Motherboard" HEADER/M -> ACS2/&J32
     JACK &J36 "Digital (J1)" MDM51/F -> &C8/&J36
@@ -120,6 +124,9 @@ ACS2_D1 "ACS2 Digital Daughter #1" < ACS2
 CABLE &C7 "ACS2_A1 Jumper"
     JACK &J34 "Analog" MDM51/F -> ACS2_A1/&J34
     JACK &J40 "ACS2 A1" 50D/M -> ACSBOB/&J40
+CABLE &C59 "ACS2_A2 Jumper"
+    JACK &J30 "Analog" MDM51/F -> ACS2_A2/&J30
+    JACK &J41 "ACS2 A2" 50D/M -> ACSBOB/&J41
 CABLE &C8 "ACS2_D1 Jumper"
     JACK &J36 "Digital" MDM51/M -> ACS2_D1/&J36
     JACK &J42 "ACS2 D1a" 50D/M -> ACSBOB/&J42
@@ -163,6 +170,7 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK &J27 "ACS1 D1a" 50D/F -> &C5/&J27
     JACK &J29 "ACS1 D1b" 37D/F -> &C6/&J29
     JACK &J40 "ACS2 A1" 50D/F -> &C7/&J40
+    JACK &J41 "ACS2 A2" 50D/F -> &C59/&J41
     JACK &J42 "ACS2 D1a" 50D/F -> &C8/&J42
     JACK &J44 "ACS2 D1b" 37D/F -> &C9/&J44
     JACK &J65 "Gyros Data" 25D/M -> GYROS/&J177 CABLE &C10 "Gyro Signals"
@@ -185,7 +193,8 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK &J81 "RS232 Hub" 7W2D/F -> HUB232/&J163 CABLE &C25 "Serial Hub Power"
     JACK &J82 "IF Hub" 7W2D/F -> IFHUB/&J173 CABLE &C26 "IF Hub Power"
     JACK &J83 "BS Cam" 17W2D/F -> BSCAM/&J206 CABLE &C27 "Bore-sight Camera"
-    JACK &J84 "Sun Sensor" 17W2D/F -> SUN/&J193 CABLE &C28 "Sun Sensor"
+    JACK &J84 "PSS Power" 7W2D/F -> SUN/&J193 CABLE &C28 "Sun Sensor Power"
+    JACK &J54 "PSS Signals" 25D/F -> SUN/&J58 CABLE &C60 "Sun Sensor Signals"
     JACK &J85 "Elevation Right" 7W2D/F -> ELE_R/&J230 CABLE &C29 "Right Elevation Drive"
     JACK &J86 "Elevation Left" 7W2D/F -> ELE_L/&J231 CABLE &C30 "Left Elevation Drive"
     JACK &J87 "DAS" 7W2D/F -> DAS/&J271 CABLE &C31 "DAS power"
@@ -346,8 +355,33 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "BS Cam Inhibit" (&J83;10),(&J49;5)
     LINE "BS Cam Video+" (&J83;4),(&J76;2)
     LINE "BS Cam Video-" (&J83;11),(&J76;4)
-    LINE "Sunsenor +?V" (&J84;A1)
-    LINE "Sunsenor Ground" (&J84;A2)
+    LINE "PSS Battery+" (&J84;A1)
+    LINE "PSS Battery-" (&J84;A2)
+    LINE "PSS1 X1" (&J54;1),(&J41;2)
+    LINE "PSS1 X2" (&J54;2),(&J41;3)
+    LINE "PSS1 Y1" (&J54;14),(&J41;4)
+    LINE "PSS1 Y2" (&J54;15),(&J41;5)
+    LINE "PSS2 X1" (&J54;3),(&J41;7)
+    LINE "PSS2 X2" (&J54;4),(&J41;8)
+    LINE "PSS2 Y1" (&J54;16),(&J41;9)
+    LINE "PSS2 Y2" (&J54;17),(&J41;10)
+    LINE "PSS3 X1" (&J54;5),(&J41;11)
+    LINE "PSS3 X2" (&J54;6),(&J41;12)
+    LINE "PSS3 Y1" (&J54;18),(&J41;13)
+    LINE "PSS3 Y2" (&J54;19),(&J41;14)
+    LINE "PSS4 X1" (&J54;7),(&J41;15)
+    LINE "PSS4 X2" (&J54;8),(&J41;16)
+    LINE "PSS4 Y1" (&J54;20),(&J41;17)
+    LINE "PSS4 Y2" (&J54;21),(&J41;49)
+    LINE "PSS5 X1" (&J54;9),(&J41;1)
+    LINE "PSS5 X2" (&J54;10),(&J41;35)
+    LINE "PSS5 Y1" (&J54;22),(&J41;37)
+    LINE "PSS5 Y2" (&J54;23),(&J41;39)
+    LINE "PSS6 X1" (&J54;11),(&J41;41)
+    LINE "PSS6 X2" (&J54;12),(&J41;43)
+    LINE "PSS6 Y1" (&J54;24),(&J41;45)
+    LINE "PSS6 Y2" (&J54;25),(&J41;47)
+    LINE "PSS GND" (&J54;13),(&J41;18,19,20,21,23,24,25,26,27,28,29,30,31,32,33,34,36,38,40,42,44,46,48,50)
     LINE "Elevation Battery+ In" (&J70;A4),(&J57;1)
     LINE "Elevation Battery+" (&J85;A1),(&J86;A1),(&J57;2)
     LINE "Elevation Battery-" (&J70;A8),(&J85;A2),(&J86;A2)
@@ -614,8 +648,36 @@ MAGBOX "Connector Plate for Magnetometer" < IF
     LINE "Mag Y" (&J191;15),(&J190;YEL)
     LINE "Mag Z" (&J191;8),(&J190;GRN)
 
-SUN "Sun Sensor" < OF
-    JACK &J193 "Power, Signals" 17W2D/M -> ACSBOB/&J84 CABLE &C28 "Sun Sensor"
+SUN "Pinhole Sun Sensor" < OF
+    JACK &J193 "Power" 7W2D/M -> ACSBOB/&J84 CABLE &C28 "Sun Sensor Power"
+    JACK &J58 "Signals" 25D/F -> ACSBOB/&J54 CABLE &C60 "Sun Sensor Signals"
+    LINE "Battery+" (&J193;A1)
+    LINE "Battery-" (&J193;A2)
+    LINE "PSS1 X1" (&J58;1)
+    LINE "PSS1 X2" (&J58;2)
+    LINE "PSS1 Y1" (&J58;14)
+    LINE "PSS1 Y2" (&J58;15)
+    LINE "PSS2 X1" (&J58;3)
+    LINE "PSS2 X2" (&J58;4)
+    LINE "PSS2 Y1" (&J58;16)
+    LINE "PSS2 Y2" (&J58;17)
+    LINE "PSS3 X1" (&J58;5)
+    LINE "PSS3 X2" (&J58;6)
+    LINE "PSS3 Y1" (&J58;18)
+    LINE "PSS3 Y2" (&J58;19)
+    LINE "PSS4 X1" (&J58;7)
+    LINE "PSS4 X2" (&J58;8)
+    LINE "PSS4 Y1" (&J58;20)
+    LINE "PSS4 Y2" (&J58;21)
+    LINE "PSS5 X1" (&J58;9)
+    LINE "PSS5 X2" (&J58;10)
+    LINE "PSS5 Y1" (&J58;22)
+    LINE "PSS5 Y2" (&J58;23)
+    LINE "PSS6 X1" (&J58;11)
+    LINE "PSS6 X2" (&J58;12)
+    LINE "PSS6 Y1" (&J58;24)
+    LINE "PSS6 Y2" (&J58;25)
+    LINE "PSS GND" (&J58;13)
 
 STARCAM "Rotating Star Camera" < OF
     JACK &J194 "Power, signals" 17W2D/M -> ACSBOB/&J71 CABLE &C15 "Star Camera"
