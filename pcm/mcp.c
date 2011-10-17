@@ -1165,7 +1165,9 @@ int main(int argc, char *argv[])
                  // in motors.c
   openTable();	// opens communications and creates thread in table.cpp
 
+#ifndef TEST_RUN //ethernet threads should start in test versions
   openSBSC();  // SBSC - creates thread in sbsc.cpp
+#endif
 
 
   startChrgCtrl(); // create charge controller serial thread
