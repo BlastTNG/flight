@@ -66,7 +66,7 @@ struct CMInfoStruct {
   int open;               // 0 = closed, 1 = open
   int init;               // 0 = uninitialized, 1 = initialized
   int closing;            // 1 if in the process of closing
-  int ref;                // position of encoder (counts) after an az_el_set 
+  //int ref;              // position of encoder (counts) after an az_el_set 
                           // command
   char motorstr[3];       // name of motor
 
@@ -339,10 +339,16 @@ void raster_cm()
   
   bprintf(info, "Moving to end of az scan range..."); 
   bprintf(info, "Moving to starting elevation...");
-  goto_cm(az_start, el_low, az_speed_init, el_speed_init, 
+  
+   /* negate el direction */
+  //goto_cm(az_start, el_low, az_speed_init, el_speed_init, 
+  //        CommandData.az_el.az_accel, CommandData.az_el.el_accel);
+
+  goto_cm(az_start, el_high, az_speed_init, el_speed_init, 
           CommandData.az_el.az_accel, CommandData.az_el.el_accel);
 
   /* start the raster scan */
+
 
   step_count = 0;
   
@@ -355,8 +361,10 @@ void raster_cm()
 
     az_goto = (((step_count - 1) % 2) == 0) ? 
     CommandData.az_el.az_width + az_start : az_start;
-    az_goto = mod_cm(az_goto, 360.0);
-    el_goto = el_low + (step_count - 1)*step_size;
+    az_goto = mod_cm(az_goto, 360.0); 
+    /* negate el direction */
+    //el_goto = el_low + (step_count - 1)*step_size;
+    el_goto = el_high - (step_count - 1)*step_size;
     goto_cm(az_goto, el_goto, az_speed_init, el_speed_init, 
 	    CommandData.az_el.az_accel, CommandData.az_el.el_accel);
 
@@ -365,7 +373,9 @@ void raster_cm()
     if ( (step_size > 0) && (step_count <= CommandData.az_el.el_Nstep) ) {
       bprintf(info,"Elevation Step: %i", step_count);  
       bprintf(info, "Stepping in elevation...");
-      el_goto = el_low + step_count*step_size;
+      /* negate el direction */
+      //el_goto = el_low + step_count*step_size;
+      el_goto = el_high - step_count*step_size;
       goto_cm(az_goto, el_goto, az_speed_init, el_speed_init, 
 	      CommandData.az_el.az_accel, CommandData.az_el.el_accel);
     }
@@ -390,6 +400,11 @@ void init_cm(struct CMInfoStruct* cminfo)
  
   char* tolerance = "K55=5\r";     // sets tolerence for in-position error
    
+  char* response_type = "K23=0\r"; // motor responds only when polled
+
+  char* port_type = "K52=1\r";     // force motor to interpret input 1 as 
+                                   // an RS-232 port
+
   char* password = "W=924\r";      // unlocks the H parameters for writing
                                    // (these are gains for controller design)
   char* H0 = "H0=100\r";
@@ -414,12 +429,25 @@ void init_cm(struct CMInfoStruct* cminfo)
     cminfo->init = 0;
     return;
   }
+  
+  if ( (write_cm(cminfo, response_type, strlen(response_type), 
+                 " response type parameter K23")) < 0) {
+    cminfo->init = 0;
+    return;
+  }
+
+  if ( (write_cm(cminfo, port_type, strlen(port_type), 
+                 " port type parameter K52")) < 0) {
+    cminfo->init = 0;
+    return;
+  }
 
   if ( (write_cm(cminfo, tolerance, strlen(tolerance), 
                  " tolerance parameter K55")) < 0) {
     cminfo->init = 0;
     return;
   }
+
   if ( (write_cm(cminfo, password, strlen(password), 
                  " password to access H parameters")) < 0) {
     cminfo->init = 0;
@@ -819,12 +847,12 @@ double mod_cm(double val, double mod) {
   
 void CalcAzEl(double* az_ptr, double* el_ptr)
 { 
-  *az_ptr = -((double)az_enc - (double)azinfo.ref)/CNTS_PER_DEG 
-            + CommandData.az_el.az_ref;
+  *az_ptr = -((double)az_enc - (double)CommandData.az_el.az_enc_ref)
+             /CNTS_PER_DEG + CommandData.az_el.az_ref;
   *az_ptr = mod_cm(*az_ptr, 360.0);
 
-  *el_ptr = -((double)el_enc - (double)elinfo.ref)/CNTS_PER_DEG 
-             + CommandData.az_el.el_ref;
+  *el_ptr = -((double)el_enc - (double)CommandData.az_el.el_enc_ref)
+            /CNTS_PER_DEG + CommandData.az_el.el_ref;
   *el_ptr = mod_cm(*el_ptr, 360.0);
   if (*el_ptr > EL_MAX+1.0) { // For safety, EL_MAX is 1 deg < mechanical limit
     *el_ptr -= 360.0;
@@ -849,14 +877,14 @@ void* azelComm(void* arg)
   azinfo.open = 0;
   azinfo.init = 0;
   azinfo.closing = 0;
-  azinfo.ref = az_enc;
+  //azinfo.ref = az_enc;
   strncpy(azinfo.motorstr, "az", 3);
 
   elinfo.fd = 0;
   elinfo.open = 0;
   elinfo.init = 0;
   elinfo.closing = 0;
-  elinfo.ref = el_enc;
+  //elinfo.ref = el_enc;
   strncpy(elinfo.motorstr, "el", 3);
  
   /* try to open the ports */
@@ -997,8 +1025,10 @@ void AzElScan()
       break;
 
     case AzElSet:
-      azinfo.ref = az_enc;
-      elinfo.ref = el_enc;
+      CommandData.az_el.az_enc_ref = az_enc;
+      CommandData.az_el.el_enc_ref = el_enc;
+      //azinfo.ref = az_enc;
+      //elinfo.ref = el_enc;
       CommandData.az_el.mode = AzElNone;
       break;
 

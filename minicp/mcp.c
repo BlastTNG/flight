@@ -437,7 +437,7 @@ int main(int argc, char *argv[])
 
   InitialiseFrameFile(argv[1][0]);
   pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  //startAzEl();
+  startAzEl();
 
   signal(SIGHUP, CloseBBC);
   signal(SIGINT, CloseBBC);

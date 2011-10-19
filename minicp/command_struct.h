@@ -90,6 +90,8 @@ struct CommandDataStruct {
     double el;
     double az_ref;
     double el_ref;
+    int az_enc_ref;
+    int el_enc_ref;
 
     /* raster-specific: */
 

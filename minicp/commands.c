@@ -408,8 +408,6 @@ void InitCommandData()
   CommandData.az_el.cmd_disable = 1;
   CommandData.az_el.new_cmd = 0;
   CommandData.az_el.mode = AzElNone;
-  CommandData.az_el.az_ref = 0.0;
-  CommandData.az_el.el_ref = 0.0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
@@ -445,7 +443,11 @@ void InitCommandData()
   CommandData.az_el.az_width = 30.0;
   CommandData.az_el.el_Nstep = 10; 
   CommandData.az_el.el_height = 10.0;
-
+  CommandData.az_el.az_ref = 0.0;
+  CommandData.az_el.el_ref = 0.0;
+  CommandData.az_el.az_enc_ref = 0;
+  CommandData.az_el.el_enc_ref = 0; 
+ 
   CommandData.plover = 0;
 
   WritePrevStatus();
