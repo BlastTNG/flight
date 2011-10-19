@@ -839,15 +839,15 @@ static void DoSpiderMode(void)
   axes_mode.el_vel = 0.0;
 
   i_point = GETREADINDEX(point_index);
-  //lst = PointingData[i_point].lst;
+  lst = PointingData[i_point].lst;
   /* input unchanging lst for testing purposes */
-  lst = 23400.0;
-  //lat = PointingData[i_point].lat;
+  //lst = 23400.0;
+  lat = PointingData[i_point].lat;
   /* input unchanging latitude for testing purposes: 
      McMurdo station at 71 deg. 51 arcmin S */
-  lat = -71.85;
+  //lat = -71.85;
   az = PointingData[i_point].az;
-  el = PointingData[i_point].el + 28.0;
+  el = PointingData[i_point].el;// + 28.0;
 
   /* convert ra/decs to az/el */
   for (i = 0; i < 4; i++) {

@@ -25,7 +25,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.34 $";
+const char *command_list_serial = "$Revision: 1.35 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -362,7 +362,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"RA of Corner 4 (h)",        0, 24, 'f', "NONE"},
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Accel (deg/s^2)",   0,  2, 'f', "NONE"},
-      {"Elevation (deg)",          28, 40, 'f', "NONE"}
+      {"Elevation (deg)",           0, 40, 'f', "NONE"}
     }
   },
   {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
