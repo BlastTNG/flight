@@ -16,7 +16,7 @@
 
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 150        /* total number of single word cmds */
+#define N_SCOMMANDS 145        /* total number of single word cmds */
 #define N_MCOMMANDS  91        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -66,8 +66,7 @@ enum singleCommand {
   el_off,	     el_on,             pin_in,            reset_trims,
   elclin_allow,      elclin_veto,       elenc_allow,       elenc_veto,
   gps_allow,         gps_veto,          mag_allow,         mag_veto,
-  stop,              sun_veto,          sun_allow,         pss_veto,
-  pss_allow,
+  stop,              pss_veto,		pss_allow,
   trim_to_isc,       unlock,            lock_off,         
   force_el_on,       gps_cycle,         actbus_cycle,      rw_cycle,
   piv_cycle,         elmot_cycle,       hub232_cycle,      das_cycle,
@@ -85,8 +84,7 @@ enum singleCommand {
   ifel_1_gy_off,     ifel_1_gy_on,	ifel_2_gy_off,	   ifel_2_gy_on,
   ifroll_1_gy_cycle, ifroll_2_gy_cycle, ifyaw_1_gy_cycle,  ifyaw_2_gy_cycle,
   ifel_1_gy_cycle,   ifel_2_gy_cycle,   gybox_off,         gybox_on,
-  ss_off,            ss_on,             hub232_off,	   hub232_on,
-  ss_cycle,          gybox_cycle,        
+  hub232_off,	     hub232_on,		gybox_cycle,        
   reap_itsy,         reap_bitsy,        xy_panic,
   trim_to_osc,       antisun,           blast_rocks,       blast_sucks,
   at_float,          not_at_float,      el_auto_gyro,

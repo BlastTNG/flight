@@ -541,17 +541,6 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 }
 
 
-// Note that SSConvert has been re-written 12 June 2010
-// to use new calibration developed by Andrei -GST
-
-// return 1 if new sun, and 0 otherwise
-#define MIN_SS_AMP 1000
-#define MIN_SS_SNR 1.21
-
-#define SS_N_MAX          12
-#define BUNK_FUDGE_FACTOR 400
-#define MIN_AMP_VAL       2000
-
 //make history 30s long so that nobody ever exceeds it (with sc_max_age)
 #define GY_HISTORY 3000
 static void RecordHistory(int index)
@@ -966,7 +955,6 @@ void Pointing(void)
   int mag_ok, dgps_ok;
   int pss_ok;
   static unsigned dgps_since_ok = 500;
-  static unsigned ss_since_ok = 500;
   static unsigned pss_since_ok = 500;
   double mag_az;
   double pss_az = 0;
@@ -1048,18 +1036,6 @@ void Pointing(void)
     0, 0, // n_solutions, since_last
     NULL, NULL
   };
-  static struct AzSolutionStruct SSAz =  {0.0, // starting angle
-    360.0 * 360.0, // starting varience
-    1.0 / M2DV(30), //sample weight
-    M2DV(60), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
   static struct AzSolutionStruct PSSAz =  {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(30), //sample weight
@@ -1080,7 +1056,6 @@ void Pointing(void)
     NullAz.trim = CommandData.null_az_trim;
     MagAz.trim = CommandData.mag_az_trim;
     DGPSAz.trim = CommandData.dgps_az_trim;
-    SSAz.trim = CommandData.ss_az_trim;
     PSSAz.trim = CommandData.pss_az_trim;
     
     ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -1102,11 +1077,6 @@ void Pointing(void)
     DGPSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(DGPSAz.fs2, FIR_LENGTH);
     initFir(DGPSAz.fs3, FIR_LENGTH);
-
-    SSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    SSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(SSAz.fs2, FIR_LENGTH);
-    initFir(SSAz.fs3, FIR_LENGTH);
 
     PSSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     PSSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -1299,9 +1269,6 @@ void Pointing(void)
   if (CommandData.use_mag) {
     AddAzSolution(&AzAtt, &MagAz, 1);
   }
-  if (CommandData.use_sun) {
-    AddAzSolution(&AzAtt, &SSAz, 1);
-  }
   if (CommandData.use_pss) {
     AddAzSolution(&AzAtt, &PSSAz, 1);
   }
@@ -1342,8 +1309,6 @@ void Pointing(void)
   PointingData[point_index].dgps_pitch = dgps_pitch;
   PointingData[point_index].dgps_roll = dgps_roll;
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
-  PointingData[point_index].ss_az = SSAz.angle;
-  PointingData[point_index].ss_sigma = sqrt(SSAz.varience + SSAz.sys_var);
   // Added 22 June 2010 GT
   PointingData[point_index].pss_az = PSSAz.angle;
 
@@ -1355,7 +1320,6 @@ void Pointing(void)
     NullAz.trim = 0.0;
     MagAz.trim = 0.0;
     DGPSAz.trim = 0.0;
-    SSAz.trim = 0.0;
     PSSAz.trim = 0.0;
     NewAzEl.fresh = 0;
   }
@@ -1368,9 +1332,6 @@ void Pointing(void)
 
     if (dgps_since_ok<500) {
       DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
-    }
-    if (ss_since_ok<500) {
-      SSAz.trim = NewAzEl.az - SSAz.angle;
     }
     if (pss_since_ok<500) {
       PSSAz.trim = NewAzEl.az - PSSAz.angle;
@@ -1385,7 +1346,6 @@ void Pointing(void)
   CommandData.null_az_trim = NullAz.trim;
   CommandData.mag_az_trim = MagAz.trim;
   CommandData.dgps_az_trim = DGPSAz.trim;
-  CommandData.ss_az_trim = SSAz.trim;
   CommandData.pss_az_trim = PSSAz.trim;
   j++;
  

@@ -25,7 +25,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.36 $";
+const char *command_list_serial = "$Revision: 1.37 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -48,9 +48,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(gps_off), "turn off the dGPS", GR_POWER | CONFIRM},
   {COMMAND(gps_on), "turn on the dGPS", GR_POWER},
   {COMMAND(gps_cycle), "power cycle the dGPS", GR_POWER | CONFIRM},
-  {COMMAND(ss_off), "turn off the Sun Sensor", GR_POWER},
-  {COMMAND(ss_on), "turn on the Sun Sensor", GR_POWER},
-  {COMMAND(ss_cycle), "power cycle the Sun Sensor", GR_POWER},
   {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER},
   {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER},
   {COMMAND(gybox_cycle), "power cycle the digital gyros' box", GR_POWER},
@@ -131,8 +128,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(gps_allow), "un-veto differential gps", GR_VETO},
   {COMMAND(mag_veto), "veto magnotometer", GR_VETO},
   {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
-  {COMMAND(sun_veto), "veto sun sensor", GR_VETO},
-  {COMMAND(sun_allow), "un-veto sun sensor", GR_VETO},
   {COMMAND(pss_veto), "veto pss sensor", GR_VETO},
   {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO},
   {COMMAND(ifroll_1_gy_allow), "enable ifroll_1_gy", GR_VETO},

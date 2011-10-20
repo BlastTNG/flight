@@ -426,31 +426,6 @@ static void StoreData(int index)
 {
   static int firsttime = 1;
 
-  static struct NiosStruct* azRelSunSsAddr;
-  static struct NiosStruct* phaseSsAddr;
-  static struct NiosStruct* snrSsAddr;
-  static struct NiosStruct* sunTimeSsAddr;
-  static struct NiosStruct* tCpuSsAddr;
-  static struct NiosStruct* tHddSsAddr;
-  static struct NiosStruct* tCaseSsAddr;
-  static struct NiosStruct* tPortSsAddr;
-  static struct NiosStruct* tStarSsAddr;
-  static struct NiosStruct* v5SsAddr;
-  static struct NiosStruct* v12SsAddr;
-  static struct NiosStruct* vBattSsAddr;
-  static struct NiosStruct* Raw01SsAddr;
-  static struct NiosStruct* Raw02SsAddr;
-  static struct NiosStruct* Raw03SsAddr;
-  static struct NiosStruct* Raw04SsAddr;
-  static struct NiosStruct* Raw05SsAddr;
-  static struct NiosStruct* Raw06SsAddr;
-  static struct NiosStruct* Raw07SsAddr;
-  static struct NiosStruct* Raw08SsAddr;
-  static struct NiosStruct* Raw09SsAddr;
-  static struct NiosStruct* Raw10SsAddr;
-  static struct NiosStruct* Raw11SsAddr;
-  static struct NiosStruct* Raw12SsAddr;
-
   static struct NiosStruct* latSipAddr;
   static struct NiosStruct* lonSipAddr;
   static struct NiosStruct* altSipAddr;
@@ -500,7 +475,6 @@ static void StoreData(int index)
   static struct NiosStruct* sigmaMagAddr;
   static struct NiosStruct* dgpsAzAddr;
   static struct NiosStruct* dgpsSigmaAddr;
-  static struct NiosStruct* azSsAddr;
   static struct NiosStruct* azrawPssAddr;
   static struct NiosStruct* elrawPssAddr;
   static struct NiosStruct* snrPss1Addr;
@@ -510,7 +484,6 @@ static void StoreData(int index)
   static struct NiosStruct* snrPss5Addr;
   static struct NiosStruct* snrPss6Addr;
   static struct NiosStruct* azPssAddr;
-  static struct NiosStruct* sigmaSsAddr;
   static struct NiosStruct* azSunAddr;
   static struct NiosStruct* elSunAddr;
   static struct NiosStruct* azIscAddr;
@@ -554,7 +527,6 @@ static void StoreData(int index)
   static struct NiosStruct *trimMagAddr;
   static struct NiosStruct *trimPssAddr;
   static struct NiosStruct *dgpsTrimAddr;
-  static struct NiosStruct *trimSsAddr;
 
   static struct NiosStruct *lstSchedAddr;
 
@@ -616,31 +588,6 @@ static void StoreData(int index)
     elAddr = GetNiosAddr("el");
     mcpFrameAddr = GetNiosAddr("mcp_frame");
 
-    azRelSunSsAddr = GetNiosAddr("az_rel_sun_ss");
-    phaseSsAddr = GetNiosAddr("phase_ss");
-    snrSsAddr = GetNiosAddr("snr_ss");
-    sunTimeSsAddr = GetNiosAddr("sun_time_ss");
-    tCpuSsAddr = GetNiosAddr("t_cpu_ss");
-    tHddSsAddr = GetNiosAddr("t_hdd_ss");
-    tCaseSsAddr = GetNiosAddr("t_case_ss");
-    tPortSsAddr = GetNiosAddr("t_port_ss");
-    tStarSsAddr = GetNiosAddr("t_star_ss");
-    v5SsAddr = GetNiosAddr("v_5_ss");
-    v12SsAddr = GetNiosAddr("v_12_ss");
-    vBattSsAddr = GetNiosAddr("v_batt_ss");
-    Raw01SsAddr = GetNiosAddr("raw_01_ss");
-    Raw02SsAddr = GetNiosAddr("raw_02_ss");
-    Raw03SsAddr = GetNiosAddr("raw_03_ss");
-    Raw04SsAddr = GetNiosAddr("raw_04_ss");
-    Raw05SsAddr = GetNiosAddr("raw_05_ss");
-    Raw06SsAddr = GetNiosAddr("raw_06_ss");
-    Raw07SsAddr = GetNiosAddr("raw_07_ss");
-    Raw08SsAddr = GetNiosAddr("raw_08_ss");
-    Raw09SsAddr = GetNiosAddr("raw_09_ss");
-    Raw10SsAddr = GetNiosAddr("raw_10_ss");
-    Raw11SsAddr = GetNiosAddr("raw_11_ss");
-    Raw12SsAddr = GetNiosAddr("raw_12_ss");
-
     latSipAddr = GetNiosAddr("lat_sip");
     lonSipAddr = GetNiosAddr("lon_sip");
     altSipAddr = GetNiosAddr("alt_sip");
@@ -672,11 +619,8 @@ static void StoreData(int index)
     sigmaMagAddr = GetNiosAddr("sigma_mag");
     dgpsAzAddr = GetNiosAddr("az_dgps");
     dgpsSigmaAddr = GetNiosAddr("sigma_dgps");
-    azSsAddr = GetNiosAddr("az_ss");
-    sigmaSsAddr = GetNiosAddr("sigma_ss");
     azSunAddr = GetNiosAddr("az_sun");
     elSunAddr = GetNiosAddr("el_sun");
-    trimSsAddr = GetNiosAddr("trim_ss");
     azrawPssAddr = GetNiosAddr("azraw_pss");
     elrawPssAddr = GetNiosAddr("elraw_pss");
     snrPss1Addr = GetNiosAddr("snr_pss1");
@@ -834,11 +778,6 @@ static void StoreData(int index)
   WriteData(velAzMcAddr, axes_mode.az_vel * 6000., NIOS_QUEUE);
   WriteData(velElMcAddr, axes_mode.el_vel * 6000., NIOS_QUEUE);
 
-  /********** Sun Sensor Data **********/
-  WriteData(phaseSsAddr, PointingData[i_point].ss_phase * DEG2I, NIOS_QUEUE);
-  WriteData(snrSsAddr, PointingData[i_point].ss_snr * 1000, NIOS_QUEUE);
-  WriteData(azRelSunSsAddr, PointingData[i_point].ss_az_rel_sun * DEG2I,
-      NIOS_QUEUE);
   /********* PSS data *************/
   WriteData(azrawPssAddr, PointingData[i_point].pss_azraw * DEG2I, NIOS_QUEUE);
   WriteData(elrawPssAddr, PointingData[i_point].pss_elraw * DEG2I, NIOS_QUEUE);
@@ -917,15 +856,9 @@ static void StoreData(int index)
   WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
   WriteData(dgpsCovLimAddr, CommandData.dgps_cov_limit*32768.0/100.0, NIOS_QUEUE);
   WriteData(dgpsAntsLimAddr, CommandData.dgps_ants_limit*32768.0/100.0, NIOS_QUEUE);
-  WriteData(azSsAddr, (unsigned int)((PointingData[i_point].ss_az +
-          CommandData.ss_az_trim) * DEG2I),
-      NIOS_QUEUE);
-  WriteData(sigmaSsAddr,
-      (unsigned int)(PointingData[i_point].ss_sigma * DEG2I), NIOS_QUEUE);
   WriteData(azSunAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I),
       NIOS_QUEUE);
   WriteData(elSunAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
-  WriteData(trimSsAddr, CommandData.ss_az_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(trimEncAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
 
@@ -974,11 +907,10 @@ static void StoreData(int index)
   WriteData(dec4PAddr, (int)(CommandData.pointing_mode.dec[3] * DEG2I),
       NIOS_QUEUE);
 
-  sensor_veto = (!CommandData.use_sun) |
-    ((!CommandData.use_elenc) << 2) |
-    ((!CommandData.use_mag) << 3) |
-    ((!CommandData.use_gps) << 4) |
-    ((!CommandData.use_elclin) << 5) |
+  sensor_veto = (!CommandData.use_elenc) |
+    ((!CommandData.use_mag) << 2) |
+    ((!CommandData.use_gps) << 3) |
+    ((!CommandData.use_elclin) << 4) |
     ((CommandData.disable_el) << 10) |
     ((CommandData.disable_az) << 11) |
     ((CommandData.force_el) << 12) |

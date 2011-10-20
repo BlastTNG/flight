@@ -211,7 +211,6 @@ struct CommandDataStruct {
     int hub232_off;
     int sbsc_cpu_off;
     int sbsc_cam_off;
-    int ss_off;
     unsigned char adc_reset[16];
   } power;
 
@@ -245,7 +244,6 @@ struct CommandDataStruct {
 
   unsigned char use_elenc;
   unsigned char use_elclin;
-  unsigned char use_sun;
   unsigned char use_pss;
   unsigned char use_mag;
   unsigned char use_gps;
@@ -264,7 +262,6 @@ struct CommandDataStruct {
   double null_az_trim;
   double mag_az_trim;
   double dgps_az_trim;
-  double ss_az_trim;
   double pss_az_trim;
 
   struct {
