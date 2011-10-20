@@ -482,6 +482,10 @@ static void GetACS()
   double x_comp, y_comp, z_comp;
   double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
   double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
+  double pss3_i1, pss3_i2, pss3_i3, pss3_i4;
+  double pss4_i1, pss4_i2, pss4_i3, pss4_i4;
+  double pss5_i1, pss5_i2, pss5_i3, pss5_i4;
+  double pss6_i1, pss6_i2, pss6_i3, pss6_i4;
   double vel_rw;
 //short vel_rw;
   double res_piv;
@@ -506,6 +510,22 @@ static void GetACS()
   static struct BiPhaseStruct* v22PssAddr;
   static struct BiPhaseStruct* v32PssAddr;
   static struct BiPhaseStruct* v42PssAddr;
+  static struct BiPhaseStruct* v13PssAddr;
+  static struct BiPhaseStruct* v23PssAddr;
+  static struct BiPhaseStruct* v33PssAddr;
+  static struct BiPhaseStruct* v43PssAddr;
+  static struct BiPhaseStruct* v14PssAddr;
+  static struct BiPhaseStruct* v24PssAddr;
+  static struct BiPhaseStruct* v34PssAddr;
+  static struct BiPhaseStruct* v44PssAddr;
+  static struct BiPhaseStruct* v15PssAddr;
+  static struct BiPhaseStruct* v25PssAddr;
+  static struct BiPhaseStruct* v35PssAddr;
+  static struct BiPhaseStruct* v45PssAddr;
+  static struct BiPhaseStruct* v16PssAddr;
+  static struct BiPhaseStruct* v26PssAddr;
+  static struct BiPhaseStruct* v36PssAddr;
+  static struct BiPhaseStruct* v46PssAddr;
   static struct BiPhaseStruct* potHwprAddr;
   static struct BiPhaseStruct* encTableAddr;
 
@@ -533,6 +553,22 @@ static void GetACS()
     v22PssAddr = GetBiPhaseAddr("v2_2_pss");
     v32PssAddr = GetBiPhaseAddr("v3_2_pss");
     v42PssAddr = GetBiPhaseAddr("v4_2_pss");
+    v13PssAddr = GetBiPhaseAddr("v1_3_pss");
+    v23PssAddr = GetBiPhaseAddr("v2_3_pss");
+    v33PssAddr = GetBiPhaseAddr("v3_3_pss");
+    v43PssAddr = GetBiPhaseAddr("v4_3_pss");
+    v14PssAddr = GetBiPhaseAddr("v1_4_pss");
+    v24PssAddr = GetBiPhaseAddr("v2_4_pss");
+    v34PssAddr = GetBiPhaseAddr("v3_4_pss");
+    v44PssAddr = GetBiPhaseAddr("v4_4_pss");
+    v15PssAddr = GetBiPhaseAddr("v1_5_pss");
+    v25PssAddr = GetBiPhaseAddr("v2_5_pss");
+    v35PssAddr = GetBiPhaseAddr("v3_5_pss");
+    v45PssAddr = GetBiPhaseAddr("v4_5_pss");
+    v16PssAddr = GetBiPhaseAddr("v1_6_pss");
+    v26PssAddr = GetBiPhaseAddr("v2_6_pss");
+    v36PssAddr = GetBiPhaseAddr("v3_6_pss");
+    v46PssAddr = GetBiPhaseAddr("v4_6_pss");
     potHwprAddr = GetBiPhaseAddr("pot_hwpr");
     encTableAddr = GetBiPhaseAddr("enc_table");
   }
@@ -566,6 +602,22 @@ static void GetACS()
   pss2_i2 = (double)(slow_data[v22PssAddr->index][v22PssAddr->channel]);
   pss2_i3 = (double)(slow_data[v32PssAddr->index][v32PssAddr->channel]);
   pss2_i4 = (double)(slow_data[v42PssAddr->index][v42PssAddr->channel]);
+  pss3_i1 = (double)(slow_data[v13PssAddr->index][v13PssAddr->channel]);
+  pss3_i2 = (double)(slow_data[v23PssAddr->index][v23PssAddr->channel]);
+  pss3_i3 = (double)(slow_data[v33PssAddr->index][v33PssAddr->channel]);
+  pss3_i4 = (double)(slow_data[v43PssAddr->index][v43PssAddr->channel]);
+  pss4_i1 = (double)(slow_data[v14PssAddr->index][v14PssAddr->channel]);
+  pss4_i2 = (double)(slow_data[v24PssAddr->index][v24PssAddr->channel]);
+  pss4_i3 = (double)(slow_data[v34PssAddr->index][v34PssAddr->channel]);
+  pss4_i4 = (double)(slow_data[v44PssAddr->index][v44PssAddr->channel]);
+  pss5_i1 = (double)(slow_data[v15PssAddr->index][v15PssAddr->channel]);
+  pss5_i2 = (double)(slow_data[v25PssAddr->index][v25PssAddr->channel]);
+  pss5_i3 = (double)(slow_data[v35PssAddr->index][v35PssAddr->channel]);
+  pss5_i4 = (double)(slow_data[v45PssAddr->index][v45PssAddr->channel]);
+  pss6_i1 = (double)(slow_data[v16PssAddr->index][v16PssAddr->channel]);
+  pss6_i2 = (double)(slow_data[v26PssAddr->index][v26PssAddr->channel]);
+  pss6_i3 = (double)(slow_data[v36PssAddr->index][v36PssAddr->channel]);
+  pss6_i4 = (double)(slow_data[v46PssAddr->index][v46PssAddr->channel]);
   hwpr_pot = (double)(slow_data[potHwprAddr->index][potHwprAddr->channel]);
 
   uTab = (RxFrame[encTableAddr->channel+1] << 16 | 
@@ -596,6 +648,22 @@ static void GetACS()
   ACSData.pss2_i2 = pss2_i2;
   ACSData.pss2_i3 = pss2_i3;
   ACSData.pss2_i4 = pss2_i4;
+  ACSData.pss3_i1 = pss3_i1;
+  ACSData.pss3_i2 = pss3_i2;
+  ACSData.pss3_i3 = pss3_i3;
+  ACSData.pss3_i4 = pss3_i4;
+  ACSData.pss4_i1 = pss4_i1;
+  ACSData.pss4_i2 = pss4_i2;
+  ACSData.pss4_i3 = pss4_i3;
+  ACSData.pss4_i4 = pss4_i4;
+  ACSData.pss5_i1 = pss5_i1;
+  ACSData.pss5_i2 = pss5_i2;
+  ACSData.pss5_i3 = pss5_i3;
+  ACSData.pss5_i4 = pss5_i4;
+  ACSData.pss6_i1 = pss6_i1;
+  ACSData.pss6_i2 = pss6_i2;
+  ACSData.pss6_i3 = pss6_i3;
+  ACSData.pss6_i4 = pss6_i4;
   ACSData.hwpr_pot = hwpr_pot; // keep this as an integer, 
                                // so it can be read in one atomic cycle...
   ACSData.enc_table = enc_table;

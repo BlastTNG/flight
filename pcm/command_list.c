@@ -25,7 +25,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.35 $";
+const char *command_list_serial = "$Revision: 1.36 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -133,10 +133,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
   {COMMAND(sun_veto), "veto sun sensor", GR_VETO},
   {COMMAND(sun_allow), "un-veto sun sensor", GR_VETO},
-  {COMMAND(pss1_veto), "veto pss1 sensor", GR_VETO},
-  {COMMAND(pss1_allow), "un-veto pss1 sensor", GR_VETO},
-  {COMMAND(pss2_veto), "veto pss2 sensor", GR_VETO},
-  {COMMAND(pss2_allow), "un-veto pss2 sensor", GR_VETO},
+  {COMMAND(pss_veto), "veto pss sensor", GR_VETO},
+  {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO},
   {COMMAND(ifroll_1_gy_allow), "enable ifroll_1_gy", GR_VETO},
   {COMMAND(ifroll_1_gy_veto), "disable ifroll_1_gy", GR_VETO},
   {COMMAND(ifroll_2_gy_allow), "enable ifroll_2_gy", GR_VETO},

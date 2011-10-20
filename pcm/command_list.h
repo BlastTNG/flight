@@ -16,7 +16,7 @@
 
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 152        /* total number of single word cmds */
+#define N_SCOMMANDS 150        /* total number of single word cmds */
 #define N_MCOMMANDS  91        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -66,8 +66,8 @@ enum singleCommand {
   el_off,	     el_on,             pin_in,            reset_trims,
   elclin_allow,      elclin_veto,       elenc_allow,       elenc_veto,
   gps_allow,         gps_veto,          mag_allow,         mag_veto,
-  stop,              sun_veto,          sun_allow,         pss1_veto,
-  pss1_allow,        pss2_veto,         pss2_allow,
+  stop,              sun_veto,          sun_allow,         pss_veto,
+  pss_allow,
   trim_to_isc,       unlock,            lock_off,         
   force_el_on,       gps_cycle,         actbus_cycle,      rw_cycle,
   piv_cycle,         elmot_cycle,       hub232_cycle,      das_cycle,

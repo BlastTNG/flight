@@ -33,7 +33,7 @@
 #define ACS2_C	 4, 0
 #define ACS2_D	 5, 0
 #define ACS2_A1	 6, 0
-//ACS2_unused	 7, 0
+#define ACS2_A2	 7, 0
 #define RTD_C	 8, 0
 #define RTD_D	 9, 0
 #define RTD_A1	10, 0
@@ -441,8 +441,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_set_gy",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"h_age_gy",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"h_hist_gy",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  {"trim_pss1",    'w', LOOP4, 39,              I2DEG,             0.0, 's', U_NONE},
-  {"trim_pss2",    'w', LOOP4, 40,              I2DEG,             0.0, 's', U_NONE},
+  {"trim_pss",     'w', LOOP4, 39,              I2DEG,             0.0, 's', U_NONE},
+  {"az_pss",       'w', LOOP4, 40,              I2DEG,             0.0, 'u', U_P_DEG},
   /* LOOP4 41-43 appear unused */
   {"ra_1_p",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE}, // pointing mode coordinates
   {"dec_1_p",      'w', LOOP4, 45,              I2DEG,             0.0, 's', U_NONE},
@@ -671,14 +671,14 @@ struct ChannelStruct SlowChannels[] = {
   {"goal_1_act",   'w',   LOOP8, 24,                1.0,             0.0, 's', U_NONE},
   {"goal_2_act",   'w',   LOOP8, 25,                1.0,             0.0, 's', U_NONE},
 
-  {"azraw_pss1",   'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"elraw_pss1",   'w',   LOOP8, 27,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"azraw_pss",   'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"elraw_pss",   'w',   LOOP8, 27,              I2DEG,             0.0, 'u', U_P_DEG},
   {"snr_pss1",     'w',   LOOP8, 28,            1/1000.,             0.0, 'u', U_NONE},
-  {"az_pss1",      'w',   LOOP8, 29,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"azraw_pss2",   'w',   LOOP8, 30,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"elraw_pss2",   'w',   LOOP8, 31,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"snr_pss2",     'w',   LOOP8, 32,            1/1000.,             0.0, 'u', U_NONE},
-  {"az_pss2",      'w',   LOOP8, 33,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"snr_pss2",     'w',   LOOP8, 29,            1/1000.,             0.0, 'u', U_NONE},
+  {"snr_pss3",     'w',   LOOP8, 30,            1/1000.,             0.0, 'u', U_NONE},
+  {"snr_pss4",     'w',   LOOP8, 31,            1/1000.,             0.0, 'u', U_NONE},
+  {"snr_pss5",     'w',   LOOP8, 32,            1/1000.,             0.0, 'u', U_NONE},
+  {"snr_pss6",     'w',   LOOP8, 33,            1/1000.,             0.0, 'u', U_NONE},
   {"accel_az",     'w',   LOOP8, 34,          2.0/65536,             0.0, 'u', U_NONE},
   {"pos_focus_isc",'w',   LOOP8, 35,                1.0,             0.0, 'u', U_NONE},
   {"pos_focus_osc",'w',   LOOP8, 36,                1.0,             0.0, 'u', U_NONE},
@@ -856,14 +856,30 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_63_act",  'r',  ACS2_A1, 23,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
   {"lvdt_64_act",  'r',  ACS2_A1, 25,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
   //{"sbsc_trig",	   'r',	 ACS2_A1, 27,		      1.0,	      0.0, 'u', U_NONE},
-  {"v1_1_pss",     'r',  ACS2_A1, 29,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v2_1_pss",     'r',  ACS2_A1, 31,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v3_1_pss",     'r',  ACS2_A1, 33,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v4_1_pss",     'r',  ACS2_A1, 35,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v1_2_pss",     'r',  ACS2_A1, 37,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v2_2_pss",     'r',  ACS2_A1, 39,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v3_2_pss",     'r',  ACS2_A1, 41,           CAL16(-1.,            0.),  'u', U_V_V},
-  {"v4_2_pss",     'r',  ACS2_A1, 43,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v1_1_pss",     'r',  ACS2_A2,  1,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v2_1_pss",     'r',  ACS2_A2,  3,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v3_1_pss",     'r',  ACS2_A2,  5,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v4_1_pss",     'r',  ACS2_A2,  7,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v1_2_pss",     'r',  ACS2_A2, 11,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v2_2_pss",     'r',  ACS2_A2, 13,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v3_2_pss",     'r',  ACS2_A2, 15,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v4_2_pss",     'r',  ACS2_A2, 17,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v1_3_pss",     'r',  ACS2_A2, 19,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v2_3_pss",     'r',  ACS2_A2, 21,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v3_3_pss",     'r',  ACS2_A2, 23,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v4_3_pss",     'r',  ACS2_A2, 25,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v1_4_pss",     'r',  ACS2_A2, 27,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v2_4_pss",     'r',  ACS2_A2, 29,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v3_4_pss",     'r',  ACS2_A2, 31,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v4_4_pss",     'r',  ACS2_A2, 33,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v1_5_pss",     'r',  ACS2_A2, 35,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v2_5_pss",     'r',  ACS2_A2, 37,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v3_5_pss",     'r',  ACS2_A2, 39,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v4_5_pss",     'r',  ACS2_A2, 41,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v1_6_pss",     'r',  ACS2_A2, 43,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v2_6_pss",     'r',  ACS2_A2, 45,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v3_6_pss",     'r',  ACS2_A2, 47,           CAL16(-1.,            0.),  'u', U_V_V},
+  {"v4_6_pss",     'r',  ACS2_A2, 49,           CAL16(-1.,            0.),  'u', U_V_V},
 
 #endif
 
