@@ -60,12 +60,12 @@
 /* Calibrations of the az of each sensor  */
 #define MAG_ALIGNMENT      -164.6968
 #define PSS_ALIGNMENT	  0.0
-#define PSS1_ALIGNMENT    (PSS_ALIGNMENT + 23.0)
-#define PSS2_ALIGNMENT    (PSS_ALIGNMENT + 46.0)
-#define PSS3_ALIGNMENT    (PSS_ALIGNMENT + 69.0)
-#define PSS4_ALIGNMENT    (PSS_ALIGNMENT + 92.0)
-#define PSS5_ALIGNMENT    (PSS_ALIGNMENT + 115.0)
-#define PSS6_ALIGNMENT    (PSS_ALIGNMENT + 138.0)
+#define PSS1_ALIGNMENT    (PSS_ALIGNMENT + 35.0)
+#define PSS2_ALIGNMENT    (PSS_ALIGNMENT + 70.0)
+#define PSS3_ALIGNMENT    (PSS_ALIGNMENT + 105.0)
+#define PSS4_ALIGNMENT    (PSS_ALIGNMENT + 140.0)
+#define PSS5_ALIGNMENT    (PSS_ALIGNMENT + 175.0)
+#define PSS6_ALIGNMENT    (PSS_ALIGNMENT + 210.0)
 #define DGPS_ALIGNMENT    2.0232
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
