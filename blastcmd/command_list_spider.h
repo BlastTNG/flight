@@ -16,8 +16,8 @@
 
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 145        /* total number of single word cmds */
-#define N_MCOMMANDS  91        /* total number of multiword commands */
+#define N_SCOMMANDS 163        /* total number of single word cmds */
+#define N_MCOMMANDS 110        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -37,9 +37,9 @@
 #define GR_BIAS         0x00000020
 #define GR_VETO         0x00000040
 #define GR_ACT          0x00000080
-#define GR_SBSC		0x00000100
+#define GR_BSC		0x00000100
 #define GR_GAIN         0x00000200
-//#define GR_FOCUS        0x00000400	  //unused
+#define GR_RSC          0x00000400
 #define GR_CRYO_HEAT    0x00000800
 #define GR_POWER        0x00001000
 #define GR_LOCK         0x00002000
@@ -94,8 +94,13 @@ enum singleCommand {
   vtx1_isc,	     vtx1_osc,		vtx1_sbsc,	   vtx2_isc,
   vtx2_osc,	     vtx2_sbsc,
   sbsc_off,	     sbsc_on,		sbsc_cam_cycle,	   sbsc_cpu_cycle,
+  thegood_off,	     thegood_on,	thegood_cam_cycle, thegood_cpu_cycle,
+  thebad_off,	     thebad_on,		thebad_cam_cycle,  thebad_cpu_cycle,
   cam_expose,	     cam_autofocus,	cam_settrig_ext,   cam_force_lens, 
-  cam_unforce_lens,  hwpr_step,         hwpr_pot_is_dead,  hwpr_pot_is_alive,
+  thegood_expose,    thegood_autofocus,	thegood_settrig_ext,thegood_force_lens, 
+  thebad_expose,     thebad_autofocus,	thebad_settrig_ext,thebad_force_lens, 
+  thegood_unforce_lens,thebad_unforce_lens,cam_unforce_lens,  
+  hwpr_step,         hwpr_pot_is_dead,  hwpr_pot_is_alive,
   hwpr_step_off,     hwpr_step_on,
   //theo heater commands. TODO-theo assign non-temporary names
   hk_t0_heat_on,     hk_t0_heat_off,    hk_t1_heat_on,     hk_t1_heat_off,
@@ -126,10 +131,15 @@ enum multiCommand {
   motors_verbose,    hwpr_set_backlash,
   cam_any,	     cam_settrig_timed, cam_exp_params,	   cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	   cam_lens_move,
+  thegood_any,	     thegood_settrig_timed,thegood_exp_params,thegood_focus_params,
+  thegood_bad_pix,   thegood_blob_params,thegood_lens_any, thegood_lens_move,
+  thebad_any,	     thebad_settrig_timed,thebad_exp_params,thebad_focus_params,
+  thebad_bad_pix,    thebad_blob_params,thebad_lens_any,   thebad_lens_move,
+  thegood_lens_params,thebad_lens_params,
   table_move,	     table_move_g,	table_gain, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,       hwpr_define_pos,
   hwpr_goto,	     ants_gps,          hwpr_goto_pot,     act_enc_trim,
-  hwpr_vel,          hwpr_i,
+  hwpr_vel,          hwpr_i,		t_rsc_set,
   hk_pump_heat_on,   hk_pump_heat_off,  hk_heat_switch_on, hk_heat_switch_off,
   hk_fphi_heat_on,   hk_fphi_heat_off,  hk_tile_heat_on,   hk_tile_heat_off,
   hk_fplo_heat_set,  hk_ssa_heat_set,   hk_ampl_cernox,    hk_ampl_ntd,

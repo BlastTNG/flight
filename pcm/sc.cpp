@@ -42,7 +42,7 @@ extern "C" {
 #include "sbsc_protocol.h"
 
 //allow any host to be the star camera
-#define CAM_SERVERNAME "192.168.1.115"
+#define CAM_SERVERNAME "192.168.1.109"
 
 #define SBSC_SERIAL "08073506"
 
