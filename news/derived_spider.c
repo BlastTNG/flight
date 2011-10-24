@@ -132,7 +132,7 @@ union DerivedUnion DerivedChannels[] = {
 #endif
 
   /* ISC and OSC */
-  COMMENT("Star Camera State"),
+/*  COMMENT("Star Camera State"),
   BITFIELD("state_isc",
       "SAVE_IMAGES_ISC",
       "PAUSE_ISC",
@@ -166,7 +166,7 @@ union DerivedUnion DerivedChannels[] = {
       "PULSE_OSC",
       "PULSE_SBSC"
       ),
-
+*/
   COMMENT("ACS Digital Signals"),
 
   BITFIELD("bits_bal",

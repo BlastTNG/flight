@@ -189,6 +189,8 @@ struct CommandDataStruct {
   struct PivGainStruct pivot_gain;
 
   struct SBSCCommandData cam;
+  struct SBSCCommandData thegood;
+  struct SBSCCommandData thebad;
   struct TableStruct table;
 
   struct {

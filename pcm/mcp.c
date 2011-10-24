@@ -92,6 +92,7 @@ void FrameFileWriter(void);         //framefile.c
 void CompressionWriter(void);
 void StageBus(void);
 void openSBSC(void);
+void openRSC(void);
 
 void InitialiseFrameFile(char);
 void pushDiskFrame(unsigned short *RxFrame);
@@ -1235,6 +1236,7 @@ int main(int argc, char *argv[])
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
   openSBSC();  // SBSC - creates thread in sbsc.cpp
+  openRSC();  // RSC - creates thread in rsc.cpp
 #endif
 
 

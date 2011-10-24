@@ -30,14 +30,14 @@ class RSCCommunicator{
     string looplessRead();
 
     //send a return value to the flight computer
-    int sendReturn(const RSCReturn* returnStruct);
+    int sendReturn(const SBSCReturn* returnStruct);
     int sendReturnString(string returnStr);
     //or build a return without actually sending it
-    static string buildReturn(const RSCReturn* returnStruct);
+    static string buildReturn(const SBSCReturn* returnStruct);
     static string buildReturnString(string returnStr);
 
     //functions for use on "flight computer"
-    static RSCReturn* interpretReturn(string returnString, RSCReturn* rtn);
+    static SBSCReturn* interpretReturn(string returnString, SBSCReturn* rtn);
     int sendCommand(string cmd);
     int sendCommand(const char* cmd);      //in case flight uses C only
 

@@ -29,6 +29,7 @@
 #include <pthread.h>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 extern "C" {
 #include "share/blast.h"
@@ -77,7 +78,6 @@ int sendRSCCommand(const char *cmd)
  * open a connection the the star camera computer
  * also creates the communications thread
  */
-//TODO add to mcp.c
 void openRSC()
 {
   bprintf(info, "connecting to the RSC");
@@ -90,8 +90,6 @@ void openRSC()
  * meant to be called in mcp slow loop (5Hz)
  */
 void RSCFields() 
-//TODO add all these fields to tx_struct!
-//TODO add to tx.c after cameraFields, change cameraFields to BSCFields
 {
   static int firsttime = 1;
   SBSCReturn* rsc = NULL;
@@ -198,7 +196,6 @@ void RSCFields()
       TheBadBlobS[i] = GetNiosAddr(buf);
     }
   }
-//TODO add fields to CommandData, change CommandData.cam to CommandData.theugly
   WriteData(TheGoodforceAddr, CommandData.thegood.forced, NIOS_QUEUE);
   WriteData(TheBadforceAddr, CommandData.thebad.forced, NIOS_QUEUE);
   WriteData(TheGoodexpIntAddr, CommandData.thegood.expInt, NIOS_QUEUE);
@@ -304,7 +301,8 @@ static void* RSCReadLoop(void* arg)
   }
   bprintf(startup, "talking to camera");
 
-  sendRSCCommand("Oconf");  //request configuration data
+  sendRSCCommand("GOconf");  //request The Good configuration data
+  sendRSCCommand("BOconf");  //request The Bad configuration data
 
   while(true) {
     camComm->readLoop(&parseReturn);
@@ -330,7 +328,7 @@ static string parseReturn(string rtnStr)
     if (Rstr[0] == 'E') //it is an error
       bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
 
-    else if (Rstr.substr(0,6) == "<TheGoodconf>") //contains The Good config data
+    else if (Rstr.substr(0,6) == "<Gconf>") //contains The Good config data
     {
       Rstr = Rstr.substr(6, Rstr.size()-6);
       istringstream sin;
@@ -346,7 +344,7 @@ static string parseReturn(string rtnStr)
 	>> CommandData.thegood.minBlobDist;
       CommandData.thegood.expTime = (int)(temp * 1000);
     }
-    else if (Rstr.substr(0,6) == "<TheBadconf>") //contains The Bad config data
+    else if (Rstr.substr(0,6) == "<Bconf>") //contains The Bad config data
     {
       Rstr = Rstr.substr(6, Rstr.size()-6);
       istringstream sin;

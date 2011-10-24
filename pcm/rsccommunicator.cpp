@@ -22,7 +22,7 @@ extern "C" {
 #define CLIENT_RETRY_DELAY 1000000
 
 
-extern "C" int EthernetRSC;      /* TODO add to tx.c */
+extern "C" int EthernetRSC;
 pthread_mutex_t rscmutex;
 extern "C" int sendRSCCommand(const char *cmd); //rsc.cpp
 
@@ -70,14 +70,14 @@ void RSCCommunicator::Init()
 
 /*
 
-init_sockaddr:
+r_init_sockaddr:
 
 non-member socket utility function lifted from glibc docs
 initializes the sockaddr structure given a hostname and port
 changed to return -1 on error, 0 on success
 
 */
-int init_sockaddr(sockaddr_in *name, const char* hostname, uint16_t port)
+int r_init_sockaddr(sockaddr_in *name, const char* hostname, uint16_t port)
 {
   hostent *hostinfo;
   name->sin_family = AF_INET;
@@ -117,10 +117,10 @@ int RSCCommunicator::openHost(string target)
   int retval;
   if (addrStr == "any") {
     //use a dummy hostname ad then change the address afterwards
-    retval = init_sockaddr(&servaddr, "127.0.0.1", portnum);
+    retval = r_init_sockaddr(&servaddr, "127.0.0.1", portnum);
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   }
-  else retval = init_sockaddr(&servaddr, addrStr.c_str(), portnum);
+  else retval = r_init_sockaddr(&servaddr, addrStr.c_str(), portnum);
   if (retval < 0) return errorFlag = -1;  //something went wrong
 
   //now create a TCP socket, bind it to the target address, and listen on it
@@ -186,7 +186,7 @@ int RSCCommunicator::openClient(string target)
 
   //create a sockaddr_in structure with this information
   sockaddr_in servaddr;
-  if (init_sockaddr(&servaddr, addrStr.c_str(), portnum) < 0)
+  if (r_init_sockaddr(&servaddr, addrStr.c_str(), portnum) < 0)
     return errorFlag = -1;
   //create the socket and try to connect
   commFD = socket(PF_INET, SOCK_STREAM, 0);
@@ -395,7 +395,7 @@ Sends data in rtn back to "flight computer"
 returns number of characters written or -1 on error
 
 */
-string RSCCommunicator::buildReturn(const RSCReturn* rtn)
+string RSCCommunicator::buildReturn(const SBSCReturn* rtn)
 {
   ostringstream sout;
   sout << rtn->frameNum << " " << rtn->mapmean << " " << rtn->sigma << " " << rtn->exposuretime << " " 
@@ -415,7 +415,7 @@ string RSCCommunicator::buildReturn(const RSCReturn* rtn)
   return output;
 }
 
-int RSCCommunicator::sendReturn(const RSCReturn* rtn)
+int RSCCommunicator::sendReturn(const SBSCReturn* rtn)
 {
 #if RSC_COMM_DEBUG
   cerr << "[Comm debug]: in sendReturn method" << endl;
@@ -449,7 +449,7 @@ For use on "flight computer". Interprets data sent via sendReturn
 pass pointer to already declared struct to populate
 
 */
-RSCReturn* RSCCommunicator::interpretReturn(string returnString, RSCReturn* rtn)
+SBSCReturn* RSCCommunicator::interpretReturn(string returnString, SBSCReturn* rtn)
 {
 #if RSC_COMM_DEBUG
   cerr << "[Comm debug]: in interpretReturn method" << endl;

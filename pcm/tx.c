@@ -56,10 +56,8 @@ extern int StartupVeto;
 
 short int InCharge = 0;
 
-int EthernetSun = 3;
-int EthernetIsc = 3;
-int EthernetOsc = 3;
 int EthernetSBSC = 3;
+int EthernetRSC = 3;
 
 extern struct AxesModeStruct axes_mode; /* motors.c */
 
@@ -96,6 +94,8 @@ double calcVSerRW(void);
 
 /* in sbsc.cpp */
 void cameraFields();        
+/* in rsc.cpp */
+void RSCFields();        
 
 /* in table.cpp */
 void updateTableSpeed();
@@ -222,10 +222,8 @@ static void WriteAux(void)
   WriteData(rateIridiumAddr, CommandData.iridium_bw, NIOS_QUEUE);
 
   WriteData(statusEthAddr, 
-       (EthernetSun & 0x3) + 
-       ((EthernetIsc & 0x3) << 2) + 
-       ((EthernetOsc & 0x3) << 4) +
-       ((EthernetSBSC & 0x3) << 6),  
+       (EthernetSBSC & 0x3) + 
+       ((EthernetRSC & 0x3) << 2), 
        NIOS_QUEUE);
 
   mccstatus =        
@@ -488,10 +486,8 @@ static void StoreData(int index)
   static struct NiosStruct* elSunAddr;
   static struct NiosStruct* azIscAddr;
   static struct NiosStruct* elIscAddr;
-  static struct NiosStruct* sigmaIscAddr;
   static struct NiosStruct* azOscAddr;
   static struct NiosStruct* elOscAddr;
-  static struct NiosStruct* sigmaOscAddr;
   static struct NiosStruct* elEncAddr;
   static struct NiosStruct* sigmaEncAddr;
   static struct NiosStruct* elClinAddr;
@@ -632,10 +628,8 @@ static void StoreData(int index)
     azPssAddr = GetNiosAddr("az_pss");  // evolved az
     azIscAddr = GetNiosAddr("az_isc");
     elIscAddr = GetNiosAddr("el_isc");
-    sigmaIscAddr = GetNiosAddr("sigma_isc");
     azOscAddr = GetNiosAddr("az_osc");
     elOscAddr = GetNiosAddr("el_osc");
-    sigmaOscAddr = GetNiosAddr("sigma_osc");
     elEncAddr = GetNiosAddr("el_enc");
     sigmaEncAddr = GetNiosAddr("sigma_enc");
     elClinAddr = GetNiosAddr("el_clin");
@@ -1202,6 +1196,7 @@ void UpdateBBCFrame()
     ControlPower();
     VideoTx();
     cameraFields();
+    RSCFields();
 #endif
   }
 

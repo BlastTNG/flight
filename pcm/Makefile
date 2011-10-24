@@ -19,6 +19,7 @@ HEADERS = amccommand.h share/bbc_pci.h share/blast.h share/channels.h \
 	  share/derived.h share/ephem_read.h share/ephem_types.h ezstep.h \
 	  share/fir.h share/lut.h mcp.h motordefs.h \
 	  share/netcmd.h pointing_struct.h sbsc_protocol.h sbsccommunicator.h \
+	  rsccommunicator.h \
 	  slow_dl.h share/starpos.h tx.h drivecommunicator.h motorcommand.h
 		
 
@@ -34,6 +35,7 @@ OBJS := $(OBJS) amccommand.o auxiliary.o chrgctrl.o share/compressfuncs.o \
 		share/crc.o dgps.o share/ephem_read.o share/fir.o \
 		share/geomag.o motors.o pointing.o share/radbox.o sbsc.o \
 		sbsccommunicator.o sched.o slow_dl.o share/starpos.o \
+		rsc.o rsccommunicator.o \
 		drivecommunicator.o motorcommand.o table.o
 endif
 
