@@ -100,7 +100,7 @@ extern char lst0str[82];
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
 
-/* in sbsc.cpp: */
+/* in sc.cpp: */
 int sendBSCCommand(const char *cmd);
 int sendRSCCommand(const char *cmd);
 

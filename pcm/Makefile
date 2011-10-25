@@ -32,7 +32,7 @@ ifndef BOLOTEST
 OBJS := $(OBJS) amccommand.o auxiliary.o chrgctrl.o share/compressfuncs.o \
   		share/compressionwriter.o compressstruct.o \
 		share/crc.o dgps.o share/ephem_read.o share/fir.o \
-		share/geomag.o motors.o pointing.o share/radbox.o sbsc.o \
+		share/geomag.o motors.o pointing.o share/radbox.o sc.o \
 		camcommunicator.o sched.o slow_dl.o share/starpos.o \
 		drivecommunicator.o motorcommand.o table.o
 endif

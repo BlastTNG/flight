@@ -91,7 +91,7 @@ void UpdateAxesMode(void);
 void WriteMot(int TxIndex);
 double calcVSerRW(void);
 
-/* in sbsc.cpp */
+/* in sc.cpp */
 void cameraFields();        
 
 /* in table.cpp */

@@ -25,7 +25,7 @@ extern "C" {
 extern "C" int EthernetSC[2];      /* tx.c */
 pthread_mutex_t scmutex;
 short int bsc_trigger;
-extern "C" int sendBSCCommand(const char *cmd); //sbsc.cpp
+extern "C" int sendBSCCommand(const char *cmd); //sc.cpp
 
 /*
 
