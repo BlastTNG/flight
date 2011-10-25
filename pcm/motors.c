@@ -93,8 +93,8 @@ extern short int InCharge; /* tx.c */
 
 extern int StartupVeto; /* mcp.c */
 
-extern short int sbsc_trigger; /* Semaphore for SBSC trigger */
-#define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_sbsc */
+extern short int bsc_trigger; /* Semaphore for BSC trigger */
+#define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_bsc */
 
 double az_accel = 0.1;
 
@@ -807,15 +807,15 @@ static void SetAzScanMode(double az, double left, double right, double v,
 #endif
       }
     }
-    /* SBSC Trigger flag */
+    /* BSC Trigger flag */
     before_trig = DELAY - v/CommandData.az_accel 
-    + CommandData.cam.expTime/2000;
+    + CommandData.theugly.expTime/2000;
     if (az < left + before_trig*v) {
-      sbsc_trigger = 1;  
+      bsc_trigger = 1;  
     } else if (az > right - before_trig*v) {
-      sbsc_trigger = 1;
+      bsc_trigger = 1;
     } else {
-      sbsc_trigger = 0;
+      bsc_trigger = 0;
     }
 }
 
@@ -1185,7 +1185,7 @@ static void DoRaDecGotoMode(void)
   axes_mode.el_dest = cel;
   axes_mode.el_vel = 0.0;
   //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-  sbsc_trigger = 1;
+  bsc_trigger = 1;
 }
 
 static void DoNewCapMode(void)
@@ -1807,7 +1807,7 @@ void UpdateAxesMode(void)
               + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
          > MAX_ISC_SLOW_PULSE_SPEED) ? 1 : 0;
 #endif
-      sbsc_trigger = 1;
+      bsc_trigger = 1;
       break;
     case P_AZEL_GOTO:
       axes_mode.el_mode = AXIS_POSITION;
@@ -1817,7 +1817,7 @@ void UpdateAxesMode(void)
       axes_mode.az_dest = CommandData.pointing_mode.X;
       axes_mode.az_vel = 0.0;
       //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      sbsc_trigger = 1;
+      bsc_trigger = 1;
       break;
     case P_AZ_SCAN:
       DoAzScanMode();
@@ -1850,7 +1850,7 @@ void UpdateAxesMode(void)
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
       //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      sbsc_trigger = 1;
+      bsc_trigger = 1;
       break;
     default:
       bprintf(warning, "Pointing: Unknown Elevation Pointing Mode %d: "
@@ -1867,7 +1867,7 @@ void UpdateAxesMode(void)
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
       //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      sbsc_trigger = 1;
+      bsc_trigger = 1;
       break;
   }
   last_mode = CommandData.pointing_mode.mode;

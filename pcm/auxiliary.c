@@ -62,7 +62,7 @@
  * broken */
 #define MIN_GYBOX_TEMP ((223.15 / M_16T) - B_16T)   /* -50 C */
 #define MAX_GYBOX_TEMP ((333.15 / M_16T) - B_16T)   /* +60 C */
-#define MIN_SBSC_TEMP  ((223.15 / M_16T) - B_16T)   /* -50 C */
+#define MIN_BSC_TEMP  ((223.15 / M_16T) - B_16T)   /* -50 C */
  
 /* Gybox heater stuff */
 #define GY_HEAT_MAX 40 /* percent */
@@ -75,7 +75,7 @@
 extern short int InCharge; /* tx.c */
 
 /* ACS2 digital signals */
-#define SBSC_HEAT    0x01  /* ACS1_D Spare-0 */
+#define BSC_HEAT    0x01  /* ACS1_D Spare-0 */
 
 #define PUMP_MAX 26214      /*  3.97*2.0V   */
 #define PUMP_MIN  3277      /*  3.97*0.25V   */
@@ -186,36 +186,36 @@ void ControlGyroHeat()
 }
 
 /************************************************************************/
-/*    ControlSBSCHeat:  Controls SBSC temp		                */
+/*    ControlBSCHeat:  Controls BSC temp		                */
 /************************************************************************/
-
-static int ControlSBSCHeat()
+/*
+static int ControlBSCHeat()
 {
 
-  static struct BiPhaseStruct *tSBSCAddr;
+  static struct BiPhaseStruct *tBSCAddr;
   static int firsttime = 1;
 
   unsigned int temp;
 
   if (firsttime) {
     firsttime = 0;
-    tSBSCAddr = GetBiPhaseAddr("t_sbsc");
+    tBSCAddr = GetBiPhaseAddr("t_bsc");
   }
 
-  temp = slow_data[tSBSCAddr->index][tSBSCAddr->channel]; 
+  temp = slow_data[tBSCAddr->index][tBSCAddr->channel]; 
 
-  if (temp > MIN_SBSC_TEMP) {
-      if (temp < CommandData.t_set_sbsc) {
+  if (temp > MIN_BSC_TEMP) {
+      if (temp < CommandData.t_set_bsc) {
 	return 0x1;	
       } else {
 	return 0x0;
       }
   } else {
-    /* Turn off heater if thermometer appears broken */
+    // Turn off heater if thermometer appears broken 
     return 0x0;
   }
 }
-
+*/
 void ChargeController(void)
 {
 
@@ -283,13 +283,13 @@ void ControlPower(void) {
     switchMiscAddr = GetNiosAddr("switch_misc");
   }
 
-  if (CommandData.power.sbsc_cam_off) {
-    if (CommandData.power.sbsc_cam_off > 0) CommandData.power.sbsc_cam_off--;
+  if (CommandData.power.theugly_cam_off) {
+    if (CommandData.power.theugly_cam_off > 0) CommandData.power.theugly_cam_off--;
     misc |= 0x02;
   }
 
-  if (CommandData.power.sbsc_cpu_off) {
-    if (CommandData.power.sbsc_cpu_off > 0) CommandData.power.sbsc_cpu_off--;
+  if (CommandData.power.theugly_cpu_off) {
+    if (CommandData.power.theugly_cpu_off > 0) CommandData.power.theugly_cpu_off--;
     misc |= 0x04;
   }
 
@@ -419,7 +419,7 @@ void ControlPower(void) {
     if (CommandData.power.rx_amps.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0a00;
   }
 
-  misc |= ControlSBSCHeat();
+//  misc |= ControlBSCHeat();
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
@@ -438,9 +438,9 @@ void VideoTx(void)
     bitsVtxAddr = GetNiosAddr("bits_vtx");
   }
 
-  if (CommandData.vtx_sel[0] == vtx_sbsc) vtx_bits |= 0x3;
+  if (CommandData.vtx_sel[0] == vtx_bsc) vtx_bits |= 0x3;
   else if (CommandData.vtx_sel[0] == vtx_osc) vtx_bits |= 0x1;
-  if (CommandData.vtx_sel[1] == vtx_sbsc) vtx_bits |= 0xc;
+  if (CommandData.vtx_sel[1] == vtx_bsc) vtx_bits |= 0xc;
   else if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0x4;
 
   WriteData(bitsVtxAddr, vtx_bits, NIOS_QUEUE);

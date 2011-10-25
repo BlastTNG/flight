@@ -143,7 +143,7 @@ struct latch_pulse {
 };
 
 
-struct SBSCCommandData {
+struct SCCommandData {
   //camera and lens configuration
   short int forced;  //are lens moves forced?
   int expInt;        //exposure interval (ms) (0=triggered)
@@ -182,15 +182,15 @@ struct CommandDataStruct {
   unsigned int tdrss_bw;
   unsigned int iridium_bw;
   
-  enum {vtx_isc, vtx_osc, vtx_sbsc} vtx_sel[2];
+  enum {vtx_isc, vtx_osc, vtx_bsc} vtx_sel[2];
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
 
-  struct SBSCCommandData cam;
-  struct SBSCCommandData thegood;
-  struct SBSCCommandData thebad;
+  struct SCCommandData thegood;
+  struct SCCommandData thebad;
+  struct SCCommandData theugly;
   struct TableStruct table;
 
   struct {
@@ -213,10 +213,10 @@ struct CommandDataStruct {
     int hub232_off;
     int thegood_cpu_off;
     int thebad_cpu_off;
-    int sbsc_cpu_off;
+    int theugly_cpu_off;
     int thegood_cam_off;
     int thebad_cam_off;
-    int sbsc_cam_off;
+    int theugly_cam_off;
     unsigned char adc_reset[16];
   } power;
 
@@ -246,7 +246,7 @@ struct CommandDataStruct {
     struct GainStruct gain;
   } gyheat;
 
-  double t_set_sbsc;
+  double t_set_bsc;
   double t_set_rsc;
 
   unsigned char use_elenc;

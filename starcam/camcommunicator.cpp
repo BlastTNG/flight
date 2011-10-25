@@ -9,7 +9,9 @@
 #include <netdb.h>      //for gethostbyname
 #include <cstdlib>
 #include "camcommunicator.h"
-
+extern "C" {
+#include "share/blast.h"
+}
 #define CAM_COMM_DEBUG 0
 #if CAM_COMM_DEBUG
 #include <iostream>
@@ -19,6 +21,11 @@
 //how long to wait after failed connection attempt to try again (us)
 #define CLIENT_RETRY_DELAY 1000000
 
+
+extern "C" int EthernetSC[2];      /* tx.c */
+pthread_mutex_t scmutex;
+short int bsc_trigger;
+extern "C" int sendBSCCommand(const char *cmd); //sbsc.cpp
 
 /*
 
@@ -167,6 +174,10 @@ int CamCommunicator::openHost(string target)
 */
 int CamCommunicator::openClient(string target)
 {
+	int flag;
+	if (target == "192.168.1.11") flag=0; 	//RSC
+	else flag=1; 				//BSC
+  	EthernetSC[flag] = 3; /* Unknown state */
 	if (commFD >= 0) return -1;   //already an open connection
 	
 	//separate the port and address parts of the target
@@ -192,18 +203,23 @@ int CamCommunicator::openClient(string target)
 //	setsockopt(commFD, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
 	while ( true ) {
 		if ( connect(commFD, (sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+      			if (errno == ENETUNREACH || errno == EHOSTUNREACH || errno == EHOSTDOWN) /* No route to host */
+        			EthernetSC[flag] = 1;
 			if (errno == ECONNREFUSED) {  //nobody is listening
+				EthernetSC[flag] = 2;
 #if CAM_COMM_DEBUG
 				cerr << "[Comm debug]: connection refused (nobody listening?) trying again in a bit" << endl;
 #endif	
 				usleep(CLIENT_RETRY_DELAY);
 			} else {  //some other error
+				EthernetSC[flag] = 3;
 				closeConnection();  //close server
 				return errorFlag = -1;
 			}
 		}
 		else break;
 	}
+  	EthernetSC[flag] = 0;
 #if CAM_COMM_DEBUG
 	cerr << "[Comm debug]: connection successful" << endl;
 #endif	
@@ -298,17 +314,32 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
 	cerr << "[Comm debug]: in readLoop method" << endl;
 #endif
 	fd_set input;
+  	timeval read_timeout;
+  	read_timeout.tv_sec = 0;
+  	read_timeout.tv_usec = 0;
 	char buf[CAM_COMM_BUF_SIZE];
 	string line = "";
 	string rtnStr;
 	int n;
+  	static int pulsewait = 0;
 	string::size_type pos;
 	if (commFD == -1) return;          //communications aren't open
 	
 	while (1) {
+    		usleep(100000);
+    		pulsewait++;
+    		if (bsc_trigger) {
+      			if (pulsewait > 24) {
+				sendBSCCommand("CtrigExp");
+        			bsc_trigger = 0;
+        			pulsewait = 0;
+      			} else {
+				bsc_trigger = 0;
+	        	}
+		}    
 		FD_ZERO(&input);
 		FD_SET(commFD, &input);
-		if (select(commFD+1, &input, NULL, NULL, NULL) < 0) //won't time out
+    		if (select(commFD+1, &input, NULL, NULL, &read_timeout) < 0)
 			return;
 		if (!FD_ISSET(commFD, &input)) return;  //should always be false
 		if ((n = read(commFD, buf, CAM_COMM_BUF_SIZE-1)) < 0) return;
@@ -320,8 +351,7 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
 			if (temp == "repairfail") return; //something bad has happened
 			else if (temp != "") line += temp;  //link wasn't dead
 			//otherwise, link has been reestablished, continue
-		}
-		else { //n > 0
+		} else { //n > 0
 #if CAM_COMM_DEBUG
 			cerr << "[Comm debug]: readloop just read " << n << " bytes: " << buf << endl;
 #endif
@@ -469,6 +499,7 @@ StarcamReturn* CamCommunicator::interpretReturn(string returnString, StarcamRetu
 */
 int CamCommunicator::sendCommand(string cmd)
 {
+  	pthread_mutex_lock(&scmutex);
 #if CAM_COMM_DEBUG
 	cerr << "[Comm debug]: in sendCommand method with: " << cmd << endl;
 #endif
@@ -489,7 +520,10 @@ int CamCommunicator::sendCommand(string cmd)
 	if (select(commFD+1, NULL, &output, NULL, NULL) < 0) //doesn't time out
 		return -1;
 	if (!FD_ISSET(commFD, &output)) return -1;  //should always be false
-	return write(commFD, cmd.c_str(), cmd.length());
+  	//return write(commFD, cmd.c_str(), cmd.length());
+  	int n = write(commFD, cmd.c_str(), cmd.length());
+  	pthread_mutex_unlock(&scmutex);
+  	return n;
 }
 
 int CamCommunicator::sendCommand(const char* cmd)       //in case flight wants to use C only

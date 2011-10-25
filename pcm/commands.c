@@ -100,8 +100,9 @@ extern char lst0str[82];
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
 
-int sendSBSCCommand(const char *cmd); //sbsc.cpp
-int sendRSCCommand(const char *cmd); //rsc.cpp
+/* in sbsc.cpp: */
+int sendBSCCommand(const char *cmd);
+int sendRSCCommand(const char *cmd);
 
 /** Write the Previous Status: called whenever anything changes */
 static void WritePrevStatus()
@@ -581,20 +582,6 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case gybox_cycle:
       CommandData.power.gybox_off = PCYCLE_HOLD_LEN;
       break;
-    case sbsc_off:
-      CommandData.power.sbsc_cam_off = -1;
-      CommandData.power.sbsc_cpu_off = -1;
-      break;
-    case sbsc_on:
-      CommandData.power.sbsc_cam_off = 0;
-      CommandData.power.sbsc_cpu_off = 0;
-      break;
-    case sbsc_cam_cycle:
-      CommandData.power.sbsc_cam_off = PCYCLE_HOLD_LEN;
-      break;
-    case sbsc_cpu_cycle:
-      CommandData.power.sbsc_cpu_off = PCYCLE_HOLD_LEN;
-      break;
     case thegood_off:
       CommandData.power.thegood_cam_off = -1;
       CommandData.power.thegood_cpu_off = -1;
@@ -622,6 +609,20 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case thebad_cpu_cycle:
       CommandData.power.thebad_cpu_off = PCYCLE_HOLD_LEN;
+      break;
+    case theugly_off:
+      CommandData.power.theugly_cam_off = -1;
+      CommandData.power.theugly_cpu_off = -1;
+      break;
+    case theugly_on:
+      CommandData.power.theugly_cam_off = 0;
+      CommandData.power.theugly_cpu_off = 0;
+      break;
+    case theugly_cam_cycle:
+      CommandData.power.theugly_cam_off = PCYCLE_HOLD_LEN;
+      break;
+    case theugly_cpu_cycle:
+      CommandData.power.theugly_cpu_off = PCYCLE_HOLD_LEN;
       break;
     case hub232_off:
       CommandData.power.hub232_off = -1;
@@ -709,15 +710,15 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       /***************************************/
       /********* The Bad Commanding  *************/
     case thebad_expose:
-      sendSBSCCommand("BCtrigExp");
+      sendBSCCommand("BCtrigExp");
       break;
     case thebad_autofocus:
       if (CommandData.thebad.forced)
-	sendSBSCCommand("BCtrigFocusF");
-      else sendSBSCCommand("BCtrigFocus");
+	sendBSCCommand("BCtrigFocusF");
+      else sendBSCCommand("BCtrigFocus");
       break;
     case thebad_settrig_ext:
-      sendSBSCCommand("BCsetExpInt=0");
+      sendBSCCommand("BCsetExpInt=0");
       CommandData.thebad.expInt = 0;
       break;
     case thebad_force_lens:
@@ -728,23 +729,23 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       break;
       /***************************************/
       /********* The Ugly Commanding  *************/
-    case cam_expose:
-      sendSBSCCommand("CtrigExp");
+    case theugly_expose:
+      sendBSCCommand("CtrigExp");
       break;
-    case cam_autofocus:
-      if (CommandData.cam.forced)
-	sendSBSCCommand("CtrigFocusF");
-      else sendSBSCCommand("CtrigFocus");
+    case theugly_autofocus:
+      if (CommandData.theugly.forced)
+	sendBSCCommand("CtrigFocusF");
+      else sendBSCCommand("CtrigFocus");
       break;
-    case cam_settrig_ext:
-      sendSBSCCommand("CsetExpInt=0");
-      CommandData.cam.expInt = 0;
+    case theugly_settrig_ext:
+      sendBSCCommand("CsetExpInt=0");
+      CommandData.theugly.expInt = 0;
       break;
-    case cam_force_lens:
-      CommandData.cam.forced = 1;
+    case theugly_force_lens:
+      CommandData.theugly.forced = 1;
       break;
-    case cam_unforce_lens:
-      CommandData.cam.forced = 0;
+    case theugly_unforce_lens:
+      CommandData.theugly.forced = 0;
       break;
 
     case blast_rocks:
@@ -768,8 +769,8 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case vtx1_osc:
       CommandData.vtx_sel[0] = vtx_osc;
       break;
-    case vtx1_sbsc:
-      CommandData.vtx_sel[0] = vtx_sbsc;
+    case vtx1_bsc:
+      CommandData.vtx_sel[0] = vtx_bsc;
       break;
     case vtx2_isc:
       CommandData.vtx_sel[1] = vtx_isc;
@@ -777,8 +778,8 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case vtx2_osc:
       CommandData.vtx_sel[1] = vtx_osc;
       break;
-    case vtx2_sbsc:
-      CommandData.vtx_sel[1] = vtx_sbsc;
+    case vtx2_bsc:
+      CommandData.vtx_sel[1] = vtx_bsc;
       break;
 #endif
     case hwpr_step:
@@ -997,7 +998,7 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
   int i, j;
-  char buf[256]; //for SBSC Commands
+  char buf[256]; //for SC Commands
   int is_new;
 
   /* Update CommandData struct with new info
@@ -1422,11 +1423,11 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.gyheat.gain.I = ivalues[1];
       CommandData.gyheat.gain.D = ivalues[2];
       break;
-    case t_sbsc_set:  /* SBSC heater setpoint */
-      CommandData.t_set_sbsc = rvalues[0];
-      break;
-    case t_rsc_set:  /* SBSC heater setpoint */
+    case t_rsc_set:  /* RSC heater setpoint */
       CommandData.t_set_rsc = rvalues[0];
+      break;
+    case t_bsc_set:  /* BSC heater setpoint */
+      CommandData.t_set_bsc = rvalues[0];
       break;
 
       /***************************************/
@@ -1683,59 +1684,59 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
       /***************************************/
       /********* The Ugly Commanding  *************/ 
-    case cam_any:
-      sendSBSCCommand(svalues[0]);
+    case theugly_any:
+      sendBSCCommand(svalues[0]);
       break;
-    case cam_settrig_timed:
+    case theugly_settrig_timed:
       sprintf(buf, "CsetExpInt=%d", ivalues[0]);
-      sendSBSCCommand(buf);
-      CommandData.cam.expInt = ivalues[0];
+      sendBSCCommand(buf);
+      CommandData.theugly.expInt = ivalues[0];
       break;
-    case cam_exp_params:
+    case theugly_exp_params:
       sprintf(buf, "CsetExpTime=%d", ivalues[0]);
-      CommandData.cam.expTime = ivalues[0];
-      sendSBSCCommand(buf);
+      CommandData.theugly.expTime = ivalues[0];
+      sendBSCCommand(buf);
       break;
-    case cam_focus_params:
+    case theugly_focus_params:
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
-      sendSBSCCommand(buf);
+      sendBSCCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendSBSCCommand(buf); 
-      CommandData.cam.focusRes = ivalues[0];
-      CommandData.cam.focusRng = ivalues[1];
+      sendBSCCommand(buf); 
+      CommandData.theugly.focusRes = ivalues[0];
+      CommandData.theugly.focusRng = ivalues[1];
       break;
-    case cam_bad_pix:
+    case theugly_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
-      sendSBSCCommand(buf);
+      sendBSCCommand(buf);
       break;
-    case cam_blob_params:
+    case theugly_blob_params:
       sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
-      sendSBSCCommand(buf);
+      sendBSCCommand(buf);
       sprintf(buf, "IsetGrid=%d", ivalues[1]);
-      sendSBSCCommand(buf);
+      sendBSCCommand(buf);
       sprintf(buf, "IsetThreshold=%f", rvalues[2]);
-      sendSBSCCommand(buf);
+      sendBSCCommand(buf);
       sprintf(buf, "IsetDisttol=%d", ivalues[3]);
-      sendSBSCCommand(buf);
-      CommandData.cam.maxBlobs = ivalues[0];
-      CommandData.cam.grid = ivalues[1];
-      CommandData.cam.threshold = rvalues[2];
-      CommandData.cam.minBlobDist = ivalues[3];
+      sendBSCCommand(buf);
+      CommandData.theugly.maxBlobs = ivalues[0];
+      CommandData.theugly.grid = ivalues[1];
+      CommandData.theugly.threshold = rvalues[2];
+      CommandData.theugly.minBlobDist = ivalues[3];
       break;
-    case cam_lens_any:
+    case theugly_lens_any:
       sprintf(buf, "L=%s", svalues[0]);
-      sendSBSCCommand(buf);
+      sendBSCCommand(buf);
       break;
-    case cam_lens_move:
-      if (CommandData.cam.forced)
+    case theugly_lens_move:
+      if (CommandData.theugly.forced)
 	sprintf(buf, "Lforce=%d", ivalues[0]);
       else sprintf(buf, "Lmove=%d", ivalues[0]);
-      sendSBSCCommand(buf);
+      sendBSCCommand(buf);
       break;
-    case cam_lens_params:
+    case theugly_lens_params:
       sprintf(buf, "LsetTol=%d", ivalues[0]);
-      sendSBSCCommand(buf);
-      CommandData.cam.moveTol = ivalues[0];
+      sendBSCCommand(buf);
+      CommandData.theugly.moveTol = ivalues[0];
       break;
     case table_move:
       CommandData.table.RelMove += rvalues[0];

@@ -91,8 +91,7 @@ void WatchFIFO(void);               //commands.c
 void FrameFileWriter(void);         //framefile.c
 void CompressionWriter(void);
 void StageBus(void);
-void openSBSC(void);
-void openRSC(void);
+void openSC(void);
 
 void InitialiseFrameFile(char);
 void pushDiskFrame(unsigned short *RxFrame);
@@ -1235,8 +1234,7 @@ int main(int argc, char *argv[])
   openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
-  openSBSC();  // SBSC - creates thread in sbsc.cpp
-  openRSC();  // RSC - creates thread in rsc.cpp
+  openSC();  // SC - creates threads in sbsc.cpp
 #endif
 
 

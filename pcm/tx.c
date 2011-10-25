@@ -56,8 +56,7 @@ extern int StartupVeto;
 
 short int InCharge = 0;
 
-int EthernetSBSC = 3;
-int EthernetRSC = 3;
+int EthernetSC[2] = {3,3};
 
 extern struct AxesModeStruct axes_mode; /* motors.c */
 
@@ -94,8 +93,6 @@ double calcVSerRW(void);
 
 /* in sbsc.cpp */
 void cameraFields();        
-/* in rsc.cpp */
-void RSCFields();        
 
 /* in table.cpp */
 void updateTableSpeed();
@@ -222,8 +219,8 @@ static void WriteAux(void)
   WriteData(rateIridiumAddr, CommandData.iridium_bw, NIOS_QUEUE);
 
   WriteData(statusEthAddr, 
-       (EthernetSBSC & 0x3) + 
-       ((EthernetRSC & 0x3) << 2), 
+       (EthernetSC[0] & 0x3) +
+       ((EthernetSC[1] & 0x3) << 2), 
        NIOS_QUEUE);
 
   mccstatus =        
@@ -1196,7 +1193,6 @@ void UpdateBBCFrame()
     ControlPower();
     VideoTx();
     cameraFields();
-    RSCFields();
 #endif
   }
 

@@ -21,11 +21,11 @@
 
 #include "command_list.h"
 #ifdef __MCP__
-#include "sbsc_protocol.h"
+#include "camstruct.h"
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.38 $";
+const char *command_list_serial = "$Revision: 1.39 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -88,10 +88,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(vtx_on), "turn on the video transmitters", GR_TELEM | GR_POWER},
   {COMMAND(bi0_off), "turn off the biphase transmitter", GR_TELEM | GR_POWER},
   {COMMAND(bi0_on), "turn on the biphase transmitter", GR_TELEM | GR_POWER},
-  {COMMAND(sbsc_off), "turn off the SBSC", GR_POWER},
-  {COMMAND(sbsc_on), "turn on the SBSC", GR_POWER},
-  {COMMAND(sbsc_cam_cycle), "power cycle The Ugly (camera,lens,heater)", GR_POWER},
-  {COMMAND(sbsc_cpu_cycle), "power cycle The Ugly (computer)", GR_POWER},
   {COMMAND(thegood_off), "turn off The Good", GR_POWER},
   {COMMAND(thegood_on), "turn on The Good", GR_POWER},
   {COMMAND(thegood_cam_cycle), "power cycle The Good (camera,lens,heater)", GR_POWER},
@@ -100,6 +96,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(thebad_on), "turn on The Bad", GR_POWER},
   {COMMAND(thebad_cam_cycle), "power cycle The Bad (camera,lens,heater)", GR_POWER},
   {COMMAND(thebad_cpu_cycle), "power cycle The Bad (computer)", GR_POWER},
+  {COMMAND(theugly_off), "turn off the The Ugly", GR_POWER},
+  {COMMAND(theugly_on), "turn on the The Ugly", GR_POWER},
+  {COMMAND(theugly_cam_cycle), "power cycle The Ugly (camera,lens,heater)", GR_POWER},
+  {COMMAND(theugly_cpu_cycle), "power cycle The Ugly (computer)", GR_POWER},
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
@@ -168,10 +168,10 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_TELEM},
   {COMMAND(vtx1_isc), "put ISC video on transmitter #1", GR_TELEM},
   {COMMAND(vtx1_osc), "put OSC video on transmitter #1", GR_TELEM},
-  {COMMAND(vtx1_sbsc), "put SBSC video on transmitter #1", GR_TELEM},
+  {COMMAND(vtx1_bsc), "put BSC video on transmitter #1", GR_TELEM},
   {COMMAND(vtx2_isc), "put ISC video on transmitter #2", GR_TELEM},
   {COMMAND(vtx2_osc), "put OSC video on transmitter #2", GR_TELEM},
-  {COMMAND(vtx2_sbsc), "put SBSC video on transmitter #2", GR_TELEM},
+  {COMMAND(vtx2_bsc), "put BSC video on transmitter #2", GR_TELEM},
 
   {COMMAND(halt_itsy), "ask MCP to halt *ITSY* MCC", GR_MISC | CONFIRM},
   {COMMAND(halt_bitsy), "ask MCP to halt *BITSY* MCC", GR_MISC | CONFIRM},
@@ -209,11 +209,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(thebad_force_lens), "Forced mode for The Bad lens moves", GR_RSC},
   {COMMAND(thebad_unforce_lens), "Normal mode for The Bad lens moves", GR_RSC},
   //The Ugly commands
-  {COMMAND(cam_expose), "Start The Ugly exposure (in triggered mode)", GR_BSC},
-  {COMMAND(cam_autofocus), "The Ugly autofocus mode", GR_BSC},
-  {COMMAND(cam_settrig_ext), "Set external The Ugly trigger mode", GR_BSC},
-  {COMMAND(cam_force_lens), "Forced mode for The Ugly lens moves", GR_BSC},
-  {COMMAND(cam_unforce_lens), "Normal mode for The Ugly lens moves", GR_BSC},
+  {COMMAND(theugly_expose), "Start The Ugly exposure (in triggered mode)", GR_BSC},
+  {COMMAND(theugly_autofocus), "The Ugly autofocus mode", GR_BSC},
+  {COMMAND(theugly_settrig_ext), "Set external The Ugly trigger mode", GR_BSC},
+  {COMMAND(theugly_force_lens), "Forced mode for The Ugly lens moves", GR_BSC},
+  {COMMAND(theugly_unforce_lens), "Normal mode for The Ugly lens moves", GR_BSC},
 
   //Theo heater housekeeping commands
   {COMMAND(hk_t0_heat_on), "Turn on Theo's Heater #0", GR_THEO_HEAT},
@@ -661,14 +661,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
     }
   },
-  {COMMAND(t_sbsc_set), "SBSC temperature set point", GR_ELECT, 1,
-    {
-      {"Set Point (deg C)", 0, 60, 'f', "T_SET_SBSC"}
-    }
-  },
   {COMMAND(t_rsc_set), "RSC temperature set point", GR_ELECT, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_SET_RSC"}
+    }
+  },
+  {COMMAND(t_bsc_set), "BSC temperature set point", GR_ELECT, 1,
+    {
+      {"Set Point (deg C)", 0, 60, 'f', "T_SET_BSC"}
     }
   },
 
@@ -804,7 +804,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(thegood_bad_pix), "Indicate pixel to ignore on The Good", GR_RSC, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
-      //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (sbsc_protocol.h)
+      //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
       {"x (0=left)", 0, 1530, 'i', ""},
       {"y (0=top)", 0, 1020, 'i', ""}
     }
@@ -859,7 +859,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(thebad_bad_pix), "Indicate pixel to ignore on The Bad", GR_RSC, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
-      //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (sbsc_protocol.h)
+      //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
       {"x (0=left)", 0, 1530, 'i', ""},
       {"y (0=top)", 0, 1020, 'i', ""}
     }
@@ -890,57 +890,57 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   /***************************************/
   /*************** The Ugly  *****************/
-  {COMMAND(cam_any), "Execute arbitrary The Ugly command", GR_BSC, 1,
+  {COMMAND(theugly_any), "Execute arbitrary The Ugly command", GR_BSC, 1,
     {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  {COMMAND(cam_settrig_timed), "Use timed exposure mode on The Ugly", GR_BSC, 1,
+  {COMMAND(theugly_settrig_timed), "Use timed exposure mode on The Ugly", GR_BSC, 1,
     {
-      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "exp_int_sbsc"}
+      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "exp_int_theugly"}
     }
   },
-  {COMMAND(cam_exp_params), "set The Ugly exposure commands", GR_BSC, 1,
+  {COMMAND(theugly_exp_params), "set The Ugly exposure commands", GR_BSC, 1,
     {
-      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_sbsc"}
+      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_theugly"}
     }
   },
-  {COMMAND(cam_focus_params), "set The Ugly autofocus params", GR_BSC, 2,
+  {COMMAND(theugly_focus_params), "set The Ugly autofocus params", GR_BSC, 2,
     {
-      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_sbsc"},
+      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_theugly"},
       {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
     }
   },
-  {COMMAND(cam_bad_pix), "Indicate pixel to ignore on The Ugly", GR_BSC, 3,
+  {COMMAND(theugly_bad_pix), "Indicate pixel to ignore on The Ugly", GR_BSC, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
-      //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (sbsc_protocol.h)
+      //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
       {"x (0=left)", 0, 1530, 'i', ""},
       {"y (0=top)", 0, 1020, 'i', ""}
     }
   },
-  {COMMAND(cam_blob_params), "set blob finder params on The Ugly", GR_BSC, 4,
+  {COMMAND(theugly_blob_params), "set blob finder params on The Ugly", GR_BSC, 4,
     {
-      {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_sbsc"},
-      {"Search grid size (pix)", 1, 1530 , 'i', "grid_sbsc"},
-      {"Threshold (# sigma)", 0, 100, 'f', "thresh_sbsc"},
-      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_sbsc"}
+      {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_theugly"},
+      {"Search grid size (pix)", 1, 1530 , 'i', "grid_theugly"},
+      {"Threshold (# sigma)", 0, 100, 'f', "thresh_theugly"},
+      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_theugly"}
     }
   },
-  {COMMAND(cam_lens_any), "execute The Ugly lens command directly", GR_BSC, 1,
+  {COMMAND(theugly_lens_any), "execute The Ugly lens command directly", GR_BSC, 1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
   },
-  {COMMAND(cam_lens_move), "move The Ugly lens", GR_BSC, 1,
+  {COMMAND(theugly_lens_move), "move The Ugly lens", GR_BSC, 1,
     {
       //total range on Sigma EX 120-300mm is about 3270
       {"New position (ticks)", -10000, 10000, 'i', ""}
     }
   },
-  {COMMAND(cam_lens_params), "set The Ugly lens params", GR_BSC, 1,
+  {COMMAND(theugly_lens_params), "set The Ugly lens params", GR_BSC, 1,
     {
-      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_sbsc"}
+      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_theugly"}
     }
   },
 
