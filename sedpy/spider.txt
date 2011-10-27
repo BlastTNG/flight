@@ -181,7 +181,7 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     #JACK 15 "Charge Controller" 50D/M -> CHARGE_C CABLE ""
     JACK &J70 "Power In" 8W8D/M -> BATT/&J274 CABLE &C14 "Gondola Power"
     JACK &J71 "Starcam" 17W2D/F -> STARCAM/&J194 CABLE &C15 "Star Camera"
-    JACK &J72 "Starcam Motor" 7W2D/F -> STARCAM/&J196 CABLE &C16 "Starcam Motor"
+    JACK &J72 "Starcam Motor" 17W2D/F -> STARCAM/&J196 CABLE &C16 "Starcam Motor"
     JACK &J73 "Gyros Power" 17W2D/F -> GYROS/&J178 CABLE &C17 "Gyroscope Power"
     JACK &J74 "Reaction Wheel" 7W2D/F -> REAC/&J208 CABLE &C18 "Reaction Wheel"
     JACK &J75 "Pivot" 7W2D/F -> PIVOT/&J219 CABLE &C19 "Pivot"
@@ -292,6 +292,12 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "Starcam Z" (&J72;2),(&J44;6)
     LINE "Starcam Zbar" (&J72;4),(&J44;25)
     LINE "Starcam Encoder Ground" (&J72;5),(&J44;20)
+    LINE "5V GND" (&J72;6)
+    LINE "+5V" (&J72;7)
+    LINE "ACS OFF" (&J72;8)
+    LINE "ACS ON" (&J72;9)
+    LINE "+24V" (&J72;10)
+    LINE "24V GND" (&J72;11)
     LINE "RW Battery+ In" (&J70;A2),(&J56;1)
     LINE "RW Battery+" (&J74;A1),(&J56;2)
     LINE "RW Battery-" (&J70;A6),(&J74;A2)
@@ -682,7 +688,7 @@ SUN "Pinhole Sun Sensor" < OF
 STARCAM "Rotating Star Camera" < OF
     JACK &J194 "Power, signals" 17W2D/M -> ACSBOB/&J71 CABLE &C15 "Star Camera"
     JACK &J195 "Ethernet" ETH/F -> WSPOUT/&J116 CABLE &C42 "Starcam Ethernet"
-    JACK &J196 "Motor" 7W2D/M -> ACSBOB/&J72 CABLE &C16 "Starcam Motor"
+    JACK &J196 "Motor" 17W2D/M -> ACSBOB/&J72 CABLE &C16 "Starcam Motor"
     JACK IN &J6 "Signal comp. DCDC" LUG/F -> SCDCBD/&J6
     JACK IN &J7 "Heaters" LUG/F -> SCHEAT/&J7
     JACK IN &J11 "Ethernet" ETH/F -> SCCOMP/&J11
@@ -690,6 +696,7 @@ STARCAM "Rotating Star Camera" < OF
     JACK IN &J198 "Controller Feedback" 15UD/M -> SCTAB_C/&J198
     JACK IN &J199 "Motor Power" 9W4D/F -> SCTABLE/&J199
     JACK IN &J200 "Motor Feedback" 25D/F -> SCTABLE/&J200
+    JACK IN &J24 "Limit Switch Control" 17W2D/F -> SCLS/&J24
     LINE "Battery+" (&J196;A1),(&J197;6,7)
     LINE "Battery Ground" (&J196;A2),(&J197;8),(&J199;A4)
     LINE "Motor Phase A" (&J197;1),(&J199;A1)
@@ -702,6 +709,12 @@ STARCAM "Rotating Star Camera" < OF
     LINE "B/COS-N" (&J198;12),(&J200;15)
     LINE "Z/MKR" (&J196;2),(&J198;7),(&J200;7)
     LINE "Z/MKR-N" (&J196;4),(&J198;8),(&J200;6)
+    LINE "5V GND" (&J196;6),(&J24;8)
+    LINE "+5V" (&J196;7),(&J24;1)
+    LINE "ACS OFF" (&J196;8),(&J24;10)
+    LINE "ACS ON" (&J196;9),(&J24;3)
+    LINE "+24V" (&J196;10),(&J24;7)
+    LINE "24V GND" (&J196;11),(&J24;14)
     LINE "Encoder Gnd" (&J196;5),(&J198;13),(&J200;8,20,21)
     LINE "Encoder +5V" (&J198;3),(&J200;3,16)
     LINE "Hall A" (&J198;5),(&J200;10)
@@ -712,9 +725,6 @@ STARCAM "Rotating Star Camera" < OF
 SCTABLE "Star Camera Rotary Table" < STARCAM
     JACK &J200 "Motor Feedback" 25D/M -> STARCAM/&J200
     JACK &J199 "Motor Power" 9W4D/M -> STARCAM/&J199
-
-
-
 
 SCHEAT "Star Camera Heater / Relay" < STARCAM
     JACK &J7 "Relay" SCREW/M -> STARCAM/&J7
@@ -771,14 +781,15 @@ SCCOMP "Star Camera Computer" < STARCAM
 SCVGA "Star Camera VGA over Cat5 video signal converter" < STARCAM
     JACK &J62 "VGA" 15UD/M -> SCCOMP/&J62
 
-
-
-
 SCTAB_C "Star Camera Rotary Table Controller" < SCTABLE
     JACK &J198 "Motor Feedback" 15UD/F -> STARCAM/&J198
     JACK &J204 "Communication" RS232/F -> HUB232/&J165 CABLE &C45 "Starcam Table Serial"
     #JACK 2 "Control I/O (Not needed?)" 26UD/F
     JACK &J197 "Power" TERM/F -> STARCAM/&J197
+
+SCLS "Star Camera Limit Switch Sensor" < SCTABLE
+    JACK &J24 "Limit Switch Control" 17W2D/M -> STARCAM/&J24
+
 
 BSCAM "Bore-sight Star Camera" < IF
     JACK &J206 "Power, Signals" 17W2D/M -> ACSBOB/&J83 CABLE &C27 "Bore-sight Camera"
