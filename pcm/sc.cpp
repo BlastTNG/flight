@@ -45,8 +45,8 @@ extern "C" {
 #define RSC_SERVERNAME "192.168.1.11"
 #define BSC_SERVERNAME "192.168.1.109"
 
-#define THEGOOD_SERIAL "08073507"
-#define THEBAD_SERIAL "110794466"
+#define THEGOOD_SERIAL "110794466"
+#define THEBAD_SERIAL  "08073507"
 #define THEUGLY_SERIAL "08073506"
 
 extern "C" void nameThread(const char*);  /* in mcp.c */
@@ -393,7 +393,8 @@ static void* RSCReadLoop(void* arg)
   }
   bprintf(startup, "talking to Rotating Cameras");
 
-  sendRSCCommand("Oconf");  //request configuration data
+  sendRSCCommand("GOconf");  //request configuration data
+  sendRSCCommand("BOconf");  //request configuration data
 
   while(true) {
     RSCComm->readLoop(&RSCparseReturn);
@@ -416,7 +417,7 @@ static void* BSCReadLoop(void* arg)
   }
   bprintf(startup, "talking to Boresite Camera");
 
-  sendBSCCommand("Oconf");  //request configuration data
+  sendBSCCommand("UOconf");  //request configuration data
 
   while(true) {
     BSCComm->readLoop(&BSCparseReturn);

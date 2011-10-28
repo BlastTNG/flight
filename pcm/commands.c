@@ -710,15 +710,15 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       /***************************************/
       /********* The Bad Commanding  *************/
     case thebad_expose:
-      sendBSCCommand("BCtrigExp");
+      sendRSCCommand("BCtrigExp");
       break;
     case thebad_autofocus:
       if (CommandData.thebad.forced)
-	sendBSCCommand("BCtrigFocusF");
-      else sendBSCCommand("BCtrigFocus");
+	sendRSCCommand("BCtrigFocusF");
+      else sendRSCCommand("BCtrigFocus");
       break;
     case thebad_settrig_ext:
-      sendBSCCommand("BCsetExpInt=0");
+      sendRSCCommand("BCsetExpInt=0");
       CommandData.thebad.expInt = 0;
       break;
     case thebad_force_lens:
