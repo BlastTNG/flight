@@ -783,7 +783,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_dcdc_acs",   'r',  ACS1_T1, 25,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_mc_lock",    'r',  ACS1_T1, 27,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_lock",       'r',  ACS1_T1, 29,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_bsc ",       'r',  ACS1_T1, 31,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"t_bsc",        'r',  ACS1_T1, 31,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_box_bal",    'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_pump_bal",   'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_el",         'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
