@@ -229,21 +229,21 @@ void cameraFields()
       TheGoodBlobX[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_x_thebad", i);
       TheBadBlobX[i] = GetNiosAddr(buf);
-      sprintf(buf, "blob%02d_y_thegood", i);
-      TheUglyBlobX[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_y_theugly", i);
+      TheUglyBlobX[i] = GetNiosAddr(buf);
+      sprintf(buf, "blob%02d_y_thegood", i);
       TheGoodBlobY[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_y_thebad", i);
       TheBadBlobY[i] = GetNiosAddr(buf);
-      sprintf(buf, "blob%02d_f_thegood", i);
-      TheUglyBlobY[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_f_theugly", i);
+      TheUglyBlobY[i] = GetNiosAddr(buf);
+      sprintf(buf, "blob%02d_f_thegood", i);
       TheGoodBlobF[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_f_thebad", i);
       TheBadBlobF[i] = GetNiosAddr(buf);
-      sprintf(buf, "blob%02d_s_thegood", i);
-      TheUglyBlobF[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_s_theugly", i);
+      TheUglyBlobF[i] = GetNiosAddr(buf);
+      sprintf(buf, "blob%02d_s_thegood", i);
       TheGoodBlobS[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_s_thebad", i);
       TheBadBlobS[i] = GetNiosAddr(buf);
@@ -293,6 +293,7 @@ void cameraFields()
   }
   else if (camRtn[i_cam].camID == THEUGLY_SERIAL)  {
     bsc = &camRtn[i_cam];
+    which = 2;
     unrecFlag = false;
   }
   else if (!unrecFlag) { //don't keep printing same error
