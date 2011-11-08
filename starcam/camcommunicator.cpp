@@ -26,6 +26,7 @@ extern "C" int EthernetSC[2];      /* tx.c */
 pthread_mutex_t scmutex;
 short int bsc_trigger;
 extern "C" int sendBSCCommand(const char *cmd); //sc.cpp
+extern "C" int sendRSCCommand(const char *cmd); //sc.cpp
 
 /*
 
@@ -321,22 +322,29 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
 	string line = "";
 	string rtnStr;
 	int n;
-  	static int pulsewait = 0;
+  	static int Rpulsewait = 0;
+  	static int Bpulsewait = 0;
 	string::size_type pos;
 	if (commFD == -1) return;          //communications aren't open
 	
 	while (1) {
     		usleep(100000);
-    		pulsewait++;
+    		Rpulsewait++;
+    		Bpulsewait++;
     		if (bsc_trigger) {
-      			if (pulsewait > 24) {
+      			if (Bpulsewait > 24) {
 				sendBSCCommand("CtrigExp");
         			bsc_trigger = 0;
-        			pulsewait = 0;
+        			Bpulsewait = 0;
       			} else {
 				bsc_trigger = 0;
 	        	}
 		}    
+      		if (Rpulsewait > 40) {
+			sendRSCCommand("GCtrigExp");
+			sendRSCCommand("BCtrigExp");
+			Rpulsewait = 0;
+		}
 		FD_ZERO(&input);
 		FD_SET(commFD, &input);
     		if (select(commFD+1, &input, NULL, NULL, &read_timeout) < 0)

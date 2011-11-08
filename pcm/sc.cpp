@@ -46,8 +46,8 @@ extern "C" {
 #define BSC_SERVERNAME "192.168.1.109"
 
 #define THEGOOD_SERIAL "110794466"
-#define THEBAD_SERIAL  "08073507"
-#define THEUGLY_SERIAL "08073506"
+#define THEBAD_SERIAL  "08073506"
+#define THEUGLY_SERIAL "08073507"
 
 extern "C" void nameThread(const char*);  /* in mcp.c */
 
@@ -104,7 +104,7 @@ void cameraFields()
   static int firsttime = 1;
   StarcamReturn* rsc = NULL;
   StarcamReturn* bsc = NULL;
-  static int which = 0;
+  static int which;
   static bool unrecFlag = false;
 
   static NiosStruct* TheGoodforceAddr = NULL;
@@ -162,6 +162,7 @@ void cameraFields()
 
   static NiosStruct* TheGoodBlobX[5];
   static NiosStruct* TheBadBlobX[5];
+  static NiosStruct* TheUglyBlobX[5];
   static NiosStruct* TheGoodBlobY[5];
   static NiosStruct* TheBadBlobY[5];
   static NiosStruct* TheUglyBlobY[5];
@@ -170,7 +171,6 @@ void cameraFields()
   static NiosStruct* TheUglyBlobF[5];
   static NiosStruct* TheGoodBlobS[5];
   static NiosStruct* TheBadBlobS[5];
-  static NiosStruct* TheUglyBlobX[5];
   static NiosStruct* TheUglyBlobS[5];
 
   //initialization
@@ -183,8 +183,8 @@ void cameraFields()
     TheBadexpIntAddr = GetNiosAddr("exp_int_thebad");
     TheUglyexpIntAddr = GetNiosAddr("exp_int_theugly");
     TheGoodexpTimeAddr = GetNiosAddr("exp_time_thegood");
-    TheUglyexpTimeAddr = GetNiosAddr("exp_time_theugly");
     TheBadexpTimeAddr = GetNiosAddr("exp_time_thebad");
+    TheUglyexpTimeAddr = GetNiosAddr("exp_time_theugly");
     TheGoodfocResAddr = GetNiosAddr("foc_res_thegood");
     TheBadfocResAddr = GetNiosAddr("foc_res_thebad");
     TheUglyfocResAddr = GetNiosAddr("foc_res_theugly");
@@ -235,25 +235,25 @@ void cameraFields()
       TheGoodBlobX[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_x_thebad", i);
       TheBadBlobX[i] = GetNiosAddr(buf);
-      sprintf(buf, "blob%02d_y_theugly", i);
+      sprintf(buf, "blob%02d_x_theugly", i);
       TheUglyBlobX[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_y_thegood", i);
       TheGoodBlobY[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_y_thebad", i);
       TheBadBlobY[i] = GetNiosAddr(buf);
-      sprintf(buf, "blob%02d_f_theugly", i);
+      sprintf(buf, "blob%02d_y_theugly", i);
       TheUglyBlobY[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_f_thegood", i);
       TheGoodBlobF[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_f_thebad", i);
       TheBadBlobF[i] = GetNiosAddr(buf);
-      sprintf(buf, "blob%02d_s_theugly", i);
+      sprintf(buf, "blob%02d_f_theugly", i);
       TheUglyBlobF[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_s_thegood", i);
       TheGoodBlobS[i] = GetNiosAddr(buf);
       sprintf(buf, "blob%02d_s_thebad", i);
       TheBadBlobS[i] = GetNiosAddr(buf);
-      sprintf(buf, "blob%02d_x_theugly", i);
+      sprintf(buf, "blob%02d_s_theugly", i);
       TheUglyBlobS[i] = GetNiosAddr(buf);
     }
   }
@@ -267,9 +267,9 @@ void cameraFields()
   WriteData(TheGoodexpTimeAddr, CommandData.thegood.expTime, NIOS_QUEUE);
   WriteData(TheBadexpTimeAddr, CommandData.thebad.expTime, NIOS_QUEUE);
   WriteData(TheUglyexpTimeAddr, CommandData.theugly.expTime, NIOS_QUEUE);
-  WriteData(TheUglyfocResAddr, CommandData.theugly.focusRes, NIOS_QUEUE);
   WriteData(TheGoodfocResAddr, CommandData.thegood.focusRes, NIOS_QUEUE);
   WriteData(TheBadfocResAddr, CommandData.thebad.focusRes, NIOS_QUEUE);
+  WriteData(TheUglyfocResAddr, CommandData.theugly.focusRes, NIOS_QUEUE);
   WriteData(TheGoodmoveTolAddr, CommandData.thegood.moveTol, NIOS_QUEUE);
   WriteData(TheBadmoveTolAddr, CommandData.thebad.moveTol, NIOS_QUEUE);
   WriteData(TheUglymoveTolAddr, CommandData.theugly.moveTol, NIOS_QUEUE);
@@ -289,17 +289,16 @@ void cameraFields()
   //persistently identify cameras by serial number (camID)
   if (camRtn[i_cam].camID == THEGOOD_SERIAL)  {
     rsc = &camRtn[i_cam];
-    which = 0;
+    which = 1;
     unrecFlag = false;
   }
   else if (camRtn[i_cam].camID == THEBAD_SERIAL)  {
     rsc = &camRtn[i_cam];
-    which = 1;
+    which = 2;
     unrecFlag = false;
   }
   else if (camRtn[i_cam].camID == THEUGLY_SERIAL)  {
     bsc = &camRtn[i_cam];
-    which = 2;
     unrecFlag = false;
   }
   else if (!unrecFlag) { //don't keep printing same error
@@ -310,7 +309,7 @@ void cameraFields()
   }
 
   if (rsc != NULL) {
-    if (which == 0) { 
+    if (which == 1) { 
     	WriteData(TheGoodFrameAddr, rsc->frameNum, NIOS_QUEUE);
     	WriteData(TheGoodMeanAddr, (int)rsc->mapmean, NIOS_QUEUE);
     	WriteData(TheGoodSigmaAddr, (int)(rsc->sigma*10), NIOS_QUEUE);
@@ -321,18 +320,20 @@ void cameraFields()
     	WriteData(TheGoodFocPosAddr, (int)(rsc->focusposition*100), NIOS_QUEUE);
     	WriteData(TheGoodNumBlobsAddr, rsc->numblobs, NIOS_QUEUE);
 	
-    	for (int i=0; i<rsc->numblobs; i++)
-    	{
-    	  WriteData(TheGoodBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
-		  NIOS_QUEUE);
-	      WriteData(TheGoodBlobY[i],(unsigned int)(rsc->y[i]/CAM_WIDTH*SHRT_MAX),
-		  NIOS_QUEUE);
-	      WriteData(TheGoodBlobF[i], (unsigned int)rsc->flux[i], NIOS_QUEUE);
-	      unsigned int snr = (rsc->snr[i] >= SHRT_MAX / 100.0) ? 
-		SHRT_MAX : (unsigned int)rsc->snr[i]*100;
-	      WriteData(TheGoodBlobS[i], snr, NIOS_QUEUE);
+	if (rsc->numblobs > 0) {
+		for (int i=0; i<5; i++)
+    		{
+    		  WriteData(TheGoodBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
+			  NIOS_QUEUE);
+		      WriteData(TheGoodBlobY[i],(unsigned int)(rsc->y[i]/CAM_WIDTH*SHRT_MAX),
+			  NIOS_QUEUE);
+		      WriteData(TheGoodBlobF[i], (unsigned int)rsc->flux[i], NIOS_QUEUE);
+		      unsigned int snr = (rsc->snr[i] >= SHRT_MAX / 100.0) ? 
+			SHRT_MAX : (unsigned int)rsc->snr[i]*100;
+		      WriteData(TheGoodBlobS[i], snr, NIOS_QUEUE);
+		}
 	}
-    } else if (which == 1) {
+    } else if (which == 2) {
     	WriteData(TheBadFrameAddr, rsc->frameNum, NIOS_QUEUE);
     	WriteData(TheBadMeanAddr, (int)rsc->mapmean, NIOS_QUEUE);
     	WriteData(TheBadSigmaAddr, (int)(rsc->sigma*10), NIOS_QUEUE);
@@ -343,43 +344,47 @@ void cameraFields()
     	WriteData(TheBadFocPosAddr, (int)(rsc->focusposition*100), NIOS_QUEUE);
     	WriteData(TheBadNumBlobsAddr, rsc->numblobs, NIOS_QUEUE);
 
-    	for (int i=0; i<rsc->numblobs; i++)
-    	{
-    	  WriteData(TheBadBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
-		  NIOS_QUEUE);
-	      WriteData(TheBadBlobY[i],(unsigned int)(rsc->y[i]/CAM_WIDTH*SHRT_MAX),
-		  NIOS_QUEUE);
-	      WriteData(TheBadBlobF[i], (unsigned int)rsc->flux[i], NIOS_QUEUE);
-	      unsigned int snr = (rsc->snr[i] >= SHRT_MAX / 100.0) ? 
-		SHRT_MAX : (unsigned int)rsc->snr[i]*100;
-	      WriteData(TheBadBlobS[i], snr, NIOS_QUEUE);
+	if (rsc->numblobs > 0) {
+		for (int i=0; i<5; i++)
+    		{
+    		  WriteData(TheBadBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
+			  NIOS_QUEUE);
+		      WriteData(TheBadBlobY[i],(unsigned int)(rsc->y[i]/CAM_WIDTH*SHRT_MAX),
+			  NIOS_QUEUE);
+		      WriteData(TheBadBlobF[i], (unsigned int)rsc->flux[i], NIOS_QUEUE);
+		      unsigned int snr = (rsc->snr[i] >= SHRT_MAX / 100.0) ? 
+			SHRT_MAX : (unsigned int)rsc->snr[i]*100;
+		      WriteData(TheBadBlobS[i], snr, NIOS_QUEUE);
+		}
 	}
     }
 
   }
   if (bsc != NULL) {
-    WriteData(TheUglyFrameAddr, bsc->frameNum, NIOS_QUEUE);
-    WriteData(TheUglyMeanAddr, (int)bsc->mapmean, NIOS_QUEUE);
-    WriteData(TheUglySigmaAddr, (int)(bsc->sigma*10), NIOS_QUEUE);
-    WriteData(TheUglyTimeAddr, bsc->imagestarttime.tv_sec, NIOS_QUEUE);
-    WriteData(TheUglyUsecAddr, bsc->imagestarttime.tv_usec, NIOS_QUEUE);
-    //it looks like this is in deg C. just scale to get better resolution
-    WriteData(TheUglyCcdTempAddr, (int)(bsc->ccdtemperature*100), NIOS_QUEUE);
-    WriteData(TheUglyFocPosAddr, (int)(bsc->focusposition*100), NIOS_QUEUE);
-    WriteData(TheUglyNumBlobsAddr, bsc->numblobs, NIOS_QUEUE);
+    	WriteData(TheUglyFrameAddr, bsc->frameNum, NIOS_QUEUE);
+    	WriteData(TheUglyMeanAddr, (int)bsc->mapmean, NIOS_QUEUE);
+    	WriteData(TheUglySigmaAddr, (int)(bsc->sigma*10), NIOS_QUEUE);
+    	WriteData(TheUglyTimeAddr, bsc->imagestarttime.tv_sec, NIOS_QUEUE);
+    	WriteData(TheUglyUsecAddr, bsc->imagestarttime.tv_usec, NIOS_QUEUE);
+    	//it looks like this is in deg C. just scale to get better resolution
+    	WriteData(TheUglyCcdTempAddr, (int)(bsc->ccdtemperature*100), NIOS_QUEUE);
+    	WriteData(TheUglyFocPosAddr, (int)(bsc->focusposition*100), NIOS_QUEUE);
+    	WriteData(TheUglyNumBlobsAddr, bsc->numblobs, NIOS_QUEUE);
 
-    for (int i=0; i<bsc->numblobs; i++)
-    {
-      WriteData(TheUglyBlobX[i],(unsigned int)(bsc->x[i]/CAM_WIDTH*SHRT_MAX),
-	  NIOS_QUEUE);
-      WriteData(TheUglyBlobY[i],(unsigned int)(bsc->y[i]/CAM_WIDTH*SHRT_MAX),
-	  NIOS_QUEUE);
-      WriteData(TheUglyBlobF[i], (unsigned int)bsc->flux[i], NIOS_QUEUE);
-      unsigned int snr = (bsc->snr[i] >= SHRT_MAX / 100.0) ? 
-	SHRT_MAX : (unsigned int)bsc->snr[i]*100;
-      WriteData(TheUglyBlobS[i], snr, NIOS_QUEUE);
-    }
-  }
+	if (bsc->numblobs > 0) {
+    		for (int i=0; i<5; i++)
+    		{
+      			WriteData(TheUglyBlobX[i],(unsigned int)(bsc->x[i]/CAM_WIDTH*SHRT_MAX),
+		  		NIOS_QUEUE);
+      			WriteData(TheUglyBlobY[i],(unsigned int)(bsc->y[i]/CAM_WIDTH*SHRT_MAX),
+		  		NIOS_QUEUE);
+      			WriteData(TheUglyBlobF[i], (unsigned int)bsc->flux[i], NIOS_QUEUE);
+      			unsigned int snr = (bsc->snr[i] >= SHRT_MAX / 100.0) ? 
+			SHRT_MAX : (unsigned int)bsc->snr[i]*100;
+      			WriteData(TheUglyBlobS[i], snr, NIOS_QUEUE);
+    		}
+	}
+  }	
 
 }
 
