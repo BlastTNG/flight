@@ -339,9 +339,7 @@ static double GetVAz(void)
   //max_dv = 1000;
 
   if (axes_mode.az_mode == AXIS_VEL) {
-  /* TODO: JAS -- temporary negative sign below since az = yaw, whereas all of
-           the velocity request calculations assume az = -yaw */ 
-    vel = -axes_mode.az_vel;
+      vel = axes_mode.az_vel;
     //bprintf(info, "vel according to axes_mode: %f", vel);
   } else if (axes_mode.az_mode == AXIS_POSITION) {
     az = PointingData[i_point].az;
@@ -856,13 +854,14 @@ static void DoSpiderMode(void)
   }
 
   radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top, &az_of_bot);
-  bprintf(info, "az/el corner points are: (%f,%f), (%f,%f), (%f,%f), (%f,%f)",
-          c_az[0], c_el[0], c_az[1], c_el[1], c_az[2], c_el[2], c_az[3], c_el[3]
-         );
+  //bprintf(info, "az/el corner points are: (%f,%f), (%f,%f), (%f,%f), (%f,%f)",
+   //       c_az[0], c_el[0], c_az[1], c_el[1], c_az[2], c_el[2], c_az[3], c_el[3]
+     //    );
 
   SetSafeDAz(az, &left);     // don't cross sun between here and left
   SetSafeDAz(left, &right);  // don't cross sun bewteen left and right
-  
+ 
+  // TODO: JAS -- this is WRONG! Change it! 
   if (right < left) {
     tmp = right;
     right = left;
@@ -875,7 +874,8 @@ static void DoSpiderMode(void)
   v_az_max = sqrt(accel_spider * ampl);
   turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
   //turn_around = 1.0;
-  bprintf(info, "left = %f, right = %f, centre = %f, ampl = %f, v_az_max = %f, turn_around = %f", left, right, centre, ampl, v_az_max, turn_around);
+  //bprintf(info, "left = %f, right = %f, centre = %f, ampl = %f, v_az_max = %f, turn_around = %f", left, right, centre, ampl, v_az_max, turn_around);
+  // TODO: JAS -- also correct ampl for the case below!
   if (right-left < MIN_SCAN) {
     left = centre - MIN_SCAN/2.0; 
     right = left + MIN_SCAN;
@@ -890,7 +890,7 @@ static void DoSpiderMode(void)
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
   
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm beyond the left endpoint.");
+    //bprintf(info, "I'm beyond the left endpoint.");
   
   /* case 2: moving into quad from beyond right endpoint: */
   } else if (az > right + turn_around) {
@@ -899,7 +899,7 @@ static void DoSpiderMode(void)
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
     
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm beyond the right endpoint.");
+    //bprintf(info, "I'm beyond the right endpoint.");
   /* case 3: moving from left to right endpoints */
   } else if ( (az > left) && (az < right) 
              && (PointingData[i_point].v_az > V_AZ_MIN) ) {
@@ -907,7 +907,7 @@ static void DoSpiderMode(void)
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
  
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm in between the endpoints and moving right.");
+    //bprintf(info, "I'm in between the endpoints and moving right.");
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > left) && (az < right) 
@@ -916,7 +916,7 @@ static void DoSpiderMode(void)
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
 
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm in between the endpoints and moving left.");
+    //bprintf(info, "I'm in between the endpoints and moving left.");
 
   /* case 5: in left turn-around zone */ 
   } else if ( (az <= left) && (az >= (left-turn_around)) ) {
@@ -924,7 +924,7 @@ static void DoSpiderMode(void)
     v_az = V_AZ_MIN;
  
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm in the left turn-around zone.");
+    //bprintf(info, "I'm in the left turn-around zone.");
 
   /* case 6: in right turn-around zone */   
   } else if ( (az >= right) && (az <= (right+turn_around)) ) {
@@ -932,9 +932,9 @@ static void DoSpiderMode(void)
     v_az = -V_AZ_MIN;
     
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm in the right turn-around zone.");
+    //bprintf(info, "I'm in the right turn-around zone.");
   } 
- bprintf(info, "v_az req = %f", v_az);
+ //bprintf(info, "v_az req = %f", v_az);
 }
 
 static void DoAzScanMode(void)

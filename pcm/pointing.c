@@ -1119,7 +1119,9 @@ void Pointing(void)
   //  if (j%500==0) bprintf(info,"Pointing: RG.gy1 = %f, gy1_earth= %f, cos_l =%f sin_a = %f",ACSData.ifel_gy,PointingData[point_index].gy1_earth, cos_a, sin_a);
   RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
   RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
-  PointingData[point_index].v_az = (-1.0)*RG.ifroll_gy*sin_e-RG.ifyaw_gy*cos_e;
+  //PointingData[point_index].v_az = (-1.0)*RG.ifroll_gy*sin_e-RG.ifyaw_gy*cos_e;
+  PointingData[point_index].v_az = -(RG.ifyaw_gy*cos(0.0) 
+                                     + RG.ifroll_gy*sin(0.0));
   /*************************************/
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);
