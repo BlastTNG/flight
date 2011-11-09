@@ -96,6 +96,7 @@ static void CalcAzEl(double* az_ptr, double* el_ptr);
 static int write_cm(struct CMInfoStruct *cminfo, char *cmd, int length, 
                     const char *cmd_desc); 
 static int read_cm(struct CMInfoStruct *cminfo, int read_flag); 
+static void flush_cm(struct CMInfoStruct *cminfo);
 
 static double dxdtheta(double theta);
 static double mod_cm(double val, double mod);
@@ -126,6 +127,7 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
 
   static int firsttime = 1;
   unsigned int zero_count = 0;
+  int err_count = 0;
 
   char* move = "P=1000000000\r";    // CML command to move continuously
   char speed_cmd_az[COMMAND_SIZE];  // speed CML command string
@@ -144,6 +146,7 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
   double az_now;   // current azimuth
   double el_now;   // current elevation
   double d_az;     // diff between current and destination az
+  double d_az_last = 0.0;
   double d_el;     // diff between current and destination el
   double az_rps;   // rev/s of az motor
   double el_rps;   // rev/s of el motor
@@ -157,6 +160,11 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
   int w_az_cm;
   int w_el_cm;
   
+  double last_waz = 0.0;
+
+  int status_result;
+  char* stat_query = "?99\r";
+
   /* set initial motion variables */
   a_az_cm = (int)((a_az*AZ_GEAR_RATIO*CM_PULSES)/(360.0*ACCEL_UNIT));
     
@@ -178,6 +186,8 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
       	     " continuous motion CML command");
 
     write_cm(&azinfo, exec, strlen(exec), " execute motion CML command");
+    
+    flush_cm(&azinfo);
   }
 
   if ( (w0_el != 0) && (a_el != 0) ) {
@@ -191,8 +201,9 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
 	     " continuous motion CML command");
     
     write_cm(&elinfo, exec, strlen(exec), " execute motion CML command");
+    flush_cm(&elinfo);
   }
-
+  bprintf(info, "Entering goto control loop");
   while ( !(CommandData.az_el.new_cmd) && (zero_count < 10) ) {
 
     /* get latest position errors  */
@@ -201,7 +212,7 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
 
     d_az = az_now - az;
     d_el = el_now - el;
-  
+ 
     /* don't take the long way around */ 
     if (-(d_az) >= 0) {
       d_az = (-(d_az) < (360.0 + d_az)) ? d_az : (360.0 + d_az);
@@ -209,6 +220,61 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
       d_az = (d_az < (360.0 - d_az)) ?  d_az : -(360.0 - d_az);
     }
 
+    if ((d_az == d_az_last) && (w0_az != 0.0) && (a_az != 0.0) && 
+       (fabs(d_az) > TOLERANCE)) {
+      err_count++;
+    } else {
+      if (err_count-=30 < 0) {
+        err_count = 0;
+      }
+    }
+
+   if (err_count > 200) {
+      bprintf(info, "Az motion appears to be stalled, disabling motors...");
+      flush_cm(&azinfo);
+      usleep(100000);
+      status_result = write_cm(&azinfo, stat_query, strlen(stat_query), 
+                      "status query cmd");
+      if (status_result == 0) {
+        if (read_cm(&azinfo, 1) <= 0) {
+          bprintf(err, "Failed to receive status message from az motor.");
+        } 
+      }
+      allstop_cm();
+      err_count = 0;
+      usleep(100000);
+      write_cm(&azinfo, accel_cmd_az, n_a_az, 
+             " initial acceleration CML command");
+
+      write_cm(&azinfo, speed_cmd_az, n_s_az, 
+  	     " initial speed CML command");
+
+      write_cm(&azinfo, move, strlen(move), 
+      	     " continuous motion CML command");
+
+      write_cm(&azinfo, exec, strlen(exec), " execute motion CML command");
+
+
+      write_cm(&elinfo, accel_cmd_el, n_a_el, 
+	     " initial acceleration CML command");
+
+      write_cm(&elinfo, speed_cmd_el, n_s_el, 
+	     " initial speed CML command");
+
+      write_cm(&elinfo, move, strlen(move), 
+	     " continuous motion CML command");
+    
+      write_cm(&elinfo, exec, strlen(exec), " execute motion CML command");
+
+      flush_cm(&azinfo);
+      flush_cm(&elinfo);
+    }
+
+    d_az_last = d_az;
+
+    /*bprintf(info, "az position err = %f", d_az);
+      bprintf(info, "el position err = %f", d_el);*/
+ 
     if ( ((fabs(d_az)<TOLERANCE) || ((w0_az == 0) || (a_az == 0))) &&
          ((fabs(d_el)<TOLERANCE) || ((w0_el == 0) || (a_el == 0))) ) {
       zero_count++;
@@ -243,8 +309,10 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
     az_rps = (w_az*AZ_GEAR_RATIO)/360.0;
     w_az_cm = (int)((az_rps*CM_PULSES)/SPEED_UNIT);
     n_s_az = sprintf(speed_cmd_az, "S=%i\r", -w_az_cm);
-    if ( (w0_az != 0) && (a_az != 0) ) {
+    if ( (w0_az != 0) && (a_az != 0)) {
       write_cm(&azinfo, speed_cmd_az, n_s_az, " speed CML command");
+      flush_cm(&azinfo);
+      last_waz = w_az;
     }
     
     w_el = (d_el < 0) ? sqrt(-2.0*a_el*d_el) : -sqrt(2.0*a_el*d_el);
@@ -266,6 +334,7 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
     n_a_el = sprintf(accel_cmd_el, "A=%i\r", a_el_cm);
     if ( (w0_el != 0) && (a_el != 0) ) {
       write_cm(&elinfo, accel_cmd_el, n_a_el, " acceleration CML command");
+      flush_cm(&elinfo);
     }
 
     el_rps = (dx_del*w_el/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
@@ -280,11 +349,16 @@ void goto_cm(double az, double el, double w0_az, double w0_el, double a_az,
     n_s_el = sprintf(speed_cmd_el, "S=%i\r", -w_el_cm); 
     if ( (w0_el != 0) && (a_el != 0) ) {
       write_cm(&elinfo, speed_cmd_el, n_s_el, " speed CML command");
+      flush_cm(&elinfo);
     }
 
     usleep(10000);
   }
-
+  if (CommandData.az_el.new_cmd) {
+    bprintf(info, "New command received, leaving while loop in goto_cm");
+  } else {
+  bprintf(info, "Target position achieved. Leaving goto ctrl loop"); 
+  }
   n_s_el = sprintf(speed_cmd_el, "S=%i\r", 0); 
   write_cm(&elinfo, speed_cmd_el, n_s_el, " speed CML command");
 
@@ -365,8 +439,10 @@ void raster_cm()
     /* negate el direction */
     //el_goto = el_low + (step_count - 1)*step_size;
     el_goto = el_high - (step_count - 1)*step_size;
+    bprintf(info, "Raster: entering goto_cm() function for az scan");
     goto_cm(az_goto, el_goto, az_speed_init, el_speed_init, 
 	    CommandData.az_el.az_accel, CommandData.az_el.el_accel);
+    bprintf(info, "Raster: leaving goto_cm() function for az scan");
 
     /* step in elevation */
     
@@ -376,8 +452,10 @@ void raster_cm()
       /* negate el direction */
       //el_goto = el_low + step_count*step_size;
       el_goto = el_high - step_count*step_size;
+      bprintf(info, "Entering goto_cm() function for el step");
       goto_cm(az_goto, el_goto, az_speed_init, el_speed_init, 
 	      CommandData.az_el.az_accel, CommandData.az_el.el_accel);
+      bprintf(info, "Leaving goto_cm() function for el step");
     }
     
     /* TODO - sjb: XY stage also did "el" scan with "az" steps. Do we want 
@@ -400,10 +478,12 @@ void init_cm(struct CMInfoStruct* cminfo)
  
   char* tolerance = "K55=5\r";     // sets tolerence for in-position error
    
-  char* response_type = "K23=0\r"; // motor responds only when polled
+  char* response_type = "K23=0\r"; // disable echo
 
   char* port_type = "K52=1\r";     // force motor to interpret input 1 as 
                                    // an RS-232 port
+
+  char* push_current = "K60=70\r"; // max current in "push mode"
 
   char* password = "W=924\r";      // unlocks the H parameters for writing
                                    // (these are gains for controller design)
@@ -438,6 +518,12 @@ void init_cm(struct CMInfoStruct* cminfo)
 
   if ( (write_cm(cminfo, port_type, strlen(port_type), 
                  " port type parameter K52")) < 0) {
+    cminfo->init = 0;
+    return;
+  }
+
+  if ( (write_cm(cminfo, push_current, strlen(push_current), 
+                 " push current parameter K60")) < 0) {
     cminfo->init = 0;
     return;
   }
@@ -595,6 +681,17 @@ void allstop_cm()
   
 }
 
+// empty the port
+void flush_cm(struct CMInfoStruct *cminfo)  
+{
+  char buffer[100];
+  
+  while(read(cminfo->fd, buffer, 99)==99) {
+    // do nothing
+  }
+
+}
+
 /* read_cm waits for a response from a Cool Muscle to a query */
 
 int read_cm(struct CMInfoStruct *cminfo, int read_flag) 
@@ -710,6 +807,10 @@ int read_cm(struct CMInfoStruct *cminfo, int read_flag)
 	    CommandData.az_el.mode = AzElNone;
           }
         }
+      } else if (rxchar == '\r') {
+	response[bytes_received] = '\0';
+        bprintf(info, "%s", response); 
+        bytes_received = 0;
       }
     } else { // 0 bytes were read or error
       if (read_flag && (loop_count >= 100)) { 
