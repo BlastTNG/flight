@@ -337,15 +337,6 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
     		usleep(100000);
     		Rpulsewait++;
     		Bpulsewait++;
-    		if (bsc_trigger) {
-      			if (Bpulsewait > BSCWAIT) {
-				sendTheUglyCommand("CtrigExp");
-        			bsc_trigger = 0;
-        			Bpulsewait = 0;
-      			} else {
-				bsc_trigger = 0;
-	        	}
-		}    
       		if (Rpulsewait > RSCWAIT) {
 			sendTheGoodCommand("CtrigExp");
 			sendTheBadCommand("CtrigExp");
@@ -359,6 +350,15 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
 				exposing = 0;
 			}
 		}
+    		if (bsc_trigger) {
+      			if (Bpulsewait > BSCWAIT) {
+				sendTheUglyCommand("CtrigExp");
+        			bsc_trigger = 0;
+        			Bpulsewait = 0;
+      			} else {
+				bsc_trigger = 0;
+	        	}
+		}    
 		FD_ZERO(&input);
 		FD_SET(commFD, &input);
     		if (select(commFD+1, &input, NULL, NULL, &read_timeout) < 0)

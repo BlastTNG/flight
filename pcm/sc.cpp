@@ -54,6 +54,8 @@ extern "C" void nameThread(const char*);  /* in mcp.c */
 
 extern "C" short int InCharge;		  /* in tx.c */
 
+extern "C" int EthernetSC[3];      /* tx.c */
+
 static CamCommunicator* TheGoodComm;
 static CamCommunicator* TheBadComm;
 static CamCommunicator* TheUglyComm;
@@ -79,17 +81,20 @@ extern "C" {
 int sendTheGoodCommand(const char *cmd)
 {
   if (!InCharge) return 0;
-  return TheGoodComm->sendCommand(cmd);
+  if (EthernetSC[0] == 0) return TheGoodComm->sendCommand(cmd);
+  return 0;
 }
 int sendTheBadCommand(const char *cmd)
 {
   if (!InCharge) return 0;
-  return TheBadComm->sendCommand(cmd);
+  if (EthernetSC[1] == 0) return TheBadComm->sendCommand(cmd);
+  return 0;
 }
 int sendTheUglyCommand(const char *cmd)
 {
   if (!InCharge) return 0;
-  return TheUglyComm->sendCommand(cmd);
+  if (EthernetSC[2] == 0) return TheUglyComm->sendCommand(cmd);
+  return 0;
 }
 
 /*
@@ -408,7 +413,7 @@ void cameraFields()
  */
 static void* TheGoodReadLoop(void* arg)
 {
-  nameThread("TheGoodSC");
+  nameThread("GoodSC");
   bputs(startup, "startup\n");
   bool errorshown = false;
 
@@ -420,8 +425,7 @@ static void* TheGoodReadLoop(void* arg)
   }
   bprintf(startup, "talking to The Good Star Camera");
 
-  sendTheGoodCommand("GOconf");  //request configuration data
-  sendTheGoodCommand("BOconf");  //request configuration data
+  sendTheGoodCommand("Oconf");  //request configuration data
 
   while(true) {
     TheGoodComm->readLoop(&TheGoodparseReturn);
@@ -432,7 +436,7 @@ static void* TheGoodReadLoop(void* arg)
 }
 static void* TheBadReadLoop(void* arg)
 {
-  nameThread("TheBadSC");
+  nameThread("BadSC");
   bputs(startup, "startup\n");
   bool errorshown = false;
 
@@ -444,8 +448,7 @@ static void* TheBadReadLoop(void* arg)
   }
   bprintf(startup, "talking to The Bad Star Camera");
 
-  sendTheBadCommand("GOconf");  //request configuration data
-  sendTheBadCommand("BOconf");  //request configuration data
+  sendTheBadCommand("Oconf");  //request configuration data
 
   while(true) {
     TheBadComm->readLoop(&TheBadparseReturn);
@@ -456,7 +459,7 @@ static void* TheBadReadLoop(void* arg)
 }
 static void* TheUglyReadLoop(void* arg)
 {
-  nameThread("TheUglySC");
+  nameThread("UglySC");
   bputs(startup, "startup\n");
   bool errorshown = false;
 
@@ -468,7 +471,7 @@ static void* TheUglyReadLoop(void* arg)
   }
   bprintf(startup, "talking to The Ugly Star Camera");
 
-  sendTheUglyCommand("UOconf");  //request configuration data
+  sendTheUglyCommand("Oconf");  //request configuration data
 
   while(true) {
     TheUglyComm->readLoop(&TheUglyparseReturn);
