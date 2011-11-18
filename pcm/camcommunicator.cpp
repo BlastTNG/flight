@@ -20,13 +20,17 @@ extern "C" {
 #define CAM_COMM_BUF_SIZE 255
 //how long to wait after failed connection attempt to try again (us)
 #define CLIENT_RETRY_DELAY 1000000
+#define BSCWAIT 24 
+#define RSCWAIT 40 
+#define EXPCOUNT 20 
 
-
-extern "C" int EthernetSC[2];      /* tx.c */
+extern "C" int EthernetSC[3];      /* tx.c */
 pthread_mutex_t scmutex;
 short int bsc_trigger;
-extern "C" int sendBSCCommand(const char *cmd); //sc.cpp
-extern "C" int sendRSCCommand(const char *cmd); //sc.cpp
+extern "C" int sendTheGoodCommand(const char *cmd); //sc.cpp
+extern "C" int sendTheBadCommand(const char *cmd); //sc.cpp
+extern "C" int sendTheUglyCommand(const char *cmd); //sc.cpp
+extern short int exposing;	//in table.cpp
 
 /*
 
@@ -176,8 +180,9 @@ int CamCommunicator::openHost(string target)
 int CamCommunicator::openClient(string target)
 {
 	int flag;
-	if (target == "192.168.1.11") flag=0; 	//RSC
-	else flag=1; 				//BSC
+	if (target == "192.168.1.11") flag=0; 	   //TheGood
+	else if (target == "192.168.1.12") flag=1; //TheBad
+	else flag=2;				   //TheUgly
   	EthernetSC[flag] = 3; /* Unknown state */
 	if (commFD >= 0) return -1;   //already an open connection
 	
@@ -324,6 +329,7 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
 	int n;
   	static int Rpulsewait = 0;
   	static int Bpulsewait = 0;
+	static int exposecount = 0;
 	string::size_type pos;
 	if (commFD == -1) return;          //communications aren't open
 	
@@ -332,18 +338,26 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
     		Rpulsewait++;
     		Bpulsewait++;
     		if (bsc_trigger) {
-      			if (Bpulsewait > 24) {
-				sendBSCCommand("CtrigExp");
+      			if (Bpulsewait > BSCWAIT) {
+				sendTheUglyCommand("CtrigExp");
         			bsc_trigger = 0;
         			Bpulsewait = 0;
       			} else {
 				bsc_trigger = 0;
 	        	}
 		}    
-      		if (Rpulsewait > 40) {
-			sendRSCCommand("GCtrigExp");
-			sendRSCCommand("BCtrigExp");
+      		if (Rpulsewait > RSCWAIT) {
+			sendTheGoodCommand("CtrigExp");
+			sendTheBadCommand("CtrigExp");
+			exposing = 1;
 			Rpulsewait = 0;
+		}
+		if (exposing) {
+			exposecount++;
+			if (exposecount == EXPCOUNT) {
+				exposecount = 0;
+				exposing = 0;
+			}
 		}
 		FD_ZERO(&input);
 		FD_SET(commFD, &input);

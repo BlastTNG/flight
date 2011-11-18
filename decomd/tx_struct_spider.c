@@ -820,8 +820,6 @@ struct ChannelStruct SlowChannels[] = {
   {"i_term_az",    'r',   ACS2_D, 26,                1.0,        -32768.0, 'u', U_NONE},
   {"error_az",     'r',   ACS2_D, 27,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
   {"bits_bal",     'w',   ACS2_D, 28,                1.0,             0.0, 'u', U_NONE},
-  {"trig_s_theugly",  'r',   ACS2_D, 51,                1.0,             0.0, 'u', U_NONE},
-  {"trig_l_theugly",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
   {"pch_pyr_clin", 'r',  ACS2_A1,  1,           0.001343,          -47.09, 'u', U_NONE},
@@ -839,6 +837,12 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_63_act",  'r',  ACS2_A1, 23,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},
   {"lvdt_64_act",  'r',  ACS2_A1, 25,   LVDT64_ADC_TO_ENC,     LVDT64_ZERO,   'u', U_NONE},
   //{"bsc_trig",	   'r',	 ACS2_A1, 27,		      1.0,	      0.0, 'u', U_NONE},
+  {"trig_s_thegood",'r', ACS2_A1, 51,                1.0,             0.0, 'u', U_NONE},
+  {"trig_l_thegood",'r', ACS2_A1, 52,                1.0,             0.0, 'u', U_NONE},
+  {"trig_s_thebad", 'r', ACS2_A1, 53,                1.0,             0.0, 'u', U_NONE},
+  {"trig_l_thebad", 'r', ACS2_A1, 54,                1.0,             0.0, 'u', U_NONE},
+  {"trig_s_theugly",'r', ACS2_A1, 55,                1.0,             0.0, 'u', U_NONE},
+  {"trig_l_theugly",'r', ACS2_A1, 56,                1.0,             0.0, 'u', U_NONE},
   {"v1_1_pss",     'r',  ACS2_A2,  1,           CAL16(-1.,            0.),  'u', U_V_V},
   {"v2_1_pss",     'r',  ACS2_A2,  3,           CAL16(-1.,            0.),  'u', U_V_V},
   {"v3_1_pss",     'r',  ACS2_A2,  5,           CAL16(-1.,            0.),  'u', U_V_V},
@@ -1054,9 +1058,7 @@ struct ChannelStruct FastChannels[] = {
   {"sin_el",       'w',   ACS2_D, 26,         1.0/32768.0,           -1.0, 'u', U_NONE},
 //{"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS,-32768.0*GY16_TO_DPS, 'u', U_V_DPS},
-  {"pulse_sc",     'r',   ACS2_D, 50,                 1.0,            0.0, 'u', U_NONE},
-  //{"trig_s_theugly",  'r',   ACS2_D, 51,                1.0,             0.0, 'u', U_NONE},
-  //{"trig_l_theugly",  'r',   ACS2_D, 52,                1.0,             0.0, 'u', U_NONE},
+  {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
   {"dps_table",    'w',    LOOP1, 34,  	     70.0/32767.0,            0.0, 's', U_V_DPS},
 
 #endif

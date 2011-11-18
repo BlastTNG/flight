@@ -56,7 +56,7 @@ extern int StartupVeto;
 
 short int InCharge = 0;
 
-int EthernetSC[2] = {3,3};
+int EthernetSC[3] = {3,3,3};
 
 extern struct AxesModeStruct axes_mode; /* motors.c */
 
@@ -220,7 +220,8 @@ static void WriteAux(void)
 
   WriteData(statusEthAddr, 
        (EthernetSC[0] & 0x3) +
-       ((EthernetSC[1] & 0x3) << 2), 
+       ((EthernetSC[1] & 0x3) << 2) + 
+       ((EthernetSC[2] & 0x3) << 4), 
        NIOS_QUEUE);
 
   mccstatus =        

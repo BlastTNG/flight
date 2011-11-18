@@ -49,7 +49,7 @@ extern "C" {
 //minimum table move to actually execute (in deg)
 #define MIN_TABLE_MOVE 0.1
 static int tableSpeed = 0;
-
+short int exposing;
 
 #define TABLE_DEVICE "/dev/ttySI8" //TODO change this?
 #define TABLE_ADDR 0x0ff0 //destination address on IDM controller bus (only one drive)
@@ -123,7 +123,10 @@ void updateTableSpeed()
   WriteData(dpsAddr, data, NIOS_QUEUE);
 
   //find new target velocity
-  targVel = -ACSData.ifyaw_gy;
+  if (exposing)  {
+	targVel = -ACSData.ifyaw_gy;
+  }
+  targVel = 0.0;
   if (targVel > MAX_TABLE_SPEED) targVel = MAX_TABLE_SPEED;
   else if (targVel < -MAX_TABLE_SPEED) targVel = -MAX_TABLE_SPEED;
   tableSpeed = (int)(targVel/MAX_TABLE_SPEED * (INT_MAX-1));

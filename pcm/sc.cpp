@@ -42,26 +42,31 @@ extern "C" {
 #include "camstruct.h"
 
 //allow any host to be the star camera
-#define RSC_SERVERNAME "192.168.1.11"
-#define BSC_SERVERNAME "192.168.1.109"
+#define THEGOOD_SERVERNAME "192.168.1.11"
+#define THEBAD_SERVERNAME  "192.168.1.12"
+#define THEUGLY_SERVERNAME "192.168.1.13"
 
-#define THEGOOD_SERIAL "110794466"
+#define THEGOOD_SERIAL "08073507"
 #define THEBAD_SERIAL  "08073506"
-#define THEUGLY_SERIAL "08073507"
+#define THEUGLY_SERIAL "110794466"
 
 extern "C" void nameThread(const char*);  /* in mcp.c */
 
 extern "C" short int InCharge;		  /* in tx.c */
 
-static CamCommunicator* RSCComm;
-static CamCommunicator* BSCComm;
-static pthread_t RSCcomm_id;
-static pthread_t BSCcomm_id;
+static CamCommunicator* TheGoodComm;
+static CamCommunicator* TheBadComm;
+static CamCommunicator* TheUglyComm;
+static pthread_t TheGoodcomm_id;
+static pthread_t TheBadcomm_id;
+static pthread_t TheUglycomm_id;
 
-static void* RSCReadLoop(void* arg);
-static void* BSCReadLoop(void* arg);
-static string RSCparseReturn(string rtnStr);
-static string BSCparseReturn(string rtnStr);
+static void* TheGoodReadLoop(void* arg);
+static void* TheBadReadLoop(void* arg);
+static void* TheUglyReadLoop(void* arg);
+static string TheGoodparseReturn(string rtnStr);
+static string TheBadparseReturn(string rtnStr);
+static string TheUglyparseReturn(string rtnStr);
 
 static StarcamReturn camRtn[3];
 static short int i_cam = 0; //read index in above buffer
@@ -71,15 +76,20 @@ extern "C" {
 /*
  * used to make commanding available to rest of mcp
  */
-int sendRSCCommand(const char *cmd)
+int sendTheGoodCommand(const char *cmd)
 {
   if (!InCharge) return 0;
-  return RSCComm->sendCommand(cmd);
+  return TheGoodComm->sendCommand(cmd);
 }
-int sendBSCCommand(const char *cmd)
+int sendTheBadCommand(const char *cmd)
 {
   if (!InCharge) return 0;
-  return BSCComm->sendCommand(cmd);
+  return TheBadComm->sendCommand(cmd);
+}
+int sendTheUglyCommand(const char *cmd)
+{
+  if (!InCharge) return 0;
+  return TheUglyComm->sendCommand(cmd);
 }
 
 /*
@@ -89,10 +99,12 @@ int sendBSCCommand(const char *cmd)
 void openSC()
 {
   bprintf(info, "connecting to the Star Cameras");
-  RSCComm = new CamCommunicator();
-  BSCComm = new CamCommunicator();
-  pthread_create(&RSCcomm_id, NULL, &RSCReadLoop, NULL);
-  pthread_create(&BSCcomm_id, NULL, &BSCReadLoop, NULL);
+  TheGoodComm = new CamCommunicator();
+  TheBadComm  = new CamCommunicator();
+  TheUglyComm = new CamCommunicator();
+  pthread_create(&TheGoodcomm_id, NULL, &TheGoodReadLoop, NULL);
+  pthread_create(&TheBadcomm_id, NULL, &TheBadReadLoop, NULL);
+  pthread_create(&TheUglycomm_id, NULL, &TheUglyReadLoop, NULL);
 }
 
 /*
@@ -394,59 +406,80 @@ void cameraFields()
  * wrapper for the read loop in camcommunicator
  * mcp main should make a thread for this
  */
-static void* RSCReadLoop(void* arg)
+static void* TheGoodReadLoop(void* arg)
 {
-  nameThread("RSC");
+  nameThread("TheGoodSC");
   bputs(startup, "startup\n");
   bool errorshown = false;
 
-  while (RSCComm->openClient(RSC_SERVERNAME) < 0) {
+  while (TheGoodComm->openClient(THEGOOD_SERVERNAME) < 0) {
     if (!errorshown) {
       bprintf(err, "failed to accept camera connection");
       errorshown = true;
     }
   }
-  bprintf(startup, "talking to Rotating Cameras");
+  bprintf(startup, "talking to The Good Star Camera");
 
-  sendRSCCommand("GOconf");  //request configuration data
-  sendRSCCommand("BOconf");  //request configuration data
+  sendTheGoodCommand("GOconf");  //request configuration data
+  sendTheGoodCommand("BOconf");  //request configuration data
 
   while(true) {
-    RSCComm->readLoop(&RSCparseReturn);
+    TheGoodComm->readLoop(&TheGoodparseReturn);
     //sleep(1);	//catchall for varous busy-waiting scenarios
   }
 
   return NULL;
 }
-static void* BSCReadLoop(void* arg)
+static void* TheBadReadLoop(void* arg)
 {
-  nameThread("BSC");
+  nameThread("TheBadSC");
   bputs(startup, "startup\n");
   bool errorshown = false;
 
-  while (BSCComm->openClient(BSC_SERVERNAME) < 0) {
+  while (TheBadComm->openClient(THEBAD_SERVERNAME) < 0) {
     if (!errorshown) {
       bprintf(err, "failed to accept camera connection");
       errorshown = true;
     }
   }
-  bprintf(startup, "talking to Boresite Camera");
+  bprintf(startup, "talking to The Bad Star Camera");
 
-  sendBSCCommand("UOconf");  //request configuration data
+  sendTheBadCommand("GOconf");  //request configuration data
+  sendTheBadCommand("BOconf");  //request configuration data
 
   while(true) {
-    BSCComm->readLoop(&BSCparseReturn);
+    TheBadComm->readLoop(&TheBadparseReturn);
+    //sleep(1);	//catchall for varous busy-waiting scenarios
+  }
+
+  return NULL;
+}
+static void* TheUglyReadLoop(void* arg)
+{
+  nameThread("TheUglySC");
+  bputs(startup, "startup\n");
+  bool errorshown = false;
+
+  while (TheUglyComm->openClient(THEUGLY_SERVERNAME) < 0) {
+    if (!errorshown) {
+      bprintf(err, "failed to accept camera connection");
+      errorshown = true;
+    }
+  }
+  bprintf(startup, "talking to The Ugly Star Camera");
+
+  sendTheUglyCommand("UOconf");  //request configuration data
+
+  while(true) {
+    TheUglyComm->readLoop(&TheUglyparseReturn);
     //sleep(1);	//catchall for varous busy-waiting scenarios
   }
 
   return NULL;
 }
 
-/*
- * function used by readloop that handles strings returned from the camera
- * it will write data to frames and log errors
- */
-static string RSCparseReturn(string rtnStr)
+
+static string TheGoodparseReturn(string rtnStr)
 {
   /* debugging only
      bprintf(info, "return string: %s", rtnStr.c_str());
@@ -460,7 +493,7 @@ static string RSCparseReturn(string rtnStr)
       bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
 
     //else if (Rstr.find("<conf>", 0) == 0) //contains config data
-    else if (Rstr.substr(0,6) == "<Gconf>") //contains The Good config data
+    else if (Rstr.substr(0,6) == "<conf>") //contains The Ugly config data
     {
       Rstr = Rstr.substr(6, Rstr.size()-6);
       istringstream sin;
@@ -476,7 +509,29 @@ static string RSCparseReturn(string rtnStr)
 	>> CommandData.thegood.minBlobDist;
       CommandData.thegood.expTime = (int)(temp * 1000);
     }
-    else if (Rstr.substr(0,6) == "<Bconf>") //contains The Bad config data
+    //otherwise it is success notice for another command
+
+  } else { //response is exposure data
+    TheGoodComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
+    i_cam = (i_cam+1)%2;
+  }
+  return "";  //doesn't send a response back to camera
+}
+static string TheBadparseReturn(string rtnStr)
+{
+  /* debugging only
+     bprintf(info, "return string: %s", rtnStr.c_str());
+     */
+  //if (rtnStr.find("<str>", 0) == 0) //response is string
+  if (rtnStr.substr(0,5) == "<str>") //response is string
+  {
+    string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
+
+    if (Rstr[0] == 'E') //it is an error
+      bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
+
+    //else if (Rstr.find("<conf>", 0) == 0) //contains config data
+    else if (Rstr.substr(0,6) == "<conf>") //contains The Ugly config data
     {
       Rstr = Rstr.substr(6, Rstr.size()-6);
       istringstream sin;
@@ -492,32 +547,15 @@ static string RSCparseReturn(string rtnStr)
 	>> CommandData.thebad.minBlobDist;
       CommandData.thebad.expTime = (int)(temp * 1000);
     }
-    else if (Rstr.substr(0,6) == "<Uconf>") //contains The Ugly config data
-    {
-      Rstr = Rstr.substr(6, Rstr.size()-6);
-      istringstream sin;
-      sin.str(Rstr);
-      double temp;  //value sent for expTime is a double
-      sin >> CommandData.theugly.expInt
-	>> temp
-	>> CommandData.theugly.focusRes
-	>> CommandData.theugly.moveTol
-	>> CommandData.theugly.maxBlobs
-	>> CommandData.theugly.grid
-	>> CommandData.theugly.threshold
-	>> CommandData.theugly.minBlobDist;
-      CommandData.theugly.expTime = (int)(temp * 1000);
-    }
     //otherwise it is success notice for another command
 
   } else { //response is exposure data
-    RSCComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
+    TheBadComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
     i_cam = (i_cam+1)%2;
   }
   return "";  //doesn't send a response back to camera
 }
-
-static string BSCparseReturn(string rtnStr)
+static string TheUglyparseReturn(string rtnStr)
 {
   /* debugging only
      bprintf(info, "return string: %s", rtnStr.c_str());
@@ -550,7 +588,7 @@ static string BSCparseReturn(string rtnStr)
     //otherwise it is success notice for another command
 
   } else { //response is exposure data
-    BSCComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
+    TheUglyComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
     i_cam = (i_cam+1)%2;
   }
   return "";  //doesn't send a response back to camera

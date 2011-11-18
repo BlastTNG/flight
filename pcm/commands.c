@@ -101,8 +101,9 @@ struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
 
 /* in sc.cpp: */
-int sendBSCCommand(const char *cmd);
-int sendRSCCommand(const char *cmd);
+int sendTheGoodCommand(const char *cmd);
+int sendTheBadCommand(const char *cmd);
+int sendTheUglyCommand(const char *cmd);
 
 /** Write the Previous Status: called whenever anything changes */
 static void WritePrevStatus()
@@ -690,15 +691,15 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       /***************************************/
       /********* The Good Commanding  *************/
     case thegood_expose:
-      sendRSCCommand("GCtrigExp");
+      sendTheGoodCommand("CtrigExp");
       break;
     case thegood_autofocus:
       if (CommandData.thegood.forced)
-	sendRSCCommand("GCtrigFocusF");
-      else sendRSCCommand("GCtrigFocus");
+	sendTheGoodCommand("CtrigFocusF");
+      else sendTheGoodCommand("CtrigFocus");
       break;
     case thegood_settrig_ext:
-      sendRSCCommand("GCsetExpInt=0");
+      sendTheGoodCommand("CsetExpInt=0");
       CommandData.thegood.expInt = 0;
       break;
     case thegood_force_lens:
@@ -710,15 +711,15 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       /***************************************/
       /********* The Bad Commanding  *************/
     case thebad_expose:
-      sendRSCCommand("BCtrigExp");
+      sendTheBadCommand("CtrigExp");
       break;
     case thebad_autofocus:
       if (CommandData.thebad.forced)
-	sendRSCCommand("BCtrigFocusF");
-      else sendRSCCommand("BCtrigFocus");
+	sendTheBadCommand("CtrigFocusF");
+      else sendTheBadCommand("CtrigFocus");
       break;
     case thebad_settrig_ext:
-      sendRSCCommand("BCsetExpInt=0");
+      sendTheBadCommand("CsetExpInt=0");
       CommandData.thebad.expInt = 0;
       break;
     case thebad_force_lens:
@@ -730,15 +731,15 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       /***************************************/
       /********* The Ugly Commanding  *************/
     case theugly_expose:
-      sendBSCCommand("CtrigExp");
+      sendTheUglyCommand("CtrigExp");
       break;
     case theugly_autofocus:
       if (CommandData.theugly.forced)
-	sendBSCCommand("CtrigFocusF");
-      else sendBSCCommand("CtrigFocus");
+	sendTheUglyCommand("CtrigFocusF");
+      else sendTheUglyCommand("CtrigFocus");
       break;
     case theugly_settrig_ext:
-      sendBSCCommand("CsetExpInt=0");
+      sendTheUglyCommand("CsetExpInt=0");
       CommandData.theugly.expInt = 0;
       break;
     case theugly_force_lens:
@@ -1573,151 +1574,151 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /********* The Good Commanding  *************/ 
     case thegood_any:
-      sendRSCCommand(svalues[0]);
+      sendTheGoodCommand(svalues[0]);
       break;
     case thegood_settrig_timed:
-      sprintf(buf, "GCsetExpInt=%d", ivalues[0]);
-      sendRSCCommand(buf);
+      sprintf(buf, "CsetExpInt=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
       CommandData.thegood.expInt = ivalues[0];
       break;
     case thegood_exp_params:
-      sprintf(buf, "GCsetExpTime=%d", ivalues[0]);
+      sprintf(buf, "CsetExpTime=%d", ivalues[0]);
       CommandData.thegood.expTime = ivalues[0];
-      sendRSCCommand(buf);
+      sendTheGoodCommand(buf);
       break;
     case thegood_focus_params:
-      sprintf(buf, "GCsetFocRsln=%d", ivalues[0]);
-      sendRSCCommand(buf);
-      sprintf(buf, "GCsetFocRnge=%d", ivalues[1]);
-      sendRSCCommand(buf); 
+      sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
+      sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
+      sendTheGoodCommand(buf); 
       CommandData.thegood.focusRes = ivalues[0];
       CommandData.thegood.focusRng = ivalues[1];
       break;
     case thegood_bad_pix:
-      sprintf(buf, "GIsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
-      sendRSCCommand(buf);
+      sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
+      sendTheGoodCommand(buf);
       break;
     case thegood_blob_params:
-      sprintf(buf, "GIsetMaxBlobs=%d", ivalues[0]);
-      sendRSCCommand(buf);
-      sprintf(buf, "GIsetGrid=%d", ivalues[1]);
-      sendRSCCommand(buf);
-      sprintf(buf, "GIsetThreshold=%f", rvalues[2]);
-      sendRSCCommand(buf);
-      sprintf(buf, "GIsetDisttol=%d", ivalues[3]);
-      sendRSCCommand(buf);
+      sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
+      sprintf(buf, "IsetGrid=%d", ivalues[1]);
+      sendTheGoodCommand(buf);
+      sprintf(buf, "IsetThreshold=%f", rvalues[2]);
+      sendTheGoodCommand(buf);
+      sprintf(buf, "IsetDisttol=%d", ivalues[3]);
+      sendTheGoodCommand(buf);
       CommandData.thegood.maxBlobs = ivalues[0];
       CommandData.thegood.grid = ivalues[1];
       CommandData.thegood.threshold = rvalues[2];
       CommandData.thegood.minBlobDist = ivalues[3];
       break;
     case thegood_lens_any:
-      sprintf(buf, "GL=%s", svalues[0]);
-      sendRSCCommand(buf);
+      sprintf(buf, "L=%s", svalues[0]);
+      sendTheGoodCommand(buf);
       break;
     case thegood_lens_move:
       if (CommandData.thegood.forced)
-	sprintf(buf, "GLforce=%d", ivalues[0]);
-      else sprintf(buf, "GLmove=%d", ivalues[0]);
-      sendRSCCommand(buf);
+	sprintf(buf, "Lforce=%d", ivalues[0]);
+      else sprintf(buf, "Lmove=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
       break;
     case thegood_lens_params:
-      sprintf(buf, "GLsetTol=%d", ivalues[0]);
-      sendRSCCommand(buf);
+      sprintf(buf, "LsetTol=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
       CommandData.thegood.moveTol = ivalues[0];
       break;
       /***************************************/
       /********* The Bad Commanding  *************/ 
     case thebad_any:
-      sendRSCCommand(svalues[0]);
+      sendTheBadCommand(svalues[0]);
       break;
     case thebad_settrig_timed:
-      sprintf(buf, "BCsetExpInt=%d", ivalues[0]);
-      sendRSCCommand(buf);
+      sprintf(buf, "BsetExpInt=%d", ivalues[0]);
+      sendTheBadCommand(buf);
       CommandData.thebad.expInt = ivalues[0];
       break;
     case thebad_exp_params:
-      sprintf(buf, "BCsetExpTime=%d", ivalues[0]);
+      sprintf(buf, "BsetExpTime=%d", ivalues[0]);
       CommandData.thebad.expTime = ivalues[0];
-      sendRSCCommand(buf);
+      sendTheBadCommand(buf);
       break;
     case thebad_focus_params:
-      sprintf(buf, "BCsetFocRsln=%d", ivalues[0]);
-      sendRSCCommand(buf);
-      sprintf(buf, "BCsetFocRnge=%d", ivalues[1]);
-      sendRSCCommand(buf); 
+      sprintf(buf, "BsetFocRsln=%d", ivalues[0]);
+      sendTheBadCommand(buf);
+      sprintf(buf, "BsetFocRnge=%d", ivalues[1]);
+      sendTheBadCommand(buf); 
       CommandData.thebad.focusRes = ivalues[0];
       CommandData.thebad.focusRng = ivalues[1];
       break;
     case thebad_bad_pix:
-      sprintf(buf, "BIsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
-      sendRSCCommand(buf);
+      sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
+      sendTheBadCommand(buf);
       break;
     case thebad_blob_params:
-      sprintf(buf, "BIsetMaxBlobs=%d", ivalues[0]);
-      sendRSCCommand(buf);
-      sprintf(buf, "BIsetGrid=%d", ivalues[1]);
-      sendRSCCommand(buf);
-      sprintf(buf, "BIsetThreshold=%f", rvalues[2]);
-      sendRSCCommand(buf);
-      sprintf(buf, "BIsetDisttol=%d", ivalues[3]);
-      sendRSCCommand(buf);
+      sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
+      sendTheBadCommand(buf);
+      sprintf(buf, "IsetGrid=%d", ivalues[1]);
+      sendTheBadCommand(buf);
+      sprintf(buf, "IsetThreshold=%f", rvalues[2]);
+      sendTheBadCommand(buf);
+      sprintf(buf, "IsetDisttol=%d", ivalues[3]);
+      sendTheBadCommand(buf);
       CommandData.thebad.maxBlobs = ivalues[0];
       CommandData.thebad.grid = ivalues[1];
       CommandData.thebad.threshold = rvalues[2];
       CommandData.thebad.minBlobDist = ivalues[3];
       break;
     case thebad_lens_any:
-      sprintf(buf, "BL=%s", svalues[0]);
-      sendRSCCommand(buf);
+      sprintf(buf, "L=%s", svalues[0]);
+      sendTheBadCommand(buf);
       break;
     case thebad_lens_move:
       if (CommandData.thebad.forced)
-	sprintf(buf, "BLforce=%d", ivalues[0]);
-      else sprintf(buf, "BLmove=%d", ivalues[0]);
-      sendRSCCommand(buf);
+	sprintf(buf, "Lforce=%d", ivalues[0]);
+      else sprintf(buf, "Lmove=%d", ivalues[0]);
+      sendTheBadCommand(buf);
       break;
     case thebad_lens_params:
-      sprintf(buf, "BLsetTol=%d", ivalues[0]);
-      sendRSCCommand(buf);
+      sprintf(buf, "LsetTol=%d", ivalues[0]);
+      sendTheBadCommand(buf);
       CommandData.thebad.moveTol = ivalues[0];
       break;
       /***************************************/
       /********* The Ugly Commanding  *************/ 
     case theugly_any:
-      sendBSCCommand(svalues[0]);
+      sendTheUglyCommand(svalues[0]);
       break;
     case theugly_settrig_timed:
       sprintf(buf, "CsetExpInt=%d", ivalues[0]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       CommandData.theugly.expInt = ivalues[0];
       break;
     case theugly_exp_params:
       sprintf(buf, "CsetExpTime=%d", ivalues[0]);
       CommandData.theugly.expTime = ivalues[0];
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       break;
     case theugly_focus_params:
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendBSCCommand(buf); 
+      sendTheUglyCommand(buf); 
       CommandData.theugly.focusRes = ivalues[0];
       CommandData.theugly.focusRng = ivalues[1];
       break;
     case theugly_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       break;
     case theugly_blob_params:
       sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       sprintf(buf, "IsetGrid=%d", ivalues[1]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       sprintf(buf, "IsetThreshold=%f", rvalues[2]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       sprintf(buf, "IsetDisttol=%d", ivalues[3]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       CommandData.theugly.maxBlobs = ivalues[0];
       CommandData.theugly.grid = ivalues[1];
       CommandData.theugly.threshold = rvalues[2];
@@ -1725,17 +1726,17 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case theugly_lens_any:
       sprintf(buf, "L=%s", svalues[0]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       break;
     case theugly_lens_move:
       if (CommandData.theugly.forced)
 	sprintf(buf, "Lforce=%d", ivalues[0]);
       else sprintf(buf, "Lmove=%d", ivalues[0]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       break;
     case theugly_lens_params:
       sprintf(buf, "LsetTol=%d", ivalues[0]);
-      sendBSCCommand(buf);
+      sendTheUglyCommand(buf);
       CommandData.theugly.moveTol = ivalues[0];
       break;
     case table_move:
