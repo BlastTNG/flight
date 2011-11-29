@@ -877,10 +877,10 @@ struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
   {"ifyaw_1_gy",  'r',  ACS2_D,  0, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"ifyaw_2_gy",  'r',  ACS2_D,  2, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifroll_1_gy", 'r',  ACS2_D,  4, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifroll_2_gy", 'r',  ACS2_D,  6, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifel_2_gy",   'r',  ACS2_D,  8, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifel_1_gy",   'r',  ACS2_D, 10, DGY32_TO_DPS, -1*DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifroll_1_gy", 'r',  ACS2_D,  4, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifroll_2_gy", 'r',  ACS2_D,  6, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifel_2_gy",   'r',  ACS2_D,  8, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifel_1_gy",   'r',  ACS2_D, 10, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"enc_table",   'r',  ACS2_D, 54,     360.0/144000.0,             0.0, 'U', U_P_DEG},
 #endif
 
