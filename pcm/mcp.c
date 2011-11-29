@@ -838,18 +838,20 @@ static void WatchDog (void)
   }
 }
 
-static void write_to_biphase()
+static void write_to_biphase(unsigned short *frame)
 {
   int i;
   static unsigned short nothing[BI0_FRAME_SIZE];
   static unsigned short sync = 0xEB90;
   static unsigned int do_skip = 0;
+  //static int tmpfp;
 
   if (bi0_fp == -2) {
     bi0_fp = open("/dev/bbc_bi0", O_RDWR);
     if (bi0_fp == -1) {
       berror(tfatal, "Error opening biphase device");
     }
+    //tmpfp = open("/data/rawdir/tmpbi0", O_RDWR | O_TRUNC | O_CREAT, S_IRUSR|S_IWUSR);
 
     for (i = 0; i < BI0_FRAME_SIZE; i++) {
       nothing[i] = 0xEEEE;
@@ -858,25 +860,28 @@ static void write_to_biphase()
 
   if ((bi0_fp >= 0) && InCharge) {
 
-    RxFrame[0] = 0xEB90;
-    nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
+    frame[0] = 0xEB90;
+    nothing[0] = CalculateCRC(0xEB90, frame, BiPhaseFrameWords);
 
-    RxFrame[0] = sync;
+    frame[0] = sync;
     sync = ~sync;
 
     if (do_skip) {
       --do_skip;
     } else {
-      i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
+      i = write(bi0_fp, frame, BiPhaseFrameWords * sizeof(unsigned short));
+      //write(tmpfp, frame, BiPhaseFrameWords * sizeof(unsigned short));
       if (i < 0) {
-        berror(err, "bi-phase write for RxFrame failed");
+        berror(err, "bi-phase write for frame failed");
       } else if (i != BiPhaseFrameWords * sizeof(unsigned short)) {
-        bprintf(err, "Short write for RxFrame: %i of %u", i,
+        bprintf(err, "Short write for biphase frame: %i of %u", i,
             (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
       }
 
       i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
           sizeof(unsigned short));
+      //write(tmpfp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
+      //    sizeof(unsigned short));
       if (i < 0) 
         berror(err, "bi-phase write for padding failed");
       else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
