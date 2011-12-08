@@ -1752,11 +1752,14 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
     case table_goto:
       CommandData.table.mode = 1;
       CommandData.table.pos = rvalues[0];
+      break;
     case table_relmove:
       CommandData.table.mode = 2;
       CommandData.table.move = rvalues[0];
+      break;
     case table_speed:
       CommandData.table.vel = rvalues[0];
+      break;
 
 #endif
     default:
