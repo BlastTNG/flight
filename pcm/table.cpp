@@ -41,7 +41,7 @@ extern "C" {
 #include "motorcommand.h"
 
 //speed limit in dps
-#define MAX_TABLE_SPEED 45.0
+#define MAX_TABLE_SPEED 30.0
 //unit conversion from dps to internal controller units
 #define DPS_TO_TABLE (1.0/2.496)
 //don't update speed unless it changes by this (1000 == 0.08arcsec/sec)
@@ -50,8 +50,10 @@ extern "C" {
 #define MIN_TABLE_MOVE 0.1
 static int tableSpeed = 0;
 short int exposing;
+short int zerodist;
+double goodPos = 90;
 
-#define TABLE_DEVICE "/dev/ttySI8" //TODO change this?
+#define TABLE_DEVICE "/dev/ttySI8"
 #define TABLE_ADDR 0x0ff0 //destination address on IDM controller bus (only one drive)
 static DriveCommunicator* tableComm = NULL;
 static pthread_t tablecomm_id;
@@ -86,11 +88,16 @@ void closeTable()
 void updateTableSpeed()
 {
   double vel, dt;
+  static double yawdist;
+  double dist;
   static double targVel;
   timeval timestruct;
+  double targPos=0.0;
   static double lastTime, lastPos;
   double thisTime, thisPos;
   static int firsttime = 1;
+  static int zerodist = 1;
+  static int startmove = 1;
   static NiosStruct* dpsAddr = NULL;
 
   //initialization
@@ -118,15 +125,51 @@ void updateTableSpeed()
   lastPos = thisPos;
   lastTime = thisTime;
 
+  //figure out position of goodPos, and move there at 5dps
+
+  //1) yaw distance moved since goodPos was declared
+  if (zerodist) {	//zero yawdist every time a trigPos is set (in camcommunicator.cpp)
+	yawdist = 0.0;
+	zerodist = 0;
+  }
+  yawdist += ACSData.ifyaw_gy*dt;
+  if (yawdist > 180) yawdist -= 360.0;
+  if (yawdist < -180) yawdist += 360.0;
+
+  //2) actual encoder position of goodPos now = goodPos(=trigPos) + yawdist
+  targPos = goodPos + yawdist;
+  dist = thisPos - targPos;
+  if (goodPos == 90.0) {
+	dist = 90.0 - thisPos;
+  }
+  if (dist > 180) dist -= 360;
+  if (dist < -180) dist += 360;
   //write speed to frame
   int data = (int)((vel/70.0)*32767.0); //allow much room to avoid overflow
   WriteData(dpsAddr, data, NIOS_QUEUE);
 
   //find new target velocity
-  if (exposing)  {
-	targVel = -ACSData.ifyaw_gy;
+  if (CommandData.table.mode==1) {
+	targVel = CommandData.table.vel;
+	if (thisPos == CommandData.table.pos) targVel = 0;
+  } else if (CommandData.table.mode==2) {
+	if (startmove) {
+		targPos = thisPos + CommandData.table.move;
+		startmove=0;
+	}
+	targVel = CommandData.table.vel;
+	if (thisPos == targPos) targVel = 0;
+  } else {
+  	if (exposing)  {
+		targVel = -ACSData.ifyaw_gy;
+  	} else {
+		if (dist > 0) targVel = 5.0;
+		if (dist < 0) targVel = -5.0;
+		if ((fabs(dist)) < 0.5) {
+			targVel = 0.0;
+		}
+  	}
   }
-  targVel = 0.0;
   if (targVel > MAX_TABLE_SPEED) targVel = MAX_TABLE_SPEED;
   else if (targVel < -MAX_TABLE_SPEED) targVel = -MAX_TABLE_SPEED;
   tableSpeed = (int)(targVel/MAX_TABLE_SPEED * (INT_MAX-1));

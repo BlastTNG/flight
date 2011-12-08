@@ -25,7 +25,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.39 $";
+const char *command_list_serial = "$Revision: 1.40 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Balance",          "Waveplate Rotator",
@@ -33,7 +33,7 @@ const char *GroupNames[N_GROUPS] = {
   "Pointing Sensor Vetos", "Actuators",        "BSC",
   "Pointing Motor Gains",  "RSC",	       "HK Insert Heat",
   "Subsystem Power",       "Lock Motor",       "HK Theo Heat",
-  "Telemetry",             "ISC Housekeeping", "OSC Housekeeping",
+  "Telemetry",             "SC Table", 	       "OSC Housekeeping",
   "X-Y Stage",             "ISC Modes",        "OSC Modes",
   "Miscellaneous",         "ISC Parameters",   "OSC Parameters"
   };
@@ -214,7 +214,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(theugly_settrig_ext), "Set external The Ugly trigger mode", GR_BSC},
   {COMMAND(theugly_force_lens), "Forced mode for The Ugly lens moves", GR_BSC},
   {COMMAND(theugly_unforce_lens), "Normal mode for The Ugly lens moves", GR_BSC},
-
+  //Star Camera table
+  {COMMAND(table_track), "Put the table in track mode", GR_SCTAB},
   //Theo heater housekeeping commands
   {COMMAND(hk_t0_heat_on), "Turn on Theo's Heater #0", GR_THEO_HEAT},
   {COMMAND(hk_t0_heat_off), "Turn off Theo's Heater #0", GR_THEO_HEAT},
@@ -943,25 +944,30 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_theugly"}
     }
   },
-
-  {COMMAND(table_move), "move RSC by relative angle", GR_RSC, 1,
-    {
-      {"Relative angle (deg)", -360, 360, 'd', "table_move"}
-    }
-  },
-  {COMMAND(table_move_g), "Gains to find move velocity from length",
-    GR_RSC, 1,
-    {
-      {"P", 0, 100, 'f', "g_table_move"}
-    }
-  },
-  {COMMAND(table_gain), "RSC rotary table gains", GR_RSC, 2,
+  //STAR CAMERA TABLE
+  {COMMAND(table_gain), "RSC rotary table gains", GR_SCTAB, 2,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_table"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_table"},
       {"Derivative Gain",   0, MAX_15BIT, 'i', "g_d_table"}
     }
   },
+  {COMMAND(table_goto), "move RSC to specific encoder position", GR_SCTAB, 1,
+    {
+      {"Goto position (deg)", 0, 360, 'd', "table_goto"}
+    }
+  },
+  {COMMAND(table_relmove), "move RSC by relative angle", GR_SCTAB, 1,
+    {
+      {"Relative angle (deg)", -360, 360, 'd', "table_move_"}
+    }
+  },
+  {COMMAND(table_speed), "change RSC table speed", GR_SCTAB, 1,
+    {
+      {"Speed (deg/s)", 0, 45, 'd', "table_speed"}
+    }
+  },
+
   {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
    {
      {"Reaction Wheel", 0, 5, 'i', "VERBOSE_RW"},

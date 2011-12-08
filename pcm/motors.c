@@ -354,8 +354,8 @@ static double GetVAz(void)
     //bprintf(info, "az_dest: %f, az: %f, dx: %f, vel: %f", az_dest, az, dx, vel);
     /* TODO: JAS -- temporary negative sign below since az = yaw, whereas all of
              the velocity request calculations assume az = -yaw */ 
-    //vel *= (double)CommandData.azi_gain.PT/10000.0;
-    vel *= -(double)CommandData.azi_gain.PT/10000.0;
+    vel *= (double)CommandData.azi_gain.PT/10000.0;
+    //vel *= -(double)CommandData.azi_gain.PT/10000.0;
     //vel = -(az - az_dest) * 0.36;
   }
 

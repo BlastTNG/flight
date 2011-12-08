@@ -748,6 +748,10 @@ static void SingleCommand (enum singleCommand command, int scheduled)
     case theugly_unforce_lens:
       CommandData.theugly.forced = 0;
       break;
+	/**************************************/
+	/********** Star Camera Table *********/
+    case table_track:
+      CommandData.table.mode = 0;
 
     case blast_rocks:
       CommandData.sucks = 0;
@@ -1739,18 +1743,20 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheUglyCommand(buf);
       CommandData.theugly.moveTol = ivalues[0];
       break;
-    case table_move:
-      CommandData.table.RelMove += rvalues[0];
-      break;
-    case table_move_g:
-      CommandData.table.MoveGain = rvalues[0];
-      break;
     case table_gain:  /* rotary table gains */
       //TODO PID loop performed in controller, figure out how to set gains
       CommandData.table.tableGain.P = ivalues[0];
       CommandData.table.tableGain.I = ivalues[1];
       CommandData.table.tableGain.D = ivalues[2];
       break;
+    case table_goto:
+      CommandData.table.mode = 1;
+      CommandData.table.pos = rvalues[0];
+    case table_relmove:
+      CommandData.table.mode = 2;
+      CommandData.table.move = rvalues[0];
+    case table_speed:
+      CommandData.table.vel = rvalues[0];
 
 #endif
     default:
@@ -2478,7 +2484,9 @@ void InitCommandData()
   CommandData.hwpr.force_repoll = 0;
   CommandData.hwpr.repeats = 0;
 
-  CommandData.table.RelMove = 0;
+  CommandData.table.vel = 0.0;
+  CommandData.table.pos = 90.0;
+  CommandData.table.move = 0.0;
 
   CommandData.Temporary.setLevel[0] = 1;
   CommandData.Temporary.setLevel[1] = 1;
@@ -2596,10 +2604,10 @@ void InitCommandData()
   CommandData.gyheat.gain.I = 10;
   CommandData.gyheat.gain.D = 3;
 
-  CommandData.table.MoveGain = 10.0;
   CommandData.table.tableGain.P = 6652;  //thousandths
   CommandData.table.tableGain.I = 302;   //ten-thousandths
   CommandData.table.tableGain.D = 13520; //hundredths
+  CommandData.table.mode = 0;
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;

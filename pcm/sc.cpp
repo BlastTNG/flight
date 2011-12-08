@@ -29,6 +29,7 @@
 #include <pthread.h>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 extern "C" {
 #include "share/blast.h"
@@ -46,15 +47,19 @@ extern "C" {
 #define THEBAD_SERVERNAME  "192.168.1.12"
 #define THEUGLY_SERVERNAME "192.168.1.13"
 
-#define THEGOOD_SERIAL "08073507"
+//FIXME these get switched around
+#define THEGOOD_SERIAL "110794466"
 #define THEBAD_SERIAL  "08073506"
-#define THEUGLY_SERIAL "110794466"
+#define THEUGLY_SERIAL "08073507"
 
 extern "C" void nameThread(const char*);  /* in mcp.c */
 
 extern "C" short int InCharge;		  /* in tx.c */
 
 extern "C" int EthernetSC[3];      /* tx.c */
+
+extern double goodPos;	/* table.cpp */
+extern double trigPos;	/* camcommunicator.cpp */
 
 static CamCommunicator* TheGoodComm;
 static CamCommunicator* TheBadComm;
@@ -349,6 +354,10 @@ void cameraFields()
 			SHRT_MAX : (unsigned int)rsc->snr[i]*100;
 		      WriteData(TheGoodBlobS[i], snr, NIOS_QUEUE);
 		}
+	}
+	if ((rsc->numblobs > 5) && (goodPos == 90.0)) {
+		goodPos = trigPos;
+//		cout << rsc->numblobs << "BLOBS" <<  ", setting GOODPOS to " << goodPos << endl;
 	}
     } else if (which == 2) {
     	WriteData(TheBadFrameAddr, rsc->frameNum, NIOS_QUEUE);

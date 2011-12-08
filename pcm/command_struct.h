@@ -160,9 +160,11 @@ struct SCCommandData {
 };
 
 struct TableStruct {
-  double RelMove;	//relative angle to move table by (deg)
-  double MoveGain;	//P
   struct GainStruct tableGain;	//PID
+  double vel;
+  double pos;
+  double move;
+  double mode;		//0=track, 1=move to pos, 2=relative move
 };
 
 struct CommandDataStruct {

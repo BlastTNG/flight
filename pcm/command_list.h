@@ -16,8 +16,8 @@
 
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 163        /* total number of single word cmds */
-#define N_MCOMMANDS 110        /* total number of multiword commands */
+#define N_SCOMMANDS 164        /* total number of single word cmds */
+#define N_MCOMMANDS 111        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -45,7 +45,7 @@
 #define GR_LOCK         0x00002000
 #define GR_THEO_HEAT	0x00004000
 #define GR_TELEM        0x00008000
-//#define GR_ISC_HOUSE    0x00010000	  //unused
+#define GR_SCTAB        0x00010000
 //#define GR_OSC_HOUSE    0x00020000	  //unused
 #define GR_STAGE        0x00040000
 //#define GR_ISC_MODE     0x00080000	  //unused
@@ -96,10 +96,10 @@ enum singleCommand {
   thegood_off,	     thegood_on,	thegood_cam_cycle, thegood_cpu_cycle,
   thebad_off,	     thebad_on,		thebad_cam_cycle,  thebad_cpu_cycle,
   theugly_off,	     theugly_on,	theugly_cam_cycle, theugly_cpu_cycle,
-  thegood_expose,    thegood_autofocus,	thegood_settrig_ext,thegood_force_lens, 
-  thebad_expose,     thebad_autofocus,	thebad_settrig_ext,thebad_force_lens, 
-  theugly_expose,    theugly_autofocus,	theugly_settrig_ext,theugly_force_lens, 
-  thegood_unforce_lens,thebad_unforce_lens,theugly_unforce_lens,  
+  thegood_expose,    	thegood_autofocus,	thegood_settrig_ext,	thegood_force_lens, 
+  thebad_expose,     	thebad_autofocus,	thebad_settrig_ext,	thebad_force_lens, 
+  theugly_expose,    	theugly_autofocus,	theugly_settrig_ext,	theugly_force_lens, 
+  thegood_unforce_lens,	thebad_unforce_lens,	theugly_unforce_lens,	table_track,  
   hwpr_step,         hwpr_pot_is_dead,  hwpr_pot_is_alive,
   hwpr_step_off,     hwpr_step_on,
   //theo heater commands. TODO-theo assign non-temporary names
@@ -136,7 +136,7 @@ enum multiCommand {
   thebad_bad_pix,    thebad_blob_params,	thebad_lens_any,   	thebad_lens_move,
   theugly_bad_pix,   theugly_blob_params,	theugly_lens_any,	theugly_lens_move,
   thegood_lens_params,thebad_lens_params,	theugly_lens_params, 
-  table_move,	     table_move_g,	table_gain, 
+  table_gain,	     table_goto,	table_relmove,	   table_speed, 
   t_bsc_set,         t_rsc_set,		hwpr_repeat,       hwpr_define_pos,
   hwpr_goto,	     ants_gps,          hwpr_goto_pot,     act_enc_trim,
   hwpr_vel,          hwpr_i,

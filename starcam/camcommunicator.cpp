@@ -11,6 +11,7 @@
 #include "camcommunicator.h"
 extern "C" {
 #include "share/blast.h"
+#include "pointing_struct.h"
 }
 #define CAM_COMM_DEBUG 0
 #if CAM_COMM_DEBUG
@@ -21,8 +22,8 @@ extern "C" {
 //how long to wait after failed connection attempt to try again (us)
 #define CLIENT_RETRY_DELAY 1000000
 #define BSCWAIT 24 
-#define RSCWAIT 40 
-#define EXPCOUNT 20 
+#define RSCWAIT 80 
+#define EXPCOUNT 40 
 
 extern "C" int EthernetSC[3];      /* tx.c */
 pthread_mutex_t scmutex;
@@ -31,6 +32,10 @@ extern "C" int sendTheGoodCommand(const char *cmd); //sc.cpp
 extern "C" int sendTheBadCommand(const char *cmd); //sc.cpp
 extern "C" int sendTheUglyCommand(const char *cmd); //sc.cpp
 extern short int exposing;	//in table.cpp
+extern short int zerodist;	//in table.cpp
+extern double goodPos;		//in table.cpp
+double trigPos;
+
 
 /*
 
@@ -337,22 +342,26 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
     		usleep(100000);
     		Rpulsewait++;
     		Bpulsewait++;
-      		if (Rpulsewait > RSCWAIT) {
+      		if (Rpulsewait > 200/*RSCWAIT*/) {
 			sendTheGoodCommand("CtrigExp");
-			sendTheBadCommand("CtrigExp");
+//			sendTheBadCommand("CtrigExp");
+			if (goodPos == 90.0) {
+				trigPos = ACSData.enc_table;
+				zerodist = 1;
+			}
 			exposing = 1;
 			Rpulsewait = 0;
 		}
 		if (exposing) {
 			exposecount++;
-			if (exposecount == EXPCOUNT) {
+			if (exposecount == 50/*EXPCOUNT*/) {
 				exposecount = 0;
 				exposing = 0;
 			}
 		}
     		if (bsc_trigger) {
       			if (Bpulsewait > BSCWAIT) {
-				sendTheUglyCommand("CtrigExp");
+				//sendTheUglyCommand("CtrigExp");
         			bsc_trigger = 0;
         			Bpulsewait = 0;
       			} else {
