@@ -40,6 +40,7 @@
 #include "share/lut.h"
 #include "tx.h"
 #include "share/fir.h"
+#include "share/sip.h"
 
 // Include gsl package for the old sun sensor
 #include <gsl/gsl_rng.h>

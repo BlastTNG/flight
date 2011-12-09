@@ -48,6 +48,8 @@
 #include "sss_struct.h"
 #include "chrgctrl.h"
 
+#include "share/sip.h"
+
 #define NIOS_BUFFER_SIZE 100
 
 extern short int SouthIAm;
