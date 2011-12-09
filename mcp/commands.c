@@ -1716,7 +1716,7 @@ void InitCommandData()
 {
   int fp, n_read = 0, junk, extra = 0, i;
 
-  if ((fp = open("/data/etc/blast/mcp.prev_status", O_RDONLY)) < 0) {
+  if ((fp = open(PREV_STATUS_FILE, O_RDONLY)) < 0) {
     berror(err, "Commands: Unable to open prev_status file for reading");
   } else {
     if ((n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0)

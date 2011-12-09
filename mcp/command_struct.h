@@ -52,7 +52,7 @@
 /* time (in slow frames) to suppress ADC card watchdog, to induce reset */
 #define	RESET_ADC_LEN	 80
 
-#define PREV_STATUS_DIR "/data/etc/blast/mcp.prev_status"
+#define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
 
 struct GainStruct {
   unsigned short int P;

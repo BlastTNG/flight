@@ -76,7 +76,7 @@ void WritePrevStatus()
   int fp, n;
 
   /** write the default file */
-  fp = open(PREV_STATUS_DIR, O_WRONLY|O_CREAT|O_TRUNC, 00666);
+  fp = open(PREV_STATUS_FILE, O_WRONLY|O_CREAT|O_TRUNC, 00666);
   if (fp < 0) {
     berror(err, "Commands: mcp.prev_status open()");
     return;
