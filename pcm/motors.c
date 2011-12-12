@@ -818,7 +818,7 @@ static void SetAzScanMode(double az, double left, double right, double v,
 static void DoSineMode(void)
 {
   double az, el;
-  double lst, lat;
+  //double lst, lat;
   double centre, left, right, v_az;//, top, bottom, v_az;
   //double az_of_bot;
   double v_az_max, ampl, turn_around;
@@ -836,8 +836,8 @@ static void DoSineMode(void)
   axes_mode.el_vel = 0.0;
 
   i_point = GETREADINDEX(point_index);
-  lst = PointingData[i_point].lst;
-  lat = PointingData[i_point].lat;
+  //lst = PointingData[i_point].lst;
+  //lat = PointingData[i_point].lat;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;// + 28.0;
 
@@ -873,7 +873,7 @@ static void DoSineMode(void)
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
   
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm beyond the left endpoint.");
+    //bprintf(info, "I'm beyond the left endpoint.");
   
   /* case 2: moving into quad from beyond right endpoint: */
   } else if (az > right + turn_around) {
@@ -882,10 +882,11 @@ static void DoSineMode(void)
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
     
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm beyond the right endpoint.");
+    //bprintf(info, "I'm beyond the right endpoint.");
   /* case 3: moving from left to right endpoints */
   } else if ( (az > left) && (az < right) 
-             && (PointingData[i_point].v_az > V_AZ_MIN) ) {
+             && (PointingData[i_point].v_az > 0.0) ) {
+             //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
 
@@ -895,11 +896,12 @@ static void DoSineMode(void)
     }
  
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm in between the endpoints and moving right.");
+    //bprintf(info, "I'm in between the endpoints and moving right.");
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > left) && (az < right) 
-              && (PointingData[i_point].v_az < -V_AZ_MIN) ) {
+              && (PointingData[i_point].v_az < 0.0) ) {
+              //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
 
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
 
@@ -909,7 +911,7 @@ static void DoSineMode(void)
     }
 
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm in between the endpoints and moving left.");
+    //bprintf(info, "I'm in between the endpoints and moving left.");
 
   /* case 5: in left turn-around zone */ 
   } else if ( (az <= left) && (az >= (left-turn_around)) ) {
@@ -917,7 +919,7 @@ static void DoSineMode(void)
     v_az = V_AZ_MIN;
  
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm in the left turn-around zone.");
+    //bprintf(info, "I'm in the left turn-around zone.");
 
   /* case 6: in right turn-around zone */   
   } else if ( (az >= right) && (az <= (right+turn_around)) ) {
@@ -925,7 +927,7 @@ static void DoSineMode(void)
     v_az = -V_AZ_MIN;
     
     axes_mode.az_vel = v_az;
-    bprintf(info, "I'm in the right turn-around zone.");
+    //bprintf(info, "I'm in the right turn-around zone.");
   } 
 }
 
