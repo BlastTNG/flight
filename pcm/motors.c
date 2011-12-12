@@ -892,6 +892,8 @@ static void DoSineMode(void)
     
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
 
+    v_az = (v_az < V_AZ_MIN) ? V_AZ_MIN : v_az;
+
     if (az >= ((right+turn_around) + 
         ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
@@ -906,6 +908,8 @@ static void DoSineMode(void)
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
 
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
+
+    v_az = (v_az > -V_AZ_MIN) ? -V_AZ_MIN : v_az;
 
     if (az <= ((left-turn_around) + 
         ampl*(1 - cos(sqrt(accel_spider/ampl)*t_before)))) {
