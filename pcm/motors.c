@@ -856,7 +856,9 @@ static void DoSineMode(void)
   }
 
   v_az_max = sqrt(accel_spider * ampl);
-  turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
+  //turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
+  turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
+
 
   if (right-left < MIN_SCAN) {
     left = centre - MIN_SCAN/2.0; 
@@ -1017,7 +1019,8 @@ static void DoSpiderMode(void)
     //bprintf(info, "I'm beyond the right endpoint.");
   /* case 3: moving from left to right endpoints */
   } else if ( (az > left) && (az < right) 
-             && (PointingData[i_point].v_az > V_AZ_MIN) ) {
+	     && (PointingData[i_point].v_az > 0.0) ) {
+             //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
 
@@ -1031,7 +1034,8 @@ static void DoSpiderMode(void)
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > left) && (az < right) 
-              && (PointingData[i_point].v_az < -V_AZ_MIN) ) {
+	      && (PointingData[i_point].v_az < 0.0) ) {
+              //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
 
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
 
