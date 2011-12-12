@@ -43,11 +43,10 @@ extern "C" {
 #include "camstruct.h"
 
 //allow any host to be the star camera
-#define THEGOOD_SERVERNAME "192.168.1.11"
+#define THEGOOD_SERVERNAME "192.168.1.13"
 #define THEBAD_SERVERNAME  "192.168.1.12"
-#define THEUGLY_SERVERNAME "192.168.1.13"
+#define THEUGLY_SERVERNAME "192.168.1.11"
 
-//FIXME these get switched around
 #define THEGOOD_SERIAL "110794466"
 #define THEBAD_SERIAL  "08073506"
 #define THEUGLY_SERIAL "08073507"

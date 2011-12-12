@@ -342,13 +342,9 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
     		usleep(100000);
     		Rpulsewait++;
     		Bpulsewait++;
-      		if (Rpulsewait > 200/*RSCWAIT*/) {
-			sendTheGoodCommand("CtrigExp");
-//			sendTheBadCommand("CtrigExp");
-			if (goodPos == 90.0) {
-				trigPos = ACSData.enc_table;
-				zerodist = 1;
-			}
+      		if (Rpulsewait > RSCWAIT) {
+			//sendTheGoodCommand("CtrigExp");
+			//sendTheBadCommand("CtrigExp");
 			exposing = 1;
 			Rpulsewait = 0;
 		}
@@ -361,7 +357,8 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
 		}
     		if (bsc_trigger) {
       			if (Bpulsewait > BSCWAIT) {
-				//sendTheUglyCommand("CtrigExp");
+				sendTheUglyCommand("CtrigExp");
+			sendTheGoodCommand("CtrigExp");
         			bsc_trigger = 0;
         			Bpulsewait = 0;
       			} else {

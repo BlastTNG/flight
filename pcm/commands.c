@@ -1181,6 +1181,13 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.Y = rvalues[9];
       CommandData.pointing_mode.mode = P_SPIDER;
       break;
+    case sine_scan:
+      CommandData.az_accel = rvalues[0];
+      CommandData.pointing_mode.w = 2.0*rvalues[1];
+      CommandData.pointing_mode.X = rvalues[2];
+      CommandData.pointing_mode.Y = rvalues[3];
+      CommandData.pointing_mode.mode = P_SINE;
+      break;
     case set_az_accel:
       CommandData.az_accel = rvalues[0];
       CommandData.az_accel_max = rvalues[1];

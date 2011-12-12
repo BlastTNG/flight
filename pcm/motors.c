@@ -352,11 +352,7 @@ static double GetVAz(void)
       vel = sqrt(dx);
     }
     //bprintf(info, "az_dest: %f, az: %f, dx: %f, vel: %f", az_dest, az, dx, vel);
-    /* TODO: JAS -- temporary negative sign below since az = yaw, whereas all of
-             the velocity request calculations assume az = -yaw */ 
     vel *= (double)CommandData.azi_gain.PT/10000.0;
-    //vel *= -(double)CommandData.azi_gain.PT/10000.0;
-    //vel = -(az - az_dest) * 0.36;
   }
 
   /*vel_offset = -(PointingData[i_point].offset_ifroll_gy 
@@ -817,6 +813,122 @@ static void SetAzScanMode(double az, double left, double right, double v,
     }
 }
 
+/* JAS - sinusoidal scan in azimuth at a fixed amplitude around a given
+         centre point */
+static void DoSineMode(void)
+{
+  double az, el;
+  double lst, lat;
+  double centre, left, right, v_az;//, top, bottom, v_az;
+  //double az_of_bot;
+  double v_az_max, ampl, turn_around;
+  double accel_spider;
+  int i_point;
+  double t_before; // time at which to send BSC trigger command
+
+  t_before = DELAY + CommandData.theugly.expTime/2000.0;
+ 
+  accel_spider = az_accel*SR; // convert back from deg/s in one Bbus interval
+                              // to (deg/s)/s
+
+  axes_mode.el_mode = AXIS_POSITION;
+  axes_mode.el_dest = CommandData.pointing_mode.Y;
+  axes_mode.el_vel = 0.0;
+
+  i_point = GETREADINDEX(point_index);
+  lst = PointingData[i_point].lst;
+  lat = PointingData[i_point].lat;
+  az = PointingData[i_point].az;
+  el = PointingData[i_point].el;// + 28.0;
+
+  centre = CommandData.pointing_mode.X;
+  ampl = (CommandData.pointing_mode.w)/2.0;
+
+  right = centre + ampl;
+ 
+  left = centre - ampl;
+
+  SetSafeDAz(az, &left);     // don't cross sun between here and left
+  SetSafeDAz(left, &right);  // don't cross sun between left and right
+ 
+  if (right < left) {
+    left -= 360.0;
+  }
+
+  v_az_max = sqrt(accel_spider * ampl);
+  turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
+
+  if (right-left < MIN_SCAN) {
+    left = centre - MIN_SCAN/2.0; 
+    right = left + MIN_SCAN;
+    ampl = right - centre;
+  }
+
+  axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
+
+  /* case 1: moving into quad from beyond left endpoint: */
+  if (az < left - turn_around) {
+    v_az = sqrt(2.0*accel_spider*(left-az)) + V_AZ_MIN;
+
+    v_az = (v_az > v_az_max) ? v_az_max : v_az;
+  
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm beyond the left endpoint.");
+  
+  /* case 2: moving into quad from beyond right endpoint: */
+  } else if (az > right + turn_around) {
+    v_az = -sqrt(2.0*accel_spider*(az-right)) - V_AZ_MIN;
+
+    v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
+    
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm beyond the right endpoint.");
+  /* case 3: moving from left to right endpoints */
+  } else if ( (az > left) && (az < right) 
+             && (PointingData[i_point].v_az > V_AZ_MIN) ) {
+    
+    v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
+
+    if (az >= ((right+turn_around) + 
+        ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
+      bsc_trigger = 1;
+    }
+ 
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm in between the endpoints and moving right.");
+
+  /* case 4: moving from right to left endpoints */
+  } else if ( (az > left) && (az < right) 
+              && (PointingData[i_point].v_az < -V_AZ_MIN) ) {
+
+    v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
+
+    if (az <= ((left-turn_around) + 
+        ampl*(1 - cos(sqrt(accel_spider/ampl)*t_before)))) {
+      bsc_trigger = 1;
+    }
+
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm in between the endpoints and moving left.");
+
+  /* case 5: in left turn-around zone */ 
+  } else if ( (az <= left) && (az >= (left-turn_around)) ) {
+    
+    v_az = V_AZ_MIN;
+ 
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm in the left turn-around zone.");
+
+  /* case 6: in right turn-around zone */   
+  } else if ( (az >= right) && (az <= (right+turn_around)) ) {
+
+    v_az = -V_AZ_MIN;
+    
+    axes_mode.az_vel = v_az;
+    bprintf(info, "I'm in the right turn-around zone.");
+  } 
+}
+
 /* JAS - "modified quad" scan mode for Spider */
 static void DoSpiderMode(void)
 {
@@ -824,10 +936,13 @@ static void DoSpiderMode(void)
   double lst, lat;
   double c_az[4], c_el[4]; // corner az and corner el
   double centre, left, right, top, bottom, v_az;
-  double az_of_bot, tmp;
+  double az_of_bot;
   double v_az_max, ampl, turn_around;
   double accel_spider;
   int i, i_point;
+  double t_before; // time at which to send BSC trigger command
+
+  t_before = DELAY + CommandData.theugly.expTime/2000.0;
  
   accel_spider = az_accel*SR; // convert back from deg/s in one Bbus interval
                               // to (deg/s)/s
@@ -843,7 +958,7 @@ static void DoSpiderMode(void)
   lat = PointingData[i_point].lat;
   /* input unchanging latitude for testing purposes: 
      McMurdo station at 71 deg. 51 arcmin S */
-  //lat = -71.85;
+  //lat = -77.85;
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;// + 28.0;
 
@@ -859,13 +974,10 @@ static void DoSpiderMode(void)
      //    );
 
   SetSafeDAz(az, &left);     // don't cross sun between here and left
-  SetSafeDAz(left, &right);  // don't cross sun bewteen left and right
+  SetSafeDAz(left, &right);  // don't cross sun between left and right
  
-  // TODO: JAS -- this is WRONG! Change it! 
   if (right < left) {
-    tmp = right;
-    right = left;
-    left = tmp;
+    left -= 360.0;
   }
 
   centre = (left + right) / 2.0;
@@ -875,10 +987,11 @@ static void DoSpiderMode(void)
   turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
   //turn_around = 1.0;
   //bprintf(info, "left = %f, right = %f, centre = %f, ampl = %f, v_az_max = %f, turn_around = %f", left, right, centre, ampl, v_az_max, turn_around);
-  // TODO: JAS -- also correct ampl for the case below!
+
   if (right-left < MIN_SCAN) {
     left = centre - MIN_SCAN/2.0; 
     right = left + MIN_SCAN;
+    ampl = right - centre;
   }
 
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
@@ -905,6 +1018,11 @@ static void DoSpiderMode(void)
              && (PointingData[i_point].v_az > V_AZ_MIN) ) {
     
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
+
+    if (az >= ((right+turn_around) + 
+        ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
+      bsc_trigger = 1;
+    }
  
     axes_mode.az_vel = v_az;
     //bprintf(info, "I'm in between the endpoints and moving right.");
@@ -914,6 +1032,11 @@ static void DoSpiderMode(void)
               && (PointingData[i_point].v_az < -V_AZ_MIN) ) {
 
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
+
+    if (az <= ((left-turn_around) + 
+        ampl*(1 - cos(sqrt(accel_spider/ampl)*t_before)))) {
+      bsc_trigger = 1;
+    }
 
     axes_mode.az_vel = v_az;
     //bprintf(info, "I'm in between the endpoints and moving left.");
@@ -1842,6 +1965,9 @@ void UpdateAxesMode(void)
       break;
     case P_SPIDER:
       DoSpiderMode();
+      break;
+    case P_SINE:
+      DoSineMode();
       break;
     case P_LOCK:
       axes_mode.el_mode = AXIS_LOCK;

@@ -399,7 +399,17 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
   (*el) *=  (180.0/M_PI);
 
   cos_az = (sin_dec - sin_lat*sin_el)/(cos_lat*cos_el);
-  (*az) = acos(cos_az) * 180.0/M_PI;
+
+/*JAS 2011: Sometimes the ratio above comes out > 1 or < -1 due to numerical 
+  imprecision. Correct this by changing the angle as appropriate. */
+  
+  if (cos_az > 1.0) {
+    (*az) = 0.0;
+  } else if (cos_az < -1.0) {
+    (*az) = 180.0;
+  } else {
+    (*az) = acos(cos_az) * 180.0/M_PI;
+  }
 
   /* Get the signs right */
   if ((h > 0) && (h < M_PI))

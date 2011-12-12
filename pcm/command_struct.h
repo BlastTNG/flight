@@ -43,6 +43,7 @@
 #define P_VBOX       9
 #define P_QUAD      10
 #define P_SPIDER    11
+#define P_SINE      12
 
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
@@ -122,6 +123,7 @@ struct PivGainStruct {
 // CAP         ra    dec  vaz   elstep r
 // BOX         ra    dec  vaz   elstep w    h
 // SPIDER            el                         
+// SINE        az    el                w
 struct PointingModeStruct {
   int nw; /* used for gy-offset veto during slews */
   int mode;
