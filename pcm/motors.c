@@ -892,11 +892,13 @@ static void DoSineMode(void)
     
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
 
-    v_az = (v_az < V_AZ_MIN) ? V_AZ_MIN : v_az;
+    //v_az = (v_az < V_AZ_MIN) ? V_AZ_MIN : v_az;
 
     if (az >= ((right+turn_around) + 
         ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
+    } else {
+      bsc_trigger = 0;
     }
  
     axes_mode.az_vel = v_az;
@@ -909,11 +911,13 @@ static void DoSineMode(void)
 
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
 
-    v_az = (v_az > -V_AZ_MIN) ? -V_AZ_MIN : v_az;
+    //v_az = (v_az > -V_AZ_MIN) ? -V_AZ_MIN : v_az;
 
     if (az <= ((left-turn_around) + 
         ampl*(1 - cos(sqrt(accel_spider/ampl)*t_before)))) {
       bsc_trigger = 1;
+    } else {
+      bsc_trigger = 0;
     }
 
     axes_mode.az_vel = v_az;
@@ -922,16 +926,16 @@ static void DoSineMode(void)
   /* case 5: in left turn-around zone */ 
   } else if ( (az <= left) && (az >= (left-turn_around)) ) {
     
-    v_az = V_AZ_MIN;
- 
+    //v_az = V_AZ_MIN;
+    v_az += az_accel;
     axes_mode.az_vel = v_az;
     //bprintf(info, "I'm in the left turn-around zone.");
 
   /* case 6: in right turn-around zone */   
   } else if ( (az >= right) && (az <= (right+turn_around)) ) {
 
-    v_az = -V_AZ_MIN;
-    
+    //v_az = -V_AZ_MIN;
+    v_az -= az_accel;
     axes_mode.az_vel = v_az;
     //bprintf(info, "I'm in the right turn-around zone.");
   } 
