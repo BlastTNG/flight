@@ -339,7 +339,7 @@ void cameraFields()
     	WriteData(TheGoodUsecAddr, rsc->imagestarttime.tv_usec, NIOS_QUEUE);
     	//it looks like this is in deg C. just scale to get better resolution
     	WriteData(TheGoodCcdTempAddr, (int)(rsc->ccdtemperature*100), NIOS_QUEUE);
-    	WriteData(TheGoodFocPosAddr, (int)(rsc->focusposition*100), NIOS_QUEUE);
+    	WriteData(TheGoodFocPosAddr, (int)(rsc->focusposition*10), NIOS_QUEUE);
     	WriteData(TheGoodNumBlobsAddr, rsc->numblobs, NIOS_QUEUE);
 	
 	if (rsc->numblobs > 0) {
@@ -373,7 +373,7 @@ void cameraFields()
     	WriteData(TheBadUsecAddr, rsc->imagestarttime.tv_usec, NIOS_QUEUE);
     	//it looks like this is in deg C. just scale to get better resolution
     	WriteData(TheBadCcdTempAddr, (int)(rsc->ccdtemperature*100), NIOS_QUEUE);
-    	WriteData(TheBadFocPosAddr, (int)(rsc->focusposition*100), NIOS_QUEUE);
+    	WriteData(TheBadFocPosAddr, (int)(rsc->focusposition*10), NIOS_QUEUE);
     	WriteData(TheBadNumBlobsAddr, rsc->numblobs, NIOS_QUEUE);
 
 	if (rsc->numblobs > 0) {
@@ -400,7 +400,7 @@ void cameraFields()
     	WriteData(TheUglyUsecAddr, bsc->imagestarttime.tv_usec, NIOS_QUEUE);
     	//it looks like this is in deg C. just scale to get better resolution
     	WriteData(TheUglyCcdTempAddr, (int)(bsc->ccdtemperature*100), NIOS_QUEUE);
-    	WriteData(TheUglyFocPosAddr, (int)(bsc->focusposition*100), NIOS_QUEUE);
+    	WriteData(TheUglyFocPosAddr, (int)(bsc->focusposition*10), NIOS_QUEUE);
     	WriteData(TheUglyNumBlobsAddr, bsc->numblobs, NIOS_QUEUE);
 
 	if (bsc->numblobs > 0) {

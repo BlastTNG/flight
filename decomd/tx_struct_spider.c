@@ -406,9 +406,9 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP4 0 is unused */
   {"pref_tp_sf",   'w', LOOP4,  1,                1.0,             0.0, 'u', U_NONE},
   /* LOOP4 2 is unused */
-  {"focpos_thegood",'w',LOOP4,  3,          1.0/100.0,             0.0, 's', U_NONE},
-  {"focpos_thebad",'w', LOOP4,  4,          1.0/100.0,             0.0, 's', U_NONE},
-  {"focpos_theugly",'w',LOOP4,  5,          1.0/100.0,             0.0, 's', U_NONE},
+  {"focpos_thegood",'w',LOOP4,  3,           1.0/10.0,             0.0, 's', U_NONE},
+  {"focpos_thebad",'w', LOOP4,  4,           1.0/10.0,             0.0, 's', U_NONE},
+  {"focpos_theugly",'w',LOOP4,  5,           1.0/10.0,             0.0, 's', U_NONE},
   {"maxblob_thegood",'w',LOOP4, 6,                1.0,             0.0, 'u', U_NONE},
   {"maxblob_thebad",'w',LOOP4,  7,                1.0,             0.0, 'u', U_NONE},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u', U_NONE},
