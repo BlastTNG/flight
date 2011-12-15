@@ -955,7 +955,7 @@ static void DoSpiderMode(void)
   double t_before; // time at which to send BSC trigger command
 
   t_before = DELAY + CommandData.theugly.expTime/2000.0;
- 
+
   accel_spider = az_accel*SR; // convert back from deg/s in one Bbus interval
                               // to (deg/s)/s
 
@@ -1035,6 +1035,8 @@ static void DoSpiderMode(void)
     if (az >= ((right+turn_around) + 
         ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
+    } else {
+      bsc_trigger = 0;
     }
  
     axes_mode.az_vel = v_az;
@@ -1050,6 +1052,8 @@ static void DoSpiderMode(void)
     if (az <= ((left-turn_around) + 
         ampl*(1 - cos(sqrt(accel_spider/ampl)*t_before)))) {
       bsc_trigger = 1;
+    } else {
+      bsc_trigger = 0;
     }
 
     axes_mode.az_vel = v_az;

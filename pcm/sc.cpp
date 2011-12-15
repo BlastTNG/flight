@@ -43,9 +43,9 @@ extern "C" {
 #include "camstruct.h"
 
 //allow any host to be the star camera
-#define THEGOOD_SERVERNAME "192.168.1.13"
+#define THEGOOD_SERVERNAME "192.168.1.11"
 #define THEBAD_SERVERNAME  "192.168.1.12"
-#define THEUGLY_SERVERNAME "192.168.1.11"
+#define THEUGLY_SERVERNAME "192.168.1.13"
 
 #define THEGOOD_SERIAL "110794466"
 #define THEBAD_SERIAL  "08073506"
@@ -57,8 +57,8 @@ extern "C" short int InCharge;		  /* in tx.c */
 
 extern "C" int EthernetSC[3];      /* tx.c */
 
-extern double goodPos;	/* table.cpp */
-extern double trigPos;	/* camcommunicator.cpp */
+extern double goodPos[10];	/* table.cpp */
+extern double trigPos[10];	/* camcommunicator.cpp */
 
 static CamCommunicator* TheGoodComm;
 static CamCommunicator* TheBadComm;
@@ -127,6 +127,7 @@ void cameraFields()
   StarcamReturn* bsc = NULL;
   static int which;
   static bool unrecFlag = false;
+  static unsigned long int posFrame;
 
   static NiosStruct* TheGoodforceAddr = NULL;
   static NiosStruct* TheBadforceAddr = NULL;
@@ -354,9 +355,15 @@ void cameraFields()
 		      WriteData(TheGoodBlobS[i], snr, NIOS_QUEUE);
 		}
 	}
-	if ((rsc->numblobs > 5) && (goodPos == 90.0)) {
-		goodPos = trigPos;
-//		cout << rsc->numblobs << "BLOBS" <<  ", setting GOODPOS to " << goodPos << endl;
+	if (rsc->numblobs > 8) {
+		for (int j=0; j<10; j++) {
+			if ((goodPos[j] == 90.0) && (rsc->frameNum != posFrame)) {
+				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
+				cout << rsc->numblobs << " BLOBS" <<  ", setting GOODPOS #" << j << " to " << goodPos[j] << endl;
+				posFrame = rsc->frameNum;
+				break;
+			}
+		}
 	}
     } else if (which == 2) {
     	WriteData(TheBadFrameAddr, rsc->frameNum, NIOS_QUEUE);

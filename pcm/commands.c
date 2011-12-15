@@ -694,9 +694,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       sendTheGoodCommand("CtrigExp");
       break;
     case thegood_autofocus:
-      if (CommandData.thegood.forced)
+/*      if (CommandData.thegood.forced)
 	sendTheGoodCommand("CtrigFocusF");
-      else sendTheGoodCommand("CtrigFocus");
+      else*/ sendTheGoodCommand("CtrigFocus");
       break;
     case thegood_settrig_ext:
       sendTheGoodCommand("CsetExpInt=0");
@@ -714,9 +714,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       sendTheBadCommand("CtrigExp");
       break;
     case thebad_autofocus:
-      if (CommandData.thebad.forced)
+/*      if (CommandData.thebad.forced)
 	sendTheBadCommand("CtrigFocusF");
-      else sendTheBadCommand("CtrigFocus");
+      else*/ sendTheBadCommand("CtrigFocus");
       break;
     case thebad_settrig_ext:
       sendTheBadCommand("CsetExpInt=0");
@@ -734,9 +734,9 @@ static void SingleCommand (enum singleCommand command, int scheduled)
       sendTheUglyCommand("CtrigExp");
       break;
     case theugly_autofocus:
-      if (CommandData.theugly.forced)
+/*      if (CommandData.theugly.forced)
 	sendTheUglyCommand("CtrigFocusF");
-      else sendTheUglyCommand("CtrigFocus");
+      else*/ sendTheUglyCommand("CtrigFocus");
       break;
     case theugly_settrig_ext:
       sendTheUglyCommand("CsetExpInt=0");
@@ -1628,9 +1628,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheGoodCommand(buf);
       break;
     case thegood_lens_move:
-      if (CommandData.thegood.forced)
+/*      if (CommandData.thegood.forced)
 	sprintf(buf, "Lforce=%d", ivalues[0]);
-      else sprintf(buf, "Lmove=%d", ivalues[0]);
+      else*/ sprintf(buf, "Lmove=%d", ivalues[0]);
       sendTheGoodCommand(buf);
       break;
     case thegood_lens_params:
@@ -1644,19 +1644,19 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheBadCommand(svalues[0]);
       break;
     case thebad_settrig_timed:
-      sprintf(buf, "BsetExpInt=%d", ivalues[0]);
+      sprintf(buf, "CsetExpInt=%d", ivalues[0]);
       sendTheBadCommand(buf);
       CommandData.thebad.expInt = ivalues[0];
       break;
     case thebad_exp_params:
-      sprintf(buf, "BsetExpTime=%d", ivalues[0]);
+      sprintf(buf, "CsetExpTime=%d", ivalues[0]);
       CommandData.thebad.expTime = ivalues[0];
       sendTheBadCommand(buf);
       break;
     case thebad_focus_params:
-      sprintf(buf, "BsetFocRsln=%d", ivalues[0]);
+      sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendTheBadCommand(buf);
-      sprintf(buf, "BsetFocRnge=%d", ivalues[1]);
+      sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
       sendTheBadCommand(buf); 
       CommandData.thebad.focusRes = ivalues[0];
       CommandData.thebad.focusRng = ivalues[1];
@@ -1684,9 +1684,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheBadCommand(buf);
       break;
     case thebad_lens_move:
-      if (CommandData.thebad.forced)
+/*      if (CommandData.thebad.forced)
 	sprintf(buf, "Lforce=%d", ivalues[0]);
-      else sprintf(buf, "Lmove=%d", ivalues[0]);
+      else*/ sprintf(buf, "Lmove=%d", ivalues[0]);
       sendTheBadCommand(buf);
       break;
     case thebad_lens_params:
@@ -1740,9 +1740,9 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheUglyCommand(buf);
       break;
     case theugly_lens_move:
-      if (CommandData.theugly.forced)
+/*      if (CommandData.theugly.forced)
 	sprintf(buf, "Lforce=%d", ivalues[0]);
-      else sprintf(buf, "Lmove=%d", ivalues[0]);
+      else*/ sprintf(buf, "Lmove=%d", ivalues[0]);
       sendTheUglyCommand(buf);
       break;
     case theugly_lens_params:
@@ -2497,6 +2497,7 @@ void InitCommandData()
   CommandData.table.vel = 0.0;
   CommandData.table.pos = 90.0;
   CommandData.table.move = 0.0;
+  CommandData.table.mode = 0;
 
   CommandData.Temporary.setLevel[0] = 1;
   CommandData.Temporary.setLevel[1] = 1;
@@ -2617,7 +2618,6 @@ void InitCommandData()
   CommandData.table.tableGain.P = 6652;  //thousandths
   CommandData.table.tableGain.I = 302;   //ten-thousandths
   CommandData.table.tableGain.D = 13520; //hundredths
-  CommandData.table.mode = 0;
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;

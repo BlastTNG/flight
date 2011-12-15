@@ -12,6 +12,7 @@
 extern "C" {
 #include "share/blast.h"
 #include "pointing_struct.h"
+#include "command_struct.h"
 }
 #define CAM_COMM_DEBUG 0
 #if CAM_COMM_DEBUG
@@ -22,8 +23,8 @@ extern "C" {
 //how long to wait after failed connection attempt to try again (us)
 #define CLIENT_RETRY_DELAY 1000000
 #define BSCWAIT 24 
-#define RSCWAIT 80 
-#define EXPCOUNT 40 
+#define RSCWAIT 80
+#define EXPCOUNT 40
 
 extern "C" int EthernetSC[3];      /* tx.c */
 pthread_mutex_t scmutex;
@@ -32,10 +33,10 @@ extern "C" int sendTheGoodCommand(const char *cmd); //sc.cpp
 extern "C" int sendTheBadCommand(const char *cmd); //sc.cpp
 extern "C" int sendTheUglyCommand(const char *cmd); //sc.cpp
 extern short int exposing;	//in table.cpp
-extern short int zerodist;	//in table.cpp
-extern double goodPos;		//in table.cpp
-double trigPos;
-
+extern short int docalc;	//in table.cpp
+extern short int zerodist[10];	//in table.cpp
+extern double goodPos[10];		//in table.cpp
+double trigPos[10];
 
 /*
 
@@ -343,27 +344,33 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
     		Rpulsewait++;
     		Bpulsewait++;
       		if (Rpulsewait > RSCWAIT) {
-			//sendTheGoodCommand("CtrigExp");
-			//sendTheBadCommand("CtrigExp");
+			if (!CommandData.thegood.forced) sendTheGoodCommand("CtrigExp");
+			if (!CommandData.thebad.forced) sendTheBadCommand("CtrigExp");
+			for (int i=0; i<10; i++) {
+				if (goodPos[i] == 90.0) { 
+					trigPos[i] = ACSData.enc_table;
+					zerodist[i] = 1;
+				}
+			}
 			exposing = 1;
 			Rpulsewait = 0;
 		}
 		if (exposing) {
 			exposecount++;
-			if (exposecount == 50/*EXPCOUNT*/) {
+			if (exposecount == EXPCOUNT) {
 				exposecount = 0;
 				exposing = 0;
+				docalc = 1;
 			}
 		}
     		if (bsc_trigger) {
       			if (Bpulsewait > BSCWAIT) {
-				sendTheUglyCommand("CtrigExp");
-			sendTheGoodCommand("CtrigExp");
+				if (!CommandData.theugly.forced) sendTheUglyCommand("CtrigExp");
         			bsc_trigger = 0;
         			Bpulsewait = 0;
-      			} else {
+	        	} else {
 				bsc_trigger = 0;
-	        	}
+			}
 		}    
 		FD_ZERO(&input);
 		FD_SET(commFD, &input);
