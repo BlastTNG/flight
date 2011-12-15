@@ -148,6 +148,7 @@ static const MyCamConfigParams defaultCameraParams = {
 		0,                              //readoutMode
 		ABG_CLK_MED7,                   //ABGState
 		0, 0, 0, 0                      //subframe left, top, width, height
+//		100, 100, 100, 100                      //subframe left, top, width, height
 	},
 	INVALID_USB_NUM,                //USBNum
 	0,                              //pictureInterval
@@ -210,8 +211,8 @@ static const BlobImageConfigParams defaultImageParams = {
 	},
     {                               //pyramid params
         0.035,                          //fov
-		"/home/steve/starcam/programming/pyr/gsc_mag08_res21.bin", //catalogname
-		"/home/steve/starcam/programming/pyr/k.bin"                //katalogname
+		(char*)"/home/spider/pyr/gsc_mag08_res21.bin", //catalogname
+		(char*)"/home/spider/pyr/k.bin"                //katalogname
     },
 	{                               //viewer params
 		10,                          //refreshTime
