@@ -55,7 +55,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
-
 /*
 
 Local Constants
@@ -67,7 +66,7 @@ static const char	*HEADER_KEYWORDS[] =
 	"Data_version = ",
 	"Exposure = ",
 	"Focal_length = ",
-	"Focus Position = ",
+	"Aperture = ",
 	"Response_factor = ",
 	"Note = ",
 	"Background = ",
@@ -356,7 +355,6 @@ SBIG_FILE_ERROR CSBIGImg::SaveImage(const char *pFullPath, SBIG_IMAGE_FORMAT fmt
 	char			header[HEADER_LEN];
 	SBIG_FILE_ERROR res;
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
 	if (fmt == SBIF_DEFAULT)
 		fmt = m_nDefaultImageFormat;
 	switch (fmt) {
@@ -589,7 +587,6 @@ SBIG_FILE_ERROR CSBIGImg::ReadCompressedImage(FILE *fh)
 				//      fprintf(stderr, "\nCSBIGImg::OpenImage():Row %d reading uncompressed data", i);
 				if (fread(pVid, 2, m_nWidth, fh) != (size_t) m_nWidth)
 					break;
-
 				//      fprintf(stderr, "\nCSBIGImg::OpenImage():Row %d uncompressed data read", i);
 				i++;	// goto next row
 			}
@@ -599,7 +596,6 @@ SBIG_FILE_ERROR CSBIGImg::ReadCompressedImage(FILE *fh)
 				//      fprintf(stderr, "\nCSBIGImg::OpenImage():Row %d reading compressed data", i);
 				if (fread(pcb, 1, len, fh) != (size_t) len)
 					break;
-
 				//      fprintf(stderr, "\nCSBIGImg::OpenImage():Row %d compressed data read", i);
 				pc = pcb;
 				vid = *pc++;					// first pixel is 2 bytes, lsb first
@@ -1238,7 +1234,6 @@ void CSBIGImg::AutoBackgroundAndRange(void)
 	unsigned short	p20, p99;
 	long			back, range;
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
 	// skip if no image data
 	if (m_pImage == NULL)
 		return;
