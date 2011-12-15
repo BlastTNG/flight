@@ -9,6 +9,12 @@
 #include "frameblob.h"
 #include <cmath>
 
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <time.h>
+#include <unistd.h>
+#include <sys/time.h>
 #define FRAMEBLOB_DEBUG 0
 #if FRAMEBLOB_DEBUG
 #include <iostream>
@@ -409,12 +415,18 @@ void frameblob::calc_mapstat() {
   mapmean = 0;
   count = 0;
   memset(satcol,0,xpix*sizeof(int));
-  
+
+  unsigned int randx = rand() % (xpix-100);
+  unsigned int randy = rand() % (ypix-100);
+
+  for( j=randy; j<(randy+100); j++ ) { // j=row
+    index = j*100;         // inner loop columns to speed up addressing
+    for( i=randx; i<(randx+100); i++ ) {
+/*
   for( j=0; j<ypix; j++ ) { // j=row
     index = j*xpix;         // inner loop columns to speed up addressing
     for( i=0; i<xpix; i++ ) {
-      //printf("%i ",map[index]);
-      
+*/
       if( map[index] > satval ) satcol[i]++;   // if bad pixel
       else {                // otherwise contributes to mean
 	if( map[index] != satval ) { // pixel isn't bad
@@ -534,10 +546,9 @@ void frameblob::calc_searchgrid() {
       level = (double) max - meancell; 
       
       // Calculate the sample variance about the central value
-      if( mapmean == 0 ) calc_mapstat();   // Calculate the map mean
-      
-	  if (stddev == 0) calc_stddev();
-	  sigma = stddev;
+	if( mapmean == 0 ) calc_mapstat();   // Calculate the map mean
+	if (stddev == 0) calc_stddev();
+	sigma = stddev;
 /* Don't use noise model any more, finding map standard deviation is fast enough and much better
 	  if( mapmean < readout_offset ) sigma = readout_noise;
       else sigma = (double)sqrt(gain*(mapmean-readout_offset) + 
@@ -865,10 +876,18 @@ double frameblob::calc_stddev(void)
   if (mapmean == 0) calc_mapstat();
   unsigned int i, j, count = 0, index;
   stddev = 0;
-  
+
+  unsigned int xrand = rand() % (xpix-100);
+  unsigned int yrand = rand() % (ypix-100);
+
+  for( j=yrand; j<(yrand+100); j++ ) { // j=row
+    index = j*100;         // inner loop columns to speed up addressing
+    for( i=xrand; i<(xrand+100); i++ ) {
+/* 
   for( j=0; j<ypix; j++ ) { // j=row
 	  index = j*xpix;         // inner loop columns to speed up addressing
 	  for( i=0; i<xpix; i++ ) {
+*/
       //printf("%i ",map[index]);
       
 		  if( map[index] <= satval ) { 
@@ -880,7 +899,7 @@ double frameblob::calc_stddev(void)
 		  index++;
 	  }
   }
-  
+	
   if( count > 0 ) stddev = stddev / (double) count; // prevent  / zero
   stddev = sqrt(stddev);
   if (stddev < 1) stddev = 1;                     //prevent 0 standard deviation
