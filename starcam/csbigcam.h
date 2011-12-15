@@ -68,6 +68,7 @@ public:
 	PAR_ERROR OpenDevice(OpenDeviceParams odp);
 	PAR_ERROR CloseDevice();
 	PAR_ERROR GetDriverInfo(DRIVER_REQUEST request, GetDriverInfoResults0 &gdir);
+	PAR_ERROR SetDriverControl(DRIVER_CONTROL_PARAM ctrlpram, unsigned long ctrlval);
 
 	// High-Level Exposure Related Commands
 	PAR_ERROR GrabImage(CSBIGImg *pImg, SBIG_DARK_FRAME dark);

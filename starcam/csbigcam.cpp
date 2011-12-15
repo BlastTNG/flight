@@ -521,6 +521,27 @@ PAR_ERROR CSBIGCam::GetDriverInfo(DRIVER_REQUEST request, GetDriverInfoResults0 
 	else
 		return SBIGUnivDrvCommand(CC_GET_DRIVER_INFO, &gdip, &gdir);
 }
+/*
+
+SetDriverControl:
+
+Modify the behavior of the driver by changing the
+settings of one of the driver control parameters.
+Driver options can be enabled or disabled with this
+command.
+
+*/
+PAR_ERROR CSBIGCam::SetDriverControl(DRIVER_CONTROL_PARAM ctrlpram, unsigned long ctrlval)
+{
+	SetDriverControlParams sdcp;
+
+	sdcp.controlParameter = ctrlpram;
+	sdcp.controlValue = ctrlval;
+	if ( CheckLink() )
+		return SBIGUnivDrvCommand(CC_SET_DRIVER_CONTROL, &sdcp, NULL);
+	else
+		return m_eLastError;
+}
 
 /*
   
@@ -549,7 +570,6 @@ PAR_ERROR CSBIGCam::GrabImage(CSBIGImg *pImg, SBIG_DARK_FRAME dark)
 	time_t curTime;
 	struct tm *pLT;
 	char cs[80];
-
 	// Get the image dimensions
 	vertNBinning = m_uReadoutMode >> 8;
 	if ( vertNBinning == 0 )
@@ -621,10 +641,10 @@ PAR_ERROR CSBIGCam::GrabImage(CSBIGImg *pImg, SBIG_DARK_FRAME dark)
 	EndExposure();
 	if ( m_eLastError != CE_NO_ERROR && m_eLastError != CE_NO_EXPOSURE_IN_PROGRESS )
 		return m_eLastError;
-
 	// start the exposure
 	if ( StartExposure(dark == SBDF_LIGHT_ONLY ? SC_OPEN_SHUTTER : SC_CLOSE_SHUTTER) != CE_NO_ERROR )
 		return m_eLastError;
+	
 	curTime = time(NULL);
 	pImg->SetImageStartTime(curTime);
 
@@ -727,16 +747,18 @@ PAR_ERROR CSBIGCam::GrabImage(CSBIGImg *pImg, SBIG_DARK_FRAME dark)
 PAR_ERROR CSBIGCam::StartExposure(SHUTTER_COMMAND shutterState)
 {
 	StartExposureParams sep;
-	
 	sep.ccd = m_eActiveCCD;
 	sep.exposureTime = (unsigned long)(m_dExposureTime * 100.0 + 0.5);
+	//adding START_SKIP_VDD should speed up the process, but may result in a glow on the side of the image
+//	sep.ccd = m_eActiveCCD + START_SKIP_VDD;
+//	sep.exposureTime = (unsigned long)(m_dExposureTime * 100.0 + 0.5 + EXP_SEND_TRIGGER_OUT);
 	if ( sep.exposureTime < 1 )
 		sep.exposureTime = 1;
 	sep.abgState = m_eABGState;
 	sep.openShutter = shutterState;
-	if ( CheckLink() )
+	if ( CheckLink() ) 
 		return SBIGUnivDrvCommand(CC_START_EXPOSURE, &sep, NULL);
-	else
+	else 
 		return m_eLastError;
 }
 
