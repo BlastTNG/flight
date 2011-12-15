@@ -22,6 +22,8 @@
 #include "clensadapter.h"
 #include "blobimage.h"
 #include "focusstruct.h"
+#include "camcommunicator.h"
+#include "camcommserver.h"
 
 #define MYCAM_DEBUG 0
 #define MYCAM_TIMING 0
@@ -31,7 +33,7 @@
 #define MIN_AUTO_STEP 10
 
 using namespace std;
-
+CamCommServer globalcomm;
 //use same constructors as CSBIGCam, make sure proper Init is called though.
 MyCam::MyCam() : CSBIGCam() { Init(); }
 MyCam::MyCam(OpenDeviceParams odp) : CSBIGCam(odp) { Init(); }
@@ -123,6 +125,7 @@ PAR_ERROR MyCam::OpenUSBDevice(int num)
 LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 {
 	frameblob *blob = img->getFrameBlob();
+	StarcamReturn returnStruct;
     	bloblist* focblobs;
 	if (!forced)  //can actually measure focal range
 		if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
@@ -151,8 +154,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 	double yhere = 0;
 	double yplus = 0;
 	double yminus = 0;
-	bool star = false;
-	bool focused = false;
+	int maxflux = 0;
 
 	for (int i=0; i < numsteps; i++) {
 //#if AUTOFOCUS_DEBUG
@@ -167,11 +169,15 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 
 		img->findBlobs();
 		focuser[i].numblobs = blob->get_numblobs();
+#if AUTOFOCUS_DEBUG
 		cout << "autofocus: Found " << blob->get_numblobs() << " blobs" << endl;
+#endif
       		if (blob->get_numblobs()) {
 			focblobs = blob->getblobs();
 			while ((focblobs != NULL) && (j<15)) { //keep 15 blobs per images in focusStruct
+#if AUTOFOCUS_DEBUG
 				cout << "autofocus:   ..." << focblobs->getx() << " " << focblobs->gety() << " " << focblobs->getflux() << endl;
+#endif
 				focuser[i].flux[j] = focblobs->getflux();
 				focuser[i].x[j] = focblobs->getx();
 				focuser[i].y[j] = focblobs->gety();
@@ -182,19 +188,21 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		j=0;
 		}
 
-		//if applicable, save image for use by viewer, change to img->SaveImage(path)
-		//if (path != NULL) {
 #if AUTOFOCUS_DEBUG
-		  cout << "[autoFocus debug]: saving focus image in : " << path << endl;
+		cout << "[autoFocus debug]: saving focus image in : " << path << endl;
 #endif
-		  if (img->SaveImageIn(path) != SBFE_NO_ERROR) {
-		  //if (img->SaveImage(path) != SBFE_NO_ERROR) {
+		if (img->SaveImageIn(path) != SBFE_NO_ERROR) {
+#if AUTOFOCUS_DEBUG
+		    cerr << "[autoFocus debug]: autoFocus failed to save image" << endl;
+#endif
+		}
+		if (img->SaveImage("/data/etc/current.sbig") != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
-		  }
-		//}
-
+		}
+		img->createReturnStruct(&returnStruct);
+		globalcomm.sendAll(CamCommunicator::buildReturn(&returnStruct));
 
 		focuser[i].focpos = toInf;
 		//move to next location
@@ -205,62 +213,45 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		if (i==(numsteps-1)) endpos = toInf;
 	}
 
-	while ((focused == false) && (m<(numsteps-1))) { //loop over all images
-		cerr << "m=" << m << endl;
+	while (m<(numsteps-1)) { //loop over all images
 		nblobhere = focuser[m].numblobs;
 		nblobplus = focuser[m+1].numblobs; //#blobs in next img
 		nblobminus = focuser[m-1].numblobs;//#blobs in prev img
-		cerr << " blobs: " << nblobhere << " blobs+: " << nblobplus << " blobs-: " << nblobminus << endl;
-		while ((star == false) && (n<nblobhere)) { //loop over all blobs in this image
-			cerr << "n=" << n << endl;
+		while (n<nblobhere) { //loop over all blobs in this image
 			xhere = focuser[m].x[n];
 			yhere = focuser[m].y[n];
-			cerr << " blobhere" << n << " x,y: " << xhere << " " << yhere << endl;
-			while ((star == false) && (o<nblobplus))  { //loop over all blobs in next image
-				cerr << "o=" << o << endl;
+			while (o<nblobplus)  { //loop over all blobs in next image
 				xplus = focuser[m+1].x[o];
 		     		yplus = focuser[m+1].y[o];
-				cerr << " blob+" << o << " x,y: " << xplus << " " << yplus << endl;
 				if ((abs(xplus-xhere) < 20) && (abs(yplus-yhere) < 20)) { 
-					cerr << "blob+" << o << " is close enough" << endl;
 					//if meets test in next image, check prev image:
-					while ((star == false) && (p<nblobminus)) { //loop over all blobs in prev image	
-						cerr << "p=" << p << endl;
+					while (p<nblobminus) { //loop over all blobs in prev image	
 						xminus = focuser[m-1].x[p];
 						yminus = focuser[m-1].y[p];
-						cerr << " blob-" << p << " x,y: " << xplus << " " << yplus << endl;
 		 				if ((abs(xminus-xhere) < 20) && (abs(yminus-yhere) < 20)) {
-							cerr << "blob-" << p << " is close enough" << endl;
-							cerr << "it's a star" << endl;
-							star = true;//stops blob search, goes to next image if focus test fails
 							if ((focuser[m].flux[n] > focuser[m+1].flux[o]) &&
 							    (focuser[m].flux[n] > focuser[m-1].flux[p])) {
-								atfocus = m;
-								focused = true;//stops image search
+								if ((focuser[m].flux[n]) > maxflux) {
+									maxflux = focuser[m].flux[n];
+									atfocus = m;
+								}
 							}
 						}
-						cerr << "try next blob-" << endl;
 						p++;//go to next blob in prev image 
-					//(or loop ends if star=true)
 					}
 				}
-				cerr << "try next blob+" << endl;
 				o++;//go to next blob in next image 
-			//(or loop ends if star=true)
 			}
-			cerr << "try next blobhere" << endl;
 			o=0;
 			p=0;
 			n++;//go to next blob in this image...	
-		//(or loop ends if star=true)
 		}
-		star = false;
 		n=0;
 		m++;//go to next image...		
-	//(or loop ends if found focus)
 	}	
-
-	cerr << "focus position is: " << focuser[atfocus].focpos << endl;
+#if AUTOFOCUS_DEBUG
+	cerr << "maxflux = " << maxflux << ", focus position = " << focuser[atfocus].focpos << endl;
+#endif
 	//move back to focus position
 	int toFocus = endpos - focuser[atfocus].focpos;
 	if (m_cAdapter.preciseMove(toFocus, remaining, forced) != LE_NO_ERROR)
@@ -433,7 +424,7 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 	ReadoutLineParams rlp;
 	int subFrameWidth, subFrameHeight, subFrameTop, subFrameLeft;
 	CSBIGCam::GetSubFrame(subFrameLeft, subFrameTop, subFrameWidth, subFrameHeight);
-
+	CSBIGCam::SetDriverControl(DCP_HIGH_THROUGHPUT, TRUE);
 	// Get the image dimensions
 	vertNBinning = CSBIGCam::GetReadoutMode() >> 8;
 	if ( vertNBinning == 0 )
