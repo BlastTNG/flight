@@ -25,7 +25,7 @@
 using namespace std;
 
 //enable display of debugging info to console
-#define STARCAM_DEBUG 1
+#define STARCAM_DEBUG 0
 #define SC_THREAD_DEBUG 0
 
 //enable use of image viewer window
@@ -36,6 +36,7 @@ using namespace std;
 #define SAVE_SC_IMAGES 0
 //#define NUMIMGS 50
 
+extern CamCommServer globalcomm;
 //camera and image objects (and associated mutexes)
 MyCam globalCam;
 BlobImage globalImages[2];                //one image can be processed while other is obtained
@@ -48,7 +49,6 @@ int globalImageReadyFlags[2] = {0, 0};    // 1 when an image is ready, 0 when pr
 pthread_mutex_t imageReadyLock[2] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 pthread_cond_t imageReadyCond[2] = {PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER};
 pthread_cond_t processingCompleteCond[2] = {PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER};
-
 //camera trigger flags, etc.
 int globalCameraTriggerFlag = 0;
 pthread_mutex_t cameraTriggerLock = PTHREAD_MUTEX_INITIALIZER;
@@ -113,7 +113,7 @@ PAR_ERROR openCameras()
 {
   PAR_ERROR err;
   static int crashcount = 0;
-  sclog(info, "Opening the camera driver.");
+  sclog(info, (char*)"Opening the camera driver.");
   if ((err = globalCam.OpenDriver()) != CE_NO_ERROR)
     return err;
 
@@ -124,7 +124,7 @@ PAR_ERROR openCameras()
    		return err;
    	cout << "...search for a camera was " << ((qur.camerasFound)?"successful":"unsuccessful") << endl;
 
-  sclog(info, "Opening the camera device.");
+  sclog(info, (char*)"Opening the camera device.");
   if ((err = globalCam.OpenUSBDevice(0)) != CE_NO_ERROR) {
 	crashcount ++;
 	if (crashcount == 5) {
@@ -134,9 +134,9 @@ PAR_ERROR openCameras()
 	}
     	return err;
   }
-  sclog(info, "Attempting to establish link to camera.");
+  sclog(info, (char*)"Attempting to establish link to camera.");
   for (int i=0; i<6; i++) {
-    sclog(info, "     ...attempt %d", i);
+    sclog(info, (char*)"     ...attempt %d", i);
     if ((err = globalCam.EstablishLink()) == CE_NO_ERROR) break;
   }
   if (err != CE_NO_ERROR)
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
   if ((err = openCameras()) != CE_NO_ERROR)
     return err;
 
-  sclog(info, "Opening a connection to the lens adapter...");
+  sclog(info,(char*)"Opening a connection to the lens adapter...");
   if ((lerr = globalCam.getLensAdapter()->openConnection(adapterPath)) != LE_NO_ERROR)
     return lerr;
 
@@ -168,31 +168,36 @@ int main(int argc, char *argv[])
   if (initCommands() < 0) return -1;
 
   //set up communications...really easy now
-  CamCommServer comm;
+//  CamCommServer comm;
 
   //start threads for picture taking, image processing, and command reading
+  int threaderr;
   pthread_t threads[3];
   pthread_attr_t scheduleAttr;
   struct sched_param scheduleParams;
   pthread_attr_init(&scheduleAttr);
+  if (pthread_attr_setschedpolicy(&scheduleAttr, SCHED_FIFO) !=0) return -1;
   pthread_attr_getschedparam(&scheduleAttr, &scheduleParams);
-  scheduleParams.sched_priority++;
+
+  scheduleParams.sched_priority+=2;
   if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
   pthread_create(&threads[0], &scheduleAttr, &pictureLoop, NULL);
+
   scheduleParams.sched_priority--;   //run processing at default priority, lower than pictures
   if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
-  pthread_create(&threads[1], &scheduleAttr, &processingLoop, (void*)&comm);
-  scheduleParams.sched_priority += 2;        //run command reading at highest priority
-  if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
-  pthread_create(&threads[2], &scheduleAttr, &startCommunications, (void*)&comm);
+  pthread_create(&threads[1], &scheduleAttr, &processingLoop, (void*)&globalcomm);//comm);//
 
-  sclog(info, "Waiting for threads to complete...ie never");
+  scheduleParams.sched_priority+=2;        //run command reading at highest priority
+  if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
+  pthread_create(&threads[2], &scheduleAttr, &startCommunications, (void*)&globalcomm);//comm);
+
+  sclog(info, (char*)"Waiting for threads to complete...ie never");
   //wait for threads to return
-  for (int i=0; i<4; i++) 
-    pthread_join(threads[i], NULL);
+  for (int i=0; i<3; i++)
+    threaderr = pthread_join(threads[i], NULL);
 
   // shut down cameras if threads return (an error has occured)
-  sclog(info, "All threads have returned...there are errors somehwere...go find them");
+  sclog(info, (char*)"All threads have returned...there are errors somehwere...go find them");
 
   if ((err = globalCam.CloseDevice()) != CE_NO_ERROR )
     return err;
@@ -213,13 +218,13 @@ Might have to wait for image processing in progress to complete
 */
 void* pictureLoop(void* arg)
 {
-  sclog(info, "Starting up picture loop");
+  sclog(info, (char*)"Starting up picture loop");
+
   int imageIndex = 0;                //index in image array to use
   int interval;                      //local storage of picture interval (in us)
   static PAR_ERROR err = CE_NO_ERROR;   //static enum lets a pointer to it be returned
   int failureCount = 0;
   while (1) {
-
     //depending on picture interval, either sleep or wait for trigger
     lock(&camLock, "camLock", "pictureLoop");
     interval = globalCam.getPictureInterval() * 1000;
@@ -244,7 +249,7 @@ void* pictureLoop(void* arg)
       // 				pthread_cond_wait(&processingCompleteCond[imageIndex], 
       // 								   &imageReadyLock[imageIndex]);
       wait(&processingCompleteCond[imageIndex], &imageReadyLock[imageIndex],
-	  "processingCompleteCond", "imageReadyLock", "pictureLoop");
+      	  "processingCompleteCond", "imageReadyLock", "pictureLoop");
     }
     unlock(&imageReadyLock[imageIndex], "imageReadyLock", "pictureLoop");
 
@@ -254,14 +259,14 @@ void* pictureLoop(void* arg)
     if (err != CE_NO_ERROR) {
       failureCount++;
       if (failureCount == 3) {
-	sclog(error, "pictureLoop: repeated errors: %s, restarting camera.", globalCam.GetErrorString(err).c_str());
+	sclog(error, (char*)"pictureLoop: repeated errors: %s, restarting camera.", globalCam.GetErrorString(err).c_str());
 	powerCycle();
       }
       else if (failureCount > 5) {
-	sclog(error, "pictureLoop: too many repeated errors: %s", globalCam.GetErrorString(err).c_str());
+	sclog(error, (char*)"pictureLoop: too many repeated errors: %s", globalCam.GetErrorString(err).c_str());
 	exit(1);
       }
-      else sclog(warning, "pictureLoop: error: %s", globalCam.GetErrorString(err).c_str());
+      else sclog(warning, (char*)"pictureLoop: error: %s", globalCam.GetErrorString(err).c_str());
     }
     else failureCount = 0;
     unlock(&camLock, "camLock", "pictureLoop");
@@ -271,6 +276,7 @@ void* pictureLoop(void* arg)
     globalImageReadyFlags[imageIndex] = 1;
     unlock(&imageReadyLock[imageIndex], "imageReadyLock", "pictureLoop");
     pthread_cond_signal(&imageReadyCond[imageIndex]);
+
 
     //move on to next image while this one is being processed
     imageIndex = (imageIndex == 0)?1:0;
@@ -289,12 +295,11 @@ Designed to run concurrently with pictureLoop and readLoop
 */
 void* processingLoop(void* arg)
 {
-  sclog(info, "Starting up image processing loop");
+  sclog(info, (char*)"Starting up image processing loop");
   int imageIndex = 0;
   static SBIG_FILE_ERROR err;
 //  static int imgcounter = 0;
   CamCommServer* comm = (CamCommServer*)arg;
-
   while (1) {
     //wait for image to be available for processing
     lock(&imageReadyLock[imageIndex], "imageReadyLock", "processingLoop");
@@ -321,12 +326,13 @@ void* processingLoop(void* arg)
 //	imgcounter = 0;
 //    }
 #endif
+
 #if USE_IMAGE_VIEWER
     if (!showBoxes) {
-      sclog(debug, "processingLoop: Saving viewer image in: %s", viewerPath);
+      sclog(debug, (char*)"processingLoop: Saving viewer image in: %s", viewerPath);
       err = globalImages[imageIndex].SaveImage(viewerPath);
       if (err != SBFE_NO_ERROR) {
-	sclog(warning, "processingLoop: File error during viewer write: %d", err);
+	sclog(warning, (char*)"processingLoop: File error during viewer write: %d", err);
       }
     }
 #endif
@@ -336,12 +342,12 @@ void* processingLoop(void* arg)
     frameblob* fblob = globalImages[imageIndex].getFrameBlob();
     bloblist* blobs;
     if (STARCAM_DEBUG || showBoxes || SAVE_SC_IMAGES == 2) {  //add boxes or output blob data
-      sclog(data, "processingLoop: Found %d blobs.", fblob->get_numblobs());
-      sclog(data, "processingLoop: Their locations (x,y) are: ");
+      sclog(data, (char*)"processingLoop: Found %d blobs.", fblob->get_numblobs());
+      sclog(data, (char*)"processingLoop: Their locations (x,y) are: ");
       if (fblob->get_numblobs()) {
 	blobs = fblob->getblobs();
 	while (blobs != NULL) {
-	  sclog(data, "processingLoop:   ...(%g,%g)", blobs->getx(), blobs->gety());
+	  sclog(data, (char*)"processingLoop:   ...(%g,%g)", blobs->getx(), blobs->gety());
 	  if (showBoxes || SAVE_SC_IMAGES == 2)
 	    globalImages[imageIndex].drawBox(blobs->getx(), blobs->gety(), 20);
 	  blobs = blobs->getnextblob();
@@ -355,18 +361,18 @@ void* processingLoop(void* arg)
       sclog(warning, "processingLoop: File error during box write: %d", err);
     }
 #endif
+
 #if USE_IMAGE_VIEWER
     if (showBoxes) {
-      sclog(debug, "processingLoop: Saving viewer image in: %s", viewerPath);
-      err = globalImages[imageIndex].SaveImage(viewerPath);
-      if (err != SBFE_NO_ERROR) {
-	sclog(warning, "processingLoop: File error during boxed viewer write: %d", err);
-      }
+      	sclog(debug, (char*)"processingLoop: Saving viewer image in: %s", viewerPath);
+      	err = globalImages[imageIndex].SaveImage(viewerPath);
+	if (err != SBFE_NO_ERROR)
+		sclog(warning, (char*)"processingLoop: File error during boxed viewer write: %d", err);
     }
 #endif
 
     //send a return value to the flight computer
-    sclog(debug, "processingLoop: sending image return value.");
+    sclog(debug, (char*)"processingLoop: sending image return value.");
     StarcamReturn returnStruct;
     globalImages[imageIndex].createReturnStruct(&returnStruct);
     comm->sendAll(CamCommunicator::buildReturn(&returnStruct));
@@ -393,11 +399,11 @@ void* processingLoop(void* arg)
  */
 void* startCommunications(void* arg)
 {
-  sclog(info, "Starting to listen for communications");
+  sclog(info, (char*)"Starting to listen for communications");
   CamCommServer* comm = (CamCommServer*)arg;
   while (1) {
     comm->startServer(&interpretCommand);
-    sclog(error, "Communications server failed to start.");
+    sclog(error, (char*)"Communications server failed to start.");
     sleep(1);
   }
   return NULL;
@@ -419,7 +425,7 @@ to flight computer by adding an entry here
 */
 string interpretCommand(string cmd)
 {
-  sclog(info, "Interpreting command: \"%s\"", cmd.c_str());
+  sclog(info, (char*)"Interpreting command: \"%s\"", cmd.c_str());
   //separate command part of cmd from the value part
   string::size_type valPos = cmd.find("=", 0);
   string valStr = "";
@@ -448,14 +454,7 @@ string interpretCommand(string cmd)
       lock(&imageLock[0], "imageLock", "interpretCommand");
       lock(&imageLock[1], "imageLock", "interpretCommand");
       BlobImage img;
-//#if USE_IMAGE_VIEWER
-      //err = globalCam.autoFocus(&img, 0, viewerPath);
-      //err = globalCam.autoFocus(&globalImages[imageIndex], 0, viewerPath);
       err = globalCam.autoFocus(&globalImages[imageIndex], 0, imgPath);
-//#else
-//      //err = globalCam.autoFocus(&img, 0, NULL);
-//      err = globalCam.autoFocus(&globalImages[imageIndex], 0, NULL);
-//#endif
       unlock(&imageLock[1], "imageLock", "interpretCommand");
       unlock(&imageLock[0], "imageLock", "interpretCommand");
       unlock(&camLock, "camLock", "interpretCommand");
@@ -470,12 +469,7 @@ string interpretCommand(string cmd)
       lock(&imageLock[0], "imageLock", "interpretCommand");
       lock(&imageLock[1], "imageLock", "interpretCommand");
       BlobImage img;
-//#if USE_IMAGE_VIEWER
-      //err = globalCam.autoFocus(&img, 1, viewerPath);
       err = globalCam.autoFocus(&img, 1, imgPath);
-//#else
-//      err = globalCam.autoFocus(&img, 1, NULL);
-//#endif
       unlock(&imageLock[1], "imageLock", "interpretCommand");
       unlock(&imageLock[0], "imageLock", "interpretCommand");
       unlock(&camLock, "camLock", "interpretCommand");
@@ -549,7 +543,7 @@ string interpretCommand(string cmd)
       return (cmd + " successful");
     }
     else {
-      sclog(warning, "interpretCommand: bad camera command");
+      sclog(warning, (char*)"interpretCommand: bad camera command");
       return (string)"Error: Failed to parse camera command: " + cmd;
     }
   }
@@ -630,7 +624,7 @@ string interpretCommand(string cmd)
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else {
-      sclog(warning, "interpretCommand: bad image command");
+      sclog(warning, (char*)"interpretCommand: bad image command");
       return (string)"Error: failed to parse image command: " + cmd;
     }
   }
@@ -644,7 +638,7 @@ string interpretCommand(string cmd)
       lock(&camLock, "camLock", "interpretCommand");
       LENS_ERROR err = globalCam.getLensAdapter()->preciseMove(counts, remaining, 0);
       unlock(&camLock, "camLock", "interpretCommand");
-      sclog(data, "interpretCommand: Lens move of: %d counts has %d left", counts, remaining);
+      sclog(data, (char*)"interpretCommand: Lens move of: %d counts has %d left", counts, remaining);
       if (err == LE_NO_ERROR) return (cmd + " successful");
       else return (string)"Error: Move returned " + CLensAdapter::getErrorString(err);
     } 
@@ -656,7 +650,7 @@ string interpretCommand(string cmd)
       lock(&camLock, "camLock", "interpretCommand");
       LENS_ERROR err = globalCam.getLensAdapter()->preciseMove(counts, remaining, 1);
       unlock(&camLock, "camLock", "interpretCommand");
-      sclog(data, "interpretCommand: Forced lens move of: %d counts has %d left", counts, remaining);
+      sclog(data, (char*)"interpretCommand: Forced lens move of: %d counts has %d left", counts, remaining);
       if (err == LE_NO_ERROR) return (cmd + " successful");
       else return (string)"Error: Forced move returned " + CLensAdapter::getErrorString(err);
     } 
@@ -678,11 +672,11 @@ string interpretCommand(string cmd)
       lock(&camLock, "camLock", "interpretCommand");
       globalCam.getLensAdapter()->runCommand(cmd, returnVal);
       unlock(&camLock, "camLock", "interpretCommand");
-      sclog(data, "interpretCommand: Lens command: \"%s\" returned \"%s\"", cmd.c_str(), returnVal.c_str());
+      sclog(data, (char*)"interpretCommand: Lens command: \"%s\" returned \"%s\"", cmd.c_str(), returnVal.c_str());
       return cmd + " returned: " + returnVal;
     }
     else {
-      sclog(warning, "interpretCommand: bad lens command");
+      sclog(warning, (char*)"interpretCommand: bad lens command");
       return (string)"Error: failed to parse lens command: " + cmd;
     }
   }
@@ -719,12 +713,12 @@ string interpretCommand(string cmd)
 #endif
     }
     else {
-      sclog(warning, "interpretCommand: bad overall command");
+      sclog(warning, (char*)"interpretCommand: bad overall command");
       return (string)"Error: failed to parse overall command: " + cmd;
     }
   }
   else {
-    sclog(warning, "interpretCommand: Unknown device specifier: '%c'", cmd[0]);
+    sclog(warning, (char*)"interpretCommand: Unknown device specifier: '%c'", cmd[0]);
     return (string)"Error: Unknown device specifier (1st char)" + cmd.substr(0,1);
   }
 
@@ -742,17 +736,17 @@ void powerCycle()
 
   if (!hasperms) {
     if (ioperm(0x378, 0x0F, 1) != 0) {
-      sclog(warning, "powerCycle couldn't set port permissions...are you root?");
+      sclog(warning, (char*)"powerCycle couldn't set port permissions...are you root?");
       return;
     }
     else hasperms = true;
   }
 
-  sclog(info, "Power cycling the cameras!");
+  sclog(info, (char*)"Power cycling the cameras!");
   if (globalCam.CloseDevice() != CE_NO_ERROR)
-    sclog(warning, "Trouble safely shutting down camera, proceeding anyway.");
+    sclog(warning, (char*)"Trouble safely shutting down camera, proceeding anyway.");
   if (globalCam.CloseDriver() != CE_NO_ERROR)
-    sclog(warning, "Trouble safely shutting down driver");
+    sclog(warning, (char*)"Trouble safely shutting down driver");
 
   outb(0xFF, 0x378);
   usleep(1000000);
@@ -761,10 +755,10 @@ void powerCycle()
   PAR_ERROR err;
   sleep(3);
   while ((err = openCameras()) != CE_NO_ERROR) {
-    sclog(error, "Problem reconnecting to camera: %s", globalCam.GetErrorString(err).c_str());
+    sclog(error, (char*)"Problem reconnecting to camera: %s", globalCam.GetErrorString(err).c_str());
     sleep(5);
   }
-  sclog(info, "Star camera reconnected");
+  sclog(info, (char*)"Star camera reconnected");
 }
 
 /*
@@ -828,7 +822,7 @@ when an error occurs, -1 is returned otherwise returns 0
 */
 int initCommands()
 {
-  sclog(info, "Running stored initialization commands");
+  sclog(info, (char*)"Running stored initialization commands");
   //open file for reading...if it fails try creating it
   ifstream fin(initFilename, ios::in);
   if (!fin) {
@@ -850,7 +844,7 @@ int initCommands()
     //check for empty file before running commands
     if (cmd == "") return 0;
     retVal = interpretCommand(cmd);
-    sclog(debug, "init command returned: %s", retVal.c_str());
+    sclog(debug, (char*)"init command returned: %s", retVal.c_str());
     if (retVal.substr(0,5) == "Error")  {
       return -1;
     }
