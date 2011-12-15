@@ -12,7 +12,7 @@
 #include <sys/ioctl.h>
 
 #define LENS_DEBUG 0
-
+#define OLD_LENS 0
 
 
 using namespace std;
@@ -217,6 +217,7 @@ LENS_ERROR CLensAdapter::runCommand(string cmd, string &return_value)
 	string first, second;
 	fd_set input, output;
 	struct timeval timeout;
+	string cmdNoR = cmd;
 	if (cmd.find("\r") == string::npos) cmd += "\r";     //insert carriage return as needed
 	
 #if LENS_DEBUG
@@ -240,33 +241,6 @@ LENS_ERROR CLensAdapter::runCommand(string cmd, string &return_value)
 		if (n < 0) return (m_eLastError = LE_COMMUNICATION_ERROR);
 	}
 	else return (m_eLastError = LE_COMMUNICATION_ERROR);
-	
-	for (int i=0; i<0; i++) {     //repeat to first read command echo and then "OK"
-					//NB: no more command echo, or "OK"
-#if LENS_DEBUG
-		cout << "[Lens Debug]: performing read of confirmation... " << endl;
-#endif
-		timeout.tv_sec = 10;
-		timeout.tv_usec = 0;
-		FD_ZERO(&input);
-		FD_SET(m_nPortFD, &input);
-		n = select(m_nPortFD+1, &input, NULL, NULL, &timeout);
-		if (n < 0) return (m_eLastError = LE_COMMUNICATION_ERROR);
-		if (n == 0) return (m_eLastError = LE_TIMEOUT);
-		if (FD_ISSET(m_nPortFD, &input)) {
-#if LENS_DEBUG
-			cout << "[Lens Debug]:   calling read... " << endl;
-#endif
-			n = read(m_nPortFD, buf, 254);                      //in canonical mode, should read until \r
-			if (n < 0) return (m_eLastError = LE_COMMUNICATION_ERROR);
-			buf[n] = '\0';                //turn buffer into a C-style string
-			first = buf;                  //first line of result (should read "OK")
-#if LENS_DEBUG
-			cout << "[Lens Debug]:   read line of output: " << first << endl;
-#endif
-		}
-	}
-	
 #if LENS_DEBUG
 	cout << "[Lens Debug]: performing read of return value... " << endl;
 #endif
@@ -284,22 +258,49 @@ LENS_ERROR CLensAdapter::runCommand(string cmd, string &return_value)
 		n = read(m_nPortFD, buf, 254);
 		if (n < 0) return (m_eLastError = LE_COMMUNICATION_ERROR);
 		buf[n] = '\0';
-		second = buf;                 //second line of result: either return value or error code
+		first = buf;
 #if LENS_DEBUG
-		cout << "[Lens Debug]:   read line of output: " << second << endl;
+		cout << "[Lens Debug]:   read line of output: " << first << endl;
 #endif
 	}
-//	return_value = first + second;
-	return_value = second;
+	return_value = first;
 	
 	//check return value for an error code
-	if (second.find("ERR", 0) == 0) {  //an error occured in processing the command
-		end_pos = second.find("\n",0);
+	if (first.find("ERR", 0) == 0) {  //an error occured in processing the command
+		end_pos = first.find("\n",0);
 		if (end_pos == string::npos) return (m_eLastError = LE_COMMUNICATION_ERROR);
-		err_code_str = second.substr(3,end_pos-3);
+		err_code_str = first.substr(3,end_pos-3);
 		return (m_eLastError = (LENS_ERROR)atoi(err_code_str.c_str()));
 	}
-	
+#if OLD_LENS
+        if ((first.find(cmdNoR))!=(string::npos)) {
+                for (int i=0; i<2; i++) {     //repeat to first read command echo and then "OK"
+#if LENS_DEBUG
+                        cout << "[Lens Debug]: performing more read (OK, then return value... " << endl;
+#endif
+                        timeout.tv_sec = 10;
+                        timeout.tv_usec = 0;
+                        FD_ZERO(&input);
+                        FD_SET(m_nPortFD, &input);
+                        n = select(m_nPortFD+1, &input, NULL, NULL, &timeout);
+                        if (n < 0) return (m_eLastError = LE_COMMUNICATION_ERROR);
+                        if (n == 0) return (m_eLastError = LE_TIMEOUT);
+                        if (FD_ISSET(m_nPortFD, &input)) {
+#if LENS_DEBUG
+                                cout << "[Lens Debug]:   calling read... " << endl;
+#endif
+                                n = read(m_nPortFD, buf, 254);                      //in canonical mode, should read until \r
+                                if (n < 0) return (m_eLastError = LE_COMMUNICATION_ERROR);
+                                buf[n] = '\0';                //turn buffer into a C-style string
+                                second = buf;                  //first line of result (should read "OK")
+#if LENS_DEBUG
+                                cout << "[Lens Debug]:   read line of output: " << second << endl;
+#endif
+                        }
+                }
+                return_value = second;
+        }
+#endif	
 	return (m_eLastError = LE_NO_ERROR);
 }
 
