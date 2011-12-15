@@ -284,6 +284,7 @@ void CommandGUI::showReturnVal(QString &str)
 			 << "... imagestarttime=" << rtn.imagestarttime.tv_sec << "s " 
 				 << rtn.imagestarttime.tv_usec << "us\n"
 			 << "... ccdtemperature=" << rtn.ccdtemperature << "\n"
+			 << "... focusposition=" << rtn.focusposition << "\n"
 			 << "... numblobs=" << rtn.numblobs;
 		returnPane->append(sout.str().c_str());
 	}
