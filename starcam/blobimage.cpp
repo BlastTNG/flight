@@ -11,6 +11,11 @@
 #include "bloblist.h"
 #include "pyramid.h"
 
+#include <iostream>
+#include <fstream>
+#include <time.h>
+#include <unistd.h>
+
 #define BLOB_IMAGE_DEBUG 0
 #if BLOB_IMAGE_DEBUG
 #include <iostream>
@@ -180,12 +185,10 @@ SBIG_FILE_ERROR BlobImage::OpenImage(const char *pFullPath)
 			res = SBFE_MEMORY_ERROR;
 			if (!AllocateImageBuffer(CSBIGImg::GetHeight(), CSBIGImg::GetWidth()))
 				break;
-
 			if (isCompressed)
 				res = CSBIGImg::ReadCompressedImage(fh);
 			else
 				res = CSBIGImg::ReadUncompressedImage(fh);
-
 			if (res != SBFE_NO_ERROR) {
 				CSBIGImg::DeleteImageData();
 			}
@@ -312,6 +315,7 @@ int BlobImage::findBlobs()
 #if BLOB_IMAGE_DEBUG
 	cout << "[Blob image debug]: in findBlobs method..." << endl;
 #endif
+
 	string note = "";
 	ostringstream sout;
 	int numblobs;
@@ -334,33 +338,7 @@ int BlobImage::findBlobs()
 	
 	numblobs = m_cBlob.get_numblobs();
 	blobs = m_cBlob.getblobs();
-	
-/*  not using this any more, the image note will now provide UNIX timestamp
-	
-	//set the image note to provide rough information about the blobs found
-	int x, y;
-	char buf[40];
-	sout << numblobs << " blobs";
-	if (numblobs) sout << " at:";
-	while (blobs != NULL) {
-//		if (blobs->gettype() == 2)      //only include extended blobs
-		{
-			x = (int) floor(blobs->getx() + 0.5);     //round location to save space
-			y = (int) floor(blobs->gety() + 0.5);
-			sout << " (" << x << "," << y << ")";
-			if (strlen(buf) + note.length() > 67) {   //note field has maximum length 70
-				note += "...";
-				break;
-			}
-		}
-		blobs = blobs->getnextblob();
-	}
-#if BLOB_IMAGE_DEBUG
-	cout << "[Blob image debug]: The camera note will be set to: " << sout.str() << endl;
-#endif
-	CSBIGImg::SetImageNote(sout.str());
-*/
-	
+
 	return numblobs;
 }
 
@@ -378,6 +356,9 @@ int BlobImage::findBlobs()
 using namespace std;
 int BlobImage::highPassFilter(int box_size, int n_boxes)
 {
+#if BLOB_IMAGE_DEBUG
+	cout << "[Blob image debug]: in highPassFilter..." << endl;
+#endif
   unsigned short *img = this->GetImagePointer();
   unsigned int height = this->GetHeight();
   unsigned int width = this->GetWidth();
@@ -467,7 +448,6 @@ void BlobImage::drawBox(double x, double y, double side, bool willChange /*=true
 #if BLOB_IMAGE_DEBUG
 	cout << "[Blob image debug]: In drawBox method." << endl;
 #endif
-	
 	MAPTYPE* map = CSBIGImg::GetImagePointer();
 	//rather than using saturation, try just background + range
 	//MAPTYPE sat = m_cBlob.get_satval();
@@ -583,6 +563,7 @@ StarcamReturn* BlobImage::createReturnStruct(StarcamReturn* arg)
 	arg->imagestarttime = GetImageStartTime();
 	arg->camID = m_sCamID;
 	arg->ccdtemperature = CSBIGImg::GetCCDTemperature();
+	arg->focusposition = CSBIGImg::GetApertureArea();
 	
 	//blob info (on 15 brightest blobs)
 	arg->numblobs = m_cBlob.get_numblobs();
