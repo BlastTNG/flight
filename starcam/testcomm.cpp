@@ -4,8 +4,9 @@
 #include <string>
 
 //these are reversed because the files are named from starcam perspective
-const char* defaultCommTarget = "192.168.1.11";
-//const char* defaultCommTarget = "burqas.blast";
+//const char* defaultCommTarget = "192.168.1.11"; //THEGOOD
+const char* defaultCommTarget = "192.168.1.12"; //THEBAD
+//const char* defaultCommTarget = "192.168.1.13"; //THEUGLY
 
 #define USE_COMMAND_GUI 1
 
@@ -120,6 +121,7 @@ string displayReturn(string rtn_str)
 		 	<< "... imagestarttime=" << rtn.imagestarttime.tv_sec << "s " 
 			<< rtn.imagestarttime.tv_usec << "us" << endl
 			 	<< "... ccdtemperature=" << rtn.ccdtemperature << endl
+			 	<< "... focusposition=" << rtn.focusposition << endl
 		 	<< "... numblobs=" << rtn.numblobs << endl;
 	}
 	
