@@ -19,13 +19,14 @@ HEADERS = amccommand.h share/bbc_pci.h share/blast.h share/channels.h \
 	  share/derived.h share/ephem_read.h share/ephem_types.h ezstep.h \
 	  share/fir.h share/lut.h mcp.h motordefs.h \
 	  share/netcmd.h pointing_struct.h camstruct.h camcommunicator.h \
-	  slow_dl.h share/starpos.h tx.h drivecommunicator.h motorcommand.h
+	  share/sip.h slow_dl.h share/starpos.h tx.h drivecommunicator.h \
+	  motorcommand.h
 		
 
 # These are needed by both bolotest and flight versions
 OBJS = actuators.o share/blast.o share/channels.o command_list.o commands.o \
        derived.o ezstep.o share/framefile.o hk.o hwpr.o share/lut.o mcp.o \
-       tx.o tx_struct.o xystage.o
+       share/sip.o tx.o tx_struct.o xystage.o
 
 # These are only needed by the flight version
 ifndef BOLOTEST
