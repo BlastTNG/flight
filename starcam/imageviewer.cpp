@@ -1,7 +1,9 @@
 #include "imageviewer.h"
+#include <sstream>
 #include <qapplication.h>
 #include <qimage.h>
 #include <qlabel.h>
+#include <qstring.h>
 #include <qpainter.h>
 #include <qtimer.h>
 #include "blobimage.h"
@@ -162,7 +164,15 @@ void ImageViewer::paintEvent(QPaintEvent*)
 	QRect img_rect = this->rect();
 	img_rect.setWidth(scaled_img.width());
 	img_rect.setHeight(scaled_img.height());
+	struct tm timestruct = bimg->CSBIGImg::GetImageStartTime();
+	QString timestring;
+	ostringstream sout;
+	sout << ((timestruct.tm_hour<10)?"0":"") << timestruct.tm_hour << ":"
+		 << ((timestruct.tm_min<10)?"0":"") << timestruct.tm_min << ":"
+		 << ((timestruct.tm_sec<10)?"0":"") << timestruct.tm_sec;
+	timestring = sout.str();
 	p.drawImage(img_rect, scaled_img);
+	p.drawText(20,20,timestring);
 }
 
 
