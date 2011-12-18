@@ -280,9 +280,9 @@ void cameraFields()
     }
   }
 
-  WriteData(TheGoodforceAddr, CommandData.thegood.forced, NIOS_QUEUE);
-  WriteData(TheBadforceAddr, CommandData.thebad.forced, NIOS_QUEUE);
-  WriteData(TheUglyforceAddr, CommandData.theugly.forced, NIOS_QUEUE);
+  WriteData(TheGoodforceAddr, CommandData.thegood.paused, NIOS_QUEUE);
+  WriteData(TheBadforceAddr, CommandData.thebad.paused, NIOS_QUEUE);
+  WriteData(TheUglyforceAddr, CommandData.theugly.paused, NIOS_QUEUE);
   WriteData(TheGoodexpIntAddr, CommandData.thegood.expInt, NIOS_QUEUE);
   WriteData(TheBadexpIntAddr, CommandData.thebad.expInt, NIOS_QUEUE);
   WriteData(TheUglyexpIntAddr, CommandData.theugly.expInt, NIOS_QUEUE);

@@ -344,8 +344,8 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
     		Rpulsewait++;
     		Bpulsewait++;
       		if (Rpulsewait > RSCWAIT) {
-			if (!CommandData.thegood.forced) sendTheGoodCommand("CtrigExp");
-			if (!CommandData.thebad.forced) sendTheBadCommand("CtrigExp");
+			if (!CommandData.thegood.paused) sendTheGoodCommand("CtrigExp");
+			if (!CommandData.thebad.paused) sendTheBadCommand("CtrigExp");
 			for (int i=0; i<10; i++) {
 				if (goodPos[i] == 90.0) { 
 					trigPos[i] = ACSData.enc_table;
@@ -365,7 +365,7 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
 		}
     		if (bsc_trigger) {
       			if (Bpulsewait > BSCWAIT) {
-				if (!CommandData.theugly.forced) sendTheUglyCommand("CtrigExp");
+				if (!CommandData.theugly.paused) sendTheUglyCommand("CtrigExp");
         			bsc_trigger = 0;
         			Bpulsewait = 0;
 	        	} else {

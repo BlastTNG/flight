@@ -25,17 +25,17 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.41 $";
+const char *command_list_serial = "$Revision: 1.42 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance",          "Waveplate Rotator",
+  "Pointing Modes",        "CMB grenades",     "Waveplate Rotator",
   "Pointing Sensor Trims", "Aux. Electronics", "HK Bias",
-  "Pointing Sensor Vetos", "Actuators",        "BSC",
-  "Pointing Motor Gains",  "RSC",	       "HK Insert Heat",
-  "Subsystem Power",       "Lock Motor",       "HK Theo Heat",
-  "Telemetry",             "SC Table", 	       "OSC Housekeeping",
-  "X-Y Stage",             "ISC Modes",        "OSC Modes",
-  "Miscellaneous",         "ISC Parameters",   "OSC Parameters"
+  "Pointing Sensor Vetos", "Actuators",        "Long Range Missiles",
+  "Pointing Motor Gains",  "Lock Motor",       "HK Insert Heat",
+  "Subsystem Power",       "SC Table",         "HK Theo Heat",
+  "Telemetry",             "The Good SC",      "Semi-Automatic Weapons",
+  "X-Y Stage",             "The Bad SC",       "Knives and Swords",
+  "Miscellaneous",         "The Ugly SC",      "Handguns"
   };
 
 //echoes as string; makes enum name the command name string
@@ -197,23 +197,23 @@ struct scom scommands[N_SCOMMANDS] = {
 
 
   //The Good commands
-  {COMMAND(thegood_expose), "Start The Good exposure (in triggered mode)", GR_RSC},
-  {COMMAND(thegood_autofocus), "The Good autofocus mode", GR_RSC},
-  {COMMAND(thegood_settrig_ext), "Set external The Good trigger mode", GR_RSC},
-  {COMMAND(thegood_force_lens), "Forced mode for The Good lens moves", GR_RSC},
-  {COMMAND(thegood_unforce_lens), "Normal mode for The Good lens moves", GR_RSC},
+  {COMMAND(thegood_expose), "Start The Good exposure (in triggered mode)", GR_SCGOOD},
+  {COMMAND(thegood_autofocus), "The Good autofocus mode", GR_SCGOOD},
+  {COMMAND(thegood_settrig_ext), "Set external The Good trigger mode", GR_SCGOOD},
+  {COMMAND(thegood_pause), "Stop automatic image capture", GR_SCGOOD},
+  {COMMAND(thegood_run), "Start automatic image capture", GR_SCGOOD},
   //The Bad commands
-  {COMMAND(thebad_expose), "Start The Bad exposure (in triggered mode)", GR_RSC},
-  {COMMAND(thebad_autofocus), "The Bad autofocus mode", GR_RSC},
-  {COMMAND(thebad_settrig_ext), "Set external The Bad trigger mode", GR_RSC},
-  {COMMAND(thebad_force_lens), "Forced mode for The Bad lens moves", GR_RSC},
-  {COMMAND(thebad_unforce_lens), "Normal mode for The Bad lens moves", GR_RSC},
+  {COMMAND(thebad_expose), "Start The Bad exposure (in triggered mode)", GR_SCBAD},
+  {COMMAND(thebad_autofocus), "The Bad autofocus mode", GR_SCBAD},
+  {COMMAND(thebad_settrig_ext), "Set external The Bad trigger mode", GR_SCBAD},
+  {COMMAND(thebad_pause), "Stop automatic image capture", GR_SCBAD},
+  {COMMAND(thebad_run), "Start automatic image capture", GR_SCBAD},
   //The Ugly commands
-  {COMMAND(theugly_expose), "Start The Ugly exposure (in triggered mode)", GR_BSC},
-  {COMMAND(theugly_autofocus), "The Ugly autofocus mode", GR_BSC},
-  {COMMAND(theugly_settrig_ext), "Set external The Ugly trigger mode", GR_BSC},
-  {COMMAND(theugly_force_lens), "Forced mode for The Ugly lens moves", GR_BSC},
-  {COMMAND(theugly_unforce_lens), "Normal mode for The Ugly lens moves", GR_BSC},
+  {COMMAND(theugly_expose), "Start The Ugly exposure (in triggered mode)", GR_SCUGLY},
+  {COMMAND(theugly_autofocus), "The Ugly autofocus mode", GR_SCUGLY},
+  {COMMAND(theugly_settrig_ext), "Set external The Ugly trigger mode", GR_SCUGLY},
+  {COMMAND(theugly_pause), "Stop automatic image capture", GR_SCUGLY},
+  {COMMAND(theugly_run), "Start automatic image capture", GR_SCUGLY},
   //Star Camera table
   {COMMAND(table_track), "Put the table in track mode", GR_SCTAB},
   //Theo heater housekeeping commands
@@ -790,28 +790,28 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*************** The Good  *****************/
-  {COMMAND(thegood_any), "Execute arbitrary The Good command", GR_RSC, 1,
+  {COMMAND(thegood_any), "Execute arbitrary The Good command", GR_SCGOOD, 1,
     {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  {COMMAND(thegood_settrig_timed), "Use timed exposure mode on The Good", GR_RSC, 1,
+  {COMMAND(thegood_settrig_timed), "Use timed exposure mode on The Good", GR_SCGOOD, 1,
     {
       {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "exp_int_thegood"}
     }
   },
-  {COMMAND(thegood_exp_params), "set The Good exposure commands", GR_RSC, 1,
+  {COMMAND(thegood_exp_params), "set The Good exposure commands", GR_SCGOOD, 1,
     {
       {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_thegood"}
     }
   },
-  {COMMAND(thegood_focus_params), "set The Good autofocus params", GR_RSC, 2,
+  {COMMAND(thegood_focus_params), "set The Good autofocus params", GR_SCGOOD, 2,
     {
       {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_thegood"},
       {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
     }
   },
-  {COMMAND(thegood_bad_pix), "Indicate pixel to ignore on The Good", GR_RSC, 3,
+  {COMMAND(thegood_bad_pix), "Indicate pixel to ignore on The Good", GR_SCGOOD, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
       //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
@@ -819,7 +819,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"y (0=top)", 0, 1020, 'i', ""}
     }
   },
-  {COMMAND(thegood_blob_params), "set blob finder params on The Good", GR_RSC, 4,
+  {COMMAND(thegood_blob_params), "set blob finder params on The Good", GR_SCGOOD, 4,
     {
       {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_thegood"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_thegood"},
@@ -827,46 +827,46 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_thegood"}
     }
   },
-  {COMMAND(thegood_lens_any), "execute The Good lens command directly", GR_RSC, 1,
+  {COMMAND(thegood_lens_any), "execute The Good lens command directly", GR_SCGOOD, 1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
   },
-  {COMMAND(thegood_lens_move), "move The Good lens", GR_RSC, 1,
+  {COMMAND(thegood_lens_move), "move The Good lens", GR_SCGOOD, 1,
     {
       //total range on Sigma EX 120-300mm is about 3270
       {"New position (ticks)", -10000, 10000, 'i', ""}
     }
   },
-  {COMMAND(thegood_lens_params), "set The Good lens params", GR_RSC, 1,
+  {COMMAND(thegood_lens_params), "set The Good lens params", GR_SCGOOD, 1,
     {
       {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_thegood"}
     }
   },
   /***************************************/
   /*************** The Bad  *****************/
-  {COMMAND(thebad_any), "Execute arbitrary The Bad command", GR_RSC, 1,
+  {COMMAND(thebad_any), "Execute arbitrary The Bad command", GR_SCBAD, 1,
     {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  {COMMAND(thebad_settrig_timed), "Use timed exposure mode on The Bad", GR_RSC, 1,
+  {COMMAND(thebad_settrig_timed), "Use timed exposure mode on The Bad", GR_SCBAD, 1,
     {
       {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "exp_int_thebad"}
     }
   },
-  {COMMAND(thebad_exp_params), "set The Bad exposure commands", GR_RSC, 1,
+  {COMMAND(thebad_exp_params), "set The Bad exposure commands", GR_SCBAD, 1,
     {
       {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_thebad"}
     }
   },
-  {COMMAND(thebad_focus_params), "set The Bad autofocus params", GR_RSC, 2,
+  {COMMAND(thebad_focus_params), "set The Bad autofocus params", GR_SCBAD, 2,
     {
       {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_thebad"},
       {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
     }
   },
-  {COMMAND(thebad_bad_pix), "Indicate pixel to ignore on The Bad", GR_RSC, 3,
+  {COMMAND(thebad_bad_pix), "Indicate pixel to ignore on The Bad", GR_SCBAD, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
       //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
@@ -874,7 +874,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"y (0=top)", 0, 1020, 'i', ""}
     }
   },
-  {COMMAND(thebad_blob_params), "set blob finder params on The Bad", GR_RSC, 4,
+  {COMMAND(thebad_blob_params), "set blob finder params on The Bad", GR_SCBAD, 4,
     {
       {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_thebad"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_thebad"},
@@ -882,46 +882,46 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_thebad"}
     }
   },
-  {COMMAND(thebad_lens_any), "execute The Bad lens command directly", GR_RSC, 1,
+  {COMMAND(thebad_lens_any), "execute The Bad lens command directly", GR_SCBAD, 1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
   },
-  {COMMAND(thebad_lens_move), "move The Bad lens", GR_RSC, 1,
+  {COMMAND(thebad_lens_move), "move The Bad lens", GR_SCBAD, 1,
     {
       //total range on Sigma EX 120-300mm is about 3270
       {"New position (ticks)", -10000, 10000, 'i', ""}
     }
   },
-  {COMMAND(thebad_lens_params), "set The Bad lens params", GR_RSC, 1,
+  {COMMAND(thebad_lens_params), "set The Bad lens params", GR_SCBAD, 1,
     {
       {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_thebad"}
     }
   },
   /***************************************/
   /*************** The Ugly  *****************/
-  {COMMAND(theugly_any), "Execute arbitrary The Ugly command", GR_BSC, 1,
+  {COMMAND(theugly_any), "Execute arbitrary The Ugly command", GR_SCUGLY, 1,
     {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  {COMMAND(theugly_settrig_timed), "Use timed exposure mode on The Ugly", GR_BSC, 1,
+  {COMMAND(theugly_settrig_timed), "Use timed exposure mode on The Ugly", GR_SCUGLY, 1,
     {
       {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "exp_int_theugly"}
     }
   },
-  {COMMAND(theugly_exp_params), "set The Ugly exposure commands", GR_BSC, 1,
+  {COMMAND(theugly_exp_params), "set The Ugly exposure commands", GR_SCUGLY, 1,
     {
       {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_theugly"}
     }
   },
-  {COMMAND(theugly_focus_params), "set The Ugly autofocus params", GR_BSC, 2,
+  {COMMAND(theugly_focus_params), "set The Ugly autofocus params", GR_SCUGLY, 2,
     {
       {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_theugly"},
       {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
     }
   },
-  {COMMAND(theugly_bad_pix), "Indicate pixel to ignore on The Ugly", GR_BSC, 3,
+  {COMMAND(theugly_bad_pix), "Indicate pixel to ignore on The Ugly", GR_SCUGLY, 3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
       //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
@@ -929,7 +929,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"y (0=top)", 0, 1020, 'i', ""}
     }
   },
-  {COMMAND(theugly_blob_params), "set blob finder params on The Ugly", GR_BSC, 4,
+  {COMMAND(theugly_blob_params), "set blob finder params on The Ugly", GR_SCUGLY, 4,
     {
       {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_theugly"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_theugly"},
@@ -937,18 +937,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_theugly"}
     }
   },
-  {COMMAND(theugly_lens_any), "execute The Ugly lens command directly", GR_BSC, 1,
+  {COMMAND(theugly_lens_any), "execute The Ugly lens command directly", GR_SCUGLY, 1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
   },
-  {COMMAND(theugly_lens_move), "move The Ugly lens", GR_BSC, 1,
+  {COMMAND(theugly_lens_move), "move The Ugly lens", GR_SCUGLY, 1,
     {
       //total range on Sigma EX 120-300mm is about 3270
       {"New position (ticks)", -10000, 10000, 'i', ""}
     }
   },
-  {COMMAND(theugly_lens_params), "set The Ugly lens params", GR_BSC, 1,
+  {COMMAND(theugly_lens_params), "set The Ugly lens params", GR_SCUGLY, 1,
     {
       {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_theugly"}
     }

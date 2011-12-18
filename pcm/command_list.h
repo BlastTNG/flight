@@ -37,21 +37,21 @@
 #define GR_BIAS         0x00000020
 #define GR_VETO         0x00000040
 #define GR_ACT          0x00000080
-#define GR_BSC		0x00000100
+//#define GR_BSC	  0x00000100	  //unused
 #define GR_GAIN         0x00000200
-#define GR_RSC          0x00000400
+#define GR_LOCK         0x00000400
 #define GR_CRYO_HEAT    0x00000800
 #define GR_POWER        0x00001000
-#define GR_LOCK         0x00002000
+#define GR_SCTAB        0x00002000
 #define GR_THEO_HEAT	0x00004000
 #define GR_TELEM        0x00008000
-#define GR_SCTAB        0x00010000
+#define GR_SCGOOD       0x00010000
 //#define GR_OSC_HOUSE    0x00020000	  //unused
 #define GR_STAGE        0x00040000
-//#define GR_ISC_MODE     0x00080000	  //unused
+#define GR_SCBAD        0x00080000
 //#define GR_OSC_MODE     0x00100000	  //unused
 #define GR_MISC         0x00200000
-//#define GR_ISC_PARAM    0x00400000	  //unused
+#define GR_SCUGLY       0x00400000
 //#define GR_OSC_PARAM    0x00800000	  //unused
 
 //reserved for CONFIRM  0x80000000
@@ -96,10 +96,10 @@ enum singleCommand {
   thegood_off,	     thegood_on,	thegood_cam_cycle, thegood_cpu_cycle,
   thebad_off,	     thebad_on,		thebad_cam_cycle,  thebad_cpu_cycle,
   theugly_off,	     theugly_on,	theugly_cam_cycle, theugly_cpu_cycle,
-  thegood_expose,    	thegood_autofocus,	thegood_settrig_ext,	thegood_force_lens, 
-  thebad_expose,     	thebad_autofocus,	thebad_settrig_ext,	thebad_force_lens, 
-  theugly_expose,    	theugly_autofocus,	theugly_settrig_ext,	theugly_force_lens, 
-  thegood_unforce_lens,	thebad_unforce_lens,	theugly_unforce_lens,	table_track,  
+  thegood_expose,    	thegood_autofocus,	thegood_settrig_ext,	thegood_pause, 
+  thebad_expose,     	thebad_autofocus,	thebad_settrig_ext,	thebad_pause, 
+  theugly_expose,    	theugly_autofocus,	theugly_settrig_ext,	theugly_pause, 
+  thegood_run,	     thebad_run,	theugly_run,	 table_track,  
   hwpr_step,         hwpr_pot_is_dead,  hwpr_pot_is_alive,
   hwpr_step_off,     hwpr_step_on,
   //theo heater commands. TODO-theo assign non-temporary names

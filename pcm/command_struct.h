@@ -147,7 +147,7 @@ struct latch_pulse {
 
 struct SCCommandData {
   //camera and lens configuration
-  short int forced;  //are lens moves forced?
+  short int paused;  //1=image capture paused, 0=image capture running
   int expInt;        //exposure interval (ms) (0=triggered)
   int expTime;       //exposure duration (ms)
   int focusRes;      //steps to divide lens range into for focus

@@ -526,19 +526,17 @@ void SingleCommand (enum singleCommand command, int scheduled)
       sendTheGoodCommand("CtrigExp");
       break;
     case thegood_autofocus:
-/*      if (CommandData.thegood.forced)
-	sendTheGoodCommand("CtrigFocusF");
-      else*/ sendTheGoodCommand("CtrigFocus");
+      sendTheGoodCommand("CtrigFocus");
       break;
     case thegood_settrig_ext:
       sendTheGoodCommand("CsetExpInt=0");
       CommandData.thegood.expInt = 0;
       break;
-    case thegood_force_lens:
-      CommandData.thegood.forced = 1;
+    case thegood_pause:
+      CommandData.thegood.paused = 1;
       break;
-    case thegood_unforce_lens:
-      CommandData.thegood.forced = 0;
+    case thegood_run:
+      CommandData.thegood.paused = 0;
       break;
       /***************************************/
       /********* The Bad Commanding  *************/
@@ -546,19 +544,17 @@ void SingleCommand (enum singleCommand command, int scheduled)
       sendTheBadCommand("CtrigExp");
       break;
     case thebad_autofocus:
-/*      if (CommandData.thebad.forced)
-	sendTheBadCommand("CtrigFocusF");
-      else*/ sendTheBadCommand("CtrigFocus");
+      sendTheBadCommand("CtrigFocus");
       break;
     case thebad_settrig_ext:
       sendTheBadCommand("CsetExpInt=0");
       CommandData.thebad.expInt = 0;
       break;
-    case thebad_force_lens:
-      CommandData.thebad.forced = 1;
+    case thebad_pause:
+      CommandData.thebad.paused = 1;
       break;
-    case thebad_unforce_lens:
-      CommandData.thebad.forced = 0;
+    case thebad_run:
+      CommandData.thebad.paused = 0;
       break;
       /***************************************/
       /********* The Ugly Commanding  *************/
@@ -566,19 +562,17 @@ void SingleCommand (enum singleCommand command, int scheduled)
       sendTheUglyCommand("CtrigExp");
       break;
     case theugly_autofocus:
-/*      if (CommandData.theugly.forced)
-	sendTheUglyCommand("CtrigFocusF");
-      else*/ sendTheUglyCommand("CtrigFocus");
+      sendTheUglyCommand("CtrigFocus");
       break;
     case theugly_settrig_ext:
       sendTheUglyCommand("CsetExpInt=0");
       CommandData.theugly.expInt = 0;
       break;
-    case theugly_force_lens:
-      CommandData.theugly.forced = 1;
+    case theugly_pause:
+      CommandData.theugly.paused = 1;
       break;
-    case theugly_unforce_lens:
-      CommandData.theugly.forced = 0;
+    case theugly_run:
+      CommandData.theugly.paused = 0;
       break;
 	/**************************************/
 	/********** Star Camera Table *********/
@@ -1357,9 +1351,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheGoodCommand(buf);
       break;
     case thegood_lens_move:
-/*      if (CommandData.thegood.forced)
-	sprintf(buf, "Lforce=%d", ivalues[0]);
-      else*/ sprintf(buf, "Lmove=%d", ivalues[0]);
+      sprintf(buf, "Lmove=%d", ivalues[0]);
       sendTheGoodCommand(buf);
       break;
     case thegood_lens_params:
@@ -1413,9 +1405,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheBadCommand(buf);
       break;
     case thebad_lens_move:
-/*      if (CommandData.thebad.forced)
-	sprintf(buf, "Lforce=%d", ivalues[0]);
-      else*/ sprintf(buf, "Lmove=%d", ivalues[0]);
+      sprintf(buf, "Lmove=%d", ivalues[0]);
       sendTheBadCommand(buf);
       break;
     case thebad_lens_params:
@@ -1469,9 +1459,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheUglyCommand(buf);
       break;
     case theugly_lens_move:
-/*      if (CommandData.theugly.forced)
-	sprintf(buf, "Lforce=%d", ivalues[0]);
-      else*/ sprintf(buf, "Lmove=%d", ivalues[0]);
+      sprintf(buf, "Lmove=%d", ivalues[0]);
       sendTheUglyCommand(buf);
       break;
     case theugly_lens_params:
