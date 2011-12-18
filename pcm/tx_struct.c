@@ -261,7 +261,8 @@ struct ChannelStruct SlowChannels[] = {
   {"level_target_bal",'w', LOOP1, 31,           1./1990.13,            -5.0, 'u', U_I_A},
   /* LOOP1 32-33 are wide */
   /* LOOP1 34 is fast */
-  /* LOOP1 35-36 are unused */
+  {"blob07_x_thegood",'w', LOOP1, 35, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob07_y_thegood",'w', LOOP1, 36, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
   {"alt_sip",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"mapmean_thegood",'w', LOOP1, 42,                1.0,             0.0, 'u', U_NONE},
@@ -311,21 +312,21 @@ struct ChannelStruct SlowChannels[] = {
   {"lrad_isc",     'w', LOOP2, 22,              I2DEG,             0.0, 'u', U_NONE},
   {"thresh_thegood",'w', LOOP2, 23,         1.0/1000.0,             0.0, 'u', U_NONE},
   {"grid_thegood", 'w', LOOP2, 24,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP2 25 is unused */
+  {"blob07_x_thebad",'w', LOOP2,  25, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"real_trig_osc",'w', LOOP2, 26,                1.0,             0.0, 's', U_NONE},
   {"mdist_thegood",'w', LOOP2, 27,                1.0,             0.0, 'u', U_NONE},
   {"nblobs_isc",   'w', LOOP2, 28,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP2 29-30 are unused */
+  {"blob07_f_thegood",'w', LOOP2, 29,                1.0,             0.0, 'u', U_NONE},
+  {"blob07_s_thegood",'w', LOOP2, 30,          1.0/100.0,             0.0, 'u', U_NONE},
   {"foc_off_osc",  'w', LOOP2, 31,                1.0,             0.0, 's', U_NONE},
-  /* LOOP2 32 is unused */
+  {"blob07_y_thebad",'w', LOOP2,  32, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"tol_isc",      'w', LOOP2, 33,                1.0,             0.0, 'u', U_NONE},
   /* LOOP2 34 is fast */
-  /* LOOP2 35 is unused */
+  {"blob07_f_thebad",'w', LOOP2, 35,                1.0,             0.0, 'u', U_NONE},
   {"offset_ifel_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"az_raw_mag",      'w',LOOP2, 39,            I2DEG,             0.0, 'u', U_D_DEG},
-  /* LOOP2 39 is unused */
   {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
   {"sigma_dgps",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
@@ -335,7 +336,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mapsigma_thegood",'w',LOOP2, 46,           1.0/10.0,             0.0, 'u', U_NONE},
   // LOOP2 47-48 are fast
   {"pulse_cal",    'w', LOOP2, 49,               10.0,              0., 'u', U_NONE},
-  /* LOOP2 50 is unused */
+  {"blob07_s_thebad",'w', LOOP2, 50,          1.0/100.0,             0.0, 'u', U_NONE},
   /* LOOP2 51-54 are wide fast */
   {"sigma_clin",   'w', LOOP2, 55,              I2DEG,             0.0, 'u', U_NONE},
   {"az_mag",       'w', LOOP2, 56,              I2DEG,             0.0, 'u', U_D_DEG},
@@ -403,9 +404,9 @@ struct ChannelStruct SlowChannels[] = {
   {"i_hold_osc",   'w', LOOP3, 61,                1.0,             0.0, 'u', U_NONE},
   {"save_prd_osc", 'w', LOOP3, 62,               0.01,             0.0, 'u', U_NONE},
   {"y_off_osc",    'w', LOOP3, 63,              I2DEG,             0.0, 's', U_NONE},
-  /* LOOP4 0 is unused */
+  {"blob07_x_theugly",  'w', LOOP4,  0, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"pref_tp_sf",   'w', LOOP4,  1,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP4 2 is unused */
+  {"blob07_y_theugly",  'w', LOOP4,  2, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"focpos_thegood",'w',LOOP4,  3,           1.0/10.0,             0.0, 's', U_NONE},
   {"focpos_thebad",'w', LOOP4,  4,           1.0/10.0,             0.0, 's', U_NONE},
   {"focpos_theugly",'w',LOOP4,  5,           1.0/10.0,             0.0, 's', U_NONE},
@@ -426,7 +427,7 @@ struct ChannelStruct SlowChannels[] = {
   {"gain_isc",     'w', LOOP4, 20,        100./65536.,             0.0, 'u', U_NONE},
   {"jfet_set_on",  'w', LOOP4, 21,             1/100.,             0.0, 'u', U_NONE},
   {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u', U_NONE},
-  /* LOOP4 23 is unused */
+  {"blob07_f_theugly",  'w', LOOP4,  23,                1.0,             0.0, 'u', U_NONE},
   /* LOOP4 24-25 are wide */
   {"cycle_state",  'w', LOOP4, 26,                1.0,             0.0, 'u', U_NONE},
   {"trig_type_isc",'w', LOOP4, 27,                1.0,             0.0, 'u', U_NONE},
@@ -443,7 +444,8 @@ struct ChannelStruct SlowChannels[] = {
   {"h_hist_gy",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"trim_pss",     'w', LOOP4, 39,              I2DEG,             0.0, 's', U_NONE},
   {"az_pss",       'w', LOOP4, 40,              I2DEG,             0.0, 'u', U_P_DEG},
-  /* LOOP4 41-43 appear unused */
+  /* LOOP4 42-43 appear unused */
+  {"blob07_s_theugly",  'w', LOOP4,  41,          1.0/100.0,             0.0, 'u', U_NONE},
   {"ra_1_p",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE}, // pointing mode coordinates
   {"dec_1_p",      'w', LOOP4, 45,              I2DEG,             0.0, 's', U_NONE},
   {"ra_2_p",       'w', LOOP4, 46,                I2H,             0.0, 'u', U_NONE},
@@ -527,13 +529,30 @@ struct ChannelStruct SlowChannels[] = {
   {"goal_sf",      'w', LOOP6, 30,                1.0,             0.0, 'u', U_NONE},
   {"focus_sf",     'w', LOOP6, 32,                1.0,             0.0, 's', U_NONE},
 
-  {"maxslew_isc",  'w', LOOP6,  0,              I2DEG,             0.0, 'u', U_NONE},
-  {"maxslew_osc",  'w', LOOP6,  1,              I2DEG,             0.0, 'u', U_NONE},
-  /* LOOP6 2-19 are unused */
+  {"blob05_x_thegood",  'w', LOOP6,  0, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob05_y_thegood",  'w', LOOP6,  1, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob05_f_thegood",  'w', LOOP6,  2,                1.0,             0.0, 'u', U_NONE},
+  {"blob05_s_thegood",  'w', LOOP6,  3,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob05_x_thebad",   'w', LOOP6,  4, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob05_y_thebad",   'w', LOOP6,  5, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob05_f_thebad",   'w', LOOP6,  6,                1.0,             0.0, 'u', U_NONE},
+  {"blob05_s_thebad",   'w', LOOP6,  7,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob05_x_theugly",  'w', LOOP6,  8, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob05_y_theugly",  'w', LOOP6,  9, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob05_f_theugly",  'w', LOOP6, 10,                1.0,             0.0, 'u', U_NONE},
+  {"blob05_s_theugly",  'w', LOOP6, 11,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob06_x_thegood",  'w', LOOP6, 12, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob06_y_thegood",  'w', LOOP6, 13, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob06_f_thegood",  'w', LOOP6, 14,                1.0,             0.0, 'u', U_NONE},
+  {"blob06_s_thegood",  'w', LOOP6, 15,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob06_x_thebad",   'w', LOOP6, 16, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob06_y_thebad",   'w', LOOP6, 17, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob06_f_thebad",   'w', LOOP6, 18,                1.0,             0.0, 'u', U_NONE},
+  {"blob06_s_thebad",   'w', LOOP6, 19,          1.0/100.0,             0.0, 'u', U_NONE},
   {"pref_ts_sf",   'w', LOOP6, 20,                1.0,             0.0, 'u', U_NONE},
   {"spread_sf",    'w', LOOP6, 21,             1/500.,             0.0, 'u', U_NONE},
   {"acc_lock",     'w', LOOP6, 22,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP6 23 is unused */
+  {"blob06_x_theugly",  'w', LOOP6, 23, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"i_move_act",   'w', LOOP6, 25,                1.0,             0.0, 'u', U_NONE},
   {"i_hold_act",   'w', LOOP6, 26,                1.0,             0.0, 'u', U_NONE},
   {"vel_act",      'w', LOOP6, 27,                1.0,             0.0, 'u', U_NONE},
@@ -556,7 +575,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_spread_act",'w', LOOP6, 55,              1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */
   {"el_sun",       'w', LOOP6, 58,              I2DEG,             0.0, 's', U_NONE},
-  /* LOOP6 59 unused */
+  {"blob06_y_theugly",  'w', LOOP6, 59, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"mode_cal",     'w', LOOP6, 60,                1.0,             0.0, 'u', U_NONE},
   {"minblobs_isc", 'w', LOOP6, 61,                1.0,             0.0, 'u', U_NONE},
   {"minblobs_osc", 'w', LOOP6, 62,                1.0,             0.0, 'u', U_NONE},
@@ -584,8 +603,9 @@ struct ChannelStruct SlowChannels[] = {
   {"g_pv_piv",     'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
   {"set_rw",       'w', LOOP7, 22,      200.0/32768.0,             0.0, 's', U_V_DPS},
   {"vel_dps_az",   'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
-  /* LOOP7 24 unassigned */
-  /* LOOP7 25-26 are unused */
+  {"blob08_s_theugly",  'w', LOOP7, 24,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob06_f_theugly",  'w', LOOP7, 25,                1.0,             0.0, 'u', U_NONE},
+  {"blob06_s_theugly",  'w', LOOP7, 26,          1.0/100.0,             0.0, 'u', U_NONE},
   {"vel_ser_piv",  'w', LOOP7, 27,   2000.0/65536.0,         0.0, 's', U_V_DPS},
   {"vel_calc_piv", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
   {"age_isc",      'w', LOOP7, 29,                 1.0,             0.0, 'u', U_T_MS},
@@ -733,7 +753,17 @@ struct ChannelStruct SlowChannels[] = {
   {"tile_last_hk",   'w', LOOP9,  36,                1.0,             0.0, 'u', U_NONE},
   {"v_heat_last_hk", 'w', LOOP9,  37,         CALDAC(1.0,            0.0), 'u', U_V_V},
   {"pulse_last_hk",  'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP9 39-49 are unused */
+  {"blob08_x_thegood",  'w', LOOP9,  39, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob08_y_thegood",  'w', LOOP9,  40, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob08_f_thegood",  'w', LOOP9,  41,                1.0,             0.0, 'u', U_NONE},
+  {"blob08_s_thegood",  'w', LOOP9,  42,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob08_x_thebad",   'w', LOOP9,  43, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob08_y_thebad",   'w', LOOP9,  44, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob08_f_thebad",   'w', LOOP9,  45,                1.0,             0.0, 'u', U_NONE},
+  {"blob08_s_thebad",   'w', LOOP9,  46,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob08_x_theugly",  'w', LOOP9,  47, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
+  {"blob08_y_theugly",  'w', LOOP9,  48, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
+  {"blob08_f_theugly",  'w', LOOP9,  49,                1.0,             0.0, 'u', U_NONE},
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_theugly",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
