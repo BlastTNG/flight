@@ -169,12 +169,6 @@ struct PointingDataStruct {
   double ra;        // hours, aparent
   double dec;       // degrees, aparent
   double offset_ifel_gy;
-  double offset_ifel_gy_isc; 
-  double offset_ifroll_gy_isc; 
-  double offset_ifyaw_gy_isc; 
-  double offset_ifel_gy_osc; 
-  double offset_ifroll_gy_osc; 
-  double offset_ifyaw_gy_osc; 
   double offset_ifroll_gy;
   double offset_ifyaw_gy;
   double ifel_earth_gy;
