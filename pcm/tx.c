@@ -477,10 +477,6 @@ static void StoreData(int index)
   static struct NiosStruct* azPssAddr;
   static struct NiosStruct* azSunAddr;
   static struct NiosStruct* elSunAddr;
-  static struct NiosStruct* azIscAddr;
-  static struct NiosStruct* elIscAddr;
-  static struct NiosStruct* azOscAddr;
-  static struct NiosStruct* elOscAddr;
   static struct NiosStruct* elEncAddr;
   static struct NiosStruct* sigmaEncAddr;
   static struct NiosStruct* elClinAddr;
