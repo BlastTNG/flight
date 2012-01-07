@@ -46,7 +46,7 @@ FORMS    += PMainWindow.ui \
     PStyleChooser.ui \
     PWebServerInfo.ui
 
-LIBS     += -lgetdata++ -lqjson
+LIBS     += -lgetdata++ -lqjson -lpython2.7
 
 RESOURCES += \
     icons.qrc \

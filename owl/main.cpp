@@ -28,12 +28,15 @@
 #include "PDotPal.h"
 #include <QTime>
 #include <qjson/serializer.h>
+#include <python2.7/Python.h>   //you may need to change this...
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
 
   time_t seconds= time (NULL);
   qsrand((seconds*1000+QTime::currentTime().msec())%RAND_MAX);  //for concurrent ids. do not remove this line.
+
+  Py_Initialize();
 
   PMainWindow* palantir=new PMainWindow;
   palantir->setWindowTitle(_WINDOW_TITLE_);

@@ -19,6 +19,7 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdlib.h>
 #include "PMainWindow.h"
 #include "PMdiArea.h"
 #include "PTimeDataItem.h"
@@ -43,6 +44,7 @@
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFileSystemModel>
+#include <python2.7/Python.h>   //you may need to change this
 #include <qjson/parser.h>
 #include <qjson/serializer.h>
 
@@ -100,6 +102,10 @@ PMainWindow::PMainWindow(QWidget *parent) :
     activate();
 
     setMinimumSize(1,1);
+
+    ui->label_kst->hide();
+    ui->pushButton_kst->hide();
+    connect(ui->pushButton_kst,SIGNAL(clicked()),this,SLOT(showInKst()));
 }
 
 #define reconnect(a,b,c,d) \
@@ -228,13 +234,17 @@ void PMainWindow::addPBox()
 
     ui->pstyleCaption->setWidgetStyleRef(_pboxList.back()->_pstyle);
     ui->pushButtonRemove->show();
+    ui->labelRemove->show();
     connect(ui->pushButtonRemove,SIGNAL(clicked()),_pboxList.back(),SLOT(deleteLater()));
     setUpdatesEnabled(1);
 }
 
 void PMainWindow::setCurrentObject(POwlAnimation*obj)
 {
+    ui->pushButton_kst->hide();
+    ui->label_kst->hide();
     ui->pushButtonRemove->show();
+    ui->labelRemove->show();
     reconnect(ui->pushButtonRemove,SIGNAL(clicked()),this,SLOT(removeCurrentDataItem()));
     for(int i=0;i<ui->comboBox->count();i++) {
         if(ui->comboBox->itemText(i).contains(obj->idText())) {
@@ -247,6 +257,8 @@ void PMainWindow::setCurrentObject(POwlAnimation*obj)
 
 void PMainWindow::setCurrentObject(PBox*obj)
 {
+    ui->pushButton_kst->hide();
+    ui->label_kst->hide();
     setUpdatesEnabled(0);
     QString x=obj->idText();
     _currentObject=obj;
@@ -260,6 +272,7 @@ void PMainWindow::setCurrentObject(PBox*obj)
     Q_ASSERT(ok);
     ui->pstyleCaption->setWidgetStyleRef(obj->_pstyle);
     ui->pushButtonRemove->show();
+    ui->labelRemove->show();
     connect(ui->pushButtonRemove,SIGNAL(clicked()),obj,SLOT(deleteLater()));
     setUpdatesEnabled(1);
 }
@@ -293,6 +306,7 @@ void PMainWindow::setCurrentObject(PAbstractDataItem*obj)
 
     ui->labelRemove->show();
     ui->pushButtonRemove->show();
+    ui->labelRemove->show();
     reconnect(ui->pushButtonRemove,SIGNAL(clicked()),this,SLOT(removeCurrentDataItem()));
 
     ui->pstyleData->show();
@@ -310,6 +324,8 @@ void PMainWindow::setCurrentObject(PAbstractDataItem*obj)
 
 void PMainWindow::setCurrentObject(PNumberDataItem*obj)
 {
+    ui->pushButton_kst->show();
+    ui->label_kst->show();
     setUpdatesEnabled(0);
     ui->labelFormat_num->show();
     ui->lineEditFormat->show();
@@ -386,6 +402,8 @@ void PMainWindow::setCurrentObject(PNumberDataItem*obj)
 
 void PMainWindow::setCurrentObject(PMultiDataItem*obj)
 {
+    ui->pushButton_kst->show();
+    ui->label_kst->show();
     setUpdatesEnabled(0);
     disconnect(ui->tableWidgetFormat,0,0,0);
 
@@ -427,6 +445,8 @@ void PMainWindow::setCurrentObject(PMultiDataItem*obj)
 
 void PMainWindow::setCurrentObject(PTimeDataItem*obj)
 {
+    ui->pushButton_kst->show();
+    ui->label_kst->show();
     setUpdatesEnabled(0);
     ui->labelFormat_num->show();
     ui->lineEditFormat->show();
@@ -439,7 +459,6 @@ void PMainWindow::setCurrentObject(PTimeDataItem*obj)
 
 void PMainWindow::addOwl()
 {
-    qDebug()<<"ADDING OWL!"<<_owlList.back()->idText();
     setUpdatesEnabled(0);
     ui->comboBox->addItem("Owl Animation "+_owlList.back()->idText());
     connect(_owlList.back(),SIGNAL(activated()),this,SLOT(uiLogic()));
@@ -447,6 +466,7 @@ void PMainWindow::addOwl()
     ui->comboBox->setCurrentIndex(ui->comboBox->count()-1);
 
     ui->pushButtonRemove->show();
+    ui->labelRemove->show();
     hideEverything();
     setCurrentObject(dynamic_cast<POwlAnimation*>(_owlList.back()));
     setUpdatesEnabled(1);
@@ -1013,4 +1033,14 @@ void PMainWindow::owlLoad()
 
     PStyleNotifier::me->enable();
     PStyleNotifier::me->notifyChange();
+}
+
+void PMainWindow::showInKst() {
+    PAbstractDataItem* padi=dynamic_cast<PAbstractDataItem*>(currentObject());
+    if(!padi) return;
+    PyRun_SimpleString(QString("import pykst as kst\n"
+                       "client = kst.Client(\""+QString(getenv("USER"))+"-owl\")\n"    //this should be USERNAME for windows
+                       "x=kst.DataVector(client,\""+QString(_dirfileFilename)+"\",\"INDEX\")\n"
+                       "y=kst.DataVector(client,\""+QString(_dirfileFilename)+"\",\""+QString(padi->source())+"\")\n"
+                       "client.plot(x,y)\n").toAscii());
 }

@@ -95,6 +95,8 @@ public slots:
     void extremaLowLogic(double);
     void extremaXLowLogic(double);
 
+    void showInKst();
+
     void multiLogic();
     void currowLogic();
 
