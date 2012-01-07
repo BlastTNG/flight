@@ -217,7 +217,7 @@ QDataStream& operator>>(QDataStream&a,PExtrema&b)
 void load(QVariant r,PExtrema&b)
 {
     QVariantMap v=r.toMap();
-    b._name=v["_name"].toFloat();
+    b._name=v["_name"].toString();
     b._xhigh=v["_xhigh"].toFloat();
     b._high=v["_high"].toFloat();
     b._low=v["_low"].toFloat();

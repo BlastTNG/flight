@@ -222,10 +222,12 @@ void PBox::dropEvent(QDropEvent *ev)
                         qDebug()<<"Cannot copy data item of unknown type!";
                     }
                 } else if(answer.startsWith("move")) {
+                    dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i])->_caption->setFixedWidth(1);
                     PBox*x=dynamic_cast<PBox*>(dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i])->parentWidget());   //assert?
                     x->_layout->removeWidget(dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i]));
                     x->_dataItems.removeOne(dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i]));
                     addProperty(dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i]),pos);
+                    _dirty=1;
                 }
                 return;
             }

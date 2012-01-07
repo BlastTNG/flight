@@ -66,6 +66,7 @@ void PStyleChooser::select(QString s)
         ui->toolButtonI->setEnabled(1);
         ui->toolButtonBG->setEnabled(1);
         ui->toolButtonFG->setEnabled(1);
+        PStyleNotifier::me->notifyChange();
         ui->comboBoxStyle->setCurrentIndex(ui->comboBoxStyle->count()-1);
     } else {
         for(int i=0;i<PStyle::_u.size();i++) {

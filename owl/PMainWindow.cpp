@@ -586,6 +586,7 @@ void PMainWindow::extremaLogic(QString)
                 ext->setName(x);
                 ui->comboBoxExtrema->addItem(x+" "+ext->idText());
                 ui->comboBoxExtrema->setCurrentIndex(ui->comboBoxExtrema->count()-1);
+                repaint();
             } else {
                 qDebug()<<"Warning: unknown extrema:"<<cb->currentText();
             }
