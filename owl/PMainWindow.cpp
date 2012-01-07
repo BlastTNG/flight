@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFileSystemModel>
+#include <qjson/parser.h>
+#include <qjson/serializer.h>
 
 PMainWindow* PMainWindow::me=0;
 
@@ -727,7 +729,7 @@ void PMainWindow::gdUpdate()
                 PAbstractDataItem* padi=_pboxList[i]->_dataItems[j];
 
                 if(ui->comboBox->currentText().contains(padi->idText())) {
-                    Q_ASSERT(!ok);
+                    Q_ASSERT(!ok);  // the reason for this is that we should not have the same PADI in two places.
                     ok=1;
                     int l=ui->lineEditCaption->cursorPosition();
                     ui->lineEditCaption->setText(padi->caption());
@@ -936,15 +938,18 @@ void PMainWindow::activate()
     reconnect(ui->lineEditCurFile,SIGNAL(textEdited(QString)),this,SLOT(curfileLogic(QString)));
 }
 
+QVariant save(PMainWindow&b);
 void PMainWindow::owlSave()
 {
     QFile file(QFileDialog::getSaveFileName(this,"Save the current owl project","","Owl projects(*.owl)"));
-    file.open(QFile::WriteOnly);
-    QDataStream xds(&file);
-    xds<<*this;
+    file.open(QFile::WriteOnly | QFile::Text);
+    QJson::Serializer s;
+    file.write(s.serialize(save(*this)).replace('{',"\n{").replace('}',"}\n"));
+
     file.close();
 }
 
+void load(QVariant v,PMainWindow&b);
 void PMainWindow::owlLoad()
 {
     QString filename(QFileDialog::getOpenFileName(0,"Load a pal/owl project","","Pal/Owl projects(*.pal *.owl)"));
@@ -964,17 +969,37 @@ void PMainWindow::owlLoad()
     if(filename.endsWith("owl")) {
         QFile file(filename);
         file.open(QFile::ReadOnly);
-        QDataStream xds(&file);
-        PMainWindow* evenNewer=new PMainWindow(0);
-        evenNewer->setUpdatesEnabled(0);
-        evenNewer->_ut->stop();
-        xds>>*evenNewer;
-        evenNewer->setWindowTitle(_WINDOW_TITLE_);
-        evenNewer->show();
-        evenNewer->_ut->start();
-        evenNewer->setUpdatesEnabled(1);
-        file.close();
-        evenNewer->ui->lineEditCurFile->setText(evenNewer->_dirfileFilename);
+        QJson::Parser p;
+        bool ok;
+        QVariant v=p.parse(file.readAll(),&ok);
+        if(ok&&v.isValid()) {
+            PMainWindow* evenNewer=new PMainWindow(0);
+            evenNewer->setUpdatesEnabled(0);
+            evenNewer->_ut->stop();
+            load(v,*evenNewer);
+            evenNewer->setWindowTitle(_WINDOW_TITLE_);
+            evenNewer->show();
+            evenNewer->_ut->start();
+            evenNewer->setUpdatesEnabled(1);
+            file.close();
+            evenNewer->ui->lineEditCurFile->setText(evenNewer->_dirfileFilename);
+        } else {    //try legacy format
+            qDebug()<<"Trying to open legacy...";
+            file.close();
+            QFile file(filename);
+            file.open(QFile::ReadOnly);
+            QDataStream xds(&file);
+            PMainWindow* evenNewer=new PMainWindow(0);
+            evenNewer->setUpdatesEnabled(0);
+            evenNewer->_ut->stop();
+            xds>>*evenNewer;
+            evenNewer->setWindowTitle(_WINDOW_TITLE_);
+            evenNewer->show();
+            evenNewer->_ut->start();
+            evenNewer->setUpdatesEnabled(1);
+            file.close();
+            evenNewer->ui->lineEditCurFile->setText(evenNewer->_dirfileFilename);
+        }
     } else if(filename.endsWith("pal")) {
         PMainWindow* newMain=new PMainWindow(0);
         qApp->setActiveWindow(newMain);

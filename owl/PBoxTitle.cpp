@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,19 @@
  */
 
 #include "PBoxTitle.h"
+#include "PBox.h"
 
 PBoxTitle::PBoxTitle(QWidget *parent) :
     QLabel(parent)
 {
     setAlignment(Qt::AlignHCenter | Qt::AlignTop );
+    setMouseTracking(1);
+}
+
+void PBoxTitle::mouseMoveEvent(QMouseEvent *ev) {
+    dynamic_cast<PBox*>(parentWidget())->mouseMoveEvent(ev);
+}
+
+void PBoxTitle::mousePressEvent(QMouseEvent *ev) {
+    dynamic_cast<PBox*>(parentWidget())->mousePressEvent(ev);
 }

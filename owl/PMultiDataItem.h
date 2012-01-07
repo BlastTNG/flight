@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,9 +34,12 @@ class PMultiDataItem : public PAbstractDataItem
 public:
     friend QDataStream& operator<<(QDataStream&a,PAbstractDataItem&b);
     friend QDataStream& operator>>(QDataStream&a,PMultiDataItem &b);
+    friend QVariant save(PAbstractDataItem&);
+    friend void load(QVariant v,PMultiDataItem&);
     friend class PDotPal;
     friend class PMainWindow;
     PMultiDataItem(PBox*parent,QString caption) : PAbstractDataItem(parent,caption), _map(new PMap),_lastNStyle(0) {}
+    PMultiDataItem(PBox*parent,PMultiDataItem* other) : PAbstractDataItem(parent,other), _map(other->_map),_lastNStyle(0) {}
     void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
     virtual PStyle* getPrevDataStyle() { return _lastNStyle?_lastNStyle:_defaultDataStyle; }
 };

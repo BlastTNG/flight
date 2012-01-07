@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,11 +32,11 @@
 class PDirfileDataItem : public PAbstractDataItem
 {
     Q_OBJECT
-    QString _format;
 public:
     friend QDataStream& operator<<(QDataStream&a,PAbstractDataItem&b);
     friend class PMainWindow;
     PDirfileDataItem(PBox*p,QString caption) : PAbstractDataItem(p,caption) {}
+    PDirfileDataItem(PBox*p,PDirfileDataItem* other) : PAbstractDataItem(p,other) {}
     void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
 };
 

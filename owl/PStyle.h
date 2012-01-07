@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,6 +58,8 @@ public:
     bool _dirty;
     friend QDataStream& operator<<(QDataStream& a,PStyle& b);
     friend QDataStream& operator>>(QDataStream& a,PStyle& b);
+    friend QVariant save(PStyle&);
+    friend void load(QVariant v,PStyle&);
 
     static PStyle* noStyle;
     static QList<PStyle*> _u;

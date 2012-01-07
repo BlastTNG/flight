@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,11 +44,14 @@ class PBox : public QFrame, public PObject
     QString _boxTitle;
     PBoxTitle* _pbt;
     int _geoMode;
+    friend class PBoxTitle;
 
 public:
     bool _dirty;
     friend QDataStream& operator<<(QDataStream&a,PBox&b);
     friend QDataStream& operator>>(QDataStream&a,PBox&b);
+    friend QVariant save(PBox&);
+    friend void load(QVariant v,PBox&b);
     friend class PDotPal;
     friend class PMainWindow;
 
@@ -57,6 +60,8 @@ public:
     ~PBox();
     const QString& boxTitle() const { return _boxTitle; }
     const PStyle* getStyle() const { return _pstyle; }
+
+    int getWhereToInsert(QPoint p);
 
 public slots:
     void setBoxTitle(const QString& boxTitle,bool force=0);
@@ -71,8 +76,8 @@ signals:
 protected:
     void dragEnterEvent(QDragEnterEvent *ev);
     void dropEvent(QDropEvent *ev);
-    void addProperty(QString property);
-    void addProperty(PAbstractDataItem* padi);
+    void addProperty(QString property,int pos=-1);
+    void addProperty(PAbstractDataItem* padi,int pos=-1);
     void addTitle(PBoxTitle* _pbt);
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);

@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@ class PBoxTitle : public QLabel
     Q_OBJECT
 public:
     explicit PBoxTitle(QWidget *parent = 0);
+    void mouseMoveEvent(QMouseEvent *ev);
+    void mousePressEvent(QMouseEvent *ev);
 
 signals:
 

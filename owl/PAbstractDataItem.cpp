@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,22 @@
 PAbstractDataItem::PAbstractDataItem(PBox* parent, QString caption) : QWidget(parent), _layout(new QHBoxLayout()),
     _caption(new QLabel(caption)), _captionStyle(PStyle::noStyle), _defaultDataStyle(PStyle::noStyle),
     _lastCapStyle(0), _data(new QLabel(tr("Loading"))), _serverDirty(-1)
+{
+    connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(pstyleLogic()));
+    setLayout(_layout);
+    _layout->setMargin(0);
+    _layout->setSpacing(0);
+    _layout->addWidget(_caption);
+    _layout->addWidget(_data);
+    parent->_dirty=1;
+    QPlastiqueStyle* ps=new QPlastiqueStyle;
+    _caption->setStyle(ps);
+    _data->setStyle(ps);
+}
+
+PAbstractDataItem::PAbstractDataItem(PBox* parent, PAbstractDataItem* other) : QWidget(parent), _layout(new QHBoxLayout()),
+    _caption(new QLabel(other->caption())), _captionStyle(other->_captionStyle), _defaultDataStyle(other->_defaultDataStyle),
+    _lastCapStyle(0), _data(new QLabel(tr("Loading"))), _source(other->_source), _serverDirty(-1)
 {
     connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(pstyleLogic()));
     setLayout(_layout);
@@ -79,6 +95,7 @@ void PAbstractDataItem::mouseMoveEvent(QMouseEvent *event)
     QMimeData *mimeData = new QMimeData;
 
     mimeData->setData("text/plain", (PMainWindow::me->_dirfileFilename+"#"+_source).toAscii());
+    mimeData->setData("application/x-owlid", QByteArray::number(id()));
     drag->setMimeData(mimeData);
 
     drag->exec(Qt::CopyAction | Qt::MoveAction);

@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 void PDirfileDataItem::gdUpdate(GetData::Dirfile *dirFile, int)
 {
     QString x=dirFile->Name();
+    if(x.endsWith('/')) x.chop(1);
     if(x.contains('/')) {
         x.remove(0,x.lastIndexOf('/')+1);
     }

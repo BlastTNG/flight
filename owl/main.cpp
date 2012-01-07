@@ -25,6 +25,7 @@
 #include <QApplication>
 #include "PMainWindow.h"
 #include "PDotPal.h"
+#include <qjson/serializer.h>
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);

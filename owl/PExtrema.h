@@ -2,7 +2,7 @@
  *
  * This file is part of Owl.
  *
- * Owl (originally "palantir") is copyright (C) 2002-2011 University of Toronto
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
  *
  * Owl is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@ class PExtrema : public QObject, public PObject
 public:
     friend QDataStream& operator<<(QDataStream&,PExtrema&b);
     friend QDataStream& operator>>(QDataStream&,PExtrema&b);
+    friend QVariant save(PExtrema&);
+    friend void load(QVariant v,PExtrema&);
     static QList<PExtrema*> _u;
     float _xhigh,_high,_low,_xlow;
     PStyle* _sxhigh,*_shigh,*_slow,*_sxlow;
