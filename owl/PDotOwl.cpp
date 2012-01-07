@@ -37,18 +37,18 @@
 #include <QMessageBox>
 
 int revId=-1;
+int _lastId=0;  //in order to not break anything
 
 QDataStream& operator<<(QDataStream& a,PObject& b)
 {
     return a << (QString)"begin PObject"<<
-                b._id<<b._lastId;
+                b._id<<_lastId;
 }
 
 QVariant save(PObject& b)
 {
     QMap<QString,QVariant> ret;
     ret.insert("_id",b._id);
-    ret.insert("_lastId",b._lastId);
     return ret;
 }
 
@@ -58,13 +58,12 @@ QDataStream& operator>>(QDataStream& a,PObject& b)
     a>>verify;
     Q_ASSERT(verify=="begin PObject");
 
-    return a>>b._id>>b._lastId;
+    return a>>b._id>>_lastId;
 }
 
 void load(QVariant s,PObject& b)
 {
     b._id=s.toMap()["_id"].toInt();
-    b._lastId=s.toMap()["_lastId"].toInt();
 }
 
 QDataStream& operator<<(QDataStream& a,PExtrema& b)
@@ -926,8 +925,7 @@ QDataStream& operator>>(QDataStream&a,PMainWindow&b)
         a>>*pbox;
         b._mdiArea->createPBox(0,0,pbox);
         QObject::connect(pbox,SIGNAL(activated()),&b,SLOT(uiLogic()));
-        QObject::connect(pbox,SIGNAL(newChild(PAbstractDataItem*)),
-                &b,SLOT(newLabelLogic(PAbstractDataItem*)));
+
 
     }
     for(int i=0;i<b._pboxList.count();i++) {
@@ -976,8 +974,6 @@ void load(QVariant v,PMainWindow&b)
         load(m.values("PBox object")[i],*pbox);
         b._mdiArea->createPBox(0,0,pbox);
         QObject::connect(pbox,SIGNAL(activated()),&b,SLOT(uiLogic()));
-        QObject::connect(pbox,SIGNAL(newChild(PAbstractDataItem*)),
-                &b,SLOT(newLabelLogic(PAbstractDataItem*)));
 
     }
     for(int i=0;i<b._pboxList.count();i++) {

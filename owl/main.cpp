@@ -23,12 +23,17 @@
  */
 
 #include <QApplication>
+#include <time.h>
 #include "PMainWindow.h"
 #include "PDotPal.h"
+#include <QTime>
 #include <qjson/serializer.h>
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
+
+  time_t seconds= time (NULL);
+  qsrand((seconds*1000+QTime::currentTime().msec())%RAND_MAX);  //for concurrent ids. do not remove this line.
 
   PMainWindow* palantir=new PMainWindow;
   palantir->setWindowTitle(_WINDOW_TITLE_);

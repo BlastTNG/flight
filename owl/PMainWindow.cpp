@@ -50,6 +50,7 @@ PMainWindow* PMainWindow::me=0;
 
 PMainWindow::PMainWindow(QWidget *parent) :
     QMainWindow(parent),
+    PObject(0),
     _currentObject(0),
     _dirfile(0),
     _scrollArea(new QScrollArea()),
@@ -467,7 +468,6 @@ void PMainWindow::uiLogic()
             QString x=ui->comboBox->currentText();
             x.remove(0,x.indexOf('(')+2);
             x.remove(x.indexOf(')'),999999999);
-            Q_ASSERT(PObject::_u.size()>x.toInt());
             Q_ASSERT(PObject::_u[x.toInt()]);
             PObject::_u[x.toInt()]->activate(); // ==> uiLogic();
             setUpdatesEnabled(1);
@@ -961,7 +961,6 @@ void PMainWindow::owlLoad()
     delete this;
     PExtrema::_u.clear();
     PStyle::_u.clear();
-    PObject::_lastId=-1;
     PObject::_u.clear();
     PStyleNotifier::me->disable();
     ///////////////////////////////////////////

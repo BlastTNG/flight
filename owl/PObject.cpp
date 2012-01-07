@@ -22,8 +22,7 @@
 #include "PObject.h"
 #include "PMainWindow.h"
 
-int PObject::_lastId=-1;
-QList<PObject*> PObject::_u;
+QMap<int, PObject*> PObject::_u;
 
 bool PObject::isCurrentObject()
 {

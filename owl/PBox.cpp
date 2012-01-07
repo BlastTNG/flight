@@ -193,7 +193,7 @@ void PBox::dropEvent(QDropEvent *ev)
     else if(ev->mimeData()->hasFormat("application/x-owlid")) {
         int oid=ev->mimeData()->data("application/x-owlid").toInt();
         for(int i=0;i<PObject::_u.size();i++) {
-            if(PObject::_u[i]->id()==oid&&dynamic_cast<PAbstractDataItem*>(PObject::_u[i])) {
+            if(PObject::_u.values()[i]->id()==oid&&dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i])) {
                 QString answer;
                 if(ev->keyboardModifiers()&Qt::ControlModifier) {
                     answer="copy";
@@ -210,22 +210,22 @@ void PBox::dropEvent(QDropEvent *ev)
                 int pos=getWhereToInsert(ev->pos());
                 if(pos!=-1) ++pos;
                 if(answer.startsWith("copy")) {
-                    if(dynamic_cast<PNumberDataItem*>(PObject::_u[i])) {
-                        addProperty(new PNumberDataItem(this,dynamic_cast<PNumberDataItem*>(PObject::_u[i])),pos);
-                    } else if(dynamic_cast<PMultiDataItem*>(PObject::_u[i])) {
-                        addProperty(new PMultiDataItem(this,dynamic_cast<PMultiDataItem*>(PObject::_u[i])),pos);
-                    } else if(dynamic_cast<PTimeDataItem*>(PObject::_u[i])) {
-                        addProperty(new PTimeDataItem(this,dynamic_cast<PTimeDataItem*>(PObject::_u[i])),pos);
-                    } else if(dynamic_cast<PDirfileDataItem*>(PObject::_u[i])) {
-                        addProperty(new PDirfileDataItem(this,dynamic_cast<PDirfileDataItem*>(PObject::_u[i])),pos);
+                    if(dynamic_cast<PNumberDataItem*>(PObject::_u.values()[i])) {
+                        addProperty(new PNumberDataItem(this,dynamic_cast<PNumberDataItem*>(PObject::_u.values()[i])),pos);
+                    } else if(dynamic_cast<PMultiDataItem*>(PObject::_u.values()[i])) {
+                        addProperty(new PMultiDataItem(this,dynamic_cast<PMultiDataItem*>(PObject::_u.values()[i])),pos);
+                    } else if(dynamic_cast<PTimeDataItem*>(PObject::_u.values()[i])) {
+                        addProperty(new PTimeDataItem(this,dynamic_cast<PTimeDataItem*>(PObject::_u.values()[i])),pos);
+                    } else if(dynamic_cast<PDirfileDataItem*>(PObject::_u.values()[i])) {
+                        addProperty(new PDirfileDataItem(this,dynamic_cast<PDirfileDataItem*>(PObject::_u.values()[i])),pos);
                     } else {
                         qDebug()<<"Cannot copy data item of unknown type!";
                     }
                 } else if(answer.startsWith("move")) {
-                    PBox*x=dynamic_cast<PBox*>(dynamic_cast<PAbstractDataItem*>(PObject::_u[i])->parentWidget());   //assert?
-                    x->_layout->removeWidget(dynamic_cast<PAbstractDataItem*>(PObject::_u[i]));
-                    x->_dataItems.removeOne(dynamic_cast<PAbstractDataItem*>(PObject::_u[i]));
-                    addProperty(dynamic_cast<PAbstractDataItem*>(PObject::_u[i]),pos);
+                    PBox*x=dynamic_cast<PBox*>(dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i])->parentWidget());   //assert?
+                    x->_layout->removeWidget(dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i]));
+                    x->_dataItems.removeOne(dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i]));
+                    addProperty(dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i]),pos);
                 }
                 return;
             }
