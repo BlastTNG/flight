@@ -208,18 +208,71 @@ int TheSort(const void* a, const void* b)
     return strcmp(za, zb);
 }
 
-void MainForm::OmniParse(QString x)
+void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
 {
     x=(x=="__AUTODETECT__")?NOmniBox->text():x;
+    QString r=x;
+    if(r.contains(' ')) r.truncate(x.indexOf(' ')+1);
 
-    if(NOmniBox->cursorPosition()&&x[NOmniBox->cursorPosition()-1]==' '&&NOmniBox->hasFocus()) {
-        int nxt=NOmniBox->text().indexOf(' ',NOmniBox->cursorPosition()+1);
-        NOmniBox->setSelection(NOmniBox->cursorPosition(),(nxt==-1)?999999:nxt-NOmniBox->cursorPosition());
+    bool ok=0;
+    for(int i=0;i<NCommandList->count();i++) {
+        if(r==NCommandList->item(i)->text()+' ') {
+            QPalette f = NOmniBox->palette();
+            if(!NCommandList->item(i)->isSelected()) {
+                f.setColor(QPalette::Base,"pink");
+                NSendButton->setEnabled(0);
+            } else {
+                f.setColor(QPalette::Base,"white");
+                NSendButton->setEnabled(1);
+            }
+            ok=1;
+            NOmniBox->setPalette(f);
+            break;
+        }
+    }
+    if(!ok||x.contains("  ")) {
+        QPalette f = NOmniBox->palette();
+        f.setColor(QPalette::Base,"pink");
+        NOmniBox->setPalette(f);
+        NSendButton->setEnabled(0);
+    }
+
+
+    bool special=0;
+    if(!NOmniBox->hasFocus()||((r==x||x+" "==r)&&NOmniBox->oldXSize<x.size())) {
+        special=1;
+    }
+    if(NOmniBox->hasFocus()) NOmniBox->oldXSize=x.size();
+
+    for(int i=0;i<OmniList.size();i++) {
+        if(r==OmniList[i].name+' ') {
+            if(!NGroups[OmniList[i].group]->isChecked()) {
+                NGroups[OmniList[i].group]->toggle();
+            }
+            break;
+        }
+    }
+    for(int i=0;i<NCommandList->count();i++) {
+        if(NCommandList->item(i)->text()+" "==r) {
+            NCommandList->setCurrentRow(i);
+        }
     }
 
     if(x.contains(' ')) {
         QStringList words=x.split(" ");
-        for(int i=1;i<words.size();i++) {
+        int max=MAX_N_PARAMS;
+        for(int i=1;i<MAX_N_PARAMS;i++) {
+            if(!NParamFields[i-1]->isVisible()) {
+                max=i;
+                break;
+            }
+            if(words.size()<=i||words[i]=="") {
+                QPalette f = NOmniBox->palette();
+                f.setColor(QPalette::Base,"pink");
+                NOmniBox->setPalette(f);
+                NSendButton->setEnabled(0);
+                break;
+            }
             if(NParamFields[i-1]->isVisible()&&!words[i].isEmpty()) {
                 words[i].replace("..",".");
                 bool ok=dynamic_cast<NarsilStringEntry*>(NParamFields[i-1]);
@@ -244,53 +297,34 @@ void MainForm::OmniParse(QString x)
                 }
             }
         }
-        x.truncate(x.indexOf(' ')+1);
-        for(int i=0;i<MAX_N_PARAMS;i++) {
-            if(NParamFields[i]->isVisible()) {
-                x.append(i?" ":"");
-                x.append(dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->Text());
-            }
+        if(words.size()&&words.back()=="") words.pop_back();
+        if(words.size()!=max) {
+            QPalette f = NOmniBox->palette();
+            f.setColor(QPalette::Base,"pink");
+            NOmniBox->setPalette(f);
+            NSendButton->setEnabled(0);
         }
-        int cp=NOmniBox->cursorPosition();
-        int sbeg=NOmniBox->selectionStart();
-        int slen=NOmniBox->selectedText().size();
-        if(x!=NOmniBox->text()) {
-            NOmniBox->setText(x);
-        }
-        NOmniBox->setCursorPosition(cp);
-        if(sbeg!=-1) {
-            NOmniBox->setSelection(sbeg,slen);
-        }
-        return;
-    }
-
-    if(x.contains(' ')&&NOmniBox->cursorPosition()<x.indexOf(' ')) {
-        x.truncate(x.indexOf(' ')-1);
-        NOmniBox->setText(x);
-        NOmniBox->completer()->setCompletionPrefix(x);
-        NOmniBox->completer()->complete();
-        return;
-    }
-    if(sender()!=this&&!x.contains(' ')&&!x.isEmpty()) {
-        bool changed=0;
-        for(int i=0;i<OmniList.size();i++) {
-            if(x==OmniList[i].name) {
-                if(!NGroups[OmniList[i].group]->isChecked()) {
-                    NGroups[OmniList[i].group]->toggle();
+        if(special) {
+            x.truncate(x.indexOf(' ')+1);
+            for(int i=0;i<MAX_N_PARAMS;i++) {
+                if(NParamFields[i]->isVisible()) {
+                    x.append(i?" ":"");
+                    x.append(dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->Text());
                 }
-                changed=1;
-                break;
             }
-        }
-    }
 
-    if(!x.contains(' ')) {
-        for(int i=0;i<NCommandList->count();i++) {
-            //NCommandList->item(i)->setHidden( !NCommandList->item(i)->text().contains(x) );
-            if(NCommandList->item(i)->text()==x) {
-                NCommandList->setCurrentRow(i);
+            int cp=NOmniBox->cursorPosition();
+            int sbeg=NOmniBox->selectionStart();
+            int slen=NOmniBox->selectedText().size();
+            if(x!=NOmniBox->text()) {
+                NOmniBox->setText(x);
+            }
+            NOmniBox->setCursorPosition(cp);
+            if(sbeg!=-1) {
+                NOmniBox->setSelection(sbeg,slen);
             }
         }
+        return;
     }
 }
 
@@ -301,9 +335,12 @@ void MainForm::OmniSync()
     for(int i=1;i<words.size();i++) {
         if(NParamFields[i-1]->isVisible()&&!words[i].isEmpty()) {
             words[i].replace("..",".");
-            words[i]=dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->Text();
+            if(i<MAX_N_PARAMS) words[i]=dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->Text();
         }
     }
+
+    if(NOmniBox->hasFocus()) return;
+
     int cp=NOmniBox->cursorPosition();
     int sbeg=NOmniBox->selectionStart();
     int slen=NOmniBox->selectedText().size();
@@ -312,6 +349,7 @@ void MainForm::OmniSync()
     if(sbeg!=-1) {
         NOmniBox->setSelection(sbeg,slen);
     }
+    OmniParse();
 }
 
 //-------------------------------------------------------------
@@ -346,7 +384,7 @@ void MainForm::ChangeCommandList(bool really) {
             NCommandList->addItem(client_scommands[indexes[i]].name);
 
     ChooseCommand();
-    OmniParse();
+    //    OmniParse();
 }
 
 //-------------------------------------------------------------
@@ -381,7 +419,7 @@ void MainForm::ChooseCommand() {
         }
     } else {
         NSendButton->setEnabled(true);
-        NOmniBox->setText(NCommandList->currentItem()->text()+" ");
+        if(!NOmniBox->text().contains(NCommandList->currentItem()->text()+" ")) NOmniBox->setText(NCommandList->currentItem()->text()+" ");
         NOmniBox->setCursorPosition(NOmniBox->text().size());
         if ((index = SIndex( NCommandList->currentItem()->text()) ) != -1) {
             // Set up for a single command
@@ -1122,7 +1160,7 @@ bool operator==(const MainForm::OmniPair& a,const MainForm::OmniPair&b)
 
 void MainForm::PopulateOmnibox()
 {
-    NOmniBox->clear();
+    //    NOmniBox->clear();
     OmniList.clear();
 
     for(int h=0;h<client_n_groups;h++)
@@ -1151,7 +1189,7 @@ void MainForm::PopulateOmnibox()
     QStringList sl;
     for(int i=0;i<OmniList.size();i++)
     {
-        sl.push_back(OmniList[i].name);
+        sl.push_back(OmniList[i].name+" ");
     }
 
     if(NOmniBox->completer()) {
@@ -1247,6 +1285,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NCommandList->adjustSize();
     NCommandList->setGeometry(PADDING, PADDING+120, NCommandList->width(), 0);
     connect(NCommandList, SIGNAL(currentRowChanged(int)), this, SLOT(ChooseCommand()));
+    connect(NCommandList, SIGNAL(clicked(QModelIndex)), this, SLOT(ChooseCommand()));
     theHLayout->addWidget(NCommandList);
 
     w1 = 0;
@@ -1504,7 +1543,7 @@ int main(int argc, char* argv[]) {
     QApplication::setOrganizationName("University of Toronto");
     QApplication::setApplicationName("cow");
 
-    qDebug() << "starting cow";
+    qDebug() << "contains super cow powers";
 
     if (argc > 2||(argc==2&&(QString(argv[1]).contains("help",Qt::CaseInsensitive)||
                              QString(argv[1]).contains("-h",Qt::CaseInsensitive)))) {

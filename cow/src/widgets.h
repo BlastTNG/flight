@@ -169,26 +169,10 @@ public:
 class NarsilOmniBox : public QLineEdit
 {
     Q_OBJECT
+    int oldXSize;
 public:
     friend class MainForm;
-    NarsilOmniBox(QWidget*p) : QLineEdit(p) {}
-protected:
-    void keyPressEvent(QKeyEvent *ev) { // reimplementing because (1) we want to ensure that we have focus (2) the way Qt treats selections isn't all that
-                                        // great for our purposes.
-        setFocus();
-        if(ev->key()==Qt::Key_Left) {
-            setCursorPosition(qMin((selectionStart()==-1)?1000000:selectionStart(),cursorPosition())-1);
-        } else if(ev->key()==Qt::Key_Right) {
-            setCursorPosition(qMin((selectionStart()==-1)?1000000:selectionStart(),cursorPosition())+1);
-        } else {
-            QLineEdit::keyPressEvent(ev);
-        }
-    }
-    void mouseDoubleClickEvent(QMouseEvent *) {
-        int a=qMax(0,text().lastIndexOf(" ",cursorPosition())+1);
-        int b=qMin(text().size(),text().indexOf(" ",cursorPosition()));
-        setSelection(a,b-a);
-    }
+    NarsilOmniBox(QWidget*p) : QLineEdit(p), oldXSize(0) {}
 };
 
 #endif // WIDGETS_H
