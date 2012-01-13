@@ -38,6 +38,7 @@
 #include "blast.h"
 #include "../command_struct.h"
 #include "../slow_dl.h"
+#include "../mcp.h"
 static const char *UnknownCommand = "Unknown Command";
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
