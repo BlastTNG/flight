@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <pthread.h>
+#include <limits.h>
 
 #include "sip.h"
 #include "blast.h"
@@ -257,22 +258,22 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
   for (i = dataqind = 0; i < mcommands[index].numparams; ++i) {
     min = mcommands[index].params[i].min;
     type = mcommands[index].params[i].type;
-    if (type == 'i')  /* 15 bit unsigned integer */ {
+    if (type == 'i')  /* 16 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
       bprintf(info, "Commands: param%02i: integer: %i\n", i, ivalues[i]);
-    } else if (type == 'l')  /* 30 bit unsigned integer */ {
+    } else if (type == 'l')  /* 32 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
-      ivalues[i] += (dataq[dataqind++] << 15);
+      ivalues[i] += (dataq[dataqind++] << 16);
       bprintf(info, "Commands: param%02i: long   : %i\n", i, ivalues[i]);
-    } else if (type == 'f')  /* 15 bit floating point */ {
+    } else if (type == 'f')  /* 16 bit floating point */ {
       rvalues[i] = (float)dataq[dataqind++] * (mcommands[index].params[i].max
-          - min) / MAX_15BIT + min;
+          - min) / USHRT_MAX + min;
       bprintf(info, "Commands: param%02i: float  : %f\n", i, rvalues[i]);
-    } else if (type == 'd') { /* 30 bit floating point */
-      rvalues[i] = (float)((int)dataq[dataqind++] << 15); /* upper 15 bits */
-      rvalues[i] += (float)dataq[dataqind++];             /* lower 15 bits */
+    } else if (type == 'd') { /* 32 bit floating point */
+      rvalues[i] = (float)((unsigned)dataq[dataqind++] << 16); /* upper 16 bits */
+      rvalues[i] += (float)dataq[dataqind++];             /* lower 16 bits */
       rvalues[i] = rvalues[i] * (mcommands[index].params[i].max - min) /
-        MAX_30BIT + min;
+        UINT_MAX + min;
       bprintf(info, "Commands: param%02i: double : %f\n", i, rvalues[i]);
     } else if (type == 's') { /* string of 7-bit characters */
       int j;
@@ -964,9 +965,17 @@ void WatchPort (void* parameter)
 	  bytecount++;
 	} else {
 	  if (buf == 0x03) {
-	    if (extdat[4] == route[port]) {
-	      ProcessUplinkSched(extdat);
-	    }
+	    bprintf(info, "extended command %d (%s) received:", 
+		    extdat[0], MName(extdat[0]));
+	    SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
+                  ivalues, svalues);
+            MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
+	    
+	    // FIXME: re-enable sched uplink (!)
+	    //if (extdat[4] == route[port]) {
+	      //ProcessUplinkSched(extdat);
+	    //}
+	    
 	  } else {
             bprintf(warning, "Bad encoding in extended command: "
                 "Bad packet terminator: %02X\n", buf);

@@ -19,13 +19,15 @@
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
 
+#include <limits.h>
+
 #include "command_list.h"
 #ifdef __MCP__
 #include "camstruct.h"
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.42 $";
+const char *command_list_serial = "$Revision: 1.43 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "CMB grenades",     "Waveplate Rotator",
@@ -274,9 +276,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_az"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_az"},
-      {"Pointing Gain", 0, MAX_15BIT, 'i', "g_pt_az"}
+      {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_az"},
+      {"Integral Gain",     0, USHRT_MAX, 'i', "g_i_az"},
+      {"Pointing Gain", 0, USHRT_MAX, 'i', "g_pt_az"}
     }
   },
   {COMMAND(set_az_accel), "set az scan turnaround & gondola max accelerations", 
@@ -397,16 +399,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 4,
     {
       {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
-      {"V_err Gain (prop)", 0, MAX_15BIT, 'i', "G_PE_PIVOT"},
-      {"V_RW Gain (prop)", 0, MAX_15BIT, 'i', "G_PV_PIVOT"},
+      {"V_err Gain (prop)", 0, USHRT_MAX, 'i', "G_PE_PIVOT"},
+      {"V_RW Gain (prop)", 0, USHRT_MAX, 'i', "G_PV_PIVOT"},
       {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
     }
   },
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"},
-      {"Pointing Gain",     0, MAX_15BIT, 'i', "g_pt_el"}
+      {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_el"},
+      {"Integral Gain",     0, USHRT_MAX, 'i', "g_i_el"},
+      {"Pointing Gain",     0, USHRT_MAX, 'i', "g_pt_el"}
     }
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
@@ -549,10 +551,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
     "DEPRECATED - repeatedly cycle the hwpr through a number of positions",
     GR_HWPR, 4,
     {
-      {"Number of step positions", 0, MAX_15BIT, 'i', ""},
-      {"Number of times to step", 0, MAX_15BIT, 'i', ""},
-      {"Time between steps (s)", 0, MAX_15BIT, 'i', ""},
-      {"Step size (encoder ticks)", -MAX_15BIT/2, MAX_15BIT/2, 'i', ""},
+      {"Number of step positions", 0, USHRT_MAX, 'i', ""},
+      {"Number of times to step", 0, USHRT_MAX, 'i', ""},
+      {"Time between steps (s)", 0, USHRT_MAX, 'i', ""},
+      {"Step size (encoder ticks)", -USHRT_MAX/2, USHRT_MAX/2, 'i', ""},
     }
   },
   {COMMAND(hwpr_define_pos), 
@@ -576,7 +578,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     "set the overshoot in encoder counts for backwards hwpr moves",
     GR_HWPR, 1,
     {
-      {"overshoot", 0, MAX_15BIT, 'i', "OVERSHOOT_HWPR"},
+      {"overshoot", 0, USHRT_MAX, 'i', "OVERSHOOT_HWPR"},
     }
   },
   {COMMAND(hwpr_goto_i), 
@@ -661,9 +663,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_heat_gy"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_heat_gy"},
-      {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_heat_gy"}
+      {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_heat_gy"},
+      {"Integral Gain",     0, USHRT_MAX, 'i', "g_i_heat_gy"},
+      {"Derrivative Gain",  0, USHRT_MAX, 'i', "g_d_heat_gy"}
     }
   },
   {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
@@ -771,7 +773,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
       {"Tile (1-4,0=all)", 0, 4, 'i', "TILE_LAST_HK"},
-      {"On Time (# of 0.2s frames)", 0, MAX_15BIT, 'i', "PULSE_LAST_HK"},
+      {"On Time (# of 0.2s frames)", 0, USHRT_MAX, 'i', "PULSE_LAST_HK"},
     }
   },
   {COMMAND(hk_ssa_heat_set), "Set SSA heater voltage", GR_CRYO_HEAT, 2,
@@ -797,18 +799,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thegood_settrig_timed), "Use timed exposure mode on The Good", GR_SCGOOD, 1,
     {
-      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "exp_int_thegood"}
+      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_thegood"}
     }
   },
   {COMMAND(thegood_exp_params), "set The Good exposure commands", GR_SCGOOD, 1,
     {
-      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_thegood"}
+      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_thegood"}
     }
   },
   {COMMAND(thegood_focus_params), "set The Good autofocus params", GR_SCGOOD, 2,
     {
-      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_thegood"},
-      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
+      {"Resolution (number total positions)", 0, USHRT_MAX, 'i', "foc_res_thegood"},
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
     }
   },
   {COMMAND(thegood_bad_pix), "Indicate pixel to ignore on The Good", GR_SCGOOD, 3,
@@ -821,7 +823,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thegood_blob_params), "set blob finder params on The Good", GR_SCGOOD, 4,
     {
-      {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_thegood"},
+      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_thegood"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_thegood"},
       {"Threshold (# sigma)", 0, 100, 'f', "thresh_thegood"},
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_thegood"}
@@ -840,7 +842,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thegood_lens_params), "set The Good lens params", GR_SCGOOD, 1,
     {
-      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_thegood"}
+      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_thegood"}
     }
   },
   /***************************************/
@@ -852,18 +854,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thebad_settrig_timed), "Use timed exposure mode on The Bad", GR_SCBAD, 1,
     {
-      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "exp_int_thebad"}
+      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_thebad"}
     }
   },
   {COMMAND(thebad_exp_params), "set The Bad exposure commands", GR_SCBAD, 1,
     {
-      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_thebad"}
+      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_thebad"}
     }
   },
   {COMMAND(thebad_focus_params), "set The Bad autofocus params", GR_SCBAD, 2,
     {
-      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_thebad"},
-      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
+      {"Resolution (number total positions)", 0, USHRT_MAX, 'i', "foc_res_thebad"},
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
     }
   },
   {COMMAND(thebad_bad_pix), "Indicate pixel to ignore on The Bad", GR_SCBAD, 3,
@@ -876,7 +878,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thebad_blob_params), "set blob finder params on The Bad", GR_SCBAD, 4,
     {
-      {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_thebad"},
+      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_thebad"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_thebad"},
       {"Threshold (# sigma)", 0, 100, 'f', "thresh_thebad"},
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_thebad"}
@@ -895,7 +897,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thebad_lens_params), "set The Bad lens params", GR_SCBAD, 1,
     {
-      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_thebad"}
+      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_thebad"}
     }
   },
   /***************************************/
@@ -907,18 +909,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(theugly_settrig_timed), "Use timed exposure mode on The Ugly", GR_SCUGLY, 1,
     {
-      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "exp_int_theugly"}
+      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_theugly"}
     }
   },
   {COMMAND(theugly_exp_params), "set The Ugly exposure commands", GR_SCUGLY, 1,
     {
-      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_theugly"}
+      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_theugly"}
     }
   },
   {COMMAND(theugly_focus_params), "set The Ugly autofocus params", GR_SCUGLY, 2,
     {
-      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_theugly"},
-      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
+      {"Resolution (number total positions)", 0, USHRT_MAX, 'i', "foc_res_theugly"},
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
     }
   },
   {COMMAND(theugly_bad_pix), "Indicate pixel to ignore on The Ugly", GR_SCUGLY, 3,
@@ -931,7 +933,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(theugly_blob_params), "set blob finder params on The Ugly", GR_SCUGLY, 4,
     {
-      {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_theugly"},
+      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_theugly"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_theugly"},
       {"Threshold (# sigma)", 0, 100, 'f', "thresh_theugly"},
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_theugly"}
@@ -950,15 +952,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(theugly_lens_params), "set The Ugly lens params", GR_SCUGLY, 1,
     {
-      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_theugly"}
+      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_theugly"}
     }
   },
   //STAR CAMERA TABLE
   {COMMAND(table_gain), "RSC rotary table gains", GR_SCTAB, 2,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_table"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_table"},
-      {"Derivative Gain",   0, MAX_15BIT, 'i', "g_d_table"}
+      {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_table"},
+      {"Integral Gain",     0, USHRT_MAX, 'i', "g_i_table"},
+      {"Derivative Gain",   0, USHRT_MAX, 'i', "g_d_table"}
     }
   },
   {COMMAND(table_goto), "move RSC to specific encoder position", GR_SCTAB, 1,
@@ -988,7 +990,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
-      {"Plover", 0, MAX_15BIT, 'i', "PLOVER"}
+      {"Plover", 0, USHRT_MAX, 'i', "PLOVER"}
     }
   }
 };
