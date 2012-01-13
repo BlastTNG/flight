@@ -60,7 +60,7 @@
 /* Analog channel calibrations */
 #define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
 #define CAL32(m,b) ((m)*M_32PRE), ((b) + B_32PRE*(m)*M_32PRE)
-#define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T - 273.15)
+#define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T)
 #define CALDAC(m,b) ((m)*M_DAC), ((b) + B_DAC*(m)*M_DAC)
 
 /* Housekeeping calibrations (D)iode, (C)ernox, (N)TD*/
