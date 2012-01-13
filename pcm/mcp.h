@@ -46,8 +46,6 @@ extern int BLASTBusUseful;
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
 
-//#define USE_FIFO_CMD
-
 struct chat_buf {
   char msg[4][2 * FAST_PER_SLOW]; /* 4 buffers of FAST_PER_SLOW BLASTbus words of characters */
   int reading; /* the buffer we're currently reading from */
@@ -61,7 +59,6 @@ struct chat_buf {
 
 #define MAX_LINE_LENGTH 1024
 
-//#define USE_FIFO_CMD
 #ifdef TEST_RUN
 #define USE_FIFO_CMD
 #endif
