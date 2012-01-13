@@ -787,7 +787,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_el",         'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_array",      'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_sun",        'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_rw",         'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"vt_rw",        'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_V_V},
   {"t_earth",      'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_chin",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_port_pyr",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},

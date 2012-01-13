@@ -461,6 +461,13 @@ union DerivedUnion DerivedChannels[] = {
 	   ""
 	   ),
 
+  /* gondola thermistor calibration */
+#define T_ACS(tch, vch, lut) \
+    LINTERP(tch, vch, lut), \
+    UNITS(tch, "Temperature", "^oC")
+  T_ACS("T_RW", "VT_RW", "/data/etc/spider/thermistor.lut"),
+
+
   /* HWPR Control Info */
   BITFIELD("stat_control_hwpr"
 	   "",
