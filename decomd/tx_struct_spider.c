@@ -1052,6 +1052,10 @@ struct ChannelStruct FastChannels[] = {
   {"sin_el",       'w',   ACS2_D, 26,         1.0/32768.0,           -1.0, 'u', U_NONE},
 //{"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS,-32768.0*GY16_TO_DPS, 'u', U_V_DPS},
+  {"step_1_el",    'w',   ACS2_D, 29,     10000.0/32767.0, -10000.3051851, 'u', U_F_HZ},
+  {"step_2_el",    'w',   ACS2_D, 30,     10000.0/32767.0, -10000.3051851, 'u', U_F_HZ},
+  {"el_raw_1_enc", 'r',   ACS2_D, 56,               I2DEG,            0.0, 'u', U_P_DEG},
+  {"el_raw_2_enc", 'r',   ACS2_D, 57,               I2DEG,            0.0, 'u', U_P_DEG},
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
   {"dps_table",    'w',    LOOP1, 34,  	     70.0/32767.0,            0.0, 's', U_V_DPS},
 

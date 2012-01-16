@@ -559,6 +559,8 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* velCalcPivAddr;
   static struct NiosStruct* velRWAddr;
   static struct NiosStruct* accelAzAddr;
+  static struct NiosStruct* step1ElAddr;
+  static struct NiosStruct* step2ElAddr;
  
   // Used only for Lab Controller tests
   static struct NiosStruct* dacAmplAddr[5];
@@ -604,6 +606,8 @@ void WriteMot(int TxIndex)
     //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now dac_piv
     //    dacAmplAddr[3] = GetNiosAddr("dac4_ampl"); // is now dac_el
     //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now dac_rw 
+    step1ElAddr = GetNiosAddr("step_1_el");
+    step2ElAddr = GetNiosAddr("step_2_el");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -627,6 +631,9 @@ void WriteMot(int TxIndex)
   if (v_elev < -32768)
     v_elev = -32768;
   WriteData(velReqElAddr, 32768 + v_elev, NIOS_QUEUE);
+  //TODO these writes need to be replaced by real requests
+  WriteCalData(step1ElAddr, +10000.0, NIOS_QUEUE);
+  WriteCalData(step2ElAddr, -10000.0, NIOS_QUEUE);
 
   /* zero motor gains if the pin is in */
   if ((CommandData.pin_is_in && !CommandData.force_el)
