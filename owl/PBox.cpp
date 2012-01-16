@@ -27,7 +27,7 @@
 #include <QInputDialog>
 #include <QDesktopServices>
 
-PBox::PBox(QString boxTitle, QWidget*p) : QFrame(p), _pstyle(PStyle::noStyle), _layout(new QVBoxLayout()),
+PBox::PBox(QString boxTitle, QWidget*p) : QFrame(p), _pstyle(PStyle::noStyle), _lastPStyle(0),_layout(new QVBoxLayout()),
     _boxTitle(boxTitle), _geoMode(-1), _dirty(1)
 {
     bool ok=0;
