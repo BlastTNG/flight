@@ -979,7 +979,7 @@ void PMainWindow::owlLoad()
     }
 
     ///////////////////////////////////////////
-    delete this;
+    deleteLater();
     PExtrema::_u.clear();
     PStyle::_u.clear();
     PObject::_u.clear();

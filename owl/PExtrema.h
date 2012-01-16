@@ -46,6 +46,7 @@ public:
         _u.push_back(this);
         bool xmaxok=0,maxok=0,minok=0,xminok=0;
         for(int i=0;i<PStyle::_u.size();i++) {
+            Q_ASSERT(PStyle::_u[i]);
             if(PStyle::_u[i]->name()=="xhigh") {
                 _sxhigh=PStyle::_u[i];
                 xmaxok=1;
@@ -63,7 +64,7 @@ public:
         _sxhigh=xmaxok?_sxhigh:new PStyle("xhigh",1,0,"#ffaaaa","#000055",1);
         _shigh=maxok?_shigh:new PStyle("high",1,0,"white","#ff0000",1);
         _slow=minok?_slow:new PStyle("low",1,0,"white","#00bb00",1);
-        _sxlow=minok?_sxlow:new PStyle("xlow",1,0,"#00ff00","#000033",1);
+        _sxlow=xminok?_sxlow:new PStyle("xlow",1,0,"#00ff00","#000033",1);
     }
 
     ~PExtrema() { _u.removeOne(this); }

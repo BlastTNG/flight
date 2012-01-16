@@ -32,6 +32,7 @@ PBox::PBox(QString boxTitle, QWidget*p) : QFrame(p), _pstyle(PStyle::noStyle), _
 {
     bool ok=0;
     for(int i=0;i<PStyle::_u.size();i++) {
+        Q_ASSERT(PStyle::_u[i]);
         if(PStyle::_u[i]->name()=="defbox") {
             ok=1;
             _pstyle=PStyle::_u[i];
@@ -193,6 +194,7 @@ void PBox::dropEvent(QDropEvent *ev)
     else if(ev->mimeData()->hasFormat("application/x-owlid")) {
         int oid=ev->mimeData()->data("application/x-owlid").toInt();
         for(int i=0;i<PObject::_u.size();i++) {
+            if(!PObject::_u.values()[i]) continue;
             if(PObject::_u.values()[i]->id()==oid&&dynamic_cast<PAbstractDataItem*>(PObject::_u.values()[i])) {
                 QString answer;
                 if(ev->keyboardModifiers()&Qt::ControlModifier) {
