@@ -838,7 +838,7 @@ QVariant save(PMainWindow&b)
     QVariantMap ret;
     ret.insert("OWL FILE rev.",20120106);
 
-    bool rec[10000]={0};
+    QMap<int,bool> rec;
 
     for(int i=0;i<PStyle::_u.size();i++) {
         ret.insertMulti("PStyle object",save(*PStyle::_u[i]));
@@ -846,8 +846,8 @@ QVariant save(PMainWindow&b)
 
     QList<PExtrema*> uniques;
     for(int i=0;i<PExtrema::_u.size();i++) {
-        if(!rec[PExtrema::_u[i]->id()]) {
-            rec[PExtrema::_u[i]->id()]=1;
+        if(!rec.value(PExtrema::_u[i]->id(),0)) {
+            rec.insert(PExtrema::_u[i]->id(),1);
             uniques.push_back(PExtrema::_u[i]);
         }
     }
