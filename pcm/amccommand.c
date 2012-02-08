@@ -32,7 +32,7 @@
 
 
 /* Structures containing AMC controller status info and file descriptors */
-struct MotorInfoStruct reactinfo; // JAS -- moved here from copleycommand.c
+struct MotorInfoStruct reactinfo;
 struct MotorInfoStruct pivotinfo;
  
 #define SELECT_RMUS_OUT 200000 // time out for AMC controller

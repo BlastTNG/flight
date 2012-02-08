@@ -476,7 +476,9 @@ static void Chatter(void* arg)
 
 static void GetACS()
 {
-  double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
+  double enc_mean_el, enc_diff_el, ifel_gy, ifroll_gy, ifyaw_gy;
+  double enc_raw_el_1; // PORT
+  double enc_raw_el_2; // STARBOARD
   double enc_table;
   unsigned int uTab;
   double x_comp, y_comp, z_comp;
@@ -495,7 +497,7 @@ static void GetACS()
   static struct BiPhaseStruct* ifElgyAddr;
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ifYawgyAddr;
-  static struct BiPhaseStruct* elRawEncAddr;
+  //static struct BiPhaseStruct* elRawEncAddr;
   static struct BiPhaseStruct* elRawIfClinAddr;
   static struct BiPhaseStruct* xMagAddr;
   static struct BiPhaseStruct* yMagAddr;
@@ -528,13 +530,15 @@ static void GetACS()
   static struct BiPhaseStruct* v46PssAddr;
   static struct BiPhaseStruct* potHwprAddr;
   static struct BiPhaseStruct* encTableAddr;
+  static struct BiPhaseStruct* elRaw1EncAddr; // Spider PORT el encoder
+  static struct BiPhaseStruct* elRaw2EncAddr; // Souder STARBOARD el encoder
 
   unsigned int rx_frame_index = 0;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    elRawEncAddr = GetBiPhaseAddr("el_raw_enc");
+    //elRawEncAddr = GetBiPhaseAddr("el_raw_enc");
     elRawIfClinAddr = GetBiPhaseAddr("el_raw_if_clin");
     ifElgyAddr = GetBiPhaseAddr("ifel_gy");
     ifRollgyAddr = GetBiPhaseAddr("ifroll_gy");
@@ -571,12 +575,32 @@ static void GetACS()
     v46PssAddr = GetBiPhaseAddr("v4_6_pss");
     potHwprAddr = GetBiPhaseAddr("pot_hwpr");
     encTableAddr = GetBiPhaseAddr("enc_table");
+    elRaw1EncAddr = GetBiPhaseAddr("el_raw_1_enc");
+    elRaw2EncAddr = GetBiPhaseAddr("el_raw_2_enc");
   }
 
   rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
       (RxFrame[2] & 0x0000ffff) << 16);
 
-  enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
+  //enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
+
+  enc_raw_el_1 = ReadCalData(elRaw1EncAddr);
+  enc_raw_el_2 = ReadCalData(elRaw2EncAddr);
+ 
+  if (CommandData.use_elenc1 && !CommandData.use_elenc2) {
+    enc_mean_el = enc_raw_el_1;
+    enc_diff_el = 0.0;
+  } else if (!CommandData.use_elenc1 && CommandData.use_elenc2) {
+    enc_mean_el = enc_raw_el_2;
+    enc_diff_el = 0.0;
+  } else if (CommandData.use_elenc1 && CommandData.use_elenc2) {
+    /* use mean encoder position */
+    enc_mean_el = (enc_raw_el_1 + enc_raw_el_2)/2.0; 
+    enc_diff_el = enc_raw_el_1 - enc_raw_el_2;
+  } else {
+    /*don't update ACSData -- deal with this problem in pointing.c */
+  }
+
   //vel_rw = (((double)((unsigned short)RxFrame[velRWAddr->channel]))*(2400.0/65536.0)-1200.0);
   //vel_rw = (double)ReadData(velRWAddr)*(2400.0/65536.0);
   vel_rw = ReadCalData(velRWAddr); 
@@ -630,7 +654,8 @@ static void GetACS()
 
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
-  ACSData.enc_raw_el = enc_raw_el;
+  ACSData.enc_mean_el = enc_mean_el;
+  ACSData.enc_diff_el = enc_diff_el;
   ACSData.ifel_gy = ifel_gy;
   ACSData.ifroll_gy = ifroll_gy;
   ACSData.ifyaw_gy = ifyaw_gy;

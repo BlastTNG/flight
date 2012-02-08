@@ -36,8 +36,9 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
-#define MIN_EL 23.9 // JAS -- 10 for SPIDER
-#define MAX_EL 55 // JAS -- 51 for SPIDER
+// TODO: Revise these el limits for Spider flight:
+#define MIN_EL 40
+#define MAX_EL 50
 
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
@@ -45,16 +46,31 @@
 #define RW_BASE 0.95    // base for exponential filter used to compute RW
                         // speed
 
-#define V_AZ_MIN 0.05 // JAS -- smallest measured az speed we trust given gyro
-                      //        noise/offsets
+#define V_AZ_MIN 0.05   // smallest measured az speed we trust given gyro
+                        //   noise/offsets
+
+/* elevation drive related defines adapted from az-el.c in minicp: */
+#define CM_PULSES 1000    // Cool Muscle pulses per rotation
+#define IN_TO_MM 25.4
+#define ROT_PER_INCH 5    // linear actuator rotations per inch of travel
+#define EL_GEAR_RATIO 7.0 
+#define L_C 1207.79       // distance from cryo axis to lin. act. axis (mm)
+#define L_R 400.0         // length of rocker arm in mm
+#define L_L 978.94        // actuator length in mm (fully retracted)
+
+#define ANG 103.3         // angle in degrees relevant to geometry of system
+                          // = 180 - 90.76 + 14.06, where the 2nd angle is
+                          // between the rocker arm and bore-sight, and the
+                          // 3rd angle is between L_C and horizontal.
+
+#define CNTS_PER_DEG (65536.0/360.0)
+#define CM_PER_ENC (1000.0/72000.0)
+#define TOLERANCE 0.01    // max acceptable el pointing error (deg)
 
 void nameThread(const char*);	/* mcp.c */
 
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
 int rw_motor_index; 
-
-//struct ElevMotorDataStruct ElevMotorData[3]; // defined in point_struct.h
-//int elev_motor_index; JAS -- no elev motor for Spider
 
 struct PivotMotorDataStruct PivotMotorData[3]; // defined in point_struct.h
 int pivot_motor_index; 
@@ -77,16 +93,13 @@ void radbox_endpoints( double az[4], double el[4], double el_in,
     double *max_el, double *az_of_bot );
 
 static pthread_t reactcomm_id;
-//static pthread_t elevcomm_id;
 static pthread_t pivotcomm_id;
 
 // device node address for the reaction wheel motor controller
 #define REACT_DEVICE "/dev/ttySI9"
-//#define ELEV_DEVICE "/dev/ttySI11"
 #define PIVOT_DEVICE "/dev/ttySI13"
 
 static void* reactComm(void *arg);
-//static void* elevComm(void *arg);
 static void* pivotComm(void *arg);
 
 extern short int InCharge; /* tx.c */
@@ -98,29 +111,21 @@ extern short int bsc_trigger; /* Semaphore for BSC trigger */
 
 double az_accel = 0.1;
 
-//TODO temporarily declare react and elev structs, formerly in compleycommand
-//should replace with ones properly declared elsewhere
-struct MotorInfoStruct reactinfo;
-struct MotorInfoStruct elevinfo;
-
 /* opens communications with motor controllers */
 void openMotors()
 {
   bprintf(info, "Motors: connecting to motors");
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
-//  pthread_create(&elevcomm_id, NULL, &elevComm, NULL); 
-//  JAS -- no elevcomm for Spider
   pthread_create(&pivotcomm_id, NULL, &pivotComm, NULL);
 }
 
 void closeMotors()
 {
   int i=0;
+  /* Tell the serial threads to shut down */
   reactinfo.closing=1;
-//  elevinfo.closing=1; // Tell the serial threads to shut down.
   pivotinfo.closing=1;
 
-//  while(reactinfo.open==1 && elevinfo.open==1 && pivotinfo.open==1 && i++<100) usleep(10000);
   while(reactinfo.open==1 && pivotinfo.open==1 && i++<100) usleep(10000);
 }
 
@@ -163,9 +168,8 @@ static double calcVPiv(void)
               from AMC controller over RS-232 */
 static double calcVRW(void)
 {
-
-//v -- velocity input to filter
-//u -- velocity output from filter
+  //v -- velocity input to filter
+  //u -- velocity output from filter
 
   double v, u, x, dx; 
   static double last_u = 0.0, last_x = 0.0;
@@ -209,7 +213,8 @@ static double calcVRW(void)
 
   u = ( RW_BASE*last_u + (1-RW_BASE)*v );
   last_u = u;
-//bprintf(info, "i_rw = %d, x = %f deg, v = %f dps, u = %f dps", i_rw, x, v, u);
+  //bprintf(info, "i_rw = %d, x = %f deg, v = %f dps, u = %f dps", 
+  //i_rw, x, v, u);
 
   return u;
 
@@ -232,16 +237,124 @@ double calcVSerRW(void)
   //return w;
 }
 
+/*************************************************************************
+
+    SetVElev: Set elevation drive velocity request using gain terms 
+               This is just a utility called by GetVElev.
+
+    NEW in Spider!
+*************************************************************************/
+static double SetVElev(double g_com, double g_diff, double dy, double err, 
+                        double v_last, double max_dv) 
+{
+
+  double v;
+
+  if (dy > 0) {
+    v = g_com*sqrt(dy) - g_diff*err;
+  } else {
+    v = -g_com*sqrt(-dy) - g_diff*err;
+  }
+/* don't increase/decrease request by more than max_dv: */
+  v = ((v - v_last) > max_dv) ? (v_last + max_dv) : v;
+  v = ((v - v_last) < -max_dv) ? (v_last - max_dv) : v;    
+
+  return v;
+
+}
 
 /************************************************************************/
 /*                                                                      */
-/*   GetVElev: get the current elevation velocity, given current        */
+/*   GetVElev: get the current elevation velocity request, given current*/
 /*   pointing mode, etc..                                               */
 /*                                                                      */
-/*   Units are 0.1*gyro unit                                            */
 /************************************************************************/
-static double GetVElev(void)
+static void GetVElev(double* v_P, double* v_S)
 {
+
+/* JAS -- complete rewrite of this function for Spider */
+
+// S = STARBOARD
+// P = PORT
+
+/* various dynamical variables */
+  double enc_port, enc_strbrd;
+  double enc_port_last, enc_strbrd_last;
+  double el_dest;
+  double dy, dy_S, dy_P;// distance to target of mean, starboard and port 
+                        // encoders
+
+  double err;           // error between encoder position and mean position
+                        // (positive for left, negative for right) 
+
+  //double err_max = 0.005; // maximum permissible difference between left and
+                          // right encoders.
+  double max_dv;
+
+  double tolerance = 0.01;
+
+/* requested velocities (prev. values) */
+  double v_S_last = 0.0;
+  double v_P_last = 0.0;
+
+  //int nominal = 0;
+
+  //int stall_cnt_R = 0;
+  //int stall_cnt_L = 0;
+
+  //int stop_cnt_L = 0;
+  //int stop_cnt_R = 0;
+
+  max_dv = CommandData.ele_gain.accel_max/SR;
+
+  el_dest = axes_mode.el_dest;
+
+  el_dest = (el_dest < MIN_EL) ? MIN_EL : el_dest;
+  el_dest = (el_dest > MAX_EL) ? MAX_EL : el_dest;
+
+  /* port = sum/2 + diff/2 */
+  enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
+  enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
+
+  dy_S = el_dest - enc_strbrd;
+  dy_P = el_dest - enc_port;
+
+  dy = (dy_P + dy_S)/2.0;  // mean distance to target
+  //dy = el_dest - ACSData.enc_mean_el;
+
+  err = (dy_P - dy_S)/2.0; // error from mean
+  //err = -(ACSData.enc_diff_el)/2.0;
+
+  if (fabs(dy_P) < tolerance) { // we are at destination
+  //v_L = SetVElev(0.0, CommandData.ele_gain.diff, dy, err, v_L_last, max_dv);
+    *v_P = SetVElev(0.0, CommandData.ele_gain.diff, dy, err, v_P_last, max_dv);
+    v_P_last = *v_P; 
+  } else {
+  //if (enc_right != enc_right_last) {
+  //stall_cnt_R = 0; 
+    *v_P = SetVElev(CommandData.ele_gain.com, CommandData.ele_gain.diff, dy, 
+                     err, v_P_last, max_dv);
+    v_P_last = *v_P;
+//} else {
+//  stall_cnt_R++;
+//  if ( (2.0*err > err_max) && stall_cnt_R >=  ) {   
+//    v_L = SetVElev(CommandData.ele_gain.com, CommandData.ele_gain.diff, dy, 
+ //                      err, v_L_last, max_dv);
+  //  v_L_last = v_L;
+//  }      
+  } 
+
+  if (fabs(dy_S) < tolerance) { // we are at destination
+    *v_S = SetVElev(0.0, -CommandData.ele_gain.diff, dy, err, v_S_last, max_dv);
+    v_S_last = *v_S; 
+  } else {
+    *v_S = SetVElev(CommandData.ele_gain.com, -CommandData.ele_gain.diff, dy, 
+                     err, v_S_last, max_dv);
+    v_S_last = *v_S;
+  }
+
+
+#if 0 // Old BLAST-Pol version of this function, completely irrelevant
   double vel = 0;
   static double last_vel = 0;
   double dvel;
@@ -291,7 +404,7 @@ static double GetVElev(void)
     //vel = -0.2; // go down
   }
 
-  /* Limit Maximim speed to 0.5 dps*/
+  /* Limit Maximum speed to 0.5 dps*/
   if (vel > 0.5)
     vel = 0.5;
   if (vel < -0.5)
@@ -309,6 +422,7 @@ static double GetVElev(void)
 
   //bprintf(info, "GetVEl: vel=%f", vel);
   return (vel*10.0); // Factor of 10.0 is to improve the dynamic range
+#endif
 }
 
 /************************************************************************/
@@ -533,6 +647,22 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   return I_req_dac;
 }
 
+/* dxdtheta returns derivative of lin. act. extension. w.r.t. elevation angle 
+ * (mm/deg) */
+
+static double dxdtheta(double theta)
+{
+  double deriv;
+
+  deriv = -(L_C*L_R*sin((ANG - theta)*M_PI/180.0)) / 
+          (sqrt(pow(L_C,2) + pow(L_R,2)-2*L_C*L_R*cos((ANG-theta)*M_PI/180.0)));
+
+  deriv *= (M_PI/180.0); // convert from mm/rad to mm/deg
+
+  return deriv; 
+}
+
+
 /************************************************************************/
 /*                                                                      */
 /*    WriteMot: motors, and, for convenience, the inner frame lock      */
@@ -540,14 +670,10 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 /************************************************************************/
 void WriteMot(int TxIndex)
 {
-  static struct NiosStruct* velReqElAddr;
+  //static struct NiosStruct* velReqElAddr;
   static struct NiosStruct* velReqAzAddr;
-  static struct NiosStruct* cosElAddr;
-  static struct NiosStruct* sinElAddr;
-
-  static struct NiosStruct* gPElAddr;
-  static struct NiosStruct* gIElAddr;
-  static struct NiosStruct* gPtElAddr;
+  static struct NiosStruct* gComElAddr;
+  static struct NiosStruct* gDiffElAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
   static struct NiosStruct* gPtAzAddr;
@@ -559,18 +685,28 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* velCalcPivAddr;
   static struct NiosStruct* velRWAddr;
   static struct NiosStruct* accelAzAddr;
-  static struct NiosStruct* step1ElAddr;
-  static struct NiosStruct* step2ElAddr;
+  static struct NiosStruct* step1ElAddr;   // PORT
+  static struct NiosStruct* step2ElAddr;   // STARBOARD
  
   // Used only for Lab Controller tests
   static struct NiosStruct* dacAmplAddr[5];
   int i;
   static int wait = 100; /* wait 20 frames before controlling. */
-  double el_rad;
-  unsigned int ucos_el;
-  unsigned int usin_el;
 
-  int v_elev, v_az, i_piv, elGainP, elGainI;
+  //int v_elev, v_az, i_piv, elGainP, elGainI;
+  int v_az, i_piv, elGainCom, elGainDiff;
+  double v_el_P = 0.0; // port
+  double v_el_S = 0.0; // starboard
+
+  double el_deriv_P; // deriv. of lin. act. extension w.r.t. el angle
+  double el_deriv_S; // deriv. of lin. act. extension w.r.t. el angle
+  double el_rps_P; // rev/s of el motor
+  double el_rps_S; // rev/s of el motor
+  double enc_P;    // port encoder angle
+  double enc_S;    // starboard encoder angle
+  int step_rate_P; // pulse rate (Hz) of step input to el motor
+  int step_rate_S; // pulse rate (Hz) of step input to el motor
+
   double v_rw;
   int azGainP, azGainI, pivGainRW, pivGainErr;
   double pivFrictOff;
@@ -581,14 +717,11 @@ void WriteMot(int TxIndex)
 
   if (firsttime) {
     firsttime = 0;
-    velReqElAddr = GetNiosAddr("vel_req_el");
+    //velReqElAddr = GetNiosAddr("vel_req_el");
     velReqAzAddr = GetNiosAddr("vel_req_az");
-    cosElAddr = GetNiosAddr("cos_el");
-    sinElAddr = GetNiosAddr("sin_el");
     dacPivAddr = GetNiosAddr("dac_piv");
-    gPElAddr = GetNiosAddr("g_p_el");
-    gIElAddr = GetNiosAddr("g_i_el");
-    gPtElAddr = GetNiosAddr("g_pt_el");
+    gComElAddr = GetNiosAddr("g_com_el");
+    gDiffElAddr = GetNiosAddr("g_diff_el");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
     gPtAzAddr = GetNiosAddr("g_pt_az");
@@ -624,42 +757,59 @@ void WriteMot(int TxIndex)
   /***************************************************/
   /**           Elevation Drive Motors              **/
   /* elevation speed */
-  v_elev = floor(GetVElev() + 0.5);
-  /* Unit of v_elev are 0.1 gyro units */
-  if (v_elev > 32767)
-    v_elev = 32767;
-  if (v_elev < -32768)
-    v_elev = -32768;
-  WriteData(velReqElAddr, 32768 + v_elev, NIOS_QUEUE);
-  //TODO these writes need to be replaced by real requests
-  WriteCalData(step1ElAddr, +10000.0, NIOS_QUEUE);
-  WriteCalData(step2ElAddr, -10000.0, NIOS_QUEUE);
+  //v_elev = floor(GetVElev() + 0.5);
 
-  /* zero motor gains if the pin is in */
-  if ((CommandData.pin_is_in && !CommandData.force_el)
-      || CommandData.disable_el)
-    elGainP = elGainI = 0;
-  else {
-    elGainP = CommandData.ele_gain.P;
-    elGainI = CommandData.ele_gain.I;	
+  GetVElev(&v_el_P, &v_el_S);
+
+  enc_P = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
+  enc_S = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
+
+  /* convert elevation velocities from dps to Cool Muscle motor units */
+  el_deriv_P = dxdtheta(enc_P);
+  el_deriv_S = dxdtheta(enc_S);
+  
+  /*compute rotations per second of Cool Muscle Motor: */
+  
+  el_rps_P = (el_deriv_P*v_el_P/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
+  el_rps_S = (el_deriv_S*v_el_S/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
+
+  step_rate_P = (int) el_rps_P*CM_PULSES;
+  step_rate_S = (int) el_rps_S*CM_PULSES;
+
+  if ( step_rate_P > 10000 ) {
+    step_rate_P = 10000;
+  } else if ( step_rate_P < -10000 ) {
+    step_rate_P = -10000;
   }
-  /* proportional term for el motor */
-  WriteData(gPElAddr, elGainP, NIOS_QUEUE);
-  /* integral term for el_motor */
-  WriteData(gIElAddr, elGainI, NIOS_QUEUE);
-  /* pointing gain term for elevation drive */
-  WriteData(gPtElAddr, CommandData.ele_gain.PT, NIOS_QUEUE);
+
+  if ( step_rate_S > 10000 ) {
+    step_rate_S = 10000;
+  } else if ( step_rate_S < -10000 ) {
+    step_rate_S = -10000;
+  }
 
 
-  /***************************************************/
-  /*** Send elevation angles to acs1 from acs2 ***/
-  /* cos of el enc */
-  el_rad = (M_PI / 180.0) * PointingData[i_point].el; /* convert to radians */
-  ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
-  WriteData(cosElAddr, ucos_el, NIOS_QUEUE);
-  /* sin of el enc */
-  usin_el = (unsigned int)((sin(el_rad) + 1.0) * 32768.0);
-  WriteData(sinElAddr, usin_el, NIOS_QUEUE);
+  /* no motor pulses if the pin is in */
+  if ((CommandData.pin_is_in && !CommandData.force_el)
+      || CommandData.disable_el) {
+    WriteCalData(step1ElAddr, 0.0, NIOS_QUEUE);
+    WriteCalData(step2ElAddr, 0.0, NIOS_QUEUE);
+  } else {
+    WriteCalData(step1ElAddr, step_rate_P, NIOS_QUEUE);
+    WriteCalData(step2ElAddr, step_rate_S, NIOS_QUEUE);
+    /* // write fixed values for testing purposes 
+    WriteCalData(step1ElAddr, +10000.0, NIOS_QUEUE);
+    WriteCalData(step2ElAddr, -10000.0, NIOS_QUEUE);*/
+  }
+
+  elGainCom = CommandData.ele_gain.com;
+  elGainDiff = CommandData.ele_gain.diff;	
+
+  /* common-mode gain term for el motors*/
+  WriteData(gComElAddr, elGainCom, NIOS_QUEUE);
+
+  /*differential gain term for el motors */
+  WriteData(gDiffElAddr, elGainDiff, NIOS_QUEUE);
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/
@@ -876,32 +1026,24 @@ static void DoSineMode(void)
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
 
   /* case 1: moving into quad from beyond left endpoint: */
-  if (az < left - turn_around) {
+  if (az < left) {
     v_az = sqrt(2.0*accel_spider*(left-az)) + V_AZ_MIN;
-
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
-  
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm beyond the left endpoint.");
   
   /* case 2: moving into quad from beyond right endpoint: */
-  } else if (az > right + turn_around) {
+  } else if (az > right) {
     v_az = -sqrt(2.0*accel_spider*(az-right)) - V_AZ_MIN;
-
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
-    
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm beyond the right endpoint.");
+
   /* case 3: moving from left to right endpoints */
-  } else if ( (az > left) && (az < right) 
+  } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
              && (PointingData[i_point].v_az > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
-    
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
 
-    //v_az = (v_az < V_AZ_MIN) ? V_AZ_MIN : v_az;
-
-    if (az >= ((right+turn_around) + 
+    if (az >= (right + 
         ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
     } else {
@@ -909,42 +1051,31 @@ static void DoSineMode(void)
     }
  
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm in between the endpoints and moving right.");
 
   /* case 4: moving from right to left endpoints */
-  } else if ( (az > left) && (az < right) 
+  } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
               && (PointingData[i_point].v_az < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
-
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
 
-    //v_az = (v_az > -V_AZ_MIN) ? -V_AZ_MIN : v_az;
-
-    if (az <= ((left-turn_around) + 
-        ampl*(1 - cos(sqrt(accel_spider/ampl)*t_before)))) {
+    if (az <= (left + 
+        ampl*(1.0 - cos(sqrt(accel_spider/ampl)*t_before)))) {
       bsc_trigger = 1;
     } else {
       bsc_trigger = 0;
     }
 
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm in between the endpoints and moving left.");
 
   /* case 5: in left turn-around zone */ 
-  } else if ( (az <= left) && (az >= (left-turn_around)) ) {
-    
-    //v_az = V_AZ_MIN;
-    v_az += az_accel;
+  } else if ( (az <= (left+turn_around)) && (az >= left) ) {
+    v_az = V_AZ_MIN;
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm in the left turn-around zone.");
 
   /* case 6: in right turn-around zone */   
-  } else if ( (az >= right) && (az <= (right+turn_around)) ) {
-
-    //v_az = -V_AZ_MIN;
-    v_az -= az_accel;
+  } else if ( (az >= (right-turn_around)) && (az <= right) ) {
+    v_az = -V_AZ_MIN;
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm in the right turn-around zone.");
   } 
 }
 
@@ -1016,30 +1147,24 @@ static void DoSpiderMode(void)
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
 
   /* case 1: moving into quad from beyond left endpoint: */
-  if (az < left - turn_around) {
+  if (az < left) {
     v_az = sqrt(2.0*accel_spider*(left-az)) + V_AZ_MIN;
-
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
-  
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm beyond the left endpoint.");
   
   /* case 2: moving into quad from beyond right endpoint: */
-  } else if (az > right + turn_around) {
+  } else if (az > right) {
     v_az = -sqrt(2.0*accel_spider*(az-right)) - V_AZ_MIN;
-
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
-    
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm beyond the right endpoint.");
+
   /* case 3: moving from left to right endpoints */
-  } else if ( (az > left) && (az < right) 
+  } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
 	     && (PointingData[i_point].v_az > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
-    
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
 
-    if (az >= ((right+turn_around) + 
+    if (az >= (right + 
         ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
     } else {
@@ -1047,16 +1172,14 @@ static void DoSpiderMode(void)
     }
  
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm in between the endpoints and moving right.");
 
   /* case 4: moving from right to left endpoints */
-  } else if ( (az > left) && (az < right) 
+  } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
 	      && (PointingData[i_point].v_az < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
-
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
 
-    if (az <= ((left-turn_around) + 
+    if (az <= (left + 
         ampl*(1 - cos(sqrt(accel_spider/ampl)*t_before)))) {
       bsc_trigger = 1;
     } else {
@@ -1064,25 +1187,18 @@ static void DoSpiderMode(void)
     }
 
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm in between the endpoints and moving left.");
 
   /* case 5: in left turn-around zone */ 
-  } else if ( (az <= left) && (az >= (left-turn_around)) ) {
-    
+  } else if ( (az <= (left+turn_around)) && (az >= left) ) {    
     v_az = V_AZ_MIN;
- 
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm in the left turn-around zone.");
 
   /* case 6: in right turn-around zone */   
-  } else if ( (az >= right) && (az <= (right+turn_around)) ) {
-
+  } else if ( (az >= (right-turn_around)) && (az <= right) ) {
     v_az = -V_AZ_MIN;
-    
     axes_mode.az_vel = v_az;
-    //bprintf(info, "I'm in the right turn-around zone.");
-  } 
- //bprintf(info, "v_az req = %f", v_az);
+  }
+ 
 }
 
 static void DoAzScanMode(void)
@@ -2179,8 +2295,7 @@ void* reactComm(void* arg)
     i_serial++;
   }
 
-  rw_motor_index = 1; // JAS -- this line exists in original RW thread, but not
-                      // in pivot thread. Is it necessary?
+  rw_motor_index = 1; 
 
   while (1) {
     reactinfo.verbose=CommandData.verbose_rw;
@@ -2194,8 +2309,7 @@ void* reactComm(void* arg)
       reactinfo.reset=1;
       CommandData.reset_rw=0;
     }
-    if(CommandData.restore_rw==1 ) { // JAS -- CommandData.restore_rw may not
-                                     // exist. Need to check this.
+    if(CommandData.restore_rw==1 ) { 
       restoreAMC(&reactinfo);
       CommandData.restore_rw=0;
     }
@@ -2224,12 +2338,7 @@ void* reactComm(void* arg)
         "reset->Unable to connect to reaction wheel after %i attempts."
         ,resetcount);
       }
-      
-      //bprintfverb(warning,reactinfo.verbose,MC_EXTRA_VERBOSE,
-      //"Attempting to reset the reaction wheel controller.",resetcount);
-      //JAS -- it did not make sense to me that resetcount was passed as an 
-      //argument to the above print statement. 
-      
+ 
       bprintfverb(warning,reactinfo.verbose,MC_EXTRA_VERBOSE,
       "Attempting to reset the reaction wheel controller.");
       resetcount++;
@@ -2330,389 +2439,6 @@ void* reactComm(void* arg)
   }
   return NULL;
 }
-  /* JAS -- old reactComm thread from BLAST-Pol (when reaction wheel motor had
-      a Copley controller rather than the AMC one being used for Spider)*/
-
-  /*  //mark1
-  int n=0, j=0;
-  int i=0;
-  int temp_raw,curr_raw,stat_raw,faultreg_raw;
-  int firsttime=1,resetcount=0;
-  long vel_raw=0;
-  // Initialize values in the reactinfo structure.                            
-  reactinfo.open=0;
-  reactinfo.init=0;
-  reactinfo.err=0;
-  reactinfo.err_count=0;
-  reactinfo.closing=0;
-  reactinfo.reset=0;
-  reactinfo.disabled=2;
-  reactinfo.bdrate=9600;
-  reactinfo.writeset=0;
-  reactinfo.verbose=0;
-  strncpy(reactinfo.motorstr,"react",6);
-
-  nameThread("RWCom");
-
-  while(!InCharge) {
-    if(firsttime==1) {
-      bprintf(info,"I am not incharge thus I will not communicate with the 
-      RW motor.");
-      firsttime=0;
-    }
-    //in case we switch to ICC when serial communications aren't working
-    RWMotorData[0].vel_rw=ACSData.vel_rw;
-    RWMotorData[1].vel_rw=ACSData.vel_rw;
-    RWMotorData[2].vel_rw=ACSData.vel_rw;
-    usleep(20000);
-  }
-
-  firsttime=1;
-  bprintf(info,"Bringing the reaction wheel online.");
-  // Initialize structure RWMotorData.  Follows what was done in dgps.c
-  //  RWMotorData[0].vel_rw=0;
-  RWMotorData[0].temp=0;
-  RWMotorData[0].current=0.0;
-  RWMotorData[0].status=0;
-  RWMotorData[0].fault_reg=0;
-  RWMotorData[0].drive_info=0;
-  RWMotorData[0].err_count=0;
-
-  // Try to open the port.
-  while (reactinfo.open==0) {
-    reactinfo.verbose=CommandData.verbose_rw;
-    open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
-
-    if (i==10){
-     bputs(err,
-     "Reaction wheel port could not be opened after 10 attempts.\n");
-    }
-    i++;
-    if (reactinfo.open==1) {
-      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-      "Opened the serial port on attempt number %i",i); 
-    } else sleep(1);  
-  }
-
-  // Configure the serial port. If after 10 attempts the port is not 
-  // initialized it enters the main loop where it will trigger a reset command
- 
-  i=0;
-  while (reactinfo.init==0 && i <=9) {
-    reactinfo.verbose=CommandData.verbose_rw;
-    configure_copley(&reactinfo);
-    if (reactinfo.init==1) {
-      bprintf(info,"Initialized the controller on attempt number %i",i); 
-    } else if (i==9) {
-      bprintf(info,"Could not initialize the controller after %i attempts."
-      ,i); 
-    } else {
-      sleep(1);
-    }
-    i++;
-  }
-  rw_motor_index = 1; // index for writing to the RWMotor data struct
-  while (1){
-    reactinfo.verbose=CommandData.verbose_rw;
-    if((reactinfo.err & COP_ERR_MASK) > 0 ) {
-      reactinfo.err_count+=1;
-      if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT) {
-	reactinfo.reset=1;
-      }
-    }
-    if(CommandData.reset_rw==1 ) {
-      reactinfo.reset=1;
-      CommandData.reset_rw=0;
-    }
-    
-    // Make bitfield of controller info structure.
-    RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); 
-    RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) 
-                                           ? 65535: reactinfo.err_count;
-
-    // If we are still in the start up veto make sure the drive is disabled.
-    if(StartupVeto > 0) {
-      CommandData.disable_az=1;
-    }
-
-    if(reactinfo.closing==1){
-      rw_motor_index=INC_INDEX(rw_motor_index);
-      close_copley(&reactinfo);
-      usleep(10000);      
-    } else if (reactinfo.reset==1){
-      if(resetcount==0) {
-	bprintf(warning,"Resetting connection to Reaction Wheel controller.");
-      } else if ((resetcount % 10)==0) {
-	//	bprintf(warning,
-                "reset-> Unable to connect to Reaction Wheel after %i attempts.
-                ",resetcount);
-      }
-
-      resetcount++;
-      rw_motor_index=INC_INDEX(rw_motor_index);
-      resetCopley(REACT_DEVICE,&reactinfo); 
-      // if successful sets reactinfo.reset=0
-      usleep(10000);  // give time for motor bits to get written
-      if (reactinfo.reset==0) {
-	resetcount=0;
-        bprintf(info,"Controller successfuly reset!");
-      }
-
-    } else if(reactinfo.init==1){
-      if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-        "Attempting to enable the reaction wheel motor controller.");
-	n=enableCopley(&reactinfo);
-	if(n==0){    
-	  bprintf(info,"Reaction wheel motor controller is now enabled.");
-	  reactinfo.disabled=0;
-	}
-      } 
-      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || 
-         reactinfo.disabled==2)) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-        "Attempting to disable the reaction wheel motor controller.");
-	n=disableCopley(&reactinfo);
-	if(n==0){    
-	  bprintf(info,"Reaction wheel motor controller is now disabled.");
-	  reactinfo.disabled=1;
-	}
-      } 
-
-      vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/s
-      RWMotorData[rw_motor_index].vel_rw=((double) vel_raw)/RW_ENC_CTS/10.0
-                                          *360.0; 
-      j=j%4;
-      switch(j) {
-      case 0:
-	temp_raw=queryCopleyInd(COP_IND_TEMP,&reactinfo);
-        RWMotorData[rw_motor_index].temp=temp_raw; // units are deg Cel
-	break;
-      case 1:
-	curr_raw=queryCopleyInd(COP_IND_CURRENT,&reactinfo);
-        RWMotorData[rw_motor_index].current=((double) (curr_raw))/100.0; 
-        // units are Amps
-	break;
-      case 2:
-	stat_raw=queryCopleyInd(COP_IND_STATUS,&reactinfo);
-        RWMotorData[rw_motor_index].status=stat_raw; 
-	break;
-      case 3:
-	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&reactinfo);
-        RWMotorData[rw_motor_index].fault_reg=faultreg_raw; 
-	break;
-      }      
-      j++;
-      if (firsttime) {
-	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-        "Raw reaction wheel velocity is %i",vel_raw);
-	firsttime=0;
-      }
-      rw_motor_index=INC_INDEX(rw_motor_index);
-
-    } else {
-      rw_motor_index=INC_INDEX(rw_motor_index);
-      reactinfo.reset=1;
-      usleep(10000);
-    }
-    i++; 
-  }
-  return NULL;
-}
-  */
-
-// JAS -- Elevation motor serial thread commented out since irrelevant 
-//        for Spider
-
-/*void* elevComm(void* arg)
-{
-#if 0
-  //SJB: BLAST-Pol version. removed because it depends on copley stuff
-
-  int n=0, j=0;
-  int i=0;
-  long unsigned pos_raw;
-  int temp_raw,curr_raw,stat_raw,faultreg_raw;
-  int firsttime=1,resetcount=0;
-
-
-  // Initialize values in the elevinfo structure.                            
-  elevinfo.open=0;
-  elevinfo.init=0;
-  elevinfo.err=0;
-  elevinfo.err_count=0;
-  elevinfo.closing=0;
-  elevinfo.reset=0;
-  elevinfo.disabled=2;
-  elevinfo.bdrate=9600;
-  elevinfo.writeset=0;
-  strncpy(elevinfo.motorstr,"elev\0",6);
-  elevinfo.verbose=1;
-
-  nameThread("ElCom");
-
-  while(!InCharge) {
-    if(firsttime==1) {
-      bprintf(info,"I am not incharge thus I will not communicate with the elevation drive.");
-      firsttime=0;
-    }
-
-    //in case we switch to ICC when serial communications aren't working
-    ElevMotorData[0].enc_raw_el=ACSData.enc_raw_el;
-    ElevMotorData[1].enc_raw_el=ACSData.enc_raw_el;
-    ElevMotorData[2].enc_raw_el=ACSData.enc_raw_el;
-    usleep(20000);
-  }
-
-  bprintf(info,"Bringing the elevation drive online.");
-  i=0;
-  firsttime=1;
-
-  // Initialize structure ElevMotorData.  Follows what was done in dgps.c
-  //  ElevMotorData[0].enc_raw_el=0;
-  ElevMotorData[0].temp=0;
-  ElevMotorData[0].current=0.0;
-  ElevMotorData[0].status=0;
-  ElevMotorData[0].fault_reg=0;
-  ElevMotorData[0].drive_info=0;
-  ElevMotorData[0].err_count=0;
-
-  // Try to open the port.
-  while(elevinfo.open==0) {
-    elevinfo.verbose=CommandData.verbose_el;
-    open_copley(ELEV_DEVICE,&elevinfo); // sets elevinfo.open=1 if sucessful
-    
-    if(i==10) {
-      bputs(err,"Elevation drive serial port could not be opened after 10 attempts.\n");
-    }
-    i++;
-    
-    if(elevinfo.open==1) {
-	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i); 
-    } else { 
-      sleep(1);
-    }
-  }
- 
-  // Configure the serial port.  If after 10 attempts the port is not initialized it enters 
-  // the main loop where it will trigger a reset command.                                             
-  i=0;
-  while (elevinfo.init==0 && i <=9) {
-    elevinfo.verbose=CommandData.verbose_el;
-    configure_copley(&elevinfo);
-    if(elevinfo.init==1) {
-      bprintf(info,"Initialized the controller on attempt number %i",i); 
-    } else if (i==9) {
-      bprintf(info,"Could not initialize the controller after %i attempts.",i); 
-    } else {
-      sleep(1);
-    }
-    i++;
-  }
-
-  elev_motor_index = 1; // index for writing to the ElevMotor data struct
-  while (1) {
-    elevinfo.verbose=CommandData.verbose_el;
-    if ((elevinfo.err & COP_ERR_MASK) > 0 ) {
-      elevinfo.err_count+=1;
-      if (elevinfo.err_count >= COPLEY_ERR_TIMEOUT) {
-	elevinfo.reset=1;
-      }
-    }
-
-    if (CommandData.reset_elev==1 ) {
-      elevinfo.reset=1;
-      CommandData.reset_elev=0;
-    }
-
-    ElevMotorData[elev_motor_index].drive_info=makeMotorField(&elevinfo); // Make bitfield of controller info structure.
-    ElevMotorData[elev_motor_index].err_count=(elevinfo.err_count > 65535) ? 65535: elevinfo.err_count;
-
-    // If we are still in the start up veto make sure the drive is disabled.
-    if(StartupVeto > 0) {
-      CommandData.disable_el=1;
-    }
-
-    if(elevinfo.closing==1){
-      elev_motor_index=INC_INDEX(elev_motor_index);
-      close_copley(&elevinfo);
-      usleep(10000);      
-    } else if (elevinfo.reset==1){
-      if(resetcount==0) {
-	bprintf(warning,"Resetting connection to elevation drive controller.");
-      } else if ((resetcount % 10)==0) {
-	//	bprintf(warning,"reset-> Unable to connect to elevation drive after %i attempts.",resetcount);
-      }
-
-      resetcount++;
-      elev_motor_index=INC_INDEX(elev_motor_index);
-      resetCopley(ELEV_DEVICE,&elevinfo); // if successful sets elevinfo.reset=0
-
-      usleep(10000);  // give time for motor bits to get written
-      if (elevinfo.reset==0) {
-	resetcount=0;
-        bprintf(info,"Controller successfuly reset!");
-      }
-
-    } else if (elevinfo.init==1) {
-      if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
-	bprintf(info,"Attempting to enable the elevation motor controller.,CommandData.disable_el=%i,CommandData.force_el=%i,elevinfo.disabled=%i",CommandData.disable_el,CommandData.force_el,elevinfo.disabled);
-	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Attempting to enable the elevation motor controller.");
-	n=enableCopley(&elevinfo);
-	if(n==0){    
-	  bprintf(info,"Elevation motor controller is now enabled.");
-	  elevinfo.disabled=0;
-	}
-      } 
-      if((CommandData.disable_el==1 && CommandData.force_el==0 ) && (elevinfo.disabled==0 || elevinfo.disabled==2)) {
-	bprintf(info,"Attempting to enable the elevation motor controller.,CommandData.disable_el=%i,CommandData.force_el=%i,elevinfo.disabled=%i",CommandData.disable_el,CommandData.force_el,elevinfo.disabled);
-	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Attempting to disable the elevation motor controller.");
-	n=disableCopley(&elevinfo);
-	if(n==0){    
-	  bprintf(info,"Elevation motor controller is now disabled.");
-	  elevinfo.disabled=1;
-	}
-      } 
-
-      pos_raw=queryCopleyInd(COP_IND_POS,&elevinfo); // Units are counts
-                                                     // For Elev 524288 cts = 360 deg
-      ElevMotorData[elev_motor_index].enc_raw_el=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0-ENC_RAW_EL_OFFSET;
-      //   getCopleySlowInfo(j,elev_motor_index,&ElevMotorData,&elevinfo); // Reads one of temperature, current, status and fault register and
-                           // writes to the appropriate frame 
-
-      if (firsttime) {
-	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Raw elevation encoder position is %i",pos_raw);
-	firsttime=0;
-      }     
-      j=j%4;
-      switch(j) {
-      case 0:
-	temp_raw=queryCopleyInd(COP_IND_TEMP,&elevinfo);
-        ElevMotorData[elev_motor_index].temp=temp_raw; // units are deg Cel
-	break;
-      case 1:
-	curr_raw=queryCopleyInd(COP_IND_CURRENT,&elevinfo);
-        ElevMotorData[elev_motor_index].current=((double) (curr_raw))/100.0; // units are Amps
-	break;
-      case 2:
-	stat_raw=queryCopleyInd(COP_IND_STATUS,&elevinfo);
-        ElevMotorData[elev_motor_index].status=stat_raw; // units are Amps
-	break;
-      case 3:
-	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&elevinfo);
-        ElevMotorData[elev_motor_index].fault_reg=faultreg_raw; // units are Amps
-	break;
-      }      
-      j++;
-      elev_motor_index=INC_INDEX(elev_motor_index);
-    } else {
-      elevinfo.reset=1;
-      elev_motor_index=INC_INDEX(elev_motor_index);
-      usleep(10000);
-    }
-  }
-  return NULL;
-}*/
 
 void* pivotComm(void* arg) 
 {

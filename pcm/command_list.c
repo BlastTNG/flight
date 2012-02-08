@@ -27,7 +27,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.43 $";
+const char *command_list_serial = "$Revision: 1.44 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "CMB grenades",     "Waveplate Rotator",
@@ -132,8 +132,10 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
-  {COMMAND(elenc_veto), "veto elevation encoder", GR_VETO},
-  {COMMAND(elenc_allow), "un-veto elevation encoder", GR_VETO},
+  {COMMAND(elenc1_veto), "veto elevation encoder 1", GR_VETO},
+  {COMMAND(elenc2_veto), "veto elevation encoder 2", GR_VETO},
+  {COMMAND(elenc1_allow), "un-veto elevation encoder 1", GR_VETO},
+  {COMMAND(elenc2_allow), "un-veto elevation encoder 2", GR_VETO},
   {COMMAND(gps_veto), "veto differntial gps", GR_VETO},
   {COMMAND(gps_allow), "un-veto differential gps", GR_VETO},
   {COMMAND(mag_veto), "veto magnotometer", GR_VETO},
@@ -378,16 +380,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"RA of Corner 4 (h)",        0, 24, 'f', "NONE"},
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Accel (deg/s^2)",   0,  2, 'f', "NONE"},
-      {"Elevation (deg)",           0, 40, 'f', "NONE"}
+      {"Elevation (deg)",           20, 50, 'f', "NONE"}
     }
   },
   {COMMAND(sine_scan), "scan sinusoidally in azimuth with a specific amplitude",
-   GR_POINT, 3,
+   GR_POINT, 4,
     {
       {"peak acceleration (deg/s^2)", 0, 10, 'f', "NONE"},
       {"scan amplitude (deg)",        0, 90, 'f', "NONE"},
       {"scan az centre (deg)",        0, 360,'f', "NONE"},
-      {"scan elevation (deg)",        0, 50, 'f', "NONE"},
+      {"scan elevation (deg)",        20, 50, 'f', "NONE"},
     }
   },   
   {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
@@ -404,11 +406,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
     }
   },
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
+/*  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
       {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_el"},
       {"Integral Gain",     0, USHRT_MAX, 'i', "g_i_el"},
       {"Pointing Gain",     0, USHRT_MAX, 'i', "g_pt_el"}
+    }
+  },*/
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
+    {
+      {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "g_com_el"},
+      {"Differential Gain (Hz)",         0.0, 1.0, 'f', "g_diff_el"},
+      {"Maximum Acceleration (dps)",     0.0, 10.0, 'f', "NONE"}
     }
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,

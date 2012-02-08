@@ -70,9 +70,9 @@ struct DriveIPVResStruct {
   long int value;
 };
 
-extern struct MotorInfoStruct pivotinfo; /* declared in reactcommand.c
-				          * 
-				          */
+extern struct MotorInfoStruct pivotinfo; // motor info structs
+extern struct MotorInfoStruct reactinfo; // are declared in amccommand.c
+
 enum CmdorQuery {cmd, query};
 
 

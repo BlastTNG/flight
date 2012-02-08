@@ -188,7 +188,14 @@ struct CommandDataStruct {
   
   enum {vtx_isc, vtx_osc, vtx_bsc} vtx_sel[2];
 
-  struct GainStruct ele_gain;
+  //struct GainStruct ele_gain;
+
+  struct {
+    double com;
+    double diff;
+    double accel_max;
+  } ele_gain; 
+ 
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
 
@@ -253,7 +260,8 @@ struct CommandDataStruct {
   double t_set_bsc;
   double t_set_rsc;
 
-  unsigned char use_elenc;
+  unsigned char use_elenc1;
+  unsigned char use_elenc2;
   unsigned char use_elclin;
   unsigned char use_pss;
   unsigned char use_mag;

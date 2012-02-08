@@ -16,7 +16,7 @@
 
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 164        /* total number of single word cmds */
+#define N_SCOMMANDS 166        /* total number of single word cmds */
 #define N_MCOMMANDS 112        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -64,7 +64,8 @@ extern const char *GroupNames[N_GROUPS];
 enum singleCommand {
   az_auto_gyro,      az_off,            az_on,             hwpr_panic,
   el_off,	     el_on,             pin_in,            reset_trims,
-  elclin_allow,      elclin_veto,       elenc_allow,       elenc_veto,
+  elclin_allow,      elclin_veto,       elenc1_allow,      elenc2_allow,
+  elenc1_veto,       elenc2_veto,
   gps_allow,         gps_veto,          mag_allow,         mag_veto,
   stop,              pss_veto,		pss_allow,
   trim_to_isc,       unlock,            lock_off,         

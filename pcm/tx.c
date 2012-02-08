@@ -868,10 +868,10 @@ static void StoreData(int index)
   WriteData(dec4PAddr, (int)(CommandData.pointing_mode.dec[3] * DEG2I),
       NIOS_QUEUE);
 
-  sensor_veto = (!CommandData.use_elenc) |
+  sensor_veto = (!CommandData.use_elenc1) |
     ((!CommandData.use_mag) << 2) |
     ((!CommandData.use_gps) << 3) |
-    ((!CommandData.use_elclin) << 4) |
+    ((!CommandData.use_elenc2) << 4) |
     ((CommandData.disable_el) << 10) |
     ((CommandData.disable_az) << 11) |
     ((CommandData.force_el) << 12) |

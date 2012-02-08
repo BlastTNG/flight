@@ -180,13 +180,15 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case gps_veto:
       CommandData.use_gps = 0;
       break;
-    case elenc_veto:
-      CommandData.use_elenc = 0;
+    case elenc1_veto:
+      CommandData.use_elenc1 = 0;
+      break;
+    case elenc2_veto:
+      CommandData.use_elenc2 = 0;
       break;
     case elclin_veto:
       CommandData.use_elclin = 0;
       break;
-
     case pss_allow:      /* Un-veto sensors */
       CommandData.use_pss = 1;
       break;
@@ -196,8 +198,11 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case gps_allow:
       CommandData.use_gps = 1;
       break;
-    case elenc_allow:
-      CommandData.use_elenc = 1;
+    case elenc1_allow:
+      CommandData.use_elenc1 = 1;
+      break;
+    case elenc2_allow:
+      CommandData.use_elenc2 = 1;
       break;
     case elclin_allow:
       CommandData.use_elclin = 1;
@@ -943,9 +948,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /********** Pointing Motor Gains *******/
     case el_gain:  /* ele gains */
-      CommandData.ele_gain.P = ivalues[0];
-      CommandData.ele_gain.I = ivalues[1];
-      CommandData.ele_gain.PT = ivalues[2];
+      //CommandData.ele_gain.P = ivalues[0];
+      CommandData.ele_gain.com = rvalues[0];
+      //CommandData.ele_gain.I = ivalues[1];
+      CommandData.ele_gain.diff = rvalues[1];
+      //CommandData.ele_gain.PT = ivalues[2];
+      CommandData.ele_gain.accel_max = rvalues[2];
       break;
     case az_gain:  /* az gains */
       CommandData.azi_gain.P = ivalues[0];
@@ -1639,9 +1647,13 @@ void InitCommandData()
   CommandData.az_accel = 0.4; 
   CommandData.az_accel_max = 100.0;
 
-  CommandData.ele_gain.I = 5000; /* was 8000 */
-  CommandData.ele_gain.P = 5000; /* was 1200 */
-  CommandData.ele_gain.PT = 3000;
+  //CommandData.ele_gain.I = 5000; /* was 8000 */
+  //CommandData.ele_gain.P = 5000; /* was 1200 */
+  //CommandData.ele_gain.PT = 3000;
+
+  CommandData.ele_gain.com = 10;
+  CommandData.ele_gain.diff = 10;
+  CommandData.ele_gain.accel_max = 1.0;
 
   CommandData.azi_gain.P = 4000;
   CommandData.azi_gain.I = 100;
@@ -1669,7 +1681,8 @@ void InitCommandData()
   CommandData.table.tableGain.I = 302;   //ten-thousandths
   CommandData.table.tableGain.D = 13520; //hundredths
 
-  CommandData.use_elenc = 1;
+  CommandData.use_elenc1 = 1;
+  CommandData.use_elenc2 = 1;
   CommandData.use_elclin = 1;
   CommandData.use_pss = 1;
   CommandData.use_mag = 1;
