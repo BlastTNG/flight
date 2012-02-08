@@ -32,6 +32,8 @@
 
 //define to use external serial numbers and interrupt generation
 //#define USE_EXT_SERIAL
+//in external mode, number of serial numbers per frame
+#define SERIAL_PER_FRAME 2
 
 #define FRAMELEN  64
 
@@ -40,17 +42,19 @@ int main(int argc, char *argv[]) {
   unsigned int i[0x1000 * 2];
   unsigned int j, k, numerrs, secret[2], oldsecret; 
   unsigned int serial;
+  unsigned int frame_count;
+  int frame_stopped = 0;
   unsigned int num;
   struct timeval tv_frame;
   double frametime, old_frametime = 0.0;
   char frate_str[11] = "";
   
-  fp = open("/dev/bbcpci", O_RDWR);
+  fp = open("/dev/bbcpci", O_RDWR | O_NONBLOCK);
   if (fp < 0) {
     perror("Error opening BBCPCI\n");
     exit(0);
   }
-  system("clear");
+  if (system("clear") < 0) perror("Failed to clear");
   fprintf(stderr, "NIOS program version %8x.\n", ioctl(fp, BBCPCI_IOC_VERSION));
   
   i[0] = BBCPCI_WFRAME_ADD(0); 
@@ -62,13 +66,11 @@ int main(int argc, char *argv[]) {
   for(k = 3; k < FRAMELEN+3; k++) {
       i[2*k] = BBCPCI_WFRAME_ADD(k);
       num = k - 3;
-      //num = (num*2) % 64;
       i[2*k+1] = BBC_DATA((0xc000+num)) | BBC_NODE(num) | BBC_CH(0) | BBC_READ;
   }
   for(k = FRAMELEN+3; k < 2*FRAMELEN+3; k++) {
       i[2*k] = BBCPCI_WFRAME_ADD(k);
       num = k - 3 - FRAMELEN;
-      //num = (num*2) % 64;
       i[2*k+1] = BBC_DATA((0x8000+num)) | BBC_NODE(num) | BBC_CH(0) | BBC_WRITE;
   }
   i[2*k] = BBCPCI_WFRAME_ADD(2*FRAMELEN+3);
@@ -103,7 +105,7 @@ int main(int argc, char *argv[]) {
 #ifdef USE_EXT_SERIAL
   ioctl(fp, BBCPCI_IOC_EXT_SER_ON);
   ioctl(fp, BBCPCI_IOC_IRQ_RATE, 1);
-  ioctl(fp, BBCPCI_IOC_FRAME_RATE, 1);
+  ioctl(fp, BBCPCI_IOC_FRAME_RATE, SERIAL_PER_FRAME);
 #else
   ioctl(fp, BBCPCI_IOC_EXT_SER_OFF);
   ioctl(fp, BBCPCI_IOC_IRQ_RATE, 320000);
@@ -114,6 +116,7 @@ int main(int argc, char *argv[]) {
   while (1) {
     for (k = 0; read(fp, (void *)(&j), sizeof(unsigned int)) == 4; k++) {
       serial = ioctl(fp, BBCPCI_IOC_GET_SERIAL);
+      frame_count = ioctl(fp, BBCPCI_IOC_FRAME_COUNT);
       if (j & BBC_FSYNC) {
 	gettimeofday(&tv_frame, NULL);
 	frametime = tv_frame.tv_sec + (double)(tv_frame.tv_usec)/1.0e6;
@@ -121,11 +124,22 @@ int main(int argc, char *argv[]) {
 	old_frametime = frametime;
       }
       else frate_str[0] = '\0';
-      printf("%03x %08x %08x%s\n", k, j, serial, frate_str);  
+      printf("%05x %08x %08x %08x %s\n", k, j, serial, frame_count, frate_str);  
       //printf("%03x %08x\n", k, j);  
-      write(fp, (void *)&i[2], 2 * BBCPCI_SIZE_UINT);
+      if (write(fp, (void *)&i[2], 2 * BBCPCI_SIZE_UINT) < 0)
+	perror("Write failed");
+
+      frame_stopped = 0;
     }
+
     usleep(100);
+
+    //check for stopped frames (dead sync box)
+    frame_count = ioctl(fp, BBCPCI_IOC_FRAME_COUNT);
+    if (!frame_stopped && frame_count > 4000000) {
+      printf("%s %08x\n", "frames stopped at count", frame_count, "");  
+      frame_stopped = 1;
+    }
   }
   
   return 0;
