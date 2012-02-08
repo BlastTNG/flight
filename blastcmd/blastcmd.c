@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
+#include <limits.h>
 
 #include "daemon.h"
 #include "share/netcmd.h"
@@ -51,7 +52,7 @@ double round(double x);
 
 #define ACK_COUNT 17
 
-#define INPUT_TTY "/dev/ttyCMD"
+#define INPUT_TTY "/dev/ttyUSB0"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
 
 int silent = 0;
@@ -370,10 +371,10 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
   unsigned short dataq[DATA_Q_SIZE];
   int dataqsize = 0;
   float flote, max, min;
-  int ynt;
+  long long ynt;
   char type;
   int packet_length = 6;
-  unsigned char buffer[25];
+  unsigned char buffer[255];
   unsigned short *dataqbuffer;
   int i;
   time_t t;
@@ -390,55 +391,55 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
     max = mcommands[i_cmd].params[i].max;
     type = mcommands[i_cmd].params[i].type;
     if (type == 'i') {
-      /* 15 bit integer parameter */
+      /* 16 bit integer parameter */
       ynt = atoi(parms[i]);
       if (ynt < min) {
-        sprintf(output, ":::limit:::parameter %d out of range (%i < %g)\r\n",
+        sprintf(output, ":::limit:::parameter %d out of range (%lld < %g)\r\n",
             i + 1, ynt, min);
         *i_ack = 0x103;
         send(sock, output, sizeof(output), MSG_NOSIGNAL);
         return;
-      } else if (ynt > MAX_15BIT) {
-        sprintf(output, ":::limit:::parameter %d out of range (%i > %g)\r\n",
-            i + 1, ynt, MAX_15BIT);
+      } else if (ynt > USHRT_MAX) {
+        sprintf(output, ":::limit:::parameter %d out of range (%lld > %u)\r\n",
+            i + 1, ynt, USHRT_MAX);
         *i_ack = 0x103;
         send(sock, output, sizeof(output), MSG_NOSIGNAL);
         return;
       } else if (ynt > max) {
-        sprintf(output, ":::limit:::parameter %d out of range (%i > %g)\r\n",
+        sprintf(output, ":::limit:::parameter %d out of range (%lld > %g)\r\n",
             i + 1, ynt, max);
         *i_ack = 0x103;
         send(sock, output, sizeof(output), MSG_NOSIGNAL);
         return;
       }
-      dataq[dataqsize++] = (unsigned short)(ynt - min);
+       dataq[dataqsize++] = (unsigned short)(ynt - min);
     } else if (type == 'l') {
-      /* 30 bit integer parameter */
+      /* 32 bit integer parameter */
       ynt = atoi(parms[i]);
       if (ynt < min) {
-        sprintf(output, ":::limit:::parameter %d out of range (%i < %g)\r\n",
+        sprintf(output, ":::limit:::parameter %d out of range (%lld < %g)\r\n",
             i + 1, ynt, min);
         *i_ack = 0x103;
         send(sock, output, sizeof(output), MSG_NOSIGNAL);
         return;
-      } else if (ynt > MAX_30BIT) {
-        sprintf(output, ":::limit:::parameter %d out of range (%i > %g)\r\n",
-            i + 1, ynt, MAX_30BIT);
+      } else if (ynt > UINT_MAX) {
+        sprintf(output, ":::limit:::parameter %d out of range (%lld > %u)\r\n",
+            i + 1, ynt, UINT_MAX);
         *i_ack = 0x103;
         send(sock, output, sizeof(output), MSG_NOSIGNAL);
         return;
       } else if (ynt > max) {
-        sprintf(output, ":::limit:::parameter %d out of range (%i > %g)\r\n",
+        sprintf(output, ":::limit:::parameter %d out of range (%lld > %g)\r\n",
             i + 1, ynt, max);
         *i_ack = 0x103;
         send(sock, output, sizeof(output), MSG_NOSIGNAL);
         return;
       }
       ynt -= min;
-      dataq[dataqsize++] = ynt & 0x00007fff;         /* lower 15 bits */
-      dataq[dataqsize++] = (ynt & 0x3fff8000) >> 15; /* upper 15 bits */
+      dataq[dataqsize++] = ynt & 0x0000ffff;         /* lower 16 bits */
+      dataq[dataqsize++] = (ynt & 0xffff0000) >> 16; /* upper 16 bits */
     } else if (type == 'f') {
-      /* 15 bit floating point parameter */
+      /* 16 bit floating point parameter */
       flote = atof(parms[i]);
       if (flote < min) {
         sprintf(output, ":::limit:::parameter %d out of range (%g < %g)\r\n",
@@ -453,9 +454,9 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
         send(sock, output, sizeof(output), MSG_NOSIGNAL);
         return;
       }
-      dataq[dataqsize++] = round((flote - min) * MAX_15BIT / (max - min)); 
+      dataq[dataqsize++] = round((flote - min) * USHRT_MAX / (max - min)); 
     } else if (type == 'd') {
-      /* 30 bit floating point parameter */
+      /* 32 bit floating point parameter */
       flote = atof(parms[i]);
       if (flote < min) {
         sprintf(output, ":::limit:::parameter %d out of range (%g < %g)\r\n",
@@ -470,9 +471,10 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
         *i_ack = 0x103;
         return;
       }
-      ynt = round((flote - min) * MAX_30BIT / (max - min)); 
-      dataq[dataqsize++] = (ynt & 0x3fff8000) >> 15;  /* upper 15 bits */
-      dataq[dataqsize++] = ynt & 0x00007fff;          /* lower 15 bits */
+      ynt = round((flote - min) * UINT_MAX / (max - min)); 
+      dataq[dataqsize++] = (ynt & 0xffff0000) >> 16;  /* upper 16 bits */
+      dataq[dataqsize++] = ynt & 0x0000ffff;          /* lower 16 bits */
+      printf("%llx %x %x\n", ynt, dataq[dataqsize-2], dataq[dataqsize-1]);
     } else if (type == 's') {
       /* 7-bit character string */
       unsigned char c = 0xff;
@@ -501,6 +503,11 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
     }
   }
 
+  // make sure there are enough 'parameters' for extended commanding.
+  for (;dataqsize<11; dataqsize++) {
+    dataq[dataqsize] = 0;
+  }
+  
   time(&t);
 
   /* Initialize buffer */
@@ -521,22 +528,10 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
 
   /* Send parameters */
   for (i = 0; i < dataqsize; i++) {
-    dataq[i] &= 0x7fff; /* first bit must be a zero */
+    //dataq[i] &= 0x7fff; /* first bit must be a zero */
     dataqbuffer = (unsigned short *)(buffer + packet_length);
     *dataqbuffer = dataq[i];
     packet_length += 2;
-
-    /* If the packet is full write it out */
-    if (packet_length == 24) {
-      buffer[packet_length++] = 0x3;
-      buffer[3] = packet_length - 5;
-      WriteBuffer(sock, tty_fd, buffer, packet_length, i_ack);
-
-      if (*i_ack >= 0x10)
-        return;
-
-      packet_length = 4;
-    }
   }
 
   /* Send command footer */
