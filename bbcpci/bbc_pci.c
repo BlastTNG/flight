@@ -622,6 +622,9 @@ static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
     iowrite32(BBCPCI_COMREG_EXT_SER_OFF, bbc_drv.mem_base + BBCPCI_ADD_COMREG);
     external_serial_on = 0;
     break;
+  case BBCPCI_IOC_FRAME_COUNT: // Count of clock cycles per frame
+    ret = ioread32(bbc_drv.mem_base + BBCPCI_ADD_FRAME_COUNT);
+    break;
   default:
     break;
   }
