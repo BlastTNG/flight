@@ -82,6 +82,13 @@ void closeTable()
   }
 }
 
+/*puts angles between -180 and 180*/
+void FixAngle(double A)
+{
+  if (A > 180) A -= 360.0;
+  if (A < -180) A += 360.0;
+}
+
 /* figures out desired rotary table speed
  * result sent to table communication thread with global
  * control loop performed externally
@@ -136,8 +143,7 @@ void updateTableSpeed()
 		zerodist[i] = 0;
   	}
   	yawdist[i] -= ACSData.ifyaw_gy*dt;
-  	if (yawdist[i] > 180) yawdist[i] -= 360.0;
-  	if (yawdist[i] < -180) yawdist[i] += 360.0;
+	FixAngle(yawdist[i]);
   }
   if (docalc) {
 //	cout << "doing CALC" << endl;
@@ -153,18 +159,15 @@ void updateTableSpeed()
 //			cout << "GOODPOS #" << i << " is out of bounds" << endl;
 			targPos = 90.0;
 	  		calcdist = thisPos - targPos;
-	  		if (calcdist > 180) calcdist -= 360;
-	  		if (calcdist < -180) calcdist += 360;
+			FixAngle(calcdist);
 		} else {
 			calcdist = thisPos - targPos; // it's not out of bounds, check how far away it is
-	  		if (calcdist > 180) calcdist -= 360;
-	  		if (calcdist < -180) calcdist += 360;
+			FixAngle(calcdist);
 			if ((fabs(calcdist)) > 5.0) { // if it's too far, set targPos to 90
 //				cout << "GOODPOS #" << i << " is too far away(" << calcdist << "), setting TARGPOS to 90" << endl;
 				targPos = 90.0;
 	  			calcdist = thisPos - targPos;
-	  			if (calcdist > 180) calcdist -= 360;
-	  			if (calcdist < -180) calcdist += 360;
+				FixAngle(calcdist);
 			} else {	
 //				cout << "I can make it to GOODPOS #" << i << " at CALCDIST= " << calcdist << endl;
 				if (targPos != 90) break; // if it survives the test, use it, otherwise try next one
@@ -178,8 +181,7 @@ void updateTableSpeed()
   // dist is calculated every time to tell you how close you are to targPos
   }
   dist = thisPos - targPos;
-  if (dist > 180) dist -= 360;
-  if (dist < -180) dist += 360;
+  FixAngle(dist);
 
   //write speed to frame
   int data = (int)((vel/70.0)*32767.0); //allow much room to avoid overflow
@@ -192,8 +194,7 @@ void updateTableSpeed()
 	targPos = CommandData.table.pos;
 	targVel = 6.0;//CommandData.table.vel;
 	movedist = thisPos - targPos;
-  	if (movedist > 180) movedist -= 360;
-  	if (movedist < -180) movedist += 360;
+  	FixAngle(movedist);
         if (movedist > 0) targVel = -6.0;
 	if ((fabs(movedist) < 0.5)) targVel = 0;
   } else if (CommandData.table.mode==2) {
@@ -204,8 +205,7 @@ void updateTableSpeed()
 	}
 	targVel = 6.0;//CommandData.table.vel;
 	movedist = thisPos - movePos;
-  	if (movedist > 180) movedist -= 360;
-  	if (movedist < -180) movedist += 360;
+  	FixAngle(movedist);
         if (movedist > 0) targVel = -6.0;
 	if ((fabs(movedist) < 0.5)) targVel = 0;
   } else {
