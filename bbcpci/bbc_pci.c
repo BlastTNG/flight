@@ -598,12 +598,40 @@ static int bbc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
         irq_time_fifo.i_out = 0;
     }
     break;  
-  case BBCPCI_IOC_IRQ_RATE: // Enable IRQ generation.
+  case BBCPCI_IOC_IRQ_RATE: // IRQ rate
+    //deprecated. On new firmware, this word combines internal/external rates
     iowrite32(arg - 1, bbc_drv.mem_base + BBCPCI_ADD_IRQ_RATE);
     interrupt_period = arg - 1;
     break;
-  case BBCPCI_IOC_FRAME_RATE: // BBC frame rate in external serial mode.
+  case BBCPCI_IOC_IRQ_RATE_INT: // IRQ rate, internal only
+    //internal units are 4MHz periods
+    dum = ioread32(bbc_drv.mem_base + BBCPCI_ADD_IRQ_RATE);
+    dum = (dum & 0x000000ff) | (((arg-1) & 0x00ffffff) << 8);
+    iowrite32(dum, bbc_drv.mem_base + BBCPCI_ADD_IRQ_RATE);
+    interrupt_period = arg - 1;
+    break;
+  case BBCPCI_IOC_IRQ_RATE_EXT: // IRQ rate, external only
+    //external units are in snyc box serial periods
+    dum = ioread32(bbc_drv.mem_base + BBCPCI_ADD_IRQ_RATE);
+    dum = (dum & 0xffffff00) | ((arg-1) & 0x000000ff);
+    iowrite32(dum, bbc_drv.mem_base + BBCPCI_ADD_IRQ_RATE);
+    interrupt_period = arg - 1;
+    break;
+  case BBCPCI_IOC_FRAME_RATE: // BBC frame rate
+    //deprecated. On new firmware, this word combines internal/external rates
     iowrite32(arg - 1, bbc_drv.mem_base + BBCPCI_ADD_FRAME_RATE);
+    break;
+  case BBCPCI_IOC_FRAME_RATE_INT: // BBC frame rate, internal only
+    //internal units are 4MHz periods
+    dum = ioread32(bbc_drv.mem_base + BBCPCI_ADD_FRAME_RATE);
+    dum = (dum & 0x000000ff) | (((arg-1) & 0x00ffffff) << 8);
+    iowrite32(dum, bbc_drv.mem_base + BBCPCI_ADD_FRAME_RATE);
+    break;
+  case BBCPCI_IOC_FRAME_RATE_EXT: // BBC frame rate, external only
+    //external units are in snyc box serial periods
+    dum = ioread32(bbc_drv.mem_base + BBCPCI_ADD_FRAME_RATE);
+    dum = (dum & 0xffffff00) | ((arg-1) & 0x000000ff);
+    iowrite32(dum, bbc_drv.mem_base + BBCPCI_ADD_FRAME_RATE);
     break;
   case BBCPCI_IOC_RESET_SERIAL: // Reset serial.
     // Deprecated.

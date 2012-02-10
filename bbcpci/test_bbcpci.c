@@ -34,8 +34,10 @@
 //#define USE_EXT_SERIAL
 //in external mode, number of serial numbers per frame
 #define SERIAL_PER_FRAME 2
+//internal frame rate, in units of 4MHz cycles
+#define FRAME_RATE_INT 104*384
 
-#define FRAMELEN  64
+#define FRAMELEN  8
 
 int main(int argc, char *argv[]) {
   int fp;
@@ -101,14 +103,15 @@ int main(int argc, char *argv[]) {
   ioctl(fp, BBCPCI_IOC_ON_IRQ);
   ioctl(fp, BBCPCI_IOC_SYNC);
   usleep(100000);
+  ioctl(fp, BBCPCI_IOC_IRQ_RATE_EXT, 1);
+  ioctl(fp, BBCPCI_IOC_FRAME_RATE_EXT, SERIAL_PER_FRAME);
+  ioctl(fp, BBCPCI_IOC_IRQ_RATE_INT, FRAME_RATE_INT);
+  ioctl(fp, BBCPCI_IOC_FRAME_RATE_INT, FRAME_RATE_INT);
   
 #ifdef USE_EXT_SERIAL
   ioctl(fp, BBCPCI_IOC_EXT_SER_ON);
-  ioctl(fp, BBCPCI_IOC_IRQ_RATE, 1);
-  ioctl(fp, BBCPCI_IOC_FRAME_RATE, SERIAL_PER_FRAME);
 #else
   ioctl(fp, BBCPCI_IOC_EXT_SER_OFF);
-  ioctl(fp, BBCPCI_IOC_IRQ_RATE, 320000);
 #endif
   
   numerrs = 0;
