@@ -27,7 +27,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.44 $";
+const char *command_list_serial = "$Revision: 1.45 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "CMB grenades",     "Waveplate Rotator",
@@ -183,6 +183,11 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_MISC | CONFIRM},
   {COMMAND(reap_bitsy), "ask MCP to reap the *BITSY* watchdog tickle", 
     GR_MISC | CONFIRM},
+  {COMMAND(bbc_sync_ext), "Set BBC to external (sync box) mode", 
+    GR_MISC | CONFIRM},
+  {COMMAND(bbc_sync_int), "Set BBC to internal sync mode", GR_MISC | CONFIRM},
+  {COMMAND(bbc_sync_auto),
+    "Auto-set BBC to external (sync box) mode if possible", GR_MISC | CONFIRM},
   {COMMAND(xy_panic), "stop XY stage motors immediately", GR_STAGE},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
@@ -994,6 +999,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"Elevation", 0, 5, 'i', "VERBOSE_EL"},
      {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
    }
+  },
+
+  {COMMAND(bbc_rate_ext), "Set BBC external (sync box) sample rate",
+    GR_MISC | CONFIRM, 1,
+    {
+      {"Rate (Sync frames per BBC)", 1, USHRT_MAX, 'i', "FRAME_EXT_BBC"}
+    }
+  },
+  {COMMAND(bbc_rate_int), "Set BBC internal sample rate",
+    GR_MISC | CONFIRM, 1,
+    {
+      {"Rate (# ADC samples (~10kHz))", 1, USHRT_MAX, 'i', "FRAME_INT_BBC"}
+    }
   },
 
 
