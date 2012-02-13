@@ -70,6 +70,18 @@
  *   1.  Source Channel Name (string)
  *   2.  String for the quantity (eg "Temperature")
  *   3.  String for the Units (eg, "^oC")
+ * o PHASE: Phase shift a field. Use shift 0 for channel aliases. Arguments:
+ *   1.  Derived Channel Name (string)
+ *   2.  Source Channel Name (string)
+ *   3.  Phase shift (integer).
+ * o RECIP: Calculate reciprocal of a field. Arguments:
+ *   1.  Derived Channel Name (string)
+ *   2.  Source Channel Name (string)
+ *   3.  Dividned (double). Result is (Dividend / Source Channel)
+ * o MULTIPLY/DIVIDE: Multiply/divide a pair of fields. Arguments:
+ *   1.  Derived Channel Name (string)
+ *   2.  Source 1 Channel Name (string)
+ *   3.  Source 2 Channel Name (string) Result is (Source 1 *,/ Source 2)
  *
  *
  * In addition to the derived channels derived below, defile will add the
