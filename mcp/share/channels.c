@@ -721,6 +721,7 @@ static void DoSanityChecks(void)
       case 'w': /* bitword -- same checks as lincom */
       case 't': /* linterp -- same checks as lincom */
       case 'p': /* phase   -- same checks as lincom */
+      case 'r': /* recip   -- same checks as lincom */
       case 'c': /* lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
 #if DAS_CARDS > 0
@@ -1353,6 +1354,11 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         snprintf(line, 1024, "%-16s PHASE %-16s %i\n",
             DerivedChannels[i].phase.field, DerivedChannels[i].phase.source,
             DerivedChannels[i].phase.shift);
+        break;
+      case 'r': /* reciprocal */
+        snprintf(line, 1024, "%-16s RECIP %-16s %.12e\n",
+            DerivedChannels[i].recip.field, DerivedChannels[i].recip.source,
+            DerivedChannels[i].recip.dividend);
         break;
       case '/': /* divide */
         snprintf(line, 1024, "%-16s DIVIDE %-16s %-16s\n",

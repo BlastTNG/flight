@@ -66,6 +66,12 @@ union DerivedUnion {
     char source[FIELD_LEN];     /* Source Channel Name */
     int shift;                  /* Phase shift in frames */
   } phase;
+  struct {
+    char type;                  /* should be 'r' for reciprocal */
+    char field[FIELD_LEN];      /* Derived Channel Name */
+    char source[FIELD_LEN];     /* Source Channel Name */
+    double dividend;            /* Dividend */
+  } recip;
   struct {			/* MULTIPLY or DIVIDE */
     char type;			/* '*' for multiply, '/' for divide */
     char field[FIELD_LEN];      /* Derived Channel Name */
@@ -85,6 +91,7 @@ union DerivedUnion {
 #define COMMENT(c) {.comment = { '#' , c }}
 #define UNITS(s,q,u) {.units = { 'u' , s , q , u}}
 #define PHASE(f,s,p) {.phase = { 'p', f, s, p }}
+#define RECIP(f,s,d) {.recip = { 'r', f, s, d }}
 #define DIVIDE(f,s1,s2) {.math = { '/', f, s1, 0, 0, s2 }}
 #define MULTIPLY(f,s1,s2) {.math = { '*', f, s1, 0, 0, s2 }}
 #define END_OF_DERIVED_CHANNELS {.comment = { DERIVED_EOC_MARKER , "" }}
