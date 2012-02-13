@@ -28,12 +28,6 @@
 #include "calibrate.h"
 #include "share/blast.h"
 
-//configuration for BLASTBus
-//use external serial numbers and synchronzation; remove for internal
-//#define USE_EXT_SERIAL
-//number of snyc [sic] box serial pulses per BLASTbus frame (only for external)
-#define SERIAL_PER_FRAME 2
-
 extern unsigned short* slow_data[FAST_PER_SLOW];
 extern unsigned int BBFrameIndex;
 extern unsigned short* RxFrame;
@@ -58,6 +52,8 @@ struct chat_buf {
 #define TEMPORAL_OFFSET 0
 
 #define MAX_LINE_LENGTH 1024
+
+#define BBC_SYNC_TIMEOUT 40000000
 
 #ifdef TEST_RUN
 #define USE_FIFO_CMD

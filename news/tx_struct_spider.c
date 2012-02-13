@@ -46,6 +46,7 @@
 #define HWP_D	17, 0
 #define HWP_A1	18, 0
 #define HWP_A2	19, 0
+//TODO could make it possible for LOOPbacks to not need explicit channels
 #define LOOP1	32, 0
 #define LOOP2	33, 0
 #define LOOP3	34, 0
@@ -55,7 +56,8 @@
 #define LOOP7	38, 0
 #define LOOP8	39, 0
 #define LOOP9	40, 0
-#define DECOM	41, 0
+#define LOOP0	41, 0
+#define DECOM	42, 0
 
 /* Analog channel calibrations */
 #define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
@@ -740,6 +742,9 @@ struct ChannelStruct SlowChannels[] = {
   {"ant_n_dgps",     'w', LOOP9, 61,	      1.0/100.0,	     0.0, 's',U_NONE},
   {"ant_u_dgps",     'w', LOOP9, 62,	      1.0/100.0,	     0.0, 's',U_NONE},
   {"ants_lim_dgps",   'w', LOOP9, 63,    (100.0/32768.0),            0.0, 'u', U_NONE},
+  {"frame_int_bbc",  'w', LOOP0,   0,                1.0,            0.0, 'u', U_NONE},
+  {"rate_ext_bbc",   'w', LOOP0,   1,      400.0/65535.0,            0.0, 'u', U_F_HZ},
+  {"frame_ext_bbc",  'w', LOOP0,   2,                1.0,            0.0, 'u', U_NONE},
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

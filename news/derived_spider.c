@@ -85,9 +85,9 @@ union DerivedUnion DerivedChannels[] = {
 
   COMMENT("General BLAST Status"),
   BITFIELD("status_mcc",
-      "SOUTH_I_AM",
+      "BITSY_I_AM",
       "AT_FLOAT",
-      "",
+      "IS_EXT_BBC",
       "UPLINK_SCHED",
       "BLAST_SUCKS"),
   BITWORD("SCHEDULE", "status_mcc", 4, 3),
@@ -461,6 +461,10 @@ union DerivedUnion DerivedChannels[] = {
 	   ""
 	   ),
 
+  /* internal frame rate (from period) */
+  RECIP("RATE_INT_BBC", "FRAME_INT_BBC", 4.e6/384.),
+  UNITS("RATE_INT_BBC", "Frequency", "Hz"),
+
   /* gondola thermistor calibration */
 #define T_ACS(tch, vch, lut) \
     LINTERP(tch, vch, lut), \
@@ -492,6 +496,7 @@ union DerivedUnion DerivedChannels[] = {
   BITWORD("READ_BEFORE_HWPR","stat_control_hwpr",6,2),
   BITWORD("READ_AFTER_HWPR","stat_control_hwpr",8,2),
 
+  /* Housekeeping */
   COMMENT("Housekeeping digital channels"),
   BITFIELD("heat_13_hk",
 	   "HEAT_PUMP_3_HK",

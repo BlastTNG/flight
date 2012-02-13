@@ -38,6 +38,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
+#include <sys/select.h>
 #include "share/bbc_pci.h"
 
 #include "share/blast.h"
@@ -798,6 +799,89 @@ static void GetCurrents()
 
 #endif
 
+/* setup the bbcpci device in internal or external (sync box) mode
+ */
+void setup_bbc()
+{
+  int setup_test = 0;
+  static buos_t mode = startup;
+  
+  if (ioctl(bbc_fp, BBCPCI_IOC_OFF_IRQ) < 0) setup_test = -1;
+  if (ioctl(bbc_fp, BBCPCI_IOC_SYNC) < 0) setup_test = -1;
+  usleep(100000);  //TODO: needed after sync? shorter?
+
+  //external rates in units of DV pulse rate (200Hz on test box)
+  if (ioctl(bbc_fp, BBCPCI_IOC_IRQ_RATE_EXT, 1) < 0) setup_test = -1;
+  if (ioctl(bbc_fp, BBCPCI_IOC_FRAME_RATE_EXT, CommandData.bbcExtFrameRate) < 0)
+    setup_test = -1;
+
+  //internal rates in units of bbc clock rate (4MHz), command in ADC samples
+  if (ioctl(bbc_fp, BBCPCI_IOC_IRQ_RATE_INT,
+        CommandData.bbcIntFrameRate*384) < 0) setup_test = -1;
+  if (ioctl(bbc_fp, BBCPCI_IOC_FRAME_RATE_INT,
+        CommandData.bbcIntFrameRate*384) < 0) setup_test = -1;
+
+  if (CommandData.bbcIsExt) {
+    bprintf(mode, "System: BBC in external sync mode");
+    if (ioctl(bbc_fp, BBCPCI_IOC_EXT_SER_ON) < 0) setup_test = -1;
+  } else {
+    bprintf(mode, "System: BBC in internal sync mode");
+    if (ioctl(bbc_fp, BBCPCI_IOC_EXT_SER_OFF) < 0) setup_test = -1;
+  }
+
+  //after startup, messges become warnings
+  mode = warning;
+
+  if (setup_test < 0)
+    bprintf(fatal, "System: BBC failed to set synchronization mode");
+
+}
+
+void check_bbc_sync()
+{
+  CommandData.bbcExtFrameMeas = ioctl(bbc_fp, BBCPCI_IOC_FRAME_COUNT);
+
+  if (CommandData.bbcAutoExt && CommandData.bbcIsExt
+      && CommandData.bbcExtFrameMeas > BBC_SYNC_TIMEOUT) {
+    bprintf(warning, "Sync box stall. Fallback to internal\n");
+    CommandData.bbcIsExt = 0;
+    setup_bbc();
+  }
+
+  if (CommandData.bbcAutoExt && !CommandData.bbcIsExt
+      && CommandData.bbcExtFrameMeas < BBC_SYNC_TIMEOUT) {
+    bprintf(warning, "Sync box alive. Will use it\n");
+    CommandData.bbcIsExt = 1;
+    setup_bbc();
+  }
+}
+
+unsigned int read_from_bbc()
+{
+  unsigned int in_data = 0;
+  int fd;
+  fd_set rfds;
+  struct timeval timeout = {.tv_sec = 1, .tv_usec = 0};
+
+  do {
+    FD_ZERO(&rfds);
+    FD_SET(bbc_fp, &rfds);
+
+    fd = select(bbc_fp + 1, &rfds, NULL, NULL, &timeout);
+
+    if (fd < 0) {	    /* error */
+      berror(err, "System: Error waiting for BBC read");
+    } else if (!fd) { /* Timeout */
+      check_bbc_sync();
+    } else {
+      if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
+        berror(err, "System: Error on BBC read");
+    }
+  } while (!in_data);
+
+  return in_data;
+}
+
 /* fill_Rx_frame: places one 32 bit word into the RxFrame. 
  * Returns true on success */
 static int fill_Rx_frame(unsigned int in_data)
@@ -891,6 +975,7 @@ static void write_to_biphase(unsigned short *frame)
     frame[0] = sync;
     sync = ~sync;
 
+    //TODO Bi0 doens't work in external sync mode. Eventually get short writes
     if (do_skip) {
       --do_skip;
     } else {
@@ -1032,7 +1117,8 @@ static void BiPhaseWriter(void)
       /* Death meausres how long the BiPhaseWriter has gone without receiving
        * any data -- an indication that we aren't receiving FSYNCs from the
        * BLASTBus anymore */
-      if (InCharge && (++Death > 25)) {
+      /* NB: Death should be over 1.25s, so check_bbc_sync can work */
+      if (InCharge && (++Death > 150)) {
         bprintf(err, "Death is reaping the watchdog tickle.");
         pthread_cancel(watchdog_id);
       }
@@ -1121,7 +1207,6 @@ static void SegV(int signo)
 int main(int argc, char *argv[])
 {
   unsigned int in_data, i;
-  int startup_test = 0;
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
   pthread_t abus_id;
@@ -1182,37 +1267,15 @@ int main(int argc, char *argv[])
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 #endif
 
-  if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
-    berror(fatal, "System: Error opening BBC");
-
-  //both modes want interrupts enabled (?)
-  if (ioctl(bbc_fp, BBCPCI_IOC_ON_IRQ) < 0) startup_test = -1;
-  if (ioctl(bbc_fp, BBCPCI_IOC_SYNC) < 0) startup_test = -1;
-  usleep(100000);  //TODO: needed after sync? shorter?
-
-#ifdef USE_EXT_SERIAL
-  bprintf(startup, "System: BBC using external synchronization/serial numbers");
-  if (ioctl(bbc_fp, BBCPCI_IOC_EXT_SER_ON) < 0) startup_test = -1;
-  //external mode rates in units of DV pulse rate (200Hz on test box)
-  if (ioctl(bbc_fp, BBCPCI_IOC_IRQ_RATE, 1) < 0) startup_test = -1;
-  if (ioctl(bbc_fp, BBCPCI_IOC_FRAME_RATE, SERIAL_PER_FRAME) < 0)
-    startup_test = -1;
-#else
-  bprintf(startup, "System: BBC generating internal serial numbers");
-  if (ioctl(bbc_fp, BBCPCI_IOC_EXT_SER_OFF) < 0) startup_test = -1;
-  //internal mode rates in units of bbc clock rate (32MHz or 4MHz) (?)
-  //frame rate doesn't need to be specified int his mode
-  //TODO don't think this irq rate is right; doesn't matter much in this mode
-  if (ioctl(bbc_fp, BBCPCI_IOC_IRQ_RATE, 320000) < 0) startup_test = -1;
-#endif
-  if (startup_test < 0)
-    bprintf(fatal, "System: BBC failed to set synchronization mode");
-
   //populate nios addresses, based off of tx_struct, derived
   MakeAddressLookups("/data/etc/spider/Nios.map");
 
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
+
+  if ((bbc_fp = open("/dev/bbcpci", O_RDWR | O_NONBLOCK)) < 0)
+    berror(fatal, "System: Error opening BBC");
+  setup_bbc();
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
@@ -1296,8 +1359,7 @@ int main(int argc, char *argv[])
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
   while (1) {
-    if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
-      berror(err, "System: Error on BBC read");
+    in_data = read_from_bbc();
 
     if (!fill_Rx_frame(in_data))
       bprintf(err, "System: Unrecognised word received from BBC (%08x)",
@@ -1317,6 +1379,8 @@ int main(int argc, char *argv[])
         Pointing();
 
 #endif
+
+        check_bbc_sync();   /* check sync box aliveness */
 
         /* Frame sequencing check */
         if (StartupVeto) {

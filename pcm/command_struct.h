@@ -52,7 +52,7 @@
 /* time (in slow frames) to suppress ADC card watchdog, to induce reset */
 #define	RESET_ADC_LEN	 80
 
-#define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
+#define PREV_STATUS_FILE "/data/etc/spider/pcm.prev_status"
 
 struct GainStruct {
   unsigned short int P;
@@ -383,6 +383,12 @@ struct CommandDataStruct {
 
   unsigned short bi0FifoSize;
   unsigned short bbcFifoSize;
+
+  unsigned int bbcIntFrameRate;         //internal frame rate (ADC samples)
+  unsigned int bbcExtFrameRate;         //external frame rate (sync frames)
+  unsigned int bbcExtFrameMeas;         //measured external rate (32MHz)
+  unsigned char bbcIsExt;               //is the bbc in external mode
+  unsigned char bbcAutoExt;             //should pcm auto-switch ext/int mode
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
   double lat;

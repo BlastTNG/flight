@@ -66,6 +66,7 @@ extern int doing_schedule; /* sched.c */
 extern pthread_t watchdog_id;  /* mcp.c */
 extern short int BitsyIAm;
 pthread_mutex_t mutex;
+void setup_bbc();
 
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
@@ -98,6 +99,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
   int i_point = GETREADINDEX(point_index);
   double sun_az;
 #endif
+  int is_new;
 
   if (!scheduled)
     bprintf(info, "Commands: Single command: %d (%s)\n", command,
@@ -652,6 +654,21 @@ void SingleCommand (enum singleCommand command, int scheduled)
 	  berror(fatal, "Commands: failed to reboot, dying\n");
       }
       break;
+    case bbc_sync_ext:
+      is_new = !CommandData.bbcIsExt;
+      CommandData.bbcAutoExt = 0;
+      CommandData.bbcIsExt = 1;
+      if (is_new) setup_bbc();
+      break;
+    case bbc_sync_int:
+      is_new = CommandData.bbcIsExt;
+      CommandData.bbcAutoExt = 0;
+      CommandData.bbcIsExt = 0;
+      if (is_new) setup_bbc();
+      break;
+    case bbc_sync_auto:
+      CommandData.bbcAutoExt = 1;
+      break;
     case xy_panic:
       CommandData.xystage.mode = XYSTAGE_PANIC;
       CommandData.xystage.is_new = 1;
@@ -1200,6 +1217,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.slot_sched = ivalues[0];
       }
       break;
+    case bbc_rate_ext:
+      CommandData.bbcExtFrameRate = ivalues[0];
+      setup_bbc();
+      break;
+    case bbc_rate_int:
+      CommandData.bbcIntFrameRate = ivalues[0];
+      setup_bbc();
+      break;
+
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
       break;
@@ -1804,5 +1830,15 @@ void InitCommandData()
   CommandData.lat = -77.86;  //McMurdo Building 096
   CommandData.lon = -167.04; //Willy Field Dec 2010
 
+  //TODO make PCI card respect internal frame rate
+  //TODO add commands to set frame rate
+  //TODO add ability to auto-set internal rate based on sync rate
+  CommandData.bbcIntFrameRate = 104;	    //in ADC samples
+  CommandData.bbcExtFrameRate = 2;	    //in sync box frames
+  CommandData.bbcExtFrameMeas = 0;
+  CommandData.bbcIsExt = 1;
+  CommandData.bbcAutoExt = 1;
+
+  
   WritePrevStatus();
 }

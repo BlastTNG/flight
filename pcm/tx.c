@@ -135,6 +135,9 @@ static void WriteAux(void)
   static struct NiosStruct* statusEthAddr;
   static struct NiosStruct* partsSchedAddr;
   static struct NiosStruct* upslotSchedAddr;
+  static struct NiosStruct* frameIntBbcAddr;
+  static struct NiosStruct* rateExtBbcAddr;
+  static struct NiosStruct* frameExtBbcAddr;
   
   static int incharge = -1;
   time_t t;
@@ -165,6 +168,9 @@ static void WriteAux(void)
     statusEthAddr = GetNiosAddr("status_eth");
     partsSchedAddr = GetNiosAddr("parts_sched");
     upslotSchedAddr = GetNiosAddr("upslot_sched");
+    frameIntBbcAddr = GetNiosAddr("frame_int_bbc");
+    rateExtBbcAddr = GetNiosAddr("rate_ext_bbc");
+    frameExtBbcAddr = GetNiosAddr("frame_ext_bbc");
   }
 
   if (StartupVeto>0) {
@@ -225,9 +231,17 @@ static void WriteAux(void)
        ((EthernetSC[2] & 0x3) << 4), 
        NIOS_QUEUE);
 
+  WriteCalData(frameIntBbcAddr, CommandData.bbcIntFrameRate, NIOS_QUEUE);
+  if (CommandData.bbcExtFrameMeas > BBC_SYNC_TIMEOUT)
+    WriteCalData(rateExtBbcAddr, 0.0, NIOS_QUEUE);
+  else
+    WriteCalData(rateExtBbcAddr,32.e6/CommandData.bbcExtFrameMeas,NIOS_QUEUE);
+  WriteData(frameExtBbcAddr, CommandData.bbcExtFrameRate, NIOS_QUEUE);
+
   mccstatus =        
     (BitsyIAm ? 0x1 : 0x0) +                 //0x01
     (CommandData.at_float ? 0x2 : 0x0) +     //0x02
+    (CommandData.bbcIsExt ? 0x4 : 0x0) +     //0x04
     (CommandData.uplink_sched ? 0x08 : 0x00) + //0x08
     (CommandData.sucks ? 0x10 : 0x00) +      //0x10
        //((CommandData.lat_range & 0x3) << 5) +   //0x60
