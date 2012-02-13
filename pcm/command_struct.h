@@ -194,6 +194,9 @@ struct CommandDataStruct {
     double com;
     double diff;
     double accel_max;
+    double pulse_port;
+    double pulse_starboard;
+    int manual_pulses;
   } ele_gain; 
  
   struct GainStruct azi_gain;

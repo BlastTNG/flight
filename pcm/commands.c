@@ -770,7 +770,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.pointing_mode.ra[i] = 0;
         CommandData.pointing_mode.dec[i] = 0;
       }
-
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
       CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -924,6 +924,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       CommandData.az_accel = rvalues[8];
       CommandData.pointing_mode.Y = rvalues[9];
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SPIDER;
       break;
     case sine_scan:
@@ -931,6 +932,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.w = 2.0*rvalues[1];
       CommandData.pointing_mode.X = rvalues[2];
       CommandData.pointing_mode.Y = rvalues[3];
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SINE;
       break;
     case set_az_accel:
@@ -971,6 +973,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ele_gain.diff = rvalues[1];
       //CommandData.ele_gain.PT = ivalues[2];
       CommandData.ele_gain.accel_max = rvalues[2];
+      break;
+    case el_pulse: /* manual el motor pulses */
+      CommandData.ele_gain.pulse_port = rvalues[0];
+      CommandData.ele_gain.pulse_starboard = rvalues[1];
+      CommandData.ele_gain.manual_pulses = 1;
       break;
     case az_gain:  /* az gains */
       CommandData.azi_gain.P = ivalues[0];
@@ -1677,9 +1684,12 @@ void InitCommandData()
   //CommandData.ele_gain.P = 5000; /* was 1200 */
   //CommandData.ele_gain.PT = 3000;
 
-  CommandData.ele_gain.com = 10;
-  CommandData.ele_gain.diff = 10;
+  CommandData.ele_gain.com = 0;
+  CommandData.ele_gain.diff = 0;
   CommandData.ele_gain.accel_max = 1.0;
+  CommandData.ele_gain.manual_pulses = 0;
+  CommandData.ele_gain.pulse_port = 0.0;
+  CommandData.ele_gain.pulse_starboard = 0.0;
 
   CommandData.azi_gain.P = 4000;
   CommandData.azi_gain.I = 100;

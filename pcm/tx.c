@@ -737,6 +737,7 @@ static void StoreData(int index)
 
   WriteData(elEncAddr, (unsigned int)((PointingData[i_point].enc_el
                       + CommandData.enc_el_trim)* DEG2I), NIOS_QUEUE);
+
   WriteData(sigmaEncAddr,
       (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
 

@@ -584,10 +584,17 @@ static void GetACS()
       (RxFrame[2] & 0x0000ffff) << 16);
 
   //enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
-
+ 
   enc_raw_el_1 = ReadCalData(elRaw1EncAddr);
   enc_raw_el_2 = ReadCalData(elRaw2EncAddr);
- 
+
+  /*if (enc_raw_el_1 > 0.0) {
+      bprintf(info, "el_raw_1_enc = %f", enc_raw_el_1);
+  }
+  if (enc_raw_el_2 > 0.0) {
+      bprintf(info, "el_raw_2_enc = %f", enc_raw_el_2);
+  }*/
+
   if (CommandData.use_elenc1 && !CommandData.use_elenc2) {
     enc_mean_el = enc_raw_el_1;
     enc_diff_el = 0.0;
@@ -1327,7 +1334,7 @@ int main(int argc, char *argv[])
   openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
-  openSC();  // SC - creates threads in sc.cpp
+//  openSC();  // SC - creates threads in sc.cpp
 #endif
 
 

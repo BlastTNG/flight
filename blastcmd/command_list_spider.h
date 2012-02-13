@@ -17,7 +17,7 @@
 #include "share/netcmd.h"  /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 169        /* total number of single word cmds */
-#define N_MCOMMANDS 114        /* total number of multiword commands */
+#define N_MCOMMANDS 115        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -147,7 +147,8 @@ enum multiCommand {
   hk_fplo_heat_set,  hk_ssa_heat_set,   hk_ampl_cernox,    hk_ampl_ntd,
   hk_phase_cernox,   hk_phase_ntd,      hk_bias_freq,      hk_tile_heat_pulse,
   spider_scan,	     sine_scan,         bbc_rate_ext,      bbc_rate_int,
-  plugh	  //plugh should be at the end of the list
+  el_pulse,          
+  plugh	 //plugh should be at the end of the list
 };
 
 extern struct scom scommands[N_SCOMMANDS];

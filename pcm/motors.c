@@ -37,7 +37,7 @@
 #include "motordefs.h"
 
 // TODO: Revise these el limits for Spider flight:
-#define MIN_EL 40
+#define MIN_EL 35
 #define MAX_EL 50
 
 #define VPIV_FILTER_LEN 40
@@ -50,7 +50,7 @@
                         //   noise/offsets
 
 /* elevation drive related defines adapted from az-el.c in minicp: */
-#define CM_PULSES 1000    // Cool Muscle pulses per rotation
+#define CM_PULSES 200   // Cool Muscle pulses per rotation
 #define IN_TO_MM 25.4
 #define ROT_PER_INCH 5    // linear actuator rotations per inch of travel
 #define EL_GEAR_RATIO 7.0 
@@ -291,11 +291,9 @@ static void GetVElev(double* v_P, double* v_S)
                           // right encoders.
   double max_dv;
 
-  double tolerance = 0.01;
-
 /* requested velocities (prev. values) */
-  double v_S_last = 0.0;
-  double v_P_last = 0.0;
+  static double v_S_last = 0.0;
+  static double v_P_last = 0.0;
 
   //int nominal = 0;
 
@@ -309,6 +307,8 @@ static void GetVElev(double* v_P, double* v_S)
 
   el_dest = axes_mode.el_dest;
 
+  //bprintf(info, "el_dest = %f", el_dest);
+
   el_dest = (el_dest < MIN_EL) ? MIN_EL : el_dest;
   el_dest = (el_dest > MAX_EL) ? MAX_EL : el_dest;
 
@@ -316,16 +316,21 @@ static void GetVElev(double* v_P, double* v_S)
   enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
   enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
+  //bprintf(info, "enc_port = %f", enc_port);
+  //bprintf(info, "enc_strbrd = %f", enc_strbrd);
+
   dy_S = el_dest - enc_strbrd;
   dy_P = el_dest - enc_port;
 
   dy = (dy_P + dy_S)/2.0;  // mean distance to target
   //dy = el_dest - ACSData.enc_mean_el;
 
+  //bprintf(info, "dy = %f", dy);
+
   err = (dy_P - dy_S)/2.0; // error from mean
   //err = -(ACSData.enc_diff_el)/2.0;
 
-  if (fabs(dy_P) < tolerance) { // we are at destination
+  if (fabs(dy_P) < TOLERANCE) { // we are at destination
   //v_L = SetVElev(0.0, CommandData.ele_gain.diff, dy, err, v_L_last, max_dv);
     *v_P = SetVElev(0.0, CommandData.ele_gain.diff, dy, err, v_P_last, max_dv);
     v_P_last = *v_P; 
@@ -335,6 +340,9 @@ static void GetVElev(double* v_P, double* v_S)
     *v_P = SetVElev(CommandData.ele_gain.com, CommandData.ele_gain.diff, dy, 
                      err, v_P_last, max_dv);
     v_P_last = *v_P;
+
+    //bprintf(info, "v_port = %f", *v_P);
+    //bprintf(info, "v_port_last = %f", v_P_last);
 //} else {
 //  stall_cnt_R++;
 //  if ( (2.0*err > err_max) && stall_cnt_R >=  ) {   
@@ -344,7 +352,7 @@ static void GetVElev(double* v_P, double* v_S)
 //  }      
   } 
 
-  if (fabs(dy_S) < tolerance) { // we are at destination
+  if (fabs(dy_S) < TOLERANCE) { // we are at destination
     *v_S = SetVElev(0.0, -CommandData.ele_gain.diff, dy, err, v_S_last, max_dv);
     v_S_last = *v_S; 
   } else {
@@ -694,7 +702,8 @@ void WriteMot(int TxIndex)
   static int wait = 100; /* wait 20 frames before controlling. */
 
   //int v_elev, v_az, i_piv, elGainP, elGainI;
-  int v_az, i_piv, elGainCom, elGainDiff;
+  int v_az, i_piv;
+  double  elGainCom, elGainDiff;
   double v_el_P = 0.0; // port
   double v_el_S = 0.0; // starboard
 
@@ -761,6 +770,9 @@ void WriteMot(int TxIndex)
 
   GetVElev(&v_el_P, &v_el_S);
 
+  //bprintf(info, "v_el_P = %f dps", v_el_P);
+  //bprintf(info, "v_el_S = %f dps", v_el_S);
+
   enc_P = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
   enc_S = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
@@ -773,8 +785,15 @@ void WriteMot(int TxIndex)
   el_rps_P = (el_deriv_P*v_el_P/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
   el_rps_S = (el_deriv_S*v_el_S/IN_TO_MM)*ROT_PER_INCH*EL_GEAR_RATIO;
 
-  step_rate_P = (int) el_rps_P*CM_PULSES;
-  step_rate_S = (int) el_rps_S*CM_PULSES;
+  /* check to see if we're in manual pulse mode */
+
+  if (CommandData.ele_gain.manual_pulses) {
+    step_rate_P = CommandData.ele_gain.pulse_port;
+    step_rate_S = CommandData.ele_gain.pulse_starboard;
+  } else {
+    step_rate_P = (int) (el_rps_P*CM_PULSES);
+    step_rate_S = (int) (el_rps_S*CM_PULSES);
+  }
 
   if ( step_rate_P > 10000 ) {
     step_rate_P = 10000;
@@ -788,12 +807,15 @@ void WriteMot(int TxIndex)
     step_rate_S = -10000;
   }
 
-
+  //bprintf(info, "port step rate = %d", step_rate_P); 
+  //bprintf(info, "starboard step rate = %d", step_rate_S);
+ 
   /* no motor pulses if the pin is in */
   if ((CommandData.pin_is_in && !CommandData.force_el)
       || CommandData.disable_el) {
     WriteCalData(step1ElAddr, 0.0, NIOS_QUEUE);
     WriteCalData(step2ElAddr, 0.0, NIOS_QUEUE);
+    //bprintf(info, "pcm thinks that el should be disabled");
   } else {
     WriteCalData(step1ElAddr, step_rate_P, NIOS_QUEUE);
     WriteCalData(step2ElAddr, step_rate_S, NIOS_QUEUE);
@@ -806,10 +828,10 @@ void WriteMot(int TxIndex)
   elGainDiff = CommandData.ele_gain.diff;	
 
   /* common-mode gain term for el motors*/
-  WriteData(gComElAddr, elGainCom, NIOS_QUEUE);
+  WriteCalData(gComElAddr, elGainCom, NIOS_QUEUE);
 
   /*differential gain term for el motors */
-  WriteData(gDiffElAddr, elGainDiff, NIOS_QUEUE);
+  WriteCalData(gDiffElAddr, elGainDiff, NIOS_QUEUE);
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/

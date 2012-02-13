@@ -27,7 +27,7 @@
 #endif
 
 
-const char *command_list_serial = "$Revision: 1.45 $";
+const char *command_list_serial = "$Revision: 1.46 $";
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "CMB grenades",     "Waveplate Rotator",
@@ -420,11 +420,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },*/
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
-      {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "g_com_el"},
-      {"Differential Gain (Hz)",         0.0, 1.0, 'f', "g_diff_el"},
+      {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "G_COM_EL"},
+      {"Differential Gain (Hz)",         0.0, 1.0, 'f', "G_DIFF_EL"},
       {"Maximum Acceleration (dps)",     0.0, 10.0, 'f', "NONE"}
     }
   },
+  {COMMAND(el_pulse), "manually set el motor pulse rates", GR_GAIN, 2,
+    {
+      {"port motor pulse rate (Hz)", -10000.0, 10000.0, 'f', "STEP_1_EL"},
+      {"starboard motor pulse rate (Hz)", -10000.0, 10000.0, 'f', "STEP_2_EL"}
+    }
+  },
+
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
     {
       {"IF Roll Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFROLL_GY"},
