@@ -1,4 +1,4 @@
-/* mcp: the Spider master control program
+/* mcp: the Spider master ccntrol program
  *
  * starcamera.cpp: star camera control and readout functions
  *     this file is a logical part of tx.c
@@ -30,6 +30,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <string.h>
 
 extern "C" {
 #include "share/blast.h"
@@ -42,10 +43,16 @@ extern "C" {
 #include "camcommunicator.h"
 #include "camstruct.h"
 
+#include <stdlib.h>
+#include "pyramid.h"
+
+using namespace std;
+
+
 //allow any host to be the star camera
-#define THEGOOD_SERVERNAME "192.168.1.11"
+#define THEGOOD_SERVERNAME "192.168.1.13"//FIXME
 #define THEBAD_SERVERNAME  "192.168.1.12"
-#define THEUGLY_SERVERNAME "192.168.1.13"
+#define THEUGLY_SERVERNAME "192.168.1.11"//FIXME
 
 #define THEGOOD_SERIAL "110794466"
 #define THEBAD_SERIAL  "08073506"
@@ -60,6 +67,15 @@ extern "C" int EthernetSC[3];      /* tx.c */
 extern double goodPos[10];	/* table.cpp */
 extern double trigPos[10];	/* camcommunicator.cpp */
 
+//Stuff for Pyramid
+#define CAT "/home/gandilo/pyramid/pyr_mag8/gsc_mag08_res20.bin"
+#define KCAT "/home/gandilo/pyramid/pyr_mag8/k.bin"
+double FOV = 2.5*M_PI/180.0;
+double ra_thegood, dec_thegood, roll_thegood;
+double ra_thebad, dec_thebad, roll_thebad;
+double ra_theugly, dec_theugly, roll_theugly;
+Pyramid pyr;
+
 static CamCommunicator* TheGoodComm;
 static CamCommunicator* TheBadComm;
 static CamCommunicator* TheUglyComm;
@@ -67,6 +83,7 @@ static pthread_t TheGoodcomm_id;
 static pthread_t TheBadcomm_id;
 static pthread_t TheUglycomm_id;
 
+static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0);
 static void* TheGoodReadLoop(void* arg);
 static void* TheBadReadLoop(void* arg);
 static void* TheUglyReadLoop(void* arg);
@@ -108,6 +125,7 @@ int sendTheUglyCommand(const char *cmd)
 void openSC()
 {
   bprintf(info, "connecting to the Star Cameras");
+  pyr.Init(FOV, (char *)CAT, (char *)KCAT);
   TheGoodComm = new CamCommunicator();
   TheBadComm  = new CamCommunicator();
   TheUglyComm = new CamCommunicator();
@@ -115,6 +133,7 @@ void openSC()
   pthread_create(&TheBadcomm_id, NULL, &TheBadReadLoop, NULL);
   pthread_create(&TheUglycomm_id, NULL, &TheUglyReadLoop, NULL);
 }
+
 
 /*
  * update all camera related fields
@@ -181,6 +200,15 @@ void cameraFields()
   static NiosStruct* TheGoodNumBlobsAddr = NULL;
   static NiosStruct* TheBadNumBlobsAddr = NULL;
   static NiosStruct* TheUglyNumBlobsAddr = NULL;
+  static NiosStruct* TheGoodRaAddr = NULL;
+  static NiosStruct* TheBadRaAddr = NULL;
+  static NiosStruct* TheUglyRaAddr = NULL;
+  static NiosStruct* TheGoodDecAddr = NULL;
+  static NiosStruct* TheBadDecAddr = NULL;
+  static NiosStruct* TheUglyDecAddr = NULL;
+  static NiosStruct* TheGoodRollAddr = NULL;
+  static NiosStruct* TheBadRollAddr = NULL;
+  static NiosStruct* TheUglyRollAddr = NULL;
 
   static NiosStruct* TheGoodBlobX[5];
   static NiosStruct* TheBadBlobX[5];
@@ -250,6 +278,15 @@ void cameraFields()
     TheGoodNumBlobsAddr = GetNiosAddr("nblobs_thegood");
     TheBadNumBlobsAddr = GetNiosAddr("nblobs_thebad");
     TheUglyNumBlobsAddr = GetNiosAddr("nblobs_theugly");
+    TheGoodRaAddr = GetNiosAddr("ra_thegood");
+    TheBadRaAddr = GetNiosAddr("ra_thebad");
+    TheUglyRaAddr = GetNiosAddr("ra_theugly");
+    TheGoodDecAddr = GetNiosAddr("dec_thegood");
+    TheBadDecAddr = GetNiosAddr("dec_thebad");
+    TheUglyDecAddr = GetNiosAddr("dec_theugly");
+    TheGoodRollAddr = GetNiosAddr("roll_thegood");
+    TheBadRollAddr = GetNiosAddr("roll_thebad");
+    TheUglyRollAddr = GetNiosAddr("roll_theugly");
 
     for (int i=0; i<5; i++) {
       char buf[99];
@@ -341,18 +378,21 @@ void cameraFields()
     	WriteData(TheGoodCcdTempAddr, (int)(rsc->ccdtemperature*100), NIOS_QUEUE);
     	WriteData(TheGoodFocPosAddr, (int)(rsc->focusposition*10), NIOS_QUEUE);
     	WriteData(TheGoodNumBlobsAddr, rsc->numblobs, NIOS_QUEUE);
-	
+
+	WriteData(TheGoodRaAddr, (int)(ra_thegood*100*180/M_PI), NIOS_QUEUE);
+	WriteData(TheGoodDecAddr, (int)(dec_thegood*100*180/M_PI), NIOS_QUEUE);
+	WriteData(TheGoodRollAddr, (int)(roll_thegood*100*180/M_PI), NIOS_QUEUE);
 	if (rsc->numblobs > 0) {
 		for (int i=0; i<5; i++)
     		{
     		  WriteData(TheGoodBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-		      WriteData(TheGoodBlobY[i],(unsigned int)(rsc->y[i]/CAM_WIDTH*SHRT_MAX),
+		  WriteData(TheGoodBlobY[i],(unsigned int)(rsc->y[i]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-		      WriteData(TheGoodBlobF[i], (unsigned int)rsc->flux[i], NIOS_QUEUE);
+		  WriteData(TheGoodBlobF[i], (unsigned int)rsc->flux[i], NIOS_QUEUE);
 		      unsigned int snr = (rsc->snr[i] >= SHRT_MAX / 100.0) ? 
 			SHRT_MAX : (unsigned int)rsc->snr[i]*100;
-		      WriteData(TheGoodBlobS[i], snr, NIOS_QUEUE);
+		  WriteData(TheGoodBlobS[i], snr, NIOS_QUEUE);
 		}
 	}
 	if (rsc->numblobs > 8) {
@@ -376,6 +416,9 @@ void cameraFields()
     	WriteData(TheBadFocPosAddr, (int)(rsc->focusposition*10), NIOS_QUEUE);
     	WriteData(TheBadNumBlobsAddr, rsc->numblobs, NIOS_QUEUE);
 
+	WriteData(TheBadRaAddr, (int)(ra_thebad*100*180/M_PI), NIOS_QUEUE);
+	WriteData(TheBadDecAddr, (int)(dec_thebad*100*180/M_PI), NIOS_QUEUE);
+	WriteData(TheBadRollAddr, (int)(roll_thebad*100*180/M_PI), NIOS_QUEUE);
 	if (rsc->numblobs > 0) {
 		for (int i=0; i<5; i++)
     		{
@@ -403,6 +446,9 @@ void cameraFields()
     	WriteData(TheUglyFocPosAddr, (int)(bsc->focusposition*10), NIOS_QUEUE);
     	WriteData(TheUglyNumBlobsAddr, bsc->numblobs, NIOS_QUEUE);
 
+	WriteData(TheUglyRaAddr, (int)(ra_theugly*100*180/M_PI), NIOS_QUEUE);
+	WriteData(TheUglyDecAddr, (int)(dec_theugly*100*180/M_PI), NIOS_QUEUE);
+	WriteData(TheUglyRollAddr, (int)(roll_theugly*100*180/M_PI), NIOS_QUEUE);
 	if (bsc->numblobs > 0) {
     		for (int i=0; i<5; i++)
     		{
@@ -421,6 +467,43 @@ void cameraFields()
 }
 
 }       //extern "C"
+
+/*
+  runs pyramid and solves the field
+*/
+static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0) {
+  double plate_scale = 6.56/180./3600.*M_PI; 
+  double XC = 1530/2;
+  double YC = 1020/2;
+  double FTOL = 20.*M_PI/180./3600.;//star-blob association angular tolerance (default 20 arcsec as in netisc)
+  int retval_pyr,k;
+  int n_blobs = 0;
+  solution_t *sol = new solution_t [MAXSOLUTION];
+  int nsol;
+
+  n_blobs = ((solrtn->numblobs > 15) ? 15 : solrtn->numblobs);
+  double *x = new double [n_blobs];
+  double *y = new double [n_blobs];
+  double *x_p = new double [n_blobs];
+  double *y_p = new double [n_blobs];
+  memset(x, 0, sizeof(x) );
+  memset(y, 0, sizeof(y) );
+  memset(x_p, 0, sizeof(x_p) );
+  memset(y_p, 0, sizeof(y_p) );
+
+  for (k = 0; k < n_blobs; k++) {
+	x[k] = solrtn->x[k];
+	y[k] = solrtn->y[k];
+	x_p[k] = (x[k] - XC)*plate_scale;
+	y_p[k] = (y[k] - YC)*plate_scale;
+  }
+  //launch pyramid
+  retval_pyr = pyr.GetSolution(FTOL, x_p, y_p,n_blobs, &sol, &nsol, &ra0, &dec0, &r0);
+  delete[] x;
+  delete[] y;
+  delete[] x_p;
+  delete[] y_p;
+}
 
 /*
  * wrapper for the read loop in camcommunicator
@@ -531,6 +614,7 @@ static string TheGoodparseReturn(string rtnStr)
 
   } else { //response is exposure data
     TheGoodComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
+    SolveField(&camRtn[(i_cam+1)%2],ra_thegood,dec_thegood,roll_thegood);
     i_cam = (i_cam+1)%2;
   }
   return "";  //doesn't send a response back to camera
@@ -569,6 +653,7 @@ static string TheBadparseReturn(string rtnStr)
 
   } else { //response is exposure data
     TheBadComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
+    SolveField(&camRtn[(i_cam+1)%2],ra_thebad,dec_thebad,roll_thebad);
     i_cam = (i_cam+1)%2;
   }
   return "";  //doesn't send a response back to camera
@@ -607,6 +692,7 @@ static string TheUglyparseReturn(string rtnStr)
 
   } else { //response is exposure data
     TheUglyComm->interpretReturn(rtnStr, &camRtn[(i_cam+1)%2]);
+    SolveField(&camRtn[(i_cam+1)%2],ra_theugly,dec_theugly,roll_theugly);
     i_cam = (i_cam+1)%2;
   }
   return "";  //doesn't send a response back to camera

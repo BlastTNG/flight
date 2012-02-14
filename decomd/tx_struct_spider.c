@@ -372,16 +372,23 @@ struct ChannelStruct SlowChannels[] = {
   {"blob02_f_thebad",'w', LOOP3, 23,                1.0,             0.0, 'u', U_NONE},
   {"blob02_s_thebad",'w', LOOP3, 24,          1.0/100.0,             0.0, 'u', U_NONE},
   {"mapmean_thebad", 'w', LOOP3, 25,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP3 26-29 are unused */
-  {"foc_res_thebad",'w',LOOP3, 30,                1.0,             0.0, 'u', U_NONE},
+  {"ra_thegood",     'w', LOOP3, 26,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"dec_thegood",    'w', LOOP3, 27,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"roll_thegood",   'w', LOOP3, 28,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"ra_thebad",      'w', LOOP3, 29,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"foc_res_thebad", 'w', LOOP3, 30,                1.0,             0.0, 'u', U_NONE},
   /* LOOP3 31-32 are wide */
-  /* LOOP3 33-34 are unusued */
-  {"mapsigma_thebad",'w',LOOP3,35,           1.0/10.0,             0.0, 'u', U_NONE},
-  {"move_tol_thebad",'w',LOOP3,36,                1.0,             0.0, 'u', U_NONE},
-  {"exp_int_thebad",'w',LOOP3, 37,                1.0,             0.0, 'u', U_NONE},
-  {"exp_time_thebad",'w',LOOP3,38,                1.0,             0.0, 'u', U_NONE},
-  {"force_thebad", 'w', LOOP3, 39,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP3 40-43 are unusued */
+  {"dec_thebad",     'w', LOOP3, 33,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"roll_thebad",    'w', LOOP3, 34,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"mapsigma_thebad",'w', LOOP3, 35,           1.0/10.0,             0.0, 'u', U_NONE},
+  {"move_tol_thebad",'w', LOOP3, 36,                1.0,             0.0, 'u', U_NONE},
+  {"exp_int_thebad", 'w', LOOP3, 37,                1.0,             0.0, 'u', U_NONE},
+  {"exp_time_thebad",'w', LOOP3, 38,                1.0,             0.0, 'u', U_NONE},
+  {"force_thebad",   'w', LOOP3, 39,                1.0,             0.0, 'u', U_NONE},
+  {"ra_theugly",     'w', LOOP3, 40,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"dec_theugly",    'w', LOOP3, 41,          1.0/100.0,             0.0, 's', U_NONE},
+  {"roll_theugly",   'w', LOOP3, 42,	      1.0/100.0,             0.0, 's', U_NONE},
+  /* LOOP3 43 is unusued */
   /* LOOP3 44-45 are wide */
   {"thresh_thebad",'w',LOOP3, 46,         1.0/1000.0,             0.0, 'u', U_NONE},
   {"grid_thebad",  'w', LOOP3, 47,                1.0,             0.0, 'u', U_NONE},

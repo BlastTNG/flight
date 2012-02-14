@@ -1589,6 +1589,9 @@ void InitCommandData()
   CommandData.table.pos = 90.0;
   CommandData.table.move = 0.0;
   CommandData.table.mode = 0;
+  CommandData.thegood.paused = 1;
+  CommandData.thebad.paused = 1;
+  CommandData.theugly.paused = 1;
 
   CommandData.Temporary.setLevel[0] = 1;
   CommandData.Temporary.setLevel[1] = 1;
