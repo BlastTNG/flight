@@ -50,9 +50,9 @@ using namespace std;
 
 
 //allow any host to be the star camera
-#define THEGOOD_SERVERNAME "192.168.1.13"//FIXME
+#define THEGOOD_SERVERNAME "192.168.1.11"
 #define THEBAD_SERVERNAME  "192.168.1.12"
-#define THEUGLY_SERVERNAME "192.168.1.11"//FIXME
+#define THEUGLY_SERVERNAME "192.168.1.13"
 
 #define THEGOOD_SERIAL "110794466"
 #define THEBAD_SERIAL  "08073506"
@@ -210,18 +210,18 @@ void cameraFields()
   static NiosStruct* TheBadRollAddr = NULL;
   static NiosStruct* TheUglyRollAddr = NULL;
 
-  static NiosStruct* TheGoodBlobX[5];
-  static NiosStruct* TheBadBlobX[5];
-  static NiosStruct* TheUglyBlobX[5];
-  static NiosStruct* TheGoodBlobY[5];
-  static NiosStruct* TheBadBlobY[5];
-  static NiosStruct* TheUglyBlobY[5];
-  static NiosStruct* TheGoodBlobF[5];
-  static NiosStruct* TheBadBlobF[5];
-  static NiosStruct* TheUglyBlobF[5];
-  static NiosStruct* TheGoodBlobS[5];
-  static NiosStruct* TheBadBlobS[5];
-  static NiosStruct* TheUglyBlobS[5];
+  static NiosStruct* TheGoodBlobX[9];
+  static NiosStruct* TheBadBlobX[9];
+  static NiosStruct* TheUglyBlobX[9];
+  static NiosStruct* TheGoodBlobY[9];
+  static NiosStruct* TheBadBlobY[9];
+  static NiosStruct* TheUglyBlobY[9];
+  static NiosStruct* TheGoodBlobF[9];
+  static NiosStruct* TheBadBlobF[9];
+  static NiosStruct* TheUglyBlobF[9];
+  static NiosStruct* TheGoodBlobS[9];
+  static NiosStruct* TheBadBlobS[9];
+  static NiosStruct* TheUglyBlobS[9];
 
   //initialization
   if (firsttime) {
@@ -288,7 +288,7 @@ void cameraFields()
     TheBadRollAddr = GetNiosAddr("roll_thebad");
     TheUglyRollAddr = GetNiosAddr("roll_theugly");
 
-    for (int i=0; i<5; i++) {
+    for (int i=0; i<9; i++) {
       char buf[99];
       sprintf(buf, "blob%02d_x_thegood", i);
       TheGoodBlobX[i] = GetNiosAddr(buf);
@@ -383,7 +383,7 @@ void cameraFields()
 	WriteData(TheGoodDecAddr, (int)(dec_thegood*100*180/M_PI), NIOS_QUEUE);
 	WriteData(TheGoodRollAddr, (int)(roll_thegood*100*180/M_PI), NIOS_QUEUE);
 	if (rsc->numblobs > 0) {
-		for (int i=0; i<5; i++)
+		for (int i=0; i<9; i++)
     		{
     		  WriteData(TheGoodBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
@@ -420,7 +420,7 @@ void cameraFields()
 	WriteData(TheBadDecAddr, (int)(dec_thebad*100*180/M_PI), NIOS_QUEUE);
 	WriteData(TheBadRollAddr, (int)(roll_thebad*100*180/M_PI), NIOS_QUEUE);
 	if (rsc->numblobs > 0) {
-		for (int i=0; i<5; i++)
+		for (int i=0; i<9; i++)
     		{
     		  WriteData(TheBadBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
@@ -450,7 +450,7 @@ void cameraFields()
 	WriteData(TheUglyDecAddr, (int)(dec_theugly*100*180/M_PI), NIOS_QUEUE);
 	WriteData(TheUglyRollAddr, (int)(roll_theugly*100*180/M_PI), NIOS_QUEUE);
 	if (bsc->numblobs > 0) {
-    		for (int i=0; i<5; i++)
+    		for (int i=0; i<9; i++)
     		{
       			WriteData(TheUglyBlobX[i],(unsigned int)(bsc->x[i]/CAM_WIDTH*SHRT_MAX),
 		  		NIOS_QUEUE);
