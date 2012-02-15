@@ -45,6 +45,8 @@
 #define U_RATE	  "Rate", "bps"
 
 struct ChannelStruct WideSlowChannels[] = {
+  {"time",         'w',  LOOP1,  28,            1.0,          0.0, 'U', U_NONE}, 
+  {"time_usec",    'w',  LOOP1,  30,            1.0,          0.0, 'U', U_NONE},
   END_OF_CHANNELS
 };
 
@@ -150,6 +152,10 @@ struct ChannelStruct SlowChannels[] = {
   {"step_n_bias",      'w', LOOP1,25,           1.0,    0.0, 'u',  U_NONE},
   {"step_time_bias",   'w', LOOP1,26,           1.0,    0.0, 'u',  U_T_MS},
   {"step_which_bias",  'w', LOOP1,27,           1.0,    0.0, 'u',  U_NONE},
+  // LOOP1 channels 28-31 are wide slow channels
+  {"disk_free",        'w', LOOP1,32,        1./250,    0.0, 'u',  U_NONE},
+  {"bbc_fifo_size",    'w', LOOP1,33,        1./624,    0.0, 'u',  U_NONE},
+  {"plover",           'w', LOOP1,34,           1.0,    0.0, 'u',  U_NONE},
 
   END_OF_CHANNELS
 };
@@ -230,8 +236,8 @@ struct ChannelStruct WideFastChannels[] = {
 
 struct ChannelStruct FastChannels[] = {
   {"in_grp21_dig", 'r', ADC1_D,  50,            1.0,          0.0, 'u', U_NONE},
-  {"in_grp43_dig", 'r', ADC1_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"in_grp65_dig", 'r', ADC1_D,  52,            1.0,          0.0, 'u', U_NONE},
+  {"in_grp43_dig", 'r', ADC1_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"out_grp21_dig",'w', ADC1_D,  50,            1.0,          0.0, 'u', U_NONE},
   {"out_grp43_dig",'w', ADC1_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"out_grp65_dig",'w', ADC1_D,  52,            1.0,          0.0, 'u', U_NONE},

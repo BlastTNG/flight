@@ -78,5 +78,9 @@
  */
 
 union DerivedUnion DerivedChannels[] = {
+  COMMENT("Microsecond Resolution Time"),
+  LINCOM2("Time", "time_usec", 1.0E-6, 0, "time",  1, 0),
+  UNITS("Time", "Time", "s"),
+
   END_OF_DERIVED_CHANNELS
 };

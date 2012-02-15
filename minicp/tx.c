@@ -50,6 +50,41 @@ extern unsigned int el_enc; // az_el.c
  * initial control writes -- there's no input data yet */
 int mcp_initial_controls = 0;
 
+/************************************************************************/
+/*                                                                      */
+/*  WriteAux: write aux data, like cpu time, temperature                */
+/*                                                                      */
+/************************************************************************/
+static void WriteAux(void)
+{
+  static struct NiosStruct* timeAddr;
+  static struct NiosStruct* timeUSecAddr;
+  static struct NiosStruct* diskFreeAddr;
+  static struct NiosStruct* bbcFifoSizeAddr;
+  static struct NiosStruct* ploverAddr;
+  
+  struct timeval tv;
+  struct timezone tz;
+  
+  static int firsttime = 1;
+  if (firsttime) {
+    firsttime = 0;
+    timeAddr = GetNiosAddr("time");
+    timeUSecAddr = GetNiosAddr("time_usec");
+    diskFreeAddr = GetNiosAddr("disk_free");
+    bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
+    ploverAddr = GetNiosAddr("plover");
+  }
+
+  gettimeofday(&tv, &tz);
+
+  WriteData(timeAddr, tv.tv_sec + TEMPORAL_OFFSET, NIOS_QUEUE);
+  WriteData(timeUSecAddr, tv.tv_usec, NIOS_QUEUE);
+  WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
+  WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
+  WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
+}
+
 /*****************************************************************/
 /* SyncADC: check to see if any boards need to be synced and     */
 /* send the sync bit if they do.  Only one board can be synced   */
@@ -289,6 +324,7 @@ void UpdateBBCFrame()
   /*** do slow Controls ***/
   if (index == 0) {
     if (!mcp_initial_controls) SyncADC();
+    WriteAux();
     PhaseControl();
     BiasControl();
   }
