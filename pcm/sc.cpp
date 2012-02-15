@@ -493,7 +493,7 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
 
   for (k = 0; k < n_blobs; k++) {
 	x[k] = solrtn->x[k];
-	y[k] = solrtn->y[k];
+	y[k] = 1020 - solrtn->y[k];
 	x_p[k] = (x[k] - XC)*plate_scale;
 	y_p[k] = (y[k] - YC)*plate_scale;
   }
