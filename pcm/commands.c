@@ -1849,8 +1849,8 @@ void InitCommandData()
   CommandData.bbcIntFrameRate = 104;	    //in ADC samples
   CommandData.bbcExtFrameRate = 2;	    //in sync box frames
   CommandData.bbcExtFrameMeas = 0;
-  CommandData.bbcIsExt = 1;
-  CommandData.bbcAutoExt = 1;
+  CommandData.bbcIsExt = 0 /*1*/;
+  CommandData.bbcAutoExt = 0 /*1*/;
 
   
   WritePrevStatus();
