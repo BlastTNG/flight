@@ -240,6 +240,14 @@ struct ChannelStruct SlowChannels[] = {
   {"i_jfet",        'r', DIOD_A2, 21,         CAL16(1.0,            0.0), 'u', U_V_V},
 #endif
 
+  {"vt_1_if",      'r',  HWP_A2, 37, CAL16T(         1.0,           0.0), 'u', U_V_V},
+  {"vt_2_if",      'r',  HWP_A2, 39, CAL16T(         1.0,           0.0), 'u', U_V_V},
+  {"vt_3_if",      'r',  HWP_A2, 41, CAL16T(         1.0,           0.0), 'u', U_V_V},
+  {"vt_4_if",      'r',  HWP_A2, 43, CAL16T(         1.0,           0.0), 'u', U_V_V},
+  {"vt_5_if",      'r',  HWP_A2, 45, CAL16T(         1.0,           0.0), 'u', U_V_V},
+  {"vt_6_if",      'r',  HWP_A2, 47, CAL16T(         1.0,           0.0), 'u', U_V_V},
+  {"vt_7_if",      'r',  HWP_A2, 49, CAL16T(         1.0,           0.0), 'u', U_V_V},
+
   /* LOOP1 0-7 are wide */
   /* LOOP1 10-11 are unused */
   /* LOOP1 12-13 are wide */

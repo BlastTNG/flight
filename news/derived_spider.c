@@ -483,6 +483,14 @@ union DerivedUnion DerivedChannels[] = {
     UNITS(tch, "Temperature", "^oC")
   T_ACS("T_RW", "VT_RW", "/data/etc/spider/thermistor.lut"),
 
+  T_ACS("T_1_IF", "VT_1_IF", "/data/etc/spider/thermistor.lut"),
+  T_ACS("T_2_IF", "VT_2_IF", "/data/etc/spider/thermistor.lut"),
+  T_ACS("T_3_IF", "VT_3_IF", "/data/etc/spider/thermistor.lut"),
+  T_ACS("T_4_IF", "VT_4_IF", "/data/etc/spider/thermistor.lut"),
+  T_ACS("T_5_IF", "VT_5_IF", "/data/etc/spider/thermistor.lut"),
+  T_ACS("T_6_IF", "VT_6_IF", "/data/etc/spider/thermistor.lut"),
+  T_ACS("T_7_IF", "VT_7_IF", "/data/etc/spider/thermistor.lut"),
+
 
   /* HWPR Control Info */
   BITFIELD("stat_control_hwpr"
