@@ -197,6 +197,7 @@ struct CommandDataStruct {
     double pulse_port;
     double pulse_starboard;
     int manual_pulses;
+    double twist;
   } ele_gain; 
  
   struct GainStruct azi_gain;
