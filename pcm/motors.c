@@ -819,9 +819,6 @@ void WriteMot(int TxIndex)
   } else {
     WriteCalData(step1ElAddr, step_rate_P, NIOS_QUEUE);
     WriteCalData(step2ElAddr, step_rate_S, NIOS_QUEUE);
-    /* // write fixed values for testing purposes 
-    WriteCalData(step1ElAddr, +10000.0, NIOS_QUEUE);
-    WriteCalData(step2ElAddr, -10000.0, NIOS_QUEUE);*/
   }
 
   elGainCom = CommandData.ele_gain.com;

@@ -91,6 +91,8 @@
 #define U_F_HZ "Frequency", "Hz"
 
 struct ChannelStruct WideSlowChannels[] = {
+  {"count_1_el",   'r',ACS2_D, 58,                1.0,             0.0, 'U', U_NONE}, 
+  {"count_2_el",   'r',ACS2_D, 60,                1.0,             0.0, 'U', U_NONE}, 
   {"time",         'w', LOOP1,  0,                1.0,             0.0, 'U', U_NONE}, 
   {"time_usec",     'w', LOOP4, 58,                1.0,             0.0, 'U', U_NONE},
   {"time_sip",     'w', LOOP1,  2,                1.0,             0.0, 'U', U_NONE},
@@ -1053,6 +1055,31 @@ struct ChannelStruct WideFastChannels[] = {
   {"vd_16_hk",     'r',  HWP_A2, 32, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_17_hk",     'r',  HWP_A2, 34, CAL32D(         1.0,           0.0), 'U', U_V_V},
 
+  {"hwp_00",       'r',HWP_A1,  0,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_01",       'r',HWP_A1,  2,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_02",       'r',HWP_A1,  4,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_03",       'r',HWP_A1,  6,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_04",       'r',HWP_A1,  8,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_05",       'r',HWP_A1, 10,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_06",       'r',HWP_A1, 12,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_07",       'r',HWP_A1, 14,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_08",       'r',HWP_A1, 16,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_09",       'r',HWP_A1, 18,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_10",       'r',HWP_A1, 20,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_11",       'r',HWP_A1, 22,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_12",       'r',HWP_A1, 24,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_13",       'r',HWP_A1, 26,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_14",       'r',HWP_A1, 28,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_15",       'r',HWP_A1, 30,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_16",       'r',HWP_A1, 32,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_17",       'r',HWP_A1, 34,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_18",       'r',HWP_A1, 36,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_19",       'r',HWP_A1, 38,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_20",       'r',HWP_A1, 40,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_21",       'r',HWP_A1, 42,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_22",       'r',HWP_A1, 44,CAL32(1.0,      0.0),      'U',      U_V_V},
+  {"hwp_23",       'r',HWP_A1, 46,CAL32(1.0,      0.0),      'U',      U_V_V},
+
   END_OF_CHANNELS
 };
 
@@ -1095,6 +1122,7 @@ struct ChannelStruct FastChannels[] = {
   {"sigma_enc",    'w', LOOP2, 48,     I2DEG,      0.0,      'u',      U_NONE},
   {"chatter",      'w', LOOP7, 38,     1.0,        0.0,      'u',      U_NONE},
   {"mcp_frame",    'w', LOOP2, 34,     1.0,        0.0,      'u',      U_NONE},
+
   END_OF_CHANNELS
 };
 
