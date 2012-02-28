@@ -469,10 +469,16 @@ static void GetLockData()
       &lock_data.adc[2], &lock_data.adc[3]);
 }
 
+static void SetLockState(int nic)
+{
+  CommandData.pin_is_in = 0;
+  lock_data.state = LS_OPEN | LS_EL_OK;
+}
+
 /* The NiC MCC does this via the BlastBus to give it a chance to know what's
  * going on.  The ICC reads it directly to get more promptly the answer
  * (since all these fields are slow). */
-static void SetLockState(int nic)
+static void oldSetLockState(int nic)
 {
   static int firsttime = 1;
   int pot;

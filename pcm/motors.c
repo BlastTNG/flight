@@ -50,7 +50,7 @@
                         //   noise/offsets
 
 /* elevation drive related defines adapted from az-el.c in minicp: */
-#define CM_PULSES 200   // Cool Muscle pulses per rotation
+#define CM_PULSES 3200   // Cool Muscle pulses per rotation
 #define IN_TO_MM 25.4
 #define ROT_PER_INCH 5    // linear actuator rotations per inch of travel
 #define EL_GEAR_RATIO 7.0 
@@ -250,7 +250,7 @@ static double SetVElev(double g_com, double g_diff, double dy, double err,
 
   double v;
 
-  if (dy > 0) {
+  if (dy >= 0) {
     v = g_com*sqrt(dy) - g_diff*err;
   } else {
     v = -g_com*sqrt(-dy) - g_diff*err;
@@ -259,6 +259,7 @@ static double SetVElev(double g_com, double g_diff, double dy, double err,
   v = ((v - v_last) > max_dv) ? (v_last + max_dv) : v;
   v = ((v - v_last) < -max_dv) ? (v_last - max_dv) : v;    
 
+  //bprintf(info,"v: %g g_diff: %g dy: %g err: %g", v, g_diff, dy, err);
   return v;
 
 }
@@ -278,10 +279,10 @@ static void GetVElev(double* v_P, double* v_S)
 // P = PORT
 
 /* various dynamical variables */
-  double enc_port, enc_strbrd;
-  double enc_port_last, enc_strbrd_last;
+  //double enc_port, enc_strbrd;
+  //double enc_port_last, enc_strbrd_last;
   double el_dest;
-  double dy, dy_S, dy_P;// distance to target of mean, starboard and port 
+  double dy; //, dy_S, dy_P;// distance to target of mean, starboard and port 
                         // encoders
 
   double err;           // error between encoder position and mean position
@@ -290,6 +291,8 @@ static void GetVElev(double* v_P, double* v_S)
   //double err_max = 0.005; // maximum permissible difference between left and
                           // right encoders.
   double max_dv;
+  double g_com;
+  double g_diff;
 
 /* requested velocities (prev. values) */
   static double v_S_last = 0.0;
@@ -303,7 +306,7 @@ static void GetVElev(double* v_P, double* v_S)
   //int stop_cnt_L = 0;
   //int stop_cnt_R = 0;
 
-  max_dv = CommandData.ele_gain.accel_max/SR;
+  max_dv = (CommandData.ele_gain.accel_max)/SR;
 
   el_dest = axes_mode.el_dest;
 
@@ -313,34 +316,37 @@ static void GetVElev(double* v_P, double* v_S)
   el_dest = (el_dest > MAX_EL) ? MAX_EL : el_dest;
 
   /* port = sum/2 + diff/2 */
-  enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
-  enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
+  //enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
+  //enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
   //bprintf(info, "enc_port = %f", enc_port);
   //bprintf(info, "enc_strbrd = %f", enc_strbrd);
 
-  dy_S = el_dest - enc_strbrd;
-  dy_P = el_dest - enc_port;
+  //dy_S = el_dest - enc_strbrd;
+  //dy_P = el_dest - enc_port;
 
-  dy = (dy_P + dy_S)/2.0;  // mean distance to target
-  //dy = el_dest - ACSData.enc_mean_el;
+  //dy = (dy_P + dy_S)/2.0;  // mean distance to target
+  dy = el_dest - ACSData.enc_mean_el;
 
   //bprintf(info, "dy = %f", dy);
 
-  err = (dy_P - dy_S)/2.0; // error from mean
-  //err = -(ACSData.enc_diff_el)/2.0;
+  //err = (dy_P - dy_S)/2.0; // error from mean
+  err = -(ACSData.enc_diff_el)/2.0;
+  err += CommandData.ele_gain.twist*0.5; // user-settable fake offset 
+                                     // to test the twist correction
 
-  if (fabs(dy_P) < TOLERANCE) { // we are at destination
-  //v_L = SetVElev(0.0, CommandData.ele_gain.diff, dy, err, v_L_last, max_dv);
-    *v_P = SetVElev(0.0, CommandData.ele_gain.diff, dy, err, v_P_last, max_dv);
-    v_P_last = *v_P; 
-  } else {
+  //
+
+  g_com = CommandData.ele_gain.com * (double)(fabs(dy)>TOLERANCE);
+  g_diff = CommandData.ele_gain.diff * (double)(fabs(err)>TOLERANCE);
+  *v_P = SetVElev(g_com, -g_diff, dy, err, v_P_last, max_dv);
+  *v_S = SetVElev(g_com, g_diff, dy, err, v_S_last, max_dv);
+  v_P_last = *v_P; 
+  v_S_last = *v_S; 
+  //bprintf(info,"%g %g %g %g %g %g\n", dy, err, ACSData.enc_mean_el, ACSData.enc_diff_el, g_com, g_diff);
+/*
   //if (enc_right != enc_right_last) {
   //stall_cnt_R = 0; 
-    *v_P = SetVElev(CommandData.ele_gain.com, CommandData.ele_gain.diff, dy, 
-                     err, v_P_last, max_dv);
-    v_P_last = *v_P;
-
     //bprintf(info, "v_port = %f", *v_P);
     //bprintf(info, "v_port_last = %f", v_P_last);
 //} else {
@@ -351,86 +357,7 @@ static void GetVElev(double* v_P, double* v_S)
   //  v_L_last = v_L;
 //  }      
   } 
-
-  if (fabs(dy_S) < TOLERANCE) { // we are at destination
-    *v_S = SetVElev(0.0, -CommandData.ele_gain.diff, dy, err, v_S_last, max_dv);
-    v_S_last = *v_S; 
-  } else {
-    *v_S = SetVElev(CommandData.ele_gain.com, -CommandData.ele_gain.diff, dy, 
-                     err, v_S_last, max_dv);
-    v_S_last = *v_S;
-  }
-
-
-#if 0 // Old BLAST-Pol version of this function, completely irrelevant
-  double vel = 0;
-  static double last_vel = 0;
-  double dvel;
-  int i_point;
-  double max_dv = 1.6;
-  double el_for_limit, el, el_dest;
-  double dy;
-  i_point = GETREADINDEX(point_index);
-
-  if (axes_mode.el_mode == AXIS_VEL) {
-    vel = axes_mode.el_vel;
-  } else if (axes_mode.el_mode == AXIS_POSITION) {
-    el = PointingData[i_point].el;
-    el_dest = axes_mode.el_dest;
-    dy = el_dest - el;
-    if (dy<0) {
-      vel = -sqrt(-dy);
-    } else {
-      vel = sqrt(dy);
-    }
-    vel *= (double)CommandData.ele_gain.PT/10000.0;
-    //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
-  } else if (axes_mode.el_mode == AXIS_LOCK) {
-    /* for the lock, only use the elevation encoder */
-    vel = (axes_mode.el_dest - ACSData.enc_raw_el) * 0.64;
- }
-
-  /* correct offset and convert to Gyro Units */
-  vel -= (PointingData[i_point].offset_ifel_gy 
-         - PointingData[i_point].ifel_earth_gy);
-
-  if (CommandData.use_elenc) {
-    el_for_limit = ACSData.enc_raw_el;
-  } else {
-    el_for_limit = PointingData[i_point].el;
-  }
-
-  if (el_for_limit < MIN_EL) {
-    if (vel<=0) { // if we are going down
-      vel = (MIN_EL - el_for_limit)*0.36; // go to the stop 
-    }
-  }
-  if (el_for_limit > MAX_EL) {
-    if (vel>=0) { // if we are going up
-      vel = (MAX_EL - el_for_limit)*0.36; // go to the stop 
-    }
-    //vel = -0.2; // go down
-  }
-
-  /* Limit Maximum speed to 0.5 dps*/
-  if (vel > 0.5)
-    vel = 0.5;
-  if (vel < -0.5)
-    vel = -0.5;
-
-  vel *= DPS_TO_GY16;
-
-  /* limit Maximum acceleration */
-  dvel = vel - last_vel;
-  if (dvel > max_dv)
-    vel = last_vel + max_dv;
-  if (dvel < -max_dv)
-    vel = last_vel - max_dv;
-  last_vel = vel;
-
-  //bprintf(info, "GetVEl: vel=%f", vel);
-  return (vel*10.0); // Factor of 10.0 is to improve the dynamic range
-#endif
+*/
 }
 
 /************************************************************************/
@@ -806,10 +733,10 @@ void WriteMot(int TxIndex)
   } else if ( step_rate_S < -10000 ) {
     step_rate_S = -10000;
   }
-
-  //bprintf(info, "port step rate = %d", step_rate_P); 
-  //bprintf(info, "starboard step rate = %d", step_rate_S);
- 
+ /* if (step_rate_S != -step_rate_P){
+    bprintf(info, "port step rate = %d", step_rate_P); 
+    bprintf(info, "starboard step rate = %d", step_rate_S);
+  }*/
   /* no motor pulses if the pin is in */
   if ((CommandData.pin_is_in && !CommandData.force_el)
       || CommandData.disable_el) {
