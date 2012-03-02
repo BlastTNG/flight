@@ -1,3 +1,29 @@
+SRC_DIR    = .
+INCLUDE    = -I $(SRC_DIR)
+LIBRARY    = -L $(SRC_DIR)
+CPPFLAGS   = $(INCLUDE)
+#CFLAGS = -O2 -Wall
+#LDFLAGS = $(LIBRARY)
+CFLAGS = -O0 -Wall -g   #for debugging
+LDFLAGS = $(LIBRARY) -g
+LD = gcc
+CXX = g++
+MOC = moc
+
+########################################################
+# Repository object/header path munging
+#
+
+SPIDER_ONLY = 1
+
+EXPT_HEADERS = command_list.h command_struct.h pointing_struct.h
+SHARED_OBJS = camcommunicator.o
+SHARED_HEADERS = camcommunicator.h camstruct.h
+
+include ../common/Makefile.shared
+
+# now $(OBJS) and $(HEADERS) are defined, and $(CPPFLAGS) has been modified
+
 ################################################################################
 # starcam makefile by Steve Benton
 ################################################################################
@@ -6,17 +32,9 @@ TEST_NAME  = testmain
 USE_QT = 1           #change this to 0 to not use qt when its not available
                  #probably need to change bits of code too
 O_APP      = csbigcam.o csbigimg.o mycam.o clensadapter.o bloblist.o \
-frameblob.o blobimage.o camcommunicator.o pyramid.o camcommserver.o
+frameblob.o blobimage.o pyramid.o camcommserver.o $(OBJS)
 O_APP_QT = imageviewer.o moc_imageviewer.o commandgui.o moc_commandgui.o
 ################################################################################
-SRC_DIR    = .
-INCLUDE    = -I $(SRC_DIR)
-LIBRARY    = -L $(SRC_DIR)
-#CFLAGS = -O2 $(INCLUDE) $(LIBRARY) -Wall
-CFLAGS = -O0 $(INCLUDE) $(LIBRARY) -Wall -g   #for debugging
-CPPFLAGS = $(CFLAGS)
-CC = g++
-MOC = moc
 
 #different definitions for when Qt is and isn't available
 ifeq ($(strip $(USE_QT)), 1)
@@ -33,9 +51,10 @@ QTLIB =
 QTINC =
 QTFLAGS =
 endif
+
 ################################################################################
 #targets for building all or part of the main program
-all: cam comm view util test
+all:: cam comm view util test
 cam: $(APP_NAME)
 comm: commtest
 view: scviewer
@@ -52,61 +71,58 @@ install: $(APP_NAME)
 
 
 $(APP_NAME): $(APP_OBJ)
-	  $(CC) $(QTLIB) $(CFLAGS) -o $(APP_NAME) $(APP_OBJ) -lsbigudrv -lm -lpthread
+	  $(LD) $(LDFLAGS) $(QTLIB) -o $(APP_NAME) $(APP_OBJ) -lsbigudrv -lm -lpthread
 	  chmod a+x $(APP_NAME)
 
 starcam.o : starcam.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h clensadapter.h frameblob.h \
-	camconfig.h clensadapterdefs.h csbigimgdefs.h camcommunicator.h pyramid.h imageviewer.h camcommserver.h
-	  $(CC) $(CFLAGS) $(QTFLAGS) -o starcam.o -c starcam.cpp
+	camconfig.h clensadapterdefs.h csbigimgdefs.h pyramid.h imageviewer.h camcommserver.h $(HEADERS)
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o starcam.o -c starcam.cpp
 
 csbigcam.o : csbigcam.h csbigcam.cpp csbigimg.h camconfig.h
-	  $(CC) $(CFLAGS) -o csbigcam.o -c csbigcam.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o csbigcam.o -c csbigcam.cpp
 	  
 mycam.o : mycam.h mycam.cpp clensadapter.h blobimage.h camconfig.h csbigcam.h
-	  $(CC) $(CFLAGS) -o mycam.o -c mycam.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o mycam.o -c mycam.cpp
 
 csbigimg.o : csbigimg.cpp csbigimg.h camconfig.h csbigimgdefs.h
-	  $(CC) $(CFLAGS) -o csbigimg.o -c csbigimg.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o csbigimg.o -c csbigimg.cpp
 	  
 clensadapter.o : clensadapter.h clensadapter.cpp camconfig.h clensadapterdefs.h
-	  $(CC) $(CFLAGS) -o clensadapter.o -c clensadapter.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o clensadapter.o -c clensadapter.cpp
 
 bloblist.o : bloblist.h bloblist.cpp
-	  $(CC) $(CFLAGS) -o bloblist.o -c bloblist.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o bloblist.o -c bloblist.cpp
 
 frameblob.o : frameblob.h frameblob.cpp bloblist.h camconfig.h
-	  $(CC) $(CFLAGS) -o frameblob.o -c frameblob.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o frameblob.o -c frameblob.cpp
 
 blobimage.o : blobimage.h blobimage.cpp frameblob.h bloblist.h camconfig.h pyramid.h
-	  $(CC) $(CFLAGS) -o blobimage.o -c blobimage.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o blobimage.o -c blobimage.cpp
 	  
-camcommunicator.o : camcommunicator.h camcommunicator.cpp mycam.h blobimage.h camconfig.h
-	  $(CC) $(CFLAGS) -o camcommunicator.o -c camcommunicator.cpp
-
-camcommserver.o : camcommserver.h camcommserver.cpp camstruct.h camcommunicator.h
-	  $(CC) $(CFLAGS) -o camcommserver.o -c camcommserver.cpp
+camcommserver.o : camcommserver.h camcommserver.cpp $(HEADERS)
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o camcommserver.o -c camcommserver.cpp
 
 pyramid.o : pyramid.h pyramid.cpp
-	  $(CC) $(CFLAGS) -O0 -o pyramid.o -c pyramid.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -O0 -o pyramid.o -c pyramid.cpp
 	  
 ################################################################################
 #image viewer
 VIEWER_OBJ=scviewer.o blobimage.o imageviewer.o moc_imageviewer.o csbigimg.o frameblob.o bloblist.o
 scviewer: $(VIEWER_OBJ)
-	  $(CC) $(QTLIB) $(CFLAGS) -o scviewer $(VIEWER_OBJ) -lpthread
+	  $(LD) $(LDFLAGS) $(QTLIB) -o scviewer $(VIEWER_OBJ) -lpthread
 	  chmod a+x scviewer
 
 scviewer.o : scviewer.cpp blobimage.h csbigimgdefs.h imageviewer.h
-	  $(CC) $(CFLAGS)  $(QTFLAGS) -o scviewer.o -c scviewer.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o scviewer.o -c scviewer.cpp
 
 imageviewer.o : imageviewer.h imageviewer.cpp
-	  $(CC) $(CFLAGS) $(QTFLAGS) -o imageviewer.o -c imageviewer.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o imageviewer.o -c imageviewer.cpp
 	  
 moc_imageviewer.cpp : imageviewer.h
 	  $(MOC) imageviewer.h -o moc_imageviewer.cpp
 	  
 moc_imageviewer.o : imageviewer.h moc_imageviewer.cpp
-	  $(CC) $(CFLAGS) $(QTFLAGS) -o moc_imageviewer.o -c moc_imageviewer.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o moc_imageviewer.o -c moc_imageviewer.cpp
 
 	  
 ################################################################################
@@ -114,31 +130,33 @@ moc_imageviewer.o : imageviewer.h moc_imageviewer.cpp
 test: testmain commtest
 
 testmain : $(TEST_OBJ)
-	  $(CC) $(CFLAGS) $(QTLIB) -o $(TEST_NAME) $(TEST_OBJ) -lsbigudrv -lm -lpthread
-	  chmod a+x $(TEST_NAME)
+	  $(LD) $(LDFLAGS) $(QTLIB) -o $(TEST_NAME) $(TEST_OBJ) -lsbigudrv -lm \
+			-lpthread
+		chmod a+x $(TEST_NAME)
 	  
-testmain.o : testmain.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h clensadapter.h frameblob.h \
-				camconfig.h clensadapterdefs.h csbigimgdefs.h camcommunicator.h pyramid.h imageviewer.h
-	  $(CC) $(CFLAGS) $(QTFLAGS) -o testmain.o -c testmain.cpp
+testmain.o : testmain.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h \
+	clensadapter.h frameblob.h camconfig.h clensadapterdefs.h csbigimgdefs.h \
+	pyramid.h imageviewer.h $(HEADERS)
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o testmain.o -c testmain.cpp
 	  
 ################################################################################
 #test communicator app
-COMMTEST_OBJ=testcomm.o camcommunicator.o commandgui.o moc_commandgui.o
+COMMTEST_OBJ=testcomm.o $(OBJS) commandgui.o moc_commandgui.o
 commtest : $(COMMTEST_OBJ)
-	  $(CC) $(CFLAGS) $(QTLIB) -o commtest $(COMMTEST_OBJ) -lpthread
+	  $(LD) $(LDFLAGS) $(QTLIB) -o commtest $(COMMTEST_OBJ) -lpthread
 	  chmod a+x commtest
 	  
-testcomm.o : testcomm.cpp camcommunicator.h camconfig.h commandgui.h
-	  $(CC) $(CFLAGS)  $(QTFLAGS) -o testcomm.o -c testcomm.cpp
+testcomm.o : testcomm.cpp camconfig.h commandgui.h $(HEADERS)
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o testcomm.o -c testcomm.cpp
 
-commandgui.o : commandgui.h commandgui.cpp camcommunicator.h camconfig.h
-	  $(CC) $(CFLAGS) $(QTFLAGS) -o commandgui.o -c commandgui.cpp
+commandgui.o : commandgui.h commandgui.cpp camconfig.h $(HEADERS)
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o commandgui.o -c commandgui.cpp
 	  
 moc_commandgui.cpp : commandgui.h
 	  $(MOC) commandgui.h -o moc_commandgui.cpp
 	  
 moc_commandgui.o : commandgui.h moc_commandgui.cpp
-	  $(CC) $(CFLAGS) $(QTFLAGS) -o moc_commandgui.o -c moc_commandgui.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o moc_commandgui.o -c moc_commandgui.cpp
 
 ################################################################################
 # utility programs that are not related to main functionality
@@ -150,14 +168,14 @@ powercycle: powercycle.c
 # program to analyze bad pixel data
 findbadpixel: findbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o
 
-findbadpixel.o: findbadpixel.cpp blobimage.h frameblob.h bloblist.h camconfig.h camstruct.h \
-  csbigimg.h csbigimgdefs.h
+findbadpixel.o: findbadpixel.cpp blobimage.h frameblob.h bloblist.h \
+	camconfig.h $(HEADERS) csbigimg.h csbigimgdefs.h
 
 # program to use a bad pixel file to correct a bad pixel
 fixbadpixel: fixbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o
 
-fixbadpixel.o: fixbadpixel.cpp blobimage.h frameblob.h bloblist.h camconfig.h camstruct.h \
-  csbigimg.h csbigimgdefs.h
+fixbadpixel.o: fixbadpixel.cpp blobimage.h frameblob.h bloblist.h camconfig.h \
+  csbigimg.h csbigimgdefs.h $(HEADERS)
 
 ################################################################################
 

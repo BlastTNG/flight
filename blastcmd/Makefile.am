@@ -1,16 +1,35 @@
-CFLAGS = -g -Wall
-blastcmd_CFLAGS = -D__BLAST__
-minicmd_CFLAGS = -D__MINI__
-spidercmd_CFLAGS = -D__SPIDER__
+shared=$(top_srcdir)/../common
+
+AM_CFLAGS = -g -Wall -I$(shared)
 
 AUTOMAKE_OPTIONS = foreign
-blastcmd_SOURCES = blastcmd.c command_list_blast.c daemon.c netcmd.c \
-		   command_list_blast.h daemon.h isc_protocol.h share/netcmd.h
-minicmd_SOURCES = blastcmd.c command_list_mini.c daemon.c netcmd.c \
-		  command_list_mini.h daemon.h isc_protocol.h share/netcmd.h
-spidercmd_SOURCES = blastcmd.c command_list_spider.c daemon.c netcmd.c \
-		    command_list_spider.h daemon.h isc_protocol.h share/netcmd.h
-bin_PROGRAMS = blastcmd minicmd spidercmd
+
+if INSTALL_BLAST
+blast_config=$(top_srcdir)/../blast_config
+blastcmd_SOURCES = blastcmd.c $(blast_config)/command_list.c daemon.c netcmd.c \
+		   $(blast_condif)/command_list.h daemon.h isc_protocol.h $(shared)/netcmd.h
+blastcmd_CPPFLAGS = -D__BLAST__ -I$(blast_config)
+BLASTCMD=blastcmd
+endif
+
+if INSTALL_MINICP
+mini_config=$(top_srcdir)/../minicp_config
+minicmd_SOURCES = blastcmd.c $(mini_config)/command_list.c daemon.c netcmd.c \
+		  $(mini_config)/command_list.h daemon.h isc_protocol.h $(shared)/netcmd.h
+minicmd_CPPFLAGS = -D__MINI__ -I$(mini_config)
+MINICMD=minicmd
+endif
+
+if INSTALL_SPIDER
+spider_config=$(top_srcdir)/../spider_config
+spidercmd_SOURCES = blastcmd.c $(spider_config)/command_list.c daemon.c \
+										netcmd.c $(spider_config)/command_list.h daemon.h \
+										isc_protocol.h $(shared)/netcmd.h
+spidercmd_CPPFLAGS = -D__SPIDER__ -I$(spider_config)
+SPIDERCMD=spidercmd
+endif
+
+bin_PROGRAMS = $(BLASTCMD) $(MINICMD) $(SPIDERCMD)
 dist_bin_SCRIPTS = blastcmd-authorize
 
 dataetcdir = @DATA_ETC_DIR@
@@ -33,3 +52,4 @@ endif
 	  mv -f $(DESTDIR)$(dataetcdir)/blastcmd.auth.orig $(DESTDIR)$(dataetcdir)/blastcmd.auth; \
 	  fi
 
+@MAKEFILE_UPDATE@

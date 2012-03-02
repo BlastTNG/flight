@@ -7,6 +7,9 @@
 # /usr/src/linux-`uname -r`/.__modpost.cmd .  The easiest ways to do
 # this is to make them world writeable (which has been done on frodo).
 
+# the name of the shared code project in the repo
+SHARED = common
+
 ifneq ($(KERNELRELEASE),)
 # Second pass: inside kernel build system
 # All we need to do here is delcare the module objects.
@@ -19,13 +22,27 @@ else
 KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD	:= $(shell pwd)
 CC    	:= gcc -O2 -g 
+CPPFLAGS = -I../$(SHARED)
 
 all: simbbc_pci.ko
 
 simbbc_pci.ko: simbbc.c simbbc.h simdata.c simdata.h
 # invoke kernel build system
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) KCPPFLAGS=-I$(PWD)/../$(SHARED) modules
 
+up update:
+	@for dir in $(SHARED); do \
+		if [ -d ../$$dir ]; then \
+			echo "Updating $$dir..."; \
+			( cd ../$$dir && svn up ); \
+		else \
+			echo; \
+			echo "ERROR: **************************************"; \
+			echo "Project ../$$dir missing! try running:"; \
+			echo "  ( cd .. && svn co $$dir )"; \
+			false; \
+		fi; \
+	done
 
 clean: 
 	rm -f .simbbc* 

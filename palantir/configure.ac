@@ -138,6 +138,10 @@ AC_SUBST(QT_LDADD)
 dnl Look for MOC
 AC_PATH_PROG(MOC, moc,,$PATH:$QT_BIN_DIR)
 
+dnl Look for Getdata
+PKG_CHECK_MODULES([GETDATA], [getdata >= 0.7.0])
+
+
 dnl Libraries
 AC_CHECK_LIB(pthread, pthread_create,,AC_MSG_ERROR([*** libpthread not installed -- please install first ***]))
 

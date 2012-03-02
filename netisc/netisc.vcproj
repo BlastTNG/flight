@@ -226,7 +226,7 @@
 				RelativePath="HTMCatalog.h">
 			</File>
 			<File
-				RelativePath="isc_protocol.h">
+				RelativePath="..\common\isc_protocol.h">
 			</File>
 			<File
 				RelativePath="mapglobals.h">

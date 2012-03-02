@@ -39,7 +39,7 @@
 #include <limits.h>
 
 #include "daemon.h"
-#include "share/netcmd.h"
+#include "netcmd.h"
 
 double round(double x);
 

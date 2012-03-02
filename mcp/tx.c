@@ -38,9 +38,9 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "share/bbc_pci.h"
+#include "bbc_pci.h"
 
-#include "share/channels.h"
+#include "channels.h"
 #include "pointing_struct.h"
 #include "tx.h"
 #include "command_struct.h"
@@ -48,7 +48,7 @@
 #include "sss_struct.h"
 #include "chrgctrl.h"
 
-#include "share/sip.h"
+#include "sip.h"
 
 #define NIOS_BUFFER_SIZE 100
 

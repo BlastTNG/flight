@@ -25,8 +25,8 @@
 #include "blast.h"
 #include "channels.h"
 #ifdef __MCP__
-#include "../mcp.h"
-#include "../command_struct.h"
+#include "mcp.h"
+#include "command_struct.h"
 #endif
 
 #ifdef __DECOMD__

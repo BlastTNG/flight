@@ -7,6 +7,9 @@
 # /usr/src/linux-`uname -r`/.__modpost.cmd .  The easiest ways to do
 # this is to make them world writeable (which has been done on frodo).
 
+# the name of the shared code project in the repo
+SHARED = common
+
 ifneq ($(KERNELRELEASE),)
 # Second pass: inside kernel build system
 # All we need to do here is delcare the module objects.
@@ -18,24 +21,39 @@ else
 KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD		:= $(shell pwd)
 CC    := gcc -O2 -g
+CPPFLAGS = -I../$(SHARED)
 
 all: bbc_pci.ko test_bbcpci test_biphase test_irq test_data
 
-bbc_pci.ko: bbc_pci.c bbc_pci.h
+up update:
+	@for dir in $(SHARED); do \
+		if [ -d ../$$dir ]; then \
+			echo "Updating $$dir..."; \
+			( cd ../$$dir && svn up ); \
+		else \
+			echo; \
+			echo "ERROR: **************************************"; \
+			echo "Project ../$$dir missing! try running:"; \
+			echo "  ( cd .. && svn co $$dir )"; \
+			false; \
+		fi; \
+	done
+
+bbc_pci.ko: bbc_pci.c
 # invoke kernel build system
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) KCPPFLAGS=-I$(PWD)/../$(SHARED) modules
 
 test_data: test_data.c
-	$(CC) -o test_data test_data.c
+	$(CC) $(CPPFLAGS) -o test_data test_data.c
 
 test_bbcpci: test_bbcpci.c
-	$(CC) -o test_bbcpci test_bbcpci.c
+	$(CC) $(CPPFLAGS) -o test_bbcpci test_bbcpci.c
 
 test_biphase: test_biphase.c
-	$(CC) -o test_biphase test_biphase.c -lm
+	$(CC) $(CPPFLAGS) -o test_biphase test_biphase.c -lm
 
 test_irq: test_irq.c
-	$(CC) -o test_irq test_irq.c -lm
+	$(CC) $(CPPFLAGS) -o test_irq test_irq.c -lm
 
 clean: 
 	rm -f .bbc* *.ko *.o test_bbcpci test_biphase test_irq bbc_pci.mod.c
@@ -43,7 +61,6 @@ clean:
 MODULEDIR ?= /lib/modules/$(shell uname -r)/kernel/drivers/misc
 
 install: bbc_pci.ko
-	install -m 644 bbc_pci.h /usr/local/include/bbc_pci.h
 	install bbc_pci.ko -m 644 -D $(MODULEDIR)/bbc_pci.ko
 
 endif

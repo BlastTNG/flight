@@ -28,7 +28,7 @@
 #include "PDotPal.h"
 #include <QTime>
 #include <qjson/serializer.h>
-#include <python2.7/Python.h>   //you may need to change this...
+#include <python2.6/Python.h>   //you may need to change this...
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);

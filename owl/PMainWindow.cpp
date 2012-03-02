@@ -44,7 +44,7 @@
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFileSystemModel>
-#include <python2.7/Python.h>   //you may need to change this
+#include <python2.6/Python.h>   //you may need to change this
 #include <qjson/parser.h>
 #include <qjson/serializer.h>
 

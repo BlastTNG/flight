@@ -34,7 +34,7 @@
 #endif
 
 extern "C" {
-#include "share/netcmd.h"
+#include "netcmd.h"
 }
 
 #include <qvariant.h>

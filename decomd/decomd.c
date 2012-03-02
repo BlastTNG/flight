@@ -41,11 +41,11 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "share/blast.h"
+#include "blast.h"
 #include "decom_pci.h"
-#include "share/bbc_pci.h"
-#include "share/channels.h"
-#include "share/crc.h"
+#include "bbc_pci.h"
+#include "channels.h"
+#include "crc.h"
 
 #define VERSION "1.1.0"
 

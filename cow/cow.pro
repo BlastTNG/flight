@@ -8,13 +8,14 @@ log.files = data/prev_status data/log.txt
 QT += gui 
 QMAKE_INSTALL_FILE = install -m 666 -p 
 INSTALLS += target log 
+INCPATH += ../common/
 
 HEADERS += \ 
 src/cow.h \ 
-src/share/netcmd.h \ 
+../common/netcmd.h \ 
 src/widgets.h 
 SOURCES += \ 
-src/netcmd.c \ 
+../common/netcmd.c \ 
 src/cow.cpp 
 
 LIBS += -lpthread -lgetdata++ 

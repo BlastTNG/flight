@@ -29,7 +29,7 @@
 #include <errno.h>
 #include <limits.h>
 #include "ezstep.h"
-#include "share/blast.h"
+#include "blast.h"
 
 //TODO (BLAST-Pol OK) allow multiple-motor values of who more widely
 

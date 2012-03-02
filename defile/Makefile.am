@@ -1,19 +1,35 @@
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = etc
-bin_PROGRAMS = defile-blast defile-spider
+
 man_MANS = defile.1
 EXTRA_DIST = fixup.sh bootstrap.sh
-etcdir=@etcdir@
+
+blastetcdir = @DATA_ETC_DIR@/blast
+spideretcdir = @DATA_ETC_DIR@/spider
+
 if INSTALL_DEFILE_CONF
 etc_DATA = defile.conf
 endif
-defile_blast_SOURCES = defile.c frameread.c reader.c share/channels.c writer.c \
-		       share/blast.c client.c share/crc.c quendiclient.c \
-		       share/blast.h defile.h share/channels.h frameread.h \
-		       share/derived.h quenya.h share/crc.h quendiclient.h
+if INSTALL_BLAST_ETC
+blastetc_DATA = ../blast_etc/*
+endif
+if INSTALL_SPIDER_ETC
+spideretc_DATA = ../spider_etc/*
+endif
+
+bin_PROGRAMS = defile-blast defile-spider
+
+defile_blast_SOURCES = defile.c ../common/frameread.c reader.c \
+											 ../common/channels.c writer.c ../common/blast.c \
+											 client.c ../common/crc.c \
+											 ../common/quendiclient.c ../common/blast.h defile.h \
+											 ../common/channels.h frameread.h ../common/derived.h \
+											 quenya.h ../common/crc.h quendiclient.h
 defile_spider_SOURCES = $(defile_blast_SOURCES)
+
 CFLAGS = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
+INCLUDES = -I../common
 defile_blast_CFLAGS = -DDAS_CARDS=12
+
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data" --with-etc="$$dc_install_base/etc"
 
 defile.conf: Makefile $(top_builddir)/defile.conf.in $(top_srcdir)/fixup.sh

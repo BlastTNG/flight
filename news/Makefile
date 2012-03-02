@@ -1,54 +1,80 @@
-ALL = fox-blast msnbc-blast rush-blast fox-spider msnbc-spider rush-spider
-
 CC=gcc
 CFLAGS = -O2 -W -Wall
-BLAST_CFLAGS = $(CFLAGS) -D__BLAST__
-SPIDER_CFLAGS = $(CFLAGS) -D__SPIDER__
 
-OBJS = fox.o share/compressfuncs.o
-BLAST_OBJS = $(OBJS) tx_struct_blast.o compressstruct_blast.o derived_blast.o 
-SPIDER_OBJS = $(OBJS) tx_struct_spider.o \
-	      compressstruct_spider.o derived_spider.o 
+########################################################
+# External repository dependencies
+#
 
-HEADERS = calibrate.h share/compressstruct.h share/channels.h share/derived.h
+SPIDER_OR_BLAST=1   # we need at least one of Spider or BLAST config
 
-.PHONEY: all install clean
+########################################################
+# Inputs
+#
 
-all: $(ALL)
+SHARED_OBJS = compressfuncs.o
+LOCAL_OBJS = fox.o
+EXPT_OBJS = tx_struct.o compressstruct.o derived.o
 
-$(OBJS): $(HEADERS)
+SHARED_HEADERS = compressstruct.h channels.h derived.h
 
-tx_struct_blast.o: tx_struct_blast.c
-	$(CC) $(BLAST_CFLAGS) -c -o tx_struct_blast.o tx_struct_blast.c
+########################################################
+# Run the sanity checks and prepare the build system
+#
 
-tx_struct_spider.o: tx_struct_spider.c
-	$(CC) $(SPIDER_CFLAGS) -c -o tx_struct_spider.o tx_struct_spider.c
+include ../common/Makefile.shared
+
+########################################################
+# Set up targets
+#
+
+BLAST_ALL = fox-blast msnbc-blast rush-blast
+SPIDER_ALL = fox-spider msnbc-spider rush-spider
+
+ifeq ($(HAVE_BLASTCONF),1)
+	ALL += $(BLAST_ALL)
+endif
+
+ifeq ($(HAVE_SPIDERCONF),1)
+	ALL += $(SPIDER_ALL)
+endif
+
+########################################################
+# Build Stuff
+#
+
+.PHONY: install clean
+
+all:: $(ALL)
+
+../common/Makefile.shared:
+	@echo "ERROR: **************************************************************"
+	@echo "Common build files not found; unable to continue.  Try:"
+	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common"
+	@false
 
 fox-blast: $(BLAST_OBJS)
-	$(CC) $(BLAST_CFLAGS) -lm -o fox-blast $(BLAST_OBJS)
+	$(CC) -lm -o fox-blast $(BLAST_OBJS)
 
 msnbc-blast: $(BLAST_OBJS)
-	$(CC) $(BLAST_CFLAGS) -lm -o msnbc-blast $(BLAST_OBJS)
+	$(CC) -lm -o msnbc-blast $(BLAST_OBJS)
 
 rush-blast: $(BLAST_OBJS)
-	$(CC) $(BLAST_CFLAGS) -lm -o rush-blast $(BLAST_OBJS)
+	$(CC) -lm -o rush-blast $(BLAST_OBJS)
 
 fox-spider: $(SPIDER_OBJS)
-	$(CC) $(SPIDER_CFLAGS) -lm -o fox-spider $(SPIDER_OBJS)
+	$(CC) -lm -o fox-spider $(SPIDER_OBJS)
 
 msnbc-spider: $(SPIDER_OBJS)
-	$(CC) $(SPIDER_CFLAGS) -lm -o msnbc-spider $(SPIDER_OBJS)
+	$(CC) -lm -o msnbc-spider $(SPIDER_OBJS)
 
 rush-spider: $(SPIDER_OBJS)
-	$(CC) $(SPIDER_CFLAGS) -lm -o rush-spider $(SPIDER_OBJS)
+	$(CC) -lm -o rush-spider $(SPIDER_OBJS)
 
 clean:
-	rm -f fox-blast msnbc-blast rush-blast || true;
-	rm -f fox-spider msnbc-spider rush-spider || true;
-	rm -f *.o || true;
-	rm -f share/*.o || true;
+	rm -f $(BLAST_ALL) $(SPIDER_ALL)
+	rm -f *.o
 
-install: all
+install: 
 	install -m 755 fox /usr/local/bin
 	install -m 755 msnbc /usr/local/bin
 	install -m 755 rush /usr/local/bin

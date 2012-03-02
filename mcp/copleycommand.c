@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <math.h>
 
-#include "share/blast.h"
+#include "blast.h"
 #include "copleycommand.h"
 #include "motordefs.h"
 #include "command_struct.h"

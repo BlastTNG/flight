@@ -38,12 +38,12 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
-#include "share/bbc_pci.h"
+#include "bbc_pci.h"
 
-#include "share/blast.h"
+#include "blast.h"
 #include "command_struct.h"
 #include "mcp.h"
-#include "share/channels.h"
+#include "channels.h"
 #include "tx.h"
 
 #define BBC_EOF      (0xffff)

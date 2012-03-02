@@ -1,7 +1,46 @@
 CC = gcc
-CPP = g++
-CPPFLAGS = -g -O3 -Wall -D__MCP__ $(BOLOTEST)
+CXX = g++
+CPPFLAGS = -D__MCP__ $(BOLOTEST)
+CFLAGS = -g -O3 -Wall
 LDFLAGS = -lpthread -lm -lstdc++ -lgsl -lgslcblas
+
+########################################################
+# External repository dependencies
+#
+
+SPIDER_ONLY=1
+
+########################################################
+# Inputs
+#
+
+EXPT_HEADERS = calibrate.h command_list.h command_struct.h pointing_struct.h
+SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
+								 compressstruct.h crc.h derived.h ephem_read.h ephem_types.h \
+								 fir.h lut.h netcmd.h sip.h starpos.h
+LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h ezstep.h \
+								mcp.h motorcommand.h motordefs.h svd.h pyramid.h slow_dl.h tx.h
+
+# These are needed by both bolotest and flight versions
+SHARED_OBJS = blast.o channels.o framefile.o lut.o sip.o
+LOCAL_OBJS = actuators.o commands.o ezstep.o hk.o hwpr.o mcp.o tx.o xystage.o
+EXPT_OBJS = command_list.o derived.o tx_struct.o
+
+# These are only needed by the flight version
+ifndef BOLOTEST
+	SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
+								 ephem_read.o fir.o geomag.o radbox.o starpos.o
+	LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
+								motors.o motorcommand.o pointing.o pyramid.o sc.o sched.o \
+								slow_dl.o svd.o table.o
+	EXPT_OBJS += compressstruct.o 
+endif
+
+ETC_DATA = WMM.COF ephem.2000 sched.library *.sch *.lut
+
+########################################################
+# Test-run
+#
 
 #enable to setup a test run on non-flight systems (eg with simbbc)
 #use test-run-enable target to enable
@@ -13,44 +52,29 @@ ifeq ($(TEST_RUN), 1)
 	LDFLAGS := $(LDFLAGS) -m32
 endif
 
-HEADERS = amccommand.h share/bbc_pci.h share/blast.h share/channels.h \
-	  calibrate.h chrgctrl.h command_list.h command_struct.h \
-	  share/compressstruct.h hwpr.h share/crc.h \
-	  share/derived.h share/ephem_read.h share/ephem_types.h ezstep.h \
-	  share/fir.h share/lut.h mcp.h motordefs.h \
-	  share/netcmd.h pointing_struct.h camstruct.h camcommunicator.h \
-	  svd.h pyramid.h \
-	  share/sip.h slow_dl.h share/starpos.h tx.h drivecommunicator.h \
-	  motorcommand.h
-		
+########################################################
+# Run the sanity checks and prepare the build system
+#
 
-# These are needed by both bolotest and flight versions
-OBJS = actuators.o share/blast.o share/channels.o command_list.o commands.o \
-       derived.o ezstep.o share/framefile.o hk.o hwpr.o share/lut.o mcp.o \
-       share/sip.o tx.o tx_struct.o xystage.o
+include ../common/Makefile.shared
 
-# These are only needed by the flight version
-ifndef BOLOTEST
-OBJS := $(OBJS) amccommand.o auxiliary.o chrgctrl.o share/compressfuncs.o \
-  		share/compressionwriter.o compressstruct.o \
-		share/crc.o dgps.o share/ephem_read.o share/fir.o \
-		share/geomag.o motors.o pointing.o share/radbox.o sc.o \
-		camcommunicator.o sched.o slow_dl.o share/starpos.o \
-		svd.o pyramid.o \
-		drivecommunicator.o motorcommand.o table.o
-endif
+########################################################
+# Build Stuff
+#
 
-ETC_DATA = etc/WMM.COF etc/ephem.2000 etc/sched.library \
-	   etc/*.sch etc/*.lut
+.PHONY: fifo install all restart test-run-enable test-run-disable
 
-.PHONEY: fifo install all restart test-run-enable test-run-disable
+all:: pcm
 
-all: pcm
+../common/Makefile.shared:
+	@echo "ERROR: **************************************************************"
+	@echo "Common build files not found; unable to continue.  Try:"
+	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common"
+	@false
 
 clean:
 	rm -f pcm || true;
 	rm -f *.o || true;
-	rm -f share/*.o || true;
 
 Makefile.testing:
 	touch Makefile.testing
@@ -64,8 +88,6 @@ test-run-disable: clean
 pcm: $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o pcm
 
-$(OBJS): $(HEADERS)
-
 install: pcm
 	install -d -m 777 /data/rawdir
 	install -m 755 pcm /usr/local/bin
@@ -75,6 +97,10 @@ install: pcm
 ifeq ($(TEST_RUN), 1)
 	$(MAKE) fifo
 endif
+
+########################################################
+# Install Stuff
+#
 
 fifo:
 	[ -e /data/etc/SIPSS.FIFO ] || mkfifo -m 0777 /data/etc/SIPSS.FIFO

@@ -28,7 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "share/channels.h"
+#include "channels.h"
 #include "tx.h"
 #include "pointing_struct.h"
 #include "command_struct.h"

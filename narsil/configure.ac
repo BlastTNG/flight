@@ -34,6 +34,24 @@ AC_PROG_INSTALL
 dnl X
 AC_PATH_X
 
+dnl common SVN repo
+AC_MSG_CHECKING([for shared code repository])
+if test -d ../common/; then
+  AC_MSG_RESULT([found])
+  REMOTEPROJ=common
+  MAKEFILE_UPDATE="include ../common/Makefile.update"
+  SHARED_CPPFLAGS="-I\${top_srcdir}/../common"
+else
+  AC_MSG_RESULT([not found])
+  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/common/'`
+  AC_MSG_ERROR([*** Cannot find the shared code repository at ../common/;
+                Try changing to the parent directory and running:
+                svn co $SVNREPO common])
+fi
+AC_SUBST(SHARED_CPPFLAGS)
+AC_SUBST(REMOTEPROJ)
+AC_SUBST(MAKEFILE_UPDATE)
+
 # Look for Qt
 AC_MSG_CHECKING([for Qt])
 if test "x$QT_INCLUDE_DIR" = "x" -o "x$QT_LIB_DIR" = "x"; then
@@ -144,7 +162,7 @@ AC_PATH_PROG(MOC, moc,,$PATH:$QT_BIN_DIR)
 
 dnl Look for ELOG
 AC_ARG_WITH(elog, AS_HELP_STRING([--without-elog],
-             [Don't compile in elog support]),
+             [Don't compile in elog support]),dnl'
              [
               case ${withval} in
                 no) use_elog=0;;

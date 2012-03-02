@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 #include "mcp.h"
-#include "share/lut.h"
+#include "lut.h"
 #include "tx.h"
 #include "command_struct.h"
 

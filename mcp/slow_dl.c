@@ -11,9 +11,9 @@
  *
  */
 
-#include "share/channels.h"
+#include "channels.h"
 #include "slow_dl.h"
-#include "share/blast.h"
+#include "blast.h"
 
 /* SLOWDL_FORCE_INT force an integer on numbits between min and max */
 /* SLOWDL_U_MASK    masks off all but the lowest numbits and sends those */

@@ -10,9 +10,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <limits.h>
-#include "../mcp.h"
+#include "mcp.h"
 #include "compressstruct.h"
-#include "../command_struct.h"
+#include "command_struct.h"
 // Structure:
 // FASTFRAMES: 100.16 Hz
 // SLOWFRAMES: FASTFRAMES/20 - multiplex repeated at this rate

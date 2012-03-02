@@ -15,9 +15,9 @@
 #include <sys/ioctl.h>
 #include <time.h>
 
-#include "share/compressstruct.h"
-#include "share/channels.h"
-#include "share/derived.h"
+#include "compressstruct.h"
+#include "channels.h"
+#include "derived.h"
 
 #define FIFODEPTH 2048
 #define RAWDIR "/data/rawdir"

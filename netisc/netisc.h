@@ -18,7 +18,7 @@
 #include <winbase.h>
 
 #include "qcamapi.h"       // QCam interface
-#include "isc_protocol.h"  // data structures for ISC tcp/ip communication
+#include "../common/isc_protocol.h"  // data structures for ISC tcp/ip communication
 #include "FileTiff.h"      // TIFF file reading/writing
 #include "bloblist.h"      // list of blobs
 #include "frameblob.h"     // image frame to calculate blobs

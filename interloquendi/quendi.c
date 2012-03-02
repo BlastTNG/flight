@@ -36,8 +36,8 @@
 
 #include <arpa/inet.h>
 
-#include "share/crc.h"
-#include "share/blast.h"
+#include "crc.h"
+#include "blast.h"
 #include "quendi.h"
 #include "quendiclient.h"
 #include "frameread.h"

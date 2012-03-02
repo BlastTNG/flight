@@ -38,17 +38,17 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
-#include "share/bbc_pci.h"
+#include "bbc_pci.h"
 
-#include "share/blast.h"
+#include "blast.h"
 #include "command_list.h"
 #include "command_struct.h"
-#include "share/crc.h"
+#include "crc.h"
 #include "mcp.h"
 #include "pointing_struct.h"
 #include "slow_dl.h"
-#include "share/starpos.h"
-#include "share/channels.h"
+#include "starpos.h"
+#include "channels.h"
 #include "tx.h"
 
 #define BBC_EOF      (0xffff)

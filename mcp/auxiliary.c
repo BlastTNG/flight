@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 #include "mcp.h"
-#include "share/channels.h"
+#include "channels.h"
 #include "tx.h"
 #include "command_struct.h"
 #include "pointing_struct.h"

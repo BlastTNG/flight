@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../mcp.h"
+#include "mcp.h"
 
 static void E0000(int IENTRY, int *maxdeg, float alt, float glat, float glon,
     float time, float *dec, float *dip, float *ti, float *gv,

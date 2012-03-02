@@ -28,7 +28,7 @@
 
 #include "quendiclient.h"
 #include "quenya.h"
-#include "share/blast.h"
+#include "blast.h"
 
 /* In interloquendi.c */
 int MakeListener(int);

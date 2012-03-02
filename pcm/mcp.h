@@ -24,9 +24,9 @@
 #define MCP_H
 
 #include <pthread.h>
-#include "share/channels.h"
+#include "channels.h"
 #include "calibrate.h"
-#include "share/blast.h"
+#include "blast.h"
 
 extern unsigned short* slow_data[FAST_PER_SLOW];
 extern unsigned int BBFrameIndex;

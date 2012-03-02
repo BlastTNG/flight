@@ -11,6 +11,71 @@ AC_SUBST(DATA_ETC_DIR)
 AC_DEFINE_UNQUOTED(DATA_ETC_DIR, "$DATA_ETC_DIR",
                    [ Define to the path to your data directory ])
 
+dnl common SVN repo
+AC_MSG_CHECKING([for shared code repository])
+if test -d ../common/; then
+  AC_MSG_RESULT([found])
+  REMOTEPROJ=common
+  MAKEFILE_UPDATE="include ../common/Makefile.update"
+  SHARED_CPPFLAGS="-I\${top_srcdir}/../common"
+else
+  AC_MSG_RESULT([not found])
+  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/common/'`
+  AC_MSG_ERROR([*** Cannot find the shared code repository at ../common/;
+                Try changing to the parent directory and running:
+                svn co $SVNREPO common])
+fi
+AC_SUBST(SHARED_CPPFLAGS)
+AC_SUBST(REMOTEPROJ)
+AC_SUBST(MAKEFILE_UPDATE)
+
+dnl blast config repo
+AC_MSG_CHECKING([for BLAST config repository])
+if test -d ../blast_config/; then
+  AC_MSG_RESULT([found])
+  HAVE_BLASTCONFIG=yes
+  REMOTEPROJ="$REMOTEPROJ blast_config"
+else
+  AC_MSG_RESULT([not found])
+  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/blast_etc/'`
+  AC_MSG_WARN([*** Cannot find the BLAST etc repository at ../blast_config/;
+               Try changing to the parent directory and running:
+               svn co $SVNREPO blast_config])
+fi
+
+dnl minicp config repo
+AC_MSG_CHECKING([for minicp config repository])
+if test -d ../minicp_config/; then
+  AC_MSG_RESULT([found])
+  HAVE_MINICONFIG=yes
+  REMOTEPROJ="$REMOTEPROJ minicp_config"
+else
+  AC_MSG_RESULT([not found])
+  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/minicp_config/'`
+  AC_MSG_WARN([*** Cannot find the minicp config repository at ../minicp_config/;
+               Try changing to the parent directory and running:
+               svn co $SVNREPO minicp_config])
+fi
+
+dnl spider config repo
+AC_MSG_CHECKING([for Spider config repository])
+if test -d ../spider_config/; then
+  AC_MSG_RESULT([found])
+  HAVE_SPIDERCONFIG=yes
+  REMOTEPROJ="$REMOTEPROJ spider_config"
+else
+  AC_MSG_RESULT([not found])
+  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/spider_config/'`
+  AC_MSG_WARN([*** Cannot find the Spider config repository at ../spider_config/;
+               Try changing to the parent directory and running:
+               svn co $SVNREPO spider_config])
+fi
+
+if test "x$HAVE_BLASTCONFIG$HAVE_MINICONFIG$HAVE_SPIDERCONFIG" = "x"; then
+  AC_MSG_ERROR([*** No experimental configuration found])
+fi dnl'
+
+
 dnl Programs
 AC_PROG_CC
 AC_LANG_C
@@ -47,5 +112,8 @@ fi
 AC_MSG_RESULT([$HAVE_BLASTCMD_LOG])
 
 AM_CONDITIONAL(INSTALL_BLASTCMD_LOG, test "$HAVE_BLASTCMD_LOG" = "no")
+AM_CONDITIONAL(INSTALL_BLAST, test "x$HAVE_BLASTCONFIG" = "xyes")
+AM_CONDITIONAL(INSTALL_MINICP, test "x$HAVE_MINICONFIG" = "xyes")
+AM_CONDITIONAL(INSTALL_SPIDER, test "x$HAVE_SPIDERCONFIG" = "xyes")
 
 AC_OUTPUT(Makefile)

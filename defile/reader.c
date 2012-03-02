@@ -27,8 +27,8 @@
 #include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
 #include <unistd.h>     /* UNIX std library (lseek, read, close) */
 
-#include "share/blast.h"
-#include "share/channels.h"
+#include "blast.h"
+#include "channels.h"
 #include "defile.h"
 #include "frameread.h"
 

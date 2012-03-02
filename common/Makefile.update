@@ -1,0 +1,20 @@
+#########################################################
+# The rule for updating svn repositories
+#
+
+up update:
+	@for dir in $(REMOTEPROJ); do \
+		if [ -d ../$$dir ]; then \
+			echo "Updating $$dir..."; \
+			( cd ../$$dir && svn up ); \
+		else \
+			echo; \
+			echo "ERROR: **************************************"; \
+			echo "Project ../$$dir missing! try running:"; \
+			echo "  ( cd .. && svn co $$dir )"; \
+			false; \
+		fi; \
+	done
+	svn up
+
+.PHONY: up update

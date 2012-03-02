@@ -26,7 +26,7 @@
 #include <stdlib.h>
 
 #include "hwpr.h"
-#include "share/lut.h"
+#include "lut.h"
 #include "ezstep.h"
 #include "command_struct.h"
 #include "pointing_struct.h" /* To access ACSData */

@@ -42,8 +42,8 @@
 #include "mcp.h"
 #include "tx.h"
 #include "pointing_struct.h"
-#include "share/channels.h"
-#include "share/sip.h"
+#include "channels.h"
+#include "sip.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.

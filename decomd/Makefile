@@ -1,42 +1,71 @@
 CC = gcc
-CFLAGS = -O3 -Wall -g -D__DECOMD__ $(EXTRAFLAGS)
-BLAST_CFLAGS = $(CFLAGS) -DDAS_CARDS=12 -D__BLAST__
-SPIDER_CFLAGS = $(CFLAGS) -D__SPIDER__
+CFLAGS = -O3 -Wall -g $(EXTRAFLAGS)
+CPPFLAGS = -D__DECOMD__
+BLAST_CPPFLAGS = -DDAS_CARDS=12
 LDFLAGS = -lpthread $(EXTRAFLAGS)
 
-all: decomd-blast decomd-spider
+########################################################
+# External repository dependencies
+#
 
-OBJS = decomd.o share/blast.o share/crc.o 
-BLAST_OBJS = $(OBJS) share/channels-blast.o share/framefile-blast.o \
-	     derived_blast.o tx_struct_blast.o
-SPIDER_OBJS = $(OBJS) share/channels.o share/framefile.o \
-	     derived_spider.o tx_struct_spider.o
-HEADERS = share/bbc_pci.h share/blast.h share/channels.h share/crc.h \
-	  decom_pci.h share/derived.h
+SPIDER_OR_BLAST=1   # we need at least one of Spider or BLAST config
 
-share/framefile-blast.o: share/framefile.c
-	$(CC) $(BLAST_CFLAGS) -c -o share/framefile-blast.o share/framefile.c
+########################################################
+# Inputs
+#
 
-share/channels-blast.o: share/channels.c
-	$(CC) $(BLAST_CFLAGS) -c -o share/channels-blast.o share/channels.c
+LOCAL_OBJS = decomd.o
+SHARED_OBJS = channels.o framefile.o blast.o crc.o 
+EXPT_OBJS = derived.o tx_struct.o
+SHARED_HEADERS = bbc_pci.h blast.h channels.h crc.h derived.h
+LOCAL_HEADERS = decom_pci.h
 
-tx_struct_blast.o: tx_struct_blast.c
-	$(CC) $(BLAST_CFLAGS) -c -o tx_struct_blast.o tx_struct_blast.c
+########################################################
+# Run the sanity checks and prepare the build system
+#
 
-tx_struct_spider.o: tx_struct_spider.c
-	$(CC) $(SPIDER_CFLAGS) -c -o tx_struct_spider.o tx_struct_spider.c
+include ../common/Makefile.shared
+
+########################################################
+# Set up targets
+#
+
+BLAST_ALL = decomd-blast
+SPIDER_ALL = decomd-spider
+
+ifeq ($(HAVE_BLASTCONF),1)
+	ALL += $(BLAST_ALL)
+endif
+
+ifeq ($(HAVE_SPIDERCONF),1)
+	ALL += $(SPIDER_ALL)
+endif
+
+########################################################
+# Build Stuff
+#
+
+all:: $(ALL)
+
+../common/Makefile.shared:
+	@echo "ERROR: **************************************************************"
+	@echo "Common build files not found; unable to continue.  Try:"
+	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common"
+	@false
 
 decomd-blast: $(BLAST_OBJS)
-	$(CC) $(LDFLAGS) $(BLAST_OBJS) -o decomd-blast
+	  $(CC) $(LDFLAGS) $(BLAST_OBJS) -o decomd-blast
 
 decomd-spider: $(SPIDER_OBJS)
-	$(CC) $(LDFLAGS) $(SPIDER_OBJS) -o decomd-spider
-
-$(OBJS): $(HEADERS)
+	  $(CC) $(LDFLAGS) $(SPIDER_OBJS) -o decomd-spider
 
 clean:
-	rm -f decomd
+	rm -f $(BLAST_ALL) $(SPIDER_ALL)
 	rm -f *.o
+
+########################################################
+# Install stuff
+#
 
 install: all
 	install -m 700 -o root -g root decomd-blast /usr/local/sbin

@@ -19,7 +19,7 @@
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
 
-#include "share/derived.h"
+#include "derived.h"
 
 /* Don's Handy Guide to adding derived channels:
  *

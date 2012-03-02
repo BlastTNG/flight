@@ -26,7 +26,7 @@
 /* An ISC/OSC handshaking debugging macro should be set to 0 for flight */
 #define WHICH (0)
 
-#include "share/channels.h"
+#include "channels.h"
 #include "calibrate.h"
 
 extern int mcp_initial_controls;

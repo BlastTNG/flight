@@ -1,26 +1,45 @@
 CC = gcc
-CFLAGS = -g -O3 -Wall -D__BLASTD__
-BLAST_CFLAGS = $(CFLAGS) -DDAS_CARDS=12
+CFLAGS = -g -O3 -Wall
+CPPFLAGS = -D__BLASTD__
+BLAST_CPPFLAGS = -DDAS_CARDS=12
 
-OBJS = interloquendi.o quendi.o frameread.o share/blast.o share/crc.o \
-       rendezvous.o quendiclient.o
-BLAST_OBJS = $(OBJS) share/channels-blast.o
-SPIDER_OBJS = $(OBJS) share/channels.o
-HEADERS = quendi.h frameread.h share/channels.h share/bbc_pci.h share/blast.h \
-	  share/derived.h quenya.h share/crc.h quendiclient.h
+########################################################
+# Inputs
+#
 
-all: interloquendi-blast interloquendi-spider
+LOCAL_OBJS = interloquendi.o quendi.o rendezvous.o
+SHARED_OBJS = blast.o channels.o crc.o quendiclient.o frameread.o
+SHARED_HEADERS = frameread.h channels.h bbc_pci.h blast.h derived.h crc.h \
+								 quendiclient.h quenya.h
+LOCAL_HEADERS = quendi.h
 
-$(OBJS): $(HEADERS)
+########################################################
+# Run the sanity checks and prepare the build system
+#
 
-share/channels-blast.o: share/channels.c
-	$(CC) $(BLAST_CFLAGS) -c -o share/channels-blast.o share/channels.c
+include ../common/Makefile.shared
+
+########################################################
+# Build Stuff
+#
+
+all:: interloquendi-blast interloquendi-spider
 
 interloquendi-spider: $(SPIDER_OBJS)
 	$(CC) $(SPIDER_OBJS) -lnsl -lwrap -o interloquendi-spider
 
 interloquendi-blast: $(BLAST_OBJS)
 	$(CC) $(BLAST_OBJS) -lnsl -lwrap -o interloquendi-blast
+
+########################################################
+# Install Stuff
+#
+
+../common/Makefile.shared:
+	@echo "ERROR: **************************************************************"
+	@echo "Common build files not found; unable to continue.  Try:"
+	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common"
+	@false
 
 install:
 	install -m 755 -o root -g root interloquendi-blast /usr/local/sbin

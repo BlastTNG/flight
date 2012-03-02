@@ -25,8 +25,8 @@
 #include <stdio.h>
 
 #include "mcp.h"
-#include "share/channels.h"
-#include "share/lut.h"
+#include "channels.h"
+#include "lut.h"
 #include "tx.h"
 #include "command_struct.h"
 

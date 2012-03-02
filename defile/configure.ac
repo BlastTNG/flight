@@ -21,6 +21,57 @@ if test "x$SED" = "x"; then
   AC_MSG_ERROR([*** No sed found -- please install first (You are lame) ***])
 fi
 
+dnl common SVN repo
+AC_MSG_CHECKING([for shared code repository])
+if test -d ../common/; then
+  AC_MSG_RESULT([found])
+  REMOTEPROJ=common
+  MAKEFILE_UPDATE="include ../common/Makefile.update"
+  SHARED_CPPFLAGS="-I\${top_srcdir}/../common"
+else
+  AC_MSG_RESULT([not found])
+  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/common/'`
+  AC_MSG_ERROR([*** Cannot find the shared code repository at ../common/;
+                Try changing to the parent directory and running:
+                svn co $SVNREPO common])
+fi
+AC_SUBST(SHARED_CPPFLAGS)
+AC_SUBST(REMOTEPROJ)
+AC_SUBST(MAKEFILE_UPDATE)
+
+dnl blast etc repo
+AC_MSG_CHECKING([for BLAST etc repository])
+if test -d ../blast_etc/; then
+  AC_MSG_RESULT([found])
+  HAVE_BLASTETC=yes
+  REMOTEPROJ="$REMOTEPROJ blast_etc"
+else
+  AC_MSG_RESULT([not found])
+  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/blast_etc/'`
+  AC_MSG_WARN([*** Cannot find the BLAST etc repository at ../blast/;
+               Try changing to the parent directory and running:
+               svn co $SVNREPO blast_etc])
+fi
+
+dnl spier etc repo
+AC_MSG_CHECKING([for Spider etc repository])
+if test -d ../spider_etc/; then
+  AC_MSG_RESULT([found])
+  HAVE_SPIDERETC=yes
+  REMOTEPROJ="$REMOTEPROJ spider_etc"
+else
+  AC_MSG_RESULT([not found])
+  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/spider_etc/'`
+  AC_MSG_WARN([*** Cannot find the Spider etc repository at ../spider/;
+               Try changing to the parent directory and running:
+               svn co $SVNREPO spider_etc])
+fi
+
+if test "x$HAVE_BLASTETC$HAVE_SPIDERETC" = "x"; then
+  AC_MSG_WARN([*** No data repositories found])
+  AC_MSG_WARN([*** auxiliary files won't be installed])
+fi dnl'
+
 dnl Libraries
 AC_CHECK_LIB(pthread, pthread_create,,AC_MSG_ERROR([*** libpthread not installed -- please install first ***]))
 AC_CHECK_LIB(z, gzopen,,AC_MSG_WARN([*** libz not installed -- defile will have no gzip capabilities ***]))
@@ -88,5 +139,7 @@ else
   AC_MSG_RESULT([$INSTALL_DEFILE_CONF])
 fi
 AM_CONDITIONAL(INSTALL_DEFILE_CONF, test "$INSTALL_DEFILE_CONF" = "yes")
+AM_CONDITIONAL(INSTALL_BLAST_ETC, test "x$HAVE_BLASTETC" = "xyes")
+AM_CONDITIONAL(INSTALL_SPIDER_ETC, test "x$HAVE_SPIDERETC" = "xyes")
 
-AC_OUTPUT(Makefile defile.1.in defile.conf.in etc/Makefile etc/blast/Makefile etc/spider/Makefile)
+AC_OUTPUT(Makefile defile.1.in defile.conf.in)

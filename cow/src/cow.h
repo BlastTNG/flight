@@ -32,7 +32,7 @@
 #define NARSIL_H
 
 extern "C" {
-#include "share/netcmd.h"
+#include "netcmd.h"
 }
 
 #include <QVariant>
