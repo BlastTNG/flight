@@ -50,7 +50,7 @@ all:: $(ALL)
 ../common/Makefile.shared:
 	@echo "ERROR: **************************************************************"
 	@echo "Common build files not found; unable to continue.  Try:"
-	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common"
+	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common )"
 	@false
 
 decomd-blast: $(BLAST_OBJS)

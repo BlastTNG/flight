@@ -1,20 +1,9 @@
 #########################################################
-# The rule for updating svn repositories
+# The rule for globally doing stuff to svn repositories
 #
 
-up update:
-	@for dir in $(REMOTEPROJ); do \
-		if [ -d ../$$dir ]; then \
-			echo "Updating $$dir..."; \
-			( cd ../$$dir && svn up ); \
-		else \
-			echo; \
-			echo "ERROR: **************************************"; \
-			echo "Project ../$$dir missing! try running:"; \
-			echo "  ( cd .. && svn co $$dir )"; \
-			false; \
-		fi; \
-	done
-	svn up
+THISREPO=$(shell basename `pwd`)
+up update ci commit:
+	( cd .. && svn $@ $(THISREPO) $(REMOTEPROJ) )
 
-.PHONY: up update
+.PHONY: up update ci commit

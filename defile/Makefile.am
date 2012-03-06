@@ -30,6 +30,8 @@ CFLAGS = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
 INCLUDES = -I../common
 defile_blast_CFLAGS = -DDAS_CARDS=12
 
+include ../common/Makefile.update
+
 DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data" --with-etc="$$dc_install_base/etc"
 
 defile.conf: Makefile $(top_builddir)/defile.conf.in $(top_srcdir)/fixup.sh
