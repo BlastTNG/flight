@@ -260,6 +260,7 @@ struct AxesModeStruct {
   double az_vel;
   double el_vel;
   double el_dith;
+  double az_accel;
 };
 
 extern struct AxesModeStruct axes_mode;

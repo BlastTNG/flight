@@ -141,11 +141,14 @@ extern "C" {
 #define PIV_I_TO_DAC 3255.029 
 #define DAC_TO_PIV_I 1.0/PIV_I_TO_DAC
 
-#define PIV_DAC_OFF (-1)*102 // 31mV Analog Input voltage offset
+//#define PIV_DAC_OFF (-1)*102 // 31mV Analog Input voltage offset
                              // as measured by the pivot controller
-#define PIV_DEAD_BAND 162.75 // 50mV*3.255029 DAC cts/mV
+//#define PIV_DEAD_BAND 162.75 // 50mV*3.255029 DAC cts/mV
 
-/* only zero wrt each other, not absolute */
+#define PIV_DAC_OFF 0.0   // value is set in controller firmware instead
+#define PIV_DEAD_BAND 0.0 // value is set in controller firmware instead
+
+	/* only zero wrt each other, not absolute */
 #define AD590_CALIB_PRIMARY_1   -0.7285
 #define AD590_CALIB_PRIMARY_2    0.7285
 #define AD590_CALIB_SECONDARY_1  0.143

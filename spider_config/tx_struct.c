@@ -329,7 +329,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP2 28 is unusued */
   {"blob07_f_thegood",'w', LOOP2, 29,                1.0,             0.0, 'u', U_NONE},
   {"blob07_s_thegood",'w', LOOP2, 30,          1.0/100.0,             0.0, 'u', U_NONE},
-  /* LOOP2 31 is unusued */
+  {"accel_max_az",'w', LOOP2, 31,         100.0/65535.0,             0.0, 'u', U_NONE},
   {"blob07_y_thebad",'w', LOOP2,  32, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   /* LOOP2 33 is unusued */
   /* LOOP2 34 is fast */
@@ -424,7 +424,6 @@ struct ChannelStruct SlowChannels[] = {
   {"maxblob_thebad",'w',LOOP4,  7,                1.0,             0.0, 'u', U_NONE},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u', U_NONE},
   {"plover",       'w', LOOP4,  9,                1.0,             0.0, 'u', U_NONE},
-  {"plovest",      'w', LOOP0,  3,                1.0,             0.0, 'u', U_NONE},
   {"ccd_t_thegood",'w', LOOP4, 10,          1.0/100.0,             0.0, 's', U_NONE},
   /* LOOP4 11-14 are unusued */
   {"ccd_t_thebad", 'w', LOOP4, 15,          1.0/100.0,             0.0, 's', U_NONE},
@@ -1099,10 +1098,12 @@ struct ChannelStruct FastChannels[] = {
 //  {"trigger_isc",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
 //  {"trigger_osc",  'w',   ACS2_D, 12,                 1.0,            0.0, 'u', U_NONE},
   {"vel_req_el",   'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
+  {"cos_el", 	   'w',    ACS2_D, 25, 1/32768.0, -1.0, 'u', U_NONE},
+  {"sin_el", 	   'w',    ACS2_D, 26, 1/32768.0, -1.0, 'u', U_NONE}, 
 //{"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS,-32768.0*GY16_TO_DPS, 'u', U_V_DPS},
-  {"step_1_el",    'w',   ACS2_D, 29,     10000.0/32767.0, -10000.3051851, 'u', U_F_HZ},
-  {"step_2_el",    'w',   ACS2_D, 30,     10000.0/32767.0, -10000.3051851, 'u', U_F_HZ},
+  {"step_1_el",    'w',   ACS2_D, 29,     9000.0/32767.0, -9000.27466658528, 'u', U_F_HZ},
+  {"step_2_el",    'w',   ACS2_D, 30,     9000.0/32767.0, -9000.27466658528, 'u', U_F_HZ},
   {"el_raw_1_enc", 'r',   ACS2_D, 56,               I2DEG,            -157.5220752, 'u', U_P_DEG},
   {"el_raw_2_enc", 'r',   ACS2_D, 57,               -I2DEG,            215.831006, 'u', U_P_DEG},
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
