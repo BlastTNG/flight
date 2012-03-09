@@ -1275,27 +1275,27 @@ void Pointing(void)
   EvolveAzSolution(&NullAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
+      0.0,
       0.0, 0);
   /** MAG Az **/
   EvolveAzSolution(&MagAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
+      0.0,
       mag_az, mag_ok);
 
   /** DGPS Az **/
   EvolveAzSolution(&DGPSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
+      0.0,
       dgps_az, dgps_ok);
 
   /** PSS1 **/
   EvolveAzSolution(&PSSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
+      0.0,
       pss_az, pss_ok);
 
   if (CommandData.fast_offset_gy>0) {
