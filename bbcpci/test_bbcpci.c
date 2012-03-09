@@ -102,16 +102,19 @@ int main(int argc, char *argv[]) {
   usleep(100000);
   ioctl(fp, BBCPCI_IOC_ON_IRQ);
   ioctl(fp, BBCPCI_IOC_SYNC);
+  //"reset" the rates so that older firmwares will work still
+  ioctl(fp, BBCPCI_IOC_IRQ_RATE, 1);
+  ioctl(fp, BBCPCI_IOC_FRAME_RATE, 1);
   usleep(100000);
-  ioctl(fp, BBCPCI_IOC_IRQ_RATE_EXT, 1);
-  ioctl(fp, BBCPCI_IOC_FRAME_RATE_EXT, SERIAL_PER_FRAME);
-  ioctl(fp, BBCPCI_IOC_IRQ_RATE_INT, FRAME_RATE_INT);
-  ioctl(fp, BBCPCI_IOC_FRAME_RATE_INT, FRAME_RATE_INT);
   
 #ifdef USE_EXT_SERIAL
   ioctl(fp, BBCPCI_IOC_EXT_SER_ON);
+  ioctl(fp, BBCPCI_IOC_IRQ_RATE_EXT, 1);
+  ioctl(fp, BBCPCI_IOC_FRAME_RATE_EXT, SERIAL_PER_FRAME);
 #else
   ioctl(fp, BBCPCI_IOC_EXT_SER_OFF);
+  ioctl(fp, BBCPCI_IOC_IRQ_RATE_INT, FRAME_RATE_INT);
+  ioctl(fp, BBCPCI_IOC_FRAME_RATE_INT, FRAME_RATE_INT);
 #endif
   
   numerrs = 0;
