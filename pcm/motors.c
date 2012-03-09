@@ -48,8 +48,10 @@
 
 #define V_AZ_MIN 0.05   // smallest measured az speed we trust given gyro
                         //   noise/offsets
+#define OVERSHOOT_BAND 0.05 // travel at v_az_min in this band on turn arounds
 
 /* elevation drive related defines adapted from az-el.c in minicp: */
+#define MAX_STEP 9000    // maximum step rate to send to el motors
 #define CM_PULSES 3200   // Cool Muscle pulses per rotation
 #define IN_TO_MM 25.4
 #define ROT_PER_INCH 5    // linear actuator rotations per inch of travel
@@ -388,7 +390,8 @@ static double GetVAz(void)
   //max_dv = 1000;
 
   if (axes_mode.az_mode == AXIS_VEL) {
-      vel = axes_mode.az_vel;
+     vel = axes_mode.az_vel;
+    // vel = -axes_mode.az_vel; // temporary negative sign since DSP control loop seems wrong (POSITIVE FEEDBACK!)
     //bprintf(info, "vel according to axes_mode: %f", vel);
   } else if (axes_mode.az_mode == AXIS_POSITION) {
     az = PointingData[i_point].az;
@@ -402,6 +405,7 @@ static double GetVAz(void)
     }
     //bprintf(info, "az_dest: %f, az: %f, dx: %f, vel: %f", az_dest, az, dx, vel);
     vel *= (double)CommandData.azi_gain.PT/10000.0;
+    //vel *= -(double)CommandData.azi_gain.PT/10000.0; // temp negative sign
   }
 
   /*vel_offset = -(PointingData[i_point].offset_ifroll_gy 
@@ -487,11 +491,13 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS; // Convert to dps 
 
   i_point = GETREADINDEX(point_index);
-  p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
+  //p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
+  p_rw_term = (1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
   /*if (ACSData.vel_rw != 0.0) {
     bprintf(info, "measured rw vel (read from frame): %f", ACSData.vel_rw);
   }*/
-  p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
+  //p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
+  p_err_term = (double)g_err_piv*(axes_mode.az_accel)*1.94;
   I_req = p_rw_term+p_err_term;
 
 
@@ -620,9 +626,13 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* velCalcPivAddr;
   static struct NiosStruct* velRWAddr;
   static struct NiosStruct* accelAzAddr;
+  static struct NiosStruct* accelMaxAzAddr;
   static struct NiosStruct* step1ElAddr;   // PORT
   static struct NiosStruct* step2ElAddr;   // STARBOARD
- 
+  static struct NiosStruct* cosElAddr;  // temporary HACK until we get rid of this in DSP code
+  static struct NiosStruct* sinElAddr;  // temporary HACK until we get rid of this in DSP code
+   
+
   // Used only for Lab Controller tests
   static struct NiosStruct* dacAmplAddr[5];
   int i;
@@ -668,6 +678,7 @@ void WriteMot(int TxIndex)
     velCalcPivAddr = GetNiosAddr("vel_calc_piv");
     velRWAddr = GetNiosAddr("vel_rw");
     accelAzAddr = GetNiosAddr("accel_az");
+    accelMaxAzAddr = GetNiosAddr("accel_max_az");
 
     dacAmplAddr[0] = GetNiosAddr("v_pump_bal");    // is now ifpm_ampl
     //    dacAmplAddr[0] = GetNiosAddr("dac1_ampl"); // is now ifpm_ampl
@@ -677,6 +688,8 @@ void WriteMot(int TxIndex)
     //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now dac_rw 
     step1ElAddr = GetNiosAddr("step_1_el");
     step2ElAddr = GetNiosAddr("step_2_el");
+    cosElAddr = GetNiosAddr("cos_el");
+    sinElAddr = GetNiosAddr("sin_el");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -722,16 +735,16 @@ void WriteMot(int TxIndex)
     step_rate_S = (int) (el_rps_S*CM_PULSES);
   }
 
-  if ( step_rate_P > 10000 ) {
-    step_rate_P = 10000;
-  } else if ( step_rate_P < -10000 ) {
-    step_rate_P = -10000;
+  if ( step_rate_P > MAX_STEP ) {
+    step_rate_P = MAX_STEP;
+  } else if ( step_rate_P < -MAX_STEP ) {
+    step_rate_P = -MAX_STEP;
   }
 
-  if ( step_rate_S > 10000 ) {
-    step_rate_S = 10000;
-  } else if ( step_rate_S < -10000 ) {
-    step_rate_S = -10000;
+  if ( step_rate_S > MAX_STEP ) {
+    step_rate_S = MAX_STEP;
+  } else if ( step_rate_S < -MAX_STEP ) {
+    step_rate_S = -MAX_STEP;
   }
  /* if (step_rate_S != -step_rate_P){
     bprintf(info, "port step rate = %d", step_rate_P); 
@@ -756,6 +769,12 @@ void WriteMot(int TxIndex)
 
   /*differential gain term for el motors */
   WriteCalData(gDiffElAddr, elGainDiff, NIOS_QUEUE);
+
+  // FIXME HACK TODO: replace this comment with nothing.
+  
+  /* TEMPORARY HACK: write cos el and sin el for el = 0, since gyros are now on outer frame */
+  WriteCalData(cosElAddr, 1.0, NIOS_QUEUE);
+  WriteCalData(sinElAddr, 0.0, NIOS_QUEUE);
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/
@@ -809,7 +828,9 @@ void WriteMot(int TxIndex)
   WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
   /* Azimuth Scan Acceleration */
   WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
-
+  /* Azimuth Scan Max Acceleration */
+  WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
+  //bprintf(info,"az accel max: %g\n", CommandData.az_accel_max);
   if (wait > 0)
     wait--;
 }
@@ -921,14 +942,13 @@ static void SetAzScanMode(double az, double left, double right, double v,
 static void DoSineMode(void)
 {
   double az, el;
-  //double lst, lat;
-  double centre, left, right, v_az;//, top, bottom, v_az;
-  //double az_of_bot;
+  double centre, left, right, v_az=0.0, a_az;//, top, bottom, v_az;
   double v_az_max, ampl, turn_around;
   double accel_spider;
   int i_point;
   double t_before; // time at which to send BSC trigger command
-
+  static double last_v = 0.0;
+  
   t_before = DELAY + CommandData.theugly.expTime/2000.0;
  
   accel_spider = az_accel*SR; // convert back from deg/s in one Bbus interval
@@ -939,10 +959,9 @@ static void DoSineMode(void)
   axes_mode.el_vel = 0.0;
 
   i_point = GETREADINDEX(point_index);
-  //lst = PointingData[i_point].lst;
-  //lat = PointingData[i_point].lat;
+  
   az = PointingData[i_point].az;
-  el = PointingData[i_point].el;// + 28.0;
+  el = PointingData[i_point].el;
 
   centre = CommandData.pointing_mode.X;
   ampl = (CommandData.pointing_mode.w)/2.0;
@@ -959,10 +978,11 @@ static void DoSineMode(void)
   }
 
   v_az_max = sqrt(accel_spider * ampl);
-  //turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
+  
+  // |distance| from end point when V_req = V_AZ_MIN
   turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
 
-
+  // This should never ever matter.  MIN_SCAN = 0.1 deg
   if (right-left < MIN_SCAN) {
     left = centre - MIN_SCAN/2.0; 
     right = left + MIN_SCAN;
@@ -971,15 +991,15 @@ static void DoSineMode(void)
 
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
 
-  /* case 1: moving into quad from beyond left endpoint: */
-  if (az < left) {
-    v_az = sqrt(2.0*accel_spider*(left-az)) + V_AZ_MIN;
+  /* case 1: moving into scan from beyond left endpoint: */
+  if (az < left - OVERSHOOT_BAND) {
+    v_az = sqrt(2.0*accel_spider*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
     axes_mode.az_vel = v_az;
   
   /* case 2: moving into quad from beyond right endpoint: */
-  } else if (az > right) {
-    v_az = -sqrt(2.0*accel_spider*(az-right)) - V_AZ_MIN;
+  } else if (az > right + OVERSHOOT_BAND) {
+    v_az = -sqrt(2.0*accel_spider*(az-(right+OVERSHOOT_BAND))) - V_AZ_MIN;
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
     axes_mode.az_vel = v_az;
 
@@ -988,7 +1008,9 @@ static void DoSineMode(void)
              && (PointingData[i_point].v_az > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
+    a_az = accel_spider*( (centre - az)/ampl ); 
 
+    // star camera trigger (lemur?)
     if (az >= (right + 
         ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
@@ -997,13 +1019,16 @@ static void DoSineMode(void)
     }
  
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
               && (PointingData[i_point].v_az < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
-
+    a_az = accel_spider*( (centre - az)/ampl );
+  
+    // star camera trigger (lemur?)
     if (az <= (left + 
         ampl*(1.0 - cos(sqrt(accel_spider/ampl)*t_before)))) {
       bsc_trigger = 1;
@@ -1012,17 +1037,35 @@ static void DoSineMode(void)
     }
 
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
 
   /* case 5: in left turn-around zone */ 
-  } else if ( (az <= (left+turn_around)) && (az >= left) ) {
-    v_az = V_AZ_MIN;
-    axes_mode.az_vel = v_az;
-
+  } else if ( az <= left+turn_around ) {
+    //v_az = V_AZ_MIN;
+    v_az = last_v + az_accel;
+    if (v_az > V_AZ_MIN) {
+      v_az = V_AZ_MIN;
+    }
+    a_az = accel_spider*( (centre - az)/ampl );
+    
+    axes_mode.az_vel = v_az; 
+    axes_mode.az_accel = a_az;
+    
   /* case 6: in right turn-around zone */   
-  } else if ( (az >= (right-turn_around)) && (az <= right) ) {
-    v_az = -V_AZ_MIN;
+  } else if (az >= right-turn_around) {
+    //v_az = -V_AZ_MIN;
+    v_az = last_v - az_accel;
+    if (v_az < -V_AZ_MIN) {
+      v_az = -V_AZ_MIN;
+    }
+    a_az = accel_spider*( (centre - az)/ampl );
+    
     axes_mode.az_vel = v_az;
-  } 
+    axes_mode.az_accel = a_az;
+  }
+  
+  
+  last_v = v_az;
 }
 
 /* JAS - "modified quad" scan mode for Spider */
@@ -2005,6 +2048,7 @@ void DoQuadMode(void) // aka radbox
 void UpdateAxesMode(void)
 {
   az_accel = CommandData.az_accel/SR;
+  axes_mode.az_accel = 0.0; // default for scan modes that don't set
   switch (CommandData.pointing_mode.mode) {
     case P_DRIFT:
       axes_mode.el_mode = AXIS_VEL;

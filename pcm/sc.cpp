@@ -50,9 +50,9 @@ using namespace std;
 
 
 //allow any host to be the star camera
-#define THEGOOD_SERVERNAME "192.168.1.11"
+#define THEGOOD_SERVERNAME "192.168.1.13"
 #define THEBAD_SERVERNAME  "192.168.1.12"
-#define THEUGLY_SERVERNAME "192.168.1.13"
+#define THEUGLY_SERVERNAME "192.168.1.11"
 
 #define THEGOOD_SERIAL "110794466"
 #define THEBAD_SERIAL  "08073506"
