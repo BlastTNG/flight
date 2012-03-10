@@ -244,14 +244,19 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
     }
     if(NOmniBox->hasFocus()) NOmniBox->oldXSize=x.size();
 
+    int best_i=-1;
     for(int i=0;i<OmniList.size();i++) {
         if(r==OmniList[i].name+' ') {
             if(!NGroups[OmniList[i].group]->isChecked()) {
-                NGroups[OmniList[i].group]->toggle();
-            }
-            break;
+		best_i=i;
+            } else {
+		best_i=-1;
+		break;
+	    }
         }
     }
+    if(best_i!=-1) NGroups[OmniList[best_i].group]->toggle();
+
     for(int i=0;i<NCommandList->count();i++) {
         if(NCommandList->item(i)->text()+" "==r) {
             NCommandList->setCurrentRow(i);
@@ -1178,9 +1183,9 @@ void MainForm::PopulateOmnibox()
             } else {
                 pair.name=client_scommands[indexes[i]].name;
             }
-            if(!OmniList.contains(pair)) {
+            //if(!OmniList.contains(pair)) {
                 OmniList.push_back(pair);
-            }
+            //}
         }
     }
 
