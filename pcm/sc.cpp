@@ -50,9 +50,9 @@ using namespace std;
 
 
 //allow any host to be the star camera
-#define THEGOOD_SERVERNAME "192.168.1.13"
+#define THEGOOD_SERVERNAME "192.168.1.11"
 #define THEBAD_SERVERNAME  "192.168.1.12"
-#define THEUGLY_SERVERNAME "192.168.1.11"
+#define THEUGLY_SERVERNAME "192.168.1.13"
 
 #define THEGOOD_SERIAL "110794466"
 #define THEBAD_SERIAL  "08073506"
@@ -347,17 +347,17 @@ void cameraFields()
 
   //persistently identify cameras by serial number (camID)
   if (camRtn[i_cam].camID == THEGOOD_SERIAL)  {
-    rsc = &camRtn[i_cam];
-    which = 1;
+    bsc = &camRtn[i_cam];
     unrecFlag = false;
   }
   else if (camRtn[i_cam].camID == THEBAD_SERIAL)  {
     rsc = &camRtn[i_cam];
-    which = 2;
+    which = 1;
     unrecFlag = false;
   }
   else if (camRtn[i_cam].camID == THEUGLY_SERIAL)  {
-    bsc = &camRtn[i_cam];
+    rsc = &camRtn[i_cam];
+    which = 2;
     unrecFlag = false;
   }
   else if (!unrecFlag) { //don't keep printing same error
@@ -367,45 +367,36 @@ void cameraFields()
     unrecFlag = true;
   }
 
-  if (rsc != NULL) {
-    if (which == 1) { 
-    	WriteData(TheGoodFrameAddr, rsc->frameNum, NIOS_QUEUE);
-    	WriteData(TheGoodMeanAddr, (int)rsc->mapmean, NIOS_QUEUE);
-    	WriteData(TheGoodSigmaAddr, (int)(rsc->sigma*10), NIOS_QUEUE);
-    	WriteData(TheGoodTimeAddr, rsc->imagestarttime.tv_sec, NIOS_QUEUE);
-    	WriteData(TheGoodUsecAddr, rsc->imagestarttime.tv_usec, NIOS_QUEUE);
+  if (bsc != NULL) {
+    	WriteData(TheGoodFrameAddr, bsc->frameNum, NIOS_QUEUE);
+    	WriteData(TheGoodMeanAddr, (int)bsc->mapmean, NIOS_QUEUE);
+    	WriteData(TheGoodSigmaAddr, (int)(bsc->sigma*10), NIOS_QUEUE);
+    	WriteData(TheGoodTimeAddr, bsc->imagestarttime.tv_sec, NIOS_QUEUE);
+    	WriteData(TheGoodUsecAddr, bsc->imagestarttime.tv_usec, NIOS_QUEUE);
     	//it looks like this is in deg C. just scale to get better resolution
-    	WriteData(TheGoodCcdTempAddr, (int)(rsc->ccdtemperature*100), NIOS_QUEUE);
-    	WriteData(TheGoodFocPosAddr, (int)(rsc->focusposition*10), NIOS_QUEUE);
-    	WriteData(TheGoodNumBlobsAddr, rsc->numblobs, NIOS_QUEUE);
+    	WriteData(TheGoodCcdTempAddr, (int)(bsc->ccdtemperature*100), NIOS_QUEUE);
+    	WriteData(TheGoodFocPosAddr, (int)(bsc->focusposition*10), NIOS_QUEUE);
+    	WriteData(TheGoodNumBlobsAddr, bsc->numblobs, NIOS_QUEUE);
 
 	WriteData(TheGoodRaAddr, (int)(ra_thegood*100*180/M_PI), NIOS_QUEUE);
 	WriteData(TheGoodDecAddr, (int)(dec_thegood*100*180/M_PI), NIOS_QUEUE);
 	WriteData(TheGoodRollAddr, (int)(roll_thegood*100*180/M_PI), NIOS_QUEUE);
-	if (rsc->numblobs > 0) {
+	if (bsc->numblobs > 0) {
 		for (int i=0; i<9; i++)
     		{
-    		  WriteData(TheGoodBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
+    		  WriteData(TheGoodBlobX[i],(unsigned int)(bsc->x[i]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-		  WriteData(TheGoodBlobY[i],(unsigned int)(rsc->y[i]/CAM_WIDTH*SHRT_MAX),
+		  WriteData(TheGoodBlobY[i],(unsigned int)(bsc->y[i]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-		  WriteData(TheGoodBlobF[i], (unsigned int)rsc->flux[i], NIOS_QUEUE);
-		      unsigned int snr = (rsc->snr[i] >= SHRT_MAX / 100.0) ? 
-			SHRT_MAX : (unsigned int)rsc->snr[i]*100;
+		  WriteData(TheGoodBlobF[i], (unsigned int)bsc->flux[i], NIOS_QUEUE);
+		      unsigned int snr = (bsc->snr[i] >= SHRT_MAX / 100.0) ? 
+			SHRT_MAX : (unsigned int)bsc->snr[i]*100;
 		  WriteData(TheGoodBlobS[i], snr, NIOS_QUEUE);
 		}
 	}
-	if (rsc->numblobs > 8) {
-		for (int j=0; j<10; j++) {
-			if ((goodPos[j] == 90.0) && (rsc->frameNum != posFrame)) {
-				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
-				cout << rsc->numblobs << " BLOBS" <<  ", setting GOODPOS #" << j << " to " << goodPos[j] << endl;
-				posFrame = rsc->frameNum;
-				break;
-			}
-		}
-	}
-    } else if (which == 2) {
+  }	
+  if (rsc != NULL) {
+    if (which == 1) { 
     	WriteData(TheBadFrameAddr, rsc->frameNum, NIOS_QUEUE);
     	WriteData(TheBadMeanAddr, (int)rsc->mapmean, NIOS_QUEUE);
     	WriteData(TheBadSigmaAddr, (int)(rsc->sigma*10), NIOS_QUEUE);
@@ -432,37 +423,46 @@ void cameraFields()
 		      WriteData(TheBadBlobS[i], snr, NIOS_QUEUE);
 		}
 	}
-    }
-
-  }
-  if (bsc != NULL) {
-    	WriteData(TheUglyFrameAddr, bsc->frameNum, NIOS_QUEUE);
-    	WriteData(TheUglyMeanAddr, (int)bsc->mapmean, NIOS_QUEUE);
-    	WriteData(TheUglySigmaAddr, (int)(bsc->sigma*10), NIOS_QUEUE);
-    	WriteData(TheUglyTimeAddr, bsc->imagestarttime.tv_sec, NIOS_QUEUE);
-    	WriteData(TheUglyUsecAddr, bsc->imagestarttime.tv_usec, NIOS_QUEUE);
+	if (rsc->numblobs > 8) {
+		for (int j=0; j<10; j++) {
+			if ((goodPos[j] == 90.0) && (rsc->frameNum != posFrame)) {
+				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
+				cout << rsc->numblobs << " BLOBS" <<  ", setting GOODPOS #" << j << " to " << goodPos[j] << endl;
+				posFrame = rsc->frameNum;
+				break;
+			}
+		}
+	}
+    } else if (which == 2) {
+    	WriteData(TheUglyFrameAddr, rsc->frameNum, NIOS_QUEUE);
+    	WriteData(TheUglyMeanAddr, (int)rsc->mapmean, NIOS_QUEUE);
+    	WriteData(TheUglySigmaAddr, (int)(rsc->sigma*10), NIOS_QUEUE);
+    	WriteData(TheUglyTimeAddr, rsc->imagestarttime.tv_sec, NIOS_QUEUE);
+    	WriteData(TheUglyUsecAddr, rsc->imagestarttime.tv_usec, NIOS_QUEUE);
     	//it looks like this is in deg C. just scale to get better resolution
-    	WriteData(TheUglyCcdTempAddr, (int)(bsc->ccdtemperature*100), NIOS_QUEUE);
-    	WriteData(TheUglyFocPosAddr, (int)(bsc->focusposition*10), NIOS_QUEUE);
-    	WriteData(TheUglyNumBlobsAddr, bsc->numblobs, NIOS_QUEUE);
+    	WriteData(TheUglyCcdTempAddr, (int)(rsc->ccdtemperature*100), NIOS_QUEUE);
+    	WriteData(TheUglyFocPosAddr, (int)(rsc->focusposition*10), NIOS_QUEUE);
+    	WriteData(TheUglyNumBlobsAddr, rsc->numblobs, NIOS_QUEUE);
 
 	WriteData(TheUglyRaAddr, (int)(ra_theugly*100*180/M_PI), NIOS_QUEUE);
 	WriteData(TheUglyDecAddr, (int)(dec_theugly*100*180/M_PI), NIOS_QUEUE);
 	WriteData(TheUglyRollAddr, (int)(roll_theugly*100*180/M_PI), NIOS_QUEUE);
-	if (bsc->numblobs > 0) {
+	if (rsc->numblobs > 0) {
     		for (int i=0; i<9; i++)
     		{
-      			WriteData(TheUglyBlobX[i],(unsigned int)(bsc->x[i]/CAM_WIDTH*SHRT_MAX),
+      			WriteData(TheUglyBlobX[i],(unsigned int)(rsc->x[i]/CAM_WIDTH*SHRT_MAX),
 		  		NIOS_QUEUE);
-      			WriteData(TheUglyBlobY[i],(unsigned int)(bsc->y[i]/CAM_WIDTH*SHRT_MAX),
+      			WriteData(TheUglyBlobY[i],(unsigned int)(rsc->y[i]/CAM_WIDTH*SHRT_MAX),
 		  		NIOS_QUEUE);
-      			WriteData(TheUglyBlobF[i], (unsigned int)bsc->flux[i], NIOS_QUEUE);
-      			unsigned int snr = (bsc->snr[i] >= SHRT_MAX / 100.0) ? 
-			SHRT_MAX : (unsigned int)bsc->snr[i]*100;
+      			WriteData(TheUglyBlobF[i], (unsigned int)rsc->flux[i], NIOS_QUEUE);
+      			unsigned int snr = (rsc->snr[i] >= SHRT_MAX / 100.0) ? 
+			SHRT_MAX : (unsigned int)rsc->snr[i]*100;
       			WriteData(TheUglyBlobS[i], snr, NIOS_QUEUE);
     		}
 	}
-  }	
+    }
+
+  }
 
 }
 
@@ -472,7 +472,7 @@ void cameraFields()
   runs pyramid and solves the field
 */
 static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0) {
-  double plate_scale = 6.56/180./3600.*M_PI; 
+  double plate_scale = 9.3/180./3600.*M_PI; 
   double XC = 1530/2;
   double YC = 1020/2;
   double FTOL = 20.*M_PI/180./3600.;//star-blob association angular tolerance (default 20 arcsec as in netisc)
@@ -482,27 +482,29 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
   int nsol;
 
   n_blobs = ((solrtn->numblobs > 15) ? 15 : solrtn->numblobs);
-  double *x = new double [n_blobs];
-  double *y = new double [n_blobs];
-  double *x_p = new double [n_blobs];
-  double *y_p = new double [n_blobs];
-  memset(x, 0, sizeof(x) );
-  memset(y, 0, sizeof(y) );
-  memset(x_p, 0, sizeof(x_p) );
-  memset(y_p, 0, sizeof(y_p) );
+  if (n_blobs > 4) {
+	  double *x = new double [n_blobs];
+	  double *y = new double [n_blobs];
+	  double *x_p = new double [n_blobs];
+	  double *y_p = new double [n_blobs];
+	  memset(x, 0, sizeof(x) );
+	  memset(y, 0, sizeof(y) );
+	  memset(x_p, 0, sizeof(x_p) );
+	  memset(y_p, 0, sizeof(y_p) );
 
-  for (k = 0; k < n_blobs; k++) {
-	x[k] = solrtn->x[k];
-	y[k] = 1020 - solrtn->y[k];
-	x_p[k] = (x[k] - XC)*plate_scale;
-	y_p[k] = (y[k] - YC)*plate_scale;
+	  for (k = 0; k < n_blobs; k++) {
+		x[k] = solrtn->x[k];
+		y[k] = 1020 - solrtn->y[k];
+		x_p[k] = (x[k] - XC)*plate_scale;
+		y_p[k] = (y[k] - YC)*plate_scale;
+  	}
+  	//launch pyramid
+  	retval_pyr = pyr.GetSolution(FTOL, x_p, y_p,n_blobs, &sol, &nsol, &ra0, &dec0, &r0);
+  	delete[] x;
+  	delete[] y;
+  	delete[] x_p;
+  	delete[] y_p;
   }
-  //launch pyramid
-  retval_pyr = pyr.GetSolution(FTOL, x_p, y_p,n_blobs, &sol, &nsol, &ra0, &dec0, &r0);
-  delete[] x;
-  delete[] y;
-  delete[] x_p;
-  delete[] y_p;
 }
 
 /*
