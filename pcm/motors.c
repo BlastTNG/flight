@@ -994,14 +994,23 @@ static void DoSineMode(void)
   /* case 1: moving into scan from beyond left endpoint: */
   if (az < left - OVERSHOOT_BAND) {
     v_az = sqrt(2.0*accel_spider*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
-    v_az = (v_az > v_az_max) ? v_az_max : v_az;
+    a_az = -accel_spider; 
+    if (v_az > v_az_max) {
+      v_az = v_az_max;
+      a_az = 0.0;
+    }
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
   
   /* case 2: moving into quad from beyond right endpoint: */
   } else if (az > right + OVERSHOOT_BAND) {
     v_az = -sqrt(2.0*accel_spider*(az-(right+OVERSHOOT_BAND))) - V_AZ_MIN;
-    v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
+    a_az = accel_spider;
+    if (v_az < -v_az_max) {
+      v_az = -v_az_max;
+    } 
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
 
   /* case 3: moving from left to right endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
@@ -1017,7 +1026,6 @@ static void DoSineMode(void)
     } else {
       bsc_trigger = 0;
     }
- 
     axes_mode.az_vel = v_az;
     axes_mode.az_accel = a_az;
 
@@ -1063,7 +1071,8 @@ static void DoSineMode(void)
     axes_mode.az_vel = v_az;
     axes_mode.az_accel = a_az;
   }
-  
+
+   
   
   last_v = v_az;
 }
