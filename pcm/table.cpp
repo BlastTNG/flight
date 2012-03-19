@@ -109,7 +109,9 @@ void updateTableSpeed()
   static int sendvel = 1;
   static NiosStruct* dpsAddr = NULL;
   int i;
-//  static int j;
+  //  static int j;
+  int i_point;
+  i_point = GETREADINDEX(point_index);
 
   //initialization
   if (firsttime) {
@@ -138,15 +140,13 @@ void updateTableSpeed()
 
   for (i=0; i<10; i++) {
 	if (zerodist[i]) {	//zero yawdist every time a trigPos is set (in camcommunicator.cpp)
-//		cout << "ZEROING " << i << endl;
 		yawdist[i] = 0.0;
 		zerodist[i] = 0;
   	}
-  	yawdist[i] -= ACSData.ifyaw_gy*dt;
+  	yawdist[i] += PointingData[i_point].v_az*dt;
 	FixAngle(yawdist[i]);
   }
   if (docalc) {
-//	cout << "doing CALC" << endl;
   	//figure out targPos
   	//1) yaw distance moved since goodPos[i] was at trigPos[i]
 	
@@ -154,9 +154,7 @@ void updateTableSpeed()
 	  for (i=0; i<10; i++) {
 		if (goodPos[i] == 90.0) targPos = 90.0;
 		else targPos = goodPos[i] + yawdist[i];
-//		cout << "GOODPOS #" << i << " encoder pos is " << goodPos[i] << ", with YAWDIST = " << yawdist[i] << ", and TARGPOS = " << targPos << endl;
 		if ((targPos > 135) || (targPos < 45)) {//   if it's out-of-bounds, set targPos to 90
-//			cout << "GOODPOS #" << i << " is out of bounds" << endl;
 			targPos = 90.0;
 	  		calcdist = thisPos - targPos;
 			FixAngle(calcdist);
@@ -164,12 +162,10 @@ void updateTableSpeed()
 			calcdist = thisPos - targPos; // it's not out of bounds, check how far away it is
 			FixAngle(calcdist);
 			if ((fabs(calcdist)) > 5.0) { // if it's too far, set targPos to 90
-//				cout << "GOODPOS #" << i << " is too far away(" << calcdist << "), setting TARGPOS to 90" << endl;
 				targPos = 90.0;
 	  			calcdist = thisPos - targPos;
 				FixAngle(calcdist);
 			} else {	
-//				cout << "I can make it to GOODPOS #" << i << " at CALCDIST= " << calcdist << endl;
 				if (targPos != 90) break; // if it survives the test, use it, otherwise try next one
 			}
 		}
@@ -212,28 +208,17 @@ void updateTableSpeed()
 	//TRACKING
 	startmove = 1;
   	if (exposing)  {
-		targVel = -ACSData.ifyaw_gy;
+
+		targVel = PointingData[i_point].v_az;
   	} else {
 		// having figured out calcdist, set a targVel that will get you there in 1s, and don't update targVel until you get within 0.5
 		if ((calcdist < 0) && (sendvel == 1)) {
-			//TODO change this to the a ? b | c
-			if ((fabs(calcdist)) > 10.0) { // FIXME failsafe in case dist still ends up being >10
-				targVel = 10.0;   // this shouldn't be here if the calc code worked
-				sendvel = 0;
-			} else {
-				targVel = -calcdist; // go there at a speed proportional to its distance, up to 10dps
-//				cout << "TARGVEL set to " << targVel << endl;
-				sendvel = 0;
-			}
+			targVel = (((fabs(calcdist)) > 10.0) ? 10.0 : -calcdist);
+			sendvel = 0;
 		}
 		if ((calcdist > 0) && (sendvel == 1)) {
-			if ((fabs(calcdist)) > 10.0) {
-				targVel = -10.0;
-				sendvel = 0;
-			} else { 
-				targVel = -calcdist;
-				sendvel = 0;
-			}
+			targVel = (((fabs(calcdist)) > 10.0) ? -10.0 : -calcdist);
+			sendvel = 0;
 		}
 		if ((fabs(dist)) < 0.3) {
 			targVel = -ACSData.ifyaw_gy;//0.0;
