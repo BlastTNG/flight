@@ -46,7 +46,7 @@
 #define RW_BASE 0.95    // base for exponential filter used to compute RW
                         // speed
 
-#define V_AZ_MIN 0.05   // smallest measured az speed we trust given gyro
+#define V_AZ_MIN 1.77   // smallest measured az speed we trust given gyro
                         //   noise/offsets
 #define OVERSHOOT_BAND 0.05 // travel at v_az_min in this band on turn arounds
 
@@ -995,6 +995,7 @@ static void DoSineMode(void)
   if (az < left - OVERSHOOT_BAND) {
     v_az = sqrt(2.0*accel_spider*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
     a_az = -accel_spider; 
+    //a_az = 0.0;
     if (v_az > v_az_max) {
       v_az = v_az_max;
       a_az = 0.0;
@@ -1006,8 +1007,10 @@ static void DoSineMode(void)
   } else if (az > right + OVERSHOOT_BAND) {
     v_az = -sqrt(2.0*accel_spider*(az-(right+OVERSHOOT_BAND))) - V_AZ_MIN;
     a_az = accel_spider;
+    //a_az = 0.0;
     if (v_az < -v_az_max) {
       v_az = -v_az_max;
+      a_az = 0.0;
     } 
     axes_mode.az_vel = v_az;
     axes_mode.az_accel = a_az;
@@ -1072,8 +1075,6 @@ static void DoSineMode(void)
     axes_mode.az_accel = a_az;
   }
 
-   
-  
   last_v = v_az;
 }
 
