@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 BUILT_SOURCES = moc_narsil.cpp moc_doubleentry.cpp
-narsil_s = narsil.cpp doubleentry.cpp netcmd.c \
+narsil_s = narsil.cpp doubleentry.cpp ../../common/netcmd.c \
 	   doubleentry.h narsil.h ../common/narsil.h $(BUILT_SOURCES)
 narsil_l = @QT_LDADD@ 
 bin_PROGRAMS = narsil
