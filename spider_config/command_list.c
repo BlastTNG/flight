@@ -418,11 +418,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Pointing Gain",     0, USHRT_MAX, 'i', "g_pt_el"}
     }
   },*/
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 4,
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
       {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "G_COM_EL"},
       {"Differential Gain (Hz)",         0.0, 1.0, 'f', "G_DIFF_EL"},
-      {"Maximum Acceleration (dps)",     0.0, 10.0, 'f', "NONE"},
       {"Elevation Encoder Twist (deg)",     -0.5, 0.5, 'f', "NONE"}
     }
   },
