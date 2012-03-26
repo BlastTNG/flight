@@ -193,7 +193,6 @@ struct CommandDataStruct {
   struct {
     double com;
     double diff;
-    double accel_max;
     double pulse_port;
     double pulse_starboard;
     int manual_pulses;
