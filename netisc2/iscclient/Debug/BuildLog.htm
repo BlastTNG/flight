@@ -1,0 +1,44 @@
+<html>
+<head>
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=Windows-1252">
+</head>
+<body>
+<pre>
+<table width=100% bgcolor=#CFCFE5><tr> <td> <font face=arial size=+3>
+Build Log
+</font></table><table width=* cellspacing=0 cellpadding=0><tr><td width=0 bgcolor=#EDEDF5>&nbsp;</td><td width=0 bgcolor=#FFFFFF>&nbsp;</td><td width=*><pre>
+<h3>------- Build started: Project: iscclient, Configuration: Debug|Win32 -------
+</h3>
+</pre></table><table width=100% bgcolor=#DFDFE5><tr><td><font face=arial size=+2>
+Command Lines
+</font></table><table width=* cellspacing=0 cellpadding=0><tr><td width=0 bgcolor=#EDEDF5>&nbsp;</td><td width=0 bgcolor=#FFFFFF>&nbsp;</td><td width=*><pre>Creating temporary file "c:\netisc\iscclient\Debug\RSP000003.rsp" with contents
+[
+/OUT:"C:\netisc\iscclient\Debug\iscclient.exe" /INCREMENTAL /NOLOGO /DEBUG /ASSEMBLYDEBUG /PDB:"C:\netisc\iscclient\Debug/iscclient.pdb" /FIXED:No  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
+.\debug\main.obj
+.\debug\csocket.obj
+]
+Creating command line "link.exe @c:\netisc\iscclient\Debug\RSP000003.rsp"
+</pre></table><table width=100% bgcolor=#DFDFE5><tr><td><font face=arial size=+2>
+Output Window
+</font></table><table width=* cellspacing=0 cellpadding=0><tr><td width=0 bgcolor=#EDEDF5>&nbsp;</td><td width=0 bgcolor=#FFFFFF>&nbsp;</td><td width=*><pre>Linking...
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall listen(unsigned int,int)" (?listen@@$$J18YGHIH@Z)
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall bind(unsigned int,struct sockaddr const *,int)" (?bind@@$$J212YGHIPBUsockaddr@@H@Z)
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall connect(unsigned int,struct sockaddr const *,int)" (?connect@@$$J212YGHIPBUsockaddr@@H@Z)
+csocket.obj : error LNK2001: unresolved external symbol "struct hostent * __stdcall gethostbyname(char const *)" (?gethostbyname@@$$J14YGPAUhostent@@PBD@Z)
+csocket.obj : error LNK2001: unresolved external symbol "unsigned long __stdcall inet_addr(char const *)" (?inet_addr@@$$J14YGKPBD@Z)
+csocket.obj : error LNK2001: unresolved external symbol "unsigned int __stdcall accept(unsigned int,struct sockaddr *,int *)" (?accept@@$$J212YGIIPAUsockaddr@@PAH@Z)
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall closesocket(unsigned int)" (?closesocket@@$$J14YGHI@Z)
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall recv(unsigned int,char *,int,int)" (?recv@@$$J216YGHIPADHH@Z)
+csocket.obj : error LNK2001: unresolved external symbol "unsigned short __stdcall htons(unsigned short)" (?htons@@$$J14YGGG@Z)
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall WSAGetLastError(void)" (?WSAGetLastError@@$$J10YGHXZ)
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall setsockopt(unsigned int,int,int,char const *,int)" (?setsockopt@@$$J220YGHIHHPBDH@Z)
+csocket.obj : error LNK2001: unresolved external symbol "unsigned int __stdcall socket(int,int,int)" (?socket@@$$J212YGIHHH@Z)
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall WSAStartup(unsigned short,struct WSAData *)" (?WSAStartup@@$$J18YGHGPAUWSAData@@@Z)
+csocket.obj : error LNK2001: unresolved external symbol "int __stdcall send(unsigned int,char const *,int,int)" (?send@@$$J216YGHIPBDHH@Z)
+C:\netisc\iscclient\Debug\iscclient.exe : fatal error LNK1120: 14 unresolved externals
+</pre></table><table width=100% bgcolor=#DFDFE5><tr><td><font face=arial size=+2>
+Results
+</font></table><table width=* cellspacing=0 cellpadding=0><tr><td width=0 bgcolor=#EDEDF5>&nbsp;</td><td width=0 bgcolor=#FFFFFF>&nbsp;</td><td width=*><pre>
+Build log was saved at "file://c:\netisc\iscclient\Debug\BuildLog.htm"
+iscclient - 15 error(s), 0 warning(s)</pre></table><table   width=100% height=20 bgcolor=#CFCFE5><tr><td><font face=arial size=+2>
+</font></table></body></html>
