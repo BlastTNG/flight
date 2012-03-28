@@ -36,14 +36,9 @@
 #define P_AZ_SCAN    2
 #define P_DRIFT      3
 #define P_RADEC_GOTO 4
-#define P_VCAP       5
-#define P_CAP        6
-#define P_BOX        7
-#define P_LOCK       8
-#define P_VBOX       9
-#define P_QUAD      10
-#define P_SPIDER    11
-#define P_SINE      12
+#define P_LOCK       5
+#define P_SPIDER     6
+#define P_SINE       7
 
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
@@ -119,9 +114,9 @@ struct PivGainStruct {
 // AZ_SCAN     az    el   vaz
 // DRIFT                  vaz   vel
 // RADEC_GOTO  ra    dec
-// VCAP        ra    dec  vaz   vel    r
-// CAP         ra    dec  vaz   elstep r
-// BOX         ra    dec  vaz   elstep w    h
+// VCAP        ra    dec  vaz   vel    r         // NOT USED IN SPIDER
+// CAP         ra    dec  vaz   elstep r         // NOT USED IN SPIDER
+// BOX         ra    dec  vaz   elstep w    h    // NOT USED IN SPIDER
 // SPIDER            el                         
 // SINE        az    el                w
 struct PointingModeStruct {

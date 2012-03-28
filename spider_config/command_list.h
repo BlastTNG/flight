@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 169        /* total number of single word cmds */
-#define N_MCOMMANDS 116        /* total number of multiword commands */
+#define N_MCOMMANDS 111        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -116,16 +116,15 @@ enum singleCommand {
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,           dac2_level,  
-  box,		     cap,               roll_gain,         set_az_accel,
+  roll_gain,         set_accel_max,
   az_el_trim,        drift,             el_gain,
   inner_level,       hwpr_jump,         hwpr_goto_i,       actuator_tol,
   lock,              act_offset,
   pivot_gain,        ra_dec_goto,       ra_dec_set,
   t_gyro_set,        tdrss_bw,          iridium_bw,
-  t_gyro_gain,       timeout,           vcap,
-  vbox,              slot_sched,        az_gyro_offset,
+  t_gyro_gain,       timeout,           slot_sched,        az_gyro_offset,
   cov_gps,	     hwpr_set_overshoot,lvdt_limit,        reset_adc,        
-  gyro_off,	     gyro_on,           quad,
+  gyro_off,	     gyro_on,           
   el_gyro_offset,    general,           slew_veto,        
   actuator_servo,    xy_goto,           actuator_vel,
   xy_jump,           xy_xscan,          xy_yscan,          xy_raster,
