@@ -5,6 +5,7 @@
 //const char __tempInput_Name[]="temp.cfg";
 //char __tempOutput_Name[80];
 
+
 int __tempControl = 1;               // thermometer that controls heater
 unsigned int __tempsleeptime = 100;
 float __tempSetLimit = 3.0f;
@@ -21,18 +22,16 @@ int __tempHeaterStat = 0;
 
 // Variables for DMM-XT DAQ. 
 //Settings for the A/D Converter on the new DAQ
-  port=1 //port of DIOs
-  BYTE dscbresult; //Output Variable
-  DSCSAMPLE sample; //Variable that holds A/D scan data
-  ERRPARAMS errorParams;  //error handler
-  DSCADSETTINGS dscadsettings;  //DAQ Settings:
-  dscadsettings.current_channel = 0; //which channel to read from
-  dscadsettings.gain = GAIN_1; //gain of 1
-  dscadsettings.range = RANGE_5; //5V range
-  dscadsettings.polarity = BIPOLAR; //bipolar
-  dscadsettings.load_cal = FALSE; //don't load cal
-  dscadsettings.addif= SINGLE_ENDED; //Single ended operation
-  DSCDACS dscdacs;
+int port=1; //port of DIOs
+extern BYTE dscbresult; //Output Variable
+extern DSCB dscb;
+extern DSCCB dsccb;
+DSCDACS dscdacs;
+ERRPARAMS errorParams;  //error handler
+DSCADSETTINGS dscadsettings;  //DAQ Settings:
+DSCSAMPLE sample; //Variable that holds A/D scan data
+
+
 
 // set stuff up
 // return 1 for success, 0 for failure
@@ -46,7 +45,11 @@ int tempSetup( int in_tempControl, unsigned int in_tempsleeptime,
   __tempOffset = in_tempOffset;
   __temppressuregain = in_temppressuregain;
   __temppressureoffset = in_temppressureoffset;
-  
+  dscadsettings.current_channel = 0; //which channel to read from
+  dscadsettings.gain = GAIN_1; //gain of 1
+  dscadsettings.range = RANGE_5; //5V range
+  dscadsettings.polarity = BIPOLAR; //bipolar
+  dscadsettings.load_cal = FALSE; //don't load cal
   
   /*
     FILE *tempconfig;
@@ -110,7 +113,7 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
  // int Gain = BIP10VOLTS; old daq gain
   int LowChannel = 0;
   int HighChannel = 4;
-  WORD DataValue[5];
+  //WORD DataValue[5];
   DFLOAT EngUnits[5];
   //FILE *tempsout;
   
@@ -136,19 +139,19 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
 			if( ( dscbresult = dscADSetSettings( dscb, &dscadsettings ) ) != DE_NONE )
 			{
                 dscGetLastError(&errorParams);
-                return 0;
+                
 			}
 			if( ( dscbresult = dscADSample( dscb, &sample ) ) != DE_NONE )
 			{
 				dscGetLastError(&errorParams);
-				return 0;
+				
 			}
 			if ((dscbresult = dscADCodeToVoltage(dscb, dscadsettings, sample, &EngUnits[Chan])) != DE_NONE)
 			{
 				dscGetLastError(&errorParams);
 				fprintf(stderr, "dscADCodeToVoltage failed: %s (%s)\n",
 				dscGetErrorString(dscbresult), errorParams.errstring);
-				return dscbresult;
+				
 			}
 			//printf("%i Actual Voltage %5.3lfV\n", sample, EngUnits[Chan]); For Debugging
   }
@@ -183,7 +186,7 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
     {
         dscGetLastError(&errorParams);
 		fprintf(stderr, "failed: %s (%s)\n", dscGetErrorString(dscbresult), errorParams.errstring);
-        return dscbresult;
+        
         }
   i=-1;
   curTime=time(NULL);    /* Get timestamp*/                
@@ -231,6 +234,6 @@ void tempShutdown( void ) {
     {
         dscGetLastError(&errorParams);
 		fprintf(stderr, "failed: %s (%s)\n", dscGetErrorString(dscbresult), errorParams.errstring);
-        return dscbresult;
+        
         }
 }

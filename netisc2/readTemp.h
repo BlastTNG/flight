@@ -2,7 +2,7 @@
 
 #ifndef __readTemp_H
 #define __readTemp_H
-
+#include <windows.h>
 #include <stdio.h>
 #include <time.h>
 #include <dscud.h>    
