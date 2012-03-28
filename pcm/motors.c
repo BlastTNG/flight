@@ -46,12 +46,12 @@
 #define RW_BASE 0.95    // base for exponential filter used to compute RW
                         // speed
 
-#define V_AZ_MIN 1.77   // smallest measured az speed we trust given gyro
+#define V_AZ_MIN 0.05  //smallest measured az speed we trust given gyro
                         //   noise/offsets
 #define OVERSHOOT_BAND 0.05 // travel at v_az_min in this band on turn arounds
 
 /* elevation drive related defines adapted from az-el.c in minicp: */
-#define MAX_STEP 9000    // maximum step rate to send to el motors
+#define MAX_STEP 9500    // maximum step rate to send to el motors
 #define CM_PULSES 3200   // Cool Muscle pulses per rotation
 #define IN_TO_MM 25.4
 #define ROT_PER_INCH 5    // linear actuator rotations per inch of travel
@@ -104,14 +104,15 @@ static pthread_t pivotcomm_id;
 static void* reactComm(void *arg);
 static void* pivotComm(void *arg);
 
+
+static double dxdtheta(double theta);
+
 extern short int InCharge; /* tx.c */
 
 extern int StartupVeto; /* mcp.c */
 
 extern short int bsc_trigger; /* Semaphore for BSC trigger */
 #define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_bsc */
-
-double az_accel = 0.1;
 
 /* opens communications with motor controllers */
 void openMotors()
@@ -281,8 +282,8 @@ static void GetVElev(double* v_P, double* v_S)
 // P = PORT
 
 /* various dynamical variables */
-  //double enc_port, enc_strbrd;
-  //double enc_port_last, enc_strbrd_last;
+  double enc_port, enc_strbrd;
+  static double enc_port_last, enc_strbrd_last;
   double el_dest;
   double dy; //, dy_S, dy_P;// distance to target of mean, starboard and port 
                         // encoders
@@ -295,20 +296,29 @@ static void GetVElev(double* v_P, double* v_S)
   double max_dv;
   double g_com;
   double g_diff;
+  double v_P_max;
+  double v_S_max;
 
 /* requested velocities (prev. values) */
   static double v_S_last = 0.0;
-  static double v_P_last = 0.0;
-
+  static double v_P_last = 0.0;  
+  static double el_dest_last = 0.0;
+  
   //int nominal = 0;
 
-  //int stall_cnt_R = 0;
-  //int stall_cnt_L = 0;
+  static double del_strbrd_targ = 0.0;
+  static double enc_strbrd_ref = 0.0;
+  double del_strbrd;
+  
 
+ // static int stall_cnt_S = 0;
+ // static int stall_cnt_P = 0;
+  
+  static int motors_off = 1;
+  static int since_arrival = 0;
+  
   //int stop_cnt_L = 0;
   //int stop_cnt_R = 0;
-
-  max_dv = (CommandData.ele_gain.accel_max)/SR;
 
   el_dest = axes_mode.el_dest;
 
@@ -318,8 +328,8 @@ static void GetVElev(double* v_P, double* v_S)
   el_dest = (el_dest > MAX_EL) ? MAX_EL : el_dest;
 
   /* port = sum/2 + diff/2 */
-  //enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
-  //enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
+  enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
+  enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
   //bprintf(info, "enc_port = %f", enc_port);
   //bprintf(info, "enc_strbrd = %f", enc_strbrd);
@@ -340,26 +350,76 @@ static void GetVElev(double* v_P, double* v_S)
   //
 
   g_com = CommandData.ele_gain.com * (double)(fabs(dy)>TOLERANCE);
+  max_dv = 1.05 * CommandData.ele_gain.com*CommandData.ele_gain.com * (1.0/(2.0*SR));  // 5% higher than deceleration...
+
   g_diff = CommandData.ele_gain.diff * (double)(fabs(err)>TOLERANCE);
   *v_P = SetVElev(g_com, -g_diff, dy, err, v_P_last, max_dv);
   *v_S = SetVElev(g_com, g_diff, dy, err, v_S_last, max_dv);
+ 
+  if ( !(CommandData.disable_el) ) {
+    if ( !(g_com || g_diff) ) {
+      since_arrival++;
+      if (since_arrival >= 500) {
+        CommandData.power.elmot.set_count = 0;
+        CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+        motors_off = 1;
+      }
+    } else if (motors_off && (fabs(el_dest-el_dest_last) > 0.0)) {
+      CommandData.power.elmot.rst_count = 0;
+      CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
+      motors_off = 0;
+      since_arrival = 0;
+    }
+  }
+  
+  el_dest_last = el_dest;
+  
+  /* don't command a velocity greater than limit from max pulse rate */
+
+  v_P_max = fabs( ((double)MAX_STEP*IN_TO_MM) / 
+	    ((double)CM_PULSES*EL_GEAR_RATIO*ROT_PER_INCH*dxdtheta(enc_port)) );
+ 
+  v_S_max = fabs( ((double)MAX_STEP*IN_TO_MM) / 
+	  ((double)CM_PULSES*EL_GEAR_RATIO*ROT_PER_INCH*dxdtheta(enc_strbrd)) );
+
+  //bprintf(info, "v_P_max = %g deg/s, v_S_max =%g deg/s", v_P_max, v_S_max);
+
+  if (*v_P > v_P_max) {
+    *v_P = v_P_max;
+  } else if (*v_P < -v_P_max) {
+    *v_P = -v_P_max;
+  }
+  if (*v_S > v_S_max) {
+    *v_S = v_S_max;
+  } else if (*v_S < -v_S_max) {
+    *v_S = -v_S_max;
+  }
+
+  /* error checking: if one motor is stalled, stop the other one */
+  if (enc_strbrd_ref == 0.0) {
+    enc_strbrd_ref = enc_strbrd;
+  }
+  
+  del_strbrd_targ += *v_S / SR;
+  del_strbrd = enc_strbrd - enc_strbrd_ref;
+  if (fabs(del_strbrd_targ)>0.05) {
+    if (fabs(del_strbrd)<0.025) {
+      bprintf(info, "strbrd stall detected: %g %g %g", del_strbrd_targ, del_strbrd, *v_S);
+      *v_P = *v_S = 0.0;
+      // FIXME: handle the stall here...
+    } else {        
+      //bprintf(info, "strbrd no stall : %g %g", del_strbrd_targ, del_strbrd);
+    }
+    del_strbrd_targ = 0;
+    enc_strbrd_ref = enc_strbrd;
+  }
+  
+  enc_port_last = enc_port;
+  enc_strbrd_last = enc_strbrd;
+
   v_P_last = *v_P; 
   v_S_last = *v_S; 
-  //bprintf(info,"%g %g %g %g %g %g\n", dy, err, ACSData.enc_mean_el, ACSData.enc_diff_el, g_com, g_diff);
-/*
-  //if (enc_right != enc_right_last) {
-  //stall_cnt_R = 0; 
-    //bprintf(info, "v_port = %f", *v_P);
-    //bprintf(info, "v_port_last = %f", v_P_last);
-//} else {
-//  stall_cnt_R++;
-//  if ( (2.0*err > err_max) && stall_cnt_R >=  ) {   
-//    v_L = SetVElev(CommandData.ele_gain.com, CommandData.ele_gain.diff, dy, 
- //                      err, v_L_last, max_dv);
-  //  v_L_last = v_L;
-//  }      
-  } 
-*/
+
 }
 
 /************************************************************************/
@@ -835,6 +895,7 @@ void WriteMot(int TxIndex)
     wait--;
 }
 
+#if 0
 /***************************************************************/
 /*                                                             */
 /* GetElDither: set the current elevation dither offset.       */
@@ -878,6 +939,7 @@ static void ClearElDither() {
   //  bprintf(info,"ClearElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
   return;
 }
+#endif
 
 /****************************************************************/
 /*                                                              */
@@ -888,6 +950,7 @@ static void ClearElDither() {
 static void SetAzScanMode(double az, double left, double right, double v,
     double D)
 {
+    double az_accel_dv = (CommandData.az_accel)/SR;
     double before_trig;
     if (axes_mode.az_vel < -v + D)
       axes_mode.az_vel = -v + D;
@@ -899,12 +962,12 @@ static void SetAzScanMode(double az, double left, double right, double v,
       //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel < v + D)
-        axes_mode.az_vel += az_accel;
+        axes_mode.az_vel += az_accel_dv;
     } else if (az > right) {
       //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > -v + D)
-        axes_mode.az_vel -= az_accel;
+        axes_mode.az_vel -= az_accel_dv;
     } else {
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > 0) {
@@ -944,15 +1007,16 @@ static void DoSineMode(void)
   double az, el;
   double centre, left, right, v_az=0.0, a_az;//, top, bottom, v_az;
   double v_az_max, ampl, turn_around;
-  double accel_spider;
+  double az_accel;
+  double az_accel_dv;
   int i_point;
   double t_before; // time at which to send BSC trigger command
   static double last_v = 0.0;
   
   t_before = DELAY + CommandData.theugly.expTime/2000.0;
  
-  accel_spider = az_accel*SR; // convert back from deg/s in one Bbus interval
-                              // to (deg/s)/s
+  az_accel = CommandData.az_accel;
+  az_accel_dv = az_accel/SR;
 
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = CommandData.pointing_mode.Y;
@@ -977,7 +1041,7 @@ static void DoSineMode(void)
     left -= 360.0;
   }
 
-  v_az_max = sqrt(accel_spider * ampl);
+  v_az_max = sqrt(az_accel * ampl);
   
   // |distance| from end point when V_req = V_AZ_MIN
   turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
@@ -993,8 +1057,8 @@ static void DoSineMode(void)
 
   /* case 1: moving into scan from beyond left endpoint: */
   if (az < left - OVERSHOOT_BAND) {
-    v_az = sqrt(2.0*accel_spider*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
-    a_az = -accel_spider; 
+    v_az = sqrt(2.0*az_accel*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
+    a_az = -az_accel; 
     //a_az = 0.0;
     if (v_az > v_az_max) {
       v_az = v_az_max;
@@ -1005,8 +1069,8 @@ static void DoSineMode(void)
   
   /* case 2: moving into quad from beyond right endpoint: */
   } else if (az > right + OVERSHOOT_BAND) {
-    v_az = -sqrt(2.0*accel_spider*(az-(right+OVERSHOOT_BAND))) - V_AZ_MIN;
-    a_az = accel_spider;
+    v_az = -sqrt(2.0*az_accel*(az-(right+OVERSHOOT_BAND))) - V_AZ_MIN;
+    a_az = az_accel;
     //a_az = 0.0;
     if (v_az < -v_az_max) {
       v_az = -v_az_max;
@@ -1019,12 +1083,12 @@ static void DoSineMode(void)
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
              && (PointingData[i_point].v_az > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
-    v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
-    a_az = accel_spider*( (centre - az)/ampl ); 
+    v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
+    a_az = az_accel*( (centre - az)/ampl ); 
 
     // star camera trigger (lemur?)
     if (az >= (right + 
-        ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
+        ampl*(cos(sqrt(az_accel/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
     } else {
       bsc_trigger = 0;
@@ -1036,12 +1100,12 @@ static void DoSineMode(void)
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
               && (PointingData[i_point].v_az < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
-    v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
-    a_az = accel_spider*( (centre - az)/ampl );
+    v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
+    a_az = az_accel*( (centre - az)/ampl );
   
     // star camera trigger (lemur?)
     if (az <= (left + 
-        ampl*(1.0 - cos(sqrt(accel_spider/ampl)*t_before)))) {
+        ampl*(1.0 - cos(sqrt(az_accel/ampl)*t_before)))) {
       bsc_trigger = 1;
     } else {
       bsc_trigger = 0;
@@ -1053,11 +1117,11 @@ static void DoSineMode(void)
   /* case 5: in left turn-around zone */ 
   } else if ( az <= left+turn_around ) {
     //v_az = V_AZ_MIN;
-    v_az = last_v + az_accel;
+    v_az = last_v + az_accel_dv;
     if (v_az > V_AZ_MIN) {
       v_az = V_AZ_MIN;
     }
-    a_az = accel_spider*( (centre - az)/ampl );
+    a_az = az_accel*( (centre - az)/ampl );
     
     axes_mode.az_vel = v_az; 
     axes_mode.az_accel = a_az;
@@ -1065,11 +1129,11 @@ static void DoSineMode(void)
   /* case 6: in right turn-around zone */   
   } else if (az >= right-turn_around) {
     //v_az = -V_AZ_MIN;
-    v_az = last_v - az_accel;
+    v_az = last_v - az_accel_dv;
     if (v_az < -V_AZ_MIN) {
       v_az = -V_AZ_MIN;
     }
-    a_az = accel_spider*( (centre - az)/ampl );
+    a_az = az_accel*( (centre - az)/ampl );
     
     axes_mode.az_vel = v_az;
     axes_mode.az_accel = a_az;
@@ -1087,15 +1151,14 @@ static void DoSpiderMode(void)
   double centre, left, right, top, bottom, v_az;
   double az_of_bot;
   double v_az_max, ampl, turn_around;
-  double accel_spider;
+  double az_accel;
   int i, i_point;
   double t_before; // time at which to send BSC trigger command
 
   t_before = DELAY + CommandData.theugly.expTime/2000.0;
 
-  accel_spider = az_accel*SR; // convert back from deg/s in one Bbus interval
-                              // to (deg/s)/s
-
+  az_accel = CommandData.az_accel;
+  
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = CommandData.pointing_mode.Y;
   axes_mode.el_vel = 0.0;
@@ -1132,7 +1195,7 @@ static void DoSpiderMode(void)
   centre = (left + right) / 2.0;
   
   ampl = right - centre;
-  v_az_max = sqrt(accel_spider * ampl);
+  v_az_max = sqrt(az_accel * ampl);
   turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
   //turn_around = 1.0;
   //bprintf(info, "left = %f, right = %f, centre = %f, ampl = %f, v_az_max = %f, turn_around = %f", left, right, centre, ampl, v_az_max, turn_around);
@@ -1147,13 +1210,13 @@ static void DoSpiderMode(void)
 
   /* case 1: moving into quad from beyond left endpoint: */
   if (az < left) {
-    v_az = sqrt(2.0*accel_spider*(left-az)) + V_AZ_MIN;
+    v_az = sqrt(2.0*az_accel*(left-az)) + V_AZ_MIN;
     v_az = (v_az > v_az_max) ? v_az_max : v_az;
     axes_mode.az_vel = v_az;
   
   /* case 2: moving into quad from beyond right endpoint: */
   } else if (az > right) {
-    v_az = -sqrt(2.0*accel_spider*(az-right)) - V_AZ_MIN;
+    v_az = -sqrt(2.0*az_accel*(az-right)) - V_AZ_MIN;
     v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
     axes_mode.az_vel = v_az;
 
@@ -1161,10 +1224,10 @@ static void DoSpiderMode(void)
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
 	     && (PointingData[i_point].v_az > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
-    v_az = sqrt(accel_spider*ampl)*sin(acos((centre-az)/ampl));
+    v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
 
     if (az >= (right + 
-        ampl*(cos(sqrt(accel_spider/ampl)*t_before) - 1.0))) {
+        ampl*(cos(sqrt(az_accel/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
     } else {
       bsc_trigger = 0;
@@ -1176,10 +1239,10 @@ static void DoSpiderMode(void)
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
 	      && (PointingData[i_point].v_az < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
-    v_az = sqrt(accel_spider*ampl)*sin(-acos((centre-az)/ampl)); 
+    v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
 
     if (az <= (left + 
-        ampl*(1 - cos(sqrt(accel_spider/ampl)*t_before)))) {
+        ampl*(1 - cos(sqrt(az_accel/ampl)*t_before)))) {
       bsc_trigger = 1;
     } else {
       bsc_trigger = 0;
@@ -1244,6 +1307,7 @@ static void DoAzScanMode(void)
   }
 }
 
+#if 0
 #define EL_BORDER 1.0
 static void DoVCapMode(void)
 {
@@ -1339,6 +1403,7 @@ static void DoVCapMode(void)
   SetAzScanMode(az, left, right, v, daz_dt);
 }
 
+
 static void DoVBoxMode(void)
 {
   double caz, cel;
@@ -1424,6 +1489,7 @@ static void DoVBoxMode(void)
   v = CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0);
   SetAzScanMode(az, left, right, v, daz_dt);
 }
+#endif
 
 static void DoRaDecGotoMode(void)
 {
@@ -1450,7 +1516,7 @@ static void DoRaDecGotoMode(void)
   //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
   bsc_trigger = 1;
 }
-
+#if 0
 static void DoNewCapMode(void)
 {
   double caz, cel, r, x2, y, xw;
@@ -1460,6 +1526,7 @@ static void DoNewCapMode(void)
   double daz_dt, del_dt;
   double lst, lat;
   double v_az, t=1;
+  double az_accel;
   int i_point;
   int new_step = 0;
   int new_scan = 0;
@@ -1472,6 +1539,8 @@ static void DoNewCapMode(void)
   static int el_dir_last = 0; 
   static int n_scan = 0;
   static int el_next_dir = 0.0;
+  
+  az_accel = CommandData.az_accel; 
 
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
@@ -1568,14 +1637,14 @@ static void DoNewCapMode(void)
   if (az<left) {
     if (axes_mode.az_dir < 0) {
       az_distance = next_right - left;
-      t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
+      t = az_distance/v_az + 2.0*v_az/az_accel;
       new_step = 1;
     }
     axes_mode.az_dir = 1;
   } else if (az>right) {
     if (axes_mode.az_dir > 0) {
       az_distance = right - next_left;
-      t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
+      t = az_distance/v_az + 2.0*v_az/az_accel;
       new_step = 1;
     }
     axes_mode.az_dir = -1;
@@ -1673,6 +1742,7 @@ static void DoNewBoxMode(void)
   double daz_dt, del_dt;
   double lst, lat;
   double v_az, t=1;
+  double az_accel;
   int i_point;
   int new_step = 0;
   int new = 0;
@@ -1689,6 +1759,8 @@ static void DoNewBoxMode(void)
   static int n_scan = 0;
   static int el_next_dir = 0.0;
 
+  az_accel = CommandData.az_accel;
+  
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
   lat = PointingData[i_point].lat;
@@ -1778,13 +1850,13 @@ static void DoNewBoxMode(void)
   new_step = 0;
   if (az<left) {
     if (axes_mode.az_dir < 0) {
-      t = w/v_az + 2.0*v_az/(az_accel * SR);
+      t = w/v_az + 2.0*v_az/az_accel;
       new_step = 1;
     }
     axes_mode.az_dir = 1;
   } else if (az>right) {
     if (axes_mode.az_dir > 0) {
-      t = w/v_az + 2.0*v_az/(az_accel * SR);
+      t = w/v_az + 2.0*v_az/az_accel;
       new_step = 1;
     }
     axes_mode.az_dir = -1;
@@ -1870,6 +1942,7 @@ void DoQuadMode(void) // aka radbox
   double daz_dt, del_dt;
   double lst, lat;
   double v_az, t=1;
+  double az_accel;
   int i, i_point;
   int new_step = 0;
   double c_az[4], c_el[4]; // corner az and corner el
@@ -1888,6 +1961,8 @@ void DoQuadMode(void) // aka radbox
   static int n_scan = 0;
   static int el_next_dir = 0.0;
 
+  az_accel = CommandData.az_accel;
+  
   i_point = GETREADINDEX(point_index);
   lst = PointingData[i_point].lst;
   lat = PointingData[i_point].lat;
@@ -1993,14 +2068,14 @@ void DoQuadMode(void) // aka radbox
   if (az<left) {
     if (axes_mode.az_dir < 0) {
       az_distance = next_right - left;
-      t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
+      t = az_distance/v_az + 2.0*v_az/az_accel;
       new_step = 1;
     }
     axes_mode.az_dir = 1;
   } else if (az>right) {
     if (axes_mode.az_dir > 0) {
       az_distance = right - next_left;
-      t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
+      t = az_distance/v_az + 2.0*v_az/az_accel;
       new_step = 1;
     }
     axes_mode.az_dir = -1;
@@ -2048,6 +2123,7 @@ void DoQuadMode(void) // aka radbox
   axes_mode.el_vel = v_el + del_dt;
 
 }
+#endif
 
 /******************************************************************
  *                                                                *
@@ -2057,7 +2133,6 @@ void DoQuadMode(void) // aka radbox
  ******************************************************************/
 void UpdateAxesMode(void)
 {
-  az_accel = CommandData.az_accel/SR;
   axes_mode.az_accel = 0.0; // default for scan modes that don't set
   switch (CommandData.pointing_mode.mode) {
     case P_DRIFT:
@@ -2086,7 +2161,7 @@ void UpdateAxesMode(void)
     case P_AZ_SCAN:
       DoAzScanMode();
       break;
-    case P_VCAP:
+ /*   case P_VCAP:
       DoVCapMode();
       break;
     case P_VBOX:
@@ -2097,13 +2172,13 @@ void UpdateAxesMode(void)
       break;
     case P_CAP:
       DoNewCapMode();
-      break;
+      break;*/
     case P_RADEC_GOTO:
       DoRaDecGotoMode();
       break;
-    case P_QUAD: // aka radbox
+  /*  case P_QUAD: // aka radbox
       DoQuadMode();
-      break;
+      break;*/
     case P_SPIDER:
       DoSpiderMode();
       break;

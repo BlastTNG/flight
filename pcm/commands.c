@@ -809,114 +809,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = 0;
       CommandData.pointing_mode.h = 0;
       break;
-    case vcap:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
-      CommandData.pointing_mode.mode = P_VCAP;
-      CommandData.pointing_mode.X = rvalues[0]; /* ra */
-      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-      CommandData.pointing_mode.w = rvalues[2]; /* radius */
-      CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
-      CommandData.pointing_mode.del = rvalues[4]; /* el drift speed */
-      CommandData.pointing_mode.h = 0;
-      break;
-    case cap:
-      
-      if ((CommandData.pointing_mode.mode != P_CAP) ||
-          (CommandData.pointing_mode.X != rvalues[0]) ||  /* ra */
-          (CommandData.pointing_mode.Y != rvalues[1]) ||  /* dec */
-          (CommandData.pointing_mode.w != rvalues[2]) ||  /* radius */
-          (CommandData.pointing_mode.vaz != rvalues[3]) ||  /* az scan speed */
-          (CommandData.pointing_mode.del != rvalues[4]) ||  /* el step size */
-          (CommandData.pointing_mode.h != 0) || 
-          (CommandData.pointing_mode.dith != rvalues[5])) { /* el step size */
-        CommandData.pointing_mode.nw = CommandData.slew_veto;
-      }
-      // zero unused parameters
-      for (i = 0; i < 4; i++) {
-        CommandData.pointing_mode.ra[i] = 0;
-        CommandData.pointing_mode.dec[i] = 0;
-      }
-
-
-      CommandData.pointing_mode.mode = P_CAP;
-      CommandData.pointing_mode.X = rvalues[0]; /* ra */
-      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-      CommandData.pointing_mode.w = rvalues[2]; /* radius */
-      CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
-      CommandData.pointing_mode.del = rvalues[4]; /* el step size */
-      CommandData.pointing_mode.h = 0;
-      CommandData.pointing_mode.dith = rvalues[5]; /* el step size */
-      break;
-    case box:
-
-      if ((CommandData.pointing_mode.mode != P_BOX) ||
-          (CommandData.pointing_mode.X != rvalues[0]) || /* ra */
-          (CommandData.pointing_mode.Y != rvalues[1]) || /* dec */
-          (CommandData.pointing_mode.w != rvalues[2]) || /* width */
-          (CommandData.pointing_mode.h != rvalues[3]) || /* height */
-          (CommandData.pointing_mode.vaz != rvalues[4]) || /* az scan speed */
-          (CommandData.pointing_mode.del != rvalues[5]) || /* el step size */
-          (CommandData.pointing_mode.dith != rvalues[6])) { /* el step size */
-        CommandData.pointing_mode.nw = CommandData.slew_veto;
-      }
-     
-      // zero unused parameters
-      for (i = 0; i < 4; i++) {
-        CommandData.pointing_mode.ra[i] = 0;
-        CommandData.pointing_mode.dec[i] = 0;
-      }
-      
-      CommandData.pointing_mode.mode = P_BOX;
-      CommandData.pointing_mode.X = rvalues[0]; /* ra */
-      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-      CommandData.pointing_mode.w = rvalues[2]; /* width */
-      CommandData.pointing_mode.h = rvalues[3]; /* height */
-      CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
-      CommandData.pointing_mode.del = rvalues[5]; /* el step size */
-      CommandData.pointing_mode.dith = rvalues[6]; /* el step size */
-      break;
-    case vbox:
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
-      CommandData.pointing_mode.mode = P_VBOX;
-      CommandData.pointing_mode.X = rvalues[0]; /* ra */
-      CommandData.pointing_mode.Y = rvalues[1]; /* dec */
-      CommandData.pointing_mode.w = rvalues[2]; /* width */
-      CommandData.pointing_mode.h = rvalues[3]; /* height */
-      CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
-      CommandData.pointing_mode.del = rvalues[5]; /* el drift speed */
-      break;
-    case quad:
-      is_new = 0;
-      if ((CommandData.pointing_mode.mode != P_QUAD) ||
-          (CommandData.pointing_mode.vaz != rvalues[8]) || /* az scan speed */
-          (CommandData.pointing_mode.del != rvalues[9]) || /* el step size */
-          (CommandData.pointing_mode.dith != rvalues[10])) { /* el dith size */
-        is_new=1;
-      }
-      for (i = 0; i < 4; i++) {
-        if ((CommandData.pointing_mode.ra[i] != rvalues[i * 2]) ||
-            (CommandData.pointing_mode.dec[i] != rvalues[i * 2 + 1])) {
-          is_new = 1;
-        }
-      }
-      
-      if (is_new) {
-        CommandData.pointing_mode.nw = CommandData.slew_veto;
-      }
-      CommandData.pointing_mode.X = 0; /* ra */
-      CommandData.pointing_mode.Y = 0; /* dec */
-      CommandData.pointing_mode.w = 0; /* width */
-      CommandData.pointing_mode.h = 0; /* height */
-      
-      CommandData.pointing_mode.mode = P_QUAD;
-      for (i = 0; i < 4; i++) {
-        CommandData.pointing_mode.ra[i] = rvalues[i * 2];
-        CommandData.pointing_mode.dec[i] = rvalues[i * 2 + 1];
-      }
-      CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
-      CommandData.pointing_mode.del = rvalues[9]; /* el step size */
-      CommandData.pointing_mode.dith = rvalues[10]; /* el dith size */
-      break;
     case spider_scan:
       for (i = 0; i < 4; i++) {
         CommandData.pointing_mode.ra[i] = rvalues[i*2];
@@ -935,9 +827,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SINE;
       break;
-    case set_az_accel:
-      CommandData.az_accel = rvalues[0];
-      CommandData.az_accel_max = rvalues[1];
+    case set_accel_max:
+      CommandData.az_accel_max = rvalues[0];
       break;
 
       /***************************************/
@@ -970,8 +861,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ele_gain.com = rvalues[0];
       CommandData.ele_gain.diff = rvalues[1];
       //CommandData.ele_gain.PT = ivalues[2];
-      CommandData.ele_gain.accel_max = rvalues[2];
-      CommandData.ele_gain.twist = rvalues[3];
+      CommandData.ele_gain.twist = rvalues[2];
       break;
     case el_pulse: /* manual el motor pulses */
       CommandData.ele_gain.pulse_port = rvalues[0];
@@ -1679,8 +1569,8 @@ void InitCommandData()
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
   CommandData.pointing_mode.dith = 0.0;
 
-  CommandData.az_accel = 0.4; 
-  CommandData.az_accel_max = 100.0;
+  CommandData.az_accel = 0.1; 
+  CommandData.az_accel_max = 1.0;
 
   //CommandData.ele_gain.I = 5000; /* was 8000 */
   //CommandData.ele_gain.P = 5000; /* was 1200 */
@@ -1688,7 +1578,6 @@ void InitCommandData()
 
   CommandData.ele_gain.com = 0;
   CommandData.ele_gain.diff = 0;
-  CommandData.ele_gain.accel_max = 1.0;
   CommandData.ele_gain.manual_pulses = 0;
   CommandData.ele_gain.pulse_port = 0.0;
   CommandData.ele_gain.pulse_starboard = 0.0;

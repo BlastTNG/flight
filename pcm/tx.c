@@ -1086,7 +1086,7 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
 //TODO convert suitable WriteData calls to WriteCalData
 void WriteCalData(struct NiosStruct* addr, double data, int flush_flag)
 {
-  long long cal = (data - addr->b)/addr->m;
+  long long cal = (data - addr->b)/addr->m + 0.5;
 
   //check that rounding doesn't lead to over/underflow
   if (addr->wide) {   //wide

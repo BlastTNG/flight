@@ -255,6 +255,8 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
 
   if (lband>-10) {
     for (i = 0; i < S->n_sched; i++) {
+#if 0      
+// FIXME: put in sanity checks for spider scan mode
       if (S->event[i].command == box || S->event[i].command == vbox ||
         S->event[i].command == cap || S->event[i].command == vcap) {
         radec2azel(S->event[i].rvalues[0], S->event[i].rvalues[1], S->event[i].t,
@@ -297,6 +299,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
                            "%8.3f - %8.3f\n", S->event[i].t / 3600.0, az1, az2, el1, el2);
           }
         }
+#endif
     }
     bputs(sched, "********************************************\n");
   }
