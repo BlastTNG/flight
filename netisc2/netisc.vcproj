@@ -279,6 +279,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\readTemp.cpp"
+				>
+			</File>
+			<File
 				RelativePath="Region.cpp"
 				>
 			</File>
@@ -381,6 +385,10 @@
 			</File>
 			<File
 				RelativePath=".\pyramid.h"
+				>
+			</File>
+			<File
+				RelativePath=".\readTemp.h"
 				>
 			</File>
 			<File
