@@ -27,7 +27,7 @@
 #include "astro.h"         // astrometry
 #include <dscud.h>			// DAQ API
 #include "WinIo.h"         // Allow direct I/O for parallel port
-//#include "readTemp.h"      // temp/pressure sensor + heater
+#include "readTemp.h"      // temp/pressure sensor + heater
 #include "thumbnail.h"     // Save thumbnail images
 
 // --- Macros ----------------------------------------------------------------

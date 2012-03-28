@@ -2260,7 +2260,7 @@ int update_command( int abort ) {
 
 
 // Thread that runs the temperature + pressure + heater routine
-/*
+
 DWORD WINAPI th_doTemp( LPVOID parameter ) {
   //int heaterOn;
   char heat[3];
@@ -2278,7 +2278,7 @@ DWORD WINAPI th_doTemp( LPVOID parameter ) {
 
   return 0;
 }
-*/
+
 DWORD WINAPI debugme( LPVOID parameter ) {
   DWORD result;
 
@@ -2978,14 +2978,14 @@ printf("DAQ is a-go \n");
   astro_init_catalogue(catpath, catalogname, katalogname);
 
   // Initialize the temp./pressure/heater routines
-  /*
+  
   if( tempSetup(tempControl,tempSleeptime,tempSetLimit,tempOffset, 
                 tempPressuregain,tempPressureoffset) == 0 )  {
     printf("Temperature stuff couldn't open config file...\n");
   } else printf("Temperature stuff initialized AOK..\n");
   tempstring[0] = NULL;
 
-  */
+  
   // Initialize the current frame number
   if( (fnumlog = fopen(framenumlogname,"r")) == NULL )
     frameNum = -1;
@@ -3185,7 +3185,7 @@ printf("DAQ is a-go \n");
     //if( (now - server_start) > ISC_SERVER_RESTART ) quitflag = 1;
 
     // Manage the temperature / pressure sensor + heater thread
-  /*  if( (thTempState == 0) ) {
+    if( (thTempState == 0) ) {
       thTemp=CreateThread( NULL,0,th_doTemp,&thTempParam,0,&thId);
       thTempState = 1;
     } else {
@@ -3195,7 +3195,7 @@ printf("DAQ is a-go \n");
         thTempState = 0;
       }
     }
-*/
+
     //if( thExpState == 2 ) printf(" 2! ");
     
     Sleep(10);  // Sleep to give other processes some time
@@ -3255,7 +3255,7 @@ printf("DAQ is a-go \n");
   }
 
   // Stop the temp sensor thread
- /* if( thTempState == 1 ) {
+  if( thTempState == 1 ) {
     if( WaitForSingleObject(thTemp,2000) == WAIT_TIMEOUT ) 
       TerminateThread(thTemp,0);
     else CloseHandle(thTemp);        
@@ -3263,7 +3263,7 @@ printf("DAQ is a-go \n");
 
   // Turn off the heater relay
   tempShutdown();
-*/
+
   // Shut down the camera, free image buffers
   if( NO_CAMERA == 0 ) {
     QCam_CloseCamera(camhandle); 
