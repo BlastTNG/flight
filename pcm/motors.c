@@ -881,7 +881,7 @@ void WriteMot(int TxIndex)
   /* p term to vel error for pivot motor */
   WriteData(gPEPivAddr, pivGainErr, NIOS_QUEUE);
   /* setpoint for reaction wheel */
-  WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/200.0, NIOS_QUEUE);
+  WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
   /* Pivot current offset to compensate for static friction. */
   WriteData(frictOffPivAddr, pivFrictOff/2.0*65535, NIOS_QUEUE);
   /* Pivot velocity */
