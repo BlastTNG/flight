@@ -589,7 +589,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP7 18-19 are unusued */
   {"g_pe_piv",     'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
   {"g_pv_piv",     'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
-  {"set_rw",       'w', LOOP7, 22,      200.0/32768.0,             0.0, 's', U_V_DPS},
+  {"set_rw",       'w', LOOP7, 22,      500.0/32768.0,             0.0, 's', U_V_DPS},
   {"vel_dps_az",   'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
   {"blob08_s_theugly",  'w', LOOP7, 24,          1.0/100.0,             0.0, 'u', U_NONE},
   {"blob06_f_theugly",  'w', LOOP7, 25,                1.0,             0.0, 'u', U_NONE},
