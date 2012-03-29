@@ -68,8 +68,12 @@ clean:
 #
 
 install: all
+ifeq ($(HAVE_BLASTCONF),1)
 	install -m 700 -o root -g root decomd-blast /usr/local/sbin
+endif
+ifeq ($(HAVE_SPIDERCONF),1)
 	install -m 700 -o root -g root decomd-spider /usr/local/sbin
+endif
 	install -m 755 -o root -g root decomctl /usr/local/sbin
 	install -m 644 decomd.8 decomctl.8 /usr/local/man/man8
 
