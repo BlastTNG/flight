@@ -298,8 +298,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Az centre (deg)",       -180, 360, 'f', "AZ"},
       {"El centre (deg)",         15,  65, 'f', "EL"},
-      {"Width (deg on sky)",       0, 360, 'f', "NONE"},
-      {"Az Scan Speed (deg az/s)", 0,   10, 'f', "NONE"},
+      {"Width (deg on sky)",       0, 360, 'f', "W_P"},
+      {"Az Scan Speed (deg az/s)", 0,   10, 'f', "VEL_AZ_P"},
       {"Az Scan Accel (deg/s^2)",  0,   2, 'f', "ACCEL_AZ"}
     }
   },
@@ -318,25 +318,25 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(spider_scan), "scan in azimuth within a quad region in RA/Dec", 
    GR_POINT, 10,
     {
-      {"RA of Corner 1 (h)",        0, 24, 'f', "NONE"},
-      {"Dec of Corner 1 (deg)",   -90, 90, 'f', "NONE"},
-      {"RA of Corner 2 (h)",        0, 24, 'f', "NONE"},
-      {"Dec of Corner 2 (deg)",   -90, 90, 'f', "NONE"},
-      {"RA of Corner 3 (h)",        0, 24, 'f', "NONE"},
-      {"Dec of Corner 3 (deg)",   -90, 90, 'f', "NONE"},
-      {"RA of Corner 4 (h)",        0, 24, 'f', "NONE"},
-      {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
+      {"RA of Corner 1 (h)",        0, 24, 'f', "RA_1_P"},
+      {"Dec of Corner 1 (deg)",   -90, 90, 'f', "DEC_1_P"},
+      {"RA of Corner 2 (h)",        0, 24, 'f', "RA_2_P"},
+      {"Dec of Corner 2 (deg)",   -90, 90, 'f', "DEC_2_P"},
+      {"RA of Corner 3 (h)",        0, 24, 'f', "RA_3_P"},
+      {"Dec of Corner 3 (deg)",   -90, 90, 'f', "DEC_3_P"},
+      {"RA of Corner 4 (h)",        0, 24, 'f', "RA_4_P"},
+      {"Dec of Corner 4 (deg)",   -90, 90, 'f', "DEC_4_P"},
       {"Az Scan Accel (deg/s^2)",   0,  2, 'f', "ACCEL_AZ"},
-      {"Elevation (deg)",           20, 50, 'f', "NONE"}
+      {"Elevation (deg)",           20, 50, 'f', "EL"}
     }
   },
   {COMMAND(sine_scan), "scan sinusoidally in azimuth with a specific amplitude",
    GR_POINT, 4,
     {
       {"peak acceleration (deg/s^2)", 0, 2, 'f', "ACCEL_AZ"},
-      {"scan amplitude (deg)",        0, 90, 'f', "NONE"},
-      {"scan az centre (deg)",        0, 360,'f', "NONE"},
-      {"scan elevation (deg)",        20, 50, 'f', "NONE"},
+      {"scan amplitude (deg)",        0, 90, 'f', "AMPL_P"},
+      {"scan az centre (deg)",        0, 360,'f', "AZ"},
+      {"scan elevation (deg)",        20, 50, 'f', "EL"},
     }
   },   
   {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,

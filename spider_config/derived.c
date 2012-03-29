@@ -128,6 +128,8 @@ union DerivedUnion DerivedChannels[] = {
       "VETO_PSS2"
       ),
 
+  LINCOM("AMPL_P", "W_P", 0.5, 0.0), // convert scan width to scan amplitude
+
 #if 0
   BITFIELD("sensor_reset",
       "",
