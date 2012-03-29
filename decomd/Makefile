@@ -78,10 +78,18 @@ endif
 	install -m 644 decomd.8 decomctl.8 /usr/local/man/man8
 
 install-blast: install
+ifeq ($(HAVE_BLASTCONF),1)
 	rm -f /usr/local/sbin/decomd
 	ln -s /usr/local/sbin/decomd-blast /usr/local/sbin/decomd
+else
+	$(error Required repository missing.  Unable to continue)
+endif
 
 install-spider: install
+ifeq ($(HAVE_SPIDERCONF),1)
 	rm -f /usr/local/sbin/decomd
 	ln -s /usr/local/sbin/decomd-spider /usr/local/sbin/decomd
+else
+	$(error Required repository missing.  Unable to continue)
+endif
 
