@@ -1,5 +1,5 @@
 #!/bin/sh
 echo This script ignores all parameters.
 echo To change where cow will be installed, edit cow.pro!
-qmake-qt4 .
+qmake-qt4
 echo Great! Now run \"make\" and \"make install\"!
