@@ -404,7 +404,7 @@ static void GetVElev(double* v_P, double* v_S)
   del_strbrd = enc_strbrd - enc_strbrd_ref;
   if (fabs(del_strbrd_targ)>0.05) {
     if (fabs(del_strbrd)<0.025) {
-      bprintf(info, "strbrd stall detected: %g %g %g", del_strbrd_targ, del_strbrd, *v_S);
+      //bprintf(info, "strbrd stall detected: %g %g %g", del_strbrd_targ, del_strbrd, *v_S);
       *v_P = *v_S = 0.0;
       // FIXME: handle the stall here...
     } else {        
