@@ -38,8 +38,12 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
-#define MIN_EL 23.9 
-#define MAX_EL 55
+/**** TODO: Change these back once we have the sunshields on!!!****/
+#define MIN_EL 5 // Was 23.9 
+#define MAX_EL 55 // Was 55
+
+#define MAX_V_AZ 2.0 // was 2000 in gyro units
+#define MAX_V_EL 0.5 // was 0.5
 
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
@@ -205,10 +209,10 @@ static double GetVElev(void)
   }
 
   /* Limit Maximim speed to 0.5 dps*/
-  if (vel > 0.5)
-    vel = 0.5;
-  if (vel < -0.5)
-    vel = -0.5;
+  if (vel > MAX_V_EL)
+    vel = MAX_V_EL;
+  if (vel < (-1.0)*MAX_V_EL)
+    vel = (-1.0)*MAX_V_EL;
 
   vel *= DPS_TO_GY16;
 
@@ -267,13 +271,14 @@ static double GetVAz(void)
     sin(PointingData[i_point].el * M_PI / 180.0);
 
   vel -= vel_offset;
+  /* Limit Maximim speed */
+  if (vel > MAX_V_AZ)
+    vel = MAX_V_AZ;
+  if (vel < -MAX_V_AZ)
+    vel = -MAX_V_AZ;
+
   vel *= DPS_TO_GY16;
 
-  /* Limit Maximim speed */
-  if (vel > 2000.0)
-    vel = 2000.0;
-  if (vel < -2000.0)
-    vel = -2000.0;
 
   /* limit Maximum acceleration */
   dvel = vel - last_vel;
@@ -2199,23 +2204,27 @@ void* pivotComm(void* arg)
 	current_raw=queryAMCInd(16,3,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].current=((double)current_raw)/8192.0*20.0; // *2^13 / peak drive current
 	                                                                             // Units are Amps
-	//        bprintf(info,"current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
+	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
 	break;
       case 1:
 	db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].db_stat=db_stat_raw;
+	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"db_stat_raw= %i, db_stat= %f",db_stat_raw,PivotMotorData[pivot_motor_index].db_stat);
 	break;
       case 2:
 	dp_stat_raw=queryAMCInd(2,1,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].dp_stat=dp_stat_raw;
+	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"dp_stat_raw= %i, dp_stat= %f",dp_stat_raw,PivotMotorData[pivot_motor_index].dp_stat);
 	break;
       case 3:
 	ds1_stat_raw=queryAMCInd(2,3,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].ds1_stat=ds1_stat_raw;
+	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"ds1_stat_raw= %i, ds1_stat= %f",ds1_stat_raw,PivotMotorData[pivot_motor_index].ds1_stat);
 	break;
       case 4:
 	piv_vel_raw=((int) queryAMCInd(17,2,2,&pivotinfo));
         PivotMotorData[pivot_motor_index].dps_piv=piv_vel_raw*0.144;
+	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"piv_vel_raw= %i, piv_vel= %f",piv_vel_raw,PivotMotorData[pivot_motor_index].dps_piv);
 	break;
       }
       j++;
