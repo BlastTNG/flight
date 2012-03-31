@@ -788,7 +788,8 @@ struct ChannelStruct SlowChannels[] = {
   {"blob04_y_sbsc",  'w', LOOP9,  31, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
   {"blob04_f_sbsc",  'w', LOOP9,  32,                1.0,             0.0, 'u', U_NONE},
   {"blob04_s_sbsc",  'w', LOOP9,  33,          1.0/100.0,             0.0, 'u', U_NONE},
-  /* LOOP9 34-49 are unused */
+  {"vel_el_p",       'w', LOOP9,  34,              I2VEL,             0.0, 'u', U_NONE},
+  /* LOOP9 35-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  

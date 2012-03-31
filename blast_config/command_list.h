@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 229        /* total number of single word cmds */
-#define N_MCOMMANDS 118        /* total number of multiword commands */
+#define N_MCOMMANDS 119        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
@@ -151,7 +151,7 @@ enum multiCommand {
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     ants_gps,          hwpr_goto_pot,    act_enc_trim,
-  actuator_tol,	       
+  actuator_tol,	     el_scan,  
   plugh
 };
 

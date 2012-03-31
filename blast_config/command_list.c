@@ -382,6 +382,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Az Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
     }
   },
+  {COMMAND(el_scan), "scan in azimuth", GR_POINT, 4,
+    {
+      {"Az centre (deg)",       -180, 360, 'f', "AZ"},
+      {"El centre (deg)",         15,  65, 'f', "EL"},
+      {"Height (deg on sky)",       0, 360, 'f', "NONE"},
+      {"El Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
+    }
+  },
   {COMMAND(balance_manual), "Manually set balance pump rate", GR_BAL, 1,
     {
       {"level",           -1.0, 1.0, 'f', "NONE"},
