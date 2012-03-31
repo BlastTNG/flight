@@ -689,6 +689,11 @@ static void SetAzScanMode(double az, double left, double right, double v,
     }
 }
 
+static void SetElScanMode(double el, double bottom, double top, double v,
+    double D)
+{
+}
+
 static void DoAzScanMode(void)
 {
   static double last_x=0, last_w = 0;
@@ -729,6 +734,50 @@ static void DoAzScanMode(void)
     }
   } else {
     SetAzScanMode(az, left, right, v, 0);
+  }
+}
+
+static void DoElScanMode(void)
+{
+  static double last_y=0, last_w = 0;
+  double el, top, bottom, v,w;
+  //  double az, left, right, v,w;
+  int i_point;
+
+  axes_mode.az_mode = AXIS_POSITION;
+  axes_mode.az_dest = CommandData.pointing_mode.X;
+  axes_mode.az_vel  = 0.0;
+
+  i_point = GETREADINDEX(point_index);
+  el = PointingData[i_point].el; 
+
+  w = CommandData.pointing_mode.w;
+  top = CommandData.pointing_mode.Y + w / 2;
+  bottom = CommandData.pointing_mode.Y - w / 2;
+
+  //  SetSafeDAz(left, &az); // Don't think I need this because I should be staying constant in az. Test!
+
+  v = CommandData.pointing_mode.vel;
+
+  if (last_y!= CommandData.pointing_mode.Y || last_w != w) {
+    if (el < bottom) {
+      axes_mode.el_mode = AXIS_POSITION;
+      axes_mode.el_dest = bottom;
+      axes_mode.el_vel = 0.0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+    } else if (el > top) {
+      axes_mode.el_mode = AXIS_POSITION;
+      axes_mode.el_dest = top;
+      axes_mode.el_vel = 0.0;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+    } else {
+      // once we are within the new az/w range, we can mark this as 'last'.
+      last_y = CommandData.pointing_mode.Y;
+      last_w = w;
+      SetElScanMode(el, bottom, top, v, 0);
+    }
+  } else {
+    SetAzScanMode(el, bottom, top, v, 0);
   }
 }
 
@@ -1570,6 +1619,9 @@ void UpdateAxesMode(void)
       break;
     case P_AZ_SCAN:
       DoAzScanMode();
+      break;
+    case P_EL_SCAN:
+      DoElScanMode();
       break;
     case P_VCAP:
       DoVCapMode();

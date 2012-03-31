@@ -56,6 +56,6 @@ struct chat_buf {
 
 //#define USE_FIFO_CMD
 
-//#define USE_XY_THREAD
+#define USE_XY_THREAD
 
 #endif

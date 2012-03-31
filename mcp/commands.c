@@ -970,6 +970,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.h = 0;
       break;
+    case el_scan:
+      bprintf(info,"Commands: El scan not enabled yet!");
+#if 0      
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      CommandData.pointing_mode.mode = P_EL_SCAN;
+      CommandData.pointing_mode.X = rvalues[0];  /* az */
+      CommandData.pointing_mode.Y = rvalues[1];  /* el */
+      CommandData.pointing_mode.h = rvalues[2];  /* height */
+      CommandData.pointing_mode.vel = rvalues[3]; /* az scan speed */
+      CommandData.pointing_mode.vaz = 0.0;
+      CommandData.pointing_mode.del = 0.0;
+      CommandData.pointing_mode.w = 0;
+#endif      
+      break;
     case drift:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
@@ -1867,6 +1881,7 @@ void InitCommandData()
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
   CommandData.pointing_mode.dith = 0.0;
+  CommandData.pointing_mode.vel = 0.0;
 
   CommandData.az_accel = 0.4; 
 
