@@ -253,6 +253,7 @@ int bbc_read_procmem(char *buf, char **start, off_t offset, int count, int *eof,
 static void timer_callback(unsigned long dummy)
 {
   static loff_t wp, rp;
+  unsigned int wp_next; //used by bi0
   static int nwritten;
   static unsigned short out_data[2];
   static int idx = 2;
@@ -345,9 +346,15 @@ static void timer_callback(unsigned long dummy)
   // Write bi-phase data to NIOS.
   if(bi0_wfifo.status & FIFO_ENABLED) {
     rp = ioread32(bbc_drv.mem_base + BBCPCI_ADD_BI0_RP);
+    wp = ioread32(bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
     while( atomic_read(&bi0_wfifo.n) ) {
-      wp = ioread32(bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
-      if(wp == rp) break;
+      if (wp >= BBCPCI_IR_BI0_BUF_END) {
+        wp_next = BBCPCI_IR_BI0_BUF;
+      } else {
+        wp_next = wp + BBCPCI_SIZE_UINT;
+      }
+      if(wp_next == rp) break;
+
       out_data[--idx] = bi0_wfifo.data[bi0_wfifo.i_out];
       if(bi0_wfifo.i_out == (BI0_WFIFO_SIZE - 1)) {
         bi0_wfifo.i_out = 0;
@@ -357,17 +364,11 @@ static void timer_callback(unsigned long dummy)
       if(idx == 0) {
         idx = 2;
         iowrite32(*(unsigned *)out_data, bbc_drv.mem_base + wp);
-
-        if (wp >= BBCPCI_IR_BI0_BUF_END) {
-          wp = BBCPCI_IR_BI0_BUF;
-        } else {
-          wp += BBCPCI_SIZE_UINT;
-        }
-
-        iowrite32(wp, bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
+        wp = wp_next;
       }
       atomic_dec(&bi0_wfifo.n);
     }
+    iowrite32(wp, bbc_drv.mem_base + BBCPCI_ADD_BI0_WP);
   }
 
  tc_end:
