@@ -356,7 +356,7 @@ static void GetVElev(double* v_P, double* v_S)
   *v_P = SetVElev(g_com, -g_diff, dy, err, v_P_last, max_dv);
   *v_S = SetVElev(g_com, g_diff, dy, err, v_S_last, max_dv);
  
-  if ( !(CommandData.disable_el) ) {
+  if ( !(CommandData.disable_el) && CommandData.power.elmot_auto ) {
     if ( !(g_com || g_diff) ) {
       since_arrival++;
       if (since_arrival >= 500) {

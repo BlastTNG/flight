@@ -259,6 +259,12 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.elmot.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
       break;
+    case elmot_auto:
+      CommandData.power.elmot_auto = 1;
+      break;
+    case elmot_manual:
+      CommandData.power.elmot_auto = 0;
+      break;
     case vtx_off:
       CommandData.power.sc_tx.set_count = 0;
       CommandData.power.sc_tx.rst_count = LATCH_PULSE_LEN;
@@ -1581,6 +1587,8 @@ void InitCommandData()
   CommandData.ele_gain.manual_pulses = 0;
   CommandData.ele_gain.pulse_port = 0.0;
   CommandData.ele_gain.pulse_starboard = 0.0;
+  
+  CommandData.power.elmot_auto = 0;
 
   CommandData.azi_gain.P = 4000;
   CommandData.azi_gain.I = 100;
