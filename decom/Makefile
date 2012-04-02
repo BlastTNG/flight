@@ -19,11 +19,14 @@ KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD		:= $(shell pwd)
 CC    := gcc -O2 -g
 
-all: decom_pci.ko test_decom
+all: decom_pci.ko test_decom test_decom_packets
 
 decom_pci.ko: decom_pci.c decom_pci.h
 # invoke kernel build system
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+
+test_decom_packets: test_decom_packets.c
+	$(CC) -o test_decom_packets test_decom_packets.c -lm
 
 test_decom: test_decom.c
 	$(CC) -o test_decom test_decom.c -lm
