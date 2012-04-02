@@ -23,7 +23,7 @@ PWD		:= $(shell pwd)
 CC    := gcc -O2 -g
 CPPFLAGS = -I../$(SHARED)
 
-all: bbc_pci.ko test_bbcpci_int test_bbcpci_ext test_biphase test_irq test_data
+all: bbc_pci.ko test_bbcpci_int test_bbcpci_ext test_biphase test_irq test_data test_spiderbiphase
 
 up update:
 	@for dir in $(SHARED); do \
@@ -54,6 +54,9 @@ test_bbcpci_ext: test_bbcpci.c
 
 test_biphase: test_biphase.c
 	$(CC) $(CPPFLAGS) -o test_biphase test_biphase.c -lm
+
+test_spiderbiphase: test_spiderbiphase.c
+	$(CC) $(CPPFLAGS) -o test_spiderbiphase test_spiderbiphase.c -lm
 
 test_irq: test_irq.c
 	$(CC) $(CPPFLAGS) -o test_irq test_irq.c -lm
