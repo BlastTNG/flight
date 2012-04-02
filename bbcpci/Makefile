@@ -23,7 +23,7 @@ PWD		:= $(shell pwd)
 CC    := gcc -O2 -g
 CPPFLAGS = -I../$(SHARED)
 
-all: bbc_pci.ko test_bbcpci test_biphase test_irq test_data
+all: bbc_pci.ko test_bbcpci_int test_bbcpci_ext test_biphase test_irq test_data
 
 up update:
 	@for dir in $(SHARED); do \
@@ -46,8 +46,11 @@ bbc_pci.ko: bbc_pci.c
 test_data: test_data.c
 	$(CC) $(CPPFLAGS) -o test_data test_data.c
 
-test_bbcpci: test_bbcpci.c
-	$(CC) $(CPPFLAGS) -o test_bbcpci test_bbcpci.c
+test_bbcpci_int: test_bbcpci.c
+	$(CC) $(CPPFLAGS) -o test_bbcpci_int test_bbcpci.c
+
+test_bbcpci_ext: test_bbcpci.c
+	$(CC) $(CPPFLAGS) -DUSE_EXT_SERIAL -o test_bbcpci_ext test_bbcpci.c
 
 test_biphase: test_biphase.c
 	$(CC) $(CPPFLAGS) -o test_biphase test_biphase.c -lm
@@ -56,7 +59,7 @@ test_irq: test_irq.c
 	$(CC) $(CPPFLAGS) -o test_irq test_irq.c -lm
 
 clean: 
-	rm -f .bbc* *.ko *.o test_bbcpci test_biphase test_irq bbc_pci.mod.c
+	rm -f .bbc* *.ko *.o test_bbcpci_int test_bbcpci_ext test_biphase test_irq bbc_pci.mod.c
 
 MODULEDIR ?= /lib/modules/$(shell uname -r)/kernel/drivers/misc
 

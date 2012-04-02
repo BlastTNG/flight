@@ -31,6 +31,7 @@
 #include "bbc_pci.h"
 
 //define to use external serial numbers and interrupt generation
+//NB: now defined in Makefile, for separate targets
 //#define USE_EXT_SERIAL
 //in external mode, number of serial numbers per frame
 #define SERIAL_PER_FRAME 2
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]) {
   struct timeval tv_frame;
   double frametime, old_frametime = 0.0;
   char frate_str[11] = "";
-  
+
   fp = open("/dev/bbcpci", O_RDWR | O_NONBLOCK);
   if (fp < 0) {
     perror("Error opening BBCPCI\n");
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]) {
   }
   if (system("clear") < 0) perror("Failed to clear");
   fprintf(stderr, "NIOS program version %8x.\n", ioctl(fp, BBCPCI_IOC_VERSION));
-  
+
   i[0] = BBCPCI_WFRAME_ADD(0); 
   i[1] = BBC_FSYNC | 1;
   i[2] = BBCPCI_WFRAME_ADD(1);
@@ -66,59 +67,56 @@ int main(int argc, char *argv[]) {
   i[4] = BBCPCI_WFRAME_ADD(2);
   i[5] = 1;
   for(k = 3; k < FRAMELEN+3; k++) {
-      i[2*k] = BBCPCI_WFRAME_ADD(k);
-      num = k - 3;
-      i[2*k+1] = BBC_DATA((0xc000+num)) | BBC_NODE(num) | BBC_CH(0) | BBC_READ;
+    i[2*k] = BBCPCI_WFRAME_ADD(k);
+    num = k - 3;
+    i[2*k+1] = BBC_DATA((0xc000+num)) | BBC_NODE(num) | BBC_CH(0) | BBC_READ;
   }
   for(k = FRAMELEN+3; k < 2*FRAMELEN+3; k++) {
-      i[2*k] = BBCPCI_WFRAME_ADD(k);
-      num = k - 3 - FRAMELEN;
-      i[2*k+1] = BBC_DATA((0x8000+num)) | BBC_NODE(num) | BBC_CH(0) | BBC_WRITE;
+    i[2*k] = BBCPCI_WFRAME_ADD(k);
+    num = k - 3 - FRAMELEN;
+    i[2*k+1] = BBC_DATA((0x8000+num)) | BBC_NODE(num) | BBC_CH(0) | BBC_WRITE;
   }
   i[2*k] = BBCPCI_WFRAME_ADD(2*FRAMELEN+3);
   i[2*k+1] = BBC_ENDWORD;
   k++;
-  
+
   for (j = 0; j < k; j++)  {
     fprintf(stderr, "1: %02x ", write(fp, (void *)(i + 2 * j), 2 * BBCPCI_SIZE_UINT));
     fprintf(stderr, "%08x %08x\n", i[j * 2], i[j * 2 + 1]);
   }
 
-  //usleep(6000000); 
-  //for (oldsecret = 0xabcdabcd, k = 0; k < 100000; k++) {
-  //  ioctl(fp, BBCPCI_IOC_SECRET, &secret);
-  //  if (oldsecret != secret[0])
-  //    printf("===> %08x %08x\n", secret[0], secret[1]);
-  //  oldsecret = secret[0];
- // }
 #ifdef USE_EXT_SERIAL
-  printf("\nUsing external serial number generation\n");
+  fprintf(stderr,"\nUsing external serial number generation\n");
 #else
-  printf("\nUsing internal serial number generation\n");
+  fprintf(stderr,"\nUsing internal serial number generation\n");
 #endif
 
   getchar();
-  
+
   usleep(100000);
-  ioctl(fp, BBCPCI_IOC_ON_IRQ);
+  ioctl(fp, BBCPCI_IOC_OFF_IRQ);
+  usleep(100000);
   ioctl(fp, BBCPCI_IOC_SYNC);
   //"reset" the rates so that older firmwares will work still
   ioctl(fp, BBCPCI_IOC_IRQ_RATE, 1);
   ioctl(fp, BBCPCI_IOC_FRAME_RATE, 1);
   usleep(100000);
-  
+
 #ifdef USE_EXT_SERIAL
   ioctl(fp, BBCPCI_IOC_EXT_SER_ON);
   ioctl(fp, BBCPCI_IOC_IRQ_RATE_EXT, 1);
   ioctl(fp, BBCPCI_IOC_FRAME_RATE_EXT, SERIAL_PER_FRAME);
+  //BICEP2 firmwares with settable internal rate needs this:
+  //ioctl(fp, BBCPCI_IOC_IRQ_RATE_INT, FRAME_RATE_INT);
+  //ioctl(fp, BBCPCI_IOC_FRAME_RATE_INT, FRAME_RATE_INT);
 #else
   ioctl(fp, BBCPCI_IOC_EXT_SER_OFF);
   ioctl(fp, BBCPCI_IOC_IRQ_RATE_INT, FRAME_RATE_INT);
   ioctl(fp, BBCPCI_IOC_FRAME_RATE_INT, FRAME_RATE_INT);
 #endif
-  
+
   numerrs = 0;
-  
+
   while (1) {
     for (k = 0; read(fp, (void *)(&j), sizeof(unsigned int)) == 4; k++) {
       serial = ioctl(fp, BBCPCI_IOC_GET_SERIAL);
@@ -147,6 +145,6 @@ int main(int argc, char *argv[]) {
       frame_stopped = 1;
     }
   }
-  
+
   return 0;
 }
