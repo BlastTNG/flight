@@ -86,6 +86,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(elmot_off), "turn off the elevation motor", GR_POWER},
   {COMMAND(elmot_on), "turn on the elevation motor", GR_POWER},
   {COMMAND(elmot_cycle), "power cycle the elevation motor", GR_POWER},
+  {COMMAND(elmot_auto), "el motors automatically power on for a move, and then power off again", GR_POWER},
+  {COMMAND(elmot_manual), "el motors must be powered on/off manually", GR_POWER},
   {COMMAND(vtx_off), "turn off the video transmitters", GR_TELEM | GR_POWER},
   {COMMAND(vtx_on), "turn on the video transmitters", GR_TELEM | GR_POWER},
   {COMMAND(bi0_off), "turn off the biphase transmitter", GR_TELEM | GR_POWER},

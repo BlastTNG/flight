@@ -16,7 +16,7 @@
 
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 169        /* total number of single word cmds */
+#define N_SCOMMANDS 171        /* total number of single word cmds */
 #define N_MCOMMANDS 111        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -108,7 +108,8 @@ enum singleCommand {
   hk_t2_heat_on,     hk_t2_heat_off,    hk_t3_heat_on,     hk_t3_heat_off,
   hk_t4_heat_on,     hk_t4_heat_off,    hk_t5_heat_on,     hk_t5_heat_off,
   hk_t6_heat_on,     hk_t6_heat_off,    hk_t7_heat_on,     hk_t7_heat_off,
-  bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,
+  bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
+  elmot_manual,
   xyzzy	    //xyzzy should be at the end of the list
 };
 

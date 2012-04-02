@@ -227,6 +227,7 @@ struct CommandDataStruct {
     int thebad_cam_off;
     int theugly_cam_off;
     unsigned char adc_reset[16];
+    int elmot_auto; // automatically power el motors on/off before/after a move
   } power;
 
   unsigned short disable_az;
