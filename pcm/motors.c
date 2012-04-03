@@ -69,6 +69,14 @@
 #define CM_PER_ENC (1000.0/72000.0)
 #define TOLERANCE 0.01    // max acceptable el pointing error (deg)
 
+/* regions of sinsuoidal scan mode */
+#define SCAN_BEYOND_L 1
+#define SCAN_BEYOND_R 2
+#define SCAN_L_TO_R 3
+#define SCAN_R_TO_L 4
+#define SCAN_L_TURN 5
+#define SCAN_R_TURN 6
+
 void nameThread(const char*);	/* mcp.c */
 
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
@@ -1030,16 +1038,18 @@ static void DoSineMode(void)
   centre = CommandData.pointing_mode.X;
   ampl = (CommandData.pointing_mode.w)/2.0;
 
+  SetSafeDAz(az, &centre); // don't cross the sun between here and centre
+    
   right = centre + ampl;
- 
+  
   left = centre - ampl;
 
-  SetSafeDAz(az, &left);     // don't cross sun between here and left
+  /*SetSafeDAz(az, &left);     // don't cross sun between here and left
   SetSafeDAz(left, &right);  // don't cross sun between left and right
  
   if (right < left) {
     left -= 360.0;
-  }
+  }*/
 
   v_az_max = sqrt(az_accel * ampl);
   
@@ -1145,61 +1155,81 @@ static void DoSineMode(void)
 /* JAS - "modified quad" scan mode for Spider */
 static void DoSpiderMode(void)
 {
+  double ra_start, dec_start;
+  double az_start, el_start;
   double az, el;
   double lst, lat;
   double c_az[4], c_el[4]; // corner az and corner el
+  double a_az; // requested acceleration based on position
+  static double last_v = 0.0;
+  
+  /* parameters of "instantaneous" sinusoidal az scan: */
   double centre, left, right, top, bottom, v_az;
   double az_of_bot;
   double v_az_max, ampl, turn_around;
   double az_accel;
-  int i, i_point;
+  double az_accel_dv;
+  
   double t_before; // time at which to send BSC trigger command
-
+  
+  int i, i_point;
+  int N_scans; // number of azimuth half-scans per el step
+ 
+  static int scan_region = 0;
+  static int scan_region_last = 0;
+  
+  static int n_scans = 0; // number of azimuth half-scans elapsed;
+  
   t_before = DELAY + CommandData.theugly.expTime/2000.0;
 
   az_accel = CommandData.az_accel;
+  az_accel_dv = az_accel/SR;
   
-  axes_mode.el_mode = AXIS_POSITION;
-  axes_mode.el_dest = CommandData.pointing_mode.Y;
-  axes_mode.el_vel = 0.0;
+  N_scans = CommandData.pointing_mode.Nscans;
+  
+  ra_start = CommandData.pointing_mode.X;
+  dec_start = CommandData.pointing_mode.Y;
 
   i_point = GETREADINDEX(point_index);
+  
   lst = PointingData[i_point].lst;
-  /* input unchanging lst for testing purposes */
-  //lst = 23400.0;
   lat = PointingData[i_point].lat;
-  /* input unchanging latitude for testing purposes: 
-     McMurdo station at 71 deg. 51 arcmin S */
-  //lat = -77.85;
+  
   az = PointingData[i_point].az;
-  el = PointingData[i_point].el;// + 28.0;
-
+  el = PointingData[i_point].el;
+  
+  axes_mode.el_mode = AXIS_POSITION; // applies throughout this scan mode
+  axes_mode.el_dest = el; // don't go anywhere for now
+  axes_mode.el_vel = 0.0;
+  
   /* convert ra/decs to az/el */
   for (i = 0; i < 4; i++) {
     radec2azel(CommandData.pointing_mode.ra[i],CommandData.pointing_mode.dec[i],
                lst, lat, c_az+i, c_el+i);
   }
+  
+  radec2azel(ra_start, dec_start, lst, lat, &az_start, &el_start);
 
-  radbox_endpoints(c_az, c_el, el, &left, &right, &bottom, &top, &az_of_bot);
-  //bprintf(info, "az/el corner points are: (%f,%f), (%f,%f), (%f,%f), (%f,%f)",
-   //       c_az[0], c_el[0], c_az[1], c_el[1], c_az[2], c_el[2], c_az[3], c_el[3]
-     //    );
-
-  SetSafeDAz(az, &left);     // don't cross sun between here and left
-  SetSafeDAz(left, &right);  // don't cross sun between left and right
- 
-  if (right < left) {
-    left -= 360.0;
-  }
-
+  radbox_endpoints(c_az, c_el, el_start, &left, &right, &bottom, &top, &az_of_bot);
+  
+  /* Rigmarole to make sure we don't cross the sun between here and scan centre */
+  
+  ampl = (right - left) / 2.0;
   centre = (left + right) / 2.0;
   
-  ampl = right - centre;
+  SetSafeDAz(az, &centre);
+  
+  left = centre - ampl;
+  right = centre + ampl;
+  
   v_az_max = sqrt(az_accel * ampl);
-  turn_around = fabs( (centre - ampl*cos(asin(V_AZ_MIN/v_az_max))) - left );
-  //turn_around = 1.0;
-  //bprintf(info, "left = %f, right = %f, centre = %f, ampl = %f, v_az_max = %f, turn_around = %f", left, right, centre, ampl, v_az_max, turn_around);
+ 
+// EVERYTHING BELOW IS THE SAME AS IN DoSineMode()   
+  
+  // |distance| from end point when V_req = V_AZ_MIN
+  turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
 
+  // This should never ever matter.  MIN_SCAN = 0.1 deg
   if (right-left < MIN_SCAN) {
     left = centre - MIN_SCAN/2.0; 
     right = left + MIN_SCAN;
@@ -1208,59 +1238,126 @@ static void DoSpiderMode(void)
 
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
 
-  /* case 1: moving into quad from beyond left endpoint: */
-  if (az < left) {
-    v_az = sqrt(2.0*az_accel*(left-az)) + V_AZ_MIN;
-    v_az = (v_az > v_az_max) ? v_az_max : v_az;
+  /* case 1: moving into scan from beyond left endpoint: */
+  if (az < left - OVERSHOOT_BAND) {
+    scan_region = SCAN_BEYOND_L;
+    scan_region_last = scan_region;
+    v_az = sqrt(2.0*az_accel*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
+    a_az = -az_accel; 
+    //a_az = 0.0;
+    if (v_az > v_az_max) {
+      v_az = v_az_max;
+      a_az = 0.0;
+    }
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
   
   /* case 2: moving into quad from beyond right endpoint: */
-  } else if (az > right) {
-    v_az = -sqrt(2.0*az_accel*(az-right)) - V_AZ_MIN;
-    v_az = (v_az < -v_az_max) ? -v_az_max : v_az;
+  } else if (az > right + OVERSHOOT_BAND) {
+    scan_region = SCAN_BEYOND_R;
+    scan_region_last = scan_region;
+    v_az = -sqrt(2.0*az_accel*(az-(right+OVERSHOOT_BAND))) - V_AZ_MIN;
+    a_az = az_accel;
+    //a_az = 0.0;
+    if (v_az < -v_az_max) {
+      v_az = -v_az_max;
+      a_az = 0.0;
+    } 
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
 
   /* case 3: moving from left to right endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
-	     && (PointingData[i_point].v_az > 0.0) ) {
+             && (PointingData[i_point].v_az > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
+    scan_region = SCAN_L_TO_R;
+    scan_region_last = scan_region;	       
     v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
+    a_az = az_accel*( (centre - az)/ampl ); 
 
+    // star camera trigger (lemur?)
     if (az >= (right + 
         ampl*(cos(sqrt(az_accel/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
     } else {
       bsc_trigger = 0;
     }
- 
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
-	      && (PointingData[i_point].v_az < 0.0) ) {
+              && (PointingData[i_point].v_az < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
+    scan_region = SCAN_R_TO_L;
+    scan_region_last = scan_region;
     v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
-
+    a_az = az_accel*( (centre - az)/ampl );
+  
+    // star camera trigger (lemur?)
     if (az <= (left + 
-        ampl*(1 - cos(sqrt(az_accel/ampl)*t_before)))) {
+        ampl*(1.0 - cos(sqrt(az_accel/ampl)*t_before)))) {
       bsc_trigger = 1;
     } else {
       bsc_trigger = 0;
     }
 
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
 
   /* case 5: in left turn-around zone */ 
-  } else if ( (az <= (left+turn_around)) && (az >= left) ) {    
-    v_az = V_AZ_MIN;
-    axes_mode.az_vel = v_az;
-
+  } else if ( az <= left+turn_around ) {
+    scan_region = SCAN_L_TURN;
+    if (scan_region_last == SCAN_R_TO_L) {
+      n_scans++;
+      if ( (n_scans % N_scans) == 0 ) { // step in elevation
+        axes_mode.el_mode = AXIS_POSITION;
+        axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
+        axes_mode.el_vel = 0.0;
+      }
+    }
+    scan_region_last = scan_region;
+    
+    v_az = last_v + az_accel_dv;
+    if (v_az > V_AZ_MIN) {
+      v_az = V_AZ_MIN;
+    }
+    a_az = az_accel*( (centre - az)/ampl );
+    
+    axes_mode.az_vel = v_az; 
+    axes_mode.az_accel = a_az;
+    
   /* case 6: in right turn-around zone */   
-  } else if ( (az >= (right-turn_around)) && (az <= right) ) {
-    v_az = -V_AZ_MIN;
+  } else if (az >= right-turn_around) {
+    scan_region = SCAN_R_TURN;
+    if (scan_region_last == SCAN_L_TO_R) {
+      n_scans++;
+      if ( (n_scans % N_scans) == 0 ) { // step in elevation
+        axes_mode.el_mode = AXIS_POSITION;
+        axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
+        axes_mode.el_vel = 0.0;
+      }
+    }
+    scan_region_last = scan_region;
+    
+    v_az = last_v - az_accel_dv;
+    if (v_az < -V_AZ_MIN) {
+      v_az = -V_AZ_MIN;
+    }
+    a_az = az_accel*( (centre - az)/ampl );
+    
     axes_mode.az_vel = v_az;
+    axes_mode.az_accel = a_az;
   }
- 
+
+  if (n_scans >= N_scans) {
+    bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
+	    n_scans); 
+    n_scans = 0;
+  }
+
+  last_v = v_az;
+
 }
 
 static void DoAzScanMode(void)

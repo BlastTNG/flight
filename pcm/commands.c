@@ -820,23 +820,25 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.pointing_mode.ra[i] = rvalues[i*2];
         CommandData.pointing_mode.dec[i] = rvalues[i*2 + 1];        
       }
-      CommandData.az_accel = rvalues[8];
+      CommandData.pointing_mode.X = rvalues[8];
       CommandData.pointing_mode.Y = rvalues[9];
       CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SPIDER;
       break;
-    case sine_scan:
+    case set_scan_params:  
       CommandData.az_accel = rvalues[0];
-      CommandData.pointing_mode.w = 2.0*rvalues[1];
-      CommandData.pointing_mode.X = rvalues[2];
-      CommandData.pointing_mode.Y = rvalues[3];
+      CommandData.az_accel_max = rvalues[1]; 
+      CommandData.pointing_mode.Nscans = ivalues[2];
+      CommandData.pointing_mode.del = rvalues[3];
+      CommandData.pointing_mode.Nsteps = ivalues[4];
+      break;
+    case sine_scan:
+      CommandData.pointing_mode.w = 2.0*rvalues[0];
+      CommandData.pointing_mode.X = rvalues[1];
+      CommandData.pointing_mode.Y = rvalues[2];
       CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SINE;
       break;
-    case set_accel_max:
-      CommandData.az_accel_max = rvalues[0];
-      break;
-
       /***************************************/
       /********** Pointing Motor Trims *******/
     case az_el_trim:
@@ -1574,6 +1576,8 @@ void InitCommandData()
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
   CommandData.pointing_mode.dith = 0.0;
+  CommandData.pointing_mode.Nscans = 1;
+  CommandData.pointing_mode.Nsteps = 10;
 
   CommandData.az_accel = 0.1; 
   CommandData.az_accel_max = 1.0;
