@@ -117,7 +117,7 @@ enum singleCommand {
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,           dac2_level,  
-  roll_gain,         set_accel_max,
+  roll_gain,         set_scan_params,
   az_el_trim,        drift,             el_gain,
   inner_level,       hwpr_jump,         hwpr_goto_i,       actuator_tol,
   lock,              act_offset,

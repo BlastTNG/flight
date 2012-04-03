@@ -273,8 +273,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /* pointing modes */
   {COMMAND(az_el_goto), "goto point in azimuth and elevation", GR_POINT, 2,
     {
-      {"Azimuth (deg)", -360, 360, 'f', "AZ"},
-      {"Elevation (deg)", 4.95,  65, 'f', "EL"}
+      {"Azimuth (deg)",     -360, 360, 'f', "AZ"},
+      {"Elevation (deg)", 10.0,  60.0, 'f', "EL"}
     }
   },
   {COMMAND(az_el_trim), "trim sensors to azimuth and elevation", GR_TRIM, 2,
@@ -290,19 +290,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Pointing Gain", 0, USHRT_MAX, 'i', "g_pt_az"}
     }
   },
-  {COMMAND(set_accel_max), "set gondola max acceleration", 
-   GR_GAIN, 1,
-    {
-      {"Az MAX Acceleration (deg/s^2)",  0.0, 100.0, 'f', "ACCEL_MAX_AZ"}
-    }
-  },
-  {COMMAND(az_scan), "scan in azimuth", GR_POINT, 5,
+  {COMMAND(az_scan), "scan in azimuth", GR_POINT, 4,
     {
       {"Az centre (deg)",       -180, 360, 'f', "AZ"},
       {"El centre (deg)",         15,  65, 'f', "EL"},
       {"Width (deg on sky)",       0, 360, 'f', "W_P"},
-      {"Az Scan Speed (deg az/s)", 0,   10, 'f', "VEL_AZ_P"},
-      {"Az Scan Accel (deg/s^2)",  0,   2, 'f', "ACCEL_AZ"}
+      {"Az Scan Speed (deg az/s)", 0,  10, 'f', "VEL_AZ_P"}
     }
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
@@ -317,6 +310,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Centre (deg)", -90, 90, 'f', "DEC"}
     }
   },
+  {COMMAND(set_scan_params), "set common scan parameters for flight", 
+   GR_POINT, 5,
+    {
+      {"Az Scan Accel (deg/s^2)",   0,  2, 'f', "ACCEL_AZ"},
+      {"Az MAX Acceleration (deg/s^2)",  0.0, 100.0, 'f', "ACCEL_MAX_AZ"},
+      {"Number of half-scans per el microstep", 0, 100, 'i', "NONE"},
+      {"El microstep size (deg)", 0.0, 1.0, 'f', "NONE"},
+      {"Total number of el microsteps", 0, 100, 'i', "NONE"}
+    }
+  },
   {COMMAND(spider_scan), "scan in azimuth within a quad region in RA/Dec", 
    GR_POINT, 10,
     {
@@ -328,14 +331,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Corner 3 (deg)",   -90, 90, 'f', "DEC_3_P"},
       {"RA of Corner 4 (h)",        0, 24, 'f', "RA_4_P"},
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "DEC_4_P"},
-      {"Az Scan Accel (deg/s^2)",   0,  2, 'f', "ACCEL_AZ"},
-      {"Elevation (deg)",           20, 50, 'f', "EL"}
+      {"Scan Starting RA (h)",      0, 24, 'f', "RA"},
+      {"Scan Starting Dec (deg)", -90, 90, 'f', "DEC"}
     }
   },
   {COMMAND(sine_scan), "scan sinusoidally in azimuth with a specific amplitude",
-   GR_POINT, 4,
+   GR_POINT, 3,
     {
-      {"peak acceleration (deg/s^2)", 0, 2, 'f', "ACCEL_AZ"},
       {"scan amplitude (deg)",        0, 90, 'f', "AMPL_P"},
       {"scan az centre (deg)",        0, 360,'f', "AZ"},
       {"scan elevation (deg)",        20, 50, 'f', "EL"},

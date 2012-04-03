@@ -108,17 +108,20 @@ struct PivGainStruct {
 #define HWPR_GOTO_I	6
 #define HWPR_GOTO_POT	7
 
-// mode        X     Y    vaz   del    w    h
+// mode        X     Y    vaz   del    w    h      
 // LOCK              el
 // AZEL_GOTO   az    el
 // AZ_SCAN     az    el   vaz
 // DRIFT                  vaz   vel
 // RADEC_GOTO  ra    dec
-// VCAP        ra    dec  vaz   vel    r         // NOT USED IN SPIDER
-// CAP         ra    dec  vaz   elstep r         // NOT USED IN SPIDER
-// BOX         ra    dec  vaz   elstep w    h    // NOT USED IN SPIDER
-// SPIDER            el                         
+// VCAP*       ra    dec  vaz   vel    r         
+// CAP*        ra    dec  vaz   elstep r        
+// BOX*        ra    dec  vaz   elstep w    h    
+// SPIDER      ra    dec        elstep                 
 // SINE        az    el                w
+
+// *not used for Spider
+
 struct PointingModeStruct {
   int nw; /* used for gy-offset veto during slews */
   int mode;
@@ -131,7 +134,10 @@ struct PointingModeStruct {
   time_t t;
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
-  double dith; // Elevation dither step 
+  double dith; // Elevation dither step
+  // TODO: Write the two below out to frame???
+  int Nscans;  // number of half-scans per el step in SPIDER mode
+  int Nsteps;  // total number of el steps in SPIDER mode
 };
 
 struct latch_pulse {
