@@ -315,9 +315,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Az Scan Accel (deg/s^2)",   0,  2, 'f', "ACCEL_AZ"},
       {"Az MAX Acceleration (deg/s^2)",  0.0, 100.0, 'f', "ACCEL_MAX_AZ"},
-      {"Number of half-scans per el microstep", 0, 100, 'i', "NONE"},
+      {"Number of half-scans per el microstep", 1, 100, 'i', "NONE"},
       {"El microstep size (deg)", 0.0, 1.0, 'f', "NONE"},
-      {"Total number of el microsteps", 0, 100, 'i', "NONE"}
+      {"Total number of el microsteps", 1, 100, 'i', "NONE"}
     }
   },
   {COMMAND(spider_scan), "scan in azimuth within a quad region in RA/Dec", 
