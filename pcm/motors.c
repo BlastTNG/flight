@@ -1198,9 +1198,9 @@ static void DoSpiderMode(void)
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
   
-  axes_mode.el_mode = AXIS_POSITION; // applies throughout this scan mode
+  /*axes_mode.el_mode = AXIS_POSITION; // applies throughout this scan mode
   axes_mode.el_dest = el; // don't go anywhere for now
-  axes_mode.el_vel = 0.0;
+  axes_mode.el_vel = 0.0;*/
   
   /* convert ra/decs to az/el */
   for (i = 0; i < 4; i++) {
@@ -1209,6 +1209,7 @@ static void DoSpiderMode(void)
   }
   
   radec2azel(ra_start, dec_start, lst, lat, &az_start, &el_start);
+  //bprintf(info, "el_start = %g", el_start);
 
   radbox_endpoints(c_az, c_el, el_start, &left, &right, &bottom, &top, &az_of_bot);
   
@@ -1310,7 +1311,9 @@ static void DoSpiderMode(void)
     scan_region = SCAN_L_TURN;
     if (scan_region_last == SCAN_R_TO_L) {
       n_scans++;
+      bprintf(info, "n_scans = %g, N_scans = %g, n_scans % N_scans = %g", n_scans, N_scans, (n_scans%N_scans));
       if ( (n_scans % N_scans) == 0 ) { // step in elevation
+	bprintf(info, "stepping in el at left turn around");
         axes_mode.el_mode = AXIS_POSITION;
         axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
         axes_mode.el_vel = 0.0;
@@ -1332,7 +1335,9 @@ static void DoSpiderMode(void)
     scan_region = SCAN_R_TURN;
     if (scan_region_last == SCAN_L_TO_R) {
       n_scans++;
+      bprintf(info, "n_scans = %g, N_scans = %g, n_scans % N_scans = %g", n_scans, N_scans, (n_scans%N_scans));
       if ( (n_scans % N_scans) == 0 ) { // step in elevation
+	bprintf(info, "stepping in el at right turn around");
         axes_mode.el_mode = AXIS_POSITION;
         axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
         axes_mode.el_vel = 0.0;
@@ -1350,7 +1355,7 @@ static void DoSpiderMode(void)
     axes_mode.az_accel = a_az;
   }
 
-  if (n_scans >= N_scans) {
+  if (n_scans >= N_scans*CommandData.pointing_mode.Nsteps) {
     bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
 	    n_scans); 
     n_scans = 0;
