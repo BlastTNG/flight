@@ -68,8 +68,8 @@ extern double goodPos[10];	/* table.cpp */
 extern double trigPos[10];	/* camcommunicator.cpp */
 
 //Stuff for Pyramid
-#define CAT "/home/gandilo/pyramid/pyr_mag8/gsc_mag08_res20.bin"
-#define KCAT "/home/gandilo/pyramid/pyr_mag8/k.bin"
+#define CAT "/data/etc/spider/gsc_mag08_res20.bin"
+#define KCAT "/data/etc/spider/k.bin"
 double FOV = 2.5*M_PI/180.0;
 double ra_thegood, dec_thegood, roll_thegood;
 double ra_thebad, dec_thebad, roll_thebad;
