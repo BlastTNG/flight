@@ -307,6 +307,8 @@ struct CommandDataStruct {
     } ntd;
   } hk[6];    //one per insert
 
+  short hk_theo_heat;
+
   short hk_last;
   short hk_tile_last;
   short hk_pulse_last;
