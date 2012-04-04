@@ -36,7 +36,7 @@ ifndef BOLOTEST
 	EXPT_OBJS += compressstruct.o 
 endif
 
-ETC_DATA = WMM.COF ephem.2000 sched.library *.sch *.lut
+ETC_DATA = WMM.COF ephem.2000 sched.library *.sch *.lut *.bin
 
 ########################################################
 # Test-run
