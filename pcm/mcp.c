@@ -87,7 +87,6 @@ void Pointing();
 void WatchPort(void*);
 void WatchDGPS(void);
 void IntegratingStarCamera(void);
-void ActuatorBus(void);
 void WatchFIFO(void);               //commands.c
 void FrameFileWriter(void);         //framefile.c
 void CompressionWriter(void);
@@ -1216,7 +1215,6 @@ int main(int argc, char *argv[])
   unsigned int in_data, i;
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
-  pthread_t abus_id;
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -1363,7 +1361,6 @@ int main(int argc, char *argv[])
   //pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
-  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
   while (1) {
     in_data = read_from_bbc();

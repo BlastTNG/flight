@@ -1158,9 +1158,6 @@ void UpdateBBCFrame()
   WriteMot(index);
   updateTableSpeed();
 #endif
-#ifdef USE_XY_THREAD
-  StoreStageBus(index);
-#endif
   WriteChatter(index);
   HouseKeeping(index);
 
@@ -1169,9 +1166,6 @@ void UpdateBBCFrame()
     if (!mcp_initial_controls)
       SyncADC();
     WriteAux();
-    //StoreActBus();
-    //SecondaryMirror();
-    //StoreHWPRBus();
 #ifndef BOLOTEST
     SetGyroMask();
     ChargeController();
