@@ -679,49 +679,54 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.xystage.mode = XYSTAGE_PANIC;
       CommandData.xystage.is_new = 1;
 
-    //Theo heater housekeeping commands. TODO-theo: temporarily uses insert 6
+    //Theo heater housekeeping commands.
     case hk_t0_heat_on:
-      CommandData.hk[5].pump_heat = 1;
+      CommandData.hk_theo_heat |= (0x1 << 0);
       break;
     case hk_t0_heat_off:
-      CommandData.hk[5].pump_heat = 0;
+      CommandData.hk_theo_heat &= ~(0x1 << 0);
       break;
-    //NB: because heat_switch on insert 6 is NC, logic is inverted
     case hk_t1_heat_on:
-      CommandData.hk[5].heat_switch = 0;
+      CommandData.hk_theo_heat |= (0x1 << 1);
       break;
     case hk_t1_heat_off:
-      CommandData.hk[5].heat_switch = 1;
+      CommandData.hk_theo_heat &= ~(0x1 << 1);
       break;
     case hk_t2_heat_on:
-      CommandData.hk[5].tile_heat[2] = -1;
+      CommandData.hk_theo_heat |= (0x1 << 2);
       break;
     case hk_t2_heat_off:
-      CommandData.hk[5].tile_heat[2] = 0;
+      CommandData.hk_theo_heat &= ~(0x1 << 2);
       break;
     case hk_t3_heat_on:
-      CommandData.hk[5].tile_heat[1] = -1;
+      CommandData.hk_theo_heat |= (0x1 << 3);
       break;
     case hk_t3_heat_off:
-      CommandData.hk[5].tile_heat[1] = 0;
+      CommandData.hk_theo_heat &= ~(0x1 << 3);
       break;
     case hk_t4_heat_on:
-      CommandData.hk[5].tile_heat[0] = -1;
+      CommandData.hk_theo_heat |= (0x1 << 4);
       break;
     case hk_t4_heat_off:
-      CommandData.hk[5].tile_heat[0] = 0;
+      CommandData.hk_theo_heat &= ~(0x1 << 4);
       break;
     case hk_t5_heat_on:
-      CommandData.hk[5].fphi_heat = 1;
+      CommandData.hk_theo_heat |= (0x1 << 5);
       break;
     case hk_t5_heat_off:
-      CommandData.hk[5].fphi_heat = 0;
+      CommandData.hk_theo_heat &= ~(0x1 << 5);
       break;
     case hk_t6_heat_on:
-      CommandData.hk[5].tile_heat[3] = -1;
+      CommandData.hk_theo_heat |= (0x1 << 6);
       break;
     case hk_t6_heat_off:
-      CommandData.hk[5].tile_heat[3] = 0;
+      CommandData.hk_theo_heat &= ~(0x1 << 6);
+      break;
+    case hk_t7_heat_on:
+      CommandData.hk_theo_heat |= (0x1 << 7);
+      break;
+    case hk_t7_heat_off:
+      CommandData.hk_theo_heat &= ~(0x1 << 7);
       break;
 
 
@@ -1672,6 +1677,7 @@ void InitCommandData()
     CommandData.hk[i].ntd.phase = 5.0;
     CommandData.hk[i].ntd.ampl = 0.3;
   }
+  CommandData.hk_theo_heat = 0;
   CommandData.hk_last = 0;
   CommandData.hk_tile_last = 0;
   CommandData.hk_pulse_last = 0;

@@ -116,6 +116,7 @@ static void HeatControl()
   static struct NiosStruct* heat13Addr;
   static struct NiosStruct* heat45Addr;
   static struct NiosStruct* heat26Addr;
+  static struct NiosStruct* heatTAddr;
   static struct NiosStruct* heatSsaAddr[6];
   static struct NiosStruct* heatFploAddr[6];
 
@@ -130,6 +131,7 @@ static void HeatControl()
     heat13Addr = GetNiosAddr("heat_13_hk");
     heat45Addr = GetNiosAddr("heat_45_hk");
     heat26Addr = GetNiosAddr("heat_26_hk");
+    heatTAddr = GetNiosAddr("heat_t_hk");
     for (i=0; i<6; i++) {
       sprintf(buf, "heat_ssa_%1d_hk", i+1);
       heatSsaAddr[i] = GetNiosAddr(buf);
@@ -162,6 +164,8 @@ static void HeatControl()
   WriteData(heat45Addr, temp, NIOS_QUEUE);
   temp = ((bits[1] & 0xff) << 8) | (bits[5] & 0xff);
   WriteData(heat26Addr, temp, NIOS_QUEUE);
+
+  WriteData(heatTAddr, CommandData.hk_theo_heat&0x00ff, NIOS_QUEUE);
 
   //DAC heaters
   for (i=0; i<6; i++) {
