@@ -135,9 +135,10 @@ struct PointingModeStruct {
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
   double dith; // Elevation dither step
-  // TODO: Write the two below out to frame???
+  // TODO: Write the three below out to frame???
   int Nscans;  // number of half-scans per el step in SPIDER mode
   int Nsteps;  // total number of el steps in SPIDER mode
+  int new_spider; // set to 1 if a new, distinct spider scan is commanded
 };
 
 struct latch_pulse {
