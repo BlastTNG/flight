@@ -1198,10 +1198,6 @@ static void DoSpiderMode(void)
   az = PointingData[i_point].az;
   el = PointingData[i_point].el;
   
-  /*axes_mode.el_mode = AXIS_POSITION; // applies throughout this scan mode
-  axes_mode.el_dest = el; // don't go anywhere for now
-  axes_mode.el_vel = 0.0;*/
-  
   /* convert ra/decs to az/el */
   for (i = 0; i < 4; i++) {
     radec2azel(CommandData.pointing_mode.ra[i],CommandData.pointing_mode.dec[i],
@@ -1209,7 +1205,6 @@ static void DoSpiderMode(void)
   }
   
   radec2azel(ra_start, dec_start, lst, lat, &az_start, &el_start);
-  //bprintf(info, "el_start = %g", el_start);
 
   radbox_endpoints(c_az, c_el, el_start, &left, &right, &bottom, &top, &az_of_bot);
   
@@ -1224,8 +1219,14 @@ static void DoSpiderMode(void)
   right = centre + ampl;
   
   v_az_max = sqrt(az_accel * ampl);
- 
-// EVERYTHING BELOW IS THE SAME AS IN DoSineMode()   
+  
+  if (CommandData.pointing_mode.new_spider) {
+    n_scans = 0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = el_start;
+    axes_mode.el_vel = 0.0;
+    CommandData.pointing_mode.new_spider = 0;
+  }
   
   // |distance| from end point when V_req = V_AZ_MIN
   turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
@@ -1311,9 +1312,9 @@ static void DoSpiderMode(void)
     scan_region = SCAN_L_TURN;
     if (scan_region_last == SCAN_R_TO_L) {
       n_scans++;
-      bprintf(info, "n_scans = %g, N_scans = %g, n_scans % N_scans = %g", n_scans, N_scans, (n_scans%N_scans));
+      bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
       if ( (n_scans % N_scans) == 0 ) { // step in elevation
-	bprintf(info, "stepping in el at left turn around");
+        bprintf(info, "stepping in el at left turn around");
         axes_mode.el_mode = AXIS_POSITION;
         axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
         axes_mode.el_vel = 0.0;
@@ -1335,9 +1336,9 @@ static void DoSpiderMode(void)
     scan_region = SCAN_R_TURN;
     if (scan_region_last == SCAN_L_TO_R) {
       n_scans++;
-      bprintf(info, "n_scans = %g, N_scans = %g, n_scans % N_scans = %g", n_scans, N_scans, (n_scans%N_scans));
+       bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
       if ( (n_scans % N_scans) == 0 ) { // step in elevation
-	bprintf(info, "stepping in el at right turn around");
+        bprintf(info, "stepping in el at right turn around");
         axes_mode.el_mode = AXIS_POSITION;
         axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
         axes_mode.el_vel = 0.0;

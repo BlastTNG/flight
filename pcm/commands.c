@@ -821,6 +821,21 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case spider_scan:
+      is_new = 0;
+      if ( (CommandData.pointing_mode.mode != P_SPIDER) ||
+	   (CommandData.pointing_mode.X != rvalues[8]) || /* starting ra */
+	   (CommandData.pointing_mode.Y != rvalues[9]) ) { /* starting dec */
+        is_new = 1;
+      }
+      for (i = 0; i < 4; i++) {
+	if ( (CommandData.pointing_mode.ra[i] != rvalues[i*2]) ||
+	     (CommandData.pointing_mode.dec[i] != rvalues[i*2 + 1]) ) {
+	  is_new = 1;
+	}
+      }
+      if (is_new) {
+	CommandData.pointing_mode.new_spider = 1;
+      }
       for (i = 0; i < 4; i++) {
         CommandData.pointing_mode.ra[i] = rvalues[i*2];
         CommandData.pointing_mode.dec[i] = rvalues[i*2 + 1];        
@@ -1583,6 +1598,7 @@ void InitCommandData()
   CommandData.pointing_mode.dith = 0.0;
   CommandData.pointing_mode.Nscans = 1;
   CommandData.pointing_mode.Nsteps = 10;
+  CommandData.pointing_mode.new_spider = 1;
 
   CommandData.az_accel = 0.1; 
   CommandData.az_accel_max = 1.0;
