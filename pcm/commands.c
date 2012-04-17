@@ -45,11 +45,11 @@
 #include "channels.h"
 #include "sip.h"
 
-/* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
- * 90 degrees.  This is the offset to the true lock positions.
- * This number is relative to the elevation encoder reading, NOT
- * true elevation */
-#define LOCK_OFFSET (-1.4) /* Updated by LMF on December 9th, 2010 */
+/* Lock position is nominally at 40 degrees.
+ * This is the offset to the true lock positions. This number is
+ * relative to the elevation encoder reading, NOT true elevation
+ */
+#define LOCK_OFFSET (0.0) /* TODO update this */
 
 void RecalcOffset(double, double);  /* actuators.c */
 
@@ -77,21 +77,6 @@ const char* SName(enum singleCommand command); // share/sip.c
 int sendTheGoodCommand(const char *cmd);
 int sendTheBadCommand(const char *cmd);
 int sendTheUglyCommand(const char *cmd);
-
-/* calculate the nearest lockable elevation */
-double LockPosition (double elevation)
-{
-  double position;
-
-  position = floor(elevation / 10.0) * 10.0 + 5.0;
-  if (position > 79.0) {
-    position = 90.0;
-  } else if (position < 10.0) {
-    position = 5.0;
-  }
-
-  return position + LOCK_OFFSET;
-}
 
 void SingleCommand (enum singleCommand command, int scheduled)
 {
@@ -496,17 +481,34 @@ void SingleCommand (enum singleCommand command, int scheduled)
 #endif
 
     /* Lock */
-    case pin_in:
-      CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF | LS_IGNORE_EL;
+    case lock_on:
+      CommandData.power.lock_off = 0;
       break;
     case lock_off:
-      CommandData.actbus.lock_goal = LS_DRIVE_OFF | LS_DRIVE_FORCE;
+      CommandData.power.lock_off = -1;
+      break;
+    case pin_in:
+      CommandData.lock_goal = lock_insert;
+      break;
+    case lock:  /* Lock Inner Frame */
+      if (CommandData.pointing_mode.nw >= 0)
+        CommandData.pointing_mode.nw = VETO_MAX;
+      CommandData.lock_goal = lock_el_wait_insert;
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      CommandData.pointing_mode.mode = P_LOCK;
+      CommandData.pointing_mode.X = 0;
+      CommandData.pointing_mode.Y = 40. + LOCK_OFFSET;
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.vaz = 0;
+      CommandData.pointing_mode.del = 0;
+      bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
       break;
     case unlock:
-      CommandData.actbus.lock_goal = LS_OPEN | LS_DRIVE_OFF;
+      CommandData.lock_goal = lock_retract;
       if (CommandData.pointing_mode.mode == P_LOCK) {
         CommandData.pointing_mode.nw = CommandData.slew_veto;
-	CommandData.pointing_mode.mode = P_DRIFT;
+	      CommandData.pointing_mode.mode = P_DRIFT;
         CommandData.pointing_mode.X = 0;
         CommandData.pointing_mode.Y = 0;
         CommandData.pointing_mode.vaz = 0.0;
@@ -514,11 +516,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
         CommandData.pointing_mode.w = 0;
         CommandData.pointing_mode.h = 0;
       }
-      break;
-    case repoll:
-      CommandData.actbus.force_repoll = 1;
-      CommandData.hwpr.force_repoll = 1;
-      CommandData.xystage.force_repoll = 1;
       break;
 
     /* Actuators */
@@ -530,6 +527,12 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case hwpr_panic:
       CommandData.hwpr.mode = HWPR_PANIC;
       CommandData.hwpr.is_new = 1;
+      break;
+
+    case repoll:
+      CommandData.actbus.force_repoll = 1;
+      CommandData.hwpr.force_repoll = 1;
+      CommandData.xystage.force_repoll = 1;
       break;
 
 #ifndef BOLOTEST
@@ -727,6 +730,27 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case hk_t7_heat_off:
       CommandData.hk_theo_heat &= ~(0x1 << 7);
+      break;
+
+    case pull_cmb_pin:
+      bputs(info, "... What now?");
+      CommandData.questionable_behaviour++;
+      break;
+    case global_thermonuclear_war:
+      bputs(info, "The only winning move is not to play");
+      CommandData.questionable_behaviour++;
+      break;
+    case get_some:
+      bputs(info, "Aaaarrrgggh!");
+      CommandData.questionable_behaviour++;
+      break;
+    case stab:
+      bputs(info, "Swish, slash");
+      CommandData.questionable_behaviour++;
+      break;
+    case lock_and_load:
+      bputs(info, "Cachink.");
+      CommandData.questionable_behaviour++;
       break;
 
 
@@ -931,29 +955,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 #endif
 
       /***************************************/
-      /********** Lock / Actuators  **********/
-    case lock:  /* Lock Inner Frame */
-      if (CommandData.pointing_mode.nw >= 0)
-        CommandData.pointing_mode.nw = VETO_MAX;
-      CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF;
-      CommandData.pointing_mode.nw = CommandData.slew_veto;
-      CommandData.pointing_mode.mode = P_LOCK;
-      CommandData.pointing_mode.X = 0;
-      CommandData.pointing_mode.Y = LockPosition(rvalues[0]);
-      CommandData.pointing_mode.w = 0;
-      CommandData.pointing_mode.h = 0;
-      CommandData.pointing_mode.vaz = 0;
-      CommandData.pointing_mode.del = 0;
-      bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
-      break;
-    case lock_vel:
-      CommandData.actbus.lock_vel = ivalues[0];
-      CommandData.actbus.lock_acc = ivalues[1];
-      break;
-    case lock_i:
-      CommandData.actbus.lock_move_i = ivalues[0];
-      CommandData.actbus.lock_hold_i = ivalues[1];
-      break;
+      /**********        Actuators  **********/
     case general: /* General actuator bus command */
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
       copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
@@ -1489,7 +1491,7 @@ void InitCommandData()
 
   CommandData.actbus.off = 0;
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
-  CommandData.actbus.lock_goal = LS_DRIVE_OFF;
+  CommandData.lock_goal = lock_do_nothing;
   CommandData.actbus.force_repoll = 0;
   CommandData.actbus.cindex = 0;
   CommandData.actbus.caddr[0] = 0;
@@ -1548,6 +1550,7 @@ void InitCommandData()
   CommandData.power.gyro_off[4] = 0;
   CommandData.power.gyro_off[5] = 0;
   CommandData.power.hub232_off = 0;
+  CommandData.power.lock_off = 0;
   for (i=0; i<16; i++)
     CommandData.power.adc_reset[i] = 0;
 
@@ -1733,11 +1736,6 @@ void InitCommandData()
   CommandData.actbus.act_hold_i = 40;
   CommandData.actbus.act_tol = 2;
 
-  CommandData.actbus.lock_vel = 110000;
-  CommandData.actbus.lock_acc = 100;
-  CommandData.actbus.lock_move_i = 50;
-  CommandData.actbus.lock_hold_i = 0;
-
   CommandData.hwpr.vel = 1600;
   CommandData.hwpr.acc = 4;
   CommandData.hwpr.move_i = 20;
@@ -1773,6 +1771,8 @@ void InitCommandData()
   CommandData.bbcExtFrameMeas = 0;
   CommandData.bbcIsExt = 0 /*1*/;
   CommandData.bbcAutoExt = 0 /*1*/;
+
+  CommandData.questionable_behaviour = 0;
 
   
   WritePrevStatus();

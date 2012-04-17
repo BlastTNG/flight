@@ -825,7 +825,7 @@ struct ChannelStruct SlowChannels[] = {
   //  {"dac4_ampl",    'w',  ACS2_D,  3,                1.0,             0.0, 'u', U_NONE},
   //  {"dac5_ampl",    'w',  ACS2_D,  4,                1.0,             0.0, 'u', U_NONE},
   {"mask_gy",      'w',  ACS2_D, 13,                1.0,             0.0, 'u', U_NONE},
-  {"bits_vtx",     'w',  ACS2_D, 14,                1.0,             0.0, 'u', U_NONE},
+  {"control_lock", 'w',  ACS2_D, 14,                1.0,             0.0, 'u', U_NONE},
  // {"g_p_el",       'w',  ACS2_D, 20,                1.0,             0.0, 'u', U_NONE},
  // {"g_i_el",       'w',  ACS2_D, 21,                1.0,             0.0, 'u', U_NONE},
   {"g_p_az",       'w',  ACS2_D, 23,                1.0,             0.0, 'u', U_NONE},
@@ -839,7 +839,7 @@ struct ChannelStruct SlowChannels[] = {
   {"p_term_az",    'r',   ACS2_D, 25,                1.0,        -32768.0, 'u', U_NONE},
   {"i_term_az",    'r',   ACS2_D, 26,                1.0,        -32768.0, 'u', U_NONE},
   {"error_az",     'r',   ACS2_D, 27,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
-  {"bits_bal",     'w',   ACS2_D, 28,                1.0,             0.0, 'u', U_NONE},
+  {"limit_lock",   'r',   ACS2_D, 30,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
   {"pch_pyr_clin", 'r',  ACS2_A1,  1,           0.001343,          -43.54, 'u', U_NONE},

@@ -72,11 +72,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ifel_2_gy_on), "turn on ifel_2_gy", GR_POWER},
   {COMMAND(ifel_2_gy_cycle), "power cycle ifel_2_gy", GR_POWER},
   {COMMAND(actbus_off), "turn off the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
+    | GR_ACT | GR_HWPR | CONFIRM},
   {COMMAND(actbus_on), "turn on the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_LOCK | GR_ACT | GR_HWPR},
+    | GR_ACT | GR_HWPR},
   {COMMAND(actbus_cycle), "power cycle the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
+    | GR_ACT | GR_HWPR | CONFIRM},
   {COMMAND(rw_off), "turn off the reaction wheel motor", GR_POWER},
   {COMMAND(rw_on), "turn on the reaction wheel motor", GR_POWER},
   {COMMAND(rw_cycle), "power cycle the reaction wheel motor", GR_POWER},
@@ -194,10 +194,12 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
+  {COMMAND(lock), "lock inner frame", GR_LOCK | GR_POINT},
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
+  {COMMAND(lock_on), "turn on the lock motor", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
   {COMMAND(repoll), "force repoll of the stepper busses (act, lock, HWPR, XY)",
-    GR_STAGE | GR_LOCK | GR_ACT | GR_HWPR},
+    GR_STAGE | GR_ACT | GR_HWPR},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
   {COMMAND(hwpr_panic), "stop the HWPR rotator immediately", GR_HWPR},
   {COMMAND(hwpr_step), "step the hwpr", GR_HWPR},
@@ -244,6 +246,13 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hk_t6_heat_off), "Turn off Theo's Heater #6", GR_THEO_HEAT},
   {COMMAND(hk_t7_heat_on), "Turn on Theo's Heater #7", GR_THEO_HEAT},
   {COMMAND(hk_t7_heat_off), "Turn off Theo's Heater #7", GR_THEO_HEAT},
+
+  //make better use of unused groups
+  {COMMAND(pull_cmb_pin), "????", 0x00000002},
+  {COMMAND(global_thermonuclear_war), "????", 0x00000100},
+  {COMMAND(get_some), "????", 0x00020000},
+  {COMMAND(stab), "????", 0x00100000},
+  {COMMAND(lock_and_load), "????", 0x00800000},
 
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
@@ -409,29 +418,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   /* actuator bus commands */
-  {COMMAND(lock), "lock inner frame", GR_LOCK | GR_POINT, 1,
-    {
-      {"Lock Elevation (deg)", 5, 90, 'f', "EL_ENC"}
-    }
-  },
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_STAGE | GR_ACT | GR_LOCK | GR_HWPR, 2,
+    GR_STAGE | GR_ACT | GR_HWPR, 2,
     {
       {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', ""},
-    }
-  },
-  {COMMAND(lock_vel), "set the lock motor velocity and acceleration", GR_LOCK,
-    2,
-    {
-      {"Velocity", 5, 500000, 'l', "VEL_LOCK"},
-      {"Acceleration", 1, 1000, 'i', "ACC_LOCK"},
-    }
-  },
-  {COMMAND(lock_i), "set the lock motor currents", GR_LOCK, 2,
-    {
-      {"Move current (%)", 0, 100, 'i', "I_MOVE_LOCK"},
-      {"Hold current (%)", 0,  50, 'i', "I_HOLD_LOCK"},
     }
   },
   {COMMAND(actuator_servo), "servo the actuators to absolute positions",

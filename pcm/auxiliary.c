@@ -298,6 +298,11 @@ void ControlPower(void) {
     misc |= 0x08;
   }
 
+  if (CommandData.power.lock_off) {
+    if (CommandData.power.lock_off > 0) CommandData.power.lock_off--;
+    misc |= 0x20;
+  }
+
   if (CommandData.power.charge.set_count > 0) {
     CommandData.power.charge.set_count--;
     if (CommandData.power.charge.set_count < LATCH_PULSE_LEN) misc |= 0x0040;
@@ -425,6 +430,39 @@ void ControlPower(void) {
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
   WriteData(switchGyAddr, gybox, NIOS_QUEUE);
   WriteData(switchMiscAddr, misc, NIOS_QUEUE);
+}
+
+void LockMotor()
+{
+  static struct NiosStruct* controlLockAddr;
+  static int firsttime =1;
+  int lock_bits = 0;
+
+  if (firsttime) {
+    firsttime = 0;
+    controlLockAddr = GetNiosAddr("control_lock");
+  }
+
+  switch (CommandData.lock_goal) {
+    case lock_insert:
+      lock_bits = 0x5;
+      break;
+    case lock_retract:
+      lock_bits = 0xa;
+      break;
+    case lock_el_wait_insert:
+      //TODO check elevation and then set lock_bits to insert as appropriate
+      lock_bits = 0;
+      break;
+    case lock_do_nothing:
+    default:
+      lock_bits = 0;
+      break;
+  }
+  
+  //TODO read limit_lock field and try to deduce state, remember when unpowered
+
+  WriteData(controlLockAddr, lock_bits, NIOS_QUEUE);
 }
 
 void VideoTx(void)

@@ -181,12 +181,6 @@ union DerivedUnion DerivedChannels[] = {
 */
   COMMENT("ACS Digital Signals"),
 
-  BITFIELD("bits_bal",
-      "DIR_BAL",
-      "VALVE_BAL",
-      "HEAT_BAL",
-      ),
-
   /* charge controller (CC) faults and alarms */
 
   COMMENT("Charge Controller Bitfields"),

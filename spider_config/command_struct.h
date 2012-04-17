@@ -64,19 +64,6 @@ struct PivGainStruct {
   double SP; // RW velocity Set Point 
   double F; // Current offset to overcome static friction. 
 };
-#define LS_OPEN        0x0001
-#define LS_CLOSED      0x0002
-#define LS_DRIVE_OFF   0x0004
-#define LS_POT_RAIL    0x0008  //now defunct
-#define LS_DRIVE_EXT   0x0010
-#define LS_DRIVE_RET   0x0020
-#define LS_DRIVE_STP   0x0040
-#define LS_DRIVE_JIG   0x0080  //now defunct
-#define LS_DRIVE_UNK   0x0100
-#define LS_EL_OK       0x0200
-#define LS_IGNORE_EL   0x0400
-#define LS_DRIVE_FORCE 0x0800
-#define LS_DRIVE_MASK  0x09F4
 
 #define ACTBUS_FM_SLEEP  0
 #define ACTBUS_FM_SERVO  1
@@ -227,6 +214,7 @@ struct CommandDataStruct {
     int gyro_off[6];
     int gyro_off_auto[6];
     int hub232_off;
+    int lock_off;
     int thegood_cpu_off;
     int thebad_cpu_off;
     int theugly_cpu_off;
@@ -354,15 +342,10 @@ struct CommandDataStruct {
     int lvdt_delta;
     int lvdt_low;
     int lvdt_high;
-
-    /* lock control */
-    int lock_vel;
-    int lock_acc;
-    int lock_hold_i;
-    int lock_move_i;
-
-    unsigned int lock_goal;
   } actbus;
+
+  enum {lock_do_nothing, lock_insert, lock_el_wait_insert,
+    lock_retract} lock_goal;
 
   struct {
     int vel, acc, hold_i, move_i;
@@ -402,6 +385,8 @@ struct CommandDataStruct {
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
   double lat;
   double lon;
+
+  unsigned short questionable_behaviour;
 
 };
 

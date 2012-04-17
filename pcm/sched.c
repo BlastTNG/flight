@@ -504,13 +504,6 @@ void DoSched(void)
     event.is_multi = 0;
     ScheduledCommand(&event);
 #endif
-    /* turn off lock motor hold current */
-    event.command = lock_i;
-    event.is_multi = 1;
-    event.ivalues[0] = 50;
-    event.ivalues[1] = 0;
-    ScheduledCommand(&event);
-
     // out of sched mode for a while
     CommandData.pointing_mode.t = t + 30;
     doing_schedule = 0;

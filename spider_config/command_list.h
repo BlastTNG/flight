@@ -16,8 +16,8 @@
 
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
-#define N_SCOMMANDS 171        /* total number of single word cmds */
-#define N_MCOMMANDS 111        /* total number of multiword commands */
+#define N_SCOMMANDS 178        /* total number of single word cmds */
+#define N_MCOMMANDS 108        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -67,8 +67,8 @@ enum singleCommand {
   elclin_allow,      elclin_veto,       elenc1_allow,      elenc2_allow,
   elenc1_veto,       elenc2_veto,
   gps_allow,         gps_veto,          mag_allow,         mag_veto,
-  stop,              pss_veto,		pss_allow,
-  trim_to_isc,       unlock,            lock_off,         
+  stop,              pss_veto,		pss_allow,         lock,
+  trim_to_isc,       unlock,            lock_off,          lock_on,
   force_el_on,       gps_cycle,         actbus_cycle,      rw_cycle,
   piv_cycle,         elmot_cycle,       hub232_cycle,      das_cycle,
   gps_off,           gps_on,            rw_off,	           rw_on,
@@ -110,6 +110,8 @@ enum singleCommand {
   hk_t6_heat_on,     hk_t6_heat_off,    hk_t7_heat_on,     hk_t7_heat_off,
   bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
   elmot_manual,
+  //make better use of unused groups
+  pull_cmb_pin, global_thermonuclear_war, get_some, stab, lock_and_load,
   xyzzy	    //xyzzy should be at the end of the list
 };
 
@@ -118,9 +120,8 @@ enum singleCommand {
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,           dac2_level,  
   roll_gain,         set_scan_params,
-  az_el_trim,        drift,             el_gain,
+  az_el_trim,        drift,             el_gain,           act_offset,
   inner_level,       hwpr_jump,         hwpr_goto_i,       actuator_tol,
-  lock,              act_offset,
   pivot_gain,        ra_dec_goto,       ra_dec_set,
   t_gyro_set,        tdrss_bw,          iridium_bw,
   t_gyro_gain,       timeout,           slot_sched,        az_gyro_offset,
@@ -129,7 +130,7 @@ enum multiCommand {
   el_gyro_offset,    general,           slew_veto,        
   actuator_servo,    xy_goto,           actuator_vel,
   xy_jump,           xy_xscan,          xy_yscan,          xy_raster,
-  actuator_i,        lock_vel,          lock_i,            actuator_delta,
+  actuator_i,        actuator_delta,
   motors_verbose,    hwpr_set_backlash,
   thegood_any,	     thegood_settrig_timed,	thegood_exp_params,	thegood_focus_params,
   thebad_any,	     thebad_settrig_timed,	thebad_exp_params,	thebad_focus_params,

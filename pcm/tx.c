@@ -85,7 +85,7 @@ void ControlAuxMotors();
 void ControlGyroHeat();
 void CameraTrigger(int which);
 void ControlPower(void);
-void VideoTx(void);
+void LockMotor();
 
 /* in motors.c */
 void UpdateAxesMode(void);
@@ -1170,7 +1170,7 @@ void UpdateBBCFrame()
     SetGyroMask();
     ChargeController();
     ControlPower();
-    VideoTx();
+    LockMotor();
     cameraFields();
 #endif
   }
