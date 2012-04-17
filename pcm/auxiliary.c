@@ -298,10 +298,11 @@ void ControlPower(void) {
     misc |= 0x08;
   }
 
+  //NB: the bit for lock power is asserted with the motors are ON
   if (CommandData.power.lock_off) {
     if (CommandData.power.lock_off > 0) CommandData.power.lock_off--;
-    misc |= 0x20;
-  }
+    misc &= ~0x20;
+  } else misc |= 0x20;
 
   if (CommandData.power.charge.set_count > 0) {
     CommandData.power.charge.set_count--;
