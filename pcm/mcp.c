@@ -498,7 +498,7 @@ static void GetACS()
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ifYawgyAddr;
   //static struct BiPhaseStruct* elRawEncAddr;
-  static struct BiPhaseStruct* elRawIfClinAddr;
+  static struct BiPhaseStruct* rollOfClinAddr;
   static struct BiPhaseStruct* xMagAddr;
   static struct BiPhaseStruct* yMagAddr;
   static struct BiPhaseStruct* zMagAddr;
@@ -539,7 +539,7 @@ static void GetACS()
   if (firsttime) {
     firsttime = 0;
     //elRawEncAddr = GetBiPhaseAddr("el_raw_enc");
-    elRawIfClinAddr = GetBiPhaseAddr("el_raw_if_clin");
+    rollOfClinAddr = GetBiPhaseAddr("roll_of_clin");
     ifElgyAddr = GetBiPhaseAddr("ifel_gy");
     ifRollgyAddr = GetBiPhaseAddr("ifroll_gy");
     ifYawgyAddr = GetBiPhaseAddr("ifyaw_gy");
@@ -657,7 +657,7 @@ static void GetACS()
     enc_table += 360;
   else if (enc_table > 360.0) enc_table -= 360;
 
-  ACSData.clin_elev = (double)(slow_data[elRawIfClinAddr->index][elRawIfClinAddr->channel]);
+  ACSData.clin_elev = (double)(slow_data[rollOfClinAddr->index][rollOfClinAddr->channel]);
 
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
