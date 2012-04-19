@@ -66,6 +66,12 @@ extern "C" int EthernetSC[3];      /* tx.c */
 
 extern double goodPos[10];	/* table.cpp */
 extern double trigPos[10];	/* camcommunicator.cpp */
+short int bsc_trigger;		/* flag for boresite exposure, set by motors.c */
+extern short int exposing;	//in table.cpp
+extern short int docalc;	//in table.cpp
+extern short int zerodist[10];	//in table.cpp
+extern double goodPos[10];	//in table.cpp
+double trigPos[10];
 
 //Stuff for Pyramid
 #define CAT "/data/etc/spider/gsc_mag08_res20.bin"
@@ -147,6 +153,9 @@ void cameraFields()
   static int which;
   static bool unrecFlag = false;
   static unsigned long int posFrame;
+  static int bscwait;
+  static int rscwait;
+  static int exposecount;
 
   static NiosStruct* TheGoodforceAddr = NULL;
   static NiosStruct* TheBadforceAddr = NULL;
@@ -226,6 +235,9 @@ void cameraFields()
   //initialization
   if (firsttime) {
     firsttime = 0;
+    bscwait = 0;
+    rscwait = 0;
+    exposecount = 0;
     TheGoodforceAddr = GetNiosAddr("force_thegood");
     TheBadforceAddr = GetNiosAddr("force_thebad");
     TheUglyforceAddr = GetNiosAddr("force_theugly");
@@ -344,6 +356,37 @@ void cameraFields()
   WriteData(TheGoodblobMdistAddr, CommandData.thegood.minBlobDist, NIOS_QUEUE);
   WriteData(TheBadblobMdistAddr, CommandData.thebad.minBlobDist, NIOS_QUEUE);
   WriteData(TheUglyblobMdistAddr, CommandData.theugly.minBlobDist, NIOS_QUEUE);
+
+//WHERE DOES THIS GO (formerly in readLoop):
+  bscwait++; 
+  if (bsc_trigger) {
+	if ((bscwait%100)==0) {
+		if (!CommandData.thegood.paused) sendTheGoodCommand("CtrigExp");
+		bsc_trigger = 0;
+	}
+  }   
+  rscwait++;
+  if ((rscwait%10)==0) {
+	if (!CommandData.thebad.paused) sendTheBadCommand("CtrigExp");
+	if (!CommandData.theugly.paused) sendTheUglyCommand("CtrigExp");
+	for (int i=0; i<10; i++) {
+		if (goodPos[i] == 90.0) { 
+			trigPos[i] = ACSData.enc_table;
+			zerodist[i] = 1;
+		}
+	}
+	exposing = 1;
+	rscwait = 0;
+  }
+  if (exposing) {
+	exposecount++;
+	if (exposecount == 2) {
+		exposecount = 0;
+		exposing = 0;
+		docalc = 1;
+	}
+ }
+//-----------------
 
   //persistently identify cameras by serial number (camID)
   if (camRtn[i_cam].camID == THEGOOD_SERIAL)  {
@@ -520,10 +563,12 @@ static void* TheGoodReadLoop(void* arg)
   while (TheGoodComm->openClient(THEGOOD_SERVERNAME) < 0) {
     if (!errorshown) {
       bprintf(err, "failed to accept camera connection");
+      EthernetSC[0]=3;
       errorshown = true;
     }
   }
   bprintf(startup, "talking to The Good Star Camera");
+  EthernetSC[0]=0;
 
   sendTheGoodCommand("Oconf");  //request configuration data
 
@@ -543,10 +588,12 @@ static void* TheBadReadLoop(void* arg)
   while (TheBadComm->openClient(THEBAD_SERVERNAME) < 0) {
     if (!errorshown) {
       bprintf(err, "failed to accept camera connection");
+      EthernetSC[1]=3;
       errorshown = true;
     }
   }
   bprintf(startup, "talking to The Bad Star Camera");
+  EthernetSC[1]=0;
 
   sendTheBadCommand("Oconf");  //request configuration data
 
@@ -566,10 +613,12 @@ static void* TheUglyReadLoop(void* arg)
   while (TheUglyComm->openClient(THEUGLY_SERVERNAME) < 0) {
     if (!errorshown) {
       bprintf(err, "failed to accept camera connection");
+      EthernetSC[2]=3;
       errorshown = true;
     }
   }
   bprintf(startup, "talking to The Ugly Star Camera");
+  EthernetSC[2]=0;
 
   sendTheUglyCommand("Oconf");  //request configuration data
 
