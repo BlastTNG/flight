@@ -6,9 +6,10 @@
 #include <qstring.h>
 #include <qpainter.h>
 #include <qtimer.h>
+#include <qcursor.h>
 #include "blobimage.h"
 
-#define VIEWER_DEBUG 1
+#define VIEWER_DEBUG 0
 #if VIEWER_DEBUG
 #include <iostream>
 #endif
@@ -30,6 +31,7 @@ ImageViewer::ImageViewer(int w, int h, int img_w, int img_h, int msec/*=10*/, QW
 #endif
 	this->setBaseSize(w, h);
 	this->setPalette(QPalette(QColor(0, 0, 0)));
+ 	this->setCursor(QCursor(Qt::BlankCursor));
 	
 	qimg = new QImage(img_w, img_h, 8, 256);
 	for (int i=0; i<256; i++)                  //make image greyscale
@@ -172,7 +174,8 @@ void ImageViewer::paintEvent(QPaintEvent*)
 		 << ((timestruct.tm_sec<10)?"0":"") << timestruct.tm_sec;
 	timestring = sout.str();
 	p.drawImage(img_rect, scaled_img);
-	p.drawText(20,20,timestring);
+	p.setFont(QFont("Arial",12));
+	p.drawText(30,30,timestring);
 }
 
 
