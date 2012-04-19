@@ -9,11 +9,6 @@
 #include <netdb.h>      //for gethostbyname
 #include <cstdlib>
 #include "camcommunicator.h"
-extern "C" {
-#include "blast.h"
-#include "pointing_struct.h"
-#include "command_struct.h"
-}
 #define CAM_COMM_DEBUG 0
 #if CAM_COMM_DEBUG
 #include <iostream>
@@ -22,21 +17,8 @@ extern "C" {
 #define CAM_COMM_BUF_SIZE 255
 //how long to wait after failed connection attempt to try again (us)
 #define CLIENT_RETRY_DELAY 1000000
-#define BSCWAIT 24 
-#define RSCWAIT 80
-#define EXPCOUNT 40
 
-extern "C" int EthernetSC[3];      /* tx.c */
 pthread_mutex_t scmutex;
-short int bsc_trigger;
-extern "C" int sendTheGoodCommand(const char *cmd); //sc.cpp
-extern "C" int sendTheBadCommand(const char *cmd); //sc.cpp
-extern "C" int sendTheUglyCommand(const char *cmd); //sc.cpp
-extern short int exposing;	//in table.cpp
-extern short int docalc;	//in table.cpp
-extern short int zerodist[10];	//in table.cpp
-extern double goodPos[10];		//in table.cpp
-double trigPos[10];
 
 /*
 
@@ -185,11 +167,6 @@ int CamCommunicator::openHost(string target)
 */
 int CamCommunicator::openClient(string target)
 {
-	int flag;
-	if (target == "192.168.1.11") flag=0; 	   //TheGood
-	else if (target == "192.168.1.12") flag=1; //TheBad
-	else flag=2;				   //TheUgly
-  	EthernetSC[flag] = 3; /* Unknown state */
 	if (commFD >= 0) return -1;   //already an open connection
 	
 	//separate the port and address parts of the target
@@ -215,23 +192,18 @@ int CamCommunicator::openClient(string target)
 //	setsockopt(commFD, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
 	while ( true ) {
 		if ( connect(commFD, (sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-      			if (errno == ENETUNREACH || errno == EHOSTUNREACH || errno == EHOSTDOWN) /* No route to host */
-        			EthernetSC[flag] = 1;
 			if (errno == ECONNREFUSED) {  //nobody is listening
-				EthernetSC[flag] = 2;
 #if CAM_COMM_DEBUG
 				cerr << "[Comm debug]: connection refused (nobody listening?) trying again in a bit" << endl;
 #endif	
 				usleep(CLIENT_RETRY_DELAY);
 			} else {  //some other error
-				EthernetSC[flag] = 3;
 				closeConnection();  //close server
 				return errorFlag = -1;
 			}
 		}
 		else break;
 	}
-  	EthernetSC[flag] = 0;
 #if CAM_COMM_DEBUG
 	cerr << "[Comm debug]: connection successful" << endl;
 #endif	
@@ -333,45 +305,11 @@ void CamCommunicator::readLoop(string (*interpretFunction)(string))
 	string line = "";
 	string rtnStr;
 	int n;
-  	static int Rpulsewait = 0;
-  	static int Bpulsewait = 0;
-	static int exposecount = 0;
 	string::size_type pos;
 	if (commFD == -1) return;          //communications aren't open
 	
 	while (1) {
     		usleep(100000);
-    		Rpulsewait++;
-    		Bpulsewait++;
-      		if (Rpulsewait > RSCWAIT) {
-			if (!CommandData.thegood.paused) sendTheGoodCommand("CtrigExp");
-			if (!CommandData.thebad.paused) sendTheBadCommand("CtrigExp");
-			for (int i=0; i<10; i++) {
-				if (goodPos[i] == 90.0) { 
-					trigPos[i] = ACSData.enc_table;
-					zerodist[i] = 1;
-				}
-			}
-			exposing = 1;
-			Rpulsewait = 0;
-		}
-		if (exposing) {
-			exposecount++;
-			if (exposecount == EXPCOUNT) {
-				exposecount = 0;
-				exposing = 0;
-				docalc = 1;
-			}
-		}
-    		if (bsc_trigger) {
-      			if (Bpulsewait > BSCWAIT) {
-				if (!CommandData.theugly.paused) sendTheUglyCommand("CtrigExp");
-        			bsc_trigger = 0;
-        			Bpulsewait = 0;
-	        	} else {
-				bsc_trigger = 0;
-			}
-		}    
 		FD_ZERO(&input);
 		FD_SET(commFD, &input);
     		if (select(commFD+1, &input, NULL, NULL, &read_timeout) < 0)
