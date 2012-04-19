@@ -167,15 +167,21 @@ powercycle: powercycle.c
 
 # program to analyze bad pixel data
 findbadpixel: findbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o
+	g++   findbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o   -o findbadpixel
+	chmod a+x findbadpixel
 
 findbadpixel.o: findbadpixel.cpp blobimage.h frameblob.h bloblist.h \
 	camconfig.h $(HEADERS) csbigimg.h csbigimgdefs.h
+	g++  -O0 -I . -I ../common -L . -Wall -g     -c -o findbadpixel.o findbadpixel.cpp
 
 # program to use a bad pixel file to correct a bad pixel
 fixbadpixel: fixbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o
+	g++   fixbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o   -o fixbadpixel
+	chmod a+x fixbadpixel
 
 fixbadpixel.o: fixbadpixel.cpp blobimage.h frameblob.h bloblist.h camconfig.h \
   csbigimg.h csbigimgdefs.h $(HEADERS)
+	g++  -O0 -I . -I ../common -L . -Wall -g     -c -o fixbadpixel.o fixbadpixel.cpp
 
 ################################################################################
 
