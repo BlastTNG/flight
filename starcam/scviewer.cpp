@@ -50,7 +50,7 @@ void* updateImage(void* arg)
       usleep(5000); //give starcam a chance to save the file
       nextindex = (imgindex == 0) ? 1 : 0;
       oldtime = time;
-      cout << "Image updated, refreshing it" << endl;
+      //cout << "Image updated, refreshing it" << endl;
       while (img[nextindex]->OpenImage(filename) != SBFE_NO_ERROR) {
 	retries++;
 	if (retries > 1) cout << "...failed, retrying" << endl;
@@ -90,9 +90,8 @@ int main(int argc, char* argv[])
 
   //set up the viewer
   QApplication a(argc, argv);
-  //TODO still need to figure out rescaling to something other than eactly half the size
-  //ImageViewer iv(img[0]->GetWidth(), img[0]->GetHeight(), img[0]->GetWidth(), img[0]->GetHeight(), 10, 0, "viewer");
   ImageViewer iv(640, 480, img[0]->GetWidth(), img[0]->GetHeight(), 10, 0, "viewer");
+  iv.setGeometry(0,0,640,480);
   a.setMainWidget(&iv);
   iv.show();
   iv.load(img[0], TRUE);
