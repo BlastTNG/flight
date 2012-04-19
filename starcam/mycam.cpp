@@ -131,7 +131,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
 	int range = (forced)?3270:m_cAdapter.getFocalRange();
 	int step = range / m_nFocusResolution;         //number of motor counts between measurements
-	int numsteps = 30;//m_nFocusResolution/m_nFocusRange; 
+	int numsteps = m_nFocusResolution/m_nFocusRange; 
 	focusStruct focuser[numsteps];
 	//check if motor "stickiness" may have confused things
 	if (forced && step < MIN_AUTO_STEP) step = MIN_AUTO_STEP;
@@ -168,7 +168,8 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		}
 
 		img->findBlobs();
-		focuser[i].numblobs = blob->get_numblobs();
+		focuser[i].numblobs = (blob->get_numblobs() > 15)?15:blob->get_numblobs();
+
 #if AUTOFOCUS_DEBUG
 		cout << "autofocus: Found " << blob->get_numblobs() << " blobs" << endl;
 #endif
@@ -181,7 +182,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 				focuser[i].flux[j] = focblobs->getflux();
 				focuser[i].x[j] = focblobs->getx();
 				focuser[i].y[j] = focblobs->gety();
-				img->drawBox(focblobs->getx(), focblobs->gety(), 20);
+				img->drawBox(focblobs->getx(), focblobs->gety(), 20, j+1);
 				focblobs = focblobs->getnextblob();
 				j++;
 			}
@@ -254,6 +255,9 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 #endif
 	//move back to focus position
 	int toFocus = endpos - focuser[atfocus].focpos;
+#if AUTOFOCUS_DEBUG
+	cerr << "at endpos: " << endpos << ", need to move " << toFocus << " steps toFocus (=endpos-focpos)" << endl;
+#endif
 	if (m_cAdapter.preciseMove(toFocus, remaining, forced) != LE_NO_ERROR)
 		return m_cAdapter.getLastError();
 	return LE_NO_ERROR;

@@ -187,6 +187,7 @@ int main(int argc, char *argv[])
 				cout << "\nFound " << fblob->get_numblobs() << " blobs, map mean = "
 				<< fblob->get_mapmean() << " sigma = " << fblob->get_sigma() << endl;
 			}
+			int num = 1;
 			if (fblob->get_numblobs()) {
 				if(fblob->get_numblobs() > 7) cout <<"Their locations, flux and snr  (x y f s) are " << endl;
 				blobs = fblob->getblobs();
@@ -197,8 +198,9 @@ int main(int argc, char *argv[])
 					double s = blobs->getsnr();
 					//cout << "\t" << x << " " << y << " " << f << " " << s << endl;
 					if (fblob->get_numblobs() > 7) cout << "\t" << x << " " << y << endl;
-					img.drawBox(blobs->getx(), blobs->gety(), 20, true);
+					img.drawBox(blobs->getx(), blobs->gety(), 20, num, true);
 					blobs = blobs->getnextblob();
+					num++;
 				}
 			}
 /*FIXME			

@@ -54,6 +54,7 @@ public:
 	void copyImageFrom(const unsigned short*);
 	SBIG_FILE_ERROR FixBadpix(string filename);
 	int findBlobs();
+	int crapifyImage();
 	int highPassFilter(int box_size, int n_boxes);
 #if USE_PYRAMID
 	int matchStars(solution_t **sol);
@@ -80,7 +81,7 @@ public:
 	StarcamReturn* createReturnStruct(StarcamReturn* arg);
 	
 	//functions to help in testing the blob finder
-	void drawBox(double x, double y, double side, bool willChange=true);
+	void drawBox(double x, double y, double side, int bnum, bool willChange=true);
 	string createFilename();
 	string createDirectory(string root, int boxflag);
 	SBIG_FILE_ERROR SaveImageIn(string root="/usr/local/starcam/pictures/", int boxflag=0);

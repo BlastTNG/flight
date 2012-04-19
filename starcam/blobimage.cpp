@@ -321,6 +321,7 @@ int BlobImage::findBlobs()
 	int numblobs;
 	bloblist *blobs;
 	
+	crapifyImage();
 	//find the blobs
 	if (FixBadpix(m_sBadpixFilename) == SBFE_OPEN_ERROR)
 		return -1;
@@ -343,10 +344,54 @@ int BlobImage::findBlobs()
 }
 
 /*
+ crapifyImage:
+
+ adds another image's value for each pixel to the current image
+
+*/
+
+
+int BlobImage::crapifyImage()
+{
+	const char* filename[14];
+	filename[0] = "/home/spider/starcam/sbsc/13:01:41.sbig";
+	filename[1] = "/home/spider/starcam/sbsc/13:05:53.sbig";
+	filename[2] = "/home/spider/starcam/sbsc/13:10:31.sbig";
+	filename[3] = "/home/spider/starcam/sbsc/13:14:48.sbig";
+	filename[4] = "/home/spider/starcam/sbsc/13:19:20.sbig";
+	filename[5] = "/home/spider/starcam/sbsc/13:23:38.sbig";
+	filename[6] = "/home/spider/starcam/sbsc/13:27:53.sbig";
+	filename[7] = "/home/spider/starcam/sbsc/13:32:19.sbig";
+	filename[8] = "/home/spider/starcam/sbsc/13:36:30.sbig";
+	filename[9] = "/home/spider/starcam/sbsc/13:40:59.sbig";
+	filename[10] = "/home/spider/starcam/sbsc/13:45:25.sbig";
+	filename[11] = "/home/spider/starcam/sbsc/13:49:40.sbig";
+	filename[12] = "/home/spider/starcam/sbsc/13:54:03.sbig";
+	filename[13] = "/home/spider/starcam/sbsc/13:58:29.sbig";
+	int randi = rand()%13;
+	BlobImage* sbscimg = new BlobImage();
+  	if (sbscimg->OpenImage(filename[randi]) != SBFE_NO_ERROR) {
+    		cerr << "Error opening image: " << filename[randi] << endl;
+    		return 1;
+  	} else cout << "Opening image: " << filename[randi] << endl;
+  	unsigned short *img = this->GetImagePointer();
+  	/*unsigned NNG*/ int height = this->GetHeight();
+  	/*unsigned NNG*/ int width = this->GetWidth();
+  	unsigned short *crapimg = sbscimg->GetImagePointer();
+	for (int x=0; x<width; x++) {
+		for (int y=0; y<height; y++) {
+			img[x+width*y]+=crapimg[x+width*y];
+		}
+	}			
+	delete sbscimg;
+	return 1;
+}
+
+/*
 
  highPassFilter:
 
- simple (and hopefully quick, good enough) high pass fitler
+ simple (and hopefully quick, good enough) high pass filter
  operates on sqaure regions box_size on side
  averages a region n_boxes boxes on a side, and subtracts mean from central box
  probably best if box_size evenly divides image dimensions, and n_boxes is odd
@@ -443,7 +488,7 @@ int BlobImage::highPassFilter(int box_size, int n_boxes)
  when willChange is true, sets the images changed flag
  
 */
-void BlobImage::drawBox(double x, double y, double side, bool willChange /*=true*/)
+void BlobImage::drawBox(double x, double y, double side, int bnum, bool willChange /*=true*/)
 {
 #if BLOB_IMAGE_DEBUG
 	cout << "[Blob image debug]: In drawBox method." << endl;
@@ -453,9 +498,12 @@ void BlobImage::drawBox(double x, double y, double side, bool willChange /*=true
 	//MAPTYPE sat = m_cBlob.get_satval();
 	this->AutoBackgroundAndRange();
 	MAPTYPE sat = this->GetBackground() + this->GetRange();
+	int i,j;
 	int top = (int)(y - side/2), left = (int)(x - side/2), size = (int)side;
 	int xdim = CSBIGImg::GetWidth(), ydim = CSBIGImg::GetHeight();
 	int xlimit = left + size, ylimit = top + size;
+	int first = bnum/10;
+	int second = bnum%10;
 	if (top < 0) top = 0;
 	if (left < 0) left = 0;
 	if (xlimit > xdim) xlimit = xdim;
@@ -464,12 +512,141 @@ void BlobImage::drawBox(double x, double y, double side, bool willChange /*=true
 	cout << "[Blob image debug]: entering loop for: " << top << " < y < " << ylimit << " and " 
  		 << left << " < x < " << xlimit << endl;
 #endif
-	for (int i=top; i<ylimit; i++) {        //row
-		for (int j=left; j<xlimit; j++) {   //column
+	for (i=top; i<ylimit; i++) {        //row
+		for (j=left; j<xlimit; j++) {   //column
 			if (i == top || i == (ylimit-1) || j == left || j == (xlimit-1))   //on edge of box
 				map[i*xdim+j] = sat;
 		}
 	}
+	int xnum,ynum;
+	//Draw the blob number next to the box-----------
+	if ((first == 4) || (first == 5) || (first == 6) || (first == 8) || (first == 9)) {
+	  for (i=0; i<9; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+2+j)>xdim) ? xdim : (xlimit+2+j);	
+			ynum = ((top+i) > ydim) ? ydim : (top+i);
+			map[ynum*xdim+xnum] = sat;  //left vertical top
+		}
+	  }
+	}
+	if ((first == 2) || (first == 6) || (first == 8)) {
+	  for (i=6; i<15; i++) { 
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+2+j)>xdim) ? xdim : (xlimit+2+j);	
+			ynum = ((top+i) > ydim) ? ydim : (top+i);	
+			map[ynum*xdim+xnum] = sat;  //left vertical bottom
+		}
+	  }
+	}
+	if ((first == 1) || (first == 2) || (first == 3) || (first == 4) || (first == 7) || (first == 8) || (first == 9)) {
+	  for (i=0; i<9; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+8+j)>xdim) ? xdim : (xlimit+8+j);	
+			ynum = ((top+i) > ydim) ? ydim : (top+i);	
+			map[ynum*xdim+xnum] = sat;  //right vertical top
+		}
+	  }
+	}
+	if ((first == 1) || (first == 3) || (first == 4) || (first == 5) || (first == 6) || (first == 7) || (first == 8) || (first == 9)) {
+	  for (i=6; i<15; i++) { 
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+8+j)>xdim) ? xdim : (xlimit+8+j);	
+			ynum = ((top+i) > ydim) ? ydim : (top+i);	
+			map[ynum*xdim+xnum] = sat;  //right vertical bottom
+		}
+	  }
+	}
+	if ((first == 2) || (first == 3) || (first == 5) || (first == 7) || (first == 8) || (first == 9)) {
+	  for (i=0; i<9; i++) { 
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+2+i) > xdim) ? xdim : (xlimit+2+i);
+			ynum = ((top+j)>ydim) ? ydim : (top+j);
+			map[ynum*xdim+xnum] = sat;          //top horizontal
+		}
+	  }
+	}
+	if ((first == 2) || (first == 3) || (first == 4) || (first == 5) || (first == 6) || (first == 8) || (first == 9)) {	
+	  for (i=0; i<9; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+2+i) > xdim) ? xdim : (xlimit+2+i);
+			ynum = ((top+6+j)>ydim) ? ydim : (top+6+j);
+			map[ynum*xdim+xnum] = sat;      //middle horizontal
+		}
+	  }
+	}
+	if ((first == 2) || (first == 3) || (first == 5) || (first == 6) || (first == 8)) {
+	  for (i=0; i<9; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+2+i) > xdim) ? xdim : (xlimit+2+i);
+			ynum = ((top+12+j) > ydim) ? ydim : (top+12+j);
+			map[ynum*xdim+xnum] = sat;      //bottom horizontal
+		}
+	  }
+	}
+        if ((second == 0) || (second == 4) || (second == 5) || (second == 6) || (second == 8) || (second == 9)) {
+          for (i=0; i<9; i++) { 
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+14+j)>xdim) ? xdim : (xlimit+14+j);
+			ynum = ((top+i) > ydim) ? ydim : (top+i);	
+			map[ynum*xdim+xnum] = sat;  //left vertical top
+		}
+	  }
+        }
+	if ((second == 0) || (second == 2) || (second == 6) || (second == 8)) {
+	  for (i=6; i<15; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+14+j)>xdim) ? xdim : (xlimit+14+j);
+			ynum = ((top+i) > ydim) ? ydim : (top+i);	
+			map[ynum*xdim+xnum] = sat;  //left vertical bottom
+		}
+	  }
+	}
+	if ((second == 0) || (second == 1) || (second == 2) || (second == 3) || (second == 4) || (second == 7) || (second == 8) || (second == 9)) {
+	  for (i=0; i<9; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+20+j)>xdim) ? xdim : (xlimit+20+j);
+			ynum = ((top+i) > ydim) ? ydim : (top+i);	
+			map[ynum*xdim+xnum] = sat;  //right vertical top
+		}
+	  }
+	}
+	if ((second == 0) || (second == 1) || (second == 3) || (second == 4) || (second == 5) || (second == 6) || (second == 7) || (second == 8) || (second == 9)) {
+	  for (i=6; i<15; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+20+j)>xdim) ? xdim : (xlimit+20+j);
+			ynum = ((top+i) > ydim) ? ydim : (top+i);	
+			map[ynum*xdim+xnum] = sat;  //right vertical bottom
+		}
+	  }
+	}
+	if ((second == 0) || (second == 2) || (second == 3) || (second == 5) || (second == 7) || (second == 8) || (second == 9)) {
+	  for (i=0; i<9; i++) { 
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+14+i) > xdim) ? xdim : (xlimit+14+i);
+			ynum = ((top+j)>ydim) ? ydim : (top+j);
+			map[ynum*xdim+xnum] = sat;          //top horizontal
+		}
+	  }
+	}
+	if ((second == 2) || (second == 3) || (second == 4) || (second == 5) || (second == 6) || (second == 8) || (second == 9)) {	
+	  for (i=0; i<9; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+14+i) > xdim) ? xdim : (xlimit+14+i);
+			ynum = ((top+6+j)>ydim) ? ydim : (top+6+j);
+			map[ynum*xdim+xnum] = sat;      //middle horizontal
+		}
+	  }
+	}
+	if ((second == 0) || (second == 2) || (second == 3) || (second == 5) || (second == 6) || (second == 8)) {
+	  for (i=0; i<9; i++) {
+		for (j=0; j<3; j++) {
+			xnum = ((xlimit+14+i) > xdim) ? xdim : (xlimit+14+i);
+			ynum = ((top+12+j)>ydim) ? ydim : (top+12+j);
+			map[ynum*xdim+xnum] = sat;      //bottom horizontal
+		}
+	  }
+	}
+
 	if (willChange) m_bIsChanged = 1;
 }
 

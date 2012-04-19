@@ -341,6 +341,7 @@ void* processingLoop(void* arg)
     globalImages[imageIndex].findBlobs();
     frameblob* fblob = globalImages[imageIndex].getFrameBlob();
     bloblist* blobs;
+    int num = 1;
     if (STARCAM_DEBUG || showBoxes || SAVE_SC_IMAGES == 2) {  //add boxes or output blob data
       sclog(data, (char*)"processingLoop: Found %d blobs.", fblob->get_numblobs());
       sclog(data, (char*)"processingLoop: Their locations (x,y) are: ");
@@ -349,8 +350,9 @@ void* processingLoop(void* arg)
 	while (blobs != NULL) {
 	  sclog(data, (char*)"processingLoop:   ...(%g,%g)", blobs->getx(), blobs->gety());
 	  if (showBoxes || SAVE_SC_IMAGES == 2)
-	    globalImages[imageIndex].drawBox(blobs->getx(), blobs->gety(), 20);
+	    globalImages[imageIndex].drawBox(blobs->getx(), blobs->gety(), 20, num);
 	  blobs = blobs->getnextblob();
+	  num++;
 	}
       }
     }
