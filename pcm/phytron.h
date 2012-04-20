@@ -14,6 +14,9 @@
 #ifndef PHYTRON_H
 #define PHYTRON_H
 
+#include <termios.h>
+#include <unistd.h>
+
 /* Errors:
  * Phytron functions will return an integer error code.
  * The code should be interpreted as an error bitfield, as follows.
@@ -30,6 +33,7 @@
 #define PH_ERR_POLL     0x0040  //not all polled steppers found
 #define PH_ERR_NAK      0x0080  //NAK in response. Message/controller error
 #define PH_ERR_PARAM    0x0100  //invalid parameter value (out of range)
+#define PH_ERR_BAUD     0x0200  //unknown baud rate for stepper
 
 /* Chatter:
  * The verbosity level of the Phytron library.
@@ -65,6 +69,7 @@ struct phytron_stepper {
   char name[PH_BUS_NAME_LEN];   //name of the stepper
   char addr;                    //bus address of the contorller ('0', '1', etc)
   char axis;                    //axis of the stepper ('X' or 'Y')
+  speed_t baud;                 //serial port baud rate to use for this stepper
   //parameters for the Phytron move commands
   int gear_teeth;               //number of gear teeth on rotator
   int usteps;                   //ustep reoslution
@@ -118,10 +123,13 @@ int Phytron_Release(struct phytron* bus, int who);
 int Phytron_IsTaken(struct phytron* bus, int who);
 
 /* Phytron_Send sends command string 'what' to device 'who'
- * Phytron_ASend does the same, but omits axis ('X'/'Y') if 'useaxis' is false
+ * Phytron_NASend does the same, but omits axis ('X'/'Y') since some commands
+ * won't work with the axis specified (they just want the controller addr)
+ *
+ * Ideally would want a smart send that decides for each command which to use
  */
 int Phytron_Send(struct phytron* bus, int who, const char* what);
-int Phytron_ASend(struct phytron* bus, int who, const char* what, int useaxis);
+int Phytron_NASend(struct phytron* bus, int who, const char* what);
 
 /* receive response from bus
  */
@@ -132,10 +140,14 @@ int Phytron_Recv(struct phytron* bus);
  * Phytron_Comm retries PH_BUS_COMM_RETRIES times
  * Phytron_CommRetry specifies number of retries
  * Phytron_CommVarg uses printf-style 'fmt' and arguments for what
+ *
+ * The NAComm variants are similar but use NASend (see above)
  */
 int Phytron_Comm(struct phytron* bus, int who, const char* what);
-int Phytron_CommRetry(struct phytron* bus, int who, const char* what, int retries);
 int __attribute__((format(printf,3,4))) Phytron_CommVarg(struct phytron* bus,
+    int who, const char* fmt, ...);
+int Phytron_NAComm(struct phytron* bus, int who, const char* what);
+int __attribute__((format(printf,3,4))) Phytron_NACommVarg(struct phytron* bus,
     int who, const char* fmt, ...);
 
 /* send query command 'what' to 'who' to get integer response

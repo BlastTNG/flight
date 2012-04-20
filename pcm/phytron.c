@@ -32,6 +32,15 @@
 #include "phytron.h"
 #include "blast.h"
 
+
+//allowed baud rates. Scanned during Poll(). First entry is default
+#define N_ALLOWED_BAUDS 5
+const unsigned int allowed_bauds[N_ALLOWED_BAUDS] = {B115200, B57600, B38400,
+  B19200, B9600};
+const char* allowed_bauds_s[N_ALLOWED_BAUDS] = {"115200", "57600", "38400",
+  "19200", "9600"};
+
+
 //terminating snprintf and strncpy, for convenience
 //assumes 'str' is an array of length at least 'size'
 static int  __attribute__((format(printf,3,4))) stprintf(char* str,
@@ -54,19 +63,24 @@ static char* strtcpy(char* dest, const char* src, size_t n)
   return ret;
 }
 
-//set up serial port. Only call from Phytron_Init()
-static int phytron_setserial(struct phytron* bus)
+//set up serial port.
+//Set bus->fd negative before call from Phytron_Init()
+//Otherwise, can be used to change speed (baud rate) of already-opened port
+static int phytron_setserial(struct phytron* bus, speed_t speed)
 {
   int fd;
   struct termios term;
   static int err_flag = 0;
 
-  if ((fd = open(bus->tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
-    if (bus->chatter >= PH_CHAT_ERR && err_flag == 0)
-      berror(err, "%sUnable to open serial port (%s)", bus->name, bus->tty);
-    err_flag = 1;
-    return -1;
-  }
+  if (bus->fd < 0) {  //open device if it is not yet open
+    if ((fd = open(bus->tty, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+      if (bus->chatter >= PH_CHAT_ERR && err_flag == 0)
+        berror(err, "%sUnable to open serial port (%s)", bus->name, bus->tty);
+      err_flag = 1;
+      return -1;
+    }
+  } else fd = bus->fd;
+
 
   if (tcgetattr(fd, &term)) {
     if (bus->chatter >= PH_CHAT_ERR && err_flag == 0)
@@ -90,14 +104,14 @@ static int phytron_setserial(struct phytron* bus)
   /* disable input processing (raw input) */
   term.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 
-  if(cfsetospeed(&term, B115200)) {        /*  <======= SET THE SPEED HERE */
+  if(cfsetospeed(&term, speed)) {        /*  <======= SET THE SPEED HERE */
     if (bus->chatter >= PH_CHAT_ERR && err_flag == 0)
       berror(err, "%sError setting serial output speed", bus->name);
     err_flag = 1;
     return -1;
   }
 
-  if(cfsetispeed(&term, B115200)) {        /*  <======= SET THE SPEED HERE */
+  if(cfsetispeed(&term, speed)) {        /*  <======= SET THE SPEED HERE */
     if (bus->chatter >= PH_CHAT_ERR && err_flag == 0)
       berror(err, "%sError setting serial input speed", bus->name);
     err_flag = 1;
@@ -124,13 +138,15 @@ int Phytron_Init(struct phytron* bus, const char* tty, const char* name,
   bus->tty = tty;  //NB: Init argument should not be deallocated
   bus->seized = -1;
   bus->chatter = chatter;
-  if ( (bus->fd = phytron_setserial(bus)) < 0)
+  bus->fd = -1;
+  if ( (bus->fd = phytron_setserial(bus, allowed_bauds[0])) < 0 )
     retval |= PH_ERR_TTY;
   for (i = 0; i < PH_BUS_NACT; ++i) {
     bus->stepper[i].status = 0;
     bus->stepper[i].name[0] = '\0';
     bus->stepper[i].addr = '\0';
     bus->stepper[i].axis = '\0';
+    bus->stepper[i].baud = allowed_bauds[0];
     bus->stepper[i].usteps = 0;
     bus->stepper[i].gear_teeth = 0;
     bus->stepper[i].vel = 0;
@@ -234,12 +250,8 @@ static const char* HexDump(const unsigned char* from, char* to, int len)
 #define ACK (char)0x06
 #define NAK (char)0x15
 
-int Phytron_Send(struct phytron *bus, int who, const char* what)
-{
-  return Phytron_ASend(bus, who, what, 1);
-}
-
-int Phytron_ASend(struct phytron* bus, int who, const char* what, int useaxis)
+static int Phytron_DoSend(struct phytron* bus, int who, int useaxis,
+    const char* what)
 {
   size_t len = strnlen(what, PH_BUS_BUF_LEN) + 3 + ((useaxis)?1:0);
   char* buffer = malloc(len);
@@ -264,10 +276,17 @@ int Phytron_ASend(struct phytron* bus, int who, const char* what, int useaxis)
         addrstr, what);
     free(hex_buffer);
   }
+  //update baud rate to that used by stepper 'who'
+  if (phytron_setserial(bus, bus->stepper[who].baud) < 0) {
+    if (bus->chatter >= PH_CHAT_ERR)
+      berror(err, "%sError setting baud rate. File descriptor = %i",
+          bus->name, bus->fd);
+    retval |= PH_ERR_BAUD;
+  }
   if (write(bus->fd, buffer, len) < 0) {
     if (bus->chatter >= PH_CHAT_ERR)
       berror(err, "%sError writing on bus. File descriptor = %i",
-          bus->name,bus->fd);
+          bus->name, bus->fd);
     retval |= PH_ERR_TTY;
   }
 
@@ -276,6 +295,16 @@ int Phytron_ASend(struct phytron* bus, int who, const char* what, int useaxis)
   count_errors(bus, retval, "Phytron_Send");
 
   return (bus->error=retval);
+}
+
+int Phytron_Send(struct phytron *bus, int who, const char* what)
+{
+  return Phytron_DoSend(bus, who, 1, what);
+}
+
+int Phytron_NASend(struct phytron *bus, int who, const char* what)
+{
+  return Phytron_DoSend(bus, who, 0, what);
 }
 
 #define PH_BUS_RECV_ABORT 3000000 /* state for general parsing abort */
@@ -384,7 +413,8 @@ int Phytron_Recv(struct phytron* bus)
     hex_buffer = malloc(3*len+1);
     bprintf(info, "%sResponse=%s (%s%s)\n", bus->name, 
         HexDump((unsigned char *)full_response, hex_buffer, len), 
-        (retval & PH_ERR_NAK)?"<NAK>":"<ACK>", bus->buffer);
+        (full_response[1]==NAK)?"<NAK>":(full_response[1]==ACK)?"<ACK>":"",
+        bus->buffer);
     free(hex_buffer);
   }
 
@@ -393,13 +423,8 @@ int Phytron_Recv(struct phytron* bus)
   return (bus->error=retval);
 }
 
-int Phytron_Comm(struct phytron* bus, int who, const char* what)
-{
-  return Phytron_CommRetry(bus, who, what, PH_BUS_COMM_RETRIES);
-}
-
-int Phytron_CommRetry(struct phytron* bus, int who, const char* what,
-    int retries)
+static int Phytron_DoCommRetry(struct phytron* bus, int who, int useaxis,
+    const char* what, int retries)
 {
   int ok;
   int retval = PH_ERR_OK;
@@ -407,7 +432,8 @@ int Phytron_CommRetry(struct phytron* bus, int who, const char* what,
 
   do {
     ok = 1;
-    retval = Phytron_Send(bus, who, what);
+    if (useaxis) retval = Phytron_Send(bus, who, what);
+    else retval = Phytron_NASend(bus, who, what);
     if (retval != PH_ERR_OK) {
       if (bus->chatter >= PH_CHAT_ERR)
         berror(warning, "%sFailed to send command\n", bus->name);
@@ -439,6 +465,16 @@ int Phytron_CommRetry(struct phytron* bus, int who, const char* what,
   return (bus->error=retval);
 }
 
+int Phytron_Comm(struct phytron* bus, int who, const char* what)
+{
+  return Phytron_DoCommRetry(bus, who, 1, what, PH_BUS_COMM_RETRIES);
+}
+
+int Phytron_NAComm(struct phytron* bus, int who, const char* what)
+{
+  return Phytron_DoCommRetry(bus, who, 0, what, PH_BUS_COMM_RETRIES);
+}
+
 int __attribute__((format(printf,3,4))) Phytron_CommVarg(struct phytron* bus,
     int who, const char* fmt, ...)
 {
@@ -452,6 +488,21 @@ int __attribute__((format(printf,3,4))) Phytron_CommVarg(struct phytron* bus,
   va_end(argptr);
 
   return Phytron_Comm(bus, who, buf);
+}
+
+int __attribute__((format(printf,3,4))) Phytron_NACommVarg(struct phytron* bus,
+    int who, const char* fmt, ...)
+{
+  int ret;
+  va_list argptr;
+  char buf[PH_BUS_BUF_LEN];
+
+  va_start(argptr, fmt);
+  ret = vsnprintf(buf, PH_BUS_BUF_LEN, fmt, argptr);
+  buf[PH_BUS_BUF_LEN-1] = '\0';
+  va_end(argptr);
+
+  return Phytron_NAComm(bus, who, buf);
 }
 
 int Phytron_ReadInt(struct phytron* bus, int who, const char* what, int* val)
@@ -484,7 +535,7 @@ int Phytron_Poll(struct phytron* bus)
 
 int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
 {
-  int i, result;
+  int i, b, result;
   int retval = PH_ERR_OK;
 
   if (bus->chatter >= PH_CHAT_ACT) {
@@ -496,25 +547,34 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
         || ((bus->stepper[i].status & PH_STEP_OK)
           && (bus->stepper[i].status & PH_STEP_INIT)) ) //skip if ok, init
       continue;
-    Phytron_ASend(bus, i, "IVR", 0);
-    if ((result = Phytron_Recv(bus)) & (PH_ERR_TIMEOUT | PH_ERR_OOD)) {
-      if (bus->chatter >= PH_CHAT_ACT)
-        bprintf(warning, "%sNo response from %s, will repoll later.", 
-            bus->name, bus->stepper[i].name);
-      bus->stepper[i].status &= ~PH_STEP_OK;
-      retval |= result;	  //include in retval results from Recv
-      retval |= PH_ERR_POLL;
-    } else if (!strncmp(bus->buffer, "MCC Minilog V", 13)) {
-      if (bus->chatter >= PH_CHAT_ACT)
-        bprintf(info, "%sFound Phytron MCC V%.2f device \"%s\", address %d\n", 
-            bus->name, atof(bus->buffer+13), bus->stepper[i].name, i);
-      bus->stepper[i].status |= PH_STEP_OK;
-    } else {
-      if (bus->chatter >= PH_CHAT_ERR)
-        bprintf(warning, "%sUnrecognised response from %s, "
-            "will repoll later.\n", bus->name, bus->stepper[i].name);
-      bus->stepper[i].status &= ~PH_STEP_OK;
-      retval |= PH_ERR_POLL;
+
+    for (b=0; b<N_ALLOWED_BAUDS; b++) {
+      bus->stepper[i].baud = allowed_bauds[b];
+      Phytron_NASend(bus, i, "IVR");
+      if ((result = Phytron_Recv(bus)) & (PH_ERR_TIMEOUT | PH_ERR_OOD)) {
+        if (bus->chatter >= PH_CHAT_ACT && b == N_ALLOWED_BAUDS-1)
+          bprintf(warning, "%sNo response from %s, will repoll later.", 
+              bus->name, bus->stepper[i].name);
+        bus->stepper[i].status &= ~PH_STEP_OK;
+        retval |= result;	  //include in retval results from Recv
+        retval |= PH_ERR_POLL;
+      } else if (!strncmp(bus->buffer, "MCC Minilog V", 13)) {
+        if (bus->chatter >= PH_CHAT_ACT)
+          bprintf(info, "%sFound Phytron MCC V%.2f device \"%s\","
+              "address \"%c%c\" baud rate %s\n",
+              bus->name, atof(bus->buffer+13), bus->stepper[i].name,
+              bus->stepper[i].addr, bus->stepper[i].axis, allowed_bauds_s[b]);
+        bus->stepper[i].status |= PH_STEP_OK;
+        retval &= ~(PH_ERR_TIMEOUT | PH_ERR_OOD); //clear previous error bits
+        break;
+      } else {
+        if (bus->chatter >= PH_CHAT_ERR && b == N_ALLOWED_BAUDS-1)
+          bprintf(warning, "%sUnrecognised response from %s, "
+              "will repoll later.\n", bus->name, bus->stepper[i].name);
+        bus->stepper[i].status &= ~PH_STEP_OK;
+        retval |= result;	  //include in retval results from Recv
+        retval |= PH_ERR_POLL;
+      }
     }
 
     if ( bus->stepper[i].status & PH_STEP_OK &&
@@ -543,7 +603,7 @@ int Phytron_IsBusy(struct phytron* bus, int who)
   int retval;
   if (!Phytron_IsUsable(bus, who)) return PH_ERR_POLL | PH_READY;
 
-  retval = Phytron_CommRetry(bus, who, "Q", 0);
+  retval = Phytron_DoCommRetry(bus, who, 1, "Q", 0);
   if ( (retval & ~PH_READY) != PH_ERR_OK ) {
     //on error return code with busy bit set
     return retval | PH_READY;
