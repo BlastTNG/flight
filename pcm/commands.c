@@ -80,10 +80,8 @@ int sendTheUglyCommand(const char *cmd);
 
 void SingleCommand (enum singleCommand command, int scheduled)
 {
-#ifndef BOLOTEST
   int i_point = GETREADINDEX(point_index);
   double sun_az;
-#endif
   int is_new;
 
   if (!scheduled)
@@ -93,7 +91,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
   /* Update CommandData structure with new info */
 
   switch (command) {
-#ifndef BOLOTEST
     case stop: /* Pointing abort */
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
@@ -478,8 +475,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hwpr.force_repoll = 1;
       break;
 
-#endif
-
     /* Lock */
     case lock_on:
       CommandData.power.lock_off = 0;
@@ -535,7 +530,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.xystage.force_repoll = 1;
       break;
 
-#ifndef BOLOTEST
       /***************************************/
       /********* The Good Commanding  *************/
     case thegood_expose:
@@ -628,7 +622,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case vtx2_bsc:
       CommandData.vtx_sel[1] = vtx_bsc;
       break;
-#endif
+
     case hwpr_step:
       CommandData.hwpr.mode = HWPR_STEP;
       CommandData.hwpr.is_new = 1;
@@ -761,14 +755,12 @@ void SingleCommand (enum singleCommand command, int scheduled)
       return; /* invalid command - no write or update */
   }
 
-#ifndef BOLOTEST
   if (!scheduled) {
     if (doing_schedule)
       bprintf(info, "Scheduler: *** Out of schedule file mode ***");
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
   } else
     CommandData.pointing_mode.t = PointingData[i_point].t;
-#endif
 
   WritePrevStatus();
 }
@@ -793,7 +785,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
   /* Pointing Modes */
   switch(command) {
-#ifndef BOLOTEST
     case az_el_goto:
       if ((CommandData.pointing_mode.mode != P_AZEL_GOTO) || 
           (CommandData.pointing_mode.X != rvalues[0]) ||
@@ -952,7 +943,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.verbose_el = ivalues[1];
       CommandData.verbose_piv = ivalues[2];
       break;
-#endif
 
       /***************************************/
       /**********        Actuators  **********/
@@ -1097,7 +1087,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.xystage.is_new = 1;
       break;
 
-#ifndef BOLOTEST
       /***************************************/
       /******** Electronics Heaters  *********/
     case t_gyro_set:  /* gyro heater setpoint */
@@ -1155,7 +1144,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
       break;
-#endif
 
       /***************************************/
       /*************** Bias  *****************/
@@ -1264,7 +1252,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
 
-#ifndef BOLOTEST
       /***************************************/
       /********* The Good Commanding  *************/ 
     case thegood_any:
@@ -1445,20 +1432,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.table.vel = rvalues[0];
       break;
 
-#endif
     default:
       bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
       return; /* invalid command - don't update */
   }
 
-#ifndef BOLOTEST
   int i_point = GETREADINDEX(point_index);
 
   if (!scheduled)
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
   else
     CommandData.pointing_mode.t = PointingData[i_point].t;
-#endif
 
   WritePrevStatus();
 }

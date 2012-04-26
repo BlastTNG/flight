@@ -58,6 +58,7 @@
 #define STARTUP_VETO_LENGTH 250 /* "frames" */
 #define BI0_VETO_LENGTH 5 /* seconds */
 
+// Used by higain and bi0.  Number of frames in buffer.
 #define BI0_FRAME_BUFLEN (400)
 
 /* Define global variables */
@@ -103,18 +104,16 @@ void InitSched();
 
 static FILE* logfile = NULL;
 
-#ifndef BOLOTEST
 struct frameBuffer {
   int i_in;
   int i_out;
   unsigned short *framelist[BI0_FRAME_BUFLEN];
   unsigned short** slow_data_list[BI0_FRAME_BUFLEN];
+  int has_bi0_padding;
 };
 
 static struct frameBuffer bi0_buffer;
 struct frameBuffer hiGain_buffer;
-
-#endif
 
 time_t biphase_timer;
 int biphase_is_on = 0;
@@ -134,7 +133,6 @@ struct chat_buf chatter_buffer;
 #warning TEMPORAL_OFFSET NON-ZERO; FIX FOR FLIGHT
 #endif
 
-#ifndef BOLOTEST
 void openMotors();    // motors.c
 void closeMotors();
 
@@ -143,7 +141,6 @@ void closeTable();
 
 void startChrgCtrl(); // chrgctrl.c
 void endChrgCtrl();
-#endif
 
 /* gives system time (in s) */
 time_t mcp_systime(time_t *t) {
@@ -318,7 +315,6 @@ void mputs(buos_t flag, const char* message) {
   }
 }
 
-#ifndef BOLOTEST
 static void FillSlowDL()
 {
   int i;
@@ -803,8 +799,6 @@ static void GetCurrents()
 
 }
 
-#endif
-
 /* setup the bbcpci device in internal or external (sync box) mode
  */
 void setup_bbc()
@@ -932,7 +926,6 @@ static int fill_Rx_frame(unsigned int in_data)
   return(1);
 }
 
-#ifndef BOLOTEST
 static void WatchDog (void)
 {
   nameThread("WDog");
@@ -953,74 +946,60 @@ static void WatchDog (void)
   }
 }
 
+// Write to the bi-phase.
+// the format is: 4 word header (0xeb90 c5c5 3a3a 146f) | the frame | 1 word crc
+// The header has already been prepended in InitFrameBuffer()
+// the CRC is only over the frame, and does not include the header or crc.
+// the first word of the frame has been replaced with the length of the frame.
 static void write_to_biphase(unsigned short *frame)
 {
   int i;
-  static unsigned short nothing[BI0_FRAME_SIZE];
-  static unsigned short sync = 0xEB90;
-  static unsigned int do_skip = 0;
-  //static int tmpfp;
 
-  if (bi0_fp == -2) {
-    bi0_fp = open("/dev/bbc_bi0", O_RDWR);
-    if (bi0_fp == -1) {
-      berror(tfatal, "Error opening biphase device");
+  if (bi0_fp >= 0) { // should never be false!
+
+    frame[BiPhaseFrameWords+4] = CalculateCRC(0, frame+5, 
+		sizeof(short)*(BiPhaseFrameWords-1));
+    frame[4] = BiPhaseFrameWords;
+
+    i = write(bi0_fp, frame, (BiPhaseFrameWords + 5) * sizeof(unsigned short));
+    //write(tmpfp, frame, BiPhaseFrameWords * sizeof(unsigned short));
+    if (i < 0) {
+      berror(err, "bi-phase write for frame failed");
+    } else if (i != (BiPhaseFrameWords + 5) * sizeof(unsigned short)) {
+      bprintf(err, "Short write for biphase frame: %i of %u", i,
+	    (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
     }
-    //tmpfp = open("/data/rawdir/tmpbi0", O_RDWR | O_TRUNC | O_CREAT, S_IRUSR|S_IWUSR);
-
-    for (i = 0; i < BI0_FRAME_SIZE; i++) {
-      nothing[i] = 0xEEEE;
-    }
-  }
-
-  if ((bi0_fp >= 0) && InCharge) {
-
-    frame[0] = 0xEB90;
-    nothing[0] = CalculateCRC(0xEB90, frame, BiPhaseFrameWords);
-
-    frame[0] = sync;
-    sync = ~sync;
-
-    //TODO Bi0 doens't work in external sync mode. Eventually get short writes
-    if (do_skip) {
-      --do_skip;
-    } else {
-      i = write(bi0_fp, frame, BiPhaseFrameWords * sizeof(unsigned short));
-      //write(tmpfp, frame, BiPhaseFrameWords * sizeof(unsigned short));
-      if (i < 0) {
-        berror(err, "bi-phase write for frame failed");
-      } else if (i != BiPhaseFrameWords * sizeof(unsigned short)) {
-        bprintf(err, "Short write for biphase frame: %i of %u", i,
-            (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
-      }
-
-      i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
-          sizeof(unsigned short));
-      //write(tmpfp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
-      //    sizeof(unsigned short));
-      if (i < 0) 
-        berror(err, "bi-phase write for padding failed");
-      else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
-          * sizeof(unsigned short))
-        bprintf(err, "Short write for padding: %i of %u", i,
-            (unsigned int)
-              ((BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)));
-    }
-
+    
+    // bi0FifoSize holds number of 32 bit words in the fifo buffer.
+    // This is NOT the number of 16 bit words!
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
   }
 }
 
-static void InitFrameBuffer(struct frameBuffer *buffer) {
+static void InitFrameBuffer(struct frameBuffer *buffer, int has_bi0_padding) {
   int i,j;
+  int words;
 
+  buffer->has_bi0_padding = has_bi0_padding;
   buffer->i_in = 0;
   buffer->i_out = 0;
+  
+  words = BiPhaseFrameWords;
+  if (has_bi0_padding) {
+    words += 5;
+  }
   for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
-    buffer->framelist[i] = balloc(fatal, BiPhaseFrameWords *
+    buffer->framelist[i] = balloc(fatal, words *
         sizeof(unsigned short));
 
-    memset(buffer->framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
+    memset(buffer->framelist[i], 0, words*sizeof(unsigned short));
+    
+    if (has_bi0_padding) {
+      buffer->framelist[i][0] = 0xeb90;
+      buffer->framelist[i][1] = 0xc5c5;
+      buffer->framelist[i][2] = 0x3a3a;
+      buffer->framelist[i][3] = 0x146f;
+    }
 
     buffer->slow_data_list[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW*sizeof(unsigned short *));
     for (j = 0; j < FAST_PER_SLOW; ++j) {
@@ -1034,6 +1013,11 @@ static void InitFrameBuffer(struct frameBuffer *buffer) {
 // enough that it can never happen.
 static void PushFrameBuffer(struct frameBuffer *buffer) {
   int i, j, fw, i_in;
+  int i0 = 0;
+  
+  if (buffer->has_bi0_padding) {
+    i0 = 4;
+  }
 
   i_in = buffer->i_in + 1;
   if (i_in>=BI0_FRAME_BUFLEN)
@@ -1042,7 +1026,7 @@ static void PushFrameBuffer(struct frameBuffer *buffer) {
   fw = BiPhaseFrameWords;
 
   for (i = 0; i<fw; i++) {
-    buffer->framelist[i_in][i] = RxFrame[i];
+    buffer->framelist[i_in][i+i0] = RxFrame[i];
   }
   
   for (i=0; i<FAST_PER_SLOW; i++) {
@@ -1093,7 +1077,6 @@ unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
   return (frame);
 }
   
-#endif
 
 static void zero()
 {
@@ -1103,7 +1086,6 @@ static void zero()
     RxFrame[i] = 0;
 }
 
-#ifndef BOLOTEST
 static void BiPhaseWriter(void)
 {
   unsigned short *frame;
@@ -1115,6 +1097,11 @@ static void BiPhaseWriter(void)
     usleep(10000);
 
   bputs(info, "Veto has ended.  Here we go.\n");
+
+  bi0_fp = open("/dev/bbc_bi0", O_RDWR);
+  if (bi0_fp == -1) {
+    berror(tfatal, "Error opening biphase device");
+  }
 
   while (1) {
     frame = PopFrameBuffer(&bi0_buffer);
@@ -1138,7 +1125,6 @@ static void BiPhaseWriter(void)
   }
 }
 
-#endif
 
 /******************************************************************/
 /*                                                                */
@@ -1179,12 +1165,10 @@ static int AmIBitsy()
 static void CloseBBC(int signo)
 {
   bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
-#ifndef BOLOTEST
   closeMotors();
   closeTable(); //table.cpp
 
   endChrgCtrl();  // is this needed?
-#endif
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
   bprintf(err, "System: Closing BBC and Bi0");
@@ -1220,12 +1204,10 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm2;
 #endif
 
-#ifndef BOLOTEST
   pthread_t compression_id;
   pthread_t bi0_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
-#endif
 #ifdef USE_XY_THREAD
   pthread_t xy_id;
 #endif
@@ -1267,10 +1249,8 @@ int main(int argc, char *argv[])
 
   bputs(startup, "System: Startup");
 
-#ifndef BOLOTEST
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
-#endif
 
   //populate nios addresses, based off of tx_struct, derived
   MakeAddressLookups("/data/etc/spider/Nios.map");
@@ -1290,18 +1270,16 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif
 
-#ifndef BOLOTEST
   /* Initialize the Ephemeris */
   ReductionInit("/data/etc/spider/ephem.2000");
 
   bprintf(info, "System: Slow Downlink Initialisation");
   InitSlowDL();
 
-  InitFrameBuffer(&bi0_buffer);
-  InitFrameBuffer(&hiGain_buffer);
+  InitFrameBuffer(&bi0_buffer, 1);
+  InitFrameBuffer(&hiGain_buffer, 0);
 
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
-#endif
 
   InitialiseFrameFile(argv[1][0]);
   pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
@@ -1323,7 +1301,6 @@ int main(int argc, char *argv[])
   if (BitsyIAm) bputs(info, "System: I am Bitsy.\n");
   else bputs(info, "System: I am not Bitsy.\n");
 
-#ifndef BOLOTEST
   pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
 
   InitSched();
@@ -1332,13 +1309,12 @@ int main(int argc, char *argv[])
   openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
-  openSC();  // SC - creates threads in sc.cpp
+  //openSC();  // SC - creates threads in sc.cpp
 #endif
 
 
   startChrgCtrl(); // create charge controller serial thread
                    // defined in chrgctrl.c
-#endif
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
 
@@ -1352,7 +1328,6 @@ int main(int argc, char *argv[])
 #ifdef USE_XY_THREAD
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
-#ifndef BOLOTEST
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
 #ifndef TEST_RUN
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
@@ -1360,7 +1335,6 @@ int main(int argc, char *argv[])
   //TODO CompressionWriter segfaults on (currently) empty compressstruct
   //pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
-#endif
 
   while (1) {
     in_data = read_from_bbc();
@@ -1377,12 +1351,10 @@ int main(int argc, char *argv[])
       if (StartupVeto > 1) {
         --StartupVeto;
       } else {
-#ifndef BOLOTEST
         GetACS();
         GetCurrents();
         Pointing();
 
-#endif
 
         check_bbc_sync();   /* check sync box aliveness */
 
@@ -1408,7 +1380,6 @@ int main(int argc, char *argv[])
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
            data right */
         pushDiskFrame(RxFrame);
-#ifndef BOLOTEST
         if (biphase_is_on) {
           PushFrameBuffer(&bi0_buffer);
           PushFrameBuffer(&hiGain_buffer);
@@ -1417,7 +1388,6 @@ int main(int argc, char *argv[])
         }
 
         FillSlowDL();
-#endif
         zero();
       }
     }

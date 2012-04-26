@@ -207,11 +207,7 @@ static void WriteAux(void)
 
   i_point = GETREADINDEX(point_index);
 
-#ifdef BOLOTEST
-  t = mcp_systime(NULL);
-#else
   t = PointingData[i_point].t;
-#endif
 
   if (CommandData.pointing_mode.t > t) {
     WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
@@ -427,7 +423,6 @@ static void SyncADC (void)
   }
 }
 
-#ifndef BOLOTEST
 /************************************************************************/
 /*                                                                      */
 /*    Store derived acs and pointing data in frame                      */
@@ -964,7 +959,6 @@ static void StoreData(int index)
   WriteData(verbosePivAddr,CommandData.verbose_piv,NIOS_QUEUE);
 
 }
-#endif
 
 void InitTxFrame()
 {
@@ -1149,7 +1143,6 @@ void UpdateBBCFrame()
     frameNumAddr = GetBiPhaseAddr("framenum");
   }
 
-#ifndef BOLOTEST
   if (!mcp_initial_controls)
     DoSched();
   UpdateAxesMode();
@@ -1157,7 +1150,6 @@ void UpdateBBCFrame()
   ControlGyroHeat();
   WriteMot(index);
   updateTableSpeed();
-#endif
   WriteChatter(index);
   HouseKeeping(index);
 
@@ -1166,13 +1158,11 @@ void UpdateBBCFrame()
     if (!mcp_initial_controls)
       SyncADC();
     WriteAux();
-#ifndef BOLOTEST
     SetGyroMask();
     ChargeController();
     ControlPower();
     LockMotor();
     cameraFields();
-#endif
   }
 
   if (!mcp_initial_controls)
