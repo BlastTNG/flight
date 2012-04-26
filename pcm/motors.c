@@ -37,7 +37,7 @@
 #include "motordefs.h"
 
 // TODO: Revise these el limits for Spider flight:
-#define MIN_EL 35
+#define MIN_EL 34
 #define MAX_EL 50
 
 #define VPIV_FILTER_LEN 40
@@ -48,11 +48,11 @@
 
 #define V_AZ_MIN 0.05  //smallest measured az speed we trust given gyro
                         //   noise/offsets
-#define OVERSHOOT_BAND 0.05 // travel at v_az_min in this band on turn arounds
+#define OVERSHOOT_BAND 0.15 // travel at v_az_min in this band on turn arounds
 
 /* elevation drive related defines adapted from az-el.c in minicp: */
 #define MAX_STEP 9500    // maximum step rate to send to el motors
-#define CM_PULSES 3200   // Cool Muscle pulses per rotation
+#define CM_PULSES 5000   // Cool Muscle pulses per rotation
 #define IN_TO_MM 25.4
 #define ROT_PER_INCH 5    // linear actuator rotations per inch of travel
 #define EL_GEAR_RATIO 7.0 
@@ -328,12 +328,19 @@ static void GetVElev(double* v_P, double* v_S)
   //int stop_cnt_L = 0;
   //int stop_cnt_R = 0;
 
-  el_dest = axes_mode.el_dest;
-
-  //bprintf(info, "el_dest = %f", el_dest);
-
-  el_dest = (el_dest < MIN_EL) ? MIN_EL : el_dest;
-  el_dest = (el_dest > MAX_EL) ? MAX_EL : el_dest;
+  if (axes_mode.el_dest > MAX_EL) {
+    
+    el_dest = axes_mode.el_dest = MAX_EL;
+    
+  } else if (axes_mode.el_dest < MIN_EL) {
+    
+    el_dest = axes_mode.el_dest = MIN_EL;
+    
+  } else {
+    
+    el_dest = axes_mode.el_dest;
+    
+  }
 
   /* port = sum/2 + diff/2 */
   enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
@@ -795,13 +802,13 @@ void WriteMot(int TxIndex)
 
   /* check to see if we're in manual pulse mode */
 
-  if (CommandData.ele_gain.manual_pulses) {
-    step_rate_P = CommandData.ele_gain.pulse_port;
-    step_rate_S = CommandData.ele_gain.pulse_starboard;
-  } else {
+  //if (CommandData.ele_gain.manual_pulses) {
+ //   step_rate_P = CommandData.ele_gain.pulse_port;
+ //   step_rate_S = CommandData.ele_gain.pulse_starboard;
+  //} else {
     step_rate_P = (int) (el_rps_P*CM_PULSES);
     step_rate_S = (int) (el_rps_S*CM_PULSES);
-  }
+  //}
 
   if ( step_rate_P > MAX_STEP ) {
     step_rate_P = MAX_STEP;
@@ -825,8 +832,10 @@ void WriteMot(int TxIndex)
     WriteCalData(step2ElAddr, 0.0, NIOS_QUEUE);
     //bprintf(info, "pcm thinks that el should be disabled");
   } else {
-    WriteCalData(step1ElAddr, step_rate_P, NIOS_QUEUE);
-    WriteCalData(step2ElAddr, step_rate_S, NIOS_QUEUE);
+    //WriteCalData(step1ElAddr, step_rate_P, NIOS_QUEUE);
+    //WriteCalData(step2ElAddr, step_rate_S, NIOS_QUEUE);
+    WriteCalData(step1ElAddr, -step_rate_P, NIOS_QUEUE);
+    WriteCalData(step2ElAddr, -step_rate_S, NIOS_QUEUE);
   }
 
   elGainCom = CommandData.ele_gain.com;
@@ -2581,7 +2590,10 @@ void* reactComm(void* arg)
       switch(thread_count) {
       case 0:
 	current_raw=queryAMCInd(16,3,1,&reactinfo);
-        RWMotorData[rw_motor_index].current=((double)current_raw)/8192.0*60.0;
+        //RWMotorData[rw_motor_index].current=((double)current_raw)/8192.0*60.0;
+	// TODO: changed peak drive current to 20 A since we are 
+	//       using smaller controller for RW temporarily
+	RWMotorData[rw_motor_index].current=((double)current_raw)/8192.0*20.0;
         // divide by scaling factor which is (2^13 / peak drive current) 
         // to get units in amps
 	// bprintf(info,"current_raw= %i, current= %f",current_raw,
