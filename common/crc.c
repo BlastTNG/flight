@@ -12,6 +12,7 @@
  *
  */
 
+// CRC-16 table
 static unsigned short crctab[0x100] = {
   0x00000, 0x0C0C1, 0x0C181, 0x00140, 0x0C301, 0x003C0, 0x00280, 0x0C241,
   0x0C601, 0x006C0, 0x00780, 0x0C741, 0x00500, 0x0C5C1, 0x0C481, 0x00440,
@@ -50,24 +51,26 @@ static unsigned short crctab[0x100] = {
 /*-----------------------------------------------------------------------------
  * CalculateCRC
  *
- * This function computes the CRC used by SEA's ARC utility.
+ * This function computes the CRC-16 used by SEA's ARC utility.
  *----------------------------------------------------------------------------*/
-
+// note: initword is ignored.  Its also not necessary.
 unsigned short CalculateCRC(unsigned int initword, void *buffer,
                             unsigned int buflen) {
   unsigned int k;
   unsigned short crc;
   unsigned char *b;
 
-  if (buflen)
-    crc = 0;
-  else
+  if (buflen==0) {
     return 0;
-
+  }
+  
+  crc = 0;
+  
   b = (unsigned char *)buffer;
 
-  for (k = 0; k < buflen; k++)
-   crc = ((crc >> 8) & 0x00ff) ^ crctab[(crc ^ b[k]) & 0x00ff];
+  for (k = 0; k < buflen; k++) {
+    crc = ((crc >> 8) & 0x00ff) ^ crctab[(crc ^ b[k]) & 0x00ff];
+  }
 
   return crc;
 }
