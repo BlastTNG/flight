@@ -552,12 +552,14 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
       bus->stepper[i].baud = allowed_bauds[b];
       Phytron_NASend(bus, i, "IVR");
       if ((result = Phytron_Recv(bus)) & (PH_ERR_TIMEOUT | PH_ERR_OOD)) {
-        if (bus->chatter >= PH_CHAT_ACT && b == N_ALLOWED_BAUDS-1)
-          bprintf(warning, "%sNo response from %s, will repoll later.", 
-              bus->name, bus->stepper[i].name);
+        if (b == N_ALLOWED_BAUDS-1) {
+          if (bus->chatter >= PH_CHAT_ACT)
+            bprintf(warning, "%sNo response from %s, will repoll later.", 
+                bus->name, bus->stepper[i].name);
+          retval |= PH_ERR_POLL;
+        }
         bus->stepper[i].status &= ~PH_STEP_OK;
         retval |= result;	  //include in retval results from Recv
-        retval |= PH_ERR_POLL;
       } else if (!strncmp(bus->buffer, "MCC Minilog V", 13)) {
         if (bus->chatter >= PH_CHAT_ACT)
           bprintf(info, "%sFound Phytron MCC V%.2f device \"%s\","
@@ -568,12 +570,14 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
         retval &= ~(PH_ERR_TIMEOUT | PH_ERR_OOD); //clear previous error bits
         break;
       } else {
-        if (bus->chatter >= PH_CHAT_ERR && b == N_ALLOWED_BAUDS-1)
-          bprintf(warning, "%sUnrecognised response from %s, "
-              "will repoll later.\n", bus->name, bus->stepper[i].name);
+        if (b == N_ALLOWED_BAUDS-1) {
+          if (bus->chatter >= PH_CHAT_ERR)
+            bprintf(warning, "%sUnrecognised response from %s, "
+                "will repoll later.\n", bus->name, bus->stepper[i].name);
+          retval |= PH_ERR_POLL;
+        }
         bus->stepper[i].status &= ~PH_STEP_OK;
         retval |= result;	  //include in retval results from Recv
-        retval |= PH_ERR_POLL;
       }
     }
 
@@ -581,7 +585,7 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
         !(bus->stepper[i].status & PH_STEP_INIT) ) {
       if (phinit(bus,i)) bus->stepper[i].status |= PH_STEP_INIT;
       else bus->stepper[i].status &= ~PH_STEP_INIT;
-      sleep(1); //TODO belongs in library? may prevent many-init
+      usleep(1000); //may prevent many-init...what does this mean?
     }
 
   }
@@ -645,6 +649,12 @@ int Phytron_SetVel(struct phytron* bus, int who, double vel)
     return PH_ERR_PARAM;
   }
   bus->stepper[who].vel = vel;
+  return PH_ERR_OK;
+}
+
+int Phytron_SetGear(struct phytron* bus, int who, int teeth)
+{
+  bus->stepper[who].gear_teeth = teeth;
   return PH_ERR_OK;
 }
 
