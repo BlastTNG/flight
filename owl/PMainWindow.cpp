@@ -44,7 +44,7 @@
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFileSystemModel>
-#include <python2.6/Python.h>   //you may need to change this
+#include <python2.7/Python.h>   //you may need to change this
 #include <qjson/parser.h>
 #include <qjson/serializer.h>
 
@@ -715,7 +715,7 @@ void PMainWindow::currowLogic()
 void PMainWindow::gdUpdate()
 {
     if(!_dirfile) {
-	return;
+      return;
     }
     setUpdatesEnabled(0);
     int nFrames = _dirfile->NFrames();
@@ -956,7 +956,7 @@ void PMainWindow::activate()
 {
     ui->labelCurFile->show();
     ui->lineEditCurFile->show();
-    reconnect(ui->lineEditCurFile,SIGNAL(textEdited(QString)),this,SLOT(curfileLogic(QString)));
+    reconnect(ui->lineEditCurFile,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic(QString)));
 }
 
 QVariant save(PMainWindow&b);
