@@ -161,8 +161,8 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
     /* Value to write to digital port to turn on relay */
     //__tempDataValue = 64;
     
-    printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater on: %i, %lf < %lf\n",
-	   __tempControl,EngUnits[__tempControl]*__tempgain, __tempSetLimit);
+    //printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater on: %i, %lf < %lf\n",
+	//   __tempControl,EngUnits[__tempControl]*__tempgain, __tempSetLimit);
 
     // set the heater flag
     //*heaterOn = 1;
@@ -173,9 +173,9 @@ void tempDoStuff( double *temp1, double *temp2, double *temp3, double *temp4, do
     /* Turn off relay...if neither condition is met, do nothing */
    // __tempDataValue = 0;
     
-    printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater off: %i, %lf > %lf\n",
-	   __tempControl,EngUnits[__tempControl]*__tempgain, 
-	   __tempSetLimit+__tempOffset);
+    //printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater off: %i, %lf > %lf\n",
+	//   __tempControl,EngUnits[__tempControl]*__tempgain, 
+	//   __tempSetLimit+__tempOffset);
     //*heaterOn = 0;
     __tempHeaterStat = 0;
   }
@@ -228,7 +228,7 @@ void tempShutdown( void ) {
   
   __tempHeaterStat = 0;
     
-  printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater off\n");
+  //printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&& heater off\n");
     
   if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
     {

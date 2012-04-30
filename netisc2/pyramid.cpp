@@ -963,9 +963,9 @@ int Pyramid::Match(double* x, double* y, double ftol, unsigned long n)
         d3 = cdist(x[k], x[r], y[k], y[r]);
         
         if(StarPyramid(r, d1, d2, d3, ftol, S) == 0) {
-//#if PYRAMID_DEBUG
+#if PYRAMID_DEBUG
           cerr << "[Pyramid debug]: Matched a pyramid!!\n";
-//#endif
+#endif
           pyramid = 1;
           S->flag = 1;
         }

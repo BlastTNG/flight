@@ -32,7 +32,7 @@
 
 // --- Macros ----------------------------------------------------------------
 
-#define LOUD 0         // show millions of time stamps on the server
+#define LOUD 1         // show millions of time stamps on the server
 
 //#define AUTONOMOUS     // Set if not using client
 
@@ -246,6 +246,7 @@ double mult_dist;
 
 unsigned long ccd_exposure; // CCD exposure time (us)
 unsigned long default_gain; // default CCD gain
+//unsigned long some_param; // default some parameter, NNG
 unsigned long gain_res;     // resolution in the CCD gain control
 signed long default_offset; // default offset for the CCD
 double rel_gain;            // relative gain to the default (>0)

@@ -202,8 +202,8 @@ int read_settings() {
                  (unsigned long)( ((double)default_gain)*rel_gain ) ); 
   QCam_SetParamS32( &settings, qprmS32AbsoluteOffset, 
                     (signed long)(default_offset+rel_offset) );
-  //QCam_SetParam( &settings, qprmGain,(unsigned long)gain );
-  //QCam_SetParam( &settings, qprmOffset, (unsigned long)offset );
+  //QCam_SetParam( &settings, qprmGain,8000);//NNG(unsigned long)gain );
+  //QCam_SetParam( &settings, qprmOffset,292);//NNG (unsigned long)offset );
   QCam_SetParam( &settings, qprmCoolerActive, coolerActive );
   QCam_SetParam( &settings, qprmHighSensitivityMode, highSensMode );
   QCam_SetParam( &settings, qprmBlackoutMode, blackoutMode );
@@ -507,8 +507,8 @@ int init_camera( void ) {
     printf("Camera opened...\n");
     
     settings.size = sizeof(settings); 
-    QCam_ReadDefaultSettings( camhandle, &settings );        
-    QCam_SetParam( &settings, qprmImageFormat, qfmtMono16); 
+    QCam_ReadDefaultSettings( camhandle, &settings );
+	QCam_SetParam( &settings, qprmImageFormat, qfmtMono16); 
     QCam_SendSettingsToCam( camhandle, &settings );
 
     // Query the camera for the CCD dimenions to figure out if we're ISC or OSC
@@ -557,7 +557,7 @@ void framewrite( int mode ) {
   }
 
   // Save entire image
-/*  else if( mode == 1 ) {
+  else if( mode == 1 ) {
     //sprintf(tiffFilename,"%s%06i.tif",imagePrefix,frameNum);
     sprintf(tiffFilename,"%s%ld.tif",imagePrefix,frame_fname);
                 
@@ -567,12 +567,12 @@ void framewrite( int mode ) {
     printf("Saved frame to %s...\n",tiffFilename);
     
     time( &last_save );
-  }NNG*/
+  }
   
   // Save thumbnails
   else {
     if( server_data.n_blobs > 0 ) {
-
+/*
       for( i=0; i<server_data.n_blobs; i++ ) {
         xblob[i] = (int) server_data.blob_x[i];
         yblob[i] = CCD_Y_PIXELS - ((int) server_data.blob_y[i]) - 1;
@@ -583,7 +583,7 @@ void framewrite( int mode ) {
       thumbnail( (unsigned short *) Frameblob.get_map(), 
                  (int) CCD_X_PIXELS, (int) CCD_Y_PIXELS, 32,
                  server_data.n_blobs, xblob, yblob, tiffFilename );
-      
+*/      
       //sprintf(tiffFilename,"Saved thumbnails: %i",frameNum);
     }
     //else sprintf(tiffFilename,"IMAGE NOT SAVED: %i",frameNum);
@@ -770,7 +770,7 @@ DWORD WINAPI expose_frame( LPVOID parameter ) {
     time( &frame_time ); // record the time
     
     // write the frame _AFTER_ analysis
-    //framewrite(saveFrameMode);
+    framewrite(saveFrameMode);
     
     server_data.framenum = frameNum;
   }
@@ -1001,7 +1001,7 @@ void pointingSolution( void ) {
     }
     
     // If enough blobs were matched to be considered successful...
-	//NNG printf("nmatch=%i\n",nmatch);
+	//printf("MAIN*** CALC_POINTING matched %i/%i blobs\n",nmatch,nMatchBlobs);
     if( (nmatch >= minBlobMatch) && (nmatch > 0) ) {
       
       // If the chi^2 looked bad then flag solution as bad
@@ -1106,7 +1106,7 @@ void pointingSolution( void ) {
   }
 
   // write the frame to a file
-  framewrite(saveFrameMode);
+  //framewrite(saveFrameMode);
 }
 
 // Prepare the display by scaling the image buffer into the display buffer
@@ -1892,9 +1892,9 @@ DWORD WINAPI command_exec( LPVOID parameter ) {
   if( focusPosition == -1 ) focus_home(); 
       
   if( aperturePosition != execCmd.ap_pos ) 
-    printf("Aperture cannot be changed on this camera!\n");
+    //printf("Aperture cannot be changed on this camera!\n");
     //**LORENZO** faulty aperture in this camera - avoid any command to be sent to the aperture motor
-    //absoluteMotor(AP_MOTOR,execCmd.ap_pos);
+    absoluteMotor(AP_MOTOR,execCmd.ap_pos);
         
   if( hold_current != execCmd.hold_current ) {
     char hold_cmd[80];
@@ -2905,7 +2905,7 @@ printf("DAQ is a-go \n");
 	printf("SerialNo: %s,\t", SerialNo);
 	if (strcmp(SerialNo, "Q21989") == 0) I_AM_ISC = 1;
 	else I_AM_ISC = 0;
-	// I_AM_ISC = 1;
+	//I_AM_ISC = 1;
   }
 
   printf("I_AM_ISC = %i\n",I_AM_ISC);
