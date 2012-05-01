@@ -46,6 +46,8 @@ struct chat_buf {
   int writing; /* the buffer we're currently writing to */
 };
 
+void nameThread(const char*);
+
 // Max Slew Veto
 #define VETO_MAX 60000
 
