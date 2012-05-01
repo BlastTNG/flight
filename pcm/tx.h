@@ -30,6 +30,7 @@
 #include "calibrate.h"
 
 extern int mcp_initial_controls;
+extern short int InCharge;
 
 void InitTxFrame();
 void UpdateBBCFrame();
