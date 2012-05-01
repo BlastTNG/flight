@@ -174,7 +174,7 @@ static void HeatControl()
   }
 }
 
-void HouseKeeping(int index)
+void HouseKeeping()
 {
   static struct NiosStruct* insertLastHkAddr;
   static struct NiosStruct* tileLastHkAddr;
@@ -189,11 +189,9 @@ void HouseKeeping(int index)
     vHeatLastHkAddr = GetNiosAddr("v_heat_last_hk");
   }
 
-  if (index == 0) {
-    BiasControl();
-    PhaseControl();
-    HeatControl();
-  }
+  BiasControl();
+  PhaseControl();
+  HeatControl();
 
   WriteData(insertLastHkAddr, CommandData.hk_last, NIOS_QUEUE);
   WriteData(tileLastHkAddr, CommandData.hk_tile_last, NIOS_QUEUE);
