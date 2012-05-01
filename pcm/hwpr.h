@@ -1,25 +1,17 @@
 #ifndef HWPR_H
 #define HWPR_H
 
-#include "ezstep.h"
+/* HWP/phytron bus setup paramters */
+#define NHWP 6
+#define HWP_BUS "/dev/ttyUSB0"
+#define HWP_CHATTER	PH_CHAT_ACT
 
-//#define HWPR_STEPS_PER_MOTENC (64)
-#define HWPR_REV_PER_MOTREV (24./100.)
+/* stepper parameters. definition in hwpr.c */
+extern const char *hwp_name[NHWP];
+extern const char *hwp_id[NHWP];
+extern const int hwp_nteeth[NHWP];
 
-#define HWPR_NAME "HWPR Motor"
-#define HWPR_ADDR EZ_WHO_S13
-#define HWPR_PREAMBLE "aE64000"
-
-#define HWPR_CHECK_NONE 0 
-#define HWPR_CHECK_BEFORE 1
-#define HWPR_CHECK_AFTER 2
-#define HWPR_CHECK_BOTH 3
-
-#define HWPR_POT_MIN 0.1
-#define HWPR_POT_MAX 0.9
-
-#define HWPR_DEFAULT_STEP 7292 // used if pot is dead
-
-void DoHWPR(struct ezbus* bus);
+void StartHWP();         //create a thread for HWP control/communication
+void StoreHWPBus();      //store HWP parameters to frame
 
 #endif

@@ -51,6 +51,7 @@
 #include "starpos.h"
 #include "channels.h"
 #include "tx.h"
+#include "hwpr.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -487,7 +488,6 @@ static void GetACS()
   double vel_rw;
 //short vel_rw;
   double res_piv;
-  int hwpr_pot;
 
   
   static struct BiPhaseStruct* ifElgyAddr;
@@ -524,7 +524,6 @@ static void GetACS()
   static struct BiPhaseStruct* v26PssAddr;
   static struct BiPhaseStruct* v36PssAddr;
   static struct BiPhaseStruct* v46PssAddr;
-  static struct BiPhaseStruct* potHwprAddr;
   static struct BiPhaseStruct* encTableAddr;
   static struct BiPhaseStruct* elRaw1EncAddr; // Spider PORT el encoder
   static struct BiPhaseStruct* elRaw2EncAddr; // Souder STARBOARD el encoder
@@ -569,7 +568,6 @@ static void GetACS()
     v26PssAddr = GetBiPhaseAddr("v2_6_pss");
     v36PssAddr = GetBiPhaseAddr("v3_6_pss");
     v46PssAddr = GetBiPhaseAddr("v4_6_pss");
-    potHwprAddr = GetBiPhaseAddr("pot_hwpr");
     encTableAddr = GetBiPhaseAddr("enc_table");
     elRaw1EncAddr = GetBiPhaseAddr("el_raw_1_enc");
     elRaw2EncAddr = GetBiPhaseAddr("el_raw_2_enc");
@@ -645,7 +643,6 @@ static void GetACS()
   pss6_i2 = (double)(slow_data[v26PssAddr->index][v26PssAddr->channel]);
   pss6_i3 = (double)(slow_data[v36PssAddr->index][v36PssAddr->channel]);
   pss6_i4 = (double)(slow_data[v46PssAddr->index][v46PssAddr->channel]);
-  hwpr_pot = (double)(slow_data[potHwprAddr->index][potHwprAddr->channel]);
 
   uTab = (RxFrame[encTableAddr->channel+1] << 16 | 
       RxFrame[encTableAddr->channel]);
@@ -692,7 +689,6 @@ static void GetACS()
   ACSData.pss6_i2 = pss6_i2;
   ACSData.pss6_i3 = pss6_i3;
   ACSData.pss6_i4 = pss6_i4;
-  ACSData.hwpr_pot = hwpr_pot; // keep this as an integer, 
                                // so it can be read in one atomic cycle...
   ACSData.enc_table = enc_table;
 }
@@ -1212,6 +1208,7 @@ int main(int argc, char *argv[])
   pthread_t xy_id;
 #endif
   pthread_t chatter_id;
+  pthread_t hwpr_id;
   struct stat fstats;
 
   if (argc == 1) {
@@ -1329,12 +1326,11 @@ int main(int argc, char *argv[])
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-#ifndef TEST_RUN
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
-#endif
   //TODO CompressionWriter segfaults on (currently) empty compressstruct
   //pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
+  pthread_create(&hwpr_id, NULL, (void*)&StartHWP, NULL);
 
   while (1) {
     in_data = read_from_bbc();

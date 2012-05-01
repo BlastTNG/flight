@@ -467,12 +467,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case actbus_on:
       CommandData.actbus.off = 0;
       CommandData.actbus.force_repoll = 1;
-      CommandData.hwpr.force_repoll = 1;
       break;
     case actbus_cycle:
       CommandData.actbus.off = PCYCLE_HOLD_LEN;
       CommandData.actbus.force_repoll = 1;
-      CommandData.hwpr.force_repoll = 1;
       break;
 
     /* Lock */
@@ -519,14 +517,19 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.tc_mode = TC_MODE_VETOED;
       break;
 
-    case hwpr_panic:
-      CommandData.hwpr.mode = HWPR_PANIC;
-      CommandData.hwpr.is_new = 1;
+    case hwp_panic:
+      CommandData.hwp.mode = hwp_m_panic;
+      break;
+    case hwp_repoll:
+      //TODO integrate repoll into hwp on/cycle commands, when implemented
+      CommandData.hwp.force_repoll = 1;
+      break;
+    case hwp_step:
+      CommandData.hwp.mode = hwp_m_step;
       break;
 
     case repoll:
       CommandData.actbus.force_repoll = 1;
-      CommandData.hwpr.force_repoll = 1;
       CommandData.xystage.force_repoll = 1;
       break;
 
@@ -621,23 +624,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case vtx2_bsc:
       CommandData.vtx_sel[1] = vtx_bsc;
-      break;
-
-    case hwpr_step:
-      CommandData.hwpr.mode = HWPR_STEP;
-      CommandData.hwpr.is_new = 1;
-      break;
-    case hwpr_step_off:
-      CommandData.hwpr.no_step = 1;
-      break;
-    case hwpr_step_on:
-      CommandData.hwpr.no_step = 0;
-      break;
-    case hwpr_pot_is_dead:
-      CommandData.hwpr.use_pot = 0;
-      break;
-    case hwpr_pot_is_alive:
-      CommandData.hwpr.use_pot = 1;
       break;
 
     case reap_itsy:  /* Miscellaneous commands */
@@ -997,51 +983,27 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
 
-    case hwpr_vel:
-      CommandData.hwpr.vel = ivalues[0];
-      CommandData.hwpr.acc = ivalues[1];
+    case hwp_vel:
+      CommandData.hwp.vel = rvalues[0];
       break;
-    case hwpr_i:
-      CommandData.hwpr.move_i = ivalues[0];
-      CommandData.hwpr.hold_i = ivalues[1];
+    case hwp_i:
+      CommandData.hwp.move_i = rvalues[0];
       break;
-    case hwpr_goto:
-      CommandData.hwpr.target = ivalues[0];
-      CommandData.hwpr.mode = HWPR_GOTO;
-      CommandData.hwpr.is_new = 1;
+    case hwp_move:
+      CommandData.hwp.who = ivalues[0] - 1;
+      CommandData.hwp.delta = rvalues[1];
+      CommandData.hwp.mode = hwp_m_rel_move;
       break;
-    case hwpr_jump:
-      CommandData.hwpr.target = ivalues[0];
-      CommandData.hwpr.mode = HWPR_JUMP;
-      CommandData.hwpr.is_new = 1;
+    case hwp_halt:
+      CommandData.hwp.who = ivalues[0] - 1;
+      CommandData.hwp.mode = hwp_m_halt;
       break;
-    case hwpr_repeat:
-      CommandData.hwpr.n_pos = ivalues[0];
-      CommandData.hwpr.repeats = ivalues[1];
-      CommandData.hwpr.step_wait = ivalues[2]*5;
-      CommandData.hwpr.step_size = ivalues[3];
-      CommandData.hwpr.mode = HWPR_REPEAT;
-      CommandData.hwpr.is_new = 1;
+    case hwp_general:
+      CommandData.hwp.caddr[CommandData.hwp.cindex] = ivalues[0] - 1;
+      copysvalue(CommandData.hwp.command[CommandData.hwp.cindex], svalues[1]);
+      CommandData.hwp.cindex = INC_INDEX(CommandData.hwp.cindex);
       break;
-    case hwpr_define_pos:
-      CommandData.hwpr.pos[0] = rvalues[0];
-      CommandData.hwpr.pos[1] = rvalues[1];
-      CommandData.hwpr.pos[2] = rvalues[2];
-      CommandData.hwpr.pos[3] = rvalues[3];
-      break;
-    case hwpr_goto_pot:
-      CommandData.hwpr.pot_targ = rvalues[0];
-      CommandData.hwpr.mode = HWPR_GOTO_POT;
-      CommandData.hwpr.is_new = 1;
-      break;
-    case hwpr_set_overshoot:
-      CommandData.hwpr.overshoot = ivalues[0];
-      break;
-    case hwpr_goto_i:
-      CommandData.hwpr.i_pos = ivalues[0];
-      CommandData.hwpr.mode = HWPR_GOTO_I;
-      CommandData.hwpr.is_new = 1;
-      break;
+
       /* XY Stage */
     case xy_goto:
       CommandData.xystage.x1 = ivalues[0];
@@ -1448,6 +1410,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 }
 
 
+void CheckCommandList(void)
+{
+  if ((int)xyzzy != N_SCOMMANDS - 1)
+    bprintf(fatal, "command_list: N_SCOMMANDS should be %d\n", (int)xyzzy + 1);
+  if ((int)plugh != N_MCOMMANDS - 1)
+    bprintf(fatal, "command_list: N_MCOMMANDS should be %d\n", (int)plugh + 1);
+}
+
 /************************************************************/
 /*                                                          */
 /*  Initialize CommandData: read last valid state: if there */
@@ -1457,6 +1427,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 void InitCommandData()
 {
   int fp, n_read = 0, junk, extra = 0, i, j;
+
+  //run a basic check of the command lists before initializing
+  CheckCommandList();
 
   if ((fp = open("/data/etc/spider/pcm.prev_status", O_RDONLY)) < 0) {
     berror(err, "Commands: Unable to open prev_status file for reading");
@@ -1477,16 +1450,16 @@ void InitCommandData()
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   CommandData.lock_goal = lock_do_nothing;
   CommandData.actbus.force_repoll = 0;
-  CommandData.actbus.cindex = 0;
-  CommandData.actbus.caddr[0] = 0;
-  CommandData.actbus.caddr[1] = 0;
-  CommandData.actbus.caddr[2] = 0;
 
   CommandData.xystage.is_new = 0;
   CommandData.xystage.force_repoll = 0;
-  CommandData.hwpr.is_new = 0;
-  CommandData.hwpr.force_repoll = 0;
-  CommandData.hwpr.repeats = 0;
+
+  CommandData.hwp.force_repoll = 0;
+  CommandData.hwp.cindex = 0;
+  CommandData.hwp.caddr[0] = -1;
+  CommandData.hwp.caddr[1] = -1;
+  CommandData.hwp.caddr[2] = -1;
+  CommandData.hwp.mode = hwp_m_sleep;
 
   CommandData.table.vel = 0.0;
   CommandData.table.pos = 90.0;
@@ -1720,23 +1693,8 @@ void InitCommandData()
   CommandData.actbus.act_hold_i = 40;
   CommandData.actbus.act_tol = 2;
 
-  CommandData.hwpr.vel = 1600;
-  CommandData.hwpr.acc = 4;
-  CommandData.hwpr.move_i = 20;
-  CommandData.hwpr.hold_i = 10;
-
-  /* hwpr positions separated by 22.5 degs.
-     Calculated by Tristan on July 19th 2010*/
-  CommandData.hwpr.pos[3] = 0.263096; 
-  CommandData.hwpr.pos[2] = 0.326452;
-  CommandData.hwpr.pos[1] = 0.38909;
-  CommandData.hwpr.pos[0] = 0.450767;
-
-  CommandData.hwpr.overshoot = 300;
-  CommandData.hwpr.i_pos = 0;
-  CommandData.hwpr.no_step = 0;
-  CommandData.hwpr.use_pot = 1;
-  CommandData.hwpr.pot_targ = 0.5;
+  CommandData.hwp.vel = 1.0;
+  CommandData.hwp.move_i = 0.8;
 
   CommandData.pin_is_in = 1;
 
