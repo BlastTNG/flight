@@ -72,11 +72,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ifel_2_gy_on), "turn on ifel_2_gy", GR_POWER},
   {COMMAND(ifel_2_gy_cycle), "power cycle ifel_2_gy", GR_POWER},
   {COMMAND(actbus_off), "turn off the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_ACT | GR_HWPR | CONFIRM},
+    | GR_ACT | CONFIRM},
   {COMMAND(actbus_on), "turn on the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_ACT | GR_HWPR},
+    | GR_ACT},
   {COMMAND(actbus_cycle), "power cycle the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_ACT | GR_HWPR | CONFIRM},
+    | GR_ACT | CONFIRM},
   {COMMAND(rw_off), "turn off the reaction wheel motor", GR_POWER},
   {COMMAND(rw_on), "turn on the reaction wheel motor", GR_POWER},
   {COMMAND(rw_cycle), "power cycle the reaction wheel motor", GR_POWER},
@@ -198,15 +198,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_on), "turn on the lock motor", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
-  {COMMAND(repoll), "force repoll of the stepper busses (act, lock, HWPR, XY)",
-    GR_STAGE | GR_ACT | GR_HWPR},
+  {COMMAND(repoll), "force repoll of the stepper busses (act, lock, XY)",
+    GR_STAGE | GR_ACT},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
-  {COMMAND(hwpr_panic), "stop the HWPR rotator immediately", GR_HWPR},
-  {COMMAND(hwpr_step), "step the hwpr", GR_HWPR},
-  {COMMAND(hwpr_step_off), "Disable half wave plate stepping", GR_HWPR},
-  {COMMAND(hwpr_step_on), "Enable half wave plate stepping", GR_HWPR},
-  {COMMAND(hwpr_pot_is_dead), "don't use the potentiometer when stepping the hwpr", GR_HWPR},
-  {COMMAND(hwpr_pot_is_alive), "use the potentiometer when stepping the hwpr", GR_HWPR},
+  {COMMAND(hwp_repoll), "repoll HWP bus for stepper controllers", GR_HWPR},
+  {COMMAND(hwp_panic), "stop all HWP rotators immediately", GR_HWPR},
+  {COMMAND(hwp_step), "step the HWPs to their next position", GR_HWPR},
 
 
   //The Good commands
@@ -419,7 +416,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /* actuator bus commands */
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_STAGE | GR_ACT | GR_HWPR, 2,
+    GR_STAGE | GR_ACT, 2,
     {
       {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', ""},
@@ -480,70 +477,31 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Upper limit", -5000, 60000, 'f', "LVDT_HIGH_ACT"}
     }
   },
-  {COMMAND(hwpr_vel), "set the wavepalte rotator velocity and acceleration", 
-    GR_HWPR, 2,
+  {COMMAND(hwp_general), "send a general phytron command string", GR_HWPR, 2,
     {
-      {"Velocity", 5, 500000, 'l', "VEL_HWPR"},
-      {"Acceleration", 1, 1000, 'i', "ACC_HWPR"},
+      {"Stepper (1-6)", 1, 6, 'i', ""},
+      {"Command", 0, 32, 's', ""},
     }
   },
-  {COMMAND(hwpr_i), "set the wavepalte rotator currents", GR_HWPR, 2,
+  {COMMAND(hwp_vel), "set the HWP rotator velocity", GR_HWPR, 1,
     {
-      {"Move current (%)", 0, 100, 'i', "I_MOVE_HWPR"},
-      {"Hold current (%)", 0,  50, 'i', "I_HOLD_HWPR"},
+      {"Velocity (dps)", 0, 10, 'f', "VEL_HWP"},
     }
   },
-  {COMMAND(hwpr_goto), "move the waveplate rotator to absolute position",
-    GR_HWPR, 1,
+  {COMMAND(hwp_i), "set the HWP rotator current", GR_HWPR, 1,
     {
-      {"destination", 0, 80000, 'l', "ENC_HWPR"}
+      {"Move current (A)", 0, 10, 'f', "I_MOVE_HWP"},
     }
   },
-  {COMMAND(hwpr_jump), "move the waveplate rotator to relative position",
-    GR_HWPR, 1,
+  {COMMAND(hwp_halt), "halt HWP rotator motion", GR_HWPR, 1,
     {
-      {"delta", -80000, 80000, 'l', "0"}
+      {"Stepper (1-6,0=all)", 0, 6, 'i', "0"},
     }
   },
-  {COMMAND(hwpr_repeat), 
-    "DEPRECATED - repeatedly cycle the hwpr through a number of positions",
-    GR_HWPR, 4,
+  {COMMAND(hwp_move), "move the HWP rotator to relative position", GR_HWPR, 2,
     {
-      {"Number of step positions", 0, USHRT_MAX, 'i', ""},
-      {"Number of times to step", 0, USHRT_MAX, 'i', ""},
-      {"Time between steps (s)", 0, USHRT_MAX, 'i', ""},
-      {"Step size (encoder ticks)", -USHRT_MAX/2, USHRT_MAX/2, 'i', ""},
-    }
-  },
-  {COMMAND(hwpr_define_pos), 
-    "define the four hwpr potentiometer positions to be used for scans",
-    GR_HWPR, 4,
-    {
-      {"Position 1", 0.1, 0.9, 'f', "POS0_HWPR"},
-      {"Position 2", 0.1, 0.9, 'f', "POS1_HWPR"},
-      {"Position 3", 0.1, 0.9, 'f', "POS2_HWPR"},
-      {"Position 4", 0.1, 0.9, 'f', "POS3_HWPR"}
-    }
-  },
-  {COMMAND(hwpr_goto_pot), 
-    "Move wave plate rotator to commanded potentiometer value",
-    GR_HWPR, 1,
-    {
-      {"Pot Value ", 0.1, 0.9, 'f', "POT_HWPR"},
-    }
-  },
-  {COMMAND(hwpr_set_overshoot), 
-    "set the overshoot in encoder counts for backwards hwpr moves",
-    GR_HWPR, 1,
-    {
-      {"overshoot", 0, USHRT_MAX, 'i', "OVERSHOOT_HWPR"},
-    }
-  },
-  {COMMAND(hwpr_goto_i), 
-    "goto hwpr position (0-3)",
-    GR_HWPR, 1,
-    {
-      {"hwpr position", 0, 3, 'i', "I_POS_RQ_HWPR"},
+      {"Stepper (1-6,0=all)", 0, 6, 'i', "0"},
+      {"delta (degrees)", -360, 360, 'f', "0"}
     }
   },
 
@@ -959,11 +917,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
 
 
-  {COMMAND(plughgh), "The hollowest voice says \"Plughgh\".", GR_MISC, 1,
-    {
-      {"Plovest", 0, USHRT_MAX, 'i', "PLOVEST"}
-    }
-  },
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
       {"Plover", 0, USHRT_MAX, 'i', "PLOVER"}
