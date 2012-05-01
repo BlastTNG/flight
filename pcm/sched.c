@@ -490,10 +490,10 @@ void DoSched(void)
     /* point antisolar */
     event.command = antisun;
     ScheduledCommand(&event);
+#if 0	  //BLAST-Pol leftovers
     /* enable hwpr autostepping */
     event.command = hwpr_step_on;
     ScheduledCommand(&event);
-#if 0	  //BLAST-Pol leftovers
     /* pot_valve_open */
     event.command = pot_valve_open;
     ScheduledCommand(&event);
