@@ -293,6 +293,8 @@ void ControlPower(void) {
     misc |= 0x04;
   }
 
+  //TODO make the HWP bus switchable. used to be handled in actuators.c
+
   if (CommandData.power.hub232_off) {
     if (CommandData.power.hub232_off > 0) CommandData.power.hub232_off--;
     misc |= 0x08;
