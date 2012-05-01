@@ -48,6 +48,7 @@
 #include "mcp.h"
 #include "chrgctrl.h"
 #include "sip.h"
+#include "hwpr.h"
 
 #define NIOS_BUFFER_SIZE 100
 
@@ -74,10 +75,7 @@ void StoreActBus(void);
 void SecondaryMirror(void);
 
 /* in hk.c */
-void HouseKeeping(int);
-
-/* in hwpr.c */
-void StoreHWPRBus(void);
+void HouseKeeping();
 
 /* in auxiliary.c */
 void ChargeController(void);
@@ -1151,18 +1149,19 @@ void UpdateBBCFrame()
   WriteMot(index);
   updateTableSpeed();
   WriteChatter(index);
-  HouseKeeping(index);
 
   /*** do slow Controls ***/
   if (index == 0) {
     if (!mcp_initial_controls)
       SyncADC();
+    HouseKeeping();
     WriteAux();
     SetGyroMask();
     ChargeController();
     ControlPower();
     LockMotor();
     cameraFields();
+    StoreHWPBus();
   }
 
   if (!mcp_initial_controls)
