@@ -490,7 +490,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(hwp_i), "set the HWP rotator current", GR_HWPR, 1,
     {
-      {"Move current (A)", 0, 10, 'f', "I_MOVE_HWP"},
+      {"Move current (A)", 0, 1.2, 'f', "I_MOVE_HWP"},
     }
   },
   {COMMAND(hwp_halt), "halt HWP rotator motion", GR_HWPR, 1,

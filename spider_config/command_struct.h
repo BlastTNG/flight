@@ -348,16 +348,22 @@ struct CommandDataStruct {
     lock_retract} lock_goal;
 
   struct {
-    int vel, acc, hold_i, move_i;
+    /* move parameters */
+    double vel;    //velocity in dps, shared by all motors
+    double move_i; //hold current in A, shared by all motors
+
+    /* command parameters */
+    int who;
+    double delta; //degrees
+    enum {hwp_m_sleep, hwp_m_panic, hwp_m_halt, hwp_m_rel_move,
+      hwp_m_step} mode;
     int force_repoll;
-    int mode, is_new, target;
-    int n_pos, repeats, step_wait, step_size, overshoot;
-    double pos[4];
-    int i_pos;
-    int no_step;
-    int use_pot;
-    double pot_targ;
-  } hwpr;
+
+    /* arbitrary command */
+    int cindex;
+    int caddr[3];
+    char command[3][CMD_STRING_LEN];
+  } hwp;
 
   struct {
     int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;
@@ -371,7 +377,6 @@ struct CommandDataStruct {
   unsigned short df;
 
   unsigned short plover;
-  unsigned short plovest;
 
   unsigned short bi0FifoSize;
   unsigned short bbcFifoSize;
