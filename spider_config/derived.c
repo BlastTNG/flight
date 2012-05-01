@@ -227,52 +227,6 @@ union DerivedUnion DerivedChannels[] = {
 
 #endif
 
-  COMMENT("Lock Motor/Actuators"),
-  BITFIELD("state_lock",
-      "LS_OPEN_LOCK",
-      "LS_CLOSED_LOCK",
-      "LS_DRIVE_OFF_LOCK",
-      "LS_POT_RAIL_LOCK",
-      "LS_DRIVE_EXT_LOCK",
-      "LS_DRIVE_RET_LOCK",
-      "LS_DRIVE_STP_LOCK",
-      "LS_DRIVE_JIG_LOCK",
-      "LS_DRIVE_UNK_LOCK",
-      "LS_EL_OK_LOCK",
-      "LS_IGNORE_EL_LOCK",
-      "LS_DRIVE_FORCE_LOCK"
-      ),
-
-  /* Secondary Focus */
-  COMMENT("Secondary Focus"),
-  LINCOM2("REL_FOCUS_SF", "CORRECTION_SF", 1, 0, "OFFSET_SF", 1, 0),
-  LINCOM2("VETO_SF", "WAIT_SF", 1, 0, "AGE_SF", -1, 0),
-
-  LINCOM2("Pos_0_act", "POS_0_ACT", 1, 0, "OFFSET_0_ACT", 1, 0),
-  LINCOM2("Pos_1_act", "POS_1_ACT", 1, 0, "OFFSET_1_ACT", 1, 0),
-  LINCOM2("Pos_2_act", "POS_2_ACT", 1, 0, "OFFSET_2_ACT", 1, 0),
-  LINCOM2("Enc_0_act", "ENC_0_ACT", 1, 0, "OFFSET_0_ACT", 1, 0),
-  LINCOM2("Enc_1_act", "ENC_1_ACT", 1, 0, "OFFSET_1_ACT", 1, 0),
-  LINCOM2("Enc_2_act", "ENC_2_ACT", 1, 0, "OFFSET_2_ACT", 1, 0),
-  LINCOM2("Lvdt_0_act", "LVDT_0_ACT", 1, 0, "OFFSET_0_ACT", 1, 0),
-  LINCOM2("Lvdt_1_act", "LVDT_1_ACT", 1, 0, "OFFSET_1_ACT", 1, 0),
-  LINCOM2("Lvdt_2_act", "LVDT_2_ACT", 1, 0, "OFFSET_2_ACT", 1, 0),
-  LINCOM2("Goal_0_act", "GOAL_0_ACT", 1, 0, "OFFSET_0_ACT", 1, 0),
-  LINCOM2("Goal_1_act", "GOAL_1_ACT", 1, 0, "OFFSET_1_ACT", 1, 0),
-  LINCOM2("Goal_2_act", "GOAL_2_ACT", 1, 0, "OFFSET_2_ACT", 1, 0),
-  LINCOM2("Dr_0_act", "DR_0_ACT", 1, 0, "OFFSET_0_ACT", 1, 0),
-  LINCOM2("Dr_1_act", "DR_1_ACT", 1, 0, "OFFSET_1_ACT", 1, 0),
-  LINCOM2("Dr_2_act", "DR_2_ACT", 1, 0, "OFFSET_2_ACT", 1, 0),
-
-  BITFIELD("flags_act",
-      "TRIM_WAIT_ACT",
-      "TRIMMED_ACT",
-      "BUSY_0_ACT",
-      "BUSY_1_ACT",
-      "BUSY_2_ACT",
-      "BAD_MOVE_ACT"
-      ),
-
   BITFIELD("stat_1_el",
 	   "ST_SHORT_CIRC_EL",
 	   "ST_AMP_OVER_T_EL",
@@ -487,30 +441,6 @@ union DerivedUnion DerivedChannels[] = {
   T_ACS("T_6_IF", "VT_6_IF", "/data/etc/spider/thermistor.lut"),
   T_ACS("T_7_IF", "VT_7_IF", "/data/etc/spider/thermistor.lut"),
 
-
-  /* HWPR Control Info */
-  BITFIELD("stat_control_hwpr"
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "DO_OVERSHOOT_HWPR",
-	   "DONE_MOVE_HWPR",
-	   "DONE_ALL_HWPR",
-	   "",
-	   "",
-	   "",
-	   ),
-  BITWORD("MOVE_TYPE_HWPR","stat_control_hwpr",0,3),
-  BITWORD("MOVE_STAT_HWPR","stat_control_hwpr",3,3),
-  BITWORD("READ_BEFORE_HWPR","stat_control_hwpr",6,2),
-  BITWORD("READ_AFTER_HWPR","stat_control_hwpr",8,2),
 
   /* Housekeeping */
   COMMENT("Housekeeping digital channels"),
