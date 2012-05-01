@@ -30,7 +30,8 @@
 #define PH_ERR_BAD_WHO  0x0008  //bad 'who' value. NOT always checked
 #define	PH_ERR_BUSY     0x0010  //bus busy (as per Take/Release)
 #define	PH_ERR_RESPONSE 0x0020  //malformed response from device/bad checksum
-#define PH_ERR_POLL     0x0040  //not all polled steppers found
+#define PH_ERR_POLL     0x0040  //didn't find all steppers in Poll
+                                //or attempting to use an unpolled stepper
 #define PH_ERR_NAK      0x0080  //NAK in response. Message/controller error
 #define PH_ERR_PARAM    0x0100  //invalid parameter value (out of range)
 #define PH_ERR_BAUD     0x0200  //unknown baud rate for stepper
@@ -57,6 +58,9 @@
 #define PH_BUS_BUF_LEN      0x100 //serial buffer
 #define PH_BUS_NACT         6     //max number of actuators
 #define PH_BUS_COMM_RETRIES 5     //default number of Comm retries
+#define PH_STEPS_PER_REV    200.  //motor (micro)steps per revolution
+                                  //probably "better" to be in bus->stepper
+
 
 /* # Communication Errors before triggering a reconnect to the serial port */
 #define PH_ERR_MAX  5
@@ -135,6 +139,10 @@ int Phytron_NASend(struct phytron* bus, int who, const char* what);
  */
 int Phytron_Recv(struct phytron* bus);
 
+/* read and discard all responses currently available on the bus
+ */
+int Phytron_Recv_Flush(struct phytron* bus);
+
 /* send command 'what' to 'who' and recieve response
  * will retry (every second) under certain error conditions (busy)
  * Phytron_Comm retries PH_BUS_COMM_RETRIES times
@@ -206,6 +214,12 @@ int Phytron_SetVel(struct phytron* bus, int who, double vel);
  */
 int Phytron_SetGear(struct phytron* bus, int who, int teeth);
 
+/* use the gear ratio to convert degrees to (micro)steps (D2S) 
+ * and (micro)steps to degrees (S2D)
+ */
+inline int Phytron_D2S(struct phytron* bus, int who, double degrees);
+inline double Phytron_S2D(struct phytron* bus, int who, int steps);
+
 /* sets acceleration for simple motion moves (in steps/s)
  */
 //int Phytron_SetAccel(struct phytron* bus, int who, int acc);
@@ -218,6 +232,10 @@ int Phytron_SendParams(struct phytron* bus, int who);
 /* Terminate movement
  */
 int Phytron_Stop(struct phytron* bus, int who);
+
+/* Terminate movement, but don't even check if the stepper is polled
+ */
+int Phytron_Stop_All(struct phytron* bus);
 
 /* Relative move by 'delta' (in degrees from current location)
  * delta can be positive or negative

@@ -141,6 +141,7 @@ int Phytron_Init(struct phytron* bus, const char* tty, const char* name,
   bus->fd = -1;
   if ( (bus->fd = phytron_setserial(bus, allowed_bauds[0])) < 0 )
     retval |= PH_ERR_TTY;
+  Phytron_Recv_Flush(bus);
   for (i = 0; i < PH_BUS_NACT; ++i) {
     bus->stepper[i].status = 0;
     bus->stepper[i].name[0] = '\0';
@@ -239,6 +240,10 @@ static void count_errors(struct phytron* bus, int retval, const char* f)
 static const char* HexDump(const unsigned char* from, char* to, int len)
 {
   int i;
+  if (from[0] == '\0') {
+    to[0] = '\0';
+    return to;
+  }
   sprintf(to, "%02x", from[0]);
   for (i = 1; i < len; ++i)
     sprintf(to + i * 3 - 1, ".%02x", from[i]);
@@ -257,15 +262,14 @@ static int Phytron_DoSend(struct phytron* bus, int who, int useaxis,
   char* buffer = malloc(len);
   //TODO should I use checksums on sends?
   char* hex_buffer;
-  int i = 0;
+  int i = 0, j=0;
   int retval = PH_ERR_OK;
   char addrstr[3] = {'\0', '\0', '\0'};
 
   buffer[i++] = STX;
   buffer[i++] = bus->stepper[who].addr;
   if (useaxis) buffer[i++] = bus->stepper[who].axis;
-  strncat(buffer+i, what, PH_BUS_BUF_LEN);
-  i += strnlen(what, PH_BUS_BUF_LEN);
+  while (what[j] != '\0' && i < len-1) buffer[i++] = what[j++];
   buffer[i++] = ETX;
   if (bus->chatter >= PH_CHAT_BUS) {
     hex_buffer = malloc(3*len+1);
@@ -308,12 +312,13 @@ int Phytron_NASend(struct phytron *bus, int who, const char* what)
 }
 
 #define PH_BUS_RECV_ABORT 3000000 /* state for general parsing abort */
+#define READ_TRIES  100
 
 int Phytron_Recv(struct phytron* bus)
 {
   int fd;
   fd_set rfds;
-  struct timeval timeout = {.tv_sec = 2, .tv_usec = 0};
+  struct timeval timeout = {.tv_sec = 0, .tv_usec = 10000};
   unsigned char byte;
   //unsigned char checksum = 0;
   char full_response[PH_BUS_BUF_LEN];
@@ -337,7 +342,7 @@ int Phytron_Recv(struct phytron* bus)
   } else {
     int state = 1;
     int had_errors = 0;
-    int read_tries = 100;
+    int read_tries = READ_TRIES;
     int len;
 
     for(;;) {
@@ -421,6 +426,24 @@ int Phytron_Recv(struct phytron* bus)
   count_errors(bus, retval, "Phytron_Recv");
 
   return (bus->error=retval);
+}
+
+int Phytron_Recv_Flush(struct phytron* bus)
+{
+  ssize_t len;
+  char byte;
+  int read_tries = READ_TRIES;
+
+  while (1) {
+    len = read(bus->fd, &byte, 1);
+    if (len < 0) {
+      if (errno == EAGAIN) {
+        if (read_tries <= 0) return PH_ERR_OK;  //out of data. done
+        read_tries--;
+        usleep(1000);
+      } else return PH_ERR_TTY;                 //serial error. abort
+    } else if (len == 0) return PH_ERR_OK;      //out of data. done
+  }
 }
 
 static int Phytron_DoCommRetry(struct phytron* bus, int who, int useaxis,
@@ -509,11 +532,14 @@ int Phytron_ReadInt(struct phytron* bus, int who, const char* what, int* val)
 {
   //TODO update ReadInt
   int retval;
-  retval = Phytron_Comm(bus, who, what);
-  if ( !(retval & (PH_ERR_TIMEOUT | PH_ERR_OOD | PH_ERR_TTY)) )
-    *val = atoi(bus->buffer);
+  if (!Phytron_IsUsable(bus, who)) return PH_ERR_POLL;
+  else {
+    retval = Phytron_Comm(bus, who, what);
+    if ( !(retval & (PH_ERR_TIMEOUT | PH_ERR_OOD | PH_ERR_TTY)) )
+      *val = atoi(bus->buffer);
 
-  return retval;
+    return retval;
+  }
 }
 
 int Phytron_ForceRepoll(struct phytron* bus, int who)
@@ -556,6 +582,7 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
           if (bus->chatter >= PH_CHAT_ACT)
             bprintf(warning, "%sNo response from %s, will repoll later.", 
                 bus->name, bus->stepper[i].name);
+          bus->stepper[i].baud = allowed_bauds[0];  //reset to default
           retval |= PH_ERR_POLL;
         }
         bus->stepper[i].status &= ~PH_STEP_OK;
@@ -574,6 +601,7 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
           if (bus->chatter >= PH_CHAT_ERR)
             bprintf(warning, "%sUnrecognised response from %s, "
                 "will repoll later.\n", bus->name, bus->stepper[i].name);
+          bus->stepper[i].baud = allowed_bauds[0];  //reset to default
           retval |= PH_ERR_POLL;
         }
         bus->stepper[i].status &= ~PH_STEP_OK;
@@ -625,7 +653,7 @@ int Phytron_IsBusy(struct phytron* bus, int who)
 int Phytron_SetIHold(struct phytron* bus, int who, double current)
 {
   if (current > 1.2 || current < 0.0) {
-    bprintf(err, "%sInvalid current command %g", bus->name, current);
+    //bprintf(err, "%sInvalid current command %g", bus->name, current);
     return PH_ERR_PARAM;
   }
   bus->stepper[who].ihold = current;
@@ -635,7 +663,7 @@ int Phytron_SetIHold(struct phytron* bus, int who, double current)
 int Phytron_SetIMove(struct phytron* bus, int who, double current)
 {
   if (current > 1.2 || current < 0.0) {
-    bprintf(err, "%sInvalid current command %g", bus->name, current);
+    //bprintf(err, "%sInvalid current command %g", bus->name, current);
     return PH_ERR_PARAM;
   }
   bus->stepper[who].imove = current;
@@ -645,7 +673,7 @@ int Phytron_SetIMove(struct phytron* bus, int who, double current)
 int Phytron_SetVel(struct phytron* bus, int who, double vel)
 {
   if (vel < 0.0) {
-    bprintf(err, "%sInvalid velocity command %g", bus->name, vel);
+    //bprintf(err, "%sInvalid velocity command %g", bus->name, vel);
     return PH_ERR_PARAM;
   }
   bus->stepper[who].vel = vel;
@@ -666,11 +694,16 @@ int Phytron_SetAccel(struct phytron* bus, int who, int acc)
 }
 #endif
 
-static inline int deg_to_step(struct phytron* bus, int who, double degrees)
+inline int Phytron_D2S(struct phytron* bus, int who, double degrees)
 {
-  //note the 200. is steps per motor revolution
-  return (int)round(( 200. * (double)bus->stepper[who].usteps
+  return (int)round(( PH_STEPS_PER_REV * (double)bus->stepper[who].usteps
       * (double)bus->stepper[who].gear_teeth * degrees / 360.));
+}
+
+inline double Phytron_S2D(struct phytron* bus, int who, int steps)
+{
+  return 360. * (double)steps / PH_STEPS_PER_REV
+    / (double)bus->stepper[who].usteps / (double)bus->stepper[who].gear_teeth;
 }
 
 int Phytron_SendParams(struct phytron* bus, int who)
@@ -693,36 +726,56 @@ int Phytron_SendParams(struct phytron* bus, int who)
   if (retval != PH_ERR_OK) return retval;
   //velocity
   retval = Phytron_CommVarg(bus, who, "P14S%i",
-      deg_to_step(bus, who, bus->stepper[who].vel));
+      Phytron_D2S(bus, who, bus->stepper[who].vel));
   return retval;
 }
 
 int Phytron_Stop(struct phytron* bus, int who)
 {
+  if (!Phytron_IsUsable(bus, who)) return PH_ERR_POLL;
+  else return Phytron_Comm(bus, who, "S");
+}
+
+int Phytron_Stop_All(struct phytron* bus)
+{
   //TODO check into multi-stepper version of stop command
-  return Phytron_Comm(bus, who, "S");
+  int i;
+  int ret = PH_ERR_OK;
+  for (i=0; i<PH_BUS_NACT; i++)
+    if (bus->stepper[i].status & PH_STEP_USED) ret |= Phytron_Send(bus, i, "S");
+  return ret | Phytron_Recv_Flush(bus);
 }
 
 int Phytron_Move(struct phytron* bus, int who, double delta)
 {
-  int ret = Phytron_SendParams(bus, who);
-  if (ret != PH_ERR_OK) return ret;
-  return Phytron_CommVarg(bus, who, "%+i", deg_to_step(bus, who, delta));
+  int ret;
+  if (!Phytron_IsUsable(bus, who)) return PH_ERR_POLL;
+  else {
+    ret = Phytron_SendParams(bus, who);
+    if (ret != PH_ERR_OK) return ret;
+    return Phytron_CommVarg(bus, who, "%+i", Phytron_D2S(bus, who, delta));
+  }
 }
 
 int Phytron_MoveVel(struct phytron* bus, int who, double delta, double vel)
 {
-  Phytron_SetVel(bus, who, vel);
-  return Phytron_Move(bus, who, delta);
+  if (!Phytron_IsUsable(bus, who)) return PH_ERR_POLL;
+  else {
+    Phytron_SetVel(bus, who, vel);
+    return Phytron_Move(bus, who, delta);
+  }
 }
 
 int Phytron_ContinuousVel(struct phytron* bus, int who, double vel)
 {
   int ret;
   char dir = (vel >= 0) ? '+' : '-';
-  Phytron_SetVel(bus, who, fabs(vel));
-  ret = Phytron_SendParams(bus, who);
-  if (ret != PH_ERR_OK) return ret;
-  return Phytron_CommVarg(bus, who, "L%c", dir);
+  if (!Phytron_IsUsable(bus, who)) return PH_ERR_POLL;
+  else {
+    Phytron_SetVel(bus, who, fabs(vel));
+    ret = Phytron_SendParams(bus, who);
+    if (ret != PH_ERR_OK) return ret;
+    return Phytron_CommVarg(bus, who, "L%c", dir);
+  }
 }
 
