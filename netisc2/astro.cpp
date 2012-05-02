@@ -1,4 +1,5 @@
 #include "astro.h"
+#include <windows.h>
 
 using namespace std;
 
@@ -1523,9 +1524,11 @@ int calc_pointing( double ra_0_guess, double dec_0_guess,
 void astro_init_catalogue( const char *pathname, char *catalogname,
                            char *katalogname ) {
   __astro_catalog = new HTMCatalog(pathname);
+
   __astro_catalog->init();
 
   __astro_pyr = new Pyramid( (3.4 * M_PI/180.0), catalogname, katalogname );
+ 
 }
 
 void astro_close_catalogue( void ) {

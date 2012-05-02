@@ -20,6 +20,6 @@ COM2             Serial port for stepper motor communications
 50               Velocity for the stepper motors
 0          	 Set =0 for immediate picture taking, set =1 for PAUSE
 0	         Offset to home focus (LABFLIGHT)
-C:/catalog/gsc1
-C:/catalog/gsc_mag08_res21.bin
-C:/catalog/k.bin
+E:/catalog/gsc1
+E:/catalog/gsc_mag08_res21.bin
+E:/catalog/k.bin

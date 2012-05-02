@@ -2873,7 +2873,6 @@ int main( int argc, char **argv ) {
     return 31;
   }*/
   printf("initializing DAQ \n");
-Sleep(300);
   // initialize the DMM-XT DAQ
 BYTE boardtype;
   if( dscInit( DSC_VERSION ) != DE_NONE )
@@ -2883,9 +2882,9 @@ BYTE boardtype;
 		Sleep(300);
 		return 0;
 	}
-  Sleep(300);
+ 
   printf("initialized driver...\n");
-  Sleep(300);
+  
 	dsccb.base_address = 0x300;
 	dsccb.int_level = 7;
 
@@ -2940,7 +2939,7 @@ printf("DAQ is a-go \n");
   // Do this AFTER initializing the camera
   Frameblob.commonconstructor( (MAPTYPE *) QCFrame.pBuffer, xpix, ypix, 14, 
                                (double)0.00194 );
-        
+
   // Read in the settings file
   if( !read_settings() ) {
     printf("Couldn't read in settings\n\n");
@@ -2975,8 +2974,10 @@ printf("DAQ is a-go \n");
   // Intialize the star catalogue
   
   printf( "Attempting to use star catalogue: %s\n", catpath );
-  astro_init_catalogue(catpath, catalogname, katalogname);
-
+  
+  astro_init_catalogue(catpath, catalogname, katalogname); //crashing in this?
+  
+  
   // Initialize the temp./pressure/heater routines
   
   if( tempSetup(tempControl,tempSleeptime,tempSetLimit,tempOffset, 
@@ -2984,6 +2985,7 @@ printf("DAQ is a-go \n");
     printf("Temperature stuff couldn't open config file...\n");
   } else printf("Temperature stuff initialized AOK..\n");
   tempstring[0] = NULL;
+  
 
   
   // Initialize the current frame number
