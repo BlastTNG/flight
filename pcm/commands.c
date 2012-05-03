@@ -989,6 +989,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case hwp_i:
       CommandData.hwp.move_i = rvalues[0];
       break;
+    case hwp_phase:
+      CommandData.hwp.phase = rvalues[0];
+      break;
     case hwp_move:
       CommandData.hwp.who = ivalues[0] - 1;
       CommandData.hwp.delta = rvalues[1];
@@ -1695,6 +1698,7 @@ void InitCommandData()
 
   CommandData.hwp.vel = 1.0;
   CommandData.hwp.move_i = 0.8;
+  CommandData.hwp.phase = 0.0;
 
   CommandData.pin_is_in = 1;
 

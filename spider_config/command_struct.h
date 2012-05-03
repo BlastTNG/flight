@@ -358,6 +358,7 @@ struct CommandDataStruct {
     enum {hwp_m_sleep, hwp_m_panic, hwp_m_halt, hwp_m_rel_move,
       hwp_m_step} mode;
     int force_repoll;
+    double phase;
 
     /* arbitrary command */
     int cindex;

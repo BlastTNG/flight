@@ -493,6 +493,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Move current (A)", 0, 1.2, 'f', "I_MOVE_HWP"},
     }
   },
+  {COMMAND(hwp_phase), "set the HWP analog lock-in phase", GR_HWPR, 1,
+    {
+      {"Phase (degrees)", 0, 360., 'f', "PHASE_00_HWP"},
+    }
+  },
   {COMMAND(hwp_halt), "halt HWP rotator motion", GR_HWPR, 1,
     {
       {"Stepper (1-6,0=all)", 0, 6, 'i', "0"},
