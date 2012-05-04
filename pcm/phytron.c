@@ -148,8 +148,8 @@ int Phytron_Init(struct phytron* bus, const char* tty, const char* name,
     bus->stepper[i].addr = '\0';
     bus->stepper[i].axis = '\0';
     bus->stepper[i].baud = allowed_bauds[0];
-    bus->stepper[i].usteps = 0;
-    bus->stepper[i].gear_teeth = 0;
+    bus->stepper[i].usteps = 1;
+    bus->stepper[i].gear_teeth = 1;
     bus->stepper[i].vel = 0;
     //bus->stepper[i].acc = 0;
     bus->stepper[i].ihold = 0;
