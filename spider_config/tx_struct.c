@@ -775,6 +775,7 @@ struct ChannelStruct SlowChannels[] = {
   {"frame_int_bbc",  'w', LOOP0,   0,                1.0,            0.0, 'u', U_NONE},
   {"rate_ext_bbc",   'w', LOOP0,   1,      400.0/65535.0,            0.0, 'u', U_F_HZ},
   {"frame_ext_bbc",  'w', LOOP0,   2,                1.0,            0.0, 'u', U_NONE},
+  /* LOOP0 4-15 are wide fast TODO (change when hwp counts moved) */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
@@ -1067,6 +1068,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"vd_16_hk",     'r',  HWP_A2, 32, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_17_hk",     'r',  HWP_A2, 34, CAL32D(         1.0,           0.0), 'U', U_V_V},
 
+  //TODO fix naming of HWP encoder channels
   {"hwp_00",       'r',HWP_A1,  0,CAL32(1.0,      0.0),      'U',      U_V_V},
   {"hwp_01",       'r',HWP_A1,  2,CAL32(1.0,      0.0),      'U',      U_V_V},
   {"hwp_02",       'r',HWP_A1,  4,CAL32(1.0,      0.0),      'U',      U_V_V},
@@ -1091,6 +1093,14 @@ struct ChannelStruct WideFastChannels[] = {
   {"hwp_21",       'r',HWP_A1, 42,CAL32(1.0,      0.0),      'U',      U_V_V},
   {"hwp_22",       'r',HWP_A1, 44,CAL32(1.0,      0.0),      'U',      U_V_V},
   {"hwp_23",       'r',HWP_A1, 46,CAL32(1.0,      0.0),      'U',      U_V_V},
+
+  //TODO the counts can be made narrow slow once debugging is complete
+  {"enc_cnt_1_hwp",'w', LOOP0,  4,    LI2DEG,      0.0,      'U',      U_P_DEG},
+  {"enc_cnt_2_hwp",'w', LOOP0,  6,    LI2DEG,      0.0,      'U',      U_P_DEG},
+  {"enc_cnt_3_hwp",'w', LOOP0,  8,    LI2DEG,      0.0,      'U',      U_P_DEG},
+  {"enc_cnt_4_hwp",'w', LOOP0, 10,    LI2DEG,      0.0,      'U',      U_P_DEG},
+  {"enc_cnt_5_hwp",'w', LOOP0, 12,    LI2DEG,      0.0,      'U',      U_P_DEG},
+  {"enc_cnt_6_hwp",'w', LOOP0, 14,    LI2DEG,      0.0,      'U',      U_P_DEG},
 
   END_OF_CHANNELS
 };

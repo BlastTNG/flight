@@ -12,6 +12,7 @@ extern const char *hwp_id[NHWP];
 extern const int hwp_nteeth[NHWP];
 
 void StartHWP();         //create a thread for HWP control/communication
-void StoreHWPBus();      //store HWP parameters to frame
+void countHWPEncoder();  //count ticks of the shaft encoder. Fast frame call
+void StoreHWPBus();      //store HWP parameters to frame. Slow frame call
 
 #endif

@@ -24,6 +24,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "hwpr.h"
 #include "phytron.h"
@@ -46,6 +47,8 @@ static struct phytron bus;
 
 static struct {
   int pos;
+  int shaft_count;
+  int direction;
 } hwp_data[NHWP];
 
 //determine relative move to next HWP position in sequence
@@ -58,6 +61,7 @@ static double hwpToNext(int who)
 static void DoHWP()
 {
   int i;
+  double to_next;
 
   // update the HWP move parameters
   for (i=0; i<NHWP; i++) {
@@ -76,12 +80,22 @@ static void DoHWP()
       else Phytron_Stop(&bus, CommandData.hwp.who);
       break;
     case hwp_m_rel_move:
-      if (CommandData.hwp.who >= NHWP || CommandData.hwp.who < 0)
-        for (i=0; i<NHWP; i++) Phytron_Move(&bus, i, CommandData.hwp.delta);
-      else Phytron_Move(&bus, CommandData.hwp.who, CommandData.hwp.delta);
+      if (CommandData.hwp.who >= NHWP || CommandData.hwp.who < 0) {
+        for (i=0; i<NHWP; i++) {
+          hwp_data[i].direction = (CommandData.hwp.delta >= 0);
+          Phytron_Move(&bus, i, CommandData.hwp.delta);
+        }
+      } else {
+        hwp_data[CommandData.hwp.who].direction = (CommandData.hwp.delta >= 0);
+        Phytron_Move(&bus, CommandData.hwp.who, CommandData.hwp.delta);
+      }
       break;
     case hwp_m_step:
-      for (i=0; i<NHWP; i++) Phytron_Move(&bus, i, hwpToNext(i));
+      for (i=0; i<NHWP; i++) {
+        to_next = hwpToNext(i);
+        hwp_data[i].direction = (to_next >= 0);
+        Phytron_Move(&bus, i, to_next);
+      }
       break;
     case hwp_m_sleep:
     default:
@@ -143,6 +157,69 @@ void StoreHWPBus(void)
   if (poll_timeout > 0) poll_timeout--;
 }
 
+void countHWPEncoder()
+{
+  int i;
+  static int firsttime = 1;
+  //TODO upgrade to handle reading all NHWP encoders
+  static struct BiPhaseStruct* shaftEncAddr;
+  static struct NiosStruct* encCntHwpAddr[NHWP];
+
+  double degrees;
+
+  static double data_shaft[5] = {0};
+
+  //sanity check on the voltage change between min/max ticks
+  //TODO setup system to actually measure noise level when not moving
+  double noise_level = 1.e-5; //volts, exaggerated
+  double min_amp = 20 * noise_level;
+  static double last_tick_data = -20.;  //initialize far from all real values
+
+  //sanity check the number of samples between ticks: half an expected period
+  int samples_per_tick = ceil(( (360.0/465.0)/40.0 )
+      * (SR / CommandData.hwp.vel));
+  int min_tick_spacing = ceil(samples_per_tick / 2.0);
+  static int since_last_tick = 0;
+
+  if (firsttime)
+  {
+    firsttime = 0;
+    shaftEncAddr = GetBiPhaseAddr("hwp_06");
+    for (i=0; i<NHWP; i++) {
+      char namebuf[100];
+      sprintf(namebuf, "enc_cnt_%i_hwp", i+1);
+      encCntHwpAddr[i] = GetNiosAddr(namebuf);
+    }
+  }
+
+  //shift new data into buffer
+  for (i=4; i>0; i--) data_shaft[i] = data_shaft[i-1];
+  data_shaft[0] = ReadCalData(shaftEncAddr);
+  since_last_tick++;
+
+  //check to see if this is a minimum or maximium
+  if ( ((data_shaft[0] < data_shaft[2]) && (data_shaft[4] < data_shaft[2]))
+      || ((data_shaft[0] > data_shaft[2]) && (data_shaft[4] > data_shaft[2])) )
+  {
+    if (fabs(data_shaft[1] - last_tick_data) > min_amp) { //enough amplitude?
+      if (since_last_tick > min_tick_spacing) { //far enough from last tick?
+        since_last_tick = 0;
+        last_tick_data = data_shaft[1];
+        if (hwp_data[0].direction) hwp_data[0].shaft_count++;
+        else hwp_data[0].shaft_count--;
+      }
+    }
+  }
+
+  //write the count (converted to degrees) to the frame
+  //(200 steps/rev) / (40 counts/rev) = (5 steps/count)
+  degrees = Phytron_S2D(&bus, 0,
+      hwp_data[0].shaft_count * 5 * bus.stepper[0].usteps);
+  while (degrees < 0) degrees += 360.;
+  while (degrees > 360.) degrees -= 360.;
+  WriteCalData(encCntHwpAddr[0], degrees, NIOS_QUEUE);
+}
+
 //create a thread for this function
 void StartHWP(void)
 {
@@ -161,6 +238,8 @@ void StartHWP(void)
   //Initialize global data
   for (i=0; i<NHWP; i++) {
     hwp_data[i].pos = 0;
+    hwp_data[i].shaft_count = 0;
+    hwp_data[i].direction = 1;
   }
 
   //Wait until in charge before doing any serial port stuff

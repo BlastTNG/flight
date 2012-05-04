@@ -1149,6 +1149,7 @@ void UpdateBBCFrame()
   WriteMot(index);
   updateTableSpeed();
   WriteChatter(index);
+  countHWPEncoder();
 
   /*** do slow Controls ***/
   if (index == 0) {
