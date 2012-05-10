@@ -281,7 +281,6 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 12-13 are wide */
   {"g_com_el",     'w', LOOP1,  8,                3.0/65536.0,     0.0, 'u', U_NONE},
   {"g_diff_el",    'w', LOOP1,  9,                1.0/65536.0,     0.0, 'u', U_NONE},
-  {"pin_in_lock",  'w', LOOP1, 16,                1.0,             0.0, 'u', U_NONE},
   {"foc_res_thegood", 'w', LOOP1, 17,                1.0,             0.0, 'u', U_NONE},
   {"period_cal",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status
@@ -508,12 +507,8 @@ struct ChannelStruct SlowChannels[] = {
   {"slew_veto",    'w', LOOP5, 17,           4.0 / SR,             0.0, 'u', U_NONE},
   /* LOOP5 18-19 are wide */
   {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u', U_NONE},
-  //POT_LOCK = -100/(LOCK_MAX_POT-LOCK_MIN_POT)*pot_lock 
-  //	+ 100*LOCK_MAX_POT/(LOCK_MAX_POT-LOCK_MIN_POT)
-  {"pot_lock",     'w', LOOP5, 22,    -100.0/13368.0,1636800.0/13368.0, 'u', U_NONE},
   {"dith_el",      'w', LOOP5, 23,        0.5/32768.0,             0.0, 's', U_D_DEG},
   {"state_lock",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
-  {"goal_lock",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
   {"seized_act",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 28 is fast */
   {"dith_step_p",  'w', LOOP5, 29,        0.1/32768.0,             0.0, 's', U_D_DEG},
@@ -535,7 +530,6 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP5 56-63 are unusued */
 
   //this set of actuator channels used to be wide
-  {"pos_lock",     'w', LOOP5, 18,                1.0,             0.0, 's', U_NONE},
   {"pos_0_act",    'w', LOOP5, 42,                1.0,		   0.0, 's', U_NONE},
   {"pos_1_act",    'w', LOOP5, 44,                1.0,             0.0, 's', U_NONE},
   {"pos_2_act",    'w', LOOP5, 46,                1.0,             0.0, 's', U_NONE},
@@ -567,16 +561,12 @@ struct ChannelStruct SlowChannels[] = {
   {"blob06_s_thebad",   'w', LOOP6, 19,          1.0/100.0,             0.0, 'u', U_NONE},
   {"pref_ts_sf",   'w', LOOP6, 20,                1.0,             0.0, 'u', U_NONE},
   {"spread_sf",    'w', LOOP6, 21,             1/500.,             0.0, 'u', U_NONE},
-  {"acc_lock",     'w', LOOP6, 22,                1.0,             0.0, 'u', U_NONE},
   {"blob06_x_theugly",  'w', LOOP6, 23, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"i_move_act",   'w', LOOP6, 25,                1.0,             0.0, 'u', U_NONE},
   {"i_hold_act",   'w', LOOP6, 26,                1.0,             0.0, 'u', U_NONE},
   {"vel_act",      'w', LOOP6, 27,                1.0,             0.0, 'u', U_NONE},
   {"acc_act",      'w', LOOP6, 28,                1.0,             0.0, 'u', U_NONE},
-  {"i_move_lock",  'w', LOOP6, 29,                1.0,             0.0, 'u', U_NONE},
   /* LOOP6 30-33 are wide */
-  {"i_hold_lock",  'w', LOOP6, 34,                1.0,             0.0, 'u', U_NONE},
-  {"vel_lock",     'w', LOOP6, 35,               100.,             0.0, 'u', U_NONE},
   {"g_prime_sf",   'w', LOOP6, 36,               0.01,             0.0, 's', U_NONE},
   {"g_second_sf",  'w', LOOP6, 37,               0.01,             0.0, 's', U_NONE},
   {"step_sf",      'w', LOOP6, 38,                1.0,             0.0, 'u', U_NONE},

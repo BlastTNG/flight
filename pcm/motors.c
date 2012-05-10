@@ -826,7 +826,7 @@ void WriteMot(int TxIndex)
     bprintf(info, "starboard step rate = %d", step_rate_S);
   }*/
   /* no motor pulses if the pin is in */
-  if ((CommandData.pin_is_in && !CommandData.force_el)
+  if ((CommandData.lock.pin_is_in && !CommandData.force_el)
       || CommandData.disable_el) {
     WriteCalData(step1ElAddr, 0.0, NIOS_QUEUE);
     WriteCalData(step2ElAddr, 0.0, NIOS_QUEUE);

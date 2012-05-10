@@ -344,8 +344,13 @@ struct CommandDataStruct {
     int lvdt_high;
   } actbus;
 
-  enum {lock_do_nothing, lock_insert, lock_el_wait_insert,
-    lock_retract} lock_goal;
+  struct {
+    enum {lock_do_nothing = 0, lock_insert, lock_el_wait_insert,
+      lock_retract} goal;
+    enum {lock_unknown = 0, lock_closed, lock_open, lock_closing,
+      lock_opening} state_p, state_s;
+    int pin_is_in;
+  } lock;
 
   struct {
     /* move parameters */
@@ -370,8 +375,6 @@ struct CommandDataStruct {
     int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;
     int force_repoll;
   } xystage;
-
-  int pin_is_in;
 
   /* sensors output: read in mcp:SensorReader() */
   unsigned short temp1, temp2, temp3;

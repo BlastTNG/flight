@@ -435,54 +435,96 @@ void ControlPower(void) {
   WriteData(switchMiscAddr, misc, NIOS_QUEUE);
 }
 
+//limit switch positions. NB: active low
+#define LIM_CL_P  0x1
+#define LIM_OP_P  0x2
+#define LIM_CL_S  0x4
+#define LIM_OP_S  0x8
+
+//command bits to insert or retract locks (always to both at once)
+#define LOCK_INSERT   0x5
+#define LOCK_RETRACT  0xa
+
 void LockMotor()
 {
   static struct NiosStruct* controlLockAddr;
+  static struct NiosStruct* stateLockAddr;
+  static struct BiPhaseStruct* limitLockAddr;
   static int firsttime =1;
+  unsigned int limits;
   int lock_bits = 0;
 
   if (firsttime) {
     firsttime = 0;
     controlLockAddr = GetNiosAddr("control_lock");
+    stateLockAddr = GetNiosAddr("state_lock");
+    limitLockAddr = GetBiPhaseAddr("limit_lock");
   }
 
-  switch (CommandData.lock_goal) {
+  //set the control bits as per mode/goal
+  switch (CommandData.lock.goal) {
     case lock_insert:
-      lock_bits = 0x5;
+      lock_bits = LOCK_INSERT;
       break;
     case lock_retract:
-      lock_bits = 0xa;
+      lock_bits = LOCK_RETRACT;
       break;
     case lock_el_wait_insert:
-      //TODO check elevation and then set lock_bits to insert as appropriate
-      lock_bits = 0;
+      if (fabs(ACSData.enc_mean_el - LOCK_POSITION) <= 0.5)
+        lock_bits = LOCK_INSERT;
+      else lock_bits = 0x0;
       break;
     case lock_do_nothing:
     default:
-      lock_bits = 0;
+      lock_bits = 0x0;
       break;
   }
-  
-  //TODO read limit_lock field and try to deduce state, remember when unpowered
 
   WriteData(controlLockAddr, lock_bits, NIOS_QUEUE);
-}
-
-void VideoTx(void)
-{
-  static struct NiosStruct* bitsVtxAddr;  
-  static int firsttime =1;
-  int vtx_bits = 0;
-
-  if (firsttime) {
-    firsttime = 0;
-    bitsVtxAddr = GetNiosAddr("bits_vtx");
+  
+  //examine limit switches. Do nothing when lock is off (switches unpowered)
+  //also ignore case when both switches asserted (disconnect/aphysical)
+  //NB: limit switches are asserted low
+  if (!CommandData.power.lock_off) {
+    limits = ReadData(limitLockAddr);
+    if ( !(limits & LIM_CL_P) && (limits & LIM_OP_P) )
+      CommandData.lock.state_p = lock_closed;
+    else if ( (limits & LIM_CL_P) && !(limits & LIM_OP_P) )
+      CommandData.lock.state_p = lock_open;
+    else if ( (limits & LIM_CL_P) && (limits & LIM_OP_P) ) {
+      if (lock_bits == LOCK_INSERT)
+        CommandData.lock.state_p = lock_closing;
+      else if (lock_bits == LOCK_RETRACT)
+        CommandData.lock.state_p = lock_opening;
+    }
+    if ( !(limits & LIM_CL_S) && (limits & LIM_OP_S) )
+      CommandData.lock.state_s = lock_closed;
+    else if ( (limits & LIM_CL_S) && !(limits & LIM_OP_S) )
+      CommandData.lock.state_s = lock_open;
+    else if ( (limits & LIM_CL_S) && (limits & LIM_OP_S) ) {
+      if (lock_bits == LOCK_INSERT)
+        CommandData.lock.state_s = lock_closing;
+      else if (lock_bits == LOCK_RETRACT)
+        CommandData.lock.state_s = lock_opening;
+    }
   }
 
-  if (CommandData.vtx_sel[0] == vtx_bsc) vtx_bits |= 0x3;
-  else if (CommandData.vtx_sel[0] == vtx_osc) vtx_bits |= 0x1;
-  if (CommandData.vtx_sel[1] == vtx_bsc) vtx_bits |= 0xc;
-  else if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0x4;
+  //compress state to a single bit (pin_is_in) for use elsewhere
+  //if either side is closed or closing, consider closed
+  //otherwise consider open, unless state is unknown (then don't change)
+  if (CommandData.lock.state_p == lock_closed
+      || CommandData.lock.state_p == lock_closing
+      || CommandData.lock.state_s == lock_closed
+      || CommandData.lock.state_s == lock_closing)
+    CommandData.lock.pin_is_in = 1;
+  else if (CommandData.lock.state_p != lock_unknown
+      && CommandData.lock.state_s != lock_unknown)
+    CommandData.lock.pin_is_in = 0;
 
-  WriteData(bitsVtxAddr, vtx_bits, NIOS_QUEUE);
+  WriteData(stateLockAddr, (CommandData.lock.pin_is_in & 0x0001)
+      | ((CommandData.lock.goal & 0x000f) << 1)
+      | ((CommandData.lock.state_p & 0x000f) << 5)
+      | ((CommandData.lock.state_s & 0x000f) << 9)
+      , NIOS_QUEUE);
 }
+

@@ -66,6 +66,13 @@ extern "C" {
 #define LVDT64_ZERO  65240  /* in encoder counts */
 #define LVDT65_ZERO  65536  /* in encoder counts */
 
+/* Lock position is nominally at 40 degrees.
+ * This is the offset to the true lock positions. This number is
+ * relative to the elevation encoder reading, NOT true elevation
+ */
+#define LOCK_OFFSET (0.0) /* TODO update this */
+#define LOCK_POSITION (40.0 + LOCK_OFFSET)
+
 /* Thermal model numbers, from EP */
 #define T_PRIMARY_FOCUS   296.15 /* = 23C */
 #define T_SECONDARY_FOCUS 296.15 /* = 23C */

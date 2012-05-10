@@ -181,6 +181,23 @@ union DerivedUnion DerivedChannels[] = {
 */
   COMMENT("ACS Digital Signals"),
 
+  BITFIELD("CONTROL_LOCK",
+      "CLOSING_PORT_LOCK",
+      "OPENING_PORT_LOCK",
+      "CLOSING_STAR_LOCK",
+      "OPENING_STAR_LOCK",
+      ),
+  BITFIELD("LIMIT_LOCK",
+      "LIM_NCLOSE_PORT_LOCK",
+      "LIM_NOPEN_PORT_LOCK",
+      "LIM_NCLOSE_STAR_LOCK",
+      "LIM_NOPEN_STAR_LOCK"
+      ),
+  BITWORD("PIN_IN_LOCK", "STATE_LOCK", 0, 1),
+  BITWORD("GOAL_LOCK", "STATE_LOCK", 1, 4),
+  BITWORD("STATE_P_LOCK", "STATE_LOCK", 5, 4),
+  BITWORD("STATE_S_LOCK", "STATE_LOCK", 9, 4),
+
   /* charge controller (CC) faults and alarms */
 
   COMMENT("Charge Controller Bitfields"),

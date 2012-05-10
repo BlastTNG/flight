@@ -45,12 +45,6 @@
 #include "channels.h"
 #include "sip.h"
 
-/* Lock position is nominally at 40 degrees.
- * This is the offset to the true lock positions. This number is
- * relative to the elevation encoder reading, NOT true elevation
- */
-#define LOCK_OFFSET (0.0) /* TODO update this */
-
 void RecalcOffset(double, double);  /* actuators.c */
 
 void SetRaDec(double, double); /* defined in pointing.c */
@@ -481,16 +475,16 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.lock_off = -1;
       break;
     case pin_in:
-      CommandData.lock_goal = lock_insert;
+      CommandData.lock.goal = lock_insert;
       break;
     case lock:  /* Lock Inner Frame */
       if (CommandData.pointing_mode.nw >= 0)
         CommandData.pointing_mode.nw = VETO_MAX;
-      CommandData.lock_goal = lock_el_wait_insert;
+      CommandData.lock.goal = lock_el_wait_insert;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_LOCK;
       CommandData.pointing_mode.X = 0;
-      CommandData.pointing_mode.Y = 40. + LOCK_OFFSET;
+      CommandData.pointing_mode.Y = LOCK_POSITION;
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.h = 0;
       CommandData.pointing_mode.vaz = 0;
@@ -498,7 +492,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
       break;
     case unlock:
-      CommandData.lock_goal = lock_retract;
+      CommandData.lock.goal = lock_retract;
       if (CommandData.pointing_mode.mode == P_LOCK) {
         CommandData.pointing_mode.nw = CommandData.slew_veto;
 	      CommandData.pointing_mode.mode = P_DRIFT;
@@ -1451,7 +1445,7 @@ void InitCommandData()
 
   CommandData.actbus.off = 0;
   CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
-  CommandData.lock_goal = lock_do_nothing;
+  CommandData.lock.goal = lock_do_nothing;
   CommandData.actbus.force_repoll = 0;
 
   CommandData.xystage.is_new = 0;
@@ -1700,7 +1694,9 @@ void InitCommandData()
   CommandData.hwp.move_i = 0.8;
   CommandData.hwp.phase = 0.0;
 
-  CommandData.pin_is_in = 1;
+  CommandData.lock.pin_is_in = 1;
+  CommandData.lock.state_p = lock_unknown;
+  CommandData.lock.state_s = lock_unknown;
 
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;
