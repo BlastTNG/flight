@@ -709,8 +709,8 @@ void WriteMot(int TxIndex)
    
 
   // Used only for Lab Controller tests
-  static struct NiosStruct* dacAmplAddr[5];
-  int i;
+  static struct NiosStruct* dac2AmplAddr;
+
   static int wait = 100; /* wait 20 frames before controlling. */
 
   //int v_elev, v_az, i_piv, elGainP, elGainI;
@@ -755,12 +755,8 @@ void WriteMot(int TxIndex)
     accelAzAddr = GetNiosAddr("accel_az");
     accelMaxAzAddr = GetNiosAddr("accel_max_az");
 
-    dacAmplAddr[0] = GetNiosAddr("v_pump_bal");    // is now ifpm_ampl
-    //    dacAmplAddr[0] = GetNiosAddr("dac1_ampl"); // is now ifpm_ampl
-    dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
-    //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now dac_piv
-    //    dacAmplAddr[3] = GetNiosAddr("dac4_ampl"); // is now dac_el
-    //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now dac_rw 
+    dac2AmplAddr = GetNiosAddr("dac2_ampl");
+
     step1ElAddr = GetNiosAddr("step_1_el");
     step2ElAddr = GetNiosAddr("step_2_el");
     cosElAddr = GetNiosAddr("cos_el");
@@ -771,12 +767,12 @@ void WriteMot(int TxIndex)
 
   //NOTE: this is only used to program the extra DAC - not used for
   // flight.
-  if (wait <= 0)
-    for (i=1; i<2; i++)
-      if (CommandData.Temporary.setLevel[i]) {
-	WriteData(dacAmplAddr[i], CommandData.Temporary.dac_out[i], NIOS_QUEUE);
-	CommandData.Temporary.setLevel[i] = 0;
-      }
+  if (TxIndex == 0) {  //only write at slow frame rate
+    if (CommandData.Temporary.setLevel[1] && wait <= 0) {
+      WriteData(dac2AmplAddr, CommandData.Temporary.dac_out[1], NIOS_QUEUE);
+      CommandData.Temporary.setLevel[1] = 0;
+    }
+  }
 
   /***************************************************/
   /**           Elevation Drive Motors              **/
@@ -841,17 +837,16 @@ void WriteMot(int TxIndex)
   elGainCom = CommandData.ele_gain.com;
   elGainDiff = CommandData.ele_gain.diff;	
 
-  /* common-mode gain term for el motors*/
-  WriteCalData(gComElAddr, elGainCom, NIOS_QUEUE);
+  if (TxIndex == 0) {   //only write at slow frame rate
+    /* common-mode gain term for el motors*/
+    WriteCalData(gComElAddr, elGainCom, NIOS_QUEUE);
+    /*differential gain term for el motors */
+    WriteCalData(gDiffElAddr, elGainDiff, NIOS_QUEUE);
 
-  /*differential gain term for el motors */
-  WriteCalData(gDiffElAddr, elGainDiff, NIOS_QUEUE);
-
-  // FIXME HACK TODO: replace this comment with nothing.
-  
-  /* TEMPORARY HACK: write cos el and sin el for el = 0, since gyros are now on outer frame */
-  WriteCalData(cosElAddr, 1.0, NIOS_QUEUE);
-  WriteCalData(sinElAddr, 0.0, NIOS_QUEUE);
+  /* TODO TEMPORARY HACK: write cos el and sin el for el = 0, since gyros are now on outer frame */
+    WriteCalData(cosElAddr, 1.0, NIOS_QUEUE);
+    WriteCalData(sinElAddr, 0.0, NIOS_QUEUE);
+  }
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/
@@ -866,7 +861,8 @@ void WriteMot(int TxIndex)
 
   v_rw = calcVRW();
 
-  WriteData(velRWAddr, v_rw*(65535.0/2400.0) + 32768.0, NIOS_QUEUE);
+  if (TxIndex == 0)  //only write at slow frame rate
+    WriteData(velRWAddr, v_rw*(65535.0/2400.0) + 32768.0, NIOS_QUEUE);
 
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
@@ -886,27 +882,31 @@ void WriteMot(int TxIndex)
   //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
   /* requested pivot current*/
   WriteData(dacPivAddr, i_piv*2, NIOS_QUEUE);
-  /* p term for az motor */
-  WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
-  /* I term for az motor */
-  WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
-  /* pointing gain term for az drive */
-  WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
 
-  /* p term to rw vel for pivot motor */
-  WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
-  /* p term to vel error for pivot motor */
-  WriteData(gPEPivAddr, pivGainErr, NIOS_QUEUE);
-  /* setpoint for reaction wheel */
-  WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
-  /* Pivot current offset to compensate for static friction. */
-  WriteData(frictOffPivAddr, pivFrictOff/2.0*65535, NIOS_QUEUE);
-  /* Pivot velocity */
-  WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
-  /* Azimuth Scan Acceleration */
-  WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
-  /* Azimuth Scan Max Acceleration */
-  WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
+  if (TxIndex == 0) { //only write at slow frame rate
+    /* p term for az motor */
+    WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
+    /* I term for az motor */
+    WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
+    /* pointing gain term for az drive */
+    WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
+
+    /* p term to rw vel for pivot motor */
+    WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
+    /* p term to vel error for pivot motor */
+    WriteData(gPEPivAddr, pivGainErr, NIOS_QUEUE);
+    /* setpoint for reaction wheel */
+    WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
+    /* Pivot current offset to compensate for static friction. */
+    WriteData(frictOffPivAddr, pivFrictOff/2.0*65535, NIOS_QUEUE);
+    /* Pivot velocity */
+    WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
+    /* Azimuth Scan Acceleration */
+    WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
+    /* Azimuth Scan Max Acceleration */
+    WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
+  }
+
   //bprintf(info,"az accel max: %g\n", CommandData.az_accel_max);
   if (wait > 0)
     wait--;
