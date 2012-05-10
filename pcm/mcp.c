@@ -653,7 +653,6 @@ static void GetACS()
   ACSData.clin_elev = (double)(slow_data[rollOfClinAddr->index][rollOfClinAddr->channel]);
 
   ACSData.t = mcp_systime(NULL);
-  ACSData.mcp_frame = rx_frame_index;
   ACSData.enc_mean_el = enc_mean_el;
   ACSData.enc_diff_el = enc_diff_el;
   ACSData.ifel_gy = ifel_gy;

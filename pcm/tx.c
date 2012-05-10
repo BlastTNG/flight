@@ -454,7 +454,6 @@ static void StoreData(int index)
   static struct NiosStruct* vetoSensorAddr;
 
   /** derived pointing data */
-  static struct NiosStruct* mcpFrameAddr;
   static struct NiosStruct* OffsetIFelGYAddr;
   static struct NiosStruct* OffsetIFrollGYAddr;
   static struct NiosStruct* OffsetIFyawGYAddr;
@@ -578,7 +577,6 @@ static void StoreData(int index)
     firsttime = 0;
     azAddr = GetNiosAddr("az");
     elAddr = GetNiosAddr("el");
-    mcpFrameAddr = GetNiosAddr("mcp_frame");
 
     latSipAddr = GetNiosAddr("lat_sip");
     lonSipAddr = GetNiosAddr("lon_sip");
@@ -799,7 +797,6 @@ static void StoreData(int index)
       NIOS_QUEUE);
   WriteData(altAddr, (unsigned int)(PointingData[i_point].alt), NIOS_QUEUE);
 
-  WriteData(mcpFrameAddr, PointingData[i_point].mcp_frame, NIOS_QUEUE);
   WriteData(lstAddr, PointingData[i_point].lst, NIOS_QUEUE);
 
   WriteData(azMagAddr,

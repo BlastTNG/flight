@@ -1210,7 +1210,6 @@ void Pointing(void)
 
   /*****************************/
   /** set time related things **/
-  PointingData[point_index].mcp_frame = ACSData.mcp_frame;
   PointingData[point_index].t = mcp_systime(NULL); // for now use CPU time
   PointingData[point_index].lst = getlst(PointingData[point_index].t,
       PointingData[point_index].lon);

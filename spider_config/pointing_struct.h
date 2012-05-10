@@ -90,7 +90,6 @@ struct ACSDataStruct {
   double ifroll_gy;    // deg/s
   double ifyaw_gy;    // deg/s
   double enc_table; // degrees
-  int mcp_frame;
   time_t t;
 };
 extern struct ACSDataStruct ACSData;
@@ -178,7 +177,6 @@ struct PointingDataStruct {
   double lon;       // degrees
   double alt;       // m
   int at_float;
-  int mcp_frame;
   time_t t;
   time_t lst;
   double mag_az;   // degrees

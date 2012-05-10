@@ -108,7 +108,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"frame_thebad", 'w', LOOP3, 31,                1.0,             0.0, 'U', U_NONE},
   {"sec_thebad",   'w', LOOP3, 44,                1.0,             0.0, 'U', U_NONE},
   {"usec_thebad",  'w', LOOP3, 58,                1.0,             0.0, 'U', U_NONE},
-  {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
+  //{"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
   {"lst_sched",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
   {"frame_theugly",    'w', LOOP9, 50,                1.0,             0.0, 'U', U_NONE},
@@ -242,6 +242,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_jfet",        'r', DIOD_A2, 21,         CAL16(1.0,            0.0), 'u', U_V_V},
 #endif
 
+  //TODO replace these with one write
   {"phase_00_hwp",  'w', HWP_A1,  0,               I2DEG,            0.0, 'u',U_PH_DEG},
   {"phase_01_hwp",  'w', HWP_A1,  1,               I2DEG,            0.0, 'u',U_PH_DEG},
   {"phase_02_hwp",  'w', HWP_A1,  2,               I2DEG,            0.0, 'u',U_PH_DEG},
@@ -286,16 +287,12 @@ struct ChannelStruct SlowChannels[] = {
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"az_sun",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
-  {"lvdt_low_act", 'w', LOOP1, 22,                1.0,         -5000.0, 'u', U_NONE},
   {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, slot_sched
-  {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
+  //{"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
   {"upslot_sched", 'w', LOOP1, 25,                1.0,             0.0, 'u', U_NONE},  
   {"t_chip_flc",   'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
   {"declination_mag",'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_D_DEG}, // magnetic declination
   {"veto_sensor",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
-  {"level_on_bal", 'w', LOOP1, 29,           1./1990.13,             0.0, 'u', U_I_A},
-  {"level_off_bal",'w', LOOP1, 30,           1./1990.13,             0.0, 'u', U_I_A},
-  {"level_target_bal",'w', LOOP1, 31,           1./1990.13,            -5.0, 'u', U_I_A},
   /* LOOP1 32-33 are wide */
   /* LOOP1 34 is fast */
   {"blob07_x_thegood",'w', LOOP1, 35, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
@@ -366,7 +363,6 @@ struct ChannelStruct SlowChannels[] = {
   {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
   {"sigma_dgps",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
-  {"lvdt_high_act",   'w',LOOP2, 43,              1.0,         -5000.0, 'u', U_NONE},
   /* LOOP2 44-45 are unusued */
   {"mapsigma_thegood",'w',LOOP2, 46,           1.0/10.0,             0.0, 'u', U_NONE},
   // LOOP2 47-48 are fast
@@ -440,7 +436,6 @@ struct ChannelStruct SlowChannels[] = {
   {"blob04_s_thebad",  'w', LOOP3,  60,          1.0/100.0,             0.0, 'u', U_NONE},
   /* LOOP3 61-63 are unusued */
   {"blob07_x_theugly",  'w', LOOP4,  0, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
-  {"pref_tp_sf",   'w', LOOP4,  1,                1.0,             0.0, 'u', U_NONE},
   {"blob07_y_theugly",  'w', LOOP4,  2, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"focpos_thegood",'w',LOOP4,  3,           1.0/10.0,             0.0, 's', U_NONE},
   {"focpos_thebad",'w', LOOP4,  4,           1.0/10.0,             0.0, 's', U_NONE},
@@ -453,11 +448,9 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP4 11-14 are unusued */
   {"ccd_t_thebad", 'w', LOOP4, 15,          1.0/100.0,             0.0, 's', U_NONE},
   /* LOOP4 16-20 are unusued */
-  {"jfet_set_on",  'w', LOOP4, 21,             1/100.,             0.0, 'u', U_NONE},
-  {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u', U_NONE},
   {"blob07_f_theugly",  'w', LOOP4,  23,                1.0,             0.0, 'u', U_NONE},
   /* LOOP4 24-25 are wide */
-  {"cycle_state",  'w', LOOP4, 26,                1.0,             0.0, 'u', U_NONE},
+  //{"cycle_state",  'w', LOOP4, 26,                1.0,             0.0, 'u', U_NONE},
   /* LOOP4 27-32 is unusued */
   {"g_p_heat_gy",   'w', LOOP4, 33,                1.0,             0.0, 'u', U_NONE},
   {"g_i_heat_gy",   'w', LOOP4, 34,                1.0,             0.0, 'u', U_NONE},
@@ -485,7 +478,6 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP4 57 is unused */
   /* LOOP4 58-59 are wide */
   {"az_raw_dgps",  'w', LOOP4, 60,              I2DEG,             0.0, 'u', U_D_DEG},
-  {"gain_bal",     'w', LOOP4, 61,            1/1000.,             0.0, 'u', U_NONE},
   {"el_clin",      'w', LOOP4, 62,              I2DEG,             0.0, 'u', U_NONE},
   {"h_p",          'w', LOOP4, 63,              I2DEG,             0.0, 'u', U_NONE}, // scan height
 
@@ -509,35 +501,16 @@ struct ChannelStruct SlowChannels[] = {
   {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u', U_NONE},
   {"dith_el",      'w', LOOP5, 23,        0.5/32768.0,             0.0, 's', U_D_DEG},
   {"state_lock",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
-  {"seized_act",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 28 is fast */
   {"dith_step_p",  'w', LOOP5, 29,        0.1/32768.0,             0.0, 's', U_D_DEG},
-  {"x_vel_stage",  'w', LOOP5, 30,                1.0,             0.0, 'u', U_NONE}, // not used in flight...
-  {"x_stp_stage",  'w', LOOP5, 31,                1.0,             0.0, 'u', U_NONE},
-  {"x_str_stage",  'w', LOOP5, 32,                1.0,             0.0, 'u', U_NONE},
-  {"y_lim_stage",  'w', LOOP5, 33,                1.0,             0.0, 'u', U_NONE},
   /* LOOP5 34 is fast */
   /* LOOP5 35 is unused */
-  {"y_stp_stage",  'w', LOOP5, 36,                1.0,             0.0, 'u', U_NONE},
-  {"y_str_stage",  'w', LOOP5, 37,                1.0,             0.0, 'u', U_NONE},
-  {"x_lim_stage",  'w', LOOP5, 38,                1.0,             0.0, 'u', U_NONE},
-  {"y_vel_stage",  'w', LOOP5, 39,                1.0,             0.0, 'u', U_NONE},
-  {"he4_lev_old",  'w', LOOP5, 40,          CAL16(1.0,            0.0), 'u', U_NONE},
+  //{"he4_lev_old",  'w', LOOP5, 40,          CAL16(1.0,            0.0), 'u', U_NONE},
   /* LOOP5 41 is unusued */
   /* LOOP5 42-53 are wide */
   /* LOOP5 54 is unusued */
   {"pitch_mag",        'w',LOOP5, 55,           I2DEG,             0.0, 'u', U_NONE},
   /* LOOP5 56-63 are unusued */
-
-  //this set of actuator channels used to be wide
-  {"pos_0_act",    'w', LOOP5, 42,                1.0,		   0.0, 's', U_NONE},
-  {"pos_1_act",    'w', LOOP5, 44,                1.0,             0.0, 's', U_NONE},
-  {"pos_2_act",    'w', LOOP5, 46,                1.0,             0.0, 's', U_NONE},
-  {"enc_0_act",    'w', LOOP5, 48,                1.0,		   0.0, 's', U_NONE},
-  {"enc_1_act",    'w', LOOP5, 50,                1.0,             0.0, 's', U_NONE},
-  {"enc_2_act",    'w', LOOP5, 52,                1.0,             0.0, 's', U_NONE},
-  {"goal_sf",      'w', LOOP6, 30,                1.0,             0.0, 'u', U_NONE},
-  {"focus_sf",     'w', LOOP6, 32,                1.0,             0.0, 's', U_NONE},
 
   {"blob05_x_thegood",  'w', LOOP6,  0, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"blob05_y_thegood",  'w', LOOP6,  1, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
@@ -559,26 +532,8 @@ struct ChannelStruct SlowChannels[] = {
   {"blob06_y_thebad",   'w', LOOP6, 17, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
   {"blob06_f_thebad",   'w', LOOP6, 18,                1.0,             0.0, 'u', U_NONE},
   {"blob06_s_thebad",   'w', LOOP6, 19,          1.0/100.0,             0.0, 'u', U_NONE},
-  {"pref_ts_sf",   'w', LOOP6, 20,                1.0,             0.0, 'u', U_NONE},
-  {"spread_sf",    'w', LOOP6, 21,             1/500.,             0.0, 'u', U_NONE},
   {"blob06_x_theugly",  'w', LOOP6, 23, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
-  {"i_move_act",   'w', LOOP6, 25,                1.0,             0.0, 'u', U_NONE},
-  {"i_hold_act",   'w', LOOP6, 26,                1.0,             0.0, 'u', U_NONE},
-  {"vel_act",      'w', LOOP6, 27,                1.0,             0.0, 'u', U_NONE},
-  {"acc_act",      'w', LOOP6, 28,                1.0,             0.0, 'u', U_NONE},
   /* LOOP6 30-33 are wide */
-  {"g_prime_sf",   'w', LOOP6, 36,               0.01,             0.0, 's', U_NONE},
-  {"g_second_sf",  'w', LOOP6, 37,               0.01,             0.0, 's', U_NONE},
-  {"step_sf",      'w', LOOP6, 38,                1.0,             0.0, 'u', U_NONE},
-  {"wait_sf",      'w', LOOP6, 39,              1/30.,             0.0, 'u', U_NONE},
-  {"mode_sf",      'w', LOOP6, 40,                1.0,             0.0, 'u', U_NONE},
-  {"correction_sf",'w', LOOP6, 41,                1.0,             0.0, 's', U_NONE},
-  {"age_sf",       'w', LOOP6, 42,              1/30.,             0.0, 'u', U_NONE},
-  {"offset_sf",    'w', LOOP6, 43,                1.0,             0.0, 's', U_NONE},
-  {"t_prime_sf",   'w', LOOP6, 44,         CAL16T(1.0,            0.0), 'u', U_T_C},
-  {"t_second_sf",  'w', LOOP6, 45,         CAL16T(1.0,            0.0), 'u', U_T_C},
-  {"flags_act",    'w', LOOP6, 50,                1.0,             0.0, 'u', U_NONE},
-  {"lvdt_spread_act",'w', LOOP6, 55,              1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */
   {"el_sun",       'w', LOOP6, 58,              I2DEG,             0.0, 's', U_NONE},
   {"blob06_y_theugly",  'w', LOOP6, 59, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
@@ -626,7 +581,6 @@ struct ChannelStruct SlowChannels[] = {
   {"pos_1_hwp",        'w', LOOP7, 42,           I2DEG,             0.0, 'u', U_P_DEG},
   {"pos_2_hwp",        'w', LOOP7, 43,           I2DEG,             0.0, 'u', U_P_DEG},
   {"pos_3_hwp",        'w', LOOP7, 44,           I2DEG,             0.0, 'u', U_P_DEG},
-  {"mode_bal",         'w', LOOP7, 45,             1.0,             0.0, 'u', U_NONE},
   {"pitch_raw_dgps",   'w', LOOP7, 46,           I2DEG,             0.0, 'u', U_P_DEG},
   {"roll_raw_dgps",    'w', LOOP7, 47,           I2DEG,             0.0, 'u', U_P_DEG},
   {"verbose_rw",       'w', LOOP7, 48,             1.0,             0.0, 'u', U_NONE},
@@ -634,14 +588,14 @@ struct ChannelStruct SlowChannels[] = {
   {"verbose_piv",      'w', LOOP7, 52,             1.0,             0.0, 'u', U_NONE},
   {"p_rw_term_piv",    'w', LOOP7, 53,             1.0,             0.0, 's', U_NONE},
   {"p_err_term_piv",   'w', LOOP7, 54,             1.0,             0.0, 's', U_NONE},
-  {"step_start_bias",  'w', LOOP7, 55,             0.5,             0.0, 'u', U_NONE},
-  {"step_end_bias",    'w', LOOP7, 56,             0.5,             0.0, 'u', U_NONE},
-  {"step_n_bias",      'w', LOOP7, 57,             1.0,             0.0, 'u', U_NONE},
-  {"step_time_bias",   'w', LOOP7, 58,             1.0,             0.0, 'u', U_NONE},
-  {"step_which_bias",  'w', LOOP7, 60,             1.0,             0.0, 'u', U_NONE},
-  {"step_start_phase", 'w', LOOP7, 61,             0.5,             0.0, 'u', U_NONE},
-  {"step_end_phase",   'w', LOOP7, 62,             0.5,             0.0, 'u', U_NONE},
-  {"step_nsteps_phase",'w', LOOP7, 63,             1.0,             0.0, 'u', U_NONE},
+  //{"step_start_bias",  'w', LOOP7, 55,             0.5,             0.0, 'u', U_NONE},
+  //{"step_end_bias",    'w', LOOP7, 56,             0.5,             0.0, 'u', U_NONE},
+  //{"step_n_bias",      'w', LOOP7, 57,             1.0,             0.0, 'u', U_NONE},
+  //{"step_time_bias",   'w', LOOP7, 58,             1.0,             0.0, 'u', U_NONE},
+  //{"step_which_bias",  'w', LOOP7, 60,             1.0,             0.0, 'u', U_NONE},
+  //{"step_start_phase", 'w', LOOP7, 61,             0.5,             0.0, 'u', U_NONE},
+  //{"step_end_phase",   'w', LOOP7, 62,             0.5,             0.0, 'u', U_NONE},
+  //{"step_nsteps_phase",'w', LOOP7, 63,             1.0,             0.0, 'u', U_NONE},
   {"step_time_phase",  'w', LOOP8,  0,             1.0,             0.0, 'u', U_NONE},
   {"step_ena_bias",    'w', LOOP8,  1,             1.0,             0.0, 'u', U_NONE},
   {"step_ena_phase",   'w', LOOP8,  2,             1.0,             0.0, 'u', U_NONE},
@@ -659,22 +613,11 @@ struct ChannelStruct SlowChannels[] = {
   {"v_targ_cc",  'w',  LOOP8,  11,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
   {"state_cc",   'w',  LOOP8,  12,  1.0,      0.0,            'u',  U_NONE},   
   
-  /* filtered LVDTs, rotated to motor positions */
-  {"lvdt_0_act",  'w',  LOOP8, 13,   1.0,     0.0,   's', U_NONE},
-  {"lvdt_1_act",  'w',  LOOP8, 14,   1.0,     0.0,   's', U_NONE},
-  {"lvdt_2_act",  'w',  LOOP8, 15,   1.0,     0.0,   's', U_NONE},
-
   {"frict_off_piv",'w', LOOP8,  16,      2.0/65535.0,              0.0,   'u', U_NONE},
   {"frict_term_piv",'w',LOOP8,  17,      2.0/32767.0,              0.0,   's', U_NONE},
   {"frict_term_uf_piv",'w',LOOP8,18,     2.0/32767.0,              0.0,   's', U_NONE}, // For debugging remove later
 
   {"az_gy",        'w',   LOOP8, 19,       20.0/32768.0,             0.0, 's', U_V_DPS},
-  {"offset_0_act", 'w',   LOOP8, 20,                1.0,             0.0, 'u', U_NONE},
-  {"offset_1_act", 'w',   LOOP8, 21,                1.0,             0.0, 'u', U_NONE},
-  {"offset_2_act", 'w',   LOOP8, 22,                1.0,             0.0, 'u', U_NONE},
-  {"goal_0_act",   'w',   LOOP8, 23,                1.0,             0.0, 's', U_NONE},
-  {"goal_1_act",   'w',   LOOP8, 24,                1.0,             0.0, 's', U_NONE},
-  {"goal_2_act",   'w',   LOOP8, 25,                1.0,             0.0, 's', U_NONE},
 
   {"azraw_pss",   'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
   {"elraw_pss",   'w',   LOOP8, 27,              I2DEG,             0.0, 'u', U_P_DEG},
@@ -724,12 +667,6 @@ struct ChannelStruct SlowChannels[] = {
   {"pos_6_hwp",      'w', LOOP9,  6,              I2DEG,             0.0, 'u', U_P_DEG},
   {"rate_tdrss",     'w', LOOP9,  9,                1.0,             0.0, 'u', U_RATE},
   {"rate_iridium",   'w', LOOP9,  10,                1.0,             0.0, 'u', U_RATE},
-  {"mode_act",       'w', LOOP9,  17,                1.0,             0.0, 's', U_NONE},
-  {"dr_0_act",       'w', LOOP9,  20,                1.0,             0.0, 's', U_NONE},
-  {"dr_1_act",       'w', LOOP9,  21,                1.0,             0.0, 's', U_NONE},
-  {"dr_2_act",       'w', LOOP9,  22,                1.0,             0.0, 's', U_NONE},
-  {"tol_act",        'w', LOOP9,  23,                1.0,             0.0, 'u', U_NONE},
-  {"status_actbus",  'w', LOOP9,  24,                1.0,             0.0, 'u', U_NONE},
   {"blob03_x_theugly",  'w', LOOP9,  26, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"blob03_y_theugly",  'w', LOOP9,  27, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
   {"blob03_f_theugly",  'w', LOOP9,  28,                1.0,             0.0, 'u', U_NONE},
@@ -775,7 +712,6 @@ struct ChannelStruct SlowChannels[] = {
   //this may be unused because of the new program
   //{"switch_charge",'w',  ACS1_D,  3,                1.0,             0.0, 'u', U_NONE},
   {"switch_misc",  'w',  ACS1_D,  4,                1.0,             0.0, 'u', U_NONE},
-  {"bus_reset_act",'w',  ACS1_D,  5,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS1 Analog card 1 */
 /* default current cal is 12.5, 0.0 */
@@ -822,7 +758,6 @@ struct ChannelStruct SlowChannels[] = {
 
 /* ACS2 Digital I/O card */
   // ACS2_D 20-21 are unused
-  {"v_pump_bal",    'w',  ACS2_D,  0,       3.91/13107.0,          -9.775, 'u', U_NONE},
   {"dac2_ampl",    'w',  ACS2_D,  1,                 1.0,             0.0, 'u', U_NONE},
   {"dac_piv",      'w',  ACS2_D,  2,                 1.0,             0.0, 'u', U_NONE},
   //  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
@@ -1109,7 +1044,7 @@ struct ChannelStruct FastChannels[] = {
   {"ifyaw_gy",     'r',   ACS2_D, 14,-GY16_TO_DPS,GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
 //  {"trigger_isc",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
 //  {"trigger_osc",  'w',   ACS2_D, 12,                 1.0,            0.0, 'u', U_NONE},
-  {"vel_req_el",   'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
+  //{"vel_req_el",   'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"cos_el", 	   'w',    ACS2_D, 25, 1/32768.0, -1.0, 'u', U_NONE},
   {"sin_el", 	   'w',    ACS2_D, 26, 1/32768.0, -1.0, 'u', U_NONE}, 
 //{"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
@@ -1127,8 +1062,6 @@ struct ChannelStruct FastChannels[] = {
   {"heat_45_hk",   'w',  RTD_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
 
-  {"x_stage",      'w', LOOP5, 28,     2.0,        0.0,      'u',      U_NONE},
-  {"y_stage",      'w', LOOP5, 34,     2.0,        0.0,      'u',      U_NONE},
   {"vel_ser_rw",   'w', LOOP7,  0,     2400.0/65536.0,  0.0, 's',      U_V_DPS},
   {"vel_rw",       'w', LOOP7,  1,     2400.0/65536.0, -1200.0,  'u',  U_V_DPS},
  // {"el_raw_enc",   'w', LOOP7,  2,     I2DEG,      0.0,      'u',      U_P_DEG},
@@ -1136,7 +1069,6 @@ struct ChannelStruct FastChannels[] = {
   {"el_enc",       'w', LOOP2, 47,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"sigma_enc",    'w', LOOP2, 48,     I2DEG,      0.0,      'u',      U_NONE},
   {"chatter",      'w', LOOP7, 38,     1.0,        0.0,      'u',      U_NONE},
-  {"mcp_frame",    'w', LOOP2, 34,     1.0,        0.0,      'u',      U_NONE},
 
   END_OF_CHANNELS
 };
