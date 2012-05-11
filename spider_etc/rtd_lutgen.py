@@ -20,9 +20,9 @@ R = {
       #"ntd" test board coniguration
       "ntd-test": { "1": 4700., "2": 220., "b": 3300., "tmax": 1100.},
       #"ntd"  configuration with warm load resistors
-      "ntd": { "1": 4700., "2": 220., "b": 50.e6, "tmax": 10.e6},
+      # "ntd": { "1": 4700., "2": 220., "b": 50.e6, "tmax": 10.e6},
       #"ntd" proper coniguration
-      # "ntd": { "1": 4700., "2": 220., "b": 30.e6, "tmax": 10.e6},
+      "ntd": { "1": 4700., "2": 220., "b": 30.e6, "tmax": 10.e6},
       "cnx": { "1": 12.e3, "2": 100., "b": 33.e4, "tmax": 15.e4}
     }
 
