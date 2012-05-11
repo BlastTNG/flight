@@ -53,11 +53,11 @@ all:: $(ALL)
 	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common )"
 	@false
 
-decomd-blast: $(BLAST_OBJS)
-	  $(CC) $(LDFLAGS) $(BLAST_OBJS) -o decomd-blast
+decomd-blast: $(BLAST_OBJS) readdecom_blast.o
+	  $(CC) $(LDFLAGS) $(BLAST_OBJS) readdecom_blast.o -o decomd-blast
 
-decomd-spider: $(SPIDER_OBJS)
-	  $(CC) $(LDFLAGS) $(SPIDER_OBJS) -o decomd-spider
+decomd-spider: $(SPIDER_OBJS) readdecom_spider.o
+	  $(CC) $(LDFLAGS) $(SPIDER_OBJS) readdecom_spider.o -o decomd-spider
 
 clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)

@@ -54,7 +54,6 @@
 #define FILE_SUFFIX 'y'
 
 #define FS_FILTER 0.9
-#define DQ_FILTER 0.9977
 
 void InitialiseFrameFile(char type);
 void FrameFileWriter(void);
@@ -93,98 +92,12 @@ int du = 0;
 int wfifo_size = 0;
 unsigned long frame_counter = 0;
 unsigned short crc_ok = 1;
-unsigned short crc_pos = 2;
-unsigned short crc_neg = 2;
-unsigned short crc_buf = 2;
 
 #ifdef DEBUG
 FILE* dump = NULL;
 #endif
 
-void ReadDecom (void)
-{
-  unsigned short buf;
-  int i_word = 0;
-  int read_data = 0;
-
-  for (;;) {
-    while ((read(decom, &buf, sizeof(unsigned short))) > 0) {
-#ifdef DEBUG
-      fwrite(&buf, sizeof(unsigned short), 1, dump);
-#endif
-      read_data = 1;
-      FrameBuf[i_word] = buf;
-      AntiFrameBuf[i_word] = ~buf;
-      if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
-        du = ioctl(decom, DECOM_IOC_NUM_UNLOCKED);
-        wfifo_size = ioctl(decom, DECOM_IOC_FIONREAD);
-        if ((buf != FRAME_SYNC_WORD) && ((~buf & 0xffff) != FRAME_SYNC_WORD)) {
-          status = 0;
-          i_word = 0;
-        } else {
-          if (status < 2) {
-            status++;
-          } else {
-            if (polarity) {
-              FrameBuf[BiPhaseFrameWords] = crc_ok;
-              FrameBuf[BiPhaseFrameWords + 1] = polarity;
-              FrameBuf[BiPhaseFrameWords + 2] = du;
-              if (!system_idled) {
-                pushDiskFrame(FrameBuf);
-                frame_counter++;
-              }
-            } else {
-              AntiFrameBuf[BiPhaseFrameWords] = crc_ok;
-              AntiFrameBuf[BiPhaseFrameWords + 1] = polarity;
-              AntiFrameBuf[BiPhaseFrameWords + 2] = du;
-              if (!system_idled) {
-                pushDiskFrame(AntiFrameBuf);
-                frame_counter++;
-              }
-            }
-          }
-
-          if (crc_ok==1) {
-            dq_bad *= DQ_FILTER;
-          } else {
-            dq_bad = dq_bad * DQ_FILTER + (1.0 - DQ_FILTER);
-	  }
-
-          i_word++;
-        }
-      } else {
-        if (++i_word >= BI0_FRAME_SIZE) {
-          i_word = 0;
-	}
-
-        if (i_word - 1 == BiPhaseFrameWords) {
-          FrameBuf[0] = AntiFrameBuf[0] = 0xEB90;
-
-          crc_pos = CalculateCRC(CRC_SEED, FrameBuf, BiPhaseFrameWords);
-          crc_neg = CalculateCRC(CRC_SEED, AntiFrameBuf, BiPhaseFrameWords);
-	  crc_buf = buf;
-          if (buf == crc_pos) {
-            crc_ok = 1;
-            polarity = 1;
-          } else if ((unsigned short)~buf == crc_neg) {
-            polarity = 0;
-            crc_ok = 1;
-          } else {
-            crc_ok = 0;
-	  }
-        }
-      }
-    }
-
-    if (!read_data) {
-      status = 0;
-    } else {
-      read_data = 0;
-    }
-
-    usleep(5000);
-  }
-}
+void ReadDecom(void);
 
 int MakeSock(void)
 {
@@ -392,10 +305,10 @@ int main(void) {
     if (fs_bad > 1)
       fs_bad = 1;
 #ifdef DEBUG
-    printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f %d %d %d\n", 
-	status + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, 
-	disk_free, frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok,
-	DiskFrameSize, BiPhaseFrameSize);
+    //printf("%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f %d %d %d\n", 
+	//status + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, 
+	//disk_free, frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok,
+	//DiskFrameSize, BiPhaseFrameSize);
 #endif
     sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f %d %d %d\n", 
 	status + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, 
