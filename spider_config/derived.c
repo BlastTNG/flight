@@ -536,6 +536,10 @@ union DerivedUnion DerivedChannels[] = {
     LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", NTD_LUT), \
     UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega"), \
     T_HK("TR_"#ch"_"#i"_HK", "R_"#ch"_"#i"_HK", lut)
+#define NTD_HK_NOLUT(ch, i) \
+    DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_NTD_"#i"_HK"), \
+    LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", NTD_LUT), \
+    UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega")
 #define CNX_HK(ch, i, lut) \
     DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_CNX_"#i"_HK"), \
     LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", CNX_LUT), \
@@ -552,11 +556,10 @@ union DerivedUnion DerivedChannels[] = {
   // CNX_HK(FP,	3, LUT_DIR "c_fp_3.lut"),
   
   COMMENT("Housekeeping NTD Temperature Calibration"),
-  //NTD_HK(NTD1,	4, LUT_DIR "n_x2_ntd1.lut"),
-  //NTD_HK(NTD2,	4, LUT_DIR "n_x2_ntd2.lut"),
-  //NTD_HK(NTD3,	4, LUT_DIR "n_x2_ntd3.lut"),
-  //NTD_HK(NTD4,	4, LUT_DIR "n_x2_ntd4.lut"),
-  //NTD_HK(NTD3,	3, LUT_DIR "n_ntd3_3.lut"),
+  NTD_HK_NOLUT(NTD1,	4),
+  NTD_HK(NTD2,	4, LUT_DIR "x2_ntd2.lut"),
+  NTD_HK(NTD3,	4, LUT_DIR "x2_ntd3.lut"),
+  NTD_HK(NTD4,	4, LUT_DIR "x2_ntd4.lut"),
   
   COMMENT("Housekeeping Diode Temperature Calibration"),
   // Theo Run 9: X2 in slot 4 with Thelma 5
