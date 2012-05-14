@@ -1128,21 +1128,13 @@ double ReadCalData(struct BiPhaseStruct* addr)
 /* called from mcp, should call all nios writing functions */
 void UpdateBBCFrame()
 {
-  static struct BiPhaseStruct* frameNumAddr;
-  static int firsttime = 1;
   static int index = 0;
 
   /*** do fast Controls ***/
-  if (firsttime) {
-    firsttime = 0;
-    frameNumAddr = GetBiPhaseAddr("framenum");
-  }
-
   if (!mcp_initial_controls)
     DoSched();
   UpdateAxesMode();
   StoreData(index);
-  ControlGyroHeat();
   WriteMot(index);
   updateTableSpeed();
   WriteChatter(index);
@@ -1160,6 +1152,7 @@ void UpdateBBCFrame()
     LockMotor();
     cameraFields();
     StoreHWPBus();
+    ControlGyroHeat();    //TODO made slow (ch too). Check that this works
   }
 
   if (!mcp_initial_controls)

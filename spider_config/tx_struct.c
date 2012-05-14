@@ -539,7 +539,10 @@ struct ChannelStruct SlowChannels[] = {
   {"blob06_y_theugly",  'w', LOOP6, 59, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"mode_cal",     'w', LOOP6, 60,                1.0,             0.0, 'u', U_NONE},
   /* LOOP6 61-62 are unusued */
-  /* LOOP7 0-3 are fast narrow */
+  {"vel_ser_rw",   'w', LOOP7,  0,     2400.0/65536.0,  0.0, 's',      U_V_DPS},
+  {"vel_rw",       'w', LOOP7,  1,     2400.0/65536.0, -1200.0,  'u',  U_V_DPS},
+ // {"el_raw_enc",   'w', LOOP7,  2,     I2DEG,      0.0,      'u',      U_P_DEG},
+  /* LOOP7 3 is fast narrow */
 //{"stat_1_rw",    'w', LOOP7,  4,             1.0,           0.0, 'u', U_NONE},
 //{"stat_2_rw",    'w', LOOP7,  5,             1.0,           0.0, 'u', U_NONE},
 //{"fault_rw",     'w', LOOP7,  6,             1.0,           0.0, 'u', U_NONE},
@@ -712,6 +715,8 @@ struct ChannelStruct SlowChannels[] = {
   //this may be unused because of the new program
   //{"switch_charge",'w',  ACS1_D,  3,                1.0,             0.0, 'u', U_NONE},
   {"switch_misc",  'w',  ACS1_D,  4,                1.0,             0.0, 'u', U_NONE},
+  {"heat_gy",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
+
 
 /* ACS1 Analog card 1 */
 /* default current cal is 12.5, 0.0 */
@@ -769,6 +774,8 @@ struct ChannelStruct SlowChannels[] = {
  // {"g_i_el",       'w',  ACS2_D, 21,                1.0,             0.0, 'u', U_NONE},
   {"g_p_az",       'w',  ACS2_D, 23,                1.0,             0.0, 'u', U_NONE},
   {"g_i_az",       'w',  ACS2_D, 24,                1.0,             0.0, 'u', U_NONE},
+  {"cos_el", 	     'w',  ACS2_D, 25,          1/32768.0,            -1.0, 'u', U_NONE},
+  {"sin_el", 	     'w',  ACS2_D, 26,          1/32768.0,            -1.0, 'u', U_NONE}, 
   {"fault_gy",     'r',  ACS2_D, 15,                1.0,             0.0, 'u', U_NONE},
   {"dac_el",       'r',   ACS2_D, 20,                 1.0,            0.0, 'u', U_NONE},
   {"p_term_el",    'r',   ACS2_D, 21,                1.0,        -32768.0, 'u', U_NONE},
@@ -826,6 +833,12 @@ struct ChannelStruct SlowChannels[] = {
   {"v4_6_pss",     'r',  ACS2_A2, 37,           CAL16(-1.,            0.),  'u', U_V_V},
 
 #endif
+
+  {"heat_t_hk",    'w',  HWP_D,  53,            1.0,          0.0, 'u', U_NONE},
+  {"heat_13_hk",   'w',  RTD_D,  50,            1.0,          0.0, 'u', U_NONE},
+  {"heat_45_hk",   'w',  RTD_D,  51,            1.0,          0.0, 'u', U_NONE},
+  {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
+
 
   END_OF_CHANNELS
 };
@@ -1032,9 +1045,6 @@ struct ChannelStruct WideFastChannels[] = {
 
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
-/* ACS1 Digital Card */
-  {"heat_gy",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
-
 /* ACS2 Common Node */
   {"framenum",     'r',  ACS2_C,  1,                1.0,             0.0, 'u', U_NONE},
 
@@ -1045,8 +1055,6 @@ struct ChannelStruct FastChannels[] = {
 //  {"trigger_isc",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
 //  {"trigger_osc",  'w',   ACS2_D, 12,                 1.0,            0.0, 'u', U_NONE},
   //{"vel_req_el",   'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
-  {"cos_el", 	   'w',    ACS2_D, 25, 1/32768.0, -1.0, 'u', U_NONE},
-  {"sin_el", 	   'w',    ACS2_D, 26, 1/32768.0, -1.0, 'u', U_NONE}, 
 //{"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS,-32768.0*GY16_TO_DPS, 'u', U_V_DPS},
   {"step_1_el",    'w',   ACS2_D, 29,     10000.0/32767.0, -10000.30518509, 'u', U_F_HZ},
@@ -1057,14 +1065,6 @@ struct ChannelStruct FastChannels[] = {
   {"dps_table",    'w',    LOOP1, 34,  	     70.0/32767.0,            0.0, 's', U_V_DPS},
 
 #endif
-  {"heat_t_hk",    'w',  HWP_D,  53,            1.0,          0.0, 'u', U_NONE},
-  {"heat_13_hk",   'w',  RTD_D,  50,            1.0,          0.0, 'u', U_NONE},
-  {"heat_45_hk",   'w',  RTD_D,  51,            1.0,          0.0, 'u', U_NONE},
-  {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
-
-  {"vel_ser_rw",   'w', LOOP7,  0,     2400.0/65536.0,  0.0, 's',      U_V_DPS},
-  {"vel_rw",       'w', LOOP7,  1,     2400.0/65536.0, -1200.0,  'u',  U_V_DPS},
- // {"el_raw_enc",   'w', LOOP7,  2,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"res_rw",       'w', LOOP7,  3,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"el_enc",       'w', LOOP2, 47,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"sigma_enc",    'w', LOOP2, 48,     I2DEG,      0.0,      'u',      U_NONE},
