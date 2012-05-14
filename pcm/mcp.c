@@ -949,9 +949,29 @@ static void WatchDog (void)
 static void write_to_biphase(unsigned short *frame)
 {
   int i;
+  int j;
+  static char *padding = 0;
+  
+  if (padding == 0) {
+    padding = (char *)malloc(BiPhaseFrameWords*sizeof(int));
+    for (j=0; j<BiPhaseFrameWords*sizeof(int); j++) {
+      padding[j] = 0x55;
+    }
+  }
+  
 
   if (bi0_fp >= 0) { // should never be false!
+    // bi0FifoSize holds number of words in the fifo buffer.
+    CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
+    // make sure there is at least 1/5 frame of data in the buffer to avoid
+    // having the bi-0 writer run out of data while writing to the pci card.
+    if (CommandData.bi0FifoSize<BiPhaseFrameWords/5) {
+      write(bi0_fp, padding, (BiPhaseFrameWords/5-CommandData.bi0FifoSize) * sizeof(unsigned short));
+    }
+    CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
 
+    for (j=BiPhaseFrameWords-10; j<BiPhaseFrameWords+4; j++) frame[j] = j;
+    //frame[BiPhaseFrameWords+4] = 17;
     frame[BiPhaseFrameWords+4] = CalculateCRC(0, frame+5, 
 		sizeof(short)*(BiPhaseFrameWords-1));
     frame[4] = BiPhaseFrameWords;
@@ -965,9 +985,6 @@ static void write_to_biphase(unsigned short *frame)
 	    (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
     }
     
-    // bi0FifoSize holds number of 32 bit words in the fifo buffer.
-    // This is NOT the number of 16 bit words!
-    CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
   }
 }
 
