@@ -86,7 +86,7 @@ void LutInit(struct LutType *L)
     return;
   }
 
-  bprintf(info, "LUT: Reading lut `%s' with %i lines\n", L->filename, i);
+  //bprintf(info, "LUT: Reading lut `%s' with %i lines\n", L->filename, i);
   L->n = i;
   L->x = (double *)balloc(fatal, i * sizeof(double));
   L->y = (double *)balloc(fatal, i * sizeof(double));
