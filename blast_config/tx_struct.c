@@ -69,8 +69,13 @@
 #define LOOP9	40, 0
 #define DECOM	41, 0
 
+/* Analog channel calibrations */
+/* 16-bit channels with analog preamps. To Volts */
 #define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
-#define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T - 273.15)
+/* bare thermomtstor. To Volts. Use LUT for temperature conversion */
+#define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T)
+/* AD590 conversion. To Celsius */
+#define CAL_AD590(m,b) ((m)*M_16_AD590),((b)+B_16_AD590*(m)*M_16_AD590-273.15)
 
 #define U_NONE  "","" 
 #define U_T_C   "Temperature","^oC"
@@ -832,7 +837,8 @@ struct ChannelStruct SlowChannels[] = {
   {"t_mc_piv",     'r',  ACS1_T1, 5,          CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_piv",        'r',  ACS1_T1, 7,          CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_wd_flc",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_port_hexc",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  //NB: I'm using port_hexc as an example. Revert if not using new thermistor
+  {"vt_port_hexc",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_V_V},
   {"t_1_bat",      'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_2_bat",      'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_port_back",      'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u', U_T_C},

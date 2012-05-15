@@ -28,8 +28,12 @@ extern "C" {
 #define B_32PRE	(-2147483648.0)
 #define M_16PRE (10.24/32768.0)
 #define B_16PRE (-32768.0)
-#define M_16T	(4.096E6/2.2E3/32768.0/8.0)  //factor of 8 from maximizing range
-#define B_16T	(0.0)
+/* bare thermometer conversion to Volts. No negative values allowed */
+#define M_16T (4.096/32768.0/2.0)
+#define B_16T (0.0)
+/* AD590 calibrations. To Kelvin */
+#define M_16_AD590	(M_16T/2.2E-3)
+#define B_16_AD590	(B_16T)
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
 /* This is the elevation at which the encoder wraps around */

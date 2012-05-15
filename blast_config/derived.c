@@ -77,6 +77,8 @@
  * start of the file, to the end of the format file.
  */
 
+#define LUT_DIR "/data/etc/blast/"
+
 union DerivedUnion DerivedChannels[] = {
   /* Pointing */
   COMMENT("Microsecond Resolution Time"),
@@ -220,6 +222,14 @@ union DerivedUnion DerivedChannels[] = {
       ),
 
 #endif
+
+  /* gondola thermistor calibration */
+#define THERMISTOR(tch, vch) \
+    LINTERP(tch, vch, LUT_DIR "thermistor.lut"), \
+    UNITS(tch, "Temperature", "^oC")
+
+  COMMENT("Thermistor calibrations"),
+  THERMISTOR("T_PORT_HEXC", "VT_PORT_HEXC"),
 
   COMMENT("Lock Motor/Actuators"),
   BITFIELD("state_lock",
@@ -557,47 +567,47 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Cryo Table Lookups"),
   COMMENT("Diodes"),
 
-  LINTERP("Td_charcoal",   "TD_CHARCOAL"   , "/data/etc/blast/dt600.txt"),
+  LINTERP("Td_charcoal",   "TD_CHARCOAL"   , LUT_DIR "dt600.txt"),
     UNITS("Td_charcoal", "Temperature", "K"),
-  LINTERP("Td_lhe",        "TD_LHE"        , "/data/etc/blast/dt600.txt"),
+  LINTERP("Td_lhe",        "TD_LHE"        , LUT_DIR "dt600.txt"),
     UNITS("Td_lhe", "Temperature", "K"),
-  LINTERP("Td_ln",         "TD_LN"         , "/data/etc/blast/dt600.txt"),
+  LINTERP("Td_ln",         "TD_LN"         , LUT_DIR "dt600.txt"),
     UNITS("Td_ln", "Temperature", "K"),
-  LINTERP("Td_hs_pot",     "TD_HS_POT"     , "/data/etc/blast/dt-simonchase.txt"),
+  LINTERP("Td_hs_pot",     "TD_HS_POT"     , LUT_DIR "dt-simonchase.txt"),
     UNITS("Td_hs_pot", "Temperature", "K"),
-  LINTERP("Td_jfet",       "TD_JFET"       , "/data/etc/blast/dt600.txt"),
+  LINTERP("Td_jfet",       "TD_JFET"       , LUT_DIR "dt600.txt"),
     UNITS("Td_jfet", "Temperature", "K"),
-  LINTERP("Td_vcs_filt",   "TD_VCS_FILT"   , "/data/etc/blast/dt600.txt"),
+  LINTERP("Td_vcs_filt",   "TD_VCS_FILT"   , LUT_DIR "dt600.txt"),
     UNITS("Td_vcs_filt", "Temperature", "K"),
-  LINTERP("Td_ln_filt",    "TD_LN_FILT"    , "/data/etc/blast/dt600.txt"),
+  LINTERP("Td_ln_filt",    "TD_LN_FILT"    , LUT_DIR "dt600.txt"),
     UNITS("Td_ln_filt", "Temperature", "K"),
-  LINTERP("Td_lhe_filt",   "TD_LHE_FILT"   , "/data/etc/blast/dt600.txt"),
+  LINTERP("Td_lhe_filt",   "TD_LHE_FILT"   , LUT_DIR "dt600.txt"),
     UNITS("Td_lhe_filt", "Temperature", "K"),
-  LINTERP("Td_vcs_jfet",   "TD_VCS_JFET"   , "/data/etc/blast/dt600.txt"),
+  LINTERP("Td_vcs_jfet",   "TD_VCS_JFET"   , LUT_DIR "dt600.txt"),
     UNITS("Td_vcs_jfet", "Temperature", "K"),
-  LINTERP("Td_hs_charcoal","TD_HS_CHARCOAL", "/data/etc/blast/dt-simonchase.txt"),
+  LINTERP("Td_hs_charcoal","TD_HS_CHARCOAL", LUT_DIR "dt-simonchase.txt"),
     UNITS("Td_hs_charcoal", "Temperature", "K"),
 
   COMMENT("ROXes"), // raw calibration only -- warning!
-  LINTERP("Tr_300mk_strap","TR_300MK_STRAP", "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_300mk_strap","TR_300MK_STRAP", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_300mk_strap", "Temperature", "K"),
-  LINTERP("Tr_he3_fridge", "TR_HE3_FRIDGE" , "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_he3_fridge", "TR_HE3_FRIDGE" , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_he3_fridge", "Temperature", "K"),
-  LINTERP("Tr_m5",	   "TR_M5"         , "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_m5",	   "TR_M5"         , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_m5", "Temperature", "K"),
-  LINTERP("Tr_m4",         "TR_M4"         , "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_m4",         "TR_M4"         , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_m4", "Temperature", "K"),
-  LINTERP("Tr_hwpr",       "TR_HWPR"       , "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_hwpr",       "TR_HWPR"       , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_hwpr", "Temperature", "K"),
-  LINTERP("Tr_horn_500",   "TR_HORN_500"   , "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_horn_500",   "TR_HORN_500"   , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_horn_500", "Temperature", "K"),
-  LINTERP("Tr_horn_350",   "TR_HORN_350"   , "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_horn_350",   "TR_HORN_350"   , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_horn_350", "Temperature", "K"),
-  LINTERP("Tr_horn_250",   "TR_HORN_250"   , "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_horn_250",   "TR_HORN_250"   , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_horn_250", "Temperature", "K"),
-  LINTERP("Tr_he4_pot",    "TR_HE4_POT"    , "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_he4_pot",    "TR_HE4_POT"    , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_he4_pot", "Temperature", "K"),
-  LINTERP("Tr_optbox_filt","TR_OPTBOX_FILT", "/data/etc/blast/rox-raw.txt"),
+  LINTERP("Tr_optbox_filt","TR_OPTBOX_FILT", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_optbox_filt", "Temperature", "K"),
 
   COMMENT("ROX Voltage Calibrations for noise tests"),
@@ -624,8 +634,8 @@ union DerivedUnion DerivedChannels[] = {
 
 
 //  COMMENT("Level Sensor"),
-//  LINTERP("HE4_LITRE", "HE4_LEV", "/data/etc/blast/he4_litre.txt"),
-//  LINTERP("HE4_PERCENT", "HE4_LEV", "/data/etc/blast/he4_percent.txt"),
+//  LINTERP("HE4_LITRE", "HE4_LEV", LUT_DIR "he4_litre.txt"),
+//  LINTERP("HE4_PERCENT", "HE4_LEV", LUT_DIR "he4_percent.txt"),
 
   COMMENT("\"Named\" Bolometers"),
   
