@@ -26,14 +26,22 @@ extern "C" {
 #define SR (100.16)
 
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */
+/* 16- and 32-bit channels with preamps conversion to Volts */
 #define M_32PRE (10.24/2147483648.0)
 #define B_32PRE	(-2147483648.0)
 #define M_16PRE (10.24/32768.0)
 #define B_16PRE (-32768.0)
+/* Bare analog (no preamp) conversion to Volts. Used by some IF thermometers */
+#define M_16B (4.096/32768.0)
+#define B_16B (-32768.0)
 //NB: temperature cal just to volts now. Use a LUT to convert to degC
 //can get 2x more range if impossible -'ve values discarded
-#define M_16T (4.096/32768.0)
-#define B_16T	(-32768.0)
+/* bare thermometer conversion to Volts. No negative values allowed */
+#define M_16T (4.096/32768.0/2.0)
+#define B_16T (0.0)
+/* AD590 calibrations. To Kelvin (NB: used to have /8 not /2) */
+#define M_16_AD590	(M_16T/2.2E-3)
+#define B_16_AD590	(B_16T)
 
 #define M_DAC (5.0/32768.0)
 #define B_DAC (-32768.0)

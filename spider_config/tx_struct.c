@@ -60,9 +60,16 @@
 #define DECOM	42, 0
 
 /* Analog channel calibrations */
+/* 16/32-bit channels with analog preamps. To Volts */
 #define CAL16(m,b) ((m)*M_16PRE), ((b) + B_16PRE*(m)*M_16PRE)
 #define CAL32(m,b) ((m)*M_32PRE), ((b) + B_32PRE*(m)*M_32PRE)
+/* 16-bit bare analog. To Volts */
+#define CAL16B(m,b) ((m)*M_16B), ((b) + B_16B*(m)*M_16B)
+/* bare thermomtstor. To Volts. Use LUT for temperature conversion */
 #define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T)
+/* AD590 conversion. To Celsius */
+#define CAL_AD590(m,b) ((m)*M_16_AD590),((b)+B_16_AD590*(m)*M_16_AD590-273.15)
+/* DAC outputs. To Volts */
 #define CALDAC(m,b) ((m)*M_DAC), ((b) + B_DAC*(m)*M_DAC)
 
 /* Housekeeping calibrations (D)iode, (C)ernox, (N)TD*/
@@ -269,13 +276,13 @@ struct ChannelStruct SlowChannels[] = {
   {"phase_23_hwp",  'w', HWP_A1, 23,               I2DEG,            0.0, 'u',U_PH_DEG},
   {"phase_24_hwp",  'w', HWP_A1, 24,               I2DEG,            0.0, 'u',U_PH_DEG},
 
-  {"vt_1_if",      'r',  HWP_A2, 37, CAL16T(         1.0,           0.0), 'u', U_V_V},
-  {"vt_2_if",      'r',  HWP_A2, 39, CAL16T(         1.0,           0.0), 'u', U_V_V},
-  {"vt_3_if",      'r',  HWP_A2, 41, CAL16T(         1.0,           0.0), 'u', U_V_V},
-  {"vt_4_if",      'r',  HWP_A2, 43, CAL16T(         1.0,           0.0), 'u', U_V_V},
-  {"vt_5_if",      'r',  HWP_A2, 45, CAL16T(         1.0,           0.0), 'u', U_V_V},
-  {"vt_6_if",      'r',  HWP_A2, 47, CAL16T(         1.0,           0.0), 'u', U_V_V},
-  {"vt_7_if",      'r',  HWP_A2, 49, CAL16T(         1.0,           0.0), 'u', U_V_V},
+  {"vt_1_if",      'r',  HWP_A2, 37, CAL16B(         1.0,           0.0), 'u', U_V_V},
+  {"vt_2_if",      'r',  HWP_A2, 39, CAL16B(         1.0,           0.0), 'u', U_V_V},
+  {"vt_3_if",      'r',  HWP_A2, 41, CAL16B(         1.0,           0.0), 'u', U_V_V},
+  {"vt_4_if",      'r',  HWP_A2, 43, CAL16B(         1.0,           0.0), 'u', U_V_V},
+  {"vt_5_if",      'r',  HWP_A2, 45, CAL16B(         1.0,           0.0), 'u', U_V_V},
+  {"vt_6_if",      'r',  HWP_A2, 47, CAL16B(         1.0,           0.0), 'u', U_V_V},
+  {"vt_7_if",      'r',  HWP_A2, 49, CAL16B(         1.0,           0.0), 'u', U_V_V},
 
   /* LOOP1 0-7 are wide */
   /* LOOP1 10-11 are unused */
