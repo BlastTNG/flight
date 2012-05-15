@@ -89,6 +89,8 @@
  * start of the file, to the end of the format file.
  */
 
+#define LUT_DIR "/data/etc/spider/"
+
 union DerivedUnion DerivedChannels[] = {
   /* Pointing */
   COMMENT("Microsecond Resolution Time"),
@@ -445,18 +447,19 @@ union DerivedUnion DerivedChannels[] = {
   UNITS("RATE_INT_BBC", "Frequency", "Hz"),
 
   /* gondola thermistor calibration */
-#define T_ACS(tch, vch, lut) \
-    LINTERP(tch, vch, lut), \
+#define T_ACS(tch, vch) \
+    LINTERP(tch, vch, LUT_DIR "thermistor.lut"), \
     UNITS(tch, "Temperature", "^oC")
-  T_ACS("T_RW", "VT_RW", "/data/etc/spider/thermistor.lut"),
 
-  T_ACS("T_BOTTOM_ORING_IF", "VT_1_IF", "/data/etc/spider/thermistor.lut"),
-  T_ACS("T_TOP_DOME_IF", "VT_2_IF", "/data/etc/spider/thermistor.lut"),
-  T_ACS("T_MCE_POWER_IF", "VT_3_IF", "/data/etc/spider/thermistor.lut"),
-  T_ACS("T_APERTURE_IF", "VT_4_IF", "/data/etc/spider/thermistor.lut"),
-  T_ACS("T_TOP_ORING_IF", "VT_5_IF", "/data/etc/spider/thermistor.lut"),
-  T_ACS("T_HERMETICS_IF", "VT_6_IF", "/data/etc/spider/thermistor.lut"),
-  T_ACS("T_SFT_VALVE_IF", "VT_7_IF", "/data/etc/spider/thermistor.lut"),
+  T_ACS("T_RW", "VT_RW"),
+
+  T_ACS("T_BOTTOM_ORING_IF", "VT_1_IF"),
+  T_ACS("T_TOP_DOME_IF", "VT_2_IF"),
+  T_ACS("T_MCE_POWER_IF", "VT_3_IF"),
+  T_ACS("T_APERTURE_IF", "VT_4_IF"),
+  T_ACS("T_TOP_ORING_IF", "VT_5_IF"),
+  T_ACS("T_HERMETICS_IF", "VT_6_IF"),
+  T_ACS("T_SFT_VALVE_IF", "VT_7_IF"),
 
 
   /* Housekeeping */
@@ -530,7 +533,6 @@ union DerivedUnion DerivedChannels[] = {
 	   ),
 
 
-#define LUT_DIR "/data/etc/spider/"
 #define NTD_LUT	LUT_DIR "r_ntd.lut"
 #define CNX_LUT	LUT_DIR "r_cernox.lut"
 
