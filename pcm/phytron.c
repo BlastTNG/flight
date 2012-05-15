@@ -281,6 +281,7 @@ static int Phytron_DoSend(struct phytron* bus, int who, int useaxis,
     free(hex_buffer);
   }
   //update baud rate to that used by stepper 'who'
+  bprintf(info, "erase me: using baud rate %d\n", bus->stepper[who].baud);
   if (phytron_setserial(bus, bus->stepper[who].baud) < 0) {
     if (bus->chatter >= PH_CHAT_ERR)
       berror(err, "%sError setting baud rate. File descriptor = %i",
@@ -318,7 +319,7 @@ int Phytron_Recv(struct phytron* bus)
 {
   int fd;
   fd_set rfds;
-  struct timeval timeout = {.tv_sec = 0, .tv_usec = 10000};
+  struct timeval timeout = {.tv_sec = 0, .tv_usec = 500000};
   unsigned char byte;
   //unsigned char checksum = 0;
   char full_response[PH_BUS_BUF_LEN];
@@ -590,9 +591,10 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
       } else if (!strncmp(bus->buffer, "MCC Minilog V", 13)) {
         if (bus->chatter >= PH_CHAT_ACT)
           bprintf(info, "%sFound Phytron MCC V%.2f device \"%s\","
-              "address \"%c%c\" baud rate %s\n",
+              "address \"%c%c\" baud rate %s (%d)\n",
               bus->name, atof(bus->buffer+13), bus->stepper[i].name,
-              bus->stepper[i].addr, bus->stepper[i].axis, allowed_bauds_s[b]);
+              bus->stepper[i].addr, bus->stepper[i].axis, allowed_bauds_s[b],
+              allowed_bauds[b]);
         bus->stepper[i].status |= PH_STEP_OK;
         retval &= ~(PH_ERR_TIMEOUT | PH_ERR_OOD); //clear previous error bits
         break;
