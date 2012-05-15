@@ -110,6 +110,12 @@ static void BiasControl()
 #define HK_PWM_TILE1  0x10
 #define HK_PWM_FPHI   0x20
 #define HK_PWM_TILE4  0x40
+/* redefine tile heaters, backwards compatible */
+#define HK_PWM_SSA    HK_PWM_TILE1
+#define HK_PWM_HTR1   HK_PWM_TILE2
+#define HK_PWM_HTR2   HK_PWM_TILE3
+#define HK_PWM_HTR3   HK_PWM_TILE4
+
 
 static void HeatControl()
 {
@@ -117,7 +123,7 @@ static void HeatControl()
   static struct NiosStruct* heat45Addr;
   static struct NiosStruct* heat26Addr;
   static struct NiosStruct* heatTAddr;
-  static struct NiosStruct* heatSsaAddr[6];
+  static struct NiosStruct* heatStrapAddr[6];
   static struct NiosStruct* heatFploAddr[6];
 
   int i;
@@ -133,8 +139,8 @@ static void HeatControl()
     heat26Addr = GetNiosAddr("heat_26_hk");
     heatTAddr = GetNiosAddr("heat_t_hk");
     for (i=0; i<6; i++) {
-      sprintf(buf, "heat_ssa_%1d_hk", i+1);
-      heatSsaAddr[i] = GetNiosAddr(buf);
+      sprintf(buf, "heat_strap_%1d_hk", i+1);
+      heatStrapAddr[i] = GetNiosAddr(buf);
     }
     for (i=0; i<6; i++) {
       sprintf(buf, "heat_fplo_%1d_hk", i+1);
@@ -149,6 +155,11 @@ static void HeatControl()
     //NB: heat switch is normally closed, so logic inverted
     if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
     if (CommandData.hk[i].fphi_heat) bits[i] |= HK_PWM_FPHI;
+    if (CommandData.hk[i].ssa_heat) bits[i] |= HK_PWM_SSA;
+    if (CommandData.hk[i].htr1_heat) bits[i] |= HK_PWM_HTR1;
+    if (CommandData.hk[i].htr2_heat) bits[i] |= HK_PWM_HTR2;
+    if (CommandData.hk[i].htr3_heat) bits[i] |= HK_PWM_HTR3;
+    /*
     if (CommandData.hk[i].tile_heat[0]) bits[i] |= HK_PWM_TILE1;
     if (CommandData.hk[i].tile_heat[0] > 0) CommandData.hk[i].tile_heat[0]--;
     if (CommandData.hk[i].tile_heat[1]) bits[i] |= HK_PWM_TILE2;
@@ -157,6 +168,7 @@ static void HeatControl()
     if (CommandData.hk[i].tile_heat[2] > 0) CommandData.hk[i].tile_heat[2]--;
     if (CommandData.hk[i].tile_heat[3]) bits[i] |= HK_PWM_TILE4;
     if (CommandData.hk[i].tile_heat[3] > 0) CommandData.hk[i].tile_heat[3]--;
+    */
   }
   temp = ((bits[0] & 0xff) << 8) | (bits[2] & 0xff);
   WriteData(heat13Addr, temp, NIOS_QUEUE);
@@ -169,7 +181,7 @@ static void HeatControl()
 
   //DAC heaters
   for (i=0; i<6; i++) {
-    WriteCalData(heatSsaAddr[i], CommandData.hk[i].ssa_heat, NIOS_QUEUE);
+    WriteCalData(heatStrapAddr[i], CommandData.hk[i].strap_heat, NIOS_QUEUE);
     WriteCalData(heatFploAddr[i], CommandData.hk[i].fplo_heat, NIOS_QUEUE);
   }
 }
