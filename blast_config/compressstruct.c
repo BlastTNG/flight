@@ -856,7 +856,7 @@ char *frameList[] = {
   "t_pauram_rec",
   "t_piv",
   "t_port_back",
-  "t_port_hexc",
+  "vt_port_hexc",
   "t_port_pyr",
   "t_port_ss",
   "t_prime_sf",
