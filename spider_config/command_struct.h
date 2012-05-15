@@ -281,9 +281,13 @@ struct CommandDataStruct {
     bool pump_heat;
     bool heat_switch;
     bool fphi_heat;
-    int tile_heat[4];
+    bool ssa_heat;
+    bool htr1_heat;
+    bool htr2_heat;
+    bool htr3_heat;
+    int tile_heat[4];  // not used currently
     double fplo_heat;
-    double ssa_heat;
+    double strap_heat;
 
     struct {
       double phase;

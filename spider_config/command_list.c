@@ -227,20 +227,20 @@ struct scom scommands[N_SCOMMANDS] = {
   //Star Camera table
   {COMMAND(table_track), "Put the table in track mode", GR_SCTAB},
   //Theo heater housekeeping commands
-  {COMMAND(hk_t0_heat_on), "Turn on Theo's Heater #0", GR_THEO_HEAT},
-  {COMMAND(hk_t0_heat_off), "Turn off Theo's Heater #0", GR_THEO_HEAT},
+  {COMMAND(hk_mt_bottom_heat_on), "Turn on Theo's MT Bottom Heater", GR_THEO_HEAT},
+  {COMMAND(hk_mt_bottom_heat_off), "Turn off Theo's MT Bottom Heater", GR_THEO_HEAT},
   {COMMAND(hk_t1_heat_on), "Turn on Theo's Heater #1", GR_THEO_HEAT},
   {COMMAND(hk_t1_heat_off), "Turn off Theo's Heater #1", GR_THEO_HEAT},
-  {COMMAND(hk_t2_heat_on), "Turn on Theo's Heater #2", GR_THEO_HEAT},
-  {COMMAND(hk_t2_heat_off), "Turn off Theo's Heater #2", GR_THEO_HEAT},
-  {COMMAND(hk_t3_heat_on), "Turn on Theo's Heater #3", GR_THEO_HEAT},
-  {COMMAND(hk_t3_heat_off), "Turn off Theo's Heater #3", GR_THEO_HEAT},
-  {COMMAND(hk_t4_heat_on), "Turn on Theo's Heater #4", GR_THEO_HEAT},
-  {COMMAND(hk_t4_heat_off), "Turn off Theo's Heater #4", GR_THEO_HEAT},
-  {COMMAND(hk_t5_heat_on), "Turn on Theo's Heater #5", GR_THEO_HEAT},
-  {COMMAND(hk_t5_heat_off), "Turn off Theo's Heater #5", GR_THEO_HEAT},
-  {COMMAND(hk_t6_heat_on), "Turn on Theo's Heater #6", GR_THEO_HEAT},
-  {COMMAND(hk_t6_heat_off), "Turn off Theo's Heater #6", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx1_heat_on), "Turn on Theo's VCS1 HX1 Heater", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx1_heat_off), "Turn off Theo's VCS1 HX1 Heater", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx1_heat_on), "Turn on Theo's VCS2 HX1 Heater", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx1_heat_off), "Turn off Theo's VCS2 HX1 Heater", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx2_heat_on), "Turn on Theo's VCS1 HX2 Heater", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx2_heat_off), "Turn off Theo's VCS1 HX2 Heater", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx2_heat_on), "Turn on Theo's VCS2 HX2 Heater", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx2_heat_off), "Turn off Theo's VCS2 HX2 Heater", GR_THEO_HEAT},
+  {COMMAND(hk_sft_bottom_heat_on), "Turn on Theo's SFT Bottom Heater", GR_THEO_HEAT},
+  {COMMAND(hk_sft_bottom_heat_off), "Turn off Theo's SFT Bottom Heater", GR_THEO_HEAT},
   {COMMAND(hk_t7_heat_on), "Turn on Theo's Heater #7", GR_THEO_HEAT},
   {COMMAND(hk_t7_heat_off), "Turn off Theo's Heater #7", GR_THEO_HEAT},
 
@@ -675,6 +675,54 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
+  {COMMAND(hk_ssa_heat_on), "Turn on the SSA heater",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_ssa_heat_off), "Turn off the SSA heater",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_htr1_heat_on), "Turn on heater 1",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_htr1_heat_off), "Turn off heater 1",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_htr2_heat_on), "Turn on heater 2",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_htr2_heat_off), "Turn off heater 2",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_htr3_heat_on), "Turn on heater 3",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_htr3_heat_off), "Turn off heater 3",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
   {COMMAND(hk_tile_heat_on), "Turn on a detector tile heater",
       GR_CRYO_HEAT, 2,
     {
@@ -697,7 +745,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"On Time (# of 0.2s frames)", 0, USHRT_MAX, 'i', "PULSE_LAST_HK"},
     }
   },
-  {COMMAND(hk_ssa_heat_set), "Set SSA heater voltage", GR_CRYO_HEAT, 2,
+  {COMMAND(hk_strap_heat_set), "Set Strap heater voltage", GR_CRYO_HEAT, 2,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
       {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},

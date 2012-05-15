@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 175        /* total number of single word cmds */
-#define N_MCOMMANDS 103        /* total number of multiword commands */
+#define N_MCOMMANDS 111        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -103,10 +103,10 @@ enum singleCommand {
   thegood_run,	     thebad_run,        theugly_run,       table_track,  
   hwp_step,          hwp_repoll,
   //theo heater commands. TODO-theo assign non-temporary names
-  hk_t0_heat_on,     hk_t0_heat_off,    hk_t1_heat_on,     hk_t1_heat_off,
-  hk_t2_heat_on,     hk_t2_heat_off,    hk_t3_heat_on,     hk_t3_heat_off,
-  hk_t4_heat_on,     hk_t4_heat_off,    hk_t5_heat_on,     hk_t5_heat_off,
-  hk_t6_heat_on,     hk_t6_heat_off,    hk_t7_heat_on,     hk_t7_heat_off,
+  hk_mt_bottom_heat_on,     hk_mt_bottom_heat_off,    hk_t1_heat_on,     hk_t1_heat_off,
+  hk_vcs1_hx1_heat_on,     hk_vcs1_hx1_heat_off,    hk_vcs2_hx1_heat_on,     hk_vcs2_hx1_heat_off,
+  hk_vcs1_hx2_heat_on,     hk_vcs1_hx2_heat_off,    hk_vcs2_hx2_heat_on,     hk_vcs2_hx2_heat_off,
+  hk_sft_bottom_heat_on,     hk_sft_bottom_heat_off,    hk_t7_heat_on,     hk_t7_heat_off,
   bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
   elmot_manual,
   //make better use of unused groups
@@ -142,8 +142,10 @@ enum multiCommand {
   t_bsc_set,         t_rsc_set,         ants_gps,          act_enc_trim,
   hwp_vel,           hwp_i,             hwp_move,          hwp_general,
   hk_pump_heat_on,   hk_pump_heat_off,  hk_heat_switch_on, hk_heat_switch_off,
+  hk_ssa_heat_on,    hk_ssa_heat_off,   hk_htr1_heat_on,   hk_htr1_heat_off,
+  hk_htr2_heat_on,   hk_htr2_heat_off,  hk_htr3_heat_on,   hk_htr3_heat_off,
   hk_fphi_heat_on,   hk_fphi_heat_off,  hk_tile_heat_on,   hk_tile_heat_off,
-  hk_fplo_heat_set,  hk_ssa_heat_set,   hk_ampl_cernox,    hk_ampl_ntd,
+  hk_fplo_heat_set,  hk_strap_heat_set, hk_ampl_cernox,    hk_ampl_ntd,
   hk_phase_cernox,   hk_phase_ntd,      hk_bias_freq,      hk_tile_heat_pulse,
   spider_scan,	     sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,          hwp_halt,          hwp_phase,
