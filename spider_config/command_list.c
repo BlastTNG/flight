@@ -723,28 +723,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
-  {COMMAND(hk_tile_heat_on), "Turn on a detector tile heater",
-      GR_CRYO_HEAT, 2,
-    {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
-      {"Tile (1-4,0=all)", 0, 4, 'i', "TILE_LAST_HK"},
-    }
-  },
-  {COMMAND(hk_tile_heat_off), "Turn off a detector tile heater",
-      GR_CRYO_HEAT, 2,
-    {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
-      {"Tile (1-4,0=all)", 0, 4, 'i', "TILE_LAST_HK"},
-    }
-  },
-  {COMMAND(hk_tile_heat_pulse), "Pulse on a detector tile heater",
-      GR_CRYO_HEAT, 3,
-    {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
-      {"Tile (1-4,0=all)", 0, 4, 'i', "TILE_LAST_HK"},
-      {"On Time (# of 0.2s frames)", 0, USHRT_MAX, 'i', "PULSE_LAST_HK"},
-    }
-  },
   {COMMAND(hk_strap_heat_set), "Set Strap heater voltage", GR_CRYO_HEAT, 2,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},

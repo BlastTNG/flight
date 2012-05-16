@@ -285,7 +285,6 @@ struct CommandDataStruct {
     bool htr1_heat;
     bool htr2_heat;
     bool htr3_heat;
-    int tile_heat[4];  // not used currently
     double fplo_heat;
     double strap_heat;
 
@@ -306,7 +305,6 @@ struct CommandDataStruct {
   short hk_theo_heat;
 
   short hk_last;
-  short hk_tile_last;
   short hk_pulse_last;
   double hk_vheat_last;
   unsigned short hk_bias_freq;

@@ -586,7 +586,7 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_SNOUT_4_HK",     "VD_SNOUT_4_HK",     LUT_DIR "d_curve10.lut"),
   T_HK("TD_EYEPIECE_4_HK",  "VD_EYEPIECE_4_HK",  LUT_DIR "D77241.lut"),
   T_HK("TD_OBJECTIVE_4_HK", "VD_OBJECTIVE_4_HK", LUT_DIR "d_curve10.lut"),
-  T_HK("TD_SC_SHIELD_4_HK", "VD_SC_SHIELD_4_HK", LUT_DIR "D78318.lut"),
+  T_HK("TD_SC_SHIELD_4_HK", "VD_SC_SHIELD_4_HK", LUT_DIR "D78323.lut"),
   T_HK("TD_AUX_POST_4_HK",  "VD_AUX_POST_4_HK",  LUT_DIR "D77243.lut"),
   T_HK("TD_STOP_4_HK",      "VD_STOP_4_HK",      LUT_DIR "d_curve10.lut"),
   T_HK("TD_SSA_4_HK",       "VD_SSA_4_HK",       LUT_DIR "d_curve10.lut"),

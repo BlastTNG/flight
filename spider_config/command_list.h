@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 175        /* total number of single word cmds */
-#define N_MCOMMANDS 113        /* total number of multiword commands */
+#define N_MCOMMANDS 110        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -144,9 +144,9 @@ enum multiCommand {
   hk_pump_heat_on,   hk_pump_heat_off,  hk_heat_switch_on, hk_heat_switch_off,
   hk_ssa_heat_on,    hk_ssa_heat_off,   hk_htr1_heat_on,   hk_htr1_heat_off,
   hk_htr2_heat_on,   hk_htr2_heat_off,  hk_htr3_heat_on,   hk_htr3_heat_off,
-  hk_fphi_heat_on,   hk_fphi_heat_off,  hk_tile_heat_on,   hk_tile_heat_off,
-  hk_fplo_heat_set,  hk_strap_heat_set, hk_ampl_cernox,    hk_ampl_ntd,
-  hk_phase_cernox,   hk_phase_ntd,      hk_bias_freq,      hk_tile_heat_pulse,
+  hk_fphi_heat_on,   hk_fphi_heat_off,  hk_fplo_heat_set,  hk_strap_heat_set, 
+  hk_ampl_cernox,    hk_ampl_ntd,       hk_phase_cernox,   hk_phase_ntd,
+  hk_bias_freq,      
   spider_scan,	     sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,          hwp_halt,          hwp_phase,
   plugh	 //plugh should be at the end of the list
