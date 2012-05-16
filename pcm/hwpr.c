@@ -162,7 +162,7 @@ void countHWPEncoder()
   int i;
   static int firsttime = 1;
   //TODO upgrade to handle reading all NHWP encoders
-  static struct BiPhaseStruct* shaftEncAddr;
+  static struct BiPhaseStruct* encSHwpAddr[NHWP];
   static struct NiosStruct* encCntHwpAddr[NHWP];
 
   double degrees;
@@ -184,9 +184,10 @@ void countHWPEncoder()
   if (firsttime)
   {
     firsttime = 0;
-    shaftEncAddr = GetBiPhaseAddr("hwp_06");
     for (i=0; i<NHWP; i++) {
       char namebuf[100];
+      sprintf(namebuf, "enc_s_%i_hwp", i+1);
+      encSHwpAddr[i] = GetBiPhaseAddr(namebuf);
       sprintf(namebuf, "enc_cnt_%i_hwp", i+1);
       encCntHwpAddr[i] = GetNiosAddr(namebuf);
     }
@@ -194,7 +195,7 @@ void countHWPEncoder()
 
   //shift new data into buffer
   for (i=4; i>0; i--) data_shaft[i] = data_shaft[i-1];
-  data_shaft[0] = ReadCalData(shaftEncAddr);
+  data_shaft[0] = ReadCalData(encSHwpAddr[0]);
   since_last_tick++;
 
   //check to see if this is a minimum or maximium
@@ -217,6 +218,7 @@ void countHWPEncoder()
       hwp_data[0].shaft_count * 5 * bus.stepper[0].usteps);
   while (degrees < 0) degrees += 360.;
   while (degrees > 360.) degrees -= 360.;
+  //TODO write more slowly once done testing
   WriteCalData(encCntHwpAddr[0], degrees, NIOS_QUEUE);
 }
 
