@@ -713,6 +713,18 @@ struct ChannelStruct SlowChannels[] = {
   {"rate_ext_bbc",   'w', LOOP0,   1,      400.0/65535.0,            0.0, 'u', U_F_HZ},
   {"frame_ext_bbc",  'w', LOOP0,   2,                1.0,            0.0, 'u', U_NONE},
   /* LOOP0 4-15 are wide fast TODO (change when hwp counts moved) */
+  {"start_1_cycle",  'w', LOOP0,  16,                1.0,            0.0, 'u', U_NONE},
+  {"start_2_cycle",  'w', LOOP0,  17,                1.0,            0.0, 'u', U_NONE},
+  {"start_3_cycle",  'w', LOOP0,  18,                1.0,            0.0, 'u', U_NONE},
+  {"start_4_cycle",  'w', LOOP0,  19,                1.0,            0.0, 'u', U_NONE},
+  {"start_5_cycle",  'w', LOOP0,  20,                1.0,            0.0, 'u', U_NONE},
+  {"start_6_cycle",  'w', LOOP0,  21,                1.0,            0.0, 'u', U_NONE},
+  {"state_1_cycle",  'w', LOOP0,  22,                1.0,            0.0, 'u', U_NONE},
+  {"state_2_cycle",  'w', LOOP0,  23,                1.0,            0.0, 'u', U_NONE},
+  {"state_3_cycle",  'w', LOOP0,  24,                1.0,            0.0, 'u', U_NONE},
+  {"state_4_cycle",  'w', LOOP0,  25,                1.0,            0.0, 'u', U_NONE},
+  {"state_5_cycle",  'w', LOOP0,  26,                1.0,            0.0, 'u', U_NONE},
+  {"state_6_cycle",  'w', LOOP0,  27,                1.0,            0.0, 'u', U_NONE},
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

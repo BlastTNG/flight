@@ -30,6 +30,21 @@
 #include "tx.h"
 #include "command_struct.h"
 
+/* bit positions of hk pwm heaters */
+#define HK_PWM_PUMP   0x01
+#define HK_PWM_HSW    0x02
+#define HK_PWM_TILE3  0x04
+#define HK_PWM_TILE2  0x08
+#define HK_PWM_TILE1  0x10
+#define HK_PWM_FPHI   0x20
+#define HK_PWM_TILE4  0x40
+/* redefine tile heaters, backwards compatible */
+#define HK_PWM_SSA    HK_PWM_TILE1
+#define HK_PWM_HTR1   HK_PWM_TILE2
+#define HK_PWM_HTR2   HK_PWM_TILE3
+#define HK_PWM_HTR3   HK_PWM_TILE4
+
+
 /************************************************************************/
 /*                                                                      */
 /* PhaseControl: set phase shifts for the bias channels                 */
@@ -99,24 +114,261 @@ static void BiasControl()
 
 /************************************************************************/
 /*                                                                      */
+/*   FridgeCycle: auto-cycle the He3 fridge. Overrides pump/hs controls */
+/*                                                                      */
+/************************************************************************/
+/* wait this many slow frames before starting to run fridge cycle */
+#define FRIDGE_CYCLE_START_WAIT 50
+/* update fridge cycle state once per this many slow frames. At least 6 */
+#define FRIDGE_CYCLE_WAIT       10
+
+/* state machine states */
+#define CRYO_CYCLE_OUT        0x0000
+#define CRYO_CYCLE_COLD       0x0001
+#define CRYO_CYCLE_HSW_OFF    0x0010
+#define CRYO_CYCLE_ON_HEAT    0x0002
+#define CRYO_CYCLE_ON_SETTLE  0x0004
+#define CRYO_CYCLE_COOL       0x0008
+
+/* auto-cycle timeouts (all in seconds from start of cycle) */
+#define CRYO_CYCLE_HSW_TIMEOUT    (2.75*60)
+#define CRYO_CYCLE_HEAT_TIMEOUT   (32*60)
+#define CRYO_CYCLE_COOL_TIMEOUT   (2*60*60)
+
+/* temperature limits/control points for the auto-cycle */
+#define T_4K_MAX      4.600     /* above this, LHe gone. Do nothing */
+#define T_FP_HOT      0.375     /* above this, start a cycle */
+#define T_HSW_COLD    10.000    /* don't turn on pump until hsw this cold */
+#define T_STILL_MAX   2.500     /* stop heating pump if still gets too hot */
+#define T_PUMP_MAX    38.000    /* stop heating pump when it gets too hot */
+#define T_PUMP_SET    35.000    /* turn hsw on after settling below this */
+#define T_FP_COLD     0.350     /* below this, cycle is complete */
+
+#ifndef LUT_DIR
+#define LUT_DIR "/data/etc/spider/"
+#endif
+
+//NB: insert numbered from 0
+static unsigned short FridgeCycle(int insert, int reset)
+{
+  static int firsttime[6] = {1, 1, 1, 1, 1, 1}; 
+  static struct BiPhaseStruct* t4kAddr[6];
+  static struct BiPhaseStruct* tFpAddr[6];
+  static struct BiPhaseStruct* tPumpAddr[6];
+  static struct BiPhaseStruct* tStillAddr[6];
+  static struct BiPhaseStruct* tHswAddr[6];
+  static struct BiPhaseStruct* vCnxAddr[6];
+  static struct NiosStruct*    startCycleWAddr[6];
+  static struct BiPhaseStruct* startCycleRAddr[6];
+  static struct NiosStruct*    stateCycleWAddr[6];
+  static struct BiPhaseStruct* stateCycleRAddr[6];
+
+  static struct LutType t4kLut[6] = {
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"}
+  };
+  static struct LutType tFpLut[6] = {
+    {.filename = LUT_DIR "X41767.lut"},
+    {.filename = LUT_DIR "X41767.lut"},
+    {.filename = LUT_DIR "X41767.lut"},
+    {.filename = LUT_DIR "X41767.lut"},
+    {.filename = LUT_DIR "X41767.lut"},
+    {.filename = LUT_DIR "X41767.lut"}
+  };
+  static struct LutType tPumpLut[6] = {
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"}
+  };
+  static struct LutType tStillLut[6] = {
+    {.filename = LUT_DIR "c_thelma5_still.lut"},
+    {.filename = LUT_DIR "c_thelma5_still.lut"},
+    {.filename = LUT_DIR "c_thelma5_still.lut"},
+    {.filename = LUT_DIR "c_thelma5_still.lut"},
+    {.filename = LUT_DIR "c_thelma5_still.lut"},
+    {.filename = LUT_DIR "c_thelma5_still.lut"}
+  };
+  static struct LutType tHswLut[6] = {
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase2.lut"}
+  };
+
+  double t_4k, t_fp, t_pump, t_still, t_hsw, v_cnx;
+
+  time_t start_time;
+  unsigned short cycle_state, next_state;
+  unsigned short heat_pump, heat_hsw;
+  unsigned short retval = 0;
+
+  if (firsttime[insert]) {
+    char field[64];
+    firsttime[insert] = 0;
+    sprintf(field, "vd_4k_%1d_hk", insert+1);
+    t4kAddr[insert] = GetBiPhaseAddr(field);
+    sprintf(field, "vr_fp_%1d_hk", insert+1);
+    tFpAddr[insert] = GetBiPhaseAddr(field);
+    sprintf(field, "vd_pump_%1d_hk", insert+1);
+    tPumpAddr[insert] = GetBiPhaseAddr(field);
+    sprintf(field, "vr_still_%1d_hk", insert+1);
+    tStillAddr[insert] = GetBiPhaseAddr(field);
+    sprintf(field, "vd_hsw_%1d_hk", insert+1);
+    tHswAddr[insert] = GetBiPhaseAddr(field);
+    sprintf(field, "v_cnx_%1d_hk", insert+1);
+    vCnxAddr[insert] = GetBiPhaseAddr(field);
+    sprintf(field, "start_%1d_cycle", insert+1);
+    startCycleWAddr[insert] = GetNiosAddr(field);
+    startCycleRAddr[insert] = ExtractBiPhaseAddr(startCycleWAddr[insert]);
+    sprintf(field, "state_%1d_cycle", insert+1);
+    stateCycleWAddr[insert] = GetNiosAddr(field);
+    stateCycleRAddr[insert] = ExtractBiPhaseAddr(stateCycleWAddr[insert]);
+    WriteData(stateCycleWAddr[insert], CRYO_CYCLE_OUT, NIOS_QUEUE);
+
+    LutInit(&t4kLut[insert]);
+    LutInit(&tFpLut[insert]);
+    LutInit(&tPumpLut[insert]);
+    LutInit(&tStillLut[insert]);
+    LutInit(&tHswLut[insert]);
+  }
+
+  if (reset) {
+    WriteData(stateCycleWAddr[insert], CRYO_CYCLE_OUT, NIOS_QUEUE);
+    return 0;
+  }
+
+  /* get current cycle state */
+  start_time = ReadData(startCycleRAddr[insert]);
+  cycle_state = ReadData(stateCycleRAddr[insert]);
+
+  /* Read voltages for all the thermometers of interest */
+  t_4k = ReadCalData(t4kAddr[insert]);
+  t_pump = ReadCalData(tPumpAddr[insert]);
+  t_fp = ReadCalData(tFpAddr[insert]);
+  t_still = ReadCalData(tStillAddr[insert]);
+  t_hsw = ReadCalData(tHswAddr[insert]);
+  v_cnx = ReadCalData(vCnxAddr[insert]);
+
+  /* normalize the cernox readings with bias level */
+  t_fp /= v_cnx;
+  t_still /= v_cnx;
+
+  /* Look-up calibrated temperatures */
+  t_4k = LutCal(&t4kLut[insert], t_4k);
+  t_pump = LutCal(&tPumpLut[insert], t_pump);
+  t_hsw = LutCal(&tHswLut[insert], t_hsw);
+  t_fp = LutCal(&tFpLut[insert], t_fp);
+  t_still = LutCal(&tStillLut[insert], t_still);
+
+  /* figure out next_state of finite state machine */
+
+  /* do nothing if out of liquid helium -> OUT */
+  if (t_4k > T_4K_MAX) {
+    next_state = CRYO_CYCLE_OUT;
+    if (cycle_state != CRYO_CYCLE_OUT)
+      bprintf(info, "Auto Cycle %1d: LHe is DRY!\n", insert+1);
+  }
+  /* COLD: start a cycle when FP too hot (or forced by command) -> HSW_OFF */
+  else if (cycle_state == CRYO_CYCLE_COLD) {
+    if ((t_fp > T_FP_HOT && t_still < T_STILL_MAX)
+        || CommandData.hk[insert].force_cycle) {
+      CommandData.hk[insert].force_cycle = 0;
+      WriteData(startCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
+      next_state = CRYO_CYCLE_HSW_OFF;
+      bprintf(info, "Auto Cycle %1d: Turning heat switch off.", insert+1);
+    } else next_state = CRYO_CYCLE_COLD;
+  }
+  /* HSW_OFF: wait for heat switch to cool -> ON_HEAT */
+  else if (cycle_state == CRYO_CYCLE_HSW_OFF) {
+    if (t_hsw < T_HSW_COLD
+        || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HSW_TIMEOUT)) {
+      next_state = CRYO_CYCLE_ON_HEAT;
+      bprintf(info, "Auto Cycle %1d: Turning pump heat on.", insert+1);
+    } else next_state = CRYO_CYCLE_HSW_OFF;
+  }
+  /* ON_HEAT: heat pump until timeout or still too hot -> COOL
+   *          or if pump too hot, let it settle -> ON_SETTLE */
+  else if (cycle_state == CRYO_CYCLE_ON_HEAT) {
+    if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HEAT_TIMEOUT) ||
+        t_still > T_STILL_MAX) {
+      next_state = CRYO_CYCLE_COOL;
+      bprintf(info, "Auto Cycle %1d: Pump heat off; heat switch on.", insert+1);
+    } else if (t_pump > T_PUMP_MAX) {
+      next_state = CRYO_CYCLE_ON_SETTLE;
+      bprintf(info, "Auto Cycle %1d: Turning pump heat off.", insert+1);
+    } else next_state = CRYO_CYCLE_ON_HEAT;
+  }
+  /* ON_SETTLE: let hot pump settle until timeout, or still too hot -> COOL */
+  else if (cycle_state == CRYO_CYCLE_ON_SETTLE) {
+    if (t_pump < T_PUMP_SET || t_still > T_STILL_MAX
+        || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HEAT_TIMEOUT)) {
+      next_state = CRYO_CYCLE_COOL;
+      bprintf(info, "Auto Cycle %1d: heat switch on.", insert+1);
+    } else next_state = CRYO_CYCLE_ON_SETTLE;
+  }
+  /* COOL: wait until fridge is cold -> COLD */
+  else if ( cycle_state == CRYO_CYCLE_COOL) {
+    if ((t_fp < T_FP_COLD)
+        || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
+      CommandData.hk[insert].force_cycle = 0; //clear pending cycles
+      next_state = CRYO_CYCLE_COLD;
+      bprintf(info, "Auto Cycle %1d: Fridge is now cold!.", insert+1);
+    } else next_state = CRYO_CYCLE_COOL;
+  }
+  /* OUT: do nothing if out of LHe. Unless not, then be cold -> COLD */
+  else if (cycle_state == CRYO_CYCLE_OUT) {
+    if (t_4k < T_4K_MAX) {
+      next_state = CRYO_CYCLE_COLD;
+      bprintf(info, "Auto Cycle %1d: Activated.", insert+1);
+    } else next_state = CRYO_CYCLE_OUT;
+  }
+  else {
+    bprintf(err, "Auto Cycle %1d: cycle_state: %i unknown!",
+        insert+1, cycle_state);
+    next_state = CRYO_CYCLE_COLD;
+  }
+
+  WriteData(stateCycleWAddr[insert], next_state, NIOS_QUEUE);
+
+  /* set outputs of finite state machine */
+  if (next_state == CRYO_CYCLE_COLD) {
+    heat_pump = 0;
+    heat_hsw = 1;
+  } else if (next_state == CRYO_CYCLE_HSW_OFF) {
+    heat_pump = 0;
+    heat_hsw = 0;
+  } else if (next_state == CRYO_CYCLE_ON_HEAT) {
+    heat_pump = 1;
+    heat_hsw = 0;
+  } else if (next_state == CRYO_CYCLE_ON_SETTLE) {
+    heat_pump = 0;
+    heat_hsw = 0;
+  } else {    /* CRYO_CYCLE_COOL, CRYO_CYCLE_OUT, or bad state */
+    heat_pump = 0;
+    heat_hsw = 1;
+  }
+
+  /* set the heater control bits in the output, as needed */
+  if (heat_pump) retval |= HK_PWM_PUMP;
+  if (!heat_hsw) retval |= HK_PWM_HSW;  /* inverted logic because normally on */
+
+  return retval;
+}
+
+/************************************************************************/
+/*                                                                      */
 /*   HeatControl: Switching logic for the PWM (digital) heaters         */
 /*                                                                      */
 /************************************************************************/
-/* bit positions of hk pwm heaters */
-#define HK_PWM_PUMP   0x01
-#define HK_PWM_HSW    0x02
-#define HK_PWM_TILE3  0x04
-#define HK_PWM_TILE2  0x08
-#define HK_PWM_TILE1  0x10
-#define HK_PWM_FPHI   0x20
-#define HK_PWM_TILE4  0x40
-/* redefine tile heaters, backwards compatible */
-#define HK_PWM_SSA    HK_PWM_TILE1
-#define HK_PWM_HTR1   HK_PWM_TILE2
-#define HK_PWM_HTR2   HK_PWM_TILE3
-#define HK_PWM_HTR3   HK_PWM_TILE4
-
-
 static void HeatControl()
 {
   static struct NiosStruct* heat13Addr;
@@ -125,6 +377,9 @@ static void HeatControl()
   static struct NiosStruct* heatTAddr;
   static struct NiosStruct* heatStrapAddr[6];
   static struct NiosStruct* heatFploAddr[6];
+
+  static int fridge_start_wait = FRIDGE_CYCLE_START_WAIT;
+  static int fridge_wait = 0;
 
   int i;
   unsigned short temp;
@@ -148,12 +403,22 @@ static void HeatControl()
     }
   }	
 
+  if (fridge_start_wait > 0) fridge_start_wait--;
+  fridge_wait = (fridge_wait + 1) % FRIDGE_CYCLE_WAIT;
+
   //PWM heaters
   for (i=0; i<6; i++) {
     bits[i] = 0;
-    if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
-    //NB: heat switch is normally closed, so logic inverted
-    if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
+    if (CommandData.hk[i].auto_cycle_on && fridge_start_wait <= 0) {
+      //using auto cycle, get PUMP and HSW bits from fridge control
+      if (fridge_wait == i) bits[i] |= FridgeCycle(i, 0);
+    } else {
+      //not using auto cycle. Command PUMP and HSW manually
+      FridgeCycle(i, 1);  //reset cycle state
+      if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
+      //NB: heat switch is normally closed, so logic inverted
+      if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
+    }
     if (CommandData.hk[i].fphi_heat) bits[i] |= HK_PWM_FPHI;
     if (CommandData.hk[i].ssa_heat) bits[i] |= HK_PWM_SSA;
     if (CommandData.hk[i].htr1_heat) bits[i] |= HK_PWM_HTR1;

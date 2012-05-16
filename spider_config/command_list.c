@@ -639,26 +639,26 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*************** Heat  *****************/
-  {COMMAND(hk_pump_heat_on), "Turn on the pump (charcoal) heater",
-      GR_CRYO_HEAT, 1,
+  {COMMAND(hk_pump_heat_on),
+    "Turn on the pump (charcoal) heater. Disable autocycle", GR_CRYO_HEAT, 1,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
-  {COMMAND(hk_pump_heat_off), "Turn off the pump (charcoal) heater",
-      GR_CRYO_HEAT, 1,
+  {COMMAND(hk_pump_heat_off),
+    "Turn off the pump (charcoal) heater. Disable autocycle", GR_CRYO_HEAT, 1,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
-  {COMMAND(hk_heat_switch_on), "Turn on the heat switch heater",
-      GR_CRYO_HEAT, 1,
+  {COMMAND(hk_heat_switch_on),
+    "Turn on the heat switch heater. Disable autocycle", GR_CRYO_HEAT, 1,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
-  {COMMAND(hk_heat_switch_off), "Turn off the heat switch heater",
-      GR_CRYO_HEAT, 1,
+  {COMMAND(hk_heat_switch_off),
+    "Turn off the heat switch heater. Disable autocycle", GR_CRYO_HEAT, 1,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
@@ -756,6 +756,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
       {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_auto_cycle_on), "Enable autocycling of He3 fridge",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  {COMMAND(hk_fridge_cycle), "Force an He3 fridge cycle. Enable autocycle",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
 

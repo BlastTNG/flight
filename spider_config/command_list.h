@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 175        /* total number of single word cmds */
-#define N_MCOMMANDS 111        /* total number of multiword commands */
+#define N_MCOMMANDS 113        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -125,7 +125,7 @@ enum multiCommand {
   t_gyro_set,        tdrss_bw,          iridium_bw,
   t_gyro_gain,       timeout,           slot_sched,        az_gyro_offset,
   cov_gps,	         lvdt_limit,        reset_adc,        
-  gyro_off,	         gyro_on,           
+  gyro_off,	         gyro_on,           hk_auto_cycle_on,  hk_fridge_cycle,
   el_gyro_offset,    general,           slew_veto,        
   actuator_servo,    xy_goto,           actuator_vel,
   xy_jump,           xy_xscan,          xy_yscan,          xy_raster,

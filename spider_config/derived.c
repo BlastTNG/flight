@@ -561,6 +561,7 @@ union DerivedUnion DerivedChannels[] = {
 
 
   COMMENT("Housekeeping Cernox Temperature Calibration"),
+  // NB: make sure to also set LUT filename in hk.c for FridgeCycle
   CNX_HK(STILL,	4, LUT_DIR "c_thelma5_still.lut"),
   CNX_HK(FP,	4, LUT_DIR "X41767.lut"),
   CNX_HK(STRAP,	4, LUT_DIR "X40799.lut"),
@@ -575,6 +576,7 @@ union DerivedUnion DerivedChannels[] = {
   NTD_HK(NTD4,	4, LUT_DIR "x2_ntd4.lut"),
   
   COMMENT("Housekeeping Diode Temperature Calibration"),
+  // NB: make sure to also set LUT filename in hk.c for FridgeCycle
   // Theo Run 9: X2 in slot 4 with Thelma 5
   T_HK("TD_4K_4_HK",        "VD_4K_4_HK",        LUT_DIR "d_simonchase2.lut"),
   T_HK("TD_CP_4_HK",        "VD_CP_4_HK",        LUT_DIR "d_simonchase2.lut"),

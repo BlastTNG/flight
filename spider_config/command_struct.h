@@ -289,6 +289,9 @@ struct CommandDataStruct {
     double fplo_heat;
     double strap_heat;
 
+    bool auto_cycle_on;
+    bool force_cycle;
+
     struct {
       double phase;
       double ampl;
