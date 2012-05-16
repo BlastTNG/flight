@@ -117,6 +117,16 @@ static void BiasControl()
 /*   FridgeCycle: auto-cycle the He3 fridge. Overrides pump/hs controls */
 /*                                                                      */
 /************************************************************************/
+
+/* bit positions of hk pwm heaters */
+#define HK_PWM_PUMP   0x01
+#define HK_PWM_HSW    0x02
+#define HK_PWM_HTR2   0x04
+#define HK_PWM_HTR1   0x08
+#define HK_PWM_SSA    0x10
+#define HK_PWM_FPHI   0x20
+#define HK_PWM_HTR3   0x40
+
 /* wait this many slow frames before starting to run fridge cycle */
 #define FRIDGE_CYCLE_START_WAIT 50
 /* update fridge cycle state once per this many slow frames. At least 6 */
@@ -424,16 +434,6 @@ static void HeatControl()
     if (CommandData.hk[i].htr1_heat) bits[i] |= HK_PWM_HTR1;
     if (CommandData.hk[i].htr2_heat) bits[i] |= HK_PWM_HTR2;
     if (CommandData.hk[i].htr3_heat) bits[i] |= HK_PWM_HTR3;
-    /*
-    if (CommandData.hk[i].tile_heat[0]) bits[i] |= HK_PWM_TILE1;
-    if (CommandData.hk[i].tile_heat[0] > 0) CommandData.hk[i].tile_heat[0]--;
-    if (CommandData.hk[i].tile_heat[1]) bits[i] |= HK_PWM_TILE2;
-    if (CommandData.hk[i].tile_heat[1] > 0) CommandData.hk[i].tile_heat[1]--;
-    if (CommandData.hk[i].tile_heat[2]) bits[i] |= HK_PWM_TILE3;
-    if (CommandData.hk[i].tile_heat[2] > 0) CommandData.hk[i].tile_heat[2]--;
-    if (CommandData.hk[i].tile_heat[3]) bits[i] |= HK_PWM_TILE4;
-    if (CommandData.hk[i].tile_heat[3] > 0) CommandData.hk[i].tile_heat[3]--;
-    */
   }
   temp = ((bits[0] & 0xff) << 8) | (bits[2] & 0xff);
   WriteData(heat13Addr, temp, NIOS_QUEUE);
@@ -454,14 +454,12 @@ static void HeatControl()
 void HouseKeeping()
 {
   static struct NiosStruct* insertLastHkAddr;
-  static struct NiosStruct* tileLastHkAddr;
   static struct NiosStruct* pulseLastHkAddr;
   static struct NiosStruct* vHeatLastHkAddr;
   static int first_time = 1;
   if (first_time) {
     first_time = 0;
     insertLastHkAddr = GetNiosAddr("insert_last_hk");
-    tileLastHkAddr = GetNiosAddr("tile_last_hk");
     pulseLastHkAddr = GetNiosAddr("pulse_last_hk");
     vHeatLastHkAddr = GetNiosAddr("v_heat_last_hk");
   }
@@ -471,7 +469,6 @@ void HouseKeeping()
   HeatControl();
 
   WriteData(insertLastHkAddr, CommandData.hk_last, NIOS_QUEUE);
-  WriteData(tileLastHkAddr, CommandData.hk_tile_last, NIOS_QUEUE);
   WriteData(pulseLastHkAddr, CommandData.hk_pulse_last, NIOS_QUEUE);
   WriteCalData(vHeatLastHkAddr, CommandData.hk_vheat_last, NIOS_QUEUE);
 }

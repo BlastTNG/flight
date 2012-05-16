@@ -754,7 +754,7 @@ static inline void copysvalue(char* dest, const char* src)
 void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
-  int i, j;
+  int i;
   char buf[256]; //for SC Commands
   int is_new;
 
@@ -1223,40 +1223,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].htr3_heat = 0;
       else for (i=0; i<HK_MAX; i++) CommandData.hk[i].htr3_heat = 0;
       break;
-    case hk_tile_heat_on:
-      CommandData.hk_last = ivalues[0];
-      CommandData.hk_tile_last = ivalues[1];
-      for (i = ((ivalues[0] > 0) ? ivalues[0] - 1 : 0);
-	   i < ((ivalues[0] > 0) ? ivalues[0]     : HK_MAX); i++) {
-	for (j = ((ivalues[1] > 0) ? ivalues[1] - 1 : 0);
-	     j < ((ivalues[1] > 0) ? ivalues[1]     : 4); j++) {
-	  CommandData.hk[i].tile_heat[j] = -1;
-	}
-      }
-      break;
-    case hk_tile_heat_off:
-      CommandData.hk_last = ivalues[0];
-      CommandData.hk_tile_last = ivalues[1];
-      for (i = ((ivalues[0] > 0) ? ivalues[0] - 1 : 0);
-	   i < ((ivalues[0] > 0) ? ivalues[0]     : HK_MAX); i++) {
-	for (j = ((ivalues[1] > 0) ? ivalues[1] - 1 : 0);
-	     j < ((ivalues[1] > 0) ? ivalues[1]     : 4); j++) {
-	  CommandData.hk[i].tile_heat[j] = 0;
-	}
-      }
-      break;
-    case hk_tile_heat_pulse:
-      CommandData.hk_last = ivalues[0];
-      CommandData.hk_tile_last = ivalues[1];
-      CommandData.hk_pulse_last = ivalues[2];
-      for (i = ((ivalues[0] > 0) ? ivalues[0] - 1 : 0);
-	   i < ((ivalues[0] > 0) ? ivalues[0]     : HK_MAX); i++) {
-	for (j = ((ivalues[1] > 0) ? ivalues[1] - 1 : 0);
-	     j < ((ivalues[1] > 0) ? ivalues[1]     : 4); j++) {
-	  CommandData.hk[i].tile_heat[j] = ivalues[2];
-	}
-      }
-      break;
     case hk_fplo_heat_set:
       CommandData.hk_last = ivalues[0];
       CommandData.hk_vheat_last = rvalues[1];
@@ -1499,7 +1465,7 @@ void CheckCommandList(void)
 /************************************************************/
 void InitCommandData()
 {
-  int fp, n_read = 0, junk, extra = 0, i, j;
+  int fp, n_read = 0, junk, extra = 0, i;
 
   //run a basic check of the command lists before initializing
   CheckCommandList();
@@ -1717,7 +1683,10 @@ void InitCommandData()
     CommandData.hk[i].pump_heat = 0;
     CommandData.hk[i].heat_switch = 1;	  //heat switch defaults to on
     CommandData.hk[i].fphi_heat = 0;
-    for (j=0; j<4; j++) CommandData.hk[i].tile_heat[j] = 0;
+    CommandData.hk[i].ssa_heat = 0;
+    CommandData.hk[i].htr1_heat = 0;
+    CommandData.hk[i].htr2_heat = 0;
+    CommandData.hk[i].htr3_heat = 0;
     CommandData.hk[i].fplo_heat = 0.0;
     CommandData.hk[i].strap_heat = 0.0;
 
@@ -1731,7 +1700,6 @@ void InitCommandData()
   }
   CommandData.hk_theo_heat = 0;
   CommandData.hk_last = 0;
-  CommandData.hk_tile_last = 0;
   CommandData.hk_pulse_last = 0;
   CommandData.hk_vheat_last = 0.0;
   CommandData.hk_bias_freq = 50;
