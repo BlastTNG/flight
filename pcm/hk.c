@@ -30,21 +30,6 @@
 #include "tx.h"
 #include "command_struct.h"
 
-/* bit positions of hk pwm heaters */
-#define HK_PWM_PUMP   0x01
-#define HK_PWM_HSW    0x02
-#define HK_PWM_TILE3  0x04
-#define HK_PWM_TILE2  0x08
-#define HK_PWM_TILE1  0x10
-#define HK_PWM_FPHI   0x20
-#define HK_PWM_TILE4  0x40
-/* redefine tile heaters, backwards compatible */
-#define HK_PWM_SSA    HK_PWM_TILE1
-#define HK_PWM_HTR1   HK_PWM_TILE2
-#define HK_PWM_HTR2   HK_PWM_TILE3
-#define HK_PWM_HTR3   HK_PWM_TILE4
-
-
 /************************************************************************/
 /*                                                                      */
 /* PhaseControl: set phase shifts for the bias channels                 */
