@@ -1138,9 +1138,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] > 0) {
         CommandData.hk[ivalues[0]-1].pump_heat = 1;
         CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
+	CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
       } else for (i=0; i<HK_MAX; i++) {
         CommandData.hk[i].pump_heat = 1;
         CommandData.hk[i].auto_cycle_on = 0;
+	CommandData.hk[i].pump_servo_on = 0;
       }
       break;
     case hk_pump_heat_off:
@@ -1148,9 +1150,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] > 0) {
         CommandData.hk[ivalues[0]-1].pump_heat = 0;
         CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
+	CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
       } else for (i=0; i<HK_MAX; i++) {
         CommandData.hk[i].pump_heat = 0;
         CommandData.hk[i].auto_cycle_on = 0;
+	CommandData.hk[i].pump_servo_on = 0;
       }
       break;
     case hk_heat_switch_on:
@@ -1241,6 +1245,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].auto_cycle_on = 1;
       else for (i=0; i<HK_MAX; i++) CommandData.hk[i].auto_cycle_on = 1;
       break;
+    case hk_auto_cycle_off:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
+      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].auto_cycle_on = 0;
+      break;
     case hk_fridge_cycle:
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
@@ -1251,8 +1260,24 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.hk[i].force_cycle = 1;
       }
       break;
-
-
+    case hk_pump_servo_on:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] > 0) {
+	CommandData.hk[ivalues[0]-1].pump_servo_on = 1;
+	CommandData.hk[ivalues[0]-1].pump_servo_low = ivalues[1];
+	CommandData.hk[ivalues[0]-1].pump_servo_high = ivalues[2];
+      } else for (i=0; i<HK_MAX; i++) {
+	CommandData.hk[i].pump_servo_on = 1;
+	CommandData.hk[i].pump_servo_low = ivalues[1];
+	CommandData.hk[i].pump_servo_high = ivalues[2];
+      }
+      break;
+    case hk_pump_servo_off:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
+      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].pump_servo_on = 0;
+      break;
+      
       /***************************************/
       /********* The Good Commanding  *************/ 
     case thegood_any:
