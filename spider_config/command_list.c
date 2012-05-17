@@ -742,13 +742,33 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
+  {COMMAND(hk_auto_cycle_off), "Disable autocycling of He3 fridge",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
   {COMMAND(hk_fridge_cycle), "Force an He3 fridge cycle. Enable autocycle",
       GR_CRYO_HEAT, 1,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
-
+  {COMMAND(hk_pump_servo_on), "Enable pump servo mode: maintain pump temperature between setpoints.",
+      GR_CRYO_HEAT, 3,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Set Low (K):",           0.0, 50.0,     'f', ""},
+      {"Set High (K):",          0.0, 50.0,     'f', ""},
+    }
+  },
+  {COMMAND(hk_pump_servo_off), "Disable pump servo mode.",
+      GR_CRYO_HEAT, 1,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+    }
+  },
+  
   /***************************************/
   /*************** The Good  *****************/
   {COMMAND(thegood_any), "Execute arbitrary The Good command", GR_SCGOOD, 1,

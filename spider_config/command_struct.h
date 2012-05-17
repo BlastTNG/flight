@@ -290,7 +290,11 @@ struct CommandDataStruct {
 
     bool auto_cycle_on;
     bool force_cycle;
-
+    
+    bool pump_servo_on;
+    double pump_servo_low;
+    double pump_servo_high;
+    
     struct {
       double phase;
       double ampl;
