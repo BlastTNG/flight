@@ -122,6 +122,12 @@ struct ChannelStruct WideSlowChannels[] = {
   {"sec_theugly",      'w', LOOP9, 52,                1.0,             0.0, 'U', U_NONE},
   {"usec_theugly",     'w', LOOP9, 54,                1.0,             0.0, 'U', U_NONE},
   //derived channel time_theugly adds these together
+  {"start_1_cycle",  'w', LOOP0,  12,                1.0,            0.0, 'U', U_NONE},
+  {"start_2_cycle",  'w', LOOP0,  14,                1.0,            0.0, 'U', U_NONE},
+  {"start_3_cycle",  'w', LOOP0,  16,                1.0,            0.0, 'U', U_NONE},
+  {"start_4_cycle",  'w', LOOP0,  18,                1.0,            0.0, 'U', U_NONE},
+  {"start_5_cycle",  'w', LOOP0,  20,                1.0,            0.0, 'U', U_NONE},
+  {"start_6_cycle",  'w', LOOP0,  22,                1.0,            0.0, 'U', U_NONE},
 
   /* housekeeping channels */  /* TODO many can probably be not-wide */
   {"vr_still_2_hk",  'r', RTD_A1,  0, CAL32C(       1.055,           0.0), 'U', U_V_V},
@@ -828,18 +834,13 @@ struct ChannelStruct SlowChannels[] = {
   {"enc_cnt_4_hwp",'w', LOOP0,  8,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_5_hwp",'w', LOOP0,  9,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_6_hwp",'w', LOOP0, 10,     I2DEG,      0.0,      'u',      U_P_DEG},
-  {"start_1_cycle",  'w', LOOP0,  11,                1.0,            0.0, 'u', U_NONE},
-  {"start_2_cycle",  'w', LOOP0,  12,                1.0,            0.0, 'u', U_NONE},
-  {"start_3_cycle",  'w', LOOP0,  13,                1.0,            0.0, 'u', U_NONE},
-  {"start_4_cycle",  'w', LOOP0,  14,                1.0,            0.0, 'u', U_NONE},
-  {"start_5_cycle",  'w', LOOP0,  15,                1.0,            0.0, 'u', U_NONE},
-  {"start_6_cycle",  'w', LOOP0,  16,                1.0,            0.0, 'u', U_NONE},
-  {"state_1_cycle",  'w', LOOP0,  17,                1.0,            0.0, 'u', U_NONE},
-  {"state_2_cycle",  'w', LOOP0,  18,                1.0,            0.0, 'u', U_NONE},
-  {"state_3_cycle",  'w', LOOP0,  19,                1.0,            0.0, 'u', U_NONE},
-  {"state_4_cycle",  'w', LOOP0,  20,                1.0,            0.0, 'u', U_NONE},
-  {"state_5_cycle",  'w', LOOP0,  21,                1.0,            0.0, 'u', U_NONE},
-  {"state_6_cycle",  'w', LOOP0,  22,                1.0,            0.0, 'u', U_NONE},
+  /* LOOP0 12-23 are wide slow */
+  {"state_1_cycle",  'w', LOOP0,  24,                1.0,            0.0, 'u', U_NONE},
+  {"state_2_cycle",  'w', LOOP0,  25,                1.0,            0.0, 'u', U_NONE},
+  {"state_3_cycle",  'w', LOOP0,  26,                1.0,            0.0, 'u', U_NONE},
+  {"state_4_cycle",  'w', LOOP0,  27,                1.0,            0.0, 'u', U_NONE},
+  {"state_5_cycle",  'w', LOOP0,  28,                1.0,            0.0, 'u', U_NONE},
+  {"state_6_cycle",  'w', LOOP0,  29,                1.0,            0.0, 'u', U_NONE},
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
