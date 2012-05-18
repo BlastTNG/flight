@@ -776,7 +776,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.pointing_mode.ra[i] = 0;
         CommandData.pointing_mode.dec[i] = 0;
       }
-      CommandData.ele_gain.manual_pulses = 0;
+      //CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
       CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -837,7 +837,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       CommandData.pointing_mode.X = rvalues[8];
       CommandData.pointing_mode.Y = rvalues[9];
-      CommandData.ele_gain.manual_pulses = 0;
+      //CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SPIDER;
       break;
     case set_scan_params:  
@@ -851,7 +851,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.w = 2.0*rvalues[0];
       CommandData.pointing_mode.X = rvalues[1];
       CommandData.pointing_mode.Y = rvalues[2];
-      CommandData.ele_gain.manual_pulses = 0;
+      //CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SINE;
       break;
       /***************************************/
@@ -881,16 +881,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /********** Pointing Motor Gains *******/
     case el_gain:  /* ele gains */
-      CommandData.ele_gain.com = rvalues[0];
-      CommandData.ele_gain.diff = rvalues[1];
+      CommandData.ele_gain.P = ivalues[0];
+      CommandData.ele_gain.D = ivalues[1];
       //CommandData.ele_gain.PT = ivalues[2];
-      CommandData.ele_gain.twist = rvalues[2];
+      //CommandData.ele_gain.twist = rvalues[2];
       break;
-    case el_pulse: /* manual el motor pulses */
-      CommandData.ele_gain.pulse_port = rvalues[0];
-      CommandData.ele_gain.pulse_starboard = rvalues[1];
-      CommandData.ele_gain.manual_pulses = 1;
-      break;
+    //case el_pulse: /* manual el motor pulses */
+    //  CommandData.ele_gain.pulse_port = rvalues[0];
+    //  CommandData.ele_gain.pulse_starboard = rvalues[1];
+    //  CommandData.ele_gain.manual_pulses = 1;
+     // break;
     case az_gain:  /* az gains */
       CommandData.azi_gain.P = ivalues[0];
       CommandData.azi_gain.I = ivalues[1];
@@ -1631,11 +1631,11 @@ void InitCommandData()
   //CommandData.ele_gain.P = 5000; /* was 1200 */
   //CommandData.ele_gain.PT = 3000;
 
-  CommandData.ele_gain.com = 0;
-  CommandData.ele_gain.diff = 0;
-  CommandData.ele_gain.manual_pulses = 0;
-  CommandData.ele_gain.pulse_port = 0.0;
-  CommandData.ele_gain.pulse_starboard = 0.0;
+  CommandData.ele_gain.P = 0;
+  CommandData.ele_gain.D = 0;
+  //CommandData.ele_gain.manual_pulses = 0;
+  //CommandData.ele_gain.pulse_port = 0.0;
+  //CommandData.ele_gain.pulse_starboard = 0.0;
   
   CommandData.power.elmot_auto = 0;
 
