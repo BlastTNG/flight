@@ -1264,12 +1264,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
 	CommandData.hk[ivalues[0]-1].pump_servo_on = 1;
-	CommandData.hk[ivalues[0]-1].pump_servo_low = ivalues[1];
-	CommandData.hk[ivalues[0]-1].pump_servo_high = ivalues[2];
+	CommandData.hk[ivalues[0]-1].pump_servo_low = rvalues[1];
+	CommandData.hk[ivalues[0]-1].pump_servo_high = rvalues[2];
       } else for (i=0; i<HK_MAX; i++) {
 	CommandData.hk[i].pump_servo_on = 1;
-	CommandData.hk[i].pump_servo_low = ivalues[1];
-	CommandData.hk[i].pump_servo_high = ivalues[2];
+	CommandData.hk[i].pump_servo_low = rvalues[1];
+	CommandData.hk[i].pump_servo_high = rvalues[2];
       }
       break;
     case hk_pump_servo_off:
@@ -1717,6 +1717,9 @@ void InitCommandData()
 
     CommandData.hk[i].auto_cycle_on = 0;
     CommandData.hk[i].force_cycle = 0;
+    CommandData.hk[i].pump_servo_on = 0;
+    CommandData.hk[i].pump_servo_low = 20.0;
+    CommandData.hk[i].pump_servo_high = 25.0;
 
     CommandData.hk[i].cernox.phase = 5.0;
     CommandData.hk[i].cernox.ampl = 0.3;

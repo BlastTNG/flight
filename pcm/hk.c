@@ -365,11 +365,10 @@ static unsigned short FridgeCycle(int insert, int reset)
 /*   Overrides pump controls                                            */
 /*                                                                      */
 /************************************************************************/
-static unsigned short PumpServo(int insert, int reset)
+static unsigned short PumpServo(int insert)
 {
   static int firsttime[6] = {1, 1, 1, 1, 1, 1};
   static struct BiPhaseStruct* tPumpAddr[6];
-  static struct BiPhaseStruct* heatPumpAddr[6];
   
   //TODO update these calibrations
   static struct LutType tPumpLut[6] = {
@@ -382,7 +381,7 @@ static unsigned short PumpServo(int insert, int reset)
   };
   
   double t_pump;
-  unsigned short heat_pump;
+  unsigned short heat_pump = 0;
   unsigned short retval = 0;
   
   if (firsttime[insert]) {
@@ -390,24 +389,8 @@ static unsigned short PumpServo(int insert, int reset)
     firsttime[insert] = 0;
     sprintf(field, "vd_pump_%1d_hk", insert+1);
     tPumpAddr[insert] = GetBiPhaseAddr(field);
-    if (insert==1 || insert==3) sprintf(field,"heat_13_hk");
-    else if (insert==2 || insert==4) sprintf(field,"heat_24_hk");
-    else if (insert==5 || insert==6) sprintf(field,"heat_56_hk");
-    heatPumpAddr[insert] = GetBiPhaseAddr(field);
     LutInit(&tPumpLut[insert]);
   }
-  
-  if (reset) {
-    // TODO write pump_servo state to disk!
-    return 0;
-  }
-  
-  /* get current pump state */
-  heat_pump = ReadData(heatPumpAddr[insert]);
-  if (insert==1 || insert==2 || insert==5)
-    heat_pump = (heat_pump >> 8) && HEAT_PWM_PUMP;
-  else if (insert==3 || insert==4 || insert==6)
-    heat_pump = heat_pump && HEAT_PWM_PUMP;
   
   /* Read pump thermometer voltage */
   t_pump = ReadCalData(tPumpAddr[insert]);
@@ -478,11 +461,8 @@ static void HeatControl()
     } else {
       //not using auto cycle. Command PUMP and HSW manually
       FridgeCycle(i, 1);  //reset cycle state
-      if (CommandData.hk[i].pump_servo_on) bits[i] |= PumpServo(i, 0);
-      else {
-	PumpServo(i, 1);
-	if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
-      }
+      if (CommandData.hk[i].pump_servo_on) bits[i] |= PumpServo(i);
+      else if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
       //NB: heat switch is normally closed, so logic inverted
       if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
     }
