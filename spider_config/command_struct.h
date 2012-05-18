@@ -180,12 +180,12 @@ struct CommandDataStruct {
   //struct GainStruct ele_gain;
 
   struct {
-    double com;
-    double diff;
-    double pulse_port;
-    double pulse_starboard;
-    int manual_pulses;
-    double twist;
+    int P;
+    int D;
+    //double pulse_port;
+    //double pulse_starboard;
+    //int manual_pulses;
+    //double twist;
   } ele_gain; 
  
   struct GainStruct azi_gain;

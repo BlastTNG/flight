@@ -404,8 +404,8 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 0-7 are wide */
   /* LOOP1 10-11 are unused */
   /* LOOP1 12-13 are wide */
-  {"g_com_el",     'w', LOOP1,  8,                3.0/65536.0,     0.0, 'u', U_NONE},
-  {"g_diff_el",    'w', LOOP1,  9,                1.0/65536.0,     0.0, 'u', U_NONE},
+  {"g_p_el",     'w', LOOP1,  8,                1.0,     0.0, 'u', U_NONE},
+  {"g_d_el",     'w', LOOP1,  9,                1.0,     0.0, 'u', U_NONE},
   {"foc_res_thegood", 'w', LOOP1, 17,                1.0,             0.0, 'u', U_NONE},
   {"period_cal",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status
@@ -861,12 +861,12 @@ struct ChannelStruct SlowChannels[] = {
   {"i_rec",        'r',  ACS1_A1, 7,          CAL16(10.75, -0.07),      'u', U_I_A},
   {"i_sc",         'r',  ACS1_A1, 9,          CAL16(10.89, -0.09),      'u', U_I_A},
   {"i_dgps",       'r',  ACS1_A1, 11,         CAL16(11.03, -0.19),      'u', U_I_A},
-  {"i_el",         'r',  ACS1_A1, 13,         CAL16(12.5,  -0.02),      'u', U_I_A},
-  {"i_piv",        'r',  ACS1_A1, 15,         CAL16(12.5, -0.05),       'u', U_I_A},
-  {"i_rw",         'r',  ACS1_A1, 17,         CAL16(12.5, -0.09),       'u', U_I_A},
-  {"i_step",       'r',  ACS1_A1, 19,         CAL16(12.5, -0.25),       'u', U_I_A},
-  {"i_gy",         'r',  ACS1_A1, 21,         CAL16(11.0, -0.01),       'u', U_I_A},
-  {"i_flc",        'r',  ACS1_A1, 23,         CAL16(12.5,  0.0),        'u', U_I_A},
+  {"i_piv",        'r',  ACS1_A1, 13,         CAL16(12.5,  -0.02),      'u', U_I_A},
+  {"i_el",         'r',  ACS1_A1, 15,         CAL16(12.5, -0.05),       'u', U_I_A},
+  {"i_flc",        'r',  ACS1_A1, 17,         CAL16(12.5, -0.09),       'u', U_I_A},
+  {"i_rw",         'r',  ACS1_A1, 19,         CAL16(12.5, -0.25),       'u', U_I_A},
+  {"i_step",       'r',  ACS1_A1, 21,         CAL16(11.0, -0.01),       'u', U_I_A},
+  {"i_gy",         'r',  ACS1_A1, 23,         CAL16(12.5,  0.0),        'u', U_I_A},
 /* ACS_A1 24-41 are unused. */
 
 /* ACS1 Temperature card */
@@ -1077,8 +1077,8 @@ struct ChannelStruct FastChannels[] = {
   //{"vel_req_el",   'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
 //{"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS,-32768.0*GY16_TO_DPS, 'u', U_V_DPS},
-  {"step_1_el",    'w',   ACS2_D, 29,     10000.0/32767.0, -10000.30518509, 'u', U_F_HZ},
-  {"step_2_el",    'w',   ACS2_D, 30,     10000.0/32767.0, -10000.30518509, 'u', U_F_HZ},
+  {"duty_p_el",    'w',   ACS2_D, 29,     1.0, 0.0, 'u', U_NONE},
+  {"duty_s_el",    'w',   ACS2_D, 30,     1.0, 0.0, 'u', U_NONE},
   {"el_raw_1_enc", 'r',   ACS2_D, 56,               I2DEG,            -245.54, 'u', U_P_DEG},
   {"el_raw_2_enc", 'r',   ACS2_D, 57,               -I2DEG,            214.87, 'u', U_P_DEG},
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
