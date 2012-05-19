@@ -761,12 +761,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Set High (K):",          0.0, 50.0,     'f', ""},
     }
   },
-  {COMMAND(hk_pump_servo_off), "Disable pump servo mode.",
-      GR_CRYO_HEAT, 1,
-    {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
-    }
-  },
   
   /***************************************/
   /*************** The Good  *****************/

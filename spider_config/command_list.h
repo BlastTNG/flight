@@ -147,7 +147,7 @@ enum multiCommand {
   hk_htr2_heat_on,   hk_htr2_heat_off,  hk_htr3_heat_on,   hk_htr3_heat_off,
   hk_fphi_heat_on,   hk_fphi_heat_off,  hk_fplo_heat_set,  hk_strap_heat_set, 
   hk_ampl_cernox,    hk_ampl_ntd,       hk_phase_cernox,   hk_phase_ntd,
-  hk_bias_freq,      hk_pump_servo_on,  hk_pump_servo_off,
+  hk_bias_freq,      hk_pump_servo_on,
   spider_scan,	     sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,          hwp_halt,          hwp_phase,
   plugh	 //plugh should be at the end of the list
