@@ -1272,11 +1272,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 	CommandData.hk[i].pump_servo_high = rvalues[2];
       }
       break;
-    case hk_pump_servo_off:
-      CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].pump_servo_on = 0;
-      break;
       
       /***************************************/
       /********* The Good Commanding  *************/ 
