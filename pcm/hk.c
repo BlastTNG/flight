@@ -365,7 +365,7 @@ static unsigned short FridgeCycle(int insert, int reset)
 /*   Overrides pump controls                                            */
 /*                                                                      */
 /************************************************************************/
-static unsigned short PumpServo(int insert)
+static void PumpServo(int insert)
 {
   static int firsttime[6] = {1, 1, 1, 1, 1, 1};
   static struct BiPhaseStruct* tPumpAddr[6];
@@ -381,8 +381,6 @@ static unsigned short PumpServo(int insert)
   };
   
   double t_pump;
-  unsigned short heat_pump = 0;
-  unsigned short retval = 0;
   
   if (firsttime[insert]) {
     char field[64];
@@ -395,18 +393,14 @@ static unsigned short PumpServo(int insert)
   /* Read pump thermometer voltage */
   t_pump = ReadCalData(tPumpAddr[insert]);
   
-  /* Loop-up calibrated temperature */
+  /* Look-up calibrated temperature */
   t_pump = LutCal(&tPumpLut[insert], t_pump);
   
   /* figure out next pump heater state */
   if (t_pump > CommandData.hk[insert].pump_servo_high)
-    heat_pump = 0;
+    CommandData.hk[insert].pump_heat = 0;
   else if (t_pump < CommandData.hk[insert].pump_servo_low)
-    heat_pump = 1;
-  
-  /* set heater control bit */
-  if (heat_pump) retval |= HK_PWM_PUMP;
-  return retval;
+    CommandData.hk[insert].pump_heat = 1;
 }
 
 
@@ -461,8 +455,9 @@ static void HeatControl()
     } else {
       //not using auto cycle. Command PUMP and HSW manually
       FridgeCycle(i, 1);  //reset cycle state
-      if (CommandData.hk[i].pump_servo_on) bits[i] |= PumpServo(i);
-      else if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
+      //servo pump temperature
+      if (CommandData.hk[i].pump_servo_on) PumpServo(i);
+      if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
       //NB: heat switch is normally closed, so logic inverted
       if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
     }
