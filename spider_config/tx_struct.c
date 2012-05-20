@@ -805,7 +805,7 @@ struct ChannelStruct SlowChannels[] = {
   {"insert_last_hk", 'w', LOOP9,  34,                1.0,             0.0, 'u', U_NONE},
   {"f_bias_hk",      'w', LOOP9,  35,      400.0/65535.0,             0.0, 'u', U_F_HZ},
   {"v_heat_last_hk", 'w', LOOP9,  37,         CALDAC(1.0,            0.0), 'u', U_V_V},
-  {"pulse_last_hk",  'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
+  // {"pulse_last_hk",  'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
   {"blob08_x_thegood",  'w', LOOP9,  39, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"blob08_y_thegood",  'w', LOOP9,  40, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
   {"blob08_f_thegood",  'w', LOOP9,  41,                1.0,             0.0, 'u', U_NONE},

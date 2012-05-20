@@ -133,6 +133,14 @@ struct latch_pulse {
   int rst_count;
 };
 
+// for HK PWM heaters
+struct PWMStruct {
+  bool state;                 // heater state (0=off, 1=on)
+  int duration;               // frames requested (-1=infinity)
+  int elapsed;                // frames elapsed
+  unsigned short duty_target; // duty cycle target (8-bit resolution)
+  unsigned short duty_avg;    // running average duty cycle
+};
 
 struct SCCommandData {
   //camera and lens configuration
@@ -306,10 +314,9 @@ struct CommandDataStruct {
     } ntd;
   } hk[6];    //one per insert
 
-  short hk_theo_heat;
+  struct PWMStruct hk_theo_heat[8];
 
   short hk_last;
-  short hk_pulse_last;
   double hk_vheat_last;
   unsigned short hk_bias_freq;
 

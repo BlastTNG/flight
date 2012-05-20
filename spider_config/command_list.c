@@ -227,22 +227,38 @@ struct scom scommands[N_SCOMMANDS] = {
   //Star Camera table
   {COMMAND(table_track), "Put the table in track mode", GR_SCTAB},
   //Theo heater housekeeping commands
-  {COMMAND(hk_mt_bottom_heat_on), "Turn on Theo's MT Bottom Heater", GR_THEO_HEAT},
-  {COMMAND(hk_mt_bottom_heat_off), "Turn off Theo's MT Bottom Heater", GR_THEO_HEAT},
-  {COMMAND(hk_t1_heat_on), "Turn on Theo's Heater #1", GR_THEO_HEAT},
-  {COMMAND(hk_t1_heat_off), "Turn off Theo's Heater #1", GR_THEO_HEAT},
-  {COMMAND(hk_vcs1_hx1_heat_on), "Turn on Theo's VCS1 HX1 Heater", GR_THEO_HEAT},
-  {COMMAND(hk_vcs1_hx1_heat_off), "Turn off Theo's VCS1 HX1 Heater", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx1_heat_on), "Turn on Theo's VCS2 HX1 Heater", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx1_heat_off), "Turn off Theo's VCS2 HX1 Heater", GR_THEO_HEAT},
-  {COMMAND(hk_vcs1_hx2_heat_on), "Turn on Theo's VCS1 HX2 Heater", GR_THEO_HEAT},
-  {COMMAND(hk_vcs1_hx2_heat_off), "Turn off Theo's VCS1 HX2 Heater", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx2_heat_on), "Turn on Theo's VCS2 HX2 Heater", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx2_heat_off), "Turn off Theo's VCS2 HX2 Heater", GR_THEO_HEAT},
-  {COMMAND(hk_sft_bottom_heat_on), "Turn on Theo's SFT Bottom Heater", GR_THEO_HEAT},
-  {COMMAND(hk_sft_bottom_heat_off), "Turn off Theo's SFT Bottom Heater", GR_THEO_HEAT},
-  {COMMAND(hk_t7_heat_on), "Turn on Theo's Heater #7", GR_THEO_HEAT},
-  {COMMAND(hk_t7_heat_off), "Turn off Theo's Heater #7", GR_THEO_HEAT},
+  {COMMAND(hk_mt_bottom_heat_on), 
+   "Turn on Theo's MT Bottom Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_mt_bottom_heat_off), 
+   "Turn off Theo's MT Bottom Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_t1_heat_on), "Turn on Theo's Heater #1. Disable pulse",
+   GR_THEO_HEAT},
+  {COMMAND(hk_t1_heat_off), "Turn off Theo's Heater #1. Disable pulse",
+   GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx1_heat_on), 
+   "Turn on Theo's VCS1 HX1 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx1_heat_off), 
+   "Turn off Theo's VCS1 HX1 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx1_heat_on), 
+   "Turn on Theo's VCS2 HX1 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx1_heat_off), 
+   "Turn off Theo's VCS2 HX1 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx2_heat_on),
+   "Turn on Theo's VCS1 HX2 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx2_heat_off),
+   "Turn off Theo's VCS1 HX2 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx2_heat_on),
+   "Turn on Theo's VCS2 HX2 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx2_heat_off),
+   "Turn off Theo's VCS2 HX2 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_sft_bottom_heat_on),
+   "Turn on Theo's SFT Bottom Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_sft_bottom_heat_off),
+   "Turn off Theo's SFT Bottom Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_t7_heat_on), "Turn on Theo's Heater #7. Disable pulse",
+   GR_THEO_HEAT},
+  {COMMAND(hk_t7_heat_off), "Turn off Theo's Heater #7. Disable pulse",
+   GR_THEO_HEAT},
 
   //make better use of unused groups
   {COMMAND(pull_cmb_pin), "????", 0x00000002},
@@ -639,13 +655,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
   /***************************************/
   /*************** Heat  *****************/
   {COMMAND(hk_pump_heat_on),
-    "Turn on the pump (charcoal) heater. Disable autocycle", GR_CRYO_HEAT, 1,
+    "Turn on the pump (charcoal) heater. Disable autocycle or servo",
+    GR_CRYO_HEAT, 1,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
   {COMMAND(hk_pump_heat_off),
-    "Turn off the pump (charcoal) heater. Disable autocycle", GR_CRYO_HEAT, 1,
+    "Turn off the pump (charcoal) heater. Disable autocycle or servo", 
+    GR_CRYO_HEAT, 1,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
@@ -753,7 +771,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
-  {COMMAND(hk_pump_servo_on), "Enable pump servo mode: maintain pump temperature between setpoints.",
+  {COMMAND(hk_pump_servo_on), 
+      "Enable pump servo mode: maintain pump temperature between setpoints.",
       GR_CRYO_HEAT, 3,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
@@ -762,6 +781,63 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   
+  {COMMAND(hk_mt_bottom_pulse), "Pulse Theo's MT bottom heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_t1_pulse), "Pulse Theo's T1 heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Duration (minutes) (0=1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_vcs1_hx1_pulse), "Pulse Theo's VCS1 HX1 heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_vcs2_hx1_pulse), "Pulse Theo's VCS2 HX1 heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_vcs1_hx2_pulse), "Pulse Theo's VCS1 HX2 heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_vcs2_hx2_pulse), "Pulse Theo's VCS2 HX2 heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_sft_bottom_pulse), "Pulse Theo's SFT Bottom heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_t7_pulse), "Pulse Theo's #7 heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+
   /***************************************/
   /*************** The Good  *****************/
   {COMMAND(thegood_any), "Execute arbitrary The Good command", GR_SCGOOD, 1,
