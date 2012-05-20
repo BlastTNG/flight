@@ -361,6 +361,29 @@ static unsigned short FridgeCycle(int insert, int reset)
 
 /************************************************************************/
 /*                                                                      */
+/*   PulseHeater: pulse PWM heater. Overrides heater controls           */
+/*                                                                      */
+/************************************************************************/
+static void PulseHeater(struct PWMStruct *heater) {
+  // do nothing if total time has elapsed
+  if (heater->elapsed >= heater->duration && heater->duration >= 0) return;
+
+  // update state and increment running average
+  // average duty cycle is exact on periods of 256 frames
+  if (heater->duty_avg < heater->duty_target) {
+    heater->state = 1;
+    heater->duty_avg += -(heater->duty_avg >> 8) + 0x00ff;
+  } else {
+    heater->state = 0;
+    heater->duty_avg -= (heater->duty_avg >> 8);
+  }
+  
+  // increment frame counter
+  if (heater->duration >= 0) heater->elapsed++;
+}
+
+/************************************************************************/
+/*                                                                      */
 /*   PumpServo: maintain pump temperature between set points.           */
 /*   Overrides pump controls                                            */
 /*                                                                      */
@@ -474,7 +497,13 @@ static void HeatControl()
   temp = ((bits[1] & 0xff) << 8) | (bits[5] & 0xff);
   WriteData(heat26Addr, temp, NIOS_QUEUE);
 
-  WriteData(heatTAddr, CommandData.hk_theo_heat&0x00ff, NIOS_QUEUE);
+  //Theo PWM heaters
+  temp = 0x0000;
+  for (i=0; i<8; i++) {
+    PulseHeater(&CommandData.hk_theo_heat[i]);
+    if (CommandData.hk_theo_heat[i].state) temp |= (0x1 << i);
+  }
+  WriteData(heatTAddr, temp, NIOS_QUEUE);
 
   //DAC heaters
   for (i=0; i<6; i++) {
@@ -486,13 +515,11 @@ static void HeatControl()
 void HouseKeeping()
 {
   static struct NiosStruct* insertLastHkAddr;
-  static struct NiosStruct* pulseLastHkAddr;
   static struct NiosStruct* vHeatLastHkAddr;
   static int first_time = 1;
   if (first_time) {
     first_time = 0;
     insertLastHkAddr = GetNiosAddr("insert_last_hk");
-    pulseLastHkAddr = GetNiosAddr("pulse_last_hk");
     vHeatLastHkAddr = GetNiosAddr("v_heat_last_hk");
   }
 
@@ -501,6 +528,5 @@ void HouseKeeping()
   HeatControl();
 
   WriteData(insertLastHkAddr, CommandData.hk_last, NIOS_QUEUE);
-  WriteData(pulseLastHkAddr, CommandData.hk_pulse_last, NIOS_QUEUE);
   WriteCalData(vHeatLastHkAddr, CommandData.hk_vheat_last, NIOS_QUEUE);
 }

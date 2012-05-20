@@ -658,52 +658,84 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
     //Theo heater housekeeping commands.
     case hk_mt_bottom_heat_on:
-      CommandData.hk_theo_heat |= (0x1 << 0);
+      CommandData.hk_theo_heat[0].state = 1;
+      CommandData.hk_theo_heat[0].duration = 0;
+      CommandData.hk_theo_heat[0].elapsed = 0;
       break;
     case hk_mt_bottom_heat_off:
-      CommandData.hk_theo_heat &= ~(0x1 << 0);
+      CommandData.hk_theo_heat[0].state = 0;
+      CommandData.hk_theo_heat[0].duration = 0;
+      CommandData.hk_theo_heat[0].elapsed = 0;
       break;
     case hk_t1_heat_on:
-      CommandData.hk_theo_heat |= (0x1 << 1);
+      CommandData.hk_theo_heat[1].state = 1;
+      CommandData.hk_theo_heat[1].duration = 0;
+      CommandData.hk_theo_heat[1].elapsed = 0;
       break;
     case hk_t1_heat_off:
-      CommandData.hk_theo_heat &= ~(0x1 << 1);
+      CommandData.hk_theo_heat[1].state = 0;
+      CommandData.hk_theo_heat[1].duration = 0;
+      CommandData.hk_theo_heat[1].elapsed = 0;
       break;
     case hk_vcs1_hx1_heat_on:
-      CommandData.hk_theo_heat |= (0x1 << 2);
+      CommandData.hk_theo_heat[2].state = 1;
+      CommandData.hk_theo_heat[2].duration = 0;
+      CommandData.hk_theo_heat[2].elapsed = 0;
       break;
     case hk_vcs1_hx1_heat_off:
-      CommandData.hk_theo_heat &= ~(0x1 << 2);
+      CommandData.hk_theo_heat[2].state = 0;
+      CommandData.hk_theo_heat[2].duration = 0;
+      CommandData.hk_theo_heat[2].elapsed = 0;
       break;
     case hk_vcs2_hx1_heat_on:
-      CommandData.hk_theo_heat |= (0x1 << 3);
+      CommandData.hk_theo_heat[3].state = 1;
+      CommandData.hk_theo_heat[3].duration = 0;
+      CommandData.hk_theo_heat[3].elapsed = 0;
       break;
     case hk_vcs2_hx1_heat_off:
-      CommandData.hk_theo_heat &= ~(0x1 << 3);
+      CommandData.hk_theo_heat[3].state = 0;
+      CommandData.hk_theo_heat[3].duration = 0;
+      CommandData.hk_theo_heat[3].elapsed = 0;
       break;
     case hk_vcs1_hx2_heat_on:
-      CommandData.hk_theo_heat |= (0x1 << 4);
+      CommandData.hk_theo_heat[4].state = 1;
+      CommandData.hk_theo_heat[4].duration = 0;
+      CommandData.hk_theo_heat[4].elapsed = 0;
       break;
     case hk_vcs1_hx2_heat_off:
-      CommandData.hk_theo_heat &= ~(0x1 << 4);
+      CommandData.hk_theo_heat[4].state = 0;
+      CommandData.hk_theo_heat[4].duration = 0;
+      CommandData.hk_theo_heat[4].elapsed = 0;
       break;
     case hk_vcs2_hx2_heat_on:
-      CommandData.hk_theo_heat |= (0x1 << 5);
+      CommandData.hk_theo_heat[5].state = 1;
+      CommandData.hk_theo_heat[5].duration = 0;
+      CommandData.hk_theo_heat[5].elapsed = 0;
       break;
     case hk_vcs2_hx2_heat_off:
-      CommandData.hk_theo_heat &= ~(0x1 << 5);
+      CommandData.hk_theo_heat[5].state = 0;
+      CommandData.hk_theo_heat[5].duration = 0;
+      CommandData.hk_theo_heat[5].elapsed = 0;
       break;
     case hk_sft_bottom_heat_on:
-      CommandData.hk_theo_heat |= (0x1 << 6);
+      CommandData.hk_theo_heat[6].state = 1;
+      CommandData.hk_theo_heat[6].duration = 0;
+      CommandData.hk_theo_heat[6].elapsed = 0;
       break;
     case hk_sft_bottom_heat_off:
-      CommandData.hk_theo_heat &= ~(0x1 << 6);
+      CommandData.hk_theo_heat[6].state = 0;
+      CommandData.hk_theo_heat[6].duration = 0;
+      CommandData.hk_theo_heat[6].elapsed = 0;
       break;
     case hk_t7_heat_on:
-      CommandData.hk_theo_heat |= (0x1 << 7);
+      CommandData.hk_theo_heat[7].state = 1;
+      CommandData.hk_theo_heat[7].duration = 0;
+      CommandData.hk_theo_heat[7].elapsed = 0;
       break;
     case hk_t7_heat_off:
-      CommandData.hk_theo_heat &= ~(0x1 << 7);
+      CommandData.hk_theo_heat[7].state = 0;
+      CommandData.hk_theo_heat[7].duration = 0;
+      CommandData.hk_theo_heat[7].elapsed = 0;
       break;
 
     case pull_cmb_pin:
@@ -1273,6 +1305,103 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
       
+    case hk_mt_bottom_pulse:
+      CommandData.hk_theo_heat[0].duty_target = 
+	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[0].duration = // slow frames
+	((rvalues[1]<0) ? -1 :
+	 (int)(rvalues[1]*60*4e6/384.0/
+	       (float)CommandData.bbcIntFrameRate/FAST_PER_SLOW));
+      // initialize
+      CommandData.hk_theo_heat[0].duty_avg = 
+	CommandData.hk_theo_heat[0].duty_target;
+      CommandData.hk_theo_heat[0].elapsed = 0;
+      break;
+    case hk_t1_pulse:
+      CommandData.hk_theo_heat[1].duty_target = 
+	((int)(rvalues[1]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[1].duration = // slow frames
+	((rvalues[1]<0) ? -1 :
+	 (int)(rvalues[1]*60*4e6/384.0/
+	       (float)CommandData.bbcIntFrameRate/FAST_PER_SLOW));
+      // initialize
+      CommandData.hk_theo_heat[1].duty_avg = 
+	CommandData.hk_theo_heat[1].duty_target;
+      CommandData.hk_theo_heat[1].elapsed = 0;
+      break;
+    case hk_vcs1_hx1_pulse:
+      CommandData.hk_theo_heat[2].duty_target = 
+	((int)(rvalues[2]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[2].duration = // slow frames
+	((rvalues[1]<0) ? -1 :
+	 (int)(rvalues[1]*60*4e6/384.0/
+	       (float)CommandData.bbcIntFrameRate/FAST_PER_SLOW));
+      // initialize
+      CommandData.hk_theo_heat[2].duty_avg = 
+	CommandData.hk_theo_heat[2].duty_target;
+      CommandData.hk_theo_heat[2].elapsed = 0;
+      break;
+    case hk_vcs2_hx1_pulse:
+      CommandData.hk_theo_heat[3].duty_target = 
+	((int)(rvalues[3]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[3].duration = // slow frames
+	((rvalues[1]<0) ? -1 :
+	 (int)(rvalues[1]*60*4e6/384.0/
+	       (float)CommandData.bbcIntFrameRate/FAST_PER_SLOW));
+      // initialize
+      CommandData.hk_theo_heat[3].duty_avg = 
+	CommandData.hk_theo_heat[3].duty_target;
+      CommandData.hk_theo_heat[3].elapsed = 0;
+      break;
+    case hk_vcs1_hx2_pulse:
+      CommandData.hk_theo_heat[4].duty_target = 
+	((int)(rvalues[4]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[4].duration = // slow frames
+	((rvalues[1]<0) ? -1 :
+	 (int)(rvalues[1]*60*4e6/384.0/
+	       (float)CommandData.bbcIntFrameRate/FAST_PER_SLOW));
+      // initialize
+      CommandData.hk_theo_heat[4].duty_avg = 
+	CommandData.hk_theo_heat[4].duty_target;
+      CommandData.hk_theo_heat[4].elapsed = 0;
+      break;
+    case hk_vcs2_hx2_pulse:
+      CommandData.hk_theo_heat[5].duty_target = 
+	((int)(rvalues[5]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[5].duration = // slow frames
+	((rvalues[1]<0) ? -1 :
+	 (int)(rvalues[1]*60*4e6/384.0/
+	       (float)CommandData.bbcIntFrameRate/FAST_PER_SLOW));
+      // initialize
+      CommandData.hk_theo_heat[5].duty_avg = 
+	CommandData.hk_theo_heat[5].duty_target;
+      CommandData.hk_theo_heat[5].elapsed = 0;
+      break;
+    case hk_sft_bottom_pulse:
+      CommandData.hk_theo_heat[6].duty_target = 
+	((int)(rvalues[6]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[6].duration = // slow frames
+	((rvalues[1]<0) ? -1 :
+	 (int)(rvalues[1]*60*4e6/384.0/
+	       (float)CommandData.bbcIntFrameRate/FAST_PER_SLOW));
+      // initialize
+      CommandData.hk_theo_heat[6].duty_avg = 
+	CommandData.hk_theo_heat[6].duty_target;
+      CommandData.hk_theo_heat[6].elapsed = 0;
+      break;
+    case hk_t7_pulse:
+      CommandData.hk_theo_heat[7].duty_target = 
+	((int)(rvalues[7]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[7].duration = // slow frames
+	((rvalues[1]<0) ? -1 :
+	 (int)(rvalues[1]*60*4e6/384.0/
+	       (float)CommandData.bbcIntFrameRate/FAST_PER_SLOW));
+      // initialize
+      CommandData.hk_theo_heat[7].duty_avg = 
+	CommandData.hk_theo_heat[7].duty_target;
+      CommandData.hk_theo_heat[7].elapsed = 0;
+      break;
+
       /***************************************/
       /********* The Good Commanding  *************/ 
     case thegood_any:
@@ -1701,7 +1830,7 @@ void InitCommandData()
 
   for (i=0; i<6; i++) {
     CommandData.hk[i].pump_heat = 0;
-    CommandData.hk[i].heat_switch = 1;	  //heat switch defaults to on
+    CommandData.hk[i].heat_switch = 1;   //heat switch defaults to on
     CommandData.hk[i].fphi_heat = 0;
     CommandData.hk[i].ssa_heat = 0;
     CommandData.hk[i].htr1_heat = 0;
@@ -1721,9 +1850,8 @@ void InitCommandData()
     CommandData.hk[i].ntd.phase = 5.0;
     CommandData.hk[i].ntd.ampl = 0.3;
   }
-  CommandData.hk_theo_heat = 0;
+  for (i=0; i<8; i++) CommandData.hk_theo_heat[i] = {0,0,0,0,0};
   CommandData.hk_last = 0;
-  CommandData.hk_pulse_last = 0;
   CommandData.hk_vheat_last = 0.0;
   CommandData.hk_bias_freq = 50;
 
