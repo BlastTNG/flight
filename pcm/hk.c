@@ -365,7 +365,16 @@ static unsigned short FridgeCycle(int insert, int reset)
 /*                                                                      */
 /************************************************************************/
 static void PulseHeater(struct PWMStruct *heater) {
-  // do nothing if total time has elapsed
+  
+  // turn off pulse mode and turn off heater if pulse mode ended
+  if (heater->elapsed >= heater->duration && heater->duration > 0) {
+    heater->state = 0;
+    heater->duration = 0;
+    heater->elapsed = 0;
+    return;
+  }
+  
+  // do nothing if total time has elapsed or pulse mode is off
   if (heater->elapsed >= heater->duration && heater->duration >= 0) return;
 
   // update state and increment running average
