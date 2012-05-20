@@ -1850,7 +1850,13 @@ void InitCommandData()
     CommandData.hk[i].ntd.phase = 5.0;
     CommandData.hk[i].ntd.ampl = 0.3;
   }
-  for (i=0; i<8; i++) CommandData.hk_theo_heat[i] = {0,0,0,0,0};
+  for (i=0; i<8; i++) {
+    CommandData.hk_theo_heat[i].state = 0;
+    CommandData.hk_theo_heat[i].duration = 0;
+    CommandData.hk_theo_heat[i].elapsed = 0;
+    CommandData.hk_theo_heat[i].duty_target = 0;
+    CommandData.hk_theo_heat[i].duty_avg = 0;
+  }
   CommandData.hk_last = 0;
   CommandData.hk_vheat_last = 0.0;
   CommandData.hk_bias_freq = 50;
