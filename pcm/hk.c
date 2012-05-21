@@ -366,16 +366,20 @@ static unsigned short FridgeCycle(int insert, int reset)
 /************************************************************************/
 static void PulseHeater(struct PWMStruct *heater) {
   
+  time_t elapsed;
+  if (heater->duration >= 0) elapsed = mcp_systime(NULL) - heater->start_time;
+  else elapsed = 0;
+
   // turn off pulse mode and turn off heater if pulse mode ended
-  if (heater->elapsed >= heater->duration && heater->duration > 0) {
+  if (elapsed >= heater->duration && heater->duration > 0) {
     heater->state = 0;
     heater->duration = 0;
-    heater->elapsed = 0;
+    heater->start_time = 0;
     return;
   }
   
   // do nothing if total time has elapsed or pulse mode is off
-  if (heater->elapsed >= heater->duration && heater->duration >= 0) return;
+  if (elapsed >= heater->duration && heater->duration >= 0) return;
 
   // update state and increment running average
   // average duty cycle is exact on periods of 256 frames
@@ -386,9 +390,6 @@ static void PulseHeater(struct PWMStruct *heater) {
     heater->state = 0;
     heater->duty_avg -= (heater->duty_avg >> 8);
   }
-  
-  // increment frame counter
-  if (heater->duration >= 0) heater->elapsed++;
 }
 
 /************************************************************************/
