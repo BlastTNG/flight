@@ -136,8 +136,8 @@ struct latch_pulse {
 // for HK PWM heaters
 struct PWMStruct {
   bool state;                 // heater state (0=off, 1=on)
-  int duration;               // frames requested (-1=infinity)
-  int elapsed;                // frames elapsed
+  int duration;               // seconds requested (-1=infinity)
+  time_t start_time;          // start time of pulse mode
   unsigned short duty_target; // duty cycle target (8-bit resolution)
   unsigned short duty_avg;    // running average duty cycle
 };
