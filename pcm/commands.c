@@ -1317,7 +1317,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_t1_pulse:
       CommandData.hk_theo_heat[1].duty_target = 
-	((int)(rvalues[1]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[1].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1327,7 +1327,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_vcs1_hx1_pulse:
       CommandData.hk_theo_heat[2].duty_target = 
-	((int)(rvalues[2]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[2].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1337,7 +1337,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_vcs2_hx1_pulse:
       CommandData.hk_theo_heat[3].duty_target = 
-	((int)(rvalues[3]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[3].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1347,7 +1347,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_vcs1_hx2_pulse:
       CommandData.hk_theo_heat[4].duty_target = 
-	((int)(rvalues[4]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[4].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1357,7 +1357,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_vcs2_hx2_pulse:
       CommandData.hk_theo_heat[5].duty_target = 
-	((int)(rvalues[5]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[5].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1367,7 +1367,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_sft_bottom_pulse:
       CommandData.hk_theo_heat[6].duty_target = 
-	((int)(rvalues[6]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[6].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1377,7 +1377,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_t7_pulse:
       CommandData.hk_theo_heat[7].duty_target = 
-	((int)(rvalues[7]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[7].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
