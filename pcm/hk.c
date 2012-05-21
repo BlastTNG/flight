@@ -32,6 +32,38 @@
 
 /************************************************************************/
 /*                                                                      */
+/* PhaseStep: sweep through phase shifts for the bias channels          */
+/*                                                                      */
+/************************************************************************/
+static void PhaseStep(struct RTDStruct *rtd)
+{
+  // do nothing if not enough time has passed
+  if (mcp_systime(NULL) - rtd->phase_time < rtd->phase_dt) return;
+  
+  // increment phase if we're within limits
+  if ( (rtd->phase_step > 0) ? 
+       (rtd->phase < rtd->phase_end && rtd->phase >= rtd->phase_start) :
+       (rtd->phase > rtd->phase_end && rtd->phase <= rtd->phase_start) ) {
+    rtd->phase += rtd->phase_step;
+    rtd->phase_time = mcp_systime(NULL);
+  }
+  
+  // turn off phase step mode if we've reached the end
+  if ( (rtd->phase_step > 0) ? (rtd->phase >= rtd->phase_end) : 
+      (rtd->phase <= rtd->phase_end) ) rtd->do_phase_step = 0;
+  
+  // check if we've reached limits
+  if (rtd->phase < 0) {
+    rtd->phase = 0.0;
+    rtd->do_phase_step = 0;
+  } else if (rtd->phase > 360) {
+    rtd->phase = 360.0;
+    rtd->do_phase_step = 0;
+  }
+}
+
+/************************************************************************/
+/*                                                                      */
 /* PhaseControl: set phase shifts for the bias channels                 */
 /*                                                                      */
 /************************************************************************/
@@ -54,6 +86,11 @@ static void PhaseControl()
   }	
 
   for(i = 0; i < 6; i++) {
+    if (CommandData.hk[i].cernox.do_phase_step)
+      PhaseStep(&CommandData.hk[i].cernox);
+    if (CommandData.hk[i].ntd.do_phase_step)
+      PhaseStep(&CommandData.hk[i].ntd);
+    
     WriteCalData(phaseCnxAddr[i], CommandData.hk[i].cernox.phase, NIOS_QUEUE);
     WriteCalData(phaseNtdAddr[i], CommandData.hk[i].ntd.phase, NIOS_QUEUE);
   }

@@ -789,6 +789,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
   int i;
   char buf[256]; //for SC Commands
   int is_new;
+  double step;
+  double duty_cycle;
 
   /* Update CommandData struct with new info
    * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
@@ -1150,13 +1152,65 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_phase_ntd:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].ntd.phase = rvalues[1];
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].ntd.phase = rvalues[1];
+      if (ivalues[0] > 0) {
+	CommandData.hk[ivalues[0]-1].ntd.phase = rvalues[1];
+	CommandData.hk[ivalues[0]-1].ntd.do_phase_step = 0;
+      } else for (i=0; i<HK_MAX; i++) {
+	CommandData.hk[i].ntd.phase = rvalues[1];
+	CommandData.hk[i].ntd.do_phase_step = 0;
+      }
       break;
     case hk_phase_cernox:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].cernox.phase= rvalues[1];
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].cernox.phase = rvalues[1];
+      if (ivalues[0] > 0) {
+	CommandData.hk[ivalues[0]-1].cernox.phase= rvalues[1];
+	CommandData.hk[ivalues[0]-1].cernox.do_phase_step = 0;
+      } else for (i=0; i<HK_MAX; i++) {
+	CommandData.hk[i].cernox.phase = rvalues[1];
+	CommandData.hk[i].cernox.do_phase_step = 0;
+      }
+      break;
+    case hk_phase_step_ntd:
+      CommandData.hk_last = ivalues[0];
+      step = (rvalues[2]-rvalues[1])/rvalues[3];
+      if (ivalues[0] > 0) {
+	CommandData.hk[ivalues[0]-1].ntd.do_phase_step = 1;
+	CommandData.hk[ivalues[0]-1].ntd.phase = rvalues[1];
+	CommandData.hk[ivalues[0]-1].ntd.phase_start = rvalues[1];
+	CommandData.hk[ivalues[0]-1].ntd.phase_end = rvalues[2];
+	CommandData.hk[ivalues[0]-1].ntd.phase_step = step;
+	CommandData.hk[ivalues[0]-1].ntd.phase_dt = ivalues[4];
+	CommandData.hk[ivalues[0]-1].ntd.phase_time = mcp_systime(NULL);
+      } else for (i=0; i<HK_MAX; i++) {
+	CommandData.hk[i].ntd.do_phase_step = 1;
+	CommandData.hk[i].ntd.phase = rvalues[1];
+	CommandData.hk[i].ntd.phase_start = rvalues[1];
+	CommandData.hk[i].ntd.phase_end = rvalues[2];
+	CommandData.hk[i].ntd.phase_step = step;
+	CommandData.hk[i].ntd.phase_dt = ivalues[4];
+	CommandData.hk[i].ntd.phase_time = mcp_systime(NULL);
+      }
+      break;
+    case hk_phase_step_cernox:
+      CommandData.hk_last = ivalues[0];
+      step = (rvalues[2]-rvalues[1])/rvalues[3];
+      if (ivalues[0] > 0) {
+	CommandData.hk[ivalues[0]-1].cernox.do_phase_step = 1;
+	CommandData.hk[ivalues[0]-1].cernox.phase = rvalues[1];
+	CommandData.hk[ivalues[0]-1].cernox.phase_start = rvalues[1];
+	CommandData.hk[ivalues[0]-1].cernox.phase_end = rvalues[2];
+	CommandData.hk[ivalues[0]-1].cernox.phase_step = step;
+	CommandData.hk[ivalues[0]-1].cernox.phase_dt = ivalues[4];
+	CommandData.hk[ivalues[0]-1].cernox.phase_time = mcp_systime(NULL);
+      } else for (i=0; i<HK_MAX; i++) {
+	CommandData.hk[i].cernox.do_phase_step = 1;
+	CommandData.hk[i].cernox.phase = rvalues[1];
+	CommandData.hk[i].cernox.phase_start = rvalues[1];
+	CommandData.hk[i].cernox.phase_end = rvalues[2];
+	CommandData.hk[i].cernox.phase_step = step;
+	CommandData.hk[i].cernox.phase_dt = ivalues[4];
+	CommandData.hk[i].cernox.phase_time = mcp_systime(NULL);
+      }
       break;
     case hk_bias_freq:
       //TODO consider scaling phases as fixed time delay, when freq changes
@@ -1306,8 +1360,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
       
     case hk_mt_bottom_pulse:
+      duty_cycle = rvalues[0]/HK_MT_BOTTOM_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[0].duty_target = 
-	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[0].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1316,8 +1372,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_theo_heat[0].start_time = mcp_systime(NULL);
       break;
     case hk_t1_pulse:
+      duty_cycle = rvalues[0]/HK_T1_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[1].duty_target = 
-	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[1].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1326,8 +1384,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_theo_heat[1].start_time = mcp_systime(NULL);
       break;
     case hk_vcs1_hx1_pulse:
+      duty_cycle = rvalues[0]/HK_VCS1_HX1_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[2].duty_target = 
-	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[2].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1336,8 +1396,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_theo_heat[2].start_time = mcp_systime(NULL);
       break;
     case hk_vcs2_hx1_pulse:
+      duty_cycle = rvalues[0]/HK_VCS2_HX1_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[3].duty_target = 
-	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[3].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1346,8 +1408,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_theo_heat[3].start_time = mcp_systime(NULL);
       break;
     case hk_vcs1_hx2_pulse:
+      duty_cycle = rvalues[0]/HK_VCS1_HX2_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[4].duty_target = 
-	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[4].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1356,8 +1420,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_theo_heat[4].start_time = mcp_systime(NULL);
       break;
     case hk_vcs2_hx2_pulse:
+      duty_cycle = rvalues[0]/HK_VCS2_HX2_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[5].duty_target = 
-	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[5].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1366,8 +1432,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_theo_heat[5].start_time = mcp_systime(NULL);
       break;
     case hk_sft_bottom_pulse:
+      duty_cycle = rvalues[0]/HK_SFT_BOTTOM_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[6].duty_target = 
-	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[6].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1376,8 +1444,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_theo_heat[6].start_time = mcp_systime(NULL);
       break;
     case hk_t7_pulse:
+      duty_cycle = rvalues[0]/HK_T7_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[7].duty_target = 
-	((int)(rvalues[0]/100.0*256) << 8); // 8-bit resolution, pad with zeros
+	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[7].duration = // seconds
 	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
@@ -1833,6 +1903,16 @@ void InitCommandData()
     CommandData.hk[i].cernox.ampl = 0.3;
     CommandData.hk[i].ntd.phase = 5.0;
     CommandData.hk[i].ntd.ampl = 0.3;
+    CommandData.hk[i].ntd.phase_start = 0;
+    CommandData.hk[i].ntd.phase_end = 0;
+    CommandData.hk[i].ntd.phase_step = 0;
+    CommandData.hk[i].ntd.phase_dt = 0;
+    CommandData.hk[i].ntd.phase_time = 0;
+    CommandData.hk[i].cernox.phase_start = 0;
+    CommandData.hk[i].cernox.phase_end = 0;
+    CommandData.hk[i].cernox.phase_step = 0;
+    CommandData.hk[i].cernox.phase_dt = 0;
+    CommandData.hk[i].cernox.phase_time = 0;
   }
   for (i=0; i<8; i++) {
     CommandData.hk_theo_heat[i].state = 0;
