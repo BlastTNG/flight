@@ -646,6 +646,24 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
+  {COMMAND(hk_phase_step_cernox), "Sweep Cernox bias phase", GR_BIAS, 5,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Phase start (degrees)", 0.0, 360.0, 'f', ""},
+      {"Phase end (degrees)",   0.0, 360.0, 'f', ""},
+      {"Number of steps", 0, USHRT_MAX, 'i', ""},
+      {"Time per step (s)", 0, USHRT_MAX, 'i', ""},
+    }
+  },
+  {COMMAND(hk_phase_step_ntd), "Sweep NTD bias phase", GR_BIAS, 5,
+    {
+      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Phase start (degrees)", 0.0, 360.0, 'f', ""},
+      {"Phase end (degrees)",   0.0, 360.0, 'f', ""},
+      {"Number of steps", 0, USHRT_MAX, 'i', ""},
+      {"Time per step (s)", 0, USHRT_MAX, 'i', ""},
+    }
+  },
   {COMMAND(hk_bias_freq), "Set NTD & cernox bias frequency", GR_BIAS, 1,
     {
       {"Frequency (Hz)", 10, 400, 'i', "F_BIAS_CMD_HK"}
@@ -784,56 +802,56 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(hk_mt_bottom_pulse), "Pulse Theo's MT bottom heater",
     GR_THEO_HEAT, 2,
     {
-      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Power (W,max=4.5)", 0.0, 4.5, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
   {COMMAND(hk_t1_pulse), "Pulse Theo's T1 heater",
     GR_THEO_HEAT, 2,
     {
-      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Power (W)", 0.0, 12.0, 'f', ""},
       {"Duration (minutes) (0=1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
   {COMMAND(hk_vcs1_hx1_pulse), "Pulse Theo's VCS1 HX1 heater",
     GR_THEO_HEAT, 2,
     {
-      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Power (W,max=4.5)", 0.0, 4.5, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
   {COMMAND(hk_vcs2_hx1_pulse), "Pulse Theo's VCS2 HX1 heater",
     GR_THEO_HEAT, 2,
     {
-      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Power (W,max=1.8)", 0.0, 1.8, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
   {COMMAND(hk_vcs1_hx2_pulse), "Pulse Theo's VCS1 HX2 heater",
     GR_THEO_HEAT, 2,
     {
-      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Power (W,max=1.8)", 0.0, 1.8, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
   {COMMAND(hk_vcs2_hx2_pulse), "Pulse Theo's VCS2 HX2 heater",
     GR_THEO_HEAT, 2,
     {
-      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Power (W,max=1.8)", 0.0, 1.8, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
   {COMMAND(hk_sft_bottom_pulse), "Pulse Theo's SFT Bottom heater",
     GR_THEO_HEAT, 2,
     {
-      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Power (W,max=9.0)", 0.0, 9.0, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
   {COMMAND(hk_t7_pulse), "Pulse Theo's #7 heater",
     GR_THEO_HEAT, 2,
     {
-      {"Duty cycle (%)", 0.0, 100.0, 'f', ""},
+      {"Power (W)", 0.0, 12.0, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },

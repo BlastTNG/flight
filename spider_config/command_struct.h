@@ -133,13 +133,35 @@ struct latch_pulse {
   int rst_count;
 };
 
-// for HK PWM heaters
+// for HK Theo heaters
+// max power in Watts, TODO update command_list with these values
+#define HK_MT_BOTTOM_PMAX   4.5 // TODO add H2B2 in parallel --> 9
+#define HK_T1_PMAX          1.0 // TODO install capillary 4K heater
+#define HK_VCS1_HX1_PMAX    4.5 // TODO put VCS1 HX2 in parallel --> 6.3
+#define HK_VCS2_HX1_PMAX    1.8 // TODO put VCS2 HX2 in parallel --> 3.6
+#define HK_VCS1_HX2_PMAX    1.8 // TODO replace with MT fill?
+#define HK_VCS2_HX2_PMAX    1.8 // TODO replace with MT vent?
+#define HK_SFT_BOTTOM_PMAX  9.0 // TODO change to LC --> 0.250
+#define HK_T7_PMAX          1.0 // not wired!
+
 struct PWMStruct {
   bool state;                 // heater state (0=off, 1=on)
   int duration;               // seconds requested (-1=infinity)
   time_t start_time;          // start time of pulse mode
   unsigned short duty_target; // duty cycle target (8-bit resolution)
   unsigned short duty_avg;    // running average duty cycle
+};
+
+// for HK RTD's
+struct RTDStruct {
+  double phase;
+  double ampl;
+  bool do_phase_step;
+  double phase_start;
+  double phase_end;
+  double phase_step;
+  int phase_dt;
+  time_t phase_time;
 };
 
 struct SCCommandData {
@@ -303,15 +325,8 @@ struct CommandDataStruct {
     double pump_servo_low;
     double pump_servo_high;
     
-    struct {
-      double phase;
-      double ampl;
-    } cernox;
-
-    struct {
-      double phase;
-      double ampl;
-    } ntd;
+    struct RTDStruct cernox;
+    struct RTDStruct ntd;
   } hk[6];    //one per insert
 
   struct PWMStruct hk_theo_heat[8];

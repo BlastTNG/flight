@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 175        /* total number of single word cmds */
-#define N_MCOMMANDS 120        /* total number of multiword commands */
+#define N_MCOMMANDS 122        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -147,7 +147,7 @@ enum multiCommand {
   hk_htr2_heat_on,   hk_htr2_heat_off,  hk_htr3_heat_on,   hk_htr3_heat_off,
   hk_fphi_heat_on,   hk_fphi_heat_off,  hk_fplo_heat_set,  hk_strap_heat_set, 
   hk_ampl_cernox,    hk_ampl_ntd,       hk_phase_cernox,   hk_phase_ntd,
-  hk_bias_freq,      hk_pump_servo_on,
+  hk_phase_step_cernox, hk_phase_step_ntd, hk_bias_freq,      hk_pump_servo_on,
   hk_mt_bottom_pulse,  hk_t1_pulse,         hk_vcs1_hx1_pulse,  
   hk_vcs2_hx1_pulse,   hk_vcs1_hx2_pulse,   hk_vcs2_hx2_pulse,
   hk_sft_bottom_pulse, hk_t7_pulse,
