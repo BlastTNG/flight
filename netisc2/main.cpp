@@ -2683,7 +2683,8 @@ LRESULT CALLBACK MainWndProc(
             (int)strlen(stddevstr));     
 
     // I am ISC
-    sprintf(iscstr,"ISC");
+	if ( I_AM_ISC == 1 ){ sprintf(iscstr,"ISC");}
+	else { sprintf(iscstr,"OSC");}
     TextOut(hdc, client_width*3/4.+6, FONT_HEIGHT/2-10, iscstr, 
             (int)strlen(iscstr));
     
