@@ -45,6 +45,7 @@
 #include "daemon.h"
 #include "config.h"
 #include "command_list.h"
+#include "elog.h"
 
 #ifdef USE_AUTHENTICATION
 /* read authorized IP addresses from file, and store in list */
@@ -281,11 +282,6 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
       result = 11;
   }
 
-  snprintf(log2, 4999, "/usr/local/bin/elog -h blastexperiment.info"
-       " -p 8080 -l Narsil -a Author=blastcmd-daemon"
-       " \"EXE %s\n", buffer);
-
-
   if (result == 0) {
     if (route)
       result = SimpleRoute(sock, fd, &buffer[3]);
@@ -296,12 +292,18 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   sprintf(output, ":::ack:::%i\r\n", result);
   printf("%i<--%s", sock, output);
   send(sock, output, strlen(output), MSG_NOSIGNAL);
+
+#ifdef ELOG_CMD
+  snprintf(log2, 4999, ELOG_CMD " \"EXE %s\n", buffer);
   snprintf(log, 4999, "%sResult = %d\"", log2, result);
   if (fork() != 0) {
     return result;
   } else {
     exit(system(log));
   }
+#else
+  return result;
+#endif
 }
 
 void SendCommandList(int sock)
