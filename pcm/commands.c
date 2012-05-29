@@ -917,6 +917,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case el_gain:  /* ele gains */
       CommandData.ele_gain.P = ivalues[0];
       CommandData.ele_gain.D = ivalues[1];
+      CommandData.ele_gain.I = ivalues[2];
       //CommandData.ele_gain.PT = ivalues[2];
       //CommandData.ele_gain.twist = rvalues[2];
       break;
@@ -1810,7 +1811,9 @@ void InitCommandData()
   //CommandData.ele_gain.PT = 3000;
 
   CommandData.ele_gain.P = 0;
+  CommandData.ele_gain.I = 0;
   CommandData.ele_gain.D = 0;
+
   //CommandData.ele_gain.manual_pulses = 0;
   //CommandData.ele_gain.pulse_port = 0.0;
   //CommandData.ele_gain.pulse_starboard = 0.0;
