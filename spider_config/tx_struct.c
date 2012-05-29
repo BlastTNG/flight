@@ -405,12 +405,12 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 11 is unused */
   /* LOOP1 12-13 are wide */
   {"g_p_el",     'w', LOOP1,  8,                1.0,     0.0, 'u', U_NONE},
-  {"g_d_el",     'w', LOOP1,  9,                1.0,     0.0, 'u', U_NONE},
+  {"g_d_el",     'w', LOOP1,  9,                1.0,-32768.0, 'u', U_NONE},
   {"g_i_el",     'w', LOOP1, 10,                1.0,     0.0, 'u', U_NONE},
   {"p_term_el",  'w', LOOP1, 14,                1.0,-32768.0, 'u', U_NONE},
   {"i_term_el",  'w', LOOP1, 15,                1.0,-32768.0, 'u', U_NONE},
   {"d_term_el",  'w', LOOP1, 16,                1.0,-32768.0, 'u', U_NONE},
-  {"foc_res_thegood", 'w', LOOP1, 17,                1.0,             0.0, 'u', U_NONE},
+  {"foc_res_thegood", 'w', LOOP1, 17,             1.0,             0.0, 'u', U_NONE},
   {"period_cal",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status
   {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},

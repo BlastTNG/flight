@@ -383,7 +383,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_el"},
       {"Derivative Gain",   0, USHRT_MAX, 'i', "g_d_el"},
-      {"Integral Gain",   0, USHRT_MAX, 'i', "g_i_el"}
+      {"Integral Gain",   -32768, 32767, 'i', "g_i_el"}
     }
   },
   /*{COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
