@@ -299,7 +299,7 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
 
   g_P = CommandData.ele_gain.P * (double) (fabs(dy) > TOLERANCE);
   g_I = CommandData.ele_gain.I;
-  g_D = 100*(CommandData.ele_gain.D-32768.0) * (double) (fabs(dy) > TOLERANCE);
+  g_D = 100*(CommandData.ele_gain.D) * (double) (fabs(dy) > TOLERANCE);
   
   if ( !(CommandData.disable_el) && CommandData.power.elmot_auto ) {
     if (!g_P) {
@@ -729,9 +729,9 @@ void WriteMot(int TxIndex)
     /*integral gain term for el motors */
     WriteCalData(gIElAddr, elGainI, NIOS_QUEUE);
     
-    WriteCalData(pTermElAddr, duty_P+32768, NIOS_QUEUE);
-    WriteCalData(iTermElAddr, duty_I+32768, NIOS_QUEUE);
-    WriteCalData(dTermElAddr, duty_D+32768, NIOS_QUEUE);
+    WriteCalData(pTermElAddr, duty_P, NIOS_QUEUE);
+    WriteCalData(iTermElAddr, duty_I, NIOS_QUEUE);
+    WriteCalData(dTermElAddr, duty_D, NIOS_QUEUE);
 
   /* TODO TEMPORARY HACK: write cos el and sin el for el = 0, since gyros are now on outer frame */
     WriteCalData(cosElAddr, 1.0, NIOS_QUEUE);
