@@ -281,7 +281,6 @@ static int Phytron_DoSend(struct phytron* bus, int who, int useaxis,
     free(hex_buffer);
   }
   //update baud rate to that used by stepper 'who'
-  bprintf(info, "erase me: using baud rate %d\n", bus->stepper[who].baud);
   if (phytron_setserial(bus, bus->stepper[who].baud) < 0) {
     if (bus->chatter >= PH_CHAT_ERR)
       berror(err, "%sError setting baud rate. File descriptor = %i",
