@@ -212,6 +212,7 @@ struct CommandDataStruct {
   struct {
     int P;
     int D;
+    int I;
     //double pulse_port;
     //double pulse_starboard;
     //int manual_pulses;

@@ -402,10 +402,14 @@ struct ChannelStruct SlowChannels[] = {
   {"vt_7_if",      'r',  HWP_A2, 49, CAL16B(         1.0,           0.0), 'u', U_V_V},
 
   /* LOOP1 0-7 are wide */
-  /* LOOP1 10-11 are unused */
+  /* LOOP1 11 is unused */
   /* LOOP1 12-13 are wide */
   {"g_p_el",     'w', LOOP1,  8,                1.0,     0.0, 'u', U_NONE},
   {"g_d_el",     'w', LOOP1,  9,                1.0,     0.0, 'u', U_NONE},
+  {"g_i_el",     'w', LOOP1, 10,                1.0,     0.0, 'u', U_NONE},
+  {"p_term_el",  'w', LOOP1, 14,                1.0,-32768.0, 'u', U_NONE},
+  {"i_term_el",  'w', LOOP1, 15,                1.0,-32768.0, 'u', U_NONE},
+  {"d_term_el",  'w', LOOP1, 16,                1.0,-32768.0, 'u', U_NONE},
   {"foc_res_thegood", 'w', LOOP1, 17,                1.0,             0.0, 'u', U_NONE},
   {"period_cal",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status
@@ -897,7 +901,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_port_pyr",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},
 
 /* ACS2 Digital I/O card */
-  // ACS2_D 20-21 are unused
+  // ACS2_D 20-22 are unused
   {"dac2_ampl",    'w',  ACS2_D,  1,                 1.0,             0.0, 'u', U_NONE},
   {"dac_piv",      'w',  ACS2_D,  2,                 1.0,             0.0, 'u', U_NONE},
   //  {"dac3_ampl",    'w',  ACS2_D,  2,                1.0,             0.0, 'u', U_NONE},
@@ -913,8 +917,6 @@ struct ChannelStruct SlowChannels[] = {
   {"sin_el", 	     'w',  ACS2_D, 26,          1/32768.0,            -1.0, 'u', U_NONE}, 
   {"fault_gy",     'r',  ACS2_D, 15,                1.0,             0.0, 'u', U_NONE},
   {"dac_el",       'r',   ACS2_D, 20,                 1.0,            0.0, 'u', U_NONE},
-  {"p_term_el",    'r',   ACS2_D, 21,                1.0,        -32768.0, 'u', U_NONE},
-  {"i_term_el",    'r',   ACS2_D, 22,                1.0,        -32768.0, 'u', U_NONE},
   {"error_el",     'r',   ACS2_D, 23,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
   {"dac_rw",       'r',   ACS2_D, 24,                 1.0,            0.0, 'u', U_NONE},
   {"p_term_az",    'r',   ACS2_D, 25,                1.0,        -32768.0, 'u', U_NONE},
