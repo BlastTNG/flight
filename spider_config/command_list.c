@@ -521,7 +521,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(hwp_move), "move the HWP rotator to relative position", GR_HWPR, 2,
     {
       {"Stepper (1-6,0=all)", 0, 6, 'i', "0"},
-      {"delta (degrees)", -360, 360, 'f', "0"}
+      {"delta (degrees)", -720, 720, 'd', "0"}
     }
   },
 
