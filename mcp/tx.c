@@ -1331,7 +1331,7 @@ static void StoreData(int index)
   WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*10.0*32768.0), NIOS_QUEUE);
   WriteData(modePAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
-      (CommandData.pointing_mode.mode == P_AZ_SCAN))
+      (CommandData.pointing_mode.mode == P_AZ_SCAN) || (CommandData.pointing_mode.mode == P_EL_SCAN))
     WriteData(xPAddr, (int)(CommandData.pointing_mode.X * DEG2I),
         NIOS_QUEUE);
   else

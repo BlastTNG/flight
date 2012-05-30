@@ -46,7 +46,8 @@
 #endif
 
 /* EZBus setup parameters */
-#define STAGE_BUS_TTY "/dev/ttyXYSTAGE"
+#define STAGE_BUS_TTY "/dev/ttySI6"
+//#define STAGE_BUS_TTY "/dev/ttyXYSTAGE"
 #define STAGE_BUS_CHATTER EZ_CHAT_ACT
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
@@ -59,7 +60,7 @@
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1
-#define POLL_TIMEOUT 30000 /* 5 minutes */
+#define POLL_TIMEOUT 1500 /* 15 seconds */
 
 extern short int InCharge; /* tx.c */
 void nameThread(const char*);	/* mcp.c */
@@ -294,11 +295,18 @@ void StageBus(void)
   int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
   unsigned long conn_attempt = 1;
+  int first_time=1;
   struct ezbus bus;
 
   nameThread("XYBus");
   bputs(startup, "startup.");
-
+  while (!InCharge) {
+    if (first_time) {
+      bprintf(info,"Not in charge.  Waiting.");
+      first_time = 0;
+    }
+    usleep(500000);
+  }
   while (1) {
     if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) == EZ_ERR_OK) {
       bprintf(info, "Connected to %s on attempt %lu.", STAGE_BUS_TTY, conn_attempt);
@@ -321,6 +329,9 @@ void StageBus(void)
   all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
 
   for (;;) {
+    /* LMF: I'm pretty sure this next while loop should be removed*/
+    /* Otherwise it will attempt to open the serial port for the XY stage even if it is not in charge*/
+    /* Anyway I've added a while (!Incharge) loop above that should make this redundant */
     while (!InCharge) { /* NiC MCC traps here */
       EZBus_ForceRepoll(&bus, STAGEX_ID);
       EZBus_ForceRepoll(&bus, STAGEY_ID);
@@ -330,14 +341,18 @@ void StageBus(void)
 
     /* Repoll bus if necessary */
     if (CommandData.xystage.force_repoll) {
+      bprintf(info,"XYBus: Recieved signal to repoll");      
       EZBus_ForceRepoll(&bus, STAGEX_ID);
       EZBus_ForceRepoll(&bus, STAGEY_ID);
       poll_timeout = POLL_TIMEOUT;
+      bprintf(info,"Tah-Dah!");
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
+      bprintf(info,"all_ok = %i",all_ok);
       CommandData.xystage.force_repoll = 0;
     }
 
     if (poll_timeout == 0 && !all_ok) {
+      bprintf(info,"XYBus:Timeout!");
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
       poll_timeout = POLL_TIMEOUT;
     } else if (poll_timeout > 0)

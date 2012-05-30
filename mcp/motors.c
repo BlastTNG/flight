@@ -48,6 +48,8 @@
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
 
+#define EL_ACCEL 0.05
+
 void nameThread(const char*);	/* mcp.c */
 
 struct RWMotorDataStruct RWMotorData[3]; // defined in point_struct.h
@@ -692,6 +694,47 @@ static void SetAzScanMode(double az, double left, double right, double v,
 static void SetElScanMode(double el, double bottom, double top, double v,
     double D)
 {
+    double before_trig;
+    if (axes_mode.el_vel < -v + D)
+      axes_mode.el_vel = -v + D;
+    if (axes_mode.el_vel > v + D)
+      axes_mode.el_vel = v + D;
+
+    if (el < bottom) {
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      axes_mode.el_mode = AXIS_VEL;
+      if (axes_mode.el_vel < v + D)
+        axes_mode.el_vel += EL_ACCEL;
+    } else if (el > top) {
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+      axes_mode.el_mode = AXIS_VEL;
+      if (axes_mode.el_vel > -v + D)
+        axes_mode.el_vel -= EL_ACCEL;
+    } else {
+      axes_mode.el_mode = AXIS_VEL;
+      if (axes_mode.el_vel > 0) {
+        axes_mode.el_vel = v + D;
+        if (el > top - 2.0*v) /* within 2 sec of turnaround */
+          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+        else
+          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      } else {
+        axes_mode.el_vel = -v + D;
+        if (el < bottom + 2.0*v) /* within 2 sec of turnaround */
+          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+        else
+          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      }
+    }
+    /* SBSC Trigger flag */
+    before_trig = DELAY - v/EL_ACCEL + CommandData.cam.expTime/2000;
+    if (el < bottom + before_trig*v) {
+      sbsc_trigger = 1;  
+    } else if (el > top - before_trig*v) {
+      sbsc_trigger = 1;
+    } else {
+      sbsc_trigger = 0;
+    }
 }
 
 static void DoAzScanMode(void)
@@ -739,11 +782,12 @@ static void DoAzScanMode(void)
 
 static void DoElScanMode(void)
 {
-  static double last_y=0, last_w = 0;
-  double el, top, bottom, v,w;
+  static double last_y=0, last_h = 0;
+  double el, top, bottom, v,h;
   //  double az, left, right, v,w;
   int i_point;
-
+  static int first_time=1;
+  
   axes_mode.az_mode = AXIS_POSITION;
   axes_mode.az_dest = CommandData.pointing_mode.X;
   axes_mode.az_vel  = 0.0;
@@ -751,15 +795,18 @@ static void DoElScanMode(void)
   i_point = GETREADINDEX(point_index);
   el = PointingData[i_point].el; 
 
-  w = CommandData.pointing_mode.w;
-  top = CommandData.pointing_mode.Y + w / 2;
-  bottom = CommandData.pointing_mode.Y - w / 2;
+  h = CommandData.pointing_mode.h;
+  top = CommandData.pointing_mode.Y + h / 2;
+  bottom = CommandData.pointing_mode.Y - h / 2;
+
+  if (first_time) bprintf(info,"Starting an elevation scan! h = %f, top=%f , bottom=%f",h,top,bottom);
+  first_time=0;
 
   //  SetSafeDAz(left, &az); // Don't think I need this because I should be staying constant in az. Test!
 
   v = CommandData.pointing_mode.vel;
 
-  if (last_y!= CommandData.pointing_mode.Y || last_w != w) {
+  if (last_y!= CommandData.pointing_mode.Y || last_h != h) {
     if (el < bottom) {
       axes_mode.el_mode = AXIS_POSITION;
       axes_mode.el_dest = bottom;
@@ -773,11 +820,11 @@ static void DoElScanMode(void)
     } else {
       // once we are within the new az/w range, we can mark this as 'last'.
       last_y = CommandData.pointing_mode.Y;
-      last_w = w;
+      last_h = h;
       SetElScanMode(el, bottom, top, v, 0);
     }
   } else {
-    SetAzScanMode(el, bottom, top, v, 0);
+    SetElScanMode(el, bottom, top, v, 0);
   }
 }
 
