@@ -260,8 +260,7 @@ struct CommandDataStruct {
   unsigned char use_elenc;
   unsigned char use_elclin;
   unsigned char use_sun;
-  unsigned char use_pss1;
-  unsigned char use_pss2;
+  unsigned char use_pss;
   unsigned char use_isc;
   unsigned char use_osc;
   unsigned char use_mag;
@@ -281,8 +280,7 @@ struct CommandDataStruct {
   double mag_az_trim;
   double dgps_az_trim;
   double ss_az_trim;
-  double pss1_az_trim;
-  double pss2_az_trim;
+  double pss_az_trim;
 
   struct {
     int biasRamp;

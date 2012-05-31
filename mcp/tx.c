@@ -840,14 +840,13 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsAzAddr;
   static struct NiosStruct* dgpsSigmaAddr;
   static struct NiosStruct* azSsAddr;
-  static struct NiosStruct* azrawPss1Addr;
-  static struct NiosStruct* elrawPss1Addr;
+  static struct NiosStruct* azrawPssAddr;
+  static struct NiosStruct* elrawPssAddr;
   static struct NiosStruct* snrPss1Addr;
-  static struct NiosStruct* azPss1Addr;
-  static struct NiosStruct* azrawPss2Addr;
-  static struct NiosStruct* elrawPss2Addr;
   static struct NiosStruct* snrPss2Addr;
-  static struct NiosStruct* azPss2Addr;
+  static struct NiosStruct* snrPss3Addr;
+  static struct NiosStruct* snrPss4Addr;
+  static struct NiosStruct* azPssAddr;
   static struct NiosStruct* sigmaSsAddr;
   static struct NiosStruct* azSunAddr;
   static struct NiosStruct* elSunAddr;
@@ -890,8 +889,7 @@ static void StoreData(int index)
   static struct NiosStruct *trimEncAddr;
   static struct NiosStruct *trimNullAddr;
   static struct NiosStruct *trimMagAddr;
-  static struct NiosStruct *trimPss1Addr;
-  static struct NiosStruct *trimPss2Addr;
+  static struct NiosStruct *trimPssAddr;
   static struct NiosStruct *dgpsTrimAddr;
   static struct NiosStruct *trimSsAddr;
 
@@ -1015,14 +1013,13 @@ static void StoreData(int index)
     azSunAddr = GetNiosAddr("az_sun");
     elSunAddr = GetNiosAddr("el_sun");
     trimSsAddr = GetNiosAddr("trim_ss");
-    azrawPss1Addr = GetNiosAddr("azraw_pss1");
-    elrawPss1Addr = GetNiosAddr("elraw_pss1");
+    azrawPssAddr = GetNiosAddr("azraw_pss");
+    elrawPssAddr = GetNiosAddr("elraw_pss");
     snrPss1Addr = GetNiosAddr("snr_pss1");
-    azPss1Addr = GetNiosAddr("az_pss1");  // evolved az
-    azrawPss2Addr = GetNiosAddr("azraw_pss2");
-    elrawPss2Addr = GetNiosAddr("elraw_pss2");
     snrPss2Addr = GetNiosAddr("snr_pss2");
-    azPss2Addr = GetNiosAddr("az_pss2");  // evolved az
+    snrPss3Addr = GetNiosAddr("snr_pss3");
+    snrPss4Addr = GetNiosAddr("snr_pss4");
+    azPssAddr = GetNiosAddr("az_pss");  // evolved az
     modeCalAddr = GetNiosAddr("mode_cal");
     periodCalAddr = GetNiosAddr("period_cal");
     azIscAddr = GetNiosAddr("az_isc");
@@ -1084,8 +1081,7 @@ static void StoreData(int index)
     trimEncAddr = GetNiosAddr("trim_enc");
     trimNullAddr = GetNiosAddr("trim_null");
     trimMagAddr = GetNiosAddr("trim_mag");
-    trimPss1Addr = GetNiosAddr("trim_pss1");
-    trimPss2Addr = GetNiosAddr("trim_pss2");
+    trimPssAddr = GetNiosAddr("trim_pss");
     dgpsTrimAddr = GetNiosAddr("trim_dgps");
     dgpsCovLimAddr = GetNiosAddr("cov_lim_dgps");
     dgpsAntsLimAddr = GetNiosAddr("ants_lim_dgps");
@@ -1203,16 +1199,14 @@ static void StoreData(int index)
   WriteData(azRelSunSsAddr, PointingData[i_point].ss_az_rel_sun * DEG2I,
       NIOS_QUEUE);
   /********* PSS data *************/
-  WriteData(azrawPss1Addr, PointingData[i_point].pss1_azraw * DEG2I, NIOS_QUEUE);
-  WriteData(elrawPss1Addr, PointingData[i_point].pss1_elraw * DEG2I, NIOS_QUEUE);
+  WriteData(azrawPssAddr, PointingData[i_point].pss_azraw * DEG2I, NIOS_QUEUE);
+  WriteData(elrawPssAddr, PointingData[i_point].pss_elraw * DEG2I, NIOS_QUEUE);
   WriteData(snrPss1Addr, PointingData[i_point].pss1_snr * 1000., NIOS_QUEUE);
-  WriteData(azPss1Addr, (PointingData[i_point].pss1_az +
-                      CommandData.pss1_az_trim) * DEG2I, NIOS_QUEUE);
-  WriteData(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I, NIOS_QUEUE);
-  WriteData(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I, NIOS_QUEUE);
   WriteData(snrPss2Addr, PointingData[i_point].pss2_snr * 1000., NIOS_QUEUE);
-  WriteData(azPss2Addr, (PointingData[i_point].pss2_az +
-                      CommandData.pss2_az_trim) * DEG2I, NIOS_QUEUE);
+  WriteData(snrPss3Addr, PointingData[i_point].pss3_snr * 1000., NIOS_QUEUE);
+  WriteData(snrPss4Addr, PointingData[i_point].pss4_snr * 1000., NIOS_QUEUE);
+  WriteData(azPssAddr, (PointingData[i_point].pss_az +
+                      CommandData.pss_az_trim) * DEG2I, NIOS_QUEUE);
   /********** SIP GPS Data **********/
   WriteData(latSipAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(lonSipAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);
@@ -1270,8 +1264,7 @@ static void StoreData(int index)
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
   WriteData(trimMagAddr, CommandData.mag_az_trim * DEG2I, NIOS_QUEUE);
 
-  WriteData(trimPss1Addr, CommandData.pss1_az_trim * DEG2I, NIOS_QUEUE);
-  WriteData(trimPss2Addr, CommandData.pss2_az_trim * DEG2I, NIOS_QUEUE);
+  WriteData(trimPssAddr, CommandData.pss_az_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(dgpsAzAddr,
       (unsigned int)((PointingData[i_point].dgps_az  +
@@ -1365,8 +1358,7 @@ static void StoreData(int index)
     ((CommandData.disable_el) << 10) |
     ((CommandData.disable_az) << 11) |
     ((CommandData.force_el) << 12) |
-    ((!CommandData.use_pss1) << 13) |
-    ((!CommandData.use_pss2) << 14);
+    ((!CommandData.use_pss) << 13);
 
   if (PointingData[i_point].t >= CommandData.pointing_mode.t)
     sensor_veto |= (1 << 7);
