@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 229        /* total number of single word cmds */
+#define N_SCOMMANDS 227        /* total number of single word cmds */
 #define N_MCOMMANDS 119        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -70,8 +70,8 @@ enum singleCommand {
   level_on,         mag_allow,          mag_veto,         osc_auto_focus,
   pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,       
   pot_valve_open,   ramp,               reset_trims,      isc_save_images,
-  stop,             sun_veto,           sun_allow,        pss1_veto,
-  pss1_allow,       pss2_veto,          pss2_allow,       isc_eye_off,
+  stop,             sun_veto,           sun_allow,        pss_veto,
+  pss_allow,        isc_eye_off,
   trim_to_isc,      unlock,             lock_off,         
   isc_reboot,       isc_cam_cycle,      osc_run,          osc_shutdown,
   osc_reboot,       osc_cam_cycle,      osc_pause,        osc_abort,
