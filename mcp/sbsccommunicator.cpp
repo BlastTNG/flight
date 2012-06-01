@@ -471,7 +471,7 @@ SBSCReturn* SBSCCommunicator::interpretReturn(string returnString, SBSCReturn* r
   sin.str(returnString);
 
   sin >> rtn->frameNum >> rtn->mapmean >> rtn->sigma >> rtn->exposuretime >> rtn->imagestarttime.tv_sec
-    >> rtn->imagestarttime.tv_usec >> rtn->camID >> rtn->ccdtemperature >> rtn->numblobs;
+    >> rtn->imagestarttime.tv_usec >> rtn->camID >> rtn->ccdtemperature >> rtn->focusposition >> rtn->numblobs;
 
   int top = 15;
   if (rtn->numblobs < 15) top = rtn->numblobs;

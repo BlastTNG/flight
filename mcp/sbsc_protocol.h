@@ -28,6 +28,7 @@ struct SBSCReturn {
   timeval imagestarttime;         //time set immediately after exposure started
   string camID;                   //some number to uniquely identify camera
   double ccdtemperature;          //CCD temperature measured by camera's sensor
+  double focusposition;		//focus position
 
   //blob info (on 15 brightest blobs)
   int numblobs;                   //number of blobs found (or 15 if larger than 15)
