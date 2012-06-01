@@ -66,6 +66,7 @@ void RecalcOffset(double, double);  /* actuators.c */
 
 void SetRaDec(double, double); /* defined in pointing.c */
 void SetTrimToSC(int);
+void TrimOSCToISC();
 void ClearTrim();
 void AzElTrim(double, double);
 void NormalizeAngle(double*);
@@ -145,6 +146,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case trim_to_osc:
       SetTrimToSC(1);
+      break;
+    case trim_osc_to_isc:
+      TrimOSCToISC();
       break;
     case reset_trims:
       ClearTrim();

@@ -165,6 +165,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
   {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
   {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
+  {COMMAND(trim_osc_to_isc), "trim OSC to ISC", GR_TRIM},
   {COMMAND(fixed), "fixed level bias", GR_BIAS},
   {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
