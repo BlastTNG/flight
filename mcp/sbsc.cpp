@@ -109,6 +109,7 @@ void cameraFields()
   static NiosStruct* sbscTimeAddr = NULL;
   static NiosStruct* sbscUsecAddr = NULL;
   static NiosStruct* sbscCcdTempAddr = NULL;
+  static NiosStruct* sbscFocPosAddr = NULL;
   static NiosStruct* sbscNumBlobsAddr = NULL;
 
   static NiosStruct* sbscBlobX[5];
@@ -135,6 +136,7 @@ void cameraFields()
     sbscTimeAddr = GetNiosAddr("sec_sbsc");
     sbscUsecAddr = GetNiosAddr("usec_sbsc");
     sbscCcdTempAddr = GetNiosAddr("ccd_t_sbsc");
+    sbscFocPosAddr = GetNiosAddr("focpos_sbsc");
     sbscNumBlobsAddr = GetNiosAddr("nblobs_sbsc");
 
     for (int i=0; i<5; i++) {
@@ -179,6 +181,7 @@ void cameraFields()
     WriteData(sbscUsecAddr, sbsc->imagestarttime.tv_usec, NIOS_QUEUE);
     //it looks like this is in deg C. just scale to get better resolution
     WriteData(sbscCcdTempAddr, (int)(sbsc->ccdtemperature*100), NIOS_QUEUE);
+    WriteData(sbscFocPosAddr, (int)(sbsc->focusposition*10), NIOS_QUEUE);
     WriteData(sbscNumBlobsAddr, sbsc->numblobs, NIOS_QUEUE);
 
     for (int i=0; i<sbsc->numblobs; i++)
