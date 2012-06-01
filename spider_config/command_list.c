@@ -379,11 +379,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
     }
   },
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 4,
     {
       {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_el"},
       {"Derivative Gain",   -32768, 32767, 'i', "g_d_el"},
-      {"Integral Gain",   0, USHRT_MAX, 'i', "g_i_el"}
+      {"Integral Gain",   0, USHRT_MAX, 'i', "g_i_el"},
+      {"Exponential Filter Constant", 0.50, 1.0, 'f', "NONE"}
     }
   },
   /*{COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
