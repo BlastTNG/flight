@@ -402,11 +402,11 @@ struct ChannelStruct SlowChannels[] = {
   {"vt_7_if",      'r',  HWP_A2, 49, CAL16B(         1.0,           0.0), 'u', U_V_V},
 
   /* LOOP1 0-7 are wide */
-  /* LOOP1 11 is unused */
   /* LOOP1 12-13 are wide */
   {"g_p_el",     'w', LOOP1,  8,                1.0,     0.0, 'u', U_NONE},
-  {"g_d_el",     'w', LOOP1,  9,                1.0,-32768.0, 'u', U_NONE},
+  {"g_d_el",     'w', LOOP1,  9,                1.0,-32768.0, 's', U_NONE},
   {"g_i_el",     'w', LOOP1, 10,                1.0,     0.0, 'u', U_NONE},
+  {"filt_el",    'w', LOOP1, 11,        0.5/32767.0,     0.0, 'u', U_NONE},
   {"p_term_el",  'w', LOOP1, 14,                1.0,-32768.0, 'u', U_NONE},
   {"i_term_el",  'w', LOOP1, 15,                1.0,-32768.0, 'u', U_NONE},
   {"d_term_el",  'w', LOOP1, 16,                1.0,-32768.0, 'u', U_NONE},
