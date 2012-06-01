@@ -67,7 +67,7 @@
 
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
-#define TOLERANCE 0.00    // max acceptable el pointing error (deg)
+#define TOLERANCE 0.02    // max acceptable el pointing error (deg)
 
 /* regions of sinsuoidal scan mode */
 #define SCAN_BEYOND_L 1
@@ -253,7 +253,8 @@ double calcVSerRW(void)
 /*   GetIElev: get the elevation current request (PWM duty cycle)       */
 /*                                                                      */
 /************************************************************************/
-
+#define MAX_DY 0.01
+#define MAX_I_TERM 10000
 static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
 {
   
@@ -271,9 +272,20 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
   static double el_last = 0.0;
 
   static double el_dest_last = 0.0;
+  static double el_dest_this = -1.0;
   
   static int motors_off = 1;
   static int since_arrival = 0;
+  static int count = 0;
+
+  g_P = CommandData.ele_gain.P;// * (double) (fabs(dy) > TOLERANCE);
+  g_I = CommandData.ele_gain.I*0.01;
+  g_D = 100*(CommandData.ele_gain.D);// * (double) (fabs(dy) > TOLERANCE);
+  
+  // initialize el_dest_this the first time here.
+  if (el_dest_this < 20.0) {
+    el_dest_this = ACSData.enc_mean_el;
+  }
   
   if (axes_mode.el_dest > MAX_EL) {  
     el_dest = MAX_EL;
@@ -283,10 +295,28 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
     el_dest = axes_mode.el_dest;
   }
 
-  dy = el_dest - ACSData.enc_mean_el;
-  
-  dy_int += dy;
+  if (el_dest - el_dest_this > MAX_DY) {
+    el_dest_this += MAX_DY;
+  } else if (el_dest_this - el_dest > MAX_DY) {
+    el_dest_this -= MAX_DY;
+  } else {
+    el_dest_this = el_dest;
+  }
+   
+  dy = el_dest_this - ACSData.enc_mean_el;
 
+  
+  if ( !(CommandData.disable_el)) {
+    dy_int += dy;
+  }
+
+  // don't let dy_int grow too big
+  if (dy_int * g_I > MAX_I_TERM) {
+    dy_int = MAX_I_TERM/g_I;
+  } else if (dy_int * g_I < -MAX_I_TERM) {
+    dy_int = -MAX_I_TERM/g_I;
+  }
+    
   /* compute the mean velocity in a naive way */
 
   v_el = ACSData.enc_mean_el - el_last;
@@ -297,10 +327,7 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
 
   el_last = ACSData.enc_mean_el;
 
-  g_P = CommandData.ele_gain.P * (double) (fabs(dy) > TOLERANCE);
-  g_I = CommandData.ele_gain.I;
-  g_D = 100*(CommandData.ele_gain.D) * (double) (fabs(dy) > TOLERANCE);
-  
+ 
   if ( !(CommandData.disable_el) && CommandData.power.elmot_auto ) {
     if (!g_P) {
       since_arrival++;
@@ -316,18 +343,39 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
       since_arrival = 0;
     }
   }
-  
+ 
+  if (el_dest != el_dest_last) {
+    //dy_int = 0.0;
+    //count = 0;
+  }
+
   el_dest_last = el_dest;
   
+
+  /* stop trying to servo if we got close enough */
+#if 0
+  if ( fabs(dy) < TOLERANCE ) {
+    count++;
+    if (count >= 500) {
+      g_P = g_I = g_D = 0;
+    }
+  } else {
+    count = 0;
+  }
+#endif
+
   *duty_P = (int) (g_P*dy);
-  *duty_D = (int) (g_D*v_el);
+  *duty_D = (int) (g_D*v_el);  
   
   if (abs(*duty_P) > 16384) {
     *duty_I = 0;
   } else {
     *duty_I = (int) (g_I*dy_int);
   }
-  
+ 
+
+
+
   // duty_P = (g_P-32767); // HACK: to get manually commandable pwm duty cycle
                            // for testing
   
@@ -640,6 +688,11 @@ void WriteMot(int TxIndex)
   
   int duty_P=0, duty_I=0, duty_D=0;
   int duty; // duty cycle for pwm output to el drive
+  static int duty_last = 0;
+  
+  double filt; // length of exp. filter
+  
+  filt = CommandData.ele_gain.filt;
   
   double v_rw;
   int azGainP, azGainI, pivGainRW, pivGainErr;
@@ -694,10 +747,16 @@ void WriteMot(int TxIndex)
   /* elevation speed */
   //v_elev = floor(GetVElev() + 0.5);
 
+  filt = CommandData.ele_gain.filt;
+
   GetIElev(&duty_P, &duty_I, &duty_D);
  
   duty = duty_P + duty_I + duty_D;
 
+  duty =  filt*duty_last + (1.0-filt)*duty;
+  
+  duty_last = duty;
+  
   if (duty > 32767) {
     duty = 32767;
   } else if (duty < -32767) {

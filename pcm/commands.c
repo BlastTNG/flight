@@ -918,6 +918,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ele_gain.P = ivalues[0];
       CommandData.ele_gain.D = ivalues[1];
       CommandData.ele_gain.I = ivalues[2];
+      CommandData.ele_gain.filt = rvalues[3];
       //CommandData.ele_gain.PT = ivalues[2];
       //CommandData.ele_gain.twist = rvalues[2];
       break;
