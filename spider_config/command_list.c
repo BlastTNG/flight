@@ -382,7 +382,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 4,
     {
       {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_el"},
-      {"Derivative Gain",   -32768, 32767, 'i', "g_d_el"},
+      {"Derivative Gain",   -32768, 32767, 'i', "G_D_EL"},
       {"Integral Gain",   0, USHRT_MAX, 'i', "g_i_el"},
       {"Exponential Filter Constant", 0.50, 1.0, 'f', "FILT_EL"}
     }
