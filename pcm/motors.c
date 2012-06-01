@@ -671,6 +671,7 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* pTermElAddr;
   static struct NiosStruct* iTermElAddr;
   static struct NiosStruct* dTermElAddr;
+  static struct NiosStruct* filtElAddr;
   static struct NiosStruct* dutyPElAddr;   // PORT
   static struct NiosStruct* dutySElAddr;   // STARBOARD
   static struct NiosStruct* cosElAddr;  // temporary HACK until we get rid of this in DSP code
@@ -722,6 +723,7 @@ void WriteMot(int TxIndex)
     accelAzAddr = GetNiosAddr("accel_az");
     accelMaxAzAddr = GetNiosAddr("accel_max_az");
     dac2AmplAddr = GetNiosAddr("dac2_ampl");
+    filtElAddr = GetNiosAddr("filt_el");
     pTermElAddr = GetNiosAddr("p_term_el");
     iTermElAddr = GetNiosAddr("i_term_el");
     dTermElAddr = GetNiosAddr("d_term_el");
@@ -791,6 +793,7 @@ void WriteMot(int TxIndex)
     WriteCalData(pTermElAddr, duty_P, NIOS_QUEUE);
     WriteCalData(iTermElAddr, duty_I, NIOS_QUEUE);
     WriteCalData(dTermElAddr, duty_D, NIOS_QUEUE);
+    WriteCalData(filtElAddr, filt, NIOS_QUEUE);
 
   /* TODO TEMPORARY HACK: write cos el and sin el for el = 0, since gyros are now on outer frame */
     WriteCalData(cosElAddr, 1.0, NIOS_QUEUE);
