@@ -963,10 +963,10 @@ static void write_to_biphase(unsigned short *frame)
   if (bi0_fp >= 0) { // should never be false!
     // bi0FifoSize holds number of words in the fifo buffer.
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
-    // make sure there is at least 1/5 frame of data in the buffer to avoid
+    // make sure there is at least 1000 words of data in the buffer to avoid
     // having the bi-0 writer run out of data while writing to the pci card.
-    if (CommandData.bi0FifoSize<BiPhaseFrameWords/5) {
-      write(bi0_fp, padding, (BiPhaseFrameWords/5-CommandData.bi0FifoSize) * sizeof(unsigned short));
+    if (CommandData.bi0FifoSize<1000) {
+      write(bi0_fp, padding, (1000-CommandData.bi0FifoSize) * sizeof(unsigned short));
     }
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
 
@@ -977,7 +977,6 @@ static void write_to_biphase(unsigned short *frame)
     frame[4] = BiPhaseFrameWords;
 
     i = write(bi0_fp, frame, (BiPhaseFrameWords + 5) * sizeof(unsigned short));
-    //write(tmpfp, frame, BiPhaseFrameWords * sizeof(unsigned short));
     if (i < 0) {
       berror(err, "bi-phase write for frame failed");
     } else if (i != (BiPhaseFrameWords + 5) * sizeof(unsigned short)) {
