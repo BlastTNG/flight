@@ -198,7 +198,7 @@ int main(void) {
     berror(fatal, "fatal error opening " DEV);
 
   /* Initialise Channel Lists */
-  MakeAddressLookups(NULL);
+  MakeAddressLookups("/data/etc/decomd/Nios.map");
 
   /* Initialise Decom */
   ioctl(decom, DECOM_IOC_RESET);
