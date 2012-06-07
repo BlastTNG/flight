@@ -970,7 +970,7 @@ static void write_to_biphase(unsigned short *frame)
     }
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
 
-    for (j=BiPhaseFrameWords-10; j<BiPhaseFrameWords+4; j++) frame[j] = j;
+    //for (j=BiPhaseFrameWords-10; j<BiPhaseFrameWords+4; j++) frame[j] = j;
     //frame[BiPhaseFrameWords+4] = 17;
     frame[BiPhaseFrameWords+4] = CalculateCRC(0, frame+5, 
 		sizeof(short)*(BiPhaseFrameWords-1));
