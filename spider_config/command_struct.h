@@ -255,6 +255,7 @@ struct CommandDataStruct {
     int theugly_cam_off;
     unsigned char adc_reset[16];
     int elmot_auto; // automatically power el motors on/off before/after a move
+    int elmot_is_on; // 1 if el drive on, 0 if not
   } power;
 
   unsigned short disable_az;
