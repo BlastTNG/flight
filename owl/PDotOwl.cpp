@@ -64,6 +64,7 @@ QDataStream& operator>>(QDataStream& a,PObject& b)
 void load(QVariant s,PObject& b)
 {
     b._id=s.toMap()["_id"].toInt();
+    PObject::_u[b._id]=&b;
 }
 
 QDataStream& operator<<(QDataStream& a,PExtrema& b)
@@ -941,6 +942,7 @@ QDataStream& operator>>(QDataStream&a,PMainWindow&b)
 
 void load(QVariant v,PMainWindow&b)
 {
+    PObject::isLoading=1;
     QVariantMap m=v.toMap();
     if(m["OWL FILE rev."].toInt()>20120106) {
         QMessageBox::critical(0,"Unsupported OWL File","The OWL file you are trying to load is too new for this "
@@ -984,6 +986,7 @@ void load(QVariant v,PMainWindow&b)
     for(int i=0;i<PExtrema::_u.size();i++) {
         b.recognizeExtrema(PExtrema::_u[i]);
     }
+    PObject::isLoading=0;
 }
 
 

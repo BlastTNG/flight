@@ -50,7 +50,7 @@
 
 PMainWindow* PMainWindow::me=0;
 
-PMainWindow::PMainWindow(QWidget *parent) :
+PMainWindow::PMainWindow(QString file, QWidget *parent) :
     QMainWindow(parent),
     PObject(0),
     _currentObject(0),
@@ -59,6 +59,7 @@ PMainWindow::PMainWindow(QWidget *parent) :
     styleVersion(0),
     layoutVersion(0),
     _server(0),
+    _deleteScheduled(0),
     ui(new Ui::PMainWindow)
 {
     PStyle::noStyle = PStyle::noStyle?PStyle::noStyle:new PStyle("No style");
@@ -106,6 +107,12 @@ PMainWindow::PMainWindow(QWidget *parent) :
     ui->label_kst->hide();
     ui->pushButton_kst->hide();
     connect(ui->pushButton_kst,SIGNAL(clicked()),this,SLOT(showInKst()));
+
+    setWindowTitle(_WINDOW_TITLE_);
+
+    if(file.size()) owlLoad(file);
+
+    if(!_deleteScheduled&&!PObject::isLoading) show();
 }
 
 #define reconnect(a,b,c,d) \
@@ -120,6 +127,11 @@ PMainWindow::~PMainWindow()
     while(_owlList.size()) {
         delete _owlList.takeFirst();
     }
+}
+
+void PMainWindow::closeEvent(QCloseEvent* e)
+{
+    e->setAccepted(QMessageBox::question(this,"Really Quit?","If you quit, you will lose all unsaved data. Quit anyway?",QMessageBox::Yes,QMessageBox::No)==QMessageBox::Yes);
 }
 
 void PMainWindow::readmeHelp()
@@ -971,14 +983,22 @@ void PMainWindow::owlSave()
 }
 
 void load(QVariant v,PMainWindow&b);
-void PMainWindow::owlLoad()
+void PMainWindow::owlLoad(QString filename)
 {
-    QString filename(QFileDialog::getOpenFileName(0,"Load a pal/owl project","","Pal/Owl projects(*.pal *.owl)"));
+    if(filename.isEmpty()) {
+        filename = QFileDialog::getOpenFileName(0,"Load a pal/owl project","","Pal/Owl projects(*.pal *.owl)");
+    }
+
+    QFileInfo f(filename);
+    filename=f.absoluteFilePath();
+
     if(filename.isEmpty()) {
         return;
     }
+    setUpdatesEnabled(0);
 
     ///////////////////////////////////////////
+    _deleteScheduled=1;
     deleteLater();
     PExtrema::_u.clear();
     PStyle::_u.clear();
@@ -993,6 +1013,7 @@ void PMainWindow::owlLoad()
         bool ok;
         QVariant v=p.parse(file.readAll(),&ok);
         if(ok&&v.isValid()) {
+            PObject::isLoading=1;
             PMainWindow* evenNewer=new PMainWindow(0);
             evenNewer->setUpdatesEnabled(0);
             evenNewer->_ut->stop();
@@ -1004,12 +1025,14 @@ void PMainWindow::owlLoad()
             file.close();
             evenNewer->ui->lineEditCurFile->setText(evenNewer->_dirfileFilename);
         } else {    //try legacy format
+            PObject::isLoading=1;
             qDebug()<<"Trying to open legacy...";
             file.close();
             QFile file(filename);
             file.open(QFile::ReadOnly);
             QDataStream xds(&file);
             PMainWindow* evenNewer=new PMainWindow(0);
+            PObject::isLoading=0;
             evenNewer->setUpdatesEnabled(0);
             evenNewer->_ut->stop();
             xds>>*evenNewer;
@@ -1021,7 +1044,9 @@ void PMainWindow::owlLoad()
             evenNewer->ui->lineEditCurFile->setText(evenNewer->_dirfileFilename);
         }
     } else if(filename.endsWith("pal")) {
+        PObject::isLoading=1;
         PMainWindow* newMain=new PMainWindow(0);
+        PObject::isLoading=0;
         qApp->setActiveWindow(newMain);
         PDotPal dotPal(filename);
         for(int i=0;i<dotPal._pbox.size();i++) {
@@ -1029,10 +1054,17 @@ void PMainWindow::owlLoad()
             newMain->_pboxList.back()->show();
         }
         newMain->show();
+    } else {
+        QMessageBox::warning(0,"Could not load file",filename+" does not seem to be either a .owl file or a .pal file!");
+
+        PMainWindow* newMain=new PMainWindow(0);
+        qApp->setActiveWindow(newMain);
+        newMain->show();
     }
 
     PStyleNotifier::me->enable();
     PStyleNotifier::me->notifyChange();
+    setUpdatesEnabled(1);
 }
 
 void PMainWindow::showInKst() {

@@ -28,19 +28,25 @@
 #include "PDotPal.h"
 #include <QTime>
 #include <qjson/serializer.h>
+#include <iostream>
 #include <python2.7/Python.h>   //you may need to change this...
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
+
+  for(int i=0;i<app.arguments().size();i++) {
+      if(app.arguments()[i].startsWith('-')) {
+          std::cout<<"usage: "<<qPrintable(app.arguments()[0])<<" [filename]"<<std::endl;
+          return 1;
+      }
+  }
 
   time_t seconds= time (NULL);
   qsrand((seconds*1000+QTime::currentTime().msec())%RAND_MAX);  //for concurrent ids. do not remove this line.
 
   Py_Initialize();
 
-  PMainWindow* palantir=new PMainWindow;
-  palantir->setWindowTitle(_WINDOW_TITLE_);
-  palantir->show();
+  new PMainWindow((qApp->arguments().size()==2)?qApp->arguments()[1]:"");
 
   app.exec();
 

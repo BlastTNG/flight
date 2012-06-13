@@ -58,6 +58,7 @@ protected:
     QList<POwlAnimation*> _owlList;
     bool _dirty;
     PServer* _server;
+    bool _deleteScheduled;
 
 public:
     friend QDataStream& operator<<(QDataStream&a,PMainWindow&b);
@@ -69,9 +70,10 @@ public:
     friend class PAbstractDataItem;
     friend class PMdiArea;
     static PMainWindow* me;
-    explicit PMainWindow(QWidget *parent = 0);
+    explicit PMainWindow(QString file="",QWidget *parent = 0);
     QObject* currentObject() const { return _currentObject; }
     virtual ~PMainWindow();
+    void closeEvent(QCloseEvent *);
 public slots:
     void readmeHelp();
     void webServerHelp();
@@ -112,7 +114,7 @@ public slots:
     void activate();
 
     void owlSave();
-    void owlLoad();
+    void owlLoad(QString file="");
     void addOwl();
 
 private:

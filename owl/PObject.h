@@ -25,18 +25,22 @@
 #include <QStringList>
 #include <QDebug>
 
+class PMainWindow;
+
 class PObject
 {
     int _id;
+    static bool isLoading;
 public:
     friend QDataStream& operator<<(QDataStream& a,PObject& b);
     friend QDataStream& operator>>(QDataStream& a,PObject& b);
     friend QVariant save(PObject&);
     friend void load(QVariant s,PObject& b);
+    friend void load(QVariant s,PMainWindow& b);
     friend class PMainWindow;
     static QMap<int, PObject*> _u;
 
-    PObject(int id=qrand()) : _id(id) { while(_u.contains(_id)) {qDebug()<<"Broken random number generator?"; id=qrand(); } _u.insert(id,this); }
+    PObject(int id=qrand()) : _id(id) { if(isLoading) return; while(_u.contains(_id)) {qDebug()<<"Broken random number generator?"; id=qrand(); } _u.insert(id,this); }
     virtual ~PObject() { if(_u.contains(_id)) _u[_id]=0; }
 
     bool isCurrentObject();

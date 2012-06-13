@@ -23,6 +23,7 @@
 #include "PMainWindow.h"
 
 QMap<int, PObject*> PObject::_u;
+bool PObject::isLoading=0;
 
 bool PObject::isCurrentObject()
 {
