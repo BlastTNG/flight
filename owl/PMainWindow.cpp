@@ -1060,6 +1060,9 @@ void PMainWindow::owlLoad(QString filename)
         PMainWindow* newMain=new PMainWindow(0);
         qApp->setActiveWindow(newMain);
         newMain->show();
+        PStyleNotifier::me->enable();
+        PStyleNotifier::me->notifyChange();
+        return;
     }
 
     PStyleNotifier::me->enable();
