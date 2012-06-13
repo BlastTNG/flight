@@ -788,6 +788,13 @@ static void GetCurrents()
   i_el = (double)(slow_data[i_elAddr->index][i_elAddr->channel])*i_elNios->m + i_elNios->b;
   i_piv = (double)(slow_data[i_pivAddr->index][i_pivAddr->channel])*i_pivNios->m + i_pivNios->b;
 
+  /* check to see if the elevation drive is powered on */
+  if (i_el > 0.3) {
+    CommandData.power.elmot_is_on = 1;
+  } else {
+    CommandData.power.elmot_is_on = 0;
+  }
+
   i_tot = i_trans + i_das + i_acs + i_rec + i_sc + i_dgps + i_step + i_flc + i_gy + i_rw + i_el + i_piv;
 
   WriteData(i_totNios, 1000*i_tot, NIOS_QUEUE);

@@ -67,7 +67,7 @@
 
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
-#define TOLERANCE 0.02    // max acceptable el pointing error (deg)
+#define TOLERANCE 0.05    // max acceptable el pointing error (deg)
 
 /* regions of sinsuoidal scan mode */
 #define SCAN_BEYOND_L 1
@@ -253,7 +253,7 @@ double calcVSerRW(void)
 /*   GetIElev: get the elevation current request (PWM duty cycle)       */
 /*                                                                      */
 /************************************************************************/
-#define MAX_DY 0.01
+#define MAX_DY 0.005
 #define MAX_I_TERM 10000
 static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
 {
@@ -267,25 +267,33 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
   int g_I;         // integral gain
   int g_D;         // derivative gain
 
+  //static double g_ramp = 0.0; // ramp up gains slowly when el drive is turned on.
+
   double v_el;
+  static double filtered_v_el = 0.0;
 
   static double el_last = 0.0;
 
   static double el_dest_last = 0.0;
   static double el_dest_this = -1.0;
   
-  static int motors_off = 1;
   static int since_arrival = 0;
-  static int count = 0;
+  static int on_delay = 0;
+  //static int firsttime = 1;
 
   g_P = CommandData.ele_gain.P;// * (double) (fabs(dy) > TOLERANCE);
   g_I = CommandData.ele_gain.I*0.01;
   g_D = 100*(CommandData.ele_gain.D);// * (double) (fabs(dy) > TOLERANCE);
   
   // initialize el_dest_this the first time here.
-  if (el_dest_this < 20.0) {
+  if (el_dest_this < 15.0) {
     el_dest_this = ACSData.enc_mean_el;
   }
+
+  /*if (firsttime) {
+    el_dest_this = ACSData.enc_mean_el;
+    firsttime = 0;
+  }*/
   
   if (axes_mode.el_dest > MAX_EL) {  
     el_dest = MAX_EL;
@@ -295,19 +303,34 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
     el_dest = axes_mode.el_dest;
   }
 
-  if (el_dest - el_dest_this > MAX_DY) {
-    el_dest_this += MAX_DY;
-  } else if (el_dest_this - el_dest > MAX_DY) {
-    el_dest_this -= MAX_DY;
-  } else {
-    el_dest_this = el_dest;
-  }
-   
-  dy = el_dest_this - ACSData.enc_mean_el;
+  if ( !(CommandData.power.elmot_auto) || (on_delay >= 120) ) {
 
+   if (el_dest - el_dest_this > MAX_DY) {
+      el_dest_this += MAX_DY;
+    } else if (el_dest_this - el_dest > MAX_DY) {
+      el_dest_this -= MAX_DY;
+    } else {
+      el_dest_this = el_dest;
+    }
+
+  }
+
+  dy = el_dest_this - ACSData.enc_mean_el;
+  //dy = el_dest - ACSData.enc_mean_el;
   
+  /* compute the mean velocity in a naive way */
+
+  v_el = ACSData.enc_mean_el - el_last;
+  //bprintf(info, "v_el = %g", v_el);
+  el_last = ACSData.enc_mean_el;
+
+  filtered_v_el = 0.85 * filtered_v_el + 0.15 * v_el;
+
   if ( !(CommandData.disable_el)) {
-    dy_int += dy;
+    if ( (fabs(filtered_v_el) < 0.0010) ) { 
+      dy_int += dy*((double)CommandData.power.elmot_is_on);
+    } else {
+    }
   }
 
   // don't let dy_int grow too big
@@ -316,71 +339,50 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
   } else if (dy_int * g_I < -MAX_I_TERM) {
     dy_int = -MAX_I_TERM/g_I;
   }
-    
-  /* compute the mean velocity in a naive way */
-
-  v_el = ACSData.enc_mean_el - el_last;
-
-  /*if (v_el != 0.0) {
-    bprintf(info, "v_el = %g", v_el);
-  }*/
-
-  el_last = ACSData.enc_mean_el;
-
  
   if ( !(CommandData.disable_el) && CommandData.power.elmot_auto ) {
-    if (!g_P) {
+    //if (fabs(dy) < TOLERANCE) {
+    if (fabs(el_dest - ACSData.enc_mean_el) < TOLERANCE) {
       since_arrival++;
       if (since_arrival >= 500) {
-        CommandData.power.elmot.set_count = 0;
-        CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
-        motors_off = 1;
+	if (CommandData.power.elmot_is_on) {      
+          CommandData.power.elmot.set_count = 0;
+          CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+	}
+	on_delay = 0;
       }
-    } else if (motors_off && (fabs(el_dest-el_dest_last) > TOLERANCE)) {
-      CommandData.power.elmot.rst_count = 0;
-      CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
-      motors_off = 0;
+    } else if ( fabs(el_dest-el_dest_last) > TOLERANCE ) { 
       since_arrival = 0;
-    }
-  }
- 
-  if (el_dest != el_dest_last) {
-    //dy_int = 0.0;
-    //count = 0;
+      on_delay++;
+      if ( !(CommandData.power.elmot_is_on) ) {
+        CommandData.power.elmot.rst_count = 0;
+        CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
+      }
+    }  
   }
 
-  el_dest_last = el_dest;
+  el_dest_last = el_dest_this;
   
-
-  /* stop trying to servo if we got close enough */
-#if 0
-  if ( fabs(dy) < TOLERANCE ) {
-    count++;
-    if (count >= 500) {
-      g_P = g_I = g_D = 0;
-    }
-  } else {
-    count = 0;
-  }
-#endif
+  //if ( !(CommandData.power.elmot_is_on) ) {
+    //g_ramp = 0.0;
+  //} else {
+  //  if (g_ramp < 1.0) {
+  //    g_ramp += 0.001;
+  //  }
+ // }
 
   *duty_P = (int) (g_P*dy);
+  //*duty_P = (int) (g_ramp*g_P*dy);
   *duty_D = (int) (g_D*v_el);  
+  //*duty_D = (int) (g_ramp*g_D*v_el);  
   
-  if (abs(*duty_P) > 16384) {
-    *duty_I = 0;
-  } else {
+ // if (abs(*duty_P) > 16384) {
+//    *duty_I = 0;
+//  } else {
     *duty_I = (int) (g_I*dy_int);
-  }
+    //*duty_I = (int) (g_ramp*g_I*dy_int);
+//  }
  
-
-
-
-  // duty_P = (g_P-32767); // HACK: to get manually commandable pwm duty cycle
-                           // for testing
-  
-//  duty_pwm = duty_P + duty_I + duty_D;
-
   /* TODO: Re-implement stall detection? */
   
 #if 0  
@@ -399,7 +401,6 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
   } 
 #endif 
 
-//  return duty_pwm; 
 }
 
 /************************************************************************/

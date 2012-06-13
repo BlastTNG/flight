@@ -224,22 +224,22 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.piv.rst_count = LATCH_PULSE_LEN;
       break;
     case elmot_off:
+      CommandData.power.elmot_auto = 0;
       CommandData.power.elmot.set_count = 0;
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
       break;
     case elmot_on:
+      CommandData.power.elmot_auto = 0;
       CommandData.power.elmot.rst_count = 0;
       CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
       break;
     case elmot_cycle:
+      CommandData.power.elmot_auto = 0;
       CommandData.power.elmot.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
       break;
     case elmot_auto:
       CommandData.power.elmot_auto = 1;
-      break;
-    case elmot_manual:
-      CommandData.power.elmot_auto = 0;
       break;
     case vtx_off:
       CommandData.power.sc_tx.set_count = 0;
@@ -1752,6 +1752,7 @@ void InitCommandData()
   CommandData.power.gyro_off[5] = 0;
   CommandData.power.hub232_off = 0;
   CommandData.power.lock_off = 0;
+  CommandData.power.elmot_is_on = 0;
   for (i=0; i<16; i++)
     CommandData.power.adc_reset[i] = 0;
 
