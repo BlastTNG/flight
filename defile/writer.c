@@ -804,6 +804,9 @@ void CleanUp(void)
 {
   dtracevoid();
   int j, i, is_bolo = 0;
+#if DAS_CARDS > 0
+  char first_bolo_buf[16];
+#endif
 
   for (i = 0; i < FAST_PER_SLOW + 10; ++i)
     bfree(fatal, pre_buffer[i]);
@@ -820,9 +823,12 @@ void CleanUp(void)
       slow_fields[j][i].b = NULL;
     }
 
+#if DAS_CARDS > 0
+  sprintf(first_bolo_buf, "n%02dc00lo", DAS_START+1);
+#endif
   for(i = 0; i < ccFast; ++i) {
 #if DAS_CARDS > 0
-    if (strcmp(FastChList[i].field, "n5c0lo") == 0)
+    if (strcmp(FastChList[i].field, first_bolo_buf) == 0)
       is_bolo = 1;
     else if (ccDecom > 0 && strcmp(FastChList[i].field,
           DecomChannels[0].field) == 0)
