@@ -37,8 +37,8 @@
 #include "motordefs.h"
 
 // TODO: Revise these el limits for Spider flight:
-#define MIN_EL 34
-#define MAX_EL 50
+#define MIN_EL 35
+#define MAX_EL 45
 
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
@@ -373,7 +373,8 @@ static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
 
   *duty_P = (int) (g_P*dy);
   //*duty_P = (int) (g_ramp*g_P*dy);
-  *duty_D = (int) (g_D*v_el);  
+  //*duty_D = (int) (g_D*v_el);  
+  *duty_D = (int) (g_D*filtered_v_el);  
   //*duty_D = (int) (g_ramp*g_D*v_el);  
   
  // if (abs(*duty_P) > 16384) {
