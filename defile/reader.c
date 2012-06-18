@@ -105,7 +105,7 @@ void FrameFileReader(void)
 
   if (rc.resume_at >= 0) {
     seek_to = SetStartChunk(rc.resume_at, rc.chunk, rc.sufflen)
-      * DiskFrameWords;
+      * DiskFrameSize;
     ri.read = rc.resume_at;
   }
 
