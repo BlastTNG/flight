@@ -563,8 +563,12 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
 {
   int i, b, result;
   int retval = PH_ERR_OK;
+  int bus_chatter;    //the normal value of bus->chatter
 
-  if (bus->chatter >= PH_CHAT_ACT) {
+  bus_chatter = bus->chatter;
+  bus->chatter = PH_CHAT_NONE;
+
+  if (bus_chatter >= PH_CHAT_ACT) {
     bprintf(info, "%sPolling Phytron Bus.", bus->name);
   }
 
@@ -579,7 +583,7 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
       Phytron_NASend(bus, i, "IVR");
       if ((result = Phytron_Recv(bus)) & (PH_ERR_TIMEOUT | PH_ERR_OOD)) {
         if (b == N_ALLOWED_BAUDS-1) {
-          if (bus->chatter >= PH_CHAT_ACT)
+          if (bus_chatter >= PH_CHAT_ACT)
             bprintf(warning, "%sNo response from %s, will repoll later.", 
                 bus->name, bus->stepper[i].name);
           bus->stepper[i].baud = allowed_bauds[0];  //reset to default
@@ -588,7 +592,7 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
         bus->stepper[i].status &= ~PH_STEP_OK;
         retval |= result;	  //include in retval results from Recv
       } else if (!strncmp(bus->buffer, "MCC Minilog V", 13)) {
-        if (bus->chatter >= PH_CHAT_ACT)
+        if (bus_chatter >= PH_CHAT_ACT)
           bprintf(info, "%sFound Phytron MCC V%.2f device \"%s\","
               "address \"%c%c\" baud rate %s (%d)\n",
               bus->name, atof(bus->buffer+13), bus->stepper[i].name,
@@ -599,7 +603,7 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
         break;
       } else {
         if (b == N_ALLOWED_BAUDS-1) {
-          if (bus->chatter >= PH_CHAT_ERR)
+          if (bus_chatter >= PH_CHAT_ACT)
             bprintf(warning, "%sUnrecognised response from %s, "
                 "will repoll later.\n", bus->name, bus->stepper[i].name);
           bus->stepper[i].baud = allowed_bauds[0];  //reset to default
@@ -619,6 +623,7 @@ int Phytron_PollInit(struct phytron* bus, int (*phinit)(struct phytron*,int))
 
   }
 
+  bus->chatter = bus_chatter; //restore chatter level
   return retval;
 }
 
