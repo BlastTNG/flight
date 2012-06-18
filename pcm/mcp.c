@@ -953,6 +953,10 @@ static void WatchDog (void)
 // The header has already been prepended in InitFrameBuffer()
 // the CRC is only over the frame, and does not include the header or crc.
 // the first word of the frame has been replaced with the length of the frame.
+
+// make sure there is at least 1000 words of data in the buffer to avoid
+// having the bi-0 writer run out of data while writing to the pci card.
+#define BI0_PADDING_MIN 1000
 static void write_to_biphase(unsigned short *frame)
 {
   int i;
@@ -960,7 +964,7 @@ static void write_to_biphase(unsigned short *frame)
   static char *padding = 0;
   
   if (padding == 0) {
-    padding = (char *)malloc(BiPhaseFrameWords*sizeof(int));
+    padding = (char *)malloc(BI0_PADDING_MIN*sizeof(unsigned short));
     for (j=0; j<BiPhaseFrameWords*sizeof(int); j++) {
       padding[j] = 0x55;
     }
@@ -970,10 +974,9 @@ static void write_to_biphase(unsigned short *frame)
   if (bi0_fp >= 0) { // should never be false!
     // bi0FifoSize holds number of words in the fifo buffer.
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
-    // make sure there is at least 1000 words of data in the buffer to avoid
-    // having the bi-0 writer run out of data while writing to the pci card.
-    if (CommandData.bi0FifoSize<1000) {
-      write(bi0_fp, padding, (1000-CommandData.bi0FifoSize) * sizeof(unsigned short));
+    if (CommandData.bi0FifoSize<BI0_PADDING_MIN) {
+      write(bi0_fp, padding,
+          (BI0_PADDING_MIN-CommandData.bi0FifoSize) * sizeof(unsigned short));
     }
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
 
