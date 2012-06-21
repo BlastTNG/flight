@@ -960,14 +960,11 @@ static void WatchDog (void)
 static void write_to_biphase(unsigned short *frame)
 {
   int i;
-  int j;
   static char *padding = 0;
   
   if (padding == 0) {
     padding = (char *)malloc(BI0_PADDING_MIN*sizeof(unsigned short));
-    for (j=0; j<BiPhaseFrameWords*sizeof(int); j++) {
-      padding[j] = 0x55;
-    }
+    memset(padding, 0x55, BI0_PADDING_MIN*sizeof(unsigned short));
   }
   
 
