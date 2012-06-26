@@ -46,6 +46,8 @@ protected:
     QString _source;
     QPoint _dragStartPos;
     int _serverDirty;
+    bool _neverGood;
+    bool _sourceBad;
 public:
     friend class PBox;
     friend class PMainWindow;

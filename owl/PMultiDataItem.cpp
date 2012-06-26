@@ -29,19 +29,32 @@ void PMultiDataItem::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
     double indata[20];
     // Read in from disk
     int i=0;
+    if (_sourceBad) { // we have determined that this field does not exist in the dirfile, so quit trying.
+        return;
+    }
     while (dirFile->GetData(_source.toStdString().c_str(),
                          lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
                          GetData::Float64, (void*)(indata))==0) {
-        if(++i==5) {
-            if(_data->text()!="bad src") {
-                _data->setText("bad src");
-                _serverDirty=-1;
-            } else --_serverDirty;
+
+        if (dirFile->Error()== GD_E_BAD_CODE) {
+            _sourceBad = true;
+            _data->setText("bad src");
             return;
-        } else {
+        }
+        if(++i==5) {
+            if (_neverGood) {
+                if(_data->text()!="bad src") {
+                    _data->setText("bad src");
+                    _serverDirty=-1;
+                    _sourceBad = true;
+                } else --_serverDirty;
+            }
+            return;
+        } else if (!_neverGood){
 //            usleep(10000);
         }
     } {
+        _neverGood = false;
         QString x=_map->get(*indata);
         if(_data->text()!=x) {
             _data->setText(x);

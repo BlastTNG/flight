@@ -66,7 +66,7 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     me=this;
     ui->setupUi(this);
     ui->comboBox->addItem("Owl "+idText());
-    ui->lineEditCurFile->setText("/data1/replay/");
+    ui->lineEditCurFile->setText("/data/etc/defile.lnk");
     _mdiArea=new PMdiArea;
     _scrollArea->setParent(centralWidget());
     _scrollArea->setAutoFillBackground(1);
@@ -89,7 +89,7 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     fsm->setRootPath(QDir::currentPath());
     ui->lineEditCurFile->setCompleter(new QCompleter(fsm));
 
-    curfileLogic("/data1/replay");
+    curfileLogic("/data/etc/defile.lnk");
 
     _currowStyle=PStyle::noStyle;
 

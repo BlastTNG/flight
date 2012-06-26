@@ -2373,4 +2373,4 @@
 { "PObject" : 
 { "_id" : 94 }
 , "_bg" : "#ffffff", "_bold" : true, "_fg" : "#0000ff", "_italic" : false, "_linked" : true, "_name" : "defbox" }
-, "_dirfileFilename" : "/home/joshua/kst/tests/dirfile_replay/south/" }
+, "_dirfileFilename" : "/data/etc/defile.lnk" }

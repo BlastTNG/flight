@@ -41,7 +41,7 @@ public:
     static QMap<int, PObject*> _u;
 
     PObject(int id=qrand()) : _id(id) { if(isLoading) return; while(_u.contains(_id)) {qDebug()<<"Broken random number generator?"; id=qrand(); } _u.insert(id,this); }
-    virtual ~PObject() { if(_u.contains(_id)) _u[_id]=0; }
+    virtual ~PObject() { if((_id !=0) && _u.contains(_id)) _u[_id]=0; }
 
     bool isCurrentObject();
     QString idText() const { return "(P"+QString::number(_id)+")"; }

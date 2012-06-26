@@ -28,7 +28,7 @@
 
 PAbstractDataItem::PAbstractDataItem(PBox* parent, QString caption) : QWidget(parent), _layout(new QHBoxLayout()),
     _caption(new QLabel(caption)), _captionStyle(PStyle::noStyle), _defaultDataStyle(PStyle::noStyle),
-    _lastCapStyle(0), _data(new QLabel(tr("Loading"))), _serverDirty(-1)
+    _lastCapStyle(0), _data(new QLabel(tr("Loading"))), _serverDirty(-1), _neverGood(true), _sourceBad(false)
 {
     connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(pstyleLogic()));
     setLayout(_layout);
@@ -128,6 +128,8 @@ void PAbstractDataItem::setSource(QString x,bool force) {
         return;
     }
     _source=x;
+    _sourceBad = false;
+    _neverGood = true;
     emit sourceChanged(x);
 }
 
