@@ -515,18 +515,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Slew Veto (s)", 0., 1200., 'f', "SVETO_LEN"},
     }
   },
-  {COMMAND(cov_gps), "set the threshhold for allowable DGPS covariance", GR_TRIM,
-    1,
-    {
-      {"Covariance (deg^2)", 0, 5.0, 'f', "COV_LIM_DGPS"},
-    }
-  },
-  {COMMAND(ants_gps), "set the threshhold for allowable DGPS antenna separation error", GR_TRIM,
-    1,
-    {
-      {"Antenna Separation Error (m)", 0, 10.0, 'f', "ANT_E_DGPS"},
-    }
-  },
 
   /* actuator bus commands */
   {COMMAND(lock), "lock inner frame", GR_LOCK | GR_POINT, 1,

@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 228        /* total number of single word cmds */
-#define N_MCOMMANDS 119        /* total number of multiword commands */
+#define N_MCOMMANDS 117        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
@@ -137,7 +137,7 @@ enum multiCommand {
   t_gyro_set,        osc_gain,          tdrss_bw,         iridium_bw,
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              slot_sched,        az_gyro_offset,   isc_hold_current,
-  isc_save_period,   osc_offset,	cov_gps,          hwpr_set_overshoot,
+  isc_save_period,   osc_offset,        hwpr_set_overshoot,
   jfet_set,          isc_foc_off,       hwpr_vel,         hwpr_i,
   osc_foc_off,       gyro_off,	        gyro_on,          quad,
   el_gyro_offset,    general,           slew_veto,        set_secondary,
@@ -150,7 +150,7 @@ enum multiCommand {
   cam_any,	     cam_settrig_timed, cam_exp_params,	  cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
-  hwpr_goto,	     ants_gps,          hwpr_goto_pot,    act_enc_trim,
+  hwpr_goto,	     hwpr_goto_pot,    act_enc_trim,
   actuator_tol,	     el_scan,  
   plugh
 };
