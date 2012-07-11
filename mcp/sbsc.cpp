@@ -184,7 +184,7 @@ void cameraFields()
     WriteData(sbscFocPosAddr, (int)(sbsc->focusposition*10), NIOS_QUEUE);
     WriteData(sbscNumBlobsAddr, sbsc->numblobs, NIOS_QUEUE);
 
-    for (int i=0; i<sbsc->numblobs; i++)
+    for (int i=0; i<5; i++)
     {
       WriteData(sbscBlobX[i],(unsigned int)(sbsc->x[i]/CAM_WIDTH*SHRT_MAX),
 	  NIOS_QUEUE);
