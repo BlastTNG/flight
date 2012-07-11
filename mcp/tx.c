@@ -874,14 +874,6 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsAzRawAddr;
   static struct NiosStruct* dgpsPitchRawAddr;
   static struct NiosStruct* dgpsRollRawAddr;
-  static struct NiosStruct* dgpsAzCovAddr;
-  static struct NiosStruct* dgpsPitchCovAddr;
-  static struct NiosStruct* dgpsRollCovAddr;
-  static struct NiosStruct* dgpsAntEAddr;
-  static struct NiosStruct* dgpsAntNAddr;
-  static struct NiosStruct* dgpsAntUAddr;
-  static struct NiosStruct *dgpsCovLimAddr;
-  static struct NiosStruct *dgpsAntsLimAddr;
   static struct NiosStruct* dgpsNSatAddr;
 
   /* trim fields */
@@ -1068,12 +1060,6 @@ static void StoreData(int index)
     dgpsAzRawAddr = GetNiosAddr("az_raw_dgps");
     dgpsPitchRawAddr = GetNiosAddr("pitch_raw_dgps");
     dgpsRollRawAddr = GetNiosAddr("roll_raw_dgps");
-    dgpsAzCovAddr = GetNiosAddr("az_cov_dgps");
-    dgpsPitchCovAddr = GetNiosAddr("pitch_cov_dgps");
-    dgpsRollCovAddr = GetNiosAddr("roll_cov_dgps");
-    dgpsAntEAddr = GetNiosAddr("ant_e_dgps");
-    dgpsAntNAddr = GetNiosAddr("ant_n_dgps");
-    dgpsAntUAddr = GetNiosAddr("ant_u_dgps");
 
     lstSchedAddr = GetNiosAddr("lst_sched");
 
@@ -1083,8 +1069,6 @@ static void StoreData(int index)
     trimMagAddr = GetNiosAddr("trim_mag");
     trimPssAddr = GetNiosAddr("trim_pss");
     dgpsTrimAddr = GetNiosAddr("trim_dgps");
-    dgpsCovLimAddr = GetNiosAddr("cov_lim_dgps");
-    dgpsAntsLimAddr = GetNiosAddr("ants_lim_dgps");
 
     modeAzMcAddr = GetNiosAddr("mode_az_mc");
     modeElMcAddr = GetNiosAddr("mode_el_mc");
@@ -1272,8 +1256,6 @@ static void StoreData(int index)
   WriteData(dgpsSigmaAddr,
   (((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I))>65535)?65535:((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I)), NIOS_QUEUE);
   WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsCovLimAddr, CommandData.dgps_cov_limit*32768.0/100.0, NIOS_QUEUE);
-  WriteData(dgpsAntsLimAddr, CommandData.dgps_ants_limit*32768.0/100.0, NIOS_QUEUE);
   WriteData(azSsAddr, (unsigned int)((PointingData[i_point].ss_az +
           CommandData.ss_az_trim) * DEG2I),
       NIOS_QUEUE);
@@ -1388,12 +1370,6 @@ static void StoreData(int index)
   WriteData(dgpsAzRawAddr, DGPSAtt[i_dgps].az * DEG2I, NIOS_QUEUE);
   WriteData(dgpsPitchRawAddr, DGPSAtt[i_dgps].pitch * DEG2I, NIOS_QUEUE);
   WriteData(dgpsRollRawAddr, DGPSAtt[i_dgps].roll * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsAzCovAddr, DGPSAtt[i_dgps].az_cov * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsPitchCovAddr, DGPSAtt[i_dgps].pitch_cov * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsRollCovAddr, DGPSAtt[i_dgps].roll_cov * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsAntEAddr,(int)(DGPSAtt[i_dgps].ant_E*100), NIOS_QUEUE);
-  WriteData(dgpsAntNAddr,(int)(DGPSAtt[i_dgps].ant_N*100), NIOS_QUEUE);
-  WriteData(dgpsAntUAddr,(int)(DGPSAtt[i_dgps].ant_U*100), NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
   WriteData(tMCRWAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
   WriteData(iSerRWAddr,((int)(RWMotorData[i_rw_motors].current/30.0*32768.0)),NIOS_QUEUE);

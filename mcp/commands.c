@@ -1157,15 +1157,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pivot_gain.F = rvalues[3];
       break;
 
-      //***********DGPS tests****************/
-    case cov_gps:
-      CommandData.dgps_cov_limit = rvalues[0];
-      break;
-    case ants_gps:
-      CommandData.dgps_ants_limit = rvalues[0];
-      break;
-      /*************************************/
-
       /***************************************/
       /*****           test of motor DACs ****/
     case dac2_level:
@@ -1927,9 +1918,6 @@ void InitCommandData()
   CommandData.dgps_az_trim = 0;
   CommandData.ss_az_trim = 0;
   CommandData.pss_az_trim = 0;
-
-  CommandData.dgps_cov_limit = 0.3;
-  CommandData.dgps_ants_limit = 0.5;
 
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;

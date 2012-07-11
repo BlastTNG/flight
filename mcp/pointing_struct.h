@@ -230,13 +230,7 @@ struct DGPSAttStruct {
   double az;
   double pitch;
   double roll;
-  double az_cov;
-  double pitch_cov;
-  double roll_cov;
   int att_ok; 
-  double ant_E;
-  double ant_N;
-  double ant_U;//
 };
 
 /**********************************************/
