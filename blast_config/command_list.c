@@ -47,9 +47,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 
-  {COMMAND(gps_off), "turn off the dGPS", GR_POWER | CONFIRM},
-  {COMMAND(gps_on), "turn on the dGPS", GR_POWER},
-  {COMMAND(gps_cycle), "power cycle the dGPS", GR_POWER | CONFIRM},
+  {COMMAND(sbsc_off), "turn off the SBSC", GR_POWER | CONFIRM},
+  {COMMAND(sbsc_on), "turn on the SBSC", GR_POWER},
+  {COMMAND(sbsc_cycle), "power cycle the SBSC", GR_POWER | CONFIRM},
   {COMMAND(isc_off), "turn off the ISC", GR_ISC_MODE | GR_POWER | CONFIRM},
   {COMMAND(isc_on), "turn on the ISC", GR_ISC_MODE | GR_POWER},
   {COMMAND(isc_cycle), "power cycle the ISC", GR_ISC_MODE | GR_POWER | CONFIRM},
@@ -99,10 +99,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(vtx_on), "turn on the video transmitters", GR_TELEM | GR_POWER},
   {COMMAND(bi0_off), "turn off the biphase transmitter", GR_TELEM | GR_POWER},
   {COMMAND(bi0_on), "turn on the biphase transmitter", GR_TELEM | GR_POWER},
-  {COMMAND(sbsc_off), "turn off the SBSC", GR_POWER},
-  {COMMAND(sbsc_on), "turn on the SBSC", GR_POWER},
-  {COMMAND(sbsc_cam_cycle), "power cycle the SBSC (camera,lens,heater)", GR_POWER},
-  {COMMAND(sbsc_cpu_cycle), "power cycle the SBSC (computer)", GR_POWER},
+  {COMMAND(sbsc_cam_cycle), "power cycle the SBSC camera", GR_POWER},
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
@@ -780,11 +777,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
     {
       {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
-    }
-  },
-  {COMMAND(t_sbsc_set), "SBSC temperature set point", GR_ELECT, 1,
-    {
-      {"Set Point (deg C)", 0, 60, 'f', "T_SET_SBSC"}
     }
   },
 

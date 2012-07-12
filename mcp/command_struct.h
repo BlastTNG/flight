@@ -211,7 +211,7 @@ struct CommandDataStruct {
     struct latch_pulse das;
     struct latch_pulse isc;
     struct latch_pulse osc;
-    struct latch_pulse gps;
+    struct latch_pulse sbsc;
     struct latch_pulse rw;
     struct latch_pulse piv;
     struct latch_pulse elmot;
@@ -224,8 +224,6 @@ struct CommandDataStruct {
     int gyro_off[6];
     int gyro_off_auto[6];
     int hub232_off;
-    int sbsc_cpu_off;
-    int sbsc_cam_off;
     int ss_off;
     unsigned char adc_reset[16];
   } power;
@@ -254,8 +252,6 @@ struct CommandDataStruct {
     int age;
     struct GainStruct gain;
   } gyheat;
-
-  double t_set_sbsc;
 
   unsigned char use_elenc;
   unsigned char use_elclin;

@@ -240,17 +240,17 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.use_elclin = 1;
       break;
 
-    case gps_off:          /* power switching */
-      CommandData.power.gps.set_count = 0;
-      CommandData.power.gps.rst_count = LATCH_PULSE_LEN;
+    case sbsc_off:          /* power switching */
+      CommandData.power.sbsc.set_count = 0;
+      CommandData.power.sbsc.rst_count = LATCH_PULSE_LEN;
       break;
-    case gps_on:
-      CommandData.power.gps.rst_count = 0;
-      CommandData.power.gps.set_count = LATCH_PULSE_LEN;
+    case sbsc_on:
+      CommandData.power.sbsc.rst_count = 0;
+      CommandData.power.sbsc.set_count = LATCH_PULSE_LEN;
       break;
-    case gps_cycle:
-      CommandData.power.gps.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.power.gps.rst_count = LATCH_PULSE_LEN;
+    case sbsc_cycle:
+      CommandData.power.sbsc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.sbsc.rst_count = LATCH_PULSE_LEN;
       break;
     case isc_off:
       CommandData.power.isc.set_count = 0;
@@ -475,20 +475,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case gybox_cycle:
       CommandData.power.gybox_off = PCYCLE_HOLD_LEN;
-      break;
-    case sbsc_off:
-      CommandData.power.sbsc_cam_off = -1;
-      CommandData.power.sbsc_cpu_off = -1;
-      break;
-    case sbsc_on:
-      CommandData.power.sbsc_cam_off = 0;
-      CommandData.power.sbsc_cpu_off = 0;
-      break;
-    case sbsc_cam_cycle:
-      CommandData.power.sbsc_cam_off = PCYCLE_HOLD_LEN;
-      break;
-    case sbsc_cpu_cycle:
-      CommandData.power.sbsc_cpu_off = PCYCLE_HOLD_LEN;
       break;
     case hub232_off:
       CommandData.power.hub232_off = -1;
@@ -1389,9 +1375,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.gyheat.gain.I = ivalues[1];
       CommandData.gyheat.gain.D = ivalues[2];
       break;
-    case t_sbsc_set:  /* SBSC heater setpoint */
-      CommandData.t_set_sbsc = rvalues[0];
-      break;
 
       /***************************************/
       /*************** Misc  *****************/
@@ -1636,6 +1619,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
       /***************************************/
       /********* SBSC Commanding  *************/ 
+    case sbsc_cam_cycle:
+      sprintf(buf,"Cpower");
+      sendSBSCCommand(buf);
     case cam_any:
       sendSBSCCommand(svalues[0]);
       break;
@@ -1787,8 +1773,8 @@ void InitCommandData()
   CommandData.power.isc.set_count = 0;
   CommandData.power.osc.rst_count = 0;
   CommandData.power.osc.set_count = 0;
-  CommandData.power.gps.rst_count = 0;
-  CommandData.power.gps.set_count = 0;
+  CommandData.power.sbsc.rst_count = 0;
+  CommandData.power.sbsc.set_count = 0;
   CommandData.power.rw.rst_count = 0;
   CommandData.power.rw.set_count = 0;
   CommandData.power.piv.rst_count = 0;

@@ -17,8 +17,8 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 228        /* total number of single word cmds */
-#define N_MCOMMANDS 117        /* total number of multiword commands */
+#define N_SCOMMANDS 225        /* total number of single word cmds */
+#define N_MCOMMANDS 116        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
@@ -76,10 +76,10 @@ enum singleCommand {
   isc_reboot,       isc_cam_cycle,      osc_run,          osc_shutdown,
   osc_reboot,       osc_cam_cycle,      osc_pause,        osc_abort,
   osc_reconnect,    osc_save_images,    osc_discard_images, osc_full_screen,  
-  force_el_on,      auto_jfetheat,      auto_cycle,       gps_cycle,
+  force_el_on,      auto_jfetheat,      auto_cycle,       sbsc_cycle,
   isc_cycle,        osc_cycle,          actbus_cycle,     rw_cycle,
   piv_cycle,        elmot_cycle,        hub232_cycle,     das_cycle,
-  gps_off,          gps_on,             isc_off,          isc_on,
+  sbsc_off,         sbsc_on,            isc_off,          isc_on,
   osc_off,          osc_on,             rw_off,	          rw_on,
   piv_off,	    piv_on,		elmot_off,	  elmot_on,
   vtx_off,	    vtx_on,		bi0_off,	  bi0_on,
@@ -110,8 +110,7 @@ enum singleCommand {
   hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,
   hwpr_enc_off,     hwpr_enc_pulse,     balance_heat_on,  balance_heat_off,
   vtx1_isc,	    vtx1_osc,		vtx1_sbsc,	  vtx2_isc,
-  vtx2_osc,	    vtx2_sbsc,
-  sbsc_off,	    sbsc_on,		sbsc_cam_cycle,	  sbsc_cpu_cycle,
+  vtx2_osc,	    vtx2_sbsc,		sbsc_cam_cycle,
   cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens, 
   cam_unforce_lens, hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,
@@ -149,7 +148,7 @@ enum multiCommand {
   motors_verbose,    bias_step,         phase_step,       hwpr_set_backlash,
   cam_any,	     cam_settrig_timed, cam_exp_params,	  cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
-  cam_lens_params,   t_sbsc_set,        hwpr_repeat,      hwpr_define_pos,
+  cam_lens_params,   hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,    act_enc_trim,
   actuator_tol,	     el_scan,  
   plugh
