@@ -840,9 +840,9 @@ struct ChannelStruct SlowChannels[] = {
   {"t_wd_flc",        'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u', U_T_C},
   //NB: I'm using port_hexc as an example. Revert if not using new thermistor
   {"vt_port_hexc",    'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_V_V},
-  {"t_1_bat",      'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_2_bat",      'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_port_back",      'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"vt_1_bat",      'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u', U_V_V},
+  {"vt_2_bat",      'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u', U_V_V},
+  {"vt_port_back",      'r',  ACS1_T1, 17,         CAL16T(1.0, 0.0),         'u', U_V_V},
   {"t_dgps",      'r',  ACS1_T1, 19,         CAL16T(1.0, 0.0),         'u', U_T_C}, /* Not used can be re-assigned*/
   {"t_star_front",      'r',  ACS1_T1, 21,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_acs",        'r',  ACS1_T1, 23,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -852,13 +852,13 @@ struct ChannelStruct SlowChannels[] = {
   {"t_sbsc",       'r',  ACS1_T1, 31,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_box_bal",    'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_pump_bal",   'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_el",         'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"vt_el",         'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_V_V},
   {"t_array",      'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"t_sun",        'r',  ACS1_T1, 41,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_rw",         'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_earth",      'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"vt_rw",         'r',  ACS1_T1, 43,         CAL16T(1.0, 0.0),         'u', U_V_V},
+  {"vt_earth",      'r',  ACS1_T1, 45,         CAL16T(1.0, 0.0),         'u', U_V_V},
   {"t_chin",       'r',  ACS1_T1, 47,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"t_port_pyr",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"vt_port_pyr",       'r',  ACS1_T1, 49,         CAL16T(1.0, 0.0),         'u', U_V_V},
 
 /* ACS2 Digital I/O card */
   {"v_pump_bal",    'w',  ACS2_D,  0,       3.91/13107.0,          -9.775, 'u', U_NONE},

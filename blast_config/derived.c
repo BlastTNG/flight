@@ -229,6 +229,13 @@ union DerivedUnion DerivedChannels[] = {
 
   COMMENT("Thermistor calibrations"),
   THERMISTOR("T_PORT_HEXC", "VT_PORT_HEXC"),
+  THERMISTOR("T_RW", "VT_RW"),
+  THERMISTOR("T_PORT_PYR", "VT_PORT_PYR"),
+  THERMISTOR("T_PORT_BACK", "VT_PORT_BACK"),
+  THERMISTOR("T_EARTH", "VT_EARTH"),
+  THERMISTOR("T_EL", "VT_EL"),
+  THERMISTOR("T_1_BAT", "VT_1_BAT"),
+  THERMISTOR("T_2_BAT", "VT_2_BAT"),
 
   COMMENT("Lock Motor/Actuators"),
   BITFIELD("state_lock",
