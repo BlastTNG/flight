@@ -200,7 +200,8 @@ void WatchDGPS()
   berror(info, "dGPS: GPS initialised");
 
   while (1) {
-    fgets(instr, 499, fp);
+    if (fgets(instr, 499, fp) == NULL)
+      berror(tfatal, "dGPS: error getting input string");
 
     if (strncmp(instr, "$GPZDA", 6) == 0) { /* p 109 */
       sscanf(instr,"$GPZDA,%2d%2d%f,%d,%d,%d",&(ts.tm_hour),&(ts.tm_min),
