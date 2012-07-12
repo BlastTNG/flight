@@ -44,7 +44,7 @@ extern "C" {
 //allow any host to be the star camera
 #define CAM_SERVERNAME "192.168.1.11"
 
-#define SBSC_SERIAL "08073507"
+#define SBSC_SERIAL "110794466"
 
 extern "C" void nameThread(const char*);  /* in mcp.c */
 
