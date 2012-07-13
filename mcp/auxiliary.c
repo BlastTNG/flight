@@ -224,7 +224,8 @@ static int Balance(int bits_bal)
   }
  
 
-  if ((CommandData.pumps.mode == bal_rest) || (CommandData.pointing_mode.nw > 0)) {
+  if ((CommandData.pumps.mode == bal_rest) || (CommandData.pointing_mode.nw > 0) || 
+      (CommandData.pointing_mode.mode == P_EL_SCAN)) {
  
     // set direction
     bits_bal &= (0xFF - BAL_DIR); /* Clear reverse bit */ 

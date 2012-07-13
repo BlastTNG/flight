@@ -40,7 +40,7 @@
 
 /**** TODO: Change these back once we have the sunshields on!!!****/
 #define MIN_EL 5 // Was 23.9 
-#define MAX_EL 55 // Was 55
+#define MAX_EL 65 // Was 55
 
 #define MAX_V_AZ 2.0 // was 2000 in gyro units
 #define MAX_V_EL 0.5 // was 0.5
