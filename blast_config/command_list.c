@@ -99,7 +99,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(vtx_on), "turn on the video transmitters", GR_TELEM | GR_POWER},
   {COMMAND(bi0_off), "turn off the biphase transmitter", GR_TELEM | GR_POWER},
   {COMMAND(bi0_on), "turn on the biphase transmitter", GR_TELEM | GR_POWER},
-  {COMMAND(sbsc_cam_cycle), "power cycle the SBSC camera", GR_POWER},
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
@@ -315,6 +314,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(osc_no_pyramid), "tell OSC not to use the pyramid solution finder",
     GR_OSC_PARAM},
   //SBSC commands
+  {COMMAND(cam_cycle), "power cycle the SBSC camera", GR_SBSC},
   {COMMAND(cam_expose), "Start cam exposure (in triggered mode)", GR_SBSC},
   {COMMAND(cam_autofocus), "Camera autofocus mode", GR_SBSC},
   {COMMAND(cam_settrig_ext), "Set external cam trigger mode", GR_SBSC},
@@ -1052,6 +1052,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(cam_any), "Execute arbitrary starcam command", GR_SBSC, 1,
     {
       {"Command String", 0, 32, 's', ""}
+    }
+  },
+  {COMMAND(cam_trig_delay), "Set trigger delay time", GR_SBSC, 1,
+    {
+      {"Delay (s)", 0, 100, 'f', "delay_sbsc"}
     }
   },
   {COMMAND(cam_settrig_timed), "Use timed exposure mode", GR_SBSC, 1,

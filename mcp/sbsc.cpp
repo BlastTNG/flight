@@ -101,6 +101,7 @@ void cameraFields()
   static NiosStruct* maxBlobAddr = NULL;
   static NiosStruct* gridAddr = NULL;
   static NiosStruct* threshAddr = NULL;
+  static NiosStruct* delayAddr = NULL;
   static NiosStruct* blobMdistAddr = NULL;
 
   static NiosStruct* sbscFrameAddr = NULL;
@@ -128,6 +129,7 @@ void cameraFields()
     maxBlobAddr = GetNiosAddr("maxblob_sbsc");
     gridAddr = GetNiosAddr("grid_sbsc");
     threshAddr = GetNiosAddr("thresh_sbsc");
+    delayAddr = GetNiosAddr("delay_sbsc");
     blobMdistAddr = GetNiosAddr("mdist_sbsc");
 
     sbscFrameAddr = GetNiosAddr("frame_sbsc");
@@ -160,6 +162,7 @@ void cameraFields()
   WriteData(maxBlobAddr, CommandData.cam.maxBlobs, NIOS_QUEUE);
   WriteData(gridAddr, CommandData.cam.grid, NIOS_QUEUE);
   WriteData(threshAddr, (int)(CommandData.cam.threshold*1000), NIOS_QUEUE);
+  WriteData(delayAddr, (int)(CommandData.cam.delay*1000), NIOS_QUEUE);
   WriteData(blobMdistAddr, CommandData.cam.minBlobDist, NIOS_QUEUE);
 
   //persistently identify cameras by serial number (camID)

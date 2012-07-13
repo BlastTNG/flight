@@ -96,7 +96,6 @@ extern short int InCharge; /* tx.c */
 extern int StartupVeto; /* mcp.c */
 
 extern short int sbsc_trigger; /* Semaphore for SBSC trigger */
-#define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_sbsc */
 
 double az_accel = 0.1;
 
@@ -681,7 +680,7 @@ static void SetAzScanMode(double az, double left, double right, double v,
       }
     }
     /* SBSC Trigger flag */
-    before_trig = DELAY - v/CommandData.az_accel + CommandData.cam.expTime/2000;
+    before_trig = CommandData.cam.delay - v/CommandData.az_accel + CommandData.cam.expTime/2000;
     if (az < left + before_trig*v) {
       sbsc_trigger = 1;  
     } else if (az > right - before_trig*v) {
@@ -727,7 +726,7 @@ static void SetElScanMode(double el, double bottom, double top, double v,
       }
     }
     /* SBSC Trigger flag */
-    before_trig = DELAY - v/EL_ACCEL + CommandData.cam.expTime/2000;
+    before_trig = CommandData.cam.delay - v/EL_ACCEL + CommandData.cam.expTime/2000;
     if (el < bottom + before_trig*v) {
       sbsc_trigger = 1;  
     } else if (el > top - before_trig*v) {

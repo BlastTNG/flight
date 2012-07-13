@@ -794,6 +794,8 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
       /***************************************/
       /********* SBSC Commanding  *************/
+    case cam_cycle:
+      sendSBSCCommand("Cpower");
     case cam_expose:
       sendSBSCCommand("CtrigExp");
       break;
@@ -1619,11 +1621,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
       /***************************************/
       /********* SBSC Commanding  *************/ 
-    case sbsc_cam_cycle:
-      sprintf(buf,"Cpower");
-      sendSBSCCommand(buf);
     case cam_any:
       sendSBSCCommand(svalues[0]);
+      break;
+    case cam_trig_delay:
+      CommandData.cam.delay = rvalues[0];
       break;
     case cam_settrig_timed:
       sprintf(buf, "CsetExpInt=%d", ivalues[0]);
