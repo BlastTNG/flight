@@ -71,6 +71,7 @@ struct PivGainStruct {
   double SP; // RW velocity Set Point 
   double F; // Current offset to overcome static friction. 
 };
+
 #define LS_OPEN        0x0001
 #define LS_CLOSED      0x0002
 #define LS_DRIVE_OFF   0x0004
@@ -84,6 +85,13 @@ struct PivGainStruct {
 #define LS_IGNORE_EL   0x0400
 #define LS_DRIVE_FORCE 0x0800
 #define LS_DRIVE_MASK  0x09F4
+
+#define SHUTTER_OPEN   0x0001
+#define SHUTTER_CLOSED 0x0002
+#define SHUTTER_INIT   0x0004
+#define SHUTTER_OFF    0x0008
+#define SHUTTER_UNK    0x0100
+
 
 #define ACTBUS_FM_SLEEP  0
 #define ACTBUS_FM_SERVO  1
@@ -375,6 +383,15 @@ struct CommandDataStruct {
     int lock_move_i;
 
     unsigned int lock_goal;
+
+    /* shutter control */
+    int shutter_vel;
+    int shutter_acc;
+    int shutter_hold_i;
+    int shutter_move_i;
+
+    unsigned int  shutter_goal;
+
   } actbus;
 
   struct {

@@ -129,7 +129,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"td_lhe",        'r', CRYO_A2, 28,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
 //{"cryo_a2_15",    'r', CRYO_A2, 30,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   //CRYO_A2 CH16 is narrow fast
-//{"cryo_a2_17",    'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  // Uncommented for shutter  7/14/12 G.T.
+  {"cryo_a2_17",    'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
 //{"cryo_a2_18",    'r', CRYO_A2, 36,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
 //{"cryo_a2_19",    'r', CRYO_A2, 38,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"td_vcs_jfet",   'r', CRYO_A2, 40,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
@@ -792,7 +793,13 @@ struct ChannelStruct SlowChannels[] = {
   {"focpos_sbsc",    'w', LOOP9,  35,           1.0/10.0,             0.0, 's', U_NONE},
   {"delay_sbsc",     'w', LOOP9,  36,         1.0/1000.0,             0.0, 'u', U_NONE},
   {"daz_p",          'w', LOOP9,  37,              I2VEL,             0.0, 'u', U_NONE},
-  /* LOOP9 36-49 are unused */
+  {"i_move_shutter", 'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
+  {"i_hold_shutter", 'w', LOOP9,  39,                1.0,             0.0, 'u', U_NONE},
+  {"vel_shutter",    'w', LOOP9,  40,                1.0,             0.0, 'u', U_NONE},
+  {"acc_shutter",    'w', LOOP9,  41,                1.0,             0.0, 'u', U_NONE},
+  {"pos_shutter",    'w', LOOP9,  42,                1.0,             0.0, 'u', U_NONE},
+  {"out_shutter",    'w', LOOP9,  43,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP9 44-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  

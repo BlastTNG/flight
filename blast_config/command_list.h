@@ -18,13 +18,13 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 225        /* total number of single word cmds */
-#define N_MCOMMANDS 117        /* total number of multiword commands */
+#define N_MCOMMANDS 119        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
 #define MAX_30BIT (1073741823.)
 
-#define N_GROUPS 24
+#define N_GROUPS 25
 
 #define GR_POINT        0x00000001
 #define GR_BAL          0x00000002
@@ -50,6 +50,7 @@
 #define GR_MISC         0x00200000
 #define GR_ISC_PARAM    0x00400000
 #define GR_OSC_PARAM    0x00800000
+#define GR_SHUTTER      0x01000000
 //reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
@@ -113,7 +114,8 @@ enum singleCommand {
   vtx2_osc,	    vtx2_sbsc,		cam_cycle,
   cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens, 
   cam_unforce_lens, hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
-  hwpr_step_off,    hwpr_step_on,
+  hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
+  shutter_reset,    shutter_open,       shutter_off,
   xyzzy
 };
 
@@ -149,8 +151,8 @@ enum multiCommand {
   cam_any,	     cam_settrig_timed, cam_exp_params,	  cam_focus_params,
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   cam_trig_delay,	hwpr_repeat,      hwpr_define_pos,
-  hwpr_goto,	     hwpr_goto_pot,    act_enc_trim,
-  actuator_tol,	     el_scan,          el_box,
+  hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
+  el_scan,           el_box,            shutter_vel,      shutter_i,
   plugh
 };
 

@@ -37,7 +37,8 @@ const char *GroupNames[N_GROUPS] = {
   "Subsystem Power",       "Lock Motor",       "Cryo Control",
   "Telemetry",             "ISC Housekeeping", "OSC Housekeeping",
   "X-Y Stage",             "ISC Modes",        "OSC Modes",
-  "Miscellaneous",         "ISC Parameters",   "OSC Parameters"
+  "Miscellaneous",         "ISC Parameters",   "OSC Parameters",
+  "Shutter"
   };
 
 //echoes as string; makes enum name the command name string
@@ -320,6 +321,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(cam_settrig_ext), "Set external cam trigger mode", GR_SBSC},
   {COMMAND(cam_force_lens), "Forced mode for cam lens moves", GR_SBSC},
   {COMMAND(cam_unforce_lens), "Normal mode for cam lens moves", GR_SBSC},
+  //Shutter commands
+  {COMMAND(shutter_init), "Initialize shutter move parameters", GR_SHUTTER},
+  {COMMAND(shutter_close), "Close shutter", GR_SHUTTER},
+  {COMMAND(shutter_reset), "Reset shutter; shutter will open then close", GR_SHUTTER},
+  {COMMAND(shutter_open), "Open shutter", GR_SHUTTER},
+  {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_SHUTTER},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 
 };
@@ -640,14 +647,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Preferred T Second", 0, 2, 'i', "PREF_TS_SF"}
     }
   },
-  {COMMAND(hwpr_vel), "set the wavepalte rotator velocity and acceleration", 
+  {COMMAND(hwpr_vel), "set the waveplate rotator velocity and acceleration", 
     GR_HWPR, 2,
     {
       {"Velocity", 5, 500000, 'l', "VEL_HWPR"},
       {"Acceleration", 1, 1000, 'i', "ACC_HWPR"},
     }
   },
-  {COMMAND(hwpr_i), "set the wavepalte rotator currents", GR_HWPR, 2,
+  {COMMAND(hwpr_i), "set the waveplate rotator currents", GR_HWPR, 2,
     {
       {"Move current (%)", 0, 100, 'i', "I_MOVE_HWPR"},
       {"Hold current (%)", 0,  50, 'i', "I_HOLD_HWPR"},
@@ -1125,6 +1132,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"Elevation", 0, 5, 'i', "VERBOSE_EL"},
      {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
    }
+  },
+  {COMMAND(shutter_vel), "set the shutter velocity and acceleration", 
+    GR_SHUTTER, 2,
+    {
+      {"Velocity", 5, 500000, 'l', "VEL_SHUTTER"},
+      {"Acceleration", 1, 1000, 'i', "ACC_SHUTTER"},
+    }
+  },
+  {COMMAND(shutter_i), "set the shutter currents", GR_SHUTTER, 2,
+    {
+      {"Move current (%)", 0, 100, 'i', "I_MOVE_SHUTTER"},
+      {"Hold current (%)", 0,  50, 'i', "I_HOLD_SHUTTER"},
+    }
   },
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
