@@ -803,7 +803,7 @@ static void StoreData(int index)
   static struct NiosStruct* modePAddr;
   static struct NiosStruct* xPAddr, *yPAddr;
   static struct NiosStruct* velAzPAddr, *delPAddr;
-  static struct NiosStruct* velElPAddr;
+  static struct NiosStruct* velElPAddr, *dazPAddr;
   static struct NiosStruct* wPAddr, *hPAddr;
   static struct NiosStruct* ra1PAddr, *dec1PAddr;
   static struct NiosStruct* ra2PAddr, *dec2PAddr;
@@ -1034,6 +1034,7 @@ static void StoreData(int index)
     velAzPAddr = GetNiosAddr("vel_az_p");
     velElPAddr = GetNiosAddr("vel_el_p");
     delPAddr = GetNiosAddr("del_p");
+    dazPAddr = GetNiosAddr("daz_p");
     wPAddr = GetNiosAddr("w_p");
     hPAddr = GetNiosAddr("h_p");
     ra1PAddr = GetNiosAddr("ra_1_p");
@@ -1316,6 +1317,7 @@ static void StoreData(int index)
   WriteData(velAzPAddr, (int)(CommandData.pointing_mode.vaz*VEL2I), NIOS_QUEUE);
   WriteData(velElPAddr, (int)(CommandData.pointing_mode.vel*VEL2I), NIOS_QUEUE);
   WriteData(delPAddr, (int)(CommandData.pointing_mode.del * VEL2I), NIOS_QUEUE);
+  WriteData(dazPAddr, (int)(CommandData.pointing_mode.daz * VEL2I), NIOS_QUEUE);
   WriteData(wPAddr, (int)(CommandData.pointing_mode.w * DEG2I), NIOS_QUEUE);
   WriteData(hPAddr, (int)(CommandData.pointing_mode.h * DEG2I), NIOS_QUEUE);
   WriteData(ra1PAddr, (int)(CommandData.pointing_mode.ra[0] * H2I), NIOS_QUEUE);

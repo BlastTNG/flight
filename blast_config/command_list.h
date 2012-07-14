@@ -150,7 +150,7 @@ enum multiCommand {
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   cam_trig_delay,	hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,    act_enc_trim,
-  actuator_tol,	     el_scan,  
+  actuator_tol,	     el_scan,          el_box,
   plugh
 };
 

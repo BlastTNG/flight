@@ -791,7 +791,8 @@ struct ChannelStruct SlowChannels[] = {
   {"vel_el_p",       'w', LOOP9,  34,              I2VEL,             0.0, 'u', U_NONE},
   {"focpos_sbsc",    'w', LOOP9,  35,           1.0/10.0,             0.0, 's', U_NONE},
   {"delay_sbsc",     'w', LOOP9,  36,         1.0/1000.0,             0.0, 'u', U_NONE},
-  /* LOOP9 37-49 are unused */
+  {"daz_p",          'w', LOOP9,  37,              I2VEL,             0.0, 'u', U_NONE},
+  /* LOOP9 36-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  

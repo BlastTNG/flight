@@ -43,6 +43,7 @@
 #define P_VBOX       9
 #define P_QUAD      10
 #define P_EL_SCAN   11
+#define P_EL_BOX    12
 
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
@@ -137,6 +138,7 @@ struct PointingModeStruct {
   double dec[4]; // the decs for radbox (ie, quad)
   double dith; // Elevation dither step 
   double vel; // Elevation scan velocity
+  double daz; // Azimuth step size (for el scans)
 };
 
 struct latch_pulse {

@@ -416,6 +416,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Dith Step Size (deg)",-0.1,  0.1, 'f', "NONE"}
     }
   },
+  {COMMAND(el_box), "scan an az/el box centred on RA/Dec with az steps",
+    GR_POINT, 7,
+    {
+      {"RA of Centre (h)",          0, 24, 'd', "RA"},
+      {"Dec of Centre (deg)",     -90, 90, 'd', "DEC"},
+      {"Az Width (deg on sky)",     0, 90, 'f', "NONE"},
+      {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
+      {"El Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
+      {"Az Step Size (deg on sky)", 0,  1, 'f', "NONE"},
+      {"El Dith Step Size (deg)",-0.1,  0.1, 'f', "NONE"}
+    }
+  },
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 6,
     {
       {"RA of Centre (h)",          0, 24, 'd', "RA"},
