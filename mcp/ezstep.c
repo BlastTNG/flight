@@ -649,6 +649,10 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*,char) )
 	bprintf(info, "%sFound type 23 device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
+    } else if (!strncmp(bus->buffer, "EZHR-17 All Motion", 18)) {
+        bprintf(info, "%sFound type 17 device %s at address %c (0x%x). \n",
+	    bus->name, stepName(bus,i), i, i);
+      bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else {
       if (bus->chatter >= EZ_CHAT_ERR)
 	bprintf(warning, "%sUnrecognised response from %s, "

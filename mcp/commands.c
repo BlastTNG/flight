@@ -674,7 +674,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.shutter_goal = SHUTTER_CLOSED;
       break;
     case shutter_reset:
-      CommandData.actbus.shutter_goal = SHUTTER_INIT;
+      CommandData.actbus.shutter_goal = SHUTTER_RESET;
       break;
     case shutter_open:
       CommandData.actbus.shutter_goal = SHUTTER_OPEN;

@@ -90,6 +90,8 @@ struct PivGainStruct {
 #define SHUTTER_CLOSED 0x0002
 #define SHUTTER_INIT   0x0004
 #define SHUTTER_OFF    0x0008
+#define SHUTTER_RESET  0x0010
+#define SHUTTER_NOP    0x0020
 #define SHUTTER_UNK    0x0100
 
 
