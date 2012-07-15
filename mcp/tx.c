@@ -141,6 +141,8 @@ static void WriteAux(void)
   static struct BiPhaseStruct* he4LevReadAddr;
   static struct NiosStruct* partsSchedAddr;
   static struct NiosStruct* upslotSchedAddr;
+  static struct NiosStruct* lastCmdAddr;
+  static struct NiosStruct* countCmdAddr;
   
   static int incharge = -1;
   time_t t;
@@ -174,6 +176,9 @@ static void WriteAux(void)
     statusEthAddr = GetNiosAddr("status_eth");
     partsSchedAddr = GetNiosAddr("parts_sched");
     upslotSchedAddr = GetNiosAddr("upslot_sched");
+
+    lastCmdAddr = GetNiosAddr("last_cmd");
+    countCmdAddr = GetNiosAddr("count_cmd");
   }
 
   if (StartupVeto>0) {
@@ -254,6 +259,9 @@ static void WriteAux(void)
   
   WriteData(statusMCCAddr, mccstatus,
        NIOS_FLUSH);
+
+  WriteData(lastCmdAddr, CommandData.last_command, NIOS_QUEUE);
+  WriteData(countCmdAddr, CommandData.command_count, NIOS_QUEUE);
 }
 
 void WriteChatter (int index)

@@ -910,6 +910,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
       return; /* invalid command - no write or update */
   }
 
+  CommandData.command_count++;
+  CommandData.last_command = (unsigned short)command;
+
 #ifndef BOLOTEST
   if (!scheduled) {
     if (doing_schedule)
@@ -1737,6 +1740,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       return; /* invalid command - don't update */
   }
 
+  CommandData.command_count++;
+  //set high bit to differentiate multi-commands from single
+  CommandData.last_command = (unsigned short)command | 0x8000;
+
 #ifndef BOLOTEST
   int i_point = GETREADINDEX(point_index);
 
@@ -1891,6 +1898,9 @@ void InitCommandData()
   bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
   /** prev_status overrides this stuff **/
+  CommandData.command_count = 0;
+  CommandData.last_command = 0xffff;
+
   CommandData.at_float = 0;
   CommandData.timeout = 3600;
   CommandData.slot_sched = 0;

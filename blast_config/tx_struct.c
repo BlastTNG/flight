@@ -805,7 +805,9 @@ struct ChannelStruct SlowChannels[] = {
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
   /* LOOP9 58 is unused */
   {"pot_hwpr",       'w', LOOP9, 59,        1.0/65535.0,             0.0, 'u', U_NONE},
-  /* LOOP9 60-63 are unused */
+  {"last_cmd",       'w', LOOP9, 60,                1.0,             0.0, 'u', U_NONE},
+  {"count_cmd",      'w', LOOP9, 61,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP9 62-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

@@ -187,6 +187,9 @@ struct SBSCCommandData {
 };
 
 struct CommandDataStruct {
+  unsigned short command_count;
+  unsigned short last_command;
+
   struct {
     unsigned short dac_out[5];
     unsigned char setLevel[5];
