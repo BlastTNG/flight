@@ -297,6 +297,7 @@ void StageBus(void)
   unsigned long conn_attempt = 1;
   int first_time=1;
   struct ezbus bus;
+  int chat_temp;
 
   nameThread("XYBus");
   bputs(startup, "startup.");
@@ -341,19 +342,20 @@ void StageBus(void)
 
     /* Repoll bus if necessary */
     if (CommandData.xystage.force_repoll) {
-      bprintf(info,"XYBus: Recieved signal to repoll");      
+      bprintf(info,"XYBus: repolling");      
       EZBus_ForceRepoll(&bus, STAGEX_ID);
       EZBus_ForceRepoll(&bus, STAGEY_ID);
       poll_timeout = POLL_TIMEOUT;
-      bprintf(info,"Tah-Dah!");
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
       bprintf(info,"all_ok = %i",all_ok);
       CommandData.xystage.force_repoll = 0;
     }
 
     if (poll_timeout == 0 && !all_ok) {
-      bprintf(info,"XYBus:Timeout!");
+      chat_temp = bus.chatter;
+      bus.chatter = EZ_CHAT_NONE;
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
+      bus.chatter = chat_temp;
       poll_timeout = POLL_TIMEOUT;
     } else if (poll_timeout > 0)
       poll_timeout--;
