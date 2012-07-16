@@ -167,15 +167,21 @@ void ImageViewer::paintEvent(QPaintEvent*)
 	img_rect.setWidth(scaled_img.width());
 	img_rect.setHeight(scaled_img.height());
 	struct tm timestruct = bimg->CSBIGImg::GetImageStartTime();
+	string CamName = bimg->CSBIGImg::GetObserver(); 
 	QString timestring;
+	QString IDstring;
 	ostringstream sout;
+	ostringstream sout2;
 	sout << ((timestruct.tm_hour<10)?"0":"") << timestruct.tm_hour << ":"
 		 << ((timestruct.tm_min<10)?"0":"") << timestruct.tm_min << ":"
 		 << ((timestruct.tm_sec<10)?"0":"") << timestruct.tm_sec;
+	sout2 << CamName;
 	timestring = sout.str();
+	IDstring = sout2.str();
 	p.drawImage(img_rect, scaled_img);
 	p.setFont(QFont("Arial",12));
-	p.drawText(30,30,timestring);
+	p.drawText(30,30,IDstring);
+	p.drawText(30,50,timestring);
 }
 
 
