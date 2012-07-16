@@ -20,6 +20,7 @@
 #include "sbigudrv.h"
 #include "csbigimgdefs.h"
 #include "camconfig.h"
+#include "pyramid.h"
 //#include "clensadapter.h"
 
 using namespace std;
@@ -370,6 +371,25 @@ void* processingLoop(void* arg)
       	err = globalImages[imageIndex].SaveImage(viewerPath);
 	if (err != SBFE_NO_ERROR)
 		sclog(warning, (char*)"processingLoop: File error during boxed viewer write: %d", err);
+    }
+#endif
+
+#if USE_PYRAMID
+    if ((fblob->get_numblobs())>4) {
+	    cout << "\nPerforming Star matching..." << endl;
+	    solution_t* sol;
+	    cout << "\nGoing into matchStars..." << endl;
+	    int nsol = globalImages[imageIndex].matchStars(&sol);
+	    cout << "\nStar matching found: " << nsol << " solutions and " << sol[0].n << " stars";
+	    if (nsol > 0) {
+	 	cout << " with:" << endl;
+	 	for (int j=0; j<((nsol<15)?nsol:15); j++) {
+	 		cout << "  " << j << ":\tn=" << sol[j].n << ", brightest: ra=" << sol[j].C[0]->ra*180/M_PI << " dec=" << sol[j].C[0]->dec*180/M_PI << endl;
+			for (int k=0; k<sol[j].n; k++)
+				cout << " " << k << " ra: " << sol[j].C[k]->ra*180/M_PI << " dec: " << sol[j].C[k]->dec*180/M_PI << endl; 
+		}
+    	}
+    	else cout << endl;
     }
 #endif
 

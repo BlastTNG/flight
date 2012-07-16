@@ -32,7 +32,7 @@ TEST_NAME  = testmain
 USE_QT = 1           #change this to 0 to not use qt when its not available
                  #probably need to change bits of code too
 O_APP      = csbigcam.o csbigimg.o mycam.o clensadapter.o bloblist.o \
-frameblob.o blobimage.o pyramid.o camcommserver.o $(OBJS)
+frameblob.o blobimage.o pyramid.o svd.o camcommserver.o $(OBJS)
 O_APP_QT = imageviewer.o moc_imageviewer.o commandgui.o moc_commandgui.o
 ################################################################################
 
@@ -75,7 +75,7 @@ $(APP_NAME): $(APP_OBJ)
 	  chmod a+x $(APP_NAME)
 
 starcam.o : starcam.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h clensadapter.h frameblob.h \
-	camconfig.h clensadapterdefs.h csbigimgdefs.h pyramid.h imageviewer.h camcommserver.h $(HEADERS)
+	camconfig.h clensadapterdefs.h csbigimgdefs.h pyramid.h svd.h imageviewer.h camcommserver.h $(HEADERS)
 	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o starcam.o -c starcam.cpp
 
 csbigcam.o : csbigcam.h csbigcam.cpp csbigimg.h camconfig.h
@@ -96,7 +96,7 @@ bloblist.o : bloblist.h bloblist.cpp
 frameblob.o : frameblob.h frameblob.cpp bloblist.h camconfig.h
 	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o frameblob.o -c frameblob.cpp
 
-blobimage.o : blobimage.h blobimage.cpp frameblob.h bloblist.h camconfig.h pyramid.h
+blobimage.o : blobimage.h blobimage.cpp frameblob.h bloblist.h camconfig.h pyramid.h svd.h
 	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o blobimage.o -c blobimage.cpp
 	  
 camcommserver.o : camcommserver.h camcommserver.cpp $(HEADERS)
@@ -105,9 +105,12 @@ camcommserver.o : camcommserver.h camcommserver.cpp $(HEADERS)
 pyramid.o : pyramid.h pyramid.cpp
 	  $(CXX) $(CPPFLAGS) $(CFLAGS) -O0 -o pyramid.o -c pyramid.cpp
 	  
+svd.o : svd.h svd.cpp
+	  $(CXX) $(CPPFLAGS) $(CFLAGS) -O0 -o svd.o -c svd.cpp
+	  
 ################################################################################
 #image viewer
-VIEWER_OBJ=scviewer.o blobimage.o imageviewer.o moc_imageviewer.o csbigimg.o frameblob.o bloblist.o
+VIEWER_OBJ=scviewer.o blobimage.o pyramid.o svd.o imageviewer.o moc_imageviewer.o csbigimg.o frameblob.o bloblist.o
 scviewer: $(VIEWER_OBJ)
 	  $(LD) $(LDFLAGS) $(QTLIB) -o scviewer $(VIEWER_OBJ) -lpthread
 	  chmod a+x scviewer
@@ -136,7 +139,7 @@ testmain : $(TEST_OBJ)
 	  
 testmain.o : testmain.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h \
 	clensadapter.h frameblob.h camconfig.h clensadapterdefs.h csbigimgdefs.h \
-	pyramid.h imageviewer.h $(HEADERS)
+	pyramid.h svd.h imageviewer.h $(HEADERS)
 	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o testmain.o -c testmain.cpp
 	  
 ################################################################################
@@ -166,8 +169,8 @@ util: powercycle findbadpixel fixbadpixel
 powercycle: powercycle.c
 
 # program to analyze bad pixel data
-findbadpixel: findbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o
-	g++   findbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o   -o findbadpixel
+findbadpixel: findbadpixel.o blobimage.o pyramid.o svd.o frameblob.o bloblist.o csbigimg.o
+	g++   findbadpixel.o blobimage.o pyramid.o svd.o frameblob.o bloblist.o csbigimg.o   -o findbadpixel
 	chmod a+x findbadpixel
 
 findbadpixel.o: findbadpixel.cpp blobimage.h frameblob.h bloblist.h \
@@ -175,8 +178,8 @@ findbadpixel.o: findbadpixel.cpp blobimage.h frameblob.h bloblist.h \
 	g++  -O0 -I . -I ../common -L . -Wall -g     -c -o findbadpixel.o findbadpixel.cpp
 
 # program to use a bad pixel file to correct a bad pixel
-fixbadpixel: fixbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o
-	g++   fixbadpixel.o blobimage.o frameblob.o bloblist.o csbigimg.o   -o fixbadpixel
+fixbadpixel: fixbadpixel.o blobimage.o pyramid.o svd.o frameblob.o bloblist.o csbigimg.o
+	g++   fixbadpixel.o blobimage.o pyramid.o svd.o frameblob.o bloblist.o csbigimg.o   -o fixbadpixel
 	chmod a+x fixbadpixel
 
 fixbadpixel.o: fixbadpixel.cpp blobimage.h frameblob.h bloblist.h camconfig.h \
@@ -186,6 +189,6 @@ fixbadpixel.o: fixbadpixel.cpp blobimage.h frameblob.h bloblist.h camconfig.h \
 ################################################################################
 
 clean:
-	rm -f *.o testmain commtest starcam moc_*
+	rm -f *.o powercycle findbadpixel fixbadpixel scviewer testmain commtest starcam moc_*
 
 

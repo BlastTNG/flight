@@ -31,7 +31,9 @@ using namespace std;
  
 */
 BlobImage::BlobImage(BlobImageConfigParams params /*=defaultImageParams*/)
-//	: m_cPyramid(params.pyrParams.fov, params.pyrParams.catalogname, params.pyrParams.katalogname)
+#if USE_PYRAMID	
+	: m_cPyramid(params.pyrParams.fov, params.pyrParams.catalogname, params.pyrParams.katalogname)
+#endif
 {
 	Init(params);
 }
@@ -44,7 +46,9 @@ BlobImage::BlobImage(BlobImageConfigParams params /*=defaultImageParams*/)
  
 */
 BlobImage::BlobImage(int height, int width, BlobImageConfigParams params /*=defaultImageParams*/)
-//	: m_cPyramid(params.pyrParams.fov, params.pyrParams.catalogname, params.pyrParams.katalogname)
+#if USE_PYRAMID	
+	: m_cPyramid(params.pyrParams.fov, params.pyrParams.catalogname, params.pyrParams.katalogname)
+#endif
 {
 	Init(params);
 	AllocateImageBuffer(height, width);
@@ -78,9 +82,10 @@ void BlobImage::Init(BlobImageConfigParams params/*=defaultImageParams*/)
 	m_cBlob.commonconstructor(params.blobParams);
 	m_sBadpixFilename = params.badpixFilename;
 	m_nTimeError = params.timeError;
-#if USE_PYRAMID
-	m_cPyramid.Init(params.pyrParams.fov, params.pyrParams.catalogname, params.pyrParams.katalogname);
-//	cout << "erase me: left Init for Pyramid" << endl;
+
+#if USE_PYRAMID	
+	//m_cPyramid.Init(params.pyrParams.fov, params.pyrParams.catalogname, params.pyrParams.katalogname);
+	//cout << "erase me: left Init for Pyramid" << endl;
 	m_dMatchTol = params.matchTol;
 	m_dPlatescale = params.platescale;
 #endif
@@ -321,7 +326,7 @@ int BlobImage::findBlobs()
 	int numblobs;
 	bloblist *blobs;
 	
-	crapifyImage();
+	//crapifyImage();
 	//find the blobs
 	if (FixBadpix(m_sBadpixFilename) == SBFE_OPEN_ERROR)
 		return -1;
@@ -770,20 +775,45 @@ StarcamReturn* BlobImage::createReturnStruct(StarcamReturn* arg)
 int BlobImage::matchStars(solution_t **sol)
 {
 	int nblobs = m_cBlob.get_numblobs();
+//	int nblobs = 5; //NNG for testing
 	double *x, *y;
 	x = new double[nblobs];
 	y = new double[nblobs];
+	double *x_p = new double [nblobs];
+  	double *y_p = new double [nblobs];
+	memset(x_p, 0, sizeof(x_p) );
+	memset(y_p, 0, sizeof(y_p) );
+  	double XC = 1530/2;
+  	double YC = 1020/2;
 	bloblist *blobs = m_cBlob.getblobs();
 	int i = 0, retval = -1;
+  	double ra0, dec0, r0;
 	
 	while (blobs != NULL) {
-		x[i] = blobs->getx()*m_dPlatescale;
-		y[i] = blobs->gety()*m_dPlatescale;
+		x[i] = (blobs->getx()-XC)*m_dPlatescale;
+		y[i] = (blobs->gety()-YC)*m_dPlatescale;
 		blobs = blobs->getnextblob();
 		i++;
 	}
-	
-	if (m_cPyramid.GetSolution(m_dMatchTol, x, y, nblobs, sol, &retval, 0, 0, 0) < 0)
+/*
+	//AND change platescale to 9.44	
+	x[0]=930.157011384096;
+	y[0]=167.158449582342;
+	x[1]=1472.58714161560;
+	y[1]=922.480301367182;
+	x[2]=908.983169656947;
+	y[2]=323.056623586626;
+	x[3]=1129.46618620267;
+	y[3]=677.975355808673;
+	x[4]=330.391564235287;
+	y[4]=825.453326589156;
+
+	for (i = 0; i < nblobs; i++) {
+		x_p[i] = (x[i] - XC)*m_dPlatescale;
+		y_p[i] = (y[i] - YC)*m_dPlatescale;
+	}
+*/
+	if (m_cPyramid.GetSolution(m_dMatchTol, x_p, y_p, nblobs, sol, &retval, &ra0, &dec0, &r0) < 0)
 		retval = -1;
 	
 	delete[] x;

@@ -1,13 +1,11 @@
+#include "stdint.h"
+
 #ifndef __PYRAMID__H
 #define __PYRAMID__H
 
-//#ifdef _WINDOWS_
-//#define CATALOG "d:\\catalog\\gsc_mag08_res21.bin"
-//#define KATALOG "d:\\catalog\\k.bin"
-//#else 
-//#define CATALOG "./catalog/gsc_mag08_res21.bin"
-//#define KATALOG "./catalog/k.bin"
-//#endif
+#ifdef _WINDOWS_  // If in windows change packing order of frames to have
+#pragma pack(2)    // same packing as Linux
+#endif
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846
@@ -16,8 +14,6 @@
 #ifndef M_PI_2
 #define M_PI_2     1.57079632679489661923
 #endif
-
-//#define FOV (3.4 * M_PI/180.0)    // SC field of view
 
 #define CSI 1.0E-10
 #define MAXSOLUTION 200
@@ -32,69 +28,83 @@ typedef struct {
 
 //type for entries in star pair & distance catalogue
 typedef struct {
-  unsigned long I, J;                //catalog indexes of each star in pair
-  unsigned long K;                   // ?????
+  //uint32_t I, J;                //catalog indexes of each star in pair
+  //uint32_t K;                   // ?????
+  uint32_t I, J;                //catalog indexes of each star in pair
+  uint32_t K;                   // ?????
   double d;                          //distance between stars (on focal plane?)
 } rec_t;
 
 //type for pattern matching solutions
 typedef struct {
-  unsigned long I[MAXBLOBS];       // Ignore - index into master catalogue
-  unsigned long B[MAXBLOBS];       // Blob index corresponding to C 
+  //uint32_t I[MAXBLOBS];       // Ignore - index into master catalogue
+  //uint32_t B[MAXBLOBS];       // Blob index corresponding to C 
+  uint32_t I[MAXBLOBS];       // Ignore - index into master catalogue
+  uint32_t B[MAXBLOBS];       // Blob index corresponding to C 
   gsc_t* C[MAXBLOBS];              // Matched Star catalogue
   int flag;
-  unsigned long n;
+  //uint32_t n;
+  uint32_t n;
 } solution_t;
 
 //type for ???????
 typedef struct {
   rec_t *r;
-  unsigned long flag;
+  uint32_t flag;
 } match_t;
 
 
 class Pyramid {
  public:
   Pyramid();
-  Pyramid(double fov, char *catalogname, char *katalogname);
-  void Init(double fov, char *catalogname, char *katalogname);
+  Pyramid(double fov, const char *catalogname, const char *katalogname);
+  void Init(double fov, const char *catalogname, const char *katalogname);
   ~Pyramid();  
+  
+  int BuildCatalog(double ra0, double dec0, double r0);
 
-  int Match(double*, double*, double, unsigned long);
+
+  int Match(double*, double*, double, uint32_t);
   int GetSolution(double, double*, double*, int, solution_t**, int*, 
-                  double ra0=0.0, double dec0=0.0, double r0=-1.0);
+                  double*, double*, double*);
 
   int GetTestStars(double, double, double *, double *, 
-                   unsigned long *, unsigned long);
-
+                   uint32_t *, uint32_t);
+  
   double Ra(int I) {return gsc[I].ra;}
   double Dec(int I) {return gsc[I].dec;}
  private:
-
+  void   SwapColumns(double *matrix, int ,int ,int, int);
+  double* Product(double *matrix1, double *matrix2, int ,int , int);
+  void   Transpose(double *matrix, int ,int);
+  double Determinant3x3(double *matrix);
+  void   GetCenter(double*, double*, int ,double&, double&, double&);
   double dist(double&, double&, double&, double&);
   double cdist(double&, double&, double&, double&);
-  int    GetIdx(double, double, unsigned long&, unsigned long&);
-  int    GetTriangle(unsigned long&, unsigned long&, 
-                     unsigned long&, unsigned long n = 0); 
+  int    GetIdx(double, double, uint32_t&, uint32_t&);
+  int    GetTriangle(uint32_t&, uint32_t&, 
+                     uint32_t&, uint32_t n = 0); 
   int    s2tp(double, double, double, double, double&, double&);
   void   tp2s(double&, double&, double, double, double, double);
 
-  int    StarPair(double* x, double*, unsigned long, double, solution_t*, unsigned long&); 
+  int    StarPair(double* x, double*, uint32_t, double, solution_t*, uint32_t&); 
 
-  int    StarTriangle(unsigned long, unsigned long, unsigned long,
-                        double, double, double, double, solution_t*, unsigned long&);
+  int    StarTriangle(uint32_t, uint32_t, uint32_t,
+                        double, double, double, double, solution_t*, uint32_t&);
 
-  int    StarPyramid(unsigned long , double, double, double, double, solution_t*);
+  int    StarPyramid(uint32_t , double, double, double, double, solution_t*);
 
 
   int    CheckSpecularTriangle(double*, double*, solution_t*);
   // ***********************************************
 
-  unsigned long ngsc;          // number of starts in catalog
+  //uint32_t ngsc;          // number of starts in catalog
+  uint32_t ngsc;          // number of starts in catalog
   gsc_t *gsc;                  // pointd to the guide star catalog
                                // sorted in increasing declination
 
-  unsigned long nrec;         //size of pair & distance catalogue
+  //uint32_t nrec;         //size of pair & distance catalogue
+  uint32_t nrec;         //size of pair & distance catalogue
   rec_t *rec;                 // the catalogue itself
 
 
@@ -105,7 +115,7 @@ class Pyramid {
   int kidx;
   
   double c_fov;                // cos(fov);
-  double fov;                  // field of view (longest of length or width) in radians of sky
+  double fov;                  // field of view (intest of length or width) in radians of sky
 
   double m, q;                 //coefficients of a linear distance vs index trend for the rec array (?)
 
