@@ -188,7 +188,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 			}
 		j=0;
 		}
-
+/*
 #if AUTOFOCUS_DEBUG
 		cout << "[autoFocus debug]: saving focus image in : " << path << endl;
 #endif
@@ -197,7 +197,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		    cerr << "[autoFocus debug]: autoFocus failed to save image" << endl;
 #endif
 		}
-		if (img->SaveImage("/data/etc/current.sbig") != SBFE_NO_ERROR) {
+NNG*/		if (img->SaveImage("/data/etc/current.sbig") != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
@@ -428,7 +428,7 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 	ReadoutLineParams rlp;
 	int subFrameWidth, subFrameHeight, subFrameTop, subFrameLeft;
 	CSBIGCam::GetSubFrame(subFrameLeft, subFrameTop, subFrameWidth, subFrameHeight);
-	CSBIGCam::SetDriverControl(DCP_HIGH_THROUGHPUT, TRUE);
+	//NNG CSBIGCam::SetDriverControl(DCP_HIGH_THROUGHPUT, TRUE);
 	// Get the image dimensions
 	vertNBinning = CSBIGCam::GetReadoutMode() >> 8;
 	if ( vertNBinning == 0 )
@@ -506,7 +506,9 @@ PAR_ERROR MyCam::GrabImage(BlobImage *pImg, SBIG_DARK_FRAME dark)
 	s = gcir.name;
 	//add identifier to camera name (distinguish two cameras)
 	ostringstream sout;
-	sout << s << " #" << m_nUSBNum;
+	string IDNum = pImg->getCameraID();
+	//NNG sout << s << " #" << m_nUSBNum;
+	sout << s << " #" << IDNum;
 	pImg->SetCameraModel(sout.str());
 	pImg->SetBinning(hBin, vBin);
 	pImg->SetSubFrame(left, top);
