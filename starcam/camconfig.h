@@ -195,7 +195,7 @@ static const BlobImageConfigParams defaultImageParams = {
 				ES_AUTOBIAS_ENABLED,    //exposureState
 		0,                              //readoutMode
 		"",                             //note
-		"Spider Starcam",               //observer
+		"THE GOOD",               	//observer
 		"0",                            //history
 		"None",                         //filter
 		"Starcam control",              //software
@@ -211,8 +211,8 @@ static const BlobImageConfigParams defaultImageParams = {
 	},
     {                               //pyramid params
         0.035,                          //fov
-		(char*)"/home/spider/pyr/gsc_mag08_res21.bin", //catalogname
-		(char*)"/home/spider/pyr/k.bin"                //katalogname
+		(char*)"/home/spider/pyramid/pyr_mag8/gsc_mag08_res20.bin", //catalogname
+		(char*)"/home/spider/pyramid/pyr_mag8/k.bin"                //katalogname
     },
 	{                               //viewer params
 		10,                          //refreshTime
