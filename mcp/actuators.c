@@ -91,14 +91,20 @@ static struct lock_struct {
 
 // Shutter motor parameters and data
 
-#define  SHUTTER_MOTOR_DATA_TIMER 100  /* 1 second */
-#define  SHUTTER_TIMEOUT 3000          /* 30 seconds */
+#define  SHUTTER_MOTOR_DATA_TIMER 100 /* 1 second */
+#define  SHUTTER_TIMEOUT 3000         /* 30 seconds */
+#define  SHUTTER_CLOSED_BIT 0x04      // /7?4 returns 15 when shutter is closed and
+                                      // returns 11 when shutter is not closed
+//#define  SHUTTER_OPEN 7               // The choice of 7 is arbitrary
+#define SHUTTER_SLEEP 100000 /* 100 milliseconds */
 int shutter_timeout = -1;
 
 static struct shutter_struct {
   int pos;
   int out;               // shutter not out (presumed in) = 0
                          // shutter out (limit switch depressed) = 1
+  int in;                // shutter in = 1 (opto-switch blocked)
+                         // shutter not in = 0 (opto-switch not blocked)
   unsigned int  state;
 } shutter_data = { .state = SHUTTER_UNK };
 
@@ -466,16 +472,18 @@ static int InitialiseActuator(struct ezbus* thebus, char who)
 }
 
 
-/************************************************************************/
-/*                                                                      */
-/*    Do shutter logic: check status, determine if shutter is out       */
-/*                                                                      */
-/************************************************************************/
+/******************************************************************************/
+/*                                                                            */
+/*    Do shutter logic: check status, determine if shutter is in or out       */
+/*    or in between                                                           */
+/*                                                                            */
+/******************************************************************************/
 
 static void TurnOffShutter()
 {
   // Set hold current to zero
   EZBus_Comm(&bus, id[SHUTTERNUM], "h0R");
+  CommandData.actbus.shutter_hold_i = 0;
 }
 
 
@@ -494,14 +502,14 @@ static void InitializeShutter()
     firsttime = -1;
   }
   // Set move current and speed
-  EZBus_Comm(&bus, id[SHUTTERNUM], "m100l100v10R");
+  EZBus_Comm(&bus, id[SHUTTERNUM], "m100l100v10j64h50R");
   // Set microstepping on j64N1
   // Wait 2 seconds M2000
   // Set hold current to 50 h50
   // Set position to 5000 z5000
   // Move to activate limit switch D424
   // Set position to 0 z0
-  EZBus_Comm(&bus, id[SHUTTERNUM], "j64N1h50R");
+  //EZBus_Comm(&bus, id[SHUTTERNUM], "j64h50R");
   EZBus_SetIMove(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_move_i);
   EZBus_SetIHold(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_hold_i);
   EZBus_SetVel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_vel);
@@ -523,7 +531,20 @@ static void ResetShutter()
 
 static void CloseShutter()
 {
-  EZBus_Comm(&bus, id[SHUTTERNUM], "P4424R");
+  EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.in);
+  if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
+    ResetShutter();
+    EZBus_Comm(&bus, id[SHUTTERNUM], "P4424R");
+    //bputs(info, "Closing shutter");
+    shutter_timeout = 0;
+    while ((shutter_timeout < 10000000) &
+           ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT)) {
+      EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.in);
+      usleep(SHUTTER_SLEEP);
+      shutter_timeout += SHUTTER_SLEEP;
+    }
+  }
+
 }
 
 
@@ -535,7 +556,14 @@ static void OpenShutter()
 
 static void GetShutterData()
 {
+
   static int counter = 0;
+
+  //int  opto_state;    // state of opto-isolator switch
+  //                    // indicates if shutter is closed
+  //int  limit_state;   // state of limit switch
+  //                    // indicates that shutter is open
+
   if (EZBus_IsTaken(&bus, id[SHUTTERNUM]) != EZ_ERR_OK
       && counter++ < SHUTTER_MOTOR_DATA_TIMER)
     return;
@@ -544,7 +572,7 @@ static void GetShutterData()
   // This position is only where the step controller thinks the shutter
   // is.  There is no direct feedback from the shutter other than the
   // limit switch.
-  EZBus_ReadInt(&bus, id[SHUTTERNUM], "?0", &shutter_data.pos);
+  EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.pos);
 
   // **** NEED TO ADD CODE HERE TO READ ANALOG CHANNEL = Limit Switch
 
@@ -583,7 +611,7 @@ static void DoShutter(void)
       case  SHUTTER_CLOSED:
         action = SHUTTER_DO_CLOSE;
         shutter_data.state = SHUTTER_CLOSED;
-        CommandData.actbus.shutter_goal = SHUTTER_NOP;
+        //CommandData.actbus.shutter_goal = SHUTTER_NOP;
         break;
       case  SHUTTER_INIT:
         action = SHUTTER_DO_INIT;
@@ -620,7 +648,7 @@ static void DoShutter(void)
         break;
       case SHUTTER_DO_CLOSE:
         shutter_timeout = DRIVE_TIMEOUT;
-        bputs(info, "Closing shutter.");
+        //bputs(info, "Closing shutter.");
         EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
         CloseShutter();
         break;
@@ -1259,12 +1287,12 @@ void StoreActBus(void)
   WriteData(iLockHoldAddr, CommandData.actbus.lock_hold_i, NIOS_QUEUE);
 
   // Shutter data
-  WriteData(velShutterAddr, CommandData.actbus.shutter_vel / 100, NIOS_QUEUE);
+  WriteData(velShutterAddr, CommandData.actbus.shutter_vel, NIOS_QUEUE);
   WriteData(accShutterAddr, CommandData.actbus.shutter_acc, NIOS_QUEUE);
   WriteData(iMoveShutterAddr, CommandData.actbus.shutter_move_i, NIOS_QUEUE);
   WriteData(iHoldShutterAddr, CommandData.actbus.shutter_hold_i, NIOS_QUEUE);
   WriteData(posShutterAddr, shutter_data.pos, NIOS_QUEUE);
-  WriteData(outShutterAddr, shutter_data.out, NIOS_QUEUE);
+  //WriteData(openShutterAddr, shutter_data.open, NIOS_QUEUE);
 
   WriteData(gPrimeSfAddr, CommandData.actbus.g_primary * 100., NIOS_QUEUE);
   WriteData(gSecondSfAddr, CommandData.actbus.g_secondary*100., NIOS_QUEUE);
