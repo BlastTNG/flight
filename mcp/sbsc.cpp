@@ -118,6 +118,9 @@ void cameraFields()
   static NiosStruct* sbscBlobF[5];
   static NiosStruct* sbscBlobS[5];
 
+  static NiosStruct* sbscRAAddr = NULL;
+  static NiosStruct* sbscDECAddr = NULL;
+
   //initialization
   if (firsttime) {
     firsttime = 0;
@@ -152,6 +155,8 @@ void cameraFields()
       sprintf(buf, "blob%02d_s_sbsc", i);
       sbscBlobS[i] = GetNiosAddr(buf);
     }
+    sbscRAAddr = GetNiosAddr("ra_sbsc");
+    sbscDECAddr = GetNiosAddr("dec_sbsc");
   }
 
   WriteData(forceAddr, CommandData.cam.forced, NIOS_QUEUE);
@@ -198,6 +203,8 @@ void cameraFields()
 	SHRT_MAX : (unsigned int)sbsc->snr[i]*100;
       WriteData(sbscBlobS[i], snr, NIOS_QUEUE);
     }
+    WriteData(sbscRAAddr, (int)(sbsc->ra*10), NIOS_QUEUE);
+    WriteData(sbscDECAddr, (int)(sbsc->dec*10), NIOS_QUEUE);
   }
 
 }

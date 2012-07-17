@@ -480,6 +480,7 @@ SBSCReturn* SBSCCommunicator::interpretReturn(string returnString, SBSCReturn* r
     sin >> rtn->flux[i] >> rtn->mean[i] >> rtn->snr[i] >> rtn->x[i] >> rtn->y[i];
   }
 
+  sin >> rtn->ra >> rtn->dec;
   return rtn;
 }
 

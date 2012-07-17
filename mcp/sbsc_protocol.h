@@ -39,6 +39,8 @@ struct SBSCReturn {
   double y[15];                   //...
 
   //pointing info won't be included since only coarse pointing needed in flight
+  double ra;
+  double dec;
 };
 #endif        //__cplusplus
 
