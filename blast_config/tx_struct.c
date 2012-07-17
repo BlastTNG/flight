@@ -799,7 +799,9 @@ struct ChannelStruct SlowChannels[] = {
   {"acc_shutter",    'w', LOOP9,  41,                1.0,             0.0, 'u', U_NONE},
   {"pos_shutter",    'w', LOOP9,  42,                1.0,             0.0, 'u', U_NONE},
   {"out_shutter",    'w', LOOP9,  43,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP9 44-49 are unused */
+  {"ra_sbsc",        'w', LOOP9,  44,           1.0/10.0,             0.0, 'u', U_NONE},
+  {"dec_sbsc",       'w', LOOP9,  45,           1.0/10.0,             0.0, 'u', U_NONE},
+  /* LOOP9 46-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
