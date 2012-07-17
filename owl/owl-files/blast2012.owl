@@ -1,0 +1,2376 @@
+
+{ "OWL FILE rev." : 20120716, "Owl" : 
+{ "PObject" : 
+{ "_id" : 562 }
+, "geometryHeight" : 200, "geometryWidth" : 100, "geometryX" : 20, "geometryY" : 780 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 545 }
+, "_boxTitle" : "Motorised Valves", "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 561 }
+, "_map" : 
+{ "0" : "No Limit [style=\"P_BIT\" (P13)]", "1" : "Open [style=\"W_BIT\" (P11)]", "2" : "Closed [style=\"OK_BIT\" (P10)]", "3" : "Error [style=\"E_BIT\" (P12)]" }
+ }
+, "PObject" : 
+{ "_id" : 560 }
+, "_caption" : "LN State", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "LN_STATE", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 559 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 558 }
+, "_caption" : "LN", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "LN_VALVE", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 557 }
+, "_map" : 
+{ "0" : "No Limit [style=\"P_BIT\" (P13)]", "1" : "Open [style=\"W_BIT\" (P11)]", "2" : "Closed [style=\"OK_BIT\" (P10)]", "3" : "Error [style=\"E_BIT\" (P12)]" }
+ }
+, "PObject" : 
+{ "_id" : 556 }
+, "_caption" : "He State", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "LHE_STATE", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 555 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 554 }
+, "_caption" : "He", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "LHE_VALVE", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 553 }
+, "_map" : 
+{ "0" : "Closing [style=\"OK_BIT\" (P10)]", "1" : "Opening [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 552 }
+, "_caption" : "Cryo V. Dir", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "CRYO_DIREC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 551 }
+, "_map" : 
+{ "0" : "No Limit [style=\"P_BIT\" (P13)]", "1" : "Open [style=\"OK_BIT\" (P10)]", "2" : "Closed [style=\"W_BIT\" (P11)]", "3" : "Error [style=\"E_BIT\" (P12)]" }
+ }
+, "PObject" : 
+{ "_id" : 550 }
+, "_caption" : "Pot State", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "POT_STATE", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 549 }
+, "_map" : 
+{ "0" : "Closing [style=\"W_BIT\" (P11)]", "1" : "Opening [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 548 }
+, "_caption" : "Pot Dir", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "POT_DIREC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 547 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 546 }
+, "_caption" : "Pot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "POT_VALVE", "type" : "PMDI" }
+, "geometryHeight" : 220, "geometryWidth" : 140, "geometryX" : 260, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 521 }
+, "_boxTitle" : "Cryo Heaters", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 544 }
+, "_caption" : "I 300mK", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "I_300MK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 543 }
+, "_map" : 
+{ "0" : "Off [style=\"E_BIT\" (P12)]", "1" : "Idle [style=\"OK_BIT\" (P10)]", "2" : "Heating [style=\"W_BIT\" (P11)]", "4" : "Cooling [style=\"W_BIT\" (P11)]", "8" : "HS Off [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 542 }
+, "_caption" : "Autocycle", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "cycle_state", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 541 }
+, "_caption" : "I Cal Lamp", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P68)", "_format" : "%.2f", "_source" : "I_CAL_LAMP", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 540 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 539 }
+, "_caption" : "Calibrator", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "CALIBRATOR_HEAT", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 538 }
+, "_map" : 
+{ "0" : "Off [style=\"W_BIT\" (P11)]", "1" : "On [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 537 }
+, "_caption" : "Auto JFET", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "AUTO_JFET_HEAT", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 536 }
+, "_caption" : "I JFET", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P68)", "_format" : "%.2f", "_source" : "I_JFET", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 535 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 534 }
+, "_caption" : "JFET", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "JFET_HEAT", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 533 }
+, "_caption" : "I HS Pot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P68)", "_format" : "%.2f", "_source" : "I_HS_POT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 532 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 531 }
+, "_caption" : "HS Pot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "POT_HS_HEAT", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 530 }
+, "_caption" : "I HS Char", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P67)", "_format" : "%.2f", "_source" : "I_HS_CHAR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 529 }
+, "_map" : 
+{ "0" : "Off [style=\"W_BIT\" (P11)]", "1" : "On [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 528 }
+, "_caption" : "HS Char", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "CHARCOAL_HS_HEAT", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 527 }
+, "_caption" : "I Charcoal", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P66)", "_format" : "%.2f", "_source" : "I_CHARCOAL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 526 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 525 }
+, "_caption" : "Charcoal", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "CHARCOAL_HEAT", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 524 }
+, "_caption" : "Lev Sens", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P65)", "_format" : "%.2f", "_source" : "HE4_LEV_OLD", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 523 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 522 }
+, "_caption" : "He Level", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "HELIUM_LEVEL_HEAT", "type" : "PMDI" }
+, "geometryHeight" : 300, "geometryWidth" : 160, "geometryX" : 920, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 506 }
+, "_boxTitle" : "HWPR", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 520 }
+, "_caption" : "I Move", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "I_MOVE_HWPR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 519 }
+, "_caption" : "Last Pot Err", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P91)", "_format" : "%.4f", "_source" : "POT_ERR_HWPR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 518 }
+, "_caption" : "Last Enc Err", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P90)", "_format" : "%.0f", "_source" : "ENC_ERR_HWPR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 517 }
+, "_caption" : "HWPR Pos", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "POS_HWPR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 516 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 515 }
+, "_caption" : "HWPR", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "HWPR_POS_HEAT", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 514 }
+, "_caption" : "Rel Move", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "REL_MOVE_HWPR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 513 }
+, "_map" : 
+{ "0" : "Not Yet [style=\"OK_BIT\" (P10)]", "1" : "Ready [style=\"OK_BIT\" (P10)]", "2" : "Moving [style=\"OK_BIT\" (P10)]", "3" : "At Overshoot [style=\"OK_BIT\" (P10)]", "4" : "Done [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 512 }
+, "_caption" : "Move Stat", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "MOVE_STAT_HWPR", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 511 }
+, "_map" : 
+{ "0" : "None [style=\"OK_BIT\" (P10)]", "1" : "Encoder [style=\"OK_BIT\" (P10)]", "2" : "Pot [style=\"OK_BIT\" (P10)]", "3" : "Ind [style=\"OK_BIT\" (P10)]", "4" : "Step [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 510 }
+, "_caption" : "Move HWPR", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "MOVE_TYPE_HWPR", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 509 }
+, "_caption" : "Pot HWPR", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "POT_HWPR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 508 }
+, "_caption" : "Enc HWPR", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "ENC_HWPR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 507 }
+, "_caption" : "Ind HWPR", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "I_POS_HWPR", "type" : "PNDI" }
+, "geometryHeight" : 220, "geometryWidth" : 120, "geometryX" : 540, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 495 }
+, "_boxTitle" : "Cold Optics Temps", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 505 }
+, "_caption" : "250 um Horn", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P60)", "_format" : "%.3f", "_source" : "Tr_horn_250", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 504 }
+, "_caption" : "350 um Horn", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P60)", "_format" : "%.3f", "_source" : "Tr_horn_350", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 503 }
+, "_caption" : "500 um Horn", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P60)", "_format" : "%.3f", "_source" : "Tr_horn_500", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 502 }
+, "_caption" : "300mK Strap", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P59)", "_format" : "%.3f", "_source" : "Tr_300mk_strap", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 501 }
+, "_caption" : "He3 Fridge", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P58)", "_format" : "%.3f", "_source" : "Tr_he3_fridge", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 500 }
+, "_caption" : "Mirror 5", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P57)", "_format" : "%.2f", "_source" : "Tr_m5", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 499 }
+, "_caption" : "Mirror 4", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P57)", "_format" : "%.2f", "_source" : "Tr_m4", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 498 }
+, "_caption" : "Opt Box Filt", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P57)", "_format" : "%.2f", "_source" : "Tr_optbox_filt", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 497 }
+, "_caption" : "He4 Pot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "Tr_he4_pot", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 496 }
+, "_caption" : "HWPR", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P50)", "_format" : "%.2f", "_source" : "Tr_hwpr", "type" : "PNDI" }
+, "geometryHeight" : 220, "geometryWidth" : 160, "geometryX" : 920, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 484 }
+, "_boxTitle" : "Cryostat Temps", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 494 }
+, "_caption" : "HS Pot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P46)", "_format" : "%.2f", "_source" : "Td_hs_pot", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 493 }
+, "_caption" : "HS Charcoal", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P47)", "_format" : "%.2f", "_source" : "Td_hs_charcoal", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 492 }
+, "_caption" : "Charcoal", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P61)", "_format" : "%.2f", "_source" : "Td_charcoal", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 491 }
+, "_caption" : "LHe", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P48)", "_format" : "%.2f", "_source" : "Td_lhe", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 490 }
+, "_caption" : "LHE Filter", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P49)", "_format" : "%.2f", "_source" : "Td_lhe_filt", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 489 }
+, "_caption" : "VCS JFET", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P54)", "_format" : "%.2f", "_source" : "Td_vcs_jfet", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 488 }
+, "_caption" : "VCS Filter", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P53)", "_format" : "%.2f", "_source" : "Td_vcs_filt", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 487 }
+, "_caption" : "LN2 Filter", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P52)", "_format" : "%.2f", "_source" : "Td_ln_filt", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 486 }
+, "_caption" : "LN2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P51)", "_format" : "%.2f", "_source" : "Td_ln", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 485 }
+, "_caption" : "JFET", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P55)", "_format" : "%.2f", "_source" : "Td_jfet", "type" : "PNDI" }
+, "geometryHeight" : 220, "geometryWidth" : 120, "geometryX" : 800, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 466 }
+, "_boxTitle" : "Azimuth", "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 483 }
+, "_map" : 
+{ "0" : "Off [style=\"W_BIT\" (P11)]", "1" : "On [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 482 }
+, "_caption" : "Autogyro", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "AZ_AUTO_GYRO", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 481 }
+, "_caption" : "Gy Yaw Offs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "OFFSET_IFYAW_GY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 480 }
+, "_caption" : "Gy Roll Offs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "OFFSET_IFROLL_GY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 479 }
+, "_caption" : "SS Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_SS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 478 }
+, "_caption" : "Mag Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_MAG", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 477 }
+, "_caption" : "dGPS Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 476 }
+, "_caption" : "OSC Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 475 }
+, "_caption" : "ISC Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 474 }
+, "_caption" : "PSS2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ_PSS2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 473 }
+, "_caption" : "PSS1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ_PSS1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 472 }
+, "_caption" : "SS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ_SS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 471 }
+, "_caption" : "Mag", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ_MAG", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 470 }
+, "_caption" : "dGPS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 469 }
+, "_caption" : "OSC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 468 }
+, "_caption" : "ISC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 467 }
+, "_caption" : "Azimuth", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ", "type" : "PNDI" }
+, "geometryHeight" : 300, "geometryWidth" : 140, "geometryX" : 120, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 451 }
+, "_boxTitle" : "Elevation", "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 465 }
+, "_map" : 
+{ "0" : "Off [style=\"W_BIT\" (P11)]", "1" : "On [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 464 }
+, "_caption" : "Autogyro", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "EL_AUTO_GYRO", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 463 }
+, "_caption" : "Gy El Offs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "OFFSET_IFEL_GY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 462 }
+, "_caption" : "Clin Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_CLIN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 461 }
+, "_caption" : "Enc Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_ENC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 460 }
+, "_caption" : "OSC Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 459 }
+, "_caption" : "ISC Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SIGMA_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 458 }
+, "_caption" : "Clin El Raw", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "EL_LUT_CLIN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 457 }
+, "_caption" : "Clinometer", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "EL_CLIN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 456 }
+, "_caption" : "Enc Raw", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "EL_RAW_ENC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 455 }
+, "_caption" : "Encoder", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "EL_ENC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 454 }
+, "_caption" : "OSC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "EL_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 453 }
+, "_caption" : "ISC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "EL_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 452 }
+, "_caption" : "Elevation", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "EL", "type" : "PNDI" }
+, "geometryHeight" : 300, "geometryWidth" : 120, "geometryX" : 0, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 440 }
+, "_boxTitle" : "Location and Tilt", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 450 }
+, "_caption" : "Clin Roll", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "% 6.2f", "_source" : "ROLL_PYR_CLIN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 449 }
+, "_caption" : "Clin Pitch", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "% 6.2f", "_source" : "PCH_PYR_CLIN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 448 }
+, "_caption" : "dGPS Roll", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "% 6.2f", "_source" : "ROLL_RAW_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 447 }
+, "_caption" : "dGPS Pitch", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "% 6.2f", "_source" : "PITCH_RAW_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 446 }
+, "_caption" : "Climb (m/s)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "% 6.2f", "_source" : "CLIMB_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 445 }
+, "_caption" : "Bearing", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%5.1f", "_source" : "DIR_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 444 }
+, "_caption" : "Speed (kts)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "SPEED_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 443 }
+, "_caption" : "Altitude (m)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P92)", "_format" : "%.0f", "_source" : "ALT_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 442 }
+, "_caption" : "Longitude", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "LON", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 441 }
+, "_caption" : "Latitude", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "LAT", "type" : "PNDI" }
+, "geometryHeight" : 220, "geometryWidth" : 140, "geometryX" : 120, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 434 }
+, "_boxTitle" : "Attitude", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 439 }
+, "_caption" : "Az of Sun", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "AZ_SUN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 438 }
+, "_caption" : "DEC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.4f", "_source" : "DEC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 437 }
+, "_caption" : "RA", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.4f", "_source" : "RA", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 436 }
+, "_caption" : "El", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 435 }
+, "_caption" : "Az", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "AZ", "type" : "PNDI" }
+, "geometryHeight" : 120, "geometryWidth" : 120, "geometryX" : 0, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 413 }
+, "_boxTitle" : "State", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 433 }
+, "_caption" : "Sched Timeout", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_format" : "%H:%M:%S", "_source" : "TIMEOUT", "type" : "PTDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 432 }
+, "_caption" : "Schedule LST", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_format" : "Day %j, %H:%M:%S", "_source" : "LST_SCHED", "type" : "PTDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 431 }
+, "_caption" : "Gondola LST", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "LST", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 430 }
+, "_caption" : "SIP Time", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_format" : "%e %b %Y, %H:%M:%S", "_source" : "TIME_SIP", "type" : "PTDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 429 }
+, "_caption" : "dGPS Time", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_format" : "%e %b %Y, %H:%M:%S", "_source" : "TIME_DGPS", "type" : "PTDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 428 }
+, "_caption" : "CPU Time", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_format" : "%e %b %Y, %H:%M:%S", "_source" : "TIME", "type" : "PTDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 427 }
+, "_caption" : "IRIDIUM Rate", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.1f", "_source" : "RATE_IRIDIUM", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 426 }
+, "_caption" : "TDRSS Rate", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.1f", "_source" : "RATE_TDRSS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 425 }
+, "_caption" : "Plover", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "PLOVER", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 424 }
+, "_caption" : "Uplink Slot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "UPSLOT_SCHED", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 423 }
+, "_caption" : "Uplink Parts", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%x", "_source" : "PARTS_SCHED", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 422 }
+, "_caption" : "Sched Slot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "SLOT_SCHED", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 421 }
+, "_map" : 
+{ "0" : "Happy North [style=\"W_BIT\" (P11)]", "1" : "Sad North [style=\"W_BIT\" (P11)]", "2" : "Happy Mid [style=\"OK_BIT\" (P10)]", "3" : "Sad Mid [style=\"W_BIT\" (P11)]", "4" : "Happy South [style=\"W_BIT\" (P11)]", "5" : "Sad South [style=\"W_BIT\" (P11)]", "6" : "Slot [style=\"OK_BIT\" (P10)]", "7" : "Slot [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 420 }
+, "_caption" : "Schedule File", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "SCHEDULE", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 419 }
+, "_caption" : "Framenum", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "FRAMENUM", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 418 }
+, "_caption" : "Index", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "INDEX", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 417 }
+, "_caption" : "Disk Free (GB)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "DISK_FREE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 416 }
+, "_map" : 
+{ "0" : "North [style=\"OK_BIT\" (P10)]", "1" : "South [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 415 }
+, "_caption" : "FLC Pole", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "SOUTH_I_AM", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 414 }
+, "_caption" : "Dirfile", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "", "type" : "PDDI" }
+, "geometryHeight" : 360, "geometryWidth" : 260, "geometryX" : 0, "geometryY" : 0 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 397 }
+, "_boxTitle" : "Motor Controllers", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 412 }
+, "_caption" : "Piv I", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P83)", "_format" : "%.2f", "_source" : "I_SER_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 411 }
+, "_caption" : "Piv RIO", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P82)", "_format" : "%3b", "_source" : "DR_INFO_RIO_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 410 }
+, "_caption" : "Piv Err", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P81)", "_format" : "%5b", "_source" : "DR_INFO_ERR_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 409 }
+, "_map" : 
+{ "0" : "Enabled [style=\"OK_BIT\" (P10)]", "1" : "Disabled [style=\"W_BIT\" (P11)]", "2" : "??? [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 408 }
+, "_caption" : "Piv Enab", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "DR_INFO_DISAB_PIV", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 407 }
+, "_caption" : "RW I", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P84)", "_format" : "%.2f", "_source" : "I_SER_RW", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 406 }
+, "_caption" : "RW RIO", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P82)", "_format" : "%3b", "_source" : "DR_INFO_RIO_RW", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 405 }
+, "_caption" : "RW Err", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P81)", "_format" : "%5b", "_source" : "DR_INFO_ERR_RW", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 404 }
+, "_map" : 
+{ "0" : "Enabled [style=\"OK_BIT\" (P10)]", "1" : "Disabled [style=\"W_BIT\" (P11)]", "2" : "??? [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 403 }
+, "_caption" : "RW Enab", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "DR_INFO_DISAB_RW", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 402 }
+, "_caption" : "El I", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P83)", "_format" : "%.2f", "_source" : "I_SER_EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 401 }
+, "_caption" : "El RIO", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P82)", "_format" : "%3b", "_source" : "DR_INFO_RIO_EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 400 }
+, "_caption" : "El Err", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P81)", "_format" : "%5b", "_source" : "DR_INFO_ERR_EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 399 }
+, "_map" : 
+{ "0" : "Enabled [style=\"OK_BIT\" (P10)]", "1" : "Disabled [style=\"W_BIT\" (P11)]", "2" : "??? [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 398 }
+, "_caption" : "El Enab", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "DR_INFO_DISAB_EL", "type" : "PMDI" }
+, "geometryHeight" : 240, "geometryWidth" : 120, "geometryX" : 540, "geometryY" : 120 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 378 }
+, "_boxTitle" : "Bias/Phase", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 396 }
+, "_caption" : "Phase 13", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N13_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 395 }
+, "_caption" : "Phase 31", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N31_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 394 }
+, "_caption" : "Phase 30", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N30_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 393 }
+, "_caption" : "Phase 29", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N29_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 392 }
+, "_caption" : "Phase 27", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N27_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 391 }
+, "_caption" : "Phase 26", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N26_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 390 }
+, "_caption" : "Phase 25", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N25_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 389 }
+, "_caption" : "Phase 23", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N23_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 388 }
+, "_caption" : "Phase 22", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N22_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 387 }
+, "_caption" : "Phase 21", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N21_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 386 }
+, "_caption" : "Phase 19", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N19_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 385 }
+, "_caption" : "Phase 18", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N18_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 384 }
+, "_caption" : "Phase 17", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N17_PHASE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 383 }
+, "_caption" : "Bias X", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%d", "_source" : "AMPL_X_BIAS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 382 }
+, "_caption" : "ROX Bias", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%d", "_source" : "AMPL_ROX_BIAS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 381 }
+, "_caption" : "Bias 500", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P64)", "_format" : "%d", "_source" : "AMPL_500_BIAS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 380 }
+, "_caption" : "Bias 350", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P63)", "_format" : "%d", "_source" : "AMPL_350_BIAS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 379 }
+, "_caption" : "Bias 250", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P62)", "_format" : "%.0f", "_source" : "AMPL_250_BIAS", "type" : "PNDI" }
+, "geometryHeight" : 360, "geometryWidth" : 100, "geometryX" : 1080, "geometryY" : 0 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 363 }
+, "_boxTitle" : "Diag. Bolos", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 377 }
+, "_caption" : "B5T2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B5T2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 376 }
+, "_caption" : "B5T1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B5T1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 375 }
+, "_caption" : "B5R1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B5R1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 374 }
+, "_caption" : "B5D1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B5D1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 373 }
+, "_caption" : "B3T2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3T2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 372 }
+, "_caption" : "B3T1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3T1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 371 }
+, "_caption" : "B3R2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3R2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 370 }
+, "_caption" : "B3R1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3R1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 369 }
+, "_caption" : "B3D2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3D2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 368 }
+, "_caption" : "B3D1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3D1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 367 }
+, "_caption" : "B2T2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2T2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 366 }
+, "_caption" : "B2R1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2R1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 365 }
+, "_caption" : "B2D2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2D2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 364 }
+, "_caption" : "B2D1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2D1", "type" : "PNDI" }
+, "geometryHeight" : 300, "geometryWidth" : 100, "geometryX" : 1080, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 351 }
+, "_boxTitle" : "'Central' Bolos ", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 362 }
+, "_caption" : "B2G08H", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2G08H", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 361 }
+, "_caption" : "B2F09V", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2F09V", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 360 }
+, "_caption" : "B2E08H", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2E08H", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 359 }
+, "_caption" : "B2D09V", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2D09V", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 358 }
+, "_caption" : "B2C08H", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B2C08H", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 357 }
+, "_caption" : "B3E07V", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3E07V", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 356 }
+, "_caption" : "B3D06V", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3D06V", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 355 }
+, "_caption" : "B3C07V", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B3C07V", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 354 }
+, "_caption" : "B5B05V", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B5B05V", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 353 }
+, "_caption" : "B5C05V", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B5C05V", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 352 }
+, "_caption" : "B5D05V", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "B5D05V", "type" : "PNDI" }
+, "geometryHeight" : 220, "geometryWidth" : 100, "geometryX" : 1080, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 328 }
+, "_boxTitle" : "Currents", "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 350 }
+, "_map" : 
+{ "0" : "Start [style=\"OK_BIT\" (P10)]", "1" : "Night Check [style=\"W_BIT\" (P11)]", "10" : "No Comm [style=\"W_BIT\" (P11)]", "2" : "Disconnect [style=\"W_BIT\" (P11)]", "3" : "Arr. Low [style=\"W_BIT\" (P11)]", "4" : "Fault [style=\"W_BIT\" (P11)]", "5" : "Max. Pwr [style=\"MAX_POWER\" (P14)]", "6" : "Absorp [style=\"OK_BIT\" (P10)]", "7" : "Float [style=\"OK_BIT\" (P10)]", "8" : "Equalize [style=\"W_BIT\" (P11)]", "9" : "Slave [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 349 }
+, "_caption" : "State", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "STATE_CC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 348 }
+, "_map" : 
+{ "0" : "Start [style=\"W_BIT\" (P11)]", "1" : "Start2 [style=\"W_BIT\" (P11)]", "10" : "FAULT [style=\"W_BIT\" (P11)]", "11" : "Discharge [style=\"W_BIT\" (P11)]", "12" : "FAULT [style=\"W_BIT\" (P11)]", "13" : "FAULT [style=\"W_BIT\" (P11)]", "14" : "SHORT [style=\"W_BIT\" (P11)]", "15" : "HTD [style=\"W_BIT\" (P11)]", "16" : "HVD. [style=\"W_BIT\" (P11)]", "17" : "RTS [style=\"W_BIT\" (P11)]", "18" : "FAULT [style=\"W_BIT\" (P11)]", "19" : "FAULT [style=\"W_BIT\" (P11)]", "2" : "Branch [style=\"W_BIT\" (P11)]", "20" : "Unknown [style=\"W_BIT\" (P11)]", "3" : "Equal. [style=\"W_BIT\" (P11)]", "4" : "PWM [style=\"OK_BIT\" (P10)]", "5" : "100% [style=\"OK_BIT\" (P10)]", "6" : "80-95% [style=\"OK_BIT\" (P10)]", "7" : "60-80% [style=\"W_BIT\" (P11)]", "8" : "35-60% [style=\"W_BIT\" (P11)]", "9" : "0-35% [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 347 }
+, "_caption" : "Charge:", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "LED_CC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 346 }
+, "_caption" : "V Arr", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P87)", "_format" : "%.2f", "_source" : "V_ARR_CC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 345 }
+, "_caption" : "V Target", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "V_TARG_CC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 344 }
+, "_caption" : "V Batt", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P86)", "_format" : "%.2f", "_source" : "V_BATT_CC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 343 }
+, "_caption" : "I Arr", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "I_ARR_CC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 342 }
+, "_caption" : "I CC Out", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P89)", "_format" : "%.2f", "_source" : "I_BATT_CC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 341 }
+, "_caption" : "TOTAL", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P31)", "_format" : "%5.2f", "_source" : "I_TOT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 340 }
+, "_caption" : "Pivot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 339 }
+, "_caption" : "EL", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 338 }
+, "_caption" : "RW", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_RW", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 337 }
+, "_caption" : "Gyro Box", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P35)", "_format" : "%6.2f", "_source" : "I_GY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 336 }
+, "_caption" : "MCC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P33)", "_format" : "%6.2f", "_source" : "I_FLC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 335 }
+, "_caption" : "Steppers", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_STEP", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 334 }
+, "_caption" : "dGPS+OSS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 333 }
+, "_caption" : "Star Cams", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_SC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 332 }
+, "_caption" : "Preamps", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_REC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 331 }
+, "_caption" : "ACS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P32)", "_format" : "%6.2f", "_source" : "I_ACS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 330 }
+, "_caption" : "DAS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_DAS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 329 }
+, "_caption" : "Transmit.", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P30)", "_format" : "%6.2f", "_source" : "I_TRANS", "type" : "PNDI" }
+, "geometryHeight" : 360, "geometryWidth" : 160, "geometryX" : 920, "geometryY" : 0 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 321 }
+, "_boxTitle" : "Motor Temps", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 327 }
+, "_caption" : "Pivot MC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_MC_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 326 }
+, "_caption" : "Pivot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 325 }
+, "_caption" : "El MC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_MC_EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 324 }
+, "_caption" : "El", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 323 }
+, "_caption" : "RW MC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_MC_RW", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 322 }
+, "_caption" : "RW", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_RW", "type" : "PNDI" }
+, "geometryHeight" : 120, "geometryWidth" : 120, "geometryX" : 540, "geometryY" : 0 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 308 }
+, "_boxTitle" : "Focus System", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 320 }
+, "_caption" : "Veto Timeout", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "VETO_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 319 }
+, "_caption" : "Step Size", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "STEP_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 318 }
+, "_caption" : "Secndry Gain", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "G_SECOND_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 317 }
+, "_caption" : "Primary Gain", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "G_PRIME_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 316 }
+, "_caption" : "T Secondary", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P25)", "_format" : "%.2f", "_source" : "T_SECOND_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 315 }
+, "_caption" : "T Primary", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P24)", "_format" : "%.2f", "_source" : "T_PRIME_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 314 }
+, "_caption" : "Offset", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "OFFSET_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 313 }
+, "_caption" : "Goal", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "GOAL_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 312 }
+, "_caption" : "Correction", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P80)", "_format" : "%.0f", "_source" : "CORRECTION_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 311 }
+, "_caption" : "Position", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P75)", "_format" : "%.0f", "_source" : "FOCUS_SF", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 310 }
+, "_map" : 
+{ "0" : "Enabled [style=\"OK_BIT\" (P10)]", "1" : "Autovetoed [style=\"W_BIT\" (P11)]", "2" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 309 }
+, "_caption" : "Auto Focus", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "MODE_SF", "type" : "PMDI" }
+, "geometryHeight" : 220, "geometryWidth" : 140, "geometryX" : 660, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 288 }
+, "_boxTitle" : "Actuators", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 307 }
+, "_caption" : "Accel.", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "ACC_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 306 }
+, "_caption" : "Velocity", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "VEL_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 305 }
+, "_caption" : "I Hold", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "I_HOLD_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 304 }
+, "_caption" : "I Move", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "I_MOVE_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 303 }
+, "_caption" : "LVDT Sp.", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P79)", "_format" : "%.0f", "_source" : "LVDT_SPREAD_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 302 }
+, "_caption" : "LVDT Lo", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P78)", "_format" : "%.0f", "_source" : "LVDT_LOW_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 301 }
+, "_caption" : "LVDT Hi", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P77)", "_format" : "%.0f", "_source" : "LVDT_HIGH_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 300 }
+, "_caption" : "LVDT Gamma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P76)", "_format" : "%.0f", "_source" : "Lvdt_2_act", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 299 }
+, "_caption" : "LVDT Beta", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P76)", "_format" : "%.0f", "_source" : "Lvdt_1_act", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 298 }
+, "_caption" : "LVDT Alpha", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P76)", "_format" : "%.0f", "_source" : "Lvdt_0_act", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 297 }
+, "_caption" : "Enc Gamma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P75)", "_format" : "%.0f", "_source" : "ENC_2_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 296 }
+, "_caption" : "Enc Beta", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P75)", "_format" : "%.0f", "_source" : "ENC_1_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 295 }
+, "_caption" : "Enc Alpha", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P75)", "_format" : "%.0f", "_source" : "ENC_0_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 294 }
+, "_map" : 
+{ "0" : "Ok [style=\"OK_BIT\" (P10)]", "1" : "Lost [style=\"W_BIT\" (P11)]", "1024" : "Fault ENC2 [style=\"E_BIT\" (P12)]", "128" : "Move Bad [style=\"W_BIT\" (P11)]", "256" : "Fault ENC0 [style=\"E_BIT\" (P12)]", "512" : "Fault ENC1 [style=\"E_BIT\" (P12)]" }
+ }
+, "PObject" : 
+{ "_id" : 293 }
+, "_caption" : "Status", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "FLAGS_ACT", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 292 }
+, "_map" : 
+{ "0" : "Enabled [style=\"OK_BIT\" (P10)]", "1" : "AutoVeto [style=\"W_BIT\" (P11)]", "2" : "Veto [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 291 }
+, "_caption" : "Focus Mode", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "MODE_SF", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 290 }
+, "_map" : 
+{ "0" : "Idle [style=\"OK_BIT\" (P10)]", "1" : "Servoing [style=\"W_BIT\" (P11)]", "2" : "Focusing [style=\"W_BIT\" (P11)]", "3" : "Offset [style=\"W_BIT\" (P11)]", "4" : "Thermo [style=\"W_BIT\" (P11)]", "5" : "Now [style=\"W_BIT\" (P11)]", "6" : "Delta [style=\"W_BIT\" (P11)]", "7" : "Panic Stop [style=\"E_BIT\" (P12)]", "8" : "Delfoc [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 289 }
+, "_caption" : "Mode", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "MODE_ACT", "type" : "PMDI" }
+, "geometryHeight" : 300, "geometryWidth" : 140, "geometryX" : 660, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 267 }
+, "_boxTitle" : "Outer Frame Elect", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 287 }
+, "_caption" : "SBSC T Lens", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_SBSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 286 }
+, "_caption" : "T Batt 2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P19)", "_format" : "%.2f", "_source" : "T_2_BAT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 285 }
+, "_caption" : "T Batt 1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P19)", "_format" : "%.2f", "_source" : "T_1_BAT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 284 }
+, "_caption" : "Charge Ctrl", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P88)", "_format" : "%.2f", "_source" : "T_HS_CC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 283 }
+, "_caption" : "Seppy (GPS)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 282 }
+, "_caption" : "Balance Mot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_PUMP_BAL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 281 }
+, "_caption" : "Balance Ctrl", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_BOX_BAL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 280 }
+, "_caption" : "Lock Ctrl", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_MC_LOCK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 279 }
+, "_caption" : "Lock Motor", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_LOCK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 278 }
+, "_caption" : "OSS Port", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P20)", "_format" : "%.2f", "_source" : "T_PORT_SS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 277 }
+, "_caption" : "OSS HDD", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P20)", "_format" : "%.2f", "_source" : "T_HDD_SS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 276 }
+, "_caption" : "OSS CPU", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P20)", "_format" : "%.2f", "_source" : "T_CPU_SS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 275 }
+, "_caption" : "OSS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_CASE_SS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 274 }
+, "_caption" : "MCC WDog", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P20)", "_format" : "%.2f", "_source" : "T_WD_FLC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 273 }
+, "_caption" : "FLC Chipset", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P20)", "_format" : "%.2f", "_source" : "T_CHIP_FLC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 272 }
+, "_caption" : "FLC CPU", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P20)", "_format" : "%.2f", "_source" : "T_CPU_FLC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 271 }
+, "_caption" : "MCC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P22)", "_format" : "%.2f", "_source" : "T_MB_FLC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 270 }
+, "_caption" : "ACS DCDC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P21)", "_format" : "%.2f", "_source" : "T_DCDC_ACS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 269 }
+, "_caption" : "ACS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P21)", "_format" : "%.2f", "_source" : "T_ACS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 268 }
+, "_caption" : "Serial Box", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P21)", "_format" : "%.2f", "_source" : "T_SERIAL", "type" : "PNDI" }
+, "geometryHeight" : 360, "geometryWidth" : 140, "geometryX" : 660, "geometryY" : 0 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 246 }
+, "_boxTitle" : "Ambient", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 266 }
+, "_caption" : "T Sol Arr", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P26)", "_format" : "%.2f", "_source" : "T_ARRAY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 265 }
+, "_caption" : "Earth Amb.", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_EARTH", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 264 }
+, "_caption" : "Port Pyr", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_PORT_PYR", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 263 }
+, "_caption" : "Port Hex", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_PORT_HEXC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 262 }
+, "_caption" : "Chin Mid", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P23)", "_format" : "%.2f", "_source" : "T_CHIN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 261 }
+, "_caption" : "Stbd Front", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_STAR_FRONT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 260 }
+, "_caption" : "Port Back", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_PORT_BACK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 259 }
+, "_caption" : "OSS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_SUN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 258 }
+, "_caption" : "Act. Motor", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_MOT_ACT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 257 }
+, "_caption" : "Push Plate", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P25)", "_format" : "%.2f", "_source" : "T_PUSH_PLATE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 256 }
+, "_caption" : "Secondary 2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P25)", "_format" : "%.2f", "_source" : "T_2_SECOND", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 255 }
+, "_caption" : "Secondary 1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P25)", "_format" : "%.2f", "_source" : "T_1_SECOND", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 254 }
+, "_caption" : "Side Strut", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P23)", "_format" : "%.2f", "_source" : "T_STRUT_SIDE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 253 }
+, "_caption" : "Bot Strut", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P23)", "_format" : "%.2f", "_source" : "T_STRUT_BOT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 252 }
+, "_caption" : "Primary 2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P24)", "_format" : "%.2f", "_source" : "T_2_PRIME", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 251 }
+, "_caption" : "Primary 1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P24)", "_format" : "%.2f", "_source" : "T_1_PRIME", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 250 }
+, "_caption" : "IF Bot Back", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_IF_BOT_BACK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 249 }
+, "_caption" : "IF Bot Front", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_IF_BOT_FRNT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 248 }
+, "_caption" : "IF Top Back", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_IF_TOP_BACK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 247 }
+, "_caption" : "IF Top Front", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_IF_TOP_FRNT", "type" : "PNDI" }
+, "geometryHeight" : 360, "geometryWidth" : 120, "geometryX" : 800, "geometryY" : 0 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 231 }
+, "_boxTitle" : "Inner Frame Elect", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 245 }
+, "_caption" : "P OSC (psi)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P41)", "_format" : "%.2f", "_source" : "PRESSURE1_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 244 }
+, "_caption" : "P ISC (psi)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P41)", "_format" : "%.2f", "_source" : "PRESSURE1_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 243 }
+, "_caption" : "Pump Valve", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_MOT_PUMP_VAL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 242 }
+, "_caption" : "DAC Box", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_DAC_BOX", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 241 }
+, "_caption" : "Feedthrough", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P18)", "_format" : "%.2f", "_source" : "T_HWPR_FEED", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 240 }
+, "_caption" : "HWPR Motor", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_HWPR_MOT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 239 }
+, "_caption" : "HK DCDC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_HKDCDC_REC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 238 }
+, "_caption" : "Amp DCDC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_PADCDC_REC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 237 }
+, "_caption" : "Amp Crate", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_PORT_REC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 236 }
+, "_caption" : "IF Clin", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_IF_CLIN", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 235 }
+, "_caption" : "Gybox Heat%", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P16)", "_format" : "%.2f", "_source" : "H_HIST_GY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 234 }
+, "_caption" : "Gybox Set", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_SET_GY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 233 }
+, "_caption" : "Gybox", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_GY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 232 }
+, "_caption" : "DAS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_PORT_DAS", "type" : "PNDI" }
+, "geometryHeight" : 300, "geometryWidth" : 120, "geometryX" : 800, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 219 }
+, "_boxTitle" : "Motor Gains", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 230 }
+, "_caption" : "Az Accel", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%+4.3f", "_source" : "ACCEL_AZ", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 229 }
+, "_caption" : "Piv Res", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%+5.2f", "_source" : "RES_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 228 }
+, "_caption" : "Reac DPS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P85)", "_format" : "%+5.2f", "_source" : "VEL_RW", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 227 }
+, "_caption" : "Frict Off Piv", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%+5.3f", "_source" : "FRICT_OFF_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 226 }
+, "_caption" : "Set RW", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%+5.2f", "_source" : "SET_RW", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 225 }
+, "_caption" : "P Err Pivot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%5.0f", "_source" : "G_PE_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 224 }
+, "_caption" : "P RW Pivot", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%5.0f", "_source" : "G_PV_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 223 }
+, "_caption" : "I RW", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%5.0f", "_source" : "G_I_AZ", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 222 }
+, "_caption" : "P RW", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%5.0f", "_source" : "G_P_AZ", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 221 }
+, "_caption" : "I Elev", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%5.0f", "_source" : "G_I_EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 220 }
+, "_caption" : "P Elev", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%5.0f", "_source" : "G_P_EL", "type" : "PNDI" }
+, "geometryHeight" : 220, "geometryWidth" : 140, "geometryX" : 400, "geometryY" : 660 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 197 }
+, "_boxTitle" : "Pointing Mode", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 218 }
+, "_caption" : "El Dith ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.4f", "_source" : "DITH_EL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 217 }
+, "_caption" : "Dith Step", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.4f", "_source" : "DITH_STEP_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 216 }
+, "_caption" : "Dec 4", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "DEC_4_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 215 }
+, "_caption" : "RA 4", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P27)", "_format" : "%.4f", "_source" : "RA_4_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 214 }
+, "_caption" : "Dec 3", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "DEC_3_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 213 }
+, "_caption" : "RA 3", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P27)", "_format" : "%.4f", "_source" : "RA_3_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 212 }
+, "_caption" : "Dec 2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "DEC_2_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 211 }
+, "_caption" : "RA 2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P27)", "_format" : "%.4f", "_source" : "RA_2_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 210 }
+, "_caption" : "Dec 1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "DEC_1_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 209 }
+, "_caption" : "RA 1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P27)", "_format" : "%.4f", "_source" : "RA_1_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 208 }
+, "_caption" : "H ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P29)", "_format" : "%.4f", "_source" : "H_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 207 }
+, "_caption" : "W ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "W_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 206 }
+, "_caption" : "dEl", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "DEL_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 205 }
+, "_caption" : "Az Vel", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P29)", "_format" : "%.4f", "_source" : "VEL_AZ_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 204 }
+, "_caption" : "Y ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "Y_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 203 }
+, "_caption" : "X (h)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P27)", "_format" : "%.4f", "_source" : "X_H_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 202 }
+, "_caption" : "X (deg)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P28)", "_format" : "%.2f", "_source" : "X_P", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 201 }
+, "_map" : 
+{ "0" : "Not Set [style=\"E_BIT\" (P12)]", "1" : "Az El Goto [style=\"W_BIT\" (P11)]", "10" : "Quad [style=\"OK_BIT\" (P10)]", "2" : "Az Scan [style=\"W_BIT\" (P11)]", "3" : "Drift [style=\"W_BIT\" (P11)]", "4" : "RA Dec Goto [style=\"W_BIT\" (P11)]", "5" : "VCap [style=\"OK_BIT\" (P10)]", "6" : "Cap [style=\"OK_BIT\" (P10)]", "7" : "Box [style=\"OK_BIT\" (P10)]", "8" : "Lock [style=\"W_BIT\" (P11)]", "9" : "VBox [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 200 }
+, "_caption" : "Mode", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "MODE_P", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 199 }
+, "_map" : 
+{ "0" : "Uplink [style=\"W_BIT\" (P11)]", "1" : "Schedule [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 198 }
+, "_caption" : "Source", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "IS_SCHED", "type" : "PMDI" }
+, "geometryHeight" : 360, "geometryWidth" : 140, "geometryX" : 260, "geometryY" : 0 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 187 }
+, "_boxTitle" : "Lock", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 196 }
+, "_caption" : "Accel", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P74)", "_format" : "%.0f", "_source" : "ACC_LOCK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 195 }
+, "_caption" : "Velocity", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P73)", "_format" : "%.0f", "_source" : "VEL_LOCK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 194 }
+, "_caption" : "I Hold (%)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P72)", "_format" : "%.0f", "_source" : "I_HOLD_LOCK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 193 }
+, "_caption" : "I Move (%)", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P71)", "_format" : "%.0f", "_source" : "I_MOVE_LOCK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 192 }
+, "_caption" : "Extension", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P70)", "_format" : "%.2f", "_source" : "POT_LOCK", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 191 }
+, "_map" : 
+{ "0" : "No Good [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 190 }
+, "_caption" : "Elevation", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "STATE_LOCK", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 189 }
+, "_map" : 
+{ "0" : "Locking [style=\"W_BIT\" (P11)]", "1" : "Unlocked, On [style=\"E_BIT\" (P12)]", "2" : "Locked, On [style=\"E_BIT\" (P12)]", "5" : "Unlocked [style=\"OK_BIT\" (P10)]", "6" : "Locked [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 188 }
+, "_caption" : "Lock", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "STATE_LOCK", "type" : "PMDI" }
+, "geometryHeight" : 140, "geometryWidth" : 120, "geometryX" : 540, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 174 }
+, "_boxTitle" : "Balance", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 186 }
+, "_caption" : "Gain", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "GAIN_BAL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 185 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 184 }
+, "_caption" : "Heat", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "HEAT_BAL", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 183 }
+, "_map" : 
+{ "0" : "Up [style=\"OK_BIT\" (P10)]", "1" : "Down [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 182 }
+, "_caption" : "Direction", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "DIR_BAL", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 181 }
+, "_map" : 
+{ "0" : "Closed [style=\"OK_BIT\" (P10)]", "1" : "Open [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 180 }
+, "_caption" : "Valve", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VALVE_BAL", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 179 }
+, "_caption" : "Balance %", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "V_PUMP_BAL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 178 }
+, "_caption" : "Target", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.2f", "_source" : "LEVEL_TARGET_BAL", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 177 }
+, "_map" : 
+{ "0" : "Off [style=\"defbox\" (P94)]", "1" : "Manual [style=\"defbox\" (P94)]", "2" : "Auto [style=\"defbox\" (P94)]" }
+ }
+, "PObject" : 
+{ "_id" : 176 }
+, "_caption" : "Mode", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "MODE_BAL", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 175 }
+, "_caption" : "Slew Veto", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "SLEW_VETO", "type" : "PNDI" }
+, "geometryHeight" : 160, "geometryWidth" : 120, "geometryX" : 540, "geometryY" : 500 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 150 }
+, "_boxTitle" : "OSC", "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 173 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 172 }
+, "_caption" : "Heater", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "HEATER_ON_OSC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 171 }
+, "_caption" : "T OSC PC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P20)", "_format" : "%.2f", "_source" : "T_COMP_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 170 }
+, "_caption" : "T Lens", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_LENS_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 169 }
+, "_caption" : "T Ring", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_HEAT_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 168 }
+, "_caption" : "T Flange", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_FLANGE_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 167 }
+, "_caption" : "Error Code", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "ERROR_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 166 }
+, "_caption" : "Map Mean", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "MAPMEAN_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 165 }
+, "_caption" : "Frame #", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "FRAMENUM_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 164 }
+, "_caption" : "# blobs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "NBLOBS_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 163 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 162 }
+, "_caption" : "Save Imgs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "SAVE_IMAGES_OSC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 161 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 160 }
+, "_caption" : "Evil Eye", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "EYE_ON_OSC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 159 }
+, "_map" : 
+{ "0" : "Run [style=\"OK_BIT\" (P10)]", "1" : "Pause [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 158 }
+, "_caption" : "Capture", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "PAUSE_OSC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 157 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 156 }
+, "_caption" : "Autofocus", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "AUTOFOCUS_OSC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 155 }
+, "_caption" : "Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "RD_SIGMA_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 154 }
+, "_caption" : "DEC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "DEC_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 153 }
+, "_caption" : "RA", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "RA_OSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 152 }
+, "_map" : 
+{ "0" : "Connected [style=\"OK_BIT\" (P10)]", "1" : "No Route [style=\"W_BIT\" (P11)]", "2" : "Conn. Ref. [style=\"W_BIT\" (P11)]", "3" : "Er Ror [style=\"E_BIT\" (P12)]" }
+ }
+, "PObject" : 
+{ "_id" : 151 }
+, "_caption" : "Ethernet", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "STATUS_OSC_ETH", "type" : "PMDI" }
+, "geometryHeight" : 300, "geometryWidth" : 140, "geometryX" : 400, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 126 }
+, "_boxTitle" : "ISC", "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 149 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 148 }
+, "_caption" : "Heater", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "HEATER_ON_ISC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 147 }
+, "_caption" : "T ISC PC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P20)", "_format" : "%.2f", "_source" : "T_COMP_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 146 }
+, "_caption" : "T Lens", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_LENS_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 145 }
+, "_caption" : "T Ring", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_HEAT_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 144 }
+, "_caption" : "T Flange", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : true, "_extremaID" : "(P17)", "_format" : "%.2f", "_source" : "T_FLANGE_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 143 }
+, "_caption" : "Error Code", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "ERROR_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 142 }
+, "_caption" : "Map Mean", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "MAPMEAN_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 141 }
+, "_caption" : "Frame #", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "FRAMENUM_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 140 }
+, "_caption" : "# blobs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "NBLOBS_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 139 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 138 }
+, "_caption" : "Save Imgs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "SAVE_IMAGES_ISC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 137 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 136 }
+, "_caption" : "Evil Eye", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "EYE_ON_ISC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 135 }
+, "_map" : 
+{ "0" : "Run [style=\"OK_BIT\" (P10)]", "1" : "Pause [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 134 }
+, "_caption" : "Capture", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "PAUSE_ISC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 133 }
+, "_map" : 
+{ "0" : "Off [style=\"OK_BIT\" (P10)]", "1" : "On [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 132 }
+, "_caption" : "Autofocus", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "AUTOFOCUS_ISC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 131 }
+, "_caption" : "Sigma", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.3f", "_source" : "RD_SIGMA_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 130 }
+, "_caption" : "DEC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "DEC_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 129 }
+, "_caption" : "RA", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.4f", "_source" : "RA_ISC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 128 }
+, "_map" : 
+{ "0" : "Connected [style=\"OK_BIT\" (P10)]", "1" : "No Route [style=\"W_BIT\" (P11)]", "2" : "Conn. Ref. [style=\"W_BIT\" (P11)]", "3" : "Er Ror [style=\"E_BIT\" (P12)]" }
+ }
+, "PObject" : 
+{ "_id" : 127 }
+, "_caption" : "Ethernet", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "STATUS_ISC_ETH", "type" : "PMDI" }
+, "geometryHeight" : 300, "geometryWidth" : 140, "geometryX" : 260, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 119 }
+, "_boxTitle" : "SBSC", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 125 }
+, "_caption" : "T CCD", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "CCD_T_SBSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 124 }
+, "_caption" : "Frame", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "FRAME_SBSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 123 }
+, "_caption" : "Blobs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "NBLOBS_SBSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 122 }
+, "_caption" : "Mean", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "MAPMEAN_SBSC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 121 }
+, "_map" : 
+{ "0" : "Connected [style=\"OK_BIT\" (P10)]", "1" : "No Route [style=\"W_BIT\" (P11)]", "2" : "Conn. Ref. [style=\"W_BIT\" (P11)]", "3" : "Er Ror [style=\"E_BIT\" (P12)]" }
+ }
+, "PObject" : 
+{ "_id" : 120 }
+, "_caption" : "Net", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "STATUS_SBSC_ETH", "type" : "PMDI" }
+, "geometryHeight" : 100, "geometryWidth" : 140, "geometryX" : 400, "geometryY" : 260 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 93 }
+, "_boxTitle" : "Sensors", "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 118 }
+, "_map" : 
+{ "0" : "Connected [style=\"OK_BIT\" (P10)]", "1" : "No Route [style=\"W_BIT\" (P11)]", "2" : "Conn. Ref. [style=\"W_BIT\" (P11)]", "3" : "Er Ror [style=\"E_BIT\" (P12)]" }
+ }
+, "PObject" : 
+{ "_id" : 117 }
+, "_caption" : "OSS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "STATUS_SUN_ETH", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 116 }
+, "_caption" : "Gyros", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%6b", "_source" : "MASK_GY", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 115 }
+, "_caption" : "# Sat", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "%.0f", "_source" : "N_SAT_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 114 }
+, "_map" : 
+{ "0" : "Pissy [style=\"W_BIT\" (P11)]", "1" : "OK [style=\"OK_BIT\" (P10)]" }
+ }
+, "PObject" : 
+{ "_id" : 113 }
+, "_caption" : "dGPS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "ATT_OK_DGPS", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 112 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 111 }
+, "_caption" : "dGPS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_GPS", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 110 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 109 }
+, "_caption" : "Mag", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_MAG", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 108 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 107 }
+, "_caption" : "OSC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_OSC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 106 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 105 }
+, "_caption" : "ISC", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_ISC", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 104 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 103 }
+, "_caption" : "PSS 2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_PSS2", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 102 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 101 }
+, "_caption" : "PSS 1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_PSS1", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 100 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 99 }
+, "_caption" : "OSS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_SS", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 98 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 97 }
+, "_caption" : "El Clin", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_EL_CLIN", "type" : "PMDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 96 }
+, "_map" : 
+{ "0" : "Allowed [style=\"OK_BIT\" (P10)]", "1" : "Vetoed [style=\"W_BIT\" (P11)]" }
+ }
+, "PObject" : 
+{ "_id" : 95 }
+, "_caption" : "El Enc", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "VETO_EL_ENC", "type" : "PMDI" }
+, "geometryHeight" : 260, "geometryWidth" : 140, "geometryX" : 400, "geometryY" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 92 }
+, "_high" : 40500, "_low" : 38000, "_name" : "altitude", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 42000, "_xlow" : 35000 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 91 }
+, "_high" : 0, "_low" : 0, "_name" : "hwprpoterr", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 0, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 90 }
+, "_high" : 5, "_low" : -5, "_name" : "hwprerr", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 100, "_xlow" : -100 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 89 }
+, "_high" : 30, "_low" : 5, "_name" : "ibattcheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 60, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 88 }
+, "_high" : 60, "_low" : 20, "_name" : "thscheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 100, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 87 }
+, "_high" : 70, "_low" : 40, "_name" : "varrcheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 85, "_xlow" : 30 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 86 }
+, "_high" : 29, "_low" : 25, "_name" : "vbattcheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 30, "_xlow" : 23 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 85 }
+, "_high" : 170, "_low" : -170, "_name" : "vrwcheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 300, "_xlow" : -300 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 84 }
+, "_high" : 9, "_low" : -9, "_name" : "iserrwcheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 10, "_xlow" : -10 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 83 }
+, "_high" : 5, "_low" : -5, "_name" : "isercheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 10, "_xlow" : -10 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 82 }
+, "_high" : 4, "_low" : 3, "_name" : "riocheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 1000, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 81 }
+, "_high" : 1, "_low" : -1, "_name" : "errcheck", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 5000, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 80 }
+, "_high" : 100, "_low" : -100, "_name" : "sfcorrection", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 300, "_xlow" : -300 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 79 }
+, "_high" : 1010, "_low" : 5, "_name" : "LVDTSpread", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 5000, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 78 }
+, "_high" : 30000, "_low" : 20000, "_name" : "LVDTLow", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 40000, "_xlow" : 10000 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 77 }
+, "_high" : 40000, "_low" : 30000, "_name" : "LVDTHigh", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 50000, "_xlow" : 20000 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 76 }
+, "_high" : 34500, "_low" : 29500, "_name" : "actuator_lvdt", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 36000, "_xlow" : 25000 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 75 }
+, "_high" : 1200, "_low" : -1200, "_name" : "actuator_enc", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 3500, "_xlow" : -3500 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 74 }
+, "_high" : 125, "_low" : 75, "_name" : "accellock", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 200, "_xlow" : 50 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 73 }
+, "_high" : 120000, "_low" : 100001, "_name" : "vellock", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 120001, "_xlow" : 100000 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 72 }
+, "_high" : 25, "_low" : -1, "_name" : "iholdlock", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 51, "_xlow" : -2 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 71 }
+, "_high" : 55, "_low" : 45, "_name" : "imovelock", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 95, "_xlow" : 10 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 70 }
+, "_high" : 10, "_low" : 0, "_name" : "lockpot", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 110, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 69 }
+, "_high" : 1, "_low" : 0, "_name" : "hspwm", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 99, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 68 }
+, "_high" : 0, "_low" : 0, "_name" : "icryo", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 0, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 67 }
+, "_high" : 3, "_low" : 3, "_name" : "ihschar", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 5, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 66 }
+, "_high" : 0, "_low" : 0, "_name" : "ichar", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 4, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 65 }
+, "_high" : 8, "_low" : 2, "_name" : "levelsens", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 9, "_xlow" : 1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 64 }
+, "_high" : 15000, "_low" : 5000, "_name" : "bias500", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 20000, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 63 }
+, "_high" : 15000, "_low" : 5000, "_name" : "bias350", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 20000, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 62 }
+, "_high" : 15000, "_low" : 5000, "_name" : "bias250", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 20000, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 61 }
+, "_high" : 5, "_low" : 4, "_name" : "chartemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 7, "_xlow" : 3 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 60 }
+, "_high" : 0, "_low" : 0, "_name" : "horn", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 0, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 59 }
+, "_high" : 0, "_low" : 0, "_name" : "heatstrap", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 0, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 58 }
+, "_high" : 1, "_low" : 0, "_name" : "he3fridge", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 1, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 57 }
+, "_high" : 3, "_low" : 1, "_name" : "pottemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 4, "_xlow" : 1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 56 }
+, "_high" : 40, "_low" : 0, "_name" : "jfetheat", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 75, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 55 }
+, "_high" : 150, "_low" : 135, "_name" : "jfettemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 160, "_xlow" : 120 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 54 }
+, "_high" : 65, "_low" : 45, "_name" : "vcsfet", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 80, "_xlow" : 40 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 53 }
+, "_high" : 50, "_low" : 35, "_name" : "vcstemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 55, "_xlow" : 30 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 52 }
+, "_high" : 90, "_low" : 78, "_name" : "lnfilttemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 95, "_xlow" : 77 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 51 }
+, "_high" : 81, "_low" : 75, "_name" : "lntemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 85, "_xlow" : 70 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 50 }
+, "_high" : 6, "_low" : 4, "_name" : "hwprtemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 6, "_xlow" : 4 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 49 }
+, "_high" : 5, "_low" : 4, "_name" : "lhefilttemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 6, "_xlow" : 3 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 48 }
+, "_high" : 5, "_low" : 4, "_name" : "lhetemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 5, "_xlow" : 3 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 47 }
+, "_high" : 21, "_low" : 15, "_name" : "charhstemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 25, "_xlow" : 4 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 46 }
+, "_high" : 6, "_low" : 4, "_name" : "pothstemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 12, "_xlow" : 3 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 45 }
+, "_high" : 999, "_low" : 0, "_name" : "hours", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 1000, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 44 }
+, "_high" : 1000, "_low" : 0, "_name" : "balstatus", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 1001, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 43 }
+, "_high" : 32, "_low" : 31, "_name" : "statusactbus", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 32, "_xlow" : 30 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 42 }
+, "_high" : 2147483648, "_low" : -2147483648, "_name" : "unknown", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 2147483648, "_xlow" : -2147483648 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 41 }
+, "_high" : 15, "_low" : 11, "_name" : "psi", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 16, "_xlow" : 9 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 40 }
+, "_high" : 1, "_low" : 1, "_name" : "pressure", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 1, "_xlow" : 1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 39 }
+, "_high" : 29, "_low" : 23, "_name" : "vbat", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 30, "_xlow" : 23 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 38 }
+, "_high" : 55, "_low" : 23, "_name" : "vsolar", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 60, "_xlow" : 20 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 37 }
+, "_high" : 25, "_low" : 0, "_name" : "acssolcurrent", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 29, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 36 }
+, "_high" : 20, "_low" : 0, "_name" : "solcurrent", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 25, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 35 }
+, "_high" : 3, "_low" : 1, "_name" : "gycurrent", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 5, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 34 }
+, "_high" : 0, "_low" : 0, "_name" : "sscurrent", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 0, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 33 }
+, "_high" : 3, "_low" : 1, "_name" : "compcurrent", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 4, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 32 }
+, "_high" : 2, "_low" : 1, "_name" : "acscurrent", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 30, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 31 }
+, "_high" : 24, "_low" : 9, "_name" : "currenttotal", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 30, "_xlow" : 3 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 30 }
+, "_high" : 15, "_low" : 0, "_name" : "current", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 40, "_xlow" : -40 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 29 }
+, "_high" : 2, "_low" : -2, "_name" : "dps", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 3, "_xlow" : -3 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 28 }
+, "_high" : 360, "_low" : -180, "_name" : "angle", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 360, "_xlow" : -180 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 27 }
+, "_high" : 24, "_low" : -12, "_name" : "rahour", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 24, "_xlow" : -12 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 26 }
+, "_high" : 80, "_low" : 0, "_name" : "soltemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 100, "_xlow" : -30 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 25 }
+, "_high" : -5, "_low" : -25, "_name" : "secondtemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 5, "_xlow" : -40 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 24 }
+, "_high" : -5, "_low" : -25, "_name" : "primetemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 5, "_xlow" : -40 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 23 }
+, "_high" : 10, "_low" : -40, "_name" : "ambtemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 20, "_xlow" : -50 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 22 }
+, "_high" : 45, "_low" : 10, "_name" : "mcctemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 55, "_xlow" : -20 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 21 }
+, "_high" : 30, "_low" : -5, "_name" : "powtemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 45, "_xlow" : -20 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 20 }
+, "_high" : 65, "_low" : 15, "_name" : "cputemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 75, "_xlow" : 0 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 19 }
+, "_high" : 30, "_low" : -10, "_name" : "battemp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 45, "_xlow" : -30 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 18 }
+, "_high" : 40, "_low" : 0, "_name" : "t_feedthrough", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 50, "_xlow" : -5 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 17 }
+, "_high" : 40, "_low" : -20, "_name" : "temp", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 60, "_xlow" : -40 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 16 }
+, "_high" : 75, "_low" : -1, "_name" : "gyheat", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 100, "_xlow" : -1 }
+, "PExtrema object" : 
+{ "PObject" : 
+{ "_id" : 15 }
+, "_high" : 0, "_low" : 0, "_name" : "slope", "_shigh" : "(P3)", "_slow" : "(P4)", "_sxhigh" : "(P2)", "_sxlow" : "(P5)", "_xhigh" : 32768, "_xlow" : -32768 }
+, "PObject" : 
+{ "_id" : 0 }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 94 }
+, "_bg" : "#ffffff", "_bold" : true, "_fg" : "#0000ff", "_italic" : false, "_linked" : true, "_name" : "defbox" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 14 }
+, "_bg" : "#ffffff", "_bold" : true, "_fg" : "#000055", "_italic" : false, "_linked" : true, "_name" : "MAX_POWER" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 13 }
+, "_bg" : "#ffaaff", "_bold" : false, "_fg" : "#000055", "_italic" : false, "_linked" : true, "_name" : "P_BIT" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 12 }
+, "_bg" : "#ffaaaa", "_bold" : true, "_fg" : "#000055", "_italic" : false, "_linked" : true, "_name" : "E_BIT" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 11 }
+, "_bg" : "#ffffff", "_bold" : true, "_fg" : "#cc0000", "_italic" : false, "_linked" : true, "_name" : "W_BIT" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 10 }
+, "_bg" : "#ffffff", "_bold" : false, "_fg" : "#000055", "_italic" : false, "_linked" : true, "_name" : "OK_BIT" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 9 }
+, "_bg" : "#ffffff", "_bold" : false, "_fg" : "#000000", "_italic" : false, "_linked" : true, "_name" : "spacer" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 8 }
+, "_bg" : "#ffffff", "_bold" : false, "_fg" : "#000000", "_italic" : false, "_linked" : true, "_name" : "standard" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 7 }
+, "_bg" : "#ffffff", "_bold" : true, "_fg" : "#0000cc", "_italic" : false, "_linked" : true, "_name" : "decreasing" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 6 }
+, "_bg" : "#ffffff", "_bold" : true, "_fg" : "#cc0000", "_italic" : false, "_linked" : true, "_name" : "increasing" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 5 }
+, "_bg" : "#00ff00", "_bold" : true, "_fg" : "#000033", "_italic" : false, "_linked" : true, "_name" : "xlow" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 4 }
+, "_bg" : "#ffffff", "_bold" : true, "_fg" : "#00bb00", "_italic" : false, "_linked" : true, "_name" : "low" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 3 }
+, "_bg" : "#ffffff", "_bold" : true, "_fg" : "#ff0000", "_italic" : false, "_linked" : true, "_name" : "high" }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 2 }
+, "_bg" : "#ffaaaa", "_bold" : true, "_fg" : "#000055", "_italic" : false, "_linked" : true, "_name" : "xhigh" }
+, "_dirfileFilename" : "/data/etc/defile.lnk", "windowHeight" : 962, "windowWidth" : 1276 }

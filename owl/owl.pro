@@ -3,6 +3,13 @@ QT      += core gui xml
 TARGET   = owl
 TEMPLATE = app
 
+target.path = /usr/local/bin
+INSTALLS += target
+
+owlfiles.path = /data/etc/owl
+owlfiles.files += owl-files/blast2012.owl
+INSTALLS += owlfiles
+
 SOURCES += main.cpp\
         PMainWindow.cpp \
     PObject.cpp \
@@ -57,3 +64,4 @@ QMAKE_CXXFLAGS = -O0
 OTHER_FILES += \
     PClient.html \
     README.txt
+
