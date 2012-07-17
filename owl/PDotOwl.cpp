@@ -837,7 +837,7 @@ QDataStream& operator<<(QDataStream&a,PMainWindow&b)
 QVariant save(PMainWindow&b)
 {
     QVariantMap ret;
-    ret.insert("OWL FILE rev.",20120106);
+    ret.insert("OWL FILE rev.",20120716);
 
     ret.insert("windowWidth", b.size().width());
     ret.insert("windowHeight", b.size().height());
@@ -947,15 +947,18 @@ void load(QVariant v,PMainWindow&b)
 {
     PObject::isLoading=1;
     QVariantMap m=v.toMap();
-    if(m["OWL FILE rev."].toInt()>20120106) {
+    if(m["OWL FILE rev."].toInt()>20120716) {
         QMessageBox::critical(0,"Unsupported OWL File","The OWL file you are trying to load is too new for this "
                               "version of OWL. Quitting.",QMessageBox::Ok);
         qFatal("The OWL file you are trying to load is too new for this version of OWL. Quitting.");
     }
-    int windowWidth = m["windowWidth"].toInt();
-    int windowHeight = m["windowHeight"].toInt();
 
-    b.resize(windowWidth, windowHeight);
+    if(m["OWL FILE rev."].toInt()>=20120716) {
+        int windowWidth = m["windowWidth"].toInt();
+        int windowHeight = m["windowHeight"].toInt();
+
+        b.resize(windowWidth, windowHeight);
+    }
 
     for(int i=0;i<m.count("PStyle object");i++) {
         PStyle* nee=new PStyle("Loaded PStyle");
