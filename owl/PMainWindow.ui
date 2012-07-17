@@ -20,7 +20,7 @@
   <widget class="QDockWidget" name="dockInsert">
    <property name="minimumSize">
     <size>
-     <width>78</width>
+     <width>84</width>
      <height>130</height>
     </size>
    </property>

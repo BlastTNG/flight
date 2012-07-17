@@ -31,13 +31,25 @@
 #include <iostream>
 #include <python2.7/Python.h>   //you may need to change this...
 
+void usage(QString appname) {
+    std::cout<<"usage: "<<qPrintable(appname)<<" [--new | <filename>]"<<std::endl;
+    exit(1);
+}
+
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
 
-  for(int i=0;i<app.arguments().size();i++) {
-      if(app.arguments()[i].startsWith('-')) {
-          std::cout<<"usage: "<<qPrintable(app.arguments()[0])<<" [filename]"<<std::endl;
-          return 1;
+  QString filename("__lastfile");
+
+  if (app.arguments().size() > 2) {
+      usage(app.arguments()[0]);
+  }
+
+  if (app.arguments().size() == 2) {
+      if (app.arguments()[1] == "--new") {
+          filename.clear();
+      } else if (app.arguments()[1].startsWith('-')) {
+          usage(app.arguments()[0]);
       }
   }
 
@@ -45,8 +57,7 @@ int main(int argc, char* argv[]) {
   qsrand((seconds*1000+QTime::currentTime().msec())%RAND_MAX);  //for concurrent ids. do not remove this line.
 
   Py_Initialize();
-
-  new PMainWindow((qApp->arguments().size()==2)?qApp->arguments()[1]:"");
+  new PMainWindow((qApp->arguments().size()==2)?qApp->arguments()[1]:filename);
 
   app.exec();
 

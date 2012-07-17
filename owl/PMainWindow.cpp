@@ -62,6 +62,8 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     _deleteScheduled(0),
     ui(new Ui::PMainWindow)
 {
+
+    _settings = new QSettings("UToronto", "owl");
     PStyle::noStyle = PStyle::noStyle?PStyle::noStyle:new PStyle("No style");
     me=this;
     ui->setupUi(this);
@@ -110,7 +112,13 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
 
     setWindowTitle(_WINDOW_TITLE_);
 
-    if(file.size()) owlLoad(file);
+    if (file == "__lastfile") {
+        file = _settings->value("filename").toString();
+    }
+
+    if(file.size()) {
+        owlLoad(file);
+    }
 
     if(!_deleteScheduled&&!PObject::isLoading) show();
 }
@@ -121,6 +129,7 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
 
 PMainWindow::~PMainWindow()
 {
+
     while(_pboxList.size()) {
         delete _pboxList.takeFirst();
     }
@@ -978,6 +987,7 @@ void PMainWindow::owlSave()
     file.open(QFile::WriteOnly | QFile::Text);
     QJson::Serializer s;
     file.write(s.serialize(save(*this)).replace('{',"\n{").replace('}',"}\n"));
+    _settings->setValue("filename", file.fileName());
 
     file.close();
 }
@@ -990,6 +1000,11 @@ void PMainWindow::owlLoad(QString filename)
     }
 
     QFileInfo f(filename);
+
+    if (!f.exists()) {
+        return;
+    }
+
     filename=f.absoluteFilePath();
 
     if(filename.isEmpty()) {
@@ -1065,6 +1080,7 @@ void PMainWindow::owlLoad(QString filename)
         return;
     }
 
+    _settings->setValue("filename", filename);
     PStyleNotifier::me->enable();
     PStyleNotifier::me->notifyChange();
     setUpdatesEnabled(1);

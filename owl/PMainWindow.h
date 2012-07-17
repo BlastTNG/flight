@@ -23,6 +23,7 @@
 #include <QDataStream>
 #include <QScrollArea>
 #include <QSystemSemaphore>
+#include <QSettings>
 #include "PAbstractDataItem.h"
 #include "PObject.h"
 #include "PBox.h"
@@ -59,6 +60,7 @@ protected:
     bool _dirty;
     PServer* _server;
     bool _deleteScheduled;
+    QSettings *_settings;
 
 public:
     friend QDataStream& operator<<(QDataStream&a,PMainWindow&b);
@@ -74,6 +76,8 @@ public:
     QObject* currentObject() const { return _currentObject; }
     virtual ~PMainWindow();
     void closeEvent(QCloseEvent *);
+
+
 public slots:
     void readmeHelp();
     void webServerHelp();
