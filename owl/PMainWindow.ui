@@ -722,8 +722,8 @@
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>49</x>
-     <y>220</y>
+     <x>513</x>
+     <y>160</y>
     </hint>
    </hints>
   </connection>
@@ -734,8 +734,8 @@
    <slot>setChecked(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>49</x>
-     <y>220</y>
+     <x>513</x>
+     <y>160</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
@@ -755,7 +755,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>340</x>
-     <y>562</y>
+     <y>948</y>
     </hint>
    </hints>
   </connection>
@@ -767,7 +767,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>340</x>
-     <y>562</y>
+     <y>948</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

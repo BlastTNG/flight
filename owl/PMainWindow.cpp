@@ -116,11 +116,25 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
         file = _settings->value("filename").toString();
     }
 
+    if (_settings->value("hideWeb", false).toBool()) {
+        ui->actionWeb_Server->setChecked(false);
+        ui->dockWeb_Server->hide();
+    }
+    if (_settings->value("hideInsert", false).toBool()) {
+      ui->actionInsert->setChecked(false);
+      ui->dockInsert->hide();
+    }
+    if (_settings->value("hideConfig", false).toBool()) {
+      ui->actionConfigure->setChecked(false);
+      ui->dockConfigure->hide();
+    }
+
     if(file.size()) {
         owlLoad(file);
     }
 
     if(!_deleteScheduled&&!PObject::isLoading) show();
+
 }
 
 #define reconnect(a,b,c,d) \
@@ -129,6 +143,10 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
 
 PMainWindow::~PMainWindow()
 {
+
+    _settings->setValue("hideWeb",!ui->dockWeb_Server->isVisible());
+    _settings->setValue("hideInsert",!ui->dockInsert->isVisible());
+    _settings->setValue("hideConfig",!ui->dockConfigure->isVisible());
 
     while(_pboxList.size()) {
         delete _pboxList.takeFirst();

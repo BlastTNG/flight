@@ -839,6 +839,9 @@ QVariant save(PMainWindow&b)
     QVariantMap ret;
     ret.insert("OWL FILE rev.",20120106);
 
+    ret.insert("windowWidth", b.size().width());
+    ret.insert("windowHeight", b.size().height());
+
     QMap<int,bool> rec;
 
     for(int i=0;i<PStyle::_u.size();i++) {
@@ -949,6 +952,10 @@ void load(QVariant v,PMainWindow&b)
                               "version of OWL. Quitting.",QMessageBox::Ok);
         qFatal("The OWL file you are trying to load is too new for this version of OWL. Quitting.");
     }
+    int windowWidth = m["windowWidth"].toInt();
+    int windowHeight = m["windowHeight"].toInt();
+
+    b.resize(windowWidth, windowHeight);
 
     for(int i=0;i<m.count("PStyle object");i++) {
         PStyle* nee=new PStyle("Loaded PStyle");
