@@ -140,9 +140,13 @@ void start_flc_data_swapper(const char *other)
   pthread_create(&out_id, NULL, &data_out_thread, (void*)other);
 }
 
+struct flc_data *get_flc_out_data()
+{
+  return &flc_out_data[i_flc_out];
+}
+
 struct flc_data *swap_flc_data(struct flc_data *d)
 {
-  memcpy(&flc_out_data[i_flc_out], d, sizeof(struct flc_data));
   i_flc_out = INC_INDEX(i_flc_out);
   memcpy(d, &flc_in_data[GETREADINDEX(i_flc_in)], sizeof(struct flc_data));
   return d;

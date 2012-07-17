@@ -26,8 +26,8 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
     {"lat",           SLOWDL_FORCE_INT, 16, -90.0, -30},
     {"lon",           SLOWDL_FORCE_INT, 16,  -180, 360},
     {"alt",           SLOWDL_U_MASK,    16},
-    {"disk_free",     SLOWDL_U_MASK,    16},
-    {"timeout",       SLOWDL_U_MASK,    16},
+    {"df_n_flc",      SLOWDL_U_MASK,    16},    //might also want df_s_flc
+    {"timeout_n",     SLOWDL_U_MASK,    16},    //might also want timeout_s
     {"plover",        SLOWDL_U_MASK,    16},
     {"time",          SLOWDL_U_MASK,    32},
 

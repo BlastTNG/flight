@@ -67,7 +67,8 @@
 #define LOOP7	38, 0
 #define LOOP8	39, 0
 #define LOOP9	40, 0
-#define DECOM	41, 0
+#define LOOP0	41, 0
+#define DECOM	42, 0
 
 /* Analog channel calibrations */
 /* 16-bit channels with analog preamps. To Volts */
@@ -92,6 +93,7 @@
 #define U_T_MS  "Time","ms"
 #define U_R_O   "Resistance","Ohms"
 #define U_RATE "Rate", "bps"
+#define U_GB  "", "GB"
 
 struct ChannelStruct WideSlowChannels[] = {
   {"tr_he3_fridge", 'r', CRYO_A1,  0,  CRYO_HE3_FRIDGE_M,CRYO_HE3_FRIDGE_B,'U', U_R_O},
@@ -147,7 +149,9 @@ struct ChannelStruct WideSlowChannels[] = {
   {"ra_isc",       'w', LOOP1,  8,              LI2H,              0.0, 'U', U_NONE},
   {"dec_isc",      'w', LOOP1, 10,          LI2DEG/2.,            -90., 'U', U_NONE},
   {"parts_sched",   'w', LOOP1, 12,                1.0,             0.0, 'U', U_NONE},
+  {"time_n_flc",    'w', LOOP1, 14,                1.0,             0.0, 'U', U_NONE},
   {"framenum_isc", 'w', LOOP1, 32,                1.0,             0.0, 'U', U_NONE},
+  {"time_s_flc",    'w', LOOP1, 34,                1.0,             0.0, 'U', U_NONE},
   {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'S', U_NONE},
   {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'S', U_NONE},
   {"state_isc",    'w', LOOP2, 20,                1.0,             0.0, 'U', U_NONE},
@@ -299,7 +303,7 @@ struct ChannelStruct SlowChannels[] = {
   {"fpulse_isc",   'w', LOOP1, 17,                10.,             0.0, 'u', U_NONE},
   {"period_cal",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status
-  {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
+  {"timeout_n",    'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"az_sun",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
   {"lvdt_low_act", 'w', LOOP1, 22,                1.0,         -5000.0, 'u', U_NONE},
   {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, slot_sched
@@ -329,7 +333,7 @@ struct ChannelStruct SlowChannels[] = {
   {"att_ok_dgps",  'w', LOOP1, 53,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 54-56 are unused */
   {"n_sat_dgps",   'w', LOOP1, 57,                1.0,             0.0, 'u', U_NONE},
-  {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u', U_NONE},
+  {"df_n_flc",     'w', LOOP1, 58,             1./250,             0.0, 'u', U_GB},
   {"mode_p",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE},
   {"x_p",          'w', LOOP1, 60,              I2DEG,             0.0, 'u', U_NONE},
   {"y_p",          'w', LOOP1, 61,              I2DEG,             0.0, 's', U_NONE},
@@ -374,7 +378,6 @@ struct ChannelStruct SlowChannels[] = {
   {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"az_raw_mag",      'w',LOOP2, 39,            I2DEG,             0.0, 'u', U_D_DEG},
-  /* LOOP2 39 is unused */
   {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
   {"sigma_dgps",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
@@ -402,7 +405,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP3 4-5 are wide */
   {"offset_isc",   'w', LOOP3,  6,                1.0,             0.0, 's', U_NONE},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u', U_NONE},
-  {"t_cpu_flc",    'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu_n_flc",  'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
   {"t_mb_flc",      'w', LOOP3,  9,               0.01,             0.0, 'u', U_NONE},
   {"mks_hi_sip",   'w', LOOP3, 10,           0.003256,       -0.226858, 'u', U_NONE},
   {"mks_med_sip",  'w', LOOP3, 11,           0.032614,       -0.072580, 'u', U_NONE},
@@ -807,9 +810,14 @@ struct ChannelStruct SlowChannels[] = {
   {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
   /* LOOP9 58 is unused */
   {"pot_hwpr",       'w', LOOP9, 59,        1.0/65535.0,             0.0, 'u', U_NONE},
-  {"last_cmd",       'w', LOOP9, 60,                1.0,             0.0, 'u', U_NONE},
-  {"count_cmd",      'w', LOOP9, 61,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP9 62-63 are unused */
+  {"last_n_cmd",     'w', LOOP9, 60,                1.0,             0.0, 'u', U_NONE},
+  {"count_n_cmd",    'w', LOOP9, 61,                1.0,             0.0, 'u', U_NONE},
+  {"last_s_cmd",     'w', LOOP9, 62,                1.0,             0.0, 'u', U_NONE},
+  {"count_s_cmd",    'w', LOOP9, 63,                1.0,             0.0, 'u', U_NONE},
+  {"df_s_flc",       'w', LOOP0,  0,          1.0/250.0,             0.0, 'u', U_GB},
+  {"timeout_s",      'w', LOOP0,  1,                1.0,             0.0, 'u', U_NONE},
+  {"t_cpu_s_flc",    'w', LOOP0,  2,               0.01,             0.0, 'u', U_NONE},
+  /* LOOP0 3-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

@@ -28,22 +28,31 @@
 #define FLC_DATA_PORT "17777"
 
 struct flc_data {
-  //TODO this string contet is for testing only
-  char msg[128];
+  time_t time;
+  unsigned short df;
+  unsigned short t_cpu;
+  time_t timeout;
+  unsigned short last_command;
+  unsigned short command_count;
+
   /* things we want:
-      time
-      free disk space
-      command count
-      last command received
-      schedule timeout
+      time  wide "time_x_flc"
+      free disk space "disk_free" -> "df_x_flc"
+      command count   "count_x_cmd"
+      last command received "last_x_cmd"
+      schedule timeout  "timeout" -> "timeout_x"
+      cpu temperature "t_cpu_flc" -> "t_cpu_x_flc"
       possibly a CRC check
       */
 };
 
-//start send and receive thread. "other" should contain dot-and-numbers IP
+//start send and receive threads. "other" should contain dot-and-numbers IP
 void start_flc_data_swapper(const char *other);
 
-//execute data swap. Overwrites d with data from other computer
+//get pointer to output write buffer. Stable between calls to swap_flc_data()
+struct flc_data *get_flc_out_data();
+
+//execute data swap. Fills d with received data (and returns pointer to it)
 struct flc_data *swap_flc_data(struct flc_data *d);
 
 #endif  //FLC_DATA_SWAP_H

@@ -16,7 +16,7 @@ struct fieldStreamStruct streamList[] = {
   {"time",1,1,NOAVG,NODX,8,SLOW},
   {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
   {"framenum",1,1,NOAVG,DX,8,SLOW},
-  {"timeout",1,1,NOAVG,DX,8,SLOW},
+  {"timeout_n",1,1,NOAVG,DX,8,SLOW},  //TODO add timeout_s
   {"ifel_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifyaw_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifroll_gy", 5, 10, AVG, NODX, 8, SLOW},
@@ -465,7 +465,7 @@ char *frameList[] = {
   "dir_az_mc",
   "dir_dgps",
   "dir_el_mc",
-  "disk_free",
+  "df_n_flc", //TODO add "df_s_flc"
   "diskfree_isc",
   "diskfree_osc",
   "dith_el",
@@ -793,7 +793,7 @@ char *frameList[] = {
   "t_chip_flc",
   "t_comp_isc",
   "t_comp_osc",
-  "t_cpu_flc",
+  "t_cpu_n_flc",  //TODO add t_cpu_s_flc
   "t_cpu_ss",
   "t_dac_box",
   "t_port_das",
