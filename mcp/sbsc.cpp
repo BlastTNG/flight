@@ -203,8 +203,8 @@ void cameraFields()
 	SHRT_MAX : (unsigned int)sbsc->snr[i]*100;
       WriteData(sbscBlobS[i], snr, NIOS_QUEUE);
     }
-    WriteData(sbscRAAddr, (int)(sbsc->ra*10), NIOS_QUEUE);
-    WriteData(sbscDECAddr, (int)(sbsc->dec*10), NIOS_QUEUE);
+    WriteData(sbscRAAddr, (int)(sbsc->ra*1000), NIOS_QUEUE);
+    WriteData(sbscDECAddr, (int)(sbsc->dec*1000), NIOS_QUEUE);
   }
 
 }
