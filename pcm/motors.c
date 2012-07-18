@@ -1134,17 +1134,22 @@ static void DoSpiderMode(void)
   double az_accel_dv;
   
   double t_before; // time at which to send BSC trigger command
-  
+  double t_step;   // amount time (s) before turn-around at which el micro-step is  
+                   // commanded
   int i, i_point;
   int N_scans; // number of azimuth half-scans per el step
  
   static int scan_region = 0;
   static int scan_region_last = 0;
+  static int past_step_point = 0;
+  static int past_step_point_last = 0;
   
   static int n_scans = 0; // number of azimuth half-scans elapsed;
   
   t_before = DELAY + CommandData.theugly.expTime/2000.0;
-
+  
+  t_step = 1.2 + 1.0; // "on_delay" in GetIElev + (1/2)*(step duration) 
+  
   az_accel = CommandData.az_accel;
   az_accel_dv = az_accel/SR;
   
@@ -1169,7 +1174,15 @@ static void DoSpiderMode(void)
   
   radec2azel(ra_start, dec_start, lst, lat, &az_start, &el_start);
 
-  radbox_endpoints(c_az, c_el, el_start, &left, &right, &bottom, &top, &az_of_bot);
+  if (CommandData.pointing_mode.new_spider) {
+    n_scans = 0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = el_start;
+    axes_mode.el_vel = 0.0;
+    CommandData.pointing_mode.new_spider = 0;
+  }
+   
+  radbox_endpoints(c_az, c_el, axes_mode.el_dest, &left, &right, &bottom, &top, &az_of_bot);
   
   /* Rigmarole to make sure we don't cross the sun between here and scan centre */
   
@@ -1183,13 +1196,6 @@ static void DoSpiderMode(void)
   
   v_az_max = sqrt(az_accel * ampl);
   
-  if (CommandData.pointing_mode.new_spider) {
-    n_scans = 0;
-    axes_mode.el_mode = AXIS_POSITION;
-    axes_mode.el_dest = el_start;
-    axes_mode.el_vel = 0.0;
-    CommandData.pointing_mode.new_spider = 0;
-  }
   
   // |distance| from end point when V_req = V_AZ_MIN
   turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
@@ -1247,6 +1253,23 @@ static void DoSpiderMode(void)
     } else {
       bsc_trigger = 0;
     }
+    
+    // start el step at position corresponding to t_step seconds before turn-around
+    if (az >= (right + ampl*(cos(sqrt(az_accel/ampl)*t_step) - 1.0))) {
+      past_step_point = 1;
+      if ( past_step_point_last == 0 ) {
+        n_scans++;
+	if ( (n_scans % N_scans) == 0 ) { // step in elevation
+          bprintf(info, "stepping in el at right turn around");
+          axes_mode.el_mode = AXIS_POSITION;
+          axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
+          axes_mode.el_vel = 0.0;
+        }  
+      }
+      past_step_point_last = past_step_point;
+      //bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
+    }
+    
     axes_mode.az_vel = v_az;
     axes_mode.az_accel = a_az;
 
@@ -1266,24 +1289,47 @@ static void DoSpiderMode(void)
     } else {
       bsc_trigger = 0;
     }
-
+    
+    // start el step at position corresponding to t_step seconds before turn-around
+    if (az <= (left + ampl*(1.0 - cos(sqrt(az_accel/ampl)*t_step))) ) {
+      past_step_point = 1;
+      if ( past_step_point_last == 0 ) {
+        n_scans++;
+	
+	if ( (n_scans % N_scans) == 0 ) { // step in elevation
+          bprintf(info, "stepping in el at left turn around");
+          axes_mode.el_mode = AXIS_POSITION;
+          axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
+          axes_mode.el_vel = 0.0;
+        }
+        
+      }
+      past_step_point_last = past_step_point;
+     
+      //bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
+    
+    }
+    
     axes_mode.az_vel = v_az;
     axes_mode.az_accel = a_az;
 
   /* case 5: in left turn-around zone */ 
   } else if ( az <= left+turn_around ) {
     scan_region = SCAN_L_TURN;
-    if (scan_region_last == SCAN_R_TO_L) {
-      n_scans++;
-      bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
-      if ( (n_scans % N_scans) == 0 ) { // step in elevation
-        bprintf(info, "stepping in el at left turn around");
-        axes_mode.el_mode = AXIS_POSITION;
-        axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
-        axes_mode.el_vel = 0.0;
-      }
-    }
     scan_region_last = scan_region;
+
+    past_step_point = 0; // reset for the next half-scan
+    past_step_point_last = past_step_point;
+    //if (scan_region_last == SCAN_R_TO_L) {
+    //  n_scans++;
+    //  bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
+    //  if ( (n_scans % N_scans) == 0 ) { // step in elevation
+    //    bprintf(info, "stepping in el at left turn around");
+    //    axes_mode.el_mode = AXIS_POSITION;
+     //   axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
+      //  axes_mode.el_vel = 0.0;
+      //}
+    //}
     
     v_az = last_v + az_accel_dv;
     if (v_az > V_AZ_MIN) {
@@ -1297,17 +1343,21 @@ static void DoSpiderMode(void)
   /* case 6: in right turn-around zone */   
   } else if (az >= right-turn_around) {
     scan_region = SCAN_R_TURN;
-    if (scan_region_last == SCAN_L_TO_R) {
-      n_scans++;
-       bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
-      if ( (n_scans % N_scans) == 0 ) { // step in elevation
-        bprintf(info, "stepping in el at right turn around");
-        axes_mode.el_mode = AXIS_POSITION;
-        axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
-        axes_mode.el_vel = 0.0;
-      }
-    }
     scan_region_last = scan_region;
+    
+    past_step_point = 0; // reset for the next half-scan
+    past_step_point_last = past_step_point;
+
+   // if (scan_region_last == SCAN_L_TO_R) {
+  //    n_scans++;
+//       bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
+     // if ( (n_scans % N_scans) == 0 ) { // step in elevation
+       // bprintf(info, "stepping in el at right turn around");
+       // axes_mode.el_mode = AXIS_POSITION;
+      //  axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
+     //   axes_mode.el_vel = 0.0;
+      //}
+    //}
     
     v_az = last_v - az_accel_dv;
     if (v_az < -V_AZ_MIN) {
@@ -2547,7 +2597,7 @@ void* reactComm(void* arg)
         //RWMotorData[rw_motor_index].current=((double)current_raw)/8192.0*60.0;
 	// TODO: changed peak drive current to 20 A since we are 
 	//       using smaller controller for RW temporarily
-	RWMotorData[rw_motor_index].current=((double)current_raw)/8192.0*20.0;
+	RWMotorData[rw_motor_index].current=(((double)current_raw)/8192.0)*60.0;
         // divide by scaling factor which is (2^13 / peak drive current) 
         // to get units in amps
 	// bprintf(info,"current_raw= %i, current= %f",current_raw,
