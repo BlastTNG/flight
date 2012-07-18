@@ -44,7 +44,7 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
     {"i_rec",         SLOWDL_U_MASK, 16},
     {"i_trans",       SLOWDL_U_MASK, 16},
     {"i_sc",          SLOWDL_U_MASK, 16},
-    {"i_dgps",        SLOWDL_U_MASK, 16},
+    {"i_sbsc",        SLOWDL_U_MASK, 16},
     {"i_step",        SLOWDL_U_MASK, 16},
     {"i_flc",         SLOWDL_U_MASK, 16},
     {"i_gy",          SLOWDL_U_MASK, 16},
