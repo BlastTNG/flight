@@ -1,0 +1,8 @@
+The tdrss code which runs in palestine:
+
+tdrsslogger: logs the tdrss streams to disk.
+rnc: server for high gain streams - run fox to connect from a client.
+dnc: server for omni-data streams - run msnbc to connect from a client.
+tea: server for dialup-data streams - run rush to connect from a client.
+
+doRestart: restart the ground station, including blastcmd
