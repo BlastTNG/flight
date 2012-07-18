@@ -548,7 +548,7 @@ char *frameList[] = {
   "i_cal_lamp",
   "i_charcoal",
   "i_das",
-  "i_dgps",
+  "i_sbsc",
   "i_el",
   "i_flc",
   "ifpm_hall",
