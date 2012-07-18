@@ -321,7 +321,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
     {
-      {"Az Speed (deg/s on sky)", -10.0, 10.0, 'f', "0.0"},
+      {"Az Speed (deg/s)", -10.0, 10.0, 'f', "0.0"},
       {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
     }
   },
