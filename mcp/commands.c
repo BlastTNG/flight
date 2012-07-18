@@ -1095,7 +1095,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.pointing_mode.dec[i] = 0;
       }
       
-      CommandData.pointing_mode.mode = P_BOX;
+      CommandData.pointing_mode.mode = P_EL_BOX;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
       CommandData.pointing_mode.Y = rvalues[1]; /* dec */
       CommandData.pointing_mode.w = rvalues[2]; /* width */

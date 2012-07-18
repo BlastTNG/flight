@@ -828,6 +828,7 @@ static void DoElScanMode(void)
 }
 
 #define EL_BORDER 1.0
+#define AZ_BORDER 1.0
 static void DoVCapMode(void)
 {
   double caz, cel;
@@ -1254,17 +1255,17 @@ static void DoElBoxMode(void)
   double az, az2, el, el2;
   double daz_dt, del_dt;
   double lst, lat;
-  double v_az, t=1;
+  double v_el, t=1;
   int i_point;
   int new_step = 0;
   int new = 0;
   int new_scan = 0;
-  int turn_el = 0;
+  int turn_az = 0;
   static int j = 0;
 
   static double last_X=0, last_Y=0, last_w=0, last_h = 0;
-  static double v_el = 0;
-  static double targ_el=0.0;
+  static double v_az = 0;
+  static double targ_az=0.0;
 
   // Stuff for hwpr rotation triggering
   static int az_dir_last = 0; 
@@ -1310,7 +1311,7 @@ static void DoElBoxMode(void)
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w) ||
       (CommandData.pointing_mode.h != last_h) ||
-      (last_mode != P_BOX)) {
+      (last_mode != P_EL_BOX)) {
     new = 1;
     ClearElDither();
   }
@@ -1336,81 +1337,80 @@ static void DoElBoxMode(void)
       axes_mode.el_mode = AXIS_POSITION;
       axes_mode.el_dest = bottom;
       axes_mode.el_vel = 0.0;
-      v_el = 0.0;
-      targ_el = -h*0.5;
+      v_az = 0.0;
+      targ_az = -w*0.5;
       az_next_dir = 1;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;      
       return;
     }
-  }
-
+  } 
   /* set az v */
-  v_el = CommandData.pointing_mode.vel;
-#if 0
-  SetAzScanMode(az, left, right, v_az, daz_dt);
 
-  /** set El V **/
+  v_el = CommandData.pointing_mode.vel;
+  SetElScanMode(el, bottom, top, v_el, del_dt);
+
+  /** set Az V **/
   new_step = 0;
-  if (az<left) {
-    if (axes_mode.az_dir < 0) {
-      t = w/v_az + 2.0*v_az/(az_accel * SR);
+  if (el<bottom) {
+    if (axes_mode.el_dir < 0) {
+      t = h/v_el + 2.0*v_el/(EL_ACCEL * SR);
       new_step = 1;
     }
-    axes_mode.az_dir = 1;
-  } else if (az>right) {
-    if (axes_mode.az_dir > 0) {
-      t = w/v_az + 2.0*v_az/(az_accel * SR);
+    axes_mode.el_dir = 1;
+  } else if (el>top) {
+    if (axes_mode.el_dir > 0) {
+      t = h/v_el + 2.0*v_el/(EL_ACCEL * SR);
       new_step = 1;
     }
-    axes_mode.az_dir = -1;
+    axes_mode.el_dir = -1;
   }
 
   if (new_step) {
     // set v for this step
-    v_el = (targ_el - (el-cel))/t;
-    // set targ_el for the next step
-    //    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
-    targ_el += CommandData.pointing_mode.del*el_next_dir; // This is actually the next target el....
-    //    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
-    axes_mode.el_dir = el_next_dir;
-    if (targ_el>h*0.5) { // If the target el for the next step is outside the el box range
-      targ_el = h*0.5;
-      el_next_dir=-1;
-      bprintf(info,"Approaching the top: next targ_el = %f, h*0.5 = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",targ_el,h*0.5,el_next_dir,axes_mode.el_dir,v_el);
-    } else if (targ_el<-h*0.5) {
-      targ_el = -h*0.5;
-      el_next_dir = 1;
-      bprintf(info,"Approaching the bottom: next targ_el = %f, h*0.5 = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",targ_el,h*0.5,el_next_dir,axes_mode.el_dir,v_el);
+    v_az = (targ_az - (az-caz))/t;
+    // set targ_az for the next step
+    targ_az += CommandData.pointing_mode.daz*az_next_dir; // This is actually the next target az....
+    axes_mode.az_dir = az_next_dir;
+    if (targ_az>w*0.5) { // If the target az for the next step is outside the az box range
+      targ_az = w*0.5;
+      az_next_dir=-1;
+      bprintf(info,"Approaching the top %i: next targ_az = %f, h*0.5 = %f, az_next_dir = %i,axes_mode.az_dir=%i,  v_az = %f",j,targ_az,h*0.5,az_next_dir,axes_mode.az_dir,v_az);
+    } else if (targ_az<-w*0.5) {
+      targ_az = -w*0.5;
+      az_next_dir = 1;
+      bprintf(info,"Approaching the bottom %i: next targ_az = %f, h*0.5 = %f,az_next_dir = %i,axes_mode.az_dir=%i, v_az = %f",j,targ_az,h*0.5,az_next_dir,axes_mode.az_dir,v_az);
     }
   }
-  /* check for out of range in el */
-  if (el > top + EL_BORDER) {
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = caz;
-    axes_mode.az_vel = 0.0;
+  /* check for out of range in az */
+  if (az > right + AZ_BORDER) {
     axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = cel;
     axes_mode.el_vel = 0.0;
-    axes_mode.el_dest = top;
-    axes_mode.el_dir = -1;
-    if (v_el > 0) {
-      v_el = -v_el;
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_vel = 0.0;
+    bprintf(info,"%i: az_vel=%f",j,axes_mode.az_vel);
+
+    axes_mode.az_dest = left;
+    axes_mode.az_dir = -1;
+    if (v_az > 0) {
+      v_az = -v_az;
     }
     return;
-  } else if (el < bottom - EL_BORDER) {
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_dest = caz;
-    axes_mode.az_vel = 0.0;
+  } else if (az < left - AZ_BORDER) {
     axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = cel;
     axes_mode.el_vel = 0.0;
-    axes_mode.el_dest = bottom;
-    axes_mode.el_dir = 1;
-    if (v_el < 0) {
-      v_el = -v_el;
+    axes_mode.az_mode = AXIS_POSITION;
+    axes_mode.az_vel = 0.0;
+    axes_mode.az_dest = bottom;
+    axes_mode.az_dir = 1;
+    if (v_az < 0) {
+      v_az = -v_az;
     }
     return;
   }
 
-  if ( ((axes_mode.el_dir - el_dir_last)== 2) &&
+  if ( ((axes_mode.az_dir - az_dir_last)== 2) &&
        (CommandData.pointing_mode.nw == 0) ) {
 
     n_scan +=1;
@@ -1434,7 +1434,7 @@ static void DoElBoxMode(void)
     axes_mode.az_mode = AXIS_VEL;
     axes_mode.az_vel = v_az + daz_dt;
   }
-#endif //if0
+
   j++;
 
   return;
