@@ -938,7 +938,7 @@ struct ChannelStruct SlowChannels[] = {
   {"trig_thegood", 'r',  ACS2_A1, 23,		CAL16(1.0, 	     0.0), 'u',  U_V_V}, 
   {"trig_thebad",  'r',  ACS2_A1, 25,		CAL16(1.0, 	     0.0), 'u',  U_V_V}, 
   {"trig_theugly", 'r',  ACS2_A1, 27,		CAL16(1.0, 	     0.0), 'u',  U_V_V}, 
-  {"t_ifel_gy",    'r',  ACS2_A1, 47,           50.0,                 0.0, 's',  U_T_C},
+  {"t_ifel_gy",    'r',  ACS2_A1, 47,           50.0*(4.0/65536.0),   0.0, 's',  U_T_C},
   {"trig_s_thegood",'r', ACS2_A1, 51,                1.0,             0.0, 'u', U_NONE},
   {"trig_l_thegood",'r', ACS2_A1, 52,                1.0,             0.0, 'u', U_NONE},
   {"trig_s_thebad", 'r', ACS2_A1, 53,                1.0,             0.0, 'u', U_NONE},
@@ -1084,7 +1084,7 @@ struct ChannelStruct FastChannels[] = {
   {"duty_s_el",    'w',   ACS2_D, 30,     1.0, 0.0, 'u', U_NONE},
   {"el_raw_1_enc", 'r',   ACS2_D, 56,               I2DEG,            -245.54, 'u', U_P_DEG},
   {"el_raw_2_enc", 'r',   ACS2_D, 57,               -I2DEG,            214.87, 'u', U_P_DEG},
-  {"vel_ifel_gy",  'r', ACS2_A1,  45,     14.9925037, 0.0, 's', U_V_DPS},  
+  {"vel_ifel_gy",  'r', ACS2_A1,  45,          14.9925037*(4.0/65536.0), 0.0, 's', U_V_DPS},  
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
   {"dps_table",    'w',    LOOP1, 34,  	     70.0/32767.0,            0.0, 's', U_V_DPS},
 
