@@ -199,11 +199,11 @@ int party_connect() {
 //*********************************************************
 // usage
 //*********************************************************
-void Usage() {
-  fprintf(stderr,"fox <hostname>\n"
+void Usage(char *name) {
+  fprintf(stderr,"%s <hostname>\n"
     "File Output eXtractor: \n"
     "Connects to an rnc server and downloads and\n"
-    "produce defiles from the high gain tdrss link.\n");
+    "produce defiles from an over the horizon link.\n", name);
     exit(0);
 }
 
@@ -559,20 +559,31 @@ int main(int argc, char *argv[]) {
   unsigned u_in;
   long long ll_in=0;
   int first_time = 1;
-  char *name;
+  char name[128];
 
+  int len;
+  int i0;
+  
   struct fifoStruct fs;
 
-  name = argv[0] + strlen(argv[0])-3;
-  if (strcmp(name, "fox")==0) {
+  /* find if we are fox, rush, or msnbc from the file name */
+  /* first strip out the directory */
+  len = strlen(argv[0]);
+  for (i0=len-1; i0>0 && (argv[0][i0-1] != '/'); i0--);
+  for (i_in = i0; i_in<len; i_in++) {
+    name[i_in-i0] = argv[0][i_in];
+  }
+  name[i_in-i0] = '\0';
+    
+  if (strncmp(name, "fox", 3)==0) {
     strcpy(LNKFILE, FOX_LNKFILE);
     PORT = RNC_PORT;
     EXT = FOX_EXT;
-  } else if (strcmp(name, "nbc")==0) {
+  } else if (strncmp(name, "msn", 3)==0) {
     strcpy(LNKFILE, MSNBC_LNKFILE);
     PORT = DNC_PORT;
     EXT = MSNBC_EXT;
-  } else if (strcmp(name, "ush")==0) {
+  } else if (strncmp(name, "rus", 3)==0) {
     strcpy(LNKFILE, RUSH_LNKFILE);
     PORT = TEA_PORT;
     EXT = RUSH_EXT;
@@ -583,8 +594,8 @@ int main(int argc, char *argv[]) {
 
   fs.i_in = fs.i_out = 0;
   
-  if (argc!=2) Usage();
-  if (argv[1][0]=='-') Usage();
+  if (argc!=2) Usage(name);
+  if (argv[1][0]=='-') Usage(name);
 
   sprintf(filedirname, "%s/%lu.%c", RAWDIR, time(NULL),EXT);
   if (mkdir(filedirname, 0777)<0) {
