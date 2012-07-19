@@ -367,9 +367,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_az"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_az"},
-      {"Pointing Gain", 0, MAX_15BIT, 'i', "g_pt_az"}
+      {"Proportional Gain", 0, MAX_16BIT, 'i', "g_p_az"},
+      {"Integral Gain",     0, MAX_16BIT, 'i', "g_i_az"},
+      {"Pointing Gain", 0, MAX_16BIT, 'i', "g_pt_az"}
     }
   },
   {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_GAIN, 1,
@@ -509,9 +509,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"},
-      {"Pointing Gain",     0, MAX_15BIT, 'i', "g_pt_el"}
+      {"Proportional Gain", 0, MAX_16BIT, 'i', "g_p_el"},
+      {"Integral Gain",     0, MAX_16BIT, 'i', "g_i_el"},
+      {"Pointing Gain",     0, MAX_16BIT, 'i', "g_pt_el"}
     }
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,

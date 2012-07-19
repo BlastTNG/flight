@@ -1926,15 +1926,15 @@ void InitCommandData()
 
   CommandData.az_accel = 0.4; 
 
-  CommandData.ele_gain.I = 5000; /* was 8000 */
-  CommandData.ele_gain.P = 5000; /* was 1200 */
+  CommandData.ele_gain.I = 200; /* was 8000 */
+  CommandData.ele_gain.P = 200; /* was 1200 */
   CommandData.ele_gain.PT = 3000;
 
-  CommandData.azi_gain.P = 4000;
-  CommandData.azi_gain.I = 100;
+  CommandData.azi_gain.P = 200;
+  CommandData.azi_gain.I = 200;
   CommandData.azi_gain.PT = 3000;
 
-  CommandData.pivot_gain.SP = 50; // dps
+  CommandData.pivot_gain.SP = 30; // dps
   CommandData.pivot_gain.PV = 400;
   CommandData.pivot_gain.PE = 0;
   CommandData.pivot_gain.F = 0.3;

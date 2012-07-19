@@ -22,6 +22,7 @@
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
+#define MAX_16BIT (65535.)
 #define MAX_30BIT (1073741823.)
 
 #define N_GROUPS 25
