@@ -34,6 +34,8 @@
 
 #define GPSCOM "/dev/ttySI5"
 
+extern short int InCharge;
+
 void nameThread(const char*);	/* mcp.c */
 
 struct DGPSAttStruct DGPSAtt[3];
@@ -103,9 +105,14 @@ void WatchDGPS()
   float s,m;
   struct tm ts;
   int pos_ok;
-
+  
   nameThread("dGPS");
   bputs(startup, "dGPS: WatchDGPS startup\n");
+
+  while (!InCharge) {  // wait to be the boss to open the port!
+    usleep(10000);
+  }
+  
 
   DGPSAtt[0].az = 0;
   DGPSAtt[0].pitch = 0;
@@ -124,6 +131,7 @@ void WatchDGPS()
 
   DGPSTime = 0;
 
+#if 0
   /************************ Set serial ports: *******************/
   /* Set our serial port to 9600 (the dGPS default, then
    * tell the dgps to set its port B to 38400, then set our port
@@ -147,6 +155,7 @@ void WatchDGPS()
   fprintf(fp,"$PASHS,SPD,B,7\r\n"); // 38400 Pg 66
 
   fclose(fp);
+#endif 
 
   SetGPSPort(B38400);
 
@@ -154,6 +163,7 @@ void WatchDGPS()
   if (fp == NULL)
     berror(tfatal, "dGPS: error opening gps port for i/o");
 
+#if 0
   /****************** Set up Port A for ntp output *********/
   /* see file:/usr/share/doc/ntp-4.2.0-r2/html/drivers/driver20.html */
   fprintf(fp,"$PASHS,SPD,A,4\r\n"); // 4800 baud Pg66
@@ -196,13 +206,13 @@ void WatchDGPS()
   fprintf(fp,"$PASHS,NME,ZDA,B,ON\r\n");  // turn on time message P109
   fprintf(fp,"$PASHS,NME,PAT,B,ON\r\n");   // turn on attitude/position P98
   fprintf(fp,"$PASHS,NME,POS,B,ON\r\n");   // turn on pos/vel message P99
+#endif
 
   berror(info, "dGPS: GPS initialised");
 
   while (1) {
     if (fgets(instr, 499, fp) == NULL)
       berror(tfatal, "dGPS: error getting input string");
-
     if (strncmp(instr, "$GPZDA", 6) == 0) { /* p 109 */
       sscanf(instr,"$GPZDA,%2d%2d%f,%d,%d,%d",&(ts.tm_hour),&(ts.tm_min),
           &s,&(ts.tm_mday),&(ts.tm_mon),&(ts.tm_year));

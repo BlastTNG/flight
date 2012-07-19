@@ -465,6 +465,20 @@ void DoSched(void)
     return;
   }
 
+/*************************************************************/
+  /** find local comoving siderial date (in siderial seconds) **/
+  dt = (PointingData[i_point].t - S->t0) * 1.002737909; /*Ref Siderial Time */
+  d_lon = PointingData[i_point].lon;
+
+  while (d_lon < -170)
+    d_lon += 360.0;
+  while (d_lon >= 190.0)
+    d_lon -= 360.0;
+
+  dt -= ((d_lon) * 3600.00 * 24.00 / 360.0); /* add longitude correction */
+
+  sched_lst = dt;
+  
   t = PointingData[i_point].t;
   if (t < CommandData.pointing_mode.t) {
     doing_schedule = 0;
@@ -515,20 +529,6 @@ void DoSched(void)
     bputs(info, "Scheduler: *** Initial float commands complete. ***\n");
     return;
   }
-
-  /*************************************************************/
-  /** find local comoving siderial date (in siderial seconds) **/
-  dt = (PointingData[i_point].t - S->t0) * 1.002737909; /*Ref Siderial Time */
-  d_lon = PointingData[i_point].lon;
-
-  while (d_lon < -170)
-    d_lon += 360.0;
-  while (d_lon >= 190.0)
-    d_lon -= 360.0;
-
-  dt -= ((d_lon) * 3600.00 * 24.00 / 360.0); /* add longitude correction */
-
-  sched_lst = dt;
 
   /******************/
   /** find i_sched **/
