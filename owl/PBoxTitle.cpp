@@ -21,6 +21,7 @@
 
 #include "PBoxTitle.h"
 #include "PBox.h"
+#include "PMainWindow.h"
 
 PBoxTitle::PBoxTitle(QWidget *parent) :
     QLabel(parent)
@@ -30,9 +31,13 @@ PBoxTitle::PBoxTitle(QWidget *parent) :
 }
 
 void PBoxTitle::mouseMoveEvent(QMouseEvent *ev) {
+    if (PMainWindow::me->mouseInactive()) return;
+
     dynamic_cast<PBox*>(parentWidget())->mouseMoveEvent(ev);
 }
 
 void PBoxTitle::mousePressEvent(QMouseEvent *ev) {
+    if (PMainWindow::me->mouseInactive()) return;
+
     dynamic_cast<PBox*>(parentWidget())->mousePressEvent(ev);
 }

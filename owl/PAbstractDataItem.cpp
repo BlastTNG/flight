@@ -75,6 +75,8 @@ QString PAbstractDataItem::source() const
 
 void PAbstractDataItem::mousePressEvent(QMouseEvent *event)
 {
+    if (PMainWindow::me->mouseInactive()) return;
+
     emit activated();
 
     if(event) {
@@ -86,6 +88,8 @@ void PAbstractDataItem::mousePressEvent(QMouseEvent *event)
 
 void PAbstractDataItem::mouseMoveEvent(QMouseEvent *event)
 {
+    if (PMainWindow::me->mouseInactive()) return;
+
     if (!(event->buttons() & Qt::LeftButton))
         return;
     if ((event->pos() - _dragStartPos).manhattanLength() < QApplication::startDragDistance())

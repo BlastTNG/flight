@@ -73,6 +73,8 @@ const int& POwlAnimation::stage() const
 
 void POwlAnimation::mouseMoveEvent(QMouseEvent *ev)
 {
+    if (PMainWindow::me->mouseInactive()) return;
+
     if(ev->buttons()&Qt::LeftButton&&_moveThingy!=QPoint(-1,-1)) {
         QPoint p1=parentWidget()->mapFromGlobal(ev->globalPos());   //setGeometry refers to parent's (x,y)
         setGeometry((p1.x()-_moveThingy.x())/20*20,(p1.y()-_moveThingy.y())/20*20,

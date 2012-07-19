@@ -273,6 +273,8 @@ void PBox::addTitle(PBoxTitle* pbt)
 
 void PBox::mousePressEvent(QMouseEvent *e)
 {
+    if (PMainWindow::me->mouseInactive()) return;
+
     _geoMode=-1;
 //    if(parentWidget()->children().indexOf(this)!= <-- I don't really know what this code is for, but it causes problems.
 //            parentWidget()->children().size()-1)          -- Josh
@@ -289,11 +291,18 @@ void PBox::mousePressEvent(QMouseEvent *e)
 
 void PBox::mouseReleaseEvent(QMouseEvent *)
 {
+    if (PMainWindow::me->mouseInactive()) return;
+
     _geoMode=-1;
 }
 
 void PBox::mouseMoveEvent(QMouseEvent *ev)
 {
+    if (PMainWindow::me->mouseInactive()) {
+        setCursor(QCursor(Qt::ArrowCursor));
+        return;
+    }
+
     QPoint p1=parentWidget()->mapFromGlobal(ev->globalPos());   //setGeometry refers to parent's (x,y)
     QRect geo=geometry();
     bool resize=(ev->buttons()&Qt::LeftButton);

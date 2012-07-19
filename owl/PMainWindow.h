@@ -76,6 +76,7 @@ public:
     QObject* currentObject() const { return _currentObject; }
     virtual ~PMainWindow();
     void closeEvent(QCloseEvent *);
+    bool mouseInactive();
 
 
 public slots:

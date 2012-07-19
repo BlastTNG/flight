@@ -563,6 +563,10 @@ void PMainWindow::curfileLogic(QString x)
     setUpdatesEnabled(1);
 }
 
+bool PMainWindow::mouseInactive() {
+    return !(ui->actionConfigure->isChecked());
+}
+
 void PMainWindow::newLabelLogic(PAbstractDataItem *padi)
 {
     setUpdatesEnabled(0);
