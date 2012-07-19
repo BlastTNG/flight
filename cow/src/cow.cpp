@@ -305,7 +305,7 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
         if(words.size()&&words.back()=="") words.pop_back();
         if(words.size()!=max) {
             QPalette f = NOmniBox->palette();
-            f.setColor(QPalette::Base,"pink");
+            f.setColor(QPalette::Base,"yellow");
             NOmniBox->setPalette(f);
             NSendButton->setEnabled(0);
         }
@@ -1230,13 +1230,21 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     lastmcmd = -1;
     sending = 0;
 
+    Images[0] = new QPixmap(":/icons/lightning00.png");
+    Images[1] = new QPixmap(":/icons/lightning03.png");
+    Images[2] = new QPixmap(":/icons/lightning06.png");
+    Images[3] = new QPixmap(":/icons/lightning09.png");
+    Images[4] = new QPixmap(":/icons/lightning12.png");
+    Images[5] = new QPixmap(":/icons/lightning15.png");
+
+/*
     Images[0] = new QPixmap(":/icons/cow0.png");
     Images[1] = new QPixmap(":/icons/cow1.png");
     Images[2] = new QPixmap(":/icons/cow2.png");
     Images[3] = new QPixmap(":/icons/cow3.png");
     Images[4] = new QPixmap(":/icons/cow4.png");
     Images[5] = new QPixmap(":/icons/cow5.png");
-
+*/
     framenum = 0;
     numframes = 4;
     dir = 1;
@@ -1547,8 +1555,6 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     QApplication::setOrganizationName("University of Toronto");
     QApplication::setApplicationName("cow");
-
-    qDebug() << "contains super cow powers";
 
     if (argc > 2||(argc==2&&(QString(argv[1]).contains("help",Qt::CaseInsensitive)||
                              QString(argv[1]).contains("-h",Qt::CaseInsensitive)))) {

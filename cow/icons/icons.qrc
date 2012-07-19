@@ -11,5 +11,11 @@
         <file>cow3.png</file>
         <file>cow4.png</file>
         <file>cow5.png</file>
+        <file>lightning00.png</file>
+        <file>lightning03.png</file>
+        <file>lightning06.png</file>
+        <file>lightning09.png</file>
+        <file>lightning12.png</file>
+        <file>lightning15.png</file>
     </qresource>
 </RCC>
