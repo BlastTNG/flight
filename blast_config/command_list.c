@@ -323,10 +323,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(cam_unforce_lens), "Normal mode for cam lens moves", GR_SBSC},
   //Shutter commands
   {COMMAND(shutter_init), "Initialize shutter move parameters", GR_SHUTTER},
-  {COMMAND(shutter_close), "Close shutter", GR_SHUTTER},
+  {COMMAND(shutter_close), "Close shutter and keep it closed", GR_SHUTTER},
   {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_SHUTTER},
   {COMMAND(shutter_open), "Open shutter", GR_SHUTTER},
-  {COMMAND(shutter_open_close), "Open and close shutter", GR_SHUTTER},
+  {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_SHUTTER},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_SHUTTER},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 

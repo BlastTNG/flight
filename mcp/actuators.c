@@ -533,12 +533,16 @@ static void OpenCloseShutter()
 
   if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.in) != EZ_ERR_OK)
     bputs(info, "OpenCloseShutter: Error polling opto switch");
+  usleep(SHUTTER_SLEEP);
 
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
     bputs(info, "OpenCloseShutter: doing action");
-    if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64h0M2000z0h50V10000D424P4424R") != EZ_ERR_OK)
+   if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0z5000h50V10000D424P4224R") != EZ_ERR_OK)
        bputs(warning, "OpenCloseShutter: EZ Bus error");
-  }  
+    usleep(20*SHUTTER_SLEEP);
+  }
+  else
+    bputs(info, "OpenCloseShutter: Shutter is already closed");
 
 }
 
@@ -643,7 +647,6 @@ static void DoShutter(void)
     InitializeShutter();
     EZBus_Release(&bus, id[SHUTTERNUM]);
     shutter_data.state = SHUTTER_OPEN;
-    //closing_shutter = 0;
     CommandData.actbus.shutter_goal = SHUTTER_NOP;
   }
 
@@ -663,7 +666,8 @@ static void DoShutter(void)
       break;
     case  SHUTTER_CLOSED2:
       action = SHUTTER_DO_OPEN_CLOSE;
-      CommandData.actbus.shutter_goal = SHUTTER_CLOSED;
+      //CommandData.actbus.shutter_goal = SHUTTER_CLOSED;
+      CommandData.actbus.shutter_goal = SHUTTER_NOP;
       break; 
     case  SHUTTER_INIT:
       action = SHUTTER_DO_INIT;
@@ -706,11 +710,14 @@ static void DoShutter(void)
       }
       break;
     case SHUTTER_DO_OPEN_CLOSE:
-      if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
+      //if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
         EZBus_Take(&bus, id[SHUTTERNUM]);
+        EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
         OpenCloseShutter();
         EZBus_Release(&bus, id[SHUTTERNUM]);
-      }       
+	//}
+	//else
+        //bputs(warning, "EZBus busy --- not calling OpenCloseShutter");
       break;
     case SHUTTER_DO_OPEN:
       //shutter_timeout = DRIVE_TIMEOUT;
