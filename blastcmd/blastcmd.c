@@ -52,7 +52,8 @@ double round(double x);
 
 #define ACK_COUNT 17
 
-#define INPUT_TTY "/dev/ttyUSB0"
+#define INPUT_TTY "/dev/ttyCMD"
+//#define INPUT_TTY "/dev/ttyUSB0"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
 
 int silent = 0;
