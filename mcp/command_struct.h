@@ -86,13 +86,14 @@ struct PivGainStruct {
 #define LS_DRIVE_FORCE 0x0800
 #define LS_DRIVE_MASK  0x09F4
 
-#define SHUTTER_OPEN   0x0001
-#define SHUTTER_CLOSED 0x0002
-#define SHUTTER_INIT   0x0004
-#define SHUTTER_OFF    0x0008
-#define SHUTTER_RESET  0x0010
-#define SHUTTER_NOP    0x0020
-#define SHUTTER_UNK    0x0100
+#define SHUTTER_OPEN    0x0001
+#define SHUTTER_CLOSED  0x0002
+#define SHUTTER_INIT    0x0004
+#define SHUTTER_OFF     0x0008
+#define SHUTTER_RESET   0x0010
+#define SHUTTER_NOP     0x0020
+#define SHUTTER_CLOSED2 0x0040
+#define SHUTTER_UNK     0x0100
 
 
 #define ACTBUS_FM_SLEEP  0
@@ -394,6 +395,7 @@ struct CommandDataStruct {
     int shutter_acc;
     int shutter_hold_i;
     int shutter_move_i;
+    int shutter_out;
 
     unsigned int  shutter_goal;
 
