@@ -536,7 +536,7 @@ static void OpenCloseShutter()
 
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
     bputs(info, "OpenCloseShutter: doing action");
-    if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64h0M2000z0h50D424P4424R") != EZ_ERR_OK)
+    if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64h0M2000z0h50V10000D424P4424R") != EZ_ERR_OK)
        bputs(warning, "OpenCloseShutter: EZ Bus error");
   }  
 
