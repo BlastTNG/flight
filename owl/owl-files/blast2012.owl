@@ -5,6 +5,48 @@
 , "geometryHeight" : 200, "geometryWidth" : 100, "geometryX" : 0, "geometryY" : 800 }
 , "PBox object" : 
 { "PObject" : 
+{ "_id" : 1282579068 }
+, "_boxTitle" : "Fridge Cycle", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 171613147 }
+, "_caption" : "Since Start", "_captionStyle" : "noStyle", "_defaultStyle" : "(P8)", "_format" : "%d:%H:%M:%S", "_source" : "SINCE_START_CYCLE", "type" : "PTDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1343018967 }
+, "_caption" : "Settle Time", "_captionStyle" : "noStyle", "_defaultStyle" : "(P8)", "_extrema" : false, "_format" : "%.2f", "_source" : "TIME_SET_CYCLE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1013822601 }
+, "_caption" : "Charcoal Settle", "_captionStyle" : "noStyle", "_defaultStyle" : "(P8)", "_extrema" : false, "_format" : "%.2f", "_source" : "T_CHAR_SET_CYCLE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 866297689 }
+, "_caption" : "Charcoal Max", "_captionStyle" : "noStyle", "_defaultStyle" : "(P8)", "_extrema" : false, "_format" : "%.2f", "_source" : "T_CHAR_MAX_CYCLE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1811392285 }
+, "_caption" : "Charcoal Time", "_captionStyle" : "noStyle", "_defaultStyle" : "(P8)", "_extrema" : false, "_format" : "%.2f", "_source" : "TIME_CHAR_CYCLE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 332942384 }
+, "_caption" : "Pot Max", "_captionStyle" : "noStyle", "_defaultStyle" : "(P8)", "_extrema" : false, "_format" : "%.3f", "_source" : "T_POT_MAX_CYCLE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 178530123 }
+, "_caption" : "Start", "_captionStyle" : "noStyle", "_defaultStyle" : "(P8)", "_extrema" : false, "_format" : "%.3f", "_source" : "T_START_CYCLE", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PMDI" : 
+{ "PObject" : 
+{ "_id" : 543 }
+, "_map" : 
+{ "0" : "Off [style=xhigh (P2)]", "1" : "Idle [style=standard (P8)]", "16" : "Settling[style=high (P3)]", "2" : "Heating [style=high (P3)]", "4" : "Cooling [style=high (P3)]", "8" : "HS Off [style=high (P3)]" }
+ }
+, "PObject" : 
+{ "_id" : 1624484997 }
+, "_caption" : "Autocycle", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_source" : "STATE_CYCLE", "type" : "PMDI" }
+, "geometryHeight" : 280, "geometryWidth" : 180, "geometryX" : 1260, "geometryY" : 360 }
+, "PBox object" : 
+{ "PObject" : 
 { "_id" : 545 }
 , "_boxTitle" : "Motorised Valves", "dataItem object" : 
 { "PMDI" : 
@@ -99,7 +141,7 @@
 { "PObject" : 
 { "_id" : 543 }
 , "_map" : 
-{ "0" : "Off [style=\"xhigh\" (P2)]", "1" : "Idle [style=\"standard\" (P8)]", "2" : "Heating [style=\"high\" (P3)]", "4" : "Cooling [style=\"high\" (P3)]", "8" : "HS Off [style=\"high\" (P3)]" }
+{ "0" : "Off [style=xhigh (P2)]", "1" : "Idle [style=standard (P8)]", "16" : "Settling[style=high (P3)]", "2" : "Heating [style=high (P3)]", "4" : "Cooling [style=high (P3)]", "8" : "HS Off [style=high (P3)]" }
  }
 , "PObject" : 
 { "_id" : 542 }
