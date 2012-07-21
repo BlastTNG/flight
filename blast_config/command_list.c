@@ -883,7 +883,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Charcoal Max Temp (K)", 0, 70., 'f', "T_CHAR_MAX_CYCLE"},
       {"Charcoal Timeout (min)", 0, 120., 'f', "TIME_CHAR_CYCLE"},
       {"Charcoal Settled Temp (K)", 0, 70., 'f', "T_CHAR_SET_CYCLE"},
-      {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SETTLE_CYCLE"}
+      {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
     }
   },
 
