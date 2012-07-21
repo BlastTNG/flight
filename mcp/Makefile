@@ -2,7 +2,7 @@ CC = gcc
 CXX = g++
 CFLAGS = -g -O3 -Wall
 CPPFLAGS = -D__MCP__  $(BOLOTEST) -DDAS_CARDS=12 
-LDFLAGS = -lpthread -lm -lstdc++ -lgsl -lgslcblas
+LDFLAGS = -pthread -lm -lstdc++ -lgsl -lgslcblas
 ifeq ($(DEBUG), 1)
 	CPPFLAGS := $(CPPFLAGS) -DDEBUG
 	LDFLAGS := $(LDFLAGS) -g -DDEBUG
@@ -68,7 +68,6 @@ clean:
 	rm -f *.o
 
 mcp: $(OBJS)
-
 
 ########################################################
 # Install Stuff
