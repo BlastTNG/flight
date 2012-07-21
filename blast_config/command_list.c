@@ -876,6 +876,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(fridge_cycle_params), "Fridge cycle parameters", GR_CRYO_HEAT, 6,
+    {
+      {"300mK_strap Start Temp (K)", 0, 4., 'f', "T_START_CYCLE"},
+      {"Pot Max Temp (K)", 0, 10., 'f', "T_POT_MAX_CYCLE"},
+      {"Charcoal Max Temp (K)", 0, 70., 'f', "T_CHAR_MAX_CYCLE"},
+      {"Charcoal Timeout (min)", 0, 120., 'f', "TIME_CHAR_CYCLE"},
+      {"Charcoal Settled Temp (K)", 0, 70., 'f', "T_CHAR_SET_CYCLE"},
+      {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SETTLE_CYCLE"}
+    }
+  },
+
   /***************************************/
   /********* ISC Commanding **************/
   {COMMAND(isc_offset), "set offset of ISC to primary beam",

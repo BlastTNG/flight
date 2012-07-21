@@ -18,7 +18,7 @@
 #include "isc_protocol.h"  /* required for constants */
 
 #define N_SCOMMANDS 226        /* total number of single word cmds */
-#define N_MCOMMANDS 119        /* total number of multiword commands */
+#define N_MCOMMANDS 120        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
@@ -126,7 +126,7 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
   balance_manual,    osc_set_focus,     osc_set_aperture, osc_save_period,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
-  bias_level_x,      isc_blob_centre,   dac2_level,  
+  bias_level_x,      isc_blob_centre,   dac2_level,       fridge_cycle_params,
   box,               osc_pixel_centre,  osc_blob_centre,  isc_gain,
   cal_pulse,         cal_repeat,        cap,              isc_catalogue,
   az_el_trim,        isc_det_set,       drift,            el_gain,

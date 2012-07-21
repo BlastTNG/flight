@@ -80,6 +80,7 @@
 
 #define U_NONE  "","" 
 #define U_T_C   "Temperature","^oC"
+#define U_T_K   "Temperature", "K"
 #define U_V_DPS "Rate","^o/s"
 #define U_V_MPS "Speed","m/s"
 #define U_V_KPH "Speed","km/hr"
@@ -91,6 +92,7 @@
 #define U_V_V	"Voltage","V"
 #define U_I_A   "Current","A"
 #define U_T_MS  "Time","ms"
+#define U_T_MIN "Time","min"
 #define U_R_O   "Resistance","Ohms"
 #define U_RATE "Rate", "bps"
 #define U_GB  "", "GB"
@@ -162,13 +164,14 @@ struct ChannelStruct WideSlowChannels[] = {
   {"framenum_osc", 'w', LOOP3, 31,                1.0,             0.0, 'U', U_NONE},
   {"state_osc",    'w', LOOP3, 44,                1.0,             0.0, 'U', U_NONE},
   {"mcpnum_osc",   'w', LOOP3, 58,                1.0,             0.0, 'U', U_NONE},
-  {"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
+  {"start_cycle",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
   {"lst_sched",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
   {"frame_sbsc",    'w', LOOP9, 50,                1.0,             0.0, 'U', U_NONE},
   {"sec_sbsc",      'w', LOOP9, 52,                1.0,             0.0, 'U', U_NONE},
   {"usec_sbsc",     'w', LOOP9, 54,                1.0,             0.0, 'U', U_NONE},
   //derived channel time_sbsc adds these together
+  {"start_set_cycle",'w', LOOP0, 10,               1.0,             0.0, 'U', U_NONE},
 
   END_OF_CHANNELS
 };
@@ -480,7 +483,7 @@ struct ChannelStruct SlowChannels[] = {
   {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u', U_NONE},
   {"t_case_ss",    'w', LOOP4, 23,             1/100.,         -273.15, 'u', U_NONE},
   /* LOOP4 24-25 are wide */
-  {"cycle_state",  'w', LOOP4, 26,                1.0,             0.0, 'u', U_NONE},
+  {"state_cycle",  'w', LOOP4, 26,                1.0,             0.0, 'u', U_NONE},
   {"trig_type_isc",'w', LOOP4, 27,                1.0,             0.0, 'u', U_NONE},
   {"exposure_isc", 'w', LOOP4, 28,               100.,             0.0, 'u', U_NONE},
   {"trig_type_osc",'w', LOOP4, 29,                1.0,             0.0, 'u', U_NONE},
@@ -817,7 +820,14 @@ struct ChannelStruct SlowChannels[] = {
   {"df_s_flc",       'w', LOOP0,  0,          1.0/250.0,             0.0, 'u', U_GB},
   {"timeout_s",      'w', LOOP0,  1,                1.0,             0.0, 'u', U_NONE},
   {"t_cpu_s_flc",    'w', LOOP0,  2,               0.01,             0.0, 'u', U_NONE},
-  /* LOOP0 3-63 are unused */
+  {"t_start_cycle",   'w', LOOP0,  3,        4.0/65536.0,             0.0, 'u', U_T_K},
+  {"t_pot_max_cycle", 'w', LOOP0,  4,       10.0/65536.0,             0.0, 'u', U_T_K},
+  {"t_char_max_cycle",'w', LOOP0,  5,       70.0/65536.0,             0.0, 'u', U_T_K},
+  {"t_char_set_cycle",'w', LOOP0,  6,       70.0/65536.0,             0.0, 'u', U_T_K},
+  {"time_char_cycle", 'w', LOOP0,  7,      120.0/65536.0,             0.0, 'u', U_T_MIN},
+  {"time_set_cycle",  'w', LOOP0,  8,      120.0/65536.0,             0.0, 'u', U_T_MIN},
+  /* LOOP0 10-11 are wide slow */
+  /* LOOP0 9, 12-63 are unused */
 
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

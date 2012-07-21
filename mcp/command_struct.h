@@ -305,6 +305,14 @@ struct CommandDataStruct {
     unsigned short fridgeCycle;
     unsigned short force_cycle;
 
+    double cycle_start_temp;
+    double cycle_pot_max;
+    double cycle_charcoal_max;
+    double cycle_charcoal_settle;
+    //timeouts in minutes (NB: time will probably be in seconds)
+    double cycle_charcoal_timeout;
+    double cycle_settle_timeout;
+
     unsigned short BDAHeat;
     unsigned short hsPot;
     short heliumLevel;

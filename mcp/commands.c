@@ -1544,6 +1544,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.JFETSetOff = rvalues[1];
       break;
 
+    case fridge_cycle_params:
+      CommandData.Cryo.cycle_start_temp = rvalues[0];
+      CommandData.Cryo.cycle_pot_max = rvalues[1];
+      CommandData.Cryo.cycle_charcoal_max = rvalues[2];
+      CommandData.Cryo.cycle_charcoal_timeout = rvalues[3];
+      CommandData.Cryo.cycle_charcoal_settle = rvalues[4];
+      CommandData.Cryo.cycle_settle_timeout = rvalues[5];
+      break;
+
 #ifndef BOLOTEST
       /***************************************/
       /********* ISC Commanding  *************/
@@ -2002,9 +2011,9 @@ void InitCommandData()
   CommandData.Temporary.dac_out[3] = 0x8000;
   CommandData.Temporary.dac_out[4] = 0x8000;
 
-  CommandData.Bias.bias[0] = 10000;   //500um
-  CommandData.Bias.bias[1] = 10000;   //350um
-  CommandData.Bias.bias[2] = 10000;   //250um
+  CommandData.Bias.bias[0] = 12470;   //500um
+  CommandData.Bias.bias[1] = 11690;   //350um
+  CommandData.Bias.bias[2] = 13940;   //250um
   CommandData.Bias.bias[3] = 1050;   //ROX
   CommandData.Bias.bias[4] = 16384;  //X
 
@@ -2083,6 +2092,13 @@ void InitCommandData()
   CommandData.Cryo.calib_pulse = 30; /* = 300 ms @ 100Hz */
   CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
   CommandData.Cryo.calib_repeats = -1;  //indefinitely
+
+  CommandData.Cryo.cycle_start_temp = 0.375;
+  CommandData.Cryo.cycle_pot_max = 2.5;
+  CommandData.Cryo.cycle_charcoal_max = 40.0;
+  CommandData.Cryo.cycle_charcoal_timeout = 30.0;
+  CommandData.Cryo.cycle_charcoal_settle = 25.0;
+  CommandData.Cryo.cycle_settle_timeout = 40.0;
 
   CommandData.ISCState[0].useLost = 1;
   CommandData.ISCState[0].abort = 0;
@@ -2168,18 +2184,18 @@ void InitCommandData()
   CommandData.lat = -77.86;  //McMurdo Building 096
   CommandData.lon = -167.04; //Willy Field Dec 2010
 
-  CommandData.Phase[0] = 27468;
-  CommandData.Phase[1] = 27468;
-  CommandData.Phase[2] = 27468;
-  CommandData.Phase[3] = 27468;
-  CommandData.Phase[4] = 27468;
-  CommandData.Phase[5] = 27468;
-  CommandData.Phase[6] = 10791;
-  CommandData.Phase[7] = 10791;
-  CommandData.Phase[8] = 10791;
-  CommandData.Phase[9] = 10791;
-  CommandData.Phase[10] = 11118;
-  CommandData.Phase[11] = 11118;
+  CommandData.Phase[0] = 27000;
+  CommandData.Phase[1] = 27000;
+  CommandData.Phase[2] = 27000;
+  CommandData.Phase[3] = 26700;
+  CommandData.Phase[4] = 26700;
+  CommandData.Phase[5] = 26700;
+  CommandData.Phase[6] =  9800;
+  CommandData.Phase[7] =  9800;
+  CommandData.Phase[8] =  9800;
+  CommandData.Phase[9] =  9800;
+  CommandData.Phase[10] = 10000;
+  CommandData.Phase[11] =  9800;
   CommandData.Phase[12] = 11600;    //ROX
 
   WritePrevStatus();
