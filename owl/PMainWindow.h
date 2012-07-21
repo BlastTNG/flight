@@ -78,7 +78,6 @@ public:
     void closeEvent(QCloseEvent *);
     bool mouseInactive();
 
-
 public slots:
     void readmeHelp();
     void webServerHelp();
@@ -119,6 +118,7 @@ public slots:
     void activate();
 
     void owlSave();
+    void owlSaveAs();
     void owlLoad(QString file="");
     void addOwl();
 

@@ -50,6 +50,8 @@
 
 PMainWindow* PMainWindow::me=0;
 
+static QString _filename;
+
 PMainWindow::PMainWindow(QString file, QWidget *parent) :
     QMainWindow(parent),
     PObject(0),
@@ -82,6 +84,7 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     connect(_mdiArea,SIGNAL(newBox(PBox*)),this,SLOT(uiLogic()));
     connect(ui->comboBox,SIGNAL(activated(int)),this,SLOT(uiLogic()));
     connect(ui->actionSave,SIGNAL(activated()),this,SLOT(owlSave()));
+    connect(ui->actionSaveAs,SIGNAL(activated()),this,SLOT(owlSaveAs()));
     connect(ui->actionLoad,SIGNAL(activated()),this,SLOT(owlLoad()));
     connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(currowLogic()));
     connect(ui->toolButtonHelp,SIGNAL(clicked()),this,SLOT(webServerHelp()));
@@ -131,6 +134,7 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
 
     if(file.size()) {
         owlLoad(file);
+        _filename = file;
     }
 
     if(!_deleteScheduled&&!PObject::isLoading) show();
@@ -1005,14 +1009,37 @@ void PMainWindow::activate()
 QVariant save(PMainWindow&b);
 void PMainWindow::owlSave()
 {
-    QFile file(QFileDialog::getSaveFileName(this,"Save the current owl project","","Owl projects(*.owl)"));
+    QString filename = _filename; //settings->value("filename").toString();
+    QFileInfo qfi(filename);
+    qDebug() << "Saving " << _filename;
+    if (qfi.exists()) {
+        QFile file(filename);
+        file.open(QFile::WriteOnly | QFile::Text);
+        QJson::Serializer s;
+        file.write(s.serialize(save(*this)).replace('{',"\n{").replace('}',"}\n"));
+        _settings->setValue("filename", file.fileName());
+
+        file.close();
+    } else {
+        owlSaveAs();
+    }
+}
+
+void PMainWindow::owlSaveAs()
+{
+    QString filename = _filename; //settings->value("filename").toString();
+    QFileInfo qfi(filename);
+
+    QFile file(QFileDialog::getSaveFileName(this,"Save the current owl project",qfi.dir().dirName(),"Owl projects(*.owl)"));
     file.open(QFile::WriteOnly | QFile::Text);
     QJson::Serializer s;
     file.write(s.serialize(save(*this)).replace('{',"\n{").replace('}',"}\n"));
     _settings->setValue("filename", file.fileName());
+    _filename = file.fileName();
 
     file.close();
 }
+
 
 void load(QVariant v,PMainWindow&b);
 void PMainWindow::owlLoad(QString filename)
@@ -1103,6 +1130,7 @@ void PMainWindow::owlLoad(QString filename)
     }
 
     _settings->setValue("filename", filename);
+    _filename = filename;
     PStyleNotifier::me->enable();
     PStyleNotifier::me->notifyChange();
     setUpdatesEnabled(1);

@@ -626,6 +626,7 @@
    <addaction name="actionConfigure"/>
    <addaction name="actionWeb_Server"/>
    <addaction name="actionSave"/>
+   <addaction name="actionSaveAs"/>
    <addaction name="actionLoad"/>
    <addaction name="actionHelp"/>
   </widget>
@@ -656,6 +657,11 @@
   <action name="actionSave">
    <property name="text">
     <string>Save</string>
+   </property>
+  </action>
+  <action name="actionSaveAs">
+   <property name="text">
+    <string>Save As</string>
    </property>
   </action>
   <action name="actionLoad">
