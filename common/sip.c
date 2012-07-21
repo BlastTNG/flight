@@ -22,6 +22,10 @@
  *
  */
 
+/* Define this symbol to have mcp log all SIP traffic */
+#undef SIP_CHATTER
+#undef VERBOSE_SIP_CHATTER
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -865,6 +869,7 @@ void WatchPort (void* parameter)
             if ((indata[1] & 0xE0) == 0xA0) {
               /*** Single command ***/
               bprintf(info, "Single command received\n");
+              //FIXME: this limits # single commands to 255. use indata[1] too
               SingleCommand(indata[0], 0);
               mcommand = -1;
             } else if ((indata[1] & 0xE0) == 0x80) {

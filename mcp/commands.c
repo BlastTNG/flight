@@ -22,10 +22,6 @@
  *
  */
 
-/* Define this symbol to have mcp log all SIP traffic */
-#undef SIP_CHATTER
-#undef VERBOSE_SIP_CHATTER
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
