@@ -515,7 +515,7 @@ union DerivedUnion DerivedChannels[] = {
       "AUTO_JFET_HEAT"
       ),
 
-  LINCOM2("TIME_SINCE_START_CYCLE", "TIME", 1, 0, "START_CYCLE",  -1, 0),
+  LINCOM2("SINCE_START_CYCLE", "TIME", 1, 0, "START_CYCLE",  -1, 0),
 
 #if 0
   COMMENT("Control bits to the Cryo control card"),
