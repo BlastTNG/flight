@@ -23,8 +23,8 @@ SHARED_HEADERS = bbc_pci.h blast.h channels.h compressstruct.h crc.h derived.h \
                  ephem_read.h ephem_types.h fir.h flcdataswap.h lut.h netcmd.h \
                  sip.h starpos.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h command_struct.h copleycommand.h \
-hwpr.h ezstep.h mcp.h motordefs.h pointing_struct.h \
-								sbsc_protocol.h sbsccommunicator.h slow_dl.h sss_struct.h tx.h
+								hwpr.h ezstep.h mcp.h motordefs.h pointing_struct.h \
+								sbsc_protocol.h sbsccommunicator.h slow_dl.h tx.h
 
 # These are needed by both bolotest and flight versions
 EXPT_OBJS = command_list.o derived.o tx_struct.o
@@ -37,8 +37,7 @@ EXPT_OBJS += compressstruct.o
 SHARED_OBJS += compressfuncs.o compressionwriter.o crc.o ephem_read.o fir.o \
 							 flcdataswap.o geomag.o radbox.o starpos.o
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o copleycommand.o dgps.o isc.o \
-							motors.o pointing.o sbsc.o sbsccommunicator.o sched.o slow_dl.o \
-							sunsensor.o
+							motors.o pointing.o sbsc.o sbsccommunicator.o sched.o slow_dl.o
 endif
 
 ETC_DATA = WMM.COF *.sch *.lut *.txt ephem.2000 sched.library

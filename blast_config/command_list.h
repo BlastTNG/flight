@@ -19,7 +19,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 #include "isc_protocol.h"  /* required for constants */
 
-#define N_SCOMMANDS 226        /* total number of single word cmds */
+#define N_SCOMMANDS 221        /* total number of single word cmds */
 #define N_MCOMMANDS 120        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -74,7 +74,7 @@ enum singleCommand {
   level_on,         mag_allow,          mag_veto,         osc_auto_focus,
   pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,       
   pot_valve_open,   ramp,               reset_trims,      isc_save_images,
-  stop,             sun_veto,           sun_allow,        pss_veto,
+  stop,             pss_veto,
   pss_allow,        isc_eye_off,	trim_osc_to_isc,
   trim_to_isc,      unlock,             lock_off,         
   isc_reboot,       isc_cam_cycle,      osc_run,          osc_shutdown,
@@ -98,8 +98,8 @@ enum singleCommand {
   ifel_1_gy_off,    ifel_1_gy_on,	ifel_2_gy_off,	  ifel_2_gy_on,
   ifroll_1_gy_cycle,ifroll_2_gy_cycle,  ifyaw_1_gy_cycle, ifyaw_2_gy_cycle,
   ifel_1_gy_cycle,  ifel_2_gy_cycle,    gybox_off,        gybox_on,
-  ss_off,           ss_on,              hub232_off,	  hub232_on,
-  ss_cycle,         gybox_cycle,        isc_trig_int,     isc_trig_ext,
+  hub232_off,	      hub232_on,
+  gybox_cycle,      isc_trig_int,       isc_trig_ext,
   osc_trig_int,     osc_trig_ext,       ln_valve_on,      ln_valve_off,
   osc_veto,         osc_allow,          reap_north,       reap_south,
   isc_eye_on,       osc_eye_on,         osc_eye_off,      xy_panic,

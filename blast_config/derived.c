@@ -94,7 +94,7 @@ union DerivedUnion DerivedChannels[] = {
       "BLAST_SUCKS"),
   BITWORD("SCHEDULE", "status_mcc", 4, 3),
   BITWORD("SLOT_SCHED", "status_mcc", 8, 8),
-  BITWORD("STATUS_SUN_ETH", "status_eth", 0, 2),
+  //first two bits used to be sun sensor
   BITWORD("STATUS_ISC_ETH", "status_eth", 2, 2),
   BITWORD("STATUS_OSC_ETH", "status_eth", 4, 2),
   BITWORD("STATUS_SBSC_ETH", "status_eth", 6, 2),
@@ -103,7 +103,7 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Pointing Stuff"),
   LINCOM("X_H_P", "x_p", 0.0003662109375, 0),
   BITFIELD("veto_sensor",
-      "VETO_SS",
+      "",   //VETO_SS
       "VETO_ISC",
       "VETO_EL_ENC",
       "VETO_MAG",

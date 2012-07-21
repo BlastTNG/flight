@@ -99,7 +99,6 @@ void InitialiseFrameFile(char);
 void pushDiskFrame(unsigned short *RxFrame);
 void ShutdownFrameFile();
 
-void SunSensor(void);
 
 void InitSched();
 
@@ -485,7 +484,6 @@ static void GetACS(unsigned short *RxFrame)
   double res_piv;
   int hwpr_pot;
 
-  
   static struct BiPhaseStruct* ifElgyAddr;
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ifYawgyAddr;
@@ -514,11 +512,7 @@ static void GetACS(unsigned short *RxFrame)
   static struct BiPhaseStruct* v44PssAddr;
   static struct BiPhaseStruct* potHwprAddr;
 
-
-
-
   unsigned int rx_frame_index = 0;
-  int i_ss;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -586,7 +580,6 @@ static void GetACS(unsigned short *RxFrame)
   pss4_i4 = (double)(slow_data[v44PssAddr->index][v44PssAddr->channel]);
   hwpr_pot = (double)(slow_data[potHwprAddr->index][potHwprAddr->channel]);
 
-  i_ss = ss_index;
   ACSData.clin_elev = (double)(slow_data[elRawIfClinAddr->index][elRawIfClinAddr->channel]);
 
   ACSData.t = mcp_systime(NULL);
@@ -1052,7 +1045,6 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef BOLOTEST
-  pthread_t sunsensor_id;
   pthread_t compression_id;
   pthread_t bi0_id;
   pthread_t sensors_id;
@@ -1192,7 +1184,6 @@ int main(int argc, char *argv[])
   }
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
-  pthread_create(&sunsensor_id, NULL, (void*)&SunSensor, NULL);
 
   pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);

@@ -41,7 +41,6 @@
 #include <time.h>
 #include "isc_protocol.h"   /* required for ISCData; get updates from
                                Ed Chapin and/or the ISC computer */
-#include "sss_struct.h"
 
 #define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 #define SEC2RAD (1. / RAD2SEC)
@@ -149,9 +148,6 @@ struct PivotMotorDataStruct{
 extern struct PivotMotorDataStruct PivotMotorData[3];
 extern int pivot_motor_index; // defined in motors.c
 
-extern sss_packet_data SunSensorData[3];
-extern int ss_index;
-
 
 /**********************************************/
 /*  PointingDataStruct                        */
@@ -190,11 +186,6 @@ struct PointingDataStruct {
   double dgps_pitch; // degrees
   double dgps_roll; // degrees
   double dgps_sigma; // degrees
-  double ss_az; // degrees
-  double ss_sigma; // degrees
-  double ss_snr; // max/ave
-  double ss_phase; // az rel cell
-  double ss_az_rel_sun;
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
   double pss_azraw; //degrees

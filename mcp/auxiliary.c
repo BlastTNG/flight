@@ -713,10 +713,6 @@ void ControlPower(void) {
     misc |= 0x08;
   }
 
-  if (CommandData.power.ss_off) {
-    if (CommandData.power.ss_off > 0) CommandData.power.ss_off--;
-    misc |= 0x20;
-  }
   if (CommandData.power.charge.set_count > 0) {
     CommandData.power.charge.set_count--;
     if (CommandData.power.charge.set_count < LATCH_PULSE_LEN) misc |= 0x0040;

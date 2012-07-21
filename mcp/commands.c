@@ -186,9 +186,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case restore_piv:
       CommandData.restore_piv=1;
       break;
-    case sun_veto:      /* Veto sensors */
-      CommandData.use_sun = 0;
-      break;
     case pss_veto:
       CommandData.use_pss = 0;
       break;
@@ -211,9 +208,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.use_elclin = 0;
       break;
 
-    case sun_allow:      /* Un-veto sensors */
-      CommandData.use_sun = 1;
-      break;
     case pss_allow:
       CommandData.use_pss = 1;
       break;
@@ -480,15 +474,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case hub232_cycle:
       CommandData.power.hub232_off = PCYCLE_HOLD_LEN;
-      break;
-    case ss_off:
-      CommandData.power.ss_off = -1;
-      break;
-    case ss_on:
-      CommandData.power.ss_off = 0;
-      break;
-    case ss_cycle:
-      CommandData.power.ss_off = PCYCLE_HOLD_LEN;
       break;
     case actbus_off:
       CommandData.actbus.off = -1;
@@ -1867,7 +1852,6 @@ void InitCommandData()
   CommandData.power.gyro_off[4] = 0;
   CommandData.power.gyro_off[5] = 0;
   CommandData.power.hub232_off = 0;
-  CommandData.power.ss_off = 0;
   for (i=0; i<16; i++)
     CommandData.power.adc_reset[i] = 0;
 
@@ -1962,7 +1946,6 @@ void InitCommandData()
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;
-  CommandData.use_sun = 1;
   CommandData.use_pss = 1;
   CommandData.use_isc = 1;
   CommandData.use_osc = 1;
@@ -1976,7 +1959,6 @@ void InitCommandData()
   CommandData.null_az_trim = 0;
   CommandData.mag_az_trim = 0;
   CommandData.dgps_az_trim = 0;
-  CommandData.ss_az_trim = 0;
   CommandData.pss_az_trim = 0;
 
   SIPData.MKScal.m_hi = 0.01;
