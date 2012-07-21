@@ -333,10 +333,10 @@ struct scom scommands[N_SCOMMANDS] = {
 };
 
 /* parameter type:
- * i :  parameter is 15 bit unnormalised integer
- * l :  parameter is 30 bit unnormalised integer
- * f :  parameter is 15 bit renormalised floating point
- * d :  parameter is 30 bit renormalised floating point
+ * i :  parameter is 16 bit unnormalised integer. Max is CMD_I_MAX
+ * l :  parameter is 32 bit unnormalised integer. Max is CMD_L_MAX
+ * f :  parameter is 16 bit renormalised floating point
+ * d :  parameter is 32 bit renormalised floating point
  * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
@@ -368,9 +368,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, MAX_16BIT, 'i', "g_p_az"},
-      {"Integral Gain",     0, MAX_16BIT, 'i', "g_i_az"},
-      {"Pointing Gain", 0, MAX_16BIT, 'i', "g_pt_az"}
+      {"Proportional Gain", 0, CMD_I_MAX, 'i', "g_p_az"},
+      {"Integral Gain",     0, CMD_I_MAX, 'i', "g_i_az"},
+      {"Pointing Gain", 0, CMD_I_MAX, 'i', "g_pt_az"}
     }
   },
   {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_GAIN, 1,
@@ -510,9 +510,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, MAX_16BIT, 'i', "g_p_el"},
-      {"Integral Gain",     0, MAX_16BIT, 'i', "g_i_el"},
-      {"Pointing Gain",     0, MAX_16BIT, 'i', "g_pt_el"}
+      {"Proportional Gain", 0, CMD_I_MAX, 'i', "g_p_el"},
+      {"Integral Gain",     0, CMD_I_MAX, 'i', "g_i_el"},
+      {"Pointing Gain",     0, CMD_I_MAX, 'i', "g_pt_el"}
     }
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
@@ -1160,7 +1160,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
-      {"Plover", 0, MAX_15BIT, 'i', "PLOVER"}
+      {"Plover", 0, CMD_I_MAX, 'i', "PLOVER"}
     }
   }
 };

@@ -14,6 +14,8 @@
 #ifndef COMMAND_LIST_H
 #define COMMAND_LIST_H
 
+#include <limits.h>
+
 #include "netcmd.h"  /* common parts of command defintions moved here */
 #include "isc_protocol.h"  /* required for constants */
 
@@ -21,9 +23,9 @@
 #define N_MCOMMANDS 120        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
-#define MAX_15BIT (32767.)
-#define MAX_16BIT (65535.)
-#define MAX_30BIT (1073741823.)
+#define MAX_15BIT (32767.)    //deprecated. Probably want CMD_I_MAX instead
+#define CMD_I_MAX USHRT_MAX
+#define CMD_L_MAX UINT_MAX
 
 #define N_GROUPS 25
 
