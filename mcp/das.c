@@ -322,7 +322,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int  reset,
     startCycleRAddr = ExtractBiPhaseAddr(startCycleWAddr);
     stateCycleWAddr = GetNiosAddr("state_cycle");
     stateCycleRAddr = ExtractBiPhaseAddr(stateCycleWAddr);
-    startSetCycleWAddr = GetNiosAddr("start_settle_cycle");
+    startSetCycleWAddr = GetNiosAddr("start_set_cycle");
     startSetCycleRAddr = ExtractBiPhaseAddr(startSetCycleWAddr);
     WriteData(stateCycleWAddr, CRYO_CYCLE_OUT, NIOS_QUEUE);
 
