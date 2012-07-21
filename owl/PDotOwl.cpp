@@ -710,6 +710,12 @@ QVariant save(PBox&b)
     map.insert("geometryWidth",b.geometry().width());
     map.insert("geometryHeight",b.geometry().height());  //our wonderful json parser doesn't like parsing qrects
     map.insert("_boxTitle",b._boxTitle);
+    if(b._pstyle!=PStyle::noStyle) {
+        map.insert("_style",b._pstyle->idText());
+    } else {
+        map.insert("_style","noStyle");
+    }
+
     for(int i=0;i<b._dataItems.size();i++) {
         map.insertMulti("dataItem object",save(*b._dataItems[i]));
     }
@@ -770,6 +776,19 @@ void load(QVariant v,PBox&b)
 
     b.setGeometry(m["geometryX"].toInt(),m["geometryY"].toInt(),m["geometryWidth"].toInt(),m["geometryHeight"].toInt());
     b.setBoxTitle(m["_boxTitle"].toString());
+
+    QString idText=m["_style"].toString();
+    bool ok=0;
+    for(int i=0;i<PStyle::_u.size();i++) {
+        if(PStyle::_u[i]->idText()==idText) {
+            ok=1;
+            b._pstyle=PStyle::_u[i];
+            break;
+        }
+    }
+    if (!ok) {
+        qDebug() << "warning: box without style";
+    }
 
     for(int i=m.count("dataItem object")-1;i>=0;i--) {  //BUG (?) - there is no guarantee of order in maps, so you might need to change this
         PAbstractDataItem* padi=0;
@@ -838,7 +857,6 @@ QVariant save(PMainWindow&b)
 {
     QVariantMap ret;
     ret.insert("OWL FILE rev.",20120716);
-
     ret.insert("windowWidth", b.size().width());
     ret.insert("windowHeight", b.size().height());
 
