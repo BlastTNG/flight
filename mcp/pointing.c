@@ -1028,7 +1028,7 @@ void Pointing(void)
   static struct AzSolutionStruct MagAz = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
-    M2DV(90), // systemamatic varience
+    M2DV(300), // systemamatic varience
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
