@@ -531,7 +531,6 @@ static void ResetShutter()
 
 static void OpenCloseShutter()
 {
-  int  counter = 0;
 
   bputs(info, "OpenCloseShutter...");
 
@@ -555,6 +554,7 @@ static void OpenCloseShutter()
 
 
 #define SHUTTER_CLOSE_TIMEOUT 20000000
+//#define COMPILE_OLD  1
 
 static void CloseShutter()
 {
@@ -567,8 +567,14 @@ static void CloseShutter()
     bputs(info, "CloseShutter: 1. Error polling opto switch");
   else
     ;
-  //new_opto = 1;
 
+  //bprintf(info, "%d %d %d", shutter_data.in, shutter_data.in & SHUTTER_CLOSED_BIT,
+  //        SHUTTER_CLOSED_BIT);
+  
+#ifdef COMPILE_OLD
+  // This code does the old style clsing of the shutter:
+  // Close shutter a little, check the opto, close the shutter a little,
+  // check the opto... until shutter is closed
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
 
     bputs(info, "CloseShutter: Closing shutter...");
@@ -583,12 +589,9 @@ static void CloseShutter()
           //if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64z0h50V1000P300R") != EZ_ERR_OK)
           if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64z5000h50V1000D300R") != EZ_ERR_OK)
             bputs(warning, "CloseShutter: EZ Bus error");
-          //usleep(SHUTTER_SLEEP);
           closing_shutter = 1;
         }
-	//        new_opto = 0;
       }
-      //usleep(SHUTTER_SLEEP);
       shutter_timeout += SHUTTER_SLEEP;
     }
   }
@@ -597,6 +600,27 @@ static void CloseShutter()
     shutter_data.state = SHUTTER_CLOSED;
     //bputs(info, "CloseShutter: shutter is closed");
   }
+#else
+  // This code does new style closing of the shutter:
+  // If the shutter is not closed, then turn of the shutter (it will fall
+  // open), drive against limit switch then close quickly.
+  if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
+    bputs(info, "In new code");
+     usleep(SHUTTER_SLEEP);
+     if (EZBus_Comm(&bus, id[SHUTTERNUM], "z0V10000h0M2000h50P424z5000D4224R") != EZ_ERR_OK)
+        bputs(warning, "CloseShutter: EZ Bus error");
+     usleep(SHUTTER_SLEEP);
+     bputs(info, "start wait..");
+     usleep(5000000);   // Wait 5 seconds
+     EZBus_Stop(&bus, id[SHUTTERNUM]);
+     bputs(info, "end wait");
+  }
+  else {  // Shutter is closed according to opto switch
+    closing_shutter = 0;
+    shutter_data.state = SHUTTER_CLOSED;
+    //bputs(info, "CloseShutter: shutter is closed");
+  }
+#endif
 
   if (shutter_timeout >= SHUTTER_CLOSE_TIMEOUT)
     bputs(warning, "CloseShutter: Closing shutter timed out");
@@ -606,8 +630,8 @@ static void CloseShutter()
 
 static void OpenShutter()
 {
-  //EZBus_Comm(&bus, id[SHUTTERNUM], "z5000V10000D4424R");
-  EZBus_Comm(&bus, id[SHUTTERNUM], "z0V10000P4424R");
+  //EZBus_Comm(&bus, id[SHUTTERNUM], "z5000V10000D4224R");
+  EZBus_Comm(&bus, id[SHUTTERNUM], "z0V10000P4224R");
 }
 
 
