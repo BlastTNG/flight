@@ -1011,7 +1011,6 @@ void PMainWindow::owlSave()
 {
     QString filename = _filename; //settings->value("filename").toString();
     QFileInfo qfi(filename);
-    qDebug() << "Saving " << _filename;
     if (qfi.exists()) {
         QFile file(filename);
         file.open(QFile::WriteOnly | QFile::Text);

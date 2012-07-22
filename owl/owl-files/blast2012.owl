@@ -1,8 +1,8 @@
 
 { "OWL FILE rev." : 20120716, "Owl" : 
 { "PObject" : 
-{ "_id" : 562 }
-, "geometryHeight" : 200, "geometryWidth" : 100, "geometryX" : 0, "geometryY" : 800 }
+{ "_id" : 1590493958 }
+, "geometryHeight" : 120, "geometryWidth" : 80, "geometryX" : 20, "geometryY" : 840 }
 , "PBox object" : 
 { "PObject" : 
 { "_id" : 719690853 }
@@ -2411,4 +2411,4 @@
 { "PObject" : 
 { "_id" : 1445697244 }
 , "_bg" : "#e6ffff", "_bold" : true, "_fg" : "#005050", "_italic" : false, "_linked" : true, "_name" : "bolo_box" }
-, "_dirfileFilename" : "/data/etc/defile.lnk", "windowHeight" : 876, "windowWidth" : 1375 }
+, "_dirfileFilename" : "/data/etc/defile.lnk", "windowHeight" : 1053, "windowWidth" : 1375 }

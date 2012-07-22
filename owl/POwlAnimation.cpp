@@ -62,7 +62,7 @@ void POwlAnimation::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
 
 QSize POwlAnimation::sizeHint()
 {
-    return QSize(100,200);
+    return QSize(85,120);
 }
 
 const int& POwlAnimation::stage() const
