@@ -48,17 +48,21 @@ time_t DGPSTime;
 
 #define LEAP_SECONDS 0
 
-static void SetGPSPort(speed_t speed)
+static int SetGPSPort(speed_t speed)
 {
   int fd;
 
   struct termios term;
 
-  if ((fd = open(GPSCOM, O_RDWR)) < 0)
-    berror(tfatal, "dGPS: Unable to open dgps serial port");
+  if ((fd = open(GPSCOM, O_RDWR)) < 0) {
+    return 0;
+    // berror(tfatal, "dGPS: Unable to open dgps serial port");
+  }
 
-  if (tcgetattr(fd, &term))
-    berror(tfatal, "dGPS: Unable to get dgps serial port attributes");
+  if (tcgetattr(fd, &term)) {
+    return 0;
+    //berror(tfatal, "dGPS: Unable to get dgps serial port attributes");
+  }
 
   term.c_iflag = 0;
   term.c_oflag = 0;
@@ -66,13 +70,18 @@ static void SetGPSPort(speed_t speed)
   term.c_cflag |= CS8;
   term.c_lflag = 0;
 
-  if (cfsetispeed(&term, speed))
-    berror(tfatal, "dGPS: error setting serial input speed");
+  if (cfsetispeed(&term, speed)) {
+    return 0;
+    //berror(tfatal, "dGPS: error setting serial input speed");
+  }
 
-  if (tcsetattr(fd, TCSANOW, &term))
+  if (tcsetattr(fd, TCSANOW, &term)) {
+    return 0;
     berror(tfatal, "dGPS: Unable to set serial attributes");
+  }
 
   close(fd);
+  return 1;
 }
 
 /** grab the next field from a command delimeted list **/
@@ -98,17 +107,21 @@ static int GetField(char *instr, char *outstr)
 
 void WatchDGPS()
 {
-  FILE *fp;
+  FILE *fp = NULL;
   char instr[500], outstr[500];
   char *inptr;
   int d;
   float s,m;
   struct tm ts;
   int pos_ok;
+  int serial_error = 0;
+  int serial_set = 0;
   
   nameThread("dGPS");
   bputs(startup, "dGPS: WatchDGPS startup\n");
 
+  //sleep (12); 
+  
   while (!InCharge) {  // wait to be the boss to open the port!
     usleep(10000);
   }
@@ -157,12 +170,22 @@ void WatchDGPS()
   fclose(fp);
 #endif 
 
-  SetGPSPort(B38400);
+  do {
+    serial_set = SetGPSPort(B38400);
 
-  fp = fopen(GPSCOM, "r+");
-  if (fp == NULL)
-    berror(tfatal, "dGPS: error opening gps port for i/o");
-
+    if (serial_set){
+      fp = fopen(GPSCOM, "r+");
+    }
+    
+    if (fp == NULL) {
+      if (!serial_error) {
+        bprintf(info, "error opening gps serial port.  Will silently try again every 1s.");
+        serial_error = 1;
+      }
+      sleep(1);
+    }
+  } while (fp == NULL);
+  
 #if 0
   /****************** Set up Port A for ntp output *********/
   /* see file:/usr/share/doc/ntp-4.2.0-r2/html/drivers/driver20.html */

@@ -89,22 +89,22 @@ fifo:
 restart: install
 ifeq ($(shell hostname),south)
 	@echo "** I am south **"
-	killall mcp
 	scp /usr/local/bin/mcp north.blast:/tmp/mcp
 	ssh north.blast 'install -d -m 666 /tmp/etc'
 	scp $(ETC_DATA) north.blast:/tmp/etc/
 	ssh north.blast 'install -m 755 /tmp/mcp /usr/local/bin'
 	ssh north.blast 'install -m 666 /tmp/etc/* /data/etc/blast'
+	killall mcp
 	ssh north.blast 'killall mcp'
 else
 ifeq ($(shell hostname),north)
 	@echo "** I am north **"
-	killall mcp
 	scp /usr/local/bin/mcp south.blast:/tmp/mcp
 	ssh south.blast 'install -d -m 666 /tmp/etc'
 	scp $(ETC_DATA) south.blast:/tmp/etc/
 	ssh south.blast 'install -m 755 /tmp/mcp /usr/local/bin'
 	ssh south.blast 'install -m 666 /tmp/etc/* /data/etc/blast'
+	killall mcp
 	ssh south.blast 'killall mcp'
 else
 	@echo "******************** WARNING ******************************"
