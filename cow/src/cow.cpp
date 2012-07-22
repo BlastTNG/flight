@@ -762,17 +762,13 @@ void MainForm::TurnOff(void) {
 //-------------------------------------------------------------
 
 void MainForm::SendCommand() {
-    int index, i, j;
+    int index, j;
     char buffer[1024];
     char request[1024];
     const char link[] = "LTI";
     const char route[] = "12";
 
     if (!sending) {
-
-        framenum=1;
-        dir=1;
-        i = 0;
 
         // Select appropiate flags
         verbose = NVerbose->isChecked();
@@ -851,6 +847,10 @@ void MainForm::SendCommand() {
                 }
             }
         }
+
+        //trigger the animation
+        dir=1;
+        framenum=1;
 
         /* Take the conn */
         /* note: loop takes place in TakeConn now. TODO implement limited attempts
