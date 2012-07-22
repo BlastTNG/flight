@@ -100,6 +100,8 @@ static struct lock_struct {
 #define  SHUTTER_IS_CLOSED 2
 #define  SHUTTER_IS_UNK    1
 #define  SHUTTER_IS_OPEN   0
+#define  SHUTTER_POLARITY  0  // If polarity on one pair of windings is reversed
+                              // then motor will turn in opposite direction
 int shutter_timeout = -1;
 
 static struct shutter_struct {
@@ -521,25 +523,30 @@ static void InitializeShutter()
 
 static void ResetShutter()
 {
-  if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0M2000h50z5000D424z0R") != EZ_ERR_OK)
+  //if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0M2000h50z5000D424z0R") != EZ_ERR_OK)
+  if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0M2000h50z5000P424z0R") != EZ_ERR_OK)
     bputs(info, "ResetShutter: Error resetting shutter");
 }
 
 
 static void OpenCloseShutter()
 {
+  int  counter = 0;
 
   bputs(info, "OpenCloseShutter...");
 
   if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.in) != EZ_ERR_OK)
     bputs(info, "OpenCloseShutter: Error polling opto switch");
   usleep(SHUTTER_SLEEP);
+  EZBus_Stop(&bus, id[SHUTTERNUM]);
 
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
     bputs(info, "OpenCloseShutter: doing action");
-   if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0z5000h50V10000D424P4224R") != EZ_ERR_OK)
+    //if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0z5000h50V10000D424P4224R") != EZ_ERR_OK)
+    if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0z5000h50V10000P424D4224R") != EZ_ERR_OK) {
        bputs(warning, "OpenCloseShutter: EZ Bus error");
-    usleep(20*SHUTTER_SLEEP);
+       usleep(20*SHUTTER_SLEEP);
+    }
   }
   else
     bputs(info, "OpenCloseShutter: Shutter is already closed");
@@ -573,7 +580,8 @@ static void CloseShutter()
           bputs(warning, "CloseShutter: 2. Error polling opto switch");
         usleep(SHUTTER_SLEEP);
         if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
-          if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64z0h50V1000P300R") != EZ_ERR_OK)
+          //if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64z0h50V1000P300R") != EZ_ERR_OK)
+          if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64z5000h50V1000D300R") != EZ_ERR_OK)
             bputs(warning, "CloseShutter: EZ Bus error");
           //usleep(SHUTTER_SLEEP);
           closing_shutter = 1;
@@ -598,7 +606,8 @@ static void CloseShutter()
 
 static void OpenShutter()
 {
-  EZBus_Comm(&bus, id[SHUTTERNUM], "z5000V10000D4424R");
+  //EZBus_Comm(&bus, id[SHUTTERNUM], "z5000V10000D4424R");
+  EZBus_Comm(&bus, id[SHUTTERNUM], "z0V10000P4424R");
 }
 
 
@@ -712,7 +721,7 @@ static void DoShutter(void)
     case SHUTTER_DO_OPEN_CLOSE:
       //if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
         EZBus_Take(&bus, id[SHUTTERNUM]);
-        EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
+        //EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
         OpenCloseShutter();
         EZBus_Release(&bus, id[SHUTTERNUM]);
 	//}
