@@ -39,20 +39,24 @@ void PMultiDataItem::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
         if (dirFile->Error()== GD_E_BAD_CODE) {
             _sourceBad = true;
             _data->setText("bad src");
+            qDebug() << "field" << _source << "is not in the dirfile";
             return;
         }
-        if(++i==5) {
+        if(++i==50) {
             if (_neverGood) {
                 if(_data->text()!="bad src") {
                     _data->setText("bad src");
                     _serverDirty=-1;
-                    _sourceBad = true;
-                } else --_serverDirty;
+                    //_sourceBad = true;
+                    qDebug() << "field" << _source << "giving up after 50 tries";
+                } else {
+                    --_serverDirty;
+                }
             }
             return;
-        } else if (!_neverGood){
-//            usleep(10000);
         }
+        qDebug() << "field" << _source << "couldn't be read. Sleeping before trying again." << i;
+        usleep(10000);
     } {
         _neverGood = false;
         QString x=_map->get(*indata);

@@ -207,7 +207,7 @@ void PMainWindow::hideEverything()
     ui->labelCaption->hide();
     ui->lineEditCaption->hide();
     disconnect(ui->lineEditCaption,0,0,0);
-    ui->labelColour->hide();
+    //ui->labelColour->hide();
     ui->labelSource->hide();
     ui->lineEditSource->hide();
     disconnect(ui->lineEditSource,0,0,0);
@@ -217,7 +217,7 @@ void PMainWindow::hideEverything()
     ui->labelFormat_multi->hide();
     ui->tableWidgetFormat->hide();
     disconnect(ui->tableWidgetFormat,0,0,0);
-    ui->label_colour2->hide();
+    //ui->label_colour2->hide();
     ui->pushButtonAddFormat->hide();
     disconnect(ui->pushButtonAddFormat,0,0,0);
     ui->pushButtonDelFormat->hide();
@@ -336,14 +336,14 @@ void PMainWindow::setCurrentObject(PAbstractDataItem*obj)
     reconnect(ui->lineEditCaption,SIGNAL(textChanged(QString)),obj,SLOT(setCaption(QString)));
     reconnect(obj,SIGNAL(textChanged(QString)),this,SLOT(uiLogic()));
 
-    ui->labelColour->show();
+    //ui->labelColour->show();
 
     ui->labelSource->show();
     ui->lineEditSource->show();
     reconnect(ui->lineEditSource,SIGNAL(textChanged(QString)),obj,SLOT(setSource(QString)));
     reconnect(obj,SIGNAL(sourceChanged(QString)),this,SLOT(uiLogic()));
 
-    ui->label_colour2->show();
+    //ui->label_colour2->show();
     ui->pstyleCaption->show();
     ui->pstyleCaption->setWidgetStyleRef(obj->_captionStyle);
 
@@ -787,7 +787,7 @@ void PMainWindow::gdUpdate()
                 ui->lineEditCaption->setText(_pboxList[i]->boxTitle());
                 ui->labelCaption->show();
                 ui->lineEditCaption->show();
-                ui->labelColour->show();
+                //ui->labelColour->show();
                 ui->pstyleCaption->show();
                 reconnect(ui->lineEditCaption,SIGNAL(textChanged(QString)),_pboxList[i],SLOT(setBoxTitle(QString)));
                 reconnect(_pboxList[i],SIGNAL(textChanged(QString)),this,SLOT(uiLogic()));
