@@ -222,12 +222,13 @@ union DerivedUnion DerivedChannels[] = {
 
 #endif
 
-  /* gondola thermistor calibration */
+  /*GONDOLA THERMISTOR CALIBRATION */
 #define THERMISTOR(tch, vch) \
     LINTERP(tch, vch, LUT_DIR "thermistor.lut"), \
     UNITS(tch, "Temperature", "^oC")
 
   COMMENT("Thermistor calibrations"),
+  /*Misc Thermometers Outer Frame cable*/
   THERMISTOR("T_PORT_HEXC", "VT_PORT_HEXC"),
   THERMISTOR("T_RW", "VT_RW"),
   THERMISTOR("T_PORT_PYR", "VT_PORT_PYR"),
@@ -236,6 +237,39 @@ union DerivedUnion DerivedChannels[] = {
   THERMISTOR("T_EL", "VT_EL"),
   THERMISTOR("T_1_BAT", "VT_1_BAT"),
   THERMISTOR("T_2_BAT", "VT_2_BAT"),
+  THERMISTOR("T_CHIN", "VT_CHIN"),
+  THERMISTOR("T_SUN", "VT_SUN"),
+  THERMISTOR("T_ARRAY", "VT_ARRAY"),
+  THERMISTOR("T_STAR_FRONT", "VT_STAR_FRONT"),
+  /*T DAS Cable*/
+  THERMISTOR("T_STBD_DAS", "VT_STBD_DAS"),
+  THERMISTOR("T_STBD_REC", "VT_STBD_REC"),
+  THERMISTOR("T_PORT_DAS", "VT_PORT_DAS"),
+  THERMISTOR("T_PORT_REC", "VT_PORT_REC"),
+  /*T BETH Cable*/
+  THERMISTOR("T_MOT_PUMP_VALVE", "VT_MOT_PUMP_VAL"),
+  THERMISTOR("T_1_PRIME", "VT_1_PRIME"),
+  THERMISTOR("T_IF_TOP_BACK", "VT_IF_TOP_BACK"),
+  THERMISTOR("T_HWPR_MOT", "VT_HWPR_MOT"),
+  THERMISTOR("T_IF_TOP_FRNT", "VT_IF_TOP_FRNT"),
+  THERMISTOR("T_HWPR_FEED", "VT_HWPR_FEED"),
+  THERMISTOR("T_IF_BOT_FRNT", "VT_IF_BOT_FRNT"),
+  /*T ISREAL Cable*/
+  THERMISTOR("T_STRUT_BOT", "VT_STRUT_BOT"),
+  THERMISTOR("T_STRUT_SIDE", "VT_STRUT_SIDE"),
+  THERMISTOR("T_2_PRIME", "VT_2_PRIME"),
+  THERMISTOR("T_IF_BOT_BACK", "VT_IF_BOT_BACK"),
+  THERMISTOR("T_DAC_BOX", "VT_DAC_BOX"),
+
+
+
+
+
+
+
+
+
+
 
   COMMENT("Lock Motor/Actuators"),
   BITFIELD("state_lock",

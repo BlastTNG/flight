@@ -1053,12 +1053,12 @@ void SecondaryMirror(void)
   double t_primary2, t_secondary2;
 
   double correction_temp = 0;
-
+/*TODO Need to add lookups for vt channels! */
   if (firsttime) {
     firsttime = 0;
-    t1PrimeAddr = GetBiPhaseAddr("t_1_prime");
+    t1PrimeAddr = GetBiPhaseAddr("vt_1_prime");
     t1SecondAddr = GetBiPhaseAddr("t_1_second");
-    t2PrimeAddr = GetBiPhaseAddr("t_2_prime");
+    t2PrimeAddr = GetBiPhaseAddr("vt_2_prime");
     t2SecondAddr = GetBiPhaseAddr("t_2_second");
     correctionSfAddr = GetNiosAddr("correction_sf");
     ageSfAddr = GetNiosAddr("age_sf");
