@@ -29,14 +29,34 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <sys/time.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 #include "pointing_struct.h"
 #include "mcp.h"
+
+#define NTPD_BASE 0x4e545030 //shared memory segment key
 
 #define GPSCOM "/dev/ttySI5"
 
 extern short int InCharge;
 
 void nameThread(const char*);	/* mcp.c */
+
+struct shmTime {
+  int	  mode;
+  int	  count;
+  time_t  clockTimeStampSec; /* external clock */
+  int	  clockTimeStampUsec;
+  time_t  receiveTimeStampSec; /* internal clock, when external value was received */
+  int	  receiveTimeStampUsec;
+  int	  leap;
+  int	  precision;
+  int	  nsamples;
+  int	  valid;
+  int	  dummy[10];
+};
 
 struct DGPSAttStruct DGPSAtt[3];
 int dgpsatt_index = 0;
@@ -105,6 +125,44 @@ static int GetField(char *instr, char *outstr)
     return i + 1;
 }
 
+struct shmTime *getShmTime() {
+  int shmid;
+  if ((shmid = shmget (NTPD_BASE, sizeof (struct shmTime), IPC_CREAT|0660))== -1) {
+    return 0;
+  } else {
+    struct shmTime *p=(struct shmTime *)shmat (shmid, 0, 0);
+    if ((int)(long)p==-1) {
+      return 0;
+    }
+    return p;
+  }
+}
+
+int ntpshm_put(double fixtime) {
+  static struct shmTime *shmTime = NULL;
+  struct timeval tv;
+  double seconds, microseconds;
+  (void)gettimeofday(&tv,NULL);
+  microseconds = 1000000.0 * modf(fixtime,&seconds);
+
+  if (shmTime == NULL) {
+    shmTime = getShmTime();
+  }
+
+  shmTime->valid =0;
+  shmTime->count++;
+  shmTime->clockTimeStampSec = (time_t)seconds;
+  shmTime->clockTimeStampUsec = (int)microseconds;
+  shmTime->receiveTimeStampSec = (time_t)tv.tv_sec;
+  shmTime->receiveTimeStampUsec = (int)tv.tv_usec;
+  shmTime->count++;
+  shmTime->valid = 1;
+
+  return 1;
+
+}
+
+
 void WatchDGPS()
 {
   FILE *fp = NULL;
@@ -116,7 +174,7 @@ void WatchDGPS()
   int pos_ok;
   int serial_error = 0;
   int serial_set = 0;
-  
+
   nameThread("dGPS");
   bputs(startup, "dGPS: WatchDGPS startup\n");
 
@@ -245,7 +303,9 @@ void WatchDGPS()
       ts.tm_isdst = 0;
       ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
-      DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
+      //DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
+      DGPSTime = timegm(&ts) + LEAP_SECONDS;
+      ntpshm_put((double)DGPSTime); //segfault unless run mcp as sudo
     } else if (strncmp(instr, "$GPPAT",6) == 0) { /* position & attitude:
                                                    * Page 98 */
       inptr = instr + 7;
