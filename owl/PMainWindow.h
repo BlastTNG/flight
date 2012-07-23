@@ -36,6 +36,8 @@
 
 struct PTimeDataItem;
 
+class QLineEdit;
+
 namespace Ui {
 class PMainWindow;
 }
@@ -92,7 +94,8 @@ public slots:
     void setCurrentObject(POwlAnimation*);
 
     void uiLogic();
-    void curfileLogic(QString x);
+    void curfileLogic(bool force = false);
+    void setFileLineEditValidity(QLineEdit* fle);
     void newLabelLogic(PAbstractDataItem* padi);
 
     void extremaLogic(QString);

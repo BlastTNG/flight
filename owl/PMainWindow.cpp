@@ -70,7 +70,6 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     me=this;
     ui->setupUi(this);
     ui->comboBox->addItem("Owl "+idText());
-    ui->lineEditCurFile->setText("/data/etc/defile.lnk");
     _mdiArea=new PMdiArea;
     _scrollArea->setParent(centralWidget());
     _scrollArea->setAutoFillBackground(1);
@@ -92,9 +91,12 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     connect(_mdiArea,SIGNAL(newOwl(POwlAnimation*)),this,SLOT(addOwl()));
     QFileSystemModel* fsm=new QFileSystemModel();
     fsm->setRootPath(QDir::currentPath());
-    ui->lineEditCurFile->setCompleter(new QCompleter(fsm));
+    ui->lineEditHighGain->setCompleter(new QCompleter(fsm));
+    ui->lineEditTDRSSOmni->setCompleter(new QCompleter(fsm));
+    ui->lineEditLOS->setCompleter(new QCompleter(fsm));
+    ui->lineEditIridum->setCompleter(new QCompleter(fsm));
 
-    curfileLogic("/data/etc/defile.lnk");
+    curfileLogic();
 
     _currowStyle=PStyle::noStyle;
 
@@ -131,6 +133,10 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
       ui->actionConfigure->setChecked(false);
       ui->dockConfigure->hide();
     }
+    if (_settings->value("hideLink", false).toBool()) {
+      ui->actionLink->setChecked(false);
+      ui->dockLink->hide();
+    }
 
     if(file.size()) {
         owlLoad(file);
@@ -151,6 +157,7 @@ PMainWindow::~PMainWindow()
     _settings->setValue("hideWeb",!ui->dockWeb_Server->isVisible());
     _settings->setValue("hideInsert",!ui->dockInsert->isVisible());
     _settings->setValue("hideConfig",!ui->dockConfigure->isVisible());
+    _settings->setValue("hideLink",!ui->dockLink->isVisible());
 
     while(_pboxList.size()) {
         delete _pboxList.takeFirst();
@@ -243,8 +250,6 @@ void PMainWindow::hideEverything()
     ui->labelXLow->hide();
     ui->doubleSpinBoxXLow->hide();
     disconnect(ui->doubleSpinBoxXLow,0,0,0);
-    ui->labelCurFile->hide();
-    ui->lineEditCurFile->hide();
 
     ui->labelCurRow->hide();
     disconnect(ui->labelCurRow,0,0,0);
@@ -542,15 +547,35 @@ void PMainWindow::uiLogic()
     setUpdatesEnabled(1);
 }
 
-void PMainWindow::curfileLogic(QString x)
+void PMainWindow::setFileLineEditValidity(QLineEdit* fle)
+{
+    QPalette pal=fle->palette();
+    pal.setColor(fle->foregroundRole(),QFile::exists(fle->text())?"black":"red");
+    fle->setPalette(pal);
+}
+
+void PMainWindow::curfileLogic(bool force)
 {
     setUpdatesEnabled(0);
-    QPalette pal=ui->lineEditCurFile->palette();
-    pal.setColor(ui->lineEditCurFile->foregroundRole(),QFile::exists(x)?"black":"red");
-    ui->lineEditCurFile->setPalette(pal);
-    if(QFile::exists(x)) {
+    setFileLineEditValidity(ui->lineEditHighGain);
+    setFileLineEditValidity(ui->lineEditTDRSSOmni);
+    setFileLineEditValidity(ui->lineEditIridum);
+    setFileLineEditValidity(ui->lineEditLOS);
+    QString filename;
+    if (ui->radioButtonHighGain->isChecked()) {
+        filename = ui->lineEditHighGain->text();
+    } else if (ui->radioButtonTDRSSOmni->isChecked()) {
+        filename = ui->lineEditTDRSSOmni->text();
+    } else if (ui->radioButtonIridum->isChecked()) {
+        filename = ui->lineEditIridum->text();
+    } else {
+        filename = ui->lineEditLOS->text();
+    }
+
+
+    if(QFile::exists(filename) && ((filename != _dirfileFilename) || (force))) {
         delete _dirfile;
-        _dirfileFilename=x;
+        _dirfileFilename=filename;
         _dirfile = new GetData::Dirfile(_dirfileFilename.toAscii(), GD_RDONLY);
 
         int flc=_dirfile->NFields();
@@ -563,6 +588,11 @@ void PMainWindow::curfileLogic(QString x)
         QCompleter* completer=new QCompleter(fields);
         completer->setCaseSensitivity(Qt::CaseInsensitive);
         ui->lineEditSource->setCompleter(completer);
+        for(int i=0;i<_pboxList.size();i++) {
+            for(int j=0;j<_pboxList[i]->_dataItems.size();j++) {
+                _pboxList[i]->_dataItems[j]->resetSource();
+            }
+        }
     }
     setUpdatesEnabled(1);
 }
@@ -1001,9 +1031,14 @@ void PMainWindow::recognizeExtrema(PExtrema *e)
 
 void PMainWindow::activate()
 {
-    ui->labelCurFile->show();
-    ui->lineEditCurFile->show();
-    reconnect(ui->lineEditCurFile,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic(QString)));
+    reconnect(ui->lineEditLOS,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
+    reconnect(ui->lineEditHighGain,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
+    reconnect(ui->lineEditIridum,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
+    reconnect(ui->lineEditTDRSSOmni,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
+    reconnect(ui->radioButtonLOS,SIGNAL(clicked()),this,SLOT(curfileLogic()));
+    reconnect(ui->radioButtonHighGain,SIGNAL(clicked()),this,SLOT(curfileLogic()));
+    reconnect(ui->radioButtonIridum,SIGNAL(clicked()),this,SLOT(curfileLogic()));
+    reconnect(ui->radioButtonTDRSSOmni,SIGNAL(clicked()),this,SLOT(curfileLogic()));
 }
 
 QVariant save(PMainWindow&b);
@@ -1086,7 +1121,6 @@ void PMainWindow::owlLoad(QString filename)
             evenNewer->_ut->start();
             evenNewer->setUpdatesEnabled(1);
             file.close();
-            evenNewer->ui->lineEditCurFile->setText(evenNewer->_dirfileFilename);
         } else {    //try legacy format
             PObject::isLoading=1;
             qDebug()<<"Trying to open legacy...";
@@ -1104,7 +1138,6 @@ void PMainWindow::owlLoad(QString filename)
             evenNewer->_ut->start();
             evenNewer->setUpdatesEnabled(1);
             file.close();
-            evenNewer->ui->lineEditCurFile->setText(evenNewer->_dirfileFilename);
         }
     } else if(filename.endsWith("pal")) {
         PObject::isLoading=1;

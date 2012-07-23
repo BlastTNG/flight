@@ -878,8 +878,6 @@ QVariant save(PMainWindow&b)
         ret.insertMulti("PExtrema object",save(*uniques[i]));
     }
 
-    ret.insert("_dirfileFilename",b._dirfileFilename);
-
     ret.insert("PObject",save(*(PObject*)(&b)));
 
     for(int i=0;i<b._owlList.size();i++) {
@@ -924,7 +922,7 @@ QDataStream& operator>>(QDataStream&a,PMainWindow&b)
 
     QString curfile;
     a>>curfile;
-    b.curfileLogic(curfile);
+    b.curfileLogic();
 
     qint32 htmlInterval;
     a>>htmlInterval;
@@ -987,8 +985,6 @@ void load(QVariant v,PMainWindow&b)
         PExtrema* pee=new PExtrema;
         load(m.values("PExtrema object")[i],*pee);
     }
-
-    b.curfileLogic(m["_dirfileFilename"].toString());
 
     load(m["PObject"],*(PObject*)(&b));
 

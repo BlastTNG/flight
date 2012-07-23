@@ -68,6 +68,7 @@ public:
     void mouseMoveEvent(QMouseEvent*);
     virtual QString format() { return "???"; }
     virtual PStyle* getPrevDataStyle() { return _defaultDataStyle; }
+    void resetSource() {_neverGood = true; _sourceBad = false;}
 
 public slots:
     void setCaption(QString x, bool force=0);
