@@ -78,6 +78,10 @@
 #define CS_LNVALVE_ON     0x0100
 #define CS_AUTO_JFET      0x0200
 
+/*!!!!!!!!!!! CALCHANGE !!!!!!!!!!!!!*/
+extern int hwpr_calpulse_flag; // defined in hwpr.c
+/*!!!!!!!!!!! END CALCHANGE !!!!!!!!!!!!!*/
+
 void WritePrevStatus();
 
 /************************************************************************/
@@ -184,7 +188,7 @@ static int CalLamp (int index)
 {
   static struct NiosStruct* pulseCalAddr;
   static int pulse_cnt = 0;             //count of pulse length
-  static unsigned int elapsed = 0;  //count for wait between pulses
+  //  static unsigned int elapsed = 0;  //DEBUG_CAL count for wait between pulses
   static enum calmode last_mode = off;
 
   static int firsttime = 1;
@@ -200,16 +204,21 @@ static int CalLamp (int index)
   if (CommandData.Cryo.calibrator == on) {
     last_mode = on;
     return 1;
+
+
   } else if (CommandData.Cryo.calibrator == repeat) {
-    if (elapsed >= CommandData.Cryo.calib_period || last_mode != repeat) {
-      if (CommandData.Cryo.calib_repeats < 0 
-	  || --CommandData.Cryo.calib_repeats > 0) {
-	/* end of cycle -- send a new pulse */
-	elapsed = 0;
-	pulse_cnt = CommandData.Cryo.calib_pulse;
-      }
+    CommandData.Cryo.calibrator = off; // Hack until I can test my code modifications below
+#if 0
+    if (hwpr_calpulse_flag) {
+      pulse_cnt = CommandData.Cryo.calib_pulse;
+      elapsed=0;
+      hwpr_calpulse_flag=0;
+    } else if ((CommandData.Cryo.calib_period > 0 && elapsed >= CommandData.Cryo.calib_period) || last_mode != repeat) {
+      elapsed = 0;
+      pulse_cnt = CommandData.Cryo.calib_pulse;
     } else if (index == 0) elapsed++;  //period measured in slow frames
     last_mode = repeat;
+#endif
   } else if (CommandData.Cryo.calibrator == pulse) {
       if (last_mode != pulse) pulse_cnt = CommandData.Cryo.calib_pulse;
       last_mode = pulse;

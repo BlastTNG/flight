@@ -498,8 +498,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 4,
     {
       {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
-      {"V_err Gain (prop)", 0, MAX_15BIT, 'i', "G_PE_PIVOT"},
-      {"V_RW Gain (prop)", 0, MAX_15BIT, 'i', "G_PV_PIVOT"},
+      {"V_err Gain (prop)", 0, CMD_I_MAX, 'i', "G_PE_PIVOT"},
+      {"V_RW Gain (prop)", 0, CMD_I_MAX, 'i', "G_PV_PIVOT"},
       {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
     }
   },
@@ -854,11 +854,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Pulse Length (ms)", 0, 8000, 'i', "PULSE_CAL"}
     }
   },
-  {COMMAND(cal_repeat), "pulse calibrator repeatedly", GR_CRYO_HEAT, 3,
+  {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO_HEAT, 3,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
-      {"Repeat Delay (s)",  1, 32767, 'i', "PERIOD_CAL"},
-      {"Number of repeats (0=infinity)",  0, 32767, 'i', ""}
+      {"Max Pulse Delay (0=never pulse) (s)",  1, 32767, 'i', "PERIOD_CAL"},
+      {"Always Pulse before HWP move (0=no,1=yes)",  0, 1, 'i', ""}
     }
   },
 

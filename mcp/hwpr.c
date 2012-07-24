@@ -64,8 +64,10 @@ static struct hwpr_control_struct {
   double pot_targ; //Added
   double pot_err; //Added
   int dead_pot; //Added
-
+  int do_calpulse; 
 } hwpr_control;
+
+int hwpr_calpulse_flag = 0;
 
 void MonitorHWPR(struct ezbus *bus)
 {
@@ -87,6 +89,7 @@ void ResetControlHWPR (void) {
   hwpr_control.done_all = 0;
   hwpr_control.rel_move = 0;
   hwpr_control.do_overshoot = 0;
+  hwpr_control.do_calpulse = no;
   hwpr_control.stop_cnt = 0;
   hwpr_control.enc_targ = 0;
   hwpr_control.enc_err = 0;
@@ -184,6 +187,7 @@ void StoreHWPRBus(void)
   hwpr_stat_field |= ((hwpr_control.done_move) & 0x0001)<<11 ;
   hwpr_stat_field |= ((hwpr_control.done_all) & 0x0001)<<12 ;
   hwpr_stat_field |= ((hwpr_control.dead_pot) & 0x0001)<<13 ;
+  hwpr_stat_field |= ((hwpr_control.do_calpulse) & 0x0001)<<14 ;
 
   WriteData(statControlHwprAddr, hwpr_stat_field, NIOS_FLUSH);
 
@@ -217,10 +221,11 @@ int GetHWPRi(double pot_val)
 void ControlHWPR(struct ezbus *bus)
 {
   static int repeat_pos_cnt = 0;
+  //  static int cal_wait_cnt = 0; //DEBUG_CAL
   static int overshooting = 0;
   static int first_time = 1;
   static int last_enc = 0;
-
+  
   int hwpr_enc_cur, hwpr_enc_dest;
   int i_step;  // index of the current step
   int i_next_step=0;
@@ -259,6 +264,7 @@ void ControlHWPR(struct ezbus *bus)
       hwpr_control.move_cur = not_yet;
       hwpr_control.read_before = yes;
       hwpr_control.read_after = yes;
+      if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
     } else if (CommandData.hwpr.mode == HWPR_GOTO_POT) {
       bprintf(info,"ControlHWPR: Attempting to go to HWPR potentiometer position %f",CommandData.hwpr.pot_targ);
       ResetControlHWPR();
@@ -266,6 +272,7 @@ void ControlHWPR(struct ezbus *bus)
       hwpr_control.move_cur = not_yet;
       hwpr_control.read_before = yes;
       hwpr_control.read_after = yes;
+      if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
     } else if ((CommandData.hwpr.mode == HWPR_STEP)) {
       if(!CommandData.hwpr.no_step) {
 	ResetControlHWPR();
@@ -273,6 +280,7 @@ void ControlHWPR(struct ezbus *bus)
 	hwpr_control.move_cur = not_yet;
 	hwpr_control.read_before = yes;
 	hwpr_control.read_after = yes;
+	hwpr_control.do_calpulse = yes;
       } else {
 	bprintf(warning,"Cannot step half wave plate.  hwpr_step_off is set.");
 	CommandData.hwpr.mode = HWPR_SLEEP;
@@ -288,9 +296,20 @@ void ControlHWPR(struct ezbus *bus)
   
   /* if are doing anything with the HWPR other than sleeping, panicing or repeating */
   if(CommandData.hwpr.mode >= HWPR_GOTO && CommandData.hwpr.mode != HWPR_REPEAT) {
-    
-    /* Do we want a pot reading first? Should always be yes for step mode.*/
-    if (hwpr_control.read_before == yes) {
+
+#if 0 
+    if (hwpr_control.do_calpulse && cal_wait_cnt <= 0) {
+      hwpr_calpulse_flag=1;
+      cal_wait_cnt = CommandData.Cryo.calib_pulse/20;
+      hwpr_control.do_calpulse = waiting;
+      //Set flag for calpulse
+    } else if (cal_wait_cnt > 0) {
+      cal_wait_cnt--;
+      if (cal_wait_cnt <= 0) hwpr_control.do_calpulse = 0;
+   /* Do we want a pot reading first? Should always be yes for step mode.*/
+    } else 
+#endif // DEBUG_CAL
+if (hwpr_control.read_before == yes) {
  
       /* pulse the potentiometer */
 #ifdef DEBUG_HWPR

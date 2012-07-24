@@ -1507,14 +1507,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.calibrator = pulse;
       CommandData.Cryo.calib_pulse = ivalues[0] / 10;
       break;
-    case cal_repeat:
+    case cal_repeat: 
       CommandData.Cryo.calibrator = repeat;
       CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-      CommandData.Cryo.calib_period = ivalues[1] * 5;
-      if (ivalues[2] > 0)
-	CommandData.Cryo.calib_repeats = ivalues[2];
-      else
-	CommandData.Cryo.calib_repeats = -1;
+      CommandData.Cryo.calib_period = ivalues[1];
       
       break;
 
@@ -1920,11 +1916,11 @@ void InitCommandData()
 
   CommandData.ele_gain.I = 200; /* was 8000 */
   CommandData.ele_gain.P = 200; /* was 1200 */
-  CommandData.ele_gain.PT = 3000;
+  CommandData.ele_gain.PT = 200;
 
   CommandData.azi_gain.P = 200;
   CommandData.azi_gain.I = 200;
-  CommandData.azi_gain.PT = 3000;
+  CommandData.azi_gain.PT = 200;
 
   CommandData.pivot_gain.SP = 30; // dps
   CommandData.pivot_gain.PV = 400;

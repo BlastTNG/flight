@@ -181,7 +181,7 @@ static double GetVElev(void)
     } else {
       vel = sqrt(dy);
     }
-    vel *= (double)CommandData.ele_gain.PT/10000.0;
+    vel *= (double)CommandData.ele_gain.PT/1000.0;
     //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
@@ -261,7 +261,7 @@ static double GetVAz(void)
     } else {
       vel = sqrt(dx);
     }
-    vel *= (double)CommandData.azi_gain.PT/10000.0;
+    vel *= (double)CommandData.azi_gain.PT*(15.0/10000.0);
     //vel = -(az - az_dest) * 0.36;
   }
 
@@ -332,7 +332,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 
   i_point = GETREADINDEX(point_index);
   p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
-  p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
+  p_err_term = (double)g_err_piv*5.0*(v_az_req-PointingData[point_index].v_az);
   I_req = p_rw_term+p_err_term;
 
 
