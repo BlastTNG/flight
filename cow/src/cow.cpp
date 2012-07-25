@@ -66,6 +66,7 @@
 #include <QInputDialog>
 #include <QSettings>
 #include <QDirModel>
+#include <QKeyEvent>
 
 #include <iostream>
 #include <stdio.h>
@@ -214,36 +215,13 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
     QString r=x;
     if(r.contains(' ')) r.truncate(x.indexOf(' ')+1);
 
-    bool ok=0;
-    for(int i=0;i<NCommandList->count();i++) {
-        if(r==NCommandList->item(i)->text()+' ') {
-            QPalette f = NOmniBox->palette();
-            if(!NCommandList->item(i)->isSelected()) {
-                f.setColor(QPalette::Base,"pink");
-                NSendButton->setEnabled(0);
-            } else {
-                f.setColor(QPalette::Base,"white");
-                NSendButton->setEnabled(1);
-            }
-            ok=1;
-            NOmniBox->setPalette(f);
-            break;
-        }
-    }
-    if(!ok||x.contains("  ")) {
-        QPalette f = NOmniBox->palette();
-        f.setColor(QPalette::Base,"pink");
-        NOmniBox->setPalette(f);
-        NSendButton->setEnabled(0);
-    }
-
-
     bool special=0;
     if(!NOmniBox->hasFocus()||((r==x||x+" "==r)&&NOmniBox->oldXSize<x.size())) {
         special=1;
     }
     if(NOmniBox->hasFocus()) NOmniBox->oldXSize=x.size();
 
+    //search for command, and select it if matched
     int best_i=-1;
     for(int i=0;i<OmniList.size();i++) {
         if(r==OmniList[i].name+' ') {
@@ -263,7 +241,49 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
         }
     }
 
+    //look for command in current list, then set box colour and dis/enable Send button
+    bool ok=0;
+    for(int i=0;i<NCommandList->count();i++) {
+        if(r==NCommandList->item(i)->text()+' ') {
+            ok=1;
+            break;
+        }
+    }
+    QPalette f = NOmniBox->palette();
+    if(!ok||x.contains("  ")) {
+        f.setColor(QPalette::Base,"pink");
+        NSendButton->setEnabled(0);
+    } else {    //moved from questionably useful part above
+        f.setColor(QPalette::Base,"white");
+        NSendButton->setEnabled(1);
+    }
+    NOmniBox->setPalette(f);
+    //TODO currently doesn't yellow when incompletely filled by completer
+    //FIXME after selecting a group, commands get erased not completed eg click "HWPR", type "stop"
+
+
     if(x.contains(' ')) {
+        if(special && ok) {
+            x.truncate(x.indexOf(' ')+1);
+            for(int i=0;i<MAX_N_PARAMS;i++) {
+                if(NParamFields[i]->isVisible()) {
+                    x.append(i?" ":"");
+                    x.append(dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->Text());
+                }
+            }
+
+            int cp=NOmniBox->cursorPosition();
+            int sbeg=NOmniBox->selectionStart();
+            int slen=NOmniBox->selectedText().size();
+            if(x!=NOmniBox->text()) {
+                NOmniBox->setRealText(x);
+            }
+            NOmniBox->setCursorPosition(cp);
+            if(sbeg!=-1) {
+                NOmniBox->setSelection(sbeg,slen);
+            }
+        }
+
         QStringList words=x.split(" ");
         int max=MAX_N_PARAMS;
         for(int i=1;i<MAX_N_PARAMS;i++) {
@@ -309,28 +329,30 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
             NOmniBox->setPalette(f);
             NSendButton->setEnabled(0);
         }
-        if(special) {
-            x.truncate(x.indexOf(' ')+1);
-            for(int i=0;i<MAX_N_PARAMS;i++) {
-                if(NParamFields[i]->isVisible()) {
-                    x.append(i?" ":"");
-                    x.append(dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->Text());
-                }
-            }
 
-            int cp=NOmniBox->cursorPosition();
-            int sbeg=NOmniBox->selectionStart();
-            int slen=NOmniBox->selectedText().size();
-            if(x!=NOmniBox->text()) {
-                NOmniBox->setText(x);
-            }
-            NOmniBox->setCursorPosition(cp);
-            if(sbeg!=-1) {
-                NOmniBox->setSelection(sbeg,slen);
-            }
-        }
-        return;
     }
+}
+
+void MainForm::nOmniBox_completerActivated(const QString & text)
+{
+    //always special when selected from completer
+    NOmniBox->oldXSize = 0;
+
+    OmniParse(text);
+
+}
+
+/*
+void MainForm::testTextChanged(const QString & text)
+{
+    qDebug() << "test textChanged: " << NOmniBox->text() << " -> " << text;
+}
+*/
+
+void MainForm::nOmniBox_textEdited(const QString & text)
+{
+    NOmniBox->setRealText(text);
+    OmniParse(text);
 }
 
 void MainForm::OmniSync()
@@ -349,7 +371,7 @@ void MainForm::OmniSync()
     int cp=NOmniBox->cursorPosition();
     int sbeg=NOmniBox->selectionStart();
     int slen=NOmniBox->selectedText().size();
-    NOmniBox->setText(words.join(" "));
+    NOmniBox->setRealText(words.join(" "));
     NOmniBox->setCursorPosition(cp);
     if(sbeg!=-1) {
         NOmniBox->setSelection(sbeg,slen);
@@ -424,7 +446,9 @@ void MainForm::ChooseCommand() {
         }
     } else {
         NSendButton->setEnabled(true);
-        if(!NOmniBox->text().contains(NCommandList->currentItem()->text()+" ")) NOmniBox->setText(NCommandList->currentItem()->text()+" ");
+        if(!NOmniBox->text().contains(NCommandList->currentItem()->text()+" ")) {
+            NOmniBox->setRealText(NCommandList->currentItem()->text()+" ");
+        }
         NOmniBox->setCursorPosition(NOmniBox->text().size());
         if ((index = SIndex( NCommandList->currentItem()->text()) ) != -1) {
             // Set up for a single command
@@ -462,7 +486,7 @@ void MainForm::ChooseCommand() {
                         delete NParamFields[i];
                         NParamFields[i]=new NarsilDoubleEntry(NTopFrame,"NParamLabels");
                         connect(dynamic_cast<NarsilDoubleEntry*>(NParamFields[i]),
-                                SIGNAL(valueChanged(double)),this,SLOT(OmniSync()));
+                                SIGNAL(valueEdited()),this,SLOT(OmniSync()));
                     }
                     if(typeChanged)
                     {
@@ -499,7 +523,9 @@ void MainForm::ChooseCommand() {
                 }
             }
         }
-        OmniParse();
+        if (!NOmniBox->hasFocus()) {
+            OmniParse();
+        }
         NOmniBox->setFocus();
         NOmniBox->setCursorPosition(NOmniBox->text().indexOf(" ")+1);
     }
@@ -1196,12 +1222,16 @@ void MainForm::PopulateOmnibox()
     {
         sl.push_back(OmniList[i].name+" ");
     }
+    sl.removeDuplicates();
 
     if(NOmniBox->completer()) {
         delete NOmniBox->completer();
     }
 
-    NOmniBox->setCompleter(new QCompleter(sl));
+    QCompleter *qcomp = new QCompleter(sl);
+    //can conceivably use SIGNAL(highlighted) instead, but I think this behaviour is better
+    connect(qcomp, SIGNAL(activated(const QString &)), this, SLOT(nOmniBox_completerActivated(const QString &)));
+    NOmniBox->setCompleter(qcomp);
 }
 
 //-------------------------------------------------------------
@@ -1258,8 +1288,9 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NOmniBox->setObjectName("NFilter");
     NOmniBox->adjustSize();
     //NOmniBox->setPlaceholderText("Awesome Bar");
-    connect(NOmniBox,SIGNAL(textChanged(QString)),this,SLOT(OmniParse(QString)));
-    connect(NOmniBox,SIGNAL(cursorPositionChanged(int,int)),this,SLOT(OmniParse()));
+    connect(NOmniBox,SIGNAL(textEdited(QString)),this,SLOT(nOmniBox_textEdited(QString)));
+    //connect(NOmniBox,SIGNAL(textChanged(QString)),this,SLOT(testTextChanged(QString)));       //for debugging
+    //connect(NOmniBox,SIGNAL(cursorPositionChanged(int,int)),this,SLOT(testCursorChanged()));
     theHLayout->addWidget(NOmniBox);
 
     // Lay everything out.  Everything is very carefully positioned -- there are
@@ -1314,7 +1345,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
 
         NParamFields[i] = new NarsilDoubleEntry(NTopFrame, "NParamLabels");
         connect(dynamic_cast<NarsilDoubleEntry*>(NParamFields[i]),
-                SIGNAL(valueChanged(double)),this,SLOT(OmniSync()));
+                SIGNAL(valueEdited()),this,SLOT(OmniSync()));
 
         NParamFields[i]->setFixedWidth(w2/2);
         NParamFields[i]->adjustSize();

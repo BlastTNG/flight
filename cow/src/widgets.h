@@ -119,6 +119,7 @@ public:
         setObjectName(objName);
         setMinimum(-__DBL_MAX__);
         setMaximum(__DBL_MAX__);
+        connect(this, SIGNAL(valueChanged(double)), this, SLOT(slotValueChanged()));
     }
 
     void SetType(char t)
@@ -162,17 +163,51 @@ public:
         }
         return QDoubleSpinBox::validate(input,pos);
     }
-};
 
-#include <QKeyEvent>
+public slots:
+    void slotValueChanged()
+    {   //to override parent's valueChanged signal to require focus
+        if (hasFocus()) {
+            emit valueEdited();
+        }
+    }
+
+signals:
+    void valueEdited();
+
+};
 
 class NarsilOmniBox : public QLineEdit
 {
     Q_OBJECT
     int oldXSize;
+
+    //hack to prevent QCompleter from overwriting the box text: track real text separately
+    QString _realText;
+
 public:
     friend class MainForm;
-    NarsilOmniBox(QWidget*p) : QLineEdit(p), oldXSize(0) {}
+    NarsilOmniBox(QWidget*p) : QLineEdit(p), oldXSize(0), _realText() {
+        connect(this,SIGNAL(textChanged(QString)),this,SLOT(updateRealText()));
+        connect(this,SIGNAL(realTextChanged()),this,SLOT(updateRealText()));
+    }
+
+    void setRealText(const QString &text) {
+        _realText = text;
+        setText(text);
+    }
+    QString & realText() { return _realText; }
+
+public slots:
+    void updateRealText() { //connect to textChanged to prevent Qt from resetting it
+        if (text() != realText()) {
+            setText(realText());
+            emit realTextChanged();
+        }
+    }
+
+signals:
+    void realTextChanged();
 };
 
 #endif // WIDGETS_H

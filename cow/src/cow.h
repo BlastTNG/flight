@@ -182,6 +182,9 @@ public slots:
     void Tick();
     void Ping();
     void ChangeHost();
+    void nOmniBox_completerActivated(const QString & text);
+    void nOmniBox_textEdited(const QString & text);
+    //void testTextChanged(const QString & text);       //for debugging
 };
 
 #endif
