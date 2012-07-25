@@ -258,7 +258,6 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
         NSendButton->setEnabled(1);
     }
     NOmniBox->setPalette(f);
-    //TODO currently doesn't yellow when incompletely filled by completer
     //FIXME after selecting a group, commands get erased not completed eg click "HWPR", type "stop"
 
 
@@ -325,7 +324,7 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
         if(words.size()&&words.back()=="") words.pop_back();
         if(words.size()!=max) {
             QPalette f = NOmniBox->palette();
-            f.setColor(QPalette::Base,"yellow");
+            f.setColor(QPalette::Base,"pink");
             NOmniBox->setPalette(f);
             NSendButton->setEnabled(0);
         }
