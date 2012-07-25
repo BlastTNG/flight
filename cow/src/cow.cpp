@@ -352,6 +352,7 @@ void MainForm::nOmniBox_textEdited(const QString & text)
 {
     NOmniBox->setRealText(text);
     OmniParse(text);
+    NOmniBox->setFocus();
 }
 
 void MainForm::OmniSync()
@@ -525,7 +526,7 @@ void MainForm::ChooseCommand() {
         if (!NOmniBox->hasFocus()) {
             OmniParse();
         }
-        NOmniBox->setFocus();
+        //NOmniBox->setFocus();
         NOmniBox->setCursorPosition(NOmniBox->text().indexOf(" ")+1);
     }
 }
@@ -1308,7 +1309,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NGroups = new QRadioButton*[client_n_groups];
     for (i = 0; i < client_n_groups; i++) {
         NGroups[i] = new QRadioButton(NGroupsBox);
-        connect(NGroups[i],SIGNAL(clicked()),NOmniBox,SLOT(clear()));
+        //connect(NGroups[i],SIGNAL(clicked()),NOmniBox,SLOT(clear()));
         connect(NGroups[i],SIGNAL(toggled(bool)),this,SLOT(ChangeCommandList(bool)));
         NGroups[i]->setObjectName("QGroup");
         NGroups[i]->setText(tr(client_group_names[i]));
