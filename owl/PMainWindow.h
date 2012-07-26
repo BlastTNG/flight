@@ -97,6 +97,7 @@ public slots:
     void curfileLogic(bool force = false);
     void setFileLineEditValidity(QLineEdit* fle);
     void newLabelLogic(PAbstractDataItem* padi);
+    void resetLink() {curfileLogic(true);}
 
     void extremaLogic(QString);
     void extremaXHighLogic(double);

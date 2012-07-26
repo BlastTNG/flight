@@ -1031,6 +1031,7 @@ void PMainWindow::recognizeExtrema(PExtrema *e)
 
 void PMainWindow::activate()
 {
+    reconnect(ui->pushButtonResetLink, SIGNAL(clicked()), this, SLOT(resetLink()));
     reconnect(ui->lineEditLOS,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
     reconnect(ui->lineEditHighGain,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
     reconnect(ui->lineEditIridum,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
