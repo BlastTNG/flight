@@ -11,6 +11,7 @@
 #include "sbsccommunicator.h"
 extern "C" {
 #include "blast.h"
+#include "command_struct.h"
 }
 #define SBSC_COMM_DEBUG 0
 #if SBSC_COMM_DEBUG
@@ -25,6 +26,8 @@ extern "C" {
 extern "C" int EthernetSBSC;      /* tx.c */
 pthread_mutex_t sbscmutex;
 short int sbsc_trigger;
+short int dir_sbsc_trigger;
+short int sbsc_interval;
 extern "C" int sendSBSCCommand(const char *cmd); //sbsc.cpp
 
 /*
@@ -316,22 +319,32 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
   string line = "";
   string rtnStr;
   int n;
-  static int pulsewait = 0;
+  static int sbsc_firsttime = 1;
   string::size_type pos;
   if (commFD == -1) return;          //communications aren't open
 
   while (1) {
     usleep(100000);
-    pulsewait++;
     if (sbsc_trigger) {
-      if (pulsewait > 24) {
+	sbsc_interval = 0;
+	if (!sbsc_firsttime) {
+	  sendSBSCCommand("CsetExpInt=0");
+	  CommandData.cam.expInt = 0;
+	  sbsc_firsttime = 1;
+	}
 	sendSBSCCommand("CtrigExp");
         sbsc_trigger = 0;
-        pulsewait = 0;
-      } else {
-	sbsc_trigger = 0;
+	if (dir_sbsc_trigger==0) dir_sbsc_trigger=1;
+	else dir_sbsc_trigger=0;
+    }   
+    if (sbsc_interval) {
+      sbsc_trigger = 0;
+      if (sbsc_firsttime) {
+	sendSBSCCommand("CsetExpInt=2000");
+	CommandData.cam.expInt = 2000;
+	sbsc_firsttime = 0;
       }
-    }    
+    }   
     FD_ZERO(&input);
     FD_SET(commFD, &input);
     if (select(commFD+1, &input, NULL, NULL, &read_timeout) < 0)
