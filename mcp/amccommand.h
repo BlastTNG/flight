@@ -92,7 +92,7 @@ unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned sh
 
 void configure_amc(struct MotorInfoStruct* amcinfo);
 
-int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo);
+int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo, unsigned int waittime);
 
 int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, struct MotorInfoStruct* amcinfo);
 int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcinfo);
