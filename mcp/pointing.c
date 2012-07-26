@@ -58,6 +58,9 @@
 #define OFFSET_GY_IFYAW  (0)
 
 #define FIR_LENGTH (60*30 * SR)
+#define GPS_FIR_LENGTH (60*30 * 1)
+//#define FIR_LENGTH (30 * SR)
+//#define GPS_FIR_LENGTH (30 * 1)
 
 /* Calibrations of the az of each sensor  */
 /*#define MAG_ALIGNMENT	  183.   //(4.2681)
@@ -1028,7 +1031,7 @@ void Pointing(void)
   static struct AzSolutionStruct MagAz = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
-    M2DV(300), // systemamatic varience
+    M2DV(90), // systemamatic varience
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1040,7 +1043,7 @@ void Pointing(void)
   static struct AzSolutionStruct DGPSAz = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(20), //sample weight
-    M2DV(15), // systemamatic varience
+    M2DV(30), // systemamatic varience
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1112,8 +1115,8 @@ void Pointing(void)
 
     DGPSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     DGPSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(DGPSAz.fs2, FIR_LENGTH);
-    initFir(DGPSAz.fs3, FIR_LENGTH);
+    initFir(DGPSAz.fs2, GPS_FIR_LENGTH);
+    initFir(DGPSAz.fs3, GPS_FIR_LENGTH);
 
     PSSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     PSSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -1314,7 +1317,7 @@ void Pointing(void)
   EvolveAzSolution(&PSSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      0.0,
+      PointingData[point_index].el,
       pss_az, pss_ok);
 
   if (CommandData.fast_offset_gy>0) {
@@ -1341,6 +1344,15 @@ void Pointing(void)
     AddAzSolution(&AzAtt, &OSCAz, 0);
   }
 
+  PointingData[point_index].offset_ifrollmag_gy = MagAz.offset_ifroll_gy;
+  PointingData[point_index].offset_ifyawmag_gy  = MagAz.offset_ifyaw_gy;
+  
+  PointingData[point_index].offset_ifrolldgps_gy = DGPSAz.offset_ifroll_gy;
+  PointingData[point_index].offset_ifyawdgps_gy  = DGPSAz.offset_ifyaw_gy;
+ 
+  PointingData[point_index].offset_ifrollmag_gy = PSSAz.offset_ifroll_gy;
+  PointingData[point_index].offset_ifyawmag_gy  = PSSAz.offset_ifyaw_gy;
+  
   //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
   PointingData[point_index].az = AzAtt.az;
   if (CommandData.az_autogyro) {

@@ -856,6 +856,12 @@ static void StoreData(int index)
   static struct NiosStruct* OffsetIFyawGYoscAddr;
   static struct NiosStruct* OffsetIFrollGYAddr;
   static struct NiosStruct* OffsetIFyawGYAddr;
+  static struct NiosStruct* OffsetIFrollMagGYAddr;
+  static struct NiosStruct* OffsetIFyawMagGYAddr;
+  static struct NiosStruct* OffsetIFrollDGPSGYAddr;
+  static struct NiosStruct* OffsetIFyawDGPSGYAddr;
+  static struct NiosStruct* OffsetIFrollPSSGYAddr;
+  static struct NiosStruct* OffsetIFyawPSSGYAddr;
   static struct NiosStruct* azAddr;
   static struct NiosStruct* elAddr;
   static struct NiosStruct* raAddr;
@@ -990,6 +996,12 @@ static void StoreData(int index)
     OffsetIFyawGYoscAddr = GetNiosAddr("off_ifyaw_gy_osc");
     OffsetIFrollGYAddr = GetNiosAddr("offset_ifroll_gy");
     OffsetIFyawGYAddr = GetNiosAddr("offset_ifyaw_gy");
+    OffsetIFrollMagGYAddr = GetNiosAddr("offset_ifrollmag_gy");
+    OffsetIFyawMagGYAddr = GetNiosAddr("offset_ifyawmag_gy");
+    OffsetIFrollDGPSGYAddr = GetNiosAddr("offset_ifrolldgps_gy");
+    OffsetIFyawDGPSGYAddr = GetNiosAddr("offset_ifyawdgps_gy");
+    OffsetIFrollPSSGYAddr = GetNiosAddr("offset_ifrollpss_gy");
+    OffsetIFyawPSSGYAddr = GetNiosAddr("offset_ifyawpss_gy");
     raAddr = GetNiosAddr("ra");
     decAddr = GetNiosAddr("dec");
     latAddr = GetNiosAddr("lat");
@@ -1200,6 +1212,21 @@ static void StoreData(int index)
       (signed int)(PointingData[i_point].offset_ifroll_gy * 32768.), NIOS_QUEUE);
   WriteData(OffsetIFyawGYAddr,
       (signed int)(PointingData[i_point].offset_ifyaw_gy * 32768.), NIOS_QUEUE);
+
+  WriteData(OffsetIFrollMagGYAddr,
+      (signed int)(PointingData[i_point].offset_ifrollmag_gy * 32768.), NIOS_QUEUE);
+  WriteData(OffsetIFyawMagGYAddr,
+      (signed int)(PointingData[i_point].offset_ifyawmag_gy * 32768.), NIOS_QUEUE);
+  WriteData(OffsetIFrollDGPSGYAddr,
+      (signed int)(PointingData[i_point].offset_ifrolldgps_gy * 32768.), NIOS_QUEUE);
+  WriteData(OffsetIFyawDGPSGYAddr,
+      (signed int)(PointingData[i_point].offset_ifyawdgps_gy * 32768.), NIOS_QUEUE);
+  WriteData(OffsetIFrollPSSGYAddr,
+      (signed int)(PointingData[i_point].offset_ifrollpss_gy * 32768.), NIOS_QUEUE);
+  WriteData(OffsetIFyawPSSGYAddr,
+      (signed int)(PointingData[i_point].offset_ifyawpss_gy * 32768.), NIOS_QUEUE);
+
+  
   WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2LI),
       NIOS_QUEUE);
   WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2LI),

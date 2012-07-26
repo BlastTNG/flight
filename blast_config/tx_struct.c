@@ -159,13 +159,14 @@ struct ChannelStruct WideSlowChannels[] = {
   {"state_isc",    'w', LOOP2, 20,                1.0,             0.0, 'U', U_NONE},
   {"mcpnum_isc",   'w', LOOP2, 60,                1.0,             0.0, 'U', U_NONE},
   {"ra",           'w', LOOP3,  4,               LI2H,             0.0, 'U', U_NONE},
+  {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
   {"ra_osc",       'w', LOOP3, 26,               LI2H,             0.0, 'U', U_NONE},
   {"dec_osc",      'w', LOOP3, 28,          LI2DEG/2.,            -90., 'U', U_NONE},
   {"framenum_osc", 'w', LOOP3, 31,                1.0,             0.0, 'U', U_NONE},
   {"state_osc",    'w', LOOP3, 44,                1.0,             0.0, 'U', U_NONE},
   {"mcpnum_osc",   'w', LOOP3, 58,                1.0,             0.0, 'U', U_NONE},
   {"start_cycle",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
-  {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
+  // dec - LOOP5,  6 - is listed above.
   {"lst_sched",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
   {"frame_sbsc",    'w', LOOP9, 50,                1.0,             0.0, 'U', U_NONE},
   {"sec_sbsc",      'w', LOOP9, 52,                1.0,             0.0, 'U', U_NONE},
@@ -581,7 +582,15 @@ struct ChannelStruct SlowChannels[] = {
 
   {"maxslew_isc",  'w', LOOP6,  0,              I2DEG,             0.0, 'u', U_NONE},
   {"maxslew_osc",  'w', LOOP6,  1,              I2DEG,             0.0, 'u', U_NONE},
-  /* LOOP6 2-19 are unused */
+  
+  {"offset_ifrollmag_gy", 'w',LOOP6, 2,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifyawmag_gy",  'w',LOOP6, 3,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifrolldgps_gy",'w',LOOP6, 4,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifyawdgps_gy", 'w',LOOP6, 5,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifrollpss_gy", 'w',LOOP6, 6,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifyawpss_gy",  'w',LOOP6, 7,      1.0/32768.0,             0.0, 's', U_V_DPS},
+
+  /* LOOP6 8-19 are unused */
   {"pref_ts_sf",   'w', LOOP6, 20,                1.0,             0.0, 'u', U_NONE},
   {"spread_sf",    'w', LOOP6, 21,             1/500.,             0.0, 'u', U_NONE},
   {"acc_lock",     'w', LOOP6, 22,                1.0,             0.0, 'u', U_NONE},

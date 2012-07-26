@@ -168,6 +168,14 @@ struct PointingDataStruct {
   double offset_ifyaw_gy_osc; 
   double offset_ifroll_gy;
   double offset_ifyaw_gy;
+
+  double offset_ifrollmag_gy;
+  double offset_ifyawmag_gy;
+  double offset_ifrolldgps_gy;
+  double offset_ifyawdgps_gy;
+  double offset_ifrollpss_gy;
+  double offset_ifyawpss_gy;
+  
   double ifel_earth_gy;
   double ifroll_earth_gy;
   double ifyaw_earth_gy;

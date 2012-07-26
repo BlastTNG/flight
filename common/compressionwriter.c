@@ -130,12 +130,13 @@ void writeHiGainData(char *x, int size) {
 //*********************************************************
 void writeOmni1Data(char *x, int size) {
   static int fp = -1;
-
+  
   if (fp < 0) {
     fp = OpenSerial(OMNI1_TTY);
   }
 
   if (fp>=0) {
+    
     if (write(fp, x, size)!=size) {
       close(fp);
     }
