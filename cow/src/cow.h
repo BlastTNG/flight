@@ -185,6 +185,7 @@ public slots:
     void nOmniBox_completerActivated(const QString & text);
     void nOmniBox_textEdited(const QString & text);
     //void testTextChanged(const QString & text);       //for debugging
+    //void testCursorPositionChanged(int o, int n);       //for debugging
 };
 
 #endif

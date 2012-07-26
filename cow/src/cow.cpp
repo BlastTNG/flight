@@ -346,11 +346,23 @@ void MainForm::testTextChanged(const QString & text)
 {
     qDebug() << "test textChanged: " << NOmniBox->text() << " -> " << text;
 }
+
+void MainForm::testCursorPositionChanged(int o, int n)
+{
+    qDebug() << "cursor moved: " << o << " -> " << n;
+}
 */
 
 void MainForm::nOmniBox_textEdited(const QString & text)
 {
+    int cp=NOmniBox->cursorPosition();
+    int sbeg=NOmniBox->selectionStart();
+    int slen=NOmniBox->selectedText().size();
     NOmniBox->setRealText(text);
+    NOmniBox->setCursorPosition(cp);
+    if(sbeg!=-1) {
+        NOmniBox->setSelection(sbeg,slen);
+    }
     OmniParse(text);
     NOmniBox->setFocus();
 }
@@ -1290,7 +1302,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     //NOmniBox->setPlaceholderText("Awesome Bar");
     connect(NOmniBox,SIGNAL(textEdited(QString)),this,SLOT(nOmniBox_textEdited(QString)));
     //connect(NOmniBox,SIGNAL(textChanged(QString)),this,SLOT(testTextChanged(QString)));       //for debugging
-    //connect(NOmniBox,SIGNAL(cursorPositionChanged(int,int)),this,SLOT(testCursorChanged()));
+    //connect(NOmniBox,SIGNAL(cursorPositionChanged(int,int)),this,SLOT(testCursorPositionChanged(int,int)));
     theHLayout->addWidget(NOmniBox);
 
     // Lay everything out.  Everything is very carefully positioned -- there are
