@@ -996,12 +996,14 @@ static void StoreData(int index)
     OffsetIFyawGYoscAddr = GetNiosAddr("off_ifyaw_gy_osc");
     OffsetIFrollGYAddr = GetNiosAddr("offset_ifroll_gy");
     OffsetIFyawGYAddr = GetNiosAddr("offset_ifyaw_gy");
+ 
     OffsetIFrollMagGYAddr = GetNiosAddr("offset_ifrollmag_gy");
     OffsetIFyawMagGYAddr = GetNiosAddr("offset_ifyawmag_gy");
-    OffsetIFrollDGPSGYAddr = GetNiosAddr("offset_ifrolldgps_gy");
+    OffsetIFrollDGPSGYAddr = GetNiosAddr("offset_ifrollgps_gy");
     OffsetIFyawDGPSGYAddr = GetNiosAddr("offset_ifyawdgps_gy");
     OffsetIFrollPSSGYAddr = GetNiosAddr("offset_ifrollpss_gy");
     OffsetIFyawPSSGYAddr = GetNiosAddr("offset_ifyawpss_gy");
+ 
     raAddr = GetNiosAddr("ra");
     decAddr = GetNiosAddr("dec");
     latAddr = GetNiosAddr("lat");

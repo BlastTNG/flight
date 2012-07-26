@@ -585,7 +585,7 @@ struct ChannelStruct SlowChannels[] = {
   
   {"offset_ifrollmag_gy", 'w',LOOP6, 2,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyawmag_gy",  'w',LOOP6, 3,      1.0/32768.0,             0.0, 's', U_V_DPS},
-  {"offset_ifrolldgps_gy",'w',LOOP6, 4,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ifrollgps_gy",'w',LOOP6, 4,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyawdgps_gy", 'w',LOOP6, 5,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifrollpss_gy", 'w',LOOP6, 6,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyawpss_gy",  'w',LOOP6, 7,      1.0/32768.0,             0.0, 's', U_V_DPS},
