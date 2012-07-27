@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #define LOS 0
+#define TSRSS 1
 #define IRIDIUM 2
 #define DEFAULT 3
 
@@ -55,6 +56,7 @@ void usage(char *message) {
 		  "  -f <chunk>: fix - upload chunk <chunk> only.\n"
 		  "  -l: los upload\n"
 		  "  -i: iridium upload - default\n"
+		  "  -t: iridium upload\n"
 		  "  -1: route to com1\n"
 		  "  -2: route to com2 - default\n"
 		  "  <slot>: index of slot to upload into.\n"
@@ -165,7 +167,14 @@ int main(int argc, char *argv[]) {
 	  if (link == DEFAULT) {
 	    link = IRIDIUM;
 	  } else {
-	    usage("los: link already set");
+	    usage("iridium: link already set");
+	  }
+	  break;
+	case 't':
+	  if (link == DEFAULT) {
+	    link = TDRSS;
+	  } else {
+	    usage("iridium: link already set");
 	  }
 	  break;
 	case '1':
