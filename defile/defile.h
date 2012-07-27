@@ -29,7 +29,8 @@
 #include "frameread.h"
 #include "quendiclient.h"
 
-#define INPUT_BUF_SIZE 50 /* Frames are big (~1 kb) and we take a big
+/* upped from 50 to 200 to handle high latencies of rsyncing frame files */
+#define INPUT_BUF_SIZE 200 /* Frames are big (~1 kb) and we take a big
                            * performance hit if we read more than 64k at a
                            * time, so we keep this small */
 
