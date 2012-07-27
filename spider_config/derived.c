@@ -606,7 +606,8 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_VCS1_BOTTOM_T_HK",	 "VD_01_HK",	LUT_DIR "d_curve10.lut"),
   T_HK("TD_CAPILLARY_T_HK",	 "VD_02_HK",	LUT_DIR "D77232.lut"),
   T_HK("TD_VCS2_FILT_T_HK",	 "VD_03_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_VCS1_TOP_T_HK",	 "VD_04_HK",	LUT_DIR "d_curve10.lut"),
+  // This channel is not currently enabled (needs hardware mods)
+  // T_HK("TD_VCS1_TOP_T_HK",	 "VD_04_HK",	LUT_DIR "d_curve10.lut"),
   T_HK("TD_VCS2_BOTTOM_T_HK",	 "VD_05_HK",	LUT_DIR "d_curve10.lut"),
   T_HK("TD_VCS1_FILT_T_HK",	 "VD_06_HK",	LUT_DIR "d_curve10.lut"),
   T_HK("TD_VCS2_TOP2_T_HK",	 "VD_07_HK",	LUT_DIR "d_curve10.lut"),
