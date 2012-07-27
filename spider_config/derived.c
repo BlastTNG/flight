@@ -578,7 +578,7 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Housekeeping Diode Temperature Calibration"),
   // NB: make sure to also set LUT filename in hk.c for FridgeCycle
   // Theo Run 9: X2 in slot 4 with Thelma 5
-  T_HK("TD_4K_4_HK",        "VD_4K_4_HK",        LUT_DIR "d_simonchase2.lut"),
+  T_HK("TD_BETTY_4_HK",     "VD_4K_4_HK",        LUT_DIR "d_curve10.lut"),
   T_HK("TD_CP_4_HK",        "VD_CP_4_HK",        LUT_DIR "d_simonchase2.lut"),
   T_HK("TD_PUMP_4_HK",      "VD_PUMP_4_HK",      LUT_DIR "d_simonchase2.lut"),
   T_HK("TD_HSW_4_HK",       "VD_HSW_4_HK",       LUT_DIR "d_simonchase2.lut"),
