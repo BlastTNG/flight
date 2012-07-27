@@ -622,6 +622,11 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_VCS1_APERT_T_HK",	 "VD_17_HK",	LUT_DIR "d_curve10.lut"),
   
   //Extra Theo diodes for Run 10
-  T_HK("TD_SFT_MID_T_HK",        "VD_SPITTOON_1_HK",
+  T_HK("TD_SFT_MID_T_HK",    "VD_SPITTOON_1_HK", LUT_DIR "D78318.lut"),
+  T_HK("TD_SFT_G10_T_HK",    "VD_EYEPIECE_1_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_SFT_TOP_T_HK",    "VD_PLATE_1_HK",    LUT_DIR "D75322.lut"),
+  T_HK("TD_SFT_VENT_T_HK",   "VD_SNOUT_1_HK",    LUT_DIR "d_curve10.lut"),
+  T_HK("TD_CAP_SHIELD_T_HK", "VD_HSW_1_HK",      LUT_DIR "d_curve10.lut"),
+  
   END_OF_DERIVED_CHANNELS
 };
