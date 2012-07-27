@@ -603,20 +603,23 @@ void WriteMot(int TxIndex)
 /*                                                             */
 /***************************************************************/
 static void GetElDither() {
-  static int first_time = 1;
   // Set up the random variable.
-  if(first_time) {
-    first_time = 0;
+
+  (axes_mode.i_dith)++;
+  bprintf(info,"GetElDither: Incrementing axes_mode.i_dith to %i",axes_mode.i_dith);
+  if (CommandData.pointing_mode.n_dith <= 0) {
+    axes_mode.el_dith=0.0;
+    bprintf(info,"No dither: axes_mode.el_dith = %f",axes_mode.el_dith);
   } else {
-    (axes_mode.i_dith)++;
-    if (CommandData.pointing_mode.n_dith <= 0) {
-      axes_mode.el_dith=0.0;
-      bprintf(info,"No dither: axes_mode.el_dith = %f",axes_mode.el_dith);
-    } else {
-      axes_mode.i_dith%=(CommandData.pointing_mode.n_dith);
-      axes_mode.el_dith=2.0*((double) axes_mode.i_dith)/((double)(CommandData.pointing_mode.n_dith));
-    }					    
-  } 
+    bprintf(info,"GetElDither: CommandData.pointing_mode.n_dith = %i",CommandData.pointing_mode.n_dith);
+
+    axes_mode.i_dith%=(CommandData.pointing_mode.n_dith);
+    bprintf(info,"GetElDither: axes_mode.i_dith is now %i",axes_mode.i_dith);
+    axes_mode.el_dith=2.0*(CommandData.pointing_mode.del)*((double) axes_mode.i_dith)/((double)(CommandData.pointing_mode.n_dith));
+    bprintf(info,"GetElDither: axes_mode.el_dith is finally %i",axes_mode.i_dith);
+    
+  }					    
+
 
   bprintf(info,"***Dither Time!!!***  El Dither = %f",axes_mode.el_dith);
   
@@ -631,14 +634,14 @@ static void GetElDither() {
 static void InitElDither() {
   if (CommandData.pointing_mode.next_i_dith >= 0) {
     axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
-    CommandData.pointing_mode.next_i_dith = -1;
     bprintf(info,"InitElDither: axes_mode.i_dith = %i",axes_mode.i_dith);
+    CommandData.pointing_mode.next_i_dith = -1;
   } else {
     CommandData.pointing_mode.next_i_dith = -1;
     bprintf(info,"InitElDither: CommandData.pointing_mode.next_i_dith =%i, so axes_mode.i_dith = %i",CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);  
   }
 
-  if (CommandData.pointing_mode.next_i_hwpr >= 0 && CommandData.pointing_mode.next_i_hwpr <= 0) {
+  if (CommandData.pointing_mode.next_i_hwpr >= 0 && CommandData.pointing_mode.next_i_hwpr < 4) {
     axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
     CommandData.hwpr.i_pos = CommandData.pointing_mode.next_i_hwpr;
     CommandData.hwpr.mode = HWPR_GOTO_I;

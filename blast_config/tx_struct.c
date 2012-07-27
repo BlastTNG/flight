@@ -551,7 +551,7 @@ struct ChannelStruct SlowChannels[] = {
   {"x_str_stage",  'w', LOOP5, 32,                1.0,             0.0, 'u', U_NONE},
   {"y_lim_stage",  'w', LOOP5, 33,                1.0,             0.0, 'u', U_NONE},
   /* LOOP5 34 is fast */
-  {"i_dith_el",    'w', LOOP5, 35,                1.0,             0.0, 'u', U_NONE},  
+  {"i_dith_el",    'w', LOOP5, 35,                1.0,             0.0, 's', U_NONE},  
   {"y_stp_stage",  'w', LOOP5, 36,                1.0,             0.0, 'u', U_NONE},
   {"y_str_stage",  'w', LOOP5, 37,                1.0,             0.0, 'u', U_NONE},
   {"x_lim_stage",  'w', LOOP5, 38,                1.0,             0.0, 'u', U_NONE},
