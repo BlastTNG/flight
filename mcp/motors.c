@@ -1066,6 +1066,7 @@ static void DoNewCapMode(void)
   int i_point;
   int new_step = 0;
   int new_scan = 0;
+  static int new_count = 0;
 
   static double last_X=0, last_Y=0, last_w=0;
   static double v_el = 0;
@@ -1111,7 +1112,8 @@ static void DoNewCapMode(void)
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w) ||
       (last_mode != P_CAP)) {
-    InitElDither(); // sets dither to 0...
+    if (new_count == 0) InitElDither(); // sets dither to 0...
+    new_count++;
     if ( (fabs(az - (caz)) < 0.1) &&
         (fabs(el - (bottom)) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
@@ -1132,6 +1134,8 @@ static void DoNewCapMode(void)
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
+  } else {
+    new_count = 0;
   }
 
   /** Get x limits at the next elevation row **/
@@ -1281,6 +1285,7 @@ static void DoElBoxMode(void)
   int new_scan = 0;
   int turn_az = 0;
   static int j = 0;
+  static int new_count = 0;
 
   static double last_X=0, last_Y=0, last_w=0, last_h = 0;
   static double v_az = 0;
@@ -1331,8 +1336,8 @@ static void DoElBoxMode(void)
       (CommandData.pointing_mode.w != last_w) ||
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_EL_BOX)) {
+    if (new_count == 0) InitElDither();
     new = 1;
-    InitElDither();
   }
   if (el < bottom - 0.5) new = 1;
   if (el > top + 0.5) new = 1;
@@ -1342,6 +1347,7 @@ static void DoElBoxMode(void)
   /* If a new command, reset to bottom row */
   if (new) {
     n_scan = 0;
+    new_count++;
     if ( (fabs(az - left) < 0.1) &&
         (fabs(el - bottom) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
@@ -1362,7 +1368,9 @@ static void DoElBoxMode(void)
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;      
       return;
     }
-  } 
+  } else {
+    new_count = 0;
+  }
   /* set az v */
 
   v_el = CommandData.pointing_mode.vel;
@@ -1475,7 +1483,6 @@ static void DoNewBoxMode(void)
   int turn_el = 0;
   static int j = 0;
   static int new_count = 0;
-
   static double last_X=0, last_Y=0, last_w=0, last_h = 0;
   static double v_el = 0;
   static double targ_el=0.0;
@@ -1675,6 +1682,7 @@ void DoQuadMode(void) // aka radbox
   double az_of_bot;
   int new;
   int new_scan = 0;
+  static int new_count = 0;
  
   //int i_top, i_bot, new;
 
@@ -1740,7 +1748,8 @@ void DoQuadMode(void) // aka radbox
   }
 
   if (new) {
-    InitElDither();
+    if (new_count == 0) InitElDither();
+    new_count++;
     if ( (fabs(az - az_of_bot) < 0.1) &&
         (fabs(el - bottom) < 0.05)) {
       for (i=0; i<4; i++) {
@@ -1761,6 +1770,8 @@ void DoQuadMode(void) // aka radbox
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
+  } else {
+    new_count = 0;
   }
 
   if (targ_el<0) {
