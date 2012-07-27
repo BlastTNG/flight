@@ -39,12 +39,12 @@ struct HeaderStruct {
   unsigned char route;
   unsigned char size;
 
+  unsigned char command;
   unsigned char slot;
   unsigned char i_chunk;
   unsigned char n_chunk;
   unsigned char n_sched;
   unsigned char route_d;
-  unsigned char foo;
 } header;
   
 void usage(char *message) {
@@ -253,6 +253,7 @@ int main(int argc, char *argv[]) {
     header.route = sipcom;
     header.size =  datasize;
     /* our header - part of datasize */
+    header.command = 0xff;
     header.slot = slot;
     header.i_chunk = i;
     header.n_chunk = n_chunk;
