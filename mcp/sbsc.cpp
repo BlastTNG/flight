@@ -92,6 +92,7 @@ void cameraFields()
   static int firsttime = 1;
   SBSCReturn* sbsc = NULL;
   static bool unrecFlag = false;
+  static int blobindex = 0;
 
   static NiosStruct* forceAddr = NULL;
   static NiosStruct* expIntAddr = NULL;
@@ -117,6 +118,7 @@ void cameraFields()
   static NiosStruct* sbscBlobY[5];
   static NiosStruct* sbscBlobF[5];
   static NiosStruct* sbscBlobS[5];
+  static NiosStruct* sbscBlobIdxAddr;
 
   static NiosStruct* sbscRAAddr = NULL;
   static NiosStruct* sbscDECAddr = NULL;
@@ -144,7 +146,7 @@ void cameraFields()
     sbscFocPosAddr = GetNiosAddr("focpos_sbsc");
     sbscNumBlobsAddr = GetNiosAddr("nblobs_sbsc");
 
-    for (int i=0; i<5; i++) {
+    for (int i=0; i<3; i++) {
       char buf[99];
       sprintf(buf, "blob%02d_x_sbsc", i);
       sbscBlobX[i] = GetNiosAddr(buf);
@@ -155,6 +157,7 @@ void cameraFields()
       sprintf(buf, "blob%02d_s_sbsc", i);
       sbscBlobS[i] = GetNiosAddr(buf);
     }
+    sbscBlobIdxAddr = GetNiosAddr("blob_idx_sbsc");
     sbscRAAddr = GetNiosAddr("ra_sbsc");
     sbscDECAddr = GetNiosAddr("dec_sbsc");
   }
@@ -192,17 +195,19 @@ void cameraFields()
     WriteData(sbscFocPosAddr, (int)(sbsc->focusposition*10), NIOS_QUEUE);
     WriteData(sbscNumBlobsAddr, sbsc->numblobs, NIOS_QUEUE);
 
-    for (int i=0; i<5; i++)
+    for (int i=0; i<3; i++)
     {
-      WriteData(sbscBlobX[i],(unsigned int)(sbsc->x[i]/CAM_WIDTH*SHRT_MAX),
+      WriteData(sbscBlobX[i],(unsigned int)(sbsc->x[blobindex * 3 + i]/CAM_WIDTH*SHRT_MAX),
 	  NIOS_QUEUE);
-      WriteData(sbscBlobY[i],(unsigned int)(sbsc->y[i]/CAM_WIDTH*SHRT_MAX),
+      WriteData(sbscBlobY[i],(unsigned int)(sbsc->y[blobindex * 3 + i]/CAM_WIDTH*SHRT_MAX),
 	  NIOS_QUEUE);
-      WriteData(sbscBlobF[i], (unsigned int)sbsc->flux[i], NIOS_QUEUE);
-      unsigned int snr = (sbsc->snr[i] >= SHRT_MAX / 100.0) ? 
-	SHRT_MAX : (unsigned int)sbsc->snr[i]*100;
+      WriteData(sbscBlobF[i], (unsigned int)sbsc->flux[blobindex * 3 + i], NIOS_QUEUE);
+      unsigned int snr = (sbsc->snr[blobindex * 3 + i] >= SHRT_MAX / 100.0) ? 
+	SHRT_MAX : (unsigned int)sbsc->snr[blobindex * 3 + i]*100;
       WriteData(sbscBlobS[i], snr, NIOS_QUEUE);
     }
+    WriteData(sbscBlobIdxAddr, blobindex, NIOS_QUEUE);
+    blobindex = (blobindex + 1) % 5;
     WriteData(sbscRAAddr, (int)(sbsc->ra*1000), NIOS_QUEUE);
     WriteData(sbscDECAddr, (int)(sbsc->dec*1000), NIOS_QUEUE);
   }

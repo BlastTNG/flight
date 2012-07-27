@@ -372,7 +372,8 @@ struct ChannelStruct SlowChannels[] = {
   {"real_trig_osc",'w', LOOP2, 26,                1.0,             0.0, 's', U_NONE},
   {"mdist_isc",    'w', LOOP2, 27,                1.0,             0.0, 'u', U_NONE},
   {"nblobs_isc",   'w', LOOP2, 28,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP2 29-30 are unused */
+  {"delay_isc",    'w', LOOP2, 29,         1.0/1000.0,             0.0, 'u', U_NONE},
+  {"delay_osc",    'w', LOOP2, 30,         1.0/1000.0,             0.0, 'u', U_NONE},
   {"foc_off_osc",  'w', LOOP2, 31,                1.0,             0.0, 's', U_NONE},
   /* LOOP2 32 is unused */
   {"tol_isc",      'w', LOOP2, 33,                1.0,             0.0, 'u', U_NONE},
@@ -779,14 +780,8 @@ struct ChannelStruct SlowChannels[] = {
   {"tol_act",        'w', LOOP9,  23,                1.0,             0.0, 'u', U_NONE},
   {"status_actbus",  'w', LOOP9,  24,                1.0,             0.0, 'u', U_NONE},
   {"pot_err_hwpr",   'w', LOOP9,  25,        1.0/32767.0,             0.0, 's', U_NONE},
-  {"blob03_x_sbsc",  'w', LOOP9,  26, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
-  {"blob03_y_sbsc",  'w', LOOP9,  27, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
-  {"blob03_f_sbsc",  'w', LOOP9,  28,                1.0,             0.0, 'u', U_NONE},
-  {"blob03_s_sbsc",  'w', LOOP9,  29,          1.0/100.0,             0.0, 'u', U_NONE},
-  {"blob04_x_sbsc",  'w', LOOP9,  30, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
-  {"blob04_y_sbsc",  'w', LOOP9,  31, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
-  {"blob04_f_sbsc",  'w', LOOP9,  32,                1.0,             0.0, 'u', U_NONE},
-  {"blob04_s_sbsc",  'w', LOOP9,  33,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"blob_idx_sbsc",  'w', LOOP9,  26,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP9 27-33 are unused */
   {"vel_el_p",       'w', LOOP9,  34,              I2VEL,             0.0, 'u', U_NONE},
   {"focpos_sbsc",    'w', LOOP9,  35,           1.0/10.0,             0.0, 's', U_NONE},
   {"delay_sbsc",     'w', LOOP9,  36,         1.0/1000.0,             0.0, 'u', U_NONE},
