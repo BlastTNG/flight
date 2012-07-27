@@ -307,6 +307,18 @@ static int MagConvert(double *mag_az)
   return (1);
 }
 
+static int fakeDGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll) {
+  static int i = 0;
+  if (i++>100) {
+    i = 0;
+    *dgps_az = 180.0 + (double)random()/(double)RAND_MAX*2.0;
+    *dgps_roll = 0;
+    *dgps_pitch = 0;
+    return (1);
+  }
+  return (0);
+}
+
 static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 {
   static int last_i_dgpsatt = 0;
@@ -879,7 +891,6 @@ static void AddAzSolution(struct AzAttStruct *AzAtt,
   AzAtt->weight += weight;
 }
 
-//FIXME: need to add rotation of earth correction
 static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
     double offset_ifroll_gy, double ifyaw_gy, double offset_ifyaw_gy, double el, double new_angle,
     int new_reading)
@@ -953,7 +964,7 @@ void Pointing(void)
   double mag_az;
   double pss_az = 0;
   double pss_el = 0;
-  double dgps_az, dgps_pitch, dgps_roll;
+  double dgps_az=0, dgps_pitch, dgps_roll;
   double clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_sip_gps = -1;
   static double last_good_lat=0, last_good_lon=0;
@@ -1287,6 +1298,7 @@ void Pointing(void)
   }
 
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
+  //dgps_ok = fakeDGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   if (dgps_ok) {
     dgps_since_ok = 0;
   } else {
@@ -1350,8 +1362,8 @@ void Pointing(void)
   PointingData[point_index].offset_ifrolldgps_gy = DGPSAz.offset_ifroll_gy;
   PointingData[point_index].offset_ifyawdgps_gy  = DGPSAz.offset_ifyaw_gy;
  
-  PointingData[point_index].offset_ifrollmag_gy = PSSAz.offset_ifroll_gy;
-  PointingData[point_index].offset_ifyawmag_gy  = PSSAz.offset_ifyaw_gy;
+  PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
+  PointingData[point_index].offset_ifyawpss_gy  = PSSAz.offset_ifyaw_gy;
   
   //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
   PointingData[point_index].az = AzAtt.az;
