@@ -544,13 +544,13 @@ struct ChannelStruct SlowChannels[] = {
   {"goal_lock",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
   {"seized_act",   'w', LOOP5, 27,                1.0,             0.0, 's', U_NONE},
   /* LOOP5 28 is fast */
-  {"dith_step_p",  'w', LOOP5, 29,        0.1/32768.0,             0.0, 's', U_D_DEG},
+  {"n_dith_p",     'w', LOOP5, 29,                1.0,             0.0, 'u', U_NONE},
   {"x_vel_stage",  'w', LOOP5, 30,                1.0,             0.0, 'u', U_NONE}, // not used in flight...
   {"x_stp_stage",  'w', LOOP5, 31,                1.0,             0.0, 'u', U_NONE},
   {"x_str_stage",  'w', LOOP5, 32,                1.0,             0.0, 'u', U_NONE},
   {"y_lim_stage",  'w', LOOP5, 33,                1.0,             0.0, 'u', U_NONE},
   /* LOOP5 34 is fast */
-  /* LOOP5 35 is unused */
+  {"i_dith_el",    'w', LOOP5, 35,                1.0,             0.0, 'u', U_NONE},  
   {"y_stp_stage",  'w', LOOP5, 36,                1.0,             0.0, 'u', U_NONE},
   {"y_str_stage",  'w', LOOP5, 37,                1.0,             0.0, 'u', U_NONE},
   {"x_lim_stage",  'w', LOOP5, 38,                1.0,             0.0, 'u', U_NONE},
@@ -589,8 +589,10 @@ struct ChannelStruct SlowChannels[] = {
   {"offset_ifyawdgps_gy", 'w',LOOP6, 5,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifrollpss_gy", 'w',LOOP6, 6,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyawpss_gy",  'w',LOOP6, 7,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"next_i_hwpr_p",      'w', LOOP6, 8,              1.0,             0.0, 's', U_NONE},
+  {"next_i_dith_p",      'w', LOOP6, 9,              1.0,             0.0, 's', U_NONE},
 
-  /* LOOP6 8-19 are unused */
+  /* LOOP6 10-19 are unused */
   {"pref_ts_sf",   'w', LOOP6, 20,                1.0,             0.0, 'u', U_NONE},
   {"spread_sf",    'w', LOOP6, 21,             1/500.,             0.0, 'u', U_NONE},
   {"acc_lock",     'w', LOOP6, 22,                1.0,             0.0, 'u', U_NONE},

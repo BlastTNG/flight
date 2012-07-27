@@ -147,7 +147,9 @@ struct PointingModeStruct {
   time_t t;
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
-  double dith; // Elevation dither step 
+  unsigned int n_dith; // Elevation dither step 
+  unsigned int next_i_dith; // Dither starting index for next scan
+  unsigned int next_i_hwpr; // HWPR pos for next scan
   double vel; // Elevation scan velocity
   double daz; // Azimuth step size (for el scans)
 };

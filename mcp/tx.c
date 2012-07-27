@@ -841,7 +841,10 @@ static void StoreData(int index)
   static struct NiosStruct* ra2PAddr, *dec2PAddr;
   static struct NiosStruct* ra3PAddr, *dec3PAddr;
   static struct NiosStruct* ra4PAddr, *dec4PAddr;
-  static struct NiosStruct* dithStepPAddr;
+  static struct NiosStruct* ndithPAddr;
+  static struct NiosStruct* nextIHwprPAddr;
+  static struct NiosStruct* nextIDithPAddr;
+  static struct NiosStruct* nDithPAddr;
 
   static struct NiosStruct* vetoSensorAddr;
 
@@ -934,6 +937,7 @@ static void StoreData(int index)
   static struct NiosStruct *dithElAddr;
   static struct NiosStruct *velAzMcAddr;
   static struct NiosStruct *velElMcAddr;
+  static struct NiosStruct *iDithMcAddr;
 
   /* Motor data read out over serial threads in motors.c */
   static struct NiosStruct *velRWAddr;
@@ -1059,7 +1063,9 @@ static void StoreData(int index)
     dec3PAddr = GetNiosAddr("dec_3_p");
     ra4PAddr = GetNiosAddr("ra_4_p");
     dec4PAddr = GetNiosAddr("dec_4_p");
-    dithStepPAddr = GetNiosAddr("dith_step_p");
+    nDithPAddr = GetNiosAddr("n_dith_p");
+    nextIDithPAddr = GetNiosAddr("next_i_dith_p");
+    nextIHwprPAddr = GetNiosAddr("next_i_hwpr_p");
 
     vetoSensorAddr = GetNiosAddr("veto_sensor");
 
@@ -1094,6 +1100,7 @@ static void StoreData(int index)
     dirAzMcAddr = GetNiosAddr("dir_az_mc");
     dirElMcAddr = GetNiosAddr("dir_el_mc");
     dithElAddr = GetNiosAddr("dith_el");
+    iDithMcAddr = GetNiosAddr("i_dith_el");
 
     velRWAddr = GetNiosAddr("vel_rw");
     elRawEncAddr = GetNiosAddr("el_raw_enc");
@@ -1169,6 +1176,7 @@ static void StoreData(int index)
   WriteData(destElMcAddr, axes_mode.el_dest * DEG2I, NIOS_QUEUE);
   WriteData(velAzMcAddr, axes_mode.az_vel * 6000., NIOS_QUEUE);
   WriteData(velElMcAddr, axes_mode.el_vel * 6000., NIOS_QUEUE);
+  WriteData(iDithMcAddr, axes_mode.i_dith, NIOS_QUEUE);
 
   /********* PSS data *************/
   WriteData(azrawPssAddr, PointingData[i_point].pss_azraw * DEG2I, NIOS_QUEUE);
@@ -1300,7 +1308,9 @@ static void StoreData(int index)
   WriteData(slewVetoAddr, (int)(CommandData.pointing_mode.nw) / 4.,
       NIOS_QUEUE);
   WriteData(svetoLenAddr, (int)(CommandData.slew_veto) / 4., NIOS_QUEUE);
-  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*10.0*32768.0), NIOS_QUEUE);
+  WriteData(nextIHwprPAddr, (int)(CommandData.pointing_mode.next_i_hwpr), NIOS_QUEUE);
+  WriteData(nextIDithPAddr, (int)(CommandData.pointing_mode.next_i_dith), NIOS_QUEUE);
+  WriteData(nDithPAddr, (int)(CommandData.pointing_mode.n_dith), NIOS_QUEUE);
   WriteData(modePAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
       (CommandData.pointing_mode.mode == P_AZ_SCAN) || (CommandData.pointing_mode.mode == P_EL_SCAN))

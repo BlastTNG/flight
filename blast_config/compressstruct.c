@@ -467,7 +467,6 @@ char *frameList[] = {
   "diskfree_isc",
   "diskfree_osc",
   "dith_el",
-  "dith_step_p",
   "drive_err_cts_el",
   "drive_err_cts_piv",
   "drive_err_cts_rw",

@@ -1012,8 +1012,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           (CommandData.pointing_mode.w != rvalues[2]) ||  /* radius */
           (CommandData.pointing_mode.vaz != rvalues[3]) ||  /* az scan speed */
           (CommandData.pointing_mode.del != rvalues[4]) ||  /* el step size */
-          (CommandData.pointing_mode.h != 0) || 
-          (CommandData.pointing_mode.dith != rvalues[5])) { /* el step size */
+          (CommandData.pointing_mode.h != 0))  { /* N dither steps */
         CommandData.pointing_mode.nw = CommandData.slew_veto;
       }
       // zero unused parameters
@@ -1030,7 +1029,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[4]; /* el step size */
       CommandData.pointing_mode.h = 0;
-      CommandData.pointing_mode.dith = rvalues[5]; /* el step size */
+      CommandData.pointing_mode.n_dith = ivalues[5]; /* No of dither steps */
       break;
     case box:
 
@@ -1040,8 +1039,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           (CommandData.pointing_mode.w != rvalues[2]) || /* width */
           (CommandData.pointing_mode.h != rvalues[3]) || /* height */
           (CommandData.pointing_mode.vaz != rvalues[4]) || /* az scan speed */
-          (CommandData.pointing_mode.del != rvalues[5]) || /* el step size */
-          (CommandData.pointing_mode.dith != rvalues[6])) { /* el step size */
+          (CommandData.pointing_mode.del != rvalues[5])) { /* el step size */ 
         CommandData.pointing_mode.nw = CommandData.slew_veto;
       }
      
@@ -1058,7 +1056,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = rvalues[3]; /* height */
       CommandData.pointing_mode.vaz = rvalues[4]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[5]; /* el step size */
-      CommandData.pointing_mode.dith = rvalues[6]; /* el step size */
+      CommandData.pointing_mode.n_dith = ivalues[6]; /* number of el dither steps */
       break;
     case el_box:
 
@@ -1068,8 +1066,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           (CommandData.pointing_mode.w != rvalues[2]) || /* width */
           (CommandData.pointing_mode.h != rvalues[3]) || /* height */
           (CommandData.pointing_mode.vel != rvalues[4]) || /* az scan speed */
-          (CommandData.pointing_mode.daz != rvalues[5]) || /* el step size */
-          (CommandData.pointing_mode.dith != rvalues[6])) { /* el step size */
+          (CommandData.pointing_mode.daz != rvalues[5])) { /* el step size */
+
         CommandData.pointing_mode.nw = CommandData.slew_veto;
       }
      
@@ -1086,7 +1084,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = rvalues[3]; /* height */
       CommandData.pointing_mode.vel = rvalues[4]; /* az scan speed */
       CommandData.pointing_mode.daz = rvalues[5]; /* el step size */
-      CommandData.pointing_mode.dith = rvalues[6]; /* el step size */
+      CommandData.pointing_mode.n_dith = ivalues[6]; /* number of el dither steps */
+
       break;
     case vbox:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -1102,8 +1101,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       is_new = 0;
       if ((CommandData.pointing_mode.mode != P_QUAD) ||
           (CommandData.pointing_mode.vaz != rvalues[8]) || /* az scan speed */
-          (CommandData.pointing_mode.del != rvalues[9]) || /* el step size */
-          (CommandData.pointing_mode.dith != rvalues[10])) { /* el dith size */
+          (CommandData.pointing_mode.del != rvalues[9])) {/* el step size */
         is_new=1;
       }
       for (i = 0; i < 4; i++) {
@@ -1128,10 +1126,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       CommandData.pointing_mode.vaz = rvalues[8]; /* az scan speed */
       CommandData.pointing_mode.del = rvalues[9]; /* el step size */
-      CommandData.pointing_mode.dith = rvalues[10]; /* el dith size */
+      CommandData.pointing_mode.n_dith = ivalues[10]; /* N dither steps */
       break;
     case az_scan_accel:
       CommandData.az_accel = rvalues[0];
+      break;
+    case set_scan_params:
+      CommandData.pointing_mode.next_i_hwpr = ivalues[0];
+      CommandData.pointing_mode.next_i_dith = ivalues[1];
       break;
 
       /***************************************/
@@ -1908,7 +1910,10 @@ void InitCommandData()
   CommandData.pointing_mode.w = 0;
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
-  CommandData.pointing_mode.dith = 0.0;
+  CommandData.pointing_mode.n_dith = 0;
+  CommandData.pointing_mode.next_i_dith = 0;
+  CommandData.pointing_mode.next_i_hwpr = 0;
+  CommandData.pointing_mode.n_dith = 0;
   CommandData.pointing_mode.vel = 0.0;
   CommandData.pointing_mode.daz = 0.0;
 

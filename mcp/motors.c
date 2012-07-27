@@ -63,7 +63,8 @@ int pivot_motor_index;
 
 struct AxesModeStruct axes_mode = {
   .el_dir = 1,
-  .az_dir = 0
+  .az_dir = 0,
+  .i_dith = 0
 }; /* low level velocity mode */
 
 void SetSafeDAz(double ref, double *A); /* in pointing.c */
@@ -602,41 +603,54 @@ void WriteMot(int TxIndex)
 /*                                                             */
 /***************************************************************/
 static void GetElDither() {
-  time_t seconds;
-  int tmp_rand;
   static int first_time = 1;
-  double dith_step;
   // Set up the random variable.
   if(first_time) {
-    time(&seconds);
-    srand((unsigned int) seconds);
     first_time = 0;
-  }
-  dith_step = CommandData.pointing_mode.dith;
-  bprintf(info,"***Dither Time!!!***  dith_step = %f",dith_step);
-  
-  if (dith_step < -0.000277778 && dith_step > 0.000277778) { // If |dith_step| < 1'' no dither
-    axes_mode.el_dith = 0.0;
-    bprintf(info,"No dither: axes_mode.el_dith = %f",axes_mode.el_dith);
-  } else if (dith_step < 0.00) { // Random mode! May want to remove later...
-    tmp_rand = rand();
-    axes_mode.el_dith = CommandData.pointing_mode.del*(tmp_rand/RAND_MAX-0.5);      
-    bprintf(info,"Random dither: axes_mode.el_dith = %f, tmp_rand = %i",axes_mode.el_dith,tmp_rand);
   } else {
-    axes_mode.el_dith += dith_step;
-    bprintf(info,"Stepping dither: axes_mode.el_dith = %f, CommandData.pointing_mode.del=%f",axes_mode.el_dith,CommandData.pointing_mode.del);
-    bprintf(info,"GetElDither: dith_step =%f, CommandData.pointing_mode.del =%f",dith_step,CommandData.pointing_mode.del);
-    if(axes_mode.el_dith > CommandData.pointing_mode.del) {
-      axes_mode.el_dith += (-2.0)*CommandData.pointing_mode.del;
-      bprintf(info,"GetElDither: Wrapping dither... axes_mode.el_dith=%f",axes_mode.el_dith);
-    }
+    (axes_mode.i_dith)++;
+    if (CommandData.pointing_mode.n_dith <= 0) {
+      axes_mode.el_dith=0.0;
+      bprintf(info,"No dither: axes_mode.el_dith = %f",axes_mode.el_dith);
+    } else {
+      axes_mode.i_dith%=(CommandData.pointing_mode.n_dith);
+      axes_mode.el_dith=2.0*((double) axes_mode.i_dith)/((double)(CommandData.pointing_mode.n_dith));
+    }					    
+  } 
+
+  bprintf(info,"***Dither Time!!!***  El Dither = %f",axes_mode.el_dith);
+  
+  if (axes_mode.el_dith > CommandData.pointing_mode.del) {
+    axes_mode.el_dith += (-2.0)*CommandData.pointing_mode.del;
+    bprintf(info,"GetElDither: Wrapping dither... axes_mode.el_dith=%f",axes_mode.el_dith);
   }
+  
   return;
 }
 
-static void ClearElDither() {
-  axes_mode.el_dith = 0.0;
-  //  bprintf(info,"ClearElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
+static void InitElDither() {
+  if (CommandData.pointing_mode.next_i_dith >= 0) {
+    axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
+    CommandData.pointing_mode.next_i_dith = -1;
+    bprintf(info,"InitElDither: axes_mode.i_dith = %i",axes_mode.i_dith);
+  } else {
+    CommandData.pointing_mode.next_i_dith = -1;
+    bprintf(info,"InitElDither: CommandData.pointing_mode.next_i_dith =%i, so axes_mode.i_dith = %i",CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);  
+  }
+
+  if (CommandData.pointing_mode.next_i_hwpr >= 0 && CommandData.pointing_mode.next_i_hwpr <= 0) {
+    axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
+    CommandData.hwpr.i_pos = CommandData.pointing_mode.next_i_hwpr;
+    CommandData.hwpr.mode = HWPR_GOTO_I;
+    CommandData.hwpr.is_new = 1;
+    bprintf(info,"InitElDither: Sending HWPR to index = %i",CommandData.pointing_mode.next_i_hwpr);
+    CommandData.pointing_mode.next_i_hwpr=-1;
+  } else {
+    bprintf(info,"InitElDither: CommandData.pointing_mode.next_i_hwpr =%i, so we will do nothing",CommandData.pointing_mode.next_i_hwpr);  
+    CommandData.pointing_mode.next_i_dith = -1;
+  }
+
+  //  bprintf(info,"InitElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
   return;
 }
 
@@ -1094,7 +1108,7 @@ static void DoNewCapMode(void)
       (CommandData.pointing_mode.Y != last_Y) ||
       (CommandData.pointing_mode.w != last_w) ||
       (last_mode != P_CAP)) {
-    ClearElDither(); // sets dither to 0...
+    InitElDither(); // sets dither to 0...
     if ( (fabs(az - (caz)) < 0.1) &&
         (fabs(el - (bottom)) < 0.05)) {
       last_X = CommandData.pointing_mode.X;
@@ -1315,7 +1329,7 @@ static void DoElBoxMode(void)
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_EL_BOX)) {
     new = 1;
-    ClearElDither();
+    InitElDither();
   }
   if (el < bottom - 0.5) new = 1;
   if (el > top + 0.5) new = 1;
@@ -1516,7 +1530,7 @@ static void DoNewBoxMode(void)
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_BOX)) {
     new = 1;
-    ClearElDither();
+    InitElDither();
   }
   if (el < bottom - 0.5) new = 1;
   if (el > top + 0.5) new = 1;
@@ -1719,7 +1733,7 @@ void DoQuadMode(void) // aka radbox
   }
 
   if (new) {
-    ClearElDither();
+    InitElDither();
     if ( (fabs(az - az_of_bot) < 0.1) &&
         (fabs(el - bottom) < 0.05)) {
       for (i=0; i<4; i++) {

@@ -373,6 +373,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Az Acceleration", 0.1, 2.0, 'f', "accel_az"}
     }
   },
+  {COMMAND(set_scan_params), "set pos hwpr and dither index for next scan", GR_POINT, 2,
+    {
+      {"Next HWPR pos (0-3, -1: no change)", -1, 3, 'i', "next_i_hwpr"},
+      {"Next dither index ", 0, 200, 'i', "next_i_dith"}
+    }
+  },
   {COMMAND(az_scan), "scan in azimuth", GR_POINT, 4,
     {
       {"Az centre (deg)",       -180, 360, 'f', "AZ"},
@@ -416,7 +422,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (deg)",-0.1,  0.1, 'f', "NONE"}
+      {"No. of dither steps",       0,200, 'i', "n_dith"}
     }
   },
   {COMMAND(el_box), "scan an az/el box centred on RA/Dec with az steps",
@@ -428,7 +434,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"El Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"Az Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (deg)",-0.1,  0.1, 'f', "NONE"}
+      {"No. of dither steps",       0,200, 'i', "n_dith"}
     }
   },
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 6,
@@ -438,7 +444,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (deg)",-0.1,  0.1, 'f', "NONE"}
+      {"No. of dither steps",       0,200, 'i', "n_dith"}
     }
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
@@ -460,7 +466,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"El Dith Step Size (deg)",-0.1, 0.1, 'f', "NONE"}
+      {"No. of dither steps",       0,200, 'i', "n_dith"}
     }
   },
   {COMMAND(vbox), "DEPRECATED - scan an az/el box centred on RA/Dec with el drift",
