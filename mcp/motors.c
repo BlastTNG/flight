@@ -1474,6 +1474,7 @@ static void DoNewBoxMode(void)
   int new_scan = 0;
   int turn_el = 0;
   static int j = 0;
+  static int new_count = 0;
 
   static double last_X=0, last_Y=0, last_w=0, last_h = 0;
   static double v_el = 0;
@@ -1533,7 +1534,7 @@ static void DoNewBoxMode(void)
       (CommandData.pointing_mode.h != last_h) ||
       (last_mode != P_BOX)) {
     new = 1;
-    InitElDither();
+    if (new_count == 0) InitElDither();
   }
   if (el < bottom - 0.5) new = 1;
   if (el > top + 0.5) new = 1;
@@ -1542,6 +1543,7 @@ static void DoNewBoxMode(void)
 
   /* If a new command, reset to bottom row */
   if (new) {
+    new_count++;
     n_scan = 0;
     if ( (fabs(az - left) < 0.1) &&
         (fabs(el - bottom) < 0.05)) {
@@ -1563,6 +1565,8 @@ static void DoNewBoxMode(void)
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
+  } else {
+    new_count=0;
   }
 
   /* set az v */
