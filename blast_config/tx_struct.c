@@ -497,10 +497,10 @@ struct ChannelStruct SlowChannels[] = {
   {"h_age_gy",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"h_hist_gy",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
   
-  {"cal_xmax_mag",    'w', LOOP4, 39,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  {"cal_xmin_mag",    'w', LOOP4, 40,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  {"cal_ymax_mag",    'w', LOOP4, 41,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  {"cal_ymin_mag",    'w', LOOP4, 42,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  {"cal_xmax_mag",    'w', LOOP4, 39,    		1,             0.0, 'u', U_NONE},
+  {"cal_xmin_mag",    'w', LOOP4, 40,    		1,             0.0, 'u', U_NONE},
+  {"cal_ymax_mag",    'w', LOOP4, 41,    		1,             0.0, 'u', U_NONE},
+  {"cal_ymin_mag",    'w', LOOP4, 42,    		1,             0.0, 'u', U_NONE},
   
   /* LOOP4 43 appears unused */
   {"ra_1_p",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE}, // pointing mode coordinates

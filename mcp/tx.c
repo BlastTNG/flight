@@ -876,6 +876,10 @@ static void StoreData(int index)
   static struct NiosStruct* azRawMagAddr;
   static struct NiosStruct* pitchMagAddr;
   static struct NiosStruct* declinationMagAddr;
+  static struct NiosStruct* calXMaxMagAddr;
+  static struct NiosStruct* calXMinMagAddr;
+  static struct NiosStruct* calYMaxMagAddr;
+  static struct NiosStruct* calYMinMagAddr;
   static struct NiosStruct* sigmaMagAddr;
   static struct NiosStruct* dgpsAzAddr;
   static struct NiosStruct* dgpsSigmaAddr;
@@ -1017,6 +1021,10 @@ static void StoreData(int index)
     azRawMagAddr = GetNiosAddr("az_raw_mag");
     pitchMagAddr = GetNiosAddr("pitch_mag");
     declinationMagAddr = GetNiosAddr("declination_mag");
+    calXMaxMagAddr = GetNiosAddr("cal_xmax_mag");
+    calXMinMagAddr = GetNiosAddr("cal_xmin_mag");
+    calYMaxMagAddr = GetNiosAddr("cal_ymax_mag");
+    calYMinMagAddr = GetNiosAddr("cal_ymin_mag");
     sigmaMagAddr = GetNiosAddr("sigma_mag");
     dgpsAzAddr = GetNiosAddr("az_dgps");
     dgpsSigmaAddr = GetNiosAddr("sigma_dgps");
@@ -1254,6 +1262,16 @@ static void StoreData(int index)
       (unsigned int)(ACSData.mag_pitch * DEG2I), NIOS_QUEUE);
   WriteData(declinationMagAddr,
       (unsigned int)(PointingData[i_point].mag_model * DEG2I), NIOS_QUEUE);
+
+  WriteData(calXMaxMagAddr,
+      (unsigned int)(CommandData.cal_xmax_mag), NIOS_QUEUE);
+  WriteData(calXMinMagAddr,
+      (unsigned int)(CommandData.cal_xmin_mag), NIOS_QUEUE);
+  WriteData(calYMaxMagAddr,
+      (unsigned int)(CommandData.cal_ymax_mag), NIOS_QUEUE);
+  WriteData(calYMinMagAddr,
+      (unsigned int)(CommandData.cal_ymin_mag), NIOS_QUEUE);
+
   WriteData(sigmaMagAddr,
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
   WriteData(trimMagAddr, CommandData.mag_az_trim * DEG2I, NIOS_QUEUE);
