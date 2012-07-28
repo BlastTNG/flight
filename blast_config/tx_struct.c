@@ -496,8 +496,13 @@ struct ChannelStruct SlowChannels[] = {
   {"t_set_gy",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"h_age_gy",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"h_hist_gy",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  /* LOOP4 39-40 are unused */
-  /* LOOP4 41-43 appear unused */
+  
+  {"cal_xmax_mag",    'w', LOOP4, 39,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  {"cal_xmin_mag",    'w', LOOP4, 40,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  {"cal_ymax_mag",    'w', LOOP4, 41,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  {"cal_ymin_mag",    'w', LOOP4, 42,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  
+  /* LOOP4 43 appears unused */
   {"ra_1_p",       'w', LOOP4, 44,                I2H,             0.0, 'u', U_NONE}, // pointing mode coordinates
   {"dec_1_p",      'w', LOOP4, 45,              I2DEG,             0.0, 's', U_NONE},
   {"ra_2_p",       'w', LOOP4, 46,                I2H,             0.0, 'u', U_NONE},
@@ -912,9 +917,9 @@ struct ChannelStruct SlowChannels[] = {
   {"el_raw_if_clin",'r', ACS2_A1,  9,                1.0,             0.0, 'u', U_NONE},
   //  {"el_raw_if_clin",'r', ACS2_A1,  9,         0.00546739,         -133.78, 'u', U_NONE},
   {"t_if_clin",    'r',  ACS2_A1, 11,            100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
-  {"x_mag",        'r',  ACS2_A1, 13,              MAGX_M,         MAGX_B, 'u', U_NONE},
-  {"y_mag",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u', U_NONE},
-  {"z_mag",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
+  {"x_mag",        'r',  ACS2_A1, 13,              1.0,         0, 'u', U_NONE},
+  {"y_mag",        'r',  ACS2_A1, 15,              1.0,         0, 'u', U_NONE},
+  {"z_mag",        'r',  ACS2_A1, 17,              1.0,         0, 'u', U_NONE},
   {"ifpm_hall",    'r',  ACS2_A1, 19,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_65_act",  'r',  ACS2_A1, 21,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
   {"lvdt_63_act",  'r',  ACS2_A1, 23,   LVDT63_ADC_TO_ENC,     LVDT63_ZERO,   'u', U_NONE},

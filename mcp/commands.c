@@ -1137,7 +1137,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
       /***************************************/
-      /********** Pointing Motor Trims *******/
+      /********** Pointing Sensor Trims *******/
     case az_el_trim:
       AzElTrim(rvalues[0], rvalues[1]);
       break;
@@ -1156,10 +1156,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case slew_veto:
       CommandData.slew_veto = rvalues[0] * SR;
             bprintf(info,"CommandData.slew_veto = %i, CommandData.pointing_mode.nw = %i", CommandData.slew_veto, CommandData.pointing_mode.nw);
-      if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto; 
-     
+      if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto;      
       break;
-
+    case mag_cal:
+      CommandData.cal_xmax_mag = ivalues[0];
+      CommandData.cal_xmin_mag = ivalues[1];
+      CommandData.cal_ymax_mag = ivalues[2];
+      CommandData.cal_ymin_mag = ivalues[3];      
+      break;
+      
       /***************************************/
       /********** Pointing Motor Gains *******/
     case el_gain:  /* ele gains */
@@ -1962,6 +1967,11 @@ void InitCommandData()
   CommandData.dgps_az_trim = 0;
   CommandData.pss_az_trim = 0;
 
+  CommandData.cal_xmax_mag = 34783;
+  CommandData.cal_ymax_mag = 34691;
+  CommandData.cal_xmin_mag = 32250;
+  CommandData.cal_ymin_mag = 32180;
+  
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;
   SIPData.MKScal.m_lo = 1;

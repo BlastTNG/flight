@@ -167,10 +167,11 @@ extern "C" {
 // y = -3000*sin(x-19)+33050 : mag_x
 // y = 3000*cos(x-19)+33310 : mag_y
 // x is dgps theta in degrees.
-#define MAGX_M (-1.0/1290.0)
-#define MAGX_B (33500/1290.0)
-#define MAGY_M (-1.0/1290.0)
-#define MAGY_B (33400.0/1290.0)
+// The defines for x and y are no longer used.
+//#define MAGX_M (-1.0/1290.0)
+//#define MAGX_B (33500/1290.0)
+//#define MAGY_M (-1.0/1290.0)
+//#define MAGY_B (33400.0/1290.0)
 #define MAGZ_M (-1/1290.0)
 #define MAGZ_B (32768.0)
 

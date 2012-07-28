@@ -291,6 +291,11 @@ struct CommandDataStruct {
   double dgps_az_trim;
   double pss_az_trim;
 
+  double cal_xmax_mag;
+  double cal_xmin_mag;
+  double cal_ymax_mag;
+  double cal_ymin_mag;
+  
   struct {
     int biasRamp;
     unsigned short bias[5];

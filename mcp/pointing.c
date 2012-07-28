@@ -212,15 +212,16 @@ void SetSafeDAz(double ref, double *A)
 static int MagConvert(double *mag_az)
 {
   float year;
-  static double mvx, mvy, mvz;
-  static double raw_mag_az, raw_mag_pitch;
+  double mvx, mvy, mvz;
+  double raw_mag_az, raw_mag_pitch;
   static float fdec, dip, ti, gv;
-  static double dec;
-  static time_t t, oldt;
+  static double dec=0;
+  time_t t;
   struct tm now;
   int i_point_read;
+  static time_t oldt;
   static int firsttime = 1;
-  //static struct LutType magLut = {"/data/etc/blast/mag.lut",0,NULL,NULL,0};
+  double magx_m, magx_b, magy_m, magy_b;
 
   i_point_read = GETREADINDEX(point_index);
 
@@ -230,7 +231,6 @@ static int MagConvert(double *mag_az)
     /* I think it has something to do with the accuracy of the modelling -- */
     /* probably shouldn't change this value.  (Adam H.) */
     MagModelInit(12, "/data/etc/blast/WMM.COF");
-    //LutInit(&magLut);
 
     oldt = 1;
     firsttime = 0;
@@ -241,10 +241,10 @@ static int MagConvert(double *mag_az)
    * dec = magnetic declination (field direction in az)
    * dip = magnetic inclination (field direction in ele)
    * ti  = intensity of the field in nT
-   * gv  = modified form of dec used in polar reasons -- haven't researched
+   * gv  = modified form of dec used in polar regions -- haven't researched
    *       this one
    *
-   * The year must be between 2000.0 and 2005.0 with current model data
+   * The year must be between 2010.0 and 2015.0 with current model data
    *
    * The functions called are in 'geomag.c' (Adam. H) */
   if ((t = PointingData[i_point_read].t) > oldt + 10) {
@@ -268,27 +268,25 @@ static int MagConvert(double *mag_az)
   /* Thus, depending on the sign convention, you have to either add or */
   /* subtract dec from az to get the true bearing. (Adam H.) */
 
-
-  // Enzo commented out these two lines
-  //raw_mag_az = (180.0 / M_PI) * atan2(ACSData.mag_y, ACSData.mag_x);
-  //*mag_az = LutCal(&magLut, raw_mag_az);
-
-  // cbn added this line
   //mvx = (ACSData.mag_x-MAGX_B)/MAGX_M;
   //mvy = (ACSData.mag_y-MAGY_B)/MAGY_M;
-  mvx = ACSData.mag_x*MAGX_M + MAGX_B;
-  mvy = ACSData.mag_y*MAGY_M + MAGY_B;
+  
+  magx_m = -1.0/((double)(CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
+  magy_m = -1.0/((double)(CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
+  
+  magx_b = (CommandData.cal_xmax_mag + CommandData.cal_xmin_mag)*0.5;
+  magy_b = (CommandData.cal_ymax_mag + CommandData.cal_ymin_mag)*0.5;
+  
+  mvx = magx_m*(ACSData.mag_x - magx_b);
+  mvy = magy_m*(ACSData.mag_y - magy_b);
+  mvz = MAGZ_M*(ACSData.mag_z - MAGZ_B);
 
-  mvz = MAGZ_M*ACSData.mag_z + MAGZ_B;
 
   raw_mag_az = (-1.0)*(180.0 / M_PI) * atan2(mvy, mvx);
-  raw_mag_pitch = (180.0/M_PI) * atan(mvz/sqrt(mvx*mvx + mvy*mvy));
+  raw_mag_pitch = (180.0/M_PI) * atan2(mvz,sqrt(mvx*mvx + mvy*mvy));
   *mag_az = raw_mag_az;
   ACSData.mag_pitch = raw_mag_pitch+(double)dip;
 
-  // Enzo inserted these two lines
-  //mag_az_tmp = MagLutCal(&magLut, ACSData.mag_x, ACSData.mag_y, mag_az_tmp);
-  //*mag_az = mag_az_tmp;
 
 #if 0
 #warning THE MAGNETIC MODEL HAS BEEN DISABLED
@@ -296,7 +294,6 @@ static int MagConvert(double *mag_az)
 #endif
 
   *mag_az += dec + MAG_ALIGNMENT;
-  //*mag_az = -(*mag_az);
 
   NormalizeAngle(mag_az);
 

@@ -55,11 +55,11 @@ extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 /* Seconds in a week */
 #define SEC_IN_WEEK  604800L
 
-#define EXT_SLOT   0
-#define EXT_ICHUNK 1
-#define EXT_NCHUNK 2
-#define EXT_NSCHED 3
-#define EXT_ROUTE  4
+#define EXT_SLOT   1
+#define EXT_ICHUNK 2
+#define EXT_NCHUNK 3
+#define EXT_NSCHED 4
+#define EXT_ROUTE  5
   
 #define MAXLIB 1024
 
@@ -667,6 +667,9 @@ void ProcessUplinkSched(unsigned char *extdat) {
   slot_in = extdat[EXT_SLOT];
   i_chunk = extdat[EXT_ICHUNK];
   nchunk_in = extdat[EXT_NCHUNK];
+
+  bprintf(info,"slot: %d chunk: %d nchunk: %d", slot_in, i_chunk, nchunk_in);
+
   nsched[i_chunk] = extdat[EXT_NSCHED];
   
   if ((slot != slot_in) || (nchunk_in != nchunk)) {
@@ -692,10 +695,9 @@ void ProcessUplinkSched(unsigned char *extdat) {
   
   if (chunks_received == 0xffffffff) {
     FILE *fp;
-    char filename[18];
-   
+    char filename[128];
     OpenLibrary();
-    
+
     sprintf(filename, "/data/etc/blast/%d.sch", slot);
     fp = fopen(filename, "w");
     
@@ -878,7 +880,7 @@ void WatchPort (void* parameter)
               mcommand = indata[0];
               mcommand_count = 0;
               dataqsize = DataQSize(MIndex(mcommand));
-              bprintf(info, "Multi word command %d (%s) started\n",
+              bprintf(info, "UNSUPPORTED: Multi word command %d (%s) started\n",
                   mcommand, MName(mcommand));
 
               /* The time of sending, a "unique" number shared by the first */
@@ -971,11 +973,21 @@ void WatchPort (void* parameter)
 	  bytecount++;
 	} else {
 	  if (buf == 0x03) {
-	    bprintf(info, "extended command %d (%s) received:", 
+	    if (extdat[0] == sched_packet) {
+	      if (extdat[EXT_ROUTE] == route[port]) {
+	        bprintf(info, "Schedule file uplink packet detected\n");
+	        ProcessUplinkSched(extdat);
+	      } else {
+	        bprintf(info, "Schedule file uplink packet bad route %d != %d\n",
+		  extdat[EXT_ROUTE], route[port]);
+	      }		
+	    } else {
+	      bprintf(info, "extended command %d (%s) received:", 
 		    extdat[0], MName(extdat[0]));
-	    SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
+  	      SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
                   ivalues, svalues);
-            MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
+              MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
+	    }
 	    
 	    // FIXME: re-enable sched uplink (!)
 	    //if (extdat[4] == route[port]) {

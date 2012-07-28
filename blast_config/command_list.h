@@ -19,8 +19,9 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 #include "isc_protocol.h"  /* required for constants */
 
+/* WARNING: if either of the next two numbers exceeds 254, commanding will break */
 #define N_SCOMMANDS 221        /* total number of single word cmds */
-#define N_MCOMMANDS 121        /* total number of multiword commands */
+#define N_MCOMMANDS 122        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)    //deprecated. Probably want CMD_I_MAX instead
@@ -156,8 +157,8 @@ enum multiCommand {
   cam_lens_params,   cam_trig_delay,	hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_vel,      shutter_i,
-  set_scan_params,
-  plugh
+  set_scan_params,   mag_cal,
+  plugh, sched_packet = 0xff
 };
 
 extern struct scom scommands[N_SCOMMANDS];

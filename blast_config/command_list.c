@@ -361,6 +361,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Elevation (deg)", 0, 90, 'f', "EL"}
     }
   },
+  {COMMAND(mag_cal), "set magnetometer calibration", GR_TRIM, 4,
+    {
+      {"Max X", 0, 65535, 'i', "cal_xmax_mag"},
+      {"Min X", 0, 65535, 'i', "cal_xmin_mag"},
+      {"Max Y", 0, 65535, 'i', "cal_ymax_mag"},
+      {"Min Y", 0, 65535, 'i', "cal_ymin_mag"},
+    }
+  },
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,
     {
       {"Proportional Gain", 0, CMD_I_MAX, 'i', "g_p_az"},
