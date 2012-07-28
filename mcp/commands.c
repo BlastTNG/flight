@@ -648,7 +648,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_LOCK;
       CommandData.pointing_mode.X = 0;
-      CommandData.pointing_mode.Y = 45.0;
+      CommandData.pointing_mode.Y = LockPosition(45.0);
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.h = 0;
       CommandData.pointing_mode.vaz = 0;
