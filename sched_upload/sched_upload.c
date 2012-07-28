@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 #define LOS 0
-#define TSRSS 1
+#define TDRSS 1
 #define IRIDIUM 2
 #define DEFAULT 3
 
@@ -19,7 +19,7 @@
 #define MAX_RTIME 65536.0
 #define MAX_DAYS 21.0
 
-#define MAX_SCHED_PER_CHUNK 60
+#define MAX_SCHED_PER_CHUNK 54
 //#define MAX_SCHED_PER_CHUNK 7
 #define HEADER_LEN 4
 
@@ -322,7 +322,7 @@ int main(int argc, char *argv[]) {
     if (do_fix) {
       break;
     }
-    //sleep(10);
+    sleep(11);
   }
 
   close(tty_fd);
