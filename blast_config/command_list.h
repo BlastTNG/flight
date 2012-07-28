@@ -19,8 +19,9 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 #include "isc_protocol.h"  /* required for constants */
 
+
 /* WARNING: if either of the next two numbers exceeds 254, commanding will break */
-#define N_SCOMMANDS 221        /* total number of single word cmds */
+#define N_SCOMMANDS 222        /* total number of single word cmds */
 #define N_MCOMMANDS 122        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -120,6 +121,7 @@ enum singleCommand {
   cam_unforce_lens, hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
+  lock45,
   xyzzy
 };
 

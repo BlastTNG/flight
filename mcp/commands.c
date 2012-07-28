@@ -641,6 +641,20 @@ void SingleCommand (enum singleCommand command, int scheduled)
         CommandData.pointing_mode.h = 0;
       }
       break;
+  case lock45:  /* Lock Inner Frame at 45 (to be sent by CSBF pre-termination) */
+      if (CommandData.pointing_mode.nw >= 0)
+        CommandData.pointing_mode.nw = VETO_MAX;
+      CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF;
+      CommandData.pointing_mode.nw = CommandData.slew_veto;
+      CommandData.pointing_mode.mode = P_LOCK;
+      CommandData.pointing_mode.X = 0;
+      CommandData.pointing_mode.Y = 45.0;
+      CommandData.pointing_mode.w = 0;
+      CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.vaz = 0;
+      CommandData.pointing_mode.del = 0;
+      bprintf(info, "Commands: Lock at : %g\n", CommandData.pointing_mode.Y);
+      break;
     case repoll:
       CommandData.actbus.force_repoll = 1;
       CommandData.hwpr.force_repoll = 1;

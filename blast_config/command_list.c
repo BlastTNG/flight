@@ -241,6 +241,7 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_LOCK | CONFIRM},
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
+  {COMMAND(lock45), "Lock the inner frame at 45 degrees", GR_LOCK},
   {COMMAND(repoll), "force repoll of the stepper busses (act, lock, HWPR, XY)",
     GR_STAGE | GR_LOCK | GR_ACT | GR_HWPR},
   {COMMAND(autofocus_veto), "veto the secondary actuator system temperature"
