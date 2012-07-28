@@ -841,7 +841,6 @@ static void StoreData(int index)
   static struct NiosStruct* ra2PAddr, *dec2PAddr;
   static struct NiosStruct* ra3PAddr, *dec3PAddr;
   static struct NiosStruct* ra4PAddr, *dec4PAddr;
-  static struct NiosStruct* ndithPAddr;
   static struct NiosStruct* nextIHwprPAddr;
   static struct NiosStruct* nextIDithPAddr;
   static struct NiosStruct* nDithPAddr;
