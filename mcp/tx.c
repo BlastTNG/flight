@@ -883,6 +883,7 @@ static void StoreData(int index)
   static struct NiosStruct* sigmaMagAddr;
   static struct NiosStruct* dgpsAzAddr;
   static struct NiosStruct* dgpsSigmaAddr;
+  static struct NiosStruct* sigmaPssAddr;
   static struct NiosStruct* azrawPssAddr;
   static struct NiosStruct* elrawPssAddr;
   static struct NiosStruct* snrPss1Addr;
@@ -1030,6 +1031,7 @@ static void StoreData(int index)
     dgpsSigmaAddr = GetNiosAddr("sigma_dgps");
     azSunAddr = GetNiosAddr("az_sun");
     elSunAddr = GetNiosAddr("el_sun");
+    sigmaPssAddr = GetNiosAddr("sigma_pss");
     azrawPssAddr = GetNiosAddr("azraw_pss");
     elrawPssAddr = GetNiosAddr("elraw_pss");
     snrPss1Addr = GetNiosAddr("snr_pss1");
@@ -1276,6 +1278,8 @@ static void StoreData(int index)
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
   WriteData(trimMagAddr, CommandData.mag_az_trim * DEG2I, NIOS_QUEUE);
 
+  WriteData(sigmaPssAddr,
+      (unsigned int)(PointingData[i_point].pss_sigma * DEG2I), NIOS_QUEUE);
   WriteData(trimPssAddr, CommandData.pss_az_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(dgpsAzAddr,

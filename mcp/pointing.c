@@ -457,9 +457,6 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 	weight[3]=0.0;
   }
 
-  weightsum=weight[0]+weight[1]+weight[2]+weight[3];
-  if (weightsum == 0 ) return 0;
-
   /* get current sun az, el */
   jd = GetJulian(PointingData[i_point].t);
   SunPos(jd, &sun_ra, &sun_dec);
@@ -475,6 +472,9 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   NormalizeAngle(&sun_az);
   PointingData[point_index].sun_az = sun_az;
   PointingData[point_index].sun_el = sun_el;
+
+  weightsum=weight[0]+weight[1]+weight[2]+weight[3];
+  if (weightsum == 0 ) return 0;
 
   // Define beta (az rotation)
   beta[0] = (M_PI/180.)*PSS1_BETA;
@@ -1397,6 +1397,7 @@ void Pointing(void)
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
   // Added 22 June 2010 GT
   PointingData[point_index].pss_az = PSSAz.angle;
+  PointingData[point_index].pss_sigma = sqrt(PSSAz.varience + PSSAz.sys_var);
 
 
   PointingData[point_index].isc_az = ISCAz.angle;

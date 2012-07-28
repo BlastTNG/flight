@@ -392,7 +392,7 @@ struct ChannelStruct SlowChannels[] = {
   {"sigma_isc",       'w',LOOP2, 46,            I2DEG,             0.0, 'u', U_NONE},
   // LOOP2 47-48 are fast
   {"pulse_cal",    'w', LOOP2, 49,               10.0,              0., 'u', U_NONE},
-  /* LOOP2 50 is unused */
+  {"sigma_pss",       'w',LOOP2, 50,            I2DEG,             0.0, 'u', U_NONE},
   /* LOOP2 51-54 are wide fast */
   {"sigma_clin",   'w', LOOP2, 55,              I2DEG,             0.0, 'u', U_NONE},
   {"az_mag",       'w', LOOP2, 56,              I2DEG,             0.0, 'u', U_D_DEG},
