@@ -634,23 +634,22 @@ static void GetElDither() {
 static void InitElDither() {
   if (CommandData.pointing_mode.next_i_dith >= 0) {
     axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
-    bprintf(info,"InitElDither: axes_mode.i_dith = %i",axes_mode.i_dith);
+    //    bprintf(info,"InitElDither: axes_mode.i_dith = %i",axes_mode.i_dith);
     CommandData.pointing_mode.next_i_dith = -1;
   } else {
     CommandData.pointing_mode.next_i_dith = -1;
-    bprintf(info,"InitElDither: CommandData.pointing_mode.next_i_dith =%i, so axes_mode.i_dith = %i",CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);  
+    //    bprintf(info,"InitElDither: CommandData.pointing_mode.next_i_dith =%i, so axes_mode.i_dith = %i",CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);  
   }
 
   if (CommandData.pointing_mode.next_i_hwpr >= 0 && CommandData.pointing_mode.next_i_hwpr < 4) {
-    axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
     CommandData.hwpr.i_pos = CommandData.pointing_mode.next_i_hwpr;
     CommandData.hwpr.mode = HWPR_GOTO_I;
     CommandData.hwpr.is_new = 1;
-    bprintf(info,"InitElDither: Sending HWPR to index = %i",CommandData.pointing_mode.next_i_hwpr);
+    //    bprintf(info,"InitElDither: Sending HWPR to index = %i",CommandData.pointing_mode.next_i_hwpr);
     CommandData.pointing_mode.next_i_hwpr=-1;
   } else {
-    bprintf(info,"InitElDither: CommandData.pointing_mode.next_i_hwpr =%i, so we will do nothing",CommandData.pointing_mode.next_i_hwpr);  
-    CommandData.pointing_mode.next_i_dith = -1;
+    //    bprintf(info,"InitElDither: CommandData.pointing_mode.next_i_hwpr =%i, so we will do nothing",CommandData.pointing_mode.next_i_hwpr);  
+    CommandData.pointing_mode.next_i_hwpr = -1;
   }
 
   //  bprintf(info,"InitElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
@@ -1524,6 +1523,7 @@ static void DoNewBoxMode(void)
   top = cel + h*0.5;
   left = caz - w*0.5;
   right = caz + w*0.5;
+  j++;
 
   if (top > MAX_EL)
     top = MAX_EL;

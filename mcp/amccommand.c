@@ -32,7 +32,8 @@
 struct MotorInfoStruct pivotinfo; /* Contains the status info and file
                                           * Descriptor
                                           */
-#define SELECT_RMUS_OUT 200000 // time out for AMC controller
+#define SELECT_RMUS_OUT 200 // time out for AMC controller
+                            // in milliseconds
 
 //#define DEBUG_AMC
 
