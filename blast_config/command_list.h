@@ -21,7 +21,7 @@
 
 
 /* WARNING: if either of the next two numbers exceeds 254, commanding will break */
-#define N_SCOMMANDS 222        /* total number of single word cmds */
+#define N_SCOMMANDS 223        /* total number of single word cmds */
 #define N_MCOMMANDS 122        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -121,7 +121,7 @@ enum singleCommand {
   cam_unforce_lens, hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
-  lock45,
+  lock45,           shutter_close_slow,
   xyzzy
 };
 
@@ -158,7 +158,7 @@ enum multiCommand {
   cam_bad_pix,	     cam_blob_params,	cam_lens_any,	  cam_lens_move, 
   cam_lens_params,   cam_trig_delay,	hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
-  el_scan,           el_box,            shutter_vel,      shutter_i,
+  el_scan,           el_box,            shutter_step,     shutter_step_slow,
   set_scan_params,   mag_cal,
   plugh, sched_packet = 0xff
 };

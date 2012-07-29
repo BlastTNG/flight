@@ -324,6 +324,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(shutter_open), "Open shutter", GR_SHUTTER},
   {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_SHUTTER},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_SHUTTER},
+  {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_SHUTTER},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 
 };
@@ -1155,17 +1156,15 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
    }
   },
-  {COMMAND(shutter_vel), "set the shutter velocity and acceleration", 
-    GR_SHUTTER, 2,
+  {COMMAND(shutter_step), "set number of shutter steps to close", 
+    GR_SHUTTER, 1,
     {
-      {"Velocity", 5, 500000, 'l', "VEL_SHUTTER"},
-      {"Acceleration", 1, 1000, 'i', "ACC_SHUTTER"},
+      {"Steps", 1, 5000, 'i', "STEPS_SHUTTER"},
     }
   },
-  {COMMAND(shutter_i), "set the shutter currents", GR_SHUTTER, 2,
+  {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close", GR_SHUTTER, 1,
     {
-      {"Move current (%)", 0, 100, 'i', "I_MOVE_SHUTTER"},
-      {"Hold current (%)", 0,  50, 'i', "I_HOLD_SHUTTER"},
+      {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
     }
   },
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,

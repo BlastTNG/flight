@@ -93,6 +93,7 @@ struct PivGainStruct {
 #define SHUTTER_RESET   0x0010
 #define SHUTTER_NOP     0x0020
 #define SHUTTER_CLOSED2 0x0040
+#define SHUTTER_CLOSED_SLOW 0x0080
 #define SHUTTER_UNK     0x0100
 
 
@@ -403,10 +404,8 @@ struct CommandDataStruct {
     unsigned int lock_goal;
 
     /* shutter control */
-    int shutter_vel;
-    int shutter_acc;
-    int shutter_hold_i;
-    int shutter_move_i;
+    int shutter_step;
+    int shutter_step_slow;
     int shutter_out;
 
     unsigned int  shutter_goal;

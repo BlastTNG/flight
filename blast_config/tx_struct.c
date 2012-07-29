@@ -791,12 +791,11 @@ struct ChannelStruct SlowChannels[] = {
   {"focpos_sbsc",    'w', LOOP9,  35,           1.0/10.0,             0.0, 's', U_NONE},
   {"delay_sbsc",     'w', LOOP9,  36,         1.0/1000.0,             0.0, 'u', U_NONE},
   {"daz_p",          'w', LOOP9,  37,              I2VEL,             0.0, 'u', U_NONE},
-  {"i_move_shutter", 'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
-  {"i_hold_shutter", 'w', LOOP9,  39,                1.0,             0.0, 'u', U_NONE},
-  {"vel_shutter",    'w', LOOP9,  40,                1.0,             0.0, 'u', U_NONE},
-  {"acc_shutter",    'w', LOOP9,  41,                1.0,             0.0, 'u', U_NONE},
-  {"pos_shutter",    'w', LOOP9,  42,                1.0,             0.0, 'u', U_NONE},
-  {"out_shutter",    'w', LOOP9,  43,                1.0,             0.0, 'u', U_NONE},
+  {"steps_shutter",  'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
+  {"steps_slow_shutter", 'w', LOOP9,  39,                1.0,             0.0, 'u', U_NONE},
+  {"pos_shutter",    'w', LOOP9,  40,                1.0,             0.0, 'u', U_NONE},
+  {"out_shutter",    'w', LOOP9,  41,                1.0,             0.0, 'u', U_NONE},
+  /* LOOP 9 42, 43 are unused */
   {"ra_sbsc",        'w', LOOP9,  44,         1.0/1000.0,             0.0, 'u', U_NONE},
   {"dec_sbsc",       'w', LOOP9,  45,         1.0/1000.0,             0.0, 's', U_NONE},
   /* LOOP9 46-49 are unused */
