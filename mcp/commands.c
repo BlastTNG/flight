@@ -2005,9 +2005,9 @@ void InitCommandData()
   CommandData.pss_az_trim = 0;
 
   CommandData.autotrim_enable = 0;
-  CommandData.autotrim_thresh = 0.1;
-  CommandData.autotrim_rate = 0.1;
-  CommandData.autotrim_time = 30;
+  CommandData.autotrim_thresh = 0.05;
+  CommandData.autotrim_rate = 1.0;
+  CommandData.autotrim_time = 60;
 
   CommandData.cal_xmax_mag = 34783;
   CommandData.cal_ymax_mag = 34691;

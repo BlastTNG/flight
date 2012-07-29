@@ -1330,9 +1330,11 @@ static void StoreData(int index)
 
   WriteData(trimNullAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
 
-  WriteData(threshAtrimAddr, CommandData.autotrim_thresh * DEG2I, NIOS_QUEUE);
+  WriteData(threshAtrimAddr, CommandData.autotrim_thresh * 65536.0/10.0,
+      NIOS_QUEUE);
   WriteData(timeAtrimAddr, CommandData.autotrim_time, NIOS_QUEUE);
-  WriteData(rateAtrimAddr, CommandData.autotrim_rate * DEG2I, NIOS_QUEUE);
+  WriteData(rateAtrimAddr, CommandData.autotrim_rate * 65536.0/30.0,
+      NIOS_QUEUE);
 
 
   WriteData(azGyAddr,

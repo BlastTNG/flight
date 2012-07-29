@@ -374,9 +374,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(autotrim_to_sc), "enable auto-trim to ISC/OSC", GR_TRIM, 3,
     {
-      {"Threshold (sigma)", 0, 360, 'f', "THRESH_ATRIM"},
+      {"Threshold (sigma)", 0, 10, 'f', "THRESH_ATRIM"},
       {"Good time (s)", 0, CMD_I_MAX, 'i', "TIME_ATRIM"},
-      {"Set rate (deg/s)", 0, 360, 'f', "RATE_ATRIM"}
+      {"Set rate (deg/s)", 0, 30, 'f', "RATE_ATRIM"}
     }
   },
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,

@@ -816,10 +816,10 @@ struct ChannelStruct SlowChannels[] = {
   {"t_char_set_cycle",'w', LOOP0,  6,       70.0/65536.0,             0.0, 'u', U_T_K},
   {"time_char_cycle", 'w', LOOP0,  7,      120.0/65536.0,             0.0, 'u', U_T_MIN},
   {"time_set_cycle",  'w', LOOP0,  8,      120.0/65536.0,             0.0, 'u', U_T_MIN},
-  {"thresh_atrim",    'w', LOOP0,  9,              I2DEG,             0.0, 'u', U_NONE},
+  {"thresh_atrim",    'w', LOOP0,  9,       10.0/65536.0,             0.0, 'u', U_NONE},
   /* LOOP0 10-11 are wide slow */
   {"time_atrim",      'w', LOOP0, 12,                1.0,             0.0, 'u', U_NONE},
-  {"rate_atrim",      'w', LOOP0, 13,              I2DEG,             0.0, 'u', U_NONE},
+  {"rate_atrim",      'w', LOOP0, 13,       30.0/65536.0,             0.0, 'u', U_NONE},
   /* LOOP0 14-63 are unused */
 
 #ifndef BOLOTEST
