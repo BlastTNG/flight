@@ -601,6 +601,7 @@ static void CloseShutter()
 }
 
 
+#define SHUTTER_CLOSE_SLOW_TIMEOUT 50000000
 
 static void CloseSlowShutter()
 {
@@ -649,8 +650,8 @@ static void CloseSlowShutter()
     //bputs(info, "CloseShutter: shutter is closed");
   }
 
-  if (shutter_timeout >= SHUTTER_CLOSE_TIMEOUT)
-    bputs(warning, "CloseShutter: Closing shutter timed out");
+  if (shutter_timeout >= SHUTTER_CLOSE_SLOW_TIMEOUT)
+    bputs(warning, "CloseSlowShutter: Closing shutter timed out");
 
 }
 

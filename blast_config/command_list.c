@@ -1156,13 +1156,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
      {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
    }
   },
-  {COMMAND(shutter_step), "set number of shutter steps to close", 
+  {COMMAND(shutter_step), "set number of shutter steps to close (default 4224)", 
     GR_SHUTTER, 1,
     {
       {"Steps", 1, 5000, 'i', "STEPS_SHUTTER"},
     }
   },
-  {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close", GR_SHUTTER, 1,
+  {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_SHUTTER, 1,
     {
       {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
     }
