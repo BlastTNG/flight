@@ -1259,8 +1259,6 @@ void StoreActBus(void)
 
   static struct NiosStruct* posShutterAddr;
   static struct NiosStruct* outShutterAddr;
-  static struct NiosStruct* shutterOutAddr;
-
   static struct NiosStruct* stepShutterAddr;
   static struct NiosStruct* stepSlowShutterAddr;
 
@@ -1350,8 +1348,6 @@ void StoreActBus(void)
 
     posShutterAddr = GetNiosAddr("pos_shutter");
     outShutterAddr = GetNiosAddr("out_shutter");
-    shutterOutAddr = GetNiosAddr("shutter_out");
-
     stepShutterAddr = GetNiosAddr("steps_shutter");
     stepSlowShutterAddr = GetNiosAddr("steps_slow_shutter");
 
@@ -1428,8 +1424,7 @@ void StoreActBus(void)
   WriteData(stepShutterAddr, CommandData.actbus.shutter_step, NIOS_QUEUE);
   WriteData(stepSlowShutterAddr, CommandData.actbus.shutter_step_slow, NIOS_QUEUE);
   WriteData(posShutterAddr, (shutter_data.in & SHUTTER_CLOSED_BIT), NIOS_QUEUE);
-  //WriteData(openShutterAddr, shutter_data.open, NIOS_QUEUE);
-  WriteData(shutterOutAddr, CommandData.actbus.shutter_out, NIOS_QUEUE);
+  WriteData(outShutterAddr, shutter_data.pos, NIOS_QUEUE);
 
   WriteData(gPrimeSfAddr, CommandData.actbus.g_primary * 100., NIOS_QUEUE);
   WriteData(gSecondSfAddr, CommandData.actbus.g_secondary*100., NIOS_QUEUE);

@@ -134,7 +134,7 @@ struct ChannelStruct WideSlowChannels[] = {
 //{"cryo_a2_15",    'r', CRYO_A2, 30,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   //CRYO_A2 CH16 is narrow fast
   // Uncommented for shutter  7/14/12 G.T.
-  {"shutter_out",   'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
+  {"out_shutter",   'r', CRYO_A2, 34,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
 //{"cryo_a2_18",    'r', CRYO_A2, 36,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
 //{"cryo_a2_19",    'r', CRYO_A2, 38,          CRYO_A2_M,       CRYO_A2_B, 'U', U_V_V},
   {"td_vcs_jfet",   'r', CRYO_A2, 40,           CRYO_D_M,        CRYO_D_B, 'U', U_V_V},
@@ -794,8 +794,7 @@ struct ChannelStruct SlowChannels[] = {
   {"steps_shutter",  'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
   {"steps_slow_shutter", 'w', LOOP9,  39,                1.0,             0.0, 'u', U_NONE},
   {"pos_shutter",    'w', LOOP9,  40,                1.0,             0.0, 'u', U_NONE},
-  {"out_shutter",    'w', LOOP9,  41,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP 9 42, 43 are unused */
+  /* LOOP 9 41-43 are unused */
   {"ra_sbsc",        'w', LOOP9,  44,         1.0/1000.0,             0.0, 'u', U_NONE},
   {"dec_sbsc",       'w', LOOP9,  45,         1.0/1000.0,             0.0, 's', U_NONE},
   /* LOOP9 46-49 are unused */
