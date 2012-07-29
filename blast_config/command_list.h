@@ -21,8 +21,8 @@
 
 
 /* WARNING: if either of the next two numbers exceeds 254, commanding will break */
-#define N_SCOMMANDS 223        /* total number of single word cmds */
-#define N_MCOMMANDS 122        /* total number of multiword commands */
+#define N_SCOMMANDS 224        /* total number of single word cmds */
+#define N_MCOMMANDS 123        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)    //deprecated. Probably want CMD_I_MAX instead
@@ -77,7 +77,7 @@ enum singleCommand {
   pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,       
   pot_valve_open,   ramp,               reset_trims,      isc_save_images,
   stop,             pss_veto,
-  pss_allow,        isc_eye_off,	trim_osc_to_isc,
+  pss_allow,        isc_eye_off,        trim_osc_to_isc,  autotrim_off,
   trim_to_isc,      unlock,             lock_off,         
   isc_reboot,       isc_cam_cycle,      osc_run,          osc_shutdown,
   osc_reboot,       osc_cam_cycle,      osc_pause,        osc_abort,
@@ -137,7 +137,7 @@ enum multiCommand {
   az_el_trim,        isc_det_set,       drift,            el_gain,
   isc_integrate,     osc_integrate,     osc_det_set,      osc_blobs,
   inner_level,       isc_offset,        hwpr_jump,        hwpr_goto_i,
-  osc_catalogue,     osc_tolerances,    osc_hold_current,
+  osc_catalogue,     osc_tolerances,    osc_hold_current, autotrim_to_sc,
   lock,              isc_blobs,         phase,            act_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    az_scan_accel,

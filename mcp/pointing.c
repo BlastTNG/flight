@@ -157,7 +157,8 @@ static struct {
   double az;
   double el;
   int fresh;
-} NewAzEl = {0.0, 0.0, 0};
+  double rate;
+} NewAzEl = {0.0, 0.0, 0, 360.0};
 
 // gyros, with earth's rotation removed
 static struct {
@@ -942,6 +943,8 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
   s->since_last++;
 }
 
+void AutoTrimToSC();    //defined below
+
 /*****************************************************************
   do sensor selection;
   update the pointing;
@@ -967,6 +970,7 @@ void Pointing(void)
   static double last_good_lat=0, last_good_lon=0;
   static int since_last_good_dgps_pos=5;
   static int i_at_float = 0;
+  double trim_change;
 
   static int firsttime = 1;
 
@@ -1416,6 +1420,8 @@ void Pointing(void)
 
   /********************/
   /* Set Manual Trims */
+  if (CommandData.autotrim_enable) AutoTrimToSC();
+
   if (NewAzEl.fresh == -1) {
     ClinEl.trim = 0.0;
     EncEl.trim = 0.0;
@@ -1427,17 +1433,40 @@ void Pointing(void)
   }
 
   if (NewAzEl.fresh==1) {
-    ClinEl.trim = NewAzEl.el - ClinEl.angle;	
-    EncEl.trim = NewAzEl.el - EncEl.angle;	
-    NullAz.trim = NewAzEl.az - NullAz.angle;
-    MagAz.trim = NewAzEl.az - MagAz.angle;
+    trim_change = (NewAzEl.el - ClinEl.angle) - ClinEl.trim;
+    if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
+    else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
+    ClinEl.trim += trim_change;
+
+    trim_change = (NewAzEl.el - EncEl.angle) - EncEl.trim;
+    if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
+    else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
+    EncEl.trim += trim_change;
+
+    trim_change = (NewAzEl.az - NullAz.angle) - NullAz.trim;
+    if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
+    else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
+    NullAz.trim += trim_change;
+
+    trim_change = (NewAzEl.az - MagAz.angle) - MagAz.trim;
+    if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
+    else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
+    MagAz.trim += trim_change;
 
     if (dgps_since_ok<500) {
-      DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
+      trim_change = (NewAzEl.az - DGPSAz.angle) - DGPSAz.trim;
+      if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
+      else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
+      DGPSAz.trim += trim_change;
     }
+
     if (pss_since_ok<500) {
-      PSSAz.trim = NewAzEl.az - PSSAz.angle;
+      trim_change = (NewAzEl.az - PSSAz.angle) - PSSAz.trim;
+      if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
+      else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
+      PSSAz.trim += trim_change;
     }
+
     NewAzEl.fresh = 0;
   }
 
@@ -1466,6 +1495,7 @@ void SetRaDec(double ra, double dec)
       PointingData[i_point].lat,
       &(NewAzEl.az), &(NewAzEl.el));
 
+  NewAzEl.rate = 360.0; //allow arbitrary trim changes
   NewAzEl.fresh = 1;
 }
 
@@ -1482,6 +1512,44 @@ void SetTrimToSC(int which)
     NewAzEl.el = PointingData[i_point].osc_el;
   }
 
+  NewAzEl.rate = 360.0; //allow arbitrary trim changes
+  NewAzEl.fresh = 1;
+}
+
+void AutoTrimToSC()
+{
+  int i_point= GETREADINDEX(point_index);
+  int isc_good = 0, osc_good = 0;
+  static int which = 0;
+  time_t t = mcp_systime(NULL);
+
+  if (PointingData[i_point].isc_sigma > CommandData.autotrim_thresh) {
+    CommandData.autotrim_isc_last_bad = t;
+  }
+  if (PointingData[i_point].osc_sigma > CommandData.autotrim_thresh) {
+    CommandData.autotrim_osc_last_bad = t;
+  }
+
+  if (t - CommandData.autotrim_isc_last_bad > CommandData.autotrim_time)
+    isc_good = 1;
+  if (t - CommandData.autotrim_osc_last_bad > CommandData.autotrim_time)
+    osc_good = 1;
+
+  //sticky choice
+  if (isc_good && !osc_good && which == 1) which = 0;
+  if (osc_good && !isc_good && which == 0) which = 1;
+
+  if (isc_good || osc_good) {
+    if (which == 0) {
+      NewAzEl.az = PointingData[i_point].isc_az;
+      NewAzEl.el = PointingData[i_point].isc_el;
+    } else {
+      NewAzEl.az = PointingData[i_point].osc_az;
+      NewAzEl.el = PointingData[i_point].osc_el;
+    }
+  }
+
+  NewAzEl.rate = CommandData.autotrim_rate / SR;
   NewAzEl.fresh = 1;
 }
 
@@ -1503,6 +1571,7 @@ void AzElTrim(double az, double el)
   NewAzEl.az = az;
   NewAzEl.el = el;
 
+  NewAzEl.rate = 360.0; //allow arbitrary trim changes
   NewAzEl.fresh = 1;
 }
 

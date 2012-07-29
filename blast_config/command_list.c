@@ -158,6 +158,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
   {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
   {COMMAND(trim_osc_to_isc), "trim OSC to ISC", GR_TRIM},
+  {COMMAND(autotrim_off), "disable auto-trim to ISC/OSC", GR_TRIM},
   {COMMAND(fixed), "fixed level bias", GR_BIAS},
   {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
@@ -369,6 +370,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Min X", 0, 65535, 'i', "cal_xmin_mag"},
       {"Max Y", 0, 65535, 'i', "cal_ymax_mag"},
       {"Min Y", 0, 65535, 'i', "cal_ymin_mag"},
+    }
+  },
+  {COMMAND(autotrim_to_sc), "enable auto-trim to ISC/OSC", GR_TRIM, 3,
+    {
+      {"Threshold (sigma)", 0, 360, 'f', "THRESH_ATRIM"},
+      {"Good time (s)", 0, CMD_I_MAX, 'i', "TIME_ATRIM"},
+      {"Set rate (deg/s)", 0, 360, 'f', "RATE_ATRIM"}
     }
   },
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,

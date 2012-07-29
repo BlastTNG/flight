@@ -927,6 +927,10 @@ static void StoreData(int index)
   static struct NiosStruct *trimPssAddr;
   static struct NiosStruct *dgpsTrimAddr;
 
+  static struct NiosStruct *threshAtrimAddr;
+  static struct NiosStruct *timeAtrimAddr;
+  static struct NiosStruct *rateAtrimAddr;
+
   static struct NiosStruct *modeCalAddr;
   static struct NiosStruct *periodCalAddr;
   static struct NiosStruct *lstSchedAddr;
@@ -1099,6 +1103,10 @@ static void StoreData(int index)
     trimMagAddr = GetNiosAddr("trim_mag");
     trimPssAddr = GetNiosAddr("trim_pss");
     dgpsTrimAddr = GetNiosAddr("trim_dgps");
+
+    threshAtrimAddr = GetNiosAddr("thresh_atrim");
+    timeAtrimAddr = GetNiosAddr("time_atrim");
+    rateAtrimAddr = GetNiosAddr("rate_atrim");
 
     modeAzMcAddr = GetNiosAddr("mode_az_mc");
     modeElMcAddr = GetNiosAddr("mode_el_mc");
@@ -1321,6 +1329,11 @@ static void StoreData(int index)
   WriteData(trimClinAddr, CommandData.clin_el_trim * DEG2I, NIOS_QUEUE);
 
   WriteData(trimNullAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
+
+  WriteData(threshAtrimAddr, CommandData.autotrim_thresh * DEG2I, NIOS_QUEUE);
+  WriteData(timeAtrimAddr, CommandData.autotrim_time, NIOS_QUEUE);
+  WriteData(rateAtrimAddr, CommandData.autotrim_rate * DEG2I, NIOS_QUEUE);
+
 
   WriteData(azGyAddr,
       (int)(PointingData[i_point].v_az * 32768.0/20.0), NIOS_QUEUE);

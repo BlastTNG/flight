@@ -292,6 +292,13 @@ struct CommandDataStruct {
   double dgps_az_trim;
   double pss_az_trim;
 
+  int autotrim_enable;
+  double autotrim_thresh;    //in sc sigma
+  double autotrim_rate;      //degrees/s
+  time_t autotrim_time;      //in seconds
+  time_t autotrim_isc_last_bad;
+  time_t autotrim_osc_last_bad;
+
   double cal_xmax_mag;
   double cal_xmin_mag;
   double cal_ymax_mag;

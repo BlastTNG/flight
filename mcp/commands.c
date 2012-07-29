@@ -138,16 +138,26 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
     case trim_to_isc:
+      CommandData.autotrim_enable = 0;
+      CommandData.autotrim_rate = 0.0;
       SetTrimToSC(0);
       break;
     case trim_to_osc:
+      CommandData.autotrim_enable = 0;
+      CommandData.autotrim_rate = 0.0;
       SetTrimToSC(1);
       break;
     case trim_osc_to_isc:
       TrimOSCToISC();
       break;
     case reset_trims:
+      CommandData.autotrim_enable = 0;
+      CommandData.autotrim_rate = 0.0;
       ClearTrim();
+      break;
+    case autotrim_off:
+      CommandData.autotrim_enable = 0;
+      CommandData.autotrim_rate = 0.0;
       break;
     case az_auto_gyro:
       CommandData.az_autogyro = 1;
@@ -1161,6 +1171,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case ra_dec_set:
       SetRaDec(rvalues[0], rvalues[1]);
       break;
+    case autotrim_to_sc:
+      CommandData.autotrim_thresh = rvalues[0];
+      CommandData.autotrim_time = ivalues[1];
+      CommandData.autotrim_rate = rvalues[2];
+      CommandData.autotrim_isc_last_bad = mcp_systime(NULL);
+      CommandData.autotrim_osc_last_bad = CommandData.autotrim_isc_last_bad;
+      CommandData.autotrim_enable = 1;
+      break;
     case az_gyro_offset:
       CommandData.offset_ifroll_gy = rvalues[0];
       CommandData.offset_ifyaw_gy = rvalues[1];
@@ -1888,6 +1906,10 @@ void InitCommandData()
   /* don't use the fast gy offset calculator */
   CommandData.fast_offset_gy = 0;
 
+  /* force autotrim to reset its wait time on restart */
+  CommandData.autotrim_isc_last_bad = mcp_systime(NULL);
+  CommandData.autotrim_osc_last_bad = CommandData.autotrim_isc_last_bad;
+
   CommandData.reset_rw = 0;
   CommandData.reset_piv = 0;
   CommandData.reset_elev = 0;
@@ -1981,6 +2003,11 @@ void InitCommandData()
   CommandData.mag_az_trim = 0;
   CommandData.dgps_az_trim = 0;
   CommandData.pss_az_trim = 0;
+
+  CommandData.autotrim_enable = 0;
+  CommandData.autotrim_thresh = 0.1;
+  CommandData.autotrim_rate = 0.1;
+  CommandData.autotrim_time = 30;
 
   CommandData.cal_xmax_mag = 34783;
   CommandData.cal_ymax_mag = 34691;
