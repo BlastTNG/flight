@@ -81,7 +81,6 @@
 #define PSS4_ALIGNMENT    (PSS_ALIGNMENT - 155.0)
 
 #define SSS_ALIGNMENT     1.5532
-#define DGPS_ALIGNMENT    0.0
 
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
     double *el);
@@ -323,7 +322,7 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
   int i_dgpsatt;
 
   i_dgpsatt = GETREADINDEX(dgpsatt_index);
-  *dgps_az = DGPSAtt[i_dgpsatt].az + DGPS_ALIGNMENT;
+  *dgps_az = DGPSAtt[i_dgpsatt].az;
   NormalizeAngle(dgps_az);
 
   *dgps_pitch = DGPSAtt[i_dgpsatt].pitch;

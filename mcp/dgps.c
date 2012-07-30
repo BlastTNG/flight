@@ -42,6 +42,8 @@
 
 extern short int InCharge;
 
+#define DGPS_ALIGNMENT    90.0 // rotates in positive azimuth
+
 void nameThread(const char*);	/* mcp.c */
 
 struct shmTime {
@@ -320,10 +322,10 @@ void WatchDGPS()
       inptr += GetField(inptr,outstr);
       // Skip Altitude
       inptr += GetField(inptr,outstr);
-
       // Az (heading)
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%lf", &(DGPSAtt[dgpsatt_index].az));
+      DGPSAtt[dgpsatt_index].az+= DGPS_ALIGNMENT;
       // Pitch
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%lf", &(DGPSAtt[dgpsatt_index].pitch));
