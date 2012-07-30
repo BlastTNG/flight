@@ -1036,8 +1036,8 @@ static void StoreData(int index)
     azSunAddr = GetNiosAddr("az_sun");
     elSunAddr = GetNiosAddr("el_sun");
     sigmaPssAddr = GetNiosAddr("sigma_pss");
-    azrawPssAddr = GetNiosAddr("azraw_pss");
-    elrawPssAddr = GetNiosAddr("elraw_pss");
+    azrawPssAddr = GetNiosAddr("az_raw_pss");
+    elrawPssAddr = GetNiosAddr("el_raw_pss");
     snrPss1Addr = GetNiosAddr("snr_pss1");
     snrPss2Addr = GetNiosAddr("snr_pss2");
     snrPss3Addr = GetNiosAddr("snr_pss3");
