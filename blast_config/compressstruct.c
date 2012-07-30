@@ -448,7 +448,6 @@ char *frameList[] = {
 "climb_dgps",
 "correction_sf",
 "cos_el",
-"crc_ok",
 "cryostate",
 "dac2_ampl",
 "daz_p",
@@ -457,7 +456,6 @@ char *frameList[] = {
 "dec_3_p",
 "dec_4_p",
 "declination_mag",
-"decom_unlock",
 "dec_sbsc",
 "delay_isc",
 "delay_osc",
@@ -486,7 +484,6 @@ char *frameList[] = {
 "drive_info_piv",
 "drive_info_rw",
 "el_lut_clin",
-"elraw_pss",
 "el_sun",
 "enc_0_act",
 "enc_1_act",
@@ -699,7 +696,6 @@ char *frameList[] = {
 "pitch_mag",
 "pitch_raw_dgps",
 "plover",
-"polarity",
 "pos_0_act",
 "pos0_hwpr",
 "pos_1_act",
@@ -972,4 +968,4 @@ char *frameList[] = {
 "y_p",
 "z_mag",
   ""
-}
+};

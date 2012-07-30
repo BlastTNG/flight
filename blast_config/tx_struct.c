@@ -723,8 +723,8 @@ struct ChannelStruct SlowChannels[] = {
   {"goal_1_act",   'w',   LOOP8, 24,                1.0,             0.0, 's', U_NONE},
   {"goal_2_act",   'w',   LOOP8, 25,                1.0,             0.0, 's', U_NONE},
 
-  {"azraw_pss",    'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"elraw_pss",    'w',   LOOP8, 27,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"az_raw_pss",    'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss",    'w',   LOOP8, 27,              I2DEG,             0.0, 'u', U_P_DEG},
   {"snr_pss1",     'w',   LOOP8, 28,            1/1000.,             0.0, 'u', U_NONE},
   {"snr_pss2",     'w',   LOOP8, 29,            1/1000.,             0.0, 'u', U_NONE},
   {"snr_pss3",     'w',   LOOP8, 30,            1/1000.,             0.0, 'u', U_NONE},
