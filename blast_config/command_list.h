@@ -22,7 +22,7 @@
 
 /* WARNING: if either of the next two numbers exceeds 254, commanding will break */
 #define N_SCOMMANDS 224        /* total number of single word cmds */
-#define N_MCOMMANDS 123        /* total number of multiword commands */
+#define N_MCOMMANDS 124        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)    //deprecated. Probably want CMD_I_MAX instead
@@ -159,7 +159,7 @@ enum multiCommand {
   cam_lens_params,   cam_trig_delay,	hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
-  set_scan_params,   mag_cal,
+  set_scan_params,   mag_cal,           params_test,
   plugh, sched_packet = 0xff
 };
 

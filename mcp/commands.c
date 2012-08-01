@@ -1485,6 +1485,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.slot_sched = ivalues[0];
       }
       break;
+    case params_test:/* Do nothing, with lots of parameters */
+      bprintf(info, "Integer params 'i': %d 'l' %d", ivalues[0], ivalues[1]);
+      bprintf(info, "Float params 'f': %g 'd' %g", rvalues[2], rvalues[3]);
+      bprintf(info, "String param 's': %s", svalues[4]);
+      CommandData.plover = ivalues[0];
+      break;
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
       break;
