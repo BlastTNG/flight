@@ -1542,14 +1542,16 @@ void AutoTrimToSC()
     if (which == 0) {
       NewAzEl.az = PointingData[i_point].isc_az;
       NewAzEl.el = PointingData[i_point].isc_el;
+      NewAzEl.rate = CommandData.autotrim_rate / SR;
+      NewAzEl.fresh = 1;
     } else {
       NewAzEl.az = PointingData[i_point].osc_az;
       NewAzEl.el = PointingData[i_point].osc_el;
+      NewAzEl.rate = CommandData.autotrim_rate / SR;
+      NewAzEl.fresh = 1;
     }
   }
 
-  NewAzEl.rate = CommandData.autotrim_rate / SR;
-  NewAzEl.fresh = 1;
 }
 
 void TrimOSCToISC()
