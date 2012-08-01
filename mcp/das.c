@@ -44,11 +44,13 @@
 #define HEAT_HWPR_POS        0x80
 
 /* Valve control bits (BIAS_D G3) */
-#define VALVE_LHe_OFF     0x01
+/* NB: VALVE_*_ON bits are all active low in hardware, but inverted in the DSP
+ * so that the default DSP state (0x0000) leaves valves off */
+#define VALVE_LHe_ON      0x01
 #define VALVE_L_OPEN      0x04
 #define VALVE_L_CLOSE     0x02
-#define VALVE_LN_OFF      0x08
-#define VALVE_POT_OFF     0x90	  //more cowbell
+#define VALVE_LN_ON       0x08
+#define VALVE_POT_ON      0x90	  //more cowbell
 #define VALVE_POT_OPEN    0x40
 #define VALVE_POT_CLOSE   0x20
 
@@ -586,10 +588,10 @@ void CryoControl (int index)
     cryostate &= 0xFFFF - CS_POTVALVE_OPEN;
     CommandData.Cryo.potvalve_close--;
   }
-  if (CommandData.Cryo.potvalve_on)
+  if (CommandData.Cryo.potvalve_on) {
+    valvectrl |= VALVE_POT_ON;
     cryostate |= CS_POTVALVE_ON;
-  else {
-    valvectrl |= VALVE_POT_OFF;
+  } else {
     cryostate &= 0xFFFF - CS_POTVALVE_ON;
   }
 
@@ -602,16 +604,16 @@ void CryoControl (int index)
     cryostate &= 0xFFFF - CS_LVALVE_OPEN;
     CommandData.Cryo.lvalve_close--;
   }
-  if (CommandData.Cryo.lhevalve_on)
+  if (CommandData.Cryo.lhevalve_on) {
+    valvectrl |= VALVE_LHe_ON;
     cryostate |= CS_LHeVALVE_ON;
-  else {
-    valvectrl |= VALVE_LHe_OFF;
+  } else {
     cryostate &= 0xFFFF - CS_LHeVALVE_ON;
   }
-  if (CommandData.Cryo.lnvalve_on)
+  if (CommandData.Cryo.lnvalve_on) {
+    valvectrl |= VALVE_LN_ON;
     cryostate |= CS_LNVALVE_ON;
-  else {
-    valvectrl |= VALVE_LN_OFF;
+  } else {
     cryostate &= 0xFFFF - CS_LNVALVE_ON;
   }
 
