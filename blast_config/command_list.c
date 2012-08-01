@@ -1175,7 +1175,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
     }
   },
-  {COMMAND(plugh), "Do nothing, with all paramter types", GR_MISC, 5,
+  {COMMAND(params_test), "Do nothing, with all paramter types", GR_MISC, 5,
     {
       {"i", 0, CMD_I_MAX, 'i', ""},
       {"l", 0, CMD_L_MAX, 'l', ""},
