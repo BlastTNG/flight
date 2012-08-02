@@ -32,7 +32,7 @@
 #include "pointing_struct.h" /* To access ACSData */
 #include "tx.h" /* InCharge */
 
-//#define DEBUG_HWPR
+#define DEBUG_HWPR
 
 #define HWPR_READ_WAIT 10
 #define HWPR_MOVE_TIMEOUT 3 
@@ -65,6 +65,7 @@ static struct hwpr_control_struct {
   double pot_err; //Added
   int dead_pot; //Added
   int do_calpulse; 
+  int reset_enc; 
 } hwpr_control;
 
 int hwpr_calpulse_flag = 0;
@@ -95,7 +96,7 @@ void ResetControlHWPR (void) {
   hwpr_control.enc_err = 0;
   hwpr_control.pot_targ = 0;
   hwpr_control.pot_err = 0;
-  hwpr_control.dead_pot = 0;
+  hwpr_control.reset_enc = 0;
 }
 
 
@@ -188,6 +189,7 @@ void StoreHWPRBus(void)
   hwpr_stat_field |= ((hwpr_control.done_all) & 0x0001)<<12 ;
   hwpr_stat_field |= ((hwpr_control.dead_pot) & 0x0001)<<13 ;
   hwpr_stat_field |= ((hwpr_control.do_calpulse) & 0x0001)<<14 ;
+  hwpr_stat_field |= ((hwpr_control.reset_enc) & 0x0001)<<15 ;
 
   WriteData(statControlHwprAddr, hwpr_stat_field, NIOS_FLUSH);
 
@@ -221,7 +223,7 @@ int GetHWPRi(double pot_val)
 void ControlHWPR(struct ezbus *bus)
 {
   static int repeat_pos_cnt = 0;
-  //  static int cal_wait_cnt = 0; //DEBUG_CAL
+  static int cal_wait_cnt = 0; 
   static int overshooting = 0;
   static int first_time = 1;
   static int last_enc = 0;
@@ -264,6 +266,7 @@ void ControlHWPR(struct ezbus *bus)
       hwpr_control.move_cur = not_yet;
       hwpr_control.read_before = yes;
       hwpr_control.read_after = yes;
+      hwpr_control.reset_enc = 1;
       if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
     } else if (CommandData.hwpr.mode == HWPR_GOTO_POT) {
       bprintf(info,"ControlHWPR: Attempting to go to HWPR potentiometer position %f",CommandData.hwpr.pot_targ);
@@ -272,6 +275,7 @@ void ControlHWPR(struct ezbus *bus)
       hwpr_control.move_cur = not_yet;
       hwpr_control.read_before = yes;
       hwpr_control.read_after = yes;
+      hwpr_control.reset_enc = 1;
       if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
     } else if ((CommandData.hwpr.mode == HWPR_STEP)) {
       if(!CommandData.hwpr.no_step) {
@@ -281,6 +285,7 @@ void ControlHWPR(struct ezbus *bus)
 	hwpr_control.read_before = yes;
 	hwpr_control.read_after = yes;
 	hwpr_control.do_calpulse = yes;
+	hwpr_control.reset_enc = 1;
       } else {
 	bprintf(warning,"Cannot step half wave plate.  hwpr_step_off is set.");
 	CommandData.hwpr.mode = HWPR_SLEEP;
@@ -296,19 +301,22 @@ void ControlHWPR(struct ezbus *bus)
   
   /* if are doing anything with the HWPR other than sleeping, panicing or repeating */
   if(CommandData.hwpr.mode >= HWPR_GOTO && CommandData.hwpr.mode != HWPR_REPEAT) {
-
-#if 0 
     if (hwpr_control.do_calpulse && cal_wait_cnt <= 0) {
       hwpr_calpulse_flag=1;
       cal_wait_cnt = CommandData.Cryo.calib_pulse/20;
-      hwpr_control.do_calpulse = waiting;
+#ifdef DEBUG_HWPR
+      bprintf(info,"Setting calpulse flag...cal_wait_cnt=%i",cal_wait_cnt);
+#endif
+      //      hwpr_control.do_calpulse = waiting;
       //Set flag for calpulse
     } else if (cal_wait_cnt > 0) {
       cal_wait_cnt--;
       if (cal_wait_cnt <= 0) hwpr_control.do_calpulse = 0;
+#ifdef DEBUG_HWPR
+      bprintf(info,"Waiting for calpulse to be done...cal_wait_cnt=%i, hwpr_control.do_calpulse=%i",cal_wait_cnt,hwpr_control.do_calpulse);
+#endif
    /* Do we want a pot reading first? Should always be yes for step mode.*/
     } else 
-#endif // DEBUG_CAL
 if (hwpr_control.read_before == yes) {
  
       /* pulse the potentiometer */
@@ -518,6 +526,16 @@ if (hwpr_control.read_before == yes) {
 
 	} else if (hwpr_control.move_cur == is_done) {
 
+	    /* Have to tell the HWPR that it is at it's current warm encoder position
+	     * or else it will sometimes oscillate 
+	     */
+	  if (hwpr_control.reset_enc) {
+#ifdef DEBUG_HWPR
+	    bprintf(info,"ControlHWPR: Telling the HWPR that it is at the current encoder position of %i",hwpr_data.enc);
+#endif
+            EZBus_SetEnc(bus, HWPR_ADDR, hwpr_data.enc);
+	    hwpr_control.reset_enc = 0;
+	  }
 	    /* Do we want to read the pot?*/
 	    if (hwpr_control.read_after == yes) {
 	      

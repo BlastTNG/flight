@@ -795,6 +795,13 @@ int EZBus_MoveComm(struct ezbus* bus, char who, const char* what)
   }
 }
 
+int EZBus_SetEnc(struct ezbus* bus, char who, int enc)
+{
+  char buf[EZ_BUS_BUF_LEN];
+  sprintf(buf, "z%d", enc);
+  return EZBus_MoveComm(bus, who, buf);
+}
+
 int EZBus_Goto(struct ezbus* bus, char who, int pos)
 {
   char buf[EZ_BUS_BUF_LEN];

@@ -259,6 +259,11 @@ char* __attribute__((format(printf,4,5))) EZBus_StrComm(struct ezbus* bus,
  */
 int EZBus_MoveComm(struct ezbus* bus, char who, const char* what);
 
+/* Sets the current warm encoder position.
+ * Thould only be used for individual steppers (not groups).
+ */
+int EZBus_SetEnc(struct ezbus* bus, char who, int enc);
+
 /* Absolute move to 'pos' (measured in steps from "zero")
  */
 int EZBus_Goto(struct ezbus* bus, char who, int pos);
