@@ -286,7 +286,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
             if (el1 < 25.0)
               el_range_warning = 1;
           }
-          if (el_range_warning) {
+          if (el_range_warning && 0) { // FIXME: reenable
             bprintf(sched, "Scheduler: ******************************************\n"
                            "Scheduler: *** Warning: El Range of Event %i (%s)\n", i,
                     CommandName(S->event[i].is_multi, S->event[i].command));
@@ -295,7 +295,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
                     S->event[i].rvalues[0], S->event[i].rvalues[1]);
             bprintf(sched, "Scheduler: *** LST: %7.4f Az: %8.3f - %8.3f El: "
                            "%8.3f - %8.3f\n", S->event[i].t / 3600.0, az1, az2, el1, el2);
-          }
+          } 
         }
     }
     bputs(sched, "********************************************\n");

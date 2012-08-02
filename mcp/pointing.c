@@ -368,6 +368,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   double        az[4];
   double	azraw[4];
   double	elraw[4];
+  double new_val;
 
   static double i1[4], i2[4], i3[4], i4[4];
   double        itot[4];
@@ -526,8 +527,28 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   	elraw[i] = (180./M_PI)*atan(u2[i][1]/sqrt(u2[i][0]*u2[i][0]+u2[i][2]*u2[i][2]));
   }
 
-  *azraw_pss = (weight[0]*azraw[0] + weight[1]*azraw[1] + weight[2]*azraw[2] + weight[3]*azraw[3])/weightsum;
-  *elraw_pss = (weight[0]*elraw[0] + weight[1]*elraw[1] + weight[2]*elraw[2] + weight[3]*elraw[3])/weightsum;
+  for (i=0; i<4; i++) {
+  	gsl_matrix_free(rot[i]);
+  	gsl_matrix_free(rxalpha[i]);
+  	gsl_matrix_free(rzpsi[i]);
+  }
+
+  new_val = (weight[0]*azraw[0] + weight[1]*azraw[1] + weight[2]*azraw[2] + weight[3]*azraw[3])/weightsum;
+
+  if ((!isinf(new_val)) && (!isnan(new_val))) {
+    *azraw_pss = new_val;
+  } else {
+    *azraw_pss = 0.0;
+    return 0;
+  }
+
+  new_val = (weight[0]*elraw[0] + weight[1]*elraw[1] + weight[2]*elraw[2] + weight[3]*elraw[3])/weightsum;
+  if ((!isinf(new_val)) && (!isnan(new_val))) {
+    *elraw_pss = new_val;
+  } else {
+    *elraw_pss = 0.0;
+    return 0;
+  }
 
   NormalizeAngle(azraw_pss);
   NormalizeAngle(elraw_pss);
@@ -535,11 +556,6 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   PointingData[point_index].pss_azraw = *azraw_pss;
   PointingData[point_index].pss_elraw = *elraw_pss;
 
-  for (i=0; i<4; i++) {
-  	gsl_matrix_free(rot[i]);
-  	gsl_matrix_free(rxalpha[i]);
-  	gsl_matrix_free(rzpsi[i]);
-  }
   return 1;
 
 }
@@ -1041,7 +1057,7 @@ void Pointing(void)
   };
   static struct AzSolutionStruct MagAz = {0.0, // starting angle
     360.0 * 360.0, // starting varience
-    1.0 / M2DV(60), //sample weight
+    1.0 / M2DV(120.0), //sample weight
     M2DV(90), // systemamatic varience
     0.0, // trim
     0.0, // last input
