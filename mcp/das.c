@@ -207,14 +207,16 @@ static int CalLamp (int index)
 
 
   } else if (CommandData.Cryo.calibrator == repeat) {
-    CommandData.Cryo.calibrator = off; 
+    //    CommandData.Cryo.calibrator = off; 
     if (hwpr_calpulse_flag) {
       pulse_cnt = CommandData.Cryo.calib_pulse;
       elapsed=0;
       hwpr_calpulse_flag=0;
+      bprintf(info,"CalLamp: Hey! Got a hwpr_calpulse_flag! pulse_cnt = %i, elapsed = %i",pulse_cnt, elapsed);
     } else if ((CommandData.Cryo.calib_period > 0 && elapsed >= CommandData.Cryo.calib_period) || last_mode != repeat) {
       elapsed = 0;
       pulse_cnt = CommandData.Cryo.calib_pulse;
+      bprintf(info,"CalLamp: We haven't had a pulse in a while!  Let's send one! pulse_cnt = %i, elapsed = %i",pulse_cnt, elapsed);
     } else if (index == 0) elapsed++;  //period measured in slow frames
     last_mode = repeat;
   } else if (CommandData.Cryo.calibrator == pulse) {
