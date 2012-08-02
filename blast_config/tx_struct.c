@@ -918,8 +918,15 @@ struct ChannelStruct SlowChannels[] = {
   {"el_raw_if_clin",'r', ACS2_A1,  9,                1.0,             0.0, 'u', U_NONE},
   //  {"el_raw_if_clin",'r', ACS2_A1,  9,         0.00546739,         -133.78, 'u', U_NONE},
   {"t_if_clin",    'r',  ACS2_A1, 11,            100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
+
+  //{"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
+  //{"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
+
+#ifndef FASTMAG
   {"x_mag",        'r',  ACS2_A1, 13,              1.0,         0, 'u', U_NONE},
   {"y_mag",        'r',  ACS2_A1, 15,              1.0,         0, 'u', U_NONE},
+#endif
+  
   {"z_mag",        'r',  ACS2_A1, 17,              1.0,         0, 'u', U_NONE},
   {"ifpm_hall",    'r',  ACS2_A1, 19,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_65_act",  'r',  ACS2_A1, 21,   LVDT65_ADC_TO_ENC,     LVDT65_ZERO,   'u', U_NONE},
@@ -981,8 +988,15 @@ struct ChannelStruct FastChannels[] = {
   {"dig43_das",    'w',   BIAS_D,  6,                1.0,             0.0, 'u', U_NONE},
   {"chopper",      'r',  CRYO_A2, 33,          CAL16(1.0,            0.0), 'u',  U_V_V},
 
-  {"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
-  {"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
+ 
+  //{"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
+  //{"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
+
+#ifdef FASTMAG
+  {"x_mag",        'r',  ACS2_A1, 13,              1.0,         0, 'u', U_NONE},
+  {"y_mag",        'r',  ACS2_A1, 15,              1.0,         0, 'u', U_NONE},
+#endif
+
   {"vel_rw",       'w', LOOP7,  0,         I2DEG*4.0,             0.0, 's', U_V_DPS},
   {"el_raw_enc",   'w', LOOP7,  2,             I2DEG,             0.0, 'u', U_P_DEG},
   {"el_enc",       'w', LOOP2, 47,              I2DEG,             0.0, 'u', U_P_DEG},
