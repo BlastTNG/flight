@@ -558,7 +558,7 @@ static void GetACS(unsigned short *RxFrame)
   res_piv = (((double)
 	((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
 
-#ifndef FASTMAG
+#ifndef FAST_MAG
   x_comp = (double)(slow_data[xMagAddr->index][xMagAddr->channel]);
   y_comp = (double)(slow_data[yMagAddr->index][yMagAddr->channel]);
 #else

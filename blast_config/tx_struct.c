@@ -922,7 +922,7 @@ struct ChannelStruct SlowChannels[] = {
   //{"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
   //{"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
 
-#ifndef FASTMAG
+#ifndef FAST_MAG
   {"x_mag",        'r',  ACS2_A1, 13,              1.0,         0, 'u', U_NONE},
   {"y_mag",        'r',  ACS2_A1, 15,              1.0,         0, 'u', U_NONE},
 #endif
@@ -992,7 +992,7 @@ struct ChannelStruct FastChannels[] = {
   //{"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
   //{"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
 
-#ifdef FASTMAG
+#ifdef FAST_MAG
   {"x_mag",        'r',  ACS2_A1, 13,              1.0,         0, 'u', U_NONE},
   {"y_mag",        'r',  ACS2_A1, 15,              1.0,         0, 'u', U_NONE},
 #endif
