@@ -204,7 +204,7 @@ struct PointingDataStruct {
   double pss4_snr;
   double pss_az;   //degrees
   double pss_sigma;   //degrees
-//  int pss_ok;
+  int pss_ok;
   double isc_az; // degrees
   double isc_el; // degrees
   double isc_sigma; // degrees
