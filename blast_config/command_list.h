@@ -21,7 +21,7 @@
 
 
 /* WARNING: if either of the next two numbers exceeds 254, commanding will break */
-#define N_SCOMMANDS 224        /* total number of single word cmds */
+#define N_SCOMMANDS 225        /* total number of single word cmds */
 #define N_MCOMMANDS 124        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -76,7 +76,7 @@ enum singleCommand {
   level_on,         mag_allow,          mag_veto,         osc_auto_focus,
   pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,       
   pot_valve_open,   ramp,               reset_trims,      isc_save_images,
-  stop,             pss_veto,
+  stop,             pss_veto,		trim_isc_to_osc,
   pss_allow,        isc_eye_off,        trim_osc_to_isc,  autotrim_off,
   trim_to_isc,      unlock,             lock_off,         
   isc_reboot,       isc_cam_cycle,      osc_run,          osc_shutdown,

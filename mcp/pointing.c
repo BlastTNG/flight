@@ -1583,6 +1583,19 @@ void TrimOSCToISC()
 
 }
 
+void TrimISCToOSC()
+{
+    int i_point;
+    double delta_az;
+    double delta_el;
+    i_point = GETREADINDEX(point_index);
+    delta_az = PointingData[i_point].isc_az - PointingData[i_point].osc_az;
+    delta_el = PointingData[i_point].isc_el - PointingData[i_point].osc_el;
+    CommandData.ISCState[0].azBDA -= DEG2RAD*(delta_az*cos(PointingData[i_point].el*M_PI / 180.0));
+    CommandData.ISCState[0].elBDA -= DEG2RAD*(delta_el);
+
+}
+
 void AzElTrim(double az, double el)
 {
   NewAzEl.az = az;
