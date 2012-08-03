@@ -352,12 +352,12 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #define  PSS2_BETA  (-PSS2_ALIGNMENT)
 #define  PSS3_BETA  (-PSS3_ALIGNMENT)
 #define  PSS4_BETA  (-PSS4_ALIGNMENT)
-#define  PSS1_ALPHA 24.3  // This angle should be 25 degrees.  Boom bent?
-#define  PSS2_ALPHA   25.
+#define  PSS1_ALPHA   25.
+#define  PSS2_ALPHA 24.3  // This angle should be 25 degrees.  Boom bent?
 #define  PSS3_ALPHA   25.
 #define  PSS4_ALPHA   25.
-#define  PSS1_PSI   11.
-#define  PSS2_PSI    -15.5
+#define  PSS1_PSI    -15.5
+#define  PSS2_PSI   11.
 #define  PSS3_PSI   0
 #define  PSS4_PSI   0
 
@@ -1312,7 +1312,7 @@ void Pointing(void)
   } else {
     pss_since_ok++;
   }
-
+  PointingData[point_index].pss_ok = pss_ok;
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   //dgps_ok = fakeDGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   if (dgps_ok) {

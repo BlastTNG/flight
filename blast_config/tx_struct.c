@@ -378,7 +378,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP2 32 is unused */
   {"tol_isc",      'w', LOOP2, 33,                1.0,             0.0, 'u', U_NONE},
   /* LOOP2 34 is fast */
-  /* LOOP2 35 is unused */
+  {"ok_pss",	      'w',LOOP2, 35,              1.0,             0.0, 'u', U_NONE},
   {"offset_ifel_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
