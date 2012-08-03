@@ -1312,7 +1312,7 @@ void Pointing(void)
   } else {
     pss_since_ok++;
   }
-  PointingData[point_index].pss_ok = pss_ok;
+//  PointingData[point_index].pss_ok = pss_ok;
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   //dgps_ok = fakeDGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   if (dgps_ok) {
