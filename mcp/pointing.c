@@ -271,7 +271,7 @@ static int MagConvert(double *mag_az)
   //mvx = (ACSData.mag_x-MAGX_B)/MAGX_M;
   //mvy = (ACSData.mag_y-MAGY_B)/MAGY_M;
   
-  magx_m = -1.0/((double)(CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
+  magx_m = 1.0/((double)(CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
   magy_m = -1.0/((double)(CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
   
   magx_b = (CommandData.cal_xmax_mag + CommandData.cal_xmin_mag)*0.5;
