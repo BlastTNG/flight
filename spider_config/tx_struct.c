@@ -1079,9 +1079,9 @@ struct ChannelStruct FastChannels[] = {
   {"framenum",     'r',  ACS2_C,  1,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Digital Card */
-  {"ifel_gy",      'r',   ACS2_D, 12,-GY16_TO_DPS,GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ifyaw_gy",      'r',   ACS2_D, 12,-GY16_TO_DPS,GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
   {"ifroll_gy",    'r',   ACS2_D, 13,-GY16_TO_DPS,GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
-  {"ifyaw_gy",     'r',   ACS2_D, 14,-GY16_TO_DPS,GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ifel_gy",     'r',   ACS2_D, 14,-GY16_TO_DPS,GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
 //  {"trigger_isc",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
 //  {"trigger_osc",  'w',   ACS2_D, 12,                 1.0,            0.0, 'u', U_NONE},
   //{"vel_req_el",   'w',   ACS2_D, 22, GY16_TO_DPS*0.1,-3276.8*GY16_TO_DPS, 'u', U_V_DPS},
