@@ -882,7 +882,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO_HEAT, 3,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
-      {"Max Pulse Delay (0=never pulse) (s)",  1, 32767, 'i', "PERIOD_CAL"},
+      {"Max Pulse Delay (0=never pulse) (s)",  0, 32767, 'i', "PERIOD_CAL"},
       {"Always Pulse before HWP move (0=no,1=yes)",  0, 1, 'i', ""}
     }
   },

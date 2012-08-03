@@ -208,7 +208,7 @@ static int CalLamp (int index)
 
   } else if (CommandData.Cryo.calibrator == repeat) {
     //    CommandData.Cryo.calibrator = off; 
-    if (hwpr_calpulse_flag) {
+    if (hwpr_calpulse_flag && CommandData.Cryo.calib_hwpr) {
       pulse_cnt = CommandData.Cryo.calib_pulse;
       elapsed=0;
       hwpr_calpulse_flag=0;

@@ -932,6 +932,7 @@ static void StoreData(int index)
   static struct NiosStruct *rateAtrimAddr;
 
   static struct NiosStruct *modeCalAddr;
+  static struct NiosStruct *hwprCalAddr;
   static struct NiosStruct *periodCalAddr;
   static struct NiosStruct *lstSchedAddr;
 
@@ -1043,6 +1044,7 @@ static void StoreData(int index)
     snrPss3Addr = GetNiosAddr("snr_pss3");
     snrPss4Addr = GetNiosAddr("snr_pss4");
     azPssAddr = GetNiosAddr("az_pss");  // evolved az
+    hwprCalAddr = GetNiosAddr("hwpr_cal");
     modeCalAddr = GetNiosAddr("mode_cal");
     periodCalAddr = GetNiosAddr("period_cal");
     azIscAddr = GetNiosAddr("az_isc");
@@ -1301,6 +1303,7 @@ static void StoreData(int index)
   WriteData(elSunAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
 
   WriteData(modeCalAddr, CommandData.Cryo.calibrator, NIOS_QUEUE);
+  WriteData(hwprCalAddr, CommandData.Cryo.calib_hwpr, NIOS_QUEUE);
   WriteData(periodCalAddr, CommandData.Cryo.calib_period, NIOS_QUEUE);
 
   WriteData(azIscAddr,

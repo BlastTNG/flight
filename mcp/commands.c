@@ -1560,8 +1560,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case cal_repeat: 
       CommandData.Cryo.calibrator = repeat;
       CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-      CommandData.Cryo.calib_period = ivalues[1];
-      
+      CommandData.Cryo.calib_period = ivalues[1]*5;
+      CommandData.Cryo.calib_hwpr = ivalues[2];
       break;
 
       /***************************************/
@@ -2133,6 +2133,7 @@ void InitCommandData()
   CommandData.Cryo.calib_pulse = 30; /* = 300 ms @ 100Hz */
   CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
   CommandData.Cryo.calib_repeats = -1;  //indefinitely
+  CommandData.Cryo.calib_hwpr = 1;  //pulse after every hwpr step
 
   CommandData.Cryo.cycle_start_temp = 0.375;
   CommandData.Cryo.cycle_pot_max = 2.5;

@@ -625,7 +625,7 @@ struct ChannelStruct SlowChannels[] = {
   {"lvdt_spread_act",'w', LOOP6, 55,              1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */
   {"el_sun",       'w', LOOP6, 58,              I2DEG,             0.0, 's', U_NONE},
-  /* LOOP6 59 unused */
+  {"hwpr_cal",     'w', LOOP6, 59,                1.0,             0.0, 'u', U_NONE},
   {"mode_cal",     'w', LOOP6, 60,                1.0,             0.0, 'u', U_NONE},
   {"minblobs_isc", 'w', LOOP6, 61,                1.0,             0.0, 'u', U_NONE},
   {"minblobs_osc", 'w', LOOP6, 62,                1.0,             0.0, 'u', U_NONE},
