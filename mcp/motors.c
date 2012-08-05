@@ -741,8 +741,9 @@ static void SetElScanMode(double el, double bottom, double top, double v,
       axes_mode.el_mode = AXIS_VEL;
       if (axes_mode.el_vel > 0) {
         axes_mode.el_vel = v + D;
-        if (el > top - 2.0*v) /* within 2 sec of turnaround */
-          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+        if (el > top - 2.0*v) { /* within 2 sec of turnaround */
+	  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+	}
         else
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       } else {
@@ -753,15 +754,6 @@ static void SetElScanMode(double el, double bottom, double top, double v,
           isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       }
     }
-    /* SBSC Trigger flag */
-    before_trig = CommandData.cam.delay - v/EL_ACCEL + CommandData.cam.expTime/2000;
-    if ((el < bottom + before_trig*v) && (dir_sbsc_trigger == 0)) {
-	sbsc_trigger = 1;
-    } else if ((el > top - before_trig*v) && (dir_sbsc_trigger == 1)) {
-	sbsc_trigger = 1;
-     } else {
-	sbsc_trigger = 0;
-     }
 }
 
 static void DoAzScanMode(void)
@@ -1887,6 +1879,7 @@ void UpdateAxesMode(void)
       break;
     case P_EL_SCAN:
       DoElScanMode();
+      sbsc_interval = 1;
       break;
     case P_VCAP:
       DoVCapMode();

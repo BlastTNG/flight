@@ -527,16 +527,29 @@ void CameraTrigger(int which)
           delay[which] = 0;
 
           if (!isc_pulses[which].is_fast) {
-            /* wait until we're below the slow speed */
-            if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
-              if (!waiting[which] && WHICH)
-                bprintf(info,
-                    "%s (t): Velocity wait starts (%.3f %.3f) <----- v\n",
-                    swhich, 
-		    fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
-              waiting[which] = 1;
-              return;
-            }
+            /* wait until we're below the slow el speed */
+	    if ((CommandData.pointing_mode.mode==P_EL_BOX) || (CommandData.pointing_mode.mode==P_EL_SCAN)) {
+	      if (fabs(axes_mode.el_vel) >= 0.0075) {
+		if (!waiting[which] && WHICH)
+		  bprintf(info,
+		      "%s (t): Velocity wait starts (%.3f %.3f) <----- v\n",
+		     swhich, 
+		     fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
+		waiting[which] = 1;
+		return;
+	      }
+            } else {
+	     /* wait until we're below the slow az speed */
+	     if (fabs(axes_mode.az_vel) >= MAX_ISC_SLOW_PULSE_SPEED) {
+	       if (!waiting[which] && WHICH)
+	         bprintf(info,
+	             "%s (t): Velocity wait starts (%.3f %.3f) <----- v\n",
+	             swhich, 
+	  	    fabs(axes_mode.az_vel), MAX_ISC_SLOW_PULSE_SPEED);
+	        waiting[which] = 1;
+		return;
+	      }
+	    }
 
             if (WHICH)
               bprintf(info, "%s (t): Velocity wait ends. -------> v\n",
