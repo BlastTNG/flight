@@ -982,7 +982,7 @@ void Pointing(void)
   double dgps_az=0, dgps_pitch, dgps_roll;
   double clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_sip_gps = -1;
-  static double last_good_lat=0, last_good_lon=0;
+  static double last_good_lat=0, last_good_lon=0, last_good_alt = 0;
   static int since_last_good_dgps_pos=5;
   static int i_at_float = 0;
   double trim_change;
@@ -1195,7 +1195,7 @@ void Pointing(void)
 
   /************************************************/
   /** Set the official Lat and Long: prefer dgps **/
-  if (i_dgpspos != last_i_dgpspos) { // there has been a new solution
+  if ((i_dgpspos != last_i_dgpspos) && (DGPSPos[i_dgpspos].n_sat>0)) { // there has been a new solution
     if (using_sip_gps != 0)
       bprintf(info, "Pointing: Using dGPS for positional data");
     last_i_dgpspos = i_dgpspos;
@@ -1206,9 +1206,9 @@ void Pointing(void)
     
 
     if (dgpspos_ok) { 
-      last_good_lat = PointingData[point_index].lat = DGPSPos[i_dgpspos].lat;
-      last_good_lon = PointingData[point_index].lon = DGPSPos[i_dgpspos].lon;
-      PointingData[point_index].alt = DGPSPos[i_dgpspos].alt;
+      last_good_lat = DGPSPos[i_dgpspos].lat;
+      last_good_lon = DGPSPos[i_dgpspos].lon;
+      last_good_alt = DGPSPos[i_dgpspos].alt;
       using_sip_gps = 0;
       no_dgps_pos = 0;
       since_last_good_dgps_pos = 0;
@@ -1220,15 +1220,18 @@ void Pointing(void)
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
       if (using_sip_gps != 1)
         bprintf(info, "Pointing: Using SIP for positional data");
-      PointingData[point_index].lat = SIPData.GPSpos.lat;
-      PointingData[point_index].lon = SIPData.GPSpos.lon;
-      PointingData[point_index].alt = SIPData.GPSpos.alt;
+      last_good_lat = SIPData.GPSpos.lat;
+      last_good_lon = SIPData.GPSpos.lon;
+      last_good_alt = SIPData.GPSpos.alt;
       using_sip_gps = 1;
     }
   }
+  PointingData[point_index].lat = last_good_lat;
+  PointingData[point_index].lon = last_good_lon;
+  PointingData[point_index].alt = last_good_alt;
 
   /* At float check */
-    if (PointingData[point_index].alt < FLOAT_ALT) {
+  if (PointingData[point_index].alt < FLOAT_ALT) {
     PointingData[point_index].at_float = 0;
     i_at_float = 0;
   } else {
@@ -1312,7 +1315,7 @@ void Pointing(void)
   } else {
     pss_since_ok++;
   }
-  PointingData[point_index].pss_ok = pss_ok;
+//  PointingData[point_index].pss_ok = pss_ok;
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   //dgps_ok = fakeDGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   if (dgps_ok) {
