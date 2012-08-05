@@ -48,7 +48,7 @@
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
 
-#define EL_ACCEL 0.05
+#define EL_ACCEL 0.5
 
 #define NO_DITH_INC 0
 #define DITH_INC 1
@@ -721,6 +721,7 @@ static void SetElScanMode(double el, double bottom, double top, double v,
     double D)
 {
     double before_trig;
+    double el_accel=EL_ACCEL/SR;
     if (axes_mode.el_vel < -v + D)
       axes_mode.el_vel = -v + D;
     if (axes_mode.el_vel > v + D)
@@ -730,12 +731,12 @@ static void SetElScanMode(double el, double bottom, double top, double v,
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.el_mode = AXIS_VEL;
       if (axes_mode.el_vel < v + D)
-        axes_mode.el_vel += EL_ACCEL;
+        axes_mode.el_vel += el_accel;
     } else if (el > top) {
       isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.el_mode = AXIS_VEL;
       if (axes_mode.el_vel > -v + D)
-        axes_mode.el_vel -= EL_ACCEL;
+        axes_mode.el_vel -= el_accel;
     } else {
       axes_mode.el_mode = AXIS_VEL;
       if (axes_mode.el_vel > 0) {

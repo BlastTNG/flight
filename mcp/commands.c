@@ -1161,6 +1161,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case az_scan_accel:
       CommandData.az_accel = rvalues[0];
+      if (CommandData.az_accel < 0.005) {
+	bprintf(warning,"Attempt to set az_accel to %f, that is too low! Setting %f instead",rvalues[0],CommandData.az_accel);
+      }
       break;
     case set_scan_params:
       CommandData.pointing_mode.next_i_hwpr = ivalues[0];
