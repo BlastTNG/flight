@@ -2189,7 +2189,7 @@ void InitCommandData()
   CommandData.ISCState[1].autofocus = 0;
   CommandData.ISCState[1].focus_pos = 0;
   CommandData.ISCState[1].MCPFrameNum = 0;
-  CommandData.ISCState[1].focusOffset = 450;
+  CommandData.ISCState[1].focusOffset = 0;
   CommandData.ISCState[1].ap_pos = 495;
   CommandData.ISCState[1].display_mode = full;
   /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
