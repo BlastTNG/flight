@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=cow
+Icon=cow
+MimeType=application/x-cow;
+Categories=Qt;Science;
+Name=Cow
+GenericName=Command Operations Window
