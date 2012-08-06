@@ -42,11 +42,12 @@ PBox::PBox(QString boxTitle, QWidget*p) : QFrame(p), _pstyle(PStyle::noStyle), _
 
     _pstyle=ok?_pstyle:new PStyle("defbox",1,0,"white","blue",1);
 
-    setFrameStyle(QFrame::Panel | QFrame::Plain);
+    setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
+
     setLineWidth(1);
     setContentsMargins(2,2,2,2);
     setMidLineWidth(1);
-    setFrameShadow(QFrame::Plain);
+    //setFrameShadow(QFrame::Plain);
     _pbt=new PBoxTitle;
     _pbt->setText("[change me]");
     addTitle(_pbt);

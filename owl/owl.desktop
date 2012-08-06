@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=owl
+Icon=owl
+MimeType=application/x-owl;
+Categories=Qt;Science;
+Name=Owl
+GenericName=Numerical Display
