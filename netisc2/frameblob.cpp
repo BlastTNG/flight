@@ -239,7 +239,7 @@ int frameblob::load_badpix(char *fname) {
     //printf("badpix: %i %i\n",x, y);
     if( count == 2 ) { // If we read in a coordinate pair
       numbadpix ++;
-      thisbad = new bloblist(0, (double)x, (double)(ypix - y - 1));
+      thisbad = new bloblist(0, (double)x, (double)y);
       
       if( firstbad == NULL ) { // If first bad pixel in the list
         firstbad = thisbad;
