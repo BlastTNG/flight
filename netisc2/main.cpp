@@ -899,7 +899,9 @@ void pointingSolution( void ) {
   }
 
   // Calculate the new ra/dec guesses from MCP
-  calc_ra_dec(az,el,lat,lst,&ra_0_guess,&dec_0_guess);
+  az_guess = az-azBDA/cos(el);
+  el_guess = el-elBDA;
+  calc_ra_dec(az_guess,el_guess,lat,lst,&ra_0_guess,&dec_0_guess);
 
   lost = 0; // start assuming we're not lost
 
@@ -1015,7 +1017,7 @@ void pointingSolution( void ) {
         // if we were lost, solution is definitely good 
         if( lost ) {
           pointing_quality = 2;
-          ccdRotation = rot; // update rotation if many blobs matched
+          //ccdRotation = rot; // update rotation if many blobs matched
         }
         
         // otherwise check for excursions from the previous good solution
