@@ -11,11 +11,11 @@
 38               Side length of coarse grid for search (38)
 20               Centroiding box side length (20)
 5                Photometry box side length (5)
-0                If 1 we can use the pyramid pointing solution
+1                If 1 we can use the pyramid pointing solution
 3                Min blobs required for pointing solution
 7                Max blobs used in pointing solution
 9.5              Magnitude limit
-180.0            Rotation tolerance (not lost) for pointing solutions
+2.0              Rotation tolerance (not lost) for pointing solutions
 COM3             Serial port for stepper motor communications	
 50               Velocity for the stepper motors
 0          	 Set =0 for immediate picture taking, set =1 for PAUSE
