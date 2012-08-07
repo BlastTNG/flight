@@ -246,7 +246,6 @@ double mult_dist;
 
 unsigned long ccd_exposure; // CCD exposure time (us)
 unsigned long default_gain; // default CCD gain
-//unsigned long some_param; // default some parameter, NNG
 unsigned long gain_res;     // resolution in the CCD gain control
 signed long default_offset; // default offset for the CCD
 double rel_gain;            // relative gain to the default (>0)
@@ -298,6 +297,8 @@ int hereflag = 0;  // debugging flag
 // Other pointing information
 double ra_0_guess=0;   // guess centre of the search region in the catalogue
 double dec_0_guess=0;  //  "             "              "                    "
+double az_guess=0;
+double el_guess=0;
 double search_radius;  // current search radius in the catalogue
 int pointing_quality=0;// 0=no solution, 1=good, -1=possibly bad, 2=LIS soln.
 int pointing_nbad=0;   // number of bad solutions in a row
