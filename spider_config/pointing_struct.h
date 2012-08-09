@@ -89,6 +89,7 @@ struct ACSDataStruct {
   double ifel_gy;    // deg/s
   double ifroll_gy;    // deg/s
   double ifyaw_gy;    // deg/s
+  double ofaz_gy;    // deg/s
   double enc_table; // degrees
   time_t t;
 };
