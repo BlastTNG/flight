@@ -207,10 +207,10 @@ void updateTableSpeed()
   } else {
 	//TRACKING
 	startmove = 1;
-  	if (exposing)  {
+  	//if (exposing)  {
 
 		targVel = PointingData[i_point].v_az;
-  	} else {
+  	/*} else {
 		// having figured out calcdist, set a targVel that will get you there in 1s, and don't update targVel until you get within 0.5
 		if ((calcdist < 0) && (sendvel == 1)) {
 			targVel = (((fabs(calcdist)) > 10.0) ? 10.0 : -calcdist);
@@ -223,7 +223,7 @@ void updateTableSpeed()
 		if ((fabs(dist)) < 0.3) {
 			targVel = -ACSData.ifyaw_gy;//0.0;
 		}
-  	}
+  	}*/
 
   }
   /*if((j%50)==0)*/ //cout << "TARGVEL= " << targVel << endl;

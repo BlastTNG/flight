@@ -35,6 +35,7 @@
 #include "mcp.h"
 #include "amccommand.h"
 #include "motordefs.h"
+#include "calibrate.h"
 
 // TODO: Revise these el limits for Spider flight:
 #define MIN_EL 35
@@ -113,7 +114,7 @@ static void* reactComm(void *arg);
 static void* pivotComm(void *arg);
 
 
-static double dxdtheta(double theta);
+//static double dxdtheta(double theta);
 
 extern short int InCharge; /* tx.c */
 
@@ -253,7 +254,7 @@ double calcVSerRW(void)
 /*   GetIElev: get the elevation current request (PWM duty cycle)       */
 /*                                                                      */
 /************************************************************************/
-#define MAX_DY 0.005
+#define MAX_DY 0.004
 #define MAX_I_TERM 10000
 static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
 {
@@ -633,7 +634,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 /* dxdtheta returns derivative of lin. act. extension. w.r.t. elevation angle 
  * (mm/deg) */
 
-static double dxdtheta(double theta)
+/*static double dxdtheta(double theta)
 {
   double deriv;
 
@@ -643,7 +644,7 @@ static double dxdtheta(double theta)
   deriv *= (M_PI/180.0); // convert from mm/rad to mm/deg
 
   return deriv; 
-}
+}*/
 
 
 /************************************************************************/
@@ -676,9 +677,10 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* filtElAddr;
   static struct NiosStruct* dutyPElAddr;   // PORT
   static struct NiosStruct* dutySElAddr;   // STARBOARD
-  static struct NiosStruct* cosElAddr;  // temporary HACK until we get rid of this in DSP code
-  static struct NiosStruct* sinElAddr;  // temporary HACK until we get rid of this in DSP code
-   
+  //static struct NiosStruct* cosElAddr;  
+  //static struct NiosStruct* sinElAddr; 
+  static struct NiosStruct* enc1OffsetAddr;
+  static struct NiosStruct* enc2OffsetAddr; 
 
   // Used only for Lab Controller tests
   static struct NiosStruct* dac2AmplAddr;
@@ -731,8 +733,10 @@ void WriteMot(int TxIndex)
     dTermElAddr = GetNiosAddr("d_term_el");
     dutySElAddr = GetNiosAddr("duty_s_el");
     dutyPElAddr = GetNiosAddr("duty_p_el");
-    cosElAddr = GetNiosAddr("cos_el");
-    sinElAddr = GetNiosAddr("sin_el");
+    //cosElAddr = GetNiosAddr("cos_el");
+    //sinElAddr = GetNiosAddr("sin_el");
+    enc1OffsetAddr = GetNiosAddr("enc1_offset");
+    enc2OffsetAddr = GetNiosAddr("enc2_offset");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -797,9 +801,14 @@ void WriteMot(int TxIndex)
     WriteCalData(dTermElAddr, duty_D, NIOS_QUEUE);
     WriteCalData(filtElAddr, filt, NIOS_QUEUE);
 
-  /* TODO TEMPORARY HACK: write cos el and sin el for el = 0, since gyros are now on outer frame */
-    WriteCalData(cosElAddr, 1.0, NIOS_QUEUE);
-    WriteCalData(sinElAddr, 0.0, NIOS_QUEUE);
+  /* write cos(el) and sin(el) where el is the inner-to-outer frame elevation angle
+   * used by DSP to convert inner frame gyro speeds to az velocity 
+    WriteCalData(cosElAddr, cos( ACSData.enc_mean_el*(M_PI/180.0) ), NIOS_QUEUE);
+    WriteCalData(sinElAddr, sin( ACSData.enc_mean_el*(M_PI/180.0) ), NIOS_QUEUE); */
+
+    WriteCalData(enc1OffsetAddr, (ENC1_OFFSET + GYBOX_OFFSET), NIOS_QUEUE);
+    WriteCalData(enc2OffsetAddr, (ENC2_OFFSET + GYBOX_OFFSET), NIOS_QUEUE);
+
   }
 
   /***************************************************/
@@ -1146,9 +1155,15 @@ static void DoSpiderMode(void)
   
   static int n_scans = 0; // number of azimuth half-scans elapsed;
   
+  static int in_scan = 0;
+  
+  /*pre-step el destination: used for computing box endpoints during each half-scan*/
+  
+  static double el_dest_pre = 37.5; // arbitrary
+  
   t_before = DELAY + CommandData.theugly.expTime/2000.0;
   
-  t_step = 1.2 + 1.0; // "on_delay" in GetIElev + (1/2)*(step duration) 
+  t_step = 1.2 + 0.5; // "on_delay" in GetIElev + (1/2)*(step duration) 
   
   az_accel = CommandData.az_accel;
   az_accel_dv = az_accel/SR;
@@ -1177,15 +1192,19 @@ static void DoSpiderMode(void)
   if (CommandData.pointing_mode.new_spider) {
     n_scans = 0;
     axes_mode.el_mode = AXIS_POSITION;
-    axes_mode.el_dest = el_start;
+    axes_mode.el_dest = el_dest_pre = el_start;
     axes_mode.el_vel = 0.0;
     CommandData.pointing_mode.new_spider = 0;
   }
    
-  radbox_endpoints(c_az, c_el, axes_mode.el_dest, &left, &right, &bottom, &top, &az_of_bot);
+  radbox_endpoints(c_az, c_el, el_dest_pre, &left, &right, &bottom, &top, &az_of_bot);
   
   /* Rigmarole to make sure we don't cross the sun between here and scan centre */
-  
+ 
+  if (left > right) {
+    left -=360.0;
+  }
+
   ampl = (right - left) / 2.0;
   centre = (left + right) / 2.0;
   
@@ -1194,12 +1213,6 @@ static void DoSpiderMode(void)
   left = centre - ampl;
   right = centre + ampl;
   
-  v_az_max = sqrt(az_accel * ampl);
-  
-  
-  // |distance| from end point when V_req = V_AZ_MIN
-  turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
-
   // This should never ever matter.  MIN_SCAN = 0.1 deg
   if (right-left < MIN_SCAN) {
     left = centre - MIN_SCAN/2.0; 
@@ -1207,10 +1220,37 @@ static void DoSpiderMode(void)
     ampl = right - centre;
   }
 
+  /*if ( (PointingData[i_point].sun_az > left) && 
+       (PointingData[i_point].sun_az < right) ) {
+
+    bprintf(err, "The sun is inside the scan region! Stopping gondola.");
+
+    CommandData.pointing_mode.X = 0;
+    CommandData.pointing_mode.Y = 0;
+    CommandData.pointing_mode.vaz = 0.0;
+    CommandData.pointing_mode.del = 0.0;
+    CommandData.pointing_mode.w = 0;
+    CommandData.pointing_mode.h = 0;
+    CommandData.pointing_mode.mode = P_DRIFT;
+    
+    return;
+
+  }
+*/
+
+  v_az_max = sqrt(az_accel * ampl);
+  
+  
+  // |distance| from end point when V_req = V_AZ_MIN
+  turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
+
+ 
+
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
 
   /* case 1: moving into scan from beyond left endpoint: */
   if (az < left - OVERSHOOT_BAND) {
+    in_scan = 0;
     scan_region = SCAN_BEYOND_L;
     scan_region_last = scan_region;
     v_az = sqrt(2.0*az_accel*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
@@ -1242,6 +1282,13 @@ static void DoSpiderMode(void)
              && (PointingData[i_point].v_az > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     scan_region = SCAN_L_TO_R;
+ 
+  
+    if ( ((az - left) > ampl/10.0) && ( (az-left) < (ampl/10.0 + 1.0) ) ) { 
+      // ampl/10 deg. in from left turn-around
+      el_dest_pre = axes_mode.el_dest;
+    }
+  
     scan_region_last = scan_region;	       
     v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
     a_az = az_accel*( (centre - az)/ampl ); 
@@ -1278,6 +1325,12 @@ static void DoSpiderMode(void)
               && (PointingData[i_point].v_az < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     scan_region = SCAN_R_TO_L;
+  
+    if ( ((right - az) > ampl/10.0) && ((right - az) < (ampl/10.0 + 1.0))  ) {
+      // ampl/10 degrees in from right turn-around
+      el_dest_pre = axes_mode.el_dest;
+    }
+  
     scan_region_last = scan_region;
     v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
     a_az = az_accel*( (centre - az)/ampl );

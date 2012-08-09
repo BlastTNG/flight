@@ -473,7 +473,7 @@ static void Chatter(void* arg)
 
 static void GetACS()
 {
-  double enc_mean_el, enc_diff_el, ifel_gy, ifroll_gy, ifyaw_gy;
+  double enc_mean_el, enc_diff_el, ifel_gy, ifroll_gy, ifyaw_gy, ofaz_gy;
   double enc_raw_el_1; // PORT
   double enc_raw_el_2; // STARBOARD
   double enc_table;
@@ -493,7 +493,7 @@ static void GetACS()
   static struct BiPhaseStruct* ifElgyAddr;
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ifYawgyAddr;
-  //static struct BiPhaseStruct* elRawEncAddr;
+  static struct BiPhaseStruct* ofAzGyAddr;
   static struct BiPhaseStruct* rollOfClinAddr;
   static struct BiPhaseStruct* xMagAddr;
   static struct BiPhaseStruct* yMagAddr;
@@ -538,6 +538,7 @@ static void GetACS()
     ifElgyAddr = GetBiPhaseAddr("ifel_gy");
     ifRollgyAddr = GetBiPhaseAddr("ifroll_gy");
     ifYawgyAddr = GetBiPhaseAddr("ifyaw_gy");
+    ofAzGyAddr = GetBiPhaseAddr("ofaz_gy");
     xMagAddr = GetBiPhaseAddr("x_mag");
     yMagAddr = GetBiPhaseAddr("y_mag");
     zMagAddr = GetBiPhaseAddr("z_mag");
@@ -612,6 +613,8 @@ static void GetACS()
   ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
   ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
 
+  ofaz_gy = ReadCalData(ofAzGyAddr);
+  
   res_piv = (((double)
 	((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
 
@@ -658,6 +661,7 @@ static void GetACS()
   ACSData.ifel_gy = ifel_gy;
   ACSData.ifroll_gy = ifroll_gy;
   ACSData.ifyaw_gy = ifyaw_gy;
+  ACSData.ofaz_gy = ofaz_gy;
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
   ACSData.mag_z = z_comp;
@@ -1326,10 +1330,10 @@ int main(int argc, char *argv[])
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
   //TODO FIXME: openTable seems to make pcm crash, so removed for now
-  //openTable();	// opens communications and creates thread in table.cpp
+  openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
-  //openSC();  // SC - creates threads in sc.cpp
+  openSC();  // SC - creates threads in sc.cpp
 #endif
 
 
@@ -1344,6 +1348,7 @@ int main(int argc, char *argv[])
   bputs(info, "System: BBC is up.\n");
 
   InitTxFrame();
+  bputs(info, "InitTxFrame done\n");
 
 #ifdef USE_XY_THREAD
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);

@@ -73,11 +73,11 @@ void DriveCommunicator::openConnection(string deviceName,
   struct termios options;
   tcgetattr(portFD, &options);
   if (!highspeed) {
-    cfsetispeed(&options, B9600);                 //input speed
-    cfsetospeed(&options, B9600);                 //outpur speed
+    cfsetispeed(&options, B19200);                 //input speed
+    cfsetospeed(&options, B19200);                 //outpur speed
   } else {
-    cfsetispeed(&options, B115200);               //input speed
-    cfsetospeed(&options, B115200);               //outpur speed
+    cfsetispeed(&options, B19200);               //input speed
+    cfsetospeed(&options, B19200);               //outpur speed
   }
 
   //set up simple raw 8N2 communications

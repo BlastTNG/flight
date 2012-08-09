@@ -461,7 +461,6 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   }
 
   weightsum=weight[0]+weight[1]+weight[2]+weight[3]+weight[4]+weight[5];
-  if (weightsum == 0 ) return 0;
 
   /* get current sun az, el */
   jd = GetJulian(PointingData[i_point].t);
@@ -479,6 +478,8 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   PointingData[point_index].sun_az = sun_az;
   PointingData[point_index].sun_el = sun_el;
 
+  if (weightsum == 0 ) return 0;
+  
   // Define beta (az rotation)
   beta[0] = (M_PI/180.)*PSS1_BETA;
   beta[1] = (M_PI/180.)*PSS2_BETA;
@@ -818,7 +819,6 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
         if (fabs(new_offset) > 500.0)
           new_offset = 0; // 5 deg step is bunk!
 	
-	
         s->offset_gy = filter(new_offset, s->fs);
       }
       s->since_last = 0;
@@ -888,7 +888,6 @@ static void AddAzSolution(struct AzAttStruct *AzAtt,
   AzAtt->weight += weight;
 }
 
-//FIXME: need to add rotation of earth correction
 static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
     double offset_ifroll_gy, double ifyaw_gy, double offset_ifyaw_gy, double el, double new_angle,
     int new_reading)
@@ -921,12 +920,12 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 	daz = remainder(new_angle - s->last_input, 360.0);
 	
 	/* Do Gyro_IFroll */
-	new_offset = -(daz * cos(el) + s->ifroll_gy_int) /
+	new_offset = -(daz * sin(el) + s->ifroll_gy_int) /
 	  ((1.0/SR) * (double)s->since_last);
 	s->offset_ifroll_gy = filter(new_offset, s->fs2);;
 	
 	/* Do Gyro_IFyaw */
-	new_offset = -(daz * sin(el) + s->ifyaw_gy_int) /
+	new_offset = -(daz * cos(el) + s->ifyaw_gy_int) /
 	  ((1.0/SR) * (double)s->since_last);
 	s->offset_ifyaw_gy = filter(new_offset, s->fs3);;
 	
@@ -974,14 +973,14 @@ void Pointing(void)
   int i_dgpspos, dgpspos_ok = 0;
   int i_point_read;
 
-  //int el_encs_ok; // el_enc_1 OR el_enc_2 OK.
+  int el_encs_ok; // el_enc_1 OR el_enc_2 OK.
 
   static struct LutType elClinLut = {"/data/etc/spider/clin_elev.lut",0,NULL,NULL,0};
 
   struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
   struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};
 
-/*  static struct ElSolutionStruct EncEl = {0.0, // starting angle
+  static struct ElSolutionStruct EncEl = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
     M2DV(20), // systemamatic varience
@@ -993,7 +992,7 @@ void Pointing(void)
     0, 0, // n_solutions, since_last
     NULL // firstruct					
   };
-  static struct ElSolutionStruct ClinEl = {0.0, // starting angle
+/*  static struct ElSolutionStruct ClinEl = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
     M2DV(60), // systemamatic varience
@@ -1011,6 +1010,7 @@ void Pointing(void)
       	provides a "data" sample of 0.0 degrees with some large
       	variance  
    */
+  /*
   static struct ElSolutionStruct NullEl =
   {
     0.0, // starting angle
@@ -1025,6 +1025,7 @@ void Pointing(void)
     0.0, 0.0, // n_solutions, since_last
     NULL //FirStruct
   }; 
+  */
 
   static struct AzSolutionStruct NullAz = {91.0, // starting angle
     360.0 * 360.0, // starting varience
@@ -1086,16 +1087,21 @@ void Pointing(void)
     
     /*ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(ClinEl.fs, FIR_LENGTH);
-    EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(EncEl.fs, FIR_LENGTH);*/
+    */
 
+    EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    initFir(EncEl.fs, FIR_LENGTH);
+
+    /*
     NullEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(NullEl.fs, FIR_LENGTH);
+    */
 
     NullAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     NullAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(NullAz.fs2, (int)(10)); // not used
     initFir(NullAz.fs3, (int)(10)); // not used
+    
 
     MagAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     MagAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -1226,18 +1232,18 @@ void Pointing(void)
     //               PointingData[i_point_read].offset_ifel_gy, clin_elev, 1);
 
   
-  //el_encs_ok =  (CommandData.use_elenc1 || CommandData.use_elenc2);
+  el_encs_ok =  (CommandData.use_elenc1 || CommandData.use_elenc2);
    
-//EvolveElSolution(&EncEl, RG.ifel_gy, PointingData[i_point_read].offset_ifel_gy
-    //               , ACSData.enc_mean_el, el_encs_ok);
+  EvolveElSolution(&EncEl, RG.ifel_gy, PointingData[i_point_read].offset_ifel_gy
+                   , ACSData.enc_mean_el, el_encs_ok);
 
 
-  EvolveElSolution(&NullEl, RG.ifel_gy, 
-                   PointingData[i_point_read].offset_ifel_gy, 0.0, 1);
+  //EvolveElSolution(&NullEl, RG.ifel_gy, 
+   //                PointingData[i_point_read].offset_ifel_gy, 0.0, 1);
 
   //if (CommandData.use_elenc) {
-  //AddElSolution(&ElAtt, &EncEl, 1);
-  AddElSolution(&ElAtt, &NullEl, 1);
+  AddElSolution(&ElAtt, &EncEl, 1);
+  //AddElSolution(&ElAtt, &NullEl, 1);
   //}
 
   /*if (CommandData.use_elclin) {
@@ -1246,8 +1252,8 @@ void Pointing(void)
 
   PointingData[point_index].offset_ifel_gy = (CommandData.el_autogyro)
     ? ElAtt.offset_gy : CommandData.offset_ifel_gy;
-  //PointingData[point_index].el = ElAtt.el;
-  PointingData[point_index].el = ElAtt.el + ACSData.enc_mean_el;
+  PointingData[point_index].el = ElAtt.el;
+  //PointingData[point_index].el = ElAtt.el + ACSData.enc_mean_el;
 
   /*******************************/
   /**      do az solution      **/
@@ -1274,27 +1280,27 @@ void Pointing(void)
   EvolveAzSolution(&NullAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      0.0,
+      (ACSData.enc_mean_el + GYBOX_OFFSET),
       0.0, 0);
   /** MAG Az **/
   EvolveAzSolution(&MagAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      0.0,
+      (ACSData.enc_mean_el + GYBOX_OFFSET),
       mag_az, mag_ok);
 
   /** DGPS Az **/
   EvolveAzSolution(&DGPSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      0.0,
+      (ACSData.enc_mean_el + GYBOX_OFFSET),
       dgps_az, dgps_ok);
 
   /** PSS1 **/
   EvolveAzSolution(&PSSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      0.0,
+      (ACSData.enc_mean_el + GYBOX_OFFSET),
       pss_az, pss_ok);
 
   if (CommandData.fast_offset_gy>0) {
