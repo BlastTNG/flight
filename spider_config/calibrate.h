@@ -165,7 +165,7 @@ extern "C" {
 
 #define ENC1_OFFSET -245.54 // encoder 1 to bore-sight offset angle
 #define ENC2_OFFSET 214.87  // encoder 2 to bore-sight offset angle
-#define GYBOX_OFFSET -69.8  // gyro box to bore-sight offset angle (fixed)
+#define GYBOX_OFFSET -75.0  // gyro box to bore-sight offset angle (fixed)
 
 
 
