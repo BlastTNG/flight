@@ -806,7 +806,7 @@ void WriteMot(int TxIndex)
     WriteCalData(cosElAddr, cos( ACSData.enc_mean_el*(M_PI/180.0) ), NIOS_QUEUE);
     WriteCalData(sinElAddr, sin( ACSData.enc_mean_el*(M_PI/180.0) ), NIOS_QUEUE); */
 
-    WriteCalData(enc1OffsetAddr, (ENC1_OFFSET + GYBOX_OFFSET), NIOS_QUEUE);
+    WriteCalData(enc1OffsetAddr, (ENC1_OFFSET + 360.0 + GYBOX_OFFSET), NIOS_QUEUE);
     WriteCalData(enc2OffsetAddr, (ENC2_OFFSET + GYBOX_OFFSET), NIOS_QUEUE);
 
   }
