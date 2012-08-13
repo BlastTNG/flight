@@ -378,27 +378,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
     }
   },
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 4,
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_el"},
-      {"Derivative Gain",   -32768, 32767, 'i', "G_D_EL"},
-      {"Integral Gain",   0, USHRT_MAX, 'i', "g_i_el"},
-      {"Exponential Filter Constant", 0.50, 1.0, 'f', "FILT_EL"}
+      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
+      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"},
+      {"Pointing Gain",     0, MAX_15BIT, 'i', "g_pt_el"}
     }
   },
-  /*{COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
-    {
-      {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "G_COM_EL"},
-      {"Differential Gain (Hz)",         0.0, 1.0, 'f', "G_DIFF_EL"},
-      {"Elevation Encoder Twist (deg)",     -0.5, 0.5, 'f', "NONE"}
-    }
-  },*/
-  {COMMAND(el_pulse), "manually set el motor pulse rates", GR_GAIN, 2,
+  /*{COMMAND(el_pulse), "manually set el motor pulse rates", GR_GAIN, 2,
     {
       {"port motor pulse rate (Hz)", -10000.0, 10000.0, 'f', "STEP_1_EL"},
       {"starboard motor pulse rate (Hz)", -10000.0, 10000.0, 'f', "STEP_2_EL"}
     }
-  },
+  },*/
 
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
     {
