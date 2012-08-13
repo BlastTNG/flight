@@ -609,9 +609,9 @@ static void GetACS()
   /*if (vel_rw >1200.0) {
     vel_rw -= 2400.0;
   }*/
-  ifel_gy = (double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
-  ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
-  ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
+  ifel_gy = ReadCalData(ifElgyAddr); //(double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
+  ifroll_gy = ReadCalData(ifRollgyAddr); //(double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
+  ifyaw_gy = ReadCalData(ifYawgyAddr); //(double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
 
   ofaz_gy = ReadCalData(ofAzGyAddr);
   

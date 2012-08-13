@@ -251,158 +251,97 @@ double calcVSerRW(void)
 
 /************************************************************************/
 /*                                                                      */
-/*   GetIElev: get the elevation current request (PWM duty cycle)       */
+/*   GetVElev: get the current elevation velocity request, given current*/
+/*   pointing mode, etc..                                               */
 /*                                                                      */
 /************************************************************************/
-#define MAX_DY 0.004
-#define MAX_I_TERM 10000
-static void GetIElev(int* duty_P, int* duty_I, int* duty_D)
+
+static double GetVElev(void)
 {
+
+/* various dynamical variables */
+  double el_dest;
+  double d_el;    // distance to target from mean encoder position 
+
+  double max_dv;
+  double g_pt;    // pointing gain: how velocity depends on d_el
+  double v;
   
-  double el_dest;  // target position
-  double dy;       // distance to target of mean encoder                             
-
-  static double dy_int = 0.0;   // integrated position error
-
-  int g_P;         // proportional gain
-  int g_I;         // integral gain
-  int g_D;         // derivative gain
-
-  //static double g_ramp = 0.0; // ramp up gains slowly when el drive is turned on.
-
-  double v_el;
-  static double filtered_v_el = 0.0;
-
-  static double el_last = 0.0;
-
+  static double v_last = 0.0;
   static double el_dest_last = 0.0;
+  static int on_delay = 0;
   static double el_dest_this = -1.0;
   
   static int since_arrival = 0;
-  static int on_delay = 0;
-  //static int firsttime = 1;
-
-  g_P = CommandData.ele_gain.P;// * (double) (fabs(dy) > TOLERANCE);
-  g_I = CommandData.ele_gain.I*0.01;
-  g_D = 100*(CommandData.ele_gain.D);// * (double) (fabs(dy) > TOLERANCE);
   
-  // initialize el_dest_this the first time here.
-  if (el_dest_this < 15.0) {
+   if (el_dest_this < 15.0) {
     el_dest_this = ACSData.enc_mean_el;
   }
-
-  /*if (firsttime) {
-    el_dest_this = ACSData.enc_mean_el;
-    firsttime = 0;
-  }*/
   
-  if (axes_mode.el_dest > MAX_EL) {  
-    el_dest = MAX_EL;
+  if (axes_mode.el_dest > MAX_EL) {   
+    el_dest = axes_mode.el_dest = MAX_EL;
   } else if (axes_mode.el_dest < MIN_EL) {
-    el_dest = MIN_EL;
+    el_dest = axes_mode.el_dest = MIN_EL;
   } else {
     el_dest = axes_mode.el_dest;
   }
-
-  if ( !(CommandData.power.elmot_auto) || (on_delay >= 120) ) {
-
-   if (el_dest - el_dest_this > MAX_DY) {
-      el_dest_this += MAX_DY;
-    } else if (el_dest_this - el_dest > MAX_DY) {
-      el_dest_this -= MAX_DY;
-    } else {
-      el_dest_this = el_dest;
-    }
-
-  }
-
-  dy = el_dest_this - ACSData.enc_mean_el;
-  //dy = el_dest - ACSData.enc_mean_el;
   
-  /* compute the mean velocity in a naive way */
+   if ( !(CommandData.power.elmot_auto) || (on_delay >= 120) ) {
+     el_dest_this = el_dest;
+   }
+  
+  d_el = el_dest_this - ACSData.enc_mean_el;
 
-  v_el = ACSData.enc_mean_el - el_last;
-  //bprintf(info, "v_el = %g", v_el);
-  el_last = ACSData.enc_mean_el;
-
-  filtered_v_el = 0.85 * filtered_v_el + 0.15 * v_el;
-
-  if ( !(CommandData.disable_el)) {
-    if ( (fabs(filtered_v_el) < 0.0010) ) { 
-      dy_int += dy*((double)CommandData.power.elmot_is_on);
-    } else {
-    }
+  g_pt = CommandData.ele_gain.PT * (double)(fabs(d_el)>TOLERANCE);
+  max_dv = 1.05 * CommandData.ele_gain.PT*CommandData.ele_gain.PT * (1.0/(2.0*SR));  // 5% higher than deceleration...
+  
+  if (d_el >= 0) {
+    v = g_pt*sqrt(d_el);
+  } else {
+    v = -g_pt*sqrt(-d_el);
   }
+  
+/* don't increase/decrease request by more than max_dv: */
+  v = ((v - v_last) > max_dv) ? (v_last + max_dv) : v;
+  v = ((v - v_last) < -max_dv) ? (v_last - max_dv) : v;    
 
-  // don't let dy_int grow too big
-  if (dy_int * g_I > MAX_I_TERM) {
-    dy_int = MAX_I_TERM/g_I;
-  } else if (dy_int * g_I < -MAX_I_TERM) {
-    dy_int = -MAX_I_TERM/g_I;
-  }
- 
   if ( !(CommandData.disable_el) && CommandData.power.elmot_auto ) {
-    //if (fabs(dy) < TOLERANCE) {
-    if (fabs(el_dest - ACSData.enc_mean_el) < TOLERANCE) {
-      since_arrival++;
-      if (since_arrival >= 500) {
-	if (CommandData.power.elmot_is_on) {      
-          CommandData.power.elmot.set_count = 0;
-          CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
-	}
-	on_delay = 0;
-      }
-    } else if ( fabs(el_dest-el_dest_last) > TOLERANCE ) { 
-      since_arrival = 0;
-      on_delay++;
-      if ( !(CommandData.power.elmot_is_on) ) {
-        CommandData.power.elmot.rst_count = 0;
-        CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
-      }
-    }  
+     if (fabs(el_dest - ACSData.enc_mean_el) < TOLERANCE) {
+       since_arrival++;
+       if (since_arrival >= 500) {
+	 if (CommandData.power.elmot_is_on) {      
+           CommandData.power.elmot.set_count = 0;
+           CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+	 }
+	 on_delay = 0;
+       }
+     } else if ( fabs(el_dest-el_dest_last) > TOLERANCE ) { 
+       since_arrival = 0;
+       on_delay++;
+       if ( !(CommandData.power.elmot_is_on) ) {
+         CommandData.power.elmot.rst_count = 0;
+         CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
+       }
+     }  
   }
-
+  
   el_dest_last = el_dest_this;
   
-  //if ( !(CommandData.power.elmot_is_on) ) {
-    //g_ramp = 0.0;
-  //} else {
-  //  if (g_ramp < 1.0) {
-  //    g_ramp += 0.001;
-  //  }
- // }
-
-  *duty_P = (int) (g_P*dy);
-  //*duty_P = (int) (g_ramp*g_P*dy);
-  //*duty_D = (int) (g_D*v_el);  
-  *duty_D = (int) (g_D*filtered_v_el);  
-  //*duty_D = (int) (g_ramp*g_D*v_el);  
+  v_last = v;
   
- // if (abs(*duty_P) > 16384) {
-//    *duty_I = 0;
-//  } else {
-    *duty_I = (int) (g_I*dy_int);
-    //*duty_I = (int) (g_ramp*g_I*dy_int);
-//  }
+  /* Limit maximum speed to 0.5 dps */
+  
+  if (v > 0.5) {
+    v = 0.5;
+  }
+  if (v < -0.5) {
+    v = -0.5;
+  }
+
+  v *= DPS_TO_GY16;
+  
+  return (v*10.0); // Factor of 10.0 is to improve the dynamic range
  
-  /* TODO: Re-implement stall detection? */
-  
-#if 0  
-  del_strbrd_targ += *v_S / SR;
-  del_strbrd = enc_strbrd - enc_strbrd_ref;
-  if (fabs(del_strbrd_targ)>0.05) {
-    if (fabs(del_strbrd)<0.025) {
-      //bprintf(info, "strbrd stall detected: %g %g %g", del_strbrd_targ, del_strbrd, *v_S);
-      *v_P = *v_S = 0.0;
-      // FIXME: handle the stall here...
-    } else {        
-      //bprintf(info, "strbrd no stall : %g %g", del_strbrd_targ, del_strbrd);
-    }
-    del_strbrd_targ = 0;
-    enc_strbrd_ref = enc_strbrd;
-  } 
-#endif 
-
 }
 
 /************************************************************************/
@@ -656,9 +595,10 @@ void WriteMot(int TxIndex)
 {
   //static struct NiosStruct* velReqElAddr;
   static struct NiosStruct* velReqAzAddr;
+  static struct NiosStruct* velReqElAddr;
   static struct NiosStruct* gPElAddr;
   static struct NiosStruct* gIElAddr;
-  static struct NiosStruct* gDElAddr;
+  static struct NiosStruct* gPtElAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
   static struct NiosStruct* gPtAzAddr;
@@ -671,14 +611,12 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* velRWAddr;
   static struct NiosStruct* accelAzAddr;
   static struct NiosStruct* accelMaxAzAddr;
-  static struct NiosStruct* pTermElAddr;
-  static struct NiosStruct* iTermElAddr;
-  static struct NiosStruct* dTermElAddr;
-  static struct NiosStruct* filtElAddr;
-  static struct NiosStruct* dutyPElAddr;   // PORT
-  static struct NiosStruct* dutySElAddr;   // STARBOARD
-  //static struct NiosStruct* cosElAddr;  
-  //static struct NiosStruct* sinElAddr; 
+  //static struct NiosStruct* pTermElAddr;
+  //static struct NiosStruct* iTermElAddr;
+  //static struct NiosStruct* dTermElAddr;
+  //static struct NiosStruct* filtElAddr;
+//  static struct NiosStruct* dutyPElAddr;   // PORT
+ // static struct NiosStruct* dutySElAddr;   // STARBOARD
   static struct NiosStruct* enc1OffsetAddr;
   static struct NiosStruct* enc2OffsetAddr; 
 
@@ -687,17 +625,15 @@ void WriteMot(int TxIndex)
 
   static int wait = 100; /* wait 20 frames before controlling. */
 
-  //int v_elev, v_az, i_piv, elGainP, elGainI;
-  int v_az, i_piv;
-  double  elGainP, elGainI, elGainD;
+  int v_elev, v_az, i_piv, elGainP, elGainI;
   
-  int duty_P=0, duty_I=0, duty_D=0;
-  int duty; // duty cycle for pwm output to el drive
-  static int duty_last = 0;
+//  int duty_P=0, duty_I=0, duty_D=0;
+//  int duty; // duty cycle for pwm output to el drive
+//  static int duty_last = 0;
   
-  double filt; // length of exp. filter
+ // double filt; // length of exp. filter
   
-  filt = CommandData.ele_gain.filt;
+ // filt = CommandData.ele_gain.filt;
   
   double v_rw;
   int azGainP, azGainI, pivGainRW, pivGainErr;
@@ -709,11 +645,11 @@ void WriteMot(int TxIndex)
 
   if (firsttime) {
     firsttime = 0;
-    //velReqElAddr = GetNiosAddr("vel_req_el");
+    velReqElAddr = GetNiosAddr("vel_req_el");
     velReqAzAddr = GetNiosAddr("vel_req_az");
     dacPivAddr = GetNiosAddr("dac_piv");
     gPElAddr = GetNiosAddr("g_p_el");
-    gDElAddr = GetNiosAddr("g_d_el");
+    gPtElAddr = GetNiosAddr("g_pt_el");
     gIElAddr = GetNiosAddr("g_i_el");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
@@ -727,12 +663,12 @@ void WriteMot(int TxIndex)
     accelAzAddr = GetNiosAddr("accel_az");
     accelMaxAzAddr = GetNiosAddr("accel_max_az");
     dac2AmplAddr = GetNiosAddr("dac2_ampl");
-    filtElAddr = GetNiosAddr("filt_el");
-    pTermElAddr = GetNiosAddr("p_term_el");
-    iTermElAddr = GetNiosAddr("i_term_el");
-    dTermElAddr = GetNiosAddr("d_term_el");
-    dutySElAddr = GetNiosAddr("duty_s_el");
-    dutyPElAddr = GetNiosAddr("duty_p_el");
+    //filtElAddr = GetNiosAddr("filt_el");
+    //pTermElAddr = GetNiosAddr("p_term_el");
+    //iTermElAddr = GetNiosAddr("i_term_el");
+    //dTermElAddr = GetNiosAddr("d_term_el");
+    //dutySElAddr = GetNiosAddr("duty_s_el");
+    //dutyPElAddr = GetNiosAddr("duty_p_el");
     //cosElAddr = GetNiosAddr("cos_el");
     //sinElAddr = GetNiosAddr("sin_el");
     enc1OffsetAddr = GetNiosAddr("enc1_offset");
@@ -753,53 +689,38 @@ void WriteMot(int TxIndex)
   /***************************************************/
   /**           Elevation Drive Motors              **/
   /* elevation speed */
-  //v_elev = floor(GetVElev() + 0.5);
-
-  filt = CommandData.ele_gain.filt;
-
-  GetIElev(&duty_P, &duty_I, &duty_D);
- 
-  duty = duty_P + duty_I + duty_D;
-
-  duty =  filt*duty_last + (1.0-filt)*duty;
+  v_elev = floor(GetVElev() + 0.5);
   
-  duty_last = duty;
+  /* Unit of v_elev are 0.1 gyro units */
+  if (v_elev > 32767)
+    v_elev = 32767;
+  if (v_elev < -32768)
+    v_elev = -32768;
   
-  if (duty > 32767) {
-    duty = 32767;
-  } else if (duty < -32767) {
-    duty = -32767;
-  }
-  
-  duty += 32768;
+  WriteCalData(velReqElAddr, v_elev, NIOS_QUEUE);
 
-  /* no motor pulses if the pin is in */
+  /* zero motor gains if the pin is in */
   if ((CommandData.lock.pin_is_in && !CommandData.force_el)
-      || CommandData.disable_el) {
-    WriteData(dutySElAddr, 32768, NIOS_QUEUE);
-    WriteData(dutyPElAddr, 32768, NIOS_QUEUE);
-  } else {
-    WriteData(dutySElAddr, duty, NIOS_QUEUE);
-    WriteData(dutyPElAddr, duty, NIOS_QUEUE);
+      || CommandData.disable_el)
+    elGainP = elGainI = 0;
+  else {
+    elGainP = CommandData.ele_gain.P;
+    elGainI = CommandData.ele_gain.I;	
   }
-
-  elGainP = CommandData.ele_gain.P;
-  elGainI = CommandData.ele_gain.I;
-  elGainD = CommandData.ele_gain.D;
-
 
   if (TxIndex == 0) {   //only write at slow frame rate
     /* proportional gain term for el motors*/
     WriteCalData(gPElAddr, elGainP, NIOS_QUEUE);
-    /*derivative gain term for el motors */
-    WriteCalData(gDElAddr, elGainD, NIOS_QUEUE);
     /*integral gain term for el motors */
     WriteCalData(gIElAddr, elGainI, NIOS_QUEUE);
+   /* pointing gain term for elevation drive */
+    WriteCalData(gPtElAddr, CommandData.ele_gain.PT, NIOS_QUEUE);
+
     
-    WriteCalData(pTermElAddr, duty_P, NIOS_QUEUE);
+/*    WriteCalData(pTermElAddr, duty_P, NIOS_QUEUE);
     WriteCalData(iTermElAddr, duty_I, NIOS_QUEUE);
     WriteCalData(dTermElAddr, duty_D, NIOS_QUEUE);
-    WriteCalData(filtElAddr, filt, NIOS_QUEUE);
+    WriteCalData(filtElAddr, filt, NIOS_QUEUE);*/
 
   /* write cos(el) and sin(el) where el is the inner-to-outer frame elevation angle
    * used by DSP to convert inner frame gyro speeds to az velocity 

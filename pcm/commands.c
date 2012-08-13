@@ -912,17 +912,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       /********** Pointing Motor Gains *******/
     case el_gain:  /* ele gains */
       CommandData.ele_gain.P = ivalues[0];
-      CommandData.ele_gain.D = ivalues[1];
-      CommandData.ele_gain.I = ivalues[2];
-      CommandData.ele_gain.filt = rvalues[3];
-      //CommandData.ele_gain.PT = ivalues[2];
-      //CommandData.ele_gain.twist = rvalues[2];
+      CommandData.ele_gain.I = ivalues[1];
+      CommandData.ele_gain.PT = ivalues[2];
       break;
-    //case el_pulse: /* manual el motor pulses */
-    //  CommandData.ele_gain.pulse_port = rvalues[0];
-    //  CommandData.ele_gain.pulse_starboard = rvalues[1];
-    //  CommandData.ele_gain.manual_pulses = 1;
-     // break;
     case az_gain:  /* az gains */
       CommandData.azi_gain.P = ivalues[0];
       CommandData.azi_gain.I = ivalues[1];
