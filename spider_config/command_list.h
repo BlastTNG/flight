@@ -16,6 +16,7 @@
 
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
+/* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
 #define N_SCOMMANDS 174        /* total number of single word cmds */
 #define N_MCOMMANDS 121        /* total number of multiword commands */
 
@@ -152,7 +153,8 @@ enum multiCommand {
   hk_sft_bottom_pulse, hk_t7_pulse,
   spider_scan,	     sine_scan,         bbc_rate_ext,      bbc_rate_int,
   hwp_halt,          hwp_phase,
-  plugh	 //plugh should be at the end of the list
+  plugh,                //plugh should be at the end of the list
+  sched_packet = 0xff   //not really a command, more of a placeholder
 };
 
 extern struct scom scommands[N_SCOMMANDS];
