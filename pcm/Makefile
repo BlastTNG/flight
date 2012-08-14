@@ -2,7 +2,7 @@ CC = gcc
 CXX = g++
 CPPFLAGS = -D__MCP__ $(BOLOTEST)
 CFLAGS = -g -O3 -Wall
-LDFLAGS = -lpthread -lm -lstdc++ -lgsl -lgslcblas
+LDLIBS = -pthread -lm -lstdc++ -lgsl -lgslcblas
 
 ########################################################
 # External repository dependencies
@@ -29,12 +29,12 @@ EXPT_OBJS = command_list.o derived.o tx_struct.o
 
 # These are only needed by the flight version
 ifndef BOLOTEST
-	SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
+SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
 								 ephem_read.o fir.o geomag.o radbox.o starpos.o
-	LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
+LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
 								motors.o motorcommand.o pointing.o pyramid.o sc.o sched.o \
 								slow_dl.o svd.o table.o
-	EXPT_OBJS += compressstruct.o 
+EXPT_OBJS += compressstruct.o 
 endif
 
 ETC_DATA = WMM.COF ephem.2000 sched.library *.sch *.lut *.bin
@@ -87,7 +87,11 @@ test-run-disable: clean
 	echo "TEST_RUN = 0" > Makefile.testing
 
 pcm: $(OBJS)
-	$(CC) $(OBJS) $(CFLAGS) $(LDFLAGS) -o pcm
+	$(CC) $(LDFLGS) $(CFLAGS) $(OBJS) $(LDLIBS) -o pcm
+
+########################################################
+# Install Stuff
+#
 
 install: pcm
 	install -d -m 777 /data/rawdir
@@ -98,10 +102,6 @@ install: pcm
 ifeq ($(TEST_RUN), 1)
 	$(MAKE) fifo
 endif
-
-########################################################
-# Install Stuff
-#
 
 fifo:
 	[ -e /data/etc/SIPSS.FIFO ] || mkfifo -m 0777 /data/etc/SIPSS.FIFO
