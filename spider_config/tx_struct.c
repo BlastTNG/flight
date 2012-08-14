@@ -922,7 +922,7 @@ struct ChannelStruct SlowChannels[] = {
   {"enc1_offset",  'w',  ACS2_D, 25,            I2DEG,                0.0,  'u', U_P_DEG},
   {"enc2_offset",  'w',  ACS2_D, 26,            I2DEG,                0.0,  'u', U_P_DEG}, 
   {"fault_gy",     'r',  ACS2_D, 15,                1.0,             0.0, 'u', U_NONE},
-  {"dac_el",       'r',   ACS2_D, 20,                 1.0,            0.0, 'u', U_NONE},
+  {"pwm_el",       'r',   ACS2_D, 20,                 1.0,            0.0, 'u', U_NONE},
   {"p_term_el",    'r',   ACS2_D, 21,               1.0,         -32768.0, 'u', U_NONE},
   {"i_term_el",    'r',   ACS2_D, 22,               1.0,         -32768.0, 'u', U_NONE},
   {"error_el",     'r',   ACS2_D, 23,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
