@@ -207,18 +207,16 @@ struct CommandDataStruct {
   
   enum {vtx_isc, vtx_osc, vtx_bsc} vtx_sel[2];
 
-  struct GainStruct ele_gain;
+  //struct GainStruct ele_gain;
 
-/*  struct {
-    int P;
-    int D;
-    int I;
-    double filt;
-    //double pulse_port;
-    //double pulse_starboard;
-    //int manual_pulses;
-    //double twist;
-  } ele_gain; */
+  struct {
+    double com;
+    double diff;
+    double pulse_port;
+    double pulse_starboard;
+    int manual_pulses;
+    double twist;
+  } ele_gain; 
  
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
