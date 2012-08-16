@@ -911,9 +911,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       /***************************************/
       /********** Pointing Motor Gains *******/
     case el_gain:  /* ele gains */
-      CommandData.ele_gain.P = ivalues[0];
+      CommandData.ele_gain.com = rvalues[0];
+      CommandData.ele_gain.diff = rvalues[1];
+      CommandData.ele_gain.twist = rvalues[2];
+      /*CommandData.ele_gain.P = ivalues[0];
       CommandData.ele_gain.I = ivalues[1];
-      CommandData.ele_gain.PT = ivalues[2];
+      CommandData.ele_gain.PT = ivalues[2];*/
+      break;
+   case el_pulse: /* manual el motor pulses */
+      CommandData.ele_gain.pulse_port = rvalues[0];
+      CommandData.ele_gain.pulse_starboard = rvalues[1];
+      CommandData.ele_gain.manual_pulses = 1;
       break;
     case az_gain:  /* az gains */
       CommandData.azi_gain.P = ivalues[0];
@@ -1800,13 +1808,12 @@ void InitCommandData()
   //CommandData.ele_gain.P = 5000; /* was 1200 */
   //CommandData.ele_gain.PT = 3000;
 
-  CommandData.ele_gain.P = 0;
-  CommandData.ele_gain.I = 0;
-  CommandData.ele_gain.D = 0;
+  CommandData.ele_gain.com = 0;
+  CommandData.ele_gain.diff = 0;
+  CommandData.ele_gain.manual_pulses = 0;
+  CommandData.ele_gain.pulse_port = 0.0;
+  CommandData.ele_gain.pulse_starboard = 0.0;
 
-  //CommandData.ele_gain.manual_pulses = 0;
-  //CommandData.ele_gain.pulse_port = 0.0;
-  //CommandData.ele_gain.pulse_starboard = 0.0;
   
   CommandData.power.elmot_auto = 0;
 
@@ -1845,12 +1852,12 @@ void InitCommandData()
   CommandData.lat_range = 1;
   CommandData.sucks = 1;
 
-  CommandData.clin_el_trim = 0;
-  CommandData.enc_el_trim = 0;
-  CommandData.null_az_trim = 0;
-  CommandData.mag_az_trim = 0;
-  CommandData.dgps_az_trim = 0;
-  CommandData.pss_az_trim = 0;
+  CommandData.clin_el_trim = 0.0;
+  CommandData.enc_el_trim = 0.0;
+  CommandData.null_az_trim = 0.0;
+  CommandData.mag_az_trim = 0.0;
+  CommandData.dgps_az_trim = 0.0;
+  CommandData.pss_az_trim = 0.0;
 
   CommandData.dgps_cov_limit = 0.3;
   CommandData.dgps_ants_limit = 0.5;
