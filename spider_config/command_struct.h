@@ -410,7 +410,7 @@ struct CommandDataStruct {
 
   /* sensors output: read in mcp:SensorReader() */
   unsigned short temp1, temp2, temp3;
-  unsigned short df;
+  size_t df;
 
   unsigned short plover;
 

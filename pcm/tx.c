@@ -198,7 +198,8 @@ static void WriteAux(void)
   WriteData(tCpuFlcAddr, CommandData.temp2, NIOS_QUEUE);
   WriteData(tMbFlcAddr, CommandData.temp3, NIOS_QUEUE);
 
-  WriteData(diskFreeAddr, CommandData.df, NIOS_QUEUE);
+  WriteData(diskFreeAddr, (CommandData.df > 65535) ? 65535 : CommandData.df,
+      NIOS_QUEUE);
   
   WriteData(partsSchedAddr, CommandData.parts_sched&0xffffff, NIOS_QUEUE);
   WriteData(upslotSchedAddr, CommandData.upslot_sched, NIOS_QUEUE);
