@@ -1,4 +1,4 @@
-//pixelFivxer.cpp
+//pixelFixer.cpp
 //a class that decides on the bad pixels in the camera and saves them into the correction table
 
 #include "stdafx.h"
@@ -19,6 +19,13 @@ WORD* PixelFixer::generateBadPixelTable(const char* directory){
 
 	DIR* data = opendir(directory);
 
+	if(data == NULL){
+		printf("calibration directory not found, creating.\n");
+
+		system("mkdir calibImages");
+		return NULL;
+	}
+
 	std::vector<double> pixelVector;
 	pixelVector.resize(xSize*ySize, 0);
 	char newDirectory[100];
@@ -29,13 +36,15 @@ WORD* PixelFixer::generateBadPixelTable(const char* directory){
 	char* fileName;
 	char* newFileName =(char*) malloc(200);
 	int exposureTime;
+	int pictureNumber;
+	bool filesWereFound = false;
 
 	if(fileStructure != NULL){//if the first file exists
 
 		fileName = fileStructure->d_name;
 		if(*fileName == 'L'){
-			sscanf(fileName, "LensOn%d.bmp", &exposureTime);
-
+			sscanf(fileName, "LensOn%d-%d.bmp", &exposureTime, &pictureNumber);
+			filesWereFound == true;
 			sprintf(newFileName, "%s/%s", directory, fileName);
 			pixelVector = detectWeirdPixels(pixelVector, newFileName, exposureTime);//calls the helper method to put the data from the file into a vector
 		}
@@ -49,14 +58,20 @@ WORD* PixelFixer::generateBadPixelTable(const char* directory){
 	while(fileStructure != NULL){//while there are more files
 		fileName = fileStructure->d_name;
 		if(*fileName == 'L'){
+			filesWereFound = true;
 			sprintf(newFileName, "%s/%s", directory, fileName);
-			sscanf(fileName, "LensOn%d.bmp", &exposureTime);
+			sscanf(fileName, "LensOn%d-%d.bmp", &exposureTime, &pictureNumber);
 			pixelVector = detectWeirdPixels(pixelVector, newFileName, exposureTime);//repeat the above process
 			count ++;
 		}
 		fileStructure = readdir(data);
 	}
 	free(newFileName);
+
+	if(filesWereFound == false){
+		printf("no calibration files found in the directory\n");
+		return NULL;
+	}
 
 	char* charValues =(char *) malloc(pixelVector.size());
 
@@ -98,7 +113,7 @@ WORD* PixelFixer::generateBadPixelTable(const char* directory){
 
 	file.close();//closes the file
 
-	file.open(compositeFilename, std::ios_base::out | std::ios_base::binary);//opens the fil for writing
+	file.open(compositeFilename, std::ios_base::out | std::ios_base::binary);//opens the file for writing
 
 	file.write(fullHeader, offset);//writes the header to the file
 	if(file.bad()){
@@ -128,6 +143,8 @@ WORD* PixelFixer::generateBadPixelTable(const char* directory){
 	average = average/pixelVector.size();
 	stdDev = sqrt(stdDev/pixelVector.size() - average*average);
 
+	printf("average was %lf, stddev was %lf\n");
+
 	double noiseAverage = 0;
 	double noiseStdDev = 0;
 	int noiseCount = 0;
@@ -148,7 +165,7 @@ WORD* PixelFixer::generateBadPixelTable(const char* directory){
 	unsigned short badCount = 0;
 
 	for(unsigned int i = 0; i<pixelVector.size(); i++){
-		if((abs(pixelVector[i] - /*noiseA*/ average) > 50* /*noiseS*/ stdDev) /*&&(abs(pixelVector[i] - average) > stdDev)*/){
+		if((abs(pixelVector[i] - /*noiseA*/ average) > 4 * /*noiseS*/ stdDev) /*&&(abs(pixelVector[i] - average) > stdDev)*/){
 			badCount ++;//increments the count of bad pixels
 
 			badPixels.push_back(i%xSize);//puts the x coordinate in the array
@@ -211,7 +228,7 @@ std::vector<double> PixelFixer::detectWeirdPixels(std::vector<double> data, char
 	returnValue.resize(xSize*ySize);
 
 	for(int i = 0; i < (xSize * ySize); i++){
-		returnValue[i] = data[i] + abs(tempVector[i] - average)/weight * 350;
+		returnValue[i] = data[i] + abs(tempVector[i] - average)*weight /* 10000*/;
 	}
 	return returnValue;
 }
@@ -272,4 +289,33 @@ int PixelFixer::savePixelTable(char* filename, unsigned short* tablePointer){
 
 	fclose(file);
 	return IS_SUCCESS;
+}
+
+void PixelFixer::getImageBackground(void* picture){
+
+	double average = 0;
+	double stdDev = 0;
+	int temp;
+
+	for(int i = 0; i<xSize*ySize*pixelSize/8; i++){
+
+		temp = *((char*)((unsigned long long int)picture + i));
+		average += temp;
+		stdDev += pow(temp, 2);
+	}
+
+	average/= xSize*ySize*pixelSize/8;
+	stdDev/= xSize*ySize*pixelSize/8;
+
+	stdDev = sqrt(stdDev - pow(average, 2));
+
+	int noisyCount = 0;
+	for(int i = 0; i<xSize*ySize*pixelSize/8; i++){
+
+		if(abs(*((char*)((unsigned long long int)picture +i)) - average) > 3*stdDev){
+			noisyCount ++;
+		}
+	}
+
+	printf("%lf\t\t%lf\t\t%d\n", average, stdDev, noisyCount);
 }

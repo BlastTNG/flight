@@ -16,6 +16,8 @@ public:
 
 	int savePixelTable(char*, unsigned short*);
 
+	void getImageBackground(void*);
+
 private:
 
 	std::vector<double> detectWeirdPixels(std::vector<double>, char*, int);

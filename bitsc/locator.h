@@ -13,8 +13,8 @@
 #define LIGHT_THRESHOLD 200
 
 struct coords{//the coordinates of the object
-	int x;
-	int y;
+	double x;
+	double y;
 };
 
 struct blob{//a structure representing a blob
@@ -31,6 +31,8 @@ class Locator{
 	public:
 
 		Locator(int, int, int, int, int, Camera*);
+
+		~Locator();
 
 		blob locate(void*, int, int, int, int);
 
@@ -69,4 +71,6 @@ class Locator{
 		blob starTracker(void*, int, int);
 
 		Camera* camera;
+
+		void* oldPicture;
 };

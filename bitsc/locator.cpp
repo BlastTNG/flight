@@ -26,6 +26,12 @@ Locator::Locator(int xSize, int ySize, int pixelSize, int nSigma, int mode, Came
 	if(locationMode < 1){
 		printf("invalid location mode in locator.\n");
 	}
+
+	oldPicture = malloc(xSize*ySize*pixelDataSize/8);
+}
+
+Locator::~Locator(){
+	free(oldPicture);
 }
 
 //calls the correct type of locator depending on the flag passed to the constructor
@@ -213,6 +219,18 @@ blob Locator::starTracker(void* address, int xSubSize, int ySubSize){
 
 //this is the code written to track the spider baloon ball
 blob Locator::spiderLocate(void* address){
+
+	int byteCount =0;
+	/*for(int i = 0; i<xPixels*yPixels*pixelDataSize/8; i++){
+		if(*((char*)address + i) != *((char*)oldPicture + i)){
+		byteCount ++;
+		}
+	}
+	printf("%d bytes differ\n", byteCount);
+
+	memcpy(oldPicture, address, xPixels*yPixels*pixelDataSize/8);	
+	*/
+
 	double average = 0;
 	double stdDev = 0;
 	void* pixelAddress;
@@ -245,7 +263,6 @@ blob Locator::spiderLocate(void* address){
 	}
 	
 	if(lastBlob.size == 0){//if we have never found the blob before, look at the whole picture
-		
 		blob maxBlob;
 		maxBlob.size = 0;
 		for(int i = 0; i<totalPixels; i++){
@@ -268,16 +285,19 @@ blob Locator::spiderLocate(void* address){
 		}
 
 		lastBlob = maxBlob;
-
+		if(lastBlob.size == 1){
+			lastBlob.size = 0;
+		}
+	
 		blobVector.push_back(lastBlob);
 		return lastBlob;
 	
 	}else{//otherwise start looking at the previous location in a snake-like pattern
 
 		int step = 1;
-		unsigned long long startLocation = (unsigned long long) address + (xPixels*lastBlob.centroid.y + lastBlob.centroid.x)*(pixelDataSize/8);
-		int index = (xPixels*lastBlob.centroid.y + lastBlob.centroid.x)*(pixelDataSize/8);
-		printf("starting at: %d, %d\n", index %xPixels , index /xPixels);
+		unsigned long long startLocation = (unsigned long long) address + (xPixels*(int)lastBlob.centroid.y + (int)lastBlob.centroid.x)*(pixelDataSize/8);
+		int index = (xPixels*(int)lastBlob.centroid.y + (int)lastBlob.centroid.x)*(pixelDataSize/8);
+		//printf("starting at: %d, %d\n", index %xPixels , index /xPixels);
 		bool stillLooking = true;
 	
 		while(stillLooking){
@@ -288,9 +308,15 @@ blob Locator::spiderLocate(void* address){
 				}else{
 					temp = -1;
 				}
+				int oldIndex = (int) (startLocation - (unsigned long long int) address);
 				startLocation += temp*(pixelDataSize/8);
 				index = (int) (startLocation - (unsigned long long)address);
-				printf("looking at %d, %d\n", index%xPixels, index /xPixels);
+				if(index/xPixels != oldIndex/xPixels){
+					printf("search has wrapped around in the x direction. Terminating\n");
+					stillLooking = false;
+					break;
+				}
+				//printf("looking at %d, %d\n", index%xPixels, index /xPixels);
 				if((startLocation > (unsigned long long) address + totalPixels*(pixelDataSize/8))||(startLocation < (unsigned long long)address)){
 					printf("Search has gone out of bounds in the x direction. Terminating\n");
 					stillLooking = false;
@@ -302,15 +328,24 @@ blob Locator::spiderLocate(void* address){
 				for(int j = 0; j<pixelDataSize/8; j++){
 					pixelValue += (*(unsigned char*)((unsigned long long)pixelAddress + j)) *(int) pow((float)2, j*pixelDataSize);//adds the value of the next byte to the total
 				}
-
+				//printf("pixelValue: %d, average: %lf, sigmaNumber: %d, standard deviation: %lf\n", pixelValue, average, sigmaNumber, stdDev);
 				if(abs(pixelValue - average) > (sigmaNumber*stdDev)){
-					printf("pixel is a feature\n");
-					tempBlob = detectBlob(pixelAddress, address);
-				}
+					//printf("pixel is a feature\n");
+					if(!blobWasFound(pixelAddress, address, foundBlobs)){  
+						tempBlob = detectBlob(pixelAddress, address);
+						foundBlobs.push_back(tempBlob);
+					}else{
+						continue;
+					}
+				
 
-				if(abs(tempBlob.size - lastBlob.size) < (lastBlob.size/5)&&(tempBlob.size != 0)){//if we are pretty sure this is the right blob
-					blobVector.push_back(tempBlob);
-					return tempBlob;
+					if((abs(tempBlob.size - lastBlob.size) < (4*lastBlob.size/5)||(abs(tempBlob.size - lastBlob.size) < (4*tempBlob.size/5)))&&(tempBlob.size > 1)){//if we are pretty sure this is the right blob
+						lastBlob = tempBlob;
+						blobVector.push_back(tempBlob);
+						return tempBlob;
+					}else{
+						printf("discarding blob at %lf, %lf, size %d\n", tempBlob.centroid.x, tempBlob.centroid.y, tempBlob.size);
+					}
 				}
 			}
 			if(!stillLooking){
@@ -323,10 +358,16 @@ blob Locator::spiderLocate(void* address){
 				}else{
 					temp = -1;
 				}
-
+				int oldIndex = (int)(startLocation - (unsigned long long int)address);
 				startLocation += xPixels*temp*(pixelDataSize/8);
 				index = (int)(startLocation - (unsigned long long)address);
-				printf("looking at %d, %d\n", index%xPixels, index/xPixels);
+				if(index%xPixels != oldIndex %xPixels){
+					printf("search has wrapped around in the y direction. Terminating\n");
+					stillLooking = false;
+					break;
+				}
+				
+				//printf("looking at %d, %d\n", index%xPixels, index/xPixels);
 				if((startLocation > (unsigned long long) address + totalPixels*(pixelDataSize/8))||(startLocation < (unsigned long long)address)){
 					printf("Search has gone out of bounds in the y direction. Terminating\n");
 					stillLooking = false;
@@ -338,19 +379,27 @@ blob Locator::spiderLocate(void* address){
 				for(int j = 0; j<pixelDataSize/8; j++){
 					pixelValue += ( *(unsigned char*)((unsigned long long)pixelAddress + j)) * (int)pow((float)2, j*pixelDataSize);//adds the value of the next byte to the total
 				}
-
 				if(abs(pixelValue - average) > (sigmaNumber*stdDev)){
-					printf("pixel is a feature\n");
-					tempBlob = detectBlob(pixelAddress, address);
-				}
+					//printf("pixel is a feature\n");
+					if(!blobWasFound(pixelAddress, address, foundBlobs)){
+						tempBlob = detectBlob(pixelAddress, address);
+						foundBlobs.push_back(tempBlob);
+					}else{
+						continue;
+					}
+				
 
-				if(abs(tempBlob.size - lastBlob.size) < (lastBlob.size/5)&&(tempBlob.size != 0)){//if we are pretty sure this is the right blob
-					blobVector.push_back(tempBlob);
-					return tempBlob;
+					if((abs(tempBlob.size - lastBlob.size) < (4*lastBlob.size/5)||(abs(tempBlob.size - lastBlob.size) < (4*tempBlob.size/5)))&&(tempBlob.size > 1)){//if we are pretty sure this is the right blob
+						lastBlob = tempBlob;
+						blobVector.push_back(tempBlob);
+						return tempBlob;
+					}else{
+						printf("discarding blob at %lf, %lf, size %d\n", tempBlob.centroid.x, tempBlob.centroid.y, tempBlob.size);
+					}
 				}
 			}
 			step++;
-			if(step > 100){
+			if(step > 20){
 				break;
 			}
 		}
@@ -370,14 +419,13 @@ void Locator::writeData(){//writes out a formatted summary of the blobs that hav
 	blob current;
 	for(int i =0; i<(int)blobVector.size(); i++){
 		current = blobVector.at(i);
-		fprintf(file, "%d\t\t%d\t%d\t%d\t%d\t%d\n", i, current.centroid.x, current.centroid.y, current.size, current.source.x, current.source.y);
+		fprintf(file, "%d\t\t%lf\t%lf\t%d\t%lf\t%lf\n", i, current.centroid.x, current.centroid.y, current.size, current.source.x, current.source.y);
 	}
 	fclose(file);
 }
 
 //does a quick check to see if the blob was already found
 bool Locator::blobWasFound(void* pixel, void* address, std::vector<blob> foundBlobs){
-
 	int pixelNum = (int)((unsigned long long int)pixel - (unsigned long long int)address);
 	double x = pixelNum % xPixels;
 	double y = (double)(pixelNum / xPixels);
@@ -427,14 +475,13 @@ blob Locator::detectBlob (void* pixel, void* picture){
 		if((abs(*leftPointer - averageValue) < sigmaNumber*standardDeviation)&&(!leftEdge)){
 			storedLeft = leftPointer + 1;
 			leftEdge = true;
-		}
+		} 
 		offset ++;
 
 		if((leftEdge) && (rightEdge)){
 			edgeSeeker = false;
 		}
 	}
-
 	unsigned char* centerLine = (unsigned char*) (((unsigned long long int)storedRight + (unsigned long long int)storedLeft)/2);
 
 	edgeSeeker = true;
@@ -442,31 +489,51 @@ blob Locator::detectBlob (void* pixel, void* picture){
 	unsigned char* bottomPointer;
 	unsigned char* storedTop;
 	unsigned char* storedBottom;
-	offset = 0;
+	offset = 1;
 	bool foundTop = false;
 	bool foundBottom = false;
-	int intensity = 0;
-	int pixelCount = 0;
+	int intensity = *centerLine;
+	int pixelCount = 1;
+
+	int startPoint = (unsigned long long int)centerLine - (unsigned long long int) picture;
+
+	double yAverage = *centerLine * startPoint/xPixels;
+	int yWeight = *centerLine;
 
 	while (edgeSeeker){
 
 		topPointer = centerLine - offset*xPixels;
-		bottomPointer = centerLine + offset*xPixels;
-
-		if((abs(*topPointer - averageValue) < sigmaNumber*standardDeviation)&&(!foundTop)){
+		if(topPointer < picture){
 			storedTop = topPointer + xPixels;
 			foundTop = true;
-		}else{
-			pixelCount ++;
-			intensity += *topPointer;
 		}
-
-		if((abs(*bottomPointer - averageValue) < sigmaNumber*standardDeviation)&&(!foundBottom)){
+		bottomPointer = centerLine + offset*xPixels;
+		if(bottomPointer > (unsigned char*)picture + xPixels*yPixels*pixelDataSize/8){
 			storedBottom = bottomPointer - xPixels;
 			foundBottom = true;
-		}else{
-			pixelCount ++;
-			intensity += *bottomPointer;
+		}
+
+		if(!foundTop){
+			if((abs(*topPointer - averageValue) < (sigmaNumber/2)*standardDeviation)){
+				storedTop = topPointer + xPixels;
+				foundTop = true;
+			}else{
+				yAverage += (*topPointer) * (startPoint/xPixels - offset);
+				yWeight += *topPointer;
+				pixelCount ++;
+				intensity += *topPointer;
+			}
+		}
+		if(!foundBottom){
+			if((abs(*bottomPointer - averageValue) < (sigmaNumber/2)*standardDeviation)){
+				storedBottom = bottomPointer - xPixels;
+				foundBottom = true;
+			}else{
+				yAverage += (*bottomPointer) * (startPoint/xPixels + offset);
+				yWeight += *bottomPointer;
+				pixelCount ++;
+				intensity += *bottomPointer;
+			}
 		}
 
 		if(foundTop && foundBottom){
@@ -480,42 +547,70 @@ blob Locator::detectBlob (void* pixel, void* picture){
 
 	centerLine = (unsigned char*)((unsigned long long int)storedTop + ((((int)(storedBottom - storedTop)/xPixels)/2)*xPixels));
 	edgeSeeker = true;
-	offset = 0;
+	offset = 1;
 	leftEdge = false;
 	rightEdge = false;
 
+	startPoint = (unsigned long long int)centerLine - (unsigned long long int) picture;
+
+	double xAverage = (*centerLine) * (startPoint%xPixels);
+        int xWeight = *centerLine;
+	
 	while(edgeSeeker){
 	
 		leftPointer = centerLine - offset;
-		rightPointer = centerLine + offset;
-	
-		if((abs(*rightPointer - averageValue) < sigmaNumber*standardDeviation)&&(!rightEdge)){
-			storedRight = rightPointer - 1;
-			rightEdge = true;
-		}else{
-			pixelCount ++;
-			intensity += *rightPointer;
-		}
-		if((abs(*leftPointer - averageValue) < sigmaNumber*standardDeviation)&&(!leftEdge)){
+		if((leftPointer - (unsigned char*)picture)%xPixels == xPixels -1){
 			storedLeft = leftPointer + 1;
 			leftEdge = true;
-		}else{
-			pixelCount ++;
-			intensity += *leftPointer;
+		}
+		rightPointer = centerLine + offset;
+		if((rightPointer - (unsigned char*)picture)%xPixels == 0){
+			storedRight = rightPointer -1;
+			rightEdge = true;
+		}
+
+		if(!rightEdge){
+			if((abs(*rightPointer - averageValue) < (sigmaNumber/2)*standardDeviation)){
+				storedRight = rightPointer - 1;
+				rightEdge = true;
+			}else{
+				xAverage += (*rightPointer) * (startPoint%xPixels + offset);
+				xWeight += *rightPointer;
+				pixelCount ++;
+				intensity += *rightPointer;
+			}
+		}
+		if(!leftEdge){
+			if((abs(*leftPointer - averageValue) < (sigmaNumber/2)*standardDeviation)){
+				storedLeft = leftPointer + 1;
+				leftEdge = true;
+			}else{
+				xAverage += (*leftPointer) * (startPoint%xPixels - offset);
+				xWeight += *leftPointer;
+
+				pixelCount ++;
+				intensity += *leftPointer;
+			
+			}
 		}
 		offset ++;
 		if((leftEdge) && (rightEdge)){
 			edgeSeeker = false;
 		}
 	}
-
+	xAverage /= xWeight;
+	yAverage /= yWeight;
 	returnBlob.max.x = (int) ((storedRight - (unsigned char*) picture) % xPixels);
 	returnBlob.min.x = (int) ((storedLeft - (unsigned char*) picture) % xPixels);
+	returnBlob.min.y = (int) ((storedTop - (unsigned char*) picture) /xPixels);
+	returnBlob.max.y = (int) ((storedBottom - (unsigned char*) picture) /xPixels);
 
-	returnBlob.centroid.x = (returnBlob.max.x + returnBlob.min.x)/2;
-	returnBlob.centroid.y = (returnBlob.max.y + returnBlob.min.y)/2;
+	returnBlob.centroid.x = xAverage;
+	returnBlob.centroid.y = yAverage;
 	returnBlob.size = (int) (3.14/4.0 * ((double)((returnBlob.max.x - returnBlob.min.x + 1)*(returnBlob.max.y - returnBlob.min.y + 1))));
 	returnBlob.intensity = intensity / pixelCount; 
-	//printf("Blob found at %d, %d (center x = %d, y = %d), height: %d, width %d, size %d\n", (int)((unsigned long long int)pixel - (unsigned long long int)picture)%xPixels, (int)((unsigned long long int)pixel - (unsigned long long int)picture)/xPixels, returnBlob.centroid.x, returnBlob.centroid.y, 1+ returnBlob.max.y - returnBlob.min.y, 1+ returnBlob.max.x - returnBlob.min.x, returnBlob.size);
+	if(returnBlob.size != 0){
+		//printf("Blob found at %d, %d (center x = %d, y = %d), height: %d, width %d, size %d\n", (int)((unsigned long long int)pixel - (unsigned long long int)picture)%xPixels, (int)((unsigned long long int)pixel - (unsigned long long int)picture)/xPixels, returnBlob.centroid.x, returnBlob.centroid.y, 1+ returnBlob.max.y - returnBlob.min.y, 1+ returnBlob.max.x - returnBlob.min.x, returnBlob.size);
+	}
 	return returnBlob;
 }

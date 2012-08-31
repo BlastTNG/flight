@@ -5,6 +5,11 @@
 #include "camera.h"
 #include "pixelFixer.h"
 
+#define EXPOSURE_TIME 		50
+#define GAIN_PERCENTAGE 	100
+#define PIXEL_CLOCK_RATE 	100
+#define FRAMERATE		10.00
+
 Camera::Camera(){
 	if(!initCamera()){
 		printf("Camera failed to initialize. Giving up.\n");
@@ -27,7 +32,7 @@ void* Camera::capture(){
 		return NULL;
 	}
 
-	//timeval systemTime1;
+	timeval systemTime1;
 	//timeval systemTime2;
 
 	int status;
@@ -50,16 +55,17 @@ void* Camera::capture(){
 			printf("Setting full frame subsample fails\n");
 		}
 		double framerate;
-		status = is_SetFrameRate(cameraHandle, 15.0, &framerate);
+		status = is_SetFrameRate(cameraHandle, FRAMERATE, &framerate);
 
 		if(status != IS_SUCCESS){
 			printf("setting framerate fails, error %d\n", status);
 		}
 	}
 
-//	gettimeofday(&systemTime1, NULL);
+	gettimeofday(&systemTime1, NULL);
 	status = is_FreezeVideo(cameraHandle, IS_WAIT);//takes a picture
-//	gettimeofday(&systemTime2, NULL);
+	//printf("%ld\t%ld\t", systemTime1.tv_sec, systemTime1.tv_usec);
+	//gettimeofday(&systemTime2, NULL);
 	//printf("elapsed time: %ld\n", 1000000*(systemTime2.tv_sec - systemTime1.tv_sec) + systemTime2.tv_usec - systemTime1.tv_usec);
 	if(status == IS_NO_SUCCESS){
 		printf("capture image fails. Checking for issues\n"); 
@@ -150,7 +156,7 @@ double Camera::getExposureTime(){
 	return exposureTime;
 }
 
-void Camera::saveActiveData(){
+void Camera::saveActiveData(wchar_t* name){
 	if(!isOpen){//makes sure camera is open
 		printf("Camera is not open to save data. Returning\n");
 		return;
@@ -159,7 +165,7 @@ void Camera::saveActiveData(){
 	int status;
 
 	IMAGE_FILE_PARAMS imageFileData;
-	imageFileData.pwchFileName = L"testfile.bmp";
+	imageFileData.pwchFileName = name;
 	imageFileData.nFileType = IS_IMG_BMP;
 	imageFileData.ppcImageMem = NULL;
 	imageFileData.pnImageID = NULL;
@@ -267,7 +273,8 @@ bool Camera::initCamera(){
 	//sets the pixel clock to the maximum rate
 
 	status = is_PixelClock(cameraHandle, IS_PIXELCLOCK_CMD_GET_RANGE, (void*) range, sizeof(range));
-	status = is_PixelClock(cameraHandle, IS_PIXELCLOCK_CMD_SET, (void*) &range[1], sizeof(range[1]));
+	int pixelSpeed = PIXEL_CLOCK_RATE;/*range[1]*/
+	status = is_PixelClock(cameraHandle, IS_PIXELCLOCK_CMD_SET, (void*) &pixelSpeed, sizeof(int));
 
 	if(status != IS_SUCCESS){
 		printf("Setting the pixel clock fails\n");
@@ -288,7 +295,7 @@ bool Camera::initCamera(){
 	}*/
 
 	double framerate;
-	status = is_SetFrameRate(cameraHandle, 1500.0, &framerate);
+	status = is_SetFrameRate(cameraHandle, FRAMERATE, &framerate);
 
 	if(status != IS_SUCCESS){
 		printf("getting framerate fails, error %d\n", status);
@@ -298,7 +305,7 @@ bool Camera::initCamera(){
 	}
 
 
-	double exposure = 1.0;
+	double exposure = EXPOSURE_TIME;
 	//sets one millisecond exposure time
 	status = is_Exposure(cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, (void*)&exposure, sizeof(double));
 	if(status != IS_SUCCESS){
@@ -307,6 +314,15 @@ bool Camera::initCamera(){
 	printf("Integreation time is %lf\n", exposure);
 
 	exposureTime = exposure;
+
+	/*int delay =*/ is_SetTriggerDelay(IS_GET_TRIGGER_DELAY, 0);
+	//printf("trigger delay: %d\n", delay);
+
+	status = is_SetHardwareGain(cameraHandle, GAIN_PERCENTAGE, IS_IGNORE_PARAMETER, IS_IGNORE_PARAMETER, IS_IGNORE_PARAMETER);
+
+	if(status != IS_SUCCESS){
+		printf("setting gain failed\n");
+	}
 
 	char saveFile[100];
 	strcpy(saveFile, "/home/snaffle/source/badPixels.txt");
@@ -323,6 +339,47 @@ bool Camera::initCamera(){
 
 		char* pictureLocation = (char*)"./calibImages\0";
 		badPixelTable = pixelFixer.generateBadPixelTable(pictureLocation);
+		if(badPixelTable == NULL){
+			printf("bad pixel callibration files not found. Please ensure that the lens cap in ON and then press any key to regenerate them.\n");
+			getchar();
+			system("rm calibImages/*");
+
+			wchar_t filename[100];
+						
+			status = is_PixelClock(cameraHandle, IS_PIXELCLOCK_CMD_SET, (void*) &range[0], sizeof(range[0]));
+
+			if(status != IS_SUCCESS){
+				printf("Setting the pixel clock fails\n");
+			}
+			
+			exposure = 3000;
+			status = is_Exposure(cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, (void*)&exposure, sizeof(double));
+			if(status != IS_SUCCESS){
+				printf("Set exposure time fails\n");
+			}
+			printf("Integreation time is %lf\n", exposure);
+
+			isOpen = true;
+			for(int i = 0; i<100; i++){
+				swprintf(filename, 100, L"calibImages/LensOn%d-%d.bmp", (int) exposure, i);
+				this->capture();
+				this->saveActiveData(filename);
+			}
+			status = is_PixelClock(cameraHandle, IS_PIXELCLOCK_CMD_SET, (void*) &range[1], sizeof(range[1]));
+
+			if(status != IS_SUCCESS){
+				printf("Setting the pixel clock fails\n");
+			}
+			exposure = EXPOSURE_TIME;
+			status = is_Exposure(cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, (void*)&exposure, sizeof(double));
+			if(status != IS_SUCCESS){
+				printf("Set exposure time fails\n");
+			}
+			printf("Integreation time is %lf\n", exposure);
+			
+			badPixelTable = pixelFixer.generateBadPixelTable(pictureLocation);
+			isOpen = false;
+		}
 	}
 	unsigned short size = *badPixelTable;
 	status = is_HotPixel(cameraHandle, IS_HOTPIXEL_SET_SOFTWARE_USER_LIST, (void*)badPixelTable, sizeof(short)*(2*((int) size) + 1));
@@ -348,8 +405,58 @@ bool Camera::initCamera(){
 	free(badPixelTable);
 	//is_SaveParameters(cameraHandle, NULL);
 
-	int delay = is_SetTriggerDelay(IS_GET_TRIGGER_DELAY, 0);
-	//printf("trigger delay: %d\n", delay);
-
 	return true;
 }
+
+void Camera::characterizeCameraNoise(){
+
+	PixelFixer fixy = PixelFixer(sensorInfo.nMaxWidth, sensorInfo.nMaxHeight, this->colourDepth);
+
+	UINT range[3];
+
+	int status = is_PixelClock(cameraHandle, IS_PIXELCLOCK_CMD_GET_RANGE, (void*) range, sizeof(range));
+
+	if(status != IS_SUCCESS){
+		printf("getting pixel clock values has failed\n");
+		return;
+	}
+	status = is_PixelClock(cameraHandle, IS_PIXELCLOCK_CMD_SET, (void*) &range[1], sizeof(range[1]));
+	if(status != IS_SUCCESS){
+		printf("setting pixle clock to max fails\n");
+		return;
+	}
+
+	double exposure = 0.03;
+	void* image;
+	for(int i = 0; i<5; i++){
+		status = is_Exposure(cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, (void*)&exposure, sizeof(double));
+		if(status != IS_SUCCESS){
+			printf("setting exposure to %lf fails\n", exposure);
+			return;
+		}
+
+		printf("%lf\t", exposure);
+		image = this->capture();
+		fixy.getImageBackground(image);
+		exposure += 0.2;
+	}
+	status = is_PixelClock(cameraHandle, IS_PIXELCLOCK_CMD_SET, (void*) &range[0], sizeof(range[0]));
+	if(status != IS_SUCCESS){
+		printf("setting pixle clock to min fails\n");
+		return;
+	}
+	for(int i = 1; i<2000; i++){
+		exposure = (double)i;
+		status = is_Exposure(cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, (void*)&exposure, sizeof(double));
+		if(status != IS_SUCCESS){
+			printf("setting exposure to %lf fails\n", exposure);
+			return;
+		}
+
+		printf("%lf\t", exposure);
+		image = this->capture();
+		fixy.getImageBackground(image);
+	}
+	return;
+}
+		

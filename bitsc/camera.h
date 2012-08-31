@@ -24,7 +24,9 @@ class Camera{
 
 		double getExposureTime();
 
-		void saveActiveData();
+		void saveActiveData(wchar_t *);
+
+		void characterizeCameraNoise();
 
 	private:
 		
