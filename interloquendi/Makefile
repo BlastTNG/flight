@@ -44,7 +44,7 @@ interloquendi-blast: $(BLAST_OBJS)
 install:
 	install -m 755 -o root -g root interloquendi-blast /usr/local/sbin
 	install -m 755 -o root -g root interloquendi-spider /usr/local/sbin
-	install -m 644 -o root -g root interloquendi.conf.decom /etc
+	install -m 644 -o root -g root interloquendi.conf /etc
 
 clean:
 	rm -f *.o interloquendi-blast interloquendi-spider

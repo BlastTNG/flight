@@ -42,7 +42,7 @@
 #define SERVER_PORT 44144
 #define RENDEZ_PORT 14141
 #define PID_FILE "/var/run/interloquendi.pid"
-#define CONFIG_FILE "/etc/interloquendi.conf.decom"
+#define CONFIG_FILE "/etc/interloquendi.conf"
 
 #define DEBUG
 
@@ -89,7 +89,7 @@ char* GetCurFile(char *buffer, int buflen)
   char* ptr;
 
   if ((stream = fopen(options[CFG_CUR_FILE].value.as_string, "rt")) == NULL)
-    berror(err, "can't open curfile");
+    berror(err, "can't open curfile %s",options[CFG_CUR_FILE].value.as_string);
   else if (fgets(buffer, buflen, stream) == NULL) {
     berror(err, "read error on curfile");
     fclose(stream);
