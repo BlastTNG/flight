@@ -45,6 +45,12 @@ install:
 	install -m 755 -o root -g root interloquendi-blast /usr/local/sbin
 	install -m 755 -o root -g root interloquendi-spider /usr/local/sbin
 	install -m 644 -o root -g root interloquendi.conf /etc
+	@echo "\n*** NB *** On decom systems, you should run: make install-decom"
+
+install-decom:
+	install -m 755 -o root -g root interloquendi-blast /usr/local/sbin
+	install -m 755 -o root -g root interloquendi-spider /usr/local/sbin
+	install -m 644 -o root -g root interloquendi.conf.decom /etc/interloquendi.conf
 
 clean:
 	rm -f *.o interloquendi-blast interloquendi-spider
