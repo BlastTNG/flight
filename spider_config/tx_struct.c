@@ -989,12 +989,12 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"ifyaw_1_gy",  'r',  ACS2_D,  0, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifyaw_2_gy",  'r',  ACS2_D,  2, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifyaw_1_gy",  'r',  ACS2_D,  0, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifyaw_2_gy",  'r',  ACS2_D,  2, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"ifroll_1_gy", 'r',  ACS2_D,  4, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"ifroll_2_gy", 'r',  ACS2_D,  6, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifel_2_gy",   'r',  ACS2_D,  8, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifel_1_gy",   'r',  ACS2_D, 10, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifel_2_gy",   'r',  ACS2_D,  8, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ifel_1_gy",   'r',  ACS2_D, 10, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"enc_table",   'r',  ACS2_D, 54,     360.0/144000.0,             0.0, 'U', U_P_DEG},
 #endif
 
@@ -1078,8 +1078,8 @@ struct ChannelStruct FastChannels[] = {
   {"framenum",     'r',  ACS2_C,  1,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Digital Card */
-  {"ifel_gy",      'r',   ACS2_D, 12,-GY16_TO_DPS,GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
-  {"ifroll_gy",    'r',   ACS2_D, 13,-GY16_TO_DPS,GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ifel_gy",      'r',   ACS2_D, 12, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ifroll_gy",    'r',   ACS2_D, 13,GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
   {"ifyaw_gy",     'r',   ACS2_D, 14,GY16_TO_DPS, -GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
   {"ofaz_gy",     'r',   ACS2_D, 16  ,-GY16_TO_DPS, GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS}, 
 //  {"trigger_isc",  'w',   ACS2_D, 11,                 1.0,            0.0, 'u', U_NONE},
