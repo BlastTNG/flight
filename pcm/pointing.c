@@ -910,8 +910,11 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 
   static int fifthtime = 1;
   el *= M_PI / 180.0; // want el in radians
-  gy_az = -(ifroll_gy + offset_ifroll_gy) * sin(el) + -(ifyaw_gy + offset_ifyaw_gy) * cos(el);
-  if (fifthtime < 4) bprintf(info, "%d angle %g gy_az %g ifroll_gy %g ifyaw_gy %g el %g", fifthtime, s->angle, gy_az, ifroll_gy, ifyaw_gy, el);
+  //gy_az = -(ifroll_gy + offset_ifroll_gy) * sin(el) + -(ifyaw_gy + offset_ifyaw_gy) * cos(el);
+  
+  gy_az = ifyaw_gy + offset_ifyaw_gy;
+
+//  if (fifthtime < 4) bprintf(info, "%d angle %g gy_az %g ifroll_gy %g ifyaw_gy %g el %g", fifthtime, s->angle, gy_az, ifroll_gy, ifyaw_gy, el);
 
   s->angle += gy_az / SR;
   s->varience += GYRO_VAR;
@@ -1176,7 +1179,7 @@ void Pointing(void)
   RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
   RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
   //PointingData[point_index].v_az = (-1.0)*RG.ifroll_gy*sin_e-RG.ifyaw_gy*cos_e;
-  PointingData[point_index].v_az = -(RG.ifyaw_gy*cos(0.0) 
+  PointingData[point_index].v_az = (RG.ifyaw_gy*cos(0.0) 
                                      + RG.ifroll_gy*sin(0.0));
   if (fourthtime < 4) bprintf(info, "RG.ifel_gy %g PD.ifel_earth_gy %g", RG.ifel_gy, PointingData[point_index].ifel_earth_gy);
   if (fourthtime < 4) fourthtime++;
@@ -1318,7 +1321,7 @@ void Pointing(void)
   EvolveAzSolution(&NullAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      (ACSData.enc_mean_el + GYBOX_OFFSET),
+      0.0,
       0.0, 0);
   if(secondtime < 4) bprintf(info, "%d Null.angle (after): %f", secondtime,  NullAz.angle);
   /** MAG Az **/
@@ -1326,7 +1329,7 @@ void Pointing(void)
   EvolveAzSolution(&MagAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      (ACSData.enc_mean_el + GYBOX_OFFSET),
+      0.0,
       mag_az, mag_ok);
   if(secondtime < 4) bprintf(info, "%d Mag.angle (after): %f", secondtime,  MagAz.angle);
 
@@ -1335,7 +1338,7 @@ void Pointing(void)
   EvolveAzSolution(&DGPSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      (ACSData.enc_mean_el + GYBOX_OFFSET),
+      0.0,
       dgps_az, dgps_ok);
   if(secondtime < 4) bprintf(info, "%d GPS.angle (after): %f", secondtime,  DGPSAz.angle);
 
@@ -1344,9 +1347,8 @@ void Pointing(void)
   EvolveAzSolution(&PSSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      (ACSData.enc_mean_el + GYBOX_OFFSET),
+      0.0,
       pss_az, pss_ok);
-  if(secondtime < 4) bprintf(info, "%d PSS.angle (after): %f", secondtime,  PSSAz.angle);
 
   if (CommandData.fast_offset_gy>0) {
     CommandData.fast_offset_gy--;
@@ -1354,21 +1356,17 @@ void Pointing(void)
 
   //bprintf(info, "off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.offset_gy, ClinEl.offset_gy);
 
-  if(secondtime < 4) bprintf(info, "%d AzAtt.az (1): %f", secondtime,  AzAtt.az);
   AddAzSolution(&AzAtt, &NullAz, 1);
   /** add az solutions **/
   if (CommandData.use_mag) {
     AddAzSolution(&AzAtt, &MagAz, 1);
   }
-  if(secondtime < 4) bprintf(info, "%d AzAtt.az (2): %f", secondtime,  AzAtt.az);
   if (CommandData.use_pss) {
     AddAzSolution(&AzAtt, &PSSAz, 1);
   }
-  if(secondtime < 4) bprintf(info, "%d AzAtt.az (3): %f", secondtime,  AzAtt.az);
   if (CommandData.use_gps) {
     AddAzSolution(&AzAtt, &DGPSAz, 1);
   }
-  if(secondtime < 4) bprintf(info, "%d AzAtt.az (4): %f", secondtime,  AzAtt.az);
 
   //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
   if (secondtime < 4) bprintf(info, "%d i %d az1 %g az2 %g az3 %g", secondtime, point_index, PointingData[0].az, PointingData[1].az, PointingData[2].az);

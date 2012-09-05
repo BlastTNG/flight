@@ -1330,7 +1330,7 @@ int main(int argc, char *argv[])
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
   //TODO FIXME: openTable seems to make pcm crash, so removed for now
-  openTable();	// opens communications and creates thread in table.cpp
+  //openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
   openSC();  // SC - creates threads in sc.cpp

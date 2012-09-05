@@ -315,10 +315,19 @@ static void GetVElev(double* v_P, double* v_S)
   static double del_strbrd_targ = 0.0;
   static double enc_strbrd_ref = 0.0;
   double del_strbrd;
-   
+  static int on_delay = 0;
+  static double el_dest_this = -1.0;
+
+
 //  static int motors_off = 1;
   static int since_arrival = 0;
   
+
+   if (el_dest_this < 15.0) {
+     el_dest_this = ACSData.enc_mean_el;
+   }
+
+
   if (axes_mode.el_dest > MAX_EL) {
     
     el_dest = axes_mode.el_dest = MAX_EL;
@@ -337,7 +346,11 @@ static void GetVElev(double* v_P, double* v_S)
   enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
   enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
-  dy = el_dest - ACSData.enc_mean_el;
+  if ( !(CommandData.power.elmot_auto) || (on_delay >= 50) ) {
+    el_dest_this = el_dest;
+  }
+
+  dy = el_dest_this - ACSData.enc_mean_el;
 
   err = -(ACSData.enc_diff_el)/2.0;
   err += CommandData.ele_gain.twist*0.5; // user-settable fake offset 
@@ -355,11 +368,15 @@ static void GetVElev(double* v_P, double* v_S)
     if ( fabs(el_dest - ACSData.enc_mean_el) < TOLERANCE ) {
       since_arrival++;
       if (since_arrival >= 500) {
-        CommandData.power.elmot.set_count = 0;
-        CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+	if (CommandData.power.elmot_is_on) {      
+          CommandData.power.elmot.set_count = 0;
+          CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+	}
+        on_delay = 0;
       }
     } else if ( fabs(el_dest-el_dest_last) > TOLERANCE ) {
       since_arrival = 0;
+      on_delay++;
       if ( !(CommandData.power.elmot_is_on) ) {
         CommandData.power.elmot.rst_count = 0;
         CommandData.power.elmot.set_count = LATCH_PULSE_LEN;  
@@ -367,7 +384,7 @@ static void GetVElev(double* v_P, double* v_S)
     }
   }
   
-  el_dest_last = el_dest;
+  el_dest_last = el_dest_this;
   
   /* don't command a velocity greater than limit from max pulse rate */
 
