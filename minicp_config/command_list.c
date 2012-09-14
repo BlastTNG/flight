@@ -56,19 +56,20 @@ struct scom scommands[N_SCOMMANDS] = {
  * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
-  {COMMAND(dac_ampl), "Set bias signal amplitude", GR_BIAS, 2,
+  {COMMAND(dac1_ampl), "Set bias signal amplitude on MB #1", GR_BIAS, 2,
     {
       {"Which (0-31,32=all)", 0, 32, 'i', ""},
       {"Amplitude (full=32767)", 1, MAX_15BIT, 'i', ""}
     }
   },
-  {COMMAND(dac_phase), "Set lock-in phase on card 4", GR_BIAS, 2,
+  {COMMAND(dac1_phase), "Set lock-in phase  on MB #1", GR_BIAS, 2,
     {
       {"Which (0-31,32=all)", 0, 32, 'i', ""},
       {"Phase (degrees)", 0, 360, 'f', ""}
     }
   },
-  {COMMAND(bias_step), "step through different bias levels", GR_BIAS, 5,
+  {COMMAND(bias1_step), "step through different bias levels on MB #1",
+    GR_BIAS, 5,
     {
       {"Start (full=32767)", 0, MAX_15BIT, 'i', "STEP_START_BIAS"},
       {"End (full=32767)", 0, MAX_15BIT, 'i', "STEP_END_BIAS"},
@@ -77,7 +78,8 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Which (0-31,32=all)", 0, 32, 'i', "STEP_WHICH_BIAS"},
     }
   },
-  {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
+  {COMMAND(phase1_step), "step through different phases on MB #1",
+    GR_BIAS, 4,
     {
       {"Start (degrees)", 0, 360, 'f', "STEP_START_PHASE"},
       {"End (degrees)", 0, 360, 'f', "STEP_END_PHASE"},
@@ -85,6 +87,39 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_PHASE"},
     }
   },
+
+  {COMMAND(dac2_ampl), "Set bias signal amplitude on MB #2", GR_BIAS, 2,
+    {
+      {"Which (0-31,32=all)", 0, 32, 'i', ""},
+      {"Amplitude (full=32767)", 1, MAX_15BIT, 'i', ""}
+    }
+  },
+  {COMMAND(dac2_phase), "Set lock-in phase  on MB #2", GR_BIAS, 2,
+    {
+      {"Which (0-31,32=all)", 0, 32, 'i', ""},
+      {"Phase (degrees)", 0, 360, 'f', ""}
+    }
+  },
+  {COMMAND(bias2_step), "step through different bias levels on MB #2",
+    GR_BIAS, 5,
+    {
+      {"Start (full=32767)", 0, MAX_15BIT, 'i', "STEP_START_BIAS"},
+      {"End (full=32767)", 0, MAX_15BIT, 'i', "STEP_END_BIAS"},
+      {"N steps", 1, MAX_15BIT, 'i', "STEP_NSTEPS_BIAS"},
+      {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_BIAS"},
+      {"Which (0-31,32=all)", 0, 32, 'i', "STEP_WHICH_BIAS"},
+    }
+  },
+  {COMMAND(phase2_step), "step through different phases on MB #2",
+    GR_BIAS, 4,
+    {
+      {"Start (degrees)", 0, 360, 'f', "STEP_START_PHASE"},
+      {"End (degrees)", 0, 360, 'f', "STEP_END_PHASE"},
+      {"N steps", 1, MAX_15BIT, 'i', "STEP_NSTEPS_PHASE"},
+      {"Time per step (ms)", 100, MAX_15BIT, 'i', "STEP_TIME_PHASE"},
+    }
+  },
+
   {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER, 1,
     {
       {"Node number",  0, 64, 'i', ""}

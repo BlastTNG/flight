@@ -211,37 +211,70 @@ static void MultiCommand(enum multiCommand command, double *rvalues,
    */
 
   switch(command) {
-    case dac_ampl:
+    case dac1_ampl:
       if (ivalues[0] < N_DAC) {
-	CommandData.Bias.bias[ivalues[0]] = ivalues[1] << 1;
-	CommandData.Bias.setLevel[ivalues[0]] = 1;
+	CommandData.Bias[0].bias[ivalues[0]] = ivalues[1] << 1;
+	CommandData.Bias[0].setLevel[ivalues[0]] = 1;
       } else for (i=0; i<N_DAC; i++) {
-	CommandData.Bias.bias[i] = ivalues[1] << 1;
-	CommandData.Bias.setLevel[i] = 1;
+	CommandData.Bias[0].bias[i] = ivalues[1] << 1;
+	CommandData.Bias[0].setLevel[i] = 1;
       }
       break;
-    case dac_phase:
+    case dac1_phase:
       if (ivalues[0] < N_DAC) {
-	CommandData.Phase.phase[ivalues[0]] = rvalues[1] * 65535.0/360.0;
+	CommandData.Phase[0].phase[ivalues[0]] = rvalues[1] * 65535.0/360.0;
       } else for (i=0; i<N_DAC; i++) {
-	CommandData.Phase.phase[i] = rvalues[1] * 65535.0/360.0;
+	CommandData.Phase[0].phase[i] = rvalues[1] * 65535.0/360.0;
       }
       break;
-    case bias_step:
-      CommandData.Bias.step.do_step = 1;
-      CommandData.Bias.step.start = ivalues[0] << 1;
-      CommandData.Bias.step.end = ivalues[1] << 1;
-      CommandData.Bias.step.nsteps = ivalues[2];
-      CommandData.Bias.step.dt = ivalues[3];
-      CommandData.Bias.step.which = ivalues[4];
+    case bias1_step:
+      CommandData.Bias[0].step.do_step = 1;
+      CommandData.Bias[0].step.start = ivalues[0] << 1;
+      CommandData.Bias[0].step.end = ivalues[1] << 1;
+      CommandData.Bias[0].step.nsteps = ivalues[2];
+      CommandData.Bias[0].step.dt = ivalues[3];
+      CommandData.Bias[0].step.which = ivalues[4];
       break;
-    case phase_step:
-      CommandData.Phase.step.do_step=1;
-      CommandData.Phase.step.start=rvalues[0] * 65535.0/360.0;
-      CommandData.Phase.step.end=rvalues[1] * 65535.0/360.0;
-      CommandData.Phase.step.nsteps=ivalues[2];
-      CommandData.Phase.step.dt=ivalues[3];
+    case phase1_step:
+      CommandData.Phase[0].step.do_step=1;
+      CommandData.Phase[0].step.start=rvalues[0] * 65535.0/360.0;
+      CommandData.Phase[0].step.end=rvalues[1] * 65535.0/360.0;
+      CommandData.Phase[0].step.nsteps=ivalues[2];
+      CommandData.Phase[0].step.dt=ivalues[3];
       break;
+
+    case dac2_ampl:
+      if (ivalues[0] < N_DAC) {
+	CommandData.Bias[0].bias[ivalues[0]] = ivalues[1] << 1;
+	CommandData.Bias[0].setLevel[ivalues[0]] = 1;
+      } else for (i=0; i<N_DAC; i++) {
+	CommandData.Bias[0].bias[i] = ivalues[1] << 1;
+	CommandData.Bias[0].setLevel[i] = 1;
+      }
+      break;
+    case dac2_phase:
+      if (ivalues[0] < N_DAC) {
+	CommandData.Phase[0].phase[ivalues[0]] = rvalues[1] * 65535.0/360.0;
+      } else for (i=0; i<N_DAC; i++) {
+	CommandData.Phase[0].phase[i] = rvalues[1] * 65535.0/360.0;
+      }
+      break;
+    case bias2_step:
+      CommandData.Bias[0].step.do_step = 1;
+      CommandData.Bias[0].step.start = ivalues[0] << 1;
+      CommandData.Bias[0].step.end = ivalues[1] << 1;
+      CommandData.Bias[0].step.nsteps = ivalues[2];
+      CommandData.Bias[0].step.dt = ivalues[3];
+      CommandData.Bias[0].step.which = ivalues[4];
+      break;
+    case phase2_step:
+      CommandData.Phase[0].step.do_step=1;
+      CommandData.Phase[0].step.start=rvalues[0] * 65535.0/360.0;
+      CommandData.Phase[0].step.end=rvalues[1] * 65535.0/360.0;
+      CommandData.Phase[0].step.nsteps=ivalues[2];
+      CommandData.Phase[0].step.dt=ivalues[3];
+      break;
+
     case reset_adc:
       if (ivalues[0] < 64)
         CommandData.power.adc_reset[ivalues[0]/4] = RESET_ADC_LEN;
@@ -384,7 +417,7 @@ void WatchFIFO ()
 /************************************************************/
 void InitCommandData()
 {
-  int fp, n_read = 0, junk, extra = 0, i;
+  int fp, n_read = 0, junk, extra = 0, i, j;
 
   if ((fp = open("/data/etc/minicp/minicp.prev_status", O_RDONLY)) < 0) {
     berror(err, "Commands: Unable to open prev_status file for reading");
@@ -400,10 +433,12 @@ void InitCommandData()
   /** stuff here overrides prev_status **/
   for (i=0; i<16; i++) CommandData.power.adc_reset[i] = 0;
 
-  CommandData.Bias.step.do_step = 0;
-  CommandData.Phase.step.do_step = 0;
-  //forces reload of saved bias values
-  for (i=0; i<N_DAC; i++) CommandData.Bias.setLevel[i] = 1;
+  for (j=0; j<N_DAC_BUS; j++) {
+    CommandData.Bias[j].step.do_step = 0;
+    CommandData.Phase[j].step.do_step = 0;
+    //forces reload of saved bias values
+    for (i=0; i<N_DAC; i++) CommandData.Bias[j].setLevel[i] = 1;
+  }
 
   CommandData.az_el.cmd_disable = 1;
   CommandData.az_el.new_cmd = 0;
@@ -421,18 +456,20 @@ void InitCommandData()
   bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
   /** prev_status overrides this stuff **/
-  for (i=0; i<N_DAC; i++) CommandData.Bias.bias[i] = DAC_ZERO;
-  CommandData.Bias.step.start = DAC_MIN;
-  CommandData.Bias.step.end = DAC_MAX;
-  CommandData.Bias.step.nsteps = 1000;
-  CommandData.Bias.step.dt = 1000;
-  CommandData.Bias.step.which = 0;
+  for (j=0; j<N_DAC_BUS; j++) {
+    for (i=0; i<N_DAC; i++) CommandData.Bias[j].bias[i] = DAC_ZERO;
+    CommandData.Bias[j].step.start = DAC_MIN;
+    CommandData.Bias[j].step.end = DAC_MAX;
+    CommandData.Bias[j].step.nsteps = 1000;
+    CommandData.Bias[j].step.dt = 1000;
+    CommandData.Bias[j].step.which = 0;
 
-  for (i=0; i<N_DAC; i++) CommandData.Phase.phase[i] = PHASE_MIN;
-  CommandData.Phase.step.start = PHASE_MIN;
-  CommandData.Phase.step.end = PHASE_MAX;
-  CommandData.Phase.step.nsteps = 1000;
-  CommandData.Phase.step.dt = 1000;
+    for (i=0; i<N_DAC; i++) CommandData.Phase[j].phase[i] = PHASE_MIN;
+    CommandData.Phase[j].step.start = PHASE_MIN;
+    CommandData.Phase[j].step.end = PHASE_MAX;
+    CommandData.Phase[j].step.nsteps = 1000;
+    CommandData.Phase[j].step.dt = 1000;
+  }
 
   CommandData.az_el.az_accel = 1.0;
   CommandData.az_el.el_accel = 1.0;

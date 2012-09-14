@@ -40,6 +40,10 @@
 #define DAC_ZERO    0x8000
 #define DAC_MIN	    0
 
+/* number of DAC systems (ie motherboards) */
+#define N_DAC_BUS 2
+
+
 struct Step {
   unsigned short do_step;
   unsigned short start;
@@ -58,12 +62,12 @@ struct CommandDataStruct {
     unsigned short bias[N_DAC];
     unsigned char setLevel[N_DAC];
     struct Step step;
-  } Bias;
+  } Bias[N_DAC_BUS];
 
   struct {
     unsigned short phase[N_DAC];
     struct Step step;
-  } Phase;
+  } Phase[N_DAC_BUS];
 
   unsigned short df;
   unsigned short bbcFifoSize;

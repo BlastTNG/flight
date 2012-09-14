@@ -17,7 +17,7 @@
 #include "netcmd.h"    /* common parts of command defintions moved here */
 
 #define N_SCOMMANDS 2          /* total number of single word cmds */
-#define N_MCOMMANDS 9           /* total number of multiword commands */
+#define N_MCOMMANDS 13         /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)
@@ -68,7 +68,8 @@ enum singleCommand {
 /* multiCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
-  dac_ampl,          dac_phase,         bias_step,         phase_step,
+  dac1_ampl,         dac1_phase,        bias1_step,        phase1_step,
+  dac2_ampl,         dac2_phase,        bias2_step,        phase2_step,
   az_el_raster,      az_el_set,		az_el_goto,        reset_adc,         
   plugh
 };

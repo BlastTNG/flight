@@ -91,8 +91,8 @@ static void WriteAux(void)
 /* in each superframe.                                           */
 /*****************************************************************/
 //list node numbers for sync, which may have gaps
-#define NUM_SYNC 4
-const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3};
+#define NUM_SYNC 7
+const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,6};
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
 static void SyncADC (void)
 {
