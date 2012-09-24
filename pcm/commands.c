@@ -806,7 +806,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.pointing_mode.ra[i] = 0;
         CommandData.pointing_mode.dec[i] = 0;
       }
-      //CommandData.ele_gain.manual_pulses = 0;
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
       CommandData.pointing_mode.Y = rvalues[1];  /* el */
@@ -867,7 +867,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       CommandData.pointing_mode.X = rvalues[8];
       CommandData.pointing_mode.Y = rvalues[9];
-      //CommandData.ele_gain.manual_pulses = 0;
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SPIDER;
       break;
     case set_scan_params:  
@@ -881,7 +881,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.w = 2.0*rvalues[0];
       CommandData.pointing_mode.X = rvalues[1];
       CommandData.pointing_mode.Y = rvalues[2];
-      //CommandData.ele_gain.manual_pulses = 0;
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_SINE;
       break;
       /***************************************/

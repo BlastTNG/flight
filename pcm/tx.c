@@ -136,7 +136,8 @@ static void WriteAux(void)
   static struct NiosStruct* frameIntBbcAddr;
   static struct NiosStruct* rateExtBbcAddr;
   static struct NiosStruct* frameExtBbcAddr;
-  
+  static struct NiosStruct* rateFrameBbcAddr;
+
   static int incharge = -1;
   time_t t;
   int i_point;
@@ -169,6 +170,7 @@ static void WriteAux(void)
     frameIntBbcAddr = GetNiosAddr("frame_int_bbc");
     rateExtBbcAddr = GetNiosAddr("rate_ext_bbc");
     frameExtBbcAddr = GetNiosAddr("frame_ext_bbc");
+    rateFrameBbcAddr = GetNiosAddr("rate_frame_bbc");
   }
 
   if (StartupVeto>0) {
@@ -232,6 +234,8 @@ static void WriteAux(void)
   else
     WriteCalData(rateExtBbcAddr,32.e6/CommandData.bbcExtFrameMeas,NIOS_QUEUE);
   WriteData(frameExtBbcAddr, CommandData.bbcExtFrameRate, NIOS_QUEUE);
+
+  WriteCalData(rateFrameBbcAddr, ACSData.bbc_rate, NIOS_QUEUE);
 
   mccstatus =        
     (BitsyIAm ? 0x1 : 0x0) +                 //0x01

@@ -992,14 +992,14 @@ void Pointing(void)
   int i_dgpspos, dgpspos_ok = 0;
   int i_point_read;
 
-  int el_encs_ok; // el_enc_1 OR el_enc_2 OK.
+  //int el_encs_ok; // el_enc_1 OR el_enc_2 OK.
 
   static struct LutType elClinLut = {"/data/etc/spider/clin_elev.lut",0,NULL,NULL,0};
 
   struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
   struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};
 
-  static struct ElSolutionStruct EncEl = {0.0, // starting angle
+  /*static struct ElSolutionStruct EncEl = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
     M2DV(20), // systemamatic varience
@@ -1010,7 +1010,8 @@ void Pointing(void)
     0.0001, // filter constant
     0, 0, // n_solutions, since_last
     NULL // firstruct					
-  };
+  };*/
+
 /*  static struct ElSolutionStruct ClinEl = {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(60), //sample weight
@@ -1029,7 +1030,7 @@ void Pointing(void)
       	provides a "data" sample of 0.0 degrees with some large
       	variance  
    */
-  /*
+  
   static struct ElSolutionStruct NullEl =
   {
     0.0, // starting angle
@@ -1044,7 +1045,7 @@ void Pointing(void)
     0.0, 0.0, // n_solutions, since_last
     NULL //FirStruct
   }; 
-  */
+  
 
   static struct AzSolutionStruct NullAz = {91.0, // starting angle
     360.0 * 360.0, // starting varience
@@ -1109,13 +1110,13 @@ void Pointing(void)
     initFir(ClinEl.fs, FIR_LENGTH);
     */
 
-    EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(EncEl.fs, FIR_LENGTH);
+    /*EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
+    initFir(EncEl.fs, FIR_LENGTH);*/
 
-    /*
+    
     NullEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(NullEl.fs, FIR_LENGTH);
-    */
+    
 
     NullAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     NullAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -1216,8 +1217,10 @@ void Pointing(void)
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
       if (using_sip_gps != 1)
         bprintf(info, "Pointing: Using SIP for positional data");
-      PointingData[point_index].lat = SIPData.GPSpos.lat;
-      PointingData[point_index].lon = SIPData.GPSpos.lon;
+      //PointingData[point_index].lat = SIPData.GPSpos.lat;
+      PointingData[point_index].lat = -77.85;
+      //PointingData[point_index].lon = SIPData.GPSpos.lon;
+      PointingData[point_index].lon = -166.67;
       PointingData[point_index].alt = SIPData.GPSpos.alt;
       using_sip_gps = 1;
     }
@@ -1260,30 +1263,17 @@ void Pointing(void)
  
   static int secondtime = 1;
 
-  el_encs_ok =  (CommandData.use_elenc1 || CommandData.use_elenc2);
+  //el_encs_ok =  (CommandData.use_elenc1 || CommandData.use_elenc2);
   
-  if (secondtime < 4) {
-    bprintf(info, "EncEl.angle (before): %f", EncEl.angle);
-  };
-  EvolveElSolution(&EncEl, RG.ifel_gy, PointingData[i_point_read].offset_ifel_gy
-                   , ACSData.enc_mean_el, el_encs_ok);
+  //EvolveElSolution(&EncEl, RG.ifel_gy, PointingData[i_point_read].offset_ifel_gy, ACSData.enc_mean_el, el_encs_ok);
   
-  if(secondtime < 4) bprintf(info, "EncEl.angle (after): %f", EncEl.angle);
-
-
-  //EvolveElSolution(&NullEl, RG.ifel_gy, 
-   //                PointingData[i_point_read].offset_ifel_gy, 0.0, 1);
+  EvolveElSolution(&NullEl, RG.ifel_gy, 
+                   PointingData[i_point_read].offset_ifel_gy, 0.0, 1);
 
   //if (CommandData.use_elenc) {
 
-  if (secondtime < 4) bprintf(info, "ElAtt.el (before): %f", ElAtt.el);
-
-  AddElSolution(&ElAtt, &EncEl, 1);
-  if (secondtime < 4) bprintf(info, "ElAtt.el (after): %f", ElAtt.el);
-  if (secondtime < 4) {
-	  bprintf(info, "ElEnc.angle (after add soln): %f", EncEl.angle);
-  }
-	  //AddElSolution(&ElAtt, &NullEl, 1);
+  //AddElSolution(&ElAtt, &EncEl, 1);
+  AddElSolution(&ElAtt, &NullEl, 1);
   //}
 
   /*if (CommandData.use_elclin) {
@@ -1292,8 +1282,8 @@ void Pointing(void)
 
   PointingData[point_index].offset_ifel_gy = (CommandData.el_autogyro)
     ? ElAtt.offset_gy : CommandData.offset_ifel_gy;
-  PointingData[point_index].el = ElAtt.el;
-  //PointingData[point_index].el = ElAtt.el + ACSData.enc_mean_el;
+  //PointingData[point_index].el = ElAtt.el;
+  PointingData[point_index].el = ElAtt.el + ACSData.enc_mean_el;
 
   /*******************************/
   /**      do az solution      **/
@@ -1411,13 +1401,13 @@ void Pointing(void)
   /* Set Manual Trims */
   if (NewAzEl.fresh == -1) {
     //ClinEl.trim = 0.0;
-    EncEl.trim = 0.0;
+    //EncEl.trim = 0.0;
     NullAz.trim = 0.0;
     MagAz.trim = 0.0;
     DGPSAz.trim = 0.0;
     PSSAz.trim = 0.0;
     //CommandData.clin_el_trim = ClinEl.trim;
-    CommandData.enc_el_trim = EncEl.trim;
+    //CommandData.enc_el_trim = EncEl.trim;
     CommandData.null_az_trim = NullAz.trim;
     CommandData.mag_az_trim = MagAz.trim;
     CommandData.dgps_az_trim = DGPSAz.trim;
@@ -1427,7 +1417,7 @@ void Pointing(void)
 
   if (NewAzEl.fresh==1) {
   //  ClinEl.trim = NewAzEl.el - ClinEl.angle;	
-    EncEl.trim = NewAzEl.el - EncEl.angle;	
+    //EncEl.trim = NewAzEl.el - EncEl.angle;	
     NullAz.trim = NewAzEl.az - NullAz.angle;
     MagAz.trim = NewAzEl.az - MagAz.angle;
 
@@ -1438,7 +1428,7 @@ void Pointing(void)
       PSSAz.trim = NewAzEl.az - PSSAz.angle;
     }
     //CommandData.clin_el_trim = ClinEl.trim;
-    CommandData.enc_el_trim = EncEl.trim;
+    //CommandData.enc_el_trim = EncEl.trim;
     CommandData.null_az_trim = NullAz.trim;
     CommandData.mag_az_trim = MagAz.trim;
     CommandData.dgps_az_trim = DGPSAz.trim;

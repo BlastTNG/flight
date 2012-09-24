@@ -62,6 +62,8 @@
 // Used by higain and bi0.  Number of frames in buffer.
 #define BI0_FRAME_BUFLEN (400)
 
+#define MCE_RATE ( 25.0e6/(120.0*33.0*41.0) ) // 25 MHz/(rl*nr*fr) ~ 154 Hz
+
 /* Define global variables */
 int bbc_fp = -1;
 unsigned int debug = 0;
@@ -488,7 +490,7 @@ static void GetACS()
   double vel_rw;
 //short vel_rw;
   double res_piv;
-
+  double bbc_rate; // BBC frame rate in Hz 
   
   static struct BiPhaseStruct* ifElgyAddr;
   static struct BiPhaseStruct* ifRollgyAddr;
@@ -653,6 +655,12 @@ static void GetACS()
     enc_table += 360;
   else if (enc_table > 360.0) enc_table -= 360;
 
+  if (CommandData.bbcIsExt) {
+    bbc_rate = (double) MCE_RATE/CommandData.bbcExtFrameRate;
+  } else {
+    bbc_rate = (4.0e6/384.0) / CommandData.bbcIntFrameRate;
+  }
+
   ACSData.clin_elev = (double)(slow_data[rollOfClinAddr->index][rollOfClinAddr->channel]);
 
   ACSData.t = mcp_systime(NULL);
@@ -694,6 +702,7 @@ static void GetACS()
   ACSData.pss6_i4 = pss6_i4;
                                // so it can be read in one atomic cycle...
   ACSData.enc_table = enc_table;
+  ACSData.bbc_rate = bbc_rate;
 }
 
 /* sole purpose of following function is to add a field that reads the total current */
@@ -1330,7 +1339,7 @@ int main(int argc, char *argv[])
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
   //TODO FIXME: openTable seems to make pcm crash, so removed for now
-  //openTable();	// opens communications and creates thread in table.cpp
+  openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
   openSC();  // SC - creates threads in sc.cpp

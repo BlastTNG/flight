@@ -314,7 +314,6 @@ void ControlPower(void) {
     CommandData.power.charge.rst_count--;
     if (CommandData.power.charge.rst_count < LATCH_PULSE_LEN) misc |= 0x0080;
   }
-
   for (i=0; i<6; i++) {
     if (CommandData.power.gyro_off[i] || CommandData.power.gyro_off_auto[i]) {
       if (CommandData.power.gyro_off[i] > 0) 

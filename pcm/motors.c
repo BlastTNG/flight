@@ -346,7 +346,7 @@ static void GetVElev(double* v_P, double* v_S)
   enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
   enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
-  if ( !(CommandData.power.elmot_auto) || (on_delay >= 50) ) {
+  if ( !(CommandData.power.elmot_auto) || (on_delay >= 75) ) {
     el_dest_this = el_dest;
   }
 
