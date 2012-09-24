@@ -834,6 +834,8 @@ struct ChannelStruct SlowChannels[] = {
   {"frame_int_bbc",  'w', LOOP0,   0,                1.0,            0.0, 'u', U_NONE},
   {"rate_ext_bbc",   'w', LOOP0,   1,      400.0/65535.0,            0.0, 'u', U_F_HZ},
   {"frame_ext_bbc",  'w', LOOP0,   2,                1.0,            0.0, 'u', U_NONE},
+  {"rate_frame_bbc", 'w', LOOP0,   3,      400.0/65535.0,            0.0, 'u', U_F_HZ},
+
   /* LOOP0 4-5 are wide fast TODO (change when hwp counts moved) */
   {"enc_cnt_2_hwp",'w', LOOP0,  6,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_3_hwp",'w', LOOP0,  7,     I2DEG,      0.0,      'u',      U_P_DEG},

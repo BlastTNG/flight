@@ -92,6 +92,8 @@ struct ACSDataStruct {
   double ofaz_gy;    // deg/s
   double enc_table; // degrees
   time_t t;
+  double bbc_rate;
+
 };
 extern struct ACSDataStruct ACSData;
 
