@@ -851,9 +851,9 @@ static void StoreData(int index)
       (int)(PointingData[i_point].v_az * 32768.0/20.0), NIOS_QUEUE);
 
   /************* Pointing mode fields *************/
-  WriteData(slewVetoAddr, (int)(CommandData.pointing_mode.nw) / 4.,
+  WriteCalData(slewVetoAddr, (CommandData.pointing_mode.nw) / (ACSData.bbc_rate),
       NIOS_QUEUE);
-  WriteData(svetoLenAddr, (int)(CommandData.slew_veto) / 4., NIOS_QUEUE);
+  WriteCalData(svetoLenAddr, (CommandData.slew_veto) / (ACSData.bbc_rate), NIOS_QUEUE);
   WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*10.0*32768.0), NIOS_QUEUE);
   WriteData(modePAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||

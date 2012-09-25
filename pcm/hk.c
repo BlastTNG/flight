@@ -29,6 +29,7 @@
 #include "lut.h"
 #include "tx.h"
 #include "command_struct.h"
+#include "pointing_struct.h"
 
 /************************************************************************/
 /*                                                                      */
@@ -130,8 +131,8 @@ static void BiasControl()
     WriteCalData(vNtdAddr[i], CommandData.hk[i].ntd.ampl, NIOS_QUEUE);
   }
   WriteData(fBiasCmdHkAddr, CommandData.hk_bias_freq, NIOS_QUEUE);
-  period = ADC_SR/CommandData.hk_bias_freq; //cast as short important here!
-  WriteCalData(fBiasHkAddr, ADC_SR/period, NIOS_QUEUE);
+  period = (ACSData.adc_rate)/CommandData.hk_bias_freq; //cast as short important here!
+  WriteCalData(fBiasHkAddr, (ACSData.adc_rate)/period, NIOS_QUEUE);
 }
 
 /************************************************************************/
