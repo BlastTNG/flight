@@ -56,7 +56,7 @@
 #define OFFSET_GY_IFROLL (0)
 #define OFFSET_GY_IFYAW  (0)
 
-#define FIR_LENGTH (60*30 * SR)
+#define FIR_LENGTH (60.0*30.0)
 
 /* Calibrations of the az of each sensor  */
 #define MAG_ALIGNMENT      -164.6968
@@ -635,7 +635,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
   double offset_new_ifyaw_gy = 0;
 
   // evolve el
-   e->angle += (ifel_gy + off_ifel_gy) / SR;
+   e->angle += (ifel_gy + off_ifel_gy) / ACSData.bbc_rate;
 
  
    if(e->since_last <= 18000) {
@@ -644,12 +644,12 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
      e->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
    }
 
-   e->gy_int += ifel_gy / SR; // in degrees
+   e->gy_int += ifel_gy / ACSData.bbc_rate; // in degrees
 
   // evolve az
   old_el *= M_PI / 180.0;
   gy_az = -(ifroll_gy + off_ifroll_gy) * sin(old_el) + -(ifyaw_gy + off_ifyaw_gy) * cos(old_el);
-  a->angle += gy_az / SR;
+  a->angle += gy_az / ACSData.bbc_rate;
 
    if(a->since_last <= 18000) {
      a->varience += GYRO_VAR;
@@ -657,8 +657,8 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
      a->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
    }
 
-  a->ifroll_gy_int += ifroll_gy / SR; // in degrees
-  a->ifyaw_gy_int += ifyaw_gy / SR; // in degrees
+  a->ifroll_gy_int += ifroll_gy / ACSData.bbc_rate; // in degrees
+  a->ifyaw_gy_int += ifyaw_gy / ACSData.bbc_rate; // in degrees
 
   i_isc = iscpoint_index[which];
   /* in theory, iscpoint_index points to the last ISCSolution with flag set.
@@ -697,14 +697,14 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
           if (j < 0)
             j += GY_HISTORY;
 
-          gy_el_delta += (hs.ifel_gy_history[j] + off_ifel_gy) * (1.0 / SR);
-          gy_raw_el_delta += (hs.ifel_gy_history[j]) * (1.0 / SR);
+          gy_el_delta += (hs.ifel_gy_history[j] + off_ifel_gy) * (1.0 / ACSData.bbc_rate);
+          gy_raw_el_delta += (hs.ifel_gy_history[j]) * (1.0 / ACSData.bbc_rate);
 
           gy_az_delta += (-(hs.ifroll_gy_history[j] + off_ifroll_gy) *
               cos(hs.elev_history[j]) + -(hs.ifyaw_gy_history[j] + off_ifyaw_gy) *
-              sin(hs.elev_history[j])) * (1.0 / SR);
-          ifroll_gy_raw_delta += (hs.ifroll_gy_history[j]) * (1.0 / SR);
-          ifyaw_gy_raw_delta += (hs.ifyaw_gy_history[j]) * (1.0 / SR);
+              sin(hs.elev_history[j])) * (1.0 / ACSData.bbc_rate);
+          ifroll_gy_raw_delta += (hs.ifroll_gy_history[j]) * (1.0 / ACSData.bbc_rate);
+          ifyaw_gy_raw_delta += (hs.ifyaw_gy_history[j]) * (1.0 / ACSData.bbc_rate);
         }
 
         // evolve el solution
@@ -725,7 +725,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
           // Calculate el offset
           e->since_last -= isc_pulses[which].age;
           offset_new_el = ((new_el - e->last_input) - e->gy_int+gy_raw_el_delta)/
-            ((1.0/SR) * (double)e->since_last);
+            ((1.0/ACSData.bbc_rate) * (double)e->since_last);
           e->last_input = new_el;
           e->since_last = isc_pulses[which].age;
           e->offset_gy = offset_new_el;
@@ -757,11 +757,11 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
 
           a->since_last -= isc_pulses[which].age;
           offset_new_ifroll_gy = -(daz * cos(new_el*M_PI/180) + a->ifroll_gy_int-ifroll_gy_raw_delta) /
-            ((1.0/SR) * (double)a->since_last);
+            ((1.0/ACSData.bbc_rate) * (double)a->since_last);
 
           /* Do Gyro_IFyaw */
           offset_new_ifyaw_gy = -(daz * sin(new_el*M_PI/180.0) + a->ifyaw_gy_int-ifyaw_gy_raw_delta) /
-            ((1.0/SR) * (double)a->since_last);
+            ((1.0/ACSData.bbc_rate) * (double)a->since_last);
 
           a->last_input = new_az;
           a->since_last = isc_pulses[which].age;
@@ -799,10 +799,10 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
  
   //  if (i%500==1) bprintf(info,"EvolveElSolution: #1 Initial angle %f, new angle %f",s->angle, new_angle);
   if (thirdtime < 4) bprintf(info, "angle %g gyro %g gy_off %g\n", s->angle, gyro, gy_off);
-  s->angle += (gyro + gy_off) / SR;
+  s->angle += (gyro + gy_off) / ACSData.bbc_rate;
   s->varience += GYRO_VAR;
 
-  s->gy_int += gyro / SR; // in degrees
+  s->gy_int += gyro / ACSData.bbc_rate; // in degrees
 
   //  if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, gyro %f, gy_off %f, varience %f, gy_int %f",s->angle, gyro, gy_off, s->varience, s->gy_int);
   if (new_reading) {
@@ -819,7 +819,7 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
       /** calculate offset **/
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
         new_offset = ((new_angle - s->last_input) - s->gy_int) /
-          ((1.0/SR) * (double)s->since_last);
+          ((1.0/ACSData.bbc_rate) * (double)s->since_last);
 	
         if (fabs(new_offset) > 500.0)
           new_offset = 0; // 5 deg step is bunk!
@@ -916,11 +916,11 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 
 //  if (fifthtime < 4) bprintf(info, "%d angle %g gy_az %g ifroll_gy %g ifyaw_gy %g el %g", fifthtime, s->angle, gy_az, ifroll_gy, ifyaw_gy, el);
 
-  s->angle += gy_az / SR;
+  s->angle += gy_az / ACSData.bbc_rate;
   s->varience += GYRO_VAR;
 
-  s->ifroll_gy_int += ifroll_gy / SR; // in degrees
-  s->ifyaw_gy_int += ifyaw_gy / SR; // in degrees
+  s->ifroll_gy_int += ifroll_gy / ACSData.bbc_rate; // in degrees
+  s->ifyaw_gy_int += ifyaw_gy / ACSData.bbc_rate; // in degrees
 
   if (new_reading) {
     w1 = 1.0 / (s->varience);
@@ -940,12 +940,12 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 	
 	/* Do Gyro_IFroll */
 	new_offset = -(daz * sin(el) + s->ifroll_gy_int) /
-	  ((1.0/SR) * (double)s->since_last);
+	  ((1.0/ACSData.bbc_rate) * (double)s->since_last);
 	s->offset_ifroll_gy = filter(new_offset, s->fs2);;
 	
 	/* Do Gyro_IFyaw */
 	new_offset = -(daz * cos(el) + s->ifyaw_gy_int) /
-	  ((1.0/SR) * (double)s->since_last);
+	  ((1.0/ACSData.bbc_rate) * (double)s->since_last);
 	s->offset_ifyaw_gy = filter(new_offset, s->fs3);;
 	
       }
@@ -1107,15 +1107,15 @@ void Pointing(void)
     bprintf(info, "null_trim: %g, mag_trim: %g, gps_trim: %g, pss_trim: %g", CommandData.null_az_trim, CommandData.mag_az_trim, CommandData.dgps_az_trim, CommandData.pss_az_trim);
 
     /*ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(ClinEl.fs, FIR_LENGTH);
+    initFir(ClinEl.fs, FIR_LENGTH*ACSData.bbc_rate);
     */
 
     /*EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(EncEl.fs, FIR_LENGTH);*/
+    initFir(EncEl.fs, FIR_LENGTH*ACSData.bbc_rate);*/
 
     
     NullEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(NullEl.fs, FIR_LENGTH);
+    initFir(NullEl.fs, FIR_LENGTH*ACSData.bbc_rate);
     
 
     NullAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
@@ -1126,18 +1126,18 @@ void Pointing(void)
 
     MagAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     MagAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(MagAz.fs2, FIR_LENGTH);
-    initFir(MagAz.fs3, FIR_LENGTH);
+    initFir(MagAz.fs2, FIR_LENGTH*ACSData.bbc_rate);
+    initFir(MagAz.fs3, FIR_LENGTH*ACSData.bbc_rate);
 
     DGPSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     DGPSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(DGPSAz.fs2, FIR_LENGTH);
-    initFir(DGPSAz.fs3, FIR_LENGTH);
+    initFir(DGPSAz.fs2, FIR_LENGTH*ACSData.bbc_rate);
+    initFir(DGPSAz.fs3, FIR_LENGTH*ACSData.bbc_rate);
 
     PSSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     PSSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(PSSAz.fs2, FIR_LENGTH);
-    initFir(PSSAz.fs3, FIR_LENGTH);
+    initFir(PSSAz.fs2, FIR_LENGTH*ACSData.bbc_rate);
+    initFir(PSSAz.fs3, FIR_LENGTH*ACSData.bbc_rate);
 
     // the first t about to be read needs to be set
     PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time

@@ -902,7 +902,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.el_autogyro = 0;
       break;
     case slew_veto:
-      CommandData.slew_veto = rvalues[0] * SR;
+      CommandData.slew_veto = rvalues[0] * ACSData.bbc_rate;
             bprintf(info,"CommandData.slew_veto = %i, CommandData.pointing_mode.nw = %i", CommandData.slew_veto, CommandData.pointing_mode.nw);
       if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto; 
      

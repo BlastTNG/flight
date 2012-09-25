@@ -491,7 +491,8 @@ static void GetACS()
 //short vel_rw;
   double res_piv;
   double bbc_rate; // BBC frame rate in Hz 
-  
+  double adc_rate; // BLASTbus ADC sample rate in Hz
+
   static struct BiPhaseStruct* ifElgyAddr;
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ifYawgyAddr;
@@ -657,8 +658,10 @@ static void GetACS()
 
   if (CommandData.bbcIsExt) {
     bbc_rate = (double) MCE_RATE/CommandData.bbcExtFrameRate;
+    adc_rate = 5.0e6/384.0;
   } else {
     bbc_rate = (4.0e6/384.0) / CommandData.bbcIntFrameRate;
+    adc_rate = 4.0e6/384.0;
   }
 
   ACSData.clin_elev = (double)(slow_data[rollOfClinAddr->index][rollOfClinAddr->channel]);
@@ -703,6 +706,7 @@ static void GetACS()
                                // so it can be read in one atomic cycle...
   ACSData.enc_table = enc_table;
   ACSData.bbc_rate = bbc_rate;
+  ACSData.adc_rate = adc_rate;
 }
 
 /* sole purpose of following function is to add a field that reads the total current */

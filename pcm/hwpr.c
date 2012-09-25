@@ -29,6 +29,7 @@
 #include "hwpr.h"
 #include "phytron.h"
 #include "command_struct.h"
+#include "pointing_struct.h"
 #include "tx.h"
 
 const char *hwp_name[NHWP] = {"HWP S1", "HWP S2", "HWP S3",
@@ -177,7 +178,7 @@ void countHWPEncoder()
 
   //sanity check the number of samples between ticks: half an expected period
   int samples_per_tick = ceil(( (360.0/465.0)/40.0 )
-      * (SR / CommandData.hwp.vel));
+      * (ACSData.bbc_rate / CommandData.hwp.vel));
   int min_tick_spacing = ceil(samples_per_tick / 2.0);
   static int since_last_tick = 0;
 

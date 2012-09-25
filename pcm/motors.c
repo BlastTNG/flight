@@ -121,7 +121,6 @@ extern short int InCharge; /* tx.c */
 extern int StartupVeto; /* mcp.c */
 
 extern short int bsc_trigger; /* Semaphore for BSC trigger */
-//#define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_bsc */
 
 #define DELAY (3.685*20.0) // delay between starcam exposure command and pulse_bsc in units of Bbus frame intervals */
 
