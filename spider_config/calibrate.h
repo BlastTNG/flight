@@ -21,8 +21,11 @@ extern "C" {
 #endif
 
 /* BLASTBus ADC sample rate. Always clock rate / 384.0 */
+// Use ACSData.adc_rate instead from now on to account for variable clock rate
 #define ADC_SR (4.0e6/384.0)
+
 /* BLASTBus frame sample rate (ADC_SR/104.0) */
+// Use ACSData.bbc_rate instead from now on
 #define SR (100.16)
 
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */

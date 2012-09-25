@@ -626,9 +626,9 @@ struct ChannelStruct SlowChannels[] = {
   {"vel_el_mc",    'w', LOOP5, 14,            1./6000,             0.0, 's', U_NONE},
   {"dir_az_mc",    'w', LOOP5, 15,                1.0,             0.0, 's', U_NONE},
   {"dir_el_mc",    'w', LOOP5, 16,                1.0,             0.0, 's', U_NONE},
-  {"slew_veto",    'w', LOOP5, 17,           4.0 / SR,             0.0, 'u', U_NONE},
+  {"slew_veto",    'w', LOOP5, 17,           1200.0/65535.0,             0.0, 'u', U_NONE},
   /* LOOP5 18-19 are wide */
-  {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u', U_NONE},
+  {"sveto_len",    'w', LOOP5, 20,           1200.0/65535.0,             0.0, 'u', U_NONE},
   {"dith_el",      'w', LOOP5, 23,        0.5/32768.0,             0.0, 's', U_D_DEG},
   {"state_lock",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
   /* LOOP5 28 is fast */
