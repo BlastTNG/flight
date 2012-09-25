@@ -121,7 +121,10 @@ extern short int InCharge; /* tx.c */
 extern int StartupVeto; /* mcp.c */
 
 extern short int bsc_trigger; /* Semaphore for BSC trigger */
-#define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_bsc */
+//#define DELAY 3.685/SR*20 /* number of seconds between sending exposure command and pulse_bsc */
+
+#define DELAY (3.685*20.0) // delay between starcam exposure command and pulse_bsc in units of Bbus frame intervals */
+
 
 /* opens communications with motor controllers */
 void openMotors()
@@ -216,7 +219,7 @@ static double calcVRW(void)
       v = last_v;  
     }
   } else {
-    v = dx*(SR/((double)frame_count));
+    v = dx*(ACSData.bbc_rate/((double)frame_count));
     frame_count = 0; 
   }  
 
@@ -358,7 +361,7 @@ static void GetVElev(double* v_P, double* v_S)
 
 
   g_com = CommandData.ele_gain.com * (double)(fabs(dy)>TOLERANCE);
-  max_dv = 1.05 * CommandData.ele_gain.com*CommandData.ele_gain.com * (1.0/(2.0*SR));  // 5% higher than deceleration...
+  max_dv = 1.05 * CommandData.ele_gain.com*CommandData.ele_gain.com * (1.0/(2.0*ACSData.bbc_rate));  // 5% higher than deceleration...
 
   g_diff = CommandData.ele_gain.diff * (double)(fabs(err)>TOLERANCE);
   *v_P = SetVElev(g_com, -g_diff, dy, err, v_P_last, max_dv);
@@ -410,7 +413,7 @@ static void GetVElev(double* v_P, double* v_S)
     enc_strbrd_ref = enc_strbrd;
   }
   
-  del_strbrd_targ += *v_S / SR;
+  del_strbrd_targ += *v_S / ACSData.bbc_rate;
   del_strbrd = enc_strbrd - enc_strbrd_ref;
   if (fabs(del_strbrd_targ)>0.05) {
     if (fabs(del_strbrd)<0.025) {
@@ -454,7 +457,7 @@ static double GetVAz(void)
 
   i_point = GETREADINDEX(point_index);
   
-  t_bbus = 1.0/SR;
+  t_bbus = 1.0/(ACSData.bbc_rate);
   max_dv = 1.05*(CommandData.az_accel_max)*t_bbus;
   max_dv *= DPS_TO_GY16;
   //max_dv = 1000;
@@ -713,7 +716,7 @@ void WriteMot(int TxIndex)
   static int wait = 100; /* wait 20 frames before controlling. */
 
 //  int v_elev, v_az, i_piv, elGainP, elGainI;
-  int v_az, i_piv;\
+  int v_az, i_piv;
   double elGainCom, elGainDiff;
   double v_el_P = 0.0; // port
   double v_el_S = 0.0; // starboard
@@ -961,7 +964,7 @@ static void ClearElDither() {
 static void SetAzScanMode(double az, double left, double right, double v,
     double D)
 {
-    double az_accel_dv = (CommandData.az_accel)/SR;
+    double az_accel_dv = (CommandData.az_accel)/(ACSData.bbc_rate);
     double before_trig;
     if (axes_mode.az_vel < -v + D)
       axes_mode.az_vel = -v + D;
@@ -1000,7 +1003,7 @@ static void SetAzScanMode(double az, double left, double right, double v,
       }
     }
     /* BSC Trigger flag */
-    before_trig = DELAY - v/CommandData.az_accel 
+    before_trig = (DELAY/ACSData.bbc_rate) - v/CommandData.az_accel 
     + CommandData.theugly.expTime/2000;
     if (az < left + before_trig*v) {
       bsc_trigger = 1;  
@@ -1024,10 +1027,10 @@ static void DoSineMode(void)
   double t_before; // time at which to send BSC trigger command
   static double last_v = 0.0;
   
-  t_before = DELAY + CommandData.theugly.expTime/2000.0;
+  t_before = (DELAY/ACSData.bbc_rate) + CommandData.theugly.expTime/2000.0;
  
   az_accel = CommandData.az_accel;
-  az_accel_dv = az_accel/SR;
+  az_accel_dv = az_accel/(ACSData.bbc_rate);
 
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = CommandData.pointing_mode.Y;
@@ -1192,12 +1195,12 @@ static void DoSpiderMode(void)
   
   static double el_dest_pre = 37.5; // arbitrary
   
-  t_before = DELAY + CommandData.theugly.expTime/2000.0;
+  t_before = (DELAY/ACSData.bbc_rate) + CommandData.theugly.expTime/2000.0;
   
   t_step = 1.2 + 0.5; // "on_delay" in GetIElev + (1/2)*(step duration) 
   
   az_accel = CommandData.az_accel;
-  az_accel_dv = az_accel/SR;
+  az_accel_dv = az_accel/(ACSData.bbc_rate);
   
   N_scans = CommandData.pointing_mode.Nscans;
   
