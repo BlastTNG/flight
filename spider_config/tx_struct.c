@@ -656,11 +656,11 @@ struct ChannelStruct SlowChannels[] = {
   {"g_v_rw_piv",   'w', LOOP7, 18,                1.0,             0.0, 'u', U_NONE},
   {"g_i_rw_piv",   'w', LOOP7, 19,                1.0,             0.0, 'u', U_NONE},
   {"g_v_az_piv",   'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
-  {"g_a_az_piv",   'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
+  {"g_t_rw_piv",   'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
   {"set_rw",       'w', LOOP7, 22,      500.0/32768.0,             0.0, 's', U_V_DPS},
   {"vel_dps_az",   'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
   {"i_v_rw_term_piv",  'w', LOOP7, 24,             1.0,             0.0, 'u', U_NONE},
-  {"p_a_az_term_piv",  'w', LOOP7, 25,             1.0,             0.0, 'u', U_NONE},
+  {"p_t_rw_term_piv",  'w', LOOP7, 25,             1.0,             0.0, 'u', U_NONE},
   /* LOOP7 26 is unused */
   {"vel_ser_piv",  'w', LOOP7, 27,   2000.0/65536.0,         0.0, 's', U_V_DPS},
   {"vel_calc_piv", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
