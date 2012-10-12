@@ -348,7 +348,7 @@ static void GetVElev(double* v_P, double* v_S)
   enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
   enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
-  if ( !(CommandData.power.elmot_auto) || (on_delay >= 75) ) {
+  if ( !(CommandData.power.elmot_auto) || (on_delay >= 200) ) {
     el_dest_this = el_dest;
   }
 
@@ -525,139 +525,137 @@ static double GetVAz(void)
 
 /************************************************************************/
 /*                                                                      */
-/*     GetIPivot: get the current request for the pivot in DAC units    */
-/*       Proportional to the reaction wheel speed error                 */
+/* GetVPivot: get the velocity request for the pivot in DAC units       */
+/*            Proportional to the reaction wheel speed error            */       
+/*            (and other things). NOTE: used to be GetIPivot, but now   */
+/*            we are going to try running the pivot in velocity mode    */
 /*                                                                      */
 /************************************************************************/
-static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
+static double GetVPivot(unsigned int gI_v_rw, unsigned int gP_v_rw, unsigned int gP_v_az, unsigned int gP_a_az,
+		        unsigned int disabled)
 {
-  static struct NiosStruct* pRWTermPivAddr;
-  static struct NiosStruct* pErrTermPivAddr;
-  static struct NiosStruct* frictTermPivAddr;
-  static struct NiosStruct* frictTermUnfiltPivAddr; // For debugging only.  Remove later!
-  static double buf_frictPiv[FPIV_FILTER_LEN]; // Buffer for Piv friction term boxcar filter.
-  static double a=0.0; 
-  static unsigned int ib_last=0;
-  double I_req = 0.0;
-  int I_req_dac = 0;
-  int I_req_dac_init = 0;
+  static struct NiosStruct* pVRWTermPivAddr;
+  static struct NiosStruct* iVRWTermPivAddr;
+  static struct NiosStruct* pVAzTermPivAddr;
+  static struct NiosStruct* pAAzTermPivAddr;
+  double v_req = 0.0;
+  int v_req_dac = 0;
   int i_point;
-  double v_az_req,i_frict,i_frict_filt;
-  double p_rw_term, p_err_term;
-  int p_rw_term_dac, p_err_term_dac;
+  double I_v_rw_term, P_v_rw_term, P_v_az_term, P_a_az_term;
+  int I_v_rw_term_dac, P_v_rw_term_dac, P_v_az_term_dac, P_a_az_term_dac;
  
-  static int i=0;
   static unsigned int firsttime = 1;
 
+  static double int_v_rw = 0.0;  // integrated reaction wheel speed
+
+  /* TODO: Remove this note.
+   * v_piv = (I_rw * int_v_rw) + (P_rw * v_rw) + (P_g * v_g) + (P_t_rw * t_rw)
+   * with appropriate signs */
+
+   // g_I_v_rw, g_P_v_rw, g_P_v_az, g_P_a_az;
+
   if(firsttime) {
-    pRWTermPivAddr = GetNiosAddr("p_rw_term_piv");
-    pErrTermPivAddr = GetNiosAddr("p_err_term_piv");
-    frictTermPivAddr = GetNiosAddr("frict_term_piv");
-    frictTermUnfiltPivAddr = GetNiosAddr("frict_term_uf_piv");
-    // Initialize the buffer.  Assume all zeros to begin
-    for(i=0;i<(FPIV_FILTER_LEN-1);i++) buf_frictPiv[i]=0.0;
+    pVRWTermPivAddr = GetNiosAddr("p_v_rw_term_piv");
+    iVRWTermPivAddr = GetNiosAddr("i_v_rw_term_piv");
+    pVAzTermPivAddr = GetNiosAddr("p_v_az_term_piv");
+    pAAzTermPivAddr = GetNiosAddr("p_a_az_term_piv");
     firsttime = 0;
   }
 
-  //v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
-  v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS; // Convert to dps 
-
   i_point = GETREADINDEX(point_index);
-  //p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
-  p_rw_term = (1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
-  /*if (ACSData.vel_rw != 0.0) {
-    bprintf(info, "measured rw vel (read from frame): %f", ACSData.vel_rw);
-  }*/
-  //p_err_term = (double)g_err_piv*(v_az_req-PointingData[point_index].v_az);
-  p_err_term = (double)g_err_piv*(axes_mode.az_accel)*1.94;
-  I_req = p_rw_term+p_err_term;
 
+  int_v_rw += ACSData.vel_rw; 
 
-  if(disabled) { // Don't attempt to send current to the motors if we are disabled.
-    I_req=0.0;
-  }
+  /* Calculate control terms */
+  P_v_rw_term = ( ((double) gP_v_rw)/1000.0 )*(ACSData.vel_rw - CommandData.pivot_gain.SP);
+  P_a_az_term = ( (double)gP_a_az )*(axes_mode.az_accel)*1.94;
+  P_v_az_term = ( (double)gP_v_az )*(PointingData[i_point].v_az);
+  I_v_rw_term = ( (double)gI_v_rw )*(int_v_rw);
 
-  // Calculate static friction offset term
-  if(fabs(I_req)<100) {
-    i_frict=0.0;
-  } else {
-    if(I_req>0.0) {
-      i_frict=frict_off_piv;
-    } else {
-      i_frict=(-1.0)*frict_off_piv;
-    }
+  v_req = P_v_rw_term + P_a_az_term + P_v_az_term + I_v_rw_term;
+
+  if(disabled) { // Don't request a velocity if we are disabled.
+    v_req=0.0;
   }
 
   /* Convert to DAC Units*/
 
-  if(fabs(I_req)<100) {
-    I_req_dac=16384+PIV_DAC_OFF;
+  if (v_req > 0.0) {
+    v_req_dac=v_req+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
   } else {
-    if(I_req>0.0) {
-      I_req_dac=I_req+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
-    } else {
-      I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
-    }
-  }
-  I_req_dac_init=I_req_dac;
-
-  a+=(i_frict-buf_frictPiv[ib_last]);
-  buf_frictPiv[ib_last]=i_frict;
-  ib_last=(ib_last+FPIV_FILTER_LEN+1)%FPIV_FILTER_LEN;
-  i_frict_filt=a/((double) FPIV_FILTER_LEN);
-
-  I_req_dac += i_frict_filt*PIV_I_TO_DAC;
-  //  if(i%20==1) bprintf(info,"Motors: a=%f,ib_last=%i,i_frict=%f,i_frict_filt=%f,I_req=%f,I_req_dac_init=%i,I_req_dac=%i",a,ib_last,i_frict,i_frict_filt,I_req,I_req_dac_init,I_req_dac);
-
-  if(fabs(p_rw_term)<100) {
-    p_rw_term_dac=16384+PIV_DAC_OFF;
-  } else {
-    if(p_rw_term>0.0) {
-      p_rw_term_dac=p_rw_term+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
-    } else {
-      p_rw_term_dac=p_rw_term+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
-    }
+    v_req_dac=v_req+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
   }
 
-  if(fabs(p_err_term)<100) {
-    p_err_term_dac=16384+PIV_DAC_OFF;
+  if(P_v_rw_term>0.0) {
+    P_v_rw_term_dac=P_v_rw_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
   } else {
-    if(p_err_term>0.0) {
-      p_err_term_dac=p_err_term+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
-    } else {
-      p_err_term_dac=p_err_term+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
-    }
+    P_v_rw_term_dac=P_v_rw_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
   }
 
+  if(P_a_az_term>0.0) {
+    P_a_az_term_dac=P_a_az_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
+  } else {
+    P_a_az_term_dac=P_a_az_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
+  }
+ 
+  if(P_v_az_term>0.0) {
+    P_v_az_term_dac=P_v_az_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
+  } else {
+    P_v_az_term_dac=P_v_az_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
+  }
+
+  if(I_v_rw_term>0.0) {
+    I_v_rw_term_dac=I_v_rw_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
+  } else {
+    I_v_rw_term_dac=I_v_rw_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
+  }
 
   // Check to make sure the DAC value is in the proper range
-  if(I_req_dac <= 0) {
-    I_req_dac=1;
-  }
-  if(I_req_dac >  32767) {
-    I_req_dac=32767;
-  }
-  // Check to make sure the P-terms are in the proper range
-  if(p_rw_term_dac <= 0) {
-    p_rw_term_dac=1;
-  }
-  if(p_rw_term_dac >  32767) {
-    p_rw_term_dac=32767;
-  }
-  if(p_err_term_dac <= 0) {
-    p_err_term_dac=1;
-  }
-  if(p_err_term_dac >  32767) {
-    p_err_term_dac=32767;
+  if(v_req_dac <= 0) {
+    v_req_dac=1;
   }
 
-  i++;
+  if(v_req_dac > 65535) {
+    v_req_dac=65535;
+  }
 
-  WriteData(pRWTermPivAddr,p_rw_term,NIOS_QUEUE);
-  WriteData(pErrTermPivAddr,p_err_term,NIOS_QUEUE);
-  WriteData(frictTermPivAddr,i_frict_filt*32767.0/2.0,NIOS_QUEUE);
-  WriteData(frictTermUnfiltPivAddr,i_frict*32767.0/2.0,NIOS_QUEUE);
-  return I_req_dac;
+  // Check to make sure the control terms are in the proper range
+  if(P_v_rw_term_dac <= 0) {
+    P_v_rw_term_dac=1;
+  }
+  if(P_v_rw_term_dac > 65535) {
+    P_v_rw_term_dac=65535;
+  }
+
+  if(P_a_az_term_dac <= 0) {
+    P_a_az_term_dac=1;
+  }
+  if(P_a_az_term_dac > 65535) {
+    P_a_az_term_dac=65535;
+  }
+
+  if(P_v_az_term_dac <= 0) {
+    P_v_az_term_dac=1;
+  }
+  if(P_v_az_term_dac > 65535) {
+    P_v_az_term_dac=65535;
+  }
+
+  if(I_v_rw_term_dac <= 0) {
+    I_v_rw_term_dac=1;
+  }
+  if(I_v_rw_term_dac > 65535) {
+    I_v_rw_term_dac=65535;
+  }
+
+  /* Write control terms to frame */
+
+  WriteData(pVRWTermPivAddr, P_v_rw_term_dac, NIOS_QUEUE);
+  WriteData(iVRWTermPivAddr, I_v_rw_term_dac, NIOS_QUEUE);
+  WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
+  WriteData(pAAzTermPivAddr, P_a_az_term_dac, NIOS_QUEUE);
+
+  return v_req_dac;
 }
 
 /* dxdtheta returns derivative of lin. act. extension. w.r.t. elevation angle 
@@ -683,22 +681,17 @@ static double dxdtheta(double theta)
 /************************************************************************/
 void WriteMot(int TxIndex)
 {
-  //static struct NiosStruct* velReqElAddr;
   static struct NiosStruct* velReqAzAddr;
-  //static struct NiosStruct* velReqElAddr;
-  //static struct NiosStruct* gPElAddr;
-  //static struct NiosStruct* gIElAddr;
-  //static struct NiosStruct* gPtElAddr;
   static struct NiosStruct* gComElAddr;
   static struct NiosStruct* gDiffElAddr;
-//  static struct NiosStruct* gPtElAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
   static struct NiosStruct* gPtAzAddr;
-  static struct NiosStruct* gPVPivAddr;
-  static struct NiosStruct* gPEPivAddr;
+  static struct NiosStruct* gVRWPivAddr;
+  static struct NiosStruct* gIRWPivAddr;
+  static struct NiosStruct* gVAzPivAddr;
+  static struct NiosStruct* gAAzPivAddr;
   static struct NiosStruct* setRWAddr;
-  static struct NiosStruct* frictOffPivAddr;
   static struct NiosStruct* dacPivAddr;
   static struct NiosStruct* velCalcPivAddr;
   static struct NiosStruct* velRWAddr;
@@ -706,16 +699,13 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* accelMaxAzAddr;
   static struct NiosStruct* step1ElAddr;      // PORT
   static struct NiosStruct* step2ElAddr;      // STARBOARD
- // static struct NiosStruct* enc1OffsetAddr;
- // static struct NiosStruct* enc2OffsetAddr; 
 
   // Used only for Lab Controller tests
   static struct NiosStruct* dac2AmplAddr;
 
   static int wait = 100; /* wait 20 frames before controlling. */
 
-//  int v_elev, v_az, i_piv, elGainP, elGainI;
-  int v_az, i_piv;
+  int v_az, v_piv;
   double elGainCom, elGainDiff;
   double v_el_P = 0.0; // port
   double v_el_S = 0.0; // starboard
@@ -730,8 +720,7 @@ void WriteMot(int TxIndex)
   int step_rate_S; // pulse rate (Hz) of step input to el motor
    
   double v_rw;
-  int azGainP, azGainI, pivGainRW, pivGainErr;
-  double pivFrictOff;
+  int azGainP, azGainI, pivGainVelRW, pivGainVelAz, pivGainPosRW, pivGainAccelAz;
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -739,21 +728,18 @@ void WriteMot(int TxIndex)
 
   if (firsttime) {
     firsttime = 0;
-    //velReqElAddr = GetNiosAddr("vel_req_el");
     velReqAzAddr = GetNiosAddr("vel_req_az");
     dacPivAddr = GetNiosAddr("dac_piv");
-    //gPElAddr = GetNiosAddr("g_p_el");
-    //gPtElAddr = GetNiosAddr("g_pt_el");
-    //gIElAddr = GetNiosAddr("g_i_el");
     gComElAddr = GetNiosAddr("g_com_el");
     gDiffElAddr = GetNiosAddr("g_diff_el");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
     gPtAzAddr = GetNiosAddr("g_pt_az");
-    gPVPivAddr = GetNiosAddr("g_pv_piv");
-    gPEPivAddr = GetNiosAddr("g_pe_piv");
+    gVRWPivAddr = GetNiosAddr("g_v_rw_piv");
+    gIRWPivAddr = GetNiosAddr("g_i_rw_piv");
+    gVAzPivAddr = GetNiosAddr("g_v_az_piv");
+    gAAzPivAddr = GetNiosAddr("g_a_az_piv");
     setRWAddr = GetNiosAddr("set_rw");
-    frictOffPivAddr = GetNiosAddr("frict_off_piv");
     velCalcPivAddr = GetNiosAddr("vel_calc_piv");
     velRWAddr = GetNiosAddr("vel_rw");
     accelAzAddr = GetNiosAddr("accel_az");
@@ -761,8 +747,6 @@ void WriteMot(int TxIndex)
     dac2AmplAddr = GetNiosAddr("dac2_ampl");
     step1ElAddr = GetNiosAddr("step_1_el");
     step2ElAddr = GetNiosAddr("step_2_el");
-    //enc1OffsetAddr = GetNiosAddr("enc1_offset");
-    //enc2OffsetAddr = GetNiosAddr("enc2_offset");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -839,15 +823,12 @@ void WriteMot(int TxIndex)
     /*differential gain term for el motors */
     WriteCalData(gDiffElAddr, elGainDiff, NIOS_QUEUE);
     
-  //  WriteCalData(enc1OffsetAddr, (ENC1_OFFSET + 360.0 + GYBOX_OFFSET), NIOS_QUEUE);
-  //  WriteCalData(enc2OffsetAddr, (ENC2_OFFSET + GYBOX_OFFSET), NIOS_QUEUE);
-
   }
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/
   v_az = floor(GetVAz() + 0.5);
-  //bprintf(info, "GetVAz() output after casting to int = %d", v_az);
+  
   /* Units for v_az are 16 bit gyro units*/
   if (v_az > 32767)
     v_az = 32767;
@@ -863,21 +844,23 @@ void WriteMot(int TxIndex)
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
     azGainI = 0;
-    pivGainRW = 0;
-    pivGainErr = 0;
-    pivFrictOff = 0.0;
-    i_piv=GetIPivot(0,pivGainRW,pivGainErr,pivFrictOff,1);
+    pivGainVelRW = 0;
+    pivGainVelAz = 0;
+    pivGainPosRW = 0;
+    pivGainAccelAz = 0;
+    v_piv=GetVPivot(pivGainPosRW,pivGainVelRW,pivGainVelAz,pivGainAccelAz,1);
   } else {
     azGainP = CommandData.azi_gain.P;
     azGainI = CommandData.azi_gain.I;
-    pivGainRW = CommandData.pivot_gain.PV;
-    pivGainErr = CommandData.pivot_gain.PE;
-    pivFrictOff = CommandData.pivot_gain.F;
-    i_piv=GetIPivot(v_az,pivGainRW,pivGainErr,pivFrictOff,0);
+    pivGainVelRW = CommandData.pivot_gain.V_RW;
+    pivGainVelAz = CommandData.pivot_gain.V_AZ;
+    pivGainPosRW = CommandData.pivot_gain.P_RW;
+    pivGainAccelAz = CommandData.pivot_gain.A_AZ;
+    v_piv=GetVPivot(pivGainPosRW,pivGainVelRW,pivGainVelAz,pivGainAccelAz,0);
   }
-  //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
+  
   /* requested pivot current*/
-  WriteData(dacPivAddr, i_piv*2, NIOS_QUEUE);
+  WriteData(dacPivAddr, v_piv, NIOS_QUEUE);
 
   if (TxIndex == 0) { //only write at slow frame rate
     /* p term for az motor */
@@ -888,13 +871,15 @@ void WriteMot(int TxIndex)
     WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
 
     /* p term to rw vel for pivot motor */
-    WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
-    /* p term to vel error for pivot motor */
-    WriteData(gPEPivAddr, pivGainErr, NIOS_QUEUE);
+    WriteData(gVRWPivAddr, pivGainVelRW, NIOS_QUEUE);
+    /* p term to az vel for pivot motor */
+    WriteData(gVAzPivAddr, pivGainVelAz, NIOS_QUEUE);
+    /* i term to rw vel for pivot motor */
+    WriteData(gIRWPivAddr, pivGainPosRW, NIOS_QUEUE);
+    /* p term to az accel for pivot motor */
+    WriteData(gAAzPivAddr, pivGainAccelAz, NIOS_QUEUE);
     /* setpoint for reaction wheel */
     WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
-    /* Pivot current offset to compensate for static friction. */
-    WriteData(frictOffPivAddr, pivFrictOff/2.0*65535, NIOS_QUEUE);
     /* Pivot velocity */
     WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
     /* Azimuth Scan Acceleration */
@@ -903,7 +888,6 @@ void WriteMot(int TxIndex)
     WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
   }
 
-  //bprintf(info,"az accel max: %g\n", CommandData.az_accel_max);
   if (wait > 0)
     wait--;
 }

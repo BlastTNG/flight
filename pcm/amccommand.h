@@ -25,7 +25,7 @@
 // expected current when used by setRWCur.  I have no idea why, maybe
 // some kind of conversion from Peak to RMS?
 
-#define PIV_RES_CTS 16384.0
+#define PIV_RES_CTS 16384.0 // using high res (14 bits) on resolver
 
 #define AMC_ERR_TIMEOUT 5 // Number of consecutive serious errors before the
                              // thread attempts to reset the controller.

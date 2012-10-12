@@ -929,10 +929,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.azi_gain.PT = ivalues[2];
       break;
     case pivot_gain:  /* pivot gains */
-      CommandData.pivot_gain.SP = rvalues[0];
-      CommandData.pivot_gain.PE = ivalues[1];
-      CommandData.pivot_gain.PV = ivalues[2];
-      CommandData.pivot_gain.F = rvalues[3];
+      CommandData.pivot_gain.SP =   rvalues[0];
+      CommandData.pivot_gain.V_RW = ivalues[1];
+      CommandData.pivot_gain.P_RW = ivalues[2];
+      CommandData.pivot_gain.V_AZ = ivalues[3];
+      CommandData.pivot_gain.A_AZ = ivalues[4];
       break;
 
       //***********DGPS tests****************/
@@ -1821,10 +1822,11 @@ void InitCommandData()
   CommandData.azi_gain.I = 100;
   CommandData.azi_gain.PT = 3000;
 
-  CommandData.pivot_gain.SP = 50; // dps
-  CommandData.pivot_gain.PV = 400;
-  CommandData.pivot_gain.PE = 0;
-  CommandData.pivot_gain.F = 0.3;
+  CommandData.pivot_gain.SP = 0;   // dps
+  CommandData.pivot_gain.V_RW = 0;
+  CommandData.pivot_gain.P_RW = 0;
+  CommandData.pivot_gain.V_AZ = 0;
+  CommandData.pivot_gain.A_AZ = 0;
 
   CommandData.disable_az = 1; 
   CommandData.disable_el = 0;
