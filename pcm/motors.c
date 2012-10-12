@@ -531,19 +531,23 @@ static double GetVAz(void)
 /*            we are going to try running the pivot in velocity mode    */
 /*                                                                      */
 /************************************************************************/
-static double GetVPivot(unsigned int gI_v_rw, unsigned int gP_v_rw, unsigned int gP_v_az, unsigned int gP_a_az,
+static double GetVPivot(int TxIndex, unsigned int gI_v_rw, unsigned int gP_v_rw, unsigned int gP_v_az, unsigned int gP_t_rw,
 		        unsigned int disabled)
 {
   static struct NiosStruct* pVRWTermPivAddr;
   static struct NiosStruct* iVRWTermPivAddr;
   static struct NiosStruct* pVAzTermPivAddr;
-  static struct NiosStruct* pAAzTermPivAddr;
+  static struct NiosStruct* pTRWTermPivAddr;
+  
+  static struct BiPhaseStruct* dacRWAddr;
+
   double v_req = 0.0;
   int v_req_dac = 0;
   int i_point;
-  double I_v_rw_term, P_v_rw_term, P_v_az_term, P_a_az_term;
-  int I_v_rw_term_dac, P_v_rw_term_dac, P_v_az_term_dac, P_a_az_term_dac;
- 
+  double I_v_rw_term, P_v_rw_term, P_v_az_term, P_t_rw_term;
+  int I_v_rw_term_dac, P_v_rw_term_dac, P_v_az_term_dac, P_t_rw_term_dac;
+  unsigned short int dac_rw;
+
   static unsigned int firsttime = 1;
 
   static double int_v_rw = 0.0;  // integrated reaction wheel speed
@@ -552,13 +556,16 @@ static double GetVPivot(unsigned int gI_v_rw, unsigned int gP_v_rw, unsigned int
    * v_piv = (I_rw * int_v_rw) + (P_rw * v_rw) + (P_g * v_g) + (P_t_rw * t_rw)
    * with appropriate signs */
 
-   // g_I_v_rw, g_P_v_rw, g_P_v_az, g_P_a_az;
+   // g_I_v_rw, g_P_v_rw, g_P_v_az, g_P_t_rw;
 
   if(firsttime) {
     pVRWTermPivAddr = GetNiosAddr("p_v_rw_term_piv");
     iVRWTermPivAddr = GetNiosAddr("i_v_rw_term_piv");
     pVAzTermPivAddr = GetNiosAddr("p_v_az_term_piv");
-    pAAzTermPivAddr = GetNiosAddr("p_a_az_term_piv");
+    pTRWTermPivAddr = GetNiosAddr("p_t_rw_term_piv");
+    
+    dacRWAddr = GetBiPhaseAddr("dac_rw");
+    
     firsttime = 0;
   }
 
@@ -566,13 +573,15 @@ static double GetVPivot(unsigned int gI_v_rw, unsigned int gP_v_rw, unsigned int
 
   int_v_rw += ACSData.vel_rw; 
 
+  dac_rw = ReadCalData(dacRWAddr);
+
   /* Calculate control terms */
   P_v_rw_term = ( ((double) gP_v_rw)/1000.0 )*(ACSData.vel_rw - CommandData.pivot_gain.SP);
-  P_a_az_term = ( (double)gP_a_az )*(axes_mode.az_accel)*1.94;
+  P_t_rw_term = ( ((double)gP_t_rw)/1000.0 )*((double)dac_rw); 
   P_v_az_term = ( (double)gP_v_az )*(PointingData[i_point].v_az);
   I_v_rw_term = ( (double)gI_v_rw )*(int_v_rw);
 
-  v_req = P_v_rw_term + P_a_az_term + P_v_az_term + I_v_rw_term;
+  v_req = P_v_rw_term + P_t_rw_term + P_v_az_term + I_v_rw_term;
 
   if(disabled) { // Don't request a velocity if we are disabled.
     v_req=0.0;
@@ -592,10 +601,10 @@ static double GetVPivot(unsigned int gI_v_rw, unsigned int gP_v_rw, unsigned int
     P_v_rw_term_dac=P_v_rw_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
   }
 
-  if(P_a_az_term>0.0) {
-    P_a_az_term_dac=P_a_az_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
+  if(P_t_rw_term>0.0) {
+    P_t_rw_term_dac=P_t_rw_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
   } else {
-    P_a_az_term_dac=P_a_az_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
+    P_t_rw_term_dac=P_t_rw_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
   }
  
   if(P_v_az_term>0.0) {
@@ -627,11 +636,11 @@ static double GetVPivot(unsigned int gI_v_rw, unsigned int gP_v_rw, unsigned int
     P_v_rw_term_dac=65535;
   }
 
-  if(P_a_az_term_dac <= 0) {
-    P_a_az_term_dac=1;
+  if(P_t_rw_term_dac <= 0) {
+    P_t_rw_term_dac=1;
   }
-  if(P_a_az_term_dac > 65535) {
-    P_a_az_term_dac=65535;
+  if(P_t_rw_term_dac > 65535) {
+    P_t_rw_term_dac=65535;
   }
 
   if(P_v_az_term_dac <= 0) {
@@ -649,12 +658,12 @@ static double GetVPivot(unsigned int gI_v_rw, unsigned int gP_v_rw, unsigned int
   }
 
   /* Write control terms to frame */
-
-  WriteData(pVRWTermPivAddr, P_v_rw_term_dac, NIOS_QUEUE);
-  WriteData(iVRWTermPivAddr, I_v_rw_term_dac, NIOS_QUEUE);
-  WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
-  WriteData(pAAzTermPivAddr, P_a_az_term_dac, NIOS_QUEUE);
-
+  if (TxIndex == 0) {
+    WriteData(pVRWTermPivAddr, P_v_rw_term_dac, NIOS_QUEUE);
+    WriteData(iVRWTermPivAddr, I_v_rw_term_dac, NIOS_QUEUE);
+    WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
+    WriteData(pTRWTermPivAddr, P_t_rw_term_dac, NIOS_QUEUE);
+  }
   return v_req_dac;
 }
 
@@ -690,7 +699,7 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* gVRWPivAddr;
   static struct NiosStruct* gIRWPivAddr;
   static struct NiosStruct* gVAzPivAddr;
-  static struct NiosStruct* gAAzPivAddr;
+  static struct NiosStruct* gTRWPivAddr;
   static struct NiosStruct* setRWAddr;
   static struct NiosStruct* dacPivAddr;
   static struct NiosStruct* velCalcPivAddr;
@@ -720,7 +729,7 @@ void WriteMot(int TxIndex)
   int step_rate_S; // pulse rate (Hz) of step input to el motor
    
   double v_rw;
-  int azGainP, azGainI, pivGainVelRW, pivGainVelAz, pivGainPosRW, pivGainAccelAz;
+  int azGainP, azGainI, pivGainVelRW, pivGainVelAz, pivGainPosRW, pivGainTorqueRW;
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -738,7 +747,7 @@ void WriteMot(int TxIndex)
     gVRWPivAddr = GetNiosAddr("g_v_rw_piv");
     gIRWPivAddr = GetNiosAddr("g_i_rw_piv");
     gVAzPivAddr = GetNiosAddr("g_v_az_piv");
-    gAAzPivAddr = GetNiosAddr("g_a_az_piv");
+    gTRWPivAddr = GetNiosAddr("g_t_rw_piv");
     setRWAddr = GetNiosAddr("set_rw");
     velCalcPivAddr = GetNiosAddr("vel_calc_piv");
     velRWAddr = GetNiosAddr("vel_rw");
@@ -847,16 +856,16 @@ void WriteMot(int TxIndex)
     pivGainVelRW = 0;
     pivGainVelAz = 0;
     pivGainPosRW = 0;
-    pivGainAccelAz = 0;
-    v_piv=GetVPivot(pivGainPosRW,pivGainVelRW,pivGainVelAz,pivGainAccelAz,1);
+    pivGainTorqueRW = 0;
+    v_piv=GetVPivot(TxIndex,pivGainPosRW,pivGainVelRW,pivGainVelAz,pivGainTorqueRW,1);
   } else {
     azGainP = CommandData.azi_gain.P;
     azGainI = CommandData.azi_gain.I;
     pivGainVelRW = CommandData.pivot_gain.V_RW;
     pivGainVelAz = CommandData.pivot_gain.V_AZ;
     pivGainPosRW = CommandData.pivot_gain.P_RW;
-    pivGainAccelAz = CommandData.pivot_gain.A_AZ;
-    v_piv=GetVPivot(pivGainPosRW,pivGainVelRW,pivGainVelAz,pivGainAccelAz,0);
+    pivGainTorqueRW = CommandData.pivot_gain.T_RW;
+    v_piv=GetVPivot(TxIndex,pivGainPosRW,pivGainVelRW,pivGainVelAz,pivGainTorqueRW,0);
   }
   
   /* requested pivot current*/
@@ -876,8 +885,8 @@ void WriteMot(int TxIndex)
     WriteData(gVAzPivAddr, pivGainVelAz, NIOS_QUEUE);
     /* i term to rw vel for pivot motor */
     WriteData(gIRWPivAddr, pivGainPosRW, NIOS_QUEUE);
-    /* p term to az accel for pivot motor */
-    WriteData(gAAzPivAddr, pivGainAccelAz, NIOS_QUEUE);
+    /* p term to rw torque for pivot motor */
+    WriteData(gTRWPivAddr, pivGainTorqueRW, NIOS_QUEUE);
     /* setpoint for reaction wheel */
     WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
     /* Pivot velocity */

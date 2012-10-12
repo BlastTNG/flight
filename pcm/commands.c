@@ -933,7 +933,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pivot_gain.V_RW = ivalues[1];
       CommandData.pivot_gain.P_RW = ivalues[2];
       CommandData.pivot_gain.V_AZ = ivalues[3];
-      CommandData.pivot_gain.A_AZ = ivalues[4];
+      CommandData.pivot_gain.T_RW = ivalues[4];
       break;
 
       //***********DGPS tests****************/
@@ -1826,7 +1826,7 @@ void InitCommandData()
   CommandData.pivot_gain.V_RW = 0;
   CommandData.pivot_gain.P_RW = 0;
   CommandData.pivot_gain.V_AZ = 0;
-  CommandData.pivot_gain.A_AZ = 0;
+  CommandData.pivot_gain.T_RW = 0;
 
   CommandData.disable_az = 1; 
   CommandData.disable_el = 0;
