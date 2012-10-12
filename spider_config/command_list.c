@@ -372,10 +372,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 4,
     {
-      {"Set Point (dps)",   -500, 500, 'f', "SET_RW"},
-      {"V_err Gain (prop)", 0, USHRT_MAX, 'i', "G_PE_PIVOT"},
-      {"V_RW Gain (prop)", 0, USHRT_MAX, 'i', "G_PV_PIVOT"},
-      {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
+      {"RW Set Point (dps)",   -500, 500, 'f', "SET_RW"},
+      {"RW vel. P gain", 0, USHRT_MAX, 'i', "G_V_RW_PIV"},
+      {"RW vel. I gain", 0, USHRT_MAX, 'i', "G_I_RW_PIV"},
+      {"Az vel. P gain", 0, USHRT_MAX, 'i', "G_V_AZ_PIV"},
+      {"Az accel. P gain", 0, USHRT_MAX, 'i', "G_A_AZ_PIV"}
     }
   },
   /*{COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,

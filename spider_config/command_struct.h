@@ -59,10 +59,11 @@ struct GainStruct {
 
 // used for pivot loop gains
 struct PivGainStruct { 
-  unsigned short int PV; // prop to RW velocity
-  unsigned short int PE; // prop to velocity error
+  unsigned short int V_RW; // prop to RW velocity
+  unsigned short int V_AZ; // prop to gondola az speed
+  unsigned short int P_RW; // prop to RW position (integrated velocity)
+  unsigned short int A_AZ; // prop to gondola az accel
   double SP; // RW velocity Set Point 
-  double F; // Current offset to overcome static friction. 
 };
 
 #define ACTBUS_FM_SLEEP  0

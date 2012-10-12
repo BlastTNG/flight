@@ -653,15 +653,18 @@ struct ChannelStruct SlowChannels[] = {
   {"i_ser_el",     'w', LOOP7, 15,       30.0/32768.0,             0.0, 's', U_I_A},
   {"res_piv",      'w', LOOP7, 16,              I2DEG,             0.0, 'u', U_P_DEG},
   {"i_ser_piv",    'w', LOOP7, 17,       20.0/32768.0,             0.0, 's', U_I_A},
-  /* LOOP7 18-19 are unusued */
-  {"g_pe_piv",     'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
-  {"g_pv_piv",     'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
+  {"g_v_rw_piv",   'w', LOOP7, 18,                1.0,             0.0, 'u', U_NONE},
+  {"g_i_rw_piv",   'w', LOOP7, 19,                1.0,             0.0, 'u', U_NONE},
+  {"g_v_az_piv",   'w', LOOP7, 20,                1.0,             0.0, 'u', U_NONE},
+  {"g_a_az_piv",   'w', LOOP7, 21,                1.0,             0.0, 'u', U_NONE},
   {"set_rw",       'w', LOOP7, 22,      500.0/32768.0,             0.0, 's', U_V_DPS},
   {"vel_dps_az",   'w', LOOP7, 23,       20.0/32768.0,             0.0, 's', U_V_DPS},
-  /* LOOP7 24-26 are unusued */
+  {"i_v_rw_term_piv",  'w', LOOP7, 24,             1.0,             0.0, 'u', U_NONE},
+  {"p_a_az_term_piv",  'w', LOOP7, 25,             1.0,             0.0, 'u', U_NONE},
+  /* LOOP7 26 is unused */
   {"vel_ser_piv",  'w', LOOP7, 27,   2000.0/65536.0,         0.0, 's', U_V_DPS},
   {"vel_calc_piv", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
-  /* LOOP7 29-31 are unusued */
+  /* LOOP7 29-31 are unused */
   {"drive_info_rw",'w', LOOP7, 32,                 1.0,             0.0, 'u', U_NONE},
   {"drive_err_cts_rw",'w', LOOP7, 33,              1.0,             0.0, 'u', U_NONE},
   {"drive_info_el",'w', LOOP7, 34,                 1.0,             0.0, 'u', U_NONE},
@@ -680,8 +683,8 @@ struct ChannelStruct SlowChannels[] = {
   {"verbose_rw",       'w', LOOP7, 48,             1.0,             0.0, 'u', U_NONE},
   {"verbose_el",       'w', LOOP7, 49,             1.0,             0.0, 'u', U_NONE},
   {"verbose_piv",      'w', LOOP7, 52,             1.0,             0.0, 'u', U_NONE},
-  {"p_rw_term_piv",    'w', LOOP7, 53,             1.0,             0.0, 's', U_NONE},
-  {"p_err_term_piv",   'w', LOOP7, 54,             1.0,             0.0, 's', U_NONE},
+  {"p_v_rw_term_piv",  'w', LOOP7, 53,             1.0,             0.0, 'u', U_NONE},
+  {"p_v_az_term_piv",  'w', LOOP7, 54,             1.0,             0.0, 'u', U_NONE},
   //{"step_start_bias",  'w', LOOP7, 55,             0.5,             0.0, 'u', U_NONE},
   //{"step_end_bias",    'w', LOOP7, 56,             0.5,             0.0, 'u', U_NONE},
   //{"step_n_bias",      'w', LOOP7, 57,             1.0,             0.0, 'u', U_NONE},
