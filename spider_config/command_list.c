@@ -370,7 +370,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Current Dec (deg)", -90, 90, 'f', "DEC"}
     }
   },
-  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 4,
+  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 5,
     {
       {"RW Set Point (dps)",   -500, 500, 'f', "SET_RW"},
       {"RW vel. P gain", 0, USHRT_MAX, 'i', "G_V_RW_PIV"},
