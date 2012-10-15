@@ -552,6 +552,8 @@ static double GetVPivot(int TxIndex, unsigned int gI_v_rw, unsigned int gP_v_rw,
 
   static double int_v_rw = 0.0;  // integrated reaction wheel speed
 
+  double a = 0.9998;
+
   /* TODO: Remove this note.
    * v_piv = (I_rw * int_v_rw) + (P_rw * v_rw) + (P_g * v_g) + (P_t_rw * t_rw)
    * with appropriate signs */
@@ -571,15 +573,16 @@ static double GetVPivot(int TxIndex, unsigned int gI_v_rw, unsigned int gP_v_rw,
 
   i_point = GETREADINDEX(point_index);
 
-  int_v_rw += ACSData.vel_rw; 
+  int_v_rw = (1.0-a)*ACSData.vel_rw + a*int_v_rw; 
 
   dac_rw = ReadCalData(dacRWAddr);
 
   /* Calculate control terms */
   P_v_rw_term = ( ((double) gP_v_rw)/1000.0 )*(ACSData.vel_rw - CommandData.pivot_gain.SP);
-  P_t_rw_term = ( ((double)gP_t_rw)/1000.0 )*((double)dac_rw); 
-  P_v_az_term = ( (double)gP_v_az )*(PointingData[i_point].v_az);
-  I_v_rw_term = ( (double)gI_v_rw )*(int_v_rw);
+  P_t_rw_term = -( ((double)gP_t_rw)/1000.0 )*((double)dac_rw); 
+  //P_v_az_term = -1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
+  P_v_az_term = 1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
+  I_v_rw_term = ( (double)gI_v_rw/100.0 )*(int_v_rw);
 
   v_req = P_v_rw_term + P_t_rw_term + P_v_az_term + I_v_rw_term;
 
@@ -868,6 +871,13 @@ void WriteMot(int TxIndex)
     v_piv=GetVPivot(TxIndex,pivGainPosRW,pivGainVelRW,pivGainVelAz,pivGainTorqueRW,0);
   }
   
+  /* Even if az drive is disabled, write non-zero values of gains
+   * to frame so that we can see what they are */
+  pivGainVelRW = CommandData.pivot_gain.V_RW;
+  pivGainVelAz = CommandData.pivot_gain.V_AZ;
+  pivGainPosRW = CommandData.pivot_gain.P_RW;
+  pivGainTorqueRW = CommandData.pivot_gain.T_RW;
+ 
   /* requested pivot current*/
   WriteData(dacPivAddr, v_piv, NIOS_QUEUE);
 
@@ -2661,6 +2671,8 @@ void* reactComm(void* arg)
 	bprintf(info,"d8.13h = %i",tmp);
 	tmp = queryAMCInd(216,19,1,&reactinfo);
 	bprintf(info,"v2 d8.13h = %i",tmp);
+	tmp = queryAMCInd(1, 0, 1, &reactinfo);
+	bprintf(info, "Control bitfield = 0x%04x", tmp);
       }
 
       res_rw = getAMCResolver(&reactinfo);
@@ -2875,6 +2887,8 @@ void* pivotComm(void* arg)
 	bprintf(info,"d8.13h = %i",tmp);
 	tmp = queryAMCInd(216,19,1,&pivotinfo);
 	bprintf(info,"v2 d8.13h = %i",tmp);
+	tmp = queryAMCInd(1, 0, 1, &pivotinfo);
+	bprintf(info, "Control bitfield = 0x%04x", tmp);
       }
 
       pos_raw=getAMCResolver(&pivotinfo);
