@@ -63,6 +63,7 @@ struct PivGainStruct {
   unsigned short int V_AZ; // prop to gondola az speed
   unsigned short int P_RW; // prop to RW position (integrated velocity)
   unsigned short int T_RW; // prop to gondola az accel
+  unsigned short int V_REQ; // prop to gondoal az speed *request*
   double SP; // RW velocity Set Point 
 };
 
