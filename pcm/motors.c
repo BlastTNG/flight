@@ -579,7 +579,7 @@ static double GetVPivot(int TxIndex, unsigned int gI_v_rw, unsigned int gP_v_rw,
 
   /* Calculate control terms */
   P_v_rw_term = ( ((double) gP_v_rw)/1000.0 )*(ACSData.vel_rw - CommandData.pivot_gain.SP);
-  P_t_rw_term = -( ((double)gP_t_rw)/1000.0 )*((double)dac_rw); 
+  P_t_rw_term = ( ((double)gP_t_rw)/1000.0 )*((double)(dac_rw-32768)); 
   //P_v_az_term = -1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
   P_v_az_term = 1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
   I_v_rw_term = ( (double)gI_v_rw/100.0 )*(int_v_rw);
