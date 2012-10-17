@@ -448,7 +448,7 @@ static double GetVAz(void)
   static double last_vel = 0.0;
   double dvel;
   int i_point;
-  //double vel_offset;
+  double vel_offset;
   double az, az_dest;
   double t_bbus;
   double max_dv;// = 20;
@@ -487,14 +487,16 @@ static double GetVAz(void)
                - PointingData[i_point].ifyaw_earth_gy)
                * sin(PointingData[i_point].el * M_PI / 180.0);*/
 
-  /* gyros are on the outer frame for Spider...
+  // gyros are on the outer frame for Spider...
  
-     vel_offset =-(PointingData[i_point].offset_ifyaw_gy 
-                  - PointingData[i_point].ifyaw_earth_gy)
+//  vel_offset =-(PointingData[i_point].offset_ifyaw_gy 
+    //            - PointingData[i_point].ifyaw_earth_gy);
 
-    ...and we don't care about vel_offset anyway */
+  // TODO: signs above appear to be wrong???
+  vel_offset = (PointingData[i_point].offset_ifyaw_gy 
+                + PointingData[i_point].ifyaw_earth_gy);
 
-  //vel -= vel_offset;
+  vel -= vel_offset;
   vel *= DPS_TO_GY16;
   //bprintf(info, "vel intermediate from GetVAz() (gyro units): %f", vel);
   /* limit maximum speed */
@@ -1127,7 +1129,8 @@ static void DoSineMode(void)
 
   /* case 3: moving from left to right endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
-             && (PointingData[i_point].v_az > 0.0) ) {
+             && ((PointingData[i_point].v_az
+                  +PointingData[i_point].offset_ifyaw_gy) > 0.0 ) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
     a_az = az_accel*( (centre - az)/ampl ); 
@@ -1144,7 +1147,8 @@ static void DoSineMode(void)
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
-              && (PointingData[i_point].v_az < 0.0) ) {
+              && ( (PointingData[i_point].v_az
+	            + PointingData[i_point].offset_ifyaw_gy) < 0.0 ) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
     a_az = az_accel*( (centre - az)/ampl );
