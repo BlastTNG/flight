@@ -65,7 +65,7 @@ enum singleCommand SCommand(char*);
 void ScheduledCommand(struct ScheduleEvent*);
 const char* CommandName(int, int);
 
-static const char filename[2][3][32] = {
+static const char filename[2][3][64] = {
   {"/data/etc/spider/happy.north.sch",
     "/data/etc/spider/happy.mid.sch",
     "/data/etc/spider/happy.south.sch"},
