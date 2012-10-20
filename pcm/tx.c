@@ -886,9 +886,15 @@ static void StoreData(int index)
       NIOS_QUEUE);
 
   sensor_veto = (!CommandData.use_elenc1) |
+    /* bit for << 1 unused */
     ((!CommandData.use_mag) << 2) |
     ((!CommandData.use_gps) << 3) |
     ((!CommandData.use_elenc2) << 4) |
+    /* bit for << 5 unused */
+    /* bit for << 6 unused */
+    /* bit for is_sched (below) << 7 */
+    ((CommandData.az_autogyro) << 8) |
+    ((CommandData.el_autogyro) << 9) |
     ((CommandData.disable_el) << 10) |
     ((CommandData.disable_az) << 11) |
     ((CommandData.force_el) << 12) |
@@ -896,9 +902,6 @@ static void StoreData(int index)
 
   if (PointingData[i_point].t >= CommandData.pointing_mode.t)
     sensor_veto |= (1 << 7);
-
-  sensor_veto |= (CommandData.az_autogyro << 8);
-  sensor_veto |= (CommandData.el_autogyro << 9);
 
   WriteData(vetoSensorAddr, sensor_veto, NIOS_QUEUE);
 

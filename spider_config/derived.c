@@ -114,21 +114,20 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Pointing Stuff"),
   LINCOM("X_H_P", "x_p", 0.0003662109375, 0),
   BITFIELD("veto_sensor",
-      "VETO_SS",
-      "VETO_ISC",
-      "VETO_EL_ENC",
+      "VETO_EL_1_ENC",
+      "",
       "VETO_MAG",
       "VETO_GPS",
-      "VETO_EL_CLIN",
-      "VETO_OSC",
+      "VETO_EL_2_ENC",
+      "",
+      "",
       "IS_SCHED",
       "AZ_AUTO_GYRO",
       "EL_AUTO_GYRO",
       "DISABLE_EL",
       "DISABLE_AZ",
       "FORCE_EL",
-      "VETO_PSS1",
-      "VETO_PSS2"
+      "VETO_PSS"
       ),
 
   LINCOM("AMPL_P", "W_P", 0.5, 0.0), // convert scan width to scan amplitude
