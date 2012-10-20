@@ -52,7 +52,7 @@ static int tableSpeed = 0;
 short int exposing;
 short int docalc;
 short int zerodist[10];
-double goodPos[10] = {95.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0};
+double goodPos[10] = {90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0};
 
 #define TABLE_DEVICE "/dev/ttySI8"
 #define TABLE_ADDR 0x0ff0 //destination address on IDM controller bus (only one drive)
@@ -153,18 +153,24 @@ void updateTableSpeed()
 	  //2) actual encoder position of goodPos now = goodPos(=trigPos) + yawdist
 	  for (i=0; i<10; i++) {
 		if (goodPos[i] == 90.0) targPos = 90.0;
-		else targPos = goodPos[i] + yawdist[i];
+		else {
+			targPos = goodPos[i] + yawdist[i];
+			bprintf(info,"---%i--- targpos=%f, goodPos=%f, yawdist=%f",i,targPos,goodPos[i],yawdist[i]);
+		}
 		if ((targPos > 135) || (targPos < 45)) {//   if it's out-of-bounds, set targPos to 90
 			targPos = 90.0;
 	  		calcdist = thisPos - targPos;
 			FixAngle(calcdist);
+			bprintf(info,"out of bounds, doing 90 instead");
 		} else {
 			calcdist = thisPos - targPos; // it's not out of bounds, check how far away it is
 			FixAngle(calcdist);
+			bprintf(info,"calcdist=%f, thisPos=%f, targPos=%f",calcdist,thisPos,targPos);
 			if ((fabs(calcdist)) > 5.0) { // if it's too far, set targPos to 90
 				targPos = 90.0;
 	  			calcdist = thisPos - targPos;
 				FixAngle(calcdist);
+				bprintf(info,"too far, doing 90 instead");
 			} else {	
 				if (targPos != 90) break; // if it survives the test, use it, otherwise try next one
 			}
@@ -207,10 +213,9 @@ void updateTableSpeed()
   } else {
 	//TRACKING
 	startmove = 1;
-  	//if (exposing)  {
-
+  	if (exposing || CommandData.theugly.paused)  {
 		targVel = PointingData[i_point].v_az;
-  	/*} else {
+  	} else {
 		// having figured out calcdist, set a targVel that will get you there in 1s, and don't update targVel until you get within 0.5
 		if ((calcdist < 0) && (sendvel == 1)) {
 			targVel = (((fabs(calcdist)) > 10.0) ? 10.0 : -calcdist);
@@ -221,9 +226,9 @@ void updateTableSpeed()
 			sendvel = 0;
 		}
 		if ((fabs(dist)) < 0.3) {
-			targVel = -ACSData.ifyaw_gy;//0.0;
+			targVel = PointingData[i_point].v_az;//0.0;
 		}
-  	}*/
+  	}
 
   }
   /*if((j%50)==0)*/ //cout << "TARGVEL= " << targVel << endl;
