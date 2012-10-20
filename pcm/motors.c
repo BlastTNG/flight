@@ -49,7 +49,6 @@
 
 #define V_AZ_MIN 0.05  //smallest measured az speed we trust given gyro
                         //   noise/offsets
-#define OVERSHOOT_BAND 0.15 // travel at v_az_min in this band on turn arounds
 
 /* elevation drive related defines adapted from az-el.c in minicp: */
 #define MAX_STEP 9500    // maximum step rate to send to el motors
@@ -70,7 +69,12 @@
 #define CM_PER_ENC (1000.0/72000.0)
 #define TOLERANCE 0.05    // max acceptable el pointing error (deg)
 
-/* regions of sinsuoidal scan mode */
+
+/* variables storing scan region (relative to defined quad) */
+static int scan_region = 0;
+static int scan_region_last = 0;
+
+/* possible regions of sinsuoidal scan mode */
 #define SCAN_BEYOND_L 1
 #define SCAN_BEYOND_R 2
 #define SCAN_L_TO_R 3
@@ -348,7 +352,7 @@ static void GetVElev(double* v_P, double* v_S)
   enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
   enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
-  if ( !(CommandData.power.elmot_auto) || (on_delay >= 200) ) {
+  if ( !(CommandData.power.elmot_auto) || (on_delay >= 35) ) {
     el_dest_this = el_dest;
   }
 
@@ -589,8 +593,14 @@ static double GetVPivot(int TxIndex, unsigned int gI_v_rw,unsigned int gP_v_rw,
   //P_v_az_term = -1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
   P_v_az_term = 1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
   I_v_rw_term = ( (double)gI_v_rw/100.0 )*(int_v_rw);
-  P_v_req_term = -( (double)gP_v_req )*axes_mode.az_vel;
-  
+  if ( (CommandData.pointing_mode.mode == P_SPIDER) || 
+       (CommandData.pointing_mode.mode == P_SINE) ) {
+     if ( (scan_region != SCAN_BEYOND_L) && (scan_region != SCAN_BEYOND_R) ){
+       P_v_req_term = -( (double)gP_v_req )*axes_mode.az_vel;
+     }
+  } else {
+    P_v_req_term = 0.0;
+  }    
   v_req = P_v_rw_term + P_t_rw_term + P_v_az_term + I_v_rw_term + P_v_req_term;
 
   if(disabled) { // Don't request a velocity if we are disabled.
@@ -1104,8 +1114,8 @@ static void DoSineMode(void)
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
 
   /* case 1: moving into scan from beyond left endpoint: */
-  if (az < left - OVERSHOOT_BAND) {
-    v_az = sqrt(2.0*az_accel*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
+  if (az < left - CommandData.pointing_mode.overshoot_band) {
+    v_az = sqrt(2.0*az_accel*(left - CommandData.pointing_mode.overshoot_band - az)) + V_AZ_MIN;
     a_az = -az_accel; 
     //a_az = 0.0;
     if (v_az > v_az_max) {
@@ -1116,8 +1126,8 @@ static void DoSineMode(void)
     axes_mode.az_accel = a_az;
   
   /* case 2: moving into quad from beyond right endpoint: */
-  } else if (az > right + OVERSHOOT_BAND) {
-    v_az = -sqrt(2.0*az_accel*(az-(right+OVERSHOOT_BAND))) - V_AZ_MIN;
+  } else if (az > right + CommandData.pointing_mode.overshoot_band) {
+    v_az = -sqrt(2.0*az_accel*(az-(right+CommandData.pointing_mode.overshoot_band))) - V_AZ_MIN;
     a_az = az_accel;
     //a_az = 0.0;
     if (v_az < -v_az_max) {
@@ -1216,8 +1226,6 @@ static void DoSpiderMode(void)
   int i, i_point;
   int N_scans; // number of azimuth half-scans per el step
  
-  static int scan_region = 0;
-  static int scan_region_last = 0;
   static int past_step_point = 0;
   static int past_step_point_last = 0;
   
@@ -1317,11 +1325,11 @@ static void DoSpiderMode(void)
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
 
   /* case 1: moving into scan from beyond left endpoint: */
-  if (az < left - OVERSHOOT_BAND) {
+  if (az < left - CommandData.pointing_mode.overshoot_band) {
     in_scan = 0;
     scan_region = SCAN_BEYOND_L;
     scan_region_last = scan_region;
-    v_az = sqrt(2.0*az_accel*(left - OVERSHOOT_BAND - az)) + V_AZ_MIN;
+    v_az = sqrt(2.0*az_accel*(left - CommandData.pointing_mode.overshoot_band - az)) + V_AZ_MIN;
     a_az = -az_accel; 
     //a_az = 0.0;
     if (v_az > v_az_max) {
@@ -1332,10 +1340,10 @@ static void DoSpiderMode(void)
     axes_mode.az_accel = a_az;
   
   /* case 2: moving into quad from beyond right endpoint: */
-  } else if (az > right + OVERSHOOT_BAND) {
+  } else if (az > right + CommandData.pointing_mode.overshoot_band) {
     scan_region = SCAN_BEYOND_R;
     scan_region_last = scan_region;
-    v_az = -sqrt(2.0*az_accel*(az-(right+OVERSHOOT_BAND))) - V_AZ_MIN;
+    v_az = -sqrt(2.0*az_accel*(az-(right+CommandData.pointing_mode.overshoot_band))) - V_AZ_MIN;
     a_az = az_accel;
     //a_az = 0.0;
     if (v_az < -v_az_max) {
@@ -1347,7 +1355,8 @@ static void DoSpiderMode(void)
 
   /* case 3: moving from left to right endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
-             && (PointingData[i_point].v_az > 0.0) ) {
+             && ( (PointingData[i_point].v_az
+	           +PointingData[i_point].offset_ifyaw_gy)  > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     scan_region = SCAN_L_TO_R;
  
@@ -1390,7 +1399,8 @@ static void DoSpiderMode(void)
 
   /* case 4: moving from right to left endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
-              && (PointingData[i_point].v_az < 0.0) ) {
+              && ( (PointingData[i_point].v_az
+		    +PointingData[i_point].offset_ifyaw_gy) < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     scan_region = SCAN_R_TO_L;
   
@@ -2703,8 +2713,8 @@ void* reactComm(void* arg)
 	bprintf(info,"d8.13h = %i",tmp);
 	tmp = queryAMCInd(216,19,1,&reactinfo);
 	bprintf(info,"v2 d8.13h = %i",tmp);
-	tmp = queryAMCInd(1, 0, 1, &reactinfo);
-	bprintf(info, "Control bitfield = 0x%04x", tmp);
+	tmp = queryAMCInd(3, 2, 1, &reactinfo);
+	bprintf(info, "Sys. Protect status bitfield = 0x%04x", tmp);
       }
 
       res_rw = getAMCResolver(&reactinfo);
@@ -2919,8 +2929,8 @@ void* pivotComm(void* arg)
 	bprintf(info,"d8.13h = %i",tmp);
 	tmp = queryAMCInd(216,19,1,&pivotinfo);
 	bprintf(info,"v2 d8.13h = %i",tmp);
-	tmp = queryAMCInd(1, 0, 1, &pivotinfo);
-	bprintf(info, "Control bitfield = 0x%04x", tmp);
+	tmp = queryAMCInd(3, 2, 1, &pivotinfo);
+	bprintf(info, "Sys. Protect status bitfield = 0x%04x", tmp);
       }
 
       pos_raw=getAMCResolver(&pivotinfo);

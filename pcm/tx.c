@@ -138,6 +138,7 @@ static void WriteAux(void)
   static struct NiosStruct* frameExtBbcAddr;
   static struct NiosStruct* rateFrameBbcAddr;
   static struct NiosStruct* rateSampAdcAddr;
+  static struct NiosStruct* bandAzAddr;
 
   static int incharge = -1;
   time_t t;
@@ -173,6 +174,7 @@ static void WriteAux(void)
     frameExtBbcAddr = GetNiosAddr("frame_ext_bbc");
     rateFrameBbcAddr = GetNiosAddr("rate_frame_bbc");
     rateSampAdcAddr = GetNiosAddr("rate_samp_adc");
+    bandAzAddr = GetNiosAddr("band_az");
   }
 
   if (StartupVeto>0) {
@@ -231,14 +233,16 @@ static void WriteAux(void)
        NIOS_QUEUE);
 
   WriteCalData(frameIntBbcAddr, CommandData.bbcIntFrameRate, NIOS_QUEUE);
-  if (CommandData.bbcExtFrameMeas > BBC_SYNC_TIMEOUT)
+  if (CommandData.bbcExtFrameMeas > BBC_SYNC_TIMEOUT) {
     WriteCalData(rateExtBbcAddr, 0.0, NIOS_QUEUE);
-  else
+  } else {
     WriteCalData(rateExtBbcAddr,32.e6/CommandData.bbcExtFrameMeas,NIOS_QUEUE);
+  }
   WriteData(frameExtBbcAddr, CommandData.bbcExtFrameRate, NIOS_QUEUE);
 
   WriteCalData(rateFrameBbcAddr, ACSData.bbc_rate, NIOS_QUEUE);
   WriteCalData(rateSampAdcAddr, ACSData.adc_rate, NIOS_QUEUE);
+  WriteCalData(bandAzAddr, CommandData.pointing_mode.overshoot_band, NIOS_QUEUE);
 
   mccstatus =        
     (BitsyIAm ? 0x1 : 0x0) +                 //0x01

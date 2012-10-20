@@ -461,7 +461,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 	  setWriteAccess(amcinfo);
 	  wrset=checkAMCAccess(amcinfo);
 	}
-     // count = send_amccmd(1, 0, 0x1001, 1, cmd, amcinfo); // reset drive status events
+      count = send_amccmd(3, 2, 0x0040, 1, cmd, amcinfo); // reset drive status events
       amcinfo->init=1;
       amcinfo->err=0;
       return;
@@ -509,7 +509,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 	  wrset=checkAMCAccess(amcinfo);
           m=disableAMC(amcinfo); // Make sure the AMC is disabled
 	}
-      //count = send_amccmd(1, 0, 0x1001, 1, cmd, amcinfo); // reset drive status events
+      count = send_amccmd(3, 2, 0x040, 1, cmd, amcinfo); // reset drive status events
       amcinfo->err=0;
       amcinfo->init=1;
     }

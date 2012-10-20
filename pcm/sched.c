@@ -96,7 +96,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   int n_fields, mindex;
   int el_range_warning;
   int discarded_lines;
-
+  
   bprintf(sched, "********************************************\n"
           "*** Schedule: %s\n", file);
   /*******************************************/
@@ -148,7 +148,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
 
   S->t0 = mktime(&ts) - timezone;
-
+  
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/ //166 east lon
   dt = (mcp_systime(NULL) - S->t0) * 1.002737909; /* Ref Siderial Time */

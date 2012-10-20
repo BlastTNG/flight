@@ -179,8 +179,8 @@ void UnwindDiff(double ref, double *A)
 void SetSafeDAz(double ref, double *A)
 {
   *A = ref + remainder(*A - ref, 360.0);
-  if (sun_el < MAX_SUN_EL)
-    return;
+  //if (sun_el < MAX_SUN_EL)
+  //  return;
 
   sun_az = ref + remainder(sun_az - ref, 360.0);
 

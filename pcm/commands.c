@@ -876,6 +876,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.Nscans = ivalues[2];
       CommandData.pointing_mode.del = rvalues[3];
       CommandData.pointing_mode.Nsteps = ivalues[4];
+      CommandData.pointing_mode.overshoot_band = rvalues[5];
       break;
     case sine_scan:
       CommandData.pointing_mode.w = 2.0*rvalues[0];
@@ -1802,6 +1803,7 @@ void InitCommandData()
   CommandData.pointing_mode.Nscans = 1;
   CommandData.pointing_mode.Nsteps = 10;
   CommandData.pointing_mode.new_spider = 1;
+  CommandData.pointing_mode.overshoot_band = 0.15;
 
   CommandData.az_accel = 0.1; 
   CommandData.az_accel_max = 1.0;
