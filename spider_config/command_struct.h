@@ -128,6 +128,7 @@ struct PointingModeStruct {
   int Nscans;  // number of half-scans per el step in SPIDER mode
   int Nsteps;  // total number of el steps in SPIDER mode
   int new_spider; // set to 1 if a new, distinct spider scan is commanded
+  double overshoot_band; // width of turn around zone for Spider and Sine scans 
 };
 
 struct latch_pulse {

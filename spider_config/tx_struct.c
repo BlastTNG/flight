@@ -791,14 +791,14 @@ struct ChannelStruct SlowChannels[] = {
   {"enc_cnt_4_hwp",'w', LOOP0,  8,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_5_hwp",'w', LOOP0,  9,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_6_hwp",'w', LOOP0, 10,     I2DEG,      0.0,      'u',      U_P_DEG},
-  /* LOOP0 12-23 are wide slow */
+  /* LOOP0 12-23 and 30-41 are wide slow */
   {"state_1_cycle",  'w', LOOP0,  24,                1.0,            0.0, 'u', U_NONE},
   {"state_2_cycle",  'w', LOOP0,  25,                1.0,            0.0, 'u', U_NONE},
   {"state_3_cycle",  'w', LOOP0,  26,                1.0,            0.0, 'u', U_NONE},
   {"state_4_cycle",  'w', LOOP0,  27,                1.0,            0.0, 'u', U_NONE},
   {"state_5_cycle",  'w', LOOP0,  28,                1.0,            0.0, 'u', U_NONE},
   {"state_6_cycle",  'w', LOOP0,  29,                1.0,            0.0, 'u', U_NONE},
-
+  {"band_az",        'w', LOOP0,  43,                30.0/65535.0,   0.0, 'u', U_P_DEG},
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
