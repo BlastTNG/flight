@@ -369,13 +369,15 @@ void cameraFields()
 	}
   }   
   rscwait++;
-  if ((rscwait%10)==0) {
+  if ((rscwait%20)==0) {
 	if (!CommandData.thebad.paused) {
 		sendTheBadCommand("CtrigExp");
+	}
+	if (!CommandData.theugly.paused) {
+		sendTheUglyCommand("CtrigExp");
 		exposing = 1;
 		rscwait = 0;
 	}
-	if (!CommandData.theugly.paused) sendTheUglyCommand("CtrigExp");
 	for (int i=0; i<10; i++) {
 		if (goodPos[i] == 90.0) { 
 			trigPos[i] = ACSData.enc_table;
@@ -476,16 +478,6 @@ void cameraFields()
 	}
 	WriteData(TheBadBlobIdx, blobindex[1], NIOS_QUEUE);
 	blobindex[1] = (blobindex[1] + 1) % 5;
-	if (rsc->numblobs > 8) {
-		for (int j=0; j<10; j++) {
-			if ((goodPos[j] == 90.0) && (rsc->frameNum != posFrame)) {
-				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
-				cout << rsc->numblobs << " BLOBS" <<  ", setting GOODPOS #" << j << " to " << goodPos[j] << endl;
-				posFrame = rsc->frameNum;
-				break;
-			}
-		}
-	}
     } else if (which == 2) {
     	WriteData(TheUglyFrameAddr, rsc->frameNum, NIOS_QUEUE);
     	WriteData(TheUglyMeanAddr, (int)rsc->mapmean, NIOS_QUEUE);
@@ -515,6 +507,16 @@ void cameraFields()
 	}
 	WriteData(TheUglyBlobIdx, blobindex[2], NIOS_QUEUE);
 	blobindex[2] = (blobindex[2] + 1) % 5;
+	if ((rsc->numblobs > 8) && ((rsc->mapmean) < 1200.0)) {
+		for (int j=0; j<10; j++) {
+			if ((goodPos[j] == 90.0) && (rsc->frameNum != posFrame)) {
+				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
+				bprintf(info,"SETTING goodPos[%i]",j);
+				posFrame = rsc->frameNum;
+				break;
+			}
+		}
+	}
     }
 
   }
