@@ -602,8 +602,8 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_PLATE_3_HK",     "VD_PLATE_3_HK",     LUT_DIR "dt670.lut"),
   T_HK("TD_CHARCOAL_3_HK",  "VD_SNOUT_3_HK",     LUT_DIR "dt670.lut"),
   T_HK("TD_SPITTOON_3_HK",  "VD_SPITTOON_3_HK",  LUT_DIR "dt670.lut"),
-  T_HK("TD_AUX_POST_3_HK",  "VD_AUX_POST_3_HK",  LUT_DIR "dt670.lut"),
-  T_HK("TD_BIRDY_3_HK",     "VD_STOP_3_HK",      LUT_DIR "dt670.lut"),
+  T_HK("TD_AUX_POST_3_HK",  "VD_AUX_POST_3_HK",  LUT_DIR "D6032429.lut"),
+  T_HK("TD_BIRDY_3_HK",     "VD_STOP_3_HK",      LUT_DIR "D6031960.lut"),
   T_HK("TD_SSA_3_HK",       "VD_SSA_3_HK",       LUT_DIR "d_curve10.lut"),
   
   //Theo diode calibrations.
