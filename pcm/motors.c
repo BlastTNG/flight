@@ -68,7 +68,7 @@
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
 #define TOLERANCE 0.05    // max acceptable el pointing error (deg)
-
+#define TWIST_TOL 0.01    // max acceptable twist error (deg)
 
 /* variables storing scan region (relative to defined quad) */
 static int scan_region = 0;
@@ -342,7 +342,7 @@ static void GetVElev(double* v_P, double* v_S)
                           // right encoders.
   double max_dv;
   double g_com;
-  double g_diff;
+  double g_diff=0.0;
   double v_P_max;
   double v_S_max;
 
@@ -356,7 +356,6 @@ static void GetVElev(double* v_P, double* v_S)
   double del_strbrd;
   static int on_delay = 0;
   static double el_dest_this = -1.0;
-
 
 //  static int motors_off = 1;
   static int since_arrival = 0;
@@ -387,6 +386,7 @@ static void GetVElev(double* v_P, double* v_S)
 
   if ( !(CommandData.power.elmot_auto) || (on_delay >= 35) ) {
     el_dest_this = el_dest;
+    g_diff = CommandData.ele_gain.diff;
   }
 
   dy = el_dest_this - ACSData.enc_mean_el;
@@ -399,7 +399,8 @@ static void GetVElev(double* v_P, double* v_S)
   g_com = CommandData.ele_gain.com * (double)(fabs(dy)>TOLERANCE);
   max_dv = 1.05 * CommandData.ele_gain.com*CommandData.ele_gain.com * (1.0/(2.0*ACSData.bbc_rate));  // 5% higher than deceleration...
 
-  g_diff = CommandData.ele_gain.diff * (double)(fabs(err)>TOLERANCE);
+  g_diff *= (double)(fabs(err)>TWIST_TOL);
+
   *v_P = SetVElev(g_com, -g_diff, dy, err, v_P_last, max_dv, enc_port);
   *v_S = SetVElev(g_com, g_diff, dy, err, v_S_last, max_dv, enc_strbrd);
  
