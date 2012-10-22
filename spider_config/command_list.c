@@ -393,7 +393,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "G_COM_EL"},
       {"Differential Gain (Hz)",         0.0, 1.0, 'f', "G_DIFF_EL"},
-      {"Elevation Encoder Twist (deg)",     -0.5, 0.5, 'f', "NONE"}
+      {"Elevation Encoder Twist (deg)",     -2.0, 2.0, 'f', "NONE"}
     }
   },
   {COMMAND(el_pulse), "manually set el motor pulse rates", GR_GAIN, 2,
