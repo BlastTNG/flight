@@ -874,7 +874,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.az_accel = rvalues[0];
       CommandData.az_accel_max = rvalues[1]; 
       CommandData.pointing_mode.Nscans = ivalues[2];
-      CommandData.pointing_mode.del = rvalues[3];
+      CommandData.pointing_mode.del = CommandData.pointing_mode.el_step 
+	                            = rvalues[3];
       CommandData.pointing_mode.Nsteps = ivalues[4];
       CommandData.pointing_mode.overshoot_band = rvalues[5];
       break;
@@ -1804,6 +1805,7 @@ void InitCommandData()
   CommandData.pointing_mode.Nsteps = 10;
   CommandData.pointing_mode.new_spider = 1;
   CommandData.pointing_mode.overshoot_band = 0.15;
+  CommandData.pointing_mode.el_step = 0.0;
 
   CommandData.az_accel = 0.1; 
   CommandData.az_accel_max = 1.0;

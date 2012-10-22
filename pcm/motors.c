@@ -51,7 +51,7 @@
                         //   noise/offsets
 
 /* elevation drive related defines adapted from az-el.c in minicp: */
-#define MAX_STEP 9500    // maximum step rate to send to el motors
+#define MAX_STEP 10000    // maximum step rate to send to el motors
 #define CM_PULSES 5000   // Cool Muscle pulses per rotation
 #define IN_TO_MM 25.4
 #define ROT_PER_INCH 5    // linear actuator rotations per inch of travel
@@ -263,15 +263,48 @@ double calcVSerRW(void)
     NEW in Spider!
 *************************************************************************/
 static double SetVElev(double g_com, double g_diff, double dy, double err, 
-                        double v_last, double max_dv) 
+                       double v_last, double max_dv, double enc) 
 {
 
-  double v;
+  double v, v_com, v_diff, v_max;
 
+  v_max = fabs( ((double)MAX_STEP*IN_TO_MM) / 
+	     ((double)CM_PULSES*EL_GEAR_RATIO*ROT_PER_INCH*dxdtheta(enc)) );
+  
   if (dy >= 0) {
-    v = g_com*sqrt(dy) - g_diff*err;
+    v_com = g_com*sqrt(dy);
+    
+    if (v_com > v_max) {
+      v_com = v_max;
+    }
+    
+    v_diff = -g_diff*err;
+    
+    if (v_diff > v_max) {
+      v_diff = v_max;
+    } else if (v_diff < -v_max) {
+      v_diff = -v_max;
+    }
+    
+    v = v_com + v_diff;
+  
   } else {
-    v = -g_com*sqrt(-dy) - g_diff*err;
+    v_com = -g_com*sqrt(-dy);
+    
+    if (v_com < -v_max) {
+      v_com = -v_max;
+    } 
+    
+    v_diff = -g_diff*err;
+    
+    if (v_diff > v_max) {
+      v_diff = v_max;
+    } else if (v_diff < -v_max) {
+      v_diff = -v_max;
+    }
+    
+    v = v_com + v_diff;
+    
   }
 /* don't increase/decrease request by more than max_dv: */
   v = ((v - v_last) > max_dv) ? (v_last + max_dv) : v;
@@ -367,8 +400,8 @@ static void GetVElev(double* v_P, double* v_S)
   max_dv = 1.05 * CommandData.ele_gain.com*CommandData.ele_gain.com * (1.0/(2.0*ACSData.bbc_rate));  // 5% higher than deceleration...
 
   g_diff = CommandData.ele_gain.diff * (double)(fabs(err)>TOLERANCE);
-  *v_P = SetVElev(g_com, -g_diff, dy, err, v_P_last, max_dv);
-  *v_S = SetVElev(g_com, g_diff, dy, err, v_S_last, max_dv);
+  *v_P = SetVElev(g_com, -g_diff, dy, err, v_P_last, max_dv, enc_port);
+  *v_S = SetVElev(g_com, g_diff, dy, err, v_S_last, max_dv, enc_strbrd);
  
   if ( !(CommandData.disable_el) && CommandData.power.elmot_auto ) {
     if ( fabs(el_dest - ACSData.enc_mean_el) < TOLERANCE ) {
@@ -429,7 +462,7 @@ static void GetVElev(double* v_P, double* v_S)
     del_strbrd_targ = 0;
     enc_strbrd_ref = enc_strbrd;
   }
-  
+   
   enc_port_last = enc_port;
   enc_strbrd_last = enc_strbrd;
 
@@ -597,6 +630,8 @@ static double GetVPivot(int TxIndex, unsigned int gI_v_rw,unsigned int gP_v_rw,
        (CommandData.pointing_mode.mode == P_SINE) ) {
      if ( (scan_region != SCAN_BEYOND_L) && (scan_region != SCAN_BEYOND_R) ){
        P_v_req_term = -( (double)gP_v_req )*axes_mode.az_vel;
+     } else {
+       P_v_req_term = 0.0;
      }
   } else {
     P_v_req_term = 0.0;
@@ -1270,6 +1305,7 @@ static void DoSpiderMode(void)
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_dest = el_dest_pre = el_start;
     axes_mode.el_vel = 0.0;
+    CommandData.pointing_mode.del = CommandData.pointing_mode.el_step;
     CommandData.pointing_mode.new_spider = 0;
   }
    
