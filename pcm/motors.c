@@ -39,7 +39,7 @@
 
 // TODO: Revise these el limits for Spider flight:
 #define MIN_EL 35
-#define MAX_EL 45
+#define MAX_EL 42
 
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
@@ -1796,6 +1796,11 @@ static void DoRaDecGotoMode(void)
   axes_mode.az_vel = 0.0;
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = cel;
+  if (axes_mode.el_dest > MAX_EL) {
+    axes_mode.el_dest = MAX_EL;
+  } else if (axes_mode.el_dest < MIN_EL) {
+    axes_mode.el_dest = MIN_EL;
+  }
   axes_mode.el_vel = 0.0;
   //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
   bsc_trigger = 1;

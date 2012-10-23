@@ -82,6 +82,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
   switch (command) {
     case stop: /* Pointing abort */
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;
@@ -92,13 +93,19 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.h = 0;
       break;
     case antisun: /* turn antisolar (az-only) */
-      sun_az = PointingData[i_point].sun_az + 250; /* point solar panels to sun */
+
+      /* point solar panels to sun */
+      //sun_az = PointingData[i_point].sun_az + 250;       
+      sun_az = PointingData[i_point].sun_az + 180.0; // set to this for now
+
       NormalizeAngle(&sun_az);
 
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
       CommandData.pointing_mode.X = sun_az;  /* az */
-      CommandData.pointing_mode.Y = PointingData[i_point].el;  /* el */
+      //CommandData.pointing_mode.Y = PointingData[i_point].el;  /* el */
+      CommandData.pointing_mode.Y = ACSData.enc_mean_el;
       CommandData.pointing_mode.vaz = 0.0;
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
@@ -474,6 +481,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.lock.goal = lock_insert;
       break;
     case lock:  /* Lock Inner Frame */
+      CommandData.ele_gain.manual_pulses = 0;
       if (CommandData.pointing_mode.nw >= 0)
         CommandData.pointing_mode.nw = VETO_MAX;
       CommandData.lock.goal = lock_el_wait_insert;
@@ -816,6 +824,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case az_scan:
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_AZ_SCAN;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
@@ -826,6 +835,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case drift:
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;
@@ -836,6 +846,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       break;
     case ra_dec_goto:
+      CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_RADEC_GOTO;
       CommandData.pointing_mode.X = rvalues[0]; /* ra */
