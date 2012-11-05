@@ -44,8 +44,8 @@
 #define DIOD_A3	15, 0
 #define HWP_C	16, 0
 #define HWP_D	17, 0
-#define HWP_A1	18, 0
-#define HWP_A2	19, 0
+#define HWP_A1	19, 0 /* nodes swapped to change Theo/HWP */
+#define HWP_A2	18, 0 /* nodes swapped to change Theo/HWP */
 //TODO could make it possible for LOOPbacks to not need explicit channels
 #define LOOP1	32, 0
 #define LOOP2	33, 0

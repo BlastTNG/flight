@@ -26,7 +26,7 @@
 #define MAX_30BIT (1073741823.)
 
 //maximum insert number for hk commands. TODO-theo temporarily set to 4
-#define	HK_MAX  4
+#define	HK_MAX  6
 
 #define N_GROUPS 24
 
