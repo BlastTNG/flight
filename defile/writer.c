@@ -406,11 +406,12 @@ int CheckWriteAllow(int mkdir_err)
 
   if (rc.write_mode == 2) {
     /* check to see if we've read all the channels */
-    if ((n_fast != ccWideFast + ccNarrowFast + 1 + ccDecom) ||
+    if ((n_fast != ccWideFast + ccNarrowFast + 2 + ccDecom) ||
         (n_slow != ccNarrowSlow + ccWideSlow) ||
         (n_bolo != DAS_CARDS * DAS_CHS))
-      bprintf(fatal, "dirfile `%s' is missing field files\ncannot resume.\n",
-          rc.dirfile);
+      bprintf(fatal, "dirfile `%s' is missing field files\ncannot resume. n_fast=%d(%d), n_slow=%d(%d), n_bolo=%d(%d)\n",
+	      rc.dirfile,n_fast,ccWideFast + ccNarrowFast + 1 + ccDecom,
+	      n_slow,ccNarrowSlow + ccWideSlow,n_bolo,DAS_CARDS * DAS_CHS);
 
     /* Be safe -- go backwards a bit */
     if (min_wrote > 0) {
