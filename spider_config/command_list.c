@@ -34,8 +34,8 @@ const char *GroupNames[N_GROUPS] = {
   "Pointing Sensor Trims", "Aux. Electronics", "HK Bias",
   "Pointing Sensor Vetos", "Actuators",        "Long Range Missiles",
   "Pointing Motor Gains",  "Lock Motor",       "HK Insert Heat",
-  "Subsystem Power",       "SC Table",         "HK Theo Heat",
-  "Telemetry",             "The Good SC",      "Semi-Automatic Weapons",
+  "Outer Frame Power",     "SC Table",         "HK Theo Heat",
+  "Telemetry",             "The Good SC",      "Inner Frame Power",
   "X-Y Stage",             "The Bad SC",       "Knives and Swords",
   "Miscellaneous",         "The Ugly SC",      "Handguns"
   };
@@ -120,6 +120,38 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(charge_cycle), "power cycle the charge controller", 
     GR_POWER | CONFIRM},
 
+  {COMMAND(mce1_on), "turn on MCE power supply 1 (MCE 1, MCE 2, & MCC 1)", GR_IFPOWER},
+  {COMMAND(mce1_off), "turn off MCE power supply 1 (MCE 1, MCE 2, & MCC 1)", GR_IFPOWER},
+  {COMMAND(mce1_cycle), "power cycle MCE power supply 1 (MCE 1, MCE 2, & MCC 1)", GR_IFPOWER},
+
+  {COMMAND(mce2_on), "turn on MCE power supply 2 (MCE 3, MCE 4, & MCC 2)", GR_IFPOWER},
+  {COMMAND(mce2_off), "turn off MCE power supply 2 (MCE 3, MCE 4, & MCC 2)", GR_IFPOWER},
+  {COMMAND(mce2_cycle), "power cycle MCE power supply 2 (MCE 3, MCE 4, & MCC 2)", GR_IFPOWER},
+
+  {COMMAND(mce3_on), "turn on MCE power supply 3 (MCE 5, MCE 6, & MCC 3)", GR_IFPOWER},
+  {COMMAND(mce3_off), "turn off MCE power supply 3 (MCE 5, MCE 6, & MCC 3)", GR_IFPOWER},
+  {COMMAND(mce3_cycle), "power cycle MCE power supply 3 (MCE 5, MCE 6, & MCC 3)", GR_IFPOWER},
+
+  {COMMAND(mac_on), "turn on the MCE Archive Computer", GR_IFPOWER},
+  {COMMAND(mac_off), "turn off the MCE Archive Computer", GR_IFPOWER},
+  {COMMAND(mac_cycle), "power cycle the MCE Archive Computer", GR_IFPOWER},
+
+  {COMMAND(sync_on), "turn on the sync box", GR_IFPOWER},
+  {COMMAND(sync_off), "turn off the sync box", GR_IFPOWER},
+  {COMMAND(sync_cycle), "power cycle the sync box", GR_IFPOWER},
+  
+  {COMMAND(eth_on), "turn on the inner frame ethernet switch", GR_IFPOWER},
+  {COMMAND(eth_off), "turn off the inner frame ethernet switch", GR_IFPOWER},
+  {COMMAND(eth_cycle), "power cycle inner frame ethernet switch", GR_IFPOWER},
+  
+  {COMMAND(hwp_on), "turn on the HWP rotators", GR_IFPOWER},
+  {COMMAND(hwp_off), "turn off the HWP rotators", GR_IFPOWER},
+  {COMMAND(hwp_cycle), "power cycle HWP rotators", GR_IFPOWER},
+  
+  {COMMAND(hk_preamp_on), "turn on the HK preamp crate", GR_IFPOWER},
+  {COMMAND(hk_preamp_off), "turn off the HK preamp crate", GR_IFPOWER},
+  {COMMAND(hk_preamp_cycle), "power cycle the HK preamp crate", GR_IFPOWER},
+  
   {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_GAIN},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_GAIN},
@@ -262,7 +294,7 @@ struct scom scommands[N_SCOMMANDS] = {
   //make better use of unused groups
   {COMMAND(pull_cmb_pin), "????", 0x00000002},
   {COMMAND(global_thermonuclear_war), "????", 0x00000100},
-  {COMMAND(get_some), "????", 0x00020000},
+  //{COMMAND(get_some), "????", 0x00020000},
   {COMMAND(stab), "????", 0x00100000},
   {COMMAND(lock_and_load), "????", 0x00800000},
 

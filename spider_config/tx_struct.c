@@ -41,11 +41,11 @@
 #define DIOD_C	12, 0
 #define DIOD_A1	13, 0
 #define DIOD_A2	14, 0
-#define DIOD_A3	15, 0
+#define DIOD_A3	15, 0 /* swapped with theo, originally 15 */
 #define HWP_C	16, 0
 #define HWP_D	17, 0
-#define HWP_A1	19, 0 /* nodes swapped to change Theo/HWP */
-#define HWP_A2	18, 0 /* nodes swapped to change Theo/HWP */
+#define HWP_A1  19, 0 /* nodes swapped to change Theo/HWP, originally 18 */
+#define HWP_A2  18, 0 /* nodes swapped to change Theo/HWP, originally 19 */
 //TODO could make it possible for LOOPbacks to not need explicit channels
 #define LOOP1	32, 0
 #define LOOP2	33, 0
@@ -373,6 +373,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_jfet",        'r', DIOD_A2, 21,         CAL16(1.0,            0.0), 'u', U_V_V},
 #endif
 
+  {"ifpwr",         'w', HWP_D,  50,                1.0,             0.0, 'u', U_NONE},
   //TODO replace these with one write
   {"phase_00_hwp",  'w', HWP_A1,  0,               I2DEG,            0.0, 'u',U_PH_DEG},
   {"phase_01_hwp",  'w', HWP_A1,  1,               I2DEG,            0.0, 'u',U_PH_DEG},

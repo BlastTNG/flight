@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 174        /* total number of single word cmds */
+#define N_SCOMMANDS 197        /* total number of single word cmds */
 #define N_MCOMMANDS 122        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -47,7 +47,7 @@
 #define GR_THEO_HEAT	0x00004000
 #define GR_TELEM        0x00008000
 #define GR_SCGOOD       0x00010000
-//#define GR_OSC_HOUSE    0x00020000	  //unused
+#define GR_IFPOWER      0x00020000	  
 #define GR_STAGE        0x00040000
 #define GR_SCBAD        0x00080000
 //#define GR_OSC_MODE     0x00100000	  //unused
@@ -110,7 +110,12 @@ enum singleCommand {
   hk_sft_bottom_heat_on,     hk_sft_bottom_heat_off,    hk_t7_heat_on,     hk_t7_heat_off,
   bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
   //make better use of unused groups
-  pull_cmb_pin, global_thermonuclear_war, get_some, stab, lock_and_load,
+  pull_cmb_pin, global_thermonuclear_war, stab, lock_and_load, 
+  mce1_on,           mce1_off,          mce1_cycle,        mce2_on,        mce2_off,
+  mce2_cycle,        mce3_on,           mce3_off,          mce3_cycle,     mac_on,
+  mac_off,           mac_cycle,         sync_on,           sync_off,       sync_cycle,
+  eth_on,            eth_off,           eth_cycle,         hwp_on,         hwp_off,
+  hwp_cycle,         hk_preamp_on,      hk_preamp_off,     hk_preamp_cycle, 
   xyzzy	    //xyzzy should be at the end of the list
 };
 

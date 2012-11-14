@@ -261,6 +261,17 @@ struct CommandDataStruct {
     int elmot_is_on; // 1 if el drive on, 0 if not
   } power;
 
+  struct {
+    struct latch_pulse mce1;
+    struct latch_pulse mce2;
+    struct latch_pulse mce3;
+    struct latch_pulse mac;
+    struct latch_pulse sync;
+    struct latch_pulse eth;
+    struct latch_pulse hwp;
+    int hk_preamp_off;
+  } ifpower;
+  
   unsigned short disable_az;
   unsigned short disable_el;
   unsigned short force_el;
