@@ -470,6 +470,102 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.force_repoll = 1;
       break;
 
+    /* Inner Frame Power */
+
+    case mce1_off:
+      CommandData.ifpower.mce1.set_count = 0;
+      CommandData.ifpower.mce1.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mce1_on:
+      CommandData.ifpower.mce1.rst_count = 0;
+      CommandData.ifpower.mce1.set_count = LATCH_PULSE_LEN;
+      break;
+    case mce1_cycle:
+      CommandData.ifpower.mce1.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.ifpower.mce1.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mce2_off:
+      CommandData.ifpower.mce2.set_count = 0;
+      CommandData.ifpower.mce2.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mce2_on:
+      CommandData.ifpower.mce2.rst_count = 0;
+      CommandData.ifpower.mce2.set_count = LATCH_PULSE_LEN;
+      break;
+    case mce2_cycle:
+      CommandData.ifpower.mce2.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.ifpower.mce2.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mce3_off:
+      CommandData.ifpower.mce3.set_count = 0;
+      CommandData.ifpower.mce3.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mce3_on:
+      CommandData.ifpower.mce3.rst_count = 0;
+      CommandData.ifpower.mce3.set_count = LATCH_PULSE_LEN;
+      break;
+    case mce3_cycle:
+      CommandData.ifpower.mce3.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.ifpower.mce3.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mac_off:
+      CommandData.ifpower.mac.set_count = 0;
+      CommandData.ifpower.mac.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mac_on:
+      CommandData.ifpower.mac.rst_count = 0;
+      CommandData.ifpower.mac.set_count = LATCH_PULSE_LEN;
+      break;
+    case mac_cycle:
+      CommandData.ifpower.mac.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.ifpower.mac.rst_count = LATCH_PULSE_LEN;
+      break;
+    case sync_off:
+      CommandData.ifpower.sync.set_count = 0;
+      CommandData.ifpower.sync.rst_count = LATCH_PULSE_LEN;
+      break;
+    case sync_on:
+      CommandData.ifpower.sync.rst_count = 0;
+      CommandData.ifpower.sync.set_count = LATCH_PULSE_LEN;
+      break;
+    case sync_cycle:
+      CommandData.ifpower.sync.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.ifpower.sync.rst_count = LATCH_PULSE_LEN;
+      break;
+    case eth_off:
+      CommandData.ifpower.eth.set_count = 0;
+      CommandData.ifpower.eth.rst_count = LATCH_PULSE_LEN;
+      break;
+    case eth_on:
+      CommandData.ifpower.eth.rst_count = 0;
+      CommandData.ifpower.eth.set_count = LATCH_PULSE_LEN;
+      break;
+    case eth_cycle:
+      CommandData.ifpower.eth.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.ifpower.eth.rst_count = LATCH_PULSE_LEN;
+      break;
+    case hwp_off:
+      CommandData.ifpower.hwp.set_count = 0;
+      CommandData.ifpower.hwp.rst_count = LATCH_PULSE_LEN;
+      break;
+    case hwp_on:
+      CommandData.ifpower.hwp.rst_count = 0;
+      CommandData.ifpower.hwp.set_count = LATCH_PULSE_LEN;
+      break;
+    case hwp_cycle:
+      CommandData.ifpower.hwp.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.ifpower.hwp.rst_count = LATCH_PULSE_LEN;
+      break;
+    case hk_preamp_off:
+      CommandData.ifpower.hk_preamp_off = -1;
+      break;
+    case hk_preamp_on:
+      CommandData.ifpower.hk_preamp_off = 0;
+      break;
+    case hk_preamp_cycle:
+      CommandData.ifpower.hk_preamp_off = PCYCLE_HOLD_LEN;
+      break;
+
     /* Lock */
     case lock_on:
       CommandData.power.lock_off = 0;
@@ -750,10 +846,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
       bputs(info, "The only winning move is not to play");
       CommandData.questionable_behaviour++;
       break;
-    case get_some:
+    /*case get_some:
       bputs(info, "Aaaarrrgggh!");
       CommandData.questionable_behaviour++;
-      break;
+      break;*/
     case stab:
       bputs(info, "Swish, slash");
       CommandData.questionable_behaviour++;

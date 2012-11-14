@@ -272,13 +272,15 @@ void ControlPower(void) {
   static struct NiosStruct* latchingAddr[2];
   static struct NiosStruct* switchGyAddr;
   static struct NiosStruct* switchMiscAddr;
-  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0;
+  static struct NiosStruct* ifPwrAddr;
+  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0; // ifpwr is IF power
   int i;
 
   if (firsttime) {
     firsttime = 0;
     latchingAddr[0] = GetNiosAddr("latch0");
     latchingAddr[1] = GetNiosAddr("latch1");
+    ifPwrAddr = GetNiosAddr("ifpwr");
     switchGyAddr = GetNiosAddr("switch_gy");
     switchMiscAddr = GetNiosAddr("switch_misc");
   }
@@ -426,10 +428,71 @@ void ControlPower(void) {
     if (CommandData.power.rx_amps.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0a00;
   }
 
+  if (CommandData.ifpower.mce1.set_count > 0) {
+    CommandData.ifpower.mce1.set_count--;
+    if (CommandData.ifpower.mce1.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0002;
+  }
+  if (CommandData.ifpower.mce1.rst_count > 0) {
+    CommandData.ifpower.mce1.rst_count--;
+    if (CommandData.ifpower.mce1.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0001;
+  }
+  if (CommandData.ifpower.mce2.set_count > 0) {
+    CommandData.ifpower.mce2.set_count--;
+    if (CommandData.ifpower.mce2.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0008;
+  }
+  if (CommandData.ifpower.mce2.rst_count > 0) {
+    CommandData.ifpower.mce2.rst_count--;
+    if (CommandData.ifpower.mce2.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0004;
+  }
+  if (CommandData.ifpower.mce3.set_count > 0) {
+    CommandData.ifpower.mce3.set_count--;
+    if (CommandData.ifpower.mce3.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0020;
+  }
+  if (CommandData.ifpower.mce3.rst_count > 0) {
+    CommandData.ifpower.mce3.rst_count--;
+    if (CommandData.ifpower.mce3.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0010;
+  }
+  if (CommandData.ifpower.mac.set_count > 0) {
+    CommandData.ifpower.mac.set_count--;
+    if (CommandData.ifpower.mac.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0040;
+  }
+  if (CommandData.ifpower.mac.rst_count > 0) {
+    CommandData.ifpower.mac.rst_count--;
+    if (CommandData.ifpower.mac.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0080;
+  }
+  if (CommandData.ifpower.sync.set_count > 0) {
+    CommandData.ifpower.sync.set_count--;
+    if (CommandData.ifpower.sync.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0100;
+  }
+  if (CommandData.ifpower.sync.rst_count > 0) {
+    CommandData.ifpower.sync.rst_count--;
+    if (CommandData.ifpower.sync.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0200;
+  }
+  if (CommandData.ifpower.eth.set_count > 0) {
+    CommandData.ifpower.eth.set_count--;
+    if (CommandData.ifpower.eth.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0400;
+  }
+  if (CommandData.ifpower.eth.rst_count > 0) {
+    CommandData.ifpower.eth.rst_count--;
+    if (CommandData.ifpower.eth.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0800;
+  }
+  if (CommandData.ifpower.hwp.set_count > 0) {
+    CommandData.ifpower.hwp.set_count--;
+    if (CommandData.ifpower.hwp.set_count < LATCH_PULSE_LEN) ifpwr |= 0x1000;
+  }
+  if (CommandData.ifpower.hwp.rst_count > 0) {
+    CommandData.ifpower.hwp.rst_count--;
+    if (CommandData.ifpower.hwp.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x2000;
+  }
+  if (CommandData.ifpower.hk_preamp_off) {
+    if (CommandData.ifpower.hk_preamp_off > 0) CommandData.ifpower.hk_preamp_off--;
+    ifpwr &= ~0x4000;
+  } else ifpwr |= 0x4000;
 //  misc |= ControlBSCHeat();
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
+  WriteData(ifPwrAddr, ifpwr, NIOS_QUEUE);
   WriteData(switchGyAddr, gybox, NIOS_QUEUE);
   WriteData(switchMiscAddr, misc, NIOS_QUEUE);
 }

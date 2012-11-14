@@ -99,6 +99,7 @@ install: pcm
 	install -m 755 pcm_inf_loop /usr/local/bin
 	install -d -m 777 /data/etc/spider
 	install -m 666  $(ETC_DATA) /data/etc/spider
+	install -m 755 set_sync.sh /usr/local/bin/set_sync
 ifeq ($(TEST_RUN), 1)
 	$(MAKE) fifo
 endif

@@ -51,7 +51,7 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
 #include "tx.h"
  */
 
-#define CHRGCTRL_DEVICE "/dev/ttySI3" // change depending upon serial hub port
+#define CHRGCTRL_DEVICE "/dev/ttyUSB1" // change depending upon serial hub port
 #define QUERY_SIZE 6
 #define CHECKSUM_SIZE 2               
 

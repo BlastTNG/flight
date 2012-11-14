@@ -164,18 +164,24 @@ static void BiasControl()
 #define CRYO_CYCLE_COOL       0x0008
 
 /* auto-cycle timeouts (all in seconds from start of cycle) */
-#define CRYO_CYCLE_HSW_TIMEOUT    (2.75*60)
-#define CRYO_CYCLE_HEAT_TIMEOUT   (32*60)
+#define CRYO_CYCLE_HSW_TIMEOUT    (5*60)
+#define CRYO_CYCLE_HEAT_TIMEOUT   (35*60)
+#define CRYO_CYCLE_SET_TIMEOUT    (1.5*60*60)
 #define CRYO_CYCLE_COOL_TIMEOUT   (2*60*60)
 
+/* minimum times for each state (in seconds from start of state) */
+#define CRYO_CYCLE_HEAT_MIN       (20*60) // time that pump is above minimum
+#define CRYO_CYCLE_SET_MIN        (5*60) // time between pump off and hsw on
+
 /* temperature limits/control points for the auto-cycle */
-#define T_4K_MAX      4.600     /* above this, LHe gone. Do nothing */
-#define T_FP_HOT      0.375     /* above this, start a cycle */
+#define T_4K_MAX      5.000     /* above this, LHe gone. Do nothing */
+#define T_STILL_HOT   0.600     /* above this, start a cycle */
 #define T_HSW_COLD    10.000    /* don't turn on pump until hsw this cold */
 #define T_STILL_MAX   2.500     /* stop heating pump if still gets too hot */
 #define T_PUMP_MAX    38.000    /* stop heating pump when it gets too hot */
-#define T_PUMP_SET    35.000    /* turn hsw on after settling below this */
-#define T_FP_COLD     0.350     /* below this, cycle is complete */
+#define T_PUMP_MIN    30.000    /* above this, pump is hot enough */
+#define T_CP_SET      1.800     /* turn hsw on after settling below this */
+#define T_STILL_COLD  0.350     /* below this, cycle is complete */
 
 #ifndef LUT_DIR
 #define LUT_DIR "/data/etc/spider/"
@@ -184,33 +190,29 @@ static void BiasControl()
 //NB: insert numbered from 0
 static unsigned short FridgeCycle(int insert, int reset)
 {
-  static int firsttime[6] = {1, 1, 1, 1, 1, 1}; 
-  static struct BiPhaseStruct* t4kAddr[6];
-  static struct BiPhaseStruct* tFpAddr[6];
+  static int firsttime[6] = {1, 1, 1, 1, 1, 1};
+  static int firsttime_4k = 1;
+  static struct BiPhaseStruct* t4kAddr;
+  static struct BiPhaseStruct* tCpAddr[6];
   static struct BiPhaseStruct* tPumpAddr[6];
   static struct BiPhaseStruct* tStillAddr[6];
   static struct BiPhaseStruct* tHswAddr[6];
   static struct BiPhaseStruct* vCnxAddr[6];
   static struct NiosStruct*    startCycleWAddr[6];
   static struct BiPhaseStruct* startCycleRAddr[6];
+  static struct NiosStruct*    stimeCycleWAddr[6];
+  static struct BiPhaseStruct* stimeCycleRAddr[6];
   static struct NiosStruct*    stateCycleWAddr[6];
   static struct BiPhaseStruct* stateCycleRAddr[6];
 
-  static struct LutType t4kLut[6] = {
+  static struct LutType t4kLut = {.filename = LUT_DIR "D75551.lut"};
+  static struct LutType tCpLut[6] = {
     {.filename = LUT_DIR "d_simonchase2.lut"},
     {.filename = LUT_DIR "d_simonchase2.lut"},
     {.filename = LUT_DIR "d_simonchase2.lut"},
     {.filename = LUT_DIR "d_simonchase2.lut"},
     {.filename = LUT_DIR "d_simonchase2.lut"},
     {.filename = LUT_DIR "d_simonchase2.lut"}
-  };
-  static struct LutType tFpLut[6] = {
-    {.filename = LUT_DIR "X41767.lut"},
-    {.filename = LUT_DIR "X41767.lut"},
-    {.filename = LUT_DIR "X41767.lut"},
-    {.filename = LUT_DIR "X41767.lut"},
-    {.filename = LUT_DIR "X41767.lut"},
-    {.filename = LUT_DIR "X41767.lut"}
   };
   static struct LutType tPumpLut[6] = {
     {.filename = LUT_DIR "d_simonchase2.lut"},
@@ -224,7 +226,7 @@ static unsigned short FridgeCycle(int insert, int reset)
     {.filename = LUT_DIR "c_thelma5_still.lut"},
     {.filename = LUT_DIR "c_thelma5_still.lut"},
     {.filename = LUT_DIR "c_thelma5_still.lut"},
-    {.filename = LUT_DIR "c_thelma5_still.lut"},
+    {.filename = LUT_DIR "c_still_4.lut"},
     {.filename = LUT_DIR "c_thelma5_still.lut"},
     {.filename = LUT_DIR "c_thelma5_still.lut"}
   };
@@ -237,20 +239,24 @@ static unsigned short FridgeCycle(int insert, int reset)
     {.filename = LUT_DIR "d_simonchase2.lut"}
   };
 
-  double t_4k, t_fp, t_pump, t_still, t_hsw, v_cnx;
+  double t_4k, t_cp, t_pump, t_still, t_hsw, v_cnx;
 
-  time_t start_time;
+  time_t start_time, state_time;
   unsigned short cycle_state, next_state;
   unsigned short heat_pump, heat_hsw;
   unsigned short retval = 0;
 
   if (firsttime[insert]) {
     char field[64];
-    firsttime[insert] = 0;
-    sprintf(field, "vd_4k_%1d_hk", insert+1);
-    t4kAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "vr_fp_%1d_hk", insert+1);
-    tFpAddr[insert] = GetBiPhaseAddr(field);
+    firsttime[insert] = 0; 
+    if (firsttime_4k) {
+      firsttime_4k = 0;
+      sprintf(field, "vd_09_hk");
+      t4kAddr = GetBiPhaseAddr(field);
+      LutInit(&t4kLut);
+    }
+    sprintf(field, "vd_cp_%1d_hk", insert+1);
+    tCpAddr[insert] = GetBiPhaseAddr(field);
     sprintf(field, "vd_pump_%1d_hk", insert+1);
     tPumpAddr[insert] = GetBiPhaseAddr(field);
     sprintf(field, "vr_still_%1d_hk", insert+1);
@@ -266,9 +272,11 @@ static unsigned short FridgeCycle(int insert, int reset)
     stateCycleWAddr[insert] = GetNiosAddr(field);
     stateCycleRAddr[insert] = ExtractBiPhaseAddr(stateCycleWAddr[insert]);
     WriteData(stateCycleWAddr[insert], CRYO_CYCLE_OUT, NIOS_QUEUE);
+    sprintf(field, "start_state_%1d_cycle", insert+1);
+    stimeCycleWAddr[insert] = GetNiosAddr(field);
+    stimeCycleRAddr[insert] = ExtractBiPhaseAddr(stimeCycleWAddr[insert]);
 
-    LutInit(&t4kLut[insert]);
-    LutInit(&tFpLut[insert]);
+    LutInit(&tCpLut[insert]);
     LutInit(&tPumpLut[insert]);
     LutInit(&tStillLut[insert]);
     LutInit(&tHswLut[insert]);
@@ -281,25 +289,25 @@ static unsigned short FridgeCycle(int insert, int reset)
 
   /* get current cycle state */
   start_time = ReadData(startCycleRAddr[insert]);
+  state_time = ReadData(stimeCycleRAddr[insert]);
   cycle_state = ReadData(stateCycleRAddr[insert]);
 
   /* Read voltages for all the thermometers of interest */
-  t_4k = ReadCalData(t4kAddr[insert]);
+  t_4k = ReadCalData(t4kAddr);
+  t_cp = ReadCalData(tCpAddr[insert]);
   t_pump = ReadCalData(tPumpAddr[insert]);
-  t_fp = ReadCalData(tFpAddr[insert]);
   t_still = ReadCalData(tStillAddr[insert]);
   t_hsw = ReadCalData(tHswAddr[insert]);
   v_cnx = ReadCalData(vCnxAddr[insert]);
 
   /* normalize the cernox readings with bias level */
-  t_fp /= v_cnx;
   t_still /= v_cnx;
 
   /* Look-up calibrated temperatures */
-  t_4k = LutCal(&t4kLut[insert], t_4k);
+  t_4k = LutCal(&t4kLut, t_4k);
+  t_cp = LutCal(&tCpLut[insert], t_cp);
   t_pump = LutCal(&tPumpLut[insert], t_pump);
   t_hsw = LutCal(&tHswLut[insert], t_hsw);
-  t_fp = LutCal(&tFpLut[insert], t_fp);
   t_still = LutCal(&tStillLut[insert], t_still);
 
   /* figure out next_state of finite state machine */
@@ -312,10 +320,11 @@ static unsigned short FridgeCycle(int insert, int reset)
   }
   /* COLD: start a cycle when FP too hot (or forced by command) -> HSW_OFF */
   else if (cycle_state == CRYO_CYCLE_COLD) {
-    if ((t_fp > T_FP_HOT && t_still < T_STILL_MAX)
+    if ((t_still > T_STILL_HOT)
         || CommandData.hk[insert].force_cycle) {
       CommandData.hk[insert].force_cycle = 0;
       WriteData(startCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
+      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_HSW_OFF;
       bprintf(info, "Auto Cycle %1d: Turning heat switch off.", insert+1);
     } else next_state = CRYO_CYCLE_COLD;
@@ -324,35 +333,37 @@ static unsigned short FridgeCycle(int insert, int reset)
   else if (cycle_state == CRYO_CYCLE_HSW_OFF) {
     if (t_hsw < T_HSW_COLD
         || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HSW_TIMEOUT)) {
+      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_ON_HEAT;
       bprintf(info, "Auto Cycle %1d: Turning pump heat on.", insert+1);
     } else next_state = CRYO_CYCLE_HSW_OFF;
   }
-  /* ON_HEAT: heat pump until timeout or still too hot -> COOL
-   *          or if pump too hot, let it settle -> ON_SETTLE */
+  /* ON_HEAT: heat pump until timeout -> COOL
+   *          or if pump or still too hot, let it settle -> ON_SETTLE */
   else if (cycle_state == CRYO_CYCLE_ON_HEAT) {
-    if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HEAT_TIMEOUT) ||
-        t_still > T_STILL_MAX) {
-      next_state = CRYO_CYCLE_COOL;
-      bprintf(info, "Auto Cycle %1d: Pump heat off; heat switch on.", insert+1);
-    } else if (t_pump > T_PUMP_MAX) {
+    if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HEAT_TIMEOUT) || 
+	t_pump > T_PUMP_MAX) {
+      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_ON_SETTLE;
       bprintf(info, "Auto Cycle %1d: Turning pump heat off.", insert+1);
     } else next_state = CRYO_CYCLE_ON_HEAT;
   }
-  /* ON_SETTLE: let hot pump settle until timeout, or still too hot -> COOL */
+  /* ON_SETTLE: let hot pump settle until timeout, or CP cold enough -> COOL */
   else if (cycle_state == CRYO_CYCLE_ON_SETTLE) {
-    if (t_pump < T_PUMP_SET || t_still > T_STILL_MAX
-        || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HEAT_TIMEOUT)) {
+    if (((mcp_systime(NULL) - state_time) > CRYO_CYCLE_SET_MIN) && 
+	(t_cp < T_CP_SET ||
+	 ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_SET_TIMEOUT))) {
+      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_COOL;
-      bprintf(info, "Auto Cycle %1d: heat switch on.", insert+1);
+      bprintf(info, "Auto Cycle %1d: Turning heat switch on.", insert+1);
     } else next_state = CRYO_CYCLE_ON_SETTLE;
   }
   /* COOL: wait until fridge is cold -> COLD */
-  else if ( cycle_state == CRYO_CYCLE_COOL) {
-    if ((t_fp < T_FP_COLD)
+  else if (cycle_state == CRYO_CYCLE_COOL) {
+    if ((t_still < T_STILL_COLD)
         || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
       CommandData.hk[insert].force_cycle = 0; //clear pending cycles
+      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_COLD;
       bprintf(info, "Auto Cycle %1d: Fridge is now cold!.", insert+1);
     } else next_state = CRYO_CYCLE_COOL;
@@ -443,12 +454,12 @@ static void PumpServo(int insert)
   
   //TODO update these calibrations
   static struct LutType tPumpLut[6] = {
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
     {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"}
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"}
   };
   
   double t_pump;
