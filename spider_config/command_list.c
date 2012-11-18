@@ -1101,7 +1101,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(mpc_test), "Test the MPC", GR_MCE | MCECMD, 1,
+  {COMMAND(mpc_test), "Test the MPC", GR_MCE | MCECMD, 3,
     {
       {"Final grade (%)", 0, 100, 'i', ""},
       {"Bonus points", -10, 0, 'f', ""},
