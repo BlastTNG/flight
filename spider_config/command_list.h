@@ -18,7 +18,7 @@
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
 #define N_SCOMMANDS 197        /* total number of single word cmds */
-#define N_MCOMMANDS 122        /* total number of multiword commands */
+#define N_MCOMMANDS 123        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -31,7 +31,7 @@
 #define N_GROUPS 24
 
 #define GR_POINT        0x00000001
-//#define GR_BAL          0x00000002	  //unused
+#define GR_MCE          0x00000002
 #define GR_HWPR         0x00000004
 #define GR_TRIM         0x00000008
 #define GR_ELECT        0x00000010
@@ -55,6 +55,7 @@
 #define GR_SCUGLY       0x00400000
 //#define GR_OSC_PARAM    0x00800000	  //unused
 
+#define MCECMD          0x40000000 /* MCE command flag */
 //reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
@@ -158,6 +159,9 @@ enum multiCommand {
   hk_sft_bottom_pulse, hk_t7_pulse,
   spider_scan,	     sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,
+  /* start MCE block */
+  mpc_test,
+  /* end MCE block */
   plugh,                //plugh should be at the end of the list
   sched_packet = 0xff   //not really a command, more of a placeholder
 };

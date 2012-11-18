@@ -30,7 +30,7 @@
 const char *command_list_serial = "$Rev$";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "CMB grenades",     "Waveplate Rotator",
+  "Pointing Modes",        "MCE",              "Waveplate Rotator",
   "Pointing Sensor Trims", "Aux. Electronics", "HK Bias",
   "Pointing Sensor Vetos", "Actuators",        "Long Range Missiles",
   "Pointing Motor Gains",  "Lock Motor",       "HK Insert Heat",
@@ -292,7 +292,6 @@ struct scom scommands[N_SCOMMANDS] = {
    GR_THEO_HEAT},
 
   //make better use of unused groups
-  {COMMAND(pull_cmb_pin), "????", 0x00000002},
   {COMMAND(global_thermonuclear_war), "????", 0x00000100},
   //{COMMAND(get_some), "????", 0x00020000},
   {COMMAND(stab), "????", 0x00100000},
@@ -1099,6 +1098,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
     GR_MISC | CONFIRM, 1,
     {
       {"Rate (# ADC samples (~10kHz))", 1, USHRT_MAX, 'i', "FRAME_INT_BBC"}
+    }
+  },
+
+  {COMMAND(mpc_test), "Test the MPC", GR_MCE | MCECMD, 1,
+    {
+      {"Final grade (%)", 0, 100, 'i', ""},
+      {"Bonus points", -10, 0, 'f', ""},
+      {"Snide comment from marker", 0, 20, 's', ""}
     }
   },
 
