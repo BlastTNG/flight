@@ -49,10 +49,6 @@
 
 #define PREV_STATUS_FILE "/data/etc/spider/pcm.prev_status"
 
-/* recevied command flags */
-#define COMMAND_SCHEDULED 1
-#define COMMAND_MCE       2
-
 struct GainStruct {
   unsigned short int P;
   unsigned short int I;
