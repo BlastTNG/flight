@@ -49,6 +49,10 @@
 
 #define PREV_STATUS_FILE "/data/etc/spider/pcm.prev_status"
 
+/* recevied command flags */
+#define COMMAND_SCHEDULED 1
+#define COMMAND_MCE       2
+
 struct GainStruct {
   unsigned short int P;
   unsigned short int I;
@@ -191,6 +195,15 @@ struct TableStruct {
   double pos;
   double move;
   double mode;		//0=track, 1=move to pos, 2=relative move
+};
+
+struct ScheduleEvent {
+  int t;
+  int is_multi;
+  int command;
+  double rvalues[MAX_N_PARAMS];
+  int ivalues[MAX_N_PARAMS];
+  char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
 };
 
 struct CommandDataStruct {
@@ -445,15 +458,9 @@ struct CommandDataStruct {
 
   unsigned short questionable_behaviour;
 
-};
-
-struct ScheduleEvent {
-  int t;
-  int is_multi;
-  int command;
-  double rvalues[MAX_N_PARAMS];
-  int ivalues[MAX_N_PARAMS];
-  char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
+  /* commands to be relayed to the MCE computers */
+  int mcecmd_index;
+  struct ScheduleEvent mcecmd[3];
 };
 
 struct ScheduleType {
