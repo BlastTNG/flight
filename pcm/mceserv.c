@@ -171,6 +171,12 @@ HANDSHAKE_FAIL:
         close(new_fd.fd);
         goto RESET;
       }
+
+      if (buffer[1] == 'P' && buffer[2] == 'C') { /* a MCC */
+      } else if (buffer[1] == 'A' && buffer[2] == 'C') { /* the MAC */
+      } else if (buffer[1] == 'O' && buffer[2] == 'N') { /* kibitzer */
+      } else
+        goto HANDSHAKE_FAIL;
     }
   }
 
