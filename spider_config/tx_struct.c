@@ -24,7 +24,6 @@
 #ifdef __MCP__
 #include "camstruct.h"
 #endif
-
 /* card name to (node number, bus number) mapping */
 #define ACS1_C	 0, 0  /* C denotes a common motherboard node */
 #define ACS1_D	 1, 0  /* D denotes a digital daughter card */
@@ -232,7 +231,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_01_hk",     'r',  HWP_A2,  2, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_02_hk",     'r',  HWP_A2,  4, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_03_hk",     'r',  HWP_A2,  6, CAL32D(         1.0,           0.0), 'U', U_V_V},
-  {"vd_04_hk",     'r',  HWP_A2,  8, CAL32D(         1.0,           0.0), 'U', U_V_V},
+  //{"vd_04_hk",     'r',  HWP_A2,  8, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_05_hk",     'r',  HWP_A2, 10, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_06_hk",     'r',  HWP_A2, 12, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_07_hk",     'r',  HWP_A2, 14, CAL32D(         1.0,           0.0), 'U', U_V_V},
@@ -246,6 +245,9 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_15_hk",     'r',  HWP_A2, 30, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_16_hk",     'r',  HWP_A2, 32, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_17_hk",     'r',  HWP_A2, 34, CAL32D(         1.0,           0.0), 'U', U_V_V},
+
+  {"v_pressure1_hk", 'r', DIOD_A2, 48,         CAL32(1.0, 0.0),       'U', U_V_V},
+  {"v_pressure2_hk", 'r', DIOD_A3, 48,         CAL32(1.0, 0.0),       'U', U_V_V},
 
   END_OF_CHANNELS
 };
@@ -409,6 +411,16 @@ struct ChannelStruct SlowChannels[] = {
   {"vt_6_if",      'r',  HWP_A2, 47, CAL16B(         1.0,           0.0), 'u', U_V_V},
   {"vt_7_if",      'r',  HWP_A2, 49, CAL16B(         1.0,           0.0), 'u', U_V_V},
 
+  
+/* default current cal is 12.5, 0.0 */
+  {"i_mce",        'r',  HWP_A2,   9,          CAL16(12.5, 0.0),      'u', U_I_A},
+  {"i_mcc",        'r',  RTD_A1,  49,          CAL16(12.5, 0.0),      'u', U_I_A},
+  {"i_hk_misc",    'r',  RTD_A2,  49,          CAL16(12.5, 0.0),      'u', U_I_A},
+ 
+/* spare IF analog inputs */ 
+  // DIOD_A2 and DIOD_A3 49 are wide
+  {"v_sft_valve_hk", 'r', DIOD_A1, 49,         CAL16(1.0, 0.0),       'u', U_V_V},
+ 
   /* LOOP1 0-7 are wide */
   /* LOOP1 12-13 are wide */
   {"g_com_el",     'w', LOOP1,  8,                3.0/65536.0,     0.0, 'u', U_NONE},
