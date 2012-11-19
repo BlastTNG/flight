@@ -52,6 +52,7 @@
 #include "channels.h"
 #include "tx.h"
 #include "hwpr.h"
+#include "mceserv.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -1248,6 +1249,7 @@ int main(int argc, char *argv[])
 #endif
   pthread_t chatter_id;
   pthread_t hwpr_id;
+  pthread_t mce_id;
   struct stat fstats;
 
   if (argc == 1) {
@@ -1372,6 +1374,7 @@ int main(int argc, char *argv[])
   //pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
   pthread_create(&hwpr_id, NULL, (void*)&StartHWP, NULL);
+  //pthread_create(&mce_id, NULL, (void*)&mceserv, NULL);
 
   while (1) {
     in_data = read_from_bbc();

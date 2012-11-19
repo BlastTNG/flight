@@ -68,6 +68,44 @@ int sendTheGoodCommand(const char *cmd);
 int sendTheBadCommand(const char *cmd);
 int sendTheUglyCommand(const char *cmd);
 
+/* forward an unrecognised command to the MCE computers.  Returns zero if this
+ * isn't in fact, a mce command */
+static int MCEcmd(int command, const double *rvalues, const int *ivalues,
+    char svalues[][CMD_STRING_LEN])
+{
+  int index;
+
+  /* find the command, and bail on non-MCE commands */
+  if (rvalues) {
+    index = MIndex(command);
+    if (!(mcommands[index].group & MCECMD))
+      return 0;
+  } else {
+    index = SIndex(command);
+    if (!(scommands[index].group & MCECMD))
+      return 0;
+  }
+
+  /* queue the command */
+  index = CommandData.mcecmd_index;
+  CommandData.mcecmd[index].t = 0;
+  CommandData.mcecmd[index].is_multi = rvalues ? 1 : 0;
+  CommandData.mcecmd[index].command = command;
+  memcpy(CommandData.mcecmd[index].rvalues, rvalues,
+      sizeof(double) * MAX_N_PARAMS);
+  memcpy(CommandData.mcecmd[index].rvalues, ivalues,
+      sizeof(int) * MAX_N_PARAMS);
+  memcpy(CommandData.mcecmd[index].svalues, svalues,
+      MAX_N_PARAMS * CMD_STRING_LEN);
+  CommandData.mcecmd[index].t = 1;
+  CommandData.mcecmd_index = INC_INDEX(index);
+
+  bprintf(info, "Commands: Queued %s command #%i for transfer to MPC.\n",
+      rvalues ? "multi" : "single", command);
+
+  return 1;
+}
+
 void SingleCommand (enum singleCommand command, int scheduled)
 {
   int i_point = GETREADINDEX(point_index);
@@ -863,8 +901,11 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case xyzzy:
       break;
     default:
-      bputs(warning, "Commands: ***Invalid Single Word Command***\n");
-      return; /* invalid command - no write or update */
+      /* Render, therefore, unto Caesar the things which are Caesar's */
+      if (MCEcmd(command, NULL, NULL, NULL)) {
+        bputs(warning, "Commands: ***Invalid Single Word Command***\n");
+        return; /* invalid command - no write or update */
+      }
   }
 
   if (!scheduled) {
@@ -1746,8 +1787,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
     default:
-      bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
-      return; /* invalid command - don't update */
+      if (!MCEcmd(command, rvalues, ivalues, svalues)) {
+        bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
+        return; /* invalid command - don't update */
+      }
   }
 
   int i_point = GETREADINDEX(point_index);
@@ -1875,6 +1918,11 @@ void InitCommandData()
   
   CommandData.slot_sched = 0x100;
   CommandData.parts_sched=0x0;
+
+  CommandData.mcecmd_index = 0;
+  CommandData.mcecmd[0].t = 0;
+  CommandData.mcecmd[1].t = 0;
+  CommandData.mcecmd[2].t = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))

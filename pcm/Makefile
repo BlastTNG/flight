@@ -18,8 +18,8 @@ EXPT_HEADERS = calibrate.h command_list.h command_struct.h pointing_struct.h
 SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 compressstruct.h crc.h derived.h ephem_read.h ephem_types.h \
 								 fir.h lut.h netcmd.h sip.h starpos.h
-LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h mcp.h \
-								motorcommand.h motordefs.h phytron.h pyramid.h slow_dl.h \
+LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h mceserv.h \
+								mcp.h motorcommand.h motordefs.h phytron.h pyramid.h slow_dl.h \
 								svd.h tx.h
 
 # These are needed by both bolotest and flight versions
@@ -32,8 +32,8 @@ ifndef BOLOTEST
 SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
 								 ephem_read.o fir.o geomag.o radbox.o starpos.o
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
-								motors.o motorcommand.o pointing.o pyramid.o sc.o sched.o \
-								slow_dl.o svd.o table.o
+								mceserv.o motors.o motorcommand.o pointing.o pyramid.o sc.o \
+								sched.o slow_dl.o svd.o table.o
 EXPT_OBJS += compressstruct.o 
 endif
 
