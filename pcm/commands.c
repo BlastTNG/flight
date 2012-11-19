@@ -1906,6 +1906,21 @@ void InitCommandData()
   for (i=0; i<16; i++)
     CommandData.power.adc_reset[i] = 0;
 
+  CommandData.ifpower.mce1.rst_count = 0;
+  CommandData.ifpower.mce1.set_count = 0;
+  CommandData.ifpower.mce2.rst_count = 0;
+  CommandData.ifpower.mce2.set_count = 0;
+  CommandData.ifpower.mce3.rst_count = 0;
+  CommandData.ifpower.mce3.set_count = 0;
+  CommandData.ifpower.mac.rst_count = 0;
+  CommandData.ifpower.mac.set_count = 0;
+  CommandData.ifpower.sync.rst_count = 0;
+  CommandData.ifpower.sync.set_count = 0;
+  CommandData.ifpower.eth.rst_count = 0;
+  CommandData.ifpower.eth.set_count = 0;
+  CommandData.ifpower.hwp.rst_count = 0;
+  CommandData.ifpower.hwp.set_count = 0;
+
   CommandData.gyheat.age = 0;
 
   /* don't use the fast gy offset calculator */
@@ -2087,6 +2102,7 @@ void InitCommandData()
   CommandData.hk_last = 0;
   CommandData.hk_vheat_last = 0.0;
   CommandData.hk_bias_freq = 50;
+  CommandData.ifpower.hk_preamp_off = 0;
 
   CommandData.actbus.tc_mode = TC_MODE_VETOED;
   CommandData.actbus.tc_step = 100; /* microns */
