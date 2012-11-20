@@ -28,6 +28,7 @@
 #include <sys/time.h>
 #include <math.h>
 #include <pthread.h>
+#include <unistd.h>
 
 extern "C" {
 #include "blast.h"

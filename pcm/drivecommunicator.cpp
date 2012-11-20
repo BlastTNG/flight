@@ -1,7 +1,7 @@
 #include <termios.h>
 #include <fcntl.h>   /* File control definitions */
 #include <sys/select.h>
-//#include <unistd.h>  /* UNIX standard function definitions */
+#include <unistd.h>  /* UNIX standard function definitions */
 #include <math.h>         //for powers and float parsing
 #include <limits.h>       //for numerical limits of integer types
 #include "drivecommunicator.h"
