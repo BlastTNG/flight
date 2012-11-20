@@ -88,7 +88,10 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
 
   /* queue the command */
   index = CommandData.mcecmd_index;
-  CommandData.mcecmd[index].t = 0;
+
+  /* invalidate */
+  CommandData.mcecmd[index].t = -1;
+
   CommandData.mcecmd[index].is_multi = rvalues ? 1 : 0;
   CommandData.mcecmd[index].command = command;
   memcpy(CommandData.mcecmd[index].rvalues, rvalues,
@@ -97,7 +100,11 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
       sizeof(int) * MAX_N_PARAMS);
   memcpy(CommandData.mcecmd[index].svalues, svalues,
       MAX_N_PARAMS * CMD_STRING_LEN);
-  CommandData.mcecmd[index].t = 1;
+
+  /* Activate */
+  CommandData.mcecmd[index].t = index;
+  CommandData.mcecmd[index].done = 0;
+
   CommandData.mcecmd_index = INC_INDEX(index);
 
   bprintf(info, "Commands: Queued %s command #%i for transfer to MPC.\n",
@@ -1935,9 +1942,12 @@ void InitCommandData()
   CommandData.parts_sched=0x0;
 
   CommandData.mcecmd_index = 0;
-  CommandData.mcecmd[0].t = 0;
-  CommandData.mcecmd[1].t = 0;
-  CommandData.mcecmd[2].t = 0;
+  CommandData.mcecmd[0].t = -1;
+  CommandData.mcecmd[1].t = -1;
+  CommandData.mcecmd[2].t = -1;
+  CommandData.mcecmd[0].done = 1;
+  CommandData.mcecmd[1].done = 1;
+  CommandData.mcecmd[2].done = 1;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
