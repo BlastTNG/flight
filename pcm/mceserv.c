@@ -221,6 +221,7 @@ void *mceserv(void *unused)
   /* poll loop */
   for (;;) {
 RESET:
+    usleep(10000);
     fds[0].events = POLLIN;
     memset(ready, 0, sizeof(int) * 5);
     for (i = 1; i < nfds; ++i)
@@ -248,7 +249,7 @@ RESET:
       new_fd.revents = 0;
 
       /* wait for the client to become ready */
-      n = poll(&new_fd, 1, 300000);
+      n = poll(&new_fd, 1, 10000);
       if (n <= 0) {
         if (n < 0)
           berror(err, "poll on accept");
@@ -273,7 +274,7 @@ RESET:
       /* wait for the client to respond */
       new_fd.events = POLLIN;
       new_fd.revents = 0;
-      n = poll(&new_fd, 1, 300000);
+      n = poll(&new_fd, 1, 10000);
       if (n <= 0) {
         if (n < 0)
           berror(err, "poll on handshake");
