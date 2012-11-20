@@ -193,10 +193,14 @@ struct TableStruct {
   double mode;		//0=track, 1=move to pos, 2=relative move
 };
 
+/* This structure is now also used by the MCE command passthrough.  Be careful
+ * when modifying it.
+ */
 struct ScheduleEvent {
   int t;
   int is_multi;
   int command;
+  int done; /* MCEserv only; not used by scheduler */
   double rvalues[MAX_N_PARAMS];
   int ivalues[MAX_N_PARAMS];
   char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
