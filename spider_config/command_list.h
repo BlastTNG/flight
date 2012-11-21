@@ -31,7 +31,7 @@
 #define N_GROUPS 24
 
 #define GR_POINT        0x00000001
-#define GR_MCE          0x00000002
+#define GR_CMB          0x00000002
 #define GR_HWPR         0x00000004
 #define GR_TRIM         0x00000008
 #define GR_ELECT        0x00000010
@@ -50,7 +50,7 @@
 #define GR_IFPOWER      0x00020000	  
 #define GR_STAGE        0x00040000
 #define GR_SCBAD        0x00080000
-//#define GR_OSC_MODE     0x00100000	  //unused
+#define GR_MCE          0x00100000
 #define GR_MISC         0x00200000
 #define GR_SCUGLY       0x00400000
 //#define GR_OSC_PARAM    0x00800000	  //unused

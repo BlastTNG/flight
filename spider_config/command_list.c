@@ -30,13 +30,13 @@
 const char *command_list_serial = "$Rev$";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "MCE",              "Waveplate Rotator",
+  "Pointing Modes",        "CMB Grenades",     "Waveplate Rotator",
   "Pointing Sensor Trims", "Aux. Electronics", "HK Bias",
   "Pointing Sensor Vetos", "Actuators",        "Long Range Missiles",
   "Pointing Motor Gains",  "Lock Motor",       "HK Insert Heat",
   "Outer Frame Power",     "SC Table",         "HK Theo Heat",
   "Telemetry",             "The Good SC",      "Inner Frame Power",
-  "X-Y Stage",             "The Bad SC",       "Knives and Swords",
+  "X-Y Stage",             "The Bad SC",       "MCE",
   "Miscellaneous",         "The Ugly SC",      "Handguns"
   };
 
@@ -292,6 +292,7 @@ struct scom scommands[N_SCOMMANDS] = {
    GR_THEO_HEAT},
 
   //make better use of unused groups
+  {COMMAND(pull_cmb_pin), "????", GR_CMB},
   {COMMAND(global_thermonuclear_war), "????", 0x00000100},
   //{COMMAND(get_some), "????", 0x00020000},
   {COMMAND(stab), "????", 0x00100000},
