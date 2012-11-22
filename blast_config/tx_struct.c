@@ -919,8 +919,8 @@ struct ChannelStruct SlowChannels[] = {
   //  {"el_raw_if_clin",'r', ACS2_A1,  9,         0.00546739,         -133.78, 'u', U_NONE},
   {"t_if_clin",    'r',  ACS2_A1, 11,            100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
 
-  //{"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
-  //{"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
+  {"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
+  {"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
 
 #ifndef FAST_MAG
   {"x_mag",        'r',  ACS2_A1, 13,              1.0,         0, 'u', U_NONE},
