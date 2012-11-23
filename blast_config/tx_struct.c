@@ -734,7 +734,9 @@ struct ChannelStruct SlowChannels[] = {
   {"accel_az",     'w',   LOOP8, 34,          2.0/65536,             0.0, 'u', U_NONE},
   {"pos_focus_isc",'w',   LOOP8, 35,                1.0,             0.0, 'u', U_NONE},
   {"pos_focus_osc",'w',   LOOP8, 36,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP8 37-39 are unused */
+  {"az_raw_pss1",   'w',  LOOP8, 37,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"az_raw_pss2",   'w',  LOOP8, 38,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"az_raw_pss3",   'w',  LOOP8, 39,              I2DEG,             0.0, 'u', U_P_DEG},
   {"led_cc",        'w', LOOP8, 40,              1.0,               0.0, 'u', U_NONE}, // charge controller LED state
   {"force_sbsc",     'w', LOOP8, 41,                1.0,             0.0, 'u', U_NONE},
   {"exp_int_sbsc",   'w', LOOP8, 42,                1.0,             0.0, 'u', U_T_MS},
@@ -786,7 +788,12 @@ struct ChannelStruct SlowChannels[] = {
   {"status_actbus",  'w', LOOP9,  24,                1.0,             0.0, 'u', U_NONE},
   {"pot_err_hwpr",   'w', LOOP9,  25,        1.0/32767.0,             0.0, 's', U_NONE},
   {"blob_idx_sbsc",  'w', LOOP9,  26,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP9 27-33 are unused */
+  {"az_raw_pss4",   'w',  LOOP9, 27,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss1",   'w',  LOOP9, 28,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss2",   'w',  LOOP9, 29,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss3",   'w',  LOOP9, 30,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss4",   'w',  LOOP9, 31,              I2DEG,             0.0, 'u', U_P_DEG},
+  /* LOOP9 32-33 are unused */
   {"vel_el_p",       'w', LOOP9,  34,              I2VEL,             0.0, 'u', U_NONE},
   {"focpos_sbsc",    'w', LOOP9,  35,           1.0/10.0,             0.0, 's', U_NONE},
   {"delay_sbsc",     'w', LOOP9,  36,         1.0/1000.0,             0.0, 'u', U_NONE},
