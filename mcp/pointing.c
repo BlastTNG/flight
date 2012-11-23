@@ -475,7 +475,9 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   PointingData[point_index].sun_el = sun_el;
 
   weightsum=weight[0]+weight[1]+weight[2]+weight[3];
-  if (weightsum == 0 ) return 0;
+  if (weightsum == 0 ) {
+    return 0;
+  }
 
   // Define beta (az rotation)
   beta[0] = (M_PI/180.)*PSS1_BETA;
@@ -526,7 +528,14 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   	azraw[i] = sun_az + (180./M_PI)*(az[i] - beta[i]);
   	elraw[i] = (180./M_PI)*atan(u2[i][1]/sqrt(u2[i][0]*u2[i][0]+u2[i][2]*u2[i][2]));
   }
-
+  PointingData[point_index].pss1_azraw = azraw[0];
+  PointingData[point_index].pss2_azraw = azraw[1];
+  PointingData[point_index].pss3_azraw = azraw[2];
+  PointingData[point_index].pss4_azraw = azraw[3];
+  PointingData[point_index].pss1_elraw = elraw[0];
+  PointingData[point_index].pss2_elraw = elraw[1];
+  PointingData[point_index].pss3_elraw = elraw[2];
+  PointingData[point_index].pss4_elraw = elraw[3];
   for (i=0; i<4; i++) {
   	gsl_matrix_free(rot[i]);
   	gsl_matrix_free(rxalpha[i]);
@@ -1315,7 +1324,7 @@ void Pointing(void)
   } else {
     pss_since_ok++;
   }
-//  PointingData[point_index].pss_ok = pss_ok;
+  PointingData[point_index].pss_ok = pss_ok;
   dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   //dgps_ok = fakeDGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
   if (dgps_ok) {

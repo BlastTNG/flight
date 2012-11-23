@@ -885,7 +885,15 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsSigmaAddr;
   static struct NiosStruct* sigmaPssAddr;
   static struct NiosStruct* azrawPssAddr;
+  static struct NiosStruct* azrawPss1Addr;
+  static struct NiosStruct* azrawPss2Addr;
+  static struct NiosStruct* azrawPss3Addr;
+  static struct NiosStruct* azrawPss4Addr;
   static struct NiosStruct* elrawPssAddr;
+  static struct NiosStruct* elrawPss1Addr;
+  static struct NiosStruct* elrawPss2Addr;
+  static struct NiosStruct* elrawPss3Addr;
+  static struct NiosStruct* elrawPss4Addr;
   static struct NiosStruct* snrPss1Addr;
   static struct NiosStruct* snrPss2Addr;
   static struct NiosStruct* snrPss3Addr;
@@ -1039,7 +1047,15 @@ static void StoreData(int index)
     elSunAddr = GetNiosAddr("el_sun");
     sigmaPssAddr = GetNiosAddr("sigma_pss");
     azrawPssAddr = GetNiosAddr("az_raw_pss");
+    azrawPss1Addr = GetNiosAddr("az_raw_pss1");
+    azrawPss2Addr = GetNiosAddr("az_raw_pss2");
+    azrawPss3Addr = GetNiosAddr("az_raw_pss3");
+    azrawPss4Addr = GetNiosAddr("az_raw_pss4");
     elrawPssAddr = GetNiosAddr("el_raw_pss");
+    elrawPss1Addr = GetNiosAddr("el_raw_pss1");
+    elrawPss2Addr = GetNiosAddr("el_raw_pss2");
+    elrawPss3Addr = GetNiosAddr("el_raw_pss3");
+    elrawPss4Addr = GetNiosAddr("el_raw_pss4");
     snrPss1Addr = GetNiosAddr("snr_pss1");
     snrPss2Addr = GetNiosAddr("snr_pss2");
     snrPss3Addr = GetNiosAddr("snr_pss3");
@@ -1201,7 +1217,15 @@ static void StoreData(int index)
 
   /********* PSS data *************/
   WriteData(azrawPssAddr, PointingData[i_point].pss_azraw * DEG2I, NIOS_QUEUE);
+  WriteData(azrawPss1Addr, PointingData[i_point].pss1_azraw * DEG2I, NIOS_QUEUE);
+  WriteData(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I, NIOS_QUEUE);
+  WriteData(azrawPss3Addr, PointingData[i_point].pss3_azraw * DEG2I, NIOS_QUEUE);
+  WriteData(azrawPss4Addr, PointingData[i_point].pss4_azraw * DEG2I, NIOS_QUEUE);
   WriteData(elrawPssAddr, PointingData[i_point].pss_elraw * DEG2I, NIOS_QUEUE);
+  WriteData(elrawPss1Addr, PointingData[i_point].pss1_elraw * DEG2I, NIOS_QUEUE);
+  WriteData(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I, NIOS_QUEUE);
+  WriteData(elrawPss3Addr, PointingData[i_point].pss3_elraw * DEG2I, NIOS_QUEUE);
+  WriteData(elrawPss4Addr, PointingData[i_point].pss4_elraw * DEG2I, NIOS_QUEUE);
   WriteData(snrPss1Addr, PointingData[i_point].pss1_snr * 1000., NIOS_QUEUE);
   WriteData(snrPss2Addr, PointingData[i_point].pss2_snr * 1000., NIOS_QUEUE);
   WriteData(snrPss3Addr, PointingData[i_point].pss3_snr * 1000., NIOS_QUEUE);
