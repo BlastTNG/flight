@@ -345,6 +345,8 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 // PSS1 for Lupus, PSS2 for Vela, PSS3 and PSS4 TBD
 #define  PSS_L  10.     // 10 mm = effective length of active area
 #define  PSS_D  10.     // 10 mm = Distance between pinhole and sensor
+#define  PSS3_D 10.5    // 
+#define  PSS4_D 10.34   //
 #define  PSS_IMAX  8192.  // Maximum current (place holder for now)
 #define  PSS_XSTRETCH  1.  // 0.995
 #define  PSS_YSTRETCH  1.  // 1.008
@@ -379,7 +381,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 
   double	weight[4];
   double	weightsum;
-  double        beta[4], alpha[4], psi[4];
+  double        pss_d[4], beta[4], alpha[4], psi[4];
   double        norm[4];
 
   i1[0] = ACSData.pss1_i1 - 32768.;
@@ -434,10 +436,10 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   for (i=0; i<4; i++) {
   	x[i] = -PSS_XSTRETCH*(PSS_L/2.)*((i2[i]+i3[i])-(i1[i]+i4[i]))/itot[i];
   	y[i] = -PSS_YSTRETCH*(PSS_L/2.)*((i2[i]+i4[i])-(i1[i]+i3[i]))/itot[i];
-  	norm[i] = sqrt(x[i]*x[i] + y[i]*y[i] + PSS_D*PSS_D);
+  	norm[i] = sqrt(x[i]*x[i] + y[i]*y[i] + pss_d[i]*pss_d[i]);
   	usun[i][0] = -x[i] / norm[i];
   	usun[i][1] = -y[i] / norm[i];
-  	usun[i][2] = PSS_D / norm[i];
+  	usun[i][2] = pss_d[i] / norm[i];
   }
 
   // Then spot is at the edge of the sensor
@@ -479,6 +481,10 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     return 0;
   }
 
+  // Define pss_d (distance to pinhole)
+  pss_d[0] = pss_d[1] = PSS_D;
+  pss_d[2] = PSS3_D;
+  pss_d[3] = PSS4_D;
   // Define beta (az rotation)
   beta[0] = (M_PI/180.)*PSS1_BETA;
   beta[1] = (M_PI/180.)*PSS2_BETA;
