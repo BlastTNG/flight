@@ -433,6 +433,11 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 	weight[3] = 0.0;
   }
 
+  // Define pss_d (distance to pinhole)
+  pss_d[0] = pss_d[1] = PSS_D;
+  pss_d[2] = PSS3_D;
+  pss_d[3] = PSS4_D;
+
   for (i=0; i<4; i++) {
   	x[i] = -PSS_XSTRETCH*(PSS_L/2.)*((i2[i]+i3[i])-(i1[i]+i4[i]))/itot[i];
   	y[i] = -PSS_YSTRETCH*(PSS_L/2.)*((i2[i]+i4[i])-(i1[i]+i3[i]))/itot[i];
@@ -481,10 +486,6 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     return 0;
   }
 
-  // Define pss_d (distance to pinhole)
-  pss_d[0] = pss_d[1] = PSS_D;
-  pss_d[2] = PSS3_D;
-  pss_d[3] = PSS4_D;
   // Define beta (az rotation)
   beta[0] = (M_PI/180.)*PSS1_BETA;
   beta[1] = (M_PI/180.)*PSS2_BETA;
