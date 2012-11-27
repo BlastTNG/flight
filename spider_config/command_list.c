@@ -295,7 +295,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(pull_cmb_pin), "????", GR_CMB},
   {COMMAND(global_thermonuclear_war), "????", 0x00000100},
   //{COMMAND(get_some), "????", 0x00020000},
-  {COMMAND(stab), "????", 0x00100000},
+  //{COMMAND(stab), "????", 0x00100000},
   {COMMAND(lock_and_load), "????", 0x00800000},
 
 
