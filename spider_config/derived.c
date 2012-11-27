@@ -540,6 +540,10 @@ union DerivedUnion DerivedChannels[] = {
 #define T_HK(tch, rch, lut) \
     LINTERP(tch, rch, lut), \
     UNITS(tch, "Temperature", "K")
+//P_HK: Alias for LINTERP that sets units. Use directly for pressure sensors
+#define P_HK(pch, vch, lut) \
+    LINTERP(pch, vch, lut), \
+    UNITS(pch, "Pressure", "psi")
 //NTD_HK, CNX_HK: create fields required to calibrate NTD and CNX thermistors
 //  ch:	  all-caps channel name
 //  i:	  insert number
@@ -558,7 +562,6 @@ union DerivedUnion DerivedChannels[] = {
     LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", CNX_LUT), \
     UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega"), \
     T_HK("TR_"#ch"_"#i"_HK", "R_"#ch"_"#i"_HK", lut)
-
 
   COMMENT("Housekeeping Cernox Temperature Calibration"),
   // NB: make sure to also set LUT filename in hk.c for FridgeCycle
@@ -634,5 +637,8 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_SFT_TOP_T_HK",     "VD_SNOUT_1_HK",    LUT_DIR "d_curve10.lut"),
   T_HK("TD_SFT_SHIELD_T_HK",  "VD_HSW_1_HK",      LUT_DIR "d_curve10.lut"),
   
+  //Pressure sensor calibration
+  P_HK("P_MT_PRESSURE_T_HK",  "V_PRESSURE1_HK",   LUT_DIR "pressure_tube.lut"),
+
   END_OF_DERIVED_CHANNELS
 };
