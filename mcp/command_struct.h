@@ -304,6 +304,17 @@ struct CommandDataStruct {
   double cal_ymax_mag;
   double cal_ymin_mag;
   
+  double cal_off_pss1;
+  double cal_off_pss2;
+  double cal_off_pss3;
+  double cal_off_pss4;
+
+  double cal_d_pss1;
+  double cal_d_pss2;
+  double cal_d_pss3;
+  double cal_d_pss4;
+  
+  double cal_imin_pss;
   struct {
     int biasRamp;
     unsigned short bias[5];

@@ -902,7 +902,8 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case reap_south:
       if ((command == reap_north && !SouthIAm) || 
 	  (command == reap_south && SouthIAm)) {
-	bprintf(err, "Commands: Reaping the watchdog tickle on command.");
+	bprintf(err, "Commands: Reaping the watchdog tickle on command in 1 second.");
+        sleep(1);
 	pthread_cancel(watchdog_id);
       }
       break;
@@ -1207,6 +1208,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.cal_ymin_mag = ivalues[3];      
       break;
       
+    case pss_cal:
+      CommandData.cal_off_pss1 = rvalues[0];
+      CommandData.cal_d_pss1 = rvalues[1];
+      CommandData.cal_off_pss2 = rvalues[2];
+      CommandData.cal_d_pss2 = rvalues[3];
+      CommandData.cal_off_pss3 = rvalues[4];
+      CommandData.cal_d_pss3 = rvalues[5];
+      CommandData.cal_off_pss4 = rvalues[6];
+      CommandData.cal_d_pss4 = rvalues[7];
+      CommandData.cal_imin_pss = rvalues[8];
+      break;
+      
+
       /***************************************/
       /********** Pointing Motor Gains *******/
     case el_gain:  /* ele gains */
@@ -2026,6 +2040,18 @@ void InitCommandData()
   CommandData.cal_ymax_mag = 34691;
   CommandData.cal_xmin_mag = 32250;
   CommandData.cal_ymin_mag = 32180;
+  
+  CommandData.cal_off_pss1 = 0.0;
+  CommandData.cal_off_pss2 = 0.0;
+  CommandData.cal_off_pss3 = 0.0;
+  CommandData.cal_off_pss4 = 0.0;
+  
+  CommandData.cal_d_pss1 = 0.0;
+  CommandData.cal_d_pss2 = 0.0;
+  CommandData.cal_d_pss3 = 0.0;
+  CommandData.cal_d_pss4 = 0.0;
+  
+  CommandData.cal_imin_pss = 4.5;
   
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;

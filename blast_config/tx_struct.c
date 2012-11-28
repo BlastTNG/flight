@@ -96,6 +96,8 @@
 #define U_R_O   "Resistance","Ohms"
 #define U_RATE "Rate", "bps"
 #define U_GB  "", "GB"
+#define U_TRIM_DEG "Trim","^o"
+#define U_TRIM_MM "Trim","mm"
 
 struct ChannelStruct WideSlowChannels[] = {
   {"tr_he3_fridge", 'r', CRYO_A1,  0,  CRYO_HE3_FRIDGE_M,CRYO_HE3_FRIDGE_B,'U', U_R_O},
@@ -598,7 +600,17 @@ struct ChannelStruct SlowChannels[] = {
   {"next_i_hwpr_p",      'w', LOOP6, 8,              1.0,             0.0, 's', U_NONE},
   {"next_i_dith_p",      'w', LOOP6, 9,              1.0,             0.0, 's', U_NONE},
 
-  /* LOOP6 10-19 are unused */
+  {"cal_off_pss1",      'w', LOOP6, 10,    40.0/65536.0,             0.0, 's', U_TRIM_DEG},  
+  {"cal_off_pss2",      'w', LOOP6, 11,    40.0/65536.0,             0.0, 's', U_TRIM_DEG},  
+  {"cal_off_pss3",      'w', LOOP6, 12,    40.0/65536.0,             0.0, 's', U_TRIM_DEG},  
+  {"cal_off_pss4",      'w', LOOP6, 13,    40.0/65536.0,             0.0, 's', U_TRIM_DEG},  
+  {"cal_d_pss1",        'w', LOOP6, 14,    4.0/65536.0,              0.0, 's', U_TRIM_MM},  
+  {"cal_d_pss2",        'w', LOOP6, 15,    4.0/65536.0,              0.0, 's', U_TRIM_MM},  
+  {"cal_d_pss3",        'w', LOOP6, 16,    4.0/65536.0,              0.0, 's', U_TRIM_MM},  
+  {"cal_d_pss4",        'w', LOOP6, 17,    4.0/65536.0,              0.0, 's', U_TRIM_MM},  
+  {"cal_imin_pss",      'w', LOOP6, 18,    40.0/65536.0,             0.0, 'u', U_V_V},  
+  
+  /* LOOP6 19 is unused */
   {"pref_ts_sf",   'w', LOOP6, 20,                1.0,             0.0, 'u', U_NONE},
   {"spread_sf",    'w', LOOP6, 21,             1/500.,             0.0, 'u', U_NONE},
   {"acc_lock",     'w', LOOP6, 22,                1.0,             0.0, 'u', U_NONE},

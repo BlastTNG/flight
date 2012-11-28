@@ -370,7 +370,20 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Max X", 0, 65535, 'i', "cal_xmax_mag"},
       {"Min X", 0, 65535, 'i', "cal_xmin_mag"},
       {"Max Y", 0, 65535, 'i', "cal_ymax_mag"},
-      {"Min Y", 0, 65535, 'i', "cal_ymin_mag"},
+      {"Min Y", 0, 65535, 'i', "cal_ymin_mag"}
+    }
+  }, // 10 10 10.5 10.34
+  {COMMAND(pss_cal), "set pss calibration", GR_TRIM, 9,
+    {
+      {"Offset 1", -20.0, 20.0, 'f', "CAL_OFF_PSS1"},
+      {"Distance 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
+      {"Offset 2", -20.0, 20.0, 'f', "CAL_OFF_PSS2"},
+      {"Distance 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
+      {"Offset 3", -20.0, 20.0, 'f', "CAL_OFF_PSS3"},
+      {"Distance 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
+      {"Offset 4", -20.0, 20.0, 'f', "CAL_OFF_PSS4"},
+      {"Distance 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
+      {"I Min", 0.0, 20.0, 'f', "CAL_IMIN_PSS"}
     }
   },
   {COMMAND(autotrim_to_sc), "enable auto-trim to ISC/OSC", GR_TRIM, 3,
