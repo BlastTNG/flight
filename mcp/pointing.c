@@ -344,7 +344,8 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 // PSSConvert versions added 12 June 2010 -GST
 // PSS1 for Lupus, PSS2 for Vela, PSS3 and PSS4 TBD
 #define  PSS_L  10.     // 10 mm = effective length of active area
-#define  PSS_D  10.     // 10 mm = Distance between pinhole and sensor
+#define  PSS1_D  10.     // 10 mm = Distance between pinhole and sensor
+#define  PSS2_D  10.     // 10 mm = Distance between pinhole and sensor
 #define  PSS3_D 10.5    // 
 #define  PSS4_D 10.34   //
 #define  PSS_IMAX  8192.  // Maximum current (place holder for now)
@@ -383,6 +384,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   double	weightsum;
   double        pss_d[4], beta[4], alpha[4], psi[4];
   double        norm[4];
+  double        pss_imin;
 
   i1[0] = ACSData.pss1_i1 - 32768.;
   i2[0] = ACSData.pss1_i2 - 32768.;
@@ -405,6 +407,8 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   	itot[i] = i1[i]+i2[i]+i3[i]+i4[i];
   }
 
+  pss_imin = CommandData.cal_imin_pss/M_16PRE;
+  
   i_point = GETREADINDEX(point_index);
 
   PointingData[point_index].pss1_snr = itot[0]/PSS_IMAX;  // 10.
@@ -416,27 +420,28 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   PointingData[point_index].pss4_snr = itot[3]/PSS_IMAX;  // 10.
   weight[3]= PointingData[point_index].pss4_snr;
 
-  if (fabs(itot[0]) < PSS_IMAX) {
+  if (fabs(itot[0]) < pss_imin) {
     	PointingData[point_index].pss1_snr = 1.;  // 1.
 	weight[0] = 0.0;
   }
-  if (fabs(itot[1]) < PSS_IMAX) {
+  if (fabs(itot[1]) < pss_imin) {
     	PointingData[point_index].pss2_snr = 1.;  // 1.
 	weight[1] = 0.0;
   }
-  if (fabs(itot[2]) < PSS_IMAX) {
+  if (fabs(itot[2]) < pss_imin) {
     	PointingData[point_index].pss3_snr = 1.;  // 1.
 	weight[2] = 0.0;
   }
-  if (fabs(itot[3]) < PSS_IMAX) {
+  if (fabs(itot[3]) < pss_imin) {
     	PointingData[point_index].pss4_snr = 1.;  // 1.
 	weight[3] = 0.0;
   }
 
   // Define pss_d (distance to pinhole)
-  pss_d[0] = pss_d[1] = PSS_D;
-  pss_d[2] = PSS3_D;
-  pss_d[3] = PSS4_D;
+  pss_d[0] = PSS1_D + CommandData.cal_d_pss1;
+  pss_d[1] = PSS2_D + CommandData.cal_d_pss2;
+  pss_d[2] = PSS3_D + CommandData.cal_d_pss3;
+  pss_d[3] = PSS4_D + CommandData.cal_d_pss4;
 
   for (i=0; i<4; i++) {
   	x[i] = -PSS_XSTRETCH*(PSS_L/2.)*((i2[i]+i3[i])-(i1[i]+i4[i]))/itot[i];
@@ -487,10 +492,11 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   }
 
   // Define beta (az rotation)
-  beta[0] = (M_PI/180.)*PSS1_BETA;
-  beta[1] = (M_PI/180.)*PSS2_BETA;
-  beta[2] = (M_PI/180.)*PSS3_BETA;
-  beta[3] = (M_PI/180.)*PSS4_BETA;
+  beta[0] = (M_PI/180.)*(PSS1_BETA + CommandData.cal_off_pss1);
+  beta[1] = (M_PI/180.)*(PSS2_BETA + CommandData.cal_off_pss2);
+  beta[2] = (M_PI/180.)*(PSS3_BETA + CommandData.cal_off_pss3);
+  beta[3] = (M_PI/180.)*(PSS4_BETA + CommandData.cal_off_pss4);
+  
   // Define alpha (el rotation)
   alpha[0] = (M_PI/180.)*PSS1_ALPHA;
   alpha[1] = (M_PI/180.)*PSS2_ALPHA;
