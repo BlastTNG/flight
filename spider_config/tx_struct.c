@@ -246,9 +246,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_16_hk",     'r',  HWP_A2, 32, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_17_hk",     'r',  HWP_A2, 34, CAL32D(         1.0,           0.0), 'U', U_V_V},
 
-  {"v_pressure1_hk", 'r', DIOD_A2, 48,         CAL32(1.0, 0.0),       'U', U_V_V},
-  {"v_pressure2_hk", 'r', DIOD_A3, 48,         CAL32(1.0, 0.0),       'U', U_V_V},
-
   END_OF_CHANNELS
 };
 
@@ -1004,7 +1001,10 @@ struct ChannelStruct WideFastChannels[] = {
   {"vr_ntd4_4_hk",   'r', RTD_A2, 42, CAL32N(       1.129,           0.0), 'U', U_V_V},
   {"vr_ntd3_4_hk",   'r', RTD_A2, 44, CAL32N(       1.129,           0.0), 'U', U_V_V},
   {"vr_ntd2_4_hk",   'r', RTD_A2, 46, CAL32N(       1.129,           0.0), 'U', U_V_V},
-
+  
+  {"vp_01_hk",       'r', DIOD_A2, 48, CAL32(1.0, 0.0),                    'U', U_V_V},
+  {"vp_02_hk",       'r', DIOD_A3, 48, CAL32(1.0, 0.0),                    'U', U_V_V},
+  
   {"enc_a_1_hwp",  'r',HWP_A1,  0,CAL32(1.0,      0.0),      'U',      U_V_V},
   {"enc_i_1_hwp",  'r',HWP_A1,  2,CAL32(1.0,      0.0),      'U',      U_V_V},
   {"enc_b_1_hwp",  'r',HWP_A1,  4,CAL32(1.0,      0.0),      'U',      U_V_V},
