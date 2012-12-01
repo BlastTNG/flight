@@ -168,7 +168,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_hsw_1_hk",      'r', DIOD_A1, 30, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_plate_1_hk",    'r', DIOD_A1, 32, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_snout_1_hk",    'r', DIOD_A1, 34, CAL32D(     1.0,     0.0), 'U', U_V_V},
-  {"vd_eyepiece_1_hk", 'r', DIOD_A1, 36, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_objective_1_hk",'r', DIOD_A1, 38, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_spittoon_1_hk",'r',  DIOD_A1, 40, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_aux_post_1_hk", 'r', DIOD_A1, 42, CAL32D(     1.0,     0.0), 'U', U_V_V},
@@ -229,14 +228,12 @@ struct ChannelStruct WideSlowChannels[] = {
 
   {"vd_00_hk",     'r',  HWP_A2,  0, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_01_hk",     'r',  HWP_A2,  2, CAL32D(         1.0,           0.0), 'U', U_V_V},
-  {"vd_02_hk",     'r',  HWP_A2,  4, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_03_hk",     'r',  HWP_A2,  6, CAL32D(         1.0,           0.0), 'U', U_V_V},
   //{"vd_04_hk",     'r',  HWP_A2,  8, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_05_hk",     'r',  HWP_A2, 10, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_06_hk",     'r',  HWP_A2, 12, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_07_hk",     'r',  HWP_A2, 14, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_08_hk",     'r',  HWP_A2, 16, CAL32D(         1.0,           0.0), 'U', U_V_V},
-  {"vd_09_hk",     'r',  HWP_A2, 18, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_10_hk",     'r',  HWP_A2, 20, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_11_hk",     'r',  HWP_A2, 22, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_12_hk",     'r',  HWP_A2, 24, CAL32D(         1.0,           0.0), 'U', U_V_V},
@@ -1005,6 +1002,10 @@ struct ChannelStruct WideFastChannels[] = {
   {"vp_01_hk",       'r', DIOD_A2, 48, CAL32(1.0, 0.0),                    'U', U_V_V},
   {"vp_02_hk",       'r', DIOD_A3, 48, CAL32(1.0, 0.0),                    'U', U_V_V},
   
+  {"vd_02_hk",     'r',  HWP_A2,  4, CAL32D(         1.0,           0.0), 'U', U_V_V},
+  {"vd_09_hk",     'r',  HWP_A2, 18, CAL32D(         1.0,           0.0), 'U', U_V_V},
+  {"vd_eyepiece_1_hk", 'r', DIOD_A1, 36, CAL32D(     1.0,     0.0), 'U', U_V_V},
+
   {"enc_a_1_hwp",  'r',HWP_A1,  0,CAL32(1.0,      0.0),      'U',      U_V_V},
   {"enc_i_1_hwp",  'r',HWP_A1,  2,CAL32(1.0,      0.0),      'U',      U_V_V},
   {"enc_b_1_hwp",  'r',HWP_A1,  4,CAL32(1.0,      0.0),      'U',      U_V_V},
