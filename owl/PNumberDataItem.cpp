@@ -22,6 +22,8 @@
 #include "PNumberDataItem.h"
 #include <stdio.h>
 #include <QDebug>
+#include <unistd.h>
+
 
 void PNumberDataItem::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
 {

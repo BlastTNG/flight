@@ -21,6 +21,8 @@
 
 #include "PTimeDataItem.h"
 #include <ctime>
+#include <unistd.h>
+
 
 void PTimeDataItem::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
 {
