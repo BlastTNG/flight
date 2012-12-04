@@ -265,8 +265,8 @@ struct ChannelStruct SlowChannels[] = {
   {"status15",     'r', DIOD_A3, 63,                1.0,             0.0, 'u', U_NONE},
   {"status16",     'r',   HWP_C, 63,                1.0,             0.0, 'u', U_NONE},
   {"status17",     'r',   HWP_D, 63,                1.0,             0.0, 'u', U_NONE},
-  {"status18",     'r',  HWP_A1, 63,                1.0,             0.0, 'u', U_NONE},
-  {"status19",     'r',  HWP_A2, 63,                1.0,             0.0, 'u', U_NONE},
+  {"status18",     'r',  HWP_A2, 63,                1.0,             0.0, 'u', U_NONE},
+  {"status19",     'r',  HWP_A1, 63,                1.0,             0.0, 'u', U_NONE},
   {"sync00",       'w',  ACS1_C, 63,                1.0,             0.0, 'u', U_NONE},
   {"sync01",       'w',  ACS1_D, 63,                1.0,             0.0, 'u', U_NONE},
   {"sync02",       'w', ACS1_A1, 63,                1.0,             0.0, 'u', U_NONE},
@@ -284,8 +284,8 @@ struct ChannelStruct SlowChannels[] = {
   {"sync15",       'w', DIOD_A3, 63,                1.0,             0.0, 'u', U_NONE},
   {"sync16",       'w',   HWP_C, 63,                1.0,             0.0, 'u', U_NONE},
   {"sync17",       'w',   HWP_D, 63,                1.0,             0.0, 'u', U_NONE},
-  {"sync18",       'w',  HWP_A1, 63,                1.0,             0.0, 'u', U_NONE},
-  {"sync19",       'w',  HWP_A2, 63,                1.0,             0.0, 'u', U_NONE},
+  {"sync18",       'w',  HWP_A2, 63,                1.0,             0.0, 'u', U_NONE},
+  {"sync19",       'w',  HWP_A1, 63,                1.0,             0.0, 'u', U_NONE},
 
   //phase of AC DAC signals (NB: overflowed from digital to analog daughter)
   {"ph_cnx_2_hk",   'w', RTD_A1,  0,          I2DEG,          0.0,'u',U_PH_DEG},
