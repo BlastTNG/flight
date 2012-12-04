@@ -325,15 +325,15 @@ void WatchDGPS()
       // Az (heading)
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%lf", &(DGPSAtt[dgpsatt_index].az));
-      DGPSAtt[dgpsatt_index].az+= DGPS_ALIGNMENT;
-      //2012: CSBF gps array mounted 90 deg off, so their pitch is our roll, and their roll is our -pitch
+      DGPSAtt[dgpsatt_index].az-= DGPS_ALIGNMENT;
+      //2012: CSBF gps array mounted 90 deg off, so their pitch is our -roll, and their roll is our pitch
       // Pitch
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%lf", &(DGPSAtt[dgpsatt_index].roll));
+      DGPSAtt[dgpsatt_index].roll *= -1.0;
       // Roll
       inptr += GetField(inptr,outstr);
       sscanf(outstr,"%lf", &(DGPSAtt[dgpsatt_index].pitch));
-      DGPSAtt[dgpsatt_index].pitch *= -1.0;
 
       // skip phase error and baseline error
       inptr += GetField(inptr,outstr);
