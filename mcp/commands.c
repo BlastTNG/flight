@@ -2183,9 +2183,9 @@ void InitCommandData()
   CommandData.ISCState[0].focusOffset = 0;
   CommandData.ISCState[0].ap_pos = 495;
   CommandData.ISCState[0].display_mode = full;
-  /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
-  CommandData.ISCState[0].azBDA = 0.16527 * DEG2RAD;
-  CommandData.ISCState[0].elBDA = 0.81238 * DEG2RAD;
+  /* ISC-BDA offsets per Natalie Gandilo on 2012-11-30 */
+  CommandData.ISCState[0].azBDA = 0.2099 * DEG2RAD;
+  CommandData.ISCState[0].elBDA = -0.2330 * DEG2RAD;
   CommandData.ISCControl[0].max_age = 200; /* 2000 ms*/
 
   CommandData.ISCState[0].brightStarMode = 0;
@@ -2221,9 +2221,9 @@ void InitCommandData()
   CommandData.ISCState[1].focusOffset = 0;
   CommandData.ISCState[1].ap_pos = 495;
   CommandData.ISCState[1].display_mode = full;
-  /* ISC-BDA offsets per Lorenzo Moncelsi on 2010-12-16 */
-  CommandData.ISCState[1].azBDA = -0.2862 * DEG2RAD;
-  CommandData.ISCState[1].elBDA = -0.5918 * DEG2RAD;
+  /* ISC-BDA offsets per Natalie Gandilo on 2012-11-30 */
+  CommandData.ISCState[1].azBDA = 0.7422 * DEG2RAD;
+  CommandData.ISCState[1].elBDA = -0.0920 * DEG2RAD;
   CommandData.ISCControl[1].max_age = 200;  /* 2000 ms*/
 
   CommandData.ISCState[1].brightStarMode = 0;
