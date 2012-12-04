@@ -394,7 +394,7 @@ static void SyncADC (void)
   }
 
   for (m = 0; m < NUM_SYNC; ++m) {
-    l = sync_nums[m];	    //node number
+    l = GET_NODE(syncAddr[m]->bbcAddr);
     k = ReadData(statusAddr[m]);
 
     if ((k & 0x3) == 0x1 && CommandData.power.adc_reset[l/4] == 0) {
