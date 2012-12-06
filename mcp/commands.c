@@ -2036,10 +2036,10 @@ void InitCommandData()
   CommandData.autotrim_rate = 1.0;
   CommandData.autotrim_time = 60;
 
-  CommandData.cal_xmax_mag = 34783;
-  CommandData.cal_ymax_mag = 34691;
-  CommandData.cal_xmin_mag = 32250;
-  CommandData.cal_ymin_mag = 32180;
+  CommandData.cal_xmax_mag = 41619;
+  CommandData.cal_ymax_mag = 41066;
+  CommandData.cal_xmin_mag = 40659;
+  CommandData.cal_ymin_mag = 40516;
   
   CommandData.cal_off_pss1 = 0.0;
   CommandData.cal_off_pss2 = 0.0;
