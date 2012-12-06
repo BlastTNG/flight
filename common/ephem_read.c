@@ -647,7 +647,7 @@ void Interpolate_Position( double Time , int Target , double Position[3] )
 
 void Interpolate_State(double Time , int Target, stateType *Planet)
 {
-  double    A[50]   , B[50] , Cp[50] , P_Sum[3] , V_Sum[3] , Up[50] ,
+  double    A[50]   , Cp[50] , P_Sum[3] , V_Sum[3] , Up[50] ,
   T_break , T_seg = 0 , T_sub = 0 , Tc = 0;
   int       i , j;
   long int  C , G , N , offset = 0;
@@ -670,7 +670,6 @@ void Interpolate_State(double Time , int Target, stateType *Planet)
   for ( i=0 ; i<50 ; i++ )
   {
     A[i] = 0.0;
-    B[i] = 0.0;
   }
 
   /*--------------------------------------------------------------------------*/

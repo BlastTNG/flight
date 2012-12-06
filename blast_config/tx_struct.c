@@ -707,16 +707,16 @@ struct ChannelStruct SlowChannels[] = {
   
   /* charge controller related channels */
   
-  {"v_batt_cc",  'w',  LOOP8,  3,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"v_arr_cc",   'w',  LOOP8,  4,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"i_batt_cc",  'w',  LOOP8,  5,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  {"i_arr_cc",   'w',  LOOP8,  6,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  { "t_hs_cc",   'w',  LOOP8,  7,   1.0,      0.0,            's',  U_T_C},
-  {"fault_cc",   'w',  LOOP8,  8,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
-  {"alarm_hi_cc",'w',  LOOP8,  9,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
-  {"alarm_lo_cc",'w',  LOOP8,  10,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
-  {"v_targ_cc",  'w',  LOOP8,  11,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"state_cc",   'w',  LOOP8,  12,  1.0,      0.0,            'u',  U_NONE},   
+  {"v_batt_cc1",  'w',  LOOP8,  3,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"v_arr_cc1",   'w',  LOOP8,  4,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"i_batt_cc1",  'w',  LOOP8,  5,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  {"i_arr_cc1",   'w',  LOOP8,  6,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  { "t_hs_cc1",   'w',  LOOP8,  7,   1.0,      0.0,            's',  U_T_C},
+  {"fault_cc1",   'w',  LOOP8,  8,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
+  {"alarm_hi_cc1",'w',  LOOP8,  9,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
+  {"alarm_lo_cc1",'w',  LOOP8,  10,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
+  {"v_targ_cc1",  'w',  LOOP8,  11,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"state_cc1",   'w',  LOOP8,  12,  1.0,      0.0,            'u',  U_NONE},   
   
   /* filtered LVDTs, rotated to motor positions */
   {"lvdt_0_act",  'w',  LOOP8, 13,   1.0,     0.0,   's', U_NONE},
@@ -749,7 +749,7 @@ struct ChannelStruct SlowChannels[] = {
   {"az_raw_pss1",   'w',  LOOP8, 37,              I2DEG,             0.0, 'u', U_P_DEG},
   {"az_raw_pss2",   'w',  LOOP8, 38,              I2DEG,             0.0, 'u', U_P_DEG},
   {"az_raw_pss3",   'w',  LOOP8, 39,              I2DEG,             0.0, 'u', U_P_DEG},
-  {"led_cc",        'w', LOOP8, 40,              1.0,               0.0, 'u', U_NONE}, // charge controller LED state
+  {"led_cc1",        'w', LOOP8, 40,              1.0,               0.0, 'u', U_NONE}, // charge controller LED state
   {"force_sbsc",     'w', LOOP8, 41,                1.0,             0.0, 'u', U_NONE},
   {"exp_int_sbsc",   'w', LOOP8, 42,                1.0,             0.0, 'u', U_T_MS},
   {"exp_time_sbsc",  'w', LOOP8, 43,                1.0,             0.0, 'u', U_T_MS},
@@ -839,6 +839,19 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP0 10-11 are wide slow */
   {"time_atrim",      'w', LOOP0, 12,                1.0,             0.0, 'u', U_NONE},
   {"rate_atrim",      'w', LOOP0, 13,       30.0/65536.0,             0.0, 'u', U_NONE},
+  
+  {"v_batt_cc2",  'w',  LOOP0,  14,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"v_arr_cc2",   'w',  LOOP0,  15,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"i_batt_cc2",  'w',  LOOP0,  16,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  {"i_arr_cc2",   'w',  LOOP0,  17,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  { "t_hs_cc2",   'w',  LOOP0,  18,   1.0,      0.0,             's',  U_T_C},
+  {"fault_cc2",   'w',  LOOP0,  19,   1.0,      0.0,             'u',  U_NONE},  // fault bitfield
+  {"alarm_hi_cc2",'w',  LOOP0,  20,   1.0,      0.0,             'u',  U_NONE},  // alarm high bitfield
+  {"alarm_lo_cc2",'w',  LOOP0,  21,   1.0,      0.0,             'u',  U_NONE},  // alarm low bitfield
+  {"v_targ_cc2",  'w',  LOOP0,  22,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"state_cc2",   'w',  LOOP0,  23,   1.0,      0.0,             'u',  U_NONE},   
+  {"led_cc2",     'w',  LOOP0,  24,   1.0,      0.0,             'u',  U_NONE}, // charge controller LED state
+  /* LOOP0 25-63 are unused */
   /* LOOP0 14-63 are unused */
 
 #ifndef BOLOTEST
