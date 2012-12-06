@@ -453,7 +453,7 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
 
 void configure_amc(struct MotorInfoStruct* amcinfo)
 {
-  int n,m,wrset;
+  int n;
   bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
   setopts_amc(38400,amcinfo);
   amcinfo->bdrate=38400;
@@ -463,11 +463,11 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
     {
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
       amcinfo->err=0;
-      wrset=checkAMCAccess(amcinfo);
+      checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
-	  wrset=checkAMCAccess(amcinfo);
+	  checkAMCAccess(amcinfo);
 	}
       amcinfo->init=1;
       amcinfo->err=0;
@@ -487,16 +487,16 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 9600 baud rate.",amcinfo->motorstr);
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: Attempting to set the baud rate to 38400.",amcinfo->motorstr);
 
-      wrset=checkAMCAccess(amcinfo);
+      checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
-	  wrset=checkAMCAccess(amcinfo);
-          m=disableAMC(amcinfo); // Make sure the AMC is disabled
+	  checkAMCAccess(amcinfo);
+          disableAMC(amcinfo); // Make sure the AMC is disabled
 	}
       n=send_amccmd(5,1,2,1,cmd,amcinfo); 
 
-      m=checkAMCResp(n, amcinfo);
+      checkAMCResp(n, amcinfo);
     }
   else
     {
@@ -509,12 +509,12 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
   if(n >= 0)
     {
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
-      wrset=checkAMCAccess(amcinfo);
+      checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
 	{
 	  setWriteAccess(amcinfo);
-	  wrset=checkAMCAccess(amcinfo);
-          m=disableAMC(amcinfo); // Make sure the AMC is disabled
+	  checkAMCAccess(amcinfo);
+          disableAMC(amcinfo); // Make sure the AMC is disabled
 	}
       amcinfo->err=0;
       amcinfo->init=1;
@@ -691,13 +691,14 @@ int getAMCResp(int seq, int *val, int *l, struct MotorInfoStruct* amcinfo)
 {
   int n,i;
   unsigned char response[256];
-  int rseq, rl, rval,rstat;
+  int rl, rval,rstat;
+  //int rseq;
   n=readAMCResp(seq,response,l,amcinfo);
   if(n<0)
     {
       return n;
     }
-  rseq=((int) response[2])/4;
+  //rseq=((int) response[2])/4;
   rval=0;
   rl=((int) response[5]); // Gives the number of words
   bprintfverb(info,amcinfo->verbose,MC_EXTRA_VERBOSE,"%sComm getAMCResp: response[2]: %x, [3]: %x, [4]: %x",amcinfo->motorstr,(unsigned char) response[2],(unsigned char) response[3],(unsigned char) response[4]);
@@ -739,14 +740,14 @@ int checkAMCResp(int seq, struct MotorInfoStruct* amcinfo)
   int n;
   int l=0;
   unsigned char response[256];
-  int rval, rseq, rstat;
+  int rstat;
+  //int rseq;
   n=readAMCResp(seq,response,&l,amcinfo);
   if(n<0)
     {
       return n;
     }
-  rseq=((int) response[2])/4;
-  rval=0;
+  //rseq=((int) response[2])/4;
 
   rstat=((int) response[3]);
 

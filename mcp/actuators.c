@@ -563,8 +563,6 @@ static void OpenCloseShutter()
 
 static void CloseShutter()
 {
-
-  static int  closing_shutter = 0;
   char        cmd[80];
 
   int  shutter_timeout = 0;
@@ -590,7 +588,6 @@ static void CloseShutter()
     bputs(info, "end wait");
   }
   else {  // Shutter is closed according to opto switch
-    closing_shutter = 0;
     shutter_data.state = SHUTTER_CLOSED;
     //bputs(info, "CloseShutter: shutter is closed");
   }
@@ -605,9 +602,6 @@ static void CloseShutter()
 
 static void CloseSlowShutter()
 {
-
-  static int  closing_shutter = 0;
-
   int  shutter_timeout = 0;
 
   char  cmd[80];
@@ -638,14 +632,12 @@ static void CloseSlowShutter()
           sprintf(cmd, "j64z5000h50V1000D%dR", CommandData.actbus.shutter_step_slow);
           if (EZBus_Comm(&bus, id[SHUTTERNUM], cmd) != EZ_ERR_OK)
             bputs(warning, "CloseShutter: EZ Bus error");
-          closing_shutter = 1;
         }
       }
       shutter_timeout += SHUTTER_SLEEP;
     }
   }
   else {  // Shutter is closed according to opto switch
-    closing_shutter = 0;
     shutter_data.state = SHUTTER_CLOSED;
     //bputs(info, "CloseShutter: shutter is closed");
   }
@@ -764,7 +756,6 @@ static void DoShutter(void)
       EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
       TurnOffShutter();
       EZBus_Release(&bus, id[SHUTTERNUM]);
-      //closing_shutter = 0;
       break;
     case SHUTTER_DO_CLOSE:
       //shutter_timeout = DRIVE_TIMEOUT;

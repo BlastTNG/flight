@@ -51,19 +51,21 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
 #include "tx.h"
  */
 
-#define CHRGCTRL_DEVICE "/dev/ttySI3" // change depending upon serial hub port
+#define CHRGCTRL1_DEVICE "/dev/ttySI3" // change depending upon serial hub port
+#define CHRGCTRL2_DEVICE "/dev/ttySI6" // change depending upon serial hub port
 #define QUERY_SIZE 6
 #define CHECKSUM_SIZE 2               
 
 /*#define CHRGCTRL_VERBOSE            // uncomment to see useful debug info*/
 
-static pthread_t chrgctrlcomm_id;     // thread ID
+static pthread_t chrgctrlcomm1_id;     // thread ID
+static pthread_t chrgctrlcomm2_id;     // thread ID
 static int char_interval_timeout;     // time to wait for next MODBUS byte in packet
 
-struct CCInfo chrgctrlinfo;           // device status info -- see chrgctrl.h
-struct CCData ChrgCtrlData;           // data from device -- see chrgctrl.h
+struct CCInfo chrgctrlinfo[2];           // device status info -- see chrgctrl.h
+struct CCData ChrgCtrlData[2];           // data from device -- see chrgctrl.h
 
-static void* chrgctrlComm(void* arg);
+static void* chrgctrlComm(void* cc);
 static unsigned int modbus_crc(unsigned char *buf, int start, int cnt);
 
 void nameThread(const char*);	      // in mcp.c
@@ -77,10 +79,10 @@ extern short int InCharge;            // in tx.c
 /* create charge controller serial thread */
 
 void startChrgCtrl()
-{
-
+{  
   bprintf(info, "startChrgCtrl: creating charge controller serial thread");
-  pthread_create(&chrgctrlcomm_id, NULL, chrgctrlComm, NULL);
+  pthread_create(&chrgctrlcomm1_id, NULL, chrgctrlComm, (void*)0);
+  pthread_create(&chrgctrlcomm2_id, NULL, chrgctrlComm, (void*)1);
 }
 
 
@@ -91,9 +93,10 @@ void endChrgCtrl()          // declare in mcp.c along with startChrgCtrl
 {
 
   int i = 0;
-  chrgctrlinfo.closing = 1; // tells the serial thread to shut down
+  chrgctrlinfo[0].closing = 1; // tells the serial thread to shut down
+  chrgctrlinfo[1].closing = 1; // tells the serial thread to shut down
 
-  while (chrgctrlinfo.open == 1 && i++ < 100) {
+  while ((chrgctrlinfo[0].open == 1) && (chrgctrlinfo[1].open == 1) && (i++ < 100)) {
     usleep(10000);
   }
 }
@@ -101,12 +104,13 @@ void endChrgCtrl()          // declare in mcp.c along with startChrgCtrl
 
 /* thread routine: continously poll charge controller for data */
 
-void* chrgctrlComm(void* arg)
+void* chrgctrlComm(void* cc)
 {
-
+  const char *COMM[] = {CHRGCTRL1_DEVICE, CHRGCTRL2_DEVICE};
   const int slave = 0x01;   // default MODBUS device address   
                             // for charge controller
-
+  int i_cc = (int)cc;       // which charge controller we should be talking to
+                            
 /*Relics from the test program -- have no use in mcp  
   const int nfaults = 11;   // number of faults conditions
   const int nalarms = 20;   // number of alarm conditions
@@ -120,7 +124,8 @@ void* chrgctrlComm(void* arg)
   double Vscale;            // voltage scaling factor
   double Iscale;            // current scaling factor
 
- 
+  char tname[10];
+  
   /* struct for parsing alarm and fault bitfields, and other general
      status lookup tables. 
      
@@ -205,16 +210,17 @@ void* chrgctrlComm(void* arg)
 
   /* initialize values in charge controller info struct */
 
-  chrgctrlinfo.open = 0;
-  chrgctrlinfo.err = 0;
-  chrgctrlinfo.closing = 0;
-  chrgctrlinfo.reset = 0;
-/*chrgctrlinfo.closing = 1; // just for testing */
+  chrgctrlinfo[i_cc].open = 0;
+  chrgctrlinfo[i_cc].err = 0;
+  chrgctrlinfo[i_cc].closing = 0;
+  chrgctrlinfo[i_cc].reset = 0;
+/*chrgctrlinfo[i_cc].closing = 1; // just for testing */
 
 //  fp = fopen("/home/shariff/chrgctrl.log", "a");   // open the log file that records
                                                      // charge controller serial frames
 
-  nameThread("ChrgC");
+  sprintf(tname, "ChrgC%1d", i_cc);
+  nameThread(tname);
 
   /* check whether this is the ICC */
 
@@ -227,9 +233,9 @@ void* chrgctrlComm(void* arg)
 
   /* try to open serial port */
 
-  while (chrgctrlinfo.open == 0) {
+  while (chrgctrlinfo[i_cc].open == 0) {
 
-    open_chrgctrl(CHRGCTRL_DEVICE);
+    open_chrgctrl(COMM[i_cc], i_cc);
 
     if (n_conn == 10) {
       bputs(err, "Charge controller port failed to open after 10 attempts");
@@ -237,7 +243,7 @@ void* chrgctrlComm(void* arg)
 
     n_conn++;
 
-    if (chrgctrlinfo.open == 1) {
+    if (chrgctrlinfo[i_cc].open == 1) {
 
 //  #ifdef CHRGCTRL_VERBOSE
       bprintf(info, "Opened the serial port on attempt number %i", n_conn); 
@@ -250,39 +256,39 @@ void* chrgctrlComm(void* arg)
 
   while (1) {
 
-    if (chrgctrlinfo.closing == 1) {
+    if (chrgctrlinfo[i_cc].closing == 1) {
 
-      close_chrgctrl();
+      close_chrgctrl(i_cc);
       usleep(10000); 
 
-    } else if (chrgctrlinfo.reset == 1) {
+    } else if (chrgctrlinfo[i_cc].reset == 1) {
       
       /* if there's an error, reset connection to charge controller */
 
-      close_chrgctrl();
+      close_chrgctrl(i_cc);
      
       if (n_reconn == 0) {
         bprintf(info,"Error occurred: attempting to re-open serial port.");
       }
 
-      while (chrgctrlinfo.open == 0) {
+      while (chrgctrlinfo[i_cc].open == 0) {
 
-        open_chrgctrl(CHRGCTRL_DEVICE);
+        open_chrgctrl(COMM[i_cc], i_cc);
 
         #ifdef CHRGCTRL_VERBOSE
         if (n_reconn == 10) { 
-	  bputs(err,"Failed to re-open charge controller port after 10 attempts.");
+	  bprintf(err,"Failed to re-open charge controller #%d after 10 attempts.", i_cc);
 	}
         #endif
 
         n_reconn++;
 
-        if (chrgctrlinfo.open == 1) { // reset succeeded
+        if (chrgctrlinfo[i_cc].open == 1) { // reset succeeded
 
           #ifdef CHRGCTRL_VERBOSE
-            bprintf(info, "Re-opened serial port on attempt %i.", n_reconn);
+            bprintf(info, "Re-opened charge controller #%d on attempt %i.", i_cc, n_reconn);
           #endif
-	  chrgctrlinfo.reset = chrgctrlinfo.err = 0;       
+	  chrgctrlinfo[i_cc].reset = chrgctrlinfo[i_cc].err = 0;       
 
 	} else {
             sleep(1);
@@ -294,38 +300,38 @@ void* chrgctrlComm(void* arg)
          ADC output into meaningful V & I values) from register 
          addresses 1-4 */
 
-      scale.num = query_chrgctrl(slave, 1, 4, scale.arr, chrgctrlinfo.fd);
+      scale.num = query_chrgctrl(slave, 1, 4, scale.arr, chrgctrlinfo[i_cc].fd);
 
       //      usleep(10000);  // ignore these -- just for debugging
 
       /* poll charge controller for battery and array voltages and currents,
          which range from register addresses [26 or]27-30 */
        
-      elec.num = query_chrgctrl(slave, 26, 5, elec.arr, chrgctrlinfo.fd);   
+      elec.num = query_chrgctrl(slave, 26, 5, elec.arr, chrgctrlinfo[i_cc].fd);   
 
       //      usleep(10000);
 
       /* heatsink temperature in degrees C (addr 36) */
 
-      temp.num = query_chrgctrl(slave, 36, 1, temp.arr, chrgctrlinfo.fd);   
+      temp.num = query_chrgctrl(slave, 36, 1, temp.arr, chrgctrlinfo[i_cc].fd);   
 
       //      usleep(10000);
 
       /* charge controller fault bitfield (addr 45) */
 
-      fault.num = query_chrgctrl(slave, 45, 1, fault.arr, chrgctrlinfo.fd);   
+      fault.num = query_chrgctrl(slave, 45, 1, fault.arr, chrgctrlinfo[i_cc].fd);   
 
       //      usleep(10000);
 
       /* charge controller alarm bitfield (spans 2 regs with addrs 47,48) */
 
-      alarm.num = query_chrgctrl(slave, 47, 2, alarm.arr, chrgctrlinfo.fd);
+      alarm.num = query_chrgctrl(slave, 47, 2, alarm.arr, chrgctrlinfo[i_cc].fd);
 
       //      usleep(10000);
 
       /* controller LED state, charge state and target charging voltage (addrs 50, 51, 52) */
 
-      charge.num = query_chrgctrl(slave, 50, 3, charge.arr, chrgctrlinfo.fd);
+      charge.num = query_chrgctrl(slave, 50, 3, charge.arr, chrgctrlinfo[i_cc].fd);
 
       //      usleep(10000);
 
@@ -390,22 +396,22 @@ void* chrgctrlComm(void* arg)
               bputs(err, "An unknown charge controller error occurred.");  
 	  }
   #endif
-          chrgctrlinfo.err = 1;
+          chrgctrlinfo[i_cc].err = 1;
           query_no = 6; // break out of for loop upon first problem encountered
 	}
       }
 
-      if (chrgctrlinfo.err == 1) {
-        chrgctrlinfo.reset = 1;
+      if (chrgctrlinfo[i_cc].err == 1) {
+        chrgctrlinfo[i_cc].reset = 1;
         /* put charge controller data values into obvious error state */
-        ChrgCtrlData.V_batt = 0.0;
-        ChrgCtrlData.V_arr = 0.0;
-        ChrgCtrlData.I_batt = 0.0;
-        ChrgCtrlData.I_arr = 0.0;
-        ChrgCtrlData.V_targ = 0.0;
-        ChrgCtrlData.T_hs = 0;
-        ChrgCtrlData.charge_state = 10;
-        ChrgCtrlData.led_state = 20;
+        ChrgCtrlData[i_cc].V_batt = 0.0;
+        ChrgCtrlData[i_cc].V_arr = 0.0;
+        ChrgCtrlData[i_cc].I_batt = 0.0;
+        ChrgCtrlData[i_cc].I_arr = 0.0;
+        ChrgCtrlData[i_cc].V_targ = 0.0;
+        ChrgCtrlData[i_cc].T_hs = 0;
+        ChrgCtrlData[i_cc].charge_state = 10;
+        ChrgCtrlData[i_cc].led_state = 20;
         continue; // go back up to top of infinite loop
       } else if (n_reconn > 0) {
 
@@ -418,31 +424,31 @@ void* chrgctrlComm(void* arg)
       Vscale = *scale.arr + (*(scale.arr+1))/65536.0;
       Iscale = *(scale.arr+2) + (*(scale.arr+3))/65536.0;
 
-      //      ChrgCtrlData.V_batt = *elec.arr * Vscale/32768.0;
-      //      ChrgCtrlData.V_arr =  *(elec.arr+1) * Vscale/32768.0;
-      //      ChrgCtrlData.I_batt = *(elec.arr+2) * Iscale/32768.0;
-      //      ChrgCtrlData.I_arr =  *(elec.arr+3) * Iscale/32768.0;
+      //      ChrgCtrlData[i_cc].V_batt = *elec.arr * Vscale/32768.0;
+      //      ChrgCtrlData[i_cc].V_arr =  *(elec.arr+1) * Vscale/32768.0;
+      //      ChrgCtrlData[i_cc].I_batt = *(elec.arr+2) * Iscale/32768.0;
+      //      ChrgCtrlData[i_cc].I_arr =  *(elec.arr+3) * Iscale/32768.0;
 
       /* *elec.arr is the battery voltage at the charging terminals
 	 (less accurate) as opposed to the sense terminals. 
          EDIT: actually these terminals are shorted, so it doesn't
          matter which reading is used. */
 
-      ChrgCtrlData.V_batt = *(elec.arr+1) * Vscale/32768.0;
-      ChrgCtrlData.V_arr =  *(elec.arr+2) * Vscale/32768.0;
-      ChrgCtrlData.I_batt = *(elec.arr+3) * Iscale/32768.0;
-      ChrgCtrlData.I_arr =  *(elec.arr+4) * Iscale/32768.0;
+      ChrgCtrlData[i_cc].V_batt = *(elec.arr+1) * Vscale/32768.0;
+      ChrgCtrlData[i_cc].V_arr =  *(elec.arr+2) * Vscale/32768.0;
+      ChrgCtrlData[i_cc].I_batt = *(elec.arr+3) * Iscale/32768.0;
+      ChrgCtrlData[i_cc].I_arr =  *(elec.arr+4) * Iscale/32768.0;
     
-      ChrgCtrlData.V_targ = *(charge.arr+2) * Vscale/32768.0;
+      ChrgCtrlData[i_cc].V_targ = *(charge.arr+2) * Vscale/32768.0;
 
-      ChrgCtrlData.T_hs = *temp.arr;
-      ChrgCtrlData.fault_field = *fault.arr;
+      ChrgCtrlData[i_cc].T_hs = *temp.arr;
+      ChrgCtrlData[i_cc].fault_field = *fault.arr;
 
-      ChrgCtrlData.alarm_field_hi = *alarm.arr;
-      ChrgCtrlData.alarm_field_lo = *(alarm.arr+1);
+      ChrgCtrlData[i_cc].alarm_field_hi = *alarm.arr;
+      ChrgCtrlData[i_cc].alarm_field_lo = *(alarm.arr+1);
 
-      ChrgCtrlData.led_state = *charge.arr;
-      ChrgCtrlData.charge_state = *(charge.arr+1);
+      ChrgCtrlData[i_cc].led_state = *charge.arr;
+      ChrgCtrlData[i_cc].charge_state = *(charge.arr+1);
     
       /* Relics from test program -- not for mcp!
 
@@ -451,38 +457,38 @@ void* chrgctrlComm(void* arg)
       printf("\n");
       printf("Voltage Scaling Factor: %.3f \n", Vscale);
       printf("Current Scaling Factor: %.3f \n \n", Iscale);    
-      printf("Battery Sense Voltage: %.3f V \n", ChrgCtrlData.V_batt);
-      printf("Solar Array Input Voltage: %.3f V \n", ChrgCtrlData.V_arr);
-      printf("Output Current to Battery: %.3f A \n", ChrgCtrlData.I_batt);
-      printf("Input Current from Array: %.3f A \n", ChrgCtrlData.I_arr);
-      printf("Target Battery Charging Voltage: %.3f V \n \n", ChrgCtrlData.V_targ);
-      printf("Heatsink Temperature: %d C \n \n", ChrgCtrlData.T_hs);
+      printf("Battery Sense Voltage: %.3f V \n", ChrgCtrlData[i_cc].V_batt);
+      printf("Solar Array Input Voltage: %.3f V \n", ChrgCtrlData[i_cc].V_arr);
+      printf("Output Current to Battery: %.3f A \n", ChrgCtrlData[i_cc].I_batt);
+      printf("Input Current from Array: %.3f A \n", ChrgCtrlData[i_cc].I_arr);
+      printf("Target Battery Charging Voltage: %.3f V \n \n", ChrgCtrlData[i_cc].V_targ);
+      printf("Heatsink Temperature: %d C \n \n", ChrgCtrlData[i_cc].T_hs);
 
       parse fault bitfield 
 
-      if (!ChrgCtrlData.fault_field)
+      if (!ChrgCtrlData[i_cc].fault_field)
         printf("No fault conditions detected \n");
 
       for (i = 0; i < nfaults ; i++) {
      
-        if (ChrgCtrlData.fault_field & fault_bits[i].flag)
+        if (ChrgCtrlData[i_cc].fault_field & fault_bits[i].flag)
           printf("FAULT: %s \n", fault_bits[i].message);  
       }
 
       parse alarm bitfield 
 
-      if (!ChrgCtrlData.alarm_field)
+      if (!ChrgCtrlData[i_cc].alarm_field)
         printf("No alarm conditions detected \n");
 
       for (j = 0; j < nalarms ; j++) {
      
-        if (ChrgCtrlData.alarm_field & alarm_bits[j].flag)
+        if (ChrgCtrlData[i_cc].alarm_field & alarm_bits[j].flag)
           printf("ALARM: %s \n", alarm_bits[j].message);  
       }
 
       determine charging state from lookup table    
 
-      printf("Charging State: %s \n \n", charge_states[ChrgCtrlData.charge_state].message);
+      printf("Charging State: %s \n \n", charge_states[ChrgCtrlData[i_cc].charge_state].message);
 
       i = j = 0;*/
     }
@@ -494,27 +500,27 @@ void* chrgctrlComm(void* arg)
 
 /* open serial port */
 
-void open_chrgctrl(char *dev_name)
+void open_chrgctrl(const char *dev_name, int i_cc)
 {  
   struct termios settings;
 		
-  if ((chrgctrlinfo.fd = open(dev_name, O_RDWR)) < 0) {
+  if ((chrgctrlinfo[i_cc].fd = open(dev_name, O_RDWR)) < 0) {
    
     /* port failed to open */
      
-    chrgctrlinfo.open = 0;
+    chrgctrlinfo[i_cc].open = 0;
     return;
 
   } else {
 
-    fcntl(chrgctrlinfo.fd, F_SETFL, 0);
-    chrgctrlinfo.open = 1;
+    fcntl(chrgctrlinfo[i_cc].fd, F_SETFL, 0);
+    chrgctrlinfo[i_cc].open = 1;
 
   }
 
   /* initialize settings by getting terminal attributes */
-  if (tcgetattr(chrgctrlinfo.fd, &settings)) {
-    chrgctrlinfo.open = 0;
+  if (tcgetattr(chrgctrlinfo[i_cc].fd, &settings)) {
+    chrgctrlinfo[i_cc].open = 0;
     return;
   }
 
@@ -581,21 +587,21 @@ void open_chrgctrl(char *dev_name)
 
   cfmakeraw(&settings);
 
-  tcsetattr(chrgctrlinfo.fd, TCSANOW, &settings);
+  tcsetattr(chrgctrlinfo[i_cc].fd, TCSANOW, &settings);
 }
 
 
 
 /* close the serial port */
 
-void close_chrgctrl(void)
+void close_chrgctrl(int i_cc)
 {
 
   #ifdef CHRGCTRL_VERBOSE
     bprintf(info, "close_chrgctrl: closing connection to charge controller.");
   #endif
 
-  if (chrgctrlinfo.open == 0) {
+  if (chrgctrlinfo[i_cc].open == 0) {
   
     #ifdef CHRGCTRL_VERBOSE
       bprintf(info, "close_chrgctrl: charge controller is already closed!");
@@ -607,10 +613,10 @@ void close_chrgctrl(void)
       bprintf(info, "close_chrgctrl: closing serial port.");
     #endif
 
-      if (chrgctrlinfo.fd >= 0) {
-      close(chrgctrlinfo.fd);
+      if (chrgctrlinfo[i_cc].fd >= 0) {
+      close(chrgctrlinfo[i_cc].fd);
       }
-    chrgctrlinfo.open = 0;
+    chrgctrlinfo[i_cc].open = 0;
     
     #ifdef CHRGCTRL_VERBOSE
       bprintf(info, "close_chrgctrl: connection to port is now closed.");

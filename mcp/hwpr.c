@@ -232,8 +232,6 @@ void ControlHWPR(struct ezbus *bus)
   int i_step;  // index of the current step
   int i_next_step=0;
 
-  int overshoot = 0;
-
   static struct LutType HwprPotLut = {"/data/etc/blast/hwpr_pot.lut", 0, NULL, NULL, 0};
 
   if (HwprPotLut.n == 0)
@@ -582,12 +580,6 @@ if (hwpr_control.read_before == yes) {
   /* This is historic and won't be used for flight.*/
   if( CommandData.hwpr.mode == HWPR_REPEAT) {
 
-    if (CommandData.hwpr.step_size > 0) {
-      overshoot = CommandData.hwpr.overshoot;
-    } else {
-      overshoot = (-1)*CommandData.hwpr.overshoot;
-    }
-
     if ( hwpr_wait_cnt <= 0
 	     //TODO I don't know why having a shorter wait for the overshoot fails
 	     /*|| (overshooting && hwpr_wait_cnt >= 10)*/ ) {
@@ -609,8 +601,7 @@ if (hwpr_control.read_before == yes) {
 			- CommandData.hwpr.overshoot);
 	}
       }
-    }
-    else if (hwpr_wait_cnt == 10) {
+    } else if (hwpr_wait_cnt == 10) {
       //pulse the potentiometer
       CommandData.Cryo.hwprPos = 50;
     }

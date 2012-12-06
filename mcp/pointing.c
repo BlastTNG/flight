@@ -304,6 +304,7 @@ static int MagConvert(double *mag_az)
   return (1);
 }
 
+/*
 static int fakeDGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll) {
   static int i = 0;
   if (i++>100) {
@@ -315,6 +316,7 @@ static int fakeDGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_rol
   }
   return (0);
 }
+*/
 
 static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 {
