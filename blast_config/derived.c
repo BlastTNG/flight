@@ -180,7 +180,21 @@ union DerivedUnion DerivedChannels[] = {
 
   COMMENT("Charge Controller Bitfields"),
 
-  BITFIELD("fault_cc",
+  BITFIELD("fault_cc1",
+      "F_OVERCURRENT_CC", 
+      "F_FET_SHORT_CC", 
+      "F_SOFTWARE_BUG_CC", 
+      "F_BATT_HVD_CC", 
+      "F_ARR_HVD_CC", 
+      "F_DIP_CHANGED_CC", 
+      "F_SETTINGS_CHANGE_CC", 
+      "F_RTS_SHORT_CC", 
+      "F_RTS_DISCONN_CC",
+      "F_EEPROM_LIM_CC",
+      "F_SLAVE_TO_CC" 
+      ),
+
+  BITFIELD("fault_cc2",
       "F_OVERCURRENT_CC", 
       "F_FET_SHORT_CC", 
       "F_SOFTWARE_BUG_CC", 
