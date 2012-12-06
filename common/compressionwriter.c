@@ -38,7 +38,7 @@ struct streamDataStruct {
 
 #define HIGAIN_TTY "/dev/ttySI2"
 #define OMNI1_TTY "/dev/ttySI1"
-#define OMNI2_TTY "/dev/ttySI4"
+#define OMNI2_TTY "/dev/ttySI7"
 
 void nameThread(const char*);               /* mcp.c */
 

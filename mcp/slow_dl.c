@@ -52,8 +52,8 @@ struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA] = {
     {"i_piv",         SLOWDL_U_MASK, 16},
     {"i_rw",          SLOWDL_U_MASK, 16},
 
-    {"v_batt_cc",     SLOWDL_U_MASK, 16},
-    {"v_arr_cc",      SLOWDL_U_MASK, 16},
+    {"v_batt_cc1",     SLOWDL_U_MASK, 16},
+    {"v_batt_cc2",     SLOWDL_U_MASK, 16},
 
     {"t_wd_flc",      SLOWDL_U_MASK, 16},
     {"t_acs",         SLOWDL_U_MASK, 16},
