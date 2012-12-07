@@ -57,7 +57,7 @@ struct CCInfo {
   int reset;                   // 1 if a reset is required
 };
 
-extern struct CCInfo chrgctrlinfo;
+extern struct CCInfo chrgctrlinfo[2];
 
 /* charge controller data struct 
    written to by serial thread in chrgctrl.c */
@@ -79,7 +79,7 @@ struct CCData {
   unsigned int charge_state;   // charging state of controller   
 };
 
-extern struct CCData ChrgCtrlData;
+extern struct CCData ChrgCtrlData[2];
                                          
 /* function declarations */
 
@@ -92,14 +92,14 @@ extern struct CCData ChrgCtrlData;
  dev_name      -- pointer to character string containing path
                   of serial device file
  ***************************************************************/
- void open_chrgctrl(char *dev_name);
+void open_chrgctrl(char *dev_name, int isTwo);
 
 
 /*************************************************************** 
  close_chrgctrl -- closes serial port for MODBUS communication
                    with the charge controller
  ***************************************************************/
- void close_chrgctrl(void);
+void close_chrgctrl(int isTwo);
 
 
 

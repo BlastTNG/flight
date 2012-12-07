@@ -795,10 +795,8 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
   double w1, w2;
   double new_offset = 0;
 
-  static int thirdtime = 1;
  
   //  if (i%500==1) bprintf(info,"EvolveElSolution: #1 Initial angle %f, new angle %f",s->angle, new_angle);
-  if (thirdtime < 4) bprintf(info, "angle %g gyro %g gy_off %g\n", s->angle, gyro, gy_off);
   s->angle += (gyro + gy_off) / ACSData.bbc_rate;
   s->varience += GYRO_VAR;
 
@@ -809,8 +807,6 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
     w1 = 1.0 / (s->varience);
     w2 = s->samp_weight;
 
-    if (thirdtime < 4) bprintf(info, "angle %g new_angle %g w1 %g w2 %g\n", s->angle, new_angle, w1, w2);
-    if (thirdtime < 4) thirdtime++;
     s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
     s->varience = 1.0 / (w1 + w2);
     //    if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, w1 %f, w2 %f, varience %f",s->angle, w1, w2,s->varience);
@@ -870,12 +866,10 @@ static void AddAzSolution(struct AzAttStruct *AzAtt,
     struct AzSolutionStruct *AzSol, int add_offset)
 {
   double weight, var, az;
-  static int sixthtime = 1;
 
   var = AzSol->varience + AzSol->sys_var;
   az = AzSol->angle + AzSol->trim;
 
-  if (sixthtime < 4) bprintf(info, "%d, variance: %g, sys_var: %g, angle: %g, trim: %g", sixthtime, AzSol->varience, AzSol->sys_var, AzSol->angle, AzSol->trim);
 
   if (var > 0)
     weight = 1.0 / var;
@@ -887,8 +881,6 @@ static void AddAzSolution(struct AzAttStruct *AzAtt,
     (weight + AzAtt->weight);
   NormalizeAngle(&(AzAtt->az));
 
-  if (sixthtime < 4) bprintf(info, "%d weight: %g, AzAtt->weight: %g, AzAtt->az %g, az: %g", sixthtime, weight, AzAtt->weight, AzAtt->az, az);
-  if (sixthtime < 4) sixthtime++;
 
   if (add_offset) {
     AzAtt->offset_ifroll_gy = (weight * AzSol->offset_ifroll_gy +
@@ -908,13 +900,11 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
   double gy_az;
   double new_offset, daz;
 
-  static int fifthtime = 1;
   el *= M_PI / 180.0; // want el in radians
   //gy_az = -(ifroll_gy + offset_ifroll_gy) * sin(el) + -(ifyaw_gy + offset_ifyaw_gy) * cos(el);
   
   gy_az = ifyaw_gy + offset_ifyaw_gy;
 
-//  if (fifthtime < 4) bprintf(info, "%d angle %g gy_az %g ifroll_gy %g ifyaw_gy %g el %g", fifthtime, s->angle, gy_az, ifroll_gy, ifyaw_gy, el);
 
   s->angle += gy_az / ACSData.bbc_rate;
   s->varience += GYRO_VAR;
@@ -927,8 +917,6 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
     w2 = s->samp_weight;
 
     UnwindDiff(s->angle, &new_angle);
-    if (fifthtime < 4) bprintf(info, "%d s->angle %g new_angle %g w1 %g w2 %g", fifthtime, s->angle, new_angle, w1, w2);
-    if (fifthtime < 4) fifthtime++;
     s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
     s->varience = 1.0 / (w1 + w2);
     NormalizeAngle(&(s->angle));
@@ -1104,7 +1092,6 @@ void Pointing(void)
     MagAz.trim = CommandData.mag_az_trim;
     DGPSAz.trim = CommandData.dgps_az_trim;
     PSSAz.trim = CommandData.pss_az_trim;
-    bprintf(info, "null_trim: %g, mag_trim: %g, gps_trim: %g, pss_trim: %g", CommandData.null_az_trim, CommandData.mag_az_trim, CommandData.dgps_az_trim, CommandData.pss_az_trim);
 
     /*ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(ClinEl.fs, FIR_LENGTH*ACSData.bbc_rate);
@@ -1165,9 +1152,6 @@ void Pointing(void)
   cos_a = cos(PointingData[i_point_read].az * (M_PI / 180.0));
   sin_a = sin(PointingData[i_point_read].az * (M_PI / 180.0));
 
-  static int fourthtime = 1;
-  if (fourthtime < 4) bprintf(info, "%d i %d az1 %g az2 %g az3 %g", fourthtime, i_point_read, PointingData[0].az, PointingData[1].az, PointingData[2].az);
-  if (fourthtime < 4) bprintf(info, "%d R %g ce %g se %g cl %g sl %g ca %g sa %g", fourthtime, R, cos_e, sin_e, cos_l, sin_l, cos_a, sin_a);
 
   PointingData[point_index].ifel_earth_gy = R * (-cos_l * sin_a);
   PointingData[point_index].ifroll_earth_gy = R *
@@ -1182,8 +1166,6 @@ void Pointing(void)
   //PointingData[point_index].v_az = (-1.0)*RG.ifroll_gy*sin_e-RG.ifyaw_gy*cos_e;
   PointingData[point_index].v_az = (RG.ifyaw_gy*cos(0.0) 
                                      + RG.ifroll_gy*sin(0.0));
-  if (fourthtime < 4) bprintf(info, "RG.ifel_gy %g PD.ifel_earth_gy %g", RG.ifel_gy, PointingData[point_index].ifel_earth_gy);
-  if (fourthtime < 4) fourthtime++;
   /*************************************/
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);
@@ -1261,7 +1243,6 @@ void Pointing(void)
     //               PointingData[i_point_read].offset_ifel_gy, clin_elev, 1);
 
  
-  static int secondtime = 1;
 
   //el_encs_ok =  (CommandData.use_elenc1 || CommandData.use_elenc2);
   
@@ -1307,33 +1288,26 @@ void Pointing(void)
   }
 
   /** evolve solutions **/
-  if(secondtime < 4) bprintf(info, "%d Null.angle (before): %f", secondtime,  NullAz.angle);
   EvolveAzSolution(&NullAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       0.0,
       0.0, 0);
-  if(secondtime < 4) bprintf(info, "%d Null.angle (after): %f", secondtime,  NullAz.angle);
   /** MAG Az **/
-  if(secondtime < 4) bprintf(info, "%d Mag.angle (before): %f", secondtime,  MagAz.angle);
   EvolveAzSolution(&MagAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       0.0,
       mag_az, mag_ok);
-  if(secondtime < 4) bprintf(info, "%d Mag.angle (after): %f", secondtime,  MagAz.angle);
 
   /** DGPS Az **/
-  if(secondtime < 4) bprintf(info, "%d GPS.angle (before): %f", secondtime,  DGPSAz.angle);
   EvolveAzSolution(&DGPSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
       0.0,
       dgps_az, dgps_ok);
-  if(secondtime < 4) bprintf(info, "%d GPS.angle (after): %f", secondtime,  DGPSAz.angle);
 
   /** PSS1 **/
-  if(secondtime < 4) bprintf(info, "%d PSS.angle (before): %f", secondtime,  PSSAz.angle);
   EvolveAzSolution(&PSSAz,
       RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
       RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
@@ -1359,10 +1333,7 @@ void Pointing(void)
   }
 
   //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
-  if (secondtime < 4) bprintf(info, "%d i %d az1 %g az2 %g az3 %g", secondtime, point_index, PointingData[0].az, PointingData[1].az, PointingData[2].az);
   PointingData[point_index].az = AzAtt.az;
-  if (secondtime < 4) bprintf(info, "%d i %d az1 %g az2 %g az3 %g", secondtime, point_index, PointingData[0].az, PointingData[1].az, PointingData[2].az);
-  if (secondtime < 4) secondtime++;
   if (CommandData.az_autogyro) {
     PointingData[point_index].offset_ifroll_gy = AzAtt.offset_ifroll_gy;
     PointingData[point_index].offset_ifyaw_gy = AzAtt.offset_ifyaw_gy;

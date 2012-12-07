@@ -219,17 +219,28 @@ static int ControlBSCHeat()
 void ChargeController(void)
 {
 
-  static struct NiosStruct *VBattCCAddr;
-  static struct NiosStruct *VArrCCAddr;
-  static struct NiosStruct *IBattCCAddr;
-  static struct NiosStruct *IArrCCAddr;
-  static struct NiosStruct *VTargCCAddr;
-  static struct NiosStruct *ThsCCAddr;
-  static struct NiosStruct *FaultCCAddr;
-  static struct NiosStruct *AlarmHiCCAddr;
-  static struct NiosStruct *AlarmLoCCAddr;
-  static struct NiosStruct *ChargeCCAddr;
-  static struct NiosStruct *LEDCCAddr;
+  static struct NiosStruct *VBattCC1Addr;
+  static struct NiosStruct *VBattCC2Addr;
+  static struct NiosStruct *VArrCC1Addr;
+  static struct NiosStruct *VArrCC2Addr;
+  static struct NiosStruct *IBattCC1Addr;
+  static struct NiosStruct *IBattCC2Addr;
+  static struct NiosStruct *IArrCC1Addr;
+  static struct NiosStruct *IArrCC2Addr;
+  static struct NiosStruct *VTargCC1Addr;
+  static struct NiosStruct *VTargCC2Addr;
+  static struct NiosStruct *ThsCC1Addr;
+  static struct NiosStruct *ThsCC2Addr;
+  static struct NiosStruct *FaultCC1Addr;
+  static struct NiosStruct *FaultCC2Addr;
+  static struct NiosStruct *AlarmHiCC1Addr;
+  static struct NiosStruct *AlarmHiCC2Addr;
+  static struct NiosStruct *AlarmLoCC1Addr;
+  static struct NiosStruct *AlarmLoCC2Addr;
+  static struct NiosStruct *ChargeCC1Addr;
+  static struct NiosStruct *ChargeCC2Addr;
+  static struct NiosStruct *LEDCC1Addr;
+  static struct NiosStruct *LEDCC2Addr;
 
   static int firsttime = 1;
   
@@ -237,30 +248,56 @@ void ChargeController(void)
 
     firsttime = 0;
 
-    VBattCCAddr = GetNiosAddr("v_batt_cc");
-    VArrCCAddr = GetNiosAddr("v_arr_cc");
-    IBattCCAddr = GetNiosAddr("i_batt_cc");
-    IArrCCAddr  = GetNiosAddr("i_arr_cc");
-    VTargCCAddr = GetNiosAddr("v_targ_cc");
-    ThsCCAddr = GetNiosAddr("t_hs_cc");
-    FaultCCAddr = GetNiosAddr("fault_cc");
-    AlarmHiCCAddr = GetNiosAddr("alarm_hi_cc");
-    AlarmLoCCAddr = GetNiosAddr("alarm_lo_cc");
-    ChargeCCAddr = GetNiosAddr("state_cc");
-    LEDCCAddr = GetNiosAddr("led_cc");
+    VBattCC1Addr = GetNiosAddr("v_batt_cc1");
+    VArrCC1Addr = GetNiosAddr("v_arr_cc1");
+    IBattCC1Addr = GetNiosAddr("i_batt_cc1");
+    IArrCC1Addr  = GetNiosAddr("i_arr_cc1");
+    VTargCC1Addr = GetNiosAddr("v_targ_cc1");
+    ThsCC1Addr = GetNiosAddr("t_hs_cc1");
+    FaultCC1Addr = GetNiosAddr("fault_cc1");
+    AlarmHiCC1Addr = GetNiosAddr("alarm_hi_cc1");
+    AlarmLoCC1Addr = GetNiosAddr("alarm_lo_cc1");
+    ChargeCC1Addr = GetNiosAddr("state_cc1");
+    LEDCC1Addr = GetNiosAddr("led_cc1");
+  
+    VBattCC2Addr = GetNiosAddr("v_batt_cc2");
+    VArrCC2Addr = GetNiosAddr("v_arr_cc2");
+    IBattCC2Addr = GetNiosAddr("i_batt_cc2");
+    IArrCC2Addr  = GetNiosAddr("i_arr_cc2");
+    VTargCC2Addr = GetNiosAddr("v_targ_cc2");
+    ThsCC2Addr = GetNiosAddr("t_hs_cc2");
+    FaultCC2Addr = GetNiosAddr("fault_cc2");
+    AlarmHiCC2Addr = GetNiosAddr("alarm_hi_cc2");
+    AlarmLoCC2Addr = GetNiosAddr("alarm_lo_cc2");
+    ChargeCC2Addr = GetNiosAddr("state_cc2");
+    LEDCC2Addr = GetNiosAddr("led_cc2");
+  
+  
   }
 
-  WriteData(VBattCCAddr, 180.0*ChrgCtrlData.V_batt + 32400.0, NIOS_QUEUE); 
-  WriteData(VArrCCAddr, 180.0*ChrgCtrlData.V_arr + 32400.0, NIOS_QUEUE);
-  WriteData(IBattCCAddr, 400.0*ChrgCtrlData.I_batt + 32000.0, NIOS_QUEUE);
-  WriteData(IArrCCAddr,  400.0*ChrgCtrlData.I_arr + 32000.0, NIOS_QUEUE);
-  WriteData(VTargCCAddr, 180.0*ChrgCtrlData.V_targ + 32400.0, NIOS_QUEUE);
-  WriteData(ThsCCAddr, ChrgCtrlData.T_hs, NIOS_QUEUE);
-  WriteData(FaultCCAddr, ChrgCtrlData.fault_field, NIOS_QUEUE);
-  WriteData(AlarmHiCCAddr, ChrgCtrlData.alarm_field_hi, NIOS_QUEUE);
-  WriteData(AlarmLoCCAddr, ChrgCtrlData.alarm_field_lo, NIOS_QUEUE);
-  WriteData(ChargeCCAddr, ChrgCtrlData.charge_state, NIOS_QUEUE);
-  WriteData(LEDCCAddr, ChrgCtrlData.led_state, NIOS_QUEUE);
+  WriteData(VBattCC1Addr, 180.0*ChrgCtrlData[0].V_batt + 32400.0, NIOS_QUEUE); 
+  WriteData(VArrCC1Addr, 180.0*ChrgCtrlData[0].V_arr + 32400.0, NIOS_QUEUE);
+  WriteData(IBattCC1Addr, 400.0*ChrgCtrlData[0].I_batt + 32000.0, NIOS_QUEUE);
+  WriteData(IArrCC1Addr,  400.0*ChrgCtrlData[0].I_arr + 32000.0, NIOS_QUEUE);
+  WriteData(VTargCC1Addr, 180.0*ChrgCtrlData[0].V_targ + 32400.0, NIOS_QUEUE);
+  WriteData(ThsCC1Addr, ChrgCtrlData[0].T_hs, NIOS_QUEUE);
+  WriteData(FaultCC1Addr, ChrgCtrlData[0].fault_field, NIOS_QUEUE);
+  WriteData(AlarmHiCC1Addr, ChrgCtrlData[0].alarm_field_hi, NIOS_QUEUE);
+  WriteData(AlarmLoCC1Addr, ChrgCtrlData[0].alarm_field_lo, NIOS_QUEUE);
+  WriteData(ChargeCC1Addr, ChrgCtrlData[0].charge_state, NIOS_QUEUE);
+  WriteData(LEDCC1Addr, ChrgCtrlData[0].led_state, NIOS_QUEUE);
+
+  WriteData(VBattCC2Addr, 180.0*ChrgCtrlData[1].V_batt + 32400.0, NIOS_QUEUE); 
+  WriteData(VArrCC2Addr, 180.0*ChrgCtrlData[1].V_arr + 32400.0, NIOS_QUEUE);
+  WriteData(IBattCC2Addr, 400.0*ChrgCtrlData[1].I_batt + 32000.0, NIOS_QUEUE);
+  WriteData(IArrCC2Addr,  400.0*ChrgCtrlData[1].I_arr + 32000.0, NIOS_QUEUE);
+  WriteData(VTargCC2Addr, 180.0*ChrgCtrlData[1].V_targ + 32400.0, NIOS_QUEUE);
+  WriteData(ThsCC2Addr, ChrgCtrlData[1].T_hs, NIOS_QUEUE);
+  WriteData(FaultCC2Addr, ChrgCtrlData[1].fault_field, NIOS_QUEUE);
+  WriteData(AlarmHiCC2Addr, ChrgCtrlData[1].alarm_field_hi, NIOS_QUEUE);
+  WriteData(AlarmLoCC2Addr, ChrgCtrlData[1].alarm_field_lo, NIOS_QUEUE);
+  WriteData(ChargeCC2Addr, ChrgCtrlData[1].charge_state, NIOS_QUEUE);
+  WriteData(LEDCC2Addr, ChrgCtrlData[1].led_state, NIOS_QUEUE);
 
 }
 

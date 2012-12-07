@@ -51,23 +51,31 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
 #include "tx.h"
  */
 
-#define CHRGCTRL_DEVICE "/dev/ttyUSB1" // change depending upon serial hub port
+#define CHRGCTRL_DEVICE1 "/dev/ttySI3" // change depending upon serial hub port
+#define CHRGCTRL_DEVICE2 "/dev/ttySI4" // change depending upon serial hub port
 #define QUERY_SIZE 6
 #define CHECKSUM_SIZE 2               
 
 /*#define CHRGCTRL_VERBOSE            // uncomment to see useful debug info*/
 
-static pthread_t chrgctrlcomm_id;     // thread ID
+static pthread_t chrgctrlcomm1_id;     // thread ID
+static pthread_t chrgctrlcomm2_id;     // thread ID
 static int char_interval_timeout;     // time to wait for next MODBUS byte in packet
 
-struct CCInfo chrgctrlinfo;           // device status info -- see chrgctrl.h
-struct CCData ChrgCtrlData;           // data from device -- see chrgctrl.h
+struct CCInfo chrgctrlinfo[2];           // device status info -- see chrgctrl.h
+struct CCData ChrgCtrlData[2];           // data from device -- see chrgctrl.h
 
-static void* chrgctrlComm(void* arg);
+static void* chrgctrlComm(void* threadargs);
 static unsigned int modbus_crc(unsigned char *buf, int start, int cnt);
 
 void nameThread(const char*);	      // in mcp.c
 extern short int InCharge;            // in tx.c
+
+struct chrgctrl_args {
+  int isTwo;
+  char chrgctrl_device[13];
+};
+
 
 //static int nlog = 0;                // counts number of frames printed to chrgctrl.log
 
@@ -79,8 +87,20 @@ extern short int InCharge;            // in tx.c
 void startChrgCtrl()
 {
 
-  bprintf(info, "startChrgCtrl: creating charge controller serial thread");
-  pthread_create(&chrgctrlcomm_id, NULL, chrgctrlComm, NULL);
+  struct chrgctrl_args args1;
+  struct chrgctrl_args args2;
+
+  args1.isTwo = 0;
+  //args1.chrgctrl_device = CHRGCTRL_DEVICE1;
+  strcpy(args1.chrgctrl_device, CHRGCTRL_DEVICE1);
+
+  args2.isTwo = 1;
+  strcpy(args2.chrgctrl_device, CHRGCTRL_DEVICE2);
+
+ 
+  bprintf(info, "startChrgCtrl: creating charge controller serial threads");
+  pthread_create(&chrgctrlcomm1_id, NULL, chrgctrlComm, (void *) &args1);
+  pthread_create(&chrgctrlcomm2_id, NULL, chrgctrlComm, (void *) &args2);
 }
 
 
@@ -91,9 +111,10 @@ void endChrgCtrl()          // declare in mcp.c along with startChrgCtrl
 {
 
   int i = 0;
-  chrgctrlinfo.closing = 1; // tells the serial thread to shut down
+  chrgctrlinfo[0].closing = 1; // tells the serial thread to shut down
+  chrgctrlinfo[1].closing = 1; // tells the serial thread to shut down
 
-  while (chrgctrlinfo.open == 1 && i++ < 100) {
+  while (chrgctrlinfo[0].open == 1 && chrgctrlinfo[1].open == 1 && i++ < 100) {
     usleep(10000);
   }
 }
@@ -101,14 +122,14 @@ void endChrgCtrl()          // declare in mcp.c along with startChrgCtrl
 
 /* thread routine: continously poll charge controller for data */
 
-void* chrgctrlComm(void* arg)
+void* chrgctrlComm(void* threadargs)
 {
 
   const int slave = 0x01;   // default MODBUS device address   
                             // for charge controller
 
 /*Relics from the test program -- have no use in mcp  
-  const int nfaults = 11;   // number of faults conditions
+  const int nfaults = 11; 
   const int nalarms = 20;   // number of alarm conditions
   const int nstates = 10;   // number of charging states 
 */
@@ -136,6 +157,10 @@ void* chrgctrlComm(void* arg)
 
   /* declare one chrgctrl_rawdata struct for each contiguous set of registers 
      to be read */
+
+  struct chrgctrl_args *args;
+
+  args = (struct chrgctrl_args *) threadargs;
 
   struct chrgctrl_rawdata {
     
@@ -205,17 +230,20 @@ void* chrgctrlComm(void* arg)
 
   /* initialize values in charge controller info struct */
 
-  chrgctrlinfo.open = 0;
-  chrgctrlinfo.err = 0;
-  chrgctrlinfo.closing = 0;
-  chrgctrlinfo.reset = 0;
+  chrgctrlinfo[args->isTwo].open = 0;
+  chrgctrlinfo[args->isTwo].err = 0;
+  chrgctrlinfo[args->isTwo].closing = 0;
+  chrgctrlinfo[args->isTwo].reset = 0;
 /*chrgctrlinfo.closing = 1; // just for testing */
 
 //  fp = fopen("/home/shariff/chrgctrl.log", "a");   // open the log file that records
                                                      // charge controller serial frames
 
-  nameThread("ChrgC");
-
+  if (args->isTwo) {
+    nameThread("ChrgC2");
+  } else {
+    nameThread("ChrgC1");
+  }
   /* check whether this is the ICC */
 
   while (!InCharge) {
@@ -227,17 +255,17 @@ void* chrgctrlComm(void* arg)
 
   /* try to open serial port */
 
-  while (chrgctrlinfo.open == 0) {
+  while (chrgctrlinfo[args->isTwo].open == 0) {
 
-    open_chrgctrl(CHRGCTRL_DEVICE);
+    open_chrgctrl(args->chrgctrl_device, args->isTwo);
 
     if (n_conn == 10) {
-      bputs(err, "Charge controller port failed to open after 10 attempts");
+      bprintf(err, "Charge controller #%d port failed to open after 10 attempts", (args->isTwo + 1) );
     }
 
     n_conn++;
 
-    if (chrgctrlinfo.open == 1) {
+    if (chrgctrlinfo[args->isTwo].open == 1) {
 
 //  #ifdef CHRGCTRL_VERBOSE
       bprintf(info, "Opened the serial port on attempt number %i", n_conn); 
@@ -250,24 +278,24 @@ void* chrgctrlComm(void* arg)
 
   while (1) {
 
-    if (chrgctrlinfo.closing == 1) {
+    if (chrgctrlinfo[args->isTwo].closing == 1) {
 
-      close_chrgctrl();
+      close_chrgctrl(args->isTwo);
       usleep(10000); 
 
-    } else if (chrgctrlinfo.reset == 1) {
+    } else if (chrgctrlinfo[args->isTwo].reset == 1) {
       
       /* if there's an error, reset connection to charge controller */
 
-      close_chrgctrl();
+      close_chrgctrl(args->isTwo);
      
       if (n_reconn == 0) {
         bprintf(info,"Error occurred: attempting to re-open serial port.");
       }
 
-      while (chrgctrlinfo.open == 0) {
+      while (chrgctrlinfo[args->isTwo].open == 0) {
 
-        open_chrgctrl(CHRGCTRL_DEVICE);
+        open_chrgctrl(args->chrgctrl_device, args->isTwo);
 
         #ifdef CHRGCTRL_VERBOSE
         if (n_reconn == 10) { 
@@ -277,12 +305,12 @@ void* chrgctrlComm(void* arg)
 
         n_reconn++;
 
-        if (chrgctrlinfo.open == 1) { // reset succeeded
+        if (chrgctrlinfo[args->isTwo].open == 1) { // reset succeeded
 
           #ifdef CHRGCTRL_VERBOSE
             bprintf(info, "Re-opened serial port on attempt %i.", n_reconn);
           #endif
-	  chrgctrlinfo.reset = chrgctrlinfo.err = 0;       
+	  chrgctrlinfo[args->isTwo].reset = chrgctrlinfo[args->isTwo].err = 0;       
 
 	} else {
             sleep(1);
@@ -294,38 +322,38 @@ void* chrgctrlComm(void* arg)
          ADC output into meaningful V & I values) from register 
          addresses 1-4 */
 
-      scale.num = query_chrgctrl(slave, 1, 4, scale.arr, chrgctrlinfo.fd);
+      scale.num = query_chrgctrl(slave, 1, 4, scale.arr, chrgctrlinfo[args->isTwo].fd);
 
       //      usleep(10000);  // ignore these -- just for debugging
 
       /* poll charge controller for battery and array voltages and currents,
          which range from register addresses [26 or]27-30 */
        
-      elec.num = query_chrgctrl(slave, 26, 5, elec.arr, chrgctrlinfo.fd);   
+      elec.num = query_chrgctrl(slave, 26, 5, elec.arr, chrgctrlinfo[args->isTwo].fd);   
 
       //      usleep(10000);
 
       /* heatsink temperature in degrees C (addr 36) */
 
-      temp.num = query_chrgctrl(slave, 36, 1, temp.arr, chrgctrlinfo.fd);   
+      temp.num = query_chrgctrl(slave, 36, 1, temp.arr, chrgctrlinfo[args->isTwo].fd);   
 
       //      usleep(10000);
 
       /* charge controller fault bitfield (addr 45) */
 
-      fault.num = query_chrgctrl(slave, 45, 1, fault.arr, chrgctrlinfo.fd);   
+      fault.num = query_chrgctrl(slave, 45, 1, fault.arr, chrgctrlinfo[args->isTwo].fd);   
 
       //      usleep(10000);
 
       /* charge controller alarm bitfield (spans 2 regs with addrs 47,48) */
 
-      alarm.num = query_chrgctrl(slave, 47, 2, alarm.arr, chrgctrlinfo.fd);
+      alarm.num = query_chrgctrl(slave, 47, 2, alarm.arr, chrgctrlinfo[args->isTwo].fd);
 
       //      usleep(10000);
 
       /* controller LED state, charge state and target charging voltage (addrs 50, 51, 52) */
 
-      charge.num = query_chrgctrl(slave, 50, 3, charge.arr, chrgctrlinfo.fd);
+      charge.num = query_chrgctrl(slave, 50, 3, charge.arr, chrgctrlinfo[args->isTwo].fd);
 
       //      usleep(10000);
 
@@ -390,22 +418,22 @@ void* chrgctrlComm(void* arg)
               bputs(err, "An unknown charge controller error occurred.");  
 	  }
   #endif
-          chrgctrlinfo.err = 1;
+          chrgctrlinfo[args->isTwo].err = 1;
           query_no = 6; // break out of for loop upon first problem encountered
 	}
       }
 
-      if (chrgctrlinfo.err == 1) {
-        chrgctrlinfo.reset = 1;
+      if (chrgctrlinfo[args->isTwo].err == 1) {
+        chrgctrlinfo[args->isTwo].reset = 1;
         /* put charge controller data values into obvious error state */
-        ChrgCtrlData.V_batt = 0.0;
-        ChrgCtrlData.V_arr = 0.0;
-        ChrgCtrlData.I_batt = 0.0;
-        ChrgCtrlData.I_arr = 0.0;
-        ChrgCtrlData.V_targ = 0.0;
-        ChrgCtrlData.T_hs = 0;
-        ChrgCtrlData.charge_state = 10;
-        ChrgCtrlData.led_state = 20;
+        ChrgCtrlData[args->isTwo].V_batt = 0.0;
+        ChrgCtrlData[args->isTwo].V_arr = 0.0;
+        ChrgCtrlData[args->isTwo].I_batt = 0.0;
+        ChrgCtrlData[args->isTwo].I_arr = 0.0;
+        ChrgCtrlData[args->isTwo].V_targ = 0.0;
+        ChrgCtrlData[args->isTwo].T_hs = 0;
+        ChrgCtrlData[args->isTwo].charge_state = 10;
+        ChrgCtrlData[args->isTwo].led_state = 20;
         continue; // go back up to top of infinite loop
       } else if (n_reconn > 0) {
 
@@ -428,21 +456,21 @@ void* chrgctrlComm(void* arg)
          EDIT: actually these terminals are shorted, so it doesn't
          matter which reading is used. */
 
-      ChrgCtrlData.V_batt = *(elec.arr+1) * Vscale/32768.0;
-      ChrgCtrlData.V_arr =  *(elec.arr+2) * Vscale/32768.0;
-      ChrgCtrlData.I_batt = *(elec.arr+3) * Iscale/32768.0;
-      ChrgCtrlData.I_arr =  *(elec.arr+4) * Iscale/32768.0;
+      ChrgCtrlData[args->isTwo].V_batt = *(elec.arr+1) * Vscale/32768.0;
+      ChrgCtrlData[args->isTwo].V_arr =  *(elec.arr+2) * Vscale/32768.0;
+      ChrgCtrlData[args->isTwo].I_batt = *(elec.arr+3) * Iscale/32768.0;
+      ChrgCtrlData[args->isTwo].I_arr =  *(elec.arr+4) * Iscale/32768.0;
     
-      ChrgCtrlData.V_targ = *(charge.arr+2) * Vscale/32768.0;
+      ChrgCtrlData[args->isTwo].V_targ = *(charge.arr+2) * Vscale/32768.0;
 
-      ChrgCtrlData.T_hs = *temp.arr;
-      ChrgCtrlData.fault_field = *fault.arr;
+      ChrgCtrlData[args->isTwo].T_hs = *temp.arr;
+      ChrgCtrlData[args->isTwo].fault_field = *fault.arr;
 
-      ChrgCtrlData.alarm_field_hi = *alarm.arr;
-      ChrgCtrlData.alarm_field_lo = *(alarm.arr+1);
+      ChrgCtrlData[args->isTwo].alarm_field_hi = *alarm.arr;
+      ChrgCtrlData[args->isTwo].alarm_field_lo = *(alarm.arr+1);
 
-      ChrgCtrlData.led_state = *charge.arr;
-      ChrgCtrlData.charge_state = *(charge.arr+1);
+      ChrgCtrlData[args->isTwo].led_state = *charge.arr;
+      ChrgCtrlData[args->isTwo].charge_state = *(charge.arr+1);
     
       /* Relics from test program -- not for mcp!
 
@@ -494,27 +522,27 @@ void* chrgctrlComm(void* arg)
 
 /* open serial port */
 
-void open_chrgctrl(char *dev_name)
+void open_chrgctrl(char *dev_name, int isTwo)
 {  
   struct termios settings;
-		
-  if ((chrgctrlinfo.fd = open(dev_name, O_RDWR)) < 0) {
+
+  if ((chrgctrlinfo[isTwo].fd = open(dev_name, O_RDWR)) < 0) {
    
     /* port failed to open */
      
-    chrgctrlinfo.open = 0;
+    chrgctrlinfo[isTwo].open = 0;
     return;
 
   } else {
 
-    fcntl(chrgctrlinfo.fd, F_SETFL, 0);
-    chrgctrlinfo.open = 1;
+    fcntl(chrgctrlinfo[isTwo].fd, F_SETFL, 0);
+    chrgctrlinfo[isTwo].open = 1;
 
   }
-
+ 
   /* initialize settings by getting terminal attributes */
-  if (tcgetattr(chrgctrlinfo.fd, &settings)) {
-    chrgctrlinfo.open = 0;
+  if (tcgetattr(chrgctrlinfo[isTwo].fd, &settings)) {
+    chrgctrlinfo[isTwo].open = 0;
     return;
   }
 
@@ -581,21 +609,22 @@ void open_chrgctrl(char *dev_name)
 
   cfmakeraw(&settings);
 
-  tcsetattr(chrgctrlinfo.fd, TCSANOW, &settings);
+  tcsetattr(chrgctrlinfo[isTwo].fd, TCSANOW, &settings);
+  
 }
 
 
 
 /* close the serial port */
 
-void close_chrgctrl(void)
+void close_chrgctrl(int isTwo)
 {
 
   #ifdef CHRGCTRL_VERBOSE
     bprintf(info, "close_chrgctrl: closing connection to charge controller.");
   #endif
 
-  if (chrgctrlinfo.open == 0) {
+  if (chrgctrlinfo[isTwo].open == 0) {
   
     #ifdef CHRGCTRL_VERBOSE
       bprintf(info, "close_chrgctrl: charge controller is already closed!");
@@ -607,10 +636,10 @@ void close_chrgctrl(void)
       bprintf(info, "close_chrgctrl: closing serial port.");
     #endif
 
-      if (chrgctrlinfo.fd >= 0) {
-      close(chrgctrlinfo.fd);
+      if (chrgctrlinfo[isTwo].fd >= 0) {
+      close(chrgctrlinfo[isTwo].fd);
       }
-    chrgctrlinfo.open = 0;
+    chrgctrlinfo[isTwo].open = 0;
     
     #ifdef CHRGCTRL_VERBOSE
       bprintf(info, "close_chrgctrl: connection to port is now closed.");
