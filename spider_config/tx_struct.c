@@ -707,17 +707,29 @@ struct ChannelStruct SlowChannels[] = {
   
   /* charge controller related channels */
   
-  {"v_batt_cc",  'w',  LOOP8,  3,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"v_arr_cc",   'w',  LOOP8,  4,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"i_batt_cc",  'w',  LOOP8,  5,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  {"i_arr_cc",   'w',  LOOP8,  6,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  { "t_hs_cc",   'w',  LOOP8,  7,   1.0,      0.0,            's',  U_T_C},
-  {"fault_cc",   'w',  LOOP8,  8,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
-  {"alarm_hi_cc",'w',  LOOP8,  9,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
-  {"alarm_lo_cc",'w',  LOOP8,  10,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
-  {"v_targ_cc",  'w',  LOOP8,  11,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"state_cc",   'w',  LOOP8,  12,  1.0,      0.0,            'u',  U_NONE},   
-  
+  {"v_batt_cc1",  'w',  LOOP8,  3,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"v_arr_cc1",   'w',  LOOP8,  4,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"i_batt_cc1",  'w',  LOOP8,  5,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  {"i_arr_cc1",   'w',  LOOP8,  6,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  { "t_hs_cc1",   'w',  LOOP8,  7,   1.0,      0.0,            's',  U_T_C},
+  {"fault_cc1",   'w',  LOOP8,  8,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
+  {"alarm_hi_cc1",'w',  LOOP8,  9,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
+  {"alarm_lo_cc1",'w',  LOOP8,  10,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
+  {"v_targ_cc1",  'w',  LOOP8,  11,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"state_cc1",   'w',  LOOP8,  12,  1.0,      0.0,            'u',  U_NONE},   
+
+  {"v_batt_cc2",  'w',  LOOP9,  39,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"v_arr_cc2",   'w',  LOOP9,  40,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"i_batt_cc2",  'w',  LOOP9,  41,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  {"i_arr_cc2",   'w',  LOOP9,  42,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  { "t_hs_cc2",   'w',  LOOP9,  43,   1.0,      0.0,            's',  U_T_C},
+  {"fault_cc2",   'w',  LOOP9,  44,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
+  {"alarm_hi_cc2",'w',  LOOP9,  45,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
+  {"alarm_lo_cc2",'w',  LOOP9,  46,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
+  {"v_targ_cc2",  'w',  LOOP9,  47,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"state_cc2",   'w',  LOOP9,  48,  1.0,      0.0,            'u',  U_NONE},   
+
+
   {"frict_off_piv",'w', LOOP8,  16,      2.0/65535.0,              0.0,   'u', U_NONE},
   {"frict_term_piv",'w',LOOP8,  17,      2.0/32767.0,              0.0,   's', U_NONE},
   {"frict_term_uf_piv",'w',LOOP8,18,     2.0/32767.0,              0.0,   's', U_NONE}, // For debugging remove later
