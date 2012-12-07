@@ -91,15 +91,16 @@ extern struct CCData ChrgCtrlData[2];
 
  dev_name      -- pointer to character string containing path
                   of serial device file
+ i_cc          -- index of the charge controller we are using
  ***************************************************************/
-void open_chrgctrl(char *dev_name, int isTwo);
+ void open_chrgctrl(const char *dev_name, int i_cc);
 
 
 /*************************************************************** 
  close_chrgctrl -- closes serial port for MODBUS communication
                    with the charge controller
  ***************************************************************/
-void close_chrgctrl(int isTwo);
+ void close_chrgctrl(int i_cc);
 
 
 
