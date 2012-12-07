@@ -717,6 +717,7 @@ struct ChannelStruct SlowChannels[] = {
   {"alarm_lo_cc1",'w',  LOOP8,  10,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
   {"v_targ_cc1",  'w',  LOOP8,  11,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
   {"state_cc1",   'w',  LOOP8,  12,  1.0,      0.0,            'u',  U_NONE},   
+  {"led_cc1",     'w',  LOOP8,  40,  1.0,      0.0,            'u', U_NONE}, // charge controller LED state
 
   {"v_batt_cc2",  'w',  LOOP9,  39,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
   {"v_arr_cc2",   'w',  LOOP9,  40,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
@@ -728,7 +729,7 @@ struct ChannelStruct SlowChannels[] = {
   {"alarm_lo_cc2",'w',  LOOP9,  46,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
   {"v_targ_cc2",  'w',  LOOP9,  47,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
   {"state_cc2",   'w',  LOOP9,  48,  1.0,      0.0,            'u',  U_NONE},   
-
+  {"led_cc2",     'w',  LOOP9,  49,  1.0,      0.0,            'u', U_NONE}, // charge controller LED state
 
   {"frict_off_piv",'w', LOOP8,  16,      2.0/65535.0,              0.0,   'u', U_NONE},
   {"frict_term_piv",'w',LOOP8,  17,      2.0/32767.0,              0.0,   's', U_NONE},
@@ -751,7 +752,6 @@ struct ChannelStruct SlowChannels[] = {
   {"pitch_cov_dgps",'w', LOOP8, 38,              I2DEG,             0.0, 'u', U_NONE},
   {"roll_cov_dgps", 'w', LOOP8, 39,              I2DEG,             0.0, 'u', U_NONE},
 
-  {"led_cc",        'w', LOOP8, 40,              1.0,               0.0, 'u', U_NONE}, // charge controller LED state
   {"force_theugly",     'w', LOOP8, 41,                1.0,             0.0, 'u', U_NONE},
   {"exp_int_theugly",   'w', LOOP8, 42,                1.0,             0.0, 'u', U_NONE},
   {"exp_time_theugly",  'w', LOOP8, 43,                1.0,             0.0, 'u', U_NONE},
@@ -789,7 +789,6 @@ struct ChannelStruct SlowChannels[] = {
   {"f_bias_hk",      'w', LOOP9,  35,      400.0/65535.0,             0.0, 'u', U_F_HZ},
   {"v_heat_last_hk", 'w', LOOP9,  37,         CALDAC(1.0,            0.0), 'u', U_V_V},
   // {"pulse_last_hk",  'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP9 39-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_theugly",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
