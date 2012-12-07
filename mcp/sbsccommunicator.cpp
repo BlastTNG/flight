@@ -261,34 +261,49 @@ in this case will return the string ""
 */
 string SBSCCommunicator::repairLink()
 {
+  EthernetSBSC=3;
   fd_set test;
   timeval timeout;
   char buf[SBSC_COMM_BUF_SIZE];
   int n;
   FD_ZERO(&test);
   FD_SET(commFD, &test);
-  timeout.tv_sec = 2;
+  timeout.tv_sec = 60;
   timeout.tv_usec = 0;
   n = select(commFD+1, &test, NULL, NULL, &timeout);
-  if (n<0 || !FD_ISSET(commFD,&test)) //latter should never fail
-    return "repairfail";  //something is wrong
-  if (n==0) return "";  //timeout...link is probably active
+  if (n<0 || !FD_ISSET(commFD,&test)) {
+//    bprintf(info,"repairfail FDISSET"); //latter should never fail
+    //return "repairfail";
+  }  //something is wrong
+  //if (n==0) return "";  //timeout...link is probably active
 
   //else n>0
-  if ((n = read(commFD, buf, SBSC_COMM_BUF_SIZE-1)) < 0) return "";
+  if (n>0) {
+    if ((n = read(commFD, buf, SBSC_COMM_BUF_SIZE-1)) < 0) return "";
+  } else {
+    n = 0;
+  }
   if (n == 0) {  //link is probably dead, try to reconnect
 #if SBSC_COMM_DEBUG
     cerr << "[Comm debug]: link appears dead, waiting for reconnect" << endl;
 #endif
-    if (serverFD == -2)     //control is done by external server, let connection die
+    if (serverFD == -2) {
+//      bprintf(info,"repairfail serverFD");    //control is done by external server, let connection die
       return "repairfail";
+    }
     bool isHost = (serverFD >= 0);
     string oldTarget = target;
     closeConnection();
     if (isHost) { 
-      if (openHost(oldTarget) < 0) return "repairfail";
+      if (openHost(oldTarget) < 0) {
+//	bprintf(info,"repairfail openHost");
+	return "repairfail";
+      }
     }
-    else if (openClient(oldTarget) < 0) return "repairfail";
+    else if (openClient(oldTarget) < 0) {
+//      bprintf(info,"repairfail openClient");
+      return "repairfail";
+    }
     else return "";
   }
   //otherwise received a string and link is still active
@@ -313,63 +328,107 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
 #endif
   fd_set input;
   timeval read_timeout;
-  read_timeout.tv_sec = 0;
-  read_timeout.tv_usec = 0;
   char buf[SBSC_COMM_BUF_SIZE];
   string line = "";
   string rtnStr;
-  int n;
+  int m,n;
   static int sbsc_firsttime = 1;
   string::size_type pos;
-  if (commFD == -1) return;          //communications aren't open
+  if (commFD == -1) {
+//    bprintf(info,"returning with commFD = -1");
+    sleep(1);
+    return;          //communications aren't open
+  }
 
   while (1) {
-    usleep(100000);
+//    bprintf(info,"in while loop...");
+    usleep(1000000);
     if (sbsc_trigger) {
 	sbsc_interval = 0;
 	if (!sbsc_firsttime) {
+//	  bprintf(info,"sending SBSCcommnad");
 	  sendSBSCCommand("CsetExpInt=0");
+//	  bprintf(info,"sent SBSCcommnad");
 	  CommandData.cam.expInt = 0;
 	  sbsc_firsttime = 1;
 	}
+//	bprintf(info,"sending SBSCcommnad");
 	sendSBSCCommand("CtrigExp");
+//	  bprintf(info,"sent SBSCcommnad");
         sbsc_trigger = 0;
 	if (dir_sbsc_trigger==0) dir_sbsc_trigger=1;
 	else dir_sbsc_trigger=0;
-    }   
-    if (sbsc_interval) {
+    } else if (sbsc_interval) {
       sbsc_trigger = 0;
       if (sbsc_firsttime) {
+//	bprintf(info,"sending SBSCcommnad");
 	sendSBSCCommand("CsetExpInt=2000");
+//	bprintf(info,"sent SBSCcommnad");
 	CommandData.cam.expInt = 2000;
 	sbsc_firsttime = 0;
       }
     }   
     FD_ZERO(&input);
     FD_SET(commFD, &input);
-    if (select(commFD+1, &input, NULL, NULL, &read_timeout) < 0)
+    read_timeout.tv_sec = 60;
+    read_timeout.tv_usec = 0;
+    m = select(commFD+1, &input, NULL, NULL, &read_timeout);
+    if (m < 0) {
+//      bprintf(info,"select failed, returning");
       return;
-    if (!FD_ISSET(commFD, &input)) return;  //should always be false
-    if ((n = read(commFD, buf, SBSC_COMM_BUF_SIZE-1)) < 0) return;
-    if (n == 0) {  //link may be dead...check it out
+    }
+//    bprintf(info,"m=%i, FD_ISSET=%i",m,FD_ISSET(commFD,&input));
+//    if (!FD_ISSET(commFD, &input)) {
+//      bprintf(info,"FD_ISSET, returning");
+//      return;  //should always be false
+//    }
+
+    if (m>0) {
+      if ((n = read(commFD, buf, SBSC_COMM_BUF_SIZE-1)) < 0) {
+//        bprintf(info,"read <0, returning");
+       return;
+     }
+    } else {
+      n=0;
+    }
+    if (n > (SBSC_COMM_BUF_SIZE-2)) {
+      string oldTarget = target;
+      closeConnection();
+      openClient(oldTarget);
+      n=0;
+    }
+    if (!FD_ISSET(commFD,&input) || (n == 0)) {  //link may be dead...check it out
+//      bprintf(info,"checking if link is dead");
 #if SBSC_COMM_DEBUG
       cerr << "[Comm debug]: read empty string, checking if link is dead " << buf << endl;
 #endif
       string temp = repairLink();
-      if (temp == "repairfail") return; //something bad has happened
-      else if (temp != "") line += temp;  //link wasn't dead
+      if (temp == "repairfail") {
+//	bprintf(info,"repairfail,returning");
+	return; //something bad has happened
+      }
+      else if (temp != "") {
+	line += temp;  //link wasn't dead
+//	bprintf(info, "link wasn't dead");
+      }
       //otherwise, link has been reestablished, continue
     } else { //n > 0
+//      bprintf(info,"readLoop just read %i bytes",n);
 #if SBSC_COMM_DEBUG
       cerr << "[Comm debug]: readloop just read " << n << " bytes: " << buf << endl;
 #endif
       buf[n] = '\0';
+//      bprintf(info,"buf is %s",buf);
       line += buf;
+      EthernetSBSC=0;
     }
     while ((pos = line.find("\n",0)) != string::npos) {
       //interpret the command and send a return value
       if ((rtnStr = (*interpretFunction)(line.substr(0,pos))) != "") //don't send blank return
-	if (sendReturnString(rtnStr) < 0) return;
+	if (sendReturnString(rtnStr) < 0) {
+//	  bprintf(info,"sendReturnSTring < 0, returning");
+	  return;
+	}
       line = line.substr(pos+1, line.length()-(pos+1)); //set line to text after "\n"
     }
   }
