@@ -56,7 +56,8 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
 #define QUERY_SIZE 6
 #define CHECKSUM_SIZE 2               
 
-/*#define CHRGCTRL_VERBOSE            // uncomment to see useful debug info*/
+//#define CHRGCTRL_VERBOSE            // uncomment to see useful debug info
+//#define CHRGCTRL_VERBOSE_ERROR            // uncomment to see useful debug info
 
 static pthread_t chrgctrlcomm1_id;     // thread ID
 static pthread_t chrgctrlcomm2_id;     // thread ID
@@ -81,8 +82,8 @@ extern short int InCharge;            // in tx.c
 void startChrgCtrl()
 {  
   bprintf(info, "startChrgCtrl: creating charge controller serial thread");
-  pthread_create(&chrgctrlcomm1_id, NULL, chrgctrlComm, (void*)0);
   pthread_create(&chrgctrlcomm2_id, NULL, chrgctrlComm, (void*)1);
+  pthread_create(&chrgctrlcomm1_id, NULL, chrgctrlComm, (void*)0);
 }
 
 
@@ -106,11 +107,18 @@ void endChrgCtrl()          // declare in mcp.c along with startChrgCtrl
 
 void* chrgctrlComm(void* cc)
 {
-  const char *COMM[] = {CHRGCTRL1_DEVICE, CHRGCTRL2_DEVICE};
+  const char *COMM[] = {CHRGCTRL2_DEVICE, CHRGCTRL1_DEVICE};
   const int slave = 0x01;   // default MODBUS device address   
                             // for charge controller
   int i_cc = (int)cc;       // which charge controller we should be talking to
-                            
+
+  char tname[10];
+  
+  sprintf(tname, "ChrgC%1d", i_cc);
+  nameThread(tname);
+
+  bprintf(info, "starting controller #%d on port %s", i_cc, COMM[i_cc]);
+
 /*Relics from the test program -- have no use in mcp  
   const int nfaults = 11;   // number of faults conditions
   const int nalarms = 20;   // number of alarm conditions
@@ -124,8 +132,6 @@ void* chrgctrlComm(void* cc)
   double Vscale;            // voltage scaling factor
   double Iscale;            // current scaling factor
 
-  char tname[10];
-  
   /* struct for parsing alarm and fault bitfields, and other general
      status lookup tables. 
      
@@ -218,9 +224,6 @@ void* chrgctrlComm(void* cc)
 
 //  fp = fopen("/home/shariff/chrgctrl.log", "a");   // open the log file that records
                                                      // charge controller serial frames
-
-  sprintf(tname, "ChrgC%1d", i_cc);
-  nameThread(tname);
 
   /* check whether this is the ICC */
 
@@ -353,47 +356,47 @@ void* chrgctrlComm(void* cc)
            EDIT: Except when serial comms. messes up! 
 	 */
 
- #ifdef CHRGCTRL_VERBOSE
+ #ifdef CHRGCTRL_VERBOSE_ERROR
           switch (data_lengths[query_no]) {
 
 	    case COMMS_FAILURE: 
-	      bputs(err, "Charge controller produced no data.");
+	      bprintf(err, "Charge controller produced no data. Q%d", query_no);
               break;
 
 	    case ILLEGAL_FUNCTION:
-              bputs(err, "Invalid MODBUS function code in query packet.");
+              bprintf(err, "Invalid MODBUS function code in query packet. Q%d", query_no);
               break;
 
 	    case ILLEGAL_DATA_ADDRESS: 
-              bputs(err, "Invalid MODBUS register address in query packet.");
+              bprintf(err, "Invalid MODBUS register address in query packet. Q%d", query_no);
               break;
 
 	    case ILLEGAL_DATA_VALUE:
-              bputs(err, "Invalid data value in MODBUS query packet.");
+              bprintf(err, "Invalid data value in MODBUS query packet. Q%d", query_no);
               break;
 
        	    case SLAVE_DEVICE_FAILURE:
-	      bputs(err, "Unrecoverable MODBUS device error during request.");
+	      bprintf(err, "Unrecoverable MODBUS device error during request. Q%d", query_no);
               break;
 
   	    case ACKNOWLEDGE:
-              bputs(err, "Charge controller is still processing request.");
+              bprintf(err, "Charge controller is still processing request. Q%d", query_no);
               break;
 
 	    case SLAVE_DEVICE_BUSY:
-              bputs(err, "Charge controller is busy: try query again.");
+              bprintf(err, "Charge controller is busy: try query again. Q%d", query_no);
               break;
 
 	    case MEMORY_PARITY_ERROR: 
-	      bputs(err, "Charge controller detected memory parity error.\n");
+	      bprintf(err, "Charge controller detected memory parity error. Q%d", query_no);
               break;
 
 	    case PORT_FAILURE:
-              bputs(err,"Error in reading from or writing to charge controller.");
+              bprintf(err,"Error in reading from or writing to charge controller. Q%d", query_no);
               break;
 
  	    default:
-              bputs(err, "An unknown charge controller error occurred.");  
+              bprintf(err, "An unknown charge controller error occurred. Q%d", query_no);  
 	  }
   #endif
           chrgctrlinfo[i_cc].err = 1;
@@ -411,7 +414,7 @@ void* chrgctrlComm(void* cc)
         ChrgCtrlData[i_cc].V_targ = 0.0;
         ChrgCtrlData[i_cc].T_hs = 0;
         ChrgCtrlData[i_cc].charge_state = 10;
-        ChrgCtrlData[i_cc].led_state = 20;
+        ChrgCtrlData[i_cc].led_state = 18;
         continue; // go back up to top of infinite loop
       } else if (n_reconn > 0) {
 
