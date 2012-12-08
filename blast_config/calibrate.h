@@ -38,7 +38,7 @@ extern "C" {
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
 /* This is the elevation at which the encoder wraps around */
-#define ENC_RAW_EL_OFFSET (255.36) /* Updated 19-NOV-2010 bylmf */
+#define ENC_RAW_EL_OFFSET (255.0) /* Updated 29-NOV-2012 by nng */
                                    /* Note this is referenced relative to the gyro beam*/
 
 /* to get proper wrapping in KST, the encoder elevation type should be
