@@ -150,7 +150,7 @@ void cameraFields()
   static bool unrecFlag = false;
   static int blobindex[3] = {0,0,0};
   static unsigned long int posFrame;
-  static int bscwait;
+//  static int bscwait;
   static int rscwait;
   static int exposecount;
 
@@ -235,7 +235,7 @@ void cameraFields()
   //initialization
   if (firsttime) {
     firsttime = 0;
-    bscwait = 0;
+//    bscwait = 0;
     rscwait = 0;
     exposecount = 0;
     TheGoodforceAddr = GetNiosAddr("force_thegood");
@@ -361,12 +361,13 @@ void cameraFields()
   WriteData(TheUglyblobMdistAddr, CommandData.theugly.minBlobDist, NIOS_QUEUE);
 
 //WHERE DOES THIS GO (formerly in readLoop):
-  bscwait++; 
+//  bscwait++; 
   if (bsc_trigger) {
-	if ((bscwait%100)==0) {
-		if (!CommandData.thegood.paused) sendTheGoodCommand("CtrigExp");
+//	if ((bscwait%50)==0) {
+		//if (!CommandData.thegood.paused) sendTheGoodCommand("CtrigExp");
+		if (!CommandData.thegood.paused) sendTheUglyCommand("CtrigExp");
 		bsc_trigger = 0;
-	}
+//	}
   }   
   rscwait++;
   if ((rscwait%20)==0) {

@@ -353,6 +353,14 @@ void ControlPower(void) {
     CommandData.power.charge.rst_count--;
     if (CommandData.power.charge.rst_count < LATCH_PULSE_LEN) misc |= 0x0080;
   }
+  if (CommandData.power.ifcharge.set_count > 0) {
+    CommandData.power.ifcharge.set_count--;
+    if (CommandData.power.ifcharge.set_count < LATCH_PULSE_LEN) misc |= 0x0010;
+  }
+  if (CommandData.power.ifcharge.rst_count > 0) {
+    CommandData.power.ifcharge.rst_count--;
+    if (CommandData.power.ifcharge.rst_count < LATCH_PULSE_LEN) misc |= 0x0001;
+  }
   for (i=0; i<6; i++) {
     if (CommandData.power.gyro_off[i] || CommandData.power.gyro_off_auto[i]) {
       if (CommandData.power.gyro_off[i] > 0) 
@@ -569,7 +577,7 @@ void LockMotor()
       lock_bits = LOCK_RETRACT;
       break;
     case lock_el_wait_insert:
-      if (fabs(ACSData.enc_mean_el - LOCK_POSITION) <= 0.5)
+      if (fabs(ACSData.enc_mean_el - LOCK_POSITION) <= 0.05)
         lock_bits = LOCK_INSERT;
       else lock_bits = 0x0;
       break;

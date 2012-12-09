@@ -38,7 +38,7 @@
 #include "calibrate.h"
 
 // TODO: Revise these el limits for Spider flight:
-#define MIN_EL 35
+#define MIN_EL 35 
 #define MAX_EL 42
 
 #define VPIV_FILTER_LEN 40
@@ -126,7 +126,8 @@ extern int StartupVeto; /* mcp.c */
 
 extern short int bsc_trigger; /* Semaphore for BSC trigger */
 
-#define DELAY (3.685*20.0) // delay between starcam exposure command and pulse_bsc in units of Bbus frame intervals */
+//#define DELAY (3.685*20.0) // delay between starcam exposure command and pulse_bsc in units of Bbus frame intervals */
+#define DELAY (6.935*20.0) // delay between starcam exposure command and pulse_bsc in units of Bbus frame intervals */
 
 
 /* opens communications with motor controllers */
@@ -1275,7 +1276,7 @@ static void DoSpiderMode(void)
   
   t_before = (DELAY/ACSData.bbc_rate) + CommandData.theugly.expTime/2000.0;
   
-  t_step = 1.2 + 0.5; // "on_delay" in GetIElev + (1/2)*(step duration) 
+  t_step = 0.35; // "on_delay" in GetIElev + (1/2)*(step duration) 
   
   az_accel = CommandData.az_accel;
   az_accel_dv = az_accel/(ACSData.bbc_rate);
