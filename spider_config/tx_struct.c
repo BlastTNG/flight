@@ -823,7 +823,7 @@ struct ChannelStruct SlowChannels[] = {
   {"latch1",       'w',  ACS1_D,  1,                1.0,             0.0, 'u', U_NONE},
   {"switch_gy",    'w',  ACS1_D,  2,                1.0,             0.0, 'u', U_NONE},
   //this may be unused because of the new program
-  //{"switch_charge",'w',  ACS1_D,  3,                1.0,             0.0, 'u', U_NONE},
+  {"switch_charge",'w',  ACS1_D,  3,                1.0,             0.0, 'u', U_NONE},
   {"switch_misc",  'w',  ACS1_D,  4,                1.0,             0.0, 'u', U_NONE},
   {"heat_gy",      'w',  ACS1_D,  6,                1.0,             0.0, 'u', U_NONE},
 
