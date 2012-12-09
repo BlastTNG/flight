@@ -310,7 +310,8 @@ void ControlPower(void) {
   static struct NiosStruct* switchGyAddr;
   static struct NiosStruct* switchMiscAddr;
   static struct NiosStruct* ifPwrAddr;
-  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0; // ifpwr is IF power
+  static struct NiosStruct* switchChargeAddr;
+  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0, chrg_grp = 0; // ifpwr is IF power
   int i;
 
   if (firsttime) {
@@ -320,6 +321,7 @@ void ControlPower(void) {
     ifPwrAddr = GetNiosAddr("ifpwr");
     switchGyAddr = GetNiosAddr("switch_gy");
     switchMiscAddr = GetNiosAddr("switch_misc");
+    switchChargeAddr = GetNiosAddr("switch_charge");
   }
 
   if (CommandData.power.theugly_cam_off) {
@@ -347,19 +349,19 @@ void ControlPower(void) {
 
   if (CommandData.power.charge.set_count > 0) {
     CommandData.power.charge.set_count--;
-    if (CommandData.power.charge.set_count < LATCH_PULSE_LEN) misc |= 0x0040;
+    if (CommandData.power.charge.set_count < LATCH_PULSE_LEN) chrg_grp |= 0x0001;
   }
   if (CommandData.power.charge.rst_count > 0) {
     CommandData.power.charge.rst_count--;
-    if (CommandData.power.charge.rst_count < LATCH_PULSE_LEN) misc |= 0x0080;
+    if (CommandData.power.charge.rst_count < LATCH_PULSE_LEN) chrg_grp |= 0x0002;
   }
   if (CommandData.power.ifcharge.set_count > 0) {
     CommandData.power.ifcharge.set_count--;
-    if (CommandData.power.ifcharge.set_count < LATCH_PULSE_LEN) misc |= 0x0010;
+    if (CommandData.power.ifcharge.set_count < LATCH_PULSE_LEN) chrg_grp |= 0x0004;
   }
   if (CommandData.power.ifcharge.rst_count > 0) {
     CommandData.power.ifcharge.rst_count--;
-    if (CommandData.power.ifcharge.rst_count < LATCH_PULSE_LEN) misc |= 0x0001;
+    if (CommandData.power.ifcharge.rst_count < LATCH_PULSE_LEN) chrg_grp |= 0x0008;
   }
   for (i=0; i<6; i++) {
     if (CommandData.power.gyro_off[i] || CommandData.power.gyro_off_auto[i]) {
@@ -540,6 +542,7 @@ void ControlPower(void) {
   WriteData(ifPwrAddr, ifpwr, NIOS_QUEUE);
   WriteData(switchGyAddr, gybox, NIOS_QUEUE);
   WriteData(switchMiscAddr, misc, NIOS_QUEUE);
+  WriteData(switchChargeAddr, chrg_grp, NIOS_QUEUE);
 }
 
 //limit switch positions. NB: active low
