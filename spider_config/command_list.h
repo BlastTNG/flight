@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 197        /* total number of single word cmds */
+#define N_SCOMMANDS 200        /* total number of single word cmds */
 #define N_MCOMMANDS 123        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -78,7 +78,8 @@ enum singleCommand {
   vtx_off,           vtx_on,            bi0_off,           bi0_on,
   das_off,           das_on,            rx_off,            rx_on,
   rx_hk_off,         rx_hk_on,          rx_amps_off,	     rx_amps_on,
-  charge_off,	       charge_on,         charge_cycle,
+  of_charge_off,     of_charge_on,      of_charge_cycle,
+  if_charge_off,     if_charge_on,       if_charge_cycle,
   ifroll_1_gy_allow, ifroll_1_gy_veto,  ifroll_2_gy_allow, ifroll_2_gy_veto,
   ifyaw_1_gy_allow,  ifyaw_1_gy_veto,   ifyaw_2_gy_allow,  ifyaw_2_gy_veto,
   ifel_1_gy_allow,   ifel_1_gy_veto,    ifel_2_gy_allow,   ifel_2_gy_veto,

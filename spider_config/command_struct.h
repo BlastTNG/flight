@@ -258,6 +258,7 @@ struct CommandDataStruct {
     struct latch_pulse rx_hk;
     struct latch_pulse rx_amps;
     struct latch_pulse charge;
+    struct latch_pulse ifcharge;
     int gybox_off;
     int gyro_off[6];
     int gyro_off_auto[6];
