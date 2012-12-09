@@ -73,7 +73,7 @@
 //#define SSS_ALIGNMENT	  -90.
 //#define DGPS_ALIGNMENT    3.65
 
-#define MAG_ALIGNMENT      -164.6968
+#define MAG_ALIGNMENT     -28.0
 #define PSS_ALIGNMENT	  0.0
 #define PSS1_ALIGNMENT    (PSS_ALIGNMENT - 50.0)
 #define PSS2_ALIGNMENT    (PSS_ALIGNMENT - 85.0 + 3.9)
