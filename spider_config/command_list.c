@@ -119,9 +119,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(of_charge_on), "turn on the outer frame charge controller", GR_POWER},
   {COMMAND(if_charge_off), "turn off the inner frame charge controller", GR_IFPOWER | CONFIRM},
   {COMMAND(if_charge_on), "turn on the inner frame charge controller", GR_IFPOWER},
-  {COMMAND(of_charge_cycle), "power cycle the charge controller", 
+  {COMMAND(of_charge_cycle), "power cycle the outer frame charge controller", 
     GR_POWER | CONFIRM},
-  {COMMAND(if_charge_cycle), "power cycle the charge controller", 
+  {COMMAND(if_charge_cycle), "power cycle the inner frame charge controller", 
     GR_IFPOWER | CONFIRM},
 
   {COMMAND(mce1_on), "turn on MCE power supply 1 (MCE 1, MCE 2, & MCC 1)", GR_IFPOWER},

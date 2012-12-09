@@ -1050,6 +1050,16 @@ struct ChannelStruct WideFastChannels[] = {
 
 struct ChannelStruct FastChannels[] = {
 #ifndef BOLOTEST
+  {"interrupts00", 'r', ACS1_C, 0, 1.0, 0.0, 'u', U_NONE},
+  {"interrupts04", 'r', ACS2_C, 0, 1.0, 0.0, 'u', U_NONE},
+  {"interrupts08", 'r', RTD_C,  0, 1.0, 0.0, 'u', U_NONE},
+  {"interrupts12", 'r', DIOD_C, 0, 1.0, 0.0, 'u', U_NONE},
+  {"interrupts16", 'r', HWP_C,  0, 1.0, 0.0, 'u', U_NONE},
+  {"framenum00",   'r', ACS1_C, 1, 1.0, 0.0, 'u', U_NONE},
+  {"framenum08",   'r', RTD_C,  1, 1.0, 0.0, 'u', U_NONE},
+  {"framenum12",   'r', DIOD_C, 1, 1.0, 0.0, 'u', U_NONE},
+  {"framenum16",   'r', HWP_C,  1, 1.0, 0.0, 'u', U_NONE},
+  
 /* ACS2 Common Node */
   {"framenum",     'r',  ACS2_C,  1,                1.0,             0.0, 'u', U_NONE},
 
