@@ -301,14 +301,9 @@ union DerivedUnion DerivedChannels[] = {
   THERMISTOR("T_IF_BOT_BACK", "VT_IF_BOT_BACK"),
   THERMISTOR("T_DAC_BOX", "VT_DAC_BOX"),
 
-
-
-
-
-
-
-
-
+/*Misc T*/
+  THERMISTOR("T_PUMP_BAL", "VT_PUMP_BAL"),
+  THERMISTOR("T_MC_LOCK", "VT_MC_LOCK"),
 
 
   COMMENT("Lock Motor/Actuators"),

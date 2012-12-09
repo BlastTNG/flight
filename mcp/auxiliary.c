@@ -31,6 +31,7 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 #include "chrgctrl.h"
+#include "lut.h"
 
 /* Define to 1 to send synchronous star camera triggers based on ISC
  * handshaking */
@@ -323,22 +324,26 @@ static int Balance(int bits_bal)
 static int ControlPumpHeat(int bits_bal)
 {
 
-  static struct BiPhaseStruct *tBoxBalAddr, *tPumpBalAddr;
+  static struct BiPhaseStruct *tBoxBalAddr, *vtPumpBalAddr;
+  static struct LutType tPumpBalLut =
+     {"/data/etc/blast/thermistor.lut", 0, NULL, NULL, 0};
   static int firsttime = 1;
 
-  unsigned int temp1, temp2;
+  double temp1, temp2;
 
   if (firsttime) {
     firsttime = 0;
     tBoxBalAddr = GetBiPhaseAddr("t_box_bal");
-    tPumpBalAddr = GetBiPhaseAddr("t_pump_bal");  
+    vtPumpBalAddr = GetBiPhaseAddr("vt_pump_bal");  
+    LutInit(&tPumpBalLut);
   }
 
-  temp1 = slow_data[tBoxBalAddr->index][tBoxBalAddr->channel];
-  temp2 = slow_data[tPumpBalAddr->index][tPumpBalAddr->channel];
+  temp1 = (double)slow_data[tBoxBalAddr->index][tBoxBalAddr->channel];
+  temp2 = (double)slow_data[vtPumpBalAddr->index][vtPumpBalAddr->channel];
  
   temp1 = M_16T*temp1 + B_16T*M_16T - 273.15; 
-  temp2 = M_16T*temp2 + B_16T*M_16T - 273.15; 
+  temp2 = M_16PRE*temp2 + B_16PRE*M_16PRE; 
+  temp2 = LutCal(&tPumpBalLut, temp2);
 
   if (CommandData.pumps.heat_on) {
     if (temp1 < CommandData.pumps.heat_tset) {
