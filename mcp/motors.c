@@ -675,6 +675,7 @@ static void SetAzScanMode(double az, double left, double right, double v,
     double D)
 {
     double before_trig;
+    sbsc_interval = 0;
     if (axes_mode.az_vel < -v + D)
       axes_mode.az_vel = -v + D;
     if (axes_mode.az_vel > v + D)
@@ -720,7 +721,7 @@ static void SetAzScanMode(double az, double left, double right, double v,
 static void SetElScanMode(double el, double bottom, double top, double v,
     double D)
 {
-    double before_trig;
+//    double before_trig;
     double el_accel=EL_ACCEL/SR;
     if (axes_mode.el_vel < -v + D)
       axes_mode.el_vel = -v + D;
