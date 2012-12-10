@@ -18,7 +18,6 @@ extern "C" {
 #include <iostream>
 #endif
 
-#define SBSC_COMM_BUF_SIZE 255
 //how long to wait after failed connection attempt to try again (us)
 #define CLIENT_RETRY_DELAY 1000000
 
@@ -28,7 +27,8 @@ pthread_mutex_t sbscmutex;
 short int sbsc_trigger;
 short int dir_sbsc_trigger;
 short int sbsc_interval;
-extern "C" int sendSBSCCommand(const char *cmd); //sbsc.cpp
+extern "C" short int InCharge;		  /* in tx.c */
+
 
 /*
 
@@ -195,10 +195,6 @@ int SBSCCommunicator::openClient(string target)
   //create the socket and try to connect
   commFD = socket(PF_INET, SOCK_STREAM, 0);
   if (commFD < 0) return errorFlag = -1;
-  //set an option that will send keepalive messages (prevent timeout?)
-  //I don't think this is necessary--timeout interval is quite long (~hours)
-  //	int optval = 1;
-  //	setsockopt(commFD, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval));
   while ( true ) {
     if ( connect(commFD, (sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
       if (errno == ENETUNREACH || errno == EHOSTUNREACH || errno == EHOSTDOWN) /* No route to host */
@@ -210,7 +206,6 @@ int SBSCCommunicator::openClient(string target)
 #endif	
 	usleep(CLIENT_RETRY_DELAY);
       } else {  //some other error
-	EthernetSBSC = 3;
 	closeConnection();  //close server
 	return errorFlag = -1;
       }
@@ -236,6 +231,7 @@ if an open connection exists, close it
 */
 void SBSCCommunicator::closeConnection()
 {
+  EthernetSBSC = 3;
   if (serverFD >= 0) {
     close(serverFD);
     serverFD = -1;
@@ -261,21 +257,17 @@ in this case will return the string ""
 */
 string SBSCCommunicator::repairLink()
 {
-  EthernetSBSC=3;
   fd_set test;
   timeval timeout;
   char buf[SBSC_COMM_BUF_SIZE];
   int n;
+
+  bprintf(warning,"lost ethernet. Try to repair link.");
   FD_ZERO(&test);
   FD_SET(commFD, &test);
-  timeout.tv_sec = 60;
-  timeout.tv_usec = 0;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 10000;
   n = select(commFD+1, &test, NULL, NULL, &timeout);
-  if (n<0 || !FD_ISSET(commFD,&test)) {
-//    bprintf(info,"repairfail FDISSET"); //latter should never fail
-    //return "repairfail";
-  }  //something is wrong
-  //if (n==0) return "";  //timeout...link is probably active
 
   //else n>0
   if (n>0) {
@@ -284,31 +276,44 @@ string SBSCCommunicator::repairLink()
     n = 0;
   }
   if (n == 0) {  //link is probably dead, try to reconnect
+    if (basicRepairLink() < 0) return "repairfail";
+    else return "";
+  }
+  //otherwise received a string and link is still active
+  buf[n] = '\0';
+  return (string)buf;
+}
+
+/*
+
+basicRepairLink:
+
+closes and tries to reopen the connection
+(can tell if host or not by whether the serverFD is valid)
+returns 0 on success and negative numbers on failure
+
+*/
+int SBSCCommunicator::basicRepairLink()
+{
 #if SBSC_COMM_DEBUG
     cerr << "[Comm debug]: link appears dead, waiting for reconnect" << endl;
 #endif
     if (serverFD == -2) {
-//      bprintf(info,"repairfail serverFD");    //control is done by external server, let connection die
-      return "repairfail";
+      return -1;
     }
     bool isHost = (serverFD >= 0);
     string oldTarget = target;
     closeConnection();
     if (isHost) { 
       if (openHost(oldTarget) < 0) {
-//	bprintf(info,"repairfail openHost");
-	return "repairfail";
+	return -2;
       }
     }
     else if (openClient(oldTarget) < 0) {
-//      bprintf(info,"repairfail openClient");
-      return "repairfail";
+      return -3;
     }
-    else return "";
-  }
-  //otherwise received a string and link is still active
-  buf[n] = '\0';
-  return (string)buf;
+
+    return 0;
 }
 
 /*
@@ -328,6 +333,8 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
 #endif
   fd_set input;
   timeval read_timeout;
+  timeval tv_now;
+  double t_now, t_last_read;
   char buf[SBSC_COMM_BUF_SIZE];
   string line = "";
   string rtnStr;
@@ -335,90 +342,91 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
   static int sbsc_firsttime = 1;
   string::size_type pos;
   if (commFD == -1) {
-//    bprintf(info,"returning with commFD = -1");
     sleep(1);
     return;          //communications aren't open
   }
 
+  gettimeofday(&tv_now, NULL);
+  t_now = (double)tv_now.tv_sec + (double)tv_now.tv_usec/1.e6;
+  t_last_read = t_now;
+
   while (1) {
-//    bprintf(info,"in while loop...");
-    usleep(1000000);
+    gettimeofday(&tv_now, NULL);
+    t_now = (double)tv_now.tv_sec + (double)tv_now.tv_usec/1.e6;
+    usleep(10000);
+    //TODO send periodic config check, and correct CsetExpInt as necessary
     if (sbsc_trigger) {
 	sbsc_interval = 0;
+	//in this state firsttime is "backwards", for oscillating with non-trig
 	if (!sbsc_firsttime) {
-//	  bprintf(info,"sending SBSCcommnad");
-	  sendSBSCCommand("CsetExpInt=0");
-//	  bprintf(info,"sent SBSCcommnad");
+	  if (InCharge) sendCommand("CsetExpInt=0");
 	  CommandData.cam.expInt = 0;
 	  sbsc_firsttime = 1;
 	}
-//	bprintf(info,"sending SBSCcommnad");
-	sendSBSCCommand("CtrigExp");
-//	  bprintf(info,"sent SBSCcommnad");
+	if (InCharge) sendCommand("CtrigExp");
         sbsc_trigger = 0;
 	if (dir_sbsc_trigger==0) dir_sbsc_trigger=1;
 	else dir_sbsc_trigger=0;
     } else if (sbsc_interval) {
       sbsc_trigger = 0;
       if (sbsc_firsttime) {
-//	bprintf(info,"sending SBSCcommnad");
-	sendSBSCCommand("CsetExpInt=2000");
-//	bprintf(info,"sent SBSCcommnad");
+	if (InCharge) sendCommand("CsetExpInt=2000");
 	CommandData.cam.expInt = 2000;
 	sbsc_firsttime = 0;
       }
     }   
+
+    //send uplink commands, if there are any
+    while (CommandData.cam.i_uplink_r != CommandData.cam.i_uplink_w) {
+      char *newcmd = CommandData.cam.uplink_cmd[CommandData.cam.i_uplink_r];
+      newcmd[SBSC_COMM_BUF_SIZE-1] = '\0'; //for sanity
+      if (InCharge) sendCommand(newcmd);
+      CommandData.cam.i_uplink_r =
+	(CommandData.cam.i_uplink_r + 1) % SBSC_CMD_Q_SIZE;
+    }
+
     FD_ZERO(&input);
     FD_SET(commFD, &input);
-    read_timeout.tv_sec = 60;
-    read_timeout.tv_usec = 0;
+    read_timeout.tv_sec = 0;
+    read_timeout.tv_usec = 10000;
     m = select(commFD+1, &input, NULL, NULL, &read_timeout);
     if (m < 0) {
-//      bprintf(info,"select failed, returning");
       return;
     }
-//    bprintf(info,"m=%i, FD_ISSET=%i",m,FD_ISSET(commFD,&input));
-//    if (!FD_ISSET(commFD, &input)) {
-//      bprintf(info,"FD_ISSET, returning");
-//      return;  //should always be false
-//    }
-
     if (m>0) {
       if ((n = read(commFD, buf, SBSC_COMM_BUF_SIZE-1)) < 0) {
-//        bprintf(info,"read <0, returning");
        return;
-     }
+      }
     } else {
       n=0;
     }
+    //TODO try to fix this repeat-data problem. Messages could be this long
     if (n > (SBSC_COMM_BUF_SIZE-2)) {
-      string oldTarget = target;
-      closeConnection();
-      openClient(oldTarget);
+      bprintf(warning, "read repeated data. resetting");
+      basicRepairLink();
       n=0;
     }
     if (!FD_ISSET(commFD,&input) || (n == 0)) {  //link may be dead...check it out
-//      bprintf(info,"checking if link is dead");
+      if (t_now - t_last_read > 60) {  //one minute since last good read
+	t_last_read = t_now;
 #if SBSC_COMM_DEBUG
-      cerr << "[Comm debug]: read empty string, checking if link is dead " << buf << endl;
+	cerr << "[Comm debug]: read empty string, checking if link is dead " << buf << endl;
 #endif
-      string temp = repairLink();
-      if (temp == "repairfail") {
-//	bprintf(info,"repairfail,returning");
-	return; //something bad has happened
+	string temp = repairLink();
+	if (temp == "repairfail") {
+	  return; //something bad has happened
+	}
+	else if (temp != "") {
+	  line += temp;  //link wasn't dead
+	}
+	//otherwise, link has been reestablished, continue
       }
-      else if (temp != "") {
-	line += temp;  //link wasn't dead
-//	bprintf(info, "link wasn't dead");
-      }
-      //otherwise, link has been reestablished, continue
     } else { //n > 0
-//      bprintf(info,"readLoop just read %i bytes",n);
 #if SBSC_COMM_DEBUG
       cerr << "[Comm debug]: readloop just read " << n << " bytes: " << buf << endl;
 #endif
+      t_last_read = t_now;
       buf[n] = '\0';
-//      bprintf(info,"buf is %s",buf);
       line += buf;
       EthernetSBSC=0;
     }
@@ -426,7 +434,6 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
       //interpret the command and send a return value
       if ((rtnStr = (*interpretFunction)(line.substr(0,pos))) != "") //don't send blank return
 	if (sendReturnString(rtnStr) < 0) {
-//	  bprintf(info,"sendReturnSTring < 0, returning");
 	  return;
 	}
       line = line.substr(pos+1, line.length()-(pos+1)); //set line to text after "\n"
@@ -505,7 +512,8 @@ int SBSCCommunicator::sendReturn(const SBSCReturn* rtn)
 #if SBSC_COMM_DEBUG
   cerr << "[Comm debug]: in sendReturn method" << endl;
 #endif
-  return sendCommand(buildReturn(rtn));
+  if (InCharge) return sendCommand(buildReturn(rtn));
+  else return 0;
 }
 
 /*
@@ -523,7 +531,8 @@ string SBSCCommunicator::buildReturnString(string returnStr)
 
 int SBSCCommunicator::sendReturnString(string returnStr)
 {
-  return sendCommand(buildReturnString(returnStr));
+  if (InCharge) return sendCommand(buildReturnString(returnStr));
+  else return 0;
 }
 
 /*
@@ -585,16 +594,29 @@ int SBSCCommunicator::sendCommand(string cmd)
 
   FD_ZERO(&output);
   FD_SET(commFD, &output);
-  if (select(commFD+1, NULL, &output, NULL, NULL) < 0) //doesn't time out
+  timeval timeout;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 10000;
+  int n = select(commFD+1, NULL, &output, NULL, &timeout);
+  if (n < 0) { //doesn't time out
+    bprintf(err, "select fails in sendCommand %s %d %d",
+	cmd.c_str(), n, errno);
     return -1;
+  }
   if (!FD_ISSET(commFD, &output)) return -1;  //should always be false
-  //return write(commFD, cmd.c_str(), cmd.length());
-  int n = write(commFD, cmd.c_str(), cmd.length());
+  n = write(commFD, cmd.c_str(), cmd.length());
   pthread_mutex_unlock(&sbscmutex);
+  if (n < 0) {
+    bprintf(err, "write fails in sendCommand %s %d %d",
+	cmd.c_str(), n, errno);
+  }
+  if (n < (int)cmd.length()) {
+    bprintf(err, "short write in sendCommand %d/%d", n, cmd.length());
+  }
   return n;
 }
 
-int SBSCCommunicator::sendCommand(const char* cmd)       //in case flight wants to use C only
+int SBSCCommunicator::sendCommand(const char* cmd)
 {
   string str_cmd = cmd;
   return sendCommand(str_cmd);

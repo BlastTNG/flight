@@ -48,8 +48,6 @@ extern "C" {
 
 extern "C" void nameThread(const char*);  /* in mcp.c */
 
-extern "C" short int InCharge;		  /* in tx.c */
-
 static SBSCCommunicator* camComm;
 static pthread_t camcomm_id;
 
@@ -66,9 +64,17 @@ extern "C" {
  */
 int sendSBSCCommand(const char *cmd)
 {
-  //this is okay unless I want to handle link dying during transmission
-  if (!InCharge) return 0;
-  return camComm->sendCommand(cmd);
+  int next_i = (CommandData.cam.i_uplink_w + 1) % SBSC_CMD_Q_SIZE;
+  if (next_i == CommandData.cam.i_uplink_r) {
+    bprintf(err, "Overflow of star camera command queue");
+    return -1;
+  } else {
+    strncpy(CommandData.cam.uplink_cmd[CommandData.cam.i_uplink_w],
+	cmd, SBSC_COMM_BUF_SIZE);
+    CommandData.cam.uplink_cmd[next_i][SBSC_COMM_BUF_SIZE-1] = '\0';
+    CommandData.cam.i_uplink_w = next_i;
+  }
+  return 0;
 }
 
 

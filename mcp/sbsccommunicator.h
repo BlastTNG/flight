@@ -23,7 +23,8 @@ class SBSCCommunicator{
     int openHost(string target);    //DEPRECATED! use CamCommServer instead
     int openClient(string target);
     void closeConnection();
-    string repairLink();
+    string repairLink();      //for fail to read, will retry before repair
+    int basicRepairLink();    //like repairLink, but with no extra checking
 
     //main program of communicator: infinite loop that reads commands and executes on global objects
     void readLoop(string (*interpretFunction)(string));
@@ -39,7 +40,7 @@ class SBSCCommunicator{
     //functions for use on "flight computer"
     static SBSCReturn* interpretReturn(string returnString, SBSCReturn* rtn);
     int sendCommand(string cmd);
-    int sendCommand(const char* cmd);      //in case flight uses C only
+    int sendCommand(const char* cmd); //in case flight uses C only
 
     //accessors
     int getErrorFlag() { return errorFlag; }

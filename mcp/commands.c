@@ -1883,6 +1883,12 @@ void InitCommandData()
   CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
   CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
 
+  for (i=0; i<SBSC_CMD_Q_SIZE; i++) {
+    CommandData.cam.uplink_cmd[i][0] = '\0';
+  }
+  CommandData.cam.i_uplink_r = 0;
+  CommandData.cam.i_uplink_w = 0;
+
   CommandData.power.sc_tx.rst_count = 0;
   CommandData.power.sc_tx.set_count = 0;
   CommandData.power.das.rst_count = 0;

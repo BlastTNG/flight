@@ -173,6 +173,8 @@ struct Step {
   unsigned short pulse_len;  // only used for bias
 };
 
+#define SBSC_COMM_BUF_SIZE  255
+#define SBSC_CMD_Q_SIZE 6
 struct SBSCCommandData {
   //camera and lens configuration
   short int forced;  //are lens moves forced?
@@ -188,6 +190,11 @@ struct SBSCCommandData {
   int grid;          //search grid cell size (pix)
   double threshold;  //# sigma threshold for star finding
   int minBlobDist;   //min dist (pix) between blobs
+  
+  //uplink commands
+  char uplink_cmd[SBSC_CMD_Q_SIZE][SBSC_COMM_BUF_SIZE];
+  int i_uplink_r;
+  int i_uplink_w;
 };
 
 struct CommandDataStruct {
