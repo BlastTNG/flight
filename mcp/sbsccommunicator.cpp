@@ -334,12 +334,11 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
   fd_set input;
   timeval read_timeout;
   timeval tv_now;
-  double t_now, t_last_read;
+  double t_now, t_last_read, t_last_conf = 0;
   char buf[SBSC_COMM_BUF_SIZE];
   string line = "";
   string rtnStr;
   int m,n;
-  static int sbsc_firsttime = 1;
   string::size_type pos;
   if (commFD == -1) {
     sleep(1);
@@ -351,30 +350,34 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
   t_last_read = t_now;
 
   while (1) {
-    gettimeofday(&tv_now, NULL);
-    t_now = (double)tv_now.tv_sec + (double)tv_now.tv_usec/1.e6;
     usleep(10000);
     //TODO send periodic config check, and correct CsetExpInt as necessary
     if (sbsc_trigger) {
 	sbsc_interval = 0;
-	//in this state firsttime is "backwards", for oscillating with non-trig
-	if (!sbsc_firsttime) {
-	  if (InCharge) sendCommand("CsetExpInt=0");
-	  CommandData.cam.expInt = 0;
-	  sbsc_firsttime = 1;
-	}
 	if (InCharge) sendCommand("CtrigExp");
         sbsc_trigger = 0;
 	if (dir_sbsc_trigger==0) dir_sbsc_trigger=1;
 	else dir_sbsc_trigger=0;
     } else if (sbsc_interval) {
       sbsc_trigger = 0;
-      if (sbsc_firsttime) {
-	if (InCharge) sendCommand("CsetExpInt=2000");
-	CommandData.cam.expInt = 2000;
-	sbsc_firsttime = 0;
-      }
     }   
+
+    gettimeofday(&tv_now, NULL);
+    t_now = (double)tv_now.tv_sec + (double)tv_now.tv_usec/1.e6;
+    if (t_last_conf - t_now > 1) {
+      t_last_conf = t_now;
+      sendCommand("Oconf"); //get config, even as NICC
+    }
+
+    //in this state firsttime is "backwards", for oscillating with non-trig
+    if (sbsc_interval && CommandData.cam.expInt != 2000) {
+      if (InCharge) sendCommand("CsetExpInt=2000");
+      CommandData.cam.expInt = 2000;
+    }
+    if (!sbsc_interval && CommandData.cam.expInt != 0) {
+      if (InCharge) sendCommand("CsetExpInt=0");
+      CommandData.cam.expInt = 0;
+    }
 
     //send uplink commands, if there are any
     while (CommandData.cam.i_uplink_r != CommandData.cam.i_uplink_w) {

@@ -240,7 +240,8 @@ static void* camReadLoop(void* arg)
   }
   bprintf(startup, "talking to camera");
 
-  sendSBSCCommand("Oconf");  //request configuration data
+  //now done frequently in the read loop
+  //sendSBSCCommand("Oconf");  //request configuration data
 
   while(true) {
     camComm->readLoop(&parseReturn);
