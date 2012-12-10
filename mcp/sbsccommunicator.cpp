@@ -351,7 +351,6 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
 
   while (1) {
     usleep(10000);
-    //TODO send periodic config check, and correct CsetExpInt as necessary
     if (sbsc_trigger) {
 	sbsc_interval = 0;
 	if (InCharge) sendCommand("CtrigExp");
