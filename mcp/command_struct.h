@@ -173,7 +173,7 @@ struct Step {
   unsigned short pulse_len;  // only used for bias
 };
 
-#define SBSC_COMM_BUF_SIZE  255
+#define SBSC_COMM_BUF_SIZE  10000
 #define SBSC_CMD_Q_SIZE 6
 struct SBSCCommandData {
   //camera and lens configuration
