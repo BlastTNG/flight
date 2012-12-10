@@ -1120,23 +1120,23 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_trig_delay), "Set trigger delay time", GR_SBSC, 1,
     {
-      {"Delay (s)", 0, 100, 'f', "delay_sbsc"}
+      {"Delay (s)", 0, 100, 'f', "DELAY_SBSC"}
     }
   },
   {COMMAND(cam_settrig_timed), "Use timed exposure mode", GR_SBSC, 1,
     {
-      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "sc_exp_int"}
+      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "SC_EXP_INT"}
     }
   },
   {COMMAND(cam_exp_params), "set starcam exposure commands", GR_SBSC, 1,
     {
-      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "exp_time_sbsc"}
+      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "EXP_TIME_SBSC"}
     }
   },
   {COMMAND(cam_focus_params), "set camera autofocus params", GR_SBSC, 2,
     {
-      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "foc_res_sbsc"},
-      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', "NONE"} 
+      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "FOC_RES_SBSC"},
+      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', ""} 
     }
   },
   {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SBSC, 3,
@@ -1149,10 +1149,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_blob_params), "set blob finder params", GR_SBSC, 4,
     {
-      {"Max number of blobs", 1, MAX_15BIT, 'i', "maxblob_sbsc"},
-      {"Search grid size (pix)", 1, 1530 , 'i', "grid_sbsc"},
-      {"Threshold (# sigma)", 0, 100, 'f', "thresh_sbsc"},
-      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_sbsc"}
+      {"Max number of blobs", 1, MAX_15BIT, 'i', "MAXBLOB_SBSC"},
+      {"Search grid size (pix)", 1, 1530 , 'i', "GRID_SBSC"},
+      {"Threshold (# sigma)", 0, 100, 'f', "THRESH_SBSC"},
+      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "MDIST_SBSC"}
     }
   },
   {COMMAND(cam_lens_any), "execute lens command directly", GR_SBSC, 1,
@@ -1168,7 +1168,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(cam_lens_params), "set starcam lens params", GR_SBSC, 1,
     {
-      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "move_tol_sbsc"}
+      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "MOVE_TOL_SBSC"}
     }
   },
   {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
