@@ -232,19 +232,19 @@ static void* camReadLoop(void* arg)
   bputs(startup, "startup\n");
   bool errorshown = false;
 
-  while (camComm->openClient(CAM_SERVERNAME) < 0) {
-    if (!errorshown) {
-      bprintf(err, "failed to accept camera connection");
-      errorshown = true;
-    }
-  }
-  bprintf(startup, "talking to camera");
-
-  //now done frequently in the read loop
-  //sendSBSCCommand("Oconf");  //request configuration data
-
   while(true) {
+    errorshown = false;
+    while (camComm->openClient(CAM_SERVERNAME) < 0) {
+      if (!errorshown) {
+	bprintf(err, "failed to accept camera connection");
+	errorshown = true;
+      }
+    }
+    bprintf(startup, "talking to camera");
+
     camComm->readLoop(&parseReturn);
+    bprintf(warning, "unexpected return from readLoop");
+    camComm->closeConnection();
     //sleep(1);	//catchall for varous busy-waiting scenarios
   }
 

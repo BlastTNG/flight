@@ -262,7 +262,7 @@ string SBSCCommunicator::repairLink()
   char buf[SBSC_COMM_BUF_SIZE];
   int n;
 
-  bprintf(warning,"lost ethernet. Try to repair link.");
+  bprintf(warning,"lost ethernet. Will double check then try to repair link.");
   FD_ZERO(&test);
   FD_SET(commFD, &test);
   timeout.tv_sec = 0;
@@ -298,6 +298,7 @@ int SBSCCommunicator::basicRepairLink()
 #if SBSC_COMM_DEBUG
     cerr << "[Comm debug]: link appears dead, waiting for reconnect" << endl;
 #endif
+    bprintf(warning,"lost ethernet. Trying to repair link.");
     if (serverFD == -2) {
       return -1;
     }
@@ -404,23 +405,23 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
     //TODO try to fix this repeat-data problem. Messages could be this long
     if (n > (SBSC_COMM_BUF_SIZE-2)) {
       bprintf(warning, "read repeated data. resetting");
-      basicRepairLink();
+      if (basicRepairLink() < 0) {
+	bprintf(err, "Repair failed. something bad has happened");
+	return;
+      }
+      t_last_read = t_now;
       n=0;
     }
     if (!FD_ISSET(commFD,&input) || (n == 0)) {  //link may be dead...check it out
       if (t_now - t_last_read > 60) {  //one minute since last good read
-	t_last_read = t_now;
 #if SBSC_COMM_DEBUG
 	cerr << "[Comm debug]: read empty string, checking if link is dead " << buf << endl;
 #endif
-	string temp = repairLink();
-	if (temp == "repairfail") {
-	  return; //something bad has happened
+	if (basicRepairLink() < 0) {
+	  bprintf(err, "Repair failed. something bad has happened");
+	  return;
 	}
-	else if (temp != "") {
-	  line += temp;  //link wasn't dead
-	}
-	//otherwise, link has been reestablished, continue
+	t_last_read = t_now;
       }
     } else { //n > 0
 #if SBSC_COMM_DEBUG
@@ -582,7 +583,7 @@ int SBSCCommunicator::sendCommand(string cmd)
   cerr << "[Comm debug]: in sendCommand method with: " << cmd << endl;
 #endif
   fd_set output;
-  if (commFD == -1) return -1;          //communications aren't open
+  if (commFD < 0) return -2;          //communications aren't open
 
   //remove all newlines and add a single one at the end
   string sought = "\n";
@@ -598,6 +599,11 @@ int SBSCCommunicator::sendCommand(string cmd)
   timeval timeout;
   timeout.tv_sec = 0;
   timeout.tv_usec = 10000;
+  if (commFD < 0) {
+    //shouldn't happen now that sendCommand and read/repair all in same thread
+    bprintf(err, "unexpected fd reset");
+    return -2;
+  }
   int n = select(commFD+1, NULL, &output, NULL, &timeout);
   if (n < 0) { //doesn't time out
     bprintf(err, "select fails in sendCommand %s %d %d",
@@ -605,6 +611,11 @@ int SBSCCommunicator::sendCommand(string cmd)
     return -1;
   }
   if (!FD_ISSET(commFD, &output)) return -1;  //should always be false
+  if (commFD < 0) {
+    //shouldn't happen now that sendCommand and read/repair all in same thread
+    bprintf(err, "unexpected fd reset");
+    return -2;
+  }
   n = write(commFD, cmd.c_str(), cmd.length());
   pthread_mutex_unlock(&sbscmutex);
   if (n < 0) {
