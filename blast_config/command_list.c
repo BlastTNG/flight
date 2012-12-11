@@ -575,7 +575,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(general), "send a general command string to the lock or actuators",
     GR_STAGE | GR_ACT | GR_LOCK | GR_HWPR, 2,
     {
-      {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
+      {"Address (1-3,5,8,13,33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', ""},
     }
   },

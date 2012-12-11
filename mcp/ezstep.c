@@ -709,9 +709,15 @@ int EZBus_IsBusy(struct ezbus* bus, char who)
 int EZBus_SetIHold(struct ezbus* bus, char who, int current)
 {
   char i;
-  for (i=whoLoopMin(who); i<=whoLoopMax(who); ++i)
+  int change = 0;
+  char buf[EZ_BUS_BUF_LEN];
+  for (i=whoLoopMin(who); i<=whoLoopMax(who); ++i) {
+    if (bus->stepper[iWho(i)].ihold != current) change = 1;
     bus->stepper[iWho(i)].ihold = current;
-  return EZ_ERR_OK;
+  }
+  //when hold current changes, send command to update immediately
+  sprintf(buf, "h%dR", current);
+  return EZBus_Comm(bus, who, buf);
 }
 
 int EZBus_SetIMove(struct ezbus* bus, char who, int current)
