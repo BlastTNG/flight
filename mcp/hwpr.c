@@ -397,6 +397,7 @@ if (hwpr_control.read_before == yes) {
 #endif
              
               i_next_step = CommandData.hwpr.i_pos;
+	      hwpr_control.i_next_step = i_next_step;
 	      hwpr_control.pot_targ = CommandData.hwpr.pos[i_next_step];
 	      hwpr_enc_dest = LutCal(&HwprPotLut, hwpr_control.pot_targ);
 	      
