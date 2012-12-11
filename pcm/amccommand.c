@@ -445,7 +445,7 @@ int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcin
 
 void configure_amc(struct MotorInfoStruct* amcinfo)
 {
-  int n,m,wrset, count;
+  int n,m,wrset; //count;
   bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: Testing a 38400 baud rate...\n",amcinfo->motorstr);
   setopts_amc(38400,amcinfo);
   amcinfo->bdrate=38400;
@@ -461,7 +461,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 	  setWriteAccess(amcinfo);
 	  wrset=checkAMCAccess(amcinfo);
 	}
-      count = send_amccmd(3, 2, 0x0040, 1, cmd, amcinfo); // reset drive status events
+      //count = send_amccmd(3, 2, 0x0040, 1, cmd, amcinfo); // reset drive status events
       amcinfo->init=1;
       amcinfo->err=0;
       return;
@@ -509,7 +509,7 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 	  wrset=checkAMCAccess(amcinfo);
           m=disableAMC(amcinfo); // Make sure the AMC is disabled
 	}
-      count = send_amccmd(3, 2, 0x040, 1, cmd, amcinfo); // reset drive status events
+      //count = send_amccmd(3, 2, 0x040, 1, cmd, amcinfo); // reset drive status events
       amcinfo->err=0;
       amcinfo->init=1;
     }
@@ -880,6 +880,7 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
   amcinfo->init=2;
   amcinfo->writeset=2;
   //  int count = 10;
+  int num;
   close_amc(amcinfo);
   //  while(amcinfo->open==0 && count > 0) {
   open_amc(address,amcinfo);
@@ -894,6 +895,7 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
 
   //  count = 10;
   //  while(amcinfo->init==0  && count > 0 ) {
+    num = send_amccmd(3, 2, 0x0040, 1, cmd, amcinfo); // reset drive status events
     configure_amc(amcinfo);
     //    count--;
     //  }
