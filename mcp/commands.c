@@ -46,6 +46,8 @@
  * This number is relative to the elevation encoder reading, NOT
  * true elevation */
 #define LOCK_OFFSET (-0.77) /* Updated by LMF on July 12th, 2012 */
+#define NUM_LOCK_POS 9
+static const double lock_positions[NUM_LOCK_POS] = {5.0, 15.0, 25.0, 35.0, 45.0, 55.0, 65.0, 75.0, 90.0};
 
 /* based on isc_protocol.h */
 #define ISC_SHUTDOWN_NONE     0
@@ -87,16 +89,19 @@ const char* SName(enum singleCommand command); // share/sip.c
 /* calculate the nearest lockable elevation */
 double LockPosition (double elevation)
 {
-  double position;
-
-  position = floor(elevation / 10.0) * 10.0 + 5.0;
-  if (position > 79.0) {
-    position = 90.0;
-  } else if (position < 10.0) {
-    position = 5.0;
+  int i_pos;
+  double min_err = 360.0;
+  double err;
+  int i_min_err = 0;
+  
+  for (i_pos = 0; i_pos <NUM_LOCK_POS; i_pos++) {
+    err = fabs(elevation - lock_positions[i_pos]);
+    if (err<min_err) {
+      i_min_err = i_pos;
+      min_err = err;
+    }
   }
-
-  return position + LOCK_OFFSET;
+  return (lock_positions[i_min_err] + LOCK_OFFSET);
 }
 
 void SingleCommand (enum singleCommand command, int scheduled)

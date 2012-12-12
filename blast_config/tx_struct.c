@@ -267,9 +267,9 @@ struct ChannelStruct SlowChannels[] = {
   {"ramp_ampl_bias",'r',  BIAS_D,  0,                1.0,             0.0, 'u', U_NONE},
 
   /* this is all the inerframe ad590's.*/
-  {"t_padcdc_rec",  'r', BIAS_T1,  1, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_padcdc_rec",  'r', BIAS_T1,  1, CAL_AD590(1.0,                 0.0), 'u', U_T_C},
   {"t_pauram_rec",  'r', BIAS_T1,  3, CAL16T(1.0,                    0.0), 'u', U_T_C},
-  {"t_hkdcdc_rec",  'r', BIAS_T1,  5, CAL16T(1.0,                    0.0), 'u', U_T_C},
+  {"t_hkdcdc_rec",  'r', BIAS_T1,  5, CAL_AD590(1.0,                 0.0), 'u', U_T_C},
   {"vt_stbd_das",    'r', BIAS_T1,  7, CAL16T(1.0, 0.0),                    'u', U_V_V}, 
   {"vt_stbd_rec",    'r', BIAS_T1,  9, CAL16T(1.0, 0.0),                    'u', U_V_V},
   {"vt_port_das",    'r', BIAS_T1, 11, CAL16T(1.0, 0.0),                    'u', U_V_V},
