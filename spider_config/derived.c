@@ -679,6 +679,7 @@ union DerivedUnion DerivedChannels[] = {
   
   //Pressure sensor calibration
   P_HK("P_MT_VENT_T_HK",  "VP_01_HK",   LUT_DIR "pressure_tube.lut"),
+  P_HK("P_SFT_VENT_T_HK", "VP_02_HK",   LUT_DIR "pressure_omega1.lut"),
   
   END_OF_DERIVED_CHANNELS
 };
