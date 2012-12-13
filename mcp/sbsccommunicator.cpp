@@ -363,7 +363,7 @@ void SBSCCommunicator::readLoop(string (*interpretFunction)(string))
 
     gettimeofday(&tv_now, NULL);
     t_now = (double)tv_now.tv_sec + (double)tv_now.tv_usec/1.e6;
-    if (t_last_conf - t_now > 1) {
+    if (t_now - t_last_conf > 1) {
       t_last_conf = t_now;
       sendCommand("Oconf"); //get config, even as NICC
     }
