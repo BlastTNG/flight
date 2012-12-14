@@ -982,18 +982,16 @@ void WatchPort (void* parameter)
 		  extdat[EXT_ROUTE], route[port]);
 	      }		
 	    } else {
-	      bprintf(info, "extended command %d (%s) received:", 
-		    extdat[0], MName(extdat[0]));
-  	      SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
-                  ivalues, svalues);
-              MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
+	      if (MIndex(extdat[0])<0) {
+		bprintf(warning, "ignoring unknown extended command (%d)", extdat[0]);
+	      } else {
+		bprintf(info, "extended command %d (%s)", 
+		      extdat[0], MName(extdat[0]));
+		SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
+		    ivalues, svalues);
+		MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
+	      }
 	    }
-	    
-	    // FIXME: re-enable sched uplink (!)
-	    //if (extdat[4] == route[port]) {
-	      //ProcessUplinkSched(extdat);
-	    //}
-	    
 	  } else {
             bprintf(warning, "Bad encoding in extended command: "
                 "Bad packet terminator: %02X\n", buf);
