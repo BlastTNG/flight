@@ -716,8 +716,10 @@ int EZBus_SetIHold(struct ezbus* bus, char who, int current)
     bus->stepper[iWho(i)].ihold = current;
   }
   //when hold current changes, send command to update immediately
-  sprintf(buf, "h%dR", current);
-  return EZBus_Comm(bus, who, buf);
+  if (change) {
+    sprintf(buf, "h%dR", current);
+    return EZBus_Comm(bus, who, buf);
+  } else return EZ_ERR_OK;
 }
 
 int EZBus_SetIMove(struct ezbus* bus, char who, int current)
