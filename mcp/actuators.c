@@ -78,7 +78,7 @@ static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 int lock_timeout = -1;
 
-#define LOCK_MIN_POT 3000     //actual min stop: ~2530 (fully extended)
+#define LOCK_MIN_POT 300      //actual min stop: ~120 (fully extended)
 #define LOCK_MAX_POT 16368    //max stop at saturation: 16368 (fully retracted)
 #define LOCK_POT_RANGE 300
 

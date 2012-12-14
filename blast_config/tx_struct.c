@@ -546,7 +546,7 @@ struct ChannelStruct SlowChannels[] = {
   {"sveto_len",    'w', LOOP5, 20,           4.0 / SR,             0.0, 'u', U_NONE},
   //POT_LOCK = -100/(LOCK_MAX_POT-LOCK_MIN_POT)*pot_lock 
   //	+ 100*LOCK_MAX_POT/(LOCK_MAX_POT-LOCK_MIN_POT)
-  {"pot_lock",     'w', LOOP5, 22,    -100.0/13368.0,1636800.0/13368.0, 'u', U_NONE},
+  {"pot_lock",     'w', LOOP5, 22,    -100.0/16068.0,1636800.0/16068.0, 'u', U_NONE},
   {"dith_el",      'w', LOOP5, 23,        0.5/32768.0,             0.0, 's', U_D_DEG},
   {"state_lock",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
   {"goal_lock",    'w', LOOP5, 26,                1.0,             0.0, 'u', U_NONE},
