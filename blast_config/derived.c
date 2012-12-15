@@ -304,7 +304,7 @@ union DerivedUnion DerivedChannels[] = {
 /*Misc T*/
   THERMISTOR("T_PUMP_BAL", "VT_PUMP_BAL"),
   THERMISTOR("T_MC_LOCK", "VT_MC_LOCK"),
-
+  THERMISTOR("T_SBSC", "VT_SBSC"), 
 
   COMMENT("Lock Motor/Actuators"),
   BITFIELD("state_lock",

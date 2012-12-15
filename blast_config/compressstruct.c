@@ -890,7 +890,7 @@ char *frameList[] = {
 "tr_m4",
 "tr_m5",
 "tr_optbox_filt",
-"t_sbsc",
+"vt_sbsc",
 "t_second_sf",
 "t_serial",
 "t_set_gy",
