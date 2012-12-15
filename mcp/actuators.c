@@ -1040,19 +1040,6 @@ static void DoLock(void)
 /*    Frame Logic: Write data to the frame, called from main thread     */
 /*                                                                      */
 /************************************************************************/
-static double CalibrateAD590(int counts)
-{
-  double t = M_16T * (counts + B_16T);
-
-  /* if t < -73C or t > 67C, assume AD590 is broken */
-  if (t < 170)
-    t = -1;
-  else if (t > 360)
-    t = -2;
-
-  return t;
-}
-
 #define N_FILT_TEMP 2	    //number of temperatures to filter
 #define TEMP_FILT_LEN 300   //60s @ 5Hz
 static double filterTemp(int num, double data)
@@ -1086,7 +1073,6 @@ void SecondaryMirror(void)
   double t_primary2, t_secondary2;
 
   double correction_temp = 0;
-/*TODO Need to add lookups for vt channels! */
   if (firsttime) {
     firsttime = 0;
     t1PrimeAddr = GetBiPhaseAddr("vt_1_prime");
@@ -1100,19 +1086,15 @@ void SecondaryMirror(void)
     tSecondSfAddr = GetNiosAddr("t_second_sf");
   }
 
-  t_primary1 = CalibrateAD590(
-      slow_data[t1PrimeAddr->index][t1PrimeAddr->channel]
-      ) + AD590_CALIB_PRIMARY_1;
-  t_primary2 = CalibrateAD590(
-      slow_data[t2PrimeAddr->index][t2PrimeAddr->channel]
-      ) + AD590_CALIB_PRIMARY_2;
+  t_primary1 = CalibrateThermister(
+      slow_data[t1PrimeAddr->index][t1PrimeAddr->channel]);
+  t_primary2 = CalibrateThermister(
+      slow_data[t2PrimeAddr->index][t2PrimeAddr->channel]);
 
   t_secondary1 = CalibrateAD590(
-      slow_data[t1SecondAddr->index][t1SecondAddr->channel]
-      ) + AD590_CALIB_SECONDARY_1;
+      slow_data[t1SecondAddr->index][t1SecondAddr->channel]);
   t_secondary2 = CalibrateAD590(
-      slow_data[t2SecondAddr->index][t2SecondAddr->channel]
-      ) + AD590_CALIB_SECONDARY_2;
+      slow_data[t2SecondAddr->index][t2SecondAddr->channel]);
 
   if (t_primary1 < 0 || t_primary2 < 0)
     t_primary = -1; /* autoveto */
@@ -1174,8 +1156,8 @@ void SecondaryMirror(void)
   if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
     CommandData.actbus.sf_time++;
 
-  WriteData(tPrimeSfAddr, t_primary/M_16T + B_16T, NIOS_QUEUE);
-  WriteData(tSecondSfAddr, t_secondary/M_16T + B_16T, NIOS_QUEUE);
+  WriteData(tPrimeSfAddr, t_primary/M_16_AD590 + B_16_AD590, NIOS_QUEUE);
+  WriteData(tSecondSfAddr, t_secondary/M_16_AD590 + B_16_AD590, NIOS_QUEUE);
   WriteData(correctionSfAddr, correction, NIOS_QUEUE);
   WriteData(ageSfAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
   WriteData(offsetSfAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);

@@ -39,6 +39,9 @@ extern int BLASTBusUseful;
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
 
+double CalibrateAD590(int counts);
+double CalibrateThermister(int counts);
+
 //#define USE_FIFO_CMD
 
 struct chat_buf {

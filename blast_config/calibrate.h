@@ -143,12 +143,6 @@ extern "C" {
                              // as measured by the pivot controller
 #define PIV_DEAD_BAND 162.75 // 50mV*3.255029 DAC cts/mV
 
-/* only zero wrt each other, not absolute */
-#define AD590_CALIB_PRIMARY_1   -0.7285
-#define AD590_CALIB_PRIMARY_2    0.7285
-#define AD590_CALIB_SECONDARY_1  0.143
-#define AD590_CALIB_SECONDARY_2 -0.143
-
 /* zero point (in counts) of i_el */
 #define I_EL_ZERO 32638
 

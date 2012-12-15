@@ -51,6 +51,7 @@
 #include "channels.h"
 #include "tx.h"
 #include "flcdataswap.h"
+#include "lut.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -185,7 +186,48 @@ char* threadNameLookup(int tid)
   failed_lookup_buffer[TID_NAME_LEN] = '\0';
   return failed_lookup_buffer;
 }
+
+
+double CalibrateAD590(int counts)
+{
+  double t = M_16_AD590 * (counts + B_16_AD590);
+
+  /* if t < -73C or t > 67C, assume AD590 is broken */
+  if (t < 170)
+    t = -1;
+  else if (t > 360)
+    t = -2;
+
+  return t;
+}
+
+double CalibrateThermister(int counts)
+{
+  static struct LutType temperature_lut =
+     {"/data/etc/blast/thermistor.lut", 0, NULL, NULL, 0};
+  static int firsttime = 1;
   
+  double vt;
+  double t;
+  
+  if (firsttime) {
+    firsttime =0;
+    LutInit(&temperature_lut);
+  }
+  
+  vt = M_16T * (counts + B_16T);
+  t = LutCal(&temperature_lut, vt) + 273.15;
+
+  /* if t < -73C or t > 67C, assume AD590 is broken */
+  if (t < 170)
+    t = -1;
+  else if (t > 360)
+    t = -2;
+
+  return t;
+}
+
+
 
 /* I/O function to be used by bputs, bprintf, etc.
  * it is assigned this purpose in main

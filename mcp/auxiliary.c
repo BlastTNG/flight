@@ -338,13 +338,13 @@ static int ControlPumpHeat(int bits_bal)
     LutInit(&tPumpBalLut);
   }
 
+
   temp1 = (double)slow_data[tBoxBalAddr->index][tBoxBalAddr->channel];
   temp2 = (double)slow_data[vtPumpBalAddr->index][vtPumpBalAddr->channel];
+  
+  temp1 = CalibrateAD590(temp1) - 273.15;
+  temp2 = CalibrateThermister(temp2) - 273.15;
  
-  temp1 = M_16T*temp1 + B_16T*M_16T - 273.15; 
-  temp2 = M_16PRE*temp2 + B_16PRE*M_16PRE; 
-  temp2 = LutCal(&tPumpBalLut, temp2);
-
   if (CommandData.pumps.heat_on) {
     if (temp1 < CommandData.pumps.heat_tset) {
       bits_bal |= BAL_HEAT;  /* set heat bit */

@@ -81,6 +81,7 @@
 #define U_NONE  "","" 
 #define U_T_C   "Temperature","^oC"
 #define U_T_K   "Temperature", "K"
+#define U_P_PSI   "Pressure", "PSI"
 #define U_V_DPS "Rate","^o/s"
 #define U_V_MPS "Speed","m/s"
 #define U_V_KPH "Speed","km/hr"
@@ -287,10 +288,10 @@ struct ChannelStruct SlowChannels[] = {
   {"vt_2_prime",     'r', BIAS_T1, 35, CAL16T(1.0, 0.0),  'u', U_V_V},
   {"vt_if_bot_back", 'r', BIAS_T1, 37, CAL16T(1.0, 0.0),                    'u', U_V_V},
   {"vt_dac_box",     'r', BIAS_T1, 39,  CAL16T(1.0,      0.0), 'u', U_V_V},
-  {"t_mot_act",     'r', BIAS_T1, 41, CAL_AD590(1.0, 0.0),                    'u', U_T_C},
-  {"t_push_plate",  'r', BIAS_T1, 43, CAL_AD590(1.0, 0.0),                    'u', U_T_C},
-  {"t_1_second",    'r', BIAS_T1, 45, CAL_AD590(1.0, AD590_CALIB_SECONDARY_1),'u', U_T_C},
-  {"t_2_second",    'r', BIAS_T1, 47, CAL_AD590(1.0, AD590_CALIB_SECONDARY_1),'u', U_T_C},
+  {"t_mot_act",     'r', BIAS_T1, 41, CAL_AD590(1.0, 0.0),                  'u', U_T_C},
+  {"t_push_plate",  'r', BIAS_T1, 43, CAL_AD590(1.0, 0.0),                  'u', U_T_C},
+  {"t_1_second",    'r', BIAS_T1, 45, CAL_AD590(1.0, 0),                    'u', U_T_C},
+  {"t_2_second",    'r', BIAS_T1, 47, CAL_AD590(1.0, 0),                    'u', U_T_C},
 //{"t_24_das",      'r', BIAS_T1, 49,         CAL16T(1.0,            0.0), 'u', U_NONE},
 //{"t_25_das",      'r', BIAS_T1, 51, CAL16T(1.0, 0.0),                    'u', U_T_C},
 //{"t_rec",         'r', BIAS_T1, 53, CAL16T(1.0, 0.0),                    'u', U_T_C},
@@ -315,7 +316,7 @@ struct ChannelStruct SlowChannels[] = {
   {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, slot_sched
   {"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
   {"upslot_sched", 'w', LOOP1, 25,                1.0,             0.0, 'u', U_NONE},  
-  {"t_chip_flc",   'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
+  {"t_chip_flc",   'w', LOOP1, 26,               0.01,             0.0, 'u', U_T_C},
   {"declination_mag",'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_D_DEG}, // magnetic declination
   {"veto_sensor",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
   {"level_on_bal", 'w', LOOP1, 29,           1./1990.13,             0.0, 'u', U_I_A},
@@ -412,8 +413,8 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP3 4-5 are wide */
   {"offset_isc",   'w', LOOP3,  6,                1.0,             0.0, 's', U_NONE},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u', U_NONE},
-  {"t_cpu_n_flc",  'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
-  {"t_mb_flc",      'w', LOOP3,  9,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu_n_flc",  'w', LOOP3,  8,               0.01,             0.0, 'u', U_T_C},
+  {"t_mb_flc",      'w', LOOP3,  9,               0.01,             0.0, 'u', U_T_C},
   {"mks_hi_sip",   'w', LOOP3, 10,           0.003256,       -0.226858, 'u', U_NONE},
   {"mks_med_sip",  'w', LOOP3, 11,           0.032614,       -0.072580, 'u', U_NONE},
   {"blob_idx_osc", 'w', LOOP3, 12,                1.0,             0.0, 'u', U_NONE},
@@ -470,16 +471,16 @@ struct ChannelStruct SlowChannels[] = {
   {"maxblobs_osc", 'w', LOOP4,  7,                1.0,             0.0, 'u', U_NONE},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u', U_NONE},
   {"plover",       'w', LOOP4,  9,                1.0,             0.0, 'u', U_NONE},
-  {"t_flange_isc", 'w', LOOP4, 10,            1./100.,         -273.15, 'u', U_NONE},
-  {"t_lens_isc",   'w', LOOP4, 11,            1./100.,         -273.15, 'u', U_NONE},
-  {"t_heat_isc",   'w', LOOP4, 12,            1./100.,         -273.15, 'u', U_NONE},
-  {"t_comp_isc",   'w', LOOP4, 13,            1./100.,         -273.15, 'u', U_NONE},
-  {"pressure1_isc",'w', LOOP4, 14,           1./2000.,             0.0, 'u', U_NONE},
-  {"t_flange_osc", 'w', LOOP4, 15,            1./100.,         -273.15, 'u', U_NONE},
-  {"t_lens_osc",   'w', LOOP4, 16,            1./100.,         -273.15, 'u', U_NONE},
-  {"t_heat_osc",   'w', LOOP4, 17,            1./100.,         -273.15, 'u', U_NONE},
-  {"t_comp_osc",   'w', LOOP4, 18,            1./100.,         -273.15, 'u', U_NONE},
-  {"pressure1_osc",'w', LOOP4, 19,           1./2000.,             0.0, 'u', U_NONE},
+  {"t_flange_isc", 'w', LOOP4, 10,            1./100.,         -273.15, 'u', U_T_C},
+  {"t_lens_isc",   'w', LOOP4, 11,            1./100.,         -273.15, 'u', U_T_C},
+  {"t_heat_isc",   'w', LOOP4, 12,            1./100.,         -273.15, 'u', U_T_C},
+  {"t_comp_isc",   'w', LOOP4, 13,            1./100.,         -273.15, 'u', U_T_C},
+  {"pressure1_isc",'w', LOOP4, 14,           1./2000.,             0.0, 'u', U_P_PSI},
+  {"t_flange_osc", 'w', LOOP4, 15,            1./100.,         -273.15, 'u', U_T_C},
+  {"t_lens_osc",   'w', LOOP4, 16,            1./100.,         -273.15, 'u', U_T_C},
+  {"t_heat_osc",   'w', LOOP4, 17,            1./100.,         -273.15, 'u', U_T_C},
+  {"t_comp_osc",   'w', LOOP4, 18,            1./100.,         -273.15, 'u', U_T_C},
+  {"pressure1_osc",'w', LOOP4, 19,           1./2000.,             0.0, 'u', U_P_PSI},
   {"gain_isc",     'w', LOOP4, 20,        100./65536.,             0.0, 'u', U_NONE},
   {"jfet_set_on",  'w', LOOP4, 21,             1/100.,             0.0, 'u', U_NONE},
   {"jfet_set_off", 'w', LOOP4, 22,             1/100.,             0.0, 'u', U_NONE},
@@ -495,7 +496,7 @@ struct ChannelStruct SlowChannels[] = {
   {"g_p_heat_gy",   'w', LOOP4, 33,                1.0,             0.0, 'u', U_NONE},
   {"g_i_heat_gy",   'w', LOOP4, 34,                1.0,             0.0, 'u', U_NONE},
   {"g_d_heat_gy",   'w', LOOP4, 35,                1.0,             0.0, 'u', U_NONE},
-  {"t_set_gy",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  {"t_set_gy",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_T_C},
   {"h_age_gy",     'w', LOOP4, 37,                1.0,             0.0, 'u', U_NONE},
   {"h_hist_gy",    'w', LOOP4, 38,    (100.0/32768.0),             0.0, 'u', U_NONE},
   
@@ -631,8 +632,8 @@ struct ChannelStruct SlowChannels[] = {
   {"correction_sf",'w', LOOP6, 41,                1.0,             0.0, 's', U_NONE},
   {"age_sf",       'w', LOOP6, 42,              1/30.,             0.0, 'u', U_NONE},
   {"offset_sf",    'w', LOOP6, 43,                1.0,             0.0, 's', U_NONE},
-  {"t_prime_sf",   'w', LOOP6, 44,         CAL16T(1.0,            0.0), 'u', U_T_C},
-  {"t_second_sf",  'w', LOOP6, 45,         CAL16T(1.0,            0.0), 'u', U_T_C},
+  {"t_prime_sf",   'w', LOOP6, 44,       CAL_AD590(1.0,            0.0), 'u', U_T_C},
+  {"t_second_sf",  'w', LOOP6, 45,       CAL_AD590(1.0,            0.0), 'u', U_T_C},
   {"flags_act",    'w', LOOP6, 50,                1.0,             0.0, 'u', U_NONE},
   {"lvdt_spread_act",'w', LOOP6, 55,              1.0,             0.0, 's', U_NONE},
   /* LOOP6 56-57 are wide */
@@ -819,7 +820,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP9 46-49 are unused */
   /* LOOP9 50-55 are wide */
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
-  {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
+  {"t_set_sbsc",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_T_C},  
   /* LOOP9 58 is unused */
   {"pot_hwpr",       'w', LOOP9, 59,        1.0/65535.0,             0.0, 'u', U_NONE},
   {"last_n_cmd",     'w', LOOP9, 60,                1.0,             0.0, 'u', U_NONE},
@@ -828,7 +829,7 @@ struct ChannelStruct SlowChannels[] = {
   {"count_s_cmd",    'w', LOOP9, 63,                1.0,             0.0, 'u', U_NONE},
   {"df_s_flc",       'w', LOOP0,  0,          1.0/250.0,             0.0, 'u', U_GB},
   {"timeout_s",      'w', LOOP0,  1,                1.0,             0.0, 'u', U_NONE},
-  {"t_cpu_s_flc",    'w', LOOP0,  2,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu_s_flc",    'w', LOOP0,  2,               0.01,             0.0, 'u', U_T_C},
   {"t_start_cycle",   'w', LOOP0,  3,        4.0/65536.0,             0.0, 'u', U_T_K},
   {"t_pot_max_cycle", 'w', LOOP0,  4,       10.0/65536.0,             0.0, 'u', U_T_K},
   {"t_char_max_cycle",'w', LOOP0,  5,       70.0/65536.0,             0.0, 'u', U_T_K},
@@ -945,11 +946,11 @@ struct ChannelStruct SlowChannels[] = {
 /* ACS2 Analog card */
   {"pch_pyr_clin", 'r',  ACS2_A1,  1,           0.001343,          -47.09, 'u', U_NONE},
   {"roll_pyr_clin",'r',  ACS2_A1,  3,           0.001413,          -45.86, 'u', U_NONE},
-  {"t_pyr_clin",   'r',  ACS2_A1,  5,          100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
+  {"t_pyr_clin",   'r',  ACS2_A1,  5,          100.0*10.0/32768.0,    -100.0*10.0, 'u', U_T_C},
   {"xel_if_clin",  'r',  ACS2_A1,  7,         0.00546739,      -25.*6.144, 'u', U_NONE},
   {"el_raw_if_clin",'r', ACS2_A1,  9,                1.0,             0.0, 'u', U_NONE},
   //  {"el_raw_if_clin",'r', ACS2_A1,  9,         0.00546739,         -133.78, 'u', U_NONE},
-  {"t_if_clin",    'r',  ACS2_A1, 11,            100.0*10.0/32768.0,    -100.0*10.0, 'u', U_NONE},
+  {"t_if_clin",    'r',  ACS2_A1, 11,            100.0*10.0/32768.0,    -100.0*10.0, 'u', U_T_C},
 
   {"x_stage",      'w', LOOP5, 28,                2.0,             0.0, 'u', U_NONE},
   {"y_stage",      'w', LOOP5, 34,                2.0,             0.0, 'u', U_NONE},
