@@ -2084,7 +2084,7 @@ void InitCommandData()
   CommandData.pumps.gain_bal = 0.2;
   CommandData.pumps.mode = bal_auto;
   CommandData.pumps.heat_on = 1;
-  CommandData.pumps.heat_tset = 20;
+  CommandData.pumps.heat_tset = 5;
 
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;
