@@ -45,9 +45,10 @@
  * 90 degrees.  This is the offset to the true lock positions.
  * This number is relative to the elevation encoder reading, NOT
  * true elevation */
-#define LOCK_OFFSET (-0.77) /* Updated by LMF on July 12th, 2012 */
+//#define LOCK_OFFSET (-0.77) /* Updated by LMF on July 12th, 2012 */
+#define LOCK_OFFSET (0.0)
 #define NUM_LOCK_POS 9
-static const double lock_positions[NUM_LOCK_POS] = {5.0, 15.0, 25.0, 35.0, 45.0, 55.0, 65.0, 75.0, 90.0};
+static const double lock_positions[NUM_LOCK_POS] = {4.8, 14.8, 24.82, 34.81, 44.75, 54.7, 64.7, 75.0, 90.0};
 
 /* based on isc_protocol.h */
 #define ISC_SHUTDOWN_NONE     0

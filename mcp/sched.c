@@ -46,11 +46,11 @@ void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 char lst0str[82];
 
 //Toronto Highbay
-#define CHECK_LON -79.3994
-#define NOMINAL_LATITUDE 44.6601
+//#define CHECK_LON -79.3994
+//#define NOMINAL_LATITUDE 44.6601
 //McMurdo (LDB)
-//#define CHECK_LON 167.0592
-//#define NOMINAL_LATITUDE -77.8616
+#define CHECK_LON 167.0592
+#define NOMINAL_LATITUDE -77.8616
 //Palestine (CSBF)
 //#define CHECK_LON -95.7168 
 //#define NOMINAL_LATITUDE 31.7799
