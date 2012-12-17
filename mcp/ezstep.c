@@ -382,7 +382,7 @@ int EZBus_Recv(struct ezbus* bus)
        * attempt to recover malformed strings */
       switch (state) {
         case 0: /* RS-485 turnaround */
-	  //FIXME: this was needed for xystage on 19 Nov 2010, I don't know why
+	  //NOTE: this was needed for xystage on 19 Nov 2010, I don't know why
 	  if (byte == 0x00) {
 	    /*
 	    if (bus->chatter >= EZ_CHAT_ERR)

@@ -38,9 +38,8 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
-/**** TODO: Change these back once we have the sunshields on!!!****/
-#define MIN_EL 5 // Was 23.9 
-#define MAX_EL 60 // Was 55
+#define MIN_EL 19.5
+#define MAX_EL 55
 
 #define MAX_V_AZ 2.0 // was 2000 in gyro units
 #define MAX_V_EL 0.5 // was 0.5
@@ -638,10 +637,9 @@ static void GetElDither(unsigned int inc) {
 
 static void InitElDither() {
   static int j = 0;
-  int nid = CommandData.pointing_mode.next_i_dith;
   if (CommandData.pointing_mode.next_i_dith >= 0) {
     axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
-    //    bprintf(info,"InitElDither:%i nid = %i, next_dith=%i,  axes_mode.i_dith = %i",j,nid,CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);
+    //    bprintf(info,"InitElDither:%i nid = %i, next_dith=%i,  axes_mode.i_dith = %i",j,CommandData.pointing_mode.next_i_dith,CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);
     CommandData.pointing_mode.next_i_dith = -1;
   } else {
     CommandData.pointing_mode.next_i_dith = -1;

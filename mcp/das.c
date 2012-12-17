@@ -63,7 +63,7 @@
 #define CRYO_CYCLE_SETTLE 0x0010    //Charcoal off, settle before connecting HS
 
 /* he3 cycle timeouts (all in seconds) */
-#define CRYO_CYCLE_COOL_TIMEOUT  (2*60*60)  //TODO should this be longer?
+#define CRYO_CYCLE_COOL_TIMEOUT  (2*60*60)
 #define CRYO_CYCLE_HS_TIMEOUT    (2.75*60)
 
 #define T_LHE_MAX         4.600

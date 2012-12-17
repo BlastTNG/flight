@@ -725,7 +725,8 @@ static void DoSanityChecks(void)
       case 'c': /* lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
 #if DAS_CARDS > 0
-          //bolometer channel exception. FIXME bolo channels should be searched
+          //bolometer channel exception.
+          //TODO (BLAST-Pol OK) bolo channels should be searched
           if ((DerivedChannels[i].lincom.source[0] != 'n' &&
               DerivedChannels[i].lincom.source[0] != 'N') ||
               (DerivedChannels[i].lincom.source[3] != 'c' &&
@@ -752,7 +753,7 @@ static void DoSanityChecks(void)
         if (GetChannelByName(names, nn, DerivedChannels[i].units.source) == -1)
           bprintf(fatal, "Channels: Derived channel source %s not found.",
               DerivedChannels[i].units.source);
-        // FIXME: consider adding checks for metadata collisions.
+        //TODO (BLAST-Pol OK) add checks for metadata collisions?
         break;
       default:
         bprintf(fatal, "Channels: FATAL: Unrecognised Derived Channel Type "

@@ -385,47 +385,6 @@ int ping_copley(struct MotorInfoStruct* copleyinfo)
   
 }
 
-// TODO : Right now this is never called...not removing it for now. 
-
-#if 0 
-void checkCopleyErr(int errcode,struct MotorInfoStruct* copleyinfo)
-{
-  switch(errcode)
-    {
-    case COP_ERR_2MUCH_DATA:
-      bprintf(err,"%sComm checkCopleyErr: Too much data passed with command.",copleyinfo->motorstr);
-      break;
-    case COP_ERR_UNKNOWN_CMD: 
-      bprintf(err,"%sComm checkCopleyErr: Unknown Command Code.",copleyinfo->motorstr);
-      break;
-    case COP_ERR_NOT_ENOUGH_DATA:
-      bprintf(err,"%sComm checkCopleyErr: Not enough data was supplied with the command",copleyinfo->motorstr);
-      break;
-    case COP_ERR_TOO_MUCH_DATA:
-      bprintf(err,"%sComm checkCopleyErr: Too much data was supplied with the command",copleyinfo->motorstr);
-      break;
-    case COP_ERR_UNKNOWN_ID:
-      bprintf(err,"%sComm checkCopleyErr: Unknown variable ID",copleyinfo->motorstr);
-      break;
-    case COP_ERR_OUT_RANGE:
-      bprintf(err,"%sComm checkCopleyErr: Data value out of range",copleyinfo->motorstr);
-      break;
-    case COP_ERR_READ_ONLY:
-      bprintf(err,"%sComm checkCopleyErr: Attempt to modify read only variable",copleyinfo->motorstr);
-      break;
-    case COP_ERR_CAN_FAIL:
-      bprintf(err,"%sComm checkCopleyErr: CAN Network Communications failure",copleyinfo->motorstr);
-      break;
-    case COP_ERR_PARSE:
-      bprintf(err,"%sComm checkCopleyErr: ASCII command parsing error.",copleyinfo->motorstr);
-      break;
-    default:
-      bprintf(err,"%sComm checkCopleyErr: Unknown Error code",copleyinfo->motorstr);
-      break;
-    }
-}
-#endif
-
 // Check the controller response after a command.
 // If the response from the controller is "ok" (i.e. no errors) return 0.
 // Returns -10 if the controller returned garbage.

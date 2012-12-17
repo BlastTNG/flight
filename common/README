@@ -13,6 +13,12 @@ Do not under any circumstances execute "cvs rm" on any of these files without
 first consulting the maintainer of the cvs repository. Doing so *will* break
 the code of other experiments in a way that is painful to recover from.
 
+--------------------------------------------------------------------------------
+-----                       no caps erratum                                -----
+--------------------------------------------------------------------------------
+since we've moved to svn, you can no longer "cvs rm" anything. still, you should
+refrain from "svn rm" as well.
+
 
 TODO:
 If they become sufficiently stable and generic, the amccommand and ezstep

@@ -381,9 +381,6 @@ if (hwpr_control.read_before == yes) {
 
 
 	  } else if (hwpr_control.go == ind) {
-	    //TODO I don't like repeated code, and this chunk is VERY similar to the above one
-	    //TODO can set i_next_step depending on mode, and then have common code shared
-	    //TODO or can make a function that calculates move to any new index
             // Not changing for flight.  Fix if we fly again. -lmf
 	    if (((hwpr_data.pot > HWPR_POT_MIN) &&  
 		 (hwpr_data.pot < HWPR_POT_MAX)) &&
@@ -582,7 +579,6 @@ if (hwpr_control.read_before == yes) {
   if( CommandData.hwpr.mode == HWPR_REPEAT) {
 
     if ( hwpr_wait_cnt <= 0
-	     //TODO I don't know why having a shorter wait for the overshoot fails
 	     /*|| (overshooting && hwpr_wait_cnt >= 10)*/ ) {
       hwpr_wait_cnt = CommandData.hwpr.step_wait;
       if (overshooting) {
