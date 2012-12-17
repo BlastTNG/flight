@@ -74,8 +74,22 @@ clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)
 	rm -f *.o
 
-install: 
-	install -m 755 fox /usr/local/bin
-	install -m 755 msnbc /usr/local/bin
-	install -m 755 rush /usr/local/bin
+########################################################
+# Install stuff
+#
+
+install: all
+	rm -f /usr/local/bin/fox
+	rm -f /usr/local/bin/msnbc
+	rm -f /usr/local/bin/rush
+ifeq ($(HAVE_BLASTCONF),1)
+	install -m 755 fox-blast   /usr/local/bin
+	install -m 755 msnbc-blast /usr/local/bin
+	install -m 755 rush-blast  /usr/local/bin
+endif
+ifeq ($(HAVE_SPIDERCONF),1)
+	install -m 755 fox-spider   /usr/local/bin
+	install -m 755 msnbc-spider /usr/local/bin
+	install -m 755 rush-spider  /usr/local/bin
+endif
 
