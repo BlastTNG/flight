@@ -119,6 +119,7 @@ int main(int argc, char *argv[]) {
       write(out_fd, inbuf, numread);
       totalread += numread;
       blockread += numread;
+      t_lr = time(NULL);
     } else {
       t_r = time(NULL);
       if ((t_r -t_lr) > TIMEOUT) {

@@ -4,4 +4,4 @@ rove: rove.o
 	$(CC) -o rove rove.o -lm
 
 install: rove
-	install -m 755 rove /usr/local/bin
+	install -m 755 rove /usr/local/sbin
