@@ -1722,7 +1722,13 @@ void DoQuadMode(void) // aka radbox
   }
 
   new = 0;
-  if (last_mode != P_QUAD) new = 1;
+  if (last_mode != P_QUAD) {
+    new = 1;
+    v_el = 0.0;
+    targ_el = 0.0;
+    el_next_dir = 1;
+  }
+    
   if (el < bottom - 0.5) new = 1;
   if (el > top + 0.5) new = 1;
   if (az < left - 2.0) new = 1;
