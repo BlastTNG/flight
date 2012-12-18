@@ -1735,6 +1735,7 @@ void DoQuadMode(void) // aka radbox
 
   if (new) {
     InitElDither();
+    n_scan = 0;
     if ( (fabs(az - az_of_bot) < 0.1) &&
         (fabs(el - bottom) < 0.05)) {
       for (i=0; i<4; i++) {

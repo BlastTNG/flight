@@ -1,3 +1,4 @@
+
 /* mcp: the BLAST master control program
  *
  * This software is copyright (C) 2002-2006 University of Toronto
@@ -815,6 +816,7 @@ static void EvolveSCSolution(struct ElSolutionStruct *e,
       last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
       isc_pulses[which].age = -1; // reset counter.
     } else if (!finite(new_el) || !finite(new_az)) {
+      last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
       bprintf(err, "Pointing: Aphysical star camera solution discarded.");
     }
   }
