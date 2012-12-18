@@ -2020,7 +2020,7 @@ void InitCommandData()
   CommandData.verbose_el = 0;
   CommandData.verbose_piv = 0;
 
-  CommandData.gyheat.setpoint = 15.0;
+  CommandData.gyheat.setpoint = 5.0;
   CommandData.gyheat.age = 0;
   CommandData.gyheat.gain.P = 30;
   CommandData.gyheat.gain.I = 10;
@@ -2107,12 +2107,12 @@ void InitCommandData()
   CommandData.actbus.tc_prefs = 1;
 
   CommandData.actbus.lvdt_delta = 1000;
-  CommandData.actbus.lvdt_low = 25000;
-  CommandData.actbus.lvdt_high = 35000;
+  CommandData.actbus.lvdt_low = 30000;
+  CommandData.actbus.lvdt_high = 50000;
 
-  CommandData.actbus.offset[0] = 33333;
-  CommandData.actbus.offset[1] = 33333;
-  CommandData.actbus.offset[2] = 33333;
+  CommandData.actbus.offset[0] = 40000;
+  CommandData.actbus.offset[1] = 40000;
+  CommandData.actbus.offset[2] = 40000;
 
   /* The first is due to change in radius of curvature, the second due to
    * displacement of the secondary due to the rigid struts */
@@ -2124,9 +2124,9 @@ void InitCommandData()
   CommandData.actbus.g_secondary = 10; /* um/deg */
   CommandData.actbus.focus = 0;
   CommandData.actbus.sf_time = 0;
-  CommandData.actbus.sf_offset = 0;
+  CommandData.actbus.sf_offset = 6667;
 
-  CommandData.actbus.act_vel = 10;
+  CommandData.actbus.act_vel = 20;
   CommandData.actbus.act_acc = 1;
   CommandData.actbus.act_move_i = 85;
   CommandData.actbus.act_hold_i = 40;
@@ -2140,7 +2140,7 @@ void InitCommandData()
   CommandData.hwpr.vel = 1600;
   CommandData.hwpr.acc = 4;
   CommandData.hwpr.move_i = 20;
-  CommandData.hwpr.hold_i = 10;
+  CommandData.hwpr.hold_i = 0;
 
   /* hwpr positions separated by 22.5 degs.
      Calculated by Tristan on July 19th 2010*/
@@ -2267,18 +2267,18 @@ void InitCommandData()
   CommandData.lat = -77.86;  //McMurdo Building 096
   CommandData.lon = -167.04; //Willy Field Dec 2010
 
-  CommandData.Phase[0] = 27000;
-  CommandData.Phase[1] = 27000;
-  CommandData.Phase[2] = 27000;
-  CommandData.Phase[3] = 26700;
-  CommandData.Phase[4] = 26700;
-  CommandData.Phase[5] = 26700;
-  CommandData.Phase[6] =  9800;
-  CommandData.Phase[7] =  9800;
-  CommandData.Phase[8] =  9800;
-  CommandData.Phase[9] =  9800;
-  CommandData.Phase[10] = 10000;
-  CommandData.Phase[11] =  9800;
+  CommandData.Phase[0] = 25450;
+  CommandData.Phase[1] = 26370;
+  CommandData.Phase[2] = 25620;
+  CommandData.Phase[3] = 25470;
+  CommandData.Phase[4] = 25400;
+  CommandData.Phase[5] = 24900;
+  CommandData.Phase[6] =  9050;
+  CommandData.Phase[7] =  9350;
+  CommandData.Phase[8] =  9120;
+  CommandData.Phase[9] =  9120;
+  CommandData.Phase[10] = 9320;
+  CommandData.Phase[11] =  8820;
   CommandData.Phase[12] = 11600;    //ROX
 
   WritePrevStatus();
