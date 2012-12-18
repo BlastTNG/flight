@@ -2035,6 +2035,7 @@ void InitCommandData()
   CommandData.use_gps = 0;
   CommandData.lat_range = 1;
   CommandData.sucks = 1;
+  CommandData.uplink_sched=0;
 
   CommandData.clin_el_trim = 0;
   CommandData.enc_el_trim = 0;
@@ -2144,9 +2145,9 @@ void InitCommandData()
 
   /* hwpr positions separated by 22.5 degs.
      Calculated by Tristan on July 19th 2010*/
-  CommandData.hwpr.pos[3] = 0.263096; 
-  CommandData.hwpr.pos[2] = 0.326452;
-  CommandData.hwpr.pos[1] = 0.38909;
+  CommandData.hwpr.pos[2] = 0.263096; 
+  CommandData.hwpr.pos[1] = 0.326452;
+  CommandData.hwpr.pos[3] = 0.38909;
   CommandData.hwpr.pos[0] = 0.450767;
 
   CommandData.hwpr.overshoot = 300;
