@@ -668,7 +668,7 @@ static void InitElDither() {
 /*   Do scan modes                                              */
 /*                                                              */
 /****************************************************************/
-#define MIN_SCAN 0.1
+#define MIN_SCAN 0.2
 static void SetAzScanMode(double az, double left, double right, double v,
     double D)
 {
