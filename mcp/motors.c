@@ -1729,10 +1729,10 @@ void DoQuadMode(void) // aka radbox
     el_next_dir = 1;
   }
     
-  if (el < bottom - 0.5) new = 1;
-  if (el > top + 0.5) new = 1;
-  if (az < left - 2.0) new = 1;
-  if (az > right + 2.0) new = 1;
+  if (el < bottom - 1.0) new = 1;
+  if (el > top + 1.0) new = 1;
+  if (az < left - 6.0) new = 1;
+  if (az > right + 6.0) new = 1;
 
   for (i=0; i<4; i++) {
     if (CommandData.pointing_mode.ra[i] != last_ra[i]) new = 1;
