@@ -1181,6 +1181,7 @@ int main(int argc, char *argv[])
   signal(SIGHUP, CloseBBC);
   signal(SIGINT, CloseBBC);
   signal(SIGTERM, CloseBBC);
+  signal(SIGPIPE, SIG_IGN);
 
   /* Allocate the local data buffers */
   RxFrame = balloc(fatal, BiPhaseFrameSize);
