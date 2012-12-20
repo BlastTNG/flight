@@ -621,6 +621,9 @@ int SBSCCommunicator::sendCommand(string cmd)
   if (n < 0) {
     bprintf(err, "write fails in sendCommand %s %d %d",
 	cmd.c_str(), n, errno);
+    if (basicRepairLink() < 0) {
+	bprintf(err, "Repair failed. something bad has happened");
+    }
   }
   if (n < (int)cmd.length()) {
     bprintf(err, "short write in sendCommand %d/%d", n, cmd.length());
