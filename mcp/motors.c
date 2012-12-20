@@ -1793,11 +1793,13 @@ void DoQuadMode(void) // aka radbox
   if ((axes_mode.az_vel < 0) && (axes_mode.az_dir>=0)) { // turn around
     axes_mode.az_dir = -1;
     az_distance = az - next_left;
+    if (az_distance<MIN_SCAN) az_distance = MIN_SCAN;
     t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
     new_step = 1;
   } else if ((axes_mode.az_vel > 0) && (axes_mode.az_dir<=0)) { // turn around
     axes_mode.az_dir = 1;
     az_distance = next_right - az;
+    if (az_distance<MIN_SCAN) az_distance = MIN_SCAN;
     t = az_distance/v_az + 2.0*v_az/(az_accel * SR);
     new_step = 1;
   }
