@@ -657,7 +657,7 @@
 { "PObject" : 
 { "_id" : 201 }
 , "_map" : 
-{ "0" : "Not Set [style=\"xhigh\" (P2)]", "1" : "Az El Goto [style=\"high\" (P3)]", "10" : "Quad [style=standard (P8)]", "12" : "ElBox[style=standard (P8)]", "2" : "Az Scan [style=\"high\" (P3)]", "3" : "Drift [style=\"high\" (P3)]", "4" : "RA Dec Goto [style=\"high\" (P3)]", "5" : "VCap [style=\"standard\" (P8)]", "6" : "Cap [style=\"standard\" (P8)]", "7" : "Box [style=\"standard\" (P8)]", "8" : "Lock [style=\"high\" (P3)]", "9" : "VBox [style=\"standard\" (P8)]" }
+{ "0" : "Not Set [style=\"xhigh\" (P2)]", "1" : "Az El Goto [style=\"high\" (P3)]", "10" : "Quad [style=standard (P8)]", "11" : "ElScan[style=standard (P8)]", "12" : "ElBox[style=standard (P8)]", "2" : "Az Scan [style=\"high\" (P3)]", "3" : "Drift [style=\"high\" (P3)]", "4" : "RA Dec Goto [style=\"high\" (P3)]", "5" : "VCap [style=\"standard\" (P8)]", "6" : "Cap [style=\"standard\" (P8)]", "7" : "Box [style=\"standard\" (P8)]", "8" : "Lock [style=\"high\" (P3)]", "9" : "VBox [style=\"standard\" (P8)]" }
  }
 , "PObject" : 
 { "_id" : 200 }
