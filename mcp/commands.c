@@ -2160,7 +2160,7 @@ void InitCommandData()
 
   CommandData.Cryo.charcoalHeater = 0;
   CommandData.Cryo.hsCharcoal = 1;
-  CommandData.Cryo.fridgeCycle = 0;
+  CommandData.Cryo.fridgeCycle = 1;
   CommandData.Cryo.force_cycle = 0;
   CommandData.Cryo.hsPot = 0;
   CommandData.Cryo.heliumLevel = 0;
