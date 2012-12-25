@@ -282,6 +282,12 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
       result = 11;
   }
 
+#ifdef ELOG_CMD
+  // must go before Route calls, as they change the buffer string
+  snprintf(log2, 4999, ELOG_CMD " \"EXE %s\n", buffer);
+  snprintf(log, 4999, "%sResult = %d\"", log2, result);
+#endif
+
   if (result == 0) {
     if (route)
       result = SimpleRoute(sock, fd, &buffer[3]);
@@ -294,8 +300,6 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   send(sock, output, strlen(output), MSG_NOSIGNAL);
 
 #ifdef ELOG_CMD
-  snprintf(log2, 4999, ELOG_CMD " \"EXE %s\n", buffer);
-  snprintf(log, 4999, "%sResult = %d\"", log2, result);
   if (fork() != 0) {
     return result;
   } else {
