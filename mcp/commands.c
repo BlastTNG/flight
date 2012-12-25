@@ -2144,11 +2144,11 @@ void InitCommandData()
   CommandData.hwpr.hold_i = 0;
 
   /* hwpr positions separated by 22.5 degs.
-     Calculated by Tristan on July 19th 2010*/
-  CommandData.hwpr.pos[2] = 0.263096; 
-  CommandData.hwpr.pos[1] = 0.326452;
-  CommandData.hwpr.pos[3] = 0.38909;
-  CommandData.hwpr.pos[0] = 0.450767;
+     entered by Barth on December 25, 2012 */
+  CommandData.hwpr.pos[3] = 0.3418; 
+  CommandData.hwpr.pos[2] = 0.2168;
+  CommandData.hwpr.pos[1] = 0.2779;
+  CommandData.hwpr.pos[0] = 0.4047;
 
   CommandData.hwpr.overshoot = 300;
   CommandData.hwpr.i_pos = 0;
