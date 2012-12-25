@@ -27,9 +27,9 @@
 #define ENABLE_ELOG
 
 #if defined __BLAST__
-#define ELOG_HOST   "blastexperiment.info"
-#define ELOG_PORT   "8080"
-#define ELOG_LOG    "Narsil"
+#define ELOG_HOST   "elog.blastpol.com"
+#define ELOG_PORT   "8000"
+#define ELOG_LOG    "blastcmd2012"
 #define ELOG_AUTH   "blastcmd-daemon"
 #elif defined __SPIDER__
 #define ELOG_HOST   "someplace.update.me"
@@ -40,7 +40,7 @@
 
 #if defined ENABLE_ELOG && defined ELOG_HOST
 #define ELOG_CMD "/usr/local/bin/elog -h " ELOG_HOST " -p " ELOG_PORT \
- " -l " ELOG_LOG " -a Author=" ELOG_AUTH
+ " -l " ELOG_LOG " -a Author=" ELOG_AUTH " -a Source=blastcmd "
 #endif
 
 
