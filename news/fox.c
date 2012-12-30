@@ -33,6 +33,11 @@
 #define TEA_PORT 14141
 #define RUSH_EXT 's'
 
+#define MAX_STREAM_FIELDS 400
+#define MAX_SAMPLES_PER_FRAME 100
+
+#define PAST_SEND 4800
+
 char LNKFILE[4096];
 int PORT;
 char EXT;
@@ -493,6 +498,7 @@ void BlockingRead(int minRead, struct fifoStruct *fs) {
   int numread;
   time_t last_t = 0;
   time_t t;  
+  int flush = 0;
   
   time_t t_r, t_lr;
   
@@ -506,9 +512,22 @@ void BlockingRead(int minRead, struct fifoStruct *fs) {
       numin = FIFODEPTH - nFifo(fs) - 2;
     }
     if (numin) {
-      numread = read(tty_fd, inbuf, numin);
-      push(fs, inbuf, numread);
-      n_bytemon += numread;
+      if (flush > 0 ) {
+        if (flush >= numin) {
+          numread = read(tty_fd, inbuf, numin);
+          flush -= numread;
+          numin = 0;
+        } else {
+          numread = read(tty_fd, inbuf, flush);
+          flush = 0;
+          numin -= flush;
+        }
+      }
+      if (numin>0) {
+        numread = read(tty_fd, inbuf, numin);
+        push(fs, inbuf, numread);
+        n_bytemon += numread;
+      }
       t_lr = time(NULL);
     } else {
       t_r = time(NULL);
@@ -517,6 +536,7 @@ void BlockingRead(int minRead, struct fifoStruct *fs) {
         t_lr = t_r;
         shutdown(tty_fd, SHUT_RDWR);
         tty_fd = party_connect();
+        flush = PAST_SEND;
       } 
       usleep(10000);
     }
@@ -557,7 +577,7 @@ int main(int argc, char *argv[]) {
   signed char c_in;
   int i_in;
   unsigned u_in;
-  long long ll_in=0;
+  long long ll_in[MAX_STREAM_FIELDS][MAX_SAMPLES_PER_FRAME];
   int first_time = 1;
   char name[128];
 
@@ -626,6 +646,7 @@ int main(int argc, char *argv[]) {
 
       peek(&fs, (char *)&u_in, sizeof(unsigned));
       if (u_in==SYNCWORD) {
+        printf("\rRead %d bytes for frame %d\n", n_bytemon, n_sync);
         advance(&fs, sizeof(unsigned));
         index = 1;
         is_lost = 0;
@@ -667,7 +688,7 @@ int main(int argc, char *argv[]) {
       // reset first_time later
     }
     
-    if (n_streamfields ==0) {
+    if (n_streamfields == 0) {
       n_streamfields = us_in;
       if (n_streamfields>n_streamfieldlist) {
         fprintf(stderr, "error file asks for more streamfields than are listed (%u > %u)\n", n_streamfields, n_streamfieldlist); 
@@ -725,28 +746,6 @@ int main(int argc, char *argv[]) {
 
     // Handle the 1 Hz frame stuff.
     for (i_frame = 0; i_frame < STREAMFRAME_PER_SUPERFRAME; i_frame++) {
-      // write the slow data at 1 hz, even though it is only updated slower than that
-      // this is so we can get near-realtime updated data.
-      for (i_framefield=0; i_framefield<n_framefields; i_framefield++) {
-        switch (framefields[i_framefield]->type) {
-          case 'u':
-          case 's':
-            fieldsize = 2;
-            break;
-          case 'U':
-          case 'S':
-            fieldsize = 4;
-            break;
-          default:
-            break;
-        }
-        
-        n_wrote = write(fieldfp[i_framefield], fielddata[i_framefield], fieldsize);
-        if (n_wrote != fieldsize) {
-          fprintf(stderr, "\nWriting field data unsuccesful. Out of disk space?\n");
-        }
-      }
-
       // Read the >= 1 Hz streamed data.
       for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
         BlockingRead(streamList[i_streamfield].samples_per_frame*streamList[i_streamfield].bits/8, &fs);
@@ -756,61 +755,87 @@ int main(int argc, char *argv[]) {
             // FIXME: deal with 4 bit fields.  There should always be a pair of them
           } else if (streamList[i_streamfield].bits == 8) {
             pop(&fs, (char *)&c_in, 1);
-            ll_in  = (int)c_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
+            ll_in[i_streamfield][i_samp]  = (int)c_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
             if (streamList[i_streamfield].doDifferentiate) { // undiferentiate...
-              ll_in = stream_offsets[i_streamfield];
+              ll_in[i_streamfield][i_samp] = stream_offsets[i_streamfield];
               stream_offsets[i_streamfield]+=(int)c_in * stream_gains[i_streamfield];
             }
           } else if (streamList[i_streamfield].bits == 16) {
             pop(&fs, (char *)&s_in, 2);
-            ll_in = (int)s_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
+            ll_in[i_streamfield][i_samp] = (int)s_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
             if (streamList[i_streamfield].doDifferentiate) { // undiferentiate...
-              ll_in = stream_offsets[i_streamfield];
+              ll_in[i_streamfield][i_samp] = stream_offsets[i_streamfield];
               stream_offsets[i_streamfield]+=(int)s_in * stream_gains[i_streamfield];
             }
           } else {
             fprintf(stderr,"Unsupported stream resolution... (a definite bug!)\n");
           }
-          switch (streamfields[i_streamfield]->type) {
-            case 'u':
-              us_in = ll_in;
-              n_wrote = write(streamfp[i_streamfield], (char *)(&us_in), 2);
-              if (n_wrote != 2) {
-                fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
-              }
-              break;
-            case 's': 
-              s_in = ll_in;
-              n_wrote = write(streamfp[i_streamfield], (char *)(&s_in), 2);
-              if (n_wrote != 2) {
-                fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
-              }
-              break;
-            case 'U':
-              u_in = ll_in;
-              n_wrote = write(streamfp[i_streamfield], (char *)(&u_in), 4);
-              if (n_wrote != 4) {
-                fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
-              }
-              break;
-            case 'S':
-              i_in = ll_in;
-              n_wrote = write(streamfp[i_streamfield], (char *)(&i_in), 4);
-              if (n_wrote != 4) {
-                fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
-              }
-              break;
-          }          
-        } // next samp
-      } // next streamfield
-      // read frame sync byte
+        }
+      }
+            // read frame sync byte
       BlockingRead(sizeof(char), &fs);
       pop(&fs, (char *)(&uc_in), sizeof(char));
       if (uc_in != 0xa5) {
         printf("bad sync byte: must be lost %x\n", (int)uc_in);
         i_frame = STREAMFRAME_PER_SUPERFRAME;
         break;
-      }
+      } else {
+        // write the slow data at 1 hz, even though it is only updated slower than that
+        // this is so we can get near-realtime updated data.
+        for (i_framefield=0; i_framefield<n_framefields; i_framefield++) {
+          switch (framefields[i_framefield]->type) {
+            case 'u':
+            case 's':
+              fieldsize = 2;
+              break;
+            case 'U':
+            case 'S':
+              fieldsize = 4;
+              break;
+            default:
+              break;
+          }
+          
+          n_wrote = write(fieldfp[i_framefield], fielddata[i_framefield], fieldsize);
+          if (n_wrote != fieldsize) {
+            fprintf(stderr, "\nWriting field data unsuccesful. Out of disk space?\n");
+          }
+        }
+        for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
+          for (i_samp = 0; i_samp<streamList[i_streamfield].samples_per_frame; i_samp++) {
+            switch (streamfields[i_streamfield]->type) {
+              case 'u':
+                us_in = ll_in[i_streamfield][i_samp];
+                n_wrote = write(streamfp[i_streamfield], (char *)(&us_in), 2);
+                if (n_wrote != 2) {
+                  fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
+                }
+                break;
+              case 's': 
+                s_in = ll_in[i_streamfield][i_samp];
+                n_wrote = write(streamfp[i_streamfield], (char *)(&s_in), 2);
+                if (n_wrote != 2) {
+                  fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
+                }
+                break;
+              case 'U':
+                u_in = ll_in[i_streamfield][i_samp];
+                n_wrote = write(streamfp[i_streamfield], (char *)(&u_in), 4);
+                if (n_wrote != 4) {
+                  fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
+                }
+                break;
+              case 'S':
+                i_in = ll_in[i_streamfield][i_samp];
+                n_wrote = write(streamfp[i_streamfield], (char *)(&i_in), 4);
+                if (n_wrote != 4) {
+                  fprintf(stderr, "Writing field data unsuccesful. Out of disk space?\n");
+                }
+                break;
+            }
+          } // next samp
+        } // next streamfield
+      } // endif
     } // next frame
   } // end while 1
 
