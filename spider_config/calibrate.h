@@ -166,8 +166,8 @@ extern "C" {
 #define MAGZ_M (-1/1290.0)
 #define MAGZ_B (32768.0)
 
-#define ENC1_OFFSET (-173.353124) // encoder 1 to bore-sight offset angle
-#define ENC2_OFFSET 48.302678  // encoder 2 to bore-sight offset angle
+#define ENC1_OFFSET (-10.5104142824445) // encoder 1 to bore-sight offset angle
+#define ENC2_OFFSET 284.4660105287251  // encoder 2 to bore-sight offset angle
 #define GYBOX_OFFSET -69.8  // gyro box to bore-sight offset angle (fixed)
 
 
