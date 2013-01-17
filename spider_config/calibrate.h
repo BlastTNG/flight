@@ -81,7 +81,7 @@ extern "C" {
  * This is the offset to the true lock positions. This number is
  * relative to the elevation encoder reading, NOT true elevation
  */
-#define LOCK_OFFSET (0.0) /* TODO update this */
+#define LOCK_OFFSET (-0.1606) /* TODO update this */
 #define LOCK_POSITION (40.0 + LOCK_OFFSET)
 
 /* Thermal model numbers, from EP */
