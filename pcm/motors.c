@@ -39,7 +39,7 @@
 
 // TODO: Revise these el limits for Spider flight:
 #define MIN_EL 15 
-#define MAX_EL 50
+#define MAX_EL 45
 
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
@@ -67,8 +67,7 @@
 
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
-#define TOLERANCE 0.05    // max acceptable el pointing error (deg)
-#define TWIST_TOL 0.01    // max acceptable twist error (deg)
+#define TOLERANCE 0.02    // max acceptable el pointing error (deg)
 
 /* variables storing scan region (relative to defined quad) */
 static int scan_region = 0;
@@ -263,55 +262,34 @@ double calcVSerRW(void)
 
     NEW in Spider!
 *************************************************************************/
-static double SetVElev(double g_com, double g_diff, double dy, double err, 
+static double SetVElev(double g_com, double dy,
                        double v_last, double max_dv, double enc) 
 {
 
-  double v, v_com, v_diff, v_max;
+  double v, v_max;
 
   v_max = fabs( ((double)MAX_STEP*IN_TO_MM) / 
 	     ((double)CM_PULSES*EL_GEAR_RATIO*ROT_PER_INCH*dxdtheta(enc)) );
   
   if (dy >= 0) {
-    v_com = g_com*sqrt(dy);
+    v = g_com*sqrt(dy);
     
-    if (v_com > v_max) {
-      v_com = v_max;
+    if (v > v_max) {
+      v = v_max;
     }
-    
-    v_diff = -g_diff*err;
-    
-    if (v_diff > v_max) {
-      v_diff = v_max;
-    } else if (v_diff < -v_max) {
-      v_diff = -v_max;
-    }
-    
-    v = v_com + v_diff;
   
   } else {
-    v_com = -g_com*sqrt(-dy);
+    v = -g_com*sqrt(-dy);
     
-    if (v_com < -v_max) {
-      v_com = -v_max;
+    if (v < -v_max) {
+      v = -v_max;
     } 
-    
-    v_diff = -g_diff*err;
-    
-    if (v_diff > v_max) {
-      v_diff = v_max;
-    } else if (v_diff < -v_max) {
-      v_diff = -v_max;
-    }
-    
-    v = v_com + v_diff;
     
   }
 /* don't increase/decrease request by more than max_dv: */
   v = ((v - v_last) > max_dv) ? (v_last + max_dv) : v;
   v = ((v - v_last) < -max_dv) ? (v_last - max_dv) : v;    
 
-  //bprintf(info,"v: %g g_diff: %g dy: %g err: %g", v, g_diff, dy, err);
   return v;
 
 }
@@ -332,91 +310,102 @@ static void GetVElev(double* v_P, double* v_S)
 
 /* various dynamical variables */
   double enc_port, enc_strbrd;
-  static double enc_port_last, enc_strbrd_last;
   double el_dest;
-  double dy; 
+  double dy;
 
-  double err;           // error between encoder position and mean position
-                        // (positive for left, negative for right) 
-
-  //double err_max = 0.005; // maximum permissible difference between left and
-                          // right encoders.
   double max_dv;
   double g_com;
-  double g_diff=0.0;
-  double v_P_max;
-  double v_S_max;
+
+  int isStopped = 1;
+  int isTwist = 0;
 
 /* requested velocities (prev. values) */
   static double v_S_last = 0.0;
   static double v_P_last = 0.0;  
   static double el_dest_last = 0.0;
   
-  static double del_strbrd_targ = 0.0;
-  static double enc_strbrd_ref = 0.0;
-  double del_strbrd;
   static int on_delay = 0;
   static double el_dest_this = -1.0;
-
-//  static int motors_off = 1;
   static int since_arrival = 0;
-  
+  static int count_p = 0;
+  static int count_s = 0;
 
-   if (el_dest_this < 15.0) {
-     el_dest_this = ACSData.enc_mean_el;
-   }
+  if (CommandData.pointing_mode.el_rel_move) {
+    if (CommandData.pointing_mode.d_el_p<0) {
+      CommandData.pointing_mode.v_el_p = -fabs(CommandData.pointing_mode.v_el_p);
+    } else {
+      CommandData.pointing_mode.v_el_p = fabs(CommandData.pointing_mode.v_el_p);
+    }
+    if (CommandData.pointing_mode.d_el_s<0) {
+      CommandData.pointing_mode.v_el_s = -fabs(CommandData.pointing_mode.v_el_s);
+    } else {
+      CommandData.pointing_mode.v_el_s = fabs(CommandData.pointing_mode.v_el_s);
+    }
 
+    count_p = fabs(CommandData.pointing_mode.d_el_p / CommandData.pointing_mode.v_el_p);  
+    count_s = fabs(CommandData.pointing_mode.d_el_s / CommandData.pointing_mode.v_el_s);  
+    count_p *= ACSData.bbc_rate;
+    count_s *= ACSData.bbc_rate;
+    CommandData.pointing_mode.el_rel_move = 0;
+  }
 
+  if (el_dest_this < 15.0) {
+    el_dest_this = ACSData.enc_mean_el;
+  }
+
+  /* check limits (shouldn't be possible to command out of bounds el in cow
+   * though) */
   if (axes_mode.el_dest > MAX_EL) {
-    
-    el_dest = axes_mode.el_dest = MAX_EL;
-    
+    el_dest = MAX_EL;
   } else if (axes_mode.el_dest < MIN_EL) {
-    
-    el_dest = axes_mode.el_dest = MIN_EL;
-    
+    el_dest = MIN_EL;
   } else {
-    
     el_dest = axes_mode.el_dest;
-    
   }
 
   /* port = sum/2 + diff/2 */
   enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
   enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
 
-  if ( !(CommandData.power.elmot_auto) || (on_delay >= 35) ) {
+  if ( !(CommandData.power.elmot_auto))  on_delay = 35; 
+  
+  if ((on_delay >= 35)) {
     el_dest_this = el_dest;
-    g_diff = CommandData.ele_gain.diff;
   }
 
   dy = el_dest_this - ACSData.enc_mean_el;
 
-  err = -(ACSData.enc_diff_el)/2.0;
-  err += CommandData.ele_gain.twist*0.5; // user-settable fake offset 
-                                     // to test the twist correction
+  g_com = CommandData.ele_gain.com * (double)(fabs(dy)>TOLERANCE); 
+  max_dv = 1.05 * CommandData.ele_gain.com*CommandData.ele_gain.com 
+	   * (1.0/(2.0*ACSData.bbc_rate));  // 5% higher than deceleration...
 
+  *v_P = SetVElev(g_com, dy, v_P_last, max_dv, enc_port);
+  *v_S = SetVElev(g_com, dy, v_S_last, max_dv, enc_strbrd);
 
-  g_com = CommandData.ele_gain.com * (double)(fabs(dy)>TOLERANCE);
-  max_dv = 1.05 * CommandData.ele_gain.com*CommandData.ele_gain.com * (1.0/(2.0*ACSData.bbc_rate));  // 5% higher than deceleration...
+  /* set both speeds equal to the minimum of the two
+   * TODO: this is clumsy */
+  *v_S = (*v_S < *v_P) ? *v_S : *v_P;
+  *v_P = *v_S;
 
-  g_diff *= (double)(fabs(err)>TWIST_TOL);
+  if ( fabs(el_dest - ACSData.enc_mean_el ) < TOLERANCE ) { 
+    since_arrival++;
+    isStopped = (since_arrival >= 500);
+  } else if ( fabs(el_dest-el_dest_last) > TOLERANCE ) {
+    since_arrival = 0;
+    isStopped = 0;
+  }
+  isTwist = ((count_p>0) || (count_s>0));
 
-  *v_P = SetVElev(g_com, -g_diff, dy, err, v_P_last, max_dv, enc_port);
-  *v_S = SetVElev(g_com, g_diff, dy, err, v_S_last, max_dv, enc_strbrd);
- 
-  if ( !(CommandData.disable_el) && CommandData.power.elmot_auto ) {
-    if ( fabs(el_dest - ACSData.enc_mean_el) < TOLERANCE ) {
-      since_arrival++;
-      if (since_arrival >= 500) {
-	if (CommandData.power.elmot_is_on) {      
+  
+  if ( CommandData.power.elmot_auto ) {
+    if (isStopped && !isTwist) {
+      if (CommandData.power.elmot_is_on) {      
           CommandData.power.elmot.set_count = 0;
           CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
-	}
-        on_delay = 0;
       }
-    } else if ( fabs(el_dest-el_dest_last) > TOLERANCE ) {
-      since_arrival = 0;
+      on_delay = 0;
+    } 
+    if ((!CommandData.disable_el) && (!isStopped || isTwist)) {
       on_delay++;
       if ( !(CommandData.power.elmot_is_on) ) {
         CommandData.power.elmot.rst_count = 0;
@@ -424,54 +413,24 @@ static void GetVElev(double* v_P, double* v_S)
       }
     }
   }
-  
+
+  if (isTwist && isStopped && on_delay>=35) {
+    if (count_p>0) {
+      *v_P = CommandData.pointing_mode.v_el_p;
+      count_p--;
+    }
+    if (count_s>0) {
+      *v_S = CommandData.pointing_mode.v_el_s;
+      count_s--;
+    }
+  }
+
   el_dest_last = el_dest_this;
   
-  /* don't command a velocity greater than limit from max pulse rate */
-
-  v_P_max = fabs( ((double)MAX_STEP*IN_TO_MM) / 
-	    ((double)CM_PULSES*EL_GEAR_RATIO*ROT_PER_INCH*dxdtheta(enc_port)) );
- 
-  v_S_max = fabs( ((double)MAX_STEP*IN_TO_MM) / 
-	  ((double)CM_PULSES*EL_GEAR_RATIO*ROT_PER_INCH*dxdtheta(enc_strbrd)) );
-
-  if (*v_P > v_P_max) {
-    *v_P = v_P_max;
-  } else if (*v_P < -v_P_max) {
-    *v_P = -v_P_max;
-  }
-  if (*v_S > v_S_max) {
-    *v_S = v_S_max;
-  } else if (*v_S < -v_S_max) {
-    *v_S = -v_S_max;
-  }
-
-  /* error checking: if one motor is stalled, stop the other one */
-  if (enc_strbrd_ref == 0.0) {
-    enc_strbrd_ref = enc_strbrd;
-  }
-  
-  del_strbrd_targ += *v_S / ACSData.bbc_rate;
-  del_strbrd = enc_strbrd - enc_strbrd_ref;
-  if (fabs(del_strbrd_targ)>0.05) {
-    if (fabs(del_strbrd)<0.025) {
-      //bprintf(info, "strbrd stall detected: %g %g %g", del_strbrd_targ, del_strbrd, *v_S);
-      *v_P = *v_S = 0.0;
-      // FIXME: handle the stall here...
-    } else {        
-      //bprintf(info, "strbrd no stall : %g %g", del_strbrd_targ, del_strbrd);
-    }
-    del_strbrd_targ = 0;
-    enc_strbrd_ref = enc_strbrd;
-  }
-   
-  enc_port_last = enc_port;
-  enc_strbrd_last = enc_strbrd;
-
   v_P_last = *v_P; 
   v_S_last = *v_S; 
 
-}
+} 
 
 /************************************************************************/
 /*                                                                      */
@@ -763,7 +722,6 @@ void WriteMot(int TxIndex)
 {
   static struct NiosStruct* velReqAzAddr;
   static struct NiosStruct* gComElAddr;
-  static struct NiosStruct* gDiffElAddr;
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
   static struct NiosStruct* gPtAzAddr;
@@ -787,7 +745,7 @@ void WriteMot(int TxIndex)
   static int wait = 100; /* wait 20 frames before controlling. */
 
   int v_az, v_piv;
-  double elGainCom, elGainDiff;
+  double elGainCom;
   double v_el_P = 0.0; // port
   double v_el_S = 0.0; // starboard
 
@@ -812,7 +770,6 @@ void WriteMot(int TxIndex)
     velReqAzAddr = GetNiosAddr("vel_req_az");
     dacPivAddr = GetNiosAddr("dac_piv");
     gComElAddr = GetNiosAddr("g_com_el");
-    gDiffElAddr = GetNiosAddr("g_diff_el");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
     gPtAzAddr = GetNiosAddr("g_pt_az");
@@ -897,13 +854,10 @@ void WriteMot(int TxIndex)
   if (TxIndex == 0) {   //only write at slow frame rate
   
     elGainCom = CommandData.ele_gain.com;
-    elGainDiff = CommandData.ele_gain.diff;	
 
     /*common-mode gain term for el motors*/
     WriteCalData(gComElAddr, elGainCom, NIOS_QUEUE);
 
-    /*differential gain term for el motors */
-    WriteCalData(gDiffElAddr, elGainDiff, NIOS_QUEUE);
     
   }
 

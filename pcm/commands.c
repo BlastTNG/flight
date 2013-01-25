@@ -1081,16 +1081,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       /********** Pointing Motor Gains *******/
     case el_gain:  /* ele gains */
       CommandData.ele_gain.com = rvalues[0];
-      CommandData.ele_gain.diff = rvalues[1];
-      CommandData.ele_gain.twist = rvalues[2];
-      /*CommandData.ele_gain.P = ivalues[0];
-      CommandData.ele_gain.I = ivalues[1];
-      CommandData.ele_gain.PT = ivalues[2];*/
       break;
    case el_pulse: /* manual el motor pulses */
       CommandData.ele_gain.pulse_port = rvalues[0];
       CommandData.ele_gain.pulse_starboard = rvalues[1];
       CommandData.ele_gain.manual_pulses = 1;
+      break;
+   case el_rel_move: /* el relative move (separate for each side) */
+      CommandData.pointing_mode.d_el_p = rvalues[0];
+      CommandData.pointing_mode.d_el_s = rvalues[1];
+      CommandData.pointing_mode.v_el_p = rvalues[2];
+      CommandData.pointing_mode.v_el_p = rvalues[3];
+      CommandData.pointing_mode.el_rel_move = 1;
       break;
     case az_gain:  /* az gains */
       CommandData.azi_gain.P = ivalues[0];
@@ -1989,6 +1991,10 @@ void InitCommandData()
   CommandData.pointing_mode.Y = 0;
   CommandData.pointing_mode.vaz = 0.0;
   CommandData.pointing_mode.del = 0.0;
+  CommandData.pointing_mode.d_el_p = 0.0;
+  CommandData.pointing_mode.d_el_s = 0.0;
+  CommandData.pointing_mode.v_el_p = 0.0;
+  CommandData.pointing_mode.v_el_s = 0.0;
   CommandData.pointing_mode.w = 0;
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
@@ -2002,12 +2008,7 @@ void InitCommandData()
   CommandData.az_accel = 0.1; 
   CommandData.az_accel_max = 1.0;
 
-  //CommandData.ele_gain.I = 5000; /* was 8000 */
-  //CommandData.ele_gain.P = 5000; /* was 1200 */
-  //CommandData.ele_gain.PT = 3000;
-
   CommandData.ele_gain.com = 0;
-  CommandData.ele_gain.diff = 0;
   CommandData.ele_gain.manual_pulses = 0;
   CommandData.ele_gain.pulse_port = 0.0;
   CommandData.ele_gain.pulse_starboard = 0.0;
