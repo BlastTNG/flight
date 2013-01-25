@@ -331,7 +331,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(az_el_goto), "goto point in azimuth and elevation", GR_POINT, 2,
     {
       {"Azimuth (deg)",     -360, 360, 'f', "AZ"},
-      {"Elevation (deg)", 15.0,  50.0, 'f', "EL"}
+      {"Elevation (deg)", 15.0,  45.0, 'f', "EL"}
     }
   },
   {COMMAND(az_el_trim), "trim sensors to azimuth and elevation", GR_TRIM, 2,
@@ -418,24 +418,24 @@ struct mcom mcommands[N_MCOMMANDS] = {
       
     } 
   },
-  /*{COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
+  {COMMAND(el_gain), "elevation motor gain", GR_GAIN, 1,
     {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_el"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_el"},
-      {"Pointing Gain",     0, MAX_15BIT, 'i', "g_pt_el"}
-    }
-  },*/
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
-    {
-      {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "G_COM_EL"},
-      {"Differential Gain (Hz)",         -1.0, 1.0, 'f', "G_DIFF_EL"},
-      {"Elevation Encoder Twist (deg)",     -2.0, 2.0, 'f', "NONE"}
+      {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "G_COM_EL"}
     }
   },
   {COMMAND(el_pulse), "manually set el motor pulse rates", GR_GAIN, 2,
     {
       {"port motor pulse rate (Hz)", -10000.0, 10000.0, 'f', "STEP_1_EL"},
       {"starboard motor pulse rate (Hz)", -10000.0, 10000.0, 'f', "STEP_2_EL"}
+    }
+  },
+  {COMMAND(el_rel_move), "El relative move, separate for each side", 
+   GR_GAIN | CONFIRM, 4,
+    {
+      {"port distance (deg)", -1.0, 1.0, 'f', "NONE"},
+      {"starboard distance (deg)", -1.0, 1.0, 'f', "NONE"},
+      {"port speed (deg/s)", -0.1, 0.1, 'f', "NONE"},
+      {"starboard speed (deg/s)", -0.1, 0.1, 'f', "NONE"}
     }
   },
 

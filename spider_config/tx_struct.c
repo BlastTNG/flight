@@ -419,9 +419,8 @@ struct ChannelStruct SlowChannels[] = {
   {"v_sft_valve_hk", 'r', DIOD_A1, 49,         CAL16(1.0, 0.0),       'u', U_V_V},
  
   /* LOOP1 0-7 are wide */
-  /* LOOP1 12-13 are wide */
+  /* LOOP1 9, 12-13 are wide */
   {"g_com_el",     'w', LOOP1,  8,                3.0/65536.0,     0.0, 'u', U_NONE},
-  {"g_diff_el",    'w', LOOP1,  9,                1.0/65536.0,     0.0, 'u', U_NONE},
   {"foc_res_thegood", 'w', LOOP1, 17,             1.0,             0.0, 'u', U_NONE},
   {"period_cal",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status

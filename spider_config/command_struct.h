@@ -118,6 +118,11 @@ struct PointingModeStruct {
   double Y;
   double vaz;
   double del;
+  double d_el_p; // port distance for rel move
+  double d_el_s; // starboard distance for rel move
+  double v_el_p; // port speed for rel move
+  double v_el_s; // starboard speed for rel move
+  int el_rel_move; // 1 if rel move is commanded
   double w;
   double h;
   time_t t;
@@ -229,11 +234,9 @@ struct CommandDataStruct {
 
   struct {
     double com;
-    double diff;
     double pulse_port;
     double pulse_starboard;
     int manual_pulses;
-    double twist;
   } ele_gain; 
  
   struct GainStruct azi_gain;
