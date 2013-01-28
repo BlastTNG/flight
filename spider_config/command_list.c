@@ -430,12 +430,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(el_rel_move), "El relative move, separate for each side", 
-   GR_GAIN | CONFIRM, 4,
+   GR_POINT, 4,
     {
       {"port distance (deg)", -1.0, 1.0, 'f', "NONE"},
       {"starboard distance (deg)", -1.0, 1.0, 'f', "NONE"},
-      {"port speed (deg/s)", -0.1, 0.1, 'f', "NONE"},
-      {"starboard speed (deg/s)", -0.1, 0.1, 'f', "NONE"}
+      {"port speed (deg/s)", 0.0, 0.2, 'f', "NONE"},
+      {"starboard speed (deg/s)", 0.0, 0.2, 'f', "NONE"}
     }
   },
 

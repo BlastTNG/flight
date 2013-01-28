@@ -32,6 +32,7 @@
 #define AXIS_POSITION 1
 #define AXIS_LOCK     2
 
+/* az pointing modes */
 #define P_AZEL_GOTO  1
 #define P_AZ_SCAN    2
 #define P_DRIFT      3
@@ -39,6 +40,11 @@
 #define P_LOCK       5
 #define P_SPIDER     6
 #define P_SINE       7
+
+/* el pointing modes */
+#define P_EL_NONE    0
+#define P_EL_GOTO    1
+#define P_EL_RELMOVE 2
 
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
@@ -114,6 +120,7 @@ struct PivGainStruct {
 struct PointingModeStruct {
   int nw; /* used for gy-offset veto during slews */
   int mode;
+  int el_mode;
   double X;
   double Y;
   double vaz;
@@ -122,7 +129,7 @@ struct PointingModeStruct {
   double d_el_s; // starboard distance for rel move
   double v_el_p; // port speed for rel move
   double v_el_s; // starboard speed for rel move
-  int el_rel_move; // 1 if rel move is commanded
+  int el_rel_move; // 1 if new el rel move command sent
   double w;
   double h;
   time_t t;
