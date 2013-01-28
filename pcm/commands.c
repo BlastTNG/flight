@@ -1091,7 +1091,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.d_el_p = rvalues[0];
       CommandData.pointing_mode.d_el_s = rvalues[1];
       CommandData.pointing_mode.v_el_p = rvalues[2];
-      CommandData.pointing_mode.v_el_p = rvalues[3];
+      CommandData.pointing_mode.v_el_s = rvalues[3];
       CommandData.pointing_mode.el_rel_move = 1;
       break;
     case az_gain:  /* az gains */
@@ -1987,6 +1987,7 @@ void InitCommandData()
 
   CommandData.pointing_mode.nw = 0;
   CommandData.pointing_mode.mode = P_DRIFT;
+  CommandData.pointing_mode.el_mode = P_EL_NONE;
   CommandData.pointing_mode.X = 0;
   CommandData.pointing_mode.Y = 0;
   CommandData.pointing_mode.vaz = 0.0;
@@ -1995,6 +1996,7 @@ void InitCommandData()
   CommandData.pointing_mode.d_el_s = 0.0;
   CommandData.pointing_mode.v_el_p = 0.0;
   CommandData.pointing_mode.v_el_s = 0.0;
+  CommandData.pointing_mode.el_rel_move = 0;
   CommandData.pointing_mode.w = 0;
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;

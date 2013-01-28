@@ -68,6 +68,7 @@
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
 #define TOLERANCE 0.02    // max acceptable el pointing error (deg)
+#define EL_REL_MIN 0.005  // min size of el relative move (= 1 count)
 
 /* variables storing scan region (relative to defined quad) */
 static int scan_region = 0;
@@ -255,6 +256,116 @@ double calcVSerRW(void)
   //return w;
 }
 
+static void SetVElevRelMove(double d, double v0, double* a, int* count1, int*
+		            count2, int* count3)
+{
+
+  /* Rel move has three phases:
+     t = 0 to t = t1: constant acceleration to crusing speed
+     t = t1 to t = t2: crusing at constant speed v0
+     t = t2 to t = t3: constant deceleration to a stop */
+	
+  double t1, t2, t3;
+  
+  *a = (v0*v0)/EL_REL_MIN;
+
+  t1 = v0/(*a);
+  
+  if ( (d < EL_REL_MIN) || (v0 < EL_REL_MIN) ) {
+    t1 = t2 = t3 = 0.0;
+  } else {
+
+    t2 = t1 + (d-EL_REL_MIN)/v0;
+
+    t3 = t2 + v0/(*a);
+  }
+
+  *count1 = t1*ACSData.bbc_rate;
+  *count2 = t2*ACSData.bbc_rate;
+  *count3 = t3*ACSData.bbc_rate;
+
+}
+
+static void GetVElevRelMove(double* v_P, double* v_S)
+{
+  static int count_p = 0;
+  static int count_s = 0;
+
+  int count_p_1, count_p_2, count_p_3;  
+  int count_s_1, count_s_2, count_s_3;  
+
+  double a_s, a_p;
+
+  SetVElevRelMove(fabs(CommandData.pointing_mode.d_el_p), 
+		  fabs(CommandData.pointing_mode.v_el_p), &a_p, &count_p_1, 
+		  &count_p_2, &count_p_3);
+  
+  SetVElevRelMove(fabs(CommandData.pointing_mode.d_el_s), 
+		  fabs(CommandData.pointing_mode.v_el_s), &a_s, &count_s_1, 
+		  &count_s_2, &count_s_3);
+
+  if (CommandData.pointing_mode.el_rel_move) {
+    count_p = count_p_3;
+    count_s = count_s_3;
+    CommandData.pointing_mode.el_rel_move = 0;
+  }
+ 
+  if (count_p > 0) { 
+    
+    if ( (count_p_3 - count_p) < count_p_1 ) {
+      if (CommandData.pointing_mode.d_el_p < 0) {
+        *v_P -= a_p/ACSData.bbc_rate;
+      } else {
+        *v_P += a_p/ACSData.bbc_rate;
+      }
+    } else if ( (count_p_3 - count_p) < count_p_2 ) {
+      if (CommandData.pointing_mode.d_el_p < 0) {
+        *v_P = -fabs(CommandData.pointing_mode.v_el_p); 
+      } else {
+        *v_P = fabs(CommandData.pointing_mode.v_el_p); 
+      }
+    } else if ( (count_p_3 - count_p) < count_p_3 ) {
+      if (CommandData.pointing_mode.d_el_p < 0) {
+        *v_P += a_p/ACSData.bbc_rate;
+      } else {
+        *v_P -= a_p/ACSData.bbc_rate;
+      }
+    } else {
+      *v_P = 0.0;
+    }
+    count_p--; 
+  }
+  if (count_s > 0) { 
+    
+    if ( (count_s_3 - count_s) < count_s_1 ) {
+      if (CommandData.pointing_mode.d_el_s < 0) {
+        *v_S -= a_s/ACSData.bbc_rate;
+      } else {
+        *v_S += a_s/ACSData.bbc_rate;
+      }
+    } else if ( (count_s_3 - count_s) < count_s_2 ) {
+      if (CommandData.pointing_mode.d_el_s < 0) {
+        *v_S = -fabs(CommandData.pointing_mode.v_el_s); 
+      } else {
+        *v_S = fabs(CommandData.pointing_mode.v_el_s); 
+      }
+    } else if ( (count_s_3 - count_s) < count_s_3 ) {
+      if (CommandData.pointing_mode.d_el_s < 0) {
+        *v_S += a_s/ACSData.bbc_rate;
+      } else {
+        *v_S -= a_s/ACSData.bbc_rate;
+      }
+    } else {
+      *v_S = 0.0;
+    }
+    count_s--; 
+  }
+
+  if ( (count_p == 0) && (count_s == 0) ) {
+    CommandData.pointing_mode.el_mode = P_EL_NONE;
+  }  
+}
+
 /*************************************************************************
 
     SetVElev: Set elevation drive velocity request using gain terms 
@@ -294,16 +405,8 @@ static double SetVElev(double g_com, double dy,
 
 }
 
-/************************************************************************/
-/*                                                                      */
-/*   GetVElev: get the current elevation velocity request, given current*/
-/*   pointing mode, etc..                                               */
-/*                                                                      */
-/************************************************************************/
-static void GetVElev(double* v_P, double* v_S)
+static void GetVElevGoto(double* v_P, double* v_S)
 {
-
-/* JAS -- complete rewrite of this function for Spider */
 
 // S = STARBOARD
 // P = PORT
@@ -317,41 +420,12 @@ static void GetVElev(double* v_P, double* v_S)
   double g_com;
 
   int isStopped = 1;
-  int isTwist = 0;
 
 /* requested velocities (prev. values) */
   static double v_S_last = 0.0;
   static double v_P_last = 0.0;  
-  static double el_dest_last = 0.0;
   
-  static int on_delay = 0;
-  static double el_dest_this = -1.0;
   static int since_arrival = 0;
-  static int count_p = 0;
-  static int count_s = 0;
-
-  if (CommandData.pointing_mode.el_rel_move) {
-    if (CommandData.pointing_mode.d_el_p<0) {
-      CommandData.pointing_mode.v_el_p = -fabs(CommandData.pointing_mode.v_el_p);
-    } else {
-      CommandData.pointing_mode.v_el_p = fabs(CommandData.pointing_mode.v_el_p);
-    }
-    if (CommandData.pointing_mode.d_el_s<0) {
-      CommandData.pointing_mode.v_el_s = -fabs(CommandData.pointing_mode.v_el_s);
-    } else {
-      CommandData.pointing_mode.v_el_s = fabs(CommandData.pointing_mode.v_el_s);
-    }
-
-    count_p = fabs(CommandData.pointing_mode.d_el_p / CommandData.pointing_mode.v_el_p);  
-    count_s = fabs(CommandData.pointing_mode.d_el_s / CommandData.pointing_mode.v_el_s);  
-    count_p *= ACSData.bbc_rate;
-    count_s *= ACSData.bbc_rate;
-    CommandData.pointing_mode.el_rel_move = 0;
-  }
-
-  if (el_dest_this < 15.0) {
-    el_dest_this = ACSData.enc_mean_el;
-  }
 
   /* check limits (shouldn't be possible to command out of bounds el in cow
    * though) */
@@ -366,14 +440,8 @@ static void GetVElev(double* v_P, double* v_S)
   /* port = sum/2 + diff/2 */
   enc_port = ACSData.enc_mean_el + ACSData.enc_diff_el/2.0;
   enc_strbrd = ACSData.enc_mean_el - ACSData.enc_diff_el/2.0;
-
-  if ( !(CommandData.power.elmot_auto))  on_delay = 35; 
   
-  if ((on_delay >= 35)) {
-    el_dest_this = el_dest;
-  }
-
-  dy = el_dest_this - ACSData.enc_mean_el;
+  dy = el_dest - ACSData.enc_mean_el;
 
   g_com = CommandData.ele_gain.com * (double)(fabs(dy)>TOLERANCE); 
   max_dv = 1.05 * CommandData.ele_gain.com*CommandData.ele_gain.com 
@@ -382,55 +450,68 @@ static void GetVElev(double* v_P, double* v_S)
   *v_P = SetVElev(g_com, dy, v_P_last, max_dv, enc_port);
   *v_S = SetVElev(g_com, dy, v_S_last, max_dv, enc_strbrd);
 
-  /* set both speeds equal to the minimum of the two
-   * TODO: this is clumsy */
+  /* set both speeds equal to the minimum of the two */
   *v_S = (*v_S < *v_P) ? *v_S : *v_P;
   *v_P = *v_S;
 
   if ( fabs(el_dest - ACSData.enc_mean_el ) < TOLERANCE ) { 
     since_arrival++;
     isStopped = (since_arrival >= 500);
-  } else if ( fabs(el_dest-el_dest_last) > TOLERANCE ) {
+  }  else {
     since_arrival = 0;
     isStopped = 0;
   }
-  isTwist = ((count_p>0) || (count_s>0));
 
-  
-  if ( CommandData.power.elmot_auto ) {
-    if (isStopped && !isTwist) {
-      if (CommandData.power.elmot_is_on) {      
-          CommandData.power.elmot.set_count = 0;
-          CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
-      }
-      on_delay = 0;
-    } 
-    if ((!CommandData.disable_el) && (!isStopped || isTwist)) {
-      on_delay++;
-      if ( !(CommandData.power.elmot_is_on) ) {
-        CommandData.power.elmot.rst_count = 0;
-        CommandData.power.elmot.set_count = LATCH_PULSE_LEN;  
-      }
-    }
+  if (isStopped) { // stop servoing
+    CommandData.pointing_mode.el_mode = P_EL_NONE;
   }
 
-  if (isTwist && isStopped && on_delay>=35) {
-    if (count_p>0) {
-      *v_P = CommandData.pointing_mode.v_el_p;
-      count_p--;
-    }
-    if (count_s>0) {
-      *v_S = CommandData.pointing_mode.v_el_s;
-      count_s--;
-    }
-  }
-
-  el_dest_last = el_dest_this;
-  
   v_P_last = *v_P; 
   v_S_last = *v_S; 
 
 } 
+
+/************************************************************************/
+/*                                                                      */
+/*   GetVElev: get the current elevation velocity request, given current*/
+/*   pointing mode, etc..                                               */
+/*                                                                      */
+/************************************************************************/
+static void GetVElev(double* v_P, double* v_S)
+{
+  static int on_delay = 0;
+
+  if ( !(CommandData.power.elmot_auto) ) {
+    on_delay = 35; 
+  }
+  
+  // if !P_EL_NONE and auto and off
+  //   Turn On
+  if ( (CommandData.pointing_mode.el_mode != P_EL_NONE) 
+      && (CommandData.power.elmot_auto) ) {
+    on_delay++;
+    if ( !(CommandData.power.elmot_is_on) ) { 
+      CommandData.power.elmot.rst_count = 0;
+      CommandData.power.elmot.set_count = LATCH_PULSE_LEN;  
+    }
+  }
+             
+  if ( (CommandData.pointing_mode.el_mode == P_EL_GOTO) && (on_delay >= 35) ) {
+    GetVElevGoto(v_P, v_S);
+  } else if ( (CommandData.pointing_mode.el_mode == P_EL_RELMOVE) && (on_delay >= 35) ) {
+    GetVElevRelMove(v_P, v_S);
+  } else {
+    *v_P = *v_S = 0.0;
+    // if we are auto and on and if P_EL_NONE
+    //   turn off
+    if ( (CommandData.power.elmot_is_on) && (CommandData.power.elmot_auto) 
+        && (CommandData.pointing_mode.el_mode == P_EL_NONE) ) {      
+      CommandData.power.elmot.set_count = 0;
+      CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+      on_delay = 0; // reset for the next time we turn on
+    }
+  }
+}
 
 /************************************************************************/
 /*                                                                      */
