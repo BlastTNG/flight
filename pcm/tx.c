@@ -363,9 +363,9 @@ void SetGyroMask (void) {
 /* in each superframe.                                           */
 /*****************************************************************/
 //list node numbers for sync, which may have gaps
-#define NUM_SYNC 19
-const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,6,8,9,10,11,12,13,14,\
-			15,16,17,18,19};
+#define NUM_SYNC 20
+const unsigned short sync_nums[NUM_SYNC] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,\
+  14,15,16,17,18,19};
 #define REBOOT_TIMEOUT 50 /* 10 sec -- in 5Hz Frames */
 static void SyncADC (void)
 {
