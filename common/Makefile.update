@@ -3,7 +3,7 @@
 #
 
 THISREPO=$(shell basename `pwd`)
-up update ci commit:
+up update ci commit di diff st status:
 	( cd .. && svn $@ $(THISREPO) $(REMOTEPROJ) )
 
-.PHONY: up update ci commit
+.PHONY: up update ci commit di diff st status
