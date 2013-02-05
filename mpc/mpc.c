@@ -4,7 +4,7 @@
 #define $Rev (0?0 /* eat a : here */
 #define $    )
 
-const static inline int ProtoRev(void) { return $Rev: 6019 $; };
+const static inline int ProtoRev(void) { return $Rev$; };
 
 #undef $Rev
 #undef $
