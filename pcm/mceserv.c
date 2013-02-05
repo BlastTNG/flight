@@ -1,7 +1,28 @@
 /* mceserv: the MCE flight computer network server
  *
- * lorem ipsum dolor sit GPL!
+ * Copyright (c) 2012-2013, D. V. Wiebe
+ * All rights reserved.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+
+ * - Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ * - Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ *
+ * This software is provided by the copyright holders and contributors "as is"
+ * and any express or implied warranties, including, but not limited to, the
+ * implied warranties of merchantability and fitness for a particular purpose
+ * are disclaimed. In no event shall the copyright holder or contributors be
+ * liable for any direct, indirect, incidental, special, exemplary, or
+ * consequential damages (including, but not limited to, procurement of
+ * substitute goods or services; loss of use, data, or profits; or business
+ * interruption) however caused and on any theory of liability, whether in
+ * contract, strict liability, or tort (including negligence or otherwise)
+ * arising in any way out of the use of this software, even if advised of the
+ * possibility of such damage.
  */
 #include <unistd.h>
 #include <sys/types.h>
@@ -32,11 +53,21 @@ const static inline int ProtoRev(void) { return $Rev$; };
 #define CLI_MPC1 1
 #define CLI_MPC2 2
 #define CLI_MPC3 3
-#define CLI_MAC  4
-#define CLI_MON  5
-static const char *cli_name[] = {NULL, "MPC1", "MPC2", "MPC3", "MAC", "MON"};
+#define CLI_MPC4 4
+#define CLI_MPC5 5
+#define CLI_MPC6 6
+#define CLI_MPC7 7
+#define CLI_MPC8 8
+#define CLI_MPC9 9
+#define CLI_MAC  10
+#define CLI_MON  11
+static const char *cli_name[] = {NULL,
+  "MPC1", "MPC2", "MPC3",
+  "MPC4", "MPC5", "MPC6",
+  "MPC7", "MPC8", "MPC9",
+  "MAC", "MON"};
 
-/* reverse lookup on an integer array */
+/* reverse lookup on an unsorted integer array */
 static inline int FindInt(int v, const int *a, size_t l)
 {
   size_t i;
@@ -240,8 +271,7 @@ RESET:
     /* handle incomming connections */
     if (fds[0].revents & POLLIN) {
       sprintf(buffer, "MCEserv %i\r\n", proto_rev);
-      const size_t len = strlen(buffer);
-      size_t done = 0;
+      size_t done = 0, len = strlen(buffer);
       struct pollfd new_fd;
 
       new_fd.fd = accept(fds[0].fd, (struct sockaddr *)&addr, &addr_len);
@@ -249,7 +279,7 @@ RESET:
       new_fd.revents = 0;
 
       /* wait for the client to become ready */
-      n = poll(&new_fd, 1, 10000);
+      n = poll(&new_fd, 1, 1000);
       if (n <= 0) {
         if (n < 0)
           berror(err, "poll on accept");
@@ -274,7 +304,7 @@ RESET:
       /* wait for the client to respond */
       new_fd.events = POLLIN;
       new_fd.revents = 0;
-      n = poll(&new_fd, 1, 10000);
+      n = poll(&new_fd, 1, 1000);
       if (n <= 0) {
         if (n < 0)
           berror(err, "poll on handshake");
@@ -286,7 +316,7 @@ RESET:
 
       /* validate the client */
       n = read(new_fd.fd, buffer, 1024);
-      if (n < 0) {
+      if (n <= 0) {
         bprintf(warning, "Dropping incognito client %s during handshake",
             inet_ntoa(addr.sin_addr));
         close(new_fd.fd);
@@ -301,15 +331,13 @@ RESET:
       /* parse the client response.  This should be:
        *    <client_spec> <hostname> <protovers>
        * where client_spec is one of:
-       *   MP1 - an MCC (they're indistinguishable to PCM)
-       *   MP2 - an MCC (they're indistinguishable to PCM)
-       *   MP3 - an MCC (they're indistinguishable to PCM)
+       *   MP# - an MCC (they're indistinguishable to PCM)
        *   MAC - the MAC
        *   MON - for any other client that wants to kibitz
        *
-       * A client is also allows to reply BAD PROTO here, if the server protocol
-       * version isn't liked.  Not much we can do about that, but we'll report
-       * it.
+       * A client is also allowed to reply BAD PROTO here, if the server
+       * protocol version isn't liked.  Not much we can do about that, but we'll
+       * report it.
        */
       if (strncmp(buffer, "BAD PROTO", 9) == 0) {
         bprintf(warning, "Client reset and dropped.  BAD PROTO from %s",
@@ -324,9 +352,8 @@ HANDSHAKE_FAIL:
         goto RESET;
       }
 
-      if (buffer[1] == 'P' && (buffer[2] == '1' /* a MCC */
-            || buffer[2] == '2' || buffer[2] == '3'))
-      {
+      if (buffer[1] == 'P' && (buffer[2] >= '1' && buffer[2] <= '9')) {
+        /* a(n) MCC */
         int rev = GetRev(buffer);
         if (rev < 0)
           goto HANDSHAKE_FAIL;
@@ -360,6 +387,32 @@ HANDSHAKE_FAIL:
       /* update record */
       fds[i].fd = new_fd.fd;
 
+      /* ACK */
+      new_fd.events = POLLOUT;
+      new_fd.revents = 0;
+      n = poll(&new_fd, 1, 10000);
+      if (n <= 0) {
+        if (n < 0)
+          berror(err, "poll on handshake");
+        bprintf(warning, "Dropping lame client %s after handshake",
+            inet_ntoa(addr.sin_addr));
+        close(new_fd.fd);
+        goto RESET;
+      }
+
+      strcpy(buffer, "OK\r\n");
+      len = 4;
+      done = 0;
+      while (done < len) {
+        n = write(new_fd.fd, buffer + done, len - done);
+        if (n < 0) {
+          bprintf(warning, "Dropping lame client %s after handshake",
+              inet_ntoa(addr.sin_addr));
+          close(new_fd.fd);
+          goto RESET;
+        }
+        done += n;
+      }
       bprintf(info, "Registered new client %s on %s", cli_name[n],
           inet_ntoa(addr.sin_addr));
 
