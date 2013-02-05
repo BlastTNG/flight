@@ -109,7 +109,7 @@ int MakeSock(void)
   return sock;
 }
 
-int OpenDataPort(int csock, int* dsock)
+int OpenDataPort(int csock, const struct sockaddr_in *rc_addr, int* dsock)
 {
   char buffer[2000];
   int n;
@@ -130,9 +130,10 @@ int OpenDataPort(int csock, int* dsock)
       *(ptr2++) = 0;
       *(strchr(ptr2, ' ')) = 0;
 
+      memcpy(&dp_addr, rc_addr, sizeof(dp_addr));
       dp_addr.sin_family = AF_INET;
       dp_addr.sin_port = htons(atoi(ptr2));
-      inet_aton(ptr1, &dp_addr.sin_addr);
+//      inet_aton(ptr1, &dp_addr.sin_addr);
       sleep(1);
 
       if ((n = connect(*dsock, (struct sockaddr*)&dp_addr, sizeof(dp_addr)))

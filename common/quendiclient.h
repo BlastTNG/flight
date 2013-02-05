@@ -22,5 +22,5 @@
 
 int GetServerResponse(int, char*);
 int MakeSock(void);
-int OpenDataPort(int, int*);
+int OpenDataPort(int, const struct sockaddr_in*, int*);
 const char* ResolveHost(const char*, struct sockaddr_in*, int forced);

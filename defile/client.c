@@ -117,7 +117,7 @@ int InitClient(char* new_filename)
         bprintf(fatal, "Unexpected response from server after IDEN: %i\n", n);
     }
 
-    if (OpenDataPort(rc.csock, &rc.dsock))
+    if (OpenDataPort(rc.csock, &rc.addr, &rc.dsock))
       return -1;
 
     strcpy(buffer, "QNOW\r\n");
@@ -199,7 +199,7 @@ int InitClient(char* new_filename)
   MakeAddressLookups(NULL);
   bprintf(info, "Frame size: %i bytes\n", DiskFrameSize);
 
-  if (OpenDataPort(rc.csock, &rc.dsock))
+  if (OpenDataPort(rc.csock, &rc.addr, &rc.dsock))
     return -1;
 
   return 0;
