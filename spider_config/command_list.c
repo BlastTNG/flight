@@ -566,12 +566,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(hwp_bias_on), "turn on bias for HWP encoders", GR_HWPR, 1,
     {
-      {"HWP (1- 6, 0=all)", 0, 6, 'd', "0"}
+      {"HWP (1- 6, 0=all)", 0, 6, 'i', "0"}
     }
   },
   {COMMAND(hwp_bias_off), "turn off bias for HWP encoders", GR_HWPR, 1,
     {
-      {"HWP (1- 6, 0=all)", 0, 6, 'd', "0"}
+      {"HWP (1- 6, 0=all)", 0, 6, 'i', "0"}
     }
   },
 
