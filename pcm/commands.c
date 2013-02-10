@@ -1891,6 +1891,7 @@ void InitCommandData()
   CommandData.hwp.caddr[1] = -1;
   CommandData.hwp.caddr[2] = -1;
   CommandData.hwp.mode = hwp_m_sleep;
+  CommandData.hwp.bias_mask = 0x0;
 
   CommandData.table.vel = 0.0;
   CommandData.table.pos = 90.0;
