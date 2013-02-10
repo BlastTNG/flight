@@ -120,6 +120,7 @@ void StoreHWPBus(void)
   static struct NiosStruct* iMoveHwpAddr;
   static struct NiosStruct* statusHwpAddr;
   static struct NiosStruct* posHwpAddr[NHWP];
+  static struct NiosStruct* hwpBiasAddr;
   //TODO change DSP code so that hwp phase requires only one channel
   static struct NiosStruct* phaseHwpAddr[25];
   double degrees;
@@ -130,6 +131,7 @@ void StoreHWPBus(void)
     velHwpAddr = GetNiosAddr("vel_hwp");
     iMoveHwpAddr = GetNiosAddr("i_move_hwp");
     statusHwpAddr = GetNiosAddr("status_hwp");
+    hwpBiasAddr = GetNiosAddr("hwp_bias");
     for (i=0; i<NHWP; i++) {
       char namebuf[100];
       sprintf(namebuf, "pos_%i_hwp", i+1);
@@ -141,7 +143,7 @@ void StoreHWPBus(void)
       phaseHwpAddr[i] = GetNiosAddr(namebuf);
     }
   }
-
+  WriteData(hwpBiasAddr, CommandData.hwp.bias_mask, NIOS_QUEUE);
   WriteCalData(velHwpAddr, CommandData.hwp.vel, NIOS_QUEUE);
   WriteCalData(iMoveHwpAddr, CommandData.hwp.move_i, NIOS_QUEUE);
   WriteData(statusHwpAddr, actuators_init, NIOS_QUEUE);

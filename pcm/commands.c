@@ -972,6 +972,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
+      CommandData.pointing_mode.el_mode = P_EL_GOTO;
       CommandData.pointing_mode.X = rvalues[0];  /* az */
       CommandData.pointing_mode.Y = rvalues[1];  /* el */
       CommandData.pointing_mode.vaz = 0.0;
@@ -1093,6 +1094,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.v_el_p = rvalues[2];
       CommandData.pointing_mode.v_el_s = rvalues[3];
       CommandData.pointing_mode.el_rel_move = 1;
+      CommandData.pointing_mode.el_mode = P_EL_RELMOVE;
       break;
     case az_gain:  /* az gains */
       CommandData.azi_gain.P = ivalues[0];
@@ -1199,6 +1201,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case hwp_halt:
       CommandData.hwp.who = ivalues[0] - 1;
       CommandData.hwp.mode = hwp_m_halt;
+      break;
+    case hwp_bias_off:
+      if (ivalues[0]) {
+        CommandData.hwp.bias_mask |= ( 0x01 << (ivalues[0]-1) );
+      } else {
+        CommandData.hwp.bias_mask |= 0x3f;
+      }
+      break;
+    case hwp_bias_on:
+      if (ivalues[0]) {
+        CommandData.hwp.bias_mask &= ~( 0x01 << (ivalues[0]-1) );
+      } else {
+        CommandData.hwp.bias_mask &= ~(0x3f);
+      }
       break;
     case hwp_general:
       CommandData.hwp.caddr[CommandData.hwp.cindex] = ivalues[0] - 1;
