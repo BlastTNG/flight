@@ -18,7 +18,7 @@
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
 #define N_SCOMMANDS 200        /* total number of single word cmds */
-#define N_MCOMMANDS 124        /* total number of multiword commands */
+#define N_MCOMMANDS 126        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -160,6 +160,7 @@ enum multiCommand {
   hk_sft_bottom_pulse, hk_t7_pulse,
   spider_scan,	     sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,        el_rel_move,
+  hwp_bias_on,        hwp_bias_off,
   /* start MCE block */
   mpc_test,
   /* end MCE block */

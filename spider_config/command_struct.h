@@ -1,4 +1,4 @@
-/* mcp: the BLAST master control program
+/* mfcp: the BLAST master control program
  *
  * This software is copyright (C) 2002-2010 University of Toronto
  *
@@ -441,6 +441,7 @@ struct CommandDataStruct {
     int cindex;
     int caddr[3];
     char command[3][CMD_STRING_LEN];
+    unsigned short int bias_mask;
   } hwp;
 
   struct {

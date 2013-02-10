@@ -375,6 +375,7 @@ struct ChannelStruct SlowChannels[] = {
 #endif
 
   {"ifpwr",         'w', HWP_D,  50,                1.0,             0.0, 'u', U_NONE},
+  {"hwp_bias",      'w', HWP_D,  54,                1.0,             0.0, 'u', U_NONE},
   //TODO replace these with one write
   {"phase_00_hwp",  'w', HWP_A1,  0,               I2DEG,            0.0, 'u',U_PH_DEG},
   {"phase_01_hwp",  'w', HWP_A1,  1,               I2DEG,            0.0, 'u',U_PH_DEG},

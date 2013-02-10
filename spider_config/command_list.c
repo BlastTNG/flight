@@ -564,6 +564,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"delta (degrees)", -720, 720, 'd', "0"}
     }
   },
+  {COMMAND(hwp_bias_on), "turn on bias for HWP encoders", GR_HWPR, 1,
+    {
+      {"HWP (1- 6, 0=all)", 0, 6, 'd', "0"}
+    }
+  },
+  {COMMAND(hwp_bias_off), "turn off bias for HWP encoders", GR_HWPR, 1,
+    {
+      {"HWP (1- 6, 0=all)", 0, 6, 'd', "0"}
+    }
+  },
 
   /* XY Stage */
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
