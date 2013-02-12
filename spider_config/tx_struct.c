@@ -677,7 +677,8 @@ struct ChannelStruct SlowChannels[] = {
   {"vel_ser_piv",  'w', LOOP7, 27,   2000.0/65536.0,         0.0, 's', U_V_DPS},
   {"vel_calc_piv", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
   {"g_v_req_az_piv",'w',LOOP7, 29,                 1.0,             0.0, 'u', U_NONE},
-  /* LOOP7 30-31 are unused */
+  {"az_raw_pss1",   'w',   LOOP7, 30,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"az_raw_pss2",   'w',   LOOP7, 31,              I2DEG,             0.0, 'u', U_P_DEG},
   {"drive_info_rw",'w', LOOP7, 32,                 1.0,             0.0, 'u', U_NONE},
   {"drive_err_cts_rw",'w', LOOP7, 33,              1.0,             0.0, 'u', U_NONE},
   {"drive_info_el",'w', LOOP7, 34,                 1.0,             0.0, 'u', U_NONE},
@@ -751,7 +752,8 @@ struct ChannelStruct SlowChannels[] = {
   {"snr_pss5",     'w',   LOOP8, 32,            1/1000.,             0.0, 'u', U_NONE},
   {"snr_pss6",     'w',   LOOP8, 33,            1/1000.,             0.0, 'u', U_NONE},
   {"accel_az",     'w',   LOOP8, 34,          2.0/65536,             0.0, 'u', U_NONE},
-  /* LOOP8 35-36 are unusued */
+  {"az_raw_pss3",   'w',   LOOP8, 35,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"az_raw_pss4",   'w',   LOOP8, 36,              I2DEG,             0.0, 'u', U_P_DEG},
 
   {"az_cov_dgps",   'w', LOOP8, 37,              I2DEG,             0.0, 'u', U_NONE},
   {"pitch_cov_dgps",'w', LOOP8, 38,              I2DEG,             0.0, 'u', U_NONE},
@@ -789,7 +791,14 @@ struct ChannelStruct SlowChannels[] = {
   {"pos_6_hwp",      'w', LOOP9,  6,              I2DEG,             0.0, 'u', U_P_DEG},
   {"rate_tdrss",     'w', LOOP9,  9,                1.0,             0.0, 'u', U_RATE},
   {"rate_iridium",   'w', LOOP9,  10,                1.0,             0.0, 'u', U_RATE},
-  /* LOOP9 26-33 are unused */
+  {"az_raw_pss5",   'w',   LOOP9, 26,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"az_raw_pss6",   'w',   LOOP9, 27,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss1",   'w',   LOOP9, 28,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss2",   'w',   LOOP9, 29,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss3",   'w',   LOOP9, 30,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss4",   'w',   LOOP9, 31,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss5",   'w',   LOOP9, 32,              I2DEG,             0.0, 'u', U_P_DEG},
+  {"el_raw_pss6",   'w',   LOOP9, 33,              I2DEG,             0.0, 'u', U_P_DEG},
   {"insert_last_hk", 'w', LOOP9,  34,                1.0,             0.0, 'u', U_NONE},
   {"f_bias_hk",      'w', LOOP9,  35,      400.0/65535.0,             0.0, 'u', U_F_HZ},
   {"v_heat_last_hk", 'w', LOOP9,  37,         CALDAC(1.0,            0.0), 'u', U_V_V},
