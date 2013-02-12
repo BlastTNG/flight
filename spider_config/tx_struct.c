@@ -95,6 +95,8 @@
 #define U_R_O   "Resistance","Ohms"
 #define U_RATE "Rate", "bps"
 #define U_F_HZ "Frequency", "Hz"
+#define U_TRIM_DEG "Trim","^o"
+#define U_TRIM_MM "Trim","mm"
 
 struct ChannelStruct WideSlowChannels[] = {
   {"count_1_el",   'r',ACS2_D, 58,                1.0,             0.0, 'U', U_NONE}, 
@@ -487,13 +489,17 @@ struct ChannelStruct SlowChannels[] = {
   {"blob_idx_theugly",'w', LOOP2, 22,                1.0,             0.0, 'u', U_NONE},
   {"thresh_thegood",  'w', LOOP2, 23,         1.0/1000.0,             0.0, 'u', U_NONE},
   {"grid_thegood",    'w', LOOP2, 24,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP2 25-26 are unused */
+  {"cal_off_pss1",    'w', LOOP2, 25,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
+  {"cal_off_pss2",    'w', LOOP2, 26,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   {"mdist_thegood",   'w', LOOP2, 27,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP2 28-30 are unusued */
+  {"cal_off_pss3",    'w', LOOP2, 28,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
+  {"cal_off_pss4",    'w', LOOP2, 29,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
+  {"cal_off_pss5",    'w', LOOP2, 30,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   {"accel_max_az",    'w', LOOP2, 31,      100.0/65535.0,             0.0, 'u', U_NONE},
-  /* LOOP2 32-33 are unusued */
+  {"cal_off_pss6",    'w', LOOP2, 32,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
+  {"cal_d_pss1",      'w', LOOP2, 33,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   /* LOOP2 34 is fast */
-  /* LOOP2 35 is unusued */
+  {"cal_d_pss2",      'w', LOOP2, 35,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   {"offset_ifel_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
@@ -501,15 +507,18 @@ struct ChannelStruct SlowChannels[] = {
   {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
   {"sigma_dgps",      'w',LOOP2, 42,            I2DEG,             0.0, 'u', U_NONE},
-  /* LOOP2 44-45 are unusued */
+  {"cal_d_pss3",      'w', LOOP2, 44,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
+  {"cal_d_pss4",      'w', LOOP2, 45,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   {"mapsigma_thegood",'w',LOOP2, 46,           1.0/10.0,             0.0, 'u', U_NONE},
   // LOOP2 47-48 are fast
   {"pulse_cal",    'w', LOOP2, 49,               10.0,              0., 'u', U_NONE},
-  /* LOOP2 50 is unusued */
+  {"cal_d_pss5",      'w', LOOP2, 50,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   /* LOOP2 51-54 are wide fast */
   {"sigma_clin",   'w', LOOP2, 55,              I2DEG,             0.0, 'u', U_NONE},
   {"az_mag",       'w', LOOP2, 56,              I2DEG,             0.0, 'u', U_D_DEG},
-  /* LOOP2 57-59 are unusued */
+  {"cal_d_pss6",      'w', LOOP2, 57,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
+  {"cal_imin_pss",    'w', LOOP2, 58,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
+  /* LOOP2 59 is unusued */
   /* LOOP2 60-61 are wide */
   /* LOOP2 62-63 are unusued */
 
