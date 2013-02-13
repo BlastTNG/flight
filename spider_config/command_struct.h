@@ -273,6 +273,7 @@ struct CommandDataStruct {
     struct latch_pulse mcc4;
     struct latch_pulse mcc5;
     struct latch_pulse mcc6;
+    struct latch_pulse sync;
     int gybox_off;
     int gyro_off[6];
     int gyro_off_auto[6];
@@ -294,7 +295,6 @@ struct CommandDataStruct {
     struct latch_pulse mce2;
     struct latch_pulse mce3;
     struct latch_pulse mac;
-    struct latch_pulse sync;
     struct latch_pulse eth;
     struct latch_pulse hwp;
     int hk_preamp_off;
