@@ -109,12 +109,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(das_off), "turn off the DAS", GR_POWER},
   {COMMAND(das_on), "turn on the DAS", GR_POWER},
   {COMMAND(das_cycle), "power cycle the DAS", GR_POWER},
-  {COMMAND(rx_off), "receiver/preamp crate Make it Not-So!", GR_POWER},
-  {COMMAND(rx_on), "receiver/preamp crate Make it So!", GR_POWER},
-  {COMMAND(rx_hk_off), "cryostat housekeepng Make it Not-So!", GR_POWER},
-  {COMMAND(rx_hk_on), "cryostat housekeepng Make it So!", GR_POWER},
-  {COMMAND(rx_amps_off), "receiver amplifiers Make it Not-So!", GR_POWER},
-  {COMMAND(rx_amps_on), "receiver amplifiers Make it So!", GR_POWER},
   {COMMAND(of_charge_off), "turn off the outer frame charge controller", GR_POWER | CONFIRM},
   {COMMAND(of_charge_on), "turn on the outer frame charge controller", GR_POWER},
   {COMMAND(if_charge_off), "turn off the inner frame charge controller", GR_IFPOWER | CONFIRM},
@@ -124,17 +118,45 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(if_charge_cycle), "power cycle the inner frame charge controller", 
     GR_IFPOWER | CONFIRM},
 
-  {COMMAND(mce1_on), "turn on MCE power supply 1 (MCE 1, MCE 2, & MCC 1)", GR_IFPOWER},
-  {COMMAND(mce1_off), "turn off MCE power supply 1 (MCE 1, MCE 2, & MCC 1)", GR_IFPOWER},
-  {COMMAND(mce1_cycle), "power cycle MCE power supply 1 (MCE 1, MCE 2, & MCC 1)", GR_IFPOWER},
+  {COMMAND(mce1_on), "turn on MCE power supply 1 (MCE 1, MCE 2)", GR_IFPOWER},
+  {COMMAND(mce1_off), "turn off MCE power supply 1 (MCE 1, MCE 2)", GR_IFPOWER},
+  {COMMAND(mce1_cycle), "power cycle MCE power supply 1 (MCE 1, MCE 2)", GR_IFPOWER},
 
-  {COMMAND(mce2_on), "turn on MCE power supply 2 (MCE 3, MCE 4, & MCC 2)", GR_IFPOWER},
-  {COMMAND(mce2_off), "turn off MCE power supply 2 (MCE 3, MCE 4, & MCC 2)", GR_IFPOWER},
-  {COMMAND(mce2_cycle), "power cycle MCE power supply 2 (MCE 3, MCE 4, & MCC 2)", GR_IFPOWER},
+  {COMMAND(mce2_on), "turn on MCE power supply 2 (MCE 3, MCE 4)", GR_IFPOWER},
+  {COMMAND(mce2_off), "turn off MCE power supply 2 (MCE 3, MCE 4)", GR_IFPOWER},
+  {COMMAND(mce2_cycle), "power cycle MCE power supply 2 (MCE 3, MCE 4)", GR_IFPOWER},
 
-  {COMMAND(mce3_on), "turn on MCE power supply 3 (MCE 5, MCE 6, & MCC 3)", GR_IFPOWER},
-  {COMMAND(mce3_off), "turn off MCE power supply 3 (MCE 5, MCE 6, & MCC 3)", GR_IFPOWER},
-  {COMMAND(mce3_cycle), "power cycle MCE power supply 3 (MCE 5, MCE 6, & MCC 3)", GR_IFPOWER},
+  {COMMAND(mce3_on), "turn on MCE power supply 3 (MCE 5, MCE 6)", GR_IFPOWER},
+  {COMMAND(mce3_off), "turn off MCE power supply 3 (MCE 5, MCE 6)", GR_IFPOWER},
+  {COMMAND(mce3_cycle), "power cycle MCE power supply 3 (MCE 5, MCE 6)", GR_IFPOWER},
+
+  {COMMAND(mcc1_on), "turn on MCC 1", GR_POWER},
+  {COMMAND(mcc1_off), "turn off MCC 1", GR_POWER},
+  {COMMAND(mcc1_cycle), "power cycle MCC 1", GR_POWER},
+
+  {COMMAND(mcc1_on), "turn on MCC 1", GR_POWER},
+  {COMMAND(mcc1_off), "turn off MCC 1", GR_POWER},
+  {COMMAND(mcc1_cycle), "power cycle MCC 1", GR_POWER},
+
+  {COMMAND(mcc2_on), "turn on MCC 2", GR_POWER},
+  {COMMAND(mcc2_off), "turn off MCC 2", GR_POWER},
+  {COMMAND(mcc2_cycle), "power cycle MCC 2", GR_POWER},
+
+  {COMMAND(mcc3_on), "turn on MCC 3", GR_POWER},
+  {COMMAND(mcc3_off), "turn off MCC 3", GR_POWER},
+  {COMMAND(mcc3_cycle), "power cycle MCC 3", GR_POWER},
+  
+  {COMMAND(mcc4_on), "turn on MCC 4", GR_POWER},
+  {COMMAND(mcc4_off), "turn off MCC 4", GR_POWER},
+  {COMMAND(mcc4_cycle), "power cycle MCC 4", GR_POWER},
+  
+  {COMMAND(mcc5_on), "turn on MCC 5", GR_POWER},
+  {COMMAND(mcc5_off), "turn off MCC 5", GR_POWER},
+  {COMMAND(mcc5_cycle), "power cycle MCC 5", GR_POWER},
+  
+  {COMMAND(mcc6_on), "turn on MCC 6", GR_POWER},
+  {COMMAND(mcc6_off), "turn off MCC 6", GR_POWER},
+  {COMMAND(mcc6_cycle), "power cycle MCC 6", GR_POWER},
 
   {COMMAND(mac_on), "turn on the MCE Archive Computer", GR_IFPOWER},
   {COMMAND(mac_off), "turn off the MCE Archive Computer", GR_IFPOWER},

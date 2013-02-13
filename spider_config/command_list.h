@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 200        /* total number of single word cmds */
+#define N_SCOMMANDS 212        /* total number of single word cmds */
 #define N_MCOMMANDS 126        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -76,8 +76,7 @@ enum singleCommand {
   gps_off,           gps_on,            rw_off,	           rw_on,
   piv_off,           piv_on,            elmot_off,         elmot_on,
   vtx_off,           vtx_on,            bi0_off,           bi0_on,
-  das_off,           das_on,            rx_off,            rx_on,
-  rx_hk_off,         rx_hk_on,          rx_amps_off,	     rx_amps_on,
+  das_off,           das_on,             
   of_charge_off,     of_charge_on,      of_charge_cycle,
   if_charge_off,     if_charge_on,       if_charge_cycle,
   ifroll_1_gy_allow, ifroll_1_gy_veto,  ifroll_2_gy_allow, ifroll_2_gy_veto,
@@ -118,6 +117,10 @@ enum singleCommand {
   mac_off,           mac_cycle,         sync_on,           sync_off,       sync_cycle,
   eth_on,            eth_off,           eth_cycle,         hwp_on,         hwp_off,
   hwp_cycle,         hk_preamp_on,      hk_preamp_off,     hk_preamp_cycle, 
+  mcc1_on,           mcc1_off,          mcc1_cycle,        mcc2_on,        mcc2_off,
+  mcc2_cycle,        mcc3_on,           mcc3_off,          mcc3_cycle,     mcc4_on,
+  mcc4_off,          mcc4_cycle,        mcc5_on,           mcc5_off,       mcc5_cycle,
+  mcc6_on,           mcc6_off,          mcc6_cycle,
   xyzzy	    //xyzzy should be at the end of the list
 };
 

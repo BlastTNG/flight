@@ -143,6 +143,7 @@ struct PointingModeStruct {
   double overshoot_band; // width of turn around zone for Spider and Sine scans 
   double el_step; // size of el microstep used by Spider scan. 
                   // Is equal to del iff gondola is in Spider scan mode.
+  unsigned short is_turn_around; // flag to indicate we're in a scan turn around
 };
 
 struct latch_pulse {
@@ -264,11 +265,14 @@ struct CommandDataStruct {
     struct latch_pulse piv;
     struct latch_pulse elmot;
     struct latch_pulse bi0;
-    struct latch_pulse rx_main;
-    struct latch_pulse rx_hk;
-    struct latch_pulse rx_amps;
     struct latch_pulse charge;
     struct latch_pulse ifcharge;
+    struct latch_pulse mcc1;
+    struct latch_pulse mcc2;
+    struct latch_pulse mcc3;
+    struct latch_pulse mcc4;
+    struct latch_pulse mcc5;
+    struct latch_pulse mcc6;
     int gybox_off;
     int gyro_off[6];
     int gyro_off_auto[6];

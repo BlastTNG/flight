@@ -840,6 +840,9 @@ struct ChannelStruct SlowChannels[] = {
   {"state_5_cycle",  'w', LOOP0,  28,                1.0,            0.0, 'u', U_NONE},
   {"state_6_cycle",  'w', LOOP0,  29,                1.0,            0.0, 'u', U_NONE},
   {"band_az",        'w', LOOP0,  43,                30.0/65535.0,   0.0, 'u', U_P_DEG},
+  // TODO: GET RID OF THIS AFTER TURN AROUND FLAG HAS BEEN TESTED AND WORKS
+  {"is_turn_around", 'w', LOOP0,  44,                1.0,            0.0, 'u', U_NONE},
+  
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
   {"latch0",       'w',  ACS1_D,  0,                1.0,             0.0, 'u', U_NONE},
