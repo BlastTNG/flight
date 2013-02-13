@@ -628,16 +628,16 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.ifpower.mac.rst_count = LATCH_PULSE_LEN;
       break;
     case sync_off:
-      CommandData.ifpower.sync.set_count = 0;
-      CommandData.ifpower.sync.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.sync.set_count = 0;
+      CommandData.power.sync.rst_count = LATCH_PULSE_LEN;
       break;
     case sync_on:
-      CommandData.ifpower.sync.rst_count = 0;
-      CommandData.ifpower.sync.set_count = LATCH_PULSE_LEN;
+      CommandData.power.sync.rst_count = 0;
+      CommandData.power.sync.set_count = LATCH_PULSE_LEN;
       break;
     case sync_cycle:
-      CommandData.ifpower.sync.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.ifpower.sync.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.sync.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.sync.rst_count = LATCH_PULSE_LEN;
       break;
     case eth_off:
       CommandData.ifpower.eth.set_count = 0;
@@ -1994,6 +1994,8 @@ void InitCommandData()
   CommandData.power.mcc5.rst_count = 0;
   CommandData.power.mcc6.set_count = 0;
   CommandData.power.mcc6.rst_count = 0;
+  CommandData.power.sync.rst_count = 0;
+  CommandData.power.sync.set_count = 0;
   CommandData.power.gybox_off = 0;
   CommandData.power.gyro_off[0] = 0;
   CommandData.power.gyro_off[1] = 0;
@@ -2015,8 +2017,6 @@ void InitCommandData()
   CommandData.ifpower.mce3.set_count = 0;
   CommandData.ifpower.mac.rst_count = 0;
   CommandData.ifpower.mac.set_count = 0;
-  CommandData.ifpower.sync.rst_count = 0;
-  CommandData.ifpower.sync.set_count = 0;
   CommandData.ifpower.eth.rst_count = 0;
   CommandData.ifpower.eth.set_count = 0;
   CommandData.ifpower.hwp.rst_count = 0;
