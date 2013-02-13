@@ -819,6 +819,8 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* accelMaxAzAddr;
   static struct NiosStruct* step1ElAddr;      // PORT
   static struct NiosStruct* step2ElAddr;      // STARBOARD
+  // TODO: Temporary, just to test turn around flag
+  static struct NiosStruct* isTurnAroundAddr;
 
   // Used only for Lab Controller tests
   static struct NiosStruct* dac2AmplAddr;
@@ -867,6 +869,8 @@ void WriteMot(int TxIndex)
     dac2AmplAddr = GetNiosAddr("dac2_ampl");
     step1ElAddr = GetNiosAddr("step_1_el");
     step2ElAddr = GetNiosAddr("step_2_el");
+    // TODO: Temporary
+    isTurnAroundAddr = GetNiosAddr("is_turn_around");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -1017,6 +1021,8 @@ void WriteMot(int TxIndex)
     WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
     /* Azimuth Scan Max Acceleration */
     WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
+    /* Turn Around Flag */
+    WriteData(isTurnAroundAddr, CommandData.pointing_mode.is_turn_around, NIOS_QUEUE);
   }
 
   if (wait > 0)
@@ -1402,6 +1408,7 @@ static void DoSpiderMode(void)
     in_scan = 0;
     scan_region = SCAN_BEYOND_L;
     scan_region_last = scan_region;
+    CommandData.pointing_mode.is_turn_around = 0;
     v_az = sqrt(2.0*az_accel*(left - CommandData.pointing_mode.overshoot_band - az)) + V_AZ_MIN;
     a_az = -az_accel; 
     //a_az = 0.0;
@@ -1416,6 +1423,7 @@ static void DoSpiderMode(void)
   } else if (az > right + CommandData.pointing_mode.overshoot_band) {
     scan_region = SCAN_BEYOND_R;
     scan_region_last = scan_region;
+    CommandData.pointing_mode.is_turn_around = 0;
     v_az = -sqrt(2.0*az_accel*(az-(right+CommandData.pointing_mode.overshoot_band))) - V_AZ_MIN;
     a_az = az_accel;
     //a_az = 0.0;
@@ -1432,6 +1440,7 @@ static void DoSpiderMode(void)
 	           +PointingData[i_point].offset_ifyaw_gy)  > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     scan_region = SCAN_L_TO_R;
+    CommandData.pointing_mode.is_turn_around = 0;
  
   
     if ( ((az - left) > ampl/10.0) && ( (az-left) < (ampl/10.0 + 1.0) ) ) { 
@@ -1476,6 +1485,7 @@ static void DoSpiderMode(void)
 		    +PointingData[i_point].offset_ifyaw_gy) < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     scan_region = SCAN_R_TO_L;
+    CommandData.pointing_mode.is_turn_around = 0;
   
     if ( ((right - az) > ampl/10.0) && ((right - az) < (ampl/10.0 + 1.0))  ) {
       // ampl/10 degrees in from right turn-around
@@ -1521,7 +1531,8 @@ static void DoSpiderMode(void)
   } else if ( az <= left+turn_around ) {
     scan_region = SCAN_L_TURN;
     scan_region_last = scan_region;
-
+    CommandData.pointing_mode.is_turn_around = 1;
+      
     past_step_point = 0; // reset for the next half-scan
     past_step_point_last = past_step_point;
     //if (scan_region_last == SCAN_R_TO_L) {
@@ -1548,6 +1559,7 @@ static void DoSpiderMode(void)
   } else if (az >= right-turn_around) {
     scan_region = SCAN_R_TURN;
     scan_region_last = scan_region;
+    CommandData.pointing_mode.is_turn_around = 1;
     
     past_step_point = 0; // reset for the next half-scan
     past_step_point_last = past_step_point;

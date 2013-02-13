@@ -311,7 +311,7 @@ void ControlPower(void) {
   static struct NiosStruct* switchMiscAddr;
   static struct NiosStruct* ifPwrAddr;
   static struct NiosStruct* switchChargeAddr;
-  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0, chrg_grp = 0; // ifpwr is IF power
+  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0, chrg_grp = 0; 
   int i;
 
   if (firsttime) {
@@ -450,31 +450,6 @@ void ControlPower(void) {
     CommandData.power.bi0.rst_count--;
     if (CommandData.power.bi0.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0002;
   }
-  if (CommandData.power.rx_main.set_count > 0) {
-    CommandData.power.rx_main.set_count--;
-    if (CommandData.power.rx_main.set_count < LATCH_PULSE_LEN) latch1 |= 0x0004;
-  }
-  if (CommandData.power.rx_main.rst_count > 0) {
-    CommandData.power.rx_main.rst_count--;
-    if (CommandData.power.rx_main.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0008;
-  }
-  if (CommandData.power.rx_hk.set_count > 0) {
-    CommandData.power.rx_hk.set_count--;
-    if (CommandData.power.rx_hk.set_count < LATCH_PULSE_LEN) latch1 |= 0x5050;
-  }
-  if (CommandData.power.rx_hk.rst_count > 0) {
-    CommandData.power.rx_hk.rst_count--;
-    if (CommandData.power.rx_hk.rst_count < LATCH_PULSE_LEN) latch1 |= 0xa0a0;
-  }
-  if (CommandData.power.rx_amps.set_count > 0) {
-    CommandData.power.rx_amps.set_count--;
-    if (CommandData.power.rx_amps.set_count < LATCH_PULSE_LEN) latch1 |= 0x0500;
-  }
-  if (CommandData.power.rx_amps.rst_count > 0) {
-    CommandData.power.rx_amps.rst_count--;
-    if (CommandData.power.rx_amps.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0a00;
-  }
-
   if (CommandData.ifpower.mce1.set_count > 0) {
     CommandData.ifpower.mce1.set_count--;
     if (CommandData.ifpower.mce1.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0002;

@@ -136,6 +136,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       break;
     case antisun: /* turn antisolar (az-only) */
 
@@ -155,6 +156,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       break;
 
     case reset_trims:
@@ -316,30 +318,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case das_cycle:
       CommandData.power.das.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.das.rst_count = LATCH_PULSE_LEN;
-      break;
-    case rx_off:
-      CommandData.power.rx_main.set_count = 0;
-      CommandData.power.rx_main.rst_count = LATCH_PULSE_LEN;
-      break;
-    case rx_on:
-      CommandData.power.rx_main.rst_count = 0;
-      CommandData.power.rx_main.set_count = LATCH_PULSE_LEN;
-      break;
-    case rx_hk_off:
-      CommandData.power.rx_hk.set_count = 0;
-      CommandData.power.rx_hk.rst_count = LATCH_PULSE_LEN;
-      break;
-    case rx_hk_on:
-      CommandData.power.rx_hk.rst_count = 0;
-      CommandData.power.rx_hk.set_count = LATCH_PULSE_LEN;
-      break;
-    case rx_amps_off:
-      CommandData.power.rx_amps.set_count = 0;
-      CommandData.power.rx_amps.rst_count = LATCH_PULSE_LEN;
-      break;
-    case rx_amps_on:
-      CommandData.power.rx_amps.rst_count = 0;
-      CommandData.power.rx_amps.set_count = LATCH_PULSE_LEN;
       break;
     case of_charge_off:
       CommandData.power.charge.rst_count = 0;
@@ -526,7 +504,79 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.off = PCYCLE_HOLD_LEN;
       CommandData.actbus.force_repoll = 1;
       break;
-
+    case mcc1_on:
+      CommandData.power.mcc1.set_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc1.rst_count = 0;
+      break;
+    case mcc1_off:
+      CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc1.set_count = 0;
+      break;
+    case mcc1_cycle:
+      CommandData.power.mcc1.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mcc2_on:
+      CommandData.power.mcc2.set_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc2.rst_count = 0;
+      break;
+    case mcc2_off:
+      CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc2.set_count = 0;
+      break;
+    case mcc2_cycle:
+      CommandData.power.mcc2.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mcc3_on:
+      CommandData.power.mcc3.set_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc3.rst_count = 0;
+      break;
+    case mcc3_off:
+      CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc3.set_count = 0;
+      break;
+    case mcc3_cycle:
+      CommandData.power.mcc3.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mcc4_on:
+      CommandData.power.mcc4.set_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc4.rst_count = 0;
+      break;
+    case mcc4_off:
+      CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc4.set_count = 0;
+      break;
+    case mcc4_cycle:
+      CommandData.power.mcc4.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mcc5_on:
+      CommandData.power.mcc5.set_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc5.rst_count = 0;
+      break;
+    case mcc5_off:
+      CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc5.set_count = 0;
+      break;
+    case mcc5_cycle:
+      CommandData.power.mcc5.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
+      break;
+    case mcc6_on:
+      CommandData.power.mcc6.set_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc6.rst_count = 0;
+      break;
+    case mcc6_off:
+      CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.mcc6.set_count = 0;
+      break;
+    case mcc6_cycle:
+      CommandData.power.mcc6.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
+      break;
+      
     /* Inner Frame Power */
 
     case mce1_off:
@@ -646,6 +696,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.h = 0;
       CommandData.pointing_mode.vaz = 0;
       CommandData.pointing_mode.del = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
       break;
     case unlock:
@@ -979,6 +1030,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       break;
     case az_scan:
       CommandData.ele_gain.manual_pulses = 0;
@@ -990,6 +1042,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = rvalues[3]; /* az scan speed */
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       break;
     case drift:
       CommandData.ele_gain.manual_pulses = 0;
@@ -1001,6 +1054,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = rvalues[0]; /* az speed */
       CommandData.pointing_mode.del = rvalues[1]; /* el speed */
       CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       break;
     case ra_dec_goto:
       CommandData.ele_gain.manual_pulses = 0;
@@ -1012,6 +1066,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.vaz = 0;
       CommandData.pointing_mode.del = 0;
       CommandData.pointing_mode.h = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       break;
     case spider_scan:
       is_new = 0;
@@ -1036,6 +1091,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.X = rvalues[8];
       CommandData.pointing_mode.Y = rvalues[9];
       CommandData.ele_gain.manual_pulses = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       CommandData.pointing_mode.mode = P_SPIDER;
       break;
     case set_scan_params:  
@@ -1052,6 +1108,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.X = rvalues[1];
       CommandData.pointing_mode.Y = rvalues[2];
       CommandData.ele_gain.manual_pulses = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
       CommandData.pointing_mode.mode = P_SINE;
       break;
       /***************************************/
@@ -1925,12 +1982,18 @@ void InitCommandData()
   CommandData.power.elmot.set_count = 0;
   CommandData.power.bi0.rst_count = 0;
   CommandData.power.bi0.set_count = 0;
-  CommandData.power.rx_main.rst_count = 0;
-  CommandData.power.rx_main.set_count = 0;
-  CommandData.power.rx_hk.rst_count = 0;
-  CommandData.power.rx_hk.set_count = 0;
-  CommandData.power.rx_amps.rst_count = 0;
-  CommandData.power.rx_amps.set_count = 0;
+  CommandData.power.mcc1.set_count = 0;
+  CommandData.power.mcc1.rst_count = 0;
+  CommandData.power.mcc2.set_count = 0;
+  CommandData.power.mcc2.rst_count = 0;
+  CommandData.power.mcc3.set_count = 0;
+  CommandData.power.mcc3.rst_count = 0;
+  CommandData.power.mcc4.set_count = 0;
+  CommandData.power.mcc4.rst_count = 0;
+  CommandData.power.mcc5.set_count = 0;
+  CommandData.power.mcc5.rst_count = 0;
+  CommandData.power.mcc6.set_count = 0;
+  CommandData.power.mcc6.rst_count = 0;
   CommandData.power.gybox_off = 0;
   CommandData.power.gyro_off[0] = 0;
   CommandData.power.gyro_off[1] = 0;
@@ -2023,6 +2086,7 @@ void InitCommandData()
   CommandData.pointing_mode.new_spider = 1;
   CommandData.pointing_mode.overshoot_band = 0.15;
   CommandData.pointing_mode.el_step = 0.0;
+  CommandData.pointing_mode.is_turn_around = 0;
 
   CommandData.az_accel = 0.1; 
   CommandData.az_accel_max = 1.0;
