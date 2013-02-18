@@ -618,9 +618,11 @@ union DerivedUnion DerivedChannels[] = {
   NTD_HK(NTD1,	4, LUT_DIR "x2_ntd1.lut"),
   NTD_HK(NTD2,	4, LUT_DIR "x2_ntd2.lut"),
   NTD_HK(NTD3,	4, LUT_DIR "x2_ntd3.lut"),
-  // NTD_HK(NTD4,	4, LUT_DIR "x2_ntd4.lut"), // borked
+  NTD_HK(NTD4,	4, LUT_DIR "x2_ntd4.lut"),
   
+  NTD_HK_NOLUT(NTD2, 3),
   NTD_HK(NTD3,  3, LUT_DIR "x0_ntd3.lut"),
+  NTD_HK_NOLUT(NTD4, 3),
   
   COMMENT("Housekeeping Diode Temperature Calibration"),
   // NB: make sure to also set LUT filename in hk.c for FridgeCycle
