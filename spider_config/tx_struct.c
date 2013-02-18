@@ -178,8 +178,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_ssa_1_hk",      'r', DIOD_A1, 46, CAL32D(     1.0,     0.0), 'U', U_V_V},
 
   {"vd_4k_4_hk",       'r', DIOD_A2,  0, CAL32D(     1.0,     0.0), 'U', U_V_V},
-  //NB: (board #3 diode 00) and (board #4 diode 01) are swapped, inverted
-  {"vd_4k_3_hk",       'r', DIOD_A2,  2, CAL32D(    -1.0,     0.0), 'U', U_V_V},
+  {"vd_cp_4_hk",       'r', DIOD_A2,  2, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_pump_4_hk",     'r', DIOD_A2,  4, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_hsw_4_hk",      'r', DIOD_A2,  6, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_plate_4_hk",    'r', DIOD_A2,  8, CAL32D(     1.0,     0.0), 'U', U_V_V},
@@ -190,8 +189,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_aux_post_4_hk", 'r', DIOD_A2, 18, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_stop_4_hk",     'r', DIOD_A2, 20, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_ssa_4_hk",      'r', DIOD_A2, 22, CAL32D(     1.0,     0.0), 'U', U_V_V},
-  //NB: (board #3 diode 00 (4k)) & (board #4 diode 01 (cp)) swapped, inverted
-  {"vd_cp_4_hk",       'r', DIOD_A2, 24, CAL32D(    -1.0,     0.0), 'U', U_V_V},
+  {"vd_4k_3_hk",       'r', DIOD_A2, 24, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_cp_3_hk",       'r', DIOD_A2, 26, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_pump_3_hk",     'r', DIOD_A2, 28, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_hsw_3_hk",      'r', DIOD_A2, 30, CAL32D(     1.0,     0.0), 'U', U_V_V},

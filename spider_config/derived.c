@@ -624,9 +624,8 @@ union DerivedUnion DerivedChannels[] = {
   
   COMMENT("Housekeeping Diode Temperature Calibration"),
   // NB: make sure to also set LUT filename in hk.c for FridgeCycle
-  // Theo Run 11: X2 in slot 4 with Thelma 4
-  T_HK("TD_BETTY_4_HK",     "VD_4K_4_HK",        LUT_DIR "d_curve10.lut"),
-  T_HK("TD_CP_4_HK",        "VD_CP_4_HK",        LUT_DIR "d_simonchase2.lut"),
+  // Theo Run 12: X2 in slot 4 with Thelma 4
+  T_HK("TD_CP_4_HK",        "VD_CP_4_HK",        LUT_DIR "d_cp_4.lut"),
   T_HK("TD_PUMP_4_HK",      "VD_PUMP_4_HK",      LUT_DIR "d_simonchase2.lut"),
   T_HK("TD_HSW_4_HK",       "VD_HSW_4_HK",       LUT_DIR "d_simonchase2.lut"),
   T_HK("TD_PLATE_4_HK",     "VD_PLATE_4_HK",     LUT_DIR "D87587.lut"),
@@ -638,16 +637,18 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_STOP_4_HK",      "VD_STOP_4_HK",      LUT_DIR "d_curve10.lut"),
   T_HK("TD_SSA_4_HK",       "VD_SSA_4_HK",       LUT_DIR "d_curve10.lut"),
   
-  // Run 11: X0 in slot 3 with Thelma 8
+  // Run 12: X0 in slot 3 with Thelma 8
   T_HK("TD_CP_3_HK",        "VD_CP_3_HK",        LUT_DIR "d_simonchase.lut"),
   T_HK("TD_PUMP_3_HK",      "VD_PUMP_3_HK",      LUT_DIR "d_simonchase.lut"),
   T_HK("TD_HSW_3_HK",       "VD_HSW_3_HK",       LUT_DIR "d_simonchase.lut"),
-  T_HK("TD_PLATE_3_HK",     "VD_PLATE_3_HK",     LUT_DIR "dt670.lut"),
-  T_HK("TD_CHARCOAL_3_HK",  "VD_SNOUT_3_HK",     LUT_DIR "dt670.lut"),
-  T_HK("TD_SPITTOON_3_HK",  "VD_SPITTOON_3_HK",  LUT_DIR "dt670.lut"),
+  T_HK("TD_PLATE_3_HK",     "VD_PLATE_3_HK",     LUT_DIR "D6031481.lut"),
+  T_HK("TD_SNOUT_3_HK",     "VD_SNOUT_3_HK",     LUT_DIR "d_curve10.lut"),
+  T_HK("TD_EYEPIECE_3_HK",  "VD_EYEPIECE_3_HK",  LUT_DIR "d_curve10.lut"),
+  T_HK("TD_OBJECTIVE_3_HK", "VD_OBJECTIVE_3_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_SPITTOON_3_HK",  "VD_SPITTOON_3_HK",  LUT_DIR "D6032720.lut"),
   T_HK("TD_AUX_POST_3_HK",  "VD_AUX_POST_3_HK",  LUT_DIR "D6032429.lut"),
-  T_HK("TD_BIRDY_3_HK",     "VD_STOP_3_HK",      LUT_DIR "D6031960.lut"),
   T_HK("TD_SSA_3_HK",       "VD_SSA_3_HK",       LUT_DIR "d_curve10.lut"),
+  T_HK("TD_SPIT_COVER_3_HK","VD_4K_3_HK",        LUT_DIR "D6031960.lut"),
   
   //Theo diode calibrations.
   // T_HK("TD_00_T_HK",	 "VD_00_HK",	LUT_DIR "d_curve10.lut"), // TODO
@@ -665,7 +666,6 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_SFT_BOTTOM_T_HK",	 "VD_11_HK",	LUT_DIR "D77239.lut"),
   T_HK("TD_VCS1_TOP2_T_HK",	 "VD_12_HK",	LUT_DIR "d_curve10.lut"),
   T_HK("TD_MT_TOP_T_HK",	 "VD_13_HK",	LUT_DIR "D78317.lut"),
-  T_HK("TD_HB_PLATE_T_HK",	 "VD_14_HK",	LUT_DIR "D75319.lut"),
   T_HK("TD_VCS2_APERT_T_HK",	 "VD_15_HK",	LUT_DIR "d_curve10.lut"),
   T_HK("TD_VCS1_FLEX_T_HK",	 "VD_16_HK",	LUT_DIR "d_curve10.lut"),
   T_HK("TD_VCS1_APERT_T_HK",	 "VD_17_HK",	LUT_DIR "d_curve10.lut"),
