@@ -17,8 +17,8 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 212        /* total number of single word cmds */
-#define N_MCOMMANDS 126        /* total number of multiword commands */
+#define N_SCOMMANDS 211        /* total number of single word cmds */
+#define N_MCOMMANDS 122        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -111,7 +111,7 @@ enum singleCommand {
   hk_sft_bottom_heat_on,     hk_sft_bottom_heat_off,    hk_t7_heat_on,     hk_t7_heat_off,
   bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
   //make better use of unused groups
-  pull_cmb_pin, global_thermonuclear_war, stab, lock_and_load, 
+  pull_cmb_pin, global_thermonuclear_war, lock_and_load, 
   mce1_on,           mce1_off,          mce1_cycle,        mce2_on,        mce2_off,
   mce2_cycle,        mce3_on,           mce3_off,          mce3_cycle,     mac_on,
   mac_off,           mac_cycle,         sync_on,           sync_off,       sync_cycle,
@@ -128,14 +128,13 @@ enum singleCommand {
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,           dac2_level,  
-  roll_gain,         set_scan_params,
+  set_scan_params,
   az_el_trim,        drift,             el_gain,           act_offset,
-  inner_level,       actuator_tol,
+  actuator_tol,
   pivot_gain,        ra_dec_goto,       ra_dec_set,
   t_gyro_set,        tdrss_bw,          iridium_bw,
   t_gyro_gain,       timeout,           slot_sched,        az_gyro_offset,
   cov_gps,	         lvdt_limit,        reset_adc,        
-  gyro_off,	         gyro_on,           
   hk_auto_cycle_on,  hk_auto_cycle_off, hk_fridge_cycle,
   el_gyro_offset,    general,           slew_veto,        
   actuator_servo,    xy_goto,           actuator_vel,

@@ -954,14 +954,16 @@ void SingleCommand (enum singleCommand command, int scheduled)
       bputs(info, "The only winning move is not to play");
       CommandData.questionable_behaviour++;
       break;
-    /*case get_some:
+#if 0
+    case get_some:
       bputs(info, "Aaaarrrgggh!");
       CommandData.questionable_behaviour++;
-      break;*/
+      break;
     case stab:
       bputs(info, "Swish, slash");
       CommandData.questionable_behaviour++;
       break;
+#endif
     case lock_and_load:
       bputs(info, "Cachink.");
       CommandData.questionable_behaviour++;
@@ -1900,10 +1902,55 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
 void CheckCommandList(void)
 {
+  int i, c;
+
+  /* the scommand enum isn't the same length as the scommand array */
   if ((int)xyzzy != N_SCOMMANDS - 1)
     bprintf(fatal, "command_list: N_SCOMMANDS should be %d\n", (int)xyzzy + 1);
+
+  /* the scommand enum and scommand array are the same length, but there's a problem in the scommand arrray initialiser */
+  if (scommands[xyzzy].command != xyzzy) {
+    c = -1;
+    for (i = 0; i < N_SCOMMANDS; ++i) 
+      if (scommands[i].command == xyzzy) {
+        c = i;
+        break;
+      }
+
+    if (c == -1)
+      /* the initialiser is too long -- look for duplicate definitions */
+      bprintf(fatal, "command_list: scommand #%i should be xyzzy, but it's \"%s\" (%i); "
+          "xyzzy is not in the list at all.\n", (int)xyzzy, scommands[xyzzy].name, scommands[xyzzy].command);
+    else
+      /* the initialiser is too short -- look for missing definitions or extra things in the enum */
+      bprintf(fatal, "command_list: scommand #%i should be xyzzy, but it's \"%s\" (%i); xyzzy is scommand #%i\n",
+          (int)xyzzy, scommands[xyzzy].name, scommands[xyzzy].command, c);
+  }
+
+  /* the mcommand enum isn't the same length as the mcommand array */
   if ((int)plugh != N_MCOMMANDS - 1)
     bprintf(fatal, "command_list: N_MCOMMANDS should be %d\n", (int)plugh + 1);
+
+  /* the mcommand enum and mcommand array are the same length, but there's a problem in the mcommand arrray initialiser */
+  if (mcommands[plugh].command != plugh) {
+    c = -1;
+    for (i = 0; i < N_MCOMMANDS; ++i) 
+      if (mcommands[i].command == plugh) {
+        c = i;
+        break;
+      }
+
+    if (c == -1)
+      /* the initialiser is too long -- look for duplicate definitions */
+      bprintf(fatal, "command_list: mcommand #%i should be plugh, but it's \"%s\" (%i); "
+          "plugh is not in the list at all.\n", (int)plugh, mcommands[plugh].name, mcommands[plugh].command);
+    else
+      /* the initialiser is too short -- look for missing definitions or extra things in the enum */
+      bprintf(fatal, "command_list: mcommand #%i should be plugh, but it's \"%s\" (%i); plugh is mcommand #%i\n",
+          (int)plugh, mcommands[plugh].name, mcommands[plugh].command, c);
+  }
+
+  bprintf(info, "command_list: All Checks Passed.\n");
 }
 
 /************************************************************/

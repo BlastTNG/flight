@@ -134,10 +134,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mcc1_off), "turn off MCC 1", GR_POWER},
   {COMMAND(mcc1_cycle), "power cycle MCC 1", GR_POWER},
 
-  {COMMAND(mcc1_on), "turn on MCC 1", GR_POWER},
-  {COMMAND(mcc1_off), "turn off MCC 1", GR_POWER},
-  {COMMAND(mcc1_cycle), "power cycle MCC 1", GR_POWER},
-
   {COMMAND(mcc2_on), "turn on MCC 2", GR_POWER},
   {COMMAND(mcc2_off), "turn off MCC 2", GR_POWER},
   {COMMAND(mcc2_cycle), "power cycle MCC 2", GR_POWER},
@@ -320,8 +316,6 @@ struct scom scommands[N_SCOMMANDS] = {
   //make better use of unused groups
   {COMMAND(pull_cmb_pin), "????", GR_CMB},
   {COMMAND(global_thermonuclear_war), "????", 0x00000100},
-  //{COMMAND(get_some), "????", 0x00020000},
-  //{COMMAND(stab), "????", 0x00100000},
   {COMMAND(lock_and_load), "????", 0x00800000},
 
 
