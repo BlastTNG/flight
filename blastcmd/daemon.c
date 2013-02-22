@@ -488,14 +488,14 @@ void Daemonise(int route, int no_fork)
     if (reset_lastsock) {
       reset_lastsock = 0;
       for (i = 0; i < sizeof(fd_set) * 8; ++i)
-        if (__FDS_BITS(&fdlist)[__FDELT(i)] & __FDMASK(i))
+        if (FD_ISSET(i, &fdlist))
           lastsock = i;
     }
 
     if (report) {
       reset_lastsock = 0;
       for (i = 0; i < sizeof(fd_set) * 8; ++i)
-        if (i != sock && (__FDS_BITS(&fdlist)[__FDELT(i)] & __FDMASK(i)))
+        if (i != sock && FD_ISSET(i, &fdlist))
           conn[i].report = 1;
 
       report = 0;
