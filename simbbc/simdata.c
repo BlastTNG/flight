@@ -24,10 +24,14 @@
 
 static struct {
   unsigned framecounter;
-  unsigned bbc_frame[BBCPCI_MAX_FRAME_SIZE];
+  unsigned bbc_frame[2 * BBCPCI_MAX_FRAME_SIZE];
   unsigned *bb1_frame;
   unsigned *bb1_ptr;
   unsigned short bb1_data[BI0_TABLE_SIZE];
+
+  unsigned *bb2_frame;
+  unsigned *bb2_ptr;
+  unsigned short bb2_data[BI0_TABLE_SIZE];
   
 } bbc_data;
 
@@ -36,15 +40,18 @@ void InitBBCData(void)
 {
   int k;
   bbc_data.bb1_frame = bbc_data.bbc_frame;
+  bbc_data.bb2_frame = bbc_data.bbc_frame + BBCPCI_MAX_FRAME_SIZE;
   bbc_data.bb1_ptr = bbc_data.bb1_frame;
+  bbc_data.bb2_ptr = bbc_data.bb2_frame;
   bbc_data.framecounter = 0;
   
-  for(k = 0; k < BBCPCI_MAX_FRAME_SIZE; k++) {
+  for (k = 0; k < 2 * BBCPCI_MAX_FRAME_SIZE; k++) {
     bbc_data.bbc_frame[k] = 0;
   }
 
-  for(k = 0; k < BI0_TABLE_SIZE; k++) {
+  for (k = 0; k < BI0_TABLE_SIZE; k++) {
     bbc_data.bb1_data[k] = 0;
+    bbc_data.bb2_data[k] = 0;
   }
 }
 
@@ -63,18 +70,22 @@ unsigned int GetFrameCount()
 
 void WriteToFrame(unsigned addr, unsigned data)
 {
-  bbc_data.bb1_frame[addr] = data;
+  if (addr > BBCPCI_MAX_FRAME_SIZE)
+    bbc_data.bb2_frame[addr - BBCPCI_MAX_FRAME_SIZE] = data;
+  else
+    bbc_data.bb1_frame[addr] = data;
 }
 
 int GetFrameNextWord(unsigned* out_data)
 {
   unsigned data;
   static unsigned wordcount = 0;
+  static int bus = 0;
 
-  data =  *bbc_data.bb1_ptr;
+  data = bus ? *bbc_data.bb2_ptr : *bbc_data.bb1_ptr;
 
   //force serial number into first two words
-  if(wordcount == 1) {
+  if (wordcount == 1) {
     data = (data & 0xffff0000) | BBC_WRITE
       | (bbc_data.framecounter & 0x0000ffff);
   } else if (wordcount == 2) {
@@ -82,25 +93,46 @@ int GetFrameNextWord(unsigned* out_data)
       | ((bbc_data.framecounter >> 16) & 0x0000ffff);
   }
 
-  //update the bb1_data table on writes, make response to reads
+  //update the bb[12]_data tables on writes, make response to reads
   out_data[0] = data;
   if (wordcount < 3) {	//fsync and serial number
     out_data[1] = 0;
   } else if (data & BBC_WRITE) {
-    bbc_data.bb1_data[BI0_MAGIC(data)] = BBC_DATA(data);
+    if (bus)
+      bbc_data.bb2_data[BI0_MAGIC(data)] = BBC_DATA(data);
+    else
+      bbc_data.bb1_data[BI0_MAGIC(data)] = BBC_DATA(data);
     out_data[1] = 0;
   } else if (data & BBC_READ) {
-    out_data[1] = (data & 0xffff0000) | BBC_WRITE
-      | (bbc_data.bb1_data[BI0_MAGIC(data)] & 0x0000ffff);
+    if (bus)
+      out_data[1] = (data & 0xffff0000) | BBC_WRITE
+        | (bbc_data.bb2_data[BI0_MAGIC(data)] & 0x0000ffff);
+    else
+      out_data[1] = (data & 0xffff0000) | BBC_WRITE
+        | (bbc_data.bb1_data[BI0_MAGIC(data)] & 0x0000ffff);
   }
 
   //move to next word, and return done if on an FSYNC
   wordcount++;
-  bbc_data.bb1_ptr++;
-  if(*bbc_data.bb1_ptr == BBC_ENDWORD) bbc_data.bb1_ptr = bbc_data.bb1_frame;
-  if(*bbc_data.bb1_ptr & BBC_FSYNC) {
-    wordcount = 0;
-    return 1;
+  if (bus) {
+    bbc_data.bb2_ptr++;
+    if (*bbc_data.bb2_ptr == BBC_ENDWORD)
+      bbc_data.bb2_ptr = bbc_data.bb2_frame;
+
+    if (*bbc_data.bb2_ptr & BBC_FSYNC) {
+      bus = 0;
+      wordcount = 0;
+      return 1;
+    }
+  } else {
+    bbc_data.bb1_ptr++;
+    if (*bbc_data.bb1_ptr == BBC_ENDWORD)
+      bbc_data.bb1_ptr = bbc_data.bb1_frame;
+
+    if (*bbc_data.bb1_ptr & BBC_FSYNC) {
+      bus = 1;
+      return 1;
+    }
   }
 
   return 0;
@@ -130,7 +162,9 @@ void FrameSyncLogic()
   int i;
   for (i=0; i<64; i++) {
     bbc_data.bb1_data[BI0_MAGIC(BBC_NODE(i) | BBC_STAT_CH)] =
-	bbc_data.bb1_data[BI0_MAGIC(BBC_NODE(i) | BBC_SYNC_CH)] | 0x1;
+      bbc_data.bb1_data[BI0_MAGIC(BBC_NODE(i) | BBC_SYNC_CH)] | 0x1;
+    bbc_data.bb2_data[BI0_MAGIC(BBC_NODE(i) | BBC_STAT_CH)] =
+      bbc_data.bb2_data[BI0_MAGIC(BBC_NODE(i) | BBC_SYNC_CH)] | 0x1;
   }
 }
 

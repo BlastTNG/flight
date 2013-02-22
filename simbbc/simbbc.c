@@ -177,15 +177,11 @@ static void timer_callback(unsigned long dummy)
 //--------------------------------------------------------------------------
 unsigned int bbc_poll(struct file *filp, poll_table *wait)
 {
-  int minor;
   unsigned int mask = 0;
 
-  minor = *(int *)filp->private_data;
-  if (minor == bbc_minor)
-  {
-    poll_wait (filp, &bbc_read_wq, wait);
-    if (atomic_read(&bbc_rfifo.n) > 0) mask |= POLLIN | POLLRDNORM;
-  }
+  poll_wait (filp, &bbc_read_wq, wait);
+  if (atomic_read(&bbc_rfifo.n) > 0)
+    mask |= POLLIN | POLLRDNORM;
 
   return mask;
 }
@@ -269,8 +265,8 @@ static ssize_t bbc_write(struct file *filp, const char __user *buf,
     __copy_from_user((void *)data, in_buf, 2 * BBCPCI_SIZE_UINT);
     in_buf += 2*BBCPCI_SIZE_UINT;
     
-    if(data[0] >= BBCPCI_MAX_FRAME_SIZE) {
-      printk(KERN_WARNING "BBC buffer overflow: mcp error\n");
+    if(data[0] >= 2 * BBCPCI_MAX_FRAME_SIZE) {
+      printk(KERN_WARNING "BBC buffer overflow: mcp error: 0x%X\n", data[0]);
     } else {
       WriteToFrame(data[0], data[1]);
     }
