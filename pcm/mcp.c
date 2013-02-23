@@ -1374,7 +1374,7 @@ int main(int argc, char *argv[])
   //pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
   pthread_create(&hwpr_id, NULL, (void*)&StartHWP, NULL);
-  //pthread_create(&mce_id, NULL, (void*)&mceserv, NULL);
+  pthread_create(&mce_id, NULL, (void*)&mceserv, NULL);
 
   while (1) {
     in_data = read_from_bbc();

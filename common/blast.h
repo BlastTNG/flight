@@ -22,6 +22,7 @@
 #define BLAST_H
 
 #include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
+#include <sys/types.h>  /* for size_t */
 
 /* If we're not using GNU C, elide __attribute__ */
 #ifndef __GNUC__

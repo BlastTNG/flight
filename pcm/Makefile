@@ -17,13 +17,13 @@ SPIDER_ONLY=1
 EXPT_HEADERS = calibrate.h command_list.h command_struct.h pointing_struct.h
 SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 compressstruct.h crc.h derived.h ephem_read.h ephem_types.h \
-								 fir.h lut.h netcmd.h sip.h starpos.h
+								 fir.h lut.h netcmd.h sip.h starpos.h udp.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h mceserv.h \
 								mcp.h motorcommand.h motordefs.h phytron.h pyramid.h slow_dl.h \
 								svd.h tx.h
 
 # These are needed by both bolotest and flight versions
-SHARED_OBJS = blast.o channels.o framefile.o lut.o sip.o
+SHARED_OBJS = blast.o channels.o framefile.o lut.o sip.o udp.o
 LOCAL_OBJS = commands.o hk.o hwpr.o mcp.o phytron.o tx.o
 EXPT_OBJS = command_list.o derived.o tx_struct.o
 

@@ -24,18 +24,13 @@
  * arising in any way out of the use of this software, even if advised of the
  * possibility of such damage.
  */
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <poll.h>
-#include <string.h>
-#include <stdlib.h>
-
 #include "mcp.h"
 #include "command_struct.h"
 #include "mceserv.h"
+#include "udp.h"
+
+#include <unistd.h>
+#include <string.h>
 
 /* desecrate the C preprocessor to extract this file's SVN revision */
 
@@ -49,24 +44,7 @@ const static inline int ProtoRev(void) { return $Rev$; };
 #undef $
 /* end preprocessor desecration */
 
-#define CLI_NONE -1
-#define CLI_MPC1 1
-#define CLI_MPC2 2
-#define CLI_MPC3 3
-#define CLI_MPC4 4
-#define CLI_MPC5 5
-#define CLI_MPC6 6
-#define CLI_MPC7 7
-#define CLI_MPC8 8
-#define CLI_MPC9 9
-#define CLI_MAC  10
-#define CLI_MON  11
-static const char *cli_name[] = {NULL,
-  "MPC1", "MPC2", "MPC3",
-  "MPC4", "MPC5", "MPC6",
-  "MPC7", "MPC8", "MPC9",
-  "MAC", "MON"};
-
+#if 0
 /* reverse lookup on an unsorted integer array */
 static inline int FindInt(int v, const int *a, size_t l)
 {
@@ -112,51 +90,15 @@ static int GetRev(char *buffer)
 
   return rev;
 }
-
-/* initialise the network -- shouldn't there be a generic function for this
- * somewhere in the flight code? */
-static int start(void)
-{
-  struct sockaddr_in addr;
-  int sock, n;
-
-  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-    berror(warning, "Unable to create socket.");
-    return -1;
-  }
-
-  n = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) != 0) {
-    berror(warning, "Unable set socket options.");
-  }
-
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(MCESERV_PORT);
-  addr.sin_addr.s_addr = INADDR_ANY;
-
-  if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
-    berror(warning, "Unable to bind to port.");
-    return -1;
-  }
-
-  if (listen(sock, 20) == -1) {
-    berror(warning, "Unable to listen.");
-    return -1;
-  }
-
-  bprintf(info, "Listening on port %i.", MCESERV_PORT);
-
-  return sock;
-}
+#endif
 
 /* send a command if one is pending */
-static int ForwardCommand(const struct pollfd *fds, int *ready,
-    const int *client)
+static int ForwardCommand(int sock)
 {
   int i;
   int32_t i32;
-  size_t len, sent[5] = {0, 0, 0, 0, 0};
-  char *ptr, buffer[1024];
+  size_t len;
+  char *ptr, buffer[10000];
   const int cmd_idx = GETREADINDEX(CommandData.mcecmd_index);
   struct ScheduleEvent ev;
 
@@ -172,8 +114,8 @@ static int ForwardCommand(const struct pollfd *fds, int *ready,
 
   /* compose the command for transfer. */
   if (ev.is_multi) {
-    sprintf(buffer, "CMD m %3i ", ev.command);
-    ptr = buffer + 10;
+    sprintf(buffer, "CMDm%3i", ev.command);
+    ptr = buffer + 7;
     for (i = 0; i < mcommands[ev.t].numparams; ++i) {
       switch (mcommands[ev.t].params[i].type) {
         case 'i':
@@ -195,30 +137,17 @@ static int ForwardCommand(const struct pollfd *fds, int *ready,
           ptr += 32;
           break;
       }
-      *(ptr++) = '\r';
-      *(ptr++) = '\n';
-      *ptr = 0;
     }
+    len = ptr - buffer;
   } else {
-    sprintf(buffer, "CMD s %3i\r\n", ev.command);
+    sprintf(buffer, "CMDs%3i", ev.command);
+    len = 7;
   }
 
-  len = strlen(buffer);
-  /* "Broadcast" this to everyone */
-  for (i = 1; i < 5; ++i) {
-    /* theoretically there should be an iteration counter here */
-    while (ready[i] && sent[i] < len) {
-      ssize_t n = write(fds[i].fd, buffer + sent[i], len - sent[i]);
-      if (n <= 0) {
-        ready[i] = 0;
-        if (n < 0)
-          berror(warning, "error writing to client %s", cli_name[client[i]]);
-      }
-      if ((sent[i] += n) == len) {
-        bprintf(info, "Transmitted %s command #%i to %s.\n",
-            ev.is_multi ? "multi" : "single", ev.command, cli_name[client[i]]);
-      }
-    }
+  /* Broadcast this to everyone */
+  if (udp_bcast(sock, MPC_PORT, len, buffer) == 0) {
+    bprintf(info, "Broadcast %s command #%i.\n",
+        ev.is_multi ? "multi" : "single", ev.command);
   }
 
   /* mark as written */
@@ -231,231 +160,22 @@ static int ForwardCommand(const struct pollfd *fds, int *ready,
 /* main routine */
 void *mceserv(void *unused)
 {
-  socklen_t addr_len; /* stoopid POSIX */
-  struct sockaddr_in addr;
-  char buffer[1024];
-  int client[5] = {0, -1, -1, -1, -1};
-  int ready[5];
-  int i;
-  nfds_t nfds = 1;
-  struct pollfd fds[5];
   const int proto_rev = ProtoRev();
+  int sock;
 
   nameThread("MCE");
   bprintf(startup, "Startup");
   bprintf(info, "Protocol revision: %i", proto_rev);
 
-  /* wait here until serving works */
-  while ((fds[0].fd = start()) < 0)
-    sleep(1);
+  sock = udp_bind_port(MCESERV_PORT, 1);
 
-  /* poll loop */
+  if (sock == -1)
+    bprintf(tfatal, "Unable to bind to port");
+
   for (;;) {
-RESET:
-    usleep(10000);
-    fds[0].events = POLLIN;
-    memset(ready, 0, sizeof(int) * 5);
-    for (i = 1; i < nfds; ++i)
-      fds[i].events = POLLIN | POLLOUT;
-
-    /* this blocks */
-    int n = poll(fds, nfds, -1);
-    if (n < 0) { /* poll() error? */
-      berror(err, "poll");
-      continue;
-    } else if (n == 0) {
-      /* nothing to do */
-      continue;
-    }
-
-    /* handle incomming connections */
-    if (fds[0].revents & POLLIN) {
-      sprintf(buffer, "MCEserv %i\r\n", proto_rev);
-      size_t done = 0, len = strlen(buffer);
-      struct pollfd new_fd;
-
-      new_fd.fd = accept(fds[0].fd, (struct sockaddr *)&addr, &addr_len);
-      new_fd.events = POLLOUT;
-      new_fd.revents = 0;
-
-      /* wait for the client to become ready */
-      n = poll(&new_fd, 1, 1000);
-      if (n <= 0) {
-        if (n < 0)
-          berror(err, "poll on accept");
-        bprintf(warning, "Dropping lame client %s before handshake",
-            inet_ntoa(addr.sin_addr));
-        close(new_fd.fd);
-        goto RESET;
-      }
-
-      /* handshake -- iteration counter here? */
-      while (done < len) {
-        n = write(new_fd.fd, buffer + done, len - done);
-        if (n < 0) {
-          bprintf(warning, "Dropping deaf client %s during handshake",
-              inet_ntoa(addr.sin_addr));
-          close(new_fd.fd);
-          goto RESET;
-        }
-        done += n;
-      }
-
-      /* wait for the client to respond */
-      new_fd.events = POLLIN;
-      new_fd.revents = 0;
-      n = poll(&new_fd, 1, 1000);
-      if (n <= 0) {
-        if (n < 0)
-          berror(err, "poll on handshake");
-        bprintf(warning, "Dropping mute client %s during handshake",
-            inet_ntoa(addr.sin_addr));
-        close(new_fd.fd);
-        goto RESET;
-      }
-
-      /* validate the client */
-      n = read(new_fd.fd, buffer, 1024);
-      if (n <= 0) {
-        bprintf(warning, "Dropping incognito client %s during handshake",
-            inet_ntoa(addr.sin_addr));
-        close(new_fd.fd);
-        goto RESET;
-      } else if (n > 1023) {
-        bprintf(warning, "Dropping co-dependent client %s during handshake",
-            inet_ntoa(addr.sin_addr));
-        close(new_fd.fd);
-        goto RESET;
-      }
-
-      /* parse the client response.  This should be:
-       *    <client_spec> <hostname> <protovers>
-       * where client_spec is one of:
-       *   MP# - an MCC (they're indistinguishable to PCM)
-       *   MAC - the MAC
-       *   MON - for any other client that wants to kibitz
-       *
-       * A client is also allowed to reply BAD PROTO here, if the server
-       * protocol version isn't liked.  Not much we can do about that, but we'll
-       * report it.
-       */
-      if (strncmp(buffer, "BAD PROTO", 9) == 0) {
-        bprintf(warning, "Client reset and dropped.  BAD PROTO from %s",
-            inet_ntoa(addr.sin_addr));
-        close(new_fd.fd);
-        goto RESET;
-      } else if (buffer[0] != 'M') {
-HANDSHAKE_FAIL:
-        bprintf(warning, "Unrecognised response from client %s.  Dropped.",
-            inet_ntoa(addr.sin_addr));
-        close(new_fd.fd);
-        goto RESET;
-      }
-
-      if (buffer[1] == 'P' && (buffer[2] >= '1' && buffer[2] <= '9')) {
-        /* a(n) MCC */
-        int rev = GetRev(buffer);
-        if (rev < 0)
-          goto HANDSHAKE_FAIL;
-        n = buffer[2] - '0';
-
-        if (rev != proto_rev) {
-          bprintf(warning, "Dropping client %s with bad proto revision: %i",
-              inet_ntoa(addr.sin_addr), rev);
-          close(new_fd.fd);
-          goto RESET;
-        }
-      } else if (buffer[1] == 'A' && buffer[2] == 'C') { /* the MAC */
-        n = CLI_MAC;
-        int rev = GetRev(buffer);
-        if (rev < 0)
-          goto HANDSHAKE_FAIL;
-      } else if (buffer[1] == 'O' && buffer[2] == 'N') { /* monitor */
-        n = CLI_MON;
-      } else
-        goto HANDSHAKE_FAIL;
-
-      /* close the existing connection to this client, if any */
-      i = FindInt(n, client + 1, 4);
-      if (i > 0) {
-        bprintf(info, "Closing old connection to %s", cli_name[n]);
-        close(fds[i].fd);
-      } else  {
-        i = nfds++; /* new client */
-        client[i] = n;
-      }
-      /* update record */
-      fds[i].fd = new_fd.fd;
-
-      /* ACK */
-      new_fd.events = POLLOUT;
-      new_fd.revents = 0;
-      n = poll(&new_fd, 1, 10000);
-      if (n <= 0) {
-        if (n < 0)
-          berror(err, "poll on handshake");
-        bprintf(warning, "Dropping lame client %s after handshake",
-            inet_ntoa(addr.sin_addr));
-        close(new_fd.fd);
-        goto RESET;
-      }
-
-      strcpy(buffer, "OK\r\n");
-      len = 4;
-      done = 0;
-      while (done < len) {
-        n = write(new_fd.fd, buffer + done, len - done);
-        if (n < 0) {
-          bprintf(warning, "Dropping lame client %s after handshake",
-              inet_ntoa(addr.sin_addr));
-          close(new_fd.fd);
-          goto RESET;
-        }
-        done += n;
-      }
-      bprintf(info, "Registered new client %s on %s", cli_name[n],
-          inet_ntoa(addr.sin_addr));
-
-      /* now RESET to get back to the SOP */
-      goto RESET;
-    }
-
-    /* run through active clients and do, you know, things */
-    for (i = 1; i < nfds; ++i) {
-      /* handle weirdness / drops */
-      if (fds[i].revents & (POLLERR | POLLNVAL | POLLHUP)) {
-        if (fds[i].revents & POLLHUP)
-          bprintf(warning, "Client %s disconnected.\n", cli_name[client[i]]);
-        else
-          bprintf(warning, "Dropping client %s on error.\n",
-              cli_name[client[i]]);
-        close(fds[i].fd);
-
-        /* move the last client over top of this one and back up a step */
-        client[i] = client[nfds];
-        memcpy(fds + i, fds + nfds, sizeof(fds[i]));
-        nfds--;
-        i--;
-      } else if (fds[i].revents & POLLIN) {
-        if (client[i] == CLI_MON) {
-          /* we ignore data from the monitor */
-          while (read(fds[i].fd, buffer, 1024) > 0);
-        } else {
-          /* client has something to say */
-        }
-      } else if (fds[i].revents & POLLOUT) {
-        /* client is ready to listen */
-        ready[0] = 1;
-        ready[i] = 1;
-      }
-    }
-
-    /* "Broadcast" stuff to the clients, assuming someone's ready */
-    if (ready[0]) {
-      if (ForwardCommand(fds, ready, client)) {
-        ; /* done */
-      }
-    }
+    /* broadcast MCE commands */
+    ForwardCommand(sock);
+    sleep(1);
   }
 
   return NULL;

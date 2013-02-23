@@ -73,16 +73,16 @@ int sendTheUglyCommand(const char *cmd);
 static int MCEcmd(int command, const double *rvalues, const int *ivalues,
     char svalues[][CMD_STRING_LEN])
 {
-  int index;
+  int cmd, index;
 
   /* find the command, and bail on non-MCE commands */
   if (rvalues) {
-    index = MIndex(command);
-    if (!(mcommands[index].group & MCECMD))
+    cmd = MIndex(command);
+    if (!(mcommands[cmd].group & MCECMD))
       return 0;
   } else {
-    index = SIndex(command);
-    if (!(scommands[index].group & MCECMD))
+    cmd = SIndex(command);
+    if (!(scommands[cmd].group & MCECMD))
       return 0;
   }
 
@@ -96,13 +96,13 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
   CommandData.mcecmd[index].command = command;
   memcpy(CommandData.mcecmd[index].rvalues, rvalues,
       sizeof(double) * MAX_N_PARAMS);
-  memcpy(CommandData.mcecmd[index].rvalues, ivalues,
+  memcpy(CommandData.mcecmd[index].ivalues, ivalues,
       sizeof(int) * MAX_N_PARAMS);
   memcpy(CommandData.mcecmd[index].svalues, svalues,
       MAX_N_PARAMS * CMD_STRING_LEN);
 
   /* Activate */
-  CommandData.mcecmd[index].t = index;
+  CommandData.mcecmd[index].t = cmd;
   CommandData.mcecmd[index].done = 0;
 
   CommandData.mcecmd_index = INC_INDEX(index);
