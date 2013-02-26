@@ -26,23 +26,11 @@
  */
 #include "mcp.h"
 #include "command_struct.h"
-#include "mceserv.h"
+#include "mpc_proto.h"
 #include "udp.h"
 
 #include <unistd.h>
 #include <string.h>
-
-/* desecrate the C preprocessor to extract this file's SVN revision */
-
-/* Fun fact: GCC's CPP allows $ in identifier names */
-#define $Rev (0?0 /* eat a : here */
-#define $    )
-
-const static inline int ProtoRev(void) { return $Rev$; };
-
-#undef $Rev
-#undef $
-/* end preprocessor desecration */
 
 #if 0
 /* reverse lookup on an unsorted integer array */
@@ -95,10 +83,8 @@ static int GetRev(char *buffer)
 /* send a command if one is pending */
 static int ForwardCommand(int sock)
 {
-  int i;
-  int32_t i32;
   size_t len;
-  char *ptr, buffer[10000];
+  char buffer[10000];
   const int cmd_idx = GETREADINDEX(CommandData.mcecmd_index);
   struct ScheduleEvent ev;
 
@@ -113,36 +99,7 @@ static int ForwardCommand(int sock)
     return 0;
 
   /* compose the command for transfer. */
-  if (ev.is_multi) {
-    sprintf(buffer, "CMDm%3i", ev.command);
-    ptr = buffer + 7;
-    for (i = 0; i < mcommands[ev.t].numparams; ++i) {
-      switch (mcommands[ev.t].params[i].type) {
-        case 'i':
-        case 'l':
-          *(ptr++) = 'N';
-          i32 = (int32_t)ev.ivalues + i;
-          memcpy(ptr, &i32, sizeof(i32));
-          ptr += sizeof(i32);
-          break;
-        case 'f':
-        case 'd':
-          *(ptr++) = 'R';
-          memcpy(ptr, ev.rvalues + i, sizeof(double));
-          ptr += sizeof(double);
-          break;
-        case 's':
-          *(ptr++) = 'T';
-          memcpy(ptr, ev.svalues + i, 32);
-          ptr += 32;
-          break;
-      }
-    }
-    len = ptr - buffer;
-  } else {
-    sprintf(buffer, "CMDs%3i", ev.command);
-    len = 7;
-  }
+  len = mpc_compose_command(&ev, buffer);
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, buffer) == 0) {
@@ -160,7 +117,7 @@ static int ForwardCommand(int sock)
 /* main routine */
 void *mceserv(void *unused)
 {
-  const int proto_rev = ProtoRev();
+  const int proto_rev = mpc_proto_revision();
   int sock;
 
   nameThread("MCE");

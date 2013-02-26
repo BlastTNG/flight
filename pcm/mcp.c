@@ -52,7 +52,6 @@
 #include "channels.h"
 #include "tx.h"
 #include "hwpr.h"
-#include "mceserv.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -97,6 +96,7 @@ void FrameFileWriter(void);         //framefile.c
 void CompressionWriter(void);
 void StageBus(void);
 void openSC(void);
+void *mceserv(void*); /* mceserv.c */
 
 void InitialiseFrameFile(char);
 void pushDiskFrame(unsigned short *RxFrame);

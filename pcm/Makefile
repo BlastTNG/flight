@@ -14,12 +14,13 @@ SPIDER_ONLY=1
 # Inputs
 #
 
-EXPT_HEADERS = calibrate.h command_list.h command_struct.h pointing_struct.h
+EXPT_HEADERS = calibrate.h command_list.h command_struct.h mpc_proto.h \
+							 pointing_struct.h
 SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 compressstruct.h crc.h derived.h ephem_read.h ephem_types.h \
 								 fir.h lut.h netcmd.h sip.h starpos.h udp.h
-LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h mceserv.h \
-								mcp.h motorcommand.h motordefs.h phytron.h pyramid.h slow_dl.h \
+LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h mcp.h \
+								motorcommand.h motordefs.h phytron.h pyramid.h slow_dl.h \
 								svd.h tx.h
 
 # These are needed by both bolotest and flight versions
@@ -34,7 +35,7 @@ SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
 								mceserv.o motors.o motorcommand.o pointing.o pyramid.o sc.o \
 								sched.o slow_dl.o svd.o table.o
-EXPT_OBJS += compressstruct.o 
+EXPT_OBJS += compressstruct.o mpc_proto.o
 endif
 
 ETC_DATA = WMM.COF ephem.2000 sched.library *.sch *.lut *.bin
