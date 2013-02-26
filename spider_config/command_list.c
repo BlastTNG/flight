@@ -318,6 +318,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(global_thermonuclear_war), "????", 0x00000100},
   {COMMAND(lock_and_load), "????", 0x00800000},
 
+  {COMMAND(mpc_ping), "MPC test command", MCECMD | GR_MCE},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };

@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 211        /* total number of single word cmds */
+#define N_SCOMMANDS 212        /* total number of single word cmds */
 #define N_MCOMMANDS 122        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -105,22 +105,32 @@ enum singleCommand {
   thegood_run,	     thebad_run,        theugly_run,       table_track,  
   hwp_step,          hwp_repoll,
   //theo heater commands. TODO-theo assign non-temporary names
-  hk_mt_bottom_heat_on,     hk_mt_bottom_heat_off,    hk_t1_heat_on,     hk_t1_heat_off,
-  hk_vcs1_hx1_heat_on,     hk_vcs1_hx1_heat_off,    hk_vcs2_hx1_heat_on,     hk_vcs2_hx1_heat_off,
-  hk_vcs1_hx2_heat_on,     hk_vcs1_hx2_heat_off,    hk_vcs2_hx2_heat_on,     hk_vcs2_hx2_heat_off,
-  hk_sft_bottom_heat_on,     hk_sft_bottom_heat_off,    hk_t7_heat_on,     hk_t7_heat_off,
+  hk_mt_bottom_heat_on,    hk_mt_bottom_heat_off,
+  hk_t1_heat_on,           hk_t1_heat_off,
+  hk_vcs1_hx1_heat_on,     hk_vcs1_hx1_heat_off,
+  hk_vcs2_hx1_heat_on,     hk_vcs2_hx1_heat_off,
+  hk_vcs1_hx2_heat_on,     hk_vcs1_hx2_heat_off,
+  hk_vcs2_hx2_heat_on,     hk_vcs2_hx2_heat_off,
+  hk_sft_bottom_heat_on,   hk_sft_bottom_heat_off,
+  hk_t7_heat_on,           hk_t7_heat_off,
   bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
   //make better use of unused groups
   pull_cmb_pin, global_thermonuclear_war, lock_and_load, 
-  mce1_on,           mce1_off,          mce1_cycle,        mce2_on,        mce2_off,
-  mce2_cycle,        mce3_on,           mce3_off,          mce3_cycle,     mac_on,
-  mac_off,           mac_cycle,         sync_on,           sync_off,       sync_cycle,
-  eth_on,            eth_off,           eth_cycle,         hwp_on,         hwp_off,
-  hwp_cycle,         hk_preamp_on,      hk_preamp_off,     hk_preamp_cycle, 
-  mcc1_on,           mcc1_off,          mcc1_cycle,        mcc2_on,        mcc2_off,
-  mcc2_cycle,        mcc3_on,           mcc3_off,          mcc3_cycle,     mcc4_on,
-  mcc4_off,          mcc4_cycle,        mcc5_on,           mcc5_off,       mcc5_cycle,
+  mce1_on,           mce1_off,          mce1_cycle,
+  mce2_on,           mce2_off,          mce2_cycle,
+  mce3_on,           mce3_off,          mce3_cycle,
+  mac_on,            mac_off,           mac_cycle,
+  sync_on,           sync_off,          sync_cycle,
+  eth_on,            eth_off,           eth_cycle,
+  hwp_on,            hwp_off,           hwp_cycle,
+  hk_preamp_on,      hk_preamp_off,     hk_preamp_cycle, 
+  mcc1_on,           mcc1_off,          mcc1_cycle,
+  mcc2_on,           mcc2_off,          mcc2_cycle,
+  mcc3_on,           mcc3_off,          mcc3_cycle,
+  mcc4_on,           mcc4_off,          mcc4_cycle,
+  mcc5_on,           mcc5_off,          mcc5_cycle,
   mcc6_on,           mcc6_off,          mcc6_cycle,
+  mpc_ping, /* MPC test command */
   xyzzy	    //xyzzy should be at the end of the list
 };
 
