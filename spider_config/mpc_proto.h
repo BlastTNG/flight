@@ -30,5 +30,5 @@
 #define MCESERV_PORT 1729
 #define MPC_PORT     9271
 
-const int mpc_proto_revision(void);
 size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer);
+int mpc_init(void);

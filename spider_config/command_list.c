@@ -20,14 +20,23 @@
  */
 
 #include <limits.h>
+#include <stdio.h>
 
 #include "command_list.h"
 #ifdef __MCP__
 #include "camstruct.h"
 #endif
 
-
 const char *command_list_serial = "$Rev$";
+
+/* parse the above; returns -1 if command_list_serial can't be parsed */
+const int command_list_serial_as_int(void)
+{
+  int cmd_rev = -1;
+  sscanf(command_list_serial, "$Rev$", &cmd_rev);
+
+  return cmd_rev;
+}
 
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "CMB Grenades",     "Waveplate Rotator",

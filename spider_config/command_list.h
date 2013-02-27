@@ -59,6 +59,8 @@
 //reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
+extern const int command_list_serial_as_int(void);
+
 extern const char *GroupNames[N_GROUPS];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in

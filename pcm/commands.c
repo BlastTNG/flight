@@ -1908,9 +1908,10 @@ void CheckCommandList(void)
 
   /* the scommand enum isn't the same length as the scommand array */
   if ((int)xyzzy != N_SCOMMANDS - 1)
-    bprintf(fatal, "command_list: N_SCOMMANDS should be %d\n", (int)xyzzy + 1);
+    bprintf(fatal, "Commands: N_SCOMMANDS should be %d\n", (int)xyzzy + 1);
 
-  /* the scommand enum and scommand array are the same length, but there's a problem in the scommand arrray initialiser */
+  /* the scommand enum and scommand array are the same length, but there's a
+   * problem in the scommand arrray initialiser */
   if (scommands[xyzzy].command != xyzzy) {
     c = -1;
     for (i = 0; i < N_SCOMMANDS; ++i) 
@@ -1919,21 +1920,26 @@ void CheckCommandList(void)
         break;
       }
 
-    if (c == -1)
+    if (c == -1) {
       /* the initialiser is too long -- look for duplicate definitions */
-      bprintf(fatal, "command_list: scommand #%i should be xyzzy, but it's \"%s\" (%i); "
-          "xyzzy is not in the list at all.\n", (int)xyzzy, scommands[xyzzy].name, scommands[xyzzy].command);
-    else
-      /* the initialiser is too short -- look for missing definitions or extra things in the enum */
-      bprintf(fatal, "command_list: scommand #%i should be xyzzy, but it's \"%s\" (%i); xyzzy is scommand #%i\n",
-          (int)xyzzy, scommands[xyzzy].name, scommands[xyzzy].command, c);
+      bprintf(fatal, "Commands: scommand #%i should be xyzzy, but it's \"%s\" "
+          "(%i); xyzzy is not in the list at all.\n", (int)xyzzy,
+          scommands[xyzzy].name, scommands[xyzzy].command);
+    } else {
+      /* the initialiser is too short -- look for missing definitions or extra
+       * things in the enum */
+      bprintf(fatal, "Commands: scommand #%i should be xyzzy, but it's \"%s\" "
+          "(%i); xyzzy is scommand #%i\n", (int)xyzzy, scommands[xyzzy].name,
+          scommands[xyzzy].command, c);
+    }
   }
 
   /* the mcommand enum isn't the same length as the mcommand array */
   if ((int)plugh != N_MCOMMANDS - 1)
-    bprintf(fatal, "command_list: N_MCOMMANDS should be %d\n", (int)plugh + 1);
+    bprintf(fatal, "Commands: N_MCOMMANDS should be %d\n", (int)plugh + 1);
 
-  /* the mcommand enum and mcommand array are the same length, but there's a problem in the mcommand arrray initialiser */
+  /* the mcommand enum and mcommand array are the same length, but there's a
+   * problem in the mcommand arrray initialiser */
   if (mcommands[plugh].command != plugh) {
     c = -1;
     for (i = 0; i < N_MCOMMANDS; ++i) 
@@ -1942,17 +1948,21 @@ void CheckCommandList(void)
         break;
       }
 
-    if (c == -1)
+    if (c == -1) {
       /* the initialiser is too long -- look for duplicate definitions */
-      bprintf(fatal, "command_list: mcommand #%i should be plugh, but it's \"%s\" (%i); "
-          "plugh is not in the list at all.\n", (int)plugh, mcommands[plugh].name, mcommands[plugh].command);
-    else
-      /* the initialiser is too short -- look for missing definitions or extra things in the enum */
-      bprintf(fatal, "command_list: mcommand #%i should be plugh, but it's \"%s\" (%i); plugh is mcommand #%i\n",
-          (int)plugh, mcommands[plugh].name, mcommands[plugh].command, c);
+      bprintf(fatal, "Commands: mcommand #%i should be plugh, but it's \"%s\" "
+          "(%i); plugh is not in the list at all.\n", (int)plugh,
+          mcommands[plugh].name, mcommands[plugh].command);
+    } else {
+      /* the initialiser is too short -- look for missing definitions or extra
+       * things in the enum */
+      bprintf(fatal, "Commands: mcommand #%i should be plugh, but it's \"%s\" "
+          "(%i); plugh is mcommand #%i\n", (int)plugh, mcommands[plugh].name,
+          mcommands[plugh].command, c);
+    }
   }
 
-  bprintf(info, "command_list: All Checks Passed.\n");
+  bprintf(info, "Commands: All Checks Passed.\n");
 }
 
 /************************************************************/

@@ -24,9 +24,12 @@
  * arising in any way out of the use of this software, even if advised of the
  * possibility of such damage.
  */
+#include "blast.h"
 #include "mpc_proto.h"
 
 #include <string.h>
+
+static int mpc_cmd_rev = -1, mpc_proto_rev = -1;
 
 /* desecrate the C preprocessor to extract this file's SVN revision */
 
@@ -34,11 +37,25 @@
 #define $Rev (0?0 /* eat a : here */
 #define $    )
 
-const int mpc_proto_revision(void) { return $Rev$; };
+static const inline int mpc_proto_revision(void) { return $Rev$; };
 
 #undef $Rev
 #undef $
 /* end preprocessor desecration */
+
+/* initialisation routine: sets up the environment; returns non-zero on error */
+int mpc_init(void)
+{
+  mpc_proto_rev = mpc_proto_revision();
+  mpc_cmd_rev = command_list_serial_as_int();
+  if (mpc_cmd_rev < 0) {
+    bputs(err, "MPC: Unable to parse the command list revision.");
+    return -1;
+  }
+
+  bprintf(info, "MPC: Protocol revision: %i/%i\n", mpc_proto_rev, mpc_cmd_rev);
+  return 0;
+}
 
 /* compose a command for transfer to the mpc
  *
@@ -60,7 +77,7 @@ size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
   size_t len = 2 + 1 + 2 + 1; /* 16-bit protocol revision + 'C' + 16-bit command
                                  number + 'm'/'s' */
   int32_t i32;
-  int16_t i16 = mpc_proto_revision();
+  int16_t i16 = mpc_proto_rev;
   char *ptr;
   int i;
 

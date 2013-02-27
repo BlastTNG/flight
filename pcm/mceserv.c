@@ -32,54 +32,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#if 0
-/* reverse lookup on an unsorted integer array */
-static inline int FindInt(int v, const int *a, size_t l)
-{
-  size_t i;
-  for (i = 0; i < l; ++i)
-    if (v == a[i])
-      return v;
-  return -1;
-}
-
-/* check a client revision number.  Also isolate the hostname */
-static int GetRev(char *buffer)
-{
-  char *end = NULL;
-  int rev;
-  char *ptr = buffer + 5;
-
-  /* find first space */
-  while (*ptr && *ptr != ' ')
-    ptr++;
-
-  /* no space */
-  if (!*ptr)
-    return -1;
-
-  *(ptr++) = 0;
-
-  /* skip all the spaces */
-  while (*ptr && *ptr == ' ')
-    ptr++;
-
-  if (!*ptr)
-    return -1;
-
-  /* convert revision number */
-  rev = (int)strtol(ptr, &end, 10);
-  if (rev <= 0)
-    return -1;
-
-  /* revision number should be ended by a \r\n */
-  if (*end != '\r')
-    return -1;
-
-  return rev;
-}
-#endif
-
 /* send a command if one is pending */
 static int ForwardCommand(int sock)
 {
@@ -117,12 +69,14 @@ static int ForwardCommand(int sock)
 /* main routine */
 void *mceserv(void *unused)
 {
-  const int proto_rev = mpc_proto_revision();
   int sock;
 
   nameThread("MCE");
   bprintf(startup, "Startup");
-  bprintf(info, "Protocol revision: %i", proto_rev);
+
+  /* initialise the MPC protocol suite */
+  if (mpc_init())
+    bprintf(tfatal, "Unable to initialise MPC protocol subsystem.");
 
   sock = udp_bind_port(MCESERV_PORT, 1);
 
