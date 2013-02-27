@@ -33,7 +33,8 @@ const char *command_list_serial = "$Rev$";
 const int command_list_serial_as_int(void)
 {
   int cmd_rev = -1;
-  sscanf(command_list_serial, "$Rev$", &cmd_rev);
+  sscanf(command_list_serial, "$R" /* prevent SVN from munging this string */
+      "ev: %i $", &cmd_rev);
 
   return cmd_rev;
 }
