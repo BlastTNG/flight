@@ -97,7 +97,7 @@ size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
         case 'i':
         case 'l':
           *(ptr++) = 'N'; /* 32-bit integer */
-          i32 = (int32_t)ev->ivalues + i;
+          i32 = (int32_t)(ev->ivalues[i]);
           memcpy(ptr, &i32, sizeof(i32));
           ptr += sizeof(i32);
           break;
