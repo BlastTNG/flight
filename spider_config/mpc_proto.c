@@ -25,6 +25,7 @@
  * possibility of such damage.
  */
 #include "blast.h"
+#include "command_common.h"
 #include "mpc_proto.h"
 
 #include <string.h>
@@ -103,7 +104,7 @@ size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
           break;
         case 'f':
         case 'd':
-          *(ptr++) = 'R'; /* 4-bit double */
+          *(ptr++) = 'R'; /* 64-bit double */
           memcpy(ptr, ev->rvalues + i, sizeof(double));
           ptr += sizeof(double);
           break;
@@ -118,4 +119,90 @@ size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
   }
 
   return len;
+}
+
+/* perform routine checks on an incoming packet.  Returns the packet type, or
+ * -1 on error */
+int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
+{
+  const int16_t pcm_proto = (len >= 2) ? *(const int16_t*)data : -1;
+  const char *ptr = data + 2; /* skip proto rev */
+
+  /* check protocol revision */
+  if (mpc_proto_rev != pcm_proto) {
+    bprintf(err, "Ignoring %i-byte packet with bad protocol revision %i from "
+        "%s/%i\n", len, pcm_proto, peer, port);
+    return -1;
+  }
+
+  /* check type -- there's a list of valid packet codes here */
+  if (*ptr != 'C') {
+    bprintf(err, "Ignoring %i-byte packet of unknown type 0x%X from %s/%i\n",
+        len, (unsigned char)*ptr, peer, port);
+    return -1;
+  }
+
+  return *ptr;
+}
+
+/* decompose a command into the ScheduleEvent struct.  returns non-zero on 
+ * error */
+int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
+    const char *data, const char *peer, int port)
+{
+  const char *ptr = data + 3; /* skip proto revision and packet type */
+  int16_t pcm_cmd_rev;
+  int i = 0;
+
+  /* check command type and command list revision */
+  memset(ev, 0, sizeof(*ev));
+  if (*ptr != 'm' && *ptr != 's') {
+    bprintf(err, "Dropping Command packet with bad type 0x%x",
+        (unsigned char)*ptr);
+    return -1;
+  }
+  ev->is_multi = (*ptr == 'm') ? 1 : 0;
+  ptr++;
+
+  pcm_cmd_rev = *(int16_t*)ptr;
+  if (pcm_cmd_rev != mpc_cmd_rev) {
+    bprintf(err, "Dropping Command packet with bad command list revision %i",
+        pcm_cmd_rev);
+    return -1;
+  }
+  ptr += 2;
+
+  ev->command = *(int16_t*)(ptr);
+  ptr += 2;
+
+  bprintf(info, "Received %sword command #%i (%s)", ev->is_multi ? "mutli" :
+      "single ", ev->command, CommandName(ev->is_multi, ev->command));
+
+  if (ev->is_multi)
+    while (ptr - data < len) {
+      switch (*(ptr++)) {
+        case 'N': /* 32-bit integer */
+          ev->ivalues[i] = *(int32_t*)ptr;
+          ptr += sizeof(int32_t);
+          bprintf(info, "Param %02i: integer: %i", i, ev->ivalues[i]);
+          break;
+        case 'R':
+          ev->rvalues[i] = *(double*)ptr;
+          ptr += sizeof(double);
+          bprintf(info, "Param %02i: float:   %g", i, ev->rvalues[i]);
+          break;
+        case 'T':
+          memcpy(ev->svalues + i, ptr, 32);
+          ptr += 32;
+          bprintf(info, "Param %02i: string:  %s", i, ev->svalues[i]);
+          break;
+        default:
+          bprintf(err, "Droping Command packet with bad parameter type: 0x%X",
+              *(ptr - 1));
+          return -1;
+      }
+      ++i;
+    }
+
+  return 0;
 }

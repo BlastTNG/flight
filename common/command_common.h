@@ -22,6 +22,8 @@
  */
 #include "command_struct.h"
 
+int SIndex(enum singleCommand command);
 const char* SName(enum singleCommand command);
+int MIndex(enum multiCommand command);
 const char* MName(enum multiCommand command);
 const char* CommandName(int is_multi, int command);

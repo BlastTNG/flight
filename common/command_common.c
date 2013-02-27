@@ -25,10 +25,32 @@
 
 static const char *UnknownCommand = "Unknown Command";
 
+int SIndex(enum singleCommand command)
+{
+  int i;
+
+  for (i = 0; i < N_SCOMMANDS; i++)
+    if (scommands[i].command == command)
+      return i;
+
+  return -1;
+}
+
 const char* SName(enum singleCommand command)
 {
   int i = SIndex(command);
   return (i == -1) ? UnknownCommand : scommands[i].name;
+}
+
+int MIndex(enum multiCommand command)
+{
+  int i;
+
+  for (i = 0; i < N_MCOMMANDS; i++)
+    if (mcommands[i].command == command)
+      return i;
+
+  return -1;
 }
 
 const char* MName(enum multiCommand command)

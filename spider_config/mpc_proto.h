@@ -30,5 +30,8 @@
 #define MCESERV_PORT 1729
 #define MPC_PORT     9271
 
-size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer);
 int mpc_init(void);
+size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer);
+int mpc_check_packet(size_t len, const char *data, const char *peer, int port);
+int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
+    const char *data, const char *peer, int port);

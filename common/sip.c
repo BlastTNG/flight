@@ -201,17 +201,6 @@ enum singleCommand SCommand(char *cmd) //---------------------
   return -1;
 }
 
-int SIndex(enum singleCommand command)   //---------------------
-{
-  int i;
-
-  for (i = 0; i < N_SCOMMANDS; i++)
-    if (scommands[i].command == command)
-      return i;
-
-  return -1;
-}
-
 enum multiCommand MCommand(char *cmd)
 {
   int i;
@@ -220,17 +209,6 @@ enum multiCommand MCommand(char *cmd)
     if (strcmp(mcommands[i].name, cmd) == 0)
       return mcommands[i].command;
   }
-
-  return -1;
-}
-
-int MIndex(enum multiCommand command)
-{
-  int i;
-
-  for (i = 0; i < N_MCOMMANDS; i++)
-    if (mcommands[i].command == command)
-      return i;
 
   return -1;
 }

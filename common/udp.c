@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -111,7 +112,15 @@ ssize_t udp_recv(int sock, int msec, char *peer, int *port, size_t len,
 
   if (msec > 0) {
     /* poll */
-    return -1;
+    int r;
+    struct pollfd fds = { .fd = sock, .events = POLLIN, .revents = 0};
+    r = poll(&fds, 1, msec);
+    if (r < 0) {
+      berror(err, "poll");
+      return -1;
+    } else if (r == 0) {
+      return 0; /* timeout */
+    }
   }
 
   n = recvfrom(sock, data, len, 0, &addr, &addr_len);
