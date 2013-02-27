@@ -132,7 +132,7 @@ void *mceserv(void *unused)
   for (;;) {
     /* broadcast MCE commands */
     ForwardCommand(sock);
-    sleep(1);
+    usleep(10000);
   }
 
   return NULL;

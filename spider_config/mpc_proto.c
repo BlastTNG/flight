@@ -40,43 +40,60 @@ const int mpc_proto_revision(void) { return $Rev$; };
 #undef $
 /* end preprocessor desecration */
 
-/* compose a command for transfer to the mpc */
+/* compose a command for transfer to the mpc
+ *
+ * Command packet looks like:
+ *
+ * RR RR CC NN NN T ...
+ *
+ * where
+ * 
+ * R = protocol revision
+ * C = 'C', indicating command packet
+ * N = command number
+ * T = 'm' or 's' indicating single or multiword command
+ *
+ * followed by command parameters, if any.  Like the rest of the protocol all
+ * numbers a little-endian */
 size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
 {
-  size_t len;
+  size_t len = 2 + 1 + 2 + 1; /* 16-bit protocol revision + 'C' + 16-bit command
+                                 number + 'm'/'s' */
   int32_t i32;
+  int16_t i16 = mpc_proto_revision();
   char *ptr;
   int i;
 
+  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  buffer[2] = 'C'; /* command packet */
+  i16 = ev->command;
+  memcpy(buffer + 3, &i16, sizeof(i16)); /* 16-bit command number */
+  buffer[5] = ev->is_multi ? 'm' : 's'; /* multi/single command */
   if (ev->is_multi) {
-    sprintf(buffer, "CMDm%3i", ev->command);
-    ptr = buffer + 7;
+    ptr = buffer + 6;
     for (i = 0; i < mcommands[ev->t].numparams; ++i) {
       switch (mcommands[ev->t].params[i].type) {
         case 'i':
         case 'l':
-          *(ptr++) = 'N';
+          *(ptr++) = 'N'; /* 32-bit integer */
           i32 = (int32_t)ev->ivalues + i;
           memcpy(ptr, &i32, sizeof(i32));
           ptr += sizeof(i32);
           break;
         case 'f':
         case 'd':
-          *(ptr++) = 'R';
+          *(ptr++) = 'R'; /* 4-bit double */
           memcpy(ptr, ev->rvalues + i, sizeof(double));
           ptr += sizeof(double);
           break;
         case 's':
-          *(ptr++) = 'T';
+          *(ptr++) = 'T'; /* 32-byte NUL-terminated string */
           memcpy(ptr, ev->svalues + i, 32);
           ptr += 32;
           break;
       }
     }
     len = ptr - buffer;
-  } else {
-    sprintf(buffer, "CMDs%3i", ev->command);
-    len = 7;
   }
 
   return len;

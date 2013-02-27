@@ -94,12 +94,14 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
 
   CommandData.mcecmd[index].is_multi = rvalues ? 1 : 0;
   CommandData.mcecmd[index].command = command;
-  memcpy(CommandData.mcecmd[index].rvalues, rvalues,
-      sizeof(double) * MAX_N_PARAMS);
-  memcpy(CommandData.mcecmd[index].ivalues, ivalues,
-      sizeof(int) * MAX_N_PARAMS);
-  memcpy(CommandData.mcecmd[index].svalues, svalues,
-      MAX_N_PARAMS * CMD_STRING_LEN);
+  if (rvalues) {
+    memcpy(CommandData.mcecmd[index].rvalues, rvalues,
+        sizeof(double) * MAX_N_PARAMS);
+    memcpy(CommandData.mcecmd[index].ivalues, ivalues,
+        sizeof(int) * MAX_N_PARAMS);
+    memcpy(CommandData.mcecmd[index].svalues, svalues,
+        MAX_N_PARAMS * CMD_STRING_LEN);
+  }
 
   /* Activate */
   CommandData.mcecmd[index].t = cmd;
@@ -974,7 +976,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     default:
       /* Render, therefore, unto Caesar the things which are Caesar's */
-      if (MCEcmd(command, NULL, NULL, NULL)) {
+      if (!MCEcmd(command, NULL, NULL, NULL)) {
         bputs(warning, "Commands: ***Invalid Single Word Command***\n");
         return; /* invalid command - no write or update */
       }
