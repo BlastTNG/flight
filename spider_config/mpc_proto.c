@@ -61,21 +61,23 @@ int mpc_init(void)
  *
  * Command packet looks like:
  *
- * RR RR CC NN NN T ...
+ * RRCZZNNT...
  *
  * where
  * 
- * R = protocol revision
+ * R = 16-bit protocol revision
  * C = 'C', indicating command packet
- * N = command number
+ * Z = 16-bit command list revision
+ * N = 16-bit command number
  * T = 'm' or 's' indicating single or multiword command
  *
  * followed by command parameters, if any.  Like the rest of the protocol all
  * numbers a little-endian */
 size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
 {
-  size_t len = 2 + 1 + 2 + 1; /* 16-bit protocol revision + 'C' + 16-bit command
-                                 number + 'm'/'s' */
+  size_t len = 2 + 1 + 2 + 2 + 1; /* 16-bit protocol revision + 'C' + 16-bit
+                                     command list revision + 16-bit command
+                                     number + 'm'/'s' */
   int32_t i32;
   int16_t i16 = mpc_proto_rev;
   char *ptr;
@@ -83,11 +85,13 @@ size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
 
   memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
   buffer[2] = 'C'; /* command packet */
+  i16 = mpc_cmd_rev;
+  memcpy(buffer + 3, &i16, sizeof(i16)); /* 16-bit command list revision */
   i16 = ev->command;
-  memcpy(buffer + 3, &i16, sizeof(i16)); /* 16-bit command number */
-  buffer[5] = ev->is_multi ? 'm' : 's'; /* multi/single command */
+  memcpy(buffer + 5, &i16, sizeof(i16)); /* 16-bit command number */
+  buffer[6] = ev->is_multi ? 'm' : 's'; /* multi/single command */
   if (ev->is_multi) {
-    ptr = buffer + 6;
+    ptr = buffer + 8;
     for (i = 0; i < mcommands[ev->t].numparams; ++i) {
       switch (mcommands[ev->t].params[i].type) {
         case 'i':
