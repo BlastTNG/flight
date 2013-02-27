@@ -13,14 +13,14 @@ SPIDER_ONLY=1
 # Inputs
 #
 
-EXPT_HEADERS = 
-SHARED_HEADERS = 
-LOCAL_HEADERS = 
+EXPT_HEADERS = command_list.h command_struct.h mpc_proto.h
+SHARED_HEADERS = blast.h command_common.h udp.h 
+LOCAL_HEADERS =
 
 # These are needed by both bolotest and flight versions
-SHARED_OBJS = 
+EXPT_OBJS = command_list.o mpc_proto.o
+SHARED_OBJS = blast.o command_common.o udp.o
 LOCAL_OBJS = mpc.o
-EXPT_OBJS =
 
 ########################################################
 # Run the sanity checks and prepare the build system
@@ -46,7 +46,7 @@ clean:
 	rm -f mpc
 	rm -f *.o
 
-pcm: $(OBJS)
+mpc: $(OBJS)
 	$(CC) $(LDFLGS) $(CFLAGS) $(OBJS) $(LDLIBS) -o mpc
 
 ########################################################
