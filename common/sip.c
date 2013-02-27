@@ -40,10 +40,10 @@
 
 #include "sip.h"
 #include "blast.h"
+#include "command_common.h"
 #include "command_struct.h"
 #include "slow_dl.h"
 #include "mcp.h"
-static const char *UnknownCommand = "Unknown Command";
 extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 #define REQ_POSITION    0x50
@@ -212,13 +212,6 @@ int SIndex(enum singleCommand command)   //---------------------
   return -1;
 }
 
-const char* SName(enum singleCommand command)
-{
-  int i = SIndex(command);
-  return (i == -1) ? UnknownCommand : scommands[i].name;
-}
-
-
 enum multiCommand MCommand(char *cmd)
 {
   int i;
@@ -241,13 +234,6 @@ int MIndex(enum multiCommand command)
 
   return -1;
 }
-
-static const char* MName(enum multiCommand command)
-{
-  int i = MIndex(command);
-  return (i == -1) ? UnknownCommand : mcommands[i].name;
-}
-
 
 static void SetParameters(enum multiCommand command, unsigned short *dataq,
     double* rvalues, int* ivalues, char svalues[][CMD_STRING_LEN])
@@ -344,11 +330,6 @@ static void GPSPosition (unsigned char *indata)
   }
 }
 #endif
-
-const char* CommandName(int is_multi, int command)
-{
-  return (is_multi) ? MName(command) : SName(command);
-}
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
@@ -847,9 +828,9 @@ void WatchPort (void* parameter)
         if (bytecount == 0) {  /* Look for 2nd byte of command packet = 0x02 */
           if (buf == 0x02) {
             bytecount = 1;
-	  } else {
+          } else {
             readstage = 7;
-	    extlen = buf;
+            extlen = buf;
           }
         } else if (bytecount >= 1 && bytecount <= 2) {
           /* Read the two data bytes of the command packet */
@@ -908,7 +889,7 @@ void WatchPort (void* parameter)
               mcommand = -1;
               mcommand_count = 0;
               bprintf(warning, "Command packet discarded: Bad Encoding: %04X\n",
-		  indata[1]);
+                  indata[1]);
               mcommand_time = 0;
             }
           }
@@ -969,36 +950,38 @@ void WatchPort (void* parameter)
         break;
       case 7: // reading extended command
         if (bytecount < extlen) {
-	  extdat[bytecount] = buf;
-	  bytecount++;
-	} else {
-	  if (buf == 0x03) {
-	    if (extdat[0] == sched_packet) {
-	      if (extdat[EXT_ROUTE] == route[port]) {
-	        bprintf(info, "Schedule file uplink packet detected\n");
-	        ProcessUplinkSched(extdat);
-	      } else {
-	        bprintf(info, "Schedule file uplink packet bad route %d != %d\n",
-		  extdat[EXT_ROUTE], route[port]);
-	      }		
-	    } else {
-	      if (MIndex(extdat[0])<0) {
-		bprintf(warning, "ignoring unknown extended command (%d)", extdat[0]);
-	      } else {
-		bprintf(info, "extended command %d (%s)", 
-		      extdat[0], MName(extdat[0]));
-		SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
-		    ivalues, svalues);
-		MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
-	      }
-	    }
-	  } else {
+          extdat[bytecount] = buf;
+          bytecount++;
+        } else {
+          if (buf == 0x03) {
+            if (extdat[0] == sched_packet) {
+              if (extdat[EXT_ROUTE] == route[port]) {
+                bprintf(info, "Schedule file uplink packet detected\n");
+                ProcessUplinkSched(extdat);
+              } else {
+                bprintf(info,
+                    "Schedule file uplink packet bad route %d != %d\n",
+                    extdat[EXT_ROUTE], route[port]);
+              }		
+            } else {
+              if (MIndex(extdat[0])<0) {
+                bprintf(warning, "ignoring unknown extended command (%d)",
+                    extdat[0]);
+              } else {
+                bprintf(info, "extended command %d (%s)", 
+                    extdat[0], MName(extdat[0]));
+                SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
+                    ivalues, svalues);
+                MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
+              }
+            }
+          } else {
             bprintf(warning, "Bad encoding in extended command: "
                 "Bad packet terminator: %02X\n", buf);
           }
           bytecount = 0;
           readstage = 0;
-	}
+        }
         break;
     }
 

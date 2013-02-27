@@ -19,16 +19,16 @@ BLAST_ONLY=1
 #
 
 EXPT_HEADERS = calibrate.h command_list.h isc_protocol.h
-SHARED_HEADERS = bbc_pci.h blast.h channels.h compressstruct.h crc.h derived.h \
-                 ephem_read.h ephem_types.h fir.h flcdataswap.h lut.h netcmd.h \
-                 sip.h starpos.h
+SHARED_HEADERS = bbc_pci.h blast.h channels.h command_common.h \
+								 compressstruct.h crc.h derived.h ephem_read.h ephem_types.h \
+								 fir.h flcdataswap.h lut.h netcmd.h sip.h starpos.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h command_struct.h copleycommand.h \
 								hwpr.h ezstep.h mcp.h motordefs.h pointing_struct.h \
 								sbsc_protocol.h sbsccommunicator.h slow_dl.h tx.h
 
 # These are needed by both bolotest and flight versions
 EXPT_OBJS = command_list.o derived.o tx_struct.o
-SHARED_OBJS = blast.o channels.o framefile.o lut.o sip.o
+SHARED_OBJS = blast.o channels.o command_common.o framefile.o lut.o sip.o
 LOCAL_OBJS = actuators.o commands.o das.o ezstep.o hwpr.o mcp.o tx.o xystage.o
 
 # These are only needed by the flight version
