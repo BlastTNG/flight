@@ -61,15 +61,15 @@ int mpc_init(void)
  *
  * Command packet looks like:
  *
- * RRCZZNNT...
+ * RRCTZZNN...
  *
  * where
  * 
  * R = 16-bit protocol revision
  * C = 'C', indicating command packet
+ * T = 'm' or 's' indicating single or multiword command
  * Z = 16-bit command list revision
  * N = 16-bit command number
- * T = 'm' or 's' indicating single or multiword command
  *
  * followed by command parameters, if any.  Like the rest of the protocol all
  * numbers a little-endian */
@@ -85,11 +85,11 @@ size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
 
   memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
   buffer[2] = 'C'; /* command packet */
+  buffer[3] = ev->is_multi ? 'm' : 's'; /* multi/single command */
   i16 = mpc_cmd_rev;
-  memcpy(buffer + 3, &i16, sizeof(i16)); /* 16-bit command list revision */
+  memcpy(buffer + 4, &i16, sizeof(i16)); /* 16-bit command list revision */
   i16 = ev->command;
-  memcpy(buffer + 5, &i16, sizeof(i16)); /* 16-bit command number */
-  buffer[6] = ev->is_multi ? 'm' : 's'; /* multi/single command */
+  memcpy(buffer + 6, &i16, sizeof(i16)); /* 16-bit command number */
   if (ev->is_multi) {
     ptr = buffer + 8;
     for (i = 0; i < mcommands[ev->t].numparams; ++i) {
