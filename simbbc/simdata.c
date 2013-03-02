@@ -131,7 +131,7 @@ int GetFrameNextWord(unsigned* out_data)
 
     if (*bbc_data.bb1_ptr & BBC_FSYNC) {
       bus = 1;
-      return 1;
+      return 0;
     }
   }
 
