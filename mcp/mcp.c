@@ -46,7 +46,6 @@
 #include "crc.h"
 #include "mcp.h"
 #include "pointing_struct.h"
-#include "slow_dl.h"
 #include "starpos.h"
 #include "channels.h"
 #include "tx.h"
@@ -82,7 +81,6 @@ static int Death = -STARTUP_VETO_LENGTH * 2;
 static int RxFrameIndex;
 
 extern short int InCharge; /* tx.c */
-extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 extern pthread_mutex_t mutex;  //commands.c
 
 void Pointing();
@@ -100,6 +98,7 @@ void InitialiseFrameFile(char);
 void pushDiskFrame(unsigned short *RxFrame);
 void ShutdownFrameFile();
 
+void updateSlowDL(); // common/slowdl.c
 
 void InitSched();
 
@@ -359,29 +358,6 @@ void mputs(buos_t flag, const char* message) {
 }
 
 #ifndef BOLOTEST
-static void FillSlowDL(unsigned short *RxFrame)
-{
-  int i;
-  unsigned short msb, lsb;
-
-  for (i = 0, msb = 0; i < SLOWDL_NUM_DATA; i++) {
-    if (SlowDLInfo[i].mindex == NOT_MULTIPLEXED) {
-      lsb = RxFrame[SlowDLInfo[i].chnum];
-      if (SlowDLInfo[i].wide)
-        msb = RxFrame[SlowDLInfo[i].chnum + 1];
-      else
-        msb = 0;
-      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
-    } else {
-      lsb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum];
-      if (SlowDLInfo[i].wide)
-        msb = slow_data[SlowDLInfo[i].mindex][SlowDLInfo[i].chnum + 1];
-      else
-        msb = 0;
-      SlowDLInfo[i].value = (double)((msb << 16) | lsb);
-    }
-  }
-}
 
 static void SensorReader(void)
 {
@@ -1167,7 +1143,6 @@ int main(int argc, char *argv[])
   ReductionInit("/data/etc/blast/ephem.2000");
 
   bprintf(info, "System: Slow Downlink Initialisation");
-  InitSlowDL();
 
   InitFrameBuffer(&bi0_buffer);
   InitFrameBuffer(&hiGain_buffer);
@@ -1294,8 +1269,8 @@ int main(int argc, char *argv[])
         } else if (biphase_timer < mcp_systime(NULL)) {
           biphase_is_on = 1;
         }
+        updateSlowDL();
 
-        FillSlowDL(RxFrame);
 #endif
         zero(RxFrame);
       }

@@ -1619,6 +1619,42 @@ void WriteData(struct NiosStruct* addr, unsigned int data, int flush_flag)
   }
 }
 
+
+unsigned int ReadData(struct BiPhaseStruct* addr)
+{
+  unsigned int result = 0;
+#if 0
+  // FIXME: slow DL needs this!  port from Spider
+  if (addr->nios->fast) {
+    result = RxFrame[addr->channel];
+    if (addr->nios->wide)
+      result |= (RxFrame[addr->channel+1] << 16);
+  } else {
+    result = slow_data[addr->index][addr->channel];
+    if (addr->nios->wide)
+      result |= (slow_data[addr->index][addr->channel+1] << 16);
+  }
+#endif
+  return result;
+}
+
+//TODO convert slow_data and RxFrame accesses to ReadData or ReadCalData
+double ReadCalData(struct BiPhaseStruct* addr)
+{
+#if 0
+  // FIXME: slow DL needs this!  port from Spider
+  if (addr->nios->sign) {   //signed
+    if (addr->nios->wide)
+      return ((double)(int)ReadData(addr) * addr->nios->m + addr->nios->b);
+    else return ((double)(short)ReadData(addr) * addr->nios->m + addr->nios->b);
+  } else {                  //unsigned
+    return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
+  }
+#endif
+  return (0.0);
+}
+
+
 /* called from mcp, should call all nios writing functions */
 void UpdateBBCFrame(unsigned short *RxFrame)
 {

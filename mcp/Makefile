@@ -21,10 +21,10 @@ BLAST_ONLY=1
 EXPT_HEADERS = calibrate.h command_list.h isc_protocol.h
 SHARED_HEADERS = bbc_pci.h blast.h channels.h command_common.h \
 								 compressstruct.h crc.h derived.h ephem_read.h ephem_types.h \
-								 fir.h flcdataswap.h lut.h netcmd.h sip.h starpos.h
+								 fir.h flcdataswap.h lut.h netcmd.h sip.h starpos.h slowdl.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h command_struct.h copleycommand.h \
 								hwpr.h ezstep.h mcp.h motordefs.h pointing_struct.h \
-								sbsc_protocol.h sbsccommunicator.h slow_dl.h tx.h
+								sbsc_protocol.h sbsccommunicator.h tx.h
 
 # These are needed by both bolotest and flight versions
 EXPT_OBJS = command_list.o derived.o tx_struct.o
@@ -33,11 +33,11 @@ LOCAL_OBJS = actuators.o commands.o das.o ezstep.o hwpr.o mcp.o tx.o xystage.o
 
 # These are only needed by the flight version
 ifndef BOLOTEST
-EXPT_OBJS += compressstruct.o
+EXPT_OBJS += compressstruct.o slowdl_struct.o
 SHARED_OBJS += compressfuncs.o compressionwriter.o crc.o ephem_read.o fir.o \
-							 flcdataswap.o geomag.o radbox.o starpos.o
+							 flcdataswap.o geomag.o radbox.o starpos.o slowdl.o
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o copleycommand.o dgps.o isc.o \
-							motors.o pointing.o sbsc.o sbsccommunicator.o sched.o slow_dl.o
+							motors.o pointing.o sbsc.o sbsccommunicator.o sched.o
 endif
 
 ETC_DATA = WMM.COF *.sch *.lut *.txt ephem.2000 sched.library
