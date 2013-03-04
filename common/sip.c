@@ -42,13 +42,17 @@
 #include "blast.h"
 #include "command_common.h"
 #include "command_struct.h"
-#include "slow_dl.h"
 #include "mcp.h"
-extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
 #define REQ_ALTITUDE    0x52
+#define SLOWDL_SYNC     0x53
+
+#define SLOWDL_LEN          255
+
+#define SLOWDL_DLE          0x10
+#define SLOWDL_ETX          0x03
 
 /* Seconds since 0TMG jan 1 1970 */
 #define SUN_JAN_6_1980 315964800L
@@ -67,6 +71,7 @@ extern struct SlowDLStruct SlowDLInfo[SLOWDL_NUM_DATA];
 #define MAX_DAYS 21.0
 
 void nameThread(const char*);  /* mcp.c */
+void fillDLData(unsigned char *b, int len); /* slowdl.c */
 
 extern pthread_mutex_t mutex;
 
@@ -380,90 +385,14 @@ static void MKSAltitude (unsigned char *indata)
 
 static void SendDownData(char tty_fd)
 {
-  unsigned char buffer[3 + SLOWDL_LEN + 1], data[3 + SLOWDL_LEN + 1];
-  int i, temp;
-  int bitpos, bytepos, numbits;
-  double slowM, slowB;
-  static char firsttime;
-
-  bitpos = 0;
-  bytepos = 0;
-  memset(data, 0, SLOWDL_LEN);
-
-  for (i = 0; i < SLOWDL_NUM_DATA; i++) {
-    switch (SlowDLInfo[i].type) {
-      case SLOWDL_FORCE_INT:
-        /* Round value to an integer and try to fit it in numbits */
-        numbits = SlowDLInfo[i].numbits;
-        slowM = (double)((1 << (numbits - 1)) - 1) /
-          (SlowDLInfo[i].max - SlowDLInfo[i].min);
-        slowB = - slowM * (double)SlowDLInfo[i].min;
-        if ((int)SlowDLInfo[i].value > SlowDLInfo[i].max)
-          temp = (int)(slowM * SlowDLInfo[i].max + slowB);
-        else if ((int)SlowDLInfo[i].value < SlowDLInfo[i].min)
-          temp = 0;
-        else
-          temp = (int)(slowM * SlowDLInfo[i].value + slowB);
-        break;
-
-      case SLOWDL_U_MASK:
-        /* Simply take the bottom numbits from the unsigned number */
-        temp = ((int)(SlowDLInfo[i].value)) & ((1 << SlowDLInfo[i].numbits) -
-            1);
-        numbits = SlowDLInfo[i].numbits;
-        break;
-
-      case SLOWDL_TAKE_BIT:
-        /* Intended for bitfields:  get the value of bit number numbit */
-        temp = (((int)(SlowDLInfo[i].value)) >> (SlowDLInfo[i].numbits - 1))
-          & 0x01;
-        numbits = 1;
-        break;
-
-      default:
-        temp = 0;
-        numbits = 1;
-        break;
-    }
-    //bprintf(info, "%g %ld %ld %x %s\n", SlowDLInfo[i].value, SlowDLInfo[i].max,
-    //	   SlowDLInfo[i].min, temp, SlowDLInfo[i].src);
-
-    if (numbits - 1 > 7 - bitpos) {         /* Do we need to wrap? */
-      data[bytepos++] |= (temp & ((1 << (8 - bitpos)) - 1)) << bitpos;
-      temp = temp << (8 - bitpos);
-      numbits -= 8 - bitpos;
-      bitpos = 0;
-    }
-
-    while (temp > 0xFF) {          /* Is temp still larger than one byte? */
-      data[bytepos++] |= temp & 0xFF;
-      temp = temp >> 8;
-      numbits -= 8;
-    }
-
-    data[bytepos] |= temp << bitpos;
-    bitpos += numbits;
-    if (bitpos > 7) {
-      bitpos = 0;
-      bytepos++;
-    }
-
-    if (bytepos >= SLOWDL_LEN) {
-      bprintf(warning, "Low Rate: Slow DL size is larger than maximum size "
-          "of %d.  Reduce length of SlowDLInfo structure.", SLOWDL_LEN);
-      break;
-    }
-  }
-
-  if (firsttime) {
-    bprintf(info, "Low Rate: Slow DL size = %d\n", bytepos);
-    firsttime = 0;
-  }
+  unsigned char buffer[3 + SLOWDL_LEN + 1];
 
   buffer[0] = SLOWDL_DLE;
   buffer[1] = SLOWDL_SYNC;
   buffer[2] = SLOWDL_LEN;
-  memcpy(buffer +  3, data, SLOWDL_LEN);
+  
+  fillDLData(buffer+3, SLOWDL_LEN);
+  
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
 
   if (write(tty_fd, buffer, 3 + SLOWDL_LEN + 1) < 0) {

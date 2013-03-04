@@ -19,9 +19,9 @@ EXPT_HEADERS = calibrate.h command_list.h command_struct.h mpc_proto.h \
 SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 command_common.h compressstruct.h crc.h derived.h \
 								 ephem_read.h ephem_types.h fir.h lut.h netcmd.h sip.h \
-								 starpos.h udp.h
+								 starpos.h udp.h slowdl.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h mcp.h \
-								motorcommand.h motordefs.h phytron.h pyramid.h slow_dl.h \
+								motorcommand.h motordefs.h phytron.h pyramid.h \
 								svd.h tx.h
 
 # These are needed by both bolotest and flight versions
@@ -32,11 +32,11 @@ EXPT_OBJS = command_list.o derived.o tx_struct.o
 # These are only needed by the flight version
 ifndef BOLOTEST
 SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
-								 ephem_read.o fir.o geomag.o radbox.o starpos.o
+								 ephem_read.o fir.o geomag.o radbox.o starpos.o  slowdl.o
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
 								mceserv.o motors.o motorcommand.o pointing.o pyramid.o sc.o \
-								sched.o slow_dl.o svd.o table.o
-EXPT_OBJS += compressstruct.o mpc_proto.o
+								sched.o svd.o table.o
+EXPT_OBJS += compressstruct.o mpc_proto.o slowdl_struct.o
 endif
 
 ETC_DATA = WMM.COF ephem.2000 sched.library *.sch *.lut *.bin
