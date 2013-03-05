@@ -146,6 +146,9 @@ void closeTable();
 void startChrgCtrl(); // chrgctrl.c
 void endChrgCtrl();
 
+void startSync();     // sync_comms.c
+void endSync();
+
 /* gives system time (in s) */
 time_t mcp_systime(time_t *t) {
   time_t the_time = time(NULL) + TEMPORAL_OFFSET;
@@ -1181,6 +1184,7 @@ static void CloseBBC(int signo)
   closeTable(); //table.cpp
 
   endChrgCtrl();  // is this needed?
+  endSync();
   RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
   RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
   bprintf(err, "System: Closing BBC and Bi0");
@@ -1327,6 +1331,8 @@ int main(int argc, char *argv[])
 
   startChrgCtrl(); // create charge controller serial thread
                    // defined in chrgctrl.c
+
+  startSync();     // create sync box serial thread defined in sync_comms.c
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
 

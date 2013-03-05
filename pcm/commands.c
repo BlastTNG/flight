@@ -1883,6 +1883,24 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case table_speed:
       CommandData.table.vel = rvalues[0];
       break;
+      
+    /*******************************************/
+    /*************** Sync Box  *****************/
+    case write_row_len:
+      CommandData.sync_box.write_param = rl;
+      CommandData.sync_box.param_value = ivalues[0];
+      CommandData.sync_box.cmd = 1;
+      break;
+    case write_num_rows:
+      CommandData.sync_box.write_param = nr;
+      CommandData.sync_box.param_value = ivalues[0];
+      CommandData.sync_box.cmd = 1;
+      break;
+    case write_free_run:
+      CommandData.sync_box.write_param = fr;
+      CommandData.sync_box.param_value = ivalues[0];
+      CommandData.sync_box.cmd = 1;
+      break;
 
     default:
       if (!MCEcmd(command, rvalues, ivalues, svalues)) {
@@ -2101,6 +2119,10 @@ void InitCommandData()
   CommandData.mcecmd[0].done = 1;
   CommandData.mcecmd[1].done = 1;
   CommandData.mcecmd[2].done = 1;
+
+  CommandData.sync_box.write_param = none;
+  CommandData.sync_box.cmd = 0;
+  CommandData.sync_box.param_value = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))

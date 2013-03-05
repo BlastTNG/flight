@@ -31,6 +31,7 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 #include "chrgctrl.h"
+#include "sync_comms.h"
 
 /* Define to 1 to send synchronous star camera triggers based on ISC
  * handshaking */
@@ -299,6 +300,26 @@ void ChargeController(void)
   WriteData(ChargeCC2Addr, ChrgCtrlData[1].charge_state, NIOS_QUEUE);
   WriteData(LEDCC2Addr, ChrgCtrlData[1].led_state, NIOS_QUEUE);
 
+}
+
+void WriteSyncBox(void)
+{
+  static struct NiosStruct* rowLenSyncAddr;
+  static struct NiosStruct* numRowsSyncAddr;
+  static struct NiosStruct* freeRunSyncAddr;
+
+  static int firsttime = 1;
+  
+  if (firsttime) {
+    firsttime = 0;
+    rowLenSyncAddr = GetNiosAddr("row_len_sync");
+    numRowsSyncAddr = GetNiosAddr("num_rows_sync");
+    freeRunSyncAddr = GetNiosAddr("free_run_sync");
+  }
+
+  WriteData(rowLenSyncAddr, SyncBoxData.row_len, NIOS_QUEUE); 
+  WriteData(numRowsSyncAddr, SyncBoxData.num_rows, NIOS_QUEUE);
+  WriteData(freeRunSyncAddr, SyncBoxData.free_run, NIOS_QUEUE);
 }
 
 /* create latching relay pulses, and update enable/disbale levels */

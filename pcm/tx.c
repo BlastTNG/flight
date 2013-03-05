@@ -79,6 +79,7 @@ void HouseKeeping();
 
 /* in auxiliary.c */
 void ChargeController(void);
+void WriteSyncBox(void);
 void ControlAuxMotors();
 void ControlGyroHeat();
 void CameraTrigger(int which);
@@ -1163,6 +1164,7 @@ void UpdateBBCFrame()
     WriteAux();
     SetGyroMask();
     ChargeController();
+    WriteSyncBox();
     ControlPower();
     LockMotor();
     cameraFields();

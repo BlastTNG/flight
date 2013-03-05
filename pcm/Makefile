@@ -22,7 +22,7 @@ SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 starpos.h udp.h slowdl.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h mcp.h \
 								motorcommand.h motordefs.h phytron.h pyramid.h \
-								svd.h tx.h
+								svd.h sync_comms.h tx.h
 
 # These are needed by both bolotest and flight versions
 SHARED_OBJS = blast.o channels.o command_common.o framefile.o lut.o sip.o udp.o
@@ -35,7 +35,7 @@ SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
 								 ephem_read.o fir.o geomag.o radbox.o starpos.o  slowdl.o
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
 								mceserv.o motors.o motorcommand.o pointing.o pyramid.o sc.o \
-								sched.o svd.o table.o
+								sched.o svd.o sync_comms.o table.o
 EXPT_OBJS += compressstruct.o mpc_proto.o slowdl_struct.o
 endif
 
