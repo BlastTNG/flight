@@ -965,12 +965,11 @@ void SingleCommand (enum singleCommand command, int scheduled)
       bputs(info, "Swish, slash");
       CommandData.questionable_behaviour++;
       break;
-#endif
     case lock_and_load:
       bputs(info, "Cachink.");
       CommandData.questionable_behaviour++;
       break;
-
+#endif
 
     case xyzzy:
       break;
