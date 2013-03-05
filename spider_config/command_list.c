@@ -326,7 +326,6 @@ struct scom scommands[N_SCOMMANDS] = {
   //make better use of unused groups
   {COMMAND(pull_cmb_pin), "????", GR_CMB},
   {COMMAND(global_thermonuclear_war), "????", 0x00000100},
-  {COMMAND(lock_and_load), "????", 0x00800000},
 
   {COMMAND(mpc_ping), "MPC test command", MCECMD | GR_MCE},
 

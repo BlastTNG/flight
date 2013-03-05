@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 212        /* total number of single word cmds */
+#define N_SCOMMANDS 211        /* total number of single word cmds */
 #define N_MCOMMANDS 125        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -117,7 +117,7 @@ enum singleCommand {
   hk_t7_heat_on,           hk_t7_heat_off,
   bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
   //make better use of unused groups
-  pull_cmb_pin, global_thermonuclear_war, lock_and_load, 
+  pull_cmb_pin, global_thermonuclear_war,  
   mce1_on,           mce1_off,          mce1_cycle,
   mce2_on,           mce2_off,          mce2_cycle,
   mce3_on,           mce3_off,          mce3_cycle,
