@@ -219,6 +219,14 @@ struct ScheduleEvent {
   char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
 };
 
+/* sync box paramater type */
+enum SyncParam {
+  rl,
+  fr,
+  nr,
+  none
+}; 
+
 struct CommandDataStruct {
   struct {
     unsigned short dac_out[5];
@@ -246,7 +254,15 @@ struct CommandDataStruct {
     double pulse_starboard;
     int manual_pulses;
   } ele_gain; 
- 
+
+
+  struct {
+    enum SyncParam write_param;
+    int cmd;
+    int param_value;
+  } sync_box;
+
+
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
 

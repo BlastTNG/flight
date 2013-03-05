@@ -18,7 +18,7 @@
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
 #define N_SCOMMANDS 212        /* total number of single word cmds */
-#define N_MCOMMANDS 122        /* total number of multiword commands */
+#define N_MCOMMANDS 125        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -53,7 +53,7 @@
 #define GR_MCE          0x00100000
 #define GR_MISC         0x00200000
 #define GR_SCUGLY       0x00400000
-//#define GR_OSC_PARAM    0x00800000	  //unused
+#define GR_SYNC         0x00800000	  
 
 #define MCECMD          0x40000000 /* MCE command flag */
 //reserved for CONFIRM  0x80000000
@@ -174,7 +174,8 @@ enum multiCommand {
   hk_sft_bottom_pulse, hk_t7_pulse,
   spider_scan,	     sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,        el_rel_move,
-  hwp_bias_on,        hwp_bias_off,
+  hwp_bias_on,        hwp_bias_off,     write_row_len,     write_num_rows,
+  write_free_run,
   /* start MCE block */
   mpc_test,
   /* end MCE block */

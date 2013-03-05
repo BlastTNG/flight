@@ -47,7 +47,7 @@ const char *GroupNames[N_GROUPS] = {
   "Outer Frame Power",     "SC Table",         "HK Theo Heat",
   "Telemetry",             "The Good SC",      "Inner Frame Power",
   "X-Y Stage",             "The Bad SC",       "MCE",
-  "Miscellaneous",         "The Ugly SC",      "Handguns"
+  "Miscellaneous",         "The Ugly SC",      "Sync Box"
   };
 
 //echoes as string; makes enum name the command name string
@@ -1151,6 +1151,22 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  /* Sync Box Commands */
+  {COMMAND(write_row_len), "Change the row length parameter", GR_SYNC, 1,
+    {
+      {"value", 1, 4094, 'i', "ROW_LEN_SYNC"}
+    }
+  },
+  {COMMAND(write_num_rows), "Change the num rows parameter", GR_SYNC, 1,
+    {
+      {"value", 1, 63, 'i', "NUM_ROWS_SYNC"}
+    }
+  },
+  {COMMAND(write_free_run), "Change the free run count parameter", GR_SYNC, 1,
+    {
+      {"value", 1, 4095, 'i', "FREE_RUN_SYNC"}
+    }
+  },
 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
