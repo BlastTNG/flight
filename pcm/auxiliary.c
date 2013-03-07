@@ -346,16 +346,6 @@ void ControlPower(void) {
     switchGrp2Addr = GetNiosAddr("switch_grp2");
   }
 
-  if (CommandData.power.theugly_cam_off) {
-    if (CommandData.power.theugly_cam_off > 0) CommandData.power.theugly_cam_off--;
-    misc |= 0x02;
-  }
-
-  if (CommandData.power.theugly_cpu_off) {
-    if (CommandData.power.theugly_cpu_off > 0) CommandData.power.theugly_cpu_off--;
-    misc |= 0x04;
-  }
-
   //TODO make the HWP bus switchable. used to be handled in actuators.c
 
   if (CommandData.power.hub232_off) {
@@ -416,21 +406,21 @@ void ControlPower(void) {
     CommandData.power.das.rst_count--;
     if (CommandData.power.das.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0008;
   }
-  if (CommandData.power.isc.set_count > 0) {
-    CommandData.power.isc.set_count--;
-    if (CommandData.power.isc.set_count < LATCH_PULSE_LEN) latch0 |= 0x0010;
+  if (CommandData.power.rsc.set_count > 0) {
+    CommandData.power.rsc.set_count--;
+    if (CommandData.power.rsc.set_count < LATCH_PULSE_LEN) latch0 |= 0x0010;
   }
-  if (CommandData.power.isc.rst_count > 0) {
-    CommandData.power.isc.rst_count--;
-    if (CommandData.power.isc.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0020;
+  if (CommandData.power.rsc.rst_count > 0) {
+    CommandData.power.rsc.rst_count--;
+    if (CommandData.power.rsc.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0020;
   }
-  if (CommandData.power.osc.set_count > 0) {
-    CommandData.power.osc.set_count--;
-    if (CommandData.power.osc.set_count < LATCH_PULSE_LEN) latch0 |= 0x0040;
+  if (CommandData.power.bsc.set_count > 0) {
+    CommandData.power.bsc.set_count--;
+    if (CommandData.power.bsc.set_count < LATCH_PULSE_LEN) latch0 |= 0x0040;
   }
-  if (CommandData.power.osc.rst_count > 0) {
-    CommandData.power.osc.rst_count--;
-    if (CommandData.power.osc.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0080;
+  if (CommandData.power.bsc.rst_count > 0) {
+    CommandData.power.bsc.rst_count--;
+    if (CommandData.power.bsc.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0080;
   }
   if (CommandData.power.gps.set_count > 0) {
     CommandData.power.gps.set_count--;

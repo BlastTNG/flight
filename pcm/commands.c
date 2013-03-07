@@ -321,6 +321,30 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.das.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.das.rst_count = LATCH_PULSE_LEN;
       break;
+    case rsc_off:
+      CommandData.power.rsc.set_count = 0;
+      CommandData.power.rsc.rst_count = LATCH_PULSE_LEN;
+      break;
+    case rsc_on:
+      CommandData.power.rsc.rst_count = 0;
+      CommandData.power.rsc.set_count = LATCH_PULSE_LEN;
+      break;
+    case rsc_cycle:
+      CommandData.power.rsc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.rsc.rst_count = LATCH_PULSE_LEN;
+      break;
+    case bsc_off:
+      CommandData.power.bsc.set_count = 0;
+      CommandData.power.bsc.rst_count = LATCH_PULSE_LEN;
+      break;
+    case bsc_on:
+      CommandData.power.bsc.rst_count = 0;
+      CommandData.power.bsc.set_count = LATCH_PULSE_LEN;
+      break;
+    case bsc_cycle:
+      CommandData.power.bsc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.bsc.rst_count = LATCH_PULSE_LEN;
+      break;
     case of_charge_off:
       CommandData.power.charge.rst_count = 0;
       CommandData.power.charge.set_count = LATCH_PULSE_LEN;
@@ -443,48 +467,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case gybox_cycle:
       CommandData.power.gybox_off = PCYCLE_HOLD_LEN;
-      break;
-    case thegood_off:
-      CommandData.power.thegood_cam_off = -1;
-      CommandData.power.thegood_cpu_off = -1;
-      break;
-    case thegood_on:
-      CommandData.power.thegood_cam_off = 0;
-      CommandData.power.thegood_cpu_off = 0;
-      break;
-    case thegood_cam_cycle:
-      CommandData.power.thegood_cam_off = PCYCLE_HOLD_LEN;
-      break;
-    case thegood_cpu_cycle:
-      CommandData.power.thegood_cpu_off = PCYCLE_HOLD_LEN;
-      break;
-    case thebad_off:
-      CommandData.power.thebad_cam_off = -1;
-      CommandData.power.thebad_cpu_off = -1;
-      break;
-    case thebad_on:
-      CommandData.power.thebad_cam_off = 0;
-      CommandData.power.thebad_cpu_off = 0;
-      break;
-    case thebad_cam_cycle:
-      CommandData.power.thebad_cam_off = PCYCLE_HOLD_LEN;
-      break;
-    case thebad_cpu_cycle:
-      CommandData.power.thebad_cpu_off = PCYCLE_HOLD_LEN;
-      break;
-    case theugly_off:
-      CommandData.power.theugly_cam_off = -1;
-      CommandData.power.theugly_cpu_off = -1;
-      break;
-    case theugly_on:
-      CommandData.power.theugly_cam_off = 0;
-      CommandData.power.theugly_cpu_off = 0;
-      break;
-    case theugly_cam_cycle:
-      CommandData.power.theugly_cam_off = PCYCLE_HOLD_LEN;
-      break;
-    case theugly_cpu_cycle:
-      CommandData.power.theugly_cpu_off = PCYCLE_HOLD_LEN;
       break;
     case hub232_off:
       CommandData.power.hub232_off = -1;
@@ -2044,10 +2026,10 @@ void InitCommandData()
   CommandData.power.sc_tx.set_count = 0;
   CommandData.power.das.rst_count = 0;
   CommandData.power.das.set_count = 0;
-  CommandData.power.isc.rst_count = 0;
-  CommandData.power.isc.set_count = 0;
-  CommandData.power.osc.rst_count = 0;
-  CommandData.power.osc.set_count = 0;
+  CommandData.power.rsc.rst_count = 0;
+  CommandData.power.rsc.set_count = 0;
+  CommandData.power.bsc.rst_count = 0;
+  CommandData.power.bsc.set_count = 0;
   CommandData.power.gps.rst_count = 0;
   CommandData.power.gps.set_count = 0;
   CommandData.power.rw.rst_count = 0;
