@@ -462,6 +462,14 @@ void ControlPower(void) {
     CommandData.power.bi0.rst_count--;
     if (CommandData.power.bi0.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0002;
   }
+  if (CommandData.power.table.set_count > 0) {
+    CommandData.power.table.set_count--;
+    if (CommandData.power.table.set_count < LATCH_PULSE_LEN) latch1 |= 0x0040;
+  }
+  if (CommandData.power.table.rst_count > 0) {
+    CommandData.power.table.rst_count--;
+    if (CommandData.power.table.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0080;
+  }
  
   /* MCC power switching now uses ACS1 D1 grp 6 = latch1 high byte
    * and grp 2 = switch_grp2 low byte

@@ -321,6 +321,18 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.das.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.das.rst_count = LATCH_PULSE_LEN;
       break;
+    case table_off:
+      CommandData.power.table.set_count = 0;
+      CommandData.power.table.rst_count = LATCH_PULSE_LEN;
+      break;
+    case table_on:
+      CommandData.power.table.rst_count = 0;
+      CommandData.power.table.set_count = LATCH_PULSE_LEN;
+      break;
+    case table_cycle:
+      CommandData.power.table.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.table.rst_count = LATCH_PULSE_LEN;
+      break;
     case rsc_off:
       CommandData.power.rsc.set_count = 0;
       CommandData.power.rsc.rst_count = LATCH_PULSE_LEN;
