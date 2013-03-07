@@ -281,6 +281,7 @@ struct CommandDataStruct {
     struct latch_pulse piv;
     struct latch_pulse elmot;
     struct latch_pulse bi0;
+    struct latch_pulse table;
     struct latch_pulse charge;
     struct latch_pulse ifcharge;
     struct latch_pulse mcc1;
