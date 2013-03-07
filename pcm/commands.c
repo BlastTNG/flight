@@ -2226,6 +2226,22 @@ void InitCommandData()
   CommandData.dgps_cov_limit = 0.3;
   CommandData.dgps_ants_limit = 0.5;
 
+  CommandData.cal_off_pss1 = 0.0;
+  CommandData.cal_off_pss2 = 0.0;
+  CommandData.cal_off_pss3 = 0.0;
+  CommandData.cal_off_pss4 = 0.0;
+  CommandData.cal_off_pss5 = 0.0;
+  CommandData.cal_off_pss6 = 0.0;
+
+  CommandData.cal_d_pss1 = 0.0;
+  CommandData.cal_d_pss2 = 0.0;
+  CommandData.cal_d_pss3 = 0.0;
+  CommandData.cal_d_pss4 = 0.0;
+  CommandData.cal_d_pss5 = 0.0;
+  CommandData.cal_d_pss6 = 0.0;
+
+  CommandData.cal_imin_pss = 4.5;
+
   SIPData.MKScal.m_hi = 0.01;
   SIPData.MKScal.m_med = 0.1;
   SIPData.MKScal.m_lo = 1;
