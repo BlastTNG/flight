@@ -367,6 +367,22 @@ struct CommandDataStruct {
   double mag_az_trim;
   double dgps_az_trim;
   double pss_az_trim;
+       
+  double cal_off_pss1;
+  double cal_off_pss2;
+  double cal_off_pss3;
+  double cal_off_pss4;
+  double cal_off_pss5;
+  double cal_off_pss6;
+
+  double cal_d_pss1;
+  double cal_d_pss2;
+  double cal_d_pss3;
+  double cal_d_pss4;
+  double cal_d_pss5;
+  double cal_d_pss6;
+
+  double cal_imin_pss;
 
   struct {
     bool pump_heat;
