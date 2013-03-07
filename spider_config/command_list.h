@@ -17,7 +17,7 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 211        /* total number of single word cmds */
+#define N_SCOMMANDS 205        /* total number of single word cmds */
 #define N_MCOMMANDS 125        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
@@ -75,10 +75,11 @@ enum singleCommand {
   trim_to_isc,       unlock,            lock_off,          lock_on,
   force_el_on,       gps_cycle,         actbus_cycle,      rw_cycle,
   piv_cycle,         elmot_cycle,       hub232_cycle,      das_cycle,
+  rsc_cycle,         bsc_cycle,         rsc_off,	   rsc_on,
   gps_off,           gps_on,            rw_off,	           rw_on,
   piv_off,           piv_on,            elmot_off,         elmot_on,
   vtx_off,           vtx_on,            bi0_off,           bi0_on,
-  das_off,           das_on,             
+  das_off,           das_on,            bsc_off,           bsc_on,
   of_charge_off,     of_charge_on,      of_charge_cycle,
   if_charge_off,     if_charge_on,       if_charge_cycle,
   ifroll_1_gy_allow, ifroll_1_gy_veto,  ifroll_2_gy_allow, ifroll_2_gy_veto,
@@ -98,9 +99,6 @@ enum singleCommand {
   reset_rw,          reset_piv,         reset_elev,
   vtx1_isc,          vtx1_osc,          vtx1_bsc,          vtx2_isc,
   vtx2_osc,          vtx2_bsc,
-  thegood_off,	     thegood_on,        thegood_cam_cycle, thegood_cpu_cycle,
-  thebad_off,        thebad_on,         thebad_cam_cycle,  thebad_cpu_cycle,
-  theugly_off,	     theugly_on,        theugly_cam_cycle, theugly_cpu_cycle,
   thegood_expose,    thegood_autofocus,	thegood_settrig_ext, thegood_pause, 
   thebad_expose,     thebad_autofocus,	thebad_settrig_ext,	thebad_pause, 
   theugly_expose,    theugly_autofocus,	theugly_settrig_ext, theugly_pause, 

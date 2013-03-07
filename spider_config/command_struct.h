@@ -274,8 +274,8 @@ struct CommandDataStruct {
   struct {
     struct latch_pulse sc_tx;
     struct latch_pulse das;
-    struct latch_pulse isc;
-    struct latch_pulse osc;
+    struct latch_pulse rsc;
+    struct latch_pulse bsc;
     struct latch_pulse gps;
     struct latch_pulse rw;
     struct latch_pulse piv;
@@ -295,12 +295,6 @@ struct CommandDataStruct {
     int gyro_off_auto[6];
     int hub232_off;
     int lock_off;
-    int thegood_cpu_off;
-    int thebad_cpu_off;
-    int theugly_cpu_off;
-    int thegood_cam_off;
-    int thebad_cam_off;
-    int theugly_cam_off;
     unsigned char adc_reset[16];
     int elmot_auto; // automatically power el motors on/off before/after a move
     int elmot_is_on; // 1 if el drive on, 0 if not
