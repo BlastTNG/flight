@@ -1869,11 +1869,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.table.mode = 1;
       CommandData.table.pos = rvalues[0];
       break;
-    case table_relmove:
+    case table_drift:
       CommandData.table.mode = 2;
-      CommandData.table.move = rvalues[0];
-      break;
-    case table_speed:
       CommandData.table.vel = rvalues[0];
       break;
       
@@ -2021,8 +2018,7 @@ void InitCommandData()
   CommandData.hwp.bias_mask = 0x0;
 
   CommandData.table.vel = 0.0;
-  CommandData.table.pos = 90.0;
-  CommandData.table.move = 0.0;
+  CommandData.table.pos = 0.0;
   CommandData.table.mode = 0;
   CommandData.thegood.paused = 1;
   CommandData.thebad.paused = 1;

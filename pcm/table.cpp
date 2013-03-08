@@ -53,7 +53,7 @@ static int tableSpeed = 0;
 short int exposing;
 short int docalc;
 short int zerodist[10];
-double goodPos[10] = {90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0};
+double goodPos[10] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 #define TABLE_DEVICE "/dev/ttySI8"
 #define TABLE_ADDR 0x0ff0 //destination address on IDM controller bus (only one drive)
@@ -155,33 +155,33 @@ void updateTableSpeed()
 	
 	  //2) actual encoder position of goodPos now = goodPos(=trigPos) + yawdist
 	  for (i=0; i<10; i++) {
-		if (goodPos[i] == 90.0) targPos = 90.0;
+		if (goodPos[i] == 0.0) targPos = 0.0;
 		else {
 			targPos = goodPos[i] + yawdist[i];
 			bprintf(info,"---%i--- targpos=%f, goodPos=%f, yawdist=%f",i,targPos,goodPos[i],yawdist[i]);
 		}
-		if ((targPos > 135) || (targPos < 45)) {//   if it's out-of-bounds, set targPos to 90
-			targPos = 90.0;
+		if ((targPos > 15) && (targPos < 280)) {//   if it's out-of-bounds, set targPos to 0
+			targPos = 0.0;
 	  		calcdist = thisPos - targPos;
 			FixAngle(calcdist);
-			bprintf(info,"out of bounds, doing 90 instead");
+			bprintf(info,"out of bounds, doing 0 instead");
 		} else {
 			calcdist = thisPos - targPos; // it's not out of bounds, check how far away it is
 			FixAngle(calcdist);
 			bprintf(info,"calcdist=%f, thisPos=%f, targPos=%f",calcdist,thisPos,targPos);
-			if ((fabs(calcdist)) > 5.0) { // if it's too far, set targPos to 90
-				targPos = 90.0;
+			if ((fabs(calcdist)) > 5.0) { // if it's too far, set targPos to 0
+				targPos = 0.0;
 	  			calcdist = thisPos - targPos;
 				FixAngle(calcdist);
-				bprintf(info,"too far, doing 90 instead");
+				bprintf(info,"too far, doing 0 instead");
 			} else {	
-				if (targPos != 90) break; // if it survives the test, use it, otherwise try next one
+				if (targPos != 0) break; // if it survives the test, use it, otherwise try next one
 			}
 		}
 	  }
   docalc = 0;
   sendvel = 1;
-  // after all this, calcdist should = here - 90, or here - smthg else
+  // after all this, calcdist should = here - 0, or here - smthg else
   // calcdist is calculated once, and sets the targVel
   // dist is calculated every time to tell you how close you are to targPos
   }
