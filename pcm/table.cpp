@@ -88,10 +88,10 @@ void closeTable()
 }
 
 /*puts angles between -180 and 180*/
-void FixAngle(double A)
+void FixAngle(double *A)
 {
-  if (A > 180) A -= 360.0;
-  if (A < -180) A += 360.0;
+  if (*A > 180) *A -= 360.0;
+  if (*A < -180) *A += 360.0;
 }
 
 /* figures out desired rotary table speed
@@ -112,7 +112,7 @@ void updateTableSpeed()
   static int sendvel = 1;
   static NiosStruct* dpsAddr = NULL;
   int i;
-  //  static int j;
+  //static int j;
   int i_point;
   i_point = GETREADINDEX(point_index);
 
@@ -147,7 +147,7 @@ void updateTableSpeed()
 		zerodist[i] = 0;
   	}
   	yawdist[i] += PointingData[i_point].v_az*dt;
-	FixAngle(yawdist[i]);
+	FixAngle(&yawdist[i]);
   }
   if (docalc) {
   	//figure out targPos
@@ -163,16 +163,16 @@ void updateTableSpeed()
 		if ((targPos > 15) && (targPos < 280)) {//   if it's out-of-bounds, set targPos to 0
 			targPos = 0.0;
 	  		calcdist = thisPos - targPos;
-			FixAngle(calcdist);
+			FixAngle(&calcdist);
 			bprintf(info,"out of bounds, doing 0 instead");
 		} else {
 			calcdist = thisPos - targPos; // it's not out of bounds, check how far away it is
-			FixAngle(calcdist);
+			FixAngle(&calcdist);
 			bprintf(info,"calcdist=%f, thisPos=%f, targPos=%f",calcdist,thisPos,targPos);
 			if ((fabs(calcdist)) > 5.0) { // if it's too far, set targPos to 0
 				targPos = 0.0;
 	  			calcdist = thisPos - targPos;
-				FixAngle(calcdist);
+				FixAngle(&calcdist);
 				bprintf(info,"too far, doing 0 instead");
 			} else {	
 				if (targPos != 0) break; // if it survives the test, use it, otherwise try next one
@@ -186,7 +186,7 @@ void updateTableSpeed()
   // dist is calculated every time to tell you how close you are to targPos
   }
   dist = thisPos - targPos;
-  FixAngle(dist);
+  FixAngle(&dist);
 
   //write speed to frame
   int data = (int)((vel/70.0)*32767.0); //allow much room to avoid overflow
@@ -198,7 +198,9 @@ void updateTableSpeed()
 	targPos = CommandData.table.pos;
 	targVel = 6.0;
 	movedist = thisPos - targPos;
-  	FixAngle(movedist);
+        //if((j%300)==0) bprintf(info,"THISPOS = %f, TARGPOS = %f, MOVEDIST = %f\n",thisPos,targPos,movedist);
+  	FixAngle(&movedist);
+        //if((j%300)==0) bprintf(info,"after FIXANGLE, MOVEDIST = %f\n",movedist);
         if (movedist > 0) targVel = -6.0;
 	if ((fabs(movedist) < 0.5)) targVel = 0;
   } else if (CommandData.table.mode==2) {
@@ -224,8 +226,8 @@ void updateTableSpeed()
   	}
 
   }
-  /*if((j%50)==0)*/ //cout << "TARGVEL= " << targVel << endl;
-//  j++;
+  //if((j%300)==0) bprintf(info,"TARGVEL= %f",targVel);
+  //j++;
   if (targVel > MAX_TABLE_SPEED) targVel = MAX_TABLE_SPEED;
   else if (targVel < -MAX_TABLE_SPEED) targVel = -MAX_TABLE_SPEED;
   tableSpeed = (int)(targVel/MAX_TABLE_SPEED * (INT_MAX-1));
