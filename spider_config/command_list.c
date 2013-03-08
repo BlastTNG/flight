@@ -1095,26 +1095,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   //STAR CAMERA TABLE
-  {COMMAND(table_gain), "RSC rotary table gains", GR_SCTAB, 2,
+  {COMMAND(table_gain), "RSC rotary table gains", GR_SCTAB, 3,
     {
       {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_table"},
       {"Integral Gain",     0, USHRT_MAX, 'i', "g_i_table"},
       {"Derivative Gain",   0, USHRT_MAX, 'i', "g_d_table"}
     }
   },
-  {COMMAND(table_goto), "move RSC to specific encoder position", GR_SCTAB, 1,
+  {COMMAND(table_goto), "move RSC table to specific encoder position", GR_SCTAB, 1,
     {
       {"Goto position (deg)", 0, 360, 'd', "table_goto"}
     }
   },
-  {COMMAND(table_relmove), "move RSC by relative angle", GR_SCTAB, 1,
+  {COMMAND(table_drift), "move RSC table at constant speed", GR_SCTAB, 1,
     {
-      {"Relative angle (deg)", -360, 360, 'd', "table_move_"}
-    }
-  },
-  {COMMAND(table_speed), "change RSC table speed", GR_SCTAB, 1,
-    {
-      {"Speed (deg/s)", 0, 45, 'd', "table_speed"}
+      {"Speed (deg/s)", -30, 30, 'd', "table_speed"}
     }
   },
 

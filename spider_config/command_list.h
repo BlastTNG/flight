@@ -18,7 +18,7 @@
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
 #define N_SCOMMANDS 208        /* total number of single word cmds */
-#define N_MCOMMANDS 125        /* total number of multiword commands */
+#define N_MCOMMANDS 124        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -159,7 +159,7 @@ enum multiCommand {
   thebad_bad_pix,    thebad_blob_params,	thebad_lens_any,   	thebad_lens_move,
   theugly_bad_pix,   theugly_blob_params,	theugly_lens_any,	theugly_lens_move,
   thegood_lens_params,thebad_lens_params,	theugly_lens_params, 
-  table_gain,	       table_goto,        table_relmove,     table_speed, 
+  table_gain,	     table_goto,        table_drift, 
   t_bsc_set,         t_rsc_set,         ants_gps,          act_enc_trim,
   hwp_vel,           hwp_i,             hwp_move,          hwp_general,
   hk_pump_heat_on,   hk_pump_heat_off,  hk_heat_switch_on, hk_heat_switch_off,
