@@ -60,6 +60,10 @@ double goodPos[10] = {90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0
 static DriveCommunicator* tableComm = NULL;
 static pthread_t tablecomm_id;
 
+extern "C" void nameThread(const char*);  /* in mcp.c */
+
+extern "C" short int InCharge;		  /* in tx.c */
+
 static void* rotaryTableComm(void *arg);
 
 extern "C" {
@@ -101,12 +105,10 @@ void updateTableSpeed()
   static double targVel;
   timeval timestruct;
   static double targPos;
-  static double movePos;
   static double lastTime, lastPos;
   double thisTime, thisPos;
   static int firsttime = 1;
   static double yawdist[10];
-  static int startmove = 1;
   static int sendvel = 1;
   static NiosStruct* dpsAddr = NULL;
   int i;
@@ -192,28 +194,18 @@ void updateTableSpeed()
 
   //find new target velocity
   if (CommandData.table.mode==1) {
-	// MOVE
-	startmove = 1;
+	//GOTO
 	targPos = CommandData.table.pos;
-	targVel = 6.0;//CommandData.table.vel;
+	targVel = 6.0;
 	movedist = thisPos - targPos;
   	FixAngle(movedist);
         if (movedist > 0) targVel = -6.0;
 	if ((fabs(movedist) < 0.5)) targVel = 0;
   } else if (CommandData.table.mode==2) {
-	// RELMOVE
-	if (startmove) {
-		movePos = thisPos + CommandData.table.move;
-		startmove=0;
-	}
-	targVel = 6.0;//CommandData.table.vel;
-	movedist = thisPos - movePos;
-  	FixAngle(movedist);
-        if (movedist > 0) targVel = -6.0;
-	if ((fabs(movedist) < 0.5)) targVel = 0;
+	//DRIFT
+	targVel = CommandData.table.vel;
   } else {
 	//TRACKING
-	startmove = 1;
   	if (exposing || CommandData.theugly.paused)  {
 		targVel = PointingData[i_point].v_az;
   	} else {
@@ -247,6 +239,15 @@ void updateTableSpeed()
  */
 void* rotaryTableComm(void* arg)
 {
+  int first_time=1;
+  nameThread("SCTabl");
+  while (!InCharge) {
+    if (first_time) {
+      bprintf(info,"Not in charge. Sleeping.");
+      first_time = 0;
+    }
+    usleep(20000);
+  }
   static int currSpeed=0;
   double dTableSpeed;  //speed (global int) converted to double
   timeval time;
@@ -263,31 +264,28 @@ void* rotaryTableComm(void* arg)
   axison.buildCommand();
   tableComm->sendCommand(&axison);
 
-//  bputs(startup, "Motors: rotary table startup");
   while (1) {
-//    usleep(1000);  //needed with if statement
-//    if (abs(currSpeed-tableSpeed) > TABLE_SPEED_TOL) {
       currSpeed = tableSpeed;
       dTableSpeed = (double) tableSpeed * 
         MAX_TABLE_SPEED * DPS_TO_TABLE / (INT_MAX - 1);
       tableComm->sendSpeedCommand(TABLE_ADDR,dTableSpeed);
       if (tableComm->getError() != DC_NO_ERROR) {
-        bprintf(err, "Motors: rotary table comm failure, trying re-synch");
+        bprintf(err, "rotary table comm failure, trying re-synch");
         while (tableComm->getError() != DC_NO_ERROR) {
           //command failed, keep trying to resynchronize communications
           usleep(10000);
           tableComm->synchronize();
         }
         //may also need to resend volatile memory commands (if I use any)
-        bprintf(info, "Motors: successful reconnection to rotary table");
+        bprintf(info, "successful reconnection to rotary table");
+    	CommandData.table.mode = 2;
+	CommandData.table.vel = 0.0;
       }
 
       //can also put queries here for (eg) motor temperature
       gettimeofday(&time, NULL);
       thisTime = time.tv_sec + time.tv_usec/1000000.0;
-//      bprintf(info, "table update time is: %gs", (thisTime-lastTime));
       lastTime = thisTime;
-//    }
   }
   return NULL;
 }
