@@ -142,7 +142,7 @@ void updateTableSpeed()
   lastTime = thisTime;
 
   for (i=0; i<10; i++) {
-	if (zerodist[i]) {	//zero yawdist every time a trigPos is set (in camcommunicator.cpp)
+	if (zerodist[i]) {	//zero yawdist every time a trigPos is set (in sc.cpp)
 		yawdist[i] = 0.0;
 		zerodist[i] = 0;
   	}
@@ -158,22 +158,22 @@ void updateTableSpeed()
 		if (goodPos[i] == 0.0) targPos = 0.0;
 		else {
 			targPos = goodPos[i] + yawdist[i];
-			bprintf(info,"---%i--- targpos=%f, goodPos=%f, yawdist=%f",i,targPos,goodPos[i],yawdist[i]);
+			//bprintf(info,"---%i--- targpos=%f, goodPos=%f, yawdist=%f",i,targPos,goodPos[i],yawdist[i]);
 		}
 		if ((targPos > 15) && (targPos < 280)) {//   if it's out-of-bounds, set targPos to 0
 			targPos = 0.0;
 	  		calcdist = thisPos - targPos;
 			FixAngle(&calcdist);
-			bprintf(info,"out of bounds, doing 0 instead");
+			//bprintf(info,"out of bounds, doing 0 instead");
 		} else {
 			calcdist = thisPos - targPos; // it's not out of bounds, check how far away it is
 			FixAngle(&calcdist);
-			bprintf(info,"calcdist=%f, thisPos=%f, targPos=%f",calcdist,thisPos,targPos);
+			//bprintf(info,"calcdist=%f, thisPos=%f, targPos=%f",calcdist,thisPos,targPos);
 			if ((fabs(calcdist)) > 5.0) { // if it's too far, set targPos to 0
 				targPos = 0.0;
 	  			calcdist = thisPos - targPos;
 				FixAngle(&calcdist);
-				bprintf(info,"too far, doing 0 instead");
+				//bprintf(info,"too far, doing 0 instead");
 			} else {	
 				if (targPos != 0) break; // if it survives the test, use it, otherwise try next one
 			}
@@ -212,11 +212,11 @@ void updateTableSpeed()
 		targVel = PointingData[i_point].v_az;
   	} else {
 		// having figured out calcdist, set a targVel that will get you there in 1s, and don't update targVel until you get within 0.5
-		if ((calcdist < 0) && (sendvel == 1)) {
+		if ((calcdist < 0) && (sendvel)) {
 			targVel = (((fabs(calcdist)) > 10.0) ? 10.0 : -calcdist);
 			sendvel = 0;
 		}
-		if ((calcdist > 0) && (sendvel == 1)) {
+		if ((calcdist > 0) && (sendvel)) {
 			targVel = (((fabs(calcdist)) > 10.0) ? -10.0 : -calcdist);
 			sendvel = 0;
 		}
