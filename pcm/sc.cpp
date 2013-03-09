@@ -380,7 +380,7 @@ void cameraFields()
 		rscwait = 0;
 	}
 	for (int i=0; i<10; i++) {
-		if (goodPos[i] == 90.0) { 
+		if (goodPos[i] == 0.0) { 
 			trigPos[i] = ACSData.enc_table;
 			zerodist[i] = 1;
 		}
@@ -510,7 +510,7 @@ void cameraFields()
 	blobindex[2] = (blobindex[2] + 1) % 5;
 	if ((rsc->numblobs > 8) && ((rsc->mapmean) < 1200.0)) {
 		for (int j=0; j<10; j++) {
-			if ((goodPos[j] == 90.0) && (rsc->frameNum != posFrame)) {
+			if ((goodPos[j] == 0.0) && (rsc->frameNum != posFrame)) {
 				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
 				bprintf(info,"SETTING goodPos[%i]",j);
 				posFrame = rsc->frameNum;
@@ -571,7 +571,15 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
  */
 static void* TheGoodReadLoop(void* arg)
 {
+  int firsttime=1;
   nameThread("GoodSC");
+  while (!InCharge) {
+    if (firsttime==1) {
+      bprintf(info,"Not in charge, waiting....");
+      firsttime=0;
+    }
+    usleep(20000);
+  }
   bputs(startup, "startup\n");
   bool errorshown = false;
 
@@ -596,7 +604,15 @@ static void* TheGoodReadLoop(void* arg)
 }
 static void* TheBadReadLoop(void* arg)
 {
+  int firsttime=1;
   nameThread("BadSC");
+  while (!InCharge) {
+    if (firsttime==1) {
+      bprintf(info,"Not in charge, waiting....");
+      firsttime=0;
+    }
+    usleep(20000);
+  }
   bputs(startup, "startup\n");
   bool errorshown = false;
 
@@ -621,7 +637,15 @@ static void* TheBadReadLoop(void* arg)
 }
 static void* TheUglyReadLoop(void* arg)
 {
+  int firsttime=1;
   nameThread("UglySC");
+  while (!InCharge) {
+    if (firsttime==1) {
+      bprintf(info,"Not in charge, waiting....");
+      firsttime=0;
+    }
+    usleep(20000);
+  }
   bputs(startup, "startup\n");
   bool errorshown = false;
 
