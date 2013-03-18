@@ -12,6 +12,8 @@
 
 #include "channels.h"
 
+#define SLOWDLSYNCWORD 0xeb90a174
+
 #define SDL_RAW 0
 #define SDL_SCALE 1
 struct SlowDlStruct {

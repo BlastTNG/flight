@@ -9,6 +9,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#include "blast.h"
 
 #include "slowdl.h"
 #include "tx.h"
@@ -55,9 +56,13 @@ void fillDLData(unsigned char *b, int len) {
   unsigned char *b_end;
   
   b_end = b+len-4; // FIXME: wasted space if last field is not 32bit.
-  
+    
   i_r = slow_dl_read_index;
 
+  U = (unsigned  *)b;
+  *U = SLOWDLSYNCWORD;
+  b+=4;
+  
   for (i_ch = 0; (slowDLList[i_ch].name[0]!='\0') && (b<b_end); i_ch++) {
     if (slowDLList[i_ch].encode == SDL_SCALE) {
       /* scale between 0 and 1 */
@@ -107,4 +112,9 @@ void fillDLData(unsigned char *b, int len) {
         break;
     }
   }
+  while (b<b_end) {
+    *b = i_ch++;
+    b++;
+  }
+  
 }
