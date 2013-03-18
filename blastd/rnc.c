@@ -33,10 +33,12 @@ extern int h_errno;
 #define RNC_SOCK_PORT 41114
 #define DNC_SOCK_PORT 14441
 #define TEA_SOCK_PORT 14141
+#define LNC_SOCK_PORT 11111
 
 #define RNC_LNKFILE  "/data/etc/highgain.lnk"
 #define DNC_LNKFILE  "/data/etc/tdomni.lnk"
 #define TEA_LNKFILE  "/data/etc/iromni.lnk"
+#define LNC_LNKFILE  "/data/etc/irslow.lnk"
 
 #define LEN 500
 #define BUF_LEN 5000
@@ -47,7 +49,7 @@ extern int h_errno;
 char LNKFILE[4096];
 int SOCK_PORT;
 
-enum PartyType{RNC=0, DNC, TEA};
+enum PartyType{RNC=0, DNC, TEA, LNC};
 
 enum PartyType party = RNC;
 
@@ -184,6 +186,10 @@ int main(int argc, char *argv[])
     party = TEA;
     strcpy(LNKFILE, TEA_LNKFILE);
     SOCK_PORT = TEA_SOCK_PORT;
+  } else if (strcmp(name, "lnc")==0) {
+    party = LNC;
+    strcpy(LNKFILE, LNC_LNKFILE);
+    SOCK_PORT = LNC_SOCK_PORT;
   } else {
     fprintf(stderr, "unknown program: %s\n", name);
     exit(0);
