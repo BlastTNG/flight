@@ -391,7 +391,7 @@ void MakeFormatFile(char *filedirname) {
     }
   }
 
-  /* Hack for a few important derived of derived fields: */
+  /* Hack for a few important derived of derived fields: BLAST10 and probably BLAST12 */
   fprintf(formatfile, "DR_INFO_IO_RW    LINCOM 2 DR_INFO_OPEN_RW  1.000000000000e+00 0.000000000000e+00 DR_INFO_INIT_1_RW 2.000000000000e+00 0.000000000000e+00\n");
   fprintf(formatfile, "DR_INFO_IO_EL    LINCOM 2 DR_INFO_OPEN_EL  1.000000000000e+00 0.000000000000e+00 DR_INFO_INIT_1_EL 2.000000000000e+00 0.000000000000e+00\n");
   fprintf(formatfile, "DR_INFO_IO_PIV   LINCOM 2 DR_INFO_OPEN_PIV 1.000000000000e+00 0.000000000000e+00 DR_INFO_INIT_1_PIV 2.000000000000e+00 0.000000000000e+00\n");

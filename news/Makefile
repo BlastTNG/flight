@@ -12,7 +12,7 @@ SPIDER_OR_BLAST=1   # we need at least one of Spider or BLAST config
 #
 
 SHARED_OBJS = compressfuncs.o
-LOCAL_OBJS = fox.o
+LOCAL_OBJS = 
 EXPT_OBJS = tx_struct.o compressstruct.o derived.o
 
 SHARED_HEADERS = compressstruct.h channels.h derived.h
@@ -27,8 +27,8 @@ include ../common/Makefile.shared
 # Set up targets
 #
 
-BLAST_ALL = fox-blast msnbc-blast rush-blast
-SPIDER_ALL = fox-spider msnbc-spider rush-spider
+BLAST_ALL = fox-blast msnbc-blast rush-blast rumor-blast
+SPIDER_ALL = fox-spider msnbc-spider rush-spider rumor-blast
 
 ifeq ($(HAVE_BLASTCONF),1)
 	ALL += $(BLAST_ALL)
@@ -52,23 +52,29 @@ all:: $(ALL)
 	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common )"
 	@false
 
-fox-blast: $(BLAST_OBJS)
-	$(CC) -lm -o fox-blast $(BLAST_OBJS)
+fox-blast: fox.o $(BLAST_OBJS)
+	$(CC) -lm -o fox-blast fox.o $(BLAST_OBJS)
 
-msnbc-blast: $(BLAST_OBJS)
-	$(CC) -lm -o msnbc-blast $(BLAST_OBJS)
+msnbc-blast: fox.o $(BLAST_OBJS)
+	$(CC) -lm -o msnbc-blast fox.o $(BLAST_OBJS)
 
-rush-blast: $(BLAST_OBJS)
-	$(CC) -lm -o rush-blast $(BLAST_OBJS)
+rush-blast: fox.o $(BLAST_OBJS)
+	$(CC) -lm -o rush-blast fox.o $(BLAST_OBJS)
 
-fox-spider: $(SPIDER_OBJS)
-	$(CC) -lm -o fox-spider $(SPIDER_OBJS)
+rumor-blast: rumor.o $(BLAST_OBJS)
+	$(CC) -lm -o rumor-blast rumor.o $(BLAST_OBJS)
 
-msnbc-spider: $(SPIDER_OBJS)
-	$(CC) -lm -o msnbc-spider $(SPIDER_OBJS)
+fox-spider: fox.o $(SPIDER_OBJS)
+	$(CC) -lm -o fox-spider fox.o $(SPIDER_OBJS)
 
-rush-spider: $(SPIDER_OBJS)
-	$(CC) -lm -o rush-spider $(SPIDER_OBJS)
+msnbc-spider: fox.o $(SPIDER_OBJS)
+	$(CC) -lm -o msnbc-spider fox.o $(SPIDER_OBJS)
+
+rush-spider: fox.o $(SPIDER_OBJS)
+	$(CC) -lm -o rush-spider fox.o $(SPIDER_OBJS)
+
+rumor-spider: rumor.o $(SPIDER_OBJS)
+	$(CC) -lm -o rumor-spider rumor.o $(SPIDER_OBJS)
 
 clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)
