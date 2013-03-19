@@ -10,6 +10,9 @@
  *
  */
 
+#ifndef DERIVED_H
+#define DERIVED_H
+
 #include "channels.h"
 
 #pragma pack(4)
@@ -95,3 +98,5 @@ union DerivedUnion {
 #define DIVIDE(f,s1,s2) {.math = { '/', f, s1, 0, 0, s2 }}
 #define MULTIPLY(f,s1,s2) {.math = { '*', f, s1, 0, 0, s2 }}
 #define END_OF_DERIVED_CHANNELS {.comment = { DERIVED_EOC_MARKER , "" }}
+
+#endif
