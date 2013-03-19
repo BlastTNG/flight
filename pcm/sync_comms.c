@@ -45,7 +45,7 @@ along with pcm; if not, write to the Free Software Foundation, Inc.,
 
 #define SYNC_DEV "/dev/ttySI0"
 #define MAX_BYTES 10000
-#define SYNCBOX_VERBOSE
+#undef SYNCBOX_VERBOSE
 
 static pthread_t synccomm_id; // thread ID
 struct SyncInfo syncinfo;     // device status info -- see sync_comms.h
@@ -187,7 +187,9 @@ void open_sync(void)
     
   if ( (syncinfo.fd = open(SYNC_DEV, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0 ) {
     /* port failed to open */
+#ifdef SYNCBOX_VERBOSE
     berror(err, "Sync box port %s failed to open", SYNC_DEV); 
+#endif 
     syncinfo.open = 0;
     return;
   } else {
