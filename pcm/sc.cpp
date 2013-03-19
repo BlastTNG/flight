@@ -31,6 +31,7 @@
 #include <sstream>
 #include <iostream>
 #include <string.h>
+#include <unistd.h>
 
 extern "C" {
 #include "blast.h"
