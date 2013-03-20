@@ -72,7 +72,7 @@ int main(int argc, const char **argv)
 {
   sigset_t signals;
   struct sigaction action;
-  int port, sock;
+  int port, remport, sock;
   ssize_t n;
 
   char peer[UDP_MAXHOST];
@@ -114,10 +114,10 @@ int main(int argc, const char **argv)
 
   /* service loop */
   while (!done) {
-    n = udp_recv(sock, 0, peer, &port, 65536, data);
+    n = udp_recv(sock, 0, peer, &remport, 65536, data);
     if (n > 0) {
       system("date");
-      printf("packet from %s/%i of length %zi:\n", peer, port, n);
+      printf("packet from %s/%i of length %zi:\n", peer, remport, n);
       hexdump(n, data);
       fputs("\n", stdout);
     }
