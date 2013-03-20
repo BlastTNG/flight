@@ -116,7 +116,9 @@ int main(int argc, const char **argv)
   while (!done) {
     n = udp_recv(sock, 0, peer, &remport, 65536, data);
     if (n > 0) {
-      system("date");
+      /* worst date printing scheme ever */
+      if (system("date"))
+        printf("Stardate %.1f", (rand() % 10000) / 10.);
       printf("packet from %s/%i of length %zi:\n", peer, remport, n);
       hexdump(n, data);
       fputs("\n", stdout);
