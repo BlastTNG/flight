@@ -830,6 +830,7 @@ struct ChannelStruct SlowChannels[] = {
   {"enc_cnt_4_hwp",'w', LOOP0,  8,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_5_hwp",'w', LOOP0,  9,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_6_hwp",'w', LOOP0, 10,     I2DEG,      0.0,      'u',      U_P_DEG},
+  {"fset",         'w', LOOP0, 11,         1,        0,      'u',      U_NONE},
   /* LOOP0 12-23 and 30-41 are wide slow */
   {"state_1_cycle",  'w', LOOP0,  24,                1.0,            0.0, 'u', U_NONE},
   {"state_2_cycle",  'w', LOOP0,  25,                1.0,            0.0, 'u', U_NONE},
@@ -978,7 +979,6 @@ struct ChannelStruct SlowChannels[] = {
   {"heat_13_hk",   'w',  RTD_D,  50,            1.0,          0.0, 'u', U_NONE},
   {"heat_45_hk",   'w',  RTD_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
-
 
   END_OF_CHANNELS
 };

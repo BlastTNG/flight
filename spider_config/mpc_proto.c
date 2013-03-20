@@ -63,31 +63,34 @@ int mpc_init(void)
  *
  * Fset packet looks like:
  *
- * RRFx1122334455...
+ * RRFxNN1122334455...
  *
  * where
  *
  * R = 16-bit protocol revision
  * F = 'F' indicating fset packet
  * x is a padding byte
+ * N = the fset_num
  * 11, 22, 33, ... are the 16-bit TES numbers
  */
-size_t mpc_compose_fset(const struct fset *set, char *buffer)
+size_t mpc_compose_fset(const struct fset *set, uint16_t num, char *buffer)
 {
   int i;
   int16_t i16 = mpc_proto_rev;
-  uint16_t n = 0;
+  uint16_t n = num;
 
   memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
   buffer[2] = 'F'; /* fset packet */
   buffer[3] = 0; /* padding */
+  memcpy(buffer + 4, &n, sizeof(n)); /* fset number + serial */
 
   /* append bolos in the fset */
+  n = 0;
   for (i = 0; i < set->n; ++i)
     if (set->f[i].bolo >= 0)
-      *(int16_t*)(buffer + 4 + n++ * 2) = set->f[i].bolo;
+      *(int16_t*)(buffer + 6 + n++ * 2) = set->f[i].bolo;
 
-  return 4 + n * 2;
+  return 6 + n * 2;
 }
 
 /* compose a command for transfer to the mpc
@@ -242,14 +245,22 @@ int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
 /* decompose an fset packet into a bolometer list, taking care of filtering on
  * the mce number; array is allocated by the caller.
  */
-int mpc_decompose_fset(int16_t *array, int mce, size_t len, const char *data)
+int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
+    const char *data)
 {
-  int16_t *in = (int16_t*)(data + 4);
+  int16_t *in = (int16_t*)(data + 6);
+  uint16_t new_fset_num = *(uint16_t*)(data + 4);
   const int n = (len - 4) / 2;
   int i, m = 0;
+
+  /* no change */
+  if (new_fset_num == *fset_num)
+    return -1;
+
   for (i = 0; i < n; ++i)
     if (TES_MCE(in[i]) == mce)
       array[m++] = TES_LOCAL(in[i]);
 
+  *fset_num = new_fset_num;
   return m;
 }

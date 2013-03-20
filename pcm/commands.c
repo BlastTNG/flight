@@ -76,7 +76,15 @@ int sendTheUglyCommand(const char *cmd);
  */
 static int change_fset(int i, int init)
 {
+  static uint8_t fset_serial = 0xF0; /* we start here to better detect
+                                        wrap-around bugs */
   struct fset new_fset;
+
+  /* range checking */
+  if (i < 0 || i > 255) {
+    bprintf(warning, "FSet: ignoring out-of-range fset index %i\n", i);
+    return CommandData.fset_num;
+  }
 
   /* special empty fset -- always succeeds */
   if (i == 0) {
@@ -84,8 +92,7 @@ static int change_fset(int i, int init)
     free(CommandData.fset.f);
     CommandData.fset.f = NULL;
     bputs(info, "FSet: using empty FSET000.");
-    send_fset = 1; /* make the MCEserv rebroadcast the fset */
-    return 0;
+    return fset_serial++ << 8;
   }
 
   /* try to load the fset */
@@ -95,8 +102,8 @@ static int change_fset(int i, int init)
       return change_fset(0, 0);
 
     bprintf(warning, "FSet: unable to read FSET%03i; still using FSET%03i", i,
-        CommandData.fset.n);
-    return CommandData.fset.n;
+        (CommandData.fset_num & 0xFF));
+    return CommandData.fset_num;
   }
 
   /* update, with concurrency handling */
@@ -105,8 +112,7 @@ static int change_fset(int i, int init)
   CommandData.fset.f = new_fset.f;
   CommandData.fset.n = new_fset.n;
   bprintf(info, "FSet: using FSET%03i with %i fields", i, CommandData.fset.n);
-  send_fset = 1; /* make the MCEserv rebroadcast the fset */
-  return i;
+  return i | (fset_serial++ << 8);
 }
 
 /* forward an unrecognised command to the MCE computers.  Returns zero if this
@@ -2020,7 +2026,7 @@ void CheckCommandList(void)
 /* do necessary stuff after reading prev_status */
 static void PostProcessInitCommand(void)
 {
-  CommandData.fset_num = change_fset(CommandData.fset_num, 1);
+  CommandData.fset_num = change_fset(CommandData.fset_num & 0xFF, 1);
 }
 
 /************************************************************/

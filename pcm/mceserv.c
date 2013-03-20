@@ -30,7 +30,7 @@
 #include <stdlib.h>
 
 /* semeuphoria */
-int send_fset = 0; /* field sets have changed and need re-sending */
+int sent_fset = -1; /* the last field set that was sent */
 
 /* send a command if one is pending */
 static int ForwardCommand(int sock)
@@ -73,28 +73,24 @@ static void ForwardFSet(int sock)
   int num = CommandData.fset_num;
   struct fset set = {0, NULL};
 
-  send_fset = 0;
-  
   set.n = CommandData.fset.n;
   if (set.n > 0) {
     set.f = malloc(sizeof(struct fset_item) * set.n);
     memcpy(set.f, CommandData.fset.f, set.n * sizeof(struct fset_item));
   }
 
-  /* double check -- on error, reraise the semaphore and return to try again */
-  if (CommandData.fset_num != num || CommandData.fset.n != set.n) {
-    send_fset = 1;
+  /* double check -- on error return to try again next time round */
+  if (CommandData.fset_num != num || CommandData.fset.n != set.n)
     goto FWD_FSET_DONE;
-  }
 
   /* compose the packet */
-  len = mpc_compose_fset(&set, buffer);
+  len = mpc_compose_fset(&set, (uint16_t)num, buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, buffer) == 0)
-    bprintf(info, "Broadcast FSET%03i\n", num);
-  else
-    send_fset = 1;
+  if (udp_bcast(sock, MPC_PORT, len, buffer) == 0) {
+    bprintf(info, "Broadcast FSet 0x%04X\n", num);
+    sent_fset = num;
+  }
 
 FWD_FSET_DONE:
   free(set.f);
@@ -122,7 +118,7 @@ void *mceserv(void *unused)
     ForwardCommand(sock);
 
     /* broadcast the field set, when necessary */
-    if (send_fset)
+    if (sent_fset != CommandData.fset_num)
       ForwardFSet(sock);
     usleep(10000);
   }
