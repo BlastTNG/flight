@@ -26,7 +26,7 @@ LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h \
 
 # These are needed by both bolotest and flight versions
 SHARED_OBJS = blast.o channels.o command_common.o framefile.o lut.o sip.o udp.o
-LOCAL_OBJS = commands.o hk.o hwpr.o mcp.o phytron.o tx.o
+LOCAL_OBJS = commands.o fset.o hk.o hwpr.o mcp.o phytron.o tx.o
 EXPT_OBJS = command_list.o derived.o tx_struct.o
 
 # These are only needed by the flight version
@@ -34,7 +34,7 @@ ifndef BOLOTEST
 SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
 								 ephem_read.o fir.o geomag.o radbox.o starpos.o  slowdl.o
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
-								fset.o mceserv.o motors.o motorcommand.o pointing.o pyramid.o \
+								mceserv.o motors.o motorcommand.o pointing.o pyramid.o \
 								sc.o sched.o svd.o sync_comms.o table.o
 EXPT_OBJS += compressstruct.o mpc_proto.o slowdl_struct.o
 endif
