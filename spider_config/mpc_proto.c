@@ -27,6 +27,7 @@
 #include "blast.h"
 #include "command_common.h"
 #include "mpc_proto.h"
+#include "tes.h"
 
 #include <string.h>
 
@@ -56,6 +57,37 @@ int mpc_init(void)
 
   bprintf(info, "MPC: Protocol revision: %i/%i\n", mpc_proto_rev, mpc_cmd_rev);
   return 0;
+}
+
+/* compose an fset list for transfer to the mpc
+ *
+ * Fset packet looks like:
+ *
+ * RRFx1122334455...
+ *
+ * where
+ *
+ * R = 16-bit protocol revision
+ * F = 'F' indicating fset packet
+ * x is a padding byte
+ * 11, 22, 33, ... are the 16-bit TES numbers
+ */
+size_t mpc_compose_fset(const struct fset *set, char *buffer)
+{
+  int i;
+  int16_t i16 = mpc_proto_rev;
+  uint16_t n = 0;
+
+  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  buffer[2] = 'F'; /* fset packet */
+  buffer[3] = 0; /* padding */
+
+  /* append bolos in the fset */
+  for (i = 0; i < set->n; ++i)
+    if (set->f[i].bolo >= 0)
+      *(int16_t*)(buffer + 4 + n++ * 2) = set->f[i].bolo;
+
+  return 4 + n * 2;
 }
 
 /* compose a command for transfer to the mpc
@@ -148,7 +180,7 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
 /* decompose a command into the ScheduleEvent struct.  returns non-zero on 
  * error */
 int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
-    const char *data, const char *peer, int port)
+    const char *data)
 {
   const char *ptr = data + 3; /* skip proto revision and packet type */
   int16_t pcm_cmd_rev;
@@ -205,4 +237,19 @@ int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
     }
 
   return 0;
+}
+
+/* decompose an fset packet into a bolometer list, taking care of filtering on
+ * the mce number; array is allocated by the caller.
+ */
+int mpc_decompose_fset(int16_t *array, int mce, size_t len, const char *data)
+{
+  int16_t *in = (int16_t*)(data + 4);
+  const int n = (len - 4) / 2;
+  int i, m = 0;
+  for (i = 0; i < n; ++i)
+    if (TES_MCE(in[i]) == mce)
+      array[m++] = TES_LOCAL(in[i]);
+
+  return m;
 }

@@ -40,6 +40,8 @@
 #include "pointing_struct.h"
 #include "channels.h"
 #include "sip.h"
+#include "fset.h"
+#include "mceserv.h"
 
 void RecalcOffset(double, double);  /* actuators.c */
 
@@ -67,6 +69,45 @@ const char* SName(enum singleCommand command); // share/sip.c
 int sendTheGoodCommand(const char *cmd);
 int sendTheBadCommand(const char *cmd);
 int sendTheUglyCommand(const char *cmd);
+
+/* (re-)load the fset number 'i' into the command data -- no change on error;
+ * returns the fset number in use; 'init'=1 occurs at start up, when there's
+ * no fallback initialised.
+ */
+static int change_fset(int i, int init)
+{
+  struct fset new_fset;
+
+  /* special empty fset -- always succeeds */
+  if (i == 0) {
+    CommandData.fset.n = 0;
+    free(CommandData.fset.f);
+    CommandData.fset.f = NULL;
+    bputs(info, "FSet: using empty FSET000.");
+    send_fset = 1; /* make the MCEserv rebroadcast the fset */
+    return 0;
+  }
+
+  /* try to load the fset */
+  if (read_fset(i, &new_fset) == NULL) {
+    /* no fset loaded -- load the empty default */
+    if (init)
+      return change_fset(0, 0);
+
+    bprintf(warning, "FSet: unable to read FSET%03i; still using FSET%03i", i,
+        CommandData.fset.n);
+    return CommandData.fset.n;
+  }
+
+  /* update, with concurrency handling */
+  CommandData.fset.n = 0;
+  free(CommandData.fset.f);
+  CommandData.fset.f = new_fset.f;
+  CommandData.fset.n = new_fset.n;
+  bprintf(info, "FSet: using FSET%03i with %i fields", i, CommandData.fset.n);
+  send_fset = 1; /* make the MCEserv rebroadcast the fset */
+  return i;
+}
 
 /* forward an unrecognised command to the MCE computers.  Returns zero if this
  * isn't in fact, a mce command */
@@ -1374,6 +1415,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.bbcIntFrameRate = ivalues[0];
       setup_bbc();
       break;
+    case fset:
+      CommandData.fset_num = change_fset(ivalues[0], 0);
+      break;
 
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
@@ -1973,6 +2017,12 @@ void CheckCommandList(void)
   bprintf(info, "Commands: All Checks Passed.\n");
 }
 
+/* do necessary stuff after reading prev_status */
+static void PostProcessInitCommand(void)
+{
+  CommandData.fset_num = change_fset(CommandData.fset_num, 1);
+}
+
 /************************************************************/
 /*                                                          */
 /*  Initialize CommandData: read last valid state: if there */
@@ -2113,14 +2163,20 @@ void InitCommandData()
   CommandData.sync_box.cmd = 0;
   CommandData.sync_box.param_value = 0;
 
+ /* this will get set properly later in PostProcessInitCommand() */
+  CommandData.fset.n = 0;
+  CommandData.fset.f = NULL;
+
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
     bprintf(warning, "Commands: prev_status: Wanted %i bytes but got %i.\n",
         (int) sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
     bputs(warning, "Commands: prev_status: Extra bytes found.\n");
-  else
+  else {
+    PostProcessInitCommand();
     return;
+  }
 
   bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
@@ -2355,6 +2411,6 @@ void InitCommandData()
 
   CommandData.questionable_behaviour = 0;
 
-  
+  PostProcessInitCommand(); 
   WritePrevStatus();
 }

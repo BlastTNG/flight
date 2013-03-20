@@ -1142,6 +1142,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(fset), "Change the field set in use", GR_TELEM, 1,
+    {
+      {"number", 1, 255, 'i', "FSET_NUM"}
+    }
+  },
+
   /* Sync Box Commands */
   {COMMAND(write_row_len), "Change the row length parameter", GR_SYNC, 1,
     {

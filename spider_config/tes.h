@@ -1,0 +1,57 @@
+/* tes.c: some TES stuff for PCM/MPC
+ *
+ * This software is copyright (C) 2013 D. V. Wiebe
+ *
+ * mcp is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * mcp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+#ifndef TES_H
+#define TES_H
+
+#include <stdint.h>
+
+/* this following three numbers define the addressable TES space in the flight
+ * code; they do not affect MCE operation */
+#define NUM_MCE 6
+#define NUM_COL 16
+#define NUM_ROW 33
+
+/* make a 16-bit TES number from a (subrack/column/row) triplet; returns -1 on
+ * out-of-range values.  The number is encoded as:
+ *
+ *   0mmm cccc 00rr rrrr <- LSB
+ */
+const static inline int16_t TESNumber(int m, int c, int r)
+{
+  if (m < 0 || m >= NUM_MCE ||
+      c < 0 || c >= NUM_COL ||
+      r < 0 || r >= NUM_ROW)
+  {
+    return -1;
+  }
+
+  return (m << 12) + (c << 8) + r;
+}
+
+/* do the reverse */
+#define TES_MCE(t) ((t) >> 12)
+#define TES_COL(t) (((t) & 0x0FFF) >> 8)
+#define TES_ROW(t) ((t) & 0xFF)
+
+/* mask off the mce number */
+#define TES_LOCAL(t) ((t) & 0x0FFF)
+
+#endif

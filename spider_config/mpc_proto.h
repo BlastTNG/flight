@@ -25,13 +25,19 @@
  * possibility of such damage.
  */
 #include <sys/types.h>
+#include <stdint.h>
 #include "command_struct.h"
+#include "fset.h"
 
 #define MCESERV_PORT 1729
 #define MPC_PORT     9271
 
 int mpc_init(void);
-size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer);
 int mpc_check_packet(size_t len, const char *data, const char *peer, int port);
+
+size_t mpc_compose_command(struct ScheduleEvent *, char *);
 int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
-    const char *data, const char *peer, int port);
+    const char *data);
+
+size_t mpc_compose_fset(const struct fset *set, char *buffer);
+int mpc_decompose_fset(int16_t *array, int mce, size_t len, const char *data);

@@ -1,29 +1,25 @@
-/* mceserv: the MCE flight computer network server
+/* pcm: the Spider master control program
  *
- * Copyright (c) 2012-2013, D. V. Wiebe
- * All rights reserved.
+ * mceserv.c: the MCE flight computer network server
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
-
- * - Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
+ * This software is copyright (C) 2012-2013 D. V. Wiebe
  *
- * This software is provided by the copyright holders and contributors "as is"
- * and any express or implied warranties, including, but not limited to, the
- * implied warranties of merchantability and fitness for a particular purpose
- * are disclaimed. In no event shall the copyright holder or contributors be
- * liable for any direct, indirect, incidental, special, exemplary, or
- * consequential damages (including, but not limited to, procurement of
- * substitute goods or services; loss of use, data, or profits; or business
- * interruption) however caused and on any theory of liability, whether in
- * contract, strict liability, or tort (including negligence or otherwise)
- * arising in any way out of the use of this software, even if advised of the
- * possibility of such damage.
+ * pcm is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * pcm is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with pcm; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include "mceserv.h"
+#include "fset.h"
 #include "mcp.h"
 #include "command_struct.h"
 #include "mpc_proto.h"
@@ -31,6 +27,10 @@
 
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
+
+/* semeuphoria */
+int send_fset = 0; /* field sets have changed and need re-sending */
 
 /* send a command if one is pending */
 static int ForwardCommand(int sock)
@@ -66,6 +66,40 @@ static int ForwardCommand(int sock)
   return 1;
 }
 
+static void ForwardFSet(int sock)
+{
+  char buffer[10000];
+  size_t len;
+  int num = CommandData.fset_num;
+  struct fset set = {0, NULL};
+
+  send_fset = 0;
+  
+  set.n = CommandData.fset.n;
+  if (set.n > 0) {
+    set.f = malloc(sizeof(struct fset_item) * set.n);
+    memcpy(set.f, CommandData.fset.f, set.n * sizeof(struct fset_item));
+  }
+
+  /* double check -- on error, reraise the semaphore and return to try again */
+  if (CommandData.fset_num != num || CommandData.fset.n != set.n) {
+    send_fset = 1;
+    goto FWD_FSET_DONE;
+  }
+
+  /* compose the packet */
+  len = mpc_compose_fset(&set, buffer);
+
+  /* Broadcast this to everyone */
+  if (udp_bcast(sock, MPC_PORT, len, buffer) == 0)
+    bprintf(info, "Broadcast FSET%03i\n", num);
+  else
+    send_fset = 1;
+
+FWD_FSET_DONE:
+  free(set.f);
+}
+
 /* main routine */
 void *mceserv(void *unused)
 {
@@ -86,6 +120,10 @@ void *mceserv(void *unused)
   for (;;) {
     /* broadcast MCE commands */
     ForwardCommand(sock);
+
+    /* broadcast the field set, when necessary */
+    if (send_fset)
+      ForwardFSet(sock);
     usleep(10000);
   }
 

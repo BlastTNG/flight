@@ -1,0 +1,25 @@
+# Example field set file.  Comments have # in column zero.  Blank lines are
+# allowed.
+
+# The first (non-blank, non-comment line) is the number of fields in this file
+10
+
+# Then there's a list of fields, one per line.  Non-bolo fields have 'n' in the
+# first column followed by a space and then the field name.  Bolo fields have
+# 'b' in the first column followed by a space and then a string of the form
+# m#c##r## indicating MCE, column and row number.  Column and row are zero
+# padded, and all three count from zero.
+
+n FASTSAMP
+b m0c01r01
+b m0c01r01
+b m0c02r02
+n az
+b m0c02r03
+n el
+b m3c02r03
+b m5c01r10
+b m2c11r23
+
+# the file must end with a line containing 'e' in the first column.
+e

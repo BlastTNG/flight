@@ -27,6 +27,7 @@
 #include <time.h>
 #include "command_list.h"
 #include "channels.h"
+#include "fset.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -500,6 +501,9 @@ struct CommandDataStruct {
   double lon;
 
   unsigned short questionable_behaviour;
+
+  int fset_num; /* current field set number */
+  struct fset fset; /* the field set itself */
 
   /* commands to be relayed to the MCE computers */
   int mcecmd_index;
