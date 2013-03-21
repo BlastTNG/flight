@@ -63,6 +63,9 @@ static void send_slow_data(int sock, char *data)
   struct statvfs buf;
   size_t len;
 
+  /* data mode is always 11 for now */
+  slow_dat.data_mode = 11;
+
   /* disk free -- units are 2**24 bytes = 16 MB */
   if (statvfs(MAS_DATA_ROOT, &buf) == 0)
     slow_dat.df =

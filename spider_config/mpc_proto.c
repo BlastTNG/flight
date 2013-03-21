@@ -339,6 +339,7 @@ int mpc_decompose_slow(struct mpc_slow_data *slow_dat, size_t len,
 {
   size_t dat_len = sizeof(*slow_dat);
 
+  /* data[3] is the MCE number */
   if (dat_len + 4 != len || data[3] < 0 || data[3] > NUM_MCE)
     return -1;
 

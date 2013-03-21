@@ -35,6 +35,8 @@
 /* the MPC slow data structure */
 struct mpc_slow_data {
   uint16_t df; /* disk free in units of 2**24 bytes (16 MB) */
+  uint16_t data_mode; /* MCE data mode */
+  uint16_t time; /* system time */
 };
 
 int mpc_init(void);
