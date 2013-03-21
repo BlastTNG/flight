@@ -338,7 +338,7 @@ int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
     int mce_slow_index[NUM_MCE], size_t len, const char *data,
     const char *peer, int port)
 {
-  size_t dat_len = sizeof(*slow_dat);
+  size_t dat_len = sizeof(slow_dat[0][0]);
   int index, nmce;
 
   if (dat_len + 4 != len) {
