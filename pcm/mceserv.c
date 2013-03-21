@@ -24,6 +24,7 @@
 #include "command_struct.h"
 #include "mpc_proto.h"
 #include "udp.h"
+#include "tes.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -33,6 +34,9 @@
 
 /* semeuphoria */
 int sent_fset = -1; /* the last field set that was sent */
+
+/* slow data */
+struct mpc_slow_data mce_slow_dat[NUM_MCE];
 
 /* send a command if one is pending */
 static int ForwardCommand(int sock)
@@ -146,6 +150,9 @@ void *mceserv(void *unused)
         if (mpc_decompose_init(n, data, peer, port) >= 0) {
           sent_fset = -1;
         }
+        break;
+      case 'S': /* slow data */
+        mpc_decompose_slow(mce_slow_dat, n, data);
         break;
       default:
         bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",
