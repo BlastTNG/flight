@@ -335,16 +335,26 @@ int mpc_decompose_init(size_t len, const char *data, const char *peer, int port)
 /* decompose the slow data and stuff it into the right struct;
  * returns -1 on error and updates nuttin */
 int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
-    int mce_slow_index[NUM_MCE], size_t len, const char *data)
+    int mce_slow_index[NUM_MCE], size_t len, const char *data,
+    const char *peer, int port)
 {
   size_t dat_len = sizeof(*slow_dat);
   int index, nmce;
 
-  if (dat_len + 4 != len || data[3] < 0 || data[3] > NUM_MCE)
+  if (dat_len + 4 != len) {
+    bprintf(err, "Bad slow data packet (size %zu) from %s/%i",
+        len, peer, port);
     return -1;
+  }
 
   /* data[3] is the MCE number */
   nmce = data[3];
+  if (nmce < 0 || nmce > NUM_MCE) {
+    bprintf(err, "Unknown MCE %i in slow data packet from %s/%i",
+        nmce, peer, port);
+    return -1;
+  }
+
   index = mce_slow_index[nmce];
 
   /* again, this will probably work... */

@@ -153,7 +153,8 @@ void *mceserv(void *unused)
         }
         break;
       case 'S': /* slow data */
-        mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer);
+        mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer,
+            peer, port);
         break;
       default:
         bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",

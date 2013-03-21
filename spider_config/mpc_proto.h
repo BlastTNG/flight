@@ -62,6 +62,6 @@ int mpc_decompose_init(size_t len, const char *data, const char *peer,
 
 size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer);
 int mpc_decompose_slow(struct mpc_slow_data dat[NUM_MCE][3], int ind[NUM_MCE],
-    size_t len, const char *data);
+    size_t len, const char *data, const char *peer, int port);
 
 #endif
