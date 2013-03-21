@@ -338,19 +338,20 @@ int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
     int mce_slow_index[NUM_MCE], size_t len, const char *data)
 {
   size_t dat_len = sizeof(*slow_dat);
-  int index;
+  int index, nmce;
 
-  /* data[3] is the MCE number */
   if (dat_len + 4 != len || data[3] < 0 || data[3] > NUM_MCE)
     return -1;
 
-  index = mce_slow_index[data[3]];
+  /* data[3] is the MCE number */
+  nmce = data[3];
+  index = mce_slow_index[nmce];
 
   /* again, this will probably work... */
-  memcpy(&slow_dat[data[3]][index], data + 4, dat_len);
+  memcpy(&slow_dat[nmce][index], data + 4, dat_len);
 
   /* increment write pointer */
-  mce_slow_index[data[3]] = (mce_slow_index[data[3]] + 1) % 3;
+  mce_slow_index[nmce] = (mce_slow_index[nmce] + 1) % 3;
 
   return 0;
 }
