@@ -32,14 +32,20 @@
 #include <unistd.h>
 #include "tes.h"
 
+#define UDP_TIMEOUT    100 /* milliseconds */
+#define INIT_TIMEOUT 60000 /* milliseconds */
+
 int main(void)
 {
-  int i, sock, port, type;
+  int sock, port, type;
   ssize_t n;
+  size_t len;
 
+  int init = 1, init_timer = 0;
   int nmce = 0;
 
   int ntes = 0;
+  uint16_t fset_num = 0xFFFF;
   int16_t tes[NUM_ROW * NUM_COL];
 
   char peer[UDP_MAXHOST];
@@ -50,17 +56,31 @@ int main(void)
     bprintf(fatal, "Unable to initialise MPC subsystem.");
 
   /* bind to the UDP port */
-  sock = udp_bind_port(MPC_PORT, 0);
+  sock = udp_bind_port(MPC_PORT, 1);
 
   /* main loop */
   for (;;) {
     struct ScheduleEvent ev;
 
     /* check inbound packets */
-    n = udp_recv(sock, 100, peer, &port, 65536, data);
+    n = udp_recv(sock, UDP_TIMEOUT, peer, &port, 65536, data);
 
     /* n == 0 on timeout */
     type = (n > 0) ? mpc_check_packet(n, data, peer, port) : -1;
+
+    if (init) {
+      if (init_timer <= 0) {
+        /* send init packet */
+        len = mpc_compose_init(nmce, data);
+
+        /* Broadcast this to everyone */
+        if (udp_bcast(sock, MCESERV_PORT, len, data) == 0)
+          bputs(info, "Broadcast awake ping.\n");
+
+        init_timer = INIT_TIMEOUT;
+      } else
+        init_timer -= UDP_TIMEOUT;
+    }
 
     if (type < 0)
       continue;
@@ -75,7 +95,9 @@ int main(void)
         /* run the command here */
         break;
       case 'F': /* field set packet */
-        ntes = mpc_decompose_fset(tes, nmce, n, data);
+        if ((n = mpc_decompose_fset(&fset_num, tes, nmce, n, data)) >= 0)
+          ntes = n;
+        init = 0;
         break;
       default:
         bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",

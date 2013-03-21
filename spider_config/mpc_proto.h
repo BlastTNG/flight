@@ -42,3 +42,6 @@ int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
 size_t mpc_compose_fset(const struct fset *set, uint16_t num, char *buffer);
 int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
     const char *data);
+
+size_t mpc_compose_init(int mce, char *buffer);
+int mpc_decompose_init(size_t len, const char *data);

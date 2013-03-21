@@ -59,6 +59,29 @@ int mpc_init(void)
   return 0;
 }
 
+/* compose an init packet for transfer from the mpc
+ *
+ * Init packet looks like:
+ *
+ * RRAM
+ *
+ * where
+ *
+ * R = 16-bit protocol revision
+ * A = 'A' inidcating init packet
+ * M = 8-bit mce number
+ */
+size_t mpc_compose_init(int mce, char *buffer)
+{
+  int16_t i16 = mpc_proto_rev;
+
+  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  buffer[2] = 'A'; /* init ("awake") packet */
+  buffer[3] = mce & 0xF; /* mce number */
+
+  return 4;
+}
+
 /* compose an fset list for transfer to the mpc
  *
  * Fset packet looks like:
@@ -171,7 +194,7 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
   }
 
   /* check type -- there's a list of valid packet codes here */
-  if (*ptr != 'C') {
+  if (*ptr != 'A' && *ptr != 'C' && *ptr != 'F') {
     bprintf(err, "Ignoring %i-byte packet of unknown type 0x%X from %s/%i\n",
         len, (unsigned char)*ptr, peer, port);
     return -1;
@@ -250,17 +273,29 @@ int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
 {
   int16_t *in = (int16_t*)(data + 6);
   uint16_t new_fset_num = *(uint16_t*)(data + 4);
-  const int n = (len - 4) / 2;
+  const int n = (len - 6) / 2;
   int i, m = 0;
 
   /* no change */
-  if (new_fset_num == *fset_num)
+  if (new_fset_num == *fset_num) {
+    bprintf(info, "Ignoring rebroadcast FSet 0x%04i\n", new_fset_num);
     return -1;
+  }
 
   for (i = 0; i < n; ++i)
     if (TES_MCE(in[i]) == mce)
       array[m++] = TES_LOCAL(in[i]);
 
+  bprintf(info, "New FSet 0x%04X with %i channels for MCE%i\n", new_fset_num, m,
+      mce);
+
   *fset_num = new_fset_num;
   return m;
 }
+
+/* returns the mce number on success or -1 on error */
+int mpc_decompose_init(size_t len, const char *data)
+{
+  return (len < 4) ? -1 : data[3];
+}
+
