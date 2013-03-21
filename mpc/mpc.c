@@ -32,6 +32,7 @@
 #include <sys/statvfs.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
 
 #define MAS_DATA_ROOT "/data0/mce/"
 
@@ -70,6 +71,9 @@ static void send_slow_data(int sock, char *data)
   if (statvfs(MAS_DATA_ROOT, &buf) == 0)
     slow_dat.df =
       (uint16_t)(((unsigned long long)buf.f_bfree * buf.f_bsize) >> 24);
+
+  /* time */
+  slow_dat.time = (uint32_t)time(NULL);
 
   /* make packet and send */
   len = mpc_compose_slow(&slow_dat, nmce, data);
