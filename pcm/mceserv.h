@@ -18,3 +18,8 @@
  * along with pcm; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include "mpc_proto.h"
+#include "tes.h"
+
+extern int mce_slow_index[NUM_MCE];
+extern struct mpc_slow_data mce_slow_dat[NUM_MCE][3];

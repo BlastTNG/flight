@@ -36,13 +36,16 @@
 int sent_fset = -1; /* the last field set that was sent */
 
 /* slow data */
-struct mpc_slow_data mce_slow_dat[NUM_MCE];
+int mce_slow_index[NUM_MCE];
+struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
+
+/* general purpose datagram buffer */
+static char udp_buffer[UDP_MAXSIZE];
 
 /* send a command if one is pending */
 static int ForwardCommand(int sock)
 {
   size_t len;
-  char buffer[10000];
   const int cmd_idx = GETREADINDEX(CommandData.mcecmd_index);
   struct ScheduleEvent ev;
 
@@ -57,10 +60,10 @@ static int ForwardCommand(int sock)
     return 0;
 
   /* compose the command for transfer. */
-  len = mpc_compose_command(&ev, buffer);
+  len = mpc_compose_command(&ev, udp_buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, buffer) == 0) {
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
     bprintf(info, "Broadcast %s command #%i.\n",
         ev.is_multi ? "multi" : "single", ev.command);
   }
@@ -74,7 +77,6 @@ static int ForwardCommand(int sock)
 
 static void ForwardFSet(int sock)
 {
-  char buffer[10000];
   size_t len;
   int num = CommandData.fset_num;
   struct fset set = {0, NULL};
@@ -90,10 +92,10 @@ static void ForwardFSet(int sock)
     goto FWD_FSET_DONE;
 
   /* compose the packet */
-  len = mpc_compose_fset(&set, (uint16_t)num, buffer);
+  len = mpc_compose_fset(&set, (uint16_t)num, udp_buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, buffer) == 0) {
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
     bprintf(info, "Broadcast FSet 0x%04X\n", num);
     sent_fset = num;
   }
@@ -108,7 +110,6 @@ void *mceserv(void *unused)
   int sock, port, type;
   ssize_t n;
   char peer[UDP_MAXHOST];
-  char data[UDP_MAXSIZE];
 
   nameThread("MCE");
   bprintf(startup, "Startup");
@@ -131,10 +132,10 @@ void *mceserv(void *unused)
       ForwardFSet(sock);
 
     /* check inbound packets */
-    n = udp_recv(sock, UDP_TIMEOUT, peer, &port, UDP_MAXSIZE, data);
+    n = udp_recv(sock, UDP_TIMEOUT, peer, &port, UDP_MAXSIZE, udp_buffer);
 
     /* n == 0 on timeout */
-    type = (n > 0) ? mpc_check_packet(n, data, peer, port) : -1;
+    type = (n > 0) ? mpc_check_packet(n, udp_buffer, peer, port) : -1;
 
     if (type < 0)
       continue;
@@ -147,12 +148,12 @@ void *mceserv(void *unused)
         /* this returns the mce number of the trasmitting computer, which we
          * promptly forget, or -1 on error.
          */
-        if (mpc_decompose_init(n, data, peer, port) >= 0) {
+        if (mpc_decompose_init(n, udp_buffer, peer, port) >= 0) {
           sent_fset = -1;
         }
         break;
       case 'S': /* slow data */
-        mpc_decompose_slow(mce_slow_dat, n, data);
+        mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer);
         break;
       default:
         bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",

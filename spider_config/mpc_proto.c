@@ -334,16 +334,23 @@ int mpc_decompose_init(size_t len, const char *data, const char *peer, int port)
 
 /* decompose the slow data and stuff it into the right struct;
  * returns -1 on error and updates nuttin */
-int mpc_decompose_slow(struct mpc_slow_data *slow_dat, size_t len,
-    const char *data)
+int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
+    int mce_slow_index[NUM_MCE], size_t len, const char *data)
 {
   size_t dat_len = sizeof(*slow_dat);
+  int index;
 
   /* data[3] is the MCE number */
   if (dat_len + 4 != len || data[3] < 0 || data[3] > NUM_MCE)
     return -1;
 
+  index = mce_slow_index[data[3]];
+
   /* again, this will probably work... */
-  memcpy(slow_dat + data[3], data + 4, dat_len);
+  memcpy(&slow_dat[data[3]][index], data + 4, dat_len);
+
+  /* increment write pointer */
+  mce_slow_index[data[3]] = (mce_slow_index[data[3]] + 1) % 3;
+
   return 0;
 }

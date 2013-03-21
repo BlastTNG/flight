@@ -24,10 +24,15 @@
  * arising in any way out of the use of this software, even if advised of the
  * possibility of such damage.
  */
+
+#ifndef MPC_PROTO_H
+#define MPC_PROTO_H
+
 #include <sys/types.h>
 #include <stdint.h>
 #include "command_struct.h"
 #include "fset.h"
+#include "tes.h"
 
 #define MCESERV_PORT 1729
 #define MPC_PORT     9271
@@ -55,4 +60,7 @@ int mpc_decompose_init(size_t len, const char *data, const char *peer,
     int port);
 
 size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer);
-int mpc_decompose_slow(struct mpc_slow_data *dat, size_t len, const char *data);
+int mpc_decompose_slow(struct mpc_slow_data dat[NUM_MCE][3], int ind[NUM_MCE],
+    size_t len, const char *data);
+
+#endif
