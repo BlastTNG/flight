@@ -27,13 +27,51 @@
 #include "blast.h"
 #include "mpc_proto.h"
 #include "udp.h"
-
-#include <stdio.h>
-#include <unistd.h>
 #include "tes.h"
 
+#include <sys/statvfs.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#define MAS_DATA_ROOT "/data0/mce/"
+
+/* some timing constants; in the main loop, timing is done using the udp poll
+ * timeout.  As a result, all timings are approximate (typically lower bounds)
+ * and the granularity of timing is the UDP_TIMEOUT
+ */
 #define UDP_TIMEOUT    100 /* milliseconds */
+
+/* wait time betewwn sending the ping to an unresponsive PCM? */
 #define INIT_TIMEOUT 60000 /* milliseconds */
+
+/* sets the rate at which slow data are sent to PCM.  Since PCM multiplexes
+ * these over the MCE count into a slow channel, this can happen "rarely".
+ * If we assume the PCM frame rate is 100 Hz, it's once every 1.2 seconds;
+ * this is slightly faster than that, probably.
+ */
+#define SLOW_TIMEOUT   800 /* milliseconds */
+
+/* The number of the attached MCE */
+int nmce = 0;
+
+/* The slow data struct */
+struct mpc_slow_data slow_dat;
+
+/* send slow data to PCM */
+static void send_slow_data(int sock, char *data)
+{
+  struct statvfs buf;
+  size_t len;
+
+  /* disk free -- units are 2**24 bytes = 16 MB */
+  if (statvfs(MAS_DATA_ROOT, &buf) == 0)
+    slow_dat.df =
+      (uint16_t)(((unsigned long long)buf.f_bfree * buf.f_bsize) >> 24);
+
+  /* make packet and send */
+  len = mpc_compose_slow(&slow_dat, nmce, data);
+  udp_bcast(sock, MCESERV_PORT, len, data);
+}
 
 int main(void)
 {
@@ -42,14 +80,14 @@ int main(void)
   size_t len;
 
   int init = 1, init_timer = 0;
-  int nmce = 0;
+  int slow_timer = 0;
 
   int ntes = 0;
   uint16_t fset_num = 0xFFFF;
   int16_t tes[NUM_ROW * NUM_COL];
 
   char peer[UDP_MAXHOST];
-  char data[65536];
+  char data[UDP_MAXSIZE];
 
   printf("This is MPC.\n");
   if (mpc_init())
@@ -63,7 +101,7 @@ int main(void)
     struct ScheduleEvent ev;
 
     /* check inbound packets */
-    n = udp_recv(sock, UDP_TIMEOUT, peer, &port, 65536, data);
+    n = udp_recv(sock, UDP_TIMEOUT, peer, &port, UDP_MAXSIZE, data);
 
     /* n == 0 on timeout */
     type = (n > 0) ? mpc_check_packet(n, data, peer, port) : -1;
@@ -78,10 +116,18 @@ int main(void)
           bputs(info, "Broadcast awake ping.\n");
 
         init_timer = INIT_TIMEOUT;
-      } else
+      } else if (n == 0)
         init_timer -= UDP_TIMEOUT;
+    } else {
+      /* slow data */
+      if (slow_timer <= 0) {
+        send_slow_data(sock, data);
+        slow_timer = SLOW_TIMEOUT;
+      } else if (n == 0)
+        slow_timer -= UDP_TIMEOUT;
     }
 
+    /* skip bad packets */
     if (type < 0)
       continue;
 

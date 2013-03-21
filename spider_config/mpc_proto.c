@@ -59,6 +59,35 @@ int mpc_init(void)
   return 0;
 }
 
+/* compose a slow data packet for transfer from the mpc
+ *
+ * Slow data packet looks like:
+ *
+ * RRSM...
+ *
+ * where
+ *
+ * R = 16-bit protocol revision
+ * S = 'S' indicating a slow packet
+ * M = 8-bit MCE number
+ *
+ * followed by the packed slow data
+ */
+size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer)
+{
+  size_t len = sizeof(*dat);
+  int16_t i16 = mpc_proto_rev;
+
+  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  buffer[2] = 'S'; /* slow data packet */
+  buffer[3] = mce & 0xF; /* mce number */
+
+  /* this will probably work... */
+  memcpy(buffer + 4, dat, len);
+
+  return len + 4;
+}
+
 /* compose an init packet for transfer from the mpc
  *
  * Init packet looks like:
@@ -278,7 +307,7 @@ int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
 
   /* no change */
   if (new_fset_num == *fset_num) {
-    bprintf(info, "Ignoring rebroadcast FSet 0x%04i\n", new_fset_num);
+    bprintf(info, "Ignoring rebroadcast FSet 0x%04X\n", new_fset_num);
     return -1;
   }
 
@@ -296,10 +325,24 @@ int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
 /* returns the mce number on success or -1 on error */
 int mpc_decompose_init(size_t len, const char *data, const char *peer, int port)
 {
-  if (len < 4)
+  if (len != 4 || data[3] < 0 || data[3] > NUM_MCE)
     return -1;
 
   bprintf(info, "Pinged by %s/%i running MCE%i", peer, port, data[3]);
   return data[3];
 }
 
+/* decompose the slow data and stuff it into the right struct;
+ * returns -1 on error and updates nuttin */
+int mpc_decompose_slow(struct mpc_slow_data *slow_dat, size_t len,
+    const char *data)
+{
+  size_t dat_len = sizeof(*slow_dat);
+
+  if (dat_len + 4 != len || data[3] < 0 || data[3] > NUM_MCE)
+    return -1;
+
+  /* again, this will probably work... */
+  memcpy(slow_dat + data[3], data + 4, dat_len);
+  return 0;
+}

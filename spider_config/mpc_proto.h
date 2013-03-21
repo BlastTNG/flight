@@ -32,6 +32,11 @@
 #define MCESERV_PORT 1729
 #define MPC_PORT     9271
 
+/* the MPC slow data structure */
+struct mpc_slow_data {
+  uint16_t df; /* disk free in units of 2**24 bytes (16 MB) */
+};
+
 int mpc_init(void);
 int mpc_check_packet(size_t len, const char *data, const char *peer, int port);
 
@@ -46,3 +51,6 @@ int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
 size_t mpc_compose_init(int mce, char *buffer);
 int mpc_decompose_init(size_t len, const char *data, const char *peer,
     int port);
+
+size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer);
+int mpc_decompose_slow(struct mpc_slow_data *dat, size_t len, const char *data);
