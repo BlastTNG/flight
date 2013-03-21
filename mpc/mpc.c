@@ -30,11 +30,17 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include "tes.h"
 
 int main(void)
 {
-  int sock, port, type;
+  int i, sock, port, type;
   ssize_t n;
+
+  int nmce = 0;
+
+  int ntes = 0;
+  int16_t tes[NUM_ROW * NUM_COL];
 
   char peer[UDP_MAXHOST];
   char data[65536];
@@ -48,6 +54,8 @@ int main(void)
 
   /* main loop */
   for (;;) {
+    struct ScheduleEvent ev;
+
     /* check inbound packets */
     n = udp_recv(sock, 100, peer, &port, 65536, data);
 
@@ -59,13 +67,15 @@ int main(void)
 
     /* do something based on packet type */
     switch (type) {
-      struct ScheduleEvent ev;
       case 'C': /* command packet */
-        if (mpc_decompose_command(&ev, n, data, peer, port)) {
+        if (mpc_decompose_command(&ev, n, data)) {
           /* command decomposition failed */
           break;
         }
         /* run the command here */
+        break;
+      case 'F': /* field set packet */
+        ntes = mpc_decompose_fset(tes, nmce, n, data);
         break;
       default:
         bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",
