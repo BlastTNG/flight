@@ -223,7 +223,7 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
   }
 
   /* check type -- there's a list of valid packet codes here */
-  if (*ptr != 'A' && *ptr != 'C' && *ptr != 'F') {
+  if (*ptr != 'A' && *ptr != 'C' && *ptr != 'F' && *ptr != 'S') {
     bprintf(err, "Ignoring %i-byte packet of unknown type 0x%X from %s/%i\n",
         len, (unsigned char)*ptr, peer, port);
     return -1;
