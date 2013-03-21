@@ -29,6 +29,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define UDP_TIMEOUT 100 /* milliseconds */
+
 /* semeuphoria */
 int sent_fset = -1; /* the last field set that was sent */
 
@@ -99,7 +101,10 @@ FWD_FSET_DONE:
 /* main routine */
 void *mceserv(void *unused)
 {
-  int sock;
+  int sock, port, type;
+  ssize_t n;
+  char peer[UDP_MAXHOST];
+  char data[UDP_MAXSIZE];
 
   nameThread("MCE");
   bprintf(startup, "Startup");
@@ -120,7 +125,32 @@ void *mceserv(void *unused)
     /* broadcast the field set, when necessary */
     if (sent_fset != CommandData.fset_num)
       ForwardFSet(sock);
-    usleep(10000);
+
+    /* check inbound packets */
+    n = udp_recv(sock, UDP_TIMEOUT, peer, &port, UDP_MAXSIZE, data);
+
+    /* n == 0 on timeout */
+    type = (n > 0) ? mpc_check_packet(n, data, peer, port) : -1;
+
+    if (type < 0)
+      continue;
+
+    /* do something based on packet type */
+    switch (type) {
+      case 'A': /* "awake" packet from somebody, trigger retransmission of
+                   "interesting" things. */
+
+        /* this returns the mce number of the trasmitting computer, which we
+         * promptly forget, or -1 on error.
+         */
+        if (mpc_decompose_init(n, data, peer, port) >= 0) {
+          sent_fset = -1;
+        }
+        break;
+      default:
+        bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",
+            type);
+    }
   }
 
   return NULL;

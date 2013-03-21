@@ -294,8 +294,12 @@ int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
 }
 
 /* returns the mce number on success or -1 on error */
-int mpc_decompose_init(size_t len, const char *data)
+int mpc_decompose_init(size_t len, const char *data, const char *peer, int port)
 {
-  return (len < 4) ? -1 : data[3];
+  if (len < 4)
+    return -1;
+
+  bprintf(info, "Pinged by %s/%i running MCE%i", peer, port, data[3]);
+  return data[3];
 }
 

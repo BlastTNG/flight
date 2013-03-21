@@ -86,6 +86,10 @@ static int change_fset(int i, int init)
     return CommandData.fset_num;
   }
 
+  /* avoid the forbidden serial number */
+  if (fset_serial == 0xFF)
+    fset_serial++;
+
   /* special empty fset -- always succeeds */
   if (i == 0) {
     CommandData.fset.n = 0;

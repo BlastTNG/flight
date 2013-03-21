@@ -30,6 +30,9 @@
 /* maximum length of a hostname */
 #define UDP_MAXHOST 1025
 
+/* maximum length of a datagram */
+#define UDP_MAXSIZE 65536
+
 /* udp_bind_port: create and bind a socket to a UDP port on the local interfaces
  *
  * Inputs:
