@@ -32,7 +32,8 @@
 #include <sys/statvfs.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <time.h>
+#include <sys/time.h>
+#include <pthread.h>
 
 #define MAS_DATA_ROOT "/data0/mce/"
 
@@ -52,15 +53,69 @@
  */
 #define SLOW_TIMEOUT   800 /* milliseconds */
 
+/* UDP socket */
+int sock;
+
 /* The number of the attached MCE */
 int nmce = 0;
+
+/* Initialisation veto */
+int init = 1;
+
+/* Data return veto */
+int veto = 0;
 
 /* The slow data struct */
 struct mpc_slow_data slow_dat;
 
-/* send slow data to PCM */
-static void send_slow_data(int sock, char *data)
+/* the list of bolometers to send to PCM */
+uint16_t fset_num = 0xFFFF;
+int ntes = 0;
+int16_t tes[NUM_ROW * NUM_COL];
+
+/* make and send fake data -- we only make data mode 11 data, which is static */
+#define FAKE_DATA_RATE   2500 /* microseconds -- this is approximate */
+static void *fake_data(void *dummy)
 {
+  int i, j;
+  uint32_t mode11[NUM_COL * NUM_ROW];
+
+  char data[UDP_MAXSIZE];
+
+  /* generate the mode 11 data -- this is simply:
+   *
+   *  0000 0000 0000 0000 0000 000r rrrr rccc
+   *
+   *  where :
+   *
+   *  r = the row number
+   *  c = the column number
+   */
+  for (i = 0; i < NUM_COL; ++i)
+    for (j = 0; j < NUM_ROW; ++j)
+      mode11[i + j * NUM_COL] = (i & 0x7) | ((j & 0x3F) << 3);
+
+  /* wait for initialisation from PCM */
+  while (init)
+    sleep(1);
+
+  /* send data packets at the frame rate */
+  for (;;) {
+    /* we just don't bother sending anything if nothing is requested */
+    if (!veto && ntes > 0) {
+      size_t len = mpc_compose_tes(mode11, fset_num, nmce, ntes, tes, data);
+      udp_bcast(sock, MCESERV_PORT, len, data);
+    }
+    usleep(FAKE_DATA_RATE);
+  }
+
+  return NULL;
+}
+
+/* send slow data to PCM */
+static void send_slow_data(char *data)
+{
+  struct timeval tv;
   struct statvfs buf;
   size_t len;
 
@@ -72,8 +127,9 @@ static void send_slow_data(int sock, char *data)
     slow_dat.df =
       (uint16_t)(((unsigned long long)buf.f_bfree * buf.f_bsize) >> 24);
 
-  /* time */
-  slow_dat.time = (uint32_t)time(NULL);
+  /* time -- this wraps around ~16 months after the epoch */
+  gettimeofday(&tv, NULL);
+  slow_dat.time = (tv.tv_sec - MPC_EPOCH) * 100 + tv.tv_usec / 10000;
 
   /* make packet and send */
   len = mpc_compose_slow(&slow_dat, nmce, data);
@@ -82,16 +138,14 @@ static void send_slow_data(int sock, char *data)
 
 int main(void)
 {
-  int sock, port, type;
+  int port, type;
   ssize_t n;
   size_t len;
 
-  int init = 1, init_timer = 0;
-  int slow_timer = 0;
+  pthread_t data_thread;
 
-  int ntes = 0;
-  uint16_t fset_num = 0xFFFF;
-  int16_t tes[NUM_ROW * NUM_COL];
+  int init_timer = 0;
+  int slow_timer = 0;
 
   char peer[UDP_MAXHOST];
   char data[UDP_MAXSIZE];
@@ -102,6 +156,9 @@ int main(void)
 
   /* bind to the UDP port */
   sock = udp_bind_port(MPC_PORT, 1);
+
+  /* create the data thread */
+  pthread_create(&data_thread, NULL, fake_data, NULL);
 
   /* main loop */
   for (;;) {
@@ -126,9 +183,9 @@ int main(void)
       } else if (n == 0)
         init_timer -= UDP_TIMEOUT;
     } else {
-      /* slow data */
+      /* finished the init; slow data */
       if (slow_timer <= 0) {
-        send_slow_data(sock, data);
+        send_slow_data(data);
         slow_timer = SLOW_TIMEOUT;
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
@@ -148,8 +205,10 @@ int main(void)
         /* run the command here */
         break;
       case 'F': /* field set packet */
+        veto = 1; /* veto transmission */
         if ((n = mpc_decompose_fset(&fset_num, tes, nmce, n, data)) >= 0)
           ntes = n;
+        veto = 0; /* unveto transmission */
         init = 0;
         break;
       default:

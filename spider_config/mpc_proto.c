@@ -59,6 +59,41 @@ int mpc_init(void)
   return 0;
 }
 
+/* compose a TES data packet for transmission from the mpc
+ *
+ * data packet looks like:
+ *
+ * RRTMFF00...
+ *
+ * where
+ *
+ * R = 16-bit protocol revision
+ * T = 'T' indicating a slow packet
+ * M = 8-bit MCE number
+ * F = 16-bit fset number
+ * 0 = padding
+ *
+ * followed by the tes data in fset order
+ */
+size_t mpc_compose_tes(const uint32_t *data, uint16_t fset_num, int nmce,
+    int ntes, const int16_t *tesind, char *buffer)
+{
+  size_t len = 8 + sizeof(uint32_t) * ntes;
+  int16_t i16 = mpc_proto_rev;
+  int i;
+  uint32_t *ptr = (uint32_t*)(buffer + 8);
+
+  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  buffer[2] = 'T'; /* tes data packet */
+  buffer[3] = nmce & 0xF; /* mce number */
+  memcpy(buffer + 4, &fset_num, sizeof(fset_num)); /* FSET */
+
+  /* append data */
+  for (i = 0; i < ntes; ++i)
+    *(ptr++) = data[tesind[i]];
+
+  return len;
+}
 /* compose a slow data packet for transfer from the mpc
  *
  * Slow data packet looks like:
@@ -223,7 +258,7 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
   }
 
   /* check type -- there's a list of valid packet codes here */
-  if (*ptr != 'A' && *ptr != 'C' && *ptr != 'F' && *ptr != 'S') {
+  if (*ptr != 'A' && *ptr != 'C' && *ptr != 'F' && *ptr != 'S' && *ptr != 'T') {
     bprintf(err, "Ignoring %i-byte packet of unknown type 0x%X from %s/%i\n",
         len, (unsigned char)*ptr, peer, port);
     return -1;
@@ -313,7 +348,7 @@ int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
 
   for (i = 0; i < n; ++i)
     if (TES_MCE(in[i]) == mce)
-      array[m++] = TES_LOCAL(in[i]);
+      array[m++] = TES_OFFSET(in[i]);
 
   bprintf(info, "New FSet 0x%04X with %i channels for MCE%i\n", new_fset_num, m,
       mce);

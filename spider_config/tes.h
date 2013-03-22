@@ -30,9 +30,7 @@
 #define NUM_ROW 33
 
 /* make a 16-bit TES number from a (subrack/column/row) triplet; returns -1 on
- * out-of-range values.  The number is encoded as:
- *
- *   0mmm cccc 00rr rrrr <- LSB
+ * out-of-range values.
  */
 const static inline int16_t TESNumber(int m, int c, int r)
 {
@@ -43,15 +41,18 @@ const static inline int16_t TESNumber(int m, int c, int r)
     return -1;
   }
 
-  return (m << 12) + (c << 8) + r;
+  return (m << 12) + (c + r * NUM_COL);
 }
-
-/* do the reverse */
-#define TES_MCE(t) ((t) >> 12)
-#define TES_COL(t) (((t) & 0x0FFF) >> 8)
-#define TES_ROW(t) ((t) & 0xFF)
 
 /* mask off the mce number */
 #define TES_LOCAL(t) ((t) & 0x0FFF)
+
+/* do the reverse */
+#define TES_MCE(t) ((t) >> 12)
+#define TES_COL(t) (TES_LOCAL((t)) % NUM_COL)
+#define TES_ROW(t) (TES_LOCAL((t)) / NUM_COL)
+
+/* the offset into a COL * ROW length array -- simply just the local part */
+#define TES_OFFSET(t) TES_LOCAL((t))
 
 #endif

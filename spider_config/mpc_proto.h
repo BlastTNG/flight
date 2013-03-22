@@ -37,6 +37,9 @@
 #define MCESERV_PORT 1729
 #define MPC_PORT     9271
 
+/* the MPC epoch */
+#define MPC_EPOCH 1363903385
+
 /* the MPC slow data structure */
 struct mpc_slow_data {
   uint32_t time; /* system time */
@@ -63,5 +66,10 @@ int mpc_decompose_init(size_t len, const char *data, const char *peer,
 size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer);
 int mpc_decompose_slow(struct mpc_slow_data dat[NUM_MCE][3], int ind[NUM_MCE],
     size_t len, const char *data, const char *peer, int port);
+
+size_t mpc_compose_tes(const uint32_t *data, uint16_t fset_num, int nmce,
+    int ntes, const int16_t *tesind, char *buffer);
+int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
+    const char *peer, int port);
 
 #endif

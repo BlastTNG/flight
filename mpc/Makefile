@@ -1,7 +1,7 @@
 CC = gcc
 CPPFLAGS = -D__MPC__
 CFLAGS = -g -O3 -Wall
-LDLIBS = -lm
+LDLIBS = -lm -lpthread
 
 ########################################################
 # External repository dependencies
