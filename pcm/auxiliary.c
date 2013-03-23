@@ -473,7 +473,7 @@ void ControlPower(void) {
  
   /* MCC power switching now uses ACS1 D1 grp 6 = latch1 high byte
    * and grp 2 = switch_grp2 low byte
-   * and bits 6 & & of grp SIP/Spare = switch_misc */
+   * and bits 6 & 7 of grp SIP/Spare = switch_misc */
 
   if (CommandData.power.mcc1.set_count > 0) {
     CommandData.power.mcc1.set_count--;

@@ -1933,16 +1933,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case write_row_len:
       CommandData.sync_box.write_param = rl;
       CommandData.sync_box.param_value = ivalues[0];
+      CommandData.sync_box.rl_value = CommandData.sync_box.param_value;
       CommandData.sync_box.cmd = 1;
       break;
     case write_num_rows:
       CommandData.sync_box.write_param = nr;
       CommandData.sync_box.param_value = ivalues[0];
+      CommandData.sync_box.nr_value = CommandData.sync_box.param_value;
       CommandData.sync_box.cmd = 1;
       break;
     case write_free_run:
       CommandData.sync_box.write_param = fr;
       CommandData.sync_box.param_value = ivalues[0];
+      CommandData.sync_box.fr_value = CommandData.sync_box.param_value;
       CommandData.sync_box.cmd = 1;
       break;
 
@@ -2418,6 +2421,11 @@ void InitCommandData()
   CommandData.bbcExtFrameMeas = 0;
   CommandData.bbcIsExt = 0 /*1*/;
   CommandData.bbcAutoExt = 0 /*1*/;
+  
+  /* sync box parameter defaults*/
+  CommandData.sync_box.rl_value = 57;
+  CommandData.sync_box.nr_value = 33;
+  CommandData.sync_box.fr_value = 120;
 
   CommandData.questionable_behaviour = 0;
 

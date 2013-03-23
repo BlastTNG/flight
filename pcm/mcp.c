@@ -697,7 +697,7 @@ static void GetCurrents()
   double i_trans;
   double i_das;
   double i_acs;
-  double i_rec;
+  double i_mcc;
   double i_sc;
   double i_dgps;
   double i_step;
@@ -711,7 +711,7 @@ static void GetCurrents()
   static struct BiPhaseStruct* i_transAddr;
   static struct BiPhaseStruct* i_dasAddr;
   static struct BiPhaseStruct* i_acsAddr;
-  static struct BiPhaseStruct* i_recAddr;
+  static struct BiPhaseStruct* i_mccAddr;
   static struct BiPhaseStruct* i_scAddr;
   static struct BiPhaseStruct* i_dgpsAddr;
   static struct BiPhaseStruct* i_stepAddr;
@@ -724,7 +724,7 @@ static void GetCurrents()
   static struct NiosStruct* i_transNios;
   static struct NiosStruct* i_dasNios;
   static struct NiosStruct* i_acsNios;
-  static struct NiosStruct* i_recNios;
+  static struct NiosStruct* i_mccNios;
   static struct NiosStruct* i_scNios;
   static struct NiosStruct* i_dgpsNios;
   static struct NiosStruct* i_stepNios;
@@ -745,7 +745,7 @@ static void GetCurrents()
     i_transAddr = GetBiPhaseAddr("i_trans");
     i_dasAddr = GetBiPhaseAddr("i_das");
     i_acsAddr = GetBiPhaseAddr("i_acs");
-    i_recAddr = GetBiPhaseAddr("i_rec");
+    i_mccAddr = GetBiPhaseAddr("i_mcc");
     i_scAddr = GetBiPhaseAddr("i_sc");
     i_dgpsAddr = GetBiPhaseAddr("i_dgps");
     i_stepAddr = GetBiPhaseAddr("i_step");
@@ -758,7 +758,7 @@ static void GetCurrents()
     i_transNios = GetNiosAddr("i_trans");
     i_dasNios = GetNiosAddr("i_das");
     i_acsNios = GetNiosAddr("i_acs");
-    i_recNios = GetNiosAddr("i_rec");
+    i_mccNios = GetNiosAddr("i_mcc");
     i_scNios = GetNiosAddr("i_sc");
     i_dgpsNios = GetNiosAddr("i_dgps");
     i_stepNios = GetNiosAddr("i_step");
@@ -775,7 +775,7 @@ static void GetCurrents()
   i_trans = (double)(slow_data[i_transAddr->index][i_transAddr->channel])*i_transNios->m + i_transNios->b;
   i_das = (double)(slow_data[i_dasAddr->index][i_dasAddr->channel])*i_dasNios->m + i_dasNios->b;
   i_acs = (double)(slow_data[i_acsAddr->index][i_acsAddr->channel])*i_acsNios->m + i_acsNios->b;
-  i_rec = (double)(slow_data[i_recAddr->index][i_recAddr->channel])*i_recNios->m + i_recNios->b;
+  i_mcc = (double)(slow_data[i_mccAddr->index][i_mccAddr->channel])*i_mccNios->m + i_mccNios->b;
   i_sc = (double)(slow_data[i_scAddr->index][i_scAddr->channel])*i_scNios->m + i_scNios->b;
   i_dgps = (double)(slow_data[i_dgpsAddr->index][i_dgpsAddr->channel])*i_dgpsNios->m + i_dgpsNios->b;
   i_step = (double)(slow_data[i_stepAddr->index][i_stepAddr->channel])*i_stepNios->m + i_stepNios->b;
@@ -792,7 +792,7 @@ static void GetCurrents()
     CommandData.power.elmot_is_on = 0;
   }
 
-  i_tot = i_trans + i_das + i_acs + i_rec + i_sc + i_dgps + i_step + i_flc + i_gy + i_rw + i_el + i_piv;
+  i_tot = i_trans + i_das + i_acs + i_mcc + i_sc + i_dgps + i_step + i_flc + i_gy + i_rw + i_el + i_piv;
 
   WriteData(i_totNios, 1000*i_tot, NIOS_QUEUE);
 

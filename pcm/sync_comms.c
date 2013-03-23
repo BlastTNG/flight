@@ -45,7 +45,7 @@ along with pcm; if not, write to the Free Software Foundation, Inc.,
 
 #define SYNC_DEV "/dev/ttySI0"
 #define MAX_BYTES 10000
-#undef SYNCBOX_VERBOSE
+//#define SYNCBOX_VERBOSE
 
 static pthread_t synccomm_id; // thread ID
 struct SyncInfo syncinfo;     // device status info -- see sync_comms.h
@@ -99,7 +99,9 @@ void* syncComm(void* arg)
     open_sync();
 
     if (n_conn == 10) {
+      #ifdef SYNCBOX_VERBOSE
       bputs(err, "Sync box port failed to open after 10 attempts");
+      #endif
     }
 
     n_conn++;
@@ -120,9 +122,11 @@ void* syncComm(void* arg)
       /* if there's an error, reset connection to charge controller */
       close_sync();
      
+      #ifdef SYNCBOX_VERBOSE
       if (n_reconn == 0) {
         bprintf(info,"Error occurred: attempting to re-open serial port.");
       }
+      #endif
 
       while (syncinfo.open == 0) {
         open_sync();
@@ -154,8 +158,26 @@ void* syncComm(void* arg)
         usleep(10000);
       } else {
         query_sync();
+        
+        /* check to see if read values are equal to the intended values
+         * if not, command them to be on the next cycle */
+        if (SyncBoxData.row_len != CommandData.sync_box.rl_value) {
+          CommandData.sync_box.cmd = 1;
+          CommandData.sync_box.write_param = rl;
+          CommandData.sync_box.param_value = CommandData.sync_box.rl_value;
+        } else if (SyncBoxData.num_rows != CommandData.sync_box.nr_value) {
+          CommandData.sync_box.cmd = 1;
+          CommandData.sync_box.write_param = nr;
+          CommandData.sync_box.param_value = CommandData.sync_box.nr_value;
+        } else if (SyncBoxData.free_run != CommandData.sync_box.fr_value) {
+          CommandData.sync_box.cmd = 1;
+          CommandData.sync_box.write_param = fr;
+          CommandData.sync_box.param_value = CommandData.sync_box.fr_value;
+        }
+          
         usleep(10000);
       }
+
       /* error handling for communication failures or corrupted data */
       /* TODO: have some condition under which err is set: */
       //syncinfo.err = 1;
@@ -168,12 +190,14 @@ void* syncComm(void* arg)
         SyncBoxData.free_run = 0;
         continue; // go back up to top of infinite loop
       } else if (n_reconn > 0) {
+        #ifdef SYNCBOX_VERBOSE
         bprintf(info, "Re-established communication with sync box");
+        #endif
         n_reconn = 0; // managed this query cycle w/o errors; 
                       // reset for the next one 
       }
     
-      usleep(10000); // TODO: do we need this?
+      usleep(10000); 
     }
   }
   return NULL;
