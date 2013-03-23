@@ -414,7 +414,6 @@ struct ChannelStruct SlowChannels[] = {
   
 /* default current cal is 12.5, 0.0 */
   {"i_mce",        'r',  HWP_A2,   9,          CAL16(12.5, 0.0),      'u', U_I_A},
-  {"i_mcc",        'r',  RTD_A1,  49,          CAL16(12.5, 0.0),      'u', U_I_A},
   {"i_hk_misc",    'r',  RTD_A2,  49,          CAL16(12.5, 0.0),      'u', U_I_A},
  
 /* spare IF analog inputs */ 
@@ -861,7 +860,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_trans",      'r',  ACS1_A1, 1,          CAL16(11.32, -0.0566),      'u', U_I_A},
   {"i_das",        'r',  ACS1_A1, 3,          CAL16(11.03, -0.041),      'u', U_I_A},
   {"i_acs",        'r',  ACS1_A1, 5,          CAL16(12.5,  0.0),        'u', U_I_A},
-  {"i_rec",        'r',  ACS1_A1, 7,          CAL16(10.75, -0.05),      'u', U_I_A},
+  {"i_mcc",        'r',  ACS1_A1, 7,          CAL16(10.75, -0.05),      'u', U_I_A},
   {"i_sc",         'r',  ACS1_A1, 9,          CAL16(10.89, -0.058),      'u', U_I_A},
   {"i_dgps",       'r',  ACS1_A1, 11,         CAL16(11.03, -0.066),      'u', U_I_A},
   {"i_piv",        'r',  ACS1_A1, 13,         CAL16(12.5,  -0.03125),      'u', U_I_A},

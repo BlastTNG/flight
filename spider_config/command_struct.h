@@ -261,6 +261,9 @@ struct CommandDataStruct {
     enum SyncParam write_param;
     int cmd;
     int param_value;
+    int rl_value;
+    int nr_value;
+    int fr_value;
   } sync_box;
 
 
