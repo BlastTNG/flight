@@ -18,10 +18,9 @@
 #include "compressstruct.h"
 #include "channels.h"
 #include "derived.h"
+#include "news.h"
 
-#define FIFODEPTH 2048
 #define RAWDIR "/data/rawdir"
-#define TIMEOUT 100
 
 #define FOX_LNKFILE "/data/etc/fox.lnk"
 #define RNC_PORT 41114
@@ -35,8 +34,6 @@
 
 #define MAX_STREAM_FIELDS 400
 #define MAX_SAMPLES_PER_FRAME 100
-
-#define PAST_SEND 4800
 
 char LNKFILE[4096];
 int PORT;
@@ -52,12 +49,6 @@ extern char *frameList[];
 extern struct fieldStreamStruct streamList[];
 
 extern union DerivedUnion DerivedChannels[];
-
-struct fifoStruct {
-  char d[FIFODEPTH];
-  int i_in;  // points at next place to write
-  int i_out; // points at next place to read
-};
 
 int n_framefields = 0;
 struct ChannelStruct **framefields;
@@ -75,131 +66,6 @@ int is_lost = 1;
 int tty_fd;
 char hostname[255];
 
-//*********************************************************
-// "out" needs to be allocated before we come here.
-//*********************************************************
-void convertToUpper(char *in, char *out) {
-  int i;
-  for (i=0; in[i] != '\0'; i++) {
-    out[i] = toupper(in[i]);
-  }
-  out[i] = '\0';
-}
- 
-//*********************************************************
-// "out" needs to be allocated before we come here.
-//*********************************************************
-void convertToLower(char *in, char *out) {
-  int i;
-  for (i=0; in[i] != '\0'; i++) {
-    out[i] = tolower(in[i]);
-  }
-  out[i] = '\0';
-}
-
-//*********************************************************
-// insert data into the fifo
-//*********************************************************
-void push(struct fifoStruct *fs, char x[], int size) {
-  int i;
-  for (i=0; i<size; i++) {
-    fs->d[fs->i_in] = x[i];
-    fs->i_in++;
-    if (fs->i_in>=FIFODEPTH) {
-      fs->i_in = 0;
-    }
-  }
-}
-
-//*********************************************************
-// return data w/out removing it
-//*********************************************************
-void peek(struct fifoStruct *fs, char x[], int size) {
-  // warning: no error checking.  Use nFifo first to make
-  // sure you don't wrap the fifo.
-  int i;
-  int i_out = fs->i_out;
-  
-  for (i=0; i< size; i++) {
-    x[i] = fs->d[i_out];
-    i_out++;
-    if (i_out >= FIFODEPTH) {
-      i_out = 0;
-    }
-  }
-}
-
-//*********************************************************
-// advance the fifo pointer (removes data)
-//*********************************************************
-void advance(struct fifoStruct *fs, int size) {
-  fs->i_out += size;
-  if (fs->i_out >= FIFODEPTH) {
-    fs->i_out -= FIFODEPTH;
-  }
-}
-
-//*********************************************************
-// remove data from the fifo
-//*********************************************************
-void pop(struct fifoStruct *fs, char x[], int size) {
-  peek(fs, x, size);
-  advance(fs,size);
-}
-
-//*********************************************************
-// how many bytes are availible in the fifo
-//*********************************************************
-int nFifo(struct fifoStruct *fs) {
-  int n;
-
-  n = fs->i_in - fs->i_out;
-  if (n < 0) n+= FIFODEPTH;
-
-  return n;
-}
-
-
-//*********************************************************
-// connect to the political party server
-//*********************************************************
-int party_connect() {
-  int s;
-  struct sockaddr_in sn;
-  struct hostent *hostinfo;
-  struct servent *sp;
-  struct servent sp_real;
-  int on =1 ;
-
-  sp = &sp_real;
-  sp->s_port = htons(PORT);
-
-  sn.sin_family = AF_INET;
-  sn.sin_port = sp->s_port;
-
-  if(!inet_aton(hostname, &sn.sin_addr)) {
-    hostinfo = gethostbyname(hostname);
-    if (hostinfo == NULL) {
-      herror(hostname);
-      exit(1);
-    }
-    sn.sin_addr = *(struct in_addr *) hostinfo->h_addr;
-  }
-
-  /* Create the socket. */
-  if ( (s = socket (AF_INET, SOCK_STREAM, 0)) < 0 ) {
-    perror("socket");
-    exit(1);
-  }
-  /* set socket options */
-  (void) setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-
-  if (connect(s, (struct sockaddr *)&sn, sizeof (sn)) < 0) {
-    perror("socket");
-  }
-
-  return s;
-}
 
 //*********************************************************
 // usage
@@ -211,6 +77,7 @@ void Usage(char *name) {
     "produce defiles from an over the horizon link.\n", name);
     exit(0);
 }
+
 
 //*********************************************************
 // See if a field already exists - case sensitive
@@ -490,72 +357,6 @@ void OpenDirfilePointers(int **fieldfp, int **streamfp, char *filedirname) {
 }
 
 //*********************************************************
-// read data, leaving at least minRead in the fifo, but without overloading the Fifo
-//*********************************************************
-void BlockingRead(int minRead, struct fifoStruct *fs) {
-  int numin;
-  char inbuf[FIFODEPTH];
-  int numread;
-  time_t last_t = 0;
-  time_t t;  
-  int flush = 0;
-  
-  time_t t_r, t_lr;
-  
-  t_lr = time(NULL);
-  do {
-    ioctl(tty_fd, FIONREAD, &numin);
-
-    // Read data from the port into the FIFO
-    // don't over-fill the fifo.
-    if (numin>=FIFODEPTH - nFifo(fs) - 2) {
-      numin = FIFODEPTH - nFifo(fs) - 2;
-    }
-    if (numin) {
-      if (flush > 0 ) {
-        if (flush >= numin) {
-          numread = read(tty_fd, inbuf, numin);
-          flush -= numread;
-          numin = 0;
-        } else {
-          numread = read(tty_fd, inbuf, flush);
-          flush = 0;
-          numin -= flush;
-        }
-      }
-      if (numin>0) {
-        numread = read(tty_fd, inbuf, numin);
-        push(fs, inbuf, numread);
-        n_bytemon += numread;
-      }
-      t_lr = time(NULL);
-    } else {
-      t_r = time(NULL);
-      if ((t_r -t_lr) > TIMEOUT) {
-        printf("No data for %us.  Resetting connection.\n", t_r-t_lr);
-        t_lr = t_r;
-        shutdown(tty_fd, SHUT_RDWR);
-        tty_fd = party_connect();
-        flush = PAST_SEND;
-      } 
-      usleep(10000);
-    }
-  } while (nFifo(fs)<minRead);
-  
-  t = time(NULL);
-  //if (t != last_t) {
-  if (1) {
-    if (is_lost) {
-      printf("\rlost for %3d bytes (frame %d) ", n_bytemon, n_sync);
-    } else {
-      printf("\rread %3d bytes for frame %d   ", n_bytemon, n_sync);
-    }
-    fflush(stdout);
-    last_t = t;
-  }
-}
-
-//*********************************************************
 // main
 //*********************************************************
 int main(int argc, char *argv[]) {
@@ -632,7 +433,7 @@ int main(int argc, char *argv[]) {
 
   strncpy(hostname, argv[1], 250);
   
-  tty_fd = party_connect();
+  tty_fd = party_connect(hostname, PORT);
 
   MakeFrameList();
   
@@ -642,7 +443,7 @@ int main(int argc, char *argv[]) {
 
     // Look for sync word
     while (index == 0) {
-      BlockingRead(sizeof(unsigned), &fs);
+      n_bytemon+=BlockingRead(sizeof(unsigned), &fs, tty_fd, hostname, PORT);
 
       peek(&fs, (char *)&u_in, sizeof(unsigned));
       if (u_in==SYNCWORD) {
@@ -655,8 +456,9 @@ int main(int argc, char *argv[]) {
         fflush(stdout);
       } else {
         is_lost = 1;
-        fflush(stdout);
         advance(&fs, 1);
+        printf("\rlost for %3d bytes (frame %d) ", n_bytemon, n_sync);
+        fflush(stdout);
       }
     }
 
@@ -674,13 +476,13 @@ int main(int argc, char *argv[]) {
         default:
           break;
       }
-      BlockingRead(fieldsize, &fs);
+      n_bytemon+=BlockingRead(fieldsize, &fs, tty_fd, hostname, PORT);
 
       pop(&fs, fielddata[i_framefield], fieldsize);
       index++;
     }
 
-    BlockingRead(2, &fs);
+    n_bytemon+=BlockingRead(2, &fs, tty_fd, hostname, PORT);
     pop(&fs, (char *)(&us_in), 2);
 
     if (first_time) {
@@ -713,7 +515,7 @@ int main(int argc, char *argv[]) {
     
     // Read stream gains and offsets
     for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
-      BlockingRead(sizeof(unsigned short), &fs);
+      n_bytemon+=BlockingRead(sizeof(unsigned short), &fs, tty_fd, hostname, PORT);
       pop(&fs, (char *)&us_in, sizeof(unsigned short));
       stream_gains[i_streamfield] = us_in;
       if (stream_gains[i_streamfield] == 0) {
@@ -722,22 +524,22 @@ int main(int argc, char *argv[]) {
       }
       switch (streamfields[i_streamfield]->type) {
         case 'u':
-          BlockingRead(sizeof(short), &fs);
+          n_bytemon+=BlockingRead(sizeof(short), &fs, tty_fd, hostname, PORT);
           pop(&fs, (char *)&us_in, sizeof(short));
           stream_offsets[i_streamfield] = us_in;
           break;
         case 's': // 16 bit offsets
-          BlockingRead(sizeof(short), &fs);
+          n_bytemon+=BlockingRead(sizeof(short), &fs, tty_fd, hostname, PORT);
           pop(&fs, (char *)&s_in, sizeof(short));
           stream_offsets[i_streamfield] = s_in;
           break;
         case 'U':
-          BlockingRead(sizeof(int), &fs);
+          n_bytemon+=BlockingRead(sizeof(int), &fs, tty_fd, hostname, PORT);
           pop(&fs, (char *)&u_in, sizeof(int));
           stream_offsets[i_streamfield] = u_in;
           break;
         case 'S': // 32 bit offsets
-          BlockingRead(sizeof(int), &fs);
+          n_bytemon+=BlockingRead(sizeof(int), &fs, tty_fd, hostname, PORT);
           pop(&fs, (char *)&i_in, sizeof(int));
           stream_offsets[i_streamfield] = i_in;
           break;
@@ -748,7 +550,7 @@ int main(int argc, char *argv[]) {
     for (i_frame = 0; i_frame < STREAMFRAME_PER_SUPERFRAME; i_frame++) {
       // Read the >= 1 Hz streamed data.
       for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
-        BlockingRead(streamList[i_streamfield].samples_per_frame*streamList[i_streamfield].bits/8, &fs);
+        n_bytemon+=BlockingRead(streamList[i_streamfield].samples_per_frame*streamList[i_streamfield].bits/8, &fs, tty_fd, hostname, PORT);
         for (i_samp = 0; i_samp<streamList[i_streamfield].samples_per_frame; i_samp++) {
           // read streamfield;
           if (streamList[i_streamfield].bits == 4) {
@@ -773,7 +575,7 @@ int main(int argc, char *argv[]) {
         }
       }
             // read frame sync byte
-      BlockingRead(sizeof(char), &fs);
+      n_bytemon+=BlockingRead(sizeof(char), &fs, tty_fd, hostname, PORT);
       pop(&fs, (char *)(&uc_in), sizeof(char));
       if (uc_in != 0xa5) {
         printf("bad sync byte: must be lost %x\n", (int)uc_in);

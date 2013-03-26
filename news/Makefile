@@ -12,8 +12,8 @@ SPIDER_OR_BLAST=1   # we need at least one of Spider or BLAST config
 #
 
 SHARED_OBJS = compressfuncs.o
-LOCAL_OBJS = 
-EXPT_OBJS = tx_struct.o compressstruct.o derived.o
+LOCAL_OBJS = news_utils.o
+EXPT_OBJS = tx_struct.o compressstruct.o derived.o slowdl_struct.o
 
 SHARED_HEADERS = compressstruct.h channels.h derived.h
 
@@ -28,7 +28,7 @@ include ../common/Makefile.shared
 #
 
 BLAST_ALL = fox-blast msnbc-blast rush-blast rumor-blast
-SPIDER_ALL = fox-spider msnbc-spider rush-spider rumor-blast
+SPIDER_ALL = fox-spider msnbc-spider rush-spider rumor-spider
 
 ifeq ($(HAVE_BLASTCONF),1)
 	ALL += $(BLAST_ALL)
@@ -62,7 +62,7 @@ rush-blast: fox.o $(BLAST_OBJS)
 	$(CC) -lm -o rush-blast fox.o $(BLAST_OBJS)
 
 rumor-blast: rumor.o $(BLAST_OBJS)
-	$(CC) -lm -o rumor-blast rumor.o $(BLAST_OBJS)
+	$(CC) -lm -lgetdata -o rumor-blast rumor.o $(BLAST_OBJS)
 
 fox-spider: fox.o $(SPIDER_OBJS)
 	$(CC) -lm -o fox-spider fox.o $(SPIDER_OBJS)
@@ -74,7 +74,7 @@ rush-spider: fox.o $(SPIDER_OBJS)
 	$(CC) -lm -o rush-spider fox.o $(SPIDER_OBJS)
 
 rumor-spider: rumor.o $(SPIDER_OBJS)
-	$(CC) -lm -o rumor-spider rumor.o $(SPIDER_OBJS)
+	$(CC) -lm -lgetdata -o rumor-spider rumor.o $(SPIDER_OBJS) 
 
 clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)

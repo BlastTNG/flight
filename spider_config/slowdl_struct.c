@@ -11,6 +11,8 @@
  */
 #include "slowdl.h"
 
+// If encoding is SDL_RAW, then type can be c, s, u, S, or U.
+// if encoding is SDL_SCALE, then type can be s, u, or U.
 struct SlowDlStruct slowDLList[] = {
   {"time", 'U', SDL_RAW},
   {"t_acs", 'c', SDL_SCALE, 70.0, -45.0},
