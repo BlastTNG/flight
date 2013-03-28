@@ -69,14 +69,16 @@ int veto = 0;
 struct mpc_slow_data slow_dat;
 
 /* the list of bolometers to send to PCM */
-uint16_t fset_num = 0xFFFF;
+uint16_t bset_num = 0xFFFF;
 int ntes = 0;
 int16_t tes[NUM_ROW * NUM_COL];
 
 /* make and send fake data -- we only make data mode 11 data, which is static */
-#define FAKE_DATA_RATE   2500 /* microseconds -- this is approximate */
+//#define FAKE_DATA_RATE   2500 /* microseconds -- this is approximate */
+#define FAKE_DATA_RATE   1000000 /* microseconds -- this is approximate */
 static void *fake_data(void *dummy)
 {
+  uint32_t framenum = 0x37183332;
   int i, j;
   uint32_t mode11[NUM_COL * NUM_ROW];
 
@@ -99,14 +101,16 @@ static void *fake_data(void *dummy)
   while (init)
     sleep(1);
 
-  /* send data packets at the frame rate */
+  /* send data packets at half the "frame rate" */
   for (;;) {
     /* we just don't bother sending anything if nothing is requested */
     if (!veto && ntes > 0) {
-      size_t len = mpc_compose_tes(mode11, fset_num, nmce, ntes, tes, data);
+      size_t len = mpc_compose_tes(mode11, framenum, bset_num, nmce, ntes, tes,
+          data);
       udp_bcast(sock, MCESERV_PORT, len, data);
     }
-    usleep(FAKE_DATA_RATE);
+    framenum += 2;
+    usleep(FAKE_DATA_RATE * 2);
   }
 
   return NULL;
@@ -185,7 +189,7 @@ int main(void)
     } else {
       /* finished the init; slow data */
       if (slow_timer <= 0) {
-        send_slow_data(data);
+//        send_slow_data(data);
         slow_timer = SLOW_TIMEOUT;
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
@@ -206,7 +210,7 @@ int main(void)
         break;
       case 'F': /* field set packet */
         veto = 1; /* veto transmission */
-        if ((n = mpc_decompose_fset(&fset_num, tes, nmce, n, data)) >= 0)
+        if ((n = mpc_decompose_bset(&bset_num, tes, nmce, n, data)) >= 0)
           ntes = n;
         veto = 0; /* unveto transmission */
         init = 0;

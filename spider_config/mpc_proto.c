@@ -63,34 +63,33 @@ int mpc_init(void)
  *
  * data packet looks like:
  *
- * RRTMFF00...
+ * RRTMFFFFBB00...
  *
  * where
  *
  * R = 16-bit protocol revision
  * T = 'T' indicating a slow packet
  * M = 8-bit MCE number
- * F = 16-bit fset number
+ * F = 32-bit framenumber
+ * B = 16-bit bset number
  * 0 = padding
  *
- * followed by the tes data in fset order
+ * followed by the tes data in bset order
  */
-size_t mpc_compose_tes(const uint32_t *data, uint16_t fset_num, int nmce,
-    int ntes, const int16_t *tesind, char *buffer)
+size_t mpc_compose_tes(const uint32_t *data, uint32_t framenum,
+    uint16_t bset_num, int nmce, int ntes, const int16_t *tesind, char *buffer)
 {
-  size_t len = 8 + sizeof(uint32_t) * ntes;
+  size_t len = 12 + sizeof(uint32_t) * ntes;
   int16_t i16 = mpc_proto_rev;
-  int i;
-  uint32_t *ptr = (uint32_t*)(buffer + 8);
 
   memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
   buffer[2] = 'T'; /* tes data packet */
   buffer[3] = nmce & 0xF; /* mce number */
-  memcpy(buffer + 4, &fset_num, sizeof(fset_num)); /* FSET */
+  memcpy(buffer + 4, &framenum, sizeof(framenum)); /* FRAMENUM */
+  memcpy(buffer + 8, &bset_num, sizeof(bset_num)); /* BSET */
 
   /* append data */
-  for (i = 0; i < ntes; ++i)
-    *(ptr++) = data[tesind[i]];
+  memcpy(buffer + 12, data, sizeof(uint32_t) * ntes);
 
   return len;
 }
@@ -146,7 +145,7 @@ size_t mpc_compose_init(int mce, char *buffer)
   return 4;
 }
 
-/* compose an fset list for transfer to the mpc
+/* compose an bset list for transfer to the mpc
  *
  * Fset packet looks like:
  *
@@ -155,29 +154,23 @@ size_t mpc_compose_init(int mce, char *buffer)
  * where
  *
  * R = 16-bit protocol revision
- * F = 'F' indicating fset packet
+ * F = 'F' indicating bset packet
  * x is a padding byte
- * N = the fset_num
+ * N = the bset_num
  * 11, 22, 33, ... are the 16-bit TES numbers
  */
-size_t mpc_compose_fset(const struct fset *set, uint16_t num, char *buffer)
+size_t mpc_compose_bset(const int16_t *set, int set_len, uint16_t num,
+    char *buffer)
 {
-  int i;
   int16_t i16 = mpc_proto_rev;
-  uint16_t n = num;
 
   memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
-  buffer[2] = 'F'; /* fset packet */
+  buffer[2] = 'F'; /* bset packet */
   buffer[3] = 0; /* padding */
-  memcpy(buffer + 4, &n, sizeof(n)); /* fset number + serial */
+  memcpy(buffer + 4, &num, sizeof(num)); /* bset number + serial */
+  memcpy(buffer + 6, set, set_len * 2);
 
-  /* append bolos in the fset */
-  n = 0;
-  for (i = 0; i < set->n; ++i)
-    if (set->f[i].bolo >= 0)
-      *(int16_t*)(buffer + 6 + n++ * 2) = set->f[i].bolo;
-
-  return 6 + n * 2;
+  return 6 + set_len * 2;
 }
 
 /* compose a command for transfer to the mpc
@@ -329,31 +322,31 @@ int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
   return 0;
 }
 
-/* decompose an fset packet into a bolometer list, taking care of filtering on
+/* decompose an bset packet into a bolometer list, taking care of filtering on
  * the mce number; array is allocated by the caller.
  */
-int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
+int mpc_decompose_bset(uint16_t *bset_num, int16_t *set, int mce, size_t len,
     const char *data)
 {
   int16_t *in = (int16_t*)(data + 6);
-  uint16_t new_fset_num = *(uint16_t*)(data + 4);
+  uint16_t new_bset_num = *(uint16_t*)(data + 4);
   const int n = (len - 6) / 2;
   int i, m = 0;
 
   /* no change */
-  if (new_fset_num == *fset_num) {
-    bprintf(info, "Ignoring rebroadcast FSet 0x%04X\n", new_fset_num);
+  if (new_bset_num == *bset_num) {
+    bprintf(info, "Ignoring rebroadcast BSet 0x%04X\n", new_bset_num);
     return -1;
   }
 
   for (i = 0; i < n; ++i)
     if (TES_MCE(in[i]) == mce)
-      array[m++] = TES_OFFSET(in[i]);
+      set[m++] = TES_OFFSET(in[i]);
 
-  bprintf(info, "New FSet 0x%04X with %i channels for MCE%i\n", new_fset_num, m,
+  bprintf(info, "New BSet 0x%04X with %i channels for MCE%i\n", new_bset_num, m,
       mce);
 
-  *fset_num = new_fset_num;
+  *bset_num = new_bset_num;
   return m;
 }
 
@@ -399,4 +392,40 @@ int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
   mce_slow_index[nmce] = (mce_slow_index[nmce] + 1) % 3;
 
   return 0;
+}
+
+int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
+    uint16_t bset_num, int set_len[NUM_MCE], int *bad_bset_count,
+    uint32_t *framenum, const char *peer, int port)
+{
+  /* check len */
+  if (len < 12) {
+    bprintf(err, "Bad data packet (size %zu) from %s/%i", len, peer, port);
+    return -1;
+  }
+
+  /* get mce number */
+  int mce = data[3];
+  if (mce < 0 || mce >= NUM_MCE) {
+    bprintf(err, "Unknown MCE %i in slow data packet from %s/%i", mce, peer,
+        port);
+    return -1;
+  }
+
+  /* check len again */
+  if (len < set_len[mce] * 4 + 12) {
+    bprintf(err, "Bad data packet (size %zu) from %s/%i", len, peer, port);
+    return -1;
+  }
+
+  /* check bset number */
+  if (*(uint16_t*)(data + 4) != bset_num) {
+    (*bad_bset_count)++;
+    return -1;
+  }
+
+  /* copy tes data */
+  memcpy(tes_data, data + 8, len - 8);
+
+  return mce;
 }

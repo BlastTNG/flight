@@ -28,11 +28,11 @@
 #ifndef MPC_PROTO_H
 #define MPC_PROTO_H
 
+#include "command_struct.h" /* for ScheduleEvent */
+#include "tes.h" /* for NUM_MCE */
+
 #include <sys/types.h>
 #include <stdint.h>
-#include "command_struct.h"
-#include "fset.h"
-#include "tes.h"
 
 #define MCESERV_PORT 1729
 #define MPC_PORT     9271
@@ -55,8 +55,9 @@ size_t mpc_compose_command(struct ScheduleEvent *, char *);
 int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
     const char *data);
 
-size_t mpc_compose_fset(const struct fset *set, uint16_t num, char *buffer);
-int mpc_decompose_fset(uint16_t *fset_num, int16_t *array, int mce, size_t len,
+size_t mpc_compose_bset(const int16_t *set, int set_len, uint16_t num,
+    char *buffer);
+int mpc_decompose_bset(uint16_t *bset_num, int16_t *set, int mce, size_t len,
     const char *data);
 
 size_t mpc_compose_init(int mce, char *buffer);
@@ -67,9 +68,10 @@ size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer);
 int mpc_decompose_slow(struct mpc_slow_data dat[NUM_MCE][3], int ind[NUM_MCE],
     size_t len, const char *data, const char *peer, int port);
 
-size_t mpc_compose_tes(const uint32_t *data, uint16_t fset_num, int nmce,
-    int ntes, const int16_t *tesind, char *buffer);
+size_t mpc_compose_tes(const uint32_t *data, uint32_t framenum,
+    uint16_t bset_num, int nmce, int ntes, const int16_t *tesind, char *buffer);
 int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
+    uint16_t bset_num, int nm[NUM_MCE], int *bad_bset_count, uint32_t *framenum,
     const char *peer, int port);
 
 #endif
