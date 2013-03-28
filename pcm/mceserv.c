@@ -77,6 +77,7 @@ static int ForwardCommand(int sock)
 
 static void ForwardFSet(int sock)
 {
+#if 0
   size_t len;
   int num = CommandData.fset_num;
   struct fset set = {0, NULL};
@@ -102,6 +103,7 @@ static void ForwardFSet(int sock)
 
 FWD_FSET_DONE:
   free(set.f);
+#endif
 }
 
 /* main routine */
