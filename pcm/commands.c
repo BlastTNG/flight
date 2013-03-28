@@ -1308,17 +1308,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwp.mode = hwp_m_halt;
       break;
     case hwp_bias_off:
+      //extra << 6 is to use bits that turn bias off, not always on
       if (ivalues[0]) {
-        CommandData.hwp.bias_mask |= ( 0x01 << (ivalues[0]-1) );
+        CommandData.hwp.bias_mask |= ( 0x01 << (ivalues[0]-1) ) << 6;
       } else {
-        CommandData.hwp.bias_mask |= 0x3f;
+        CommandData.hwp.bias_mask |= 0x3f << 6;
       }
       break;
     case hwp_bias_on:
+      //extra << 6 is to use bits that turn bias off, not always on
       if (ivalues[0]) {
-        CommandData.hwp.bias_mask &= ~( 0x01 << (ivalues[0]-1) );
+        CommandData.hwp.bias_mask &= ~( 0x01 << (ivalues[0]-1) << 6);
       } else {
-        CommandData.hwp.bias_mask &= ~(0x3f);
+        CommandData.hwp.bias_mask &= ~(0x3f << 6);
       }
       break;
     case hwp_general:
