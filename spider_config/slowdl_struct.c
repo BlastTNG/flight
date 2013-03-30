@@ -15,7 +15,7 @@
 // if encoding is SDL_SCALE, then type can be s, u, or U.
 struct SlowDlStruct slowDLList[] = {
   {"time", 'U', SDL_RAW},
-  {"t_acs", 'c', SDL_SCALE, 70.0, -45.0},
+  {"t_hs_cc1", 'c', SDL_SCALE, 70.0, -45.0},
   {""}
 };
 
