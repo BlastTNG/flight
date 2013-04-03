@@ -95,9 +95,8 @@ void ControlGyroHeat()
   static struct BiPhaseStruct* tGyAddr;
   static struct NiosStruct *heatGyAddr, *tSetGyAddr, *gPHeatGyAddr;
   static struct NiosStruct *gIHeatGyAddr;
-  static struct NiosStruct *gDHeatGyAddr, *hHistGyAddr, *hAgeGyAddr;
+  static struct NiosStruct *gDHeatGyAddr;
   static int firsttime = 1;
-  static double history = 0;
 
   static int p_on = 0;
   static int p_off = -1;
@@ -114,8 +113,6 @@ void ControlGyroHeat()
     firsttime = 0;
     tGyAddr = GetBiPhaseAddr("t_gy");
     heatGyAddr = GetNiosAddr("heat_gy");
-    hHistGyAddr = GetNiosAddr("h_hist_gy");
-    hAgeGyAddr = GetNiosAddr("h_age_gy");
     tSetGyAddr = GetNiosAddr("t_set_gy");
 
     gPHeatGyAddr = GetNiosAddr("g_p_heat_gy");
@@ -137,9 +134,6 @@ void ControlGyroHeat()
     P = CommandData.gyheat.gain.P * (1.0 / 10.0);
     I = CommandData.gyheat.gain.I * (1.0 / 110000.0);
     D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
-    //P = CommandData.gyheat.gain.P * (-1.0 / 1000000.0);
-    //I = CommandData.gyheat.gain.I * (-1.0 / 110000.0);
-    //D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
 
     /********* if end of pulse, calculate next pulse *********/
     if (p_off <= 0 && p_on <= 0) {
@@ -164,11 +158,7 @@ void ControlGyroHeat()
 
       p_off = 60 - p_on;
 
-      history = p_on * 100. / GY_HEAT_TC + (1. - 60. / GY_HEAT_TC) * history;
     }
-
-    if (CommandData.gyheat.age <= GY_HEAT_TC * 2)
-      ++CommandData.gyheat.age;
 
     /******** do the pulse *****/
     if (p_on > 0) {
@@ -182,8 +172,6 @@ void ControlGyroHeat()
     /* Turn off heater if thermometer appears broken */
     WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
 
-  WriteData(hAgeGyAddr, CommandData.gyheat.age, NIOS_QUEUE);
-  WriteData(hHistGyAddr, (history * 32768. / 100.), NIOS_QUEUE);
 }
 
 /************************************************************************/

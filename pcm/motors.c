@@ -183,62 +183,6 @@ static double calcVPiv(void)
   return vpiv;
 }
 
-/* calcVRW(): compute filtered RW velocity from RW resolver position read 
-              from AMC controller over RS-232 */
-static double calcVRW(void)
-{
-  //v -- velocity input to filter
-  //u -- velocity output from filter
-
-  double v, u, x, dx; 
-  static double last_u = 0.0, last_x = 0.0;
-  static double last_v = 0.0;
-  int i_rw;
-  static int frame_count = 0;
-  //static int since_last = 0;
-
-  frame_count++;
-
-  /*if (++since_last < 30) {
-    return last_u;
-  }
-  since_last = 0;*/
-
-  i_rw = GETREADINDEX(rw_motor_index);
-
-  x = RWMotorData[i_rw].res_rw;
-
-  dx = x - last_x;
-
-  if ( dx > 180.0 ) {
-    dx -= 360.0;
-  } else if (dx < -180.0) {
-    dx += 360.0;
-  }
-   
-  if (dx==0.0) {
-    if (frame_count>100) {
-      v = 0.0;
-    } else {
-      v = last_v;  
-    }
-  } else {
-    v = dx*(ACSData.bbc_rate/((double)frame_count));
-    frame_count = 0; 
-  }  
-
-  last_x = x;
-  last_v = v;
-
-  u = ( RW_BASE*last_u + (1-RW_BASE)*v );
-  last_u = u;
-  //bprintf(info, "i_rw = %d, x = %f deg, v = %f dps, u = %f dps", 
-  //i_rw, x, v, u);
-
-  return u;
-
-}
-
 double calcVSerRW(void)
 {
 
@@ -260,7 +204,7 @@ static void SetVElevRelMove(double d, double v0, double* a, int* count1, int*
 		            count2, int* count3)
 {
 
-  /* Rel move has three phases:
+  /* Rel move  has three phases:
      t = 0 to t = t1: constant acceleration to crusing speed
      t = t1 to t = t2: crusing at constant speed v0
      t = t2 to t = t3: constant deceleration to a stop */
@@ -814,12 +758,10 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* setRWAddr;
   static struct NiosStruct* dacPivAddr;
   static struct NiosStruct* velCalcPivAddr;
-  static struct NiosStruct* velRWAddr;
   static struct NiosStruct* accelAzAddr;
   static struct NiosStruct* accelMaxAzAddr;
   static struct NiosStruct* step1ElAddr;      // PORT
   static struct NiosStruct* step2ElAddr;      // STARBOARD
-  // TODO: Temporary, just to test turn around flag
   static struct NiosStruct* isTurnAroundAddr;
 
   // Used only for Lab Controller tests
@@ -841,7 +783,6 @@ void WriteMot(int TxIndex)
   int step_rate_P; // pulse rate (Hz) of step input to el motor
   int step_rate_S; // pulse rate (Hz) of step input to el motor
    
-  double v_rw;
   int azGainP, azGainI, pivGainVelRW, pivGainVelAz, pivGainPosRW, pivGainTorqueRW, pivGainVelReqAz;
   int i_point;
 
@@ -863,7 +804,6 @@ void WriteMot(int TxIndex)
     gVReqAzPivAddr = GetNiosAddr("g_v_req_az_piv");
     setRWAddr = GetNiosAddr("set_rw");
     velCalcPivAddr = GetNiosAddr("vel_calc_piv");
-    velRWAddr = GetNiosAddr("vel_rw");
     accelAzAddr = GetNiosAddr("accel_az");
     accelMaxAzAddr = GetNiosAddr("accel_max_az");
     dac2AmplAddr = GetNiosAddr("dac2_ampl");
@@ -951,17 +891,16 @@ void WriteMot(int TxIndex)
   v_az = floor(GetVAz() + 0.5);
   
   /* Units for v_az are 16 bit gyro units*/
-  if (v_az > 32767)
+  if (v_az > 32767) {
     v_az = 32767;
-  if (v_az < -32768)
+  }
+  
+  if (v_az < -32768) {
     v_az = -32768;
+  }
+  
   WriteData(velReqAzAddr, 32768 + v_az, NIOS_QUEUE);
-
-  v_rw = calcVRW();
-
-  if (TxIndex == 0)  //only write at slow frame rate
-    WriteData(velRWAddr, v_rw*(65535.0/2400.0) + 32768.0, NIOS_QUEUE);
-
+   
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
     azGainI = 0;
@@ -1029,51 +968,6 @@ void WriteMot(int TxIndex)
     wait--;
 }
 
-#if 0
-/***************************************************************/
-/*                                                             */
-/* GetElDither: set the current elevation dither offset.       */
-/*                                                             */
-/***************************************************************/
-static void GetElDither() {
-  time_t seconds;
-  int tmp_rand;
-  static int first_time = 1;
-  double dith_step;
-  // Set up the random variable.
-  if(first_time) {
-    time(&seconds);
-    srand((unsigned int) seconds);
-    first_time = 0;
-  }
-  dith_step = CommandData.pointing_mode.dith;
-  bprintf(info,"***Dither Time!!!***  dith_step = %f",dith_step);
-  
-  if (dith_step < -0.000277778 && dith_step > 0.000277778) { // If |dith_step| < 1'' no dither
-    axes_mode.el_dith = 0.0;
-    bprintf(info,"No dither: axes_mode.el_dith = %f",axes_mode.el_dith);
-  } else if (dith_step < 0.00) { // Random mode! May want to remove later...
-    tmp_rand = rand();
-    axes_mode.el_dith = CommandData.pointing_mode.del*(tmp_rand/RAND_MAX-0.5);      
-    bprintf(info,"Random dither: axes_mode.el_dith = %f, tmp_rand = %i",axes_mode.el_dith,tmp_rand);
-  } else {
-    axes_mode.el_dith += dith_step;
-    bprintf(info,"Stepping dither: axes_mode.el_dith = %f, CommandData.pointing_mode.del=%f",axes_mode.el_dith,CommandData.pointing_mode.del);
-    bprintf(info,"GetElDither: dith_step =%f, CommandData.pointing_mode.del =%f",dith_step,CommandData.pointing_mode.del);
-    if(axes_mode.el_dith > CommandData.pointing_mode.del) {
-      axes_mode.el_dith += (-1.0)*CommandData.pointing_mode.del;
-      bprintf(info,"GetElDither: Wrapping dither... axes_mode.el_dith=%f",axes_mode.el_dith);
-    }
-  }
-  return;
-}
-
-static void ClearElDither() {
-  axes_mode.el_dith = 0.0;
-  //  bprintf(info,"ClearElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
-  return;
-}
-#endif
 
 /****************************************************************/
 /*                                                              */

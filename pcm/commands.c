@@ -302,9 +302,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case elenc2_veto:
       CommandData.use_elenc2 = 0;
       break;
-    case elclin_veto:
-      CommandData.use_elclin = 0;
-      break;
     case pss_allow:      /* Un-veto sensors */
       CommandData.use_pss = 1;
       break;
@@ -319,9 +316,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case elenc2_allow:
       CommandData.use_elenc2 = 1;
-      break;
-    case elclin_allow:
-      CommandData.use_elclin = 1;
       break;
 
     case gps_off:          /* power switching */
@@ -1274,8 +1268,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case motors_verbose:
       CommandData.verbose_rw = ivalues[0];
-      CommandData.verbose_el = ivalues[1];
-      CommandData.verbose_piv = ivalues[2];
+      CommandData.verbose_piv = ivalues[1];
       break;
 
       /***************************************/
@@ -1420,7 +1413,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       /******** Electronics Heaters  *********/
     case t_gyro_set:  /* gyro heater setpoint */
       CommandData.gyheat.setpoint = rvalues[0];
-      CommandData.gyheat.age = 0;
       break;
     case t_gyro_gain:  /* gyro heater gains */
       CommandData.gyheat.gain.P = ivalues[0];
@@ -1961,7 +1953,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.theugly.moveTol = ivalues[0];
       break;
     case table_gain:  /* rotary table gains */
-      //TODO PID loop performed in controller, figure out how to set gains
+      // TODO PID loop performed in controller, figure out how to set gains
+      // and write them to frame.
       CommandData.table.tableGain.P = ivalues[0];
       CommandData.table.tableGain.I = ivalues[1];
       CommandData.table.tableGain.D = ivalues[2];
@@ -2203,8 +2196,6 @@ void InitCommandData()
   CommandData.ifpower.hwp.rst_count = 0;
   CommandData.ifpower.hwp.set_count = 0;
 
-  CommandData.gyheat.age = 0;
-
   /* don't use the fast gy offset calculator */
   CommandData.fast_offset_gy = 0;
 
@@ -2270,7 +2261,6 @@ void InitCommandData()
   CommandData.pointing_mode.w = 0;
   CommandData.pointing_mode.h = 0;
   CommandData.pointing_mode.t = mcp_systime(NULL) + CommandData.timeout;
-  CommandData.pointing_mode.dith = 0.0;
   CommandData.pointing_mode.Nscans = 1;
   CommandData.pointing_mode.Nsteps = 10;
   CommandData.pointing_mode.new_spider = 1;
@@ -2303,11 +2293,9 @@ void InitCommandData()
   CommandData.disable_el = 0;
 
   CommandData.verbose_rw = 0;
-  CommandData.verbose_el = 0;
   CommandData.verbose_piv = 0;
 
   CommandData.gyheat.setpoint = 15.0;
-  CommandData.gyheat.age = 0;
   CommandData.gyheat.gain.P = 30;
   CommandData.gyheat.gain.I = 10;
   CommandData.gyheat.gain.D = 3;
@@ -2318,15 +2306,12 @@ void InitCommandData()
 
   CommandData.use_elenc1 = 1;
   CommandData.use_elenc2 = 1;
-  CommandData.use_elclin = 1;
   CommandData.use_pss = 1;
   CommandData.use_mag = 1;
   CommandData.use_gps = 0;
   CommandData.lat_range = 1;
   CommandData.sucks = 1;
 
-  CommandData.clin_el_trim = 0.0;
-  CommandData.enc_el_trim = 0.0;
   CommandData.null_az_trim = 0.0;
   CommandData.mag_az_trim = 0.0;
   CommandData.dgps_az_trim = 0.0;

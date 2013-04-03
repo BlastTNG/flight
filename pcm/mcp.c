@@ -472,7 +472,6 @@ static void GetACS()
   double pss5_i1, pss5_i2, pss5_i3, pss5_i4;
   double pss6_i1, pss6_i2, pss6_i3, pss6_i4;
   double vel_rw;
-//short vel_rw;
   double res_piv;
   double bbc_rate; // BBC frame rate in Hz 
   double adc_rate; // BLASTbus ADC sample rate in Hz
@@ -481,11 +480,10 @@ static void GetACS()
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ifYawgyAddr;
   static struct BiPhaseStruct* ofAzGyAddr;
-  static struct BiPhaseStruct* rollOfClinAddr;
   static struct BiPhaseStruct* xMagAddr;
   static struct BiPhaseStruct* yMagAddr;
   static struct BiPhaseStruct* zMagAddr;
-  static struct BiPhaseStruct* velRWAddr;
+  static struct BiPhaseStruct* velSerRWAddr;
   static struct BiPhaseStruct* resPivAddr;
   static struct BiPhaseStruct* v11PssAddr;
   static struct BiPhaseStruct* v21PssAddr;
@@ -520,8 +518,6 @@ static void GetACS()
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    //elRawEncAddr = GetBiPhaseAddr("el_raw_enc");
-    rollOfClinAddr = GetBiPhaseAddr("roll_of_clin");
     ifElgyAddr = GetBiPhaseAddr("ifel_gy");
     ifRollgyAddr = GetBiPhaseAddr("ifroll_gy");
     ifYawgyAddr = GetBiPhaseAddr("ifyaw_gy");
@@ -529,8 +525,7 @@ static void GetACS()
     xMagAddr = GetBiPhaseAddr("x_mag");
     yMagAddr = GetBiPhaseAddr("y_mag");
     zMagAddr = GetBiPhaseAddr("z_mag");
-    //velRWAddr = GetBiPhaseAddr("vel_rw");
-    velRWAddr = GetBiPhaseAddr("vel_ser_rw");
+    velSerRWAddr = GetBiPhaseAddr("vel_ser_rw");
     resPivAddr = GetBiPhaseAddr("res_piv");
     v11PssAddr = GetBiPhaseAddr("v1_1_pss");
     v21PssAddr = GetBiPhaseAddr("v2_1_pss");
@@ -590,12 +585,7 @@ static void GetACS()
     /*don't update ACSData -- deal with this problem in pointing.c */
   }
 
-  //vel_rw = (((double)((unsigned short)RxFrame[velRWAddr->channel]))*(2400.0/65536.0)-1200.0);
-  //vel_rw = (double)ReadData(velRWAddr)*(2400.0/65536.0);
-  vel_rw = ReadCalData(velRWAddr); 
-  /*if (vel_rw >1200.0) {
-    vel_rw -= 2400.0;
-  }*/
+  vel_rw = ReadCalData(velSerRWAddr); 
   ifel_gy = ReadCalData(ifElgyAddr); //(double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
   ifroll_gy = ReadCalData(ifRollgyAddr); //(double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
   ifyaw_gy = ReadCalData(ifYawgyAddr); //(double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
@@ -648,8 +638,6 @@ static void GetACS()
     adc_rate = 4.0e6/384.0;
   }
 
-  ACSData.clin_elev = (double)(slow_data[rollOfClinAddr->index][rollOfClinAddr->channel]);
-
   ACSData.t = mcp_systime(NULL);
   ACSData.enc_mean_el = enc_mean_el;
   ACSData.enc_diff_el = enc_diff_el;
@@ -661,7 +649,6 @@ static void GetACS()
   ACSData.mag_y = y_comp;
   ACSData.mag_z = z_comp;
   ACSData.vel_rw = vel_rw;
-  //ACSData.vel_rw = (double)vel_rw*(2400.0/65536.0);
   ACSData.res_piv = res_piv;
   ACSData.pss1_i1 = pss1_i1;
   ACSData.pss1_i2 = pss1_i2;

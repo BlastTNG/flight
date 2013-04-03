@@ -165,7 +165,7 @@ static void WriteAux(void)
   if (firsttime) {
     char buf[128];
     firsttime = 0;
-    statusMCCAddr = GetNiosAddr("status_mcc");
+    statusMCCAddr = GetNiosAddr("status_flc");
     statusMCCReadAddr = ExtractBiPhaseAddr(statusMCCAddr);
 
     
@@ -557,7 +557,6 @@ static void StoreData(int index)
   static struct NiosStruct* ra2PAddr, *dec2PAddr;
   static struct NiosStruct* ra3PAddr, *dec3PAddr;
   static struct NiosStruct* ra4PAddr, *dec4PAddr;
-  static struct NiosStruct* dithStepPAddr;
 
   static struct NiosStruct* vetoSensorAddr;
 
@@ -603,11 +602,6 @@ static void StoreData(int index)
   static struct NiosStruct* azPssAddr;
   static struct NiosStruct* azSunAddr;
   static struct NiosStruct* elSunAddr;
-  static struct NiosStruct* elEncAddr;
-  static struct NiosStruct* sigmaEncAddr;
-  static struct NiosStruct* elClinAddr;
-  static struct NiosStruct* elLutClinAddr;
-  static struct NiosStruct* sigmaClinAddr;
 
   /** dgps fields **/
   static struct NiosStruct* dgpsTimeAddr;
@@ -632,8 +626,6 @@ static void StoreData(int index)
   static struct NiosStruct* dgpsNSatAddr;
 
   /* trim fields */
-  static struct NiosStruct *trimClinAddr;
-  static struct NiosStruct *trimEncAddr;
   static struct NiosStruct *trimNullAddr;
   static struct NiosStruct *trimMagAddr;
   static struct NiosStruct *trimPssAddr;
@@ -654,35 +646,20 @@ static void StoreData(int index)
 
   /* Motor data read out over serial threads in motors.c */
   static struct NiosStruct *velSerRWAddr;
-//  static struct NiosStruct *tMCRWAddr; // JAS--afaik, no temp. reading avail.
-                                         // from AMC controller
   static struct NiosStruct *resRWAddr;
   static struct NiosStruct *iSerRWAddr;
-//  static struct NiosStruct *stat1RWAddr;// JAS--Old Copley controller data
-//  static struct NiosStruct *stat2RWAddr;
-//  static struct NiosStruct *faultRWAddr;
   static struct NiosStruct *infoRWAddr;
   static struct NiosStruct *statDrRWAddr;
   static struct NiosStruct *statS1RWAddr;
   static struct NiosStruct *driveErrCtsRWAddr;
-  //static struct NiosStruct *elRawEncAddr;
-  static struct NiosStruct *tMCElAddr;
-  static struct NiosStruct *iSerElAddr;
-  static struct NiosStruct *stat1ElAddr;
-  static struct NiosStruct *stat2ElAddr;
-  static struct NiosStruct *faultElAddr;
-  static struct NiosStruct *infoElAddr;
-  static struct NiosStruct *driveErrCtsElAddr;
   static struct NiosStruct *resPivAddr;
   static struct NiosStruct *iSerPivAddr;
   static struct NiosStruct *statDrPivAddr;
   static struct NiosStruct *statS1PivAddr;
-  static struct NiosStruct *azGyAddr;
   static struct NiosStruct *velSerPivAddr;
   static struct NiosStruct *infoPivAddr;
   static struct NiosStruct *driveErrCtsPivAddr;
   static struct NiosStruct *verboseRWAddr;
-  static struct NiosStruct *verboseElAddr;
   static struct NiosStruct *verbosePivAddr;
 
   int i_rw_motors;
@@ -746,11 +723,6 @@ static void StoreData(int index)
     snrPss5Addr = GetNiosAddr("snr_pss5");
     snrPss6Addr = GetNiosAddr("snr_pss6");
     azPssAddr = GetNiosAddr("az_pss");  // evolved az
-    elEncAddr = GetNiosAddr("el_enc");
-    sigmaEncAddr = GetNiosAddr("sigma_enc");
-    elClinAddr = GetNiosAddr("el_clin");
-    elLutClinAddr = GetNiosAddr("el_lut_clin");
-    sigmaClinAddr = GetNiosAddr("sigma_clin");
 
     svetoLenAddr = GetNiosAddr("sveto_len");
     slewVetoAddr = GetNiosAddr("slew_veto");
@@ -769,7 +741,6 @@ static void StoreData(int index)
     dec3PAddr = GetNiosAddr("dec_3_p");
     ra4PAddr = GetNiosAddr("ra_4_p");
     dec4PAddr = GetNiosAddr("dec_4_p");
-    dithStepPAddr = GetNiosAddr("dith_step_p");
 
     vetoSensorAddr = GetNiosAddr("veto_sensor");
 
@@ -794,8 +765,6 @@ static void StoreData(int index)
 
     lstSchedAddr = GetNiosAddr("lst_sched");
 
-    trimClinAddr = GetNiosAddr("trim_clin");
-    trimEncAddr = GetNiosAddr("trim_enc");
     trimNullAddr = GetNiosAddr("trim_null");
     trimMagAddr = GetNiosAddr("trim_mag");
     trimPssAddr = GetNiosAddr("trim_pss");
@@ -812,36 +781,21 @@ static void StoreData(int index)
     dirAzMcAddr = GetNiosAddr("dir_az_mc");
     dirElMcAddr = GetNiosAddr("dir_el_mc");
     dithElAddr = GetNiosAddr("dith_el");
-    /* JAS--comment out irrelevant fields from old RW Copley controller*/
     velSerRWAddr = GetNiosAddr("vel_ser_rw");
-    //elRawEncAddr = GetNiosAddr("el_raw_enc");
-//  tMCRWAddr = GetNiosAddr("t_mc_rw");
     resRWAddr = GetNiosAddr("res_rw");
     iSerRWAddr = GetNiosAddr("i_ser_rw");
-//  stat1RWAddr = GetNiosAddr("stat_1_rw");
-//  stat2RWAddr = GetNiosAddr("stat_2_rw");
-//  faultRWAddr = GetNiosAddr("fault_rw");i
     statDrRWAddr = GetNiosAddr("stat_dr_rw");
     statS1RWAddr = GetNiosAddr("stat_s1_rw");
     infoRWAddr = GetNiosAddr("drive_info_rw");
     driveErrCtsRWAddr = GetNiosAddr("drive_err_cts_rw");
-    tMCElAddr = GetNiosAddr("t_mc_el");
-    iSerElAddr = GetNiosAddr("i_ser_el");
-    stat1ElAddr = GetNiosAddr("stat_1_el");
-    stat2ElAddr = GetNiosAddr("stat_2_el");
-    faultElAddr = GetNiosAddr("fault_el");
     resPivAddr = GetNiosAddr("res_piv");
     iSerPivAddr = GetNiosAddr("i_ser_piv");
     statDrPivAddr = GetNiosAddr("stat_dr_piv");
     statS1PivAddr = GetNiosAddr("stat_s1_piv");
-    azGyAddr = GetNiosAddr("az_gy");
     velSerPivAddr = GetNiosAddr("vel_ser_piv");
     infoPivAddr = GetNiosAddr("drive_info_piv");
     driveErrCtsPivAddr = GetNiosAddr("drive_err_cts_piv");
-    infoElAddr = GetNiosAddr("drive_info_el");
-    driveErrCtsElAddr = GetNiosAddr("drive_err_cts_el");
     verboseRWAddr = GetNiosAddr("verbose_rw");
-    verboseElAddr = GetNiosAddr("verbose_el");
     verbosePivAddr = GetNiosAddr("verbose_piv");
   }
 
@@ -858,19 +812,7 @@ static void StoreData(int index)
   WriteData(elAddr, (unsigned int)(PointingData[i_point].el * DEG2LI),
       NIOS_QUEUE);
 
-  WriteData(elEncAddr, (unsigned int)((PointingData[i_point].enc_el
-                      + CommandData.enc_el_trim)* DEG2I), NIOS_QUEUE);
-
-  WriteData(sigmaEncAddr,
-      (unsigned int)(PointingData[i_point].enc_sigma * DEG2I), NIOS_QUEUE);
-
-  //WriteData(velRWAddr,
-  //    ((long int)(RWMotorData[i_rw_motors].vel_rw/4.0*DEG2I)), NIOS_QUEUE);
-
-  //WriteCalData(velSerRWAddr, RWMotorData[i_rw_motors].dps_rw, NIOS_QUEUE);
   WriteCalData(velSerRWAddr, calcVSerRW(), NIOS_QUEUE);
-// WriteData(elRawEncAddr,
-   //  ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
   WriteData(resRWAddr, RWMotorData[i_rw_motors].res_rw*DEG2I, NIOS_QUEUE);
 
   /*************************************************
@@ -987,28 +929,12 @@ static void StoreData(int index)
       NIOS_QUEUE);
   WriteData(elSunAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
 
-  WriteData(trimEncAddr, CommandData.enc_el_trim * DEG2I, NIOS_QUEUE);
-
-  WriteData(elClinAddr,
-      (unsigned int)((PointingData[i_point].clin_el_lut +
-                      CommandData.clin_el_trim) * DEG2I), NIOS_QUEUE);
-  WriteData(elLutClinAddr,
-      (unsigned int)(PointingData[i_point].clin_el * DEG2I), NIOS_QUEUE);
-  WriteData(sigmaClinAddr,
-      (unsigned int)(PointingData[i_point].clin_sigma * DEG2I), NIOS_QUEUE);
-  WriteData(trimClinAddr, CommandData.clin_el_trim * DEG2I, NIOS_QUEUE);
-
   WriteData(trimNullAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
-
-  WriteData(azGyAddr,
-      (int)(PointingData[i_point].v_az * 32768.0/20.0), NIOS_QUEUE);
 
   /************* Pointing mode fields *************/
   WriteCalData(slewVetoAddr, (CommandData.pointing_mode.nw)
       / (ACSData.bbc_rate), NIOS_QUEUE);
   WriteCalData(svetoLenAddr, (CommandData.slew_veto) / (ACSData.bbc_rate),
-      NIOS_QUEUE);
-  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*10.0*32768.0),
       NIOS_QUEUE);
   WriteData(modePAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
@@ -1084,42 +1010,26 @@ static void StoreData(int index)
   WriteData(dgpsAntNAddr,(int)(DGPSAtt[i_dgps].ant_N*100), NIOS_QUEUE);
   WriteData(dgpsAntUAddr,(int)(DGPSAtt[i_dgps].ant_U*100), NIOS_QUEUE);
   WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
-//WriteData(tMCRWAddr,RWMotorData[i_rw_motors].temp,NIOS_QUEUE);
   WriteData(iSerRWAddr,((int)(RWMotorData[i_rw_motors].current/60.0*32768.0))
             ,NIOS_QUEUE); // need to check scaling
-//WriteData(stat1RWAddr,(RWMotorData[i_rw_motors].status & 0xffff),
-//          NIOS_QUEUE);
-//WriteData(stat2RWAddr,((RWMotorData[i_rw_motors].status & 0xffff0000)>> 16),
-//          NIOS_QUEUE);
-//WriteData(faultRWAddr,RWMotorData[i_rw_motors].fault_reg,NIOS_QUEUE);
   WriteData(statDrRWAddr,(RWMotorData[i_rw_motors].db_stat & 0xff)
             +((RWMotorData[i_rw_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
   WriteData(statS1RWAddr,RWMotorData[i_rw_motors].ds1_stat,NIOS_QUEUE);
   WriteData(infoRWAddr,RWMotorData[i_rw_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsRWAddr,RWMotorData[i_rw_motors].err_count,NIOS_QUEUE);
-  //WriteData(tMCElAddr,ElevMotorData[i_elev_motors].temp,NIOS_QUEUE);
-//  WriteData(iSerElAddr,((int)(ElevMotorData[i_elev_motors].current/30.0*32768.0)),NIOS_QUEUE);
-  //WriteData(stat1ElAddr,(ElevMotorData[i_elev_motors].status & 0xffff),
-//            NIOS_QUEUE);
-  //WriteData(stat2ElAddr,((ElevMotorData[i_elev_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
-  //WriteData(faultElAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
   WriteData(iSerPivAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,
       NIOS_QUEUE);
   WriteData(statDrPivAddr,(PivotMotorData[i_pivot_motors].db_stat & 0xff)
       +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8), NIOS_QUEUE);
   WriteData(statS1PivAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
-  //WriteData(velSerPivAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
   WriteCalData(velSerPivAddr, PivotMotorData[i_pivot_motors].dps_piv,
                NIOS_QUEUE);
   WriteData(resPivAddr,
       PivotMotorData[i_pivot_motors].res_piv*DEG2I, NIOS_QUEUE);
-//  WriteData(infoElAddr,ElevMotorData[i_elev_motors].drive_info,NIOS_QUEUE);
-//  WriteData(driveErrCtsElAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);
   WriteData(infoPivAddr,PivotMotorData[i_pivot_motors].drive_info,NIOS_QUEUE);
   WriteData(driveErrCtsPivAddr,PivotMotorData[i_pivot_motors].err_count,
       NIOS_QUEUE);
   WriteData(verboseRWAddr,CommandData.verbose_rw,NIOS_QUEUE);
-  WriteData(verboseElAddr,CommandData.verbose_el,NIOS_QUEUE);
   WriteData(verbosePivAddr,CommandData.verbose_piv,NIOS_QUEUE);
 
 }

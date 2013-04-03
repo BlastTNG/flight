@@ -636,215 +636,6 @@ static void RecordHistory(int index)
   hs.elev_history[hs.i_history] = PointingData[index].el * M_PI / 180.0;
 }
 
-
-#if 0	//TODO will eventually want to evolve spider star camera solutions
-int possible_solution(double az, double el, int i_point) {
-  double mag_az, enc_el, d_az;
-  
-  // test for insanity
-  if (!finite(az)) return(0);
-  if (!finite(el)) return(0);
-  if (el > 70.0) return (0);
-  if (el < 0.0) return(0);
-
-  mag_az = PointingData[i_point].mag_az; 
-
-  if (CommandData.use_elenc) {
-    enc_el = ACSData.enc_raw_el;
-    if (el - enc_el > 5.0) return (0);
-    if (enc_el - el > 5.0) return (0);
-  }
-  
-  if (CommandData.use_mag) {
-    d_az = az - mag_az;
-
-    if (d_az > 180.0) d_az -= 360;
-    if (d_az < -180.0) d_az += 360;
-  
-    if (d_az > 30.0) return (0);
-    if (d_az < -30.0) return (0);
-  }
-
-
-  return(1);
-}
-
-/* #define GYRO_VAR 3.7808641975309e-08
-   (0.02dps/sqrt(100Hz))^2 : gyro offset error dominated */
-static void EvolveSCSolution(struct ElSolutionStruct *e,
-    struct AzSolutionStruct *a, double ifel_gy, double off_ifel_gy, 
-    double ifroll_gy, double off_ifroll_gy, double ifyaw_gy, 
-    double off_ifyaw_gy, double old_el, int which)
-{
-
-  double gy_az;
-  static int last_isc_framenum[2] = {0xfffffff, 0xfffffff};
-  int i_isc, i_point;
-  double new_az, new_el, ra, dec;
-
-  // when we get a new frame, use these to correct for history
-  double gy_el_delta = 0;
-  double gy_az_delta = 0;
-  double gy_raw_el_delta = 0;
-  double ifroll_gy_raw_delta = 0;
-  double ifyaw_gy_raw_delta = 0;
-  double daz;
-  int i,j;
-
-  double w1, w2;
-  double offset_new_el = 0;
-  double offset_new_ifroll_gy = 0;
-  double offset_new_ifyaw_gy = 0;
-
-  // evolve el
-   e->angle += (ifel_gy + off_ifel_gy) / ACSData.bbc_rate;
-
- 
-   if(e->since_last <= 18000) {
-     e->varience += GYRO_VAR;
-   } else {
-     e->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
-   }
-
-   e->gy_int += ifel_gy / ACSData.bbc_rate; // in degrees
-
-  // evolve az
-  old_el *= M_PI / 180.0;
-  gy_az = -(ifroll_gy + off_ifroll_gy) * sin(old_el) + -(ifyaw_gy + off_ifyaw_gy) * cos(old_el);
-  a->angle += gy_az / ACSData.bbc_rate;
-
-   if(a->since_last <= 18000) {
-     a->varience += GYRO_VAR;
-   } else {
-     a->varience = 1.0e30; /* Don't accept SC solutions after 5 minutes*/
-   }
-
-  a->ifroll_gy_int += ifroll_gy / ACSData.bbc_rate; // in degrees
-  a->ifyaw_gy_int += ifyaw_gy / ACSData.bbc_rate; // in degrees
-
-  i_isc = iscpoint_index[which];
-  /* in theory, iscpoint_index points to the last ISCSolution with flag set.
-   * In cases where we've been having handshaking issues this last solution may
-   * have been overwritten, so we check flag, just as a sanity check */
-  if (ISCSolution[which][i_isc].flag && ISCSolution[which][i_isc].framenum
-      != last_isc_framenum[which]) {
-    // get az and el for new solution
-    i_point = GETREADINDEX(point_index);
-    ra = ISCSolution[which][i_isc].ra * (12.0 / M_PI);
-    dec = ISCSolution[which][i_isc].dec * (180.0 / M_PI);
-    radec2azel(ra, dec, PointingData[i_point].lst, PointingData[i_point].lat,
-        &new_az, &new_el);
-
-    //bprintf(info, "found possible solution az=%g el=%g\n", new_az, new_el);
-    if (possible_solution(new_az, new_el, i_point)) {  // no nans!
-      //bprintf(info, "age=%d max_age=%d\n", isc_pulses[which].age, CommandData.ISCControl[which].max_age);
-      CommandData.ISCControl[which].age = isc_pulses[which].age;  //write current age
-      // new solution
-      if (isc_pulses[which].age < CommandData.ISCControl[which].max_age) {
-	//bprintf(info, "solution accepted!\n");
-        /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
-        new_el += CommandData.ISCState[which].elBDA * RAD2DEG;
-        if (old_el < 80. * M_PI / 180)
-          new_az += CommandData.ISCState[which].azBDA * RAD2DEG / cos(old_el);
-
-        // this solution is isc_pulses.age old: how much have we moved?
-        gy_el_delta = 0;
-        gy_az_delta = 0;
-        gy_raw_el_delta = 0;
-        ifroll_gy_raw_delta = 0;
-        ifyaw_gy_raw_delta = 0;
-
-        for (i = 0; i < isc_pulses[which].age; i++) {
-          j = hs.i_history - i;
-          if (j < 0)
-            j += GY_HISTORY;
-
-          gy_el_delta += (hs.ifel_gy_history[j] + off_ifel_gy) * (1.0 / ACSData.bbc_rate);
-          gy_raw_el_delta += (hs.ifel_gy_history[j]) * (1.0 / ACSData.bbc_rate);
-
-          gy_az_delta += (-(hs.ifroll_gy_history[j] + off_ifroll_gy) *
-              cos(hs.elev_history[j]) + -(hs.ifyaw_gy_history[j] + off_ifyaw_gy) *
-              sin(hs.elev_history[j])) * (1.0 / ACSData.bbc_rate);
-          ifroll_gy_raw_delta += (hs.ifroll_gy_history[j]) * (1.0 / ACSData.bbc_rate);
-          ifyaw_gy_raw_delta += (hs.ifyaw_gy_history[j]) * (1.0 / ACSData.bbc_rate);
-        }
-
-        // evolve el solution
-        e->angle -= gy_el_delta; // rewind to when the frame was grabbed
-        w1 = 1.0 / (e->varience);
-        if (ISCSolution[which][i_isc].sigma > M_PI) {
-          w2 = 0;
-        } else {
-          w2 = 10.0 * ISCSolution[which][i_isc].sigma
-            * (180.0 / M_PI); //e->samp_weight;
-          if (w2 > 0)
-            w2 = 1 / (w2 * w2);
-          else
-            w2 = 0; // shouldn't happen
-        }
-
-        if (w2 > 0.0 ) {
-          // Calculate el offset
-          e->since_last -= isc_pulses[which].age;
-          offset_new_el = ((new_el - e->last_input) - e->gy_int+gy_raw_el_delta)/
-            ((1.0/ACSData.bbc_rate) * (double)e->since_last);
-          e->last_input = new_el;
-          e->since_last = isc_pulses[which].age;
-          e->offset_gy = offset_new_el;
-          e->gy_int = gy_raw_el_delta;
-        }
-
-        UnwindDiff(e->angle, &new_el);
-        e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);
-        e->varience = 1.0 / (w1 + w2);
-        e->angle += gy_el_delta; // add back to now
-
-        NormalizeAngle(&(e->angle));
-
-        // evolve az solution
-        a->angle -= gy_az_delta; // rewind to when the frame was grabbed
-        w1 = 1.0 / (a->varience);
-        // w2 already set
-
-        UnwindDiff(a->angle, &new_az);
-        a->angle = (w1 * a->angle + new_az * w2) / (w1 + w2);
-        a->varience = 1.0 / (w1 + w2);
-        a->angle += gy_az_delta; // add back to now
-
-        NormalizeAngle(&(a->angle));
-
-        if (w2 > 0.0 ) {
-          // Calculate az offset
-          daz = remainder(new_az - a->last_input, 360.0);
-
-          a->since_last -= isc_pulses[which].age;
-          offset_new_ifroll_gy = -(daz * cos(new_el*M_PI/180) + a->ifroll_gy_int-ifroll_gy_raw_delta) /
-            ((1.0/ACSData.bbc_rate) * (double)a->since_last);
-
-          /* Do Gyro_IFyaw */
-          offset_new_ifyaw_gy = -(daz * sin(new_el*M_PI/180.0) + a->ifyaw_gy_int-ifyaw_gy_raw_delta) /
-            ((1.0/ACSData.bbc_rate) * (double)a->since_last);
-
-          a->last_input = new_az;
-          a->since_last = isc_pulses[which].age;
-          a->offset_ifroll_gy = offset_new_ifroll_gy;
-          a->offset_ifyaw_gy = offset_new_ifyaw_gy;
-          a->ifroll_gy_int = ifroll_gy_raw_delta;
-          a->ifyaw_gy_int = ifyaw_gy_raw_delta;
-        }
-      }
-
-      last_isc_framenum[which] = ISCSolution[which][i_isc].framenum;
-      isc_pulses[which].age = -1; // reset counter.
-    } else if (!finite(new_el) || !finite(new_az)) {
-      bprintf(err, "Pointing: Aphysical star camera solution discarded.");
-    }
-  }
-  e->since_last++;
-  a->since_last++;
-}
-#endif
-
 /* Gyro noise: 7' / rt(hour) */
 /** the new solution is a weighted mean of:
   the old solution evolved by gyro motion and
@@ -856,22 +647,18 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
   static int i=0;
   double w1, w2;
   double new_offset = 0;
-
  
-  //  if (i%500==1) bprintf(info,"EvolveElSolution: #1 Initial angle %f, new angle %f",s->angle, new_angle);
   s->angle += (gyro + gy_off) / ACSData.bbc_rate;
   s->varience += GYRO_VAR;
 
   s->gy_int += gyro / ACSData.bbc_rate; // in degrees
 
-  //  if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, gyro %f, gy_off %f, varience %f, gy_int %f",s->angle, gyro, gy_off, s->varience, s->gy_int);
   if (new_reading) {
     w1 = 1.0 / (s->varience);
     w2 = s->samp_weight;
 
     s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
     s->varience = 1.0 / (w1 + w2);
-    //    if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, w1 %f, w2 %f, varience %f",s->angle, w1, w2,s->varience);
 
     if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       /** calculate offset **/
@@ -1031,7 +818,6 @@ void Pointing(void)
   double pss_az = 0;
   double pss_el = 0;
   double dgps_az, dgps_pitch, dgps_roll;
-  double clin_elev;
   static int no_dgps_pos = 0, last_i_dgpspos = 0, using_sip_gps = -1;
   static double last_good_lat=0, last_good_lon=0;
   static int since_last_good_dgps_pos=5;
@@ -1042,38 +828,8 @@ void Pointing(void)
   int i_dgpspos, dgpspos_ok = 0;
   int i_point_read;
 
-  //int el_encs_ok; // el_enc_1 OR el_enc_2 OK.
-
-  static struct LutType elClinLut = {"/data/etc/spider/clin_elev.lut",0,NULL,NULL,0};
-
   struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
   struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};
-
-  /*static struct ElSolutionStruct EncEl = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
-    1.0 / M2DV(60), //sample weight
-    M2DV(20), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL // firstruct					
-  };*/
-
-/*  static struct ElSolutionStruct ClinEl = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
-    1.0 / M2DV(60), //sample weight
-    M2DV(60), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL // firstruct					
-  };*/
 
   /* OUTER FRAME EL pointing solution struct  for Spider
       - uses a fictitious pointing sensor that periodically 
@@ -1148,25 +904,14 @@ void Pointing(void)
 
   if (firsttime) {
     firsttime = 0;
-   // ClinEl.trim = CommandData.clin_el_trim;
-  //  EncEl.trim = CommandData.enc_el_trim;
     NullAz.trim = CommandData.null_az_trim;
     MagAz.trim = CommandData.mag_az_trim;
     DGPSAz.trim = CommandData.dgps_az_trim;
     PSSAz.trim = CommandData.pss_az_trim;
 
-    /*ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(ClinEl.fs, FIR_LENGTH*ACSData.bbc_rate);
-    */
-
-    /*EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(EncEl.fs, FIR_LENGTH*ACSData.bbc_rate);*/
-
-    
     NullEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(NullEl.fs, FIR_LENGTH*ACSData.bbc_rate);
     
-
     NullAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     NullAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
     initFir(NullAz.fs2, (int)(10)); // not used
@@ -1199,9 +944,6 @@ void Pointing(void)
     last_i_dgpspos = GETREADINDEX(dgpspos_index);
   }
 
-  if (elClinLut.n == 0)
-    LutInit(&elClinLut);
-
   i_dgpspos = GETREADINDEX(dgpspos_index);
   i_point_read = GETREADINDEX(point_index);
 
@@ -1221,13 +963,9 @@ void Pointing(void)
   PointingData[point_index].ifyaw_earth_gy = R *
     (sin_e * sin_l + cos_l * cos_e * cos_a);
   RG.ifel_gy = ACSData.ifel_gy - PointingData[point_index].ifel_earth_gy;
-  //  if (j%500==0) bprintf(info,"Pointing: ACSData.enc_raw_el = %f",ACSData.enc_raw_el);
-  //  if (j%500==0) bprintf(info,"Pointing: RG.gy1 = %f, gy1_earth= %f, cos_l =%f sin_a = %f",ACSData.ifel_gy,PointingData[point_index].gy1_earth, cos_a, sin_a);
   RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
   RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
-  //PointingData[point_index].v_az = (-1.0)*RG.ifroll_gy*sin_e-RG.ifyaw_gy*cos_e;
-  PointingData[point_index].v_az = (RG.ifyaw_gy*cos(0.0) 
-                                     + RG.ifroll_gy*sin(0.0));
+  PointingData[point_index].v_az = RG.ifyaw_gy;
   /*************************************/
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);
@@ -1295,37 +1033,13 @@ void Pointing(void)
 
   /*************************************/
   /**      do elevation solution      **/
-  clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
-  PointingData[i_point_read].clin_el_lut = clin_elev;
-  /* x = ACSData.clin_elev; */
-  /*   clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x + */
-  /* 		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56; */
-
-  //EvolveElSolution(&ClinEl, RG.ifel_gy, 
-    //               PointingData[i_point_read].offset_ifel_gy, clin_elev, 1);
-
- 
-
-  //el_encs_ok =  (CommandData.use_elenc1 || CommandData.use_elenc2);
-  
-  //EvolveElSolution(&EncEl, RG.ifel_gy, PointingData[i_point_read].offset_ifel_gy, ACSData.enc_mean_el, el_encs_ok);
-  
   EvolveElSolution(&NullEl, RG.ifel_gy, 
                    PointingData[i_point_read].offset_ifel_gy, 0.0, 1);
 
-  //if (CommandData.use_elenc) {
-
-  //AddElSolution(&ElAtt, &EncEl, 1);
   AddElSolution(&ElAtt, &NullEl, 1);
-  //}
-
-  /*if (CommandData.use_elclin) {
-    AddElSolution(&ElAtt, &ClinEl, 1);
-  }*/
 
   PointingData[point_index].offset_ifel_gy = (CommandData.el_autogyro)
     ? ElAtt.offset_gy : CommandData.offset_ifel_gy;
-  //PointingData[point_index].el = ElAtt.el;
   PointingData[point_index].el = ElAtt.el + ACSData.enc_mean_el;
 
   /*******************************/
@@ -1415,32 +1129,21 @@ void Pointing(void)
   PointingData[point_index].ra = ra;
   PointingData[point_index].dec = dec;
   /** record solutions in pointing data **/
-  //  if (j%500==0) bprintf(info,"Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
-  /*PointingData[point_index].enc_el = EncEl.angle;
-  PointingData[point_index].enc_sigma = sqrt(EncEl.varience + EncEl.sys_var);
-  PointingData[point_index].clin_el = ClinEl.angle;
-  PointingData[point_index].clin_sigma = sqrt(ClinEl.varience + ClinEl.sys_var);
-*/
   PointingData[point_index].mag_az = MagAz.angle;
   PointingData[point_index].mag_sigma = sqrt(MagAz.varience + MagAz.sys_var);
   PointingData[point_index].dgps_az = DGPSAz.angle;
   PointingData[point_index].dgps_pitch = dgps_pitch;
   PointingData[point_index].dgps_roll = dgps_roll;
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
-  // Added 22 June 2010 GT
   PointingData[point_index].pss_az = PSSAz.angle;
 
   /********************/
   /* Set Manual Trims */
   if (NewAzEl.fresh == -1) {
-    //ClinEl.trim = 0.0;
-    //EncEl.trim = 0.0;
     NullAz.trim = 0.0;
     MagAz.trim = 0.0;
     DGPSAz.trim = 0.0;
     PSSAz.trim = 0.0;
-    //CommandData.clin_el_trim = ClinEl.trim;
-    //CommandData.enc_el_trim = EncEl.trim;
     CommandData.null_az_trim = NullAz.trim;
     CommandData.mag_az_trim = MagAz.trim;
     CommandData.dgps_az_trim = DGPSAz.trim;
@@ -1460,8 +1163,6 @@ void Pointing(void)
     if (pss_since_ok<500) {
       PSSAz.trim = NewAzEl.az - PSSAz.angle;
     }
-    //CommandData.clin_el_trim = ClinEl.trim;
-    //CommandData.enc_el_trim = EncEl.trim;
     CommandData.null_az_trim = NullAz.trim;
     CommandData.mag_az_trim = MagAz.trim;
     CommandData.dgps_az_trim = DGPSAz.trim;
