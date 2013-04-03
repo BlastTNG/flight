@@ -70,53 +70,88 @@ int sendTheGoodCommand(const char *cmd);
 int sendTheBadCommand(const char *cmd);
 int sendTheUglyCommand(const char *cmd);
 
-/* (re-)load the fset number 'i' into the command data -- no change on error;
- * returns the fset number in use; 'init'=1 occurs at start up, when there's
- * no fallback initialised.
+/* (re-)load the [bf]set number 'i' into the local buffer -- no change on error;
+ * 'init'=1 occurs at start up, when there's no fallback initialised.
  */
-static int change_fset(int i, int init)
+static void change_bset(int i, int init)
 {
-  static uint8_t fset_serial = 0xF0; /* we start here to better detect
-                                        wrap-around bugs */
-  struct fset new_fset;
+  static uint8_t bset_serial = 0xF9;
+  struct bset new_bset;
 
   /* range checking */
   if (i < 0 || i > 255) {
-    bprintf(warning, "FSet: ignoring out-of-range fset index %i\n", i);
-    return CommandData.fset_num;
+    bprintf(warning, "Set: ignoring out-of-range BSET index %i\n", i);
+    return;
+  }
+
+  /* avoid the forbidden serial number */
+  if (bset_serial == 0xFF)
+    bset_serial++;
+
+  /* special empty sets -- always succeeds */
+  if (i == 0) {
+    bputs(info, "Set: using empty BSET000.");
+    memset(&new_bset, 0, sizeof(new_bset));
+    set_bset(&new_bset, bset_serial++ << 8);
+    return;
+  }
+
+  /* try to load the fset */
+  if (read_bset(i, &new_bset) == -1) {
+    /* no bset loaded -- load the empty default */
+    if (init) {
+      change_bset(0, 0);
+      return;
+    }
+
+    bprintf(warning, "Set: unable to read BSET%03i; still using BSET%03i", i,
+        (CommandData.bset_num & 0xFF));
+    return;
+  }
+
+  /* update the current bset */
+  bprintf(info, "Set: using BSET%03i with %i fields", i, new_bset.n);
+  set_bset(&new_bset, i | (bset_serial++ << 8));
+}
+
+static void change_fset(int i, int init)
+{
+  static uint8_t fset_serial = 0xF9;
+  struct fset new_fset = { .n = 0 };
+
+  /* range checking */
+  if (i < 0 || i > 255) {
+    bprintf(warning, "Set: ignoring out-of-range FSET index %i\n", i);
+    return;
   }
 
   /* avoid the forbidden serial number */
   if (fset_serial == 0xFF)
     fset_serial++;
 
-  /* special empty fset -- always succeeds */
+  /* special empty sets -- always succeeds */
   if (i == 0) {
-    CommandData.fset.n = 0;
-    free(CommandData.fset.f);
-    CommandData.fset.f = NULL;
-    bputs(info, "FSet: using empty FSET000.");
-    return fset_serial++ << 8;
+    bputs(info, "Set: using empty FSET000.");
+    set_fset(&new_fset, fset_serial++ << 8);
+    return;
   }
 
   /* try to load the fset */
-  if (read_fset(i, &new_fset) == NULL) {
+  if (read_fset(i, &new_fset) == -1) {
     /* no fset loaded -- load the empty default */
-    if (init)
-      return change_fset(0, 0);
+    if (init) {
+      change_fset(0, 0);
+      return;
+    }
 
-    bprintf(warning, "FSet: unable to read FSET%03i; still using FSET%03i", i,
+    bprintf(warning, "Set: unable to read FSET%03i; still using FSET%03i", i,
         (CommandData.fset_num & 0xFF));
-    return CommandData.fset_num;
+    return;
   }
 
-  /* update, with concurrency handling */
-  CommandData.fset.n = 0;
-  free(CommandData.fset.f);
-  CommandData.fset.f = new_fset.f;
-  CommandData.fset.n = new_fset.n;
-  bprintf(info, "FSet: using FSET%03i with %i fields", i, CommandData.fset.n);
-  return i | (fset_serial++ << 8);
+  /* update the current fset */
+  bprintf(info, "Set: using FSET%03i with %i fields", i, new_fset.n);
+  set_fset(&new_fset, i | (fset_serial++ << 8));
 }
 
 /* forward an unrecognised command to the MCE computers.  Returns zero if this
@@ -194,7 +229,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case antisun: /* turn antisolar (az-only) */
 
       /* point solar panels to sun */
-      //sun_az = PointingData[i_point].sun_az + 250;       
+      //sun_az = PointingData[i_point].sun_az + 250;
       sun_az = PointingData[i_point].sun_az + 180.0; // set to this for now
 
       NormalizeAngle(&sun_az);
@@ -623,7 +658,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.mcc6.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
       break;
-      
+
     /* Inner Frame Power */
 
     case mce1_off:
@@ -750,7 +785,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.lock.goal = lock_retract;
       if (CommandData.pointing_mode.mode == P_LOCK) {
         CommandData.pointing_mode.nw = CommandData.slew_veto;
-	      CommandData.pointing_mode.mode = P_DRIFT;
+        CommandData.pointing_mode.mode = P_DRIFT;
         CommandData.pointing_mode.X = 0;
         CommandData.pointing_mode.Y = 0;
         CommandData.pointing_mode.vaz = 0.0;
@@ -836,8 +871,8 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case theugly_run:
       CommandData.theugly.paused = 0;
       break;
-	/**************************************/
-	/********** Star Camera Table *********/
+      /**************************************/
+      /********** Star Camera Table *********/
     case table_track:
       CommandData.table.mode = 0;
 
@@ -877,19 +912,19 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
     case reap_itsy:  /* Miscellaneous commands */
     case reap_bitsy:
-      if ((command == reap_itsy && !BitsyIAm) || 
-	  (command == reap_bitsy && BitsyIAm)) {
-	bprintf(err, "Commands: Reaping the watchdog tickle on command.");
-	pthread_cancel(watchdog_id);
+      if ((command == reap_itsy && !BitsyIAm) ||
+          (command == reap_bitsy && BitsyIAm)) {
+        bprintf(err, "Commands: Reaping the watchdog tickle on command.");
+        pthread_cancel(watchdog_id);
       }
       break;
     case halt_itsy:
     case halt_bitsy:
-      if ((command == halt_itsy && !BitsyIAm) || 
-	  (command == halt_bitsy && BitsyIAm)) {
+      if ((command == halt_itsy && !BitsyIAm) ||
+          (command == halt_bitsy && BitsyIAm)) {
         bputs(warning, "Commands: Halting the MCC\n");
         if (system("/sbin/reboot") < 0)
-	  berror(fatal, "Commands: failed to reboot, dying\n");
+          berror(fatal, "Commands: failed to reboot, dying\n");
       }
       break;
     case bbc_sync_ext:
@@ -1063,7 +1098,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
   /* Pointing Modes */
   switch(command) {
     case az_el_goto:
-      if ((CommandData.pointing_mode.mode != P_AZEL_GOTO) || 
+      if ((CommandData.pointing_mode.mode != P_AZEL_GOTO) ||
           (CommandData.pointing_mode.X != rvalues[0]) ||
           (CommandData.pointing_mode.Y != rvalues[1])) {
         CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -1123,22 +1158,22 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case spider_scan:
       is_new = 0;
       if ( (CommandData.pointing_mode.mode != P_SPIDER) ||
-	   (CommandData.pointing_mode.X != rvalues[8]) || /* starting ra */
-	   (CommandData.pointing_mode.Y != rvalues[9]) ) { /* starting dec */
+          (CommandData.pointing_mode.X != rvalues[8]) || /* starting ra */
+          (CommandData.pointing_mode.Y != rvalues[9]) ) { /* starting dec */
         is_new = 1;
       }
       for (i = 0; i < 4; i++) {
-	if ( (CommandData.pointing_mode.ra[i] != rvalues[i*2]) ||
-	     (CommandData.pointing_mode.dec[i] != rvalues[i*2 + 1]) ) {
-	  is_new = 1;
-	}
+        if ( (CommandData.pointing_mode.ra[i] != rvalues[i*2]) ||
+            (CommandData.pointing_mode.dec[i] != rvalues[i*2 + 1]) ) {
+          is_new = 1;
+        }
       }
       if (is_new) {
-	CommandData.pointing_mode.new_spider = 1;
+        CommandData.pointing_mode.new_spider = 1;
       }
       for (i = 0; i < 4; i++) {
         CommandData.pointing_mode.ra[i] = rvalues[i*2];
-        CommandData.pointing_mode.dec[i] = rvalues[i*2 + 1];        
+        CommandData.pointing_mode.dec[i] = rvalues[i*2 + 1];
       }
       CommandData.pointing_mode.X = rvalues[8];
       CommandData.pointing_mode.Y = rvalues[9];
@@ -1146,12 +1181,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.is_turn_around = 0;
       CommandData.pointing_mode.mode = P_SPIDER;
       break;
-    case set_scan_params:  
+    case set_scan_params:
       CommandData.az_accel = rvalues[0];
-      CommandData.az_accel_max = rvalues[1]; 
+      CommandData.az_accel_max = rvalues[1];
       CommandData.pointing_mode.Nscans = ivalues[2];
-      CommandData.pointing_mode.del = CommandData.pointing_mode.el_step 
-	                            = rvalues[3];
+      CommandData.pointing_mode.del = CommandData.pointing_mode.el_step
+        = rvalues[3];
       CommandData.pointing_mode.Nsteps = ivalues[4];
       CommandData.pointing_mode.overshoot_band = rvalues[5];
       break;
@@ -1182,9 +1217,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case slew_veto:
       CommandData.slew_veto = rvalues[0] * ACSData.bbc_rate;
-            bprintf(info,"CommandData.slew_veto = %i, CommandData.pointing_mode.nw = %i", CommandData.slew_veto, CommandData.pointing_mode.nw);
-      if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto; 
-     
+            bprintf(info,"CommandData.slew_veto = %i,"
+                " CommandData.pointing_mode.nw = %i",
+                CommandData.slew_veto, CommandData.pointing_mode.nw);
+      if (CommandData.pointing_mode.nw > CommandData.slew_veto)
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
+
       break;
 
       /***************************************/
@@ -1413,7 +1451,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case tdrss_bw:
       CommandData.tdrss_bw = rvalues[0];
-      break;      
+      break;
     case iridium_bw:
       CommandData.iridium_bw = rvalues[0];
       break;
@@ -1431,8 +1469,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.bbcIntFrameRate = ivalues[0];
       setup_bbc();
       break;
+    case bset:
+      change_bset(ivalues[0], 0);
+      break;
     case fset:
-      CommandData.fset_num = change_fset(ivalues[0], 0);
+      change_fset(ivalues[0], 0);
       break;
 
     case plugh:/* A hollow voice says "Plugh". */
@@ -1454,63 +1495,63 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case hk_phase_ntd:
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
-	CommandData.hk[ivalues[0]-1].ntd.phase = rvalues[1];
-	CommandData.hk[ivalues[0]-1].ntd.do_phase_step = 0;
+        CommandData.hk[ivalues[0]-1].ntd.phase = rvalues[1];
+        CommandData.hk[ivalues[0]-1].ntd.do_phase_step = 0;
       } else for (i=0; i<HK_MAX; i++) {
-	CommandData.hk[i].ntd.phase = rvalues[1];
-	CommandData.hk[i].ntd.do_phase_step = 0;
+        CommandData.hk[i].ntd.phase = rvalues[1];
+        CommandData.hk[i].ntd.do_phase_step = 0;
       }
       break;
     case hk_phase_cernox:
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
-	CommandData.hk[ivalues[0]-1].cernox.phase= rvalues[1];
-	CommandData.hk[ivalues[0]-1].cernox.do_phase_step = 0;
+        CommandData.hk[ivalues[0]-1].cernox.phase= rvalues[1];
+        CommandData.hk[ivalues[0]-1].cernox.do_phase_step = 0;
       } else for (i=0; i<HK_MAX; i++) {
-	CommandData.hk[i].cernox.phase = rvalues[1];
-	CommandData.hk[i].cernox.do_phase_step = 0;
+        CommandData.hk[i].cernox.phase = rvalues[1];
+        CommandData.hk[i].cernox.do_phase_step = 0;
       }
       break;
     case hk_phase_step_ntd:
       CommandData.hk_last = ivalues[0];
       step = (rvalues[2]-rvalues[1])/rvalues[3];
       if (ivalues[0] > 0) {
-	CommandData.hk[ivalues[0]-1].ntd.do_phase_step = 1;
-	CommandData.hk[ivalues[0]-1].ntd.phase = rvalues[1];
-	CommandData.hk[ivalues[0]-1].ntd.phase_start = rvalues[1];
-	CommandData.hk[ivalues[0]-1].ntd.phase_end = rvalues[2];
-	CommandData.hk[ivalues[0]-1].ntd.phase_step = step;
-	CommandData.hk[ivalues[0]-1].ntd.phase_dt = ivalues[4];
-	CommandData.hk[ivalues[0]-1].ntd.phase_time = mcp_systime(NULL);
+        CommandData.hk[ivalues[0]-1].ntd.do_phase_step = 1;
+        CommandData.hk[ivalues[0]-1].ntd.phase = rvalues[1];
+        CommandData.hk[ivalues[0]-1].ntd.phase_start = rvalues[1];
+        CommandData.hk[ivalues[0]-1].ntd.phase_end = rvalues[2];
+        CommandData.hk[ivalues[0]-1].ntd.phase_step = step;
+        CommandData.hk[ivalues[0]-1].ntd.phase_dt = ivalues[4];
+        CommandData.hk[ivalues[0]-1].ntd.phase_time = mcp_systime(NULL);
       } else for (i=0; i<HK_MAX; i++) {
-	CommandData.hk[i].ntd.do_phase_step = 1;
-	CommandData.hk[i].ntd.phase = rvalues[1];
-	CommandData.hk[i].ntd.phase_start = rvalues[1];
-	CommandData.hk[i].ntd.phase_end = rvalues[2];
-	CommandData.hk[i].ntd.phase_step = step;
-	CommandData.hk[i].ntd.phase_dt = ivalues[4];
-	CommandData.hk[i].ntd.phase_time = mcp_systime(NULL);
+        CommandData.hk[i].ntd.do_phase_step = 1;
+        CommandData.hk[i].ntd.phase = rvalues[1];
+        CommandData.hk[i].ntd.phase_start = rvalues[1];
+        CommandData.hk[i].ntd.phase_end = rvalues[2];
+        CommandData.hk[i].ntd.phase_step = step;
+        CommandData.hk[i].ntd.phase_dt = ivalues[4];
+        CommandData.hk[i].ntd.phase_time = mcp_systime(NULL);
       }
       break;
     case hk_phase_step_cernox:
       CommandData.hk_last = ivalues[0];
       step = (rvalues[2]-rvalues[1])/rvalues[3];
       if (ivalues[0] > 0) {
-	CommandData.hk[ivalues[0]-1].cernox.do_phase_step = 1;
-	CommandData.hk[ivalues[0]-1].cernox.phase = rvalues[1];
-	CommandData.hk[ivalues[0]-1].cernox.phase_start = rvalues[1];
-	CommandData.hk[ivalues[0]-1].cernox.phase_end = rvalues[2];
-	CommandData.hk[ivalues[0]-1].cernox.phase_step = step;
-	CommandData.hk[ivalues[0]-1].cernox.phase_dt = ivalues[4];
-	CommandData.hk[ivalues[0]-1].cernox.phase_time = mcp_systime(NULL);
+        CommandData.hk[ivalues[0]-1].cernox.do_phase_step = 1;
+        CommandData.hk[ivalues[0]-1].cernox.phase = rvalues[1];
+        CommandData.hk[ivalues[0]-1].cernox.phase_start = rvalues[1];
+        CommandData.hk[ivalues[0]-1].cernox.phase_end = rvalues[2];
+        CommandData.hk[ivalues[0]-1].cernox.phase_step = step;
+        CommandData.hk[ivalues[0]-1].cernox.phase_dt = ivalues[4];
+        CommandData.hk[ivalues[0]-1].cernox.phase_time = mcp_systime(NULL);
       } else for (i=0; i<HK_MAX; i++) {
-	CommandData.hk[i].cernox.do_phase_step = 1;
-	CommandData.hk[i].cernox.phase = rvalues[1];
-	CommandData.hk[i].cernox.phase_start = rvalues[1];
-	CommandData.hk[i].cernox.phase_end = rvalues[2];
-	CommandData.hk[i].cernox.phase_step = step;
-	CommandData.hk[i].cernox.phase_dt = ivalues[4];
-	CommandData.hk[i].cernox.phase_time = mcp_systime(NULL);
+        CommandData.hk[i].cernox.do_phase_step = 1;
+        CommandData.hk[i].cernox.phase = rvalues[1];
+        CommandData.hk[i].cernox.phase_start = rvalues[1];
+        CommandData.hk[i].cernox.phase_end = rvalues[2];
+        CommandData.hk[i].cernox.phase_step = step;
+        CommandData.hk[i].cernox.phase_dt = ivalues[4];
+        CommandData.hk[i].cernox.phase_time = mcp_systime(NULL);
       }
       break;
     case hk_bias_freq:
@@ -1525,11 +1566,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] > 0) {
         CommandData.hk[ivalues[0]-1].pump_heat = 1;
         CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
-	CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
+        CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
       } else for (i=0; i<HK_MAX; i++) {
         CommandData.hk[i].pump_heat = 1;
         CommandData.hk[i].auto_cycle_on = 0;
-	CommandData.hk[i].pump_servo_on = 0;
+        CommandData.hk[i].pump_servo_on = 0;
       }
       break;
     case hk_pump_heat_off:
@@ -1537,11 +1578,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] > 0) {
         CommandData.hk[ivalues[0]-1].pump_heat = 0;
         CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
-	CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
+        CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
       } else for (i=0; i<HK_MAX; i++) {
         CommandData.hk[i].pump_heat = 0;
         CommandData.hk[i].auto_cycle_on = 0;
-	CommandData.hk[i].pump_servo_on = 0;
+        CommandData.hk[i].pump_servo_on = 0;
       }
       break;
     case hk_heat_switch_on:
@@ -1650,115 +1691,115 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case hk_pump_servo_on:
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
-	CommandData.hk[ivalues[0]-1].pump_servo_on = 1;
-	CommandData.hk[ivalues[0]-1].pump_servo_low = rvalues[1];
-	CommandData.hk[ivalues[0]-1].pump_servo_high = rvalues[2];
+        CommandData.hk[ivalues[0]-1].pump_servo_on = 1;
+        CommandData.hk[ivalues[0]-1].pump_servo_low = rvalues[1];
+        CommandData.hk[ivalues[0]-1].pump_servo_high = rvalues[2];
       } else for (i=0; i<HK_MAX; i++) {
-	CommandData.hk[i].pump_servo_on = 1;
-	CommandData.hk[i].pump_servo_low = rvalues[1];
-	CommandData.hk[i].pump_servo_high = rvalues[2];
+        CommandData.hk[i].pump_servo_on = 1;
+        CommandData.hk[i].pump_servo_low = rvalues[1];
+        CommandData.hk[i].pump_servo_high = rvalues[2];
       }
       break;
-      
+
     case hk_mt_bottom_pulse:
       duty_cycle = rvalues[0]/HK_MT_BOTTOM_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[0].duty_target = 
-	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[0].duty_target =
+        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[0].duration = // seconds
-	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
+        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
-      CommandData.hk_theo_heat[0].duty_avg = 
-	CommandData.hk_theo_heat[0].duty_target;
+      CommandData.hk_theo_heat[0].duty_avg =
+        CommandData.hk_theo_heat[0].duty_target;
       CommandData.hk_theo_heat[0].start_time = mcp_systime(NULL);
       break;
     case hk_t1_pulse:
       duty_cycle = rvalues[0]/HK_T1_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[1].duty_target = 
-	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[1].duty_target =
+        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[1].duration = // seconds
-	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
+        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
-      CommandData.hk_theo_heat[1].duty_avg = 
-	CommandData.hk_theo_heat[1].duty_target;
+      CommandData.hk_theo_heat[1].duty_avg =
+        CommandData.hk_theo_heat[1].duty_target;
       CommandData.hk_theo_heat[1].start_time = mcp_systime(NULL);
       break;
     case hk_vcs1_hx1_pulse:
       duty_cycle = rvalues[0]/HK_VCS1_HX1_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[2].duty_target = 
-	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[2].duty_target =
+        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[2].duration = // seconds
-	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
+        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
-      CommandData.hk_theo_heat[2].duty_avg = 
-	CommandData.hk_theo_heat[2].duty_target;
+      CommandData.hk_theo_heat[2].duty_avg =
+        CommandData.hk_theo_heat[2].duty_target;
       CommandData.hk_theo_heat[2].start_time = mcp_systime(NULL);
       break;
     case hk_vcs2_hx1_pulse:
       duty_cycle = rvalues[0]/HK_VCS2_HX1_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[3].duty_target = 
-	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[3].duty_target =
+        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[3].duration = // seconds
-	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
+        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
-      CommandData.hk_theo_heat[3].duty_avg = 
-	CommandData.hk_theo_heat[3].duty_target;
+      CommandData.hk_theo_heat[3].duty_avg =
+        CommandData.hk_theo_heat[3].duty_target;
       CommandData.hk_theo_heat[3].start_time = mcp_systime(NULL);
       break;
     case hk_vcs1_hx2_pulse:
       duty_cycle = rvalues[0]/HK_VCS1_HX2_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[4].duty_target = 
-	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[4].duty_target =
+        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[4].duration = // seconds
-	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
+        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
-      CommandData.hk_theo_heat[4].duty_avg = 
-	CommandData.hk_theo_heat[4].duty_target;
+      CommandData.hk_theo_heat[4].duty_avg =
+        CommandData.hk_theo_heat[4].duty_target;
       CommandData.hk_theo_heat[4].start_time = mcp_systime(NULL);
       break;
     case hk_vcs2_hx2_pulse:
       duty_cycle = rvalues[0]/HK_VCS2_HX2_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[5].duty_target = 
-	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[5].duty_target =
+        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[5].duration = // seconds
-	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
+        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
-      CommandData.hk_theo_heat[5].duty_avg = 
-	CommandData.hk_theo_heat[5].duty_target;
+      CommandData.hk_theo_heat[5].duty_avg =
+        CommandData.hk_theo_heat[5].duty_target;
       CommandData.hk_theo_heat[5].start_time = mcp_systime(NULL);
       break;
     case hk_sft_bottom_pulse:
       duty_cycle = rvalues[0]/HK_SFT_BOTTOM_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[6].duty_target = 
-	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[6].duty_target =
+        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[6].duration = // seconds
-	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
+        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
-      CommandData.hk_theo_heat[6].duty_avg = 
-	CommandData.hk_theo_heat[6].duty_target;
+      CommandData.hk_theo_heat[6].duty_avg =
+        CommandData.hk_theo_heat[6].duty_target;
       CommandData.hk_theo_heat[6].start_time = mcp_systime(NULL);
       break;
     case hk_t7_pulse:
       duty_cycle = rvalues[0]/HK_T7_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[7].duty_target = 
-	((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
+      CommandData.hk_theo_heat[7].duty_target =
+        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
       CommandData.hk_theo_heat[7].duration = // seconds
-	( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
+        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
       // initialize
-      CommandData.hk_theo_heat[7].duty_avg = 
-	CommandData.hk_theo_heat[7].duty_target;
+      CommandData.hk_theo_heat[7].duty_avg =
+        CommandData.hk_theo_heat[7].duty_target;
       CommandData.hk_theo_heat[7].start_time = mcp_systime(NULL);
       break;
 
       /***************************************/
-      /********* The Good Commanding  *************/ 
+      /********* The Good Commanding  *************/
     case thegood_any:
       sendTheGoodCommand(svalues[0]);
       break;
@@ -1776,7 +1817,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendTheGoodCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendTheGoodCommand(buf); 
+      sendTheGoodCommand(buf);
       CommandData.thegood.focusRes = ivalues[0];
       CommandData.thegood.focusRng = ivalues[1];
       break;
@@ -1812,7 +1853,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.thegood.moveTol = ivalues[0];
       break;
       /***************************************/
-      /********* The Bad Commanding  *************/ 
+      /********* The Bad Commanding  *************/
     case thebad_any:
       sendTheBadCommand(svalues[0]);
       break;
@@ -1830,7 +1871,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendTheBadCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendTheBadCommand(buf); 
+      sendTheBadCommand(buf);
       CommandData.thebad.focusRes = ivalues[0];
       CommandData.thebad.focusRng = ivalues[1];
       break;
@@ -1866,7 +1907,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.thebad.moveTol = ivalues[0];
       break;
       /***************************************/
-      /********* The Ugly Commanding  *************/ 
+      /********* The Ugly Commanding  *************/
     case theugly_any:
       sendTheUglyCommand(svalues[0]);
       break;
@@ -1884,7 +1925,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendTheUglyCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendTheUglyCommand(buf); 
+      sendTheUglyCommand(buf);
       CommandData.theugly.focusRes = ivalues[0];
       CommandData.theugly.focusRng = ivalues[1];
       break;
@@ -1933,7 +1974,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.table.mode = 2;
       CommandData.table.vel = rvalues[0];
       break;
-      
+
     /*******************************************/
     /*************** Sync Box  *****************/
     case write_row_len:
@@ -1989,7 +2030,7 @@ void CheckCommandList(void)
    * problem in the scommand arrray initialiser */
   if (scommands[xyzzy].command != xyzzy) {
     c = -1;
-    for (i = 0; i < N_SCOMMANDS; ++i) 
+    for (i = 0; i < N_SCOMMANDS; ++i)
       if (scommands[i].command == xyzzy) {
         c = i;
         break;
@@ -2017,7 +2058,7 @@ void CheckCommandList(void)
    * problem in the mcommand arrray initialiser */
   if (mcommands[plugh].command != plugh) {
     c = -1;
-    for (i = 0; i < N_MCOMMANDS; ++i) 
+    for (i = 0; i < N_MCOMMANDS; ++i)
       if (mcommands[i].command == plugh) {
         c = i;
         break;
@@ -2043,7 +2084,8 @@ void CheckCommandList(void)
 /* do necessary stuff after reading prev_status */
 static void PostProcessInitCommand(void)
 {
-  CommandData.fset_num = change_fset(CommandData.fset_num & 0xFF, 1);
+  change_bset(CommandData.bset_num & 0xFF, 1);
+  change_fset(CommandData.fset_num & 0xFF, 1);
 }
 
 /************************************************************/
@@ -2170,7 +2212,7 @@ void InitCommandData()
   CommandData.reset_piv = 0;
   CommandData.reset_elev = 0;
   CommandData.restore_piv = 0;
-  
+
   CommandData.slot_sched = 0x100;
   CommandData.parts_sched=0x0;
 
@@ -2185,10 +2227,6 @@ void InitCommandData()
   CommandData.sync_box.write_param = none;
   CommandData.sync_box.cmd = 0;
   CommandData.sync_box.param_value = 0;
-
- /* this will get set properly later in PostProcessInitCommand() */
-  CommandData.fset.n = 0;
-  CommandData.fset.f = NULL;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
@@ -2240,7 +2278,7 @@ void InitCommandData()
   CommandData.pointing_mode.el_step = 0.0;
   CommandData.pointing_mode.is_turn_around = 0;
 
-  CommandData.az_accel = 0.1; 
+  CommandData.az_accel = 0.1;
   CommandData.az_accel_max = 1.0;
 
   CommandData.ele_gain.com = 0;
@@ -2248,7 +2286,6 @@ void InitCommandData()
   CommandData.ele_gain.pulse_port = 0.0;
   CommandData.ele_gain.pulse_starboard = 0.0;
 
-  
   CommandData.power.elmot_auto = 0;
 
   CommandData.azi_gain.P = 4000;
@@ -2261,8 +2298,8 @@ void InitCommandData()
   CommandData.pivot_gain.V_AZ = 0;
   CommandData.pivot_gain.T_RW = 0;
   CommandData.pivot_gain.V_REQ = 0;
-  
-  CommandData.disable_az = 1; 
+
+  CommandData.disable_az = 1;
   CommandData.disable_el = 0;
 
   CommandData.verbose_rw = 0;
@@ -2327,7 +2364,7 @@ void InitCommandData()
   CommandData.offset_ifroll_gy = 0;
   CommandData.offset_ifyaw_gy = 0;
   CommandData.gymask = 0x3f;
-  
+
   CommandData.Temporary.dac_out[0] = 0x8000;
   CommandData.Temporary.dac_out[1] = 0x8000;
   CommandData.Temporary.dac_out[2] = 0x8000;
@@ -2398,7 +2435,7 @@ void InitCommandData()
 
   /* Don sez:   50.23 + 9.9 and 13.85 - 2.2 */
   /* Marco sez: 56          and 10          */
-  
+
   CommandData.actbus.g_primary = 56; /* um/deg */
   CommandData.actbus.g_secondary = 10; /* um/deg */
   CommandData.actbus.focus = 0;
@@ -2429,12 +2466,12 @@ void InitCommandData()
   //TODO make PCI card respect internal frame rate
   //TODO add commands to set frame rate
   //TODO add ability to auto-set internal rate based on sync rate
-  CommandData.bbcIntFrameRate = 104;	    //in ADC samples
-  CommandData.bbcExtFrameRate = 2;	    //in sync box frames
+  CommandData.bbcIntFrameRate = 104;    //in ADC samples
+  CommandData.bbcExtFrameRate = 2;    //in sync box frames
   CommandData.bbcExtFrameMeas = 0;
   CommandData.bbcIsExt = 0 /*1*/;
   CommandData.bbcAutoExt = 0 /*1*/;
-  
+
   /* sync box parameter defaults*/
   CommandData.sync_box.rl_value = 57;
   CommandData.sync_box.nr_value = 33;
@@ -2442,6 +2479,6 @@ void InitCommandData()
 
   CommandData.questionable_behaviour = 0;
 
-  PostProcessInitCommand(); 
   WritePrevStatus();
+  PostProcessInitCommand();
 }

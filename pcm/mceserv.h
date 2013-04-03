@@ -23,3 +23,19 @@
 
 extern int mce_slow_index[NUM_MCE];
 extern struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
+
+/* TES data FIFO read-side functions */
+
+/* length of the TES FIFO -- FIFO overfilling results in data droppage */
+#define TES_FIFO_DEPTH 10
+
+/* returns the number of records in the fifo; in the range [0:TES_FIFO_DEPTH] */
+int tes_nfifo(void);
+
+/* returns a pointer to the oldest record in the fifo or NULL if the FIFO is
+ * empty. */
+const uint32_t *tes_data(void);
+
+/* pops and discards the oldest record in the FIFO; does nothing if the FIFO
+ * is empty.  Always succeeds. */
+void tes_pop(void);

@@ -28,16 +28,30 @@ extern "C" {
 #define NOT_MULTIPLEXED (FAST_PER_SLOW)
 #define DISCARD_WORD    (FAST_PER_SLOW + 1)
 
+/* The maximum number of DAS cards allowed */
+#define MAX_DAS_CARDS 12
+
 /* Number of DAS bolometer cards to include in the frame.  The maximum number
  * of cards is 12. Making 0 will disable bolometer channels
  * Unless specified, will assume 0. Blast should compile with -DDAS_CARDS=12 */
+
+/* as of 2013-04-01, this is only the default value; a caller can change
+ * this at runtime by modifying the das_cards variable before doing anything
+ * else with this library */
 #ifndef DAS_CARDS
 #define DAS_CARDS 0
 #endif
 
-#define DAS_CHS 24
+#if DAS_CARDS > MAX_DAS_CARDS
+#error "Too many DAS cards."
+#endif
+
+#define DAS_CHS 24 /* number of DAS channels per DAS card */
 #define DAS_START 16  //motherboard node of first DAS card
-#define N_FAST_BOLOS (DAS_CARDS * (DAS_CHS + DAS_CHS / 2))
+#define MAX_FAST_BOLOS (MAX_DAS_CARDS * (DAS_CHS + DAS_CHS / 2))
+
+  extern unsigned short das_cards; /* number of DAS cards -- defaults to
+                                      DAS_CARDS */
 
 /* number of channels below the first slow channel */
 #define SLOW_OFFSET 4
@@ -122,6 +136,16 @@ extern "C" {
   void WriteFormatFile(int, time_t, unsigned long);
   char* FieldToLower(char*);
   char* FieldToUpper(char*);
+
+#if (defined __DEFILE__ || defined __BLASTD__)
+#include "derived.h"
+  extern struct ChannelStruct* WideSlowChannels;
+  extern struct ChannelStruct* SlowChannels;
+  extern struct ChannelStruct* WideFastChannels;
+  extern struct ChannelStruct* FastChannels;
+  extern struct ChannelStruct* DecomChannels;
+  extern union DerivedUnion* DerivedChannels;
+#endif
 
 /* reserved node numbers */
 #define SPARE      62

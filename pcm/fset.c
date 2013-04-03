@@ -20,63 +20,24 @@
  *
  */
 
-/* Field Set notes:
+/* There are two kinds of field sets:
  *
- * A "field set" is a file containing a list of fields (probably mostly
- * bolometers) which will be inserted into the "variable field list" part of
- * the downlink.
+ * bset: bolometer sets, which just list bolometers using a numberic triplet:
+ *       of the form: m#c##r## where the numbers (#) mce_number, column, row
+ *       and the two last are always two digits, zero paddedr
+ * fset: field sets, which are lists of blast fields and/or mce### channel
+ *       numbers
  *
- * Up to 255 different field lists may be defined, each is defined in a file
- * called ###.fset located in /data/etc/, numbered 001.fset through 255.fset.
- * Not all 255 field sets need be present. The field set files present are not
- * required to be consequitively numbered or to start with number 000.
  *
- * Not more than FSET_MAXLEN (defined in field_set.h) fields may be defined in
- * any set.  Excess fields are a syntax error.
+ * There are 255 sets available of each kind (001.bset -> 255.bset and
+ * 001.fset -> 255.fset).  [fb]set files may contain comment lines (with a # in
+ * column one, and also blank lines.  These are ignored.
  *
- * A special field set numbered 0 is only used when *NO* fset files are found
- * by pcm.  This failover comprises zero fields.
- *
- * The fset file definition follows:
- *
- * - Completely blank lines are ignored.  (A line containing only whitespace
- *   isn't blank: it will produce a syntax error.)
- * - Comment lines are allowed.  A comment line consists of a hash ('#') in
- *   the first column of the line followed by anything.  Comment lines are
- *   ignored.
- * - The first non-comment line contains a single decimal integer indicating the
- *   total number of fields in the field set.
- * - Each subsequent (non-comment, non-blank) line defines a field for the set.
- * - The character in column zero of a field line must be one of the following
- *   characters (case sensitive) indicating the type of field:
- *
- *     'n': a non-bolometer field
- *     'b': a bolometer field
- *
- * - The second column of every field line is ignored (typically a space is put
- *   here)
- * - For "normal" fields, the field name starts in column 3 and continues until
- *   the newline.
- * - For bolometer fields, a string of the form "m#c##r##" indicating the MCE
- *   number (0 to 5), MCE column (00 to 15) and MCE row number (00 to 32) of the
- *   desired bolometer.  Column and row are zero padded 2-digit numbers.
- * - The next (non-comment, non-blank) line after the last field defined must
- *   contain 'e' in the first column.
- *
- * A syntax error in a fset file will result in pcm COMPLETELY IGNORING that
- * file (resulting in no fset defined for that file).
- *
- * Syntax errors are:
- * - the first non-comment, non-blank line not consisting solely of a decimal
- *   integer.
- * - the first column of a non-comment, non-blank line containing something
- *   other than n, w, b, or e.
- * - the end of file ('E') line occurring too early or too late, based on the
- *   number of fields declared on line 1, or being missing.
- * - declaring a non-existent field
- * - declaring an out-of-range bolometer
+ * The first (non-blank, non-comment) line must comprise an integer indicating
+ * the number of entries in the set.  Excess elements are ignored.
  */
 
+#include "command_struct.h"
 #include "fset.h"
 #include "tes.h"
 #include "blast.h"
@@ -85,28 +46,72 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdint.h>
+#include <pthread.h>
 
-#define FSET_DIR "/data/etc/spider"
+#define SET_DIR "/data/etc/spider"
 
-/* parse fset file number 'i' and store it in 'set'.  Returns 'set' or NULL
- * on error
- */
-struct fset *read_fset(int i, struct fset *set)
+/* currently loaded set in PCM */
+static struct bset curr_bset;
+static struct fset curr_fset;
+
+static pthread_mutex_t set_mex = PTHREAD_MUTEX_INITIALIZER;
+
+/* get/set the global sets along with their numbers */
+int get_bset(struct bset *local_set)
 {
-  struct fset_item *s = NULL;
-  int lineno = 0, c = 0, n = -1;
+  int num;
+  pthread_mutex_lock(&set_mex);
+  num = CommandData.bset_num;
+  memcpy(local_set, &curr_bset, sizeof(curr_bset));
+  pthread_mutex_unlock(&set_mex);
+  return num;
+}
+
+void set_bset(const struct bset *local_set, int num)
+{
+  pthread_mutex_lock(&set_mex);
+  CommandData.bset_num = num;
+  memcpy(&curr_bset, local_set, sizeof(curr_bset));
+  pthread_mutex_unlock(&set_mex);
+}
+
+int get_fset(struct fset *local_set)
+{
+  int num;
+  pthread_mutex_lock(&set_mex);
+  num = CommandData.fset_num;
+  memcpy(local_set, &curr_fset, sizeof(curr_fset));
+  pthread_mutex_unlock(&set_mex);
+  return num;
+}
+
+void set_fset(const struct fset *local_set, int num)
+{
+  pthread_mutex_lock(&set_mex);
+  CommandData.fset_num = num;
+  memcpy(&curr_fset, local_set, sizeof(curr_fset));
+  pthread_mutex_unlock(&set_mex);
+}
+
+/* parse fset file number 'i' and store it in 'set'.  Returns the length
+ * of the set or -1 on error
+ */
+int read_fset(int i, struct fset *set)
+{
+  struct fset new_set = { .n = -1 };
+  int lineno = 0, c = 0;
   FILE *stream;
   char line[1024];
-  char name[sizeof(FSET_DIR) + sizeof(".fset") + 5];
+  char name[sizeof(SET_DIR) + sizeof(".fset") + 5];
 
-  sprintf(name, FSET_DIR "/%03i.fset", i);
+  sprintf(name, SET_DIR "/%03i.fset", i);
 
   /* open */
   if ((stream = fopen(name, "r")) == NULL) {
     /* a missing file isn't interesting */
     if (errno != ENOENT)
-      berror(err, "FSet: unable to open %s as FSET%03i", name, i);
-    return NULL;
+      berror(err, "Set: unable to open %s as FSET%03i", name, i);
+    return -1;
   }
 
   /* parse lines */
@@ -114,7 +119,7 @@ struct fset *read_fset(int i, struct fset *set)
     size_t len = strlen(line);
     /* check for line length */
     if (line[len - 1] != '\n') {
-      bprintf(err, "FSet: Error reading FSET%03i: line %i too long.", i,
+      bprintf(err, "Set: Error reading FSET%03i: line %i too long.", i,
           lineno);
       goto LOAD_FSET_ERROR;
     }
@@ -125,73 +130,153 @@ struct fset *read_fset(int i, struct fset *set)
       continue;
     }
 
-    if (n == -1) {
+    if (new_set.n == -1) {
       /* first line is the number */
       char *endptr;
-      n = strtol(line, &endptr, 10);
+      new_set.n = strtol(line, &endptr, 10);
       /* check for trailing garbage and/or crazy numbers */
-      if (*endptr != '\n' || n <= 0 || n >= MAX_FSET) {
-        bprintf(err, "FSet: Error reading FSET%03i: bad count on line %i", i,
+      if (*endptr != '\n' || new_set.n <= 0 || new_set.n >= MAX_FSET) {
+        bprintf(err, "Set: Error reading FSET%03i: bad count on line %i", i,
             lineno);
         goto LOAD_FSET_ERROR;
+      } else if (new_set.n > MAX_FSET) {
+        bprintf(warning, "Set: FSET%03i too long; dropping %i %s", i,
+            new_set.n - MAX_FSET,
+            (new_set.n - MAX_FSET == 1) ? "entry" : "entries");
+        new_set.n = MAX_FSET;
       }
-      s = (struct fset_item *)malloc(sizeof(struct fset_item) * n);
-    } else if (c == n) {
-      if (line[0] != 'e') {
-        bprintf(err, "FSet: Extra field definition on line %i of FSET%03i",
-            lineno, i);
-        goto LOAD_FSET_ERROR;
-      } else {
-        /* done -- ignore the rest of the file and return success */
-        fclose(stream);
-        set->n = n;
-        set->f = s;
-        return set;
-      }
-    } else if (line[0] == 'e') { /* EOF */
-      bprintf(err, "FSet: Unexpected end on line %i of FSET%03i", lineno, i);
-      goto LOAD_FSET_ERROR;
-    } else if (line[0] == 'b') { /* bolo */
-      /* parse "b m#c##r##\n" */
-      if (line[2] != 'm' || line[4] != 'c' || line[7] != 'r' ||
-          line[10] != '\n')
-      {
-        bprintf(err, "FSet: Bad bolometer number on line %i of FSET%03i",
-            lineno, i);
-        goto LOAD_FSET_ERROR;
-      }
-      /* lame number parsing.
-       * yes ",m" produces the same number as "21" ... DON'T DO THAT */
-      s[c].bolo = TESNumber(line[3] - '0',
-          (line[5] - '0') * 10 + line[6] - '0',
-          (line[8] - '0') * 10 + line[9] - '0');
-      if (s[c].bolo < 0) {
-        bprintf(err, "FSet: Bad bolometer number on line %i of FSET%03i",
-            lineno, i);
-        goto LOAD_FSET_ERROR;
-      }
-      c++;
-    } else if (line[0] == 'n') { /* non-bolo */
-      s[c].bolo = -1;
-      /* check length -- minus two for columns 0 and 1; minus one for \n */
-      if (len - 3 > FIELD_LEN) {
-        bprintf(err, "FSet: Field name too long on line %i of FSET%03i", lineno,
+    } else if (c == new_set.n) {
+      /* done -- ignore the rest of the file and return success */
+      fclose(stream);
+      memcpy(set, &new_set, sizeof(new_set));
+      return new_set.n;
+    } else {
+      /* check length -- minus one for \n */
+      if (len - 1 > FIELD_LEN) {
+        bprintf(err, "Set: Field name too long on line %i of FSET%03i", lineno,
             i);
         goto LOAD_FSET_ERROR;
       }
-      /* TODO: verify field name */
-      memcpy(s[c++].name, line + 2, FIELD_LEN);
-    } else { /* bad stuff */
-      bprintf(err, "FSet: Syntax error on line %i of FSET%03i: %s", lineno, i,
-          line);
-      goto LOAD_FSET_ERROR;
+      /* TODO: verify field name? */
+      memcpy(new_set.v[c++], line, FIELD_LEN);
     }
     lineno++;
   }
-  bprintf(err, "FSet: Unexpected EOF reading FSET%03i", i);
+  if (c != new_set.n)
+    bprintf(err, "Set: Unexpected EOF reading FSET%03i", i);
+  else {
+    fclose(stream);
+    memcpy(set, &new_set, sizeof(new_set));
+    return new_set.n;
+  }
+
 
 LOAD_FSET_ERROR:
-  free(s);
   fclose(stream);
-  return NULL;
+  return -1;
+}
+
+/* parse bset file number 'i' and store it in 'set'.  Returns 'set' or NULL
+ * on error
+ */
+int read_bset(int i, struct bset *set)
+{
+  struct bset new_set = { .n = -1 };
+  int lineno = 0, c = 0;
+  FILE *stream;
+  char line[1024];
+  char name[sizeof(SET_DIR) + sizeof(".bset") + 5];
+
+  sprintf(name, SET_DIR "/%03i.bset", i);
+
+  /* open */
+  if ((stream = fopen(name, "r")) == NULL) {
+    /* a missing file isn't interesting */
+    if (errno != ENOENT)
+      berror(err, "Set: unable to open %s as BSET%03i", name, i);
+    return -1;
+  }
+
+  /* parse lines */
+  while (fgets(line, 1024, stream)) {
+    size_t len = strlen(line);
+    /* check for line length */
+    if (line[len - 1] != '\n') {
+      bprintf(err, "Set: Error reading BSET%03i: line %i too long.", i,
+          lineno);
+      goto LOAD_BSET_ERROR;
+    }
+
+    /* skip comments and blank lines */
+    if (line[0] == '\n' || line[0] == '#') {
+      lineno++;
+      continue;
+    }
+
+    if (new_set.n == -1) {
+      /* first line is the number */
+      char *endptr;
+      new_set.n = strtol(line, &endptr, 10);
+      /* check for trailing garbage and/or crazy numbers */
+      if (*endptr != '\n' || new_set.n <= 0 || new_set.n >= MAX_BSET) {
+        bprintf(err, "Set: Error reading BSET%03i: bad count on line %i", i,
+            lineno);
+        goto LOAD_BSET_ERROR;
+      } else if (new_set.n > MAX_BSET) {
+        bprintf(warning, "Set: BSET%03i too long; dropping %i %s", i,
+            new_set.n - MAX_BSET,
+            (new_set.n - MAX_BSET == 1) ? "entry" : "entries");
+        new_set.n = MAX_BSET;
+      }
+    } else if (c == new_set.n) {
+      /* done -- ignore the rest of the file and return success */
+      break;
+    } else { /* bolo */
+      int mce;
+
+      /* parse "m#c##r##\n" */
+      if (line[0] != 'm' || line[2] != 'c' || line[5] != 'r' || line[8] != '\n')
+      {
+        bprintf(err, "Set: Bad bolometer number on line %i of BSET%03i",
+            lineno, i);
+        goto LOAD_BSET_ERROR;
+      }
+      /* lame number parsing.
+       * yes ",m" produces the same number as "21" ... DON'T DO THAT */
+
+      mce = line[1] - '0';
+      new_set.v[c] = TESNumber(mce,
+          (line[3] - '0') * 10 + line[4] - '0',
+          (line[6] - '0') * 10 + line[7] - '0');
+
+      if (new_set.v[c] < 0) {
+        bprintf(err, "Set: Bad bolometer number on line %i of BSET%03i",
+            lineno, i);
+        goto LOAD_BSET_ERROR;
+      }
+
+      /* update per-mce stuff */
+      new_set.im[mce][new_set.nm[mce]++] = c++;
+    }
+    lineno++;
+  }
+
+  if (c != new_set.n) {
+    bprintf(err, "Set: Unexpected EOF reading BSET%03i", i);
+    goto LOAD_BSET_ERROR;
+  }
+
+  /* calculate empties */
+  for (i = 0; i < NUM_MCE; ++i)
+    if (new_set.nm[i] == 0)
+      new_set.empties |= (1 << i);
+
+  /* done */
+  fclose(stream);
+  memcpy(set, &new_set, sizeof(new_set));
+  return new_set.n;
+
+LOAD_BSET_ERROR:
+  fclose(stream);
+  return -1;
 }

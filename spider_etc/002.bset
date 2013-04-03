@@ -1,0 +1,44 @@
+# Example bolo set file.  Comments have # in column zero.  Blank lines are
+# allowed.
+
+# The first (non-blank, non-comment line) is the number of fields in this file
+32
+
+# Then there's a list of fields, one per line.  Fields are indicated by a 
+# string of the form m#c##r## indicating MCE, column and row number.  Column
+# and row are zero padded, and all three count from zero.  Excess fields are
+# ignored.  Too few fields is an error.
+
+m0c00r01
+m0c01r01
+m0c02r01
+m0c03r01
+m0c04r01
+m0c05r01
+m0c06r01
+m0c07r01
+m0c08r01
+m0c09r01
+m0c10r01
+m0c11r01
+m0c12r01
+m0c13r01
+m0c14r01
+m0c15r01
+
+m0c00r09
+m0c01r09
+m0c02r09
+m0c03r09
+m0c04r09
+m0c05r09
+m0c06r09
+m0c07r09
+m0c08r09
+m0c09r09
+m0c10r09
+m0c11r09
+m0c12r09
+m0c13r09
+m0c14r09
+m0c15r09

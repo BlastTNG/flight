@@ -23,11 +23,10 @@
 #ifndef COMMAND_STRUCT_H
 #define COMMAND_STRUCT_H
 
-#include <stdbool.h>	  //bool type!
+#include <stdbool.h>  //bool type!
 #include <time.h>
 #include "command_list.h"
 #include "channels.h"
-#include "fset.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -48,11 +47,11 @@
 #define P_EL_RELMOVE 2
 
 /* latching relay pulse length in 200ms slow frames */
-#define LATCH_PULSE_LEN	 2
+#define LATCH_PULSE_LEN 2
 /* time (slow frames) to keep power off when power cycling devices */
-#define PCYCLE_HOLD_LEN	 20
+#define PCYCLE_HOLD_LEN 20
 /* time (in slow frames) to suppress ADC card watchdog, to induce reset */
-#define	RESET_ADC_LEN	 80
+#define RESET_ADC_LEN 80
 
 #define PREV_STATUS_FILE "/data/etc/spider/pcm.prev_status"
 
@@ -65,13 +64,13 @@ struct GainStruct {
 };
 
 // used for pivot loop gains
-struct PivGainStruct { 
+struct PivGainStruct {
   unsigned short int V_RW; // prop to RW velocity
   unsigned short int V_AZ; // prop to gondola az speed
   unsigned short int P_RW; // prop to RW position (integrated velocity)
   unsigned short int T_RW; // prop to gondola az accel
   unsigned short int V_REQ; // prop to gondoal az speed *request*
-  double SP; // RW velocity Set Point 
+  double SP; // RW velocity Set Point
 };
 
 #define ACTBUS_FM_SLEEP  0
@@ -95,25 +94,25 @@ struct PivGainStruct {
 #define XYSTAGE_SCAN   3
 #define XYSTAGE_RASTER 4
 
-#define HWPR_PANIC	0
-#define HWPR_SLEEP	1
-#define HWPR_GOTO	2
-#define HWPR_JUMP	3
-#define HWPR_STEP	4
-#define HWPR_REPEAT	5
-#define HWPR_GOTO_I	6
-#define HWPR_GOTO_POT	7
+#define HWPR_PANIC    0
+#define HWPR_SLEEP    1
+#define HWPR_GOTO     2
+#define HWPR_JUMP     3
+#define HWPR_STEP     4
+#define HWPR_REPEAT   5
+#define HWPR_GOTO_I   6
+#define HWPR_GOTO_POT 7
 
-// mode        X     Y    vaz   del    w    h      
+// mode        X     Y    vaz   del    w    h
 // LOCK              el
 // AZEL_GOTO   az    el
 // AZ_SCAN     az    el   vaz
 // DRIFT                  vaz   vel
 // RADEC_GOTO  ra    dec
-// VCAP*       ra    dec  vaz   vel    r         
-// CAP*        ra    dec  vaz   elstep r        
-// BOX*        ra    dec  vaz   elstep w    h    
-// SPIDER      ra    dec        elstep                 
+// VCAP*       ra    dec  vaz   vel    r
+// CAP*        ra    dec  vaz   elstep r
+// BOX*        ra    dec  vaz   elstep w    h
+// SPIDER      ra    dec        elstep
 // SINE        az    el                w
 
 // *not used for Spider
@@ -141,8 +140,8 @@ struct PointingModeStruct {
   int Nscans;  // number of half-scans per el step in SPIDER mode
   int Nsteps;  // total number of el steps in SPIDER mode
   int new_spider; // set to 1 if a new, distinct spider scan is commanded
-  double overshoot_band; // width of turn around zone for Spider and Sine scans 
-  double el_step; // size of el microstep used by Spider scan. 
+  double overshoot_band; // width of turn around zone for Spider and Sine scans
+  double el_step; // size of el microstep used by Spider scan.
                   // Is equal to del iff gondola is in Spider scan mode.
   unsigned short is_turn_around; // flag to indicate we're in a scan turn around
 };
@@ -200,11 +199,11 @@ struct SCCommandData {
 };
 
 struct TableStruct {
-  struct GainStruct tableGain;	//PID
+  struct GainStruct tableGain; //PID
   double vel;
   double pos;
   double move;
-  double mode;		//0=track, 1=move to pos, 2=relative move
+  double mode;  //0=track, 1=move to pos, 2=relative move
 };
 
 /* This structure is now also used by the MCE command passthrough.  Be careful
@@ -226,7 +225,7 @@ enum SyncParam {
   fr,
   nr,
   none
-}; 
+};
 
 struct CommandDataStruct {
   unsigned short command_count;
@@ -247,7 +246,7 @@ struct CommandDataStruct {
   unsigned short int at_float;
   unsigned int tdrss_bw;
   unsigned int iridium_bw;
-  
+
   enum {vtx_isc, vtx_osc, vtx_bsc} vtx_sel[2];
 
   //struct GainStruct ele_gain;
@@ -257,7 +256,7 @@ struct CommandDataStruct {
     double pulse_port;
     double pulse_starboard;
     int manual_pulses;
-  } ele_gain; 
+  } ele_gain;
 
 
   struct {
@@ -317,7 +316,7 @@ struct CommandDataStruct {
     struct latch_pulse hwp;
     int hk_preamp_off;
   } ifpower;
-  
+
   unsigned short disable_az;
   unsigned short disable_el;
   unsigned short force_el;
@@ -369,7 +368,7 @@ struct CommandDataStruct {
   double mag_az_trim;
   double dgps_az_trim;
   double pss_az_trim;
-       
+
   double cal_off_pss1;
   double cal_off_pss2;
   double cal_off_pss3;
@@ -399,11 +398,11 @@ struct CommandDataStruct {
 
     bool auto_cycle_on;
     bool force_cycle;
-    
+
     bool pump_servo_on;
     double pump_servo_low;
     double pump_servo_high;
-    
+
     struct RTDStruct cernox;
     struct RTDStruct ntd;
   } hk[6];    //one per insert
@@ -508,8 +507,8 @@ struct CommandDataStruct {
 
   unsigned short questionable_behaviour;
 
-  int fset_num; /* current field set number */
-  struct fset fset; /* the field set itself */
+  int bset_num; /* current bolo set number */
+  int fset_num; /* current OTH set number */
 
   /* commands to be relayed to the MCE computers */
   int mcecmd_index;

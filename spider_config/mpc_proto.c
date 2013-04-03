@@ -180,7 +180,7 @@ size_t mpc_compose_bset(const int16_t *set, int set_len, uint16_t num,
  * RRCTZZNN...
  *
  * where
- * 
+ *
  * R = 16-bit protocol revision
  * C = 'C', indicating command packet
  * T = 'm' or 's' indicating single or multiword command
@@ -260,7 +260,7 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
   return *ptr;
 }
 
-/* decompose a command into the ScheduleEvent struct.  returns non-zero on 
+/* decompose a command into the ScheduleEvent struct.  returns non-zero on
  * error */
 int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
     const char *data)
@@ -396,7 +396,7 @@ int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
 
 int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
     uint16_t bset_num, int set_len[NUM_MCE], int *bad_bset_count,
-    uint32_t *framenum, const char *peer, int port)
+    const char *peer, int port)
 {
   /* check len */
   if (len < 12) {

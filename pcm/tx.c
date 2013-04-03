@@ -1,7 +1,7 @@
 /* mcp: the Spider master control program
  *
  * tx.c writes data from mcp to the nios (bbc) to include it in frames
- * 
+ *
  * This software is copyright (C) 2002-2011 University of Toronto
  *
  * mcp is free software; you can redistribute it and/or modify
@@ -22,15 +22,6 @@
 
 /* tx.c */
 
-/* NB: As of 7 Sep 2003 this file has been split up into four pieces:
- *
- * auxiliary.c: Auxiliary controls: Lock Motor, Pumps, Electronics Heat, ISC
- * hk.c:        Housekeeping, Bias, and Cryo controls
- * motors.c:    Motor commanding and Scan modes
- * tx.c:        Pointing data writeback, ADC sync, and standard Tx frame control
- *
- * -dvw */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -49,6 +40,8 @@
 #include "chrgctrl.h"
 #include "sip.h"
 #include "hwpr.h"
+#include "mpc_proto.h"
+#include "mceserv.h"
 
 #include "flcdataswap.h"
 
@@ -94,7 +87,7 @@ void WriteMot(int TxIndex);
 double calcVSerRW(void);
 
 /* in sc.cpp */
-void cameraFields();        
+void cameraFields();
 
 /* in table.cpp */
 void updateTableSpeed();
@@ -165,7 +158,7 @@ static void WriteAux(void)
   int i_point;
   struct timeval tv;
   struct timezone tz;
-  
+
   unsigned short mccstatus;
 
   static int firsttime = 1;
@@ -231,14 +224,17 @@ static void WriteAux(void)
   if (StartupVeto>0) {
     InCharge = 0;
   } else {
-    InCharge = !(BitsyIAm
-	^ (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] & 0x1));
+    InCharge = !(BitsyIAm ^
+        (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] &
+         0x1));
   }
   if (InCharge != incharge && InCharge) {
-    bprintf(info, "System: I, %s, have gained control.\n", BitsyIAm ? "Bitsy" : "Itsy");
+    bprintf(info, "System: I, %s, have gained control.\n", BitsyIAm ? "Bitsy"
+        : "Itsy");
     CommandData.actbus.force_repoll = 1;
   } else if (InCharge != incharge) {
-    bprintf(info, "System: I, %s, have lost control.\n", BitsyIAm ? "Bitsy" : "Itsy");
+    bprintf(info, "System: I, %s, have lost control.\n", BitsyIAm ? "Bitsy"
+        : "Itsy");
   }
 
   incharge = InCharge;
@@ -254,7 +250,7 @@ static void WriteAux(void)
   WriteData(tMbFlcAddr, CommandData.temp3, NIOS_QUEUE);
   WriteData(tCpuMeFlcAddr, CommandData.temp2, NIOS_QUEUE);
   myData->t_cpu = CommandData.temp2;
-  
+
   WriteData(dfMeFlcAddr, (CommandData.df > 65535) ? 65535 : CommandData.df, NIOS_QUEUE);
   myData->df = (CommandData.df > 65535) ? 65535 : CommandData.df;
   
@@ -272,17 +268,17 @@ static void WriteAux(void)
     WriteData(timeoutMeAddr, 0, NIOS_QUEUE);
     myData->timeout = 0;
   }
-    
+
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
   WriteData(bbcFifoSizeAddr, CommandData.bbcFifoSize, NIOS_QUEUE);
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
   WriteData(rateTdrssAddr, CommandData.tdrss_bw, NIOS_QUEUE);
   WriteData(rateIridiumAddr, CommandData.iridium_bw, NIOS_QUEUE);
 
-  WriteData(statusEthAddr, 
+  WriteData(statusEthAddr,
        (EthernetSC[0] & 0x3) +
-       ((EthernetSC[1] & 0x3) << 2) + 
-       ((EthernetSC[2] & 0x3) << 4), 
+       ((EthernetSC[1] & 0x3) << 2) +
+       ((EthernetSC[2] & 0x3) << 4),
        NIOS_QUEUE);
 
   WriteCalData(frameIntBbcAddr, CommandData.bbcIntFrameRate, NIOS_QUEUE);
@@ -299,7 +295,7 @@ static void WriteAux(void)
       NIOS_QUEUE);
   WriteData(fsetAddr, CommandData.fset_num, NIOS_QUEUE);
 
-  mccstatus =        
+  mccstatus =
     (BitsyIAm ? 0x1 : 0x0) +                 //0x01
     (CommandData.at_float ? 0x2 : 0x0) +     //0x02
     (CommandData.bbcIsExt ? 0x4 : 0x0) +     //0x04
@@ -313,7 +309,7 @@ static void WriteAux(void)
   } else {
     mccstatus |= ((CommandData.lat_range & 0x3) << 5);
   }
-  
+
   WriteData(statusMCCAddr, mccstatus,
        NIOS_FLUSH);
   
@@ -330,6 +326,35 @@ static void WriteAux(void)
   WriteData(lastOtherCmdAddr, otherData.last_command, NIOS_QUEUE);
   WriteData(countOtherCmdAddr, otherData.command_count, NIOS_QUEUE);
   
+}
+
+/* write slow MCE data */
+static void WriteMCESlow(void)
+{
+  static unsigned int mux = 0;
+
+  static int firsttime = 1;
+  static struct NiosStruct *mceTxmuxAddr;
+  static struct NiosStruct *micTimeAddr;
+  static struct NiosStruct *micFreeAddr;
+  static struct NiosStruct *dataModeAddr;
+
+  int ind = GETREADINDEX(mce_slow_index[mux]);
+
+  if (firsttime) {
+    firsttime = 0;
+    micTimeAddr = GetNiosAddr("mic_time");
+    micFreeAddr = GetNiosAddr("mic_free");
+    dataModeAddr = GetNiosAddr("data_mode");
+    mceTxmuxAddr = GetNiosAddr("mce_txmux");
+  }
+
+  WriteData(dataModeAddr, mce_slow_dat[mux][ind].data_mode, NIOS_QUEUE);
+  WriteData(micTimeAddr, mce_slow_dat[mux][ind].time, NIOS_QUEUE);
+  WriteData(micFreeAddr, mce_slow_dat[mux][ind].df, NIOS_QUEUE);
+
+  WriteData(mceTxmuxAddr, mux, NIOS_FLUSH);
+  mux = (mux + 1) % NUM_MCE;
 }
 
 void WriteChatter (int index)
@@ -363,8 +388,10 @@ void WriteChatter (int index)
       break;
   }
 
-  chat += (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2] & 0x7F);
-  chat += (unsigned int)((chatter_buffer.msg[chatter_buffer.reading][(index * 2) + 1]) & 0x7F) << 8;
+  chat += (unsigned int)(chatter_buffer.msg[chatter_buffer.reading][index * 2] &
+      0x7F);
+  chat += (unsigned int)((chatter_buffer.msg[chatter_buffer.reading][(index * 2)
+        + 1]) & 0x7F) << 8;
 
   if (index == (FAST_PER_SLOW - 1))
   {
@@ -381,7 +408,7 @@ void WriteChatter (int index)
 /* power cycle gyros - if masked for 1s                        */
 /*                and- hasn't been power cycled in the last 25s */
 /***************************************************************/
-#define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Slow Frames */ 
+#define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Slow Frames */
 #define GYRO_PCYCLE_TIMEOUT 125 /* 25 sec */
 void SetGyroMask (void) {
   static struct NiosStruct* maskGyAddr;
@@ -407,16 +434,16 @@ void SetGyroMask (void) {
       GyroMask &= ~(0x01 << i);
       t_mask[i] +=1;
       if (t_mask[i] > MASK_TIMEOUT) {
-	if (wait[i] == 0) {
-	  CommandData.power.gyro_off_auto[j] = PCYCLE_HOLD_LEN;
-	  wait[i] = GYRO_PCYCLE_TIMEOUT;
-	}
+        if (wait[i] == 0) {
+          CommandData.power.gyro_off_auto[j] = PCYCLE_HOLD_LEN;
+          wait[i] = GYRO_PCYCLE_TIMEOUT;
+        }
       }
     }
     else if ((CommandData.gymask & (0x01 << i)) == 0 ) {
       GyroMask &= ~(0x01 << i);
     } else {
-      GyroMask |= 0x01 << i;	
+      GyroMask |= 0x01 << i;
       t_mask[i] = 0;
     }
 
@@ -627,7 +654,7 @@ static void StoreData(int index)
 
   /* Motor data read out over serial threads in motors.c */
   static struct NiosStruct *velSerRWAddr;
-//  static struct NiosStruct *tMCRWAddr; // JAS--afaik, no temp. reading avail. 
+//  static struct NiosStruct *tMCRWAddr; // JAS--afaik, no temp. reading avail.
                                          // from AMC controller
   static struct NiosStruct *resRWAddr;
   static struct NiosStruct *iSerRWAddr;
@@ -839,11 +866,11 @@ static void StoreData(int index)
 
   //WriteData(velRWAddr,
   //    ((long int)(RWMotorData[i_rw_motors].vel_rw/4.0*DEG2I)), NIOS_QUEUE);
- 
+
   //WriteCalData(velSerRWAddr, RWMotorData[i_rw_motors].dps_rw, NIOS_QUEUE);
   WriteCalData(velSerRWAddr, calcVSerRW(), NIOS_QUEUE);
 // WriteData(elRawEncAddr,
-   //   ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
+   //  ((long int)(ElevMotorData[i_elev_motors].enc_raw_el*DEG2I)), NIOS_QUEUE);
   WriteData(resRWAddr, RWMotorData[i_rw_motors].res_rw*DEG2I, NIOS_QUEUE);
 
   /*************************************************
@@ -864,19 +891,31 @@ static void StoreData(int index)
 
   /********* PSS data *************/
   WriteData(azrawPssAddr, PointingData[i_point].pss_azraw * DEG2I, NIOS_QUEUE);
-  WriteData(azrawPss1Addr, PointingData[i_point].pss1_azraw * DEG2I, NIOS_QUEUE);
-  WriteData(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I, NIOS_QUEUE);
-  WriteData(azrawPss3Addr, PointingData[i_point].pss3_azraw * DEG2I, NIOS_QUEUE);
-  WriteData(azrawPss4Addr, PointingData[i_point].pss4_azraw * DEG2I, NIOS_QUEUE);
-  WriteData(azrawPss5Addr, PointingData[i_point].pss5_azraw * DEG2I, NIOS_QUEUE);
-  WriteData(azrawPss6Addr, PointingData[i_point].pss6_azraw * DEG2I, NIOS_QUEUE);
+  WriteData(azrawPss1Addr, PointingData[i_point].pss1_azraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(azrawPss3Addr, PointingData[i_point].pss3_azraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(azrawPss4Addr, PointingData[i_point].pss4_azraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(azrawPss5Addr, PointingData[i_point].pss5_azraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(azrawPss6Addr, PointingData[i_point].pss6_azraw * DEG2I,
+      NIOS_QUEUE);
   WriteData(elrawPssAddr, PointingData[i_point].pss_elraw * DEG2I, NIOS_QUEUE);
-  WriteData(elrawPss1Addr, PointingData[i_point].pss1_elraw * DEG2I, NIOS_QUEUE);
-  WriteData(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I, NIOS_QUEUE);
-  WriteData(elrawPss3Addr, PointingData[i_point].pss3_elraw * DEG2I, NIOS_QUEUE);
-  WriteData(elrawPss4Addr, PointingData[i_point].pss4_elraw * DEG2I, NIOS_QUEUE);
-  WriteData(elrawPss5Addr, PointingData[i_point].pss5_elraw * DEG2I, NIOS_QUEUE);
-  WriteData(elrawPss6Addr, PointingData[i_point].pss6_elraw * DEG2I, NIOS_QUEUE);
+  WriteData(elrawPss1Addr, PointingData[i_point].pss1_elraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(elrawPss3Addr, PointingData[i_point].pss3_elraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(elrawPss4Addr, PointingData[i_point].pss4_elraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(elrawPss5Addr, PointingData[i_point].pss5_elraw * DEG2I,
+      NIOS_QUEUE);
+  WriteData(elrawPss6Addr, PointingData[i_point].pss6_elraw * DEG2I,
+      NIOS_QUEUE);
   WriteData(snrPss1Addr, PointingData[i_point].pss1_snr * 1000., NIOS_QUEUE);
   WriteData(snrPss2Addr, PointingData[i_point].pss2_snr * 1000., NIOS_QUEUE);
   WriteData(snrPss3Addr, PointingData[i_point].pss3_snr * 1000., NIOS_QUEUE);
@@ -905,7 +944,8 @@ static void StoreData(int index)
   WriteData(OffsetIFelGYAddr,
       (signed int)(PointingData[i_point].offset_ifel_gy * 32768.), NIOS_QUEUE);
   WriteData(OffsetIFrollGYAddr,
-      (signed int)(PointingData[i_point].offset_ifroll_gy * 32768.), NIOS_QUEUE);
+      (signed int)(PointingData[i_point].offset_ifroll_gy * 32768.),
+      NIOS_QUEUE);
   WriteData(OffsetIFyawGYAddr,
       (signed int)(PointingData[i_point].offset_ifyaw_gy * 32768.), NIOS_QUEUE);
   WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2LI),
@@ -935,10 +975,14 @@ static void StoreData(int index)
       (unsigned int)((PointingData[i_point].dgps_az  +
                       CommandData.dgps_az_trim) * DEG2I), NIOS_QUEUE);
   WriteData(dgpsSigmaAddr,
-  (((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I))>65535)?65535:((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I)), NIOS_QUEUE);
+      (((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I)) > 65535)
+      ? 65535 : ((unsigned int)(PointingData[i_point].dgps_sigma * DEG2I)),
+      NIOS_QUEUE);
   WriteData(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I, NIOS_QUEUE);
-  WriteData(dgpsCovLimAddr, CommandData.dgps_cov_limit*32768.0/100.0, NIOS_QUEUE);
-  WriteData(dgpsAntsLimAddr, CommandData.dgps_ants_limit*32768.0/100.0, NIOS_QUEUE);
+  WriteData(dgpsCovLimAddr, CommandData.dgps_cov_limit*32768.0/100.0,
+      NIOS_QUEUE);
+  WriteData(dgpsAntsLimAddr, CommandData.dgps_ants_limit*32768.0/100.0,
+      NIOS_QUEUE);
   WriteData(azSunAddr, (unsigned int)(PointingData[i_point].sun_az*DEG2I),
       NIOS_QUEUE);
   WriteData(elSunAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
@@ -960,10 +1004,12 @@ static void StoreData(int index)
       (int)(PointingData[i_point].v_az * 32768.0/20.0), NIOS_QUEUE);
 
   /************* Pointing mode fields *************/
-  WriteCalData(slewVetoAddr, (CommandData.pointing_mode.nw) / (ACSData.bbc_rate),
+  WriteCalData(slewVetoAddr, (CommandData.pointing_mode.nw)
+      / (ACSData.bbc_rate), NIOS_QUEUE);
+  WriteCalData(svetoLenAddr, (CommandData.slew_veto) / (ACSData.bbc_rate),
       NIOS_QUEUE);
-  WriteCalData(svetoLenAddr, (CommandData.slew_veto) / (ACSData.bbc_rate), NIOS_QUEUE);
-  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*10.0*32768.0), NIOS_QUEUE);
+  WriteData(dithStepPAddr, (int)(CommandData.pointing_mode.dith*10.0*32768.0),
+      NIOS_QUEUE);
   WriteData(modePAddr, (int)(CommandData.pointing_mode.mode), NIOS_QUEUE);
   if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) ||
       (CommandData.pointing_mode.mode == P_AZ_SCAN))
@@ -1019,7 +1065,8 @@ static void StoreData(int index)
   WriteData(dgpsLonAddr, (int)(DGPSPos[i_dgps].lon * DEG2I), NIOS_QUEUE);
   WriteData(dgpsAltAddr, DGPSPos[i_dgps].alt, NIOS_QUEUE);
   WriteData(dgpsSpeedAddr, DGPSPos[i_dgps].speed*100, NIOS_QUEUE);
-  WriteData(dgpsDirAddr, (unsigned int)DGPSPos[i_dgps].direction*DEG2I, NIOS_QUEUE);
+  WriteData(dgpsDirAddr, (unsigned int)DGPSPos[i_dgps].direction*DEG2I,
+      NIOS_QUEUE);
   WriteData(dgpsClimbAddr, DGPSPos[i_dgps].climb*100, NIOS_QUEUE);
   WriteData(dgpsNSatAddr, DGPSPos[i_dgps].n_sat, NIOS_QUEUE);
 
@@ -1056,19 +1103,21 @@ static void StoreData(int index)
 //            NIOS_QUEUE);
   //WriteData(stat2ElAddr,((ElevMotorData[i_elev_motors].status & 0xffff0000)>> 16),NIOS_QUEUE);
   //WriteData(faultElAddr,ElevMotorData[i_elev_motors].fault_reg,NIOS_QUEUE);
-  WriteData(iSerPivAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,NIOS_QUEUE);
+  WriteData(iSerPivAddr,PivotMotorData[i_pivot_motors].current*32768.0/20.0,
+      NIOS_QUEUE);
   WriteData(statDrPivAddr,(PivotMotorData[i_pivot_motors].db_stat & 0xff)
-                 +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8),NIOS_QUEUE);
+      +((PivotMotorData[i_pivot_motors].dp_stat & 0xff)<< 8), NIOS_QUEUE);
   WriteData(statS1PivAddr,PivotMotorData[i_pivot_motors].ds1_stat,NIOS_QUEUE);
   //WriteData(velSerPivAddr,PivotMotorData[i_pivot_motors].dps_piv,NIOS_QUEUE);
-  WriteCalData(velSerPivAddr, PivotMotorData[i_pivot_motors].dps_piv, 
+  WriteCalData(velSerPivAddr, PivotMotorData[i_pivot_motors].dps_piv,
                NIOS_QUEUE);
   WriteData(resPivAddr,
       PivotMotorData[i_pivot_motors].res_piv*DEG2I, NIOS_QUEUE);
 //  WriteData(infoElAddr,ElevMotorData[i_elev_motors].drive_info,NIOS_QUEUE);
 //  WriteData(driveErrCtsElAddr,ElevMotorData[i_elev_motors].err_count,NIOS_QUEUE);
   WriteData(infoPivAddr,PivotMotorData[i_pivot_motors].drive_info,NIOS_QUEUE);
-  WriteData(driveErrCtsPivAddr,PivotMotorData[i_pivot_motors].err_count,NIOS_QUEUE);
+  WriteData(driveErrCtsPivAddr,PivotMotorData[i_pivot_motors].err_count,
+      NIOS_QUEUE);
   WriteData(verboseRWAddr,CommandData.verbose_rw,NIOS_QUEUE);
   WriteData(verboseElAddr,CommandData.verbose_el,NIOS_QUEUE);
   WriteData(verbosePivAddr,CommandData.verbose_piv,NIOS_QUEUE);
@@ -1162,7 +1211,7 @@ void RawNiosWrite(unsigned int addr, unsigned int data, int flush_flag)
     n = write(bbc_fp, niosData, counter * sizeof(unsigned int));
     if (n < counter * sizeof(unsigned int)) {
       bprintf(warning, "Frame Control: Short write to Nios.");
-    } 
+    }
     counter = 0;
   }
 }
@@ -1202,15 +1251,15 @@ void WriteCalData(struct NiosStruct* addr, double data, int flush_flag)
     if (addr->sign) {   //signed
       if (cal > INT_MAX) cal = INT_MAX;
       else if (cal < INT_MIN) cal = INT_MIN;
-    } else {	      //unsigned
+    } else {      //unsigned
       if (cal > UINT_MAX) cal = UINT_MAX;
       else if (cal < 0) cal = 0;
     }
-  } else {	      //narrow
+  } else {      //narrow
     if (addr->sign) {   //signed
       if (cal > SHRT_MAX) cal = SHRT_MAX;
       else if (cal < SHRT_MIN) cal = SHRT_MIN;
-    } else {	      //unsigned
+    } else {     //unsigned
       if (cal > USHRT_MAX) cal = USHRT_MAX;
       else if (cal < 0) cal = 0;
     }
@@ -1240,7 +1289,7 @@ double ReadCalData(struct BiPhaseStruct* addr)
     if (addr->nios->wide)
       return ((double)(int)ReadData(addr) * addr->nios->m + addr->nios->b);
     else return ((double)(short)ReadData(addr) * addr->nios->m + addr->nios->b);
-  } else {		    //unsigned
+  } else {    //unsigned
     return ((double)ReadData(addr) * addr->nios->m + addr->nios->b);
   }
 }
@@ -1265,6 +1314,7 @@ void UpdateBBCFrame()
     if (!mcp_initial_controls)
       SyncADC();
     HouseKeeping();
+    WriteMCESlow();
     WriteAux();
     SetGyroMask();
     ChargeController();

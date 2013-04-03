@@ -47,9 +47,9 @@ union DerivedUnion {
     char type;                  /* Should = '2' for lincom2 */
     char field[FIELD_LEN] ;     /* Derived Channel Name */
     char source[FIELD_LEN];     /* Source Channel Name */
+    char source2[FIELD_LEN];    /* Source Channel Name */
     double m_c2e;               /* slope */
     double b_e2e;               /* intercept */
-    char source2[FIELD_LEN];    /* Source Channel Name */
     double m2_c2e;              /* slope */
     double b2_e2e;              /* intercept */
   } lincom2;
@@ -58,10 +58,10 @@ union DerivedUnion {
     char text[343];             /* comment */
   } comment;
   struct {
-    char type;			/* should be 'u' for units */
+    char type;                  /* should be 'u' for units */
     char source[FIELD_LEN];     /* the channel we are adding metadata for */
-    char quantity[155];		/* the quantity -eg, "Temperature" */
-    char units[155];		/* the Units -eg "^oC" */
+    char quantity[155];         /* the quantity -eg, "Temperature" */
+    char units[155];            /* the Units -eg "^oC" */
   } units;
   struct {
     char type;                  /* should be 'p' for phase */
@@ -75,19 +75,26 @@ union DerivedUnion {
     char source[FIELD_LEN];     /* Source Channel Name */
     double dividend;            /* Dividend */
   } recip;
-  struct {			/* MULTIPLY or DIVIDE */
-    char type;			/* '*' for multiply, '/' for divide */
+  struct {                      /* MULTIPLY or DIVIDE */
+    char type;                  /* '*' for multiply, '/' for divide */
     char field[FIELD_LEN];      /* Derived Channel Name */
     char source[FIELD_LEN];     /* 1st Source Channel, dividend for divide*/
-    double trash1, trash2;	/* dummy fields, to align with lincom2 */
     char source2[FIELD_LEN];    /* 2nd Source Channel, divisor for divide */
   } math;
+  struct {                      /* MPLEX */
+    char type;                  /* 'x'  for mplex */
+    char field[FIELD_LEN];      /* derived channel name */
+    char source[FIELD_LEN];     /* source channel */
+    char index[FIELD_LEN];      /* multiplex index channel */
+    int value;                  /* mulitplex index value to extract */
+    int max;                    /* max multiplex index range (0 if unknown) */
+  } mplex;
 };
 
 #define DERIVED_EOC_MARKER '!'
 #define LINCOM(f,s,m,b) {.lincom = { 'c' , f , s , m , b }}
-#define LINCOM2(f,s1,m1,b1,s2,m2,b2) {.lincom2 = { '2' , f , s1 , m1 , b1 ,\
-  s2 , m2 , b2 }}
+#define LINCOM2(f,s1,m1,b1,s2,m2,b2) {.lincom2 = { '2' , f, s1, s2, m1, b1 ,\
+  m2 , b2 }}
 #define LINTERP(f,s,l) {.linterp = { 't' , f , s , l }}
 #define BITWORD(f,s,o,l) {.bitword = { 'w' , f , s , o, l }}
 #define BITFIELD(s, ...) {.bitfield = { 'b' , s , { __VA_ARGS__ }}}
@@ -95,8 +102,9 @@ union DerivedUnion {
 #define UNITS(s,q,u) {.units = { 'u' , s , q , u}}
 #define PHASE(f,s,p) {.phase = { 'p', f, s, p }}
 #define RECIP(f,s,d) {.recip = { 'r', f, s, d }}
-#define DIVIDE(f,s1,s2) {.math = { '/', f, s1, 0, 0, s2 }}
-#define MULTIPLY(f,s1,s2) {.math = { '*', f, s1, 0, 0, s2 }}
+#define DIVIDE(f,s1,s2) {.math = { '/', f, s1, s2 }}
+#define MULTIPLY(f,s1,s2) {.math = { '*', f, s1, s2 }}
+#define MPLEX(f,s,i,v,m) {.mplex = { 'x', f, s, i, v, m }}
 #define END_OF_DERIVED_CHANNELS {.comment = { DERIVED_EOC_MARKER , "" }}
 
 #endif

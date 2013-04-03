@@ -1142,7 +1142,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(fset), "Change the field set in use", GR_TELEM, 1,
+  {COMMAND(bset), "Change the bolometer field set in use", GR_TELEM, 1,
+    {
+      {"number", 1, 255, 'i', "BSET_NUM"}
+    }
+  },
+
+  {COMMAND(fset), "Change the OTH field set in use", GR_TELEM, 1,
     {
       {"number", 1, 255, 'i', "FSET_NUM"}
     }

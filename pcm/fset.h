@@ -23,23 +23,35 @@
 #define FSET_H
 
 #include "channels.h" /* for FIELD_LEN */
+#include "tes.h" /* for NUM_MCE */
 #include <stdint.h>
 
-/* maximum number of fields in a field set */
-#define MAX_FSET 100
+/* maximum number of fields in the sets */
+#define MAX_BSET 200 /* if this is more than 255, the type of .im in the
+                        struct bset must also be changed to accomodate */
+#define MAX_FSET 200
 
-/* describes an item in a field set */
-struct fset_item {
-  int16_t bolo; /* < 0 indicates non-bolo */
-  char name[FIELD_LEN]; /* for non-bolos */
+/* set buffers */
+struct bset {
+  int n;
+  int16_t v[MAX_BSET];
+
+  int nm[NUM_MCE]; /* per-MCE counts */
+  int8_t im[NUM_MCE][MAX_BSET]; /* per-MCE reverse lookups */
+  int empties; /* indicating MCEs for which do data will be returned */
 };
 
-/* a field set */
 struct fset {
   int n;
-  struct fset_item *f;
+  char *v[MAX_FSET][FIELD_LEN];
 };
 
-struct fset *read_fset(int i, struct fset *set);
+int read_bset(int i, struct bset *set);
+int read_fset(int i, struct fset *set);
+
+int get_bset(struct bset *local_set);
+void set_bset(const struct bset *local_set, int num);
+int get_fset(struct fset *local_set);
+void set_fset(const struct fset *local_set, int num);
 
 #endif

@@ -71,7 +71,7 @@ int mpc_decompose_slow(struct mpc_slow_data dat[NUM_MCE][3], int ind[NUM_MCE],
 size_t mpc_compose_tes(const uint32_t *data, uint32_t framenum,
     uint16_t bset_num, int nmce, int ntes, const int16_t *tesind, char *buffer);
 int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
-    uint16_t bset_num, int nm[NUM_MCE], int *bad_bset_count, uint32_t *framenum,
-    const char *peer, int port);
+    uint16_t bset_num, int nm[NUM_MCE], int *bad_bset_count, const char *peer,
+    int port);
 
 #endif

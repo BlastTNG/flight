@@ -82,12 +82,29 @@
  *   1.  Derived Channel Name (string)
  *   2.  Source 1 Channel Name (string)
  *   3.  Source 2 Channel Name (string) Result is (Source 1 *,/ Source 2)
- *
+ * o MPLEX: a multiplexed channel.  Arguments:
+ *   1.  Derived Channel Name (string)
+ *   2.  Source Channel Name (string)
+ *   3.  Multiplex index Channel Name (string)
+ *   4.  Value of the Multiplex Index for the derived channel (int)
+ *   5.  Maximum value of the Multiplex Index, or zero if unknown (int)
  *
  * In addition to the derived channels derived below, defile will add the
  * "Nice CPU Values" (to wit: CPU_SEC, CPU_HOUR, etc.), properly offset to the
  * start of the file, to the end of the format file.
  */
+
+/* For demuxing slow MCE data based on mce_txmux.  Argument is the source field
+ * name (ie. "DATA_MODE") produces six derived fields called "DATA_MODE0",
+ * "DATA_MODE1", &c.
+ */
+#define MCESLOW(n) \
+   MPLEX(n "0", n, "mce_txmux", 0, 5), \
+   MPLEX(n "1", n, "mce_txmux", 1, 5), \
+   MPLEX(n "2", n, "mce_txmux", 2, 5), \
+   MPLEX(n "3", n, "mce_txmux", 3, 5), \
+   MPLEX(n "4", n, "mce_txmux", 4, 5), \
+   MPLEX(n "5", n, "mce_txmux", 5, 5)
 
 #define LUT_DIR "/data/etc/spider/"
 
@@ -205,28 +222,28 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("Charge Controller Bitfields"),
 
   BITFIELD("fault_cc1",
-      "F_OVERCURRENT_CC1", 
-      "F_FET_SHORT_CC1", 
-      "F_SOFTWARE_BUG_CC1", 
-      "F_BATT_HVD_CC1", 
-      "F_ARR_HVD_CC1", 
-      "F_DIP_CHANGED_CC1", 
-      "F_SETTINGS_CHNG_CC1", 
-      "F_RTS_SHORT_CC1", 
+      "F_OVERCURRENT_CC1",
+      "F_FET_SHORT_CC1",
+      "F_SOFTWARE_BUG_CC1",
+      "F_BATT_HVD_CC1",
+      "F_ARR_HVD_CC1",
+      "F_DIP_CHANGED_CC1",
+      "F_SETTINGS_CHNG_CC1",
+      "F_RTS_SHORT_CC1",
       "F_RTS_DISCONN_CC1",
       "F_EEPROM_LIM_CC1",
-      "F_SLAVE_TO_CC1" 
+      "F_SLAVE_TO_CC1"
       ),
 
   BITFIELD("alarm_lo_cc1",
-      "A_RTS_OPEN_CC1", 
-      "A_RTS_SHORT_CC1", 
-      "A_RTS_DISCONN_CC1", 
-      "A_TSENSE_OPEN_CC1", 
-      "A_TSENSE_SHORT_CC1", 
-      "A_HITEMP_LIM_CC1", 
-      "A_CURRENT_LIM_CC1", 
-      "A_CURRENT_OFFSET_CC1", 
+      "A_RTS_OPEN_CC1",
+      "A_RTS_SHORT_CC1",
+      "A_RTS_DISCONN_CC1",
+      "A_TSENSE_OPEN_CC1",
+      "A_TSENSE_SHORT_CC1",
+      "A_HITEMP_LIM_CC1",
+      "A_CURRENT_LIM_CC1",
+      "A_CURRENT_OFFSET_CC1",
       "A_BATTSENSE_RNG_CC1",
       "A_BATTSENSE_DISC_CC1",
       "A_UNCALIB_CC1",
@@ -238,35 +255,35 @@ union DerivedUnion DerivedChannels[] = {
       ),
 
  BITFIELD("alarm_hi_cc1",
-      "A_VP12_OFF_CC1",  
-      "C_A_HI_INPUT_LIM_CC1", 
-      "C_A_ADC_MAX_IN_CC1", 
-      "C_A_RESET_CC1", 
+      "A_VP12_OFF_CC1",
+      "C_A_HI_INPUT_LIM_CC1",
+      "C_A_ADC_MAX_IN_CC1",
+      "C_A_RESET_CC1",
       ),
 
   BITFIELD("fault_cc2",
-      "F_OVERCURRENT_CC2", 
-      "F_FET_SHORT_CC2", 
-      "F_SOFTWARE_BUG_CC2", 
-      "F_BATT_HVD_CC2", 
-      "F_ARR_HVD_CC2", 
-      "F_DIP_CHANGED_CC2", 
-      "F_SETTINGS_CHNG_CC2", 
-      "F_RTS_SHORT_CC2", 
+      "F_OVERCURRENT_CC2",
+      "F_FET_SHORT_CC2",
+      "F_SOFTWARE_BUG_CC2",
+      "F_BATT_HVD_CC2",
+      "F_ARR_HVD_CC2",
+      "F_DIP_CHANGED_CC2",
+      "F_SETTINGS_CHNG_CC2",
+      "F_RTS_SHORT_CC2",
       "F_RTS_DISCONN_CC2",
       "F_EEPROM_LIM_CC2",
-      "F_SLAVE_TO_CC2" 
+      "F_SLAVE_TO_CC2"
       ),
 
   BITFIELD("alarm_lo_cc2",
-      "A_RTS_OPEN_CC2", 
-      "A_RTS_SHORT_CC2", 
-      "A_RTS_DISCONN_CC2", 
-      "A_TSENSE_OPEN_CC2", 
-      "A_TSENSE_SHORT_CC2", 
-      "A_HITEMP_LIM_CC2", 
-      "A_CURRENT_LIM_CC2", 
-      "A_CURRENT_OFFSET_CC2", 
+      "A_RTS_OPEN_CC2",
+      "A_RTS_SHORT_CC2",
+      "A_RTS_DISCONN_CC2",
+      "A_TSENSE_OPEN_CC2",
+      "A_TSENSE_SHORT_CC2",
+      "A_HITEMP_LIM_CC2",
+      "A_CURRENT_LIM_CC2",
+      "A_CURRENT_OFFSET_CC2",
       "A_BATTSENSE_RNG_CC2",
       "A_BATTSENSE_DISC_CC2",
       "A_UNCALIB_CC2",
@@ -278,120 +295,120 @@ union DerivedUnion DerivedChannels[] = {
       ),
 
  BITFIELD("alarm_hi_cc2",
-      "A_VP12_OFF_CC2",  
-      "C_A_HI_INPUT_LIM_CC2", 
-      "C_A_ADC_MAX_IN_CC2", 
-      "C_A_RESET_CC2", 
+      "A_VP12_OFF_CC2",
+      "C_A_HI_INPUT_LIM_CC2",
+      "C_A_ADC_MAX_IN_CC2",
+      "C_A_RESET_CC2",
       ),
 
 #endif
 
   BITFIELD("stat_1_el",
-	   "ST_SHORT_CIRC_EL",
-	   "ST_AMP_OVER_T_EL",
-	   "ST_OVER_V_EL",
-	   "ST_UNDER_V_EL",
-	   "",
-	   "ST_FEEDBACK_ERR_EL",
-	   "ST_MOT_PHAS_ERR_EL",
-	   "ST_I_LIMITED_EL",
-	   "ST_VOLT_LIM_EL",
-	   "",
-           "",
-	   "ST_DISAB_HWARE_EL",
-	   "ST_DISAB_SWARE_EL",	
-	   "ST_ATTEMPT_STOP_EL",
-	   "ST_MOT_BREAK_ACT_EL",
-	   "ST_PWM_OUT_DIS_EL"
-	   ),
+      "ST_SHORT_CIRC_EL",
+      "ST_AMP_OVER_T_EL",
+      "ST_OVER_V_EL",
+      "ST_UNDER_V_EL",
+      "",
+      "ST_FEEDBACK_ERR_EL",
+      "ST_MOT_PHAS_ERR_EL",
+      "ST_I_LIMITED_EL",
+      "ST_VOLT_LIM_EL",
+      "",
+      "",
+      "ST_DISAB_HWARE_EL",
+      "ST_DISAB_SWARE_EL",
+      "ST_ATTEMPT_STOP_EL",
+      "ST_MOT_BREAK_ACT_EL",
+      "ST_PWM_OUT_DIS_EL"
+      ),
   BITFIELD("stat_2_el",
-	   "ST_POS_SOFT_LIM_EL",
-	   "ST_NEG_SOFT_LIM_EL",
-	   "ST_FOLLOW_ERR_EL",
-	   "ST_FOLLOW_WARN_EL",
-	   "ST_AMP_HAS_RESET_EL",
-	   "ST_ENCODER_WRAP_EL",
-	   "ST_AMP_FAULT_EL",
-	   "ST_VEL_LIMITED_EL",
-	   "ST_ACCEL_LIMITED_EL",
-	   "",
-	   "",
-	   "ST_IN_MOTION_EL",
-	   "ST_V_OUT_TRACK_W_EL",
-	   "ST_PHASE_NOT_INIT_EL",
-	   "",
-	   ""
-   ),
+      "ST_POS_SOFT_LIM_EL",
+      "ST_NEG_SOFT_LIM_EL",
+      "ST_FOLLOW_ERR_EL",
+      "ST_FOLLOW_WARN_EL",
+      "ST_AMP_HAS_RESET_EL",
+      "ST_ENCODER_WRAP_EL",
+      "ST_AMP_FAULT_EL",
+      "ST_VEL_LIMITED_EL",
+      "ST_ACCEL_LIMITED_EL",
+      "",
+      "",
+      "ST_IN_MOTION_EL",
+      "ST_V_OUT_TRACK_W_EL",
+      "ST_PHASE_NOT_INIT_EL",
+      "",
+      ""
+      ),
   //TODO jamil, you changed the field names, are these bitfields correct?
   BITFIELD("stat_dr_rw",
-	   "ST_SHORT_CIRC_RW",
-	   "ST_AMP_OVER_T_RW",
-	   "ST_OVER_V_RW",
-	   "ST_UNDER_V_RW",
-	   "",
-	   "ST_FEEDBACK_ERR_RW",
-	   "ST_MOT_PHASE_ERR_RW",
-	   "ST_I_LIMITED_RW",
-	   "ST_VOLT_LIM_RW",
-	   "",
-           "",
-	   "ST_DISAB_HWARE_RW",
-	   "ST_DISAB_SWARE_RW",	
-	   "ST_ATTEMPT_STOP_RW",
-	   "ST_MOT_BREAK_ACT_RW",
-	   "ST_PWM_OUT_DISAB_RW"
-   ),
+      "ST_SHORT_CIRC_RW",
+      "ST_AMP_OVER_T_RW",
+      "ST_OVER_V_RW",
+      "ST_UNDER_V_RW",
+      "",
+      "ST_FEEDBACK_ERR_RW",
+      "ST_MOT_PHASE_ERR_RW",
+      "ST_I_LIMITED_RW",
+      "ST_VOLT_LIM_RW",
+      "",
+      "",
+      "ST_DISAB_HWARE_RW",
+      "ST_DISAB_SWARE_RW",
+      "ST_ATTEMPT_STOP_RW",
+      "ST_MOT_BREAK_ACT_RW",
+      "ST_PWM_OUT_DISAB_RW"
+      ),
   BITFIELD("stat_s1_rw",
-	   "ST_POS_SOFT_LIM_RW",
-	   "ST_NEG_SOFT_LIM_RW",
-	   "ST_FOLLOW_ERR_RW",
-	   "ST_FOLLOW_WARN_RW",
-	   "ST_AMP_HAS_RESET_RW",
-	   "ST_ENCODER_WRAP_RW",
-	   "ST_AMP_FAULT_RW",
-	   "ST_VEL_LIMITED_RW",
-	   "ST_ACCEL_LIMITED_RW",
-	   "",
-	   "",
-	   "ST_IN_MOTION_RW",
-	   "ST_V_OUT_TRACK_W_RW",
-	   "ST_PHASE_NOT_INIT_RW",
-	   "",
-	   ""
-   ),
-#if 0	//removed by jamil, TODO resurrect?
+      "ST_POS_SOFT_LIM_RW",
+      "ST_NEG_SOFT_LIM_RW",
+      "ST_FOLLOW_ERR_RW",
+      "ST_FOLLOW_WARN_RW",
+      "ST_AMP_HAS_RESET_RW",
+      "ST_ENCODER_WRAP_RW",
+      "ST_AMP_FAULT_RW",
+      "ST_VEL_LIMITED_RW",
+      "ST_ACCEL_LIMITED_RW",
+      "",
+      "",
+      "ST_IN_MOTION_RW",
+      "ST_V_OUT_TRACK_W_RW",
+      "ST_PHASE_NOT_INIT_RW",
+      "",
+      ""
+      ),
+#if 0 //removed by jamil, TODO resurrect?
   BITFIELD("fault_rw",
-	   "ST_F_CRC_RW",
-	   "ST_F_AD_OFF_RANGE_RW",
-	   "ST_F_SHORT_CIRC_RW",
-	   "ST_F_AMP_OVER_T_RW",
-	   "",
-	   "ST_F_OVER_VOLT_RW",
-	   "ST_F_UNDER_VOLT_RW",
-	   "ST_F_FEEDBACK_ERR_RW",
-	   "ST_F_MOT_PHAS_ERR_RW",
-	   "ST_F_FOLL_ERR_RW",
-	   "ST_F_OVER_CURR_RW"
-	   ),
+      "ST_F_CRC_RW",
+      "ST_F_AD_OFF_RANGE_RW",
+      "ST_F_SHORT_CIRC_RW",
+      "ST_F_AMP_OVER_T_RW",
+      "",
+      "ST_F_OVER_VOLT_RW",
+      "ST_F_UNDER_VOLT_RW",
+      "ST_F_FEEDBACK_ERR_RW",
+      "ST_F_MOT_PHAS_ERR_RW",
+      "ST_F_FOLL_ERR_RW",
+      "ST_F_OVER_CURR_RW"
+      ),
 #endif
   BITFIELD("drive_info_rw",
-	   "DR_INFO_OPEN_RW",
-	   "DR_INFO_RESET_RW",
-	   "DR_INFO_INIT_1_RW",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "DR_INFO_CLOSING_RW"
-   ),
+      "DR_INFO_OPEN_RW",
+      "DR_INFO_RESET_RW",
+      "DR_INFO_INIT_1_RW",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "DR_INFO_CLOSING_RW"
+      ),
   BITWORD("DR_INFO_ERR_RW","drive_info_rw",10,5),
   BITWORD("DR_INFO_DISAB_RW","drive_info_rw",4,2),
   BITWORD("DR_INFO_BDRATE_RW","drive_info_rw",6,2),
@@ -401,23 +418,23 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("DR_INFO_RIO_RW","DR_INFO_RESET_RW",4,0,"DR_INFO_IO_RW",1,0),
 
   BITFIELD("drive_info_el",
-	   "DR_INFO_OPEN_EL",
-	   "DR_INFO_RESET_EL",
-	   "DR_INFO_INIT_1_EL",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "DR_INFO_CLOSING_EL"
-   ),
+      "DR_INFO_OPEN_EL",
+      "DR_INFO_RESET_EL",
+      "DR_INFO_INIT_1_EL",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "DR_INFO_CLOSING_EL"
+      ),
   BITWORD("DR_INFO_ERR_EL","drive_info_el",10,5),
   BITWORD("DR_INFO_DISAB_EL","drive_info_el",4,2),
   BITWORD("DR_INFO_BDRATE_EL","drive_info_el",6,2),
@@ -426,23 +443,23 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("DR_INFO_IO_EL","DR_INFO_OPEN_EL",1,0,"DR_INFO_INIT_1_EL",2,0),
   LINCOM2("DR_INFO_RIO_EL","DR_INFO_RESET_EL",4,0,"DR_INFO_IO_EL",1,0),
   BITFIELD("drive_info_piv",
-	   "DR_INFO_OPEN_PIV",
-	   "DR_INFO_RESET_PIV",
-	   "DR_INFO_INIT_1_PIV",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "",
-	   "DR_INFO_CLOSING_PIV"
-   ),
+      "DR_INFO_OPEN_PIV",
+      "DR_INFO_RESET_PIV",
+      "DR_INFO_INIT_1_PIV",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "DR_INFO_CLOSING_PIV"
+      ),
   BITWORD("DR_INFO_ERR_PIV","drive_info_piv",10,5),
   BITWORD("DR_INFO_DISAB_PIV","drive_info_piv",4,2),
   BITWORD("DR_INFO_BDRATE_PIV","drive_info_piv",6,2),
@@ -451,36 +468,36 @@ union DerivedUnion DerivedChannels[] = {
   LINCOM2("DR_INFO_IO_PIV","DR_INFO_OPEN_PIV",1,0,"DR_INFO_INIT_1_PIV",2,0),
   LINCOM2("DR_INFO_RIO_PIV","DR_INFO_RESET_PIV",4,0,"DR_INFO_IO_PIV",1,0),
   BITFIELD("fault_el",
-	   "ST_F_CRC_EL",
-	   "ST_F_AD_OFF_RANGE_EL",
-	   "ST_F_SHORT_CIRC_EL",
-	   "ST_F_AMP_OVER_T_EL",
-	   "",
-	   "ST_F_OVER_VOLT_EL",
-	   "ST_F_UNDER_VOLT_EL",
-	   "ST_F_FEEDBACK_ERR_EL",
-	   "ST_F_MOT_PHAS_ERR_EL",
-	   "ST_F_FOLL_ERR_EL",
-	   "ST_F_OVER_CURR_EL"
-	   ),
+      "ST_F_CRC_EL",
+      "ST_F_AD_OFF_RANGE_EL",
+      "ST_F_SHORT_CIRC_EL",
+      "ST_F_AMP_OVER_T_EL",
+      "",
+      "ST_F_OVER_VOLT_EL",
+      "ST_F_UNDER_VOLT_EL",
+      "ST_F_FEEDBACK_ERR_EL",
+      "ST_F_MOT_PHAS_ERR_EL",
+      "ST_F_FOLL_ERR_EL",
+      "ST_F_OVER_CURR_EL"
+      ),
   BITFIELD("stat_dr_piv",
-	   "ST_BRIDGE_ENA_PIV",
-	   "ST_DYN_BRAKE_ENA_PIV",
-	   "ST_SHUNT_EN_PIV",
-	   "ST_POS_STOP_ENA_PIV",
-	   "ST_NEG_STOP_ENA_PIV",
-	   "ST_POS_TORQ_INH_PIV",
-	   "ST_NEG_TORQ_INH_PIV",
-	   "ST_EXT_BRAKE_PIV",
-	   "ST_DR_RESET_PIV",
-	   "ST_DR_INTER_ERR_PIV",
-	   "ST_DR_SHORT_CIRC_PIV",
-	   "ST_DR_I_OVERSHOT_PIV",
-	   "ST_DR_UNDER_V_PIV",
-	   "ST_DR_OVER_V_PIV",
-	   "ST_DR_OVER_TEMP_PIV",
-	   ""
-	   ),
+      "ST_BRIDGE_ENA_PIV",
+      "ST_DYN_BRAKE_ENA_PIV",
+      "ST_SHUNT_EN_PIV",
+      "ST_POS_STOP_ENA_PIV",
+      "ST_NEG_STOP_ENA_PIV",
+      "ST_POS_TORQ_INH_PIV",
+      "ST_NEG_TORQ_INH_PIV",
+      "ST_EXT_BRAKE_PIV",
+      "ST_DR_RESET_PIV",
+      "ST_DR_INTER_ERR_PIV",
+      "ST_DR_SHORT_CIRC_PIV",
+      "ST_DR_I_OVERSHOT_PIV",
+      "ST_DR_UNDER_V_PIV",
+      "ST_DR_OVER_V_PIV",
+      "ST_DR_OVER_TEMP_PIV",
+      ""
+      ),
 
   /* internal frame rate (from period) */
   RECIP("RATE_INT_BBC", "FRAME_INT_BBC", 4.e6/384.),
@@ -488,8 +505,8 @@ union DerivedUnion DerivedChannels[] = {
 
   /* gondola thermistor calibration */
 #define T_ACS(tch, vch) \
-    LINTERP(tch, vch, LUT_DIR "thermistor.lut"), \
-    UNITS(tch, "Temperature", "^oC")
+  LINTERP(tch, vch, LUT_DIR "thermistor.lut"), \
+  UNITS(tch, "Temperature", "^oC")
 
   T_ACS("T_RW", "VT_RW"),
 
@@ -505,125 +522,125 @@ union DerivedUnion DerivedChannels[] = {
   /* Housekeeping */
   COMMENT("Housekeeping digital channels"),
   BITFIELD("heat_13_hk",
-	   "HEAT_PUMP_3_HK",
-	   "HEAT_HSW_3_HK",
-	   "HEAT_HTR2_3_HK",
-	   "HEAT_HTR1_3_HK",
-	   "HEAT_SSA_3_HK",
-	   "HEAT_FPHI_3_HK",
-	   "HEAT_HTR3_3_HK",
-	   "",
-	   "HEAT_PUMP_1_HK",
-	   "HEAT_HSW_1_HK",
-	   "HEAT_HTR2_1_HK",
-	   "HEAT_HTR1_1_HK",
-	   "HEAT_SSA_1_HK",
-	   "HEAT_FPHI_1_HK",
-	   "HEAT_HTR3_1_HK",
-	   "",
-	   ),
+      "HEAT_PUMP_3_HK",
+      "HEAT_HSW_3_HK",
+      "HEAT_HTR2_3_HK",
+      "HEAT_HTR1_3_HK",
+      "HEAT_SSA_3_HK",
+      "HEAT_FPHI_3_HK",
+      "HEAT_HTR3_3_HK",
+      "",
+      "HEAT_PUMP_1_HK",
+      "HEAT_HSW_1_HK",
+      "HEAT_HTR2_1_HK",
+      "HEAT_HTR1_1_HK",
+      "HEAT_SSA_1_HK",
+      "HEAT_FPHI_1_HK",
+      "HEAT_HTR3_1_HK",
+      "",
+      ),
 
   BITFIELD("heat_45_hk",
-	   "HEAT_PUMP_5_HK",
-	   "HEAT_HSW_5_HK",
-	   "HEAT_HTR2_5_HK",
-	   "HEAT_HTR1_5_HK",
-	   "HEAT_SSA_5_HK",
-	   "HEAT_FPHI_5_HK",
-	   "HEAT_HTR3_5_HK",
-	   "",
-	   "HEAT_PUMP_4_HK",
-	   "HEAT_HSW_4_HK",
-	   "HEAT_HTR2_4_HK",
-	   "HEAT_HTR1_4_HK",
-	   "HEAT_SSA_4_HK",
-	   "HEAT_FPHI_4_HK",
-	   "HEAT_HTR3_4_HK",
-	   "",
-	   ),
+      "HEAT_PUMP_5_HK",
+      "HEAT_HSW_5_HK",
+      "HEAT_HTR2_5_HK",
+      "HEAT_HTR1_5_HK",
+      "HEAT_SSA_5_HK",
+      "HEAT_FPHI_5_HK",
+      "HEAT_HTR3_5_HK",
+      "",
+      "HEAT_PUMP_4_HK",
+      "HEAT_HSW_4_HK",
+      "HEAT_HTR2_4_HK",
+      "HEAT_HTR1_4_HK",
+      "HEAT_SSA_4_HK",
+      "HEAT_FPHI_4_HK",
+      "HEAT_HTR3_4_HK",
+      "",
+      ),
 
   BITFIELD("heat_26_hk",
-	   "HEAT_PUMP_6_HK",
-	   "HEAT_HSW_6_HK",
-	   "HEAT_HTR2_6_HK",
-	   "HEAT_HTR1_6_HK",
-	   "HEAT_SSA_6_HK",
-	   "HEAT_FPHI_6_HK",
-	   "HEAT_HTR3_6_HK",
-	   "",
-	   "HEAT_PUMP_2_HK",
-	   "HEAT_HSW_2_HK",
-	   "HEAT_HTR2_2_HK",
-	   "HEAT_HTR1_2_HK",
-	   "HEAT_SSA_2_HK",
-	   "HEAT_FPHI_2_HK",
-	   "HEAT_HTR3_2_HK",
-	   "",
-	   ),
-  
+      "HEAT_PUMP_6_HK",
+      "HEAT_HSW_6_HK",
+      "HEAT_HTR2_6_HK",
+      "HEAT_HTR1_6_HK",
+      "HEAT_SSA_6_HK",
+      "HEAT_FPHI_6_HK",
+      "HEAT_HTR3_6_HK",
+      "",
+      "HEAT_PUMP_2_HK",
+      "HEAT_HSW_2_HK",
+      "HEAT_HTR2_2_HK",
+      "HEAT_HTR1_2_HK",
+      "HEAT_SSA_2_HK",
+      "HEAT_FPHI_2_HK",
+      "HEAT_HTR3_2_HK",
+      "",
+      ),
+
   BITFIELD("heat_t_hk",
-	   "HEAT_MT_BOTTOM_T_HK",
-	   "",
-	   "HEAT_VCS1_HX1_T_HK",
-	   "HEAT_VCS2_HX1_T_HK",
-	   "HEAT_VCS1_HX2_T_HK",
-	   "HEAT_VCS2_HX2_T_HK",
-	   "HEAT_SFT_BOTTOM_T_HK",
-	   "",
-	   ),
+      "HEAT_MT_BOTTOM_T_HK",
+      "",
+      "HEAT_VCS1_HX1_T_HK",
+      "HEAT_VCS2_HX1_T_HK",
+      "HEAT_VCS1_HX2_T_HK",
+      "HEAT_VCS2_HX2_T_HK",
+      "HEAT_SFT_BOTTOM_T_HK",
+      "",
+      ),
 
 
-#define NTD_LUT	LUT_DIR "r_ntd.lut"
-#define CNX_LUT	LUT_DIR "r_cernox.lut"
+#define NTD_LUT LUT_DIR "r_ntd.lut"
+#define CNX_LUT LUT_DIR "r_cernox.lut"
 
-//T_HK: Alias for LINTERP that sets UNITS. Use directly for diodes
+  //T_HK: Alias for LINTERP that sets UNITS. Use directly for diodes
 #define T_HK(tch, rch, lut) \
-    LINTERP(tch, rch, lut), \
-    UNITS(tch, "Temperature", "K")
-//P_HK: Alias for LINTERP that sets units. Use directly for pressure sensors
+  LINTERP(tch, rch, lut), \
+  UNITS(tch, "Temperature", "K")
+  //P_HK: Alias for LINTERP that sets units. Use directly for pressure sensors
 #define P_HK(pch, vch, lut) \
-    LINTERP(pch, vch, lut), \
-    UNITS(pch, "Pressure", "psi")
-//NTD_HK, CNX_HK: create fields required to calibrate NTD and CNX thermistors
-//  ch:	  all-caps channel name
-//  i:	  insert number
-//  lut:  filename of lut file converting R [ohm] to T [K]
+  LINTERP(pch, vch, lut), \
+  UNITS(pch, "Pressure", "psi")
+  //NTD_HK, CNX_HK: create fields required to calibrate NTD and CNX thermistors
+  //  ch:   all-caps channel name
+  //  i:    insert number
+  //  lut:  filename of lut file converting R [ohm] to T [K]
 #define NTD_HK(ch, i, lut) \
-    DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_NTD_"#i"_HK"), \
-    LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", NTD_LUT), \
-    UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega"), \
-    T_HK("TR_"#ch"_"#i"_HK", "R_"#ch"_"#i"_HK", lut)
+  DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_NTD_"#i"_HK"), \
+  LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", NTD_LUT), \
+  UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega"), \
+  T_HK("TR_"#ch"_"#i"_HK", "R_"#ch"_"#i"_HK", lut)
 #define NTD_HK_NOLUT(ch, i) \
-    DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_NTD_"#i"_HK"), \
-    LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", NTD_LUT), \
-    UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega")
+  DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_NTD_"#i"_HK"), \
+  LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", NTD_LUT), \
+  UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega")
 #define CNX_HK(ch, i, lut) \
-    DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_CNX_"#i"_HK"), \
-    LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", CNX_LUT), \
-    UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega"), \
-    T_HK("TR_"#ch"_"#i"_HK", "R_"#ch"_"#i"_HK", lut)
+  DIVIDE("XR_"#ch"_"#i"_HK", "VR_"#ch"_"#i"_HK", "V_CNX_"#i"_HK"), \
+  LINTERP("R_"#ch"_"#i"_HK", "XR_"#ch"_"#i"_HK", CNX_LUT), \
+  UNITS("R_"#ch"_"#i"_HK", "Resistance", "\\\\Omega"), \
+  T_HK("TR_"#ch"_"#i"_HK", "R_"#ch"_"#i"_HK", lut)
 
   COMMENT("Housekeeping Cernox Temperature Calibration"),
   // NB: make sure to also set LUT filename in hk.c for FridgeCycle
-  // CNX_HK(STILL,	4, LUT_DIR "c_thelma5_still.lut"),
-  CNX_HK(STILL,	4, LUT_DIR "c_still_4.lut"),
-  CNX_HK(FP,	4, LUT_DIR "X41767.lut"),
-  CNX_HK(STRAP,	4, LUT_DIR "X40799.lut"),
-  
-  CNX_HK(STILL,	3, LUT_DIR "X42401.lut"),  // Thelma 8
-  CNX_HK(FP,	3, LUT_DIR "X80210.lut"),
-  CNX_HK(STRAP,	3, LUT_DIR "X82505.lut"),
-  
+  // CNX_HK(STILL, 4, LUT_DIR "c_thelma5_still.lut"),
+  CNX_HK(STILL, 4, LUT_DIR "c_still_4.lut"),
+  CNX_HK(FP, 4, LUT_DIR "X41767.lut"),
+  CNX_HK(STRAP, 4, LUT_DIR "X40799.lut"),
+
+  CNX_HK(STILL, 3, LUT_DIR "X42401.lut"),  // Thelma 8
+  CNX_HK(FP, 3, LUT_DIR "X80210.lut"),
+  CNX_HK(STRAP, 3, LUT_DIR "X82505.lut"),
+
   COMMENT("Housekeeping NTD Temperature Calibration"),
-  NTD_HK(NTD1,	4, LUT_DIR "x2_ntd1.lut"),
-  NTD_HK(NTD2,	4, LUT_DIR "x2_ntd2.lut"),
-  NTD_HK(NTD3,	4, LUT_DIR "x2_ntd3.lut"),
-  NTD_HK(NTD4,	4, LUT_DIR "x2_ntd4.lut"),
-  
+  NTD_HK(NTD1, 4, LUT_DIR "x2_ntd1.lut"),
+  NTD_HK(NTD2, 4, LUT_DIR "x2_ntd2.lut"),
+  NTD_HK(NTD3, 4, LUT_DIR "x2_ntd3.lut"),
+  NTD_HK(NTD4, 4, LUT_DIR "x2_ntd4.lut"),
+
   NTD_HK_NOLUT(NTD2, 3),
   NTD_HK(NTD3,  3, LUT_DIR "x0_ntd3.lut"),
   NTD_HK_NOLUT(NTD4, 3),
-  
+
   COMMENT("Housekeeping Diode Temperature Calibration"),
   // NB: make sure to also set LUT filename in hk.c for FridgeCycle
   // Theo Run 12: X2 in slot 4 with Thelma 4
@@ -638,7 +655,7 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_AUX_POST_4_HK",  "VD_AUX_POST_4_HK",  LUT_DIR "D77243.lut"),
   T_HK("TD_STOP_4_HK",      "VD_STOP_4_HK",      LUT_DIR "d_curve10.lut"),
   T_HK("TD_SSA_4_HK",       "VD_SSA_4_HK",       LUT_DIR "d_curve10.lut"),
-  
+
   // Run 12: X0 in slot 3 with Thelma 8
   T_HK("TD_CP_3_HK",        "VD_CP_3_HK",        LUT_DIR "d_simonchase.lut"),
   T_HK("TD_PUMP_3_HK",      "VD_PUMP_3_HK",      LUT_DIR "d_simonchase.lut"),
@@ -651,34 +668,34 @@ union DerivedUnion DerivedChannels[] = {
   T_HK("TD_AUX_POST_3_HK",  "VD_AUX_POST_3_HK",  LUT_DIR "D6032429.lut"),
   T_HK("TD_SSA_3_HK",       "VD_SSA_3_HK",       LUT_DIR "d_curve10.lut"),
   T_HK("TD_SPIT_COVER_3_HK","VD_4K_3_HK",        LUT_DIR "D6031960.lut"),
-  
+
   //Theo diode calibrations.
-  // T_HK("TD_00_T_HK",	 "VD_00_HK",	LUT_DIR "d_curve10.lut"), // TODO
-  T_HK("TD_VCS1_BOTTOM_T_HK",	 "VD_01_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_CAPILLARY_T_HK",	 "VD_02_HK",	LUT_DIR "D77232.lut"),
-  T_HK("TD_VCS2_FILT_T_HK",	 "VD_03_HK",	LUT_DIR "d_curve10.lut"),
+  // T_HK("TD_00_T_HK",  "VD_00_HK", LUT_DIR "d_curve10.lut"), // TODO
+  T_HK("TD_VCS1_BOTTOM_T_HK", "VD_01_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_CAPILLARY_T_HK",   "VD_02_HK", LUT_DIR "D77232.lut"),
+  T_HK("TD_VCS2_FILT_T_HK",   "VD_03_HK", LUT_DIR "d_curve10.lut"),
   // This channel is not currently enabled (needs hardware mods)
-  // T_HK("TD_VCS1_TOP_T_HK",	 "VD_04_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_VCS2_BOTTOM_T_HK",	 "VD_05_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_VCS1_FILT_T_HK",	 "VD_06_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_VCS2_TOP2_T_HK",	 "VD_07_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_VCS2_TOP1_T_HK",	 "VD_08_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_MT_BOTLO_T_HK",	 "VD_09_HK",	LUT_DIR "D75551.lut"),
-  T_HK("TD_MT_BOTHI_T_HK",	 "VD_10_HK",	LUT_DIR "D78016.lut"),
-  T_HK("TD_SFT_BOTTOM_T_HK",	 "VD_11_HK",	LUT_DIR "D77239.lut"),
-  T_HK("TD_VCS1_TOP2_T_HK",	 "VD_12_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_MT_TOP_T_HK",	 "VD_13_HK",	LUT_DIR "D78317.lut"),
-  T_HK("TD_VCS2_APERT_T_HK",	 "VD_15_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_VCS1_FLEX_T_HK",	 "VD_16_HK",	LUT_DIR "d_curve10.lut"),
-  T_HK("TD_VCS1_APERT_T_HK",	 "VD_17_HK",	LUT_DIR "d_curve10.lut"),
-  
+  // T_HK("TD_VCS1_TOP_T_HK",  "VD_04_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS2_BOTTOM_T_HK", "VD_05_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS1_FILT_T_HK",   "VD_06_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS2_TOP2_T_HK",   "VD_07_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS2_TOP1_T_HK",   "VD_08_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_MT_BOTLO_T_HK",    "VD_09_HK", LUT_DIR "D75551.lut"),
+  T_HK("TD_MT_BOTHI_T_HK",    "VD_10_HK", LUT_DIR "D78016.lut"),
+  T_HK("TD_SFT_BOTTOM_T_HK",  "VD_11_HK", LUT_DIR "D77239.lut"),
+  T_HK("TD_VCS1_TOP2_T_HK",   "VD_12_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_MT_TOP_T_HK",      "VD_13_HK", LUT_DIR "D78317.lut"),
+  T_HK("TD_VCS2_APERT_T_HK",  "VD_15_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS1_FLEX_T_HK",   "VD_16_HK", LUT_DIR "d_curve10.lut"),
+  T_HK("TD_VCS1_APERT_T_HK",  "VD_17_HK", LUT_DIR "d_curve10.lut"),
+
   //Extra Theo diodes for Run 11
   T_HK("TD_SFT_NOSE_T_HK",    "VD_SPITTOON_1_HK", LUT_DIR "D78318.lut"),
   T_HK("TD_SFT_MID_T_HK",     "VD_EYEPIECE_1_HK", LUT_DIR "d_curve10.lut"),
   T_HK("TD_SFT_RING_T_HK",    "VD_PLATE_1_HK",    LUT_DIR "D75322.lut"),
   T_HK("TD_SFT_TOP_T_HK",     "VD_SNOUT_1_HK",    LUT_DIR "d_curve10.lut"),
   T_HK("TD_SFT_SHIELD_T_HK",  "VD_HSW_1_HK",      LUT_DIR "d_curve10.lut"),
-  
+
   //Pressure sensor calibration
   P_HK("P_MT_VENT_T_HK",  "VP_01_HK",   LUT_DIR "pressure_tube.lut"),
   P_HK("P_SFT_VENT_T_HK", "VP_02_HK",   LUT_DIR "pressure_omega1.lut"),
@@ -686,6 +703,11 @@ union DerivedUnion DerivedChannels[] = {
   /* Field sets */
   BITWORD("FSET_NUM", "fset", 0, 8),
   BITWORD("FSET_SER", "fset", 8, 8),
-  
+
+  /* MCE Slow data */
+  MCESLOW("DATA_MODE"),
+  MCESLOW("MIC_TIME"),
+  MCESLOW("MIC_FREE"),
+
   END_OF_DERIVED_CHANNELS
 };

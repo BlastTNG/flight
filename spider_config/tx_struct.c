@@ -21,42 +21,44 @@
 #include <limits.h>
 #include "channels.h"
 #include "calibrate.h"
+#include "mpc_proto.h"
 #ifdef __MCP__
 #include "camstruct.h"
 #endif
 /* card name to (node number, bus number) mapping */
-#define ACS1_C	 0, 0  /* C denotes a common motherboard node */
-#define ACS1_D	 1, 0  /* D denotes a digital daughter card */
-#define ACS1_A1	 2, 0  /* A deontes a node for analog daughter card */
-#define ACS1_T1	 3, 0  /* T denotes an AD590 thermometry daughter card */
-#define ACS2_C	 4, 0
-#define ACS2_D	 5, 0
-#define ACS2_A1	 6, 0
-#define ACS2_A2	 7, 0
-#define RTD_C	 8, 0
-#define RTD_D	 9, 0
-#define RTD_A1	10, 0
-#define RTD_A2	11, 0
-#define DIOD_C	12, 0
-#define DIOD_A1	13, 0
-#define DIOD_A2	14, 0
-#define DIOD_A3	15, 0 /* swapped with theo, originally 15 */
-#define HWP_C	16, 0
-#define HWP_D	17, 0
-#define HWP_A1  19, 0 /* nodes swapped to change Theo/HWP, originally 18 */
-#define HWP_A2  18, 0 /* nodes swapped to change Theo/HWP, originally 19 */
+#define ACS1_C    0, 0  /* C denotes a common motherboard node */
+#define ACS1_D    1, 0  /* D denotes a digital daughter card */
+#define ACS1_A1   2, 0  /* A deontes a node for analog daughter card */
+#define ACS1_T1   3, 0  /* T denotes an AD590 thermometry daughter card */
+#define ACS2_C    4, 0
+#define ACS2_D    5, 0
+#define ACS2_A1   6, 0
+#define ACS2_A2   7, 0
+#define RTD_C     8, 0
+#define RTD_D     9, 0
+#define RTD_A1   10, 0
+#define RTD_A2   11, 0
+#define DIOD_C   12, 0
+#define DIOD_A1  13, 0
+#define DIOD_A2  14, 0
+#define DIOD_A3  15, 0 /* swapped with theo, originally 15 */
+#define HWP_C    16, 0
+#define HWP_D    17, 0
+#define HWP_A1   19, 0 /* nodes swapped to change Theo/HWP, originally 18 */
+#define HWP_A2   18, 0 /* nodes swapped to change Theo/HWP, originally 19 */
 //TODO could make it possible for LOOPbacks to not need explicit channels
-#define LOOP1	32, 0
-#define LOOP2	33, 0
-#define LOOP3	34, 0
-#define LOOP4	35, 0
-#define LOOP5	36, 0
-#define LOOP6	37, 0
-#define LOOP7	38, 0
-#define LOOP8	39, 0
-#define LOOP9	40, 0
-#define LOOP0	41, 0
-#define DECOM	42, 0
+#define LOOP1    32, 0
+#define LOOP2    33, 0
+#define LOOP3    34, 0
+#define LOOP4    35, 0
+#define LOOP5    36, 0
+#define LOOP6    37, 0
+#define LOOP7    38, 0
+#define LOOP8    39, 0
+#define LOOP9    40, 0
+#define LOOP0    41, 0
+#define LOOP11   42, 0
+#define DECOM    43, 0
 
 /* Analog channel calibrations */
 /* 16/32-bit channels with analog preamps. To Volts */
@@ -89,7 +91,7 @@
 #define U_LA_DEG "Latitude","^o"
 #define U_LO_DEG "Longitude","^o"
 #define U_D_DEG "Direction","^o"
-#define U_V_V	"Voltage","V"
+#define U_V_V   "Voltage","V"
 #define U_I_A   "Current","A"
 #define U_T_MS  "Time","ms"
 #define U_R_O   "Resistance","Ohms"
@@ -248,6 +250,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_16_hk",     'r',  HWP_A2, 32, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_17_hk",     'r',  HWP_A2, 34, CAL32D(         1.0,           0.0), 'U', U_V_V},
 
+  {"mic_time",     'w',  LOOP11, 2, 0.01, MPC_EPOCH, 'U', U_NONE},
+
   END_OF_CHANNELS
 };
 
@@ -336,7 +340,7 @@ struct ChannelStruct SlowChannels[] = {
   {"heat_strap_5_hk", 'w', RTD_D,  22, CALDAC( 0.9997,     -0.0012), 'u',  U_V_V},
   {"heat_fplo_5_hk",'w', RTD_D,  23, CALDAC( 0.9988,     -0.0014), 'u',  U_V_V},
 
-#if 0	  //BLAST-Pol thermometers
+#if 0  //BLAST-Pol thermometers
   /* this is all the inerframe ad590's.*/
   {"t_padcdc_rec",  'r',  RTD_A1,  1, CAL16T(1.0,                    0.0), 'u', U_T_C},
   {"t_pauram_rec",  'r',  RTD_A1,  3, CAL16T(1.0,                    0.0), 'u', U_T_C},
@@ -346,12 +350,12 @@ struct ChannelStruct SlowChannels[] = {
   {"t_port_das",    'r',  RTD_A1, 11, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_port_rec",    'r',  RTD_A1, 13, CAL16T(1.0, 0.0),                    'u', U_T_C},
 //{"t_8_das",       'r',  RTD_A1, 15, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_mot_pump_val",'r',  RTD_A1, 17,  CAL16T(1.0,	    0.0), 'u', U_T_C},
+  {"t_mot_pump_val",'r',  RTD_A1, 17,  CAL16T(1.0,    0.0), 'u', U_T_C},
   {"t_1_prime",     'r',  RTD_A1, 19, CAL16T(1.0, AD590_CALIB_PRIMARY_1),  'u', U_T_C},
   {"t_if_top_back", 'r',  RTD_A1, 21, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_hwpr_mot",    'r',  RTD_A1, 23,  CAL16T(1.0,	    0.0), 'u', U_T_C},
+  {"t_hwpr_mot",    'r',  RTD_A1, 23,  CAL16T(1.0,    0.0), 'u', U_T_C},
   {"t_if_top_frnt", 'r',  RTD_A1, 25, CAL16T(1.0, 0.0),                    'u', U_T_C},
-  {"t_hwpr_feed",   'r',  RTD_A1, 27,  CAL16T(1.0,	    0.0), 'u', U_T_C},
+  {"t_hwpr_feed",   'r',  RTD_A1, 27,  CAL16T(1.0,    0.0), 'u', U_T_C},
   {"t_if_bot_frnt", 'r',  RTD_A1, 29, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_strut_bot",   'r',  RTD_A1, 31, CAL16T(1.0, 0.0),                    'u', U_T_C},
   {"t_strut_side",  'r',  RTD_A1, 33, CAL16T(1.0, 0.0),                    'u', U_T_C},
@@ -544,22 +548,22 @@ struct ChannelStruct SlowChannels[] = {
   {"blob02_f_thebad",'w', LOOP3, 23,                1.0,             0.0, 'u', U_NONE},
   {"blob02_s_thebad",'w', LOOP3, 24,          1.0/100.0,             0.0, 'u', U_NONE},
   {"mapmean_thebad", 'w', LOOP3, 25,                1.0,             0.0, 'u', U_NONE},
-  {"ra_thegood",     'w', LOOP3, 26,	      1.0/100.0,             0.0, 's', U_NONE},
-  {"dec_thegood",    'w', LOOP3, 27,	      1.0/100.0,             0.0, 's', U_NONE},
-  {"roll_thegood",   'w', LOOP3, 28,	      1.0/100.0,             0.0, 's', U_NONE},
-  {"ra_thebad",      'w', LOOP3, 29,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"ra_thegood",     'w', LOOP3, 26,          1.0/100.0,             0.0, 's', U_NONE},
+  {"dec_thegood",    'w', LOOP3, 27,          1.0/100.0,             0.0, 's', U_NONE},
+  {"roll_thegood",   'w', LOOP3, 28,          1.0/100.0,             0.0, 's', U_NONE},
+  {"ra_thebad",      'w', LOOP3, 29,          1.0/100.0,             0.0, 's', U_NONE},
   {"foc_res_thebad", 'w', LOOP3, 30,                1.0,             0.0, 'u', U_NONE},
   /* LOOP3 31-32 are wide */
-  {"dec_thebad",     'w', LOOP3, 33,	      1.0/100.0,             0.0, 's', U_NONE},
-  {"roll_thebad",    'w', LOOP3, 34,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"dec_thebad",     'w', LOOP3, 33,          1.0/100.0,             0.0, 's', U_NONE},
+  {"roll_thebad",    'w', LOOP3, 34,          1.0/100.0,             0.0, 's', U_NONE},
   {"mapsigma_thebad",'w', LOOP3, 35,           1.0/10.0,             0.0, 'u', U_NONE},
   {"move_tol_thebad",'w', LOOP3, 36,                1.0,             0.0, 'u', U_NONE},
   {"exp_int_thebad", 'w', LOOP3, 37,                1.0,             0.0, 'u', U_NONE},
   {"exp_time_thebad",'w', LOOP3, 38,                1.0,             0.0, 'u', U_NONE},
   {"force_thebad",   'w', LOOP3, 39,                1.0,             0.0, 'u', U_NONE},
-  {"ra_theugly",     'w', LOOP3, 40,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"ra_theugly",     'w', LOOP3, 40,          1.0/100.0,             0.0, 's', U_NONE},
   {"dec_theugly",    'w', LOOP3, 41,          1.0/100.0,             0.0, 's', U_NONE},
-  {"roll_theugly",   'w', LOOP3, 42,	      1.0/100.0,             0.0, 's', U_NONE},
+  {"roll_theugly",   'w', LOOP3, 42,          1.0/100.0,             0.0, 's', U_NONE},
   /* LOOP3 43 is unusued */
   /* LOOP3 44-45 are wide */
   {"thresh_thebad",'w',LOOP3, 46,         1.0/1000.0,             0.0, 'u', U_NONE},
@@ -816,9 +820,9 @@ struct ChannelStruct SlowChannels[] = {
   {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"t_set_theugly",     'w', LOOP9, 57,    (100.0/32768.0),             0.0, 'u', U_NONE},  
   {"cov_lim_dgps",   'w', LOOP9, 58,    (100.0/32768.0),             0.0, 'u', U_NONE},
-  {"ant_e_dgps",     'w', LOOP9, 60,	      1.0/100.0,	     0.0, 's',U_NONE},
-  {"ant_n_dgps",     'w', LOOP9, 61,	      1.0/100.0,	     0.0, 's',U_NONE},
-  {"ant_u_dgps",     'w', LOOP9, 62,	      1.0/100.0,	     0.0, 's',U_NONE},
+  {"ant_e_dgps",     'w', LOOP9, 60,          1.0/100.0,         0.0, 's',U_NONE},
+  {"ant_n_dgps",     'w', LOOP9, 61,          1.0/100.0,         0.0, 's',U_NONE},
+  {"ant_u_dgps",     'w', LOOP9, 62,          1.0/100.0,         0.0, 's',U_NONE},
   {"ants_lim_dgps",   'w', LOOP9, 63,    (100.0/32768.0),            0.0, 'u', U_NONE},
   {"frame_int_bbc",  'w', LOOP0,   0,                1.0,            0.0, 'u', U_NONE},
   {"rate_ext_bbc",   'w', LOOP0,   1,      400.0/65535.0,            0.0, 'u', U_F_HZ},
@@ -919,19 +923,19 @@ struct ChannelStruct SlowChannels[] = {
  //{"g_i_el",       'w',  ACS2_D, 21,                1.0,             0.0, 'u', U_NONE},
   {"g_p_az",       'w',  ACS2_D, 23,                1.0,             0.0, 'u', U_NONE},
   {"g_i_az",       'w',  ACS2_D, 24,                1.0,             0.0, 'u', U_NONE},
-  //{"cos_el", 	     'w',  ACS2_D, 25,          1/32768.0,            -1.0, 'u', U_NONE},
-  //{"sin_el", 	     'w',  ACS2_D, 26,          1/32768.0,            -1.0, 'u', U_NONE},
+  //{"cos_el",          'w',  ACS2_D, 25,          1/32768.0,            -1.0, 'u', U_NONE},
+  //{"sin_el",          'w',  ACS2_D, 26,          1/32768.0,            -1.0, 'u', U_NONE},
   {"enc1_offset",  'w',  ACS2_D, 25,            I2DEG,                0.0,  'u', U_P_DEG},
   {"enc2_offset",  'w',  ACS2_D, 26,            I2DEG,                0.0,  'u', U_P_DEG}, 
   {"fault_gy",     'r',  ACS2_D, 15,                1.0,             0.0, 'u', U_NONE},
   {"pwm_el",       'r',   ACS2_D, 20,                 1.0,            0.0, 'u', U_NONE},
   {"p_term_el",    'r',   ACS2_D, 21,               1.0,         -32768.0, 'u', U_NONE},
   {"i_term_el",    'r',   ACS2_D, 22,               1.0,         -32768.0, 'u', U_NONE},
-  {"error_el",     'r',   ACS2_D, 23,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
+  {"error_el",     'r',   ACS2_D, 23,        614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
   {"dac_rw",       'r',   ACS2_D, 24,                 1.0,            0.0, 'u', U_NONE},
   {"p_term_az",    'r',   ACS2_D, 25,                1.0,        -32768.0, 'u', U_NONE},
   {"i_term_az",    'r',   ACS2_D, 26,                1.0,        -32768.0, 'u', U_NONE},
-  {"error_az",     'r',   ACS2_D, 27,	    614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
+  {"error_az",     'r',   ACS2_D, 27,        614.4e-6, 614.4*(-32768.0e-6), 'u', U_NONE},
   {"limit_lock",   'r',   ACS2_D, 30,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
@@ -945,9 +949,9 @@ struct ChannelStruct SlowChannels[] = {
   {"y_mag",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u', U_NONE},
   {"z_mag",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
   {"ifpm_hall",    'r',  ACS2_A1, 19,                1.0,             0.0, 'u', U_NONE},
-  {"trig_thegood", 'r',  ACS2_A1, 23,		CAL16(1.0, 	     0.0), 'u',  U_V_V}, 
-  {"trig_thebad",  'r',  ACS2_A1, 25,		CAL16(1.0, 	     0.0), 'u',  U_V_V}, 
-  {"trig_theugly", 'r',  ACS2_A1, 27,		CAL16(1.0, 	     0.0), 'u',  U_V_V}, 
+  {"trig_thegood", 'r',  ACS2_A1, 23,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
+  {"trig_thebad",  'r',  ACS2_A1, 25,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
+  {"trig_theugly", 'r',  ACS2_A1, 27,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"t_ifel_gy",    'r',  ACS2_A1, 47,        CAL16(50.0, 0.0),     'u',  U_T_C},
   {"trig_s_thegood",'r', ACS2_A1, 51,                1.0,             0.0, 'u', U_NONE},
   {"trig_l_thegood",'r', ACS2_A1, 52,                1.0,             0.0, 'u', U_NONE},
@@ -986,6 +990,13 @@ struct ChannelStruct SlowChannels[] = {
   {"heat_13_hk",   'w',  RTD_D,  50,            1.0,          0.0, 'u', U_NONE},
   {"heat_45_hk",   'w',  RTD_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
+
+  /* slow MCE data -- all these are 6x mulitplexed using the mce_txmux channel
+   */
+  {"mce_txmux",   'w', LOOP11, 0, 1, 0, 'u', U_NONE},
+  {"data_mode",   'w', LOOP11, 1, 1, 0, 'u', U_NONE},
+  /* LOOP11 2-3 are wide */
+  {"mic_free",    'w', LOOP11, 4, (1<<24), 0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };
@@ -1108,7 +1119,7 @@ struct ChannelStruct FastChannels[] = {
   {"el_raw_2_enc", 'r',   ACS2_D, 57,               -I2DEG,           ENC2_OFFSET, 'u', U_P_DEG},
   {"vel_ifel_gy",  'r', ACS2_A1, 45,    CAL16(14.9925037, 0.0), 'u', U_V_DPS},  
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
-  {"dps_table",    'w',    LOOP1, 34,  	     70.0/32767.0,            0.0, 's', U_V_DPS},
+  {"dps_table",    'w',    LOOP1, 34,           70.0/32767.0,            0.0, 's', U_V_DPS},
 
 #endif
   {"res_rw",       'w', LOOP7,  3,     I2DEG,      0.0,      'u',      U_P_DEG},

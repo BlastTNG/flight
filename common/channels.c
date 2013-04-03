@@ -110,6 +110,8 @@ unsigned short slowCount[2] = {0, 0};
 unsigned short slowsPerBusFrame[2] = {0, 0};
 unsigned short fastsPerBusFrame[2] = {SLOW_OFFSET, 1};
 
+unsigned short das_cards = DAS_CARDS;
+
 #ifndef INPUTTER
 unsigned int NiosSpares[FAST_PER_SLOW * 2];
 unsigned int BBCSpares[FAST_PER_SLOW * 2];
@@ -120,14 +122,14 @@ struct ChannelStruct **SlowChList;
 struct ChannelStruct *FastChList;
 #endif
 
-#if DAS_CARDS > 0      //if there are bolometer cards
 #define BOLO_BUS  0    /* bus on which the bolometers live */
-unsigned int boloIndex[DAS_CARDS][DAS_CHS][2];
+unsigned int boloIndex[MAX_DAS_CARDS][DAS_CHS][2];
 unsigned short BoloBaseIndex;
-static struct ChannelStruct BoloChannels[N_FAST_BOLOS];
-#endif
+static struct ChannelStruct BoloChannels[MAX_FAST_BOLOS];
 
-#define SPEC_VERSION "12"
+#define SPEC_VERSION 13
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
 #ifndef INPUTTER
 #  define FREADORWRITE fwrite
 #  define SPECIFICATIONFILEFUNXION WriteSpecificationFile
@@ -137,7 +139,11 @@ static struct ChannelStruct BoloChannels[N_FAST_BOLOS];
 #endif
 void SPECIFICATIONFILEFUNXION(FILE* fp)
 {
-  char versionMagic[6] = "DFI" SPEC_VERSION;
+#ifdef INPUTTER
+  int version = 0;
+  const int n_fast_bolos = das_cards * (DAS_CHS + DAS_CHS / 2);
+#endif
+  char versionMagic[6] = "DFI" STRINGIFY(SPEC_VERSION);
 
   if (FREADORWRITE(&versionMagic, 6, 1, fp) < 1)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
@@ -149,19 +155,16 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
     bputs(fatal, "Spec file too old: version magic not found.\n"
         "To read this file, you will need defile version 2.1\n");
   else {
-    int version = atoi(&versionMagic[3]);
-    if (version == 10)
-      bprintf(fatal, "Unsupported Spec file version %i.\n"
-          "To read this file, you will need defile version 2.4\n", version);
-    if (version == 11)
-      bprintf(fatal, "Unsupported Spec file version: %i.  "
-          "To read this file, you will need defile version 3.3\n", version);
-    if (version != 12)
-      bprintf(fatal, "Unsupported Spec file version: %i.  "
-	  "To read this file you will need a newer version of defile.\n", version);
+    version = atoi(&versionMagic[3]);
+    if (version != SPEC_VERSION)
+      bprintf(fatal, "Unsupported Spec file version: %i (wanted %i).  "
+          "To read this file you will need a different version of defile.\n",
+          version, SPEC_VERSION);
   }
 #endif
 
+  if (FREADORWRITE(&das_cards, sizeof(unsigned short), 1, fp) < 1)
+    bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
   if (FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp) < 1)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
   if (FREADORWRITE(&ccNarrowSlow, sizeof(unsigned short), 1, fp) < 1)
@@ -201,30 +204,30 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
       ccDerived * sizeof(union DerivedUnion));
 
   ccSlow = ccNarrowSlow + ccWideSlow;
-  ccFast = ccNarrowFast + ccWideFast + N_FAST_BOLOS + ccDecom;
+  ccFast = ccNarrowFast + ccWideFast + n_fast_bolos + ccDecom;
   ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
   ccTotal = ccFast + ccSlow;
 #endif
 
   if (FREADORWRITE(WideSlowChannels,
-	sizeof(struct ChannelStruct), ccWideSlow, fp) < ccWideSlow)
+        sizeof(struct ChannelStruct), ccWideSlow, fp) < ccWideSlow)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
   if (FREADORWRITE(SlowChannels,
-	sizeof(struct ChannelStruct), ccNarrowSlow, fp) < ccNarrowSlow)
+        sizeof(struct ChannelStruct), ccNarrowSlow, fp) < ccNarrowSlow)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
   if (FREADORWRITE(WideFastChannels,
-	sizeof(struct ChannelStruct), ccWideFast, fp) < ccWideFast)
+        sizeof(struct ChannelStruct), ccWideFast, fp) < ccWideFast)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
   if (FREADORWRITE(FastChannels,
-	sizeof(struct ChannelStruct), ccNarrowFast, fp) < ccNarrowFast)
+        sizeof(struct ChannelStruct), ccNarrowFast, fp) < ccNarrowFast)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
   if (ccDecom > 0) {
     if (FREADORWRITE(DecomChannels,
-	  sizeof(struct ChannelStruct), ccDecom, fp) < ccDecom)
+          sizeof(struct ChannelStruct), ccDecom, fp) < ccDecom)
       bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
   }
   if (FREADORWRITE(DerivedChannels,
-	sizeof(union DerivedUnion), ccDerived, fp) < ccDerived)
+        sizeof(union DerivedUnion), ccDerived, fp) < ccDerived)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
 
 #ifdef INPUTTER
@@ -246,11 +249,11 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   DiskFrameSize = 2 * DiskFrameWords;
 
 #elif defined VERBOSE
-  bputs(info, "Channels: Wrote version " SPEC_VERSION " specification file.\n");
+  bputs(info, "Channels: Wrote version " STRINGIFY(SPEC_VERSION)
+      " specification file.\n");
 #endif
 }
 
-#if DAS_CARDS > 0
 /************************************************************************/
 /*                                                                      */
 /*    MakeBoloTable: create the bolometer channel table                 */
@@ -267,7 +270,7 @@ static void MakeBoloTable(void) {
   bprintf(info, "Channels: Generating Bolometer Channel Table.\n");
 #endif
 
-  for (i = 0; i < DAS_CARDS; ++i) {
+  for (i = 0; i < das_cards; ++i) {
     if (bolo_node%4 == 0) bolo_node++;  //skip motherboard common nodes
     channel.node = bolo_node++;
     channel.rw = 'r';
@@ -290,7 +293,6 @@ static void MakeBoloTable(void) {
     }
   }
 }
-#endif   //DAS_CARDS > 0
 
 #ifndef INPUTTER
 static struct NiosStruct SetNiosData(const struct ChannelStruct *channel,
@@ -573,6 +575,7 @@ static void BBCAddressCheck(char names[4096][FIELD_LEN], int nn,
  * compute useful parameters */
 static void DoSanityChecks(void)
 {
+  const int n_fast_bolos = das_cards * (DAS_CHS + DAS_CHS / 2);
   int i, j, nn = 0;
   char* fields[2][64][64];
   char names[4096][FIELD_LEN];
@@ -648,14 +651,12 @@ static void DoSanityChecks(void)
   }
   ccNarrowFast = i;
 
-#if DAS_CARDS > 0
-  for (i = 0; i < N_FAST_BOLOS; ++i) {
+  for (i = 0; i < n_fast_bolos; ++i) {
     fastsPerBusFrame[BOLO_BUS]++;
     BBCAddressCheck(names, nn, fields[1], BoloChannels[i].field,
         BoloChannels[i].node, BoloChannels[i].addr);
     nn += 2;
   }
-#endif
   ccNoBolos = ccSlow + ccWideFast + ccNarrowFast;
 
 #ifdef __DECOMD__
@@ -675,7 +676,7 @@ static void DoSanityChecks(void)
   ccDecom = 0;
 #endif
 
-  ccFast = ccWideFast + ccNarrowFast + N_FAST_BOLOS + ccDecom;
+  ccFast = ccWideFast + ccNarrowFast + n_fast_bolos + ccDecom;
   ccTotal = ccFast + ccSlow;
 
   /* Calculate slowsPerBi0Frame */
@@ -712,6 +713,7 @@ static void DoSanityChecks(void)
       case '2': /* lincom2 -- one extra check from lincom */
       case '/': /* divide  -- ditto */
       case '*': /* multiply-- ditto */
+      case 'x': /* mplex */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom2.source2)
             == -1)
           bprintf(fatal, "Channels: Derived channel source %s not found.",
@@ -724,21 +726,21 @@ static void DoSanityChecks(void)
       case 'r': /* recip   -- same checks as lincom */
       case 'c': /* lincom */
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.source) == -1)
-#if DAS_CARDS > 0
           //bolometer channel exception.
           //TODO (BLAST-Pol OK) bolo channels should be searched
-          if ((DerivedChannels[i].lincom.source[0] != 'n' &&
-              DerivedChannels[i].lincom.source[0] != 'N') ||
-              (DerivedChannels[i].lincom.source[3] != 'c' &&
-              DerivedChannels[i].lincom.source[3] != 'C') ||
-              !isdigit(DerivedChannels[i].lincom.source[1]) ||
-              !isdigit(DerivedChannels[i].lincom.source[2]) ||
-              !isdigit(DerivedChannels[i].lincom.source[4]) ||
-              !isdigit(DerivedChannels[i].lincom.source[5]) ||
-              DerivedChannels[i].lincom.source[6] != '\0')
-#endif
+          if (das_cards > 0 && ((DerivedChannels[i].lincom.source[0] != 'n' &&
+                  DerivedChannels[i].lincom.source[0] != 'N') ||
+                (DerivedChannels[i].lincom.source[3] != 'c' &&
+                 DerivedChannels[i].lincom.source[3] != 'C') ||
+                !isdigit(DerivedChannels[i].lincom.source[1]) ||
+                !isdigit(DerivedChannels[i].lincom.source[2]) ||
+                !isdigit(DerivedChannels[i].lincom.source[4]) ||
+                !isdigit(DerivedChannels[i].lincom.source[5]) ||
+                DerivedChannels[i].lincom.source[6] != '\0'))
+          {
             bprintf(fatal, "Channels: Derived channel source %s not found.",
                 DerivedChannels[i].lincom.source);
+          }
 
         if (GetChannelByName(names, nn, DerivedChannels[i].lincom.field) != -1)
           bprintf(fatal, "Channels: Namespace Collision: Duplicate channel "
@@ -809,6 +811,7 @@ static void DoSanityChecks(void)
 /* MakeAddressLookups - fills the nios and biphase address lookup tables */
 void MakeAddressLookups(const char* dump_name)
 {
+  const int n_fast_bolos = das_cards * (DAS_CHS + DAS_CHS / 2);
   int i, mplex, bus, spare_count;
   int slowIndex[2][FAST_PER_SLOW];
 
@@ -816,9 +819,8 @@ void MakeAddressLookups(const char* dump_name)
   struct ChannelStruct EmptyChannel = {"", 'w', -1, -1, -1, 1, 1};
 #endif
 
-#if DAS_CARDS > 0
-  MakeBoloTable();
-#endif
+  if (das_cards > 0)
+    MakeBoloTable();
 
 #ifndef INPUTTER
   DoSanityChecks();
@@ -1005,40 +1007,40 @@ void MakeAddressLookups(const char* dump_name)
     addr[(int)WideFastChannels[i].bus] += 2;
   }
 
-#if DAS_CARDS > 0
+  if (das_cards > 0) {
 #ifdef INPUTTER
-  /* save the location of the first bolometer in the frame so that defile
-   * can calculate the offsets properly when it goes to reconstruct the
-   * bolometers */
-  BoloBaseIndex = BiPhaseAddr + slowsPerBi0Frame + SLOW_OFFSET;
+    /* save the location of the first bolometer in the frame so that defile
+     * can calculate the offsets properly when it goes to reconstruct the
+     * bolometers */
+    BoloBaseIndex = BiPhaseAddr + slowsPerBi0Frame + SLOW_OFFSET;
 #endif
 
-  for (i = 0; i < N_FAST_BOLOS; ++i) {
+    for (i = 0; i < n_fast_bolos; ++i) {
 #ifndef INPUTTER
-    NiosLookup[i + ccNoBolos] = SetNiosData(&BoloChannels[i],
-        addr[(int)BoloChannels[i].bus], 1, 0);
+      NiosLookup[i + ccNoBolos] = SetNiosData(&BoloChannels[i],
+          addr[(int)BoloChannels[i].bus], 1, 0);
 
-    BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos].bbcAddr)].index
-      = NOT_MULTIPLEXED;
-    BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos].bbcAddr)].channel
-      = BiPhaseAddr++;
+      BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos].bbcAddr)].index
+        = NOT_MULTIPLEXED;
+      BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos].bbcAddr)].channel
+        = BiPhaseAddr++;
 #else
-    FastChList[BiPhaseAddr++] = BoloChannels[i];
+      FastChList[BiPhaseAddr++] = BoloChannels[i];
 #endif
 
-    addr[(int)BoloChannels[i].bus]++;
+      addr[(int)BoloChannels[i].bus]++;
+    }
   }
-#endif  //DAS_CARDS > 0
 
   for (i = 0; i < ccDecom; ++i) {
 #ifndef INPUTTER
-    NiosLookup[i + ccNoBolos + N_FAST_BOLOS] = SetNiosData(&DecomChannels[i],
+    NiosLookup[i + ccNoBolos + n_fast_bolos] = SetNiosData(&DecomChannels[i],
         addr[(int)DecomChannels[i].bus], 1, 0);
 
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos
-        + N_FAST_BOLOS].bbcAddr)].index = NOT_MULTIPLEXED;
+        + n_fast_bolos].bbcAddr)].index = NOT_MULTIPLEXED;
     BiPhaseLookup[BI0_MAGIC(NiosLookup[i + ccNoBolos
-        + N_FAST_BOLOS].bbcAddr)].channel = BiPhaseAddr++;
+        + n_fast_bolos].bbcAddr)].channel = BiPhaseAddr++;
 #else
     FastChList[BiPhaseAddr++] = DecomChannels[i];
 #endif
@@ -1132,10 +1134,8 @@ char* FieldToUpper(char* s)
 
 void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
 {
-#if DAS_CARDS > 0
   char field[FIELD_LEN];
   int bolo_node;
-#endif
   char line[1024];
   int i, j;
 
@@ -1204,7 +1204,8 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
       berror(err, "Error writing to format file\n");
     if (strlen(WideSlowChannels[i].quantity)>0) {
       snprintf(line, 1024, "%s/quantity STRING %s\n",
-          FieldToUpper(WideSlowChannels[i].field), WideSlowChannels[i].quantity);
+          FieldToUpper(WideSlowChannels[i].field),
+          WideSlowChannels[i].quantity);
       if (write(fd, line, strlen(line)) < 0)
         berror(err, "Error writing to format file\n");
     }
@@ -1254,7 +1255,8 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
       berror(err, "Error writing to format file\n");
     if (strlen(WideFastChannels[i].quantity)>0) {
       snprintf(line, 1024, "%s/quantity STRING %s\n",
-          FieldToUpper(WideFastChannels[i].field), WideFastChannels[i].quantity);
+          FieldToUpper(WideFastChannels[i].field),
+          WideFastChannels[i].quantity);
       if (write(fd, line, strlen(line)) < 0)
         berror(err, "Error writing to format file\n");
     }
@@ -1277,27 +1279,27 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
       berror(err, "Error writing to format file\n");
   }
 
-#if DAS_CARDS > 0
-  /* bolo channels */
-  strcpy(line, "\n## BOLOMETER:\n");
-  if (write(fd, line, strlen(line)) < 0)
-    berror(err, "Error writing to format file\n");
+  if (das_cards > 0) {
+    /* bolo channels */
+    strcpy(line, "\n## BOLOMETER:\n");
+    if (write(fd, line, strlen(line)) < 0)
+      berror(err, "Error writing to format file\n");
 
-  bolo_node = DAS_START;
-  for (i = 0; i < DAS_CARDS; i++) {
-    bolo_node++;
-    if (bolo_node%4 == 0) bolo_node++;
-    for (j = 0; j < DAS_CHS; j++) {
-      sprintf(field, "n%02dc%02d", bolo_node, j);
-      snprintf(line, 1024,
-          "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
-          FieldToLower(field), FAST_PER_SLOW, FieldToUpper(field),
-          FieldToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
-      if (write(fd, line, strlen(line)) < 0)
-	berror(err, "Error writing to format file\n");
+    bolo_node = DAS_START;
+    for (i = 0; i < das_cards; i++) {
+      bolo_node++;
+      if (bolo_node%4 == 0) bolo_node++;
+      for (j = 0; j < DAS_CHS; j++) {
+        sprintf(field, "n%02dc%02d", bolo_node, j);
+        snprintf(line, 1024,
+            "%-16s RAW    U %d\n%-16s LINCOM 1 %-16s %.12e %.12e\n",
+            FieldToLower(field), FAST_PER_SLOW, FieldToUpper(field),
+            FieldToLower(field), LOCKIN_C2V, LOCKIN_OFFSET);
+        if (write(fd, line, strlen(line)) < 0)
+          berror(err, "Error writing to format file\n");
+      }
     }
   }
-#endif
 
   /* derived channels */
   strcpy(line, "\n## DERIVED CHANNELS:\n");
@@ -1312,11 +1314,17 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
         for (j = 0; j < 16; ++j)
           if (DerivedChannels[i].bitfield.field[j][0]) {
             if (write(fd, line, strlen(line)) < 0)
-	      berror(err, "Error writing to format file\n");
+              berror(err, "Error writing to format file\n");
             snprintf(line, 1024, "%-16s BIT %-16s %i\n",
                 DerivedChannels[i].bitfield.field[j],
                 DerivedChannels[i].bitfield.source, j);
           }
+        break;
+      case 'x': /* mplex */
+        snprintf(line, 1024, "%-16s MPLEX %-16s %-16s %i %i\n",
+            DerivedChannels[i].mplex.field, DerivedChannels[i].mplex.source,
+            DerivedChannels[i].mplex.index, DerivedChannels[i].mplex.value,
+            DerivedChannels[i].mplex.max);
         break;
       case 'c': /* lincom */
         snprintf(line, 1024, "%-16s LINCOM 1 %-16s %.12e %.12e\n",
