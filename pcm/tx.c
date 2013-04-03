@@ -50,6 +50,8 @@
 #include "sip.h"
 #include "hwpr.h"
 
+#include "flcdataswap.h"
+
 #define NIOS_BUFFER_SIZE 100
 
 extern short int BitsyIAm;
@@ -119,21 +121,21 @@ static void WriteAux(void)
 {
   static struct NiosStruct* timeAddr;
   static struct NiosStruct* timeUSecAddr;
-  static struct NiosStruct* diskFreeAddr;
-  static struct NiosStruct* timeoutAddr;
   static struct NiosStruct* rateTdrssAddr;
   static struct NiosStruct* rateIridiumAddr;
   static struct NiosStruct* tChipFlcAddr;
-  static struct NiosStruct* tCpuFlcAddr;
   static struct NiosStruct* tMbFlcAddr;
   static struct NiosStruct* statusMCCAddr;
   static struct BiPhaseStruct* statusMCCReadAddr;
   static struct NiosStruct* bi0FifoSizeAddr;
   static struct NiosStruct* bbcFifoSizeAddr;
   static struct NiosStruct* ploverAddr;
+  
   static struct NiosStruct* statusEthAddr;
+  
   static struct NiosStruct* partsSchedAddr;
   static struct NiosStruct* upslotSchedAddr;
+  
   static struct NiosStruct* frameIntBbcAddr;
   static struct NiosStruct* rateExtBbcAddr;
   static struct NiosStruct* frameExtBbcAddr;
@@ -142,6 +144,22 @@ static void WriteAux(void)
   static struct NiosStruct* bandAzAddr;
   static struct NiosStruct *fsetAddr;
 
+  static struct NiosStruct* timeMeFlcAddr;
+  static struct NiosStruct* dfMeFlcAddr;
+  static struct NiosStruct* timeoutMeAddr;
+  static struct NiosStruct* tCpuMeFlcAddr;
+  static struct NiosStruct* lastMeCmdAddr;
+  static struct NiosStruct* countMeCmdAddr;
+  
+  static struct NiosStruct* timeOtherFlcAddr;
+  static struct NiosStruct* dfOtherFlcAddr;
+  static struct NiosStruct* timeoutOtherAddr;
+  static struct NiosStruct* tCpuOtherFlcAddr;
+  static struct NiosStruct* lastOtherCmdAddr;
+  static struct NiosStruct* countOtherCmdAddr;
+  
+  struct flc_data otherData, *myData;
+  
   static int incharge = -1;
   time_t t;
   int i_point;
@@ -152,17 +170,18 @@ static void WriteAux(void)
 
   static int firsttime = 1;
   if (firsttime) {
+    char buf[128];
     firsttime = 0;
     statusMCCAddr = GetNiosAddr("status_mcc");
     statusMCCReadAddr = ExtractBiPhaseAddr(statusMCCAddr);
 
+    
+    
+    
     tChipFlcAddr = GetNiosAddr("t_chip_flc");
-    tCpuFlcAddr = GetNiosAddr("t_cpu_flc");
     tMbFlcAddr = GetNiosAddr("t_mb_flc");
     timeAddr = GetNiosAddr("time");
     timeUSecAddr = GetNiosAddr("time_usec");
-    diskFreeAddr = GetNiosAddr("disk_free");
-    timeoutAddr = GetNiosAddr("timeout");
     rateTdrssAddr = GetNiosAddr("rate_tdrss");
     rateIridiumAddr= GetNiosAddr("rate_iridium");
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
@@ -171,6 +190,7 @@ static void WriteAux(void)
     statusEthAddr = GetNiosAddr("status_eth");
     partsSchedAddr = GetNiosAddr("parts_sched");
     upslotSchedAddr = GetNiosAddr("upslot_sched");
+    
     frameIntBbcAddr = GetNiosAddr("frame_int_bbc");
     rateExtBbcAddr = GetNiosAddr("rate_ext_bbc");
     frameExtBbcAddr = GetNiosAddr("frame_ext_bbc");
@@ -178,16 +198,41 @@ static void WriteAux(void)
     rateSampAdcAddr = GetNiosAddr("rate_samp_adc");
     bandAzAddr = GetNiosAddr("band_az");
     fsetAddr = GetNiosAddr("fset");
+
+    sprintf(buf, "time_%c_flc", (BitsyIAm) ? 'b' : 'i');
+    timeMeFlcAddr = GetNiosAddr(buf);
+    sprintf(buf, "df_%c_flc", (BitsyIAm) ? 'b' : 'i');
+    dfMeFlcAddr = GetNiosAddr(buf);
+    sprintf(buf, "timeout_%c", (BitsyIAm) ? 'b' : 'i');
+    timeoutMeAddr = GetNiosAddr(buf);
+    sprintf(buf, "t_cpu_%c_flc", (BitsyIAm) ? 'b' : 'i');
+    tCpuMeFlcAddr = GetNiosAddr(buf);
+    sprintf(buf, "last_%c_cmd", (BitsyIAm) ? 'b' : 'i');
+    lastMeCmdAddr = GetNiosAddr(buf);
+    sprintf(buf, "count_%c_cmd", (BitsyIAm) ? 'b' : 'i');
+    countMeCmdAddr = GetNiosAddr(buf);
+    
+    sprintf(buf, "time_%c_flc", (!BitsyIAm) ? 'b' : 'i');
+    timeOtherFlcAddr = GetNiosAddr(buf);
+    sprintf(buf, "df_%c_flc", (!BitsyIAm) ? 'b' : 'i');
+    dfOtherFlcAddr = GetNiosAddr(buf);
+    sprintf(buf, "timeout_%c", (!BitsyIAm) ? 'b' : 'i');
+    timeoutOtherAddr = GetNiosAddr(buf);
+    sprintf(buf, "t_cpu_%c_flc", (!BitsyIAm) ? 'b' : 'i');
+    tCpuOtherFlcAddr = GetNiosAddr(buf);
+    sprintf(buf, "last_%c_cmd", (!BitsyIAm) ? 'b' : 'i');
+    lastOtherCmdAddr = GetNiosAddr(buf);
+    sprintf(buf, "count_%c_cmd", (!BitsyIAm) ? 'b' : 'i');
+    countOtherCmdAddr = GetNiosAddr(buf);
   }
 
+  myData = get_flc_out_data();
+  
   if (StartupVeto>0) {
     InCharge = 0;
   } else {
     InCharge = !(BitsyIAm
 	^ (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] & 0x1));
-  //bprintf(info, "BitsyIAm = %d", BitsyIAm);
-  //bprintf(info, "mcc status bit 1 = %d", (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] & 0x1));
-  //bprintf(info, "InCharge = %d", InCharge);
   }
   if (InCharge != incharge && InCharge) {
     bprintf(info, "System: I, %s, have gained control.\n", BitsyIAm ? "Bitsy" : "Itsy");
@@ -202,13 +247,16 @@ static void WriteAux(void)
 
   WriteData(timeAddr, tv.tv_sec + TEMPORAL_OFFSET, NIOS_QUEUE);
   WriteData(timeUSecAddr, tv.tv_usec, NIOS_QUEUE);
-
+  WriteData(timeMeFlcAddr, tv.tv_sec + TEMPORAL_OFFSET, NIOS_QUEUE);
+  myData->time = tv.tv_sec + TEMPORAL_OFFSET;
+  
   WriteData(tChipFlcAddr, CommandData.temp1, NIOS_QUEUE);
-  WriteData(tCpuFlcAddr, CommandData.temp2, NIOS_QUEUE);
   WriteData(tMbFlcAddr, CommandData.temp3, NIOS_QUEUE);
-
-  WriteData(diskFreeAddr, (CommandData.df > 65535) ? 65535 : CommandData.df,
-      NIOS_QUEUE);
+  WriteData(tCpuMeFlcAddr, CommandData.temp2, NIOS_QUEUE);
+  myData->t_cpu = CommandData.temp2;
+  
+  WriteData(dfMeFlcAddr, (CommandData.df > 65535) ? 65535 : CommandData.df, NIOS_QUEUE);
+  myData->df = (CommandData.df > 65535) ? 65535 : CommandData.df;
   
   WriteData(partsSchedAddr, CommandData.parts_sched&0xffffff, NIOS_QUEUE);
   WriteData(upslotSchedAddr, CommandData.upslot_sched, NIOS_QUEUE);
@@ -218,9 +266,11 @@ static void WriteAux(void)
   t = PointingData[i_point].t;
 
   if (CommandData.pointing_mode.t > t) {
-    WriteData(timeoutAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
+    WriteData(timeoutMeAddr, CommandData.pointing_mode.t - t, NIOS_QUEUE);
+    myData->timeout = CommandData.pointing_mode.t - t;
   } else {
-    WriteData(timeoutAddr, 0, NIOS_QUEUE);
+    WriteData(timeoutMeAddr, 0, NIOS_QUEUE);
+    myData->timeout = 0;
   }
     
   WriteData(bi0FifoSizeAddr, CommandData.bi0FifoSize, NIOS_QUEUE);
@@ -266,6 +316,20 @@ static void WriteAux(void)
   
   WriteData(statusMCCAddr, mccstatus,
        NIOS_FLUSH);
+  
+  WriteData(lastMeCmdAddr, CommandData.last_command, NIOS_QUEUE);
+  WriteData(countMeCmdAddr, CommandData.command_count, NIOS_QUEUE);
+  myData->last_command = CommandData.last_command;
+  myData->command_count = CommandData.command_count;
+  
+  swap_flc_data(&otherData);
+  WriteData(timeOtherFlcAddr, otherData.time, NIOS_QUEUE);
+  WriteData(dfOtherFlcAddr, otherData.df, NIOS_QUEUE);
+  WriteData(timeoutOtherAddr, otherData.timeout, NIOS_QUEUE);
+  WriteData(tCpuOtherFlcAddr, otherData.t_cpu, NIOS_QUEUE);
+  WriteData(lastOtherCmdAddr, otherData.last_command, NIOS_QUEUE);
+  WriteData(countOtherCmdAddr, otherData.command_count, NIOS_QUEUE);
+  
 }
 
 void WriteChatter (int index)

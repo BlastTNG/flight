@@ -49,6 +49,7 @@
 #include "pointing_struct.h"
 #include "starpos.h"
 #include "channels.h"
+#include "flcdataswap.h"
 #include "tx.h"
 #include "hwpr.h"
 
@@ -64,6 +65,9 @@
 #define MCE_RATE ( 25.0e6/(120.0*33.0*41.0) ) // 25 MHz/(rl*nr*fr) ~ 154 Hz
 
 /* Define global variables */
+//flc_ip[0] = bitsy, flc_ip[1] = itsy, so that flc_ip[BitsyIAm] gives other flc
+// so flc_ip[2] = {Bitsy_IP, Itsy_IP}
+const char* flc_ip[2] = {"192.168.1.31", "192.168.1.30"};
 int bbc_fp = -1;
 unsigned int debug = 0;
 short int BitsyIAm;
@@ -1355,6 +1359,8 @@ int main(int argc, char *argv[])
   pthread_create(&hwpr_id, NULL, (void*)&StartHWP, NULL);
   pthread_create(&mce_id, NULL, (void*)&mceserv, NULL);
 
+  start_flc_data_swapper(flc_ip[BitsyIAm]);
+  
   while (1) {
     in_data = read_from_bbc();
 

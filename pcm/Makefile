@@ -18,7 +18,7 @@ EXPT_HEADERS = calibrate.h command_list.h command_struct.h fset.h \
 							 mpc_proto.h pointing_struct.h tes.h
 SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 command_common.h compressstruct.h crc.h derived.h \
-								 ephem_read.h ephem_types.h fir.h lut.h netcmd.h sip.h \
+								 ephem_read.h ephem_types.h fir.h flcdataswap.h lut.h netcmd.h sip.h \
 								 starpos.h udp.h slowdl.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h hwpr.h \
 								mceserv.h mcp.h motorcommand.h motordefs.h phytron.h pyramid.h \
@@ -32,7 +32,7 @@ EXPT_OBJS = command_list.o derived.o tx_struct.o
 # These are only needed by the flight version
 ifndef BOLOTEST
 SHARED_OBJS += camcommunicator.o compressfuncs.o compressionwriter.o crc.o \
-								 ephem_read.o fir.o geomag.o radbox.o starpos.o  slowdl.o
+								 ephem_read.o fir.o flcdataswap.o geomag.o radbox.o starpos.o  slowdl.o
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o drivecommunicator.o \
 								mceserv.o motors.o motorcommand.o pointing.o pyramid.o \
 								sc.o sched.o svd.o sync_comms.o table.o
