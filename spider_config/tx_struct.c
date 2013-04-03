@@ -122,6 +122,8 @@ struct ChannelStruct WideSlowChannels[] = {
   {"frame_theugly",    'w', LOOP9, 50,                1.0,             0.0, 'U', U_NONE},
   {"sec_theugly",      'w', LOOP9, 52,                1.0,             0.0, 'U', U_NONE},
   {"usec_theugly",     'w', LOOP9, 54,                1.0,             0.0, 'U', U_NONE},
+  {"time_b_flc",         'w', LOOP0,  48,                1.0,             0.0, 'U', U_NONE},
+  {"time_i_flc",         'w', LOOP0,  50,                1.0,             0.0, 'U', U_NONE},
   //derived channel time_theugly adds these together
   {"start_1_cycle",  'w', LOOP0,  12,                1.0,            0.0, 'U', U_NONE},
   {"start_2_cycle",  'w', LOOP0,  14,                1.0,            0.0, 'U', U_NONE},
@@ -426,7 +428,7 @@ struct ChannelStruct SlowChannels[] = {
   {"foc_res_thegood", 'w', LOOP1, 17,             1.0,             0.0, 'u', U_NONE},
   {"period_cal",   'w', LOOP1, 18,                .20,             0.0, 'u', U_NONE},
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, //Sun, ISC, OSC net status
-  {"timeout",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
+  {"timeout_b",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
   {"az_sun",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
   {"status_mcc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //south_i_am, at_float, schedule, slot_sched
   //{"cryostate",    'w', LOOP1, 24,                1.0,             0.0, 'u', U_NONE},
@@ -436,7 +438,8 @@ struct ChannelStruct SlowChannels[] = {
   {"veto_sensor",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 32-33 are wide */
   /* LOOP1 34 is fast */
-  /* LOOP1 35-36 are unused */
+  {"timeout_i",      'w', LOOP1, 35,                1.0,             0.0, 'u', U_NONE},
+  {"df_b_flc",    'w', LOOP1, 36,             1./250,             0.0, 'u', U_NONE},
   {"alt_sip",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"mapmean_thegood",'w', LOOP1, 42,                1.0,             0.0, 'u', U_NONE},
@@ -455,7 +458,7 @@ struct ChannelStruct SlowChannels[] = {
   {"g_i_table",    'w', LOOP1, 55,        1.0/10000.0,             0.0, 'u', U_NONE},
   {"g_d_table",    'w', LOOP1, 56,          1.0/100.0,             0.0, 'u', U_NONE},
   {"n_sat_dgps",   'w', LOOP1, 57,                1.0,             0.0, 'u', U_NONE},
-  {"disk_free",    'w', LOOP1, 58,             1./250,             0.0, 'u', U_NONE},
+  {"df_i_flc",    'w', LOOP1, 58,             1./250,             0.0, 'u', U_NONE},
   {"mode_p",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE},
   {"x_p",          'w', LOOP1, 60,              I2DEG,             0.0, 'u', U_NONE},
   {"y_p",          'w', LOOP1, 61,              I2DEG,             0.0, 's', U_NONE},
@@ -521,9 +524,9 @@ struct ChannelStruct SlowChannels[] = {
 
   /* LOOP3 0-3 are unusued */
   /* LOOP3 4-5 are wide */
-  /* LOOP3 6 is unusued */
+  {"t_cpu_i_flc",    'w', LOOP3,  6,               0.01,             0.0, 'u', U_NONE},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u', U_NONE},
-  {"t_cpu_flc",    'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu_b_flc",    'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
   {"t_mb_flc",      'w', LOOP3,  9,               0.01,             0.0, 'u', U_NONE},
   {"mks_hi_sip",   'w', LOOP3, 10,           0.003256,       -0.226858, 'u', U_NONE},
   {"mks_med_sip",  'w', LOOP3, 11,           0.032614,       -0.072580, 'u', U_NONE},
@@ -843,6 +846,11 @@ struct ChannelStruct SlowChannels[] = {
   {"row_len_sync",   'w', LOOP0,  45,                1.0,            0.0, 'u', U_NONE},
   {"num_rows_sync",  'w', LOOP0,  46,                1.0,            0.0, 'u', U_NONE},
   {"free_run_sync",  'w', LOOP0,  47,                1.0,            0.0, 'u', U_NONE},
+  // LOOP0 48-51 are wide slow
+  {"last_b_cmd",     'w', LOOP0,  52,                1.0,             0.0, 'u', U_NONE},
+  {"last_i_cmd",     'w', LOOP0,  53,                1.0,             0.0, 'u', U_NONE},
+  {"count_b_cmd",    'w', LOOP0,  54,                1.0,             0.0, 'u', U_NONE},
+  {"count_i_cmd",    'w', LOOP0,  55,                1.0,             0.0, 'u', U_NONE},
   
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
