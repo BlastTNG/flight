@@ -189,7 +189,7 @@ int main(void)
     } else {
       /* finished the init; slow data */
       if (slow_timer <= 0) {
-//        send_slow_data(data);
+        send_slow_data(data);
         slow_timer = SLOW_TIMEOUT;
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;

@@ -13,7 +13,7 @@ SPIDER_ONLY=1
 # Inputs
 #
 
-EXPT_HEADERS = command_list.h command_struct.h fset.h mpc_proto.h tes.h
+EXPT_HEADERS = command_list.h command_struct.h mpc_proto.h tes.h
 SHARED_HEADERS = blast.h command_common.h udp.h 
 LOCAL_HEADERS =
 
