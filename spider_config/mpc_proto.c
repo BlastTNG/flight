@@ -63,16 +63,16 @@ int mpc_init(void)
  *
  * data packet looks like:
  *
- * RRTMFFFFBB00...
+ * RRTMBB00FFFF...
  *
  * where
  *
  * R = 16-bit protocol revision
  * T = 'T' indicating a slow packet
  * M = 8-bit MCE number
- * F = 32-bit framenumber
  * B = 16-bit bset number
  * 0 = padding
+ * F = 32-bit framenumber
  *
  * followed by the tes data in bset order
  */
@@ -85,8 +85,8 @@ size_t mpc_compose_tes(const uint32_t *data, uint32_t framenum,
   memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
   buffer[2] = 'T'; /* tes data packet */
   buffer[3] = nmce & 0xF; /* mce number */
-  memcpy(buffer + 4, &framenum, sizeof(framenum)); /* FRAMENUM */
-  memcpy(buffer + 8, &bset_num, sizeof(bset_num)); /* BSET */
+  memcpy(buffer + 4, &bset_num, sizeof(bset_num)); /* BSET */
+  memcpy(buffer + 8, &framenum, sizeof(framenum)); /* FRAMENUM */
 
   /* append data */
   memcpy(buffer + 12, data, sizeof(uint32_t) * ntes);

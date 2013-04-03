@@ -74,8 +74,8 @@ int ntes = 0;
 int16_t tes[NUM_ROW * NUM_COL];
 
 /* make and send fake data -- we only make data mode 11 data, which is static */
-//#define FAKE_DATA_RATE   2500 /* microseconds -- this is approximate */
-#define FAKE_DATA_RATE   1000000 /* microseconds -- this is approximate */
+#define FAKE_DATA_RATE   2500 /* microseconds -- this is approximate */
+//#define FAKE_DATA_RATE   1000000 /* microseconds -- this is approximate */
 static void *fake_data(void *dummy)
 {
   uint32_t framenum = 0x37183332;
