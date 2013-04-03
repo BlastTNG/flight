@@ -192,8 +192,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(force_el_on), "force enable el motors despite the pin being in",
     CONFIRM | GR_GAIN},
 
-  {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
-  {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
   {COMMAND(elenc1_veto), "veto elevation encoder 1", GR_VETO},
   {COMMAND(elenc2_veto), "veto elevation encoder 2", GR_VETO},
   {COMMAND(elenc1_allow), "un-veto elevation encoder 1", GR_VETO},
@@ -1113,10 +1111,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
+  {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 2,
    {
      {"Reaction Wheel", 0, 5, 'i', "VERBOSE_RW"},
-     {"Elevation", 0, 5, 'i', "VERBOSE_EL"},
      {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
    }
   },

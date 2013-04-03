@@ -135,7 +135,6 @@ struct PointingModeStruct {
   time_t t;
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
-  double dith; // Elevation dither step
   // TODO: Write the three below out to frame???
   int Nscans;  // number of half-scans per el step in SPIDER mode
   int Nsteps;  // total number of el steps in SPIDER mode
@@ -328,7 +327,6 @@ struct CommandDataStruct {
   unsigned short restore_rw;  // JAS--added this in, not sure if we need it yet
 
   unsigned short verbose_rw;
-  unsigned short verbose_el;
   unsigned short verbose_piv;
   int az_autogyro;
   int el_autogyro;
@@ -339,7 +337,6 @@ struct CommandDataStruct {
 
   struct {
     double setpoint;
-    int age;
     struct GainStruct gain;
   } gyheat;
 
@@ -348,7 +345,6 @@ struct CommandDataStruct {
 
   unsigned char use_elenc1;
   unsigned char use_elenc2;
-  unsigned char use_elclin;
   unsigned char use_pss;
   unsigned char use_mag;
   unsigned char use_gps;
@@ -362,8 +358,6 @@ struct CommandDataStruct {
   double az_accel;
   double az_accel_max; // max gondola accel in az
 
-  double clin_el_trim;
-  double enc_el_trim;
   double null_az_trim;
   double mag_az_trim;
   double dgps_az_trim;

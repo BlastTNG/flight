@@ -83,7 +83,6 @@ struct ACSDataStruct {
   double pss6_i4;   //counts
   double enc_mean_el; // mean of port and starboard encs, in degrees
   double enc_diff_el; // difference (port-starboard) of encs, in degrees
-  double clin_elev;// counts
   double vel_rw; // deg/s
   double res_piv; // deg/s
   double ifel_gy;    // deg/s
@@ -219,11 +218,6 @@ struct PointingDataStruct {
   double pss5_snr;
   double pss6_snr;
   double pss_az;  //degrees
-  double enc_el;
-  double enc_sigma;
-  double clin_el;
-  double clin_el_lut;
-  double clin_sigma;
   double v_az; // dps
 };
 
