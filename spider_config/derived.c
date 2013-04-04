@@ -99,12 +99,12 @@
  * "DATA_MODE1", &c.
  */
 #define MCESLOW(n) \
-   MPLEX(n "0", n, "mce_txmux", 0, 5), \
-   MPLEX(n "1", n, "mce_txmux", 1, 5), \
-   MPLEX(n "2", n, "mce_txmux", 2, 5), \
-   MPLEX(n "3", n, "mce_txmux", 3, 5), \
-   MPLEX(n "4", n, "mce_txmux", 4, 5), \
-   MPLEX(n "5", n, "mce_txmux", 5, 5)
+   MPLEX(n "0", n, "mce_txmux", 0, 6), \
+   MPLEX(n "1", n, "mce_txmux", 1, 6), \
+   MPLEX(n "2", n, "mce_txmux", 2, 6), \
+   MPLEX(n "3", n, "mce_txmux", 3, 6), \
+   MPLEX(n "4", n, "mce_txmux", 4, 6), \
+   MPLEX(n "5", n, "mce_txmux", 5, 6)
 
 #define LUT_DIR "/data/etc/spider/"
 
