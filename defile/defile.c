@@ -1,6 +1,6 @@
 /* defile: converts BLAST-type framefiles into dirfiles
  *
- * This file is copyright (C) 2004-2005 D. V. Wiebe
+ * This file is copyright (C) 2004-2005, 2013 D. V. Wiebe
  * Also (C) 2005-2010 Matthew Truch.
  * And I'm sure many others....
  * 
@@ -42,7 +42,13 @@
 #include "quenya.h"
 
 #ifndef VERSION
-#  define VERSION "3.3.x"
+#  define VERSION "5.x"
+#endif
+
+#ifdef SVNREV
+#  define FULL_VERSION VERSION "-svn" SVNREV
+#else
+#  define FULL_VERSION VERSION
 #endif
 
 #define SUFF_MAX (2 * sizeof(chunkindex_t))
@@ -499,7 +505,7 @@ void GetDirFile(char* buffer, const char* source, char* parent, int start)
 
 void PrintVersion(void)
 {
-  printf("defile " VERSION "  (C) 2004-2007 D. V. Wiebe\n"
+  printf("defile " FULL_VERSION "  (C) 2004-2013 D. V. Wiebe and others\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
       "This program comes with NO WARRANTY, "
       "not even for MERCHANTABILITY or FITNESS\n"
@@ -965,7 +971,8 @@ int main (int argc, char** argv)
     setsid();
   }
 
-  bprintf(info, "defile " VERSION " (C) 2004-2010 D. V. Wiebe and others\n"
+  bprintf(info, "defile " FULL_VERSION
+      " (C) 2004-2013 D. V. Wiebe and others\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n");
 
   if (!rc.force_quenya || rc.quenya) {

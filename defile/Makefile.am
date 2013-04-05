@@ -6,6 +6,9 @@ EXTRA_DIST = fixup.sh bootstrap.sh
 blastetcdir = @DATA_ETC_DIR@/blast
 spideretcdir = @DATA_ETC_DIR@/spider
 
+# calculate the svn revision
+SVNREV=$(shell svn info | awk '/^Revision/ { print $$2 }')
+
 if INSTALL_DEFILE_CONF
 etc_DATA = defile.conf
 endif
@@ -26,7 +29,8 @@ defile_blast_SOURCES = defile.c ../common/frameread.c reader.c \
 											 quenya.h ../common/crc.h quendiclient.h
 defile_spider_SOURCES = $(defile_blast_SOURCES)
 
-CFLAGS = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\"
+CFLAGS = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\" \
+				 -DSVNREV=\"${SVNREV}\"
 INCLUDES = -I../common
 defile_blast_CFLAGS = -DDAS_CARDS=12
 
