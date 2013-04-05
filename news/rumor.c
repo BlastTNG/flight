@@ -47,8 +47,6 @@ int main(int argc, char *argv[]) {
   int fp_lnc;
   int n_read = 0;
   struct fifoStruct fs;
-  int lost = 1;
-  int dA=0;
   
   int i_frame = 0;
   
@@ -58,6 +56,8 @@ int main(int argc, char *argv[]) {
   int32_t S_in;
   uint32_t U_in;
   double x_in;
+  
+  time_t t;
 
   fs.i_in = fs.i_out = 0;
 
@@ -115,10 +115,8 @@ int main(int argc, char *argv[]) {
       }
       peek(&fs, (char *)&U_in, 4);
       advance(&fs, 1);
-      dA++;
     } while (U_in != SLOWDLSYNCWORD);
     
-    printf("found sync word at %d %d\n", dA, nFifo(&fs));
     advance(&fs, 4-1);
     
     for (i_ch =0; slowDLList[i_ch].name[0] != '\0'; i_ch++) {
@@ -196,6 +194,8 @@ int main(int argc, char *argv[]) {
         }
       }
     } // next i_ch;
+    t = time(NULL);
+    printf("%s: frame %4d - %s", argv[0], i_frame, ctime(&t)); 
     i_frame++;
   }
   return 0;
