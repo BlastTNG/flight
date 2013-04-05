@@ -14,8 +14,36 @@
 // If encoding is SDL_RAW, then type can be c, s, u, S, or U.
 // if encoding is SDL_SCALE, then type can be s, u, or U.
 struct SlowDlStruct slowDLList[] = {
-  {"time", 'U', SDL_RAW},
-  {"t_hs_cc1", 'c', SDL_SCALE, 70.0, -45.0},
+  {"time_i_flc", 'U', SDL_RAW},
+  {"time_b_flc", 'U', SDL_RAW},
+  {"frame_thegood", 'u', SDL_RAW},
+  {"frame_thebad", 'u', SDL_RAW},  
+  {"frame_theugly", 'u', SDL_RAW},
+  {"nblobs_thegood", 'c', SDL_RAW},
+  {"nblobs_thebad", 'c', SDL_RAW},
+  {"nblobs_theugly", 'c', SDL_RAW},
+  {"mapmean_thegood", 'c', SDL_SCALE, 0.0, 65535.0},
+  {"mapmean_thebad", 'c', SDL_SCALE, 0.0, 65535.0},
+  {"mapmean_theugly", 'c', SDL_SCALE, 0.0, 65535.0},
+  {"az_pss", 'c', SDL_SCALE, 0.0, 360.0},
+  {"az_dgps", 'c', SDL_SCALE, 0.0, 360.0},
+  {"az_mag", 'c', SDL_SCALE, 0.0, 360.0},
+  {"el", 'c', SDL_SCALE, 10.0, 60.0},
+  {"plover", 'c', SDL_RAW},
+  {"count_b_cmd", 'u', SDL_RAW},
+  {"count_i_cmd", 'u', SDL_RAW},
+  {"last_b_cmd", 'u', SDL_RAW},
+  {"last_i_cmd", 'u', SDL_RAW},
+  {"i_tot", 'c', SDL_SCALE, 0.0, 60.0},
+  {"v_batt_cc1", 'c', SDL_SCALE, 18.0, 36.0},
+  {"v_batt_cc2", 'c', SDL_SCALE, 18.0, 36.0},
+  {"t_cpu_i_flc", 'c', SDL_SCALE, -10.0, 90.0},
+  {"t_cpu_b_flc", 'c', SDL_SCALE, -10.0, 90.0},
+  {"t_gy", 'c', SDL_SCALE, -45.0, 70.0},
+  {"t_acs", 'c', SDL_SCALE, -45.0, 70.0},
+  {"t_mc_piv", 'c', SDL_SCALE, -45.0, 70.0},
+  {"t_hs_cc1", 'c', SDL_SCALE, -45.0, 70.0},
+  {"t_hs_cc2", 'c', SDL_SCALE, -45.0, 70.0},
   {""}
 };
 

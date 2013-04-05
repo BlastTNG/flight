@@ -26,9 +26,31 @@ void updateSlowDL() {
   int i_w;
   
   if (first_time) {
+    int size = 0;
     for (i_ch = 0; slowDLList[i_ch].name[0]!='\0'; i_ch++) {
       slowDLList[i_ch].bi0s = GetBiPhaseAddr(slowDLList[i_ch].name);
+      switch (slowDLList[i_ch].type) {
+        case 'c':
+          size++;
+          break;
+        case 's':
+        case 'u':
+          size += 2;
+          break;
+        case 'S':
+        case 'U':
+          size += 4;
+          break;
+        default:
+          bprintf(fatal, "%c: unknown var type in slow dl field %s", 
+                  slowDLList[i_ch].type, slowDLList[i_ch].name);
+          break;
+      }
+      if (size>255) {
+        bprintf(fatal, "slow downlink structure too large (%d > 255)", size);
+      }
     }
+    bprintf(info, "slow downlink packet %d/255", size);
     first_time = 0;
   }
 

@@ -118,7 +118,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"frame_thebad", 'w', LOOP3, 31,                1.0,             0.0, 'U', U_NONE},
   {"sec_thebad",   'w', LOOP3, 44,                1.0,             0.0, 'U', U_NONE},
   {"usec_thebad",  'w', LOOP3, 58,                1.0,             0.0, 'U', U_NONE},
-  //{"cycle_start",  'w', LOOP4, 24,                1.0,             0.0, 'U', U_NONE},
   {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
   {"lst_sched",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
   {"frame_theugly",    'w', LOOP9, 50,                1.0,             0.0, 'U', U_NONE},

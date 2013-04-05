@@ -20,8 +20,8 @@ struct SlowDlStruct {
   char name[256];
   char type; // c s S u U (c is signed char)
   char encode; // RAW or Scale
-  double max;
   double min;
+  double max;
   // 'private' variables: set by updateSlowDL
   struct BiPhaseStruct *bi0s;
   double X[3]; // data as read by ReadCalData
