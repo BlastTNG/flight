@@ -140,8 +140,7 @@ static struct ChannelStruct BoloChannels[MAX_FAST_BOLOS];
 void SPECIFICATIONFILEFUNXION(FILE* fp)
 {
 #ifdef INPUTTER
-  int version = 0;
-  const int n_fast_bolos = das_cards * (DAS_CHS + DAS_CHS / 2);
+  int version = 0, n_fast_bolos;
 #endif
   char versionMagic[6] = "DFI" STRINGIFY(SPEC_VERSION);
 
@@ -165,6 +164,8 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 
   if (FREADORWRITE(&das_cards, sizeof(unsigned short), 1, fp) < 1)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+  n_fast_bolos = das_cards * (DAS_CHS + DAS_CHS / 2);
+
   if (FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp) < 1)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
   if (FREADORWRITE(&ccNarrowSlow, sizeof(unsigned short), 1, fp) < 1)
