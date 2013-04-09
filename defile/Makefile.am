@@ -30,7 +30,7 @@ defile_blast_SOURCES = defile.c ../common/frameread.c reader.c \
 defile_spider_SOURCES = $(defile_blast_SOURCES)
 
 CFLAGS = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\" \
-				 -DSVNREV=\"${SVNREV}\"
+				 -DSVNREV=\"${SVNREV}\" -g
 INCLUDES = -I../common
 defile_blast_CFLAGS = -DDAS_CARDS=12
 
