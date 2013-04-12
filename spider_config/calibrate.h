@@ -81,7 +81,7 @@ extern "C" {
  * This is the offset to the true lock positions. This number is
  * relative to the elevation encoder reading, NOT true elevation
  */
-#define LOCK_OFFSET (-0.1606) /* TODO update this */
+#define LOCK_OFFSET (0.0) /* TODO update this */
 #define LOCK_POSITION (40.0 + LOCK_OFFSET)
 
 /* Thermal model numbers, from EP */
@@ -166,8 +166,8 @@ extern "C" {
 #define MAGZ_M (-1/1290.0)
 #define MAGZ_B (32768.0)
 
-#define ENC1_OFFSET (-10.1904142824445) // encoder 1 to bore-sight offset angle
-#define ENC2_OFFSET 282.7460105287251  // encoder 2 to bore-sight offset angle
+#define ENC1_OFFSET (-203.363647461) // encoder 1 to bore-sight offset angle
+#define ENC2_OFFSET (258.572998047)  // encoder 2 to bore-sight offset angle
 #define GYBOX_OFFSET -69.8  // gyro box to bore-sight offset angle (fixed)
 
 
