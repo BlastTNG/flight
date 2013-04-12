@@ -330,9 +330,9 @@ struct CommandDataStruct {
   unsigned short verbose_piv;
   int az_autogyro;
   int el_autogyro;
-  double offset_ifel_gy;
-  double offset_ifroll_gy;
-  double offset_ifyaw_gy;
+  double offset_ofpch_gy;
+  double offset_ofroll_gy;
+  double offset_ofyaw_gy;
   unsigned int gymask;
 
   struct {

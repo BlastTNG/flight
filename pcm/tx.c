@@ -684,9 +684,9 @@ static void StoreData(int index)
     mksMedSipAddr = GetNiosAddr("mks_med_sip");
     mksHiSipAddr = GetNiosAddr("mks_hi_sip");
 
-    OffsetIFelGYAddr = GetNiosAddr("offset_ifel_gy");
-    OffsetIFrollGYAddr = GetNiosAddr("offset_ifroll_gy");
-    OffsetIFyawGYAddr = GetNiosAddr("offset_ifyaw_gy");
+    OffsetIFelGYAddr = GetNiosAddr("offset_ofpch_gy");
+    OffsetIFrollGYAddr = GetNiosAddr("offset_ofroll_gy");
+    OffsetIFyawGYAddr = GetNiosAddr("offset_ofyaw_gy");
     raAddr = GetNiosAddr("ra");
     decAddr = GetNiosAddr("dec");
     latAddr = GetNiosAddr("lat");
@@ -884,12 +884,12 @@ static void StoreData(int index)
       NIOS_QUEUE);
 
   WriteData(OffsetIFelGYAddr,
-      (signed int)(PointingData[i_point].offset_ifel_gy * 32768.), NIOS_QUEUE);
+      (signed int)(PointingData[i_point].offset_ofpch_gy * 32768.), NIOS_QUEUE);
   WriteData(OffsetIFrollGYAddr,
-      (signed int)(PointingData[i_point].offset_ifroll_gy * 32768.),
+      (signed int)(PointingData[i_point].offset_ofroll_gy * 32768.),
       NIOS_QUEUE);
   WriteData(OffsetIFyawGYAddr,
-      (signed int)(PointingData[i_point].offset_ifyaw_gy * 32768.), NIOS_QUEUE);
+      (signed int)(PointingData[i_point].offset_ofyaw_gy * 32768.), NIOS_QUEUE);
   WriteData(latAddr, (unsigned int)(PointingData[i_point].lat * DEG2LI),
       NIOS_QUEUE);
   WriteData(lonAddr, (unsigned int)(PointingData[i_point].lon * DEG2LI),

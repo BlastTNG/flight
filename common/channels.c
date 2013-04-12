@@ -140,8 +140,9 @@ static struct ChannelStruct BoloChannels[MAX_FAST_BOLOS];
 void SPECIFICATIONFILEFUNXION(FILE* fp)
 {
 #ifdef INPUTTER
-  int version = 0, n_fast_bolos;
+  int version = 0;
 #endif
+  int n_fast_bolos;
   char versionMagic[6] = "DFI" STRINGIFY(SPEC_VERSION);
 
   if (FREADORWRITE(&versionMagic, 6, 1, fp) < 1)

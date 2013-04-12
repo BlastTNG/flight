@@ -85,9 +85,9 @@ struct ACSDataStruct {
   double enc_diff_el; // difference (port-starboard) of encs, in degrees
   double vel_rw; // deg/s
   double res_piv; // deg/s
-  double ifel_gy;    // deg/s
-  double ifroll_gy;    // deg/s
-  double ifyaw_gy;    // deg/s
+  double ofpch_gy;    // deg/s
+  double ofroll_gy;    // deg/s
+  double ofyaw_gy;    // deg/s
   double ofaz_gy;    // deg/s
   double enc_table; // degrees
   time_t t;
@@ -170,9 +170,9 @@ struct PointingDataStruct {
   double el;        // degrees
   double ra;        // hours, aparent
   double dec;       // degrees, aparent
-  double offset_ifel_gy;
-  double offset_ifroll_gy;
-  double offset_ifyaw_gy;
+  double offset_ofpch_gy;
+  double offset_ofroll_gy;
+  double offset_ofyaw_gy;
   double ifel_earth_gy;
   double ifroll_earth_gy;
   double ifyaw_earth_gy;

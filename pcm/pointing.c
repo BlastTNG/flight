@@ -95,8 +95,8 @@ struct ElAttStruct {
 
 struct AzAttStruct {
   double az;
-  double offset_ifroll_gy;
-  double offset_ifyaw_gy;
+  double offset_ofroll_gy;
+  double offset_ofyaw_gy;
   double weight;
 };
 
@@ -122,10 +122,10 @@ struct AzSolutionStruct {
   double sys_var;  // sytematic varience - can't do better than this
   double trim; // externally set trim to solution
   double last_input; // last good data point
-  double ifroll_gy_int; // integral of the gyro since the last solution
-  double ifyaw_gy_int; // integral of the gyro since the last solution
-  double offset_ifroll_gy; // offset associated with solution
-  double offset_ifyaw_gy;
+  double ofroll_gy_int; // integral of the gyro since the last solution
+  double ofyaw_gy_int; // integral of the gyro since the last solution
+  double offset_ofroll_gy; // offset associated with solution
+  double offset_ofyaw_gy;
   double FC; // filter constant
   int n_solutions; // number of angle inputs
   int since_last;
@@ -135,9 +135,9 @@ struct AzSolutionStruct {
 
 static struct HistoryStruct {
   double *elev_history;
-  double *ifel_gy_history;
-  double *ifroll_gy_history;
-  double *ifyaw_gy_history;
+  double *ofpch_gy_history;
+  double *ofroll_gy_history;
+  double *ofyaw_gy_history;
   int i_history;  // points to last valid point.  Not thread safe.
 } hs = {NULL, NULL, NULL, NULL, 0};
 
@@ -149,9 +149,9 @@ static struct {
 
 // gyros, with earth's rotation removed
 static struct {
-  double ifel_gy;
-  double ifroll_gy;
-  double ifyaw_gy;
+  double ofpch_gy;
+  double ofroll_gy;
+  double ofyaw_gy;
 } RG;
 
 #define MAX_SUN_EL 5.0
@@ -613,13 +613,13 @@ static void RecordHistory(int index)
 {
   /*****************************************/
   /*   Allocate Memory                     */
-  if (hs.ifel_gy_history == NULL) {
-    hs.ifel_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.ifel_gy_history, 0, GY_HISTORY * sizeof(double));
-    hs.ifroll_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.ifroll_gy_history, 0, GY_HISTORY * sizeof(double));
-    hs.ifyaw_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.ifyaw_gy_history, 0, GY_HISTORY * sizeof(double));
+  if (hs.ofpch_gy_history == NULL) {
+    hs.ofpch_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
+    memset(hs.ofpch_gy_history, 0, GY_HISTORY * sizeof(double));
+    hs.ofroll_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
+    memset(hs.ofroll_gy_history, 0, GY_HISTORY * sizeof(double));
+    hs.ofyaw_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
+    memset(hs.ofyaw_gy_history, 0, GY_HISTORY * sizeof(double));
     hs.elev_history  = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
     memset(hs.elev_history, 0, GY_HISTORY * sizeof(double));
   }
@@ -630,9 +630,9 @@ static void RecordHistory(int index)
   if (hs.i_history >= GY_HISTORY)
     hs.i_history = 0;
 
-  hs.ifel_gy_history[hs.i_history] = RG.ifel_gy;
-  hs.ifroll_gy_history[hs.i_history] = RG.ifroll_gy;
-  hs.ifyaw_gy_history[hs.i_history] = RG.ifyaw_gy;
+  hs.ofpch_gy_history[hs.i_history] = RG.ofpch_gy;
+  hs.ofroll_gy_history[hs.i_history] = RG.ofroll_gy;
+  hs.ofyaw_gy_history[hs.i_history] = RG.ofyaw_gy;
   hs.elev_history[hs.i_history] = PointingData[index].el * M_PI / 180.0;
 }
 
@@ -732,17 +732,17 @@ static void AddAzSolution(struct AzAttStruct *AzAtt,
 
 
   if (add_offset) {
-    AzAtt->offset_ifroll_gy = (weight * AzSol->offset_ifroll_gy +
-        AzAtt->weight * AzAtt->offset_ifroll_gy) / (weight + AzAtt->weight);
-    AzAtt->offset_ifyaw_gy = (weight * AzSol->offset_ifyaw_gy +
-        AzAtt->weight * AzAtt->offset_ifyaw_gy) / (weight + AzAtt->weight);
+    AzAtt->offset_ofroll_gy = (weight * AzSol->offset_ofroll_gy +
+        AzAtt->weight * AzAtt->offset_ofroll_gy) / (weight + AzAtt->weight);
+    AzAtt->offset_ofyaw_gy = (weight * AzSol->offset_ofyaw_gy +
+        AzAtt->weight * AzAtt->offset_ofyaw_gy) / (weight + AzAtt->weight);
   }
 
   AzAtt->weight += weight;
 }
 
-static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
-    double offset_ifroll_gy, double ifyaw_gy, double offset_ifyaw_gy, double el, double new_angle,
+static void EvolveAzSolution(struct AzSolutionStruct *s, double ofroll_gy,
+    double offset_ofroll_gy, double ofyaw_gy, double offset_ofyaw_gy, double el, double new_angle,
     int new_reading)
 {
   double w1, w2;
@@ -750,16 +750,16 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
   double new_offset, daz;
 
   el *= M_PI / 180.0; // want el in radians
-  //gy_az = -(ifroll_gy + offset_ifroll_gy) * sin(el) + -(ifyaw_gy + offset_ifyaw_gy) * cos(el);
+  //gy_az = -(ofroll_gy + offset_ofroll_gy) * sin(el) + -(ofyaw_gy + offset_ofyaw_gy) * cos(el);
   
-  gy_az = ifyaw_gy + offset_ifyaw_gy;
+  gy_az = ofyaw_gy + offset_ofyaw_gy;
 
 
   s->angle += gy_az / ACSData.bbc_rate;
   s->varience += GYRO_VAR;
 
-  s->ifroll_gy_int += ifroll_gy / ACSData.bbc_rate; // in degrees
-  s->ifyaw_gy_int += ifyaw_gy / ACSData.bbc_rate; // in degrees
+  s->ofroll_gy_int += ofroll_gy / ACSData.bbc_rate; // in degrees
+  s->ofyaw_gy_int += ofyaw_gy / ACSData.bbc_rate; // in degrees
 
   if (new_reading) {
     w1 = 1.0 / (s->varience);
@@ -776,14 +776,14 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 	daz = remainder(new_angle - s->last_input, 360.0);
 	
 	/* Do Gyro_IFroll */
-	new_offset = -(daz * sin(el) + s->ifroll_gy_int) /
+	new_offset = -(daz * sin(el) + s->ofroll_gy_int) /
 	  ((1.0/ACSData.bbc_rate) * (double)s->since_last);
-	s->offset_ifroll_gy = filter(new_offset, s->fs2);;
+	s->offset_ofroll_gy = filter(new_offset, s->fs2);;
 	
 	/* Do Gyro_IFyaw */
-	new_offset = -(daz * cos(el) + s->ifyaw_gy_int) /
+	new_offset = -(daz * cos(el) + s->ofyaw_gy_int) /
 	  ((1.0/ACSData.bbc_rate) * (double)s->since_last);
-	s->offset_ifyaw_gy = filter(new_offset, s->fs3);;
+	s->offset_ofyaw_gy = filter(new_offset, s->fs3);;
 	
       }
       s->since_last = 0;
@@ -791,8 +791,8 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
         s->n_solutions++;
       }
     }
-    s->ifroll_gy_int = 0.0;
-    s->ifyaw_gy_int = 0.0;
+    s->ofroll_gy_int = 0.0;
+    s->ofyaw_gy_int = 0.0;
     s->last_input = new_angle;
   }
   s->since_last++;
@@ -962,10 +962,10 @@ void Pointing(void)
     (cos_e * sin_l - cos_l * sin_e * cos_a);
   PointingData[point_index].ifyaw_earth_gy = R *
     (sin_e * sin_l + cos_l * cos_e * cos_a);
-  RG.ifel_gy = ACSData.ifel_gy - PointingData[point_index].ifel_earth_gy;
-  RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
-  RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
-  PointingData[point_index].v_az = RG.ifyaw_gy;
+  RG.ofpch_gy = ACSData.ofpch_gy - PointingData[point_index].ifel_earth_gy;
+  RG.ofroll_gy = ACSData.ofroll_gy - PointingData[point_index].ifroll_earth_gy;
+  RG.ofyaw_gy = ACSData.ofyaw_gy - PointingData[point_index].ifyaw_earth_gy;
+  PointingData[point_index].v_az = RG.ofyaw_gy;
   /*************************************/
   /** Record history for gyro offsets **/
   RecordHistory(i_point_read);
@@ -1033,13 +1033,13 @@ void Pointing(void)
 
   /*************************************/
   /**      do elevation solution      **/
-  EvolveElSolution(&NullEl, RG.ifel_gy, 
-                   PointingData[i_point_read].offset_ifel_gy, 0.0, 1);
+  EvolveElSolution(&NullEl, RG.ofpch_gy, 
+                   PointingData[i_point_read].offset_ofpch_gy, 0.0, 1);
 
   AddElSolution(&ElAtt, &NullEl, 1);
 
-  PointingData[point_index].offset_ifel_gy = (CommandData.el_autogyro)
-    ? ElAtt.offset_gy : CommandData.offset_ifel_gy;
+  PointingData[point_index].offset_ofpch_gy = (CommandData.el_autogyro)
+    ? ElAtt.offset_gy : CommandData.offset_ofpch_gy;
   PointingData[point_index].el = ElAtt.el + ACSData.enc_mean_el;
 
   /*******************************/
@@ -1065,28 +1065,28 @@ void Pointing(void)
 
   /** evolve solutions **/
   EvolveAzSolution(&NullAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+      RG.ofroll_gy, PointingData[i_point_read].offset_ofroll_gy,
+      RG.ofyaw_gy,  PointingData[i_point_read].offset_ofyaw_gy,
       0.0,
       0.0, 0);
   /** MAG Az **/
   EvolveAzSolution(&MagAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+      RG.ofroll_gy, PointingData[i_point_read].offset_ofroll_gy,
+      RG.ofyaw_gy,  PointingData[i_point_read].offset_ofyaw_gy,
       0.0,
       mag_az, mag_ok);
 
   /** DGPS Az **/
   EvolveAzSolution(&DGPSAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+      RG.ofroll_gy, PointingData[i_point_read].offset_ofroll_gy,
+      RG.ofyaw_gy,  PointingData[i_point_read].offset_ofyaw_gy,
       0.0,
       dgps_az, dgps_ok);
 
   /** PSS1 **/
   EvolveAzSolution(&PSSAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+      RG.ofroll_gy, PointingData[i_point_read].offset_ofroll_gy,
+      RG.ofyaw_gy,  PointingData[i_point_read].offset_ofyaw_gy,
       0.0,
       pss_az, pss_ok);
 
@@ -1111,11 +1111,11 @@ void Pointing(void)
   //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
   PointingData[point_index].az = AzAtt.az;
   if (CommandData.az_autogyro) {
-    PointingData[point_index].offset_ifroll_gy = AzAtt.offset_ifroll_gy;
-    PointingData[point_index].offset_ifyaw_gy = AzAtt.offset_ifyaw_gy;
+    PointingData[point_index].offset_ofroll_gy = AzAtt.offset_ofroll_gy;
+    PointingData[point_index].offset_ofyaw_gy = AzAtt.offset_ofyaw_gy;
   } else {
-    PointingData[point_index].offset_ifroll_gy = CommandData.offset_ifroll_gy;
-    PointingData[point_index].offset_ifyaw_gy = CommandData.offset_ifyaw_gy;
+    PointingData[point_index].offset_ofroll_gy = CommandData.offset_ofroll_gy;
+    PointingData[point_index].offset_ofyaw_gy = CommandData.offset_ofyaw_gy;
   }
 
   /** calculate ra/dec for convenience on the ground **/

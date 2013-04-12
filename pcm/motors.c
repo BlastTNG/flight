@@ -503,20 +503,20 @@ static double GetVAz(void)
     //vel *= -(double)CommandData.azi_gain.PT/10000.0; // temp negative sign
   }
 
-  /*vel_offset = -(PointingData[i_point].offset_ifroll_gy 
+  /*vel_offset = -(PointingData[i_point].offset_ofroll_gy 
                - PointingData[i_point].ifroll_earth_gy)
                * cos(PointingData[i_point].el * M_PI / 180.0) 
-               -(PointingData[i_point].offset_ifyaw_gy 
+               -(PointingData[i_point].offset_ofyaw_gy 
                - PointingData[i_point].ifyaw_earth_gy)
                * sin(PointingData[i_point].el * M_PI / 180.0);*/
 
   // gyros are on the outer frame for Spider...
  
-//  vel_offset =-(PointingData[i_point].offset_ifyaw_gy 
+//  vel_offset =-(PointingData[i_point].offset_ofyaw_gy 
     //            - PointingData[i_point].ifyaw_earth_gy);
 
   // TODO: signs above appear to be wrong???
-  vel_offset = (PointingData[i_point].offset_ifyaw_gy 
+  vel_offset = (PointingData[i_point].offset_ofyaw_gy 
                 + PointingData[i_point].ifyaw_earth_gy);
 
   vel -= vel_offset;
@@ -1112,7 +1112,7 @@ static void DoSineMode(void)
   /* case 3: moving from left to right endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
              && ((PointingData[i_point].v_az
-                  +PointingData[i_point].offset_ifyaw_gy) > 0.0 ) ) {
+                  +PointingData[i_point].offset_ofyaw_gy) > 0.0 ) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
     a_az = az_accel*( (centre - az)/ampl ); 
@@ -1130,7 +1130,7 @@ static void DoSineMode(void)
   /* case 4: moving from right to left endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
               && ( (PointingData[i_point].v_az
-	            + PointingData[i_point].offset_ifyaw_gy) < 0.0 ) ) {
+	            + PointingData[i_point].offset_ofyaw_gy) < 0.0 ) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
     a_az = az_accel*( (centre - az)/ampl );
@@ -1331,7 +1331,7 @@ static void DoSpiderMode(void)
   /* case 3: moving from left to right endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
              && ( (PointingData[i_point].v_az
-	           +PointingData[i_point].offset_ifyaw_gy)  > 0.0) ) {
+	           +PointingData[i_point].offset_ofyaw_gy)  > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     scan_region = SCAN_L_TO_R;
     CommandData.pointing_mode.is_turn_around = 0;
@@ -1376,7 +1376,7 @@ static void DoSpiderMode(void)
   /* case 4: moving from right to left endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
               && ( (PointingData[i_point].v_az
-		    +PointingData[i_point].offset_ifyaw_gy) < 0.0) ) {
+		    +PointingData[i_point].offset_ofyaw_gy) < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     scan_region = SCAN_R_TO_L;
     CommandData.pointing_mode.is_turn_around = 0;

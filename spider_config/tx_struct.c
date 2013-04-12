@@ -461,9 +461,9 @@ struct ChannelStruct SlowChannels[] = {
   {"cal_d_pss1",      'w', LOOP2, 33,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   /* LOOP2 34 is fast */
   {"cal_d_pss2",      'w', LOOP2, 35,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
-  {"offset_ifel_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
-  {"offset_ifroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
-  {"offset_ifyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ofpch_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ofroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},
+  {"offset_ofyaw_gy", 'w',LOOP2, 38,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"az_raw_mag",      'w',LOOP2, 39,            I2DEG,             0.0, 'u', U_D_DEG},
   {"sigma_mag",       'w',LOOP2, 40,            I2DEG,             0.0, 'u', U_NONE},
   {"az_dgps",         'w',LOOP2, 41,            I2DEG,             0.0, 'u', U_D_DEG},
@@ -854,7 +854,7 @@ struct ChannelStruct SlowChannels[] = {
   {"trig_thegood", 'r',  ACS2_A1, 23,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"trig_thebad",  'r',  ACS2_A1, 25,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"trig_theugly", 'r',  ACS2_A1, 27,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
-  {"t_ifel_gy",    'r',  ACS2_A1, 47,        CAL16(50.0, 0.0),     'u',  U_T_C},
+  {"t_ofpch_gy",    'r',  ACS2_A1, 47,        CAL16(50.0, 0.0),     'u',  U_T_C},
   {"trig_s_thegood",'r', ACS2_A1, 51,                1.0,             0.0, 'u', U_NONE},
   {"trig_l_thegood",'r', ACS2_A1, 52,                1.0,             0.0, 'u', U_NONE},
   {"trig_s_thebad", 'r', ACS2_A1, 53,                1.0,             0.0, 'u', U_NONE},
@@ -905,12 +905,12 @@ struct ChannelStruct SlowChannels[] = {
 
 struct ChannelStruct WideFastChannels[] = {
 #ifndef BOLOTEST
-  {"ifyaw_1_gy",  'r',  ACS2_D,  0, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifyaw_2_gy",  'r',  ACS2_D,  2, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifroll_1_gy", 'r',  ACS2_D,  4, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifroll_2_gy", 'r',  ACS2_D,  6, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifel_2_gy",   'r',  ACS2_D,  8, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
-  {"ifel_1_gy",   'r',  ACS2_D, 10, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ofyaw_1_gy",  'r',  ACS2_D,  0, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ofyaw_2_gy",  'r',  ACS2_D,  2, -DGY32_TO_DPS,   DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ofroll_1_gy", 'r',  ACS2_D,  4, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ofroll_2_gy", 'r',  ACS2_D,  6, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ofpch_2_gy",   'r',  ACS2_D,  8, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
+  {"ofpch_1_gy",   'r',  ACS2_D, 10, DGY32_TO_DPS,   -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"enc_table",   'r',  ACS2_D, 54,     360.0/144000.0,             0.0, 'U', U_P_DEG},
 #endif
 
@@ -997,16 +997,16 @@ struct ChannelStruct FastChannels[] = {
   {"framenum",     'r',  ACS2_C,  1,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Digital Card */
-  {"ifel_gy",      'r',   ACS2_D, 12, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
-  {"ifroll_gy",    'r',   ACS2_D, 13,GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
-  {"ifyaw_gy",     'r',   ACS2_D, 14,-GY16_TO_DPS, GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ofpch_gy",      'r',   ACS2_D, 12, GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ofroll_gy",    'r',   ACS2_D, 13,GY16_TO_DPS,-GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
+  {"ofyaw_gy",     'r',   ACS2_D, 14,-GY16_TO_DPS, GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS},
   {"ofaz_gy",     'r',   ACS2_D, 16  ,-GY16_TO_DPS, GY16_OFFSET*GY16_TO_DPS, 'u', U_V_DPS}, 
   {"vel_req_az",   'w',   ACS2_D, 27, GY16_TO_DPS,-32768.0*GY16_TO_DPS, 'u', U_V_DPS},
   {"step_1_el",    'w',   ACS2_D, 29,     10000.0/32767.0, -10000.30518509, 'u', U_F_HZ},
   {"step_2_el",    'w',   ACS2_D, 30,     10000.0/32767.0, -10000.30518509, 'u', U_F_HZ},
   {"el_raw_1_enc", 'r',   ACS2_D, 56,               I2DEG,            ENC1_OFFSET, 'u', U_P_DEG},
   {"el_raw_2_enc", 'r',   ACS2_D, 57,               -I2DEG,           ENC2_OFFSET, 'u', U_P_DEG},
-  {"vel_ifel_gy",  'r', ACS2_A1, 45,    CAL16(14.9925037, 0.0), 'u', U_V_DPS},  
+  {"vel_ofpch_gy",  'r', ACS2_A1, 45,    CAL16(14.9925037, 0.0), 'u', U_V_DPS},  
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
   {"dps_table",    'w',    LOOP1, 34,           70.0/32767.0,            0.0, 's', U_V_DPS},
 

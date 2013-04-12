@@ -459,7 +459,7 @@ static void Chatter(void* arg)
 
 static void GetACS()
 {
-  double enc_mean_el, enc_diff_el, ifel_gy, ifroll_gy, ifyaw_gy, ofaz_gy;
+  double enc_mean_el, enc_diff_el, ofpch_gy, ofroll_gy, ofyaw_gy, ofaz_gy;
   double enc_raw_el_1; // PORT
   double enc_raw_el_2; // STARBOARD
   double enc_table;
@@ -476,9 +476,9 @@ static void GetACS()
   double bbc_rate; // BBC frame rate in Hz 
   double adc_rate; // BLASTbus ADC sample rate in Hz
 
-  static struct BiPhaseStruct* ifElgyAddr;
+  static struct BiPhaseStruct* ofPchgyAddr;
   static struct BiPhaseStruct* ifRollgyAddr;
-  static struct BiPhaseStruct* ifYawgyAddr;
+  static struct BiPhaseStruct* ofYawgyAddr;
   static struct BiPhaseStruct* ofAzGyAddr;
   static struct BiPhaseStruct* xMagAddr;
   static struct BiPhaseStruct* yMagAddr;
@@ -518,9 +518,9 @@ static void GetACS()
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    ifElgyAddr = GetBiPhaseAddr("ifel_gy");
-    ifRollgyAddr = GetBiPhaseAddr("ifroll_gy");
-    ifYawgyAddr = GetBiPhaseAddr("ifyaw_gy");
+    ofPchgyAddr = GetBiPhaseAddr("ofpch_gy");
+    ifRollgyAddr = GetBiPhaseAddr("ofroll_gy");
+    ofYawgyAddr = GetBiPhaseAddr("ofyaw_gy");
     ofAzGyAddr = GetBiPhaseAddr("ofaz_gy");
     xMagAddr = GetBiPhaseAddr("x_mag");
     yMagAddr = GetBiPhaseAddr("y_mag");
@@ -586,9 +586,9 @@ static void GetACS()
   }
 
   vel_rw = ReadCalData(velSerRWAddr); 
-  ifel_gy = ReadCalData(ifElgyAddr); //(double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
-  ifroll_gy = ReadCalData(ifRollgyAddr); //(double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
-  ifyaw_gy = ReadCalData(ifYawgyAddr); //(double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
+  ofpch_gy = ReadCalData(ofPchgyAddr); //(double)((RxFrame[ofPchgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
+  ofroll_gy = ReadCalData(ifRollgyAddr); //(double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
+  ofyaw_gy = ReadCalData(ofYawgyAddr); //(double)(RxFrame[ofYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
 
   ofaz_gy = ReadCalData(ofAzGyAddr);
   
@@ -641,9 +641,9 @@ static void GetACS()
   ACSData.t = mcp_systime(NULL);
   ACSData.enc_mean_el = enc_mean_el;
   ACSData.enc_diff_el = enc_diff_el;
-  ACSData.ifel_gy = ifel_gy;
-  ACSData.ifroll_gy = ifroll_gy;
-  ACSData.ifyaw_gy = ifyaw_gy;
+  ACSData.ofpch_gy = ofpch_gy;
+  ACSData.ofroll_gy = ofroll_gy;
+  ACSData.ofyaw_gy = ofyaw_gy;
   ACSData.ofaz_gy = ofaz_gy;
   ACSData.mag_x = x_comp;
   ACSData.mag_y = y_comp;
@@ -1341,7 +1341,7 @@ int main(int argc, char *argv[])
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   //TODO CompressionWriter segfaults on (currently) empty compressstruct
-  //pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
+  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
   pthread_create(&hwpr_id, NULL, (void*)&StartHWP, NULL);
   pthread_create(&mce_id, NULL, (void*)&mceserv, NULL);
