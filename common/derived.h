@@ -91,6 +91,8 @@ union DerivedUnion {
   } mplex;
 };
 
+#pragma pack()
+
 #define DERIVED_EOC_MARKER '!'
 #define LINCOM(f,s,m,b) {.lincom = { 'c' , f , s , m , b }}
 #define LINCOM2(f,s1,m1,b1,s2,m2,b2) {.lincom2 = { '2' , f, s1, s2, m1, b1 ,\
