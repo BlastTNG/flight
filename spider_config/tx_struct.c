@@ -842,8 +842,8 @@ struct ChannelStruct SlowChannels[] = {
   {"limit_lock",   'r',   ACS2_D, 30,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
-  {"pitch_piv_clin",'r', ACS2_A1,  1,           0.001343,          -43.18, 'u', U_NONE},
-  {"roll_piv_clin",'r',  ACS2_A1,  3,           0.001413,         -44.788, 'u', U_NONE},
+  {"pitch_piv_clin",'r', ACS2_A1,  1,           0.001343,          -42.00, 'u', U_NONE},
+  {"roll_piv_clin",'r',  ACS2_A1,  3,           0.001413,         -44.588, 'u', U_NONE},
   {"t_piv_clin",   'r',  ACS2_A1,  5, 100.0*10.0/32768.0,     -100.0*10.0, 'u', U_NONE},
   {"pitch_of_clin",'r',  ACS2_A1,  7,            -0.00143,         47.555, 'u', U_NONE},
   {"roll_of_clin", 'r',  ACS2_A1,  9,              -0.001,           31.6, 'u', U_NONE},
