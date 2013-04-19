@@ -108,8 +108,8 @@ void updateTableSpeed()
   static double targVel;
   timeval timestruct;
   static double targPos;
-  static double lastTime, lastPos;
-  double thisTime, thisPos;
+  static double lastTime, lastPos, homing_lastPos;
+  double thisTime, thisPos, homing_thisPos;
   static int firsttime = 1;
   static double yawdist[10];
   static int sendvel = 1;
@@ -122,6 +122,7 @@ void updateTableSpeed()
   //initialization
   if (firsttime) {
     lastPos = ACSData.enc_table;
+    homing_lastPos = ACSData.enc_table;
     gettimeofday(&timestruct, NULL);
     lastTime = (double)timestruct.tv_sec + timestruct.tv_usec/1000000.0;
     targVel = 0;
@@ -227,12 +228,14 @@ void updateTableSpeed()
 		  targVel = -3.0;
 		  last_direction = 0;
 	  }
-	  if (((thisPos > 26.0) && (thisPos < 30)) || ((thisPos > 325.0) && (thisPos < 330.0))) {
+	  homing_thisPos = ACSData.enc_table;
+	  if ((fabs(homing_thisPos - homing_lastPos)) > 10.0 && (fabs(homing_thisPos - homing_lastPos) < 350.0)) {
 //		  bprintf(info,"Going home");
 		  targVel = 0.0;
 		  CommandData.table.mode = 1;
 		  CommandData.table.pos = 0.0;
 	  }
+	  homing_lastPos = homing_thisPos;
   } else {
 	if (targVel > 0) last_direction = 1;
   	else last_direction = 0;
