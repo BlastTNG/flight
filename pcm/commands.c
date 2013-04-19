@@ -1174,6 +1174,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.is_turn_around = 0;
       CommandData.pointing_mode.mode = P_SPIDER;
+      CommandData.pointing_mode.el_mode = P_EL_GOTO;
       break;
     case set_scan_params:
       CommandData.az_accel = rvalues[0];

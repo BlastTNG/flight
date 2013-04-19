@@ -1385,6 +1385,7 @@ static void DoSpiderMode(void)
 	if ( (n_scans % N_scans) == 0 ) { // step in elevation
           bprintf(info, "stepping in el at right turn around");
           axes_mode.el_mode = AXIS_POSITION;
+	  CommandData.pointing_mode.el_mode = P_EL_GOTO;
           axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
           axes_mode.el_vel = 0.0;
         }  
@@ -1430,6 +1431,7 @@ static void DoSpiderMode(void)
 	if ( (n_scans % N_scans) == 0 ) { // step in elevation
           bprintf(info, "stepping in el at left turn around");
           axes_mode.el_mode = AXIS_POSITION;
+	  CommandData.pointing_mode.el_mode = P_EL_GOTO;
           axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
           axes_mode.el_vel = 0.0;
         }
