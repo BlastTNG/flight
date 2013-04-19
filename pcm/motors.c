@@ -68,7 +68,9 @@
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
 #define TOLERANCE 0.02    // max acceptable el pointing error (deg)
+#define TWIST_TOL 0.2     // max diff between port & strbrd encs (deg)
 #define EL_REL_MIN 0.005  // min size of el relative move (= 1 count)
+#define EL_ON_DELAY 0.40  // turn on delay of el drive when in auto mode
 
 /* variables storing scan region (relative to defined quad) */
 static int scan_region = 0;
@@ -398,9 +400,19 @@ static void GetVElevGoto(double* v_P, double* v_S)
   *v_S = (*v_S < *v_P) ? *v_S : *v_P;
   *v_P = *v_S;
 
+  /* check for a stalled motor */
+  if ( fabs(ACSData.enc_diff_el) > TWIST_TOL ) {
+    isStopped = 1;
+    el_dest = axes_mode.el_dest = CommandData.pointing_mode.Y
+            = ACSData.enc_mean_el;
+    CommandData.power.elmot_auto = 2;
+  } else {
+    isStopped = 0;
+  }
+
   if ( fabs(el_dest - ACSData.enc_mean_el ) < TOLERANCE ) { 
     since_arrival++;
-    isStopped = (since_arrival >= 500);
+    isStopped = (since_arrival >= 2*ACSData.bbc_rate);
   }  else {
     since_arrival = 0;
     isStopped = 0;
@@ -424,9 +436,15 @@ static void GetVElevGoto(double* v_P, double* v_S)
 static void GetVElev(double* v_P, double* v_S)
 {
   static int on_delay = 0;
+  static int was_not_auto = 1;
+ 
+  if (was_not_auto && (CommandData.power.elmot_auto)) {
+    on_delay = 0;
+  }
+  was_not_auto = !CommandData.power.elmot_auto;
 
   if ( !(CommandData.power.elmot_auto) ) {
-    on_delay = 35; 
+    on_delay = EL_ON_DELAY*ACSData.bbc_rate + 2.0; //1st factor is delay in seconds 
   }
   
   // if !P_EL_NONE and auto and off
@@ -440,9 +458,11 @@ static void GetVElev(double* v_P, double* v_S)
     }
   }
              
-  if ( (CommandData.pointing_mode.el_mode == P_EL_GOTO) && (on_delay >= 35) ) {
+  if ( (CommandData.pointing_mode.el_mode == P_EL_GOTO) && 
+       (on_delay >= EL_ON_DELAY*ACSData.bbc_rate) ) {
     GetVElevGoto(v_P, v_S);
-  } else if ( (CommandData.pointing_mode.el_mode == P_EL_RELMOVE) && (on_delay >= 35) ) {
+  } else if ( (CommandData.pointing_mode.el_mode == P_EL_RELMOVE) && 
+              (on_delay >= EL_ON_DELAY*ACSData.bbc_rate) ) {
     GetVElevRelMove(v_P, v_S);
   } else {
     *v_P = *v_S = 0.0;
@@ -452,6 +472,9 @@ static void GetVElev(double* v_P, double* v_S)
         && (CommandData.pointing_mode.el_mode == P_EL_NONE) ) {      
       CommandData.power.elmot.set_count = 0;
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+      if (CommandData.power.elmot_auto == 2) { // stalled
+        CommandData.power.elmot_auto = 0; 
+      }
       on_delay = 0; // reset for the next time we turn on
     }
   }
