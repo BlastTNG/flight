@@ -62,7 +62,8 @@
 // Used by higain and bi0.  Number of frames in buffer.
 #define BI0_FRAME_BUFLEN (400)
 
-#define MCE_RATE ( 25.0e6/(120.0*33.0*41.0) ) // 25 MHz/(rl*nr*fr) ~ 154 Hz
+#define MCE_RATE ( 25.0e6/(57.0*33.0*120.0) ) // 25 MHz/(rl*nr*fr) ~ 110.76 Hz
+                                              // default, still required by pcm
 
 /* Define global variables */
 //flc_ip[0] = bitsy, flc_ip[1] = itsy, so that flc_ip[BitsyIAm] gives other flc
@@ -474,6 +475,8 @@ static void GetACS()
   double vel_rw;
   double res_piv;
   double bbc_rate; // BBC frame rate in Hz 
+  double mce_rate; // MCE data rate in Hz
+  double fr_nr_rl_product; // product of three sync box params
   double adc_rate; // BLASTbus ADC sample rate in Hz
 
   static struct BiPhaseStruct* ofPchgyAddr;
@@ -631,7 +634,17 @@ static void GetACS()
   else if (enc_table > 360.0) enc_table -= 360;
 
   if (CommandData.bbcIsExt) {
-    bbc_rate = (double) MCE_RATE/CommandData.bbcExtFrameRate;
+    fr_nr_rl_product = ( CommandData.sync_box.rl_value 
+                       * CommandData.sync_box.nr_value 
+                       * CommandData.sync_box.fr_value );     
+
+    /* MCE rate = 25 MHz/(rl*nr*fr) */
+    if (fr_nr_rl_product == 0) {
+      mce_rate = MCE_RATE;
+    } else {
+      mce_rate = ( 25.0e6 / ((double)fr_nr_rl_product));
+    }
+    bbc_rate = (double) mce_rate/CommandData.bbcExtFrameRate;
     adc_rate = 5.0e6/384.0;
   } else {
     bbc_rate = (4.0e6/384.0) / CommandData.bbcIntFrameRate;
@@ -1312,7 +1325,6 @@ int main(int argc, char *argv[])
   InitSched();
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
-  //TODO FIXME: openTable seems to make pcm crash, so removed for now
   openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
