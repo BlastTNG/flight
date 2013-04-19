@@ -50,6 +50,9 @@ extern "C" {
 //minimum table move to actually execute (in deg)
 #define MIN_TABLE_MOVE 0.1
 static int tableSpeed = 0;
+static int direction = 0;
+static int last_direction = 0;
+static int homing = 0;
 short int exposing;
 short int docalc;
 short int zerodist[10];
@@ -112,7 +115,7 @@ void updateTableSpeed()
   static int sendvel = 1;
   static NiosStruct* dpsAddr = NULL;
   int i;
-  //static int j;
+//  static int j;
   int i_point;
   i_point = GETREADINDEX(point_index);
 
@@ -150,40 +153,27 @@ void updateTableSpeed()
 	FixAngle(&yawdist[i]);
   }
   if (docalc) {
-  	//figure out targPos
-  	//1) yaw distance moved since goodPos[i] was at trigPos[i]
-	
-	  //2) actual encoder position of goodPos now = goodPos(=trigPos) + yawdist
 	  for (i=0; i<10; i++) {
 		if (goodPos[i] == 0.0) targPos = 0.0;
-		else {
-			targPos = goodPos[i] + yawdist[i];
-			//bprintf(info,"---%i--- targpos=%f, goodPos=%f, yawdist=%f",i,targPos,goodPos[i],yawdist[i]);
-		}
-		if ((targPos > 15) && (targPos < 280)) {//   if it's out-of-bounds, set targPos to 0
+		else targPos = goodPos[i] + yawdist[i];
+		if ((targPos > 15) && (targPos < 280)) {//TODO find real limits
 			targPos = 0.0;
 	  		calcdist = thisPos - targPos;
 			FixAngle(&calcdist);
-			//bprintf(info,"out of bounds, doing 0 instead");
 		} else {
-			calcdist = thisPos - targPos; // it's not out of bounds, check how far away it is
+			calcdist = thisPos - targPos;
 			FixAngle(&calcdist);
-			//bprintf(info,"calcdist=%f, thisPos=%f, targPos=%f",calcdist,thisPos,targPos);
-			if ((fabs(calcdist)) > 5.0) { // if it's too far, set targPos to 0
+			if ((fabs(calcdist)) > 5.0) {
 				targPos = 0.0;
 	  			calcdist = thisPos - targPos;
 				FixAngle(&calcdist);
-				//bprintf(info,"too far, doing 0 instead");
 			} else {	
-				if (targPos != 0) break; // if it survives the test, use it, otherwise try next one
+				if (targPos != 0.0) break;
 			}
 		}
 	  }
   docalc = 0;
   sendvel = 1;
-  // after all this, calcdist should = here - 0, or here - smthg else
-  // calcdist is calculated once, and sets the targVel
-  // dist is calculated every time to tell you how close you are to targPos
   }
   dist = thisPos - targPos;
   FixAngle(&dist);
@@ -198,20 +188,21 @@ void updateTableSpeed()
 	targPos = CommandData.table.pos;
 	targVel = 6.0;
 	movedist = thisPos - targPos;
-        //if((j%300)==0) bprintf(info,"THISPOS = %f, TARGPOS = %f, MOVEDIST = %f\n",thisPos,targPos,movedist);
   	FixAngle(&movedist);
-        //if((j%300)==0) bprintf(info,"after FIXANGLE, MOVEDIST = %f\n",movedist);
         if (movedist > 0) targVel = -6.0;
 	if ((fabs(movedist) < 0.5)) targVel = 0;
+	if (homing) {
+		homing = 0;
+//		bprintf(info,"Home");
+	}
   } else if (CommandData.table.mode==2) {
 	//DRIFT
 	targVel = CommandData.table.vel;
   } else {
 	//TRACKING
-  	if (exposing || CommandData.theugly.paused)  {
+  	if (exposing || (CommandData.thebad.paused && CommandData.theugly.paused))  {
 		targVel = PointingData[i_point].v_az;
   	} else {
-		// having figured out calcdist, set a targVel that will get you there in 1s, and don't update targVel until you get within 0.5
 		if ((calcdist < 0) && (sendvel)) {
 			targVel = (((fabs(calcdist)) > 10.0) ? 10.0 : -calcdist);
 			sendvel = 0;
@@ -221,13 +212,32 @@ void updateTableSpeed()
 			sendvel = 0;
 		}
 		if ((fabs(dist)) < 0.3) {
-			targVel = PointingData[i_point].v_az;//0.0;
+			targVel = PointingData[i_point].v_az;
 		}
   	}
 
   }
-  //if((j%300)==0) bprintf(info,"TARGVEL= %f",targVel);
-  //j++;
+  if (homing) {
+//	  if((j%300)==0) bprintf(info,"Homing...direction is %i (1=CCW, 0=CW)",direction);
+	  if (direction) {
+		  targVel = 3.0;
+		  last_direction = 1;
+	  }
+	  else {
+		  targVel = -3.0;
+		  last_direction = 0;
+	  }
+	  if (((thisPos > 26.0) && (thisPos < 30)) || ((thisPos > 325.0) && (thisPos < 330.0))) {
+//		  bprintf(info,"Going home");
+		  targVel = 0.0;
+		  CommandData.table.mode = 1;
+		  CommandData.table.pos = 0.0;
+	  }
+  } else {
+	if (targVel > 0) last_direction = 1;
+  	else last_direction = 0;
+  }
+//  j++;
   if (targVel > MAX_TABLE_SPEED) targVel = MAX_TABLE_SPEED;
   else if (targVel < -MAX_TABLE_SPEED) targVel = -MAX_TABLE_SPEED;
   tableSpeed = (int)(targVel/MAX_TABLE_SPEED * (INT_MAX-1));
@@ -282,6 +292,9 @@ void* rotaryTableComm(void* arg)
         bprintf(info, "successful reconnection to rotary table");
     	CommandData.table.mode = 2;
 	CommandData.table.vel = 0.0;
+	homing = 1;
+	if (last_direction) direction = 0;
+	else direction = 1;
       }
 
       //can also put queries here for (eg) motor temperature

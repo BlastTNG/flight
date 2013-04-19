@@ -151,7 +151,6 @@ void cameraFields()
   static bool unrecFlag = false;
   static int blobindex[3] = {0,0,0};
   static unsigned long int posFrame;
-//  static int bscwait;
   static int rscwait;
   static int exposecount;
 
@@ -236,7 +235,6 @@ void cameraFields()
   //initialization
   if (firsttime) {
     firsttime = 0;
-//    bscwait = 0;
     rscwait = 0;
     exposecount = 0;
     TheGoodforceAddr = GetNiosAddr("force_thegood");
@@ -361,19 +359,16 @@ void cameraFields()
   WriteData(TheBadblobMdistAddr, CommandData.thebad.minBlobDist, NIOS_QUEUE);
   WriteData(TheUglyblobMdistAddr, CommandData.theugly.minBlobDist, NIOS_QUEUE);
 
-//WHERE DOES THIS GO (formerly in readLoop):
-//  bscwait++; 
   if (bsc_trigger) {
-//	if ((bscwait%50)==0) {
-		//if (!CommandData.thegood.paused) sendTheGoodCommand("CtrigExp");
-		if (!CommandData.thegood.paused) sendTheUglyCommand("CtrigExp");
+		if (!CommandData.thegood.paused) sendTheGoodCommand("CtrigExp");
 		bsc_trigger = 0;
-//	}
   }   
   rscwait++;
   if ((rscwait%20)==0) {
 	if (!CommandData.thebad.paused) {
 		sendTheBadCommand("CtrigExp");
+		exposing = 1;
+		rscwait = 0;
 	}
 	if (!CommandData.theugly.paused) {
 		sendTheUglyCommand("CtrigExp");
@@ -513,7 +508,6 @@ void cameraFields()
 		for (int j=0; j<10; j++) {
 			if ((goodPos[j] == 0.0) && (rsc->frameNum != posFrame)) {
 				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
-				bprintf(info,"SETTING goodPos[%i]",j);
 				posFrame = rsc->frameNum;
 				break;
 			}
