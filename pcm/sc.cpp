@@ -364,7 +364,7 @@ void cameraFields()
 		bsc_trigger = 0;
   }   
   rscwait++;
-  if ((rscwait%20)==0) {
+  if ((rscwait%10)==0) {
 	if (!CommandData.thebad.paused) {
 		sendTheBadCommand("CtrigExp");
 		exposing = 1;

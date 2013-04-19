@@ -115,7 +115,6 @@ void updateTableSpeed()
   static int sendvel = 1;
   static NiosStruct* dpsAddr = NULL;
   int i;
-//  static int j;
   int i_point;
   i_point = GETREADINDEX(point_index);
 
@@ -157,7 +156,7 @@ void updateTableSpeed()
 	  for (i=0; i<10; i++) {
 		if (goodPos[i] == 0.0) targPos = 0.0;
 		else targPos = goodPos[i] + yawdist[i];
-		if ((targPos > 15) && (targPos < 280)) {//TODO find real limits
+		if ((targPos > 25) && (targPos < 335)) {//TODO find real limits
 			targPos = 0.0;
 	  		calcdist = thisPos - targPos;
 			FixAngle(&calcdist);
@@ -219,7 +218,6 @@ void updateTableSpeed()
 
   }
   if (homing) {
-//	  if((j%300)==0) bprintf(info,"Homing...direction is %i (1=CCW, 0=CW)",direction);
 	  if (direction) {
 		  targVel = 3.0;
 		  last_direction = 1;
@@ -240,7 +238,6 @@ void updateTableSpeed()
 	if (targVel > 0) last_direction = 1;
   	else last_direction = 0;
   }
-//  j++;
   if (targVel > MAX_TABLE_SPEED) targVel = MAX_TABLE_SPEED;
   else if (targVel < -MAX_TABLE_SPEED) targVel = -MAX_TABLE_SPEED;
   tableSpeed = (int)(targVel/MAX_TABLE_SPEED * (INT_MAX-1));
