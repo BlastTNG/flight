@@ -114,9 +114,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
-  {COMMAND(das_off), "turn off the DAS", GR_POWER},
-  {COMMAND(das_on), "turn on the DAS", GR_POWER},
-  {COMMAND(das_cycle), "power cycle the DAS", GR_POWER},
+  {COMMAND(das_off), "turn off the DAS", GR_IFPOWER},
+  {COMMAND(das_on), "turn on the DAS", GR_IFPOWER},
+  {COMMAND(das_cycle), "power cycle the DAS", GR_IFPOWER},
   {COMMAND(of_charge_off), "turn off the outer frame charge controller", GR_POWER | CONFIRM},
   {COMMAND(of_charge_on), "turn on the outer frame charge controller", GR_POWER},
   {COMMAND(if_charge_off), "turn off the inner frame charge controller", GR_IFPOWER | CONFIRM},
@@ -186,11 +186,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_GAIN},
   {COMMAND(restore_piv), "restore the serial settings for the pivot controller", GR_GAIN},
-  {COMMAND(az_off), "disable az motors' gains", GR_GAIN},
-  {COMMAND(az_on), "enable az motors' gains", GR_GAIN},
-  {COMMAND(el_off), "disable el motor gains", GR_GAIN},
-  {COMMAND(el_on), "enable el motor gains", GR_GAIN},
-  {COMMAND(force_el_on), "force enable el motors despite the pin being in",
+  {COMMAND(az_disable), "disable az motors' gains", GR_GAIN},
+  {COMMAND(az_enable), "enable az motors' gains", GR_GAIN},
+  {COMMAND(el_disable), "disable el motor gains", GR_GAIN},
+  {COMMAND(el_enable), "enable el motor gains", GR_GAIN},
+  {COMMAND(force_el_enable), "force enable el motors despite the pin being in",
     CONFIRM | GR_GAIN},
 
   {COMMAND(elenc1_veto), "veto elevation encoder 1", GR_VETO},
@@ -615,7 +615,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /****************************************/
   /*************** Misc.  *****************/
-  {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER, 1,
+  {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER | GR_IFPOWER, 1,
     {
       {"Node number",  0, 64, 'i', ""}
     }

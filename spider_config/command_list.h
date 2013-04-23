@@ -66,13 +66,13 @@ extern const char *GroupNames[N_GROUPS];
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
-  az_auto_gyro,      az_off,            az_on,             hwp_panic,
-  el_off,            el_on,             pin_in,            reset_trims,
+  az_auto_gyro,      az_disable,        az_enable,         hwp_panic,
+  el_disable,        el_enable,         pin_in,            reset_trims,
   elenc1_allow,      elenc2_allow,      elenc1_veto,       elenc2_veto,
   gps_allow,         gps_veto,          mag_allow,         mag_veto,
   stop,              pss_veto,          pss_allow,         lock,
   trim_to_isc,       unlock,            lock_off,          lock_on,
-  force_el_on,       gps_cycle,         actbus_cycle,      rw_cycle,
+  force_el_enable,   gps_cycle,         actbus_cycle,      rw_cycle,
   piv_cycle,         elmot_cycle,       hub232_cycle,      das_cycle,
   rsc_cycle,         bsc_cycle,         rsc_off,           rsc_on,
   gps_off,           gps_on,            rw_off,            rw_on,
