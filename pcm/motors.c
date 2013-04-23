@@ -1041,7 +1041,7 @@ static void SetAzScanMode(double az, double left, double right, double v,
     }
     /* BSC Trigger flag */
     before_trig = (DELAY/ACSData.bbc_rate) - v/CommandData.az_accel 
-    + CommandData.theugly.expTime/2000;
+    + CommandData.StarCam[0].expTime/2000;
     if (az < left + before_trig*v) {
       bsc_trigger = 1;  
     } else if (az > right - before_trig*v) {
@@ -1064,7 +1064,7 @@ static void DoSineMode(void)
   double t_before; // time at which to send BSC trigger command
   static double last_v = 0.0;
   
-  t_before = (DELAY/ACSData.bbc_rate) + CommandData.theugly.expTime/2000.0;
+  t_before = (DELAY/ACSData.bbc_rate) + CommandData.StarCam[0].expTime/2000.0;
  
   az_accel = CommandData.az_accel;
   az_accel_dv = az_accel/(ACSData.bbc_rate);
@@ -1232,7 +1232,7 @@ static void DoSpiderMode(void)
   
   static double el_dest_pre = 37.5; // arbitrary
   
-  t_before = (DELAY/ACSData.bbc_rate) + CommandData.theugly.expTime/2000.0;
+  t_before = (DELAY/ACSData.bbc_rate) + CommandData.StarCam[0].expTime/2000.0;
   
   t_step = 0.35; // "on_delay" in GetIElev + (1/2)*(step duration) 
   

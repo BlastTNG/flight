@@ -821,13 +821,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case thegood_settrig_ext:
       sendTheGoodCommand("CsetExpInt=0");
-      CommandData.thegood.expInt = 0;
+      CommandData.StarCam[0].expInt = 0;
       break;
     case thegood_pause:
-      CommandData.thegood.paused = 1;
+      CommandData.StarCam[0].paused = 1;
       break;
     case thegood_run:
-      CommandData.thegood.paused = 0;
+      CommandData.StarCam[0].paused = 0;
       break;
       /***************************************/
       /********* The Bad Commanding  *************/
@@ -839,13 +839,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case thebad_settrig_ext:
       sendTheBadCommand("CsetExpInt=0");
-      CommandData.thebad.expInt = 0;
+      CommandData.StarCam[1].expInt = 0;
       break;
     case thebad_pause:
-      CommandData.thebad.paused = 1;
+      CommandData.StarCam[1].paused = 1;
       break;
     case thebad_run:
-      CommandData.thebad.paused = 0;
+      CommandData.StarCam[1].paused = 0;
       break;
       /***************************************/
       /********* The Ugly Commanding  *************/
@@ -857,13 +857,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case theugly_settrig_ext:
       sendTheUglyCommand("CsetExpInt=0");
-      CommandData.theugly.expInt = 0;
+      CommandData.StarCam[2].expInt = 0;
       break;
     case theugly_pause:
-      CommandData.theugly.paused = 1;
+      CommandData.StarCam[2].paused = 1;
       break;
     case theugly_run:
-      CommandData.theugly.paused = 0;
+      CommandData.StarCam[2].paused = 0;
       break;
       /**************************************/
       /********** Star Camera Table *********/
@@ -1799,11 +1799,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case thegood_settrig_timed:
       sprintf(buf, "CsetExpInt=%d", ivalues[0]);
       sendTheGoodCommand(buf);
-      CommandData.thegood.expInt = ivalues[0];
+      CommandData.StarCam[0].expInt = ivalues[0];
       break;
     case thegood_exp_params:
       sprintf(buf, "CsetExpTime=%d", ivalues[0]);
-      CommandData.thegood.expTime = ivalues[0];
+      CommandData.StarCam[0].expTime = ivalues[0];
       sendTheGoodCommand(buf);
       break;
     case thegood_focus_params:
@@ -1811,8 +1811,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheGoodCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
       sendTheGoodCommand(buf);
-      CommandData.thegood.focusRes = ivalues[0];
-      CommandData.thegood.focusRng = ivalues[1];
+      CommandData.StarCam[0].focusRes = ivalues[0];
+      CommandData.StarCam[0].focusRng = ivalues[1];
       break;
     case thegood_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
@@ -1827,10 +1827,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheGoodCommand(buf);
       sprintf(buf, "IsetDisttol=%d", ivalues[3]);
       sendTheGoodCommand(buf);
-      CommandData.thegood.maxBlobs = ivalues[0];
-      CommandData.thegood.grid = ivalues[1];
-      CommandData.thegood.threshold = rvalues[2];
-      CommandData.thegood.minBlobDist = ivalues[3];
+      CommandData.StarCam[0].maxBlobs = ivalues[0];
+      CommandData.StarCam[0].grid = ivalues[1];
+      CommandData.StarCam[0].threshold = rvalues[2];
+      CommandData.StarCam[0].minBlobDist = ivalues[3];
       break;
     case thegood_lens_any:
       sprintf(buf, "L=%s", svalues[0]);
@@ -1843,7 +1843,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case thegood_lens_params:
       sprintf(buf, "LsetTol=%d", ivalues[0]);
       sendTheGoodCommand(buf);
-      CommandData.thegood.moveTol = ivalues[0];
+      CommandData.StarCam[0].moveTol = ivalues[0];
       break;
       /***************************************/
       /********* The Bad Commanding  *************/
@@ -1853,11 +1853,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case thebad_settrig_timed:
       sprintf(buf, "CsetExpInt=%d", ivalues[0]);
       sendTheBadCommand(buf);
-      CommandData.thebad.expInt = ivalues[0];
+      CommandData.StarCam[1].expInt = ivalues[0];
       break;
     case thebad_exp_params:
       sprintf(buf, "CsetExpTime=%d", ivalues[0]);
-      CommandData.thebad.expTime = ivalues[0];
+      CommandData.StarCam[1].expTime = ivalues[0];
       sendTheBadCommand(buf);
       break;
     case thebad_focus_params:
@@ -1865,8 +1865,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheBadCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
       sendTheBadCommand(buf);
-      CommandData.thebad.focusRes = ivalues[0];
-      CommandData.thebad.focusRng = ivalues[1];
+      CommandData.StarCam[1].focusRes = ivalues[0];
+      CommandData.StarCam[1].focusRng = ivalues[1];
       break;
     case thebad_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
@@ -1881,10 +1881,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheBadCommand(buf);
       sprintf(buf, "IsetDisttol=%d", ivalues[3]);
       sendTheBadCommand(buf);
-      CommandData.thebad.maxBlobs = ivalues[0];
-      CommandData.thebad.grid = ivalues[1];
-      CommandData.thebad.threshold = rvalues[2];
-      CommandData.thebad.minBlobDist = ivalues[3];
+      CommandData.StarCam[1].maxBlobs = ivalues[0];
+      CommandData.StarCam[1].grid = ivalues[1];
+      CommandData.StarCam[1].threshold = rvalues[2];
+      CommandData.StarCam[1].minBlobDist = ivalues[3];
       break;
     case thebad_lens_any:
       sprintf(buf, "L=%s", svalues[0]);
@@ -1897,7 +1897,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case thebad_lens_params:
       sprintf(buf, "LsetTol=%d", ivalues[0]);
       sendTheBadCommand(buf);
-      CommandData.thebad.moveTol = ivalues[0];
+      CommandData.StarCam[1].moveTol = ivalues[0];
       break;
       /***************************************/
       /********* The Ugly Commanding  *************/
@@ -1907,11 +1907,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case theugly_settrig_timed:
       sprintf(buf, "CsetExpInt=%d", ivalues[0]);
       sendTheUglyCommand(buf);
-      CommandData.theugly.expInt = ivalues[0];
+      CommandData.StarCam[2].expInt = ivalues[0];
       break;
     case theugly_exp_params:
       sprintf(buf, "CsetExpTime=%d", ivalues[0]);
-      CommandData.theugly.expTime = ivalues[0];
+      CommandData.StarCam[2].expTime = ivalues[0];
       sendTheUglyCommand(buf);
       break;
     case theugly_focus_params:
@@ -1919,8 +1919,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheUglyCommand(buf);
       sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
       sendTheUglyCommand(buf);
-      CommandData.theugly.focusRes = ivalues[0];
-      CommandData.theugly.focusRng = ivalues[1];
+      CommandData.StarCam[2].focusRes = ivalues[0];
+      CommandData.StarCam[2].focusRng = ivalues[1];
       break;
     case theugly_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
@@ -1935,10 +1935,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheUglyCommand(buf);
       sprintf(buf, "IsetDisttol=%d", ivalues[3]);
       sendTheUglyCommand(buf);
-      CommandData.theugly.maxBlobs = ivalues[0];
-      CommandData.theugly.grid = ivalues[1];
-      CommandData.theugly.threshold = rvalues[2];
-      CommandData.theugly.minBlobDist = ivalues[3];
+      CommandData.StarCam[2].maxBlobs = ivalues[0];
+      CommandData.StarCam[2].grid = ivalues[1];
+      CommandData.StarCam[2].threshold = rvalues[2];
+      CommandData.StarCam[2].minBlobDist = ivalues[3];
       break;
     case theugly_lens_any:
       sprintf(buf, "L=%s", svalues[0]);
@@ -1951,7 +1951,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case theugly_lens_params:
       sprintf(buf, "LsetTol=%d", ivalues[0]);
       sendTheUglyCommand(buf);
-      CommandData.theugly.moveTol = ivalues[0];
+      CommandData.StarCam[2].moveTol = ivalues[0];
       break;
     case table_gain:  /* rotary table gains */
       // TODO PID loop performed in controller, figure out how to set gains
@@ -2129,9 +2129,9 @@ void InitCommandData()
   CommandData.table.vel = 0.0;
   CommandData.table.pos = 0.0;
   CommandData.table.mode = 0;
-  CommandData.thegood.paused = 1;
-  CommandData.thebad.paused = 1;
-  CommandData.theugly.paused = 1;
+  CommandData.StarCam[0].paused = 1;
+  CommandData.StarCam[1].paused = 1;
+  CommandData.StarCam[2].paused = 1;
 
   CommandData.Temporary.setLevel[0] = 1;
   CommandData.Temporary.setLevel[1] = 1;

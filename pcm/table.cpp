@@ -200,7 +200,7 @@ void updateTableSpeed()
 	targVel = CommandData.table.vel;
   } else {
 	//TRACKING
-  	if (exposing || (CommandData.thebad.paused && CommandData.theugly.paused))  {
+  	if (exposing || (CommandData.StarCam[1].paused && CommandData.StarCam[2].paused))  {
 		targVel = PointingData[i_point].v_az;
   	} else {
 		if ((calcdist < 0) && (sendvel)) {

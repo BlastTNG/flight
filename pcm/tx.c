@@ -87,7 +87,8 @@ void WriteMot(int TxIndex);
 double calcVSerRW(void);
 
 /* in sc.cpp */
-void cameraFields();
+void cameraTriggers();
+void cameraFields(int which);
 
 /* in table.cpp */
 void updateTableSpeed();
@@ -1218,6 +1219,7 @@ void UpdateBBCFrame()
   updateTableSpeed();
   WriteChatter(index);
   countHWPEncoder();
+  cameraTriggers();
 
   /*** do slow Controls ***/
   if (index == 0) {
@@ -1231,7 +1233,9 @@ void UpdateBBCFrame()
     WriteSyncBox();
     ControlPower();
     LockMotor();
-    cameraFields();
+    cameraFields(0);
+    cameraFields(1);
+    cameraFields(2);
     StoreHWPBus();
     ControlGyroHeat();    //TODO made slow (ch too). Check that this works
   }
