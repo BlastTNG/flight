@@ -478,14 +478,14 @@ void DoSched(void)
   if (PointingData[i_point].at_float && !CommandData.at_float) {
     bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
     /* el on */
-    event.command = el_on;
+    event.command = el_enable;
     event.is_multi = 0;
     ScheduledCommand(&event);
     /* unlock */
     event.command = unlock;
     ScheduledCommand(&event);
     /* az on */
-    event.command = az_on;
+    event.command = az_enable;
     ScheduledCommand(&event);
     /* point antisolar */
     event.command = antisun;

@@ -257,21 +257,21 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.el_autogyro = 1;
       break;
 
-    case az_off:/* disable az motors */
+    case az_disable:/* disable az motors */
       CommandData.disable_az = 1;
       break;
-    case az_on:/* enable az motors */
+    case az_enable:/* enable az motors */
       CommandData.disable_az = 0;
       break;
-    case el_off: /* disable el motors */
+    case el_disable: /* disable el motors */
       CommandData.disable_el = 1;
       CommandData.force_el = 0;
       break;
-    case el_on: /* enable el motors */
+    case el_enable: /* enable el motors */
       CommandData.disable_el = 0;
       CommandData.force_el = 0;
       break;
-    case force_el_on: /* force enabling of el motors */
+    case force_el_enable: /* force enabling of el motors */
       CommandData.disable_el = 0;
       CommandData.force_el = 1;
       break;
