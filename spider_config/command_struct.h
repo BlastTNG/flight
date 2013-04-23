@@ -271,9 +271,7 @@ struct CommandDataStruct {
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
 
-  struct SCCommandData thegood;
-  struct SCCommandData thebad;
-  struct SCCommandData theugly;
+  struct SCCommandData StarCam[3];
   struct TableStruct table;
 
   struct {
