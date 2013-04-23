@@ -87,6 +87,7 @@
 #define U_V_KPH "Speed","km/hr"
 #define U_ALT_M "Altitude","m"
 #define U_P_DEG "Position","^o"
+#define U_P_HR  "Position", "h"
 #define U_PH_DEG  "Phase","^o"
 #define U_LA_DEG "Latitude","^o"
 #define U_LO_DEG "Longitude","^o"
@@ -114,11 +115,11 @@ struct ChannelStruct WideSlowChannels[] = {
   {"lon",          'w', LOOP1, 40,             LI2DEG,             0.0, 'S', U_NONE},
   {"sec_thegood",   'w', LOOP2, 20,                1.0,             0.0, 'U', U_NONE},
   {"usec_thegood",  'w', LOOP2, 60,                1.0,             0.0, 'U', U_NONE},
-  {"ra",           'w', LOOP3,  4,               LI2H,             0.0, 'U', U_NONE},
+  {"ra",           'w', LOOP3,  4,               LI2H,             0.0, 'U', U_P_HR},
   {"frame_thebad", 'w', LOOP3, 31,                1.0,             0.0, 'U', U_NONE},
   {"sec_thebad",   'w', LOOP3, 44,                1.0,             0.0, 'U', U_NONE},
   {"usec_thebad",  'w', LOOP3, 58,                1.0,             0.0, 'U', U_NONE},
-  {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_NONE},
+  {"dec",          'w', LOOP5,  6,             LI2DEG,             0.0, 'S', U_P_DEG},
   {"lst_sched",    'w', LOOP6, 56,                1.0,             0.0, 'U', U_NONE},  // ls day
   {"frame_theugly",    'w', LOOP9, 50,                1.0,             0.0, 'U', U_NONE},
   {"sec_theugly",      'w', LOOP9, 52,                1.0,             0.0, 'U', U_NONE},

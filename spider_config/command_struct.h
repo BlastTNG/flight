@@ -107,7 +107,7 @@ struct PivGainStruct {
 // LOCK              el
 // AZEL_GOTO   az    el
 // AZ_SCAN     az    el   vaz
-// DRIFT                  vaz   vel
+// DRIFT                  vaz   
 // RADEC_GOTO  ra    dec
 // VCAP*       ra    dec  vaz   vel    r
 // CAP*        ra    dec  vaz   elstep r
@@ -135,7 +135,7 @@ struct PointingModeStruct {
   time_t t;
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
-  // TODO: Write the three below out to frame???
+  // TODO: Write all those below out to frame
   int Nscans;  // number of half-scans per el step in SPIDER mode
   int Nsteps;  // total number of el steps in SPIDER mode
   int new_spider; // set to 1 if a new, distinct spider scan is commanded

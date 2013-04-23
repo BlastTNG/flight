@@ -17,8 +17,8 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 206        /* total number of single word cmds */
-#define N_MCOMMANDS 126        /* total number of multiword commands */
+#define N_SCOMMANDS 205        /* total number of single word cmds */
+#define N_MCOMMANDS 121        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -38,7 +38,7 @@
 #define GR_BIAS         0x00000020
 #define GR_VETO         0x00000040
 #define GR_ACT          0x00000080
-//#define GR_BSC  0x00000100  //unused
+#define GR_GYPWR        0x00000100  
 #define GR_GAIN         0x00000200
 #define GR_LOCK         0x00000400
 #define GR_CRYO_HEAT    0x00000800
@@ -48,7 +48,7 @@
 #define GR_TELEM        0x00008000
 #define GR_SCGOOD       0x00010000
 #define GR_IFPOWER      0x00020000
-#define GR_STAGE        0x00040000
+#define GR_MCEPWR       0x00040000
 #define GR_SCBAD        0x00080000
 #define GR_MCE          0x00100000
 #define GR_MISC         0x00200000
@@ -82,16 +82,16 @@ enum singleCommand {
   table_off,         table_on,          table_cycle,
   of_charge_off,     of_charge_on,      of_charge_cycle,
   if_charge_off,     if_charge_on,       if_charge_cycle,
-  ifroll_1_gy_allow, ifroll_1_gy_veto,  ifroll_2_gy_allow, ifroll_2_gy_veto,
-  ifyaw_1_gy_allow,  ifyaw_1_gy_veto,   ifyaw_2_gy_allow,  ifyaw_2_gy_veto,
-  ifel_1_gy_allow,   ifel_1_gy_veto,    ifel_2_gy_allow,   ifel_2_gy_veto,
-  ifroll_1_gy_off,   ifroll_1_gy_on,    ifroll_2_gy_off,   ifroll_2_gy_on,
-  ifyaw_1_gy_off,    ifyaw_1_gy_on,     ifyaw_2_gy_off,    ifyaw_2_gy_on,
-  ifel_1_gy_off,     ifel_1_gy_on,      ifel_2_gy_off,     ifel_2_gy_on,
-  ifroll_1_gy_cycle, ifroll_2_gy_cycle, ifyaw_1_gy_cycle,  ifyaw_2_gy_cycle,
-  ifel_1_gy_cycle,   ifel_2_gy_cycle,   gybox_off,         gybox_on,
+  ofroll_1_gy_allow, ofroll_1_gy_veto,  ofroll_2_gy_allow, ofroll_2_gy_veto,
+  ofyaw_1_gy_allow,  ofyaw_1_gy_veto,   ofyaw_2_gy_allow,  ofyaw_2_gy_veto,
+  ofpch_1_gy_allow,  ofpch_1_gy_veto,   ofpch_2_gy_allow,  ofpch_2_gy_veto,
+  ofroll_1_gy_off,   ofroll_1_gy_on,    ofroll_2_gy_off,   ofroll_2_gy_on,
+  ofyaw_1_gy_off,    ofyaw_1_gy_on,     ofyaw_2_gy_off,    ofyaw_2_gy_on,
+  ofpch_1_gy_off,    ofpch_1_gy_on,     ofpch_2_gy_off,    ofpch_2_gy_on,
+  ofroll_1_gy_cycle, ofroll_2_gy_cycle, ofyaw_1_gy_cycle,  ofyaw_2_gy_cycle,
+  ofpch_1_gy_cycle,  ofpch_2_gy_cycle,  gybox_off,         gybox_on,
   hub232_off,        hub232_on,         gybox_cycle,
-  reap_itsy,         reap_bitsy,        xy_panic,
+  reap_itsy,         reap_bitsy,        
   trim_to_osc,       antisun,           blast_rocks,       blast_sucks,
   at_float,          not_at_float,      el_auto_gyro,
   repoll,            halt_itsy,         halt_bitsy,        actbus_on,
@@ -147,8 +147,7 @@ enum multiCommand {
   cov_gps,           lvdt_limit,        reset_adc,
   hk_auto_cycle_on,  hk_auto_cycle_off, hk_fridge_cycle,
   el_gyro_offset,    general,           slew_veto,
-  actuator_servo,    xy_goto,           actuator_vel,
-  xy_jump,           xy_xscan,          xy_yscan,          xy_raster,
+  actuator_servo,    actuator_vel,
   actuator_i,        actuator_delta,
   motors_verbose,
   thegood_any,        thegood_settrig_timed,

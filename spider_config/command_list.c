@@ -42,11 +42,11 @@ const int command_list_serial_as_int(void)
 const char *GroupNames[N_GROUPS] = {
   "Pointing Modes",        "CMB Grenades",     "Waveplate Rotator",
   "Pointing Sensor Trims", "Aux. Electronics", "HK Bias",
-  "Pointing Sensor Vetos", "Actuators",        "Long Range Missiles",
+  "Pointing Sensor Vetos", "Actuators",        "Gyro Power",
   "Pointing Motor Gains",  "Lock Motor",       "HK Insert Heat",
-  "Outer Frame Power",     "SC Table",         "HK Theo Heat",
-  "Telemetry",             "The Good SC",      "Inner Frame Power",
-  "X-Y Stage",             "The Bad SC",       "MCE",
+  "ACS Power",             "SC Table",         "HK Theo Heat",
+  "Telemetry",             "The Good SC",      "Cryo/HK Power",
+  "MCE Power",             "The Bad SC",       "MCE",
   "Miscellaneous",         "The Ugly SC",      "Sync Box"
   };
 
@@ -60,27 +60,28 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(gps_off), "turn off the dGPS", GR_POWER | CONFIRM},
   {COMMAND(gps_on), "turn on the dGPS", GR_POWER},
   {COMMAND(gps_cycle), "power cycle the dGPS", GR_POWER | CONFIRM},
-  {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER},
-  {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER},
-  {COMMAND(gybox_cycle), "power cycle the digital gyros' box", GR_POWER},
-  {COMMAND(ifroll_1_gy_off), "turn off ifroll_1_gy", GR_POWER},
-  {COMMAND(ifroll_1_gy_on), "turn on ifroll_1_gy", GR_POWER},
-  {COMMAND(ifroll_1_gy_cycle), "power cycle ifroll_1_gy", GR_POWER},
-  {COMMAND(ifroll_2_gy_off), "turn off ifroll_2_gy", GR_POWER},
-  {COMMAND(ifroll_2_gy_on), "turn on ifroll_2_gy", GR_POWER},
-  {COMMAND(ifroll_2_gy_cycle), "power cycle ifroll_2_gy", GR_POWER},
-  {COMMAND(ifyaw_1_gy_off), "turn off ifyaw_1_gy", GR_POWER},
-  {COMMAND(ifyaw_1_gy_on), "turn on ifyaw_1_gy", GR_POWER},
-  {COMMAND(ifyaw_1_gy_cycle), "power cycle ifyaw_1_gy", GR_POWER},
-  {COMMAND(ifyaw_2_gy_off), "turn off ifyaw_2_gy", GR_POWER},
-  {COMMAND(ifyaw_2_gy_on), "turn on ifyaw_2_gy", GR_POWER},
-  {COMMAND(ifyaw_2_gy_cycle), "power cycle ifyaw_2_gy", GR_POWER},
-  {COMMAND(ifel_1_gy_off), "turn off ifel_1_gy", GR_POWER},
-  {COMMAND(ifel_1_gy_on), "turn on ifel_1_gy", GR_POWER},
-  {COMMAND(ifel_1_gy_cycle), "power cycle ifel_1_gy", GR_POWER},
-  {COMMAND(ifel_2_gy_off), "turn off ifel_2_gy", GR_POWER},
-  {COMMAND(ifel_2_gy_on), "turn on ifel_2_gy", GR_POWER},
-  {COMMAND(ifel_2_gy_cycle), "power cycle ifel_2_gy", GR_POWER},
+  {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER | GR_GYPWR},
+  {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER | GR_GYPWR},
+  {COMMAND(gybox_cycle), "power cycle the digital gyros' box", 
+   GR_POWER | GR_GYPWR},
+  {COMMAND(ofroll_1_gy_off), "turn off ofroll_1_gy", GR_GYPWR},
+  {COMMAND(ofroll_1_gy_on), "turn on ofroll_1_gy", GR_GYPWR},
+  {COMMAND(ofroll_1_gy_cycle), "power cycle ofroll_1_gy", GR_GYPWR},
+  {COMMAND(ofroll_2_gy_off), "turn off ofroll_2_gy", GR_GYPWR},
+  {COMMAND(ofroll_2_gy_on), "turn on ofroll_2_gy", GR_GYPWR},
+  {COMMAND(ofroll_2_gy_cycle), "power cycle ofroll_2_gy", GR_GYPWR},
+  {COMMAND(ofyaw_1_gy_off), "turn off ofyaw_1_gy", GR_GYPWR},
+  {COMMAND(ofyaw_1_gy_on), "turn on ofyaw_1_gy", GR_GYPWR},
+  {COMMAND(ofyaw_1_gy_cycle), "power cycle ofyaw_1_gy", GR_GYPWR},
+  {COMMAND(ofyaw_2_gy_off), "turn off ofyaw_2_gy", GR_GYPWR},
+  {COMMAND(ofyaw_2_gy_on), "turn on ofyaw_2_gy", GR_GYPWR},
+  {COMMAND(ofyaw_2_gy_cycle), "power cycle ofyaw_2_gy", GR_GYPWR},
+  {COMMAND(ofpch_1_gy_off), "turn off ofpch_1_gy", GR_GYPWR},
+  {COMMAND(ofpch_1_gy_on), "turn on ofpch_1_gy", GR_GYPWR},
+  {COMMAND(ofpch_1_gy_cycle), "power cycle ofpch_1_gy", GR_GYPWR},
+  {COMMAND(ofpch_2_gy_off), "turn off ofpch_2_gy", GR_GYPWR},
+  {COMMAND(ofpch_2_gy_on), "turn on ofpch_2_gy", GR_GYPWR},
+  {COMMAND(ofpch_2_gy_cycle), "power cycle ofpch_2_gy", GR_GYPWR},
   {COMMAND(actbus_off), "turn off the Actuators, Lock, and HWPR", GR_POWER 
     | GR_ACT | CONFIRM},
   {COMMAND(actbus_on), "turn on the Actuators, Lock, and HWPR", GR_POWER 
@@ -125,53 +126,53 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(if_charge_cycle), "power cycle the inner frame charge controller", 
     GR_IFPOWER | CONFIRM},
 
-  {COMMAND(mce1_on), "turn on MCE power supply 1 (MCE 1, MCE 2)", GR_IFPOWER},
-  {COMMAND(mce1_off), "turn off MCE power supply 1 (MCE 1, MCE 2)", GR_IFPOWER},
-  {COMMAND(mce1_cycle), "power cycle MCE power supply 1 (MCE 1, MCE 2)", GR_IFPOWER},
+  {COMMAND(mce1_on), "turn on MCE power supply 1 (MCE 1, MCE 2)", GR_MCEPWR},
+  {COMMAND(mce1_off), "turn off MCE power supply 1 (MCE 1, MCE 2)", GR_MCEPWR},
+  {COMMAND(mce1_cycle), "power cycle MCE power supply 1 (MCE 1, MCE 2)", GR_MCEPWR},
 
-  {COMMAND(mce2_on), "turn on MCE power supply 2 (MCE 3, MCE 4)", GR_IFPOWER},
-  {COMMAND(mce2_off), "turn off MCE power supply 2 (MCE 3, MCE 4)", GR_IFPOWER},
-  {COMMAND(mce2_cycle), "power cycle MCE power supply 2 (MCE 3, MCE 4)", GR_IFPOWER},
+  {COMMAND(mce2_on), "turn on MCE power supply 2 (MCE 3, MCE 4)", GR_MCEPWR},
+  {COMMAND(mce2_off), "turn off MCE power supply 2 (MCE 3, MCE 4)", GR_MCEPWR},
+  {COMMAND(mce2_cycle), "power cycle MCE power supply 2 (MCE 3, MCE 4)", GR_MCEPWR},
 
-  {COMMAND(mce3_on), "turn on MCE power supply 3 (MCE 5, MCE 6)", GR_IFPOWER},
-  {COMMAND(mce3_off), "turn off MCE power supply 3 (MCE 5, MCE 6)", GR_IFPOWER},
-  {COMMAND(mce3_cycle), "power cycle MCE power supply 3 (MCE 5, MCE 6)", GR_IFPOWER},
+  {COMMAND(mce3_on), "turn on MCE power supply 3 (MCE 5, MCE 6)", GR_MCEPWR},
+  {COMMAND(mce3_off), "turn off MCE power supply 3 (MCE 5, MCE 6)", GR_MCEPWR},
+  {COMMAND(mce3_cycle), "power cycle MCE power supply 3 (MCE 5, MCE 6)", GR_MCEPWR},
 
-  {COMMAND(mcc1_on), "turn on MCC 1", GR_POWER},
-  {COMMAND(mcc1_off), "turn off MCC 1", GR_POWER},
-  {COMMAND(mcc1_cycle), "power cycle MCC 1", GR_POWER},
+  {COMMAND(mcc1_on), "turn on MCC 1", GR_MCEPWR},
+  {COMMAND(mcc1_off), "turn off MCC 1", GR_MCEPWR},
+  {COMMAND(mcc1_cycle), "power cycle MCC 1", GR_MCEPWR},
 
-  {COMMAND(mcc2_on), "turn on MCC 2", GR_POWER},
-  {COMMAND(mcc2_off), "turn off MCC 2", GR_POWER},
-  {COMMAND(mcc2_cycle), "power cycle MCC 2", GR_POWER},
+  {COMMAND(mcc2_on), "turn on MCC 2", GR_MCEPWR},
+  {COMMAND(mcc2_off), "turn off MCC 2", GR_MCEPWR},
+  {COMMAND(mcc2_cycle), "power cycle MCC 2", GR_MCEPWR},
 
-  {COMMAND(mcc3_on), "turn on MCC 3", GR_POWER},
-  {COMMAND(mcc3_off), "turn off MCC 3", GR_POWER},
-  {COMMAND(mcc3_cycle), "power cycle MCC 3", GR_POWER},
+  {COMMAND(mcc3_on), "turn on MCC 3", GR_MCEPWR},
+  {COMMAND(mcc3_off), "turn off MCC 3", GR_MCEPWR},
+  {COMMAND(mcc3_cycle), "power cycle MCC 3", GR_MCEPWR},
   
-  {COMMAND(mcc4_on), "turn on MCC 4", GR_POWER},
-  {COMMAND(mcc4_off), "turn off MCC 4", GR_POWER},
-  {COMMAND(mcc4_cycle), "power cycle MCC 4", GR_POWER},
+  {COMMAND(mcc4_on), "turn on MCC 4", GR_MCEPWR},
+  {COMMAND(mcc4_off), "turn off MCC 4", GR_MCEPWR},
+  {COMMAND(mcc4_cycle), "power cycle MCC 4", GR_MCEPWR},
   
-  {COMMAND(mcc5_on), "turn on MCC 5", GR_POWER},
-  {COMMAND(mcc5_off), "turn off MCC 5", GR_POWER},
-  {COMMAND(mcc5_cycle), "power cycle MCC 5", GR_POWER},
+  {COMMAND(mcc5_on), "turn on MCC 5", GR_MCEPWR},
+  {COMMAND(mcc5_off), "turn off MCC 5", GR_MCEPWR},
+  {COMMAND(mcc5_cycle), "power cycle MCC 5", GR_MCEPWR},
   
-  {COMMAND(mcc6_on), "turn on MCC 6", GR_POWER},
-  {COMMAND(mcc6_off), "turn off MCC 6", GR_POWER},
-  {COMMAND(mcc6_cycle), "power cycle MCC 6", GR_POWER},
+  {COMMAND(mcc6_on), "turn on MCC 6", GR_MCEPWR},
+  {COMMAND(mcc6_off), "turn off MCC 6", GR_MCEPWR},
+  {COMMAND(mcc6_cycle), "power cycle MCC 6", GR_MCEPWR},
 
-  {COMMAND(mac_on), "turn on the MCE Archive Computer", GR_IFPOWER},
-  {COMMAND(mac_off), "turn off the MCE Archive Computer", GR_IFPOWER},
-  {COMMAND(mac_cycle), "power cycle the MCE Archive Computer", GR_IFPOWER},
+  {COMMAND(mac_on), "turn on the MCE Archive Computer", GR_MCEPWR},
+  {COMMAND(mac_off), "turn off the MCE Archive Computer", GR_MCEPWR},
+  {COMMAND(mac_cycle), "power cycle the MCE Archive Computer", GR_MCEPWR},
 
-  {COMMAND(sync_on), "turn on the sync box", GR_IFPOWER},
-  {COMMAND(sync_off), "turn off the sync box", GR_IFPOWER},
-  {COMMAND(sync_cycle), "power cycle the sync box", GR_IFPOWER},
+  {COMMAND(sync_on), "turn on the sync box", GR_MCEPWR},
+  {COMMAND(sync_off), "turn off the sync box", GR_MCEPWR},
+  {COMMAND(sync_cycle), "power cycle the sync box", GR_MCEPWR},
   
-  {COMMAND(eth_on), "turn on the inner frame ethernet switch", GR_IFPOWER},
-  {COMMAND(eth_off), "turn off the inner frame ethernet switch", GR_IFPOWER},
-  {COMMAND(eth_cycle), "power cycle inner frame ethernet switch", GR_IFPOWER},
+  {COMMAND(eth_on), "turn on the inner frame ethernet switch", GR_MCEPWR},
+  {COMMAND(eth_off), "turn off the inner frame ethernet switch", GR_MCEPWR},
+  {COMMAND(eth_cycle), "power cycle inner frame ethernet switch", GR_MCEPWR},
   
   {COMMAND(hwp_on), "turn on the HWP rotators", GR_IFPOWER},
   {COMMAND(hwp_off), "turn off the HWP rotators", GR_IFPOWER},
@@ -202,18 +203,18 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
   {COMMAND(pss_veto), "veto pss sensor", GR_VETO},
   {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO},
-  {COMMAND(ifroll_1_gy_allow), "enable ifroll_1_gy", GR_VETO},
-  {COMMAND(ifroll_1_gy_veto), "disable ifroll_1_gy", GR_VETO},
-  {COMMAND(ifroll_2_gy_allow), "enable ifroll_2_gy", GR_VETO},
-  {COMMAND(ifroll_2_gy_veto), "disable ifroll_2_gy", GR_VETO},
-  {COMMAND(ifyaw_1_gy_allow), "enable ifyaw_1_gy", GR_VETO},
-  {COMMAND(ifyaw_1_gy_veto), "disable ifyaw_1_gy", GR_VETO},
-  {COMMAND(ifyaw_2_gy_allow), "enable ifyaw_2_gy", GR_VETO},
-  {COMMAND(ifyaw_2_gy_veto), "disable ifyaw_2_gy", GR_VETO},
-  {COMMAND(ifel_1_gy_allow), "enable ifel_1_gy", GR_VETO},
-  {COMMAND(ifel_1_gy_veto), "disable ifel_1_gy", GR_VETO},
-  {COMMAND(ifel_2_gy_allow), "enable ifel_2_gy", GR_VETO},
-  {COMMAND(ifel_2_gy_veto), "disable ifel_2_gy", GR_VETO},
+  {COMMAND(ofroll_1_gy_allow), "enable ofroll_1_gy", GR_VETO},
+  {COMMAND(ofroll_1_gy_veto), "disable ofroll_1_gy", GR_VETO},
+  {COMMAND(ofroll_2_gy_allow), "enable ofroll_2_gy", GR_VETO},
+  {COMMAND(ofroll_2_gy_veto), "disable ofroll_2_gy", GR_VETO},
+  {COMMAND(ofyaw_1_gy_allow), "enable ofyaw_1_gy", GR_VETO},
+  {COMMAND(ofyaw_1_gy_veto), "disable ofyaw_1_gy", GR_VETO},
+  {COMMAND(ofyaw_2_gy_allow), "enable ofyaw_2_gy", GR_VETO},
+  {COMMAND(ofyaw_2_gy_veto), "disable ofyaw_2_gy", GR_VETO},
+  {COMMAND(ofpch_1_gy_allow), "enable ofpch_1_gy", GR_VETO},
+  {COMMAND(ofpch_1_gy_veto), "disable ofpch_1_gy", GR_VETO},
+  {COMMAND(ofpch_2_gy_allow), "enable ofpch_2_gy", GR_VETO},
+  {COMMAND(ofpch_2_gy_veto), "disable ofpch_2_gy", GR_VETO},
 
   {COMMAND(az_auto_gyro), "automatically calculate az gyro offsets", GR_TRIM},
   {COMMAND(el_auto_gyro), "automatically calculate el gyro offset", GR_TRIM},
@@ -248,8 +249,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(bbc_sync_int), "Set BBC to internal sync mode", GR_MISC | CONFIRM},
   {COMMAND(bbc_sync_auto),
     "Auto-set BBC to external (sync box) mode if possible", GR_MISC | CONFIRM},
-  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_STAGE},
-
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
   {COMMAND(lock), "lock inner frame", GR_LOCK | GR_POINT},
@@ -257,12 +256,11 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(lock_on), "turn on the lock motor", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
   {COMMAND(repoll), "force repoll of the stepper busses (act, lock, XY)",
-    GR_STAGE | GR_ACT},
+    GR_ACT},
   {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
   {COMMAND(hwp_repoll), "repoll HWP bus for stepper controllers", GR_HWPR},
   {COMMAND(hwp_panic), "stop all HWP rotators immediately", GR_HWPR},
   {COMMAND(hwp_step), "step the HWPs to their next position", GR_HWPR},
-
 
   //The Good commands
   {COMMAND(thegood_expose), "Start The Good exposure (in triggered mode)", GR_SCGOOD},
@@ -352,7 +350,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(az_el_goto), "goto point in azimuth and elevation", GR_POINT, 2,
     {
       {"Azimuth (deg)",     -360, 360, 'f', "AZ"},
-      {"Elevation (deg)", 15.0,  45.0, 'f', "EL"}
+      {"Elevation (deg)", 20.0,  45.0, 'f', "EL"}
     }
   },
   {COMMAND(az_el_trim), "trim sensors to azimuth and elevation", GR_TRIM, 2,
@@ -371,15 +369,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(az_scan), "scan in azimuth", GR_POINT, 4,
     {
       {"Az centre (deg)",       -180, 360, 'f', "AZ"},
-      {"El centre (deg)",         15,  65, 'f', "EL"},
+      {"El centre (deg)",         20,  45, 'f', "EL"},
       {"Width (deg on sky)",       0, 360, 'f', "W_P"},
       {"Az Scan Speed (deg az/s)", 0,  10, 'f', "VEL_AZ_P"}
     }
   },
-  {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
+  {COMMAND(drift), "move at constant speed in az", GR_POINT, 1,
     {
-      {"Az Speed (deg/s)", -10.0, 10.0, 'f', "0.0"},
-      {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
+      {"Az Speed (deg/s)", -10.0, 10.0, 'f', "0.0"}
     }
   },
   {COMMAND(ra_dec_goto), "track a location RA/Dec", GR_POINT, 2,
@@ -492,7 +489,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /* actuator bus commands */
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_STAGE | GR_ACT, 2,
+   GR_ACT, 2,
     {
       {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', ""},
@@ -593,51 +590,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(hwp_bias_off), "turn off bias for HWP encoders", GR_HWPR, 1,
     {
       {"HWP (1- 6, 0=all)", 0, 6, 'i', "0"}
-    }
-  },
-
-  /* XY Stage */
-  {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
-    GR_STAGE, 4,
-    {
-      {"X destination", 0, 80000, 'l', "X_STAGE"},
-      {"Y destination", 0, 80000, 'l', "Y_STAGE"},
-      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
-      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
-    }
-  },
-  {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
-    GR_STAGE, 4,
-    {
-      {"X delta", -80000, 80000, 'l', "0"},
-      {"Y delta", -80000, 80000, 'l', "0"},
-      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
-      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
-    }
-  },
-  {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_STAGE, 3,
-    {
-      {"X center", 0, 80000, 'l', "X_STAGE"},
-      {"delta X", 0, 80000, 'l', "NONE"},
-      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
-    }
-  },
-  {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_STAGE, 3,
-    {
-      {"Y center", 0, 80000, 'l', "Y_STAGE"},
-      {"delta Y", 0, 80000, 'l', "NONE"},
-      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"},
-    }
-  },
-  {COMMAND(xy_raster), "raster the X-Y translation stage", GR_STAGE, 7,
-    {
-      {"X center", 0, 80000, 'l', "X_STAGE"},
-      {"X Width", 0, 40000, 'i', "NONE"},
-      {"Y center", 0, 80000, 'l', "Y_STAGE"},
-      {"Y Width", 0, 40000, 'i', "NONE"},
-      {"X Velocity", 0, 16000, 'i', "X_VEL_STAGE"},
-      {"Y Velocity", 0, 16000, 'i', "Y_VEL_STAGE"},
-      {"Step Size", 0, 40000, 'i', "NONE"},
     }
   },
 
