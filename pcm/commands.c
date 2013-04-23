@@ -461,94 +461,94 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.ifcharge.rst_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.ifcharge.set_count = LATCH_PULSE_LEN;
       break;
-    case ifroll_1_gy_allow:
+    case ofroll_1_gy_allow:
       CommandData.gymask |= 0x01;
       break;
-    case ifroll_1_gy_veto:
+    case ofroll_1_gy_veto:
       CommandData.gymask &= ~0x01;
       break;
-    case ifroll_2_gy_allow:
+    case ofroll_2_gy_allow:
       CommandData.gymask |= 0x02;
       break;
-    case ifroll_2_gy_veto:
+    case ofroll_2_gy_veto:
       CommandData.gymask &= ~0x02;
       break;
-    case ifyaw_1_gy_allow:
+    case ofyaw_1_gy_allow:
       CommandData.gymask |= 0x04;
       break;
-    case ifyaw_1_gy_veto:
+    case ofyaw_1_gy_veto:
       CommandData.gymask &= ~0x04;
       break;
-    case ifyaw_2_gy_allow:
+    case ofyaw_2_gy_allow:
       CommandData.gymask |= 0x08;
       break;
-    case ifyaw_2_gy_veto:
+    case ofyaw_2_gy_veto:
       CommandData.gymask &= ~0x08;
       break;
-    case ifel_1_gy_allow:
+    case ofpch_1_gy_allow:
       CommandData.gymask |= 0x10;
       break;
-    case ifel_1_gy_veto:
+    case ofpch_1_gy_veto:
       CommandData.gymask &= ~0x10;
       break;
-    case ifel_2_gy_allow:
+    case ofpch_2_gy_allow:
       CommandData.gymask |= 0x20;
       break;
-    case ifel_2_gy_veto:
+    case ofpch_2_gy_veto:
       CommandData.gymask &= ~0x20;
       break;
-    case ifroll_1_gy_off:
+    case ofroll_1_gy_off:
       CommandData.power.gyro_off[1] = -1;
       break;
-    case ifroll_1_gy_on:
+    case ofroll_1_gy_on:
       CommandData.power.gyro_off[1] = 0;
       break;
-    case ifroll_1_gy_cycle:
+    case ofroll_1_gy_cycle:
       CommandData.power.gyro_off[1] = PCYCLE_HOLD_LEN;
       break;
-    case ifroll_2_gy_off:
+    case ofroll_2_gy_off:
       CommandData.power.gyro_off[5] = -1;
       break;
-    case ifroll_2_gy_on:
+    case ofroll_2_gy_on:
       CommandData.power.gyro_off[5] = 0;
       break;
-    case ifroll_2_gy_cycle:
+    case ofroll_2_gy_cycle:
       CommandData.power.gyro_off[5] = PCYCLE_HOLD_LEN;
       break;
-    case ifyaw_1_gy_off:
+    case ofyaw_1_gy_off:
       CommandData.power.gyro_off[0] = -1;
       break;
-    case ifyaw_1_gy_on:
+    case ofyaw_1_gy_on:
       CommandData.power.gyro_off[0] = 0;
       break;
-    case ifyaw_1_gy_cycle:
+    case ofyaw_1_gy_cycle:
       CommandData.power.gyro_off[0] = PCYCLE_HOLD_LEN;
       break;
-    case ifyaw_2_gy_off:
+    case ofyaw_2_gy_off:
       CommandData.power.gyro_off[2] = -1;
       break;
-    case ifyaw_2_gy_on:
+    case ofyaw_2_gy_on:
       CommandData.power.gyro_off[2] = 0;
       break;
-    case ifyaw_2_gy_cycle:
+    case ofyaw_2_gy_cycle:
       CommandData.power.gyro_off[2] = PCYCLE_HOLD_LEN;
       break;
-    case ifel_1_gy_off:
+    case ofpch_1_gy_off:
       CommandData.power.gyro_off[3] = -1;
       break;
-    case ifel_1_gy_on:
+    case ofpch_1_gy_on:
       CommandData.power.gyro_off[3] = 0;
       break;
-    case ifel_1_gy_cycle:
+    case ofpch_1_gy_cycle:
       CommandData.power.gyro_off[3] = PCYCLE_HOLD_LEN;
       break;
-    case ifel_2_gy_off:
+    case ofpch_2_gy_off:
       CommandData.power.gyro_off[4] = -1;
       break;
-    case ifel_2_gy_on:
+    case ofpch_2_gy_on:
       CommandData.power.gyro_off[4] = 0;
       break;
-    case ifel_2_gy_cycle:
+    case ofpch_2_gy_cycle:
       CommandData.power.gyro_off[4] = PCYCLE_HOLD_LEN;
       break;
     case gybox_off:
@@ -936,9 +936,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case bbc_sync_auto:
       CommandData.bbcAutoExt = 1;
       break;
-    case xy_panic:
-      CommandData.xystage.mode = XYSTAGE_PANIC;
-      CommandData.xystage.is_new = 1;
 
     //Theo heater housekeeping commands.
     case hk_mt_bottom_heat_on:
@@ -1133,7 +1130,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.Y = 0;
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.vaz = rvalues[0]; /* az speed */
-      CommandData.pointing_mode.del = rvalues[1]; /* el speed */
+      CommandData.pointing_mode.del = 0; 
       CommandData.pointing_mode.h = 0;
       CommandData.pointing_mode.is_turn_around = 0;
       break;
@@ -1363,51 +1360,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwp.caddr[CommandData.hwp.cindex] = ivalues[0] - 1;
       copysvalue(CommandData.hwp.command[CommandData.hwp.cindex], svalues[1]);
       CommandData.hwp.cindex = INC_INDEX(CommandData.hwp.cindex);
-      break;
-
-      /* XY Stage */
-    case xy_goto:
-      CommandData.xystage.x1 = ivalues[0];
-      CommandData.xystage.y1 = ivalues[1];
-      CommandData.xystage.xvel = ivalues[2];
-      CommandData.xystage.yvel = ivalues[3];
-      CommandData.xystage.mode = XYSTAGE_GOTO;
-      CommandData.xystage.is_new = 1;
-      break;
-    case xy_jump:
-      CommandData.xystage.x1 = ivalues[0];
-      CommandData.xystage.y1 = ivalues[1];
-      CommandData.xystage.xvel = ivalues[2];
-      CommandData.xystage.yvel = ivalues[3];
-      CommandData.xystage.mode = XYSTAGE_JUMP;
-      CommandData.xystage.is_new = 1;
-      break;
-    case xy_xscan:
-      CommandData.xystage.x1 = ivalues[0];
-      CommandData.xystage.x2 = ivalues[1];
-      CommandData.xystage.xvel = ivalues[2];
-      CommandData.xystage.yvel = 0;
-      CommandData.xystage.mode = XYSTAGE_SCAN;
-      CommandData.xystage.is_new = 1;
-      break;
-    case xy_yscan:
-      CommandData.xystage.y1 = ivalues[0];
-      CommandData.xystage.y2 = ivalues[1];
-      CommandData.xystage.yvel = ivalues[2];
-      CommandData.xystage.xvel = 0;
-      CommandData.xystage.mode = XYSTAGE_SCAN;
-      CommandData.xystage.is_new = 1;
-      break;
-    case xy_raster:
-      CommandData.xystage.x1 = ivalues[0];
-      CommandData.xystage.x2 = ivalues[1];
-      CommandData.xystage.y1 = ivalues[2];
-      CommandData.xystage.y2 = ivalues[3];
-      CommandData.xystage.xvel = ivalues[4];
-      CommandData.xystage.yvel = ivalues[5];
-      CommandData.xystage.step = ivalues[6];
-      CommandData.xystage.mode = XYSTAGE_RASTER;
-      CommandData.xystage.is_new = 1;
       break;
 
       /***************************************/
