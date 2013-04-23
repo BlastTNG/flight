@@ -535,7 +535,7 @@ static void SyncADC (void)
 /*    Store derived acs and pointing data in frame                      */
 /*                                                                      */
 /************************************************************************/
-static void StoreData(int index)
+static void StoreData(int write_slow)
 {
   static int firsttime = 1;
 
@@ -814,12 +814,11 @@ static void StoreData(int index)
       NIOS_QUEUE);
 
   WriteCalData(velSerRWAddr, calcVSerRW(), NIOS_QUEUE);
-  WriteData(resRWAddr, RWMotorData[i_rw_motors].res_rw*DEG2I, NIOS_QUEUE);
 
   /*************************************************
    *             Slow Controls                     *
    ************************************************/
-  if (index != 0) return;
+  if (!write_slow) return;
 
   /* scan modes */
   WriteData(modeAzMcAddr, axes_mode.az_mode, NIOS_QUEUE);
@@ -879,6 +878,7 @@ static void StoreData(int index)
   WriteData(mksHiSipAddr, (int)(SIPData.MKSalt.hi), NIOS_QUEUE);
 
   /************* processed pointing data *************/
+  WriteData(resRWAddr, RWMotorData[i_rw_motors].res_rw*DEG2I, NIOS_QUEUE);
   WriteData(raAddr, (unsigned int)(PointingData[i_point].ra * H2LI),
       NIOS_QUEUE);
   WriteData(decAddr, (unsigned int)(PointingData[i_point].dec * DEG2LI),
@@ -1214,8 +1214,8 @@ void UpdateBBCFrame()
   if (!mcp_initial_controls)
     DoSched();
   UpdateAxesMode();
-  StoreData(index);
-  WriteMot(index);
+  StoreData(index==15);
+  WriteMot(index==14);
   updateTableSpeed();
   WriteChatter(index);
   countHWPEncoder();
@@ -1266,7 +1266,7 @@ void UpdateBBCFrame()
   }
       
   /*** do slow Controls ***/
-  if (index == 0) {
+  if (index == 13) {
     if (!mcp_initial_controls)
       SyncADC();
   }

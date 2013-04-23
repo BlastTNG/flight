@@ -523,7 +523,7 @@ static double GetVAz(void)
 /*            we are going to try running the pivot in velocity mode    */
 /*                                                                      */
 /************************************************************************/
-static double GetVPivot(int TxIndex, unsigned int gI_v_rw,unsigned int gP_v_rw, 
+static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_rw, 
 			  unsigned int gP_v_az, unsigned int gP_t_rw,
 		          unsigned int gP_v_req, unsigned int disabled)
 {
@@ -679,27 +679,13 @@ static double GetVPivot(int TxIndex, unsigned int gI_v_rw,unsigned int gP_v_rw,
   }
 
   /* Write control terms to frame, but slowly... */
-  switch(TxIndex) {
-    case 0:
+  if (write_slow) {
       WriteData(pVRWTermPivAddr, P_v_rw_term_dac, NIOS_QUEUE);
-      break;
-    case 1:
       WriteData(iVRWTermPivAddr, I_v_rw_term_dac, NIOS_QUEUE);
-      break;
-    case 2:
       WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
-      break;
-    case 3:
       WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
-      break;
-    case 4:
       WriteData(pVReqAzTermPivAddr, P_v_req_term_dac, NIOS_QUEUE);
-      break;
-    case 5:
       WriteData(pTRWTermPivAddr, P_t_rw_term_dac, NIOS_QUEUE);
-      break;
-    default:
-      break;
   }
   
   return v_req_dac;
@@ -726,7 +712,7 @@ static double dxdtheta(double theta)
 /*    WriteMot: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
-void WriteMot(int TxIndex)
+void WriteMot(int write_slow)
 {
   static struct NiosStruct* velReqAzAddr;
   static struct NiosStruct* gComElAddr;
@@ -797,7 +783,7 @@ void WriteMot(int TxIndex)
 
   //NOTE: this is only used to program the extra DAC - not used for
   // flight.
-  if (TxIndex == 6) {  //only write at slow frame rate
+  if (write_slow) {  //only write at slow frame rate
     if (CommandData.Temporary.setLevel[1] && wait <= 0) {
       WriteData(dac2AmplAddr, CommandData.Temporary.dac_out[1], NIOS_QUEUE);
       CommandData.Temporary.setLevel[1] = 0;
@@ -856,7 +842,7 @@ void WriteMot(int TxIndex)
     WriteCalData(step2ElAddr, -step_rate_S, NIOS_QUEUE);	
   }
 
-  if (TxIndex == 7) {   //only write at slow frame rate
+  if (write_slow) {   //only write at slow frame rate
   
     elGainCom = CommandData.ele_gain.com;
 
@@ -889,7 +875,7 @@ void WriteMot(int TxIndex)
     pivGainPosRW = 0;
     pivGainTorqueRW = 0;
     pivGainVelReqAz = 0;
-    v_piv=GetVPivot(TxIndex,pivGainPosRW,pivGainVelRW,pivGainVelAz,
+    v_piv=GetVPivot(write_slow,pivGainPosRW,pivGainVelRW,pivGainVelAz,
 		     pivGainTorqueRW,pivGainVelReqAz,1);
   } else {
     azGainP = CommandData.azi_gain.P;
@@ -899,7 +885,7 @@ void WriteMot(int TxIndex)
     pivGainPosRW = CommandData.pivot_gain.P_RW;
     pivGainTorqueRW = CommandData.pivot_gain.T_RW;
     pivGainVelReqAz = CommandData.pivot_gain.V_REQ;
-    v_piv=GetVPivot(TxIndex,pivGainPosRW,pivGainVelRW,pivGainVelAz,
+    v_piv=GetVPivot(write_slow,pivGainPosRW,pivGainVelRW,pivGainVelAz,
 		     pivGainTorqueRW,pivGainVelReqAz,0);
   }
   
@@ -915,53 +901,29 @@ void WriteMot(int TxIndex)
   WriteData(dacPivAddr, v_piv, NIOS_QUEUE);
 
   // write informational terms once per slow frame, spread out.
-  switch (TxIndex) {
-    case 8:
+  if (write_slow) {
       /* p term for az motor */
       WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
-      break;
-    case 9:
       /* I term for az motor */
       WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
-      break;
-    case 10:
       /* pointing gain term for az drive */
       WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
-      break;
-    case 11:
       /* p term to rw vel for pivot motor */
       WriteData(gVRWPivAddr, pivGainVelRW, NIOS_QUEUE);
-      break;
-    case 12:
       /* p term to az vel for pivot motor */
       WriteData(gVAzPivAddr, pivGainVelAz, NIOS_QUEUE);
-      break;
-    case 13:
       /* i term to rw vel for pivot motor */
       WriteData(gIRWPivAddr, pivGainPosRW, NIOS_QUEUE);
-      break;
-    case 14:
       /* p term to rw torque for pivot motor */
       WriteData(gTRWPivAddr, pivGainTorqueRW, NIOS_QUEUE);
-      break;
-    case 15:
       /* p term to az vel request for pivot motor */
       WriteData(gVReqAzPivAddr, pivGainVelReqAz, NIOS_QUEUE);
-      break;
-    case 16:
       /* setpoint for reaction wheel */
       WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
-      break;
-    case 17:
       /* Azimuth Scan Acceleration */
       WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
-      break;
-    case 18:
       /* Azimuth Scan Max Acceleration */
       WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
-      break;
-    default:
-      break;
   }
    
   /* Turn Around Flag */
@@ -2374,12 +2336,6 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = CommandData.pointing_mode.del;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = CommandData.pointing_mode.vaz;
-#if 0
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast =
-        (sqrt(CommandData.pointing_mode.vaz * CommandData.pointing_mode.vaz
-              + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
-         > MAX_ISC_SLOW_PULSE_SPEED) ? 1 : 0;
-#endif
       bsc_trigger = 1;
       break;
     case P_AZEL_GOTO:
@@ -2389,7 +2345,6 @@ void UpdateAxesMode(void)
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = CommandData.pointing_mode.X;
       axes_mode.az_vel = 0.0;
-      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       bsc_trigger = 1;
       break;
     case P_AZ_SCAN:

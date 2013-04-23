@@ -605,6 +605,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP6 61-62 are unusued */
   {"vel_ser_rw",   'w', LOOP7,  0,     2400.0/65536.0,  0.0, 's',      U_V_DPS},
   /* LOOP7 3 is fast narrow */
+  {"res_rw",       'w', LOOP7,  3,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"stat_dr_rw",   'w', LOOP7,  4,             1.0,           0.0, 'u', U_NONE},
   {"stat_s1_rw",   'w', LOOP7,  5,             1.0,           0.0, 'u', U_NONE},
   
@@ -1010,7 +1011,6 @@ struct ChannelStruct FastChannels[] = {
   {"dps_table",    'w',    LOOP1, 34,           70.0/32767.0,            0.0, 's', U_V_DPS},
 
 #endif
-  {"res_rw",       'w', LOOP7,  3,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"chatter",      'w', LOOP7, 38,     1.0,        0.0,      'u',      U_NONE},
 
   END_OF_CHANNELS
