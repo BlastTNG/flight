@@ -459,7 +459,6 @@ char *frameList[] = {
   "p_t_rw_term_piv",
   "p_v_req_az_term_piv",
   "vel_ser_piv",
-  "vel_calc_piv",
   "g_v_req_az_piv",
   "az_raw_pss1",
   "az_raw_pss2",

@@ -1221,23 +1221,54 @@ void UpdateBBCFrame()
   countHWPEncoder();
   cameraTriggers();
 
+  switch (index) {
+    case 0:
+      WriteAux();
+      break;
+    case 1:
+      ChargeController();
+      break;
+    case 2:
+      WriteSyncBox();
+      break;
+    case 3:
+      ControlPower();
+      break;
+    case 4:
+      LockMotor();
+      break;
+    case 5:
+      ControlGyroHeat();    //TODO made slow. Check that this works
+      break;
+    case 6:
+      SetGyroMask();
+      break;
+    case 7:
+      StoreHWPBus();
+      break;
+    case 8:
+      WriteMCESlow();
+      break;
+    case 9:
+      HouseKeeping();
+      break;
+    case 10:
+      cameraFields(0);
+      break;
+    case 11:
+      cameraFields(1);
+      break;
+    case 12:
+      cameraFields(2);
+      break;
+    default:
+      break;
+  }
+      
   /*** do slow Controls ***/
   if (index == 0) {
     if (!mcp_initial_controls)
       SyncADC();
-    HouseKeeping();
-    WriteMCESlow();
-    WriteAux();
-    SetGyroMask();
-    ChargeController();
-    WriteSyncBox();
-    ControlPower();
-    LockMotor();
-    cameraFields(0);
-    cameraFields(1);
-    cameraFields(2);
-    StoreHWPBus();
-    ControlGyroHeat();    //TODO made slow (ch too). Check that this works
   }
 
   if (!mcp_initial_controls)

@@ -38,7 +38,7 @@
 #include "calibrate.h"
 
 // TODO: Revise these el limits for Spider flight:
-#define MIN_EL 20 
+#define MIN_EL 15 
 #define MAX_EL 45
 
 #define VPIV_FILTER_LEN 40
@@ -68,9 +68,7 @@
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
 #define TOLERANCE 0.02    // max acceptable el pointing error (deg)
-#define TWIST_TOL 0.2     // max diff between port & strbrd encs (deg)
 #define EL_REL_MIN 0.005  // min size of el relative move (= 1 count)
-#define EL_ON_DELAY 0.40  // turn on delay of el drive when in auto mode
 
 /* variables storing scan region (relative to defined quad) */
 static int scan_region = 0;
@@ -151,39 +149,6 @@ void closeMotors()
 }
 
 static int last_mode = -1;
-
-static double calcVPiv(void)
-{
-  double vpiv=0.0;
-  static double buf_vPiv[VPIV_FILTER_LEN]; // Buffer for Piv boxcar filter.
-  static time_t buf_t[VPIV_FILTER_LEN]; 
-  static double a=0.0,alast=0.0; 
-  static unsigned int ib_last=0;
-  static int firsttime = 1;
-  int i_point;
-  int i;
-  double dtheta=0.0;
-  static int j=0;
-  i_point = GETREADINDEX(point_index);
-  if (firsttime) {
-    firsttime = 0;
-    // Initialize the buffer.  Assume all zeros to begin
-    for(i=0;i<(VPIV_FILTER_LEN-1);i++) buf_vPiv[i]=0.0;
-    for(i=0;i<(VPIV_FILTER_LEN-1);i++) buf_t[i]=0.0;
-  }
-  a+=(ACSData.res_piv-buf_vPiv[ib_last]);
-  //  dt=((double)(gettimeofday-buf_t[ib_last]));
-  buf_vPiv[ib_last]=ACSData.res_piv;
-  //  dummy=PointingData[i_point].t
-    //  buf_t[ib_last]=PointingData[i_point].t;
-  ib_last=(ib_last+VPIV_FILTER_LEN+1)%VPIV_FILTER_LEN;
-  dtheta=(a-alast)/VPIV_FILTER_LEN;
-  alast=a;
-  vpiv=dtheta/0.010016; 
-  //  if (j%100 == 1) bprintf(info,"CalcVPiv vpiv = %f, res_piv = %f, a = %f, alast = %f, dtheta = %f ",vpiv,ACSData.res_piv,a/VPIV_FILTER_LEN,alast/VPIV_FILTER_LEN,dtheta);
-  j++;
-  return vpiv;
-}
 
 double calcVSerRW(void)
 {
@@ -400,19 +365,9 @@ static void GetVElevGoto(double* v_P, double* v_S)
   *v_S = (*v_S < *v_P) ? *v_S : *v_P;
   *v_P = *v_S;
 
-  /* check for a stalled motor */
-  if ( fabs(ACSData.enc_diff_el) > TWIST_TOL ) {
-    isStopped = 1;
-    el_dest = axes_mode.el_dest = CommandData.pointing_mode.Y
-            = ACSData.enc_mean_el;
-    CommandData.power.elmot_auto = 2;
-  } else {
-    isStopped = 0;
-  }
-
   if ( fabs(el_dest - ACSData.enc_mean_el ) < TOLERANCE ) { 
     since_arrival++;
-    isStopped = (since_arrival >= 2*ACSData.bbc_rate);
+    isStopped = (since_arrival >= 500);
   }  else {
     since_arrival = 0;
     isStopped = 0;
@@ -436,15 +391,9 @@ static void GetVElevGoto(double* v_P, double* v_S)
 static void GetVElev(double* v_P, double* v_S)
 {
   static int on_delay = 0;
-  static int was_not_auto = 1;
- 
-  if (was_not_auto && (CommandData.power.elmot_auto)) {
-    on_delay = 0;
-  }
-  was_not_auto = !CommandData.power.elmot_auto;
 
   if ( !(CommandData.power.elmot_auto) ) {
-    on_delay = EL_ON_DELAY*ACSData.bbc_rate + 2.0; //1st factor is delay in seconds 
+    on_delay = 35; 
   }
   
   // if !P_EL_NONE and auto and off
@@ -458,11 +407,9 @@ static void GetVElev(double* v_P, double* v_S)
     }
   }
              
-  if ( (CommandData.pointing_mode.el_mode == P_EL_GOTO) && 
-       (on_delay >= EL_ON_DELAY*ACSData.bbc_rate) ) {
+  if ( (CommandData.pointing_mode.el_mode == P_EL_GOTO) && (on_delay >= 35) ) {
     GetVElevGoto(v_P, v_S);
-  } else if ( (CommandData.pointing_mode.el_mode == P_EL_RELMOVE) && 
-              (on_delay >= EL_ON_DELAY*ACSData.bbc_rate) ) {
+  } else if ( (CommandData.pointing_mode.el_mode == P_EL_RELMOVE) && (on_delay >= 35) ) {
     GetVElevRelMove(v_P, v_S);
   } else {
     *v_P = *v_S = 0.0;
@@ -472,9 +419,6 @@ static void GetVElev(double* v_P, double* v_S)
         && (CommandData.pointing_mode.el_mode == P_EL_NONE) ) {      
       CommandData.power.elmot.set_count = 0;
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
-      if (CommandData.power.elmot_auto == 2) { // stalled
-        CommandData.power.elmot_auto = 0; 
-      }
       on_delay = 0; // reset for the next time we turn on
     }
   }
@@ -734,14 +678,30 @@ static double GetVPivot(int TxIndex, unsigned int gI_v_rw,unsigned int gP_v_rw,
     P_v_req_term_dac=65535;
   }
 
-  /* Write control terms to frame */
-  if (TxIndex == 0) {
-    WriteData(pVRWTermPivAddr, P_v_rw_term_dac, NIOS_QUEUE);
-    WriteData(iVRWTermPivAddr, I_v_rw_term_dac, NIOS_QUEUE);
-    WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
-    WriteData(pTRWTermPivAddr, P_t_rw_term_dac, NIOS_QUEUE);
-    WriteData(pVReqAzTermPivAddr, P_v_req_term_dac, NIOS_QUEUE);
+  /* Write control terms to frame, but slowly... */
+  switch(TxIndex) {
+    case 0:
+      WriteData(pVRWTermPivAddr, P_v_rw_term_dac, NIOS_QUEUE);
+      break;
+    case 1:
+      WriteData(iVRWTermPivAddr, I_v_rw_term_dac, NIOS_QUEUE);
+      break;
+    case 2:
+      WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
+      break;
+    case 3:
+      WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
+      break;
+    case 4:
+      WriteData(pVReqAzTermPivAddr, P_v_req_term_dac, NIOS_QUEUE);
+      break;
+    case 5:
+      WriteData(pTRWTermPivAddr, P_t_rw_term_dac, NIOS_QUEUE);
+      break;
+    default:
+      break;
   }
+  
   return v_req_dac;
 }
 
@@ -780,7 +740,6 @@ void WriteMot(int TxIndex)
   static struct NiosStruct* gVReqAzPivAddr;
   static struct NiosStruct* setRWAddr;
   static struct NiosStruct* dacPivAddr;
-  static struct NiosStruct* velCalcPivAddr;
   static struct NiosStruct* accelAzAddr;
   static struct NiosStruct* accelMaxAzAddr;
   static struct NiosStruct* step1ElAddr;      // PORT
@@ -790,7 +749,7 @@ void WriteMot(int TxIndex)
   // Used only for Lab Controller tests
   static struct NiosStruct* dac2AmplAddr;
 
-  static int wait = 100; /* wait 20 frames before controlling. */
+  static int wait = 100; /* wait 100 frames before controlling. */
 
   int v_az, v_piv;
   double elGainCom;
@@ -826,13 +785,11 @@ void WriteMot(int TxIndex)
     gTRWPivAddr = GetNiosAddr("g_t_rw_piv");
     gVReqAzPivAddr = GetNiosAddr("g_v_req_az_piv");
     setRWAddr = GetNiosAddr("set_rw");
-    velCalcPivAddr = GetNiosAddr("vel_calc_piv");
     accelAzAddr = GetNiosAddr("accel_az");
     accelMaxAzAddr = GetNiosAddr("accel_max_az");
     dac2AmplAddr = GetNiosAddr("dac2_ampl");
     step1ElAddr = GetNiosAddr("step_1_el");
     step2ElAddr = GetNiosAddr("step_2_el");
-    // TODO: Temporary
     isTurnAroundAddr = GetNiosAddr("is_turn_around");
   }
 
@@ -840,7 +797,7 @@ void WriteMot(int TxIndex)
 
   //NOTE: this is only used to program the extra DAC - not used for
   // flight.
-  if (TxIndex == 0) {  //only write at slow frame rate
+  if (TxIndex == 6) {  //only write at slow frame rate
     if (CommandData.Temporary.setLevel[1] && wait <= 0) {
       WriteData(dac2AmplAddr, CommandData.Temporary.dac_out[1], NIOS_QUEUE);
       CommandData.Temporary.setLevel[1] = 0;
@@ -899,7 +856,7 @@ void WriteMot(int TxIndex)
     WriteCalData(step2ElAddr, -step_rate_S, NIOS_QUEUE);	
   }
 
-  if (TxIndex == 0) {   //only write at slow frame rate
+  if (TxIndex == 7) {   //only write at slow frame rate
   
     elGainCom = CommandData.ele_gain.com;
 
@@ -957,36 +914,59 @@ void WriteMot(int TxIndex)
   /* requested pivot current*/
   WriteData(dacPivAddr, v_piv, NIOS_QUEUE);
 
-  if (TxIndex == 0) { //only write at slow frame rate
-    /* p term for az motor */
-    WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
-    /* I term for az motor */
-    WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
-    /* pointing gain term for az drive */
-    WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
-
-    /* p term to rw vel for pivot motor */
-    WriteData(gVRWPivAddr, pivGainVelRW, NIOS_QUEUE);
-    /* p term to az vel for pivot motor */
-    WriteData(gVAzPivAddr, pivGainVelAz, NIOS_QUEUE);
-    /* i term to rw vel for pivot motor */
-    WriteData(gIRWPivAddr, pivGainPosRW, NIOS_QUEUE);
-    /* p term to rw torque for pivot motor */
-    WriteData(gTRWPivAddr, pivGainTorqueRW, NIOS_QUEUE);
-    /* p term to az vel request for pivot motor */
-    WriteData(gVReqAzPivAddr, pivGainVelReqAz, NIOS_QUEUE);
-    /* setpoint for reaction wheel */
-    WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
-    /* Pivot velocity */
-    WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
-    /* Azimuth Scan Acceleration */
-    WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
-    /* Azimuth Scan Max Acceleration */
-    WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
-    /* Turn Around Flag */
-    WriteData(isTurnAroundAddr, CommandData.pointing_mode.is_turn_around, NIOS_QUEUE);
+  // write informational terms once per slow frame, spread out.
+  switch (TxIndex) {
+    case 8:
+      /* p term for az motor */
+      WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
+      break;
+    case 9:
+      /* I term for az motor */
+      WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
+      break;
+    case 10:
+      /* pointing gain term for az drive */
+      WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
+      break;
+    case 11:
+      /* p term to rw vel for pivot motor */
+      WriteData(gVRWPivAddr, pivGainVelRW, NIOS_QUEUE);
+      break;
+    case 12:
+      /* p term to az vel for pivot motor */
+      WriteData(gVAzPivAddr, pivGainVelAz, NIOS_QUEUE);
+      break;
+    case 13:
+      /* i term to rw vel for pivot motor */
+      WriteData(gIRWPivAddr, pivGainPosRW, NIOS_QUEUE);
+      break;
+    case 14:
+      /* p term to rw torque for pivot motor */
+      WriteData(gTRWPivAddr, pivGainTorqueRW, NIOS_QUEUE);
+      break;
+    case 15:
+      /* p term to az vel request for pivot motor */
+      WriteData(gVReqAzPivAddr, pivGainVelReqAz, NIOS_QUEUE);
+      break;
+    case 16:
+      /* setpoint for reaction wheel */
+      WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
+      break;
+    case 17:
+      /* Azimuth Scan Acceleration */
+      WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
+      break;
+    case 18:
+      /* Azimuth Scan Max Acceleration */
+      WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
+      break;
+    default:
+      break;
   }
-
+   
+  /* Turn Around Flag */
+  WriteData(isTurnAroundAddr, CommandData.pointing_mode.is_turn_around, NIOS_QUEUE);
+  
   if (wait > 0)
     wait--;
 }
@@ -1385,7 +1365,6 @@ static void DoSpiderMode(void)
 	if ( (n_scans % N_scans) == 0 ) { // step in elevation
           bprintf(info, "stepping in el at right turn around");
           axes_mode.el_mode = AXIS_POSITION;
-	  CommandData.pointing_mode.el_mode = P_EL_GOTO;
           axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
           axes_mode.el_vel = 0.0;
         }  
@@ -1431,7 +1410,6 @@ static void DoSpiderMode(void)
 	if ( (n_scans % N_scans) == 0 ) { // step in elevation
           bprintf(info, "stepping in el at left turn around");
           axes_mode.el_mode = AXIS_POSITION;
-	  CommandData.pointing_mode.el_mode = P_EL_GOTO;
           axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
           axes_mode.el_vel = 0.0;
         }

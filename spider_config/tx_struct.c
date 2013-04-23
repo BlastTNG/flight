@@ -623,7 +623,6 @@ struct ChannelStruct SlowChannels[] = {
   {"p_t_rw_term_piv",  'w', LOOP7, 25,             1.0,        -32768.0, 'u', U_NONE},
   {"p_v_req_az_term_piv", 'w', LOOP7, 26,          1.0,        -32768.0, 'u', U_NONE},
   {"vel_ser_piv",  'w', LOOP7, 27,   2000.0/65536.0,         0.0, 's', U_V_DPS},
-  {"vel_calc_piv", 'w', LOOP7, 28,        20.0/32768.0,             0.0, 's', U_V_DPS},
   {"g_v_req_az_piv",'w',LOOP7, 29,                 1.0,             0.0, 'u', U_NONE},
   {"az_raw_pss1",   'w',   LOOP7, 30,              I2DEG,             0.0, 'u', U_P_DEG},
   {"az_raw_pss2",   'w',   LOOP7, 31,              I2DEG,             0.0, 'u', U_P_DEG},
@@ -842,8 +841,8 @@ struct ChannelStruct SlowChannels[] = {
   {"limit_lock",   'r',   ACS2_D, 30,                1.0,             0.0, 'u', U_NONE},
 
 /* ACS2 Analog card */
-  {"pitch_piv_clin",'r', ACS2_A1,  1,           0.001343,          -42.20, 'u', U_NONE},
-  {"roll_piv_clin",'r',  ACS2_A1,  3,           0.001413,         -44.688, 'u', U_NONE},
+  {"pitch_piv_clin",'r', ACS2_A1,  1,           0.001343,          -43.18, 'u', U_NONE},
+  {"roll_piv_clin",'r',  ACS2_A1,  3,           0.001413,         -44.788, 'u', U_NONE},
   {"t_piv_clin",   'r',  ACS2_A1,  5, 100.0*10.0/32768.0,     -100.0*10.0, 'u', U_NONE},
   {"pitch_of_clin",'r',  ACS2_A1,  7,            -0.00143,         47.555, 'u', U_NONE},
   {"roll_of_clin", 'r',  ACS2_A1,  9,              -0.001,           31.6, 'u', U_NONE},
