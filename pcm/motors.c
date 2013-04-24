@@ -1,21 +1,21 @@
-/* mcp: the BLAST master control program
+/* pcm: the Spider master control program
  *
- * This software is copyright (C) 2002-2006 University of Toronto
+ * This software is copyright (C) 2002-2013 University of Toronto
  *
- * This file is part of mcp.
+ * This file is part of pcm.
  *
- * mcp is free software; you can redistribute it and/or modify
+ * pcm is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * mcp is distributed in the hope that it will be useful,
+ * pcm is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * along with pcm; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
@@ -38,7 +38,7 @@
 #include "calibrate.h"
 
 // TODO: Revise these el limits for Spider flight:
-#define MIN_EL 15 
+#define MIN_EL 20 
 #define MAX_EL 45
 
 #define VPIV_FILTER_LEN 40
@@ -68,7 +68,9 @@
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
 #define TOLERANCE 0.02    // max acceptable el pointing error (deg)
+#define TWIST_TOL 0.1     // max acceptable port-strbrd enc diff (deg)
 #define EL_REL_MIN 0.005  // min size of el relative move (= 1 count)
+#define EL_ON_DELAY 0.40  // turn-on delay of el drive when in auto mode
 
 /* variables storing scan region (relative to defined quad) */
 static int scan_region = 0;
@@ -341,9 +343,9 @@ static void GetVElevGoto(double* v_P, double* v_S)
   /* check limits (shouldn't be possible to command out of bounds el in cow
    * though) */
   if (axes_mode.el_dest > MAX_EL) {
-    el_dest = MAX_EL;
+    el_dest = axes_mode.el_dest = CommandData.pointing_mode.Y = MAX_EL;
   } else if (axes_mode.el_dest < MIN_EL) {
-    el_dest = MIN_EL;
+    el_dest = axes_mode.el_dest = CommandData.pointing_mode.Y = MIN_EL;
   } else {
     el_dest = axes_mode.el_dest;
   }
@@ -367,9 +369,19 @@ static void GetVElevGoto(double* v_P, double* v_S)
 
   if ( fabs(el_dest - ACSData.enc_mean_el ) < TOLERANCE ) { 
     since_arrival++;
-    isStopped = (since_arrival >= 500);
+    isStopped = (since_arrival >= 2*ACSData.bbc_rate);
   }  else {
     since_arrival = 0;
+    isStopped = 0;
+  }
+
+  /* check for a stalled motor */
+  if ( fabs(ACSData.enc_diff_el) > TWIST_TOL ) {
+    isStopped = 1;
+    el_dest = axes_mode.el_dest = CommandData.pointing_mode.Y
+            = ACSData.enc_mean_el;
+     CommandData.power.elmot_auto = 2;
+  } else {
     isStopped = 0;
   }
 
@@ -391,9 +403,16 @@ static void GetVElevGoto(double* v_P, double* v_S)
 static void GetVElev(double* v_P, double* v_S)
 {
   static int on_delay = 0;
+  static int was_not_auto = 1;
+
+  if (was_not_auto && (CommandData.power.elmot_auto)) {
+    on_delay = 0;
+  }
+  was_not_auto = !CommandData.power.elmot_auto;
 
   if ( !(CommandData.power.elmot_auto) ) {
-    on_delay = 35; 
+    on_delay = EL_ON_DELAY*ACSData.bbc_rate + 2.0; // 1st factor is delay 
+                                                   // in seconds 
   }
   
   // if !P_EL_NONE and auto and off
@@ -407,9 +426,11 @@ static void GetVElev(double* v_P, double* v_S)
     }
   }
              
-  if ( (CommandData.pointing_mode.el_mode == P_EL_GOTO) && (on_delay >= 35) ) {
+  if ( (CommandData.pointing_mode.el_mode == P_EL_GOTO) && 
+        (on_delay >= EL_ON_DELAY*ACSData.bbc_rate) ) {
     GetVElevGoto(v_P, v_S);
-  } else if ( (CommandData.pointing_mode.el_mode == P_EL_RELMOVE) && (on_delay >= 35) ) {
+  } else if ( (CommandData.pointing_mode.el_mode == P_EL_RELMOVE) && 
+              (on_delay >= EL_ON_DELAY*ACSData.bbc_rate) ) {
     GetVElevRelMove(v_P, v_S);
   } else {
     *v_P = *v_S = 0.0;
@@ -419,6 +440,9 @@ static void GetVElev(double* v_P, double* v_S)
         && (CommandData.pointing_mode.el_mode == P_EL_NONE) ) {      
       CommandData.power.elmot.set_count = 0;
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
+      if (CommandData.power.elmot_auto == 2) {
+        CommandData.power.elmot_auto = 0;
+      }
       on_delay = 0; // reset for the next time we turn on
     }
   }
@@ -1327,6 +1351,7 @@ static void DoSpiderMode(void)
 	if ( (n_scans % N_scans) == 0 ) { // step in elevation
           bprintf(info, "stepping in el at right turn around");
           axes_mode.el_mode = AXIS_POSITION;
+          CommandData.pointing_mode.el_mode = P_EL_GOTO;
           axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
           axes_mode.el_vel = 0.0;
         }  
@@ -1372,6 +1397,7 @@ static void DoSpiderMode(void)
 	if ( (n_scans % N_scans) == 0 ) { // step in elevation
           bprintf(info, "stepping in el at left turn around");
           axes_mode.el_mode = AXIS_POSITION;
+          CommandData.pointing_mode.el_mode = P_EL_GOTO;
           axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
           axes_mode.el_vel = 0.0;
         }
@@ -2332,8 +2358,9 @@ void UpdateAxesMode(void)
   axes_mode.az_accel = 0.0; // default for scan modes that don't set
   switch (CommandData.pointing_mode.mode) {
     case P_DRIFT:
-      axes_mode.el_mode = AXIS_VEL;
-      axes_mode.el_vel = CommandData.pointing_mode.del;
+      axes_mode.el_mode = AXIS_POSITION;
+      axes_mode.el_dest = ACSData.enc_mean_el;
+      axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = CommandData.pointing_mode.vaz;
       bsc_trigger = 1;
