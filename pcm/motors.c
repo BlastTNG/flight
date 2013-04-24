@@ -1040,8 +1040,10 @@ static void DoSineMode(void)
   axes_mode.el_vel = 0.0;
 
   i_point = GETREADINDEX(point_index);
-  
-  az = PointingData[i_point].az;
+
+  /* propagate az sol'n forward by az_delay */ 
+  az = PointingData[i_point].az + PointingData[i_point].v_az 
+       * (CommandData.pointing_mode.az_delay/ACSData.bbc_rate);
   el = PointingData[i_point].el;
 
   centre = CommandData.pointing_mode.X;
@@ -1214,8 +1216,10 @@ static void DoSpiderMode(void)
   
   lst = PointingData[i_point].lst;
   lat = PointingData[i_point].lat;
-  
-  az = PointingData[i_point].az;
+
+  /* propagate az sol'n forward by az_delay */ 
+  az = PointingData[i_point].az + PointingData[i_point].v_az 
+       * (CommandData.pointing_mode.az_delay/ACSData.bbc_rate);
   el = PointingData[i_point].el;
   
   /* convert ra/decs to az/el */

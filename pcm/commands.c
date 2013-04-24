@@ -1181,6 +1181,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         = rvalues[3];
       CommandData.pointing_mode.Nsteps = ivalues[4];
       CommandData.pointing_mode.overshoot_band = rvalues[5];
+      CommandData.pointing_mode.az_delay = rvalues[6];
       break;
     case sine_scan:
       CommandData.pointing_mode.w = 2.0*rvalues[0];
