@@ -2221,6 +2221,7 @@ void InitCommandData()
   CommandData.pointing_mode.overshoot_band = 0.15;
   CommandData.pointing_mode.el_step = 0.0;
   CommandData.pointing_mode.is_turn_around = 0;
+  CommandData.pointing_mode.az_delay = 2.75;
 
   CommandData.az_accel = 0.1;
   CommandData.az_accel_max = 1.0;
