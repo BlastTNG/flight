@@ -770,7 +770,7 @@ struct ChannelStruct SlowChannels[] = {
   {"last_i_cmd",     'w', LOOP0,  53,                1.0,             0.0, 'u', U_NONE},
   {"count_b_cmd",    'w', LOOP0,  54,                1.0,             0.0, 'u', U_NONE},
   {"count_i_cmd",    'w', LOOP0,  55,                1.0,             0.0, 'u', U_NONE},
-  {"delay_az",       'w', LOOP0,  56,                (32768.0/10.0),  0.0, 'u', U_NONE},
+  {"delay_az",       'w', LOOP0,  56,                (10.0/32768.0),  0.0, 'u', U_NONE},
   
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */
