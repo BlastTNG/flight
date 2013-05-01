@@ -2381,24 +2381,9 @@ void UpdateAxesMode(void)
     case P_AZ_SCAN:
       DoAzScanMode();
       break;
- /*   case P_VCAP:
-      DoVCapMode();
-      break;
-    case P_VBOX:
-      DoVBoxMode();
-      break;
-    case P_BOX:
-      DoNewBoxMode();
-      break;
-    case P_CAP:
-      DoNewCapMode();
-      break;*/
     case P_RADEC_GOTO:
       DoRaDecGotoMode();
       break;
-  /*  case P_QUAD: // aka radbox
-      DoQuadMode();
-      break;*/
     case P_SPIDER:
       DoSpiderMode();
       break;
@@ -2411,7 +2396,6 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
-      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       bsc_trigger = 1;
       break;
     default:
@@ -2428,7 +2412,6 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
-      //isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       bsc_trigger = 1;
       break;
   }
@@ -2441,7 +2424,6 @@ void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int
   char message[BUOS_MAX];
   va_list argptr;
 
-  //  bprintf(info,"DEBUG: verb_level_req = %i, verb_level_comp = %i",verb_level_req,verb_level_comp);
   if(verb_level_req >= verb_level_comp) {
     va_start(argptr, fmt);
     vsnprintf(message, BUOS_MAX, fmt, argptr);
