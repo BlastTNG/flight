@@ -390,6 +390,7 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 0-7 are wide */
   /* LOOP1 9, 12-13 are wide */
   {"g_com_el",     'w', LOOP1,  8,                3.0/65536.0,     0.0, 'u', U_NONE},
+  {"channelset_oth", 'w', LOOP1,  9,                1,             0.0, 'u', U_NONE},
   {"foc_res_thegood", 'w', LOOP1, 17,             1.0,             0.0, 'u', U_NONE},
   {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, // Star camera net status
   {"timeout_b",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},

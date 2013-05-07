@@ -246,6 +246,7 @@ struct CommandDataStruct {
   unsigned short int at_float;
   unsigned int tdrss_bw;
   unsigned int iridium_bw;
+  unsigned int channelset_oth;
 
   enum {vtx_isc, vtx_osc, vtx_bsc} vtx_sel[2];
 

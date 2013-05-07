@@ -117,6 +117,7 @@ static void WriteAux(void)
   static struct NiosStruct* timeUSecAddr;
   static struct NiosStruct* rateTdrssAddr;
   static struct NiosStruct* rateIridiumAddr;
+  static struct NiosStruct* channelsetOthAddr;
   static struct NiosStruct* tChipFlcAddr;
   static struct NiosStruct* tMbFlcAddr;
   static struct NiosStruct* statusMCCAddr;
@@ -178,6 +179,7 @@ static void WriteAux(void)
     timeUSecAddr = GetNiosAddr("time_usec");
     rateTdrssAddr = GetNiosAddr("rate_tdrss");
     rateIridiumAddr= GetNiosAddr("rate_iridium");
+    channelsetOthAddr = GetNiosAddr("channelset_oth");
     bi0FifoSizeAddr = GetNiosAddr("bi0_fifo_size");
     bbcFifoSizeAddr = GetNiosAddr("bbc_fifo_size");
     ploverAddr = GetNiosAddr("plover");
@@ -275,6 +277,7 @@ static void WriteAux(void)
   WriteData(ploverAddr, CommandData.plover, NIOS_QUEUE);
   WriteData(rateTdrssAddr, CommandData.tdrss_bw, NIOS_QUEUE);
   WriteData(rateIridiumAddr, CommandData.iridium_bw, NIOS_QUEUE);
+  WriteData(channelsetOthAddr, CommandData.channelset_oth, NIOS_QUEUE);
 
   WriteData(statusEthAddr,
        (EthernetSC[0] & 0x3) +

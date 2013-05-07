@@ -1352,7 +1352,6 @@ int main(int argc, char *argv[])
 #endif
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
-  //TODO CompressionWriter segfaults on (currently) empty compressstruct
   pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
   pthread_create(&hwpr_id, NULL, (void*)&StartHWP, NULL);
