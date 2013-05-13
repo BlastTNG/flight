@@ -43,7 +43,7 @@ struct streamDataStruct {
 void nameThread(const char*);               /* mcp.c */
 
 extern char *frameList[];
-extern struct fieldStreamStruct streamList[];
+extern struct fieldStreamStruct streamList[2][100];
 extern short int InCharge;
 
 int n_framelist;
@@ -228,7 +228,7 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
       }
     }
     streamData[i_field].x[i_streamframe] = xd;
-    if (streamList[i_field].doDifferentiate) {
+    if (streamList[CommandData.channelset_oth][i_field].doDifferentiate) {
       if (i_streamframe==FASTFRAME_PER_STREAMFRAME-1) {
         streamData[i_field].sum = xd;
         streamData[i_field].n_sum=1;
@@ -263,10 +263,14 @@ void WriteSuperFrame(unsigned short *frame) {
   unsigned x;
   int size;
   unsigned gain;
+  char set = CommandData.channelset_oth;
 
   x=SYNCWORD;
   writeData((char *)(&x), 4, 0);
   frame_bytes_written += 4;
+  
+  writeData(&set, 1, 0);
+  frame_bytes_written++;
   
   // write superframe data
   for (i_field = 0; i_field<n_framelist; i_field++) {
@@ -328,7 +332,7 @@ void WriteSuperFrame(unsigned short *frame) {
     
     for (i_field = 0; i_field<n_streamlist; i_field++) {
       double delta=0;
-      delta = streamList[i_field].samples_per_frame*streamList[i_field].bits/8;
+      delta = streamList[CommandData.channelset_oth][i_field].samples_per_frame*streamList[CommandData.channelset_oth][i_field].bits/8;
       if (streamData[i_field].mask) {
         delta+=6.0/(double)STREAMFRAME_PER_SUPERFRAME;
       } else {
@@ -434,11 +438,11 @@ void WriteStreamFrame() {
 
   for (i_field = 0; i_field<n_streamlist; i_field++) {
     n_streambuf = 0;
-    n = FASTFRAME_PER_STREAMFRAME/streamList[i_field].samples_per_frame;
-    for (i_samp = 0; i_samp < streamList[i_field].samples_per_frame; i_samp++) {
-      if (streamList[i_field].doAverage) {
+    n = FASTFRAME_PER_STREAMFRAME/streamList[CommandData.channelset_oth][i_field].samples_per_frame;
+    for (i_samp = 0; i_samp < streamList[CommandData.channelset_oth][i_field].samples_per_frame; i_samp++) {
+      if (streamList[CommandData.channelset_oth][i_field].doAverage) {
         // filter
-        n = FASTFRAME_PER_STREAMFRAME/streamList[i_field].samples_per_frame;
+        n = FASTFRAME_PER_STREAMFRAME/streamList[CommandData.channelset_oth][i_field].samples_per_frame;
         x = 0.0;
         for (i_fastsamp = 0; i_fastsamp < n ; i_fastsamp++) {
           x+=streamData[i_field].x[i_fastsamp + i_samp * n];
@@ -448,7 +452,7 @@ void WriteStreamFrame() {
         x=streamData[i_field].x[i_samp * n];
       }
       // differentiate
-      if (streamList[i_field].doDifferentiate) {
+      if (streamList[CommandData.channelset_oth][i_field].doDifferentiate) {
         dx = x - streamData[i_field].last;
         streamData[i_field].last = x;
         x = dx/(double)streamData[i_field].gain;
@@ -461,11 +465,11 @@ void WriteStreamFrame() {
       xi = (int)(x + streamData[i_field].residual);
       streamData[i_field].residual = (x + streamData[i_field].residual) - (double)xi; // preserve integral
 
-      if (streamList[i_field].bits == 4) {
-      } else if (streamList[i_field].bits == 8) {
+      if (streamList[CommandData.channelset_oth][i_field].bits == 4) {
+      } else if (streamList[CommandData.channelset_oth][i_field].bits == 8) {
         // if the derivative exceeds the maximum, truncate, but preserve the
         // integral for later application.  It gets cleared at the slow frame.
-        if (streamList[i_field].doDifferentiate) {
+        if (streamList[CommandData.channelset_oth][i_field].doDifferentiate) {
           if (xi>127) {
             streamData[i_field].residual += xi - 127;
             xi = 127;
@@ -479,7 +483,7 @@ void WriteStreamFrame() {
         }
         streambuf[i_samp] = (signed char)xi;
         n_streambuf++;
-      } else if (streamList[i_field].bits == 16) {
+      } else if (streamList[CommandData.channelset_oth][i_field].bits == 16) {
         if (xi > 32767) xi = 32767; // truncate
         if (xi<-32767) xi = -32767;
         n_streambuf+=2;
@@ -497,16 +501,12 @@ void WriteStreamFrame() {
 //*********************************************************
 // The main compression writer thread
 //*********************************************************
-void CompressionWriter() {  
+void CompressionWriterFunction(int channelset) {
   int i_field;
   int i_streamframe=0;
   unsigned short *frame;
   int i_fastframe = -1;
-
-  nameThread("DOWN");
-
-  bputs(startup, "Startup.\n");
-
+  
   // determine frameList length
   for (n_framelist=0; frameList[n_framelist][0]!='\0'; n_framelist++);
   
@@ -520,18 +520,18 @@ void CompressionWriter() {
   }
 
   // determine streamlist length
-  for (n_streamlist = 0; streamList[n_streamlist].name[0] != '\0'; n_streamlist++); // count
+  for (n_streamlist = 0; streamList[CommandData.channelset_oth][n_streamlist].name[0] != '\0'; n_streamlist++); // count
   streamData = (struct streamDataStruct *)malloc(n_streamlist*sizeof(struct streamDataStruct));
 
   for (i_field = 0; i_field < n_streamlist; i_field++) {
-    if (isBoloField(streamList[i_field].name)) {
+    if (isBoloField(streamList[CommandData.channelset_oth][i_field].name)) {
       struct BiPhaseStruct *l_bi0;
       struct BiPhaseStruct *m_bi0;
       char l_name[10];
       char m_name[10];
       
-      sprintf(l_name, "%slo", streamList[i_field].name);
-      sprintf(m_name, "%shi", streamList[i_field].name);
+      sprintf(l_name, "%slo", streamList[CommandData.channelset_oth][i_field].name);
+      sprintf(m_name, "%shi", streamList[CommandData.channelset_oth][i_field].name);
 
       // OK: bolometers are 24 bit fields.  The msw for odd bolometer
       // channels are stored in the high byte of the even channels.
@@ -544,7 +544,7 @@ void CompressionWriter() {
       streamData[i_field].isSigned = 0;
       streamData[i_field].mask = 0x00ff;
       streamData[i_field].lsw = l_bi0->channel*2;
-      if (streamList[i_field].name[5]%2) {
+      if (streamList[CommandData.channelset_oth][i_field].name[5]%2) {
         streamData[i_field].msw = m_bi0->channel*2;
       } else {
         streamData[i_field].msw = m_bi0->channel*2+1;
@@ -554,14 +554,14 @@ void CompressionWriter() {
       struct BiPhaseStruct *bi0;
       struct ChannelStruct *channel;
 
-      nios = GetNiosAddr(streamList[i_field].name);
-      bi0 = GetBiPhaseAddr(streamList[i_field].name);
-      channel = GetChannelStruct(streamList[i_field].name);
+      nios = GetNiosAddr(streamList[CommandData.channelset_oth][i_field].name);
+      bi0 = GetBiPhaseAddr(streamList[CommandData.channelset_oth][i_field].name);
+      channel = GetChannelStruct(streamList[CommandData.channelset_oth][i_field].name);
 
       if ((channel->type == 's') || (channel->type == 'S')) {
         streamData[i_field].isSigned = 1;
       } else {
-	streamData[i_field].isSigned = 0;
+        streamData[i_field].isSigned = 0;
       }
       if (nios->fast) {
         streamData[i_field].isFast = 1;
@@ -585,7 +585,7 @@ void CompressionWriter() {
     }      
     streamData[i_field].last = 0;
     streamData[i_field].residual = 0;
-    streamData[i_field].gain = streamList[i_field].gain;
+    streamData[i_field].gain = streamList[CommandData.channelset_oth][i_field].gain;
     streamData[i_field].offset = 0;
     streamData[i_field].sum = 0.0;
     streamData[i_field].n_sum = 0;
@@ -603,7 +603,7 @@ void CompressionWriter() {
   //*****************************************************
   //     The Infinite Loop....
   //*****************************************************
-  while (1) {
+  while (channelset == CommandData.channelset_oth) {
     frame = PopFrameBufferAndSlow(&hiGain_buffer, &current_slow_data);
     if (frame) {
       ++i_fastframe;
@@ -632,3 +632,17 @@ void CompressionWriter() {
   }
   
 }
+
+void CompressionWriter() {  
+
+  nameThread("DOWN");
+
+  bputs(startup, "Startup.\n");
+
+  while (1) {
+    CompressionWriterFunction(CommandData.channelset_oth);
+    usleep(10000);
+    bprintf(info, "restarting with oth channel set %d", CommandData.channelset_oth);
+  }
+}
+

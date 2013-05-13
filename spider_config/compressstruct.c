@@ -1,4 +1,5 @@
 #include "compressstruct.h"
+#include "compressconst.h"
 
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
@@ -17,7 +18,8 @@ struct fieldStreamStruct {
 };
 */
 // el_dest_mc, i_el
-struct fieldStreamStruct streamList[] = {
+struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS] = {
+  { // field set 0
   {"time",1,1,NOAVG,NODX,8,SLOW},
   {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
   {"framenum",1,1,NOAVG,DX,8,SLOW},
@@ -68,6 +70,21 @@ struct fieldStreamStruct streamList[] = {
   {"ofroll_2_gy", 5461, 10, AVG, NODX, 8, SLOW},
   
 END_OF_STREAM
+  },
+  
+  {  // field set 1
+  {"time",1,1,NOAVG,NODX,8,SLOW},
+  {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
+
+  {"ofpch_1_gy", 5461, 10, AVG, NODX, 8, SLOW},
+  {"ofyaw_1_gy", 5461, 10, AVG, NODX, 8, SLOW},
+  {"ofroll_1_gy", 5461, 10, AVG, NODX, 8, SLOW},
+  {"ofpch_2_gy", 5461, 10, AVG, NODX, 8, SLOW},
+  {"ofyaw_2_gy", 5461, 10, AVG, NODX, 8, SLOW},
+  {"ofroll_2_gy", 5461, 10, AVG, NODX, 8, SLOW},
+  
+END_OF_STREAM
+  }
 };
 
 char *frameList[] = {
