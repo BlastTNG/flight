@@ -1,4 +1,5 @@
 #include "compressstruct.h"
+#include "compressconst.h"
 
 /* Defined in compressstruct.h - included here for reference.
 struct fieldStreamStruct {
@@ -11,7 +12,8 @@ struct fieldStreamStruct {
   int spikeMode; // SLOW: skip samples  SPIKE: report enlarged data
 };
 */
-struct fieldStreamStruct streamList[] = {
+struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS] = {
+  { // field set 0
   {"time",1,1,NOAVG,NODX,8,SLOW},
   {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
   {"framenum",1,1,NOAVG,DX,8,SLOW},
@@ -367,6 +369,7 @@ struct fieldStreamStruct streamList[] = {
   {"n22c02", 1, 50, AVG, DX, 8, SLOW}, // thermistor
 
 END_OF_STREAM
+  }
 };
 
 

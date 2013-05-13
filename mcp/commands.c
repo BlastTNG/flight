@@ -1506,6 +1506,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case iridium_bw:
       CommandData.iridium_bw = rvalues[0];
       break;
+    case oth_set:
+      CommandData.channelset_oth = ivalues[0];
+      break;      
     case slot_sched: /* change uplinked schedule file */
       if (LoadUplinkFile(ivalues[0])) {
         CommandData.uplink_sched = 1;
@@ -1977,6 +1980,7 @@ void InitCommandData()
   CommandData.slot_sched = 0;
   CommandData.tdrss_bw = 6000;
   CommandData.iridium_bw = 2000;
+  CommandData.channelset_oth = 0;
   CommandData.vtx_sel[0] = vtx_isc;
   CommandData.vtx_sel[1] = vtx_osc;
 

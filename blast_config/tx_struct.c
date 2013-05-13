@@ -323,7 +323,9 @@ struct ChannelStruct SlowChannels[] = {
   {"level_off_bal",'w', LOOP1, 30,           1./1990.13,             0.0, 'u', U_I_A},
   {"level_target_bal",'w', LOOP1, 31,           1./1990.13,            -5.0, 'u', U_I_A},
   /* LOOP1 32-33 are wide */
-  /* LOOP1 34-36 are unused */
+  {"channelset_oth", 'w', LOOP1,  34,                1,             0.0, 'u', U_NONE},
+  /* LOOP1 35-36 are unused */
+
   {"alt_sip",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 38-41 are wide */
   {"mapmean_isc",  'w', LOOP1, 42,                 1.,             0.0, 'u', U_NONE},

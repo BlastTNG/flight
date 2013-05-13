@@ -813,6 +813,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(oth_set), "OTH Link channel set", GR_TELEM, 1,
+    {
+      {"Channel Set", 0, 2, 'i', "channelset_oth"}
+    }
+  },
+
   /****************************************/
   /*************** Misc.  *****************/
   {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER, 1,

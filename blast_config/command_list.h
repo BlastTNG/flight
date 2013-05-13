@@ -141,7 +141,7 @@ enum multiCommand {
   lock,              isc_blobs,         phase,            act_offset,
   pivot_gain,        isc_pixel_centre,  ra_dec_goto,      ra_dec_set,
   roll_gain,         isc_set_aperture,  isc_set_focus,    az_scan_accel,
-  t_gyro_set,        osc_gain,          tdrss_bw,         iridium_bw,
+  t_gyro_set,        osc_gain,          tdrss_bw,         iridium_bw,      oth_set,  
   t_gyro_gain,       timeout,           isc_tolerances,   vcap,
   vbox,              slot_sched,        az_gyro_offset,   isc_hold_current,
   isc_save_period,   osc_offset,        hwpr_set_overshoot,
