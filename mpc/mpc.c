@@ -73,6 +73,9 @@ uint16_t bset_num = 0xFFFF;
 int ntes = 0;
 int16_t tes[NUM_ROW * NUM_COL];
 
+/* the turnaround flag */
+int in_turnaround;
+
 /* make and send fake data -- we only make data mode 11 data, which is static */
 #define FAKE_DATA_RATE   2500 /* microseconds -- this is approximate */
 //#define FAKE_DATA_RATE   1000000 /* microseconds -- this is approximate */
@@ -214,6 +217,9 @@ int main(void)
           ntes = n;
         veto = 0; /* unveto transmission */
         init = 0;
+        break;
+      case 't': /* turnaround packet */
+        in_turnaround = mpc_decompose_turnaround(n, data, in_turnaround);
         break;
       default:
         bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",

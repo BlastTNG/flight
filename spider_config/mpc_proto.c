@@ -59,6 +59,28 @@ int mpc_init(void)
   return 0;
 }
 
+/* compose a turnaround packet for transmission to the mpc
+ *
+ * turnaround packet looks like:
+ *
+ * RRtF
+ *
+ * where
+ *
+ * R = 16-bit protocol revision
+ * t = 't' indicating a turnaround packet
+ * F = the turnaround flag (either 0 or 1)
+ */
+size_t mpc_compose_turnaround(int flag, char *buffer)
+{
+  int16_t i16 = mpc_proto_rev;
+
+  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  buffer[2] = 't'; /* turnaround packet */
+  buffer[3] = flag ? 1 : 0; /* turnaround */
+  return 4;
+}
+
 /* compose a TES data packet for transmission from the mpc
  *
  * data packet looks like:
@@ -251,7 +273,8 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
   }
 
   /* check type -- there's a list of valid packet codes here */
-  if (*ptr != 'A' && *ptr != 'C' && *ptr != 'F' && *ptr != 'S' && *ptr != 'T') {
+  if (*ptr != 'A' && *ptr != 'C' && *ptr != 'F' && *ptr != 'S' && *ptr != 'T'
+      && *ptr != 't') {
     bprintf(err, "Ignoring %i-byte packet of unknown type 0x%X from %s/%i\n",
         len, (unsigned char)*ptr, peer, port);
     return -1;
@@ -428,4 +451,13 @@ int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
   memcpy(tes_data, data + 8, len - 8);
 
   return mce;
+}
+
+int mpc_decompose_turnaround(size_t len, const char *data, int old)
+{
+  if (len < 4)
+    return old;
+
+  bprintf(info, "%s turnaround", data[3] ? "Into" : "Out of");
+  return data[3] ? 1 : 0;
 }

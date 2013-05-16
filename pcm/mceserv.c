@@ -39,6 +39,7 @@
 
 /* semeuphoria */
 int sent_bset = -1; /* the last field set that was sent */
+int last_turnaround = -1; /* the last turnaround flag sent */
 
 /* general purpose datagram buffer */
 static char udp_buffer[UDP_MAXSIZE];
@@ -95,6 +96,28 @@ static int ForwardCommand(int sock)
 
   /* indicate something has been sent */
   return 1;
+}
+
+static void ForwardTurnaround(int sock)
+{
+  size_t len;
+
+  /* edge trigger on turnaround flag */
+  if (last_turnaround == -1 ||
+      last_turnaround ^ CommandData.pointing_mode.is_turn_around)
+  {
+    /* the race condition here probably doesn't matter */
+    last_turnaround = CommandData.pointing_mode.is_turn_around;
+
+    /* compose */
+    len = mpc_compose_turnaround(last_turnaround, udp_buffer);
+
+    /* broadcast */
+    if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
+      bprintf(info, "Broadcast %s turnaround.\n",
+          last_turnaround ? "into" : "out of");
+    }
+  }
 }
 
 static void ForwardBSet(int sock)
@@ -232,6 +255,9 @@ void *mceserv(void *unused)
     /* broadcast MCE commands */
     ForwardCommand(sock);
 
+    /* Turnaround flag */
+    ForwardTurnaround(sock);
+
     /* broadcast the field set, when necessary */
     if (sent_bset != CommandData.bset_num)
       ForwardBSet(sock);
@@ -255,6 +281,7 @@ void *mceserv(void *unused)
          */
         if (mpc_decompose_init(n, udp_buffer, peer, port) >= 0) {
           sent_bset = -1; /* resend bset */
+          last_turnaround = -1; /* resent turnaround state */
         }
         break;
       case 'S': /* slow data */
@@ -281,7 +308,9 @@ void *mceserv(void *unused)
   return NULL;
 };
 
-/* TES fifo handling for tx.c */
+/* ===== TES fifo handling for tx.c ===== */
+
+/* return the number of frames in the fifo */
 int tes_nfifo(void)
 {
   int tes_fifo_len;

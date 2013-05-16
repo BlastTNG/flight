@@ -74,4 +74,7 @@ int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
     uint16_t bset_num, int nm[NUM_MCE], int *bad_bset_count, const char *peer,
     int port);
 
+size_t mpc_compose_turnaround(int flag, char *buffer);
+int mpc_decompose_turnaround(size_t len, const char *data, int old);
+
 #endif
