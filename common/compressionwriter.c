@@ -12,6 +12,7 @@
 #include <limits.h>
 #include "mcp.h"
 #include "compressstruct.h"
+#include "compressconst.h"
 #include "command_struct.h"
 // Structure:
 // FASTFRAMES: 100.16 Hz
@@ -43,7 +44,7 @@ struct streamDataStruct {
 void nameThread(const char*);               /* mcp.c */
 
 extern char *frameList[];
-extern struct fieldStreamStruct streamList[2][100];
+extern struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS];
 extern short int InCharge;
 
 int n_framelist;
@@ -263,8 +264,14 @@ void WriteSuperFrame(unsigned short *frame) {
   unsigned x;
   int size;
   unsigned gain;
+  static unsigned int last_set = 65535;
   char set = CommandData.channelset_oth;
 
+  if (last_set != set) {
+    last_set = set;
+    reset_rates = 1;
+  }
+  
   x=SYNCWORD;
   writeData((char *)(&x), 4, 0);
   frame_bytes_written += 4;
@@ -366,6 +373,12 @@ void WriteSuperFrame(unsigned short *frame) {
     
     if (n_higain_stream==0) {
       n_higain_stream = n_streamlist-1;
+    }
+    if (n_omni1_stream==0) {
+      n_omni1_stream = n_streamlist-1;
+    }
+    if (n_omni2_stream==0) {
+      n_omni2_stream = n_streamlist-1;
     }
     
     bprintf(info, "High gain: %u stream fields use %.0f out of %d bytes per stream frame (%.0f free)",
@@ -520,6 +533,7 @@ void CompressionWriterFunction(int channelset) {
   }
 
   // determine streamlist length
+  bprintf(info, "channelset oth: %d field 1: %s", CommandData.channelset_oth, streamList[1][1].name);
   for (n_streamlist = 0; streamList[CommandData.channelset_oth][n_streamlist].name[0] != '\0'; n_streamlist++); // count
   streamData = (struct streamDataStruct *)malloc(n_streamlist*sizeof(struct streamDataStruct));
 
@@ -637,7 +651,7 @@ void CompressionWriter() {
 
   nameThread("DOWN");
 
-  bputs(startup, "Startup.\n");
+  bprintf(startup, "Starting with oth channel set %d", CommandData.channelset_oth);
 
   while (1) {
     CompressionWriterFunction(CommandData.channelset_oth);
