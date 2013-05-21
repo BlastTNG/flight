@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS = -O2 -W -Wall
+CFLAGS = -g 
 
 ########################################################
 # External repository dependencies
@@ -52,29 +52,35 @@ all:: $(ALL)
 	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common )"
 	@false
 
-fox-blast: fox.o $(BLAST_OBJS)
-	$(CC) -lm -o fox-blast fox.o $(BLAST_OBJS)
+fox-blast.o: fox.c
+	$(CC) -c -I../common -I../blast_config fox.c -o fox-blast.o
 
-msnbc-blast: fox.o $(BLAST_OBJS)
-	$(CC) -lm -o msnbc-blast fox.o $(BLAST_OBJS)
+fox-spider.o: fox.c
+	$(CC) -c -I../common -I../spider_config fox.c -o fox-spider.o
 
-rush-blast: fox.o $(BLAST_OBJS)
-	$(CC) -lm -o rush-blast fox.o $(BLAST_OBJS)
+fox-blast: fox-blast.o $(BLAST_OBJS)
+	$(CC) -o fox-blast fox-blast.o $(BLAST_OBJS) -lm 
+
+msnbc-blast: fox-blast.o $(BLAST_OBJS)
+	$(CC) -o msnbc-blast fox-blast.o $(BLAST_OBJS) -lm 
+
+rush-blast: fox-blast.o $(BLAST_OBJS)
+	$(CC) -o rush-blast fox-blast.o $(BLAST_OBJS) -lm 
 
 rumor-blast: rumor.o $(BLAST_OBJS)
-	$(CC) -lm -lgetdata -o rumor-blast rumor.o $(BLAST_OBJS)
+	$(CC) -o rumor-blast rumor.o $(BLAST_OBJS) -lm -lgetdata 
 
-fox-spider: fox.o $(SPIDER_OBJS)
-	$(CC) -lm -o fox-spider fox.o $(SPIDER_OBJS)
+fox-spider: fox-spider.o $(SPIDER_OBJS)
+	$(CC) -o fox-spider fox-spider.o $(SPIDER_OBJS) -lm 
 
-msnbc-spider: fox.o $(SPIDER_OBJS)
-	$(CC) -lm -o msnbc-spider fox.o $(SPIDER_OBJS)
+msnbc-spider: fox-spider.o $(SPIDER_OBJS)
+	$(CC) -o msnbc-spider fox-spider.o $(SPIDER_OBJS) -lm 
 
-rush-spider: fox.o $(SPIDER_OBJS)
-	$(CC) -lm -o rush-spider fox.o $(SPIDER_OBJS)
+rush-spider: fox-spider.o $(SPIDER_OBJS)
+	$(CC) -o rush-spider fox-spider.o $(SPIDER_OBJS) -lm 
 
 rumor-spider: rumor.o $(SPIDER_OBJS)
-	$(CC) -lm -lgetdata -o rumor-spider rumor.o $(SPIDER_OBJS) 
+	$(CC) -o rumor-spider rumor.o $(SPIDER_OBJS) -lm -lgetdata
 
 clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)

@@ -16,6 +16,7 @@
 #include <time.h>
 
 #include "compressstruct.h"
+#include "compressconst.h"
 #include "channels.h"
 #include "derived.h"
 #include "news.h"
@@ -35,6 +36,8 @@
 #define MAX_STREAM_FIELDS 400
 #define MAX_SAMPLES_PER_FRAME 100
 
+char channelset_oth;
+
 char LNKFILE[4096];
 int PORT;
 char EXT;
@@ -46,12 +49,13 @@ extern struct ChannelStruct FastChannels[];
 extern struct ChannelStruct DecomChannels[];
 
 extern char *frameList[];
-extern struct fieldStreamStruct streamList[];
+extern struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS];
 
 extern union DerivedUnion DerivedChannels[];
 
 int n_framefields = 0;
 struct ChannelStruct **framefields;
+int *framefieldUnique;
 
 unsigned short n_streamfields = 0;
 unsigned short n_streamfieldlist = 0;
@@ -98,6 +102,18 @@ int FieldExists(char *field) {
   return(0);
 }
 
+//*********************************************************
+// verify that a field is not listed in the stream field list
+//*********************************************************
+int FrameFieldIsUnique(char *field) {
+  int i_field;
+  for (i_field = 0; i_field<n_streamfields; i_field++) {
+    if (strcmp(field, streamfields[i_field]->field)==0) {
+      return(0);
+    }
+  }
+  return(1);  
+}
 
 //*********************************************************
 // Check to see if a raw field is in one of the lists
@@ -142,22 +158,30 @@ void MakeFormatFile(char *filedirname) {
     exit(0);
   }
   for (i_field = 0; i_field < n_framefields; i_field++) {
-    convertToUpper( framefields[i_field]->field, fieldU);
-    fprintf(formatfile, "%-16s RAW    %c 1\n", framefields[i_field]->field, framefields[i_field]->type);
-    fprintf(formatfile, "%-16s LINCOM 1 %16s %.12e %.12e 1\n", fieldU, framefields[i_field]->field,
-           framefields[i_field]->m_c2e, framefields[i_field]->b_e2e);
-    if (framefields[i_field]->quantity[0]!='\0') {
-      fprintf(formatfile, "%s/quantity STRING %s\n",fieldU, framefields[i_field]->quantity);
-    }
-    if (framefields[i_field]->units[0]!='\0') {
-      fprintf(formatfile, "%s/units STRING %s\n",fieldU, framefields[i_field]->units);
+    // if the frame field already appears in the stream list
+    // then we won't add it to the format file, and we will
+    // set the file pointer to point to /dev/null in
+    // OpenDirfilePointers.
+    framefieldUnique[i_field] = FrameFieldIsUnique(frameList[i_field]);
+    
+    if (framefieldUnique[i_field]) {
+      convertToUpper( framefields[i_field]->field, fieldU);
+      fprintf(formatfile, "%-16s RAW    %c 1\n", framefields[i_field]->field, framefields[i_field]->type);
+      fprintf(formatfile, "%-16s LINCOM 1 %16s %.12e %.12e 1\n", fieldU, framefields[i_field]->field,
+              framefields[i_field]->m_c2e, framefields[i_field]->b_e2e);
+      if (framefields[i_field]->quantity[0]!='\0') {
+        fprintf(formatfile, "%s/quantity STRING %s\n",fieldU, framefields[i_field]->quantity);
+      }
+      if (framefields[i_field]->units[0]!='\0') {
+        fprintf(formatfile, "%s/units STRING %s\n",fieldU, framefields[i_field]->units);
+      }
     }
   }
 
   for (i_field = 0; i_field < n_streamfields; i_field++) {
     convertToUpper( streamfields[i_field]->field, fieldU);
     fprintf(formatfile, "%-16s RAW    %c %d\n", streamfields[i_field]->field, streamfields[i_field]->type,
-            streamList[i_field].samples_per_frame);
+            streamList[channelset_oth][i_field].samples_per_frame);
     fprintf(formatfile, "%-16s LINCOM 1 %16s %.12e %.12e 1\n", fieldU, streamfields[i_field]->field,
            streamfields[i_field]->m_c2e, streamfields[i_field]->b_e2e);
     if (streamfields[i_field]->quantity[0]!='\0') {
@@ -259,6 +283,7 @@ void MakeFormatFile(char *filedirname) {
   }
 
   /* Hack for a few important derived of derived fields: BLAST10 and probably BLAST12 */
+/*
   fprintf(formatfile, "DR_INFO_IO_RW    LINCOM 2 DR_INFO_OPEN_RW  1.000000000000e+00 0.000000000000e+00 DR_INFO_INIT_1_RW 2.000000000000e+00 0.000000000000e+00\n");
   fprintf(formatfile, "DR_INFO_IO_EL    LINCOM 2 DR_INFO_OPEN_EL  1.000000000000e+00 0.000000000000e+00 DR_INFO_INIT_1_EL 2.000000000000e+00 0.000000000000e+00\n");
   fprintf(formatfile, "DR_INFO_IO_PIV   LINCOM 2 DR_INFO_OPEN_PIV 1.000000000000e+00 0.000000000000e+00 DR_INFO_INIT_1_PIV 2.000000000000e+00 0.000000000000e+00\n");
@@ -268,7 +293,7 @@ void MakeFormatFile(char *filedirname) {
   fprintf(formatfile, "POT_STATE        LINCOM 2 POT_IS_CLOSED    2.000000000000e+00 0.000000000000e+00 POT_IS_OPEN      1.000000000000e+00 0.000000000000e+00\n");
   fprintf(formatfile, "LHE_STATE        LINCOM 2 LHE_IS_CLOSED    2.000000000000e+00 0.000000000000e+00 LHE_IS_OPEN      1.000000000000e+00 0.000000000000e+00\n");
   fprintf(formatfile, "LN_STATE         LINCOM 2 LN_IS_CLOSED     2.000000000000e+00 0.000000000000e+00 LN_IS_OPEN       1.000000000000e+00 0.000000000000e+00\n");
-
+*/
 
   fclose(formatfile);
 
@@ -283,12 +308,14 @@ void MakeFrameList() {
   // Initialize the channel lists
   // Count the frame channels
   for (n_framefields = 0; frameList[n_framefields][0] !='\0'; n_framefields++);
+  
+  framefieldUnique = (int *) malloc(n_framefields * sizeof(int));
 
   // find and set the frame fields
   framefields = (struct ChannelStruct **)malloc(n_framefields * sizeof (struct ChannelStruct *));
 
   for (i_field = 0; i_field<n_framefields; i_field++) {
-
+    
     framefields[i_field] = GetChannelStruct(frameList[i_field]);
     
     if (!framefields[i_field]) {
@@ -308,7 +335,7 @@ void MakeStreamList() {
 
   // Initialize the channel lists */
   // Count the frame channels
-  for (n_streamfieldlist = 0; streamList[n_streamfieldlist].name[0] !='\0'; n_streamfieldlist++);
+  for (n_streamfieldlist = 0; streamList[channelset_oth][n_streamfieldlist].name[0] !='\0'; n_streamfieldlist++);
   
   // find and set the frame fields
   streamfields = (struct ChannelStruct **)malloc(n_streamfieldlist * sizeof (struct ChannelStruct *));
@@ -319,12 +346,12 @@ void MakeStreamList() {
     stream_gains[i_streamfield] = 1;
     stream_offsets[i_streamfield] = 0;
 
-    name = streamList[i_streamfield].name;
+    name = streamList[channelset_oth][i_streamfield].name;
 
     streamfields[i_streamfield] = GetChannelStruct(name);
     
     if (!streamfields[i_streamfield]) {
-      fprintf(stderr,"Error: could not find field in tx_struct! |%s|\n", streamList[i_streamfield].name);
+      fprintf(stderr,"Error: could not find field in tx_struct! |%s|\n", streamList[channelset_oth][i_streamfield].name);
       exit(0);
     }
   }
@@ -339,13 +366,17 @@ void OpenDirfilePointers(int **fieldfp, int **streamfp, char *filedirname) {
   
   *fieldfp = (int *) malloc((n_framefields+1) * sizeof(int));
   for (i_field = 0; i_field < n_framefields; i_field++) {
-    sprintf(filename, "%s/%s", filedirname, framefields[i_field]->field);
-    if( ((*fieldfp)[i_field] = open(filename, O_WRONLY | O_CREAT, 00644)) < 0 ) {
-      fprintf(stderr,"rnc: Could not create %s\n", filename);
-      exit(0);
+    if (framefieldUnique[i_field]) {
+      sprintf(filename, "%s/%s", filedirname, framefields[i_field]->field);
+      if( ((*fieldfp)[i_field] = open(filename, O_WRONLY | O_CREAT, 00644)) < 0 ) {
+        fprintf(stderr,"rnc: Could not create %s\n", filename);
+        exit(0);
+      }
+    } else {
+      (*fieldfp)[i_field] = open("/dev/null", O_WRONLY);
     }
   }
-  
+    
   *streamfp = (int *) malloc(n_streamfields * sizeof(int));
   for (i_field = 0; i_field < n_streamfields; i_field++) {
     sprintf(filename, "%s/%s", filedirname, streamfields[i_field]->field);
@@ -447,7 +478,7 @@ int main(int argc, char *argv[]) {
 
       peek(&fs, (char *)&u_in, sizeof(unsigned));
       if (u_in==SYNCWORD) {
-        printf("\rRead %d bytes for frame %d\n", n_bytemon, n_sync);
+        printf("\rRead %d bytes for frame %d ", n_bytemon, n_sync);
         advance(&fs, sizeof(unsigned));
         index = 1;
         is_lost = 0;
@@ -461,7 +492,12 @@ int main(int argc, char *argv[]) {
         fflush(stdout);
       }
     }
-
+    
+    // read frameset char
+    n_bytemon+=BlockingRead(sizeof(char), &fs, tty_fd, hostname, PORT);
+    pop(&fs, &channelset_oth, 1);
+    printf("channelset %d       \n", (int)channelset_oth);
+    
     // Read once per frame fields
     for (i_framefield = 0; i_framefield < n_framefields; i_framefield++) {
       switch (framefields[i_framefield]->type) {
@@ -550,22 +586,22 @@ int main(int argc, char *argv[]) {
     for (i_frame = 0; i_frame < STREAMFRAME_PER_SUPERFRAME; i_frame++) {
       // Read the >= 1 Hz streamed data.
       for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
-        n_bytemon+=BlockingRead(streamList[i_streamfield].samples_per_frame*streamList[i_streamfield].bits/8, &fs, tty_fd, hostname, PORT);
-        for (i_samp = 0; i_samp<streamList[i_streamfield].samples_per_frame; i_samp++) {
+        n_bytemon+=BlockingRead(streamList[channelset_oth][i_streamfield].samples_per_frame*streamList[channelset_oth][i_streamfield].bits/8, &fs, tty_fd, hostname, PORT);
+        for (i_samp = 0; i_samp<streamList[channelset_oth][i_streamfield].samples_per_frame; i_samp++) {
           // read streamfield;
-          if (streamList[i_streamfield].bits == 4) {
+          if (streamList[channelset_oth][i_streamfield].bits == 4) {
             // FIXME: deal with 4 bit fields.  There should always be a pair of them
-          } else if (streamList[i_streamfield].bits == 8) {
+          } else if (streamList[channelset_oth][i_streamfield].bits == 8) {
             pop(&fs, (char *)&c_in, 1);
             ll_in[i_streamfield][i_samp]  = (int)c_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
-            if (streamList[i_streamfield].doDifferentiate) { // undiferentiate...
+            if (streamList[channelset_oth][i_streamfield].doDifferentiate) { // undiferentiate...
               ll_in[i_streamfield][i_samp] = stream_offsets[i_streamfield];
               stream_offsets[i_streamfield]+=(int)c_in * stream_gains[i_streamfield];
             }
-          } else if (streamList[i_streamfield].bits == 16) {
+          } else if (streamList[channelset_oth][i_streamfield].bits == 16) {
             pop(&fs, (char *)&s_in, 2);
             ll_in[i_streamfield][i_samp] = (int)s_in * stream_gains[i_streamfield]+stream_offsets[i_streamfield];
-            if (streamList[i_streamfield].doDifferentiate) { // undiferentiate...
+            if (streamList[channelset_oth][i_streamfield].doDifferentiate) { // undiferentiate...
               ll_in[i_streamfield][i_samp] = stream_offsets[i_streamfield];
               stream_offsets[i_streamfield]+=(int)s_in * stream_gains[i_streamfield];
             }
@@ -604,7 +640,7 @@ int main(int argc, char *argv[]) {
           }
         }
         for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
-          for (i_samp = 0; i_samp<streamList[i_streamfield].samples_per_frame; i_samp++) {
+          for (i_samp = 0; i_samp<streamList[channelset_oth][i_streamfield].samples_per_frame; i_samp++) {
             switch (streamfields[i_streamfield]->type) {
               case 'u':
                 us_in = ll_in[i_streamfield][i_samp];
