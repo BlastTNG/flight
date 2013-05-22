@@ -52,6 +52,7 @@
 #include "flcdataswap.h"
 #include "tx.h"
 #include "hwpr.h"
+#include "mceserv.h"
 
 #define BBC_EOF      (0xffff)
 #define BBC_BAD_DATA (0xfffffff0)
@@ -1221,8 +1222,9 @@ static void SegV(int signo)
 void insertMCEData(unsigned short *RxFrame)
 {
   static int *offset = 0;
-  
-  static int i;
+
+  static int i_tmp = 0;  
+  uint32_t *data;
   
   if (offset == 0) {
     char mcefield[10];
@@ -1236,9 +1238,20 @@ void insertMCEData(unsigned short *RxFrame)
       offset[i] = bi0->channel;
     }
   }
-  RxFrame[offset[0]] = i++;
-  RxFrame[offset[1]] = sin((double)i*0.1);
+  i_tmp++;
+  RxFrame[offset[0]] = tes_nfifo();
+  RxFrame[offset[1]] = 16000*sin((double)i_tmp*0.02) + 32768;
   
+  if (tes_nfifo()>0) { // 
+    int i;
+    data = tes_data();
+    for (i=0; i<NUM_MCE_FIELDS; i++) {
+      RxFrame[offset[i]] = (unsigned short) (data[i]>>16);
+    }
+    while (tes_nfifo()>1) {
+      tes_pop();
+    }
+  }
 }
 
 int main(int argc, char *argv[])
