@@ -372,13 +372,13 @@ void WriteSuperFrame(unsigned short *frame) {
     }
     
     if (n_higain_stream==0) {
-      n_higain_stream = n_streamlist-1;
+      n_higain_stream = n_streamlist;
     }
     if (n_omni1_stream==0) {
-      n_omni1_stream = n_streamlist-1;
+      n_omni1_stream = n_streamlist;
     }
     if (n_omni2_stream==0) {
-      n_omni2_stream = n_streamlist-1;
+      n_omni2_stream = n_streamlist;
     }
     
     bprintf(info, "High gain: %u stream fields use %.0f out of %d bytes per stream frame (%.0f free)",
