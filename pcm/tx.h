@@ -29,6 +29,8 @@
 #include "channels.h"
 #include "calibrate.h"
 
+#define NUM_MCE_FIELDS 128
+
 extern int mcp_initial_controls;
 extern short int InCharge;
 

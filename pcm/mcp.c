@@ -1214,6 +1214,33 @@ static void SegV(int signo)
 }
 #endif
 
+/*************************************************************/
+/* pushDiskFrame: called from main thread: puts rxframe into */
+/* individual buffers                                        */
+/*************************************************************/
+void insertMCEData(unsigned short *RxFrame)
+{
+  static int *offset = 0;
+  
+  static int i;
+  
+  if (offset == 0) {
+    char mcefield[10];
+    int i;
+    struct BiPhaseStruct *bi0;
+
+    offset = (int *) malloc(NUM_MCE_FIELDS * sizeof(int));
+    for (i=0; i< NUM_MCE_FIELDS; i++) {
+      sprintf(mcefield, "mce%03d", i);
+      bi0 = GetBiPhaseAddr(mcefield);
+      offset[i] = bi0->channel;
+    }
+  }
+  RxFrame[offset[0]] = i++;
+  RxFrame[offset[1]] = sin((double)i*0.1);
+  
+}
+
 int main(int argc, char *argv[])
 {
   unsigned int in_data, i;
@@ -1399,7 +1426,8 @@ int main(int argc, char *argv[])
 
         UpdateBBCFrame();
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
-
+        insertMCEData(RxFrame);
+        
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
            data right */
         pushDiskFrame(RxFrame);

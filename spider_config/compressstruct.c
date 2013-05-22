@@ -25,6 +25,8 @@ struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS] = {
   {"framenum",1,1,NOAVG,DX,8,SLOW},
   {"bi0_fifo_size", 1, 5, NOAVG, NODX, 16, SLOW},
   {"bbc_fifo_size", 1, 5, NOAVG, NODX, 16, SLOW},
+  {"mce000", 1, 5, NOAVG, NODX, 16, SLOW},
+  {"mce001", 1, 5, NOAVG, NODX, 16, SLOW},
   {"timeout_b",1,1,NOAVG,DX,8,SLOW},
   {"timeout_i",1,1,NOAVG,DX,8,SLOW},
   {"ofpch_gy", 5, 10, AVG, NODX, 8, SLOW},
