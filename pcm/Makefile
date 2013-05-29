@@ -18,14 +18,15 @@ EXPT_HEADERS = calibrate.h command_list.h command_struct.h \
 							 mpc_proto.h pointing_struct.h tes.h
 SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 command_common.h compressstruct.h crc.h derived.h \
-								 ephem_read.h ephem_types.h fir.h flcdataswap.h lut.h netcmd.h sip.h \
-								 starpos.h udp.h slowdl.h
+								 ephem_read.h ephem_types.h fir.h flcdataswap.h lut.h mputs.h \
+								 netcmd.h sip.h starpos.h udp.h slowdl.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h fset.h hwpr.h \
 								mceserv.h mcp.h motorcommand.h motordefs.h phytron.h pyramid.h \
 								svd.h sync_comms.h tx.h
 
 # These are needed by both bolotest and flight versions
-SHARED_OBJS = blast.o channels.o command_common.o framefile.o lut.o sip.o udp.o
+SHARED_OBJS = blast.o channels.o command_common.o framefile.o lut.o mputs.o \
+							sip.o udp.o
 LOCAL_OBJS = commands.o fset.o hk.o hwpr.o mcp.o phytron.o tx.o
 EXPT_OBJS = command_list.o derived.o tx_struct.o
 

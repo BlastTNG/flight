@@ -27,6 +27,7 @@
 #include "channels.h"
 #include "calibrate.h"
 #include "blast.h"
+#include "mputs.h"
 
 extern unsigned short* slow_data[FAST_PER_SLOW];
 extern unsigned int BBFrameIndex;
@@ -46,12 +47,8 @@ struct chat_buf {
   int writing; /* the buffer we're currently writing to */
 };
 
-void nameThread(const char*);
-
 // Max Slew Veto
 #define VETO_MAX 60000
-
-#define TEMPORAL_OFFSET 0
 
 #define MAX_LINE_LENGTH 1024
 

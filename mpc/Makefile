@@ -1,7 +1,60 @@
+# MPC: MCE-PCM communicator
+#
+# Copyright (C) 2013, D. V. Wiebe
+#
+# This is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+########################################################
+# MAS integration
+#
+ifneq (${MAS_VAR},)
+MAS_VAR_WORKS=$(shell if [ -x ${MAS_VAR} ]; then echo yes; else echo no; fi)
+ifeq (${MAS_VAR_WORKS},no)
+$(warning *********************************************)
+$(warning Ignoring bad MAS_VAR value: ${MAS_VAR})
+MAS_VAR=
+endif
+endif
+
+ifeq (${MAS_VAR},)
+$(warning *********************************************)
+$(warning  MAS_VAR not set; unable to link against MAS )
+$(warning MPC will only be able to run in FAKE MAS mode)
+$(warning *********************************************)
+FAKE_MAS=-DFAKE_MAS
+MAS_SCRIPT=/
+MAS_DATA_ROOT=/
+MAS_O = fake.o
+else
+MAS_SCRIPT=$(shell ${MAS_VAR} --script-dir)
+MAS_DATA_ROOT=$(shell ${MAS_VAR} --data-root)
+MAS_LIBS=$(shell ${MAS_VAR} --libs) -Wl,-rpath \
+				 -Wl,$(shell ${MAS_VAR} --prefix)/lib
+MAS_INC=$(shell ${MAS_VAR} --cflags)
+MAS_O = mas.o
+endif
+MAS_DEFS=${FAKE_MAS} -DMAS_DATA_ROOT=\"${MAS_DATA_ROOT}\" \
+				 -DMAS_SCRIPT=\"${MAS_SCRIPT}\"
+
+########################################################
+# Build system set up
+#
 CC = gcc
-CPPFLAGS = -D__MPC__
+CPPFLAGS = -D__MPC__ ${MAS_DEFS} ${MAS_INC}
 CFLAGS = -g -O3 -Wall
-LDLIBS = -lm -lpthread
+LDLIBS = -lm -lpthread ${MAS_LIBS}
 
 ########################################################
 # External repository dependencies
@@ -14,13 +67,14 @@ SPIDER_ONLY=1
 #
 
 EXPT_HEADERS = command_list.h command_struct.h mpc_proto.h tes.h
-SHARED_HEADERS = blast.h command_common.h udp.h 
-LOCAL_HEADERS =
+SHARED_HEADERS = blast.h command_common.h mputs.h udp.h 
+LOCAL_HEADERS = mpc.h
 
-# These are needed by both bolotest and flight versions
 EXPT_OBJS = command_list.o mpc_proto.o
-SHARED_OBJS = blast.o command_common.o udp.o
-LOCAL_OBJS = mpc.o
+SHARED_OBJS = blast.o command_common.o mputs.o udp.o
+LOCAL_OBJS = frame.o ${MAS_O} mpc.o script.o
+
+MPC_DATA = mpc_array_map
 
 ########################################################
 # Run the sanity checks and prepare the build system
@@ -53,5 +107,8 @@ mpc: $(OBJS)
 # Install Stuff
 #
 
-install: mpc
-	install -m 755 mpc /usr/mas/bin
+install: mpc ${MPC_DATA}
+	install -d /data/mas/bin
+	install -m 755 mpc /data/mas/bin
+	install -d /data/mas/etc
+	install -m 644 ${MPC_DATA} /data/mas/etc

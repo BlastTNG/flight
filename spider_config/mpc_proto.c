@@ -51,11 +51,11 @@ int mpc_init(void)
   mpc_proto_rev = mpc_proto_revision();
   mpc_cmd_rev = command_list_serial_as_int();
   if (mpc_cmd_rev < 0) {
-    bputs(err, "MPC: Unable to parse the command list revision.");
+    bputs(err, "Unable to parse the command list revision.");
     return -1;
   }
 
-  bprintf(info, "MPC: Protocol revision: %i/%i\n", mpc_proto_rev, mpc_cmd_rev);
+  bprintf(info, "Protocol revision: %i/%i\n", mpc_proto_rev, mpc_cmd_rev);
   return 0;
 }
 

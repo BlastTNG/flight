@@ -1,41 +1,33 @@
 /* MPC: MCE-PCM communicator
  *
- * Copyright (c) 2013, D. V. Wiebe
- * All rights reserved.
+ * This software is copyright (C) 2013 D. V. Wiebe
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
-
- * - Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
+ * This is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This software is provided by the copyright holders and contributors "as is"
- * and any express or implied warranties, including, but not limited to, the
- * implied warranties of merchantability and fitness for a particular purpose
- * are disclaimed. In no event shall the copyright holder or contributors be
- * liable for any direct, indirect, incidental, special, exemplary, or
- * consequential damages (including, but not limited to, procurement of
- * substitute goods or services; loss of use, data, or profits; or business
- * interruption) however caused and on any theory of liability, whether in
- * contract, strict liability, or tort (including negligence or otherwise)
- * arising in any way out of the use of this software, even if advised of the
- * possibility of such damage.
+ * This is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include "blast.h"
+#include "mpc.h"
+#include "mputs.h"
 #include "mpc_proto.h"
 #include "udp.h"
 #include "tes.h"
 
 #include <sys/statvfs.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <pthread.h>
-
-#define MAS_DATA_ROOT "/data0/mce/"
 
 /* some timing constants; in the main loop, timing is done using the udp poll
  * timeout.  As a result, all timings are approximate (typically lower bounds)
@@ -43,7 +35,7 @@
  */
 #define UDP_TIMEOUT    100 /* milliseconds */
 
-/* wait time betewwn sending the ping to an unresponsive PCM? */
+/* wait time between sending the ping to an unresponsive PCM */
 #define INIT_TIMEOUT 60000 /* milliseconds */
 
 /* sets the rate at which slow data are sent to PCM.  Since PCM multiplexes
@@ -54,38 +46,47 @@
 #define SLOW_TIMEOUT   800 /* milliseconds */
 
 /* UDP socket */
-int sock;
+static int sock;
 
 /* The number of the attached MCE */
 int nmce = 0;
 
+/* Are we running in fake mode */
+int fake;
+
+/* The current MCE data mode */
+int data_mode = -1;
+
 /* Initialisation veto */
-int init = 1;
+static int init = 1;
 
 /* Data return veto */
-int veto = 0;
+static int veto = 0;
 
 /* The slow data struct */
-struct mpc_slow_data slow_dat;
+static struct mpc_slow_data slow_dat;
 
 /* the list of bolometers to send to PCM */
-uint16_t bset_num = 0xFFFF;
-int ntes = 0;
-int16_t tes[NUM_ROW * NUM_COL];
+static uint16_t bset_num = 0xFFFF;
+static int ntes = 0;
+static int16_t tes[NUM_ROW * NUM_COL];
 
 /* the turnaround flag */
 int in_turnaround;
 
 /* make and send fake data -- we only make data mode 11 data, which is static */
-#define FAKE_DATA_RATE   2500 /* microseconds -- this is approximate */
-//#define FAKE_DATA_RATE   1000000 /* microseconds -- this is approximate */
+#define HEADER_SIZE 43
+#define FAKE_DATA_RATE   6667 /* microseconds -- this is approximate */
 static void *fake_data(void *dummy)
 {
   uint32_t framenum = 0x37183332;
   int i, j;
-  uint32_t mode11[NUM_COL * NUM_ROW];
+  uint32_t mode11[NUM_COL * NUM_ROW + HEADER_SIZE];
 
   char data[UDP_MAXSIZE];
+
+  nameThread("FAKE");
+  bprintf(info, "Running FAKE data at %.1f Hz", 1e6 / FAKE_DATA_RATE);
 
   /* generate the mode 11 data -- this is simply:
    *
@@ -98,7 +99,7 @@ static void *fake_data(void *dummy)
    */
   for (i = 0; i < NUM_COL; ++i)
     for (j = 0; j < NUM_ROW; ++j)
-      mode11[i + j * NUM_COL] = (i & 0x7) | ((j & 0x3F) << 3);
+      mode11[HEADER_SIZE + i + j * NUM_COL] = (i & 0x7) | ((j & 0x3F) << 3);
 
   /* wait for initialisation from PCM */
   while (init)
@@ -106,6 +107,7 @@ static void *fake_data(void *dummy)
 
   /* send data packets at half the "frame rate" */
   for (;;) {
+    do_frame(mode11, (HEADER_SIZE + NUM_COL * NUM_ROW) * sizeof(uint32_t));
     /* we just don't bother sending anything if nothing is requested */
     if (!veto && ntes > 0) {
       size_t len = mpc_compose_tes(mode11, framenum, bset_num, nmce, ntes, tes,
@@ -126,8 +128,7 @@ static void send_slow_data(char *data)
   struct statvfs buf;
   size_t len;
 
-  /* data mode is always 11 for now */
-  slow_dat.data_mode = 11;
+  slow_dat.data_mode = data_mode;
 
   /* disk free -- units are 2**24 bytes = 16 MB */
   if (statvfs(MAS_DATA_ROOT, &buf) == 0)
@@ -143,7 +144,87 @@ static void send_slow_data(char *data)
   udp_bcast(sock, MCESERV_PORT, len, data);
 }
 
-int main(void)
+/* Figure out which MCE we're attached to, also whether we're running in fake
+ * mode */
+static void get_nmce(int argc, const char **argv)
+{
+  int i;
+  char array_id[1024] = {0};
+
+#ifdef FAKE_MAS
+  fake = 1;
+#else
+  fake = 0;
+#endif
+
+  /* Look for "fake" on the command line */
+  for (i = 1; i < argc; ++i) {
+    if (strncmp(argv[i], "fake", 4) == 0) {
+      fake = 1;
+      if (argv[i][4] == '=') {
+        nmce = argv[i][5] - '0';
+        if (nmce < 0 || nmce > 5) {
+          bprintf(warning, "Ignoring bad fake MCE number on command line.\n");
+          nmce = 0;
+        }
+      }
+      break;
+    }
+  }
+
+  /* figure out which MCE we're attached to via the array_id */
+  if (!fake) {
+    char map_entry[1024];
+    const char *file = MAS_DATA_ROOT "/array_id";
+    FILE *stream = fopen(file, "r");
+
+    if (stream == NULL) {
+      berror(err, "Unable to open array ID file: %s", file);
+      goto BAD_ARRAY_ID;
+    } else if (fgets(array_id, 1024, stream) == NULL) {
+      berror(err, "Can't read array id");
+      fclose(stream);
+      goto BAD_ARRAY_ID;
+    }
+    fclose(stream);
+
+    /* look this array_id up in the map file */
+    file = MPC_ETC_DIR "/mpc_array_map";
+    stream = fopen(file, "r");
+    if (stream == NULL) {
+      berror(err, "Unable to open array ID map: %s", file);
+      goto BAD_ARRAY_ID;
+    }
+
+    for (i = 0; i < 6; ++i) {
+      if (fgets(map_entry, 1024, stream) == NULL) {
+        bprintf(err, "Missing entry #%i in array map", i);
+        fclose(stream);
+        goto BAD_ARRAY_ID;
+      }
+      if (strncmp(map_entry, array_id, 1024) == 0)
+        break;
+    }
+    fclose(stream);
+
+    if (i < 6) {
+      nmce = i;
+    } else {
+      bprintf(err, "Array ID not found in map file: %s", array_id);
+BAD_ARRAY_ID:
+      bprintf(err, "Reverting to FAKE MCE");
+      fake = 1;
+    }
+  }
+
+  if (fake) {
+    bprintf(info, "Running FAKE MCE #%i", nmce);
+  } else {
+    bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
+  }
+}
+
+int main(int argc, const char **argv)
 {
   int port, type;
   ssize_t n;
@@ -157,15 +238,26 @@ int main(void)
   char peer[UDP_MAXHOST];
   char data[UDP_MAXSIZE];
 
-  printf("This is MPC.\n");
+  buos_use_func(mputs);
+  nameThread("Main");
+
+  if ((logfile = fopen(MPC_ETC_DIR "/mpc.log", "a")) == NULL)
+    berror(err, "Can't open log file");
+  else
+    fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
+
+  bputs(startup, "This is MPC.\n");
   if (mpc_init())
     bprintf(fatal, "Unable to initialise MPC subsystem.");
 
   /* bind to the UDP port */
   sock = udp_bind_port(MPC_PORT, 1);
 
+  /* Figure out our MCE number and check for fake mode */
+  get_nmce(argc, argv);
+
   /* create the data thread */
-  pthread_create(&data_thread, NULL, fake_data, NULL);
+  pthread_create(&data_thread, NULL, fake ? fake_data : mas_data, NULL);
 
   /* main loop */
   for (;;) {
