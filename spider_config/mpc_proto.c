@@ -31,7 +31,8 @@
 
 #include <string.h>
 
-static int mpc_cmd_rev = -1, mpc_proto_rev = -1;
+static int mpc_cmd_rev = -1;
+static int16_t mpc_proto_rev = -1;
 
 /* desecrate the C preprocessor to extract this file's SVN revision */
 
@@ -59,26 +60,53 @@ int mpc_init(void)
   return 0;
 }
 
-/* compose a turnaround packet for transmission to the mpc
+/* compsoe a PCM notice packet for transmission to the mpc
  *
- * turnaround packet looks like:
+ * PCM notice packet looks like:
  *
- * RRtF
+ * RRN123T
  *
  * where
  *
  * R = 16-bit protocol revision
- * t = 't' indicating a turnaround packet
- * F = the turnaround flag (either 0 or 1)
+ * N = 'N' indicating notice packet
+ * 1 = MCE power bank 1 state
+ * 2 = MCE power bank 2 state
+ * 3 = MCE power bank 3 state
+ * T = turnaround flag
  */
-size_t mpc_compose_turnaround(int flag, char *buffer)
+size_t mpc_compose_notice(int mce1_power, int mce2_power, int mce3_power,
+    int turnaround, char *buffer)
 {
-  int16_t i16 = mpc_proto_rev;
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
+  buffer[2] = 'N';
+  buffer[3] = mce1_power & 0xff;
+  buffer[4] = mce2_power & 0xff;
+  buffer[5] = mce3_power & 0xff;
+  buffer[6] = turnaround ? 1 : 0;
+  return 7;
+}
 
-  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
-  buffer[2] = 't'; /* turnaround packet */
-  buffer[3] = flag ? 1 : 0; /* turnaround */
-  return 4;
+/* compose a PCM request packet for transmission to PCM
+ *
+ * PCM request packet looks like:
+ *
+ * rrRMP
+ *
+ * where
+ *
+ * r = 16-bit protocol revision
+ * R = 'R' indicating a PCM request packet
+ * M = 8-bit MCE number
+ * P = the power cycle flag
+ */
+size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer)
+{
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
+  buffer[2] = 'R';
+  buffer[3] = nmce & 0xff;
+  buffer[4] = power_cycle ? 1 : 0;
+  return 5;
 }
 
 /* compose a TES data packet for transmission from the mpc
@@ -102,9 +130,8 @@ size_t mpc_compose_tes(const uint32_t *data, uint32_t framenum,
     uint16_t bset_num, int nmce, int ntes, const int16_t *tesind, char *buffer)
 {
   size_t len = 12 + sizeof(uint32_t) * ntes;
-  int16_t i16 = mpc_proto_rev;
 
-  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'T'; /* tes data packet */
   buffer[3] = nmce & 0xF; /* mce number */
   memcpy(buffer + 4, &bset_num, sizeof(bset_num)); /* BSET */
@@ -132,9 +159,8 @@ size_t mpc_compose_tes(const uint32_t *data, uint32_t framenum,
 size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer)
 {
   size_t len = sizeof(*dat);
-  int16_t i16 = mpc_proto_rev;
 
-  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'S'; /* slow data packet */
   buffer[3] = mce & 0xF; /* mce number */
 
@@ -158,9 +184,7 @@ size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer)
  */
 size_t mpc_compose_init(int mce, char *buffer)
 {
-  int16_t i16 = mpc_proto_rev;
-
-  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'A'; /* init ("awake") packet */
   buffer[3] = mce & 0xF; /* mce number */
 
@@ -184,9 +208,7 @@ size_t mpc_compose_init(int mce, char *buffer)
 size_t mpc_compose_bset(const int16_t *set, int set_len, uint16_t num,
     char *buffer)
 {
-  int16_t i16 = mpc_proto_rev;
-
-  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'F'; /* bset packet */
   buffer[3] = 0; /* padding */
   memcpy(buffer + 4, &num, sizeof(num)); /* bset number + serial */
@@ -216,12 +238,12 @@ size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
   size_t len = 2 + 1 + 2 + 2 + 1; /* 16-bit protocol revision + 'C' + 16-bit
                                      command list revision + 16-bit command
                                      number + 'm'/'s' */
+  int16_t i16;
   int32_t i32;
-  int16_t i16 = mpc_proto_rev;
   char *ptr;
   int i;
 
-  memcpy(buffer, &i16, sizeof(i16)); /* 16-bit protocol revision */
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'C'; /* command packet */
   buffer[3] = ev->is_multi ? 'm' : 's'; /* multi/single command */
   i16 = mpc_cmd_rev;
@@ -273,8 +295,14 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
   }
 
   /* check type -- there's a list of valid packet codes here */
-  if (*ptr != 'A' && *ptr != 'C' && *ptr != 'F' && *ptr != 'S' && *ptr != 'T'
-      && *ptr != 't') {
+  if (*ptr != 'A' &&
+      *ptr != 'C' &&
+      *ptr != 'F' &&
+      *ptr != 'N' &&
+      *ptr != 'R' &&
+      *ptr != 'S' &&
+      *ptr != 'T')
+  {
     bprintf(err, "Ignoring %i-byte packet of unknown type 0x%X from %s/%i\n",
         len, (unsigned char)*ptr, peer, port);
     return -1;
@@ -453,11 +481,57 @@ int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
   return mce;
 }
 
-int mpc_decompose_turnaround(size_t len, const char *data, int old)
+int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
+    const char *peer, int port)
 {
-  if (len < 4)
-    return old;
+  if (len < 5)
+    return -1;
 
-  bprintf(info, "%s turnaround", data[3] ? "Into" : "Out of");
-  return data[3] ? 1 : 0;
+  /* get mce number */
+  int mce = data[3];
+  if (mce < 0 || mce >= NUM_MCE) {
+    bprintf(err, "Unknown MCE %i in PCM request packet from %s/%i", mce, peer,
+        port);
+    return -1;
+  }
+
+  *power_cycle = data[4] ? 1 : 0;
+
+  return mce;
+}
+
+int mce_decompose_notice(int nmce, int *turnaround, int *powstate, size_t len,
+    const char *data)
+{
+  static int last_turnaround = -1;
+
+  if (len < 7)
+    return -1;
+
+  if (data[6] != last_turnaround)
+    bprintf(info, "%s turnaround", data[6] ? "Into" : "Out of");
+
+  last_turnaround = *turnaround = data[6];
+
+  /* we assume here that the mce power banks are in MCE order */
+  if (nmce == 0 || nmce == 1)
+    *powstate = data[3];
+  else if (nmce == 2 || nmce == 3)
+    *powstate = data[4];
+  else if (nmce == 4 || nmce == 5)
+    *powstate = data[5];
+
+  switch (*powstate) {
+    case MPCPROTO_POWER_ON:
+      bputs(info, "PCM reports power to MCE is on");
+      break;
+    case MPCPROTO_POWER_OFF:
+      bputs(info, "PCM reports power to MCE is off");
+      break;
+    case MPCPROTO_POWER_CYC:
+      bputs(info, "PCM reports power to MCE is cycling");
+      break;
+  }
+
+  return 0;
 }

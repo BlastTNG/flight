@@ -581,6 +581,14 @@ union DerivedUnion DerivedChannels[] = {
   BITWORD("FSET_NUM", "fset", 0, 8),
   BITWORD("FSET_SER", "fset", 8, 8),
 
+  /* MCE Power Banks */
+  BITFIELD("mce_power",
+      "MCE_BANK1_ON",
+      "MCE_BANK2_ON",
+      "MCE_BANK3_ON",
+      "MAC_BANK_ON"
+      ),
+
   /* MCE Slow data */
   MCESLOW("DATA_MODE"),
   MCESLOW("MIC_TIME"),

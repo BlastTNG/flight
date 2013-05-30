@@ -75,7 +75,9 @@ int run_simple_script(const char *path, char *argv[])
     /* now exec the script -- this shouldn't return */
     execvp(path, argv);
 
-    berror(err, "Error executing %s", path);
+    /* Our parent will pipe this into the log, so don't use BUOS */
+    fprintf(stderr, "Error executing %s: %m", path);
+    exit(1);
   } else {
     char buffer[1024];
     FILE *stream;
@@ -84,14 +86,14 @@ int run_simple_script(const char *path, char *argv[])
     close(s_stdin);
     close(s_stdout);
 
-    /* parent, parrot the clients standard error -- we use the otherwise useless
+    /* parent: parrot the clients standard error -- we use the otherwise useless
      * "sched" level of BUOS for script messages */
     stream = fdopen(p_stderr[0], "r");
     if (stream)
       while (fgets(buffer, 1024, stream))
         bprintf(sched, "%s", buffer);
 
-    /* wait for termination -- XXX should probably have a timeout here */
+    /* wait for termination -- XXX have a timeout here ...? */
     waitpid(pid, &status, 0);
     close(p_stderr[0]);
     

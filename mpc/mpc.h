@@ -37,6 +37,8 @@ extern int nmce;
 extern int in_turnaround;
 extern int fake;
 extern int data_mode;
+extern int power_cycle_mce;
+extern int command_veto;
 
 #define MPC_ETC_DIR "/data/mas/etc"
 

@@ -227,6 +227,9 @@ enum SyncParam {
   none
 };
 
+/* MCE Power operations */
+enum mce_pow_op { nop = 0, on, off, cyc };
+
 struct CommandDataStruct {
   unsigned short command_count;
   unsigned short last_command;
@@ -307,9 +310,8 @@ struct CommandDataStruct {
   } power;
 
   struct {
-    struct latch_pulse mce1;
-    struct latch_pulse mce2;
-    struct latch_pulse mce3;
+    enum mce_pow_op mce_op[3];
+    struct latch_pulse mce[3];
     struct latch_pulse mac;
     struct latch_pulse eth;
     struct latch_pulse hwp;

@@ -32,6 +32,7 @@
 #include "pointing_struct.h"
 #include "chrgctrl.h"
 #include "sync_comms.h"
+#include "mceserv.h"
 
 /* Define to 1 to send synchronous star camera triggers based on ISC
  * handshaking */
@@ -310,15 +311,54 @@ void WriteSyncBox(void)
   WriteData(freeRunSyncAddr, SyncBoxData.free_run, NIOS_QUEUE);
 }
 
+/* convert mce_pow_op command into a latch_pulse, and tell MCEServ to report
+ * it */
+static int do_mce_power_op(int mce_power)
+{
+  int i;
+
+  for (i = 0; i < 3; ++i) {
+    if (CommandData.ifpower.mce_op[i] == off) {
+      CommandData.ifpower.mce[i].set_count = 0;
+      CommandData.ifpower.mce[i].rst_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[i] = nop;
+      mceserv_mce_power[i] = MPCPROTO_POWER_OFF;
+      bprintf(info, "MCE Power Bank %i off", i + 1);
+      mce_power &= ~(1 << i);
+    } else if (CommandData.ifpower.mce_op[i] == on) {
+      CommandData.ifpower.mce[i].rst_count = 0;
+      CommandData.ifpower.mce[i].set_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[i] = nop;
+      mceserv_mce_power[i] = MPCPROTO_POWER_ON;
+      bprintf(info, "MCE Power Bank %i on", i + 1);
+      mce_power |= (1 << i);
+    } else if (CommandData.ifpower.mce_op[i] == cyc) {
+      CommandData.ifpower.mce[i].set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.ifpower.mce[i].rst_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[i] = nop;
+      mceserv_mce_power[i] = MPCPROTO_POWER_CYC;
+      bprintf(info, "MCE Power Bank %i cycling", i + 1);
+      /* to avoid race conditions with MPC, the MCE banks are said to be on
+       * in the "mce_power" bitfield all throughout power cycling
+       */
+      mce_power |= (1 << i);
+    }
+  }
+
+  return mce_power;
+}
+
 /* create latching relay pulses, and update enable/disbale levels */
 /* actbus/steppers enable is handled separately in StoreActBus() */
 void ControlPower(void) {
-
+  static int mce_power = 0xFFFF; /* in the absense of infomration, assume things
+                                    are on */
   static int firsttime = 1;
   static struct NiosStruct* latchingAddr[2];
   static struct NiosStruct* switchGyAddr;
   static struct NiosStruct* switchMiscAddr;
   static struct NiosStruct* ifPwrAddr;
+  static struct NiosStruct* mcePowerAddr;
   /* grp2 = MCC and charge controller relays */
   static struct NiosStruct* switchGrp2Addr;
   int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0, grp2 = 0; 
@@ -329,6 +369,7 @@ void ControlPower(void) {
     latchingAddr[0] = GetNiosAddr("latch0");
     latchingAddr[1] = GetNiosAddr("latch1");
     ifPwrAddr = GetNiosAddr("ifpwr");
+    mcePowerAddr = GetNiosAddr("mce_power");
     switchGyAddr = GetNiosAddr("switch_gy");
     switchMiscAddr = GetNiosAddr("switch_misc");
     switchGrp2Addr = GetNiosAddr("switch_grp2");
@@ -366,9 +407,9 @@ void ControlPower(void) {
   for (i=0; i<6; i++) {
     if (CommandData.power.gyro_off[i] || CommandData.power.gyro_off_auto[i]) {
       if (CommandData.power.gyro_off[i] > 0) 
-	CommandData.power.gyro_off[i]--;
+        CommandData.power.gyro_off[i]--;
       if (CommandData.power.gyro_off_auto[i] > 0) 
-	CommandData.power.gyro_off_auto[i]--;
+        CommandData.power.gyro_off_auto[i]--;
       gybox |= 0x01 << i;
     }
   }
@@ -458,7 +499,7 @@ void ControlPower(void) {
     CommandData.power.table.rst_count--;
     if (CommandData.power.table.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0080;
   }
- 
+
   /* MCC power switching now uses ACS1 D1 grp 6 = latch1 high byte
    * and grp 2 = switch_grp2 low byte
    * and bits 6 & 7 of grp SIP/Spare = switch_misc */
@@ -502,7 +543,7 @@ void ControlPower(void) {
     CommandData.power.mcc4.rst_count--;
     if (CommandData.power.mcc4.rst_count < LATCH_PULSE_LEN) latch1 |= 0x8000;
   }
-  
+
   if (CommandData.power.mcc5.set_count > 0) {
     CommandData.power.mcc5.set_count--;
     if (CommandData.power.mcc5.set_count < LATCH_PULSE_LEN) grp2 |= 0x0010;
@@ -532,38 +573,47 @@ void ControlPower(void) {
     if (CommandData.power.sync.rst_count < LATCH_PULSE_LEN) misc |= 0x0080;
   }
 
-  if (CommandData.ifpower.mce1.set_count > 0) {
-    CommandData.ifpower.mce1.set_count--;
-    if (CommandData.ifpower.mce1.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0002;
+  mce_power = do_mce_power_op(mce_power);
+
+  if (CommandData.ifpower.mce[0].set_count > 0) {
+    CommandData.ifpower.mce[0].set_count--;
+    if (CommandData.ifpower.mce[0].set_count < LATCH_PULSE_LEN) ifpwr |= 0x0002;
   }
-  if (CommandData.ifpower.mce1.rst_count > 0) {
-    CommandData.ifpower.mce1.rst_count--;
-    if (CommandData.ifpower.mce1.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0001;
+  if (CommandData.ifpower.mce[0].rst_count > 0) {
+    CommandData.ifpower.mce[0].rst_count--;
+    if (CommandData.ifpower.mce[0].rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0001;
   }
-  if (CommandData.ifpower.mce2.set_count > 0) {
-    CommandData.ifpower.mce2.set_count--;
-    if (CommandData.ifpower.mce2.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0008;
+  if (CommandData.ifpower.mce[1].set_count > 0) {
+    CommandData.ifpower.mce[1].set_count--;
+    if (CommandData.ifpower.mce[1].set_count < LATCH_PULSE_LEN) ifpwr |= 0x0008;
   }
-  if (CommandData.ifpower.mce2.rst_count > 0) {
-    CommandData.ifpower.mce2.rst_count--;
-    if (CommandData.ifpower.mce2.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0004;
+  if (CommandData.ifpower.mce[1].rst_count > 0) {
+    CommandData.ifpower.mce[1].rst_count--;
+    if (CommandData.ifpower.mce[1].rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0004;
   }
-  if (CommandData.ifpower.mce3.set_count > 0) {
-    CommandData.ifpower.mce3.set_count--;
-    if (CommandData.ifpower.mce3.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0020;
+  if (CommandData.ifpower.mce[2].set_count > 0) {
+    CommandData.ifpower.mce[2].set_count--;
+    if (CommandData.ifpower.mce[2].set_count < LATCH_PULSE_LEN) ifpwr |= 0x0020;
   }
-  if (CommandData.ifpower.mce3.rst_count > 0) {
-    CommandData.ifpower.mce3.rst_count--;
-    if (CommandData.ifpower.mce3.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0010;
+  if (CommandData.ifpower.mce[2].rst_count > 0) {
+    CommandData.ifpower.mce[2].rst_count--;
+    if (CommandData.ifpower.mce[2].rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0010;
   }
   if (CommandData.ifpower.mac.set_count > 0) {
     CommandData.ifpower.mac.set_count--;
-    if (CommandData.ifpower.mac.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0040;
+    if (CommandData.ifpower.mac.set_count < LATCH_PULSE_LEN) {
+      ifpwr |= 0x0040;
+      mce_power |= 0x8;
+    }
   }
   if (CommandData.ifpower.mac.rst_count > 0) {
     CommandData.ifpower.mac.rst_count--;
-    if (CommandData.ifpower.mac.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0080;
+    if (CommandData.ifpower.mac.rst_count < LATCH_PULSE_LEN) {
+      ifpwr |= 0x0080;
+      mce_power &= ~0x8;
+    }
   }
+
   if (CommandData.ifpower.eth.set_count > 0) {
     CommandData.ifpower.eth.set_count--;
     if (CommandData.ifpower.eth.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0400;
@@ -584,11 +634,12 @@ void ControlPower(void) {
     if (CommandData.ifpower.hk_preamp_off > 0) CommandData.ifpower.hk_preamp_off--;
     ifpwr &= ~0x4000;
   } else ifpwr |= 0x4000;
-//  misc |= ControlBSCHeat();
+  //  misc |= ControlBSCHeat();
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
   WriteData(ifPwrAddr, ifpwr, NIOS_QUEUE);
+  WriteData(mcePowerAddr, mce_power, NIOS_QUEUE);
   WriteData(switchGyAddr, gybox, NIOS_QUEUE);
   WriteData(switchMiscAddr, misc, NIOS_QUEUE);
   WriteData(switchGrp2Addr, grp2, NIOS_QUEUE);
@@ -640,7 +691,7 @@ void LockMotor()
   }
 
   WriteData(controlLockAddr, lock_bits, NIOS_QUEUE);
-  
+
   //examine limit switches. Do nothing when lock is off (switches unpowered)
   //also ignore case when both switches asserted (disconnect/aphysical)
   //NB: limit switches are asserted low

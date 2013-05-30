@@ -38,8 +38,11 @@
 #define BAD_BSET_THRESHOLD 2
 
 /* semeuphoria */
-int sent_bset = -1; /* the last field set that was sent */
-int last_turnaround = -1; /* the last turnaround flag sent */
+static int sent_bset = -1; /* the last field set that was sent */
+static int last_turnaround = -1; /* the last turnaround flag sent */
+int mceserv_mce_power[3] = {
+  MPCPROTO_POWER_NOP, MPCPROTO_POWER_NOP, MPCPROTO_POWER_NOP
+};
 
 /* general purpose datagram buffer */
 static char udp_buffer[UDP_MAXSIZE];
@@ -98,8 +101,10 @@ static int ForwardCommand(int sock)
   return 1;
 }
 
-static void ForwardTurnaround(int sock)
+/* Send useful trivia to the MPC */
+static void ForwardNotices(int sock)
 {
+  int turnaround_edge = 0;
   size_t len;
 
   /* edge trigger on turnaround flag */
@@ -108,15 +113,27 @@ static void ForwardTurnaround(int sock)
   {
     /* the race condition here probably doesn't matter */
     last_turnaround = CommandData.pointing_mode.is_turn_around;
+    turnaround_edge = 1;
+  }
 
-    /* compose */
-    len = mpc_compose_turnaround(last_turnaround, udp_buffer);
+  if (mceserv_mce_power[0] == MPCPROTO_POWER_NOP &&
+      mceserv_mce_power[1] == MPCPROTO_POWER_NOP &&
+      mceserv_mce_power[2] == MPCPROTO_POWER_NOP &&
+      !turnaround_edge)
+  {
+    /* no notices */
+    return;
+  }
 
-    /* broadcast */
-    if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
-      bprintf(info, "Broadcast %s turnaround.\n",
-          last_turnaround ? "into" : "out of");
-    }
+  len = mpc_compose_notice(mceserv_mce_power[0], mceserv_mce_power[1],
+      mceserv_mce_power[2], last_turnaround, udp_buffer);
+
+  /* Broadcast this to everyone */
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
+    bprintf(info, "Broadcast notifications\n");
+    mceserv_mce_power[0] = MPCPROTO_POWER_NOP;
+    mceserv_mce_power[1] = MPCPROTO_POWER_NOP;
+    mceserv_mce_power[2] = MPCPROTO_POWER_NOP;
   }
 }
 
@@ -231,6 +248,35 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
   return bad_bset_count;
 }
 
+static void handle_pcm_request(size_t n, const char *peer, int port)
+{
+  static struct BiPhaseStruct* mcePowerAddr = NULL;
+
+  int bank;
+
+  if (mcePowerAddr == NULL)
+    mcePowerAddr = GetBiPhaseAddr("mce_power");
+
+  int power_cycle = 0;
+
+  int mce = mpc_decompose_pcmreq(&power_cycle, n, udp_buffer, peer, port);
+  if (mce < 0) /* bad packet */
+    return;
+
+  bank = mce / 2;
+
+  if (power_cycle) {
+    bprintf(info, "Request from %s/%i to power cycle MCE#%i on power bank %i",
+        peer, port, mce, bank);
+
+    /* Don't cycle the power if someone else turned it off */
+    int mce_is_on = slow_data[mcePowerAddr->index][mcePowerAddr->channel] &
+      (1 << bank);
+    if (mce_is_on)
+      CommandData.ifpower.mce_op[bank] = cyc;
+  }
+}
+
 /* main routine */
 void *mceserv(void *unused)
 {
@@ -255,8 +301,8 @@ void *mceserv(void *unused)
     /* broadcast MCE commands */
     ForwardCommand(sock);
 
-    /* Turnaround flag */
-    ForwardTurnaround(sock);
+    /* Broadcast notices */
+    ForwardNotices(sock);
 
     /* broadcast the field set, when necessary */
     if (sent_bset != CommandData.bset_num)
@@ -283,6 +329,9 @@ void *mceserv(void *unused)
           sent_bset = -1; /* resend bset */
           last_turnaround = -1; /* resent turnaround state */
         }
+        break;
+      case 'R': /* PCM command request */
+        handle_pcm_request(n, peer, port);
         break;
       case 'S': /* slow data */
         mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer,

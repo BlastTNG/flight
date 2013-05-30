@@ -27,6 +27,18 @@
 #include <string.h>
 
 static int need_reconfig = 1;
+static int cmd_err = 0;
+
+/* ask PCM to reboot the MCE if we get too many commanding errors */
+#define MAS_CMD_ERR 1
+#define CHECK_COMMAND_ERR() \
+  do { \
+    if (!command_veto) \
+      if (++cmd_err >= MAS_CMD_ERR) { \
+        bputs(err, "Too many commanding errors; MCE power cycle requested"); \
+        power_cycle_mce = 1; \
+      } \
+  } while(0)
 
 /* Write a block to the MCE; returns non-zero on error */
 /* I guess MAS needs to be able to write to it's input data buffer...? */
@@ -48,10 +60,12 @@ static int mas_write_block(mce_context_t *mas, const char *card,
 
   ret = mcecmd_write_block(mas, &param, num, data);
   if (ret) {
-    bprintf(warning, "read error, block %s/%s: %s", card, block,
+    bprintf(warning, "write error, block %s/%s: %s", card, block,
         mcelib_error_string(ret));
+    CHECK_COMMAND_ERR();
     return 1;
   }
+  cmd_err = 0;
 
   return 0;
 }
@@ -77,8 +91,10 @@ static int mas_read_block(mce_context_t *mas, const char *card,
   if (ret) {
     bprintf(warning, "read error, block %s/%s: %s", card, block,
         mcelib_error_string(ret));
+    CHECK_COMMAND_ERR();
     return 1;
   }
+  cmd_err = 0;
 
   return 0;
 }
@@ -150,8 +166,11 @@ static int mce_reconfig(mce_context_t *mas)
     return 1;
   }
 
-  if (run_simple_script(MAS_SCRIPT "/mce_reconfig", NULL))
+  if (run_simple_script(MAS_SCRIPT "/mce_reconfig", NULL)) {
+    /* reset the mce on reconfig error...? */
+    power_cycle_mce = 1;
     return 1;
+  }
 
   /* Verify that everyone's alive */
   for (i = 0; card[i]; ++i)

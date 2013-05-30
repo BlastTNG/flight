@@ -45,6 +45,8 @@
  */
 #define SLOW_TIMEOUT   800 /* milliseconds */
 
+/* Semeuphoria */
+
 /* UDP socket */
 static int sock;
 
@@ -72,7 +74,14 @@ static int ntes = 0;
 static int16_t tes[NUM_ROW * NUM_COL];
 
 /* the turnaround flag */
-int in_turnaround;
+int in_turnaround = 0;
+
+/* time to ask PCM to power cycle the MCE */
+int power_cycle_mce = 0;
+
+/* command "veto" -- actually, all this does is veto the proactive actions
+ * associated with failed commands */
+int command_veto = 0; 
 
 /* make and send fake data -- we only make data mode 11 data, which is static */
 #define HEADER_SIZE 43
@@ -119,6 +128,57 @@ static void *fake_data(void *dummy)
   }
 
   return NULL;
+}
+
+/* ask PCM to do something, maybe;
+ * also deal with PCM having done something, maybe
+ */
+static void pcm_special(size_t len, const char *data_in)
+{
+  static int power_cycle_wait = 0;
+
+  if (data_in) {
+    /* reply acknowledgement from PCM */
+    int power_state = MPCPROTO_POWER_NOP;
+
+    if (mce_decompose_notice(nmce, &in_turnaround, &power_state, len, data_in))
+      return;
+
+    if (power_state == MPCPROTO_POWER_OFF) {
+      /* MCE power turned off; if we were power cycling we should stop */
+      power_cycle_mce = 0;
+      power_cycle_wait = 0;
+      /* "veto" commanding for a while */
+      command_veto = 1000000; /* microseconds */
+    } else if (power_state == MPCPROTO_POWER_CYC) {
+      /* MCE power is cycling; if we were power cycling we should stop */
+      power_cycle_mce = 0;
+      power_cycle_wait = 0;
+      /* "veto" commanding for a while */
+      command_veto = 1000000; /* microseconds */
+    } else if (power_state == MPCPROTO_POWER_ON) {
+      /* MCE power on; disable the command veto, if any */
+      command_veto = 0;
+    }
+  } else {
+    /* send a request, if necessary */
+    char data[UDP_MAXSIZE];
+    int power_cycle = 0;
+    int need_send = 0;
+
+    /* collect pending requests */
+    if (power_cycle_mce && power_cycle_wait <= 0) {
+      power_cycle = 1;
+      need_send = 1;
+      power_cycle_wait = 1000000; /* microseconds */
+    } else if (power_cycle_wait > 0)
+      power_cycle_wait -= UDP_TIMEOUT;
+
+    if (need_send) {
+      len = mpc_compose_pcmreq(nmce, power_cycle, data);
+      udp_bcast(sock, MCESERV_PORT, len, data);
+    }
+  }
 }
 
 /* send slow data to PCM */
@@ -266,6 +326,14 @@ int main(int argc, const char **argv)
     /* check inbound packets */
     n = udp_recv(sock, UDP_TIMEOUT, peer, &port, UDP_MAXSIZE, data);
 
+    /* decrement timers */
+    if (command_veto > 0) {
+      if ((command_veto -= UDP_TIMEOUT) <= 0) {
+        bputs(info, "Commanding unvetoed\n");
+        command_veto = 0;
+      }
+    }
+
     /* n == 0 on timeout */
     type = (n > 0) ? mpc_check_packet(n, data, peer, port) : -1;
 
@@ -288,6 +356,9 @@ int main(int argc, const char **argv)
         slow_timer = SLOW_TIMEOUT;
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
+
+      /* PCM requests */
+      pcm_special(0, NULL);
     }
 
     /* skip bad packets */
@@ -310,8 +381,8 @@ int main(int argc, const char **argv)
         veto = 0; /* unveto transmission */
         init = 0;
         break;
-      case 't': /* turnaround packet */
-        in_turnaround = mpc_decompose_turnaround(n, data, in_turnaround);
+      case 'N': /* PCM notice packet */
+        pcm_special(n, data);
         break;
       default:
         bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",

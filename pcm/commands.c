@@ -656,40 +656,31 @@ void SingleCommand (enum singleCommand command, int scheduled)
     /* Inner Frame Power */
 
     case mce1_off:
-      CommandData.ifpower.mce1.set_count = 0;
-      CommandData.ifpower.mce1.rst_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[0] = off;
       break;
     case mce1_on:
-      CommandData.ifpower.mce1.rst_count = 0;
-      CommandData.ifpower.mce1.set_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[0] = on;
       break;
     case mce1_cycle:
-      CommandData.ifpower.mce1.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.ifpower.mce1.rst_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[0] = cyc;
       break;
     case mce2_off:
-      CommandData.ifpower.mce2.set_count = 0;
-      CommandData.ifpower.mce2.rst_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[1] = off;
       break;
     case mce2_on:
-      CommandData.ifpower.mce2.rst_count = 0;
-      CommandData.ifpower.mce2.set_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[1] = on;
       break;
     case mce2_cycle:
-      CommandData.ifpower.mce2.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.ifpower.mce2.rst_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[1] = cyc;
       break;
     case mce3_off:
-      CommandData.ifpower.mce3.set_count = 0;
-      CommandData.ifpower.mce3.rst_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[2] = off;
       break;
     case mce3_on:
-      CommandData.ifpower.mce3.rst_count = 0;
-      CommandData.ifpower.mce3.set_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[2] = on;
       break;
     case mce3_cycle:
-      CommandData.ifpower.mce3.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.ifpower.mce3.rst_count = LATCH_PULSE_LEN;
+      CommandData.ifpower.mce_op[2] = cyc;
       break;
     case mac_off:
       CommandData.ifpower.mac.set_count = 0;
@@ -2140,12 +2131,15 @@ void InitCommandData()
   for (i=0; i<16; i++)
     CommandData.power.adc_reset[i] = 0;
 
-  CommandData.ifpower.mce1.rst_count = 0;
-  CommandData.ifpower.mce1.set_count = 0;
-  CommandData.ifpower.mce2.rst_count = 0;
-  CommandData.ifpower.mce2.set_count = 0;
-  CommandData.ifpower.mce3.rst_count = 0;
-  CommandData.ifpower.mce3.set_count = 0;
+  CommandData.ifpower.mce_op[0] = nop;
+  CommandData.ifpower.mce_op[1] = nop;
+  CommandData.ifpower.mce_op[2] = nop;
+  CommandData.ifpower.mce[0].rst_count = 0;
+  CommandData.ifpower.mce[0].set_count = 0;
+  CommandData.ifpower.mce[1].rst_count = 0;
+  CommandData.ifpower.mce[1].set_count = 0;
+  CommandData.ifpower.mce[2].rst_count = 0;
+  CommandData.ifpower.mce[2].set_count = 0;
   CommandData.ifpower.mac.rst_count = 0;
   CommandData.ifpower.mac.set_count = 0;
   CommandData.ifpower.eth.rst_count = 0;

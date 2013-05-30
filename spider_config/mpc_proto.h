@@ -40,6 +40,12 @@
 /* the MPC epoch */
 #define MPC_EPOCH 1363903385
 
+/* power states */
+#define MPCPROTO_POWER_NOP -1
+#define MPCPROTO_POWER_ON   0
+#define MPCPROTO_POWER_OFF  1
+#define MPCPROTO_POWER_CYC  2
+
 /* the MPC slow data structure */
 struct mpc_slow_data {
   uint32_t time; /* system time */
@@ -74,7 +80,13 @@ int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
     uint16_t bset_num, int nm[NUM_MCE], int *bad_bset_count, const char *peer,
     int port);
 
-size_t mpc_compose_turnaround(int flag, char *buffer);
-int mpc_decompose_turnaround(size_t len, const char *data, int old);
+size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer);
+int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
+    const char *peer, int port);
+
+size_t mpc_compose_notice(int mce1_power, int mce2_power, int mce3_power,
+    int turnaround, char *buffer);
+int mce_decompose_notice(int nmce, int *turnaround, int *power_on, size_t len,
+    const char *data);
 
 #endif
