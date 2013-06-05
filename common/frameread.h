@@ -20,15 +20,25 @@
 #ifndef FRAMEREAD_H
 #define FRAMEREAD_H
 
-#include <linux/limits.h>
-
 #define FR_DONE            0  /* nothing left in file and not in persist mode */
 #define FR_MORE_IN_FILE    1  /* current chunk has increased in size */
 #define FR_NEW_CHUNK       2  /* current chunk done, new chunk found */
 #define FR_CURFILE_CHANGED 3  /* no new chunk, curfile points to new file */
 
-#define GPB_LEN (PATH_MAX * 4)
-#define FILENAME_LEN (PATH_MAX + NAME_MAX + 1)
+/* Don't use PATH_MAX.  It isn't. */
+#define FR_PATH_MAX 8192
+
+#include <dirent.h>     /* for MAXNAMELEN on BSD */
+#ifndef NAME_MAX
+#ifdef MAXNAMELEN
+#define NAME_MAX MAXNAMELEN
+#else
+#define NAME_MAX 255 /* iunno */
+#endif
+#endif
+
+#define GPB_LEN (FR_PATH_MAX * 4)
+#define FILENAME_LEN (FR_PATH_MAX + NAME_MAX + 1)
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>

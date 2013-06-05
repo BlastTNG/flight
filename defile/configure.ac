@@ -1,8 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(defile, 5.0, [dvw@ketiltrout.net])
 localstatedir="/var"
-AM_INIT_AUTOMAKE(defile, 5.0)
-AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE
+AC_CONFIG_HEADERS(config.h)
 
 AC_ARG_WITH(data-etc, AS_HELP_STRING([--with-data-etc=DIR],
             [put auxiliary data in DIR [[/data/etc]]]),

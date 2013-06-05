@@ -51,7 +51,7 @@
 #  define FULL_VERSION VERSION
 #endif
 
-#define SUFF_MAX (2 * sizeof(chunkindex_t))
+#define SUFF_MAX ((int)(2 * sizeof(chunkindex_t)))
 
 #define TC  (120.)  /* characteristic time (in seconds) */
 #define FR  (5.)    /* assumed frame rate (in Hertz) for display purposes only*/
@@ -257,14 +257,14 @@ struct rc_struct InitRcStruct()
 char* ResolveOutputDirfile(char* dirfile, const char* parent)
 {
   char parent_part[NAME_MAX];
-  char dirfile_part[PATH_MAX];
-  char path[PATH_MAX];
+  char dirfile_part[FR_PATH_MAX];
+  char path[FR_PATH_MAX];
   wordexp_t expansion;
 
   /* is dirfile a relative path? if so, we don't have to do anything */
   if (dirfile[0] != '/' && dirfile[0] != '~') {
     /* check string sizes */
-    if (strlen(parent) + 1 + strlen(dirfile) >= PATH_MAX)
+    if (strlen(parent) + 1 + strlen(dirfile) >= FR_PATH_MAX)
       bprintf(fatal, "output dirfile path is too long\n");
 
     strcpy(path, parent);
@@ -304,9 +304,9 @@ char* ResolveOutputDirfile(char* dirfile, const char* parent)
 
 void Remount(const char* source, char* buffer)
 {
-  char element[PATH_MAX];
-  char real_path[PATH_MAX];
-  char path[PATH_MAX];
+  char element[FR_PATH_MAX];
+  char real_path[FR_PATH_MAX];
+  char path[FR_PATH_MAX];
 
   /* is the remount_dir an absolute path? */
   if (rc.remount_dir[0] == '/') {
@@ -316,7 +316,7 @@ void Remount(const char* source, char* buffer)
     PathSplit_r(source, element, NULL);
 
     /* check string sizes */
-    if (strlen(element) + 1 + strlen(rc.remount_dir) >= PATH_MAX)
+    if (strlen(element) + 1 + strlen(rc.remount_dir) >= FR_PATH_MAX)
       bprintf(fatal, "remounted path is too long\n");
 
     strcpy(path, element);
@@ -689,7 +689,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         else if (!strncmp(argv[i], "--output-dirfile=", 17)) {
           if (rc->output_dirfile)
             bfree(fatal, rc->output_dirfile);
-          rc->output_dirfile = balloc(fatal, PATH_MAX);
+          rc->output_dirfile = balloc(fatal, FR_PATH_MAX);
           strcpy(rc->output_dirfile, &argv[i][17]);
         } else if (!strcmp(argv[i], "--persistent"))
           rc->persist = 1;
@@ -840,7 +840,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
         if (argument[j].value[0] != '\0') {
           if (rc->output_dirfile)
             bfree(fatal, rc->output_dirfile);
-          rc->output_dirfile = balloc(fatal, PATH_MAX);
+          rc->output_dirfile = balloc(fatal, FR_PATH_MAX);
           strcpy(rc->output_dirfile, argument[j].value);
         } else
           bprintf(fatal, "output dirfile name `%s' is not a valid value\n"
@@ -881,7 +881,7 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
     /* DIRECTORY (if any) */
     if (j < nargs && nargs > 1) {
       rc->dest_dir = argument[j].value;
-      if (strlen(rc->dest_dir) > PATH_MAX)
+      if (strlen(rc->dest_dir) > FR_PATH_MAX)
         bprintf(fatal, "Destination path too long\n");
     } else
       rc->dest_dir = options[CFG_OutputDirectory].value.as_string;
@@ -1002,7 +1002,7 @@ int main (int argc, char** argv)
     InitReader();
 
   /* check the length of the output path */
-  if (strlen(rc.dirfile) > PATH_MAX - FIELD_MAX - 1)
+  if (strlen(rc.dirfile) > FR_PATH_MAX - FIELD_MAX - 1)
     bprintf(fatal, "destination dirfile `%s' too long\n", rc.dirfile);
 
   /* Start */

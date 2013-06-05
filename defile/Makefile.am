@@ -29,10 +29,10 @@ defile_blast_SOURCES = defile.c ../common/frameread.c reader.c \
 											 quenya.h ../common/crc.h quendiclient.h
 defile_spider_SOURCES = $(defile_blast_SOURCES)
 
-CFLAGS = -Wall -O3 -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\" \
+CFLAGS = -Wall -O3
+AM_CPPFLAGS = -I../common -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\" \
 				 -DSVNREV=\"${SVNREV}\" -g
-INCLUDES = -I../common
-defile_blast_CFLAGS = -DDAS_CARDS=12
+defile_blast_CPPFLAGS = -DDAS_CARDS=12 $(AM_CPPFLAGS)
 
 include ../common/Makefile.update
 

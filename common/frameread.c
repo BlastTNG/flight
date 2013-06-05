@@ -30,7 +30,7 @@
 void PathSplit_r(const char* path, char* dname, char* bname)
 {
   char the_base[NAME_MAX];
-  char the_path[PATH_MAX];
+  char the_path[FR_PATH_MAX];
   char* base = NULL, *ptr;
   char* buffer;
 
@@ -54,7 +54,7 @@ void PathSplit_r(const char* path, char* dname, char* bname)
   } else { /* this is "foo/bar" */
     *(base - 1) = '\0';
     strncpy(the_base, base, NAME_MAX);
-    strncpy(the_path, buffer, PATH_MAX);
+    strncpy(the_path, buffer, FR_PATH_MAX);
   }
 
   if (dname != NULL)
@@ -330,7 +330,7 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
           berror(fatal, "open `%s'", curfile_name);
         }
 
-        if (fgets(gpb, PATH_MAX, curfile) == NULL)
+        if (fgets(gpb, FR_PATH_MAX, curfile) == NULL)
 	  bprintf(fatal, "Failed to read curfile");
 
         fclose(curfile);

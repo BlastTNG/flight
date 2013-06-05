@@ -116,6 +116,7 @@
 #include <dirent.h>     /* POSIX directory IO (DIR, opendir, closedir, &c.) */
 #include <fcntl.h>      /* POSIX file descriptor manipulation (open, creat) */
 #include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
+#include <libgen.h>     /* basename */
 #include <unistd.h>     /* unlink, &c. */
 #ifdef HAVE_ZLIB_H
 #  include <zlib.h>     /* libz compression library (gzwrite, gzopen, &c.) */
@@ -149,7 +150,7 @@ struct FieldType
   short size; /* size in words */
   int i_in;   /* index in elements */
   int i_out;  /* index in elements */
-  int fp;
+  long fp;
   void* b;    /* buffer */
   long int nw;
 };
@@ -449,9 +450,9 @@ void PreInitialiseDirFile(void)
   }
 }
 
-int OpenField(int fast, int size, const char* filename)
+long OpenField(int fast, int size, const char* filename)
 {
-  int file;
+  long file;
 #ifdef HAVE_LIBZ
   char gpb[GPB_LEN];
   int gzerrno;
@@ -472,7 +473,7 @@ int OpenField(int fast, int size, const char* filename)
   } else {
     /* create new file */
 #ifdef HAVE_LIBZ
-    if (rc.gzip_output && (file = (int)gzdopen(creat(filename, 00644), "wb"))
+    if (rc.gzip_output && (file = (long)gzdopen(creat(filename, 00644), "wb"))
         == 0) {
       snprintf(gpb, GPB_LEN, "cannot create file `%s'", filename);
       if (errno)
@@ -1060,7 +1061,7 @@ void PushFrame(unsigned short* in_frame)
   }
 }
 
-void WriteField(int file, int length, void *buffer)
+void WriteField(long file, int length, void *buffer)
 {
 #ifdef HAVE_LIBZ
   int gzerrno;

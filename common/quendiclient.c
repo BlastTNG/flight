@@ -21,7 +21,8 @@
 #include <stdlib.h>       /* ANSI C std library (atoi) */
 #include <arpa/inet.h>    /* IP4 specification (inet_aton, inet_ntoa) */
 #include <errno.h>        /* ANSI C library errors (errno) */
-#include <netinet/tcp.h>  /* TCP specification (SOL_TCP, TCP_NODELAY) */
+#include <netinet/in.h>   /* For IPPROTO_TCP */
+#include <netinet/tcp.h>  /* For TCP_NODELAY */
 #include <netdb.h>        /* DNS queries (gethostbyname, hstrerror, h_errno) */
 #include <string.h>       /* ANSI C strings (strcat, strdup, &c.)  */
 #include <unistd.h>       /* UNIX std library (read, write, close, sleep) */
@@ -103,7 +104,7 @@ int MakeSock(void)
     berror(fatal, "setsockopt");
 
   n = 1;
-  if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &n, sizeof(n)) != 0)
+  if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &n, sizeof(n)) != 0)
     berror(fatal, "setsockopt");
 
   return sock;
