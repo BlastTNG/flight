@@ -643,12 +643,8 @@ MAG "Analog Magnetometer" < MAGBOX
 MAGBOX "Connector Plate for Magnetometer" < IF
     JACK &J191 "Power, Signal" 15D/M -> ACSBOB/&J69 CABLE &C13 "Magnetometer"
     JACK IN &J190 "Internal" WIRE/M -> MAG/&J190
-    LINE "+10V" (&J191;1),(&J190;RED)
-    LINE "Ground" (&J191;9),(&J190;BLK)
-    LINE "-10V" (&J191;2),(&J190;BLU)
-    LINE "Mag X" (&J191;7),(&J190;ORG)
-    LINE "Mag Y" (&J191;15),(&J190;YEL)
-    LINE "Mag Z" (&J191;8),(&J190;GRN)
+    LINE "+10V" (&J191;1),(&J190;9)
+    LINE "Ground" (&J191;9),(&J190;5)
 
 SUN "Pinhole Sun Sensor" < OF
     JACK &J193 "Power" 7W2D/M -> ACSBOB/&J84 CABLE &C28 "Sun Sensor Power"
