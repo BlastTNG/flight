@@ -272,10 +272,10 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "SC1 Trigger+" (&J71;1),(&J44;3)
     LINE "SC Triggers-" (&J71;8,9),(&J83;8)
     LINE "SC2 Trigger+" (&J71;2),(&J44;22)
-    LINE "SC1 Temp+" (&J71;3),(&J25;3)
-    LINE "SC1 Temp-" (&J71;10),(&J25;19)
-    LINE "SC2 Temp+" (&J71;4),(&J25;4)
-    LINE "SC2 Temp-" (&J71;11),(&J25;20)
+    LINE "RSC Temp+" (&J71;3),(&J25;3)
+    LINE "RSC Temp-" (&J71;10),(&J25;19)
+    LINE "MCC Power Temp+" (&J71;4),(&J25;4)
+    LINE "MCC Power Temp-" (&J71;11),(&J25;20)
     LINE "SC1 Heater" (&J71;5),(&J27;50)
     LINE "SC2 Heater" (&J71;12),(&J27;49)
     LINE "SC Inhibit" (&J71;15),(&J49;24)
@@ -292,13 +292,15 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "ACS ON" (&J72;9)
     LINE "+24V" (&J72;10)
     LINE "24V GND" (&J72;11)
+    LINE "SC Motor Temp+" (&J72;14),(&J25;7)
+    LINE "SC Motor Temp-" (&J72;15),(&J25;23)
     LINE "RW Battery+ In" (&J70;A2),(&J56;1)
     LINE "RW Battery+" (&J74;A1),(&J56;2)
     LINE "RW Battery-" (&J70;A6),(&J74;A2)
-    LINE "RW Phase+" (&J74;1),(&J40;11)
-    LINE "RW Phase-" (&J74;3),(&J40;27)
-    LINE "RW Current+" (&J74;2),(&J40;12)
-    LINE "RW Current-" (&J74;4),(&J40;28)
+    LINE "RW Temp1+" (&J74;1),(&J25;8)
+    LINE "RW Temp1-" (&J74;3),(&J25;24)
+    LINE "RW Temp2+" (&J74;2),(&J25;9)
+    LINE "RW Temp2-" (&J74;4),(&J25;25)
     LINE "Pivot Battery+ In" (&J70;A3),(&J55;1)
     LINE "Pivot Battery+" (&J75;A1),(&J55;2)
     LINE "Pivot Battery-" (&J70;A7),(&J75;A2)
@@ -346,8 +348,10 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "Computers Battery+" (&J80;A1,1),(&J82;A1),(&J49;6,7),(&J81;A1)
     LINE "Computers Battery-" (&J80;A2,8),(&J82;A2),(&J49;25,26),(&J81;A2)
     LINE "Waterspout Temp+" (&J80;7),(&J25;6)
-    LINE "Watersoput Temp-" (&J80;15),(&J25;22)
+    LINE "Waterspout Temp-" (&J80;15),(&J25;22)
     LINE "Serial Hub Enable" (&J81;1),(&J27;47)
+    LINE "Serial Temp+" (&J81;2),(&J25;1)
+    LINE "Serial Temp-" (&J81;5),(&J25;34)
     LINE "BS Cam Trig+" (&J83;1),(&J44;4)
     LINE "BS Cam Temp+" (&J83;2),(&J25;5)
     LINE "BS Cam Temp-" (&J83;9),(&J25;21)
@@ -634,11 +638,11 @@ CLINIF "Inner Frame Inclinometer" < IF
     JACK &J189 "Power, signal" 9D/M -> ACSBOB/&J68 CABLE &C12 "IF Inclinometer"
 
 MAG "Analog Magnetometer" < MAGBOX
-    JACK &J190 "Magnetometer" WIRE/M -> MAGBOX/&J190
+    JACK &J190 "Magnetometer" 9D/M -> MAGBOX/&J190
 
 MAGBOX "Connector Plate for Magnetometer" < IF
     JACK &J191 "Power, Signal" 15D/M -> ACSBOB/&J69 CABLE &C13 "Magnetometer"
-    JACK IN &J190 "Internal" WIRE/M -> MAG/&J190
+    JACK IN &J190 "Internal" 9D/F -> MAG/&J190
     LINE "+10V" (&J191;1),(&J190;9)
     LINE "Ground" (&J191;9),(&J190;5)
 
