@@ -174,7 +174,7 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     JACK &J42 "ACS2 D1a" 50D/F -> &C8/&J42
     JACK &J44 "ACS2 D1b" 37D/F -> &C9/&J44
     JACK &J65 "Gyros Data" 25D/M -> GYROS/&J177 CABLE &C10 "Gyro Signals"
-    JACK &J66 "Assorted Thermometry" 15D/F -> &C35/&J66
+    JACK &J66 "Assorted Thermometry" 37D/F -> &C35/&J66
     JACK &J67 "Inclinometer" 9D/F -> CLINOF/&J188 CABLE &C11 "OF Inclinometer"
     JACK &J68 "Inclinometer" 9D/F -> CLINIF/&J189 CABLE &C12 "IF Inclinometer"
     JACK &J69 "Magnetometer" 15D/F -> MAGBOX/&J191 CABLE &C13 "Magnetometer"
@@ -301,6 +301,30 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "RW Temp1-" (&J74;3),(&J25;24)
     LINE "RW Temp2+" (&J74;2),(&J25;9)
     LINE "RW Temp2-" (&J74;4),(&J25;25)
+    LINE "DGPS Temp+" (&J66;1),(&J25;14)
+    LINE "DGPS Temp-" (&J66;20),(&J25;30)
+    LINE "El Port Motor Temp+" (&J66;2),(&J25;15)
+    LINE "El Port Motor Temp-" (&J66;21),(&J25;31)
+    LINE "El Starboard Motor Temp+" (&J66;3),(&J25;16)
+    LINE "El Starboard Motor Temp-" (&J66;22),(&J25;32)
+    LINE "El Port MC Temp+" (&J66;4),(&J25;17)
+    LINE "El Port MC Temp-" (&J66;23),(&J25;33)
+    LINE "El Starboard MC Temp+" (&J66;5),(&J25;35)
+    LINE "El Starboard MC Temp-" (&J66;24),(&J25;36)
+    LINE "Inner Frame Temp1+" (&J66;6),(&J25;37)
+    LINE "Inner Frame Temp1-" (&J66;25),(&J25;38)
+    LINE "Inner Frame Temp2+" (&J66;7),(&J25;39)
+    LINE "Inner Frame Temp2-" (&J66;26),(&J25;40)
+    LINE "PSS Temp+" (&J66;8),(&J25;41)
+    LINE "PSS Temp-" (&J66;27),(&J25;42)
+    LINE "Floor Temp+" (&J66;9),(&J25;43)
+    LINE "Floor Temp-" (&J66;28),(&J25;44)
+    LINE "Sun Mylar Temp+" (&J66;10),(&J25;45)
+    LINE "Sun Mylar Temp-" (&J66;29),(&J25;46)
+    LINE "Inside Mylar Temp+" (&J66;11),(&J25;47)
+    LINE "Inside Mylar Temp-" (&J66;30),(&J25;48)
+    LINE "Pivot Temp+" (&J66;12),(&J25;49)
+    LINE "Pivot Temp-" (&J66;31),(&J25;50)
     LINE "Pivot Battery+ In" (&J70;A3),(&J55;1)
     LINE "Pivot Battery+" (&J75;A1),(&J55;2)
     LINE "Pivot Battery-" (&J70;A7),(&J75;A2)
@@ -417,7 +441,7 @@ ACSBOB "Attitude Control, Power, & Housekeeping Break-out Box" < ACS
     LINE "Computer Current-" (&J50;22),(&J23;29)
 
 CABLE &C35 "Thermometer Hydra"
-    JACK &J66 "Body" 15D/M -> ACSBOB/&J66
+    JACK &J66 "Body" 37D/M -> ACSBOB/&J66
 
 DACTRANS "Transmitter for SPI DAC Bus" < ACSBOB
     JACK &J38 "Raw Signals" HEADER/M -> ACS2_D1/&J38
