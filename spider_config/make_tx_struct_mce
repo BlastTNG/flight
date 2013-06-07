@@ -21,8 +21,8 @@
 
 ################################# INSTRUCTIONS ###############################
 #
-# See pcm/Makefile for suggested invocation.  Don't compile this
-# file directly; instead, #include it in the right place of tx_struct.c (q.v).
+# See pcm/Makefile for suggested invocation.  Don't compile the file produced
+# directly; instead, #include it in the right place in tx_struct.c (q.v).
 #
 ################################# INSTRUCTIONS ###############################
 
