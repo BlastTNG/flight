@@ -67,5 +67,6 @@ void *mas_data(void *dummy)
 {
   /* Can only get here if mpc.c is compiled with the wrong CPP defines */
   bputs(tfatal, "Unhandled MAS execution attempted.");
+  return NULL;
 }
 #endif

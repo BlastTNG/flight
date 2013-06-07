@@ -19,6 +19,8 @@
 ########################################################
 # MAS integration
 #
+
+# Can we execute ${MAS_VAR}?
 ifneq (${MAS_VAR},)
 MAS_VAR_WORKS=$(shell if [ -x ${MAS_VAR} ]; then echo yes; else echo no; fi)
 ifeq (${MAS_VAR_WORKS},no)
@@ -28,9 +30,29 @@ MAS_VAR=
 endif
 endif
 
+# Is mas_var new enough?
+MIN_MAS_VERSION=802
+ifneq (${MAS_VAR},)
+MAS_HAS_INT_VERSION=$(shell if ${MAS_VAR} --int-verson >/dev/null 2>/dev/null; \
+										then echo no; else echo yes; fi)
+ifeq (${MAS_HAS_INT_VERSION},no)
+	MAS_NEW_ENOUGH=no
+else
+	MAS_NEW_ENOUGH=$(shell \
+								 if [ `${MAS_VAR} --int-version` -ge ${MIN_MAS_VERSION} ]; \
+								 then echo yes else echo no; \
+								 fi)
+endif
+ifeq (${MAS_NEW_ENOUGH},no)
+$(warning *********************************************)
+$(warning MAS too old.  Revision ${MIN_MAS_VERSION} or newer required.)
+MAS_VAR=
+endif
+endif
+
 ifeq (${MAS_VAR},)
 $(warning *********************************************)
-$(warning  MAS_VAR not set; unable to link against MAS )
+$(warning MAS_VAR not set; unable to link against MAS)
 $(warning MPC will only be able to run in FAKE MAS mode)
 $(warning *********************************************)
 FAKE_MAS=-DFAKE_MAS
