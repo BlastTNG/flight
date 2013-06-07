@@ -543,7 +543,7 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
   return mce;
 }
 
-int mce_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
+int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     int *powstate, size_t len, const char *data, const char *peer, int port)
 {
   static int last_turnaround = -1;

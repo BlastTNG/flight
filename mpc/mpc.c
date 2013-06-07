@@ -152,7 +152,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     int power_state = MPCPROTO_POWER_NOP;
     const char *data_mode_bits;
 
-    if (mce_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
+    if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
           &power_state, len, data_in, peer, port))
       return;
 

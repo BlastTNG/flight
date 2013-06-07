@@ -86,7 +86,7 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
 
 size_t mpc_compose_notice(int mce1_power, int mce2_power, int mce3_power,
     int turnaround, char data_mode_bits[13][2][2], char *buffer);
-int mce_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
+int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     int *power_on, size_t len, const char *data, const char *peer, int port);
 
 #endif
