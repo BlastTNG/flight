@@ -102,7 +102,6 @@ static void extract_data(uint32_t frameno, const uint32_t *frame,
       data[i] = coadd(frame[i + MCE_HEADER_SIZE], 0);
 
   pcm_strobe = !pcm_strobe;
-  bprintf(info, "ret_dat = %i\n", pcm_ret_dat);
 }
 
 void do_frame(const uint32_t *frame, size_t frame_size)

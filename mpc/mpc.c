@@ -311,7 +311,6 @@ static void ForwardData(void)
   char data[UDP_MAXSIZE];
   size_t len = mpc_compose_tes(pcm_data, pcm_frameno, bset_num, nmce, ntes, tes,
       data);
-  bprintf(info, "ret_dat = %i\n", pcm_ret_dat);
   if (pcm_ret_dat) { /* race condition avoidance */
     udp_bcast(sock, MCESERV_PORT, len, data);
     pcm_ret_dat = 0;
