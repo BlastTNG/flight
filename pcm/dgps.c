@@ -78,22 +78,22 @@ extern short int InCharge; /* tx.c */
 #define SBFID_PVTGEODETIC       5904
 #define SBFID_RECEIVERTIME      5914
 #define SBFID_ATTEULER          5938
-#define SBFID_ATTCOVEULER	5939
-#define SBFID_AUXPOS		5942
+#define SBFID_ATTCOVEULER       5939
+#define SBFID_AUXPOS            5942
 #define DONOTUSE  -2e10
 
 #define BDRATE B115200
 // #define SELECT_GPS_MUS_OUT  200000
 
-void nameThread(const char*);	/* mcp.c */
+void nameThread(const char*); /* mcp.c */
 
 struct shmTime {
-  int	  mode;
-  int	  count;
+  int   mode;
+  int   count;
   time_t  clockTimeStampSec; /* external clock */
-  int	  clockTimeStampUsec;
+  int   clockTimeStampUsec;
   time_t  receiveTimeStampSec; /* internal clock, when external value was received */
-  int	  receiveTimeStampUsec; 
+  int   receiveTimeStampUsec; 
   int     leap;
   int     precision;
   int     nsamples;
@@ -204,13 +204,13 @@ typedef struct {
   htUI16_t            CRC;
   htUI16_t            ID;
   htUI16_t            Length;
-  
+
   htUI32_t            TOW;
   htUI16_t            WNc;
-  
+
   htUI08_t            N;
   htUI08_t            SBLength;
-  
+
   htUI08_t            NRSV;
   htUI08_t            Error;
   htUI08_t            AmbiguityType;
@@ -239,11 +239,11 @@ time_t DGPSTime;
 struct DgpsInfoStruct {
   int open; // 0 is closed, 1 is open
   int init; // 0 has not yet been initialized
-	    // 1 has been initialized with no errors
-	    // 2 initialization was attempted but failed
+  // 1 has been initialized with no errors
+  // 2 initialization was attempted but failed
 } dgpsinfo;
 
-#define LEAP_SECONDS 0		
+#define LEAP_SECONDS 0
 
 static const htUI16_t CRCLookUp[256] = {
 
@@ -326,7 +326,7 @@ static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
   //printf("Header: %3u %3u %3u\n\n",VoidBlock->Sync, VoidBlock->ID, VoidBlock->Length);
   /*Check block header*/
   if ((VoidBlock->Sync !=
-	((htUI16_t)SYNC_STRING[0] | (htUI16_t)SYNC_STRING[1]<<8))        ||
+        ((htUI16_t)SYNC_STRING[0] | (htUI16_t)SYNC_STRING[1]<<8))        ||
       (VoidBlock->ID       < MIN_CMDID)                                ||
       ((VoidBlock->ID      > MAX_CMDID) & (VoidBlock->ID < MIN_SBFID)) ||
       (VoidBlock->ID       > MAX_SBFID)                                ||
@@ -342,7 +342,7 @@ static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
   do { 
     int ret=read(fd,&Buffer[HEADER_SIZE+count],1); 
     if (ret<0) { 
-      //	      bprintf(err,"DGPS: no response");
+      //      bprintf(err,"DGPS: no response");
       return -1; 
     } 
     count +=ret; 
@@ -351,7 +351,7 @@ static htI32_t CheckBlock(int fd, htUI08_t* Buffer)
   //if (VoidBlock->ID == SBFID_PVTGEODETIC || VoidBlock->ID ==  SBFID_ATTEULER) {
   /* Check the CRC field */
   if (CRCIsValid(Buffer) == htFalse){
-    //	    bprintf(err,"DGPS: CRC invalid");
+    //    bprintf(err,"DGPS: CRC invalid");
     return -1;
   }
   //}
@@ -362,18 +362,19 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
 {
   htBool_t     BlockFound;
   htUI08_t     Buffer[MAX_SBFSIZE];
+  VoidBlock_t* VBlock = (VoidBlock_t*)Buffer;
 
-  /*	struct timeval timeout;
-	timeout.tv_sec =0;
-	timeout.tv_usec = SELECT_GPS_MUS_OUT;
-	int maxfd = fd+1;
-	fd_set output;
-	FD_ZERO(&output);
-	FD_SET(fd,&output);
-	select(maxfd, &output, NULL, NULL, &timeout);
-	*/
+  /*struct timeval timeout;
+      timeout.tv_sec =0;
+      timeout.tv_usec = SELECT_GPS_MUS_OUT;
+      int maxfd = fd+1;
+      fd_set output;
+      FD_ZERO(&output);
+      FD_SET(fd,&output);
+      select(maxfd, &output, NULL, NULL, &timeout);
+      */
   BlockFound = htFalse;
-  //	if (FD_ISSET(fd,&output)) {
+  //if (FD_ISSET(fd,&output)) {
   do {
     //char c[1];
     //int n = read(fd,&c[0],1);
@@ -390,12 +391,12 @@ htI32_t GetNextBlock(int fd, void* SBFBlock)
     if (n>0 && c==SYNC_STRING[0]) {
       Buffer[0] = (htUI08_t)c;
       if (CheckBlock(fd, Buffer) == 0) {
-	BlockFound = htTrue;	
-	memcpy(SBFBlock, Buffer, (size_t)((VoidBlock_t*)Buffer)->Length);	
+        BlockFound = htTrue;
+        memcpy(SBFBlock, Buffer, (size_t)VBlock->Length);
       }
     }
   } while (BlockFound == htFalse);
-  //	}
+    //}
   return (BlockFound == htTrue) ? 0 : -1;
 
 }
@@ -441,6 +442,7 @@ int ntpshm_put(double fixtime) {
 void WatchDGPS()
 {
   htUI08_t SBFBlock[MAX_SBFSIZE];
+  VoidBlock_t *VBlock = (VoidBlock_t*)SBFBlock;
   double lat=0,lon=0,dir=0;
   struct tm ts;
   int pos_ok;
@@ -514,7 +516,7 @@ void WatchDGPS()
   dgpspos_index = 1;
 
   DGPSTime = 0;
-  
+
   while(!InCharge) {
     DGPSAtt[0].az = (((double)slow_data[dgpsAzAddr->index][dgpsAzAddr->channel])/DEG2I);
     DGPSAtt[1].az = (((double)slow_data[dgpsAzAddr->index][dgpsAzAddr->channel])/DEG2I);
@@ -610,26 +612,26 @@ void WatchDGPS()
   term.c_oflag = 0;
 
   cfmakeraw(&term);
- 
+
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
-  
+
   /*Read in SBF data blocks*/
   while (GetNextBlock(fd, SBFBlock) == 0) {
     /* Time */
-    if (((VoidBlock_t*)SBFBlock)->ID == SBFID_RECEIVERTIME) {
+    if (VBlock->ID == SBFID_RECEIVERTIME) {
       ReceiverTimeBlock_t* RXTIME = (ReceiverTimeBlock_t*) SBFBlock;
       /*bprintf(info,"TIME: %-2i %13.1f %3i %3i %3i %3i %3i %3i\n",
-	-5,
-	RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
-	RXTIME->UTCYear,
-	RXTIME->UTCMonth,
-	RXTIME->UTCDay,
-	RXTIME->UTCHour,
-	RXTIME->UTCMin,
-	RXTIME->UTCSec
-	//RXTIME->SyncLevel
-	);*/
+        -5,
+        RXTIME->WNc*86400.0*7.0+RXTIME->TOW/1000.0,
+        RXTIME->UTCYear,
+        RXTIME->UTCMonth,
+        RXTIME->UTCDay,
+        RXTIME->UTCHour,
+        RXTIME->UTCMin,
+        RXTIME->UTCSec
+      //RXTIME->SyncLevel
+      );*/
       ts.tm_year=RXTIME->UTCYear;
       ts.tm_mon=RXTIME->UTCMonth;
       ts.tm_mday=RXTIME->UTCDay;
@@ -641,30 +643,30 @@ void WatchDGPS()
       ts.tm_mon--; // Jan is 1 in UTC, 0 in Unix time
 
       if (RXTIME->UTCSec != -128)  {
-	//DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
-	DGPSTime = timegm(&ts) + LEAP_SECONDS;
-	ntpshm_put((double)DGPSTime); //segmentation fault unless run mcp as sudo
+        //DGPSTime = mktime(&ts) - timezone + LEAP_SECONDS;
+        DGPSTime = timegm(&ts) + LEAP_SECONDS;
+        ntpshm_put((double)DGPSTime); //segmentation fault unless run mcp as sudo
       }
 
-    } else if (((VoidBlock_t*)SBFBlock)->ID == SBFID_PVTGEODETIC) {
+    } else if (VBlock->ID == SBFID_PVTGEODETIC) {
 
       /* Position & Velocity */
       PVTGeodeticBlock_t* PVT = (PVTGeodeticBlock_t*)SBFBlock;
       /*bprintf(info,"POSITION: %-2i %13.1f %21.10f %21.10f %14.3f %10.3f"
-	" %10.3f %15.8f %13.6e %14.3e %3i %3u\n",
-	-1,
-	PVT->WNc*86400.0*7.0+PVT->TOW/1000.0,
-	PVT->Lat,
-	PVT->Lon,
-	PVT->Alt,
-	PVT->Vn,
-	PVT->Ve,
-	PVT->Vu,
-	PVT->RxClkBias,
-	PVT->RxClkDrift,
-	(int)(PVT->NrSV),
-	(unsigned int)(PVT->Mode)
-	);*/
+        " %10.3f %15.8f %13.6e %14.3e %3i %3u\n",
+        -1,
+        PVT->WNc*86400.0*7.0+PVT->TOW/1000.0,
+        PVT->Lat,
+        PVT->Lon,
+        PVT->Alt,
+        PVT->Vn,
+        PVT->Ve,
+        PVT->Vu,
+        PVT->RxClkBias,
+        PVT->RxClkDrift,
+        (int)(PVT->NrSV),
+        (unsigned int)(PVT->Mode)
+        );*/
       if (PVT->Lat != DONOTUSE) lat = PVT->Lat; // Latitude in radians
       DGPSPos[dgpspos_index].lat = lat*180/M_PI; // Latitude in degrees
       if (PVT->Lon != DONOTUSE) lon = -PVT->Lon; // *** west *** Longitude in radians
@@ -672,84 +674,84 @@ void WatchDGPS()
       if ((PVT->Alt != DONOTUSE) && (PVT->GeoidHeight != DONOTUSE)) DGPSPos[dgpspos_index].alt = PVT->Alt - PVT->GeoidHeight; // Altitude above geoid in metres
       DGPSPos[dgpspos_index].n_sat = (int)(PVT->NrSV); // # Satellites
       if ((PVT->Vn != DONOTUSE) && (PVT->Ve != DONOTUSE)) {
-	DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
-	//if ((PVT->Vn > 0) && (PVT->Ve > 0)) {
-	  dir = (180/M_PI)*atan2(PVT->Ve,PVT->Vn);// course over ground in degrees from N (due E is 90 deg)
-	/*} else if ((PVT->Vn < 0) && (PVT->Ve > 0)) {
-	  DGPSPos[dgpspos_index].direction = 180 - (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
-	} else if ((PVT->Vn < 0) && (PVT->Ve < 0)) {
-	  DGPSPos[dgpspos_index].direction = 180 + (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
-	} else if ((PVT->Vn >0) && (PVT->Ve < 0)) {
-	  DGPSPos[dgpspos_index].direction = 360 - (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
-	}*/
-	  if (dir < 0) dir +=360;
-	  DGPSPos[dgpspos_index].direction = dir;
+        DGPSPos[dgpspos_index].speed = (PVT->Vn+PVT->Ve)*60*60/1000;// speed over ground in km/hr (0 to 999.9)
+        //if ((PVT->Vn > 0) && (PVT->Ve > 0)) {
+        dir = (180/M_PI)*atan2(PVT->Ve,PVT->Vn);// course over ground in degrees from N (due E is 90 deg)
+        /*} else if ((PVT->Vn < 0) && (PVT->Ve > 0)) {
+          DGPSPos[dgpspos_index].direction = 180 - (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
+          } else if ((PVT->Vn < 0) && (PVT->Ve < 0)) {
+          DGPSPos[dgpspos_index].direction = 180 + (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
+          } else if ((PVT->Vn >0) && (PVT->Ve < 0)) {
+          DGPSPos[dgpspos_index].direction = 360 - (180/M_PI)*atan2(PVT->Ve,PVT->Vn);
+          }*/
+        if (dir < 0) dir +=360;
+        DGPSPos[dgpspos_index].direction = dir;
       }
       if (PVT->Vu != DONOTUSE) DGPSPos[dgpspos_index].climb = PVT->Vu; // vertical velocity in m/s (-999.9 to 999.9)      
-      if ((PVT->Lat == DONOTUSE)			  ||
-	  (PVT->Lon == DONOTUSE)			  || 
-	  (DGPSPos[dgpspos_index].n_sat < 4)) {
-	pos_ok = 0;
+      if ((PVT->Lat == DONOTUSE)  ||
+          (PVT->Lon == DONOTUSE)  || 
+          (DGPSPos[dgpspos_index].n_sat < 4)) {
+        pos_ok = 0;
       } else {
-	pos_ok = 1;
+        pos_ok = 1;
         dgpspos_index = INC_INDEX(dgpspos_index);
       }
-    } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTEULER) {
-    
+    } else if  (VBlock->ID == SBFID_ATTEULER) {
+
       /* Attitude */
       AttitudeEulerBlock_t* ATTEULER = (AttitudeEulerBlock_t*) SBFBlock;
       /*bprintf(info,"ATTITUDE: %-2i %13.1f %14.5f %14.5f %14.5f"
-	" %3u %3u %3u\n",
-	-3,
-	ATTEULER->WNc*86400.0*7.0+ATTEULER->TOW/1000.0,
-	ATTEULER->Heading,
-	ATTEULER->Pitch,
-	ATTEULER->Roll,
-	(unsigned int)(ATTEULER->Error),
-	ATTEULER->Mode,
-	(unsigned int)(ATTEULER->NrSV)
-	);*/
+        " %3u %3u %3u\n",
+        -3,
+        ATTEULER->WNc*86400.0*7.0+ATTEULER->TOW/1000.0,
+        ATTEULER->Heading,
+        ATTEULER->Pitch,
+        ATTEULER->Roll,
+        (unsigned int)(ATTEULER->Error),
+        ATTEULER->Mode,
+        (unsigned int)(ATTEULER->NrSV)
+        );*/
       if (ATTEULER->Heading != DONOTUSE )//&& (DGPSAtt[dgpsatt_index-1].az_cov <= CommandData.dgps_cov_limit)) 
-	DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
+        DGPSAtt[dgpsatt_index].az = ATTEULER->Heading;
       if (ATTEULER->Pitch != DONOTUSE )//&& (DGPSAtt[dgpsatt_index-1].pitch_cov <= CommandData.dgps_cov_limit)) 
-	DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
+        DGPSAtt[dgpsatt_index].pitch = ATTEULER->Pitch;
       if (ATTEULER->Roll != DONOTUSE )//&& (DGPSAtt[dgpsatt_index-1].roll_cov <= CommandData.dgps_cov_limit)) 
-	DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;
-      if ((ATTEULER->Heading == DONOTUSE)		  || 
-	  (ATTEULER->Pitch == DONOTUSE)			  || 
-	  (ATTEULER->Roll == DONOTUSE)			  ||
-	  (DGPSAtt[dgpsatt_index].az_cov <=0.001)	  ||
-	  (fabs(DGPSAtt[dgpsatt_index].ant_E - 0.0) > CommandData.dgps_ants_limit)  ||
-	  (fabs(DGPSAtt[dgpsatt_index].ant_N + 3.0) > CommandData.dgps_ants_limit)  ||
-	  (fabs(DGPSAtt[dgpsatt_index].ant_U - 0.0) > CommandData.dgps_ants_limit)  ||
-	  (DGPSAtt[dgpsatt_index].az_cov > CommandData.dgps_cov_limit))	{
-	DGPSAtt[dgpsatt_index].att_ok = 0;
+        DGPSAtt[dgpsatt_index].roll = ATTEULER->Roll;
+      if ((ATTEULER->Heading == DONOTUSE)  || 
+          (ATTEULER->Pitch == DONOTUSE)  || 
+          (ATTEULER->Roll == DONOTUSE)  ||
+          (DGPSAtt[dgpsatt_index].az_cov <=0.001)  ||
+          (fabs(DGPSAtt[dgpsatt_index].ant_E - 0.0) > CommandData.dgps_ants_limit)  ||
+          (fabs(DGPSAtt[dgpsatt_index].ant_N + 3.0) > CommandData.dgps_ants_limit)  ||
+          (fabs(DGPSAtt[dgpsatt_index].ant_U - 0.0) > CommandData.dgps_ants_limit)  ||
+          (DGPSAtt[dgpsatt_index].az_cov > CommandData.dgps_cov_limit)) {
+        DGPSAtt[dgpsatt_index].att_ok = 0;
       } else {
-	DGPSAtt[dgpsatt_index].att_ok = 1;
-      }	
+        DGPSAtt[dgpsatt_index].att_ok = 1;
+      }
       dgpsatt_index = INC_INDEX(dgpsatt_index);
-    } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_ATTCOVEULER) {
+    } else if  (VBlock->ID == SBFID_ATTCOVEULER) {
 
       /* Attitude Covariance*/
       AttitudeCovEulerBlock_t* ATTCOVEULER = (AttitudeCovEulerBlock_t*) SBFBlock;
       if (ATTCOVEULER->Cov_HeadHead != DONOTUSE) 
-      DGPSAtt[dgpsatt_index].az_cov = ATTCOVEULER->Cov_HeadHead;
+        DGPSAtt[dgpsatt_index].az_cov = ATTCOVEULER->Cov_HeadHead;
       if (ATTCOVEULER->Cov_PitchPitch != DONOTUSE) 
-      DGPSAtt[dgpsatt_index].pitch_cov = ATTCOVEULER->Cov_PitchPitch;
+        DGPSAtt[dgpsatt_index].pitch_cov = ATTCOVEULER->Cov_PitchPitch;
       if (ATTCOVEULER->Cov_RollRoll != DONOTUSE) 
-      DGPSAtt[dgpsatt_index].roll_cov = ATTCOVEULER->Cov_RollRoll; 
-    } else if  (((VoidBlock_t*)SBFBlock)->ID == SBFID_AUXPOS) {
-      
+        DGPSAtt[dgpsatt_index].roll_cov = ATTCOVEULER->Cov_RollRoll; 
+    } else if  (VBlock->ID == SBFID_AUXPOS) {
+
       /* Antenna Position*/
       AuxAntPositions_t* AUXPOSITIONS = (AuxAntPositions_t*) SBFBlock;
       if (AUXPOSITIONS->DeltaEast != DONOTUSE) 
-	DGPSAtt[dgpsatt_index].ant_E = AUXPOSITIONS->DeltaEast;
+        DGPSAtt[dgpsatt_index].ant_E = AUXPOSITIONS->DeltaEast;
       if (AUXPOSITIONS->DeltaNorth != DONOTUSE) 
-      DGPSAtt[dgpsatt_index].ant_N = AUXPOSITIONS->DeltaNorth;
+        DGPSAtt[dgpsatt_index].ant_N = AUXPOSITIONS->DeltaNorth;
       if (AUXPOSITIONS->DeltaUp != DONOTUSE) 
-      DGPSAtt[dgpsatt_index].ant_U = AUXPOSITIONS->DeltaUp;
+        DGPSAtt[dgpsatt_index].ant_U = AUXPOSITIONS->DeltaUp;
     } 
-  }	
+  }
   return;
 
-}
+  }

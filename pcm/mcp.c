@@ -800,8 +800,10 @@ static void write_to_biphase(unsigned short *frame)
     // bi0FifoSize holds number of words in the fifo buffer.
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
     if (CommandData.bi0FifoSize<BI0_PADDING_MIN) {
-      write(bi0_fp, padding,
+      i = write(bi0_fp, padding,
           (BI0_PADDING_MIN-CommandData.bi0FifoSize) * sizeof(unsigned short));
+      if (i < 0)
+        berror(err, "bi-phase write for padding failed");
     }
     CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
 

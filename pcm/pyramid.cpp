@@ -1045,7 +1045,8 @@ return det;
 void Pyramid::GetCenter(double* x, double* y,  int nblobs, double &ra0, double &dec0, double &r0)
 {
 
-  int idx,i,k,j;
+  int i,k,j;
+  uint32_t idx;
   double ra_tp, dec_tp;
 
   double *B = new double [3*3];

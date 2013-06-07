@@ -73,7 +73,7 @@ void svd ( int m, int n, int mp, int np, double *a, double *w, double *v, double
 /* Maximum number of iterations in QR phase */
 #define ITMAX 30
 {
-   int i, k, l, j, k1, its, l1, i1, cancel;
+   int i, k, l = 0, j, k1, its, l1, i1, cancel;
    double g, scale, an, s, x, f, h, cn, c, y, z;
    double *ai, *aj, *ak;
    double *vi, *vj, *vk;

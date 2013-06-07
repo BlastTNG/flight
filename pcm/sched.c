@@ -90,11 +90,8 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   double check_lat = NOMINAL_LATITUDE + lband * (LATITUDE_BAND
       - LATITUDE_OVERLAP);
 
-  double az1, az2, el1, el2, height;
-
   int i, j, k, entry_ok;
   int n_fields, mindex;
-  int el_range_warning;
   int discarded_lines;
   
   bprintf(sched, "********************************************\n"
