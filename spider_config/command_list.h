@@ -18,7 +18,7 @@
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
 #define N_SCOMMANDS 205        /* total number of single word cmds */
-#define N_MCOMMANDS 122        /* total number of multiword commands */
+#define N_MCOMMANDS 123        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -180,7 +180,7 @@ enum multiCommand {
   hwp_bias_on,        hwp_bias_off,     write_row_len,     write_num_rows,
   write_free_run,     fset,             bset,
   /* start MCE block */
-  mpc_test,
+  mpc_test,           data_mode_bits,
   /* end MCE block */
   plugh,                //plugh should be at the end of the list
   sched_packet = 0xff   //not really a command, more of a placeholder

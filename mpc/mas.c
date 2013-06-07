@@ -213,6 +213,9 @@ void *mas_data(void *dummy)
 
   frame_size = set_frame(mas, &frame);
   get_acq_metadata(mas);
+
+  int max;
+  max = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_MAX);
   
   /* main loop */
   for (;;) {
@@ -221,6 +224,8 @@ void *mas_data(void *dummy)
     if (!leech_valid) {
       mcedata_ioctl(mas, DATADEV_IOCT_RESET, 0);
       bputs(info, "New acquisition");
+      /* reset frequency halving */
+      pcm_strobe = 0;
       frame_size = set_frame(mas, &frame);
       get_acq_metadata(mas);
     }
@@ -232,12 +237,11 @@ void *mas_data(void *dummy)
     ltail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LTAIL);
     
     ssize_t total;
-    if (head > ltail) {
-      bprintf(info, "buffer = %i -> %i/%i\n", head, tail, ltail);
-      while (head > ltail) {
+    if (head != ltail) {
+      while (head != ltail) {
         total = mcedata_read(mas, frame, frame_size);
         do_frame((const uint32_t*)frame, frame_size);
-        ltail++;
+        ltail = (ltail + 1) % max;
       }
     } else
       usleep(10000);

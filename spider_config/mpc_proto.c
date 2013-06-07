@@ -6,7 +6,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
 
- * - Redistributions of source code must retain the above copyright notice, this
+ * - Redistributions of source code must retain the above copyright NOTICE, This
  *   list of conditions and the following disclaimer.
  * - Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
@@ -64,7 +64,7 @@ int mpc_init(void)
  *
  * PCM notice packet looks like:
  *
- * RRN123T
+ * RRN123Tddd
  *
  * where
  *
@@ -74,9 +74,10 @@ int mpc_init(void)
  * 2 = MCE power bank 2 state
  * 3 = MCE power bank 3 state
  * T = turnaround flag
+ * d = 20 bytes of data_mode_bits
  */
 size_t mpc_compose_notice(int mce1_power, int mce2_power, int mce3_power,
-    int turnaround, char *buffer)
+    int turnaround, char data_mode_bits[13][2][2], char *buffer)
 {
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'N';
@@ -84,7 +85,42 @@ size_t mpc_compose_notice(int mce1_power, int mce2_power, int mce3_power,
   buffer[4] = mce2_power & 0xff;
   buffer[5] = mce3_power & 0xff;
   buffer[6] = turnaround ? 1 : 0;
-  return 7;
+
+  /* we only report the useful data mode bits */
+  /* data mode zero */
+  buffer[7] = data_mode_bits[0][0][0];
+  buffer[8] = data_mode_bits[0][0][1];
+
+  /* data mode one */
+  buffer[9]  = data_mode_bits[1][0][0];
+  buffer[10] = data_mode_bits[1][0][1];
+
+  /* data mode two */
+  buffer[11] = data_mode_bits[2][0][0];
+  buffer[12] = data_mode_bits[2][0][1];
+
+  /* data mode four */
+  buffer[13] = data_mode_bits[4][0][0];
+  buffer[14] = data_mode_bits[4][0][1];
+  buffer[15] = data_mode_bits[4][1][0];
+  buffer[16] = data_mode_bits[4][1][1];
+
+  /* data mode five */
+  buffer[17] = data_mode_bits[5][0][0];
+  buffer[18] = data_mode_bits[5][0][1];
+  buffer[19] = data_mode_bits[5][1][0];
+  buffer[20] = data_mode_bits[5][1][1];
+
+  /* data mode ten */
+  buffer[21] = data_mode_bits[10][0][0];
+  buffer[22] = data_mode_bits[10][0][1];
+  buffer[23] = data_mode_bits[10][1][0];
+  buffer[24] = data_mode_bits[10][1][1];
+
+  /* data mode twelve */
+  buffer[25] = data_mode_bits[12][0][0];
+  buffer[26] = data_mode_bits[12][0][1];
+  return 27;
 }
 
 /* compose a PCM request packet for transmission to PCM
@@ -124,12 +160,12 @@ size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer)
  * 0 = padding
  * F = 32-bit framenumber
  *
- * followed by the tes data in bset order
+ * followed by the 16-bit tes data in bset order
  */
-size_t mpc_compose_tes(const uint32_t *data, uint32_t framenum,
+size_t mpc_compose_tes(const uint16_t *data, uint32_t framenum,
     uint16_t bset_num, int nmce, int ntes, const int16_t *tesind, char *buffer)
 {
-  size_t len = 12 + sizeof(uint32_t) * ntes;
+  size_t len = 12 + sizeof(uint16_t) * ntes;
 
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'T'; /* tes data packet */
@@ -138,7 +174,7 @@ size_t mpc_compose_tes(const uint32_t *data, uint32_t framenum,
   memcpy(buffer + 8, &framenum, sizeof(framenum)); /* FRAMENUM */
 
   /* append data */
-  memcpy(buffer + 12, data, sizeof(uint32_t) * ntes);
+  memcpy(buffer + 12, data, sizeof(uint16_t) * ntes);
 
   return len;
 }
@@ -445,9 +481,9 @@ int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
   return 0;
 }
 
-int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
-    uint16_t bset_num, int set_len[NUM_MCE], int *bad_bset_count,
-    const char *peer, int port)
+int mpc_decompose_tes(uint32_t *frameno, uint16_t *tes_data, size_t len,
+    const char *data, uint16_t bset_num, int set_len[NUM_MCE],
+    int *bad_bset_count, const char *peer, int port)
 {
   /* check len */
   if (len < 12) {
@@ -464,8 +500,9 @@ int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
   }
 
   /* check len again */
-  if (len < set_len[mce] * 4 + 12) {
-    bprintf(err, "Bad data packet (size %zu) from %s/%i", len, peer, port);
+  if (len < set_len[mce] * sizeof(uint16_t) + 12) {
+    bprintf(err, "Bad data packet (size %zu) from %s/%i, MCE %i", len, peer,
+        port, mce);
     return -1;
   }
 
@@ -475,8 +512,11 @@ int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
     return -1;
   }
 
+  /* framenumber */
+  *frameno = *(uint32_t*)(data + 8);
+
   /* copy tes data */
-  memcpy(tes_data, data + 8, len - 8);
+  memcpy(tes_data, data + 12, len - 12);
 
   return mce;
 }
@@ -484,8 +524,11 @@ int mpc_decompose_tes(uint32_t *tes_data, size_t len, const char *data,
 int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
     const char *peer, int port)
 {
-  if (len < 5)
+  if (len != 5) {
+    bprintf(err, "Bad PCM request packet (size %zu) from %s/%i", len, peer,
+        port);
     return -1;
+  }
 
   /* get mce number */
   int mce = data[3];
@@ -500,13 +543,15 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
   return mce;
 }
 
-int mce_decompose_notice(int nmce, int *turnaround, int *powstate, size_t len,
-    const char *data)
+int mce_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
+    int *powstate, size_t len, const char *data, const char *peer, int port)
 {
   static int last_turnaround = -1;
 
-  if (len < 7)
+  if (len != 27) {
+    bprintf(err, "Bad notice packet (size %zu) from %s/%i", len, peer, port);
     return -1;
+  }
 
   if (data[6] != last_turnaround)
     bprintf(info, "%s turnaround", data[6] ? "Into" : "Out of");
@@ -532,6 +577,8 @@ int mce_decompose_notice(int nmce, int *turnaround, int *powstate, size_t len,
       bputs(info, "PCM reports power to MCE is cycling");
       break;
   }
+
+  *data_mode_bits = data + 7;
 
   return 0;
 }

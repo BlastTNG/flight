@@ -52,6 +52,12 @@ all:: $(ALL)
 	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common )"
 	@false
 
+tx_struct_spider.o :: tx_struct_mce.c
+
+tx_struct_mce.c: ../spider_config/make_tx_struct_mce \
+	../spider_config/tes.h
+	../spider_config/make_tx_struct_mce > $@
+
 fox-blast.o: fox.c
 	$(CC) -c -I../common -I../blast_config fox.c -o fox-blast.o
 
@@ -85,6 +91,7 @@ rumor-spider: rumor.o $(SPIDER_OBJS)
 clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)
 	rm -f *.o
+	rm -f tx_struct_mce.c
 
 ########################################################
 # Install stuff

@@ -55,4 +55,8 @@ const static inline int16_t TESNumber(int m, int c, int r)
 /* the offset into a COL * ROW length array -- simply just the local part */
 #define TES_OFFSET(t) TES_LOCAL((t))
 
+/* The number of MCE fast data channels in the downlink.  See fset.h for
+ * caveats involved with making this larger than 255 */
+#define NUM_MCE_FIELDS 128
+
 #endif

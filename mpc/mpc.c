@@ -16,11 +16,11 @@
  * along with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#include "mce_frame.h"
 #include "mpc.h"
 #include "mputs.h"
 #include "mpc_proto.h"
 #include "udp.h"
-#include "tes.h"
 
 #include <sys/statvfs.h>
 #include <stdio.h>
@@ -33,7 +33,7 @@
  * timeout.  As a result, all timings are approximate (typically lower bounds)
  * and the granularity of timing is the UDP_TIMEOUT
  */
-#define UDP_TIMEOUT    100 /* milliseconds */
+#define UDP_TIMEOUT    10  /* milliseconds */
 
 /* wait time between sending the ping to an unresponsive PCM */
 #define INIT_TIMEOUT 60000 /* milliseconds */
@@ -60,18 +60,21 @@ int fake;
 int data_mode = -1;
 
 /* Initialisation veto */
-static int init = 1;
+int init = 1;
 
 /* Data return veto */
-static int veto = 0;
+int veto = 0;
 
 /* The slow data struct */
 static struct mpc_slow_data slow_dat;
 
 /* the list of bolometers to send to PCM */
-static uint16_t bset_num = 0xFFFF;
-static int ntes = 0;
-static int16_t tes[NUM_ROW * NUM_COL];
+uint16_t bset_num = 0xFFFF;
+int ntes = 0;
+int16_t tes[NUM_ROW * NUM_COL];
+
+/* the data frame to ship out */
+uint16_t pcm_data[NUM_COL * NUM_ROW];
 
 /* the turnaround flag */
 int in_turnaround = 0;
@@ -79,69 +82,78 @@ int in_turnaround = 0;
 /* time to ask PCM to power cycle the MCE */
 int power_cycle_mce = 0;
 
-/* command "veto" -- actually, all this does is veto the proactive actions
- * associated with failed commands */
+/* command "veto" -- actually, all this does is veto the actions associated with
+ * failed commands */
 int command_veto = 0; 
 
-/* make and send fake data -- we only make data mode 11 data, which is static */
-#define HEADER_SIZE 43
-#define FAKE_DATA_RATE   6667 /* microseconds -- this is approximate */
-static void *fake_data(void *dummy)
+/* handles the divide-by-two frequency scaling for PCM transfer */
+int pcm_strobe = 0;
+
+/* Semaphore for data packet ready for tranmission to PCM */
+int pcm_ret_dat = 0;
+
+/* Frame number of PCM data */
+uint32_t pcm_frameno = 0;
+
+static void set_data_mode_bits(int i, int both, const char *dmb)
 {
-  uint32_t framenum = 0x37183332;
-  int i, j;
-  uint32_t mode11[NUM_COL * NUM_ROW + HEADER_SIZE];
+  if (data_modes[i][0].first_bit != dmb[0] ||
+      data_modes[i][0].num_bits != dmb[1] ||
+      (both && (data_modes[i][1].first_bit != dmb[2] ||
+                data_modes[i][1].num_bits != dmb[3])))
+  {
+    /* sanity checks */
+    if (dmb[0] + dmb[1] > 32)
+      goto BAD_DMB;
 
-  char data[UDP_MAXSIZE];
+    if (both)
+      if (dmb[1] + dmb[3] != 16 || dmb[2] + dmb[3] > 32 ||
+          dmb[2] + dmb[3] > dmb[0])
+        goto BAD_DMB;
 
-  nameThread("FAKE");
-  bprintf(info, "Running FAKE data at %.1f Hz", 1e6 / FAKE_DATA_RATE);
+    /* update */
+    if (both)
+      bprintf(info, "Set extraction bits for data_mode %i to: %i:%i/%i:%i",
+          i, dmb[0], dmb[1], dmb[2], dmb[3]);
+    else
+      bprintf(info, "Set extraction bits for data_mode %i to: %i:%i/-:-",
+          i, dmb[0], dmb[1]);
 
-  /* generate the mode 11 data -- this is simply:
-   *
-   *  0000 0000 0000 0000 0000 000r rrrr rccc
-   *
-   *  where :
-   *
-   *  r = the row number
-   *  c = the column number
-   */
-  for (i = 0; i < NUM_COL; ++i)
-    for (j = 0; j < NUM_ROW; ++j)
-      mode11[HEADER_SIZE + i + j * NUM_COL] = (i & 0x7) | ((j & 0x3F) << 3);
-
-  /* wait for initialisation from PCM */
-  while (init)
-    sleep(1);
-
-  /* send data packets at half the "frame rate" */
-  for (;;) {
-    do_frame(mode11, (HEADER_SIZE + NUM_COL * NUM_ROW) * sizeof(uint32_t));
-    /* we just don't bother sending anything if nothing is requested */
-    if (!veto && ntes > 0) {
-      size_t len = mpc_compose_tes(mode11, framenum, bset_num, nmce, ntes, tes,
-          data);
-      udp_bcast(sock, MCESERV_PORT, len, data);
+    data_modes[i][0].first_bit = dmb[0];
+    data_modes[i][0].num_bits = dmb[1];
+    if (both) {
+      data_modes[i][1].first_bit = dmb[2];
+      data_modes[i][1].num_bits = dmb[3];
     }
-    framenum += 2;
-    usleep(FAKE_DATA_RATE * 2);
-  }
 
-  return NULL;
+    return;
+
+BAD_DMB:
+    if (both)
+      bprintf(info, "Ignoring bad bits for data_mode %i: %i:%i/%i:%i",
+          i, dmb[0], dmb[1], dmb[2], dmb[3]);
+    else
+      bprintf(info, "Ignoring bad bits for data_mode %i: %i:%i/-:-",
+          i, dmb[0], dmb[1]);
+
+  }
 }
 
 /* ask PCM to do something, maybe;
  * also deal with PCM having done something, maybe
  */
-static void pcm_special(size_t len, const char *data_in)
+static void pcm_special(size_t len, const char *data_in, const char *peer,
+    int port)
 {
   static int power_cycle_wait = 0;
 
   if (data_in) {
     /* reply acknowledgement from PCM */
     int power_state = MPCPROTO_POWER_NOP;
+    const char *data_mode_bits;
 
-    if (mce_decompose_notice(nmce, &in_turnaround, &power_state, len, data_in))
+    if (mce_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
+          &power_state, len, data_in, peer, port))
       return;
 
     if (power_state == MPCPROTO_POWER_OFF) {
@@ -160,6 +172,15 @@ static void pcm_special(size_t len, const char *data_in)
       /* MCE power on; disable the command veto, if any */
       command_veto = 0;
     }
+
+    /* update the data_modes definition */
+    set_data_mode_bits(0, 0, data_mode_bits + 0);
+    set_data_mode_bits(1, 0, data_mode_bits + 2);
+    set_data_mode_bits(2, 0, data_mode_bits + 4);
+    set_data_mode_bits(4, 1, data_mode_bits + 6);
+    set_data_mode_bits(5, 1, data_mode_bits + 10);
+    set_data_mode_bits(10, 1, data_mode_bits + 14);
+    set_data_mode_bits(12, 0, data_mode_bits + 18);
   } else {
     /* send a request, if necessary */
     char data[UDP_MAXSIZE];
@@ -284,6 +305,19 @@ BAD_ARRAY_ID:
   }
 }
 
+/* Send a TES data packet */
+static void ForwardData(void)
+{
+  char data[UDP_MAXSIZE];
+  size_t len = mpc_compose_tes(pcm_data, pcm_frameno, bset_num, nmce, ntes, tes,
+      data);
+  bprintf(info, "ret_dat = %i\n", pcm_ret_dat);
+  if (pcm_ret_dat) { /* race condition avoidance */
+    udp_bcast(sock, MCESERV_PORT, len, data);
+    pcm_ret_dat = 0;
+  }
+}
+
 int main(int argc, const char **argv)
 {
   int port, type;
@@ -337,6 +371,34 @@ int main(int argc, const char **argv)
     /* n == 0 on timeout */
     type = (n > 0) ? mpc_check_packet(n, data, peer, port) : -1;
 
+    /* skip bad packets */
+    if (type > 0) {
+      /* do something based on packet type */
+      switch (type) {
+        case 'C': /* command packet */
+          if (mpc_decompose_command(&ev, n, data)) {
+            /* command decomposition failed */
+            break;
+          }
+          /* run the command here */
+          break;
+        case 'F': /* field set packet */
+          veto = 1; /* veto transmission */
+          if ((n = mpc_decompose_bset(&bset_num, tes, nmce, n, data)) >= 0)
+            ntes = n;
+          veto = 0; /* unveto transmission */
+          init = 0;
+          break;
+        case 'N': /* PCM notice packet */
+          pcm_special(n, data, peer, port);
+          break;
+        default:
+          bprintf(err,
+              "Unintentionally dropping unhandled packet of type 0x%X\n", type);
+      }
+    }
+
+    /* Now do outbound packets */
     if (init) {
       if (init_timer <= 0) {
         /* send init packet */
@@ -357,37 +419,13 @@ int main(int argc, const char **argv)
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
 
+      if (pcm_ret_dat)
+        ForwardData();
+
       /* PCM requests */
-      pcm_special(0, NULL);
+      pcm_special(0, NULL, NULL, 0);
     }
 
-    /* skip bad packets */
-    if (type < 0)
-      continue;
-
-    /* do something based on packet type */
-    switch (type) {
-      case 'C': /* command packet */
-        if (mpc_decompose_command(&ev, n, data)) {
-          /* command decomposition failed */
-          break;
-        }
-        /* run the command here */
-        break;
-      case 'F': /* field set packet */
-        veto = 1; /* veto transmission */
-        if ((n = mpc_decompose_bset(&bset_num, tes, nmce, n, data)) >= 0)
-          ntes = n;
-        veto = 0; /* unveto transmission */
-        init = 0;
-        break;
-      case 'N': /* PCM notice packet */
-        pcm_special(n, data);
-        break;
-      default:
-        bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",
-            type);
-    }
   }
 
   close(sock);

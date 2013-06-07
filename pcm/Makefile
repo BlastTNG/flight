@@ -79,6 +79,7 @@ all:: pcm
 clean:
 	rm -f pcm || true;
 	rm -f *.o || true;
+	rm -f tx_struct_mce.c || true
 
 Makefile.testing:
 	touch Makefile.testing
@@ -88,6 +89,12 @@ test-run-enable: clean
 
 test-run-disable: clean
 	echo "TEST_RUN = 0" > Makefile.testing
+
+tx_struct_spider.o :: tx_struct_mce.c
+
+tx_struct_mce.c: ../spider_config/make_tx_struct_mce \
+	../spider_config/tes.h
+	../spider_config/make_tx_struct_mce > $@
 
 pcm: $(OBJS)
 	$(CC) $(LDFLGS) $(CFLAGS) $(OBJS) $(LDLIBS) -o pcm

@@ -53,6 +53,12 @@ all:: $(ALL)
 	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common )"
 	@false
 
+tx_struct_spider.o :: tx_struct_mce.c
+
+tx_struct_mce.c: ../spider_config/make_tx_struct_mce \
+	../spider_config/tes.h
+	../spider_config/make_tx_struct_mce > $@
+
 decomd-blast: $(BLAST_OBJS) readdecom_blast.o
 	  $(CC) $(LDFLAGS) $(BLAST_OBJS) readdecom_blast.o -o decomd-blast
 
@@ -62,6 +68,7 @@ decomd-spider: $(SPIDER_OBJS) readdecom_spider.o
 clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)
 	rm -f *.o
+	rm -f tx_struct_mce.c
 
 ########################################################
 # Install stuff

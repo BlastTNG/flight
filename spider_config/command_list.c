@@ -1098,6 +1098,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(data_mode_bits), "Change how 32->16 bit translation for TES data "
+    "happens", GR_MCE, 5,
+    {
+      {"Data mode", 0, 12, 'i', ""},
+      {"Upper subfield first bit", 0, 32, 'i', ""},
+      {"Upper subfield num bits", 0, 32, 'i', ""},
+      {"Lower subfield first bit", 0, 32, 'i', ""},
+      {"Lower subfield num bits", 0, 32, 'i', ""}
+    }
+  },
+
   {COMMAND(bset), "Change the bolometer field set in use", GR_TELEM, 1,
     {
       {"number", 1, 255, 'i', "BSET_NUM"}

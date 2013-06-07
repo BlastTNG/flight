@@ -506,6 +506,10 @@ struct CommandDataStruct {
   int bset_num; /* current bolo set number */
   int fset_num; /* current OTH set number */
 
+  /* MCE data mode 32->16 bit conversion stuff */
+  char data_mode_bits[13][2][2];
+  int data_mode_bits_serial;
+
   /* commands to be relayed to the MCE computers */
   int mcecmd_index;
   struct ScheduleEvent mcecmd[3];

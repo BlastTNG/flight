@@ -19,7 +19,6 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "mceserv.h"
-#include "fset.h"
 #include "mcp.h"
 #include "command_struct.h"
 #include "mpc_proto.h"
@@ -54,18 +53,14 @@ struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
 #define TES_FRAME_FULL ((1 << NUM_MCE) - 1) /* lowest NUM_MCE bits set */
-static struct {
-  uint32_t data[MAX_BSET + 1];
-  int present;
-} tes_buffer[2];
 
-/* are neither, one or both of the reconstruction buffers full */
-static enum {empty, half, full } tes_recon_status = empty;
+static struct tes_frame tes_buffer[2];
 
 /* TES data FIFO */
 static int tes_fifo_bottom = 0;
 static int tes_fifo_top = 0;
-static uint32_t tes_fifo[TES_FIFO_DEPTH][MAX_BSET + 1];
+
+static struct tes_frame tes_fifo[TES_FIFO_DEPTH];
 pthread_mutex_t tes_mex = PTHREAD_MUTEX_INITIALIZER;
 
 /* send a command if one is pending */
@@ -104,6 +99,7 @@ static int ForwardCommand(int sock)
 /* Send useful trivia to the MPC */
 static void ForwardNotices(int sock)
 {
+  static int last_dmb = 0;
   int turnaround_edge = 0;
   size_t len;
 
@@ -119,14 +115,16 @@ static void ForwardNotices(int sock)
   if (mceserv_mce_power[0] == MPCPROTO_POWER_NOP &&
       mceserv_mce_power[1] == MPCPROTO_POWER_NOP &&
       mceserv_mce_power[2] == MPCPROTO_POWER_NOP &&
-      !turnaround_edge)
+      !turnaround_edge &&
+      last_dmb == CommandData.data_mode_bits_serial)
   {
     /* no notices */
     return;
   }
 
   len = mpc_compose_notice(mceserv_mce_power[0], mceserv_mce_power[1],
-      mceserv_mce_power[2], last_turnaround, udp_buffer);
+      mceserv_mce_power[2], last_turnaround, CommandData.data_mode_bits,
+      udp_buffer);
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
@@ -135,6 +133,7 @@ static void ForwardNotices(int sock)
     mceserv_mce_power[1] = MPCPROTO_POWER_NOP;
     mceserv_mce_power[2] = MPCPROTO_POWER_NOP;
   }
+  last_dmb = CommandData.data_mode_bits_serial;
 }
 
 static void ForwardBSet(int sock)
@@ -165,7 +164,7 @@ static void tes_push(int n)
   pthread_mutex_lock(&tes_mex);
 
   /* do the push */
-  memcpy(tes_fifo[tes_fifo_top], tes_buffer[n].data, sizeof(*tes_fifo));
+  memcpy(tes_fifo + tes_fifo_top, tes_buffer + n, sizeof(*tes_buffer));
 
   /* increment fifo top */
   tes_fifo_top = (tes_fifo_top + 1) % TES_FIFO_DEPTH;
@@ -182,21 +181,25 @@ static void tes_push(int n)
 static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     const char *peer, int port)
 {
+  /* are neither, one or both of the reconstruction buffers full? */
+  static enum {empty, half, full } tes_recon_status = empty;
+
   struct bset local_set;
-  uint32_t datain[MAX_BSET];
+  uint16_t datain[MAX_BSET];
   uint16_t bset_num = get_bset(&local_set);
+  uint32_t frameno_in;
   int i, mce, n;
 
   /* decode input datagram */
-  mce = mpc_decompose_tes(datain, len, data, bset_num, local_set.nm,
-      &bad_bset_count, peer, port);
+  mce = mpc_decompose_tes(&frameno_in, datain, len, data, bset_num,
+      local_set.nm, &bad_bset_count, peer, port);
 
   if (mce < 0)
     return bad_bset_count;
 
   /* find framenum -- here 0 is the newer frame, 1 the older */
-  n = (tes_buffer[0].data[0] == datain[0]) ? 0
-    : (tes_buffer[1].data[0] == datain[0]) ? 1 : -1;
+  n = (tes_buffer[0].frameno == frameno_in) ? 0
+    : (tes_buffer[1].frameno == frameno_in) ? 1 : -1;
 
   /* new framenumber -- look for or make an empty frame */
   if (n == -1) {
@@ -223,11 +226,11 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     tes_buffer[0].present = local_set.empties;
 
     /* record new framenum */
-    tes_buffer[0].data[0] = datain[0];
+    tes_buffer[0].frameno = frameno_in;
   } else if (tes_buffer[n].present & MCE_PRESENT(mce)) {
     /* discard duplicates */
     bprintf(info, "Discarding duplicate data frame number 0x%08X from MCE%i",
-        tes_buffer[n].data[0], mce);
+        tes_buffer[n].frameno, mce);
     return bad_bset_count;
   }
 
@@ -327,7 +330,7 @@ void *mceserv(void *unused)
          */
         if (mpc_decompose_init(n, udp_buffer, peer, port) >= 0) {
           sent_bset = -1; /* resend bset */
-          last_turnaround = -1; /* resent turnaround state */
+          last_turnaround = -1; /* resend notices */
         }
         break;
       case 'R': /* PCM command request */
@@ -373,13 +376,13 @@ int tes_nfifo(void)
 }
 
 /* return the oldest record in the TES fifo */
-const uint32_t *tes_data(void)
+const struct tes_frame *tes_data(void)
 {
   /* empty -- return error */
   if (tes_fifo_top == tes_fifo_bottom)
     return NULL;
 
-  return tes_fifo[tes_fifo_bottom];
+  return tes_fifo + tes_fifo_bottom;
 }
 
 /* pop the oldest thing from the TES fifo */

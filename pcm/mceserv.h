@@ -19,6 +19,7 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "mpc_proto.h"
+#include "fset.h"
 #include "tes.h"
 
 /* Semeuphoria */
@@ -29,6 +30,14 @@ extern struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
 
 /* TES data FIFO read-side functions */
 
+/* the TES data frame */
+struct tes_frame {
+  uint32_t frameno;
+  uint16_t data[MAX_BSET];
+
+  int present; /* only used during frame reconstruction */
+};
+
 /* length of the TES FIFO -- FIFO overfilling results in data droppage */
 #define TES_FIFO_DEPTH 10
 
@@ -37,7 +46,7 @@ int tes_nfifo(void);
 
 /* returns a pointer to the oldest record in the fifo or NULL if the FIFO is
  * empty. */
-const uint32_t *tes_data(void);
+const struct tes_frame *tes_data(void);
 
 /* pops and discards the oldest record in the FIFO; does nothing if the FIFO
  * is empty.  Always succeeds. */

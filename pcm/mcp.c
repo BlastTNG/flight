@@ -1048,9 +1048,10 @@ static void SegV(int signo)
 void insertMCEData(unsigned short *RxFrame)
 {
   static int *offset = 0;
+  static int mce_frameno;
 
   static int i_tmp = 0;  
-  uint32_t *data;
+  const struct tes_frame *data;
   
   if (offset == 0) {
     char mcefield[10];
@@ -1063,18 +1064,26 @@ void insertMCEData(unsigned short *RxFrame)
       bi0 = GetBiPhaseAddr(mcefield);
       offset[i] = bi0->channel;
     }
+
+    bi0 = GetBiPhaseAddr("mce_frameno");
+    mce_frameno = bi0->channel;
   }
   i_tmp++;
   RxFrame[offset[0]] = tes_nfifo();
   RxFrame[offset[1]] = 16000*sin((double)i_tmp*0.02) + 32768;
   
-  if (tes_nfifo()>0) { // 
+  if (tes_nfifo() > 0) {
     int i;
     data = tes_data();
-    for (i=0; i<NUM_MCE_FIELDS; i++) {
-      RxFrame[offset[i]] = (unsigned short) (data[i]>>16);
+    /* write the 32-bit MCE frame number */
+    RxFrame[mce_frameno] = (unsigned short)(data->frameno & 0xFFFF);
+    RxFrame[mce_frameno + 1] = (unsigned short)(data->frameno >> 16);
+
+    /* now the TES data */
+    for (i = 0; i < NUM_MCE_FIELDS; i++) {
+      RxFrame[offset[i]] = (unsigned short) (data->data[i]);
     }
-    while (tes_nfifo()>1) {
+    while (tes_nfifo() > 1) {
       tes_pop();
     }
   }

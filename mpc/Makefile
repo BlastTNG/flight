@@ -36,7 +36,7 @@ $(warning *********************************************)
 FAKE_MAS=-DFAKE_MAS
 MAS_SCRIPT=/
 MAS_DATA_ROOT=/
-MAS_O = fake.o
+MAS_O =
 else
 MAS_SCRIPT=$(shell ${MAS_VAR} --script-dir)
 MAS_DATA_ROOT=$(shell ${MAS_VAR} --data-root)
@@ -68,11 +68,11 @@ SPIDER_ONLY=1
 
 EXPT_HEADERS = command_list.h command_struct.h mpc_proto.h tes.h
 SHARED_HEADERS = blast.h command_common.h mputs.h udp.h 
-LOCAL_HEADERS = mpc.h
+LOCAL_HEADERS = mpc.h mce_frame.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o udp.o
-LOCAL_OBJS = frame.o ${MAS_O} mpc.o script.o
+LOCAL_OBJS = data_mode.o fake.o frame.o ${MAS_O} mpc.o script.o
 
 MPC_DATA = mpc_array_map
 

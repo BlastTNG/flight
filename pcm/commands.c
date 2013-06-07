@@ -1937,6 +1937,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.sync_box.cmd = 1;
       break;
 
+      /* MPC related things handled by PCM */
+    case data_mode_bits:
+      if (ivalues[0] >= 0 && ivalues[0] <= 12) { /* try to avoid crashing */
+        CommandData.data_mode_bits[ivalues[0]][0][0] = (char)ivalues[1];
+        CommandData.data_mode_bits[ivalues[0]][0][1] = (char)ivalues[2];
+        CommandData.data_mode_bits[ivalues[0]][1][0] = (char)ivalues[3];
+        CommandData.data_mode_bits[ivalues[0]][1][1] = (char)ivalues[4];
+        CommandData.data_mode_bits_serial++;
+      }
+      break;
+
     default:
       if (!MCEcmd(command, rvalues, ivalues, svalues)) {
         bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
@@ -2414,6 +2425,29 @@ void InitCommandData()
   CommandData.sync_box.rl_value = 57;
   CommandData.sync_box.nr_value = 33;
   CommandData.sync_box.fr_value = 120;
+
+  /* some data modes are unsupported and so not initialised here */
+  CommandData.data_mode_bits[ 0][0][0] = 16;
+  CommandData.data_mode_bits[ 0][0][1] = 16;
+  CommandData.data_mode_bits[ 1][0][0] = 16;
+  CommandData.data_mode_bits[ 1][0][1] = 16;
+  CommandData.data_mode_bits[ 2][0][0] = 16;
+  CommandData.data_mode_bits[ 2][0][1] = 16;
+  CommandData.data_mode_bits[ 4][0][0] = 14;
+  CommandData.data_mode_bits[ 4][0][1] =  9;
+  CommandData.data_mode_bits[ 4][1][0] =  0;
+  CommandData.data_mode_bits[ 4][1][1] =  7;
+  CommandData.data_mode_bits[ 5][0][0] =  8;
+  CommandData.data_mode_bits[ 5][0][1] = 12;
+  CommandData.data_mode_bits[ 5][1][0] =  0;
+  CommandData.data_mode_bits[ 5][1][1] =  4;
+  CommandData.data_mode_bits[10][0][0] =  7;
+  CommandData.data_mode_bits[10][0][1] = 12;
+  CommandData.data_mode_bits[10][1][0] =  0;
+  CommandData.data_mode_bits[10][1][1] =  4;
+  CommandData.data_mode_bits[12][0][0] = 16;
+  CommandData.data_mode_bits[12][0][1] = 16;
+  CommandData.data_mode_bits_serial = 0;
 
   CommandData.questionable_behaviour = 0;
 
