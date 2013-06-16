@@ -380,21 +380,11 @@ union DerivedUnion DerivedChannels[] = {
   RECIP("RATE_INT_BBC", "FRAME_INT_BBC", 4.e6/384.),
   UNITS("RATE_INT_BBC", "Frequency", "Hz"),
 
-  /* gondola thermistor calibration */
+/*
 #define T_ACS(tch, vch) \
   LINTERP(tch, vch, LUT_DIR "thermistor.lut"), \
   UNITS(tch, "Temperature", "^oC")
-
-  T_ACS("T_RW", "VT_RW"),
-
-  T_ACS("T_BOTTOM_ORING_IF", "VT_1_IF"),
-  T_ACS("T_TOP_DOME_IF", "VT_2_IF"),
-  T_ACS("T_MCE_POWER_IF", "VT_3_IF"),
-  T_ACS("T_APERTURE_IF", "VT_4_IF"),
-  T_ACS("T_TOP_ORING_IF", "VT_5_IF"),
-  T_ACS("T_HERMETICS_IF", "VT_6_IF"),
-  T_ACS("T_SFT_VALVE_IF", "VT_7_IF"),
-
+*/
 
   /* Housekeeping */
   COMMENT("Housekeeping digital channels"),
@@ -466,7 +456,55 @@ union DerivedUnion DerivedChannels[] = {
       "",
       ),
 
+  /*GONDOLA THERMISTOR CALIBRATION */
+#define THERMISTOR(tch, vch) \
+    LINTERP(tch, vch, LUT_DIR "thermistor.lut"), \
+    UNITS(tch, "Temperature", "^oC")
 
+  COMMENT("Thermistor calibrations"),
+  THERMISTOR("T_1_IF", "VT_1_IF"),
+  THERMISTOR("T_2_IF", "VT_2_IF"),
+  THERMISTOR("T_3_IF", "VT_3_IF"),
+  THERMISTOR("T_4_IF", "VT_4_IF"),
+  THERMISTOR("T_5_IF", "VT_5_IF"),
+  THERMISTOR("T_6_IF", "VT_6_IF"),
+  THERMISTOR("T_7_IF", "VT_7_IF"),
+  THERMISTOR("T_GY", "VT_GY"),
+  THERMISTOR("T_RSC", "VT_RSC"),
+  THERMISTOR("T_MCC_POWER", "VT_MCC_POWER"),
+  THERMISTOR("T_BSC", "VT_BSC"),
+  THERMISTOR("T_WD_FLC", "VT_WD_FLC"),
+  THERMISTOR("T_SC_MOT", "VT_SC_MOT"),
+  THERMISTOR("T_RW1", "VT_RW1"),
+  THERMISTOR("T_RW2", "VT_RW2"),
+  THERMISTOR("T_LOCKPORT_MC", "VT_LOCKPORT_MC"),
+  THERMISTOR("T_LOCKPORT_MOT", "VT_LOCKPORT_MOT"),
+  THERMISTOR("T_LOCKSTAR_MC", "VT_LOCKSTAR_MC"),
+  THERMISTOR("T_LOCKSTAR_MOT", "VT_LOCKSTAR_MOT"),
+  THERMISTOR("T_DGPS", "VT_DGPS"),
+  THERMISTOR("T_ELPORT_MOT", "VT_ELPORT_MOT"),
+  THERMISTOR("T_ELSTAR_MOT", "VT_ELSTAR_MOT"),
+  THERMISTOR("T_ELPORT_MC", "VT_ELPORT_MC"),
+  THERMISTOR("T_ELSTAR_MC", "VT_ELSTAR_MC"),
+  THERMISTOR("T_IF1", "VT_IF1"),
+  THERMISTOR("T_IF2", "VT_IF2"),
+  THERMISTOR("T_PSS", "VT_PSS"),
+  THERMISTOR("T_FLOOR", "VT_FLOOR"),
+  THERMISTOR("T_MYLAR_SUN", "VT_MYLAR_SUN"),
+  THERMISTOR("T_MYLAR_IN", "VT_MYLAR_IN"),
+  THERMISTOR("T_PIV", "VT_PIV"),
+  THERMISTOR("T_SERIAL", "VT_SERIAL"),
+  THERMISTOR("T_RW", "VT_RW"),
+  THERMISTOR("T_BOTTOM_ORING_IF", "VT_1_IF"),
+  THERMISTOR("T_TOP_DOME_IF", "VT_2_IF"),
+  THERMISTOR("T_MCE_POWER_IF", "VT_3_IF"),
+  THERMISTOR("T_APERTURE_IF", "VT_4_IF"),
+  THERMISTOR("T_TOP_ORING_IF", "VT_5_IF"),
+  THERMISTOR("T_HERMETICS_IF", "VT_6_IF"),
+  THERMISTOR("T_SFT_VALVE_IF", "VT_7_IF"),
+
+
+  
 #define NTD_LUT LUT_DIR "r_ntd.lut"
 #define CNX_LUT LUT_DIR "r_cernox.lut"
 

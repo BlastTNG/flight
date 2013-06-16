@@ -112,7 +112,7 @@ void ControlGyroHeat()
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
     firsttime = 0;
-    tGyAddr = GetBiPhaseAddr("t_gy");
+    tGyAddr = GetBiPhaseAddr("vt_gy");
     heatGyAddr = GetNiosAddr("heat_gy");
     tSetGyAddr = GetNiosAddr("t_set_gy");
 
@@ -163,7 +163,8 @@ void ControlGyroHeat()
 
     /******** do the pulse *****/
     if (p_on > 0) {
-      WriteData(heatGyAddr, 0x1, NIOS_FLUSH);
+      //WriteData(heatGyAddr, 0x1, NIOS_FLUSH);
+      WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
       p_on--;
     } else if (p_off > 0) {
       WriteData(heatGyAddr, 0x0, NIOS_FLUSH);

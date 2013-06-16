@@ -113,8 +113,8 @@ static pthread_t reactcomm_id;
 static pthread_t pivotcomm_id;
 
 // device node address for the reaction wheel motor controller
-#define REACT_DEVICE "/dev/ttySI9"
-#define PIVOT_DEVICE "/dev/ttySI13"
+#define REACT_DEVICE "/dev/ttySI13"
+#define PIVOT_DEVICE "/dev/ttySI9"
 
 static void* reactComm(void *arg);
 static void* pivotComm(void *arg);

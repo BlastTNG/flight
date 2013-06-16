@@ -3,7 +3,7 @@
 
 /* HWP/phytron bus setup paramters */
 #define NHWP 6
-#define HWP_BUS "/dev/ttyUSB0"
+#define HWP_BUS "/dev/ttySI10"
 #define HWP_CHATTER	PH_CHAT_ACT
 
 /* stepper parameters. definition in hwpr.c */
