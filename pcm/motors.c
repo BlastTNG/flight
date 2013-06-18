@@ -598,8 +598,8 @@ static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_r
   dac_rw = ReadCalData(dacRWAddr);
 
   /* Calculate control terms */
-  P_v_rw_term = ( ((double) gP_v_rw)/1000.0 )*(ACSData.vel_rw - CommandData.pivot_gain.SP);
-  P_t_rw_term = ( ((double)gP_t_rw)/1000.0 )*((double)(dac_rw-32768)); 
+  P_v_rw_term = -( ((double) gP_v_rw)/1000.0 )*(ACSData.vel_rw - CommandData.pivot_gain.SP);
+  P_t_rw_term = -( ((double)gP_t_rw)/1000.0 )*((double)(dac_rw-32768)); 
   //P_v_az_term = -1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
   P_v_az_term = 1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
   I_v_rw_term = ( (double)gI_v_rw/100.0 )*(int_v_rw);
@@ -2675,8 +2675,10 @@ void* reactComm(void* arg)
       res_rw = getAMCResolver(&reactinfo);
       bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Resolver Position is: %i"
                   ,res_rw);
+      //RWMotorData[rw_motor_index].res_rw = fmod((((double) res_rw)/PIV_RES_CTS)
+       //                                    *360.0*4.0, 360.0);
       RWMotorData[rw_motor_index].res_rw = fmod((((double) res_rw)/PIV_RES_CTS)
-                                           *360.0*4.0, 360.0);
+                                           *360.0, 360.0);
 
       thread_count %= 5;
       switch(thread_count) {
@@ -2706,7 +2708,7 @@ void* reactComm(void* arg)
       case 4:
 	rw_vel_raw=((int) queryAMCInd(17,2,2,&reactinfo)); 
         RWMotorData[rw_motor_index].dps_rw = rw_vel_raw*(20000.0/131072.0)
-                                             *(360.0/4096.0);
+                                             *(360.0/16384.0);
         //RWMotorData[rw_motor_index].dps_rw=rw_vel_raw*0.144;
         //bprintf(info, "RW Speed = %d", RWMotorData[rw_motor_index].dps_rw);
 	break;
