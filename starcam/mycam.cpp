@@ -188,7 +188,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 			}
 		j=0;
 		}
-/*
+
 #if AUTOFOCUS_DEBUG
 		cout << "[autoFocus debug]: saving focus image in : " << path << endl;
 #endif
@@ -197,7 +197,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		    cerr << "[autoFocus debug]: autoFocus failed to save image" << endl;
 #endif
 		}
-NNG*/		if (img->SaveImage("/data/etc/current.sbig") != SBFE_NO_ERROR) {
+		if (img->SaveImage("/data/etc/current.sbig") != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
