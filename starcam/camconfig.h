@@ -161,7 +161,7 @@ static const BlobImageConfigParams defaultImageParams = {
 		16,                             //bits
 		CAM_WIDTH,                              //xpix
 		CAM_HEIGHT,                              //ypix
-		9.3/60.0/60.0,                  //platescale
+		6.19/60.0/60.0,                  //platescale
 		1,                              //gain
 		0,                              //readoutOffset
 		0,                              //readoutNoise
@@ -221,7 +221,7 @@ static const BlobImageConfigParams defaultImageParams = {
 	"",                             //badpixFilename
 	0,                              //timeError
 	8.0e-5,                         //matchTol
-	4.575e-5                        //platescale
+	3.001e-5                        //platescale	
 };
 
 #endif   //CAMCONFIG_H
