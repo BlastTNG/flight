@@ -179,6 +179,7 @@ void ImageViewer::paintEvent(QPaintEvent*)
 	timestring = sout.str();
 	IDstring = sout2.str();
 	p.drawImage(img_rect, scaled_img);
+	p.setPen(Qt::red);
 	p.setFont(QFont("Arial",12));
 	p.drawText(30,30,IDstring);
 	p.drawText(30,50,timestring);
