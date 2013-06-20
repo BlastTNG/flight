@@ -34,8 +34,8 @@ using namespace std;
 #define USE_IMAGE_VIEWER 1
 
 //0=no saving, 1=save raw image, 2=save version with boxes too
-#define SAVE_SC_IMAGES 0
-//#define NUMIMGS 50
+#define SAVE_SC_IMAGES 1
+#define NUMIMGS 50
 
 extern CamCommServer globalcomm;
 //camera and image objects (and associated mutexes)
@@ -85,6 +85,8 @@ const string imgPath = "/data/rawdir";     //path to save images in
 enum loglevel {debug, data, info, warning, error};
 void sclog(loglevel level, char* fmt, ...)
 {
+  time_t T;
+  time(&T);
   char msg[1024];
   va_list argptr;
   va_start(argptr, fmt);
@@ -95,17 +97,21 @@ void sclog(loglevel level, char* fmt, ...)
     case debug:
     case data:
 #if STARCAM_DEBUG
-      cerr << "[Starcam debug]: " << msg << endl;
+      cerr << "[Starcam debug]: " << msg << " " << ctime(&T);
+      cerr.flush();
 #endif
       break;
     case info:
-      cout << "--Starcam--" << msg << endl;
+      cout << "--Starcam--" << msg << " " << ctime(&T);
+      cout.flush();
       break;
     case warning:
-      cerr << "==Starcam Warning==" << msg << endl;
+      cerr << "==Starcam Warning==" << msg << " " << ctime(&T);
+      cerr.flush();
       break;
     case error:
-      cerr << "**Starcam ERROR**" << msg << endl;
+      cerr << "**Starcam ERROR**" << msg << " " << ctime(&T);
+      cerr.flush();
       break;
   }
 }
@@ -299,7 +305,7 @@ void* processingLoop(void* arg)
   sclog(info, (char*)"Starting up image processing loop");
   int imageIndex = 0;
   static SBIG_FILE_ERROR err;
-//  static int imgcounter = 0;
+  static int imgcounter = 0;
   CamCommServer* comm = (CamCommServer*)arg;
   while (1) {
     //wait for image to be available for processing
@@ -318,14 +324,14 @@ void* processingLoop(void* arg)
     globalImages[imageIndex].AutoBackgroundAndRange();
 #if SAVE_SC_IMAGES
     sclog(debug, "processingLoop: Saving image in: %s", imgPath.c_str());
-//    imgcounter++;
-//    if (imgcounter == NUMIMGS) {
+    imgcounter++;
+    if (imgcounter == NUMIMGS) {
     	err = globalImages[imageIndex].SaveImageIn(imgPath, 0);
     	if (err != SBFE_NO_ERROR) {
     	  sclog(warning, "processingLoop: File error during boxless write: %d", err);
     	}
-//	imgcounter = 0;
-//    }
+	imgcounter = 0;
+    }
 #endif
 
 #if USE_IMAGE_VIEWER
@@ -351,7 +357,7 @@ void* processingLoop(void* arg)
 	while (blobs != NULL) {
 	  sclog(data, (char*)"processingLoop:   ...(%g,%g)", blobs->getx(), blobs->gety());
 	  if (showBoxes || SAVE_SC_IMAGES == 2)
-	    globalImages[imageIndex].drawBox(blobs->getx(), blobs->gety(), 20, num);
+	    globalImages[imageIndex].drawBox(blobs->getx(), blobs->gety(), 40, num);
 	  blobs = blobs->getnextblob();
 	  num++;
 	}
@@ -376,18 +382,15 @@ void* processingLoop(void* arg)
 
 #if USE_PYRAMID
     if ((fblob->get_numblobs())>4) {
-	    cout << "\nPerforming Star matching..." << endl;
-	    solution_t* sol;
-	    cout << "\nGoing into matchStars..." << endl;
-	    int nsol = globalImages[imageIndex].matchStars(&sol);
-	    cout << "\nStar matching found: " << nsol << " solutions and " << sol[0].n << " stars";
-	    if (nsol > 0) {
-	 	cout << " with:" << endl;
-	 	for (int j=0; j<((nsol<15)?nsol:15); j++) {
-	 		cout << "  " << j << ":\tn=" << sol[j].n << ", brightest: ra=" << sol[j].C[0]->ra*180/M_PI << " dec=" << sol[j].C[0]->dec*180/M_PI << endl;
-			for (int k=0; k<sol[j].n; k++)
-				cout << " " << k << " ra: " << sol[j].C[k]->ra*180/M_PI << " dec: " << sol[j].C[k]->dec*180/M_PI << endl; 
-		}
+	cout << "\nPerforming Star matching..." << endl;
+	solution_t* sol;
+	cout << "\nGoing into matchStars..." << endl;
+	int nsol = globalImages[imageIndex].matchStars(&sol);
+	cout << "\nStar matching found: " << nsol << " solutions and " << sol[0].n << " stars" << endl;
+	if (nsol > 0) {
+	 		cout << "  " << 0 << ":\tn=" << sol[0].n << ", brightest: ra=" << sol[0].C[0]->ra*180/M_PI << " dec=" << sol[0].C[0]->dec*180/M_PI << endl;
+			for (int k=0; k<sol[0].n; k++)
+				cout << " " << k << " ra: " << sol[0].C[k]->ra*180/M_PI << " dec: " << sol[0].C[k]->dec*180/M_PI << endl; 
     	}
     	else cout << endl;
     }
@@ -711,7 +714,7 @@ string interpretCommand(string cmd)
       sout << globalCam.getPictureInterval() << " "
 	<< globalCam.GetExposureTime() << " "
 	<< globalCam.getFocusResolution() << " "
-	<< globalCam.getFocusRange() << " "
+//	<< globalCam.getFocusRange() << " "
 	<< globalCam.getLensAdapter()->getFocusTol() << " ";
       unlock(&camLock, "camLock", "interpretCommand");
       lock(&imageLock[0], "imageLock", "interpretCommand");
