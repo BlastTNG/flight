@@ -52,6 +52,11 @@ all:: $(ALL)
 	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common )"
 	@false
 
+framelist.inc: ../spider_config/tx_struct.c tx_struct_mce.c
+	../spider_config/make_framelist_inc > $@
+
+compressstruct_spider.o :: framelist.inc
+
 tx_struct_spider.o :: tx_struct_mce.c
 
 tx_struct_mce.c: ../spider_config/make_tx_struct_mce \
