@@ -134,7 +134,7 @@ void StoreHWPBus(void)
     hwpBiasAddr = GetNiosAddr("hwp_bias");
     for (i=0; i<NHWP; i++) {
       char namebuf[100];
-      sprintf(namebuf, "pos_%i_hwp", i+1);
+      sprintf(namebuf, "pos_x%i_hwp", i+1);
       posHwpAddr[i] = GetNiosAddr(namebuf);
     }
     for (i=0; i<25; i++) {
@@ -189,9 +189,9 @@ void countHWPEncoder()
     firsttime = 0;
     for (i=0; i<NHWP; i++) {
       char namebuf[100];
-      sprintf(namebuf, "enc_s_%i_hwp", i+1);
+      sprintf(namebuf, "enc_s_x%i_hwp", i+1);
       encSHwpAddr[i] = GetBiPhaseAddr(namebuf);
-      sprintf(namebuf, "enc_cnt_%i_hwp", i+1);
+      sprintf(namebuf, "enc_cnt_x%i_hwp", i+1);
       encCntHwpAddr[i] = GetNiosAddr(namebuf);
     }
   }

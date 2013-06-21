@@ -79,9 +79,9 @@ static void PhaseControl()
   if (first_time) {
     first_time = 0;
     for(i = 0; i < 6; i++) {
-      sprintf(field, "ph_cnx_%1d_hk", i+1);
+      sprintf(field, "ph_cnx_x%1d_hk", i+1);
       phaseCnxAddr[i] = GetNiosAddr(field);
-      sprintf(field, "ph_ntd_%1d_hk", i+1);
+      sprintf(field, "ph_ntd_x%1d_hk", i+1);
       phaseNtdAddr[i] = GetNiosAddr(field);
     }
   }	
@@ -116,9 +116,9 @@ static void BiasControl()
   if (firsttime) {
     firsttime = 0;
     for (i=0; i<6; i++) {
-      sprintf(field, "v_cnx_%1d_hk", i+1);
+      sprintf(field, "v_cnx_x%1d_hk", i+1);
       vCnxAddr[i] = GetNiosAddr(field);
-      sprintf(field, "v_ntd_%1d_hk", i+1);
+      sprintf(field, "v_ntd_x%1d_hk", i+1);
       vNtdAddr[i] = GetNiosAddr(field);
     }
     fBiasCmdHkAddr = GetNiosAddr("f_bias_cmd_hk");
@@ -251,7 +251,7 @@ static unsigned short FridgeCycle(int insert, int reset)
     firsttime[insert] = 0; 
     if (firsttime_4k) {
       firsttime_4k = 0;
-      sprintf(field, "vd_mt_bottom_hk");
+      sprintf(field, "vd_mt_botlo_t_hk");
       t4kAddr = GetBiPhaseAddr(field);
       LutInit(&t4kLut);
     }
@@ -265,14 +265,14 @@ static unsigned short FridgeCycle(int insert, int reset)
     tHswAddr[insert] = GetBiPhaseAddr(field);
     sprintf(field, "v_cnx_x%1d_hk", insert+1);
     vCnxAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "start_x%1d_cycle", insert+1);
+    sprintf(field, "time_start_x%1d_cycle", insert+1);
     startCycleWAddr[insert] = GetNiosAddr(field);
     startCycleRAddr[insert] = ExtractBiPhaseAddr(startCycleWAddr[insert]);
     sprintf(field, "state_x%1d_cycle", insert+1);
     stateCycleWAddr[insert] = GetNiosAddr(field);
     stateCycleRAddr[insert] = ExtractBiPhaseAddr(stateCycleWAddr[insert]);
     WriteData(stateCycleWAddr[insert], CRYO_CYCLE_OUT, NIOS_QUEUE);
-    sprintf(field, "start_state_x%1d_cycle", insert+1);
+    sprintf(field, "time_state_x%1d_cycle", insert+1);
     stimeCycleWAddr[insert] = GetNiosAddr(field);
     stimeCycleRAddr[insert] = ExtractBiPhaseAddr(stimeCycleWAddr[insert]);
 

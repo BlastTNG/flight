@@ -915,52 +915,52 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hk_theo_heat[0].duration = 0;
       CommandData.hk_theo_heat[0].start_time = 0;
       break;
-    case hk_t1_heat_on:
+    case hk_sft_lines_heat_on:
       CommandData.hk_theo_heat[1].state = 1;
       CommandData.hk_theo_heat[1].duration = 0;
       CommandData.hk_theo_heat[1].start_time = 0;
       break;
-    case hk_t1_heat_off:
+    case hk_sft_lines_heat_off:
       CommandData.hk_theo_heat[1].state = 0;
       CommandData.hk_theo_heat[1].duration = 0;
       CommandData.hk_theo_heat[1].start_time = 0;
       break;
-    case hk_vcs1_hx1_heat_on:
+    case hk_capillary_heat_on:
       CommandData.hk_theo_heat[2].state = 1;
       CommandData.hk_theo_heat[2].duration = 0;
       CommandData.hk_theo_heat[2].start_time = 0;
       break;
-    case hk_vcs1_hx1_heat_off:
+    case hk_capillary_heat_off:
       CommandData.hk_theo_heat[2].state = 0;
       CommandData.hk_theo_heat[2].duration = 0;
       CommandData.hk_theo_heat[2].start_time = 0;
       break;
-    case hk_vcs2_hx1_heat_on:
+    case hk_vcs2_hx_heat_on:
       CommandData.hk_theo_heat[3].state = 1;
       CommandData.hk_theo_heat[3].duration = 0;
       CommandData.hk_theo_heat[3].start_time = 0;
       break;
-    case hk_vcs2_hx1_heat_off:
+    case hk_vcs2_hx_heat_off:
       CommandData.hk_theo_heat[3].state = 0;
       CommandData.hk_theo_heat[3].duration = 0;
       CommandData.hk_theo_heat[3].start_time = 0;
       break;
-    case hk_vcs1_hx2_heat_on:
+    case hk_vcs1_hx_heat_on:
       CommandData.hk_theo_heat[4].state = 1;
       CommandData.hk_theo_heat[4].duration = 0;
       CommandData.hk_theo_heat[4].start_time = 0;
       break;
-    case hk_vcs1_hx2_heat_off:
+    case hk_vcs1_hx_heat_off:
       CommandData.hk_theo_heat[4].state = 0;
       CommandData.hk_theo_heat[4].duration = 0;
       CommandData.hk_theo_heat[4].start_time = 0;
       break;
-    case hk_vcs2_hx2_heat_on:
+    case hk_mt_lines_heat_on:
       CommandData.hk_theo_heat[5].state = 1;
       CommandData.hk_theo_heat[5].duration = 0;
       CommandData.hk_theo_heat[5].start_time = 0;
       break;
-    case hk_vcs2_hx2_heat_off:
+    case hk_mt_lines_heat_off:
       CommandData.hk_theo_heat[5].state = 0;
       CommandData.hk_theo_heat[5].duration = 0;
       CommandData.hk_theo_heat[5].start_time = 0;
@@ -974,16 +974,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hk_theo_heat[6].state = 0;
       CommandData.hk_theo_heat[6].duration = 0;
       CommandData.hk_theo_heat[6].start_time = 0;
-      break;
-    case hk_t7_heat_on:
-      CommandData.hk_theo_heat[7].state = 1;
-      CommandData.hk_theo_heat[7].duration = 0;
-      CommandData.hk_theo_heat[7].start_time = 0;
-      break;
-    case hk_t7_heat_off:
-      CommandData.hk_theo_heat[7].state = 0;
-      CommandData.hk_theo_heat[7].duration = 0;
-      CommandData.hk_theo_heat[7].start_time = 0;
       break;
 
     case pull_cmb_pin:
@@ -1309,7 +1299,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwp.mode = hwp_m_halt;
       break;
     case hwp_bias_off:
-      //extra << 6 is to use bits that turn bias off, not always on
+      // extra << 6 is to use bits that turn bias off, not always on
       if (ivalues[0]) {
         CommandData.hwp.bias_mask |= ( 0x01 << (ivalues[0]-1) ) << 6;
       } else {
@@ -1317,7 +1307,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case hwp_bias_on:
-      //extra << 6 is to use bits that turn bias off, not always on
+      // extra << 6 is to use bits that turn bias off, not always on
       if (ivalues[0]) {
         CommandData.hwp.bias_mask &= ~( 0x01 << (ivalues[0]-1) << 6);
       } else {
@@ -1629,8 +1619,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.hk_theo_heat[0].duty_target;
       CommandData.hk_theo_heat[0].start_time = mcp_systime(NULL);
       break;
-    case hk_t1_pulse:
-      duty_cycle = rvalues[0]/HK_T1_PMAX;
+    case hk_sft_lines_pulse:
+      duty_cycle = rvalues[0]/HK_SFT_LINES_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[1].duty_target =
         ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
@@ -1641,8 +1631,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.hk_theo_heat[1].duty_target;
       CommandData.hk_theo_heat[1].start_time = mcp_systime(NULL);
       break;
-    case hk_vcs1_hx1_pulse:
-      duty_cycle = rvalues[0]/HK_VCS1_HX1_PMAX;
+    case hk_capillary_pulse:
+      duty_cycle = rvalues[0]/HK_CAPILLARY_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[2].duty_target =
         ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
@@ -1653,8 +1643,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.hk_theo_heat[2].duty_target;
       CommandData.hk_theo_heat[2].start_time = mcp_systime(NULL);
       break;
-    case hk_vcs2_hx1_pulse:
-      duty_cycle = rvalues[0]/HK_VCS2_HX1_PMAX;
+    case hk_vcs2_hx_pulse:
+      duty_cycle = rvalues[0]/HK_VCS2_HX_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[3].duty_target =
         ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
@@ -1665,8 +1655,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.hk_theo_heat[3].duty_target;
       CommandData.hk_theo_heat[3].start_time = mcp_systime(NULL);
       break;
-    case hk_vcs1_hx2_pulse:
-      duty_cycle = rvalues[0]/HK_VCS1_HX2_PMAX;
+    case hk_vcs1_hx_pulse:
+      duty_cycle = rvalues[0]/HK_VCS1_HX_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[4].duty_target =
         ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
@@ -1677,8 +1667,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.hk_theo_heat[4].duty_target;
       CommandData.hk_theo_heat[4].start_time = mcp_systime(NULL);
       break;
-    case hk_vcs2_hx2_pulse:
-      duty_cycle = rvalues[0]/HK_VCS2_HX2_PMAX;
+    case hk_mt_lines_pulse:
+      duty_cycle = rvalues[0]/HK_MT_LINES_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
       CommandData.hk_theo_heat[5].duty_target =
         ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
@@ -1700,18 +1690,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_theo_heat[6].duty_avg =
         CommandData.hk_theo_heat[6].duty_target;
       CommandData.hk_theo_heat[6].start_time = mcp_systime(NULL);
-      break;
-    case hk_t7_pulse:
-      duty_cycle = rvalues[0]/HK_T7_PMAX;
-      if (duty_cycle>=1) duty_cycle = 0.999;
-      CommandData.hk_theo_heat[7].duty_target =
-        ((int)(duty_cycle*256) << 8); // 8-bit resolution, pad with zeros
-      CommandData.hk_theo_heat[7].duration = // seconds
-        ( (rvalues[1]<0) ? -1 : (int)(rvalues[1]*60) );
-      // initialize
-      CommandData.hk_theo_heat[7].duty_avg =
-        CommandData.hk_theo_heat[7].duty_target;
-      CommandData.hk_theo_heat[7].start_time = mcp_systime(NULL);
       break;
 
       /***************************************/
@@ -2301,7 +2279,7 @@ void InitCommandData()
     CommandData.hk[i].htr2_heat = 0;
     CommandData.hk[i].htr3_heat = 0;
     CommandData.hk[i].fplo_heat = 0.0;
-    CommandData.hk[i].strap_heat = 0.0;
+    CommandData.hk[i].ring_heat = 0.0;
 
     CommandData.hk[i].auto_cycle_on = 0;
     CommandData.hk[i].force_cycle = 0;
