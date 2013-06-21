@@ -858,7 +858,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(hk_mt_lines_pulse), "Pulse Theo's MT fill and vent line heaters",
     GR_THEO_HEAT, 2,
     {
-      {"Power (W,max=9.0)", 0.0, 9.0.0, 'f', ""},
+      {"Power (W,max=9.0)", 0.0, 9.0, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },

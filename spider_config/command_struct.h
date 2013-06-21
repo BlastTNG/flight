@@ -153,14 +153,13 @@ struct latch_pulse {
 
 // for HK Theo heaters
 // max power in Watts, TODO update command_list with these values
-#define HK_MT_BOTTOM_PMAX   4.5 // TODO add H2B2 in parallel --> 9
-#define HK_T1_PMAX          1.0 // TODO install capillary 4K heater
-#define HK_VCS1_HX1_PMAX    4.5 // TODO put VCS1 HX2 in parallel --> 6.3
-#define HK_VCS2_HX1_PMAX    1.8 // TODO put VCS2 HX2 in parallel --> 3.6
-#define HK_VCS1_HX2_PMAX    1.8 // TODO replace with MT fill?
-#define HK_VCS2_HX2_PMAX    1.8 // TODO replace with MT vent?
-#define HK_SFT_BOTTOM_PMAX  9.0 // TODO change to LC --> 0.250
-#define HK_T7_PMAX          1.0 // not wired!
+#define HK_MT_BOTTOM_PMAX   9.0
+#define HK_SFT_LINES_PMAX   12.0
+#define HK_CAPILLARY_PMAX   0.125
+#define HK_VCS2_HX_PMAX     3.6
+#define HK_VCS1_HX_PMAX     6.3
+#define HK_MT_LINES_PMAX    9.0
+#define HK_SFT_BOTTOM_PMAX  4.5
 
 struct PWMStruct {
   bool state;                 // heater state (0=off, 1=on)
