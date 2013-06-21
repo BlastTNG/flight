@@ -17,8 +17,8 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 205        /* total number of single word cmds */
-#define N_MCOMMANDS 123        /* total number of multiword commands */
+#define N_SCOMMANDS 197        /* total number of single word cmds */
+#define N_MCOMMANDS 122        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -105,23 +105,20 @@ enum singleCommand {
   thegood_run,       thebad_run,        theugly_run,       table_track,
   hwp_step,          hwp_repoll,
   //theo heater commands. TODO-theo assign non-temporary names
-  hk_mt_bottom_heat_on,    hk_mt_bottom_heat_off,
-  hk_t1_heat_on,           hk_t1_heat_off,
-  hk_vcs1_hx1_heat_on,     hk_vcs1_hx1_heat_off,
-  hk_vcs2_hx1_heat_on,     hk_vcs2_hx1_heat_off,
-  hk_vcs1_hx2_heat_on,     hk_vcs1_hx2_heat_off,
-  hk_vcs2_hx2_heat_on,     hk_vcs2_hx2_heat_off,
-  hk_sft_bottom_heat_on,   hk_sft_bottom_heat_off,
-  hk_t7_heat_on,           hk_t7_heat_off,
+  hk_mt_bottom_heat_on,   hk_mt_bottom_heat_off,
+  hk_sft_lines_heat_on,   hk_sft_lines_heat_off,
+  hk_capillary_heat_on,   hk_capillary_heat_off,
+  hk_vcs2_hx_heat_on,     hk_vcs2_hx_heat_off,
+  hk_vcs1_hx_heat_on,     hk_vcs1_hx_heat_off,
+  hk_mt_lines_heat_on,    hk_mt_lines_heat_off,
+  hk_sft_bottom_heat_on,  hk_sft_bottom_heat_off,
   bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
   //make better use of unused groups
   pull_cmb_pin, global_thermonuclear_war,
   mce1_on,           mce1_off,          mce1_cycle,
   mce2_on,           mce2_off,          mce2_cycle,
   mce3_on,           mce3_off,          mce3_cycle,
-  mac_on,            mac_off,           mac_cycle,
   sync_on,           sync_off,          sync_cycle,
-  eth_on,            eth_off,           eth_cycle,
   hwp_on,            hwp_off,           hwp_cycle,
   hk_preamp_on,      hk_preamp_off,     hk_preamp_cycle,
   mcc1_on,           mcc1_off,          mcc1_cycle,
@@ -169,12 +166,12 @@ enum multiCommand {
   hk_pump_heat_on,   hk_pump_heat_off,  hk_heat_switch_on, hk_heat_switch_off,
   hk_ssa_heat_on,    hk_ssa_heat_off,   hk_htr1_heat_on,   hk_htr1_heat_off,
   hk_htr2_heat_on,   hk_htr2_heat_off,  hk_htr3_heat_on,   hk_htr3_heat_off,
-  hk_fphi_heat_on,   hk_fphi_heat_off,  hk_fplo_heat_set,  hk_strap_heat_set,
+  hk_fphi_heat_on,   hk_fphi_heat_off,  hk_fplo_heat_set,  hk_ring_heat_set,
   hk_ampl_cernox,    hk_ampl_ntd,       hk_phase_cernox,   hk_phase_ntd,
   hk_phase_step_cernox, hk_phase_step_ntd, hk_bias_freq,      hk_pump_servo_on,
-  hk_mt_bottom_pulse,  hk_t1_pulse,         hk_vcs1_hx1_pulse,
-  hk_vcs2_hx1_pulse,   hk_vcs1_hx2_pulse,   hk_vcs2_hx2_pulse,
-  hk_sft_bottom_pulse, hk_t7_pulse,
+  hk_mt_bottom_pulse,  hk_sft_lines_pulse, hk_capillary_pulse,
+  hk_vcs2_hx_pulse,    hk_vcs1_hx_pulse,   hk_mt_lines_pulse,
+  hk_sft_bottom_pulse,
   spider_scan,        sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,        el_rel_move,
   hwp_bias_on,        hwp_bias_off,     write_row_len,     write_num_rows,

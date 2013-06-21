@@ -312,8 +312,6 @@ struct CommandDataStruct {
   struct {
     enum mce_pow_op mce_op[3];
     struct latch_pulse mce[3];
-    struct latch_pulse mac;
-    struct latch_pulse eth;
     struct latch_pulse hwp;
     int hk_preamp_off;
   } ifpower;
@@ -390,7 +388,7 @@ struct CommandDataStruct {
     bool htr2_heat;
     bool htr3_heat;
     double fplo_heat;
-    double strap_heat;
+    double ring_heat;
 
     bool auto_cycle_on;
     bool force_cycle;

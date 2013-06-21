@@ -162,17 +162,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mcc6_off), "turn off MCC 6", GR_MCEPWR},
   {COMMAND(mcc6_cycle), "power cycle MCC 6", GR_MCEPWR},
 
-  {COMMAND(mac_on), "turn on the MCE Archive Computer", GR_MCEPWR},
-  {COMMAND(mac_off), "turn off the MCE Archive Computer", GR_MCEPWR},
-  {COMMAND(mac_cycle), "power cycle the MCE Archive Computer", GR_MCEPWR},
-
   {COMMAND(sync_on), "turn on the sync box", GR_MCEPWR},
   {COMMAND(sync_off), "turn off the sync box", GR_MCEPWR},
   {COMMAND(sync_cycle), "power cycle the sync box", GR_MCEPWR},
-  
-  {COMMAND(eth_on), "turn on the inner frame ethernet switch", GR_MCEPWR},
-  {COMMAND(eth_off), "turn off the inner frame ethernet switch", GR_MCEPWR},
-  {COMMAND(eth_cycle), "power cycle inner frame ethernet switch", GR_MCEPWR},
   
   {COMMAND(hwp_on), "turn on the HWP rotators", GR_IFPOWER},
   {COMMAND(hwp_off), "turn off the HWP rotators", GR_IFPOWER},
@@ -284,37 +276,37 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(table_track), "Put the table in track mode", GR_SCTAB},
   //Theo heater housekeeping commands
   {COMMAND(hk_mt_bottom_heat_on), 
-   "Turn on Theo's MT Bottom Heater. Disable pulse", GR_THEO_HEAT},
+   "Turn on Theo's MT Bottom heaters. Disable pulse", GR_THEO_HEAT},
   {COMMAND(hk_mt_bottom_heat_off), 
-   "Turn off Theo's MT Bottom Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_t1_heat_on), "Turn on Theo's Heater #1. Disable pulse",
+   "Turn off Theo's MT Bottom heaters. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_sft_lines_heat_on), 
+   "Turn on Theo's SFT fill and vent line heaters. Disable pulse",
    GR_THEO_HEAT},
-  {COMMAND(hk_t1_heat_off), "Turn off Theo's Heater #1. Disable pulse",
+  {COMMAND(hk_sft_lines_heat_off), 
+   "Turn off Theo's SFT fill and vent line heaters. Disable pulse",
    GR_THEO_HEAT},
-  {COMMAND(hk_vcs1_hx1_heat_on), 
-   "Turn on Theo's VCS1 HX1 Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs1_hx1_heat_off), 
-   "Turn off Theo's VCS1 HX1 Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx1_heat_on), 
-   "Turn on Theo's VCS2 HX1 Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx1_heat_off), 
-   "Turn off Theo's VCS2 HX1 Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs1_hx2_heat_on),
-   "Turn on Theo's VCS1 HX2 Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs1_hx2_heat_off),
-   "Turn off Theo's VCS1 HX2 Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx2_heat_on),
-   "Turn on Theo's VCS2 HX2 Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx2_heat_off),
-   "Turn off Theo's VCS2 HX2 Heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_capillary_heat_on), 
+   "Turn on Theo's capillary heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_capillary_heat_off), 
+   "Turn off Theo's capillary heater. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx_heat_on), 
+   "Turn on Theo's VCS2 HX heaters. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs2_hx_heat_off), 
+   "Turn off Theo's VCS2 HX heaters. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx_heat_on),
+   "Turn on Theo's VCS1 HX heaters. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_vcs1_hx_heat_off),
+   "Turn off Theo's VCS1 HX heaters. Disable pulse", GR_THEO_HEAT},
+  {COMMAND(hk_mt_lines_heat_on),
+   "Turn on Theo's MT fill and vent line heaters. Disable pulse", 
+   GR_THEO_HEAT},
+  {COMMAND(hk_mt_lines_heat_off),
+   "Turn off Theo's MT fill and vent line heaters. Disable pulse",
+   GR_THEO_HEAT},
   {COMMAND(hk_sft_bottom_heat_on),
    "Turn on Theo's SFT Bottom Heater. Disable pulse", GR_THEO_HEAT},
   {COMMAND(hk_sft_bottom_heat_off),
    "Turn off Theo's SFT Bottom Heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_t7_heat_on), "Turn on Theo's Heater #7. Disable pulse",
-   GR_THEO_HEAT},
-  {COMMAND(hk_t7_heat_off), "Turn off Theo's Heater #7. Disable pulse",
-   GR_THEO_HEAT},
 
   //make better use of unused groups
   {COMMAND(pull_cmb_pin), "????", GR_CMB},
@@ -788,7 +780,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
     }
   },
-  {COMMAND(hk_strap_heat_set), "Set Strap heater voltage", GR_CRYO_HEAT, 2,
+  {COMMAND(hk_ring_heat_set), "Set 300mK ring heater voltage", GR_CRYO_HEAT, 2,
     {
       {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
       {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},
@@ -828,60 +820,52 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Set High (K):",          0.0, 50.0,     'f', ""},
     }
   },
-  
-  {COMMAND(hk_mt_bottom_pulse), "Pulse Theo's MT bottom heater",
-    GR_THEO_HEAT, 2,
-    {
-      {"Power (W,max=4.5)", 0.0, 4.5, 'f', ""},
-      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
-    }
-  },
-  {COMMAND(hk_t1_pulse), "Pulse Theo's T1 heater",
-    GR_THEO_HEAT, 2,
-    {
-      {"Power (W)", 0.0, 12.0, 'f', ""},
-      {"Duration (minutes) (0=1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
-    }
-  },
-  {COMMAND(hk_vcs1_hx1_pulse), "Pulse Theo's VCS1 HX1 heater",
-    GR_THEO_HEAT, 2,
-    {
-      {"Power (W,max=4.5)", 0.0, 4.5, 'f', ""},
-      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
-    }
-  },
-  {COMMAND(hk_vcs2_hx1_pulse), "Pulse Theo's VCS2 HX1 heater",
-    GR_THEO_HEAT, 2,
-    {
-      {"Power (W,max=1.8)", 0.0, 1.8, 'f', ""},
-      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
-    }
-  },
-  {COMMAND(hk_vcs1_hx2_pulse), "Pulse Theo's VCS1 HX2 heater",
-    GR_THEO_HEAT, 2,
-    {
-      {"Power (W,max=1.8)", 0.0, 1.8, 'f', ""},
-      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
-    }
-  },
-  {COMMAND(hk_vcs2_hx2_pulse), "Pulse Theo's VCS2 HX2 heater",
-    GR_THEO_HEAT, 2,
-    {
-      {"Power (W,max=1.8)", 0.0, 1.8, 'f', ""},
-      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
-    }
-  },
-  {COMMAND(hk_sft_bottom_pulse), "Pulse Theo's SFT Bottom heater",
+  {COMMAND(hk_mt_bottom_pulse), "Pulse Theo's MT bottom heaters",
     GR_THEO_HEAT, 2,
     {
       {"Power (W,max=9.0)", 0.0, 9.0, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
-  {COMMAND(hk_t7_pulse), "Pulse Theo's #7 heater",
+  {COMMAND(hk_sft_lines_pulse), "Pulse Theo's SFT fill and vent line heaters",
     GR_THEO_HEAT, 2,
     {
-      {"Power (W)", 0.0, 12.0, 'f', ""},
+      {"Power (W,max=12.0)", 0.0, 12.0, 'f', ""},
+      {"Duration (minutes) (0=1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_capillary_pulse), "Pulse Theo's capillary heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Power (W,max=0.125)", 0.0, 0.125, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_vcs2_hx_pulse), "Pulse Theo's VCS2 HX heaters",
+    GR_THEO_HEAT, 2,
+    {
+      {"Power (W,max=3.6)", 0.0, 3.6, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_vcs1_hx_pulse), "Pulse Theo's VCS1 HX heaters",
+    GR_THEO_HEAT, 2,
+    {
+      {"Power (W,max=6.3)", 0.0, 6.3, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_mt_lines_pulse), "Pulse Theo's MT fill and vent line heaters",
+    GR_THEO_HEAT, 2,
+    {
+      {"Power (W,max=9.0)", 0.0, 9.0.0, 'f', ""},
+      {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
+    }
+  },
+  {COMMAND(hk_sft_bottom_pulse), "Pulse Theo's SFT Bottom heater",
+    GR_THEO_HEAT, 2,
+    {
+      {"Power (W,max=4.5)", 0.0, 4.5, 'f', ""},
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
