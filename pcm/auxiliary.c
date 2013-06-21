@@ -600,36 +600,13 @@ void ControlPower(void) {
     CommandData.ifpower.mce[2].rst_count--;
     if (CommandData.ifpower.mce[2].rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0010;
   }
-  if (CommandData.ifpower.mac.set_count > 0) {
-    CommandData.ifpower.mac.set_count--;
-    if (CommandData.ifpower.mac.set_count < LATCH_PULSE_LEN) {
-      ifpwr |= 0x0040;
-      mce_power |= 0x8;
-    }
-  }
-  if (CommandData.ifpower.mac.rst_count > 0) {
-    CommandData.ifpower.mac.rst_count--;
-    if (CommandData.ifpower.mac.rst_count < LATCH_PULSE_LEN) {
-      ifpwr |= 0x0080;
-      mce_power &= ~0x8;
-    }
-  }
-
-  if (CommandData.ifpower.eth.set_count > 0) {
-    CommandData.ifpower.eth.set_count--;
-    if (CommandData.ifpower.eth.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0400;
-  }
-  if (CommandData.ifpower.eth.rst_count > 0) {
-    CommandData.ifpower.eth.rst_count--;
-    if (CommandData.ifpower.eth.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0800;
-  }
   if (CommandData.ifpower.hwp.set_count > 0) {
     CommandData.ifpower.hwp.set_count--;
-    if (CommandData.ifpower.hwp.set_count < LATCH_PULSE_LEN) ifpwr |= 0x1000;
+    if (CommandData.ifpower.hwp.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0040;
   }
   if (CommandData.ifpower.hwp.rst_count > 0) {
     CommandData.ifpower.hwp.rst_count--;
-    if (CommandData.ifpower.hwp.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x2000;
+    if (CommandData.ifpower.hwp.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0080;
   }
   if (CommandData.ifpower.hk_preamp_off) {
     if (CommandData.ifpower.hk_preamp_off > 0) CommandData.ifpower.hk_preamp_off--;

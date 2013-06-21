@@ -682,18 +682,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case mce3_cycle:
       CommandData.ifpower.mce_op[2] = cyc;
       break;
-    case mac_off:
-      CommandData.ifpower.mac.set_count = 0;
-      CommandData.ifpower.mac.rst_count = LATCH_PULSE_LEN;
-      break;
-    case mac_on:
-      CommandData.ifpower.mac.rst_count = 0;
-      CommandData.ifpower.mac.set_count = LATCH_PULSE_LEN;
-      break;
-    case mac_cycle:
-      CommandData.ifpower.mac.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.ifpower.mac.rst_count = LATCH_PULSE_LEN;
-      break;
     case sync_off:
       CommandData.power.sync.set_count = 0;
       CommandData.power.sync.rst_count = LATCH_PULSE_LEN;
@@ -705,18 +693,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case sync_cycle:
       CommandData.power.sync.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.sync.rst_count = LATCH_PULSE_LEN;
-      break;
-    case eth_off:
-      CommandData.ifpower.eth.set_count = 0;
-      CommandData.ifpower.eth.rst_count = LATCH_PULSE_LEN;
-      break;
-    case eth_on:
-      CommandData.ifpower.eth.rst_count = 0;
-      CommandData.ifpower.eth.set_count = LATCH_PULSE_LEN;
-      break;
-    case eth_cycle:
-      CommandData.ifpower.eth.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.ifpower.eth.rst_count = LATCH_PULSE_LEN;
       break;
     case hwp_off:
       CommandData.ifpower.hwp.set_count = 0;
@@ -1601,11 +1577,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fplo_heat = rvalues[1];
       else for (i=0; i<HK_MAX; i++) CommandData.hk[i].fplo_heat = rvalues[1];
       break;
-    case hk_strap_heat_set:
+    case hk_ring_heat_set:
       CommandData.hk_last = ivalues[0];
       CommandData.hk_vheat_last = rvalues[1];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].strap_heat = rvalues[1];
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].strap_heat = rvalues[1];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].ring_heat = rvalues[1];
+      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].ring_heat = rvalues[1];
       break;
 
     case hk_auto_cycle_on:
@@ -2151,10 +2127,6 @@ void InitCommandData()
   CommandData.ifpower.mce[1].set_count = 0;
   CommandData.ifpower.mce[2].rst_count = 0;
   CommandData.ifpower.mce[2].set_count = 0;
-  CommandData.ifpower.mac.rst_count = 0;
-  CommandData.ifpower.mac.set_count = 0;
-  CommandData.ifpower.eth.rst_count = 0;
-  CommandData.ifpower.eth.set_count = 0;
   CommandData.ifpower.hwp.rst_count = 0;
   CommandData.ifpower.hwp.set_count = 0;
 

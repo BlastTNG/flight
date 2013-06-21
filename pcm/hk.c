@@ -207,36 +207,36 @@ static unsigned short FridgeCycle(int insert, int reset)
 
   static struct LutType t4kLut = {.filename = LUT_DIR "D75551.lut"};
   static struct LutType tCpLut[6] = {
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"}
+    {.filename = LUT_DIR "thelma3_cp.lut"},
+    {.filename = LUT_DIR "thelma4_cp.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"}
   };
   static struct LutType tPumpLut[6] = {
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"}
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"}
   };
   static struct LutType tStillLut[6] = {
-    {.filename = LUT_DIR "c_thelma5_still.lut"},
-    {.filename = LUT_DIR "c_thelma5_still.lut"},
-    {.filename = LUT_DIR "c_thelma5_still.lut"},
-    {.filename = LUT_DIR "c_still_4.lut"},
-    {.filename = LUT_DIR "c_thelma5_still.lut"},
-    {.filename = LUT_DIR "c_thelma5_still.lut"}
+    {.filename = LUT_DIR "thelma3_still.lut"},
+    {.filename = LUT_DIR "thelma4_still.lut"},
+    {.filename = LUT_DIR "X42401.lut"},
+    {.filename = LUT_DIR "thelma7_still.lut"},
+    {.filename = LUT_DIR "thelma2_still.lut"},
+    {.filename = LUT_DIR "thelma6_still.lut"}
   };
   static struct LutType tHswLut[6] = {
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"}
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"}
   };
 
   double t_4k, t_cp, t_pump, t_still, t_hsw, v_cnx;
@@ -251,28 +251,28 @@ static unsigned short FridgeCycle(int insert, int reset)
     firsttime[insert] = 0; 
     if (firsttime_4k) {
       firsttime_4k = 0;
-      sprintf(field, "vd_09_hk");
+      sprintf(field, "vd_mt_bottom_hk");
       t4kAddr = GetBiPhaseAddr(field);
       LutInit(&t4kLut);
     }
-    sprintf(field, "vd_cp_%1d_hk", insert+1);
+    sprintf(field, "vd_cp_x%1d_hk", insert+1);
     tCpAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "vd_pump_%1d_hk", insert+1);
+    sprintf(field, "vd_pump_x%1d_hk", insert+1);
     tPumpAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "vr_still_%1d_hk", insert+1);
+    sprintf(field, "vr_still_x%1d_hk", insert+1);
     tStillAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "vd_hsw_%1d_hk", insert+1);
+    sprintf(field, "vd_hsw_x%1d_hk", insert+1);
     tHswAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "v_cnx_%1d_hk", insert+1);
+    sprintf(field, "v_cnx_x%1d_hk", insert+1);
     vCnxAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "start_%1d_cycle", insert+1);
+    sprintf(field, "start_x%1d_cycle", insert+1);
     startCycleWAddr[insert] = GetNiosAddr(field);
     startCycleRAddr[insert] = ExtractBiPhaseAddr(startCycleWAddr[insert]);
-    sprintf(field, "state_%1d_cycle", insert+1);
+    sprintf(field, "state_x%1d_cycle", insert+1);
     stateCycleWAddr[insert] = GetNiosAddr(field);
     stateCycleRAddr[insert] = ExtractBiPhaseAddr(stateCycleWAddr[insert]);
     WriteData(stateCycleWAddr[insert], CRYO_CYCLE_OUT, NIOS_QUEUE);
-    sprintf(field, "start_state_%1d_cycle", insert+1);
+    sprintf(field, "start_state_x%1d_cycle", insert+1);
     stimeCycleWAddr[insert] = GetNiosAddr(field);
     stimeCycleRAddr[insert] = ExtractBiPhaseAddr(stimeCycleWAddr[insert]);
 
@@ -316,7 +316,7 @@ static unsigned short FridgeCycle(int insert, int reset)
   if (t_4k > T_4K_MAX) {
     next_state = CRYO_CYCLE_OUT;
     if (cycle_state != CRYO_CYCLE_OUT)
-      bprintf(info, "Auto Cycle %1d: LHe is DRY!\n", insert+1);
+      bprintf(info, "Auto Cycle X%1d: LHe is DRY!\n", insert+1);
   }
   /* COLD: start a cycle when FP too hot (or forced by command) -> HSW_OFF */
   else if (cycle_state == CRYO_CYCLE_COLD) {
@@ -326,7 +326,7 @@ static unsigned short FridgeCycle(int insert, int reset)
       WriteData(startCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_HSW_OFF;
-      bprintf(info, "Auto Cycle %1d: Turning heat switch off.", insert+1);
+      bprintf(info, "Auto Cycle X%1d: Turning heat switch off.", insert+1);
     } else next_state = CRYO_CYCLE_COLD;
   }
   /* HSW_OFF: wait for heat switch to cool -> ON_HEAT */
@@ -335,7 +335,7 @@ static unsigned short FridgeCycle(int insert, int reset)
         || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HSW_TIMEOUT)) {
       WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_ON_HEAT;
-      bprintf(info, "Auto Cycle %1d: Turning pump heat on.", insert+1);
+      bprintf(info, "Auto Cycle X%1d: Turning pump heat on.", insert+1);
     } else next_state = CRYO_CYCLE_HSW_OFF;
   }
   /* ON_HEAT: heat pump until timeout -> COOL
@@ -345,7 +345,7 @@ static unsigned short FridgeCycle(int insert, int reset)
 	t_pump > T_PUMP_MAX) {
       WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_ON_SETTLE;
-      bprintf(info, "Auto Cycle %1d: Turning pump heat off.", insert+1);
+      bprintf(info, "Auto Cycle X%1d: Turning pump heat off.", insert+1);
     } else next_state = CRYO_CYCLE_ON_HEAT;
   }
   /* ON_SETTLE: let hot pump settle until timeout, or CP cold enough -> COOL */
@@ -355,7 +355,7 @@ static unsigned short FridgeCycle(int insert, int reset)
 	 ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_SET_TIMEOUT))) {
       WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_COOL;
-      bprintf(info, "Auto Cycle %1d: Turning heat switch on.", insert+1);
+      bprintf(info, "Auto Cycle X%1d: Turning heat switch on.", insert+1);
     } else next_state = CRYO_CYCLE_ON_SETTLE;
   }
   /* COOL: wait until fridge is cold -> COLD */
@@ -365,18 +365,18 @@ static unsigned short FridgeCycle(int insert, int reset)
       CommandData.hk[insert].force_cycle = 0; //clear pending cycles
       WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
       next_state = CRYO_CYCLE_COLD;
-      bprintf(info, "Auto Cycle %1d: Fridge is now cold!.", insert+1);
+      bprintf(info, "Auto Cycle X%1d: Fridge is now cold!.", insert+1);
     } else next_state = CRYO_CYCLE_COOL;
   }
   /* OUT: do nothing if out of LHe. Unless not, then be cold -> COLD */
   else if (cycle_state == CRYO_CYCLE_OUT) {
     if (t_4k < T_4K_MAX) {
       next_state = CRYO_CYCLE_COLD;
-      bprintf(info, "Auto Cycle %1d: Activated.", insert+1);
+      bprintf(info, "Auto Cycle X%1d: Activated.", insert+1);
     } else next_state = CRYO_CYCLE_OUT;
   }
   else {
-    bprintf(err, "Auto Cycle %1d: cycle_state: %i unknown!",
+    bprintf(err, "Auto Cycle X%1d: cycle_state: %i unknown!",
         insert+1, cycle_state);
     next_state = CRYO_CYCLE_COLD;
   }
@@ -457,7 +457,7 @@ static void PumpServo(int insert)
     {.filename = LUT_DIR "d_simonchase.lut"},
     {.filename = LUT_DIR "d_simonchase.lut"},
     {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase2.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
     {.filename = LUT_DIR "d_simonchase.lut"},
     {.filename = LUT_DIR "d_simonchase.lut"}
   };
@@ -467,7 +467,7 @@ static void PumpServo(int insert)
   if (firsttime[insert]) {
     char field[64];
     firsttime[insert] = 0;
-    sprintf(field, "vd_pump_%1d_hk", insert+1);
+    sprintf(field, "vd_pump_x%1d_hk", insert+1);
     tPumpAddr[insert] = GetBiPhaseAddr(field);
     LutInit(&tPumpLut[insert]);
   }
@@ -497,7 +497,7 @@ static void HeatControl()
   static struct NiosStruct* heat45Addr;
   static struct NiosStruct* heat26Addr;
   static struct NiosStruct* heatTAddr;
-  static struct NiosStruct* heatStrapAddr[6];
+  static struct NiosStruct* heatRingAddr[6];
   static struct NiosStruct* heatFploAddr[6];
 
   static int fridge_start_wait = FRIDGE_CYCLE_START_WAIT;
@@ -516,11 +516,11 @@ static void HeatControl()
     heat26Addr = GetNiosAddr("heat_26_hk");
     heatTAddr = GetNiosAddr("heat_t_hk");
     for (i=0; i<6; i++) {
-      sprintf(buf, "heat_strap_%1d_hk", i+1);
-      heatStrapAddr[i] = GetNiosAddr(buf);
+      sprintf(buf, "heat_ring_x%1d_hk", i+1);
+      heatRingAddr[i] = GetNiosAddr(buf);
     }
     for (i=0; i<6; i++) {
-      sprintf(buf, "heat_fplo_%1d_hk", i+1);
+      sprintf(buf, "heat_fplo_x%1d_hk", i+1);
       heatFploAddr[i] = GetNiosAddr(buf);
     }
   }	
@@ -566,7 +566,7 @@ static void HeatControl()
 
   //DAC heaters
   for (i=0; i<6; i++) {
-    WriteCalData(heatStrapAddr[i], CommandData.hk[i].strap_heat, NIOS_QUEUE);
+    WriteCalData(heatRingAddr[i], CommandData.hk[i].ring_heat, NIOS_QUEUE);
     WriteCalData(heatFploAddr[i], CommandData.hk[i].fplo_heat, NIOS_QUEUE);
   }
 }
