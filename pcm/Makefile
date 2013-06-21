@@ -80,6 +80,7 @@ clean:
 	rm -f pcm || true;
 	rm -f *.o || true;
 	rm -f tx_struct_mce.c || true
+	rm -f framelist.inc || true
 
 Makefile.testing:
 	touch Makefile.testing
@@ -89,6 +90,11 @@ test-run-enable: clean
 
 test-run-disable: clean
 	echo "TEST_RUN = 0" > Makefile.testing
+
+framelist.inc: ../spider_config/tx_struct.c tx_struct_mce.c
+	../spider_config/make_framelist_inc > $@
+
+compressstruct_spider.o :: framelist.inc
 
 tx_struct_spider.o :: tx_struct_mce.c
 
