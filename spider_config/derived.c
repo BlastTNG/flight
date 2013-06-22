@@ -579,7 +579,7 @@ union DerivedUnion DerivedChannels[] = {
   NTD_HK_NOLUT(NTD4, X3),
 
   NTD_HK_NOLUT(NTD1, X4),
-  NTD_HK_NOLUT(NTD2, X4),
+  // NTD_HK_NOLUT(NTD2, X4), // bad NTD, not connected
   NTD_HK_NOLUT(NTD3, X4),
   NTD_HK_NOLUT(NTD4, X4),
 
@@ -636,7 +636,7 @@ union DerivedUnion DerivedChannels[] = {
   TD_HK(STOP,      X3, LUT_DIR "D77240.lut"),
   TD_HK(SSA,       X3, LUT_DIR "d_curve10.lut"),
 
-  TD_HK(TRUSS,     X4, LUT_DIR "dt670.lut"),
+  // TD_HK(TRUSS,     X4, LUT_DIR "dt670.lut"), // diode reversed
   TD_HK(CP,        X4, LUT_DIR "d_simonchase.lut"),
   TD_HK(PUMP,      X4, LUT_DIR "d_simonchase.lut"),
   TD_HK(HSW,       X4, LUT_DIR "d_simonchase.lut"),
