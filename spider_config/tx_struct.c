@@ -595,10 +595,10 @@ struct ChannelStruct SlowChannels[] = {
   {"state_lock",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
   /* LOOP5 28 is fast */
   /* LOOP5 34 is fast */
-  {"x_mag",        'w', LOOP5, 35,             MAGX_M,          MAGX_B, 'u', U_NONE},
-  {"y_mag",        'w', LOOP5, 41,             MAGY_M,          MAGY_B, 'u', U_NONE},
+  {"x_mag",        'w', LOOP5, 35,             MAGX_M,          MAGX_B, 's', U_NONE},
+  {"y_mag",        'w', LOOP5, 41,             MAGY_M,          MAGY_B, 's', U_NONE},
   /* LOOP5 42-53 are wide */
-  {"z_mag",        'w', LOOP5, 54,             MAGZ_M,          MAGZ_B, 'u', U_NONE},
+  {"z_mag",        'w', LOOP5, 54,             MAGZ_M,          MAGZ_B, 's', U_NONE},
   {"pitch_mag",    'w', LOOP5, 55,              I2DEG,             0.0, 'u', U_NONE},
   /* LOOP5 56-63 are unusued */
 

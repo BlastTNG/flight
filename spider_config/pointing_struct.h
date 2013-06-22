@@ -53,9 +53,9 @@
 /*     Used: Main thread;                     */
 /*  Does not need to be a circular buffer...  */
 struct ACSDataStruct {
-  double mag_x;    // counts
-  double mag_y;    // counts
-  double mag_z;    // counts
+  int    mag_x;    // counts
+  int    mag_y;    // counts
+  int    mag_z;    // counts
   double mag_pitch; // degrees
   double pss1_i1;   //counts
   double pss1_i2;   //counts
