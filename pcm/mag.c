@@ -113,6 +113,7 @@ void Magnetometer()
   char cmd[] = "*99C\r";
   int l = strlen(cmd);
   int m;
+//  int j;
   m = write(fd,cmd,l);
   if (m<0) printf("failed to send command.\n");
   char buf;
@@ -156,9 +157,11 @@ void Magnetometer()
 	if(xsn=='-') x*=-1;
 	if(ysn=='-') y*=-1;
 	if(zsn=='-') z*=-1;
+//	if((j%40)==0) bprintf(info,"MAGGY READS: %i %i %i",x,y,z);
 	ACSData.mag_x = x;
   	ACSData.mag_y = y;
   	ACSData.mag_z = z;
+//	j++;
   }
   return;
 
