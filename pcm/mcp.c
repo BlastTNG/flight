@@ -95,6 +95,7 @@ extern pthread_mutex_t mutex;       //commands.c
 void Pointing();
 void WatchPort(void*);
 void WatchDGPS(void);
+void Magnetometer(void);
 void IntegratingStarCamera(void);
 void WatchFIFO(void);               //commands.c
 void FrameFileWriter(void);         //framefile.c
@@ -292,7 +293,6 @@ static void GetACS()
   double enc_raw_el_2; // STARBOARD
   double enc_table;
   unsigned int uTab;
-  double x_comp, y_comp, z_comp;
   double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
   double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
   double pss3_i1, pss3_i2, pss3_i3, pss3_i4;
@@ -310,9 +310,6 @@ static void GetACS()
   static struct BiPhaseStruct* ifRollgyAddr;
   static struct BiPhaseStruct* ofYawgyAddr;
   static struct BiPhaseStruct* ofAzGyAddr;
-  static struct BiPhaseStruct* xMagAddr;
-  static struct BiPhaseStruct* yMagAddr;
-  static struct BiPhaseStruct* zMagAddr;
   static struct BiPhaseStruct* velSerRWAddr;
   static struct BiPhaseStruct* resPivAddr;
   static struct BiPhaseStruct* v11PssAddr;
@@ -352,9 +349,6 @@ static void GetACS()
     ifRollgyAddr = GetBiPhaseAddr("ofroll_gy");
     ofYawgyAddr = GetBiPhaseAddr("ofyaw_gy");
     ofAzGyAddr = GetBiPhaseAddr("ofaz_gy");
-    xMagAddr = GetBiPhaseAddr("x_mag");
-    yMagAddr = GetBiPhaseAddr("y_mag");
-    zMagAddr = GetBiPhaseAddr("z_mag");
     velSerRWAddr = GetBiPhaseAddr("vel_ser_rw");
     resPivAddr = GetBiPhaseAddr("res_piv");
     v11PssAddr = GetBiPhaseAddr("v1_1_pss");
@@ -425,10 +419,6 @@ static void GetACS()
   res_piv = (((double)
 	((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
 
-  x_comp = (double)(slow_data[xMagAddr->index][xMagAddr->channel]);
-  y_comp = (double)(slow_data[yMagAddr->index][yMagAddr->channel]);
-  z_comp = (double)(slow_data[zMagAddr->index][zMagAddr->channel]);
-
   pss1_i1 = (double)(slow_data[v11PssAddr->index][v11PssAddr->channel]);
   pss1_i2 = (double)(slow_data[v21PssAddr->index][v21PssAddr->channel]);
   pss1_i3 = (double)(slow_data[v31PssAddr->index][v31PssAddr->channel]);
@@ -485,9 +475,6 @@ static void GetACS()
   ACSData.ofroll_gy = ofroll_gy;
   ACSData.ofyaw_gy = ofyaw_gy;
   ACSData.ofaz_gy = ofaz_gy;
-  ACSData.mag_x = x_comp;
-  ACSData.mag_y = y_comp;
-  ACSData.mag_z = z_comp;
   ACSData.vel_rw = vel_rw;
   ACSData.res_piv = res_piv;
   ACSData.pss1_i1 = pss1_i1;
@@ -1105,6 +1092,7 @@ int main(int argc, char *argv[])
   pthread_t bi0_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
+  pthread_t mag_id;
 #ifdef USE_XY_THREAD
   pthread_t xy_id;
 #endif
@@ -1227,6 +1215,7 @@ int main(int argc, char *argv[])
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
   pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
+  pthread_create(&mag_id, NULL, (void*)&Magnetometer, NULL);
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);

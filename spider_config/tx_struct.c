@@ -595,11 +595,11 @@ struct ChannelStruct SlowChannels[] = {
   {"state_lock",   'w', LOOP5, 25,                1.0,             0.0, 'u', U_NONE},
   /* LOOP5 28 is fast */
   /* LOOP5 34 is fast */
-  /* LOOP5 35 is unused */
-  /* LOOP5 41 is unusued */
+  {"x_mag",        'w', LOOP5, 35,             MAGX_M,          MAGX_B, 'u', U_NONE},
+  {"y_mag",        'w', LOOP5, 41,             MAGY_M,          MAGY_B, 'u', U_NONE},
   /* LOOP5 42-53 are wide */
-  /* LOOP5 54 is unusued */
-  {"pitch_mag",        'w',LOOP5, 55,           I2DEG,             0.0, 'u', U_NONE},
+  {"z_mag",        'w', LOOP5, 54,             MAGZ_M,          MAGZ_B, 'u', U_NONE},
+  {"pitch_mag",    'w', LOOP5, 55,              I2DEG,             0.0, 'u', U_NONE},
   /* LOOP5 56-63 are unusued */
 
   /* LOOP6 0-19 is unusued */
@@ -856,9 +856,6 @@ struct ChannelStruct SlowChannels[] = {
   {"pitch_of_clin",'r',  ACS2_A1,  7,            0.00147,           -48.5, 'u', U_NONE},
   {"roll_of_clin", 'r',  ACS2_A1,  9,              0.00144,        -44.78, 'u', U_NONE},
   {"t_of_clin",    'r',  ACS2_A1, 11, 100.0*10.0/32768.0,     -100.0*10.0, 'u', U_NONE},
-  {"x_mag",        'r',  ACS2_A1, 13,              MAGX_M,         MAGX_B, 'u', U_NONE},
-  {"y_mag",        'r',  ACS2_A1, 15,              MAGY_M,         MAGY_B, 'u', U_NONE},
-  {"z_mag",        'r',  ACS2_A1, 17,              MAGZ_M,         MAGZ_B, 'u', U_NONE},
   {"trig_thegood", 'r',  ACS2_A1, 23,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"trig_thebad",  'r',  ACS2_A1, 25,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"trig_theugly", 'r',  ACS2_A1, 27,        CAL16(1.0,          0.0), 'u',  U_V_V}, 

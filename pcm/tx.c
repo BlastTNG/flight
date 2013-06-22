@@ -577,6 +577,9 @@ static void StoreData(int write_slow)
   static struct NiosStruct* latAddr;
   static struct NiosStruct* lonAddr;
   static struct NiosStruct* lstAddr;
+  static struct NiosStruct* xMagAddr;
+  static struct NiosStruct* yMagAddr;
+  static struct NiosStruct* zMagAddr;
   static struct NiosStruct* azMagAddr;
   static struct NiosStruct* azRawMagAddr;
   static struct NiosStruct* pitchMagAddr;
@@ -698,6 +701,9 @@ static void StoreData(int write_slow)
     altAddr = GetNiosAddr("alt");
     lonAddr = GetNiosAddr("lon");
     lstAddr = GetNiosAddr("lst");
+    xMagAddr = GetNiosAddr("x_mag");
+    yMagAddr = GetNiosAddr("y_mag");
+    zMagAddr = GetNiosAddr("z_mag");
     azMagAddr = GetNiosAddr("az_mag");
     azRawMagAddr = GetNiosAddr("az_raw_mag");
     pitchMagAddr = GetNiosAddr("pitch_mag");
@@ -904,6 +910,9 @@ static void StoreData(int write_slow)
 
   WriteData(lstAddr, PointingData[i_point].lst, NIOS_QUEUE);
 
+  WriteData(xMagAddr, (unsigned int)(ACSData.mag_x), NIOS_QUEUE);
+  WriteData(yMagAddr, (unsigned int)(ACSData.mag_y), NIOS_QUEUE);
+  WriteData(zMagAddr, (unsigned int)(ACSData.mag_z), NIOS_QUEUE);
   WriteData(azMagAddr,
       (unsigned int)((PointingData[i_point].mag_az +
                       CommandData.mag_az_trim) * DEG2I), NIOS_QUEUE);
