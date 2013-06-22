@@ -664,7 +664,7 @@ union DerivedUnion DerivedChannels[] = {
   TD_HK(SSA,       X5, LUT_DIR "d_curve10.lut"),
   */
 
-  TD_HK(TRUSS,     X6, LUT_DIR "dt670"),
+  TD_HK(TRUSS,     X6, LUT_DIR "dt670.lut"),
   TD_HK(CP,        X6, LUT_DIR "d_simonchase.lut"),
   TD_HK(PUMP,      X6, LUT_DIR "d_simonchase.lut"),
   TD_HK(HSW,       X6, LUT_DIR "d_simonchase.lut"),
