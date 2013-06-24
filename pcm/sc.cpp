@@ -60,7 +60,7 @@ extern "C" short int InCharge;		  /* in tx.c */
 
 extern "C" int EthernetSC[3];      /* tx.c */
 
-string cam_serial[3]={"110794466","08073507","08073506"};
+string cam_serial[3]={"110794466","08073506","08073507"};
 extern double goodPos[10];	/* table.cpp */
 short int bsc_trigger;		/* flag for boresite exposure, set by motors.c */
 extern short int exposing;	//in table.cpp
