@@ -84,9 +84,10 @@ static int ForwardCommand(int sock)
   len = mpc_compose_command(&ev, udp_buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
-    bprintf(info, "Broadcast %s command #%i.\n",
-        ev.is_multi ? "multi" : "single", ev.command);
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge) == 0) {
+    if (InCharge)
+      bprintf(info, "Broadcast %s command #%i.\n",
+          ev.is_multi ? "multi" : "single", ev.command);
   }
 
   /* mark as written */
@@ -127,8 +128,9 @@ static void ForwardNotices(int sock)
       udp_buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
-    bprintf(info, "Broadcast notifications\n");
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge) == 0) {
+    if (InCharge)
+      bprintf(info, "Broadcast notifications\n");
     mceserv_mce_power[0] = MPCPROTO_POWER_NOP;
     mceserv_mce_power[1] = MPCPROTO_POWER_NOP;
     mceserv_mce_power[2] = MPCPROTO_POWER_NOP;
@@ -148,8 +150,9 @@ static void ForwardBSet(int sock)
   len = mpc_compose_bset(set.v, set.n, (uint16_t)num, udp_buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, udp_buffer) == 0) {
-    bprintf(info, "Broadcast BSet 0x%04X\n", num);
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge) == 0) {
+    if (InCharge)
+      bprintf(info, "Broadcast BSet 0x%04X\n", num);
     sent_bset = num;
   }
 }

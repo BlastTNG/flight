@@ -74,8 +74,9 @@ ssize_t udp_recv(int sock, int msec, char *peer, int *port, size_t len,
  * - port: destination port
  * - len : the length of the datagram
  * - data: a pointer to the datagram
+ * - veto: if non-zero, do nothing.
  *
  * Returns:
  * - 0 on success, non-zero on error
  */
-int udp_bcast(int sock, int port, size_t len, const char *data);
+int udp_bcast(int sock, int port, size_t len, const char *data, int veto);

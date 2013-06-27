@@ -131,7 +131,7 @@ ssize_t udp_recv(int sock, int msec, char *peer, int *port, size_t len,
     return -1;
   }
 
-  /* caller wants to know something baout the sender */
+  /* caller wants to know something about the sender */
   if (peer || port) {
     if (getnameinfo((struct sockaddr*)&addr, addr_len, ptr, UDP_MAXHOST,
           service, 32, NI_NUMERICSERV))
@@ -150,9 +150,12 @@ ssize_t udp_recv(int sock, int msec, char *peer, int *port, size_t len,
 }
 
 /* broadcast a datagram */
-int udp_bcast(int sock, int port, size_t len, const char *data)
+int udp_bcast(int sock, int port, size_t len, const char *data, int veto)
 {
   struct sockaddr_in addr;
+
+  if (veto)
+    return;
 
   memset(&addr, 0, sizeof(addr));
 

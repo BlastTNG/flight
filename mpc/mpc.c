@@ -197,7 +197,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
 
     if (need_send) {
       len = mpc_compose_pcmreq(nmce, power_cycle, data);
-      udp_bcast(sock, MCESERV_PORT, len, data);
+      udp_bcast(sock, MCESERV_PORT, len, data, 0);
     }
   }
 }
@@ -222,7 +222,7 @@ static void send_slow_data(char *data)
 
   /* make packet and send */
   len = mpc_compose_slow(&slow_dat, nmce, data);
-  udp_bcast(sock, MCESERV_PORT, len, data);
+  udp_bcast(sock, MCESERV_PORT, len, data, 0);
 }
 
 /* Figure out which MCE we're attached to, also whether we're running in fake
@@ -312,7 +312,7 @@ static void ForwardData(void)
   size_t len = mpc_compose_tes(pcm_data, pcm_frameno, bset_num, nmce, ntes, tes,
       data);
   if (pcm_ret_dat) { /* race condition avoidance */
-    udp_bcast(sock, MCESERV_PORT, len, data);
+    udp_bcast(sock, MCESERV_PORT, len, data, 0);
     pcm_ret_dat = 0;
   }
 }
@@ -404,7 +404,7 @@ int main(int argc, const char **argv)
         len = mpc_compose_init(nmce, data);
 
         /* Broadcast this to everyone */
-        if (udp_bcast(sock, MCESERV_PORT, len, data) == 0)
+        if (udp_bcast(sock, MCESERV_PORT, len, data, 0) == 0)
           bputs(info, "Broadcast awake ping.\n");
 
         init_timer = INIT_TIMEOUT;
