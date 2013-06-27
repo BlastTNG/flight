@@ -155,7 +155,7 @@ int udp_bcast(int sock, int port, size_t len, const char *data, int veto)
   struct sockaddr_in addr;
 
   if (veto)
-    return;
+    return 0;
 
   memset(&addr, 0, sizeof(addr));
 
