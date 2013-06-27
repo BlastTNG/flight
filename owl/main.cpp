@@ -29,7 +29,11 @@
 #include <QTime>
 #include <qjson/serializer.h>
 #include <iostream>
+#ifdef __APPLE__
+#include <python2.6/Python.h>
+#else
 #include <python2.7/Python.h>   //you may need to change this...
+#endif
 
 void usage(QString appname) {
     std::cout<<"usage: "<<qPrintable(appname)<<" [--new | <filename>]"<<std::endl;

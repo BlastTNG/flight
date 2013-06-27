@@ -44,7 +44,11 @@
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFileSystemModel>
+#ifdef __APPLE__
+#include <python2.6/Python.h>
+#else
 #include <python2.7/Python.h>   //you may need to change this
+#endif
 #include <qjson/parser.h>
 #include <qjson/serializer.h>
 

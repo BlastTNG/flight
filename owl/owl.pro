@@ -3,8 +3,19 @@ QT      += core gui xml
 TARGET   = owl
 TEMPLATE = app
 
-target.path = /usr/local/bin
+unix:!mac {
+  target.path = /usr/local/bin
+  LIBS += -lpython2.7
+}
+mac {
+  target.path = /Applications
+  # I don't understand why qmake doesn't do this automatically
+  QMAKE_CLEAN += '-r owl.app'
+  ICON = owl.icns
+  LIBS += -lpython2.6
+}
 INSTALLS += target
+CONFIG += link_pkgconfig
 
 owlfiles.path = /data/etc/owl
 owlfiles.files += owl-files/blast2012.owl
@@ -53,7 +64,7 @@ FORMS    += PMainWindow.ui \
     PStyleChooser.ui \
     PWebServerInfo.ui
 
-LIBS     += -lgetdata++ -lqjson -lpython2.7
+LIBS     += -lgetdata++ -lqjson
 
 RESOURCES += \
     icons.qrc \
