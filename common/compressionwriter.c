@@ -38,6 +38,7 @@ struct streamDataStruct {
 };
 
 #define HIGAIN_TTY "/dev/ttySI2"
+#define PILOT_FILE "/data/etc/highgain.lnk"
 #define OMNI1_TTY "/dev/ttySI1"
 #define OMNI2_TTY "/dev/ttySI7"
 
@@ -61,6 +62,8 @@ unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer,  unsigned shor
 void ClearBuffer(struct frameBuffer *buffer);
 
 unsigned short **current_slow_data;
+
+int cycle_highgain_file = 0;
 
 //*********************************************************
 // Open High Gain Serial port
@@ -113,15 +116,38 @@ static int OpenSerial(char *tty) {
 // Write data to the high gain serial port
 //*********************************************************
 void writeHiGainData(char *x, int size) {
-  static int fp = -1;
-  
-  if (fp < 0) {
-    fp = OpenSerial(HIGAIN_TTY);
+  static int fp_port = -1;
+  static int fp_file = -1;
+
+  // write to serial port  
+  if (fp_port < 0) {
+    fp_port = OpenSerial(HIGAIN_TTY);
   }
 
-  if (fp>=0) {
-    if (write(fp, x, size)!=size) {
-      close(fp);
+  if (fp_port>=0) {
+    if (write(fp_port, x, size)!=size) {
+      if (close(fp_port)==0) {
+        fp_port = -1;
+      }
+    }
+  }
+
+  // write to file
+  if (cycle_highgain_file && (fp_file>=0)) {
+    close(fp_file);
+    fp_file = -1;
+  }
+  
+  if (fp_file < 0) {
+    fp_file = creat(PILOT_FILE, 00666);
+    cycle_highgain_file = 0;
+  }
+
+  if (fp_file>=0) {
+    if (write(fp_file, x, size)!=size) {
+      if (close(fp_file)==0) {
+        fp_file = -1;            
+      }
     }
   }
 }
@@ -257,6 +283,7 @@ void WriteSuperFrame(unsigned short *frame) {
   static int reset_rates = 1;
   static int omni1_rate=0;
   static int omni2_rate=0;
+  static int highgain_rate=0;
 
   int frame_bytes_written = 0;
   int i_field;
@@ -313,6 +340,10 @@ void WriteSuperFrame(unsigned short *frame) {
     BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
   }
 
+  if (highgain_rate != CommandData.pilot_bw) {
+    highgain_rate = CommandData.pilot_bw;
+    reset_rates = 1;
+  }
   if (omni1_rate != CommandData.tdrss_bw) {
     omni1_rate = CommandData.tdrss_bw;
     reset_rates = 1;
@@ -323,13 +354,16 @@ void WriteSuperFrame(unsigned short *frame) {
   }
 
 #define OMNI1_BYTES_PER_FRAME (6000/9 * FASTFRAME_PER_SUPERFRAME/SR)
+//#define HIGAIN_BYTES_PER_FRAME (92000/8 * FASTFRAME_PER_SUPERFRAME/SR)
 
   // Calculate number of stream fields given data rates
   if (reset_rates) {
     reset_rates = 0;
-    higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    omni1_bytes_per_streamframe = (omni1_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    omni2_bytes_per_streamframe = (omni2_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    cycle_highgain_file = 1;
+    //higain_bytes_per_streamframe = (HIGAIN_BYTES_PER_FRAME-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    higain_bytes_per_streamframe = (highgain_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    omni1_bytes_per_streamframe =  (   omni1_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
+    omni2_bytes_per_streamframe =  (   omni2_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     bprintf(info, "Bytes per stream frame - High gain: %d  omni1: %d  omni2: %d",
             higain_bytes_per_streamframe, omni1_bytes_per_streamframe, omni2_bytes_per_streamframe);
 

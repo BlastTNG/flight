@@ -18,7 +18,7 @@
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
 #define N_SCOMMANDS 197        /* total number of single word cmds */
-#define N_MCOMMANDS 122        /* total number of multiword commands */
+#define N_MCOMMANDS 123        /* total number of multiword commands */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -138,8 +138,8 @@ enum multiCommand {
   set_scan_params,
   az_el_trim,        drift,             el_gain,           act_offset,
   actuator_tol,
-  pivot_gain,        ra_dec_goto,       ra_dec_set,
-  t_gyro_set,        tdrss_bw,          iridium_bw,        oth_set,  
+  pivot_gain,        ra_dec_goto,       ra_dec_set,        oth_set,  
+  t_gyro_set,        tdrss_bw,          iridium_bw,        pilot_bw,
   t_gyro_gain,       timeout,           slot_sched,        az_gyro_offset,
   cov_gps,           lvdt_limit,        reset_adc,
   hk_auto_cycle_on,  hk_auto_cycle_off, hk_fridge_cycle,
@@ -186,8 +186,8 @@ enum multiCommand {
 extern struct scom scommands[N_SCOMMANDS];
 
 /* parameter type:
- * i :  parameter is 15 bit unnormalised integer
- * f :  parameter is 15 bit renormalised floating point
+ * i :  parameter is 16 bit unnormalised integer
+ * f :  parameter is 16 bit renormalised floating point
  * l :  parameter is 30 bit renormalised floating point
  */
 extern struct mcom mcommands[N_MCOMMANDS];

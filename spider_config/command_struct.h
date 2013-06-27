@@ -246,6 +246,7 @@ struct CommandDataStruct {
   unsigned short int sucks;
   unsigned short int lat_range;
   unsigned short int at_float;
+  unsigned int pilot_bw;
   unsigned int tdrss_bw;
   unsigned int iridium_bw;
   unsigned int channelset_oth;

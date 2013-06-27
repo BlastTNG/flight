@@ -1352,6 +1352,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case timeout:       /* Set timeout */
       CommandData.timeout = rvalues[0];
       break;
+    case pilot_bw:
+      CommandData.pilot_bw = rvalues[0];
+      break;
     case tdrss_bw:
       CommandData.tdrss_bw = rvalues[0];
       break;
@@ -2151,6 +2154,7 @@ void InitCommandData()
   CommandData.at_float = 0;
   CommandData.timeout = 3600;
   CommandData.slot_sched = 0;
+  CommandData.pilot_bw = 50000;
   CommandData.tdrss_bw = 6000;
   CommandData.iridium_bw = 2000;
   CommandData.channelset_oth = 0;
