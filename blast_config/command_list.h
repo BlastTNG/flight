@@ -15,6 +15,7 @@
 #define COMMAND_LIST_H
 
 #include <limits.h>
+#include <sys/types.h>
 
 #include "netcmd.h"  /* common parts of command defintions moved here */
 #include "isc_protocol.h"  /* required for constants */
@@ -172,5 +173,10 @@ extern struct scom scommands[N_SCOMMANDS];
  * l :  parameter is 30 bit renormalised floating point
  */
 extern struct mcom mcommands[N_MCOMMANDS];
+
+/* validator function for mcommands */
+extern int mcom_validate(enum multiCommand cmd, const int *ivalues,
+    const double *rvalues, char svalues[][CMD_STRING_LEN], size_t buflen,
+    char *err_buffer);
 
 #endif /* COMMAND_LIST_H */

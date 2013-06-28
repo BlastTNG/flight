@@ -21,6 +21,8 @@
 #ifndef NETCMD_H
 #define NETCMD_H
 
+#include <sys/types.h>
+
 /*
  * Definition of command structures (formerly in command_list.h)
  */
@@ -45,6 +47,7 @@ struct par {
   char type;
   char field[20];
 };
+
 struct mcom {
   int command;	    //really enum multiCommand where appropriate
   char name[SIZE_NAME];
@@ -86,7 +89,7 @@ int  NetCmdConnect(const char*, int, int);
 void NetCmdDrop(void);
 void NetCmdSend(const char*);
 int  NetCmdReceive(int);
-int  NetCmdSendAndReceive(const char*, int);
+int  NetCmdSendAndReceive(const char*, int, size_t, char*);
 int  NetCmdGetCmdList(void);
 int  NetCmdGetGroupNames(void);
 int  NetCmdTakeConn(int);

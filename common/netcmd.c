@@ -49,6 +49,8 @@ struct scom *client_scommands;
 struct mcom *client_mcommands;
 char client_command_list_serial[1024];
 
+static char oob_message[1024]; /* for out-of-band signalling */
+
 int client_n_groups = 0;
 char **client_group_names;
 
@@ -145,7 +147,16 @@ int NetCmdReceive(int silent)
       return CMD_ERRR + (14 << 8);
     }
   } else if (strncmp(buffer, ":::ack:::", 9) == 0) {
-    return CMD_BCMD + (atoi(buffer + 9) << 8);
+    int ack = atoi(buffer + 9);
+
+    /* look for a message */
+    char *ptr = strstr(buffer + 10, ":::");
+    if (ptr)
+      strncpy(oob_message, ptr + 3, 1024);
+    else
+      oob_message[0] = 0;
+
+    return CMD_BCMD + (ack << 8);
   } else if (strncmp(buffer, ":::limit:::", 11) == 0) {
     if (!silent)
       puts(buffer + 11);
@@ -197,16 +208,21 @@ void NetCmdSend(const char* buffer)
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 }
 
-int NetCmdSendAndReceive(const char *buffer, int silent)
+int NetCmdSendAndReceive(const char *inbuf, int silent, size_t buflen, char *outbuf)
 {
   int ack;
 
-  NetCmdSend(buffer);
+  NetCmdSend(inbuf);
 
   do {
     ack = NetCmdReceive(silent);
-    if ((ack & 0xff) == CMD_BCMD) return ack >> 8;
-    else if ((ack & 0xff) == CMD_NONE) usleep(1000);
+    if ((ack & 0xff) == CMD_BCMD) {
+      if (oob_message[0])
+        strncpy(outbuf, oob_message, buflen);
+      return ack >> 8;
+    }
+    else if ((ack & 0xff) == CMD_NONE)
+      usleep(1000);
     else {
       fprintf(stderr, "Protocol error from daemon.\n");
       exit(14);

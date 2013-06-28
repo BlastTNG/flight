@@ -310,7 +310,8 @@ struct scom scommands[N_SCOMMANDS] = {
 
   //make better use of unused groups
   {COMMAND(pull_cmb_pin), "????", GR_CMB},
-  {COMMAND(global_thermonuclear_war), "????", 0x00000100},
+  {COMMAND(global_thermonuclear_war), "The only winning move is not to play.",
+    GR_CMB},
 
   {COMMAND(mpc_ping), "MPC test command", MCECMD | GR_MCE},
 
@@ -1135,3 +1136,65 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   }
 };
+
+/* validate parameters of an mcom -- called by spidercmd before tranmitting a
+ * command and by pcm after decoding one.  Inputs:
+ *
+ * cmd:         command number
+ * [irs]values: mcp-style parsed parameters
+ * buflen       size of the err_buffer
+ * err_buffer   a place to write the error string
+ *
+ * Return value:
+ *
+ *  0:  if parameters are okay; err_buffer ignored.
+ *  !0: if parameters are not okay.  In this case a descriptive error message
+ *      should be written to err_buffer.
+ */
+int mcom_validate(enum multiCommand cmd, const int *ivalues,
+    const double *rvalues, char svalues[][CMD_STRING_LEN], size_t buflen,
+    char *err_buffer)
+{
+  switch (cmd) {
+    case data_mode_bits:
+      /* we have five integer parameters:
+       * 0 = MCE number (ignored)
+       * 1 = upper 1st bit
+       * 2 = upper nbits
+       * 3 = lower 1st bit
+       * 4 = lower nbits
+       */
+      /* the two subfields must total 16 bits */
+      if (ivalues[2] + ivalues[4] != 16) {
+        snprintf(err_buffer, buflen, "Subfield lengths don't make 16-bits (%i)",
+            ivalues[2] + ivalues[4]);
+        return 1;
+      }
+
+      /* if only one subfield is used, it must be the upper one */
+      if (ivalues[2] == 0) {
+        snprintf(err_buffer, buflen, "Upper subfield may not be empty");
+        return 1;
+      }
+
+      if (ivalues[4] > 0) { /* two field checks */
+        /* subfields must be ordered */
+        if (ivalues[1] < ivalues[2]) {
+          snprintf(err_buffer, buflen, "Upper subfield below lower subfield");
+          return 1;
+        }
+
+        /* subfields may not overlap */
+        if (ivalues[3] + ivalues[4] >= ivalues[1]) {
+          snprintf(err_buffer, buflen, "Subfields overlap");
+          return 1;
+        }
+      }
+      break;
+    default:
+      break; /* default: assume everything's fine */
+  }
+
+  /* if we got here parameter checks passed, I guess */
+  return 0;
+}

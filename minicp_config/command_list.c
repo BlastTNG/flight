@@ -161,3 +161,24 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   }
 };
+
+/* validate parameters of an mcom -- called by spidercmd before tranmitting a
+ * command and by pcm after decoding one.  Inputs:
+ *
+ * cmd:         command number
+ * [irs]values: mcp-style parsed parameters
+ * buflen       size of the err_buffer
+ * err_buffer   a place to write the error string
+ *
+ * Return value:
+ *
+ *  0:  if parameters are okay; err_buffer ignored.
+ *  !0: if parameters are not okay.  In this case a descriptive error message
+ *      should be written to err_buffer.
+ */
+int mcom_validate(enum multiCommand cmd, const int *ivalues,
+    const double *rvalues, char svalues[][CMD_STRING_LEN], size_t buflen,
+    char *err_buffer)
+{
+  return 0; /* no checks -- everything passes */
+}

@@ -1,6 +1,6 @@
 /* blastcmd: groundstation BLAST command software
  *
- * This software is copyright (C) 2002-2005 University of Toronto
+ * This software is copyright (C) 2002-2013 D. V. Wiebe and others
  * 
  * This file is part of blastcmd.
  * 
@@ -50,33 +50,36 @@ double round(double x);
 #  define DATA_ETC_DIR "/data/etc/blastcmd"
 #endif
 
-#define ACK_COUNT 17
+#define ACK_COUNT 18
 
 #define INPUT_TTY "/dev/ttyCMD"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
+
+char err_message[ERR_MESSAGE_LEN];
 
 int silent = 0;
 
 char host[1024] = "localhost";
 
 char *ack[ACK_COUNT] = {
-  "Command transmitted.",
-  "Unrecognised command.",
-  "Unable to open output device.",
-  "Parameter out of range.",
-  "Science commanding disabled by GSE operator.",
-  "Invalid SIP routing address.",
-  "Selected SIP link not enabled.",
-  "Unspecified error from GSE.",
-  "GSE ACK == 0x0E.",
-  "GSE ACK == 0x0F.",
-  "Unexpected error in command definitions.",
-  "Syntax error on command line.",
-  "Command cancelled by user.",
-  "Program timeout waiting for response from GSE.",
-  "Unable to connect to daemon.",
-  "Unable to start daemon.",
-  "Connexion refused by daemon.",
+  "Command transmitted.", /* 0 */
+  "Unrecognised command.", /* 1 */
+  "Unable to open output device.", /* 2 */
+  "Parameter out of range.", /* 3 */
+  "Science commanding disabled by GSE operator.", /* 4 */
+  "Invalid SIP routing address.", /* 5 */
+  "Selected SIP link not enabled.", /* 6 */
+  "Unspecified error from GSE.", /* 7 */
+  "GSE ACK == 0x0E.", /* 8 */
+  "GSE ACK == 0x0F.", /* 9 */
+  "Unexpected error in command definitions.", /* 10 */
+  "Syntax error on command line.", /* 11 */
+  "Command cancelled by user.", /* 12 */
+  "Program timeout waiting for response from GSE.", /* 13 */
+  "Unable to connect to daemon.", /* 14 */
+  "Unable to start daemon.", /* 15 */
+  "Connexion refused by daemon.", /* 16 */
+  "Command parameter validation failed", /* 17 */
 };
 
 void USAGE(int flag) {
@@ -276,9 +279,10 @@ void WriteBuffer(int sock, int tty_fd, unsigned char *buffer, int len,
     usleep(10000);
   }
 
+  unsigned short *f3fa = (unsigned short *)buf;
   if (counter > 2000)
     *i_ack = 0x10;
-  else if (*(unsigned short *)buf == 0xf3fa)
+  else if (*f3fa == 0xf3fa)
     *i_ack = (unsigned int)buf[2];
   else
     *i_ack = 0x0f;
@@ -381,6 +385,11 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
   char output[1024];
   int tty_fd;
 
+  /* for the validator */
+  double rvalues[MAX_N_PARAMS];
+  int ivalues[MAX_N_PARAMS];
+  char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
+
   if (np != mcommands[i_cmd].numparams) {
     *i_ack = 0x111;
     return;
@@ -413,6 +422,7 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
         return;
       }
        dataq[dataqsize++] = (unsigned short)(ynt - min);
+       ivalues[i] = ynt;
     } else if (type == 'l') {
       /* 32 bit integer parameter */
       ynt = atoi(parms[i]);
@@ -438,6 +448,7 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
       ynt -= min;
       dataq[dataqsize++] = ynt & 0x0000ffff;         /* lower 16 bits */
       dataq[dataqsize++] = (ynt & 0xffff0000) >> 16; /* upper 16 bits */
+      ivalues[i] = ynt;
     } else if (type == 'f') {
       /* 16 bit floating point parameter */
       flote = atof(parms[i]);
@@ -455,6 +466,7 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
         return;
       }
       dataq[dataqsize++] = round((flote - min) * USHRT_MAX / (max - min)); 
+      rvalues[i] = flote;
     } else if (type == 'd') {
       /* 32 bit floating point parameter */
       flote = atof(parms[i]);
@@ -474,7 +486,7 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
       ynt = round((flote - min) * UINT_MAX / (max - min)); 
       dataq[dataqsize++] = (ynt & 0xffff0000) >> 16;  /* upper 16 bits */
       dataq[dataqsize++] = ynt & 0x0000ffff;          /* lower 16 bits */
-      printf("%llx %x %x\n", ynt, dataq[dataqsize-2], dataq[dataqsize-1]);
+      rvalues[i] = flote;
     } else if (type == 's') {
       /* 7-bit character string */
       unsigned char c = 0xff;
@@ -494,6 +506,8 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
       }
       if (c != 0xff)
         dataq[dataqsize++] = c << 8;
+      strncpy(svalues[i], parms[i], CMD_STRING_LEN);
+      svalues[i][CMD_STRING_LEN - 1] = 0;
     } else {
       printf("\nError in command definitions:\n   invalid parameter type '%c' "
           "for parameter %i of mutlicommand: %s\n\n", type, i,
@@ -501,6 +515,14 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
       *i_ack = 0x110;
       return;
     }
+  }
+
+  /* Pass this command through the parameter validator */
+  if (mcom_validate(mcommands[i_cmd].command, ivalues, rvalues, svalues,
+        ERR_MESSAGE_LEN, err_message))
+  {
+    *i_ack = 0x113;
+    return;
   }
 
   // make sure there are enough 'parameters' for extended commanding.
@@ -564,7 +586,12 @@ void WriteLogFile(int count, char *token[], unsigned int i_ack)
   for(n = 0; n < count; n++)
     fprintf(f, "Sent: %s\n", token[n]);
 
-  fprintf(f, "Ack: (0x%02x) %s\n\n", i_ack, ack[i_ack]);
+  fprintf(f, "Ack: (0x%02x) %s\n", i_ack, ack[i_ack]);
+
+  if (i_ack == 17) /* parameter validation failed */
+    fprintf(f, "Error: %s\n", err_message);
+
+  fprintf(f, "\n");
 
   fclose(f);
 
@@ -573,7 +600,7 @@ void WriteLogFile(int count, char *token[], unsigned int i_ack)
 
 void PrintVersion(void)
 {
-  printf("blastcmd " VERSION "  (C) 2002-2005 University of Toronto\n"
+  printf("blastcmd " VERSION "  (C) 2002-2013 D. V. Wiebe and others\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
       "Local command list serial: %s\n\n"
       "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
@@ -681,14 +708,21 @@ int main(int argc, char *argv[]) {
       strcat(request, " ");
     }
 
-    if (!silent) printf("Submitting %s\n\n", request);
+    if (!silent)
+      printf("Submitting %s\n\n", request);
 
     strcat(request, "\r\n");
 
     if (NetCmdTakeConn(silent)) {
-      if (!silent) printf("Took the conn.\n");
-      i = NetCmdSendAndReceive(request, silent);
-      if (!silent) printf("%s\n", ack[i]);
+      char message[1024];
+      if (!silent)
+        printf("Took the conn.\n");
+      i = NetCmdSendAndReceive(request, silent, 1024, message);
+      if (!silent) {
+        printf("%s\n", ack[i]);
+        if (message[0])
+          printf("Error: %s\n", message);
+      }
       return i;
     } else {
       fprintf(stderr, "Unable to take the conn.\n");

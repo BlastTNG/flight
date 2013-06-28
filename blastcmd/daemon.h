@@ -28,10 +28,12 @@
 #define LINK_DEFAULT_CHAR 'T'     /* Default link is TDRSS */
 #define ROUTING_DEFAULT_CHAR '1'  /* Default routing is COM1 */
 
-//TODO these are all defined in blastcmd.c and used in daemon.c. Move?
 int  bc_setserial(void);
 void Daemonise(int, int);
 void SendMcommand(int, int, int, int, char *[], int, unsigned int *);
 void SendScommand(int, int, int, int, unsigned int*);
 void WriteLogFile(int, char *[], unsigned int);
+
+#define ERR_MESSAGE_LEN 1024
+extern char err_message[ERR_MESSAGE_LEN];
 #endif

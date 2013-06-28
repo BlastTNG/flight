@@ -225,6 +225,8 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
         i_ack =  11;
       else if (i_ack == 0x112)
         i_ack =  12;
+      else if (i_ack == 0x113)
+        i_ack =  17;
       else
         i_ack = 0;
 
@@ -250,8 +252,10 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   int t_link = LINK_DEFAULT;
   int t_route = ROUTING_DEFAULT;
   char output[100];
+#ifdef ELOG_CMD
   char log[5000];
   char log2[5000];
+#endif
 
   int result = 0;
 
@@ -295,7 +299,11 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
       result = SIPRoute(sock, t_link, t_route, &buffer[3]);
   }
 
-  sprintf(output, ":::ack:::%i\r\n", result);
+  if (result == 17) { /* parameter validation failed */
+    sprintf(output, ":::ack:::%i:::%s\r\n", result, err_message);
+  } else {
+    sprintf(output, ":::ack:::%i\r\n", result);
+  }
   printf("%i<--%s", sock, output);
   send(sock, output, strlen(output), MSG_NOSIGNAL);
 

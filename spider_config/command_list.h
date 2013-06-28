@@ -192,4 +192,9 @@ extern struct scom scommands[N_SCOMMANDS];
  */
 extern struct mcom mcommands[N_MCOMMANDS];
 
+/* validator function for mcommands */
+extern int mcom_validate(enum multiCommand cmd, const int *ivalues,
+    const double *rvalues, char svalues[][CMD_STRING_LEN], size_t buflen,
+    char *err_buffer);
+
 #endif /* COMMAND_LIST_H */

@@ -15,6 +15,7 @@
 #define COMMAND_LIST_H
 
 #include "netcmd.h"    /* common parts of command defintions moved here */
+#include <sys/types.h>
 
 #define N_SCOMMANDS 2          /* total number of single word cmds */
 #define N_MCOMMANDS 13         /* total number of multiword commands */
@@ -82,5 +83,10 @@ extern struct scom scommands[N_SCOMMANDS];
  * l :  parameter is 30 bit renormalised floating point
  */
 extern struct mcom mcommands[N_MCOMMANDS];
+
+/* validator function for mcommands */
+extern int mcom_validate(enum multiCommand cmd, const int *ivalues,
+    const double *rvalues, char svalues[][CMD_STRING_LEN], size_t buflen,
+    char *err_buffer);
 
 #endif /* COMMAND_LIST_H */
