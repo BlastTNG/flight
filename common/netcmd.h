@@ -21,6 +21,13 @@
 #ifndef NETCMD_H
 #define NETCMD_H
 
+/* OSX doesn't support MSG_NOSIGNAL (it never signals) */
+#ifdef __APPLE__
+#include <sys/socket.h>
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+#endif
 #include <sys/types.h>
 
 /*
