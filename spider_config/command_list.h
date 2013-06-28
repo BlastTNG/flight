@@ -16,9 +16,8 @@
 
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
-/* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 197        /* total number of single word cmds */
-#define N_MCOMMANDS 124        /* total number of multiword commands */
+/* N_SCOMMANDS and N_MCOMMANDS are now automatically calculated at compile time
+ */
 
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -128,7 +127,8 @@ enum singleCommand {
   mcc5_on,           mcc5_off,          mcc5_cycle,
   mcc6_on,           mcc6_off,          mcc6_cycle,
   mpc_ping, /* MPC test command */
-  xyzzy     //xyzzy should be at the end of the list
+  xyzzy,
+  N_SCOMMANDS /* SENTINAL: this must be the last thing in this list */
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -179,7 +179,8 @@ enum multiCommand {
   /* start MCE block */
   mpc_test,           data_mode_bits,
   /* end MCE block */
-  plugh,                //plugh should be at the end of the list
+  plugh,
+  N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
   sched_packet = 0xff   //not really a command, more of a placeholder
 };
 
