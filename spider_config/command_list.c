@@ -313,7 +313,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(global_thermonuclear_war), "The only winning move is not to play.",
     GR_CMB},
 
-  {COMMAND(mpc_ping), "MPC test command", MCECMD | GR_MCE},
+  {COMMAND(mpc_ping), "Ping the MCCs", MCECMD | GR_MCE},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };

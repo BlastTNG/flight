@@ -54,6 +54,8 @@ struct mpc_slow_data {
   uint16_t data_mode; /* MCE data mode */
 };
 
+extern int mpc_cmd_rev;
+
 int mpc_init(void);
 int mpc_check_packet(size_t len, const char *data, const char *peer, int port);
 

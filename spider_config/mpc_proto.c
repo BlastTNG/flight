@@ -31,7 +31,7 @@
 
 #include <string.h>
 
-static int mpc_cmd_rev = -1;
+int mpc_cmd_rev = -1;
 static int16_t mpc_proto_rev = -1;
 
 /* desecrate the C preprocessor to extract this file's SVN revision */
@@ -552,6 +552,9 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     bprintf(err, "Bad notice packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
+
+  /* we just do this to get an idea of with whom where conversing */
+  bprintf(info, "Noticed by %s/%i", peer, port);
 
   if (data[6] != last_turnaround)
     bprintf(info, "%s turnaround", data[6] ? "Into" : "Out of");
