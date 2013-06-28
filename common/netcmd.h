@@ -95,7 +95,7 @@ extern char **client_group_names;
 int  NetCmdConnect(const char*, int, int);
 void NetCmdDrop(void);
 void NetCmdSend(const char*);
-int  NetCmdReceive(int);
+int  NetCmdReceive(int, size_t, char*);
 int  NetCmdSendAndReceive(const char*, int, size_t, char*);
 int  NetCmdGetCmdList(void);
 int  NetCmdGetGroupNames(void);

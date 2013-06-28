@@ -719,14 +719,20 @@ int MainForm::ReceivePackets(int silent, int wait_for)
 {
   Q_UNUSED(silent);
   int returnstatus;
+  char oob_message[1024];
 
   do {
-    returnstatus = NetCmdReceive(!verbose);
+    returnstatus = NetCmdReceive(!verbose, 1024, oob_message);
     if (sending && ((returnstatus & 0xFF) == CMD_BCMD))
     {
       if ((returnstatus >> 8) == 12)
         returnstatus = (99 << 8);
-      WriteErr(NLog, returnstatus >> 8);
+
+      if (oob_message[0])
+        WriteErr(NLog, oob_message, returnstatus >> 8);
+      else
+        WriteErr(NLog, NULL, returnstatus >> 8);
+
       TurnOff();
     }
   } while (returnstatus != CMD_NONE && returnstatus != wait_for);
@@ -1081,7 +1087,7 @@ void MainForm::WriteLog(const char *request) {
 //
 //-------------------------------------------------------------
 
-void MainForm::WriteErr(QTextEdit *dest, int retstatus) {
+void MainForm::WriteErr(QTextEdit *dest, const char *message, int retstatus) {
   QString txt;
 
   switch (retstatus) {
@@ -1135,6 +1141,14 @@ void MainForm::WriteErr(QTextEdit *dest, int retstatus) {
     case 13:
       txt = "  COMMAND POSSIBLY NOT SENT: Timeout waiting for ack from GSE.\n";
       break;
+    case 17:
+      txt = "  COMMAND NOT SENT: Parameter validation failed.\n";
+      if (message) {
+        txt += "  Error: ";
+        txt += message;
+        txt += "\n";
+      }
+      break;
   }
 
   QFile f(LOGFILE);
@@ -1150,6 +1164,12 @@ void MainForm::WriteErr(QTextEdit *dest, int retstatus) {
   dest->insertPlainText("\n"+QString(txt));
   dest->moveCursor(QTextCursor::End);
 }
+
+void MainForm::WriteErr(QTextEdit *dest, int retstatus) {
+  WriteErr(dest, NULL, retstatus);
+}
+
+
 
 
 //-------------------------------------------------------------

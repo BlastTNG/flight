@@ -49,8 +49,6 @@ struct scom *client_scommands;
 struct mcom *client_mcommands;
 char client_command_list_serial[1024];
 
-static char oob_message[1024]; /* for out-of-band signalling */
-
 int client_n_groups = 0;
 char **client_group_names;
 
@@ -131,7 +129,7 @@ void NetCmdDrop(void)
 /* Does all non-blocking receiving.                           *
  * Returns integer: lower byte is which command it received.  *
  *                  upper bytes are optional status.          */
-int NetCmdReceive(int silent)
+int NetCmdReceive(int silent, size_t oob_buflen, char *oob_message)
 {
   char buffer[1024] = "\0";
   int i;
@@ -149,12 +147,14 @@ int NetCmdReceive(int silent)
   } else if (strncmp(buffer, ":::ack:::", 9) == 0) {
     int ack = atoi(buffer + 9);
 
-    /* look for a message */
-    char *ptr = strstr(buffer + 10, ":::");
-    if (ptr)
-      strncpy(oob_message, ptr + 3, 1024);
-    else
-      oob_message[0] = 0;
+    if (oob_message) {
+      /* look for a message */
+      char *ptr = strstr(buffer + 10, ":::");
+      if (ptr)
+        strncpy(oob_message, ptr + 3, oob_buflen);
+      else
+        oob_message[0] = 0;
+    }
 
     return CMD_BCMD + (ack << 8);
   } else if (strncmp(buffer, ":::limit:::", 11) == 0) {
@@ -208,17 +208,16 @@ void NetCmdSend(const char* buffer)
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 }
 
-int NetCmdSendAndReceive(const char *inbuf, int silent, size_t buflen, char *outbuf)
+int NetCmdSendAndReceive(const char *inbuf, int silent, size_t buflen,
+    char *outbuf)
 {
   int ack;
 
   NetCmdSend(inbuf);
 
   do {
-    ack = NetCmdReceive(silent);
+    ack = NetCmdReceive(silent, buflen, outbuf);
     if ((ack & 0xff) == CMD_BCMD) {
-      if (oob_message[0])
-        strncpy(outbuf, oob_message, buflen);
       return ack >> 8;
     }
     else if ((ack & 0xff) == CMD_NONE)
@@ -343,7 +342,7 @@ int NetCmdTakeConn(int silent)
 
   //cow didn't wait for a response before. Maybe there was a reason for that
   do {
-    ack = NetCmdReceive(silent);
+    ack = NetCmdReceive(silent, 0, NULL);
     if ((ack & 0xff) == CMD_CONN) break;
     else if ((ack & 0xff) == CMD_NONE) usleep(1000);
     else {

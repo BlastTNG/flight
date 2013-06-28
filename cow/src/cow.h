@@ -152,6 +152,7 @@ private:
     char *LongestParam();
     void ReadLog(QTextEdit *dest);
     void WriteCmd(QTextEdit *dest, const char *request);
+    void WriteErr(QTextEdit *dest, const char *message, int retstatus);
     void WriteErr(QTextEdit *dest, int retstatus);
     void WriteLog(const char *request);
     QLabel* ConnBanner;
