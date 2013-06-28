@@ -27,7 +27,7 @@
 #include "camstruct.h"
 #endif
 
-const char *command_list_serial = "$Rev$";
+const char *const command_list_serial = "$Rev$";
 
 /* parse the above; returns -1 if command_list_serial can't be parsed */
 const int command_list_serial_as_int(void)
@@ -39,7 +39,7 @@ const int command_list_serial_as_int(void)
   return cmd_rev;
 }
 
-const char *GroupNames[N_GROUPS] = {
+const char *const GroupNames[N_GROUPS] = {
   "Pointing Modes",        "CMB Grenades",     "Waveplate Rotator",
   "Pointing Sensor Trims", "Aux. Electronics", "HK Bias",
   "Pointing Sensor Vetos", "Actuators",        "Gyro Power",
@@ -53,7 +53,7 @@ const char *GroupNames[N_GROUPS] = {
 //echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
-struct scom scommands[N_SCOMMANDS] = {
+const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 
@@ -325,7 +325,7 @@ struct scom scommands[N_SCOMMANDS] = {
  * d :  parameter is 30 bit renormalised floating point
  * s :  parameter is 7-bit character string
  */
-struct mcom mcommands[N_MCOMMANDS] = {
+const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(dac2_level), "*UNUSED* DAC2 output level. Does nothing", GR_MISC, 1,
     {
       {"Level", 0, 32767, 'i', "dac2_ampl"}

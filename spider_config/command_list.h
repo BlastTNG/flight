@@ -57,10 +57,10 @@
 #define MCECMD          0x40000000 /* MCE command flag */
 //reserved for CONFIRM  0x80000000
 
-extern const char *command_list_serial;
+extern const char *const command_list_serial;
 extern const int command_list_serial_as_int(void);
 
-extern const char *GroupNames[N_GROUPS];
+extern const char *const GroupNames[N_GROUPS];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
@@ -184,14 +184,14 @@ enum multiCommand {
   sched_packet = 0xff   //not really a command, more of a placeholder
 };
 
-extern struct scom scommands[N_SCOMMANDS];
+extern const struct scom scommands[N_SCOMMANDS];
 
 /* parameter type:
  * i :  parameter is 16 bit unnormalised integer
  * f :  parameter is 16 bit renormalised floating point
  * l :  parameter is 30 bit renormalised floating point
  */
-extern struct mcom mcommands[N_MCOMMANDS];
+extern const struct mcom mcommands[N_MCOMMANDS];
 
 /* validator function for mcommands */
 extern int mcom_validate(enum multiCommand cmd, const int *ivalues,
