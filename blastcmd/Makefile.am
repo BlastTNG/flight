@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = foreign
 
 if INSTALL_BLAST
 blast_config=$(top_srcdir)/../blast_config
-blastcmd_SOURCES = blastcmd.c $(blast_config)/command_list.c daemon.c netcmd.c \
+blastcmd_SOURCES = blastcmd.c $(blast_config)/command_list.c daemon.c $(shared)/netcmd.c \
 		   $(blast_config)/command_list.h daemon.h elog.h isc_protocol.h \
 			 $(shared)/netcmd.h
 blastcmd_CPPFLAGS = -D__BLAST__ -I$(blast_config)
@@ -15,7 +15,7 @@ endif
 
 if INSTALL_MINICP
 mini_config=$(top_srcdir)/../minicp_config
-minicmd_SOURCES = blastcmd.c $(mini_config)/command_list.c daemon.c netcmd.c \
+minicmd_SOURCES = blastcmd.c $(mini_config)/command_list.c daemon.c $(shared)/netcmd.c \
 		  $(mini_config)/command_list.h daemon.h elog.h isc_protocol.h \
 			$(shared)/netcmd.h
 minicmd_CPPFLAGS = -D__MINI__ -I$(mini_config)
@@ -25,7 +25,7 @@ endif
 if INSTALL_SPIDER
 spider_config=$(top_srcdir)/../spider_config
 spidercmd_SOURCES = blastcmd.c $(spider_config)/command_list.c daemon.c \
-										netcmd.c $(spider_config)/command_list.h daemon.h elog.h \
+										$(shared)/netcmd.c $(spider_config)/command_list.h daemon.h elog.h \
 										isc_protocol.h $(shared)/netcmd.h
 spidercmd_CPPFLAGS = -D__SPIDER__ -I$(spider_config)
 SPIDERCMD=spidercmd
