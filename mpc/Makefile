@@ -47,11 +47,8 @@ ifeq (${MAS_NEW_ENOUGH},no)
 $(warning *********************************************)
 $(warning MAS too old.  Revision ${MIN_MAS_VERSION} or newer required.)
 MAS_VAR=
-else
-$(info *********************************************)
-$(info Linking against MAS version $(shell ${MAS_VAR} --version))
-$(info *********************************************)
 endif
+
 endif
 
 ifeq (${MAS_VAR},)

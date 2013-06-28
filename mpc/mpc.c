@@ -22,12 +22,19 @@
 #include "mpc_proto.h"
 #include "udp.h"
 
+#include <sys/types.h>
 #include <sys/statvfs.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <sys/socket.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 
 /* some timing constants; in the main loop, timing is done using the udp poll
  * timeout.  As a result, all timings are approximate (typically lower bounds)
@@ -81,6 +88,10 @@ int in_turnaround = 0;
 
 /* time to ask PCM to power cycle the MCE */
 int power_cycle_mce = 0;
+
+/* ping */
+static int pcm_pong = 0;
+   
 
 /* command "veto" -- actually, all this does is veto the actions associated with
  * failed commands */
@@ -185,7 +196,14 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     /* send a request, if necessary */
     char data[UDP_MAXSIZE];
     int power_cycle = 0;
+    int pong = 0;
     int need_send = 0;
+
+    /* XXX */
+    if (power_cycle_mce) {
+      bprintf(warning, "WANTED TO POWER CYCLE MCE!");
+      power_cycle_mce = 0;
+    }
 
     /* collect pending requests */
     if (power_cycle_mce && power_cycle_wait <= 0) {
@@ -194,10 +212,20 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       power_cycle_wait = 1000000; /* microseconds */
     } else if (power_cycle_wait > 0)
       power_cycle_wait -= UDP_TIMEOUT;
+    
+    /* force send */
+    if (pcm_pong) {
+      pong = need_send = 1;
+      pcm_pong = 0;
+    }
 
     if (need_send) {
       len = mpc_compose_pcmreq(nmce, power_cycle, data);
       udp_bcast(sock, MCESERV_PORT, len, data, 0);
+      bprintf(info, "PCM request: :%s%s",
+          power_cycle ? "POW:" : "",
+          pong ? "PNG:" : ""
+          );
     }
   }
 }
@@ -225,12 +253,45 @@ static void send_slow_data(char *data)
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
 }
 
+static int nmce_from_ip(void)
+{
+  struct ifreq ifr;
+  int inet_sock;
+  unsigned long addr;
+
+  /* connect to kINET */
+  inet_sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (inet_sock < 0)
+    bprintf(fatal, "Unable to connect to kernel INET subsystem!");
+
+  /* get eth0's IP address */
+  strcpy(ifr.ifr_name, "eth0");
+  if (ioctl(inet_sock, SIOCGIFADDR, &ifr))
+    bprintf(fatal, "SIOCGIFADDR failed!");
+  close(inet_sock);
+  
+  /* Flight computers have addresses of the form 192.168.1.8x for x in [1,6].
+   * IPv4 addresses are encoded as a big endian number in s_addr, so we check
+   * whether the lower three bytes are 0x01a8c0 (= 1.168.192) and then use the
+   * top byte minus 80 as the mce number, if in range. */
+  addr = (unsigned long)((struct sockaddr_in*)&ifr.ifr_netmask)->sin_addr.s_addr;
+  if (((addr & 0xFFFFF) != 0x01A8C0) || ((addr >> 24) < 81) ||
+      ((addr >> 24) > 86))
+  {
+    bprintf(warning, "Unrecognised IP address %s",
+        inet_ntoa(((struct sockaddr_in*)&ifr.ifr_netmask)->sin_addr));
+    return -1;
+  }
+
+  return (addr >> 24) - 80;
+}
+
 /* Figure out which MCE we're attached to, also whether we're running in fake
  * mode */
 static void get_nmce(int argc, const char **argv)
 {
   int i;
-  char array_id[1024] = {0};
+  char array_id[1024] = {'x', 0, 0};
 
 #ifdef FAKE_MAS
   fake = 1;
@@ -253,49 +314,38 @@ static void get_nmce(int argc, const char **argv)
     }
   }
 
-  /* figure out which MCE we're attached to via the array_id */
+  /* figure out which MCE we're attached to via the IP address */
   if (!fake) {
-    char map_entry[1024];
+    int n;
+    /* get the MCE number from the IP address. */
+    nmce = nmce_from_ip();
+
     const char *file = MAS_DATA_ROOT "/array_id";
-    FILE *stream = fopen(file, "r");
+    FILE *stream = fopen(file, "w");
 
     if (stream == NULL) {
       berror(err, "Unable to open array ID file: %s", file);
       goto BAD_ARRAY_ID;
-    } else if (fgets(array_id, 1024, stream) == NULL) {
-      berror(err, "Can't read array id");
-      fclose(stream);
-      goto BAD_ARRAY_ID;
-    }
-    fclose(stream);
-
-    /* look this array_id up in the map file */
-    file = MPC_ETC_DIR "/mpc_array_map";
-    stream = fopen(file, "r");
-    if (stream == NULL) {
-      berror(err, "Unable to open array ID map: %s", file);
-      goto BAD_ARRAY_ID;
     }
 
-    for (i = 0; i < 6; ++i) {
-      if (fgets(map_entry, 1024, stream) == NULL) {
-        bprintf(err, "Missing entry #%i in array map", i);
-        fclose(stream);
-        goto BAD_ARRAY_ID;
-      }
-      if (strncmp(map_entry, array_id, 1024) == 0)
-        break;
-    }
-    fclose(stream);
+    if (nmce == -1) {
+      bputs(warning, "Using 'default' configuration and running as MCE0");
+      nmce = 0;
+      strcpy(array_id, "default");
+    } else 
+      array_id[1] = '0' + nmce;
 
-    if (i < 6) {
-      nmce = i;
-    } else {
-      bprintf(err, "Array ID not found in map file: %s", array_id);
+    n = fprintf(stream, "%s\n", array_id);
+
+    if (n < 0) {
+      berror(err, "Can't write array id");
 BAD_ARRAY_ID:
+      if (nmce == -1)
+        nmce = 0;
       bprintf(err, "Reverting to FAKE MCE");
       fake = 1;
     }
+    fclose(stream);
   }
 
   if (fake) {
@@ -314,6 +364,29 @@ static void ForwardData(void)
   if (pcm_ret_dat) { /* race condition avoidance */
     udp_bcast(sock, MCESERV_PORT, len, data, 0);
     pcm_ret_dat = 0;
+  }
+}
+
+/* Execute a command */
+static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
+{
+  if (ev->is_multi) {
+    switch (ev->command) {
+      default:
+        bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
+            ev->command, peer, port);
+        break;
+    }
+  } else {
+    switch (ev->command) {
+      case mpc_ping:
+        pcm_pong = 1;
+        break;
+      default:
+        bprintf(warning, "Unrecognised single command #%i from %s/%i\n",
+            ev->command, peer, port);
+        break;
+    }
   }
 }
 
@@ -379,7 +452,8 @@ int main(int argc, const char **argv)
             /* command decomposition failed */
             break;
           }
-          /* run the command here */
+          /* execute */
+          do_ev(&ev, peer, port);
           break;
         case 'F': /* field set packet */
           veto = 1; /* veto transmission */

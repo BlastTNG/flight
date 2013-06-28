@@ -166,6 +166,12 @@ static int mce_reconfig(mce_context_t *mas)
     return 1;
   }
 
+  if (run_simple_script(MAS_SCRIPT "/set_directory", NULL)) {
+    /* reset the mce on reconfig error...? */
+    power_cycle_mce = 1;
+    return 1;
+  }
+
   if (run_simple_script(MAS_SCRIPT "/mce_reconfig", NULL)) {
     /* reset the mce on reconfig error...? */
     power_cycle_mce = 1;
@@ -197,13 +203,13 @@ void *mas_data(void *dummy)
 
   /* open the subsystems */
   if (mcedata_open(mas))
-    bputs(tfatal, "Unable to attach to MAS data subsystem");
+    bputs(fatal, "Unable to attach to MAS data subsystem");
 
   if (mcecmd_open(mas))
-    bputs(tfatal, "Unable to attach to MAS command subsystem");
+    bputs(fatal, "Unable to attach to MAS command subsystem");
 
   if (mceconfig_open(mas, NULL, NULL))
-    bputs(tfatal, "Unable to attach to MAS config subsystem");
+    bputs(fatal, "Unable to attach to MAS config subsystem");
 
   /* leech mode */
   mcedata_ioctl(mas, DATADEV_IOCT_SET, DATA_LEECH);
