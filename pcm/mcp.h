@@ -54,11 +54,12 @@ struct chat_buf {
 
 #define BBC_SYNC_TIMEOUT 40000000
 
-#ifdef TEST_RUN
-#define USE_FIFO_CMD
+#ifndef TEST_RUN
+#define USE_SIP_CMD
 #endif
 
-//#define USE_FIFO_CMD
+// always defined now, for iridium pilot
+#define USE_FIFO_CMD
 
 //#define USE_XY_THREAD
 

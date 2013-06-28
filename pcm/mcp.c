@@ -1081,12 +1081,15 @@ void insertMCEData(unsigned short *RxFrame)
 int main(int argc, char *argv[])
 {
   unsigned int in_data, i;
+#ifdef USE_SIP_CMD
   pthread_t CommandDatacomm1;
-  pthread_t disk_id;
-
-#ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
 #endif
+#ifdef USE_FIFO_CMD
+  pthread_t CommandDatafifo;
+#endif
+  pthread_t disk_id;
+
 
   pthread_t compression_id;
   pthread_t bi0_id;
@@ -1150,8 +1153,9 @@ int main(int argc, char *argv[])
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
-  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
-#else
+  pthread_create(&CommandDatafifo, NULL, (void*)&WatchFIFO, NULL);
+#endif
+#ifdef USE_SIP_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif

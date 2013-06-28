@@ -59,6 +59,11 @@ struct chat_buf {
 
 //#define USE_FIFO_CMD
 
+//preserve use of FIFO or SIP, not both
+#ifndef USE_FIFO_CMD
+#define USE_SIP_CMD
+#endif
+
 //#define USE_XY_THREAD
 
 #endif

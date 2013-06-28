@@ -104,7 +104,7 @@ void WritePrevStatus()
   }
 }
 
-#ifndef USE_FIFO_CMD
+#ifdef USE_SIP_CMD
 int sip_setserial(const char *input_tty)
 {
   int fd;
@@ -137,9 +137,9 @@ int sip_setserial(const char *input_tty)
 
   return fd;
 }
-#endif
+#endif    // USE_SIP_CMD
 
-#ifndef USE_FIFO_CMD
+#ifdef USE_SIP_CMD
 static float ParseGPS (unsigned char *data)
 {
   char exponent;
@@ -190,7 +190,7 @@ static void SendRequest (int req, char tty_fd)
   if (write(tty_fd, buffer, 3) < 0)
     berror(warning, "Commands: error sending SIP request\n");
 }
-#endif
+#endif    // USE_SIP_CMD
 
 
 
@@ -218,14 +218,49 @@ enum multiCommand MCommand(char *cmd)
   return -1;
 }
 
-static void SetParameters(enum multiCommand command, unsigned short *dataq,
+static void SetParametersFifo(enum multiCommand command, unsigned short *dataq,
     double* rvalues, int* ivalues, char svalues[][CMD_STRING_LEN])
 {
   int i, dataqind;
   char type;
   int index = MIndex(command);
 
-#ifndef USE_FIFO_CMD
+  char** dataqc = (char**) dataq;
+  /* compute renormalised values - SIPSS FIFO version */
+  for (i = dataqind = 0; i < mcommands[index].numparams; ++i) {
+    type = mcommands[index].params[i].type;
+    if (type == 'i')  /* 15 bit unsigned integer */ {
+      ivalues[i] = atoi(dataqc[dataqind++]);
+      bprintf(info, "Commands: param%02i: integer: %i\n", i, ivalues[i]);
+    } else if (type == 'l')  /* 30 bit unsigned integer */ {
+      ivalues[i] = atoi(dataqc[dataqind++]);
+      bprintf(info, "Commands: param%02i: long   : %i\n", i, ivalues[i]);
+    } else if (type == 'f')  /* 15 bit floating point */ {
+      rvalues[i] = atof(dataqc[dataqind++]);
+      bprintf(info, "Commands: param%02i: float  : %f\n", i, rvalues[i]);
+    } else if (type == 'd') { /* 30 bit floating point */
+      rvalues[i] = atof(dataqc[dataqind++]);
+      bprintf(info, "Commands: param%02i: double : %f\n", i, rvalues[i]);
+    } else if (type == 's') { /* string */
+      strncpy(svalues[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
+      svalues[i][CMD_STRING_LEN - 1] = 0;
+      bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
+    } else
+      bprintf(err,
+          "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
+          i);
+  }
+
+  bprintf(info, "Commands: Multiword Command: %d (%s)\n", command,
+      MName(command));
+}
+
+static void SetParameters(enum multiCommand command, unsigned short *dataq,
+    double* rvalues, int* ivalues, char svalues[][CMD_STRING_LEN])
+{
+  int i, dataqind;
+  char type;
+  int index = MIndex(command);
   double min;
 
   /* compute renormalised values */
@@ -260,39 +295,9 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
           "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
           i);
   }
-#else
-  char** dataqc = (char**) dataq;
-  /* compute renormalised values - SIPSS FIFO version */
-  for (i = dataqind = 0; i < mcommands[index].numparams; ++i) {
-    type = mcommands[index].params[i].type;
-    if (type == 'i')  /* 15 bit unsigned integer */ {
-      ivalues[i] = atoi(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: integer: %i\n", i, ivalues[i]);
-    } else if (type == 'l')  /* 30 bit unsigned integer */ {
-      ivalues[i] = atoi(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: long   : %i\n", i, ivalues[i]);
-    } else if (type == 'f')  /* 15 bit floating point */ {
-      rvalues[i] = atof(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: float  : %f\n", i, rvalues[i]);
-    } else if (type == 'd') { /* 30 bit floating point */
-      rvalues[i] = atof(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: double : %f\n", i, rvalues[i]);
-    } else if (type == 's') { /* string */
-      strncpy(svalues[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
-      svalues[i][CMD_STRING_LEN - 1] = 0;
-      bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
-    } else
-      bprintf(err,
-          "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
-          i);
-  }
-
-  bprintf(info, "Commands: Multiword Command: %d (%s)\n", command,
-      MName(command));
-#endif
 }
 
-#ifndef USE_FIFO_CMD
+#ifdef USE_SIP_CMD
 static void GPSPosition (unsigned char *indata)
 {
   double lat;
@@ -312,7 +317,7 @@ static void GPSPosition (unsigned char *indata)
     WritePrevStatus();
   }
 }
-#endif
+#endif    // USE_SIP_CMD
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
@@ -351,7 +356,7 @@ void ScheduledCommand(struct ScheduleEvent *event)
   }
 }
 
-#ifndef USE_FIFO_CMD
+#ifdef USE_SIP_CMD
 static void GPSTime (unsigned char *indata)
 {
   float GPStime, offset;
@@ -412,7 +417,7 @@ static int DataQSize(int index)
 
   return size;
 }
-#endif
+#endif    // USE_SIP_CMD
 
 
 #ifdef USE_FIFO_CMD
@@ -485,8 +490,8 @@ void WatchFIFO ()
       mcommand = MCommand(command);
       bputs(info, "Multi word command received\n");
       if (mcommand_count == mcommands[MIndex(mcommand)].numparams) {
-        SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues, ivalues,
-            svalues);
+        SetParametersFifo(mcommand, (unsigned short*)mcommand_data, rvalues,
+            ivalues, svalues);
         MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
       } else {
         bputs(warning, "Ignoring mal-formed command!\n");
@@ -499,8 +504,9 @@ void WatchFIFO ()
 
   }
 }
+#endif  // USE_FIFO_CMD
 
-#else
+#ifdef USE_SIP_CMD
 
 struct LibraryStruct  {
   int n;
@@ -894,4 +900,5 @@ void WatchPort (void* parameter)
     pthread_mutex_unlock(&mutex);
   }
 }
-#endif
+
+#endif    // USE_SIP_CMD
