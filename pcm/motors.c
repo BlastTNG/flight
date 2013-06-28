@@ -72,6 +72,10 @@
 #define EL_REL_MIN 0.005  // min size of el relative move (= 1 count)
 #define EL_ON_DELAY 0.40  // turn-on delay of el drive when in auto mode
 
+/* Structures containing AMC controller status info and file descriptors */
+struct MotorInfoStruct reactinfo;
+struct MotorInfoStruct pivotinfo;
+
 /* variables storing scan region (relative to defined quad) */
 static int scan_region = 0;
 static int scan_region_last = 0;
@@ -2503,6 +2507,7 @@ void* reactComm(void* arg)
   reactinfo.writeset=0;
   strncpy(reactinfo.motorstr,"react",6);
   reactinfo.verbose=0;
+  reactinfo.mode = 1; // irrelevant for RW
 
   nameThread("RWCom");
 
@@ -2746,12 +2751,14 @@ void* pivotComm(void* arg)
   pivotinfo.writeset=0;
   strncpy(pivotinfo.motorstr,"pivot",6);
   pivotinfo.verbose=0;
+  pivotinfo.mode = 0; 
 
   nameThread("PivCom");
 
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info,"I am not incharge thus I will not communicate with the pivot motor.");
+      bprintf(info,
+      "I am not incharge thus I will not communicate with the pivot motor.");
       firsttime=0;
     }
     usleep(20000);
@@ -2778,18 +2785,20 @@ void* pivotComm(void* arg)
     open_amc(PIVOT_DEVICE,&pivotinfo); // sets pivotinfo.open=1 if sucessful
 
     if (i==10) {
-      bputs(err,"Pivot controller serial port could not be opened after 10 attempts.\n");
+      bputs(err,
+      "Pivot controller serial port could not be opened after 10 attempts.\n");
     }
     i++;
 
     if (pivotinfo.open==1) {
-      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i);
+      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,
+                  "Opened the serial port on attempt number %i",i);
     }
     else sleep(1);
   }
 
-  // Configure the serial port.  If after 10 attempts the port is not initialized it enters 
-  // the main loop where it will trigger a reset command.                                             
+  // Configure the serial port. If after 10 attempts the port is not initialized
+  // , it enters the main loop where it will trigger a reset command.                                             
   i=0;
   while (pivotinfo.init==0 && i <=9) {
     pivotinfo.verbose=CommandData.verbose_piv;
@@ -2809,7 +2818,7 @@ void* pivotComm(void* arg)
     if((pivotinfo.err & AMC_ERR_MASK) > 0 ) {
       pivotinfo.err_count+=1;
       if(pivotinfo.err_count >= AMC_ERR_TIMEOUT) {
-	pivotinfo.reset=1;
+	      pivotinfo.reset=1;
       }
     }
     if(CommandData.reset_piv==1 ) {
@@ -2821,8 +2830,10 @@ void* pivotComm(void* arg)
       CommandData.restore_piv=0;
     }
 
-    PivotMotorData[pivot_motor_index].drive_info=makeMotorField(&pivotinfo); // Make bitfield of controller info structure.
-    PivotMotorData[pivot_motor_index].err_count=(pivotinfo.err_count > 65535) ? 65535: pivotinfo.err_count;
+    // Make bitfield of controller info structure.
+    PivotMotorData[pivot_motor_index].drive_info=makeMotorField(&pivotinfo);
+    PivotMotorData[pivot_motor_index].err_count=(pivotinfo.err_count > 65535) ?
+                                                65535: pivotinfo.err_count;
     // If we are still in the start up veto make sure the drive is disabled.
     if(StartupVeto > 0) {
       CommandData.disable_az=1;
@@ -2834,93 +2845,111 @@ void* pivotComm(void* arg)
       usleep(10000);      
     } else if (pivotinfo.reset==1){
       if(resetcount==0) {
-	bprintf(warning,"Resetting connection to pivot controller.");
+	      bprintf(warning,"Resetting connection to pivot controller.");
       } else if ((resetcount % 50)==0) {
-	bprintfverb(warning,pivotinfo.verbose,MC_VERBOSE,"reset->Unable to connect to pivot after %i attempts.",resetcount);
+	      bprintfverb(warning,pivotinfo.verbose,MC_VERBOSE,
+        "reset->Unable to connect to pivot after %i attempts.",resetcount);
       }
 
-      bprintfverb(warning,pivotinfo.verbose,MC_EXTRA_VERBOSE,"Attempting to reset the pivot controller.",resetcount);
+      bprintfverb(warning,pivotinfo.verbose,MC_EXTRA_VERBOSE,
+                  "Attempting to reset the pivot controller.",resetcount);
       resetcount++;
       pivot_motor_index=INC_INDEX(pivot_motor_index);
       resetAMC(PIVOT_DEVICE,&pivotinfo); // if successful sets pivotinfo.reset=0
 
       if (pivotinfo.reset==0) {
-	resetcount=0;
+	      resetcount=0;
         bprintf(info,"Controller successfuly reset!");
       }
       usleep(10000);  // give time for motor bits to get written
 
     } else if (pivotinfo.init==1) {
       if(CommandData.disable_az==0 && pivotinfo.disabled == 1) {
-      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Attempting to enable the pivot motor contoller.");
-	n=enableAMC(&pivotinfo);
-	if(n==0) {
-	  bprintf(info,"Pivot motor is now enabled");
-	  pivotinfo.disabled=0;
-	}
+        bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,
+        "Attempting to enable the pivot motor contoller.");
+	      n=enableAMC(&pivotinfo);
+	      if(n==0) {
+	        bprintf(info,"Pivot motor is now enabled");
+	        pivotinfo.disabled=0;
+	      }
       }
-      if(CommandData.disable_az==1 && (pivotinfo.disabled==0 || pivotinfo.disabled==2)) {
-      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Attempting to disable the pivot motor controller.");
-	n=disableAMC(&pivotinfo);
-	if(n==0){    
-	  bprintf(info,"Pivot motor controller is now disabled.");
-	  pivotinfo.disabled=1;
-	}
+      if(CommandData.disable_az==1 && 
+        (pivotinfo.disabled==0 || pivotinfo.disabled==2)) {
+        bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,
+        "Attempting to disable the pivot motor controller.");
+	      n=disableAMC(&pivotinfo);
+	      if(n==0) {    
+	        bprintf(info,"Pivot motor controller is now disabled.");
+	        pivotinfo.disabled=1;
+	      }
       } 
 
-      if(firsttime){
-	firsttime=0;
-	tmp = queryAMCInd(0x32,8,1,&pivotinfo);
-	bprintf(info,"Ki = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
-	bprintf(info,"Ks = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x0c,1,&pivotinfo);
-	bprintf(info,"d8.0ch = %i",tmp);
-	tmp = queryAMCInd(216,12,1,&pivotinfo);
-	bprintf(info,"v2 d8.0ch = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x12,1,&pivotinfo);
-	bprintf(info,"d8.12h = %i",tmp);
-	tmp = queryAMCInd(216,18,1,&pivotinfo);
-	bprintf(info,"v2 d8.12h = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x13,1,&pivotinfo);
-	bprintf(info,"d8.13h = %i",tmp);
-	tmp = queryAMCInd(216,19,1,&pivotinfo);
-	bprintf(info,"v2 d8.13h = %i",tmp);
-	tmp = queryAMCInd(3, 2, 1, &pivotinfo);
-	bprintf(info, "Sys. Protect status bitfield = 0x%04x", tmp);
+      if(firsttime) {
+        firsttime=0;
+        tmp = queryAMCInd(0x32,8,1,&pivotinfo);
+        bprintf(info,"Ki = %i",tmp);
+        tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
+        bprintf(info,"Ks = %i",tmp);
+        tmp = queryAMCInd(0xd8,0x0c,1,&pivotinfo);
+        bprintf(info,"d8.0ch = %i",tmp);
+        tmp = queryAMCInd(216,12,1,&pivotinfo);
+        bprintf(info,"v2 d8.0ch = %i",tmp);
+        tmp = queryAMCInd(0xd8,0x12,1,&pivotinfo);
+        bprintf(info,"d8.12h = %i",tmp);
+        tmp = queryAMCInd(216,18,1,&pivotinfo);
+        bprintf(info,"v2 d8.12h = %i",tmp);
+        tmp = queryAMCInd(0xd8,0x13,1,&pivotinfo);
+        bprintf(info,"d8.13h = %i",tmp);
+        tmp = queryAMCInd(216,19,1,&pivotinfo);
+        bprintf(info,"v2 d8.13h = %i",tmp);
+        tmp = queryAMCInd(3, 2, 1, &pivotinfo);
+        bprintf(info, "Sys. Protect status bitfield = 0x%04x", tmp);
+      }
+
+      /* check to see if commanded pivot ctrl mode has changed */
+      if (pivotinfo.mode != CommandData.pointing_mode.piv_mode) {
+        if (CommandData.pointing_mode.piv_mode == P_PIV_VEL) {
+          send_amccmd(0xD1, 0x00, 0x0000, 1, cmd, &pivotinfo);
+          pivotinfo.mode = CommandData.pointing_mode.piv_mode;
+        } else if (CommandData.pointing_mode.piv_mode == P_PIV_TORQUE) {
+          send_amccmd(0xD1, 0x00, 0x0001, 1, cmd, &pivotinfo);
+          pivotinfo.mode = CommandData.pointing_mode.piv_mode;
+        } else {
+          bputs(err, "Unknown pivot control mode specified\n");
+        }
       }
 
       pos_raw=getAMCResolver(&pivotinfo);
-      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Resolver Position is: %i",pos_raw);
-      PivotMotorData[pivot_motor_index].res_piv=((double) pos_raw)/PIV_RES_CTS*360.0; 
-
+      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,
+      "Resolver Position is: %i",pos_raw);
+      PivotMotorData[pivot_motor_index].res_piv=((double) pos_raw)
+                                                /PIV_RES_CTS*360.0; 
       j=j%5;
       switch(j) {
       case 0:
-	current_raw=queryAMCInd(16,3,1,&pivotinfo);
-        PivotMotorData[pivot_motor_index].current=((double)current_raw)/8192.0*20.0; // *2^13 / peak drive current
-	                                                                             // Units are Amps
-	//        bprintf(info,"current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
-	break;
+	      current_raw=queryAMCInd(16,3,1,&pivotinfo);
+        // *2^13 / peak drive current, Units are Amps
+        PivotMotorData[pivot_motor_index].current=((double)current_raw)
+                                                   /8192.0*20.0; 
+	      break;
       case 1:
-	db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);
+	      db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].db_stat=db_stat_raw;
-	break;
+	      break;
       case 2:
-	dp_stat_raw=queryAMCInd(2,1,1,&pivotinfo);
+	      dp_stat_raw=queryAMCInd(2,1,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].dp_stat=dp_stat_raw;
-	break;
+	      break;
       case 3:
-	ds1_stat_raw=queryAMCInd(2,3,1,&pivotinfo);
+	      ds1_stat_raw=queryAMCInd(2,3,1,&pivotinfo);
         PivotMotorData[pivot_motor_index].ds1_stat=ds1_stat_raw;
-	break;
+	      break;
       case 4:
-	piv_vel_raw=((int) queryAMCInd(17,2,2,&pivotinfo));
+	      piv_vel_raw=((int) queryAMCInd(17,2,2,&pivotinfo));
         PivotMotorData[pivot_motor_index].dps_piv = piv_vel_raw
                                                     *(20000.0/131072.0)
                                                     *(360.0/16384.0);
-
-	break;
+	      break;
       }
       j++;
       pivot_motor_index=INC_INDEX(pivot_motor_index);

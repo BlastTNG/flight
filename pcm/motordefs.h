@@ -47,6 +47,7 @@ struct MotorInfoStruct {
   char motorstr[6]; // A character array containing the name of the motor.               
   unsigned int verbose; // Used to tell the motor threads how much chatter they should output.
                         // set to CommandData.verbose_[motor] 
+  int mode;     // 0 for velocity mode, 1 for torque mode, pivot only
 };
 
 // Used in the serial threads to decide whether output should be printed.

@@ -430,6 +430,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
       
     } 
   },
+  {COMMAND(set_piv_mode), "set pivot drive mode", GR_GAIN, 1,
+    {
+      {"Drive Mode (0 = VELOCITY, 1 = CURRENT)", 0, 1, 'i', "MODE_DR_PIV"}
+    }
+  },
   {COMMAND(el_gain), "elevation motor gain", GR_GAIN, 1,
     {
       {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "G_COM_EL"}

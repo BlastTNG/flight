@@ -46,6 +46,10 @@
 #define P_EL_GOTO    1
 #define P_EL_RELMOVE 2
 
+/* pivot _control_ modes */
+#define P_PIV_VEL 0
+#define P_PIV_TORQUE 1
+
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN 2
 /* time (slow frames) to keep power off when power cycling devices */
@@ -144,6 +148,7 @@ struct PointingModeStruct {
                   // Is equal to del iff gondola is in Spider scan mode.
   unsigned short is_turn_around; // flag to indicate we're in a scan turn around
   double az_delay; // propagate az sol'n forward by this (frames)
+  int piv_mode;
 };
 
 struct latch_pulse {

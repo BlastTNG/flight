@@ -25,7 +25,7 @@
 // expected current when used by setRWCur.  I have no idea why, maybe
 // some kind of conversion from Peak to RMS?
 
-#define PIV_RES_CTS 16384.0 // using high res (14 bits) on resolver
+#define PIV_RES_CTS 16384.0
 
 #define AMC_ERR_TIMEOUT 5 // Number of consecutive serious errors before the
                              // thread attempts to reset the controller.
@@ -70,11 +70,7 @@ struct DriveIPVResStruct {
   long int value;
 };
 
-extern struct MotorInfoStruct pivotinfo; // motor info structs
-extern struct MotorInfoStruct reactinfo; // are declared in amccommand.c
-
 enum CmdorQuery {cmd, query};
-
 
 // Function Declarations
 
@@ -92,7 +88,7 @@ unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned sh
 
 void configure_amc(struct MotorInfoStruct* amcinfo);
 
-int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo);
+int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo, unsigned int waittime);
 
 int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, struct MotorInfoStruct* amcinfo);
 int queryAMCInd(int index, int offset, int nwords, struct MotorInfoStruct* amcinfo);

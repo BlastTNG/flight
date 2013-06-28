@@ -1206,6 +1206,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pivot_gain.T_RW = ivalues[4];
       CommandData.pivot_gain.V_REQ = ivalues[5];
       break;
+    case set_piv_mode: /* switch btwn vel/torque mode*/
+      CommandData.pointing_mode.piv_mode = ivalues[0];
+      break;
 
       //***********DGPS tests****************/
     case cov_gps:
@@ -2185,6 +2188,7 @@ void InitCommandData()
   CommandData.pointing_mode.el_step = 0.0;
   CommandData.pointing_mode.is_turn_around = 0;
   CommandData.pointing_mode.az_delay = 2.75;
+  CommandData.pointing_mode.piv_mode = 0;
 
   CommandData.az_accel = 0.1;
   CommandData.az_accel_max = 1.0;
