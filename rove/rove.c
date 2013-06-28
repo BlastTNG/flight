@@ -21,14 +21,14 @@
 #define RAWDIR "/data/rawdir"
 
 #define RNC_PORT 41114
-#define TIMEOUT 60
+#define TIMEOUT 30
 
 
 #define BUFSIZE 8194
 
 void Usage() {
   fprintf(stderr, "rove: collect data from a remote rnc server, and make it availible for a local rnc server.\n"
-                  "   usage: rove <remoteserver>\n");
+                  "   usage: rove <remoteserver1> [<remoteserver1> [...]]\n");
   exit(0);
 }
 
@@ -75,7 +75,8 @@ int party_connect(const char *hostname) {
 
 
 int main(int argc, char *argv[]) {
-  char remote_server[256];
+  char remote_server[2][256];
+  int n_servers;
   char out_filename[256];
   char inbuf[BUFSIZE];
   
@@ -84,15 +85,22 @@ int main(int argc, char *argv[]) {
   int numin, numread, totalread = 0;
   time_t t, last_t = 0;
   int blockread = 0;
+  int i_server = 0;
 
   time_t t_r, t_lr;
   
   t_lr = time(NULL);
 
-  if (argc!=2) Usage();
-  if (argv[1][0]=='-') Usage();
-
-  strncpy(remote_server, argv[1], 254);
+  n_servers = argc-1;
+  
+  if (argc<=2) Usage();
+  n_servers = argc-1;
+  
+  for (i_server=0; i_server<n_servers; i_server++) {
+    if (argv[i_server+1][0]=='-') Usage();
+    strncpy(remote_server[i_server], argv[i_server+1], 254);
+  }
+  i_server = 0;
   
   sprintf(out_filename, "%s/%lu.highgain", RAWDIR, time(NULL));
   if( (out_fd = open(out_filename, O_WRONLY | O_CREAT, 00644)) < 0 ) {
@@ -108,7 +116,7 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  tty_fd = party_connect(argv[1]);
+  tty_fd = party_connect(remote_server[i_server]);
   
   while (1) {
     ioctl(tty_fd, FIONREAD, &numin);
@@ -126,14 +134,16 @@ int main(int argc, char *argv[]) {
         printf("No data for %us.  Resetting connection.\n", t_r-t_lr);
         t_lr = t_r;
         shutdown(tty_fd, SHUT_RDWR);
-        tty_fd = party_connect(argv[1]);
+        i_server++;
+        if (i_server>=n_servers) i_server = 0;
+        tty_fd = party_connect(remote_server[i_server]);
       } 
       usleep(30000);
     }
     t = time(NULL);
     
     if (t-last_t > 10) {
-      printf("High Gain: %7d bytes at %.0f bps at %s", totalread, (double)blockread*8.0/(t-last_t), ctime(&t));
+      printf("Host %s: %7d bytes at %.0f bps at %s", remote_server[i_server],totalread, (double)blockread*8.0/(t-last_t), ctime(&t));
       last_t = t;
       blockread = 0;
     }
