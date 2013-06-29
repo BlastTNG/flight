@@ -63,7 +63,6 @@
 /* Define global variables */
 //flc_ip[0] = south, flc_ip[1] = north, so that flc_ip[SouthIAm] gives other flc
 char* flc_ip[2] = {"192.168.1.6", "192.168.1.5"};
-char *other_ip;
 
 int bbc_fp = -1;
 unsigned int debug = 0;
@@ -90,7 +89,7 @@ void WatchPort(void*);
 void WatchDGPS(void);
 void IntegratingStarCamera(void);
 void ActuatorBus(void);
-void WatchFIFO(void);          //commands.c
+void WatchFIFO(void*);          //commands.c
 void FrameFileWriter(void);
 void CompressionWriter(void);
 void StageBus(void);
@@ -1118,6 +1117,15 @@ int main(int argc, char *argv[])
 
   bputs(startup, "System: Startup");
 
+  /* Find out whether I'm north or south */
+  SouthIAm = AmISouth(&use_starcams);
+
+  if (SouthIAm)
+    bputs(info, "System: I am South.\n");
+  else
+    bputs(info, "System: I am not South.\n");
+
+
 #ifndef BOLOTEST
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
@@ -1134,7 +1142,7 @@ int main(int argc, char *argv[])
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
-  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, NULL);
+  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
 #else
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
@@ -1167,14 +1175,6 @@ int main(int argc, char *argv[])
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
     memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
   }
-
-  /* Find out whether I'm north or south */
-  SouthIAm = AmISouth(&use_starcams);
-
-  if (SouthIAm)
-    bputs(info, "System: I am South.\n");
-  else
-    bputs(info, "System: I am not South.\n");
 
 #ifndef BOLOTEST
   pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
@@ -1215,8 +1215,7 @@ int main(int argc, char *argv[])
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-  other_ip = flc_ip[SouthIAm];
-  start_flc_data_swapper(other_ip);
+  start_flc_data_swapper(flc_ip[SouthIAm]);
 
   while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
