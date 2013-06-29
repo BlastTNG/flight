@@ -20,6 +20,7 @@
 #include "mpc.h"
 #include "mputs.h"
 #include "blast.h"
+#include "sys.h"
 #include <mce_library.h>
 #include <mce/data_ioctl.h>
 #include <unistd.h>
@@ -166,13 +167,13 @@ static int mce_reconfig(mce_context_t *mas)
     return 1;
   }
 
-  if (run_simple_script(MAS_SCRIPT "/set_directory", NULL)) {
+  if (exec_and_wait(sched, MAS_SCRIPT "/set_directory", NULL, 20, 0)) {
     /* reset the mce on reconfig error...? */
     power_cycle_mce = 1;
     return 1;
   }
 
-  if (run_simple_script(MAS_SCRIPT "/mce_reconfig", NULL)) {
+  if (exec_and_wait(sched, MAS_SCRIPT "/mce_reconfig", NULL, 100, 0)) {
     /* reset the mce on reconfig error...? */
     power_cycle_mce = 1;
     return 1;

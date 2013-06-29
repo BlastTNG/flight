@@ -1,0 +1,6 @@
+#!/bin/bash
+
+while true
+do
+  /data/mas/bin/mpc &> /dev/null
+done

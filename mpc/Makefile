@@ -90,14 +90,12 @@ SPIDER_ONLY=1
 #
 
 EXPT_HEADERS = command_list.h command_struct.h mpc_proto.h tes.h
-SHARED_HEADERS = blast.h command_common.h mputs.h udp.h 
+SHARED_HEADERS = blast.h command_common.h mputs.h sys.h udp.h
 LOCAL_HEADERS = mpc.h mce_frame.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
-SHARED_OBJS = blast.o command_common.o mputs.o udp.o
-LOCAL_OBJS = data_mode.o fake.o frame.o ${MAS_O} mpc.o script.o
-
-MPC_DATA = mpc_array_map
+SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
+LOCAL_OBJS = data_mode.o fake.o frame.o ${MAS_O} meta.o mpc.o
 
 ########################################################
 # Run the sanity checks and prepare the build system
@@ -130,8 +128,10 @@ mpc: $(OBJS)
 # Install Stuff
 #
 
-install: mpc ${MPC_DATA}
+install: mpc mpc_inf_loop
 	install -d /data/mas/bin
-	install -m 755 mpc /data/mas/bin
+	install -m 755 mpc mpc_inf_loop /data/mas/bin
 	install -d /data/mas/etc
-	install -m 644 ${MPC_DATA} /data/mas/etc
+
+restart: install
+	killall mpc

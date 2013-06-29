@@ -41,12 +41,34 @@ extern int pcm_strobe;
 extern uint32_t pcm_frameno;
 extern int pcm_ret_dat;
 
+/* The director */
+void meta(void);
+
 /* MCE data mode definitions */
 #define N_DATA_MODES 13
 extern struct data_mode_def {
   int first_bit, num_bits;
   enum { first, mean, sum } coadd_how;
 } data_modes[N_DATA_MODES][2];
+
+/* statūs -- these are in execution order */
+#define ST_DRIVE0 0x0001 /* The primary drive is ready */
+#define ST_DRIVE1 0x0002 /* The secondary drive is ready */
+#define ST_DRIVE2 0x0004 /* The tertiary drive is ready */
+#define ST_MCECMD 0x0008 /* MCE is talking */
+#define ST_CONFIG 0x0010 /* MCE is configured */
+#define ST_RETDAT 0x0020 /* MCE is returning data */
+extern unsigned int state;
+
+/* operating modes */
+enum modes { op_init = 0, op_drive, op_ready, op_acq };
+#define MODE_STRINGS "init", "drive", "ready", "acq"
+
+/* high-level tasks */
+enum tasks { tk_idle = 0, tk_drive, tk_reset, tk_acq };
+
+extern enum modes  new_goal;
+extern enum tasks  task;
 
 #define MPC_ETC_DIR "/data/mas/etc"
 
@@ -57,6 +79,4 @@ void *fake_data(void *dummy);
 /* The frame-processing loop */
 void do_frame(const uint32_t *frame, size_t frame_size);
 
-/* Script routines */
-int run_simple_script(const char *path, char *argv[]);
 #endif

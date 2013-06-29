@@ -429,6 +429,9 @@ int main(int argc, const char **argv)
   for (;;) {
     struct ScheduleEvent ev;
 
+    /* iterate the director */
+    meta();
+
     /* check inbound packets */
     n = udp_recv(sock, UDP_TIMEOUT, peer, &port, UDP_MAXSIZE, data);
 
