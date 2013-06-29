@@ -95,7 +95,7 @@ LOCAL_HEADERS = mpc.h mce_frame.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
-LOCAL_OBJS = data_mode.o fake.o frame.o ${MAS_O} meta.o mpc.o
+LOCAL_OBJS = data_mode.o fake.o frame.o ${MAS_O} meta.o mpc.o task.o
 
 ########################################################
 # Run the sanity checks and prepare the build system

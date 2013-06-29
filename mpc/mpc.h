@@ -31,6 +31,7 @@ extern int fake;
 extern int init;
 extern int data_mode;
 extern int power_cycle_mce;
+extern int power_cycle_cmp;
 extern int command_veto;
 extern int veto;
 extern uint16_t bset_num;
@@ -51,24 +52,42 @@ extern struct data_mode_def {
   enum { first, mean, sum } coadd_how;
 } data_modes[N_DATA_MODES][2];
 
-/* statūs -- these are in execution order */
-#define ST_DRIVE0 0x0001 /* The primary drive is ready */
-#define ST_DRIVE1 0x0002 /* The secondary drive is ready */
-#define ST_DRIVE2 0x0004 /* The tertiary drive is ready */
-#define ST_MCECMD 0x0008 /* MCE is talking */
-#define ST_CONFIG 0x0010 /* MCE is configured */
-#define ST_RETDAT 0x0020 /* MCE is returning data */
+/* mpc statūs -- try to keep these in start order */
+enum status {
+  st_idle   = 0x0000, /* Not a status bit, just a "task" */
+
+  st_drive0 = 0x0001, /* The primary drive is ready */
+  st_drive1 = 0x0002, /* The secondary drive is ready */
+  st_drive2 = 0x0004, /* The tertiary drive is ready */
+  st_mcecmd = 0x0008, /* MCE is talking */
+  st_config = 0x0010, /* MCE is configured */
+  st_retdat = 0x0020  /* MCE is returning data */
+};
+
 extern unsigned int state;
 
 /* operating modes */
-enum modes { op_init = 0, op_drive, op_ready, op_acq };
-#define MODE_STRINGS "init", "drive", "ready", "acq"
+enum modes { op_init = 0, op_ready, op_acq };
+#define MODE_STRINGS "init", "ready", "acq"
 
 /* high-level tasks */
-enum tasks { tk_idle = 0, tk_drive, tk_reset, tk_acq };
-
+extern enum status start_tk;
+extern enum status stop_tk;
 extern enum modes  new_goal;
-extern enum tasks  task;
+
+/* task handler */
+void *task(void *dummy);
+
+/* data tasklets */
+enum dtask {
+  dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
+  dt_stopacq, dt_killacq
+};
+#define DT_STRINGS "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
+  "stopacq", "killacq"
+extern enum dtask data_tk;
+extern int dt_error;
+extern int comms_lost;
 
 #define MPC_ETC_DIR "/data/mas/etc"
 

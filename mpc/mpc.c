@@ -86,17 +86,13 @@ uint16_t pcm_data[NUM_COL * NUM_ROW];
 /* the turnaround flag */
 int in_turnaround = 0;
 
-/* time to ask PCM to power cycle the MCE */
+/* time to ask PCM to power cycle the MCE or MCC */
 int power_cycle_mce = 0;
+int power_cycle_cmp = 0;
 
 /* ping */
 static int pcm_pong = 0;
    
-
-/* command "veto" -- actually, all this does is veto the actions associated with
- * failed commands */
-int command_veto = 0; 
-
 /* handles the divide-by-two frequency scaling for PCM transfer */
 int pcm_strobe = 0;
 
@@ -156,8 +152,6 @@ BAD_DMB:
 static void pcm_special(size_t len, const char *data_in, const char *peer,
     int port)
 {
-  static int power_cycle_wait = 0;
-
   if (data_in) {
     /* reply acknowledgement from PCM */
     int power_state = MPCPROTO_POWER_NOP;
@@ -166,23 +160,6 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
           &power_state, len, data_in, peer, port))
       return;
-
-    if (power_state == MPCPROTO_POWER_OFF) {
-      /* MCE power turned off; if we were power cycling we should stop */
-      power_cycle_mce = 0;
-      power_cycle_wait = 0;
-      /* "veto" commanding for a while */
-      command_veto = 1000000; /* microseconds */
-    } else if (power_state == MPCPROTO_POWER_CYC) {
-      /* MCE power is cycling; if we were power cycling we should stop */
-      power_cycle_mce = 0;
-      power_cycle_wait = 0;
-      /* "veto" commanding for a while */
-      command_veto = 1000000; /* microseconds */
-    } else if (power_state == MPCPROTO_POWER_ON) {
-      /* MCE power on; disable the command veto, if any */
-      command_veto = 0;
-    }
 
     /* update the data_modes definition */
     set_data_mode_bits(0, 0, data_mode_bits + 0);
@@ -206,12 +183,11 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     }
 
     /* collect pending requests */
-    if (power_cycle_mce && power_cycle_wait <= 0) {
+    if (power_cycle_mce) {
       power_cycle = 1;
       need_send = 1;
-      power_cycle_wait = 1000000; /* microseconds */
-    } else if (power_cycle_wait > 0)
-      power_cycle_wait -= UDP_TIMEOUT;
+      power_cycle_mce = 0;
+    }
     
     /* force send */
     if (pcm_pong) {
@@ -274,12 +250,11 @@ static int nmce_from_ip(void)
    * IPv4 addresses are encoded as a big endian number in s_addr, so we check
    * whether the lower three bytes are 0x01a8c0 (= 1.168.192) and then use the
    * top byte minus 80 as the mce number, if in range. */
-  addr = (unsigned long)((struct sockaddr_in*)&ifr.ifr_netmask)->sin_addr.s_addr;
+  addr =
+    (unsigned long)((struct sockaddr_in*)&ifr.ifr_netmask)->sin_addr.s_addr;
   if (((addr & 0xFFFFF) != 0x01A8C0) || ((addr >> 24) < 81) ||
       ((addr >> 24) > 86))
   {
-    bprintf(warning, "Unrecognised IP address %s",
-        inet_ntoa(((struct sockaddr_in*)&ifr.ifr_netmask)->sin_addr));
     return -1;
   }
 
@@ -397,6 +372,7 @@ int main(int argc, const char **argv)
   size_t len;
 
   pthread_t data_thread;
+  pthread_t task_thread;
 
   int init_timer = 0;
   int slow_timer = 0;
@@ -422,8 +398,9 @@ int main(int argc, const char **argv)
   /* Figure out our MCE number and check for fake mode */
   get_nmce(argc, argv);
 
-  /* create the data thread */
+  /* create the threads */
   pthread_create(&data_thread, NULL, fake ? fake_data : mas_data, NULL);
+  pthread_create(&task_thread, NULL, task, NULL);
 
   /* main loop */
   for (;;) {
@@ -434,14 +411,6 @@ int main(int argc, const char **argv)
 
     /* check inbound packets */
     n = udp_recv(sock, UDP_TIMEOUT, peer, &port, UDP_MAXSIZE, data);
-
-    /* decrement timers */
-    if (command_veto > 0) {
-      if ((command_veto -= UDP_TIMEOUT) <= 0) {
-        bputs(info, "Commanding unvetoed\n");
-        command_veto = 0;
-      }
-    }
 
     /* n == 0 on timeout */
     type = (n > 0) ? mpc_check_packet(n, data, peer, port) : -1;
@@ -487,7 +456,7 @@ int main(int argc, const char **argv)
         init_timer = INIT_TIMEOUT;
       } else if (n == 0)
         init_timer -= UDP_TIMEOUT;
-    } else {
+    } else if (!power_cycle_cmp) {
       /* finished the init; slow data */
       if (slow_timer <= 0) {
         send_slow_data(data);

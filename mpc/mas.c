@@ -27,18 +27,15 @@
 #include <errno.h>
 #include <string.h>
 
-static int need_reconfig = 1;
 static int cmd_err = 0;
 
 /* ask PCM to reboot the MCE if we get too many commanding errors */
 #define MAS_CMD_ERR 1
 #define CHECK_COMMAND_ERR() \
   do { \
-    if (!command_veto) \
-      if (++cmd_err >= MAS_CMD_ERR) { \
-        bputs(err, "Too many commanding errors; MCE power cycle requested"); \
-        power_cycle_mce = 1; \
-      } \
+    if (++cmd_err >= MAS_CMD_ERR) { \
+      comms_lost = 1; \
+    } \
   } while(0)
 
 /* Write a block to the MCE; returns non-zero on error */
@@ -146,52 +143,31 @@ static int set_frame(mce_context_t *mas, char **frame)
   return fs;
 }
 
-/* Do a reset/reconfig on the MCE */
-static int mce_reconfig(mce_context_t *mas)
+
+/* Check that we have all the cards */
+static int mce_check_cards(mce_context_t *mas)
 {
   const char *card[] = { "cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL };
-  int ret, i;
+  int i, ret = 0;
   uint32_t datum;
-
-  bputs(info, "MCE reset/reconfig");
-  ret = mcecmd_interface_reset(mas);
-
-  if (ret) {
-    bprintf(err, "Error resetting DSP: error #%i", ret);
-    return 1;
-  }
-
-  ret = mcecmd_hardware_reset(mas);
-  if (ret) {
-    bprintf(err, "Error resetting MCE: error #%i", ret);
-    return 1;
-  }
-
-  if (exec_and_wait(sched, MAS_SCRIPT "/set_directory", NULL, 20, 0)) {
-    /* reset the mce on reconfig error...? */
-    power_cycle_mce = 1;
-    return 1;
-  }
-
-  if (exec_and_wait(sched, MAS_SCRIPT "/mce_reconfig", NULL, 100, 0)) {
-    /* reset the mce on reconfig error...? */
-    power_cycle_mce = 1;
-    return 1;
-  }
 
   /* Verify that everyone's alive */
   for (i = 0; card[i]; ++i)
     if (!mas_read_block(mas, card[i], "fw_rev", &datum, 1))
       bprintf(info, "%3s firmware: 0x%X", card[i], datum);
+    else
+      ret = 1;
 
-  return 0;
+  return ret;
 }
 
 void *mas_data(void *dummy)
 {
   char *frame = NULL;
   mce_context_t *mas;
-  int frame_size;
+  int frame_size = 0;
+  int max = 0;
+  int ret;
 
   nameThread("MAS");
 
@@ -216,42 +192,81 @@ void *mas_data(void *dummy)
   mcedata_ioctl(mas, DATADEV_IOCT_SET, DATA_LEECH);
   bputs(info, "Leeching data from MAS data device");
 
-  mce_reconfig(mas);
-
-  frame_size = set_frame(mas, &frame);
-  get_acq_metadata(mas);
-
-  int max;
-  max = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_MAX);
-  
   /* main loop */
   for (;;) {
-    /* check for change in leeched acq */
-    int leech_valid = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LVALID);
-    if (!leech_valid) {
-      mcedata_ioctl(mas, DATADEV_IOCT_RESET, 0);
-      bputs(info, "New acquisition");
-      /* reset frequency halving */
-      pcm_strobe = 0;
-      frame_size = set_frame(mas, &frame);
-      get_acq_metadata(mas);
+
+    /* deal with tasks */
+    switch (data_tk) {
+      case dt_idle:
+        break;
+      case dt_setdir:
+        if (exec_and_wait(sched, MAS_SCRIPT "/set_directory", NULL, 20, 0)) 
+          dt_error = 1;
+        else
+          dt_error = 0;
+        data_tk = dt_idle;
+        break;
+      case dt_dsprs:
+        ret = mcecmd_interface_reset(mas);
+        if (ret) {
+          bprintf(err, "Error resetting DSP: error #%i", ret);
+          dt_error = 1;
+        } else
+          dt_error = 0;
+        data_tk = dt_idle;
+        break;
+      case dt_mcers:
+        ret = mcecmd_hardware_reset(mas);
+        if (ret) {
+          bprintf(err, "Error resetting MCE: error #%i", ret);
+          dt_error = 1;
+        } else if (mce_check_cards(mas)) {
+          bprintf(err, "Card check failed");
+          dt_error = 1;
+        } else
+          dt_error = 0;
+
+        frame_size = set_frame(mas, &frame);
+        get_acq_metadata(mas);
+        max = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_MAX);
+
+        data_tk = dt_idle;
+        break;
+      case dt_reconfig:
+        if (exec_and_wait(sched, MAS_SCRIPT "/mce_reconfig", NULL, 100, 0))
+          comms_lost = 1;
+        data_tk = dt_idle;
+        break;
     }
 
-    int head;
-    head = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_HEAD);
-    int tail, ltail;
-    tail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_TAIL);
-    ltail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LTAIL);
-    
-    ssize_t total;
-    if (head != ltail) {
-      while (head != ltail) {
-        total = mcedata_read(mas, frame, frame_size);
-        do_frame((const uint32_t*)frame, frame_size);
-        ltail = (ltail + 1) % max;
+    if (state & st_mcecmd) {
+      /* check for change in leeched acq */
+      int leech_valid = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LVALID);
+      if (!leech_valid) {
+        mcedata_ioctl(mas, DATADEV_IOCT_RESET, 0);
+        bputs(info, "New acquisition");
+        /* reset frequency halving */
+        pcm_strobe = 0;
+        frame_size = set_frame(mas, &frame);
+        get_acq_metadata(mas);
       }
-    } else
-      usleep(10000);
+
+      int head;
+      head = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_HEAD);
+      int tail, ltail;
+      tail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_TAIL);
+      ltail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LTAIL);
+    
+      ssize_t total;
+      if (head != ltail) {
+        while (head != ltail) {
+          total = mcedata_read(mas, frame, frame_size);
+          do_frame((const uint32_t*)frame, frame_size);
+          ltail = (ltail + 1) % max;
+        }
+      }
+    }
+    usleep(10000);
   }
 
   return NULL;
