@@ -190,7 +190,7 @@ void FrameFileWriter(void)
 
 #ifdef __MCP__
   nameThread("FFWrit");
-  bputs(startup, "Startup\n");
+  //bputs(startup, "Startup\n");
 #endif
 
   /* alloc output_buffer */

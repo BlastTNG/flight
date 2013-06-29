@@ -1990,7 +1990,7 @@ void CheckCommandList(void)
     }
   }
 
-  bprintf(info, "Commands: All Checks Passed.\n");
+  //bprintf(info, "Commands: All Checks Passed.\n");
 }
 
 /* do necessary stuff after reading prev_status */

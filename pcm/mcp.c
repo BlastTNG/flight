@@ -71,7 +71,6 @@
 //flc_ip[0] = bitsy, flc_ip[1] = itsy, so that flc_ip[BitsyIAm] gives other flc
 // so flc_ip[2] = {Bitsy_IP, Itsy_IP}
 char* flc_ip[2] = {"192.168.1.31", "192.168.1.30"};
-char* other_ip;
 
 int bbc_fp = -1;
 unsigned int debug = 0;
@@ -99,7 +98,7 @@ void WatchPort(void*);
 void WatchDGPS(void);
 void Magnetometer(void);
 void IntegratingStarCamera(void);
-void WatchFIFO(void);               //commands.c
+void WatchFIFO(void*);               //commands.c
 void FrameFileWriter(void);         //framefile.c
 void CompressionWriter(void);
 void StageBus(void);
@@ -167,7 +166,7 @@ static void SensorReader(void)
   FILE *stream;
 
   nameThread("Sensor");
-  bputs(startup, "Startup\n");
+  //bputs(startup, "Startup\n");
 
   while (1) {
     if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp1_input", "r"))
@@ -230,7 +229,7 @@ static void Chatter(void* arg)
 
   nameThread("Chat");
 
-  bprintf(startup, "Thread startup\n");
+  //bprintf(startup, "Thread startup\n");
 
   fd = open("/data/etc/spider/pcm.log", O_RDONLY|O_NONBLOCK);
 
@@ -1128,17 +1127,24 @@ int main(int argc, char *argv[])
     fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
   }
 
+
   biphase_timer = mcp_systime(NULL) + BI0_VETO_LENGTH;
 
   /* register the output function */
   buos_use_func(mputs);
   nameThread("Main");
 
+  /* Find out whether I'm itsy or bitsy */
+  BitsyIAm = AmIBitsy();
+  if (BitsyIAm) bputs(info, "I am Bitsy.\n");
+  else bputs(info, "I am not Bitsy.\n");
+
+
 #if (TEMPORAL_OFFSET > 0)
   bprintf(warning, "System: TEMPORAL OFFSET = %i\n", TEMPORAL_OFFSET);
 #endif
 
-  bputs(startup, "System: Startup");
+  //bputs(startup, "System: Startup");
 
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
@@ -1155,7 +1161,7 @@ int main(int argc, char *argv[])
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
-  pthread_create(&CommandDatafifo, NULL, (void*)&WatchFIFO, NULL);
+  pthread_create(&CommandDatafifo, NULL, (void*)&WatchFIFO, (void*)flc_ip[BitsyIAm]);
 #endif
 #ifdef USE_SIP_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
@@ -1184,11 +1190,6 @@ int main(int argc, char *argv[])
     slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
     memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
   }
-
-  /* Find out whether I'm itsy or bitsy */
-  BitsyIAm = AmIBitsy();
-  if (BitsyIAm) bputs(info, "System: I am Bitsy.\n");
-  else bputs(info, "System: I am not Bitsy.\n");
 
   pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
 
@@ -1230,8 +1231,7 @@ int main(int argc, char *argv[])
   pthread_create(&mce_id, NULL, (void*)&mceserv, NULL);
 #endif
 
-  other_ip = flc_ip[BitsyIAm];
-  start_flc_data_swapper(other_ip);
+  start_flc_data_swapper(flc_ip[BitsyIAm]);
   
   while (1) {
     in_data = read_from_bbc();

@@ -80,7 +80,7 @@ extern short int InCharge;            // in tx.c
 
 void startChrgCtrl()
 {  
-  bprintf(info, "startChrgCtrl: creating charge controller serial thread");
+  //bprintf(info, "startChrgCtrl: creating charge controller serial thread");
   pthread_create(&chrgctrlcomm1_id, NULL, chrgctrlComm, (void*)0);
   pthread_create(&chrgctrlcomm2_id, NULL, chrgctrlComm, (void*)1);
 }

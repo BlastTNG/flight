@@ -582,9 +582,9 @@ static void DoSanityChecks(void)
   char* fields[2][64][64];
   char names[4096][FIELD_LEN];
 
-#ifdef VERBOSE
-  bprintf(info, "Channels: Running Sanity Checks on Channel Lists.\n");
-#endif
+//#ifdef VERBOSE
+//  bprintf(info, "Channels: Running Sanity Checks on Channel Lists.\n");
+//#endif
 
   for (i = 0; i < 64; ++i)
     for (j = 0; j < 64; ++j)
@@ -766,7 +766,7 @@ static void DoSanityChecks(void)
   ccDerived = i;
 
 #ifdef VERBOSE
-  bprintf(info, "Channels: All Checks Passed.\n");
+//  bprintf(info, "Channels: All Checks Passed.\n");
   bprintf(info, "Channels: Number of Derived Channel Records: %i\n", ccDerived);
   bprintf(info, "Channels: Slow Channels Per Biphase Frame: %i\n",
       slowsPerBi0Frame);
@@ -828,9 +828,9 @@ void MakeAddressLookups(const char* dump_name)
   DoSanityChecks();
 #endif
 
-#ifdef VERBOSE
-  bprintf(info, "Channels: Generating Address Lookup Tables\n");
-#endif
+//#ifdef VERBOSE
+//  bprintf(info, "Channels: Generating Address Lookup Tables\n");
+//#endif
 
   unsigned int BiPhaseAddr;
   unsigned int addr[2] = {

@@ -76,7 +76,6 @@ void fillDLData(unsigned char *b, int len); /* slowdl.c */
 extern pthread_mutex_t mutex;
 
 extern char lst0str[82];
-extern char *other_ip;
 
 void SingleCommand (enum singleCommand command, int scheduled); // commands.c
 void MultiCommand(enum multiCommand command, double *rvalues,
@@ -422,7 +421,7 @@ static int DataQSize(int index)
 
 
 #ifdef USE_FIFO_CMD
-void WatchFIFO ()
+void WatchFIFO (void* void_other_ip)
 {
   unsigned char buf[1];
   char command[100];
@@ -435,6 +434,7 @@ void WatchFIFO ()
 
   int i;
   int send_to_other;
+  char *other_ip;
 
   nameThread("SIPSS");
   for (i = 0; i < DATA_Q_SIZE; ++i) {
@@ -447,7 +447,7 @@ void WatchFIFO ()
 
   int index, pindex = 0;
 
-  bputs(startup, "WatchFIFO startup\n");
+  //bputs(startup, "WatchFIFO startup\n");
 
   if ((fifo = open("/data/etc/SIPSS.FIFO", O_RDONLY | O_NONBLOCK)) == -1)
     berror(tfatal, "Unable to open FIFO");
@@ -463,24 +463,29 @@ void WatchFIFO ()
     command[index - 1] = command[index] = 0;
     bprintf(info, "Command received: %s\n", command);
     
-    // if the command has an _ prepended, then it came from the other computer, 
-    // and should not be sent back.
-    if (command[0] == '_') {
-      for (i=1; i<index; i++) {
-        command[i-1] = command[i];
+#ifndef TEST_RUN
+    if (void_other_ip != NULL) {
+      other_ip = (char *) void_other_ip;
+      // if the command has an _ prepended, then it came from the other computer, 
+      // and should not be sent back.
+      if (command[0] == '_') {
+        for (i=1; i<index; i++) {
+          command[i-1] = command[i];
+        }
+        send_to_other = 0;
+      } else {
+        send_to_other = 1;
       }
-      send_to_other = 0;
-    } else {
-      send_to_other = 1;
+      
+      if (send_to_other) {
+        char sys_str[512];
+        sprintf(sys_str, "/usr/local/bin/spidercmd @%s _%s", other_ip, command);
+        bputs(info, sys_str);
+        system(sys_str);
+      }    
     }
-    
-    if (send_to_other) {
-      char sys_str[512];
-      sprintf(sys_str, "/usr/local/bin/spidercmd @%s _%s", other_ip, command);
-      bputs(info, sys_str);
-      system(sys_str);
-    }
-    
+#endif
+
     index = -1;
     while((command[++index] != ' ') && command[index]);
     command[index++] = 0;
@@ -670,7 +675,7 @@ void WatchPort (void* parameter)
   char tname[6];
   sprintf(tname, "COMM%1d", port+1);
   nameThread(tname);
-  bprintf(startup, "WatchPort startup\n");
+  //bprintf(startup, "WatchPort startup\n");
 
   tty_fd = sip_setserial(COMM[port]);
 

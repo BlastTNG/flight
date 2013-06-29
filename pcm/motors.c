@@ -139,7 +139,7 @@ extern short int bsc_trigger; /* Semaphore for BSC trigger */
 /* opens communications with motor controllers */
 void openMotors()
 {
-  bprintf(info, "Motors: connecting to motors");
+  //bprintf(info, "Motors: connecting to motors");
   pthread_create(&reactcomm_id, NULL, &reactComm, NULL);
   pthread_create(&pivotcomm_id, NULL, &pivotComm, NULL);
 }
@@ -2513,8 +2513,7 @@ void* reactComm(void* arg)
 
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info,
-      "I am not in charge, thus I will not communicate with the RW motor.");
+      bprintf(info, "Not in charge: waiting.");
       firsttime=0;
     }
     usleep(20000);
@@ -2757,8 +2756,7 @@ void* pivotComm(void* arg)
 
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info,
-      "I am not incharge thus I will not communicate with the pivot motor.");
+      bprintf(info, "Not in charge: waiting.");
       firsttime=0;
     }
     usleep(20000);
