@@ -76,6 +76,7 @@ void fillDLData(unsigned char *b, int len); /* slowdl.c */
 extern pthread_mutex_t mutex;
 
 extern char lst0str[82];
+extern char *other_ip;
 
 void SingleCommand (enum singleCommand command, int scheduled); // commands.c
 void MultiCommand(enum multiCommand command, double *rvalues,
@@ -433,6 +434,8 @@ void WatchFIFO ()
   char *mcommand_data[DATA_Q_SIZE];
 
   int i;
+  int send_to_other;
+
   nameThread("SIPSS");
   for (i = 0; i < DATA_Q_SIZE; ++i) {
     mcommand_data[i] = NULL;
@@ -459,6 +462,25 @@ void WatchFIFO ()
     } while (buf[0] != '\n');
     command[index - 1] = command[index] = 0;
     bprintf(info, "Command received: %s\n", command);
+    
+    // if the command has an _ prepended, then it came from the other computer, 
+    // and should not be sent back.
+    if (command[0] == '_') {
+      for (i=1; i<index; i++) {
+        command[i-1] = command[i];
+      }
+      send_to_other = 0;
+    } else {
+      send_to_other = 1;
+    }
+    
+    if (send_to_other) {
+      char sys_str[512];
+      sprintf(sys_str, "/usr/local/bin/spidercmd @%s _%s", other_ip, command);
+      bputs(info, sys_str);
+      system(sys_str);
+    }
+    
     index = -1;
     while((command[++index] != ' ') && command[index]);
     command[index++] = 0;
