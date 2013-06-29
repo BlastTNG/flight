@@ -2904,16 +2904,20 @@ void* pivotComm(void* arg)
         bprintf(info,"v2 d8.13h = %i",tmp);
         tmp = queryAMCInd(3, 2, 1, &pivotinfo);
         bprintf(info, "Sys. Protect status bitfield = 0x%04x", tmp);
+        tmp = queryAMCInd(0xd1, 0x00, 1, &pivotinfo);
+        bprintf(info, "Drive mode bitfield = 0x%04x", tmp);
       }
 
       /* check to see if commanded pivot ctrl mode has changed */
       if (pivotinfo.mode != CommandData.pointing_mode.piv_mode) {
         if (CommandData.pointing_mode.piv_mode == P_PIV_VEL) {
-          send_amccmd(0xD1, 0x00, 0x0000, 1, cmd, &pivotinfo);
+          send_amccmd(0xD1, 0x00, 0x0000, 1, 0, &pivotinfo);
           pivotinfo.mode = CommandData.pointing_mode.piv_mode;
+          bprintf(info, "Changing from torque mode to velocity mode");
         } else if (CommandData.pointing_mode.piv_mode == P_PIV_TORQUE) {
-          send_amccmd(0xD1, 0x00, 0x0001, 1, cmd, &pivotinfo);
+          send_amccmd(0xD1, 0x00, 0x0001, 1, 0, &pivotinfo);
           pivotinfo.mode = CommandData.pointing_mode.piv_mode;
+          bprintf(info, "Changing from velocity mode to torque mode");
         } else {
           bputs(err, "Unknown pivot control mode specified\n");
         }
