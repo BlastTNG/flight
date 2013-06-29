@@ -1200,12 +1200,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case pivot_gain:  /* pivot gains */
       CommandData.pivot_gain.SP =   rvalues[0];
-      CommandData.pivot_gain.V_RW = ivalues[1];
-      CommandData.pivot_gain.T_RW = ivalues[2];
-      CommandData.pivot_gain.V_REQ = ivalues[3];
-      CommandData.pivot_gain.PE = ivalues[4];
-      CommandData.pivot_gain.PV = ivalues[5];
-      CommandData.pivot_gain.F = rvalues[6];
+      CommandData.pivot_gain.PV = ivalues[1];
+      CommandData.pivot_gain.V_RW = ivalues[2];
+      CommandData.pivot_gain.PE = ivalues[3];
+      CommandData.pivot_gain.T_RW = ivalues[4];
+      CommandData.pivot_gain.F = rvalues[5];
+      CommandData.pivot_gain.V_REQ = ivalues[6];
       break;
     case set_piv_mode: /* switch btwn vel/torque mode*/
       CommandData.pointing_mode.piv_mode = ivalues[0];
