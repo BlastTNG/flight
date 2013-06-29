@@ -419,16 +419,17 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Current Dec (deg)", -90, 90, 'f', "DEC"}
     }
   },
-  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 6,
+  {COMMAND(pivot_gain), 
+   "pivot gains ([v] = velocity mode only, [t] = torque mode only)", GR_GAIN, 7,
     {
       {"RW Set Point (dps)",   -500, 500, 'f', "SET_RW"},
-      {"RW vel. P gain", 0, USHRT_MAX, 'i', "G_V_RW_PIV"},
-      {"RW vel. I gain", 0, USHRT_MAX, 'i', "G_I_RW_PIV"},
-      {"Az vel. P gain", 0, USHRT_MAX, 'i', "G_V_AZ_PIV"},
-      {"RW torque P gain", 0, USHRT_MAX, 'i', "G_T_RW_PIV"},
-      {"Az vel. request P Gain", 0, USHRT_MAX, 'i', "G_V_REQ_AZ_PIV"}
-      
-    } 
+      {"RW vel. P gain [v]", 0, USHRT_MAX, 'i', "G_V_RW_PIV"},
+      {"RW torque P gain [v]", 0, USHRT_MAX, 'i', "G_T_RW_PIV"},
+      {"Az vel. request P Gain [v]", 0, USHRT_MAX, 'i', "G_V_REQ_AZ_PIV"},
+      {"V_err P Gain [t]", 0, USHRT_MAX, 'i', "G_PE_PIV"},
+      {"V_RW P Gain [t]", 0, USHRT_MAX, 'i', "G_PV_PIV"},
+      {"Static Friction offset [t]", 0, 2, 'f', "FRICT_OFF_PIV"}
+    }
   },
   {COMMAND(set_piv_mode), "set pivot drive mode", GR_GAIN, 1,
     {

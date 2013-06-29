@@ -69,11 +69,17 @@ struct GainStruct {
 
 // used for pivot loop gains
 struct PivGainStruct {
+  /* gains for velocity mode */
   unsigned short int V_RW; // prop to RW velocity
   unsigned short int V_AZ; // prop to gondola az speed
   unsigned short int P_RW; // prop to RW position (integrated velocity)
   unsigned short int T_RW; // prop to gondola az accel
   unsigned short int V_REQ; // prop to gondoal az speed *request*
+  /* gains for torque mode */
+  unsigned short int PE; // prop to gondola az speed err 
+  unsigned short int PV; // prop to RW speed err 
+  double F; // current offset for stiction
+  
   double SP; // RW velocity Set Point
 };
 

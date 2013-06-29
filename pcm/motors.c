@@ -546,18 +546,15 @@ static double GetVAz(void)
 /************************************************************************/
 /*                                                                      */
 /* GetVPivot: get the velocity request for the pivot in DAC units       */
-/*            Proportional to the reaction wheel speed error            */       
-/*            (and other things). NOTE: used to be GetIPivot, but now   */
-/*            we are going to try running the pivot in velocity mode    */
+/*            (and other things). NOTE: only used when running the piv  */
+/*            in velocity mode                                          */
 /*                                                                      */
 /************************************************************************/
-static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_rw, 
-			  unsigned int gP_v_az, unsigned int gP_t_rw,
-		          unsigned int gP_v_req, unsigned int disabled)
+static double GetVPivot(int write_slow, unsigned int gP_v_rw,  
+                        unsigned int gP_t_rw, unsigned int gP_v_req, 
+                        unsigned int disabled)
 {
   static struct NiosStruct* pVRWTermPivAddr;
-  static struct NiosStruct* iVRWTermPivAddr;
-  static struct NiosStruct* pVAzTermPivAddr;
   static struct NiosStruct* pTRWTermPivAddr;
   static struct NiosStruct* pVReqAzTermPivAddr;
   
@@ -566,8 +563,8 @@ static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_r
   double v_req = 0.0;
   int v_req_dac = 0;
   int i_point;
-  double I_v_rw_term, P_v_rw_term, P_v_az_term, P_t_rw_term, P_v_req_term;
-  int I_v_rw_term_dac, P_v_rw_term_dac, P_v_az_term_dac, P_t_rw_term_dac,
+  double P_v_rw_term, P_t_rw_term, P_v_req_term;
+  int P_v_rw_term_dac, P_t_rw_term_dac,
       P_v_req_term_dac;
       
   unsigned short int dac_rw;
@@ -578,18 +575,10 @@ static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_r
 
   double a = 0.9998;
 
-  /* TODO: Remove this note.
-   * v_piv = (I_rw * int_v_rw) + (P_rw * v_rw) + (P_g * v_g) + (P_t_rw * t_rw)
-   * with appropriate signs */
-
-   // g_I_v_rw, g_P_v_rw, g_P_v_az, g_P_t_rw;
-
   if(firsttime) {
-    pVRWTermPivAddr = GetNiosAddr("p_v_rw_term_piv");
-    iVRWTermPivAddr = GetNiosAddr("i_v_rw_term_piv");
-    pVAzTermPivAddr = GetNiosAddr("p_v_az_term_piv");
-    pTRWTermPivAddr = GetNiosAddr("p_t_rw_term_piv");
-    pVReqAzTermPivAddr = GetNiosAddr("p_v_req_az_term_piv");
+    pVRWTermPivAddr = GetNiosAddr("term_p_v_rw_piv");
+    pTRWTermPivAddr = GetNiosAddr("term_p_t_rw_piv");
+    pVReqAzTermPivAddr = GetNiosAddr("term_p_v_req_az_piv");
     
     dacRWAddr = GetBiPhaseAddr("dac_rw");
     
@@ -604,9 +593,6 @@ static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_r
   /* Calculate control terms */
   P_v_rw_term = -( ((double) gP_v_rw)/1000.0 )*(ACSData.vel_rw - CommandData.pivot_gain.SP);
   P_t_rw_term = -( ((double)gP_t_rw)/1000.0 )*((double)(dac_rw-32768)); 
-  //P_v_az_term = -1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
-  P_v_az_term = 1.0*( (double)gP_v_az )*(PointingData[i_point].v_az);
-  I_v_rw_term = ( (double)gI_v_rw/100.0 )*(int_v_rw);
   if ( (CommandData.pointing_mode.mode == P_SPIDER) || 
        (CommandData.pointing_mode.mode == P_SINE) ) {
      if ( (scan_region != SCAN_BEYOND_L) && (scan_region != SCAN_BEYOND_R) ){
@@ -617,7 +603,7 @@ static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_r
   } else {
     P_v_req_term = 0.0;
   }    
-  v_req = P_v_rw_term + P_t_rw_term + P_v_az_term + I_v_rw_term + P_v_req_term;
+  v_req = P_v_rw_term + P_t_rw_term + P_v_req_term;
 
   if(disabled) { // Don't request a velocity if we are disabled.
     v_req=0.0;
@@ -643,18 +629,6 @@ static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_r
     P_t_rw_term_dac=P_t_rw_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
   }
  
-  if(P_v_az_term>0.0) {
-    P_v_az_term_dac=P_v_az_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
-  } else {
-    P_v_az_term_dac=P_v_az_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
-  }
-
-  if(I_v_rw_term>0.0) {
-    I_v_rw_term_dac=I_v_rw_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
-  } else {
-    I_v_rw_term_dac=I_v_rw_term+32768+PIV_DAC_OFF-PIV_DEAD_BAND;
-  }
-  
   if(P_v_req_term>0.0) {
     P_v_req_term_dac=P_v_req_term+32768+PIV_DAC_OFF+PIV_DEAD_BAND;
   } else {
@@ -685,20 +659,6 @@ static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_r
     P_t_rw_term_dac=65535;
   }
 
-  if(P_v_az_term_dac <= 0) {
-    P_v_az_term_dac=1;
-  }
-  if(P_v_az_term_dac > 65535) {
-    P_v_az_term_dac=65535;
-  }
-
-  if(I_v_rw_term_dac <= 0) {
-    I_v_rw_term_dac=1;
-  }
-  if(I_v_rw_term_dac > 65535) {
-    I_v_rw_term_dac=65535;
-  }
-
   if(P_v_req_term_dac <= 0) {
     P_v_req_term_dac=1;
   }
@@ -709,14 +669,144 @@ static double GetVPivot(int write_slow, unsigned int gI_v_rw,unsigned int gP_v_r
   /* Write control terms to frame, but slowly... */
   if (write_slow) {
       WriteData(pVRWTermPivAddr, P_v_rw_term_dac, NIOS_QUEUE);
-      WriteData(iVRWTermPivAddr, I_v_rw_term_dac, NIOS_QUEUE);
-      WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
-      WriteData(pVAzTermPivAddr, P_v_az_term_dac, NIOS_QUEUE);
       WriteData(pVReqAzTermPivAddr, P_v_req_term_dac, NIOS_QUEUE);
       WriteData(pTRWTermPivAddr, P_t_rw_term_dac, NIOS_QUEUE);
   }
   
   return v_req_dac;
+}
+
+/************************************************************************/
+/*                                                                      */
+/*     GetIPivot: get the current request for the pivot in DAC units    */
+/*       Proportional to the reaction wheel speed error. NOTE: used only*/
+/*       when running piv in torque mode                                */
+/*                                                                      */
+/************************************************************************/
+static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, 
+                        unsigned int g_err_piv, double frict_off_piv, 
+                        unsigned int disabled)
+{
+  static struct NiosStruct* pRWTermPivAddr;
+  static struct NiosStruct* pErrTermPivAddr;
+  static struct NiosStruct* frictTermPivAddr;
+  static double buf_frictPiv[FPIV_FILTER_LEN]; // Buffer for Piv friction 
+                                               // term boxcar filter.
+  static double a=0.0; 
+  static unsigned int ib_last=0;
+  double I_req = 0.0;
+  int I_req_dac = 0;
+  int I_req_dac_init = 0;
+  int i_point;
+  double v_az_req,i_frict,i_frict_filt;
+  double p_rw_term, p_err_term;
+  int p_rw_term_dac, p_err_term_dac;
+ 
+  static int i=0;
+  static unsigned int firsttime = 1;
+
+  if(firsttime) {
+    pRWTermPivAddr = GetNiosAddr("term_p_rw_piv");
+    pErrTermPivAddr = GetNiosAddr("term_p_err_piv");
+    frictTermPivAddr = GetNiosAddr("term_frict_piv");
+
+    // Initialize the buffer.  Assume all zeros to begin
+    for(i=0;i<(FPIV_FILTER_LEN-1);i++) buf_frictPiv[i]=0.0;
+    firsttime = 0;
+  }
+
+  v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
+
+  i_point = GETREADINDEX(point_index);
+  p_rw_term = (-1.0)*((double)g_rw_piv/10.0)
+              *(ACSData.vel_rw-CommandData.pivot_gain.SP);
+  p_err_term = (double)g_err_piv*5.0*(v_az_req-PointingData[point_index].v_az);
+  I_req = p_rw_term+p_err_term;
+
+  if(disabled) { // Don't attempt to send current to the motors if we are 
+                 // disabled.
+    I_req=0.0;
+  }
+
+  // Calculate static friction offset term
+  if(fabs(I_req)<100) {
+    i_frict=0.0;
+  } else {
+    if(I_req>0.0) {
+      i_frict=frict_off_piv;
+    } else {
+      i_frict=(-1.0)*frict_off_piv;
+    }
+  }
+
+  /* Convert to DAC Units*/
+
+  if(fabs(I_req)<100) {
+    I_req_dac=16384+PIV_DAC_OFF;
+  } else {
+    if(I_req>0.0) {
+      I_req_dac=I_req+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+    } else {
+      I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+    }
+  }
+  I_req_dac_init=I_req_dac;
+
+  a+=(i_frict-buf_frictPiv[ib_last]);
+  buf_frictPiv[ib_last]=i_frict;
+  ib_last=(ib_last+FPIV_FILTER_LEN+1)%FPIV_FILTER_LEN;
+  i_frict_filt=a/((double) FPIV_FILTER_LEN);
+
+  I_req_dac += i_frict_filt*PIV_I_TO_DAC;
+
+  if(fabs(p_rw_term)<100) {
+    p_rw_term_dac=16384+PIV_DAC_OFF;
+  } else {
+    if(p_rw_term>0.0) {
+      p_rw_term_dac=p_rw_term+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+    } else {
+      p_rw_term_dac=p_rw_term+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+    }
+  }
+
+  if(fabs(p_err_term)<100) {
+    p_err_term_dac=16384+PIV_DAC_OFF;
+  } else {
+    if(p_err_term>0.0) {
+      p_err_term_dac=p_err_term+16384+PIV_DAC_OFF+PIV_DEAD_BAND;
+    } else {
+      p_err_term_dac=p_err_term+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
+    }
+  }
+
+
+  // Check to make sure the DAC value is in the proper range
+  if(I_req_dac <= 0) {
+    I_req_dac=1;
+  }
+  if(I_req_dac >  32767) {
+    I_req_dac=32767;
+  }
+  // Check to make sure the P-terms are in the proper range
+  if(p_rw_term_dac <= 0) {
+    p_rw_term_dac=1;
+  }
+  if(p_rw_term_dac >  32767) {
+    p_rw_term_dac=32767;
+  }
+  if(p_err_term_dac <= 0) {
+    p_err_term_dac=1;
+  }
+  if(p_err_term_dac >  32767) {
+    p_err_term_dac=32767;
+  }
+
+  i++;
+
+  WriteData(pRWTermPivAddr,p_rw_term,NIOS_QUEUE);
+  WriteData(pErrTermPivAddr,p_err_term,NIOS_QUEUE);
+  WriteData(frictTermPivAddr,i_frict_filt*32767.0/2.0,NIOS_QUEUE);
+  return I_req_dac;
 }
 
 /* dxdtheta returns derivative of lin. act. extension. w.r.t. elevation angle 
@@ -747,11 +837,17 @@ void WriteMot(int write_slow)
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
   static struct NiosStruct* gPtAzAddr;
+
+  /* pivot velocity mode gains */
   static struct NiosStruct* gVRWPivAddr;
-  static struct NiosStruct* gIRWPivAddr;
-  static struct NiosStruct* gVAzPivAddr;
   static struct NiosStruct* gTRWPivAddr;
   static struct NiosStruct* gVReqAzPivAddr;
+
+  /* pivot torque mode gains */
+  static struct NiosStruct* gPVPivAddr;
+  static struct NiosStruct* gPEPivAddr;
+  static struct NiosStruct* frictOffPivAddr;
+
   static struct NiosStruct* setRWAddr;
   static struct NiosStruct* dacPivAddr;
   static struct NiosStruct* accelAzAddr;
@@ -765,7 +861,7 @@ void WriteMot(int write_slow)
 
   static int wait = 100; /* wait 100 frames before controlling. */
 
-  int v_az, v_piv;
+  int v_az, v_piv=0, i_piv=0;
   double elGainCom;
   double v_el_P = 0.0; // port
   double v_el_S = 0.0; // starboard
@@ -779,7 +875,9 @@ void WriteMot(int write_slow)
   int step_rate_P; // pulse rate (Hz) of step input to el motor
   int step_rate_S; // pulse rate (Hz) of step input to el motor
    
-  int azGainP, azGainI, pivGainVelRW, pivGainVelAz, pivGainPosRW, pivGainTorqueRW, pivGainVelReqAz;
+  int azGainP, azGainI, pivGainVelRW, pivGainTorqueRW, pivGainVelReqAz, 
+      pivGainRW, pivGainErr;
+  double pivFrictOff;
   int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
@@ -793,11 +891,17 @@ void WriteMot(int write_slow)
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
     gPtAzAddr = GetNiosAddr("g_pt_az");
+
+    /* pivot velocity mode gains */
     gVRWPivAddr = GetNiosAddr("g_v_rw_piv");
-    gIRWPivAddr = GetNiosAddr("g_i_rw_piv");
-    gVAzPivAddr = GetNiosAddr("g_v_az_piv");
     gTRWPivAddr = GetNiosAddr("g_t_rw_piv");
     gVReqAzPivAddr = GetNiosAddr("g_v_req_az_piv");
+    
+    /* pivot torque mode gains */
+    gPVPivAddr = GetNiosAddr("g_pv_piv");
+    gPEPivAddr = GetNiosAddr("g_pe_piv");
+    frictOffPivAddr = GetNiosAddr("frict_off_piv");
+
     setRWAddr = GetNiosAddr("set_rw");
     accelAzAddr = GetNiosAddr("accel_az");
     accelMaxAzAddr = GetNiosAddr("accel_max_az");
@@ -898,35 +1002,52 @@ void WriteMot(int write_slow)
   if ((CommandData.disable_az) || (wait > 0)) {
     azGainP = 0;
     azGainI = 0;
+    /* velocity mode gains */
     pivGainVelRW = 0;
-    pivGainVelAz = 0;
-    pivGainPosRW = 0;
     pivGainTorqueRW = 0;
     pivGainVelReqAz = 0;
-    v_piv=GetVPivot(write_slow,pivGainPosRW,pivGainVelRW,pivGainVelAz,
-		     pivGainTorqueRW,pivGainVelReqAz,1);
+    /* torque mode gains */
+    pivGainRW = 0;
+    pivGainErr = 0;
+    pivFrictOff = 0.0;
+    if (CommandData.pointing_mode.piv_mode == P_PIV_VEL) {
+      v_piv=GetVPivot(write_slow,pivGainVelRW,pivGainTorqueRW,pivGainVelReqAz,
+                      1);
+    } else if (CommandData.pointing_mode.piv_mode == P_PIV_TORQUE) {
+      i_piv=GetIPivot(0,pivGainRW,pivGainErr,pivFrictOff,1);
+    }
   } else {
     azGainP = CommandData.azi_gain.P;
     azGainI = CommandData.azi_gain.I;
-    pivGainVelRW = CommandData.pivot_gain.V_RW;
-    pivGainVelAz = CommandData.pivot_gain.V_AZ;
-    pivGainPosRW = CommandData.pivot_gain.P_RW;
-    pivGainTorqueRW = CommandData.pivot_gain.T_RW;
-    pivGainVelReqAz = CommandData.pivot_gain.V_REQ;
-    v_piv=GetVPivot(write_slow,pivGainPosRW,pivGainVelRW,pivGainVelAz,
-		     pivGainTorqueRW,pivGainVelReqAz,0);
+    if (CommandData.pointing_mode.piv_mode == P_PIV_VEL) {
+      pivGainVelRW = CommandData.pivot_gain.V_RW;
+      pivGainTorqueRW = CommandData.pivot_gain.T_RW;
+      pivGainVelReqAz = CommandData.pivot_gain.V_REQ;
+      v_piv=GetVPivot(write_slow,pivGainVelRW, pivGainTorqueRW,pivGainVelReqAz,
+                      0);
+    } else if (CommandData.pointing_mode.piv_mode == P_PIV_TORQUE) {
+      pivGainRW = CommandData.pivot_gain.PV;
+      pivGainErr = CommandData.pivot_gain.PE;
+      pivFrictOff = CommandData.pivot_gain.F;
+      i_piv=GetIPivot(v_az,pivGainRW,pivGainErr,pivFrictOff,0);
+    } 
   }
   
   /* Even if az drive is disabled, write non-zero values of gains
    * to frame so that we can see what they are */
   pivGainVelRW = CommandData.pivot_gain.V_RW;
-  pivGainVelAz = CommandData.pivot_gain.V_AZ;
-  pivGainPosRW = CommandData.pivot_gain.P_RW;
   pivGainTorqueRW = CommandData.pivot_gain.T_RW;
   pivGainVelReqAz = CommandData.pivot_gain.V_REQ;
+  pivGainRW = CommandData.pivot_gain.PV;
+  pivGainErr = CommandData.pivot_gain.PE;
+  pivFrictOff = CommandData.pivot_gain.F;
  
-  /* requested pivot current*/
-  WriteData(dacPivAddr, v_piv, NIOS_QUEUE);
+  /* requested pivot velocity or current*/
+  if (CommandData.pointing_mode.piv_mode == P_PIV_VEL) {
+    WriteData(dacPivAddr, v_piv, NIOS_QUEUE);
+  } else if (CommandData.pointing_mode.piv_mode == P_PIV_TORQUE) {
+    WriteData(dacPivAddr, i_piv*2, NIOS_QUEUE);
+  }
 
   // write informational terms once per slow frame, spread out.
   if (write_slow) {
@@ -934,18 +1055,25 @@ void WriteMot(int write_slow)
       WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
       /* I term for az motor */
       WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
+
+      /************* piv vel mode terms **************/
       /* pointing gain term for az drive */
       WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
       /* p term to rw vel for pivot motor */
       WriteData(gVRWPivAddr, pivGainVelRW, NIOS_QUEUE);
-      /* p term to az vel for pivot motor */
-      WriteData(gVAzPivAddr, pivGainVelAz, NIOS_QUEUE);
-      /* i term to rw vel for pivot motor */
-      WriteData(gIRWPivAddr, pivGainPosRW, NIOS_QUEUE);
       /* p term to rw torque for pivot motor */
       WriteData(gTRWPivAddr, pivGainTorqueRW, NIOS_QUEUE);
       /* p term to az vel request for pivot motor */
       WriteData(gVReqAzPivAddr, pivGainVelReqAz, NIOS_QUEUE);
+
+      /************* piv torque mode terms **************/
+      /* p term to rw vel for pivot motor */
+      WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
+      /* p term to vel error for pivot motor */
+      WriteData(gPEPivAddr, pivGainErr, NIOS_QUEUE);
+      /* Pivot current offset to compensate for static friction. */
+      WriteData(frictOffPivAddr, pivFrictOff/2.0*65535, NIOS_QUEUE);
+
       /* setpoint for reaction wheel */
       WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/500.0, NIOS_QUEUE);
       /* Azimuth Scan Acceleration */
@@ -2583,7 +2711,7 @@ void* reactComm(void* arg)
     if( (reactinfo.err & AMC_ERR_MASK) > 0 ) {
       reactinfo.err_count+=1;
       if(reactinfo.err_count >= AMC_ERR_TIMEOUT) {
-	reactinfo.reset=1;
+	      reactinfo.reset=1;
       }
     }
     if(CommandData.reset_rw==1 ) {
@@ -2612,10 +2740,10 @@ void* reactComm(void* arg)
       usleep(10000);      
     } else if (reactinfo.reset==1){
       if(resetcount==0) {
-	bprintf(warning,
+ 	      bprintf(warning,
         "Resetting serial connection to reaction wheel controller.");
       } else if ((resetcount % 50)==0) {
-	bprintfverb(warning,reactinfo.verbose,MC_VERBOSE,
+	      bprintfverb(warning,reactinfo.verbose,MC_VERBOSE,
         "reset->Unable to connect to reaction wheel after %i attempts."
         ,resetcount);
       }
@@ -2628,7 +2756,7 @@ void* reactComm(void* arg)
                                           // reactinfo.reset=0
 
       if (reactinfo.reset==0) {
-	resetcount=0;
+	      resetcount=0;
         bprintf(info,"Controller successfully reset!");
       }
       usleep(10000);  // give time for motor bits to get written
@@ -2638,86 +2766,82 @@ void* reactComm(void* arg)
         bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
         "Attempting to enable the reaction wheel motor contoller.");
         bridge_flag=enableAMC(&reactinfo);
-	if(bridge_flag==0) {
-	  bprintf(info,"Reaction wheel motor is now enabled");
-	  reactinfo.disabled=0;
-	}
+        if(bridge_flag==0) {
+          bprintf(info,"Reaction wheel motor is now enabled");
+          reactinfo.disabled=0;
+        }
       }
       if(CommandData.disable_az==1 && (reactinfo.disabled==0 || 
          reactinfo.disabled==2)) {
-        bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-        "Attempting to disable the reaction wheel motor controller.");
-	bridge_flag=disableAMC(&reactinfo);
-	if(bridge_flag==0){    
-	  bprintf(info,"Reaction wheel motor controller is now disabled.");
-	  reactinfo.disabled=1;
-	}
+         bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
+         "Attempting to disable the reaction wheel motor controller.");
+	       bridge_flag=disableAMC(&reactinfo);
+	       if(bridge_flag==0){    
+	         bprintf(info,"Reaction wheel motor controller is now disabled.");
+	         reactinfo.disabled=1;
+	       }
       } 
 
       if(firsttime){
-	firsttime=0;
-	tmp = queryAMCInd(0x32,8,1,&reactinfo);
-	bprintf(info,"Ki = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x24,1,&reactinfo);
-	bprintf(info,"Ks = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x0c,1,&reactinfo);
-	bprintf(info,"d8.0ch = %i",tmp);
-	tmp = queryAMCInd(216,12,1,&reactinfo);
-	bprintf(info,"v2 d8.0ch = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x12,1,&reactinfo);
-	bprintf(info,"d8.12h = %i",tmp);
-	tmp = queryAMCInd(216,18,1,&reactinfo);
-	bprintf(info,"v2 d8.12h = %i",tmp);
-	tmp = queryAMCInd(0xd8,0x13,1,&reactinfo);
-	bprintf(info,"d8.13h = %i",tmp);
-	tmp = queryAMCInd(216,19,1,&reactinfo);
-	bprintf(info,"v2 d8.13h = %i",tmp);
-	tmp = queryAMCInd(3, 2, 1, &reactinfo);
-	bprintf(info, "Sys. Protect status bitfield = 0x%04x", tmp);
+        firsttime=0;
+        tmp = queryAMCInd(0x32,8,1,&reactinfo);
+        bprintf(info,"Ki = %i",tmp);
+        tmp = queryAMCInd(0xd8,0x24,1,&reactinfo);
+        bprintf(info,"Ks = %i",tmp);
+        tmp = queryAMCInd(0xd8,0x0c,1,&reactinfo);
+        bprintf(info,"d8.0ch = %i",tmp);
+        tmp = queryAMCInd(216,12,1,&reactinfo);
+        bprintf(info,"v2 d8.0ch = %i",tmp);
+        tmp = queryAMCInd(0xd8,0x12,1,&reactinfo);
+        bprintf(info,"d8.12h = %i",tmp);
+        tmp = queryAMCInd(216,18,1,&reactinfo);
+        bprintf(info,"v2 d8.12h = %i",tmp);
+        tmp = queryAMCInd(0xd8,0x13,1,&reactinfo);
+        bprintf(info,"d8.13h = %i",tmp);
+        tmp = queryAMCInd(216,19,1,&reactinfo);
+        bprintf(info,"v2 d8.13h = %i",tmp);
+        tmp = queryAMCInd(3, 2, 1, &reactinfo);
+        bprintf(info, "Sys. Protect status bitfield = 0x%04x", tmp);
       }
 
       res_rw = getAMCResolver(&reactinfo);
       bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Resolver Position is: %i"
                   ,res_rw);
-      //RWMotorData[rw_motor_index].res_rw = fmod((((double) res_rw)/PIV_RES_CTS)
-       //                                    *360.0*4.0, 360.0);
       RWMotorData[rw_motor_index].res_rw = fmod((((double) res_rw)/PIV_RES_CTS)
                                            *360.0, 360.0);
 
       thread_count %= 5;
+
       switch(thread_count) {
-      case 0:
-	current_raw=queryAMCInd(16,3,1,&reactinfo);
-        //RWMotorData[rw_motor_index].current=((double)current_raw)/8192.0*60.0;
-	// TODO: changed peak drive current to 20 A since we are 
-	//       using smaller controller for RW temporarily
-	RWMotorData[rw_motor_index].current=(((double)current_raw)/8192.0)*60.0;
-        // divide by scaling factor which is (2^13 / peak drive current) 
-        // to get units in amps
-	// bprintf(info,"current_raw= %i, current= %f",current_raw,
-        // PivotMotorData[pivot_motor_index].current);
-	break;
-      case 1:
-	db_stat_raw=queryAMCInd(2,0,1,&reactinfo);
-        RWMotorData[rw_motor_index].db_stat=db_stat_raw;
-	break;
-      case 2:
-	dp_stat_raw=queryAMCInd(2,1,1,&reactinfo);
-        RWMotorData[rw_motor_index].dp_stat=dp_stat_raw;
-	break;
-      case 3:
-	ds1_stat_raw=queryAMCInd(2,3,1,&reactinfo);
-        RWMotorData[rw_motor_index].ds1_stat=ds1_stat_raw;
-	break;
-      case 4:
-	rw_vel_raw=((int) queryAMCInd(17,2,2,&reactinfo)); 
-        RWMotorData[rw_motor_index].dps_rw = rw_vel_raw*(20000.0/131072.0)
-                                             *(360.0/16384.0);
-        //RWMotorData[rw_motor_index].dps_rw=rw_vel_raw*0.144;
-        //bprintf(info, "RW Speed = %d", RWMotorData[rw_motor_index].dps_rw);
-	break;
+        case 0:
+	        current_raw=queryAMCInd(16,3,1,&reactinfo);
+	        break;
+        case 1:
+	        db_stat_raw=queryAMCInd(2,0,1,&reactinfo);
+	        break;
+        case 2:
+	        dp_stat_raw=queryAMCInd(2,1,1,&reactinfo);
+	        break;
+        case 3:
+	        ds1_stat_raw=queryAMCInd(2,3,1,&reactinfo);
+	        break;
+        case 4:
+	        rw_vel_raw=((int) queryAMCInd(17,2,2,&reactinfo)); 
+	        break;
+        default:
+          break;
       }
+
       thread_count++;
+
+      // divide current by scaling factor which is (2^13 / peak drive current) 
+      // to get units in amps
+	    RWMotorData[rw_motor_index].current=(((double)current_raw)/8192.0)*60.0;
+      RWMotorData[rw_motor_index].db_stat=db_stat_raw;
+      RWMotorData[rw_motor_index].dp_stat=dp_stat_raw;
+      RWMotorData[rw_motor_index].ds1_stat=ds1_stat_raw;
+      RWMotorData[rw_motor_index].dps_rw = rw_vel_raw*(20000.0/131072.0)
+                                           *(360.0/16384.0);
       rw_motor_index=INC_INDEX(rw_motor_index);
     } else {
       reactinfo.reset=1;
