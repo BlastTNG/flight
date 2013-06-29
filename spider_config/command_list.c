@@ -126,17 +126,17 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(if_charge_cycle), "power cycle the inner frame charge controller", 
     GR_IFPOWER | CONFIRM},
 
-  {COMMAND(mce1_on), "turn on MCE power supply 1 (MCE 1, MCE 2)", GR_MCEPWR},
-  {COMMAND(mce1_off), "turn off MCE power supply 1 (MCE 1, MCE 2)", GR_MCEPWR},
-  {COMMAND(mce1_cycle), "power cycle MCE power supply 1 (MCE 1, MCE 2)", GR_MCEPWR},
+  {COMMAND(mce23_on), "turn on MCE power supply for X2 and X3", GR_MCEPWR},
+  {COMMAND(mce23_off), "turn off MCE power supply for X2 and X3", GR_MCEPWR},
+  {COMMAND(mce23_cycle), "power cycle MCE power supply for X2 and X3", GR_MCEPWR},
 
-  {COMMAND(mce2_on), "turn on MCE power supply 2 (MCE 3, MCE 4)", GR_MCEPWR},
-  {COMMAND(mce2_off), "turn off MCE power supply 2 (MCE 3, MCE 4)", GR_MCEPWR},
-  {COMMAND(mce2_cycle), "power cycle MCE power supply 2 (MCE 3, MCE 4)", GR_MCEPWR},
+  {COMMAND(mce46_on), "turn on MCE power supply for X4 and X6", GR_MCEPWR},
+  {COMMAND(mce46_off), "turn off MCE power supply for X4 and X6", GR_MCEPWR},
+  {COMMAND(mce46_cycle), "power cycle MCE power supply for X4 and X6", GR_MCEPWR},
 
-  {COMMAND(mce3_on), "turn on MCE power supply 3 (MCE 5, MCE 6)", GR_MCEPWR},
-  {COMMAND(mce3_off), "turn off MCE power supply 3 (MCE 5, MCE 6)", GR_MCEPWR},
-  {COMMAND(mce3_cycle), "power cycle MCE power supply 3 (MCE 5, MCE 6)", GR_MCEPWR},
+  {COMMAND(mce15_on), "turn on MCE power supply for X1 and X5", GR_MCEPWR},
+  {COMMAND(mce15_off), "turn off MCE power supply for X1 and X5", GR_MCEPWR},
+  {COMMAND(mce15_cycle), "power cycle MCE power supply for X1 and X5", GR_MCEPWR},
 
   {COMMAND(mcc1_on), "turn on MCC 1", GR_MCEPWR},
   {COMMAND(mcc1_off), "turn off MCC 1", GR_MCEPWR},

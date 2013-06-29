@@ -655,31 +655,31 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
     /* Inner Frame Power */
 
-    case mce1_off:
+    case mce23_off:
       CommandData.ifpower.mce_op[0] = off;
       break;
-    case mce1_on:
+    case mce23_on:
       CommandData.ifpower.mce_op[0] = on;
       break;
-    case mce1_cycle:
+    case mce23_cycle:
       CommandData.ifpower.mce_op[0] = cyc;
       break;
-    case mce2_off:
+    case mce46_off:
       CommandData.ifpower.mce_op[1] = off;
       break;
-    case mce2_on:
+    case mce46_on:
       CommandData.ifpower.mce_op[1] = on;
       break;
-    case mce2_cycle:
+    case mce46_cycle:
       CommandData.ifpower.mce_op[1] = cyc;
       break;
-    case mce3_off:
+    case mce15_off:
       CommandData.ifpower.mce_op[2] = off;
       break;
-    case mce3_on:
+    case mce15_on:
       CommandData.ifpower.mce_op[2] = on;
       break;
-    case mce3_cycle:
+    case mce15_cycle:
       CommandData.ifpower.mce_op[2] = cyc;
       break;
     case sync_off:

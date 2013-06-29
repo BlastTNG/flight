@@ -114,9 +114,9 @@ enum singleCommand {
   bbc_sync_ext,      bbc_sync_int,      bbc_sync_auto,     elmot_auto,
   //make better use of unused groups
   pull_cmb_pin, global_thermonuclear_war,
-  mce1_on,           mce1_off,          mce1_cycle,
-  mce2_on,           mce2_off,          mce2_cycle,
-  mce3_on,           mce3_off,          mce3_cycle,
+  mce23_on,          mce23_off,         mce23_cycle,
+  mce46_on,          mce46_off,         mce46_cycle,
+  mce15_on,          mce15_off,         mce15_cycle,
   sync_on,           sync_off,          sync_cycle,
   hwp_on,            hwp_off,           hwp_cycle,
   hk_preamp_on,      hk_preamp_off,     hk_preamp_cycle,

@@ -450,6 +450,7 @@ static void PulseHeater(struct PWMStruct *heater) {
 static void PumpServo(int insert)
 {
   static int firsttime[6] = {1, 1, 1, 1, 1, 1};
+  static int servo_ctr[6] = {0, 0, 0, 0, 0, 0};
   static struct BiPhaseStruct* tPumpAddr[6];
   
   //TODO update these calibrations
@@ -472,17 +473,22 @@ static void PumpServo(int insert)
     LutInit(&tPumpLut[insert]);
   }
   
-  /* Read pump thermometer voltage */
-  t_pump = ReadCalData(tPumpAddr[insert]);
-  
-  /* Look-up calibrated temperature */
-  t_pump = LutCal(&tPumpLut[insert], t_pump);
-  
-  /* figure out next pump heater state */
-  if (t_pump > CommandData.hk[insert].pump_servo_high)
-    CommandData.hk[insert].pump_heat = 0;
-  else if (t_pump < CommandData.hk[insert].pump_servo_low)
-    CommandData.hk[insert].pump_heat = 1;
+  if (servo_ctr[insert] <= 0) {
+    /* Read pump thermometer voltage */
+    t_pump = ReadCalData(tPumpAddr[insert]);
+    
+    /* Look-up calibrated temperature */
+    t_pump = LutCal(&tPumpLut[insert], t_pump);
+    
+    /* figure out next pump heater state */
+    if (t_pump > CommandData.hk[insert].pump_servo_high) {
+      if (CommandData.hk[insert].pump_heat == 1) servo_ctr[insert] = 3;
+      CommandData.hk[insert].pump_heat = 0;
+    } else if (t_pump < CommandData.hk[insert].pump_servo_low) {
+      if (CommandData.hk[insert].pump_heat == 0) servo_ctr[insert] = 3;
+      CommandData.hk[insert].pump_heat = 1;
+    }
+  } else servo_ctr[insert]--;
 }
 
 
