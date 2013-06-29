@@ -1980,6 +1980,7 @@ void InitCommandData()
   CommandData.slot_sched = 0;
   CommandData.tdrss_bw = 6000;
   CommandData.iridium_bw = 2000;
+  CommandData.pilot_bw = 92000;
   CommandData.channelset_oth = 0;
   CommandData.vtx_sel[0] = vtx_isc;
   CommandData.vtx_sel[1] = vtx_osc;

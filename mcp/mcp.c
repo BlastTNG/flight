@@ -62,7 +62,9 @@
 
 /* Define global variables */
 //flc_ip[0] = south, flc_ip[1] = north, so that flc_ip[SouthIAm] gives other flc
-const char* flc_ip[2] = {"192.168.1.6", "192.168.1.5"};
+char* flc_ip[2] = {"192.168.1.6", "192.168.1.5"};
+char *other_ip;
+
 int bbc_fp = -1;
 unsigned int debug = 0;
 short int SouthIAm;
@@ -1213,7 +1215,8 @@ int main(int argc, char *argv[])
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-  start_flc_data_swapper(flc_ip[SouthIAm]);
+  other_ip = flc_ip[SouthIAm];
+  start_flc_data_swapper(other_ip);
 
   while (1) {
     if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
