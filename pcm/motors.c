@@ -2904,23 +2904,6 @@ void* pivotComm(void* arg)
         bprintf(info,"v2 d8.13h = %i",tmp);
         tmp = queryAMCInd(3, 2, 1, &pivotinfo);
         bprintf(info, "Sys. Protect status bitfield = 0x%04x", tmp);
-        tmp = queryAMCInd(0xd1, 0x00, 1, &pivotinfo);
-        bprintf(info, "Drive mode bitfield = 0x%04x", tmp);
-      }
-
-      /* check to see if commanded pivot ctrl mode has changed */
-      if (pivotinfo.mode != CommandData.pointing_mode.piv_mode) {
-        if (CommandData.pointing_mode.piv_mode == P_PIV_VEL) {
-          send_amccmd(0xD1, 0x00, 0x0000, 1, 0, &pivotinfo);
-          pivotinfo.mode = CommandData.pointing_mode.piv_mode;
-          bprintf(info, "Changing from torque mode to velocity mode");
-        } else if (CommandData.pointing_mode.piv_mode == P_PIV_TORQUE) {
-          send_amccmd(0xD1, 0x00, 0x0001, 1, 0, &pivotinfo);
-          pivotinfo.mode = CommandData.pointing_mode.piv_mode;
-          bprintf(info, "Changing from velocity mode to torque mode");
-        } else {
-          bputs(err, "Unknown pivot control mode specified\n");
-        }
       }
 
       pos_raw=getAMCResolver(&pivotinfo);
@@ -2928,33 +2911,55 @@ void* pivotComm(void* arg)
       "Resolver Position is: %i",pos_raw);
       PivotMotorData[pivot_motor_index].res_piv=((double) pos_raw)
                                                 /PIV_RES_CTS*360.0; 
-      j=j%5;
+      j=j%6;
       switch(j) {
       case 0:
 	      current_raw=queryAMCInd(16,3,1,&pivotinfo);
-        // *2^13 / peak drive current, Units are Amps
-        PivotMotorData[pivot_motor_index].current=((double)current_raw)
-                                                   /8192.0*20.0; 
 	      break;
       case 1:
 	      db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);
-        PivotMotorData[pivot_motor_index].db_stat=db_stat_raw;
 	      break;
       case 2:
 	      dp_stat_raw=queryAMCInd(2,1,1,&pivotinfo);
-        PivotMotorData[pivot_motor_index].dp_stat=dp_stat_raw;
 	      break;
       case 3:
 	      ds1_stat_raw=queryAMCInd(2,3,1,&pivotinfo);
-        PivotMotorData[pivot_motor_index].ds1_stat=ds1_stat_raw;
 	      break;
       case 4:
 	      piv_vel_raw=((int) queryAMCInd(17,2,2,&pivotinfo));
-        PivotMotorData[pivot_motor_index].dps_piv = piv_vel_raw
-                                                    *(20000.0/131072.0)
-                                                    *(360.0/16384.0);
 	      break;
+      case 5:
+        /* check pivot drive control mode */
+        /* set as necessary */
+        tmp = queryAMCInd(0xd3, 0x00, 1, &pivotinfo);
+        //bprintf(info, "Drive mode bitfield = 0x%04x", tmp);
+        if (tmp != CommandData.pointing_mode.piv_mode) {
+          if (CommandData.pointing_mode.piv_mode == P_PIV_VEL) {
+            send_amccmd(0xD1, 0x00, 0x0000, 1, 0, &pivotinfo);
+            bprintf(info, "changing from torque mode to velocity mode");
+            pivotinfo.mode = CommandData.pointing_mode.piv_mode;
+          } else if (CommandData.pointing_mode.piv_mode == P_PIV_TORQUE) {
+            send_amccmd(0xD1, 0x00, 0x0001, 1, 0, &pivotinfo);
+            bprintf(info, "changing from velocity mode to torque mode");
+            pivotinfo.mode = CommandData.pointing_mode.piv_mode;
+          } else {
+            bputs(err, "Unknown pivot control mode specified\n");
+          }
+        }
+        break;
+      default:
+        break;
       }
+
+      // *2^13 / peak drive current, Units are Amps
+      PivotMotorData[pivot_motor_index].current=((double)current_raw)
+                                                /8192.0*20.0; 
+      PivotMotorData[pivot_motor_index].db_stat=db_stat_raw;
+      PivotMotorData[pivot_motor_index].dp_stat=dp_stat_raw;
+      PivotMotorData[pivot_motor_index].ds1_stat=ds1_stat_raw;
+      PivotMotorData[pivot_motor_index].dps_piv = piv_vel_raw
+                                                  *(20000.0/131072.0)
+                                                  *(360.0/16384.0);
       j++;
       pivot_motor_index=INC_INDEX(pivot_motor_index);
     } else {
