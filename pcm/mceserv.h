@@ -22,9 +22,6 @@
 #include "fset.h"
 #include "tes.h"
 
-/* Semeuphoria */
-extern int mceserv_mce_power[3];
-
 extern int mce_slow_index[NUM_MCE];
 extern struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
 

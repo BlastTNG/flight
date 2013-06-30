@@ -39,9 +39,6 @@
 /* semeuphoria */
 static int sent_bset = -1; /* the last field set that was sent */
 static int last_turnaround = -1; /* the last turnaround flag sent */
-int mceserv_mce_power[3] = {
-  MPCPROTO_POWER_NOP, MPCPROTO_POWER_NOP, MPCPROTO_POWER_NOP
-};
 
 /* general purpose datagram buffer */
 static char udp_buffer[UDP_MAXSIZE];
@@ -101,7 +98,8 @@ static int ForwardCommand(int sock)
 static void ForwardNotices(int sock)
 {
   static int last_dmb = 0;
-  int turnaround_edge = 0;
+  int edge = 0;
+  static int last_divisor = -1;
   size_t len;
 
   /* edge trigger on turnaround flag */
@@ -110,30 +108,28 @@ static void ForwardNotices(int sock)
   {
     /* the race condition here probably doesn't matter */
     last_turnaround = CommandData.pointing_mode.is_turn_around;
-    turnaround_edge = 1;
+    edge = 1;
   }
 
-  if (mceserv_mce_power[0] == MPCPROTO_POWER_NOP &&
-      mceserv_mce_power[1] == MPCPROTO_POWER_NOP &&
-      mceserv_mce_power[2] == MPCPROTO_POWER_NOP &&
-      !turnaround_edge &&
-      last_dmb == CommandData.data_mode_bits_serial)
-  {
+  /* edge trigger on MCE/BBC divisor */
+  if (CommandData.bbcExtFrameRate != last_divisor) {
+    /* the race condition here probably doesn't matter */
+    last_divisor = CommandData.bbcExtFrameRate;
+    edge = 1;
+  }
+
+  if (!edge && last_dmb == CommandData.data_mode_bits_serial) {
     /* no notices */
     return;
   }
 
-  len = mpc_compose_notice(mceserv_mce_power[0], mceserv_mce_power[1],
-      mceserv_mce_power[2], last_turnaround, CommandData.data_mode_bits,
-      udp_buffer);
+  len = mpc_compose_notice(last_divisor, last_turnaround,
+      CommandData.data_mode_bits, udp_buffer);
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge) == 0) {
     if (InCharge)
       bprintf(info, "Broadcast notifications\n");
-    mceserv_mce_power[0] = MPCPROTO_POWER_NOP;
-    mceserv_mce_power[1] = MPCPROTO_POWER_NOP;
-    mceserv_mce_power[2] = MPCPROTO_POWER_NOP;
   }
   last_dmb = CommandData.data_mode_bits_serial;
 }
