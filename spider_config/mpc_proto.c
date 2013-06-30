@@ -1,28 +1,14 @@
 /* MCP: the MPC communication protocol
  *
- * Copyright (c) 2012-2013, D. V. Wiebe
+ * Copyright (C) 2012-2013, D. V. Wiebe
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
-
- * - Redistributions of source code must retain the above copyright NOTICE, This
- *   list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
+ * This file is part of the BLAST flight code licensed under the GNU
+ * General Public License.
  *
- * This software is provided by the copyright holders and contributors "as is"
- * and any express or implied warranties, including, but not limited to, the
- * implied warranties of merchantability and fitness for a particular purpose
- * are disclaimed. In no event shall the copyright holder or contributors be
- * liable for any direct, indirect, incidental, special, exemplary, or
- * consequential damages (including, but not limited to, procurement of
- * substitute goods or services; loss of use, data, or profits; or business
- * interruption) however caused and on any theory of liability, whether in
- * contract, strict liability, or tort (including negligence or otherwise)
- * arising in any way out of the use of this software, even if advised of the
- * possibility of such damage.
+ * You should have received a copy of the GNU General Public License
+ * along with this software; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "blast.h"
 #include "command_common.h"
@@ -64,63 +50,59 @@ int mpc_init(void)
  *
  * PCM notice packet looks like:
  *
- * RRN123Tddd
+ * RRNDTddd
  *
  * where
  *
  * R = 16-bit protocol revision
  * N = 'N' indicating notice packet
- * 1 = MCE power bank 1 state
- * 2 = MCE power bank 2 state
- * 3 = MCE power bank 3 state
+ * D = divisor
  * T = turnaround flag
  * d = 20 bytes of data_mode_bits
  */
-size_t mpc_compose_notice(int mce1_power, int mce2_power, int mce3_power,
-    int turnaround, char data_mode_bits[13][2][2], char *buffer)
+size_t mpc_compose_notice(int divisor, int turnaround,
+    char data_mode_bits[13][2][2], char *buffer)
 {
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'N';
-  buffer[3] = mce1_power & 0xff;
-  buffer[4] = mce2_power & 0xff;
-  buffer[5] = mce3_power & 0xff;
-  buffer[6] = turnaround ? 1 : 0;
+  buffer[3] = divisor & 0xff;
+  buffer[4] = turnaround ? 1 : 0;
 
   /* we only report the useful data mode bits */
   /* data mode zero */
-  buffer[7] = data_mode_bits[0][0][0];
-  buffer[8] = data_mode_bits[0][0][1];
+  buffer[5] = data_mode_bits[0][0][0];
+  buffer[6] = data_mode_bits[0][0][1];
 
   /* data mode one */
-  buffer[9]  = data_mode_bits[1][0][0];
-  buffer[10] = data_mode_bits[1][0][1];
+  buffer[7]  = data_mode_bits[1][0][0];
+  buffer[8] = data_mode_bits[1][0][1];
 
   /* data mode two */
-  buffer[11] = data_mode_bits[2][0][0];
-  buffer[12] = data_mode_bits[2][0][1];
+  buffer[9] = data_mode_bits[2][0][0];
+  buffer[10] = data_mode_bits[2][0][1];
 
   /* data mode four */
-  buffer[13] = data_mode_bits[4][0][0];
-  buffer[14] = data_mode_bits[4][0][1];
-  buffer[15] = data_mode_bits[4][1][0];
-  buffer[16] = data_mode_bits[4][1][1];
+  buffer[11] = data_mode_bits[4][0][0];
+  buffer[12] = data_mode_bits[4][0][1];
+  buffer[13] = data_mode_bits[4][1][0];
+  buffer[14] = data_mode_bits[4][1][1];
 
   /* data mode five */
-  buffer[17] = data_mode_bits[5][0][0];
-  buffer[18] = data_mode_bits[5][0][1];
-  buffer[19] = data_mode_bits[5][1][0];
-  buffer[20] = data_mode_bits[5][1][1];
+  buffer[15] = data_mode_bits[5][0][0];
+  buffer[16] = data_mode_bits[5][0][1];
+  buffer[17] = data_mode_bits[5][1][0];
+  buffer[18] = data_mode_bits[5][1][1];
 
   /* data mode ten */
-  buffer[21] = data_mode_bits[10][0][0];
-  buffer[22] = data_mode_bits[10][0][1];
-  buffer[23] = data_mode_bits[10][1][0];
-  buffer[24] = data_mode_bits[10][1][1];
+  buffer[19] = data_mode_bits[10][0][0];
+  buffer[20] = data_mode_bits[10][0][1];
+  buffer[21] = data_mode_bits[10][1][0];
+  buffer[22] = data_mode_bits[10][1][1];
 
   /* data mode twelve */
-  buffer[25] = data_mode_bits[12][0][0];
-  buffer[26] = data_mode_bits[12][0][1];
-  return 27;
+  buffer[23] = data_mode_bits[12][0][0];
+  buffer[24] = data_mode_bits[12][0][1];
+  return 25;
 }
 
 /* compose a PCM request packet for transmission to PCM
@@ -544,11 +526,12 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
 }
 
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
-    int *powstate, size_t len, const char *data, const char *peer, int port)
+    int *divisor, size_t len, const char *data, const char *peer, int port)
 {
   static int last_turnaround = -1;
+  static int last_divisor = -1;
 
-  if (len != 27) {
+  if (len != 25) {
     bprintf(err, "Bad notice packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
@@ -556,32 +539,17 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
   /* we just do this to get an idea of with whom where conversing */
   bprintf(info, "Noticed by %s/%i", peer, port);
 
-  if (data[6] != last_turnaround)
-    bprintf(info, "%s turnaround", data[6] ? "Into" : "Out of");
+  if (data[4] != last_turnaround)
+    bprintf(info, "%s turnaround", data[4] ? "Into" : "Out of");
 
-  last_turnaround = *turnaround = data[6];
+  last_turnaround = *turnaround = data[4];
 
-  /* we assume here that the mce power banks are in MCE order */
-  if (nmce == 0 || nmce == 1)
-    *powstate = data[3];
-  else if (nmce == 2 || nmce == 3)
-    *powstate = data[4];
-  else if (nmce == 4 || nmce == 5)
-    *powstate = data[5];
+  if (data[3] != last_divisor)
+    bprintf(info, "MPC/PCM divisor: %i", data[3]);
 
-  switch (*powstate) {
-    case MPCPROTO_POWER_ON:
-      bputs(info, "PCM reports power to MCE is on");
-      break;
-    case MPCPROTO_POWER_OFF:
-      bputs(info, "PCM reports power to MCE is off");
-      break;
-    case MPCPROTO_POWER_CYC:
-      bputs(info, "PCM reports power to MCE is cycling");
-      break;
-  }
+  last_divisor = *divisor = data[3];
 
-  *data_mode_bits = data + 7;
+  *data_mode_bits = data + 5;
 
   return 0;
 }

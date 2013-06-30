@@ -1,28 +1,10 @@
 /* MCP: the MPC communication protocol
  *
- * Copyright (c) 2012-2013, D. V. Wiebe
+ * Copyright (C) 2012-2013, D. V. Wiebe
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
-
- * - Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * This software is provided by the copyright holders and contributors "as is"
- * and any express or implied warranties, including, but not limited to, the
- * implied warranties of merchantability and fitness for a particular purpose
- * are disclaimed. In no event shall the copyright holder or contributors be
- * liable for any direct, indirect, incidental, special, exemplary, or
- * consequential damages (including, but not limited to, procurement of
- * substitute goods or services; loss of use, data, or profits; or business
- * interruption) however caused and on any theory of liability, whether in
- * contract, strict liability, or tort (including negligence or otherwise)
- * arising in any way out of the use of this software, even if advised of the
- * possibility of such damage.
+ * This file is part of the BLAST flight code licensed under the GNU
+ * General Public License.
  */
 
 #ifndef MPC_PROTO_H
@@ -86,9 +68,9 @@ size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer);
 int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
     const char *peer, int port);
 
-size_t mpc_compose_notice(int mce1_power, int mce2_power, int mce3_power,
-    int turnaround, char data_mode_bits[13][2][2], char *buffer);
+size_t mpc_compose_notice(int divisor, int turnaround,
+    char data_mode_bits[13][2][2], char *buffer);
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
-    int *power_on, size_t len, const char *data, const char *peer, int port);
+    int *divisor, size_t len, const char *data, const char *peer, int port);
 
 #endif
