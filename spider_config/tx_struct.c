@@ -255,7 +255,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_sft_ring_t_hk",     'r',  HWP_A2, 32, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_vcs1_apert_t_hk",     'r',  HWP_A2, 34, CAL32D(         1.0,           0.0), 'U', U_V_V},
 
-  {"mic_time",     'w',  LOOP11, 2, 0.01, MPC_EPOCH, 'U', U_NONE},
+  {"mcc_time",     'w',  LOOP11, 2, 0.01, MPC_EPOCH, 'U', U_NONE},
 
   END_OF_CHANNELS
 };
@@ -907,7 +907,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mce_txmux",   'w', LOOP11, 0, 1, 0, 'u', U_NONE},
   {"data_mode",   'w', LOOP11, 1, 1, 0, 'u', U_NONE},
   /* LOOP11 2-3 are wide */
-  {"mic_free",    'w', LOOP11, 4, (1<<24), 0, 'u', U_NONE},
+  {"mcc_free0",   'w', LOOP11, 4, (1<<24), 0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };

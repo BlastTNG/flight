@@ -342,23 +342,23 @@ static void WriteMCESlow(void)
 
   static int firsttime = 1;
   static struct NiosStruct *mceTxmuxAddr;
-  static struct NiosStruct *micTimeAddr;
-  static struct NiosStruct *micFreeAddr;
+  static struct NiosStruct *mccTimeAddr;
+  static struct NiosStruct *mccFree0Addr;
   static struct NiosStruct *dataModeAddr;
 
   int ind = GETREADINDEX(mce_slow_index[mux]);
 
   if (firsttime) {
     firsttime = 0;
-    micTimeAddr = GetNiosAddr("mic_time");
-    micFreeAddr = GetNiosAddr("mic_free");
+    mccTimeAddr = GetNiosAddr("mcc_time");
+    mccFree0Addr = GetNiosAddr("mcc_free0");
     dataModeAddr = GetNiosAddr("data_mode");
     mceTxmuxAddr = GetNiosAddr("mce_txmux");
   }
 
   WriteData(dataModeAddr, mce_slow_dat[mux][ind].data_mode, NIOS_QUEUE);
-  WriteData(micTimeAddr, mce_slow_dat[mux][ind].time, NIOS_QUEUE);
-  WriteData(micFreeAddr, mce_slow_dat[mux][ind].df, NIOS_QUEUE);
+  WriteData(mccTimeAddr, mce_slow_dat[mux][ind].time, NIOS_QUEUE);
+  WriteData(mccFree0Addr, mce_slow_dat[mux][ind].df0, NIOS_QUEUE);
 
   WriteData(mceTxmuxAddr, mux, NIOS_FLUSH);
   mux = (mux + 1) % NUM_MCE;

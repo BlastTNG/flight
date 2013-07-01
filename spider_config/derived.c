@@ -715,8 +715,8 @@ union DerivedUnion DerivedChannels[] = {
 
   /* MCE Slow data */
   MCESLOW("DATA_MODE"),
-  MCESLOW("MIC_TIME"),
-  MCESLOW("MIC_FREE"),
+  MCESLOW("MCC_TIME"),
+  MCESLOW("MCC_FREE0"),
 
   END_OF_DERIVED_CHANNELS
 };

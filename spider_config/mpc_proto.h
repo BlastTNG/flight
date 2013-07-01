@@ -32,7 +32,7 @@
 struct mpc_slow_data {
   uint32_t time; /* system time */
 
-  uint16_t df; /* disk free in units of 2**24 bytes (16 MB) */
+  uint16_t df0; /* data0 disk free in units of 2**24 bytes (16 MB) */
   uint16_t data_mode; /* MCE data mode */
 };
 
