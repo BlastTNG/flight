@@ -458,7 +458,7 @@ int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
   /* increment write pointer */
   mce_slow_index[nmce] = (mce_slow_index[nmce] + 1) % 3;
 
-  return 0;
+  return nmce;
 }
 
 int mpc_decompose_tes(uint32_t *frameno, uint16_t *tes_data, size_t len,
