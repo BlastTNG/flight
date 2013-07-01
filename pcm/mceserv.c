@@ -81,10 +81,9 @@ static int ForwardCommand(int sock)
   len = mpc_compose_command(&ev, udp_buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge) == 0) {
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
     bprintf(warning, "Error broadcasting command.\n");
-    return 0;
-  } else /* mark as written */
+  else /* mark as written */
     CommandData.mcecmd[cmd_idx].done = 1;
 
   /* indicate something has been sent */
