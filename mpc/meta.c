@@ -29,7 +29,7 @@ unsigned int state = 0;
 static unsigned int last_reported_state = 0xFFFF;
 
 /* the desired mode */
-static enum modes goal = op_acq;
+enum modes goal = op_acq;
 static enum modes last_reported_goal = -1;
 int working = 0;
 
@@ -37,8 +37,8 @@ int working = 0;
 static const int mode_start[op_acq + 1] =
 {
   [op_init] = 0,
-  [op_ready] = st_drive0 | st_mcecmd | st_config,
-  [op_acq] = st_drive0 | st_mcecmd | st_config | st_retdat
+  [op_ready] = st_drive0 | st_mcecom | st_mcecmd | st_config,
+  [op_acq] = st_drive0 | st_mcecom | st_mcecmd | st_config | st_retdat
 };
 static const int mode_stop[op_acq + 1] =
 {
@@ -71,15 +71,29 @@ void try_toggle(enum status st, enum status *do_start, enum status *do_stop)
       case st_idle:
       case st_drive1:
       case st_drive2:
-      case st_mcecmd:
         /* always okay */
         *do_start = st;
+        break;
+      case st_mcecom:
+        if (~state & st_mcecmd) /* MCE cmd must be running */
+          try_toggle(st_mcecmd, do_start, do_stop);
+        else
+          *do_start = st;
+        break;
+      case st_mcecmd:
+        /* acquisition must be stopped to intialise a primary */
+        if (state & st_retdat)
+          try_toggle(st_retdat, do_start, do_stop);
+        else
+          *do_start = st;
         break;
       case st_config:
         if (~state & st_drive0) /* must have a drive */
           try_toggle(st_drive0, do_start, do_stop);
-        else if (~state & st_mcecmd) /* MCE must be alive */
+        else if (~state & st_mcecmd) /* mce_cmd must be running */
           try_toggle(st_mcecmd, do_start, do_stop);
+        else if (~state & st_mcecom) /* MCE must be alive */
+          try_toggle(st_mcecom, do_start, do_stop);
         else
           *do_start = st_config;
         break;

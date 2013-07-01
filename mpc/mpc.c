@@ -226,6 +226,12 @@ static void send_slow_data(char *data)
   gettimeofday(&tv, NULL);
   slow_dat.time = (tv.tv_sec - MPC_EPOCH) * 100 + tv.tv_usec / 10000;
 
+  /* meta stuff */
+  slow_dat.goal = goal;
+  slow_dat.task = start_tk - stop_tk;
+  slow_dat.dtask = data_tk;
+  slow_dat.state = state;
+
   /* make packet and send */
   len = mpc_compose_slow(&slow_dat, nmce, data);
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
@@ -472,7 +478,6 @@ int main(int argc, const char **argv)
       /* PCM requests */
       pcm_special(0, NULL, NULL, 0);
     }
-
   }
 
   close(sock);

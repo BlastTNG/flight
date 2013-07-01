@@ -39,10 +39,17 @@ static int cmd_err = 0;
     } \
   } while(0)
 
+/* mce_cmd stuff */
+struct mcp_proc *mcecmd = NULL;
+int mcecmd_i, mcecmd_o, mcecmd_e;
+
+/* mas */
+mce_context_t *mas;
+
 /* Write a block to the MCE; returns non-zero on error */
 /* I guess MAS needs to be able to write to it's input data buffer...? */
-static int mas_write_block(mce_context_t *mas, const char *card,
-    const char *block, uint32_t *data, size_t num)
+static int mas_write_block(const char *card, const char *block, uint32_t *data,
+    size_t num)
 {
   int ret;
 
@@ -70,8 +77,8 @@ static int mas_write_block(mce_context_t *mas, const char *card,
 }
 
 /* read a block from the MCE; returns non-zero on error */
-static int mas_read_block(mce_context_t *mas, const char *card,
-    const char *block, uint32_t *data, size_t num)
+static int mas_read_block(const char *card, const char *block, uint32_t *data,
+    size_t num)
 {
   int ret;
 
@@ -98,20 +105,20 @@ static int mas_read_block(mce_context_t *mas, const char *card,
   return 0;
 }
 
-static void get_acq_metadata(mce_context_t *mas)
+static void get_acq_metadata(void)
 {
   uint32_t buffer[2];
 
   /* Reading from virtual cards is weird: the count parameter indicates the
    * number of elements per card to read, ergo, 1 here
    */
-  if (!mas_read_block(mas, "rca", "data_mode", buffer, 1)) {
+  if (!mas_read_block("rca", "data_mode", buffer, 1)) {
     /* sanity check */
     if (buffer[0] != buffer[1]) {
       bprintf(warning, "Data mode mismatch on RCs: %i, %i", buffer[0],
           buffer[1]);
       /* Might as well try fixing it. */
-      mas_write_block(mas, "rc2", "data_mode", buffer, 1);
+      mas_write_block("rc2", "data_mode", buffer, 1);
     }
     if (data_mode != buffer[0])
       bprintf(info, "Data mode: %i", buffer[0]);
@@ -132,7 +139,7 @@ static int mpc_termio(int severity, const char *message)
   return 0;
 }
 
-static int set_frame(mce_context_t *mas, char **frame)
+static int set_frame(char **frame)
 {
   int fs = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_DATASIZE);
   bprintf(info, "framesize: %i", fs);
@@ -146,7 +153,7 @@ static int set_frame(mce_context_t *mas, char **frame)
 
 
 /* Check that we have all the cards */
-static int mce_check_cards(mce_context_t *mas)
+static int mce_check_cards(void)
 {
   const char *card[] = { "cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL };
   int i, ret = 0;
@@ -154,7 +161,7 @@ static int mce_check_cards(mce_context_t *mas)
 
   /* Verify that everyone's alive */
   for (i = 0; card[i]; ++i)
-    if (!mas_read_block(mas, card[i], "fw_rev", &datum, 1))
+    if (!mas_read_block(card[i], "fw_rev", &datum, 1))
       bprintf(info, "%3s firmware: 0x%X", card[i], datum);
     else
       ret = 1;
@@ -162,44 +169,70 @@ static int mce_check_cards(mce_context_t *mas)
   return ret;
 }
 
-#define MCECMD_SCRIPT "/run/mpc_mce_cmd"
+/* formatted write to MCE_CMD */
+static int __attribute__((format(printf,1,2))) mcecmd_write(const char *fmt,
+    ...)
+{
+  char buffer[4096];
+  int n, ret;
+  va_list ap;
+  
+  va_start(ap, fmt);
+  n = vsnprintf(buffer, 4096, fmt, ap);
+
+  bprintf(info, "MCECMD: %s", buffer);
+
+  buffer[n++] = '\n';
+  buffer[n] = 0;
+
+  if (write(mcecmd_i, buffer, n) < 0)
+    ret = 1;
+  else
+    ret = 0;
+
+  va_end(ap);
+
+  return ret;
+}
+
 static int start_acq(void)
 {
-  FILE *stream;
-
   long t = (long)time(NULL);
 
-  /* write mce_cmd script */
-  stream = fopen(MCECMD_SCRIPT, "w");
-  if (stream == NULL) {
-    berror(err, "Unable to open " MCECMD_SCRIPT);
-    return 1;
-  }
+  /* restart the servo */
+  uint32_t one = 1;
+  mas_write_block("rca", "flx_lp_init", &one, 1);
 
-  /* write a multiacq for all the configured drives we have */
-  fprintf(stream,
-      "wb rca flx_lp_init 1\n" /* restart the servo */
-      "acq_link /data/mas/etc/mas.lnk\n" /* symlink to the zeroth's thing */
-      "acq_config_fs /data0/mce/current_data/mpc_%li rcs 100000\n", t);
+  /* start a multiacq */
+  mcecmd_write("acq_config_fs /data0/mce/current_data/mpc_%li rcs 100000", t);
 
   if (state & st_drive1)
-    fprintf(stream,
-        "acq_config_fs /data1/mce/current_data/mpc_%li rcs 100000\n", t);
+    mcecmd_write("acq_config_fs /data1/mce/current_data/mpc_%li rcs 100000",
+        t);
 
   if (state & st_drive2)
-    fprintf(stream,
-        "acq_config_fs /data2/mce/current_data/mpc_%li rcs 100000\n", t);
+    mcecmd_write("acq_config_fs /data2/mce/current_data/mpc_%li rcs 100000",
+        t);
 
-  fprintf(stream, "ACQ_GO 1000000\n");
-  fclose(stream);
+  mcecmd_write("acq_go 1000");
 
   return 0;
+}
+
+static int start_mcecmd(void)
+{
+  char *argv[] = { "mce_cmd", "-ipr", NULL };
+  mcecmd = start_proc("mce_cmd", argv, 0, 1, &mcecmd_i, &mcecmd_o,
+      &mcecmd_e);
+  if (mcecmd == NULL)
+    return 1;
+
+  return mcecmd_write("acq_link /data/mas/etc/mpc.lnk\n");
 }
 
 void *mas_data(void *dummy)
 {
   char *frame = NULL;
-  mce_context_t *mas;
   int frame_size = 0;
   int max = 0;
   int ret;
@@ -255,16 +288,20 @@ void *mas_data(void *dummy)
         if (ret) {
           bprintf(err, "Error resetting MCE: error #%i", ret);
           dt_error = 1;
-        } else if (mce_check_cards(mas)) {
+        } else if (mce_check_cards()) {
           bprintf(err, "Card check failed");
           dt_error = 1;
         } else
           dt_error = 0;
 
-        frame_size = set_frame(mas, &frame);
-        get_acq_metadata(mas);
+        frame_size = set_frame(&frame);
+        get_acq_metadata();
         max = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_MAX);
 
+        data_tk = dt_idle;
+        break;
+      case dt_mcecmd_init:
+        dt_error = start_mcecmd();
         data_tk = dt_idle;
         break;
       case dt_reconfig:
@@ -286,8 +323,8 @@ void *mas_data(void *dummy)
         bputs(info, "New acquisition");
         /* reset frequency halving */
         pcm_strobe = 0;
-        frame_size = set_frame(mas, &frame);
-        get_acq_metadata(mas);
+        frame_size = set_frame(&frame);
+        get_acq_metadata();
       }
 
       int head;

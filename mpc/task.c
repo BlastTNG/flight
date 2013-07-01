@@ -76,7 +76,7 @@ void *task(void *dummy)
         comms_lost = 0;
         cl_count = 0;
         state &= ~st_config; /* we're unconfigured */
-        state |= st_mcecmd; /* but communicating */
+        state |= st_mcecom; /* but communicating */
         start_tk = stop_tk = st_idle;
         continue;
       }
@@ -92,7 +92,7 @@ void *task(void *dummy)
       if (power_wait[cl_count + 1])
         cl_count++;
       comms_lost = 0;
-      state &= ~(st_config | st_mcecmd); /* need complete MCE restart */
+      state &= ~(st_config | st_mcecom); /* need complete MCE restart */
       start_tk = stop_tk = st_idle; /* try again */
     } else if (start_tk != st_idle) { /* handle start task requests */
       switch (start_tk) {
@@ -108,7 +108,7 @@ void *task(void *dummy)
           state |= st_drive0;
           start_tk = st_idle;
           break;
-        case st_mcecmd:
+        case st_mcecom:
           /* DSP reset */
           if (dt_wait(dt_dsprs)) {
             power_cycle_cmp = 1;
@@ -119,6 +119,15 @@ void *task(void *dummy)
             comms_lost = 1;
           } else {
             cl_count = 0;
+            state |= st_mcecom;
+            start_tk = st_idle;
+          }
+          break;
+        case st_mcecmd:
+          /* start mce_cmd */
+          if (dt_wait(dt_mcecmd_init)) {
+            ; /* is this even meaningful? */
+          } else {
             state |= st_mcecmd;
             start_tk = st_idle;
           }

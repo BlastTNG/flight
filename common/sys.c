@@ -179,7 +179,7 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
 
     /* this is slowish */
     for (i = 1; argv[i]; ++i)
-      strncpy(strncat(cmd, " ", 4096), path, 4096);
+      strncat(strncat(cmd, " ", 4096), argv[i], 4096);
     bprintf(info, "Running %s", cmd);
   }
 
