@@ -105,7 +105,7 @@ void *task(void *dummy)
           dt_wait(dt_setdir);
 
           /* do nothing for now */
-          state |= st_drive0 | st_drive1 | st_drive2;
+          state |= st_drive0;
           start_tk = st_idle;
           break;
         case st_mcecmd:
@@ -132,6 +132,14 @@ void *task(void *dummy)
             start_tk = st_idle;
           }
           break;
+        case st_retdat:
+          /* start acq */
+          if (dt_wait(dt_startacq)) {
+            comms_lost = 1;
+          } else {
+            state |= st_retdat;
+            start_tk = st_idle;
+          }
       }
     } else if (stop_tk != st_idle) { /* handle stop task requests */
       /* XXX */

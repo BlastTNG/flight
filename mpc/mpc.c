@@ -72,6 +72,9 @@ int init = 1;
 /* Data return veto */
 int veto = 0;
 
+/* PCM/MPC divisor */
+int divisor = 2;
+
 /* The slow data struct */
 static struct mpc_slow_data slow_dat;
 
@@ -154,11 +157,10 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
 {
   if (data_in) {
     /* reply acknowledgement from PCM */
-    int power_state = MPCPROTO_POWER_NOP;
     const char *data_mode_bits;
 
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
-          &power_state, len, data_in, peer, port))
+          &divisor, len, data_in, peer, port))
       return;
 
     /* update the data_modes definition */
@@ -216,8 +218,8 @@ static void send_slow_data(char *data)
   slow_dat.data_mode = data_mode;
 
   /* disk free -- units are 2**24 bytes = 16 MB */
-  if (statvfs(MAS_DATA_ROOT, &buf) == 0)
-    slow_dat.df =
+  if (statvfs("/data0/mce", &buf) == 0)
+    slow_dat.df0 =
       (uint16_t)(((unsigned long long)buf.f_bfree * buf.f_bsize) >> 24);
 
   /* time -- this wraps around ~16 months after the epoch */

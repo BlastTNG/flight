@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 
 static int cmd_err = 0;
 
@@ -161,6 +162,40 @@ static int mce_check_cards(mce_context_t *mas)
   return ret;
 }
 
+#define MCECMD_SCRIPT "/run/mpc_mce_cmd"
+static int start_acq(void)
+{
+  FILE *stream;
+
+  long t = (long)time(NULL);
+
+  /* write mce_cmd script */
+  stream = fopen(MCECMD_SCRIPT, "w");
+  if (stream == NULL) {
+    berror(err, "Unable to open " MCECMD_SCRIPT);
+    return 1;
+  }
+
+  /* write a multiacq for all the configured drives we have */
+  fprintf(stream,
+      "wb rca flx_lp_init 1\n" /* restart the servo */
+      "acq_link /data/mas/etc/mas.lnk\n" /* symlink to the zeroth's thing */
+      "acq_config_fs /data0/mce/current_data/mpc_%li rcs 100000\n", t);
+
+  if (state & st_drive1)
+    fprintf(stream,
+        "acq_config_fs /data1/mce/current_data/mpc_%li rcs 100000\n", t);
+
+  if (state & st_drive2)
+    fprintf(stream,
+        "acq_config_fs /data2/mce/current_data/mpc_%li rcs 100000\n", t);
+
+  fprintf(stream, "ACQ_GO 1000000\n");
+  fclose(stream);
+
+  return 0;
+}
+
 void *mas_data(void *dummy)
 {
   char *frame = NULL;
@@ -235,6 +270,10 @@ void *mas_data(void *dummy)
       case dt_reconfig:
         if (exec_and_wait(sched, MAS_SCRIPT "/mce_reconfig", NULL, 100, 0))
           comms_lost = 1;
+        data_tk = dt_idle;
+        break;
+      case dt_startacq:
+        dt_error = start_acq();
         data_tk = dt_idle;
         break;
     }
