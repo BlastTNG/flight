@@ -82,13 +82,10 @@ static int ForwardCommand(int sock)
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge) == 0) {
-    if (InCharge)
-      bprintf(info, "Broadcast %s command #%i.\n",
-          ev.is_multi ? "multi" : "single", ev.command);
-  }
-
-  /* mark as written */
-  CommandData.mcecmd[cmd_idx].done = 1;
+    bprintf(warning, "Error broadcasting command.\n");
+    return 0;
+  } else /* mark as written */
+    CommandData.mcecmd[cmd_idx].done = 1;
 
   /* indicate something has been sent */
   return 1;
@@ -98,40 +95,31 @@ static int ForwardCommand(int sock)
 static void ForwardNotices(int sock)
 {
   static int last_dmb = 0;
-  int edge = 0;
   static int last_divisor = -1;
+  int this_divisor = CommandData.bbcExtFrameRate;
+  int this_turnaround = CommandData.pointing_mode.is_turn_around;
   size_t len;
 
-  /* edge trigger on turnaround flag */
-  if (last_turnaround == -1 ||
-      last_turnaround ^ CommandData.pointing_mode.is_turn_around)
+  /* edge triggers */
+  if ((last_turnaround != -1 && last_turnaround == this_turnaround) &&
+      (this_divisor == last_divisor) &&
+      (last_dmb == CommandData.data_mode_bits_serial))
   {
-    /* the race condition here probably doesn't matter */
-    last_turnaround = CommandData.pointing_mode.is_turn_around;
-    edge = 1;
-  }
-
-  /* edge trigger on MCE/BBC divisor */
-  if (CommandData.bbcExtFrameRate != last_divisor) {
-    /* the race condition here probably doesn't matter */
-    last_divisor = CommandData.bbcExtFrameRate;
-    edge = 1;
-  }
-
-  if (!edge && last_dmb == CommandData.data_mode_bits_serial) {
     /* no notices */
     return;
   }
 
-  len = mpc_compose_notice(last_divisor, last_turnaround,
+  len = mpc_compose_notice(this_divisor, this_turnaround,
       CommandData.data_mode_bits, udp_buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge) == 0) {
-    if (InCharge)
-      bprintf(info, "Broadcast notifications\n");
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
+    bprintf(warning, "Error broadcasting notifications\n");
+  else {
+    last_dmb = CommandData.data_mode_bits_serial;
+    last_turnaround = this_turnaround;
+    last_divisor = this_divisor;
   }
-  last_dmb = CommandData.data_mode_bits_serial;
 }
 
 static void ForwardBSet(int sock)
@@ -146,11 +134,10 @@ static void ForwardBSet(int sock)
   len = mpc_compose_bset(set.v, set.n, (uint16_t)num, udp_buffer);
 
   /* Broadcast this to everyone */
-  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge) == 0) {
-    if (InCharge)
-      bprintf(info, "Broadcast BSet 0x%04X\n", num);
+  if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
+    bprintf(warning, "ErrorBroadcast BSet 0x%04X\n", num);
+  else
     sent_bset = num;
-  }
 }
 
 /* push tes_buffer[n] on the tes fifo; discards the new frame if FIFO full */
@@ -288,7 +275,6 @@ void *mceserv(void *unused)
   char peer[UDP_MAXHOST];
 
   nameThread("MCE");
-  bprintf(startup, "Startup");
 
   /* initialise the MPC protocol suite */
   if (mpc_init())
@@ -344,7 +330,7 @@ void *mceserv(void *unused)
             port);
         if (bad_bset_count > BAD_BSET_THRESHOLD) {
           bprintf(warning,
-              "Reinitialising BSet after %i bad TES packets from client(s).",
+              "Resending BSet after %i bad TES packets from client(s).",
               bad_bset_count);
           sent_bset = -1; /* resend bset */
           bad_bset_count = 0;

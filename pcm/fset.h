@@ -44,17 +44,9 @@ struct bset {
   int empties; /* indicating MCEs for which do data will be returned */
 };
 
-struct fset {
-  int n;
-  char *v[MAX_FSET][FIELD_LEN];
-};
-
 int read_bset(int i, struct bset *set);
-int read_fset(int i, struct fset *set);
 
 int get_bset(struct bset *local_set);
 void set_bset(const struct bset *local_set, int num);
-int get_fset(struct fset *local_set);
-void set_fset(const struct fset *local_set, int num);
 
 #endif

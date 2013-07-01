@@ -403,10 +403,8 @@ int mpc_decompose_bset(uint16_t *bset_num, int16_t *set, int mce, size_t len,
   int i, m = 0;
 
   /* no change */
-  if (new_bset_num == *bset_num) {
-    bprintf(info, "Ignoring rebroadcast BSet 0x%04X\n", new_bset_num);
+  if (new_bset_num == *bset_num)
     return -1;
-  }
 
   for (i = 0; i < n; ++i)
     if (TES_MCE(in[i]) == mce)

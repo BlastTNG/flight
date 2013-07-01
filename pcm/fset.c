@@ -20,18 +20,10 @@
  *
  */
 
-/* There are two kinds of field sets:
- *
- * bset: bolometer sets, which just list bolometers using a numberic triplet:
- *       of the form: m#c##r## where the numbers (#) mce_number, column, row
- *       and the two last are always two digits, zero paddedr
- * fset: field sets, which are lists of blast fields and/or mce### channel
- *       numbers
- *
- *
- * There are 255 sets available of each kind (001.bset -> 255.bset and
- * 001.fset -> 255.fset).  [fb]set files may contain comment lines (with a # in
- * column one, and also blank lines.  These are ignored.
+/*
+ * There are 255 sets available of (001.bset -> 255.bset).  bset files may
+ * contain comment lines (with a # in column one, and also blank lines.  These
+ * are ignored.
  *
  * The first (non-blank, non-comment) line must comprise an integer indicating
  * the number of entries in the set.  Excess elements are ignored.
@@ -52,7 +44,6 @@
 
 /* currently loaded set in PCM */
 static struct bset curr_bset;
-static struct fset curr_fset;
 
 static pthread_mutex_t set_mex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -73,107 +64,6 @@ void set_bset(const struct bset *local_set, int num)
   CommandData.bset_num = num;
   memcpy(&curr_bset, local_set, sizeof(curr_bset));
   pthread_mutex_unlock(&set_mex);
-}
-
-int get_fset(struct fset *local_set)
-{
-  int num;
-  pthread_mutex_lock(&set_mex);
-  num = CommandData.fset_num;
-  memcpy(local_set, &curr_fset, sizeof(curr_fset));
-  pthread_mutex_unlock(&set_mex);
-  return num;
-}
-
-void set_fset(const struct fset *local_set, int num)
-{
-  pthread_mutex_lock(&set_mex);
-  CommandData.fset_num = num;
-  memcpy(&curr_fset, local_set, sizeof(curr_fset));
-  pthread_mutex_unlock(&set_mex);
-}
-
-/* parse fset file number 'i' and store it in 'set'.  Returns the length
- * of the set or -1 on error
- */
-int read_fset(int i, struct fset *set)
-{
-  struct fset new_set = { .n = -1 };
-  int lineno = 0, c = 0;
-  FILE *stream;
-  char line[1024];
-  char name[sizeof(SET_DIR) + sizeof(".fset") + 5];
-
-  sprintf(name, SET_DIR "/%03i.fset", i);
-
-  /* open */
-  if ((stream = fopen(name, "r")) == NULL) {
-    /* a missing file isn't interesting */
-    if (errno != ENOENT)
-      berror(err, "Set: unable to open %s as FSET%03i", name, i);
-    return -1;
-  }
-
-  /* parse lines */
-  while (fgets(line, 1024, stream)) {
-    size_t len = strlen(line);
-    /* check for line length */
-    if (line[len - 1] != '\n') {
-      bprintf(err, "Set: Error reading FSET%03i: line %i too long.", i,
-          lineno);
-      goto LOAD_FSET_ERROR;
-    }
-
-    /* skip comments and blank lines */
-    if (line[0] == '\n' || line[0] == '#') {
-      lineno++;
-      continue;
-    }
-
-    if (new_set.n == -1) {
-      /* first line is the number */
-      char *endptr;
-      new_set.n = strtol(line, &endptr, 10);
-      /* check for trailing garbage and/or crazy numbers */
-      if (*endptr != '\n' || new_set.n <= 0 || new_set.n >= MAX_FSET) {
-        bprintf(err, "Set: Error reading FSET%03i: bad count on line %i", i,
-            lineno);
-        goto LOAD_FSET_ERROR;
-      } else if (new_set.n > MAX_FSET) {
-        bprintf(warning, "Set: FSET%03i too long; dropping %i %s", i,
-            new_set.n - MAX_FSET,
-            (new_set.n - MAX_FSET == 1) ? "entry" : "entries");
-        new_set.n = MAX_FSET;
-      }
-    } else if (c == new_set.n) {
-      /* done -- ignore the rest of the file and return success */
-      fclose(stream);
-      memcpy(set, &new_set, sizeof(new_set));
-      return new_set.n;
-    } else {
-      /* check length -- minus one for \n */
-      if (len - 1 > FIELD_LEN) {
-        bprintf(err, "Set: Field name too long on line %i of FSET%03i", lineno,
-            i);
-        goto LOAD_FSET_ERROR;
-      }
-      /* TODO: verify field name? */
-      memcpy(new_set.v[c++], line, FIELD_LEN);
-    }
-    lineno++;
-  }
-  if (c != new_set.n)
-    bprintf(err, "Set: Unexpected EOF reading FSET%03i", i);
-  else {
-    fclose(stream);
-    memcpy(set, &new_set, sizeof(new_set));
-    return new_set.n;
-  }
-
-
-LOAD_FSET_ERROR:
-  fclose(stream);
-  return -1;
 }
 
 /* parse bset file number 'i' and store it in 'set'.  Returns 'set' or NULL

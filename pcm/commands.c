@@ -90,13 +90,12 @@ static void change_bset(int i, int init)
 
   /* special empty sets -- always succeeds */
   if (i == 0) {
-    bputs(info, "Set: using empty BSET000.");
     memset(&new_bset, 0, sizeof(new_bset));
     set_bset(&new_bset, bset_serial++ << 8);
     return;
   }
 
-  /* try to load the fset */
+  /* try to load the bset */
   if (read_bset(i, &new_bset) == -1) {
     /* no bset loaded -- load the empty default */
     if (init) {
@@ -110,48 +109,7 @@ static void change_bset(int i, int init)
   }
 
   /* update the current bset */
-  bprintf(info, "Set: using BSET%03i with %i fields", i, new_bset.n);
   set_bset(&new_bset, i | (bset_serial++ << 8));
-}
-
-static void change_fset(int i, int init)
-{
-  static uint8_t fset_serial = 0xF9;
-  struct fset new_fset = { .n = 0 };
-
-  /* range checking */
-  if (i < 0 || i > 255) {
-    bprintf(warning, "Set: ignoring out-of-range FSET index %i\n", i);
-    return;
-  }
-
-  /* avoid the forbidden serial number */
-  if (fset_serial == 0xFF)
-    fset_serial++;
-
-  /* special empty sets -- always succeeds */
-  if (i == 0) {
-    bputs(info, "Set: using empty FSET000.");
-    set_fset(&new_fset, fset_serial++ << 8);
-    return;
-  }
-
-  /* try to load the fset */
-  if (read_fset(i, &new_fset) == -1) {
-    /* no fset loaded -- load the empty default */
-    if (init) {
-      change_fset(0, 0);
-      return;
-    }
-
-    bprintf(warning, "Set: unable to read FSET%03i; still using FSET%03i", i,
-        (CommandData.fset_num & 0xFF));
-    return;
-  }
-
-  /* update the current fset */
-  bprintf(info, "Set: using FSET%03i with %i fields", i, new_fset.n);
-  set_fset(&new_fset, i | (fset_serial++ << 8));
 }
 
 /* forward an unrecognised command to the MCE computers.  Returns zero if this
@@ -1385,9 +1343,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case bset:
       change_bset(ivalues[0], 0);
       break;
-    case fset:
-      change_fset(ivalues[0], 0);
-      break;
 
     case plugh:/* A hollow voice says "Plugh". */
       CommandData.plover = ivalues[0];
@@ -1998,7 +1953,6 @@ void CheckCommandList(void)
 static void PostProcessInitCommand(void)
 {
   change_bset(CommandData.bset_num & 0xFF, 1);
-  change_fset(CommandData.fset_num & 0xFF, 1);
 }
 
 /************************************************************/

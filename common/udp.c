@@ -84,8 +84,10 @@ int udp_bind_port(int port, int bcast)
         }
 
         /* success */
+#if 0
         bprintf(info, bcast ? "Bound to udp/%i (broadcast enabled)" :
             "Bound to udp/%i", port);
+#endif
         freeaddrinfo(res);
         return sock;
       }

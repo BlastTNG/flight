@@ -760,7 +760,7 @@ struct ChannelStruct SlowChannels[] = {
   {"enc_cnt_x4_hwp",'w', LOOP0,  8,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_x5_hwp",'w', LOOP0,  9,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_x6_hwp",'w', LOOP0, 10,     I2DEG,      0.0,      'u',      U_P_DEG},
-  {"fset",         'w', LOOP0, 11,         1,        0,      'u',      U_NONE},
+  {"bset",         'w', LOOP0, 11,         1,        0,      'u',      U_NONE},
   /* LOOP0 12-23 and 30-41 are wide slow */
   {"state_x1_cycle",  'w', LOOP0,  24,                1.0,            0.0, 'u', U_NONE},
   {"state_x2_cycle",  'w', LOOP0,  25,                1.0,            0.0, 'u', U_NONE},

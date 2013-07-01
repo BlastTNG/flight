@@ -513,7 +513,6 @@ struct CommandDataStruct {
   unsigned short questionable_behaviour;
 
   int bset_num; /* current bolo set number */
-  int fset_num; /* current OTH set number */
 
   /* MCE data mode 32->16 bit conversion stuff */
   char data_mode_bits[13][2][2];

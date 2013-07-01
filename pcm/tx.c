@@ -138,7 +138,7 @@ static void WriteAux(void)
   static struct NiosStruct* rateFrameBbcAddr;
   static struct NiosStruct* rateSampAdcAddr;
   static struct NiosStruct* bandAzAddr;
-  static struct NiosStruct *fsetAddr;
+  static struct NiosStruct *bsetAddr;
 
   static struct NiosStruct* timeMeFlcAddr;
   static struct NiosStruct* dfMeFlcAddr;
@@ -195,7 +195,7 @@ static void WriteAux(void)
     rateFrameBbcAddr = GetNiosAddr("rate_frame_bbc");
     rateSampAdcAddr = GetNiosAddr("rate_samp_adc");
     bandAzAddr = GetNiosAddr("band_az");
-    fsetAddr = GetNiosAddr("fset");
+    bsetAddr = GetNiosAddr("bset");
 
     sprintf(buf, "time_%c_flc", (BitsyIAm) ? 'b' : 'i');
     timeMeFlcAddr = GetNiosAddr(buf);
@@ -300,7 +300,7 @@ static void WriteAux(void)
   WriteCalData(rateSampAdcAddr, ACSData.adc_rate, NIOS_QUEUE);
   WriteCalData(bandAzAddr, CommandData.pointing_mode.overshoot_band,
       NIOS_QUEUE);
-  WriteData(fsetAddr, CommandData.fset_num, NIOS_QUEUE);
+  WriteData(bsetAddr, CommandData.bset_num, NIOS_QUEUE);
 
   mccstatus =
     (BitsyIAm ? 0x1 : 0x0) +                 //0x01
