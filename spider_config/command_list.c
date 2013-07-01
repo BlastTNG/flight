@@ -314,6 +314,8 @@ const struct scom scommands[N_SCOMMANDS] = {
     GR_CMB},
 
   {COMMAND(mpc_ping), "Ping the MCCs", MCECMD | GR_MCE},
+  {COMMAND(mcc_wdog_enable), "Enable pcm watchdog of MCCs", GR_MCE | CONFIRM},
+  {COMMAND(mcc_wdog_disable), "Disable pcm watchdog of MCCs", GR_MCE | CONFIRM},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
@@ -1122,6 +1124,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  /***********************************************/
   /*************** MCE COMMANDS  *****************/
 
   {COMMAND(mpc_test), "Test the MPC", GR_MCE | MCECMD, 3,
@@ -1146,6 +1149,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
     }
   },
+  
 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {

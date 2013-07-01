@@ -931,6 +931,12 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hk_theo_heat[6].duration = 0;
       CommandData.hk_theo_heat[6].start_time = 0;
       break;
+   case mcc_wdog_enable:
+      CommandData.mcc_wdog = 1;
+      break;
+   case mcc_wdog_disable:
+      CommandData.mcc_wdog = 0;
+      break;
 
     case pull_cmb_pin:
       bputs(info, "... What now?");
@@ -2359,6 +2365,8 @@ void InitCommandData()
   CommandData.data_mode_bits[12][0][0] = 16;
   CommandData.data_mode_bits[12][0][1] = 16;
   CommandData.data_mode_bits_serial = 0;
+
+  CommandData.mcc_wdog = 0;
 
   CommandData.questionable_behaviour = 0;
 

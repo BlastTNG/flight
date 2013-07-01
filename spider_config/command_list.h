@@ -127,6 +127,7 @@ enum singleCommand {
   mcc5_on,           mcc5_off,          mcc5_cycle,
   mcc6_on,           mcc6_off,          mcc6_cycle,
   mpc_ping, /* MPC test command */
+  mcc_wdog_enable,   mcc_wdog_disable, 
   xyzzy,
   N_SCOMMANDS /* SENTINAL: this must be the last thing in this list */
 };

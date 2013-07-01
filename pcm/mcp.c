@@ -90,6 +90,8 @@ static int bi0_fp = -2;
 static int Death = -STARTUP_VETO_LENGTH * 2;
 static int RxFrameMultiplexIndex;
 
+unsigned long int mccSlowCount[6]; // count time between MCE slow packets
+
 extern short int InCharge; /* tx.c */
 extern pthread_mutex_t mutex;       //commands.c
 
@@ -283,6 +285,61 @@ static void Chatter(void* arg)
   }
 }
 
+static void WatchMCC()
+{
+  int i;
+  int timeout;
+  static int framecount = 0;
+
+  timeout = (int)(5.0*(ACSData.bbc_rate/FAST_PER_SLOW));
+
+  timeout = (timeout > 0) ? timeout : 25;
+
+  framecount++;
+
+  if (framecount == FAST_PER_SLOW) {
+    framecount = 0;
+    for (i=0; i<6; i++) {
+      mccSlowCount[i]++;
+      if ( (mccSlowCount[i] >= timeout) && (CommandData.mcc_wdog) ) {
+        switch (i) {
+          case 0:
+            CommandData.power.mcc1.set_count = PCYCLE_HOLD_LEN 
+                                             + LATCH_PULSE_LEN;
+            CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
+            break;
+          case 1:
+            CommandData.power.mcc2.set_count = PCYCLE_HOLD_LEN 
+                                             + LATCH_PULSE_LEN;
+            CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
+            break;
+          case 2:
+            CommandData.power.mcc3.set_count = PCYCLE_HOLD_LEN 
+                                             + LATCH_PULSE_LEN;
+            CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
+            break;
+          case 3:
+            CommandData.power.mcc4.set_count = PCYCLE_HOLD_LEN 
+                                             + LATCH_PULSE_LEN;
+            CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
+            break;
+          case 4:
+            CommandData.power.mcc5.set_count = PCYCLE_HOLD_LEN 
+                                             + LATCH_PULSE_LEN;
+            CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
+            break;
+          case 5:
+            CommandData.power.mcc6.set_count = PCYCLE_HOLD_LEN 
+                                             + LATCH_PULSE_LEN;
+            CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+}
 
 static void GetACS()
 {
@@ -1231,7 +1288,7 @@ int main(int argc, char *argv[])
         GetACS();
         GetCurrents();
         Pointing();
-
+        WatchMCC();
 
         check_bbc_sync();   /* check sync box aliveness */
 

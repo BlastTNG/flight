@@ -38,6 +38,8 @@ extern struct frameBuffer hiGain_buffer;
 
 extern int BLASTBusUseful;
 
+extern unsigned long int mccSlowCount[6];
+
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
 

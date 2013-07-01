@@ -272,6 +272,7 @@ void *mceserv(void *unused)
   int bad_bset_count = 0;
   ssize_t n;
   char peer[UDP_MAXHOST];
+  int mccnum;
 
   nameThread("MCE");
 
@@ -321,8 +322,12 @@ void *mceserv(void *unused)
         handle_pcm_request(n, peer, port);
         break;
       case 'S': /* slow data */
-        mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer,
-            peer, port);
+        mccnum = mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer
+                                    ,peer, port);
+        if (mccnum >= 0) {
+          mccSlowCount[mccnum] = 0;
+        }
+
         break;
       case 'T': /* TES (fast) data */
         bad_bset_count = insert_tes_data(bad_bset_count, n, udp_buffer, peer,

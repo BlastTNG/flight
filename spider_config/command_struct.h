@@ -521,6 +521,9 @@ struct CommandDataStruct {
   /* commands to be relayed to the MCE computers */
   int mcecmd_index;
   struct ScheduleEvent mcecmd[3];
+
+  /* mcc watchdog enable */
+  unsigned short mcc_wdog;
 };
 
 struct ScheduleType {
