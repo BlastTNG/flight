@@ -40,7 +40,7 @@ LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o dgps.o mag.o drivecommunicator
 EXPT_OBJS += compressstruct.o mpc_proto.o slowdl_struct.o
 endif
 
-ETC_DATA = WMM.COF ephem.2000 sched.library *.sch *.lut *.bin *.[bf]set
+ETC_DATA = WMM.COF ephem.2000 sched.library *.sch *.lut *.bin *.bset
 
 ########################################################
 # Test-run
