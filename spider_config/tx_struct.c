@@ -531,7 +531,13 @@ struct ChannelStruct SlowChannels[] = {
   {"grid_b",  'w', LOOP3, 47,                1.0,             0.0, 'u', U_NONE},
   /* LOOP3 48-49 are unusued */
   {"mdist_b",   'w', LOOP3, 50,                1.0,             0.0, 'u', U_NONE},
-  /* LOOP3 51-57 are unusued */
+  {"az_g",     'w', LOOP3, 51,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"el_g",     'w', LOOP3, 52,          1.0/100.0,             0.0, 's', U_NONE},
+  {"az_b",     'w', LOOP3, 53,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"el_b",     'w', LOOP3, 54,          1.0/100.0,             0.0, 's', U_NONE},
+  {"az_u",     'w', LOOP3, 55,          1.0/100.0,             0.0, 'u', U_NONE},
+  {"el_u",     'w', LOOP3, 56,          1.0/100.0,             0.0, 's', U_NONE},
+  /* LOOP3 57 is unusued */
   /* LOOP3 58-59 are wide */
   /* LOOP3 60-63 are unusued */
   /* LOOP4 0-2 are unusued */

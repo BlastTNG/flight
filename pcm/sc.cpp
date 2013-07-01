@@ -53,6 +53,7 @@ using namespace std;
 #define THEBAD_SERVERNAME  "192.168.1.12"
 #define THEUGLY_SERVERNAME "192.168.1.13"
 
+extern "C" void radec2azel(double ra, double dec, time_t lst, double lat, double *az, double *el);
 
 extern "C" void nameThread(const char*);  /* in mcp.c */
 
@@ -72,9 +73,9 @@ double trigPos[10];
 #define CAT "/data/etc/spider/gsc_mag08_res20.bin"
 #define KCAT "/data/etc/spider/k.bin"
 double FOV = 2.5*M_PI/180.0;
-double ra_thegood, dec_thegood, roll_thegood;
-double ra_thebad, dec_thebad, roll_thebad;
-double ra_theugly, dec_theugly, roll_theugly;
+double SCra[3], SCdec[3], SCroll[3], SCaz[3], SCel[3];
+#define BAD_AZ_OFF -105.0
+#define UGLY_AZ_OFF 105.0
 Pyramid pyr;
 
 static CamCommunicator* TheGoodComm;
@@ -235,6 +236,8 @@ void cameraFields(int which)
   static NiosStruct* RaAddr[3];
   static NiosStruct* DecAddr[3];
   static NiosStruct* RollAddr[3];
+  static NiosStruct* AzAddr[3];
+  static NiosStruct* ElAddr[3];
 
   static NiosStruct* Blob0XAddr[3];
   static NiosStruct* Blob1XAddr[3];
@@ -274,6 +277,8 @@ void cameraFields(int which)
     RaAddr[which] = GetSCNiosAddr("ra",which);
     DecAddr[which] = GetSCNiosAddr("dec",which);
     RollAddr[which] = GetSCNiosAddr("roll",which);
+    AzAddr[which] = GetSCNiosAddr("az",which);
+    ElAddr[which] = GetSCNiosAddr("el",which);
 
     Blob0XAddr[which] = GetSCNiosAddr("blob00_x",which);
     Blob1XAddr[which] = GetSCNiosAddr("blob01_x",which);
@@ -326,9 +331,11 @@ void cameraFields(int which)
     	WriteData(FocPosAddr[which], (int)(sc->focusposition*10), NIOS_QUEUE);
     	WriteData(NumBlobsAddr[which], sc->numblobs, NIOS_QUEUE);
 
-	WriteData(RaAddr[which], (int)(ra_thegood*100*180/M_PI), NIOS_QUEUE);
-	WriteData(DecAddr[which], (int)(dec_thegood*100*180/M_PI), NIOS_QUEUE);
-	WriteData(RollAddr[which], (int)(roll_thegood*100*180/M_PI), NIOS_QUEUE);
+	WriteData(RaAddr[which], (int)(SCra[which]*100*180/M_PI), NIOS_QUEUE);
+	WriteData(DecAddr[which], (int)(SCdec[which]*100*180/M_PI), NIOS_QUEUE);
+	WriteData(RollAddr[which], (int)(SCroll[which]*100*180/M_PI), NIOS_QUEUE);
+	WriteData(AzAddr[which], (int)(SCaz[which]*100*180/M_PI), NIOS_QUEUE);
+	WriteData(ElAddr[which], (int)(SCel[which]*100*180/M_PI), NIOS_QUEUE);
 	if (sc->numblobs > 0) {
 		WriteData(Blob0XAddr[which],(unsigned int)(sc->x[blobindex[which] * 3 + 0]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
@@ -523,6 +530,9 @@ static void* TheUglyReadLoop(void* arg)
 
 static string TheGoodparseReturn(string rtnStr)
 {
+  int i_point;
+  i_point = GETREADINDEX(point_index);  
+
   /* debugging only
      bprintf(info, "return string: %s", rtnStr.c_str());
      */
@@ -555,13 +565,17 @@ static string TheGoodparseReturn(string rtnStr)
 
   } else { //response is exposure data
     TheGoodComm->interpretReturn(rtnStr, &camRtn[0][(i_cam[0]+1)%2]);
-    SolveField(&camRtn[0][(i_cam[0]+1)%2],ra_thegood,dec_thegood,roll_thegood);
+    SolveField(&camRtn[0][(i_cam[0]+1)%2],SCra[0],SCdec[0],SCroll[0]);
+    radec2azel(SCra[0],SCdec[0], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[0], &SCel[0]);
     i_cam[0] = (i_cam[0]+1)%2;
   }
   return "";  //doesn't send a response back to camera
 }
 static string TheBadparseReturn(string rtnStr)
 {
+  int i_point;
+  i_point = GETREADINDEX(point_index);  
+
   /* debugging only
      bprintf(info, "return string: %s", rtnStr.c_str());
      */
@@ -594,13 +608,18 @@ static string TheBadparseReturn(string rtnStr)
 
   } else { //response is exposure data
     TheBadComm->interpretReturn(rtnStr, &camRtn[1][(i_cam[1]+1)%2]);
-    SolveField(&camRtn[1][(i_cam[1]+1)%2],ra_thebad,dec_thebad,roll_thebad);
+    SolveField(&camRtn[1][(i_cam[1]+1)%2],SCra[1],SCdec[1],SCroll[1]);
+    radec2azel(SCra[1],SCdec[1], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[1], &SCel[1]);
+    SCaz[1] += BAD_AZ_OFF - ACSData.enc_table;
     i_cam[1] = (i_cam[1]+1)%2;
   }
   return "";  //doesn't send a response back to camera
 }
 static string TheUglyparseReturn(string rtnStr)
 {
+  int i_point;
+  i_point = GETREADINDEX(point_index);  
+
   /* debugging only
      bprintf(info, "return string: %s", rtnStr.c_str());
      */
@@ -633,7 +652,9 @@ static string TheUglyparseReturn(string rtnStr)
 
   } else { //response is exposure data
     TheUglyComm->interpretReturn(rtnStr, &camRtn[2][(i_cam[2]+1)%2]);
-    SolveField(&camRtn[2][(i_cam[2]+1)%2],ra_theugly,dec_theugly,roll_theugly);
+    SolveField(&camRtn[2][(i_cam[2]+1)%2],SCra[2],SCdec[2],SCroll[2]);
+    radec2azel(SCra[2],SCdec[2], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[2], &SCel[2]);
+    SCaz[2] += UGLY_AZ_OFF - ACSData.enc_table;
     i_cam[2] = (i_cam[2]+1)%2;
   }
   return "";  //doesn't send a response back to camera
