@@ -401,7 +401,7 @@ struct ChannelStruct SlowChannels[] = {
   {"az_sun",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
   {"status_flc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //bitsy_i_am, at_float, schedule, slot_sched
   {"upslot_sched", 'w', LOOP1, 25,                1.0,             0.0, 'u', U_NONE},  
-  {"t_chip_flc",   'w', LOOP1, 26,               0.01,             0.0, 'u', U_NONE},
+  {"t_chip_flc",   'w', LOOP1, 26,               0.01,             0.0, 'u', U_T_C},
   {"declination_mag",'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_D_DEG}, // magnetic declination
   {"veto_sensor",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
   /* LOOP1 32-33 are wide */
@@ -489,10 +489,10 @@ struct ChannelStruct SlowChannels[] = {
 
   /* LOOP3 0-3 are unusued */
   /* LOOP3 4-5 are wide */
-  {"t_cpu_i_flc",    'w', LOOP3,  6,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu_i_flc",    'w', LOOP3,  6,               0.01,             0.0, 'u', U_T_C},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u', U_NONE},
-  {"t_cpu_b_flc",    'w', LOOP3,  8,               0.01,             0.0, 'u', U_NONE},
-  {"t_mb_flc",      'w', LOOP3,  9,               0.01,             0.0, 'u', U_NONE},
+  {"t_cpu_b_flc",    'w', LOOP3,  8,               0.01,             0.0, 'u', U_T_C},
+  {"t_mb_flc",      'w', LOOP3,  9,               0.01,             0.0, 'u', U_T_C},
   {"mks_hi_sip",   'w', LOOP3, 10,           0.003256,       -0.226858, 'u', U_NONE},
   {"mks_med_sip",  'w', LOOP3, 11,           0.032614,       -0.072580, 'u', U_NONE},
   {"nblobs_b",  'w', LOOP3, 12,                1.0,             0.0, 'u', U_NONE},
@@ -542,9 +542,9 @@ struct ChannelStruct SlowChannels[] = {
   {"maxblob_b",'w',LOOP4,  7,                1.0,             0.0, 'u', U_NONE},
   {"bi0_fifo_size",'w', LOOP4,  8,             1./624,             0.0, 'u', U_NONE},
   {"plover",       'w', LOOP4,  9,                1.0,             0.0, 'u', U_NONE},
-  {"t_ccd_g",'w', LOOP4, 10,          1.0/100.0,             0.0, 's', U_NONE},
+  {"t_ccd_g",'w', LOOP4, 10,          1.0/100.0,             0.0, 's', U_T_C},
   /* LOOP4 11-14 are unusued */
-  {"t_ccd_b", 'w', LOOP4, 15,          1.0/100.0,             0.0, 's', U_NONE},
+  {"t_ccd_b", 'w', LOOP4, 15,          1.0/100.0,             0.0, 's', U_T_C},
   /* LOOP4 16-20 are unusued */
   /* LOOP4 23 is unusued */
   /* LOOP4 24-25 are wide */
@@ -553,7 +553,7 @@ struct ChannelStruct SlowChannels[] = {
   {"g_p_heat_gy",   'w', LOOP4, 33,                1.0,             0.0, 'u', U_NONE},
   {"g_i_heat_gy",   'w', LOOP4, 34,                1.0,             0.0, 'u', U_NONE},
   {"g_d_heat_gy",   'w', LOOP4, 35,                1.0,             0.0, 'u', U_NONE},
-  {"t_set_gy",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_NONE},
+  {"t_set_gy",     'w', LOOP4, 36,    (100.0/32768.0),             0.0, 'u', U_T_C},
   {"trim_pss",     'w', LOOP4, 39,              I2DEG,             0.0, 's', U_NONE},
   {"az_pss",       'w', LOOP4, 40,              I2DEG,             0.0, 'u', U_P_DEG},
   /* LOOP4 41 is unusued */
@@ -708,7 +708,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mdist_u",     'w', LOOP8, 49,                1.0,             0.0, 'u', U_NONE},
   {"mapmean_u",   'w', LOOP8, 50,                1.0,             0.0, 'u', U_NONE},
   {"mapsigma_u",  'w', LOOP8, 51,           1.0/10.0,             0.0, 'u', U_NONE},
-  {"t_ccd_u",     'w', LOOP8, 52,          1.0/100.0,             0.0, 's', U_NONE},
+  {"t_ccd_u",     'w', LOOP8, 52,          1.0/100.0,             0.0, 's', U_T_C},
   {"nblobs_u",    'w', LOOP8, 53,                1.0,             0.0, 'u', U_NONE},
   {"blob00_x_u",  'w', LOOP8, 54, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE},
   {"blob00_y_u",  'w', LOOP8, 55, CAM_WIDTH/SHRT_MAX,             0.0, 'u', U_NONE}, 
@@ -856,10 +856,10 @@ struct ChannelStruct SlowChannels[] = {
 /* ACS2 Analog card */
   {"pitch_piv_clin",'r', ACS2_A1,  1,           0.001343,          -42.28, 'u', U_NONE},
   {"roll_piv_clin",'r',  ACS2_A1,  3,           0.001413,         -44.640, 'u', U_NONE},
-  {"t_piv_clin",   'r',  ACS2_A1,  5, 100.0*10.0/32768.0,     -100.0*10.0, 'u', U_NONE},
+  {"t_piv_clin",   'r',  ACS2_A1,  5, 100.0*10.0/32768.0,     -100.0*10.0, 'u', U_T_C},
   {"pitch_of_clin",'r',  ACS2_A1,  7,            0.00147,           -48.5, 'u', U_NONE},
   {"roll_of_clin", 'r',  ACS2_A1,  9,              0.00144,        -44.78, 'u', U_NONE},
-  {"t_of_clin",    'r',  ACS2_A1, 11, 100.0*10.0/32768.0,     -100.0*10.0, 'u', U_NONE},
+  {"t_of_clin",    'r',  ACS2_A1, 11, 100.0*10.0/32768.0,     -100.0*10.0, 'u', U_T_C},
   {"trig_g", 'r',  ACS2_A1, 23,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"trig_b",  'r',  ACS2_A1, 25,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"trig_u", 'r',  ACS2_A1, 27,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
