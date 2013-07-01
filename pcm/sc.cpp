@@ -102,13 +102,13 @@ static NiosStruct* GetSCNiosAddr(const char* field, int which)
 	  char buffer[FIELD_LEN];
 	  switch (which) {
 		  case 0:  
-	            sprintf(buffer, "%s_%s", field, "thegood");
+	            sprintf(buffer, "%s_%s", field, "g");
 		    break;
 		  case 1:
-		    sprintf(buffer, "%s_%s", field, "thebad");
+		    sprintf(buffer, "%s_%s", field, "b");
 		    break;
 		  case 2:
-		    sprintf(buffer, "%s_%s", field, "theugly");
+		    sprintf(buffer, "%s_%s", field, "u");
 		    break;
 	  }
 	  return GetNiosAddr(buffer);
@@ -268,7 +268,7 @@ void cameraFields(int which)
     SigmaAddr[which] = GetSCNiosAddr("mapsigma",which);
     TimeAddr[which] = GetSCNiosAddr("sec",which);
     UsecAddr[which] = GetSCNiosAddr("usec",which);
-    CcdTempAddr[which] = GetSCNiosAddr("ccd_t",which);
+    CcdTempAddr[which] = GetSCNiosAddr("t_ccd",which);
     FocPosAddr[which] = GetSCNiosAddr("focpos",which);
     NumBlobsAddr[which] = GetSCNiosAddr("nblobs",which);
     RaAddr[which] = GetSCNiosAddr("ra",which);
