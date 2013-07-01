@@ -166,7 +166,6 @@ static void SensorReader(void)
   FILE *stream;
 
   nameThread("Sensor");
-  //bputs(startup, "Startup\n");
 
   while (1) {
     if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp1_input", "r"))
@@ -229,13 +228,11 @@ static void Chatter(void* arg)
 
   nameThread("Chat");
 
-  //bprintf(startup, "Thread startup\n");
-
   fd = open("/data/etc/spider/pcm.log", O_RDONLY|O_NONBLOCK);
 
   if (fd == -1)
   {
-    bprintf(tfatal, "Failed to open /data/etc/spider/pcm.log for reading (%d)\n", errno);
+    bprintf(tfatal, "Failed to open /data/etc/spider/pcm.log (%d)\n", errno);
   }
 
   if (fpos == -1) {
@@ -388,13 +385,6 @@ static void GetACS()
  
   enc_raw_el_1 = ReadCalData(elRaw1EncAddr);
   enc_raw_el_2 = ReadCalData(elRaw2EncAddr);
-
-  /*if (enc_raw_el_1 > 0.0) {
-      bprintf(info, "el_raw_1_enc = %f", enc_raw_el_1);
-  }
-  if (enc_raw_el_2 > 0.0) {
-      bprintf(info, "el_raw_2_enc = %f", enc_raw_el_2);
-  }*/
 
   if (CommandData.use_elenc1 && !CommandData.use_elenc2) {
     enc_mean_el = enc_raw_el_1;
@@ -640,10 +630,10 @@ void setup_bbc()
         CommandData.bbcIntFrameRate*384) < 0) setup_test = -1;
 
   if (CommandData.bbcIsExt) {
-    bprintf(mode, "System: BBC in external sync mode");
+    bprintf(mode, "External sync");
     if (ioctl(bbc_fp, BBCPCI_IOC_EXT_SER_ON) < 0) setup_test = -1;
   } else {
-    bprintf(mode, "System: BBC in internal sync mode");
+    bprintf(mode, "Internal sync");
     if (ioctl(bbc_fp, BBCPCI_IOC_EXT_SER_OFF) < 0) setup_test = -1;
   }
 
@@ -747,7 +737,6 @@ static int fill_Rx_frame(unsigned int in_data)
 static void WatchDog (void)
 {
   nameThread("WDog");
-  bputs(startup, "Startup\n");
 
   /* Allow other threads to kill this one at any time */
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -927,12 +916,9 @@ static void BiPhaseWriter(void)
   unsigned short *frame;
   
   nameThread("Bi0");
-  bputs(startup, "Startup\n");
 
   while (!biphase_is_on)
     usleep(10000);
-
-  bputs(info, "Veto has ended.  Here we go.\n");
 
   bi0_fp = open("/dev/bbc_bi0", O_RDWR);
   if (bi0_fp == -1) {
@@ -1144,8 +1130,6 @@ int main(int argc, char *argv[])
   bprintf(warning, "System: TEMPORAL OFFSET = %i\n", TEMPORAL_OFFSET);
 #endif
 
-  //bputs(startup, "System: Startup");
-
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
@@ -1159,7 +1143,7 @@ int main(int argc, char *argv[])
     berror(fatal, "System: Error opening BBC");
   setup_bbc();
 
-  bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
+  bprintf(info, "Command List Version: %s", command_list_serial);
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatafifo, NULL, (void*)&WatchFIFO, (void*)flc_ip[BitsyIAm]);
 #endif
@@ -1208,15 +1192,11 @@ int main(int argc, char *argv[])
 
   startSync();     // create sync box serial thread defined in sync_comms.c
 
-  bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
-
   /* mcp used to wait here for a semaphore from the BBC, which makes the
    * presence of these messages somewhat "historical" */
 
-  bputs(info, "System: BBC is up.\n");
 
   InitTxFrame();
-  bputs(info, "InitTxFrame done\n");
 
 #ifdef USE_XY_THREAD
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
@@ -1257,7 +1237,7 @@ int main(int argc, char *argv[])
 
         /* Frame sequencing check */
         if (StartupVeto) {
-          bputs(info, "System: Startup Veto Ends\n");
+          bputs(info, "Startup Veto Ends\n");
           StartupVeto = 0;
           Death = 0;
         } else if (RxFrame[3] != (RxFrameMultiplexIndex + 1) % FAST_PER_SLOW

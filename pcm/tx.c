@@ -234,11 +234,11 @@ static void WriteAux(void)
          0x1));
   }
   if (InCharge != incharge && InCharge) {
-    bprintf(info, "System: I, %s, have gained control.\n", BitsyIAm ? "Bitsy"
+    bprintf(info, "I, %s, have gained control.\n", BitsyIAm ? "Bitsy"
         : "Itsy");
     CommandData.actbus.force_repoll = 1;
   } else if (InCharge != incharge) {
-    bprintf(info, "System: I, %s, have lost control.\n", BitsyIAm ? "Bitsy"
+    bprintf(info, "I, %s, have lost control.\n", BitsyIAm ? "Bitsy"
         : "Itsy");
   }
 
@@ -1057,8 +1057,6 @@ void InitTxFrame()
 {
   int bus, m, i, j, niosAddr, m0addr;
 
-  bprintf(info, "Frame Control: Writing Initial Tx Frame.\n");
-
   for (bus = 0; bus < 2; ++bus) {
     for (m = 0; m < FAST_PER_SLOW; ++m) {
       for (i = 0; i < TxFrameWords[bus]; ++i) {
@@ -1114,13 +1112,11 @@ void InitTxFrame()
   RawNiosWrite(-1, -1, NIOS_FLUSH);
 
   /* do initial controls */
-  bprintf(info, "Frame Control: Running Initial Controls.\n");
   mcp_initial_controls = 1;
   UpdateBBCFrame();
   mcp_initial_controls = 0;
 
   /* write the framesync to address 0 to get things going... */
-  bprintf(info, "Frame Control: Frame Composition Complete.  Starting NIOS.\n");
   RawNiosWrite(0, BBC_FSYNC | BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | 0xEB90,
       NIOS_FLUSH);
 }
@@ -1239,9 +1235,11 @@ void UpdateBBCFrame()
   countHWPEncoder();
   cameraTriggers();
 
+  WriteAux();
+  
   switch (index) {
     case 0:
-      WriteAux();
+      //WriteAux();
       break;
     case 1:
       ChargeController();

@@ -80,7 +80,6 @@ extern short int InCharge;            // in tx.c
 
 void startChrgCtrl()
 {  
-  //bprintf(info, "startChrgCtrl: creating charge controller serial thread");
   pthread_create(&chrgctrlcomm1_id, NULL, chrgctrlComm, (void*)0);
   pthread_create(&chrgctrlcomm2_id, NULL, chrgctrlComm, (void*)1);
 }
@@ -229,31 +228,27 @@ void* chrgctrlComm(void* cc)
     usleep(20000);
   }
 
-  bprintf(info, "I am in charge and attempting to connect to charge controller.");
-
   /* try to open serial port */
 
   while (chrgctrlinfo[i_cc].open == 0) {
 
     open_chrgctrl(COMM[i_cc], i_cc);
 
-    if (n_conn == 10) {
-      bputs(err, "Charge controller port failed to open after 10 attempts");
+    if (chrgctrlinfo[i_cc].open == 0) {
+      if (n_conn == 10) {
+        bputs(err, "Failed to open after 10 attempts");
+      }
+      
+      n_conn++;
+      
+      sleep(1);
     }
-
-    n_conn++;
-
-    if (chrgctrlinfo[i_cc].open == 1) {
-
-//  #ifdef CHRGCTRL_VERBOSE
-      bprintf(info, "Opened the serial port on attempt number %i", n_conn); 
-//  #endif
-
-    }
-
-    else sleep(1);
   }
-
+  
+  if (n_conn>=10) {
+    bprintf(info, "Opened on attempt number %i", n_conn); 
+  }
+  
   while (1) {
 
     if (chrgctrlinfo[i_cc].closing == 1) {
@@ -268,26 +263,26 @@ void* chrgctrlComm(void* cc)
       close_chrgctrl(i_cc);
      
       if (n_reconn == 0) {
-        bprintf(info,"Error occurred: attempting to re-open serial port.");
+        bprintf(info,"Error, attempting to re-connect.");
       }
 
       while (chrgctrlinfo[i_cc].open == 0) {
 
         open_chrgctrl(COMM[i_cc], i_cc);
 
-        #ifdef CHRGCTRL_VERBOSE
+#ifdef CHRGCTRL_VERBOSE
         if (n_reconn == 10) { 
 	  bprintf(err,"Failed to re-open charge controller #%d after 10 attempts.", i_cc);
 	}
-        #endif
+#endif
 
         n_reconn++;
 
         if (chrgctrlinfo[i_cc].open == 1) { // reset succeeded
 
-          #ifdef CHRGCTRL_VERBOSE
+#ifdef CHRGCTRL_VERBOSE
             bprintf(info, "Re-opened charge controller #%d on attempt %i.", i_cc, n_reconn);
-          #endif
+#endif
 	  chrgctrlinfo[i_cc].reset = chrgctrlinfo[i_cc].err = 0;       
 
 	} else {
@@ -415,7 +410,7 @@ void* chrgctrlComm(void* cc)
         continue; // go back up to top of infinite loop
       } else if (n_reconn > 0) {
 
-        bprintf(info, "Re-established communication with charge controller");
+        bprintf(info, "Connected");
         n_reconn = 0; // managed this query cycle w/o errors; reset for the next one 
       }
     

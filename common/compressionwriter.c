@@ -106,7 +106,7 @@ static int OpenSerial(char *tty) {
   if (tcsetattr(fd, TCSANOW, &term))
     berror(tfatal, "Unable to set downlink serial port %s attributes", tty);
 
-  bprintf(info, "downlink serial port %s opened", tty);
+  //bprintf(info, "downlink serial port %s opened", tty);
   report_state = 1;
   
   return fd;
@@ -364,8 +364,8 @@ void WriteSuperFrame(unsigned short *frame) {
     higain_bytes_per_streamframe = (highgain_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     omni1_bytes_per_streamframe =  (   omni1_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
     omni2_bytes_per_streamframe =  (   omni2_rate*FASTFRAME_PER_SUPERFRAME/(8*SR)-frame_bytes_written)/STREAMFRAME_PER_SUPERFRAME;
-    bprintf(info, "Bytes per stream frame - High gain: %d  omni1: %d  omni2: %d",
-            higain_bytes_per_streamframe, omni1_bytes_per_streamframe, omni2_bytes_per_streamframe);
+    //bprintf(info, "Bytes per stream frame - High gain: %d  omni1: %d  omni2: %d",
+    //        higain_bytes_per_streamframe, omni1_bytes_per_streamframe, omni2_bytes_per_streamframe);
 
     n_higain_stream=0;
     n_omni1_stream = 0;
@@ -685,12 +685,12 @@ void CompressionWriter() {
 
   nameThread("DOWN");
 
-  bprintf(startup, "Starting with oth channel set %d", CommandData.channelset_oth);
+  //bprintf(startup, "Starting with oth channel set %d", CommandData.channelset_oth);
 
   while (1) {
     CompressionWriterFunction(CommandData.channelset_oth);
     usleep(10000);
-    bprintf(info, "restarting with oth channel set %d", CommandData.channelset_oth);
+    //bprintf(info, "restarting with oth channel set %d", CommandData.channelset_oth);
   }
 }
 

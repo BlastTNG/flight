@@ -142,7 +142,7 @@ int sendTheUglyCommand(const char *cmd)
  */
 void openSC()
 {
-  bprintf(info, "connecting to the Star Cameras");
+  //bprintf(info, "connecting to the Star Cameras");
   pyr.Init(FOV, (char *)CAT, (char *)KCAT);
   TheGoodComm = new CamCommunicator();
   TheBadComm  = new CamCommunicator();
@@ -422,12 +422,11 @@ static void* TheGoodReadLoop(void* arg)
   nameThread("GoodSC");
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info,"Not in charge, waiting....");
+      //bprintf(info,"Not in charge, waiting....");
       firsttime=0;
     }
     usleep(20000);
   }
-  bputs(startup, "startup\n");
   bool errorshown = false;
 
   while (TheGoodComm->openClient(THEGOOD_SERVERNAME) < 0) {
@@ -437,7 +436,9 @@ static void* TheGoodReadLoop(void* arg)
       errorshown = true;
     }
   }
-  bprintf(startup, "talking to The Good Star Camera");
+  if (errorshown) {
+    bprintf(startup, "talking to The Good Star Camera");
+  }
   EthernetSC[0]=0;
 
   sendTheGoodCommand("Oconf");  //request configuration data
@@ -455,12 +456,11 @@ static void* TheBadReadLoop(void* arg)
   nameThread("BadSC");
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info,"Not in charge, waiting....");
+      //bprintf(info,"Not in charge, waiting....");
       firsttime=0;
     }
     usleep(20000);
   }
-  bputs(startup, "startup\n");
   bool errorshown = false;
 
   while (TheBadComm->openClient(THEBAD_SERVERNAME) < 0) {
@@ -470,7 +470,10 @@ static void* TheBadReadLoop(void* arg)
       errorshown = true;
     }
   }
-  bprintf(startup, "talking to The Bad Star Camera");
+  if (errorshown) {
+    bprintf(startup, "talking to The Bad Star Camera");
+  }
+  
   EthernetSC[1]=0;
 
   sendTheBadCommand("Oconf");  //request configuration data
@@ -488,12 +491,11 @@ static void* TheUglyReadLoop(void* arg)
   nameThread("UglySC");
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info,"Not in charge, waiting....");
+      //bprintf(info,"Not in charge, waiting....");
       firsttime=0;
     }
     usleep(20000);
   }
-  bputs(startup, "startup\n");
   bool errorshown = false;
 
   while (TheUglyComm->openClient(THEUGLY_SERVERNAME) < 0) {
@@ -503,7 +505,9 @@ static void* TheUglyReadLoop(void* arg)
       errorshown = true;
     }
   }
-  bprintf(startup, "talking to The Ugly Star Camera");
+  if (errorshown) {
+    bprintf(startup, "talking to The Ugly Star Camera");
+  }
   EthernetSC[2]=0;
 
   sendTheUglyCommand("Oconf");  //request configuration data

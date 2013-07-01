@@ -2646,13 +2646,12 @@ void* reactComm(void* arg)
 
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info, "Not in charge: waiting.");
+      //bprintf(info, "Not in charge: waiting.");
       firsttime=0;
     }
     usleep(20000);
   }
 
-  bprintf(info,"Bringing the reaction wheel drive online.");
   firsttime=1;
 
   i_serial=0;
@@ -2674,19 +2673,19 @@ void* reactComm(void* arg)
     reactinfo.verbose=CommandData.verbose_rw;
     open_amc(REACT_DEVICE, &reactinfo); // sets reactinfo.open=1 if sucessful
 
-    if (i_serial==10) {
-      bputs(err,
-      "RW controller serial port could not be opened after 10 attempts.\n");
+    if (reactinfo.open==0) {
+      if (i_serial==10) {
+        bputs(err, "Port could not be opened after 10 attempts.\n");
+      }
+      i_serial++;
+      sleep(1);
     }
-    i_serial++;
-
-    if (reactinfo.open==1) {
-      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,
-     "Opened the serial port on attempt number %i",i_serial);
-    }
-    else sleep(1);
   }
-
+  
+  if (i_serial>=9) {
+    bprintf(info, "Opened port on attempt %i",i_serial);
+  }
+  
   /* Configure the serial port.  If, after 10 attempts, the port is not 
      initialized, then the thread enters the main loop, where a reset command 
      is triggered. */
@@ -2697,13 +2696,9 @@ void* reactComm(void* arg)
     reactinfo.verbose=CommandData.verbose_rw;
     configure_amc(&reactinfo);
     if (reactinfo.init==1) {
-      bprintf(info,"Initialized the controller on attempt number %i"
-              ,i_serial); 
-    } else if (i_serial==9) {
-      bprintf(info,"Could not initialize the controller after %i attempts.",
-              i_serial); 
+      //bprintf(info,"Initialized the controller on attempt number %i"
+      //        ,i_serial); 
     } else {
-
       sleep(1);
     }
     i_serial++;
@@ -2746,7 +2741,7 @@ void* reactComm(void* arg)
     } else if (reactinfo.reset==1){
       if(resetcount==0) {
  	      bprintf(warning,
-        "Resetting serial connection to reaction wheel controller.");
+        "Resetting serial connection.");
       } else if ((resetcount % 50)==0) {
 	      bprintfverb(warning,reactinfo.verbose,MC_VERBOSE,
         "reset->Unable to connect to reaction wheel after %i attempts."
@@ -2772,7 +2767,7 @@ void* reactComm(void* arg)
         "Attempting to enable the reaction wheel motor contoller.");
         bridge_flag=enableAMC(&reactinfo);
         if(bridge_flag==0) {
-          bprintf(info,"Reaction wheel motor is now enabled");
+          //bprintf(info,"Reaction wheel motor is now enabled");
           reactinfo.disabled=0;
         }
       }
@@ -2782,12 +2777,12 @@ void* reactComm(void* arg)
          "Attempting to disable the reaction wheel motor controller.");
 	       bridge_flag=disableAMC(&reactinfo);
 	       if(bridge_flag==0){    
-	         bprintf(info,"Reaction wheel motor controller is now disabled.");
+	         //bprintf(info,"Reaction wheel motor controller is now disabled.");
 	         reactinfo.disabled=1;
 	       }
       } 
 
-      if(firsttime){
+      if (firsttime && 0) {
         firsttime=0;
         tmp = queryAMCInd(0x32,8,1,&reactinfo);
         bprintf(info,"Ki = %i",tmp);
@@ -2885,13 +2880,11 @@ void* pivotComm(void* arg)
 
   while (!InCharge) {
     if (firsttime==1) {
-      bprintf(info, "Not in charge: waiting.");
       firsttime=0;
     }
     usleep(20000);
   }
 
-  bprintf(info,"Bringing the pivot drive online.");
   firsttime=1;
 
   i=0;
@@ -2911,18 +2904,19 @@ void* pivotComm(void* arg)
     pivotinfo.verbose=CommandData.verbose_piv;
     open_amc(PIVOT_DEVICE,&pivotinfo); // sets pivotinfo.open=1 if sucessful
 
-    if (i==10) {
-      bputs(err,
-      "Pivot controller serial port could not be opened after 10 attempts.\n");
+    if (pivotinfo.open==0) {
+      if (i==10) {
+        bputs(err, "Port could not be opened after 10 attempts.\n");
+      }
+      i++;
+      sleep(1);
     }
-    i++;
-
-    if (pivotinfo.open==1) {
-      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,
-                  "Opened the serial port on attempt number %i",i);
-    }
-    else sleep(1);
   }
+  
+  if (i>=9) {
+    bprintf(info, "Opened port on attempt %i",i);
+  }
+  
 
   // Configure the serial port. If after 10 attempts the port is not initialized
   // , it enters the main loop where it will trigger a reset command.                                             
@@ -2930,16 +2924,16 @@ void* pivotComm(void* arg)
   while (pivotinfo.init==0 && i <=9) {
     pivotinfo.verbose=CommandData.verbose_piv;
     configure_amc(&pivotinfo);
-    if (pivotinfo.init==1) {
-      bprintf(info,"Initialized the controller on attempt number %i",i); 
-    } else if (i==9) {
-      bprintf(info,"Could not initialize the controller after %i attempts.",i); 
-    } else {
+    if (pivotinfo.init==0) {
       sleep(1);
     }
     i++;
   }
 
+  if (pivotinfo.init==0) {
+    bprintf(info,"Could not initialize after 10 attempts."); 
+  }
+  
   while (1) {
     pivotinfo.verbose=CommandData.verbose_piv;
     if((pivotinfo.err & AMC_ERR_MASK) > 0 ) {
@@ -2972,7 +2966,7 @@ void* pivotComm(void* arg)
       usleep(10000);      
     } else if (pivotinfo.reset==1){
       if(resetcount==0) {
-	      bprintf(warning,"Resetting connection to pivot controller.");
+	      //bprintf(warning,"Resetting connection to pivot controller.");
       } else if ((resetcount % 50)==0) {
 	      bprintfverb(warning,pivotinfo.verbose,MC_VERBOSE,
         "reset->Unable to connect to pivot after %i attempts.",resetcount);
@@ -2996,7 +2990,7 @@ void* pivotComm(void* arg)
         "Attempting to enable the pivot motor contoller.");
 	      n=enableAMC(&pivotinfo);
 	      if(n==0) {
-	        bprintf(info,"Pivot motor is now enabled");
+	        //bprintf(info,"Pivot motor is now enabled");
 	        pivotinfo.disabled=0;
 	      }
       }
@@ -3006,12 +3000,12 @@ void* pivotComm(void* arg)
         "Attempting to disable the pivot motor controller.");
 	      n=disableAMC(&pivotinfo);
 	      if(n==0) {    
-	        bprintf(info,"Pivot motor controller is now disabled.");
+	        //bprintf(info,"Pivot motor controller is now disabled.");
 	        pivotinfo.disabled=1;
 	      }
       } 
 
-      if(firsttime) {
+      if (firsttime && 0) {
         firsttime=0;
         tmp = queryAMCInd(0x32,8,1,&pivotinfo);
         bprintf(info,"Ki = %i",tmp);

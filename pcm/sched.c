@@ -99,7 +99,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   /*******************************************/
   /*** Count number of schedule file lines ***/
   if ((fp = fopen(file, "r")) == NULL) {
-    berror(err, "Scheduler: Unable to open schedule file %s", file);
+    berror(err, "Unable to open schedule file %s", file);
     S->n_sched = 0;
     return;
   }
@@ -110,7 +110,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   S->n_sched--; /* don't count date line */
 
   if (S->n_sched > MAX_NSCHED) {
-    berror(err, "Scheduler: schedule '%s' has too many commands", file);
+    berror(err, "schedule '%s' has too many commands", file);
     S->n_sched = MAX_NSCHED;
   }
 
@@ -120,12 +120,12 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   bprintf(sched, "*** Lines: %i\n", S->n_sched);
 
   if (fclose(fp) == EOF)
-    berror(err, "Scheduler: Error on close");
+    berror(err, "Error on close");
 
   /**************************/
   /*** Read Starting Time ***/
   if ((fp = fopen(file, "r")) == NULL) {
-    berror(err, "Scheduler: Unable to open schedule file");
+    berror(err, "Unable to open schedule file");
     S->n_sched = 0;
     return;
   }
@@ -199,7 +199,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
       S->event[j].is_multi = 0;
       command = SCommand(token[0]);
       if (command == -1) {
-        bprintf(sched, "Scheduler: *** ERROR: command not recognised: %s\n",
+        bprintf(sched, "*** ERROR: command not recognised: %s\n",
             token[0]);
         entry_ok = 0;
       }
@@ -210,7 +210,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
 
     /* lst */
     if (n_fields < 3) {
-      bprintf(sched, "Scheduler: *** ERROR: cannot find lst!\n");
+      bprintf(sched, "*** ERROR: cannot find lst!\n");
       entry_ok = 0;
     } else {
       day = atoi(token[1]);
@@ -222,7 +222,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
     if (entry_ok && S->event[j].is_multi) {
       mindex = MIndex(command);
       if (n_fields < 3 + mcommands[mindex].numparams) {
-        bprintf(sched, "Scheduler: *** ERROR: insufficient parameters for "
+        bprintf(sched, "*** ERROR: insufficient parameters for "
             "command (wanted %i; got %i)\n", mcommands[mindex].numparams,
             n_fields - 3);
         entry_ok = 0;
@@ -242,7 +242,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
 
     if (!entry_ok) {
       bprintf(sched,
-          "Scheduler: ****** Warning Line %i is Malformed: Skipping *****\n",
+          "****** Warning Line %i is Malformed: Skipping *****\n",
           i);
       discarded_lines++;
     } else
@@ -286,13 +286,13 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
               el_range_warning = 1;
           }
           if (el_range_warning) {
-            bprintf(sched, "Scheduler: ******************************************\n"
-                           "Scheduler: *** Warning: El Range of Event %i (%s)\n", i,
+            bprintf(sched, "******************************************\n"
+                           "*** Warning: El Range of Event %i (%s)\n", i,
                     CommandName(S->event[i].is_multi, S->event[i].command));
-            bprintf(sched, "Scheduler: *** LST: %i/%7.4f Ra: %8.3f  Dec: %8.3f\n",
+            bprintf(sched, "*** LST: %i/%7.4f Ra: %8.3f  Dec: %8.3f\n",
                     (int)(S->event[i].t / 86400), fmod(S->event[i].t / 3600.0, 24),
                     S->event[i].rvalues[0], S->event[i].rvalues[1]);
-            bprintf(sched, "Scheduler: *** LST: %7.4f Az: %8.3f - %8.3f El: "
+            bprintf(sched, "*** LST: %7.4f Az: %8.3f - %8.3f El: "
                            "%8.3f - %8.3f\n", S->event[i].t / 3600.0, az1, az2, el1, el2);
           }
         }
@@ -306,7 +306,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
         discarded_lines);
 
   if (fclose(fp) == EOF)
-    berror(err, "Scheduler: Error on close");
+    berror(err, "Error on close");
 }
 
 // load uplink file
@@ -345,7 +345,7 @@ int LoadUplinkFile(int slot) {
   LoadSchedFile(filename, &(S[i_s]), -10);
   
   
-  bprintf(info, "Scheduler: Read %i lines in schedule file %s\n", S[i_s].n_sched, filename);
+  bprintf(info, "Read %i lines in schedule file %s\n", S[i_s].n_sched, filename);
   if (S[i_s].n_sched>2) { // we read something
     Uplink_S = &(S[i_s]);
     if (i_s == 0) i_s = 1;
@@ -364,8 +364,6 @@ int LoadUplinkFile(int slot) {
 void InitSched(void)
 {
   int l, s;
-
-  bprintf(info, "Scheduler: schedule file initialisation begins.");
 
   for (s = 0; s < 2; ++s) {
     for (l = 0; l < 3; ++l) {
@@ -422,24 +420,24 @@ void DoSched(void)
     /* check our latitude band */
     if (CommandData.lat_range == 2) { /* southern band */
       if (d_lat > -(LATITUDE_BAND / 2) + LATITUDE_OVERLAP) {
-        bprintf(info, "Scheduler: Entering middle latitude band. (%g)\n", d_lat);
+        bprintf(info, "Entering middle latitude band. (%g)\n", d_lat);
         CommandData.lat_range = 1;
       }
     } else if (CommandData.lat_range == 1) { /* middle band */
       if (d_lat < -(LATITUDE_BAND / 2)) {
-        bprintf(info, "Scheduler: Entering southern latitude band. (%g)\n", d_lat);
+        bprintf(info, "Entering southern latitude band. (%g)\n", d_lat);
         CommandData.lat_range = 2;
       } else if (d_lat > (LATITUDE_BAND / 2)) {
-        bprintf(info, "Scheduler: Entering northern latitude band. (%g)\n", d_lat);
+        bprintf(info, "Entering northern latitude band. (%g)\n", d_lat);
         CommandData.lat_range = 0;
       }
     } else if (CommandData.lat_range == 0) { /* norhtern band */
       if (d_lat < (LATITUDE_BAND / 2) - LATITUDE_OVERLAP) {
-        bprintf(info, "Scheduler: Entering middle latitude band. (%g)\n", d_lat);
+        bprintf(info, "Entering middle latitude band. (%g)\n", d_lat);
         CommandData.lat_range = 1;
       }
     } else {
-      bprintf(warning, "Scheduler: Unexpected latitude band: %i\n",
+      bprintf(warning, "Unexpected latitude band: %i\n",
               CommandData.lat_range);
       CommandData.lat_range = 1;
     }
@@ -473,7 +471,7 @@ void DoSched(void)
   }
 
   if (PointingData[i_point].at_float && !CommandData.at_float) {
-    bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
+    bputs(info, "*** Executing initial float commands. ***\n");
     /* el on */
     event.command = el_enable;
     event.is_multi = 0;
@@ -507,7 +505,7 @@ void DoSched(void)
 
     /* Remember we're at float */
     CommandData.at_float = 1;
-    bputs(info, "Scheduler: *** Initial float commands complete. ***\n");
+    bputs(info, "*** Initial float commands complete. ***\n");
     return;
   }
 
@@ -538,8 +536,7 @@ void DoSched(void)
   /******************************/
   /** Execute initial controls **/
   if (!doing_schedule) {
-    bputs(info, "Scheduler: *** Entering schedule file mode.  ***\n"
-        "Scheduler: *** Running initial schedule controls.  ***\n");
+    bputs(info, "*** Entering schedule file mode.  ***\n");
 #if 0	//BLAST-Pol leftovers
     /* bias fixed */
     event.command = fixed;
@@ -552,9 +549,6 @@ void DoSched(void)
     event.ivalues[1] = 600; /* s */
     //ScheduledCommand(&event);
 #endif
-
-    bputs(info, "Scheduler: *** Searching for current pointing mode. ***\n");
-
     /* find last pointing command */
     for (i = i_sched; i >= 0; --i)
       if (S->event[i].is_multi) {
@@ -569,15 +563,15 @@ void DoSched(void)
 
     if (i == -1) {
       bputs(warning,
-          "Scheduler: *** No previous pointing mode, turning antisolar. ***\n");
+          "*** No previous pointing mode, turning antisolar. ***\n");
       event.command = antisun;
       event.is_multi = 0;
       ScheduledCommand(&event);
     } else if (i == i_sched) {
-      bputs(info, "Scheduler: *** Pointing mode change imminent. ***\n");
+      //bputs(info, "*** Pointing mode change imminent. ***\n");
     } else {
       bprintf(info,
-          "Scheduler: *** Recovering scheduled pointing mode (event %i). ***\n",
+          "*** Recovering scheduled pointing mode (event %i). ***\n",
           i);
       ScheduledCommand(&S->event[i]);
     }
@@ -588,10 +582,10 @@ void DoSched(void)
   /** Execute scheduled command **/
   dt /= 3600;
   if (i_sched != last_is) {
-    bprintf(info, "Scheduler: Submitting event %i from %s to command "
-        "subsystem (LST = %i/%f)", i_sched,
-        filename[CommandData.sucks][CommandData.lat_range], (int)(dt / 24),
-        fmod(dt, 24));
+    //bprintf(info, "Submitting event %i from %s to command "
+    //    "subsystem (LST = %i/%f)", i_sched,
+    //    filename[CommandData.sucks][CommandData.lat_range], (int)(dt / 24),
+    //    fmod(dt, 24));
     ScheduledCommand(&S->event[i_sched]);
   }
   last_is = i_sched;

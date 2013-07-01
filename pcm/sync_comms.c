@@ -58,7 +58,7 @@ extern short int InCharge;    // in tx.c
 /* create sync box serial thread */
 void startSync()
 {  
-  bprintf(info, "startSync: creating sync box serial thread");
+  //bprintf(info, "startSync: creating sync box serial thread");
   pthread_create(&synccomm_id, NULL, syncComm, NULL );
 }
 
@@ -92,27 +92,25 @@ void* syncComm(void* arg)
     usleep(20000);
   }
 
-  bprintf(info, "I am in charge and attempting to connect to the sync box.");
-
+  
   /* try to open serial port */
   while (syncinfo.open == 0) {
     open_sync();
 
-    if (n_conn == 10) {
-      #ifdef SYNCBOX_VERBOSE
-      bputs(err, "Sync box port failed to open after 10 attempts");
-      #endif
+    if (syncinfo.open == 0) {
+      if (n_conn == 10) {
+        bputs(err, "port failed to open after 10 attempts");
+      }
+      
+      n_conn++;
+      
+      sleep(1);
     }
-
-    n_conn++;
-
-    if (syncinfo.open == 1) {
-      #ifdef SYNCBOX_VERBOSE
-      bprintf(info, "Opened the serial port on attempt number %i", n_conn); 
-      #endif
-    } else sleep(1);
   }
-
+  if (n_conn>=9) {
+    bprintf(info, "Opened port on attempt %i", n_conn); 
+  }
+  
   /* main loop */
   while (1) {
     if (syncinfo.closing == 1) {
@@ -122,31 +120,25 @@ void* syncComm(void* arg)
       /* if there's an error, reset connection to charge controller */
       close_sync();
      
-      #ifdef SYNCBOX_VERBOSE
       if (n_reconn == 0) {
-        bprintf(info,"Error occurred: attempting to re-open serial port.");
+        //bprintf(info,"Error occurred: attempting to re-open serial port.");
       }
-      #endif
 
       while (syncinfo.open == 0) {
         open_sync();
 
-        #ifdef SYNCBOX_VERBOSE 
-        if (n_reconn == 10) { 
-          bprintf(err,"Failed to re-open sync box after 10 attempts.");
-	      }
-        #endif
-
-        n_reconn++;
-
-        if (syncinfo.open == 1) { // reset succeeded
-          #ifdef SYNCBOX_VERBOSE
-          bprintf(info, "Re-opened sync box on attempt %i.",  n_reconn);
-          #endif
-	        syncinfo.reset = syncinfo.err = 0;       
-	      } else {
+        if (syncinfo.open == 0) {
+          if (n_reconn == 10) { 
+            bprintf(err,"Failed to re-open sync box after 10 attempts.");
+          }          
+          n_reconn++;         
           sleep(1);
         }
+      }
+      
+      if (n_reconn>9) { // error had been reported
+        bprintf(info, "Re-opened sync box on attempt %i.",  n_reconn);
+        syncinfo.reset = syncinfo.err = 0;       
       }
     } else {                       // query the sync box      
       

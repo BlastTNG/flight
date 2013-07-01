@@ -43,11 +43,11 @@
 
 
 /*
- * open_amc: opens a connection to the address given which
- * is hopefully that of the AMC controller.  Also sets up the
- * connection, and tests the baud rate.
- *
- */
+* open_amc: opens a connection to the address given which
+* is hopefully that of the AMC controller.  Also sets up the
+* connection, and tests the baud rate.
+*
+*/
 void open_amc(char *address, struct MotorInfoStruct* amcinfo)
 {
   char a[256];
@@ -57,8 +57,8 @@ void open_amc(char *address, struct MotorInfoStruct* amcinfo)
   if (amcinfo->fd==-1)
     {
       /*
-       * Could not open the port.
-       */
+      * Could not open the port.
+      */
 
       amcinfo->open=0;
     }
@@ -101,13 +101,13 @@ void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo)
 {
   struct termios options;
   /*
-   * Get the current options for the port...
-   */
+  * Get the current options for the port...
+  */
   tcgetattr(amcinfo->fd, &options);
   
   /*
-   * Set the baud rate to bdrate.  Default is B115200.
-   */
+  * Set the baud rate to bdrate.  Default is B115200.
+  */
 
   switch( bdrate)
     {
@@ -139,8 +139,8 @@ void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo)
     }
 
   /*
-   * Enable the receiver and set local mode...
-   */
+  * Enable the receiver and set local mode...
+  */
 
   
   options.c_cflag |= (CLOCAL | CREAD);
@@ -166,10 +166,10 @@ void setopts_amc(int bdrate, struct MotorInfoStruct* amcinfo)
   /* Enter Output Options */
   options.c_oflag = 0;
 
- 
+
   /*
-   * Set the new options for the port...
-   */
+  * Set the new options for the port...
+  */
   
   tcsetattr(amcinfo->fd, TCSANOW, &options);
 }
@@ -189,13 +189,13 @@ void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHead
   else
     {
       if(type!=query)
-	{
-	  berror(err,"%sComm MakeCmdStr: CmdorQuery type is not recognized.",amcinfo->motorstr);
-	}
+  {
+    berror(err,"%sComm MakeCmdStr: CmdorQuery type is not recognized.",amcinfo->motorstr);
+  }
       else
-	{ 
-	  MessSendHead->controlbyte= (char)(1+(ValuesSend->counter)*4);
-	}
+  { 
+    MessSendHead->controlbyte= (char)(1+(ValuesSend->counter)*4);
+  }
     }
   MessSendHead->index=(char) ValuesSend->index;
   MessSendHead->offset=(char) ValuesSend->offset;
@@ -238,13 +238,11 @@ void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHead
   *command = (char *)malloc((*commsize)*sizeof(char));
 
   commbegin=*command;
-  if(command == NULL)
-    {
-      bprintf(err,"AmcComm: Malloc allocation of the command string failed.");
-      bprintf(err,"AmcComm:Aborting before we get a segmentation fault...");
-      return;
-    }
-
+  if(command == NULL) {
+    bprintf(err,"AmcComm: Malloc allocation of the command string failed. Aborting.");
+    return;
+  }
+  
 
   //    printf("Here's what I'm assigning to command: ");
   for(i=0; i<8; i++)
@@ -290,12 +288,12 @@ void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHead
       //  bprintf(info,"Command is:  ");
     }
   *command=commbegin;
-for(i=0;i<*commsize;i++)
-   {
-     //     bprintf(info)
-     sprintf(fouts+2*i,"%2x",((unsigned char) (*((*command)+i))));
-   }
- bprintfverb(info,amcinfo->verbose,MC_EXTRA_VERBOSE,"%sComm MakeSCHeadStruct: Command being sent: %s",amcinfo->motorstr,fouts);
+  for(i=0;i<*commsize;i++)
+  {
+    //     bprintf(info)
+    sprintf(fouts+2*i,"%2x",((unsigned char) (*((*command)+i))));
+  }
+  bprintfverb(info,amcinfo->verbose,MC_EXTRA_VERBOSE,"%sComm MakeSCHeadStruct: Command being sent: %s",amcinfo->motorstr,fouts);
 }
 
 void crccheck(unsigned short data, unsigned short *accumulator, unsigned short *crctable, struct MotorInfoStruct* amcinfo)
@@ -304,7 +302,7 @@ void crccheck(unsigned short data, unsigned short *accumulator, unsigned short *
 }
 
 unsigned short *mk_crctable(unsigned short poly, unsigned short (*crcfn)
-			    (unsigned short, unsigned short, unsigned short), struct MotorInfoStruct* amcinfo)
+          (unsigned short, unsigned short, unsigned short), struct MotorInfoStruct* amcinfo)
 {
   unsigned short *crctable;
   int i;
@@ -375,22 +373,19 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
   // mark2
   if (amcinfo->verbose >= MC_EXTRA_VERBOSE) {
     char fouts[512];
-    for(i=0;i<l;i++)
-      {
-	//     bprintf(info)
-	sprintf(fouts+2*i,"%2x",((unsigned char) (*(command+i))));
-      }
-    bprintf(info,"%sComm send_amccmd: Command being sent: %s",amcinfo->motorstr,fouts);
+    for(i=0;i<l;i++) {
+      sprintf(fouts+2*i,"%2x",((unsigned char) (*(command+i))));
+    }
+    //bprintf(info,"%sComm send_amccmd: Command being sent: %s",amcinfo->motorstr,fouts);
   }
   flushAMC(amcinfo);
   n = write(amcinfo->fd, command, l);
   free(command);
-  if (n<0)
-    {
-      bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm send_amccmd: Send command failed!",amcinfo->motorstr);
-      amcinfo->err |= 0x0002;
-      return -1;
-    } else {
+  if (n<0) {
+    bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm send_amccmd: Send command failed!",amcinfo->motorstr);
+    amcinfo->err |= 0x0002;
+    return -1;
+  } else {
     amcinfo->err &= ~0x0002;
     return count;
   }
@@ -462,10 +457,10 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
       amcinfo->err=0;
       checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
-	{
-	  setWriteAccess(amcinfo);
-	  checkAMCAccess(amcinfo);
-	}
+  {
+    setWriteAccess(amcinfo);
+    checkAMCAccess(amcinfo);
+  }
       amcinfo->init=1;
       amcinfo->err=0;
       return;
@@ -486,11 +481,11 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 
       checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
-	{
-	  setWriteAccess(amcinfo);
-	  checkAMCAccess(amcinfo);
+  {
+    setWriteAccess(amcinfo);
+    checkAMCAccess(amcinfo);
           disableAMC(amcinfo); // Make sure the AMC is disabled
-	}
+  }
       n=send_amccmd(5,1,2,1,cmd,amcinfo); 
 
       checkAMCResp(n, amcinfo);
@@ -508,11 +503,11 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
       bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm configure_amc: AMC controller responds to a 38400 baud rate.",amcinfo->motorstr);
       checkAMCAccess(amcinfo);
       if(amcinfo->writeset!=1)
-	{
-	  setWriteAccess(amcinfo);
-	  checkAMCAccess(amcinfo);
+  {
+    setWriteAccess(amcinfo);
+    checkAMCAccess(amcinfo);
           disableAMC(amcinfo); // Make sure the AMC is disabled
-	}
+  }
       amcinfo->err=0;
       amcinfo->init=1;
     }
@@ -525,64 +520,64 @@ void configure_amc(struct MotorInfoStruct* amcinfo)
 }
 
 int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo, unsigned int waittime)
- {
-   int n=0;
-   int m;
-   int max_fd=amcinfo->fd+1;
-   fd_set         input;
-   fd_set         output;
-   struct timeval timeout;
-   timeout.tv_sec=waittime/1000;
-   timeout.tv_usec=(waittime-timeout.tv_sec)*1000;
-   FD_ZERO(&input);
-   FD_ZERO(&output);
- 
-   switch(check){
-   case resp:
-     FD_SET(amcinfo->fd, &input);
-     n = select(max_fd, &input, NULL, NULL, &timeout);
-     break;
-   case comm:
-     FD_SET(amcinfo->fd, &output);
-     n = select(max_fd, NULL, &output, NULL, &timeout);
-     break;
-   case both:
-     FD_SET(amcinfo->fd, &input);
-     FD_SET(amcinfo->fd, &output);
-     n = select(max_fd, &input, &output, NULL, &timeout);
-     break;
-   default:
-     bprintfverb(warning,amcinfo->verbose,MC_VERBOSE,"%sComm check_amcready: CheckType is in valid.",amcinfo->motorstr);
-     return -3;
-     break;
-   }
-   /* Was there an error? */
-   if (n < 0) {
-     bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm: Select command failed!",amcinfo->motorstr);
-     amcinfo->err |= 0x0001;
-     return -2;
-   } else if (n==0) {
-     bprintfverb(warning,amcinfo->verbose,MC_VERBOSE,"%sComm: Select call timed out.",amcinfo->motorstr);
-     return -1;
-   } else {
-       // Sets a 2 bit integer m.
-       // n=1 ready to be written into
-       // n=2 there is something to be read
-       // n=3 ready to recieve a command and something to be read.
+{
+  int n=0;
+  int m;
+  int max_fd=amcinfo->fd+1;
+  fd_set         input;
+  fd_set         output;
+  struct timeval timeout;
+  timeout.tv_sec=waittime/1000;
+  timeout.tv_usec=(waittime-timeout.tv_sec)*1000;
+  FD_ZERO(&input);
+  FD_ZERO(&output);
+
+  switch(check){
+  case resp:
+    FD_SET(amcinfo->fd, &input);
+    n = select(max_fd, &input, NULL, NULL, &timeout);
+    break;
+  case comm:
+    FD_SET(amcinfo->fd, &output);
+    n = select(max_fd, NULL, &output, NULL, &timeout);
+    break;
+  case both:
+    FD_SET(amcinfo->fd, &input);
+    FD_SET(amcinfo->fd, &output);
+    n = select(max_fd, &input, &output, NULL, &timeout);
+    break;
+  default:
+    bprintfverb(warning,amcinfo->verbose,MC_VERBOSE,"%sComm check_amcready: CheckType is in valid.",amcinfo->motorstr);
+    return -3;
+    break;
+  }
+  /* Was there an error? */
+  if (n < 0) {
+    bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm: Select command failed!",amcinfo->motorstr);
+    amcinfo->err |= 0x0001;
+    return -2;
+  } else if (n==0) {
+    bprintfverb(warning,amcinfo->verbose,MC_VERBOSE,"%sComm: Select call timed out.",amcinfo->motorstr);
+    return -1;
+  } else {
+      // Sets a 2 bit integer m.
+      // n=1 ready to be written into
+      // n=2 there is something to be read
+      // n=3 ready to recieve a command and something to be read.
     m=0;
     if (check==resp || check== both) {      
       if (FD_ISSET(amcinfo->fd, &input))
-	m|=2;
+  m|=2;
     }
     if (check==comm || check==both) {
       if (FD_ISSET(amcinfo->fd, &output))
-	m|=1;
+  m|=1;
     }
-       //      bprintf(info, "%sComm: checksum returns %i.",m);
+      //      bprintf(info, "%sComm: checksum returns %i.",m);
     amcinfo->err &= ~0x0001;
     return m;
-   }
- }
+  }
+}
 
 // Check to see whether the amcion wheel controller is enabled or
 // disabled.  
@@ -601,13 +596,13 @@ int areWeDisabled(struct MotorInfoStruct* amcinfo)
   else
     {
       if(n==1)
-	{
-	  bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm areWeDisabled: We are disabled",amcinfo->motorstr);
+  {
+    bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm areWeDisabled: We are disabled",amcinfo->motorstr);
           amcinfo->disabled=1;
-	}
+  }
       if(n==0)
         {
-	  bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm areWeDisabled: We are enabled",amcinfo->motorstr);
+    bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm areWeDisabled: We are enabled",amcinfo->motorstr);
           amcinfo->disabled=0;
         }
 
@@ -626,8 +621,8 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
   int timeout=0;
   int timeoutlim=3;
   int nchars=8 ; // The number of characters expected in a reply without data.
-                 // 8 bytes for the header.
-                 // Add 2*nwords (header bit 6) +2 bytes for a response
+                // 8 bytes for the header.
+                // Add 2*nwords (header bit 6) +2 bytes for a response
   unsigned int ndatawords=0;
   while(done==0) {
     if(check_amcready(resp,amcinfo,SELECT_RMUS_OUT) >= 0){ 
@@ -635,29 +630,29 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
       bprintfverb(info,amcinfo->verbose,MC_EXTRA_VERBOSE,"Sweetness and light! n=%i, outs[i]=%2x  %i",n,((unsigned char)*outs),((unsigned int)*outs));
       if(*outs == 0xa5) firstchar_found=0; 
       if(firstchar_found == 0) {
-	if(i >= 254 || i >= nchars-1) done=1;
-	i+=n;
-	if(i==6) {
+  if(i >= 254 || i >= nchars-1) done=1;
+  i+=n;
+  if(i==6) {
           ndatawords=((unsigned int) *outs);
-	  if(ndatawords!=0) nchars+=ndatawords*2+2;
-	  bprintfverb(info,amcinfo->verbose,MC_EXTRA_VERBOSE,"OK i==6, outs[i]=%i, nchars=%i",(unsigned int) *outs, nchars);
-	}
-	outs+=n;
-	timeout=0;
+    if(ndatawords!=0) nchars+=ndatawords*2+2;
+    bprintfverb(info,amcinfo->verbose,MC_EXTRA_VERBOSE,"OK i==6, outs[i]=%i, nchars=%i",(unsigned int) *outs, nchars);
+  }
+  outs+=n;
+  timeout=0;
       } 
     } else {
       if(timeout==timeoutlim){ // If there is no data after two tries return an.
-	if(j==timeoutlim) {// The controller never responded.
-	  bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm read_line: The controller did not respond.",amcinfo->motorstr);
-	  amcinfo->err |= 0x0010;
-	  return -1;
-	} else {
-	  bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm read_line: Did not find the appropriate response end character.",amcinfo->motorstr);
+  if(j==timeoutlim) {// The controller never responded.
+    bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm read_line: The controller did not respond.",amcinfo->motorstr);
+    amcinfo->err |= 0x0010;
+    return -1;
+  } else {
+    bprintfverb(err,amcinfo->verbose,MC_VERBOSE,"%sComm read_line: Did not find the appropriate response end character.",amcinfo->motorstr);
           amcinfo->err |= 0x0004;
-	  return -2; // For some reason the controller never found the end character.
-	             // which means the response was probably garbage. 
-	  
-	}
+    return -2; // For some reason the controller never found the end character.
+              // which means the response was probably garbage. 
+    
+  }
       }
       timeout++;
       usleep(2000);
@@ -804,11 +799,11 @@ void setWriteAccess(struct MotorInfoStruct* amcinfo)
     {
       checkAMCStatus(n,amcinfo);
       if(n!=1) {
-	bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
-	amcinfo->writeset=2;
+  bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
+  amcinfo->writeset=2;
       } else {
-	bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
-	amcinfo->writeset=1;
+  bprintfverb(info,amcinfo->verbose,MC_VERBOSE,"%sComm setWriteAccess: Write access not set",amcinfo->motorstr);  
+  amcinfo->writeset=1;
       }
     }
 }
@@ -893,7 +888,7 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
   //  count = 10;
   //  while(amcinfo->init==0  && count > 0 ) {
     num = send_amccmd(3,2, 0x0040, 1, cmd, amcinfo); // reset drive status 
-                                                     // events
+                                                    // events
     configure_amc(amcinfo);
     //    count--;
     //  }
@@ -914,19 +909,17 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
 void restoreAMC(struct MotorInfoStruct* amcinfo)
 {
   int count,n;
-  bprintf(info,"%sComm restoreAMC: Attempting to restore the RS232 serial parameters.",amcinfo->motorstr);
   amcinfo->init=2;
   amcinfo->disabled=2;
 
   count = send_amccmd(9,0,0x1cae,1,cmd, amcinfo);
   n = check_amcready(resp,amcinfo,SELECT_RMUS_OUT);
-  if (n < 0)
-    {
-      bprintf(err,"%sComm restoreAMC: Communication error.",amcinfo->motorstr);
-    }  
+  if (n < 0) {
+    bprintf(err,"%sComm restoreAMC: Communication error.",amcinfo->motorstr);
+  }
+  
   n=checkAMCResp(count,amcinfo);
-  if(n==1) 
-    {
-      bprintf(info,"%sComm restoreAMC: Restoration was successful,",amcinfo->motorstr);
-    }
+  if(n==1)  {
+    bprintf(info,"%sComm restoreAMC: Restoration was successful,",amcinfo->motorstr);
+  }
 }

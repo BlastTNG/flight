@@ -466,7 +466,6 @@ void WatchDGPS()
   static struct BiPhaseStruct* dgpsNsatAddr;
   static struct BiPhaseStruct* dgpsTimeAddr;
   nameThread("dGPS");
-  bputs(startup, "WatchDGPS startup\n");
 
   /* initialize values in dgpsinfo structure */
   dgpsinfo.init = 0;

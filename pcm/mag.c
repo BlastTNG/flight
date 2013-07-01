@@ -59,9 +59,8 @@ struct MagInfoStruct {
 
 void Magnetometer()
 {
-  nameThread("Magnet");
-  bputs(startup, "Magnetometer startup\n");
-
+  nameThread("Mag");
+  
   /* initialize values in maginfo structure */
   maginfo.init = 0;
 

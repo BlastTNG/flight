@@ -51,7 +51,7 @@ void nameThread(const char* name)
   new_node->name[TID_NAME_LEN] = '\0';
   new_node->next = threadNames;
   threadNames = new_node;
-  bprintf(startup, "New thread (tid %d)", new_node->tid);
+  //bprintf(startup, "New thread (tid %d)", new_node->tid);
 }
 
 static char failed_lookup_buffer[TID_NAME_LEN+1];

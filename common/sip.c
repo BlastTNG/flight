@@ -89,17 +89,17 @@ void WritePrevStatus()
   /** write the default file */
   fp = open(PREV_STATUS_FILE, O_WRONLY|O_CREAT|O_TRUNC, 00666);
   if (fp < 0) {
-    berror(err, "Commands: mcp.prev_status open()");
+    berror(err, "mcp.prev_status open()");
     return;
   }
 
   if ((n = write(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0) {
-    berror(err, "Commands: mcp.prev_status write()");
+    berror(err, "mcp.prev_status write()");
     return;
   }
 
   if ((n = close(fp)) < 0) {
-    berror(err, "Commands: mcp.prev_status close()");
+    berror(err, "mcp.prev_status close()");
     return;
   }
 }
@@ -111,10 +111,10 @@ int sip_setserial(const char *input_tty)
   struct termios term;
 
   if ((fd = open(input_tty, O_RDWR)) < 0)
-    berror(tfatal, "Commands: Unable to open serial port");
+    berror(tfatal, "Unable to open serial port");
 
   if (tcgetattr(fd, &term))
-    berror(tfatal, "Commands: Unable to get serial device attributes");
+    berror(tfatal, "Unable to get serial device attributes");
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -127,13 +127,13 @@ int sip_setserial(const char *input_tty)
   term.c_cflag |= CS8;
 
   if(cfsetospeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "Commands: Error setting serial output speed");
+    berror(tfatal, "Error setting serial output speed");
 
   if(cfsetispeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "Commands: Error setting serial input speed");
+    berror(tfatal, "Error setting serial input speed");
 
   if( tcsetattr(fd, TCSANOW, &term) )
-    berror(tfatal, "Commands: Unable to set serial attributes");
+    berror(tfatal, "Unable to set serial attributes");
 
   return fd;
 }
@@ -183,12 +183,12 @@ static void SendRequest (int req, char tty_fd)
   buffer[2] = 0x03;
   
 #ifdef VERBOSE_SIP_CHATTER
-  bprintf(info,"Commands: sending to SIP %02x %02x %02x\n",
+  bprintf(info,"sending to SIP %02x %02x %02x\n",
       buffer[0],buffer[1],buffer[2]);
 #endif
 
   if (write(tty_fd, buffer, 3) < 0)
-    berror(warning, "Commands: error sending SIP request\n");
+    berror(warning, "error sending SIP request\n");
 }
 #endif    // USE_SIP_CMD
 
@@ -227,32 +227,33 @@ static void SetParametersFifo(enum multiCommand command, unsigned short *dataq,
 
   char** dataqc = (char**) dataq;
   /* compute renormalised values - SIPSS FIFO version */
+  bprintf(info, "Multiword Command: %s (%d)\n", MName(command), command);
+
   for (i = dataqind = 0; i < mcommands[index].numparams; ++i) {
     type = mcommands[index].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = atoi(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: integer: %i\n", i, ivalues[i]);
+      bprintf(info, "param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'l')  /* 30 bit unsigned integer */ {
       ivalues[i] = atoi(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: long   : %i\n", i, ivalues[i]);
+      bprintf(info, "param%02i: long   : %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = atof(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: float  : %f\n", i, rvalues[i]);
+      bprintf(info, "param%02i: float  : %f\n", i, rvalues[i]);
     } else if (type == 'd') { /* 30 bit floating point */
       rvalues[i] = atof(dataqc[dataqind++]);
-      bprintf(info, "Commands: param%02i: double : %f\n", i, rvalues[i]);
+      bprintf(info, "param%02i: double : %f\n", i, rvalues[i]);
     } else if (type == 's') { /* string */
       strncpy(svalues[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
       svalues[i][CMD_STRING_LEN - 1] = 0;
-      bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
+      bprintf(info, "param%02i: string: %s\n", i, svalues[i]);
     } else
       bprintf(err,
-          "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
+          "Unknown parameter type ('%c') param%02i: ignored", type,
           i);
   }
 
-  bprintf(info, "Commands: Multiword Command: %d (%s)\n", command,
-      MName(command));
+
 }
 
 static void SetParameters(enum multiCommand command, unsigned short *dataq,
@@ -269,30 +270,30 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
     type = mcommands[index].params[i].type;
     if (type == 'i')  /* 16 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
-      bprintf(info, "Commands: param%02i: integer: %i\n", i, ivalues[i]);
+      bprintf(info, "param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'l')  /* 32 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
       ivalues[i] += (dataq[dataqind++] << 16);
-      bprintf(info, "Commands: param%02i: long   : %i\n", i, ivalues[i]);
+      bprintf(info, "param%02i: long   : %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 16 bit floating point */ {
       rvalues[i] = (float)dataq[dataqind++] * (mcommands[index].params[i].max
           - min) / USHRT_MAX + min;
-      bprintf(info, "Commands: param%02i: float  : %f\n", i, rvalues[i]);
+      bprintf(info, "param%02i: float  : %f\n", i, rvalues[i]);
     } else if (type == 'd') { /* 32 bit floating point */
       rvalues[i] = (float)((unsigned)dataq[dataqind++] << 16); /* upper 16 bits */
       rvalues[i] += (float)dataq[dataqind++];             /* lower 16 bits */
       rvalues[i] = rvalues[i] * (mcommands[index].params[i].max - min) /
         UINT_MAX + min;
-      bprintf(info, "Commands: param%02i: double : %f\n", i, rvalues[i]);
+      bprintf(info, "param%02i: double : %f\n", i, rvalues[i]);
     } else if (type == 's') { /* string of 7-bit characters */
       int j;
       for (j = 0; j < mcommands[index].params[i].max; ++j)
         svalues[i][j] = ((j % 2) ? dataq[dataqind++] : dataq[dataqind] >> 8)
           & 0x7f;
-      bprintf(info, "Commands: param%02i: string: %s\n", i, svalues[i]);
+      bprintf(info, "param%02i: string: %s\n", i, svalues[i]);
     } else
       bprintf(err,
-          "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
+          "Unknown parameter type ('%c') param%02i: ignored", type,
           i);
   }
 }
@@ -325,33 +326,33 @@ void ScheduledCommand(struct ScheduleEvent *event)
     int i;
     int index = MIndex(event->command);
 
-    bprintf(info, "Commands: Executing Scheduled Command: %i (%s)\n",
-        event->command, MName(event->command));
+    bprintf(info, "Executing Scheduled Command: %s (%i)\n",
+        MName(event->command), event->command);
     for (i = 0; i < mcommands[index].numparams; ++i) {
       int type = mcommands[index].params[i].type;
       if (type == 'i') /* 15 bit unsigned integer */
-        bprintf(info, "Commands:   param%02i: integer: %i\n", i,
+        bprintf(info, "param%02i: integer: %i\n", i,
             event->ivalues[i]);
       else if (type == 'l') /* 30 bit unsigned integer */
-        bprintf(info, "Commands:   param%02i: long   : %i\n", i,
+        bprintf(info, "param%02i: long   : %i\n", i,
             event->ivalues[i]);
       else if (type == 'f') /* 15 bit floating point */
-        bprintf(info, "Commands:   param%02i: float  : %f\n", i,
+        bprintf(info, "param%02i: float  : %f\n", i,
             event->rvalues[i]);
       else if (type == 'd') /* 30 bit floating point */
-        bprintf(info, "Commands:   param%02i: double : %f\n", i,
+        bprintf(info, "param%02i: double : %f\n", i,
             event->rvalues[i]);
       else
         bprintf(err,
-            "Commands: Unknown parameter type ('%c') param%02i: ignored", type,
+            "Unknown parameter type ('%c') param%02i: ignored", type,
             i);
     }
     MultiCommand(event->command, event->rvalues, event->ivalues, event->svalues,
         1);
 
   } else {
-    bprintf(info, "Commands: Executing Scheduled Command: %i (%s)\n",
-        event->command, SName(event->command));
+    bprintf(info, "Executing Scheduled Command: %s (%i)\n",
+        SName(event->command), event->command);
     SingleCommand(event->command, 1);
   }
 }
@@ -461,7 +462,7 @@ void WatchFIFO (void* void_other_ip)
       command[index++] = buf[0];
     } while (buf[0] != '\n');
     command[index - 1] = command[index] = 0;
-    bprintf(info, "Command received: %s\n", command);
+    //bprintf(info, "Command received: %s\n", command);
     
 #ifndef TEST_RUN
     if (void_other_ip != NULL) {
@@ -504,7 +505,7 @@ void WatchFIFO (void* void_other_ip)
         pbuf[pindex++] = command[index];
       }
     } while (command[index++] != 0);
-    bprintf(info, "%i parameters found.\n", mcommand_count);
+    //bprintf(info, "%i parameters found.\n", mcommand_count);
 
     pthread_mutex_lock(&mutex);
 
@@ -515,7 +516,7 @@ void WatchFIFO (void* void_other_ip)
       mcommand = -1;
     } else {
       mcommand = MCommand(command);
-      bputs(info, "Multi word command received\n");
+      //bputs(info, "Multi word command received\n");
       if (mcommand_count == mcommands[MIndex(mcommand)].numparams) {
         SetParametersFifo(mcommand, (unsigned short*)mcommand_data, rvalues,
             ivalues, svalues);
@@ -789,7 +790,7 @@ void WatchPort (void* parameter)
 
             if ((indata[1] & 0xE0) == 0xA0) {
               /*** Single command ***/
-              bprintf(info, "Single command received\n");
+              //bprintf(info, "Single command received\n");
               //FIXME: this limits # single commands to 255. use indata[1] too
               SingleCommand(indata[0], 0);
               mcommand = -1;
@@ -799,8 +800,8 @@ void WatchPort (void* parameter)
               mcommand = indata[0];
               mcommand_count = 0;
               dataqsize = DataQSize(MIndex(mcommand));
-              bprintf(info, "UNSUPPORTED: Multi word command %d (%s) started\n",
-                  mcommand, MName(mcommand));
+              bprintf(info, "UNSUPPORTED: Multi word command %s (%d) started\n",
+                  MName(mcommand), mcommand);
 
               /* The time of sending, a "unique" number shared by the first */
               /* and last packed of a multi-command */
@@ -906,8 +907,8 @@ void WatchPort (void* parameter)
                 bprintf(warning, "ignoring unknown extended command (%d)",
                     extdat[0]);
               } else {
-                bprintf(info, "extended command %d (%s)", 
-                    extdat[0], MName(extdat[0]));
+                bprintf(info, "extended command %s (%d)", MName(extdat[0]),
+                    extdat[0]);
                 SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
                     ivalues, svalues);
                 MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);

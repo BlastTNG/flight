@@ -153,7 +153,7 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
 
   CommandData.mcecmd_index = INC_INDEX(index);
 
-  bprintf(info, "Commands: Queued %s command #%i for transfer to MPC.\n",
+  bprintf(info, "Queued %s command #%i for transfer to MPC.\n",
       rvalues ? "multi" : "single", command);
 
   return 1;
@@ -166,8 +166,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
   int is_new;
 
   if (!scheduled)
-    bprintf(info, "Commands: Single command: %d (%s)\n", command,
-        SName(command));
+    bprintf(info, "Single command: %s (%d)\n", SName(command), command);
 
   /* Update CommandData structure with new info */
 
@@ -698,7 +697,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.vaz = 0;
       CommandData.pointing_mode.del = 0;
       CommandData.pointing_mode.is_turn_around = 0;
-      bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
       break;
     case unlock:
       CommandData.lock.goal = lock_retract;
@@ -833,7 +831,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case reap_bitsy:
       if ((command == reap_itsy && !BitsyIAm) ||
           (command == reap_bitsy && BitsyIAm)) {
-        bprintf(err, "Commands: Reaping the watchdog tickle on command.");
+        bprintf(err, "Reaping the watchdog tickle on command.");
         pthread_cancel(watchdog_id);
       }
       break;
@@ -841,9 +839,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case halt_bitsy:
       if ((command == halt_itsy && !BitsyIAm) ||
           (command == halt_bitsy && BitsyIAm)) {
-        bputs(warning, "Commands: Halting the MCC\n");
+        bputs(warning, "Halting the MCC\n");
         if (system("/sbin/reboot") < 0)
-          berror(fatal, "Commands: failed to reboot, dying\n");
+          berror(fatal, "failed to reboot, dying\n");
       }
       break;
     case bbc_sync_ext:
@@ -962,7 +960,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
     default:
       /* Render, therefore, unto Caesar the things which are Caesar's */
       if (!MCEcmd(command, NULL, NULL, NULL)) {
-        bputs(warning, "Commands: ***Invalid Single Word Command***\n");
+        bputs(warning, "Invalid Single Word Command\n");
         return; /* invalid command - no write or update */
       }
   }
@@ -973,7 +971,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
   if (!scheduled) {
     if (doing_schedule)
-      bprintf(info, "Scheduler: *** Out of schedule file mode ***");
+      bprintf(info, "*** Out of schedule file mode ***");
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
   } else
     CommandData.pointing_mode.t = PointingData[i_point].t;
@@ -1866,7 +1864,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
     default:
       if (!MCEcmd(command, rvalues, ivalues, svalues)) {
-        bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
+        bputs(warning, "Invalid Multi Word Command\n");
         return; /* invalid command - don't update */
       }
   }
@@ -1892,7 +1890,7 @@ void CheckCommandList(void)
 
   /* the scommand enum isn't the same length as the scommand array */
   if ((int)xyzzy != N_SCOMMANDS - 1)
-    bprintf(fatal, "Commands: N_SCOMMANDS should be %d\n", (int)xyzzy + 1);
+    bprintf(fatal, "N_SCOMMANDS should be %d\n", (int)xyzzy + 1);
 
   /* the scommand enum and scommand array are the same length, but there's a
    * problem in the scommand arrray initialiser */
@@ -1906,13 +1904,13 @@ void CheckCommandList(void)
 
     if (c == -1) {
       /* the initialiser is too long -- look for duplicate definitions */
-      bprintf(fatal, "Commands: scommand #%i should be xyzzy, but it's \"%s\" "
+      bprintf(fatal, "scommand #%i should be xyzzy, but it's \"%s\" "
           "(%i); xyzzy is not in the list at all.\n", (int)xyzzy,
           scommands[xyzzy].name, scommands[xyzzy].command);
     } else {
       /* the initialiser is too short -- look for missing definitions or extra
        * things in the enum */
-      bprintf(fatal, "Commands: scommand #%i should be xyzzy, but it's \"%s\" "
+      bprintf(fatal, "scommand #%i should be xyzzy, but it's \"%s\" "
           "(%i); xyzzy is scommand #%i\n", (int)xyzzy, scommands[xyzzy].name,
           scommands[xyzzy].command, c);
     }
@@ -1920,7 +1918,7 @@ void CheckCommandList(void)
 
   /* the mcommand enum isn't the same length as the mcommand array */
   if ((int)plugh != N_MCOMMANDS - 1)
-    bprintf(fatal, "Commands: N_MCOMMANDS should be %d\n", (int)plugh + 1);
+    bprintf(fatal, "N_MCOMMANDS should be %d\n", (int)plugh + 1);
 
   /* the mcommand enum and mcommand array are the same length, but there's a
    * problem in the mcommand arrray initialiser */
@@ -1934,13 +1932,13 @@ void CheckCommandList(void)
 
     if (c == -1) {
       /* the initialiser is too long -- look for duplicate definitions */
-      bprintf(fatal, "Commands: mcommand #%i should be plugh, but it's \"%s\" "
+      bprintf(fatal, "mcommand #%i should be plugh, but it's \"%s\" "
           "(%i); plugh is not in the list at all.\n", (int)plugh,
           mcommands[plugh].name, mcommands[plugh].command);
     } else {
       /* the initialiser is too short -- look for missing definitions or extra
        * things in the enum */
-      bprintf(fatal, "Commands: mcommand #%i should be plugh, but it's \"%s\" "
+      bprintf(fatal, "mcommand #%i should be plugh, but it's \"%s\" "
           "(%i); plugh is mcommand #%i\n", (int)plugh, mcommands[plugh].name,
           mcommands[plugh].command, c);
     }
@@ -1969,14 +1967,14 @@ void InitCommandData()
   CheckCommandList();
 
   if ((fp = open("/data/etc/spider/pcm.prev_status", O_RDONLY)) < 0) {
-    berror(err, "Commands: Unable to open prev_status file for reading");
+    berror(err, "Unable to open prev_status file for reading");
   } else {
     if ((n_read = read(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0)
-      berror(err, "Commands: prev_status read()");
+      berror(err, "prev_status read()");
     if ((extra = read(fp, &junk, sizeof(junk))) < 0)
-      berror(err, "Commands: extra prev_status read()");
+      berror(err, "extra prev_status read()");
     if (close(fp) < 0)
-      berror(err, "Commands: prev_status close()");
+      berror(err, "prev_status close()");
   }
 
   /** this overrides prev_status **/
@@ -2094,16 +2092,16 @@ void InitCommandData()
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))
-    bprintf(warning, "Commands: prev_status: Wanted %i bytes but got %i.\n",
+    bprintf(warning, "prev_status: Wanted %i bytes but got %i.\n",
         (int) sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
-    bputs(warning, "Commands: prev_status: Extra bytes found.\n");
+    bputs(warning, "prev_status: Extra bytes found.\n");
   else {
     PostProcessInitCommand();
     return;
   }
 
-  bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
+  bputs(warning, "Regenerating Command Data and prev_status\n");
 
   /** prev_status overrides this stuff **/
   CommandData.command_count = 0;

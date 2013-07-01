@@ -238,7 +238,6 @@ void StartHWP(void)
 
 
   nameThread("HWP");
-  bputs(startup, "Startup.");
 
   //Initialize global data
   for (i=0; i<NHWP; i++) {
@@ -250,7 +249,6 @@ void StartHWP(void)
   //Wait until in charge before doing any serial port stuff
   while (!InCharge) {
     if (first_time) {
-      bprintf(info,"Not in charge.  Waiting.");
       first_time = 0;
     }
     usleep(1000000);
@@ -263,18 +261,20 @@ void StartHWP(void)
 
   //Initialize the bus
   first_time = 1;
+  is_init = 0;
   while (!is_init) {
-    if (first_time) {
-      bprintf(info,"In Charge! Attempting to initalize.");
-      first_time = 0;
-    }
-    if (Phytron_Init(&bus, HWP_BUS, "", HWP_CHATTER) == PH_ERR_OK)
+    if (Phytron_Init(&bus, HWP_BUS, "", HWP_CHATTER) == PH_ERR_OK) {
       is_init = 1;
-    usleep(10000);
-    if (is_init) {
-      bprintf(info,"Bus initialized on %ith attempt",j);
+    }
+    usleep(100000);
+    if (j>10) {
+      bprintf(info,"Bus failed to initialize after 10 attempts");
     }
     j++;
+  }
+  
+  if (j>11) {
+    bprintf(info,"Bus initialized on %ith attempt",j-1);
   }
 
   //Setup stepper parameters
@@ -308,9 +308,9 @@ void StartHWP(void)
     my_cindex = GETREADINDEX(CommandData.hwp.cindex);
     caddr_match = 0;
     if (CommandData.hwp.caddr[my_cindex] >= 0) {
-      bprintf(info, "Sending command \"%s\" to \"%s\"\n",
-          CommandData.hwp.command[my_cindex], 
-          bus.stepper[CommandData.hwp.caddr[my_cindex]].name);
+      //bprintf(info, "Sending command \"%s\" to \"%s\"\n",
+      //    CommandData.hwp.command[my_cindex], 
+      //    bus.stepper[CommandData.hwp.caddr[my_cindex]].name);
       //increase print level for uplinked manual commands
       bus.chatter = PH_CHAT_BUS;
       if (CommandData.hwp.command[my_cindex][0] == '\\') {

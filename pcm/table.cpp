@@ -255,7 +255,6 @@ void* rotaryTableComm(void* arg)
   nameThread("SCTabl");
   while (!InCharge) {
     if (first_time) {
-      bprintf(info,"Not in charge. Sleeping.");
       first_time = 0;
     }
     usleep(20000);
