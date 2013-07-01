@@ -723,6 +723,8 @@ union DerivedUnion DerivedChannels[] = {
   MCESLOW("MPC_GOAL"),
   MCESLOW("MPC_TASK"),
   MCESLOW("MPC_DTASK"),
+  LINCOM2("I_IF_TOT", "I_MCE", 1.0, 0, "I_HK_MISC",  1, 0),
+
 
   END_OF_DERIVED_CHANNELS
 };

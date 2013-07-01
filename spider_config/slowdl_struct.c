@@ -34,7 +34,7 @@ struct SlowDlStruct slowDLList[] = {
   {"count_i_cmd", 'u', SDL_RAW},
   {"last_b_cmd", 'u', SDL_RAW},
   {"last_i_cmd", 'u', SDL_RAW},
-  {"i_tot", 'c', SDL_SCALE, 0.0, 60.0},
+  {"i_of_tot", 'c', SDL_SCALE, 0.0, 60.0},
   {"v_batt_cc1", 'c', SDL_SCALE, 18.0, 36.0},
   {"v_batt_cc2", 'c', SDL_SCALE, 18.0, 36.0},
   {"t_cpu_i_flc", 'c', SDL_SCALE, -10.0, 90.0},

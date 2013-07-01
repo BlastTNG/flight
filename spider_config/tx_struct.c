@@ -742,7 +742,7 @@ struct ChannelStruct SlowChannels[] = {
   {"v_heat_last_hk", 'w', LOOP9,  37,         CALDAC(1.0,            0.0), 'u', U_V_V},
   // {"pulse_last_hk",  'w', LOOP9,  38,                1.0,             0.0, 'u', U_NONE},
   /* LOOP9 50-55 are wide */
-  {"i_tot",         'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
+  {"i_of_tot",       'w', LOOP9, 56,              1.0e-3,            0.0, 'u', U_I_A}, // sum of currents read through ACS1 A1
   {"cov_lim_dgps",   'w', LOOP9, 58,    (100.0/32768.0),             0.0, 'u', U_NONE},
   {"ant_e_dgps",     'w', LOOP9, 60,          1.0/100.0,         0.0, 's',U_NONE},
   {"ant_n_dgps",     'w', LOOP9, 61,          1.0/100.0,         0.0, 's',U_NONE},

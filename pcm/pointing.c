@@ -1083,7 +1083,7 @@ void Pointing(void)
       0.0,
       dgps_az, dgps_ok);
 
-  /** PSS1 **/
+  /** PSS **/
   EvolveAzSolution(&PSSAz,
       RG.ofroll_gy, PointingData[i_point_read].offset_ofroll_gy,
       RG.ofyaw_gy,  PointingData[i_point_read].offset_ofyaw_gy,

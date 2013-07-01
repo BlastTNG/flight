@@ -577,7 +577,7 @@ static void GetCurrents()
     i_elNios = GetNiosAddr("i_el");
     i_pivNios = GetNiosAddr("i_piv");
 
-    i_totNios = GetNiosAddr("i_tot");
+    i_totNios = GetNiosAddr("i_of_tot");
 
   }
 
