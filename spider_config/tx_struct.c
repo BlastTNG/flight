@@ -653,6 +653,7 @@ struct ChannelStruct SlowChannels[] = {
   {"term_frict_piv",   'w', LOOP7, 54,             2.0/32767.0,     0.0, 's', U_NONE},
   {"term_p_rw_piv",    'w', LOOP7, 55,             1.0,             0.0, 's', U_NONE},
   {"term_p_err_piv",   'w', LOOP7, 56,             1.0,             0.0, 's', U_NONE},
+  {"mode_piv",      'w', LOOP7, 57,             1.0,             0.0, 'u', U_NONE},
   
   /* charge controller related channels */
   

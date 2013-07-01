@@ -855,6 +855,7 @@ void WriteMot(int write_slow)
   static struct NiosStruct* step1ElAddr;      // PORT
   static struct NiosStruct* step2ElAddr;      // STARBOARD
   static struct NiosStruct* isTurnAroundAddr;
+  static struct NiosStruct* modePivAddr;
 
   // Used only for Lab Controller tests
   static struct NiosStruct* dac2AmplAddr;
@@ -909,6 +910,7 @@ void WriteMot(int write_slow)
     step1ElAddr = GetNiosAddr("step_1_el");
     step2ElAddr = GetNiosAddr("step_2_el");
     isTurnAroundAddr = GetNiosAddr("is_turn_around");
+    modePivAddr = GetNiosAddr("mode_piv");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -1080,6 +1082,9 @@ void WriteMot(int write_slow)
       WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
       /* Azimuth Scan Max Acceleration */
       WriteCalData(accelMaxAzAddr, CommandData.az_accel_max, NIOS_QUEUE);
+
+      /* pivot drive control mode */
+      WriteData(modePivAddr, CommandData.pointing_mode.piv_mode, NIOS_QUEUE);
   }
    
   /* Turn Around Flag */
