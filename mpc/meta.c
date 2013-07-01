@@ -37,34 +37,55 @@ int working = 0;
 static const int mode_start[op_acq + 1] =
 {
   [op_init] = 0,
-  [op_ready] = st_drive0 | st_mcecom | st_mcecmd | st_config,
-  [op_acq] = st_drive0 | st_mcecom | st_mcecmd | st_config | st_retdat
+  [op_ready] = st_drive0 | st_mcecom | st_mcecmd,
+  [op_acq] = st_drive0 | st_mcecom | st_mcecmd | st_config | st_acqcnf
+    | st_retdat
 };
 static const int mode_stop[op_acq + 1] =
 {
   [op_init] = 0, /* not really.. */
-  [op_ready] = st_retdat,
+  [op_ready] = st_retdat | st_acqcnf,
   [op_acq] = 0
 };
 
-enum modes new_goal = -1;
 enum status start_tk = st_idle;
 enum status  stop_tk = st_idle;
 
 /* figure out what to do to flip the desired state */
-void try_toggle(enum status st, enum status *do_start, enum status *do_stop)
+void try_toggle(enum status st, int stop, enum status *do_start,
+    enum status *do_stop)
 {
-  int stop = state & st;
-
   if (stop) {
-    /* stopping something can always occur */
-    *do_stop = st;
+    /* nothing to do */
+    if (~state & st)
+      return;
+
+    switch (st) {
+      case st_acqcnf:
+        if (state & st_retdat)
+          try_toggle(st_retdat, 1, do_start, do_stop);
+        else
+          *do_stop = st;
+        break;
+
+      case st_idle:
+      case st_drive1:
+      case st_drive2:
+      case st_retdat:
+        /* always okay */
+        *do_stop = st;
+        break;
+    }
   } else {
+    /* nothing to do */
+    if (state & st)
+      return;
+
     switch (st) {
       case st_drive0:
         /* acquisition must be stopped to intialise a primary */
         if (state & st_retdat)
-          try_toggle(st_retdat, do_start, do_stop);
+          try_toggle(st_retdat, 1, do_start, do_stop);
         else 
           *do_start = st;
         break;
@@ -76,37 +97,44 @@ void try_toggle(enum status st, enum status *do_start, enum status *do_stop)
         break;
       case st_mcecom:
         if (~state & st_mcecmd) /* MCE cmd must be running */
-          try_toggle(st_mcecmd, do_start, do_stop);
+          try_toggle(st_mcecmd, 0, do_start, do_stop);
         else
           *do_start = st;
         break;
       case st_mcecmd:
         /* acquisition must be stopped to intialise a primary */
         if (state & st_retdat)
-          try_toggle(st_retdat, do_start, do_stop);
+          try_toggle(st_retdat, 1, do_start, do_stop);
         else
           *do_start = st;
         break;
       case st_config:
         if (~state & st_drive0) /* must have a drive */
-          try_toggle(st_drive0, do_start, do_stop);
+          try_toggle(st_drive0, 0, do_start, do_stop);
         else if (~state & st_mcecmd) /* mce_cmd must be running */
-          try_toggle(st_mcecmd, do_start, do_stop);
+          try_toggle(st_mcecmd, 0, do_start, do_stop);
         else if (~state & st_mcecom) /* MCE must be alive */
-          try_toggle(st_mcecom, do_start, do_stop);
+          try_toggle(st_mcecom, 0, do_start, do_stop);
         else
           *do_start = st_config;
         break;
+      case st_acqcnf:
+        if (~state & st_config) /* MCE must be configured */
+          try_toggle(st_config, 0, do_start, do_stop);
+        else
+          *do_start = st_acqcnf;
+        break;
       case st_retdat:
-        if (~state & st_config) /* must be configured */
-          try_toggle(st_config, do_start, do_stop);
+        if (~state & st_acqcnf) /* acq must be configured */
+          try_toggle(st_acqcnf, 0, do_start, do_stop);
         else
           *do_start = st_retdat;
         break;
     }
   }
 
-  bprintf(info, "try_toggle(%04x) = %04x,%04x", st, *do_start, *do_stop);
+  bprintf(info, "try_toggle(%04x,%i) = %04x,%04x", st, stop, *do_start,
+      *do_stop);
 }
 
 /* Meta's job is to figure out how walk the graph to turn "state" into
@@ -117,15 +145,6 @@ void meta(void)
   int i;
   unsigned diff;
 
-  if (state != last_reported_state)
-    bprintf(info, "M: state = 0x%04X", state);
-  last_reported_state = state;
-
-  if (goal != last_reported_goal)
-    bprintf(info, "M: goal = 0x%04X/0x%04X (%s)", mode_start[goal],
-        mode_stop[goal], mode_string[goal]);
-  last_reported_goal = goal;
-
   /* nothing to do */
   if (((state & mode_start[goal]) == mode_start[goal]) &&
       ((~state & mode_stop[goal]) == mode_stop[goal]))
@@ -134,6 +153,10 @@ void meta(void)
   }
 
   if (!working) {
+    bprintf(info, "M: state = 0x%04X", state);
+    bprintf(info, "M: goal = 0x%04X/0x%04X (%s)", mode_start[goal],
+        mode_stop[goal], mode_string[goal]);
+
     enum status do_start = st_idle;
     enum status do_stop  = st_idle;
 
@@ -145,7 +168,7 @@ void meta(void)
     for (i = 0; i < 32; ++i) {
       if (diff & (1 << i)) {
         /* here's a bit that needs fixing, try doing something about it */
-        try_toggle(1 << i, &do_start, &do_stop);
+        try_toggle(1 << i, (mode_stop[goal] & (1 << i)), &do_start, &do_stop);
         if (do_start != st_idle || do_stop != st_idle)
           break;
       }

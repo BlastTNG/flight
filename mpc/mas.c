@@ -195,7 +195,7 @@ static int __attribute__((format(printf,1,2))) mcecmd_write(const char *fmt,
   return ret;
 }
 
-static int start_acq(void)
+static int acq_conf(void)
 {
   long t = (long)time(NULL);
 
@@ -204,6 +204,7 @@ static int start_acq(void)
   mas_write_block("rca", "flx_lp_init", &one, 1);
 
   /* start a multiacq */
+  mcecmd_write("acq_multi_begin");
   mcecmd_write("acq_config_fs /data0/mce/current_data/mpc_%li rcs 100000", t);
 
   if (state & st_drive1)
@@ -213,8 +214,6 @@ static int start_acq(void)
   if (state & st_drive2)
     mcecmd_write("acq_config_fs /data2/mce/current_data/mpc_%li rcs 100000",
         t);
-
-  mcecmd_write("acq_go 1000");
 
   return 0;
 }
@@ -309,8 +308,34 @@ void *mas_data(void *dummy)
           comms_lost = 1;
         data_tk = dt_idle;
         break;
+      case dt_acqcnf:
+        dt_error = acq_conf();
+        data_tk = dt_idle;
+        break;
       case dt_startacq:
-        dt_error = start_acq();
+        dt_error = mcecmd_write("acq_go 1000");
+        data_tk = dt_idle;
+        break;
+      case dt_fakestop:
+        ret = mcedata_fake_stopframe(mas);
+        if (ret) {
+          bprintf(err, "Error stopping acquisition: error #%i", ret);
+          dt_error = 1;
+        } else
+          dt_error = 0;
+        data_tk = dt_idle;
+        break;
+      case dt_empty:
+        ret = mcedata_empty_data(mas);
+        if (ret) {
+          bprintf(err, "Error emptying data queue: error #%i", ret);
+          dt_error = 1;
+        } else
+          dt_error = 0;
+        data_tk = dt_idle;
+        break;
+      case dt_multiend:
+        dt_error = mcecmd_write("acq_multi_end");
         data_tk = dt_idle;
         break;
     }
@@ -327,18 +352,20 @@ void *mas_data(void *dummy)
         get_acq_metadata();
       }
 
-      int head;
-      head = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_HEAD);
-      int tail, ltail;
-      tail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_TAIL);
-      ltail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LTAIL);
+      if (frame_size > 0) {
+        int head;
+        head = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_HEAD);
+        int tail, ltail;
+        tail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_TAIL);
+        ltail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LTAIL);
     
-      ssize_t total;
-      if (head != ltail) {
-        while (head != ltail) {
-          total = mcedata_read(mas, frame, frame_size);
-          do_frame((const uint32_t*)frame, frame_size);
-          ltail = (ltail + 1) % max;
+        ssize_t total;
+        if (head != ltail) {
+          while (head != ltail) {
+            total = mcedata_read(mas, frame, frame_size);
+            do_frame((const uint32_t*)frame, frame_size);
+            ltail = (ltail + 1) % max;
+          }
         }
       }
     }

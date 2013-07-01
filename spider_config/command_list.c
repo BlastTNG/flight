@@ -1127,13 +1127,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /***********************************************/
   /*************** MCE COMMANDS  *****************/
 
-  {COMMAND(mpc_test), "Test the MPC", GR_MCE | MCECMD, 3,
-    {
-      {"Final grade (%)", 0, 100, 'i', ""},
-      {"Bonus points", -10, 0, 'f', ""},
-      {"Snide comment from marker", 0, 20, 's', ""}
-    }
-  },
   {COMMAND(start_acq), "Start data acquisition", GR_MCE | MCECMD, 1,
     {
       {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}

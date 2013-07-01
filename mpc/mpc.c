@@ -355,6 +355,12 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 {
   if (ev->is_multi) {
     switch (ev->command) {
+      case start_acq:
+        goal = op_acq;
+        break;
+      case stop_acq:
+        goal = op_ready;
+        break;
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
             ev->command, peer, port);
@@ -402,6 +408,8 @@ int main(int argc, const char **argv)
 
   /* bind to the UDP port */
   sock = udp_bind_port(MPC_PORT, 1);
+  if (sock < 0)
+    bprintf(fatal, "Unable to bind port.");
 
   /* Figure out our MCE number and check for fake mode */
   get_nmce(argc, argv);

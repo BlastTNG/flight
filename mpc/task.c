@@ -26,6 +26,8 @@ static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
 int dt_error = 0;
 int comms_lost = 0;
+static int cl_count = 0;
+
 
 /* request a data tasklet and wait for it's completion.  returns dt_error */
 static int dt_wait(enum dtask dt)
@@ -44,11 +46,40 @@ static int dt_wait(enum dtask dt)
 /* wait times after power cycle request (in seconds) */
 static const int power_wait[] = { 10, 10, 20, 40, 60, 0 };
 
+/* do a DSP reset, MCE reset, fake stop and empty the data buffer */
+static int task_reset_mce()
+{
+  /* DSP reset */
+  if (dt_wait(dt_dsprs)) {
+    power_cycle_cmp = 1;
+    sleep(60);
+    return 1;
+  }
+  /* MCE reset */
+  if (dt_wait(dt_mcers)) {
+    comms_lost = 1;
+    return 1;
+  }
+  /* Fake stop */
+  if (dt_wait(dt_fakestop)) {
+    comms_lost = 1;
+    return 1;
+  }
+  /* Empty the buffer */
+  if (dt_wait(dt_empty)) {
+    comms_lost = 1;
+    return 1;
+  }
+
+  cl_count = 0;
+  state |= st_mcecom;
+  state &= ~(st_config | st_retdat);
+  return 0;
+}
+
 /* run generic tasks */
 void *task(void *dummy)
 {
-  int cl_count = 0;
-
   nameThread("Task");
 
   /* wait for a task */
@@ -57,26 +88,12 @@ void *task(void *dummy)
       bprintf(warning, "Comms lost.");
       start_tk = stop_tk = 0xFFFF; /* interrupt! */
 
-      /* kill acquisition, if it's running, but ignore errors */
-      if (state & st_retdat) {
-        dt_wait(dt_killacq);
-        state &= ~st_retdat;
-      }
-
-      /* dsp reset */
-      if (dt_wait(dt_dsprs)) {
-        power_cycle_cmp = 1;
-        sleep(60);
-      }
-
-      /* MCE reset */
-      if (!dt_wait(dt_mcers)) {
+      /* stop the MCE and reset it */
+      if (task_reset_mce() == 0) {
         /* problem solved, I guess.  Get meta to return us to our scheduled
          * program */
         comms_lost = 0;
         cl_count = 0;
-        state &= ~st_config; /* we're unconfigured */
-        state |= st_mcecom; /* but communicating */
         start_tk = stop_tk = st_idle;
         continue;
       }
@@ -97,8 +114,6 @@ void *task(void *dummy)
     } else if (start_tk != st_idle) { /* handle start task requests */
       switch (start_tk) {
         case st_idle:
-        case st_drive1: /* XXX */
-        case st_drive2: /* XXX */
           break;
         case st_drive0:
           /* set directory */
@@ -109,19 +124,8 @@ void *task(void *dummy)
           start_tk = st_idle;
           break;
         case st_mcecom:
-          /* DSP reset */
-          if (dt_wait(dt_dsprs)) {
-            power_cycle_cmp = 1;
-            sleep(60);
-          }
-          /* MCE reset */
-          if (dt_wait(dt_mcers)) {
-            comms_lost = 1;
-          } else {
-            cl_count = 0;
-            state |= st_mcecom;
-            start_tk = st_idle;
-          }
+          task_reset_mce();
+          start_tk = st_idle;
           break;
         case st_mcecmd:
           /* start mce_cmd */
@@ -141,6 +145,14 @@ void *task(void *dummy)
             start_tk = st_idle;
           }
           break;
+        case st_acqcnf:
+          /* acq config */
+          if (dt_wait(dt_acqcnf)) {
+            comms_lost = 1;
+          } else {
+            state |= st_acqcnf;
+            start_tk = st_idle;
+          }
         case st_retdat:
           /* start acq */
           if (dt_wait(dt_startacq)) {
@@ -151,7 +163,22 @@ void *task(void *dummy)
           }
       }
     } else if (stop_tk != st_idle) { /* handle stop task requests */
-      /* XXX */
+      switch (stop_tk) {
+        case st_acqcnf:
+          /* end multiacq */
+          if (dt_wait(dt_multiend)) {
+            comms_lost = 1;
+          } else {
+            state &= ~st_acqcnf;
+            stop_tk = st_idle;
+          }
+          break;
+        case st_retdat:
+          /* stop acq */
+          task_reset_mce();
+          stop_tk = st_idle;
+          break;
+      }
     }
     usleep(10000);
   }

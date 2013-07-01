@@ -178,8 +178,7 @@ enum multiCommand {
   hwp_bias_on,        hwp_bias_off,     write_row_len,     write_num_rows,
   write_free_run,     bset,              set_piv_mode,
   /* start MCE block */
-  mpc_test,           data_mode_bits,    start_acq,        reset_acq,
-  stop_acq,
+  data_mode_bits,    start_acq,        reset_acq,         stop_acq,
   /* end MCE block */
   plugh,
   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */

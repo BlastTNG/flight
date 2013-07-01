@@ -113,14 +113,13 @@ void do_frame(const uint32_t *frame, size_t frame_size)
   uint32_t frameno = sync_on ? header->syncno : header->cc_frameno;
 
   /* "Helpful" messages */
-  if (header->status & MCE_FSB_LAST)
+  if (header->status & MCE_FSB_LAST) {
     bprintf(info, "LAST bit in CC frame %u", header->cc_frameno);
+    state &= ~st_retdat;
+  }
   if (header->status & MCE_FSB_STOP) {
     bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
-    int i;
-    for (i = 0; i < 50; ++i) {
-      bprintf(info, "frame[%i] = 0x%08X", i, frame[i]);
-    }
+    state &= ~st_retdat;
   }
 
   /* do more stuff here, probably */

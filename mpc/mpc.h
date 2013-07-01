@@ -62,7 +62,8 @@ enum status {
   st_mcecmd = 0x0008, /* mce_cmd is running */
   st_mcecom = 0x0010, /* MCE is talking */ 
   st_config = 0x0020, /* MCE is configured */
-  st_retdat = 0x0040  /* MCE is returning data */
+  st_acqcnf = 0x0040, /* Acquisition is configured */
+  st_retdat = 0x0080  /* MCE is returning data */
 };
 
 extern unsigned int state;
@@ -75,7 +76,6 @@ enum modes { op_init = 0, op_ready, op_acq };
 extern enum status start_tk;
 extern enum status  stop_tk;
 extern enum modes      goal;
-extern enum modes  new_goal;
 
 /* task handler */
 void *task(void *dummy);
@@ -83,10 +83,12 @@ void *task(void *dummy);
 /* data tasklets */
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
-  dt_stopacq, dt_killacq, dt_mcecmd_init, dt_mcecmd_fini
+  dt_stopacq, dt_killacq, dt_mcecmd_init, dt_mcecmd_fini, dt_fakestop,
+  dt_empty, dt_acqcnf, dt_multiend
 };
 #define DT_STRINGS "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
-  "stopacq", "killacq", "mcecmd_init", "mcecmd_fini"
+  "stopacq", "killacq", "mcecmd_init", "mcecmd_fini", "fakestop", "empty", \
+"acqcnf", "multiend"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;
