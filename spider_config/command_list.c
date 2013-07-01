@@ -431,7 +431,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Az vel. request P Gain [v]", 0, USHRT_MAX, 'i', "G_V_REQ_AZ_PIV"}
     }
   },
-  {COMMAND(set_piv_mode), "set pivot drive mode", GR_GAIN, 1,
+  {COMMAND(set_piv_mode), "set pivot drive mode", GR_GAIN | CONFIRM, 1,
     {
       {"Drive Mode (0 = VEL, 1 = TORQUE)", 0, 1, 'i', "MODE_PIV"}
     }
@@ -1088,14 +1088,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(mpc_test), "Test the MPC", GR_MCE | MCECMD, 3,
-    {
-      {"Final grade (%)", 0, 100, 'i', ""},
-      {"Bonus points", -10, 0, 'f', ""},
-      {"Snide comment from marker", 0, 20, 's', ""}
-    }
-  },
-
   {COMMAND(data_mode_bits), "Change how 32->16 bit translation for TES data "
     "happens", GR_MCE, 5,
     {
@@ -1127,6 +1119,31 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(write_free_run), "Change the free run count parameter", GR_SYNC, 1,
     {
       {"value", 1, 4095, 'i', "FREE_RUN_SYNC"}
+    }
+  },
+
+  /*************** MCE COMMANDS  *****************/
+
+  {COMMAND(mpc_test), "Test the MPC", GR_MCE | MCECMD, 3,
+    {
+      {"Final grade (%)", 0, 100, 'i', ""},
+      {"Bonus points", -10, 0, 'f', ""},
+      {"Snide comment from marker", 0, 20, 's', ""}
+    }
+  },
+  {COMMAND(start_acq), "Start data acquisition", GR_MCE | MCECMD, 1,
+    {
+      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
+    }
+  },
+  {COMMAND(reset_acq), "Reset data acquisition", GR_MCE | MCECMD, 1,
+    {
+      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
+    }
+  },
+  {COMMAND(stop_acq), "Stop data acquisition", GR_MCE | MCECMD, 1,
+    {
+      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
     }
   },
 

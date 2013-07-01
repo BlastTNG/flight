@@ -344,7 +344,13 @@ static void WriteMCESlow(void)
   static struct NiosStruct *mceTxmuxAddr;
   static struct NiosStruct *mccTimeAddr;
   static struct NiosStruct *mccFree0Addr;
+  static struct NiosStruct *mccFree1Addr;
+  static struct NiosStruct *mccFree2Addr;
   static struct NiosStruct *dataModeAddr;
+  static struct NiosStruct *mpcStateAddr;
+  static struct NiosStruct *mpcGoalAddr;
+  static struct NiosStruct *mpcTaskAddr;
+  static struct NiosStruct *mpcDTaskAddr;
 
   int ind = GETREADINDEX(mce_slow_index[mux]);
 
@@ -352,13 +358,26 @@ static void WriteMCESlow(void)
     firsttime = 0;
     mccTimeAddr = GetNiosAddr("mcc_time");
     mccFree0Addr = GetNiosAddr("mcc_free0");
+    mccFree1Addr = GetNiosAddr("mcc_free1");
+    mccFree2Addr = GetNiosAddr("mcc_free2");
     dataModeAddr = GetNiosAddr("data_mode");
     mceTxmuxAddr = GetNiosAddr("mce_txmux");
+    mpcStateAddr = GetNiosAddr("mpc_state");
+    mpcGoalAddr = GetNiosAddr("mpc_goal");
+    mpcTaskAddr = GetNiosAddr("mpc_task");
+    mpcDTaskAddr = GetNiosAddr("mpc_dtask");
+
   }
 
   WriteData(dataModeAddr, mce_slow_dat[mux][ind].data_mode, NIOS_QUEUE);
   WriteData(mccTimeAddr, mce_slow_dat[mux][ind].time, NIOS_QUEUE);
   WriteData(mccFree0Addr, mce_slow_dat[mux][ind].df0, NIOS_QUEUE);
+  WriteData(mccFree1Addr, mce_slow_dat[mux][ind].df1, NIOS_QUEUE);
+  WriteData(mccFree2Addr, mce_slow_dat[mux][ind].df2, NIOS_QUEUE);
+  WriteData(mpcStateAddr, mce_slow_dat[mux][ind].state, NIOS_QUEUE);
+  WriteData(mpcGoalAddr, mce_slow_dat[mux][ind].goal, NIOS_QUEUE);
+  WriteData(mpcTaskAddr, mce_slow_dat[mux][ind].task, NIOS_QUEUE);
+  WriteData(mpcDTaskAddr, mce_slow_dat[mux][ind].dtask, NIOS_QUEUE);
 
   WriteData(mceTxmuxAddr, mux, NIOS_FLUSH);
   mux = (mux + 1) % NUM_MCE;

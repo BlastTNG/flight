@@ -908,6 +908,12 @@ struct ChannelStruct SlowChannels[] = {
   {"data_mode",   'w', LOOP11, 1, 1, 0, 'u', U_NONE},
   /* LOOP11 2-3 are wide */
   {"mcc_free0",   'w', LOOP11, 4, (1<<24), 0, 'u', U_NONE},
+  {"mcc_free1",   'w', LOOP11, 5, (1<<24), 0, 'u', U_NONE},
+  {"mcc_free2",   'w', LOOP11, 6, (1<<24), 0, 'u', U_NONE},
+  {"mpc_state",   'w', LOOP11, 7, 1.0,   0.0, 'u', U_NONE},
+  {"mpc_goal",    'w', LOOP11, 8, 1.0,   0.0, 'u', U_NONE},
+  {"mpc_task",    'w', LOOP11, 9, 1.0,   0.0, 'u', U_NONE},
+  {"mpc_dtask",   'w', LOOP11,10, 1.0,   0.0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };
