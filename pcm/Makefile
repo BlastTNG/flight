@@ -127,9 +127,9 @@ restart: install
 ifeq ($(shell hostname),bitsy)
 	@echo "** I am bitsy **"
 	killall pcm
-	scp /usr/local/bin/pcm itsy.spider:/tmp/pcm
+	rsync -avP /usr/local/bin/pcm itsy.spider:/tmp/pcm
 	ssh itsy.spider 'install -d -m 666 /tmp/etc'
-	scp $(ETC_DATA) itsy.spider:/tmp/etc/
+	rsync -avP $(ETC_DATA) itsy.spider:/tmp/etc/
 	ssh itsy.spider 'install -m 755 /tmp/pcm /usr/local/bin'
 	ssh itsy.spider 'install -m 666 /tmp/etc/* /data/etc/spider'
 	ssh itsy.spider 'killall pcm'
@@ -137,9 +137,9 @@ else
 ifeq ($(shell hostname),itsy)
 	@echo "** I am itsy **"
 	killall pcm
-	scp /usr/local/bin/pcm bitsy.spider:/tmp/pcm
+	rsync -avP /usr/local/bin/pcm bitsy.spider:/tmp/pcm
 	ssh bitsy.spider 'install -d -m 666 /tmp/etc'
-	scp $(ETC_DATA) bitsy.spider:/tmp/etc/
+	rsync -avP $(ETC_DATA) bitsy.spider:/tmp/etc/
 	ssh bitsy.spider 'install -m 755 /tmp/pcm /usr/local/bin'
 	ssh bitsy.spider 'install -m 666 /tmp/etc/* /data/etc/spider'
 	ssh bitsy.spider 'killall pcm'
