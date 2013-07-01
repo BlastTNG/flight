@@ -157,7 +157,7 @@ static void tes_push(int n)
   /* flag as full */
   if (tes_fifo_top == tes_fifo_bottom)
     tes_fifo_top = -1;
-  bprintf(warning, "TES_FIFO: %i:%i", tes_fifo_top, tes_fifo_bottom);
+//  bprintf(warning, "TES_FIFO: %i:%i", tes_fifo_top, tes_fifo_bottom);
 
   pthread_mutex_unlock(&tes_mex);
 }
@@ -384,7 +384,7 @@ void tes_pop(void)
 
   /* increment fifo bottom */
   tes_fifo_bottom = (tes_fifo_bottom + 1) % TES_FIFO_DEPTH;
-  bprintf(warning, "TES_FIFO: %i:%i", tes_fifo_top, tes_fifo_bottom);
+//  bprintf(warning, "TES_FIFO: %i:%i", tes_fifo_top, tes_fifo_bottom);
 
   pthread_mutex_unlock(&tes_mex);
 }
