@@ -630,6 +630,7 @@ static void StoreData(int write_slow)
   static struct NiosStruct* snrPss5Addr;
   static struct NiosStruct* snrPss6Addr;
   static struct NiosStruct* azPssAddr;
+  static struct NiosStruct* sigmaPssAddr;
   static struct NiosStruct* azSunAddr;
   static struct NiosStruct* elSunAddr;
 
@@ -756,6 +757,7 @@ static void StoreData(int write_slow)
     snrPss5Addr = GetNiosAddr("snr_pss5");
     snrPss6Addr = GetNiosAddr("snr_pss6");
     azPssAddr = GetNiosAddr("az_pss");  // evolved az
+    sigmaPssAddr = GetNiosAddr("sigma_pss");
 
     svetoLenAddr = GetNiosAddr("sveto_len");
     slewVetoAddr = GetNiosAddr("slew_veto");
@@ -899,6 +901,8 @@ static void StoreData(int write_slow)
   WriteData(snrPss6Addr, PointingData[i_point].pss6_snr * 1000., NIOS_QUEUE);
   WriteData(azPssAddr, (PointingData[i_point].pss_az +
                       CommandData.pss_az_trim) * DEG2I, NIOS_QUEUE);
+  WriteData(sigmaPssAddr,
+      (unsigned int)(PointingData[i_point].pss_sigma * DEG2I), NIOS_QUEUE);
   /********** SIP GPS Data **********/
   WriteData(latSipAddr, (int)(SIPData.GPSpos.lat*DEG2I), NIOS_QUEUE);
   WriteData(lonSipAddr, (int)(SIPData.GPSpos.lon*DEG2I), NIOS_QUEUE);

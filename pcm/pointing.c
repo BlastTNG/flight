@@ -1136,6 +1136,7 @@ void Pointing(void)
   PointingData[point_index].dgps_roll = dgps_roll;
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
   PointingData[point_index].pss_az = PSSAz.angle;
+  PointingData[point_index].pss_sigma = sqrt(PSSAz.varience + PSSAz.sys_var);
 
   /********************/
   /* Set Manual Trims */

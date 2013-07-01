@@ -465,7 +465,7 @@ struct ChannelStruct SlowChannels[] = {
   {"accel_max_az",    'w', LOOP2, 31,      100.0/65535.0,             0.0, 'u', U_NONE},
   {"cal_off_pss6",    'w', LOOP2, 32,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   {"cal_d_pss1",      'w', LOOP2, 33,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
-  /* LOOP2 34 is fast */
+  {"sigma_pss",       'w', LOOP2, 34,            I2DEG,               0.0, 'u', U_NONE},  
   {"cal_d_pss2",      'w', LOOP2, 35,       40.0/65536.0,             0.0, 's', U_TRIM_DEG},
   {"offset_ofpch_gy",  'w',LOOP2, 36,      1.0/32768.0,             0.0, 's', U_V_DPS},
   {"offset_ofroll_gy",'w',LOOP2, 37,      1.0/32768.0,             0.0, 's', U_V_DPS},

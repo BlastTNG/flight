@@ -218,6 +218,7 @@ struct PointingDataStruct {
   double pss5_snr;
   double pss6_snr;
   double pss_az;  //degrees
+  double pss_sigma;
   double v_az; // dps
 };
 
