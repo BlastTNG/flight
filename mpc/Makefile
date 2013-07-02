@@ -54,21 +54,16 @@ endif
 ifeq (${MAS_VAR},)
 $(warning *********************************************)
 $(warning MAS_VAR not set; unable to link against MAS)
-$(warning MPC will only be able to run in FAKE MAS mode)
 $(warning *********************************************)
-FAKE_MAS=-DFAKE_MAS
-MAS_SCRIPT=/
-MAS_DATA_ROOT=/
-MAS_O =
+$(error Cannot continue)
 else
 MAS_SCRIPT=$(shell ${MAS_VAR} --script-dir)
 MAS_DATA_ROOT=$(shell ${MAS_VAR} --data-root)
 MAS_LIBS=$(shell ${MAS_VAR} --libs) -Wl,-rpath \
 				 -Wl,$(shell ${MAS_VAR} --prefix)/lib
 MAS_INC=$(shell ${MAS_VAR} --cflags)
-MAS_O = mas.o
 endif
-MAS_DEFS=${FAKE_MAS} -DMAS_DATA_ROOT=\"${MAS_DATA_ROOT}\" \
+MAS_DEFS=-DMAS_DATA_ROOT=\"${MAS_DATA_ROOT}\" \
 				 -DMAS_SCRIPT=\"${MAS_SCRIPT}\"
 
 ########################################################
@@ -95,7 +90,7 @@ LOCAL_HEADERS = mpc.h mce_frame.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
-LOCAL_OBJS = data_mode.o fake.o frame.o ${MAS_O} meta.o mpc.o task.o
+LOCAL_OBJS = data_mode.o frame.o mas.o meta.o mpc.o task.o
 
 ########################################################
 # Run the sanity checks and prepare the build system

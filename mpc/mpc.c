@@ -60,9 +60,6 @@ static int sock;
 /* The number of the attached MCE */
 int nmce = 0;
 
-/* Are we running in fake mode */
-int fake;
-
 /* The current MCE data mode */
 int data_mode = -1;
 
@@ -269,73 +266,42 @@ static int nmce_from_ip(void)
   return (addr >> 24) - 80;
 }
 
-/* Figure out which MCE we're attached to, also whether we're running in fake
- * mode */
-static void get_nmce(int argc, const char **argv)
+/* Figure out which MCE we're attached to */
+static void get_nmce(void)
 {
-  int i;
+  int n;
   char array_id[1024] = {'x', 0, 0};
 
-#ifdef FAKE_MAS
-  fake = 1;
-#else
-  fake = 0;
-#endif
+  /* get the MCE number from the IP address. */
+  nmce = nmce_from_ip();
 
-  /* Look for "fake" on the command line */
-  for (i = 1; i < argc; ++i) {
-    if (strncmp(argv[i], "fake", 4) == 0) {
-      fake = 1;
-      if (argv[i][4] == '=') {
-        nmce = argv[i][5] - '0';
-        if (nmce < 0 || nmce > 5) {
-          bprintf(warning, "Ignoring bad fake MCE number on command line.\n");
-          nmce = 0;
-        }
-      }
-      break;
-    }
+  const char *file = MAS_DATA_ROOT "/array_id";
+  FILE *stream = fopen(file, "w");
+
+  if (stream == NULL) {
+    berror(err, "Unable to open array ID file: %s", file);
+    goto BAD_ARRAY_ID;
   }
 
-  /* figure out which MCE we're attached to via the IP address */
-  if (!fake) {
-    int n;
-    /* get the MCE number from the IP address. */
-    nmce = nmce_from_ip();
+  if (nmce == -1) {
+    bputs(warning, "Using 'default' configuration and running as MCE0");
+    nmce = 0;
+    strcpy(array_id, "default");
+  } else 
+    array_id[1] = '0' + nmce;
 
-    const char *file = MAS_DATA_ROOT "/array_id";
-    FILE *stream = fopen(file, "w");
+  n = fprintf(stream, "%s\n", array_id);
 
-    if (stream == NULL) {
-      berror(err, "Unable to open array ID file: %s", file);
-      goto BAD_ARRAY_ID;
-    }
-
-    if (nmce == -1) {
-      bputs(warning, "Using 'default' configuration and running as MCE0");
-      nmce = 0;
-      strcpy(array_id, "default");
-    } else 
-      array_id[1] = '0' + nmce;
-
-    n = fprintf(stream, "%s\n", array_id);
-
-    if (n < 0) {
-      berror(err, "Can't write array id");
+  if (n < 0) {
+    berror(err, "Can't write array id!");
 BAD_ARRAY_ID:
-      if (nmce == -1)
-        nmce = 0;
-      bprintf(err, "Reverting to FAKE MCE");
-      fake = 1;
-    }
-    fclose(stream);
+    if (nmce == -1)
+      nmce = 0;
+    bprintf(fatal, "Unable to find MCE.");
   }
+  fclose(stream);
 
-  if (fake) {
-    bprintf(info, "Running FAKE MCE #%i", nmce);
-  } else {
-    bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
-  }
+  bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
 }
 
 /* Send a TES data packet */
@@ -379,7 +345,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
   }
 }
 
-int main(int argc, const char **argv)
+int main(void)
 {
   int port, type;
   ssize_t n;
@@ -412,10 +378,10 @@ int main(int argc, const char **argv)
     bprintf(fatal, "Unable to bind port.");
 
   /* Figure out our MCE number and check for fake mode */
-  get_nmce(argc, argv);
+  get_nmce();
 
   /* create the threads */
-  pthread_create(&data_thread, NULL, fake ? fake_data : mas_data, NULL);
+  pthread_create(&data_thread, NULL, mas_data, NULL);
   pthread_create(&task_thread, NULL, task, NULL);
 
   /* main loop */
