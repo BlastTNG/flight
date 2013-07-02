@@ -60,7 +60,7 @@ struct MagInfoStruct {
 void Magnetometer()
 {
   nameThread("Mag");
-  
+  int attempts = 0;
   /* initialize values in maginfo structure */
   maginfo.init = 0;
 
@@ -74,9 +74,11 @@ void Magnetometer()
   maginfo.open = 0;
   while (maginfo.open == 0) {
     if ((fd = open(MAGCOM, O_RDWR | O_NOCTTY)) < 0) {
+      attempts++;
       usleep(20000);
     } else {
       maginfo.open = 1;
+      bprintf(info,"open on attempt #%i",attempts);
     }
   }
 

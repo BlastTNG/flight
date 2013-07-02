@@ -467,6 +467,7 @@ void WatchDGPS()
   static struct BiPhaseStruct* dgpsTimeAddr;
   nameThread("dGPS");
 
+  int attempts = 0;
   /* initialize values in dgpsinfo structure */
   dgpsinfo.init = 0;
 
@@ -580,9 +581,11 @@ void WatchDGPS()
   while (dgpsinfo.open == 0) {
     //if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY | O_NDELAY)) < 0) {
     if ((fd = open(GPSCOM1, O_RDWR | O_NOCTTY)) < 0) {
+      attempts++;
       usleep(20000);
     } else {
       dgpsinfo.open = 1;
+      bprintf(info,"open on attempt #%i",attempts);
     }
   }
 
