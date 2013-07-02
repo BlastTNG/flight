@@ -78,7 +78,7 @@ void Magnetometer()
       usleep(20000);
     } else {
       maginfo.open = 1;
-      bprintf(info,"open on attempt #%i",attempts);
+      if (attempts>=10) bprintf(info,"open on attempt #%i",attempts);
     }
   }
 

@@ -585,7 +585,7 @@ void WatchDGPS()
       usleep(20000);
     } else {
       dgpsinfo.open = 1;
-      bprintf(info,"open on attempt #%i",attempts);
+      if (attempts>=10) bprintf(info,"open on attempt #%i",attempts);
     }
   }
 
