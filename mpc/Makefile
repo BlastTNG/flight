@@ -84,13 +84,13 @@ SPIDER_ONLY=1
 # Inputs
 #
 
-EXPT_HEADERS = command_list.h command_struct.h mpc_proto.h tes.h
+EXPT_HEADERS = command_list.h command_struct.h mce_counts.h mpc_proto.h tes.h
 SHARED_HEADERS = blast.h command_common.h mputs.h sys.h udp.h
-LOCAL_HEADERS = mpc.h mce_frame.h
+LOCAL_HEADERS = mpc.h mce_frame.h mce_struct.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
-LOCAL_OBJS = data_mode.o frame.o mas.o meta.o mpc.o task.o
+LOCAL_OBJS = data_mode.o frame.o mas.o meta.o mce_struct.o mpc.o task.o
 
 ########################################################
 # Run the sanity checks and prepare the build system
@@ -106,6 +106,50 @@ include ../common/Makefile.shared
 
 all:: mpc
 
+mce_status_g.stamp:
+	mce_status -G > mce_status.g.new
+	@if test -e mce_status.g && diff -q mce_status.g mce_status.g.new; then \
+		echo "mce_status.g is unchanged."; \
+		rm -f mce_status.g.new; \
+	else \
+		echo "regenrated mce_status.g"; \
+		mv -f mce_status.g.new mce_status.g; \
+	fi
+	@touch $@
+
+mce_status.g: mce_status_g.stamp
+	@if test ! -f $@; then \
+		rm -f $<; \
+		$(MAKE) $<; \
+	fi
+
+mce_counts.stamp: mce_counts.h.new
+	@if test -e mce_counts.h.new; then \
+		if test -e ../spider_config/mce_counts.h && \
+		diff -q ../spider_config/mce_counts.h mce_counts.h.new; then \
+			echo "mce_counts.h is unchanged."; \
+			rm -f mce_counts.h.new; \
+		else \
+			echo "regenrated mce_counts.h"; \
+			mv -f mce_counts.h.new ../spider_config/mce_counts.h; \
+		fi; \
+	fi
+	@touch $@
+
+MCE_STATUS_STUFF=mce_struct.c mce_counts.h.new ../spider_config/mce_derived.inc
+
+../spider_config/mce_counts.h: mce_counts.stamp
+	@if test ! -f $@; then \
+		rm -f $<; \
+		$(MAKE) $<; \
+	fi
+
+${MCE_STATUS_STUFF}: mce_struct.stamp
+
+mce_struct.stamp: mce_status.g make_mce_struct
+	./make_mce_struct < $< || ( rm -f ${MCE_STATUS_STUFF}  && exit 1 )
+	@touch $@
+
 ../common/Makefile.shared:
 	@echo "ERROR: **************************************************************"
 	@echo "Common build files not found; unable to continue.  Try:"
@@ -115,6 +159,8 @@ all:: mpc
 clean:
 	rm -f mpc
 	rm -f *.o
+	rm -f mce_status.g mce_status.g.stamp
+	rm -f ${MCE_STATUS_STUFF}
 
 mpc: $(OBJS)
 	$(CC) $(LDFLGS) $(CFLAGS) $(OBJS) $(LDLIBS) -o mpc

@@ -21,6 +21,7 @@
 #include "mputs.h"
 #include "blast.h"
 #include "sys.h"
+#include "mce_struct.h"
 #include <mce_library.h>
 #include <mce/data_ioctl.h>
 #include <unistd.h>
@@ -76,7 +77,13 @@ static int mas_write_block(const char *card, const char *block, uint32_t *data,
   return 0;
 }
 
-/* read a block from the MCE; returns non-zero on error */
+/* read a block by number from the MCE; returns non-zero on error */
+static int mas_read_block_by_id(int card, int block, uint32_t *data, size_t num)
+{
+  return 1;
+}
+
+/* read a block by name from the MCE; returns non-zero on error */
 static int mas_read_block(const char *card, const char *block, uint32_t *data,
     size_t num)
 {
@@ -195,10 +202,21 @@ static int __attribute__((format(printf,1,2))) mcecmd_write(const char *fmt,
   return ret;
 }
 
-static long acq_time;
+/* a big old array of block data */
+static uint16_t *mce_stat[0xE0][0xB];
+
+static long acq_time; /* for filenames */
+
 static int mce_status(void)
 {
-  /* hmmm... */
+  int i;
+  acq_time = (long)time(NULL);
+
+  /* mce status fun */
+  for (i = 0; mstat_phys[i].c[0]; ++i) {
+
+  }
+  return 1;
 }
 static int acq_conf(void)
 {
