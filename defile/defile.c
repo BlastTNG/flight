@@ -68,7 +68,7 @@ enum {CFG_AutoReconnect, CFG_CompressedOutput, CFG_Daemonise, CFG_FlakeySource,
   CFG_InputSource, CFG_OutputCurFileName, CFG_OutputDirectory,
   CFG_OutputDirFile, CFG_Persistent, CFG_PidFile, CFG_Quiet,
   CFG_RemoteInputSource, CFG_RemountPath, CFG_RemountedSource, CFG_ResumeMode,
-  CFG_SpecFile, CFG_SuffixLength, CFG_WriteCurFile};
+  CFG_SpecFile, CFG_SuffixLength, CFG_WriteCurFile, CFG_ExtraFormat};
 
 struct {
   union {
@@ -81,6 +81,7 @@ struct {
   {{NULL}, 'b', "AutoReconnect"},
   {{NULL}, 'b', "CompressedOutput"},
   {{NULL}, 'b', "Daemonise"},
+  {{NULL}, 'b', "ExtraFormat"},
   {{NULL}, 'b', "FlakeySource"},
   {{NULL}, 's', "InputSource"},
   {{NULL}, 's', "OutputCurFileName"},
@@ -191,6 +192,7 @@ void LoadDefaultConfig(void)
         case CFG_RemountedSource:
         case CFG_ResumeMode:
         case CFG_WriteCurFile:
+        case CFG_ExtraFormat:
           options[i].value.as_int = 0;
         case CFG_InputSource: /* these are null by default */
         case CFG_OutputDirFile:
@@ -224,6 +226,7 @@ struct rc_struct InitRcStruct()
     .curfile_val       = NULL,
     .daemonise         = options[CFG_Daemonise].value.as_int,
     .dest_dir          = options[CFG_OutputDirectory].value.as_string,
+    .extra_format      = options[CFG_ExtraFormat].value.as_int,
     .flakey_source     = options[CFG_FlakeySource].value.as_int,
     .force_quenya      = 0,
     .force_stdio       = options[CFG_Daemonise].value.as_int,
@@ -566,6 +569,7 @@ void PrintUsage(void)
       "\n     --no-curfile       don't write a curfile. (default)"
       "\n     --no-compress      don't compress the output. (default)"
       "\n     --no-daemonise     don't daemonise. (default)"
+      "\n     --no-extra-format  don't add extra derived fields (defaut)"
       "\n     --no-flakey-source don't assume the input file is on a flakey"
       "\n                          filesystem. (default)"
       "\n     --no-persist       exit on reaching the end of the input stream. "
@@ -599,6 +603,7 @@ void PrintUsage(void)
       "\n                          SIZE should be an integer between 0 "
       "and %i. (default=%i)"
       "\n     --verbose          output status information to the tty (default)"
+      "\n  -x --extra-format     add extra derived fields to the dirfile"
 #ifdef HAVE_LIBZ
       "\n  -z --gzip             gzip compress the output dirfile.  Incompatible "
       "with"
@@ -655,6 +660,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           rc->output_curfile = bstrdup(fatal, &argv[i][15]);
         } else if (!strcmp(argv[i], "--daemonise"))
           rc->daemonise = 1;
+        else if (!strcmp(argv[i], "--extra-format"))
+          rc->extra_format = 1;
         else if (!strcmp(argv[i], "--flakey-source"))
           rc->flakey_source = 1;
         else if (!strcmp(argv[i], "--force"))
@@ -680,6 +687,8 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
           rc->write_curfile = 0;
         else if (!strcmp(argv[i], "--no-daemonise"))
           rc->daemonise = 0;
+        else if (!strcmp(argv[i], "--no-extra-format"))
+          rc->extra_format = 0;
         else if (!strcmp(argv[i], "--no-flakey-source"))
           rc->flakey_source = 0;
         else if (!strcmp(argv[i], "--no-persist"))
@@ -778,6 +787,9 @@ void ParseCommandLine(int argc, char** argv, struct rc_struct* rc)
                 shortarg[nshortargs].position = i - 1;
                 shortarg[nshortargs++].option = 's';
               }
+              break;
+            case 'x':
+              rc->extra_format = 1;
               break;
 #ifdef HAVE_LIBZ
             case 'z':

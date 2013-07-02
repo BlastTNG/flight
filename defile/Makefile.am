@@ -32,7 +32,8 @@ defile_spider_SOURCES = $(defile_blast_SOURCES)
 CFLAGS = -Wall -O3
 AM_CPPFLAGS = -I../common -D__DEFILE__ -DLOCALSTATEDIR=\"${localstatedir}\" \
 				 -DSVNREV=\"${SVNREV}\" -g
-defile_blast_CPPFLAGS = -DDAS_CARDS=12 $(AM_CPPFLAGS)
+defile_blast_CPPFLAGS = -DDAS_CARDS=12 $(AM_CPPFLAGS) -D__BLAST__
+defile_spider_CPPFLAGS = $(AM_CPPFLAGS) -D__SPIDER__
 
 include ../common/Makefile.update
 

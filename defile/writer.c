@@ -645,6 +645,16 @@ void InitialiseDirFile(int reset, unsigned long offset)
 
   WriteFormatFile(fd, atoi(gpb), offset / FAST_PER_SLOW);
 
+#ifdef __SPIDER__
+  if (rc.extra_format) {
+    sprintf(gpb, "/INCLUDE /data/etc/spider/format.mce_mplex\n");
+    if (write(fd, gpb, strlen(gpb)) < 0)
+      berror(err, "Error writing to format file\n");
+  }
+#else
+  /* no extra format for BLAST */
+#endif
+
   if (close(fd) < 0)
     berror(fatal, "Error while closing format file");
 
