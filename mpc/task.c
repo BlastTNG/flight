@@ -146,6 +146,13 @@ void *task(void *dummy)
           }
           break;
         case st_acqcnf:
+          /* "mce status" */
+          if (dt_wait(dt_status)) {
+            comms_lost = 1;
+          } else {
+            state |= st_acqcnf;
+            start_tk = st_idle;
+          }
           /* acq config */
           if (dt_wait(dt_acqcnf)) {
             comms_lost = 1;
@@ -164,6 +171,17 @@ void *task(void *dummy)
       }
     } else if (stop_tk != st_idle) { /* handle stop task requests */
       switch (stop_tk) {
+        case st_idle:
+          break;
+        case st_mcecmd:
+          /* stop mce_cmd */
+          if (dt_wait(dt_mcecmd_fini)) {
+            /* ...? */
+          } else {
+            state &= ~st_mcecmd;
+            stop_tk = st_idle;
+          }
+          break;
         case st_acqcnf:
           /* end multiacq */
           if (dt_wait(dt_multiend)) {

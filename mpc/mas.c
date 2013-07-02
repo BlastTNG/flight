@@ -195,25 +195,29 @@ static int __attribute__((format(printf,1,2))) mcecmd_write(const char *fmt,
   return ret;
 }
 
+static long acq_time;
+static int mce_status(void)
+{
+  /* hmmm... */
+}
 static int acq_conf(void)
 {
-  long t = (long)time(NULL);
-
   /* restart the servo */
   uint32_t one = 1;
   mas_write_block("rca", "flx_lp_init", &one, 1);
 
   /* start a multiacq */
   mcecmd_write("acq_multi_begin");
-  mcecmd_write("acq_config_fs /data0/mce/current_data/mpc_%li rcs 100000", t);
+  mcecmd_write("acq_config_fs /data0/mce/current_data/mpc_%li rcs 100000",
+      acq_time);
 
   if (state & st_drive1)
     mcecmd_write("acq_config_fs /data1/mce/current_data/mpc_%li rcs 100000",
-        t);
+        acq_time);
 
   if (state & st_drive2)
     mcecmd_write("acq_config_fs /data2/mce/current_data/mpc_%li rcs 100000",
-        t);
+        acq_time);
 
   return 0;
 }
@@ -308,12 +312,15 @@ void *mas_data(void *dummy)
           comms_lost = 1;
         data_tk = dt_idle;
         break;
+      case dt_status:
+        dt_error = mce_status();
+        break;
       case dt_acqcnf:
         dt_error = acq_conf();
         data_tk = dt_idle;
         break;
       case dt_startacq:
-        dt_error = mcecmd_write("acq_go 1000");
+        dt_error = mcecmd_write("acq_go 1000000000"); /* 100 days */
         data_tk = dt_idle;
         break;
       case dt_fakestop:
