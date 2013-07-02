@@ -92,6 +92,10 @@ EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
 LOCAL_OBJS = data_mode.o frame.o mas.o meta.o mce_struct.o mpc.o task.o
 
+# We don't acutally need this, but it causes Makefile.shared to require
+# spider_etc, which is necessary to build this file.
+ETC_DATA=format.mce_mplex
+
 ########################################################
 # Run the sanity checks and prepare the build system
 #
@@ -136,7 +140,7 @@ mce_counts.stamp: mce_counts.h.new
 	fi
 	@touch $@
 
-MCE_STATUS_STUFF=mce_struct.c mce_counts.h.new ../spider_config/mce_derived.inc
+MCE_STATUS_STUFF=mce_struct.c mce_counts.h.new
 
 ../spider_config/mce_counts.h: mce_counts.stamp
 	@if test ! -f $@; then \
