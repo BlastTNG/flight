@@ -5,40 +5,40 @@
 32
 
 # Then there's a list of fields, one per line.  Fields are indicated by a 
-# string of the form m#c##r## indicating MCE, column and row number.  Column
-# and row are zero padded, and all three count from zero.  Excess fields are
+# string of the form x#c##r## indicating MCE, column and row number.  Column
+# and row are zero padded, and all three count from one.  Excess fields are
 # ignored.  Too few fields is an error.
 
-m0c00r01
-m0c01r01
-m0c02r01
-m0c03r01
-m0c04r01
-m0c05r01
-m0c06r01
-m0c07r01
-m0c08r01
-m0c09r01
-m0c10r01
-m0c11r01
-m0c12r01
-m0c13r01
-m0c14r01
-m0c15r01
+x1c01r01
+x1c01r01
+x1c02r01
+x1c03r01
+x1c04r01
+x1c05r01
+x1c06r01
+x1c07r01
+x1c08r01
+x1c09r01
+x1c10r01
+x1c11r01
+x1c12r01
+x1c13r01
+x1c14r01
+x1c15r01
 
-m0c00r09
-m0c01r09
-m0c02r09
-m0c03r09
-m0c04r09
-m0c05r09
-m0c06r09
-m0c07r09
-m0c08r09
-m0c09r09
-m0c10r09
-m0c11r09
-m0c12r09
-m0c13r09
-m0c14r09
-m0c15r09
+x0c01r09
+x0c01r09
+x0c02r09
+x0c03r09
+x0c04r09
+x0c05r09
+x0c06r09
+x0c07r09
+x0c08r09
+x0c09r09
+x0c10r09
+x0c11r09
+x0c12r09
+x0c13r09
+x0c14r09
+x0c15r09

@@ -124,8 +124,8 @@ int read_bset(int i, struct bset *set)
     } else { /* bolo */
       int mce;
 
-      /* parse "m#c##r##\n" */
-      if (line[0] != 'm' || line[2] != 'c' || line[5] != 'r' || line[8] != '\n')
+      /* parse "x#c##r##\n" */
+      if (line[0] != 'x' || line[2] != 'c' || line[5] != 'r' || line[8] != '\n')
       {
         bprintf(err, "Set: Bad bolometer number on line %i of BSET%03i",
             lineno, i);
@@ -135,9 +135,9 @@ int read_bset(int i, struct bset *set)
        * yes ",m" produces the same number as "21" ... DON'T DO THAT */
 
       mce = line[1] - '0';
-      new_set.v[c] = TESNumber(mce,
-          (line[3] - '0') * 10 + line[4] - '0',
-          (line[6] - '0') * 10 + line[7] - '0');
+      new_set.v[c] = TESNumber(mce - 1,
+          (line[3] - '0') * 10 + line[4] - '0' - 1,
+          (line[6] - '0') * 10 + line[7] - '0' - 1);
 
       if (new_set.v[c] < 0) {
         bprintf(err, "Set: Bad bolometer number on line %i of BSET%03i",

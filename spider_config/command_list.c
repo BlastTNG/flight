@@ -309,13 +309,14 @@ const struct scom scommands[N_SCOMMANDS] = {
    "Turn off Theo's SFT Bottom Heater. Disable pulse", GR_THEO_HEAT},
 
   //make better use of unused groups
-  {COMMAND(pull_cmb_pin), "????", GR_CMB},
+  {COMMAND(pull_cmb_pin), "????", GR_CMB | CONFIRM},
   {COMMAND(global_thermonuclear_war), "The only winning move is not to play.",
-    GR_CMB},
+    GR_CMB | CONFIRM},
 
   {COMMAND(mpc_ping), "Ping the MCCs", MCECMD | GR_MCE},
   {COMMAND(mcc_wdog_enable), "Enable pcm watchdog of MCCs", GR_MCE | CONFIRM},
   {COMMAND(mcc_wdog_disable), "Disable pcm watchdog of MCCs", GR_MCE | CONFIRM},
+  {COMMAND(get_superslow), "Re-fetch the super-slow data from MPC", GR_MCE},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
@@ -1137,7 +1138,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
     }
   },
-  {COMMAND(stop_acq), "Stop data acquisition", GR_MCE | MCECMD, 1,
+  {COMMAND(stop_acq), "Stop data acquisition", GR_MCE | MCECMD | CONFIRM, 1,
     {
       {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
     }

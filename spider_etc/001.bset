@@ -5,14 +5,14 @@
 7
 
 # Then there's a list of fields, one per line.  Fields are indicated by a 
-# string of the form m#c##r## indicating MCE, column and row number.  Column
-# and row are zero padded, and all three count from zero.  Excess fields are
+# string of the form x#c##r## indicating MCE, column and row number.  Column
+# and row are zero padded, and all three count from one.  Excess fields are
 # ignored.  Too few fields is an error.
 
-m0c01r01
-m0c01r01
-m0c02r02
-m0c02r03
-m3c02r03
-m5c01r10
-m2c11r23
+x1c01r01
+x1c01r01
+x1c02r02
+x1c02r03
+x4c02r03
+x6c01r10
+x3c11r23

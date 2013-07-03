@@ -52,7 +52,7 @@ struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
 
 /* super slow data */
 uint32_t mce_param[N_MCE_STAT * NUM_MCE];
-static int request_ssdata = 1; /* start-up request */
+int request_ssdata = 1; /* start-up request */
 static int mceserv_InCharge; /* to look for edges */
 
 /* TES reconstruction buffer */
@@ -103,7 +103,7 @@ static void ForwardNotices(int sock)
 {
   static int last_dmb = 0;
   static int last_divisor = -1;
-  int this_divisor = CommandData.bbcExtFrameRate;
+  int this_divisor = CommandData.bbcIsExt ? CommandData.bbcExtFrameRate : 1;
   int this_turnaround = CommandData.pointing_mode.is_turn_around;
   size_t len;
 

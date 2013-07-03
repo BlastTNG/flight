@@ -153,7 +153,7 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
 
   CommandData.mcecmd_index = INC_INDEX(index);
 
-  bprintf(info, "Queued %s command #%i for transfer to MPC.\n",
+  bprintf(info, "Sent %s command #%i to MPC.\n",
       rvalues ? "multi" : "single", command);
 
   return 1;
@@ -936,6 +936,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
    case mcc_wdog_disable:
       CommandData.mcc_wdog = 0;
+      break;
+   case get_superslow:
+      request_ssdata = 1;
       break;
 
     case pull_cmb_pin:
@@ -2333,7 +2336,7 @@ void InitCommandData()
   //TODO add commands to set frame rate
   //TODO add ability to auto-set internal rate based on sync rate
   CommandData.bbcIntFrameRate = 104;    //in ADC samples
-  CommandData.bbcExtFrameRate = 2;    //in sync box frames
+  CommandData.bbcExtFrameRate = 1;    //in sync box frames
   CommandData.bbcExtFrameMeas = 0;
   CommandData.bbcIsExt = 0 /*1*/;
   CommandData.bbcAutoExt = 0 /*1*/;

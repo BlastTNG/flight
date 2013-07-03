@@ -126,7 +126,7 @@ enum singleCommand {
   mcc4_on,           mcc4_off,          mcc4_cycle,
   mcc5_on,           mcc5_off,          mcc5_cycle,
   mcc6_on,           mcc6_off,          mcc6_cycle,
-  mpc_ping, /* MPC test command */
+  mpc_ping,          get_superslow,
   mcc_wdog_enable,   mcc_wdog_disable, 
   xyzzy,
   N_SCOMMANDS /* SENTINAL: this must be the last thing in this list */
@@ -177,9 +177,7 @@ enum multiCommand {
   el_pulse,           hwp_halt,          hwp_phase,        el_rel_move,
   hwp_bias_on,        hwp_bias_off,     write_row_len,     write_num_rows,
   write_free_run,     bset,              set_piv_mode,
-  /* start MCE block */
   data_mode_bits,    start_acq,        reset_acq,         stop_acq,
-  /* end MCE block */
   plugh,
   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
   sched_packet = 0xff   //not really a command, more of a placeholder
