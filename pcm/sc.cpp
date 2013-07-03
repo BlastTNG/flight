@@ -219,6 +219,7 @@ void cameraFields(int which)
   static NiosStruct* ExpIntAddr[3];
   static NiosStruct* ExpTimeAddr[3];
   static NiosStruct* FocResAddr[3];
+  static NiosStruct* FocRngAddr[3];
   static NiosStruct* MoveTolAddr[3];
   static NiosStruct* MaxBlobAddr[3];
   static NiosStruct* GridAddr[3];
@@ -260,6 +261,7 @@ void cameraFields(int which)
     ExpIntAddr[which] = GetSCNiosAddr("exp_int",which);
     ExpTimeAddr[which] = GetSCNiosAddr("exp_time",which);
     FocResAddr[which] = GetSCNiosAddr("foc_res",which);
+    FocRngAddr[which] = GetSCNiosAddr("foc_rng",which);
     MoveTolAddr[which] = GetSCNiosAddr("move_tol",which);
     MaxBlobAddr[which] = GetSCNiosAddr("maxblob",which);
     GridAddr[which] = GetSCNiosAddr("grid",which);
@@ -300,6 +302,7 @@ void cameraFields(int which)
   WriteData(ExpIntAddr[which], CommandData.StarCam[which].expInt, NIOS_QUEUE);
   WriteData(ExpTimeAddr[which], CommandData.StarCam[which].expTime, NIOS_QUEUE);
   WriteData(FocResAddr[which], CommandData.StarCam[which].focusRes, NIOS_QUEUE);
+  WriteData(FocRngAddr[which], CommandData.StarCam[which].focusRng, NIOS_QUEUE);
   WriteData(MoveTolAddr[which], CommandData.StarCam[which].moveTol, NIOS_QUEUE);
   WriteData(MaxBlobAddr[which], CommandData.StarCam[which].maxBlobs, NIOS_QUEUE);
   WriteData(GridAddr[which], CommandData.StarCam[which].grid, NIOS_QUEUE);

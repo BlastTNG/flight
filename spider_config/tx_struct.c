@@ -484,7 +484,7 @@ struct ChannelStruct SlowChannels[] = {
   {"mapsigma_g",       'w', LOOP2, 46,         1.0/10.0,  0.0, 'u',     U_NONE},
   {"size_el_step",     'w', LOOP2, 47,      1.0/65536.0,  0.0, 'u',    U_P_DEG},
   {"n_el_steps",       'w', LOOP2, 48,    100.0/65536.0,  0.0, 'u',     U_NONE},
-  /* LOOP2 49 is unused */
+  {"foc_rng_g",        'w', LOOP2, 49,              1.0,  0.0, 'u',     U_NONE},
   {"cal_d_pss5",       'w', LOOP2, 50,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},
   /* LOOP2 51-54 are wide fast */
   {"az_mag",           'w', LOOP2, 56,            I2DEG,  0.0, 'u',    U_D_DEG},
@@ -497,7 +497,8 @@ struct ChannelStruct SlowChannels[] = {
 
   {"v_relmove_port",   'w', LOOP3,  0,     0.2/65536.0,   0.0, 'u',    U_V_DPS},
   {"v_relmove_stbd",   'w', LOOP3,  1,     0.2/65536.0,   0.0, 'u',    U_V_DPS},
-  /* LOOP3, 2-3 are unused */
+  {"foc_rng_b",        'w', LOOP3,  2,              1.0,  0.0, 'u',     U_NONE},
+  {"foc_rng_u",        'w', LOOP3,  3,              1.0,  0.0, 'u',     U_NONE},
   /* LOOP3 4-5 are wide */
   {"t_cpu_i_flc",    'w', LOOP3,  6,               0.01,             0.0, 'u', U_T_C},
   {"bbc_fifo_size",'w', LOOP3,  7,             1./624,             0.0, 'u', U_NONE},
