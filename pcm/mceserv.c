@@ -214,8 +214,8 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     tes_buffer[0].frameno = frameno_in;
   } else if (tes_buffer[n].present & MCE_PRESENT(mce)) {
     /* discard duplicates */
-    bprintf(info, "Discarding duplicate data frame number 0x%08X from MCE%i",
-        tes_buffer[n].frameno, mce);
+    bprintf(info, "Duplicate frame# 0x%08X from MCE%i", tes_buffer[n].frameno,
+        mce);
     return bad_bset_count;
   }
 
@@ -251,11 +251,14 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
   if (mce < 0) /* bad packet */
     return;
 
-  bank = mce / 2;
+  /* These MCE numbers are zero based */
+  bank =
+    (mce == 0 || mce == 5) ? 0 :  /* MCE1 and MCE6 are on bank 0 */
+    ((mce == 1 || mce == 2) ? 1 : /* MCE2 and MCE3 are on bank 1 */
+     2);                          /* MCE4 and MCE5 are on bank 2 */
 
   if (power_cycle) {
-    bprintf(info, "Request from %s/%i to power cycle MCE#%i on power bank %i",
-        peer, port, mce, bank);
+    bprintf(info, "%s/%i req: cycle MCE#%i on bank %i", peer, port, mce, bank);
 
     /* Don't cycle the power if someone else turned it off */
     int mce_is_on = slow_data[mcePowerAddr->index][mcePowerAddr->channel] &
@@ -333,16 +336,13 @@ void *mceserv(void *unused)
         bad_bset_count = insert_tes_data(bad_bset_count, n, udp_buffer, peer,
             port);
         if (bad_bset_count > BAD_BSET_THRESHOLD) {
-          bprintf(warning,
-              "Resending BSet after %i bad TES packets from client(s).",
-              bad_bset_count);
+          bprintf(warning, "Resending BSet: %i bad packets", bad_bset_count);
           sent_bset = -1; /* resend bset */
           bad_bset_count = 0;
         }
         break;
       default:
-        bprintf(err, "Unintentionally dropping unhandled packet of type 0x%X\n",
-            type);
+        bprintf(err, "Dropping packet with bad type 0x%X\n", type);
     }
   }
 
