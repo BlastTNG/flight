@@ -385,9 +385,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Az Scan Accel (deg/s^2)",   0,  2, 'f', "ACCEL_AZ"},
       {"Az MAX Acceleration (deg/s^2)",  0.0, 100.0, 'f', "ACCEL_MAX_AZ"},
-      {"Number of half-scans per el microstep", 1, 100, 'i', "NONE"},
-      {"El microstep size (deg)", 0.0, 1.0, 'f', "NONE"},
-      {"Total number of el microsteps", 1, 100, 'i', "NONE"},
+      {"Number of half-scans per el microstep", 1, 100, 'i', "N_SCAN_PER_STEP"},
+      {"El microstep size (deg)", 0.0, 1.0, 'f', "SIZE_EL_STEP"},
+      {"Total number of el microsteps", 1, 100, 'i', "N_EL_STEPS"},
       {"Az Overshoot Band (deg)", 0.0, 30.0, 'f', "BAND_AZ"},
       {"Az Time Delay (frames)",     0.0,  10.0, 'f', "DELAY_AZ"}
     }
@@ -452,10 +452,10 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(el_rel_move), "El relative move, separate for each side", 
    GR_POINT, 4,
     {
-      {"port distance (deg)", -1.0, 1.0, 'f', "NONE"},
-      {"starboard distance (deg)", -1.0, 1.0, 'f', "NONE"},
-      {"port speed (deg/s)", 0.0, 0.2, 'f', "NONE"},
-      {"starboard speed (deg/s)", 0.0, 0.2, 'f', "NONE"}
+      {"port distance (deg)", -1.0, 1.0, 'f', "DEL_RELMOVE_PORT"},
+      {"starboard distance (deg)", -1.0, 1.0, 'f', "DEL_RELMOVE_STBD"},
+      {"port speed (deg/s)", 0.0, 0.2, 'f', "V_RELMOVE_PORT"},
+      {"starboard speed (deg/s)", 0.0, 0.2, 'f', "V_RELMOVE_STBD"}
     }
   },
 
