@@ -856,6 +856,7 @@ void WriteMot(int write_slow)
   static struct NiosStruct* step2ElAddr;      // STARBOARD
   static struct NiosStruct* isTurnAroundAddr;
   static struct NiosStruct* modePivAddr;
+  static struct NiosStruct* modeElAddr;
 
   // Used only for Lab Controller tests
   static struct NiosStruct* dac2AmplAddr;
@@ -911,6 +912,7 @@ void WriteMot(int write_slow)
     step2ElAddr = GetNiosAddr("step_2_el");
     isTurnAroundAddr = GetNiosAddr("is_turn_around");
     modePivAddr = GetNiosAddr("mode_piv");
+    modeElAddr = GetNiosAddr("mode_el");
   }
 
   i_point = GETREADINDEX(point_index);
@@ -1085,6 +1087,9 @@ void WriteMot(int write_slow)
 
       /* pivot drive control mode */
       WriteData(modePivAddr, CommandData.pointing_mode.piv_mode, NIOS_QUEUE);
+      
+      /* elevation power control mode */
+      WriteData(modeElAddr, CommandData.power.elmot_auto || (CommandData.power.elmot_is_on<<2), NIOS_QUEUE);
   }
    
   /* Turn Around Flag */

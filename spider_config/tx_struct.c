@@ -667,6 +667,7 @@ struct ChannelStruct SlowChannels[] = {
   {"term_p_rw_piv",    'w', LOOP7, 55,             1.0,             0.0, 's', U_NONE},
   {"term_p_err_piv",   'w', LOOP7, 56,             1.0,             0.0, 's', U_NONE},
   {"mode_piv",      'w', LOOP7, 57,             1.0,             0.0, 'u', U_NONE},
+  {"mode_el",      'w', LOOP7, 58,             1.0,             0.0, 'u', U_NONE},
   
   /* charge controller related channels */
   
@@ -827,7 +828,7 @@ struct ChannelStruct SlowChannels[] = {
   {"vt_rsc",          'r',  ACS1_T1, 3,          CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_mcc_power",    'r',  ACS1_T1, 5,          CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_bsc",          'r',  ACS1_T1, 7,          CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"vt_wd_flc",       'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u', U_T_C},
+  //{"vt_wd_flc",       'r',  ACS1_T1, 9,          CAL16T(1.0, 0.0),         'u', U_T_C}, // free
   {"vt_sc_mot",       'r',  ACS1_T1, 11,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_rw1",          'r',  ACS1_T1, 13,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_rw2",          'r',  ACS1_T1, 15,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -839,7 +840,7 @@ struct ChannelStruct SlowChannels[] = {
   {"vt_elport_mot",   'r',  ACS1_T1, 27,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_elstar_mot",   'r',  ACS1_T1, 29,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_elport_mc",    'r',  ACS1_T1, 31,         CAL16T(1.0, 0.0),         'u', U_T_C},
-  {"vt_elstar_mc",    'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
+  {"vt_ambient1",     'r',  ACS1_T1, 33,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_if1",          'r',  ACS1_T1, 35,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_if2",          'r',  ACS1_T1, 37,         CAL16T(1.0, 0.0),         'u', U_T_C},
   {"vt_pss",          'r',  ACS1_T1, 39,         CAL16T(1.0, 0.0),         'u', U_T_C},
@@ -876,7 +877,7 @@ struct ChannelStruct SlowChannels[] = {
   {"trig_g", 'r',  ACS2_A1, 23,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"trig_b",  'r',  ACS2_A1, 25,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
   {"trig_u", 'r',  ACS2_A1, 27,        CAL16(1.0,          0.0), 'u',  U_V_V}, 
-  {"t_ofpch_gy",    'r',  ACS2_A1, 47,        CAL16(50.0, 0.0),     'u',  U_T_C},
+  //{"t_ofpch_gy",    'r',  ACS2_A1, 47,        CAL16(50.0, 0.0),     'u',  U_T_C}, // not used - free
   {"trig_s_g",'r', ACS2_A1, 51,                1.0,             0.0, 'u', U_NONE},
   {"trig_l_g",'r', ACS2_A1, 52,                1.0,             0.0, 'u', U_NONE},
   {"trig_s_b", 'r', ACS2_A1, 53,                1.0,             0.0, 'u', U_NONE},
@@ -1039,7 +1040,7 @@ struct ChannelStruct FastChannels[] = {
   {"step_2_el",    'w',   ACS2_D, 30,     10000.0/32767.0, -10000.30518509, 'u', U_F_HZ},
   {"el_raw_1_enc", 'r',   ACS2_D, 56,               I2DEG,            ENC1_OFFSET, 'u', U_P_DEG},
   {"el_raw_2_enc", 'r',   ACS2_D, 57,               -I2DEG,           ENC2_OFFSET, 'u', U_P_DEG},
-  {"vel_ofpch_gy",  'r', ACS2_A1, 45,    CAL16(14.9925037, 0.0), 'u', U_V_DPS},  
+  //{"vel_ofpch_gy",  'r', ACS2_A1, 45,    CAL16(14.9925037, 0.0), 'u', U_V_DPS},  // free
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
   {"dps_table",    'w',    LOOP1, 34,           70.0/32767.0,            0.0, 's', U_V_DPS},
 
