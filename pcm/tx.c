@@ -584,6 +584,9 @@ static void StoreData(int write_slow)
   static struct NiosStruct* ra3PAddr, *dec3PAddr;
   static struct NiosStruct* ra4PAddr, *dec4PAddr;
   static struct NiosStruct* azDelayAddr;
+  static struct NiosStruct* nScanPerStepAddr;
+  static struct NiosStruct* sizeElStepAddr;
+  static struct NiosStruct* nElStepsAddr;
 
   static struct NiosStruct* vetoSensorAddr;
 
@@ -777,6 +780,9 @@ static void StoreData(int write_slow)
     ra4PAddr = GetNiosAddr("ra_4_p");
     dec4PAddr = GetNiosAddr("dec_4_p");
     azDelayAddr = GetNiosAddr("delay_az");
+    nScanPerStepAddr = GetNiosAddr("n_scan_per_step");
+    sizeElStepAddr = GetNiosAddr("size_el_step");
+    nElStepsAddr = GetNiosAddr("n_el_steps");
 
     vetoSensorAddr = GetNiosAddr("veto_sensor");
 
@@ -1003,6 +1009,10 @@ static void StoreData(int write_slow)
   WriteData(dec4PAddr, (int)(CommandData.pointing_mode.dec[3] * DEG2I),
       NIOS_QUEUE);
   WriteCalData(azDelayAddr, CommandData.pointing_mode.az_delay, NIOS_QUEUE);
+  WriteCalData(nScanPerStepAddr,CommandData.pointing_mode.Nscans,NIOS_QUEUE);
+  WriteCalData(sizeElStepAddr, CommandData.pointing_mode.el_step, NIOS_QUEUE);
+  WriteCalData(nElStepsAddr, CommandData.pointing_mode.Nsteps, NIOS_QUEUE);
+
 
   sensor_veto = (!CommandData.use_elenc1) |
     /* bit for << 1 unused */

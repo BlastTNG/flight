@@ -392,44 +392,47 @@ struct ChannelStruct SlowChannels[] = {
   // DIOD_A2 and DIOD_A3 49 are wide
  
   /* LOOP1 0-7 are wide */
-  {"g_com_el",     'w', LOOP1,  8,                3.0/65536.0,     0.0, 'u', U_NONE},
-  {"channelset_oth", 'w', LOOP1,  9,                1,             0.0, 'u', U_NONE},
+  {"g_com_el",         'w', LOOP1,  8,      3.0/65536.0,  0.0, 'u',     U_NONE},
+  {"channelset_oth",   'w', LOOP1,  9,                1,  0.0, 'u',     U_NONE},
   /* LOOP1 10-13 are wide */
-  {"foc_res_g", 'w', LOOP1, 17,             1.0,             0.0, 'u', U_NONE},
-  {"status_eth",   'w', LOOP1, 19,                1.0,             0.0, 'u', U_NONE}, // Star camera net status
-  {"timeout_b",      'w', LOOP1, 20,                1.0,             0.0, 'u', U_NONE},
-  {"az_sun",       'w', LOOP1, 21,              I2DEG,             0.0, 'u', U_D_DEG},
-  {"status_flc",   'w', LOOP1, 23,                1.0,             0.0, 'u', U_NONE}, //bitsy_i_am, at_float, schedule, slot_sched
-  {"upslot_sched", 'w', LOOP1, 25,                1.0,             0.0, 'u', U_NONE},  
-  {"t_chip_flc",   'w', LOOP1, 26,               0.01,             0.0, 'u', U_T_C},
-  {"declination_mag",'w', LOOP1, 27,              I2DEG,             0.0, 'u', U_D_DEG}, // magnetic declination
-  {"veto_sensor",  'w', LOOP1, 28,                1.0,             0.0, 'u', U_NONE},
+  {"foc_res_g",        'w', LOOP1, 17,              1.0,  0.0, 'u',     U_NONE},
+  /* status_eth =  star camera net status */
+  {"status_eth",       'w', LOOP1, 19,              1.0,  0.0, 'u',     U_NONE}, 
+  {"timeout_b",        'w', LOOP1, 20,              1.0,  0.0, 'u',     U_NONE},
+  {"az_sun",           'w', LOOP1, 21,            I2DEG,  0.0, 'u',    U_D_DEG},
+  /* status_flc = {bitsy_i_am, at_float, schedule, slot_sched} */
+  {"status_flc",       'w', LOOP1, 23,              1.0,  0.0, 'u',     U_NONE}, 
+  {"upslot_sched",     'w', LOOP1, 25,              1.0,  0.0, 'u',     U_NONE},  
+  {"t_chip_flc",       'w', LOOP1, 26,             0.01,  0.0, 'u',      U_T_C},
+  /* declination_mag = magnetic declination */
+  {"declination_mag",  'w', LOOP1, 27,            I2DEG,  0.0, 'u',    U_D_DEG}, 
+  {"veto_sensor",      'w', LOOP1, 28,              1.0,  0.0, 'u',     U_NONE},
   /* LOOP1 32-33 are wide */
   /* LOOP1 34 is fast */
-  {"timeout_i",      'w', LOOP1, 35,                1.0,             0.0, 'u', U_NONE},
-  {"df_b_flc",    'w', LOOP1, 36,             1./250,             0.0, 'u', U_NONE},
-  {"alt_sip",      'w', LOOP1, 37,                1.0,             0.0, 'u', U_NONE},
+  {"timeout_i",        'w', LOOP1, 35,              1.0,  0.0, 'u',     U_NONE},
+  {"df_b_flc",         'w', LOOP1, 36,           1./250,  0.0, 'u',     U_NONE},
+  {"alt_sip",          'w', LOOP1, 37,              1.0,  0.0, 'u',     U_NONE},
   /* LOOP1 38-41 are wide */
-  {"mapmean_g",'w', LOOP1, 42,                1.0,             0.0, 'u', U_NONE},
-  {"lat_sip",      'w', LOOP1, 45,              I2DEG,             0.0, 's', U_LA_DEG},
-  {"lon_sip",      'w', LOOP1, 46,              I2DEG,             0.0, 's', U_LO_DEG},
-  {"lat_dgps",     'w', LOOP1, 47,              I2DEG,             0.0, 's', U_LA_DEG},
-  {"lon_dgps",     'w', LOOP1, 48,              I2DEG,             0.0, 's', U_LO_DEG},
-  {"alt_dgps",     'w', LOOP1, 49,                1.0,             0.0, 'u', U_ALT_M},
-  {"speed_dgps",   'w', LOOP1, 50,             1./100,             0.0, 's', U_V_KPH},
-  {"dir_dgps",     'w', LOOP1, 51,              I2DEG,             0.0, 'u', U_D_DEG},
-  {"climb_dgps",   'w', LOOP1, 52,             1./100,             0.0, 's', U_V_MPS},
-  {"att_ok_dgps",  'w', LOOP1, 53,                1.0,             0.0, 'u', U_NONE},
-  {"g_p_table",    'w', LOOP1, 54,         1.0/1000.0,             0.0, 'u', U_NONE},
-  {"g_i_table",    'w', LOOP1, 55,        1.0/10000.0,             0.0, 'u', U_NONE},
-  {"g_d_table",    'w', LOOP1, 56,          1.0/100.0,             0.0, 'u', U_NONE},
-  {"n_sat_dgps",   'w', LOOP1, 57,                1.0,             0.0, 'u', U_NONE},
-  {"df_i_flc",    'w', LOOP1, 58,             1./250,             0.0, 'u', U_NONE},
-  {"mode_p",       'w', LOOP1, 59,                  1,             0.0, 'u', U_NONE},
-  {"x_p",          'w', LOOP1, 60,              I2DEG,             0.0, 'u', U_NONE},
-  {"y_p",          'w', LOOP1, 61,              I2DEG,             0.0, 's', U_NONE},
-  {"vel_az_p",     'w', LOOP1, 62,              I2VEL,             0.0, 's', U_NONE},
-  {"del_p",        'w', LOOP1, 63,              I2VEL,             0.0, 'u', U_NONE},
+  {"mapmean_g",        'w', LOOP1, 42,              1.0,  0.0, 'u',     U_NONE},
+  {"lat_sip",          'w', LOOP1, 45,            I2DEG,  0.0, 's',   U_LA_DEG},
+  {"lon_sip",          'w', LOOP1, 46,            I2DEG,  0.0, 's',   U_LO_DEG},
+  {"lat_dgps",         'w', LOOP1, 47,            I2DEG,  0.0, 's',   U_LA_DEG},
+  {"lon_dgps",         'w', LOOP1, 48,            I2DEG,  0.0, 's',   U_LO_DEG},
+  {"alt_dgps",         'w', LOOP1, 49,              1.0,  0.0, 'u',    U_ALT_M},
+  {"speed_dgps",       'w', LOOP1, 50,           1./100,  0.0, 's',    U_V_KPH},
+  {"dir_dgps",         'w', LOOP1, 51,            I2DEG,  0.0, 'u',    U_D_DEG},
+  {"climb_dgps",       'w', LOOP1, 52,           1./100,  0.0, 's',    U_V_MPS},
+  {"att_ok_dgps",      'w', LOOP1, 53,              1.0,  0.0, 'u',     U_NONE},
+  {"g_p_table",        'w', LOOP1, 54,       1.0/1000.0,  0.0, 'u',     U_NONE},
+  {"g_i_table",        'w', LOOP1, 55,      1.0/10000.0,  0.0, 'u',     U_NONE},
+  {"g_d_table",        'w', LOOP1, 56,        1.0/100.0,  0.0, 'u',     U_NONE},
+  {"n_sat_dgps",       'w', LOOP1, 57,              1.0,  0.0, 'u',     U_NONE},
+  {"df_i_flc",         'w', LOOP1, 58,           1./250,  0.0, 'u',     U_NONE},
+  {"mode_p",           'w', LOOP1, 59,                1,  0.0, 'u',     U_NONE},
+  {"x_p",              'w', LOOP1, 60,            I2DEG,  0.0, 'u',     U_NONE},
+  {"y_p",              'w', LOOP1, 61,            I2DEG,  0.0, 's',     U_NONE},
+  {"vel_az_p",         'w', LOOP1, 62,            I2VEL,  0.0, 's',     U_NONE},
+  {"del_p",            'w', LOOP1, 63,            I2VEL,  0.0, 'u',     U_NONE},
 
   {"nblobs_g",         'w', LOOP2,  0,              1.0,  0.0, 'u',     U_NONE},
   // TODO: add appropriate derived types for these
