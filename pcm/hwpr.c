@@ -267,7 +267,7 @@ void StartHWP(void)
       is_init = 1;
     }
     usleep(100000);
-    if (j>10) {
+    if (j == 10) {
       bprintf(info,"Bus failed to initialize after 10 attempts");
     }
     j++;
