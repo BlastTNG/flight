@@ -487,6 +487,7 @@ struct ChannelStruct SlowChannels[] = {
   {"foc_rng_g",        'w', LOOP2, 49,              1.0,  0.0, 'u',     U_NONE},
   {"cal_d_pss5",       'w', LOOP2, 50,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},
   /* LOOP2 51-54 are wide fast */
+  {"bbc_sync_auto",    'w', LOOP2, 55,              1.0,  0.0, 'u',     U_NONE},
   {"az_mag",           'w', LOOP2, 56,            I2DEG,  0.0, 'u',    U_D_DEG},
   {"cal_d_pss6",       'w', LOOP2, 57,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},
   {"cal_imin_pss",     'w', LOOP2, 58,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},

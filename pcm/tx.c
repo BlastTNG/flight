@@ -137,6 +137,7 @@ static void WriteAux(void)
   static struct NiosStruct* frameExtBbcAddr;
   static struct NiosStruct* rateFrameBbcAddr;
   static struct NiosStruct* rateSampAdcAddr;
+  static struct NiosStruct* bbcSyncAutoAddr;
   static struct NiosStruct* bandAzAddr;
   static struct NiosStruct *bsetAddr;
 
@@ -194,6 +195,7 @@ static void WriteAux(void)
     frameExtBbcAddr = GetNiosAddr("frame_ext_bbc");
     rateFrameBbcAddr = GetNiosAddr("rate_frame_bbc");
     rateSampAdcAddr = GetNiosAddr("rate_samp_adc");
+    bbcSyncAutoAddr = GetNiosAddr("bbc_sync_auto");
     bandAzAddr = GetNiosAddr("band_az");
     bsetAddr = GetNiosAddr("bset");
 
@@ -298,6 +300,7 @@ static void WriteAux(void)
 
   WriteCalData(rateFrameBbcAddr, ACSData.bbc_rate, NIOS_QUEUE);
   WriteCalData(rateSampAdcAddr, ACSData.adc_rate, NIOS_QUEUE);
+  WriteCalData(bbcSyncAutoAddr, CommandData.bbcAutoExt, NIOS_QUEUE);
   WriteCalData(bandAzAddr, CommandData.pointing_mode.overshoot_band,
       NIOS_QUEUE);
   WriteData(bsetAddr, CommandData.bset_num, NIOS_QUEUE);
