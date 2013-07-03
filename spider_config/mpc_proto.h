@@ -76,9 +76,10 @@ size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer);
 int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
     const char *peer, int port);
 
-size_t mpc_compose_notice(int divisor, int turnaround,
+size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
     char data_mode_bits[13][2][2], char *buffer);
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
-    int *divisor, size_t len, const char *data, const char *peer, int port);
+    int *divisor, int *ssdata_req, size_t len, const char *data,
+    const char *peer, int port);
 
 #endif

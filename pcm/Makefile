@@ -14,7 +14,7 @@ SPIDER_ONLY=1
 # Inputs
 #
 
-EXPT_HEADERS = calibrate.h command_list.h command_struct.h \
+EXPT_HEADERS = calibrate.h command_list.h command_struct.h mce_counts.h \
 							 mpc_proto.h pointing_struct.h tes.h
 SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 command_common.h compressstruct.h crc.h derived.h \

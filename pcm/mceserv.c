@@ -20,6 +20,7 @@
  */
 #include "mceserv.h"
 #include "mcp.h"
+#include "mce_counts.h"
 #include "command_struct.h"
 #include "mpc_proto.h"
 #include "udp.h"
@@ -36,6 +37,8 @@
  * resend of the bset */
 #define BAD_BSET_THRESHOLD 2
 
+extern int StartupVeto; /* in mcp.c */
+
 /* semeuphoria */
 static int sent_bset = -1; /* the last field set that was sent */
 static int last_turnaround = -1; /* the last turnaround flag sent */
@@ -46,6 +49,11 @@ static char udp_buffer[UDP_MAXSIZE];
 /* slow data */
 int mce_slow_index[NUM_MCE];
 struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
+
+/* super slow data */
+uint32_t mce_param[N_MCE_STAT * NUM_MCE];
+static int request_ssdata = 1; /* start-up request */
+static int mceserv_InCharge; /* to look for edges */
 
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
@@ -102,22 +110,26 @@ static void ForwardNotices(int sock)
   /* edge triggers */
   if ((last_turnaround != -1 && last_turnaround == this_turnaround) &&
       (this_divisor == last_divisor) &&
-      (last_dmb == CommandData.data_mode_bits_serial))
+      (last_dmb == CommandData.data_mode_bits_serial) &&
+      (request_ssdata == 0)
+     )
   {
     /* no notices */
     return;
   }
 
-  len = mpc_compose_notice(this_divisor, this_turnaround,
+  len = mpc_compose_notice(this_divisor, this_turnaround, request_ssdata,
       CommandData.data_mode_bits, udp_buffer);
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
     bprintf(warning, "Error broadcasting notifications\n");
   else {
+    bprintf(warning, "Broadcast notifications\n");
     last_dmb = CommandData.data_mode_bits_serial;
     last_turnaround = this_turnaround;
     last_divisor = this_divisor;
+    request_ssdata = 0;
   }
 }
 
@@ -134,9 +146,11 @@ static void ForwardBSet(int sock)
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
-    bprintf(warning, "ErrorBroadcast BSet 0x%04X\n", num);
-  else
+    bprintf(warning, "Error broadcasting BSet 0x%04X\n", num);
+  else {
+    bprintf(warning, "Broadcast BSet 0x%04X\n", num);
     sent_bset = num;
+  }
 }
 
 /* push tes_buffer[n] on the tes fifo; discards the new frame if FIFO full */
@@ -289,6 +303,13 @@ void *mceserv(void *unused)
     bprintf(tfatal, "Unable to bind to port");
 
   for (;;) {
+    /* check for a change in in-chargeness */
+    if (mceserv_InCharge != InCharge) {
+      request_ssdata = 1;
+      sent_bset = -1; /* resend bset */
+      mceserv_InCharge = InCharge;
+    }
+
     /* broadcast MCE commands */
     ForwardCommand(sock);
 
