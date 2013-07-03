@@ -99,6 +99,9 @@ int pcm_strobe = 0;
 /* Semaphore for data packet ready for tranmission to PCM */
 int pcm_ret_dat = 0;
 
+/* Send mcestat to PCM */
+int send_mcestat = 0;
+
 /* Frame number of PCM data */
 uint32_t pcm_frameno = 0;
 
@@ -155,10 +158,14 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
   if (data_in) {
     /* reply acknowledgement from PCM */
     const char *data_mode_bits;
+    int ssreq;
 
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
-          &divisor, len, data_in, peer, port))
+          &divisor, &ssreq, len, data_in, peer, port))
       return;
+    
+    if (ssreq)
+      send_mcestat = 1;
 
     /* update the data_modes definition */
     set_data_mode_bits(0, 0, data_mode_bits + 0);
@@ -302,6 +309,16 @@ BAD_ARRAY_ID:
   fclose(stream);
 
   bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
+}
+
+/* Send a super-slow data packet */
+static void ForwardMCEStat(void)
+{
+  /* send it! */
+  char data[UDP_MAXSIZE];
+  size_t len = mpc_compose_stat(mce_stat, nmce, data);
+  udp_bcast(sock, MCESERV_PORT, len, data, 0);
+  send_mcestat = 0;
 }
 
 /* Send a TES data packet */
@@ -448,6 +465,9 @@ int main(void)
 
       if (pcm_ret_dat)
         ForwardData();
+
+      if (send_mcestat)
+        ForwardMCEStat();
 
       /* PCM requests */
       pcm_special(0, NULL, NULL, 0);

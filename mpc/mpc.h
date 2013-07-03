@@ -21,6 +21,7 @@
 
 #include "blast.h"
 #include "tes.h"
+#include "mce_counts.h"
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -33,6 +34,7 @@ extern int data_mode;
 extern int power_cycle_mce;
 extern int power_cycle_cmp;
 extern int command_veto;
+extern int send_mcestat;
 extern int veto;
 extern int leech_veto;
 extern uint16_t bset_num;
@@ -42,6 +44,7 @@ extern uint16_t pcm_data[NUM_COL * NUM_ROW];
 extern int pcm_strobe;
 extern uint32_t pcm_frameno;
 extern int pcm_ret_dat;
+extern uint32_t mce_stat[N_MCE_STAT];
 
 /* The director */
 void meta(void);

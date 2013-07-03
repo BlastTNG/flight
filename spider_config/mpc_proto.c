@@ -13,6 +13,8 @@
 #include "blast.h"
 #include "command_common.h"
 #include "mpc_proto.h"
+#include "mce_counts.h"
+#include "mce_counts.h"
 #include "tes.h"
 
 #include <string.h>
@@ -44,6 +46,29 @@ int mpc_init(void)
 
   bprintf(info, "Protocol revision: %i/%i\n", mpc_proto_rev, mpc_cmd_rev);
   return 0;
+}
+
+/* compose a MCE status packet for transmission to PCM
+ * 
+ * MCE status packet looks like:
+ *
+ * RRZM
+ *
+ * where
+ *
+ * R = 16-bit protocol revision
+ * Z = 'Z' indicating MCE status data
+ * M = mce number
+ *
+ * followed by the mce status data
+ */
+size_t mpc_compose_stat(const uint32_t *stat, int nmce, char *buffer)
+{
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
+  buffer[2] = 'Z';
+  buffer[3] = nmce;
+  memcpy(buffer + 4, stat, sizeof(uint32_t) * N_MCE_STAT);
+  return 4 + sizeof(uint32_t) * N_MCE_STAT;
 }
 
 /* compsoe a PCM notice packet for transmission to the mpc
@@ -321,7 +346,8 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
       *ptr != 'N' &&
       *ptr != 'R' &&
       *ptr != 'S' &&
-      *ptr != 'T')
+      *ptr != 'T' &&
+      *ptr != 'Z')
   {
     bprintf(err, "Ignoring %i-byte packet of unknown type 0x%X from %s/%i\n",
         len, (unsigned char)*ptr, peer, port);
@@ -552,5 +578,25 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
 
   *data_mode_bits = data + 6;
 
+  return 0;
+}
+
+int mce_decompose_stat(uint32_t *stat, size_t len, const char *data,
+    const char *peer, int port)
+{
+  if (len != 4 + sizeof(uint32_t) * N_MCE_STAT) {
+    bprintf(err, "Bad stat packet (size %zu) from %s/%i", len, peer, port);
+    return -1;
+  }
+
+  /* data[3] is the MCE number */
+  int nmce = data[3];
+  if (nmce < 0 || nmce > NUM_MCE) {
+    bprintf(err, "Unknown MCE %i in stat packet from %s/%i", nmce, peer, port);
+    return -1;
+  }
+
+  memcpy(stat + nmce * sizeof(uint32_t) * N_MCE_STAT, data + 4,
+      sizeof(uint32_t) * N_MCE_STAT);
   return 0;
 }

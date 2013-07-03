@@ -45,6 +45,9 @@ static unsigned cmd_err = 0;
 struct mcp_proc *mcecmd = NULL;
 int mcecmd_i, mcecmd_o, mcecmd_e;
 
+/* a big old array of block data */
+uint32_t mce_stat[N_MCE_STAT];
+
 const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
 
 /* mas */
@@ -200,9 +203,6 @@ static int __attribute__((format(printf,1,2))) mcecmd_write(const char *fmt,
   return ret;
 }
 
-/* a big old array of block data */
-static uint32_t mce_stat[N_MCE_STAT];
-
 /* read a value from the mce_stat array */
 static int mce_param(const char *card, const char *param, int offset,
     uint32_t *data, int count)
@@ -349,6 +349,9 @@ static int mce_status(void)
       goto MCE_STATUS_ERR;
     }
   }
+
+  /* trigger send to PCM */
+  send_mcestat = 1;
 
   /* now create the files */
   sprintf(filename, "/data0/mce/current_data/mpc_%li.run", acq_time);
