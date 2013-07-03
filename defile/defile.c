@@ -64,11 +64,11 @@
 #define REMOUNT_PATH "../rawdir"
 
 /* options */
-enum {CFG_AutoReconnect, CFG_CompressedOutput, CFG_Daemonise, CFG_FlakeySource,
-  CFG_InputSource, CFG_OutputCurFileName, CFG_OutputDirectory,
+enum {CFG_AutoReconnect, CFG_CompressedOutput, CFG_Daemonise, CFG_ExtraFormat,
+  CFG_FlakeySource, CFG_InputSource, CFG_OutputCurFileName, CFG_OutputDirectory,
   CFG_OutputDirFile, CFG_Persistent, CFG_PidFile, CFG_Quiet,
   CFG_RemoteInputSource, CFG_RemountPath, CFG_RemountedSource, CFG_ResumeMode,
-  CFG_SpecFile, CFG_SuffixLength, CFG_WriteCurFile, CFG_ExtraFormat};
+  CFG_SpecFile, CFG_SuffixLength, CFG_WriteCurFile};
 
 struct {
   union {
