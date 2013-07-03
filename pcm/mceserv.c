@@ -346,8 +346,8 @@ void *mceserv(void *unused)
         handle_pcm_request(n, peer, port);
         break;
       case 'S': /* slow data */
-        mccnum = mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer
-                                    ,peer, port);
+        mccnum = mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer,
+            peer, port);
         if (mccnum >= 0) {
           mccSlowCount[mccnum] = 0;
         }
@@ -361,6 +361,9 @@ void *mceserv(void *unused)
           sent_bset = -1; /* resend bset */
           bad_bset_count = 0;
         }
+        break;
+      case 'Z': /* Super slow data */
+        mpc_decompose_stat(mce_param, n, udp_buffer, peer, port);
         break;
       default:
         bprintf(err, "Dropping packet with bad type 0x%X\n", type);

@@ -581,7 +581,7 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
   return 0;
 }
 
-int mce_decompose_stat(uint32_t *stat, size_t len, const char *data,
+int mpc_decompose_stat(uint32_t *stat, size_t len, const char *data,
     const char *peer, int port)
 {
   if (len != 4 + sizeof(uint32_t) * N_MCE_STAT) {
