@@ -298,6 +298,7 @@ union DerivedUnion DerivedChannels[] = {
   BITWORD("DR_INFO_INIT_RW", "drive_info_rw",2,2),
   LINCOM2("DR_INFO_IO_RW","DR_INFO_OPEN_RW",1,0,"DR_INFO_INIT_1_RW",2,0),
   LINCOM2("DR_INFO_RIO_RW","DR_INFO_RESET_RW",4,0,"DR_INFO_IO_RW",1,0),
+  
 
   BITFIELD("mode_el",
            "MODE_AUTO_EL",
@@ -694,6 +695,9 @@ union DerivedUnion DerivedChannels[] = {
   MCESLOW("MPC_TASK"),
   MCESLOW("MPC_DTASK"),
   LINCOM2("I_IF_TOT", "I_MCE", 1.0, 0, "I_HK_MISC",  1, 0),
+  
+  LINCOM2("TWIST_EL", "EL_RAW_1_ENC", 1.0, 0.0, "EL_RAW_2_ENC",  -1.0, 0.0),
+
 
 
   END_OF_DERIVED_CHANNELS
