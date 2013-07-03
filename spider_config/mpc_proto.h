@@ -43,6 +43,7 @@ struct mpc_slow_data {
 
 };
 
+extern int16_t mpc_proto_rev;
 extern int mpc_cmd_rev;
 
 int mpc_init(void);

@@ -17,6 +17,7 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "mpc_proto.h"
 #include "mpc.h"
 #include "mputs.h"
 #include "blast.h"
@@ -29,7 +30,7 @@
 #include <string.h>
 #include <time.h>
 
-static int cmd_err = 0;
+static unsigned cmd_err = 0;
 
 /* ask PCM to reboot the MCE if we get too many commanding errors */
 #define MAS_CMD_ERR 1
@@ -44,8 +45,13 @@ static int cmd_err = 0;
 struct mcp_proc *mcecmd = NULL;
 int mcecmd_i, mcecmd_o, mcecmd_e;
 
+const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
+
 /* mas */
 mce_context_t *mas;
+
+/* number of frames in an acq_go */
+#define ACQ_FRAMECOUNT "1000000000" /* a billion frames = 105 days */
 
 /* Write a block to the MCE; returns non-zero on error */
 /* I guess MAS needs to be able to write to it's input data buffer...? */
@@ -75,12 +81,6 @@ static int mas_write_block(const char *card, const char *block, uint32_t *data,
   cmd_err = 0;
 
   return 0;
-}
-
-/* read a block by number from the MCE; returns non-zero on error */
-static int mas_read_block_by_id(int card, int block, uint32_t *data, size_t num)
-{
-  return 1;
 }
 
 /* read a block by name from the MCE; returns non-zero on error */
@@ -158,18 +158,16 @@ static int set_frame(char **frame)
   return fs;
 }
 
-
 /* Check that we have all the cards */
 static int mce_check_cards(void)
 {
-  const char *card[] = { "cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL };
   int i, ret = 0;
   uint32_t datum;
 
   /* Verify that everyone's alive */
-  for (i = 0; card[i]; ++i)
-    if (!mas_read_block(card[i], "fw_rev", &datum, 1))
-      bprintf(info, "%3s firmware: 0x%X", card[i], datum);
+  for (i = 0; all_cards[i]; ++i)
+    if (!mas_read_block(all_cards[i], "fw_rev", &datum, 1))
+      bprintf(info, "%3s firmware: 0x%X", all_cards[i], datum);
     else
       ret = 1;
 
@@ -203,20 +201,192 @@ static int __attribute__((format(printf,1,2))) mcecmd_write(const char *fmt,
 }
 
 /* a big old array of block data */
-static uint16_t *mce_stat[0xE0][0xB];
+static uint32_t mce_stat[N_MCE_STAT];
+
+/* read a value from the mce_stat array */
+static int mce_param(const char *card, const char *param, int offset,
+    uint32_t *data, int count)
+{
+  int first = 0, last = 0, i;
+
+  /* card offset */
+  if (card[0] == 'a') {
+    first = FIRST_AC_PARAM;
+    last  =  LAST_AC_PARAM;
+  } else if (card[0] == 'b') {
+    first = (card[2] == '1') ? FIRST_BC1_PARAM : FIRST_BC2_PARAM;
+    last  = (card[2] == '1') ?  LAST_BC1_PARAM :  LAST_BC2_PARAM;
+  } else if (card[0] == 'c') {
+    first = FIRST_CC_PARAM;
+    last  =  LAST_CC_PARAM;
+  } else if (card[0] == 'r') {
+    first = (card[2] == '1') ? FIRST_RC1_PARAM : FIRST_RC2_PARAM;
+    last  = (card[2] == '1') ?  LAST_RC1_PARAM :  LAST_RC2_PARAM;
+  } else /* Be unforgiving */
+    bprintf(fatal, "Parameter look-up error: %s/%s\n", card, param);
+
+  /* parameter offset */
+  for (i = first; i <= last; i++) {
+    if (strcmp(param, mstat_phys[i].p) == 0) {
+      if (count + offset > mstat_phys[i].nw) {
+        bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", offset,
+            count, card, param);
+      }
+
+      memcpy(data, mce_stat + mstat_phys[i].cd + offset,
+          sizeof(uint32_t) * count);
+      return 0;
+    }
+  }
+
+  /* Be unforgiving */
+  bprintf(fatal, "Parameter look-up error: %s/%s\n", card, param);
+  return 1;
+}
 
 static long acq_time; /* for filenames */
+
+/* write the runfile */
+static int dump_runfile(FILE *stream)
+{
+  int i, j, nr, nw;
+  uint32_t datum;
+  uint32_t vdata[33];
+
+  fprintf(stream, "<HEADER>\n");
+  /* physical cards */
+  for (i = 0; i < N_MCE_PHYS; ++i) {
+    fprintf(stream, "<RB %s %s>", mstat_phys[i].c, mstat_phys[i].p);
+    for (j = 0; j < mstat_phys[i].nw; ++j)
+      fprintf(stream, " %08i", mce_stat[mstat_phys[i].cd + j]);
+    if (mstat_phys[i].nr > mstat_phys[i].nw) /* pad */
+      for (; j < mstat_phys[i].nr; ++j)
+        fprintf(stream, " %08i", 0);
+    fprintf(stream, "\n");
+  }
+  /* sys */
+  for (i = 0; i < N_MCE_SYS; ++i) {
+    fprintf(stream, "<RB sys %s>", mstat_sys[i]);
+    for (j = 0; all_cards[j]; ++j) {
+      mce_param(all_cards[j], mstat_sys[i], 0, &datum, 1);
+      fprintf(stream, " %08i", datum);
+    }
+    fprintf(stream, "\n");
+  }
+  /* virt */
+  for (i = 0 ; i < N_MCE_VIRT; ++i) {
+    fprintf(stream, "<RB %s %s>", mstat_virt[i].c, mstat_virt[i].p);
+
+    /* the first map */
+    nw = nr = mstat_virt[i].m[0].e - mstat_virt[i].m[0].s;
+    if (nr == 41)
+      nw = 33;
+
+    mce_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p, mstat_virt[i].m[0].o,
+        vdata, nw);
+    for (j = 0; j < nw; ++j)
+      fprintf(stream, " %08i", vdata[j]);
+    if (nr > nw) /* pad */
+      for (; j < nr; ++j)
+        fprintf(stream, " %08i", 0);
+
+    /* the second map */
+    if (mstat_virt[i].m[1].c[0]) {
+      nw = nr = mstat_virt[i].m[1].e - mstat_virt[i].m[1].s;
+      mce_param(mstat_virt[i].m[1].c, mstat_virt[i].m[1].p,
+          mstat_virt[i].m[1].o, vdata, nw);
+      for (j = 0; j < nw; ++j)
+        fprintf(stream, " %08i", vdata[j]);
+    }
+    fprintf(stream, "\n");
+  }
+  fprintf(stream, "</HEADER>\n");
+
+  /* frameacq block */
+  fprintf(stream, "<FRAMEACQ>\n"
+      "  <RUNFILE_VERSION> 2\n"
+      "  <MAS_VERSION> " MAS_VERSION "\n"
+      "  <RC> rcs\n"
+      "  <DATA_FILENAME> mpc_%li\n"
+      "  <DATA_FRAMEACQ> " ACQ_FRAMECOUNT "\n"
+      "  <CTIME> %li\n"
+      "  <HOSTNAME> x%i.spider\n"
+      "</FRAMEACQ>\n",
+      acq_time, acq_time, nmce + 1);
+
+  /* mpc block */
+  fprintf(stream, "<MPC>\n"
+      "  <PROTO> %i/%i\n"
+      "  <STATE> %08x\n"
+      "</MPC>\n",
+      mpc_proto_rev, mpc_cmd_rev, state);
+
+  return 0;
+}
 
 static int mce_status(void)
 {
   int i;
+  FILE *stream;
+  uint32_t buffer[41];
+  char filename[100];
+
   acq_time = (long)time(NULL);
 
-  /* mce status fun */
-  for (i = 0; mstat_phys[i].c[0]; ++i) {
-
+  /* read all the things */
+  for (i = 0; i < N_MCE_PHYS; ++i) {
+    if (mstat_phys[i].nr != mstat_phys[i].nw) {
+      if (mas_read_block(mstat_phys[i].c, mstat_phys[i].p, buffer,
+          mstat_phys[i].nr))
+      {
+        goto MCE_STATUS_ERR;
+      }
+      memcpy(mce_stat + mstat_phys[i].cd, buffer, sizeof(uint32_t) *
+          mstat_phys[i].nw);
+    } else if (mas_read_block(mstat_phys[i].c, mstat_phys[i].p, mce_stat +
+          mstat_phys[i].cd, mstat_phys[i].nr))
+    {
+      goto MCE_STATUS_ERR;
+    }
   }
-  return 1;
+
+  /* now create the files */
+  sprintf(filename, "/data0/mce/current_data/mpc_%li.run", acq_time);
+  stream = fopen(filename, "w");
+  if (stream == NULL)
+    berror(err, "Unable to create runfile %s", filename);
+  else {
+    bprintf(info, "Writing runfile: %s\n", filename);
+    dump_runfile(stream);
+    fclose(stream);
+  }
+
+  if (state & st_drive1) {
+    filename[5] = '1';
+    stream = fopen(filename, "w");
+    if (stream == NULL)
+      berror(err, "Unable to create runfile %s", filename);
+    else {
+      bprintf(info, "Writing runfile: %s\n", filename);
+      dump_runfile(stream);
+      fclose(stream);
+    }
+  }
+
+  if (state & st_drive2) {
+    filename[5] = '2';
+    stream = fopen(filename, "w");
+    if (stream == NULL)
+      berror(err, "Unable to create runfile %s", filename);
+    else {
+      bprintf(info, "Writing runfile: %s\n", filename);
+      dump_runfile(stream);
+      fclose(stream);
+    }
+  }
+
+MCE_STATUS_ERR:
+  return 0;
 }
 static int acq_conf(void)
 {
@@ -226,15 +396,15 @@ static int acq_conf(void)
 
   /* start a multiacq */
   mcecmd_write("acq_multi_begin");
-  mcecmd_write("acq_config_fs /data0/mce/current_data/mpc_%li rcs 100000",
+  mcecmd_write("acq_config_fs /data0/mce/current_data/mpc_%li rcs 50000",
       acq_time);
 
   if (state & st_drive1)
-    mcecmd_write("acq_config_fs /data1/mce/current_data/mpc_%li rcs 100000",
+    mcecmd_write("acq_config_fs /data1/mce/current_data/mpc_%li rcs 50000",
         acq_time);
 
   if (state & st_drive2)
-    mcecmd_write("acq_config_fs /data2/mce/current_data/mpc_%li rcs 100000",
+    mcecmd_write("acq_config_fs /data2/mce/current_data/mpc_%li rcs 50000",
         acq_time);
 
   return 0;
@@ -332,13 +502,14 @@ void *mas_data(void *dummy)
         break;
       case dt_status:
         dt_error = mce_status();
+        data_tk = dt_idle;
         break;
       case dt_acqcnf:
         dt_error = acq_conf();
         data_tk = dt_idle;
         break;
       case dt_startacq:
-        dt_error = mcecmd_write("acq_go 1000000000"); /* 100 days */
+        dt_error = mcecmd_write("acq_go " ACQ_FRAMECOUNT);
         data_tk = dt_idle;
         break;
       case dt_fakestop:

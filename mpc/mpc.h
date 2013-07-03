@@ -34,6 +34,7 @@ extern int power_cycle_mce;
 extern int power_cycle_cmp;
 extern int command_veto;
 extern int veto;
+extern int leech_veto;
 extern uint16_t bset_num;
 extern int ntes;
 extern int16_t tes[NUM_ROW * NUM_COL];

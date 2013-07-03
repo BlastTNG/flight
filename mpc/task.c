@@ -26,6 +26,7 @@ static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
 int dt_error = 0;
 int comms_lost = 0;
+int leech_veto = 0;
 static int cl_count = 0;
 
 
@@ -149,6 +150,7 @@ void *task(void *dummy)
           /* "mce status" */
           if (dt_wait(dt_status)) {
             comms_lost = 1;
+//sleep(1000000);
           } else {
             state |= st_acqcnf;
             start_tk = st_idle;

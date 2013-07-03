@@ -22,15 +22,17 @@
 struct ms_phys {
   char c[4];
   char p[22];
-  int n, id, cd;
+  int nr, nw, id, cd;
 };
 extern const struct ms_phys mstat_phys[N_MCE_PHYS];
 
+extern const char *const mstat_sys[N_MCE_SYS];
+
 struct ms_map {
-  int start, end;
+  int s, e;
   char c[4];
   char p[22];
-  int offset;
+  int o;
 };
 
 struct ms_virt {
@@ -40,7 +42,3 @@ struct ms_virt {
   struct ms_map m[2];
 };
 extern const struct ms_virt mstat_virt[N_MCE_VIRT];
-extern const int sys_param[N_MCE_SYS];
-extern const char *const sys_name[N_MCE_SYS];
-extern const int rca_param[N_MCE_RCA];
-extern const char *const rca_name[N_MCE_RCA];

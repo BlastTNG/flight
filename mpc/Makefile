@@ -31,7 +31,7 @@ endif
 endif
 
 # Is mas_var new enough?
-MIN_MAS_VERSION=802
+MIN_MAS_VERSION=815
 ifneq (${MAS_VAR},)
 MAS_HAS_INT_VERSION=$(shell if ${MAS_VAR} --int-verson >/dev/null 2>/dev/null; \
 										then echo no; else echo yes; fi)
@@ -59,12 +59,15 @@ $(error Cannot continue)
 else
 MAS_SCRIPT=$(shell ${MAS_VAR} --script-dir)
 MAS_DATA_ROOT=$(shell ${MAS_VAR} --data-root)
+MAS_VERSION=$(shell ${MAS_VAR} --version)
+
 MAS_LIBS=$(shell ${MAS_VAR} --libs) -Wl,-rpath \
 				 -Wl,$(shell ${MAS_VAR} --prefix)/lib
 MAS_INC=$(shell ${MAS_VAR} --cflags)
 endif
 MAS_DEFS=-DMAS_DATA_ROOT=\"${MAS_DATA_ROOT}\" \
-				 -DMAS_SCRIPT=\"${MAS_SCRIPT}\"
+				 -DMAS_SCRIPT=\"${MAS_SCRIPT}\" \
+				 -DMAS_VERSION=\"${MAS_VERSION}\"
 
 ########################################################
 # Build system set up

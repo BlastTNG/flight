@@ -18,7 +18,7 @@
 #include <string.h>
 
 int mpc_cmd_rev = -1;
-static int16_t mpc_proto_rev = -1;
+int16_t mpc_proto_rev = -1;
 
 /* desecrate the C preprocessor to extract this file's SVN revision */
 
