@@ -42,14 +42,10 @@ static void do_frame(const uint32_t *frame, size_t frame_size)
 
   /* "Helpful" messages */
   if (last_veto > 0) {
-    if (header->status & MCE_FSB_LAST) {
+    if (header->status & MCE_FSB_LAST)
       bprintf(info, "LAST bit in CC frame %u", header->cc_frameno);
-      state &= ~st_retdat;
-    }
-    if (header->status & MCE_FSB_STOP) {
+    if (header->status & MCE_FSB_STOP)
       bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
-      state &= ~st_retdat;
-    }
   }
 
   /* do more stuff here, probably */
@@ -65,6 +61,7 @@ int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer)
   do_frame(frame[fb_top], (size_t)(sizeof(uint32_t) * frame_size));
 
   fb_top = (fb_top + 1) % FB_SIZE;
+  rd_count++;
 
   return 0; /* MAS ignores this */
 }

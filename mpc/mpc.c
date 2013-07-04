@@ -407,7 +407,6 @@ static void pushback(void)
     ForwardData(frameno);
   }
   pb_last = (pb_last + PB_SIZE) % FB_SIZE;
-  rd_count += PB_SIZE;
 }
 
 /* Send a super-slow data packet */

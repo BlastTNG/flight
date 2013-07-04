@@ -578,6 +578,8 @@ void *acquer(void* dummy)
         int r = mcedata_acq_go(acq, ACQ_FRAMECOUNT); /* blocks */
         if (r)
           bprintf(err, "Acquisition error: %s", mcelib_error_string(r));
+        else
+          bprintf(info, "Acquisition stopped");
         acq_stopped = 1;
     }
   }
