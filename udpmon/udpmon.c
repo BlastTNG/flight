@@ -46,7 +46,7 @@ static void hexdump(size_t n, const void *vdata)
   size_t i = 0, j;
 
   for (i = 0; i < n; i += 16) {
-    printf("0x%08X: ", i);
+    printf("0x%08zX: ", i);
 
     /* the hex part */
     for (j = i; j < i + 16; ++j) {

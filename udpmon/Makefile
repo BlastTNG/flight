@@ -28,8 +28,8 @@ include ../common/Makefile.shared
 
 all:: udpmon tesmon
 
-udpmon: udpmon.o blast_spider.o udp_spider.o
-tesmon: tesmon.o blast_spider.o udp_spider.o
+udpmon: udpmon.o blast.o udp.o
+tesmon: tesmon.o blast.o udp.o
 
 ../common/Makefile.shared:
 	@echo "ERROR: **************************************************************"
