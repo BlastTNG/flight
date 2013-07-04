@@ -94,18 +94,6 @@
  * start of the file, to the end of the format file.
  */
 
-/* For demuxing slow MCE data based on mce_txmux.  Argument is the source field
- * name (ie. "DATA_MODE") produces six derived fields called "DATA_MODE0",
- * "DATA_MODE1", &c.
- */
-#define MCESLOW(n) \
-   MPLEX(n "0", n, "mce_txmux", 0, 6), \
-   MPLEX(n "1", n, "mce_txmux", 1, 6), \
-   MPLEX(n "2", n, "mce_txmux", 2, 6), \
-   MPLEX(n "3", n, "mce_txmux", 3, 6), \
-   MPLEX(n "4", n, "mce_txmux", 4, 6), \
-   MPLEX(n "5", n, "mce_txmux", 5, 6)
-
 #define LUT_DIR "/data/etc/spider/"
 
 union DerivedUnion DerivedChannels[] = {
@@ -684,16 +672,6 @@ union DerivedUnion DerivedChannels[] = {
       ""
       ),
 
-  /* MCE Slow data */
-  MCESLOW("DATA_MODE"),
-  MCESLOW("MCC_TIME"),
-  MCESLOW("MCC_FREE0"),
-  MCESLOW("MCC_FREE1"),
-  MCESLOW("MCC_FREE2"),
-  MCESLOW("MPC_STATE"),
-  MCESLOW("MPC_GOAL"),
-  MCESLOW("MPC_TASK"),
-  MCESLOW("MPC_DTASK"),
   LINCOM2("I_IF_TOT", "I_MCE", 1.0, 0, "I_HK_MISC",  1, 0),
   
   LINCOM2("TWIST_EL", "EL_RAW_1_ENC", 1.0, 0.0, "EL_RAW_2_ENC",  -1.0, 0.0),

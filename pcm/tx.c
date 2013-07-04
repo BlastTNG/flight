@@ -154,6 +154,9 @@ static void WriteAux(void)
   static struct NiosStruct* tCpuOtherFlcAddr;
   static struct NiosStruct* lastOtherCmdAddr;
   static struct NiosStruct* countOtherCmdAddr;
+  static struct NiosStruct* mceCmplexAddr;
+  static struct NiosStruct* mceCindexAddr;
+  
   
   struct flc_data otherData, *myData;
   
@@ -224,6 +227,9 @@ static void WriteAux(void)
     lastOtherCmdAddr = GetNiosAddr(buf);
     sprintf(buf, "count_%c_cmd", (!BitsyIAm) ? 'b' : 'i');
     countOtherCmdAddr = GetNiosAddr(buf);
+    
+    mceCindexAddr = GetNiosAddr("mce_cindex");
+    mceCmplexAddr = GetNiosAddr("mce_cmplex");
   }
 
   myData = get_flc_out_data();
@@ -336,54 +342,70 @@ static void WriteAux(void)
   WriteData(lastOtherCmdAddr, otherData.last_command, NIOS_QUEUE);
   WriteData(countOtherCmdAddr, otherData.command_count, NIOS_QUEUE);
   
+  WriteData(mceCindexAddr, CommandData.mce_param_index, NIOS_QUEUE);
+  WriteData(mceCmplexAddr, mce_param[CommandData.mce_param_index], NIOS_QUEUE);
+}
+
+struct NiosStruct *GetMCCNiosAddr(char *field, int i_mce) {
+  char field_name[44];
+  sprintf(field_name, "%s%d", field, i_mce+1);
+  return (GetNiosAddr(field_name));
 }
 
 /* write slow MCE data */
 static void WriteMCESlow(void)
 {
-  static unsigned int mux = 0;
+  unsigned int mux;
 
   static int firsttime = 1;
-  static struct NiosStruct *mceTxmuxAddr;
-  static struct NiosStruct *mccTimeAddr;
-  static struct NiosStruct *mccFree0Addr;
-  static struct NiosStruct *mccFree1Addr;
-  static struct NiosStruct *mccFree2Addr;
-  static struct NiosStruct *dataModeAddr;
-  static struct NiosStruct *mpcStateAddr;
-  static struct NiosStruct *mpcGoalAddr;
-  static struct NiosStruct *mpcTaskAddr;
-  static struct NiosStruct *mpcDTaskAddr;
+  static struct NiosStruct *modeMceAddr[NUM_MCE];
+  static struct NiosStruct *df1MccAddr[NUM_MCE];
+  static struct NiosStruct *df2MccAddr[NUM_MCE];
+  static struct NiosStruct *df3MccAddr[NUM_MCE];
+  static struct NiosStruct *stateMpcAddr[NUM_MCE];
+  static struct NiosStruct *goalMpcAddr[NUM_MCE];
+  static struct NiosStruct *taskMpcAddr[NUM_MCE];
+  static struct NiosStruct *dtaskMpcAddr[NUM_MCE];
+  static struct NiosStruct *tMccAddr[NUM_MCE];
+  static struct NiosStruct *tMceAddr[NUM_MCE];
+  static struct NiosStruct *timeMccAddr[NUM_MCE];
 
-  int ind = GETREADINDEX(mce_slow_index[mux]);
+  int ind;
 
   if (firsttime) {
+    int i;
     firsttime = 0;
-    mccTimeAddr = GetNiosAddr("mcc_time");
-    mccFree0Addr = GetNiosAddr("mcc_free0");
-    mccFree1Addr = GetNiosAddr("mcc_free1");
-    mccFree2Addr = GetNiosAddr("mcc_free2");
-    dataModeAddr = GetNiosAddr("data_mode");
-    mceTxmuxAddr = GetNiosAddr("mce_txmux");
-    mpcStateAddr = GetNiosAddr("mpc_state");
-    mpcGoalAddr = GetNiosAddr("mpc_goal");
-    mpcTaskAddr = GetNiosAddr("mpc_task");
-    mpcDTaskAddr = GetNiosAddr("mpc_dtask");
-
+    for (i=0; i<NUM_MCE; i++) {
+      modeMceAddr[i] = GetMCCNiosAddr("mode_mce", i);
+      df1MccAddr[i] = GetMCCNiosAddr("df_1_mcc", i);
+      df2MccAddr[i] = GetMCCNiosAddr("df_2_mcc", i);
+      df3MccAddr[i] = GetMCCNiosAddr("df_3_mcc", i);
+      stateMpcAddr[i] = GetMCCNiosAddr("state_mpc", i);
+      goalMpcAddr[i] = GetMCCNiosAddr("goal_mpc", i);
+      taskMpcAddr[i] = GetMCCNiosAddr("task_mpc", i);
+      dtaskMpcAddr[i] = GetMCCNiosAddr("dtask_mpc", i);
+      tMccAddr[i] = GetMCCNiosAddr("t_mcc", i);
+      tMceAddr[i] = GetMCCNiosAddr("t_mce", i);
+      timeMccAddr[i] = GetMCCNiosAddr("time_mcc", i);
+    }
   }
 
-  WriteData(dataModeAddr, mce_slow_dat[mux][ind].data_mode, NIOS_QUEUE);
-  WriteData(mccTimeAddr, mce_slow_dat[mux][ind].time, NIOS_QUEUE);
-  WriteData(mccFree0Addr, mce_slow_dat[mux][ind].df0, NIOS_QUEUE);
-  WriteData(mccFree1Addr, mce_slow_dat[mux][ind].df1, NIOS_QUEUE);
-  WriteData(mccFree2Addr, mce_slow_dat[mux][ind].df2, NIOS_QUEUE);
-  WriteData(mpcStateAddr, mce_slow_dat[mux][ind].state, NIOS_QUEUE);
-  WriteData(mpcGoalAddr, mce_slow_dat[mux][ind].goal, NIOS_QUEUE);
-  WriteData(mpcTaskAddr, mce_slow_dat[mux][ind].task, NIOS_QUEUE);
-  WriteData(mpcDTaskAddr, mce_slow_dat[mux][ind].dtask, NIOS_QUEUE);
 
-  WriteData(mceTxmuxAddr, mux, NIOS_FLUSH);
-  mux = (mux + 1) % NUM_MCE;
+  for (mux=0; mux<NUM_MCE; mux++) {
+    ind = GETREADINDEX(mce_slow_index[mux]);
+
+    WriteData(modeMceAddr[mux], mce_slow_dat[mux][ind].data_mode, NIOS_QUEUE);
+    WriteData(timeMccAddr[mux], mce_slow_dat[mux][ind].time, NIOS_QUEUE);
+    WriteData(df1MccAddr[mux], mce_slow_dat[mux][ind].df0, NIOS_QUEUE);
+    WriteData(df2MccAddr[mux], mce_slow_dat[mux][ind].df1, NIOS_QUEUE);
+    WriteData(df3MccAddr[mux], mce_slow_dat[mux][ind].df2, NIOS_QUEUE);
+    WriteData(stateMpcAddr[mux], mce_slow_dat[mux][ind].state, NIOS_QUEUE);
+    WriteData(goalMpcAddr[mux], mce_slow_dat[mux][ind].goal, NIOS_QUEUE);
+    WriteData(taskMpcAddr[mux], mce_slow_dat[mux][ind].task, NIOS_QUEUE);
+    WriteData(dtaskMpcAddr[mux], mce_slow_dat[mux][ind].dtask, NIOS_QUEUE);
+    WriteData(tMccAddr[mux], mce_slow_dat[mux][ind].t_mcc, NIOS_QUEUE);
+    WriteData(tMceAddr[mux], mce_slow_dat[mux][ind].t_mce, NIOS_QUEUE);
+  }
 }
 
 void WriteChatter (int index)

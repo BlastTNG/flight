@@ -256,7 +256,12 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vd_sft_ring_t_hk",     'r',  HWP_A2, 32, CAL32D(         1.0,           0.0), 'U', U_V_V},
   {"vd_vcs1_apert_t_hk",     'r',  HWP_A2, 34, CAL32D(         1.0,           0.0), 'U', U_V_V},
 
-  {"mcc_time",     'w',  LOOP11, 2, 0.01, MPC_EPOCH, 'U', U_NONE},
+  {"time_mcc1",     'w',  LOOP9, 12, 0.01, MPC_EPOCH, 'U', U_NONE},
+  {"time_mcc2",     'w',  LOOP9, 14, 0.01, MPC_EPOCH, 'U', U_NONE},
+  {"time_mcc3",     'w',  LOOP9, 16, 0.01, MPC_EPOCH, 'U', U_NONE},
+  {"time_mcc4",     'w',  LOOP9, 18, 0.01, MPC_EPOCH, 'U', U_NONE},
+  {"time_mcc5",     'w',  LOOP9, 20, 0.01, MPC_EPOCH, 'U', U_NONE},
+  {"time_mcc6",     'w',  LOOP9, 22, 0.01, MPC_EPOCH, 'U', U_NONE},
 
   END_OF_CHANNELS
 };
@@ -924,17 +929,74 @@ struct ChannelStruct SlowChannels[] = {
 
   /* slow MCE data -- all these are 6x mulitplexed using the mce_txmux channel
    */
-  {"mce_txmux",   'w', LOOP11, 0, 1, 0, 'u', U_NONE},
-  {"data_mode",   'w', LOOP11, 1, 1, 0, 'u', U_NONE},
-  /* LOOP11 2-3 are wide */
-  {"mcc_free0",   'w', LOOP11, 4, (1<<24), 0, 'u', U_NONE},
-  {"mcc_free1",   'w', LOOP11, 5, (1<<24), 0, 'u', U_NONE},
-  {"mcc_free2",   'w', LOOP11, 6, (1<<24), 0, 'u', U_NONE},
-  {"mpc_state",   'w', LOOP11, 7, 1.0,   0.0, 'u', U_NONE},
-  {"mpc_goal",    'w', LOOP11, 8, 1.0,   0.0, 'u', U_NONE},
-  {"mpc_task",    'w', LOOP11, 9, 1.0,   0.0, 'u', U_NONE},
-  {"mpc_dtask",   'w', LOOP11,10, 1.0,   0.0, 'u', U_NONE},
+  {"mode_mce1",   'w', LOOP11, 10, 1, 0, 'u', U_NONE},
+  {"df_1_mcc1",   'w', LOOP11, 11, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc1",   'w', LOOP11, 12, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc1",   'w', LOOP11, 13, (1<<24), 0, 'u', U_NONE},
+  {"state_mpc1",  'w', LOOP11, 14, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc1",   'w', LOOP11, 15, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc1",   'w', LOOP11, 16, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc1",  'w', LOOP11, 17, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc1",      'w', LOOP11, 18, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce1",      'w', LOOP11, 19, 1.0,   0.0, 'u', U_NONE},
+  
+  {"mode_mce2",   'w', LOOP11, 20, 1, 0, 'u', U_NONE},
+  {"df_1_mcc2",   'w', LOOP11, 21, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc2",   'w', LOOP11, 22, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc2",   'w', LOOP11, 23, (1<<24), 0, 'u', U_NONE},
+  {"state_mpc2",  'w', LOOP11, 24, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc2",   'w', LOOP11, 25, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc2",   'w', LOOP11, 26, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc2",  'w', LOOP11, 27, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc2",      'w', LOOP11, 28, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce2",      'w', LOOP11, 29, 1.0,   0.0, 'u', U_NONE},
 
+  {"mode_mce3",   'w', LOOP11, 30, 1, 0, 'u', U_NONE},
+  {"df_1_mcc3",   'w', LOOP11, 31, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc3",   'w', LOOP11, 32, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc3",   'w', LOOP11, 33, (1<<24), 0, 'u', U_NONE},
+  {"state_mpc3",  'w', LOOP11, 34, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc3",   'w', LOOP11, 35, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc3",   'w', LOOP11, 36, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc3",  'w', LOOP11, 37, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc3",      'w', LOOP11, 38, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce3",      'w', LOOP11, 39, 1.0,   0.0, 'u', U_NONE},
+
+  {"mode_mce4",   'w', LOOP11, 40, 1, 0, 'u', U_NONE},
+  {"df_1_mcc4",   'w', LOOP11, 41, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc4",   'w', LOOP11, 42, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc4",   'w', LOOP11, 43, (1<<24), 0, 'u', U_NONE},
+  {"state_mpc4",  'w', LOOP11, 44, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc4",   'w', LOOP11, 45, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc4",   'w', LOOP11, 46, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc4",  'w', LOOP11, 47, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc4",      'w', LOOP11, 48, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce4",      'w', LOOP11, 49, 1.0,   0.0, 'u', U_NONE},
+
+  {"mode_mce5",   'w', LOOP11, 50, 1, 0, 'u', U_NONE},
+  {"df_1_mcc5",   'w', LOOP11, 51, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc5",   'w', LOOP11, 52, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc5",   'w', LOOP11, 53, (1<<24), 0, 'u', U_NONE},
+  {"state_mpc5",  'w', LOOP11, 54, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc5",   'w', LOOP11, 55, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc5",   'w', LOOP11, 56, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc5",  'w', LOOP11, 57, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc5",      'w', LOOP11, 58, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce5",      'w', LOOP11, 59, 1.0,   0.0, 'u', U_NONE},
+
+  {"mode_mce6",   'w', LOOP11,  0, 1, 0, 'u', U_NONE},
+  {"df_1_mcc6",   'w', LOOP11,  1, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc6",   'w', LOOP11,  2, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc6",   'w', LOOP11,  3, (1<<24), 0, 'u', U_NONE},
+  {"state_mpc6",  'w', LOOP11,  4, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc6",   'w', LOOP11,  5, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc6",   'w', LOOP11,  6, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc6",  'w', LOOP11,  7, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc6",      'w', LOOP11,  8, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce6",      'w', LOOP11,  9, 1.0,   0.0, 'u', U_NONE},
+
+    
+// add/change the slow data struct in mceserv.h
   END_OF_CHANNELS
 };
 

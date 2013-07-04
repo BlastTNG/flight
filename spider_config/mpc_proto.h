@@ -40,7 +40,8 @@ struct mpc_slow_data {
   uint16_t goal;
   uint16_t task;
   uint16_t dtask;
-
+  uint16_t t_mcc;
+  uint16_t t_mce;  
 };
 
 extern int16_t mpc_proto_rev;
