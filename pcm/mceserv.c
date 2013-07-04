@@ -189,6 +189,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
   uint32_t frameno_in;
   int i, mce, n;
 
+#if 0
   /* decode input datagram */
   mce = mpc_decompose_tes(&frameno_in, datain, len, data, bset_num,
       local_set.nm, &bad_bset_count, peer, port);
@@ -247,6 +248,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     tes_recon_status = n ? half : empty;
   }
 
+#endif
   return bad_bset_count;
 }
 
