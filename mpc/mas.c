@@ -41,10 +41,6 @@ static unsigned cmd_err = 0;
     } \
   } while(0)
 
-/* mce_cmd stuff */
-struct mcp_proc *mcecmd = NULL;
-int mcecmd_i, mcecmd_o, mcecmd_e;
-
 /* a big old array of block data */
 uint32_t mce_stat[N_MCE_STAT];
 
@@ -52,9 +48,10 @@ const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
 
 /* mas */
 mce_context_t *mas;
+mce_acq_t *acq;
 
 /* number of frames in an acq_go */
-#define ACQ_FRAMECOUNT "1000000000" /* a billion frames = 105 days */
+#define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
 
 /* Write a block to the MCE; returns non-zero on error */
 /* I guess MAS needs to be able to write to it's input data buffer...? */
@@ -177,32 +174,6 @@ static int mce_check_cards(void)
   return ret;
 }
 
-/* formatted write to MCE_CMD */
-static int __attribute__((format(printf,1,2))) mcecmd_write(const char *fmt,
-    ...)
-{
-  char buffer[4096];
-  int n, ret;
-  va_list ap;
-  
-  va_start(ap, fmt);
-  n = vsnprintf(buffer, 4096, fmt, ap);
-
-  bprintf(info, "MCECMD: %s", buffer);
-
-  buffer[n++] = '\n';
-  buffer[n] = 0;
-
-  if (write(mcecmd_i, buffer, n) < 0)
-    ret = 1;
-  else
-    ret = 0;
-
-  va_end(ap);
-
-  return ret;
-}
-
 /* read a value from the mce_stat array */
 static int mce_param(const char *card, const char *param, int offset,
     uint32_t *data, int count)
@@ -308,11 +279,11 @@ static int dump_runfile(FILE *stream)
       "  <MAS_VERSION> " MAS_VERSION "\n"
       "  <RC> rcs\n"
       "  <DATA_FILENAME> mpc_%li\n"
-      "  <DATA_FRAMEACQ> " ACQ_FRAMECOUNT "\n"
+      "  <DATA_FRAMEACQ> %li\n"
       "  <CTIME> %li\n"
       "  <HOSTNAME> x%i.spider\n"
       "</FRAMEACQ>\n",
-      acq_time, acq_time, nmce + 1);
+      acq_time, ACQ_FRAMECOUNT, acq_time, nmce + 1);
 
   /* mpc block */
   fprintf(stream, "<MPC>\n"
@@ -391,37 +362,98 @@ static int mce_status(void)
 MCE_STATUS_ERR:
   return 0;
 }
-static int acq_conf(void)
+
+static int acq_go(void)
 {
-  /* restart the servo */
-  uint32_t one = 1;
-  mas_write_block("rca", "flx_lp_init", &one, 1);
+  int r = mcedata_acq_go(acq, ACQ_FRAMECOUNT);
+  if (r)
+    bprintf(err, "Couldn't start acq: %s", mcelib_error_string(r));
 
-  /* start a multiacq */
-  mcecmd_write("acq_multi_begin");
-  mcecmd_write("acq_config_fs /data0/mce/current_data/mpc_%li rcs 50000",
-      acq_time);
-
-  if (state & st_drive1)
-    mcecmd_write("acq_config_fs /data1/mce/current_data/mpc_%li rcs 50000",
-        acq_time);
-
-  if (state & st_drive2)
-    mcecmd_write("acq_config_fs /data2/mce/current_data/mpc_%li rcs 50000",
-        acq_time);
-
-  return 0;
+  return r;
 }
 
-static int start_mcecmd(void)
+#define ACQ_INTERVAL 50000 /* number of frames in a chunk */
+static int acq_conf(void)
 {
-  char *argv[] = { "mce_cmd", "-ipr", NULL };
-  mcecmd = start_proc("mce_cmd", argv, 0, 1, &mcecmd_i, &mcecmd_o,
-      &mcecmd_e);
-  if (mcecmd == NULL)
-    return 1;
+  int r;
+  mcedata_storage_t *st;
+  uint32_t one = 1;
+  char filename[100];
 
-  return mcecmd_write("acq_link /data/mas/etc/mpc.lnk\n");
+  /* restart the servo */
+  mas_write_block("rca", "flx_lp_init", &one, 1);
+
+  /* start a multiacq -- this follows prepare_outfile in mce_cmd somewhat */
+  acq = malloc(sizeof(mce_acq_t));
+  if ((st = mcedata_multisync_create(0)) == NULL) {
+    bprintf(err, "Failed to create multisync");
+    goto ACQ_CONFIG_ERR;
+  }
+
+  if ((r = mcedata_acq_create(acq, mas, 0, 0 /* rcs */, -1, st))) {
+    bprintf(err, "Multisync acquisition failed: %s", mcelib_error_string(r));
+    goto ACQ_CONFIG_ERR;
+  }
+
+  /* create the rambuff callback */
+  st = mcedata_rambuff_create(frame_acq, 0);
+  if (st == NULL) {
+    bprintf(err, "Couldn't set up frame callback");
+    goto ACQ_CONFIG_ERR;
+  }
+  if (mcedata_multisync_add(acq, st)) {
+    bprintf(err, "Couldn't append frame callback");
+    goto ACQ_CONFIG_ERR;
+  }
+
+  /* now create a flatfile sequencer for each configured drive */
+  
+  /* drive0 */
+  sprintf(filename, "/data0/mce/current_data/mpc_%li", acq_time);
+  st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
+      "/data/mas/mpc.lnk");
+  if (st == NULL) {
+    bprintf(err, "Couldn't set up file sequencer for data0");
+    goto ACQ_CONFIG_ERR;
+  }
+  if (mcedata_multisync_add(acq, st)) {
+    bprintf(err, "Couldn't append file sequencer for data0");
+    goto ACQ_CONFIG_ERR;
+  }
+
+  if (state & st_drive1) {
+    filename[5] = '1';
+    st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
+        NULL);
+    if (st == NULL) {
+      bprintf(err, "Couldn't set up file sequencer for data1");
+      goto ACQ_CONFIG_ERR;
+    }
+    if (mcedata_multisync_add(acq, st)) {
+      bprintf(err, "Couldn't append file sequencer for data1");
+      goto ACQ_CONFIG_ERR;
+    }
+  }
+
+  if (state & st_drive2) {
+    filename[5] = '2';
+    st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
+        NULL);
+    if (st == NULL) {
+      bprintf(err, "Couldn't set up file sequencer for data2");
+      goto ACQ_CONFIG_ERR;
+    }
+    if (mcedata_multisync_add(acq, st)) {
+      bprintf(err, "Couldn't append file sequencer for data2");
+      goto ACQ_CONFIG_ERR;
+    }
+  }
+
+  return 0;
+
+ACQ_CONFIG_ERR:
+  mcedata_acq_destroy(acq);
+  return 1;
 }
 
 void *mas_data(void *dummy)
@@ -449,10 +481,6 @@ void *mas_data(void *dummy)
 
   if (mceconfig_open(mas, NULL, NULL))
     bputs(fatal, "Unable to attach to MAS config subsystem");
-
-  /* leech mode */
-  mcedata_ioctl(mas, DATADEV_IOCT_SET, DATA_LEECH);
-  bputs(info, "Leeching data from MAS data device");
 
   /* main loop */
   for (;;) {
@@ -494,10 +522,6 @@ void *mas_data(void *dummy)
 
         data_tk = dt_idle;
         break;
-      case dt_mcecmd_init:
-        dt_error = start_mcecmd();
-        data_tk = dt_idle;
-        break;
       case dt_reconfig:
         if (exec_and_wait(sched, MAS_SCRIPT "/mce_reconfig", NULL, 100, 0))
           comms_lost = 1;
@@ -512,7 +536,7 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_startacq:
-        dt_error = mcecmd_write("acq_go " ACQ_FRAMECOUNT);
+        dt_error = acq_go();
         data_tk = dt_idle;
         break;
       case dt_fakestop:
@@ -534,39 +558,9 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_multiend:
-        dt_error = mcecmd_write("acq_multi_end");
+        dt_error = 0;//mcecmd_write("acq_multi_end");
         data_tk = dt_idle;
         break;
-    }
-
-    if (state & st_mcecmd) {
-      /* check for change in leeched acq */
-      int leech_valid = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LVALID);
-      if (!leech_valid) {
-        mcedata_ioctl(mas, DATADEV_IOCT_RESET, 0);
-        bputs(info, "New acquisition");
-        /* reset frequency halving */
-        pcm_strobe = 0;
-        frame_size = set_frame(&frame);
-        get_acq_metadata();
-      }
-
-      if (frame_size > 0) {
-        int head;
-        head = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_HEAD);
-        int tail, ltail;
-        tail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_TAIL);
-        ltail = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_LTAIL);
-    
-        ssize_t total;
-        if (head != ltail) {
-          while (head != ltail) {
-            total = mcedata_read(mas, frame, frame_size);
-            do_frame((const uint32_t*)frame, frame_size);
-            ltail = (ltail + 1) % max;
-          }
-        }
-      }
     }
     usleep(10000);
   }

@@ -89,41 +89,68 @@ static void extract_data(uint32_t frameno, const uint32_t *frame,
   if (ndata > NUM_COL * NUM_ROW)
     ndata = NUM_COL * NUM_ROW;
 
-  if (pcm_strobe) { /* coadd */
-    pcm_ret_dat = 0; /* avoid race condition */
+  if (divisor == 1) {
+    pcm_strobe = 0;
     for (i = 0; i < ndata; ++i) 
-      pcm_data[i] = coadd(frame[i + MCE_HEADER_SIZE], data[i]);
-    
+      pcm_data[i] = coadd(frame[i + MCE_HEADER_SIZE], 0);
+
     /* signal for transmission to PCM */
     pcm_frameno = frameno;
     pcm_ret_dat = 1;
-  } else /* just copy */
-    for (i = 0; i < ndata; ++i) 
-      data[i] = coadd(frame[i + MCE_HEADER_SIZE], 0);
+  } else {
+    if (pcm_strobe) { /* coadd */
+      pcm_ret_dat = 0; /* avoid race condition */
+      for (i = 0; i < ndata; ++i) 
+        pcm_data[i] = coadd(frame[i + MCE_HEADER_SIZE], data[i]);
 
-  pcm_strobe = !pcm_strobe;
+      /* signal for transmission to PCM */
+      pcm_frameno = frameno;
+      pcm_ret_dat = 1;
+    } else /* just copy */
+      for (i = 0; i < ndata; ++i) 
+        data[i] = coadd(frame[i + MCE_HEADER_SIZE], 0);
+
+    pcm_strobe = !pcm_strobe;
+  }
 }
 
-void do_frame(const uint32_t *frame, size_t frame_size)
+static void do_frame(const uint32_t *frame, size_t frame_size)
 {
   /* Initialise */
   const struct mas_header *header = (const struct mas_header *)frame;
 
   int sync_on = header->status & MCE_FSB_ACT_CLK;
+  static uint32_t last_frameno = 0;
+  static int last_veto = 1000;
   uint32_t frameno = sync_on ? header->syncno : header->cc_frameno;
 
+  /* sequencing check */
+  if (last_frameno && frameno - last_frameno != 1)
+    bprintf(warning, "Sequencing error: %u, %u\n", last_frameno, frameno);
+  last_frameno = frameno;
+
   /* "Helpful" messages */
-  if (header->status & MCE_FSB_LAST) {
-    bprintf(info, "LAST bit in CC frame %u", header->cc_frameno);
-    state &= ~st_retdat;
-  }
-  if (header->status & MCE_FSB_STOP) {
-    bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
-    state &= ~st_retdat;
+  if (last_veto > 0) {
+    if (header->status & MCE_FSB_LAST) {
+      bprintf(info, "LAST bit in CC frame %u", header->cc_frameno);
+      state &= ~st_retdat;
+    }
+    if (header->status & MCE_FSB_STOP) {
+      bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
+      state &= ~st_retdat;
+    }
   }
 
   /* do more stuff here, probably */
 
   /* do the data extraction for PCM */
   extract_data(frameno, frame, frame_size);
+}
+
+/* the rambuff callback */
+int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer)
+{
+  do_frame(buffer, (size_t)frame_size);
+
+  return 0; /* MAS ignores this */
 }

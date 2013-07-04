@@ -98,6 +98,7 @@ int pcm_strobe = 0;
 
 /* Semaphore for data packet ready for tranmission to PCM */
 int pcm_ret_dat = 0;
+int rd_count = 0;
 
 /* Send mcestat to PCM */
 int send_mcestat = 0;
@@ -321,15 +322,39 @@ static void ForwardMCEStat(void)
   send_mcestat = 0;
 }
 
+#undef TIME_TES
 /* Send a TES data packet */
 static void ForwardData(void)
 {
+#ifdef TIME_TES
+  static struct timeval ltv = {0, 0};
+  static int delta[100];
+  static int i = 0;
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+#endif
+
   char data[UDP_MAXSIZE];
   size_t len = mpc_compose_tes(pcm_data, pcm_frameno, bset_num, nmce, ntes, tes,
       data);
   if (pcm_ret_dat) { /* race condition avoidance */
     udp_bcast(sock, MCESERV_PORT, len, data, 0);
     pcm_ret_dat = 0;
+    rd_count++;
+#ifdef TIME_TES
+    if (ltv.tv_sec) {
+      delta[i++] = (tv.tv_sec - ltv.tv_sec) * 1000000 +
+        (tv.tv_usec - ltv.tv_usec);
+      if (i == 10) {
+        bprintf(info, "D: %i %i %i %i %i %i %i %i %i %i",
+            delta[0], delta[1], delta[2], delta[3], delta[4],
+            delta[5], delta[6], delta[7], delta[8], delta[9]);
+        i = 0;
+      }
+    }
+    memcpy(&ltv, &tv, sizeof(tv));
+#endif
   }
 }
 

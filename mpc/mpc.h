@@ -35,11 +35,13 @@ extern int power_cycle_mce;
 extern int power_cycle_cmp;
 extern int command_veto;
 extern int send_mcestat;
+extern int divisor;
 extern int veto;
 extern int leech_veto;
 extern uint16_t bset_num;
 extern int ntes;
 extern int16_t tes[NUM_ROW * NUM_COL];
+extern int rd_count;
 extern uint16_t pcm_data[NUM_COL * NUM_ROW];
 extern int pcm_strobe;
 extern uint32_t pcm_frameno;
@@ -63,11 +65,10 @@ enum status {
   st_drive0 = 0x0001, /* The primary drive is ready */
   st_drive1 = 0x0002, /* The secondary drive is ready */
   st_drive2 = 0x0004, /* The tertiary drive is ready */
-  st_mcecmd = 0x0008, /* mce_cmd is running */
-  st_mcecom = 0x0010, /* MCE is talking */ 
-  st_config = 0x0020, /* MCE is configured */
-  st_acqcnf = 0x0040, /* Acquisition is configured */
-  st_retdat = 0x0080  /* MCE is returning data */
+  st_mcecom = 0x0008, /* MCE is talking */ 
+  st_config = 0x0010, /* MCE is configured */
+  st_acqcnf = 0x0020, /* Acquisition is configured */
+  st_retdat = 0x0040  /* MCE is returning data */
 };
 
 extern unsigned int state;
@@ -87,12 +88,13 @@ void *task(void *dummy);
 /* data tasklets */
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
-  dt_stopacq, dt_killacq, dt_mcecmd_init, dt_mcecmd_fini, dt_fakestop,
-  dt_empty, dt_status, dt_acqcnf, dt_multiend
+  dt_stopacq, dt_killacq, dt_fakestop, dt_empty, dt_status, dt_acqcnf,
+  dt_multiend
 };
-#define DT_STRINGS "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
-  "stopacq", "killacq", "mcecmd_init", "mcecmd_fini", "fakestop", "empty", \
-"status", "acqcnf", "multiend"
+#define DT_STRINGS \
+  "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
+  "stopacq", "killacq", "fakestop", "empty", "status", "acqcnf", \
+"multiend"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;
@@ -103,7 +105,7 @@ extern int comms_lost;
 void *mas_data(void *dummy);
 void *fake_data(void *dummy);
 
-/* The frame-processing loop */
-void do_frame(const uint32_t *frame, size_t frame_size);
+/* The frame acq callback */
+int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);
 
 #endif

@@ -37,9 +37,8 @@ int working = 0;
 static const int mode_start[op_acq + 1] =
 {
   [op_init] = 0,
-  [op_ready] = st_drive0 | st_mcecom | st_mcecmd,
-  [op_acq] = st_drive0 | st_mcecom | st_mcecmd | st_config | st_acqcnf
-    | st_retdat
+  [op_ready] = st_drive0 | st_mcecom,
+  [op_acq] = st_drive0 | st_mcecom | st_config | st_acqcnf | st_retdat
 };
 static const int mode_stop[op_acq + 1] =
 {
@@ -92,27 +91,13 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       case st_idle:
       case st_drive1:
       case st_drive2:
+      case st_mcecom:
         /* always okay */
         *do_start = st;
-        break;
-      case st_mcecom:
-        if (~state & st_mcecmd) /* MCE cmd must be running */
-          try_toggle(st_mcecmd, 0, do_start, do_stop);
-        else
-          *do_start = st;
-        break;
-      case st_mcecmd:
-        /* acquisition must be stopped to intialise a primary */
-        if (state & st_retdat)
-          try_toggle(st_retdat, 1, do_start, do_stop);
-        else
-          *do_start = st;
         break;
       case st_config:
         if (~state & st_drive0) /* must have a drive */
           try_toggle(st_drive0, 0, do_start, do_stop);
-        else if (~state & st_mcecmd) /* mce_cmd must be running */
-          try_toggle(st_mcecmd, 0, do_start, do_stop);
         else if (~state & st_mcecom) /* MCE must be alive */
           try_toggle(st_mcecom, 0, do_start, do_stop);
         else
@@ -133,8 +118,7 @@ void try_toggle(enum status st, int stop, enum status *do_start,
     }
   }
 
-  bprintf(info, "try_toggle(%04x,%i) = %04x,%04x", st, stop, *do_start,
-      *do_stop);
+//  bprintf(info, "try_toggle(%04x,%i) = %04x,%04x", st, stop, *do_start, *do_stop);
 }
 
 /* Meta's job is to figure out how walk the graph to turn "state" into
@@ -162,7 +146,7 @@ void meta(void)
 
     /* figure out all the things to do */
     diff = (~state & mode_start[goal]) | (state & mode_stop[goal]);
-    bprintf(info, "M: diff = 0x%04X", diff);
+//    bprintf(info, "M: diff = 0x%04X", diff);
 
     /* find the first thing to do */
     for (i = 0; i < 32; ++i) {

@@ -21,6 +21,7 @@
 #include "mputs.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
@@ -39,7 +40,8 @@ static int dt_wait(enum dtask dt)
   while (data_tk != dt_idle)
     usleep(10000);
 
-  bprintf(info, "DTerr: %i", dt_error);
+  if (dt_error)
+    bprintf(warning, "DTerr: %i", dt_error);
 
   return dt_error;
 }
@@ -81,6 +83,10 @@ static int task_reset_mce()
 /* run generic tasks */
 void *task(void *dummy)
 {
+  int repc = 0;
+  int check_acq = 0;
+  long trd_count = 0;
+  struct timeval stv, tv;
   nameThread("Task");
 
   /* wait for a task */
@@ -94,8 +100,10 @@ void *task(void *dummy)
         /* problem solved, I guess.  Get meta to return us to our scheduled
          * program */
         comms_lost = 0;
+        check_acq = 0;
         cl_count = 0;
         start_tk = stop_tk = st_idle;
+        state &= ~(st_config | st_acqcnf | st_mcecom | st_retdat);
         continue;
       }
 
@@ -110,7 +118,9 @@ void *task(void *dummy)
       if (power_wait[cl_count + 1])
         cl_count++;
       comms_lost = 0;
-      state &= ~(st_config | st_mcecom); /* need complete MCE restart */
+      check_acq = 0;
+      /* need complete MCE restart */
+      state &= ~(st_config | st_acqcnf | st_mcecom | st_retdat);
       start_tk = stop_tk = st_idle; /* try again */
     } else if (start_tk != st_idle) { /* handle start task requests */
       switch (start_tk) {
@@ -128,15 +138,6 @@ void *task(void *dummy)
           task_reset_mce();
           start_tk = st_idle;
           break;
-        case st_mcecmd:
-          /* start mce_cmd */
-          if (dt_wait(dt_mcecmd_init)) {
-            ; /* is this even meaningful? */
-          } else {
-            state |= st_mcecmd;
-            start_tk = st_idle;
-          }
-          break;
         case st_config:
           /* MCE reconfig */
           if (dt_wait(dt_reconfig)) {
@@ -150,7 +151,6 @@ void *task(void *dummy)
           /* "mce status" */
           if (dt_wait(dt_status)) {
             comms_lost = 1;
-//sleep(1000000);
           } else {
             state |= st_acqcnf;
             start_tk = st_idle;
@@ -162,7 +162,15 @@ void *task(void *dummy)
             state |= st_acqcnf;
             start_tk = st_idle;
           }
+          break;
         case st_retdat:
+          if (check_acq) { /* probably means an acquisition immediately
+                            terminated -- try a reset */
+            comms_lost = 1;
+            check_acq = 0;
+            continue;
+          } 
+          check_acq = 1;
           /* start acq */
           if (dt_wait(dt_startacq)) {
             comms_lost = 1;
@@ -170,19 +178,11 @@ void *task(void *dummy)
             state |= st_retdat;
             start_tk = st_idle;
           }
+          break;
       }
     } else if (stop_tk != st_idle) { /* handle stop task requests */
       switch (stop_tk) {
         case st_idle:
-          break;
-        case st_mcecmd:
-          /* stop mce_cmd */
-          if (dt_wait(dt_mcecmd_fini)) {
-            /* ...? */
-          } else {
-            state &= ~st_mcecmd;
-            stop_tk = st_idle;
-          }
           break;
         case st_acqcnf:
           /* end multiacq */
@@ -201,5 +201,29 @@ void *task(void *dummy)
       }
     }
     usleep(10000);
+
+    if (repc++ > 100) {
+      bprintf(info, "state: 0x%X; start: 0x%X; end: 0x%X", state, start_tk, stop_tk);
+      if (state & st_retdat) {
+        if (check_acq && rd_count > 20) {
+          bprintf(info, "acquisition start detected");
+          check_acq = 0;
+          gettimeofday(&stv, NULL);
+        } else {
+          gettimeofday(&tv, NULL);
+          double dt = (tv.tv_sec - stv.tv_sec) +
+            (tv.tv_usec - stv.tv_usec) / 1000000.;
+          trd_count += rd_count;
+
+          bprintf(info, "ret_dat count: %i (%10.7g Hz)\n", rd_count,
+              trd_count / dt);
+          /* should be ~50 or 100 */
+          if (rd_count < 20)
+            comms_lost = 1;
+        }
+        rd_count = 0;
+      }
+      repc = 0;
+    }
   }
 }

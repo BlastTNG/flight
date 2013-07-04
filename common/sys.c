@@ -32,6 +32,8 @@
 #include <time.h>
 #include <signal.h>
 #include <string.h>
+#include <dirent.h>
+#include <limits.h>
 
 struct mcp_proc {
   pid_t pid;
@@ -125,6 +127,29 @@ JOINED:
   return status;
 }
 
+/* close all descriptors except for 0, 1, 2 */
+#define PROC_SELF_FD "/proc/self/fd"
+static void closeallfds()
+{
+  long fd;
+  char *endp;
+  struct dirent *dent;
+  DIR *dirp;
+  
+  /* This should be faster than trying to close EVERY possible descriptor */
+  if ((dirp = opendir(PROC_SELF_FD))) {
+    while ((dent = readdir(dirp))) {
+      fd = strtol(dent->d_name, &endp, 10);
+      if (dent->d_name != endp && *endp == '\0' && fd >= 3 && fd < INT_MAX &&
+          fd != dirfd(dirp))
+      {
+        close(fd);
+      }
+    }
+    closedir(dirp);
+  }
+}
+
 /* check whether a process has terminated or exceeded it's timeout.
  *
  * Returns:
@@ -179,7 +204,7 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
 
     /* this is slowish */
     for (i = 1; argv[i]; ++i)
-      strncat(strncat(cmd, " ", 4096), argv[i], 4096);
+      sprintf(cmd + strlen(cmd), " %s", argv[i]);
     bprintf(info, "Running %s", cmd);
   }
 
@@ -249,6 +274,9 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
     dup2(p->in_fd[0], 0);
     dup2(p->out_fd[1], 1);
     dup2(p->err_fd[1], 2);
+
+    /* close all other descriptors */
+    closeallfds();
 
     /* now exec the process -- this shouldn't return */
     execvp(path, argv);

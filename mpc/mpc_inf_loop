@@ -3,6 +3,4 @@
 while true
 do
   /data/mas/bin/mpc &> /dev/null
-  # stoopid mce_cmd -- mpc will fix things when it restarts
-  killall -9 mce_cmd &> /dev/null
 done
