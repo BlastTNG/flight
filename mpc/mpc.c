@@ -55,7 +55,7 @@
 /* Semeuphoria */
 
 /* UDP socket */
-static int sock;
+int sock;
 
 /* The number of the attached MCE */
 int nmce = 0;
@@ -81,7 +81,7 @@ int ntes = 0;
 int16_t tes[NUM_ROW * NUM_COL];
 
 /* the data frame to ship out */
-uint16_t pcm_data[NUM_COL * NUM_ROW];
+static uint16_t pcm_data[NUM_COL * NUM_ROW * PB_SIZE];
 
 /* the turnaround flag */
 int in_turnaround = 0;
@@ -96,15 +96,11 @@ static int pcm_pong = 0;
 /* handles the divide-by-two frequency scaling for PCM transfer */
 int pcm_strobe = 0;
 
-/* Semaphore for data packet ready for tranmission to PCM */
-int pcm_ret_dat = 0;
+/* ret_dat counter */
 int rd_count = 0;
 
 /* Send mcestat to PCM */
 int send_mcestat = 0;
-
-/* Frame number of PCM data */
-uint32_t pcm_frameno = 0;
 
 static void set_data_mode_bits(int i, int both, const char *dmb)
 {
@@ -312,6 +308,108 @@ BAD_ARRAY_ID:
   bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
 }
 
+/* Send a TES data packet */
+static void ForwardData(const uint32_t *frameno)
+{
+  char data[UDP_MAXSIZE];
+  size_t len = mpc_compose_tes(pcm_data, frameno, bset_num, PB_SIZE, nmce,
+      ntes, tes, data);
+  udp_bcast(sock, MCESERV_PORT, len, data, 0);
+}
+
+/* do the frequency division and 16-bit conversion based on the data mode
+ * definitions */
+static int16_t coadd(uint32_t datum, uint16_t old_datum)
+{
+  uint16_t rec[2];
+  uint32_t mask[2];
+  int i;
+
+  /* 16-bit-space masks */
+  mask[0] = ((1 << data_modes[data_mode][0].num_bits) - 1)
+    << data_modes[data_mode][1].num_bits;
+  mask[1] = ((1 << data_modes[data_mode][1].num_bits) - 1);
+
+  /* extract the subfield(s) */
+  rec[0] = (uint16_t)(datum >> (data_modes[data_mode][0].first_bit -
+          data_modes[data_mode][1].num_bits)) & mask[0];
+  rec[1] = (uint16_t)(datum >> data_modes[data_mode][1].first_bit) & mask[1];
+
+  if (pcm_strobe) { /* coadd */
+    /* split the old datum, if neccessary */
+    uint16_t old_rec[2];
+    
+    old_rec[0] = (data_modes[data_mode][0].coadd_how != first)
+      ? old_datum & mask[0] : 0;
+
+    old_rec[1] = (data_modes[data_mode][1].num_bits > 0 &&
+        data_modes[data_mode][1].coadd_how != first) ?  old_datum & mask[1] : 0;
+
+    /* coadd */
+    for (i = 0; i < 2; ++i)
+      switch (data_modes[data_mode][i].coadd_how) {
+        case first:
+          break; /* nothing to do */
+        case sum:
+          rec[i] = ((uint32_t)rec[i] + old_rec[i]) & mask[i];
+          break;
+        case mean:
+          rec[i] = (((uint32_t)rec[i] + old_rec[i]) / 2) & mask[i];
+          break;
+      }
+
+  }
+
+  /* mush back together and return */
+  return rec[0] | rec[1];
+}
+
+static void pushback(void)
+{
+  int n;
+  size_t i, ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE;
+
+  /* the buffer containing the first frame */
+  static uint16_t data[NUM_ROW * NUM_COL];
+  uint32_t frameno[PB_SIZE];
+
+  if (ntes > 0 || 1) { /* not sending any TES data */
+    for (n = 0; n < PB_SIZE; ++n) {
+      /* this frame */
+      uint32_t *fr = frame[(n + pb_last) % FB_SIZE];
+
+      const struct mas_header *header = (const struct mas_header *)fr;
+      const int sync_on = header->status & MCE_FSB_ACT_CLK;
+      frameno[n] = sync_on ? header->syncno : header->cc_frameno;
+
+      if (ndata > NUM_COL * NUM_ROW)
+        ndata = NUM_COL * NUM_ROW;
+
+      if (divisor == 1) {
+        pcm_strobe = 0;
+        for (i = 0; i < ndata; ++i) 
+          pcm_data[i] = coadd(fr[i + MCE_HEADER_SIZE], 0);
+      } else {
+        if (pcm_strobe) { /* coadd */
+          for (i = 0; i < ndata; ++i) 
+            pcm_data[i] = coadd(fr[i + MCE_HEADER_SIZE], data[i]);
+          pcm_strobe = 0;
+        } else {/* just copy */
+          for (i = 0; i < ndata; ++i) 
+            data[i] = coadd(fr[i + MCE_HEADER_SIZE], 0);
+          pcm_strobe = 1;
+          return;
+        }
+      }
+    }
+
+    /* pushback */
+    ForwardData(frameno);
+  }
+  pb_last = (pb_last + PB_SIZE) % FB_SIZE;
+  rd_count += PB_SIZE;
+}
+
 /* Send a super-slow data packet */
 static void ForwardMCEStat(void)
 {
@@ -320,42 +418,6 @@ static void ForwardMCEStat(void)
   size_t len = mpc_compose_stat(mce_stat, nmce, data);
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
   send_mcestat = 0;
-}
-
-#undef TIME_TES
-/* Send a TES data packet */
-static void ForwardData(void)
-{
-#ifdef TIME_TES
-  static struct timeval ltv = {0, 0};
-  static int delta[100];
-  static int i = 0;
-  struct timeval tv;
-
-  gettimeofday(&tv, NULL);
-#endif
-
-  char data[UDP_MAXSIZE];
-  size_t len = mpc_compose_tes(pcm_data, pcm_frameno, bset_num, nmce, ntes, tes,
-      data);
-  if (pcm_ret_dat) { /* race condition avoidance */
-    udp_bcast(sock, MCESERV_PORT, len, data, 0);
-    pcm_ret_dat = 0;
-    rd_count++;
-#ifdef TIME_TES
-    if (ltv.tv_sec) {
-      delta[i++] = (tv.tv_sec - ltv.tv_sec) * 1000000 +
-        (tv.tv_usec - ltv.tv_usec);
-      if (i == 10) {
-        bprintf(info, "D: %i %i %i %i %i %i %i %i %i %i",
-            delta[0], delta[1], delta[2], delta[3], delta[4],
-            delta[5], delta[6], delta[7], delta[8], delta[9]);
-        i = 0;
-      }
-    }
-    memcpy(&ltv, &tv, sizeof(tv));
-#endif
-  }
 }
 
 /* Execute a command */
@@ -395,6 +457,7 @@ int main(void)
 
   pthread_t data_thread;
   pthread_t task_thread;
+  pthread_t acq_thread;
 
   int init_timer = 0;
   int slow_timer = 0;
@@ -425,6 +488,7 @@ int main(void)
   /* create the threads */
   pthread_create(&data_thread, NULL, mas_data, NULL);
   pthread_create(&task_thread, NULL, task, NULL);
+  pthread_create(&acq_thread, NULL, acquer, NULL);
 
   /* main loop */
   for (;;) {
@@ -488,11 +552,12 @@ int main(void)
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
 
-      if (pcm_ret_dat)
-        ForwardData();
-
       if (send_mcestat)
         ForwardMCEStat();
+
+      /* send data */
+      if ((fb_top - pb_last + FB_SIZE) % FB_SIZE > PB_SIZE)
+        pushback();
 
       /* PCM requests */
       pcm_special(0, NULL, NULL, 0);

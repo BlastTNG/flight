@@ -76,7 +76,7 @@ static int task_reset_mce()
 
   cl_count = 0;
   state |= st_mcecom;
-  state &= ~(st_config | st_retdat);
+  state &= ~(st_config | st_acqcnf | st_retdat);
   return 0;
 }
 
@@ -85,8 +85,6 @@ void *task(void *dummy)
 {
   int repc = 0;
   int check_acq = 0;
-  long trd_count = 0;
-  struct timeval stv, tv;
   nameThread("Task");
 
   /* wait for a task */
@@ -185,14 +183,6 @@ void *task(void *dummy)
         case st_idle:
           break;
         case st_acqcnf:
-          /* end multiacq */
-          if (dt_wait(dt_multiend)) {
-            comms_lost = 1;
-          } else {
-            state &= ~st_acqcnf;
-            stop_tk = st_idle;
-          }
-          break;
         case st_retdat:
           /* stop acq */
           task_reset_mce();
@@ -203,20 +193,12 @@ void *task(void *dummy)
     usleep(10000);
 
     if (repc++ > 100) {
-      bprintf(info, "state: 0x%X; start: 0x%X; end: 0x%X", state, start_tk, stop_tk);
       if (state & st_retdat) {
         if (check_acq && rd_count > 20) {
           bprintf(info, "acquisition start detected");
           check_acq = 0;
-          gettimeofday(&stv, NULL);
         } else {
-          gettimeofday(&tv, NULL);
-          double dt = (tv.tv_sec - stv.tv_sec) +
-            (tv.tv_usec - stv.tv_usec) / 1000000.;
-          trd_count += rd_count;
-
-          bprintf(info, "ret_dat count: %i (%10.7g Hz)\n", rd_count,
-              trd_count / dt);
+          bprintf(info, "ret_dat count: %i\n", rd_count);
           /* should be ~50 or 100 */
           if (rd_count < 20)
             comms_lost = 1;

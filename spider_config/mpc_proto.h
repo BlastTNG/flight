@@ -67,11 +67,12 @@ size_t mpc_compose_slow(const struct mpc_slow_data *dat, int mce, char *buffer);
 int mpc_decompose_slow(struct mpc_slow_data dat[NUM_MCE][3], int ind[NUM_MCE],
     size_t len, const char *data, const char *peer, int port);
 
-size_t mpc_compose_tes(const uint16_t *data, uint32_t framenum,
-    uint16_t bset_num, int nmce, int ntes, const int16_t *tesind, char *buffer);
-int mpc_decompose_tes(uint32_t *frameno, uint16_t *tes_data, size_t len,
-    const char *data, uint16_t bset_num, int nm[NUM_MCE], int *bad_bset_count,
-    const char *peer, int port);
+size_t mpc_compose_tes(const uint16_t *data, const uint32_t *framenum,
+    uint16_t bset_num, int16_t nf, int nmce, int ntes, const int16_t *tesind,
+    char *buffer);
+int mpc_decompose_tes(int *nf, uint32_t *frameno, uint16_t *tes_data,
+    size_t len, const char *data, uint16_t bset_num, int set_len[NUM_MCE],
+    int *bad_bset_count, const char *peer, int port);
 
 size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer);
 int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,

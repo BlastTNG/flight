@@ -27,6 +27,7 @@
 #include <mce/data_ioctl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/types.h>
 #include <string.h>
 #include <time.h>
 
@@ -49,6 +50,15 @@ const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
 /* mas */
 mce_context_t *mas;
 mce_acq_t *acq;
+static volatile int acq_going = 0;
+static volatile int acq_stopped = 0;
+
+/* the data frame buffer */
+size_t frame_size;
+int fb_top = 0;
+int pb_last = 0;
+uint32_t *frame[FB_SIZE];
+static uint32_t *fb = NULL;
 
 /* number of frames in an acq_go */
 #define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
@@ -144,18 +154,6 @@ static int mpc_termio(int severity, const char *message)
   bputs(level, message);
 
   return 0;
-}
-
-static int set_frame(char **frame)
-{
-  int fs = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_DATASIZE);
-  bprintf(info, "framesize: %i", fs);
-
-  if (*frame)
-    free(*frame);
-  *frame = malloc(fs);
-
-  return fs;
 }
 
 /* Check that we have all the cards */
@@ -363,22 +361,16 @@ MCE_STATUS_ERR:
   return 0;
 }
 
-static int acq_go(void)
-{
-  int r = mcedata_acq_go(acq, ACQ_FRAMECOUNT);
-  if (r)
-    bprintf(err, "Couldn't start acq: %s", mcelib_error_string(r));
-
-  return r;
-}
-
 #define ACQ_INTERVAL 50000 /* number of frames in a chunk */
 static int acq_conf(void)
 {
-  int r;
+  int r, i;
   mcedata_storage_t *st;
   uint32_t one = 1;
   char filename[100];
+  
+  /* stop the pushback */
+  fb_top = pb_last = 0;
 
   /* restart the servo */
   mas_write_block("rca", "flx_lp_init", &one, 1);
@@ -449,6 +441,14 @@ static int acq_conf(void)
     }
   }
 
+  /* rebuild the frame buffer */
+  free(fb);
+  frame_size = acq->frame_size * sizeof(uint32_t);
+  fb = malloc(FB_SIZE * frame_size);
+  for (i = 0; i < FB_SIZE; ++i)
+    frame[i] = fb + i * acq->frame_size;
+
+  /* done */
   return 0;
 
 ACQ_CONFIG_ERR:
@@ -458,9 +458,6 @@ ACQ_CONFIG_ERR:
 
 void *mas_data(void *dummy)
 {
-  char *frame = NULL;
-  int frame_size = 0;
-  int max = 0;
   int ret;
 
   nameThread("MAS");
@@ -516,9 +513,7 @@ void *mas_data(void *dummy)
         } else
           dt_error = 0;
 
-        frame_size = set_frame(&frame);
         get_acq_metadata();
-        max = mcedata_ioctl(mas, DATADEV_IOCT_QUERY, QUERY_MAX);
 
         data_tk = dt_idle;
         break;
@@ -536,7 +531,8 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_startacq:
-        dt_error = acq_go();
+        acq_going = 1;
+        dt_error = 0;
         data_tk = dt_idle;
         break;
       case dt_fakestop:
@@ -557,12 +553,33 @@ void *mas_data(void *dummy)
           dt_error = 0;
         data_tk = dt_idle;
         break;
-      case dt_multiend:
-        dt_error = 0;//mcecmd_write("acq_multi_end");
-        data_tk = dt_idle;
-        break;
+    }
+
+    /* check for acq termination */
+    if (acq_going && acq_stopped) {
+      acq_going = 0;
+      acq_stopped = 0;
+      state &= ~st_retdat;
     }
     usleep(10000);
+  }
+
+  return NULL;
+}
+
+/* the acquisition thread */
+void *acquer(void* dummy)
+{
+  nameThread("Acq");
+
+  for (;;) {
+    usleep(100000);
+    if (acq_going && !acq_stopped) {
+        int r = mcedata_acq_go(acq, ACQ_FRAMECOUNT); /* blocks */
+        if (r)
+          bprintf(err, "Acquisition error: %s", mcelib_error_string(r));
+        acq_stopped = 1;
+    }
   }
 
   return NULL;

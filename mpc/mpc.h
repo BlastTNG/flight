@@ -25,8 +25,22 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define FB_SIZE 40 /* number of frames in the frame buffer */
+#define PB_SIZE 10 /* number of frames in PCM packet */
+
+#pragma pack(1)
+struct mas_header {
+  uint32_t status, cc_frameno, row_len, num_rows_rep, data_rate, arz_count,
+           header_vers, ramp_val;
+  uint16_t ramp_card, ramp_param;
+  uint32_t num_rows, syncno, runid, user_word;
+  /* more stuff */
+};
+#pragma pack()
+
 /* MPC globals */
 extern int nmce;
+extern int sock;
 extern int in_turnaround;
 extern int fake;
 extern int init;
@@ -42,11 +56,15 @@ extern uint16_t bset_num;
 extern int ntes;
 extern int16_t tes[NUM_ROW * NUM_COL];
 extern int rd_count;
-extern uint16_t pcm_data[NUM_COL * NUM_ROW];
 extern int pcm_strobe;
 extern uint32_t pcm_frameno;
 extern int pcm_ret_dat;
 extern uint32_t mce_stat[N_MCE_STAT];
+
+extern size_t frame_size;
+extern int pb_last;
+extern int fb_top;
+extern uint32_t *frame[FB_SIZE];
 
 /* The director */
 void meta(void);
@@ -89,21 +107,18 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_stopacq, dt_killacq, dt_fakestop, dt_empty, dt_status, dt_acqcnf,
-  dt_multiend
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
-  "stopacq", "killacq", "fakestop", "empty", "status", "acqcnf", \
-"multiend"
+  "stopacq", "killacq", "fakestop", "empty", "status", "acqcnf"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;
 
 #define MPC_ETC_DIR "/data/mas/etc"
 
-/* the MAS-MPC interface and its fake counterpart */
 void *mas_data(void *dummy);
-void *fake_data(void *dummy);
+void *acquer(void *dummy);
 
 /* The frame acq callback */
 int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);

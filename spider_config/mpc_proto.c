@@ -158,7 +158,7 @@ size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer)
  *
  * data packet looks like:
  *
- * RRTMBB00FFFF...
+ * RRTMBBNN(FFFF...)(DD..)
  *
  * where
  *
@@ -166,27 +166,32 @@ size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer)
  * T = 'T' indicating a slow packet
  * M = 8-bit MCE number
  * B = 16-bit bset number
- * 0 = padding
- * F = 32-bit framenumber
- *
- * followed by the 16-bit tes data in bset order
+ * N = 16-bit frame count
+ * F = "N" 32-bit framenumbers
+ * D = "N" frames of 16-bit tes data in bset order
  */
-size_t mpc_compose_tes(const uint16_t *data, uint32_t framenum,
-    uint16_t bset_num, int nmce, int ntes, const int16_t *tesind, char *buffer)
+size_t mpc_compose_tes(const uint16_t *data, const uint32_t *framenum,
+    uint16_t bset_num, int16_t nf, int nmce, int ntes, const int16_t *tesind,
+    char *buffer)
 {
-  size_t len = 12 + sizeof(uint16_t) * ntes;
+  size_t len = 8 + (sizeof(uint16_t) * ntes + sizeof(uint32_t)) * nf;
 
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'T'; /* tes data packet */
   buffer[3] = nmce & 0xF; /* mce number */
   memcpy(buffer + 4, &bset_num, sizeof(bset_num)); /* BSET */
-  memcpy(buffer + 8, &framenum, sizeof(framenum)); /* FRAMENUM */
+  memcpy(buffer + 6, &nf, sizeof(nf));             /* NUM_FRAMES */
+
+  /* frame numbers */
+  memcpy(buffer + 8, framenum, sizeof(uint32_t) * nf);
 
   /* append data */
-  memcpy(buffer + 12, data, sizeof(uint16_t) * ntes);
+  memcpy(buffer + nf * sizeof(uint32_t) + 8, data,
+      sizeof(uint16_t) * ntes * nf);
 
   return len;
 }
+
 /* compose a slow data packet for transfer from the mpc
  *
  * Slow data packet looks like:
@@ -489,10 +494,11 @@ int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
   return nmce;
 }
 
-int mpc_decompose_tes(uint32_t *frameno, uint16_t *tes_data, size_t len,
-    const char *data, uint16_t bset_num, int set_len[NUM_MCE],
+int mpc_decompose_tes(int *pb_size, uint32_t *frameno, uint16_t *tes_data,
+    size_t len, const char *data, uint16_t bset_num, int set_len[NUM_MCE],
     int *bad_bset_count, const char *peer, int port)
 {
+  int16_t nf;
   /* check len */
   if (len < 12) {
     bprintf(err, "Bad data packet (size %zu) from %s/%i", len, peer, port);
@@ -507,24 +513,28 @@ int mpc_decompose_tes(uint32_t *frameno, uint16_t *tes_data, size_t len,
     return -1;
   }
 
-  /* check len again */
-  if (len < set_len[mce] * sizeof(uint16_t) + 12) {
-    bprintf(err, "Bad data packet (size %zu) from %s/%i, MCE %i", len, peer,
-        port, mce);
-    return -1;
-  }
-
   /* check bset number */
   if (*(uint16_t*)(data + 4) != bset_num) {
     (*bad_bset_count)++;
     return -1;
   }
 
-  /* framenumber */
-  *frameno = *(uint32_t*)(data + 8);
+  /* get frame count */
+  *pb_size = nf = *(uint16_t*)(data + 6);
+
+  /* check len again */
+  if (len < (set_len[mce] * sizeof(uint16_t) + sizeof(uint32_t)) * nf + 8) {
+    bprintf(err, "Bad data packet (size %zu) from %s/%i, MCE %i", len, peer,
+        port, mce);
+    return -1;
+  }
+
+  /* framenumbers */
+  memcpy(frameno, data + 8, sizeof(uint32_t) * nf);
 
   /* copy tes data */
-  memcpy(tes_data, data + 12, len - 12);
+  memcpy(tes_data, data + 8 + sizeof(uint32_t) * nf,
+      len - 8 - sizeof(uint32_t) * nf);
 
   return mce;
 }
