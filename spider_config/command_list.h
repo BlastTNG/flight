@@ -147,7 +147,7 @@ enum multiCommand {
   el_gyro_offset,    general,           slew_veto,
   actuator_servo,    actuator_vel,
   actuator_i,        actuator_delta,
-  motors_verbose,
+  motors_verbose,    get_mce_param,
   thegood_any,        thegood_settrig_timed,
   thegood_exp_params, thegood_focus_params,
   thebad_any,         thebad_settrig_timed,

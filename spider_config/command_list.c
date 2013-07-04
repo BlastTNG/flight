@@ -27,6 +27,8 @@
 #include "camstruct.h"
 #endif
 
+#include "mce_counts.h"
+
 const char *const command_list_serial = "$Rev$";
 
 /* parse the above; returns -1 if command_list_serial can't be parsed */
@@ -626,6 +628,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(oth_set), "OTH Link channel set", GR_TELEM, 1,
     {
       {"Channel Set", 0, 2, 'i', "channelset_oth"}
+    }
+  },
+
+  {COMMAND(get_mce_param), "Get MCE Parameter", GR_TELEM, 1,
+    {
+      {"Parameter Index", 0, N_MCE_STAT*6, 'i', "mce_cindex"}
     }
   },
 

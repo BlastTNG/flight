@@ -145,6 +145,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"time_state_x4_cycle",  'w', LOOP0,  36,                1.0,            0.0, 'U', U_NONE},
   {"time_state_x5_cycle",  'w', LOOP0,  38,                1.0,            0.0, 'U', U_NONE},
   {"time_state_x6_cycle",  'w', LOOP0,  40,                1.0,            0.0, 'U', U_NONE},
+  {"mce_cmplex",           'w', LOOP0,  58,                1.0,            0.0, 'U', U_NONE},
 
   /* housekeeping channels */  /* TODO many can probably be not-wide */
   {"vr_still_x2_hk",  'r', RTD_A1,  0, CAL32C(       1.055,           0.0), 'U', U_V_V},
@@ -799,6 +800,7 @@ struct ChannelStruct SlowChannels[] = {
   {"count_b_cmd",    'w', LOOP0,  54,                1.0,             0.0, 'u', U_NONE},
   {"count_i_cmd",    'w', LOOP0,  55,                1.0,             0.0, 'u', U_NONE},
   {"delay_az",       'w', LOOP0,  56,                (10.0/32768.0),  0.0, 'u', U_NONE},
+  {"mce_cindex",     'w', LOOP0,  57,                1.0,             0.0, 'u', U_NONE},
   
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

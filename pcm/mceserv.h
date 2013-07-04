@@ -19,6 +19,7 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "mpc_proto.h"
+#include "mce_counts.h"
 #include "fset.h"
 #include "tes.h"
 
@@ -49,3 +50,5 @@ const struct tes_frame *tes_data(void);
 /* pops and discards the oldest record in the FIFO; does nothing if the FIFO
  * is empty.  Always succeeds. */
 void tes_pop(void);
+
+extern uint32_t mce_param[N_MCE_STAT * NUM_MCE];
