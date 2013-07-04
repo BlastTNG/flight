@@ -12,7 +12,7 @@ LOCAL_HEADERS =
 
 # These are needed by both bolotest and flight versions
 SHARED_OBJS = blast.o udp.o
-LOCAL_OBJS = udpmon.o
+LOCAL_OBJS = udpmon.o tesmon.o
 
 ########################################################
 # Run the sanity checks and prepare the build system
@@ -26,9 +26,10 @@ include ../common/Makefile.shared
 
 .PHONY: all
 
-all:: udpmon
+all:: udpmon tesmon
 
-udpmon: $(OBJS)
+udpmon: udpmon.o blast_spider.o udp_spider.o
+tesmon: tesmon.o blast_spider.o udp_spider.o
 
 ../common/Makefile.shared:
 	@echo "ERROR: **************************************************************"
