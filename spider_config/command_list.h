@@ -174,11 +174,11 @@ enum multiCommand {
   hk_vcs2_hx_pulse,    hk_vcs1_hx_pulse,   hk_mt_lines_pulse,
   hk_sft_bottom_pulse,
   spider_scan,        sine_scan,         bbc_rate_ext,      bbc_rate_int,
-  el_pulse,           hwp_halt,          hwp_phase,        el_rel_move,
-  hwp_bias_on,        hwp_bias_off,     write_row_len,     write_num_rows,
+  el_pulse,           hwp_halt,          hwp_phase,         el_rel_move,
+  hwp_bias_on,        hwp_bias_off,      write_row_len,     write_num_rows,
   write_free_run,     bset,              set_piv_mode,
-  data_mode_bits,    start_acq,        reset_acq,         stop_acq,
-  plugh,
+  data_mode,          data_mode_bits,    start_acq,         reset_acq,
+  stop_acq,           plugh,
   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
   sched_packet = 0xff   //not really a command, more of a placeholder
 };

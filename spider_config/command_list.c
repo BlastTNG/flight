@@ -1151,7 +1151,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
     }
   },
-  
+
+  {COMMAND(data_mode), "Set the MCE data mode", GR_MCE | MCECMD, 2,
+    {
+      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"},
+      {"Data Mode", 0, 12, 'i', "NONE"},
+    }
+  },
 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
