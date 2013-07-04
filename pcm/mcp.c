@@ -105,7 +105,6 @@ void FrameFileWriter(void);         //framefile.c
 void CompressionWriter(void);
 void StageBus(void);
 void openSC(void);
-void *mceserv(void*); /* mceserv.c */
 
 void InitialiseFrameFile(char);
 void pushDiskFrame(unsigned short *RxFrame);
@@ -1178,7 +1177,8 @@ int main(int argc, char *argv[])
 #endif
   pthread_t chatter_id;
   pthread_t hwpr_id;
-  pthread_t mce_id;
+  pthread_t mcesend_id;
+  pthread_t mcerecv_id;
   struct stat fstats;
 
   if (argc == 1) {
@@ -1282,9 +1282,9 @@ int main(int argc, char *argv[])
 
   startSync();     // create sync box serial thread defined in sync_comms.c
 
-  /* mcp used to wait here for a semaphore from the BBC, which makes the
-   * presence of these messages somewhat "historical" */
-
+  /* initialise the MPC protocol subsystem */
+  if (mpc_init())
+    bprintf(fatal, "Unable to initialise MPC protocol subsystem.");
 
   InitTxFrame();
 
@@ -1298,8 +1298,9 @@ int main(int argc, char *argv[])
   pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
   pthread_create(&hwpr_id, NULL, (void*)&StartHWP, NULL);
 #ifndef TEST_RUN
-  pthread_create(&mce_id, NULL, (void*)&mceserv, NULL);
+  pthread_create(&mcesend_id, NULL, (void*)&mcesend, NULL);
 #endif
+  pthread_create(&mcerecv_id, NULL, (void*)&mcerecv, NULL);
 
   start_flc_data_swapper(flc_ip[BitsyIAm]);
   

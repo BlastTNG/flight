@@ -31,13 +31,16 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define UDP_TIMEOUT 100 /* milliseconds */
-
 /* number of data packets with the wrong bset to allow before triggering a
  * resend of the bset */
 #define BAD_BSET_THRESHOLD 2
 
+/* maximum frames per packet */
+#define FPP_MAX 100
+
 extern int StartupVeto; /* in mcp.c */
+
+static int sock = 0;
 
 /* semeuphoria */
 static int sent_bset = -1; /* the last field set that was sent */
@@ -182,73 +185,80 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
 {
   /* are neither, one or both of the reconstruction buffers full? */
   static enum {empty, half, full } tes_recon_status = empty;
+  static int last_no = -1;
 
   struct bset local_set;
-  uint16_t datain[MAX_BSET];
+  uint16_t datain[MAX_BSET * FPP_MAX];
   uint16_t bset_num = get_bset(&local_set);
-  uint32_t frameno_in;
-  int i, mce, n;
+  uint32_t frameno_in[FPP_MAX];
+  int f, mce, n, nf, ntes, i;
 
-#if 0
   /* decode input datagram */
-  mce = mpc_decompose_tes(&frameno_in, datain, len, data, bset_num,
+  mce = mpc_decompose_tes(&nf, frameno_in, datain, len, data, bset_num,
       local_set.nm, &bad_bset_count, peer, port);
 
   if (mce < 0)
     return bad_bset_count;
 
-  /* find framenum -- here 0 is the newer frame, 1 the older */
-  n = (tes_buffer[0].frameno == frameno_in) ? 0
-    : (tes_buffer[1].frameno == frameno_in) ? 1 : -1;
+  ntes = local_set.nm[mce];
 
-  /* new framenumber -- look for or make an empty frame */
-  if (n == -1) {
-    switch (tes_recon_status) {
-      case full:
-        /* push the oldest frame to the fifo */
-        tes_push(1);
+  for (f = 0; f < nf; ++f) {
+    if (last_no != -1 && frameno_in[f] - 1 != last_no)
+      bprintf(warning, "Sequencing error: %i -> %i\n", last_no, frameno_in[f]);
+    last_no = frameno_in[f];
 
-        /* FALLTHROUGH */
-      case half:
-        /* advance zero to one and reset zero */
-        memcpy(tes_buffer + 1, tes_buffer, sizeof(tes_buffer[0]));
-        memset(tes_buffer, 0, sizeof(tes_buffer[0]));
+    /* find framenum -- here 0 is the newer frame, 1 the older */
+    n = (tes_buffer[0].frameno == frameno_in[f]) ? 0
+      : (tes_buffer[1].frameno == frameno_in[f]) ? 1 : -1;
 
-        tes_recon_status = full;
-        break;
-      case empty:
-        tes_recon_status = half;
+    /* new framenumber -- look for or make an empty frame */
+    if (n == -1) {
+      switch (tes_recon_status) {
+        case full:
+          /* push the oldest frame to the fifo */
+          tes_push(1);
+
+          /* FALLTHROUGH */
+        case half:
+          /* advance zero to one and reset zero */
+          memcpy(tes_buffer + 1, tes_buffer, sizeof(tes_buffer[0]));
+          memset(tes_buffer, 0, sizeof(tes_buffer[0]));
+
+          tes_recon_status = full;
+          break;
+        case empty:
+          tes_recon_status = half;
+      }
+      /* whatever happened above, we're now using buffer zero */
+      n = 0;
+
+      /* ignore non-reporting MCEs */
+      tes_buffer[0].present = local_set.empties;
+
+      /* record new framenum */
+      tes_buffer[0].frameno = frameno_in[f];
+    } else if (tes_buffer[n].present & MCE_PRESENT(mce)) {
+      /* discard duplicates */
+      bprintf(info, "Duplicate frame# 0x%08X from MCE%i", tes_buffer[n].frameno,
+          mce);
+      return bad_bset_count;
     }
-    /* whatever happened above, we're now using buffer zero */
-    n = 0;
 
-    /* ignore non-reporting MCEs */
-    tes_buffer[0].present = local_set.empties;
+    /* insert the new data */
+    for (i = 0; i < ntes; ++i)
+      tes_buffer[n].data[local_set.im[mce][i] + 1] = datain[i + 1 + ntes * f];
 
-    /* record new framenum */
-    tes_buffer[0].frameno = frameno_in;
-  } else if (tes_buffer[n].present & MCE_PRESENT(mce)) {
-    /* discard duplicates */
-    bprintf(info, "Duplicate frame# 0x%08X from MCE%i", tes_buffer[n].frameno,
-        mce);
-    return bad_bset_count;
+    /* remember that we got a frame from this MCE */
+    tes_buffer[n].present |= MCE_PRESENT(mce);
+
+    /* if it's finished, push and then reset it */
+    if (tes_buffer[n].present == TES_FRAME_FULL) {
+      tes_push(n);
+      memset(tes_buffer + n, 0, sizeof(tes_buffer[0]));
+      tes_recon_status = n ? half : empty;
+    }
   }
 
-  /* insert the new data */
-  for (i = 0; i < local_set.nm[mce]; ++i)
-    tes_buffer[n].data[local_set.im[mce][i] + 1] = datain[i + 1];
-
-  /* remember that we got a frame from this MCE */
-  tes_buffer[n].present |= MCE_PRESENT(mce);
-
-  /* if it's finished, push and then reset it */
-  if (tes_buffer[n].present == TES_FRAME_FULL) {
-    tes_push(n);
-    memset(tes_buffer + n, 0, sizeof(tes_buffer[0]));
-    tes_recon_status = n ? half : empty;
-  }
-
-#endif
   return bad_bset_count;
 }
 
@@ -284,48 +294,27 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
   }
 }
 
-/* main routine */
-void *mceserv(void *unused)
+/* recevier routinee */
+void *mcerecv(void *unused)
 {
-  int sock, port, type;
+  int port, type;
   int bad_bset_count = 0;
   ssize_t n;
   char peer[UDP_MAXHOST];
   int mccnum;
 
-  nameThread("MCE");
-
-  /* initialise the MPC protocol suite */
-  if (mpc_init())
-    bprintf(tfatal, "Unable to initialise MPC protocol subsystem.");
+  nameThread("MCE->");
 
   sock = udp_bind_port(MCESERV_PORT, 1);
 
   if (sock == -1)
     bprintf(tfatal, "Unable to bind to port");
 
+  /* service loop */
   for (;;) {
-    /* check for a change in in-chargeness */
-    if (mceserv_InCharge != InCharge) {
-      request_ssdata = 1;
-      sent_bset = -1; /* resend bset */
-      mceserv_InCharge = InCharge;
-    }
+    /* check inbound packets - blocks */
+    n = udp_recv(sock, 0, peer, &port, UDP_MAXSIZE, udp_buffer);
 
-    /* broadcast MCE commands */
-    ForwardCommand(sock);
-
-    /* Broadcast notices */
-    ForwardNotices(sock);
-
-    /* broadcast the field set, when necessary */
-    if (sent_bset != CommandData.bset_num)
-      ForwardBSet(sock);
-
-    /* check inbound packets */
-    n = udp_recv(sock, UDP_TIMEOUT, peer, &port, UDP_MAXSIZE, udp_buffer);
-
-    /* n == 0 on timeout */
     type = (n > 0) ? mpc_check_packet(n, udp_buffer, peer, port) : -1;
 
     if (type < 0)
@@ -373,6 +362,39 @@ void *mceserv(void *unused)
   }
 
   return NULL;
+}
+
+/* send routine */
+void *mcesend(void *unused)
+{
+  nameThread("->MCE");
+
+  /* wait for socket initialisation */
+  while (sock == 0)
+    sleep(1);
+
+  for (;;) {
+    /* check for a change in in-chargeness */
+    if (mceserv_InCharge != InCharge) {
+      request_ssdata = 1;
+      sent_bset = -1; /* resend bset */
+      mceserv_InCharge = InCharge;
+    }
+
+    /* broadcast MCE commands */
+    ForwardCommand(sock);
+
+    /* Broadcast notices */
+    ForwardNotices(sock);
+
+    /* broadcast the field set, when necessary */
+    if (sent_bset != CommandData.bset_num)
+      ForwardBSet(sock);
+
+    usleep(10000);
+  }
+
+  return NULL;
 };
 
 /* ===== TES fifo handling for tx.c ===== */
@@ -415,7 +437,7 @@ void tes_pop(void)
 
   /* increment fifo bottom */
   tes_fifo_bottom = (tes_fifo_bottom + 1) % TES_FIFO_DEPTH;
-//  bprintf(warning, "TES_FIFO: %i:%i", tes_fifo_top, tes_fifo_bottom);
+  //  bprintf(warning, "TES_FIFO: %i:%i", tes_fifo_top, tes_fifo_bottom);
 
   pthread_mutex_unlock(&tes_mex);
 }

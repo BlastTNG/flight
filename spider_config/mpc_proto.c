@@ -507,6 +507,7 @@ int mpc_decompose_tes(int *pb_size, uint32_t *frameno, uint16_t *tes_data,
 
   /* get mce number */
   int mce = data[3];
+
   if (mce < 0 || mce >= NUM_MCE) {
     bprintf(err, "Unknown MCE %i in slow data packet from %s/%i", mce, peer,
         port);

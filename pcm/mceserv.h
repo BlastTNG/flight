@@ -27,6 +27,13 @@ extern int mce_slow_index[NUM_MCE];
 extern struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
 extern int request_ssdata;
 
+/* super slow data */
+extern uint32_t mce_param[N_MCE_STAT * NUM_MCE];
+
+/* entry points */
+void *mcesend(void*);
+void *mcerecv(void*);
+
 /* TES data FIFO read-side functions */
 
 /* the TES data frame */
@@ -50,5 +57,3 @@ const struct tes_frame *tes_data(void);
 /* pops and discards the oldest record in the FIFO; does nothing if the FIFO
  * is empty.  Always succeeds. */
 void tes_pop(void);
-
-extern uint32_t mce_param[N_MCE_STAT * NUM_MCE];
