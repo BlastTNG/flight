@@ -45,7 +45,7 @@ struct tes_frame {
 };
 
 /* length of the TES FIFO -- FIFO overfilling results in data droppage */
-#define TES_FIFO_DEPTH 10
+#define TES_FIFO_DEPTH 11
 
 /* returns the number of records in the fifo; in the range [0:TES_FIFO_DEPTH] */
 int tes_nfifo(void);

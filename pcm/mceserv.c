@@ -160,13 +160,17 @@ static void ForwardBSet(int sock)
 static void tes_push(int n)
 {
   /* discard if full */
-  if (tes_fifo_top < 0)
+  if (tes_fifo_top < 0) {
+    bprintf(warning, "discard on push");
     return;
+  }
 
   pthread_mutex_lock(&tes_mex);
 
   /* do the push */
   memcpy(tes_fifo + tes_fifo_top, tes_buffer + n, sizeof(*tes_buffer));
+  
+//  bprintf(info, "push = %i", tes_buffer[n].frameno);
 
   /* increment fifo top */
   tes_fifo_top = (tes_fifo_top + 1) % TES_FIFO_DEPTH;
