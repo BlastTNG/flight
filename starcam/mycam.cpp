@@ -23,7 +23,6 @@
 #include "blobimage.h"
 #include "focusstruct.h"
 #include "camcommunicator.h"
-#include "camcommserver.h"
 
 #define MYCAM_DEBUG 0
 #define MYCAM_TIMING 0
@@ -33,7 +32,6 @@
 #define MIN_AUTO_STEP 10
 
 using namespace std;
-CamCommServer globalcomm;
 //use same constructors as CSBIGCam, make sure proper Init is called though.
 MyCam::MyCam() : CSBIGCam() { Init(); }
 MyCam::MyCam(OpenDeviceParams odp) : CSBIGCam(odp) { Init(); }
@@ -182,7 +180,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 				focuser[i].flux[j] = focblobs->getflux();
 				focuser[i].x[j] = focblobs->getx();
 				focuser[i].y[j] = focblobs->gety();
-				img->drawBox(focblobs->getx(), focblobs->gety(), 20, j+1);
+				img->drawBox(focblobs->getx(), focblobs->gety(), 40, j+1);
 				focblobs = focblobs->getnextblob();
 				j++;
 			}
@@ -203,7 +201,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 #endif
 		}
 		img->createReturnStruct(&returnStruct);
-		globalcomm.sendAll(CamCommunicator::buildReturn(&returnStruct));
+    //TODO: bcast returnStruct just like in starcam
 
 		focuser[i].focpos = toInf;
 		//move to next location

@@ -519,15 +519,16 @@ void BlobImage::drawBox(double x, double y, double side, int bnum, bool willChan
 #endif
 	for (i=top; i<ylimit; i++) {        //row
 		for (j=left; j<xlimit; j++) {   //column
-			if (i == top || i == (ylimit-1) || j == left || j == (xlimit-1))   //on edge of box
+			if (i == top || i == (top+1) || i == (ylimit-2) || i == (ylimit-1) || 
+			   j == left || j == (left+1) || j == (xlimit-2) || j == (xlimit-1))   //on edge of box
 				map[i*xdim+j] = sat;
 		}
 	}
 	int xnum,ynum;
 	//Draw the blob number next to the box-----------
 	if ((first == 4) || (first == 5) || (first == 6) || (first == 8) || (first == 9)) {
-	  for (i=0; i<9; i++) {
-		for (j=0; j<3; j++) {
+	  for (i=0; i<18; i++) {
+		for (j=0; j<6; j++) {
 			xnum = ((xlimit+2+j)>xdim) ? xdim : (xlimit+2+j);	
 			ynum = ((top+i) > ydim) ? ydim : (top+i);
 			map[ynum*xdim+xnum] = sat;  //left vertical top
@@ -535,8 +536,8 @@ void BlobImage::drawBox(double x, double y, double side, int bnum, bool willChan
 	  }
 	}
 	if ((first == 2) || (first == 6) || (first == 8)) {
-	  for (i=6; i<15; i++) { 
-		for (j=0; j<3; j++) {
+	  for (i=12; i<29; i++) { 
+		for (j=0; j<6; j++) {
 			xnum = ((xlimit+2+j)>xdim) ? xdim : (xlimit+2+j);	
 			ynum = ((top+i) > ydim) ? ydim : (top+i);	
 			map[ynum*xdim+xnum] = sat;  //left vertical bottom
@@ -544,26 +545,26 @@ void BlobImage::drawBox(double x, double y, double side, int bnum, bool willChan
 	  }
 	}
 	if ((first == 1) || (first == 2) || (first == 3) || (first == 4) || (first == 7) || (first == 8) || (first == 9)) {
-	  for (i=0; i<9; i++) {
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+8+j)>xdim) ? xdim : (xlimit+8+j);	
+	  for (i=0; i<18; i++) {
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+14+j)>xdim) ? xdim : (xlimit+14+j);	
 			ynum = ((top+i) > ydim) ? ydim : (top+i);	
 			map[ynum*xdim+xnum] = sat;  //right vertical top
 		}
 	  }
 	}
 	if ((first == 1) || (first == 3) || (first == 4) || (first == 5) || (first == 6) || (first == 7) || (first == 8) || (first == 9)) {
-	  for (i=6; i<15; i++) { 
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+8+j)>xdim) ? xdim : (xlimit+8+j);	
+	  for (i=12; i<29; i++) { 
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+14+j)>xdim) ? xdim : (xlimit+14+j);	
 			ynum = ((top+i) > ydim) ? ydim : (top+i);	
 			map[ynum*xdim+xnum] = sat;  //right vertical bottom
 		}
 	  }
 	}
 	if ((first == 2) || (first == 3) || (first == 5) || (first == 7) || (first == 8) || (first == 9)) {
-	  for (i=0; i<9; i++) { 
-		for (j=0; j<3; j++) {
+	  for (i=0; i<18; i++) { 
+		for (j=0; j<6; j++) {
 			xnum = ((xlimit+2+i) > xdim) ? xdim : (xlimit+2+i);
 			ynum = ((top+j)>ydim) ? ydim : (top+j);
 			map[ynum*xdim+xnum] = sat;          //top horizontal
@@ -571,82 +572,82 @@ void BlobImage::drawBox(double x, double y, double side, int bnum, bool willChan
 	  }
 	}
 	if ((first == 2) || (first == 3) || (first == 4) || (first == 5) || (first == 6) || (first == 8) || (first == 9)) {	
-	  for (i=0; i<9; i++) {
-		for (j=0; j<3; j++) {
+	  for (i=0; i<18; i++) {
+		for (j=0; j<6; j++) {
 			xnum = ((xlimit+2+i) > xdim) ? xdim : (xlimit+2+i);
-			ynum = ((top+6+j)>ydim) ? ydim : (top+6+j);
+			ynum = ((top+12+j)>ydim) ? ydim : (top+12+j);
 			map[ynum*xdim+xnum] = sat;      //middle horizontal
 		}
 	  }
 	}
 	if ((first == 2) || (first == 3) || (first == 5) || (first == 6) || (first == 8)) {
-	  for (i=0; i<9; i++) {
-		for (j=0; j<3; j++) {
+	  for (i=0; i<18; i++) {
+		for (j=0; j<6; j++) {
 			xnum = ((xlimit+2+i) > xdim) ? xdim : (xlimit+2+i);
-			ynum = ((top+12+j) > ydim) ? ydim : (top+12+j);
+			ynum = ((top+24+j) > ydim) ? ydim : (top+24+j);
 			map[ynum*xdim+xnum] = sat;      //bottom horizontal
 		}
 	  }
 	}
         if ((second == 0) || (second == 4) || (second == 5) || (second == 6) || (second == 8) || (second == 9)) {
-          for (i=0; i<9; i++) { 
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+14+j)>xdim) ? xdim : (xlimit+14+j);
+          for (i=0; i<18; i++) { 
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+26+j)>xdim) ? xdim : (xlimit+26+j);
 			ynum = ((top+i) > ydim) ? ydim : (top+i);	
 			map[ynum*xdim+xnum] = sat;  //left vertical top
 		}
 	  }
         }
 	if ((second == 0) || (second == 2) || (second == 6) || (second == 8)) {
-	  for (i=6; i<15; i++) {
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+14+j)>xdim) ? xdim : (xlimit+14+j);
+	  for (i=12; i<29; i++) {
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+26+j)>xdim) ? xdim : (xlimit+26+j);
 			ynum = ((top+i) > ydim) ? ydim : (top+i);	
 			map[ynum*xdim+xnum] = sat;  //left vertical bottom
 		}
 	  }
 	}
 	if ((second == 0) || (second == 1) || (second == 2) || (second == 3) || (second == 4) || (second == 7) || (second == 8) || (second == 9)) {
-	  for (i=0; i<9; i++) {
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+20+j)>xdim) ? xdim : (xlimit+20+j);
+	  for (i=0; i<18; i++) {
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+38+j)>xdim) ? xdim : (xlimit+38+j);
 			ynum = ((top+i) > ydim) ? ydim : (top+i);	
 			map[ynum*xdim+xnum] = sat;  //right vertical top
 		}
 	  }
 	}
 	if ((second == 0) || (second == 1) || (second == 3) || (second == 4) || (second == 5) || (second == 6) || (second == 7) || (second == 8) || (second == 9)) {
-	  for (i=6; i<15; i++) {
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+20+j)>xdim) ? xdim : (xlimit+20+j);
+	  for (i=12; i<29; i++) {
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+38+j)>xdim) ? xdim : (xlimit+38+j);
 			ynum = ((top+i) > ydim) ? ydim : (top+i);	
 			map[ynum*xdim+xnum] = sat;  //right vertical bottom
 		}
 	  }
 	}
 	if ((second == 0) || (second == 2) || (second == 3) || (second == 5) || (second == 7) || (second == 8) || (second == 9)) {
-	  for (i=0; i<9; i++) { 
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+14+i) > xdim) ? xdim : (xlimit+14+i);
+	  for (i=0; i<18; i++) { 
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+26+i) > xdim) ? xdim : (xlimit+26+i);
 			ynum = ((top+j)>ydim) ? ydim : (top+j);
 			map[ynum*xdim+xnum] = sat;          //top horizontal
 		}
 	  }
 	}
 	if ((second == 2) || (second == 3) || (second == 4) || (second == 5) || (second == 6) || (second == 8) || (second == 9)) {	
-	  for (i=0; i<9; i++) {
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+14+i) > xdim) ? xdim : (xlimit+14+i);
-			ynum = ((top+6+j)>ydim) ? ydim : (top+6+j);
+	  for (i=0; i<18; i++) {
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+26+i) > xdim) ? xdim : (xlimit+26+i);
+			ynum = ((top+12+j)>ydim) ? ydim : (top+12+j);
 			map[ynum*xdim+xnum] = sat;      //middle horizontal
 		}
 	  }
 	}
 	if ((second == 0) || (second == 2) || (second == 3) || (second == 5) || (second == 6) || (second == 8)) {
-	  for (i=0; i<9; i++) {
-		for (j=0; j<3; j++) {
-			xnum = ((xlimit+14+i) > xdim) ? xdim : (xlimit+14+i);
-			ynum = ((top+12+j)>ydim) ? ydim : (top+12+j);
+	  for (i=0; i<18; i++) {
+		for (j=0; j<6; j++) {
+			xnum = ((xlimit+26+i) > xdim) ? xdim : (xlimit+26+i);
+			ynum = ((top+24+j)>ydim) ? ydim : (top+24+j);
 			map[ynum*xdim+xnum] = sat;      //bottom horizontal
 		}
 	  }
@@ -774,7 +775,7 @@ StarcamReturn* BlobImage::createReturnStruct(StarcamReturn* arg)
 */
 int BlobImage::matchStars(solution_t **sol)
 {
-	int nblobs = m_cBlob.get_numblobs();
+	int nblobs = (m_cBlob.get_numblobs() > 7) ? 7 : m_cBlob.get_numblobs();
 //	int nblobs = 5; //NNG for testing
 	double *x, *y;
 	x = new double[nblobs];
@@ -789,15 +790,15 @@ int BlobImage::matchStars(solution_t **sol)
 	int i = 0, retval = -1;
   	double ra0, dec0, r0;
 	
-	while (blobs != NULL) {
-		x[i] = (blobs->getx()-XC)*m_dPlatescale;
-		y[i] = (blobs->gety()-YC)*m_dPlatescale;
+	for (i=0; i< nblobs; i++) {
+		x[i] = blobs->getx();
+		y[i] = blobs->gety();
 		blobs = blobs->getnextblob();
 		i++;
 	}
-/*
+
 	//AND change platescale to 9.44	
-	x[0]=930.157011384096;
+/*	x[0]=930.157011384096;
 	y[0]=167.158449582342;
 	x[1]=1472.58714161560;
 	y[1]=922.480301367182;
@@ -815,7 +816,7 @@ int BlobImage::matchStars(solution_t **sol)
 */
 	if (m_cPyramid.GetSolution(m_dMatchTol, x_p, y_p, nblobs, sol, &retval, &ra0, &dec0, &r0) < 0)
 		retval = -1;
-	
+
 	delete[] x;
 	delete[] y;
 	return retval;

@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
       if ((int)avgimg_p[x+y*(int)CAM_WIDTH] - avgmean > snr_threshold*avgsigma) {
 	cout << "Bad pixel at " << x <<"," << y << endl;
 	fout << x << " " << y << endl;
-	avgimg_copy.drawBox(x, y, 20, 0);
+  avgimg_copy.drawBox(x, y, 40, 0);
 	badcount++;
       }
     }

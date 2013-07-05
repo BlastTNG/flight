@@ -17,8 +17,8 @@ MOC = moc
 SPIDER_ONLY = 1
 
 EXPT_HEADERS = command_list.h command_struct.h pointing_struct.h
-SHARED_OBJS = camcommunicator.o
-SHARED_HEADERS = camcommunicator.h camstruct.h
+SHARED_OBJS = blast.o camcommunicator.o udp.o
+SHARED_HEADERS = blast.h camcommunicator.h camstruct.h udp.h
 
 include ../common/Makefile.shared
 
@@ -32,7 +32,7 @@ TEST_NAME  = testmain
 USE_QT = 1           #change this to 0 to not use qt when its not available
                  #probably need to change bits of code too
 O_APP      = csbigcam.o csbigimg.o mycam.o clensadapter.o bloblist.o \
-frameblob.o blobimage.o pyramid.o svd.o camcommserver.o $(OBJS)
+frameblob.o blobimage.o pyramid.o svd.o $(OBJS)
 O_APP_QT = imageviewer.o moc_imageviewer.o commandgui.o moc_commandgui.o
 ################################################################################
 
@@ -75,7 +75,7 @@ $(APP_NAME): $(APP_OBJ)
 	  chmod a+x $(APP_NAME)
 
 starcam.o : starcam.cpp csbigcam.h csbigimg.h mycam.h blobimage.h bloblist.h clensadapter.h frameblob.h \
-	camconfig.h clensadapterdefs.h csbigimgdefs.h pyramid.h svd.h imageviewer.h camcommserver.h $(HEADERS)
+	camconfig.h clensadapterdefs.h csbigimgdefs.h pyramid.h svd.h imageviewer.h $(HEADERS)
 	  $(CXX) $(CPPFLAGS) $(CFLAGS) $(QTFLAGS) -o starcam.o -c starcam.cpp
 
 csbigcam.o : csbigcam.h csbigcam.cpp csbigimg.h camconfig.h
@@ -99,9 +99,6 @@ frameblob.o : frameblob.h frameblob.cpp bloblist.h camconfig.h
 blobimage.o : blobimage.h blobimage.cpp frameblob.h bloblist.h camconfig.h pyramid.h svd.h
 	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o blobimage.o -c blobimage.cpp
 	  
-camcommserver.o : camcommserver.h camcommserver.cpp $(HEADERS)
-	  $(CXX) $(CPPFLAGS) $(CFLAGS) -o camcommserver.o -c camcommserver.cpp
-
 pyramid.o : pyramid.h pyramid.cpp
 	  $(CXX) $(CPPFLAGS) $(CFLAGS) -O0 -o pyramid.o -c pyramid.cpp
 	  

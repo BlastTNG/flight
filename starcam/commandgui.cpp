@@ -78,7 +78,7 @@ const QString OverValDescs[] = { "",
 
 
 
-CommandGUI::CommandGUI(QWidget *parent, const char *name, string commTarget /*="aragog.spider"*/)
+CommandGUI::CommandGUI(QWidget *parent, const char *name, const char* commTarget /*="aragog.spider"*/)
  : QWidget(parent, name)
 {
 	command = new QLabel(CameraCmdStrs[TrigExp], this, "command");

@@ -19,7 +19,6 @@
 #include "bloblist.h"
 #include "clensadapter.h"
 #include "frameblob.h"
-#include "fifocommunicator.h"
 #include "pyramid.h"
 #include "imageviewer.h"
 
@@ -198,7 +197,7 @@ int main(int argc, char *argv[])
 					double s = blobs->getsnr();
 					//cout << "\t" << x << " " << y << " " << f << " " << s << endl;
 					if (fblob->get_numblobs() > 7) cout << "\t" << x << " " << y << endl;
-					img.drawBox(blobs->getx(), blobs->gety(), 20, num, true);
+					img.drawBox(blobs->getx(), blobs->gety(), 40, num, true);
 					blobs = blobs->getnextblob();
 					num++;
 				}

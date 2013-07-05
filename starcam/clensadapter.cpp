@@ -12,7 +12,7 @@
 #include <sys/ioctl.h>
 
 #define LENS_DEBUG 0
-#define OLD_LENS 0
+#define OLD_LENS 1
 
 
 using namespace std;

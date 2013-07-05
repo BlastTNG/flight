@@ -4,27 +4,41 @@
 
 #include <cstdlib>
 #include <cstdarg>
-#include <string>
+#include <string.h>
+#include <stdio.h>
 #include <fstream>
 #include <sstream>
+#include <unistd.h>
 #include <iostream>
+#include <fcntl.h>
+#include <errno.h>
 #include <pthread.h>
 #include <sched.h>
 #include <sys/io.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>      //for gethostbyname
+#include <cstdlib>
 #include "mycam.h"
 #include "blobimage.h"
 #include "frameblob.h"
 #include "bloblist.h"
 #include "camcommunicator.h"
-#include "camcommserver.h"
 #include "sbigudrv.h"
 #include "csbigimgdefs.h"
 #include "camconfig.h"
 #include "pyramid.h"
+
+extern "C" {
+#include "udp.h"
+}
+
 //#include "clensadapter.h"
 
 using namespace std;
 
+#define SC_TIMEOUT 100 /* milliseconds */
 //enable display of debugging info to console
 #define STARCAM_DEBUG 0
 #define SC_THREAD_DEBUG 0
@@ -35,9 +49,9 @@ using namespace std;
 
 //0=no saving, 1=save raw image, 2=save version with boxes too
 #define SAVE_SC_IMAGES 1
+
 #define NUMIMGS 50
 
-extern CamCommServer globalcomm;
 //camera and image objects (and associated mutexes)
 MyCam globalCam;
 BlobImage globalImages[2];                //one image can be processed while other is obtained
@@ -64,7 +78,7 @@ bool showBoxes = true;
 //function declarations
 void* pictureLoop(void* arg);
 void* processingLoop(void* arg);
-void* startCommunications(void* arg);
+void* ReadLoop(void* arg);
 string interpretCommand(string cmd);
 void powerCycle();
 void lock(pthread_mutex_t* mutex, const char* lockname, const char* funcname);
@@ -174,9 +188,6 @@ int main(int argc, char *argv[])
   //run the stored initialization commands
   if (initCommands() < 0) return -1;
 
-  //set up communications...really easy now
-//  CamCommServer comm;
-
   //start threads for picture taking, image processing, and command reading
   int threaderr;
   pthread_t threads[3];
@@ -192,11 +203,11 @@ int main(int argc, char *argv[])
 
   scheduleParams.sched_priority--;   //run processing at default priority, lower than pictures
   if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
-  pthread_create(&threads[1], &scheduleAttr, &processingLoop, (void*)&globalcomm);//comm);//
+  pthread_create(&threads[1], &scheduleAttr, &processingLoop, NULL);//comm);//
 
   scheduleParams.sched_priority+=2;        //run command reading at highest priority
   if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
-  pthread_create(&threads[2], &scheduleAttr, &startCommunications, (void*)&globalcomm);//comm);
+  pthread_create(&threads[2], &scheduleAttr, &ReadLoop, NULL);//comm);
 
   sclog(info, (char*)"Waiting for threads to complete...ie never");
   //wait for threads to return
@@ -306,7 +317,14 @@ void* processingLoop(void* arg)
   int imageIndex = 0;
   static SBIG_FILE_ERROR err;
   static int imgcounter = 0;
-  CamCommServer* comm = (CamCommServer*)arg;
+
+  int sock;
+  sock = udp_bind_port(BSC_PORT_PLOOP,1);
+  if (sock == -1)
+    cout << "unable to bind to port" << endl;
+  string rtn_str = "";
+	string sought = "\n";
+
   while (1) {
     //wait for image to be available for processing
     lock(&imageReadyLock[imageIndex], "imageReadyLock", "processingLoop");
@@ -400,7 +418,16 @@ void* processingLoop(void* arg)
     sclog(debug, (char*)"processingLoop: sending image return value.");
     StarcamReturn returnStruct;
     globalImages[imageIndex].createReturnStruct(&returnStruct);
-    comm->sendAll(CamCommunicator::buildReturn(&returnStruct));
+    rtn_str = CamCommunicator::buildReturn(&returnStruct);
+    //remove all newlines and add a single one at the end
+	  string::size_type pos = rtn_str.find(sought, 0);
+	  while (pos != string::npos) {
+      rtn_str.replace(pos, sought.size(), "");
+      pos = rtn_str.find(sought, pos - sought.size());
+    }
+    rtn_str += "\n";
+    udp_bcast(sock, SC_PORT, strlen(rtn_str.c_str()), rtn_str.c_str(), 0);
+    cout << "PLOOP BROADCASTING string " << rtn_str << endl;
     unlock(&imageLock[imageIndex], "imageLock", "processingLoop");
 
     //signal that processing is complete
@@ -416,20 +443,51 @@ void* processingLoop(void* arg)
 }
 
 /*
- * startCommunications:
+ * ReadLoop:
  *
  * starts the server that listens for new socket connections
  * the interpretCommand function is used by the server to interpret any 
  * received commands
  */
-void* startCommunications(void* arg)
+void* ReadLoop(void* arg)
 {
-  sclog(info, (char*)"Starting to listen for communications");
-  CamCommServer* comm = (CamCommServer*)arg;
-  while (1) {
-    comm->startServer(&interpretCommand);
-    sclog(error, (char*)"Communications server failed to start.");
-    sleep(1);
+  int sock, port;
+  char peer[UDP_MAXHOST];
+	char buf[UDP_MAXSIZE];	// receive buffer
+	int recvlen;			// # bytes received
+	string line = "";
+  string sought = "\n";
+  string rtnStr = "";
+  string returnString = "";
+	string::size_type pos;
+
+  /* create a socket */
+  sock = udp_bind_port(BSC_PORT, 1);
+
+  if (sock == -1)
+    cout << "Unable to bind to port" << endl;
+
+  while(1) {
+    recvlen = udp_recv(sock, SC_TIMEOUT, peer, &port, UDP_MAXSIZE, buf);
+//    if (recvlen > 0) cout << "received " << recvlen << " bytes" << endl;
+    buf[recvlen] = '\0';
+    line += buf;
+		while ((pos = line.find("\n",0)) != string::npos) {
+			//interpret the command and send a return value
+			if ((rtnStr = (*interpretCommand)(line.substr(0,pos))) != "") {//don't send blank returin
+        returnString = CamCommunicator::buildReturnString(rtnStr);
+	      string::size_type pos = returnString.find(sought, 0);
+	      while (pos != string::npos) {
+          returnString.replace(pos, sought.size(), "");
+          pos = returnString.find(sought, pos - sought.size());
+        }
+        returnString += "\n";
+        if (udp_bcast(sock, SC_PORT, strlen(returnString.c_str()), returnString.c_str(), 0))
+          perror("sendto");
+        cout << "ReadLoop BROADCASTING string " << returnString << endl;
+      }
+      line = line.substr(pos+1, line.length()-(pos+1)); //set line to text after "\n"
+		}
   }
   return NULL;
 }
@@ -439,7 +497,6 @@ void* startCommunications(void* arg)
 interpretCommand:
 
 interprets a command
-this function is passed as a pointer to CamCommServer::startServer
 returns a string to be sent back to flight computer
 when unsuccessful, the return string should start with "Error:"
 when successful, return "<command echo> successful"
@@ -465,7 +522,7 @@ string interpretCommand(string cmd)
   {
     if (cmd == "CtrigExp") {       //trigger a camera exposure
       if (globalCam.getPictureInterval() != 0) 
-	return "Error: Not in triggered-exposure mode";
+	      return "Error: Not in triggered-exposure mode";
       lock(&cameraTriggerLock, "cameraTriggerLock", "interpretCommand");
       globalCameraTriggerFlag = 1;
       pthread_cond_signal(&cameraTriggerCond);
@@ -484,7 +541,7 @@ string interpretCommand(string cmd)
       unlock(&imageLock[0], "imageLock", "interpretCommand");
       unlock(&camLock, "camLock", "interpretCommand");
       if (err != LE_NO_ERROR)
-	return (string)"Error: Autofocus returned: " + CLensAdapter::getErrorString(err);
+	      return (string)"Error: Autofocus returned: " + CLensAdapter::getErrorString(err);
       else return (cmd + " successful");
     }
     else if (cmd == "CtrigFocusF") {     //trigger forced move autofocus
@@ -499,12 +556,12 @@ string interpretCommand(string cmd)
       unlock(&imageLock[0], "imageLock", "interpretCommand");
       unlock(&camLock, "camLock", "interpretCommand");
       if (err != LE_NO_ERROR)
-	return (string)"Error: Autofocus returned: " + CLensAdapter::getErrorString(err);
+	      return (string)"Error: Autofocus returned: " + CLensAdapter::getErrorString(err);
       else return (cmd + " successful");
     }
     else if (cmd == "CsetExpTime") {           //set exposure time
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       double expTime;
       sin >> expTime;
       expTime /= 1000.0; //changed to using ms
@@ -512,19 +569,19 @@ string interpretCommand(string cmd)
       globalCam.SetExposureTime(expTime);
       unlock(&camLock, "camLock", "interpretCommand");
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else if (cmd == "CsetExpInt") {         //set exposure interval (0 for triggered)
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       //if previously in triggered mode, trigger any waiting exposure
       //when switching back to triggered mode, this may cause an extra exposure
       if (globalCam.getPictureInterval() == 0) {
-	lock(&cameraTriggerLock, "cameraTriggerLock", "interpretCommand");
-	globalCameraTriggerFlag = 1;
-	pthread_cond_signal(&cameraTriggerCond);
-	unlock(&cameraTriggerLock, "cameraTriggerLock", "interpretCommand");
+	      lock(&cameraTriggerLock, "cameraTriggerLock", "interpretCommand");
+	      globalCameraTriggerFlag = 1;
+	      pthread_cond_signal(&cameraTriggerCond);
+	      unlock(&cameraTriggerLock, "cameraTriggerLock", "interpretCommand");
       }
       int expInt;
       sin >> expInt;
@@ -532,12 +589,12 @@ string interpretCommand(string cmd)
       globalCam.setPictureInterval(expInt);
       unlock(&camLock, "camLock", "interpretCommand");
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else if (cmd == "CsetFocRsln") {           //set focus resolution
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       unsigned int resolution;
       sin >> resolution;
       if (resolution == 0) return "Error: focus resolution must be nonzero.";
@@ -545,12 +602,12 @@ string interpretCommand(string cmd)
       globalCam.setFocusResolution(resolution);
       unlock(&camLock, "camLock", "interpretCommand");
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else if (cmd == "CsetFocRnge") {           //set focus range
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       unsigned int range;
       sin >> range;
       if (range == 0) return "Error: focus range must be nonzero.";
@@ -558,7 +615,7 @@ string interpretCommand(string cmd)
       globalCam.setFocusRange(range);
       unlock(&camLock, "camLock", "interpretCommand");
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else if (cmd == "Cpower") {
@@ -577,7 +634,7 @@ string interpretCommand(string cmd)
     //TODO this needs to be adapted for two cameras (one file for each camera)
     if (cmd == "IsetBadpix") {    //set a bad pixel, value should have form "x y"
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       int x, y, camnum;
       sin >> camnum >> x >> y;
       ofstream fout(badpixFilename, ios::out | ios::app);
@@ -586,66 +643,66 @@ string interpretCommand(string cmd)
       fout.close();
       //reload bad pixels into map (in frameblob)
       for (int i=0; i<2; i++) {
-	lock(&imageLock[i], "imageLock", "interpretCommand");
-	globalImages[i].getFrameBlob()->load_badpix(badpixFilename);
-	unlock(&imageLock[i], "imageLock", "interpretCommand");
+	      lock(&imageLock[i], "imageLock", "interpretCommand");
+	      globalImages[i].getFrameBlob()->load_badpix(badpixFilename);
+	      unlock(&imageLock[i], "imageLock", "interpretCommand");
       }
       return (cmd + " successful");
     }
     else if (cmd == "IsetMaxBlobs") {        //set maximum number of blobs that will be found
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       unsigned int maxblobs;
       sin >> maxblobs;
       for (int i=0; i<2; i++) {
-	lock(&imageLock[i], "imageLock", "interpretCommand");
-	globalImages[i].getFrameBlob()->set_maxblobs(maxblobs);
-	unlock(&imageLock[i], "imageLock", "interpretCommand");
+	      lock(&imageLock[i], "imageLock", "interpretCommand");
+	      globalImages[i].getFrameBlob()->set_maxblobs(maxblobs);
+	      unlock(&imageLock[i], "imageLock", "interpretCommand");
       }
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else if (cmd == "IsetGrid") {        //set grid size for blob detection
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       unsigned int grid;
       sin >> grid;
       for (int i=0; i<2; i++) {
-	lock(&imageLock[i], "imageLock", "interpretCommand");
-	globalImages[i].getFrameBlob()->set_grid(grid);
-	unlock(&imageLock[i], "imageLock", "interpretCommand");
+	      lock(&imageLock[i], "imageLock", "interpretCommand");
+	      globalImages[i].getFrameBlob()->set_grid(grid);
+	      unlock(&imageLock[i], "imageLock", "interpretCommand");
       }
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else if (cmd == "IsetThreshold") {        //set threshold (in # sigma) for blob detection
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       double threshold;
       sin >> threshold;
       for (int i=0; i<2; i++) {
-	lock(&imageLock[i], "imageLock", "interpretCommand");
-	globalImages[i].getFrameBlob()->set_threshold(threshold);
-	unlock(&imageLock[i], "imageLock", "interpretCommand");
+	      lock(&imageLock[i], "imageLock", "interpretCommand");
+	      globalImages[i].getFrameBlob()->set_threshold(threshold);
+	      unlock(&imageLock[i], "imageLock", "interpretCommand");
       }
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else if (cmd == "IsetDisttol") {        //set minimum distance squared (pixels) between blobs
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value.";
+	      return (string)"Error: the command " + cmd + " requires a value.";
       int disttol;
       sin >> disttol;
       for (int i=0; i<2; i++) {
-	lock(&imageLock[i], "imageLock", "interpretCommand");
-	globalImages[i].getFrameBlob()->set_disttol(disttol);
-	unlock(&imageLock[i], "imageLock", "interpretCommand");
+	      lock(&imageLock[i], "imageLock", "interpretCommand");
+	      globalImages[i].getFrameBlob()->set_disttol(disttol);
+	      unlock(&imageLock[i], "imageLock", "interpretCommand");
       }
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     }
     else {
@@ -657,7 +714,7 @@ string interpretCommand(string cmd)
   {
     if (cmd == "Lmove") {       //make a precise (proportional feedback) move
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       int counts, remaining;
       sin >> counts;
       lock(&camLock, "camLock", "interpretCommand");
@@ -669,7 +726,7 @@ string interpretCommand(string cmd)
     } 
     else if (cmd == "Lforce") {       //make a forced move (ignore "false" stops)
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       int counts, remaining;
       sin >> counts;
       lock(&camLock, "camLock", "interpretCommand");
@@ -681,14 +738,14 @@ string interpretCommand(string cmd)
     } 
     else if (cmd == "LsetTol") {     //set tolerance of precise moves
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value";
+	      return (string)"Error: the command " + cmd + " requires a value";
       unsigned int tol;
       sin >> tol;
       lock(&camLock, "camLock", "interpretCommand");
       globalCam.getLensAdapter()->setFocusTol(tol);
       unlock(&camLock, "camLock", "interpretCommand");
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	      return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
     } 
     else if (cmd == "L") {                 //try to send arbitrary lens command
@@ -698,7 +755,7 @@ string interpretCommand(string cmd)
       globalCam.getLensAdapter()->runCommand(cmd, returnVal);
       unlock(&camLock, "camLock", "interpretCommand");
       sclog(data, (char*)"interpretCommand: Lens command: \"%s\" returned \"%s\"", cmd.c_str(), returnVal.c_str());
-      return cmd + " returned: " + returnVal;
+      return (cmd + " returned: " + returnVal);
     }
     else {
       sclog(warning, (char*)"interpretCommand: bad lens command");
@@ -712,26 +769,26 @@ string interpretCommand(string cmd)
       sout << "<conf>";
       lock(&camLock, "camLock", "interpretCommand");
       sout << globalCam.getPictureInterval() << " "
-	<< globalCam.GetExposureTime() << " "
-	<< globalCam.getFocusResolution() << " "
-//	<< globalCam.getFocusRange() << " "
-	<< globalCam.getLensAdapter()->getFocusTol() << " ";
+	        << globalCam.GetExposureTime() << " "
+	        << globalCam.getFocusResolution() << " "
+//	      << globalCam.getFocusRange() << " "
+	        << globalCam.getLensAdapter()->getFocusTol() << " ";
       unlock(&camLock, "camLock", "interpretCommand");
       lock(&imageLock[0], "imageLock", "interpretCommand");
       sout << globalImages[0].getFrameBlob()->get_maxblobs() << " "
-	<< globalImages[0].getFrameBlob()->get_grid() << " "
-	<< globalImages[0].getFrameBlob()->get_threshold() << " "
-	<< globalImages[0].getFrameBlob()->get_disttol();
+	        << globalImages[0].getFrameBlob()->get_grid() << " "
+	        << globalImages[0].getFrameBlob()->get_threshold() << " "
+	        << globalImages[0].getFrameBlob()->get_disttol();
       unlock(&imageLock[0], "imageLock", "interpretCommand");
       return sout.str();
     }
     if (cmd == "OshowBox") {
 #if USE_IMAGE_VIEWER
       if (valStr == "" || valStr == " ")
-	return (string)"Error: the command " + cmd + " requires a value.";
-	sin >> showBoxes;
+	      return (string)"Error: the command " + cmd + " requires a value.";
+	    sin >> showBoxes;
       if (maintainInitFile(cmd, valStr) == 0)
-	return (cmd + " successful");
+	    return (cmd + " successful");
       else return (string)"Error: " + cmd + "=" + valStr + " failed to update init file";
 #else
       return (cmd + "successful, not implemented");
