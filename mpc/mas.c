@@ -49,9 +49,12 @@ const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
 
 /* mas */
 mce_context_t *mas;
+
+/* acq */
 mce_acq_t *acq;
 static volatile int acq_going = 0;
 static volatile int acq_stopped = 0;
+int acq_init = 0;
 
 /* the data frame buffer */
 size_t frame_size;
@@ -576,17 +579,20 @@ void *mas_data(void *dummy)
 /* the acquisition thread */
 void *acquer(void* dummy)
 {
+  int r;
   nameThread("Acq");
 
   for (;;) {
     usleep(100000);
     if (acq_going && !acq_stopped) {
-        int r = mcedata_acq_go(acq, ACQ_FRAMECOUNT); /* blocks */
-        if (r)
-          bprintf(err, "Acquisition error: %s", mcelib_error_string(r));
-        else
-          bprintf(info, "Acquisition stopped");
-        acq_stopped = 1;
+      acq_init = 1;
+      r = mcedata_acq_go(acq, ACQ_FRAMECOUNT); /* blocks */
+      if (r)
+        bprintf(err, "Acquisition error: %s", mcelib_error_string(r));
+      else
+        bprintf(info, "Acquisition stopped");
+      acq_stopped = 1;
+      acq_init = 0; /* just in case */
     }
   }
 

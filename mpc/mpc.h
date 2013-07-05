@@ -53,6 +53,7 @@ extern int veto;
 extern int leech_veto;
 extern uint16_t bset_num;
 extern int ntes;
+extern int acq_init;
 extern int16_t tes[NUM_ROW * NUM_COL];
 extern int rd_count;
 extern int pcm_strobe;

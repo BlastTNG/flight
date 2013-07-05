@@ -25,15 +25,10 @@
 #include <stdio.h>
 #include <string.h>
 
-static void do_frame(const uint32_t *frame, size_t frame_size)
+static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
 {
-  /* Initialise */
   const struct mas_header *header = (const struct mas_header *)frame;
-
-  int sync_on = header->status & MCE_FSB_ACT_CLK;
   static uint32_t last_frameno = 0;
-  static int last_veto = 1000;
-  uint32_t frameno = sync_on ? header->syncno : header->cc_frameno;
 
   /* sequencing check */
   if (last_frameno && frameno - last_frameno != 1)
@@ -41,12 +36,10 @@ static void do_frame(const uint32_t *frame, size_t frame_size)
   last_frameno = frameno;
 
   /* "Helpful" messages */
-  if (last_veto > 0) {
-    if (header->status & MCE_FSB_LAST)
-      bprintf(info, "LAST bit in CC frame %u", header->cc_frameno);
-    if (header->status & MCE_FSB_STOP)
-      bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
-  }
+  if (header->status & MCE_FSB_LAST)
+    bprintf(info, "LAST bit in CC frame %u", header->cc_frameno);
+  if (header->status & MCE_FSB_STOP)
+    bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
 
   /* do more stuff here, probably */
 }
@@ -54,11 +47,23 @@ static void do_frame(const uint32_t *frame, size_t frame_size)
 /* the rambuff callback */
 int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer)
 {
+  /* Initialise */
+  const struct mas_header *header = (const struct mas_header *)buffer;
+  const int sync_on = header->status & MCE_FSB_ACT_CLK;
+  const uint32_t frameno = sync_on ? header->syncno : header->cc_frameno;
+
+  if (acq_init) {
+    /* synchronise packets to frameno */
+    if (frameno % PB_SIZE)
+      return 0; /* skip */
+    acq_init = 0;
+  }
+
   /* copy to the frame buffer */
   memcpy(frame[fb_top], buffer, frame_size * sizeof(uint32_t));
 
   /* do stuff */
-  do_frame(frame[fb_top], (size_t)(sizeof(uint32_t) * frame_size));
+  do_frame(frame[fb_top], (size_t)(sizeof(uint32_t) * frame_size), frameno);
 
   fb_top = (fb_top + 1) % FB_SIZE;
   rd_count++;
