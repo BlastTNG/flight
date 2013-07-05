@@ -1141,10 +1141,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
       
     case mag_cal:
-      CommandData.cal_xmax_mag = ivalues[0];
-      CommandData.cal_xmin_mag = ivalues[1];
-      CommandData.cal_ymax_mag = ivalues[2];
-      CommandData.cal_ymin_mag = ivalues[3];      
+      CommandData.cal_xmax_mag = rvalues[0];
+      CommandData.cal_xmin_mag = rvalues[1];
+      CommandData.cal_ymax_mag = rvalues[2];
+      CommandData.cal_ymin_mag = rvalues[3];      
       break;
       
     case pss_cal:

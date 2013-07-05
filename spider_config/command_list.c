@@ -360,10 +360,10 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   
   {COMMAND(mag_cal), "set magnetometer calibration", GR_TRIM, 4,
     {
-      {"Max X", -65535, 65535, 'i', "cal_xmax_mag"},
-      {"Min X", -65535, 65535, 'i', "cal_xmin_mag"},
-      {"Max Y", -65535, 65535, 'i', "cal_ymax_mag"},
-      {"Min Y", -65535, 65535, 'i', "cal_ymin_mag"}
+      {"Max X", -65535, 65535, 'f', "cal_xmax_mag"},
+      {"Min X", -65535, 65535, 'f', "cal_xmin_mag"},
+      {"Max Y", -65535, 65535, 'f', "cal_ymax_mag"},
+      {"Min Y", -65535, 65535, 'f', "cal_ymin_mag"}
     }
   }, // 10 10 10.5 10.34
   
