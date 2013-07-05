@@ -1,8 +1,8 @@
-/* command_list.h: BLAST command specification file definitions
+/* command_list.h: Spider command specification file definitions
  *
  * This software is copyright (C) 2002-20010 University of Toronto
  *
- * This file is part of the BLAST flight code licensed under the GNU
+ * This file is part of the Spider flight code licensed under the GNU
  * General Public License.
  *
  * You should have received a copy of the GNU General Public License
@@ -178,7 +178,7 @@ enum multiCommand {
   hwp_bias_on,        hwp_bias_off,      write_row_len,     write_num_rows,
   write_free_run,     bset,              set_piv_mode,
   data_mode,          data_mode_bits,    start_acq,         reset_acq,
-  stop_acq,           plugh,
+  stop_acq,           mag_cal,           pss_cal, plugh,   
   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
   sched_packet = 0xff   //not really a command, more of a placeholder
 };

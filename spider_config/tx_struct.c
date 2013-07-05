@@ -113,7 +113,6 @@ struct ChannelStruct WideSlowChannels[] = {
   {"time_sip",     'w', LOOP1,  2,                1.0,             0.0, 'U', U_NONE},
   {"time_dgps",    'w', LOOP1,  4,                1.0,             0.0, 'U', U_NONE},
   {"lst",          'w', LOOP1,  6,         1.0/3600.0,             0.0, 'U', U_NONE},
-  /* LOOP1, 10-11 are wide fast */
   {"parts_sched",   'w', LOOP1, 12,                1.0,             0.0, 'U', U_NONE},
   {"frame_g",'w', LOOP1, 32,                1.0,             0.0, 'U', U_NONE},
   {"lat",          'w', LOOP1, 38,             LI2DEG,             0.0, 'S', U_NONE},
@@ -400,7 +399,11 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 0-7 are wide */
   {"g_com_el",         'w', LOOP1,  8,      3.0/65536.0,  0.0, 'u',     U_NONE},
   {"channelset_oth",   'w', LOOP1,  9,                1,  0.0, 'u',     U_NONE},
-  /* LOOP1 10-13 are wide */
+  {"cal_xmax_mag",     'w', LOOP1, 10,       1,           0.0, 'u',     U_NONE},
+  {"cal_xmin_mag",     'w', LOOP1, 11,       1,           0.0, 'u',     U_NONE},
+  {"cal_ymax_mag",     'w', LOOP1, 14,       1,           0.0, 'u',     U_NONE},
+  {"cal_ymin_mag",     'w', LOOP1, 15,       1,           0.0, 'u',     U_NONE},
+
   {"foc_res_g",        'w', LOOP1, 17,              1.0,  0.0, 'u',     U_NONE},
   /* status_eth =  star camera net status */
   {"status_eth",       'w', LOOP1, 19,              1.0,  0.0, 'u',     U_NONE},

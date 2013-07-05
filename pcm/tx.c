@@ -635,6 +635,21 @@ static void StoreData(int write_slow)
   static struct NiosStruct* pitchMagAddr;
   static struct NiosStruct* declinationMagAddr;
   static struct NiosStruct* sigmaMagAddr;
+  
+  static struct NiosStruct* calXMaxMagAddr;
+  static struct NiosStruct* calXMinMagAddr;
+  static struct NiosStruct* calYMaxMagAddr;
+  static struct NiosStruct* calYMinMagAddr;
+  static struct NiosStruct* calOffPss1Addr;
+  static struct NiosStruct* calOffPss2Addr;
+  static struct NiosStruct* calOffPss3Addr;
+  static struct NiosStruct* calOffPss4Addr;
+  static struct NiosStruct* calDPss1Addr;
+  static struct NiosStruct* calDPss2Addr;
+  static struct NiosStruct* calDPss3Addr;
+  static struct NiosStruct* calDPss4Addr;
+  static struct NiosStruct* calIMinPssAddr;
+
   static struct NiosStruct* dgpsAzAddr;
   static struct NiosStruct* dgpsSigmaAddr;
   static struct NiosStruct* azrawPssAddr;
@@ -760,6 +775,21 @@ static void StoreData(int write_slow)
     pitchMagAddr = GetNiosAddr("pitch_mag");
     declinationMagAddr = GetNiosAddr("declination_mag");
     sigmaMagAddr = GetNiosAddr("sigma_mag");
+    
+    calXMaxMagAddr = GetNiosAddr("cal_xmax_mag");
+    calXMinMagAddr = GetNiosAddr("cal_xmin_mag");
+    calYMaxMagAddr = GetNiosAddr("cal_ymax_mag");
+    calYMinMagAddr = GetNiosAddr("cal_ymin_mag");
+    calOffPss1Addr = GetNiosAddr("cal_off_pss1");
+    calOffPss2Addr = GetNiosAddr("cal_off_pss2");
+    calOffPss3Addr = GetNiosAddr("cal_off_pss3");
+    calOffPss4Addr = GetNiosAddr("cal_off_pss4");
+    calDPss1Addr = GetNiosAddr("cal_d_pss1");
+    calDPss2Addr = GetNiosAddr("cal_d_pss2");
+    calDPss3Addr = GetNiosAddr("cal_d_pss3");
+    calDPss4Addr = GetNiosAddr("cal_d_pss4");
+    calIMinPssAddr = GetNiosAddr("cal_imin_pss");
+
     dgpsAzAddr = GetNiosAddr("az_dgps");
     dgpsSigmaAddr = GetNiosAddr("sigma_dgps");
     azSunAddr = GetNiosAddr("az_sun");
@@ -982,6 +1012,25 @@ static void StoreData(int write_slow)
   WriteData(sigmaMagAddr,
       (unsigned int)(PointingData[i_point].mag_sigma * DEG2I), NIOS_QUEUE);
   WriteData(trimMagAddr, CommandData.mag_az_trim * DEG2I, NIOS_QUEUE);
+  
+  WriteData(calXMaxMagAddr,
+      (unsigned int)(CommandData.cal_xmax_mag), NIOS_QUEUE);
+  WriteData(calXMinMagAddr,
+      (unsigned int)(CommandData.cal_xmin_mag), NIOS_QUEUE);
+  WriteData(calYMaxMagAddr,
+      (unsigned int)(CommandData.cal_ymax_mag), NIOS_QUEUE);
+  WriteData(calYMinMagAddr,
+      (unsigned int)(CommandData.cal_ymin_mag), NIOS_QUEUE);
+
+  WriteData(calOffPss1Addr, (unsigned int)(CommandData.cal_off_pss1*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calOffPss2Addr, (unsigned int)(CommandData.cal_off_pss2*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calOffPss3Addr, (unsigned int)(CommandData.cal_off_pss3*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calOffPss4Addr, (unsigned int)(CommandData.cal_off_pss4*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calDPss1Addr, (unsigned int)(CommandData.cal_d_pss1*65536.0/4.0), NIOS_QUEUE);
+  WriteData(calDPss2Addr, (unsigned int)(CommandData.cal_d_pss2*65536.0/4.0), NIOS_QUEUE);
+  WriteData(calDPss3Addr, (unsigned int)(CommandData.cal_d_pss3*65536.0/4.0), NIOS_QUEUE);
+  WriteData(calDPss4Addr, (unsigned int)(CommandData.cal_d_pss4*65536.0/4.0), NIOS_QUEUE);
+  WriteData(calIMinPssAddr, (unsigned int)(CommandData.cal_imin_pss*65536.0/40.0), NIOS_QUEUE);
 
   WriteData(trimPssAddr, CommandData.pss_az_trim * DEG2I, NIOS_QUEUE);
 

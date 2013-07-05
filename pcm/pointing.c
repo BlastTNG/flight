@@ -1,4 +1,4 @@
-/* mcp: the BLAST master control program
+/* mcp: the Spider master control program
  *
  * This software is copyright (C) 2002-2006 University of Toronto
  *
@@ -503,7 +503,9 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 
   weightsum=weight[0]+weight[1]+weight[2]+weight[3]+weight[4]+weight[5];
   if (weightsum == 0 ) {
-	  return 0;
+    PointingData[point_index].pss_azraw = 0;
+    PointingData[point_index].pss_elraw = 0;
+    return 0;
   }
   
   // Define beta (az rotation)
@@ -742,49 +744,49 @@ static void AddAzSolution(struct AzAttStruct *AzAtt,
 }
 
 static void EvolveAzSolution(struct AzSolutionStruct *s, double ofroll_gy,
-    double offset_ofroll_gy, double ofyaw_gy, double offset_ofyaw_gy, double el, double new_angle,
-    int new_reading)
+                             double offset_ofroll_gy, double ofyaw_gy, double offset_ofyaw_gy, double el, double new_angle,
+                             int new_reading)
 {
   double w1, w2;
   double gy_az;
   double new_offset, daz;
-
+  
   el *= M_PI / 180.0; // want el in radians
   //gy_az = -(ofroll_gy + offset_ofroll_gy) * sin(el) + -(ofyaw_gy + offset_ofyaw_gy) * cos(el);
   
   gy_az = ofyaw_gy + offset_ofyaw_gy;
-
-
+  
+  
   s->angle += gy_az / ACSData.bbc_rate;
   s->varience += GYRO_VAR;
-
+  
   s->ofroll_gy_int += ofroll_gy / ACSData.bbc_rate; // in degrees
   s->ofyaw_gy_int += ofyaw_gy / ACSData.bbc_rate; // in degrees
-
+  
   if (new_reading) {
     w1 = 1.0 / (s->varience);
     w2 = s->samp_weight;
-
+    
     UnwindDiff(s->angle, &new_angle);
     s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
     s->varience = 1.0 / (w1 + w2);
     NormalizeAngle(&(s->angle));
-
+    
     if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
-	
-	daz = remainder(new_angle - s->last_input, 360.0);
-	
-	/* Do Gyro_IFroll */
-	new_offset = -(daz * sin(el) + s->ofroll_gy_int) /
-	  ((1.0/ACSData.bbc_rate) * (double)s->since_last);
-	s->offset_ofroll_gy = filter(new_offset, s->fs2);;
-	
-	/* Do Gyro_IFyaw */
-	new_offset = -(daz * cos(el) + s->ofyaw_gy_int) /
-	  ((1.0/ACSData.bbc_rate) * (double)s->since_last);
-	s->offset_ofyaw_gy = filter(new_offset, s->fs3);;
-	
+        
+        daz = remainder(new_angle - s->last_input, 360.0);
+        
+        /* Do Gyro_IFroll */
+        new_offset = -(daz * sin(el) + s->ofroll_gy_int) /
+        ((1.0/ACSData.bbc_rate) * (double)s->since_last);
+        s->offset_ofroll_gy = filter(new_offset, s->fs2);;
+        
+        /* Do Gyro_IFyaw */
+        new_offset = -(daz * cos(el) + s->ofyaw_gy_int) /
+        ((1.0/ACSData.bbc_rate) * (double)s->since_last);
+        s->offset_ofyaw_gy = filter(new_offset, s->fs3);;
+        
       }
       s->since_last = 0;
       if (s->n_solutions<10000) {
@@ -1138,6 +1140,8 @@ void Pointing(void)
   PointingData[point_index].pss_az = PSSAz.angle;
   PointingData[point_index].pss_sigma = sqrt(PSSAz.varience + PSSAz.sys_var);
 
+  if (PointingData[point_index].pss_sigma>359.99) PointingData[point_index].pss_sigma=359.9;
+  
   /********************/
   /* Set Manual Trims */
   if (NewAzEl.fresh == -1) {

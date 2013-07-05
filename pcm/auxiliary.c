@@ -1,4 +1,4 @@
-/* mcp: the BLAST master control program
+/* mcp: the Spider master control program
  *
  * This software is copyright (C) 2002-2006 University of Toronto
  *

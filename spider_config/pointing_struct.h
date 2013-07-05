@@ -1,10 +1,10 @@
-/* mcp: the BLAST master control program
+/* pcm: the Spider master control program
  *
  * This software is copyright (C) 2003-2004 University of Toronto
  *
- * This file is part of mcp.
+ * This file is part of pcm.
  *
- * mcp is free software; you can redistribute it and/or modify
+ * pcm is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.

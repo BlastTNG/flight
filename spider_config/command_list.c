@@ -1,8 +1,8 @@
-/* command_list.c: BLAST command specification file
+/* command_list.c: Spider command specification file
  *
  * This software is copyright (C) 2002-20010 University of Toronto
  *
- * This file is part of the BLAST flight code licensed under the GNU
+ * This file is part of the Spider flight code licensed under the GNU
  * General Public License.
  *
  * You should have received a copy of the GNU General Public License
@@ -357,6 +357,30 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Elevation (deg)", 0, 90, 'f', "EL"}
     }
   },
+  
+  {COMMAND(mag_cal), "set magnetometer calibration", GR_TRIM, 4,
+    {
+      {"Max X", 0, 65535, 'i', "cal_xmax_mag"},
+      {"Min X", 0, 65535, 'i', "cal_xmin_mag"},
+      {"Max Y", 0, 65535, 'i', "cal_ymax_mag"},
+      {"Min Y", 0, 65535, 'i', "cal_ymin_mag"}
+    }
+  }, // 10 10 10.5 10.34
+  
+  {COMMAND(pss_cal), "set pss calibration", GR_TRIM, 9,
+    {
+      {"Offset 1", -20.0, 20.0, 'f', "CAL_OFF_PSS1"},
+      {"Distance 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
+      {"Offset 2", -20.0, 20.0, 'f', "CAL_OFF_PSS2"},
+      {"Distance 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
+      {"Offset 3", -20.0, 20.0, 'f', "CAL_OFF_PSS3"},
+      {"Distance 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
+      {"Offset 4", -20.0, 20.0, 'f', "CAL_OFF_PSS4"},
+      {"Distance 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
+      {"I Min", 0.0, 20.0, 'f', "CAL_IMIN_PSS"}
+    }
+  },
+
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,
     {
       {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_az"},

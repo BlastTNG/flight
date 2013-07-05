@@ -1,4 +1,4 @@
-/* mcp: the BLAST master control program
+/* mcp: the Spider master control program
  *
  * commands.c: functions for listening to and processing commands
  *
@@ -1139,6 +1139,26 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.pointing_mode.nw = CommandData.slew_veto;
 
       break;
+      
+    case mag_cal:
+      CommandData.cal_xmax_mag = ivalues[0];
+      CommandData.cal_xmin_mag = ivalues[1];
+      CommandData.cal_ymax_mag = ivalues[2];
+      CommandData.cal_ymin_mag = ivalues[3];      
+      break;
+      
+    case pss_cal:
+      CommandData.cal_off_pss1 = rvalues[0];
+      CommandData.cal_d_pss1 = rvalues[1];
+      CommandData.cal_off_pss2 = rvalues[2];
+      CommandData.cal_d_pss2 = rvalues[3];
+      CommandData.cal_off_pss3 = rvalues[4];
+      CommandData.cal_d_pss3 = rvalues[5];
+      CommandData.cal_off_pss4 = rvalues[6];
+      CommandData.cal_d_pss4 = rvalues[7];
+      CommandData.cal_imin_pss = rvalues[8];
+      break;
+      
 
       /***************************************/
       /********** Pointing Motor Gains *******/
@@ -2207,6 +2227,11 @@ void InitCommandData()
   CommandData.dgps_cov_limit = 0.3;
   CommandData.dgps_ants_limit = 0.5;
 
+  CommandData.cal_xmax_mag = 41587;
+  CommandData.cal_ymax_mag = 41300;
+  CommandData.cal_xmin_mag = 40659;
+  CommandData.cal_ymin_mag = 40650;
+  
   CommandData.cal_off_pss1 = 0.0;
   CommandData.cal_off_pss2 = 0.0;
   CommandData.cal_off_pss3 = 0.0;

@@ -1,8 +1,8 @@
-/* mfcp: the BLAST master control program
+/* mfcp: the Spider master control program
  *
  * This software is copyright (C) 2002-2010 University of Toronto
  *
- * This file is part of mcp.
+ * This file is part of pcm.
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -375,6 +375,11 @@ struct CommandDataStruct {
   double dgps_az_trim;
   double pss_az_trim;
 
+  double cal_xmax_mag;
+  double cal_xmin_mag;
+  double cal_ymax_mag;
+  double cal_ymin_mag;
+  
   double cal_off_pss1;
   double cal_off_pss2;
   double cal_off_pss3;
