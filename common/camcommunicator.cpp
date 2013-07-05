@@ -299,7 +299,9 @@ string CamCommunicator::buildReturn(const StarcamReturn* rtn)
 			<< rtn->imagestarttime.tv_sec << " " << rtn->imagestarttime.tv_usec 
 			<< " " << rtn->camID << " " << rtn->ccdtemperature << " " << rtn->focusposition << " " << rtn->numblobs << " ";
 	
-	for (int i=0; i<rtn->numblobs; i++)
+	int top = 15;
+	if (rtn->numblobs < 15) top = rtn->numblobs;
+	for (int i=0; i<top; i++)
 	{
 		sout << rtn->flux[i] << " " << rtn->mean[i] << " " << rtn->snr[i] << " " 
 				<< rtn->x[i] << " " << rtn->y[i] << " ";
