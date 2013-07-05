@@ -2227,10 +2227,10 @@ void InitCommandData()
   CommandData.dgps_cov_limit = 0.3;
   CommandData.dgps_ants_limit = 0.5;
 
-  CommandData.cal_xmax_mag = 41587;
-  CommandData.cal_ymax_mag = 41300;
-  CommandData.cal_xmin_mag = 40659;
-  CommandData.cal_ymin_mag = 40650;
+  CommandData.cal_xmax_mag = 5000;
+  CommandData.cal_ymax_mag = 5000;
+  CommandData.cal_xmin_mag = -5000;
+  CommandData.cal_ymin_mag = -5000;
   
   CommandData.cal_off_pss1 = 0.0;
   CommandData.cal_off_pss2 = 0.0;
