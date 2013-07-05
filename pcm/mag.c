@@ -111,12 +111,15 @@ void Magnetometer()
   /*Activate settings for the port*/
   tcsetattr(fd,TCSANOW,&term);
   
+  fd_set input;
+  struct timeval read_timeout;
+  int res;
+
   char cmd[] = "*99C\r";
   int l = strlen(cmd);
   int m;
-//  int j;
   m = write(fd,cmd,l);
-  if (m<0) printf("failed to send command.\n");
+  if (m<0) bprintf(err,"failed to send command.");
   char buf;
   char buffer[255];
   int n=0;
@@ -127,43 +130,54 @@ void Magnetometer()
   char xsn,ysn,zsn;
 
   while(1) {
+  	read_timeout.tv_sec = 10;
+  	read_timeout.tv_usec = 0;
 	o=0;
 	usleep(10000);
-  	do {
-  	  	n = read(fd,&buf,1);
-                if (n<0) bprintf(err,"failed to read.");
-		buffer[o] = buf;
-		o++;
-	} while (buf != '\r');
+	FD_ZERO(&input);
+	FD_SET(fd, &input);
+	res = select(fd+1,&input,NULL,NULL,&read_timeout);
+	if (res==0) {
+		//bprintf(info,"re-sending command\n");
+		m = write(fd,cmd,l);
+		if (m<0) bprintf(err,"failed to send command.");
+	} else {
+  		do {
+  		  	n = read(fd,&buf,1);
+			buffer[o] = buf;
+			o++;
+		} while (buf != '\r');
+	}
 
-	xsn=buffer[0]; //sign/space
-	x2[0]=buffer[2]; //number/space
-	x3[0]=buffer[4]; //number
-	x4[0]=buffer[5]; //number
-	x5[0]=buffer[6]; //number
-	ysn=buffer[9]; //sign/space
-	y2[0]=buffer[11]; //number/space
-	y3[0]=buffer[13]; //number
-	y4[0]=buffer[14]; //number
-	y5[0]=buffer[15]; //number
-	zsn=buffer[18]; //sign/space
-	z2[0]=buffer[20]; //number/space
-	z3[0]=buffer[22]; //number
-	z4[0]=buffer[23]; //number
-	z5[0]=buffer[24]; //number
+	if (o==28) {
+		xsn=buffer[0]; //sign/space
+		x2[0]=buffer[2]; //number/space
+		x3[0]=buffer[4]; //number
+		x4[0]=buffer[5]; //number
+		x5[0]=buffer[6]; //number
+		ysn=buffer[9]; //sign/space
+		y2[0]=buffer[11]; //number/space
+		y3[0]=buffer[13]; //number
+		y4[0]=buffer[14]; //number
+		y5[0]=buffer[15]; //number
+		zsn=buffer[18]; //sign/space
+		z2[0]=buffer[20]; //number/space
+		z3[0]=buffer[22]; //number
+		z4[0]=buffer[23]; //number
+		z5[0]=buffer[24]; //number
 
-	int x = 1000*(atoi(x2))+100*(atoi(x3))+10*(atoi(x4))+atoi(x5);
-	int y = 1000*(atoi(y2))+100*(atoi(y3))+10*(atoi(y4))+atoi(y5);
-	int z = 1000*(atoi(z2))+100*(atoi(z3))+10*(atoi(z4))+atoi(z5);
-	if(xsn=='-') x*=-1;
-	if(ysn=='-') y*=-1;
-	if(zsn=='-') z*=-1;
-//	if((j%40)==0) bprintf(info,"MAGGY READS: %i %i %i",x,y,z);
-	ACSData.mag_x = x;
-  	ACSData.mag_y = y;
-  	ACSData.mag_z = z;
-//	j++;
+		int x = 1000*(atoi(x2))+100*(atoi(x3))+10*(atoi(x4))+atoi(x5);
+		int y = 1000*(atoi(y2))+100*(atoi(y3))+10*(atoi(y4))+atoi(y5);
+		int z = 1000*(atoi(z2))+100*(atoi(z3))+10*(atoi(z4))+atoi(z5);
+		if(xsn=='-') x*=-1;
+		if(ysn=='-') y*=-1;
+		if(zsn=='-') z*=-1;
+		ACSData.mag_x = x;
+		ACSData.mag_y = y;
+		ACSData.mag_z = z;
+	}
   }
+  close(fd);
   return;
 
 }
