@@ -1217,6 +1217,14 @@ int mcom_validate(enum multiCommand cmd, const int *ivalues,
        * 3 = lower 1st bit
        * 4 = lower nbits
        */
+
+      /* everything must fit in 32-bits */
+      if ((ivalues[1] + ivalues[2] >= 32) ||
+          (ivalues[1] + ivalues[2] >= 32))
+      {
+        snprintf(err_buffer, buflen, "Subfields exceed 32-bits");
+        return 1;
+      }
       /* the two subfields must total 16 bits */
       if (ivalues[2] + ivalues[4] != 16) {
         snprintf(err_buffer, buflen, "Subfield lengths don't make 16-bits (%i)",

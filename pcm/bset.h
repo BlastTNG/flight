@@ -41,7 +41,7 @@ struct bset {
 
   int nm[NUM_MCE]; /* per-MCE counts */
   int8_t im[NUM_MCE][MAX_BSET]; /* per-MCE reverse lookups */
-  int empties; /* indicating MCEs for which do data will be returned */
+  int empties; /* indicating MCEs for which no data will be returned */
 };
 
 int read_bset(int i, struct bset *set);

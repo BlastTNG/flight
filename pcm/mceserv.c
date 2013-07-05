@@ -35,9 +35,6 @@
  * resend of the bset */
 #define BAD_BSET_THRESHOLD 2
 
-/* maximum frames per packet */
-#define FPP_MAX 100
-
 extern int StartupVeto; /* in mcp.c */
 
 static int sock = 0;
@@ -61,8 +58,9 @@ static int mceserv_InCharge; /* to look for edges */
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
 #define TES_FRAME_FULL ((1 << NUM_MCE) - 1) /* lowest NUM_MCE bits set */
-
-static struct tes_frame tes_buffer[2];
+#define TR_SIZE (PB_SIZE * 2) /* size of the reconstruction buffer */
+static struct tes_frame tes_recon[TR_SIZE];
+static int tes_recon_top = 0, tes_recon_bot = 0;
 
 /* TES data FIFO */
 static int tes_fifo_bottom = 0;
@@ -156,22 +154,46 @@ static void ForwardBSet(int sock)
   }
 }
 
-/* push tes_buffer[n] on the tes fifo; discards the new frame if FIFO full */
-static void tes_push(int n)
+/* push tes_recon[n] on the tes fifo; discards the new frame if FIFO full
+ * also updates the list of non-reporting mces (nrx)
+ */
+#define NRX_THRESH (PB_SIZE * 10)
+static int tes_push(int nrx, int *nrx_c)
 {
+  int i;
   static int ndisc = 0;
+
+  /* update nrx */
+  for (i = 0; i < NUM_MCE; ++i)
+    if (nrx & MCE_PRESENT(i)) { /* currently set as non-reporting */
+      if (nrx_c[i] < PB_SIZE) {
+        bprintf(info, "MCE%i reporting", i);
+        nrx_c[i] = 0;
+        nrx &= ~MCE_PRESENT(i);
+      }
+    } else { /* currently set as reporting */
+      if (!(tes_recon[tes_recon_bot].present & MCE_PRESENT(i))) {
+        if (nrx_c[i]++ > NRX_THRESH) {
+          bprintf(warning, "MCE%i not reporting", i);
+          nrx |= MCE_PRESENT(i);
+        }
+      }
+    }
+
   /* discard if full */
   if (tes_fifo_top < 0) {
-    if ((++ndisc % 100) == 0) 
+    if ((++ndisc % 1000) == 0) 
       bprintf(warning, "%i frames discarded on push", ndisc);
-    return;
+    tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
+    return nrx;
   }
 
   /* do the push */
-  memcpy(tes_fifo + tes_fifo_top, tes_buffer + n, sizeof(*tes_buffer));
-  
-//  bprintf(info, "push = %i", tes_buffer[n].frameno);
+  memcpy(tes_fifo + tes_fifo_top, tes_recon + tes_recon_bot,
+      sizeof(*tes_recon));
 
+  tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
+  
   pthread_mutex_lock(&tes_mex);
 
   /* increment fifo top */
@@ -180,28 +202,35 @@ static void tes_push(int n)
   /* flag as full */
   if (tes_fifo_top == tes_fifo_bottom)
     tes_fifo_top = -1;
-//  bprintf(warning, "TES_FIFO: %i:%i", tes_fifo_top, tes_fifo_bottom);
 
   pthread_mutex_unlock(&tes_mex);
+
+  return nrx;
 }
 
 /* do TES data frame reconstruction and push the data into the fifo */
 static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     const char *peer, int port)
 {
-  /* are neither, one or both of the reconstruction buffers full? */
-  static enum {empty, half, full } tes_recon_status = empty;
-  static int last_no = -1;
+  static int last_no[NUM_MCE] = {-1, -1, -1, -1, -1, -1};
+  
+  /* this is a complement of empties, containing non-reporting MCEs */
+  static int nrx = 0;
+  static int nrx_c[NUM_MCE] = {0, 0, 0, 0, 0, 0};
 
   struct bset local_set;
-  uint16_t datain[MAX_BSET * FPP_MAX];
+  uint16_t datain[MAX_BSET * PB_SIZE];
   uint16_t bset_num = get_bset(&local_set);
-  uint32_t frameno_in[FPP_MAX];
-  int f, mce, n, nf, ntes, i, old = 1;
+  uint32_t frameno_in[PB_SIZE];
+  int f, mce, sync, n, nf, ntes, i, new = 1;
 
   /* decode input datagram */
   mce = mpc_decompose_tes(&nf, frameno_in, datain, len, data, bset_num,
       local_set.nm, &bad_bset_count, peer, port);
+
+  /* sync bit on */
+  sync = (mce & 0x80);
+  mce &= 0x7F;
 
   if (mce < 0)
     return bad_bset_count;
@@ -210,66 +239,75 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
 
   for (f = 0; f < nf; ++f) {
     /* check frame sequencing */
-    if (last_no != -1 && frameno_in[f] - 1 != last_no)
-      bprintf(warning, "Sequencing error: %i -> %i\n", last_no, frameno_in[f]);
-    last_no = frameno_in[f];
+    if (last_no[mce] != -1 && frameno_in[f] - 1 != last_no[mce])
+      bprintf(warning, "Sequencing error, MCE%i: %i -> %i\n", mce, last_no[mce],
+          frameno_in[f]);
+    last_no[mce] = frameno_in[f];
 
-    /* find framenum -- here !old is the newer frame, old the older */
-    n = (tes_buffer[!old].frameno == frameno_in[f]) ? !old
-      : (tes_buffer[old].frameno == frameno_in[f]) ? old : -1;
-    
-    /* new framenumber -- look for or make an empty frame */
-    if (n == -1) {
-      switch (tes_recon_status) {
-        case full: /* both old and new are in use... */
-          /* push the oldest frame to the fifo */
-          tes_push(old);
-
-          /* FALLTHROUGH */
-        case half: /* new is in use, old is empty... */
-          /* swap old and new buffers */
-          old = !old;
-          /* zero the new buffer */
-          memset(tes_buffer + !old, 0, sizeof(tes_buffer[!old]));
-
-          tes_recon_status = full;
+    new = 1;
+    if (tes_recon_top == tes_recon_bot) { /* buffer empty */
+      ;
+    } else if (sync) { /* synchronous mode: find the right buffer */
+      for (n = tes_recon_top; n != tes_recon_bot;
+          n = (n + TR_SIZE - 1) % TR_SIZE)
+      {
+        if (tes_recon[n].frameno == frameno_in[f]) {
+          new  = 0;
           break;
-        case empty: /* both are empty */
-          tes_recon_status = half;
+        }
       }
-      /* whatever happened above, we're now using the new buffer */
-      n = !old;
+    } else { /* asynchronouse mode: find the oldest frame missing data from
+                this MCE */
+      for (n = tes_recon_bot; n != tes_recon_top; n = (n + 1) % TR_SIZE)
+        if (!(tes_recon[n].present & MCE_PRESENT(mce))) {
+          new = 0;
+          break;
+        }
+    }
+
+    if (new) { /* new framenumber */
+
+      /* in synchronous mode, frame numbers that have just recently happened
+       * are discarded */
+      if (sync && frameno_in[f] < tes_recon[tes_recon_bot].frameno &&
+          frameno_in[f] + PB_SIZE > tes_recon[tes_recon_bot].frameno) {
+        bprintf(info, "discarding late frame from MCE%i (%i < %i)", mce,
+            frameno_in[f], tes_recon[tes_recon_bot].frameno);
+        continue;
+      }
+
+      /* otherwise, new frame */
+      n = tes_recon_top = (tes_recon_top + 1) % TR_SIZE;
+      if (n == tes_recon_bot) /* buffer full */
+        nrx = tes_push(nrx, nrx_c); /* push oldest frame */
+
+      /* zero the new buffer */
+      memset(tes_recon + n, 0, sizeof(tes_recon[n]));
 
       /* ignore non-reporting MCEs */
-      tes_buffer[n].present = local_set.empties;
+      tes_recon[n].present = local_set.empties | nrx;
 
       /* record new framenum */
-      tes_buffer[n].frameno = frameno_in[f];
-    } else if (tes_buffer[n].present & MCE_PRESENT(mce)) {
+      tes_recon[n].frameno = frameno_in[f];
+    } else if (tes_recon[n].present & MCE_PRESENT(mce)) {
       /* discard duplicates */
-      bprintf(info, "Duplicate frame# 0x%08X from MCE%i", tes_buffer[n].frameno,
+      bprintf(info, "Duplicate frame# 0x%08X from MCE%i", tes_recon[n].frameno,
           mce);
       return bad_bset_count;
     }
 
     /* insert the new data */
-    for (i = 0; i < ntes; ++i) {
-      tes_buffer[n].data[local_set.im[mce][i] + 1] = datain[i + 1 + ntes * f];
-      //bprintf(info, "%i -> %i", i + 1 + ntes * f, local_set.im[mce][i] + 1);
-    }
+    for (i = 0; i < ntes; ++i)
+      tes_recon[n].data[local_set.im[mce][i] + 1] = datain[i + 1 + ntes * f];
+    nrx_c[mce] = 0;
 
     /* remember that we got a frame from this MCE */
-    tes_buffer[n].present |= MCE_PRESENT(mce);
+    tes_recon[n].present |= MCE_PRESENT(mce);
 
-    /* if it's finished, push and then reset it */
-    if (tes_buffer[n].present == TES_FRAME_FULL) {
-      tes_push(n);
-      memset(tes_buffer + n, 0, sizeof(tes_buffer[0]));
-      
-      /* if we just pushed the old buffer, then we're half empty.
-       * if we just pushed the new buffer, then we're completely empty.
-       */
-      tes_recon_status = (n == old) ? half : empty;
+    /* if it's finished, and at the bottom of the buffer, push and then reset */
+    if (n == tes_recon_bot && tes_recon[n].present == TES_FRAME_FULL) {
+      nrx = tes_push(nrx, nrx_c);
+      memset(tes_recon + n, 0, sizeof(tes_recon[0]));
     }
   }
 
@@ -451,7 +489,6 @@ void tes_pop(void)
 
   /* increment fifo bottom */
   tes_fifo_bottom = (tes_fifo_bottom + 1) % TES_FIFO_DEPTH;
-  //  bprintf(warning, "TES_FIFO: %i:%i", tes_fifo_top, tes_fifo_bottom);
 
   pthread_mutex_unlock(&tes_mex);
 }
