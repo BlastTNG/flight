@@ -26,11 +26,9 @@ const char *const mode_string[] = { MODE_STRINGS };
 
 /* the current mode */
 unsigned int state = 0;
-static unsigned int last_reported_state = 0xFFFF;
 
 /* the desired mode */
 enum modes goal = op_acq;
-static enum modes last_reported_goal = -1;
 int working = 0;
 
 /* mode -> status lookups */

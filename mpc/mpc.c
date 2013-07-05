@@ -230,11 +230,12 @@ static void send_slow_data(char *data)
   gettimeofday(&tv, NULL);
   slow_dat.time = (tv.tv_sec - MPC_EPOCH) * 100 + tv.tv_usec / 10000;
 
-  /* meta stuff */
+  /* state stuff */
+  slow_dat.state = state;
+
   slow_dat.goal = goal;
   slow_dat.task = start_tk - stop_tk;
   slow_dat.dtask = data_tk;
-  slow_dat.state = state;
 
   /* make packet and send */
   len = mpc_compose_slow(&slow_dat, nmce, data);
@@ -435,6 +436,10 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case data_mode:
         if (check_cmd_mce(ev->ivalues[0]))
           req_dm = ev->ivalues[1];
+      case reset_acq:
+        if (check_cmd_mce(ev->ivalues[0]))
+          comms_lost = 1;
+        break;
       case start_acq:
         if (check_cmd_mce(ev->ivalues[0]))
           goal = op_acq;
