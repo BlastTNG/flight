@@ -118,7 +118,7 @@ int main(int argc, const char **argv)
     if (n > 0) {
       /* worst date printing scheme ever */
       if (system("date"))
-        printf("Stardate %.1f", (rand() % 10000) / 10.);
+        exit(1);
       printf("packet from %s/%i of length %zi:\n", peer, remport, n);
       hexdump(n, data);
       fputs("\n", stdout);
