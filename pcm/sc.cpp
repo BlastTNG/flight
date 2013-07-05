@@ -32,6 +32,13 @@
 #include <iostream>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>      //for gethostbyname
+#include <cstdlib>
 
 extern "C" {
 #include "blast.h"
@@ -39,6 +46,7 @@ extern "C" {
 #include "channels.h"
 #include "pointing_struct.h"
 #include "mcp.h"
+#include "udp.h"
 #include "command_struct.h"
 }
 #include "camcommunicator.h"
@@ -49,17 +57,16 @@ extern "C" {
 
 using namespace std;
 
-#define THEGOOD_SERVERNAME "192.168.1.11"
-#define THEBAD_SERVERNAME  "192.168.1.12"
-#define THEUGLY_SERVERNAME "192.168.1.13"
+#define SC_TIMEOUT 100 /* milliseconds */
 
 extern "C" void radec2azel(double ra, double dec, time_t lst, double lat, double *az, double *el);
-
 extern "C" void nameThread(const char*);  /* in mcp.c */
-
 extern "C" short int InCharge;		  /* in tx.c */
-
 extern "C" int EthernetSC[3];      /* tx.c */
+
+const char* thegood_servername = "192.168.1.14";
+const char* thebad_servername = "192.168.1.12";
+const char* theugly_servername = "192.168.1.13";
 
 string cam_serial[3]={"110794466","08073506","08073507"};
 extern double goodPos[10];	/* table.cpp */
@@ -78,23 +85,21 @@ double SCra[3], SCdec[3], SCroll[3], SCaz[3], SCel[3];
 #define UGLY_AZ_OFF 105.0
 Pyramid pyr;
 
-static CamCommunicator* TheGoodComm;
-static CamCommunicator* TheBadComm;
-static CamCommunicator* TheUglyComm;
-static pthread_t TheGoodcomm_id;
-static pthread_t TheBadcomm_id;
-static pthread_t TheUglycomm_id;
+static pthread_t rsc_id;
+static pthread_t bsc_id;
+static pthread_t read_id;
 
 static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0);
-static void* TheGoodReadLoop(void* arg);
-static void* TheBadReadLoop(void* arg);
-static void* TheUglyReadLoop(void* arg);
-static string TheGoodparseReturn(string rtnStr);
-static string TheBadparseReturn(string rtnStr);
-static string TheUglyparseReturn(string rtnStr);
+static void* RSCLoop(void* arg);
+static void* BSCLoop(void* arg);
+static void* ReadLoop(void* arg);
+static string ParseReturn(string rtnStr, int which);
 
 static StarcamReturn camRtn[3][3];
 static short int i_cam[3] = {0,0,0}; //read index in above buffer
+
+const char* SCcmd[3];
+int SCcmd_flag[3] = {0,0,0};
 
 extern "C" {
 
@@ -121,19 +126,22 @@ static NiosStruct* GetSCNiosAddr(const char* field, int which)
 int sendTheGoodCommand(const char *cmd)
 {
   if (!InCharge) return 0;
-  if (EthernetSC[0] == 0) return TheGoodComm->sendCommand(cmd);
+  SCcmd[0] = cmd;
+  SCcmd_flag[0] = 1;
   return 0;
 }
 int sendTheBadCommand(const char *cmd)
 {
   if (!InCharge) return 0;
-  if (EthernetSC[1] == 0) return TheBadComm->sendCommand(cmd);
+  SCcmd[1] = cmd;
+  SCcmd_flag[1] = 1;
   return 0;
 }
 int sendTheUglyCommand(const char *cmd)
 {
   if (!InCharge) return 0;
-  if (EthernetSC[2] == 0) return TheUglyComm->sendCommand(cmd);
+  SCcmd[2] = cmd;
+  SCcmd_flag[2] = 1;
   return 0;
 }
 
@@ -143,14 +151,10 @@ int sendTheUglyCommand(const char *cmd)
  */
 void openSC()
 {
-  //bprintf(info, "connecting to the Star Cameras");
   pyr.Init(FOV, (char *)CAT, (char *)KCAT);
-  TheGoodComm = new CamCommunicator();
-  TheBadComm  = new CamCommunicator();
-  TheUglyComm = new CamCommunicator();
-  pthread_create(&TheGoodcomm_id, NULL, &TheGoodReadLoop, NULL);
-  pthread_create(&TheBadcomm_id, NULL, &TheBadReadLoop, NULL);
-  pthread_create(&TheUglycomm_id, NULL, &TheUglyReadLoop, NULL);
+  pthread_create(&rsc_id, NULL, &RSCLoop, NULL);
+  pthread_create(&bsc_id, NULL, &BSCLoop, NULL);
+  pthread_create(&read_id, NULL, &ReadLoop, NULL);
 }
 
 /*
@@ -318,7 +322,6 @@ void cameraFields(int which)
     unrecFlag = false;
   }
   else if (!unrecFlag) { //don't keep printing same error
-//    bprintf(err, "unrecognized camera ID");
     sc = NULL;
     unrecFlag = true;
   }
@@ -422,244 +425,156 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
   }
 }
 
+static void* BSCLoop(void* arg)
+{
+        nameThread("BSC");
+	while (!InCharge) {
+		usleep(20000);
+	}
+	int sock;
+  	string rtn_str = "";
+
+	sock = udp_bind_port(SC_PORT_BSC, 1);
+	if (sock == -1)
+		bprintf(tfatal, "Unable to bind to port");
+
+	while(1) {
+		while (SCcmd_flag[0] == 0) {
+			sleep(1);
+	        }
+		string cmd = string(SCcmd[0]);
+    		//remove all newlines and add a single one at the end
+    		string sought = "\n";
+    		string::size_type pos = cmd.find(sought, 0);
+    		while (pos != string::npos) {
+    	  		cmd.replace(pos, sought.size(), "");
+    	  		pos = cmd.find(sought, pos - sought.size());
+    		}
+    		cmd += "\n";
+		if (udp_bcast(sock, BSC_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
+			bprintf(warning, "Error broadcasting command.\n");
+		SCcmd_flag[0] = 0;
+	}
+	return NULL;
+}
+
+static void* RSCLoop(void* arg)
+{
+        nameThread("RSC");
+	while (!InCharge) {
+		usleep(20000);
+	}
+	int sock;
+  	string rtn_str = "";
+
+	sock = udp_bind_port(SC_PORT_RSC, 1);
+	if (sock == -1)
+		bprintf(tfatal, "Unable to bind to port");
+
+	while(1) {
+		while (SCcmd_flag[0] == 0) {
+			sleep(1);
+	        }
+		string cmd = string(SCcmd[0]);
+    		//remove all newlines and add a single one at the end
+    		string sought = "\n";
+    		string::size_type pos = cmd.find(sought, 0);
+    		while (pos != string::npos) {
+    	  		cmd.replace(pos, sought.size(), "");
+    	  		pos = cmd.find(sought, pos - sought.size());
+    		}
+    		cmd += "\n";
+		if (udp_bcast(sock, RSC_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
+			bprintf(warning, "Error broadcasting command.\n");
+	}
+	return NULL;
+}
+
+
 /*
  * wrapper for the read loop in camcommunicator
  * mcp main should make a thread for this
  */
-static void* TheGoodReadLoop(void* arg)
+static void* ReadLoop(void* arg)
 {
-  int firsttime=1;
-  nameThread("GoodSC");
-  while (!InCharge) {
-    if (firsttime==1) {
-      //bprintf(info,"Not in charge, waiting....");
-      firsttime=0;
-    }
-    usleep(20000);
-  }
-  bool errorshown = false;
+        nameThread("SCread");
+	while (!InCharge) {
+		usleep(20000);
+	}
 
-  while (TheGoodComm->openClient(THEGOOD_SERVERNAME) < 0) {
-    if (!errorshown) {
-      bprintf(err, "failed to accept camera connection");
-      EthernetSC[0]=3;
-      errorshown = true;
-    }
-  }
-  if (errorshown) {
-    bprintf(startup, "talking to The Good Star Camera");
-  }
-  EthernetSC[0]=0;
+	int which=0;
+	int sock, port;
+	char buf[UDP_MAXSIZE];	/* message buffer */
+  	string rtnStr = "";
+	string line = "";
+	string::size_type pos;
+	int recvlen;		/* # bytes in acknowledgement message */
+	char peer[UDP_MAXHOST];
 
-  sendTheGoodCommand("Oconf");  //request configuration data
+	/* create a socket */
+	sock = udp_bind_port(SC_PORT, 1);
 
-  while(true) {
-    TheGoodComm->readLoop(&TheGoodparseReturn);
-    //sleep(1);	//catchall for varous busy-waiting scenarios
-  }
+	if (sock == -1)
+		bprintf(tfatal, "Unable to bind to port");
 
-  return NULL;
-}
-static void* TheBadReadLoop(void* arg)
-{
-  int firsttime=1;
-  nameThread("BadSC");
-  while (!InCharge) {
-    if (firsttime==1) {
-      //bprintf(info,"Not in charge, waiting....");
-      firsttime=0;
-    }
-    usleep(20000);
-  }
-  bool errorshown = false;
+        EthernetSC[0]=0;
 
-  while (TheBadComm->openClient(THEBAD_SERVERNAME) < 0) {
-    if (!errorshown) {
-      bprintf(err, "failed to accept camera connection");
-      EthernetSC[1]=3;
-      errorshown = true;
-    }
-  }
-  if (errorshown) {
-    bprintf(startup, "talking to The Bad Star Camera");
-  }
-  
-  EthernetSC[1]=0;
-
-  sendTheBadCommand("Oconf");  //request configuration data
-
-  while(true) {
-    TheBadComm->readLoop(&TheBadparseReturn);
-    //sleep(1);	//catchall for varous busy-waiting scenarios
-  }
-
-  return NULL;
-}
-static void* TheUglyReadLoop(void* arg)
-{
-  int firsttime=1;
-  nameThread("UglySC");
-  while (!InCharge) {
-    if (firsttime==1) {
-      //bprintf(info,"Not in charge, waiting....");
-      firsttime=0;
-    }
-    usleep(20000);
-  }
-  bool errorshown = false;
-
-  while (TheUglyComm->openClient(THEUGLY_SERVERNAME) < 0) {
-    if (!errorshown) {
-      bprintf(err, "failed to accept camera connection");
-      EthernetSC[2]=3;
-      errorshown = true;
-    }
-  }
-  if (errorshown) {
-    bprintf(startup, "talking to The Ugly Star Camera");
-  }
-  EthernetSC[2]=0;
-
-  sendTheUglyCommand("Oconf");  //request configuration data
-
-  while(true) {
-    TheUglyComm->readLoop(&TheUglyparseReturn);
-    //sleep(1);	//catchall for varous busy-waiting scenarios
-  }
-
-  return NULL;
+	while (1) {
+		rtnStr = "";
+		recvlen = udp_recv(sock, SC_TIMEOUT, peer, &port, UDP_MAXSIZE, buf);
+		if (recvlen > 0) {
+//			bprintf(info,"received %i bytes from %s",recvlen,peer);
+//			bprintf(info,"message is: %s",buf);
+		}
+		if (strcmp(peer,thegood_servername)==0) {
+//		        bprintf(info,"It's from the good");
+			which=0;
+		} else if (strcmp(peer,thebad_servername)==0) which=1;
+		else if (strcmp(peer,theugly_servername)==0) which=2;
+    		buf[recvlen] = '\0';
+    		line += buf;
+		while ((pos = line.find("\n",0)) != string::npos) {
+			rtnStr = ParseReturn(line.substr(0,pos),which);
+			line = line.substr(pos+1, line.length()-(pos+1)); //set line to text after "\n"
+		}
+	}
+  	return NULL;
 }
 
-
-static string TheGoodparseReturn(string rtnStr)
+static string ParseReturn(string rtnStr, int which)
 {
-  int i_point;
-  i_point = GETREADINDEX(point_index);  
-
-  /* debugging only
-     bprintf(info, "return string: %s", rtnStr.c_str());
-     */
-  //if (rtnStr.find("<str>", 0) == 0) //response is string
-  if (rtnStr.substr(0,5) == "<str>") //response is string
-  {
-    string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
-
-    if (Rstr[0] == 'E') //it is an error
-      bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
-
-    //else if (Rstr.find("<conf>", 0) == 0) //contains config data
-    else if (Rstr.substr(0,6) == "<conf>") //contains The Ugly config data
-    {
-      Rstr = Rstr.substr(6, Rstr.size()-6);
-      istringstream sin;
-      sin.str(Rstr);
-      double temp;  //value sent for expTime is a double
-      sin >> CommandData.StarCam[0].expInt
-	>> temp
-	>> CommandData.StarCam[0].focusRes
-	>> CommandData.StarCam[0].moveTol
-	>> CommandData.StarCam[0].maxBlobs
-	>> CommandData.StarCam[0].grid
-	>> CommandData.StarCam[0].threshold
-	>> CommandData.StarCam[0].minBlobDist;
-      CommandData.StarCam[0].expTime = (int)(temp * 1000);
-    }
-    //otherwise it is success notice for another command
-
-  } else { //response is exposure data
-    TheGoodComm->interpretReturn(rtnStr, &camRtn[0][(i_cam[0]+1)%2]);
-    SolveField(&camRtn[0][(i_cam[0]+1)%2],SCra[0],SCdec[0],SCroll[0]);
-    radec2azel(SCra[0],SCdec[0], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[0], &SCel[0]);
-    i_cam[0] = (i_cam[0]+1)%2;
-  }
-  return "";  //doesn't send a response back to camera
-}
-static string TheBadparseReturn(string rtnStr)
-{
-  int i_point;
-  i_point = GETREADINDEX(point_index);  
-
-  /* debugging only
-     bprintf(info, "return string: %s", rtnStr.c_str());
-     */
-  //if (rtnStr.find("<str>", 0) == 0) //response is string
-  if (rtnStr.substr(0,5) == "<str>") //response is string
-  {
-    string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
-
-    if (Rstr[0] == 'E') //it is an error
-      bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
-
-    //else if (Rstr.find("<conf>", 0) == 0) //contains config data
-    else if (Rstr.substr(0,6) == "<conf>") //contains The Ugly config data
-    {
-      Rstr = Rstr.substr(6, Rstr.size()-6);
-      istringstream sin;
-      sin.str(Rstr);
-      double temp;  //value sent for expTime is a double
-      sin >> CommandData.StarCam[1].expInt
-	>> temp
-	>> CommandData.StarCam[1].focusRes
-	>> CommandData.StarCam[1].moveTol
-	>> CommandData.StarCam[1].maxBlobs
-	>> CommandData.StarCam[1].grid
-	>> CommandData.StarCam[1].threshold
-	>> CommandData.StarCam[1].minBlobDist;
-      CommandData.StarCam[1].expTime = (int)(temp * 1000);
-    }
-    //otherwise it is success notice for another command
-
-  } else { //response is exposure data
-    TheBadComm->interpretReturn(rtnStr, &camRtn[1][(i_cam[1]+1)%2]);
-    SolveField(&camRtn[1][(i_cam[1]+1)%2],SCra[1],SCdec[1],SCroll[1]);
-    radec2azel(SCra[1],SCdec[1], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[1], &SCel[1]);
-    SCaz[1] += BAD_AZ_OFF - ACSData.enc_table;
-    i_cam[1] = (i_cam[1]+1)%2;
-  }
-  return "";  //doesn't send a response back to camera
-}
-static string TheUglyparseReturn(string rtnStr)
-{
-  int i_point;
-  i_point = GETREADINDEX(point_index);  
-
-  /* debugging only
-     bprintf(info, "return string: %s", rtnStr.c_str());
-     */
-  //if (rtnStr.find("<str>", 0) == 0) //response is string
-  if (rtnStr.substr(0,5) == "<str>") //response is string
-  {
-    string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
-
-    if (Rstr[0] == 'E') //it is an error
-      bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
-
-    //else if (Rstr.find("<conf>", 0) == 0) //contains config data
-    else if (Rstr.substr(0,6) == "<conf>") //contains The Ugly config data
-    {
-      Rstr = Rstr.substr(6, Rstr.size()-6);
-      istringstream sin;
-      sin.str(Rstr);
-      double temp;  //value sent for expTime is a double
-      sin >> CommandData.StarCam[2].expInt
-	>> temp
-	>> CommandData.StarCam[2].focusRes
-	>> CommandData.StarCam[2].moveTol
-	>> CommandData.StarCam[2].maxBlobs
-	>> CommandData.StarCam[2].grid
-	>> CommandData.StarCam[2].threshold
-	>> CommandData.StarCam[2].minBlobDist;
-      CommandData.StarCam[2].expTime = (int)(temp * 1000);
-    }
-    //otherwise it is success notice for another command
-
-  } else { //response is exposure data
-    TheUglyComm->interpretReturn(rtnStr, &camRtn[2][(i_cam[2]+1)%2]);
-    SolveField(&camRtn[2][(i_cam[2]+1)%2],SCra[2],SCdec[2],SCroll[2]);
-    radec2azel(SCra[2],SCdec[2], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[2], &SCel[2]);
-    SCaz[2] += UGLY_AZ_OFF - ACSData.enc_table;
-    i_cam[2] = (i_cam[2]+1)%2;
-  }
-  return "";  //doesn't send a response back to camera
-}
-
+	int i_point;
+	i_point = GETREADINDEX(point_index);
+      	if (rtnStr.substr(0,5) == "<str>") { //response is string
+//		bprintf(info,"String");
+		string Rstr = rtnStr.substr(5, rtnStr.size() - 11);
+		if (Rstr[0] == 'E') //it is an errori
+			bprintf(err, "%s", Rstr.substr(6, Rstr.size()-6).c_str());
+		else if (Rstr.substr(0,6) == "<conf>") //contains config data
+		{
+//			bprintf(info,"CONFIG-O");
+			Rstr = Rstr.substr(6, Rstr.size()-6);
+			istringstream sin;
+			sin.str(Rstr);
+			double temp;  //value sent for expTime is a double
+			sin >> CommandData.StarCam[which].expInt
+				>> temp
+				>> CommandData.StarCam[which].focusRes
+				>> CommandData.StarCam[which].moveTol
+				>> CommandData.StarCam[which].maxBlobs
+				>> CommandData.StarCam[which].grid
+				>> CommandData.StarCam[which].threshold
+				>> CommandData.StarCam[which].minBlobDist;
+				CommandData.StarCam[which].expTime = (int)(temp * 1000);
+		}
+	} else { //response is exposure data
+//		bprintf(info,"Exposure data");
+		CamCommunicator::interpretReturn(rtnStr, &camRtn[which][(i_cam[which]+1)%2]);
+		SolveField(&camRtn[which][(i_cam[which]+1)%2],SCra[which],SCdec[which],SCroll[which]);
+		radec2azel(SCra[which],SCdec[which], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[which], &SCel[which]);
+		if (which==1) SCaz[which] += BAD_AZ_OFF - ACSData.enc_table;
+		if (which==2) SCaz[which] += UGLY_AZ_OFF - ACSData.enc_table;
+		i_cam[which] = (i_cam[which]+1)%2;
+	}
+	return ""; //doesn't send a response back to camera
+}	

@@ -4,7 +4,13 @@
 #include <string>
 #include "camstruct.h"
 
-#define DEFAULT_CAM_PORT 2678
+#define BSC_PORT 2676
+#define RSC_PORT 2677
+#define BSC_PORT_PLOOP 2678
+#define RSC_PORT_PLOOP 2679
+#define SC_PORT 2680 
+#define SC_PORT_RSC 2681 
+#define SC_PORT_BSC 2682 
 
 /**
 	@author Steve Benton <steve.benton@utoronto.ca>
@@ -20,15 +26,14 @@ public:
 	
 	void Init();
 	
-	int openHost(string target);    //DEPRECATED! use CamCommServer instead
-	int openClient(string target);
+	int openHost();
+	int openClient(const char* target);
 	void closeConnection();
-	string repairLink();
 	
 	//main program of communicator: infinite loop that reads commands and executes on global objects
 	void readLoop(string (*interpretFunction)(string));
 	string looplessRead();
-	
+
 	//send a return value to the flight computer
 	int sendReturn(const StarcamReturn* returnStruct);
 	int sendReturnString(string returnStr);
@@ -45,10 +50,11 @@ public:
 	int getErrorFlag() { return errorFlag; }
 	
 private:
-	string target;                //a string specifying where connections will come from/go
+	const char* target;           //a string specifying where connections will come from/go
 	int serverFD;                 //file descriptor for host only: socket server
 				      //a value of -2 means that an external server is being used
 	int commFD;                   //file descriptor for both: socket communications
+	struct addrinfo *p;
 	int errorFlag;                //will be -1 in case of error, 0 otherwise
 
 	//allow the new server class to handle some internals
