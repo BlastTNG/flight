@@ -120,6 +120,9 @@ void *task(void *dummy)
       /* need complete MCE restart */
       state &= ~(st_config | st_acqcnf | st_mcecom | st_retdat);
       start_tk = stop_tk = st_idle; /* try again */
+    } else if (req_dm != cur_dm && state & st_acqcnf) {
+      /* change of data mode while acquiring -- restart acq */
+      task_reset_mce();
     } else if (start_tk != st_idle) { /* handle start task requests */
       switch (start_tk) {
         case st_idle:
@@ -195,13 +198,13 @@ void *task(void *dummy)
     if (repc++ > 100) {
       if (state & st_retdat) {
         if (check_acq && rd_count > 20) {
-          bprintf(info, "acquisition start detected");
+          bprintf(info, "start of acquisition detected");
           check_acq = 0;
-        } else {
-          bprintf(info, "ret_dat count: %i\n", rd_count);
-          /* should be ~50 or 100 */
-          if (rd_count < 20)
+        } else if (!check_acq) {
+          if (rd_count < 1) {
+            bprintf(info, "loss of acquisition detected");
             comms_lost = 1;
+          }
         }
         rd_count = 0;
       }

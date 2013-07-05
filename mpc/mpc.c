@@ -61,13 +61,16 @@ int sock;
 int nmce = 0;
 
 /* The current MCE data mode */
-int data_mode = -1;
+int cur_dm = -1;
+
+/* The requested data mode */
+int req_dm = 10;
 
 /* Initialisation veto */
 int init = 1;
 
 /* Data return veto */
-int veto = 0;
+int veto = 1;
 
 /* PCM/MPC divisor */
 int divisor = 2;
@@ -216,7 +219,7 @@ static void send_slow_data(char *data)
   struct statvfs buf;
   size_t len;
 
-  slow_dat.data_mode = data_mode;
+  slow_dat.data_mode = cur_dm;
 
   /* disk free -- units are 2**24 bytes = 16 MB */
   if (statvfs("/data0/mce", &buf) == 0)
@@ -326,28 +329,28 @@ static int16_t coadd(uint32_t datum, uint16_t old_datum)
   int i;
 
   /* 16-bit-space masks */
-  mask[0] = ((1 << data_modes[data_mode][0].num_bits) - 1)
-    << data_modes[data_mode][1].num_bits;
-  mask[1] = ((1 << data_modes[data_mode][1].num_bits) - 1);
+  mask[0] = ((1 << data_modes[cur_dm][0].num_bits) - 1)
+    << data_modes[cur_dm][1].num_bits;
+  mask[1] = ((1 << data_modes[cur_dm][1].num_bits) - 1);
 
   /* extract the subfield(s) */
-  rec[0] = (uint16_t)(datum >> (data_modes[data_mode][0].first_bit -
-          data_modes[data_mode][1].num_bits)) & mask[0];
-  rec[1] = (uint16_t)(datum >> data_modes[data_mode][1].first_bit) & mask[1];
+  rec[0] = (uint16_t)(datum >> (data_modes[cur_dm][0].first_bit -
+          data_modes[cur_dm][1].num_bits)) & mask[0];
+  rec[1] = (uint16_t)(datum >> data_modes[cur_dm][1].first_bit) & mask[1];
 
   if (pcm_strobe) { /* coadd */
     /* split the old datum, if neccessary */
     uint16_t old_rec[2];
     
-    old_rec[0] = (data_modes[data_mode][0].coadd_how != first)
+    old_rec[0] = (data_modes[cur_dm][0].coadd_how != first)
       ? old_datum & mask[0] : 0;
 
-    old_rec[1] = (data_modes[data_mode][1].num_bits > 0 &&
-        data_modes[data_mode][1].coadd_how != first) ?  old_datum & mask[1] : 0;
+    old_rec[1] = (data_modes[cur_dm][1].num_bits > 0 &&
+        data_modes[cur_dm][1].coadd_how != first) ?  old_datum & mask[1] : 0;
 
     /* coadd */
     for (i = 0; i < 2; ++i)
-      switch (data_modes[data_mode][i].coadd_how) {
+      switch (data_modes[cur_dm][i].coadd_how) {
         case first:
           break; /* nothing to do */
         case sum:
@@ -419,16 +422,26 @@ static void ForwardMCEStat(void)
   send_mcestat = 0;
 }
 
+const static inline int check_cmd_mce(int w)
+{
+  return (w == 0) || (w == (nmce + 1));
+}
+
 /* Execute a command */
 static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 {
   if (ev->is_multi) {
     switch (ev->command) {
+      case data_mode:
+        if (check_cmd_mce(ev->ivalues[0]))
+          req_dm = ev->ivalues[1];
       case start_acq:
-        goal = op_acq;
+        if (check_cmd_mce(ev->ivalues[0]))
+          goal = op_acq;
         break;
       case stop_acq:
-        goal = op_ready;
+        if (check_cmd_mce(ev->ivalues[0]))
+          goal = op_ready;
         break;
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",

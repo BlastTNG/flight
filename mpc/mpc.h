@@ -44,7 +44,7 @@ extern int sock;
 extern int in_turnaround;
 extern int fake;
 extern int init;
-extern int data_mode;
+extern int cur_dm, req_dm;
 extern int power_cycle_mce;
 extern int power_cycle_cmp;
 extern int command_veto;

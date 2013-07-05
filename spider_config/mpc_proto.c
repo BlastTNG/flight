@@ -174,7 +174,9 @@ size_t mpc_compose_tes(const uint16_t *data, const uint32_t *framenum,
     uint16_t bset_num, int16_t nf, int nmce, int ntes, const int16_t *tesind,
     char *buffer)
 {
+  int i, j;
   size_t len = 8 + (sizeof(uint16_t) * ntes + sizeof(uint32_t)) * nf;
+  uint16_t *dbuf = (uint16_t *)(buffer + 8 + sizeof(uint32_t) * nf); 
 
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'T'; /* tes data packet */
@@ -186,8 +188,9 @@ size_t mpc_compose_tes(const uint16_t *data, const uint32_t *framenum,
   memcpy(buffer + 8, framenum, sizeof(uint32_t) * nf);
 
   /* append data */
-  memcpy(buffer + nf * sizeof(uint32_t) + 8, data,
-      sizeof(uint16_t) * ntes * nf);
+  for (i = 0; i < nf; ++i)
+    for (j = 0; j < ntes; ++j)
+      dbuf[j + i * ntes] = data[tesind[j]];
 
   return len;
 }

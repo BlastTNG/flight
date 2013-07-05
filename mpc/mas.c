@@ -137,9 +137,9 @@ static void get_acq_metadata(void)
       /* Might as well try fixing it. */
       mas_write_block("rc2", "data_mode", buffer, 1);
     }
-    if (data_mode != buffer[0])
+    if (cur_dm != buffer[0])
       bprintf(info, "Data mode: %i", buffer[0]);
-    data_mode = buffer[0];
+    cur_dm = buffer[0];
   }
 }
 
@@ -366,14 +366,20 @@ static int acq_conf(void)
 {
   int r, i;
   mcedata_storage_t *st;
-  uint32_t one = 1;
+  uint32_t n = 1;
   char filename[100];
   
   /* stop the pushback */
   fb_top = pb_last = 0;
 
   /* restart the servo */
-  mas_write_block("rca", "flx_lp_init", &one, 1);
+  n = 1;
+  mas_write_block("rca", "flx_lp_init", &n, 1);
+
+  /* set data mode */
+  cur_dm = n = req_dm;
+  mas_write_block("rca", "data_mode", &n, 1);
+
 
   /* start a multiacq -- this follows prepare_outfile in mce_cmd somewhat */
   acq = malloc(sizeof(mce_acq_t));
@@ -448,6 +454,8 @@ static int acq_conf(void)
   for (i = 0; i < FB_SIZE; ++i)
     frame[i] = fb + i * acq->frame_size;
 
+  get_acq_metadata();
+
   /* done */
   return 0;
 
@@ -512,8 +520,6 @@ void *mas_data(void *dummy)
           dt_error = 1;
         } else
           dt_error = 0;
-
-        get_acq_metadata();
 
         data_tk = dt_idle;
         break;
