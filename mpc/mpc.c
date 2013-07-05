@@ -319,7 +319,7 @@ BAD_ARRAY_ID:
 static void ForwardData(const uint32_t *frameno)
 {
   char data[UDP_MAXSIZE];
-  size_t len = mpc_compose_tes(pcm_data, frameno, bset_num, PB_SIZE, sync_on,
+  size_t len = mpc_compose_tes(pcm_data, frameno, bset_num, PB_SIZE, sync_dv,
       nmce, ntes, tes, data);
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
 }
@@ -386,8 +386,7 @@ static void pushback(void)
       uint32_t *fr = frame[(n + pb_last) % FB_SIZE];
 
       const struct mas_header *header = (const struct mas_header *)fr;
-      const int sync_on = header->status & MCE_FSB_ACT_CLK;
-      frameno[n] = sync_on ? header->syncno : header->cc_frameno;
+      frameno[n] = sync_dv ? header->syncno : header->cc_frameno;
 
       if (ndata > NUM_COL * NUM_ROW)
         ndata = NUM_COL * NUM_ROW;
