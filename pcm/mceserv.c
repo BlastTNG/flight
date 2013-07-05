@@ -197,7 +197,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
   uint16_t datain[MAX_BSET * FPP_MAX];
   uint16_t bset_num = get_bset(&local_set);
   uint32_t frameno_in[FPP_MAX];
-  int f, mce, n, nf, ntes, i;
+  int f, mce, n, nf, ntes, i, old = 1;
 
   /* decode input datagram */
   mce = mpc_decompose_tes(&nf, frameno_in, datain, len, data, bset_num,
@@ -209,40 +209,42 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
   ntes = local_set.nm[mce];
 
   for (f = 0; f < nf; ++f) {
+    /* check frame sequencing */
     if (last_no != -1 && frameno_in[f] - 1 != last_no)
       bprintf(warning, "Sequencing error: %i -> %i\n", last_no, frameno_in[f]);
     last_no = frameno_in[f];
 
-    /* find framenum -- here 0 is the newer frame, 1 the older */
-    n = (tes_buffer[0].frameno == frameno_in[f]) ? 0
-      : (tes_buffer[1].frameno == frameno_in[f]) ? 1 : -1;
-
+    /* find framenum -- here !old is the newer frame, old the older */
+    n = (tes_buffer[!old].frameno == frameno_in[f]) ? !old
+      : (tes_buffer[old].frameno == frameno_in[f]) ? old : -1;
+    
     /* new framenumber -- look for or make an empty frame */
     if (n == -1) {
       switch (tes_recon_status) {
-        case full:
+        case full: /* both old and new are in use... */
           /* push the oldest frame to the fifo */
-          tes_push(1);
+          tes_push(old);
 
           /* FALLTHROUGH */
-        case half:
-          /* advance zero to one and reset zero */
-          memcpy(tes_buffer + 1, tes_buffer, sizeof(tes_buffer[0]));
-          memset(tes_buffer, 0, sizeof(tes_buffer[0]));
+        case half: /* new is in use, old is empty... */
+          /* swap old and new buffers */
+          old = !old;
+          /* zero the new buffer */
+          memset(tes_buffer + !old, 0, sizeof(tes_buffer[!old]));
 
           tes_recon_status = full;
           break;
-        case empty:
+        case empty: /* both are empty */
           tes_recon_status = half;
       }
-      /* whatever happened above, we're now using buffer zero */
-      n = 0;
+      /* whatever happened above, we're now using the new buffer */
+      n = !old;
 
       /* ignore non-reporting MCEs */
-      tes_buffer[0].present = local_set.empties;
+      tes_buffer[n].present = local_set.empties;
 
       /* record new framenum */
-      tes_buffer[0].frameno = frameno_in[f];
+      tes_buffer[n].frameno = frameno_in[f];
     } else if (tes_buffer[n].present & MCE_PRESENT(mce)) {
       /* discard duplicates */
       bprintf(info, "Duplicate frame# 0x%08X from MCE%i", tes_buffer[n].frameno,
@@ -251,8 +253,10 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     }
 
     /* insert the new data */
-    for (i = 0; i < ntes; ++i)
+    for (i = 0; i < ntes; ++i) {
       tes_buffer[n].data[local_set.im[mce][i] + 1] = datain[i + 1 + ntes * f];
+      //bprintf(info, "%i -> %i", i + 1 + ntes * f, local_set.im[mce][i] + 1);
+    }
 
     /* remember that we got a frame from this MCE */
     tes_buffer[n].present |= MCE_PRESENT(mce);
@@ -261,7 +265,11 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     if (tes_buffer[n].present == TES_FRAME_FULL) {
       tes_push(n);
       memset(tes_buffer + n, 0, sizeof(tes_buffer[0]));
-      tes_recon_status = n ? half : empty;
+      
+      /* if we just pushed the old buffer, then we're half empty.
+       * if we just pushed the new buffer, then we're completely empty.
+       */
+      tes_recon_status = (n == old) ? half : empty;
     }
   }
 

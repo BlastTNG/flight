@@ -134,8 +134,8 @@ int read_bset(int i, struct bset *set)
       /* lame number parsing.
        * yes ",m" produces the same number as "21" ... DON'T DO THAT */
 
-      mce = line[1] - '0';
-      new_set.v[c] = TESNumber(mce - 1,
+      mce = line[1] - '0' - 1;
+      new_set.v[c] = TESNumber(mce,
           (line[3] - '0') * 10 + line[4] - '0' - 1,
           (line[6] - '0') * 10 + line[7] - '0' - 1);
 
