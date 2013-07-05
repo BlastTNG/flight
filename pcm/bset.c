@@ -1,6 +1,6 @@
 /* pcm: the Spider master control program
  *
- * fset.c: handle routines for field set manipulation
+ * bset.c: handle routines for field set manipulation
  *
  * This software is copyright (C) 2013 D. V. Wiebe
  *
@@ -30,7 +30,7 @@
  */
 
 #include "command_struct.h"
-#include "fset.h"
+#include "bset.h"
 #include "tes.h"
 #include "blast.h"
 #include <string.h>

@@ -40,7 +40,7 @@
 #include "pointing_struct.h"
 #include "channels.h"
 #include "sip.h"
-#include "fset.h"
+#include "bset.h"
 #include "mceserv.h"
 
 void RecalcOffset(double, double);  /* actuators.c */

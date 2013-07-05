@@ -1,6 +1,6 @@
 /* pcm: the Spider master control program
  *
- * fset.h: field set prototypes
+ * bset.h: field set prototypes
  *
  * This software is copyright (C) 2013 D. V. Wiebe
  *
