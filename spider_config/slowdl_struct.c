@@ -35,13 +35,13 @@ struct SlowDlStruct slowDLList[] = {
   {"last_b_cmd", 'u', SDL_RAW},
   {"last_i_cmd", 'u', SDL_RAW},
   {"i_of_tot", 'c', SDL_SCALE, 0.0, 60.0},
-  {"v_batt_cc1", 'c', SDL_SCALE, 18.0, 36.0},
-  {"v_batt_cc2", 'c', SDL_SCALE, 18.0, 36.0},
+  {"v_batt_of_cc", 'c', SDL_SCALE, 18.0, 36.0},
+  {"v_batt_if_cc", 'c', SDL_SCALE, 18.0, 36.0},
   {"t_cpu_i_flc", 'c', SDL_SCALE, -10.0, 90.0},
   {"t_cpu_b_flc", 'c', SDL_SCALE, -10.0, 90.0},
   {"vt_gy", 'c', SDL_SCALE, -45.0, 70.0},
-  {"t_hs_cc1", 'c', SDL_SCALE, -45.0, 70.0},
-  {"t_hs_cc2", 'c', SDL_SCALE, -45.0, 70.0},
+  {"t_hs_of_cc", 'c', SDL_SCALE, -45.0, 70.0},
+  {"t_hs_if_cc", 'c', SDL_SCALE, -45.0, 70.0},
   {""}
 };
 

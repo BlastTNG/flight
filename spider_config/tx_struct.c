@@ -581,7 +581,8 @@ struct ChannelStruct SlowChannels[] = {
   {"az_pss",           'w', LOOP4, 40,            I2DEG,  0.0, 'u',    U_P_DEG},
   /* LOOP4 41 is unused */
   /* LOOP4 42-43 appear unused */
-  /* ra_1_p = pointing mode coordinates */
+
+  /* pointing mode coordinates */
   {"ra_1_p",           'w', LOOP4, 44,              I2H,  0.0, 'u',     U_NONE},
   {"dec_1_p",          'w', LOOP4, 45,            I2DEG,  0.0, 's',     U_NONE},
   {"ra_2_p",           'w', LOOP4, 46,              I2H,  0.0, 'u',     U_NONE},
@@ -590,6 +591,7 @@ struct ChannelStruct SlowChannels[] = {
   {"dec_3_p",          'w', LOOP4, 49,            I2DEG,  0.0, 's',     U_NONE},
   {"ra_4_p",           'w', LOOP4, 50,              I2H,  0.0, 'u',     U_NONE},
   {"dec_4_p",          'w', LOOP4, 51,            I2DEG,  0.0, 's',     U_NONE},
+  
   {"trim_null",        'w', LOOP4, 54,            I2DEG,  0.0, 's',     U_NONE},
   {"trim_mag",         'w', LOOP4, 55,            I2DEG,  0.0, 's',     U_NONE},
   {"trim_dgps",        'w', LOOP4, 56,            I2DEG,  0.0, 's',     U_NONE},
@@ -681,29 +683,29 @@ struct ChannelStruct SlowChannels[] = {
   
   /* charge controller related channels */
   
-  {"v_batt_cc1",  'w',  LOOP8,  3,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"v_arr_cc1",   'w',  LOOP8,  4,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"i_batt_cc1",  'w',  LOOP8,  5,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  {"i_arr_cc1",   'w',  LOOP8,  6,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  { "t_hs_cc1",   'w',  LOOP8,  7,   1.0,      0.0,            's',  U_T_C},
-  {"fault_cc1",   'w',  LOOP8,  8,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
-  {"alarm_hi_cc1",'w',  LOOP8,  9,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
-  {"alarm_lo_cc1",'w',  LOOP8,  10,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
-  {"v_targ_cc1",  'w',  LOOP8,  11,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"state_cc1",   'w',  LOOP8,  12,  1.0,      0.0,            'u',  U_NONE},   
-  {"led_cc1",     'w',  LOOP8,  40,  1.0,      0.0,            'u', U_NONE}, // charge controller LED state
+  {"v_batt_of_cc",  'w',  LOOP8,  3,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"v_arr_of_cc",   'w',  LOOP8,  4,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"i_batt_of_cc",  'w',  LOOP8,  5,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  {"i_arr_of_cc",   'w',  LOOP8,  6,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  { "t_hs_of_cc",   'w',  LOOP8,  7,   1.0,      0.0,            's',  U_T_C},
+  {"fault_of_cc",   'w',  LOOP8,  8,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
+  {"alarm_hi_of_cc",'w',  LOOP8,  9,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
+  {"alarm_lo_of_cc",'w',  LOOP8,  10,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
+  {"v_targ_of_cc",  'w',  LOOP8,  11,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"state_of_cc",   'w',  LOOP8,  12,  1.0,      0.0,            'u',  U_NONE},   
+  {"led_of_cc",     'w',  LOOP8,  40,  1.0,      0.0,            'u', U_NONE}, // charge controller LED state
 
-  {"v_batt_cc2",  'w',  LOOP9,  39,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"v_arr_cc2",   'w',  LOOP9,  40,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"i_batt_cc2",  'w',  LOOP9,  41,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  {"i_arr_cc2",   'w',  LOOP9,  42,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  { "t_hs_cc2",   'w',  LOOP9,  43,   1.0,      0.0,            's',  U_T_C},
-  {"fault_cc2",   'w',  LOOP9,  44,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
-  {"alarm_hi_cc2",'w',  LOOP9,  45,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
-  {"alarm_lo_cc2",'w',  LOOP9,  46,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
-  {"v_targ_cc2",  'w',  LOOP9,  47,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"state_cc2",   'w',  LOOP9,  48,  1.0,      0.0,            'u',  U_NONE},   
-  {"led_cc2",     'w',  LOOP9,  49,  1.0,      0.0,            'u', U_NONE}, // charge controller LED state
+  {"v_batt_if_cc",  'w',  LOOP9,  39,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"v_arr_if_cc",   'w',  LOOP9,  40,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"i_batt_if_cc",  'w',  LOOP9,  41,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  {"i_arr_if_cc",   'w',  LOOP9,  42,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
+  { "t_hs_if_cc",   'w',  LOOP9,  43,   1.0,      0.0,            's',  U_T_C},
+  {"fault_if_cc",   'w',  LOOP9,  44,   1.0,      0.0,            'u',  U_NONE},  // fault bitfield
+  {"alarm_hi_if_cc",'w',  LOOP9,  45,   1.0,      0.0,            'u',  U_NONE},  // alarm high bitfield
+  {"alarm_lo_if_cc",'w',  LOOP9,  46,  1.0,      0.0,            'u',  U_NONE},  // alarm low bitfield
+  {"v_targ_if_cc",  'w',  LOOP9,  47,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
+  {"state_if_cc",   'w',  LOOP9,  48,  1.0,      0.0,            'u',  U_NONE},   
+  {"led_if_cc",     'w',  LOOP9,  49,  1.0,      0.0,            'u', U_NONE}, // charge controller LED state
 
   {"azraw_pss",   'w',   LOOP8, 26,              I2DEG,             0.0, 'u', U_P_DEG},
   {"elraw_pss",   'w',   LOOP8, 27,              I2DEG,             0.0, 'u', U_P_DEG},
