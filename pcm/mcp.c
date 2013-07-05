@@ -1145,12 +1145,12 @@ void insertMCEData(unsigned short *RxFrame)
     RxFrame[mce_frameno + 1] = (unsigned short)(data->frameno >> 16);
 
     /* now the TES data */
-    for (i = 0; i < NUM_MCE_FIELDS; i++) {
+    for (i = 2; i < NUM_MCE_FIELDS; i++) {
       RxFrame[offset[i]] = (unsigned short) (data->data[i]);
     }
-    while (tes_nfifo() > 1) {
-      tes_pop();
-    }
+    //while (tes_nfifo() > 1) {
+    tes_pop();
+    //}
   }
 }
 
