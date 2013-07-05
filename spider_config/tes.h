@@ -59,4 +59,6 @@ const static inline int16_t TESNumber(int m, int c, int r)
  * caveats involved with making this larger than 255 */
 #define NUM_MCE_FIELDS 128
 
+#define PB_SIZE 10 /* number of frames in a TES packet */
+
 #endif

@@ -26,7 +26,6 @@
 #include <stdint.h>
 
 #define FB_SIZE 40 /* number of frames in the frame buffer */
-#define PB_SIZE 10 /* number of frames in PCM packet */
 
 #pragma pack(1)
 struct mas_header {
