@@ -399,10 +399,10 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP1 0-7 are wide */
   {"g_com_el",         'w', LOOP1,  8,      3.0/65536.0,  0.0, 'u',     U_NONE},
   {"channelset_oth",   'w', LOOP1,  9,                1,  0.0, 'u',     U_NONE},
-  {"cal_xmax_mag",     'w', LOOP1, 10,       1,           0.0, 'u',     U_NONE},
-  {"cal_xmin_mag",     'w', LOOP1, 11,       1,           0.0, 'u',     U_NONE},
-  {"cal_ymax_mag",     'w', LOOP1, 14,       1,           0.0, 'u',     U_NONE},
-  {"cal_ymin_mag",     'w', LOOP1, 15,       1,           0.0, 'u',     U_NONE},
+  {"cal_xmax_mag",     'w', LOOP1, 10,       1,           0.0, 's',     U_NONE},
+  {"cal_xmin_mag",     'w', LOOP1, 11,       1,           0.0, 's',     U_NONE},
+  {"cal_ymax_mag",     'w', LOOP1, 14,       1,           0.0, 's',     U_NONE},
+  {"cal_ymin_mag",     'w', LOOP1, 15,       1,           0.0, 's',     U_NONE},
 
   {"foc_res_g",        'w', LOOP1, 17,              1.0,  0.0, 'u',     U_NONE},
   /* status_eth =  star camera net status */
