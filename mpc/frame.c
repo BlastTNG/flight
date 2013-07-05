@@ -49,7 +49,7 @@ int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer)
 {
   /* Initialise */
   const struct mas_header *header = (const struct mas_header *)buffer;
-  sync_dv = header->status & MCE_FSB_ACT_CLK;
+  sync_dv = !(header->status & MCE_FSB_ACT_CLK);
   const uint32_t frameno = sync_dv ? header->syncno : header->cc_frameno;
 
   if (acq_init) {
