@@ -64,7 +64,7 @@ extern "C" void nameThread(const char*);  /* in mcp.c */
 extern "C" short int InCharge;		  /* in tx.c */
 extern "C" int EthernetSC[3];      /* tx.c */
 
-const char* thegood_servername = "192.168.1.14";
+const char* thegood_servername = "192.168.1.11";
 const char* thebad_servername = "192.168.1.12";
 const char* theugly_servername = "192.168.1.13";
 
