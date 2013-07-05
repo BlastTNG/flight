@@ -159,18 +159,20 @@ static void ForwardBSet(int sock)
 /* push tes_buffer[n] on the tes fifo; discards the new frame if FIFO full */
 static void tes_push(int n)
 {
+  static int ndisc = 0;
   /* discard if full */
   if (tes_fifo_top < 0) {
-    bprintf(warning, "discard on push");
+    if ((++ndisc % 100) == 0) 
+      bprintf(warning, "%i frames discarded on push", ndisc);
     return;
   }
-
-  pthread_mutex_lock(&tes_mex);
 
   /* do the push */
   memcpy(tes_fifo + tes_fifo_top, tes_buffer + n, sizeof(*tes_buffer));
   
 //  bprintf(info, "push = %i", tes_buffer[n].frameno);
+
+  pthread_mutex_lock(&tes_mex);
 
   /* increment fifo top */
   tes_fifo_top = (tes_fifo_top + 1) % TES_FIFO_DEPTH;
