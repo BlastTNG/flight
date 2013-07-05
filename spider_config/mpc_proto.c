@@ -171,8 +171,8 @@ size_t mpc_compose_pcmreq(int nmce, int power_cycle, char *buffer)
  * D = "N" frames of 16-bit tes data in bset order
  */
 size_t mpc_compose_tes(const uint16_t *data, const uint32_t *framenum,
-    uint16_t bset_num, int16_t nf, int nmce, int ntes, const int16_t *tesind,
-    char *buffer)
+    uint16_t bset_num, int16_t nf, int sync, int nmce, int ntes,
+    const int16_t *tesind, char *buffer)
 {
   int i, j;
   size_t len = 8 + (sizeof(uint16_t) * ntes + sizeof(uint32_t)) * nf;
@@ -180,7 +180,7 @@ size_t mpc_compose_tes(const uint16_t *data, const uint32_t *framenum,
 
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'T'; /* tes data packet */
-  buffer[3] = nmce & 0xF; /* mce number */
+  buffer[3] = (nmce & 0xF) | (sync ? 0x80 : 0); /* mce number and sync bit */
   memcpy(buffer + 4, &bset_num, sizeof(bset_num)); /* BSET */
   memcpy(buffer + 6, &nf, sizeof(nf));             /* NUM_FRAMES */
 
@@ -511,7 +511,7 @@ int mpc_decompose_tes(int *pb_size, uint32_t *frameno, uint16_t *tes_data,
   /* get mce number */
   int mce = data[3];
 
-  if (mce < 0 || mce >= NUM_MCE) {
+  if ((mce & 0x7F) < 0 || (mce & 0x7F) >= NUM_MCE) {
     bprintf(err, "Unknown MCE %i in slow data packet from %s/%i", mce, peer,
         port);
     return -1;

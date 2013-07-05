@@ -83,6 +83,9 @@ uint16_t bset_num = 0xFFFF;
 int ntes = 0;
 int16_t tes[NUM_ROW * NUM_COL];
 
+/* DV from the sync box */
+int sync_dv = 0;
+
 /* the data frame to ship out */
 static uint16_t pcm_data[NUM_COL * NUM_ROW * PB_SIZE];
 
@@ -316,8 +319,8 @@ BAD_ARRAY_ID:
 static void ForwardData(const uint32_t *frameno)
 {
   char data[UDP_MAXSIZE];
-  size_t len = mpc_compose_tes(pcm_data, frameno, bset_num, PB_SIZE, nmce,
-      ntes, tes, data);
+  size_t len = mpc_compose_tes(pcm_data, frameno, bset_num, PB_SIZE, sync_on,
+      nmce, ntes, tes, data);
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
 }
 
