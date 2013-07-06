@@ -33,30 +33,32 @@
 /*
  * Definition of command structures (formerly in command_list.h)
  */
-#define MAX_N_PARAMS	12	    /* narsil REALLY likes this to be even */
-#define CMD_STRING_LEN	32	    /* max length of command string */
-#define SIZE_NAME	80	    /* max length for command name, */
-#define SIZE_ABOUT	80	    /*	... description, */
-#define SIZE_PARNAME	80	    /*	... and paramenter name */
+#define MAX_N_PARAMS 12     /* narsil REALLY likes this to be even */
+#define CMD_STRING_LEN 32     /* max length of command string */
+#define SIZE_NAME 80     /* max length for command name, */
+#define SIZE_ABOUT 80     /* ... description, */
+#define SIZE_PARNAME 80     /* ... and paramenter name */
 #define CONFIRM         0x80000000  /* group bit if command needs confirm */
 
 #pragma pack(4) //32-bit and 64-bit sytems disagree on packing
 struct scom {
-  int command;	    //really enum singleCommand where appropriate
+  int command;     //really enum singleCommand where appropriate
   char name[SIZE_NAME];
   char about[SIZE_ABOUT];
   unsigned int group;
 };
+
 struct par {
   char name[SIZE_PARNAME];
   double min;
   double max;
   char type;
   char field[20];
+  const char **nt; /* name look-up for integer parameters; NULL teriminated */
 };
 
 struct mcom {
-  int command;	    //really enum multiCommand where appropriate
+  int command;     //really enum multiCommand where appropriate
   char name[SIZE_NAME];
   char about[SIZE_ABOUT];
   unsigned int group;

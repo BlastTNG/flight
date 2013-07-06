@@ -320,23 +320,56 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
 
 void SendCommandList(int sock)
 {
-  unsigned short i;
-  char output[1024];
+  uint16_t u16;
+  int i, j, k;
+  char output[4096];
 
   sprintf(output, ":::rev:::%s\r\n", command_list_serial);
   printf("%i<--%s", sock, output);
   send(sock, output, strlen(output), MSG_NOSIGNAL);
 
-  i = N_SCOMMANDS;
-  if (send(sock, &i, sizeof(i), MSG_NOSIGNAL) < 1)
+  u16 = N_SCOMMANDS;
+  if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
     return;
-  i = N_MCOMMANDS;
-  if (send(sock, &i, sizeof(i), MSG_NOSIGNAL) < 1)
+  u16 = N_MCOMMANDS;
+  if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
     return;
   if (send(sock, &scommands, sizeof(struct scom) * N_SCOMMANDS, MSG_NOSIGNAL)
       < 1)
+  {
     return;
-  send(sock, &mcommands, sizeof(struct mcom) * N_MCOMMANDS, MSG_NOSIGNAL);
+  }
+  if (send(sock, &mcommands, sizeof(struct mcom) * N_MCOMMANDS, MSG_NOSIGNAL)
+      < 1)
+  {
+    return;
+  }
+
+  for (i = 0; i < N_MCOMMANDS; ++i) {
+    for (j = 0; j < mcommands[i].numparams; ++j)
+      if (mcommands[i].params[j].nt) {
+      u16 = i * 256 + j;
+      if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
+        return;
+
+      /* count */
+      for (u16 = 0; mcommands[i].params[j].nt[u16]; ++u16)
+        ;
+      if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
+        return;
+
+      output[0] = 0;
+      for (k = 0; mcommands[i].params[j].nt[k]; ++k) {
+        strncat(output, mcommands[i].params[j].nt[k], 79);
+        strcat(output, "\n");
+      }
+      if (send(sock, output, strlen(output), MSG_NOSIGNAL) < 1)
+        return;
+    } 
+  }
+  u16 = 0xFFFF;
+  if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
+    return;
 }
 
 void SendGroupNames(int sock)

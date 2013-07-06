@@ -661,8 +661,8 @@ union DerivedUnion DerivedChannels[] = {
   P_HK("P_SFT_VENT_T_HK", "VP_02_HK",   LUT_DIR "pressure_omega1.lut"),
 
   /* Field sets */
-  BITWORD("FSET_NUM", "fset", 0, 8),
-  BITWORD("FSET_SER", "fset", 8, 8),
+  BITWORD("BSET_NUM", "bset", 0, 8),
+  BITWORD("BSET_SER", "bset", 8, 8),
 
   /* MCE Power Banks */
   BITFIELD("mce_power",

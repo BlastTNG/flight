@@ -124,9 +124,42 @@ void USAGE(int flag) {
     exit(11);
 }
 
+static const char *const ParamTypeName(char c)
+{
+  switch (c) {
+    case 'i':
+      return "16-bit integer";
+    case 'l':
+      return "32-bit integer";
+    case 'f':
+      return "single precision float";
+    case 'd':
+      return "double precision float";
+    case 's':
+      return "string";
+  }
+
+  return "unknown type";
+}
+
+static void PrintMCommand(int i)
+{
+  int j, k;
+
+  printf("  %s - %s\n", client_mcommands[i].name, client_mcommands[i].about);
+  for (j = 0; j < client_mcommands[i].numparams; j++) {
+    printf("    param%02i: %s -- %s\n", j, client_mcommands[i].params[j].name,
+        ParamTypeName(client_mcommands[i].params[j].type));
+    if (client_mcommands[i].params[j].nt)
+      for (k = 0; client_mcommands[i].params[j].nt[k]; ++k)
+        printf("        %i == %s\n", k, client_mcommands[i].params[j].nt[k]);
+  }
+  printf("\n");
+}
+
 void CommandList(void)
 {
-  int i, j;
+  int i;
 
   NetCmdGetCmdList();
 
@@ -134,12 +167,8 @@ void CommandList(void)
   
   printf("Valid Multiword Commands reported by server:\n");
 
-  for (i = 0; i < client_n_mcommands; i++) {
-    printf("  %s - %s\n", client_mcommands[i].name, client_mcommands[i].about);
-    for (j = 0; j < client_mcommands[i].numparams; j++) 
-      printf("    param%02i: %s\n", j, client_mcommands[i].params[j].name);
-    printf("\n");
-  }
+  for (i = 0; i < client_n_mcommands; i++)
+    PrintMCommand(i);
 
   printf("Valid Single Word Commands reported by server:\n");
   for (i = 0; i < client_n_scommands; i++) {
@@ -167,7 +196,7 @@ void CommandGroupList(void)
 
 void CommandGroupListCommands(int groupnum)
 {
-  int i, j;
+  int i;
 
   if (groupnum >= N_GROUPS || groupnum < 0)
   {
@@ -180,12 +209,7 @@ void CommandGroupListCommands(int groupnum)
   printf("Valid mcommands in group %d (%s):\n", groupnum, GroupNames[groupnum]);
   for (i = 0; i < client_n_mcommands; i++) {
     if (client_mcommands[i].group & (1 << groupnum))
-    {
-      printf("  %s - %s\n", client_mcommands[i].name, client_mcommands[i].about);
-      for (j = 0; j < client_mcommands[i].numparams; j++)
-        printf("    param%02i: %s\n", j, client_mcommands[i].params[j].name);
-      printf("\n");
-    }
+      PrintMCommand(i);
   }
 
   printf("Valid scommands in group %d (%s):\n", groupnum, GroupNames[groupnum]);
@@ -326,14 +350,9 @@ void ConfirmMultiSend(int i_cmd, char *params[], int np) {
 }
 
 void McommandUSAGE(int mcmd) {
-  int i;
-
   printf("blastcmd: Error in multiword command parameter.\n\n");
 
-  printf("  %s - %s\n", mcommands[mcmd].name, mcommands[mcmd].about);
-  for (i = 0; i < mcommands[mcmd].numparams; i++) 
-    printf("    param%02i: %s\n", i, mcommands[mcmd].params[i].name);
-  printf("\n");
+  PrintMCommand(mcmd);
   exit(11);
 }
 

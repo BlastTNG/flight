@@ -232,9 +232,36 @@ int NetCmdSendAndReceive(const char *inbuf, int silent, size_t buflen,
   exit(-1);
 }
 
+/* read a \n-terminated string from the server, returning a malloc'd buffer */
+static char *read_string(int max)
+{
+  char *s = malloc(max);
+  int i, n;
+  char c;
+
+  /* max includes the '\0' */
+  for (i = 0; i < max; ++i) {
+    if ((n = read(sock, &c, 1)) <= 0) {
+      perror("Unable to receive");
+      exit(14);
+    } else if (i == max - 1 && c != '\n')
+      break;
+    else if (c == '\n') {
+      s[i] = 0;
+      return s;
+    } else
+      s[i] = c;
+  }
+
+  /* overrun */
+  fprintf(stderr, "Protocol error from daemon.\n");
+  exit(14);
+}
+
 //Blocks on reading until list comes through.
 int NetCmdGetCmdList(void)
 {
+  uint16_t u16;
   int i, n, c = 0;
   char buffer[1024] = "::list::\r\n";
 
@@ -246,20 +273,16 @@ int NetCmdGetCmdList(void)
     if ((n = read(sock, &c, 1)) <= 0) {
       perror("Unable to receive");
       exit(14);
-    } else if (buffer[i] != c) {
-      fprintf(stderr, "Protocol error from daemon.\n");
-      exit(14);
-    }
+    } else if (buffer[i] != c) 
+      goto CMDLIST_READ_ERROR;
   }
 
   for (i = 0; i < 100; ++i) {
     if ((n = read(sock, &c, 1)) <= 0) {
       perror("Unable to receive");
       exit(14);
-    } else if (i == 999 && c != '\n') {
-      fprintf(stderr, "Protocol error from daemon.\n");
-      exit(14);
-    }
+    } else if (i == 99 && c != '\n')
+      goto CMDLIST_READ_ERROR;
 
     if (c == '\n') {
       client_command_list_serial[i] = '\0';
@@ -274,9 +297,9 @@ int NetCmdGetCmdList(void)
     printf("Warning: NetCmdGetCmdList failed to read n_mcommands\n");
 
   if (client_n_scommands > 255 || client_n_mcommands > 255 ||
-      client_n_scommands * client_n_mcommands == 0) {
-    fprintf(stderr, "Protocol error from daemon.\n");
-    exit(14);
+      client_n_scommands * client_n_mcommands == 0)
+  {
+    goto CMDLIST_READ_ERROR;
   }
 
   client_scommands = (struct scom*)malloc(client_n_scommands
@@ -288,13 +311,40 @@ int NetCmdGetCmdList(void)
   recv(sock, client_mcommands, client_n_mcommands * sizeof(struct mcom),
       MSG_WAITALL);
 
+  /* read parameter value tables */
+  for (;;) {
+    int cmd, prm;
+    if (read(sock, &u16, sizeof(uint16_t)) < 1)
+      goto CMDLIST_READ_ERROR;
+
+    if (u16 == 0xFFFF) /* end */
+      break;
+    cmd = u16 >> 8;
+    prm = u16 & 0xFF;
+
+    if (cmd >= client_n_mcommands || prm >= client_mcommands[cmd].numparams)
+      goto CMDLIST_READ_ERROR;
+
+    if (read(sock, &u16, sizeof(uint16_t)) < 1)
+      goto CMDLIST_READ_ERROR;
+
+    client_mcommands[cmd].params[prm].nt = malloc((u16 + 1) * sizeof(char*));
+    for (i = 0; i < u16; ++i)
+      client_mcommands[cmd].params[prm].nt[i] = read_string(80);
+    client_mcommands[cmd].params[prm].nt[u16] = NULL;
+  }
+
   return 0;
+
+CMDLIST_READ_ERROR:
+  fprintf(stderr, "Protocol error from daemon.\n");
+  exit(14);
 }
 
 //Blocks on reading until list comes through.
 int NetCmdGetGroupNames(void)
 {
-  int i, j, n, c = 0;
+  int j;
   char buffer[128] = "::group::\r\n";
 
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
@@ -307,24 +357,8 @@ int NetCmdGetGroupNames(void)
   }
   client_group_names = (char**)malloc(client_n_groups * sizeof(char*));
 
-  for (j=0; j < client_n_groups; ++j) {
-    for (i=0; i<128; i++) {
-      if ((n = read(sock, &c, 1)) <= 0) {
-        perror("Unable to receive");
-        exit(14);
-      } else if (i == 127 && c != '\n') {
-        fprintf(stderr, "Protocol error from daemon.\n");
-        exit(14);
-      }
-
-      if (c == '\n') {
-        buffer[i] = '\0';
-        client_group_names[j] = (char*)malloc(strlen(buffer)+1);
-        strcpy(client_group_names[j], buffer);
-        break;
-      } else buffer[i] = c;
-    }
-  }
+  for (j = 0; j < client_n_groups; ++j)
+    client_group_names[j] = read_string(128);
 
   return 0;
 }

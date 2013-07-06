@@ -55,6 +55,9 @@ const char *const GroupNames[N_GROUPS] = {
 //echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
+/* MCE names */
+const char *mcenames[] = {"all", "X1", "X2", "X3", "X4", "X5", NULL};
+
 const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
@@ -1162,30 +1165,30 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(start_acq), "Start data acquisition", GR_MCE | MCECMD, 1,
     {
-      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
+      {"MCE#", 0, 6, 'i', "NONE", mcenames}
     }
   },
   {COMMAND(reset_acq), "Reset data acquisition", GR_MCE | MCECMD, 1,
     {
-      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
+      {"MCE#", 0, 6, 'i', "NONE", mcenames}
     }
   },
   {COMMAND(stop_acq), "Stop data acquisition", GR_MCE | MCECMD | CONFIRM, 1,
     {
-      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"}
+      {"MCE#", 0, 6, 'i', "NONE", mcenames}
     }
   },
 
   {COMMAND(data_mode), "Set the MCE data mode", GR_MCE | MCECMD, 2,
     {
-      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"},
+      {"MCE#", 0, 6, 'i', "NONE", mcenames},
       {"Data Mode", 0, 12, 'i', "NONE"},
     }
   },
 
   {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_MCE | MCECMD, 1,
     {
-      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"},
+      {"MCE#", 0, 6, 'i', "NONE", mcenames},
     }
   },
 
