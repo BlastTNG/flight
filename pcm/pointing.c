@@ -209,7 +209,9 @@ static int MagConvert(double *mag_az)
   struct tm now;
   int i_point_read;
   static int firsttime = 1;
+  static int last_index = 0;
   double magx_m, magx_b, magy_m, magy_b;
+  int mag_ok = 0;
 
   i_point_read = GETREADINDEX(point_index);
 
@@ -225,6 +227,13 @@ static int MagConvert(double *mag_az)
     firsttime = 0;
   }
 
+  if (ACSData.mag_index == last_index) {
+    mag_ok = 0;
+  } else {
+    mag_ok = 1;
+    last_index = ACSData.mag_index;
+  }
+  
   /* Every 300 s = 5 min, get new data from the magnetic model.
    *
    * dec = magnetic declination (field direction in az)
@@ -297,7 +306,7 @@ static int MagConvert(double *mag_az)
 
   PointingData[point_index].mag_model = dec;
 
-  return (1);
+  return (mag_ok);
 }
 
 static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)

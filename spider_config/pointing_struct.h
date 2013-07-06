@@ -56,6 +56,7 @@ struct ACSDataStruct {
   int    mag_x;    // counts
   int    mag_y;    // counts
   int    mag_z;    // counts
+  int    mag_index; 
   double mag_pitch; // degrees
   double pss1_i1;   //counts
   double pss1_i2;   //counts
