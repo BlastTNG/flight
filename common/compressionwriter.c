@@ -14,6 +14,7 @@
 #include "compressstruct.h"
 #include "compressconst.h"
 #include "command_struct.h"
+#include "pointing_struct.h"
 // Structure:
 // FASTFRAMES: 100.16 Hz
 // SLOWFRAMES: FASTFRAMES/20 - multiplex repeated at this rate

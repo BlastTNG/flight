@@ -22,11 +22,11 @@ extern "C" {
 
 /* BLASTBus ADC sample rate. Always clock rate / 384.0 */
 // Use ACSData.adc_rate instead from now on to account for variable clock rate
-#define ADC_SR (4.0e6/384.0)
+//#define ADC_SR (4.0e6/384.0)
 
 /* BLASTBus frame sample rate (ADC_SR/104.0) */
 // Use ACSData.bbc_rate instead from now on
-#define SR (100.16)
+//#define SR (100.16)
 
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */
 /* 16- and 32-bit channels with preamps conversion to Volts */
@@ -51,31 +51,31 @@ extern "C" {
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
 /* This is the elevation at which the encoder wraps around */
-#define ENC_RAW_EL_OFFSET (75.3) /* Updated 09-DEC_2010 by lmf */
+//#define ENC_RAW_EL_OFFSET (75.3) /* Updated 09-DEC_2010 by lmf */
 /* to get proper wrapping in KST, the encoder elevation type should be
  * 'u' for 135 <= ENC_EL_RAW_OFFSET < 315 and 's' otherwise */
-#define ENC_ELEV_TYPE 's'
+//#define ENC_ELEV_TYPE 's'
 
 #define ENC_TABLE_OFFSET 0.0 
 
-#define ROX_C2V   (5.43736e-07/256.0)
-#define ROX_OFFSET (-1.1403)
+//#define ROX_C2V   (5.43736e-07/256.0)
+//#define ROX_OFFSET (-1.1403)
 
 #define STAGE_X_THROW 78500
 #define STAGE_Y_THROW 78250
 
-#define ACTENC_TO_UM 1.05833333333 /* mm/enc.counts = 24000 counts/inch */
+//#define ACTENC_TO_UM 1.05833333333 /* mm/enc.counts = 24000 counts/inch */
 //#define ACTENC_OFFSET 1000000 /* this number should be arbitrarily larger than
                                  //the maximum throw */
 
 //ideal calibrations NB: LVDT and ENC have different signs
-#define LVDT63_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
-#define LVDT64_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
-#define LVDT65_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
+//#define LVDT63_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
+//#define LVDT64_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
+//#define LVDT65_ADC_TO_ENC -0.75 /* adc counts to encoder counts */
 //LVDT flat fielding sjb: 28 Nov 2010
-#define LVDT63_ZERO  64389  /* in encoder counts */
-#define LVDT64_ZERO  65240  /* in encoder counts */
-#define LVDT65_ZERO  65536  /* in encoder counts */
+//#define LVDT63_ZERO  64389  /* in encoder counts */
+//#define LVDT64_ZERO  65240  /* in encoder counts */
+//#define LVDT65_ZERO  65536  /* in encoder counts */
 
 /* Lock position is nominally at 40 degrees.
  * This is the offset to the true lock positions. This number is
@@ -85,9 +85,9 @@ extern "C" {
 #define LOCK_POSITION (40.0 + LOCK_OFFSET)
 
 /* Thermal model numbers, from EP */
-#define T_PRIMARY_FOCUS   296.15 /* = 23C */
-#define T_SECONDARY_FOCUS 296.15 /* = 23C */
-#define POSITION_FOCUS     33333 /* absolute counts */
+//#define T_PRIMARY_FOCUS   296.15 /* = 23C */
+//#define T_SECONDARY_FOCUS 296.15 /* = 23C */
+//#define POSITION_FOCUS     33333 /* absolute counts */
 
 #ifndef CAM_WIDTH
 #define CAM_WIDTH 1530.0  //should always be the larger dimension
@@ -133,49 +133,21 @@ extern "C" {
 #define PIV_DEAD_BAND 0.0 // value is set in controller firmware instead
 
 	/* only zero wrt each other, not absolute */
-#define AD590_CALIB_PRIMARY_1   -0.7285
-#define AD590_CALIB_PRIMARY_2    0.7285
-#define AD590_CALIB_SECONDARY_1  0.143
-#define AD590_CALIB_SECONDARY_2 -0.143
+//#define AD590_CALIB_PRIMARY_1   -0.7285
+//#define AD590_CALIB_PRIMARY_2    0.7285
+//#define AD590_CALIB_SECONDARY_1  0.143
+//#define AD590_CALIB_SECONDARY_2 -0.143
 
 /* zero point (in counts) of i_el */
 #define I_EL_ZERO 32638
 
-// convert mag readings to sine and cosine
-// calibrated in Palestine, July 11, 2010
-// Best fit to mag_x and mag_y
-// y = -3000*sin(x-19)+33050 : mag_x
-// y = 3000*cos(x-19)+33310 : mag_y
-// x is dgps theta in degrees.
-/*#define MAGX_M (-1.0/3000.0)
-#define MAGX_B (33850/3000.0)
-#define MAGY_M (-1.0/3100.0)
-#define MAGY_B (32150.0/3100.0)
-#define MAGZ_M (1.0)
-#define MAGZ_B (0.0)*/
-// convert mag readings to sine and cosine
-// calibrated in Palestine, July 11, 2010
-// Best fit to mag_x and mag_y
-// y = -3000*sin(x-19)+33050 : mag_x
-// y = 3000*cos(x-19)+33310 : mag_y
-// x is dgps theta in degrees.
-//#define MAGX_M (-1.0/1290.0)
-//#define MAGX_B (33500/1290.0)
-//#define MAGY_M (-1.0/1290.0)
-//#define MAGY_B (33400.0/1290.0)
-//#define MAGZ_M (-1/1290.0)
-//#define MAGZ_B (32768.0)
 //new magnetomter
-#define MAGX_M (1.0)
-#define MAGX_B (0.0)
-#define MAGY_M (1.0)
-#define MAGY_B (0.0)
 #define MAGZ_M (1.0)
 #define MAGZ_B (0.0)
 
 #define ENC1_OFFSET (-203.363647461) // encoder 1 to bore-sight offset angle
 #define ENC2_OFFSET (258.572998047)  // encoder 2 to bore-sight offset angle
-#define GYBOX_OFFSET -69.8  // gyro box to bore-sight offset angle (fixed)
+//#define GYBOX_OFFSET -69.8  // gyro box to bore-sight offset angle (fixed)
 
 
 
