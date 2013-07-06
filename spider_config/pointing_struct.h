@@ -187,6 +187,7 @@ struct PointingDataStruct {
   double mag_az_raw;   // degrees
   double mag_model; // degrees
   double mag_sigma; // degrees
+  int mag_ok;
   double dgps_az; // degrees
   double dgps_pitch; // degrees
   double dgps_roll; // degrees
@@ -220,6 +221,7 @@ struct PointingDataStruct {
   double pss6_snr;
   double pss_az;  //degrees
   double pss_sigma;
+  int pss_ok;
   double v_az; // dps
 };
 

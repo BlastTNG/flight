@@ -685,7 +685,7 @@ static void StoreData(int write_slow)
   static struct NiosStruct* dgpsSpeedAddr;
   static struct NiosStruct* dgpsDirAddr;
   static struct NiosStruct* dgpsClimbAddr;
-  static struct NiosStruct* dgpsAttOkAddr;
+  static struct NiosStruct* attOkAddr;
   static struct NiosStruct* dgpsAzRawAddr;
   static struct NiosStruct* dgpsPitchRawAddr;
   static struct NiosStruct* dgpsRollRawAddr;
@@ -742,6 +742,7 @@ static void StoreData(int write_slow)
   int i_point;
   int i_dgps;
   int sensor_veto;
+  int att_ok;
 
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
@@ -849,7 +850,7 @@ static void StoreData(int write_slow)
     dgpsDirAddr = GetNiosAddr("dir_dgps");
     dgpsClimbAddr = GetNiosAddr("climb_dgps");
     dgpsNSatAddr = GetNiosAddr("n_sat_dgps");
-    dgpsAttOkAddr = GetNiosAddr("att_ok_dgps");
+    attOkAddr = GetNiosAddr("att_ok");
     dgpsAzRawAddr = GetNiosAddr("az_raw_dgps");
     dgpsPitchRawAddr = GetNiosAddr("pitch_raw_dgps");
     dgpsRollRawAddr = GetNiosAddr("roll_raw_dgps");
@@ -1135,7 +1136,6 @@ static void StoreData(int write_slow)
   WriteData(dgpsAntEAddr,(int)(DGPSAtt[i_dgps].ant_E*100), NIOS_QUEUE);
   WriteData(dgpsAntNAddr,(int)(DGPSAtt[i_dgps].ant_N*100), NIOS_QUEUE);
   WriteData(dgpsAntUAddr,(int)(DGPSAtt[i_dgps].ant_U*100), NIOS_QUEUE);
-  WriteData(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok, NIOS_QUEUE);
   WriteData(iSerRWAddr,((int)(RWMotorData[i_rw_motors].current/60.0*32768.0))
             ,NIOS_QUEUE); // need to check scaling
   WriteData(statDrRWAddr,(RWMotorData[i_rw_motors].db_stat & 0xff)
@@ -1158,6 +1158,9 @@ static void StoreData(int write_slow)
   WriteData(verboseRWAddr,CommandData.verbose_rw,NIOS_QUEUE);
   WriteData(verbosePivAddr,CommandData.verbose_piv,NIOS_QUEUE);
 
+  att_ok = (PointingData[i_point].pss_ok << 2) | (PointingData[i_point].mag_ok << 1) | DGPSAtt[i_dgps].att_ok;
+  WriteData(attOkAddr, att_ok, NIOS_QUEUE);
+  
 }
 
 void InitTxFrame()

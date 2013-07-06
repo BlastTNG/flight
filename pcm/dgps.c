@@ -456,7 +456,7 @@ void WatchDGPS()
   static struct BiPhaseStruct* dgpsAntEAddr; 
   static struct BiPhaseStruct* dgpsAntNAddr; 
   static struct BiPhaseStruct* dgpsAntUAddr; 
-  static struct BiPhaseStruct* dgpsAttOkAddr;
+  static struct BiPhaseStruct* attOkAddr;
   static struct BiPhaseStruct* dgpsLatAddr;
   static struct BiPhaseStruct* dgpsLonAddr;
   static struct BiPhaseStruct* dgpsAltAddr;
@@ -482,7 +482,7 @@ void WatchDGPS()
     dgpsAntEAddr = GetBiPhaseAddr("ant_e_dgps"); 
     dgpsAntNAddr = GetBiPhaseAddr("ant_n_dgps"); 
     dgpsAntUAddr = GetBiPhaseAddr("ant_u_dgps"); 
-    dgpsAttOkAddr = GetBiPhaseAddr("att_ok_dgps");
+    attOkAddr = GetBiPhaseAddr("att_ok");
     dgpsLatAddr = GetBiPhaseAddr("lat_dgps");       
     dgpsLonAddr = GetBiPhaseAddr("lon_dgps");      
     dgpsAltAddr = GetBiPhaseAddr("alt_dgps");
@@ -545,9 +545,9 @@ void WatchDGPS()
     DGPSAtt[0].ant_U = (((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel])/100);
     DGPSAtt[1].ant_U = (((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel])/100);
     DGPSAtt[2].ant_U = (((double)slow_data[dgpsAntUAddr->index][dgpsAntUAddr->channel])/100);
-    DGPSAtt[0].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
-    DGPSAtt[1].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
-    DGPSAtt[2].att_ok = (slow_data[dgpsAttOkAddr->index][dgpsAttOkAddr->channel]);
+    DGPSAtt[0].att_ok = (slow_data[attOkAddr->index][attOkAddr->channel]) & 0x01;
+    DGPSAtt[1].att_ok = (slow_data[attOkAddr->index][attOkAddr->channel]) & 0x01;
+    DGPSAtt[2].att_ok = (slow_data[attOkAddr->index][attOkAddr->channel]) & 0x01;
     DGPSPos[0].lat = (((double)slow_data[dgpsLatAddr->index][dgpsLatAddr->channel])/DEG2I);
     DGPSPos[1].lat = (((double)slow_data[dgpsLatAddr->index][dgpsLatAddr->channel])/DEG2I);
     DGPSPos[2].lat = (((double)slow_data[dgpsLatAddr->index][dgpsLatAddr->channel])/DEG2I);

@@ -1147,12 +1147,14 @@ void Pointing(void)
   /** record solutions in pointing data **/
   PointingData[point_index].mag_az = MagAz.angle;
   PointingData[point_index].mag_sigma = sqrt(MagAz.varience + MagAz.sys_var);
+  PointingData[point_index].mag_ok = mag_ok;
   PointingData[point_index].dgps_az = DGPSAz.angle;
   PointingData[point_index].dgps_pitch = dgps_pitch;
   PointingData[point_index].dgps_roll = dgps_roll;
   PointingData[point_index].dgps_sigma = sqrt(DGPSAz.varience + DGPSAz.sys_var);
   PointingData[point_index].pss_az = PSSAz.angle;
   PointingData[point_index].pss_sigma = sqrt(PSSAz.varience + PSSAz.sys_var);
+  PointingData[point_index].pss_ok = pss_ok;
 
   if (PointingData[point_index].pss_sigma>359.99) PointingData[point_index].pss_sigma=359.9;
   

@@ -672,6 +672,13 @@ union DerivedUnion DerivedChannels[] = {
       ""
       ),
 
+  /* att ok bits */
+  BITFIELD("att_ok",
+           "ATT_OK_DGPS",
+           "ATT_OK_MAG",
+           "ATT_OK_PSS",
+           ""),
+  
   LINCOM2("I_IF_TOT", "I_MCE", 1.0, 0, "I_HK_MISC",  1, 0),
   
   LINCOM2("TWIST_EL", "EL_RAW_1_ENC", 1.0, 0.0, "EL_RAW_2_ENC",  -1.0, 0.0),
