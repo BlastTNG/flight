@@ -450,6 +450,10 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         if (check_cmd_mce(ev->ivalues[0]))
           goal = op_ready;
         break;
+      case tune_array:
+        if (check_cmd_mce(ev->ivalues[0]))
+          goal = op_tune;
+        break;
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
             ev->command, peer, port);

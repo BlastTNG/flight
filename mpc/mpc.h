@@ -87,14 +87,15 @@ enum status {
   st_mcecom = 0x0008, /* MCE is talking */ 
   st_config = 0x0010, /* MCE is configured */
   st_acqcnf = 0x0020, /* Acquisition is configured */
-  st_retdat = 0x0040  /* MCE is returning data */
+  st_retdat = 0x0040, /* MCE is returning data */
+  st_tuning = 0x0080, /* auto_setup in progress */
 };
 
 extern unsigned int state;
 
-/* operating modes */
-enum modes { op_init = 0, op_ready, op_acq };
-#define MODE_STRINGS "init", "ready", "acq"
+/* operating modes -- op_acq must be the last mode */
+enum modes { op_init = 0, op_ready, op_tune, op_acq };
+#define MODE_STRINGS "init", "ready", "tune", "acq"
 
 /* high-level tasks */
 extern enum status start_tk;
@@ -107,11 +108,11 @@ void *task(void *dummy);
 /* data tasklets */
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
-  dt_fakestop, dt_empty, dt_status, dt_acqcnf
+  dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup,
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
-  "fakestop", "empty", "status", "acqcnf"
+  "fakestop", "empty", "status", "acqcnf", "autosetup"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

@@ -128,8 +128,9 @@ enum singleCommand {
   mcc6_on,           mcc6_off,          mcc6_cycle,
   mpc_ping,          get_superslow,
   mcc_wdog_enable,   mcc_wdog_disable, 
-  xyzzy,
-  N_SCOMMANDS /* SENTINAL: this must be the last thing in this list */
+
+  /* DON'T PUT ANYTHING BELOW THIS */
+  xyzzy, N_SCOMMANDS /* SENTINAL: this must be the last thing in this list */
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -176,10 +177,12 @@ enum multiCommand {
   spider_scan,        sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,         el_rel_move,
   hwp_bias_on,        hwp_bias_off,      write_row_len,     write_num_rows,
-  write_free_run,     bset,              set_piv_mode,
+  write_free_run,     bset,              set_piv_mode,      tune_array,
   data_mode,          data_mode_bits,    start_acq,         reset_acq,
-  stop_acq,           mag_cal,           pss_cal, plugh,   
-  N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
+  stop_acq,           mag_cal,           pss_cal,
+
+  /* DON'T PUT ANYTHING BELOW THIS */
+  plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
   sched_packet = 0xff   //not really a command, more of a placeholder
 };
 

@@ -76,7 +76,7 @@ static int task_reset_mce()
 
   cl_count = 0;
   state |= st_mcecom;
-  state &= ~(st_config | st_acqcnf | st_retdat);
+  state &= ~(st_config | st_acqcnf | st_retdat | st_tuning);
   return 0;
 }
 
@@ -180,6 +180,16 @@ void *task(void *dummy)
             start_tk = st_idle;
           }
           break;
+        case st_tuning:
+          /* auto_setup */
+          state |= st_tuning;
+          if (dt_wait(dt_autosetup)) {
+            comms_lost = 1; /* hmm... */
+          } else {
+            /* done with tuning; back to acq */
+            goal = st_retdat;
+            start_tk = st_idle;
+          }
       }
     } else if (stop_tk != st_idle) { /* handle stop task requests */
       switch (stop_tk) {
@@ -187,7 +197,8 @@ void *task(void *dummy)
           break;
         case st_acqcnf:
         case st_retdat:
-          /* stop acq */
+        case st_tuning:
+          /* sledgehammer based stop acq */
           task_reset_mce();
           stop_tk = st_idle;
           break;

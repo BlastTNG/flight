@@ -32,17 +32,22 @@ enum modes goal = op_acq;
 int working = 0;
 
 /* mode -> status lookups */
+
+/* Modes that must be active to acheive a goal */
 static const int mode_start[op_acq + 1] =
 {
   [op_init] = 0,
   [op_ready] = st_drive0 | st_mcecom,
-  [op_acq] = st_drive0 | st_mcecom | st_config | st_acqcnf | st_retdat
+  [op_tune] = st_drive0 | st_mcecom | st_config | st_tuning,
+  [op_acq] = st_drive0 | st_mcecom | st_config | st_acqcnf | st_retdat,
 };
+/* Modes that must be inactive to acheive a goal */
 static const int mode_stop[op_acq + 1] =
 {
-  [op_init] = 0, /* not really.. */
+  [op_init] = 0,
   [op_ready] = st_retdat | st_acqcnf,
-  [op_acq] = 0
+  [op_tune] = st_retdat | st_acqcnf,
+  [op_acq] = st_tuning,
 };
 
 enum status start_tk = st_idle;

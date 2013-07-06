@@ -1183,6 +1183,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_MCE | MCECMD, 1,
+    {
+      {"MCE# (1-6, 0 = all)", 0, 6, 'i', "NONE"},
+    }
+  },
+
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
       {"Plover", 0, USHRT_MAX, 'i', "PLOVER"}
