@@ -359,6 +359,7 @@ static void WriteMCESlow(void)
 
   static int firsttime = 1;
   static struct NiosStruct *modeMceAddr[NUM_MCE];
+  static struct NiosStruct *df0MccAddr[NUM_MCE];
   static struct NiosStruct *df1MccAddr[NUM_MCE];
   static struct NiosStruct *df2MccAddr[NUM_MCE];
   static struct NiosStruct *df3MccAddr[NUM_MCE];
@@ -376,7 +377,8 @@ static void WriteMCESlow(void)
     int i;
     firsttime = 0;
     for (i=0; i<NUM_MCE; i++) {
-      modeMceAddr[i] = GetMCCNiosAddr("mode_mce", i);
+      modeMceAddr[i] = GetMCCNiosAddr("data_mode_mce", i);
+      df0MccAddr[i] = GetMCCNiosAddr("df_0_mcc", i);
       df1MccAddr[i] = GetMCCNiosAddr("df_1_mcc", i);
       df2MccAddr[i] = GetMCCNiosAddr("df_2_mcc", i);
       df3MccAddr[i] = GetMCCNiosAddr("df_3_mcc", i);
@@ -396,9 +398,10 @@ static void WriteMCESlow(void)
 
     WriteData(modeMceAddr[mux], mce_slow_dat[mux][ind].data_mode, NIOS_QUEUE);
     WriteData(timeMccAddr[mux], mce_slow_dat[mux][ind].time, NIOS_QUEUE);
-    WriteData(df1MccAddr[mux], mce_slow_dat[mux][ind].df0, NIOS_QUEUE);
-    WriteData(df2MccAddr[mux], mce_slow_dat[mux][ind].df1, NIOS_QUEUE);
-    WriteData(df3MccAddr[mux], mce_slow_dat[mux][ind].df2, NIOS_QUEUE);
+    WriteData(df0MccAddr[mux], mce_slow_dat[mux][ind].df[0], NIOS_QUEUE);
+    WriteData(df1MccAddr[mux], mce_slow_dat[mux][ind].df[1], NIOS_QUEUE);
+    WriteData(df2MccAddr[mux], mce_slow_dat[mux][ind].df[2], NIOS_QUEUE);
+    WriteData(df3MccAddr[mux], mce_slow_dat[mux][ind].df[3], NIOS_QUEUE);
     WriteData(stateMpcAddr[mux], mce_slow_dat[mux][ind].state, NIOS_QUEUE);
     WriteData(goalMpcAddr[mux], mce_slow_dat[mux][ind].goal, NIOS_QUEUE);
     WriteData(taskMpcAddr[mux], mce_slow_dat[mux][ind].task, NIOS_QUEUE);

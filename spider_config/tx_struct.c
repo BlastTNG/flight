@@ -58,11 +58,12 @@
 #define LOOP9    40, 0
 #define LOOP0    41, 0
 #define LOOP11   42, 0
-#define DECOM    43, 0
-#define LOOPMCE0 44, 0
-#define LOOPMCE1 45, 0
-#define LOOPMCE2 46, 0
-#define LOOPMCE3 47, 0
+#define LOOP12   43, 0
+#define DECOM    44, 0
+#define LOOPMCE0 45, 0
+#define LOOPMCE1 46, 0
+#define LOOPMCE2 47, 0
+#define LOOPMCE3 48, 0
 
 /* Analog channel calibrations */
 /* 16/32-bit channels with analog preamps. To Volts */
@@ -932,74 +933,83 @@ struct ChannelStruct SlowChannels[] = {
   {"heat_45_hk",   'w',  RTD_D,  51,            1.0,          0.0, 'u', U_NONE},
   {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
 
-  /* slow MCE data -- all these are 6x mulitplexed using the mce_txmux channel
-   */
-  {"mode_mce1",   'w', LOOP11, 10, 1, 0, 'u', U_NONE},
-  {"df_1_mcc1",   'w', LOOP11, 11, (1<<24), 0, 'u', U_NONE},
-  {"df_2_mcc1",   'w', LOOP11, 12, (1<<24), 0, 'u', U_NONE},
-  {"df_3_mcc1",   'w', LOOP11, 13, (1<<24), 0, 'u', U_NONE},
-  {"state_mpc1",  'w', LOOP11, 14, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc1",   'w', LOOP11, 15, 1.0,   0.0, 'u', U_NONE},
-  {"task_mpc1",   'w', LOOP11, 16, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc1",  'w', LOOP11, 17, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc1",      'w', LOOP11, 18, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce1",      'w', LOOP11, 19, 1.0,   0.0, 'u', U_NONE},
-  
-  {"mode_mce2",   'w', LOOP11, 20, 1, 0, 'u', U_NONE},
-  {"df_1_mcc2",   'w', LOOP11, 21, (1<<24), 0, 'u', U_NONE},
-  {"df_2_mcc2",   'w', LOOP11, 22, (1<<24), 0, 'u', U_NONE},
-  {"df_3_mcc2",   'w', LOOP11, 23, (1<<24), 0, 'u', U_NONE},
-  {"state_mpc2",  'w', LOOP11, 24, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc2",   'w', LOOP11, 25, 1.0,   0.0, 'u', U_NONE},
-  {"task_mpc2",   'w', LOOP11, 26, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc2",  'w', LOOP11, 27, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc2",      'w', LOOP11, 28, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce2",      'w', LOOP11, 29, 1.0,   0.0, 'u', U_NONE},
+  /* slow MCE data */
+  {"data_mode_mce1",   'w', LOOP11, 10, 1, 0, 'u', U_NONE},
+  {"data_mode_mce2",   'w', LOOP11, 11, 1, 0, 'u', U_NONE},
+  {"data_mode_mce3",   'w', LOOP11, 12, 1, 0, 'u', U_NONE},
+  {"data_mode_mce4",   'w', LOOP11, 13, 1, 0, 'u', U_NONE},
+  {"data_mode_mce5",   'w', LOOP11, 14, 1, 0, 'u', U_NONE},
+  {"data_mode_mce6",   'w', LOOP11, 15, 1, 0, 'u', U_NONE},
 
-  {"mode_mce3",   'w', LOOP11, 30, 1, 0, 'u', U_NONE},
-  {"df_1_mcc3",   'w', LOOP11, 31, (1<<24), 0, 'u', U_NONE},
-  {"df_2_mcc3",   'w', LOOP11, 32, (1<<24), 0, 'u', U_NONE},
-  {"df_3_mcc3",   'w', LOOP11, 33, (1<<24), 0, 'u', U_NONE},
-  {"state_mpc3",  'w', LOOP11, 34, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc3",   'w', LOOP11, 35, 1.0,   0.0, 'u', U_NONE},
-  {"task_mpc3",   'w', LOOP11, 36, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc3",  'w', LOOP11, 37, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc3",      'w', LOOP11, 38, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce3",      'w', LOOP11, 39, 1.0,   0.0, 'u', U_NONE},
+  {"df_0_mcc1",   'w', LOOP11, 16, (1<<24), 0, 'u', U_NONE},
+  {"df_0_mcc2",   'w', LOOP11, 17, (1<<24), 0, 'u', U_NONE},
+  {"df_0_mcc3",   'w', LOOP11, 18, (1<<24), 0, 'u', U_NONE},
+  {"df_0_mcc4",   'w', LOOP11, 19, (1<<24), 0, 'u', U_NONE},
+  {"df_0_mcc5",   'w', LOOP11, 20, (1<<24), 0, 'u', U_NONE},
+  {"df_0_mcc6",   'w', LOOP11, 21, (1<<24), 0, 'u', U_NONE},
 
-  {"mode_mce4",   'w', LOOP11, 40, 1, 0, 'u', U_NONE},
-  {"df_1_mcc4",   'w', LOOP11, 41, (1<<24), 0, 'u', U_NONE},
-  {"df_2_mcc4",   'w', LOOP11, 42, (1<<24), 0, 'u', U_NONE},
-  {"df_3_mcc4",   'w', LOOP11, 43, (1<<24), 0, 'u', U_NONE},
-  {"state_mpc4",  'w', LOOP11, 44, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc4",   'w', LOOP11, 45, 1.0,   0.0, 'u', U_NONE},
-  {"task_mpc4",   'w', LOOP11, 46, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc4",  'w', LOOP11, 47, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc4",      'w', LOOP11, 48, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce4",      'w', LOOP11, 49, 1.0,   0.0, 'u', U_NONE},
+  {"df_1_mcc1",   'w', LOOP11, 22, (1<<24), 0, 'u', U_NONE},
+  {"df_1_mcc2",   'w', LOOP11, 23, (1<<24), 0, 'u', U_NONE},
+  {"df_1_mcc3",   'w', LOOP11, 24, (1<<24), 0, 'u', U_NONE},
+  {"df_1_mcc4",   'w', LOOP11, 25, (1<<24), 0, 'u', U_NONE},
+  {"df_1_mcc5",   'w', LOOP11, 26, (1<<24), 0, 'u', U_NONE},
+  {"df_1_mcc6",   'w', LOOP11, 27, (1<<24), 0, 'u', U_NONE},
 
-  {"mode_mce5",   'w', LOOP11, 50, 1, 0, 'u', U_NONE},
-  {"df_1_mcc5",   'w', LOOP11, 51, (1<<24), 0, 'u', U_NONE},
-  {"df_2_mcc5",   'w', LOOP11, 52, (1<<24), 0, 'u', U_NONE},
-  {"df_3_mcc5",   'w', LOOP11, 53, (1<<24), 0, 'u', U_NONE},
-  {"state_mpc5",  'w', LOOP11, 54, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc5",   'w', LOOP11, 55, 1.0,   0.0, 'u', U_NONE},
+  {"df_2_mcc1",   'w', LOOP11, 28, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc2",   'w', LOOP11, 29, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc3",   'w', LOOP11, 30, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc4",   'w', LOOP11, 31, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc5",   'w', LOOP11, 32, (1<<24), 0, 'u', U_NONE},
+  {"df_2_mcc6",   'w', LOOP11, 33, (1<<24), 0, 'u', U_NONE},
+
+  {"df_3_mcc1",   'w', LOOP11, 34, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc2",   'w', LOOP11, 35, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc3",   'w', LOOP11, 36, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc4",   'w', LOOP11, 37, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc5",   'w', LOOP11, 38, (1<<24), 0, 'u', U_NONE},
+  {"df_3_mcc6",   'w', LOOP11, 39, (1<<24), 0, 'u', U_NONE},
+
+  {"state_mpc1",  'w', LOOP11, 40, 1.0,   0.0, 'u', U_NONE},
+  {"state_mpc2",  'w', LOOP11, 41, 1.0,   0.0, 'u', U_NONE},
+  {"state_mpc3",  'w', LOOP11, 42, 1.0,   0.0, 'u', U_NONE},
+  {"state_mpc4",  'w', LOOP11, 43, 1.0,   0.0, 'u', U_NONE},
+  {"state_mpc5",  'w', LOOP11, 44, 1.0,   0.0, 'u', U_NONE},
+  {"state_mpc6",  'w', LOOP11, 45, 1.0,   0.0, 'u', U_NONE},
+
+  {"goal_mpc1",   'w', LOOP11, 46, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc2",   'w', LOOP11, 47, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc3",   'w', LOOP11, 48, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc4",   'w', LOOP11, 49, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc5",   'w', LOOP11, 50, 1.0,   0.0, 'u', U_NONE},
+  {"goal_mpc6",   'w', LOOP11, 51, 1.0,   0.0, 'u', U_NONE},
+
+  {"task_mpc1",   'w', LOOP11, 52, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc2",   'w', LOOP11, 53, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc3",   'w', LOOP11, 54, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc4",   'w', LOOP11, 55, 1.0,   0.0, 'u', U_NONE},
   {"task_mpc5",   'w', LOOP11, 56, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc5",  'w', LOOP11, 57, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc5",      'w', LOOP11, 58, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce5",      'w', LOOP11, 59, 1.0,   0.0, 'u', U_NONE},
+  {"task_mpc6",   'w', LOOP11, 57, 1.0,   0.0, 'u', U_NONE},
 
-  {"mode_mce6",   'w', LOOP11,  0, 1, 0, 'u', U_NONE},
-  {"df_1_mcc6",   'w', LOOP11,  1, (1<<24), 0, 'u', U_NONE},
-  {"df_2_mcc6",   'w', LOOP11,  2, (1<<24), 0, 'u', U_NONE},
-  {"df_3_mcc6",   'w', LOOP11,  3, (1<<24), 0, 'u', U_NONE},
-  {"state_mpc6",  'w', LOOP11,  4, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc6",   'w', LOOP11,  5, 1.0,   0.0, 'u', U_NONE},
-  {"task_mpc6",   'w', LOOP11,  6, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc6",  'w', LOOP11,  7, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc6",      'w', LOOP11,  8, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce6",      'w', LOOP11,  9, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc1",  'w', LOOP11, 58, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc2",  'w', LOOP11, 59, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc3",  'w', LOOP11, 60, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc4",  'w', LOOP11, 61, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc5",  'w', LOOP11, 62, 1.0,   0.0, 'u', U_NONE},
+  {"dtask_mpc6",  'w', LOOP11, 63, 1.0,   0.0, 'u', U_NONE},
 
+  {"t_mcc1",      'w', LOOP12,  0, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc2",      'w', LOOP12,  1, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc3",      'w', LOOP12,  2, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc4",      'w', LOOP12,  3, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc5",      'w', LOOP12,  4, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc6",      'w', LOOP12,  5, 1.0,   0.0, 'u', U_NONE},
+
+  {"t_mce1",      'w', LOOP12,  6, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce2",      'w', LOOP12,  7, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce3",      'w', LOOP12,  8, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce4",      'w', LOOP12,  9, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce5",      'w', LOOP12, 10, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce6",      'w', LOOP12, 11, 1.0,   0.0, 'u', U_NONE},
     
 // add/change the slow data struct in mceserv.h
   END_OF_CHANNELS
