@@ -78,13 +78,18 @@ int check_proc(struct mcp_proc *p);
 int stop_proc(struct mcp_proc *p, int stop_now, int infd_closed,
   int outfd_closed, int errfd_closed);
 
-/* Synchronously execute a process, with error handling.  The process's STDIN
- * and STDOUT are set to /dev/null.  The process's STDERR is piped into the
- * BUOS log.  Waits for termination and/or timeout.  This is a convenience
- * function wrapping appropriate start_proc, check_proc, and stop_proc calls.
+/* Synchronously execute a process, with error handling.  The process's STDERR
+ * and/or STDOUT may be piped into the BUOS log.  The process's STDIN (plus
+ * STDERR and/or STDOUT if not piped) are redirected to /dev/null.  All other
+ * open file descriptors are closed before executing the process.  Waits for
+ * termination and/or timeout.  This is a convenience function wrapping
+ * appropriate start_proc, check_proc, and stop_proc calls.
  *
  * Inputs:
- *    elev: the BUOS level to use for the process's STDERR
+ *  errlev: the BUOS level to use for the process's STDERR.  Specify none to
+ *          redirect to /dev/null.
+ *  outlev: the BUOS level to use for the process's STDOUT.  Specify none to
+ *          redirect to /dev/null.
  *    path: path to the executable
  *    argv: the process's command line.  The first element in this list should
  *          be the name of the program (usually equal to path).  The string
@@ -92,18 +97,17 @@ int stop_proc(struct mcp_proc *p, int stop_now, int infd_closed,
  *          executables which need no arguments may pass NULL here, and
  *          a suitable command line will be automatically created.  (see
  *          execve(2)).
- *    timeout: the number of seconds to wait before forcibly terminating the
- *             process, or zero to wait forever.  Note: this timeout is
- *             approximate; this function may wait longer than the time
- *             specified.
- *    announce: if non-zero, report the name of the process being executed
- *              and its return value at BUOS level "info".
+ * timeout: the number of seconds to wait before forcibly terminating the
+ *          process, or zero to wait forever.  Note: this timeout is
+ *          approximate; this function may wait longer than the time specified.
+ * announce: if non-zero, report the name of the process being executed
+ *           and its return value at BUOS level "info".
  *
  * Return value:
  *    the exit status of the process.  See wait(2).
  */
-int exec_and_wait(buos_t elev, const char *path, char *argv[], unsigned timeout,
-    int announce);
+int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
+    unsigned timeout, int announce);
 
 /* mount something listed in the fstab called "name", which can either be a 
  * mount point or a device name. There's also a timeout in seconds (0 = forever)

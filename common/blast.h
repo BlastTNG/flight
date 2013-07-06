@@ -31,7 +31,8 @@
 
 /* BUOS (BLAST Unified Output Scheme) definitions */
 #define BUOS_MAX 2048
-typedef enum {info, warning, err, tfatal, fatal, startup, sched, mem} buos_t;
+typedef enum {none, info, warning, err, tfatal, fatal, startup, sched, mem}
+  buos_t;
 
 void bputs_stdio(buos_t l, const char* s);
 void bputs_syslog(buos_t l, const char* s);

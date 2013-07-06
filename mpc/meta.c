@@ -63,6 +63,14 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       return;
 
     switch (st) {
+      case st_drive0: /* probably shouldn't ever get here ... */
+        if (state & st_retdat)
+          try_toggle(st_retdat, 1, do_start, do_stop);
+        else if (state & st_tuning)
+          try_toggle(st_tuning, 1, do_start, do_stop);
+        else
+          *do_stop = st;
+        break;
       case st_acqcnf:
         if (state & st_retdat)
           try_toggle(st_retdat, 1, do_start, do_stop);
@@ -71,9 +79,12 @@ void try_toggle(enum status st, int stop, enum status *do_start,
         break;
 
       case st_idle:
+      case st_mcecom:
+      case st_config:
       case st_drive1:
       case st_drive2:
       case st_retdat:
+      case st_tuning:
         /* always okay */
         *do_stop = st;
         break;
@@ -104,19 +115,20 @@ void try_toggle(enum status st, int stop, enum status *do_start,
         else if (~state & st_mcecom) /* MCE must be alive */
           try_toggle(st_mcecom, 0, do_start, do_stop);
         else
-          *do_start = st_config;
+          *do_start = st;
         break;
       case st_acqcnf:
+      case st_tuning:
         if (~state & st_config) /* MCE must be configured */
           try_toggle(st_config, 0, do_start, do_stop);
         else
-          *do_start = st_acqcnf;
+          *do_start = st;
         break;
       case st_retdat:
         if (~state & st_acqcnf) /* acq must be configured */
           try_toggle(st_acqcnf, 0, do_start, do_stop);
         else
-          *do_start = st_retdat;
+          *do_start = st;
         break;
     }
   }

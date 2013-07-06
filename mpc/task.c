@@ -187,7 +187,7 @@ void *task(void *dummy)
             comms_lost = 1; /* hmm... */
           } else {
             /* done with tuning; back to acq */
-            goal = st_retdat;
+            goal = op_acq;
             start_tk = st_idle;
           }
       }

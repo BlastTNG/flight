@@ -491,6 +491,12 @@ int main(void)
   buos_use_func(mputs);
   nameThread("Main");
 
+  /* for scripts */
+  setenv("PYTHONPATH", "/data/mas/mce_script/python:/data/mas/python", 1);
+  setenv("PATH", "usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"
+      "/data/mas/bin:/data/mas/mce_script/script:"
+      "/data/mas/mce_script/test_suite", 1);
+
   if ((logfile = fopen(MPC_ETC_DIR "/mpc.log", "a")) == NULL)
     berror(err, "Can't open log file");
   else

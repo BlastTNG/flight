@@ -37,13 +37,15 @@ void bputs_stdio(buos_t l, const char* s)
   FILE* stream = stderr;
 
   switch (l) {
+    case none:
+      return;
+    case mem:
+      if (l == mem && !__buos_allow_mem)
+        return;
     case info:
     case startup:
     case sched:
       stream = stdout;
-    case mem:
-      if (l == mem && !__buos_allow_mem)
-        break;
     case warning:
     case err:
     case tfatal:
@@ -66,6 +68,8 @@ void bputs_syslog(buos_t l, const char* s)
   int level = LOG_INFO;
 
   switch(l) {
+    case none:
+      return;
     case info:
       level = LOG_INFO;
       break;

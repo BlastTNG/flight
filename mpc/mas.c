@@ -371,7 +371,7 @@ static int acq_conf(void)
   mcedata_storage_t *st;
   uint32_t n = 1;
   char filename[100];
-  
+
   /* stop the pushback */
   fb_top = pb_last = 0;
 
@@ -408,7 +408,7 @@ static int acq_conf(void)
   }
 
   /* now create a flatfile sequencer for each configured drive */
-  
+
   /* drive0 */
   sprintf(filename, "/data0/mce/current_data/mpc_%li", acq_time);
   st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
@@ -498,9 +498,11 @@ void *mas_data(void *dummy)
       case dt_idle:
         break;
       case dt_setdir:
-        if (exec_and_wait(sched, MAS_SCRIPT "/set_directory", NULL, 20, 0)) 
+        if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", NULL, 20,
+              0))
+        {
           dt_error = 1;
-        else
+        } else
           dt_error = 0;
         data_tk = dt_idle;
         break;
@@ -527,8 +529,11 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_reconfig:
-        if (exec_and_wait(sched, MAS_SCRIPT "/mce_reconfig", NULL, 100, 0))
+        if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_reconfig", NULL, 100,
+              0))
+        {
           comms_lost = 1;
+        }
         data_tk = dt_idle;
         break;
       case dt_status:
@@ -559,6 +564,13 @@ void *mas_data(void *dummy)
           bprintf(err, "Error emptying data queue: error #%i", ret);
           dt_error = 1;
         } else
+          dt_error = 0;
+        data_tk = dt_idle;
+        break;
+      case dt_autosetup:
+        if (exec_and_wait(sched, startup, MAS_SCRIPT "/auto_setup", NULL, 0, 0))
+          dt_error = 1;
+        else
           dt_error = 0;
         data_tk = dt_idle;
         break;

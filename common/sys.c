@@ -295,35 +295,62 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
   return p;
 }
 
-/* run a process, discarding its STDOUT.  The process's STDERR will be piped
- * into the BUOS log at "elev".  Optionally, kill the program if the timeout
+/* run a process with plumbing.  Optionally, kill the program if the timeout
  * is exceeded.  Returns a non-zero integer on error;
  */
-int exec_and_wait(buos_t elev, const char *path, char *argv[], unsigned timeout,
-    int announce)
+int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
+    unsigned timeout, int announce)
 {
   struct mcp_proc *p;
-  int p_stderr;
-  char buffer[1024];
-  FILE *stream;
+  int p_stderr = 0, p_stdout = 0;
+  char obuffer[1024], ebuffer[1024];
+  FILE *errstream = NULL, *outstream = NULL;
 
-  p = start_proc(path, argv, timeout, announce, NULL, NULL, &p_stderr);
+  p = start_proc(path, argv, timeout, announce, NULL,
+      (outlev == none) ? NULL : &p_stdout,
+      (errlev == none) ? NULL : &p_stderr);
   if (p == NULL)
     return errno ? (errno << 16) : -1;
   
-  stream = fdopen(p_stderr, "r");
-  if (stream == NULL)
-    berror(warning, "Unable to fdopen STDERR");
-  else {
+  if (errlev != none) {
+    errstream = fdopen(p_stderr, "r");
+    if (errstream == NULL) {
+      berror(warning, "Unable to fdopen subprocess STDERR");
+      errlev = none;
+    } else
+      setvbuf(errstream, NULL, _IONBF, 0);
+  }
+      
+  if (outlev != none) {
+    outstream = fdopen(p_stdout, "r");
+    if (outstream == NULL) {
+      berror(warning, "Unable to fdopen subprocess STDOUT");
+      outlev = none;
+    } else
+      setvbuf(outstream, NULL, _IONBF, 0);
+  }
+      
+  if (errlev != none || outlev != none) {
     while (check_proc(p) == 0) {
-      /* parrot the clients standard error */
-      if (fgets(buffer, 1024, stream))
-        bprintf(elev, "%s", buffer);
+      /* parrot the clients standard streams */
+      if (errstream && fgets(ebuffer, 1024, errstream))
+        bprintf(errlev, "%s", ebuffer);
+      if (outstream && fgets(obuffer, 1024, outstream))
+        bprintf(outlev, "%s", obuffer);
       usleep(10000);
     }
-    while (fgets(buffer, 1024, stream)) /* clear the buffer */
-      bprintf(elev, "%s", buffer);
-    fclose(stream);
+
+    /* clear the buffers */
+    if (errstream) {
+      while (fgets(ebuffer, 1024, errstream))
+        bprintf(errlev, "%s", ebuffer);
+      fclose(errstream);
+    }
+    if (outstream) {
+      while (fgets(obuffer, 1024, outstream))
+        bprintf(outlev, "%s", obuffer);
+      fclose(outstream);
+    }
   }
 
   return stop_proc(p, 0, 0, 0, 1);
@@ -333,7 +360,7 @@ int exec_and_wait(buos_t elev, const char *path, char *argv[], unsigned timeout,
 int do_mount(const char *name, int timeout)
 {
   char *argv[] = { "mount", (char*)name, NULL };
-  return exec_and_wait(err, "/bin/mount", argv, timeout, 0);
+  return exec_and_wait(err, mem, "/bin/mount", argv, timeout, 0);
 }
 
 /* lazy unmount something */
