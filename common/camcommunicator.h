@@ -4,13 +4,14 @@
 #include <string>
 #include "camstruct.h"
 
-#define BSC_PORT 2676
-#define RSC_PORT 2677
-#define BSC_PORT_PLOOP 2678
-#define RSC_PORT_PLOOP 2679
-#define SC_PORT 2680 
-#define SC_PORT_RSC 2681 
-#define SC_PORT_BSC 2682 
+#define GOOD_PORT 2671
+#define BAD_PORT 2672
+#define UGLY_PORT 2673
+#define GBU_PORT 2674
+#define SC_PORT 2675 
+#define SC_PORT_GOOD 2676 
+#define SC_PORT_BAD 2677 
+#define SC_PORT_UGLY 2678 
 
 /**
 	@author Steve Benton <steve.benton@utoronto.ca>

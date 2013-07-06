@@ -64,9 +64,9 @@ extern "C" void nameThread(const char*);  /* in mcp.c */
 extern "C" short int InCharge;		  /* in tx.c */
 extern "C" int EthernetSC[3];      /* tx.c */
 
-const char* thegood_servername = "192.168.1.11";
-const char* thebad_servername = "192.168.1.12";
-const char* theugly_servername = "192.168.1.13";
+const char* thegood_servername = "good.spider";//"192.168.1.11";
+const char* thebad_servername = "bad.spider";//"192.168.1.12";
+const char* theugly_servername = "ugly.spider";//"192.168.1.13";
 
 string cam_serial[3]={"110794466","08073506","08073507"};
 extern double goodPos[10];	/* table.cpp */
@@ -85,13 +85,15 @@ double SCra[3], SCdec[3], SCroll[3], SCaz[3], SCel[3];
 #define UGLY_AZ_OFF 105.0
 Pyramid pyr;
 
-static pthread_t rsc_id;
-static pthread_t bsc_id;
+static pthread_t thegood_id;
+static pthread_t thebad_id;
+static pthread_t theugly_id;
 static pthread_t read_id;
 
 static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0);
-static void* RSCLoop(void* arg);
-static void* BSCLoop(void* arg);
+static void* TheGoodLoop(void* arg);
+static void* TheBadLoop(void* arg);
+static void* TheUglyLoop(void* arg);
 static void* ReadLoop(void* arg);
 static string ParseReturn(string rtnStr, int which);
 
@@ -152,8 +154,9 @@ int sendTheUglyCommand(const char *cmd)
 void openSC()
 {
   pyr.Init(FOV, (char *)CAT, (char *)KCAT);
-  pthread_create(&rsc_id, NULL, &RSCLoop, NULL);
-  pthread_create(&bsc_id, NULL, &BSCLoop, NULL);
+  pthread_create(&thegood_id, NULL, &TheGoodLoop, NULL);
+  pthread_create(&thebad_id, NULL, &TheBadLoop, NULL);
+  pthread_create(&theugly_id, NULL, &TheUglyLoop, NULL);
   pthread_create(&read_id, NULL, &ReadLoop, NULL);
 }
 
@@ -425,16 +428,16 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
   }
 }
 
-static void* BSCLoop(void* arg)
+static void* TheGoodLoop(void* arg)
 {
-        nameThread("BSC");
+        nameThread("GoodSC");
 	while (!InCharge) {
 		usleep(20000);
 	}
 	int sock;
   	string rtn_str = "";
 
-	sock = udp_bind_port(SC_PORT_BSC, 1);
+	sock = udp_bind_port(SC_PORT_GOOD, 1);
 	if (sock == -1)
 		bprintf(tfatal, "Unable to bind to port");
 
@@ -451,31 +454,31 @@ static void* BSCLoop(void* arg)
     	  		pos = cmd.find(sought, pos - sought.size());
     		}
     		cmd += "\n";
-		if (udp_bcast(sock, BSC_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
+		if (udp_bcast(sock, GOOD_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
 			bprintf(warning, "Error broadcasting command.\n");
 		SCcmd_flag[0] = 0;
 	}
 	return NULL;
 }
 
-static void* RSCLoop(void* arg)
+static void* TheBadLoop(void* arg)
 {
-        nameThread("RSC");
+        nameThread("BadSC");
 	while (!InCharge) {
 		usleep(20000);
 	}
 	int sock;
   	string rtn_str = "";
 
-	sock = udp_bind_port(SC_PORT_RSC, 1);
+	sock = udp_bind_port(SC_PORT_BAD, 1);
 	if (sock == -1)
 		bprintf(tfatal, "Unable to bind to port");
 
 	while(1) {
-		while (SCcmd_flag[0] == 0) {
+		while (SCcmd_flag[1] == 0) {
 			sleep(1);
 	        }
-		string cmd = string(SCcmd[0]);
+		string cmd = string(SCcmd[1]);
     		//remove all newlines and add a single one at the end
     		string sought = "\n";
     		string::size_type pos = cmd.find(sought, 0);
@@ -484,12 +487,45 @@ static void* RSCLoop(void* arg)
     	  		pos = cmd.find(sought, pos - sought.size());
     		}
     		cmd += "\n";
-		if (udp_bcast(sock, RSC_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
+		if (udp_bcast(sock, BAD_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
 			bprintf(warning, "Error broadcasting command.\n");
+		SCcmd_flag[1] = 0;
 	}
 	return NULL;
 }
 
+static void* TheUglyLoop(void* arg)
+{
+        nameThread("UglySC");
+	while (!InCharge) {
+		usleep(20000);
+	}
+	int sock;
+  	string rtn_str = "";
+
+	sock = udp_bind_port(SC_PORT_UGLY, 1);
+	if (sock == -1)
+		bprintf(tfatal, "Unable to bind to port");
+
+	while(1) {
+		while (SCcmd_flag[2] == 0) {
+			sleep(1);
+	        }
+		string cmd = string(SCcmd[2]);
+    		//remove all newlines and add a single one at the end
+    		string sought = "\n";
+    		string::size_type pos = cmd.find(sought, 0);
+    		while (pos != string::npos) {
+    	  		cmd.replace(pos, sought.size(), "");
+    	  		pos = cmd.find(sought, pos - sought.size());
+    		}
+    		cmd += "\n";
+		if (udp_bcast(sock, UGLY_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
+			bprintf(warning, "Error broadcasting command.\n");
+		SCcmd_flag[2] = 0;
+	}
+	return NULL;
+}
 
 /*
  * wrapper for the read loop in camcommunicator
