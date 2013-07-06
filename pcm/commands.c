@@ -1865,19 +1865,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     /*******************************************/
     /*************** Sync Box  *****************/
     case write_row_len:
-      CommandData.sync_box.write_param = rl;
+      CommandData.sync_box.write_param = sync_rl;
       CommandData.sync_box.param_value = ivalues[0];
       CommandData.sync_box.rl_value = CommandData.sync_box.param_value;
       CommandData.sync_box.cmd = 1;
       break;
     case write_num_rows:
-      CommandData.sync_box.write_param = nr;
+      CommandData.sync_box.write_param = sync_nr;
       CommandData.sync_box.param_value = ivalues[0];
       CommandData.sync_box.nr_value = CommandData.sync_box.param_value;
       CommandData.sync_box.cmd = 1;
       break;
     case write_free_run:
-      CommandData.sync_box.write_param = fr;
+      CommandData.sync_box.write_param = sync_fr;
       CommandData.sync_box.param_value = ivalues[0];
       CommandData.sync_box.fr_value = CommandData.sync_box.param_value;
       CommandData.sync_box.cmd = 1;
@@ -2118,7 +2118,7 @@ void InitCommandData()
   CommandData.mcecmd[1].done = 1;
   CommandData.mcecmd[2].done = 1;
 
-  CommandData.sync_box.write_param = none;
+  CommandData.sync_box.write_param = sync_none;
   CommandData.sync_box.cmd = 0;
   CommandData.sync_box.param_value = 0;
 

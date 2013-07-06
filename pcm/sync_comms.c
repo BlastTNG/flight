@@ -155,15 +155,15 @@ void* syncComm(void* arg)
          * if not, command them to be on the next cycle */
         if (SyncBoxData.row_len != CommandData.sync_box.rl_value) {
           CommandData.sync_box.cmd = 1;
-          CommandData.sync_box.write_param = rl;
+          CommandData.sync_box.write_param = sync_rl;
           CommandData.sync_box.param_value = CommandData.sync_box.rl_value;
         } else if (SyncBoxData.num_rows != CommandData.sync_box.nr_value) {
           CommandData.sync_box.cmd = 1;
-          CommandData.sync_box.write_param = nr;
+          CommandData.sync_box.write_param = sync_nr;
           CommandData.sync_box.param_value = CommandData.sync_box.nr_value;
         } else if (SyncBoxData.free_run != CommandData.sync_box.fr_value) {
           CommandData.sync_box.cmd = 1;
-          CommandData.sync_box.write_param = fr;
+          CommandData.sync_box.write_param = sync_fr;
           CommandData.sync_box.param_value = CommandData.sync_box.fr_value;
         }
           
@@ -385,13 +385,13 @@ void command_sync(enum SyncParam write_param, int value)
   char cmd[9];
 
   switch (write_param) {
-    case fr:
+    case sync_fr:
       n_val = sprintf(cmd, "fr %d\r", value);
       break;
-    case nr:
+    case sync_nr:
       n_val = sprintf(cmd, "nr %d\r", value);
       break;
-    case rl:
+    case sync_rl:
       n_val = sprintf(cmd, "rl %d\r", value);
       break;
     default:

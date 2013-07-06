@@ -231,10 +231,10 @@ struct ScheduleEvent {
 
 /* sync box paramater type */
 enum SyncParam {
-  rl,
-  fr,
-  nr,
-  none
+  sync_rl,
+  sync_fr,
+  sync_nr,
+  sync_none
 };
 
 /* MCE Power operations */
