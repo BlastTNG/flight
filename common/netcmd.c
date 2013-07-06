@@ -1,22 +1,22 @@
-/* cow: groundstation BLAST command software
+/* netcmd: BLAST command protocol client
  *
- * This software is copyright (C) 2005 University of Toronto
+ * This software is copyright (C) 2005 D. V. Wiebe and others
  * Parts of this software are copyright 2010 Matthew Truch
  * 
- * This file is part of cow.
+ * This file is part of the BLAST flight code.
  * 
- * cow is free software; you can redistribute it and/or modify
+ * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  * 
- * cow is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with blastcmd; if not, write to the Free Software Foundation, Inc.,
+ * along with this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
@@ -66,7 +66,7 @@ int ReadLine(int sock, char* buffer, int bufflen)
 
   i = recv(sock, prebuffer + prebuffer_size, 2048 - prebuffer_size,
       MSG_DONTWAIT);
-  
+
   if (i < 0) {
     if (errno == EAGAIN && prebuffer_size != 0)
       i = 0;
@@ -310,18 +310,18 @@ int NetCmdGetGroupNames(void)
   for (j=0; j < client_n_groups; ++j) {
     for (i=0; i<128; i++) {
       if ((n = read(sock, &c, 1)) <= 0) {
-	perror("Unable to receive");
-	exit(14);
+        perror("Unable to receive");
+        exit(14);
       } else if (i == 127 && c != '\n') {
-	fprintf(stderr, "Protocol error from daemon.\n");
-	exit(14);
+        fprintf(stderr, "Protocol error from daemon.\n");
+        exit(14);
       }
 
       if (c == '\n') {
-	buffer[i] = '\0';
-	client_group_names[j] = (char*)malloc(strlen(buffer)+1);
-	strcpy(client_group_names[j], buffer);
-	break;
+        buffer[i] = '\0';
+        client_group_names[j] = (char*)malloc(strlen(buffer)+1);
+        strcpy(client_group_names[j], buffer);
+        break;
       } else buffer[i] = c;
     }
   }
