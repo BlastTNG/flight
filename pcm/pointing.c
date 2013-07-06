@@ -830,6 +830,7 @@ void Pointing(void)
   int pss_ok;
   static unsigned dgps_since_ok = 500;
   static unsigned pss_since_ok = 500;
+  static unsigned mag_since_ok = 500;
   double mag_az;
   double pss_az = 0;
   double pss_el = 0;
@@ -1062,6 +1063,11 @@ void Pointing(void)
   /**      do az solution      **/
   /** Convert Sensors **/
   mag_ok = MagConvert(&mag_az);
+  if (mag_ok) {
+    mag_since_ok = 0;
+  } else {
+    mag_since_ok++;
+  }
 
   PointingData[point_index].mag_az_raw = mag_az;
 
@@ -1147,7 +1153,7 @@ void Pointing(void)
   /** record solutions in pointing data **/
   PointingData[point_index].mag_az = MagAz.angle;
   PointingData[point_index].mag_sigma = sqrt(MagAz.varience + MagAz.sys_var);
-  PointingData[point_index].mag_ok = mag_ok;
+  PointingData[point_index].mag_ok = (mag_since_ok < 50);
   PointingData[point_index].dgps_az = DGPSAz.angle;
   PointingData[point_index].dgps_pitch = dgps_pitch;
   PointingData[point_index].dgps_roll = dgps_roll;
@@ -1176,7 +1182,10 @@ void Pointing(void)
   //  ClinEl.trim = NewAzEl.el - ClinEl.angle;	
     //EncEl.trim = NewAzEl.el - EncEl.angle;	
     NullAz.trim = NewAzEl.az - NullAz.angle;
-    MagAz.trim = NewAzEl.az - MagAz.angle;
+
+    if (mag_since_ok<500) {
+      MagAz.trim = NewAzEl.az - MagAz.angle;
+    }
 
     if (dgps_since_ok<500) {
       DGPSAz.trim = NewAzEl.az - DGPSAz.angle;
