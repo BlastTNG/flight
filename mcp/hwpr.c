@@ -43,7 +43,7 @@ static struct hwpr_struct {
   double pot;
 } hwpr_data;
 
-enum move_type {none=0,pot,ind,step};
+enum move_type {no_move=0,pot,ind,step};
 enum move_status {not_yet=0,ready,moving,at_overshoot,is_done};
 enum read_pot {no=0,yes,reading,done};
 
@@ -81,7 +81,7 @@ void MonitorHWPR(struct ezbus *bus)
  
 /* Clear out the hwpr_control structure*/
 void ResetControlHWPR (void) {
-  hwpr_control.go = none;
+  hwpr_control.go = no_move;
   hwpr_control.move_cur = not_yet;
   hwpr_control.read_before = no;
   hwpr_control.read_after = no;
@@ -337,7 +337,7 @@ if (hwpr_control.read_before == yes) {
 
       /*** Do we want to move? ***/
 
-      if (hwpr_control.go != none) { // yes, move
+      if (hwpr_control.go != no_move) { // yes, move
 
 	/*** Figure out how many encoder counts we want to step ***/
 	if (hwpr_control.move_cur == not_yet) {
@@ -556,7 +556,7 @@ if (hwpr_control.read_before == yes) {
 	    }
 	}
 
-      } else { // hwpr_control.go == none
+      } else { // hwpr_control.go == no_move
         // ...we're done!
 #ifdef DEBUG_HWPR
         bprintf(info,"Nothing left to do!");
