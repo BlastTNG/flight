@@ -49,6 +49,26 @@ static int dt_wait(enum dtask dt)
 /* wait times after power cycle request (in seconds) */
 static const int power_wait[] = { 10, 10, 20, 40, 60, 0 };
 
+/* do a fake stop and empty the data buffer */
+static int task_stop_acq()
+{
+  /* Fake stop */
+  if (dt_wait(dt_fakestop)) {
+    comms_lost = 1;
+    return 1;
+  }
+  /* Empty the buffer */
+  if (dt_wait(dt_empty)) {
+    comms_lost = 1;
+    return 1;
+  }
+  cl_count = 0;
+  state |= st_mcecom;
+  state &= ~st_retdat;
+
+  return 0;
+}
+
 /* do a DSP reset, MCE reset, fake stop and empty the data buffer */
 static int task_reset_mce()
 {
@@ -63,20 +83,11 @@ static int task_reset_mce()
     comms_lost = 1;
     return 1;
   }
-  /* Fake stop */
-  if (dt_wait(dt_fakestop)) {
-    comms_lost = 1;
+  if (task_stop_acq())
     return 1;
-  }
-  /* Empty the buffer */
-  if (dt_wait(dt_empty)) {
-    comms_lost = 1;
-    return 1;
-  }
 
-  cl_count = 0;
   state |= st_mcecom;
-  state &= ~(st_config | st_acqcnf | st_retdat | st_tuning);
+  state &= ~(st_config | st_tuning);
   return 0;
 }
 

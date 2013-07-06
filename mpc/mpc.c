@@ -83,7 +83,7 @@ uint16_t bset_num = 0xFFFF;
 int ntes = 0;
 int16_t tes[NUM_ROW * NUM_COL];
 
-/* DV from the sync box */
+/* DV is comming from the sync box */
 int sync_dv = 0;
 
 /* the data frame to ship out */
@@ -215,19 +215,55 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
   }
 }
 
+static int disk_bad[4] = { 0, 0, 0, 0 };
+
+#define BAD_DISK_TIMEOUT 30 /* in units of SLOW_TIMEOUT =~ 4 minutes */
+/* get disk free, also determine whether a disk is healthy or not */
+static int check_disk(int n)
+{
+  static int check_timeout[4] = { 0, 0, 0, 0 };
+
+  struct statvfs buf;
+  char path[] = "/data0/mce";
+  path[5] = '0' + n;
+
+  if (check_timeout[n]) {
+    check_timeout[n]--;
+    return disk_bad[n];
+  }
+
+  if (statvfs(path, &buf) == 0) {
+    /* disk free -- units are 2**24 bytes = 16 MB */
+    slow_dat.df[n] = (uint16_t)(((unsigned long long)buf.f_bfree * buf.f_bsize)
+        >> 24);
+    if (disk_bad[n]) {
+      bprintf(info, "/data%i now reporting", n);
+      disk_bad[n] = 0;
+    }
+    check_timeout[n] = 0;
+  } else {
+    if (!disk_bad[n]) {
+      bprintf(warning, "/data%i has failed", n);
+      disk_bad[n] = 1;
+    }
+    check_timeout[n] = BAD_DISK_TIMEOUT;
+  }
+
+  return disk_bad[n];
+}
+
 /* send slow data to PCM */
 static void send_slow_data(char *data)
 {
   struct timeval tv;
-  struct statvfs buf;
   size_t len;
 
   slow_dat.data_mode = cur_dm;
 
-  /* disk free -- units are 2**24 bytes = 16 MB */
-  if (statvfs("/data0/mce", &buf) == 0)
-    slow_dat.df0 =
-      (uint16_t)(((unsigned long long)buf.f_bfree * buf.f_bsize) >> 24);
+  check_disk(0);
+  check_disk(1);
+  check_disk(2);
+  check_disk(3);
 
   /* time -- this wraps around ~16 months after the epoch */
   gettimeofday(&tv, NULL);
