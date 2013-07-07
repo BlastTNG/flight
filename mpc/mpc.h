@@ -108,11 +108,11 @@ void *task(void *dummy);
 /* data tasklets */
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
-  dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup,
+  dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
-  "fakestop", "empty", "status", "acqcnf", "autosetup"
+  "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

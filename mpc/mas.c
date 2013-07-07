@@ -51,7 +51,7 @@ const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
 mce_context_t *mas;
 
 /* acq */
-mce_acq_t *acq;
+mce_acq_t *acq = NULL;
 static volatile int acq_going = 0;
 static volatile int acq_stopped = 0;
 int acq_init = 0;
@@ -573,6 +573,14 @@ void *mas_data(void *dummy)
         else
           dt_error = 0;
         data_tk = dt_idle;
+        break;
+      case dt_delacq:
+        if (acq)
+          mcedata_acq_destroy(acq);
+        acq = NULL;
+        dt_error = 0;
+        data_tk = dt_idle;
+        bprintf(info, "doon");
         break;
     }
 

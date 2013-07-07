@@ -62,9 +62,10 @@ static int task_stop_acq()
     comms_lost = 1;
     return 1;
   }
+  dt_wait(dt_delacq);
   cl_count = 0;
   state |= st_mcecom;
-  state &= ~st_retdat;
+  state &= ~(st_acqcnf | st_retdat);
 
   return 0;
 }
@@ -208,6 +209,9 @@ void *task(void *dummy)
           break;
         case st_acqcnf:
         case st_retdat:
+          task_stop_acq();
+          stop_tk = st_idle;
+          break;
         case st_tuning:
           /* sledgehammer based stop acq */
           task_reset_mce();

@@ -997,12 +997,12 @@ struct ChannelStruct SlowChannels[] = {
   {"dtask_mpc5",  'w', LOOP11, 62, 1.0,   0.0, 'u', U_NONE},
   {"dtask_mpc6",  'w', LOOP11, 63, 1.0,   0.0, 'u', U_NONE},
 
-  {"t_mcc1",      'w', LOOP12,  0, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc2",      'w', LOOP12,  1, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc3",      'w', LOOP12,  2, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc4",      'w', LOOP12,  3, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc5",      'w', LOOP12,  4, 1.0,   0.0, 'u', U_NONE},
-  {"t_mcc6",      'w', LOOP12,  5, 1.0,   0.0, 'u', U_NONE},
+  {"t_mcc1",      'w', LOOP12,  0, 0.01,  0.0, 'u', U_NONE},
+  {"t_mcc2",      'w', LOOP12,  1, 0.01,  0.0, 'u', U_NONE},
+  {"t_mcc3",      'w', LOOP12,  2, 0.01,  0.0, 'u', U_NONE},
+  {"t_mcc4",      'w', LOOP12,  3, 0.01,  0.0, 'u', U_NONE},
+  {"t_mcc5",      'w', LOOP12,  4, 0.01,  0.0, 'u', U_NONE},
+  {"t_mcc6",      'w', LOOP12,  5, 0.01,  0.0, 'u', U_NONE},
 
   {"t_mce1",      'w', LOOP12,  6, 1.0,   0.0, 'u', U_NONE},
   {"t_mce2",      'w', LOOP12,  7, 1.0,   0.0, 'u', U_NONE},

@@ -242,6 +242,7 @@ static int check_disk(int n)
     }
     check_timeout[n] = 0;
   } else {
+    slow_dat.df[n] = -1;
     if (!disk_bad[n]) {
       bprintf(warning, "/data%i has failed", n);
       disk_bad[n] = 1;
@@ -257,6 +258,8 @@ static void send_slow_data(char *data)
 {
   struct timeval tv;
   size_t len;
+  FILE *stream;
+  int datum;
 
   slow_dat.data_mode = cur_dm;
 
@@ -269,11 +272,19 @@ static void send_slow_data(char *data)
   gettimeofday(&tv, NULL);
   slow_dat.time = (tv.tv_sec - MPC_EPOCH) * 100 + tv.tv_usec / 10000;
 
+  /* temperature */
+  if ((stream = fopen("/sys/devices/platform/coretemp.0/temp2_input", "r"))) {
+    if (fscanf(stream, "%i\n", &datum) == 1)
+      slow_dat.t_mcc = datum / 10;
+    fclose(stream);
+  } else
+    slow_dat.t_mcc = 0xFFFF;
+
   /* state stuff */
   slow_dat.state = state;
 
   slow_dat.goal = goal;
-  slow_dat.task = start_tk - stop_tk;
+  slow_dat.task = (stop_tk == st_idle) ? start_tk : (0x8000 | stop_tk);
   slow_dat.dtask = data_tk;
 
   /* make packet and send */
