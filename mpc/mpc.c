@@ -72,6 +72,9 @@ int init = 1;
 /* Data return veto */
 int veto = 1;
 
+/* MCE temperature poll */
+int mas_get_temp = 0;
+
 /* PCM/MPC divisor */
 int divisor = 2;
 
@@ -107,6 +110,9 @@ int rd_count = 0;
 
 /* Send mcestat to PCM */
 int send_mcestat = 0;
+
+/* box temperature */
+int32_t box_temp = 0;
 
 static void set_data_mode_bits(int i, int both, const char *dmb)
 {
@@ -261,6 +267,9 @@ static void send_slow_data(char *data)
   FILE *stream;
   int datum;
 
+  /* get temperature data from MCE */
+  mas_get_temp = 1;
+
   slow_dat.data_mode = cur_dm;
 
   check_disk(0);
@@ -279,6 +288,9 @@ static void send_slow_data(char *data)
     fclose(stream);
   } else
     slow_dat.t_mcc = 0xFFFF;
+
+  /* mce temp */
+  slow_dat.t_mce = box_temp;
 
   /* state stuff */
   slow_dat.state = state;
@@ -558,7 +570,7 @@ int main(void)
   if (sock < 0)
     bprintf(fatal, "Unable to bind port.");
 
-  /* Figure out our MCE number and check for fake mode */
+  /* Figure out our MCE number */
   get_nmce();
 
   /* create the threads */

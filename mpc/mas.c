@@ -175,9 +175,7 @@ static int mce_check_cards(void)
   return ret;
 }
 
-/* read a value from the mce_stat array */
-static int mce_param(const char *card, const char *param, int offset,
-    uint32_t *data, int count)
+static int param_index(const char *card, const char *param)
 {
   int first = 0, last = 0, i;
 
@@ -200,20 +198,46 @@ static int mce_param(const char *card, const char *param, int offset,
   /* parameter offset */
   for (i = first; i <= last; i++) {
     if (strcmp(param, mstat_phys[i].p) == 0) {
-      if (count + offset > mstat_phys[i].nw) {
-        bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", offset,
-            count, card, param);
-      }
-
-      memcpy(data, mce_stat + mstat_phys[i].cd + offset,
-          sizeof(uint32_t) * count);
-      return 0;
+      return i;
     }
   }
 
   /* Be unforgiving */
   bprintf(fatal, "Parameter look-up error: %s/%s\n", card, param);
-  return 1;
+  return -1; /* can't get here */
+}
+
+/* update and return data in the mce_stat array */
+static void update_param(const char *card, const char *param, uint32_t *data,
+    int count)
+{
+  int i = param_index(card, param);
+
+  if (count > mstat_phys[i].nw)
+    bprintf(fatal, "Request for too much data: %i from %s/%s\n", count, card,
+        param);
+
+  /* fetch data */
+  if (mas_read_block(card, param, data, count) == 0)
+    /* update the array */
+    memcpy(mce_stat + mstat_phys[i].cd, data, sizeof(uint32_t) * count);
+  else 
+    /* read error: just return old data */
+    memcpy(data, mce_stat + mstat_phys[i].cd, sizeof(uint32_t) * count);
+}
+
+/* read a value from the mce_stat array */
+static void mce_param(const char *card, const char *param, int offset,
+    uint32_t *data, int count)
+{
+  int i = param_index(card, param);
+
+  if (count + offset > mstat_phys[i].nw)
+    bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", offset,
+        count, card, param);
+
+  memcpy(data, mce_stat + mstat_phys[i].cd + offset,
+      sizeof(uint32_t) * count);
 }
 
 static long acq_time; /* for filenames */
@@ -582,6 +606,12 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         bprintf(info, "doon");
         break;
+    }
+
+    /* temperature poll */
+    if (mas_get_temp) {
+      update_param("cc", "box_temp", (uint32_t*)&box_temp, 1);
+      mas_get_temp = 0;
     }
 
     /* check for acq termination */

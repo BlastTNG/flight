@@ -19,6 +19,8 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdint.h>
+
 /* The size (in 32-bit words) of the MCE frame header */
 #define MCE_HEADER_SIZE 43
 
@@ -37,3 +39,17 @@
 #define MCE_FSB_NUM_COL 0x000F000 /* number of columns per RC */
 #define MCE_FSB_DT_ERR  0x0010000 /* data timing error */
 /* bits 21-31 are reserved */
+
+#pragma pack(1)
+struct mas_header {
+  uint32_t status, cc_frameno, row_len, num_rows_rep, data_rate, arz_count,
+           header_vers, ramp_val;
+  uint16_t ramp_card, ramp_param;
+  uint32_t num_rows, syncno, runid, user_word, errno;
+  uint32_t fpga_temp[9], errno2;
+  uint32_t card_temp[9], errno3;
+  uint32_t reserved[7], errno4;
+   int32_t box_temp;
+};
+#pragma pack()
+

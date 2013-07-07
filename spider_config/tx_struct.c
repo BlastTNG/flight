@@ -1004,12 +1004,12 @@ struct ChannelStruct SlowChannels[] = {
   {"t_mcc5",      'w', LOOP12,  4, 0.01,  0.0, 'u', U_NONE},
   {"t_mcc6",      'w', LOOP12,  5, 0.01,  0.0, 'u', U_NONE},
 
-  {"t_mce1",      'w', LOOP12,  6, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce2",      'w', LOOP12,  7, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce3",      'w', LOOP12,  8, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce4",      'w', LOOP12,  9, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce5",      'w', LOOP12, 10, 1.0,   0.0, 'u', U_NONE},
-  {"t_mce6",      'w', LOOP12, 11, 1.0,   0.0, 'u', U_NONE},
+  {"t_mce1",      'w', LOOP12,  6, 0.5,   0.0, 'u', U_NONE},
+  {"t_mce2",      'w', LOOP12,  7, 0.5,   0.0, 'u', U_NONE},
+  {"t_mce3",      'w', LOOP12,  8, 0.5,   0.0, 'u', U_NONE},
+  {"t_mce4",      'w', LOOP12,  9, 0.5,   0.0, 'u', U_NONE},
+  {"t_mce5",      'w', LOOP12, 10, 0.5,   0.0, 'u', U_NONE},
+  {"t_mce6",      'w', LOOP12, 11, 0.5,   0.0, 'u', U_NONE},
     
 // add/change the slow data struct in mceserv.h
   END_OF_CHANNELS

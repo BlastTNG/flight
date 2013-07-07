@@ -27,21 +27,11 @@
 
 #define FB_SIZE 40 /* number of frames in the frame buffer */
 
-#pragma pack(1)
-struct mas_header {
-  uint32_t status, cc_frameno, row_len, num_rows_rep, data_rate, arz_count,
-           header_vers, ramp_val;
-  uint16_t ramp_card, ramp_param;
-  uint32_t num_rows, syncno, runid, user_word;
-  /* more stuff */
-};
-#pragma pack()
-
 /* MPC globals */
 extern int nmce;
+extern int mas_get_temp;
 extern int sock;
 extern int in_turnaround;
-extern int fake;
 extern int init;
 extern int cur_dm, req_dm;
 extern int power_cycle_mce;
@@ -61,6 +51,7 @@ extern int pcm_strobe;
 extern uint32_t pcm_frameno;
 extern int pcm_ret_dat;
 extern uint32_t mce_stat[N_MCE_STAT];
+extern int32_t box_temp;
 
 extern size_t frame_size;
 extern int pb_last;
