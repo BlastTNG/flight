@@ -658,10 +658,12 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case hwp_on:
       CommandData.ifpower.hwp.rst_count = 0;
       CommandData.ifpower.hwp.set_count = LATCH_PULSE_LEN;
+      CommandData.hwp.force_repoll = 1;
       break;
     case hwp_cycle:
       CommandData.ifpower.hwp.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.ifpower.hwp.rst_count = LATCH_PULSE_LEN;
+      CommandData.hwp.force_repoll = 1;
       break;
     case hk_preamp_off:
       CommandData.ifpower.hk_preamp_off = -1;
@@ -722,7 +724,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hwp.mode = hwp_m_panic;
       break;
     case hwp_repoll:
-      //TODO integrate repoll into hwp on/cycle commands, when implemented
       CommandData.hwp.force_repoll = 1;
       break;
     case hwp_step:
@@ -1453,7 +1454,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case hk_bias_freq:
-      //TODO consider scaling phases as fixed time delay, when freq changes
       CommandData.hk_bias_freq = ivalues[0];
       break;
 
@@ -2360,9 +2360,7 @@ void InitCommandData()
   CommandData.lat = -77.86;  //McMurdo Building 096
   CommandData.lon = -167.04; //Willy Field Dec 2010
 
-  //TODO make PCI card respect internal frame rate
-  //TODO add commands to set frame rate
-  //TODO add ability to auto-set internal rate based on sync rate
+  //TODO change default internal rate to "match" external?
   CommandData.bbcIntFrameRate = 104;    //in ADC samples
   CommandData.bbcExtFrameRate = 1;    //in sync box frames
   CommandData.bbcExtFrameMeas = 0;

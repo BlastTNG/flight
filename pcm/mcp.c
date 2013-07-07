@@ -684,7 +684,7 @@ void setup_bbc()
   
   if (ioctl(bbc_fp, BBCPCI_IOC_OFF_IRQ) < 0) setup_test = -1;
   if (ioctl(bbc_fp, BBCPCI_IOC_SYNC) < 0) setup_test = -1;
-  usleep(100000);  //TODO: needed after sync? shorter?
+  usleep(100000);
 
   //external rates in units of DV pulse rate (200Hz on test box)
   if (ioctl(bbc_fp, BBCPCI_IOC_IRQ_RATE_EXT, 1) < 0) setup_test = -1;
@@ -1339,7 +1339,6 @@ int main(int argc, char *argv[])
         RxFrameMultiplexIndex = RxFrame[3];
 
         /* Save current fastsamp */
-        /* NB: internal frame numbers from PCI don't work. TODO: fix! */
         BBFrameIndex = (RxFrame[1] + RxFrame[2] * 0x10000);
 
         UpdateBBCFrame();
