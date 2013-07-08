@@ -34,12 +34,13 @@ struct mpc_slow_data {
 
   uint16_t df[4]; /* data disk free in units of 2**24 bytes (16 MB) */
   uint16_t data_mode; /* MCE data mode */
-  uint16_t state;
-  uint16_t goal;
-  uint16_t task;
-  uint16_t dtask;
-  uint16_t t_mcc;
-  uint16_t t_mce;  
+  uint16_t state; /* running state */
+  uint16_t goal; /* operating goal */
+  uint16_t task; /* current high-level task */
+  uint16_t dtask; /* data tasklet */
+  uint16_t t_mcc; /* mcc temp */
+  uint16_t t_mce; /* MCE box temp */
+  uint16_t drive_map; /* current drive map */
 };
 
 extern int16_t mpc_proto_rev;
