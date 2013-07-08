@@ -46,6 +46,7 @@ extern int data_drive[3];
 extern char array_id[100];
 extern uint16_t bset_num;
 extern struct mpc_slow_data slow_dat;
+extern int slow_veto;
 extern int ntes;
 extern int acq_init;
 extern int sync_dv;

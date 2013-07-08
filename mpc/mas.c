@@ -587,7 +587,9 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_dsprs:
+        slow_veto++; /* watchdog */
         ret = mcecmd_interface_reset(mas);
+        slow_veto--;
         if (ret) {
           bprintf(err, "Error resetting DSP: error #%i", ret);
           dt_error = 1;
@@ -596,7 +598,9 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_mcers:
+        slow_veto++; /* watchdog */
         ret = mcecmd_hardware_reset(mas);
+        slow_veto--;
         if (ret) {
           bprintf(err, "Error resetting MCE: error #%i", ret);
           dt_error = 1;

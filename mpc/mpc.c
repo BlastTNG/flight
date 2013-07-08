@@ -78,6 +78,10 @@ int mas_get_temp = 0;
 /* PCM/MPC divisor */
 int divisor = 2;
 
+/* slow veto -- if vetoed, eventually PCM will reboot the MCC; ergo, we use this
+ * as a watchdog */
+int slow_veto = 0;
+
 /* The slow data struct */
 struct mpc_slow_data slow_dat;
 
@@ -442,7 +446,7 @@ static void pushback(void)
       }
     }
 
-    bprintf(info, "PB: %i > %i", frameno[0], frameno[PB_SIZE - 1]);
+//    bprintf(info, "PB: %i > %i", frameno[0], frameno[PB_SIZE - 1]);
 
     /* pushback */
     ForwardData(frameno);
@@ -624,7 +628,8 @@ int main(void)
     } else if (!power_cycle_cmp) {
       /* finished the init; slow data */
       if (slow_timer <= 0) {
-        send_slow_data(data, 1);
+        if (!slow_veto)
+          send_slow_data(data, 1);
         slow_timer = SLOW_TIMEOUT;
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
