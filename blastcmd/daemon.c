@@ -348,24 +348,24 @@ void SendCommandList(int sock)
   for (i = 0; i < N_MCOMMANDS; ++i) {
     for (j = 0; j < mcommands[i].numparams; ++j)
       if (mcommands[i].params[j].nt) {
-      u16 = i * 256 + j;
-      if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
-        return;
+        u16 = i * 256 + j;
+        if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
+          return;
 
-      /* count */
-      for (u16 = 0; mcommands[i].params[j].nt[u16]; ++u16)
-        ;
-      if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
-        return;
+        /* count */
+        for (u16 = 0; mcommands[i].params[j].nt[u16]; ++u16)
+          ;
+        if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
+          return;
 
-      output[0] = 0;
-      for (k = 0; mcommands[i].params[j].nt[k]; ++k) {
-        strncat(output, mcommands[i].params[j].nt[k], 79);
-        strcat(output, "\n");
-      }
-      if (send(sock, output, strlen(output), MSG_NOSIGNAL) < 1)
-        return;
-    } 
+        output[0] = 0;
+        for (k = 0; mcommands[i].params[j].nt[k]; ++k) {
+          strncat(output, mcommands[i].params[j].nt[k], 79);
+          strcat(output, "\n");
+        }
+        if (send(sock, output, strlen(output), MSG_NOSIGNAL) < 1)
+          return;
+      } 
   }
   u16 = 0xFFFF;
   if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)

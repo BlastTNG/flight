@@ -1165,30 +1165,30 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(start_acq), "Start data acquisition", GR_MCE | MCECMD, 1,
     {
-      {"MCE#", 0, 6, 'i', "NONE", mcenames}
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}
     }
   },
   {COMMAND(reset_acq), "Reset data acquisition", GR_MCE | MCECMD, 1,
     {
-      {"MCE#", 0, 6, 'i', "NONE", mcenames}
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}
     }
   },
   {COMMAND(stop_acq), "Stop data acquisition", GR_MCE | MCECMD | CONFIRM, 1,
     {
-      {"MCE#", 0, 6, 'i', "NONE", mcenames}
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}
     }
   },
 
   {COMMAND(data_mode), "Set the MCE data mode", GR_MCE | MCECMD, 2,
     {
-      {"MCE#", 0, 6, 'i', "NONE", mcenames},
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}},
       {"Data Mode", 0, 12, 'i', "NONE"},
     }
   },
 
   {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_MCE | MCECMD, 1,
     {
-      {"MCE#", 0, 6, 'i', "NONE", mcenames},
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}},
     }
   },
 
