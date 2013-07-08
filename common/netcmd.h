@@ -54,7 +54,10 @@ struct par {
   double max;
   char type;
   char field[20];
-  const char **nt; /* name look-up for integer parameters; NULL teriminated */
+  union {
+    const char **nt; /* name look-up for integer parameters; NULL teriminated */
+    unsigned long long strut; /* for 32-/64-bit compatiblity */
+  };
 };
 
 struct mcom {
