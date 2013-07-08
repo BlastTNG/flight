@@ -79,7 +79,11 @@ int mas_get_temp = 0;
 int divisor = 2;
 
 /* The slow data struct */
-static struct mpc_slow_data slow_dat;
+struct mpc_slow_data slow_dat;
+
+/* drive map */
+uint8_t drive_map = DRIVE0_UNMAP | DRIVE1_UNMAP | DRIVE2_UNMAP;
+int data_drive[3] = {-1, -1, -1};
 
 /* the list of bolometers to send to PCM */
 uint16_t bset_num = 0xFFFF;
@@ -94,6 +98,9 @@ static uint16_t pcm_data[NUM_COL * NUM_ROW * PB_SIZE];
 
 /* the turnaround flag */
 int in_turnaround = 0;
+
+/* array_id */
+char array_id[100] = {'x', 0, 0};
 
 /* time to ask PCM to power cycle the MCE or MCC */
 int power_cycle_mce = 0;
@@ -243,12 +250,12 @@ static int check_disk(int n)
     slow_dat.df[n] = (uint16_t)(((unsigned long long)buf.f_bfree * buf.f_bsize)
         >> 24);
     if (disk_bad[n]) {
-      bprintf(info, "/data%i now reporting", n);
+      bprintf(info, "/data%i now available", n);
       disk_bad[n] = 0;
     }
     check_timeout[n] = 0;
   } else {
-    slow_dat.df[n] = -1;
+    slow_dat.df[n] = 0;
     if (!disk_bad[n]) {
       bprintf(warning, "/data%i has failed", n);
       disk_bad[n] = 1;
@@ -260,7 +267,7 @@ static int check_disk(int n)
 }
 
 /* send slow data to PCM */
-static void send_slow_data(char *data)
+static void send_slow_data(char *data, int send)
 {
   struct timeval tv;
   size_t len;
@@ -281,7 +288,7 @@ static void send_slow_data(char *data)
   gettimeofday(&tv, NULL);
   slow_dat.time = (tv.tv_sec - MPC_EPOCH) * 100 + tv.tv_usec / 10000;
 
-  /* temperature */
+  /* mcc temperature */
   if ((stream = fopen("/sys/devices/platform/coretemp.0/temp2_input", "r"))) {
     if (fscanf(stream, "%i\n", &datum) == 1)
       slow_dat.t_mcc = datum / 10;
@@ -299,9 +306,14 @@ static void send_slow_data(char *data)
   slow_dat.task = (stop_tk == st_idle) ? start_tk : (0x8000 | stop_tk);
   slow_dat.dtask = data_tk;
 
+  /* drive map */
+  slow_dat.drive_map = drive_map;
+
   /* make packet and send */
-  len = mpc_compose_slow(&slow_dat, nmce, data);
-  udp_bcast(sock, MCESERV_PORT, len, data, 0);
+  if (send) {
+    len = mpc_compose_slow(&slow_dat, nmce, data);
+    udp_bcast(sock, MCESERV_PORT, len, data, 0);
+  }
 }
 
 static int nmce_from_ip(void)
@@ -334,44 +346,6 @@ static int nmce_from_ip(void)
   }
 
   return (addr >> 24) - 80;
-}
-
-/* Figure out which MCE we're attached to */
-static void get_nmce(void)
-{
-  int n;
-  char array_id[1024] = {'x', 0, 0};
-
-  /* get the MCE number from the IP address. */
-  nmce = nmce_from_ip();
-
-  const char *file = MAS_DATA_ROOT "/array_id";
-  FILE *stream = fopen(file, "w");
-
-  if (stream == NULL) {
-    berror(err, "Unable to open array ID file: %s", file);
-    goto BAD_ARRAY_ID;
-  }
-
-  if (nmce == -1) {
-    bputs(warning, "Using 'default' configuration and running as MCE0");
-    nmce = 0;
-    strcpy(array_id, "default");
-  } else 
-    array_id[1] = '0' + nmce;
-
-  n = fprintf(stream, "%s\n", array_id);
-
-  if (n < 0) {
-    berror(err, "Can't write array id!");
-BAD_ARRAY_ID:
-    if (nmce == -1)
-      nmce = 0;
-    bprintf(fatal, "Unable to find MCE.");
-  }
-  fclose(stream);
-
-  bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
 }
 
 /* Send a TES data packet */
@@ -467,6 +441,8 @@ static void pushback(void)
         }
       }
     }
+
+    bprintf(info, "PB: %i > %i", frameno[0], frameno[PB_SIZE - 1]);
 
     /* pushback */
     ForwardData(frameno);
@@ -571,7 +547,20 @@ int main(void)
     bprintf(fatal, "Unable to bind port.");
 
   /* Figure out our MCE number */
-  get_nmce();
+  nmce = nmce_from_ip();
+
+  /* compose array id */
+  if (nmce == -1) {
+    bputs(warning, "Using 'default' configuration and running as MCE0");
+    nmce = 0;
+    strcpy(array_id, "default");
+  } else 
+    array_id[1] = '0' + nmce;
+
+  bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
+
+  /* init slow data */
+  send_slow_data(data, 0);
 
   /* create the threads */
   pthread_create(&data_thread, NULL, mas_data, NULL);
@@ -635,7 +624,7 @@ int main(void)
     } else if (!power_cycle_cmp) {
       /* finished the init; slow data */
       if (slow_timer <= 0) {
-        send_slow_data(data);
+        send_slow_data(data, 1);
         slow_timer = SLOW_TIMEOUT;
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
@@ -644,7 +633,7 @@ int main(void)
         ForwardMCEStat();
 
       /* send data */
-      if ((fb_top - pb_last + FB_SIZE) % FB_SIZE > PB_SIZE)
+      while ((fb_top - pb_last + FB_SIZE) % FB_SIZE > PB_SIZE)
         pushback();
 
       /* PCM requests */

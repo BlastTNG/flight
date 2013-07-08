@@ -58,7 +58,6 @@ $(warning *********************************************)
 $(error Cannot continue)
 else
 MAS_SCRIPT=$(shell ${MAS_VAR} --script-dir)
-MAS_DATA_ROOT=$(shell ${MAS_VAR} --data-root)
 MAS_VERSION=$(shell ${MAS_VAR} --version)
 
 MAS_LIBS=$(shell ${MAS_VAR} --libs) -Wl,-rpath \

@@ -21,11 +21,12 @@
 
 #include "blast.h"
 #include "tes.h"
+#include "mpc_proto.h"
 #include "mce_counts.h"
 #include <stdlib.h>
 #include <stdint.h>
 
-#define FB_SIZE 40 /* number of frames in the frame buffer */
+#define FB_SIZE 5000 /* number of frames in the frame buffer */
 
 /* MPC globals */
 extern int nmce;
@@ -41,7 +42,10 @@ extern int send_mcestat;
 extern int divisor;
 extern int veto;
 extern int leech_veto;
+extern int data_drive[3];
+extern char array_id[100];
 extern uint16_t bset_num;
+extern struct mpc_slow_data slow_dat;
 extern int ntes;
 extern int acq_init;
 extern int sync_dv;
@@ -52,6 +56,7 @@ extern uint32_t pcm_frameno;
 extern int pcm_ret_dat;
 extern uint32_t mce_stat[N_MCE_STAT];
 extern int32_t box_temp;
+extern uint8_t drive_map;
 
 extern size_t frame_size;
 extern int pb_last;
@@ -68,7 +73,7 @@ extern struct data_mode_def {
   enum { first, mean, sum } coadd_how;
 } data_modes[N_DATA_MODES][2];
 
-/* mpc statūs -- try to keep these in start order */
+/* mpc statūs -- try to keep these in start-up order */
 enum status {
   st_idle   = 0x0000, /* Not a status bit, just a "task" */
 
@@ -87,6 +92,27 @@ extern unsigned int state;
 /* operating modes -- op_acq must be the last mode */
 enum modes { op_init = 0, op_ready, op_tune, op_acq };
 #define MODE_STRINGS "init", "ready", "tune", "acq"
+
+/* drive mapping */
+#define DRIVE0_DATA0 0x0000
+#define DRIVE0_DATA1 0x0001
+#define DRIVE0_DATA2 0x0002
+#define DRIVE0_DATA3 0x0003
+#define DRIVE0_UNMAP 0x0004
+#define DRIVE0_MASK  0x0007
+
+#define DRIVE1_DATA0 0x0000
+#define DRIVE1_DATA1 0x0008
+#define DRIVE1_DATA2 0x0010
+#define DRIVE1_DATA3 0x0018
+#define DRIVE1_UNMAP 0x0020
+#define DRIVE1_MASK  0x0038
+
+/* can only be SSD */
+#define DRIVE2_DATA0 0x0000
+#define DRIVE2_DATA1 0x0040
+#define DRIVE2_UNMAP 0x0080
+#define DRIVE2_MASK  0x00C0
 
 /* high-level tasks */
 extern enum status start_tk;

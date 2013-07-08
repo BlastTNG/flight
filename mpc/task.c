@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
  */
 #include "mpc.h"
 #include "mputs.h"
@@ -29,7 +28,6 @@ int dt_error = 0;
 int comms_lost = 0;
 int leech_veto = 0;
 static int cl_count = 0;
-
 
 /* request a data tasklet and wait for it's completion.  returns dt_error */
 static int dt_wait(enum dtask dt)
@@ -48,6 +46,107 @@ static int dt_wait(enum dtask dt)
 
 /* wait times after power cycle request (in seconds) */
 static const int power_wait[] = { 10, 10, 20, 40, 60, 0 };
+
+/* determine drive priorities */
+static unsigned task_set_drives(void)
+{
+  uint8_t map = 0;
+  unsigned mapped = st_drive0 | st_drive1 | st_drive2;
+  int new_data_drive[3];
+
+  int best_spinner, second_spinner, the_solid;
+
+  /* rate the drives */
+  if (slow_dat.df[2] > slow_dat.df[3]) {
+    best_spinner = 2;
+    second_spinner = (slow_dat.df[3] > 0) ? 3 : -1;
+  } else if (slow_dat.df[3] > 0) {
+    best_spinner = 3;
+    second_spinner = (slow_dat.df[2] > 0) ? 2 : -1;
+  } else
+    best_spinner = second_spinner = -1;
+
+  if (slow_dat.df[0] > slow_dat.df[1])
+    the_solid = 0;
+  else if (slow_dat.df[1] > 0)
+    the_solid = 1;
+  else
+    the_solid = -1;
+
+  /* choose drive0 */
+  if (best_spinner == 3) {
+    map = DRIVE0_DATA3;
+    new_data_drive[0] = 3;
+  } else if (best_spinner == 2) {
+    map = DRIVE0_DATA2;
+    new_data_drive[0] = 2;
+  } else if (the_solid == 1) {
+    map = DRIVE0_DATA1;
+    the_solid = -1;
+    new_data_drive[0] = 1;
+  } else if (the_solid == 0) {
+    map = DRIVE0_DATA0;
+    the_solid = -1;
+    new_data_drive[0] = 0;
+  } else {
+    drive_map = (DRIVE0_UNMAP | DRIVE1_UNMAP | DRIVE2_UNMAP);
+    bprintf(err, "No mappable drives!");
+    return 0;
+  }
+
+  /* choose drive1 */
+  if (second_spinner == 3) {
+    map |= DRIVE1_DATA3;
+    new_data_drive[1] = 3;
+  } else if (second_spinner == 2) {
+    map |= DRIVE1_DATA2;
+    new_data_drive[1] = 2;
+  } else if (the_solid == 1) {
+    map |= DRIVE1_DATA1;
+    new_data_drive[1] = 1;
+    the_solid = -1;
+  } else if (the_solid == 0) {
+    map |= DRIVE1_DATA0;
+    new_data_drive[1] = 0;
+    the_solid = -1;
+  } else {
+    new_data_drive[1] = -1;
+    map |= DRIVE1_UNMAP;
+    mapped &= ~st_drive1;
+  }
+
+  /* choose drive2 */
+  if (the_solid == 1) {
+    new_data_drive[2] = 1;
+    map |= DRIVE2_DATA1;
+  } else if (the_solid == 0) {
+    new_data_drive[2] = 0;
+    map |= DRIVE2_DATA0;
+  } else {
+    new_data_drive[2] = -1;
+    map |= DRIVE2_UNMAP;
+    mapped &= ~st_drive2;
+  }
+
+  /* print mapping */
+  bprintf(info, "  primary drive: /data%i", new_data_drive[0]);
+  if (new_data_drive[1] == -1)
+    bprintf(info, "secondary drive: unmapped");
+  else
+    bprintf(info, "secondary drive: /data%i", new_data_drive[1]);
+
+  if (new_data_drive[2] == -1)
+    bprintf(info, " tertiary drive: unmapped");
+  else
+    bprintf(info, " tertiary drive: /data%i", new_data_drive[2]);
+
+  /* record */
+  data_drive[0] = new_data_drive[0];
+  data_drive[1] = new_data_drive[1];
+  data_drive[2] = new_data_drive[2];
+  drive_map = map;
+  return mapped;
+}
 
 /* do a fake stop and empty the data buffer */
 static int task_stop_acq()
@@ -97,6 +196,7 @@ void *task(void *dummy)
 {
   int repc = 0;
   int check_acq = 0;
+  unsigned n;
   nameThread("Task");
 
   /* wait for a task */
@@ -140,11 +240,24 @@ void *task(void *dummy)
         case st_idle:
           break;
         case st_drive0:
-          /* set directory */
-          dt_wait(dt_setdir);
+        case st_drive1:
+        case st_drive2:
+          /* choose drives */
+          n = task_set_drives();
 
-          /* do nothing for now */
-          state |= st_drive0;
+          /* no useable drives -- probably means some one should power cycle
+           * a hard drive can, but we'll just power cycle oursevles */
+          if (n == 0) {
+            power_cycle_cmp = 1;
+            sleep(60);
+          }
+          state |= n;
+
+          /* set directory */
+          if (n & st_drive0)
+            dt_wait(dt_setdir);
+
+          /* done */
           start_tk = st_idle;
           break;
         case st_mcecom:

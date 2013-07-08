@@ -140,9 +140,10 @@ static void get_acq_metadata(void)
       /* Might as well try fixing it. */
       mas_write_block("rc2", "data_mode", buffer, 1);
     }
-    if (cur_dm != buffer[0])
+    if (cur_dm != buffer[0]) {
       bprintf(info, "Data mode: %i", buffer[0]);
-    cur_dm = buffer[0];
+      cur_dm = buffer[0];
+    }
   }
 }
 
@@ -350,7 +351,8 @@ static int mce_status(void)
   send_mcestat = 1;
 
   /* now create the files */
-  sprintf(filename, "/data0/mce/current_data/mpc_%li.run", acq_time);
+  sprintf(filename, "/data%c/mce/current_data/mpc_%li.run", data_drive[0] + '0',
+      acq_time);
   stream = fopen(filename, "w");
   if (stream == NULL)
     berror(err, "Unable to create runfile %s", filename);
@@ -361,7 +363,7 @@ static int mce_status(void)
   }
 
   if (state & st_drive1) {
-    filename[5] = '1';
+    filename[5] = data_drive[1] + '0';
     stream = fopen(filename, "w");
     if (stream == NULL)
       berror(err, "Unable to create runfile %s", filename);
@@ -373,7 +375,7 @@ static int mce_status(void)
   }
 
   if (state & st_drive2) {
-    filename[5] = '2';
+    filename[5] = data_drive[2] + '0';
     stream = fopen(filename, "w");
     if (stream == NULL)
       berror(err, "Unable to create runfile %s", filename);
@@ -434,7 +436,8 @@ static int acq_conf(void)
   /* now create a flatfile sequencer for each configured drive */
 
   /* drive0 */
-  sprintf(filename, "/data0/mce/current_data/mpc_%li", acq_time);
+  sprintf(filename, "/data%c/mce/current_data/mpc_%li", data_drive[0] + '0',
+      acq_time);
   st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
       "/data/mas/mpc.lnk");
   if (st == NULL) {
@@ -447,7 +450,7 @@ static int acq_conf(void)
   }
 
   if (state & st_drive1) {
-    filename[5] = '1';
+    filename[5] = data_drive[1] + '0';
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
         NULL);
     if (st == NULL) {
@@ -461,7 +464,7 @@ static int acq_conf(void)
   }
 
   if (state & st_drive2) {
-    filename[5] = '2';
+    filename[5] = data_drive[2] + '0';
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
         NULL);
     if (st == NULL) {
@@ -489,6 +492,64 @@ static int acq_conf(void)
 ACQ_CONFIG_ERR:
   mcedata_acq_destroy(acq);
   return 1;
+}
+
+static char *data_root(int n)
+{
+  static char data_root[] = "/data#/mce";
+  data_root[5] = data_drive[n] + '0';
+  return data_root;
+}
+
+static int write_array_id(int d)
+{
+  int n;
+
+  char file[1024];
+  sprintf(file, "/data%c/mce/array_id", data_drive[d] + '0');
+  FILE *stream = fopen(file, "w");
+
+  if (stream == NULL) {
+    berror(err, "Unable to open array ID file: %s", file);
+    goto BAD_ARRAY_ID;
+  }
+
+  n = fprintf(stream, "%s\n", array_id);
+
+  if (n < 0) {
+    berror(err, "Can't write array id!");
+BAD_ARRAY_ID:
+    fclose(stream);
+    if (nmce == -1)
+      nmce = 0;
+    return 1;
+  }
+  fclose(stream);
+  return 0;
+}
+
+static int set_directory(void)
+{
+  char *argv[] = {"set_directory", data_root(0), NULL};
+  write_array_id(0);
+  if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
+    return 1;
+
+  if (state & st_drive1) {
+    write_array_id(1);
+    argv[1] = data_root(1);
+    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
+      return 1;
+  }
+
+  if (state & st_drive2) {
+    write_array_id(2);
+    argv[2] = data_root(2);
+    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
+      return 1;
+  }
+
+  return 0;
 }
 
 void *mas_data(void *dummy)
@@ -522,12 +583,7 @@ void *mas_data(void *dummy)
       case dt_idle:
         break;
       case dt_setdir:
-        if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", NULL, 20,
-              0))
-        {
-          dt_error = 1;
-        } else
-          dt_error = 0;
+        dt_error = set_directory();
         data_tk = dt_idle;
         break;
       case dt_dsprs:
@@ -604,7 +660,6 @@ void *mas_data(void *dummy)
         acq = NULL;
         dt_error = 0;
         data_tk = dt_idle;
-        bprintf(info, "doon");
         break;
     }
 
