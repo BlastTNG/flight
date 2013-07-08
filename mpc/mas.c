@@ -45,6 +45,9 @@ static unsigned cmd_err = 0;
 /* a big old array of block data */
 uint32_t mce_stat[N_MCE_STAT];
 
+/* check drives when acq finishes */
+int acq_check_drives = 0;
+
 const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
 
 /* mas */
@@ -350,19 +353,22 @@ static int mce_status(void)
   /* trigger send to PCM */
   send_mcestat = 1;
 
-  /* now create the files */
   sprintf(filename, "/data%c/mce/current_data/mpc_%li.run", data_drive[0] + '0',
       acq_time);
-  stream = fopen(filename, "w");
-  if (stream == NULL)
-    berror(err, "Unable to create runfile %s", filename);
-  else {
-    bprintf(info, "Writing runfile: %s\n", filename);
-    dump_runfile(stream);
-    fclose(stream);
+
+  /* now create the files */
+  if ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP) {
+    stream = fopen(filename, "w");
+    if (stream == NULL)
+      berror(err, "Unable to create runfile %s", filename);
+    else {
+      bprintf(info, "Writing runfile: %s\n", filename);
+      dump_runfile(stream);
+      fclose(stream);
+    }
   }
 
-  if (state & st_drive1) {
+  if ((drive_map & DRIVE1_MASK) != DRIVE1_UNMAP) {
     filename[5] = data_drive[1] + '0';
     stream = fopen(filename, "w");
     if (stream == NULL)
@@ -374,7 +380,7 @@ static int mce_status(void)
     }
   }
 
-  if (state & st_drive2) {
+  if ((drive_map & DRIVE2_MASK) != DRIVE2_UNMAP) {
     filename[5] = data_drive[2] + '0';
     stream = fopen(filename, "w");
     if (stream == NULL)
@@ -390,7 +396,38 @@ MCE_STATUS_ERR:
   return 0;
 }
 
-#define ACQ_INTERVAL 50000 /* number of frames in a chunk */
+/* multisync error callback */
+static int acq_err(void *user_data, int sync_num, int err,
+    mcedata_stage_t stage)
+{
+  switch (sync_num) {
+    case 0:
+      /* the rambuff -- ignore */
+      return 0;
+    case 1: /* primary */
+      bprintf(info, "primary drive failed; stopping acq");
+      drive_map = (drive_map & ~DRIVE0_MASK) | DRIVE0_UNMAP;
+      acq_check_drives = 1;
+      break;
+    case 2: /* secondary */
+      bprintf(info, "secondary drive failed; stopping acq");
+      drive_map = (drive_map & ~DRIVE1_MASK) | DRIVE1_UNMAP;
+      acq_check_drives = 1;
+      break;
+    case 3: /* teritary */
+      bprintf(info, "tertiary drive failed; stopping acq");
+      drive_map = (drive_map & ~DRIVE2_MASK) | DRIVE2_UNMAP;
+      acq_check_drives = 1;
+      break;
+  }
+  if (drive_map == (DRIVE0_UNMAP | DRIVE1_UNMAP | DRIVE2_UNMAP)) {
+    /* uh-oh */
+    state &= ~st_drives;
+  }
+  return 1; /* stop this one */
+}
+
+#define ACQ_INTERVAL 5000 /* number of frames in a chunk */
 static int acq_conf(void)
 {
   int r, i;
@@ -422,6 +459,9 @@ static int acq_conf(void)
     goto ACQ_CONFIG_ERR;
   }
 
+  /* register the error handler */
+  mcedata_multisync_errcallback(acq, acq_err, NULL);
+
   /* create the rambuff callback */
   st = mcedata_rambuff_create(frame_acq, 0);
   if (st == NULL) {
@@ -438,18 +478,21 @@ static int acq_conf(void)
   /* drive0 */
   sprintf(filename, "/data%c/mce/current_data/mpc_%li", data_drive[0] + '0',
       acq_time);
-  st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
-      "/data/mas/mpc.lnk");
-  if (st == NULL) {
-    bprintf(err, "Couldn't set up file sequencer for data0");
-    goto ACQ_CONFIG_ERR;
-  }
-  if (mcedata_multisync_add(acq, st)) {
-    bprintf(err, "Couldn't append file sequencer for data0");
-    goto ACQ_CONFIG_ERR;
+
+  if ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP) {
+    st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
+        "/data/mas/mpc.lnk");
+    if (st == NULL) {
+      bprintf(err, "Couldn't set up file sequencer for data0");
+      goto ACQ_CONFIG_ERR;
+    }
+    if (mcedata_multisync_add(acq, st)) {
+      bprintf(err, "Couldn't append file sequencer for data0");
+      goto ACQ_CONFIG_ERR;
+    }
   }
 
-  if (state & st_drive1) {
+  if ((drive_map & DRIVE1_MASK) != DRIVE1_UNMAP) {
     filename[5] = data_drive[1] + '0';
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
         NULL);
@@ -463,7 +506,7 @@ static int acq_conf(void)
     }
   }
 
-  if (state & st_drive2) {
+  if ((drive_map & DRIVE2_MASK) != DRIVE2_UNMAP) {
     filename[5] = data_drive[2] + '0';
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
         NULL);
@@ -531,18 +574,20 @@ BAD_ARRAY_ID:
 static int set_directory(void)
 {
   char *argv[] = {"set_directory", data_root(0), NULL};
-  write_array_id(0);
-  if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
-    return 1;
+  if ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP) {
+    write_array_id(0);
+    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
+      return 1;
+  }
 
-  if (state & st_drive1) {
+  if ((drive_map & DRIVE1_MASK) != DRIVE1_UNMAP) {
     write_array_id(1);
     argv[1] = data_root(1);
     if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
       return 1;
   }
 
-  if (state & st_drive2) {
+  if ((drive_map & DRIVE2_MASK) != DRIVE2_UNMAP) {
     write_array_id(2);
     argv[2] = data_root(2);
     if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
@@ -702,6 +747,10 @@ void *acquer(void* dummy)
         bprintf(info, "Acquisition stopped");
       acq_stopped = 1;
       acq_init = 0; /* just in case */
+      if (acq_check_drives) {
+        state &= ~st_drives;
+        acq_check_drives = 0;
+      }
     }
   }
 

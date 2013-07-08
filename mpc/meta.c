@@ -37,9 +37,9 @@ int working = 0;
 static const int mode_start[op_acq + 1] =
 {
   [op_init] = 0,
-  [op_ready] = st_drive0 | st_mcecom,
-  [op_tune] = st_drive0 | st_mcecom | st_config | st_tuning,
-  [op_acq] = st_drive0 | st_mcecom | st_config | st_acqcnf | st_retdat,
+  [op_ready] = st_drives | st_mcecom,
+  [op_tune] = st_drives | st_mcecom | st_config | st_tuning,
+  [op_acq] = st_drives | st_mcecom | st_config | st_acqcnf | st_retdat,
 };
 /* Modes that must be inactive to acheive a goal */
 static const int mode_stop[op_acq + 1] =
@@ -63,7 +63,7 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       return;
 
     switch (st) {
-      case st_drive0: /* probably shouldn't ever get here ... */
+      case st_drives: /* probably shouldn't ever get here ... */
         if (state & st_retdat)
           try_toggle(st_retdat, 1, do_start, do_stop);
         else if (state & st_tuning)
@@ -81,8 +81,6 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       case st_idle:
       case st_mcecom:
       case st_config:
-      case st_drive1:
-      case st_drive2:
       case st_retdat:
       case st_tuning:
         /* always okay */
@@ -95,7 +93,7 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       return;
 
     switch (st) {
-      case st_drive0:
+      case st_drives:
         /* acquisition must be stopped to intialise a primary */
         if (state & st_retdat)
           try_toggle(st_retdat, 1, do_start, do_stop);
@@ -103,15 +101,13 @@ void try_toggle(enum status st, int stop, enum status *do_start,
           *do_start = st;
         break;
       case st_idle:
-      case st_drive1:
-      case st_drive2:
       case st_mcecom:
         /* always okay */
         *do_start = st;
         break;
       case st_config:
-        if (~state & st_drive0) /* must have a drive */
-          try_toggle(st_drive0, 0, do_start, do_stop);
+        if (~state & st_drives) /* must have a drive */
+          try_toggle(st_drives, 0, do_start, do_stop);
         else if (~state & st_mcecom) /* MCE must be alive */
           try_toggle(st_mcecom, 0, do_start, do_stop);
         else

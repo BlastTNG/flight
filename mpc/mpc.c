@@ -477,6 +477,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case data_mode:
         if (check_cmd_mce(ev->ivalues[0]))
           req_dm = ev->ivalues[1];
+        break;
       case reset_acq:
         if (check_cmd_mce(ev->ivalues[0]))
           comms_lost = 1;

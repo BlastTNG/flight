@@ -51,7 +51,6 @@ static const int power_wait[] = { 10, 10, 20, 40, 60, 0 };
 static unsigned task_set_drives(void)
 {
   uint8_t map = 0;
-  unsigned mapped = st_drive0 | st_drive1 | st_drive2;
   int new_data_drive[3];
 
   int best_spinner, second_spinner, the_solid;
@@ -91,7 +90,7 @@ static unsigned task_set_drives(void)
   } else {
     drive_map = (DRIVE0_UNMAP | DRIVE1_UNMAP | DRIVE2_UNMAP);
     bprintf(err, "No mappable drives!");
-    return 0;
+    return 1;
   }
 
   /* choose drive1 */
@@ -112,7 +111,6 @@ static unsigned task_set_drives(void)
   } else {
     new_data_drive[1] = -1;
     map |= DRIVE1_UNMAP;
-    mapped &= ~st_drive1;
   }
 
   /* choose drive2 */
@@ -125,7 +123,6 @@ static unsigned task_set_drives(void)
   } else {
     new_data_drive[2] = -1;
     map |= DRIVE2_UNMAP;
-    mapped &= ~st_drive2;
   }
 
   /* print mapping */
@@ -145,7 +142,7 @@ static unsigned task_set_drives(void)
   data_drive[1] = new_data_drive[1];
   data_drive[2] = new_data_drive[2];
   drive_map = map;
-  return mapped;
+  return 0;
 }
 
 /* do a fake stop and empty the data buffer */
@@ -196,7 +193,6 @@ void *task(void *dummy)
 {
   int repc = 0;
   int check_acq = 0;
-  unsigned n;
   nameThread("Task");
 
   /* wait for a task */
@@ -239,23 +235,19 @@ void *task(void *dummy)
       switch (start_tk) {
         case st_idle:
           break;
-        case st_drive0:
-        case st_drive1:
-        case st_drive2:
+        case st_drives:
           /* choose drives */
-          n = task_set_drives();
-
-          /* no useable drives -- probably means some one should power cycle
-           * a hard drive can, but we'll just power cycle oursevles */
-          if (n == 0) {
+          if (task_set_drives()) {
+            /* no useable drives -- probably means some one should power cycle
+             * a hard drive can, but we'll just power cycle oursevles */
             power_cycle_cmp = 1;
             sleep(60);
-          }
-          state |= n;
+          } else {
+            state |= st_drives;
 
-          /* set directory */
-          if (n & st_drive0)
+            /* set directory */
             dt_wait(dt_setdir);
+          }
 
           /* done */
           start_tk = st_idle;
@@ -322,10 +314,13 @@ void *task(void *dummy)
           break;
         case st_acqcnf:
         case st_retdat:
+        case st_drives:
+        case st_mcecom:
           task_stop_acq();
           stop_tk = st_idle;
           break;
         case st_tuning:
+        case st_config:
           /* sledgehammer based stop acq */
           task_reset_mce();
           stop_tk = st_idle;

@@ -78,14 +78,12 @@ extern struct data_mode_def {
 enum status {
   st_idle   = 0x0000, /* Not a status bit, just a "task" */
 
-  st_drive0 = 0x0001, /* The primary drive is ready */
-  st_drive1 = 0x0002, /* The secondary drive is ready */
-  st_drive2 = 0x0004, /* The tertiary drive is ready */
-  st_mcecom = 0x0008, /* MCE is talking */ 
-  st_config = 0x0010, /* MCE is configured */
-  st_acqcnf = 0x0020, /* Acquisition is configured */
-  st_retdat = 0x0040, /* MCE is returning data */
-  st_tuning = 0x0080, /* auto_setup in progress */
+  st_drives = 0x0001, /* The drives are ready */
+  st_mcecom = 0x0002, /* MCE is talking */ 
+  st_config = 0x0004, /* MCE is configured */
+  st_acqcnf = 0x0008, /* Acquisition is configured */
+  st_retdat = 0x0010, /* MCE is returning data */
+  st_tuning = 0x0020, /* auto_setup in progress */
 };
 
 extern unsigned int state;
