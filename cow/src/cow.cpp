@@ -1662,11 +1662,8 @@ int main(int argc, char* argv[]) {
         }
       }
     }
-    fprintf(stderr, "start NetCmdGetCmdList\n");
     NetCmdGetCmdList();
-    fprintf(stderr, "start NetCmdGetGroupNames\n");
     NetCmdGetGroupNames();
-    fprintf(stderr, "end NetCmdGetGroupNames\n");
 
     defaults = new Defaults();
 
