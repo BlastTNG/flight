@@ -161,7 +161,9 @@ static void ForwardBSet(int sock)
 static int tes_push(int nrx, int *nrx_c)
 {
   int i;
+#if 0
   static int ndisc = 0;
+#endif
 
   /* update nrx */
   for (i = 0; i < NUM_MCE; ++i)
@@ -182,8 +184,10 @@ static int tes_push(int nrx, int *nrx_c)
 
   /* discard if full */
   if (tes_fifo_top < 0) {
+#if 0
     if ((++ndisc % 1000) == 0) 
       bprintf(warning, "%i frames discarded on push", ndisc);
+#endif
     tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
     return nrx;
   }
