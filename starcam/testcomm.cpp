@@ -85,7 +85,7 @@ void* sendLoop(void* arg)
   string sought = "\n";
 
 	/* create a socket */
-  sock = udp_bind_port(SC_PORT_BSC, 1);
+  sock = udp_bind_port(SC_PORT_GOOD, 1);
 
   if (sock == -1)
     cout << "Unable to bind to port" << endl;
@@ -102,7 +102,7 @@ void* sendLoop(void* arg)
       pos = cmd.find(sought, pos - sought.size());
     }
     cmd += "\n";
-    if (udp_bcast(sock, BSC_PORT, strlen(cmd.c_str()), cmd.c_str(), 0))
+    if (udp_bcast(sock, GOOD_PORT, strlen(cmd.c_str()), cmd.c_str(), 0))
       cout << "error broadcasting command" << endl;
 //    cout << "sent" << endl;
     SCcmd_flag = 0;

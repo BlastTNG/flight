@@ -19,7 +19,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>      //for gethostbyname
-#include <cstdlib>
 #include "mycam.h"
 #include "blobimage.h"
 #include "frameblob.h"
@@ -319,7 +318,7 @@ void* processingLoop(void* arg)
   static int imgcounter = 0;
 
   int sock;
-  sock = udp_bind_port(BSC_PORT_PLOOP,1);
+  sock = udp_bind_port(GBU_PORT,1);
   if (sock == -1)
     cout << "unable to bind to port" << endl;
   string rtn_str = "";
@@ -462,7 +461,7 @@ void* ReadLoop(void* arg)
 	string::size_type pos;
 
   /* create a socket */
-  sock = udp_bind_port(BSC_PORT, 1);
+  sock = udp_bind_port(GOOD_PORT, 1);
 
   if (sock == -1)
     cout << "Unable to bind to port" << endl;
