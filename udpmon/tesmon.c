@@ -93,7 +93,7 @@ int main(int argc, const char **argv)
       for (i = 0; i < nf; ++i) {
         int this_no = *(int32_t*)(data + 8 + i * sizeof(uint32_t));
         if (last_no != -1 && this_no - 1 != last_no)
-          printf("%i -> %i\n", this_no, last_no);
+          printf("%i -> %i\n", last_no, this_no);
         last_no = this_no;
         if ((this_no % 1000) == 0)
           printf("[%i]\n", this_no);
