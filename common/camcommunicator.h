@@ -12,6 +12,7 @@
 #define SC_PORT_GOOD 2676 
 #define SC_PORT_BAD 2677 
 #define SC_PORT_UGLY 2678 
+#define FOCUS_PORT 2679
 
 /**
 	@author Steve Benton <steve.benton@utoronto.ca>
