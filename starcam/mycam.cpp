@@ -24,6 +24,10 @@
 #include "focusstruct.h"
 #include "camcommunicator.h"
 
+extern "C" {
+#include "udp.h"
+}
+
 #define MYCAM_DEBUG 0
 #define MYCAM_TIMING 0
 #define AUTOFOCUS_DEBUG 1
@@ -124,7 +128,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 {
 	frameblob *blob = img->getFrameBlob();
 	StarcamReturn returnStruct;
-    	bloblist* focblobs;
+  bloblist* focblobs;
 	if (!forced)  //can actually measure focal range
 		if (m_cAdapter.findFocalRange() != LE_NO_ERROR) return m_cAdapter.getLastError();
 	int range = (forced)?3270:m_cAdapter.getFocalRange();
@@ -153,6 +157,13 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 	double yplus = 0;
 	double yminus = 0;
 	int maxflux = 0;
+
+  int sock;
+  sock = udp_bind_port(FOCUS_PORT,1);
+  if (sock == -1)
+    cout << "unable to bind to port" << endl;
+  string rtn_str = "";
+	string sought = "\n";
 
 	for (int i=0; i < numsteps; i++) {
 //#if AUTOFOCUS_DEBUG
@@ -201,7 +212,16 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 #endif
 		}
 		img->createReturnStruct(&returnStruct);
-    //TODO: bcast returnStruct just like in starcam
+    rtn_str = CamCommunicator::buildReturn(&returnStruct);
+    //remove all newlines and add a single one at the end
+	  string::size_type pos = rtn_str.find(sought, 0);
+	  while (pos != string::npos) {
+      rtn_str.replace(pos, sought.size(), "");
+      pos = rtn_str.find(sought, pos - sought.size());
+    }
+    rtn_str += "\n";
+    udp_bcast(sock, SC_PORT, strlen(rtn_str.c_str()), rtn_str.c_str(), 0);
+    cout << "AUTOFOCUS BROADCASTING string " << rtn_str << endl;
 
 		focuser[i].focpos = toInf;
 		//move to next location
@@ -211,6 +231,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		toInf += step + remaining;
 		if (i==(numsteps-1)) endpos = toInf;
 	}
+  close(sock);
 
 	while (m<(numsteps-1)) { //loop over all images
 		nblobhere = focuser[m].numblobs;
