@@ -1920,6 +1920,8 @@ void CheckCommandList(void)
 {
   int i, c;
 
+  bprintf(info, "Number of single commands: %i\n", N_SCOMMANDS);
+
   /* the scommand enum isn't the same length as the scommand array */
   if ((int)xyzzy != N_SCOMMANDS - 1)
     bprintf(fatal, "N_SCOMMANDS should be %d\n", (int)xyzzy + 1);
@@ -1947,6 +1949,8 @@ void CheckCommandList(void)
           scommands[xyzzy].command, c);
     }
   }
+
+  bprintf(info, "Number of multi commands: %i\n", N_MCOMMANDS);
 
   /* the mcommand enum isn't the same length as the mcommand array */
   if ((int)plugh != N_MCOMMANDS - 1)
