@@ -175,7 +175,7 @@ void cameraTriggers()
 		bsc_trigger = 0;
   }   
   rscwait++;
-  if ((rscwait%10)==0) {
+  if ((rscwait%200)==0) {
 	  trigger_flag = 1;
 	  exposing = 1;
 	  rscwait = 0;
