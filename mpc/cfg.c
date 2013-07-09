@@ -18,13 +18,13 @@
  */
 
 #include "mpc.h"
+#include "expcfg_list.h"
 #include <libconfig.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 /* experiment.cfg needs to be flushed */
 static int expt_cfg_dirty = 0;
-
 static config_t expt;
 
 int cfg_set_int(const char *name, int n, int v)
@@ -178,7 +178,6 @@ int flush_experiment_cfg(void)
   FILE *stream;
 
   char xptname[] = "/data#/mce/current_data/experiment.cfg";
-  char tmpname[] = "/data#/mce/current_data/.experiment.cfg.XXXXX";
 
   if (!expt_cfg_dirty) /* nothing to do */
     return 0;
@@ -186,6 +185,7 @@ int flush_experiment_cfg(void)
   /* write to each physical drive */
   for (i = 0; i < 4; ++i)
     if (slow_dat.df[i] > 0) {
+      char tmpname[] = "/data#/mce/current_data/.experiment.cfg.XXXXXX";
       tmpname[5] = i + '0';
       xptname[5] = i + '0';
 
@@ -207,4 +207,9 @@ int flush_experiment_cfg(void)
     }
 
   return 0;
+}
+
+int serialise_experiment_cfg(void)
+{
+  /* listify experiment.cfg */
 }

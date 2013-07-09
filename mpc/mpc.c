@@ -69,6 +69,9 @@ int req_dm = 10;
 /* Initialisation veto */
 int init = 1;
 
+/* reset the statistics */
+int stat_reset = 1;
+
 /* Data return veto */
 int veto = 1;
 
@@ -383,21 +386,22 @@ static int16_t coadd(uint32_t datum, uint16_t old_datum)
     /* split the old datum, if neccessary */
     uint16_t old_rec[2];
     
-    old_rec[0] = (data_modes[cur_dm][0].coadd_how != first)
+    old_rec[0] = (data_modes[cur_dm][0].coadd_how != coadd_first)
       ? old_datum & mask[0] : 0;
 
     old_rec[1] = (data_modes[cur_dm][1].num_bits > 0 &&
-        data_modes[cur_dm][1].coadd_how != first) ?  old_datum & mask[1] : 0;
+        data_modes[cur_dm][1].coadd_how != coadd_first) ? old_datum & mask[1] :
+      0;
 
     /* coadd */
     for (i = 0; i < 2; ++i)
       switch (data_modes[cur_dm][i].coadd_how) {
-        case first:
+        case coadd_first:
           break; /* nothing to do */
-        case sum:
+        case coadd_sum:
           rec[i] = ((uint32_t)rec[i] + old_rec[i]) & mask[i];
           break;
-        case mean:
+        case coadd_mean:
           rec[i] = (((uint32_t)rec[i] + old_rec[i]) / 2) & mask[i];
           break;
       }
@@ -480,7 +484,7 @@ case off: cfg_set_int(name, ev->ivalues[1], 0); break
 #define CFG_SETFLTC(name) \
   case name: cfg_set_float(#name, ev->ivalues[1], ev->rvalues[2]); break
 #define CFG_SETINT(cmd,name) \
-  case cmd: cfg_set_float(name, 0, ev->ivalues[1]); break
+  case cmd: cfg_set_int(name, 0, ev->ivalues[1]); break
 #define CFG_SETINTC(cmd,name) \
   case cmd: cfg_set_int(name, ev->ivalues[1], ev->ivalues[2]); break
 #define CFG_SETINTR CFG_SETINTC /* does the same thing */
@@ -490,8 +494,8 @@ case off: cfg_set_int(name, ev->ivalues[1], 0); break
 #define CFG_SETSCS(name) \
   case name: \
     cfg_set_int(#name "_start", 0, ev->ivalues[1]); \
-cfg_set_int(#name "_count", 0, ev->ivalues[1]); \
-cfg_set_int(#name "_step",  0, ev->ivalues[1]); \
+cfg_set_int(#name "_count", 0, ev->ivalues[2]); \
+cfg_set_int(#name "_step",  0, ev->ivalues[3]); \
 break
 
 /* Execute a command */
@@ -535,7 +539,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
             "sq2_servo_bias_ramp");
         CFG_SETSCS(sq2_servo_flux);
         CFG_SETSCS(sq2_servo_bias);
-        CFG_SETFLT(locktest_pass_amplitude);
+        CFG_SETINT(locktest_pass_amplitude, "locktest_pass_amplitude");
         CFG_SETSCS(sq1_ramp_bias);
         CFG_TOGGLE(sq1_ramp_tes_bias_on, sq1_ramp_tes_bias_off,
             "sq1_ramp_bias_ramp");
@@ -545,7 +549,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_SETFLT(tes_bias_normal_time);
         CFG_TOGGLE(tuning_check_bias_on, tuning_check_bias_off,
             "tuning_check_bias");
-        CFG_SETFLT(tuning_therm_time);
+        CFG_SETINT(tuning_therm_time, "tuning_therm_time");
         CFG_TOGGLE(tuning_do_plots_on, tuning_do_plots_off, "tuning_do_plots");
         CFG_SETINTC(sq2servo_safb_init, "sq2servo_safb_init");
         CFG_SETINTC(sq1servo_safb_init, "sq1servo_safb_init");
@@ -571,7 +575,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_SETINTC(sa_bias, "sa_bias");
         CFG_SETINTC(sa_fb, "sa_fb");
         CFG_SETINTC(sa_offset, "sa_offset");
-        CFG_SETINTCR(adc_offset, "adc_offset");
+        CFG_SETINTCR(adc_offset, "adc_offset_cr");
 
       case mce_servo_pid:
         cfg_set_int("servo_p", ev->ivalues[1], ev->ivalues[2]);
@@ -659,8 +663,8 @@ int main(void)
 
   /* compose array id */
   if (nmce == -1) {
-    bputs(warning, "Using 'default' configuration and running as MCE0");
-    nmce = 0;
+    bputs(warning, "Using 'default' configuration and running as MCE4");
+    nmce = 4; /* be X5 */
     strcpy(array_id, "default");
   } else 
     array_id[1] = '0' + nmce;

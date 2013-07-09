@@ -88,11 +88,12 @@ SPIDER_ONLY=1
 
 EXPT_HEADERS = command_list.h command_struct.h mce_counts.h mpc_proto.h tes.h
 SHARED_HEADERS = blast.h command_common.h mputs.h sys.h udp.h
-LOCAL_HEADERS = mpc.h mce_frame.h mce_struct.h
+LOCAL_HEADERS = expcfg_list.h mpc.h mce_frame.h mce_struct.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
-LOCAL_OBJS = cfg.o data_mode.o frame.o mas.o meta.o mce_struct.o mpc.o task.o
+LOCAL_OBJS = cfg.o data_mode.o expcfg_list.o frame.o mas.o meta.o mce_struct.o \
+						 mpc.o task.o
 
 # We don't acutally need this, but it causes Makefile.shared to require
 # spider_etc, which is necessary to build this file.
@@ -152,8 +153,8 @@ MCE_STATUS_STUFF=mce_struct.c mce_counts.h.new
 
 ${MCE_STATUS_STUFF}: mce_struct.stamp
 
-mce_struct.stamp: mce_status.g make_mce_struct
-	./make_mce_struct < $< || ( rm -f ${MCE_STATUS_STUFF}  && exit 1 )
+mce_struct.stamp: mce_status.g make_mce_struct expcfg_list.c
+	./make_mce_struct || ( rm -f ${MCE_STATUS_STUFF}  && exit 1 )
 	@touch $@
 
 ../common/Makefile.shared:

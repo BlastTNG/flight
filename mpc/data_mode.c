@@ -24,25 +24,25 @@
  * from PCM, which remembers them */
 
 /* ignore the second subfield */
-#define IGNORED {0,0,first}
+#define IGNORED {0,0,coadd_first}
 /* for unsupported data modes -- just take the bottom 16-bits, i guess */
-#define OBSOLETE {{0,16,first},IGNORED}
+#define OBSOLETE {{0,16,coadd_first},IGNORED}
 struct data_mode_def data_modes[N_DATA_MODES][2] = {
-  { { 16, 16, mean }, IGNORED },        /* 0: [31: 0] = error */
-  { { 16, 16, mean }, IGNORED },        /* 1: [31: 0] = sq1_fb */
-  { { 16, 16, mean }, IGNORED },        /* 2: [31: 0] = sq1_fb_filtered */
+  { { 16, 16, coadd_mean }, IGNORED },        /* 0: [31: 0] = error */
+  { { 16, 16, coadd_mean }, IGNORED },        /* 1: [31: 0] = sq1_fb */
+  { { 16, 16, coadd_mean }, IGNORED },        /* 2: [31: 0] = sq1_fb_filtered */
   OBSOLETE,                             /* 3 -- obsolete */
-  { { 14,  9, mean }, { 0, 7, mean } }, /* 4: [31:14] = sq1_fb
+  { { 14,  9, coadd_mean }, { 0, 7, coadd_mean } }, /* 4: [31:14] = sq1_fb
                                            -  [13: 0] = error */
-  { { 8, 12, mean }, { 0, 4, sum } },   /* 5: [31: 8] = sq1_fb
+  { { 8, 12, coadd_mean }, { 0, 4, coadd_sum } },   /* 5: [31: 8] = sq1_fb
                                            -   [7: 0] = num_flux_jumps */
   OBSOLETE,                             /* 6 -- obsolete */
   OBSOLETE,                             /* 7 -- unsupported */
   OBSOLETE,                             /* 8 -- obsolete */
   OBSOLETE,                             /* 9 -- obsolete */
-  { { 7, 12, mean }, { 0, 4, sum } },   /* 10: [31:7] = sq1_fb_filtered
+  { { 7, 12, coadd_mean }, { 0, 4, coadd_sum } },   /* 10: [31:7] = sq1_fb_filtered
                                            -   [6:0] = num_flux_jumps */
-  { { 0, 16, first }, IGNORED },        /* 11: [9:3] row_index
+  { { 0, 16, coadd_first }, IGNORED },        /* 11: [9:3] row_index
                                            [2:0] column_index */
-  { { 16, 16, mean }, IGNORED }
+  { { 16, 16, coadd_mean }, IGNORED }
 };

@@ -671,6 +671,7 @@ void *mas_data(void *dummy)
         break;
       case dt_startacq:
         acq_going = 1;
+        stat_reset = 1;
         dt_error = 0;
         data_tk = dt_idle;
         break;

@@ -49,6 +49,7 @@ extern struct mpc_slow_data slow_dat;
 extern int slow_veto;
 extern int ntes;
 extern int acq_init;
+extern int stat_reset;
 extern int sync_dv;
 extern int16_t tes[NUM_ROW * NUM_COL];
 extern int rd_count;
@@ -71,7 +72,7 @@ void meta(void);
 #define N_DATA_MODES 13
 extern struct data_mode_def {
   int first_bit, num_bits;
-  enum { first, mean, sum } coadd_how;
+  enum { coadd_first, coadd_mean, coadd_sum } coadd_how;
 } data_modes[N_DATA_MODES][2];
 
 /* mpc statūs -- try to keep these in start-up order */
