@@ -181,6 +181,33 @@ enum multiCommand {
   data_mode,          data_mode_bits,    start_acq,         reset_acq,
   stop_acq,           mag_cal,           pss_cal,
 
+#if 0
+  /* MCE experimental parameter commands */
+  column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,
+  sa_ramp_bias_off, sa_ramp_flux_start, sa_ramp_flux_count, sa_ramp_flux_step,
+  sa_ramp_bias_start, sa_ramp_bias_count, sa_ramp_bias_step, sq2_tuning_row,
+  sq2_servo_gain, sq1_servo_gain, sq1_servo_bias_on, sq1_servo_bias_off,
+  sq1_servo_flux_start, sq1_servo_flux_count, sq1_servo_flux_step,
+  sq1_servo_bias_start, sq1_servo_bias_count, sq1_servo_bias_step,
+  sq2_servo_bias_on, sq2_servo_bias_off, sq2_servo_flux_start,
+  sq2_servo_flux_count, sq2_servo_flux_step, sq2_servo_bias_start,
+  sq2_servo_bias_count, sq2_servo_bias_step, locktest_pass_amplitude,
+  sq1_ramp_bias_start, sq1_ramp_bias_count, sq1_ramp_bias_step,
+  sq1_ramp_tes_bias_on, sq1_ramp_tes_bias_off, sq1_ramp_tes_bias,
+  sq1_ramp_tes_bias_start, sq1_ramp_tes_bias_step, sq1_ramp_tes_bias_count,
+  tes_bias_idle, tes_bias_normal, tes_bias_normal_time, tuning_check_bias_on,
+  tuning_check_bias_off, tuning_do_plots_on, tuning_do_plots_off,
+  sq2servo_safb_init, sq1servo_safb_init, ramp_tes_start, ramp_tes_step,
+  ramp_tes_count, ramp_tes_initial_pause, ramp_tes_period, mce_data_rate,
+  mce_row_len, mce_num_rows, mce_num_rows_reported, readout_row_index,
+  sample_dly, sample_num, fb_dly, row_dly, flux_jumping_on, flux_jumping_off,
+  mce_servo_mode, mce_servo_p, mce_servo_d, mce_servo_i, frail_servo_p,
+  frail_servo_i, frail_servo_d, dead_detector, frail_detector, healthy_detector,
+  sa_flux_quantum, sq2_flux_quantum, sq1_bias, sq1_bias_off, sq2_bias, sq2_fb,
+  sa_bias, sa_fb, sa_offset, adc_offset, ramp_tes_final_bias, tes_bias,
+  sq1_flux_quamtum,
+#endif
+
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
   sched_packet = 0xff   //not really a command, more of a placeholder

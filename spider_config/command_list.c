@@ -29,6 +29,39 @@
 
 #include "mce_counts.h"
 
+#define MCECMD1(cmd,desc,grp) \
+    COMMAND(cmd), desc, grp | MCECMD, 1, { \
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+    }
+
+#define MCECMD2(cmd,desc,grp,pname,min,max,typ) \
+    COMMAND(cmd), desc, grp | MCECMD, 2, { \
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {pname, min, max, typ, "NONE"}, \
+    }
+
+#define MCECMDC(cmd,desc,grp,pname,min,max,typ) \
+    COMMAND(cmd), desc, grp | MCECMD, 3, { \
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {"Column", 0, 15, 'i', "NONE"}, \
+      {pname, min, max, typ, "NONE"}, \
+    }
+
+#define MCECMDR(cmd,desc,grp,pname,min,max,typ) \
+    COMMAND(cmd), desc, grp | MCECMD, 3, { \
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {"Row", 0, 32, 'i', "NONE"}, \
+      {pname, min, max, typ, "NONE"}, \
+    }
+
+#define MCECMDCR(cmd,desc,grp,pname,min,max,typ) \
+    COMMAND(cmd), desc, grp | MCECMD, 4, { \
+      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {"Column", 0, 15, 'i', "NONE"}, \
+      {"Row", 0, 32, 'i', "NONE"}, \
+      {pname, min, max, typ, "NONE"}, \
+    }
+
 const char *const command_list_serial = "$Rev$";
 
 /* parse the above; returns -1 if command_list_serial can't be parsed */
@@ -1163,34 +1196,156 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /***********************************************/
   /*************** MCE COMMANDS  *****************/
 
-  {COMMAND(start_acq), "Start data acquisition", GR_MCE | MCECMD, 1,
-    {
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}
-    }
-  },
-  {COMMAND(reset_acq), "Reset data acquisition", GR_MCE | MCECMD, 1,
-    {
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}
-    }
-  },
-  {COMMAND(stop_acq), "Stop data acquisition", GR_MCE | MCECMD | CONFIRM, 1,
-    {
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}
-    }
-  },
-
-  {COMMAND(data_mode), "Set the MCE data mode", GR_MCE | MCECMD, 2,
-    {
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}},
-      {"Data Mode", 0, 12, 'i', "NONE"},
-    }
-  },
-
-  {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_MCE | MCECMD, 1,
-    {
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}},
-    }
-  },
+  {MCECMD1(start_acq, "Start data acquisition", GR_MCE)},
+  {MCECMD1(reset_acq, "Cycle data acquisition", GR_MCE)},
+  {MCECMD1(stop_acq, "Stop data acquisition", GR_MCE | CONFIRM)},
+  {MCECMD2(data_mode, "Set the MCE data mode", GR_MCE, "Data Mode", 0, 12,
+      'i')},
+  {MCECMD1(tune_array, "Tune MCE (auto_setup)", GR_MCE)},
+#if 0
+  {MCECMD2(column_on, "Turn on a MCE column", GR_MCE, "Column", 0, 15, 'i')},
+  {MCECMD2(column_off, "Turn off a MCE column", GR_MCE, "Column", 0, 15, 'i')},
+  {MCECMD2(sa_offset_bias_ratio, "Set the SA offset bias ratio", GR_MCE,
+      "Ratio", -10, 10, 'f')}, /* XXX */
+  {MCECMD1(sa_ramp_bias_on, "Turn on SA ramping while tuning", GR_MCE)},
+  {MCECMD1(sa_ramp_bias_off, "Turn off SA ramping while tuning", GR_MCE)},
+  {MCECMD2(sa_ramp_flux_start, "Set the SA ramp flux start", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(sa_ramp_flux_count, "Set the SA ramp flux count", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(sa_ramp_flux_step, "Set the SA ramp flux step size", GR_MCE,
+      "Step size", 0, 65535, 'i')},
+  {MCECMD2(sa_ramp_bias_start, "Set the SA ramp bias start", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(sa_ramp_bias_count, "Set the SA ramp bias count", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(sa_ramp_bias_step, "Set the SA ramp bias step size", GR_MCE,
+      "Step size", 0, 65535, 'i')},
+  {MCECMD2(sq2_tuning_row, "Set the preferred row for auto tuning", GR_MCE,
+      "Row", 0, 32, 'i')},
+  {MCECMDC(sq2_servo_gain, "Set the SQ2 servo gain", GR_MCE,
+      "Gain", -10, 10, 'f')},
+  {MCECMDC(sq1_servo_gain, "Set the SQ1 servo gain", GR_MCE,
+      "Gain", -10, 10, 'f')},
+  {MCECMD1(sq1_servo_bias_on, "Turn on SQ1 servoing while tuning", GR_MCE)},
+  {MCECMD1(sq1_servo_bias_off, "Turn off SQ1 servoing while tuning", GR_MCE)},
+  {MCECMD2(sq1_servo_flux_start, "Set the SQ1 servo flux start", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(sq1_servo_flux_count, "Set the SQ1 servo flux count", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(sq1_servo_flux_step, "Set the SQ1 servo flux step size", GR_MCE,
+      "Step size", 0, 65535, 'i')},
+  {MCECMD2(sq1_servo_bias_start, "Set the SQ1 servo bias start", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(sq1_servo_bias_count, "Set the SQ1 servo bias count", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(sq1_servo_bias_step, "Set the SQ1 servo bias step size", GR_MCE,
+      "Step size", 0, 65535, 'i')},
+  {MCECMD1(sq2_servo_bias_on, "Turn on SQ2 servoing while tuning", GR_MCE)},
+  {MCECMD1(sq2_servo_bias_off, "Turn off SQ2 servoing while tuning", GR_MCE)},
+  {MCECMD2(sq2_servo_flux_start, "Set the SQ2 servo flux start", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(sq2_servo_flux_count, "Set the SQ2 servo flux count", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(sq2_servo_flux_step, "Set the SQ2 servo flux step size", GR_MCE,
+      "Step size", 0, 65535, 'i')},
+  {MCECMD2(sq2_servo_bias_start, "Set the SQ2 servo bias start", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(sq2_servo_bias_count, "Set the SQ2 servo bias count", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(sq2_servo_bias_step, "Set the SQ2 servo bias step size", GR_MCE,
+      "Step size", 0, 65535, 'i')},
+  {MCECMD2(sq1_ramp_bias_start, "Set the SQ1 ramp bias start", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(sq1_ramp_bias_count, "Set the SQ1 ramp bias count", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(sq1_ramp_bias_step, "Set the SQ1 ramp bias step size", GR_MCE,
+      "Step size", 0, 65535, 'i')},
+  {MCECMD2(locktest_pass_amplitude,
+      "Set the 'good squid' amplitude threshold for 'off' recommendation",
+      GR_MCE, "Amplitude", 0, 65535, 'i')},
+  {MCECMD1(sq1_ramp_tes_bias_on,
+      "Turn on the final TES bias ramp at the end of tuning", GR_MCE)},
+  {MCECMD1(sq1_ramp_tes_bias_off,
+      "Turn off the final TES bias ramp at the end of tuning", GR_MCE)},
+  {MCECMD2(sq1_ramp_tes_bias_start, "Set the SQ1 ramp TES bias start", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(sq1_ramp_tes_bias_step, "Set the SQ1 ramp TES bias count", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(sq1_ramp_tes_bias_count, "Set the SQ1 ramp TES bias step size",
+      GR_MCE, "Step size", 0, 65535, 'i')},
+  {MCECMDC(tes_bias_idle, "Set the idle detector bias level", GR_MCE,
+      "Level", 0, 65535, 'i')},
+  {MCECMDC(tes_bias_normal, "Set the normal detector bias level", GR_MCE,
+      "Level", 0, 65535, 'i')},
+  {MCECMD2(tes_bias_normal_time, "Set the normal detector bias time", GR_MCE,
+      "Time", 0, 10, 'f')},
+  {MCECMD1(tuning_check_bias_on, "Turn on thermalisation time for tuning",
+      GR_MCE)},
+  {MCECMD1(tuning_check_bias_off, "Turn off thermalisation time for tuning",
+      GR_MCE)},
+  {MCECMD1(tuning_do_plots_on, "Turn on plot generation for tuning", GR_MCE)},
+  {MCECMD1(tuning_do_plots_off, "Turn off plot generation for tuning", GR_MCE)},
+  {MCECMD2(sq2servo_safb_init, "Override start point for sq2servo call",
+      GR_MCE, "Value", 0, 65535, 'i')},
+  {MCECMD2(sq1servo_safb_init, "Override start point for sq1servo call",
+      GR_MCE, "Value", 0, 65535, 'i')},
+  {MCECMD2(ramp_tes_start, "Start point for the TES bias ramp", GR_MCE,
+      "Start", 0, 65535, 'i')},
+  {MCECMD2(ramp_tes_step, "Step size for the TES bias ramp", GR_MCE,
+      "Step", -32768, 32767, 'i')},
+  {MCECMD2(ramp_tes_count, "Step count for the TES bias ramp", GR_MCE,
+      "Count", 0, 65535, 'i')},
+  {MCECMD2(ramp_tes_final_bias, "Final bias for the TES bias ramp", GR_MCE,
+      "Level", 0, 65535, 'i')},
+  {MCECMD2(ramp_tes_initial_pause, "Initial pause for the TES bias ramp",
+      GR_MCE, "Time (us)", 0, 65535, 'i')},
+  {MCECMD2(ramp_tes_period, "Period for the TES bias ramp", GR_MCE,
+      "Time (us)", 0, 1000000000, 'l')},
+  {MCECMD2(mce_data_rate, "MCE data rate", GR_MCE, "Data rate", 0, 400, 'i')},
+  {MCECMD2(mce_row_len, "MCE row len", GR_MCE, "Row Len", 0, 400, 'i')},
+  {MCECMD2(mce_num_rows, "MCE num rows", GR_MCE, "Num Rows", 0, 32, 'i')},
+  {MCECMD2(mce_num_rows_reported, "MCE num rows reported", GR_MCE,
+      "Num Rows", 0, 32, 'i')},
+  {MCECMD2(readout_row_index, "Readout Row index", GR_MCE, "Row", 0, 33, 'i')},
+  {MCECMD2(sample_dly, "Sample delay", GR_MCE, "Count", 0, 100, 'i')},
+  {MCECMD2(sample_num, "Sample number", GR_MCE, "Count", 0, 100, 'i')},
+  {MCECMD2(fb_dly, "Feedback delay", GR_MCE, "Count",  0, 100, 'i')},
+  {MCECMD2(row_dly, "Row delay", GR_MCE, "Count",  0, 100, 'i')},
+  {MCECMD1(flux_jumping_on, "Turn on flux jumping", GR_MCE)},
+  {MCECMD1(flux_jumping_off, "Turn off flux jumping", GR_MCE)},
+  {MCECMD2(mce_servo_mode, "Set the servo mode", GR_MCE, "Mode", 0, 3, 'i')},
+  {MCECMDC(mce_servo_p, "Set the servo P gain", GR_MCE, "Gain", 0, 65535, 'i')},
+  {MCECMDC(mce_servo_i, "Set the servo I gain", GR_MCE, "Gain", 0, 65535, 'i')},
+  {MCECMDC(mce_servo_d, "Set the servo D gain", GR_MCE, "Gain", 0, 65535, 'i')},
+  {MCECMD2(frail_servo_p, "Set the frail servo P gain", GR_MCE,
+      "Gain", 0, 65535, 'i')},
+  {MCECMD2(frail_servo_i, "Set the frail servo I gain", GR_MCE,
+      "Gain", 0, 65535, 'i')},
+  {MCECMD2(frail_servo_d, "Set the frail servo D gain", GR_MCE,
+      "Gain", 0, 65535, 'i')},
+  {MCECMDC(dead_detector, "Add a detector to the dead mask", GR_MCE,
+      "Row", 0, 32, 'i')},
+  {MCECMDC(frail_detector, "Add a detector to the frail mask", GR_MCE,
+      "Row", 0, 32, 'i')},
+  {MCECMDC(healthy_detector, "Remove a detector from the frail and desk masks",
+      GR_MCE, "Row", 0, 32, 'i')},
+  {MCECMDC(tes_bias, "TES bias level", GR_MCE, "Level", 0, 65535, 'i')},
+  {MCECMDC(sa_flux_quantum, "SA flux quantum", GR_MCE,
+      "Quantum", 0, 65535, 'i')},
+  {MCECMDC(sq2_flux_quantum, "SQ2 flux quantum", GR_MCE,
+      "Quantum", 0, 65535, 'i')},
+  {MCECMDCR(sq1_flux_quamtum, "SQ1 flux quantum", GR_MCE,
+      "Quantum", 0, 65535, 'i')},
+  {MCECMDR(sq1_bias, "SQ1 bias", GR_MCE, "Bias", 0, 65535, 'i')},
+  {MCECMDR(sq1_bias_off, "SQ1 off bias", GR_MCE, "Bias", 0, 65535, 'i')},
+  {MCECMDC(sq2_bias, "SQ2 bias", GR_MCE, "Bias", 0, 65535, 'i')},
+  {MCECMDCR(sq2_fb, "SQ2 feeback", GR_MCE, "Feeback", 0, 65535, 'i')},
+  {MCECMDC(sa_bias, "SA bias", GR_MCE, "Bias", 0, 65535, 'i')},
+  {MCECMDC(sa_fb, "SA feeback", GR_MCE, "Bias", 0, 65535, 'i')},
+  {MCECMDC(sa_offset, "SA offset", GR_MCE, "Bias", 0, 65535, 'i')},
+  {MCECMDCR(adc_offset, "ADC offset ", GR_MCE, "Offset", 0, 65535, 'i')},
+#endif
 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {

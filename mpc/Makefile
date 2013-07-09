@@ -61,7 +61,7 @@ MAS_SCRIPT=$(shell ${MAS_VAR} --script-dir)
 MAS_VERSION=$(shell ${MAS_VAR} --version)
 
 MAS_LIBS=$(shell ${MAS_VAR} --libs) -Wl,-rpath \
-				 -Wl,$(shell ${MAS_VAR} --prefix)/lib
+				 -Wl,$(shell ${MAS_VAR} --prefix)/lib -lconfig
 MAS_INC=$(shell ${MAS_VAR} --cflags)
 endif
 MAS_DEFS=-DMAS_DATA_ROOT=\"${MAS_DATA_ROOT}\" \
@@ -92,7 +92,7 @@ LOCAL_HEADERS = mpc.h mce_frame.h mce_struct.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
-LOCAL_OBJS = data_mode.o frame.o mas.o meta.o mce_struct.o mpc.o task.o
+LOCAL_OBJS = cfg.o data_mode.o frame.o mas.o meta.o mce_struct.o mpc.o task.o
 
 # We don't acutally need this, but it causes Makefile.shared to require
 # spider_etc, which is necessary to build this file.

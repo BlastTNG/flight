@@ -141,4 +141,6 @@ void *acquer(void *dummy);
 /* The frame acq callback */
 int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);
 
+int load_experiment_cfg(void);
+
 #endif

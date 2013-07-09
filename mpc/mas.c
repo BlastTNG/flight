@@ -99,6 +99,17 @@ static int mas_write_block(const char *card, const char *block, uint32_t *data,
   return 0;
 }
 
+static inline int drive_ready(int i)
+{
+  if (i == 0)
+    return ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP);
+  if (i == 1)
+    return ((drive_map & DRIVE1_MASK) != DRIVE1_UNMAP);
+  if (i == 2)
+    return ((drive_map & DRIVE2_MASK) != DRIVE2_UNMAP);
+  return 0;
+}
+
 /* read a block by name from the MCE; returns non-zero on error */
 static int mas_read_block(const char *card, const char *block, uint32_t *data,
     size_t num)

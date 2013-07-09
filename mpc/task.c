@@ -247,6 +247,11 @@ void *task(void *dummy)
 
             /* set directory */
             dt_wait(dt_setdir);
+            
+            /* parse experiment.cfg */
+            if (load_experiment_cfg()) {
+              /* um ... */
+            }
           }
 
           /* done */
