@@ -469,36 +469,139 @@ const static inline int check_cmd_mce(int w)
   return (w == 0) || (w == (nmce + 1));
 }
 
+#define CFG_TOGGLE(on,off,name) \
+  case on: cfg_set_int(name, 0, 1); break; \
+case off: cfg_set_int(name, 0, 0); break
+#define CFG_TOGGLEC(on,off,name) \
+  case on: cfg_set_int(name, ev->ivalues[1], 1); break; \
+case off: cfg_set_int(name, ev->ivalues[1], 0); break
+#define CFG_SETFLT(name) \
+  case name: cfg_set_float(#name, 0, ev->rvalues[1]); break
+#define CFG_SETFLTC(name) \
+  case name: cfg_set_float(#name, ev->ivalues[1], ev->rvalues[2]); break
+#define CFG_SETINT(cmd,name) \
+  case cmd: cfg_set_float(name, 0, ev->ivalues[1]); break
+#define CFG_SETINTC(cmd,name) \
+  case cmd: cfg_set_int(name, ev->ivalues[1], ev->ivalues[2]); break
+#define CFG_SETINTR CFG_SETINTC /* does the same thing */
+#define CFG_SETINTCR(cmd,name) \
+  case cmd: cfg_set_int_cr(name, ev->ivalues[1], ev->ivalues[2], \
+                ev->ivalues[3]); break
+#define CFG_SETSCS(name) \
+  case name: \
+    cfg_set_int(#name "_start", 0, ev->ivalues[1]); \
+cfg_set_int(#name "_count", 0, ev->ivalues[1]); \
+cfg_set_int(#name "_step",  0, ev->ivalues[1]); \
+break
+
 /* Execute a command */
 static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 {
   if (ev->is_multi) {
+    if (!check_cmd_mce(ev->ivalues[0]))
+      return;
+
     switch (ev->command) {
       case data_mode:
-        if (check_cmd_mce(ev->ivalues[0]))
-          req_dm = ev->ivalues[1];
+        req_dm = ev->ivalues[1];
         break;
       case reset_acq:
-        if (check_cmd_mce(ev->ivalues[0]))
-          comms_lost = 1;
+        comms_lost = 1;
         break;
       case start_acq:
-        if (check_cmd_mce(ev->ivalues[0]))
-          goal = op_acq;
+        goal = op_acq;
         break;
       case stop_acq:
-        if (check_cmd_mce(ev->ivalues[0]))
-          goal = op_ready;
+        goal = op_ready;
         break;
       case tune_array:
-        if (check_cmd_mce(ev->ivalues[0]))
-          goal = op_tune;
+        goal = op_tune;
         break;
+
+        /* Experiment config commands */
+        CFG_TOGGLEC(column_off, column_on, "columns_off");
+        CFG_SETFLT(sa_offset_bias_ratio);
+        CFG_TOGGLE(sa_ramp_bias_on, sa_ramp_bias_off, "sa_ramp_bias");
+        CFG_SETSCS(sa_ramp_flux);
+        CFG_SETSCS(sa_ramp_bias);
+        CFG_SETINTC(sq2_tuning_row, "sq2_rows");
+        CFG_SETFLTC(sq2_servo_gain);
+        CFG_SETFLTC(sq1_servo_gain);
+        CFG_TOGGLE(sq1_servo_bias_on, sq1_servo_bias_off,
+            "sq1_servo_bias_ramp");
+        CFG_SETSCS(sq1_servo_flux);
+        CFG_SETSCS(sq1_servo_bias);
+        CFG_TOGGLE(sq2_servo_bias_on, sq2_servo_bias_off,
+            "sq2_servo_bias_ramp");
+        CFG_SETSCS(sq2_servo_flux);
+        CFG_SETSCS(sq2_servo_bias);
+        CFG_SETFLT(locktest_pass_amplitude);
+        CFG_SETSCS(sq1_ramp_bias);
+        CFG_TOGGLE(sq1_ramp_tes_bias_on, sq1_ramp_tes_bias_off,
+            "sq1_ramp_bias_ramp");
+        CFG_SETSCS(sq1_ramp_tes_bias);
+        CFG_SETINTC(tes_bias_idle, "tes_bias_idle");
+        CFG_SETINTC(tes_bias_normal, "tes_bias_normal");
+        CFG_SETFLT(tes_bias_normal_time);
+        CFG_TOGGLE(tuning_check_bias_on, tuning_check_bias_off,
+            "tuning_check_bias");
+        CFG_SETFLT(tuning_therm_time);
+        CFG_TOGGLE(tuning_do_plots_on, tuning_do_plots_off, "tuning_do_plots");
+        CFG_SETINTC(sq2servo_safb_init, "sq2servo_safb_init");
+        CFG_SETINTC(sq1servo_safb_init, "sq1servo_safb_init");
+        CFG_SETSCS(ramp_tes);
+        CFG_SETINT(ramp_tes_final_bias, "ramp_tes_final_bias");
+        CFG_SETINT(ramp_tes_initial_pause, "ramp_tes_initial_pause");
+        CFG_SETINT(num_rows_reported, "num_rows_reported");
+        CFG_SETINT(readout_row_index, "readout_row_index");
+        CFG_SETINT(sample_dly, "sample_dly");
+        CFG_SETINT(sample_num, "sample_num");
+        CFG_SETINT(fb_dly, "fb_dly");
+        CFG_SETINT(row_dly, "row_dly");
+        CFG_TOGGLE(flux_jumping_on, flux_jumping_off, "flux_jumping");
+        CFG_SETINT(mce_servo_mode, "servo_mode");
+        CFG_SETINTC(tes_bias, "tes_bias");
+        CFG_SETINTC(sa_flux_quantum, "sa_flux_quantum");
+        CFG_SETINTC(sq2_flux_quantum, "sq2_flux_quantum");
+        CFG_SETINTCR(sq1_flux_quantum, "flux_quanta_all");
+        CFG_SETINTR(sq1_bias, "sq1_bias");
+        CFG_SETINTR(sq1_bias_off, "sq1_bias_off");
+        CFG_SETINTC(sq2_bias, "sq2_bias");
+        CFG_SETINTCR(sq2_fb, "sq2_fb_set");
+        CFG_SETINTC(sa_bias, "sa_bias");
+        CFG_SETINTC(sa_fb, "sa_fb");
+        CFG_SETINTC(sa_offset, "sa_offset");
+        CFG_SETINTCR(adc_offset, "adc_offset");
+
+      case mce_servo_pid:
+        cfg_set_int("servo_p", ev->ivalues[1], ev->ivalues[2]);
+        cfg_set_int("servo_i", ev->ivalues[1], ev->ivalues[3]);
+        cfg_set_int("servo_d", ev->ivalues[1], ev->ivalues[4]);
+        break;
+      case frail_servo_pid:
+        cfg_set_int("frail_servo_p", 0, ev->ivalues[1]);
+        cfg_set_int("frail_servo_i", 0, ev->ivalues[2]);
+        cfg_set_int("frail_servo_d", 0, ev->ivalues[3]);
+        break;
+      case dead_detector:
+        cfg_set_int_cr("dead_detectors", ev->ivalues[0], ev->ivalues[1], 1);
+        break;
+      case frail_detector:
+        cfg_set_int_cr("frail_detectors", ev->ivalues[0], ev->ivalues[1], 1);
+        break;
+      case healthy_detector:
+        cfg_set_int_cr("dead_detectors", ev->ivalues[0], ev->ivalues[1], 0);
+        cfg_set_int_cr("frail_detectors", ev->ivalues[0], ev->ivalues[1], 0);
+        break;
+
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
             ev->command, peer, port);
         break;
     }
+
+    /* flush the experiment.cfg if it has changed */
+    flush_experiment_cfg();
   } else {
     switch (ev->command) {
       case mpc_ping:

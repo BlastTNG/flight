@@ -19,8 +19,128 @@
 
 #include "mpc.h"
 #include <libconfig.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+/* experiment.cfg needs to be flushed */
+static int expt_cfg_dirty = 0;
 
 static config_t expt;
+
+int cfg_set_int(const char *name, int n, int v)
+{
+  config_setting_t *s;
+  int old_v;
+
+  /* get the parameter */
+  if ((s = config_lookup(&expt, name)) == NULL) {
+    bprintf(err, "unable to find '%s' in experiment.cfg", name);
+    return -1;
+  }
+
+  /* check type and set */
+  switch (config_setting_type(s))
+  {
+    case CONFIG_TYPE_INT:
+      if (n > 0) {
+        bprintf(err, "bad index %i trying to set scalar int on %s", n, name);
+        return -1;
+      }
+
+      /* get */
+      old_v = config_setting_get_int(s);
+
+      /* no change */
+      if (old_v == v)
+        return 0;
+
+      /* set */
+      config_setting_set_int(s, v);
+      expt_cfg_dirty = 1;
+      break;
+    case CONFIG_TYPE_ARRAY:
+      if (n >= config_setting_length(s)) {
+        bprintf(err, "bad index %i > %i trying to set int elem on %s", n,
+            config_setting_length(s), name);
+        return -1;
+      }
+      /* get */
+      old_v = config_setting_get_int_elem(s, n);
+
+      /* no change */
+      if (old_v == v)
+        return 0;
+
+      /* set */
+      config_setting_set_int_elem(s, n, v);
+      expt_cfg_dirty = 1;
+      break;
+    default:
+      bprintf(err, "bad type trying to set int on %s", name);
+      return -1;
+  }
+  return 0;
+}
+
+int cfg_set_float(const char *name, int n, double v)
+{
+  config_setting_t *s;
+  double old_v;
+
+  /* get the parameter */
+  if ((s = config_lookup(&expt, name)) == NULL) {
+    bprintf(err, "unable to find '%s' in experiment.cfg", name);
+    return -1;
+  }
+
+  /* check type and set */
+  switch (config_setting_type(s))
+  {
+    case CONFIG_TYPE_FLOAT:
+      if (n > 0) {
+        bprintf(err, "bad index %i trying to set scalar float on %s", n, name);
+        return -1;
+      }
+
+      /* get */
+      old_v = config_setting_get_float(s);
+
+      /* no change */
+      if (old_v == v)
+        return 0;
+
+      /* set */
+      config_setting_set_float(s, v);
+      expt_cfg_dirty = 1;
+      break;
+    case CONFIG_TYPE_ARRAY:
+      if (n >= config_setting_length(s)) {
+        bprintf(err, "bad index %i > %i trying to set float elem on %s", n,
+            config_setting_length(s), name);
+        return -1;
+      }
+      /* get */
+      old_v = config_setting_get_float_elem(s, n);
+
+      /* no change */
+      if (old_v == v)
+        return 0;
+
+      /* set */
+      config_setting_set_float_elem(s, n, v);
+      expt_cfg_dirty = 1;
+      break;
+    default:
+      bprintf(err, "bad type trying to set float on %s", name);
+      return -1;
+  }
+  return 0;
+}
+
+int cfg_set_int_cr(const char *name, int c, int r, int v)
+{
+  return cfg_set_int(name, c * 41 + r, v);
+}
 
 int load_experiment_cfg(void)
 {
@@ -50,4 +170,41 @@ int load_experiment_cfg(void)
 BAD_EXPT_CNF:
   config_destroy(&expt);
   return 1;
+}
+
+int flush_experiment_cfg(void)
+{
+  int i, fd;
+  FILE *stream;
+
+  char xptname[] = "/data#/mce/current_data/experiment.cfg";
+  char tmpname[] = "/data#/mce/current_data/.experiment.cfg.XXXXX";
+
+  if (!expt_cfg_dirty) /* nothing to do */
+    return 0;
+
+  /* write to each physical drive */
+  for (i = 0; i < 4; ++i)
+    if (slow_dat.df[i] > 0) {
+      tmpname[5] = i + '0';
+      xptname[5] = i + '0';
+
+      fd = mkstemp(tmpname);
+      if (fd < 0) {
+        bprintf(warning, "unable to create temporary file %s", tmpname);
+        continue;
+      }
+      stream = fdopen(fd, "w");
+
+      config_write(&expt, stream);
+      fclose(stream);
+      if (rename(tmpname, xptname)) {
+        bprintf(warning, "error writing %s", xptname);
+        unlink(tmpname);
+      }
+      chmod(xptname, 0777);
+      bprintf(info, "re-wrote %s", xptname);
+    }
+
+  return 0;
 }

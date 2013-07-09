@@ -141,6 +141,11 @@ void *acquer(void *dummy);
 /* The frame acq callback */
 int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);
 
+/* cfg stuff */
 int load_experiment_cfg(void);
+int cfg_set_float(const char *, int, double);
+int cfg_set_int(const char *, int, int);
+int cfg_set_int_cr(const char *, int, int, int);
+int flush_experiment_cfg(void);
 
 #endif

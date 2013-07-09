@@ -179,6 +179,7 @@ install: mpc mpc_inf_loop
 	install -d /data/mas/bin
 	install -m 755 mpc mpc_inf_loop /data/mas/bin
 	install -d /data/mas/etc
+	install -m 755 set_directory /data/mas/mce_script/script
 
 restart: install
 	killall mpc

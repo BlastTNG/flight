@@ -548,19 +548,12 @@ ACQ_CONFIG_ERR:
   return 1;
 }
 
-static char *data_root(int n)
-{
-  static char data_root[] = "/data#/mce";
-  data_root[5] = data_drive[n] + '0';
-  return data_root;
-}
-
 static int write_array_id(int d)
 {
   int n;
 
   char file[1024];
-  sprintf(file, "/data%c/mce/array_id", data_drive[d] + '0');
+  sprintf(file, "/data%c/mce/array_id", d + '0');
   FILE *stream = fopen(file, "w");
 
   if (stream == NULL) {
@@ -584,23 +577,15 @@ BAD_ARRAY_ID:
 
 static int set_directory(void)
 {
-  char *argv[] = {"set_directory", data_root(0), NULL};
-  if ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP) {
-    write_array_id(0);
-    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
-      return 1;
-  }
+  int i;
+  char data_root[] = "/data#/mce";
+  char *argv[] = {"set_directory", data_root, NULL};
+  for (i = 0; i < 4; ++i) {
+    if (slow_dat.df[i] == 0)
+      continue;
 
-  if ((drive_map & DRIVE1_MASK) != DRIVE1_UNMAP) {
-    write_array_id(1);
-    argv[1] = data_root(1);
-    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
-      return 1;
-  }
-
-  if ((drive_map & DRIVE2_MASK) != DRIVE2_UNMAP) {
-    write_array_id(2);
-    argv[2] = data_root(2);
+    data_root[5] = i + '0';
+    write_array_id(i);
     if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
       return 1;
   }
