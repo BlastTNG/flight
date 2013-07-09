@@ -85,15 +85,11 @@ double SCra[3], SCdec[3], SCroll[3], SCaz[3], SCel[3];
 #define UGLY_AZ_OFF 105.0
 Pyramid pyr;
 
-static pthread_t thegood_id;
-static pthread_t thebad_id;
-static pthread_t theugly_id;
+static pthread_t send_id;
 static pthread_t read_id;
 
 static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0);
-static void* TheGoodLoop(void* arg);
-static void* TheBadLoop(void* arg);
-static void* TheUglyLoop(void* arg);
+static void* SendLoop(void* arg);
 static void* ReadLoop(void* arg);
 static string ParseReturn(string rtnStr, int which);
 
@@ -102,6 +98,7 @@ static short int i_cam[3] = {0,0,0}; //read index in above buffer
 
 const char* SCcmd[3];
 int SCcmd_flag[3] = {0,0,0};
+int trigger_flag = 0;
 
 extern "C" {
 
@@ -154,9 +151,7 @@ int sendTheUglyCommand(const char *cmd)
 void openSC()
 {
   pyr.Init(FOV, (char *)CAT, (char *)KCAT);
-  pthread_create(&thegood_id, NULL, &TheGoodLoop, NULL);
-  pthread_create(&thebad_id, NULL, &TheBadLoop, NULL);
-  pthread_create(&theugly_id, NULL, &TheUglyLoop, NULL);
+  pthread_create(&send_id, NULL, &SendLoop, NULL);
   pthread_create(&read_id, NULL, &ReadLoop, NULL);
 }
 
@@ -181,22 +176,16 @@ void cameraTriggers()
   }   
   rscwait++;
   if ((rscwait%10)==0) {
-	if (!CommandData.StarCam[1].paused) {
-		sendTheBadCommand("CtrigExp");
-		exposing = 1;
-		rscwait = 0;
-	}
-	if (!CommandData.StarCam[2].paused) {
-		sendTheUglyCommand("CtrigExp");
-		exposing = 1;
-		rscwait = 0;
-	}
-	for (int i=0; i<10; i++) {
+	  trigger_flag = 1;
+	  exposing = 1;
+	  rscwait = 0;
+	  for (int i=0; i<10; i++) {
 		if (goodPos[i] == 0.0) { 
 			trigPos[i] = ACSData.enc_table;
 			zerodist[i] = 1;
 		}
-	}
+	
+	  }
   }
 
   if (exposing) {
@@ -428,101 +417,85 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
   }
 }
 
-static void* TheGoodLoop(void* arg)
+static void* SendLoop(void* arg)
 {
-        nameThread("GoodSC");
+        nameThread("SCsend");
 	while (!InCharge) {
 		usleep(20000);
 	}
-	int sock;
+	int sock_thegood, sock_thebad, sock_theugly;
   	string rtn_str = "";
+    	string sought = "\n";
+    	string::size_type pos_thegood;
+    	string::size_type pos_thebad;
+    	string::size_type pos_theugly;
 
-	sock = udp_bind_port(SC_PORT_GOOD, 1);
-	if (sock == -1)
-		bprintf(tfatal, "Unable to bind to port");
+	sock_thegood = udp_bind_port(SC_PORT_GOOD, 1);
+	if (sock_thegood == -1)
+		bprintf(tfatal, "Unable to bind to The Good port");
+	sock_thebad = udp_bind_port(SC_PORT_BAD, 1);
+	if (sock_thebad == -1)
+		bprintf(tfatal, "Unable to bind to The Bad port");
+	sock_theugly = udp_bind_port(SC_PORT_UGLY, 1);
+	if (sock_theugly == -1)
+		bprintf(tfatal, "Unable to bind to The Ugly port");
 
 	while(1) {
-		while (SCcmd_flag[0] == 0) {
+		while ((!SCcmd_flag[0]) && (!SCcmd_flag[1]) && (!SCcmd_flag[2]) && (!trigger_flag)) {
 			sleep(1);
 	        }
-		string cmd = string(SCcmd[0]);
-    		//remove all newlines and add a single one at the end
-    		string sought = "\n";
-    		string::size_type pos = cmd.find(sought, 0);
-    		while (pos != string::npos) {
-    	  		cmd.replace(pos, sought.size(), "");
-    	  		pos = cmd.find(sought, pos - sought.size());
-    		}
-    		cmd += "\n";
-		if (udp_bcast(sock, GOOD_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
-			bprintf(warning, "Error broadcasting command.\n");
-		SCcmd_flag[0] = 0;
-	}
-	return NULL;
-}
-
-static void* TheBadLoop(void* arg)
-{
-        nameThread("BadSC");
-	while (!InCharge) {
-		usleep(20000);
-	}
-	int sock;
-  	string rtn_str = "";
-
-	sock = udp_bind_port(SC_PORT_BAD, 1);
-	if (sock == -1)
-		bprintf(tfatal, "Unable to bind to port");
-
-	while(1) {
-		while (SCcmd_flag[1] == 0) {
-			sleep(1);
-	        }
-		string cmd = string(SCcmd[1]);
-    		//remove all newlines and add a single one at the end
-    		string sought = "\n";
-    		string::size_type pos = cmd.find(sought, 0);
-    		while (pos != string::npos) {
-    	  		cmd.replace(pos, sought.size(), "");
-    	  		pos = cmd.find(sought, pos - sought.size());
-    		}
-    		cmd += "\n";
-		if (udp_bcast(sock, BAD_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
-			bprintf(warning, "Error broadcasting command.\n");
-		SCcmd_flag[1] = 0;
-	}
-	return NULL;
-}
-
-static void* TheUglyLoop(void* arg)
-{
-        nameThread("UglySC");
-	while (!InCharge) {
-		usleep(20000);
-	}
-	int sock;
-  	string rtn_str = "";
-
-	sock = udp_bind_port(SC_PORT_UGLY, 1);
-	if (sock == -1)
-		bprintf(tfatal, "Unable to bind to port");
-
-	while(1) {
-		while (SCcmd_flag[2] == 0) {
-			sleep(1);
-	        }
-		string cmd = string(SCcmd[2]);
-    		//remove all newlines and add a single one at the end
-    		string sought = "\n";
-    		string::size_type pos = cmd.find(sought, 0);
-    		while (pos != string::npos) {
-    	  		cmd.replace(pos, sought.size(), "");
-    	  		pos = cmd.find(sought, pos - sought.size());
-    		}
-    		cmd += "\n";
-		if (udp_bcast(sock, UGLY_PORT, strlen(cmd.c_str()), cmd.c_str(), !InCharge))
-			bprintf(warning, "Error broadcasting command.\n");
-		SCcmd_flag[2] = 0;
+		if (SCcmd_flag[0]) {
+			string cmd_thegood = string(SCcmd[0]);
+    			pos_thegood = cmd_thegood.find(sought, 0);
+    			//remove all newlines and add a single one at the end
+    			while (pos_thegood != string::npos) {
+    	  			cmd_thegood.replace(pos_thegood, sought.size(), "");
+    	  			pos_thegood = cmd_thegood.find(sought, pos_thegood - sought.size());
+    			}
+    			cmd_thegood += "\n";
+			if (udp_bcast(sock_thegood, GOOD_PORT, strlen(cmd_thegood.c_str()), cmd_thegood.c_str(), !InCharge))
+				bprintf(warning, "Error broadcasting The Good command.\n");
+			SCcmd_flag[0] = 0;
+		}
+		if (SCcmd_flag[1]) {
+			string cmd_thebad = string(SCcmd[1]);
+    			pos_thebad = cmd_thebad.find(sought, 0);
+    			//remove all newlines and add a single one at the end
+    			while (pos_thebad != string::npos) {
+    	  			cmd_thebad.replace(pos_thebad, sought.size(), "");
+    	  			pos_thebad = cmd_thebad.find(sought, pos_thebad - sought.size());
+    			}
+    			cmd_thebad += "\n";
+			if (udp_bcast(sock_thebad, BAD_PORT, strlen(cmd_thebad.c_str()), cmd_thebad.c_str(), !InCharge))
+				bprintf(warning, "Error broadcasting The Bad command.\n");
+			SCcmd_flag[1] = 0;
+		}
+		if (SCcmd_flag[2]) {
+			string cmd_theugly = string(SCcmd[2]);
+    			pos_theugly = cmd_theugly.find(sought, 0);
+    			//remove all newlines and add a single one at the end
+    			while (pos_theugly != string::npos) {
+    	  			cmd_theugly.replace(pos_theugly, sought.size(), "");
+    	  			pos_theugly = cmd_theugly.find(sought, pos_theugly - sought.size());
+    			}
+    			cmd_theugly += "\n";
+			if (udp_bcast(sock_theugly, UGLY_PORT, strlen(cmd_theugly.c_str()), cmd_theugly.c_str(), !InCharge))
+				bprintf(warning, "Error broadcasting The Ugly command.\n");
+			SCcmd_flag[2] = 0;
+		}
+		if (trigger_flag) {
+			string cmd_trigger = string("CtrigExp\n");
+			if (!CommandData.StarCam[1].paused) {
+				if (udp_bcast(sock_thebad, BAD_PORT, strlen(cmd_trigger.c_str()), cmd_trigger.c_str(), !InCharge))
+					bprintf(warning, "Error broadcasting The Bad trigger Command.\n");
+			}
+			if (!CommandData.StarCam[2].paused) {
+				if (udp_bcast(sock_theugly, UGLY_PORT, strlen(cmd_trigger.c_str()), cmd_trigger.c_str(), !InCharge))
+					bprintf(warning, "Error broadcasting The Ugly trigger Command.\n");
+			}
+			trigger_flag = 0;
+			
+		}
 	}
 	return NULL;
 }
