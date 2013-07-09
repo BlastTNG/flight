@@ -219,11 +219,12 @@ int NetCmdSendAndReceive(const char *inbuf, int silent, size_t buflen,
     ack = NetCmdReceive(silent, buflen, outbuf);
     if ((ack & 0xff) == CMD_BCMD) {
       return ack >> 8;
-    }
-    else if ((ack & 0xff) == CMD_NONE)
+    } else if ((ack & 0xff) == CMD_SENT) { /* ignore packet info */
+      continue;
+    } else if ((ack & 0xff) == CMD_NONE)
       usleep(1000);
     else {
-      fprintf(stderr, "Protocol error from daemon.\n");
+      fprintf(stderr, "Protocol error from daemon (0x%04X).\n", ack);
       exit(14);
     }
   } while (1);
