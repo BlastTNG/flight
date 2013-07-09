@@ -28,8 +28,8 @@
 // *  "Ported" to qt4 by drmrshdw                    *
 // ***************************************************
 
-#ifndef NARSIL_H
-#define NARSIL_H
+#ifndef COW_H
+#define COW_H
 
 extern "C" {
 #include "netcmd.h"
@@ -55,7 +55,7 @@ class QHBoxLayout;
 class QGridLayout;
 class QTextEdit;
 class QGroupBox;
-class NarsilOmniBox;
+class CowOmniBox;
 class QFrame;
 class QLabel;
 class QLineEdit;
@@ -70,7 +70,7 @@ class QComboBox;
 class QMultiLineEdit;
 
 class KstFile;
-class NarsilDoubleEntry;
+class CowDoubleEntry;
 
 class Defaults
 {
@@ -108,7 +108,7 @@ public:
     QPushButton *NSendButton;
     //QLabel *NSettingsLabel;
     QPushButton *QuitButton;
-    NarsilOmniBox* NOmniBox;
+    CowOmniBox* NOmniBox;
     QListWidget *NCommandList;
     QLabel *NAboutLabel;
     QLabel *NParamLabels[MAX_N_PARAMS];

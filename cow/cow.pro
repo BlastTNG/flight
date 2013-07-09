@@ -7,7 +7,7 @@ mac {
   QMAKE_CLEAN += '-r cow.app'
   ICON = cow.icns
 }
-DEFINES += DATA_ETC_NARSIL_DIR=\"\\\"/data/etc/cow\\\"\"
+DEFINES += DATA_ETC_COW_DIR=\"\\\"/data/etc/cow\\\"\"
 log.path = /data/etc/cow
 log.files = data/prev_status data/log.txt
 

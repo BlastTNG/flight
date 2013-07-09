@@ -37,9 +37,10 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QDebug>
+#include <QComboBox>
 #include <QCompleter>
 
-class AbstractNarsilEntry
+class AbstractCowEntry
 {
 public:
     virtual void RecordDefaults()    //fill default element
@@ -71,11 +72,11 @@ protected:
     char type;
 };
 
-class NarsilStringEntry : public QLineEdit, public AbstractNarsilEntry
+class CowStringEntry : public QLineEdit, public AbstractCowEntry
 {
     Q_OBJECT
 public:
-    NarsilStringEntry(QWidget* parent, QString objName) : QLineEdit(parent)
+    CowStringEntry(QWidget* parent, QString objName) : QLineEdit(parent)
     {
         setObjectName(objName);
     }
@@ -98,6 +99,63 @@ public:
         return text();
     }
 };
+
+class CowComboEntry : public QComboBox, public AbstractCowEntry
+{
+    Q_OBJECT
+  public:
+    CowComboEntry(QWidget* parent, QString objName) : QComboBox(parent)
+    {
+      setObjectName(objName);
+      connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(slotValueChanged()));
+    }
+    virtual void SetType(char t)
+    {
+      Q_ASSERT(t!='s');
+      type = t;
+    }
+    virtual void SetValue(double d)
+    {
+      SetValue(int(d));
+    }
+
+    virtual void SetValue(int i)
+    {
+
+      if ((i>=0) && (i<count())) {
+          setCurrentIndex(i);
+      }
+    }
+
+    void SetStringValue(QString s)
+    {
+      bool ok;
+      int i = s.toInt(&ok);
+      if (!ok) {
+        i = findText(s);
+      }
+      i = qMin(i, count()-1);
+      i = qMax(i,0);
+      SetValue(i);
+    }
+
+    QString Text() const
+    {
+      return QString::number(currentIndex());
+    }
+  public slots:
+    void slotValueChanged()
+    {   //to override parent's valueChanged signal to require focus
+      if (hasFocus()) {
+        emit valueEdited();
+      }
+    }
+
+  signals:
+    void valueEdited();
+
+};
+
 #include <iostream>
 class NLineEdit : public QLineEdit
 {
@@ -108,11 +166,11 @@ protected:
     }
 };
 
-class NarsilDoubleEntry : public QDoubleSpinBox, public AbstractNarsilEntry
+class CowDoubleEntry : public QDoubleSpinBox, public AbstractCowEntry
 {
     Q_OBJECT
 public:
-    NarsilDoubleEntry(QWidget* parent, QString objName) : QDoubleSpinBox(parent)
+    CowDoubleEntry(QWidget* parent, QString objName) : QDoubleSpinBox(parent)
     {
 //        delete lineEdit();
         setLineEdit(new NLineEdit);
@@ -177,7 +235,7 @@ signals:
 
 };
 
-class NarsilOmniBox : public QLineEdit
+class CowOmniBox : public QLineEdit
 {
     Q_OBJECT
     int oldXSize;
@@ -187,7 +245,7 @@ class NarsilOmniBox : public QLineEdit
 
 public:
     friend class MainForm;
-    NarsilOmniBox(QWidget*p) : QLineEdit(p), oldXSize(0), _realText() {
+    CowOmniBox(QWidget*p) : QLineEdit(p), oldXSize(0), _realText() {
         connect(this,SIGNAL(textChanged(QString)),this,SLOT(updateRealText()));
         connect(this,SIGNAL(realTextChanged()),this,SLOT(updateRealText()));
     }

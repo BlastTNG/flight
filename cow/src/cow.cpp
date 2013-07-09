@@ -85,18 +85,18 @@
 
 #define VERSION "4.0-testing"   // don't remove "testing" until you're sure it works reliably...
 
-#ifndef DATA_ETC_NARSIL_DIR
-#error Edit cow.pro to define DATA_ETC_NARSIL_DIR !
+#ifndef DATA_ETC_COW_DIR
+#error Edit cow.pro to define DATA_ETC_COW_DIR !
 #endif
 
 #define PADDING 3
 #define SPACING 3
 
 //#define DEF_CURFILE CUR_DIR "/defile.lnk"
-#define LOGFILE DATA_ETC_NARSIL_DIR "/log.txt"
-#define LOGFILEDIR DATA_ETC_NARSIL_DIR "/log/"
+#define LOGFILE DATA_ETC_COW_DIR "/log.txt"
+#define LOGFILEDIR DATA_ETC_COW_DIR "/log/"
 
-#define DATA_DIR DATA_ETC_NARSIL_DIR
+#define DATA_DIR DATA_ETC_COW_DIR
 
 #ifndef ELOG_HOST
 #define ELOG_HOST "elog.blast"
@@ -141,7 +141,7 @@ Defaults::Defaults()
 
 //-------------------------------------------------------------
 //
-// Defaults::Save: Narsil remembers any values entered for the
+// Defaults::Save: Cow remembers any values entered for the
 //      next time it starts up
 //
 //-------------------------------------------------------------
@@ -267,7 +267,7 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
       for(int i=0;i<MAX_N_PARAMS;i++) {
         if(NParamFields[i]->isVisible()) {
           x.append(i?" ":"");
-          x.append(dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->Text());
+          x.append(dynamic_cast<AbstractCowEntry*>(NParamFields[i])->Text());
         }
       }
 
@@ -297,9 +297,9 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
         NSendButton->setEnabled(0);
         break;
       }
-      if(NParamFields[i-1]->isVisible()&&!words[i].isEmpty()) {
+      if(NParamFields[i-1]->isVisible() && !words[i].isEmpty()) {
         words[i].replace("..",".");
-        bool ok=dynamic_cast<NarsilStringEntry*>(NParamFields[i-1]);
+        bool ok=dynamic_cast<CowStringEntry*>(NParamFields[i-1]);
         if(ok) {
           int j=i;
           while(++j<words.size()) {
@@ -313,10 +313,10 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
           words[i].toInt(&ok);
         }
         if(ok) {
-          if(dynamic_cast<NarsilStringEntry*>(NParamFields[i-1])) {
-            dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->SetStringValue(words[i]);
-          } else if(dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->Text().toFloat()!=words[i].toFloat()){
-            dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->SetStringValue(QString::number(words[i].toFloat()));
+          if(dynamic_cast<CowStringEntry*>(NParamFields[i-1])) {
+            dynamic_cast<AbstractCowEntry*>(NParamFields[i-1])->SetStringValue(words[i]);
+          } else if(dynamic_cast<AbstractCowEntry*>(NParamFields[i-1])->Text().toFloat()!=words[i].toFloat()){
+            dynamic_cast<AbstractCowEntry*>(NParamFields[i-1])->SetStringValue(QString::number(words[i].toFloat()));
           }
         }
       }
@@ -374,7 +374,7 @@ void MainForm::OmniSync()
   for(int i=1;i<words.size();i++) {
     if(NParamFields[i-1]->isVisible()&&!words[i].isEmpty()) {
       words[i].replace("..",".");
-      if(i<MAX_N_PARAMS) words[i]=dynamic_cast<AbstractNarsilEntry*>(NParamFields[i-1])->Text();
+      if(i<MAX_N_PARAMS) words[i]=dynamic_cast<AbstractCowEntry*>(NParamFields[i-1])->Text();
     }
   }
 
@@ -442,7 +442,7 @@ void MainForm::ChooseCommand() {
   // Remember parameter values
   if (lastmcmd != -1) {
     for (i = 0; i < client_mcommands[lastmcmd].numparams; i++)
-      dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->RecordDefaults();
+      dynamic_cast<AbstractCowEntry*>(NParamFields[i])->RecordDefaults();
 
     defaults->Save();
   }
@@ -485,23 +485,31 @@ void MainForm::ChooseCommand() {
 
           bool typeChanged=0;
           QRect geometry=NParamFields[i]->geometry();
-          if(dynamic_cast<NarsilDoubleEntry*>(NParamFields[i])&&client_mcommands[index].params[i].type=='s')
-          {
+          if (!(dynamic_cast<CowStringEntry*>(NParamFields[i])) && client_mcommands[index].params[i].type=='s') {
             typeChanged=1;
             delete NParamFields[i];
-            connect(NParamFields[i]=new NarsilStringEntry(NTopFrame,"NParamLabels"),
+            connect(NParamFields[i]=new CowStringEntry(NTopFrame,"NParamLabels"),
                 SIGNAL(textEdited(QString)),this,SLOT(OmniSync()));
-          }
-          else if(dynamic_cast<NarsilStringEntry*>(NParamFields[i])&&client_mcommands[index].params[i].type!='s')
-          {
+          } else if (!(dynamic_cast<CowComboEntry*>(NParamFields[i])) && client_mcommands[index].params[i].nt) {
+            CowComboEntry* cce;
             typeChanged=1;
             delete NParamFields[i];
-            NParamFields[i]=new NarsilDoubleEntry(NTopFrame,"NParamLabels");
-            connect(dynamic_cast<NarsilDoubleEntry*>(NParamFields[i]),
+            cce=new CowComboEntry(NTopFrame,"NParamLabels");
+            NParamFields[i] = cce;
+            for (int i_par = 0; client_mcommands[index].params[i].nt[i_par] != 0; i_par++) {
+              cce->addItem(client_mcommands[index].params[i].nt[i_par]);
+            }
+            connect(dynamic_cast<CowComboEntry*>(NParamFields[i]),
+                SIGNAL(valueEdited()),this,SLOT(OmniSync()));
+          } else if (!(dynamic_cast<CowDoubleEntry*>(NParamFields[i])) && client_mcommands[index].params[i].type!='s'
+                     && client_mcommands[index].params[i].nt == 0) {
+            typeChanged=1;
+            delete NParamFields[i];
+            NParamFields[i]=new CowDoubleEntry(NTopFrame,"NParamLabels");
+            connect(dynamic_cast<CowDoubleEntry*>(NParamFields[i]),
                 SIGNAL(valueEdited()),this,SLOT(OmniSync()));
           }
-          if(typeChanged)
-          {
+          if(typeChanged) {
             int w2 = NParamLabels[i]->width();
 
             NParamFields[i]->setFixedWidth(w2/2);
@@ -510,10 +518,10 @@ void MainForm::ChooseCommand() {
             NParamFields[i]->setGeometry(geometry);
           }
           NParamFields[i]->show();
-          dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->SetParentField(index, i);
-          dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->SetType(client_mcommands[index].params[i].type);
+          dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetParentField(index, i);
+          dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetType(client_mcommands[index].params[i].type);
           if (client_mcommands[index].params[i].type == 's') {
-            dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->SetStringValue(
+            dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetStringValue(
                 client_mcommands[index].params[i].field);
           } else {
             int nf;
@@ -521,12 +529,12 @@ void MainForm::ChooseCommand() {
               if (_dirfile->GetData( client_mcommands[index].params[i].field,
                     nf-1, 0, 0, 1, // 1 sample from frame nf-1
                     Float64, (void*)(&indata))==0) {
-                dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->SetDefaultValue(index, i);
+                dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetDefaultValue(index, i);
               } else {
-                dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->SetValue(indata);
+                dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetValue(indata);
               }
             } else {
-              dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->SetDefaultValue(index, i);
+              dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetDefaultValue(index, i);
             }
           }
         } else {
@@ -685,7 +693,7 @@ void MainForm::Quit() {
   // Remember parameter values
   if (lastmcmd != -1) {
     for (i = 0; i < client_mcommands[lastmcmd].numparams; i++)
-      dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->RecordDefaults();
+      dynamic_cast<AbstractCowEntry*>(NParamFields[i])->RecordDefaults();
 
     defaults->Save();
   }
@@ -844,7 +852,7 @@ void MainForm::SendCommand() {
       }
 
       for (j = 0; j < client_mcommands[index].numparams; j++) {
-        dynamic_cast<AbstractNarsilEntry*>(NParamFields[j])->RecordDefaults();
+        dynamic_cast<AbstractCowEntry*>(NParamFields[j])->RecordDefaults();
         if (defaults->asDouble(index, j)
             < client_mcommands[index].params[j].min)
         {
@@ -946,7 +954,7 @@ void MainForm::ChangeHost() {
 //-------------------------------------------------------------
 //
 // WriteCmd (private): keeps a record of the commands sent
-//      with Narsil; also records it in a textbox visible to
+//      with Cow; also records it in a textbox visible to
 //      the user
 //
 //   *dest: the textbox
@@ -999,7 +1007,7 @@ void MainForm::WriteLog(const char *request) {
     for (i=0; i < client_mcommands[j].numparams; i++) {
       LogEntry += QString("%1: %2").
         arg(client_mcommands[j].params[i].name, 30).
-        arg(dynamic_cast<AbstractNarsilEntry*>(NParamFields[i])->Text(), -8);
+        arg(dynamic_cast<AbstractCowEntry*>(NParamFields[i])->Text(), -8);
       if (i % 2 == 1)
         LogEntry += "\n";
     }
@@ -1038,7 +1046,7 @@ void MainForm::WriteLog(const char *request) {
       "-- Source: %2  Type: %3  Entry By: %4\n"
       "-- Frame : %5  File: %6  \n")
     .arg(qdt.toString())
-    .arg("narsil",-10)
+    .arg("Cow",-10)
     .arg(Group, -10)
     .arg((getpwuid(getuid()))->pw_name, -10)
     .arg(_dirfile->NFrames(),-10)
@@ -1048,7 +1056,7 @@ void MainForm::WriteLog(const char *request) {
 
   QString logfilename = LOGFILEDIR +
     qdt.toString("yyyy-MM-dd.hh:mm:ss") + "." +
-    "narsil." +
+    "Cow." +
     Group.replace(" ", "_")+ "." +
     QString((getpwuid(getuid()))->pw_name);
 
@@ -1063,9 +1071,9 @@ void MainForm::WriteLog(const char *request) {
 #ifdef USE_ELOG
   if (fork() == 0) {
     QString elog_command = QString(
-        ELOG " -h " ELOG_HOST " -p " ELOG_PORT " -l blast-narsil "
-        "-u narsil submmblast "
-        "-a User=%1 -a Source=narsil -a Category=%2 -m %3 > /dev/null 2>&1")
+        ELOG " -h " ELOG_HOST " -p " ELOG_PORT " -l blast-cow "
+        "-u cow submmblast "
+        "-a User=%1 -a Source=cow -a Category=%2 -m %3 > /dev/null 2>&1")
       .arg(QString((getpwuid(getuid()))->pw_name))
       .arg(Group)
       .arg(logfilename);
@@ -1204,7 +1212,7 @@ void MainForm::keyPressEvent(QKeyEvent *ev)
 {
   if(ev->key()==Qt::Key_F12&&(ev->modifiers()&Qt::ShiftModifier)) {
     NSendButton->animateClick(100);
-  } else if(dynamic_cast<AbstractNarsilEntry*>(focusWidget())) {
+  } else if(dynamic_cast<AbstractCowEntry*>(focusWidget())) {
     QMainWindow::keyPressEvent(ev);
   } else {
     NOmniBox->keyPressEvent(ev);
@@ -1275,7 +1283,7 @@ void MainForm::PopulateOmnibox()
 MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     Qt::WFlags fl) : QMainWindow( parent, fl )
 {
-  setObjectName(name?QString(name):"Narsil");
+  setObjectName(name?QString(name):"Cow");
   int i;
   char tmp[SIZE_NAME + SIZE_ABOUT + SIZE_PARNAME];
   QSize tempsize;
@@ -1316,7 +1324,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
 
   setWindowTitle(tmp);
 
-  NOmniBox = new NarsilOmniBox(this->centralWidget);
+  NOmniBox = new CowOmniBox(this->centralWidget);
   NOmniBox->setObjectName("NFilter");
   NOmniBox->adjustSize();
   //NOmniBox->setPlaceholderText("Awesome Bar");
@@ -1375,8 +1383,8 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NParamLabels[i]->adjustSize();
     w2 = NParamLabels[i]->width();
 
-    NParamFields[i] = new NarsilDoubleEntry(NTopFrame, "NParamLabels");
-    connect(dynamic_cast<NarsilDoubleEntry*>(NParamFields[i]),
+    NParamFields[i] = new CowDoubleEntry(NTopFrame, "NParamLabels");
+    connect(dynamic_cast<CowDoubleEntry*>(NParamFields[i]),
         SIGNAL(valueEdited()),this,SLOT(OmniSync()));
 
     NParamFields[i]->setFixedWidth(w2/2);
