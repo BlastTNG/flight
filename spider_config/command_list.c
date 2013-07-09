@@ -31,32 +31,32 @@
 
 #define MCECMD1(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 1, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
     }
 
 #define MCECMD2(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 2, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
       {pname, min, max, typ, "NONE"}, \
     }
 
 #define MCECMDC(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 3, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
     }
 
 #define MCECMDR(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 3, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
     }
 
 #define MCECMDCR(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mcenames}}, \
+      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
@@ -88,8 +88,10 @@ const char *const GroupNames[N_GROUPS] = {
 //echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
-/* MCE names */
-const char *mcenames[] = {"all", "X1", "X2", "X3", "X4", "X5", NULL};
+/* parameter value lists */
+const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", NULL};
+const char *autotune_stages[] = {"sa_ramp", "sq2_servo", "sq1_servo",
+  "sq1_ramp", "sq1_ramp_tes", "operate", NULL};
 
 const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
@@ -1202,7 +1204,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD2(data_mode, "Set the MCE data mode", GR_MCE, "Data Mode", 0, 12,
       'i')},
   {MCECMD1(tune_array, "Tune MCE (auto_setup)", GR_MCE)},
-#if 0
+
   {MCECMD2(column_on, "Turn on a MCE column", GR_MCE, "Column", 0, 15, 'i')},
   {MCECMD2(column_off, "Turn off a MCE column", GR_MCE, "Column", 0, 15, 'i')},
   {MCECMD2(sa_offset_bias_ratio, "Set the SA offset bias ratio", GR_MCE,
@@ -1255,15 +1257,15 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       "Count", 0, 65535, 'i')},
   {MCECMD2(sq2_servo_bias_step, "Set the SQ2 servo bias step size", GR_MCE,
       "Step size", 0, 65535, 'i')},
+  {MCECMD2(locktest_pass_amplitude,
+      "Set the 'good squid' amplitude threshold for 'off' recommendation",
+      GR_MCE, "Amplitude", 0, 65535, 'i')},
   {MCECMD2(sq1_ramp_bias_start, "Set the SQ1 ramp bias start", GR_MCE,
       "Start", 0, 65535, 'i')},
   {MCECMD2(sq1_ramp_bias_count, "Set the SQ1 ramp bias count", GR_MCE,
       "Count", 0, 65535, 'i')},
   {MCECMD2(sq1_ramp_bias_step, "Set the SQ1 ramp bias step size", GR_MCE,
       "Step size", 0, 65535, 'i')},
-  {MCECMD2(locktest_pass_amplitude,
-      "Set the 'good squid' amplitude threshold for 'off' recommendation",
-      GR_MCE, "Amplitude", 0, 65535, 'i')},
   {MCECMD1(sq1_ramp_tes_bias_on,
       "Turn on the final TES bias ramp at the end of tuning", GR_MCE)},
   {MCECMD1(sq1_ramp_tes_bias_off,
@@ -1335,7 +1337,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       "Quantum", 0, 65535, 'i')},
   {MCECMDC(sq2_flux_quantum, "SQ2 flux quantum", GR_MCE,
       "Quantum", 0, 65535, 'i')},
-  {MCECMDCR(sq1_flux_quamtum, "SQ1 flux quantum", GR_MCE,
+  {MCECMDCR(sq1_flux_quantum, "SQ1 flux quantum", GR_MCE,
       "Quantum", 0, 65535, 'i')},
   {MCECMDR(sq1_bias, "SQ1 bias", GR_MCE, "Bias", 0, 65535, 'i')},
   {MCECMDR(sq1_bias_off, "SQ1 off bias", GR_MCE, "Bias", 0, 65535, 'i')},
@@ -1345,7 +1347,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDC(sa_fb, "SA feeback", GR_MCE, "Bias", 0, 65535, 'i')},
   {MCECMDC(sa_offset, "SA offset", GR_MCE, "Bias", 0, 65535, 'i')},
   {MCECMDCR(adc_offset, "ADC offset ", GR_MCE, "Offset", 0, 65535, 'i')},
-#endif
 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
