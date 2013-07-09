@@ -149,6 +149,7 @@ struct PointingModeStruct {
   int Nscans;  // number of half-scans per el step in SPIDER mode
   int Nsteps;  // total number of el steps in SPIDER mode
   int new_spider; // set to 1 if a new, distinct spider scan is commanded
+  int new_sine;  // set to 1 if a new, distinct sine scan is commanded
   double overshoot_band; // width of turn around zone for Spider and Sine scans
   double el_step; // size of el microstep used by Spider scan.
                   // Is equal to del iff gondola is in Spider scan mode.

@@ -80,6 +80,13 @@ struct MotorInfoStruct pivotinfo;
 static int scan_region = 0;
 static int scan_region_last = 0;
 
+/* pre-step el destination: used for computing box endpoints during each 
+ * half-scan in Spider Scan mode */
+static double el_dest_pre = 37.5; // arbitrary
+
+/* number of azimuth half-scans elapsed in Spider Scan or Sine Scan modes */
+static int n_scans = 0;
+
 /* possible regions of sinsuoidal scan mode */
 #define SCAN_BEYOND_L 1
 #define SCAN_BEYOND_R 2
@@ -384,7 +391,7 @@ static void GetVElevGoto(double* v_P, double* v_S)
     isStopped = 1;
     el_dest = axes_mode.el_dest = CommandData.pointing_mode.Y
             = ACSData.enc_mean_el;
-     CommandData.power.elmot_auto = 2;
+    CommandData.power.elmot_auto = 2;
   } else {
     isStopped = 0;
   }
@@ -447,7 +454,7 @@ static void GetVElev(double* v_P, double* v_S)
       if (CommandData.power.elmot_auto == 2) {
         CommandData.power.elmot_auto = 0;
       }
-      on_delay = 0; // reset for the next time we turn on
+      on_delay = 0; // /eset for the next time we turn on
     }
   }
 }
@@ -1159,252 +1166,70 @@ static void SetAzScanMode(double az, double left, double right, double v,
     }
 }
 
-/* JAS - sinusoidal scan in azimuth at a fixed amplitude around a given
-         centre point */
-static void DoSineMode(void)
+/* DoSineMode - low-level scan routine. Part of the implementation of both
+ * SineScan and SpiderScan */
+static void DoSineMode(double centre, double ampl, double el_start)
 {
+  /* scan parameters */
   double az, el;
-  double centre, left, right, v_az=0.0, a_az;//, top, bottom, v_az;
-  double v_az_max, ampl, turn_around;
   double az_accel;
   double az_accel_dv;
-  int i_point;
+  double v_az_max;
+  double left, right; 
+  double turn_around;
+  double v_az=0.0; // velocity request
+  double a_az;     // requested acceleration based on position
   double t_before; // time at which to send BSC trigger command
+  double t_step;   // step in el at t_step before turn-around 
+  double daz_step; // dist. at t_step seconds before turn-around
   static double last_v = 0.0;
-  
-  t_before = (DELAY/ACSData.bbc_rate) + CommandData.StarCam[0].expTime/2000.0;
- 
-  az_accel = CommandData.az_accel;
-  az_accel_dv = az_accel/(ACSData.bbc_rate);
 
-  axes_mode.el_mode = AXIS_POSITION;
-  axes_mode.el_dest = CommandData.pointing_mode.Y;
-  axes_mode.el_vel = 0.0;
-
-  i_point = GETREADINDEX(point_index);
-
-  /* propagate az sol'n forward by az_delay */ 
-  az = PointingData[i_point].az + PointingData[i_point].v_az 
-       * (CommandData.pointing_mode.az_delay/ACSData.bbc_rate);
-  el = PointingData[i_point].el;
-
-  centre = CommandData.pointing_mode.X;
-  ampl = (CommandData.pointing_mode.w)/2.0;
-
-  SetSafeDAz(az, &centre); // don't cross the sun between here and centre
-    
-  right = centre + ampl;
-  
-  left = centre - ampl;
-
-  /*SetSafeDAz(az, &left);     // don't cross sun between here and left
-  SetSafeDAz(left, &right);  // don't cross sun between left and right
- 
-  if (right < left) {
-    left -= 360.0;
-  }*/
-
-  v_az_max = sqrt(az_accel * ampl);
-  
-  // |distance| from end point when V_req = V_AZ_MIN
-  turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
-
-  // This should never ever matter.  MIN_SCAN = 0.1 deg
-  if (right-left < MIN_SCAN) {
-    left = centre - MIN_SCAN/2.0; 
-    right = left + MIN_SCAN;
-    ampl = right - centre;
-  }
-
-  axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
-
-  /* case 1: moving into scan from beyond left endpoint: */
-  if (az < left - CommandData.pointing_mode.overshoot_band) {
-    v_az = sqrt(2.0*az_accel*(left - CommandData.pointing_mode.overshoot_band - az)) + V_AZ_MIN;
-    a_az = -az_accel; 
-    //a_az = 0.0;
-    if (v_az > v_az_max) {
-      v_az = v_az_max;
-      a_az = 0.0;
-    }
-    axes_mode.az_vel = v_az;
-    axes_mode.az_accel = a_az;
-  
-  /* case 2: moving into quad from beyond right endpoint: */
-  } else if (az > right + CommandData.pointing_mode.overshoot_band) {
-    v_az = -sqrt(2.0*az_accel*(az-(right+CommandData.pointing_mode.overshoot_band))) - V_AZ_MIN;
-    a_az = az_accel;
-    //a_az = 0.0;
-    if (v_az < -v_az_max) {
-      v_az = -v_az_max;
-      a_az = 0.0;
-    } 
-    axes_mode.az_vel = v_az;
-    axes_mode.az_accel = a_az;
-
-  /* case 3: moving from left to right endpoints */
-  } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
-             && ((PointingData[i_point].v_az
-                  +PointingData[i_point].offset_ofyaw_gy) > 0.0 ) ) {
-             //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
-    v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
-    a_az = az_accel*( (centre - az)/ampl ); 
-
-    // star camera trigger (lemur?)
-    if (az >= (right + 
-        ampl*(cos(sqrt(az_accel/ampl)*t_before) - 1.0))) {
-      bsc_trigger = 1;
-    } else {
-      bsc_trigger = 0;
-    }
-    axes_mode.az_vel = v_az;
-    axes_mode.az_accel = a_az;
-
-  /* case 4: moving from right to left endpoints */
-  } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
-              && ( (PointingData[i_point].v_az
-	            + PointingData[i_point].offset_ofyaw_gy) < 0.0 ) ) {
-              //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
-    v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
-    a_az = az_accel*( (centre - az)/ampl );
-  
-    // star camera trigger (lemur?)
-    if (az <= (left + 
-        ampl*(1.0 - cos(sqrt(az_accel/ampl)*t_before)))) {
-      bsc_trigger = 1;
-    } else {
-      bsc_trigger = 0;
-    }
-
-    axes_mode.az_vel = v_az;
-    axes_mode.az_accel = a_az;
-
-  /* case 5: in left turn-around zone */ 
-  } else if ( az <= left+turn_around ) {
-    //v_az = V_AZ_MIN;
-    v_az = last_v + az_accel_dv;
-    if (v_az > V_AZ_MIN) {
-      v_az = V_AZ_MIN;
-    }
-    a_az = az_accel*( (centre - az)/ampl );
-    
-    axes_mode.az_vel = v_az; 
-    axes_mode.az_accel = a_az;
-    
-  /* case 6: in right turn-around zone */   
-  } else if (az >= right-turn_around) {
-    //v_az = -V_AZ_MIN;
-    v_az = last_v - az_accel_dv;
-    if (v_az < -V_AZ_MIN) {
-      v_az = -V_AZ_MIN;
-    }
-    a_az = az_accel*( (centre - az)/ampl );
-    
-    axes_mode.az_vel = v_az;
-    axes_mode.az_accel = a_az;
-  }
-
-  last_v = v_az;
-}
-
-/* JAS - "modified quad" scan mode for Spider */
-static void DoSpiderMode(void)
-{
-  double ra_start, dec_start;
-  double az_start, el_start;
-  double az, el;
-  double lst, lat;
-  double c_az[4], c_el[4]; // corner az and corner el
-  double a_az; // requested acceleration based on position
-  static double last_v = 0.0;
-  
-  /* parameters of "instantaneous" sinusoidal az scan: */
-  double centre, left, right, top, bottom, v_az;
-  double az_of_bot;
-  double v_az_max, ampl, turn_around;
-  double az_accel;
-  double az_accel_dv;
-  
-  double t_before; // time at which to send BSC trigger command
-  double t_step;   // amount time (s) before turn-around at which el micro-step is  
-                   // commanded
-  int i, i_point;
   int N_scans; // number of azimuth half-scans per el step
- 
+  int i_point;
+
   static int past_step_point = 0;
   static int past_step_point_last = 0;
-  
-  static int n_scans = 0; // number of azimuth half-scans elapsed;
-  
   static int in_scan = 0;
-  
-  /*pre-step el destination: used for computing box endpoints during each half-scan*/
-  
-  static double el_dest_pre = 37.5; // arbitrary
-  
-  t_before = (DELAY/ACSData.bbc_rate) + CommandData.StarCam[0].expTime/2000.0;
-  
-  t_step = 0.35; // "on_delay" in GetIElev + (1/2)*(step duration) 
-  
-  az_accel = CommandData.az_accel;
-  az_accel_dv = az_accel/(ACSData.bbc_rate);
-  
-  N_scans = CommandData.pointing_mode.Nscans;
-  
-  ra_start = CommandData.pointing_mode.X;
-  dec_start = CommandData.pointing_mode.Y;
 
-  i_point = GETREADINDEX(point_index);
-  
-  lst = PointingData[i_point].lst;
-  lat = PointingData[i_point].lat;
-
-  /* propagate az sol'n forward by az_delay */ 
-  az = PointingData[i_point].az + PointingData[i_point].v_az 
-       * (CommandData.pointing_mode.az_delay/ACSData.bbc_rate);
-  el = PointingData[i_point].el;
-  
-  /* convert ra/decs to az/el */
-  for (i = 0; i < 4; i++) {
-    radec2azel(CommandData.pointing_mode.ra[i],CommandData.pointing_mode.dec[i],
-               lst, lat, c_az+i, c_el+i);
-  }
-  
-  radec2azel(ra_start, dec_start, lst, lat, &az_start, &el_start);
-
-  if (CommandData.pointing_mode.new_spider) {
+  if (CommandData.pointing_mode.new_sine) {
     n_scans = 0;
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_dest = el_dest_pre = el_start;
     axes_mode.el_vel = 0.0;
     CommandData.pointing_mode.del = CommandData.pointing_mode.el_step;
-    CommandData.pointing_mode.new_spider = 0;
-  }
-   
-  radbox_endpoints(c_az, c_el, el_dest_pre, &left, &right, &bottom, &top, &az_of_bot);
-  
-  /* Rigmarole to make sure we don't cross the sun between here and scan centre */
- 
-  if (left > right) {
-    left -=360.0;
+    CommandData.pointing_mode.new_sine = 0;
   }
 
-  ampl = (right - left) / 2.0;
-  centre = (left + right) / 2.0;
-  
+  i_point = GETREADINDEX(point_index);
+
+  t_before = (DELAY/ACSData.bbc_rate) + CommandData.StarCam[0].expTime/2000.0;
+  //t_step = 0.35; // "on_delay" in GetIElev + (1/2)*(step duration) 
+  t_step = 0.5; 
+
+  az_accel = CommandData.az_accel;
+  az_accel_dv = az_accel/(ACSData.bbc_rate);
+
+  N_scans = CommandData.pointing_mode.Nscans;
+
+  /* propagate az sol'n forward by az_delay */ 
+  az = PointingData[i_point].az + PointingData[i_point].v_az 
+       * (CommandData.pointing_mode.az_delay/ACSData.bbc_rate);
+  el = PointingData[i_point].el;
+
+  /* make sure we don't cross the sun between here and scan centre */
   SetSafeDAz(az, &centre);
   
   left = centre - ampl;
   right = centre + ampl;
   
-  // This should never ever matter.  MIN_SCAN = 0.1 deg
+  /* This should never ever matter.  MIN_SCAN = 0.1 deg */
   if (right-left < MIN_SCAN) {
     left = centre - MIN_SCAN/2.0; 
     right = left + MIN_SCAN;
     ampl = right - centre;
   }
 
-  /*if ( (PointingData[i_point].sun_az > left) && 
+   /*if ( (PointingData[i_point].sun_az > left) && 
        (PointingData[i_point].sun_az < right) ) {
 
     bprintf(err, "The sun is inside the scan region! Stopping gondola.");
@@ -1420,15 +1245,12 @@ static void DoSpiderMode(void)
     return;
 
   }
-*/
+  */
 
   v_az_max = sqrt(az_accel * ampl);
   
-  
   // |distance| from end point when V_req = V_AZ_MIN
   turn_around = ampl*(1 - sqrt(1-(V_AZ_MIN*V_AZ_MIN)/(v_az_max*v_az_max)));
-
- 
 
   axes_mode.az_mode = AXIS_VEL; // applies in all cases below:
 
@@ -1438,7 +1260,8 @@ static void DoSpiderMode(void)
     scan_region = SCAN_BEYOND_L;
     scan_region_last = scan_region;
     CommandData.pointing_mode.is_turn_around = 0;
-    v_az = sqrt(2.0*az_accel*(left - CommandData.pointing_mode.overshoot_band - az)) + V_AZ_MIN;
+    v_az = sqrt(2.0*az_accel*(left - CommandData.pointing_mode.overshoot_band -
+           az)) + V_AZ_MIN;
     a_az = -az_accel; 
     //a_az = 0.0;
     if (v_az > v_az_max) {
@@ -1453,7 +1276,8 @@ static void DoSpiderMode(void)
     scan_region = SCAN_BEYOND_R;
     scan_region_last = scan_region;
     CommandData.pointing_mode.is_turn_around = 0;
-    v_az = -sqrt(2.0*az_accel*(az-(right+CommandData.pointing_mode.overshoot_band))) - V_AZ_MIN;
+    v_az = -sqrt(2.0*az_accel*(az-(right + 
+           CommandData.pointing_mode.overshoot_band))) - V_AZ_MIN;
     a_az = az_accel;
     //a_az = 0.0;
     if (v_az < -v_az_max) {
@@ -1470,7 +1294,6 @@ static void DoSpiderMode(void)
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     scan_region = SCAN_L_TO_R;
     CommandData.pointing_mode.is_turn_around = 0;
- 
   
     if ( ((az - left) > ampl/10.0) && ( (az-left) < (ampl/10.0 + 1.0) ) ) { 
       // ampl/10 deg. in from left turn-around
@@ -1481,7 +1304,7 @@ static void DoSpiderMode(void)
     v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
     a_az = az_accel*( (centre - az)/ampl ); 
 
-    // star camera trigger (lemur?)
+    /* star camera trigger (lemur?) */
     if (az >= (right + 
         ampl*(cos(sqrt(az_accel/ampl)*t_before) - 1.0))) {
       bsc_trigger = 1;
@@ -1489,21 +1312,35 @@ static void DoSpiderMode(void)
       bsc_trigger = 0;
     }
     
-    // start el step at position corresponding to t_step seconds before turn-around
-    if (az >= (right + ampl*(cos(sqrt(az_accel/ampl)*t_step) - 1.0))) {
+    /* start el step at position corresponding to t_step seconds before 
+     * turn-around OR 0.05 deg. before turn-around, whichever is larger  */
+    daz_step = ampl*(cos(sqrt(az_accel/ampl)*t_step) - 1.0);
+    daz_step = fabs(daz_step) > 0.05 ? daz_step : -0.05;
+    if (az >= (right + daz_step)) {
       past_step_point = 1;
       if ( past_step_point_last == 0 ) {
         n_scans++;
-	if ( (n_scans % N_scans) == 0 ) { // step in elevation
+        if ( (n_scans - N_scans*CommandData.pointing_mode.Nsteps) == N_scans) {
+         //bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
+	        //n_scans); 
+          n_scans = 0; 
+        }
+	      if ( (n_scans % N_scans) == 0 ) { // step in elevation
           bprintf(info, "stepping in el at right turn around");
           axes_mode.el_mode = AXIS_POSITION;
           CommandData.pointing_mode.el_mode = P_EL_GOTO;
-          axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
+          axes_mode.el_dest = el_start + (n_scans/N_scans)
+                              *CommandData.pointing_mode.del;
+          /*
+          bprintf(info, 
+          "n_scans = %d, N_scans = %d, el_start = %f, del = %f, dest = %f",
+          n_scans, N_scans, el_start, CommandData.pointing_mode.del, 
+          axes_mode.el_dest);
+          */
           axes_mode.el_vel = 0.0;
         }  
       }
       past_step_point_last = past_step_point;
-      //bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
     }
     
     axes_mode.az_vel = v_az;
@@ -1512,7 +1349,7 @@ static void DoSpiderMode(void)
   /* case 4: moving from right to left endpoints */
   } else if ( (az > (left+turn_around)) && (az < (right-turn_around)) 
               && ( (PointingData[i_point].v_az
-		    +PointingData[i_point].offset_ofyaw_gy) < 0.0) ) {
+		          + PointingData[i_point].offset_ofyaw_gy) < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     scan_region = SCAN_R_TO_L;
     CommandData.pointing_mode.is_turn_around = 0;
@@ -1534,25 +1371,35 @@ static void DoSpiderMode(void)
       bsc_trigger = 0;
     }
     
-    // start el step at position corresponding to t_step seconds before turn-around
-    if (az <= (left + ampl*(1.0 - cos(sqrt(az_accel/ampl)*t_step))) ) {
+    /* start el step at position corresponding to t_step seconds before 
+     * turn-around OR 0.05 deg. before turn_around, whichever is larger */
+    daz_step = ampl*(1.0 - cos(sqrt(az_accel/ampl)*t_step));
+    daz_step = fabs(daz_step) > 0.05 ? daz_step : 0.05;
+    if (az <= (left + daz_step)) {
       past_step_point = 1;
       if ( past_step_point_last == 0 ) {
         n_scans++;
-	
-	if ( (n_scans % N_scans) == 0 ) { // step in elevation
+        if ( (n_scans - N_scans*CommandData.pointing_mode.Nsteps) == N_scans) {
+          bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
+	        n_scans); 
+          n_scans = 0; 
+        }
+	      if ( (n_scans % N_scans) == 0 ) { // step in elevation
           bprintf(info, "stepping in el at left turn around");
           axes_mode.el_mode = AXIS_POSITION;
           CommandData.pointing_mode.el_mode = P_EL_GOTO;
-          axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
+          axes_mode.el_dest = el_start + (n_scans/N_scans)
+                              *CommandData.pointing_mode.del;
+          /*
+          bprintf(info, 
+          "n_scans = %d, N_scans = %d, el_start = %f, del = %f, dest = %f",
+          n_scans, N_scans, el_start, CommandData.pointing_mode.del, 
+          axes_mode.el_dest);
+          */
           axes_mode.el_vel = 0.0;
         }
-        
       }
       past_step_point_last = past_step_point;
-     
-      //bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
-    
     }
     
     axes_mode.az_vel = v_az;
@@ -1566,17 +1413,7 @@ static void DoSpiderMode(void)
       
     past_step_point = 0; // reset for the next half-scan
     past_step_point_last = past_step_point;
-    //if (scan_region_last == SCAN_R_TO_L) {
-    //  n_scans++;
-    //  bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
-    //  if ( (n_scans % N_scans) == 0 ) { // step in elevation
-    //    bprintf(info, "stepping in el at left turn around");
-    //    axes_mode.el_mode = AXIS_POSITION;
-     //   axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
-      //  axes_mode.el_vel = 0.0;
-      //}
-    //}
-    
+
     v_az = last_v + az_accel_dv;
     if (v_az > V_AZ_MIN) {
       v_az = V_AZ_MIN;
@@ -1595,17 +1432,6 @@ static void DoSpiderMode(void)
     past_step_point = 0; // reset for the next half-scan
     past_step_point_last = past_step_point;
 
-   // if (scan_region_last == SCAN_L_TO_R) {
-  //    n_scans++;
-//       bprintf(info, "elapsed half-scans (n)=%d, half-scans per el step (N)=%d, (n mod N)=%d", n_scans, N_scans, (n_scans%N_scans));
-     // if ( (n_scans % N_scans) == 0 ) { // step in elevation
-       // bprintf(info, "stepping in el at right turn around");
-       // axes_mode.el_mode = AXIS_POSITION;
-      //  axes_mode.el_dest = el_start + (n_scans/N_scans)*CommandData.pointing_mode.del;
-     //   axes_mode.el_vel = 0.0;
-      //}
-    //}
-    
     v_az = last_v - az_accel_dv;
     if (v_az < -V_AZ_MIN) {
       v_az = -V_AZ_MIN;
@@ -1616,15 +1442,63 @@ static void DoSpiderMode(void)
     axes_mode.az_accel = a_az;
   }
 
-  if (n_scans >= N_scans*CommandData.pointing_mode.Nsteps) {
-    bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
-	    n_scans); 
-    n_scans = 0;
-  }
 
   last_v = v_az;
-
 }
+
+
+/* modified quad (radbox) scan mode for Spider */
+static void DoSpiderMode(void)
+{
+  /* parameters of quad */
+  double ra_start, dec_start;
+  double az_start, el_start;
+  double lst, lat;
+  double c_az[4], c_el[4]; // corner az and corner el
+  
+  /* parameters of "instantaneous" sinusoidal az scan: */
+  double ampl, centre, left, right, top, bottom;
+  double az_of_bot;
+
+  int i, i_point;
+
+  ra_start = CommandData.pointing_mode.X;
+  dec_start = CommandData.pointing_mode.Y;
+
+  i_point = GETREADINDEX(point_index);
+  
+  lst = PointingData[i_point].lst;
+  lat = PointingData[i_point].lat;
+  
+  /* convert ra/decs to az/el */
+  for (i = 0; i < 4; i++) {
+    radec2azel(CommandData.pointing_mode.ra[i],
+               CommandData.pointing_mode.dec[i],
+               lst, lat, c_az+i, c_el+i);
+  }
+  radec2azel(ra_start, dec_start, lst, lat, &az_start, &el_start);
+
+  if (CommandData.pointing_mode.new_spider) {
+    n_scans = 0;
+    axes_mode.el_mode = AXIS_POSITION;
+    axes_mode.el_dest = el_dest_pre = el_start;
+    axes_mode.el_vel = 0.0;
+    CommandData.pointing_mode.del = CommandData.pointing_mode.el_step;
+    CommandData.pointing_mode.new_spider = 0;
+  }
+
+  radbox_endpoints(c_az, c_el, el_dest_pre, &left, &right, &bottom, &top, 
+                   &az_of_bot);
+
+  if (left > right) {
+    left -=360.0;
+  }
+  ampl = (right - left) / 2.0;
+  centre = (left + right) / 2.0;
+
+  DoSineMode(centre, ampl, el_start);
+}
+
 
 static void DoAzScanMode(void)
 {
@@ -2530,7 +2404,8 @@ void UpdateAxesMode(void)
       DoSpiderMode();
       break;
     case P_SINE:
-      DoSineMode();
+      DoSineMode(CommandData.pointing_mode.X, (CommandData.pointing_mode.w)/2.0,
+                 CommandData.pointing_mode.Y);
       break;
     case P_LOCK:
       axes_mode.el_mode = AXIS_LOCK;

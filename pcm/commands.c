@@ -1107,12 +1107,23 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.az_delay = rvalues[6];
       break;
     case sine_scan:
+      is_new = 0;
+      if ( (CommandData.pointing_mode.mode != P_SINE) ||
+           (CommandData.pointing_mode.w != 2.0*rvalues[0]) || // scan width
+           (CommandData.pointing_mode.X != rvalues[1]) || // scan centre
+           (CommandData.pointing_mode.Y != rvalues[2]) ) {
+        is_new = 1;
+      }
+      if (is_new) {
+        CommandData.pointing_mode.new_sine = 1;
+      }
       CommandData.pointing_mode.w = 2.0*rvalues[0];
       CommandData.pointing_mode.X = rvalues[1];
       CommandData.pointing_mode.Y = rvalues[2];
       CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.is_turn_around = 0;
       CommandData.pointing_mode.mode = P_SINE;
+      CommandData.pointing_mode.el_mode = P_EL_GOTO;
       break;
       /***************************************/
       /********** Pointing Motor Trims *******/
@@ -2173,6 +2184,7 @@ void InitCommandData()
   CommandData.pointing_mode.Nscans = 1;
   CommandData.pointing_mode.Nsteps = 10;
   CommandData.pointing_mode.new_spider = 1;
+  CommandData.pointing_mode.new_sine = 1;
   CommandData.pointing_mode.overshoot_band = 0.15;
   CommandData.pointing_mode.el_step = 0.0;
   CommandData.pointing_mode.is_turn_around = 0;
