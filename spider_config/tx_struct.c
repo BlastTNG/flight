@@ -353,32 +353,8 @@ struct ChannelStruct SlowChannels[] = {
 
   {"ifpwr",         'w', HWP_D,  50,                1.0,             0.0, 'u', U_NONE},
   {"hwp_bias",      'w', HWP_D,  54,                1.0,             0.0, 'u', U_NONE},
-  //TODO replace these with one write
-  {"phase_00_hwp",  'w', HWP_A1,  0,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_01_hwp",  'w', HWP_A1,  1,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_02_hwp",  'w', HWP_A1,  2,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_03_hwp",  'w', HWP_A1,  3,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_04_hwp",  'w', HWP_A1,  4,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_05_hwp",  'w', HWP_A1,  5,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_06_hwp",  'w', HWP_A1,  6,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_07_hwp",  'w', HWP_A1,  7,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_08_hwp",  'w', HWP_A1,  8,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_09_hwp",  'w', HWP_A1,  9,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_10_hwp",  'w', HWP_A1, 10,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_11_hwp",  'w', HWP_A1, 11,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_12_hwp",  'w', HWP_A1, 12,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_13_hwp",  'w', HWP_A1, 13,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_14_hwp",  'w', HWP_A1, 14,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_15_hwp",  'w', HWP_A1, 15,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_16_hwp",  'w', HWP_A1, 16,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_17_hwp",  'w', HWP_A1, 17,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_18_hwp",  'w', HWP_A1, 18,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_19_hwp",  'w', HWP_A1, 19,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_20_hwp",  'w', HWP_A1, 20,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_21_hwp",  'w', HWP_A1, 21,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_22_hwp",  'w', HWP_A1, 22,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_23_hwp",  'w', HWP_A1, 23,               I2DEG,            0.0, 'u',U_PH_DEG},
-  {"phase_24_hwp",  'w', HWP_A1, 24,               I2DEG,            0.0, 'u',U_PH_DEG},
+  //with quadrature code, phase_hwp is deprecated
+  {"phase_hwp",  'w', HWP_A1,  0,               I2DEG,            0.0, 'u',U_PH_DEG},
 
   // TODO: Give these real names.
   {"vt_1_if",      'r',  HWP_A2, 37, CAL16B(         1.0,           0.0), 'u', U_V_V},
@@ -785,7 +761,7 @@ struct ChannelStruct SlowChannels[] = {
   {"rate_samp_adc",  'w', LOOP0,  42,      20000.0/65535.0,          0.0, 'u', U_F_HZ},
 
   /* LOOP0 4-5 are wide fast TODO (change when hwp counts moved) */
-  {"enc_cnt_x1_hwp",'w', LOOP0,  4,    LI2DEG,      0.0,      'u',      U_P_DEG},
+  {"enc_cnt_x1_hwp",'w', LOOP0,  4,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_x2_hwp",'w', LOOP0,  6,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_x3_hwp",'w', LOOP0,  7,     I2DEG,      0.0,      'u',      U_P_DEG},
   {"enc_cnt_x4_hwp",'w', LOOP0,  8,     I2DEG,      0.0,      'u',      U_P_DEG},

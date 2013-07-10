@@ -1349,7 +1349,7 @@ void UpdateBBCFrame()
   WriteMot(index==14);
   updateTableSpeed();
   WriteChatter(index);
-  countHWPEncoder();
+  countHWPEncoder(index);
   cameraTriggers();
 
   WriteAux();

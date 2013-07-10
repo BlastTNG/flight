@@ -121,8 +121,7 @@ void StoreHWPBus(void)
   static struct NiosStruct* statusHwpAddr;
   static struct NiosStruct* posHwpAddr[NHWP];
   static struct NiosStruct* hwpBiasAddr;
-  //TODO change DSP code so that hwp phase requires only one channel
-  static struct NiosStruct* phaseHwpAddr[25];
+  static struct NiosStruct* phaseHwpAddr;
   double degrees;
 
   if (firsttime)
@@ -137,11 +136,7 @@ void StoreHWPBus(void)
       sprintf(namebuf, "pos_x%i_hwp", i+1);
       posHwpAddr[i] = GetNiosAddr(namebuf);
     }
-    for (i=0; i<25; i++) {
-      char namebuf[100];
-      sprintf(namebuf, "phase_%02i_hwp", i);
-      phaseHwpAddr[i] = GetNiosAddr(namebuf);
-    }
+    phaseHwpAddr = GetNiosAddr("phase_hwp");
   }
   WriteData(hwpBiasAddr, CommandData.hwp.bias_mask, NIOS_QUEUE);
   WriteCalData(velHwpAddr, CommandData.hwp.vel, NIOS_QUEUE);
@@ -154,15 +149,14 @@ void StoreHWPBus(void)
     WriteCalData(posHwpAddr[i], degrees, NIOS_QUEUE);
   }
 
-  for (i=0; i<25; i++)
-    WriteCalData(phaseHwpAddr[i], CommandData.hwp.phase, NIOS_QUEUE);
+  WriteCalData(phaseHwpAddr, CommandData.hwp.phase, NIOS_QUEUE);
 
   if (poll_timeout > 0) poll_timeout--;
 }
 
-void countHWPEncoder()
+void countHWPEncoder(int index)
 {
-  int i;
+  int i, j;
   static int firsttime = 1;
   //TODO upgrade to handle reading all NHWP encoders
   static struct BiPhaseStruct* encSHwpAddr[NHWP];
@@ -170,19 +164,19 @@ void countHWPEncoder()
 
   double degrees;
 
-  static double data_shaft[5] = {0};
+  static double data[NHWP][5] = {{0}};
 
   //sanity check on the voltage change between min/max ticks
   //TODO setup system to actually measure noise level when not moving
   double noise_level = 1.e-5; //volts, exaggerated
   double min_amp = 20 * noise_level;
-  static double last_tick_data = -20.;  //initialize far from all real values
+  static double last_tick_data[NHWP];
 
   //sanity check the number of samples between ticks: half an expected period
   int samples_per_tick = ceil(( (360.0/465.0)/40.0 )
       * (ACSData.bbc_rate / CommandData.hwp.vel));
   int min_tick_spacing = ceil(samples_per_tick / 2.0);
-  static int since_last_tick = 0;
+  static int since_last_tick[NHWP];
 
   if (firsttime)
   {
@@ -193,36 +187,44 @@ void countHWPEncoder()
       encSHwpAddr[i] = GetBiPhaseAddr(namebuf);
       sprintf(namebuf, "enc_cnt_x%i_hwp", i+1);
       encCntHwpAddr[i] = GetNiosAddr(namebuf);
+
+      last_tick_data[i] = -20.;  //initialize far from all real values
+      since_last_tick[i] = min_tick_spacing;  //allow detection immediately
     }
   }
 
-  //shift new data into buffer
-  for (i=4; i>0; i--) data_shaft[i] = data_shaft[i-1];
-  data_shaft[0] = ReadCalData(encSHwpAddr[0]);
-  since_last_tick++;
+  for (i=0; i<NHWP; i++) {
+    //shift new data into buffer
+    for (j=4; j>0; j--) data[i][j] = data[i][j-1];
+    data[i][0] = ReadCalData(encSHwpAddr[i]);
+    since_last_tick[i]++;
 
-  //check to see if this is a minimum or maximium
-  if ( ((data_shaft[0] < data_shaft[2]) && (data_shaft[4] < data_shaft[2]))
-      || ((data_shaft[0] > data_shaft[2]) && (data_shaft[4] > data_shaft[2])) )
-  {
-    if (fabs(data_shaft[1] - last_tick_data) > min_amp) { //enough amplitude?
-      if (since_last_tick > min_tick_spacing) { //far enough from last tick?
-        since_last_tick = 0;
-        last_tick_data = data_shaft[1];
-        if (hwp_data[0].direction) hwp_data[0].shaft_count++;
-        else hwp_data[0].shaft_count--;
+    //check to see if this is a minimum or maximium
+    if ( ((data[i][0] < data[i][2]) && (data[i][4] < data[i][2]))
+        || ((data[i][0] > data[i][2]) && (data[i][4] > data[i][2])) )
+    {
+      if (fabs(data[i][2] - last_tick_data[i]) > min_amp) {
+        if (since_last_tick[i] > min_tick_spacing) {
+          //tick.
+          since_last_tick[i] = 0;
+          last_tick_data[i] = data[i][2];
+          if (hwp_data[i].direction) hwp_data[i].shaft_count++;
+          else hwp_data[i].shaft_count--;
+        }
       }
     }
-  }
 
-  //write the count (converted to degrees) to the frame
-  //(200 steps/rev) / (40 counts/rev) = (5 steps/count)
-  degrees = Phytron_S2D(&bus, 0,
-      hwp_data[0].shaft_count * 5 * bus.stepper[0].usteps);
-  while (degrees < 0) degrees += 360.;
-  while (degrees > 360.) degrees -= 360.;
-  //TODO write more slowly once done testing
-  WriteCalData(encCntHwpAddr[0], degrees, NIOS_QUEUE);
+    //this function is called at fast rate. Only write data at slow rate
+    if (index == 0) {
+      //write the count (converted to degrees) to the frame
+      //(200 steps/rev) / (40 counts/rev) = (5 steps/count)
+      degrees = Phytron_S2D(&bus, 0,
+          hwp_data[i].shaft_count * 5 * bus.stepper[i].usteps);
+      while (degrees < 0) degrees += 360.;
+      while (degrees > 360.) degrees -= 360.;
+      WriteCalData(encCntHwpAddr[i], degrees, NIOS_QUEUE);
+    }
+  }
 }
 
 //create a thread for this function
