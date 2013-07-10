@@ -418,7 +418,7 @@ static int16_t coadd(uint32_t datum, uint16_t old_datum)
 static void pushback(void)
 {
   int n;
-  size_t i, ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE;
+  size_t i, ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
 
   /* the buffer containing the first frame */
   static uint16_t data[NUM_ROW * NUM_COL];

@@ -465,7 +465,7 @@ static int acq_err(void *user_data, int sync_num, int err,
   return 1; /* stop this one */
 }
 
-#define ACQ_INTERVAL 5000 /* number of frames in a chunk */
+#define ACQ_INTERVAL 50000 /* number of frames in a chunk */
 static int acq_conf(void)
 {
   int r, i;
