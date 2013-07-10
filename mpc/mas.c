@@ -623,7 +623,7 @@ static int set_directory(void)
 
 void crash_stop(int sig)
 {
-  bprintf(err, "Crash stop.", sig);
+  bprintf(err, "Crash stop.");
   /* reset mce on exit */
   if (mas) {
     mcecmd_hardware_reset(mas);
