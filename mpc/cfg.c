@@ -211,6 +211,8 @@ int flush_experiment_cfg(void)
       bprintf(info, "re-wrote %s", xptname);
     }
 
+  send_mcestat = 1;
+
   return 0;
 }
 
@@ -263,5 +265,18 @@ int serialise_experiment_cfg(void)
     }
   }
 
+  /* update the dead dead detector count */
+  n = 0;
+  s = config_lookup(&expt, "dead_detectors");
+  for (i = 0; i < config_setting_length(s); ++i)
+    if (config_setting_get_int_elem(s, i))
+      n++;
+
+  s = config_lookup(&expt, "frail_detectors");
+  for (i = 0; i < config_setting_length(s); ++i)
+    if (config_setting_get_int_elem(s, i))
+      n++;
+
+  slow_dat.dead_count = n;
   return 0;
 }
