@@ -463,6 +463,10 @@ static void ForwardMCEStat(void)
 {
   /* send it! */
   char data[UDP_MAXSIZE];
+
+  /* update expt config stuff */
+  serialise_experiment_cfg();
+
   size_t len = mpc_compose_stat(mce_stat, nmce, data);
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
   send_mcestat = 0;
@@ -542,7 +546,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_SETINT(locktest_pass_amplitude, "locktest_pass_amplitude");
         CFG_SETSCS(sq1_ramp_bias);
         CFG_TOGGLE(sq1_ramp_tes_bias_on, sq1_ramp_tes_bias_off,
-            "sq1_ramp_bias_ramp");
+            "sq1_ramp_tes_bias");
         CFG_SETSCS(sq1_ramp_tes_bias);
         CFG_SETINTC(tes_bias_idle, "tes_bias_idle");
         CFG_SETINTC(tes_bias_normal, "tes_bias_normal");
@@ -552,7 +556,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_SETINT(tuning_therm_time, "tuning_therm_time");
         CFG_TOGGLE(tuning_do_plots_on, tuning_do_plots_off, "tuning_do_plots");
         CFG_SETINTC(sq2servo_safb_init, "sq2servo_safb_init");
-        CFG_SETINTC(sq1servo_safb_init, "sq1servo_safb_init");
+        CFG_SETINTC(sq1servo_sq2fb_init, "sq1servo_sq2fb_init");
         CFG_SETSCS(ramp_tes);
         CFG_SETINT(ramp_tes_final_bias, "ramp_tes_final_bias");
         CFG_SETINT(ramp_tes_initial_pause, "ramp_tes_initial_pause");
@@ -565,8 +569,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_TOGGLE(flux_jumping_on, flux_jumping_off, "flux_jumping");
         CFG_SETINT(mce_servo_mode, "servo_mode");
         CFG_SETINTC(tes_bias, "tes_bias");
-        CFG_SETINTC(sa_flux_quantum, "sa_flux_quantum");
-        CFG_SETINTC(sq2_flux_quantum, "sq2_flux_quantum");
+        CFG_SETINTC(sa_flux_quantum, "sa_flux_quanta");
+        CFG_SETINTC(sq2_flux_quantum, "sq2_flux_quanta");
         CFG_SETINTCR(sq1_flux_quantum, "flux_quanta_all");
         CFG_SETINTR(sq1_bias, "sq1_bias");
         CFG_SETINTR(sq1_bias_off, "sq1_bias_off");

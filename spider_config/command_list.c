@@ -1267,7 +1267,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_TUNE)},
   {MCECMD2(sq2servo_safb_init, "Override start point for sq2servo call",
       GR_TUNE, "Value", 0, 65535, 'i')},
-  {MCECMD2(sq1servo_safb_init, "Override start point for sq1servo call",
+  {MCECMD2(sq1servo_sq2fb_init, "Override start point for sq1servo call",
       GR_TUNE, "Value", 0, 65535, 'i')},
   {MCECMDSCS(ramp_tes, "set the TES bias ramp parameters", GR_TUNE)},
   {MCECMD2(ramp_tes_final_bias, "Final bias for the TES bias ramp", GR_MCC,

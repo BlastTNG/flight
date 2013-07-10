@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 /* experiment.cfg needs to be flushed */
+static int have_expt_cfg = 0;
 static int expt_cfg_dirty = 0;
 static config_t expt;
 
@@ -147,6 +148,9 @@ int load_experiment_cfg(void)
   char file[1024] = "/data#/mce/current_data/experiment.cfg";
   config_init(&expt);
 
+  if (have_expt_cfg)
+    return 0;
+
   /* use the first available */
   if ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP)
     file[5] = data_drive[0] + '0';
@@ -165,6 +169,7 @@ int load_experiment_cfg(void)
     goto BAD_EXPT_CNF;
   }
 
+  have_expt_cfg = 1;
   return 0;
 
 BAD_EXPT_CNF:
@@ -209,7 +214,54 @@ int flush_experiment_cfg(void)
   return 0;
 }
 
+/* listify experiment.cfg */
 int serialise_experiment_cfg(void)
 {
-  /* listify experiment.cfg */
+  config_setting_t *s;
+  int i, c, r, n;
+
+  if (!have_expt_cfg)
+    return 0;
+
+  for (i = 0; expcfg_list[i].name; ++i) {
+    if ((s = config_lookup(&expt, expcfg_list[i].name)) == NULL) {
+      bprintf(err, "unable to find '%s' in experiment.cfg",
+          expcfg_list[i].name);
+      continue;
+    }
+
+    switch (expcfg_list[i].type) {
+      case CFGSER_BIT:
+        if (expcfg_list[i].count == 0)
+          mce_stat[N_EXP_OFF + expcfg_list[i].offset] = 0;
+
+        if (config_setting_get_int(s)) 
+          mce_stat[N_EXP_OFF + expcfg_list[i].offset] |=
+            (1 << expcfg_list[i].count);
+        break;
+      case CFGSER_BITARR:
+        for (r = 0; r < expcfg_list[i].count; ++r) {
+          n = 0;
+          for (c = 0; c < expcfg_list[i].count; ++c)
+            if (config_setting_get_int_elem(s, r * 16 + c))
+              n |= (1 << c);
+          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] = i * 65536 + r;//n;
+        }
+        break;
+      case CFGSER_INT:
+        for (r = 0; r < expcfg_list[i].count; ++r)
+          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] = i * 65536 + r;//
+            config_setting_get_int_elem(s, r);
+        break;
+      case CFGSER_FLOAT:
+        for (r = 0; r < expcfg_list[i].count; ++r) {
+          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] = i * 65536 + r;
+            65536 * config_setting_get_int_elem(s, r) /
+            (expcfg_list[i].max - expcfg_list[i].min) - expcfg_list[i].min;
+        }
+        break;
+    }
+  }
+
+  return 0;
 }

@@ -20,9 +20,7 @@
 #define CFGSER_BITARR    0
 #define CFGSER_BIT       1
 #define CFGSER_INT       2
-#define CFGSER_INT_ARR   3
-#define CFGSER_FLOAT     4
-#define CFGSER_FLOAT_ARR 5
+#define CFGSER_FLOAT     3
 
 /* serialisation data */
 struct cfg_serial {

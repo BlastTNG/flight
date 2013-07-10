@@ -148,5 +148,6 @@ int cfg_set_float(const char *, int, double);
 int cfg_set_int(const char *, int, int);
 int cfg_set_int_cr(const char *, int, int, int);
 int flush_experiment_cfg(void);
+int serialise_experiment_cfg(void);
 
 #endif

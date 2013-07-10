@@ -193,7 +193,7 @@ enum multiCommand {
   sq1_ramp_tes_bias_on, sq1_ramp_tes_bias_off, sq1_ramp_tes_bias, tes_bias_idle,
   tes_bias_normal, tes_bias_normal_time, tuning_check_bias_on,
   tuning_check_bias_off, tuning_therm_time, tuning_do_plots_on,
-  tuning_do_plots_off, sq2servo_safb_init, sq1servo_safb_init, ramp_tes,
+  tuning_do_plots_off, sq2servo_safb_init, sq1servo_sq2fb_init, ramp_tes,
   ramp_tes_final_bias, ramp_tes_initial_pause, ramp_tes_period,
   num_rows_reported, readout_row_index, sample_dly, sample_num, fb_dly,
   row_dly, flux_jumping_on, flux_jumping_off, mce_servo_mode, mce_servo_pid,
