@@ -31,7 +31,7 @@ endif
 endif
 
 # Is mas_var new enough?
-MIN_MAS_VERSION=815
+MIN_MAS_VERSION=817
 ifneq (${MAS_VAR},)
 MAS_HAS_INT_VERSION=$(shell if ${MAS_VAR} --int-verson >/dev/null 2>/dev/null; \
 										then echo no; else echo yes; fi)
