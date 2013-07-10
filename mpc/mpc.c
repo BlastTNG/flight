@@ -30,6 +30,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 #include <sys/socket.h>
+#include <signal.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -199,7 +200,12 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     if (ssreq)
       send_mcestat = 1;
     
-    cfg_update_timing(new_row_len, new_data_rate, new_num_rows);
+    if (new_row_len > 1 && new_data_rate > 1 && new_num_rows > 1) {
+      row_len = new_row_len;
+      num_rows = new_num_rows;
+      data_rate = new_data_rate;
+      cfg_update_timing(new_row_len, new_data_rate, new_num_rows);
+    }
 
     /* update the data_modes definition */
     set_data_mode_bits(0, 0, data_mode_bits + 0);
@@ -653,6 +659,8 @@ int main(void)
   buos_use_func(mputs);
   nameThread("Main");
 
+  atexit(crash_stop);
+
   /* for scripts */
   setenv("PYTHONPATH", "/data/mas/mce_script/python:/data/mas/python", 1);
   setenv("PATH", "usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"
@@ -693,6 +701,10 @@ int main(void)
   pthread_create(&data_thread, NULL, mas_data, NULL);
   pthread_create(&task_thread, NULL, task, NULL);
   pthread_create(&acq_thread, NULL, acquer, NULL);
+
+  signal(SIGHUP, crash_stop);
+  signal(SIGINT, crash_stop);
+  signal(SIGTERM, crash_stop);
 
   /* main loop */
   for (;;) {

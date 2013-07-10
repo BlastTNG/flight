@@ -179,9 +179,10 @@ int load_experiment_cfg(void)
     cfg_set_int("row_len", 0, deferred_row_len);
     cfg_set_int("num_rows", 0, deferred_num_rows);
     cfg_set_int("data_rate", 0, deferred_data_rate);
-    expt_cfg_dirty = 1;
-    flush_experiment_cfg();
-    state &= ~st_config;
+    if (expt_cfg_dirty) {
+      flush_experiment_cfg();
+      state &= ~st_config;
+    }
   }
   return 0;
 
@@ -307,6 +308,9 @@ void cfg_update_timing(int row_len, int num_rows, int data_rate)
     cfg_set_int("row_len", 0, row_len);
     cfg_set_int("num_rows", 0, num_rows);
     cfg_set_int("data_rate", 0, data_rate);
-    state &= ~st_config;
+    if (expt_cfg_dirty) {
+      flush_experiment_cfg();
+      state &= ~st_config;
+    }
   }
 }

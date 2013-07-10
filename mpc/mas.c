@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <time.h>
+#include <signal.h>
 
 static unsigned cmd_err = 0;
 
@@ -51,7 +52,7 @@ int acq_check_drives = 0;
 const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
 
 /* mas */
-mce_context_t *mas;
+mce_context_t *mas = NULL;
 
 /* acq */
 mce_acq_t *acq = NULL;
@@ -618,6 +619,19 @@ static int set_directory(void)
   }
 
   return 0;
+}
+
+void crash_stop(int sig)
+{
+  bprintf(err, "Crash stop.", sig);
+  /* reset mce on exit */
+  if (mas) {
+    mcecmd_hardware_reset(mas);
+    mcecmd_interface_reset(mas);
+    mcecmd_hardware_reset(mas);
+  }
+  signal(sig, SIG_DFL);
+  raise(sig);
 }
 
 void *mas_data(void *dummy)

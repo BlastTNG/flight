@@ -149,6 +149,7 @@ extern int comms_lost;
 
 void *mas_data(void *dummy);
 void *acquer(void *dummy);
+void crash_stop(int);
 
 /* The frame acq callback */
 int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);
