@@ -245,17 +245,17 @@ int serialise_experiment_cfg(void)
           for (c = 0; c < expcfg_list[i].count; ++c)
             if (config_setting_get_int_elem(s, r * 16 + c))
               n |= (1 << c);
-          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] = i * 65536 + r;//n;
+          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] = n;
         }
         break;
       case CFGSER_INT:
         for (r = 0; r < expcfg_list[i].count; ++r)
-          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] = i * 65536 + r;//
+          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] =
             config_setting_get_int_elem(s, r);
         break;
       case CFGSER_FLOAT:
         for (r = 0; r < expcfg_list[i].count; ++r) {
-          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] = i * 65536 + r;
+          mce_stat[N_EXP_OFF + expcfg_list[i].offset + r] =
             65536 * config_setting_get_int_elem(s, r) /
             (expcfg_list[i].max - expcfg_list[i].min) - expcfg_list[i].min;
         }
