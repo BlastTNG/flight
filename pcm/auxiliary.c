@@ -304,7 +304,7 @@ void WriteSyncBox(void)
     firsttime = 0;
     rowLenSyncAddr = GetNiosAddr("row_len_sync");
     numRowsSyncAddr = GetNiosAddr("num_rows_sync");
-    freeRunSyncAddr = GetNiosAddr("free_run_sync");
+    freeRunSyncAddr = GetNiosAddr("data_rate_sync");
   }
 
   WriteData(rowLenSyncAddr, SyncBoxData.row_len, NIOS_QUEUE); 

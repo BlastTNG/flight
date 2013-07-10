@@ -1193,19 +1193,20 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   /* Sync Box Commands */
-  {COMMAND(write_row_len), "Change the row length parameter", GR_SYNC, 1,
+  {COMMAND(mce_row_len), "Set the MCE per-row dwell time", GR_SYNC, 1,
     {
-      {"value", 1, 4094, 'i', "ROW_LEN_SYNC"}
+      {"Row Len (25MHz cycles)", 5, 4094, 'i', "ROW_LEN_SYNC"}
     }
   },
-  {COMMAND(write_num_rows), "Change the num rows parameter", GR_SYNC, 1,
+  {COMMAND(mce_num_rows), "Set the number of MCE rows servoed", GR_SYNC, 1,
     {
-      {"value", 1, 63, 'i', "NUM_ROWS_SYNC"}
+      {"Num Rows", 1, 41, 'i', "NUM_ROWS_SYNC"}
     }
   },
-  {COMMAND(write_free_run), "Change the free run count parameter", GR_SYNC, 1,
+  {COMMAND(mce_data_rate), "Set the MCE data rate (ARZ per data frame)",
+    GR_SYNC, 1,
     {
-      {"value", 1, 4095, 'i', "FREE_RUN_SYNC"}
+      {"Data Rate", 1, 4095, 'i', "DATA_RATE_SYNC"}
     }
   },
 

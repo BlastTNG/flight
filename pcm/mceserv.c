@@ -23,6 +23,7 @@
 #include "mce_counts.h"
 #include "command_struct.h"
 #include "mpc_proto.h"
+#include "sync_comms.h"
 #include "udp.h"
 #include "tes.h"
 
@@ -102,6 +103,7 @@ static int ForwardCommand(int sock)
 /* Send useful trivia to the MPC */
 static void ForwardNotices(int sock)
 {
+  static int last_dr = -1, last_nr = -1, last_rl = -1;
   static int last_dmb = 0;
   static int last_divisor = -1;
   int this_divisor = CommandData.bbcIsExt ? CommandData.bbcExtFrameRate : 1;
@@ -112,6 +114,9 @@ static void ForwardNotices(int sock)
   if ((last_turnaround != -1 && last_turnaround == this_turnaround) &&
       (this_divisor == last_divisor) &&
       (last_dmb == CommandData.data_mode_bits_serial) &&
+      (last_rl == SyncBoxData.row_len) &&
+      (last_nr == SyncBoxData.num_rows) &&
+      (last_dr == SyncBoxData.free_run) &&
       (request_ssdata == 0)
      )
   {
@@ -120,6 +125,7 @@ static void ForwardNotices(int sock)
   }
 
   len = mpc_compose_notice(this_divisor, this_turnaround, request_ssdata,
+      SyncBoxData.row_len, SyncBoxData.num_rows, SyncBoxData.free_run,
       CommandData.data_mode_bits, udp_buffer);
 
   /* Broadcast this to everyone */
@@ -130,6 +136,9 @@ static void ForwardNotices(int sock)
     last_dmb = CommandData.data_mode_bits_serial;
     last_turnaround = this_turnaround;
     last_divisor = this_divisor;
+    last_rl = SyncBoxData.row_len;
+    last_nr = SyncBoxData.num_rows;
+    last_dr = SyncBoxData.free_run;
     request_ssdata = 0;
   }
 }

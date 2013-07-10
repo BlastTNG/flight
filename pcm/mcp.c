@@ -1130,7 +1130,8 @@ void insertMCEData(unsigned short *RxFrame)
   RxFrame[offset[1]] = 16000*sin((double)i_tmp*0.02) + 32768;
   
   mplex_index++;
-  if (mplex_index>=N_MCE_STAT*6) mplex_index = 0;
+  if (mplex_index >= N_MCE_STAT * 6)
+    mplex_index = 0;
   D = mce_param[mplex_index];
   
   RxFrame[mce_index_offset] = mplex_index;

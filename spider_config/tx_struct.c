@@ -801,10 +801,10 @@ struct ChannelStruct SlowChannels[] = {
   {"state_x6_cycle",  'w', LOOP0,  29,                1.0,            0.0, 'u', U_NONE},
   {"band_az",        'w', LOOP0,  43,                30.0/65535.0,   0.0, 'u', U_P_DEG},
   // TODO: GET RID OF THIS AFTER TURN AROUND FLAG HAS BEEN TESTED AND WORKS
-  {"is_turn_around", 'w', LOOP0,  44,                1.0,            0.0, 'u', U_NONE},
-  {"row_len_sync",   'w', LOOP0,  45,                1.0,            0.0, 'u', U_NONE},
-  {"num_rows_sync",  'w', LOOP0,  46,                1.0,            0.0, 'u', U_NONE},
-  {"free_run_sync",  'w', LOOP0,  47,                1.0,            0.0, 'u', U_NONE},
+  {"is_turn_around", 'w', LOOP0,  44,         1.0,            0.0, 'u', U_NONE},
+  {"row_len_sync",   'w', LOOP0,  45,         1.0,            0.0, 'u', U_NONE},
+  {"num_rows_sync",  'w', LOOP0,  46,         1.0,            0.0, 'u', U_NONE},
+  {"data_rate_sync", 'w', LOOP0,  47,         1.0,            0.0, 'u', U_NONE},
   // LOOP0 48-51 are wide slow
   {"last_b_cmd",     'w', LOOP0,  52,                1.0,             0.0, 'u', U_NONE},
   {"last_i_cmd",     'w', LOOP0,  53,                1.0,             0.0, 'u', U_NONE},

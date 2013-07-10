@@ -179,8 +179,8 @@ enum multiCommand {
   hk_sft_bottom_pulse,
   spider_scan,        sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,         el_rel_move,
-  hwp_bias_on,        hwp_bias_off,      write_row_len,     write_num_rows,
-  write_free_run,     bset,              set_piv_mode,      tune_array,
+  hwp_bias_on,        hwp_bias_off,      mce_row_len,       mce_num_rows,
+  mce_data_rate,      bset,              set_piv_mode,      tune_array,
   data_mode,          data_mode_bits,    start_acq,         reset_acq,
   stop_acq,           mag_cal,           pss_cal,
 

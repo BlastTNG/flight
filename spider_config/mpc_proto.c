@@ -75,7 +75,7 @@ size_t mpc_compose_stat(const uint32_t *stat, int nmce, char *buffer)
  *
  * PCM notice packet looks like:
  *
- * RRNDSTddd
+ * RRNDSTlnrddd...
  *
  * where
  *
@@ -84,52 +84,60 @@ size_t mpc_compose_stat(const uint32_t *stat, int nmce, char *buffer)
  * D = divisor
  * S = super slow data request
  * T = turnaround flag
+ * l = row_len
+ * n = num_rows
+ * r = data_rate
  * d = 20 bytes of data_mode_bits
  */
+#define DMB_OFFSET 9
 size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
-    char data_mode_bits[13][2][2], char *buffer)
+    int row_len, int num_rows, int data_rate, char data_mode_bits[13][2][2],
+    char *buffer)
 {
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'N';
   buffer[3] = divisor & 0xff;
   buffer[4] = request_ssdata ? 1 : 0,
   buffer[5] = turnaround ? 1 : 0;
+  buffer[6] = row_len;
+  buffer[7] = num_rows;
+  buffer[8] = data_rate;
 
   /* we only report the useful data mode bits */
   /* data mode zero */
-  buffer[6] = data_mode_bits[0][0][0];
-  buffer[7] = data_mode_bits[0][0][1];
+  buffer[DMB_OFFSET +  0] = data_mode_bits[0][0][0];
+  buffer[DMB_OFFSET +  1] = data_mode_bits[0][0][1];
 
   /* data mode one */
-  buffer[8]  = data_mode_bits[1][0][0];
-  buffer[9] = data_mode_bits[1][0][1];
+  buffer[DMB_OFFSET +  2]  = data_mode_bits[1][0][0];
+  buffer[DMB_OFFSET +  3] = data_mode_bits[1][0][1];
 
   /* data mode two */
-  buffer[10] = data_mode_bits[2][0][0];
-  buffer[11] = data_mode_bits[2][0][1];
+  buffer[DMB_OFFSET +  4] = data_mode_bits[2][0][0];
+  buffer[DMB_OFFSET +  5] = data_mode_bits[2][0][1];
 
   /* data mode four */
-  buffer[12] = data_mode_bits[4][0][0];
-  buffer[13] = data_mode_bits[4][0][1];
-  buffer[14] = data_mode_bits[4][1][0];
-  buffer[15] = data_mode_bits[4][1][1];
+  buffer[DMB_OFFSET +  6] = data_mode_bits[4][0][0];
+  buffer[DMB_OFFSET +  7] = data_mode_bits[4][0][1];
+  buffer[DMB_OFFSET +  8] = data_mode_bits[4][1][0];
+  buffer[DMB_OFFSET +  9] = data_mode_bits[4][1][1];
 
   /* data mode five */
-  buffer[16] = data_mode_bits[5][0][0];
-  buffer[17] = data_mode_bits[5][0][1];
-  buffer[18] = data_mode_bits[5][1][0];
-  buffer[19] = data_mode_bits[5][1][1];
+  buffer[DMB_OFFSET + 10] = data_mode_bits[5][0][0];
+  buffer[DMB_OFFSET + 11] = data_mode_bits[5][0][1];
+  buffer[DMB_OFFSET + 12] = data_mode_bits[5][1][0];
+  buffer[DMB_OFFSET + 13] = data_mode_bits[5][1][1];
 
   /* data mode ten */
-  buffer[20] = data_mode_bits[10][0][0];
-  buffer[21] = data_mode_bits[10][0][1];
-  buffer[22] = data_mode_bits[10][1][0];
-  buffer[23] = data_mode_bits[10][1][1];
+  buffer[DMB_OFFSET + 14] = data_mode_bits[10][0][0];
+  buffer[DMB_OFFSET + 15] = data_mode_bits[10][0][1];
+  buffer[DMB_OFFSET + 16] = data_mode_bits[10][1][0];
+  buffer[DMB_OFFSET + 17] = data_mode_bits[10][1][1];
 
   /* data mode twelve */
-  buffer[24] = data_mode_bits[12][0][0];
-  buffer[25] = data_mode_bits[12][0][1];
-  return 26;
+  buffer[DMB_OFFSET + 18] = data_mode_bits[12][0][0];
+  buffer[DMB_OFFSET + 19] = data_mode_bits[12][0][1];
+  return DMB_OFFSET + 20;
 }
 
 /* compose a PCM request packet for transmission to PCM
@@ -566,13 +574,12 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
 }
 
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
-    int *divisor, int *ssdata_req, size_t len, const char *data,
-    const char *peer, int port)
+    int *divisor, int *ssdata_req, int *row_len, int *num_rows, int *data_rate,
+    size_t len, const char *data, const char *peer, int port)
 {
   static int last_turnaround = -1;
-  static int last_divisor = -1;
 
-  if (len != 26) {
+  if (len != DMB_OFFSET + 20) {
     bprintf(err, "Bad notice packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
@@ -580,17 +587,18 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
   /* we just do this to get an idea of with whom where conversing */
   bprintf(info, "Noticed by %s/%i", peer, port);
 
+  *divisor = data[3];
+  *ssdata_req = data[4];
+
   if (data[5] != last_turnaround)
     bprintf(info, "%s turnaround", data[5] ? "Into" : "Out of");
   last_turnaround = *turnaround = data[5];
 
-  *ssdata_req = data[4];
+  *row_len = data[6];
+  *num_rows = data[7];
+  *data_rate = data[8];
 
-  if (data[3] != last_divisor)
-    bprintf(info, "MPC/PCM divisor: %i", data[3]);
-  last_divisor = *divisor = data[3];
-
-  *data_mode_bits = data + 6;
+  *data_mode_bits = data + DMB_OFFSET;
 
   return 0;
 }
