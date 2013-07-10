@@ -164,7 +164,7 @@ enum multiCommand {
   thebad_lens_any,    thebad_lens_move,
   theugly_bad_pix,    theugly_blob_params,
   theugly_lens_any,   theugly_lens_move,
-  thegood_lens_params,thebad_lens_params,   theugly_lens_params,
+  thegood_lens_params,thebad_lens_params,   theugly_lens_params, sc_trig_delay,
   table_gain,        table_goto,        table_drift,
   t_bsc_set,         t_rsc_set,         ants_gps,          act_enc_trim,
   hwp_vel,           hwp_i,             hwp_move,          hwp_general,

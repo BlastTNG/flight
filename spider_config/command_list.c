@@ -1131,6 +1131,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_theugly"}
     }
   },
+  {COMMAND(sc_trig_delay), "delay to trigger boresight camera", GR_TRIM, 1,
+    {
+      {"Delay (frames)", 0, 100, 'f', "TRIG_DELAY"}
+    }
+  },
   //STAR CAMERA TABLE
   {COMMAND(table_gain), "RSC rotary table gains", GR_SCTAB, 3,
     {

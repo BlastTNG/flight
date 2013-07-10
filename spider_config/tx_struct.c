@@ -546,7 +546,7 @@ struct ChannelStruct SlowChannels[] = {
   {"ra_u",             'w', LOOP3, 40,        1.0/100.0,  0.0, 's',     U_NONE},
   {"dec_u",            'w', LOOP3, 41,        1.0/100.0,  0.0, 's',     U_NONE},
   {"roll_u",           'w', LOOP3, 42,        1.0/100.0,  0.0, 's',     U_NONE},
-  /* LOOP3 43 is unused */
+  {"trig_delay",       'w', LOOP3, 43,       1.0/1000.0,  0.0, 'u',     U_NONE},
   /* LOOP3 44-45 are wide */
   {"thresh_b",         'w', LOOP3, 46,       1.0/1000.0,  0.0, 'u',     U_NONE},
   {"grid_b",           'w', LOOP3, 47,              1.0,  0.0, 'u',     U_NONE},

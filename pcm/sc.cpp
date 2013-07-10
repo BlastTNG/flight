@@ -249,6 +249,7 @@ void cameraFields(int which)
   static NiosStruct* Blob1SAddr[3];
   static NiosStruct* Blob2SAddr[3];
   static NiosStruct* BlobIdxAddr[3];
+  static NiosStruct* DelayAddr;
 
   //initialization
   if (firsttime[which]) {
@@ -292,6 +293,7 @@ void cameraFields(int which)
     Blob2SAddr[which] = GetSCNiosAddr("blob02_s",which);
 
     BlobIdxAddr[which] = GetSCNiosAddr("blob_idx",which);
+    DelayAddr = GetNiosAddr("trig_delay");
   }
 
   WriteData(ForceAddr[which], CommandData.StarCam[which].paused, NIOS_QUEUE);
@@ -304,6 +306,7 @@ void cameraFields(int which)
   WriteData(GridAddr[which], CommandData.StarCam[which].grid, NIOS_QUEUE);
   WriteData(ThreshAddr[which], (int)(CommandData.StarCam[which].threshold*1000), NIOS_QUEUE);
   WriteData(BlobMdistAddr[which], CommandData.StarCam[which].minBlobDist, NIOS_QUEUE);
+  WriteData(DelayAddr,(int)(CommandData.trigger_delay*1000), NIOS_QUEUE);
 
 //-----------------
 
