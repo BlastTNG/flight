@@ -59,6 +59,7 @@ extern int pcm_ret_dat;
 extern uint32_t mce_stat[N_MCE_STAT];
 extern int32_t box_temp;
 extern uint8_t drive_map;
+extern int num_rows, row_len, data_rate;
 
 extern size_t frame_size;
 extern int pb_last;
@@ -114,6 +115,16 @@ enum modes { op_init = 0, op_ready, op_tune, op_acq };
 #define DRIVE2_UNMAP 0x0080
 #define DRIVE2_MASK  0x00C0
 
+/* the block update queue */
+#define BLOCKQ_SIZE 100
+struct block_q {
+  const char *c, *r;
+  uint32_t *d;
+  int n;
+};
+extern struct block_q blockq[BLOCKQ_SIZE];
+extern int blockq_head, blockq_tail;
+
 /* high-level tasks */
 extern enum status start_tk;
 extern enum status  stop_tk;
@@ -149,5 +160,6 @@ int cfg_set_int(const char *, int, int);
 int cfg_set_int_cr(const char *, int, int, int);
 int flush_experiment_cfg(void);
 int serialise_experiment_cfg(void);
+void cfg_update_timing(int row_len, int num_rows, int data_rate);
 
 #endif

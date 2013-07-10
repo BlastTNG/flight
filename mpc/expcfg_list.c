@@ -94,6 +94,9 @@ const struct cfg_serial expcfg_list[] = {
   {"frail_servo_d", CFGSER_INT, 1963, 1},              /* total: 1964 45 */
   {"dead_detectors", CFGSER_BITARR, 1964, 33},         /* total: 1997 46 */
   {"frail_detectors", CFGSER_BITARR, 1997, 33},        /* total: 2030 47 */
+  {"num_rows", CFGSER_INT, 2030, 1},                   /* total: 2031 48 */
+  {"row_len", CFGSER_INT, 2031, 1},                    /* total: 2032 49 */
+  {"data_rate", CFGSER_INT, 2032, 1},                  /* total: 2033 4A */
   {0}
 };
 

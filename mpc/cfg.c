@@ -23,10 +23,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-/* experiment.cfg needs to be flushed */
 static int have_expt_cfg = 0;
+/* experiment.cfg needs to be flushed */
 static int expt_cfg_dirty = 0;
 static config_t expt;
+
+static int deferred_timing = 0;
+static int deferred_row_len, deferred_num_rows, deferred_data_rate;
 
 int cfg_set_int(const char *name, int n, int v)
 {
@@ -170,6 +173,16 @@ int load_experiment_cfg(void)
   }
 
   have_expt_cfg = 1;
+  /* deal with deferred row len */
+  if (deferred_timing) {
+    deferred_timing = 0;
+    cfg_set_int("row_len", 0, deferred_row_len);
+    cfg_set_int("num_rows", 0, deferred_num_rows);
+    cfg_set_int("data_rate", 0, deferred_data_rate);
+    expt_cfg_dirty = 1;
+    flush_experiment_cfg();
+    state &= ~st_config;
+  }
   return 0;
 
 BAD_EXPT_CNF:
@@ -279,4 +292,21 @@ int serialise_experiment_cfg(void)
 
   slow_dat.dead_count = n;
   return 0;
+}
+
+/* update row_len, num_rows, data_rate -- the tricky part here is making
+ * sure we've read expcfg before doing it */
+void cfg_update_timing(int row_len, int num_rows, int data_rate)
+{
+  if (!have_expt_cfg) {
+    deferred_timing = 1;
+    deferred_row_len = row_len;
+    deferred_num_rows = num_rows;
+    deferred_data_rate = data_rate;
+  } else {
+    cfg_set_int("row_len", 0, row_len);
+    cfg_set_int("num_rows", 0, num_rows);
+    cfg_set_int("data_rate", 0, data_rate);
+    state &= ~st_config;
+  }
 }

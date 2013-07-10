@@ -88,6 +88,9 @@ int slow_veto = 0;
 /* The slow data struct */
 struct mpc_slow_data slow_dat;
 
+struct block_q blockq[BLOCKQ_SIZE];
+int blockq_head, blockq_tail;
+
 /* drive map */
 uint8_t drive_map = DRIVE0_UNMAP | DRIVE1_UNMAP | DRIVE2_UNMAP;
 int data_drive[3] = {-1, -1, -1};
@@ -127,6 +130,9 @@ int send_mcestat = 0;
 
 /* box temperature */
 int32_t box_temp = 0;
+
+/* DV timing parameters */
+int num_rows = -1, row_len = -1, data_rate = -1;
 
 static void set_data_mode_bits(int i, int both, const char *dmb)
 {
@@ -178,7 +184,7 @@ BAD_DMB:
 static void pcm_special(size_t len, const char *data_in, const char *peer,
     int port)
 {
-  int row_len, num_rows, data_rate;
+  int new_row_len = -1, new_num_rows = -1, new_data_rate = -1;
 
   if (data_in) {
     /* reply acknowledgement from PCM */
@@ -186,12 +192,14 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     int ssreq;
 
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
-          &divisor, &ssreq, &row_len, &num_rows, &data_rate, len, data_in, peer,
-          port))
+          &divisor, &ssreq, &new_row_len, &new_num_rows, &new_data_rate, len,
+          data_in, peer, port))
       return;
-    
+
     if (ssreq)
       send_mcestat = 1;
+    
+    cfg_update_timing(new_row_len, new_data_rate, new_num_rows);
 
     /* update the data_modes definition */
     set_data_mode_bits(0, 0, data_mode_bits + 0);
