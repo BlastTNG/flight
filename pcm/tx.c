@@ -370,6 +370,7 @@ static void WriteMCESlow(void)
   static struct NiosStruct *tMccAddr[NUM_MCE];
   static struct NiosStruct *tMceAddr[NUM_MCE];
   static struct NiosStruct *timeMccAddr[NUM_MCE];
+  static struct NiosStruct *deadCountAddr[NUM_MCE];
 
   int ind;
 
@@ -389,6 +390,7 @@ static void WriteMCESlow(void)
       tMccAddr[i] = GetMCCNiosAddr("t_mcc", i);
       tMceAddr[i] = GetMCCNiosAddr("t_mce", i);
       timeMccAddr[i] = GetMCCNiosAddr("time_mcc", i);
+      deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
     }
   }
 
@@ -408,6 +410,8 @@ static void WriteMCESlow(void)
     WriteData(dtaskMpcAddr[mux], mce_slow_dat[mux][ind].dtask, NIOS_QUEUE);
     WriteData(tMccAddr[mux], mce_slow_dat[mux][ind].t_mcc, NIOS_QUEUE);
     WriteData(tMceAddr[mux], mce_slow_dat[mux][ind].t_mce, NIOS_QUEUE);
+    WriteData(deadCountAddr[mux], mce_slow_dat[mux][ind].dead_count,
+        NIOS_QUEUE);
   }
 }
 

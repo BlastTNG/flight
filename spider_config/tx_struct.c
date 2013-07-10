@@ -1010,6 +1010,13 @@ struct ChannelStruct SlowChannels[] = {
   {"t_mce4",      'w', LOOP12,  9, 0.5,   0.0, 'u', U_NONE},
   {"t_mce5",      'w', LOOP12, 10, 0.5,   0.0, 'u', U_NONE},
   {"t_mce6",      'w', LOOP12, 11, 0.5,   0.0, 'u', U_NONE},
+
+  {"dead_count_mce1", 'w', LOOP12, 12, 0.5,   0.0, 'u', U_NONE},
+  {"dead_count_mce2", 'w', LOOP12, 13, 0.5,   0.0, 'u', U_NONE},
+  {"dead_count_mce3", 'w', LOOP12, 14, 0.5,   0.0, 'u', U_NONE},
+  {"dead_count_mce4", 'w', LOOP12, 15, 0.5,   0.0, 'u', U_NONE},
+  {"dead_count_mce5", 'w', LOOP12, 16, 0.5,   0.0, 'u', U_NONE},
+  {"dead_count_mce6", 'w', LOOP12, 17, 0.5,   0.0, 'u', U_NONE},
     
 // add/change the slow data struct in mceserv.h
   END_OF_CHANNELS
