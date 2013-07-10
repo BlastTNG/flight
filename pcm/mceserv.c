@@ -56,6 +56,10 @@ uint32_t mce_param[N_MCE_STAT * NUM_MCE];
 int request_ssdata = 1; /* start-up request */
 static int mceserv_InCharge; /* to look for edges */
 
+/* array statistics */
+uint8_t array_statistics[NUM_MCE * N_ARRAY_STAT];
+
+
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
 #define TES_FRAME_FULL ((1 << NUM_MCE) - 1) /* lowest NUM_MCE bits set */

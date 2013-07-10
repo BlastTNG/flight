@@ -1095,9 +1095,13 @@ void insertMCEData(unsigned short *RxFrame)
   static int mce_frameno;
   static int mce_mplex_offset;
   static int mce_index_offset;
+  
+  static int arraystats_data_offset;
+  static int arraystats_index_offset;
 
   static int i_tmp = 0;  
   static unsigned short mplex_index = 0;
+  static unsigned short arraystats_index=0;
   
   const struct tes_frame *data;
   
@@ -1124,19 +1128,34 @@ void insertMCEData(unsigned short *RxFrame)
     bi0 = GetBiPhaseAddr("mce_index");
     mce_index_offset = bi0->channel;
 
+    bi0 = GetBiPhaseAddr("arraystats_index");
+    arraystats_index_offset = bi0->channel;
+    
+    bi0 = GetBiPhaseAddr("arraystats_data");
+    arraystats_data_offset = bi0->channel;
+
   }
   i_tmp++;
   RxFrame[offset[0]] = tes_nfifo();
   RxFrame[offset[1]] = 16000*sin((double)i_tmp*0.02) + 32768;
   
   mplex_index++;
-  if (mplex_index >= N_MCE_STAT * 6)
+  if (mplex_index>=N_MCE_STAT*NUM_MCE) 
     mplex_index = 0;
+  
   D = mce_param[mplex_index];
   
   RxFrame[mce_index_offset] = mplex_index;
   RxFrame[mce_mplex_offset] = (unsigned short)(D & 0xFFFF);
   RxFrame[mce_mplex_offset + 1] = (unsigned short)(D >> 16);
+  
+  arraystats_index+=2;
+  if (arraystats_index>NUM_MCE*N_ARRAY_STAT-2) arraystats_index = 0;
+
+  RxFrame[arraystats_index_offset] = arraystats_index;
+  RxFrame[arraystats_data_offset] = array_statistics[arraystats_index] | 
+                                   (array_statistics[arraystats_index+1] << 8);
+
   
   if (tes_nfifo() > 0) {
     int i;

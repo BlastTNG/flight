@@ -30,6 +30,9 @@ extern int request_ssdata;
 /* super slow data */
 extern uint32_t mce_param[N_MCE_STAT * NUM_MCE];
 
+/* array statistics */
+extern uint8_t array_statistics[NUM_MCE * N_ARRAY_STAT];
+
 /* entry points */
 void *mcesend(void*);
 void *mcerecv(void*);

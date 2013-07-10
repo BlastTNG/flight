@@ -1087,7 +1087,6 @@ struct ChannelStruct WideFastChannels[] = {
    * directly into the RxFrame and never appear on the BBus */
   {"mce_frameno",   'r', LOOP1,   0, 1.0,           0.0,       'U',     U_NONE},
   {"mce_mplex",     'r', LOOP1,   2, 1.0,           0.0,       'U',     U_NONE},
-  {"mce_index",     'r', LOOP1,   4, 1.0,           0.0,       'U',     U_NONE},
 
   END_OF_CHANNELS
 };
@@ -1110,6 +1109,10 @@ struct ChannelStruct FastChannels[] = {
   //{"vel_ofpch_gy",  'r', ACS2_A1, 45,    CAL16(14.9925037, 0.0), 'u', U_V_DPS},  // free
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
   {"dps_table",    'w',    LOOP1, 34,           70.0/32767.0,            0.0, 's', U_V_DPS},
+
+  {"mce_index",     'r', LOOP1,   4, 1.0,           0.0,       'u',     U_NONE},
+  {"arraystats_index", 'r', LOOP1,   5, 1.0,           0.0,       'u',     U_NONE},
+  {"arraystats_data", 'r', LOOP1,   6, 1.0,           0.0,       'u',     U_NONE},
 
   /* Create the correct number of mce channels in the tx struct.  They
    * will be called "mce###" for ### from zero to the value defined in tes.h
@@ -1134,3 +1137,25 @@ struct ChannelStruct DecomChannels[] = {
   {"decom_unlock",'w', DECOM,  3,             1.0,                    0.0, 'u', U_NONE},
   END_OF_CHANNELS
 };
+
+/*
+void GetArrayFieldName(int i, char *name) {
+  
+  mce_num = i / N_ARRAY_STATS;
+  j = i % N_ARRAY_STATS;
+  type = j / (NUM_ROW*NUM_COL)
+  
+  noise_x1r00c13;
+  
+  //NOISE_X4T2R3C5A
+  
+  
+  for each mce_num
+    for each {mean, sigma, noise}
+      for each column
+        for each row
+          write the name
+          
+}
+*/
+

@@ -10,16 +10,20 @@
 #include <fcntl.h>
 #include <string.h>
 #include <limits.h>
+#include <stdint.h>
 #include "mcp.h"
 #include "compressstruct.h"
 #include "compressconst.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
+#include "mceserv.h"
 // Structure:
 // FASTFRAMES: 100.16 Hz
 // SLOWFRAMES: FASTFRAMES/20 - multiplex repeated at this rate
 // STREAMFRAMES: FASTFRAMES/100 - minimum speed from streams.  
 // SUPERFRAMES: FASTFRAMES/2000 - slow fields and stream offsets
+
+#define N_ARRAY_STATS_PER_SUPERFRAME 100
 
 struct streamDataStruct {
   double x[FASTFRAME_PER_STREAMFRAME];
@@ -269,6 +273,33 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
 }
 
 //*********************************************************
+// Write the array stats
+//*********************************************************
+int WriteArrayStats() {
+  static uint16_t i_stat = 0;
+  int nw = 0;
+  uint16_t n_as = N_ARRAY_STATS_PER_SUPERFRAME;
+  int i;
+  
+  writeData((char *)(&n_as), 2, 0);
+  nw += 2;
+  
+  writeData((char *)(&i_stat), 2, 0);
+  nw += 2;
+  
+  for (i = 0; i< n_as; i++) {
+    writeData((char *)array_statistics+i_stat, 1, 0);
+    nw++;
+    i_stat++;
+    if (i_stat>=NUM_MCE * N_ARRAY_STAT) {
+      i_stat = 0;
+    }
+  }
+
+  return nw;
+}
+
+//*********************************************************
 // Write data that comes once per superframe
 //*********************************************************
 void WriteSuperFrame(unsigned short *frame) {
@@ -336,6 +367,8 @@ void WriteSuperFrame(unsigned short *frame) {
 
   frame_bytes_written += sizeof(unsigned short); // account for nfields field;
   
+  frame_bytes_written += WriteArrayStats(); 
+  
   if (first_time) {
     first_time = 0;
     BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
@@ -354,7 +387,7 @@ void WriteSuperFrame(unsigned short *frame) {
     reset_rates = 1;
   }
 
-#define OMNI1_BYTES_PER_FRAME (6000/9 * FASTFRAME_PER_SUPERFRAME/SR)
+//#define OMNI1_BYTES_PER_FRAME (6000/9 * FASTFRAME_PER_SUPERFRAME/SR)
 //#define HIGAIN_BYTES_PER_FRAME (92000/8 * FASTFRAME_PER_SUPERFRAME/SR)
 
   // Calculate number of stream fields given data rates
