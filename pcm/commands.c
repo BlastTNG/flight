@@ -145,6 +145,10 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
         sizeof(int) * MAX_N_PARAMS);
     memcpy(CommandData.mcecmd[index].svalues, svalues,
         MAX_N_PARAMS * CMD_STRING_LEN);
+
+    /* for a multicommand ivalues[0] is always the insert number.
+     * Might as well hijack hk */
+    CommandData.hk_last = ivalues[0];
   }
 
   /* Activate */

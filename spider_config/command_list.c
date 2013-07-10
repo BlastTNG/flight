@@ -31,32 +31,32 @@
 
 #define MCECMD1(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 1, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}}, \
     }
 
 #define MCECMD2(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 2, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}}, \
       {pname, min, max, typ, "NONE"}, \
     }
 
 #define MCECMDC(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 3, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
     }
 
 #define MCECMDR(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 3, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
     }
 
 #define MCECMDCR(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
@@ -64,7 +64,7 @@
 
 #define MCECMDSCS(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
-      {"MCE#", 0, 6, 'i', "NONE", {mce_names}}, \
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}}, \
       {"Start", -32768, 32767, 'i', "NONE"}, \
       {"Count", 0, 65535, 'i', "NONE"}, \
       {"Step", -32768, 32767, 'i', "NONE"}, \
@@ -98,7 +98,7 @@ const char *const GroupNames[N_GROUPS] = {
 #define COMMAND(x) (int)x, #x
 
 /* parameter value lists */
-const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", NULL};
+const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *autotune_stages[] = {"sa_ramp", "sq2_servo", "sq1_servo",
   "sq1_ramp", "sq1_ramp_tes", "operate", NULL};
 
@@ -742,31 +742,31 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {COMMAND(hk_ampl_cernox), "Set cernox bias amplitude", GR_BIAS, 2,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Amplitude (V)", 0.0, 5.0, 'f', ""}
     }
   },
   {COMMAND(hk_ampl_ntd), "Set NTD bias amplitude", GR_BIAS, 2,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Amplitude (V)", 0.0, 5.0, 'f', ""}
     }
   },
   {COMMAND(hk_phase_cernox), "Set cernox bias phase", GR_BIAS, 2,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
   {COMMAND(hk_phase_ntd), "Set NTD bias phase", GR_BIAS, 2,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
   {COMMAND(hk_phase_step_cernox), "Sweep Cernox bias phase", GR_BIAS, 5,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Phase start (degrees)", 0.0, 360.0, 'f', ""},
       {"Phase end (degrees)",   0.0, 360.0, 'f', ""},
       {"Number of steps", 0, USHRT_MAX, 'i', ""},
@@ -775,7 +775,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(hk_phase_step_ntd), "Sweep NTD bias phase", GR_BIAS, 5,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Phase start (degrees)", 0.0, 360.0, 'f', ""},
       {"Phase end (degrees)",   0.0, 360.0, 'f', ""},
       {"Number of steps", 0, USHRT_MAX, 'i', ""},
@@ -794,124 +794,124 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     "Turn on the pump (charcoal) heater. Disable autocycle or servo",
     GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_pump_heat_off),
     "Turn off the pump (charcoal) heater. Disable autocycle or servo", 
     GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_heat_switch_on),
     "Turn on the heat switch heater. Disable autocycle", GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_heat_switch_off),
     "Turn off the heat switch heater. Disable autocycle", GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_fphi_heat_on), "Turn on the high-current focal plane heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_fphi_heat_off), "Turn off the high-current focal plane heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_ssa_heat_on), "Turn on the SSA heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_ssa_heat_off), "Turn off the SSA heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_htr1_heat_on), "Turn on heater 1",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_htr1_heat_off), "Turn off heater 1",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_htr2_heat_on), "Turn on heater 2",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_htr2_heat_off), "Turn off heater 2",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_htr3_heat_on), "Turn on heater 3",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_htr3_heat_off), "Turn off heater 3",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_ring_heat_set), "Set 300mK ring heater voltage", GR_CRYO_HEAT, 2,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},
     }
   },
   {COMMAND(hk_fplo_heat_set), "Set low-current focal plane heater voltage",
       GR_CRYO_HEAT, 2,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},
     }
   },
   {COMMAND(hk_auto_cycle_on), "Enable autocycling of He3 fridge",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_auto_cycle_off), "Disable autocycling of He3 fridge",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_fridge_cycle), "Force an He3 fridge cycle. Enable autocycle",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
   {COMMAND(hk_pump_servo_on), 
       "Enable pump servo mode: maintain pump temperature between setpoints.",
       GR_CRYO_HEAT, 3,
     {
-      {"Insert (1-6,0=all)", 0, HK_MAX, 'i', "INSERT_LAST_HK"},
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Set Low (K):",           0.0, 50.0,     'f', ""},
       {"Set High (K):",          0.0, 50.0,     'f', ""},
     }
@@ -1288,7 +1288,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD2(mce_servo_mode, "Set the servo mode", GR_MCC, "Mode", 0, 3, 'i')},
   {COMMAND(mce_servo_pid), "Set the servo gains", GR_MCC | MCECMD, 5,
     {
-      {"MCE#", 0, 6, 'i', "NONE", {mce_names}},
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Column", 0, 15, 'i', "NONE"},
       {"P Gain", 0, 65535, 'i', "NONE"}, 
       {"I Gain", 0, 65535, 'i', "NONE"},
@@ -1297,7 +1297,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_MCC | MCECMD, 4,
     {
-      {"MCE#", 0, 6, 'i', "NONE", {mce_names}},
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}},
       {"P Gain", 0, 65535, 'i', "NONE"}, 
       {"I Gain", 0, 65535, 'i', "NONE"},
       {"D Gain", 0, 65535, 'i', "NONE"},
