@@ -29,7 +29,9 @@
 #define NUM_COL 16
 #define NUM_ROW 33
 
-#define N_ARRAY_STAT (3*NUM_COL*NUM_ROW)
+#define N_STAT_TYPES 3
+#define N_ARRAY_STAT (N_STAT_TYPES*NUM_COL*NUM_ROW)
+
 
 /* make a 16-bit TES number from a (subrack/column/row) triplet; returns -1 on
  * out-of-range values.

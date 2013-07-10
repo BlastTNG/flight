@@ -19,6 +19,8 @@
  */
 
 #include <limits.h>
+#include <stdlib.h>
+
 #include "channels.h"
 #include "calibrate.h"
 #include "mpc_proto.h"
@@ -1138,24 +1140,28 @@ struct ChannelStruct DecomChannels[] = {
   END_OF_CHANNELS
 };
 
-/*
-void GetArrayFieldName(int i, char *name) {
+
+char *GetArrayFieldName(int i_field, char *name) {
+  static char **names = 0;
+  int i;
   
-  mce_num = i / N_ARRAY_STATS;
-  j = i % N_ARRAY_STATS;
-  type = j / (NUM_ROW*NUM_COL)
-  
-  noise_x1r00c13;
-  
-  //NOISE_X4T2R3C5A
-  
-  
-  for each mce_num
-    for each {mean, sigma, noise}
-      for each column
-        for each row
-          write the name
-          
+  if (names == 0) {
+    int type, tel, row, col;
+    char types[N_STAT_TYPES][10] = {"mean", "sigma", "noise"};
+    names = (char **) malloc(N_ARRAY_STAT * NUM_MCE * sizeof(char *));
+    for (i=0; i < N_ARRAY_STAT * NUM_MCE; i++) {
+      names[i] = (char *) malloc(21*sizeof(char));
+    }
+    for (tel = 0; tel < NUM_MCE; tel++) {
+      for (type = 0; type < 3; type++) {
+        for (col = 0; col<NUM_COL; col++) {
+          for (row = 0; row<NUM_ROW; row++) {
+            sprintf(names[i], "%s_x%1dr%02dc%02d", types[type], tel+1, col, row);
+          }
+        }
+      }
+    }            
+  }
+  return names[i_field];
 }
-*/
 
