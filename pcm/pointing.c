@@ -356,12 +356,12 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #define  PSS4_ALPHA 25
 #define  PSS5_ALPHA 25
 #define  PSS6_ALPHA 25
-#define  PSS1_PSI   0
-#define  PSS2_PSI   0
-#define  PSS3_PSI   0
-#define  PSS4_PSI   0
-#define  PSS5_PSI   0
-#define  PSS6_PSI   0
+#define  PSS1_PSI   180
+#define  PSS2_PSI   180
+#define  PSS3_PSI   180
+#define  PSS4_PSI   180
+#define  PSS5_PSI   180
+#define  PSS6_PSI   180
 
 static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 
