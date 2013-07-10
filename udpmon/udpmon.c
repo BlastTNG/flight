@@ -67,12 +67,16 @@ static void hexdump(size_t n, const void *vdata)
   }
 }
 
+struct {
+  int n, v, neg;
+} cond[1000];
 
 int main(int argc, const char **argv)
 {
   sigset_t signals;
+  int i;
   struct sigaction action;
-  int port, remport, sock;
+  int port, remport, sock, ncond = 0;
   ssize_t n;
 
   char peer[UDP_MAXHOST];
@@ -82,11 +86,26 @@ int main(int argc, const char **argv)
   buos_use_stdio();
 
   if (argc < 2) {
-    fprintf(stderr, "Usage:\n   udpmon <port>\n\n");
+    printf("Usage:\n   udpmon <port> [condition]...\n\n"
+        "where conditions are of the form:\n  <n>=<v>\nor\n  <n>!=<v>\n"
+        "to filter for packets whose <n>'th byte does (or does not) equal <v>."
+        "\n\n");
     return 1;
   }
 
   port = atoi(argv[1]);
+  for (i = 2; i < argc; ++i) {
+    if (sscanf(argv[i], "%i=%x", &cond[ncond].n, &cond[ncond].v) == 2) {
+      cond[ncond].neg = 0;
+      ncond++;
+    } else if (sscanf(argv[i], "%i!=%x", &cond[ncond].n, &cond[ncond].v) == 2) {
+      cond[ncond].neg = 1;
+      ncond++;
+    } else {
+      fprintf(stderr, "bad condition: %s\n", argv[i]);
+      return 1;
+    }
+  }
 
   if (port < 0 || port > 65536) {
     fprintf(stderr, "Bad port: %i\n", port);
@@ -116,12 +135,23 @@ int main(int argc, const char **argv)
   while (!done) {
     n = udp_recv(sock, 0, peer, &remport, 65536, data);
     if (n > 0) {
+      /* check conditions */
+      for (i = 0; i < ncond; ++i) {
+        if (n <= cond[i].n || (cond[i].neg && data[cond[i].n] == cond[i].v) ||
+            (!cond[i].neg && data[cond[i].n] != cond[i].v))
+        {
+          goto SKIP_PACKET;
+        }
+      }
+
       /* worst date printing scheme ever */
       if (system("date"))
         exit(1);
       printf("packet from %s/%i of length %zi:\n", peer, remport, n);
       hexdump(n, data);
       fputs("\n", stdout);
+SKIP_PACKET:
+      ;
     }
   }
 
