@@ -594,9 +594,9 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     bprintf(info, "%s turnaround", data[5] ? "Into" : "Out of");
   last_turnaround = *turnaround = data[5];
 
-  *row_len = data[6];
-  *num_rows = data[7];
-  *data_rate = data[8];
+  *row_len = (unsigned)data[6] * 2;
+  *num_rows = (unsigned)data[7];
+  *data_rate = (unsigned)data[8];
 
   *data_mode_bits = data + DMB_OFFSET;
 

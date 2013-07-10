@@ -178,13 +178,16 @@ BAD_DMB:
 static void pcm_special(size_t len, const char *data_in, const char *peer,
     int port)
 {
+  int row_len, num_rows, data_rate;
+
   if (data_in) {
     /* reply acknowledgement from PCM */
     const char *data_mode_bits;
     int ssreq;
 
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
-          &divisor, &ssreq, len, data_in, peer, port))
+          &divisor, &ssreq, &row_len, &num_rows, &data_rate, len, data_in, peer,
+          port))
       return;
     
     if (ssreq)
@@ -668,7 +671,7 @@ int main(void)
   /* compose array id */
   if (nmce == -1) {
     bputs(warning, "Using 'default' configuration and running as MCE4");
-    nmce = 4; /* be X5 */
+    nmce = 1; /* be X5 */
     strcpy(array_id, "default");
   } else 
     array_id[1] = '0' + nmce;

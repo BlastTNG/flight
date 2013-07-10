@@ -222,8 +222,35 @@ static int param_index(const char *card, const char *param)
   return -1; /* can't get here */
 }
 
-/* update and return data in the mce_stat array */
-static void update_param(const char *card, const char *param, uint32_t *data,
+/* send a parameter to the MCE, updating it in the mce_stat array */
+static void write_param(const char *card, const char *param, uint32_t *data,
+    int count)
+{
+  int n, new = 0;
+  int i = param_index(card, param);
+
+  if (count > mstat_phys[i].nw)
+    bprintf(fatal, "Write of too much data: %i from %s/%s\n", count, card,
+        param);
+
+  /* check whether an update is needed */
+  for (n = 0; n < count; ++n)
+    if (mce_stat[mstat_phys[i].cd + n] != data[n]) {
+      new = 1;
+      break;
+    }
+
+  if (!new)
+    return;
+
+  /* update MCE */
+  if (mas_write_block(card, param, data, count) == 0)
+    /* update the array */
+    memcpy(mce_stat + mstat_phys[i].cd, data, sizeof(uint32_t) * count);
+}
+
+/* fetch a parameter from the MCE and save it to the mce_stat array */
+static void fetch_param(const char *card, const char *param, uint32_t *data,
     int count)
 {
   int i = param_index(card, param);
@@ -711,7 +738,7 @@ void *mas_data(void *dummy)
 
     /* temperature poll */
     if (mas_get_temp) {
-      update_param("cc", "box_temp", (uint32_t*)&box_temp, 1);
+      fetch_param("cc", "box_temp", (uint32_t*)&box_temp, 1);
       mas_get_temp = 0;
     }
 
