@@ -1333,7 +1333,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCR(adc_offset, "ADC offset ", GR_MCC, "Offset", 0, 65535, 'i')},
 
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
-    GR_MCE_A | MCECMD | CONFIRM, 4,
+    GR_MCE_A | MCECMD | CONFIRM, 5,
     {
       {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}},
       {"Card", 0, 6, 'i', "NONE", {wb_cards}},
