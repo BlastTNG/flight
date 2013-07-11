@@ -369,7 +369,7 @@ static int nmce_from_ip(void)
     return -1;
   }
 
-  return (addr >> 24) - 80;
+  return (addr >> 24) - 81;
 }
 
 /* Send a TES data packet */
