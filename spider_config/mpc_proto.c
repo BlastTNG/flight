@@ -488,7 +488,7 @@ int mpc_decompose_slow(struct mpc_slow_data slow_dat[NUM_MCE][3],
 
   /* data[3] is the MCE number */
   nmce = data[3];
-  if (nmce < 0 || nmce > NUM_MCE) {
+  if (nmce < 0 || nmce >= NUM_MCE) {
     bprintf(err, "Unknown MCE %i in slow data packet from %s/%i",
         nmce, peer, port);
     return -1;
@@ -613,7 +613,7 @@ int mpc_decompose_stat(uint32_t *stat, size_t len, const char *data,
 
   /* data[3] is the MCE number */
   int nmce = data[3];
-  if (nmce < 0 || nmce > NUM_MCE) {
+  if (nmce < 0 || nmce >= NUM_MCE) {
     bprintf(err, "Unknown MCE %i in stat packet from %s/%i", nmce, peer, port);
     return -1;
   }

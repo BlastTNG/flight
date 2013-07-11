@@ -247,7 +247,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
   sync = (mce & 0x80);
   mce &= 0x7F;
 
-  if (mce < 0)
+  if (mce < 0 || mce >= NUM_MCE)
     return bad_bset_count;
 
   ntes = local_set.nm[mce];
@@ -341,7 +341,7 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
   int power_cycle = 0;
 
   int mce = mpc_decompose_pcmreq(&power_cycle, n, udp_buffer, peer, port);
-  if (mce < 0) /* bad packet */
+  if (mce < 0 || mce >= NUM_MCE) /* bad packet */
     return;
 
   /* These MCE numbers are zero based */
