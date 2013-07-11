@@ -1235,7 +1235,8 @@ static void DoSineMode(double centre, double ampl, double el_start)
    if ( (sine_sun_az > left) && 
        (sine_sun_az < right) ) {
 
-    bprintf(err, "The sun is inside the scan region! Stopping gondola.");
+    bprintf(err, 
+    "Dude, WTF? The sun is inside the scan region! Stopping gondola.");
 
     CommandData.pointing_mode.X = 0;
     CommandData.pointing_mode.Y = 0;
