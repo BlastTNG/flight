@@ -36,16 +36,16 @@
 /* make a 16-bit TES number from a (subrack/column/row) triplet; returns -1 on
  * out-of-range values.
  */
-const static inline int16_t TESNumber(int m, int c, int r)
+const static inline int16_t TESNumber(int x, int r, int c)
 {
-  if (m < 0 || m >= NUM_MCE ||
+  if (x < 0 || x >= NUM_MCE ||
       c < 0 || c >= NUM_COL ||
       r < 0 || r >= NUM_ROW)
   {
     return -1;
   }
 
-  return (m << 12) + (c + r * NUM_COL);
+  return (x << 12) + (c + r * NUM_COL);
 }
 
 /* mask off the mce number */

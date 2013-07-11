@@ -1319,8 +1319,8 @@ int main(int argc, char *argv[])
   pthread_create(&hwpr_id, NULL, (void*)&StartHWP, NULL);
 #ifndef TEST_RUN
   pthread_create(&mcesend_id, NULL, (void*)&mcesend, NULL);
-#endif
   pthread_create(&mcerecv_id, NULL, (void*)&mcerecv, NULL);
+#endif
 
   start_flc_data_swapper(flc_ip[BitsyIAm]);
   
