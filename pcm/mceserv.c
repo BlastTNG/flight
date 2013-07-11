@@ -116,9 +116,9 @@ static void ForwardNotices(int sock)
   if ((last_turnaround != -1 && last_turnaround == this_turnaround) &&
       (this_divisor == last_divisor) &&
       (last_dmb == CommandData.data_mode_bits_serial) &&
-      (last_rl == SyncBoxData.row_len) &&
-      (last_nr == SyncBoxData.num_rows) &&
-      (last_dr == SyncBoxData.free_run) &&
+      (last_rl == CommandData.sync_box.rl_value) &&
+      (last_nr == CommandData.sync_box.nr_value) &&
+      (last_dr == CommandData.sync_box.fr_value) &&
       (request_ssdata == 0)
      )
   {
@@ -127,8 +127,8 @@ static void ForwardNotices(int sock)
   }
 
   len = mpc_compose_notice(this_divisor, this_turnaround, request_ssdata,
-      SyncBoxData.row_len, SyncBoxData.num_rows, SyncBoxData.free_run,
-      CommandData.data_mode_bits, udp_buffer);
+      CommandData.sync_box.rl_value, CommandData.sync_box.nr_value,
+      CommandData.sync_box.fr_value, CommandData.data_mode_bits, udp_buffer);
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
@@ -138,9 +138,9 @@ static void ForwardNotices(int sock)
     last_dmb = CommandData.data_mode_bits_serial;
     last_turnaround = this_turnaround;
     last_divisor = this_divisor;
-    last_rl = SyncBoxData.row_len;
-    last_nr = SyncBoxData.num_rows;
-    last_dr = SyncBoxData.free_run;
+    last_rl = CommandData.sync_box.rl_value;
+    last_nr = CommandData.sync_box.nr_value;
+    last_dr = CommandData.sync_box.fr_value;
     request_ssdata = 0;
   }
 }
