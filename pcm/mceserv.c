@@ -36,8 +36,6 @@
  * resend of the bset */
 #define BAD_BSET_THRESHOLD 2
 
-extern int StartupVeto; /* in mcp.c */
-
 static int sock = 0;
 
 /* semeuphoria */

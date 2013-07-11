@@ -125,7 +125,7 @@ int read_bset(int i, struct bset *set)
       int mce;
 
       /* parse "x#c##r##\n" */
-      if (line[0] != 'x' || line[2] != 'c' || line[5] != 'r' || line[8] != '\n')
+      if (line[0] != 'x' || line[2] != 'r' || line[5] != 'c' || line[8] != '\n')
       {
         bprintf(err, "Set: Bad bolometer number on line %i of BSET%03i",
             lineno, i);
