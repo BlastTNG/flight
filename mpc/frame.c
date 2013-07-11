@@ -41,6 +41,9 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
   if (header->status & MCE_FSB_STOP)
     bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
 
+  /* update frame statistics */
+  update_stats(frame, frame_size, frameno);
+  
   /* do more stuff here, probably */
 }
 

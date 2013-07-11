@@ -65,6 +65,9 @@ extern size_t frame_size;
 extern int pb_last;
 extern int fb_top;
 extern uint32_t *frame[FB_SIZE];
+extern uint8_t mean[NUM_ROW * NUM_COL];
+extern uint8_t sigma[NUM_ROW * NUM_COL];
+extern uint8_t noise[NUM_ROW * NUM_COL];
 
 /* The director */
 void meta(void);
@@ -162,5 +165,8 @@ int cfg_set_int_cr(const char *, int, int, int);
 int flush_experiment_cfg(void);
 int serialise_experiment_cfg(void);
 void cfg_update_timing(int row_len, int num_rows, int data_rate);
+
+/* frame statistics */
+void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t frameno);
 
 #endif
