@@ -197,9 +197,10 @@ enum multiCommand {
   ramp_tes_final_bias, ramp_tes_initial_pause, ramp_tes_period,
   num_rows_reported, readout_row_index, sample_dly, sample_num, fb_dly,
   row_dly, flux_jumping_on, flux_jumping_off, mce_servo_mode, mce_servo_pid,
-  frail_servo_pid, dead_detector, frail_detector, healthy_detector, tes_bias,
-  sa_flux_quantum, sq2_flux_quantum, sq1_flux_quantum, sq1_bias, sq1_bias_off,
-  sq2_bias, sq2_fb, sa_bias, sa_fb, sa_offset, adc_offset, mce_wb,
+  pixel_servo_pid, frail_servo_pid, dead_detector, frail_detector,
+  healthy_detector, tes_bias, sa_flux_quantum, sq2_flux_quantum,
+  sq1_flux_quantum, sq1_bias, sq1_bias_off, sq2_bias, sq2_fb, sa_bias, sa_fb,
+  sa_offset, adc_offset, mce_wb,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
