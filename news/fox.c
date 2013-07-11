@@ -21,6 +21,10 @@
 #include "derived.h"
 #include "news.h"
 
+#ifdef __SPIDER__
+#include "tes.h"
+#endif
+
 #define RAWDIR "/data/rawdir"
 
 #define FOX_LNKFILE "/data/etc/fox.lnk"
@@ -59,6 +63,8 @@ int *framefieldUnique;
 
 unsigned short n_streamfields = 0;
 unsigned short n_streamfieldlist = 0;
+int n_array_in_sframe;
+
 struct ChannelStruct **streamfields;
 unsigned *stream_gains;
 long long *stream_offsets;
@@ -70,6 +76,9 @@ int is_lost = 1;
 int tty_fd;
 char hostname[255];
 
+#ifdef NUM_ARRAY_STAT
+uint8_t array_statistics[NUM_ARRAY_STAT];
+#endif
 
 //*********************************************************
 // usage
@@ -177,6 +186,11 @@ void MakeFormatFile(char *filedirname) {
       }
     }
   }
+#ifdef __SPIDER__
+  for (i_field = 0; i_field < NUM_ARRAY_STAT; i_field++) {
+    fprintf(formatfile, "%16s RAW c 1\n", GetArrayFieldName(i_field);
+  }
+#endif
 
   for (i_field = 0; i_field < n_streamfields; i_field++) {
     convertToUpper( streamfields[i_field]->field, fieldU);
@@ -360,7 +374,7 @@ void MakeStreamList() {
 //*********************************************************
 //   open the file pointers for the dirfile
 //*********************************************************
-void OpenDirfilePointers(int **fieldfp, int **streamfp, char *filedirname) {
+void OpenDirfilePointers(int **fieldfp, int **streamfp, int **arraystatfp, char *filedirname) {
   int i_field;
   char filename[1024];
   
@@ -385,6 +399,17 @@ void OpenDirfilePointers(int **fieldfp, int **streamfp, char *filedirname) {
       exit(0);
     }
   }
+  
+#ifdef __SPIDER__
+  *arraystatfp = (int *)malloc(n_array_in_sframe*sizeof(int));
+  for (i_field = 0; i_field < n_array_in_sframe; i_field++) {
+    sprintf(filename, "%s/%s", filedirname, GetArrayFieldName(i_field));
+    if( ((*arraystatfp)[i_field] = open(filename, O_WRONLY | O_CREAT, 00644)) < 0 ) {
+      fprintf(stderr,"fox: Could not create %s\n", filename);
+      exit(0);
+    }
+  }
+#endif
 }
 
 //*********************************************************
@@ -398,10 +423,14 @@ int main(int argc, char *argv[]) {
   int fieldsize = 0;
   int *fieldfp;
   int *streamfp;
+  int *arraystatfp;
   char fielddata[2000][8];
   int n_wrote;
   int i_samp;
   int i_frame;
+  
+  int i_array, j_array;
+  
   
   unsigned short us_in;
   short s_in;
@@ -517,10 +546,42 @@ int main(int argc, char *argv[]) {
       pop(&fs, fielddata[i_framefield], fieldsize);
       index++;
     }
+    
+#ifdef NUM_ARRAY_STAT
+    // Read Array Statistics
+    // Array Stats per Superframe
+    n_bytemon+=BlockingRead(2, &fs, tty_fd, hostname, PORT);
+    pop(&fs, (char *)(&us_in), 2);
+    n_array_in_sframe = us_in;
+    if (n_array_in_sframe > NUM_ARRAY_STAT) {
+      fprintf(stderr, "error: Unreasonably large number of array stats (%d).  Something is wrong.\n", 
+        n_array_in_sframe);
+      continue;
+    }
+    
+    // starting index
+    n_bytemon+=BlockingRead(2, &fs, tty_fd, hostname, PORT);
+    pop(&fs, (char *)(&us_in), 2);
+    i_array = us_in;
+    if (i_array > NUM_ARRAY_STAT) {
+      fprintf(stderr, "error: invalid array stats index.  Something is wrong.\n");
+      continue;
+    }
 
+    // read them...
+    for (j_array = 0; j_array<n_array_in_sframe; j_array++) {
+      pop(&fs, (char *)(&uc_in), 1);
+      array_statistics[i_array] = uc_in;
+      i_array++;
+      if (i_array>= NUM_ARRAY_STAT) i_array=0;
+    }
+    
+#endif
+    
     n_bytemon+=BlockingRead(2, &fs, tty_fd, hostname, PORT);
     pop(&fs, (char *)(&us_in), 2);
 
+    
     if (first_time) {
       MakeStreamList();
       // reset first_time later
@@ -545,7 +606,7 @@ int main(int argc, char *argv[]) {
     if (first_time) {
       MakeStreamList();
       MakeFormatFile(filedirname);
-      OpenDirfilePointers(&fieldfp, &streamfp, filedirname);
+      OpenDirfilePointers(&fieldfp, &streamfp, &arraystatfp, filedirname);
       first_time = 0;
     }
     
@@ -639,6 +700,14 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "\nWriting field data unsuccesful. Out of disk space?\n");
           }
         }
+#ifdef __SPIDER__
+        for (i_arrayfield = 0; i_arrayfield < n_array_in_sframe i_arrayfield++) {
+          n_wrote = write(arraystatfp[i_arrayfield], array_statistics[i_arrayfield], 1);
+          if (n_wrote != 1) {
+            fprintf(stderr, "\nWriting field data unsuccesful. Out of disk space?\n");
+          }
+        }          
+#endif
         for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
           for (i_samp = 0; i_samp<streamList[channelset_oth][i_streamfield].samples_per_frame; i_samp++) {
             switch (streamfields[i_streamfield]->type) {
