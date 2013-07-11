@@ -1351,7 +1351,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(flux_jumping_off, "Turn off flux jumping", GR_MCC)},
   {MCECMD2A(mce_servo_mode, "Set the servo mode", GR_MCE_A, "Mode", 0, 3, 'i')},
   {COMMAND(mce_servo_pid), "Set the servo gains for a column",
-    GR_TUNE | MCECMD, 6,
+    GR_MCE_A | MCECMD, 6,
     {
       {CHOOSE_INSERT_PARAM},
       {"Column", 0, 15, 'i', "NONE"},
@@ -1372,7 +1372,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"D Gain", 0, 65535, 'i', "NONE"},
     }
   },
-  {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_TUNE | MCECMD, 4,
+  {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_MCE_A | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"P Gain", 0, 65535, 'i', "NONE"}, 
