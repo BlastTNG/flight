@@ -1150,7 +1150,7 @@ void insertMCEData(unsigned short *RxFrame)
   RxFrame[mce_mplex_offset + 1] = (unsigned short)(D >> 16);
   
   arraystats_index+=2;
-  if (arraystats_index>NUM_MCE*N_ARRAY_STAT-2) arraystats_index = 0;
+  if (arraystats_index>NUM_ARRAY_STAT-2) arraystats_index = 0;
 
   RxFrame[arraystats_index_offset] = arraystats_index;
   RxFrame[arraystats_data_offset] = array_statistics[arraystats_index] | 

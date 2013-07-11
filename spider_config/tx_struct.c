@@ -1148,8 +1148,8 @@ char *GetArrayFieldName(int i_field, char *name) {
   if (names == 0) {
     int type, tel, row, col;
     char types[N_STAT_TYPES][10] = {"mean", "sigma", "noise"};
-    names = (char **) malloc(N_ARRAY_STAT * NUM_MCE * sizeof(char *));
-    for (i=0; i < N_ARRAY_STAT * NUM_MCE; i++) {
+    names = (char **) malloc(NUM_ARRAY_STAT * sizeof(char *));
+    for (i=0; i < NUM_ARRAY_STAT; i++) {
       names[i] = (char *) malloc(21*sizeof(char));
     }
     for (tel = 0; tel < NUM_MCE; tel++) {

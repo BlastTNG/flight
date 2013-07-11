@@ -57,7 +57,7 @@ int request_ssdata = 1; /* start-up request */
 static int mceserv_InCharge; /* to look for edges */
 
 /* array statistics */
-uint8_t array_statistics[NUM_MCE * N_ARRAY_STAT];
+uint8_t array_statistics[NUM_ARRAY_STAT];
 
 
 /* TES reconstruction buffer */

@@ -291,7 +291,7 @@ int WriteArrayStats() {
     writeData((char *)array_statistics+i_stat, 1, 0);
     nw++;
     i_stat++;
-    if (i_stat>=NUM_MCE * N_ARRAY_STAT) {
+    if (i_stat>=NUM_ARRAY_STAT) {
       i_stat = 0;
     }
   }

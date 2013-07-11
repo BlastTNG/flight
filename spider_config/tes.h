@@ -30,7 +30,7 @@
 #define NUM_ROW 33
 
 #define N_STAT_TYPES 3
-#define N_ARRAY_STAT (N_STAT_TYPES*NUM_COL*NUM_ROW)
+#define NUM_ARRAY_STAT (NUM_MCE*N_STAT_TYPES*NUM_COL*NUM_ROW)
 
 
 /* make a 16-bit TES number from a (subrack/column/row) triplet; returns -1 on
