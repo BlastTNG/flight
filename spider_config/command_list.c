@@ -101,6 +101,7 @@ const char *const GroupNames[N_GROUPS] = {
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *autotune_stages[] = {"sa_ramp", "sq2_servo", "sq1_servo",
   "sq1_ramp", "sq1_ramp_tes", "operate", NULL};
+const char *wb_cards[] = {"CC", "RC1", "RC2", "BC1", "BC2", "AC", NULL};
 
 const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
@@ -1330,6 +1331,17 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDC(sa_fb, "SA feeback", GR_MCC, "Bias", 0, 65535, 'i')},
   {MCECMDC(sa_offset, "SA offset", GR_MCC, "Bias", 0, 65535, 'i')},
   {MCECMDCR(adc_offset, "ADC offset ", GR_MCC, "Offset", 0, 65535, 'i')},
+
+  {COMMAND(mce_wb), "General purpose MCE write block (wb)",
+    GR_MCE_A | MCECMD | CONFIRM, 4,
+    {
+      {"Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}},
+      {"Card", 0, 6, 'i', "NONE", {wb_cards}},
+      {"Block (Parameter) Number", 0, 0xFF, 'i', "NONE"},
+      {"Element Number", 0, 41, 'i', "NONE"},
+      {"Value", 0, 4294967295UL, 'l', "NONE"},
+    }
+  },
 
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {

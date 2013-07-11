@@ -696,7 +696,7 @@ void *mas_data(void *dummy)
         break;
       case dt_reconfig:
         if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_reconfig", NULL, 100,
-              0))
+              1))
         {
           comms_lost = 1;
         }

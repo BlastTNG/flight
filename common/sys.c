@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <time.h>
@@ -298,13 +299,16 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
 /* run a process with plumbing.  Optionally, kill the program if the timeout
  * is exceeded.  Returns a non-zero integer on error;
  */
+#define EXEC_BUFLEN 1024
 int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
     unsigned timeout, int announce)
 {
+  ssize_t n;
   struct mcp_proc *p;
+  char obuffer[EXEC_BUFLEN], ebuffer[EXEC_BUFLEN];
+  char *opos = obuffer;
+  char *epos = ebuffer;
   int p_stderr = 0, p_stdout = 0;
-  char obuffer[1024], ebuffer[1024];
-  FILE *errstream = NULL, *outstream = NULL;
 
   p = start_proc(path, argv, timeout, announce, NULL,
       (outlev == none) ? NULL : &p_stdout,
@@ -312,44 +316,104 @@ int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
   if (p == NULL)
     return errno ? (errno << 16) : -1;
   
-  if (errlev != none) {
-    errstream = fdopen(p_stderr, "r");
-    if (errstream == NULL) {
-      berror(warning, "Unable to fdopen subprocess STDERR");
-      errlev = none;
-    } else
-      setvbuf(errstream, NULL, _IONBF, 0);
-  }
-      
-  if (outlev != none) {
-    outstream = fdopen(p_stdout, "r");
-    if (outstream == NULL) {
-      berror(warning, "Unable to fdopen subprocess STDOUT");
-      outlev = none;
-    } else
-      setvbuf(outstream, NULL, _IONBF, 0);
-  }
-      
+  /* no need to do this if we're not fowarding output streams */
   if (errlev != none || outlev != none) {
-    while (check_proc(p) == 0) {
+    int nfds = 0;
+    int proc_state;
+    struct timeval seltime;
+    fd_set fdset;
+
+    if (errlev != none)
+      nfds = p_stderr + 1;
+      
+    if (outlev != none)
+      if (p_stdout + 1 > nfds)
+        nfds = p_stdout + 1;
+
+    while ((proc_state = check_proc(p)) == 0) {
+      FD_ZERO(&fdset);
+      if (errlev != none)
+        FD_SET(p_stderr, &fdset);
+      if (outlev != none)
+        FD_SET(p_stdout, &fdset);
+
+      seltime.tv_sec = 1;
+      seltime.tv_usec = 0;
+
+      n = select(nfds, &fdset, NULL, NULL, &seltime);
+
       /* parrot the clients standard streams */
-      if (errstream && fgets(ebuffer, 1024, errstream))
-        bprintf(errlev, "%s", ebuffer);
-      if (outstream && fgets(obuffer, 1024, outstream))
-        bprintf(outlev, "%s", obuffer);
-      usleep(10000);
+      if (errlev != none && FD_ISSET(p_stderr, &fdset)) {
+        n = read(p_stderr, epos, 1);
+        if (n < 0)
+          break;
+        else if (n > 0) {
+          if (*epos == '\n' || (epos - ebuffer) >= EXEC_BUFLEN) {
+            *epos = 0;
+            epos = ebuffer;
+            bprintf(errlev, "%s", ebuffer);
+          } else
+            epos++;
+        }
+      }
+      if (outlev != none && FD_ISSET(p_stdout, &fdset)) {
+        n = read(p_stdout, opos, 1);
+        if (n < 0)
+          break;
+        else if (n > 0) {
+          if (*opos == '\n' || (opos - obuffer) >= EXEC_BUFLEN) {
+            *opos = 0;
+            opos = obuffer;
+            bprintf(outlev, "%s", obuffer);
+          } else
+            opos++;
+        }
+      }
     }
 
-    /* clear the buffers */
-    if (errstream) {
-      while (fgets(ebuffer, 1024, errstream))
-        bprintf(errlev, "%s", ebuffer);
-      fclose(errstream);
+    if (proc_state == 1) {
+      /* clear the buffers */
+      if (errlev != none) {
+        for (;;) {
+          n = read(p_stderr, epos, 1);
+          if (n <= 0)
+            break;
+          else if (n > 0) {
+            if (*epos == '\n' || (epos - ebuffer) >= EXEC_BUFLEN) {
+              *epos = 0;
+              epos = ebuffer;
+              bprintf(errlev, "%s", ebuffer);
+            } else
+            epos++;
+        }
+      }
+      close(p_stderr);
     }
-    if (outstream) {
-      while (fgets(obuffer, 1024, outstream))
-        bprintf(outlev, "%s", obuffer);
-      fclose(outstream);
+    if (outlev != none) {
+      for (;;) {
+        n = read(p_stdout, opos, 1);
+        if (n <= 0)
+          break;
+        else if (n > 0) {
+          if (*opos == '\n' || (opos - obuffer) >= EXEC_BUFLEN) {
+            *opos = 0;
+            opos = obuffer;
+            bprintf(outlev, "%s", obuffer);
+          } else
+            opos++;
+        }
+      }
+      close(p_stdout);
+    }
+  }
+
+    if (errlev != none && epos > ebuffer) {
+      *(++epos) = 0;
+      bprintf(errlev, "%s", ebuffer);
+    }
+    if (outlev != none && opos > obuffer) {
+      *(++opos) = 0;
+      bprintf(outlev, "%s", obuffer);
     }
   }
 
