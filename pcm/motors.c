@@ -1178,6 +1178,7 @@ static void DoSineMode(double centre, double ampl, double el_start)
   double t_before; // time at which to send BSC trigger command
   double t_step;   // step in el at t_step before turn-around 
   double daz_step; // dist. at t_step seconds before turn-around
+  double sine_sun_az; // sun az for use in this function
   static double last_v = 0.0;
 
   int N_scans; // number of azimuth half-scans per el step
@@ -1224,9 +1225,15 @@ static void DoSineMode(double centre, double ampl, double el_start)
     right = left + MIN_SCAN;
     ampl = right - centre;
   }
+  
+  sine_sun_az = PointingData[i_point].sun_az;
 
-   /*if ( (PointingData[i_point].sun_az > left) && 
-       (PointingData[i_point].sun_az < right) ) {
+  /* get sun_az into correct range relative to scan endpoints, for 
+   * direct comparision */
+  UnwindDiff(left, &sine_sun_az);
+
+   if ( (sine_sun_az > left) && 
+       (sine_sun_az < right) ) {
 
     bprintf(err, "The sun is inside the scan region! Stopping gondola.");
 
@@ -1241,7 +1248,7 @@ static void DoSineMode(double centre, double ampl, double el_start)
     return;
 
   }
-  */
+  
 
   v_az_max = sqrt(az_accel * ampl);
   
