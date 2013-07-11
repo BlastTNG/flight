@@ -189,7 +189,7 @@ enum multiCommand {
   sa_ramp_bias_off, sa_ramp_flux, sa_ramp_bias, sq2_tuning_row,
   sq2_servo_gain, sq1_servo_gain, sq1_servo_bias_on, sq1_servo_bias_off,
   sq1_servo_flux, sq1_servo_bias, sq2_servo_bias_on, sq2_servo_bias_off,
-  sq2_servo_flux, sq2_servo_bias, locktest_pass_amplitude, sq1_ramp_bias,
+  sq2_servo_flux, sq2_servo_bias, sq1_ramp_bias,
   sq1_ramp_tes_bias_on, sq1_ramp_tes_bias_off, sq1_ramp_tes_bias, tes_bias_idle,
   tes_bias_normal, tes_bias_normal_time, tuning_check_bias_on,
   tuning_check_bias_off, tuning_therm_time, tuning_do_plots_on,

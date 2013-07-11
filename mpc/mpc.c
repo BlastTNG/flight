@@ -560,7 +560,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
             "sq2_servo_bias_ramp");
         CFG_SETSCS(sq2_servo_flux);
         CFG_SETSCS(sq2_servo_bias);
-        CFG_SETINT(locktest_pass_amplitude, "locktest_pass_amplitude");
         CFG_SETSCS(sq1_ramp_bias);
         CFG_TOGGLE(sq1_ramp_tes_bias_on, sq1_ramp_tes_bias_off,
             "sq1_ramp_tes_bias");
