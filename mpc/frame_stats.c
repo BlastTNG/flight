@@ -128,10 +128,6 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     frame_fsum2[ii] += fdatum*fdatum;
     frame_filt[fb_top][ii] = fdatum;
     
-    if (ii == 100)
-      bprintf(info,"Frame %d, channel %d: value %.3f, filtered %.3f",
-	      frameno, ii, datum, fdatum);
-    
     /* update statistics */
     dmean = frame_sum[ii] / (double)(FB_SIZE);
     mean[ii] = (uint8_t) RESCALE_MEAN(dmean);
@@ -140,13 +136,6 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     sigma[ii] = (uint8_t) RESCALE_SIGMA(dsigma);
     dnoise = sqrt(frame_fsum2[ii] / (double)(FB_SIZE-1) / (double)(FILT_BW*FILT_FREQ));
     noise[ii] = (uint8_t) RESCALE_NOISE(dnoise);
-    
-    if (ii == 100) {
-      bprintf(info,"Frame %d, channel %d: mean %.3e, sigma %.3e, noise %.3e",
-	      frameno, ii, dmean, dsigma, dnoise);
-      bprintf(info,"Frame %d, channel %d: scaled mean %u, sigma %u, noise %u",
-	      frameno, ii, mean[ii], sigma[ii], noise[ii]);
-    }
     
     /* subtract oldest values from buffers */
     datum = (frame[fb_neighbors[0]][ii + MCE_HEADER_SIZE] >> 7) - frame_offset[ii];
