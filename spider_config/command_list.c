@@ -37,6 +37,12 @@
       {CHOOSE_INSERT_PARAM}, \
     }
 
+#define MCECMD1A(cmd,desc,grp) \
+    COMMAND(cmd), desc, grp | MCECMD, 2, { \
+      {CHOOSE_INSERT_PARAM}, \
+      {MCE_ACTION_PARAM(3,action_names)}, \
+    }
+
 #define MCECMD2(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 2, { \
       {CHOOSE_INSERT_PARAM}, \
@@ -141,7 +147,7 @@ const char *const GroupNames[N_GROUPS] = {
   "ACS Power",             "The Good SC",      "HK Theo Heat",
   "Telemetry",             "The Bad SC",       "Cryo/HK Power",
   "MCE Power",             "The Ugly SC",      "MCCs",
-  "Array Tuning",          "MCE A",            "MCE B",
+  "Array Tuning",          "MCE Acquisition",  "MCE B",
   "Miscellaneous",         "CMB Grenades",     "Sync Box"
   };
 
@@ -1272,13 +1278,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {MCECMD1(start_acq, "Start data acquisition", GR_MCC)},
   {MCECMD1(reset_acq, "Cycle data acquisition", GR_MCC)},
-  {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC | CONFIRM)},
-  {MCECMD2A(data_mode, "Set the MCE data mode", GR_MCC, "Data Mode", 0, 12,
-      'i')},
+  {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC)},
+  {MCECMD2A(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12, 'i')},
   {MCECMD1(tune_array, "Tune MCE (auto_setup)", GR_TUNE)},
 
-  {MCECMD2A(column_on, "Turn on a MCE column", GR_MCC, "Column", 0, 15, 'i')},
-  {MCECMD2A(column_off, "Turn off a MCE column", GR_MCC, "Column", 0, 15, 'i')},
+  {MCECMD2A(column_on, "Turn on a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
+  {MCECMD2A(column_off, "Turn off a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
   {MCECMD2(sa_offset_bias_ratio, "Set the SA offset bias ratio", GR_TUNE,
       "Ratio", -10, 10, 'f')},
   {MCECMD1(sa_ramp_bias_on, "Turn on SA ramping while tuning", GR_TUNE)},
@@ -1341,28 +1346,27 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       "Time (us)", 0, 1000000000, 'l')},
   {MCECMD2(num_rows_reported, "MCE num rows reported", GR_TUNE,
       "Num Rows", 0, 32, 'i')},
-  {MCECMD2A(readout_row_index, "Readout Row index", GR_MCE_A, "Row", 0, 32,
-      'i')},
-  {MCECMD2A(sample_dly, "Sample delay", GR_MCE_A, "Count", 0, 100, 'i')},
-  {MCECMD2A(sample_num, "Sample number", GR_MCE_A, "Count", 0, 100, 'i')},
-  {MCECMD2A(fb_dly, "Feedback delay", GR_MCE_A, "Count",  0, 100, 'i')},
-  {MCECMD2A(row_dly, "Row delay", GR_MCE_A, "Count",  0, 100, 'i')},
-  {MCECMD1(flux_jumping_on, "Turn on flux jumping", GR_MCC)},
-  {MCECMD1(flux_jumping_off, "Turn off flux jumping", GR_MCC)},
-  {MCECMD2A(mce_servo_mode, "Set the servo mode", GR_MCE_A, "Mode", 0, 3, 'i')},
-  {COMMAND(mce_servo_pid), "Set the servo gains for a column",
-    GR_MCE_A | MCECMD, 6,
+  {MCECMD2A(readout_row_index, "Readout Row index", GR_ACQ, "Row", 0, 32, 'i')},
+  {MCECMD2A(sample_dly, "Sample delay", GR_ACQ, "Count", 0, 100, 'i')},
+  {MCECMD2A(sample_num, "Sample number", GR_ACQ, "Count", 0, 100, 'i')},
+  {MCECMD2A(fb_dly, "Feedback delay", GR_ACQ, "Count",  0, 100, 'i')},
+  {MCECMD2A(row_dly, "Row delay", GR_ACQ, "Count",  0, 100, 'i')},
+  {MCECMD1A(flux_jumping_on, "Turn on flux jumping", GR_ACQ)},
+  {MCECMD1A(flux_jumping_off, "Turn off flux jumping", GR_ACQ)},
+  {MCECMD2A(mce_servo_mode, "Set the servo mode", GR_ACQ, "Mode", 0, 3, 'i')},
+  {COMMAND(mce_servo_pid), "Set the servo gains for a column", GR_ACQ | MCECMD,
+    6,
     {
       {CHOOSE_INSERT_PARAM},
       {"Column", 0, 15, 'i', "NONE"},
       {"P Gain", 0, 65535, 'i', "NONE"}, 
       {"I Gain", 0, 65535, 'i', "NONE"},
       {"D Gain", 0, 65535, 'i', "NONE"},
-      {"Update default", 0, 1, 'i', "NONE", {noyes_names}},
+      {MCE_ACTION_PARAM(4,daction_names)},
     }
   },
-  {COMMAND(pixel_servo_pid), "Set the servo gains for a pixel",
-    GR_MCE_A | MCECMD, 6,
+  {COMMAND(pixel_servo_pid), "Set the servo gains for a pixel", GR_ACQ | MCECMD,
+    6,
     {
       {CHOOSE_INSERT_PARAM},
       {"Column", 0, 15, 'i', "NONE"},
@@ -1372,7 +1376,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"D Gain", 0, 65535, 'i', "NONE"},
     }
   },
-  {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_MCE_A | MCECMD, 4,
+  {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_ACQ | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"P Gain", 0, 65535, 'i', "NONE"}, 
@@ -1380,28 +1384,28 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"D Gain", 0, 65535, 'i', "NONE"},
     }
   },
-  {MCECMDCR1A(dead_detector, "Add a detector to the dead mask", GR_MCE_A)},
-  {MCECMDCR1A(frail_detector, "Add a detector to the frail mask", GR_MCE_A)},
+  {MCECMDCR1A(dead_detector, "Add a detector to the dead mask", GR_ACQ)},
+  {MCECMDCR1A(frail_detector, "Add a detector to the frail mask", GR_ACQ)},
   {MCECMDCR1A(healthy_detector,
-      "Remove a detector from the frail and desk masks", GR_MCE_A)},
-  {MCECMDCA(tes_bias, "TES bias level", GR_MCE_A, "Level", 0, 65535, 'i')},
+      "Remove a detector from the frail and desk masks", GR_ACQ)},
+  {MCECMDCA(tes_bias, "TES bias level", GR_ACQ, "Level", 0, 65535, 'i')},
   {MCECMDC(sa_flux_quantum, "SA flux quantum", GR_TUNE,
       "Quantum", 0, 65535, 'i')},
   {MCECMDC(sq2_flux_quantum, "SQ2 flux quantum", GR_TUNE,
       "Quantum", 0, 65535, 'i')},
   {MCECMDCR(sq1_flux_quantum, "SQ1 flux quantum", GR_TUNE,
       "Quantum", 0, 65535, 'i')},
-  {MCECMDRAD(sq1_bias, "SQ1 bias", GR_MCE_A, "Bias", 0, 65535, 'i')},
-  {MCECMDRAD(sq1_bias_off, "SQ1 off bias", GR_MCE_A, "Bias", 0, 65535, 'i')},
-  {MCECMDCAD(sq2_bias, "SQ2 bias", GR_MCE_A, "Bias", 0, 65535, 'i')},
-  {MCECMDCRA(sq2_fb, "SQ2 feeback", GR_MCE_A, "Feeback", 0, 65535, 'i')},
-  {MCECMDCAD(sa_bias, "SA bias", GR_MCE_A, "Bias", 0, 65535, 'i')},
-  {MCECMDCA(sa_fb, "SA feeback", GR_MCE_A, "Bias", 0, 65535, 'i')},
-  {MCECMDCA(sa_offset, "SA offset", GR_MCE_A, "Bias", 0, 65535, 'i')},
-  {MCECMDCRA(adc_offset, "ADC offset ", GR_MCE_A, "Offset", 0, 65535, 'i')},
+  {MCECMDRAD(sq1_bias, "SQ1 bias", GR_ACQ, "Bias", 0, 65535, 'i')},
+  {MCECMDRAD(sq1_bias_off, "SQ1 off bias", GR_ACQ, "Bias", 0, 65535, 'i')},
+  {MCECMDCAD(sq2_bias, "SQ2 bias", GR_ACQ, "Bias", 0, 65535, 'i')},
+  {MCECMDCRA(sq2_fb, "SQ2 feeback", GR_ACQ, "Feeback", 0, 65535, 'i')},
+  {MCECMDCAD(sa_bias, "SA bias", GR_ACQ, "Bias", 0, 65535, 'i')},
+  {MCECMDCA(sa_fb, "SA feeback", GR_ACQ, "Bias", 0, 65535, 'i')},
+  {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
+  {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
 
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
-    GR_MCE_A | MCECMD | CONFIRM, 5,
+    GR_MCC | MCECMD | CONFIRM, 5,
     {
       {CHOOSE_INSERT_PARAM},
       {"Card", 0, 6, 'i', "NONE", {wb_cards}},
