@@ -1392,9 +1392,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_ACQ | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
-      {"P Gain", 0, 65535, 'i', "0"}, 
+      {"P Gain", 0, 65535, 'i', "1"}, 
       {"I Gain", 0, 65535, 'i', "2"},
-      {"D Gain", 0, 65535, 'i', "0"},
+      {"D Gain", 0, 65535, 'i', "3"},
     }
   },
   {MCECMDCR1A(dead_detector, "Add a detector to the dead mask", GR_ACQ)},
