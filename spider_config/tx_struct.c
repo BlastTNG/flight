@@ -1158,9 +1158,9 @@ char *GetArrayFieldName(int i_field) {
     i=0;
     for (tel = 0; tel < NUM_MCE; tel++) {
       for (type = 0; type < 3; type++) {
-        for (col = 0; col<NUM_COL; col++) {
-          for (row = 0; row<NUM_ROW; row++) {
-            sprintf(names[i], "%s_x%1dr%02dc%02d", types[type], tel+1, col, row);
+        for (row = 0; row<NUM_ROW; row++) {
+          for (col = 0; col<NUM_COL; col++) {
+            sprintf(names[i], "%s_x%1dr%02dc%02d", types[type], tel+1, row, col);
             i++;
           }
         }
