@@ -33,7 +33,7 @@
 #define GR_ELECT        0x00000002
 #define GR_HWPR         0x00000004
 #define GR_TRIM         0x00000008
-#define GR_ACT          0x00000010
+#define GR_SFTV         0x00000010
 #define GR_BIAS         0x00000020
 #define GR_VETO         0x00000040
 #define GR_LOCK         0x00000080
@@ -74,7 +74,7 @@ enum singleCommand {
   gps_allow,         gps_veto,          mag_allow,         mag_veto,
   stop,              pss_veto,          pss_allow,         lock,
   trim_to_isc,       unlock,            lock_off,          lock_on,
-  force_el_enable,   gps_cycle,         actbus_cycle,      rw_cycle,
+  force_el_enable,   gps_cycle,         rw_cycle,
   piv_cycle,         elmot_cycle,       hub232_cycle,      das_cycle,
   rsc_cycle,         bsc_cycle,         rsc_off,           rsc_on,
   gps_off,           gps_on,            rw_off,            rw_on,
@@ -96,8 +96,7 @@ enum singleCommand {
   reap_itsy,         reap_bitsy,        
   trim_to_osc,       antisun,           blast_rocks,       blast_sucks,
   at_float,          not_at_float,      el_auto_gyro,
-  repoll,            halt_itsy,         halt_bitsy,        actbus_on,
-  actbus_off,        actuator_stop,     restore_piv,
+  halt_itsy,         halt_bitsy,        restore_piv,
   reset_rw,          reset_piv,         reset_elev,
   vtx1_isc,          vtx1_osc,          vtx1_bsc,          vtx2_isc,
   vtx2_osc,          vtx2_bsc,
@@ -105,7 +104,8 @@ enum singleCommand {
   thebad_expose,     thebad_autofocus,  thebad_settrig_ext,  thebad_pause,
   theugly_expose,    theugly_autofocus, theugly_settrig_ext, theugly_pause,
   thegood_run,       thebad_run,        theugly_run,       table_track,
-  hwp_step,          hwp_repoll,
+  hwp_step,          hwp_repoll,        sftv_on,           sftv_off,
+  sftv_atm_open,     sftv_atm_close,    sftv_pump_open,    sftv_pump_close,
   //theo heater commands
   hk_mt_bottom_heat_on,   hk_mt_bottom_heat_off,
   hk_sft_lines_heat_on,   hk_sft_lines_heat_off,
@@ -141,16 +141,13 @@ enum singleCommand {
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,           dac2_level,
   set_scan_params,
-  az_el_trim,        drift,             el_gain,           act_offset,
-  actuator_tol,
+  az_el_trim,        drift,             el_gain,           
   pivot_gain,        ra_dec_goto,       ra_dec_set,        oth_set,  
   t_gyro_set,        tdrss_bw,          iridium_bw,        pilot_bw,
   t_gyro_gain,       timeout,           slot_sched,        az_gyro_offset,
-  cov_gps,           lvdt_limit,        reset_adc,
+  cov_gps,           reset_adc,
   hk_auto_cycle_on,  hk_auto_cycle_off, hk_fridge_cycle,
-  el_gyro_offset,    general,           slew_veto,
-  actuator_servo,    actuator_vel,
-  actuator_i,        actuator_delta,
+  el_gyro_offset,    slew_veto,
   motors_verbose,    get_mce_param,
   thegood_any,        thegood_settrig_timed,
   thegood_exp_params, thegood_focus_params,
@@ -166,7 +163,7 @@ enum multiCommand {
   theugly_lens_any,   theugly_lens_move,
   thegood_lens_params,thebad_lens_params,   theugly_lens_params, sc_trig_delay,
   table_gain,        table_goto,        table_drift,
-  t_bsc_set,         t_rsc_set,         ants_gps,          act_enc_trim,
+  t_bsc_set,         t_rsc_set,         ants_gps,          
   hwp_vel,           hwp_i,             hwp_move,          hwp_general,
   hk_pump_heat_on,   hk_pump_heat_off,  hk_heat_switch_on, hk_heat_switch_off,
   hk_ssa_heat_on,    hk_ssa_heat_off,   hk_htr1_heat_on,   hk_htr1_heat_off,

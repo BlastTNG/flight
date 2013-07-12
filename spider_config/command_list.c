@@ -147,7 +147,7 @@ const int command_list_serial_as_int(void)
 
 const char *const GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Aux. Electronics", "Waveplate Rotator",
-  "Pointing Sensor Trims", "Actuators",        "HK Bias",
+  "Pointing Sensor Trims", "SFT Valve Motors", "HK Bias",
   "Pointing Sensor Vetos", "Lock Motor",       "Gyro Power",
   "Pointing Motor Gains",  "SC Table",         "HK Insert Heat",
   "ACS Power",             "The Good SC",      "HK Theo Heat",
@@ -200,12 +200,6 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ofpch_2_gy_off), "turn off ofpch_2_gy", GR_GYPWR},
   {COMMAND(ofpch_2_gy_on), "turn on ofpch_2_gy", GR_GYPWR},
   {COMMAND(ofpch_2_gy_cycle), "power cycle ofpch_2_gy", GR_GYPWR},
-  {COMMAND(actbus_off), "turn off the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_ACT | CONFIRM},
-  {COMMAND(actbus_on), "turn on the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_ACT},
-  {COMMAND(actbus_cycle), "power cycle the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_ACT | CONFIRM},
   {COMMAND(rw_off), "turn off the reaction wheel motor", GR_POWER},
   {COMMAND(rw_on), "turn on the reaction wheel motor", GR_POWER},
   {COMMAND(rw_cycle), "power cycle the reaction wheel motor", GR_POWER},
@@ -365,9 +359,12 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(unlock), "unlock the inner frame", GR_LOCK},
   {COMMAND(lock_on), "turn on the lock motor", GR_LOCK},
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
-  {COMMAND(repoll), "force repoll of the stepper busses (act, lock, XY)",
-    GR_ACT},
-  {COMMAND(actuator_stop), "stop all secondary actuators immediately", GR_ACT},
+  {COMMAND(sftv_on), "turn on the SFT valve motors", GR_SFTV},
+  {COMMAND(sftv_off), "turn off the SFT valve motors", GR_SFTV},
+  {COMMAND(sftv_atm_open), "open the SFT to atmosphere", GR_SFTV | CONFIRM},
+  {COMMAND(sftv_atm_close), "close the SFT to atmosphere", GR_SFTV | CONFIRM},
+  {COMMAND(sftv_pump_open), "open the SFT to its pump", GR_SFTV | CONFIRM},
+  {COMMAND(sftv_pump_close), "close the SFT to its pump", GR_SFTV | CONFIRM},
   {COMMAND(hwp_repoll), "repoll HWP bus for stepper controllers", GR_HWPR},
   {COMMAND(hwp_panic), "stop all HWP rotators immediately", GR_HWPR},
   {COMMAND(hwp_step), "step the HWPs to their next position", GR_HWPR},
@@ -641,69 +638,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  /* actuator bus commands */
-  {COMMAND(general), "send a general command string to the lock or actuators",
-   GR_ACT, 2,
-    {
-      {"Address (1-3,5,33)", 1, 0x2F, 'i', "1.0"},
-      {"Command", 0, 32, 's', ""},
-    }
-  },
-  {COMMAND(actuator_servo), "servo the actuators to absolute positions",
-    GR_ACT, 3,
-    {
-      {"Actuator Alpha (ENC units)", -15000, 15000, 'i', "ENC_0_ACT"},
-      {"Actuator Beta (ENC units)",  -15000, 15000, 'i', "ENC_1_ACT"},
-      {"Actuator Gamma (ENC units)", -15000, 15000, 'i', "ENC_2_ACT"}
-    }
-  },
-  {COMMAND(actuator_delta), "offset the actuators to from current position",
-    GR_ACT, 3,
-    {
-      {"Actuator Alpha", -5000, 5000, 'i', "0"},
-      {"Actuator Beta",  -5000, 5000, 'i', "0"},
-      {"Actuator Gamma", -5000, 5000, 'i', "0"}
-    }
-  },
-  {COMMAND(act_offset), "set the actuator encoder/lvdt offsets", GR_ACT, 3,
-    {
-      {"Actuator Alpha (Enc units)", 0, 65535, 'f', "Enc_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65535, 'f', "Enc_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65535, 'f', "Enc_2_act"}
-    }
-  },
-  {COMMAND(act_enc_trim), "manually set encoder and dead reckoning", GR_ACT, 3,
-    {
-      {"Actuator Alpha (Enc units)", 0, 65535, 'f', "Dr_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65535, 'f', "Dr_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65535, 'f', "Dr_2_act"}
-    }
-  },
-  {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
-    2,
-    {
-      {"Velocity", 5, 20000, 'i', "VEL_ACT"},
-      {"Acceleration", 1, 20, 'i', "ACC_ACT"}
-    }
-  },
-  {COMMAND(actuator_i), "set the actuator motor currents", GR_ACT, 2,
-    {
-      {"Move current (%)", 0, 100, 'i', "I_MOVE_ACT"},
-      {"Hold current (%)", 0,  50, 'i', "I_HOLD_ACT"}
-    }
-  },
-  {COMMAND(actuator_tol), "set the tolerance for servo moves", GR_ACT, 1,
-    {
-      {"Move tolerance (~um)", 0, 1000, 'i', "TOL_ACT"}
-    }
-  },
-  {COMMAND(lvdt_limit), "set the hard LVDT limits on actuator moves", GR_ACT, 3,
-    {
-      {"Spread limit", 0, 5000, 'f', "LVDT_SPREAD_ACT"},
-      {"Lower limit", -5000, 60000, 'f', "LVDT_LOW_ACT"},
-      {"Upper limit", -5000, 60000, 'f', "LVDT_HIGH_ACT"}
-    }
-  },
   {COMMAND(hwp_general), "send a general phytron command string", GR_HWPR, 2,
     {
       {"Stepper (1-6)", 1, 6, 'i', ""},

@@ -43,8 +43,6 @@
 #include "bset.h"
 #include "mceserv.h"
 
-void RecalcOffset(double, double);  /* actuators.c */
-
 void SetRaDec(double, double); /* defined in pointing.c */
 void SetTrimToSC(int);
 void ClearTrim();
@@ -530,17 +528,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case hub232_cycle:
       CommandData.power.hub232_off = PCYCLE_HOLD_LEN;
       break;
-    case actbus_off:
-      CommandData.actbus.off = -1;
-      break;
-    case actbus_on:
-      CommandData.actbus.off = 0;
-      CommandData.actbus.force_repoll = 1;
-      break;
-    case actbus_cycle:
-      CommandData.actbus.off = PCYCLE_HOLD_LEN;
-      CommandData.actbus.force_repoll = 1;
-      break;
     case mcc1_on:
       CommandData.power.mcc1.set_count = LATCH_PULSE_LEN;
       CommandData.power.mcc1.rst_count = 0;
@@ -678,6 +665,14 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case hk_preamp_cycle:
       CommandData.ifpower.hk_preamp_off = PCYCLE_HOLD_LEN;
       break;
+    case sftv_off:
+      CommandData.ifpower.sftv.set_count = 0;
+      CommandData.ifpower.sftv.rst_count = LATCH_PULSE_LEN;
+      break;
+    case sftv_on:
+      CommandData.ifpower.sftv.rst_count = 0;
+      CommandData.ifpower.sftv.set_count = LATCH_PULSE_LEN;
+      break;
 
     /* Lock */
     case lock_on:
@@ -718,10 +713,17 @@ void SingleCommand (enum singleCommand command, int scheduled)
       }
       break;
 
-    /* Actuators */
-    case actuator_stop:
-      CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
-      CommandData.actbus.tc_mode = TC_MODE_VETOED;
+    case sftv_atm_open:
+      CommandData.sftv.goal_atm = sft_do_open;
+      break;
+    case sftv_atm_close:
+      CommandData.sftv.goal_atm = sft_do_close;
+      break;
+    case sftv_pump_open:
+      CommandData.sftv.goal_pump = sft_do_open;
+      break;
+    case sftv_pump_close:
+      CommandData.sftv.goal_pump = sft_do_close;
       break;
 
     case hwp_panic:
@@ -732,11 +734,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case hwp_step:
       CommandData.hwp.mode = hwp_m_step;
-      break;
-
-    case repoll:
-      CommandData.actbus.force_repoll = 1;
-      CommandData.xystage.force_repoll = 1;
       break;
 
       /***************************************/
@@ -1237,59 +1234,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case motors_verbose:
       CommandData.verbose_rw = ivalues[0];
       CommandData.verbose_piv = ivalues[1];
-      break;
-
-      /***************************************/
-      /**********        Actuators  **********/
-    case general: /* General actuator bus command */
-      CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
-      copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
-          svalues[1]);
-      CommandData.actbus.cindex = INC_INDEX(CommandData.actbus.cindex);
-      break;
-    case actuator_servo:
-      CommandData.actbus.goal[0] = ivalues[0] + CommandData.actbus.offset[0];
-      CommandData.actbus.goal[1] = ivalues[1] + CommandData.actbus.offset[1];
-      CommandData.actbus.goal[2] = ivalues[2] + CommandData.actbus.offset[2];
-      CommandData.actbus.focus_mode = ACTBUS_FM_SERVO;
-      break;
-    case actuator_delta:
-      CommandData.actbus.delta[0] = ivalues[0];
-      CommandData.actbus.delta[1] = ivalues[1];
-      CommandData.actbus.delta[2] = ivalues[2];
-      CommandData.actbus.focus_mode = ACTBUS_FM_DELTA;
-      break;
-    case actuator_vel:
-      CommandData.actbus.act_vel = ivalues[0];
-      CommandData.actbus.act_acc = ivalues[1];
-      break;
-    case actuator_i:
-      CommandData.actbus.act_move_i = ivalues[0];
-      CommandData.actbus.act_hold_i = ivalues[1];
-      break;
-    case actuator_tol:
-      CommandData.actbus.act_tol = ivalues[0];
-      break;
-    case act_offset:
-      CommandData.actbus.offset[0] = (int)(rvalues[0]+0.5);
-      CommandData.actbus.offset[1] = (int)(rvalues[1]+0.5);
-      CommandData.actbus.offset[2] = (int)(rvalues[2]+0.5);
-      break;
-    case act_enc_trim:
-      CommandData.actbus.trim[0] = rvalues[0];
-      CommandData.actbus.trim[1] = rvalues[1];
-      CommandData.actbus.trim[2] = rvalues[2];
-      CommandData.actbus.focus_mode = ACTBUS_FM_TRIM;
-      break;
-    case lvdt_limit:
-      CommandData.actbus.lvdt_delta = rvalues[0];
-      if (rvalues[1] > rvalues[2]) {
-        CommandData.actbus.lvdt_low = rvalues[2];
-        CommandData.actbus.lvdt_high = rvalues[1];
-      } else {
-        CommandData.actbus.lvdt_low = rvalues[1];
-        CommandData.actbus.lvdt_high = rvalues[2];
-      }
       break;
 
     case hwp_vel:
@@ -2042,10 +1986,10 @@ void InitCommandData()
   CommandData.df = 0;
   CommandData.force_el = 0;
 
-  CommandData.actbus.off = 0;
-  CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   CommandData.lock.goal = lock_do_nothing;
-  CommandData.actbus.force_repoll = 0;
+
+  CommandData.sftv.goal_atm = sft_do_nothing;
+  CommandData.sftv.goal_pump = sft_do_nothing;
 
   CommandData.xystage.is_new = 0;
   CommandData.xystage.force_repoll = 0;
@@ -2128,6 +2072,8 @@ void InitCommandData()
   CommandData.ifpower.mce[2].set_count = 0;
   CommandData.ifpower.hwp.rst_count = 0;
   CommandData.ifpower.hwp.set_count = 0;
+  CommandData.ifpower.sftv.rst_count = 0;
+  CommandData.ifpower.sftv.set_count = 0;
 
   /* don't use the fast gy offset calculator */
   CommandData.fast_offset_gy = 0;
@@ -2343,39 +2289,6 @@ void InitCommandData()
   CommandData.hk_bias_freq = 50;
   CommandData.ifpower.hk_preamp_off = 0;
 
-  CommandData.actbus.tc_mode = TC_MODE_VETOED;
-  CommandData.actbus.tc_step = 100; /* microns */
-  CommandData.actbus.tc_wait = 3000; /* = 10 minutes in 5-Hz frames */
-  CommandData.actbus.tc_spread = 5; /* centigrade degrees */
-  CommandData.actbus.tc_prefp = 1;
-  CommandData.actbus.tc_prefs = 1;
-
-  CommandData.actbus.lvdt_delta = 1000;
-  CommandData.actbus.lvdt_low = 25000;
-  CommandData.actbus.lvdt_high = 35000;
-
-  CommandData.actbus.offset[0] = 33333;
-  CommandData.actbus.offset[1] = 33333;
-  CommandData.actbus.offset[2] = 33333;
-
-  /* The first is due to change in radius of curvature, the second due to
-   * displacement of the secondary due to the rigid struts */
-
-  /* Don sez:   50.23 + 9.9 and 13.85 - 2.2 */
-  /* Marco sez: 56          and 10          */
-
-  CommandData.actbus.g_primary = 56; /* um/deg */
-  CommandData.actbus.g_secondary = 10; /* um/deg */
-  CommandData.actbus.focus = 0;
-  CommandData.actbus.sf_time = 0;
-  CommandData.actbus.sf_offset = 0;
-
-  CommandData.actbus.act_vel = 10;
-  CommandData.actbus.act_acc = 1;
-  CommandData.actbus.act_move_i = 85;
-  CommandData.actbus.act_hold_i = 40;
-  CommandData.actbus.act_tol = 2;
-
   CommandData.hwp.vel = 1.0;
   CommandData.hwp.move_i = 0.8;
   CommandData.hwp.phase = 0.0;
@@ -2383,6 +2296,9 @@ void InitCommandData()
   CommandData.lock.pin_is_in = 1;
   CommandData.lock.state_p = lock_unknown;
   CommandData.lock.state_s = lock_unknown;
+
+  CommandData.sftv.state_atm = sft_unknown;
+  CommandData.sftv.state_pump = sft_unknown;
 
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;

@@ -71,6 +71,7 @@ void SecondaryMirror(void);
 
 /* in hk.c */
 void HouseKeeping();
+void SFTValveMotors();
 
 /* in auxiliary.c */
 void ChargeController(void);
@@ -244,7 +245,6 @@ static void WriteAux(void)
   if (InCharge != incharge && InCharge) {
     bprintf(info, "I, %s, have gained control.\n", BitsyIAm ? "Bitsy"
         : "Itsy");
-    CommandData.actbus.force_repoll = 1;
   } else if (InCharge != incharge) {
     bprintf(info, "I, %s, have lost control.\n", BitsyIAm ? "Bitsy"
         : "Itsy");
@@ -1406,16 +1406,16 @@ void UpdateBBCFrame()
     case 12:
       cameraFields(2);
       break;
+    case 13:
+      if (!mcp_initial_controls) SyncADC();
+      break;
+    case 14:
+      SFTValveMotors();
+      break;
     default:
       break;
   }
       
-  /*** do slow Controls ***/
-  if (index == 13) {
-    if (!mcp_initial_controls)
-      SyncADC();
-  }
-
   if (!mcp_initial_controls)
     index = (index + 1) % FAST_PER_SLOW;
 

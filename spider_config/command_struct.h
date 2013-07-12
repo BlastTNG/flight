@@ -327,6 +327,7 @@ struct CommandDataStruct {
     enum mce_pow_op mce_op[3];
     struct latch_pulse mce[3];
     struct latch_pulse hwp;
+    struct latch_pulse sftv;
     int hk_preamp_off;
   } ifpower;
 
@@ -427,44 +428,10 @@ struct CommandDataStruct {
   unsigned short hk_bias_freq;
 
   struct {
-    int off;
-    int force_repoll;
-
-    /* arbitrary command */
-    int cindex;
-    int caddr[3];
-    char command[3][CMD_STRING_LEN];
-
-    /* thermal control */
-    double g_primary;
-    double g_secondary;
-    int tc_step;
-    int tc_wait;
-    int tc_mode;
-    int tc_prefp;
-    int tc_prefs;
-    double tc_spread;
-    int sf_offset;
-    int sf_time;
-
-    /* actuator control */
-    int act_vel;
-    int act_acc;
-    int act_hold_i;
-    int act_move_i;
-    unsigned short act_tol;
-
-    /* low-level actuator servo */
-    int focus_mode;
-    int goal[3];
-    int delta[3];
-    int offset[3];
-    int trim[3];
-    int focus;
-    int lvdt_delta;
-    int lvdt_low;
-    int lvdt_high;
-  } actbus;
+    enum {sft_do_nothing = 0, sft_do_open, sft_do_close} goal_atm, goal_pump;
+    enum {sft_unknown = 0, sft_closed, sft_open, sft_closing,
+      sft_opening} state_atm, state_pump;
+  } sftv;
 
   struct {
     enum {lock_do_nothing = 0, lock_insert, lock_el_wait_insert,

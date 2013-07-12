@@ -577,6 +577,98 @@ static void HeatControl()
   }
 }
 
+//limit switch positions. NB: active low
+#define SFT_LIM_OP_ATM  0x0001
+#define SFT_LIM_CL_ATM  0x0004
+#define SFT_LIM_OP_PUMP 0x0010
+#define SFT_LIM_CL_PUMP 0x0040
+
+//command bits to open or close valves
+#define SFT_CTL_OPEN_ATM    0x0100
+#define SFT_CTL_CLOSE_ATM   0x0400
+#define SFT_CTL_OPEN_PUMP   0x1000
+#define SFT_CTL_CLOSE_PUMP  0x4000
+
+void SFTValveMotors()
+{
+  //TODO handshake with DSP to prevent erroneous SFT open/close commands
+  static struct NiosStruct* ctlSftvAddr;
+  static struct BiPhaseStruct* limSftvAddr;
+  static struct NiosStruct* stateSftvAddr;
+  static int firsttime = 1;
+  unsigned int limits;
+  unsigned int sft_ctl_bits = 0;
+
+  if (firsttime) {
+    firsttime = 0;
+    ctlSftvAddr = GetNiosAddr("ctl_sftv");
+    limSftvAddr = GetBiPhaseAddr("lim_sftv");
+    stateSftvAddr = GetNiosAddr("state_sftv");
+  }
+
+  //set the control bits as per mode/goal
+  switch (CommandData.sftv.goal_atm) {
+    case sft_do_open:
+      sft_ctl_bits |= SFT_CTL_OPEN_ATM;
+      break;
+    case sft_do_close:
+      sft_ctl_bits |= SFT_CTL_CLOSE_ATM;
+      break;
+    case sft_do_nothing:
+    default:
+      sft_ctl_bits &= ~(SFT_CTL_OPEN_ATM | SFT_CTL_CLOSE_ATM);
+      break;
+  }
+
+  switch (CommandData.sftv.goal_pump) {
+    case sft_do_open:
+      sft_ctl_bits |= SFT_CTL_OPEN_PUMP;
+      break;
+    case sft_do_close:
+      sft_ctl_bits |= SFT_CTL_CLOSE_PUMP;
+      break;
+    case sft_do_nothing:
+    default:
+      sft_ctl_bits &= ~(SFT_CTL_OPEN_PUMP | SFT_CTL_CLOSE_PUMP);
+      break;
+  }
+
+  WriteData(ctlSftvAddr, sft_ctl_bits, NIOS_QUEUE);
+
+  //examine limit switches. Do nothing when lock is off (switches unpowered)
+  //also ignore case when both switches asserted (disconnect/aphysical)
+  //NB: limit switches are asserted low
+  limits = ReadData(limSftvAddr);
+
+  if ( !(limits & SFT_LIM_CL_ATM) && (limits & SFT_LIM_OP_ATM) )
+    CommandData.sftv.state_atm = sft_closed;
+  else if ( (limits & SFT_LIM_CL_ATM) && !(limits & SFT_LIM_OP_ATM) )
+    CommandData.sftv.state_atm = sft_open;
+  else if ( (limits & SFT_LIM_CL_ATM) && (limits & SFT_LIM_OP_ATM) ) {
+    if (sft_ctl_bits == SFT_CTL_CLOSE_ATM)
+      CommandData.sftv.state_atm = sft_closing;
+    else if (sft_ctl_bits == SFT_CTL_OPEN_ATM)
+      CommandData.sftv.state_atm = sft_opening;
+  }
+
+  if ( !(limits & SFT_LIM_CL_PUMP) && (limits & SFT_LIM_OP_PUMP) )
+    CommandData.sftv.state_pump = sft_closed;
+  else if ( (limits & SFT_LIM_CL_PUMP) && !(limits & SFT_LIM_OP_PUMP) )
+    CommandData.sftv.state_pump = sft_open;
+  else if ( (limits & SFT_LIM_CL_PUMP) && (limits & SFT_LIM_OP_PUMP) ) {
+    if (sft_ctl_bits == SFT_CTL_CLOSE_PUMP)
+      CommandData.sftv.state_pump = sft_closing;
+    else if (sft_ctl_bits == SFT_CTL_OPEN_PUMP)
+      CommandData.sftv.state_pump = sft_opening;
+  }
+
+  WriteData(stateSftvAddr, (CommandData.sftv.goal_atm & 0x000f)
+      | ((CommandData.sftv.state_atm & 0x000f) << 4)
+      | ((CommandData.sftv.goal_pump & 0x000f) << 8)
+      | ((CommandData.sftv.state_pump & 0x000f) << 12)
+      , NIOS_QUEUE);
+}
+
 void HouseKeeping()
 {
   static struct NiosStruct* insertLastHkAddr;

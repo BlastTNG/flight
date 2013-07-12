@@ -354,6 +354,8 @@ struct ChannelStruct SlowChannels[] = {
   {"heat_fplo_x5_hk",'w', RTD_D,  23, CALDAC( 0.9988,     -0.0014), 'u',  U_V_V},
 
   {"ifpwr",         'w', HWP_D,  50,                1.0,             0.0, 'u', U_NONE},
+  {"ctl_sftv",      'w', HWP_D,  51,                1.0,             0.0, 'u', U_NONE},
+  {"lim_sftv",      'r', HWP_D,  51,                1.0,             0.0, 'u', U_NONE},
   {"hwp_bias",      'w', HWP_D,  54,                1.0,             0.0, 'u', U_NONE},
   //with quadrature code, phase_hwp is deprecated
   {"phase_hwp",  'w', HWP_A1,  0,               I2DEG,            0.0, 'u',U_PH_DEG},
@@ -790,6 +792,7 @@ struct ChannelStruct SlowChannels[] = {
   {"count_i_cmd",    'w', LOOP0,  55,                1.0,             0.0, 'u', U_NONE},
   {"delay_az",       'w', LOOP0,  56,                (10.0/32768.0),  0.0, 'u', U_NONE},
   {"mce_cindex",     'w', LOOP0,  57,                1.0,             0.0, 'u', U_NONE},
+  {"state_sftv",     'w', LOOP0,  60,                1.0,             0.0, 'u', U_NONE},
   
 #ifndef BOLOTEST
 /* ACS1 Digital I/O card */

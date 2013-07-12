@@ -349,6 +349,25 @@ union DerivedUnion DerivedChannels[] = {
 
   /* Housekeeping */
   COMMENT("Housekeeping digital channels"),
+
+  BITFIELD("CTL_SFTV",
+      "", "", "", "", "", "", "", "",
+      "OPENING_ATM_SFTV", "",
+      "CLOSING_ATM_SFTV", "",
+      "OPENING_PUMP_SFTV", "",
+      "CLOSING_PUMP_SFTV", ""
+      ),
+  BITFIELD("LIM_SFTV",
+      "LIM_NOPEN_ATM_SFTV", "",
+      "LIM_NCLOSE_ATM_SFTV", "",
+      "LIM_NOPEN_PUMP_SFTV" "",
+      "LIM_NCLOSE_PUMP_SFTV", ""
+      ),
+  BITWORD("GOAL_ATM_SFTV", "STATE_SFTV", 0, 3),
+  BITWORD("STATE_ATM_SFTV", "STATE_SFTV", 4, 7),
+  BITWORD("GOAL_PUMP_SFTV", "STATE_SFTV", 8, 11),
+  BITWORD("STATE_PUMP_SFTV", "STATE_SFTV", 12, 15),
+
   BITFIELD("heat_13_hk",
       "HEAT_PUMP_X3_HK",
       "HEAT_HSW_X3_HK",

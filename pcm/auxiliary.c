@@ -347,7 +347,6 @@ static int do_mce_power_op(int mce_power)
 }
 
 /* create latching relay pulses, and update enable/disbale levels */
-/* actbus/steppers enable is handled separately in StoreActBus() */
 void ControlPower(void) {
   static int mce_power = 0xFFFF; /* in the absense of infomration, assume things
                                     are on */
@@ -602,6 +601,14 @@ void ControlPower(void) {
   if (CommandData.ifpower.hwp.rst_count > 0) {
     CommandData.ifpower.hwp.rst_count--;
     if (CommandData.ifpower.hwp.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0080;
+  }
+  if (CommandData.ifpower.sftv.set_count > 0) {   
+    CommandData.ifpower.sftv.set_count--;  
+    if (CommandData.ifpower.sftv.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0100;  
+  }  
+  if (CommandData.ifpower.sftv.rst_count > 0) {  
+    CommandData.ifpower.sftv.rst_count--;   
+    if (CommandData.ifpower.sftv.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0200;   
   }
   if (CommandData.ifpower.hk_preamp_off) {
     if (CommandData.ifpower.hk_preamp_off > 0) CommandData.ifpower.hk_preamp_off--;
