@@ -521,6 +521,24 @@ static void apply_cmd(int p, const char *name, int n, uint32_t v)
   int i, c;
 
   switch (p) {
+    case column_off:
+      if (n > 8) {
+        card[0] = "rc2";
+        n -= 8;
+      } else
+        card[0] = "rc1";
+      v = 1;
+      param = "servo_mode";
+      break;
+    case column_on:
+      if (n > 8) {
+        card[0] = "rc2";
+        n -= 8;
+      } else
+        card[0] = "rc1";
+      v = 3;
+      param = "servo_mode";
+      break;
     case readout_row_index:
     case sample_dly:
     case sample_num:

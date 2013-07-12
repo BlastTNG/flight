@@ -106,7 +106,9 @@ void try_toggle(enum status st, int stop, enum status *do_start,
         *do_start = st;
         break;
       case st_config:
-        if (~state & st_drives) /* must have a drive */
+        if (state & st_retdat) /* can't be acquiring data */
+          try_toggle(st_retdat, 1, do_start, do_stop);
+        else if (~state & st_drives) /* must have a drive */
           try_toggle(st_drives, 0, do_start, do_stop);
         else if (~state & st_mcecom) /* MCE must be alive */
           try_toggle(st_mcecom, 0, do_start, do_stop);

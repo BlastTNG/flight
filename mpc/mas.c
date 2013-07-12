@@ -751,14 +751,17 @@ void crash_stop(int sig)
 /* returns non-zero if something was popped */
 static int pop_block(void)
 {
+  int new_tail = (blockq_tail + 1) % BLOCKQ_SIZE;
+
   /* no pending requests */
   if (blockq_head == blockq_tail)
     return 0;
 
-  write_param(blockq[blockq_tail].c, blockq[blockq_tail].p,
-      blockq[blockq_tail].o, blockq[blockq_tail].d, blockq[blockq_tail].n);
+  write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
+      blockq[new_tail].d, blockq[new_tail].n);
 
-  blockq_tail = (blockq_tail + 1) % BLOCKQ_SIZE;
+  blockq_tail = new_tail;
+
   return 1;
 }
 
