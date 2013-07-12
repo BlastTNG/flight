@@ -182,7 +182,7 @@ enum multiCommand {
   hwp_bias_on,        hwp_bias_off,      mce_row_len,       mce_num_rows,
   mce_data_rate,      bset,              set_piv_mode,      tune_array,
   data_mode,          data_mode_bits,    start_acq,         reset_acq,
-  stop_acq,           mag_cal,           pss_cal,
+  stop_acq,           mag_cal,           pss_off_cal,       pss_d_cal,
 
   /* MCE experimental parameter commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,

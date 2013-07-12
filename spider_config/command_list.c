@@ -477,16 +477,25 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   }, // 10 10 10.5 10.34
   
-  {COMMAND(pss_cal), "set pss calibration", GR_TRIM, 9,
+  {COMMAND(pss_off_cal), "set pss offsets", GR_TRIM, 6,
     {
       {"Offset 1", -20.0, 20.0, 'f', "CAL_OFF_PSS1"},
-      {"Distance 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
       {"Offset 2", -20.0, 20.0, 'f', "CAL_OFF_PSS2"},
-      {"Distance 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
       {"Offset 3", -20.0, 20.0, 'f', "CAL_OFF_PSS3"},
-      {"Distance 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
       {"Offset 4", -20.0, 20.0, 'f', "CAL_OFF_PSS4"},
+      {"Offset 5", -20.0, 20.0, 'f', "CAL_OFF_PSS5"},
+      {"Offset 6", -20.0, 20.0, 'f', "CAL_OFF_PSS6"},
+    }
+  },
+
+  {COMMAND(pss_d_cal), "set pss distances and Imin", GR_TRIM, 7,
+    {
+      {"Distance 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
+      {"Distance 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
+      {"Distance 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
       {"Distance 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
+      {"Distance 5", -2.0, 2.0, 'f', "CAL_D_PSS5"},
+      {"Distance 6", -2.0, 2.0, 'f', "CAL_D_PSS6"},
       {"I Min", 0.0, 20.0, 'f', "CAL_IMIN_PSS"}
     }
   },
