@@ -1044,12 +1044,12 @@ static void StoreData(int write_slow)
   WriteData(calOffPss4Addr, (unsigned int)(CommandData.cal_off_pss4*65536.0/40.0), NIOS_QUEUE);
   WriteData(calOffPss5Addr, (unsigned int)(CommandData.cal_off_pss5*65536.0/40.0), NIOS_QUEUE);
   WriteData(calOffPss6Addr, (unsigned int)(CommandData.cal_off_pss6*65536.0/40.0), NIOS_QUEUE);
-  WriteData(calDPss1Addr, (unsigned int)(CommandData.cal_d_pss1*65536.0/4.0), NIOS_QUEUE);
-  WriteData(calDPss2Addr, (unsigned int)(CommandData.cal_d_pss2*65536.0/4.0), NIOS_QUEUE);
-  WriteData(calDPss3Addr, (unsigned int)(CommandData.cal_d_pss3*65536.0/4.0), NIOS_QUEUE);
-  WriteData(calDPss4Addr, (unsigned int)(CommandData.cal_d_pss4*65536.0/4.0), NIOS_QUEUE);
-  WriteData(calDPss5Addr, (unsigned int)(CommandData.cal_d_pss5*65536.0/4.0), NIOS_QUEUE);
-  WriteData(calDPss6Addr, (unsigned int)(CommandData.cal_d_pss6*65536.0/4.0), NIOS_QUEUE);
+  WriteData(calDPss1Addr, (unsigned int)(CommandData.cal_d_pss1*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calDPss2Addr, (unsigned int)(CommandData.cal_d_pss2*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calDPss3Addr, (unsigned int)(CommandData.cal_d_pss3*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calDPss4Addr, (unsigned int)(CommandData.cal_d_pss4*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calDPss5Addr, (unsigned int)(CommandData.cal_d_pss5*65536.0/40.0), NIOS_QUEUE);
+  WriteData(calDPss6Addr, (unsigned int)(CommandData.cal_d_pss6*65536.0/40.0), NIOS_QUEUE);
   WriteData(calIMinPssAddr, (unsigned int)(CommandData.cal_imin_pss*65536.0/40.0), NIOS_QUEUE);
 
   WriteData(trimPssAddr, CommandData.pss_az_trim * DEG2I, NIOS_QUEUE);
