@@ -157,7 +157,7 @@ const char *const GroupNames[N_GROUPS] = {
 /* parameter value lists */
 const char *noyes_names[] = {"no", "yes", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
-const char *autotune_stages[] = {"sa_ramp", "sq2_servo", "sq1_servo",
+const char *tuning_stages[] = {"sa_ramp", "sq2_servo", "sq1_servo",
   "sq1_ramp", "sq1_ramp_tes", "operate", NULL};
 const char *wb_cards[] = {"CC", "RC1", "RC2", "BC1", "BC2", "AC", NULL};
 const char *action_names[] = {"Apply & Record", "Apply only",
@@ -1281,7 +1281,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC)},
   {MCECMD2(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12,
       'i')},
-  {MCECMD1(tune_array, "Tune MCE (auto_setup)", GR_TUNE)},
+  {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_TUNE | MCECMD, 6,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
+      {"Last stage", 0, 5, 'i', "NONE", {tuning_stages}}
+    }
+  },
 
   {MCECMD2A(column_on, "Turn on a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
   {MCECMD2A(column_off, "Turn off a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
