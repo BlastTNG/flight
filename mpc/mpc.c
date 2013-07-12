@@ -633,7 +633,7 @@ static void prm_set_int(int p, const char *name, int n, int v, int a)
   /* record default */
   if (a == PRM_DEFAULT_ONLY) {
     char dflt[100] = "default_";
-    strcpy(dflt + sizeof("default_"), name);
+    strcpy(dflt + sizeof("default_") - 1, name);
     cfg_set_int(dflt, n, v);
   } else if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY
       || a == PRM_RECORD_RCONF)

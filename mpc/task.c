@@ -153,6 +153,8 @@ static int task_stop_acq()
     comms_lost = 1;
     return 1;
   }
+  /* wait for acq termination */
+  usleep(50000);
   /* Empty the buffer */
   if (dt_wait(dt_empty)) {
     comms_lost = 1;

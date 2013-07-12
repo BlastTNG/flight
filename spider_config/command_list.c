@@ -43,6 +43,12 @@
       {MCE_ACTION_PARAM(3,action_names)}, \
     }
 
+#define MCECMD1AD(cmd,desc,grp) \
+    COMMAND(cmd), desc, grp | MCECMD, 2, { \
+      {CHOOSE_INSERT_PARAM}, \
+      {MCE_ACTION_PARAM(4,daction_names)}, \
+    }
+
 #define MCECMD2(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 2, { \
       {CHOOSE_INSERT_PARAM}, \
@@ -87,7 +93,7 @@
     }
 
 #define MCECMDRAD(cmd,desc,grp,pname,min,max,typ) \
-    COMMAND(cmd), desc, grp | MCECMD, 3, { \
+    COMMAND(cmd), desc, grp | MCECMD, 4, { \
       {CHOOSE_INSERT_PARAM}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
@@ -157,8 +163,8 @@ const char *const GroupNames[N_GROUPS] = {
 /* parameter value lists */
 const char *noyes_names[] = {"no", "yes", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
-const char *tuning_stages[] = {"sa_ramp", "sq2_servo", "sq1_servo",
-  "sq1_ramp", "sq1_ramp_tes", "operate", NULL};
+const char *tuning_stages[] = {"SA ramp", "SQ2 servo", "SQ1 servo", "SQ1 ramp",
+  "SQ1 ramp TES", "Operate", NULL};
 const char *wb_cards[] = {"CC", "RC1", "RC2", "BC1", "BC2", "AC", NULL};
 const char *action_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", NULL};
@@ -1364,8 +1370,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD2A(sample_num, "Sample number", GR_ACQ, "Count", 0, 100, 'i')},
   {MCECMD2A(fb_dly, "Feedback delay", GR_ACQ, "Count",  0, 100, 'i')},
   {MCECMD2A(row_dly, "Row delay", GR_ACQ, "Count",  0, 100, 'i')},
-  {MCECMD1A(flux_jumping_on, "Turn on flux jumping", GR_ACQ)},
-  {MCECMD1A(flux_jumping_off, "Turn off flux jumping", GR_ACQ)},
+  {MCECMD1AD(flux_jumping_on, "Turn on flux jumping", GR_ACQ)},
+  {MCECMD1AD(flux_jumping_off, "Turn off flux jumping", GR_ACQ)},
   {MCECMD2(mce_servo_mode, "Set the servo mode", GR_ACQ, "Mode", 0, 3, 'i')},
   {COMMAND(mce_servo_pid), "Set the servo gains for a column", GR_ACQ | MCECMD,
     6,
