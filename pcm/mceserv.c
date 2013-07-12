@@ -421,7 +421,7 @@ void *mcerecv(void *unused)
         }
         break;
       case 'Z': /* Super slow data */
-        mpc_decompose_stat(mce_param, n, udp_buffer, peer, port);
+        mpc_decompose_param(mce_param, n, udp_buffer, peer, port);
         break;
       default:
         bprintf(err, "Dropping packet with bad type 0x%X\n", type);
