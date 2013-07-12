@@ -1279,7 +1279,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(start_acq, "Start data acquisition", GR_MCC)},
   {MCECMD1(reset_acq, "Cycle data acquisition", GR_MCC)},
   {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC)},
-  {MCECMD2A(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12, 'i')},
+  {MCECMD2(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12,
+      'i')},
   {MCECMD1(tune_array, "Tune MCE (auto_setup)", GR_TUNE)},
 
   {MCECMD2A(column_on, "Turn on a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
@@ -1341,7 +1342,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_TUNE, "Time (us)", 0, 65535, 'i')},
   {MCECMD2(ramp_tes_period, "Period for the TES bias ramp", GR_TUNE,
       "Time (us)", 0, 1000000000, 'l')},
-  {MCECMD2(num_rows_reported, "MCE num rows reported", GR_TUNE,
+  {MCECMD2A(num_rows_reported, "MCE num rows reported", GR_ACQ,
       "Num Rows", 0, 32, 'i')},
   {MCECMD2A(readout_row_index, "Readout Row index", GR_ACQ, "Row", 0, 32, 'i')},
   {MCECMD2A(sample_dly, "Sample delay", GR_ACQ, "Count", 0, 100, 'i')},
@@ -1350,7 +1351,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD2A(row_dly, "Row delay", GR_ACQ, "Count",  0, 100, 'i')},
   {MCECMD1A(flux_jumping_on, "Turn on flux jumping", GR_ACQ)},
   {MCECMD1A(flux_jumping_off, "Turn off flux jumping", GR_ACQ)},
-  {MCECMD2A(mce_servo_mode, "Set the servo mode", GR_ACQ, "Mode", 0, 3, 'i')},
+  {MCECMD2(mce_servo_mode, "Set the servo mode", GR_ACQ, "Mode", 0, 3, 'i')},
   {COMMAND(mce_servo_pid), "Set the servo gains for a column", GR_ACQ | MCECMD,
     6,
     {

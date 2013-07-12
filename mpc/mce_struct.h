@@ -36,7 +36,7 @@ struct ms_map {
 };
 
 struct ms_virt {
-  char c[4];
+  char c[8];
   char p[22];
   int n;
   struct ms_map m[2];

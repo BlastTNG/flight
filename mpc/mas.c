@@ -70,10 +70,10 @@ static uint32_t *fb = NULL;
 /* number of frames in an acq_go */
 #define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
 
-/* Write a block to the MCE; returns non-zero on error */
+/* Write a (parital) block to the MCE; returns non-zero on error */
 /* I guess MAS needs to be able to write to it's input data buffer...? */
-static int mas_write_block(const char *card, const char *block, uint32_t *data,
-    size_t num)
+static int mas_write_range(const char *card, const char *block, uint32_t *data,
+    size_t num, int offset)
 {
   int ret;
 
@@ -88,7 +88,10 @@ static int mas_write_block(const char *card, const char *block, uint32_t *data,
     return 1;
   }
 
-  ret = mcecmd_write_block(mas, &param, num, data);
+  /* why does mcecmd_..._range() have a different parameter order than 
+   * mcecmd_..._block()?
+   */
+  ret = mcecmd_write_range(mas, &param, offset, data, num);
   if (ret) {
     bprintf(warning, "write error, block %s/%s: %s", card, block,
         mcelib_error_string(ret));
@@ -98,6 +101,13 @@ static int mas_write_block(const char *card, const char *block, uint32_t *data,
   cmd_err = 0;
 
   return 0;
+}
+
+static int mas_write_block(const char *card, const char *block, uint32_t *data,
+    size_t num)
+{
+  /* ho hum .. */
+  return mas_write_range(card, block, data, num, 0);
 }
 
 static inline int drive_ready(int i)
@@ -111,9 +121,9 @@ static inline int drive_ready(int i)
   return 0;
 }
 
-/* read a block by name from the MCE; returns non-zero on error */
-static int mas_read_block(const char *card, const char *block, uint32_t *data,
-    size_t num)
+/* read a (partial) block by name from the MCE; returns non-zero on error */
+static int mas_read_range(const char *card, const char *block, uint32_t *data,
+    size_t num, int offset)
 {
   int ret;
 
@@ -128,7 +138,7 @@ static int mas_read_block(const char *card, const char *block, uint32_t *data,
     return 1;
   }
 
-  ret = mcecmd_read_block(mas, &param, num, data);
+  ret = mcecmd_read_range(mas, &param, offset, data, num);
   if (ret) {
     bprintf(warning, "read error, block %s/%s: %s", card, block,
         mcelib_error_string(ret));
@@ -138,6 +148,13 @@ static int mas_read_block(const char *card, const char *block, uint32_t *data,
   cmd_err = 0;
 
   return 0;
+}
+
+static int mas_read_block(const char *card, const char *block, uint32_t *data,
+    size_t num)
+{
+  /* Boring ... */
+  return mas_read_range(card, block, data, num, 0);
 }
 
 static void get_acq_metadata(void)
@@ -193,30 +210,55 @@ static int mce_check_cards(void)
 
 static int param_index(const char *card, const char *param)
 {
-  int first = 0, last = 0, i;
+  int virt = 0, first = 0, last = 0, i;
 
   /* card offset */
-  if (card[0] == 'a') {
-    first = FIRST_AC_PARAM;
-    last  =  LAST_AC_PARAM;
-  } else if (card[0] == 'b') {
-    first = (card[2] == '1') ? FIRST_BC1_PARAM : FIRST_BC2_PARAM;
-    last  = (card[2] == '1') ?  LAST_BC1_PARAM :  LAST_BC2_PARAM;
-  } else if (card[0] == 'c') {
-    first = FIRST_CC_PARAM;
-    last  =  LAST_CC_PARAM;
-  } else if (card[0] == 'r') {
-    first = (card[2] == '1') ? FIRST_RC1_PARAM : FIRST_RC2_PARAM;
-    last  = (card[2] == '1') ?  LAST_RC1_PARAM :  LAST_RC2_PARAM;
-  } else /* Be unforgiving */
-    bprintf(fatal, "Parameter look-up error: %s/%s\n", card, param);
-
-  /* parameter offset */
-  for (i = first; i <= last; i++) {
-    if (strcmp(param, mstat_phys[i].p) == 0) {
-      return i;
+  if (card[1] == 'c') { /* physical card */
+    if (card[0] == 'a') {
+      first = FIRST_AC_PARAM;
+      last  =  LAST_AC_PARAM;
+    } else if (card[0] == 'b') {
+      first = (card[2] == '1') ? FIRST_BC1_PARAM : FIRST_BC2_PARAM;
+      last  = (card[2] == '1') ?  LAST_BC1_PARAM :  LAST_BC2_PARAM;
+    } else if (card[0] == 'c') {
+      first = FIRST_CC_PARAM;
+      last  =  LAST_CC_PARAM;
+    } else if (card[0] == 'r') {
+      first = (card[2] == '1') ? FIRST_RC1_PARAM : FIRST_RC2_PARAM;
+      last  = (card[2] == '1') ?  LAST_RC1_PARAM :  LAST_RC2_PARAM;
+    }
+  } else { /* maybe a virtual card */
+    virt = 1;
+    if (strcmp(card, "sq1") == 0) {
+      first = FIRST_SQ1_MAP;
+      last = LAST_SQ1_MAP;
+    } else if (strcmp(card, "sq2") == 0) {
+      first = FIRST_SQ2_MAP;
+      last = LAST_SQ2_MAP;
+    } else if (strcmp(card, "sa") == 0) {
+      first = FIRST_SA_MAP;
+      last = LAST_SA_MAP;
+    } else if (strcmp(card, "tes") == 0) {
+      first = FIRST_TES_MAP;
+      last = LAST_TES_MAP;
+    } else if (strcmp(card, "heater") == 0) {
+      first = FIRST_HEATER_MAP;
+      last = LAST_HEATER_MAP;
+    } else {
+      /* Be unforgiving */
+      bprintf(fatal, "Parameter look-up error: %s/%s\n", card, param);
     }
   }
+
+  /* parameter offset */
+  if (virt) {
+    for (i = first; i <= last; i++)
+      if (strcmp(param, mstat_virt[i].p) == 0)
+        return -1 - i;
+  } else 
+    for (i = first; i <= last; i++)
+    if (strcmp(param, mstat_phys[i].p) == 0)
+      return i;
 
   /* Be unforgiving */
   bprintf(fatal, "Parameter look-up error: %s/%s\n", card, param);
@@ -224,49 +266,98 @@ static int param_index(const char *card, const char *param)
 }
 
 /* send a parameter to the MCE, updating it in the mce_stat array */
-static void write_param(const char *card, const char *param, uint32_t *data,
-    int count)
+static void write_param(const char *card, const char *param, int offset,
+    uint32_t *data, int count)
 {
   int n, new = 0;
   int i = param_index(card, param);
 
-  if (count > mstat_phys[i].nw)
-    bprintf(fatal, "Write of too much data: %i from %s/%s\n", count, card,
-        param);
+  if (i < 0) { /* virtual parameters */
+    int n = 0;
+    i = -i - 1;
+    if (count + offset > mstat_virt[i].n)
+      bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", offset,
+          count, card, param);
 
-  /* check whether an update is needed */
-  for (n = 0; n < count; ++n)
-    if (mce_stat[mstat_phys[i].cd + n] != data[n]) {
-      new = 1;
-      break;
+    /* do we have data in the first map? */
+    if (offset < mstat_virt[i].m[0].e) {
+      n = mstat_virt[i].m[0].e - offset;
+      if (n > count)
+        n = count;
+
+      write_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
+          mstat_virt[i].m[0].o + offset, data, n);
     }
 
-  if (!new)
-    return;
+    /* do we have data in the second map? */
+    if (count > n)
+      write_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
+          mstat_virt[i].m[0].o, data + n, count - n);
+  } else {
+    if (count + offset > mstat_phys[i].nw)
+      bprintf(fatal, "Write of too much data: %i+%i from %s/%s\n", count,
+          offset, card, param);
 
-  /* update MCE */
-  if (mas_write_block(card, param, data, count) == 0)
-    /* update the array */
-    memcpy(mce_stat + mstat_phys[i].cd, data, sizeof(uint32_t) * count);
+    /* check whether an update is needed */
+    for (n = 0; n < count; ++n)
+      if (mce_stat[mstat_phys[i].cd + offset + n] != data[n]) {
+        new = 1;
+        break;
+      }
+
+    if (!new)
+      return;
+
+    /* update MCE */
+    if (mas_write_range(card, param, data, count, offset) == 0)
+      /* update the array */
+      memcpy(mce_stat + mstat_phys[i].cd + offset, data,
+          sizeof(uint32_t) * count);
+  }
 }
 
 /* fetch a parameter from the MCE and save it to the mce_stat array */
-static void fetch_param(const char *card, const char *param, uint32_t *data,
-    int count)
+static void fetch_param(const char *card, const char *param, int offset,
+    uint32_t *data, int count)
 {
   int i = param_index(card, param);
 
-  if (count > mstat_phys[i].nw)
-    bprintf(fatal, "Request for too much data: %i from %s/%s\n", count, card,
-        param);
+  if (i < 0) { /* virtual parameters */
+    int n = 0;
+    i = -i - 1;
+    if (count + offset > mstat_virt[i].n)
+      bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", offset,
+          count, card, param);
 
-  /* fetch data */
-  if (mas_read_block(card, param, data, count) == 0)
-    /* update the array */
-    memcpy(mce_stat + mstat_phys[i].cd, data, sizeof(uint32_t) * count);
-  else 
-    /* read error: just return old data */
-    memcpy(data, mce_stat + mstat_phys[i].cd, sizeof(uint32_t) * count);
+    /* do we have data in the first map? */
+    if (offset < mstat_virt[i].m[0].e) {
+      n = mstat_virt[i].m[0].e - offset;
+      if (n > count)
+        n = count;
+
+      fetch_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
+          mstat_virt[i].m[0].o + offset, data, n);
+    }
+
+    /* do we have data in the second map? */
+    if (count > n)
+      fetch_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
+          mstat_virt[i].m[0].o, data + n, count - n);
+  } else {
+    if (count + offset > mstat_phys[i].nw)
+      bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", count,
+          offset, card, param);
+
+    /* fetch data */
+    if (mas_read_range(card, param, data, count, offset) == 0)
+      /* update the array */
+      memcpy(mce_stat + mstat_phys[i].cd + offset, data,
+          sizeof(uint32_t) * count);
+    else 
+      /* read error: just return old data */
+      memcpy(data, mce_stat + mstat_phys[i].cd + offset,
+          sizeof(uint32_t) * count);
+  }
 }
 
 /* read a value from the mce_stat array */
@@ -275,12 +366,35 @@ static void mce_param(const char *card, const char *param, int offset,
 {
   int i = param_index(card, param);
 
-  if (count + offset > mstat_phys[i].nw)
-    bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", offset,
-        count, card, param);
+  if (i < 0) { /* virtual parameters */
+    int n = 0;
+    i = -i - 1;
+    if (count + offset > mstat_virt[i].n)
+      bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", offset,
+          count, card, param);
 
-  memcpy(data, mce_stat + mstat_phys[i].cd + offset,
-      sizeof(uint32_t) * count);
+    /* do we have data in the first map? */
+    if (offset < mstat_virt[i].m[0].e) {
+      n = mstat_virt[i].m[0].e - offset;
+      if (n > count)
+        n = count;
+
+      mce_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
+          mstat_virt[i].m[0].o + offset, data, n);
+    }
+
+    /* do we have data in the second map? */
+    if (count > n)
+      mce_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
+          mstat_virt[i].m[0].o, data + n, count - n);
+  } else {
+    if (count + offset > mstat_phys[i].nw)
+      bprintf(fatal, "Request for too much data: %i+%i from %s/%s\n", offset,
+          count, card, param);
+
+    memcpy(data, mce_stat + mstat_phys[i].cd + offset,
+        sizeof(uint32_t) * count);
+  }
 }
 
 static long acq_time; /* for filenames */
@@ -376,7 +490,7 @@ static int mce_status(void)
   for (i = 0; i < N_MCE_PHYS; ++i) {
     if (mstat_phys[i].nr != mstat_phys[i].nw) {
       if (mas_read_block(mstat_phys[i].c, mstat_phys[i].p, buffer,
-          mstat_phys[i].nr))
+            mstat_phys[i].nr))
       {
         goto MCE_STATUS_ERR;
       }
@@ -634,6 +748,20 @@ void crash_stop(int sig)
   raise(sig);
 }
 
+/* returns non-zero if something was popped */
+static int pop_block(void)
+{
+  /* no pending requests */
+  if (blockq_head == blockq_tail)
+    return 0;
+
+  write_param(blockq[blockq_tail].c, blockq[blockq_tail].p,
+      blockq[blockq_tail].o, blockq[blockq_tail].d, blockq[blockq_tail].n);
+
+  blockq_tail = (blockq_tail + 1) % BLOCKQ_SIZE;
+  return 1;
+}
+
 void *mas_data(void *dummy)
 {
   int ret;
@@ -750,9 +878,10 @@ void *mas_data(void *dummy)
         break;
     }
 
-    /* temperature poll */
-    if (mas_get_temp) {
-      fetch_param("cc", "box_temp", (uint32_t*)&box_temp, 1);
+    /* pop a block from the queue, if there are any,
+     * otherwise, poll the temperature, if requested */
+    if (!pop_block() && mas_get_temp) {
+      fetch_param("cc", "box_temp", 0, (uint32_t*)&box_temp, 1);
       mas_get_temp = 0;
     }
 
@@ -762,7 +891,7 @@ void *mas_data(void *dummy)
       acq_stopped = 0;
       state &= ~st_retdat;
     }
-    usleep(10000);
+    usleep(10000); /* a frame */
   }
 
   return NULL;

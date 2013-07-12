@@ -90,7 +90,7 @@ int slow_veto = 0;
 struct mpc_slow_data slow_dat;
 
 struct block_q blockq[BLOCKQ_SIZE];
-int blockq_head, blockq_tail;
+int blockq_head = 0, blockq_tail = 0;
 
 /* drive map */
 uint8_t drive_map = DRIVE0_UNMAP | DRIVE1_UNMAP | DRIVE2_UNMAP;
@@ -489,6 +489,246 @@ static void ForwardMCEStat(void)
   send_mcestat = 0;
 }
 
+/* push something onto the mas block queue */
+static void push_block(const char *c, const char *p, const uint32_t *d, int n,
+    int o)
+{
+  int new_head;
+
+  /* if it's full, just discard, I guess */
+  if (((blockq_head - blockq_tail + BLOCKQ_SIZE) % BLOCKQ_SIZE) ==
+      BLOCKQ_SIZE - 1)
+  {
+    return;
+  }
+
+  new_head = (blockq_head + 1) % BLOCKQ_SIZE;
+
+  blockq[new_head].c = c;
+  blockq[new_head].p = p;
+  memcpy(blockq[new_head].d, d, sizeof(uint32_t) * n);
+  blockq[new_head].n = n;
+  blockq[new_head].o = o;
+
+  blockq_head = new_head;
+}
+
+static void apply_cmd(int p, const char *name, int n, uint32_t v)
+{
+  const char *card[] = {NULL, NULL, NULL, NULL};
+  const char *param = name;
+  char buffer[30];
+  int i, c;
+
+  switch (p) {
+    case readout_row_index:
+    case sample_dly:
+    case sample_num:
+    case fb_dly:
+      card[0] = "rc1";
+      card[1] = "rc2";
+      break;
+    case row_dly:
+      card[0] = "ac";
+      break;
+    case flux_jumping_on:
+    case flux_jumping_off:
+      card[0] = "rc1";
+      card[1] = "rc2";
+      param = "en_fb_jump";
+      break;
+    case num_rows_reported:
+      card[0] = "cc";
+      card[1] = "rc1";
+      card[2] = "rc2";
+      break;
+    case tes_bias:
+      card[0] = "tes";
+      param = "bias";
+      break;
+    case sq1_bias:
+      card[0] = "ac";
+      param = "on_bias";
+      break;
+    case sq1_bias_off:
+      card[0] = "ac";
+      param = "off_bias";
+      break;
+    case sq2_bias:
+      card[0] = "sq2";
+      param = "bias";
+      break;
+    case sq2_fb:
+      card[0] = "sq2";
+      c = n % 41;
+      n /= 41;
+      sprintf(buffer, "fb_col%i", c);
+      param = buffer;
+      break;
+    case sa_bias:
+      if (n > 8) {
+        card[0] = "rc2";
+        n -= 8;
+      } else 
+        card[0] = "rc1";
+      break;
+    case sa_fb:
+      card[0] = "sa";
+      param = "fb";
+      break;
+    case sa_offset:
+      if (n > 8) {
+        card[0] = "rc2";
+        n -= 8;
+      } else
+        card[0] = "rc1";
+      param = "offset";
+      break;
+    case adc_offset:
+      c = n % 41;
+      n /= 41;
+      if (c > 8) {
+        card[0] = "rc2";
+        c -= 8;
+      } else
+        card[0] = "rc1";
+
+      sprintf(buffer, "adc_offset%i", c);
+      param = buffer;
+      break;
+    default:
+      bprintf(err, "Unhandled parameter %s (%i) in apply_cmd", name, p);
+      return;
+  }
+
+  for (i = 0; card[i]; ++i) {
+    push_block(card[i], param, &v, 1, n);
+  }
+}
+
+static void prm_set_int(int p, const char *name, int n, int v, int a)
+{
+  /* apply */
+  if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY)
+    apply_cmd(p, name, n, v);
+
+  /* record default */
+  if (a == PRM_DEFAULT_ONLY) {
+    char dflt[100] = "default_";
+    strcpy(dflt + sizeof("default_"), name);
+    cfg_set_int(dflt, n, v);
+  } else if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY
+      || a == PRM_RECORD_RCONF)
+  {
+    cfg_set_int(name, n, v);
+    if (a == PRM_RECORD_RCONF)
+      state &= ~st_config;
+  }
+}
+
+static void prm_set_int_cr(int p, const char *name, int c, int r, int v, int a)
+{
+  prm_set_int(p, name, c * 41 + r, v, a);
+}
+
+static void prm_set_servo(int c, int r, char l, uint32_t v, int a)
+{
+  int i;
+
+  /* apply */
+  if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
+    char param[] = "gain?#";
+    char rc[] = "rc1";
+    if (c >= 8) {
+      c -= 8;
+      rc[2] = '2';
+    }
+    param[4] = l;
+    param[5] = c + '0';
+
+    if (r == -1) {
+      uint32_t buffer[33];
+      for (i = 0; i < 33; ++i)
+        buffer[i] = v;
+      push_block(rc, param, buffer, 33, 0);
+    } else 
+      push_block(rc, param, &v, 1, r);
+  }
+
+  /* record default */
+  if (a == PRM_DEFAULT_ONLY) {
+    char name[] = "default_servo_?";
+    name[14] = l;
+    cfg_set_int(name, c, v);
+  } else if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY
+      || a == PRM_RECORD_RCONF)
+  {
+    char name[] = "servo_?";
+    name[6] = l;
+    cfg_set_int(name, c, v);
+  }
+}
+
+static void prm_set_pixel(int c, int r, int h, int a)
+{
+  char name[] = "servo_?";
+
+  switch (h) {
+    case 0: /* healthy */
+      if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
+        name[6] = 'p';
+        prm_set_servo(c, r, 'p', cfg_get_int(name, r), PRM_APPLY_ONLY);
+        name[6] = 'i';
+        prm_set_servo(c, r, 'i', cfg_get_int(name, r), PRM_APPLY_ONLY);
+        name[6] = 'd';
+        prm_set_servo(c, r, 'd', cfg_get_int(name, r), PRM_APPLY_ONLY);
+      }
+
+      if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY
+          || a == PRM_RECORD_RCONF)
+      {
+        cfg_set_int_cr("dead_detectors", c, r, 0);
+        cfg_set_int_cr("frail_detectors", c, r, 0);
+      }
+      break;
+    case 1: /* dead */
+      if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
+        prm_set_servo(c, r, 'p', 0, PRM_APPLY_ONLY);
+        prm_set_servo(c, r, 'i', 0, PRM_APPLY_ONLY);
+        prm_set_servo(c, r, 'd', 0, PRM_APPLY_ONLY);
+      }
+
+      if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY
+          || a == PRM_RECORD_RCONF)
+      {
+        cfg_set_int_cr("dead_detectors", c, r, 1);
+        cfg_set_int_cr("frail_detectors", c, r, 0);
+      }
+      break;
+    case 2: /* frail */
+      if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
+        prm_set_servo(c, r, 'p', cfg_get_int("frail_servo_p", r),
+            PRM_APPLY_ONLY);
+        prm_set_servo(c, r, 'i', cfg_get_int("frail_servo_i", r),
+            PRM_APPLY_ONLY);
+        prm_set_servo(c, r, 'd', cfg_get_int("frail_servo_d", r),
+            PRM_APPLY_ONLY);
+      }
+
+      if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY
+          || a == PRM_RECORD_RCONF)
+      {
+        cfg_set_int_cr("dead_detectors", c, r, 0);
+        cfg_set_int_cr("frail_detectors", c, r, 1);
+      }
+      break;
+      break;
+  }
+
+  if (a == PRM_RECORD_RCONF)
+    state &= ~st_config;
+}
+
 const static inline int check_cmd_mce(int w)
 {
   return (w == 0) || (w == (nmce + 1));
@@ -497,9 +737,6 @@ const static inline int check_cmd_mce(int w)
 #define CFG_TOGGLE(on,off,name) \
   case on: cfg_set_int(name, 0, 1); break; \
 case off: cfg_set_int(name, 0, 0); break
-#define CFG_TOGGLEC(on,off,name) \
-  case on: cfg_set_int(name, ev->ivalues[1], 1); break; \
-case off: cfg_set_int(name, ev->ivalues[1], 0); break
 #define CFG_SETFLT(name) \
   case name: cfg_set_float(#name, 0, ev->rvalues[1]); break
 #define CFG_SETFLTC(name) \
@@ -518,6 +755,22 @@ case off: cfg_set_int(name, ev->ivalues[1], 0); break
 cfg_set_int(#name "_count", 0, ev->ivalues[2]); \
 cfg_set_int(#name "_step",  0, ev->ivalues[3]); \
 break
+
+#define PRM_TOGGLE(on,off,name) \
+  case on: prm_set_int(on, name, 0, 1, ev->ivalues[1]); break; \
+case off: prm_set_int(off, name, 0, 0, ev->ivalues[1]); break
+#define PRM_TOGGLEC(on,off,name) \
+  case on: prm_set_int(on, name, ev->ivalues[1], 1, ev->ivalues[2]); break; \
+case off: prm_set_int(off, name, ev->ivalues[1], 0, ev->ivalues[2]); break
+#define PRM_SETINT(cmd,name) \
+  case cmd: prm_set_int(cmd, name, 0, ev->ivalues[1], ev->ivalues[2]); break
+#define PRM_SETINTC(cmd,name) \
+  case cmd: prm_set_int(cmd, name, ev->ivalues[1], ev->ivalues[2], \
+                ev->ivalues[3]); break
+#define PRM_SETINTR PRM_SETINTC /* does the same thing */
+#define PRM_SETINTCR(cmd,name) \
+  case cmd: prm_set_int_cr(cmd, name, ev->ivalues[1], ev->ivalues[2], \
+                ev->ivalues[3], ev->ivalues[4]); break
 
 /* Execute a command */
 static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
@@ -544,7 +797,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
 
         /* Experiment config commands */
-        CFG_TOGGLEC(column_off, column_on, "columns_off");
+        PRM_TOGGLEC(column_off, column_on, "columns_off");
         CFG_SETFLT(sa_offset_bias_ratio);
         CFG_TOGGLE(sa_ramp_bias_on, sa_ramp_bias_off, "sa_ramp_bias");
         CFG_SETSCS(sa_ramp_flux);
@@ -576,31 +829,41 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_SETSCS(ramp_tes);
         CFG_SETINT(ramp_tes_final_bias, "ramp_tes_final_bias");
         CFG_SETINT(ramp_tes_initial_pause, "ramp_tes_initial_pause");
-        CFG_SETINT(num_rows_reported, "num_rows_reported");
-        CFG_SETINT(readout_row_index, "readout_row_index");
-        CFG_SETINT(sample_dly, "sample_dly");
-        CFG_SETINT(sample_num, "sample_num");
-        CFG_SETINT(fb_dly, "fb_dly");
-        CFG_SETINT(row_dly, "row_dly");
-        CFG_TOGGLE(flux_jumping_on, flux_jumping_off, "flux_jumping");
+        PRM_SETINT(num_rows_reported, "num_rows_reported");
+        PRM_SETINT(readout_row_index, "readout_row_index");
+        PRM_SETINT(sample_dly, "sample_dly");
+        PRM_SETINT(sample_num, "sample_num");
+        PRM_SETINT(fb_dly, "fb_dly");
+        PRM_SETINT(row_dly, "row_dly");
+        PRM_TOGGLE(flux_jumping_on, flux_jumping_off, "flux_jumping");
         CFG_SETINT(mce_servo_mode, "servo_mode");
-        CFG_SETINTC(tes_bias, "tes_bias");
+        PRM_SETINTC(tes_bias, "tes_bias");
         CFG_SETINTC(sa_flux_quantum, "sa_flux_quanta");
         CFG_SETINTC(sq2_flux_quantum, "sq2_flux_quanta");
         CFG_SETINTCR(sq1_flux_quantum, "flux_quanta_all");
-        CFG_SETINTR(sq1_bias, "sq1_bias");
-        CFG_SETINTR(sq1_bias_off, "sq1_bias_off");
-        CFG_SETINTC(sq2_bias, "sq2_bias");
-        CFG_SETINTCR(sq2_fb, "sq2_fb_set");
-        CFG_SETINTC(sa_bias, "sa_bias");
-        CFG_SETINTC(sa_fb, "sa_fb");
-        CFG_SETINTC(sa_offset, "sa_offset");
-        CFG_SETINTCR(adc_offset, "adc_offset_cr");
+        PRM_SETINTR(sq1_bias, "sq1_bias");
+        PRM_SETINTR(sq1_bias_off, "sq1_bias_off");
+        PRM_SETINTC(sq2_bias, "sq2_bias");
+        PRM_SETINTCR(sq2_fb, "sq2_fb_set");
+        PRM_SETINTC(sa_bias, "sa_bias");
+        PRM_SETINTC(sa_fb, "sa_fb");
+        PRM_SETINTC(sa_offset, "sa_offset");
+        PRM_SETINTCR(adc_offset, "adc_offset_cr");
 
       case mce_servo_pid:
-        cfg_set_int("servo_p", ev->ivalues[1], ev->ivalues[2]);
-        cfg_set_int("servo_i", ev->ivalues[1], ev->ivalues[3]);
-        cfg_set_int("servo_d", ev->ivalues[1], ev->ivalues[4]);
+        prm_set_servo(ev->ivalues[1], -1, 'p', ev->ivalues[2], ev->ivalues[5]);
+        prm_set_servo(ev->ivalues[1], -1, 'i', ev->ivalues[3], ev->ivalues[5]);
+        prm_set_servo(ev->ivalues[1], -1, 'd', ev->ivalues[4], ev->ivalues[5]);
+        if (ev->ivalues[5] == PRM_RECORD_RCONF)
+          state &= ~st_config;
+        break;
+      case pixel_servo_pid:
+        prm_set_servo(ev->ivalues[1], ev->ivalues[2], 'p', ev->ivalues[2],
+            PRM_APPLY_ONLY);
+        prm_set_servo(ev->ivalues[1], ev->ivalues[2], 'i', ev->ivalues[3],
+            PRM_APPLY_ONLY);
+        prm_set_servo(ev->ivalues[1], ev->ivalues[2], 'd', ev->ivalues[4],
+            PRM_APPLY_ONLY);
         break;
       case frail_servo_pid:
         cfg_set_int("frail_servo_p", 0, ev->ivalues[1]);
@@ -608,14 +871,13 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         cfg_set_int("frail_servo_d", 0, ev->ivalues[3]);
         break;
       case dead_detector:
-        cfg_set_int_cr("dead_detectors", ev->ivalues[0], ev->ivalues[1], 1);
+        prm_set_pixel(ev->ivalues[0], ev->ivalues[1], 1, ev->ivalues[2]);
         break;
       case frail_detector:
-        cfg_set_int_cr("frail_detectors", ev->ivalues[0], ev->ivalues[1], 1);
+        prm_set_pixel(ev->ivalues[0], ev->ivalues[1], 2, ev->ivalues[2]);
         break;
       case healthy_detector:
-        cfg_set_int_cr("dead_detectors", ev->ivalues[0], ev->ivalues[1], 0);
-        cfg_set_int_cr("frail_detectors", ev->ivalues[0], ev->ivalues[1], 0);
+        prm_set_pixel(ev->ivalues[0], ev->ivalues[1], 0, ev->ivalues[2]);
         break;
 
       default:

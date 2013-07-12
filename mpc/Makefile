@@ -113,7 +113,9 @@ include ../common/Makefile.shared
 
 all:: mpc
 
-mce_status_g.stamp:
+FORCE:
+
+mce_status.g: FORCE
 	mce_status -G > mce_status.g.new
 	@if test -e mce_status.g && diff -q mce_status.g mce_status.g.new; then \
 		echo "mce_status.g is unchanged."; \
@@ -121,13 +123,6 @@ mce_status_g.stamp:
 	else \
 		echo "regenrated mce_status.g"; \
 		mv -f mce_status.g.new mce_status.g; \
-	fi
-	@touch $@
-
-mce_status.g: mce_status_g.stamp
-	@if test ! -f $@; then \
-		rm -f $<; \
-		$(MAKE) $<; \
 	fi
 
 mce_counts.stamp: mce_counts.h.new

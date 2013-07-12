@@ -28,6 +28,13 @@
 
 #define FB_SIZE 5000 /* number of frames in the frame buffer */
 
+/* Command actions -- these must be the same as the list in command_list.c */
+#define PRM_APPLY_RECORD 0
+#define PRM_APPLY_ONLY   1
+#define PRM_RECORD_RCONF 2
+#define PRM_RECORD_ONLY  3
+#define PRM_DEFAULT_ONLY 4
+
 /* MPC globals */
 extern int nmce;
 extern int mas_get_temp;
@@ -121,9 +128,9 @@ enum modes { op_init = 0, op_ready, op_tune, op_acq };
 /* the block update queue */
 #define BLOCKQ_SIZE 100
 struct block_q {
-  const char *c, *r;
-  uint32_t *d;
-  int n;
+  const char *c, *p;
+  uint32_t d[41];
+  int n, o;
 };
 extern struct block_q blockq[BLOCKQ_SIZE];
 extern int blockq_head, blockq_tail;
@@ -159,12 +166,13 @@ int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);
 
 /* cfg stuff */
 int load_experiment_cfg(void);
+int cfg_get_int(const char *, int);
 int cfg_set_float(const char *, int, double);
 int cfg_set_int(const char *, int, int);
 int cfg_set_int_cr(const char *, int, int, int);
 int flush_experiment_cfg(void);
 int serialise_experiment_cfg(void);
-void cfg_update_timing(int row_len, int num_rows, int data_rate);
+void cfg_update_timing(int, int, int);
 
 /* frame statistics */
 void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t frameno);

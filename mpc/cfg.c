@@ -31,6 +31,40 @@ static config_t expt;
 static int deferred_timing = 0;
 static int deferred_row_len, deferred_num_rows, deferred_data_rate;
 
+int cfg_get_int(const char *name, int n)
+{
+  config_setting_t *s;
+
+  /* get the parameter */
+  if ((s = config_lookup(&expt, name)) == NULL) {
+    bprintf(err, "unable to find '%s' in experiment.cfg", name);
+    return -1;
+  }
+
+  /* check type and set */
+  switch (config_setting_type(s))
+  {
+    case CONFIG_TYPE_INT:
+      if (n > 0) {
+        bprintf(err, "bad index %i trying to get scalar int on %s", n, name);
+        return -1;
+      }
+
+      /* get */
+      return config_setting_get_int(s);
+    case CONFIG_TYPE_ARRAY:
+      if (n >= config_setting_length(s)) {
+        bprintf(err, "bad index %i > %i trying to get int elem on %s", n,
+            config_setting_length(s), name);
+        return -1;
+      }
+      /* get */
+      return config_setting_get_int_elem(s, n);
+  }
+  bprintf(err, "bad type trying to set int on %s", name);
+  return -1;
+}
+
 int cfg_set_int(const char *name, int n, int v)
 {
   config_setting_t *s;
@@ -86,6 +120,11 @@ int cfg_set_int(const char *name, int n, int v)
   return 0;
 }
 
+int cfg_set_int_cr(const char *name, int c, int r, int v)
+{
+  return cfg_set_int(name, c * 41 + r, v);
+}
+
 int cfg_set_float(const char *name, int n, double v)
 {
   config_setting_t *s;
@@ -139,11 +178,6 @@ int cfg_set_float(const char *name, int n, double v)
       return -1;
   }
   return 0;
-}
-
-int cfg_set_int_cr(const char *name, int c, int r, int v)
-{
-  return cfg_set_int(name, c * 41 + r, v);
 }
 
 int load_experiment_cfg(void)
