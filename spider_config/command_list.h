@@ -24,7 +24,7 @@
 #define MAX_15BIT (32767.)
 #define MAX_30BIT (1073741823.)
 
-//maximum insert number for hk commands. TODO-theo temporarily set to 4
+//maximum insert number for hk commands.
 #define HK_MAX  6
 
 #define N_GROUPS 27
@@ -106,7 +106,7 @@ enum singleCommand {
   theugly_expose,    theugly_autofocus, theugly_settrig_ext, theugly_pause,
   thegood_run,       thebad_run,        theugly_run,       table_track,
   hwp_step,          hwp_repoll,
-  //theo heater commands. TODO-theo assign non-temporary names
+  //theo heater commands
   hk_mt_bottom_heat_on,   hk_mt_bottom_heat_off,
   hk_sft_lines_heat_on,   hk_sft_lines_heat_off,
   hk_capillary_heat_on,   hk_capillary_heat_off,
