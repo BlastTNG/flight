@@ -1281,7 +1281,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC)},
   {MCECMD2(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12,
       'i')},
-  {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_TUNE | MCECMD, 6,
+  {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_TUNE | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
       {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
