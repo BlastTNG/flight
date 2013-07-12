@@ -53,6 +53,13 @@
  */
 #define SLOW_TIMEOUT   800 /* milliseconds */
 
+/* sets the rate at which array synopses are sent to PCM.  PCM sends these down
+ * at a rate of 16-bits per frame, seriallising MCEs.  There are ~3000 channels,
+ * 3 statistics at 8-bits = ~4500 frames of data.  So we can send this down
+ * rarely.
+ */
+#define SYNOP_TIMEOUT 10000 /* milliseconds */
+
 /* Semeuphoria */
 
 /* UDP socket */
@@ -290,6 +297,14 @@ static int check_disk(int n)
   return disk_bad[n];
 }
 
+/* send array synopses; nothing spectacular here... */
+static void send_array_synopsis(void)
+{
+  char data[UDP_MAXSIZE];
+  size_t len = mpc_compose_synop(mean, sigma, noise, nmce, data);
+  udp_bcast(sock, MCESERV_PORT, len, data, 0);
+}
+
 /* send slow data to PCM */
 static void send_slow_data(char *data, int send)
 {
@@ -484,7 +499,7 @@ static void ForwardMCEStat(void)
   /* update expt config stuff */
   serialise_experiment_cfg();
 
-  size_t len = mpc_compose_stat(mce_stat, nmce, data);
+  size_t len = mpc_compose_param(mce_stat, nmce, data);
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
   send_mcestat = 0;
 }
@@ -931,6 +946,7 @@ int main(void)
 
   int init_timer = 0;
   int slow_timer = 0;
+  int synop_timer = 0;
 
   char peer[UDP_MAXHOST];
   char data[UDP_MAXSIZE];
@@ -1045,6 +1061,13 @@ int main(void)
         slow_timer = SLOW_TIMEOUT;
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
+
+      /* stats */
+      if (synop_timer <= 0) {
+        send_array_synopsis();
+        synop_timer = SYNOP_TIMEOUT;
+      } else if (n == 0)
+        synop_timer -= UDP_TIMEOUT;
 
       if (send_mcestat)
         ForwardMCEStat();

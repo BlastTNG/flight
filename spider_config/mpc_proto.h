@@ -85,8 +85,13 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     int *divisor, int *ssdata_req, int *row_len, int *num_rows, int *data_rate,
     size_t len, const char *data, const char *peer, int port);
 
-size_t mpc_compose_stat(const uint32_t *stat, int nmce, char *buffer);
-int mpc_decompose_stat(uint32_t *stat, size_t len, const char *data,
+size_t mpc_compose_param(const uint32_t *stat, int nmce, char *buffer);
+int mpc_decompose_param(uint32_t *stat, size_t len, const char *data,
+    const char *peer, int port);
+
+size_t mpc_compose_synop(const uint8_t *mean, const uint8_t *simga,
+    const uint8_t *noise, int nmce, char *buffer);
+int mpc_decompose_synop(uint8_t *synop, size_t len, const char *data,
     const char *peer, int port);
 
 #endif

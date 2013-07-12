@@ -48,7 +48,62 @@ int mpc_init(void)
   return 0;
 }
 
-/* compose a MCE status packet for transmission to PCM
+/* compose a general-purpose data packet for transmission to PCM
+ *
+ * GP packet looks like:
+ *
+ * RRGMTTNN...
+ *
+ * where
+ *
+ * R = 16-bit protocol revision
+ * G = 'G' indicating MCE gp packet
+ * M = mce number
+ * T = payload type
+ * N = payload length (in WORDs)
+ *
+ * followed by payload data.
+ */
+size_t mpc_compose_gpdata(uint16_t type, uint16_t len, const uint16_t *data,
+    int nmce, char *buffer)
+{
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
+  buffer[2] = 'G';
+  buffer[3] = nmce;
+  memcpy(buffer + 4, &type, sizeof(type));
+  memcpy(buffer + 6, &len, sizeof(len));
+  memcpy(buffer + 8, data, sizeof(uint16_t) * len);
+  return 8 + len * sizeof(uint16_t);
+}
+
+/* compose a MCE array synopsis packet for transmission to PCM
+ *
+ * MCE array synopsis packet looks like:
+ *
+ * RRQMmm...ss...nn...
+ *
+ * where
+ *
+ * R = 16-bit protocol revision
+ * Q = 'Q' indicating MCE array synopsis
+ * M = mce number
+ * m = stream of 8-bit means
+ * s = stream of 8-bit standard deviations
+ * n = stream of 8-bit white noise levels
+ */
+size_t mpc_compose_synop(const uint8_t *mean, const uint8_t *sigma,
+    const uint8_t *noise, int nmce, char *buffer)
+{
+  memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
+  buffer[2] = 'Q';
+  buffer[3] = nmce;
+  memcpy(buffer + 4, mean, NUM_ROW * NUM_COL);
+  memcpy(buffer + 4 + NUM_ROW * NUM_COL, sigma, NUM_ROW * NUM_COL);
+  memcpy(buffer + 4 + 2 * NUM_ROW * NUM_COL, noise, NUM_ROW * NUM_COL);
+  return 4 + 3 * NUM_ROW * NUM_COL;
+}
+
+/* compose a MCE parameter packet for transmission to PCM
  * 
  * MCE status packet looks like:
  *
@@ -57,17 +112,17 @@ int mpc_init(void)
  * where
  *
  * R = 16-bit protocol revision
- * Z = 'Z' indicating MCE status data
+ * Z = 'Z' indicating MCE parameter data
  * M = mce number
  *
- * followed by the mce status data
+ * followed by the mce parameter data
  */
-size_t mpc_compose_stat(const uint32_t *stat, int nmce, char *buffer)
+size_t mpc_compose_param(const uint32_t *param, int nmce, char *buffer)
 {
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'Z';
   buffer[3] = nmce;
-  memcpy(buffer + 4, stat, sizeof(uint32_t) * N_MCE_STAT);
+  memcpy(buffer + 4, param, sizeof(uint32_t) * N_MCE_STAT);
   return 4 + sizeof(uint32_t) * N_MCE_STAT;
 }
 
@@ -359,7 +414,9 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
   if (*ptr != 'A' &&
       *ptr != 'C' &&
       *ptr != 'F' &&
+      *ptr != 'G' &&
       *ptr != 'N' &&
+      *ptr != 'Q' &&
       *ptr != 'R' &&
       *ptr != 'S' &&
       *ptr != 'T' &&
@@ -603,22 +660,76 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
   return 0;
 }
 
-int mpc_decompose_stat(uint32_t *stat, size_t len, const char *data,
+int mpc_decompose_param(uint32_t *param, size_t len, const char *data,
     const char *peer, int port)
 {
   if (len != 4 + sizeof(uint32_t) * N_MCE_STAT) {
-    bprintf(err, "Bad stat packet (size %zu) from %s/%i", len, peer, port);
+    bprintf(err, "Bad parameter packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
 
   /* data[3] is the MCE number */
   int nmce = data[3];
   if (nmce < 0 || nmce >= NUM_MCE) {
-    bprintf(err, "Unknown MCE %i in stat packet from %s/%i", nmce, peer, port);
+    bprintf(err, "Unknown MCE %i in parameter packet from %s/%i", nmce, peer,
+        port);
     return -1;
   }
 
-  memcpy(stat + nmce * sizeof(uint32_t) * N_MCE_STAT, data + 4,
+  memcpy(param + nmce * sizeof(uint32_t) * N_MCE_STAT, data + 4,
       sizeof(uint32_t) * N_MCE_STAT);
   return 0;
+}
+
+int mpc_decompose_synop(uint8_t *synop, size_t len, const char *data,
+    const char *peer, int port)
+{
+  if (len != 4 + 3 * NUM_COL * NUM_ROW) {
+    bprintf(err, "Bad synopsis packet (size %zu) from %s/%i", len, peer, port);
+    return -1;
+  }
+
+  int nmce = data[3];
+  if (nmce < 0 || nmce >= NUM_MCE) {
+    bprintf(err, "Unknown MCE %i in synopsis packet from %s/%i", nmce, peer,
+        port);
+    return -1;
+  }
+
+  memcpy(synop + nmce * 3 * NUM_ROW * NUM_COL, data + 4, 3 * NUM_ROW * NUM_COL);
+  return 0;
+}
+
+ssize_t mpc_decompose_gpdata(uint16_t *serial, size_t len, const char *data,
+    const char *peer, int port)
+{
+  uint16_t payload_len, type;
+  if (len < 8) {
+    bprintf(err, "Bad GP packet (size %zu) from %s/%i", len, peer, port);
+    return -1;
+  }
+  
+  int16_t nmce = data[3];
+  if (nmce < 0 || nmce >= NUM_MCE) {
+    bprintf(err, "Unknown MCE %i in synopsis packet from %s/%i", nmce, peer,
+        port);
+    return -1;
+  }
+
+  memcpy(&type, data + 4, sizeof(type));
+  memcpy(&payload_len, data + 6, sizeof(payload_len));
+
+  /* check length again */
+  if (len != payload_len * sizeof(uint8_t) + 8) {
+    bprintf(err, "Bad GP packet (size %zu) from %s/%i", len, peer, port);
+    return -1;
+  }
+
+  /* we serialise thusly: type, mce, data */
+  memcpy(serial++, &type, sizeof(type));
+  memcpy(serial++, &nmce, sizeof(nmce));
+  memcpy(serial, data + 8, sizeof(uint16_t) * payload_len);
+
+  /* return length in words (including type and mce#) */
+  return payload_len + 2;
 }
