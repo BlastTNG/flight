@@ -14,6 +14,8 @@
 #include <netdb.h>
 #include <sys/ioctl.h>
 #include <time.h>
+#include <string.h>
+#include <errno.h>
 
 #include "compressstruct.h"
 #include "compressconst.h"
@@ -21,9 +23,7 @@
 #include "derived.h"
 #include "news.h"
 
-#ifdef __SPIDER__
 #include "tes.h"
-#endif
 
 #define RAWDIR "/data/rawdir"
 
@@ -45,6 +45,8 @@ char channelset_oth;
 char LNKFILE[4096];
 int PORT;
 char EXT;
+
+char *GetArrayFieldName(int i_field);
 
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
@@ -186,9 +188,9 @@ void MakeFormatFile(char *filedirname) {
       }
     }
   }
-#ifdef __SPIDER__
+#ifdef NUM_MCE
   for (i_field = 0; i_field < NUM_ARRAY_STAT; i_field++) {
-    fprintf(formatfile, "%16s RAW c 1\n", GetArrayFieldName(i_field);
+    fprintf(formatfile, "%16s RAW c 1\n", GetArrayFieldName(i_field));
   }
 #endif
 
@@ -400,7 +402,7 @@ void OpenDirfilePointers(int **fieldfp, int **streamfp, int **arraystatfp, char 
     }
   }
   
-#ifdef __SPIDER__
+#ifdef NUM_MCE
   *arraystatfp = (int *)malloc(n_array_in_sframe*sizeof(int));
   for (i_field = 0; i_field < n_array_in_sframe; i_field++) {
     sprintf(filename, "%s/%s", filedirname, GetArrayFieldName(i_field));
@@ -419,6 +421,7 @@ int main(int argc, char *argv[]) {
   int index = 0;
   int i_framefield;
   int i_streamfield;
+  int i_arrayfield;
   char filedirname[1024];
   int fieldsize = 0;
   int *fieldfp;
@@ -526,7 +529,6 @@ int main(int argc, char *argv[]) {
     n_bytemon+=BlockingRead(sizeof(char), &fs, tty_fd, hostname, PORT);
     pop(&fs, &channelset_oth, 1);
     printf("channelset %d       \n", (int)channelset_oth);
-    
     // Read once per frame fields
     for (i_framefield = 0; i_framefield < n_framefields; i_framefield++) {
       switch (framefields[i_framefield]->type) {
@@ -546,8 +548,7 @@ int main(int argc, char *argv[]) {
       pop(&fs, fielddata[i_framefield], fieldsize);
       index++;
     }
-    
-#ifdef NUM_ARRAY_STAT
+#ifdef NUM_MCE
     // Read Array Statistics
     // Array Stats per Superframe
     n_bytemon+=BlockingRead(2, &fs, tty_fd, hostname, PORT);
@@ -567,7 +568,6 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "error: invalid array stats index.  Something is wrong.\n");
       continue;
     }
-
     // read them...
     for (j_array = 0; j_array<n_array_in_sframe; j_array++) {
       pop(&fs, (char *)(&uc_in), 1);
@@ -581,12 +581,12 @@ int main(int argc, char *argv[]) {
     n_bytemon+=BlockingRead(2, &fs, tty_fd, hostname, PORT);
     pop(&fs, (char *)(&us_in), 2);
 
-    
+   
     if (first_time) {
       MakeStreamList();
       // reset first_time later
     }
-    
+
     if (n_streamfields == 0) {
       n_streamfields = us_in;
       if (n_streamfields>n_streamfieldlist) {
@@ -700,13 +700,15 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "\nWriting field data unsuccesful. Out of disk space?\n");
           }
         }
-#ifdef __SPIDER__
-        for (i_arrayfield = 0; i_arrayfield < n_array_in_sframe i_arrayfield++) {
-          n_wrote = write(arraystatfp[i_arrayfield], array_statistics[i_arrayfield], 1);
+#ifdef NUM_MCE
+        for (i_arrayfield = 0; i_arrayfield < n_array_in_sframe; i_arrayfield++) {
+          n_wrote = write(arraystatfp[i_arrayfield], array_statistics+i_arrayfield, 1);
           if (n_wrote != 1) {
-            fprintf(stderr, "\nWriting field data unsuccesful. Out of disk space?\n");
+            fprintf(stderr, "\nWriting field data unsuccesful. %s %d %d\n", strerror(errno), arraystatfp[i_arrayfield],
+                    i_arrayfield);
           }
-        }          
+        }
+
 #endif
         for (i_streamfield = 0; i_streamfield < n_streamfields; i_streamfield++) {
           for (i_samp = 0; i_samp<streamList[channelset_oth][i_streamfield].samples_per_frame; i_samp++) {

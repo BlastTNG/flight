@@ -149,7 +149,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"time_state_x6_cycle",  'w', LOOP0,  40,                1.0,            0.0, 'U', U_NONE},
   {"mce_cmplex",           'w', LOOP0,  58,                1.0,            0.0, 'U', U_NONE},
 
-  /* housekeeping channels */
+  /* housekeeping channels */  /* TODO many can probably be not-wide */
   {"vr_still_x2_hk",  'r', RTD_A1,  0, CAL32C(       1.055,           0.0), 'U', U_V_V},
   {"vr_mux_x2_hk",    'r', RTD_A1,  2, CAL32C(       1.055,           0.0), 'U', U_V_V},
   {"vr_still_x3_hk",  'r', RTD_A1, 16, CAL32C(       1.055,           0.0), 'U', U_V_V},
@@ -163,6 +163,7 @@ struct ChannelStruct WideSlowChannels[] = {
   {"vr_still_x4_hk",  'r', RTD_A2, 32, CAL32C(       1.055,           0.0), 'U', U_V_V},
   {"vr_mux_x4_hk",    'r', RTD_A2, 34, CAL32C(       1.055,           0.0), 'U', U_V_V},
 
+  //TODO name the diode voltages. Must change derived.c to match
   {"vd_truss_x2_hk",    'r', DIOD_A1,  0, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_cp_x2_hk",       'r', DIOD_A1,  2, CAL32D(     1.0,     0.0), 'U', U_V_V},
   {"vd_pump_x2_hk",     'r', DIOD_A1,  4, CAL32D(     1.0,     0.0), 'U', U_V_V},
@@ -1013,7 +1014,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"az",          'w', LOOP2,   51,             LI2DEG,             0.0, 'U', U_P_DEG},
   {"el",          'w', LOOP2,   53,             LI2DEG,             0.0, 'U', U_P_DEG},
 
-/* housekeeping channels */
+/* housekeeping channels */  /* TODO many can probably be slow */
   {"vr_ntd1_x2_hk",   'r', RTD_A1,  4, CAL32N(       1.129,           0.0), 'U', U_V_V},
   {"vr_fp_x2_hk",     'r', RTD_A1,  6, CAL32C(       1.055,           0.0), 'U', U_V_V},
   {"vr_ring_x2_hk",    'r', RTD_A1,  8, CAL32C(       1.055,           0.0), 'U', U_V_V},
@@ -1140,7 +1141,7 @@ struct ChannelStruct DecomChannels[] = {
 };
 
 
-char *GetArrayFieldName(int i_field, char *name) {
+char *GetArrayFieldName(int i_field) {
   static char **names = 0;
   int i;
   
@@ -1151,11 +1152,13 @@ char *GetArrayFieldName(int i_field, char *name) {
     for (i=0; i < NUM_ARRAY_STAT; i++) {
       names[i] = (char *) malloc(21*sizeof(char));
     }
+    i=0;
     for (tel = 0; tel < NUM_MCE; tel++) {
       for (type = 0; type < 3; type++) {
         for (col = 0; col<NUM_COL; col++) {
           for (row = 0; row<NUM_ROW; row++) {
             sprintf(names[i], "%s_x%1dr%02dc%02d", types[type], tel+1, col, row);
+            i++;
           }
         }
       }

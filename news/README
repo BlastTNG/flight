@@ -1,0 +1,10 @@
+fox-spider requires more open files thsn sllowed by default in linux.
+
+fix this by adding 
+
+*       soft    nofile   30000
+*       hard    nofile   40000
+
+to /etc/security/limits.conf
+
+and then rebooting.  (or maybe just logging out and in again, or maybe just starting a nre shell...)
