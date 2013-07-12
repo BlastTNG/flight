@@ -491,7 +491,7 @@ int MainForm::ReceivePackets(int silent, int wait_for)
   int returnstatus;
 
   do {
-    returnstatus = NetCmdReceive(!verbose);
+    returnstatus = NetCmdReceive(!verbose, 0, NULL);
     if (sending && ((returnstatus & 0xFF) == CMD_BCMD))
     {
       if ((returnstatus >> 8) == 12)
