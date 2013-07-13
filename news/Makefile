@@ -63,39 +63,27 @@ tx_struct_mce.c: ../spider_config/make_tx_struct_mce \
 	../spider_config/tes.h
 	../spider_config/make_tx_struct_mce > $@
 
-fox-blast.o: fox.c
-	$(CC) -c -I../common -I../blast_config fox.c -o fox-blast.o
+fox-blast: fox_blast.o $(BLAST_OBJS)
+	$(CC) -o fox-blast $^ -lm 
 
-fox-spider.o: fox.c
-	$(CC) -c -I../common -I../spider_config fox.c -o fox-spider.o
-
-fox-blast: fox-blast.o $(BLAST_OBJS)
-	$(CC) -o fox-blast fox-blast.o $(BLAST_OBJS) -lm 
-
-msnbc-blast: fox-blast.o $(BLAST_OBJS)
-	$(CC) -o msnbc-blast fox-blast.o $(BLAST_OBJS) -lm 
-
-rush-blast: fox-blast.o $(BLAST_OBJS)
-	$(CC) -o rush-blast fox-blast.o $(BLAST_OBJS) -lm 
+msnbc-blast rush-blast: fox-blast
+	ln -f $< $@
 
 rumor-blast: rumor.o $(BLAST_OBJS)
 	$(CC) -o rumor-blast rumor.o $(BLAST_OBJS) -lm -lgetdata 
 
-fox-spider: fox-spider.o $(SPIDER_OBJS)
-	$(CC) -o fox-spider fox-spider.o $(SPIDER_OBJS) -lm 
+fox-spider: fox_spider.o $(SPIDER_OBJS)
+	$(CC) -o fox-spider $^ -lm 
 
-msnbc-spider: fox-spider.o $(SPIDER_OBJS)
-	$(CC) -o msnbc-spider fox-spider.o $(SPIDER_OBJS) -lm 
-
-rush-spider: fox-spider.o $(SPIDER_OBJS)
-	$(CC) -o rush-spider fox-spider.o $(SPIDER_OBJS) -lm 
+msnbc-spider rush-spider: fox-spider
+	ln -f $< $@
 
 rumor-spider: rumor.o $(SPIDER_OBJS)
 	$(CC) -o rumor-spider rumor.o $(SPIDER_OBJS) -lm -lgetdata
 
 clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)
-	rm -f *.o
+	rm -f *.o framelist.inc
 	rm -f tx_struct_mce.c
 
 ########################################################

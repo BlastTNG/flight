@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "compressstruct.h"
 
 extern struct ChannelStruct WideSlowChannels[];

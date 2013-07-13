@@ -23,7 +23,9 @@
 #include "derived.h"
 #include "news.h"
 
+#ifdef __SPIDER__
 #include "tes.h"
+#endif
 
 #define RAWDIR "/data/rawdir"
 

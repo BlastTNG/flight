@@ -272,6 +272,12 @@ include ../common/Makefile.update
 %_blast.o: ../$(BLASTCONF)/%.cpp $(HEADERS)
 	$(CXX) $(BLAST_CPPFLAGS) $(BLAST_CFLAGS) -o $@ -c $<
 
+%_blast.o: %.c $(HEADER)
+	$(CC) $(BLAST_CPPFLAGS) $(BLAST_CFLAGS) -o $@ -c $<
+
+%_blast.o: %.cpp $(HEADER)
+	$(CXX) $(BLAST_CPPFLAGS) $(BLAST_CFLAGS) -o $@ -c $<
+
 %_minicp.o: ../$(SHARED)/%.c $(HEADERS)
 	$(CC) $(MINICP_CPPFLAGS) $(MINICP_CFLAGS) -o $@ -c $<
 
@@ -284,6 +290,12 @@ include ../common/Makefile.update
 %_minicp.o: ../$(MINICONF)/%.cpp $(HEADERS)
 	$(CXX) $(MINICP_CPPFLAGS) $(MINICP_CFLAGS) -o $@ -c $<
 
+%_minicp.o: %.c $(HEADER)
+	$(CC) $(MINICP_CPPFLAGS) $(MINICP_CFLAGS) -o $@ -c $<
+
+%_minicp.o: %.cpp $(HEADER)
+	$(CXX) $(MINICP_CPPFLAGS) $(MINICP_CFLAGS) -o $@ -c $<
+
 %_spider.o: ../$(SHARED)/%.c $(HEADERS)
 	$(CC) $(SPIDER_CPPFLAGS) $(SPIDER_CFLAGS) -o $@ -c $<
 
@@ -294,6 +306,12 @@ include ../common/Makefile.update
 	$(CC) $(SPIDER_CPPFLAGS) $(SPIDER_CFLAGS) -o $@ -c $<
 
 %_spider.o: ../$(SPIDERCONF)/%.cpp $(HEADERS)
+	$(CXX) $(SPIDER_CPPFLAGS) $(SPIDER_CFLAGS) -o $@ -c $<
+
+%_spider.o: %.c $(HEADER)
+	$(CC) $(SPIDER_CPPFLAGS) $(SPIDER_CFLAGS) -o $@ -c $<
+
+%_spider.o: %.cpp $(HEADER)
 	$(CXX) $(SPIDER_CPPFLAGS) $(SPIDER_CFLAGS) -o $@ -c $<
 
 #######################################################3
