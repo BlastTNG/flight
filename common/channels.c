@@ -1141,12 +1141,6 @@ void WriteFormatFile(int fd, time_t start_time, unsigned long offset)
   char line[1024];
   int i, j;
 
-  if (offset) {
-    snprintf(line, 1024, "FRAMEOFFSET      %li\n", offset);
-    if (write(fd, line, strlen(line)) < 0)
-      berror(err, "Error writing to format file\n");
-  }
-
   sprintf(line, "FASTSAMP         RAW    U %i\n", FAST_PER_SLOW);
   if (write(fd, line, strlen(line)) < 0)
     berror(err, "Error writing to format file\n");
