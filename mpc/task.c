@@ -254,7 +254,7 @@ void *task(void *dummy)
             if (load_experiment_cfg()) {
               /* um ... */
             } else
-              send_mcestat = 1;
+              send_mceparam = 1;
           }
 
           /* done */

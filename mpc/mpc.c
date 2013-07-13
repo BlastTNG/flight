@@ -16,8 +16,8 @@
  * along with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include "mce_frame.h"
 #include "mpc.h"
+#include "mce_frame.h"
 #include "mputs.h"
 #include "mpc_proto.h"
 #include "udp.h"
@@ -133,8 +133,12 @@ int pcm_strobe = 0;
 /* ret_dat counter */
 int rd_count = 0;
 
-/* Send mcestat to PCM */
-int send_mcestat = 0;
+/* Send mce parameters to PCM */
+int send_mceparam = 0;
+
+/* Send blobs */
+int send_blob = 0;
+uint16_t blob[MCE_BLOB_MAX];
 
 /* box temperature */
 int32_t box_temp = 0;
@@ -205,7 +209,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       return;
 
     if (ssreq)
-      send_mcestat = 1;
+      send_mceparam = 1;
     
     if (new_row_len > 1 && new_data_rate > 1 && new_num_rows > 1) {
       row_len = new_row_len;
@@ -490,10 +494,18 @@ static void pushback(void)
   pb_last = (pb_last + PB_SIZE) % FB_SIZE;
 }
 
-/* Send a super-slow data packet */
-static void ForwardMCEStat(void)
+/* Send GP data to PCM */
+static void ForwardBlob(void)
 {
-  /* send it! */
+  char data[UDP_MAXSIZE];
+  size_t len = mpc_compose_gpdata(blob_type, blob_size, blob, nmce, data);
+  udp_bcast(sock, MCESERV_PORT, len, data, 0);
+  send_blob = 0;
+}
+
+/* Send a super-slow data packet */
+static void ForwardMCEParam(void)
+{
   char data[UDP_MAXSIZE];
 
   /* update expt config stuff */
@@ -501,7 +513,7 @@ static void ForwardMCEStat(void)
 
   size_t len = mpc_compose_param(mce_stat, nmce, data);
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
-  send_mcestat = 0;
+  send_mceparam = 0;
 }
 
 /* push something onto the mas block queue */
@@ -912,6 +924,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case healthy_detector:
         prm_set_pixel(ev->ivalues[0], ev->ivalues[1], 0, ev->ivalues[2]);
         break;
+      case get_exptcfg:
+        new_blob_type = BLOB_EXPCFG;
+        break;
 
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
@@ -943,6 +958,7 @@ int main(void)
   pthread_t data_thread;
   pthread_t task_thread;
   pthread_t acq_thread;
+  pthread_t blob_thread;
 
   int init_timer = 0;
   int slow_timer = 0;
@@ -993,6 +1009,7 @@ int main(void)
   /* create the threads */
   pthread_create(&data_thread, NULL, mas_data, NULL);
   pthread_create(&task_thread, NULL, task, NULL);
+  pthread_create(&blob_thread, NULL, blobber, NULL);
   pthread_create(&acq_thread, NULL, acquer, NULL);
 
   signal(SIGHUP, crash_stop);
@@ -1062,15 +1079,18 @@ int main(void)
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
 
-      /* stats */
+      /* array stats */
       if (synop_timer <= 0) {
         send_array_synopsis();
         synop_timer = SYNOP_TIMEOUT;
       } else if (n == 0)
         synop_timer -= UDP_TIMEOUT;
 
-      if (send_mcestat)
-        ForwardMCEStat();
+      if (send_mceparam)
+        ForwardMCEParam();
+
+      if (send_blob)
+        ForwardBlob();
 
       /* send data */
       while ((fb_top - pb_last + FB_SIZE) % FB_SIZE > PB_SIZE)

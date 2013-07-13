@@ -45,7 +45,7 @@ extern int cur_dm, req_dm;
 extern int power_cycle_mce;
 extern int power_cycle_cmp;
 extern int command_veto;
-extern int send_mcestat;
+extern int send_mceparam;
 extern int divisor;
 extern int veto;
 extern int leech_veto;
@@ -140,6 +140,17 @@ extern int blockq_head, blockq_tail;
 extern enum status start_tk;
 extern enum status  stop_tk;
 extern enum modes      goal;
+
+/* blob creator */
+#define BLOB_NONE   0
+#define BLOB_EXPCFG 1
+extern int send_blob;
+extern int blob_size;
+extern int blob_type;
+extern int new_blob_type;
+extern char blob_source[1024];
+extern uint16_t blob[MCE_BLOB_MAX];
+void *blobber(void *dummy);
 
 /* task handler */
 void *task(void *dummy);

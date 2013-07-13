@@ -504,7 +504,7 @@ static int mce_status(void)
   }
 
   /* trigger send to PCM */
-  send_mcestat = 1;
+  send_mceparam = 1;
 
   sprintf(filename, "/data%c/mce/current_data/mpc_%li.run", data_drive[0] + '0',
       acq_time);

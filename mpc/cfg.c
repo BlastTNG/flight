@@ -259,7 +259,7 @@ int flush_experiment_cfg(void)
       bprintf(info, "re-wrote %s", xptname);
     }
 
-  send_mcestat = 1;
+  send_mceparam = 1;
 
   return 0;
 }
