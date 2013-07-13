@@ -28,7 +28,8 @@
 #define MPCPROTO_POWER_OFF  1
 #define MPCPROTO_POWER_CYC  2
 
-#define MCE_BLOB_MAX 10000
+/* This make a very large UDP packet.... */
+#define MCE_BLOB_MAX 20000 /* in WORDS */
 
 /* the MPC slow data structure */
 struct mpc_slow_data {

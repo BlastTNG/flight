@@ -30,11 +30,17 @@
 #include "mce_counts.h"
 
 #define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}
+#define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"INSERT_LAST_HK", {mce_names+1}
 #define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "MCE_LAST_ACTION", {w}
 
 #define MCECMD1(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 1, { \
       {CHOOSE_INSERT_PARAM}, \
+    }
+
+#define MCECMD1P(cmd,desc,grp) \
+    COMMAND(cmd), desc, grp | MCECMD, 1, { \
+      {CHOOSE_INSERT_NO_ALL}, \
     }
 
 #define MCECMD1A(cmd,desc,grp) \
@@ -1228,6 +1234,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(start_acq, "Start data acquisition", GR_MCC)},
   {MCECMD1(reset_acq, "Cycle data acquisition", GR_MCC)},
   {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC)},
+  {MCECMD1P(get_exptcfg, "Send down experiment.cfg", GR_MCC)},
+
   {MCECMD2(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12,
       'i')},
   {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_TUNE | MCECMD, 3,
