@@ -66,20 +66,21 @@ tx_struct_mce.c: ../spider_config/make_tx_struct_mce \
 fox-blast: fox_blast.o $(BLAST_OBJS)
 	$(CC) -o fox-blast $^ -lm 
 
-msnbc-blast rush-blast: fox-blast
-	ln -f $< $@
+fox-spider: fox_spider.o $(SPIDER_OBJS)
+	$(CC) -o fox-spider $^ -lm 
 
 rumor-blast: rumor.o $(BLAST_OBJS)
 	$(CC) -o rumor-blast rumor.o $(BLAST_OBJS) -lm -lgetdata 
 
-fox-spider: fox_spider.o $(SPIDER_OBJS)
-	$(CC) -o fox-spider $^ -lm 
+rumor-spider: rumor.o $(SPIDER_OBJS)
+	$(CC) -o rumor-spider rumor.o $(SPIDER_OBJS) -lm -lgetdata
+
+# Hard-links
+msnbc-blast rush-blast: fox-blast
+	ln -f $< $@
 
 msnbc-spider rush-spider: fox-spider
 	ln -f $< $@
-
-rumor-spider: rumor.o $(SPIDER_OBJS)
-	$(CC) -o rumor-spider rumor.o $(SPIDER_OBJS) -lm -lgetdata
 
 clean:
 	rm -f $(BLAST_ALL) $(SPIDER_ALL)

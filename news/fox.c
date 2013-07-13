@@ -190,7 +190,7 @@ void MakeFormatFile(char *filedirname) {
       }
     }
   }
-#ifdef NUM_MCE
+#ifdef __SPIDER__
   for (i_field = 0; i_field < NUM_ARRAY_STAT; i_field++) {
     fprintf(formatfile, "%16s RAW c 1\n", GetArrayFieldName(i_field));
   }
@@ -404,7 +404,7 @@ void OpenDirfilePointers(int **fieldfp, int **streamfp, int **arraystatfp, char 
     }
   }
   
-#ifdef NUM_MCE
+#ifdef __SPIDER__
   *arraystatfp = (int *)malloc(n_array_in_sframe*sizeof(int));
   for (i_field = 0; i_field < n_array_in_sframe; i_field++) {
     sprintf(filename, "%s/%s", filedirname, GetArrayFieldName(i_field));
@@ -550,7 +550,7 @@ int main(int argc, char *argv[]) {
       pop(&fs, fielddata[i_framefield], fieldsize);
       index++;
     }
-#ifdef NUM_MCE
+#ifdef __SPIDER__
     // Read Array Statistics
     // Array Stats per Superframe
     n_bytemon+=BlockingRead(2, &fs, tty_fd, hostname, PORT);
@@ -702,7 +702,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "\nWriting field data unsuccesful. Out of disk space?\n");
           }
         }
-#ifdef NUM_MCE
+#ifdef __SPIDER__
         for (i_arrayfield = 0; i_arrayfield < n_array_in_sframe; i_arrayfield++) {
           n_wrote = write(arraystatfp[i_arrayfield], array_statistics+i_arrayfield, 1);
           if (n_wrote != 1) {
