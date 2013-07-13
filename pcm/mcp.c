@@ -865,7 +865,6 @@ static void write_to_biphase(unsigned short *frame)
       bprintf(err, "Short write for biphase frame: %i of %u", i,
 	    (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
     }
-    
   }
 }
 
@@ -1085,10 +1084,6 @@ static void SegV(int signo)
 }
 #endif
 
-/*************************************************************/
-/* pushDiskFrame: called from main thread: puts rxframe into */
-/* individual buffers                                        */
-/*************************************************************/
 void insertMCEData(unsigned short *RxFrame)
 {
   static int *offset = 0;
@@ -1099,14 +1094,16 @@ void insertMCEData(unsigned short *RxFrame)
   static int arraystats_data_offset;
   static int arraystats_index_offset;
 
+  static int mce_blob_offset;
+
   static int i_tmp = 0;  
   static unsigned short mplex_index = 0;
   static unsigned short arraystats_index=0;
-  
+
   const struct tes_frame *data;
   
   uint32_t D;
-  
+
   if (offset == 0) {
     char mcefield[10];
     int i;
@@ -1130,10 +1127,12 @@ void insertMCEData(unsigned short *RxFrame)
 
     bi0 = GetBiPhaseAddr("arraystats_index");
     arraystats_index_offset = bi0->channel;
-    
+
     bi0 = GetBiPhaseAddr("arraystats_data");
     arraystats_data_offset = bi0->channel;
 
+    bi0 = GetBiPhaseAddr("mce_blob");
+    mce_blob_offset = bi0->channel;
   }
   i_tmp++;
   RxFrame[offset[0]] = tes_nfifo();
@@ -1156,7 +1155,21 @@ void insertMCEData(unsigned short *RxFrame)
   RxFrame[arraystats_data_offset] = array_statistics[arraystats_index] | 
                                    (array_statistics[arraystats_index+1] << 8);
 
-  
+  /* MCE blobs -- the MCEserv will reset mce_blob_pos to zero if a new blob
+   * comes in. If mce_blob_pos is -1, we're just idling with zeroes.  The
+   * MCEserv also takes care of the payload CRC and adding the synchronisation
+   * intro and outro (both defined in mceserv.h) */
+  if (mce_blob_pos == -1)
+    RxFrame[mce_blob_offset] = 0;
+  else {
+    RxFrame[mce_blob_offset] = mce_blob_envelope[mce_blob_pos++];
+    if (mce_blob_pos > mce_blob_size) /* done; start idling */
+      /*  there's a race condition here.  Sometimes we won't notice new
+       *  blobs... meh */
+      mce_blob_pos = -1;
+  }
+
+
   if (tes_nfifo() > 0) {
     int i;
     data = tes_data();
@@ -1168,9 +1181,8 @@ void insertMCEData(unsigned short *RxFrame)
     for (i = 2; i < NUM_MCE_FIELDS; i++) {
       RxFrame[offset[i]] = (unsigned short) (data->data[i]);
     }
-    //while (tes_nfifo() > 1) {
+    //while (tes_nfifo() > 1)
     tes_pop();
-    //}
   }
 }
 
@@ -1214,6 +1226,10 @@ int main(int argc, char *argv[])
 
   umask(0);  /* clear umask */
 
+  /* register the output function */
+  buos_use_func(mputs);
+  nameThread("Main");
+
   if ((logfile = fopen("/data/etc/spider/pcm.log", "a")) == NULL) {
     berror(err, "System: Can't open log file");
     fstats.st_size = -1;
@@ -1223,12 +1239,10 @@ int main(int argc, char *argv[])
     fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
   }
 
+  /* Watchdog */
+  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
   biphase_timer = mcp_systime(NULL) + BI0_VETO_LENGTH;
-
-  /* register the output function */
-  buos_use_func(mputs);
-  nameThread("Main");
 
   /* Find out whether I'm itsy or bitsy */
   BitsyIAm = AmIBitsy();
@@ -1239,9 +1253,6 @@ int main(int argc, char *argv[])
 #if (TEMPORAL_OFFSET > 0)
   bprintf(warning, "System: TEMPORAL OFFSET = %i\n", TEMPORAL_OFFSET);
 #endif
-
-  /* Watchdog */
-  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 
   //populate nios addresses, based off of tx_struct, derived
   MakeAddressLookups("/data/etc/spider/Nios.map");

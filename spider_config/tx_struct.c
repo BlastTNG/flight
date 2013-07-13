@@ -1115,9 +1115,10 @@ struct ChannelStruct FastChannels[] = {
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
   {"dps_table",    'w',    LOOP1, 34,           70.0/32767.0,            0.0, 's', U_V_DPS},
 
-  {"mce_index",     'r', LOOP1,   4, 1.0,           0.0,       'u',     U_NONE},
-  {"arraystats_index", 'r', LOOP1,   5, 1.0,           0.0,       'u',     U_NONE},
-  {"arraystats_data", 'r', LOOP1,   6, 1.0,           0.0,       'u',     U_NONE},
+  {"mce_index",        'r', LOOP1,  4, 1.0,         0.0,       'u',     U_NONE},
+  {"arraystats_index", 'r', LOOP1,  5, 1.0,         0.0,       'u',     U_NONE},
+  {"arraystats_data",  'r', LOOP1,  6, 1.0,         0.0,       'u',     U_NONE},
+  {"mce_blob",         'r', LOOP1,  7, 1.0,         0.0,       'u',     U_NONE},
 
   /* Create the correct number of mce channels in the tx struct.  They
    * will be called "mce###" for ### from zero to the value defined in tes.h

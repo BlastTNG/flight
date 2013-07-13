@@ -66,12 +66,6 @@ int mpc_init(void)
 size_t mpc_compose_gpdata(uint16_t type, uint16_t len, const uint16_t *data,
     int nmce, char *buffer)
 {
-  if (len > MCE_BLOB_MAX - 2) {
-    bprintf(warning,
-        "Truncated GP blob type %i by %u bytes (original size: %u\n",
-        type, len - MCE_BLOB_MAX + 2, len);
-    len = MCE_BLOB_MAX - 2;
-  }
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'G';
   buffer[3] = nmce;
@@ -725,7 +719,7 @@ ssize_t mpc_decompose_gpdata(uint16_t *serial, size_t len, const char *data,
   memcpy(&payload_len, data + 6, sizeof(payload_len));
 
   /* check length again */
-  if (len != payload_len * sizeof(uint8_t) + 8) {
+  if (len != payload_len * sizeof(uint16_t) + 8) {
     bprintf(err, "Bad GP packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }

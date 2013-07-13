@@ -20,6 +20,7 @@
  */
 #include "mceserv.h"
 #include "mcp.h"
+#include "crc.h"
 #include "mce_counts.h"
 #include "command_struct.h"
 #include "mpc_proto.h"
@@ -58,9 +59,17 @@ static int mceserv_InCharge; /* to look for edges */
 uint8_t array_statistics[NUM_ARRAY_STAT];
 
 /* general purpose blobs */
-uint16_t mce_blob[MCE_BLOB_MAX];
-ssize_t mce_blob_size = -1;
-int mce_blob_pos = 0;
+
+static const uint16_t blob_leadout[BLOB_LEADOUT_LEN] = BLOB_LEADOUT
+
+uint16_t mce_blob_envelope[MCE_BLOB_ENVELOPE_MAX] = BLOB_LEADIN;
+
+/* The payload always starts a fixed distance into the envelope */
+static uint16_t *mce_blob_payload = mce_blob_envelope + BLOB_LEADIN_LEN + 1;
+
+size_t mce_blob_size = 0; /* size of the blob, including envelope */
+volatile int mce_blob_pos = -1; /* setting this to zero tells main that a new
+                                   blob is ready for bang-out */
 
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
@@ -200,7 +209,7 @@ static int tes_push(int nrx, int *nrx_c)
   /* discard if full */
   if (tes_fifo_top < 0) {
 #if 0
-    if ((++ndisc % 1000) == 0) 
+    if ((++ndisc % 1000) == 0)
       bprintf(warning, "%i frames discarded on push", ndisc);
 #endif
     tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
@@ -212,7 +221,7 @@ static int tes_push(int nrx, int *nrx_c)
       sizeof(*tes_recon));
 
   tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
-  
+
   pthread_mutex_lock(&tes_mex);
 
   /* increment fifo top */
@@ -232,7 +241,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     const char *peer, int port)
 {
   static int last_no[NUM_MCE] = {-1, -1, -1, -1, -1, -1};
-  
+
   /* this is a complement of empties, containing non-reporting MCEs */
   static int nrx = 0;
   static int nrx_c[NUM_MCE] = {0, 0, 0, 0, 0, 0};
@@ -396,17 +405,37 @@ void *mcerecv(void *unused)
       case 'A': /* "awake" packet from somebody, trigger retransmission of
                    "interesting" things. */
 
-        /* this returns the mce number of the trasmitting computer, which we
-         * promptly forget, or -1 on error.
-         */
+        /* this returns -1 on error.  */
         if (mpc_decompose_init(n, udp_buffer, peer, port) >= 0) {
           sent_bset = -1; /* resend bset */
           last_turnaround = -1; /* resend notices */
         }
         break;
-      case 'G': /* GP data packet */
-        mce_blob_size = mpc_decompose_gpdata(mce_blob, n, udp_buffer, peer,
-            port);
+      case 'G': /* GP data (blob) packet */
+
+        /* because we do everything in-place here, we'll corrupt any blob
+         * being sent out; but we'd truncate it anyways, so it doesn't really
+         * matter
+         */
+        n = mpc_decompose_gpdata(mce_blob_payload, n, udp_buffer, peer, port);
+        if (n > 0) {
+          bprintf(info, "Received GP blob, type %i, size %zu",
+              mce_blob_payload[0], n);
+
+          /* compute CRC -- goes immediately before and after the playload */
+          mce_blob_payload[-1] = mce_blob_payload[n] = CalculateCRC(CRC_SEED,
+              mce_blob_payload, n);
+
+          /* append the leadout */
+          memcpy(mce_blob_payload + n + 1, blob_leadout,
+              BLOB_LEADOUT_LEN * sizeof(uint16_t));
+
+          /* set the size */
+          mce_blob_size = n + BLOB_LEADOUT_LEN + BLOB_LEADIN_LEN + 2;
+
+          /* trigger send */
+          mce_blob_pos = -1;
+        }
         break;
       case 'Q': /* array synopsis */
         mpc_decompose_synop(array_statistics, n, udp_buffer, peer, port);
