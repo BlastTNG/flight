@@ -14,7 +14,6 @@
 #include "command_common.h"
 #include "mpc_proto.h"
 #include "mce_counts.h"
-#include "mce_counts.h"
 #include "tes.h"
 
 #include <string.h>
@@ -67,6 +66,12 @@ int mpc_init(void)
 size_t mpc_compose_gpdata(uint16_t type, uint16_t len, const uint16_t *data,
     int nmce, char *buffer)
 {
+  if (len > MCE_BLOB_MAX - 2) {
+    bprintf(warning,
+        "Truncated GP blob type %i by %u bytes (original size: %u\n",
+        type, len - MCE_BLOB_MAX + 2, len);
+    len = MCE_BLOB_MAX - 2;
+  }
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'G';
   buffer[3] = nmce;

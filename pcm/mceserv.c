@@ -57,6 +57,10 @@ static int mceserv_InCharge; /* to look for edges */
 /* array statistics */
 uint8_t array_statistics[NUM_ARRAY_STAT];
 
+/* general purpose blobs */
+uint16_t mce_blob[MCE_BLOB_MAX];
+ssize_t mce_blob_size = -1;
+int mce_blob_pos = 0;
 
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
@@ -399,6 +403,13 @@ void *mcerecv(void *unused)
           sent_bset = -1; /* resend bset */
           last_turnaround = -1; /* resend notices */
         }
+        break;
+      case 'G': /* GP data packet */
+        mce_blob_size = mpc_decompose_gpdata(mce_blob, n, udp_buffer, peer,
+            port);
+        break;
+      case 'Q': /* array synopsis */
+        mpc_decompose_synop(array_statistics, n, udp_buffer, peer, port);
         break;
       case 'R': /* PCM command request */
         handle_pcm_request(n, peer, port);

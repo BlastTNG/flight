@@ -20,13 +20,15 @@
 #define MPC_PORT     9271
 
 /* the MPC epoch */
-#define MPC_EPOCH 1363903385
+#define MPC_EPOCH 1373679821
 
 /* power states */
 #define MPCPROTO_POWER_NOP -1
 #define MPCPROTO_POWER_ON   0
 #define MPCPROTO_POWER_OFF  1
 #define MPCPROTO_POWER_CYC  2
+
+#define MCE_BLOB_MAX 10000
 
 /* the MPC slow data structure */
 struct mpc_slow_data {
@@ -92,6 +94,11 @@ int mpc_decompose_param(uint32_t *stat, size_t len, const char *data,
 size_t mpc_compose_synop(const uint8_t *mean, const uint8_t *simga,
     const uint8_t *noise, int nmce, char *buffer);
 int mpc_decompose_synop(uint8_t *synop, size_t len, const char *data,
+    const char *peer, int port);
+
+size_t mpc_compose_gpdata(uint16_t type, uint16_t len, const uint16_t *data,
+    int nmce, char *buffer);
+ssize_t mpc_decompose_gpdata(uint16_t *serial, size_t len, const char *data,
     const char *peer, int port);
 
 #endif
