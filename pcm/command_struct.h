@@ -1,6 +1,6 @@
-/* mfcp: the Spider master control program
+/* mcp: the Spider master control program
  *
- * This software is copyright (C) 2002-2010 University of Toronto
+ * This software is copyright (C) 2002-2013 University of Toronto
  *
  * This file is part of pcm.
  *
@@ -17,15 +17,14 @@
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
  */
-
 #ifndef COMMAND_STRUCT_H
 #define COMMAND_STRUCT_H
 
 #include <stdbool.h>  //bool type!
 #include <stdint.h>
 #include <time.h>
+#include "mcp_sched.h"
 #include "command_list.h"
 #include "channels.h"
 
@@ -216,19 +215,6 @@ struct TableStruct {
   double pos;
   double move;
   double mode;  //0=track, 1=move to pos, 2=relative move
-};
-
-/* This structure is now also used by the MCE command passthrough.  Be careful
- * when modifying it.
- */
-struct ScheduleEvent {
-  int t;
-  int is_multi;
-  int command;
-  int done; /* MCEserv only; not used by scheduler */
-  double rvalues[MAX_N_PARAMS];
-  int ivalues[MAX_N_PARAMS];
-  char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
 };
 
 /* sync box paramater type */
@@ -502,12 +488,6 @@ struct CommandDataStruct {
 
   /* mcc watchdog enable */
   unsigned short mcc_wdog;
-};
-
-struct ScheduleType {
-  int n_sched;
-  time_t t0;
-  struct ScheduleEvent* event;
 };
 
 void InitCommandData();

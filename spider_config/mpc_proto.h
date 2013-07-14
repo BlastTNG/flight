@@ -10,7 +10,7 @@
 #ifndef MPC_PROTO_H
 #define MPC_PROTO_H
 
-#include "command_struct.h" /* for ScheduleEvent */
+#include "mcp_sched.h" /* for ScheduleEvent */
 #include "tes.h" /* for NUM_MCE */
 
 #include <sys/types.h>

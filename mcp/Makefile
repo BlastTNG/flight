@@ -21,7 +21,8 @@ BLAST_ONLY=1
 EXPT_HEADERS = calibrate.h command_list.h isc_protocol.h
 SHARED_HEADERS = bbc_pci.h blast.h channels.h command_common.h \
 								 compressstruct.h crc.h derived.h ephem_read.h ephem_types.h \
-								 fir.h flcdataswap.h lut.h netcmd.h sip.h starpos.h slowdl.h
+								 fir.h flcdataswap.h lut.h mcp_sched.h netcmd.h sip.h \
+								 starpos.h slowdl.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h command_struct.h copleycommand.h \
 								hwpr.h ezstep.h mcp.h motordefs.h pointing_struct.h \
 								sbsc_protocol.h sbsccommunicator.h tx.h

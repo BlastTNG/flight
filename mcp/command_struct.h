@@ -26,6 +26,7 @@
 #include "isc_protocol.h"
 #include "command_list.h"
 #include "channels.h"
+#include "mcp_sched.h"
 #include <time.h>
 
 #define AXIS_VEL      0
@@ -485,21 +486,6 @@ struct CommandDataStruct {
     int max_age;    //maximum allowed time between trigger and solution
     int age;	    //last measured time between trigger and solution
   } ISCControl[2];
-};
-
-struct ScheduleEvent {
-  int t;
-  int is_multi;
-  int command;
-  double rvalues[MAX_N_PARAMS];
-  int ivalues[MAX_N_PARAMS];
-  char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
-};
-
-struct ScheduleType {
-  int n_sched;
-  time_t t0;
-  struct ScheduleEvent* event;
 };
 
 void InitCommandData();

@@ -14,15 +14,15 @@ SPIDER_ONLY=1
 # Inputs
 #
 
-EXPT_HEADERS = calibrate.h command_list.h command_struct.h mce_blob.h \
-							 mce_counts.h mpc_proto.h pointing_struct.h tes.h
+EXPT_HEADERS = calibrate.h command_list.h mce_blob.h mce_counts.h mpc_proto.h \
+							 pointing_struct.h tes.h
 SHARED_HEADERS = bbc_pci.h blast.h camcommunicator.h camstruct.h channels.h \
 								 command_common.h compressstruct.h crc.h derived.h \
-								 ephem_read.h ephem_types.h fir.h flcdataswap.h lut.h mputs.h \
-								 netcmd.h sip.h starpos.h udp.h slowdl.h
-LOCAL_HEADERS = amccommand.h chrgctrl.h drivecommunicator.h bset.h hwpr.h \
-								mceserv.h mcp.h motorcommand.h motordefs.h phytron.h pyramid.h \
-								svd.h sync_comms.h tx.h
+								 ephem_read.h ephem_types.h fir.h flcdataswap.h lut.h \
+								 mcp_sched.h mputs.h netcmd.h sip.h slowdl.h starpos.h udp.h
+LOCAL_HEADERS = amccommand.h command_struct.h chrgctrl.h drivecommunicator.h \
+								bset.h hwpr.h mceserv.h mcp.h motorcommand.h motordefs.h \
+								phytron.h pyramid.h svd.h sync_comms.h tx.h
 
 # These are needed by both bolotest and flight versions
 SHARED_OBJS = blast.o channels.o command_common.o framefile.o lut.o mputs.o \

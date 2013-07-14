@@ -16,7 +16,9 @@
 #include "compressconst.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
+#ifdef __SPIDER__
 #include "mceserv.h"
+#endif
 // Structure:
 // FASTFRAMES: 100.16 Hz
 // SLOWFRAMES: FASTFRAMES/20 - multiplex repeated at this rate
@@ -273,11 +275,13 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
   }
 }
 
+#ifdef __SPIDER__
 /* Write (part of) a blob, if pending.  The first word is the number of
  * blob words (excluding position), the second word is the blob position,
  * and then there are some blob words. If there's nothing to write, it just
  * writes a single zero as n-blobs (without a position!). */
-int WriteMCEBlob() {
+int WriteMCEBlob()
+{
   static uint16_t blob_pos = -1; /* in words */
   static int last_blob = 0;
 
@@ -335,6 +339,7 @@ int WriteArrayStats() {
 
   return nw;
 }
+#endif
 
 //*********************************************************
 // Write data that comes once per superframe
@@ -404,9 +409,11 @@ void WriteSuperFrame(unsigned short *frame) {
 
   frame_bytes_written += sizeof(unsigned short); // account for nfields field;
   
+#ifdef __SPIDER__
   frame_bytes_written += WriteArrayStats(); 
 #if 0
   frame_bytes_written += WriteMCEBlob();
+#endif
 #endif
   
   if (first_time) {
