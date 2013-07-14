@@ -21,6 +21,7 @@
 #include "mpc_proto.h"
 #include "mce_counts.h"
 #include "bset.h"
+#include "mce_blob.h"
 #include "tes.h"
 
 extern int mce_slow_index[NUM_MCE];
@@ -35,41 +36,6 @@ extern uint8_t array_statistics[NUM_ARRAY_STAT];
 
 /* blobs */
 
-/* 0xEB90 is the 16-bit Maury-Style optimum synchronisation sequence; see:
- *
- *   Maury, J. L. and Style, F. J., "Development of optimum frame
- *   synchronisation codes for Goddard space flight center PCM telemetry
- *   standards" in Proceedings of the National Telemetring Conference,
- *   Los Angeles, June 1964.
- *
- * 0xFAF320 is the 24-bit Maury-Style optimum synchronisation sequence.
- *
- * 0x146F is the inverse of 0xEB90.
- *
- * After the leadin is the blob serial number and then a 16-bit CRC of the
- * payload (repeated before the leadout)
- */
-#define BLOB_LEADIN_LEN 12
-#define BLOB_LEADIN {0, 0, 0, 0, 0, 0, 0, 0, 0xEB90, 0xFAF3, 0x2000, 0x146F}
-
-/* 0xFE6B2840 is the 32-bit Muary-Style optimum synchronisation sequence.
- *
- * Before the leadout is a 16-bit CRC of the payload (a duplicate of the one
- * following the leadin)
- */
-#define BLOB_LEADOUT_LEN 2
-#define BLOB_LEADOUT {0xFE6B, 0x2840};
-
-/* MCE_BLOB_MAX (defined in mpc_proto.h) is the payload size from MPC's point of
- * view.  The PCM payload is three words larger (for the mce#, type and size)
- */
-#define MCE_BLOB_PAYLOAD_MAX (MCE_BLOB_MAX + 3)
-
-/* In addition to the payload, the blob envelope contains the leadin and leadout
- * plus two CRCs, and the blob serial number
- */
-#define MCE_BLOB_ENVELOPE_MAX (MCE_BLOB_PAYLOAD_MAX + BLOB_LEADIN_LEN + 3 + \
-    BLOB_LEADOUT_LEN)
 extern volatile int mce_blob_num;
 extern uint16_t mce_blob_envelope[MCE_BLOB_ENVELOPE_MAX];
 extern size_t mce_blob_size;
