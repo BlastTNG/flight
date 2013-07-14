@@ -153,14 +153,20 @@ static int task_stop_acq()
     comms_lost = 1;
     return 1;
   }
+
   /* wait for acq termination */
-  usleep(50000);
+  while (state & st_retdat)
+    usleep(10000);
+
   /* Empty the buffer */
   if (dt_wait(dt_empty)) {
     comms_lost = 1;
     return 1;
   }
+
+  /* clean up */
   dt_wait(dt_delacq);
+
   cl_count = 0;
   state |= st_mcecom;
   state &= ~(st_acqcnf | st_retdat);

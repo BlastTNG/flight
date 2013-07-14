@@ -24,7 +24,7 @@
 #include "mpc.h"
 #include "mputs.h"
 
-int new_blob_type = BLOB_NONE;
+volatile int new_blob_type = BLOB_NONE;
 int blob_type = BLOB_NONE;
 int blob_size;
 char blob_source[1024];
@@ -134,6 +134,7 @@ void *blobber(void *dummy)
       blob_type = new_blob_type;
       new_blob_type = BLOB_NONE;
       bprintf(info, "New blob: %i\n", blob_type);
+
       switch (blob_type) {
         case BLOB_EXPCFG:
           strcpy(blob_source, "/data#/mce/current_data/experiment.cfg");

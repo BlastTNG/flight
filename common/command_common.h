@@ -20,7 +20,7 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  *
  */
-#include "command_struct.h"
+#include "command_list.h"
 
 int SIndex(enum singleCommand command);
 const char* SName(enum singleCommand command);

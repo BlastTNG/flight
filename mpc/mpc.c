@@ -17,11 +17,13 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "mpc.h"
+#include "command_list.h"
 #include "mce_frame.h"
 #include "mputs.h"
 #include "mpc_proto.h"
 #include "udp.h"
 
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
 #include <stdio.h>
@@ -75,10 +77,13 @@ int cur_dm = -1;
 int req_dm = 10;
 
 /* Initialisation veto */
-int init = 1;
+static int init = 1;
 
-/* reset the statistics */
-int stat_reset = 1;
+/* tuning stages */
+int tune_first = 0, tune_last = 0;
+
+/* reset the array statistics */
+volatile int stat_reset = 1;
 
 /* Data return veto */
 int veto = 1;
@@ -128,7 +133,7 @@ int power_cycle_cmp = 0;
 static int pcm_pong = 0;
    
 /* handles the divide-by-two frequency scaling for PCM transfer */
-int pcm_strobe = 0;
+static int pcm_strobe = 0;
 
 /* ret_dat counter */
 int rd_count = 0;
@@ -838,6 +843,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         goal = op_ready;
         break;
       case tune_array:
+        tune_first = ev->ivalues[1];
+        tune_last = ev->ivalues[2];
         goal = op_tune;
         break;
 
@@ -966,6 +973,8 @@ int main(void)
 
   char peer[UDP_MAXHOST];
   char data[UDP_MAXSIZE];
+
+  umask(0);
 
   buos_use_func(mputs);
   nameThread("Main");

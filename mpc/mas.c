@@ -765,6 +765,25 @@ static int pop_block(void)
   return 1;
 }
 
+static const char *first_stage_tune[] = {
+  "--first-stage=sa_ramp", "--first-stage=sq2_servo",
+  "--first-stage=sq1_servo", "--first-stage=sq1_ramp",
+  "--first-stage=sq1_ramp_tes", "--first-stage=operate"
+};
+
+static const char *last_stage_tune[] = {
+  "--last-stage=sa_ramp", "--last-stage=sq2_servo",
+  "--last-stage=sq1_servo", "--last-stage=sq1_ramp",
+  "--last-stage=sq1_ramp_tes", "--last-stage=operate"
+};
+
+static int tune(void) {
+  const char *argv[] = { MAS_SCRIPT "/auto_setupt", "--set-directory=0",
+    first_stage_tune[tune_first], last_stage_tune[tune_last], NULL };
+  return (exec_and_wait(sched, startup, MAS_SCRIPT "/auto_setup", (char**)argv,
+        0, 1)) ? 1 : 0;
+}
+
 void *mas_data(void *dummy)
 {
   int ret;
@@ -866,10 +885,7 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_autosetup:
-        if (exec_and_wait(sched, startup, MAS_SCRIPT "/auto_setup", NULL, 0, 0))
-          dt_error = 1;
-        else
-          dt_error = 0;
+        dt_error = tune();
         data_tk = dt_idle;
         break;
       case dt_delacq:

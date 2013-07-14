@@ -86,8 +86,8 @@ SPIDER_ONLY=1
 # Inputs
 #
 
-EXPT_HEADERS = command_list.h command_struct.h mce_counts.h mpc_proto.h tes.h
-SHARED_HEADERS = blast.h command_common.h mputs.h sys.h udp.h
+EXPT_HEADERS = command_list.h mce_counts.h mpc_proto.h tes.h
+SHARED_HEADERS = blast.h command_common.h mcp_sched.h mputs.h sys.h udp.h
 LOCAL_HEADERS = expcfg_list.h mpc.h mce_frame.h mce_struct.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
