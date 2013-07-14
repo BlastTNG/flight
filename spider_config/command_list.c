@@ -22,6 +22,7 @@
 #include <limits.h>
 #include <stdio.h>
 
+#include "tes.h"
 #include "command_list.h"
 #ifdef __MCP__
 #include "camstruct.h"
@@ -41,12 +42,6 @@
 #define MCECMD1P(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 1, { \
       {CHOOSE_INSERT_NO_ALL}, \
-    }
-
-#define MCECMD1A(cmd,desc,grp) \
-    COMMAND(cmd), desc, grp | MCECMD, 2, { \
-      {CHOOSE_INSERT_PARAM}, \
-      {MCE_ACTION_PARAM(3,action_names)}, \
     }
 
 #define MCECMD1AD(cmd,desc,grp) \
@@ -1345,10 +1340,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"D Gain", 0, 65535, 'i', "3"},
     }
   },
-  {MCECMDCR1A(dead_detector, "Add a detector to the dead mask", GR_ACQ)},
-  {MCECMDCR1A(frail_detector, "Add a detector to the frail mask", GR_ACQ)},
-  {MCECMDCR1A(healthy_detector,
-      "Remove a detector from the frail and desk masks", GR_ACQ)},
+  {MCECMDCR1A(dead_detector, "Set a detector as dead", GR_ACQ)},
+  {MCECMDCR1A(frail_detector, "Set a detector as frail", GR_ACQ)},
+  {MCECMDCR1A(healthy_detector, "Set a detector as healthy", GR_ACQ)},
   {MCECMDCA(tes_bias, "TES bias level", GR_ACQ, "Level", 0, 65535, 'i')},
   {MCECMDC(sa_flux_quantum, "SA flux quantum", GR_TUNE,
       "Quantum", 0, 65535, 'i')},
@@ -1373,6 +1367,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Block (Parameter) Number", 0, 0xFF, 'i', "NONE"},
       {"Element Number", 0, 41, 'i', "NONE"},
       {"Value", 0, 4294967295UL, 'l', "NONE"},
+    }
+  },
+
+  {COMMAND(get_iv_curve), "Send down IV curves", GR_MCC | MCECMD, 3,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"First curve", 0, NUM_MCE_FIELDS - 1, 'i', "NONE"},
+      {"Count", 0, 100, 'i', "NONE"}
+    }
+  },
+
+  {COMMAND(iv_curve), "Acquire and IV curve", GR_MCC | MCECMD, 4,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Start bias", 0, 65535, 'i', "NONE"},
+      {"Step count", 1, 5000, 'i', "NONE"},
+      {"Step size", 1, 200, 'i', "NONE"},
     }
   },
 

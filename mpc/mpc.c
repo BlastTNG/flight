@@ -923,16 +923,26 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         cfg_set_int("frail_servo_d", 0, ev->ivalues[3]);
         break;
       case dead_detector:
-        prm_set_pixel(ev->ivalues[0], ev->ivalues[1], 1, ev->ivalues[2]);
+        prm_set_pixel(ev->ivalues[1], ev->ivalues[2], 1, ev->ivalues[3]);
         break;
       case frail_detector:
-        prm_set_pixel(ev->ivalues[0], ev->ivalues[1], 2, ev->ivalues[2]);
+        prm_set_pixel(ev->ivalues[1], ev->ivalues[2], 2, ev->ivalues[3]);
         break;
       case healthy_detector:
-        prm_set_pixel(ev->ivalues[0], ev->ivalues[1], 0, ev->ivalues[2]);
+        prm_set_pixel(ev->ivalues[1], ev->ivalues[2], 0, ev->ivalues[3]);
         break;
       case get_exptcfg:
         new_blob_type = BLOB_EXPCFG;
+        break;
+      case iv_curve:
+        //goal = op_iv;
+        break;
+      case get_iv_curve:
+#if 0
+        new_blob_type = BLOB_IV;
+        iv_start = ev->ivalues[1];
+        iv_count = ev->ivalues[2];
+#endif
         break;
 
       default:

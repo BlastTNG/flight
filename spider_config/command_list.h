@@ -197,7 +197,7 @@ enum multiCommand {
   pixel_servo_pid, frail_servo_pid, dead_detector, frail_detector,
   healthy_detector, tes_bias, sa_flux_quantum, sq2_flux_quantum,
   sq1_flux_quantum, sq1_bias, sq1_bias_off, sq2_bias, sq2_fb, sa_bias, sa_fb,
-  sa_offset, adc_offset, mce_wb,
+  sa_offset, adc_offset, mce_wb, iv_curve, get_iv_curve,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
