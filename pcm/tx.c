@@ -393,7 +393,7 @@ static void WriteMCESlow(void)
       timeMccAddr[i] = GetMCCNiosAddr("time_mcc", i);
       deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
     }
-    blobNumAddr = GetNiosAddr("blob_num");
+    blobNumAddr = GetNiosAddr("mce_blob_num");
   }
 
   for (mux=0; mux<NUM_MCE; mux++) {

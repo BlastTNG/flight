@@ -1,6 +1,6 @@
 /* tx_struct.c: contains the channel specificiation lists
  *
- * This software is copyright (C) 2002-2010 University of Toronto
+ * This software is copyright (C) 2002-2013 University of Toronto
  *
  * This file is part of mcp licensed under the GNU General Public License.
  *
@@ -959,7 +959,8 @@ struct ChannelStruct SlowChannels[] = {
   /* END of MCE slow channels */
 
   /* LOOP7, 54-59 are fast or wide-fast */
-  {"blob_num",        'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
+  {"mce_blob_num",    'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
+  {"mce_last_action", 'w',  LOOP7, 61,  1,      0, 'u', U_NONE},
 
 // add/change the slow data struct in mceserv.h
   END_OF_CHANNELS
