@@ -358,9 +358,9 @@ union DerivedUnion DerivedChannels[] = {
       "CLOSING_PUMP_SFTV", ""
       ),
   BITFIELD("LIM_SFTV",
-      "LIM_NOPEN_ATM_SFTV", "",
+      "LIM_NOPEN_ATM_SFTV", "IS_POWERED_SFTV",
       "LIM_NCLOSE_ATM_SFTV", "",
-      "LIM_NOPEN_PUMP_SFTV" "",
+      "LIM_NOPEN_PUMP_SFTV", "",
       "LIM_NCLOSE_PUMP_SFTV", ""
       ),
   BITWORD("GOAL_ATM_SFTV", "STATE_SFTV", 0, 3),
