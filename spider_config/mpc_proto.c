@@ -724,11 +724,12 @@ ssize_t mpc_decompose_gpdata(uint16_t *serial, size_t len, const char *data,
     return -1;
   }
 
-  /* we serialise thusly: type, mce, data */
-  memcpy(serial++, &type, sizeof(type));
+  /* we serialise thusly: mce, type, length, data */
   memcpy(serial++, &nmce, sizeof(nmce));
+  memcpy(serial++, &type, sizeof(type));
+  memcpy(serial++, &payload_len, sizeof(nmce));
   memcpy(serial, data + 8, sizeof(uint16_t) * payload_len);
 
-  /* return length in words (including type and mce#) */
-  return payload_len + 2;
+  /* return length in words (including type, length and mce#) */
+  return payload_len + 3;
 }

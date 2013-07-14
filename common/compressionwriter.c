@@ -24,6 +24,7 @@
 // SUPERFRAMES: FASTFRAMES/2000 - slow fields and stream offsets
 
 #define N_ARRAY_STATS_PER_SUPERFRAME 100
+#define MAX_BLOB_WORDS_PER_SUPERFRAME 100
 
 struct streamDataStruct {
   double x[FASTFRAME_PER_STREAMFRAME];
@@ -47,7 +48,7 @@ struct streamDataStruct {
 #define OMNI1_TTY "/dev/ttySI1"
 #define OMNI2_TTY "/dev/ttySI7"
 
-void nameThread(const char*);               /* mcp.c */
+void nameThread(const char*);               /* mputs.c */
 
 extern char *frameList[];
 extern struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS];
@@ -272,6 +273,42 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
   }
 }
 
+/* Write (part of) a blob, if pending.  The first word is the number of
+ * blob words (excluding position), the second word is the blob position,
+ * and then there are some blob words. If there's nothing to write, it just
+ * writes a single zero as n-blobs (without a position!). */
+int WriteMCEBlob() {
+  static uint16_t blob_pos = -1; /* in words */
+  static int last_blob = 0;
+
+  uint16_t n_to_write = MAX_BLOB_WORDS_PER_SUPERFRAME;
+
+  /* start of a new blob */
+  if (last_blob != mce_blob_num) {
+    blob_pos = 0;
+    last_blob = mce_blob_num;
+  }
+
+  /* idlding -- no blobs. */
+  if (blob_pos == -1) {
+    n_to_write = 0;
+    writeData((void*)&n_to_write, 2, 0);
+    return 2;
+  }
+
+  /* no point in writing more data than necessary */
+  if (blob_pos + n_to_write > mce_blob_size)
+    n_to_write = mce_blob_size - blob_pos;
+
+  writeData((void*)&n_to_write, 2, 0);
+  writeData((void*)&blob_pos, 2, 0);
+  writeData((void*)(mce_blob_envelope + blob_pos), 2 * n_to_write, 0);
+  blob_pos += n_to_write;
+  if (blob_pos >= mce_blob_size) /* done */
+    blob_pos = -1;
+  return 4 + 2 * n_to_write;
+}
+
 //*********************************************************
 // Write the array stats
 //*********************************************************
@@ -368,6 +405,9 @@ void WriteSuperFrame(unsigned short *frame) {
   frame_bytes_written += sizeof(unsigned short); // account for nfields field;
   
   frame_bytes_written += WriteArrayStats(); 
+#if 0
+  frame_bytes_written += WriteMCEBlob();
+#endif
   
   if (first_time) {
     first_time = 0;

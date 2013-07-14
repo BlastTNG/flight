@@ -65,11 +65,10 @@ static const uint16_t blob_leadout[BLOB_LEADOUT_LEN] = BLOB_LEADOUT
 uint16_t mce_blob_envelope[MCE_BLOB_ENVELOPE_MAX] = BLOB_LEADIN;
 
 /* The payload always starts a fixed distance into the envelope */
-static uint16_t *mce_blob_payload = mce_blob_envelope + BLOB_LEADIN_LEN + 1;
+static uint16_t *mce_blob_payload = mce_blob_envelope + BLOB_LEADIN_LEN + 2;
 
 size_t mce_blob_size = 0; /* size of the blob, including envelope */
-volatile int mce_blob_pos = -1; /* setting this to zero tells main that a new
-                                   blob is ready for bang-out */
+volatile int mce_blob_num = 0; /* blob serial number */
 
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
@@ -426,15 +425,18 @@ void *mcerecv(void *unused)
           mce_blob_payload[-1] = mce_blob_payload[n] = CalculateCRC(CRC_SEED,
               mce_blob_payload, n);
 
+          /* the blob serial number */
+          mce_blob_payload[-2] = mce_blob_num + 1;
+
           /* append the leadout */
           memcpy(mce_blob_payload + n + 1, blob_leadout,
               BLOB_LEADOUT_LEN * sizeof(uint16_t));
 
           /* set the size */
-          mce_blob_size = n + BLOB_LEADOUT_LEN + BLOB_LEADIN_LEN + 2;
+          mce_blob_size = n + BLOB_LEADOUT_LEN + BLOB_LEADIN_LEN + 3;
 
           /* trigger send */
-          mce_blob_pos = -1;
+          mce_blob_num++;
         }
         break;
       case 'Q': /* array synopsis */

@@ -1074,16 +1074,6 @@ static void CloseBBC(int signo)
   raise(signo);
 }
 
-#if 0
-static char segvregs[100];
-static int segvcnt = 0;
-static void SegV(int signo)
-{
-  fprintf(stderr, "SEGV caught: %s\n", segvregs);
-  raise(SIGTERM);
-}
-#endif
-
 void insertMCEData(unsigned short *RxFrame)
 {
   static int *offset = 0;
@@ -1099,6 +1089,9 @@ void insertMCEData(unsigned short *RxFrame)
   static int i_tmp = 0;  
   static unsigned short mplex_index = 0;
   static unsigned short arraystats_index=0;
+
+  static int mce_blob_pos = -1;
+  static int mce_last_blob = 0; /* last blob serial number */
 
   const struct tes_frame *data;
   
@@ -1155,15 +1148,20 @@ void insertMCEData(unsigned short *RxFrame)
   RxFrame[arraystats_data_offset] = array_statistics[arraystats_index] | 
                                    (array_statistics[arraystats_index+1] << 8);
 
-  /* MCE blobs -- the MCEserv will reset mce_blob_pos to zero if a new blob
-   * comes in. If mce_blob_pos is -1, we're just idling with zeroes.  The
+  /* MCE blobs -- the MCEserv will increment mce_blob_num if a new blob comes
+   * in. If mce_blob_pos is -1, we're just idling with zeroes.  The
    * MCEserv also takes care of the payload CRC and adding the synchronisation
    * intro and outro (both defined in mceserv.h) */
+  if (mce_blob_num != mce_last_blob) {
+    mce_last_blob = mce_blob_num;
+    mce_blob_pos = 0;
+  }
+
   if (mce_blob_pos == -1)
     RxFrame[mce_blob_offset] = 0;
   else {
     RxFrame[mce_blob_offset] = mce_blob_envelope[mce_blob_pos++];
-    if (mce_blob_pos > mce_blob_size) /* done; start idling */
+    if (mce_blob_pos >= mce_blob_size) /* done; start idling */
       /*  there's a race condition here.  Sometimes we won't notice new
        *  blobs... meh */
       mce_blob_pos = -1;

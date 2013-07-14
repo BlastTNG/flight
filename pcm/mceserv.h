@@ -46,8 +46,8 @@ extern uint8_t array_statistics[NUM_ARRAY_STAT];
  *
  * 0x146F is the inverse of 0xEB90.
  *
- * After the leadin is a 16-bit CRC of the payload (repeated before the
- * leadout)
+ * After the leadin is the blob serial number and then a 16-bit CRC of the
+ * payload (repeated before the leadout)
  */
 #define BLOB_LEADIN_LEN 12
 #define BLOB_LEADIN {0, 0, 0, 0, 0, 0, 0, 0, 0xEB90, 0xFAF3, 0x2000, 0x146F}
@@ -61,16 +61,16 @@ extern uint8_t array_statistics[NUM_ARRAY_STAT];
 #define BLOB_LEADOUT {0xFE6B, 0x2840};
 
 /* MCE_BLOB_MAX (defined in mpc_proto.h) is the payload size from MPC's point of
- * view.  The PCM payload is two words larger (for the type and size)
+ * view.  The PCM payload is three words larger (for the mce#, type and size)
  */
-#define MCE_BLOB_PAYLOAD_MAX (MCE_BLOB_MAX + 2)
+#define MCE_BLOB_PAYLOAD_MAX (MCE_BLOB_MAX + 3)
 
 /* In addition to the payload, the blob envelope contains the leadin and leadout
- * plus two CRCs
+ * plus two CRCs, and the blob serial number
  */
-#define MCE_BLOB_ENVELOPE_MAX (MCE_BLOB_PAYLOAD_MAX + 2 + BLOB_LEADIN_LEN + \
+#define MCE_BLOB_ENVELOPE_MAX (MCE_BLOB_PAYLOAD_MAX + BLOB_LEADIN_LEN + 3 + \
     BLOB_LEADOUT_LEN)
-extern volatile int mce_blob_pos;
+extern volatile int mce_blob_num;
 extern uint16_t mce_blob_envelope[MCE_BLOB_ENVELOPE_MAX];
 extern size_t mce_blob_size;
 
