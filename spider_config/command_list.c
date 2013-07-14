@@ -30,7 +30,7 @@
 #include "mce_counts.h"
 
 #define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}
-#define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"INSERT_LAST_HK", {mce_names+1}
+#define CHOOSE_INSERT_NO_ALL "Insert", 0, 6, 'i',"INSERT_LAST_HK", {mce_names}
 #define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "MCE_LAST_ACTION", {w}
 
 #define MCECMD1(cmd,desc,grp) \
@@ -667,23 +667,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(hwp_halt), "halt HWP rotator motion", GR_HWPR, 1,
     {
-      {"Stepper (1-6,0=all)", 0, 6, 'i', "0"},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hwp_move), "move the HWP rotator to relative position", GR_HWPR, 2,
     {
-      {"Stepper (1-6,0=all)", 0, 6, 'i', "0"},
+      {CHOOSE_INSERT_PARAM},
       {"delta (degrees)", -720, 720, 'd', "0"}
     }
   },
   {COMMAND(hwp_bias_on), "turn on bias for HWP encoders", GR_HWPR, 1,
     {
-      {"HWP (1- 6, 0=all)", 0, 6, 'i', "0"}
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hwp_bias_off), "turn off bias for HWP encoders", GR_HWPR, 1,
     {
-      {"HWP (1- 6, 0=all)", 0, 6, 'i', "0"}
+      {CHOOSE_INSERT_PARAM}
     }
   },
 
