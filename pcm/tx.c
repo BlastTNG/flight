@@ -371,6 +371,7 @@ static void WriteMCESlow(void)
   static struct NiosStruct *tMceAddr[NUM_MCE];
   static struct NiosStruct *timeMccAddr[NUM_MCE];
   static struct NiosStruct *deadCountAddr[NUM_MCE];
+  static struct NiosStruct *blobNumAddr;
 
   int ind;
 
@@ -392,8 +393,8 @@ static void WriteMCESlow(void)
       timeMccAddr[i] = GetMCCNiosAddr("time_mcc", i);
       deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
     }
+    blobNumAddr = GetNiosAddr("blob_num");
   }
-
 
   for (mux=0; mux<NUM_MCE; mux++) {
     ind = GETREADINDEX(mce_slow_index[mux]);
@@ -413,6 +414,8 @@ static void WriteMCESlow(void)
     WriteData(deadCountAddr[mux], mce_slow_dat[mux][ind].dead_count,
         NIOS_QUEUE);
   }
+
+  WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
 }
 
 void WriteChatter (int index)

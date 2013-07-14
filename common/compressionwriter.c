@@ -284,9 +284,9 @@ int WriteMCEBlob() {
   uint16_t n_to_write = MAX_BLOB_WORDS_PER_SUPERFRAME;
 
   /* start of a new blob */
-  if (last_blob != mce_blob_num) {
+  if (last_blob != CommandData.mce_blob_num) {
     blob_pos = 0;
-    last_blob = mce_blob_num;
+    last_blob = CommandData.mce_blob_num;
   }
 
   /* idlding -- no blobs. */

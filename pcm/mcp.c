@@ -1152,8 +1152,8 @@ void insertMCEData(unsigned short *RxFrame)
    * in. If mce_blob_pos is -1, we're just idling with zeroes.  The
    * MCEserv also takes care of the payload CRC and adding the synchronisation
    * intro and outro (both defined in mceserv.h) */
-  if (mce_blob_num != mce_last_blob) {
-    mce_last_blob = mce_blob_num;
+  if (CommandData.mce_blob_num != mce_last_blob) {
+    mce_last_blob = CommandData.mce_blob_num;
     mce_blob_pos = 0;
   }
 

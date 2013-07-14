@@ -35,8 +35,6 @@ extern uint32_t mce_param[N_MCE_STAT * NUM_MCE];
 extern uint8_t array_statistics[NUM_ARRAY_STAT];
 
 /* blobs */
-
-extern volatile int mce_blob_num;
 extern uint16_t mce_blob_envelope[MCE_BLOB_ENVELOPE_MAX];
 extern size_t mce_blob_size;
 

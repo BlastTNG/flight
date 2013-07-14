@@ -24,6 +24,7 @@
 #define COMMAND_STRUCT_H
 
 #include <stdbool.h>  //bool type!
+#include <stdint.h>
 #include <time.h>
 #include "command_list.h"
 #include "channels.h"
@@ -486,6 +487,8 @@ struct CommandDataStruct {
   double lon;
 
   unsigned short questionable_behaviour;
+
+  uint16_t mce_blob_num; /* blob serial number */
 
   int bset_num; /* current bolo set number */
 

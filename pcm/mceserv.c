@@ -68,7 +68,6 @@ uint16_t mce_blob_envelope[MCE_BLOB_ENVELOPE_MAX] = BLOB_LEADIN;
 static uint16_t *mce_blob_payload = mce_blob_envelope + BLOB_LEADIN_LEN + 2;
 
 size_t mce_blob_size = 0; /* size of the blob, including envelope */
-volatile int mce_blob_num = 0; /* blob serial number */
 
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
@@ -426,7 +425,7 @@ void *mcerecv(void *unused)
               mce_blob_payload, n);
 
           /* the blob serial number */
-          mce_blob_payload[-2] = mce_blob_num + 1;
+          mce_blob_payload[-2] = CommandData.mce_blob_num + 1;
 
           /* append the leadout */
           memcpy(mce_blob_payload + n + 1, blob_leadout,
@@ -436,7 +435,7 @@ void *mcerecv(void *unused)
           mce_blob_size = n + BLOB_LEADOUT_LEN + BLOB_LEADIN_LEN + 3;
 
           /* trigger send */
-          mce_blob_num++;
+          CommandData.mce_blob_num++;
         }
         break;
       case 'Q': /* array synopsis */

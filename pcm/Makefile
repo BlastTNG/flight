@@ -126,7 +126,7 @@ fifo:
 restart: install
 ifeq ($(shell hostname),bitsy)
 	@echo "** I am bitsy **"
-	killall pcm
+	killall pcm || true
 	rsync -avP /usr/local/bin/pcm itsy.spider:/tmp/pcm
 	ssh itsy.spider 'install -d -m 666 /tmp/etc'
 	rsync -avP $(ETC_DATA) itsy.spider:/tmp/etc/
@@ -136,7 +136,7 @@ ifeq ($(shell hostname),bitsy)
 else
 ifeq ($(shell hostname),itsy)
 	@echo "** I am itsy **"
-	killall pcm
+	killall pcm || true
 	rsync -avP /usr/local/bin/pcm bitsy.spider:/tmp/pcm
 	ssh bitsy.spider 'install -d -m 666 /tmp/etc'
 	rsync -avP $(ETC_DATA) bitsy.spider:/tmp/etc/
