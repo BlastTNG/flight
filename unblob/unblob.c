@@ -22,21 +22,65 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define GD_64BIT_API
 #include <getdata.h>
 
+#define DEFAULT_DIRFILE "/data/etc/defile.lnk"
+
+static void dict_decompress(const char *filename, uint16_t *payload,
+    uint16_t len)
+{
+  int i;
+  int fd, cpw, pos;
+  int nd = payload[0];
+  int d[256];
+
+  printf("Writing DC-decompressed blob to %s\n", filename);
+
+  fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+  if (fd < 0) {
+    perror("open");
+    exit(1);
+  }
+
+  for (i = 0; i < nd; i += 2) {
+    d[i] = payload[i / 2 + 1] & 0xFF;
+    d[i + 1] = payload[i / 2 + 1] >> 8;
+  }
+
+  pos = (nd / 2) + 1 + (nd % 2);
+  cpw = 64 * M_LN2 / log(nd);
+
+  for (; pos < len; pos += 4) {
+    uint64_t v = *((uint64_t*)(payload + pos));
+    for (i = 0; i < cpw; ++i) {
+      char c = d[v % nd];
+      write(fd, &c, 1);
+      v /= nd;
+    }
+  }
+
+  close(fd);
+}
+
 static void usage(void)
 {
-  printf("Usage:\n  unblob [OPTION]... DIRFILE [OFFSET]\n\n"
+  printf("Usage:\n  unblob [OPTION]...\n\n"
     "where:\n\n"
-    "  DIRFILE      the path to the dirfile to read\n"
-    "  OFFSET       an optional frame offset\n"
+    " -d DIRFILE    read from DIRFILE instead of " DEFAULT_DIRFILE "\n"
+    " -o OFFSET     start reading at frame OFFSET\n"
+#if 0
     " -m MCE        unblob a blob from MCC number MCE (1-6)\n"
     " -n BLOB_NUM   only unblob blob number BLOB_NUM (otherwise, unblob the "
     "first\n"
     "                 blob found matching the criteria (after frame OFFSET)\n"
-    " -t BLOB_TYPE  unblob a blob of numeric type BLOB_TYPE.\n");
+    " -t BLOB_TYPE  unblob a blob of numeric type BLOB_TYPE.\n"
+#endif
+    );
   exit(0);
 }
 
@@ -53,45 +97,43 @@ int main(int argc, char **argv)
   uint64_t blob_sample = 0;
   uint16_t blob_num = 0, blob_mce = 0, blob_type = 0, blob_crc1 = 0;
   uint16_t blob_crc2 = 0, payload_crc = 0;
-  uint16_t blob_len = 0;
+  uint16_t payload_len = 0;
 
   uint16_t blob_left = 0;
 
   size_t n, i;
   uint16_t *data = malloc(30000 * sizeof(uint16_t));
   
-  const char *dirfile;
+  const char *dirfile = NULL;
   uint64_t offset = 0;
 
   /* parse command line */
-  while ((n = getopt(argc, argv, "m:n:t:") != -1)) {
+  while ((n = getopt(argc, argv, "d:m:n:o:t:")) != -1) {
     switch (n) {
+      case 'd':
+        dirfile = strdup(optarg);
+        break;
       case 'm':
         mce_num_req = atoi(optarg);
         break;
       case 'n':
         blob_num_req = atoi(optarg);
         break;
+      case 'o':
+        offset = atoi(optarg);
+        break;
       case 't':
         blob_type_req = atoi(optarg);
         break;
       case '?':
       default:
+        printf("unrecognised: '%i'\n", n);
         usage();
     }
   }
 
-  /* look for non-option stuff */
-  argc -= optind;
-  argv += optind;
-
-  if (argc < 1)
-    usage();
-
-  dirfile = argv[0];
-
-  if (argc > 1)
-    offset = strtoull(argv[1], NULL, 0);
+  if (dirfile == NULL)
+    dirfile = DEFAULT_DIRFILE;
 
   /* get data */
   DIRFILE *D = gd_open(dirfile, GD_RDONLY | GD_VERBOSE);
@@ -124,7 +166,7 @@ int main(int argc, char **argv)
         blob_type = data[i];
         match++;
       } else if (match == BLOB_LEADIN_LEN + 4) {
-        blob_left = blob_len = data[i] + 3;
+        blob_left = payload_len = data[i] + 3;
         match++;
         break;
       } else {
@@ -144,7 +186,7 @@ int main(int argc, char **argv)
       size_t n_to_copy = n - i + 3;
       if (n_to_copy > blob_left)
         n_to_copy = blob_left;
-      payload = malloc(sizeof(uint16_t) * blob_len);
+      payload = malloc(sizeof(uint16_t) * payload_len);
       memcpy(payload, data + i - 3, sizeof(uint16_t) * n_to_copy);
       blob_left -= n_to_copy;
       /* get the rest */
@@ -161,7 +203,7 @@ int main(int argc, char **argv)
       
       /* get the leadout */
       n = gd_getdata(D, "mce_blob", 0,
-          blob_sample + blob_len + BLOB_LEADIN_LEN + 2, 0,
+          blob_sample + payload_len + BLOB_LEADIN_LEN + 2, 0,
           1 + BLOB_LEADOUT_LEN, GD_UINT16, data);
       if (n < 1 + BLOB_LEADOUT_LEN) {
         fprintf(stderr, "Out of data reading leadout.\n");
@@ -181,13 +223,28 @@ int main(int argc, char **argv)
   }
 
   /* calcualte CRC */
-  payload_crc = CalculateCRC(CRC_SEED, payload, blob_len);
+  payload_crc = CalculateCRC(CRC_SEED, payload, payload_len);
 
   printf("Found blob #%i at frame %.02f from X%i, type %i, len = %i.\n",
-      blob_num, blob_sample / 20., blob_mce, blob_type, blob_len);
+      blob_num, blob_sample / 20., blob_mce, blob_type, payload_len);
   printf("  CRC check: lead-in: %s; lead-out %s\n",
       (blob_crc1 == payload_crc) ? "ok" : "BAD",
       (blob_crc2 == payload_crc) ? "ok" : "BAD");
+
+  /* strip the MPC header */
+  payload += 3;
+  payload_len -= 3;
+
+  /* do something with the blob */
+  switch (blob_type) {
+    case BLOB_NONE:
+      fprintf(stderr, "Bad blob type zero.\n");
+      return 1;
+    case BLOB_EXPCFG:
+    case BLOB_TUNECFG:
+      dict_decompress("experiment.cfg", payload, payload_len);
+      break;
+  }
 
   return 0;
 }
