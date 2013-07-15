@@ -173,13 +173,15 @@ enum multiCommand {
   hk_phase_step_cernox, hk_phase_step_ntd, hk_bias_freq,      hk_pump_servo_on,
   hk_mt_bottom_pulse,  hk_sft_lines_pulse, hk_capillary_pulse,
   hk_vcs2_hx_pulse,    hk_vcs1_hx_pulse,   hk_mt_lines_pulse,
-  hk_sft_bottom_pulse,  get_exptcfg,
+  hk_sft_bottom_pulse,
   spider_scan,        sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,         el_rel_move,
   hwp_bias_on,        hwp_bias_off,      mce_row_len,       mce_num_rows,
   mce_data_rate,      bset,              set_piv_mode,      tune_array,
-  data_mode,          data_mode_bits,    start_acq,         reset_acq,
+  data_mode,          data_mode_bits,    start_acq,         reconfig,
   stop_acq,           mag_cal,           pss_off_cal,       pss_d_cal,
+
+  send_exptcfg, mce_wb, run_iv_curve, send_iv_curve, send_tuning, use_tuning,
 
   /* MCE experimental parameter commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,
@@ -197,7 +199,7 @@ enum multiCommand {
   pixel_servo_pid, frail_servo_pid, dead_detector, frail_detector,
   healthy_detector, tes_bias, sa_flux_quantum, sq2_flux_quantum,
   sq1_flux_quantum, sq1_bias, sq1_bias_off, sq2_bias, sq2_fb, sa_bias, sa_fb,
-  sa_offset, adc_offset, mce_wb, iv_curve, get_iv_curve,
+  sa_offset, adc_offset,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */

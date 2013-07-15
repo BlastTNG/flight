@@ -51,19 +51,23 @@ struct mcp_proc;
  *           and standard error.  Again, setting either of these to NULL will
  *           cause the corresponding standard stream to be redirected to 
  *           /dev/null.
+ *    kill_sem: a pointer to an int which can be used to forcibly kill the
+ *           process asynchronously.  If non-NULL, the process will act as
+ *           if it has timed out (even if no timeout was set) whenever the
+ *           value pointed to is non-zero.
  *
  * Return value:
  *    the process record.
  */
 struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
-    int announce, int *in_fd, int *out_fd, int *err_fd);
+    int announce, int *in_fd, int *out_fd, int *err_fd, int *kill_sem);
 
 /* Check whether a process started by start_proc has terminated or else timed 
  * out.  Return value:
  *
  *  0  process is still running
  *  1  process might has finished
- *  2  process might be running but has gone over time
+ *  2  process might be running but has gone over time (or kill_sem active)
  */
 int check_proc(struct mcp_proc *p);
 
@@ -71,7 +75,7 @@ int check_proc(struct mcp_proc *p);
  * file descriptors it was giving, the corresponding ...fd_closed argument
  * should be non-NULL.  If stop_now is non-zero, the process will be forcibly
  * terminated if it hasn't already finished.  Otherwise, this function blocks
- * until the timeout expires or the process terminates.
+ * until the timeout expires, the kill_sem is raised, or the process terminates.
  *
  * Returns the exit status of the process (see wait(2)).
  */
@@ -102,12 +106,13 @@ int stop_proc(struct mcp_proc *p, int stop_now, int infd_closed,
  *          approximate; this function may wait longer than the time specified.
  * announce: if non-zero, report the name of the process being executed
  *           and its return value at BUOS level "info".
+ * kill_sem: the optional kill semaphore; see start_proc.
  *
  * Return value:
  *    the exit status of the process.  See wait(2).
  */
 int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
-    unsigned timeout, int announce);
+    unsigned timeout, int announce, int *kiil_sem);
 
 /* mount something listed in the fstab called "name", which can either be a 
  * mount point or a device name. There's also a timeout in seconds (0 = forever)

@@ -1227,9 +1227,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /*************** MCE COMMANDS  *****************/
 
   {MCECMD1(start_acq, "Start data acquisition", GR_MCC)},
-  {MCECMD1(reset_acq, "Cycle data acquisition", GR_MCC)},
+  {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_MCC)},
   {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC)},
-  {MCECMD1P(get_exptcfg, "Send down experiment.cfg", GR_MCC)},
+  {MCECMD1P(send_exptcfg, "Send down experiment.cfg", GR_MCC)},
 
   {MCECMD2(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12,
       'i')},
@@ -1370,7 +1370,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(get_iv_curve), "Send down IV curves", GR_MCC | MCECMD, 3,
+  {COMMAND(send_iv_curve), "Send down IV curves", GR_MCC | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
       {"First curve", 0, NUM_MCE_FIELDS - 1, 'i', "NONE"},
@@ -1378,12 +1378,26 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(iv_curve), "Acquire and IV curve", GR_MCC | MCECMD, 4,
+  {COMMAND(run_iv_curve), "Acquire an IV curve", GR_MCC | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Step count", 1, 5000, 'i', "NONE"},
       {"Step size", 1, 200, 'i', "NONE"},
+    }
+  },
+
+  {COMMAND(send_tuning), "Send the results of a tuning", GR_MCC | MCECMD, 2,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Tuning number", 0, 6535, 'i', "NONE"},
+    }
+  },
+
+  {COMMAND(use_tuning), "Apply a previous tuning", GR_MCC | MCECMD, 2,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Tuning number", 0, 6535, 'i', "NONE"},
     }
   },
 

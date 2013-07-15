@@ -17,6 +17,8 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#undef DEBUG_META
+
 #include "mpc.h"
 #include "blast.h"
 #include "stdlib.h"
@@ -39,6 +41,7 @@ static const int mode_start[op_acq + 1] =
   [op_init] = 0,
   [op_ready] = st_drives | st_mcecom,
   [op_tune] = st_drives | st_mcecom | st_config | st_tuning,
+  [op_iv] = st_drives | st_mcecom | st_config | st_ivcurv,
   [op_acq] = st_drives | st_mcecom | st_config | st_acqcnf | st_retdat,
 };
 /* Modes that must be inactive to acheive a goal */
@@ -47,7 +50,8 @@ static const int mode_stop[op_acq + 1] =
   [op_init] = 0,
   [op_ready] = st_retdat | st_acqcnf,
   [op_tune] = st_retdat | st_acqcnf,
-  [op_acq] = st_tuning,
+  [op_iv] = st_retdat | st_acqcnf,
+  [op_acq] = st_tuning | st_ivcurv,
 };
 
 enum status start_tk = st_idle;
@@ -66,6 +70,8 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       case st_drives: /* probably shouldn't ever get here ... */
         if (state & st_retdat)
           try_toggle(st_retdat, 1, do_start, do_stop);
+        else if (state & st_ivcurv)
+          try_toggle(st_ivcurv, 1, do_start, do_stop);
         else if (state & st_tuning)
           try_toggle(st_tuning, 1, do_start, do_stop);
         else
@@ -83,6 +89,7 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       case st_config:
       case st_retdat:
       case st_tuning:
+      case st_ivcurv:
         /* always okay */
         *do_stop = st;
         break;
@@ -108,6 +115,10 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       case st_config:
         if (state & st_retdat) /* can't be acquiring data */
           try_toggle(st_retdat, 1, do_start, do_stop);
+        else if (state & st_tuning) /* can't be tuning */
+          try_toggle(st_tuning, 1, do_start, do_stop);
+        else if (state & st_ivcurv) /* can't be ivcurving */
+          try_toggle(st_ivcurv, 1, do_start, do_stop);
         else if (~state & st_drives) /* must have a drive */
           try_toggle(st_drives, 0, do_start, do_stop);
         else if (~state & st_mcecom) /* MCE must be alive */
@@ -116,9 +127,28 @@ void try_toggle(enum status st, int stop, enum status *do_start,
           *do_start = st;
         break;
       case st_acqcnf:
-      case st_tuning:
         if (~state & st_config) /* MCE must be configured */
           try_toggle(st_config, 0, do_start, do_stop);
+        else if (state & st_tuning) /* can't be tuning */
+          try_toggle(st_tuning, 1, do_start, do_stop);
+        else if (state & st_ivcurv) /* can't be ivcurving */
+          try_toggle(st_ivcurv, 1, do_start, do_stop);
+        else
+          *do_start = st;
+        break;
+      case st_tuning:
+        if (state & st_retdat) /* can't be acquiring */
+          try_toggle(st_retdat, 1, do_start, do_stop);
+        else if (state & st_ivcurv) /* can't be ivcurving */
+          try_toggle(st_ivcurv, 1, do_start, do_stop);
+        else
+          *do_start = st;
+        break;
+      case st_ivcurv:
+        if (state & st_retdat) /* can't be acquiring */
+          try_toggle(st_retdat, 1, do_start, do_stop);
+        else if (state & st_tuning) /* can't be tuning */
+          try_toggle(st_tuning, 1, do_start, do_stop);
         else
           *do_start = st;
         break;
@@ -131,7 +161,9 @@ void try_toggle(enum status st, int stop, enum status *do_start,
     }
   }
 
-//  bprintf(info, "try_toggle(%04x,%i) = %04x,%04x", st, stop, *do_start, *do_stop);
+#ifdef DEBUG_META
+  bprintf(info, "try_toggle(%04x,%i) = %04x,%04x", st, stop, *do_start, *do_stop);
+#endif
 }
 
 /* Meta's job is to figure out how walk the graph to turn "state" into
@@ -150,16 +182,20 @@ void meta(void)
   }
 
   if (!working) {
+#ifdef DEBUG_META
     bprintf(info, "M: state = 0x%04X", state);
     bprintf(info, "M: goal = 0x%04X/0x%04X (%s)", mode_start[goal],
         mode_stop[goal], mode_string[goal]);
+#endif
 
     enum status do_start = st_idle;
     enum status do_stop  = st_idle;
 
     /* figure out all the things to do */
     diff = (~state & mode_start[goal]) | (state & mode_stop[goal]);
-//    bprintf(info, "M: diff = 0x%04X", diff);
+#ifdef DEBUG_META
+    bprintf(info, "M: diff = 0x%04X", diff);
+#endif
 
     /* find the first thing to do */
     for (i = 0; i < 32; ++i) {
@@ -173,11 +209,15 @@ void meta(void)
 
     if (do_stop != st_idle) {
       stop_tk = do_stop;
+#ifdef DEBUG_META
       bprintf(info, "M: STOP %04x", do_stop);
+#endif
       working = 1;
     } else if (do_start != st_idle) {
       start_tk = do_start;
+#ifdef DEBUG_META
       bprintf(info, "M: START %04x", do_start);
+#endif
       working = 1;
     } else {
       /* um.... */

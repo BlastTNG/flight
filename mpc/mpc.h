@@ -35,6 +35,17 @@
 #define PRM_RECORD_ONLY  3
 #define PRM_DEFAULT_ONLY 4
 
+/* non-volatile memory */
+#define MEM_VERS 1
+struct memory_t {
+  int version;
+  time_t time;
+  int last_tune;
+  int last_iv;
+};
+extern struct memory_t memory;
+extern int mem_dirty;
+
 /* MPC globals */
 extern int nmce;
 extern int mas_get_temp;
@@ -47,6 +58,7 @@ extern int command_veto;
 extern int send_mceparam;
 extern int divisor;
 extern int veto;
+extern int kill_special;
 extern int tune_first;
 extern int tune_last;
 extern int data_drive[3];
@@ -56,7 +68,8 @@ extern struct mpc_slow_data slow_dat;
 extern int slow_veto;
 extern int ntes;
 extern int acq_init;
-extern volatile int stat_reset;
+extern int stat_reset;
+extern int terminate;
 extern int sync_dv;
 extern int16_t tes[NUM_ROW * NUM_COL];
 extern int rd_count;
@@ -96,13 +109,14 @@ enum status {
   st_acqcnf = 0x0008, /* Acquisition is configured */
   st_retdat = 0x0010, /* MCE is returning data */
   st_tuning = 0x0020, /* auto_setup in progress */
+  st_ivcurv = 0x0040, /* IV curve in progress */
 };
 
 extern unsigned int state;
 
 /* operating modes -- op_acq must be the last mode */
-enum modes { op_init = 0, op_ready, op_tune, op_acq };
-#define MODE_STRINGS "init", "ready", "tune", "acq"
+enum modes { op_init = 0, op_ready, op_tune, op_iv, op_acq };
+#define MODE_STRINGS "init", "ready", "tune", "iv", "acq"
 
 /* drive mapping */
 #define DRIVE0_DATA0 0x0000
@@ -110,7 +124,7 @@ enum modes { op_init = 0, op_ready, op_tune, op_acq };
 #define DRIVE0_DATA2 0x0002
 #define DRIVE0_DATA3 0x0003
 #define DRIVE0_UNMAP 0x0004
-#define DRIVE0_MASK  0x0007
+#define DRIVE0_MASK  0x000F
 
 #define DRIVE1_DATA0 0x0000
 #define DRIVE1_DATA1 0x0008
@@ -146,7 +160,7 @@ extern enum modes      goal;
 extern int send_blob;
 extern int blob_size;
 extern int blob_type;
-extern volatile int new_blob_type;
+extern int new_blob_type;
 extern char blob_source[1024];
 extern uint16_t blob[MCE_BLOB_MAX];
 void *blobber(void *dummy);
@@ -158,10 +172,12 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
+  dt_ivcurve, dt_stop,
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
-  "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq"
+  "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
+"ivcurve", "stop",
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

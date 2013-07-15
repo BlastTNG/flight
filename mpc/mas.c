@@ -28,19 +28,20 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <libgen.h>
 #include <string.h>
 #include <time.h>
 #include <signal.h>
 
 static unsigned cmd_err = 0;
 
-/* ask PCM to reboot the MCE if we get too many commanding errors */
-#define MAS_CMD_ERR 1
+#define MAS_CMD_ERR 2
 #define CHECK_COMMAND_ERR() \
   do { \
     if (++cmd_err >= MAS_CMD_ERR) { \
       comms_lost = 1; \
-    } \
+    } else \
+      cmd_err = 0; \
   } while(0)
 
 /* a big old array of block data */
@@ -634,7 +635,7 @@ static int acq_conf(void)
 
   if ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP) {
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
-        "/data/mas/mpc.lnk");
+        "/data/mas/etc/mpc.lnk");
     if (st == NULL) {
       bprintf(err, "Couldn't set up file sequencer for data0");
       goto ACQ_CONFIG_ERR;
@@ -728,8 +729,11 @@ static int set_directory(void)
 
     data_root[5] = i + '0';
     write_array_id(i);
-    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1))
+    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1,
+        NULL))
+    {
       return 1;
+    }
   }
 
   return 0;
@@ -737,6 +741,7 @@ static int set_directory(void)
 
 void crash_stop(int sig)
 {
+  terminate = 1;
   bprintf(err, "Crash stop.");
   /* reset mce on exit */
   if (mas) {
@@ -777,11 +782,91 @@ static const char *last_stage_tune[] = {
   "--last-stage=sq1_ramp_tes", "--last-stage=operate"
 };
 
-static int tune(void) {
+/* run an iv curve */
+static int ivcurve(void)
+{
+  const char *argv[] = { "sleep", "1000", NULL };
+
+  dt_error = 0;
+  data_tk = dt_idle; /* asynchronise */
+  int r = exec_and_wait(sched, startup, "sleep", (char**)argv, 0, 1,
+      &kill_special);
+  
+  kill_special = 0;
+  state &= ~st_ivcurv;
+
+  return r ? 1 : 0;
+}
+
+  /* run a tuning */
+static int tune(void)
+{
   const char *argv[] = { MAS_SCRIPT "/auto_setupt", "--set-directory=0",
     first_stage_tune[tune_first], last_stage_tune[tune_last], NULL };
-  return (exec_and_wait(sched, startup, MAS_SCRIPT "/auto_setup", (char**)argv,
-        0, 1)) ? 1 : 0;
+
+  dt_error = 0;
+  data_tk = dt_idle; /* asynchronise */
+  int r = exec_and_wait(sched, startup, MAS_SCRIPT "/auto_setup", (char**)argv,
+        0, 1, &kill_special);
+  kill_special = 0;
+
+  bprintf(info, "tuning = %i", r);
+  if (r == 0) { /* archive it */
+    int d;
+    char *dir;
+    char lst[100];
+    char link[] = "/data#/mce/last_squid_tune";
+    link[5] = data_drive[0] + '0';
+
+    if (readlink(link, lst, 100) < 0) {
+      bprintf(warning, "Bad link: %s", link);
+      r = 1;
+    } else {
+      dir = dirname(lst);
+      char tuning_dir[100];
+
+      /* increment tuning */
+      memory.last_tune++;
+      mem_dirty = 1;
+      
+      /* copy to all available drives */
+      sprintf(tuning_dir, "/data#/mce/tuning/%04i", memory.last_tune);
+      argv[0] = "/bin/cp";
+      argv[1] = "-r";
+      argv[2] = dir;
+      argv[3] = tuning_dir;
+      argv[4] = NULL;
+      for (d = 0; d < 4; ++d)
+        if (slow_dat.df[d]) {
+          tuning_dir[5] = '0' + d;
+          exec_and_wait(sched, none, "/bin/cp", (char**)argv, 100, 0, NULL);
+          bprintf(info, "Archived tuning as %s\n", tuning_dir);
+        }
+    }
+  }
+
+  state &= ~st_tuning;
+  return r ? 1 : 0;
+}
+
+/* stop rcs ret_dat */
+static int stopacq(void)
+{
+  mce_param_t p;
+  memset(&p, 0, sizeof(p));
+
+  p.card.id[0] = 0x0b; /* rcs */
+  p.card.card_count = 1;
+  p.param.id = 0x16; /* ret_dat */
+  p.param.count = 1;
+
+  bprintf(info, "stop ret_dat\n");
+  int e = mcecmd_stop_application(mas, &p);
+
+  if (e)
+    bprintf(err, "Error stopping acquisition: error #%i", e);
+
+  return e ? 1 : 0;
 }
 
 void *mas_data(void *dummy)
@@ -846,7 +931,7 @@ void *mas_data(void *dummy)
         break;
       case dt_reconfig:
         if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_reconfig", NULL, 100,
-              1))
+              1, NULL))
         {
           comms_lost = 1;
         }
@@ -866,10 +951,14 @@ void *mas_data(void *dummy)
         dt_error = 0;
         data_tk = dt_idle;
         break;
+      case dt_stop:
+        dt_error = stopacq();
+        data_tk = dt_idle;
+        break;
       case dt_fakestop:
         ret = mcedata_fake_stopframe(mas);
         if (ret) {
-          bprintf(err, "Error stopping acquisition: error #%i", ret);
+          bprintf(err, "Error during fake stop: error #%i", ret);
           dt_error = 1;
         } else
           dt_error = 0;
@@ -885,8 +974,8 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_autosetup:
-        dt_error = tune();
-        data_tk = dt_idle;
+        if (!tune())
+          goal = op_acq;
         break;
       case dt_delacq:
         if (acq)
@@ -894,6 +983,10 @@ void *mas_data(void *dummy)
         acq = NULL;
         dt_error = 0;
         data_tk = dt_idle;
+        break;
+      case dt_ivcurve:
+        if (!ivcurve())
+          goal = op_acq; /* back to acquisition */
         break;
     }
 

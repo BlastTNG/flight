@@ -38,6 +38,8 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <fcntl.h>
+#include <dirent.h>
 
 /* some timing constants; in the main loop, timing is done using the udp poll
  * timeout.  As a result, all timings are approximate (typically lower bounds)
@@ -62,7 +64,9 @@
  */
 #define SYNOP_TIMEOUT 10000 /* milliseconds */
 
-/* Semeuphoria */
+/* non-volatile memory */
+int mem_dirty;
+struct memory_t memory;
 
 /* UDP socket */
 int sock;
@@ -76,6 +80,9 @@ int cur_dm = -1;
 /* The requested data mode */
 int req_dm = 10;
 
+/* Kill switch */
+int terminate = 0;
+
 /* Initialisation veto */
 static int init = 1;
 
@@ -83,7 +90,7 @@ static int init = 1;
 int tune_first = 0, tune_last = 0;
 
 /* reset the array statistics */
-volatile int stat_reset = 1;
+int stat_reset = 1;
 
 /* Data return veto */
 int veto = 1;
@@ -833,8 +840,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case data_mode:
         req_dm = ev->ivalues[1];
         break;
-      case reset_acq:
-        comms_lost = 1;
+      case reconfig:
+        state &= ~st_config;
+        goal = op_acq;
         break;
       case start_acq:
         goal = op_acq;
@@ -931,13 +939,13 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case healthy_detector:
         prm_set_pixel(ev->ivalues[1], ev->ivalues[2], 0, ev->ivalues[3]);
         break;
-      case get_exptcfg:
+      case send_exptcfg:
         new_blob_type = BLOB_EXPCFG;
         break;
-      case iv_curve:
-        //goal = op_iv;
+      case run_iv_curve:
+        goal = op_iv;
         break;
-      case get_iv_curve:
+      case send_iv_curve:
 #if 0
         new_blob_type = BLOB_IV;
         iv_start = ev->ivalues[1];
@@ -964,6 +972,106 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
     }
   }
+}
+
+/* find the highest numbered thing */
+int find_last_dirent(const char *what)
+{
+  DIR *dir;
+  struct dirent *ent;
+  char path[100];
+  char *endptr;
+  int d, n, last = 0;
+
+  sprintf(path, "/data#/mce/%s", what);
+
+  for (d = 0; d < 4; ++d) {
+    path[5] = d + '0';
+    dir = opendir(path);
+    if (dir == NULL)
+      continue;
+    while ((ent = readdir(dir))) {
+      n = (int)strtol(ent->d_name, &endptr, 10);
+      if (n < 0 || *endptr)
+        continue;
+      else if (last < n)
+        last = n;
+    }
+    closedir(dir);
+  }
+
+  return last;
+}
+
+/* save memory data */
+static void save_mem(void)
+{
+  char name[] = {"/data#/mce/mpc_mem"};
+  int d;
+
+  memory.time = time(NULL);
+  for (d = 0; d < 4; ++d) 
+    if (slow_dat.df[d]) {
+      char template[] = {"/data#/mce/mpc_mem.XXXXXX"};
+      name[5] = template[5] = d + '0';
+      int fd = mkstemp(template);
+      if (fd < 0)
+        continue;
+      ssize_t n = write(fd, &memory, sizeof(memory));
+      close(fd);
+      if (n < sizeof(memory))
+        unlink(template);
+      else {
+        rename(template, name);
+        bprintf(info, "Wrote memory to %s\n", name);
+      }
+    }
+  mem_dirty = 0;
+}
+
+/* read or regenerate memory data -- this must run before thread creation */
+static int read_mem(void)
+{
+  int d, have_mem = -1;
+  struct memory_t new_memory;
+
+  char name[] = {"/data#/mce/mpc_mem"};
+
+  /* find the newest memory file */
+  for (d = 0; d < 4; ++d) {
+    name[5] = d + '0';
+    /* try opening */
+    int fd = open(name, O_RDONLY);
+    if (fd < 0)
+      continue;
+
+    ssize_t n = read(fd, &new_memory, sizeof(new_memory));
+    close(fd);
+
+    if (n < sizeof(new_memory)) /* too small */
+      continue;
+
+    if (new_memory.version != MEM_VERS) /* too old */
+      continue;
+
+    /* newer than the current one? */
+    if (new_memory.time > memory.time) {
+      memcpy(&memory, &new_memory, sizeof(memory));
+      have_mem = d;
+    }
+  }
+
+  if (have_mem == -1) {
+    /* no valid memory */
+    bprintf(warning, "Regenerating memory.");
+    memory.version = MEM_VERS;
+    memory.last_tune = find_last_dirent("tuning");
+    memory.last_iv = find_last_dirent("ivcurve");
+    return 1;
+  }
+
+  bprintf(info, "Restored memory from /data%i", have_mem);
+  return 0;
 }
 
 int main(void)
@@ -1004,6 +1112,9 @@ int main(void)
   if (mpc_init())
     bprintf(fatal, "Unable to initialise MPC subsystem.");
 
+  /* load non-volatile memory */
+  mem_dirty = read_mem();
+
   /* bind to the UDP port */
   sock = udp_bind_port(MPC_PORT, 1);
   if (sock < 0)
@@ -1014,7 +1125,7 @@ int main(void)
 
   /* compose array id */
   if (nmce == -1) {
-    bputs(warning, "Using 'default' configuration and running as MCE4");
+    bputs(warning, "Using 'default' configuration");
     nmce = 1; /* be X5 */
     strcpy(array_id, "default");
   } else 
@@ -1038,6 +1149,10 @@ int main(void)
   /* main loop */
   for (;;) {
     struct ScheduleEvent ev;
+
+    /* write non-volatile memory, if dirty */
+    if (mem_dirty)
+      save_mem();
 
     /* iterate the director */
     meta();

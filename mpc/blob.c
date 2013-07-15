@@ -24,7 +24,7 @@
 #include "mpc.h"
 #include "mputs.h"
 
-volatile int new_blob_type = BLOB_NONE;
+int new_blob_type = BLOB_NONE;
 int blob_type = BLOB_NONE;
 int blob_size;
 char blob_source[1024];
@@ -72,7 +72,6 @@ int dict_compress(unsigned flags)
   }
 
   /* write the header */
-  bprintf(info, "Dictionary size: %i", nd);
   blob[0] = nd;
   for (i = 0; i < nd; i += 2)
     blob[i / 2 + 1] = (rd[i + 1] << 8) | rd[i];

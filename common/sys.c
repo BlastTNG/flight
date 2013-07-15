@@ -41,6 +41,7 @@ struct mcp_proc {
   time_t stop_time;
   int in_fd[2], out_fd[2], err_fd[2];
   int reaped, status, announce;
+  int *kill_sem;
 };
 
 static void close_proc_pipes(struct mcp_proc *p)
@@ -79,20 +80,17 @@ int stop_proc(struct mcp_proc *p, int stop_now, int infd_closed,
     goto JOINED;
   }
 
-  if (stop_now) /* force timeout */
+  if (stop_now)
     p->stop_time = 1;
 
-  if (p->stop_time == 0) { /* wait forever */
-    waitpid(p->pid, &status, 0);
-    goto JOINED;
-  }
-  
   /* wait for timeout */
   do {
     if (waitpid(p->pid, &status, WNOHANG))
       goto JOINED;
+    if (p->kill_sem && *(p->kill_sem)) /* kill switch */
+      break;
     sleep(1);
-  } while (time(NULL) <= p->stop_time);
+  } while (p->stop_time > 0 && time(NULL) <= p->stop_time);
 
   /* timed out (this is the fun part) */
 
@@ -156,7 +154,7 @@ static void closeallfds()
  * Returns:
  *  0 if it's still running and hasn't gone over time
  *  1 if it has terminated
- *  2 if it has gone over time
+ *  2 if it has gone over time or the kill_semaphore activated
  */
 int check_proc(struct mcp_proc *p)
 {
@@ -164,6 +162,10 @@ int check_proc(struct mcp_proc *p)
   /* already checked this */
   if (p->reaped)
     return 1;
+
+  /* check kill semaphore */
+  if (p->kill_sem && *(p->kill_sem))
+    return 2;
 
   /* check timeout */
   if (p->stop_time > 0 && time(NULL) > p->stop_time)
@@ -184,7 +186,7 @@ int check_proc(struct mcp_proc *p)
  * Use stop_proc() to terminate and clean up.
  */
 struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
-    int announce, int *in_fd, int *out_fd, int *err_fd)
+    int announce, int *in_fd, int *out_fd, int *err_fd, int *kill_sem)
 {
   struct mcp_proc *p = malloc(sizeof(struct mcp_proc));
   p->in_fd[0]  = p->in_fd[1]  = -1;
@@ -192,6 +194,7 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
   p->err_fd[0] = p->err_fd[1] = -1;
   p->reaped = 0;
   p->announce = announce;
+  p->kill_sem = kill_sem;
 
   /* a convenience for processes with no arguments */
   char* no_args[] = { (char*)path, NULL };
@@ -301,7 +304,7 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
  */
 #define EXEC_BUFLEN 1024
 int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
-    unsigned timeout, int announce)
+    unsigned timeout, int announce, int *kill_sem)
 {
   ssize_t n;
   struct mcp_proc *p;
@@ -312,7 +315,8 @@ int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
 
   p = start_proc(path, argv, timeout, announce, NULL,
       (outlev == none) ? NULL : &p_stdout,
-      (errlev == none) ? NULL : &p_stderr);
+      (errlev == none) ? NULL : &p_stderr,
+      kill_sem);
   if (p == NULL)
     return errno ? (errno << 16) : -1;
   
@@ -424,7 +428,7 @@ int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
 int do_mount(const char *name, int timeout)
 {
   char *argv[] = { "mount", (char*)name, NULL };
-  return exec_and_wait(err, mem, "/bin/mount", argv, timeout, 0);
+  return exec_and_wait(err, mem, "/bin/mount", argv, timeout, 0, NULL);
 }
 
 /* lazy unmount something */

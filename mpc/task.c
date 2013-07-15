@@ -27,6 +27,8 @@ enum dtask data_tk = dt_idle;
 int dt_error = 0;
 int comms_lost = 0;
 int leech_veto = 0;
+/* kill switch */
+int kill_special = 0;
 static int cl_count = 0;
 
 /* request a data tasklet and wait for it's completion.  returns dt_error */
@@ -52,6 +54,7 @@ static unsigned task_set_drives(void)
 {
   uint8_t map = 0;
   int new_data_drive[3];
+  char data_root[] = "/data#/mce";
 
   int best_spinner, second_spinner, the_solid;
 
@@ -142,14 +145,19 @@ static unsigned task_set_drives(void)
   data_drive[1] = new_data_drive[1];
   data_drive[2] = new_data_drive[2];
   drive_map = map;
+
+  /* update the environment for scripts */
+  data_root[5] = data_drive[0] + '0';
+  setenv("MAS_DATA_ROOT", data_root, 1);
+
   return 0;
 }
 
 /* do a fake stop and empty the data buffer */
-static int task_stop_acq()
+static int task_stop_acq(int fake)
 {
-  /* Fake stop */
-  if (dt_wait(dt_fakestop)) {
+  /* Stop */
+  if (dt_wait(fake ? dt_fakestop : dt_stop)) {
     comms_lost = 1;
     return 1;
   }
@@ -188,11 +196,11 @@ static int task_reset_mce()
     comms_lost = 1;
     return 1;
   }
-  if (task_stop_acq())
+  if (task_stop_acq(1))
     return 1;
 
   state |= st_mcecom;
-  state &= ~(st_config | st_tuning);
+  state &= ~st_config;
   return 0;
 }
 
@@ -205,7 +213,10 @@ void *task(void *dummy)
 
   /* wait for a task */
   for (;;) {
-    if (comms_lost) { /* deal with no MCE communication */
+    if (terminate) { /* crash stop */
+      bprintf(info, "Terminate.");
+      return NULL;
+    } else if (comms_lost) { /* deal with no MCE communication */
       bprintf(warning, "Comms lost.");
       start_tk = stop_tk = 0xFFFF; /* interrupt! */
 
@@ -317,10 +328,18 @@ void *task(void *dummy)
           if (dt_wait(dt_autosetup)) {
             comms_lost = 1; /* hmm... */
           } else {
-            /* done with tuning; back to acq */
-            goal = op_acq;
             start_tk = st_idle;
           }
+          break;
+        case st_ivcurv:
+          /* iv curve */
+          state |= st_ivcurv;
+          if (dt_wait(dt_ivcurve)) {
+            comms_lost = 1; /* hmm... */
+          } else {
+            start_tk = st_idle;
+          }
+          break;
       }
     } else if (stop_tk != st_idle) { /* handle stop task requests */
       switch (stop_tk) {
@@ -330,10 +349,17 @@ void *task(void *dummy)
         case st_retdat:
         case st_drives:
         case st_mcecom:
-          task_stop_acq();
+          task_stop_acq(0);
           stop_tk = st_idle;
           break;
         case st_tuning:
+        case st_ivcurv:
+          kill_special = 1;
+          while (kill_special)
+            usleep(10000);
+          task_reset_mce();
+          stop_tk = st_idle;
+          break;
         case st_config:
           /* sledgehammer based stop acq */
           task_reset_mce();
