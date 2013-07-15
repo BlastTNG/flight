@@ -914,12 +914,12 @@ struct ChannelStruct SlowChannels[] = {
   {"state_mpc5",      'w',  LOOP7, 16, 1.0,   0.0, 'u', U_NONE},
   {"state_mpc6",      'w',  LOOP7, 17, 1.0,   0.0, 'u', U_NONE},
 
-  {"goal_mpc1",       'w',  LOOP7, 18, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc2",       'w',  LOOP7, 19, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc3",       'w',  LOOP7, 20, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc4",       'w',  LOOP7, 21, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc5",       'w',  LOOP7, 22, 1.0,   0.0, 'u', U_NONE},
-  {"goal_mpc6",       'w',  LOOP7, 23, 1.0,   0.0, 'u', U_NONE},
+  {"dtg_mpc1",        'w',  LOOP7, 18, 1.0,   0.0, 'u', U_NONE},
+  {"dtg_mpc2",        'w',  LOOP7, 19, 1.0,   0.0, 'u', U_NONE},
+  {"dtg_mpc3",        'w',  LOOP7, 20, 1.0,   0.0, 'u', U_NONE},
+  {"dtg_mpc4",        'w',  LOOP7, 21, 1.0,   0.0, 'u', U_NONE},
+  {"dtg_mpc5",        'w',  LOOP7, 22, 1.0,   0.0, 'u', U_NONE},
+  {"dtg_mpc6",        'w',  LOOP7, 23, 1.0,   0.0, 'u', U_NONE},
 
   {"task_mpc1",       'w',  LOOP7, 24, 1.0,   0.0, 'u', U_NONE},
   {"task_mpc2",       'w',  LOOP7, 25, 1.0,   0.0, 'u', U_NONE},
@@ -928,12 +928,12 @@ struct ChannelStruct SlowChannels[] = {
   {"task_mpc5",       'w',  LOOP7, 28, 1.0,   0.0, 'u', U_NONE},
   {"task_mpc6",       'w',  LOOP7, 29, 1.0,   0.0, 'u', U_NONE},
 
-  {"dtask_mpc1",      'w',  LOOP7, 30, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc2",      'w',  LOOP7, 31, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc3",      'w',  LOOP7, 32, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc4",      'w',  LOOP7, 33, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc5",      'w',  LOOP7, 34, 1.0,   0.0, 'u', U_NONE},
-  {"dtask_mpc6",      'w',  LOOP7, 35, 1.0,   0.0, 'u', U_NONE},
+  {"last_iv_mpc1",    'w',  LOOP7, 30, 1.0,   0.0, 'u', U_NONE},
+  {"last_iv_mpc2",    'w',  LOOP7, 31, 1.0,   0.0, 'u', U_NONE},
+  {"last_iv_mpc3",    'w',  LOOP7, 32, 1.0,   0.0, 'u', U_NONE},
+  {"last_iv_mpc4",    'w',  LOOP7, 33, 1.0,   0.0, 'u', U_NONE},
+  {"last_iv_mpc5",    'w',  LOOP7, 34, 1.0,   0.0, 'u', U_NONE},
+  {"last_iv_mpc6",    'w',  LOOP7, 35, 1.0,   0.0, 'u', U_NONE},
 
   {"t_mcc1",          'w',  LOOP7, 36, 0.01,  0.0, 'u', U_NONE},
   {"t_mcc2",          'w',  LOOP7, 37, 0.01,  0.0, 'u', U_NONE},
@@ -965,7 +965,13 @@ struct ChannelStruct SlowChannels[] = {
   {"drive_map_mcc3",  'w',  LOOP8,  2, 0.5,   0.0, 'u', U_NONE},
   {"drive_map_mcc4",  'w',  LOOP8,  3, 0.5,   0.0, 'u', U_NONE},
   {"drive_map_mcc5",  'w',  LOOP8,  4, 0.5,   0.0, 'u', U_NONE},
-  {"drive_map_mcc6",  'w',  LOOP8,  5, 0.5,   0.0, 'u', U_NONE},
+
+  {"last_tune_mpc1",  'w',  LOOP8,  5, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc2",  'w',  LOOP8,  6, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc3",  'w',  LOOP8,  7, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc4",  'w',  LOOP8,  8, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc5",  'w',  LOOP8,  9, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc6",  'w',  LOOP8, 10, 0.5,   0.0, 'u', U_NONE},
 
   /* END of MCE slow channels */
 

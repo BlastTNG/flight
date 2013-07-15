@@ -702,7 +702,18 @@ union DerivedUnion DerivedChannels[] = {
   
   LINCOM2("TWIST_EL", "EL_RAW_1_ENC", 1.0, 0.0, "EL_RAW_2_ENC",  -1.0, 0.0),
 
-
+  BITWORD( "GOAL_MPC1", "dtg_mpc1", 0, 8),
+  BITWORD("DTASK_MPC1", "dtg_mpc1", 8, 8),
+  BITWORD( "GOAL_MPC2", "dtg_mpc2", 0, 8),
+  BITWORD("DTASK_MPC2", "dtg_mpc2", 8, 8),
+  BITWORD( "GOAL_MPC3", "dtg_mpc3", 0, 8),
+  BITWORD("DTASK_MPC3", "dtg_mpc3", 8, 8),
+  BITWORD( "GOAL_MPC4", "dtg_mpc4", 0, 8),
+  BITWORD("DTASK_MPC4", "dtg_mpc4", 8, 8),
+  BITWORD( "GOAL_MPC5", "dtg_mpc5", 0, 8),
+  BITWORD("DTASK_MPC5", "dtg_mpc5", 8, 8),
+  BITWORD( "GOAL_MPC6", "dtg_mpc6", 0, 8),
+  BITWORD("DTASK_MPC6", "dtg_mpc6", 8, 8),
 
   END_OF_DERIVED_CHANNELS
 };

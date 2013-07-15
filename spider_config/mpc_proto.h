@@ -45,6 +45,8 @@ struct mpc_slow_data {
   uint16_t t_mce; /* MCE box temp */
   uint16_t drive_map; /* current drive map */
   uint16_t dead_count; /* count of dead and frail pixels */
+  uint16_t last_tune; /* last tuning number */
+  uint16_t last_iv; /* last iv curve number */
 };
 
 extern int16_t mpc_proto_rev;

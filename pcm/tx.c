@@ -346,8 +346,9 @@ static void WriteAux(void)
   WriteData(mceCmplexAddr, mce_param[CommandData.mce_param_index], NIOS_QUEUE);
 }
 
-struct NiosStruct *GetMCCNiosAddr(char *field, int i_mce) {
-  char field_name[44];
+static struct NiosStruct *GetMCCNiosAddr(char *field, int i_mce)
+{
+  char field_name[FIELD_LEN];
   sprintf(field_name, "%s%d", field, i_mce+1);
   return (GetNiosAddr(field_name));
 }
@@ -364,14 +365,16 @@ static void WriteMCESlow(void)
   static struct NiosStruct *df2MccAddr[NUM_MCE];
   static struct NiosStruct *df3MccAddr[NUM_MCE];
   static struct NiosStruct *stateMpcAddr[NUM_MCE];
-  static struct NiosStruct *goalMpcAddr[NUM_MCE];
+  static struct NiosStruct *dtgMpcAddr[NUM_MCE];
   static struct NiosStruct *taskMpcAddr[NUM_MCE];
-  static struct NiosStruct *dtaskMpcAddr[NUM_MCE];
   static struct NiosStruct *tMccAddr[NUM_MCE];
   static struct NiosStruct *tMceAddr[NUM_MCE];
   static struct NiosStruct *timeMccAddr[NUM_MCE];
   static struct NiosStruct *deadCountAddr[NUM_MCE];
   static struct NiosStruct *driveMapAddr[NUM_MCE];
+  static struct NiosStruct *lastTuneAddr[NUM_MCE];
+  static struct NiosStruct *lastIVAddr[NUM_MCE];
+
   static struct NiosStruct *blobNumAddr;
   static struct NiosStruct *lastActionAddr;
 
@@ -380,21 +383,22 @@ static void WriteMCESlow(void)
   if (firsttime) {
     int i;
     firsttime = 0;
-    for (i=0; i<NUM_MCE; i++) {
+    for (i = 0; i < NUM_MCE; i++) {
       modeMceAddr[i] = GetMCCNiosAddr("data_mode_mce", i);
       df0MccAddr[i] = GetMCCNiosAddr("df_0_mcc", i);
       df1MccAddr[i] = GetMCCNiosAddr("df_1_mcc", i);
       df2MccAddr[i] = GetMCCNiosAddr("df_2_mcc", i);
       df3MccAddr[i] = GetMCCNiosAddr("df_3_mcc", i);
       stateMpcAddr[i] = GetMCCNiosAddr("state_mpc", i);
-      goalMpcAddr[i] = GetMCCNiosAddr("goal_mpc", i);
+      dtgMpcAddr[i] = GetMCCNiosAddr("dtg_mpc", i);
       taskMpcAddr[i] = GetMCCNiosAddr("task_mpc", i);
-      dtaskMpcAddr[i] = GetMCCNiosAddr("dtask_mpc", i);
       tMccAddr[i] = GetMCCNiosAddr("t_mcc", i);
       tMceAddr[i] = GetMCCNiosAddr("t_mce", i);
       timeMccAddr[i] = GetMCCNiosAddr("time_mcc", i);
       deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
       driveMapAddr[i] = GetMCCNiosAddr("drive_map_mcc", i);
+      lastTuneAddr[i] = GetMCCNiosAddr("last_tune_mpc", i);
+      lastIVAddr[i] = GetMCCNiosAddr("last_iv_mpc", i);
     }
     blobNumAddr = GetNiosAddr("mpc_blob_num");
     lastActionAddr = GetNiosAddr("mpc_last_action");
@@ -410,14 +414,16 @@ static void WriteMCESlow(void)
     WriteData(df2MccAddr[mux], mce_slow_dat[mux][ind].df[2], NIOS_QUEUE);
     WriteData(df3MccAddr[mux], mce_slow_dat[mux][ind].df[3], NIOS_QUEUE);
     WriteData(stateMpcAddr[mux], mce_slow_dat[mux][ind].state, NIOS_QUEUE);
-    WriteData(goalMpcAddr[mux], mce_slow_dat[mux][ind].goal, NIOS_QUEUE);
+    WriteData(dtgMpcAddr[mux], ((mce_slow_dat[mux][ind].goal & 0xFF) << 8)
+        | (mce_slow_dat[mux][ind].dtask & 0xFF), NIOS_QUEUE);
     WriteData(taskMpcAddr[mux], mce_slow_dat[mux][ind].task, NIOS_QUEUE);
-    WriteData(dtaskMpcAddr[mux], mce_slow_dat[mux][ind].dtask, NIOS_QUEUE);
     WriteData(tMccAddr[mux], mce_slow_dat[mux][ind].t_mcc, NIOS_QUEUE);
     WriteData(tMceAddr[mux], mce_slow_dat[mux][ind].t_mce, NIOS_QUEUE);
     WriteData(deadCountAddr[mux], mce_slow_dat[mux][ind].dead_count,
         NIOS_QUEUE);
     WriteData(driveMapAddr[mux], mce_slow_dat[mux][ind].drive_map, NIOS_QUEUE);
+    WriteData(lastTuneAddr[mux], mce_slow_dat[mux][ind].last_tune, NIOS_QUEUE);
+    WriteData(lastIVAddr[mux], mce_slow_dat[mux][ind].last_iv, NIOS_QUEUE);
   }
 
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
