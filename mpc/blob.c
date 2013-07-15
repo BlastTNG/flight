@@ -38,8 +38,9 @@ int dict_compress(unsigned flags)
 {
   int c, i;
   uint16_t nd = 0;
-  uint32_t acc = 0;
-  uint32_t env = 1;
+  uint64_t acc = 0;
+  uint64_t fac = 1;
+  int cpw, ciw = 0;
   char d[256], rd[256];
 
   memset(d, 0, 256);
@@ -81,13 +82,36 @@ int dict_compress(unsigned flags)
   blob_size = i / 2 + 1;
 
   /* second pass: encode file */
+  cpw = 64 * M_LN2 / log(nd);
   rewind(stream);
   while ((c = fgetc(stream)) != EOF) {
     if (DC_IGNORE_SPACE && c == 0x20)
       continue;
 
-    if (env > 0xFFFF) {
-      /* ship out the low bits */
+    if (ciw == cpw) {
+      /* ship out the accumulator */
+      for (i = 0; i < 4; ++i) {
+        blob[blob_size++] = acc & 0xFFFF;
+        acc >>= 16;
+
+        if (blob_size == MCE_BLOB_MAX) {
+          bprintf(warning, "File too big; truncating");
+          fclose(stream);
+          return 0;
+        }
+      }
+      acc = ciw = 0;
+      fac = 1;
+    }
+
+    /* add */
+    acc += d[c] * fac;
+    fac *= nd;
+    ciw++;
+  }
+  /* last word(s) */
+  if (ciw)
+    for (i = 0; i < 4; ++i) {
       blob[blob_size++] = acc & 0xFFFF;
       acc >>= 16;
 
@@ -96,29 +120,7 @@ int dict_compress(unsigned flags)
         fclose(stream);
         return 0;
       }
-
-      /* recompute the envelope.  If it's not a power of two, we burn part of
-       * a bit here */
-      if (env & (env - 1)) {
-        env = (env >> 16) + 1;
-      } else
-        env >>= 16;
     }
-
-    /* add */
-    acc = d[c] * env;
-    env *= nd;
-  }
-  /* last word(s) */
-  if (env > 0xFFFF) {
-    blob[blob_size++] = (acc & 0xFFFF);
-    acc >>= 16;
-  }
-
-  if (blob_size == MCE_BLOB_MAX)
-    bprintf(warning, "File too big; truncating");
-  else
-    blob[blob_size++] = (acc & 0xFFFF);
 
   fclose(stream);
   return 0;
