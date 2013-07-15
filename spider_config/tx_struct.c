@@ -965,13 +965,14 @@ struct ChannelStruct SlowChannels[] = {
   {"drive_map_mcc3",  'w',  LOOP8,  2, 0.5,   0.0, 'u', U_NONE},
   {"drive_map_mcc4",  'w',  LOOP8,  3, 0.5,   0.0, 'u', U_NONE},
   {"drive_map_mcc5",  'w',  LOOP8,  4, 0.5,   0.0, 'u', U_NONE},
+  {"drive_map_mcc6",  'w',  LOOP8,  5, 0.5,   0.0, 'u', U_NONE},
 
-  {"last_tune_mpc1",  'w',  LOOP8,  5, 0.5,   0.0, 'u', U_NONE},
-  {"last_tune_mpc2",  'w',  LOOP8,  6, 0.5,   0.0, 'u', U_NONE},
-  {"last_tune_mpc3",  'w',  LOOP8,  7, 0.5,   0.0, 'u', U_NONE},
-  {"last_tune_mpc4",  'w',  LOOP8,  8, 0.5,   0.0, 'u', U_NONE},
-  {"last_tune_mpc5",  'w',  LOOP8,  9, 0.5,   0.0, 'u', U_NONE},
-  {"last_tune_mpc6",  'w',  LOOP8, 10, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc1",  'w',  LOOP8,  6, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc2",  'w',  LOOP8,  7, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc3",  'w',  LOOP8,  8, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc4",  'w',  LOOP8,  9, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc5",  'w',  LOOP8, 10, 0.5,   0.0, 'u', U_NONE},
+  {"last_tune_mpc6",  'w',  LOOP8, 11, 0.5,   0.0, 'u', U_NONE},
 
   /* END of MCE slow channels */
 
