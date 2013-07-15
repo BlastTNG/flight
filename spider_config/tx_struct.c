@@ -955,12 +955,19 @@ struct ChannelStruct SlowChannels[] = {
   {"dead_count_mce4", 'w',  LOOP7, 51, 0.5,   0.0, 'u', U_NONE},
   {"dead_count_mce5", 'w',  LOOP7, 52, 0.5,   0.0, 'u', U_NONE},
   {"dead_count_mce6", 'w',  LOOP7, 53, 0.5,   0.0, 'u', U_NONE},
-  
-  /* END of MCE slow channels */
 
   /* LOOP7, 54-59 are fast or wide-fast */
-  {"mce_blob_num",    'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
-  {"mce_last_action", 'w',  LOOP7, 61,  1,      0, 'u', U_NONE},
+  {"mpc_blob_num",    'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
+  {"mpc_last_action", 'w',  LOOP7, 61,  1,      0, 'u', U_NONE},
+
+  {"drive_map_mcc1",  'w',  LOOP8,  0, 0.5,   0.0, 'u', U_NONE},
+  {"drive_map_mcc2",  'w',  LOOP8,  1, 0.5,   0.0, 'u', U_NONE},
+  {"drive_map_mcc3",  'w',  LOOP8,  2, 0.5,   0.0, 'u', U_NONE},
+  {"drive_map_mcc4",  'w',  LOOP8,  3, 0.5,   0.0, 'u', U_NONE},
+  {"drive_map_mcc5",  'w',  LOOP8,  4, 0.5,   0.0, 'u', U_NONE},
+  {"drive_map_mcc6",  'w',  LOOP8,  5, 0.5,   0.0, 'u', U_NONE},
+
+  /* END of MCE slow channels */
 
 // add/change the slow data struct in mceserv.h
   END_OF_CHANNELS

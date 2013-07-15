@@ -371,7 +371,9 @@ static void WriteMCESlow(void)
   static struct NiosStruct *tMceAddr[NUM_MCE];
   static struct NiosStruct *timeMccAddr[NUM_MCE];
   static struct NiosStruct *deadCountAddr[NUM_MCE];
+  static struct NiosStruct *driveMapAddr[NUM_MCE];
   static struct NiosStruct *blobNumAddr;
+  static struct NiosStruct *lastActionAddr;
 
   int ind;
 
@@ -392,8 +394,10 @@ static void WriteMCESlow(void)
       tMceAddr[i] = GetMCCNiosAddr("t_mce", i);
       timeMccAddr[i] = GetMCCNiosAddr("time_mcc", i);
       deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
+      driveMapAddr[i] = GetMCCNiosAddr("drive_map_mcc", i);
     }
-    blobNumAddr = GetNiosAddr("mce_blob_num");
+    blobNumAddr = GetNiosAddr("mpc_blob_num");
+    lastActionAddr = GetNiosAddr("mpc_last_action");
   }
 
   for (mux=0; mux<NUM_MCE; mux++) {
@@ -413,9 +417,11 @@ static void WriteMCESlow(void)
     WriteData(tMceAddr[mux], mce_slow_dat[mux][ind].t_mce, NIOS_QUEUE);
     WriteData(deadCountAddr[mux], mce_slow_dat[mux][ind].dead_count,
         NIOS_QUEUE);
+    WriteData(driveMapAddr[mux], mce_slow_dat[mux][ind].drive_map, NIOS_QUEUE);
   }
 
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
+  WriteData(lastActionAddr, CommandData.mce_last_action, NIOS_QUEUE);
 }
 
 void WriteChatter (int index)
