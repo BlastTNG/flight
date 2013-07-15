@@ -136,7 +136,7 @@ sub Status {
     print "Loss Rate     : ", (100 * $fs_bad), "\n";
     print "Data Quality  : ", (100 - 100 * $dq_bad), "\n";
     printf "Disk Free     : %6.2f GB\n", ($disk_free / 1024 / 1024 / 1024);
-    print "Framme Count: : $fc\n";
+    print "Frame Count:  : $fc\n";
     print "Filename      : $name\n";
     my ($bof) = $name =~ /(^[0-9]*)\.y/;
     print "Time since BOF: ";
