@@ -167,7 +167,7 @@ struct latch_pulse {
 // max power in Watts, TODO update command_list with these values
 #define HK_MT_BOTTOM_PMAX   9.0
 #define HK_SFT_LINES_PMAX   12.0
-#define HK_CAPILLARY_PMAX   0.125
+#define HK_CAPILLARY_PMAX   4.5
 #define HK_VCS2_HX_PMAX     3.6
 #define HK_VCS1_HX_PMAX     6.3
 #define HK_MT_LINES_PMAX    9.0
