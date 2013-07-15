@@ -89,6 +89,9 @@ static int init = 1;
 /* tuning stages */
 int tune_first = 0, tune_last = 0;
 
+/* iv curve parameters */
+int iv_start, iv_step, iv_count;
+
 /* reset the array statistics */
 int stat_reset = 1;
 
@@ -944,16 +947,23 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case run_iv_curve:
         goal = op_iv;
+        iv_start = ev->ivalues[1];
+        iv_count = ev->ivalues[2];
+        iv_step = ev->ivalues[3];
         break;
       case send_iv_curve:
 #if 0
         new_blob_type = BLOB_IV;
-        iv_start = ev->ivalues[1];
-        iv_count = ev->ivalues[2];
+        blob_data[0] = ev->ivalues[1];
+        blob_data[1] = ev->ivalues[2];
 #endif
         break;
       case use_tuning:
         cfg_apply_tuning(ev->ivalues[1]);
+        break;
+      case send_tuning:
+        new_blob_type = BLOB_TUNECFG;
+        blob_data[0] = ev->ivalues[1];
         break;
 
       default:
@@ -1075,6 +1085,21 @@ static int read_mem(void)
 
   bprintf(info, "Restored memory from /data%i", have_mem);
   return 0;
+}
+
+/* find a tuning -- returns 1 on error */
+int tuning_filename(const char *file, int n, char *buffer)
+{
+  struct stat statbuf;
+  int d = 0;
+  sprintf(buffer, "/data#/mce/tuning/%04i/%s", n, file);
+  for (d = 0; d < 4; ++d) {
+    buffer[5] = d + '0';
+    if (stat(buffer, &statbuf) == 0)
+      return 0;
+  }
+
+  return 1;
 }
 
 int main(void)

@@ -22,6 +22,7 @@
 #include "blast.h"
 #include "tes.h"
 #include "mpc_proto.h"
+#include "mce_blob.h"
 #include "mce_counts.h"
 #include <stdlib.h>
 #include <stdint.h>
@@ -62,6 +63,7 @@ extern int kill_special;
 extern int tune_first;
 extern int tune_last;
 extern int data_drive[3];
+extern int iv_step, iv_start, iv_count;
 extern char array_id[100];
 extern uint16_t bset_num;
 extern struct mpc_slow_data slow_dat;
@@ -155,13 +157,13 @@ extern enum status  stop_tk;
 extern enum modes      goal;
 
 /* blob creator */
-#define BLOB_NONE   0
-#define BLOB_EXPCFG 1
+#define N_BLOB_DATA 5
 extern int send_blob;
 extern int blob_size;
 extern int blob_type;
 extern int new_blob_type;
 extern char blob_source[1024];
+extern int blob_data[N_BLOB_DATA];
 extern uint16_t blob[MCE_BLOB_MAX];
 void *blobber(void *dummy);
 
@@ -187,6 +189,9 @@ extern int comms_lost;
 void *mas_data(void *dummy);
 void *acquer(void *dummy);
 void crash_stop(int);
+
+/* figure out tuning paths */
+int tuning_filename(const char *file, int n, char *buffer);
 
 /* The frame acq callback */
 int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);

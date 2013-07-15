@@ -401,17 +401,16 @@ void cfg_apply_tuning(int n)
     "sa_offset", "sq1_bias", "sq1_bias_off", "sq2_fb", "sq2_bias",
     "sq2_fb_set", NULL };
 
-  sprintf(file, "/data#/mce/tuning/%04i/experiment.cfg", n);
-  
   /* try to read an archive */
-  for (d = 0; d < 4; ++d)
-    if (slow_dat.df[d]) {
-      file[5] = d + '0';
-      if (read_experiment_cfg(file, &cfg) == 0) {
-        have_cfg = d;
-        break;
+  if (tuning_filename("experiment.cfg", n, file) == 0)
+    for (d = 0; d < 4; ++d)
+      if (slow_dat.df[d]) {
+        file[5] = d + '0';
+        if (read_experiment_cfg(file, &cfg) == 0) {
+          have_cfg = d;
+          break;
+        }
       }
-    }
 
   if (have_cfg == -1) {
     bprintf(warning, "Couldn't read tuning %i", n);

@@ -54,3 +54,8 @@
  */
 #define MCE_BLOB_ENVELOPE_MAX (MCE_BLOB_PAYLOAD_MAX + BLOB_LEADIN_LEN + 3 + \
     BLOB_LEADOUT_LEN)
+
+/* blob types */
+#define BLOB_NONE    0
+#define BLOB_EXPCFG  1
+#define BLOB_TUNECFG 2

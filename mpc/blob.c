@@ -27,7 +27,10 @@
 int new_blob_type = BLOB_NONE;
 int blob_type = BLOB_NONE;
 int blob_size;
+
+/* these can be used to pass data to the blobber */
 char blob_source[1024];
+int blob_data[N_BLOB_DATA];
 
 /* dictionary-compresses the given stream into the blob buffer */
 #define DC_IGNORE_SPACE 1
@@ -138,6 +141,10 @@ void *blobber(void *dummy)
         case BLOB_EXPCFG:
           strcpy(blob_source, "/data#/mce/current_data/experiment.cfg");
           blob_source[5] = '0' + data_drive[0];
+          r = dict_compress(DC_IGNORE_SPACE);
+          break;
+        case BLOB_TUNECFG:
+          tuning_filename("experiment.cfg", blob_data[0], blob_source);
           r = dict_compress(DC_IGNORE_SPACE);
           break;
         default:
