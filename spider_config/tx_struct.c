@@ -957,8 +957,8 @@ struct ChannelStruct SlowChannels[] = {
   {"dead_count_mce6", 'w',  LOOP7, 53, 0.5,   0.0, 'u', U_NONE},
 
   /* LOOP7, 54-59 are fast or wide-fast */
-  {"mpc_blob_num",    'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
-  {"mpc_last_action", 'w',  LOOP7, 61,  1,      0, 'u', U_NONE},
+  {"blob_num_mpc",    'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
+  {"last_action_mpc", 'w',  LOOP7, 61,  1,      0, 'u', U_NONE},
 
   {"drive_map_mcc1",  'w',  LOOP8,  0, 0.5,   0.0, 'u', U_NONE},
   {"drive_map_mcc2",  'w',  LOOP8,  1, 0.5,   0.0, 'u', U_NONE},

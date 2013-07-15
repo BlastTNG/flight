@@ -400,8 +400,8 @@ static void WriteMCESlow(void)
       lastTuneAddr[i] = GetMCCNiosAddr("last_tune_mpc", i);
       lastIVAddr[i] = GetMCCNiosAddr("last_iv_mpc", i);
     }
-    blobNumAddr = GetNiosAddr("mpc_blob_num");
-    lastActionAddr = GetNiosAddr("mpc_last_action");
+    blobNumAddr = GetNiosAddr("blob_num_mpc");
+    lastActionAddr = GetNiosAddr("last_action_mpc");
   }
 
   for (mux=0; mux<NUM_MCE; mux++) {
