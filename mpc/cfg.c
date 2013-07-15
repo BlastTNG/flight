@@ -180,13 +180,26 @@ int cfg_set_float(const char *name, int n, double v)
   return 0;
 }
 
+static int read_experiment_cfg(const char *file, config_t *cfg)
+{
+  config_init(cfg);
+
+  if (config_read_file(cfg, file) != CONFIG_TRUE) {
+    bprintf(err, "Error parsing %s, line %i: %s", file,
+        config_error_line(cfg), config_error_text(cfg));
+    config_destroy(cfg);
+    return 1;
+  }
+
+  return 0;
+}
+
 int load_experiment_cfg(void)
 {
   char file[1024] = "/data#/mce/current_data/experiment.cfg";
-  config_init(&expt);
 
   if (have_expt_cfg)
-    return 0;
+    return 1;
 
   /* use the first available */
   if ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP)
@@ -197,14 +210,11 @@ int load_experiment_cfg(void)
     file[5] = data_drive[2] + '0';
   else {
     bprintf(err, "No configured drives!");
-    goto BAD_EXPT_CNF;
+    return 1;
   }
 
-  if (config_read_file(&expt, file) != CONFIG_TRUE) {
-    bprintf(err, "Error parsing %s, line %i: %s", file,
-        config_error_line(&expt), config_error_text(&expt));
-    goto BAD_EXPT_CNF;
-  }
+  if (read_experiment_cfg(file, &expt))
+    return 1;
 
   have_expt_cfg = 1;
   /* deal with deferred row len */
@@ -219,10 +229,6 @@ int load_experiment_cfg(void)
     }
   }
   return 0;
-
-BAD_EXPT_CNF:
-  config_destroy(&expt);
-  return 1;
 }
 
 int flush_experiment_cfg(void)
@@ -347,4 +353,85 @@ void cfg_update_timing(int row_len, int num_rows, int data_rate)
       state &= ~st_config;
     }
   }
+}
+
+/* copy a parameter between loaded config_ts */
+static int cfg_copy_param(config_t *out, const config_t *in, const char *n)
+{
+  int i;
+
+  /* find the parameters */
+  config_setting_t *sout = config_lookup(out, n);
+  config_setting_t *sin  = config_lookup(in, n);
+  if (sout == NULL || sin == NULL) {
+    bprintf(warning, "Can't find for copy settting: %s", n);
+    return 1;
+  }
+  
+  /* checks */
+  if (config_setting_type(sin) != CONFIG_TYPE_ARRAY ||
+      config_setting_type(sout) != CONFIG_TYPE_ARRAY)
+  {
+    bprintf(warning, "Bad type in copy for settting: %s", n);
+    return 1;
+  }
+
+  if (config_setting_length(sin) != config_setting_length(sout)) {
+    bprintf(warning, "Length mismatch in copy for settting: %s", n);
+    return 1;
+  }
+
+  /* copy! */
+  for (i = 0; i < config_setting_length(sin); ++i)
+    config_setting_set_int_elem(sout, i, config_setting_get_int_elem(sin, i));
+
+  return 0;
+}
+
+/* read an archived experiment.cfg file and transfer relevant parameters into
+ * the live system */
+void cfg_apply_tuning(int n)
+{
+  config_t cfg;
+  int d, have_cfg = -1;
+  char file[100];
+  
+  /* the list of parameters to copy */
+  const char *param[] = {"sa_bias", "adc_offset_c", "adc_offset_cr", "sa_fb",
+    "sa_offset", "sq1_bias", "sq1_bias_off", "sq2_fb", "sq2_bias",
+    "sq2_fb_set", NULL };
+
+  sprintf(file, "/data#/mce/tuning/%04i/experiment.cfg", n);
+  
+  /* try to read an archive */
+  for (d = 0; d < 4; ++d)
+    if (slow_dat.df[d]) {
+      file[5] = d + '0';
+      if (read_experiment_cfg(file, &cfg) == 0) {
+        have_cfg = d;
+        break;
+      }
+    }
+
+  if (have_cfg == -1) {
+    bprintf(warning, "Couldn't read tuning %i", n);
+    return;
+  }
+
+  /* copy parameters and record */
+  int copy_error = 0;
+  for (d = 0; param[d]; ++d)
+    if (cfg_copy_param(&expt, &cfg, param[d])) {
+      copy_error = 1;
+      break;
+    }
+
+  if (!copy_error) { /* probably means it's completely corrupt, but... meh */
+    flush_experiment_cfg();
+
+    /* force reconfig */
+    state &= ~st_config;
+  }
+
+  return;
 }

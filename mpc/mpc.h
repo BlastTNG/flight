@@ -193,6 +193,7 @@ int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);
 
 /* cfg stuff */
 int load_experiment_cfg(void);
+void cfg_apply_tuning(int n);
 int cfg_get_int(const char *, int);
 int cfg_set_float(const char *, int, double);
 int cfg_set_int(const char *, int, int);

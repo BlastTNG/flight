@@ -952,6 +952,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         iv_count = ev->ivalues[2];
 #endif
         break;
+      case use_tuning:
+        cfg_apply_tuning(ev->ivalues[1]);
+        break;
 
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
