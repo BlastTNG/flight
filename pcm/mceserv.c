@@ -145,7 +145,6 @@ static void ForwardNotices(int sock)
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
     bprintf(warning, "Error broadcasting notifications\n");
   else {
-    bprintf(warning, "Broadcast notifications\n");
     last_dmb = CommandData.data_mode_bits_serial;
     last_turnaround = this_turnaround;
     last_divisor = this_divisor;
@@ -171,7 +170,6 @@ static void ForwardBSet(int sock)
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
     bprintf(warning, "Error broadcasting BSet 0x%04X\n", num);
   else {
-    bprintf(warning, "Broadcast BSet 0x%04X\n", num);
     sent_bset = num;
   }
 }
