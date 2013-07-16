@@ -675,8 +675,7 @@ int mpc_decompose_param(uint32_t *param, size_t len, const char *data,
     return -1;
   }
 
-  memcpy(param + nmce * sizeof(uint32_t) * N_MCE_STAT, data + 4,
-      sizeof(uint32_t) * N_MCE_STAT);
+  memcpy(param + nmce * N_MCE_STAT, data + 4, sizeof(uint32_t) * N_MCE_STAT);
   return 0;
 }
 

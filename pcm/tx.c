@@ -433,7 +433,9 @@ static void WriteMCESlow(void)
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
   WriteData(lastActionAddr, CommandData.mce_last_action, NIOS_QUEUE);
   WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
-  WriteData(reportingMPCsAddr, mccs_reporting, NIOS_QUEUE);
+
+  /* this field is active low */
+  WriteData(reportingMPCsAddr, (~mccs_reporting) & 0x3F, NIOS_QUEUE);
 }
 
 void WriteChatter (int index)
