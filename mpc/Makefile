@@ -178,7 +178,7 @@ install: mpc mpc_inf_loop
 	install -m 755 set_directory /data/mas/mce_script/script
 	for d in `seq 1 3`; do \
 		if [ -d /data$$d/mas ]; then \
-		rsync -avP --delete-during /data0/mas /data$$d/mas; \
+		rsync -avP --delete-during /data0/mas /data$$d; \
 		else \
 		echo "WARNING: can't find directory /data$$d/mas"; \
 		fi; done
