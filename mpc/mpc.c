@@ -1131,10 +1131,11 @@ int main(void)
       "/data/mas/bin:/data/mas/mce_script/script:"
       "/data/mas/mce_script/test_suite", 1);
 
-  if ((logfile = fopen(MPC_ETC_DIR "/mpc.log", "a")) == NULL)
-    berror(err, "Can't open log file");
-  else
-    fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
+  /* logapalooza */
+  openMCElog("/data0/mce/mpc.log");
+  openMCElog("/data1/mce/mpc.log");
+  openMCElog("/data2/mce/mpc.log");
+  openMCElog("/data3/mce/mpc.log");
 
   bputs(startup, "This is MPC.\n");
   if (mpc_init())

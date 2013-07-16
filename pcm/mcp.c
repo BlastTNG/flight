@@ -1209,7 +1209,7 @@ int main(int argc, char *argv[])
   pthread_t hwpr_id;
   pthread_t mcesend_id;
   pthread_t mcerecv_id;
-  struct stat fstats;
+  off_t log_offset;
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -1228,14 +1228,11 @@ int main(int argc, char *argv[])
   buos_use_func(mputs);
   nameThread("Main");
 
-  if ((logfile = fopen("/data/etc/spider/pcm.log", "a")) == NULL) {
-    berror(err, "System: Can't open log file");
-    fstats.st_size = -1;
-  } else {
-    if (fstat(fileno(logfile), &fstats) < 0)
-      fstats.st_size = -1;
-    fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
-  }
+  /* openMCElog opens a log file, returning the offset to the start of the
+   * new part of the log.  This function can be called multiple times to
+   * open multiple log files.
+   */
+  log_offset = openMCElog("/data/etc/spider/pcm.log");
 
   /* Watchdog */
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
@@ -1294,7 +1291,7 @@ int main(int argc, char *argv[])
     memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
   }
 
-  pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
+  pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&log_offset);
 
   InitSched();
   openMotors();  //open communications with peripherals, creates threads

@@ -176,6 +176,15 @@ install: mpc mpc_inf_loop
 	install -m 755 mpc mpc_inf_loop /data/mas/bin
 	install -d /data/mas/etc
 	install -m 755 set_directory /data/mas/mce_script/script
+	for d in `seq 1 3`; do \
+		if [ -h /data$$d/mas/config ]; then \
+		echo "ERROR: /data$$d/mas/config is a symlink"; \
+		exit 1; \
+		elif [ -d /data$$d/mas/config ]; then \
+		rsync -avP /data0/mas /data$$d/mas; \
+		else \
+		echo "WARNING: can't find directory /data$$d/mas/config"; \
+		fi; done
 
 restart: install
 	killall mpc

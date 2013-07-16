@@ -24,10 +24,9 @@
 #include "blast.h"
 #include "stdio.h"
 
-extern FILE* logfile;
-
 void nameThread(const char* name);
 void mputs(buos_t flag, const char* message);
+off_t openMCElog(const char *name);
 
 #define TEMPORAL_OFFSET 0
 

@@ -25,11 +25,16 @@
 #include <sys/syscall.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "mputs.h"
 
-FILE* logfile = NULL;
+/* multilog! */
+#define MAX_LOGFILES 10
+static int n_logfiles = 0;
+static FILE* logfiles[10];
 
 /* tid to name lookup list */
 #define stringify_(x) #x
@@ -52,6 +57,25 @@ void nameThread(const char* name)
   new_node->next = threadNames;
   threadNames = new_node;
   //bprintf(startup, "New thread (tid %d)", new_node->tid);
+}
+
+off_t openMCElog(const char *file)
+{
+  off_t offset = -1;
+  struct stat statbuf;
+
+  if (n_logfiles < MAX_LOGFILES) {
+    if ((logfiles[n_logfiles] = fopen(file, "a")) == NULL) {
+      berror(err, "Can't open log file %s", file);
+    } else {
+      if (fstat(fileno(logfiles[n_logfiles]), &statbuf) == 0)
+        offset = (off_t)statbuf.st_size;
+
+      fputs("!!!!!! LOG RESTART !!!!!!\n", logfiles[n_logfiles++]);
+    }
+  }
+
+  return offset;
 }
 
 static char failed_lookup_buffer[TID_NAME_LEN+1];
@@ -84,7 +108,6 @@ static char* threadNameLookup(int tid)
  *
  * to your initialisation code.
  */
-
 void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   struct timeval t;
@@ -96,6 +119,7 @@ void mputs(buos_t flag, const char* message) {
   int len;
   char marker[4];
   int tid = syscall(SYS_gettid);
+  int i;
 
   /* time */
   gettimeofday(&t, &tz);
@@ -172,11 +196,11 @@ void mputs(buos_t flag, const char* message) {
         strncpy(bufstart, firstchr, len);
         *(bufstart + len + 1) = '\0';
         strcat(bufstart, "\n");
-        if (logfile != NULL) {
-          fputs(buffer, logfile);
-          fflush(logfile);
+        for (i = 0; i < n_logfiles; ++i) {
+          fputs(buffer, logfiles[i]);
+          fflush(logfiles[i]);
         }
-        if (logfile == NULL || flag != mem) {
+        if (n_logfiles == 0 || flag != mem) {
           fputs(buffer, stdout);
           fflush(stdout);
         }
@@ -186,9 +210,9 @@ void mputs(buos_t flag, const char* message) {
     }
 
   if (flag == fatal) {
-    if (logfile != NULL) {
-      fputs("!! Last error is FATAL.  Cannot continue.\n", logfile);
-      fflush(logfile);
+    for (i = 0; i < n_logfiles; ++i) {
+      fputs("!! Last error is FATAL.  Cannot continue.\n", logfiles[i]);
+      fflush(logfiles[i]);
     }
     fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
     fflush(stdout);
@@ -197,10 +221,10 @@ void mputs(buos_t flag, const char* message) {
   }
 
   if (flag == tfatal) {
-    if (logfile != NULL) {
-      fprintf(logfile, "$$ Last error is THREAD FATAL. Thread [" 
+    for (i = 0; i < n_logfiles; ++i) {
+      fprintf(logfiles[i], "$$ Last error is THREAD FATAL. Thread [" 
           TID_NAME_FMT " (%5i)] exits.\n", threadNameLookup(tid), tid);
-      fflush(logfile);
+      fflush(logfiles[i]);
     }
     printf("$$ Last error is THREAD FATAL.  Thread [" 
           TID_NAME_FMT " (%5i)] exits.\n", threadNameLookup(tid), tid);
@@ -209,4 +233,3 @@ void mputs(buos_t flag, const char* message) {
     pthread_exit(NULL);
   }
 }
-
