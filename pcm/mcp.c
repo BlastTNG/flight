@@ -304,49 +304,51 @@ static void WatchMCC()
       if (reboottimer[i] > 0) {
         reboottimer[i]--;
       }
-      if ( (mccSlowCount[i] >= timeout) && (CommandData.mcc_wdog) 
-            && (reboottimer[i] == 0) ) {
-        switch (i) {
-          case 0:
-            CommandData.power.mcc1.set_count = PCYCLE_HOLD_LEN 
-                                             + LATCH_PULSE_LEN;
-            CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
-            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-            break;
-          case 1:
-            CommandData.power.mcc2.set_count = PCYCLE_HOLD_LEN 
-                                             + LATCH_PULSE_LEN;
-            CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
-            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-            break;
-          case 2:
-            CommandData.power.mcc3.set_count = PCYCLE_HOLD_LEN 
-                                             + LATCH_PULSE_LEN;
-            CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
-            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-            break;
-          case 3:
-            CommandData.power.mcc4.set_count = PCYCLE_HOLD_LEN 
-                                             + LATCH_PULSE_LEN;
-            CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
-            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-            break;
-          case 4:
-            CommandData.power.mcc5.set_count = PCYCLE_HOLD_LEN 
-                                             + LATCH_PULSE_LEN;
-            CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
-            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-            break;
-          case 5:
-            CommandData.power.mcc6.set_count = PCYCLE_HOLD_LEN 
-                                             + LATCH_PULSE_LEN;
-            CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
-            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-            break;
-          default:
-            break;
+      if (mccSlowCount[i] >= timeout) {
+        mccs_alive &= ~(1U << i);
+        if ((CommandData.mcc_wdog) && (reboottimer[i] == 0) ) {
+          switch (i) {
+            case 0:
+              CommandData.power.mcc1.set_count = PCYCLE_HOLD_LEN 
+                + LATCH_PULSE_LEN;
+              CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
+              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+              break;
+            case 1:
+              CommandData.power.mcc2.set_count = PCYCLE_HOLD_LEN 
+                + LATCH_PULSE_LEN;
+              CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
+              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+              break;
+            case 2:
+              CommandData.power.mcc3.set_count = PCYCLE_HOLD_LEN 
+                + LATCH_PULSE_LEN;
+              CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
+              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+              break;
+            case 3:
+              CommandData.power.mcc4.set_count = PCYCLE_HOLD_LEN 
+                + LATCH_PULSE_LEN;
+              CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
+              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+              break;
+            case 4:
+              CommandData.power.mcc5.set_count = PCYCLE_HOLD_LEN 
+                + LATCH_PULSE_LEN;
+              CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
+              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+              break;
+            case 5:
+              CommandData.power.mcc6.set_count = PCYCLE_HOLD_LEN 
+                + LATCH_PULSE_LEN;
+              CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
+              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+              break;
+            default:
+              break;
+          }
+          mccSlowCount[i] = 0;
         }
-        mccSlowCount[i] = 0;
       }
     }
   }
@@ -450,7 +452,7 @@ static void GetACS()
       (RxFrame[2] & 0x0000ffff) << 16);
 
   //enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
- 
+
   enc_raw_el_1 = ReadCalData(elRaw1EncAddr);
   enc_raw_el_2 = ReadCalData(elRaw2EncAddr);
 
@@ -474,9 +476,9 @@ static void GetACS()
   ofyaw_gy = ReadCalData(ofYawgyAddr); //(double)(RxFrame[ofYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
 
   ofaz_gy = ReadCalData(ofAzGyAddr);
-  
+
   res_piv = (((double)
-	((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
+        ((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
 
   pss1_i1 = (double)(slow_data[v11PssAddr->index][v11PssAddr->channel]);
   pss1_i2 = (double)(slow_data[v21PssAddr->index][v21PssAddr->channel]);
@@ -511,8 +513,8 @@ static void GetACS()
 
   if (CommandData.bbcIsExt) {
     fr_nr_rl_product = ( CommandData.sync_box.rl_value 
-                       * CommandData.sync_box.nr_value 
-                       * CommandData.sync_box.fr_value );     
+        * CommandData.sync_box.nr_value 
+        * CommandData.sync_box.fr_value );     
 
     /* MCE rate = 25 MHz/(rl*nr*fr) */
     if (fr_nr_rl_product == 0) {
@@ -560,7 +562,7 @@ static void GetACS()
   ACSData.pss6_i2 = pss6_i2;
   ACSData.pss6_i3 = pss6_i3;
   ACSData.pss6_i4 = pss6_i4;
-                               // so it can be read in one atomic cycle...
+  // so it can be read in one atomic cycle...
   ACSData.enc_table = enc_table;
   ACSData.bbc_rate = bbc_rate;
   ACSData.adc_rate = adc_rate;
@@ -616,7 +618,7 @@ static void GetCurrents()
   static int firsttime = 1;
 
   if (firsttime) {
-  
+
     firsttime = 0;
 
     i_transAddr = GetBiPhaseAddr("i_trans");
@@ -676,12 +678,12 @@ static void GetCurrents()
 }
 
 /* setup the bbcpci device in internal or external (sync box) mode
- */
+*/
 void setup_bbc()
 {
   int setup_test = 0;
   static buos_t mode = startup;
-  
+
   if (ioctl(bbc_fp, BBCPCI_IOC_OFF_IRQ) < 0) setup_test = -1;
   if (ioctl(bbc_fp, BBCPCI_IOC_SYNC) < 0) setup_test = -1;
   usleep(100000);
@@ -834,12 +836,12 @@ static void write_to_biphase(unsigned short *frame)
 {
   int i;
   static char *padding = 0;
-  
+
   if (padding == 0) {
     padding = (char *)malloc(BI0_PADDING_MIN*sizeof(unsigned short));
     memset(padding, 0x55, BI0_PADDING_MIN*sizeof(unsigned short));
   }
-  
+
 
   if (bi0_fp >= 0) { // should never be false!
     // bi0FifoSize holds number of words in the fifo buffer.
@@ -855,7 +857,7 @@ static void write_to_biphase(unsigned short *frame)
     //for (j=BiPhaseFrameWords-10; j<BiPhaseFrameWords+4; j++) frame[j] = j;
     //frame[BiPhaseFrameWords+4] = 17;
     frame[BiPhaseFrameWords+4] = CalculateCRC(0, frame+5, 
-		sizeof(short)*(BiPhaseFrameWords-1));
+        sizeof(short)*(BiPhaseFrameWords-1));
     frame[4] = BiPhaseFrameWords;
 
     i = write(bi0_fp, frame, (BiPhaseFrameWords + 5) * sizeof(unsigned short));
@@ -863,7 +865,7 @@ static void write_to_biphase(unsigned short *frame)
       berror(err, "bi-phase write for frame failed");
     } else if (i != (BiPhaseFrameWords + 5) * sizeof(unsigned short)) {
       bprintf(err, "Short write for biphase frame: %i of %u", i,
-	    (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
+          (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
     }
   }
 }
@@ -875,7 +877,7 @@ static void InitFrameBuffer(struct frameBuffer *buffer, int has_bi0_padding) {
   buffer->has_bi0_padding = has_bi0_padding;
   buffer->i_in = 0;
   buffer->i_out = 0;
-  
+
   words = BiPhaseFrameWords;
   if (has_bi0_padding) {
     words += 5;
@@ -885,7 +887,7 @@ static void InitFrameBuffer(struct frameBuffer *buffer, int has_bi0_padding) {
         sizeof(unsigned short));
 
     memset(buffer->framelist[i], 0, words*sizeof(unsigned short));
-    
+
     if (has_bi0_padding) {
       buffer->framelist[i][0] = 0xeb90;
       buffer->framelist[i][1] = 0xc5c5;
@@ -906,7 +908,7 @@ static void InitFrameBuffer(struct frameBuffer *buffer, int has_bi0_padding) {
 static void PushFrameBuffer(struct frameBuffer *buffer) {
   int i, j, fw, i_in;
   int i0 = 0;
-  
+
   if (buffer->has_bi0_padding) {
     i0 = 4;
   }
@@ -920,13 +922,13 @@ static void PushFrameBuffer(struct frameBuffer *buffer) {
   for (i = 0; i<fw; i++) {
     buffer->framelist[i_in][i+i0] = RxFrame[i];
   }
-  
+
   for (i=0; i<FAST_PER_SLOW; i++) {
     for (j=0; j<slowsPerBi0Frame; j++) {
       buffer->slow_data_list[i_in][i][j] = slow_data[i][j];
     }
   }
-  
+
   buffer->i_in = i_in;
 }
 
@@ -937,14 +939,14 @@ void ClearBuffer(struct frameBuffer *buffer) {
 unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer, unsigned short ***slow) {
   unsigned short *frame;
   int i_out = buffer->i_out;
-  
+
   if (buffer->i_in == i_out) { // no data
     return (NULL);
   }
   frame = buffer->framelist[i_out];
-  
+
   *slow = buffer->slow_data_list[i_out];
-  
+
   i_out++;
   if (i_out>=BI0_FRAME_BUFLEN) {
     i_out = 0;
@@ -956,7 +958,7 @@ unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer, unsigned short
 unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
   unsigned short *frame;
   int i_out = buffer->i_out;
-  
+
   if (buffer->i_in == i_out) { // no data
     return (NULL);
   }
@@ -968,7 +970,7 @@ unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
   buffer->i_out = i_out;
   return (frame);
 }
-  
+
 
 static void zero()
 {
@@ -981,7 +983,7 @@ static void zero()
 static void BiPhaseWriter(void)
 {
   unsigned short *frame;
-  
+
   nameThread("Bi0");
 
   while (!biphase_is_on)
@@ -994,7 +996,7 @@ static void BiPhaseWriter(void)
 
   while (1) {
     frame = PopFrameBuffer(&bi0_buffer);
-    
+
     if (!frame) { 
       /* Death meausres how long the BiPhaseWriter has gone without receiving
        * any data -- an indication that we aren't receiving FSYNCs from the
@@ -1080,7 +1082,7 @@ void insertMCEData(unsigned short *RxFrame)
   static int mce_frameno;
   static int mce_mplex_offset;
   static int mce_index_offset;
-  
+
   static int arraystats_data_offset;
   static int arraystats_index_offset;
 
@@ -1094,7 +1096,7 @@ void insertMCEData(unsigned short *RxFrame)
   static int mce_last_blob = 0; /* last blob serial number */
 
   const struct tes_frame *data;
-  
+
   uint32_t D;
 
   if (offset == 0) {
@@ -1130,23 +1132,23 @@ void insertMCEData(unsigned short *RxFrame)
   i_tmp++;
   RxFrame[offset[0]] = tes_nfifo();
   RxFrame[offset[1]] = 16000*sin((double)i_tmp*0.02) + 32768;
-  
+
   mplex_index++;
   if (mplex_index>=N_MCE_STAT*NUM_MCE) 
     mplex_index = 0;
-  
+
   D = mce_param[mplex_index];
-  
+
   RxFrame[mce_index_offset] = mplex_index;
   RxFrame[mce_mplex_offset] = (unsigned short)(D & 0xFFFF);
   RxFrame[mce_mplex_offset + 1] = (unsigned short)(D >> 16);
-  
+
   arraystats_index+=2;
   if (arraystats_index>NUM_ARRAY_STAT-2) arraystats_index = 0;
 
   RxFrame[arraystats_index_offset] = arraystats_index;
   RxFrame[arraystats_data_offset] = array_statistics[arraystats_index] | 
-                                   (array_statistics[arraystats_index+1] << 8);
+    (array_statistics[arraystats_index+1] << 8);
 
   /* MCE blobs -- the MCEserv will increment mce_blob_num if a new blob comes
    * in. If mce_blob_pos is -1, we're just idling with zeroes.  The
@@ -1295,7 +1297,7 @@ int main(int argc, char *argv[])
 
   InitSched();
   openMotors();  //open communications with peripherals, creates threads
-                 // in motors.c
+  // in motors.c
   openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
@@ -1304,7 +1306,7 @@ int main(int argc, char *argv[])
 
 
   startChrgCtrl(); // create charge controller serial thread
-                   // defined in chrgctrl.c
+  // defined in chrgctrl.c
 
   startSync();     // create sync box serial thread defined in sync_comms.c
 
@@ -1329,7 +1331,7 @@ int main(int argc, char *argv[])
 #endif
 
   start_flc_data_swapper(flc_ip[BitsyIAm]);
-  
+
   while (1) {
     in_data = read_from_bbc();
 
@@ -1370,7 +1372,7 @@ int main(int argc, char *argv[])
         UpdateBBCFrame();
         CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
         insertMCEData(RxFrame);
-        
+
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
            data right */
         pushDiskFrame(RxFrame);

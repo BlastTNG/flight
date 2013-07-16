@@ -18,6 +18,10 @@
  * along with pcm; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#ifndef MCESERV_H
+#define MCESERV_H
+
 #include "mpc_proto.h"
 #include "mce_counts.h"
 #include "bset.h"
@@ -33,6 +37,9 @@ extern uint32_t mce_param[N_MCE_STAT * NUM_MCE];
 
 /* array statistics */
 extern uint8_t array_statistics[NUM_ARRAY_STAT];
+
+/* mcc status */
+extern uint16_t mccs_alive, mccs_reporting;
 
 /* blobs */
 extern uint16_t mce_blob_envelope[MCE_BLOB_ENVELOPE_MAX];
@@ -65,3 +72,5 @@ const struct tes_frame *tes_data(void);
 /* pops and discards the oldest record in the FIFO; does nothing if the FIFO
  * is empty.  Always succeeds. */
 void tes_pop(void);
+
+#endif

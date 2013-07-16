@@ -50,6 +50,9 @@ static char udp_buffer[UDP_MAXSIZE];
 int mce_slow_index[NUM_MCE];
 struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
 
+/* mcc status */
+uint16_t mccs_alive, mccs_reporting;
+
 /* super slow data */
 uint32_t mce_param[N_MCE_STAT * NUM_MCE];
 int request_ssdata = 1; /* start-up request */
@@ -178,7 +181,7 @@ static void ForwardBSet(int sock)
  * also updates the list of non-reporting mces (nrx)
  */
 #define NRX_THRESH (PB_SIZE * 10)
-static int tes_push(int nrx, int *nrx_c)
+static uint16_t tes_push(uint16_t nrx, int *nrx_c)
 {
   int i;
 #if 0
@@ -239,7 +242,6 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
   static int last_no[NUM_MCE] = {-1, -1, -1, -1, -1, -1};
 
   /* this is a complement of empties, containing non-reporting MCEs */
-  static int nrx = 0;
   static int nrx_c[NUM_MCE] = {0, 0, 0, 0, 0, 0};
 
   struct bset local_set;
@@ -303,13 +305,13 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
       /* otherwise, new frame */
       n = tes_recon_top = (tes_recon_top + 1) % TR_SIZE;
       if (n == tes_recon_bot) /* buffer full */
-        nrx = tes_push(nrx, nrx_c); /* push oldest frame */
+        mccs_reporting = tes_push(mccs_reporting, nrx_c); /* push old frame */
 
       /* zero the new buffer */
       memset(tes_recon + n, 0, sizeof(tes_recon[n]));
 
       /* ignore non-reporting MCEs */
-      tes_recon[n].present = local_set.empties | nrx;
+      tes_recon[n].present = local_set.empties | mccs_reporting;
 
       /* record new framenum */
       tes_recon[n].frameno = frameno_in[f];
@@ -330,7 +332,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
 
     /* if it's finished, and at the bottom of the buffer, push and then reset */
     if (n == tes_recon_bot && tes_recon[n].present == TES_FRAME_FULL) {
-      nrx = tes_push(nrx, nrx_c);
+      mccs_reporting = tes_push(mccs_reporting, nrx_c);
       memset(tes_recon + n, 0, sizeof(tes_recon[0]));
     }
   }
@@ -445,8 +447,9 @@ void *mcerecv(void *unused)
       case 'S': /* slow data */
         mccnum = mpc_decompose_slow(mce_slow_dat, mce_slow_index, n, udp_buffer,
             peer, port);
-        if (mccnum >= 0) {
+        if (mccnum >= 0 && mccnum < NUM_MCE) {
           mccSlowCount[mccnum] = 0;
+          mccs_alive |= (1U << mccnum);
         }
 
         break;

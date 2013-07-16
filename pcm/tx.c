@@ -39,9 +39,9 @@
 #include "mcp.h"
 #include "chrgctrl.h"
 #include "sip.h"
+#include "mceserv.h"
 #include "hwpr.h"
 #include "mpc_proto.h"
-#include "mceserv.h"
 
 #include "flcdataswap.h"
 
@@ -377,6 +377,8 @@ static void WriteMCESlow(void)
 
   static struct NiosStruct *blobNumAddr;
   static struct NiosStruct *lastActionAddr;
+  static struct NiosStruct *reportingMPCsAddr;
+  static struct NiosStruct *aliveMPCsAddr;
 
   int ind;
 
@@ -402,6 +404,8 @@ static void WriteMCESlow(void)
     }
     blobNumAddr = GetNiosAddr("blob_num_mpc");
     lastActionAddr = GetNiosAddr("last_action_mpc");
+    reportingMPCsAddr = GetNiosAddr("reporting_mpcs");
+    aliveMPCsAddr = GetNiosAddr("alive_mpcs");
   }
 
   for (mux=0; mux<NUM_MCE; mux++) {
@@ -428,6 +432,8 @@ static void WriteMCESlow(void)
 
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
   WriteData(lastActionAddr, CommandData.mce_last_action, NIOS_QUEUE);
+  WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
+  WriteData(reportingMPCsAddr, mccs_reporting, NIOS_QUEUE);
 }
 
 void WriteChatter (int index)

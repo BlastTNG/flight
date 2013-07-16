@@ -636,22 +636,22 @@ struct ChannelStruct SlowChannels[] = {
   {"v_targ_of_cc",  'w',  LOOP5,   2,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
   {"state_of_cc",   'w',  LOOP5,   3,  1.0,      0.0,            'u',  U_NONE},
   // charge controller LED state
-  {"led_of_cc",     'w',  LOOP5,   4,  1.0,      0.0,            'u', U_NONE},
-  {"v_batt_if_cc",  'w',  LOOP5,   5,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"v_arr_if_cc",   'w',  LOOP5,   6,   1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"i_batt_if_cc",  'w',  LOOP5,   7,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  {"i_arr_if_cc",   'w',  LOOP5,   8,   1/400.0,  -32000.0/400.0,  'u',  U_I_A},
-  { "t_hs_if_cc",   'w',  LOOP5,   9,   1.0,      0.0,            's',  U_T_C},
+  {"led_of_cc",     'w',  LOOP5,   4,       1.0,             0.0, 'u', U_NONE},
+  {"v_batt_if_cc",  'w',  LOOP5,   5,   1/180.0,  -32400.0/180.0, 'u', U_V_V},
+  {"v_arr_if_cc",   'w',  LOOP5,   6,   1/180.0,  -32400.0/180.0, 'u', U_V_V},
+  {"i_batt_if_cc",  'w',  LOOP5,   7,   1/400.0,  -32000.0/400.0, 'u', U_I_A},
+  {"i_arr_if_cc",   'w',  LOOP5,   8,   1/400.0,  -32000.0/400.0, 'u', U_I_A},
+  { "t_hs_if_cc",   'w',  LOOP5,   9,       1.0,             0.0, 's', U_T_C},
   // fault bitfield
-  {"fault_if_cc",   'w',  LOOP5,  10,   1.0,      0.0,            'u',  U_NONE},
+  {"fault_if_cc",   'w',  LOOP5,  10,       1.0,             0.0, 'u', U_NONE},
   // alarm high bitfield
-  {"alarm_hi_if_cc",'w',  LOOP5,  11,   1.0,      0.0,            'u',  U_NONE},
+  {"alarm_hi_if_cc",'w',  LOOP5,  11,       1.0,             0.0, 'u', U_NONE},
   // alarm low bitfield
-  {"alarm_lo_if_cc",'w',  LOOP5,  12,  1.0,      0.0,            'u',  U_NONE},
-  {"v_targ_if_cc",  'w',  LOOP5,  13,  1/180.0,  -32400.0/180.0,  'u',  U_V_V},
-  {"state_if_cc",   'w',  LOOP5,  14,  1.0,      0.0,            'u',  U_NONE},
+  {"alarm_lo_if_cc",'w',  LOOP5,  12,       1.0,             0.0, 'u', U_NONE},
+  {"v_targ_if_cc",  'w',  LOOP5,  13,   1/180.0,  -32400.0/180.0, 'u', U_V_V},
+  {"state_if_cc",   'w',  LOOP5,  14,       1.0,             0.0, 'u', U_NONE},
   // charge controller LED state
-  {"led_if_cc",     'w',  LOOP5,  15,  1.0,      0.0,            'u', U_NONE},
+  {"led_if_cc",     'w',  LOOP5,  15,       1.0,             0.0, 'u', U_NONE},
 
   {"azraw_pss",     'w', LOOP5, 16,         I2DEG,           0.0, 'u', U_P_DEG},
   {"elraw_pss",     'w', LOOP5, 17,         I2DEG,           0.0, 'u', U_P_DEG},
@@ -959,6 +959,8 @@ struct ChannelStruct SlowChannels[] = {
   /* LOOP7, 54-59 are fast or wide-fast */
   {"blob_num_mpc",    'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
   {"last_action_mpc", 'w',  LOOP7, 61,  1,      0, 'u', U_NONE},
+  {"reporting_mpcs",  'w',  LOOP7, 62,  1,      0, 'u', U_NONE},
+  {"alive_mpcs",      'w',  LOOP7, 63,  1,      0, 'u', U_NONE},
 
   {"drive_map_mcc1",  'w',  LOOP8,  0, 0.5,   0.0, 'u', U_NONE},
   {"drive_map_mcc2",  'w',  LOOP8,  1, 0.5,   0.0, 'u', U_NONE},
