@@ -181,7 +181,7 @@ install: mpc mpc_inf_loop
 		echo "ERROR: /data$$d/mas/config is a symlink"; \
 		exit 1; \
 		elif [ -d /data$$d/mas/config ]; then \
-		rsync -avP /data0/mas /data$$d/mas; \
+		rsync -avP --delete-during /data0/mas /data$$d/mas; \
 		else \
 		echo "WARNING: can't find directory /data$$d/mas/config"; \
 		fi; done
