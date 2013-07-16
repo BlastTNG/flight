@@ -1158,7 +1158,7 @@ int main(void)
     nmce = 1; /* be X5 */
     strcpy(array_id, "default");
   } else 
-    array_id[1] = '0' + nmce;
+    array_id[1] = '1' + nmce;
 
   bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
 
