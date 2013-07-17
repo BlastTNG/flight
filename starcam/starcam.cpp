@@ -67,10 +67,11 @@ pthread_cond_t processingCompleteCond[2] = {PTHREAD_COND_INITIALIZER, PTHREAD_CO
 int globalCameraTriggerFlag = 0;
 pthread_mutex_t cameraTriggerLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cameraTriggerCond = PTHREAD_COND_INITIALIZER;
+extern int copyFlag;
 
 //image viewer
 #if USE_IMAGE_VIEWER
-const char* viewerPath = "/data/etc/current_good.sbig";
+const char* viewerPath = "/data/etc/current_bad.sbig";
 bool showBoxes = true;
 #endif
 
@@ -78,6 +79,7 @@ bool showBoxes = true;
 void* pictureLoop(void* arg);
 void* processingLoop(void* arg);
 void* ReadLoop(void* arg);
+void* CopyLoop(void* arg);
 string interpretCommand(string cmd);
 void powerCycle();
 void lock(pthread_mutex_t* mutex, const char* lockname, const char* funcname);
@@ -189,7 +191,7 @@ int main(int argc, char *argv[])
 
   //start threads for picture taking, image processing, and command reading
   int threaderr;
-  pthread_t threads[3];
+  pthread_t threads[4];
   pthread_attr_t scheduleAttr;
   struct sched_param scheduleParams;
   pthread_attr_init(&scheduleAttr);
@@ -208,9 +210,13 @@ int main(int argc, char *argv[])
   if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
   pthread_create(&threads[2], &scheduleAttr, &ReadLoop, NULL);//comm);
 
+  scheduleParams.sched_priority--;
+  if (pthread_attr_setschedparam(&scheduleAttr, &scheduleParams) != 0) return -1;
+  pthread_create(&threads[3], &scheduleAttr, &CopyLoop, NULL);//comm);//
+
   sclog(info, (char*)"Waiting for threads to complete...ie never");
   //wait for threads to return
-  for (int i=0; i<3; i++)
+  for (int i=0; i<4; i++)
     threaderr = pthread_join(threads[i], NULL);
 
   // shut down cameras if threads return (an error has occured)
@@ -222,6 +228,19 @@ int main(int argc, char *argv[])
     return err;
 
   return EXIT_SUCCESS;
+}
+
+void* CopyLoop(void* arg)
+{
+  sclog(info, (char*)"Starting up Copy Loop");
+  while(1) {
+    while (!copyFlag) {
+      usleep(10000);
+    }
+    system("scp /data/etc/current_bad.sbig spider@good.spider:/data/etc/");
+    copyFlag=0;
+  }
+  return NULL;
 }
 
 /*
@@ -249,9 +268,9 @@ void* pictureLoop(void* arg)
     if (interval == 0) {           //camera is in triggered mode, wait for trigger
       lock(&cameraTriggerLock, "cameraTriggerLock", "pictureLoop");
       while (!globalCameraTriggerFlag) {
-	// 					pthread_cond_wait(&cameraTriggerCond, &cameraTriggerLock);
-	wait(&cameraTriggerCond, &cameraTriggerLock, "cameraTriggerCond",
-	    "cameraTriggerLock", "pictureLoop");
+        // 					pthread_cond_wait(&cameraTriggerCond, &cameraTriggerLock);
+        wait(&cameraTriggerCond, &cameraTriggerLock, "cameraTriggerCond",
+            "cameraTriggerLock", "pictureLoop");
       }
       globalCameraTriggerFlag = 0;      //unset flag before continuing
       unlock(&cameraTriggerLock, "cameraTriggerLock", "pictureLoop");
@@ -272,6 +291,7 @@ void* pictureLoop(void* arg)
 
     //grab new image (lock camera so settings can't change during exposure)
     lock(&camLock, "camLock", "pictureLoop");
+    //sclog(info, (char*)"grabbing image.");
     err = globalCam.GrabImage(&globalImages[imageIndex], SBDF_LIGHT_ONLY);
     if (err != CE_NO_ERROR) {
       failureCount++;
@@ -427,6 +447,7 @@ void* processingLoop(void* arg)
     rtn_str += "\n";
     udp_bcast(sock, SC_PORT, strlen(rtn_str.c_str()), rtn_str.c_str(), 0);
     cout << "PLOOP BROADCASTING string " << rtn_str << endl;
+    copyFlag=1;
     unlock(&imageLock[imageIndex], "imageLock", "processingLoop");
 
     //signal that processing is complete
@@ -461,22 +482,20 @@ void* ReadLoop(void* arg)
 	string::size_type pos;
 
   /* create a socket */
-  sock = udp_bind_port(GOOD_PORT, 1);
+  sock = udp_bind_port(BAD_PORT, 1);
 
   if (sock == -1)
     cout << "Unable to bind to port" << endl;
 
   while(1) {
     recvlen = udp_recv(sock, SC_TIMEOUT, peer, &port, UDP_MAXSIZE, buf);
-//    if (recvlen > 0) cout << "received " << recvlen << " bytes" << endl;
     buf[recvlen] = '\0';
     line += buf;
-		while ((pos = line.find("\n",0)) != string::npos) {
-			//interpret the command and send a return value
-			if ((rtnStr = (*interpretCommand)(line.substr(0,pos))) != "") {//don't send blank returin
+    while ((pos = line.find("\n",0)) != string::npos) {
+    if ((rtnStr = (*interpretCommand)(line.substr(0,pos))) != "") {//don't send blank returin
         returnString = CamCommunicator::buildReturnString(rtnStr);
-	      string::size_type pos = returnString.find(sought, 0);
-	      while (pos != string::npos) {
+        string::size_type pos = returnString.find(sought, 0);
+	while (pos != string::npos) {
           returnString.replace(pos, sought.size(), "");
           pos = returnString.find(sought, pos - sought.size());
         }
@@ -484,8 +503,8 @@ void* ReadLoop(void* arg)
         if (udp_bcast(sock, SC_PORT, strlen(returnString.c_str()), returnString.c_str(), 0))
           perror("sendto");
         cout << "ReadLoop BROADCASTING string " << returnString << endl;
-      }
-      line = line.substr(pos+1, line.length()-(pos+1)); //set line to text after "\n"
+    }
+    line = line.substr(pos+1, line.length()-(pos+1)); //set line to text after "\n"
 		}
   }
   return NULL;

@@ -35,6 +35,8 @@ extern "C" {
 //minimum step size in autofocus, only used when suspect stickiness
 #define MIN_AUTO_STEP 10
 
+int copyFlag = 0;
+
 using namespace std;
 //use same constructors as CSBIGCam, make sure proper Init is called though.
 MyCam::MyCam() : CSBIGCam() { Init(); }
@@ -206,11 +208,12 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		    cerr << "[autoFocus debug]: autoFocus failed to save image" << endl;
 #endif
 		}
-		if (img->SaveImage("/data/etc/current.sbig") != SBFE_NO_ERROR) {
+		if (img->SaveImage("/data/etc/current_bad.sbig") != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif
 		}
+    copyFlag = 1;
 		img->createReturnStruct(&returnStruct);
     rtn_str = CamCommunicator::buildReturn(&returnStruct);
     //remove all newlines and add a single one at the end
