@@ -70,7 +70,7 @@ pthread_cond_t cameraTriggerCond = PTHREAD_COND_INITIALIZER;
 
 //image viewer
 #if USE_IMAGE_VIEWER
-const char* viewerPath = "/data/etc/current.sbig";
+const char* viewerPath = "/data/etc/current_good.sbig";
 bool showBoxes = true;
 #endif
 
@@ -781,7 +781,29 @@ string interpretCommand(string cmd)
       unlock(&imageLock[0], "imageLock", "interpretCommand");
       return sout.str();
     }
-    if (cmd == "OshowBox") {
+    else if (cmd == "Oviewer") { //switch which camera's image is shown by the viewer
+      if (valStr == "" || valStr == " ")
+        return (string)"Error: the command " + cmd + " requires a value";
+      int which;
+      sin >> which;
+      if (which == 0) {
+          if (system("ln -s -f /data/etc/current_good.sbig /data/etc/current_new.sbig") < 0)
+            return (cmd + " unable to create link");
+          system("mv /data/etc/current_new.sbig /data/etc/current.sbig");
+          return (cmd + " successful");
+      } else if (which == 1) {
+          if (system("ln -s -f /data/etc/current_bad.sbig /data/etc/current_new.sbig") < 0)
+            return (cmd + " unable to create link");
+          system("mv /data/etc/current_new.sbig /data/etc/current.sbig");
+          return (cmd + " successful");
+      } else if (which == 2) {
+          if (system("ln -s -f /data/etc/current_ugly.sbig /data/etc/current_new.sbig") < 0)
+            return (cmd + " unable to create link");
+          system("mv /data/etc/current_new.sbig /data/etc/current.sbig");
+          return (cmd + " successful");
+      } else return (string)"Error: " + cmd + " invalid value";
+    }
+    else if (cmd == "OshowBox") {
 #if USE_IMAGE_VIEWER
       if (valStr == "" || valStr == " ")
 	      return (string)"Error: the command " + cmd + " requires a value.";
