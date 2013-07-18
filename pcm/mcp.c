@@ -1120,10 +1120,10 @@ void insertMCEData(unsigned short *RxFrame)
     bi0 = GetBiPhaseAddr("mce_index");
     mce_index_offset = bi0->channel;
 
-    bi0 = GetBiPhaseAddr("arraystats_index");
+    bi0 = GetBiPhaseAddr("bolo_stats_index");
     arraystats_index_offset = bi0->channel;
 
-    bi0 = GetBiPhaseAddr("arraystats_data");
+    bi0 = GetBiPhaseAddr("bolo_stats_mplex");
     arraystats_data_offset = bi0->channel;
 
     bi0 = GetBiPhaseAddr("mce_blob");
