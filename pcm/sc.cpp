@@ -335,8 +335,8 @@ void cameraFields(int which)
 	WriteData(RaAddr[which], (int)(SCra[which]*100*180/M_PI), NIOS_QUEUE);
 	WriteData(DecAddr[which], (int)(SCdec[which]*100*180/M_PI), NIOS_QUEUE);
 	WriteData(RollAddr[which], (int)(SCroll[which]*100*180/M_PI), NIOS_QUEUE);
-	WriteData(AzAddr[which], (int)(SCaz[which]*100*180/M_PI), NIOS_QUEUE);
-	WriteData(ElAddr[which], (int)(SCel[which]*100*180/M_PI), NIOS_QUEUE);
+	WriteData(AzAddr[which], (int)(SCaz[which]*DEG2LI), NIOS_QUEUE);
+	WriteData(ElAddr[which], (int)(SCel[which]*DEG2LI), NIOS_QUEUE);
 	if (sc->numblobs > 0) {
 		WriteData(Blob0XAddr[which],(unsigned int)(sc->x[blobindex[which] * 3 + 0]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
