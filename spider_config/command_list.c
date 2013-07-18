@@ -1035,6 +1035,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_thegood"}
     }
   },
+  {COMMAND(thegood_viewer), "switch video (0=TheGood, 1=TheBad, 2=TheUgly)", GR_SCGOOD, 1,
+    {
+      {"Camera", 0, 2, 'i', ""}
+    }
+  },
   /***************************************/
   /*************** The Bad  *****************/
   {COMMAND(thebad_any), "Execute arbitrary The Bad command", GR_SCBAD, 1,

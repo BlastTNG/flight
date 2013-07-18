@@ -1740,6 +1740,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheGoodCommand(buf);
       CommandData.StarCam[0].moveTol = ivalues[0];
       break;
+    case thegood_viewer:
+      sprintf(buf, "Oviewer=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
+      break;
       /***************************************/
       /********* The Bad Commanding  *************/
     case thebad_any:

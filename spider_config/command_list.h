@@ -156,7 +156,7 @@ enum multiCommand {
   theugly_any,        theugly_settrig_timed,
   theugly_exp_params, theugly_focus_params,
   thegood_bad_pix,    thegood_blob_params,
-  thegood_lens_any,   thegood_lens_move,
+  thegood_lens_any,   thegood_lens_move, thegood_viewer,
   thebad_bad_pix,     thebad_blob_params,
   thebad_lens_any,    thebad_lens_move,
   theugly_bad_pix,    theugly_blob_params,
