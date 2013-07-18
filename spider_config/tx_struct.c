@@ -1095,8 +1095,8 @@ struct ChannelStruct FastChannels[] = {
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
 
   {"mce_index",        'r', LOOP0,  4, 1.0,         0.0,       'u',     U_NONE},
-  {"arraystats_index", 'r', LOOP0,  5, 1.0,         0.0,       'u',     U_NONE},
-  {"arraystats_data",  'r', LOOP0,  6, 1.0,         0.0,       'u',     U_NONE},
+  {"bolo_stats_index", 'r', LOOP0,  5, 1.0,         0.0,       'u',     U_NONE},
+  {"bolo_stats_mplex", 'r', LOOP0,  6, 1.0,         0.0,       'u',     U_NONE},
   {"mce_blob",         'r', LOOP0,  7, 1.0,         0.0,       'u',     U_NONE},
 
   /* Create the correct number of mce channels in the tx struct.  They
