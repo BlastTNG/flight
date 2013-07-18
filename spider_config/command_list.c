@@ -1358,6 +1358,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCA(sa_fb, "SA feeback", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
+  {MCECMD2(bias_tess, "Set all TES biases", GR_MCC, "Bias", 0, 65535, 'i')},
 
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
     GR_MCC | MCECMD | CONFIRM, 5,
@@ -1378,26 +1379,30 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(run_iv_curve), "Acquire an IV curve", GR_MCC | MCECMD, 4,
+  {COMMAND(acq_iv_curve), "Acquire IV curves (lcacq)", GR_MCC | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
+      {"Kick", 0, 1, 'i', "NONE", {noyes_names}},
+      {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start bias", 0, 65535, 'i', "NONE"},
-      {"Step count", 1, 5000, 'i', "NONE"},
-      {"Step size", 1, 200, 'i', "NONE"},
+      {"Last bias", 0, 65535, 'i', "NONE"},
+      {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
+      {"Step wait (s)", 0, 10, 'f', "NONE"},
     }
   },
 
-  {COMMAND(send_tuning), "Send the results of a tuning", GR_MCC | MCECMD, 2,
+  {COMMAND(send_tuning), "Send the experiment.cfg file resulting from a tuning",
+    GR_MCC | MCECMD, 2,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Tuning number", 0, 6535, 'i', "NONE"},
+      {"Tuning number", 0, 65535, 'i', "NONE"},
     }
   },
 
   {COMMAND(use_tuning), "Apply a previous tuning", GR_MCC | MCECMD, 2,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Tuning number", 0, 6535, 'i', "NONE"},
+      {"Tuning number", 0, 65535, 'i', "NONE"},
     }
   },
 

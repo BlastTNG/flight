@@ -64,6 +64,10 @@
  */
 #define SYNOP_TIMEOUT 10000 /* milliseconds */
 
+/* Heater-based kick depths */
+#define KICK_1V  6550
+#define KICK_2V 26200
+
 /* non-volatile memory */
 int mem_dirty;
 struct memory_t memory;
@@ -90,7 +94,9 @@ static int init = 1;
 int tune_first = 0, tune_last = 0;
 
 /* iv curve parameters */
-int iv_start, iv_step, iv_count;
+int iv_start, iv_step, iv_last;
+uint32_t iv_kick;
+double iv_kickwait, iv_wait;
 
 /* reset the array statistics */
 int stat_reset = 1;
@@ -945,11 +951,18 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case send_exptcfg:
         new_blob_type = BLOB_EXPCFG;
         break;
-      case run_iv_curve:
+      case acq_iv_curve:
         goal = op_iv;
-        iv_start = ev->ivalues[1];
-        iv_count = ev->ivalues[2];
-        iv_step = ev->ivalues[3];
+        iv_kick = (ev->ivalues[1] == 1) ? KICK_1V :
+          (ev->ivalues[2] == 2) ? KICK_2V : 0;
+        iv_kickwait = ev->rvalues[2];
+        iv_start = ev->ivalues[3];
+        iv_last = ev->ivalues[4];
+        iv_step = ev->ivalues[5];
+        /* fix sign */
+        if ((iv_last - iv_start) * iv_step < 0)
+          iv_step = -iv_step;
+        iv_wait = ev->rvalues[6];
         break;
       case send_iv_curve:
 #if 0

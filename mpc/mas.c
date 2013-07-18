@@ -770,6 +770,84 @@ static int pop_block(void)
   return 1;
 }
 
+/* set tes biases */
+static int bias_tess(uint32_t bias)
+{
+  /* "tes bias" is "bc2 flux_fb"+16 */
+  return mas_write_range("bc2", "flux_fb", &bias, 16, 16);
+}
+
+/* run an iv curve */
+static int ivcurve(void)
+{
+  char start_arg[30], step_arg[30], count_arg[30], step_wait[30], filename[90],
+       last_arg[30];;
+  const char *argv[] = { MAS_SCRIPT "/ramp_tes_bias", filename, "s", start_arg,
+    step_arg, count_arg, step_wait, step_wait, start_arg, "0", last_arg, NULL };
+
+  sprintf(start_arg, "%i", iv_start);
+  sprintf(last_arg, "%i", iv_last);
+  sprintf(step_arg, "%i", iv_step);
+  sprintf(count_arg, "%i", (iv_last - iv_start) / iv_step);
+  sprintf(step_wait, "%f", iv_wait);
+
+  /* we burn the index number whether-or-not things are successful */
+  sprintf(filename, "/data%c/mce/ivcurves/%04i", data_drive[0] + '0',
+      ++memory.last_iv);
+
+  dt_error = 0;
+  data_tk = dt_idle; /* asynchronise */
+
+  /* kick */
+  if (iv_kick > 0) {
+    uint32_t zero = 0;
+    /* bias to the start */
+    bias_tess(iv_start);
+
+    /* the heater line is bc1 bias+10 */
+    if (mas_write_range("bc1", "bias", &iv_kick, 1, 10)) {
+      bprintf(warning, "IV: Unable to kick!");
+      dt_error = 1;
+      return 1;
+    }
+
+    sleep(2);
+
+    if (mas_write_range("bc1", "bias", &zero, 1, 10)) {
+      bprintf(warning, "IV: Unable to kick!");
+      dt_error = 1;
+      return 1;
+    }
+
+    /* wait */
+    sleep(iv_kickwait);
+  }
+
+  /* do the ramp */
+  int r = exec_and_wait(sched, startup, argv[0], (char**)argv, 0, 1,
+      &kill_special);
+  kill_special = 0;
+
+  if (r == 0) { /* archive it */
+    int d;
+    char basedir[] = "/data#/mce";
+    filename[19] = 0; /* truncate to ".../ivcurves" */
+    argv[0] = "/usr/bin/rsync";
+    argv[1] = "-av";
+    argv[2] = filename;
+    argv[3] = basedir;
+    argv[4] = NULL;
+    for (d = 0; d < 4; ++d) {
+      if (d == data_drive[0])
+        continue; /* this is where we acquired it */
+      basedir[5] = d + '0';
+      exec_and_wait(sched, startup, argv[0], (char**)argv, 1000, 0, NULL);
+    }
+  }
+
+  return 0;
+}
+
 static const char *first_stage_tune[] = {
   "--first-stage=sa_ramp", "--first-stage=sq2_servo",
   "--first-stage=sq1_servo", "--first-stage=sq1_ramp",
@@ -782,35 +860,18 @@ static const char *last_stage_tune[] = {
   "--last-stage=sq1_ramp_tes", "--last-stage=operate"
 };
 
-/* run an iv curve */
-static int ivcurve(void)
-{
-  const char *argv[] = { "sleep", "1000", NULL };
-
-  dt_error = 0;
-  data_tk = dt_idle; /* asynchronise */
-  int r = exec_and_wait(sched, startup, "sleep", (char**)argv, 0, 1,
-      &kill_special);
-  
-  kill_special = 0;
-  state &= ~st_ivcurv;
-
-  return r ? 1 : 0;
-}
-
-  /* run a tuning */
+/* run a tuning */
 static int tune(void)
 {
-  const char *argv[] = { MAS_SCRIPT "/auto_setupt", "--set-directory=0",
+  const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
     first_stage_tune[tune_first], last_stage_tune[tune_last], NULL };
 
   dt_error = 0;
   data_tk = dt_idle; /* asynchronise */
   int r = exec_and_wait(sched, startup, MAS_SCRIPT "/auto_setup", (char**)argv,
-        0, 1, &kill_special);
+      0, 1, &kill_special);
   kill_special = 0;
 
-  bprintf(info, "tuning = %i", r);
   if (r == 0) { /* archive it */
     int d;
     char *dir;
@@ -828,7 +889,7 @@ static int tune(void)
       /* increment tuning */
       memory.last_tune++;
       mem_dirty = 1;
-      
+
       /* copy to all available drives */
       sprintf(tuning_dir, "/data#/mce/tuning/%04i", memory.last_tune);
       argv[0] = "/bin/cp";
@@ -839,7 +900,7 @@ static int tune(void)
       for (d = 0; d < 4; ++d)
         if (slow_dat.df[d]) {
           tuning_dir[5] = '0' + d;
-          exec_and_wait(sched, none, "/bin/cp", (char**)argv, 100, 0, NULL);
+          exec_and_wait(sched, none, argv[0], (char**)argv, 100, 0, NULL);
           bprintf(info, "Archived tuning as %s\n", tuning_dir);
         }
     }

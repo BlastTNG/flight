@@ -266,6 +266,7 @@ int flush_experiment_cfg(void)
     }
 
   send_mceparam = 1;
+  expt_cfg_dirty = 0;
 
   return 0;
 }
