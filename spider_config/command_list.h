@@ -182,7 +182,7 @@ enum multiCommand {
   stop_acq,           mag_cal,           pss_off_cal,       pss_d_cal,
 
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,
-  bias_tess,
+  bias_tess, zero_bias,
 
   /* MCE experimental parameter commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,

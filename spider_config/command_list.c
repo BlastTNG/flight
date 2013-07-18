@@ -163,6 +163,7 @@ const char *const GroupNames[N_GROUPS] = {
 
 /* parameter value lists */
 const char *noyes_names[] = {"no", "yes", NULL};
+const char *kick_names[] = {"none", "1 Volt", "2 Volts", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *tuning_stages[] = {"SA ramp", "SQ2 servo", "SQ1 servo", "SQ1 ramp",
   "SQ1 ramp TES", "Operate", NULL};
@@ -1359,6 +1360,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
   {MCECMD2(bias_tess, "Set all TES biases", GR_MCC, "Bias", 0, 65535, 'i')},
+  {MCECMD1(zero_bias, "Set all biases to zero and disable muxing", GR_MCC)},
 
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
     GR_MCC | MCECMD | CONFIRM, 5,
@@ -1382,7 +1384,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(acq_iv_curve), "Acquire IV curves (lcacq)", GR_MCC | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Kick", 0, 1, 'i', "NONE", {noyes_names}},
+      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Last bias", 0, 65535, 'i', "NONE"},
