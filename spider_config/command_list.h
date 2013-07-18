@@ -173,7 +173,7 @@ enum multiCommand {
   hk_phase_step_cernox, hk_phase_step_ntd, hk_bias_freq,      hk_pump_servo_on,
   hk_mt_bottom_pulse,  hk_sft_lines_pulse, hk_capillary_pulse,
   hk_vcs2_hx_pulse,    hk_vcs1_hx_pulse,   hk_mt_lines_pulse,
-  hk_sft_bottom_pulse,
+  hk_sft_bottom_pulse,hk_fphi_heat_pulse,
   spider_scan,        sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,         el_rel_move,
   hwp_bias_on,        hwp_bias_off,      mce_row_len,       mce_num_rows,

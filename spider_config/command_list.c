@@ -842,6 +842,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
     }
   },
+  {COMMAND(hk_fphi_heat_pulse), "Pulse the high-current focal plane heater",
+      GR_CRYO_HEAT, 2,
+    {
+      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {"Length (# of ~200ms slow frames)", 0, USHRT_MAX, 'i', "1"},
+    }
+  },
   {COMMAND(hk_ssa_heat_on), "Turn on the SSA heater",
       GR_CRYO_HEAT, 1,
     {

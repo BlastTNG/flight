@@ -549,7 +549,10 @@ static void HeatControl()
       //NB: heat switch is normally closed, so logic inverted
       if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
     }
-    if (CommandData.hk[i].fphi_heat) bits[i] |= HK_PWM_FPHI;
+    if (CommandData.hk[i].fphi_heat) {
+      if (CommandData.hk[i].fphi_heat > 0) CommandData.hk[i].fphi_heat--;
+      bits[i] |= HK_PWM_FPHI;
+    }
     if (CommandData.hk[i].ssa_heat) bits[i] |= HK_PWM_SSA;
     if (CommandData.hk[i].htr1_heat) bits[i] |= HK_PWM_HTR1;
     if (CommandData.hk[i].htr2_heat) bits[i] |= HK_PWM_HTR2;

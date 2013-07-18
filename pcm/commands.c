@@ -1507,13 +1507,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case hk_fphi_heat_on:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = 1;
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].fphi_heat = 1;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = -1;
+      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].fphi_heat = -1;
       break;
     case hk_fphi_heat_off:
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = 0;
       else for (i=0; i<HK_MAX; i++) CommandData.hk[i].fphi_heat = 0;
+      break;
+    case hk_fphi_heat_pulse:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = ivalues[1];
+      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].fphi_heat = ivalues[1];
       break;
     case hk_ssa_heat_on:
       CommandData.hk_last = ivalues[0];

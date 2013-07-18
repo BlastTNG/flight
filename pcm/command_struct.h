@@ -389,7 +389,7 @@ struct CommandDataStruct {
   struct {
     bool pump_heat;
     bool heat_switch;
-    bool fphi_heat;
+    int fphi_heat;
     bool ssa_heat;
     bool htr1_heat;
     bool htr2_heat;
