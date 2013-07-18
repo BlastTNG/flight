@@ -1,8 +1,6 @@
 #include "mpc.h"
 #include "mce_frame.h"
-
-#include <stdio.h>
-#include <math.h>
+#include "bolo_stats.h"
 
 /* filter parameters for band-passed data */
 #define FILT_FREQ  5. // center frequency in Hz
@@ -11,28 +9,15 @@
 double filt_coeffa[FILT_LEN]; // denominator coefficients
 double filt_coeffb[FILT_LEN]; // numerator coefficients
 
-/* global statistics */
-uint8_t mean[NUM_ROW * NUM_COL];
-uint8_t sigma[NUM_ROW * NUM_COL];
-uint8_t noise[NUM_ROW * NUM_COL];
-
-/* gains and offsets for statistics */
-#define MEAN_GAIN     7.3865986093514922  // 128/asinh(2**24)
-#define MEAN_OFFSET   128.
-#define RESCALE_MEAN(x)  asinh(x)*MEAN_GAIN + MEAN_OFFSET
-#define SIGMA_GAIN    34.016543691646589  // log10(2**25)/256
-#define SIGMA_OFFSET  0.
-#define RESCALE_SIGMA(x) log10(x)*SIGMA_GAIN + SIGMA_OFFSET
-#define NOISE_GAIN    34.016543691646589  // log10(2**25)/256
-#define NOISE_OFFSET  0.
-#define RESCALE_NOISE(x) log10(x)*NOISE_GAIN + NOISE_OFFSET
-
-/* ring buffers and sums */
-double frame_offset[NUM_ROW * NUM_COL];
+/* buffers */
+uint32_t frame_offset[NUM_ROW * NUM_COL];
 double frame_filt[FB_SIZE][NUM_ROW * NUM_COL];
 double frame_sum[NUM_ROW * NUM_COL];
 double frame_sum2[NUM_ROW * NUM_COL];
 double frame_fsum2[NUM_ROW * NUM_COL];
+
+/* extract data from frame (assumes data mode 10!) */
+#define FRAME_EXTRACT(frm,idx) (double)(frm[idx + MCE_HEADER_SIZE] >> 7)
 
 static void set_filter_coeffs(const double fsamp,const double flow, const double fup)
 {
@@ -42,22 +27,22 @@ static void set_filter_coeffs(const double fsamp,const double flow, const double
   double om02 = oml*omu;
   double om04 = om02*om02;
   double dom = omu - oml;
-  double rt2dom = sqrt(2.0)*dom;
+  double rt2dom = sqrt(2.)*dom;
   double dom2 = dom*dom;
   
   /* filter normalization */
   double norm = 1. + rt2dom + 2.*om02 + dom2 + rt2dom*om02 + om04;
   
-  /* update coefficients */
+  /* update coefficients -- 2-pole butterworth bandpass */
   filt_coeffb[0] = dom2/norm;
-  filt_coeffb[1] = 0.0;
+  filt_coeffb[1] = 0.;
   filt_coeffb[2] = -2.*dom2/norm;
-  filt_coeffb[3] = 0.0;
+  filt_coeffb[3] = 0.;
   filt_coeffb[4] = dom2/norm;
   
-  filt_coeffa[0] = 1.0;
+  filt_coeffa[0] = 1.;
   filt_coeffa[1] = (-2. - rt2dom + rt2dom*om02 + 2.*om04)*2./norm;
-  filt_coeffa[2] = (3. - 2.*om02 - dom2 + 3.*om04)*2/norm;
+  filt_coeffa[2] = (3. - 2.*om02 - dom2 + 3.*om04)*2./norm;
   filt_coeffa[3] = (-2. + rt2dom - rt2dom*om02 + 2.*om04)*2./norm;
   filt_coeffa[4] = (1. - rt2dom - rt2dom*om02 + 2.*om02 + dom2 + om04)/norm;
   
@@ -73,7 +58,7 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
 {
   const struct mas_header *header = (const struct mas_header *)curr_frame;
   
-  int ii, jj, fb_neighbors[FILT_LEN];
+  int ii, jj, fb_idx[FILT_LEN];
   size_t ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
   double datum, datum2, fdatum, dmean, dsigma, dnoise;
   
@@ -86,43 +71,46 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   if (stat_reset == 1) {
     /* recalculate filter coefficients */
     set_filter_coeffs((const double) fsamp,
-		      (const double) (FILT_FREQ*(1.0 - FILT_BW/2.0)),
-		      (const double) (FILT_FREQ*(1 + FILT_BW/2.0)));
+		      (const double) (FILT_FREQ*(1. - FILT_BW/2.)),
+		      (const double) (FILT_FREQ*(1. + FILT_BW/2.)));
     
+    /* reset buffers */
     for (ii = 0; ii < ndata; ii++) {
       frame_sum[ii] = 0;
       frame_sum2[ii] = 0;
       frame_fsum2[ii] = 0;
-      frame_offset[ii] = (double) (curr_frame[ii + MCE_HEADER_SIZE] >> 7);
+      frame_offset[ii] = FRAME_EXTRACT(curr_frame, ii);
       
       for (jj = 0; jj < FB_SIZE; jj++) frame_filt[jj][ii] = 0;
       
-      mean[ii] = MEAN_OFFSET;
-      sigma[ii] = SIGMA_OFFSET;
-      noise[ii] = NOISE_OFFSET;
+      mean[ii] = (uint8_t) MEAN_OFFSET;
+      sigma[ii] = (uint8_t) SIGMA_OFFSET;
+      noise[ii] = (uint8_t) NOISE_OFFSET;
     }
     
     stat_reset = 0;
   }
   
-  fb_neighbors[0] = (fb_top + 1) % FB_SIZE;
+  /* neighboring buffer elements */
+  fb_idx[0] = (fb_top + 1) % FB_SIZE; // oldest element
+  // previous elements for filtering
   for (jj = 1; jj < FILT_LEN; jj++) {
-    fb_neighbors[jj] = (fb_top - jj) % FB_SIZE;
-    if (fb_neighbors[jj] < 0) fb_neighbors[jj] += FB_SIZE;
+    fb_idx[jj] = (fb_top - jj) % FB_SIZE;
+    if (fb_idx[jj] < 0) fb_idx[jj] += FB_SIZE;
   }
   
   /* add new values */
   for (ii = 0; ii < ndata; ii++) {
-    datum = (double) (curr_frame[ii + MCE_HEADER_SIZE] >> 7) - frame_offset[ii];
-    frame_sum[ii] += (double) datum;
-    frame_sum2[ii] += (double) datum * (double) datum;
+    datum = (double) (FRAME_EXTRACT(curr_frame, ii) - frame_offset[ii]);
+    frame_sum[ii] += datum;
+    frame_sum2[ii] += datum * (double) datum;
     
     /* apply filter */
     fdatum = filt_coeffb[0] * datum;
     for (jj = 1; jj < FILT_LEN; jj++) {
-      datum2 = (double) (frame[fb_neighbors[jj]][ii + MCE_HEADER_SIZE] >> 7) - frame_offset[ii];
+      datum2 = (double) (FRAME_EXTRACT(frame[fb_idx[jj]], ii) - frame_offset[ii]);
       fdatum += (filt_coeffb[jj] * datum2 -
-		 filt_coeffa[jj] * frame_filt[fb_neighbors[jj]][ii]);
+		 filt_coeffa[jj] * frame_filt[fb_idx[jj]][ii]);
     }
     fdatum /= filt_coeffa[0];
     frame_fsum2[ii] += fdatum*fdatum;
@@ -131,17 +119,17 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     /* update statistics */
     dmean = frame_sum[ii] / (double)(FB_SIZE);
     mean[ii] = (uint8_t) RESCALE_MEAN(dmean);
-    dsigma = sqrt(frame_sum2[ii] / (double)(FB_SIZE-1) - 
-		  dmean * dmean * (double) FB_SIZE / (double)(FB_SIZE-1));
+    dsigma = sqrt((frame_sum2[ii] - dmean * dmean * (double) FB_SIZE )
+		  / (double)(FB_SIZE-1));
     sigma[ii] = (uint8_t) RESCALE_SIGMA(dsigma);
     dnoise = sqrt(frame_fsum2[ii] / (double)(FB_SIZE-1) / (double)(FILT_BW*FILT_FREQ));
     noise[ii] = (uint8_t) RESCALE_NOISE(dnoise);
     
     /* subtract oldest values from buffers */
-    datum = (frame[fb_neighbors[0]][ii + MCE_HEADER_SIZE] >> 7) - frame_offset[ii];
-    frame_sum[ii] -= (double) datum;
-    frame_sum2[ii] -= (double) datum * datum;
-    fdatum = frame_filt[fb_neighbors[0]][ii];
+    datum = (double) (FRAME_EXTRACT(frame[fb_idx[0]], ii) - frame_offset[ii]);
+    frame_sum[ii] -= datum;
+    frame_sum2[ii] -= datum * datum;
+    fdatum = frame_filt[fb_idx[0]][ii];
     frame_fsum2[ii] -= fdatum * fdatum;
   }
 }
