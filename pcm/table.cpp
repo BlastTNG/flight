@@ -120,8 +120,8 @@ void updateTableSpeed()
 
   //initialization
   if (firsttime) {
-    lastPos = ACSData.enc_table;
-    homing_lastPos = ACSData.enc_table;
+    lastPos = ACSData.enc_table + 40.0;
+    homing_lastPos = ACSData.enc_table + 40.0;
     gettimeofday(&timestruct, NULL);
     lastTime = (double)timestruct.tv_sec + timestruct.tv_usec/1000000.0;
     targVel = 0;
@@ -134,7 +134,7 @@ void updateTableSpeed()
   //find table speed
   gettimeofday(&timestruct, NULL);
   thisTime = (double)timestruct.tv_sec + timestruct.tv_usec/1000000.0;
-  thisPos = ACSData.enc_table;
+  thisPos = ACSData.enc_table + 40.0;
   if (thisTime == lastTime) {
     bprintf(err, "System: time not updating");
     return;
@@ -226,7 +226,7 @@ void updateTableSpeed()
 		  targVel = -3.0;
 		  last_direction = 0;
 	  }
-	  homing_thisPos = ACSData.enc_table;
+	  homing_thisPos = ACSData.enc_table + 40.0;
 	  if ((fabs(homing_thisPos - homing_lastPos)) > 10.0 && (fabs(homing_thisPos - homing_lastPos) < 350.0)) {
 //		  bprintf(info,"Going home");
 		  targVel = 0.0;
