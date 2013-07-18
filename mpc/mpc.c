@@ -167,6 +167,9 @@ int32_t box_temp = 0;
 /* DV timing parameters */
 int num_rows = -1, row_len = -1, data_rate = -1;
 
+/* bias_tess value */
+int bias_tess_val;
+
 static void set_data_mode_bits(int i, int both, const char *dmb)
 {
   if (data_modes[i][0].first_bit != dmb[0] ||
@@ -977,6 +980,13 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case send_tuning:
         new_blob_type = BLOB_TUNECFG;
         blob_data[0] = ev->ivalues[1];
+        break;
+      case bias_tess:
+        bias_tess_val = ev->ivalues[1];
+        task_special = TSPEC_BIAS_TESS;
+        break;
+      case zero_bias:
+        task_special = TSPEC_ZERO_BIAS;
         break;
 
       default:

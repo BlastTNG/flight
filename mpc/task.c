@@ -26,7 +26,7 @@ static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
 int dt_error = 0;
 int comms_lost = 0;
-int leech_veto = 0;
+int task_special = TSPEC_IDLE;
 /* kill switch */
 int kill_special = 0;
 static int cl_count = 0;
@@ -250,6 +250,16 @@ void *task(void *dummy)
     } else if (req_dm != cur_dm && state & st_acqcnf) {
       /* change of data mode while acquiring -- restart acq */
       task_reset_mce();
+    } else if (task_special) { /* handle priority tasks */
+      switch (task_special) {
+        case TSPEC_BIAS_TESS:
+          dt_wait(dt_biastess);
+          break;
+        case TSPEC_ZERO_BIAS:
+          dt_wait(dt_zerobias);
+          break;
+      }
+      task_special = 0;
     } else if (start_tk != st_idle) { /* handle start task requests */
       switch (start_tk) {
         case st_idle:

@@ -770,6 +770,63 @@ static int pop_block(void)
   return 1;
 }
 
+/* zero biases and shut down muxing */
+static void zero_bias(void)
+{
+  uint32_t one = 1;
+  uint32_t zeroes[33] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  uint32_t number[8] = {-8192, -8192, -8192, -8192, -8192, -8192, -8192, -8192};
+
+  /* these are row-wise */
+  write_param("ac", "on_bias", 0, zeroes, 33);
+  write_param("ac", "off_bias", 0, zeroes, 33);
+  write_param("ac", "enbl_mux", 0, &one, 1);
+  
+  /* these are column-wise */
+  write_param("sq2", "fb", 0, zeroes, 16);
+  write_param("sq2", "bias", 0, zeroes, 16);
+  write_param("sa", "fb", 0, zeroes, 16);
+  write_param("sa", "bias", 0, zeroes, 16);
+  write_param("sa", "offset", 0, zeroes, 16);
+  write_param("tes", "bias", 0, zeroes, 16);
+
+  /* wait and then turn off muxing */
+  usleep(200000);
+  write_param("ac", "enbl_mux", 0, zeroes, 1);
+
+  /* adc offset per pixel */
+  write_param("rc1", "adc_offset0", 0, zeroes, 33);
+  write_param("rc1", "adc_offset1", 0, zeroes, 33);
+  write_param("rc1", "adc_offset2", 0, zeroes, 33);
+  write_param("rc1", "adc_offset3", 0, zeroes, 33);
+  write_param("rc1", "adc_offset4", 0, zeroes, 33);
+  write_param("rc1", "adc_offset5", 0, zeroes, 33);
+  write_param("rc1", "adc_offset6", 0, zeroes, 33);
+  write_param("rc1", "adc_offset7", 0, zeroes, 33);
+  write_param("rc2", "adc_offset0", 0, zeroes, 33);
+  write_param("rc2", "adc_offset1", 0, zeroes, 33);
+  write_param("rc2", "adc_offset2", 0, zeroes, 33);
+  write_param("rc2", "adc_offset3", 0, zeroes, 33);
+  write_param("rc2", "adc_offset4", 0, zeroes, 33);
+  write_param("rc2", "adc_offset5", 0, zeroes, 33);
+  write_param("rc2", "adc_offset6", 0, zeroes, 33);
+  write_param("rc2", "adc_offset7", 0, zeroes, 33);
+
+  /* stop the servo */
+  write_param("rc1", "servo_mode", 0, zeroes, 8);
+  write_param("rc2", "servo_mode", 0, zeroes, 8);
+
+  /* sq1 fb to 0V = -8192 */
+  write_param("rc1", "fb_const", 0, number, 8);
+  write_param("rc2", "fb_const", 0, number, 8);
+  mas_write_block("rca", "flx_lp_init", &one, 1);
+
+  /* stop acq */
+  if (goal == op_acq)
+    goal = op_ready;
+}
+
 /* set tes biases */
 static int bias_tess(uint32_t bias)
 {
@@ -1055,6 +1112,14 @@ void *mas_data(void *dummy)
       case dt_ivcurve:
         ivcurve();
         goal = op_acq; /* back to acquisition */
+        break;
+      case dt_biastess:
+        bias_tess(bias_tess_val);
+        data_tk = dt_idle;
+        break;
+      case dt_zerobias:
+        zero_bias();
+        data_tk = dt_idle;
         break;
     }
 

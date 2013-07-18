@@ -47,6 +47,12 @@ struct memory_t {
 extern struct memory_t memory;
 extern int mem_dirty;
 
+/* exceptional tasks */
+#define TSPEC_IDLE      0
+#define TSPEC_BIAS_TESS 1
+#define TSPEC_ZERO_BIAS 2
+extern int task_special;
+
 /* MPC globals */
 extern int nmce;
 extern int mas_get_temp;
@@ -59,13 +65,11 @@ extern int command_veto;
 extern int send_mceparam;
 extern int divisor;
 extern int veto;
+extern int bias_tess_val;
 extern int kill_special;
 extern int tune_first;
 extern int tune_last;
 extern int data_drive[3];
-extern int iv_step, iv_start, iv_last;
-extern uint32_t iv_kick;
-extern double iv_kickwait, iv_wait;
 extern char array_id[100];
 extern uint16_t bset_num;
 extern struct mpc_slow_data slow_dat;
@@ -153,6 +157,11 @@ struct block_q {
 extern struct block_q blockq[BLOCKQ_SIZE];
 extern int blockq_head, blockq_tail;
 
+/* iv curve acq */
+extern int iv_step, iv_start, iv_last;
+extern uint32_t iv_kick;
+extern double iv_kickwait, iv_wait;
+
 /* high-level tasks */
 extern enum status start_tk;
 extern enum status  stop_tk;
@@ -176,12 +185,12 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
-  dt_ivcurve, dt_stop,
+  dt_ivcurve, dt_stop, dt_biastess, dt_zerobias,
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
   "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
-"ivcurve", "stop",
+"ivcurve", "stop", "biastess", "zerobias"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;
