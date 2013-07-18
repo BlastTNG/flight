@@ -88,16 +88,16 @@ SPIDER_ONLY=1
 
 EXPT_HEADERS = command_list.h mce_blob.h mce_counts.h mpc_proto.h tes.h
 SHARED_HEADERS = blast.h command_common.h mcp_sched.h mputs.h sys.h udp.h
-LOCAL_HEADERS = expcfg_list.h mpc.h mce_frame.h mce_struct.h
+LOCAL_HEADERS = expcfg_list.h mpc.h mce_frame.h mce_struct.h bolo_stats.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
-LOCAL_OBJS = blob.o cfg.o data_mode.o expcfg_list.o frame_stats.o frame.o \
+LOCAL_OBJS = blob.o cfg.o data_mode.o expcfg_list.o bolo_stats.o frame.o \
 						 mas.o meta.o mce_struct.o mpc.o task.o
 
 # We don't acutally need this, but it causes Makefile.shared to require
 # spider_etc, which is necessary to build this file.
-ETC_DATA=format.mce_mplex
+ETC_DATA=format.mce_mplex format.bolo_stats
 
 ########################################################
 # Run the sanity checks and prepare the build system
@@ -111,7 +111,7 @@ include ../common/Makefile.shared
 
 .PHONY: all
 
-all:: mpc
+all:: mpc make_stats_etc
 
 FORCE:
 
@@ -121,7 +121,7 @@ mce_status.g: FORCE
 		echo "mce_status.g is unchanged."; \
 		rm -f mce_status.g.new; \
 	else \
-		echo "regenrated mce_status.g"; \
+		echo "regenerated mce_status.g"; \
 		mv -f mce_status.g.new mce_status.g; \
 	fi
 
@@ -132,7 +132,7 @@ mce_counts.stamp: mce_counts.h.new
 			echo "mce_counts.h is unchanged."; \
 			rm -f mce_counts.h.new; \
 		else \
-			echo "regenrated mce_counts.h"; \
+			echo "regenerated mce_counts.h"; \
 			mv -f mce_counts.h.new ../spider_config/mce_counts.h; \
 		fi; \
 	fi
@@ -160,12 +160,19 @@ mce_struct.stamp: mce_status.g make_mce_struct expcfg_list.c
 
 clean:
 	rm -f mpc
+	rm -f make_stats_etc
 	rm -f *.o
 	rm -f mce_status.g mce_status.g.stamp
 	rm -f ${MCE_STATUS_STUFF}
 
 mpc: $(OBJS)
 	$(CC) $(LDFLGS) $(CFLAGS) $(OBJS) $(LDLIBS) -o mpc
+
+make_stats_etc: make_stats_etc.o
+	$(CC) $(LDFLGS) $(CFLAGS) make_stats_etc.o $(LDLIBS) -o $@
+
+format.bolo_stats: make_stats_etc
+	./make_stats_etc
 
 ########################################################
 # Install Stuff

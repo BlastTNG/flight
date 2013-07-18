@@ -45,7 +45,7 @@ struct mas_header {
   uint32_t status, cc_frameno, row_len, num_rows_rep, data_rate, arz_count,
            header_vers, ramp_val;
   uint16_t ramp_card, ramp_param;
-  uint32_t num_rows, syncno, runid, user_word, errno;
+  uint32_t num_rows, syncno, runid, user_word, errno1;
   uint32_t fpga_temp[9], errno2;
   uint32_t card_temp[9], errno3;
   uint32_t reserved[7], errno4;

@@ -968,11 +968,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         iv_wait = ev->rvalues[6];
         break;
       case send_iv_curve:
-#if 0
         new_blob_type = BLOB_IV;
         blob_data[0] = ev->ivalues[1];
         blob_data[1] = ev->ivalues[2];
-#endif
         break;
       case use_tuning:
         cfg_apply_tuning(ev->ivalues[1]);

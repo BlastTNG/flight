@@ -176,6 +176,8 @@ extern int new_blob_type;
 extern char blob_source[1024];
 extern int blob_data[N_BLOB_DATA];
 extern uint16_t blob[MCE_BLOB_MAX];
+extern int iv_blob_start;
+extern int iv_blob_count;
 void *blobber(void *dummy);
 
 /* task handler */
