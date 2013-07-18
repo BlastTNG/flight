@@ -780,9 +780,9 @@ static int bias_tess(uint32_t bias)
 /* run an iv curve */
 static int ivcurve(void)
 {
-  char start_arg[30], step_arg[30], count_arg[30], step_wait[30], filename[90],
-       last_arg[30];;
-  const char *argv[] = { MAS_SCRIPT "/ramp_tes_bias", filename, "s", start_arg,
+  char start_arg[30], step_arg[30], count_arg[30], step_wait[30],
+       filename1[90], filename2[90], filename3[90], last_arg[30];
+  const char *argv[] = { MAS_SCRIPT "/ramp_tes_bias", filename1, "s", start_arg,
     step_arg, count_arg, step_wait, step_wait, start_arg, "0", last_arg, NULL };
 
   sprintf(start_arg, "%i", iv_start);
@@ -792,8 +792,8 @@ static int ivcurve(void)
   sprintf(step_wait, "%f", iv_wait);
 
   /* we burn the index number whether-or-not things are successful */
-  sprintf(filename, "/data%c/mce/ivcurves/%04i", data_drive[0] + '0',
-      ++memory.last_iv);
+  sprintf(filename1, "iv_%04i", ++memory.last_iv);
+  mem_dirty = 1;
 
   dt_error = 0;
   data_tk = dt_idle; /* asynchronise */
@@ -830,20 +830,27 @@ static int ivcurve(void)
 
   if (r == 0) { /* archive it */
     int d;
-    char basedir[] = "/data#/mce";
-    filename[19] = 0; /* truncate to ".../ivcurves" */
-    argv[0] = "/usr/bin/rsync";
-    argv[1] = "-av";
-    argv[2] = filename;
-    argv[3] = basedir;
-    argv[4] = NULL;
-    for (d = 0; d < 4; ++d) {
-      if (d == data_drive[0])
-        continue; /* this is where we acquired it */
-      basedir[5] = d + '0';
-      exec_and_wait(sched, startup, argv[0], (char**)argv, 1000, 0, NULL);
-    }
+    char basedir[] = "/data#/mce/ivcurves";
+    sprintf(filename1, "/data%c/mce/current_data/iv_%04i", data_drive[0] + '0',
+        memory.last_iv);
+    sprintf(filename2, "/data%c/mce/current_data/iv_%04i.run",
+        data_drive[0] + '0', memory.last_iv);
+    sprintf(filename3, "/data%c/mce/current_data/iv_%04i.bias",
+        data_drive[0] + '0', memory.last_iv);
+    argv[0] = "/bin/cp";
+    argv[1] = filename1;
+    argv[2] = filename2;
+    argv[3] = filename3;
+    argv[4] = basedir;
+    argv[5] = NULL;
+    for (d = 0; d < 4; ++d)
+      if (slow_dat.df[d]) {
+        basedir[5] = d + '0';
+        exec_and_wait(sched, startup, argv[0], (char**)argv, 100, 0, NULL);
+        bprintf(info, "Archived tuning as %s/iv_%04i", basedir, memory.last_iv);
+      }
   }
+  state &= ~st_ivcurv;
 
   return 0;
 }
@@ -1035,8 +1042,8 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_autosetup:
-        if (!tune())
-          goal = op_acq;
+        tune();
+        goal = op_acq;
         break;
       case dt_delacq:
         if (acq)
@@ -1046,8 +1053,8 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_ivcurve:
-        if (!ivcurve())
-          goal = op_acq; /* back to acquisition */
+        ivcurve();
+        goal = op_acq; /* back to acquisition */
         break;
     }
 

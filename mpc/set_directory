@@ -34,7 +34,7 @@ fi
 
 today=`date +%Y%m%d`
 if [ ! -e $today ]; then
-  ln -s current_data $today
+  ln -sf current_data $today
 fi
 
 # Determine array name and names of config files

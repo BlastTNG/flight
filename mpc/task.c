@@ -327,18 +327,16 @@ void *task(void *dummy)
           state |= st_tuning;
           if (dt_wait(dt_autosetup)) {
             comms_lost = 1; /* hmm... */
-          } else {
-            start_tk = st_idle;
           }
+          start_tk = st_idle;
           break;
         case st_ivcurv:
           /* iv curve */
           state |= st_ivcurv;
           if (dt_wait(dt_ivcurve)) {
             comms_lost = 1; /* hmm... */
-          } else {
-            start_tk = st_idle;
           }
+          start_tk = st_idle;
           break;
       }
     } else if (stop_tk != st_idle) { /* handle stop task requests */
