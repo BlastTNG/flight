@@ -1016,10 +1016,8 @@ void Pointing(void)
     if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
       if (using_sip_gps != 1)
         bprintf(info, "Pointing: Using SIP for positional data");
-      //PointingData[point_index].lat = SIPData.GPSpos.lat;
-      PointingData[point_index].lat = -77.85;
-      //PointingData[point_index].lon = SIPData.GPSpos.lon;
-      PointingData[point_index].lon = -166.67;
+      PointingData[point_index].lat = SIPData.GPSpos.lat;
+      PointingData[point_index].lon = SIPData.GPSpos.lon;
       PointingData[point_index].alt = SIPData.GPSpos.alt;
       using_sip_gps = 1;
     }
