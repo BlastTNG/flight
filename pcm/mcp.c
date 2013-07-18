@@ -291,7 +291,7 @@ static void WatchMCC()
   static int framecount = 0;
   static int reboottimer[6] = {0, 0, 0, 0, 0, 0};
  
-  timeout = (int)(100.0*(ACSData.bbc_rate/FAST_PER_SLOW));
+  timeout = (int)(10.0*(ACSData.bbc_rate/FAST_PER_SLOW));
 
   timeout = (timeout > 0) ? timeout : 25;
 
