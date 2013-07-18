@@ -1176,7 +1176,7 @@ int main(void)
   /* compose array id */
   if (nmce == -1) {
     bputs(warning, "Using 'default' configuration");
-    nmce = 1; /* be X5 */
+    nmce = 4; /* be X5 */
     strcpy(array_id, "default");
   } else 
     array_id[1] = '1' + nmce;

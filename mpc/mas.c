@@ -460,7 +460,7 @@ static int dump_runfile(FILE *stream)
   fprintf(stream, "<FRAMEACQ>\n"
       "  <RUNFILE_VERSION> 2\n"
       "  <MAS_VERSION> " MAS_VERSION "\n"
-      "  <RC> rcs\n"
+      "  <RC> 1 2\n"
       "  <DATA_FILENAME> mpc_%li\n"
       "  <DATA_FRAMEACQ> %li\n"
       "  <CTIME> %li\n"

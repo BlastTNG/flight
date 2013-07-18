@@ -179,7 +179,7 @@ format.bolo_stats: make_stats_etc
 #
 
 install: mpc mpc_inf_loop
-	install -m 744 rc.local /etc
+	install -m 744 rc.local /etc || true
 	install -d /data/mas/bin
 	install -m 755 mpc mpc_inf_loop /data/mas/bin
 	install -d /data/mas/etc
