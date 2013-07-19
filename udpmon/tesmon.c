@@ -85,18 +85,19 @@ int main(int argc, const char **argv)
     return 1;
 
   /* service loop */
-  int i, last_no = -1;
+  int i, last_no[6] = {-1, -1, -1, -1, -1, -1};
   while (!done) {
     n = udp_recv(sock, 0, peer, &remport, 65536, data);
     if (n > 3 && data[2] == 'T') {
+      int mce = data[3];
       int nf = *(int16_t*)(data + 6);
       for (i = 0; i < nf; ++i) {
         int this_no = *(int32_t*)(data + 8 + i * sizeof(uint32_t));
-        if (last_no != -1 && this_no - 1 != last_no)
-          printf("%i -> %i\n", last_no, this_no);
-        last_no = this_no;
+        if (last_no[mce] != -1 && this_no - 1 != last_no[mce])
+          printf("%i -> %i\n", last_no[mce], this_no);
+        last_no[mce] = this_no;
         if ((this_no % 1000) == 0)
-          printf("[%i]\n", this_no);
+          printf("[X%i %i]\n", mce + 1, this_no);
       }
     }
   }
