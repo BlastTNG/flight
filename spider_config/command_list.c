@@ -163,6 +163,7 @@ const char *const GroupNames[N_GROUPS] = {
 
 /* parameter value lists */
 const char *noyes_names[] = {"no", "yes", NULL};
+const char *rc_names[] = {"RC1", "RC2", NULL};
 const char *kick_names[] = {"none", "1 Volt", "2 Volts", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *tuning_stages[] = {"SA ramp", "SQ2 servo", "SQ1 servo", "SQ1 ramp",
@@ -1371,8 +1372,25 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCA(sa_fb, "SA feeback", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
-  {MCECMD2(bias_tess, "Set all TES biases", GR_MCC, "Bias", 0, 65535, 'i')},
-  {MCECMD1(zero_bias, "Set all biases to zero and disable muxing", GR_MCC)},
+  {MCECMD2(bias_tess_all, "Set all TES biases", GR_MCC, "Bias", 0, 65535, 'i')},
+
+  {COMMAND(bias_tess), "Set TES biases", GR_MCC | MCECMD, 10,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
+      {"Column 0", 0, 65535, 'i', "NONE"},
+      {"Column 1", 0, 65535, 'i', "NONE"},
+      {"Column 2", 0, 65535, 'i', "NONE"},
+      {"Column 3", 0, 65535, 'i', "NONE"},
+      {"Column 4", 0, 65535, 'i', "NONE"},
+      {"Column 5", 0, 65535, 'i', "NONE"},
+      {"Column 6", 0, 65535, 'i', "NONE"},
+      {"Column 7", 0, 65535, 'i', "NONE"}
+    }
+  },
+
+  {MCECMD1(stop_mce, "Set all squid and TES biases to zero, "
+      "disable muxing, and stop data acquisition", GR_MCC)},
 
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
     GR_MCC | MCECMD | CONFIRM, 5,

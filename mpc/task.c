@@ -255,8 +255,8 @@ void *task(void *dummy)
         case TSPEC_BIAS_TESS:
           dt_wait(dt_biastess);
           break;
-        case TSPEC_ZERO_BIAS:
-          dt_wait(dt_zerobias);
+        case TSPEC_STOP_MCE:
+          dt_wait(dt_stopmce);
           break;
       }
       task_special = 0;
@@ -334,6 +334,7 @@ void *task(void *dummy)
           break;
         case st_tuning:
           /* auto_setup */
+          kill_special = 0;
           state |= st_tuning;
           if (dt_wait(dt_autosetup)) {
             comms_lost = 1; /* hmm... */
@@ -342,6 +343,7 @@ void *task(void *dummy)
           break;
         case st_ivcurv:
           /* iv curve */
+          kill_special = 0;
           state |= st_ivcurv;
           if (dt_wait(dt_ivcurve)) {
             comms_lost = 1; /* hmm... */

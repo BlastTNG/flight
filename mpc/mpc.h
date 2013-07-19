@@ -50,7 +50,7 @@ extern int mem_dirty;
 /* exceptional tasks */
 #define TSPEC_IDLE      0
 #define TSPEC_BIAS_TESS 1
-#define TSPEC_ZERO_BIAS 2
+#define TSPEC_STOP_MCE  2
 extern int task_special;
 
 /* MPC globals */
@@ -65,7 +65,8 @@ extern int command_veto;
 extern int send_mceparam;
 extern int divisor;
 extern int veto;
-extern int bias_tess_val;
+extern uint32_t bias_tess_val[8];
+extern int bias_tess_card;
 extern int kill_special;
 extern int tune_first;
 extern int tune_last;
@@ -187,12 +188,12 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
-  dt_ivcurve, dt_stop, dt_biastess, dt_zerobias,
+  dt_ivcurve, dt_stop, dt_biastess, dt_stopmce,
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
   "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
-"ivcurve", "stop", "biastess", "zerobias"
+"ivcurve", "stop", "biastess", "stopmce"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

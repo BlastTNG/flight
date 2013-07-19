@@ -167,8 +167,9 @@ int32_t box_temp = 0;
 /* DV timing parameters */
 int num_rows = -1, row_len = -1, data_rate = -1;
 
-/* bias_tess value */
-int bias_tess_val;
+/* bias_tess values */
+uint32_t bias_tess_val[8];
+int bias_tess_card;
 
 static void set_data_mode_bits(int i, int both, const char *dmb)
 {
@@ -980,11 +981,30 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         blob_data[0] = ev->ivalues[1];
         break;
       case bias_tess:
-        bias_tess_val = ev->ivalues[1];
+        bias_tess_card = (1U << ev->ivalues[1]);
+        bias_tess_val[0] = ev->ivalues[2];
+        bias_tess_val[1] = ev->ivalues[3];
+        bias_tess_val[2] = ev->ivalues[4];
+        bias_tess_val[3] = ev->ivalues[5];
+        bias_tess_val[4] = ev->ivalues[6];
+        bias_tess_val[5] = ev->ivalues[7];
+        bias_tess_val[6] = ev->ivalues[8];
+        bias_tess_val[7] = ev->ivalues[9];
+        task_special = TSPEC_BIAS_TESS;
+      case bias_tess_all:
+        bias_tess_card = 3;
+        bias_tess_val[0] = ev->ivalues[1];
+        bias_tess_val[1] = ev->ivalues[1];
+        bias_tess_val[2] = ev->ivalues[1];
+        bias_tess_val[3] = ev->ivalues[1];
+        bias_tess_val[4] = ev->ivalues[1];
+        bias_tess_val[5] = ev->ivalues[1];
+        bias_tess_val[6] = ev->ivalues[1];
+        bias_tess_val[7] = ev->ivalues[1];
         task_special = TSPEC_BIAS_TESS;
         break;
-      case zero_bias:
-        task_special = TSPEC_ZERO_BIAS;
+      case stop_mce:
+        task_special = TSPEC_STOP_MCE;
         break;
 
       default:

@@ -739,20 +739,6 @@ static int set_directory(void)
   return 0;
 }
 
-void crash_stop(int sig)
-{
-  terminate = 1;
-  bprintf(err, "Crash stop.");
-  /* reset mce on exit */
-  if (mas) {
-    mcecmd_hardware_reset(mas);
-    mcecmd_interface_reset(mas);
-    mcecmd_hardware_reset(mas);
-  }
-  signal(sig, SIG_DFL);
-  raise(sig);
-}
-
 /* returns non-zero if something was popped */
 static int pop_block(void)
 {
@@ -771,7 +757,7 @@ static int pop_block(void)
 }
 
 /* zero biases and shut down muxing */
-static void zero_bias(void)
+static void stop_mce(void)
 {
   uint32_t one = 1;
   uint32_t zeroes[33] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -823,15 +809,19 @@ static void zero_bias(void)
   mas_write_block("rca", "flx_lp_init", &one, 1);
 
   /* stop acq */
+  kill_special = 1;
   if (goal == op_acq)
     goal = op_ready;
 }
 
 /* set tes biases */
-static int bias_tess(uint32_t bias)
+static void bias_tess(void)
 {
   /* "tes bias" is "bc2 flux_fb"+16 */
-  return mas_write_range("bc2", "flux_fb", &bias, 16, 16);
+  if (bias_tess_card & 0x1)
+    mas_write_range("bc2", "flux_fb", bias_tess_val, 8, 16);
+  if (bias_tess_card & 0x2)
+    mas_write_range("bc2", "flux_fb", bias_tess_val, 8, 24);
 }
 
 /* run an iv curve */
@@ -859,7 +849,16 @@ static int ivcurve(void)
   if (iv_kick > 0) {
     uint32_t zero = 0;
     /* bias to the start */
-    bias_tess(iv_start);
+    bias_tess_card = 3;
+    bias_tess_val[0] = iv_start;
+    bias_tess_val[1] = iv_start;
+    bias_tess_val[2] = iv_start;
+    bias_tess_val[3] = iv_start;
+    bias_tess_val[4] = iv_start;
+    bias_tess_val[5] = iv_start;
+    bias_tess_val[6] = iv_start;
+    bias_tess_val[7] = iv_start;
+    bias_tess();
 
     /* the heater line is bc1 bias+10 */
     if (mas_write_range("bc1", "bias", &iv_kick, 1, 10)) {
@@ -994,6 +993,19 @@ static int stopacq(void)
   return e ? 1 : 0;
 }
 
+void crash_stop(int sig)
+{
+  terminate = 1;
+  bprintf(err, "Crash stop.");
+  /* stop acq and zero bias */
+  if (mas) {
+    stopacq();
+    stop_mce();
+  }
+  signal(sig, SIG_DFL);
+  raise(sig);
+}
+
 void *mas_data(void *dummy)
 {
   int ret;
@@ -1114,11 +1126,11 @@ void *mas_data(void *dummy)
         goal = op_acq; /* back to acquisition */
         break;
       case dt_biastess:
-        bias_tess(bias_tess_val);
+        bias_tess();
         data_tk = dt_idle;
         break;
-      case dt_zerobias:
-        zero_bias();
+      case dt_stopmce:
+        stop_mce();
         data_tk = dt_idle;
         break;
     }
