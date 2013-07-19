@@ -444,7 +444,7 @@ int mpc_decompose_command(struct ScheduleEvent *ev, int mce, size_t len,
 
   /* check command type and command list revision */
   memset(ev, 0, sizeof(*ev));
-  if (*ptr != 'm' && *ptr != 's') {
+  if (*ptr < 0 || *ptr == 7 || *ptr > 8) {
     bprintf(err, "Dropping Command packet with bad type 0x%x",
         (unsigned char)*ptr);
     return -1;
