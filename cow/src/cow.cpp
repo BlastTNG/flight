@@ -1319,8 +1319,8 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   numframes = 4;
   dir = 1;
 
-  strcpy(tmp, "Command Operations Window " VERSION " @");
-  strcat(tmp, blastcmd_host.toStdString().c_str());
+  sprintf(tmp, "Command Operations Window " VERSION " @%s %s",
+      blastcmd_host.toStdString().c_str(), client_command_list_serial);
 
   setWindowTitle(tmp);
 
