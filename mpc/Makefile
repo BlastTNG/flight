@@ -195,5 +195,5 @@ install-all: install
 		ssh x$$x.spider /data/mas/bin/replicate; \
 		fi; done
 
-restart: install-all
+mpcrestart: install-all
 	for x in 1 2 3 4 5 6; do ssh x$$x.spider killall mpc; done
