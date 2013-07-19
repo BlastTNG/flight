@@ -1284,7 +1284,7 @@ int main(void)
             break;
           }
           /* execute, if it's for us */
-          if (target == 0 || target == nmce)
+          if (target == 0 || target == 1 + nmce)
             do_ev(&ev, peer, port);
           break;
         case 'F': /* field set packet */

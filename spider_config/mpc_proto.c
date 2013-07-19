@@ -467,7 +467,7 @@ int mpc_decompose_command(struct ScheduleEvent *ev, int mce, size_t len,
   ptr += 2;
 
   /* no poing in decoding the rest of this if we don't have to */
-  if (target && target != mce) {
+  if (target && target != 1 + mce) {
     bprintf(info, "Ignoring command for MCE%i", target);
     return target;
   }
