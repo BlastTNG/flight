@@ -72,7 +72,7 @@ void set_bset(const struct bset *local_set, int num)
 int read_bset(int i, struct bset *set)
 {
   struct bset new_set = { .n = -1 };
-  int lineno = 0, c = 0;
+  int lineno = 1, c = 0;
   FILE *stream;
   char line[1024];
   char name[sizeof(SET_DIR) + sizeof(".bset") + 5];
@@ -108,7 +108,7 @@ int read_bset(int i, struct bset *set)
       char *endptr;
       new_set.n = strtol(line, &endptr, 10);
       /* check for trailing garbage and/or crazy numbers */
-      if (*endptr != '\n' || new_set.n <= 0 || new_set.n >= MAX_BSET) {
+      if (*endptr != '\n' || new_set.n <= 0) {
         bprintf(err, "Set: Error reading BSET%03i: bad count on line %i", i,
             lineno);
         goto LOAD_BSET_ERROR;
@@ -127,17 +127,16 @@ int read_bset(int i, struct bset *set)
       /* parse "x#c##r##\n" */
       if (line[0] != 'x' || line[2] != 'r' || line[5] != 'c' || line[8] != '\n')
       {
-        bprintf(err, "Set: Bad bolometer number on line %i of BSET%03i",
-            lineno, i);
+        bprintf(err, "Set: Bad syntax line %i of BSET%03i", lineno, i);
         goto LOAD_BSET_ERROR;
       }
+
       /* lame number parsing.
        * yes ",m" produces the same number as "21" ... DON'T DO THAT */
-
-      mce = line[1] - '0' - 1;
+      mce = line[1] - '1';
       new_set.v[c] = TESNumber(mce,
-          (line[3] - '0') * 10 + line[4] - '0' - 1,
-          (line[6] - '0') * 10 + line[7] - '0' - 1);
+          (line[3] - '0') * 10 + line[4] - '0',
+          (line[6] - '0') * 10 + line[7] - '0');
 
       if (new_set.v[c] < 0) {
         bprintf(err, "Set: Bad bolometer number on line %i of BSET%03i",
