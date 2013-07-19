@@ -129,7 +129,7 @@ enum singleCommand {
   mcc4_on,           mcc4_off,          mcc4_cycle,
   mcc5_on,           mcc5_off,          mcc5_cycle,
   mcc6_on,           mcc6_off,          mcc6_cycle,
-  mpc_ping,          get_superslow,
+  get_superslow,
   mcc_wdog_enable,   mcc_wdog_disable, 
 
   /* DON'T PUT ANYTHING BELOW THIS */
@@ -182,9 +182,10 @@ enum multiCommand {
   stop_acq,           mag_cal,           pss_off_cal,       pss_d_cal,
 
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,
-  bias_tess_all, bias_tess, stop_mce,
+  bias_tess_all, bias_tess, stop_mce, tile_heater_on, tile_heater_off,
+  tile_heater_kick, servo_reset,
 
-  /* MCE experimental parameter commands */
+  /* MCE experiment.cfg commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,
   sa_ramp_bias_off, sa_ramp_flux, sa_ramp_bias, sq2_tuning_row,
   sq2_servo_gain, sq1_servo_gain, sq1_servo_bias_on, sq1_servo_bias_off,

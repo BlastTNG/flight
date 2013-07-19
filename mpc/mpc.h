@@ -153,7 +153,7 @@ enum modes { op_init = 0, op_ready, op_tune, op_iv, op_acq };
 struct block_q {
   const char *c, *p;
   uint32_t d[41];
-  int n, o;
+  int n, o, raw;
 };
 extern struct block_q blockq[BLOCKQ_SIZE];
 extern int blockq_head, blockq_tail;

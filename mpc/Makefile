@@ -178,18 +178,21 @@ format.bolo_stats: make_stats_etc
 # Install Stuff
 #
 
+MAS_BIN_STUFF=mpc mpc_inf_loop replicate
 install: mpc mpc_inf_loop
 	install -m 744 rc.local /etc || true
 	install -d /data/mas/bin
-	install -m 755 mpc mpc_inf_loop /data/mas/bin
-	install -d /data/mas/etc
+	install -m 755 ${MAS_BIN_STUFF} /data/mas/bin
 	install -m 755 set_directory /data/mas/mce_script/script
-	for d in `seq 1 3`; do \
-		if [ -d /data$$d/mas ]; then \
-		rsync -avP --delete-during /data0/mas /data$$d; \
-		else \
-		echo "WARNING: can't find directory /data$$d/mas"; \
+	/data/mas/bin/replicate
+
+install-all: install
+	for x in 1 2 3 4 5 6; do \
+		if [ `hostname` != "x$$x" ]; then \
+		rsync -avP ${MAS_BIN_STUFF} x$$x.spider:/data/mas/bin; \
+		rsync -avP set_directory x$$x.spider:/data/mas/mce_script/script; \
+		ssh x$$x.spider /data/mas/bin/replicate; \
 		fi; done
 
-restart: install
-	killall mpc
+restart: install-all
+	for x in 1 2 3 4 5 6; do ssh x$$x.spider killall mpc; done

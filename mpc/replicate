@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Replicate /data0/mas on all the other drives
+for d in `seq 1 3`; do 
+  if [ -d /data$d/mas ]; then
+    rsync -avP --delete-during /data0/mas /data$d
+  else 
+    echo "WARNING: can't find directory /data$d/mas"
+  fi
+done

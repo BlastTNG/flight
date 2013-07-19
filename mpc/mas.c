@@ -748,8 +748,12 @@ static int pop_block(void)
   if (blockq_head == blockq_tail)
     return 0;
 
-  write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
-      blockq[new_tail].d, blockq[new_tail].n);
+  if (blockq[new_tail].raw)
+    mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].d,
+        blockq[new_tail].n, blockq[new_tail].o);
+  else
+    write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
+        blockq[new_tail].d, blockq[new_tail].n);
 
   blockq_tail = new_tail;
 

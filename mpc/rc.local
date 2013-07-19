@@ -3,7 +3,7 @@
 # rc.local for Spider MCCs; this file is automatically executed at boot time.
 
 # create mce devices ...?
-/sbin/udevadm trigger --verbose
+[ -e /dev/mce_dsp0 ] || /sbin/udevadm trigger --verbose
 
 # find a /data drive
 if [ -d /data3/mas ]; then

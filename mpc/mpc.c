@@ -162,7 +162,7 @@ int send_blob = 0;
 uint16_t blob[MCE_BLOB_MAX];
 
 /* box temperature */
-int32_t box_temp = 0;
+int32_t box_temp = 32767;
 
 /* DV timing parameters */
 int num_rows = -1, row_len = -1, data_rate = -1;
@@ -170,6 +170,9 @@ int num_rows = -1, row_len = -1, data_rate = -1;
 /* bias_tess values */
 uint32_t bias_tess_val[8];
 int bias_tess_card;
+
+/* tile heater kick timeout */
+static int tile_heater_timeout = -1;
 
 static void set_data_mode_bits(int i, int both, const char *dmb)
 {
@@ -362,7 +365,7 @@ static void send_slow_data(char *data, int send)
       slow_dat.t_mcc = datum / 10;
     fclose(stream);
   } else
-    slow_dat.t_mcc = 0xFFFF;
+    slow_dat.t_mcc = 0x8000;
 
   /* mce temp */
   slow_dat.t_mce = box_temp;
@@ -542,8 +545,8 @@ static void ForwardMCEParam(void)
 }
 
 /* push something onto the mas block queue */
-static void push_block(const char *c, const char *p, const uint32_t *d, int n,
-    int o)
+static void push_blockr(const char *c, const char *p, const uint32_t *d, int n,
+    int o, int raw)
 {
   int new_head;
 
@@ -561,8 +564,22 @@ static void push_block(const char *c, const char *p, const uint32_t *d, int n,
   memcpy(blockq[new_head].d, d, sizeof(uint32_t) * n);
   blockq[new_head].n = n;
   blockq[new_head].o = o;
+  blockq[new_head].raw = raw;
 
   blockq_head = new_head;
+}
+
+/* cooked push */
+static void push_block(const char *c, const char *p, const uint32_t *d, int n,
+    int o)
+{
+  push_blockr(c, p, d, n, o, 0);
+}
+
+static void push_block_raw(const char *c, const char *p, const uint32_t *d,
+    int n, int o)
+{
+  push_blockr(c, p, d, n, o, 1);
 }
 
 static void apply_cmd(int p, const char *name, int n, uint32_t v)
@@ -799,9 +816,29 @@ static void prm_set_pixel(int c, int r, int h, int a)
     state &= ~st_config;
 }
 
-const static inline int check_cmd_mce(int w)
+static void q_servo_reset(int c, int r)
 {
-  return (w == 0) || (w == (nmce + 1));
+  const char *rc = "rc1";
+  char block[] = "servo_rst_col#";
+  uint32_t one = 1;
+  uint32_t zero = 0;
+  uint32_t bits[41] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+  if (c > 8) {
+    rc = "rc2";
+    c -= 8;
+  }
+
+  bits[r] = 1;
+  block[13] = c + '0';
+  push_block_raw(rc, block, bits, 41, 0);
+  push_block_raw(rc, "servo_rst_arm", &one, 1, 0);
+
+  /* reset */
+  bits[r] = 0;
+  push_block_raw(rc, block, bits, 41, 0);
+  push_block_raw(rc, "servo_rst_arm", &zero, 1, 0);
 }
 
 #define CFG_TOGGLE(on,off,name) \
@@ -845,8 +882,10 @@ case off: prm_set_int(off, name, ev->ivalues[1], 0, ev->ivalues[2]); break
 /* Execute a command */
 static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 {
+  uint32_t u32;
+
   if (ev->is_multi) {
-    if (!check_cmd_mce(ev->ivalues[0]))
+    if (ev->ivalues[0] && ev->ivalues[0] != (nmce + 1)) /* 0 = all */
       return;
 
     switch (ev->command) {
@@ -993,18 +1032,31 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         task_special = TSPEC_BIAS_TESS;
       case bias_tess_all:
         bias_tess_card = 3;
-        bias_tess_val[0] = ev->ivalues[1];
-        bias_tess_val[1] = ev->ivalues[1];
-        bias_tess_val[2] = ev->ivalues[1];
-        bias_tess_val[3] = ev->ivalues[1];
-        bias_tess_val[4] = ev->ivalues[1];
-        bias_tess_val[5] = ev->ivalues[1];
-        bias_tess_val[6] = ev->ivalues[1];
-        bias_tess_val[7] = ev->ivalues[1];
+        bias_tess_val[0] = bias_tess_val[1] = bias_tess_val[2] =
+          bias_tess_val[3] = bias_tess_val[4] = bias_tess_val[5] =
+          bias_tess_val[6] = bias_tess_val[7] = ev->ivalues[1];
         task_special = TSPEC_BIAS_TESS;
         break;
       case stop_mce:
         task_special = TSPEC_STOP_MCE;
+        break;
+      case tile_heater_on:
+        u32 = ev->ivalues[1];
+        push_block("heater", "bias", &u32, 1, 0);
+        tile_heater_timeout = -1;
+        break;
+      case tile_heater_off:
+        u32 = 0;
+        push_block("heater", "bias", &u32, 1, 0);
+        tile_heater_timeout = -1;
+        break;
+      case tile_heater_kick:
+        u32 = ev->ivalues[1];
+        push_block("heater", "bias", &u32, 1, 0);
+        tile_heater_timeout = ev->ivalues[2] * 1000;
+        break;
+      case servo_reset:
+        q_servo_reset(ev->ivalues[1], ev->ivalues[2]);
         break;
 
       default:
@@ -1016,15 +1068,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
     /* flush the experiment.cfg if it has changed */
     flush_experiment_cfg();
   } else {
-    switch (ev->command) {
-      case mpc_ping:
-        pcm_pong = 1;
-        break;
-      default:
-        bprintf(warning, "Unrecognised single command #%i from %s/%i\n",
-            ev->command, peer, port);
-        break;
-    }
+    bprintf(warning, "Unrecognised single command #%i from %s/%i\n",
+        ev->command, peer, port);
   }
 }
 
@@ -1302,6 +1347,15 @@ int main(void)
 
       /* PCM requests */
       pcm_special(0, NULL, NULL, 0);
+    }
+
+    /* tile heater timer */
+    if (tile_heater_timeout >= 0) {
+      if ((tile_heater_timeout -= UDP_TIMEOUT) <= 0) {
+        uint32_t zero = 0;
+        push_block("heater", "bias", &zero, 1, 0);
+        tile_heater_timeout = -1;
+      }
     }
   }
 

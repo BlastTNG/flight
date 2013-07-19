@@ -431,9 +431,8 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(global_thermonuclear_war), "The only winning move is not to play.",
     GR_CMB | CONFIRM},
 
-  {COMMAND(mpc_ping), "Ping the MCCs", MCECMD | GR_MCC},
-  {COMMAND(mcc_wdog_enable), "Enable pcm watchdog of MCCs", GR_MCC | CONFIRM},
-  {COMMAND(mcc_wdog_disable), "Disable pcm watchdog of MCCs", GR_MCC | CONFIRM},
+  {COMMAND(mcc_wdog_enable), "Enable pcm watchdog of MCCs", GR_MCC},
+  {COMMAND(mcc_wdog_disable), "Disable pcm watchdog of MCCs", GR_MCC},
   {COMMAND(get_superslow), "Re-fetch the super-slow data from MPC", GR_MCC},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
@@ -1372,8 +1371,18 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCA(sa_fb, "SA feeback", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
+  {MCECMD2(tile_heater_on, "Turn on the tile heater", GR_MCC, "Level", 0, 32767,
+      'i')},
+  {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_MCC)},
+  {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_MCC | MCECMD, 3,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Level", 0, 32767, 'i', "NONE"},
+      {"Duration (s)", 0, 100, 'i', "NONE"},
+    }
+  },
+  {MCECMDC(servo_reset, "Reset a detector's servo", GR_ACQ, "Row", 0, 32, 'i')},
   {MCECMD2(bias_tess_all, "Set all TES biases", GR_MCC, "Bias", 0, 65535, 'i')},
-
   {COMMAND(bias_tess), "Set TES biases", GR_MCC | MCECMD, 10,
     {
       {CHOOSE_INSERT_PARAM},
@@ -1388,10 +1397,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Column 7", 0, 65535, 'i', "NONE"}
     }
   },
-
   {MCECMD1(stop_mce, "Set all squid and TES biases to zero, "
       "disable muxing, and stop data acquisition", GR_MCC)},
-
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
     GR_MCC | MCECMD | CONFIRM, 5,
     {
