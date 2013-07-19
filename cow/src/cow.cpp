@@ -490,7 +490,7 @@ void MainForm::ChooseCommand() {
             delete NParamFields[i];
             connect(NParamFields[i]=new CowStringEntry(NTopFrame,"NParamLabels"),
                 SIGNAL(textEdited(QString)),this,SLOT(OmniSync()));
-          } else if (!(dynamic_cast<CowComboEntry*>(NParamFields[i])) && client_mcommands[index].params[i].nt) {
+          } else if (/*!(dynamic_cast<CowComboEntry*>(NParamFields[i])) &&*/ client_mcommands[index].params[i].nt) {
             CowComboEntry* cce;
             typeChanged=1;
             delete NParamFields[i];
