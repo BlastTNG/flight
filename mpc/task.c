@@ -252,9 +252,6 @@ void *task(void *dummy)
       task_reset_mce();
     } else if (task_special) { /* handle priority tasks */
       switch (task_special) {
-        case TSPEC_BIAS_TESS:
-          dt_wait(dt_biastess);
-          break;
         case TSPEC_STOP_MCE:
           dt_wait(dt_stopmce);
           break;

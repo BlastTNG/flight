@@ -545,8 +545,8 @@ static void ForwardMCEParam(void)
 }
 
 /* push something onto the mas block queue */
-static void push_blockr(const char *c, const char *p, const uint32_t *d, int n,
-    int o, int raw)
+static void push_blockr(const char *c, const char *p, int o, const uint32_t *d,
+    int n, int raw)
 {
   int new_head;
 
@@ -570,16 +570,16 @@ static void push_blockr(const char *c, const char *p, const uint32_t *d, int n,
 }
 
 /* cooked push */
-static void push_block(const char *c, const char *p, const uint32_t *d, int n,
-    int o)
+static void push_block(const char *c, const char *p, int o, const uint32_t *d,
+    int n)
 {
-  push_blockr(c, p, d, n, o, 0);
+  push_blockr(c, p, o, d, n, 0);
 }
 
-static void push_block_raw(const char *c, const char *p, const uint32_t *d,
-    int n, int o)
+static void push_block_raw(const char *c, const char *p, int o,
+    const uint32_t *d, int n)
 {
-  push_blockr(c, p, d, n, o, 1);
+  push_blockr(c, p, o, d, n, 1);
 }
 
 static void apply_cmd(int p, const char *name, int n, uint32_t v)
@@ -688,9 +688,8 @@ static void apply_cmd(int p, const char *name, int n, uint32_t v)
       return;
   }
 
-  for (i = 0; card[i]; ++i) {
-    push_block(card[i], param, &v, 1, n);
-  }
+  for (i = 0; card[i]; ++i)
+    push_block(card[i], param, n, &v, 1);
 }
 
 static void prm_set_int(int p, const char *name, int n, int v, int a)
@@ -737,9 +736,9 @@ static void prm_set_servo(int c, int r, char l, uint32_t v, int a)
       uint32_t buffer[33];
       for (i = 0; i < 33; ++i)
         buffer[i] = v;
-      push_block(rc, param, buffer, 33, 0);
+      push_block(rc, param, 0, buffer, 33);
     } else 
-      push_block(rc, param, &v, 1, r);
+      push_block(rc, param, r, &v, 1);
   }
 
   /* record default */
@@ -832,13 +831,13 @@ static void q_servo_reset(int c, int r)
 
   bits[r] = 1;
   block[13] = c + '0';
-  push_block_raw(rc, block, bits, 41, 0);
-  push_block_raw(rc, "servo_rst_arm", &one, 1, 0);
+  push_block_raw(rc, block, 0, bits, 41);
+  push_block_raw(rc, "servo_rst_arm", 0, &one, 1);
 
   /* reset */
   bits[r] = 0;
-  push_block_raw(rc, block, bits, 41, 0);
-  push_block_raw(rc, "servo_rst_arm", &zero, 1, 0);
+  push_block_raw(rc, block, 0, bits, 41);
+  push_block_raw(rc, "servo_rst_arm", 0, &zero, 1);
 }
 
 #define CFG_TOGGLE(on,off,name) \
@@ -882,7 +881,7 @@ case off: prm_set_int(off, name, ev->ivalues[1], 0, ev->ivalues[2]); break
 /* Execute a command */
 static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 {
-  uint32_t u32;
+  uint32_t data[16];
 
   if (ev->is_multi) {
     if (ev->ivalues[0] && ev->ivalues[0] != (nmce + 1)) /* 0 = all */
@@ -1020,40 +1019,39 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         blob_data[0] = ev->ivalues[1];
         break;
       case bias_tess:
-        bias_tess_card = (1U << ev->ivalues[1]);
-        bias_tess_val[0] = ev->ivalues[2];
-        bias_tess_val[1] = ev->ivalues[3];
-        bias_tess_val[2] = ev->ivalues[4];
-        bias_tess_val[3] = ev->ivalues[5];
-        bias_tess_val[4] = ev->ivalues[6];
-        bias_tess_val[5] = ev->ivalues[7];
-        bias_tess_val[6] = ev->ivalues[8];
-        bias_tess_val[7] = ev->ivalues[9];
-        task_special = TSPEC_BIAS_TESS;
+        data[0] = ev->ivalues[2];
+        data[1] = ev->ivalues[3];
+        data[2] = ev->ivalues[4];
+        data[3] = ev->ivalues[5];
+        data[4] = ev->ivalues[6];
+        data[5] = ev->ivalues[7];
+        data[6] = ev->ivalues[8];
+        data[7] = ev->ivalues[9];
+        push_block("tes", "bias", ev->ivalues[1] ? 8 : 0, data, 8);
+        break;
       case bias_tess_all:
-        bias_tess_card = 3;
-        bias_tess_val[0] = bias_tess_val[1] = bias_tess_val[2] =
-          bias_tess_val[3] = bias_tess_val[4] = bias_tess_val[5] =
-          bias_tess_val[6] = bias_tess_val[7] = ev->ivalues[1];
-        task_special = TSPEC_BIAS_TESS;
+        data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = data[6] =
+          data[7] = data[8] = data[9] = data[10] = data[11] = data[12] =
+          data[13] = data[14] = data[15] = ev->ivalues[1];
+        push_block("tes", "bias", 0, data, 16);
         break;
       case stop_mce:
         task_special = TSPEC_STOP_MCE;
         break;
       case tile_heater_on:
-        u32 = ev->ivalues[1];
-        push_block("heater", "bias", &u32, 1, 0);
+        data[0] = ev->ivalues[1];
+        push_block("heater", "bias", 0, data, 1);
         tile_heater_timeout = -1;
         break;
       case tile_heater_off:
-        u32 = 0;
-        push_block("heater", "bias", &u32, 1, 0);
+        data[0] = 0;
+        push_block("heater", "bias", 0, data, 1);
         tile_heater_timeout = -1;
         break;
       case tile_heater_kick:
-        u32 = ev->ivalues[1];
-        push_block("heater", "bias", &u32, 1, 0);
-        tile_heater_timeout = ev->ivalues[2] * 1000;
+        data[0] = ev->ivalues[1];
+        push_block("heater", "bias", 0, data, 1);
+        tile_heater_timeout = ev->rvalues[2] * 1000;
         break;
       case servo_reset:
         q_servo_reset(ev->ivalues[1], ev->ivalues[2]);
@@ -1353,7 +1351,7 @@ int main(void)
     if (tile_heater_timeout >= 0) {
       if ((tile_heater_timeout -= UDP_TIMEOUT) <= 0) {
         uint32_t zero = 0;
-        push_block("heater", "bias", &zero, 1, 0);
+        push_block("heater", "bias", 0, &zero, 1);
         tile_heater_timeout = -1;
       }
     }

@@ -73,8 +73,8 @@ static uint32_t *fb = NULL;
 
 /* Write a (parital) block to the MCE; returns non-zero on error */
 /* I guess MAS needs to be able to write to it's input data buffer...? */
-static int mas_write_range(const char *card, const char *block, uint32_t *data,
-    size_t num, int offset)
+static int mas_write_range(const char *card, const char *block, int offset,
+    uint32_t *data, size_t num)
 {
   int ret;
 
@@ -108,7 +108,7 @@ static int mas_write_block(const char *card, const char *block, uint32_t *data,
     size_t num)
 {
   /* ho hum .. */
-  return mas_write_range(card, block, data, num, 0);
+  return mas_write_range(card, block, 0, data, num);
 }
 
 static inline int drive_ready(int i)
@@ -310,7 +310,7 @@ static void write_param(const char *card, const char *param, int offset,
       return;
 
     /* update MCE */
-    if (mas_write_range(card, param, data, count, offset) == 0)
+    if (mas_write_range(card, param, offset, data, count) == 0)
       /* update the array */
       memcpy(mce_stat + mstat_phys[i].cd + offset, data,
           sizeof(uint32_t) * count);
@@ -749,11 +749,14 @@ static int pop_block(void)
     return 0;
 
   if (blockq[new_tail].raw)
-    mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].d,
-        blockq[new_tail].n, blockq[new_tail].o);
+    mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
+        blockq[new_tail].d, blockq[new_tail].n);
   else
     write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
         blockq[new_tail].d, blockq[new_tail].n);
+
+  bprintf(info, "unblock: %s/%s+%i(%i)", blockq[new_tail].c, blockq[new_tail].p,
+      blockq[new_tail].o, blockq[new_tail].n);
 
   blockq_tail = new_tail;
 
@@ -769,6 +772,7 @@ static void stop_mce(void)
   uint32_t number[8] = {-8192, -8192, -8192, -8192, -8192, -8192, -8192, -8192};
 
   /* these are row-wise */
+  bprintf(info, "Stopping MCE.");
   write_param("ac", "on_bias", 0, zeroes, 33);
   write_param("ac", "off_bias", 0, zeroes, 33);
   write_param("ac", "enbl_mux", 0, &one, 1);
@@ -818,19 +822,10 @@ static void stop_mce(void)
     goal = op_ready;
 }
 
-/* set tes biases */
-static void bias_tess(void)
-{
-  /* "tes bias" is "bc2 flux_fb"+16 */
-  if (bias_tess_card & 0x1)
-    mas_write_range("bc2", "flux_fb", bias_tess_val, 8, 16);
-  if (bias_tess_card & 0x2)
-    mas_write_range("bc2", "flux_fb", bias_tess_val, 8, 24);
-}
-
 /* run an iv curve */
 static int ivcurve(void)
 {
+  uint32_t data[16];
   char start_arg[30], step_arg[30], count_arg[30], step_wait[30],
        filename1[90], filename2[90], filename3[90], last_arg[30];
   const char *argv[] = { MAS_SCRIPT "/ramp_tes_bias", filename1, "s", start_arg,
@@ -851,33 +846,15 @@ static int ivcurve(void)
 
   /* kick */
   if (iv_kick > 0) {
+    int i;
     uint32_t zero = 0;
     /* bias to the start */
-    bias_tess_card = 3;
-    bias_tess_val[0] = iv_start;
-    bias_tess_val[1] = iv_start;
-    bias_tess_val[2] = iv_start;
-    bias_tess_val[3] = iv_start;
-    bias_tess_val[4] = iv_start;
-    bias_tess_val[5] = iv_start;
-    bias_tess_val[6] = iv_start;
-    bias_tess_val[7] = iv_start;
-    bias_tess();
-
-    /* the heater line is bc1 bias+10 */
-    if (mas_write_range("bc1", "bias", &iv_kick, 1, 10)) {
-      bprintf(warning, "IV: Unable to kick!");
-      dt_error = 1;
-      return 1;
-    }
-
+    for (i = 0; i < 16; ++i)
+      data[i] = iv_start;
+    write_param("tes", "bias", 0, data, 16);
+    write_param("heater", "bias", 0, &iv_kick, 1);
     sleep(2);
-
-    if (mas_write_range("bc1", "bias", &zero, 1, 10)) {
-      bprintf(warning, "IV: Unable to kick!");
-      dt_error = 1;
-      return 1;
-    }
+    write_param("heater", "bias", 0, &zero, 1);
 
     /* wait */
     sleep(iv_kickwait);
@@ -988,7 +965,6 @@ static int stopacq(void)
   p.param.id = 0x16; /* ret_dat */
   p.param.count = 1;
 
-  bprintf(info, "stop ret_dat\n");
   int e = mcecmd_stop_application(mas, &p);
 
   if (e)
@@ -1128,10 +1104,6 @@ void *mas_data(void *dummy)
       case dt_ivcurve:
         ivcurve();
         goal = op_acq; /* back to acquisition */
-        break;
-      case dt_biastess:
-        bias_tess();
-        data_tk = dt_idle;
         break;
       case dt_stopmce:
         stop_mce();

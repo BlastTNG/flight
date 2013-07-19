@@ -1378,7 +1378,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     {
       {CHOOSE_INSERT_PARAM},
       {"Level", 0, 32767, 'i', "NONE"},
-      {"Duration (s)", 0, 100, 'i', "NONE"},
+      {"Duration (s)", 0, 100, 'f', "NONE"},
     }
   },
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_ACQ, "Row", 0, 32, 'i')},
