@@ -748,13 +748,6 @@ static int pop_block(void)
   if (blockq_head == blockq_tail)
     return 0;
 
-  if (blockq[new_tail].raw)
-    mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
-        blockq[new_tail].d, blockq[new_tail].n);
-  else
-    write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
-        blockq[new_tail].d, blockq[new_tail].n);
-
   {
     int i;
     char *ptr, params[1000];
@@ -762,8 +755,15 @@ static int pop_block(void)
     for (i = 0; i < blockq[new_tail].n; ++i)
       ptr += sprintf(ptr, "%u ", blockq[new_tail].d[i]);
     bprintf(info, "unblock: %s/%s+%i(%i) [ %s]", blockq[new_tail].c,
-      blockq[new_tail].p, blockq[new_tail].o, blockq[new_tail].n, params);
+        blockq[new_tail].p, blockq[new_tail].o, blockq[new_tail].n, params);
   }
+
+  if (blockq[new_tail].raw)
+    mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
+        blockq[new_tail].d, blockq[new_tail].n);
+  else
+    write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
+        blockq[new_tail].d, blockq[new_tail].n);
 
   blockq_tail = new_tail;
 
