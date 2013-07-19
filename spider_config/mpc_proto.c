@@ -342,7 +342,7 @@ size_t mpc_compose_bset(const int16_t *set, int set_len, uint16_t num,
  *
  * R = 16-bit protocol revision
  * C = 'C', indicating command packet
- * T = 'm' or 's' indicating single or multiword command
+ * T = MCE number (or 8 if global single command)
  * Z = 16-bit command list revision
  * N = 16-bit command number
  *
@@ -360,14 +360,17 @@ size_t mpc_compose_command(struct ScheduleEvent *ev, char *buffer)
 
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'C'; /* command packet */
-  buffer[3] = ev->is_multi ? 'm' : 's'; /* multi/single command */
+  if (ev->is_multi)
+    buffer[3] = (char)ev->ivalues[0];
+  else 
+    buffer[3] = 8;
   i16 = mpc_cmd_rev;
   memcpy(buffer + 4, &i16, sizeof(i16)); /* 16-bit command list revision */
   i16 = ev->command;
   memcpy(buffer + 6, &i16, sizeof(i16)); /* 16-bit command number */
   if (ev->is_multi) {
     ptr = buffer + 8;
-    for (i = 0; i < mcommands[ev->t].numparams; ++i) {
+    for (i = 1; i < mcommands[ev->t].numparams; ++i) {
       switch (mcommands[ev->t].params[i].type) {
         case 'i':
         case 'l':
@@ -429,14 +432,15 @@ int mpc_check_packet(size_t len, const char *data, const char *peer, int port)
   return *ptr;
 }
 
-/* decompose a command into the ScheduleEvent struct.  returns non-zero on
- * error */
-int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
+/* decompose a command into the ScheduleEvent struct.  returns target MCE (0-6)
+ * on success, -1 on error */
+int mpc_decompose_command(struct ScheduleEvent *ev, int mce, size_t len,
     const char *data)
 {
   const char *ptr = data + 3; /* skip proto revision and packet type */
   int16_t pcm_cmd_rev;
-  int i = 0;
+  int i = 1; /* parameter zero is never initialised */
+  int target;
 
   /* check command type and command list revision */
   memset(ev, 0, sizeof(*ev));
@@ -445,7 +449,13 @@ int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
         (unsigned char)*ptr);
     return -1;
   }
-  ev->is_multi = (*ptr == 'm') ? 1 : 0;
+  if (*ptr == 8) {
+    ev->is_multi = 0;
+    target = 0; /* single command are always global */
+  } else {
+    ev->is_multi = 1;
+    target = *ptr;
+  }
   ptr++;
 
   pcm_cmd_rev = *(int16_t*)ptr;
@@ -455,6 +465,12 @@ int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
     return -1;
   }
   ptr += 2;
+
+  /* no poing in decoding the rest of this if we don't have to */
+  if (target && target != mce) {
+    bprintf(info, "Ignoring command for MCE%i", target);
+    return target;
+  }
 
   ev->command = *(int16_t*)(ptr);
   ptr += 2;
@@ -488,7 +504,7 @@ int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
       ++i;
     }
 
-  return 0;
+  return target;
 }
 
 /* decompose an bset packet into a bolometer list, taking care of filtering on

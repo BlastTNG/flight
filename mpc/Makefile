@@ -189,6 +189,7 @@ install: mpc mpc_inf_loop
 install-all: install
 	for x in 1 2 3 4 5 6; do \
 		if [ `hostname` != "x$$x" ]; then \
+		echo "================== X$$x ====================="; \
 		rsync -avP ${MAS_BIN_STUFF} x$$x.spider:/data/mas/bin; \
 		rsync -avP set_directory x$$x.spider:/data/mas/mce_script/script; \
 		ssh x$$x.spider /data/mas/bin/replicate; \

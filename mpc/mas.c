@@ -755,8 +755,15 @@ static int pop_block(void)
     write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
         blockq[new_tail].d, blockq[new_tail].n);
 
-  bprintf(info, "unblock: %s/%s+%i(%i)", blockq[new_tail].c, blockq[new_tail].p,
-      blockq[new_tail].o, blockq[new_tail].n);
+  {
+    int i;
+    char *ptr, params[1000];
+    ptr = params;
+    for (i = 0; i < blockq[new_tail].n; ++i)
+      ptr += sprintf(ptr, "%u ", blockq[new_tail].d[i]);
+    bprintf(info, "unblock: %s/%s+%i(%i) [ %s]", blockq[new_tail].c,
+      blockq[new_tail].p, blockq[new_tail].o, blockq[new_tail].n, params);
+  }
 
   blockq_tail = new_tail;
 

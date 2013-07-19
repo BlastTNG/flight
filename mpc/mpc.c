@@ -884,9 +884,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
   uint32_t data[16];
 
   if (ev->is_multi) {
-    if (ev->ivalues[0] && ev->ivalues[0] != (nmce + 1)) /* 0 = all */
-      return;
-
     switch (ev->command) {
       case data_mode:
         req_dm = ev->ivalues[1];
@@ -1262,6 +1259,7 @@ int main(void)
   /* main loop */
   for (;;) {
     struct ScheduleEvent ev;
+    int target;
 
     /* write non-volatile memory, if dirty */
     if (mem_dirty)
@@ -1281,12 +1279,13 @@ int main(void)
       /* do something based on packet type */
       switch (type) {
         case 'C': /* command packet */
-          if (mpc_decompose_command(&ev, n, data)) {
+          if ((target = mpc_decompose_command(&ev, nmce, n, data)) < 0) {
             /* command decomposition failed */
             break;
           }
-          /* execute */
-          do_ev(&ev, peer, port);
+          /* execute, if it's for us */
+          if (target == 0 || target == nmce)
+            do_ev(&ev, peer, port);
           break;
         case 'F': /* field set packet */
           veto = 1; /* veto transmission */

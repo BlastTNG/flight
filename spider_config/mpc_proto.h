@@ -56,7 +56,7 @@ int mpc_init(void);
 int mpc_check_packet(size_t len, const char *data, const char *peer, int port);
 
 size_t mpc_compose_command(struct ScheduleEvent *, char *);
-int mpc_decompose_command(struct ScheduleEvent *ev, size_t len,
+int mpc_decompose_command(struct ScheduleEvent *ev, int mce, size_t len,
     const char *data);
 
 size_t mpc_compose_bset(const int16_t *set, int set_len, uint16_t num,
