@@ -243,7 +243,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       row_len = new_row_len;
       num_rows = new_num_rows;
       data_rate = new_data_rate;
-      cfg_update_timing(new_row_len, new_data_rate, new_num_rows);
+      cfg_update_timing(new_row_len, new_num_rows, new_data_rate);
     }
 
     /* update the data_modes definition */
