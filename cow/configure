@@ -3,9 +3,9 @@ echo This script ignores all parameters.
 echo To change where cow will be installed, edit cow.pro!
 if [ `uname` = "Darwin" ]; then
   /usr/bin/qmake -spec macx-g++ || exit 1
-elif [ -x qmake-qt4 ]; then
+elif [ -n `which qmake-qt4` ]; then
   qmake-qt4 || exit 1
-elif [ -x qmake ]; then
+elif [ -n `which qmake` ]; then
   qmake || exit 1
 else
   echo "ERROR: Can't find qmake-qt4 nor qmake in your path!"
