@@ -106,6 +106,7 @@ class CowComboEntry : public QComboBox, public AbstractCowEntry
   public:
     CowComboEntry(QWidget* parent, QString objName) : QComboBox(parent)
     {
+      minVal = 0;
       setObjectName(objName);
       connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(slotValueChanged()));
     }
@@ -122,9 +123,12 @@ class CowComboEntry : public QComboBox, public AbstractCowEntry
     virtual void SetValue(int i)
     {
 
-      if ((i>=0) && (i<count())) {
-          setCurrentIndex(i);
-      }
+      i -= minVal;
+
+      i = qMin(i, count()-1);
+      i = qMax(i,0);
+
+      setCurrentIndex(i);
     }
 
     void SetStringValue(QString s)
@@ -134,15 +138,17 @@ class CowComboEntry : public QComboBox, public AbstractCowEntry
       if (!ok) {
         i = findText(s);
       }
-      i = qMin(i, count()-1);
-      i = qMax(i,0);
       SetValue(i);
     }
 
     QString Text() const
     {
-      return QString::number(currentIndex());
+
+      return QString::number(currentIndex() + minVal);
     }
+
+    int minVal;
+
   public slots:
     void slotValueChanged()
     {   //to override parent's valueChanged signal to require focus

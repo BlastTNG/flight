@@ -490,7 +490,7 @@ void MainForm::ChooseCommand() {
             delete NParamFields[i];
             connect(NParamFields[i]=new CowStringEntry(NTopFrame,"NParamLabels"),
                 SIGNAL(textEdited(QString)),this,SLOT(OmniSync()));
-          } else if (/*!(dynamic_cast<CowComboEntry*>(NParamFields[i])) &&*/ client_mcommands[index].params[i].nt) {
+          } else if (client_mcommands[index].params[i].nt) {
             CowComboEntry* cce;
             typeChanged=1;
             delete NParamFields[i];
@@ -499,6 +499,7 @@ void MainForm::ChooseCommand() {
             for (int i_par = 0; client_mcommands[index].params[i].nt[i_par] != 0; i_par++) {
               cce->addItem(client_mcommands[index].params[i].nt[i_par]);
             }
+            cce->minVal = client_mcommands[index].params[i].min;
             connect(dynamic_cast<CowComboEntry*>(NParamFields[i]),
                 SIGNAL(valueEdited()),this,SLOT(OmniSync()));
           } else if (!(dynamic_cast<CowDoubleEntry*>(NParamFields[i])) && client_mcommands[index].params[i].type!='s'
