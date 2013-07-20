@@ -208,7 +208,7 @@ LENS_ERROR MyCam::autoFocus(BlobImage *img, int forced/*=0*/, string path)
 		    cerr << "[autoFocus debug]: autoFocus failed to save image" << endl;
 #endif
 		}
-		if (img->SaveImage("/data/etc/current_bad.sbig") != SBFE_NO_ERROR) {
+		if (img->SaveImage("/data/etc/tmp_bad.sbig") != SBFE_NO_ERROR) {
 #if AUTOFOCUS_DEBUG
 		    cerr << "[autoFocus debug]: autoFocus failed to save viewer image" << endl;
 #endif

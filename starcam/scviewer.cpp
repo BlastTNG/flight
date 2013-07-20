@@ -17,7 +17,6 @@
 #define DEFAULT_FILE "/data/etc/current_bad.sbig"
 
 char* filename;
-const char* viewerFilename = "/data/etc/imageready.txt";
 BlobImage* img[2];   //images. Using only 1 caused segfaults...
 int imgindex = 0;
 
@@ -26,31 +25,6 @@ void failure()
   delete img[0];
   delete img[1];
   exit(1);
-}
-
-int readViewerFile()
-{
-  char buf[256];
-  ifstream fin(viewerFilename, ios::in);
-  if (!fin) {
-    return -1;
-  }
-  fin.getline(buf, 256);
-  int a = atoi(buf);
-  if (a==0) {
-    return -1;
-  }
-  return 0;
-}
-
-int resetViewerFile()
-{
-  ofstream fout(viewerFilename, ios::out | ios::trunc);
-  if (!fout) return -1;
-  fout << "0";
-  fout.close();
-
-  return 0;
 }
 
 void* updateImage(void* arg)
@@ -78,10 +52,6 @@ void* updateImage(void* arg)
       nextindex = (imgindex == 0) ? 1 : 0;
       oldtime = time;
       cout << "Image updated, refreshing it" << endl;
-      while(readViewerFile()!=0) {
-        usleep(100000);
-      }
-      resetViewerFile();
       while (img[nextindex]->OpenImage(filename) != SBFE_NO_ERROR) {
         retries++;
         if (retries > 1) cout << "...failed, retrying" << endl;

@@ -72,6 +72,7 @@ extern int copyFlag;
 //image viewer
 #if USE_IMAGE_VIEWER
 const char* viewerPath = "/data/etc/current_bad.sbig";
+const char* tmpviewerPath = "/data/etc/tmp_bad.sbig";
 bool showBoxes = true;
 #endif
 
@@ -88,11 +89,9 @@ void wait(pthread_cond_t* cond, pthread_mutex_t* mutex, const char* condname,
     const char* lockname, const char* funcname);
 int initCommands();
 int maintainInitFile(string cmd, string val);
-int writeViewerFile();
 
 //any command that changes starcam from its default state will be stored here to
 //be executed at start time and resume previous operating state
-const char* viewerFilename = "/data/etc/imageready.txt";
 const char* initFilename = "/data/etc/init.txt";
 const char* badpixFilename = "/data/etc/badpix.txt";
 const string adapterPath = "/dev/ttyACM0";
@@ -239,9 +238,9 @@ void* CopyLoop(void* arg)
     while (!copyFlag) {
       usleep(10000);
     }
-    system("scp -c arcfour /data/etc/current_bad.sbig spider@good.spider:/data/etc/");
+    system("mv /data/etc/tmp_bad.sbig /data/etc/current_bad.sbig");
+    system("cat /data/etc/current_bad.sbig | ssh good.spider -c arcfour 'cat > /data/etc/tmp_bad.sbig && mv /data/etc/tmp_bad.sbig /data/etc/current_bad.sbig'");
     copyFlag=0;
-    writeViewerFile();
   }
   return NULL;
 }
@@ -376,8 +375,8 @@ void* processingLoop(void* arg)
 
 #if USE_IMAGE_VIEWER
     if (!showBoxes) {
-      sclog(debug, (char*)"processingLoop: Saving viewer image in: %s", viewerPath);
-      err = globalImages[imageIndex].SaveImage(viewerPath);
+      sclog(debug, (char*)"processingLoop: Saving viewer image in: %s", tmpviewerPath);
+      err = globalImages[imageIndex].SaveImage(tmpviewerPath);
       if (err != SBFE_NO_ERROR) {
 	sclog(warning, (char*)"processingLoop: File error during viewer write: %d", err);
       }
@@ -413,8 +412,8 @@ void* processingLoop(void* arg)
 
 #if USE_IMAGE_VIEWER
     if (showBoxes) {
-      	sclog(debug, (char*)"processingLoop: Saving viewer image in: %s", viewerPath);
-      	err = globalImages[imageIndex].SaveImage(viewerPath);
+      	sclog(debug, (char*)"processingLoop: Saving viewer image in: %s", tmpviewerPath);
+      	err = globalImages[imageIndex].SaveImage(tmpviewerPath);
 	if (err != SBFE_NO_ERROR)
 		sclog(warning, (char*)"processingLoop: File error during boxed viewer write: %d", err);
     }
@@ -976,24 +975,6 @@ int initCommands()
   }
 
   fin.close();
-  return 0;
-}
-
-/*
-
-writeViewerFile:
-
-writes to a file that the viewer program reads
-writes 1 when image is done being copied / saved
-
-*/
-int writeViewerFile()
-{
-  ofstream fout(viewerFilename, ios::out | ios::trunc);
-  if (!fout) return -1;
-  fout << "1" << "\n";
-  fout.close();
-
   return 0;
 }
 
