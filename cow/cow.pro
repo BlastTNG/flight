@@ -7,7 +7,8 @@ mac {
   QMAKE_CLEAN += '-r cow.app'
   ICON = cow.icns
 }
-DEFINES += DATA_ETC_COW_DIR=\"\\\"/data/etc/cow\\\"\"
+DEFINES += DATA_ETC_COW_DIR=\\\"/data/etc/cow\\\"
+DEFINES += COW_SVN_REVISION=\"\\\"${SVN_REVISION}\\\"\"
 log.path = /data/etc/cow
 log.files = data/prev_status data/log.txt
 

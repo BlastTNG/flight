@@ -83,8 +83,6 @@
 #include "widgets.h"
 #include "cow.h"
 
-#define VERSION "4.0-testing"   // don't remove "testing" until you're sure it works reliably...
-
 #ifndef DATA_ETC_COW_DIR
 #error Edit cow.pro to define DATA_ETC_COW_DIR !
 #endif
@@ -1320,7 +1318,8 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   numframes = 4;
   dir = 1;
 
-  sprintf(tmp, "Command Operations Window " VERSION " @%s %s",
+  sprintf(tmp, "Command Operations Window (COW, revision." COW_SVN_REVISION
+      "); Host: %s; Cmd List: %s",
       blastcmd_host.toStdString().c_str(), client_command_list_serial);
 
   setWindowTitle(tmp);
@@ -1631,16 +1630,18 @@ int main(int argc, char* argv[]) {
   if (argc > 2||(argc==2&&(QString(argv[1]).contains("help",Qt::CaseInsensitive)||
           QString(argv[1]).contains("-h",Qt::CaseInsensitive)))) {
     printf(
-        "COW " VERSION " can take one argument: the host to connect to.It was compiled "
-        "at "__DATE__ "\nand is copyright (C) 2002-2011 University of Toronto.\n\n"
+        "COW (SVN revision " COW_SVN_REVISION ") "
+        "can take one argument: the host to connect to.  It was compiled at "
+        __DATE__ "\nand is copyright (C) 2002-2013 University of Toronto.\n\n"
         "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
         "FITNESS\n"
         "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
         "the GNU\n"
         "General Public License; see the file named COPYING for details.\n\n"
-        "Narsil was written by Adam Hincks. It was later poked at a bit by\n"
-        "D.V. Wiebe and then further desecrated by cbn.\n"
-        "Joshua Netterfield created cow by fixing the UI, and updating it to Qt4."
+        "Narsil was written by Adam Hincks.  It was later poked at a bit by\n"
+        "D. V. Wiebe and then further desecrated by cbn.\n"
+        "Joshua Netterfield created cow by fixing the UI, "
+        "and updating it to Qt4."
         );
     exit(1);
   }
