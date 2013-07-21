@@ -1357,7 +1357,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.channelset_oth = ivalues[0];
       break;
     case get_mce_param:
-      CommandData.mce_param_index = ivalues[0];
+      CommandData.mce_param_index = (ivalues[0] - 1) * N_MCE_STAT + ivalues[1];
       break;
     case slot_sched: /* change uplinked schedule file */
       if (LoadUplinkFile(ivalues[0])) {

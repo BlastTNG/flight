@@ -284,76 +284,6 @@ static void Chatter(void* arg)
   }
 }
 
-static void WatchMCC()
-{
-  int i;
-  int timeout;
-  static int framecount = 0;
-  static int reboottimer[6] = {0, 0, 0, 0, 0, 0};
- 
-  timeout = (int)(10.0*(ACSData.bbc_rate/FAST_PER_SLOW));
-
-  timeout = (timeout > 0) ? timeout : 25;
-
-  framecount++;
-
-  if (framecount == FAST_PER_SLOW) {
-    framecount = 0;
-    for (i=0; i<6; i++) {
-      mccSlowCount[i]++;
-      if (reboottimer[i] > 0) {
-        reboottimer[i]--;
-      }
-      if (mccSlowCount[i] >= timeout) {
-        mccs_alive &= ~(1U << i);
-        if ((CommandData.mcc_wdog) && (reboottimer[i] == 0) ) {
-          switch (i) {
-            case 0:
-              CommandData.power.mcc1.set_count = PCYCLE_HOLD_LEN 
-                + LATCH_PULSE_LEN;
-              CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
-              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-              break;
-            case 1:
-              CommandData.power.mcc2.set_count = PCYCLE_HOLD_LEN 
-                + LATCH_PULSE_LEN;
-              CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
-              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-              break;
-            case 2:
-              CommandData.power.mcc3.set_count = PCYCLE_HOLD_LEN 
-                + LATCH_PULSE_LEN;
-              CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
-              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-              break;
-            case 3:
-              CommandData.power.mcc4.set_count = PCYCLE_HOLD_LEN 
-                + LATCH_PULSE_LEN;
-              CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
-              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-              break;
-            case 4:
-              CommandData.power.mcc5.set_count = PCYCLE_HOLD_LEN 
-                + LATCH_PULSE_LEN;
-              CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
-              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-              break;
-            case 5:
-              CommandData.power.mcc6.set_count = PCYCLE_HOLD_LEN 
-                + LATCH_PULSE_LEN;
-              CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
-              reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
-              break;
-            default:
-              break;
-          }
-          mccSlowCount[i] = 0;
-        }
-      }
-    }
-  }
-}
-
 static void GetACS()
 {
   double enc_mean_el, enc_diff_el, ofpch_gy, ofroll_gy, ofyaw_gy, ofaz_gy;
@@ -1350,7 +1280,6 @@ int main(int argc, char *argv[])
         GetACS();
         GetCurrents();
         Pointing();
-        WatchMCC();
 
         check_bbc_sync();   /* check sync box aliveness */
 

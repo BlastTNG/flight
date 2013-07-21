@@ -400,7 +400,7 @@ static void WriteMCESlow(void)
       deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
       lastTuneAddr[i] = GetMCCNiosAddr("last_tune_mpc", i);
       lastIVAddr[i] = GetMCCNiosAddr("last_iv_mpc", i);
-      tileHeaterVAddr[i] = GetMCCNiosAddr("tile_heater", i);
+      tileHeaterAddr[i] = GetMCCNiosAddr("tile_heater", i);
     }
     blobNumAddr = GetNiosAddr("blob_num_mpc");
     lastActionAddr = GetNiosAddr("last_action_mpc");
@@ -411,8 +411,8 @@ static void WriteMCESlow(void)
   for (mux=0; mux<NUM_MCE; mux++) {
     ind = GETREADINDEX(mce_slow_index[mux]);
 
-    WriteData(modeMceAddr[mux], (mce_slow_dat[mux][ind].data_mode & 0xFF << 8)
-        | (mce_slow_dat[mux][inde].drive_map & 0xFF), NIOS_QUEUE);
+    WriteData(dmDmAddr[mux], (mce_slow_dat[mux][ind].data_mode & 0xFF << 8)
+        | (mce_slow_dat[mux][ind].drive_map & 0xFF), NIOS_QUEUE);
     WriteData(timeMccAddr[mux], mce_slow_dat[mux][ind].time, NIOS_QUEUE);
     WriteData(df0MccAddr[mux], mce_slow_dat[mux][ind].df[0], NIOS_QUEUE);
     WriteData(df1MccAddr[mux], mce_slow_dat[mux][ind].df[1], NIOS_QUEUE);
@@ -1373,6 +1373,69 @@ double ReadCalData(struct BiPhaseStruct* addr)
   }
 }
 
+static void WatchMCC()
+{
+  int i;
+  int timeout;
+  static int reboottimer[6] = {0, 0, 0, 0, 0, 0};
+
+  timeout = (int)(20.0*(ACSData.bbc_rate/FAST_PER_SLOW));
+  timeout = (timeout > 0) ? timeout : 25;
+
+  for (i=0; i<6; i++) {
+    mccSlowCount[i]++;
+    if (reboottimer[i] > 0) {
+      reboottimer[i]--;
+    }
+    if (mccSlowCount[i] >= timeout) {
+      mccs_alive &= ~(1U << i);
+      if ((CommandData.mcc_wdog) && (reboottimer[i] == 0) ) {
+        switch (i) {
+          case 0:
+            CommandData.power.mcc1.set_count = PCYCLE_HOLD_LEN 
+              + LATCH_PULSE_LEN;
+            CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
+            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+            break;
+          case 1:
+            CommandData.power.mcc2.set_count = PCYCLE_HOLD_LEN 
+              + LATCH_PULSE_LEN;
+            CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
+            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+            break;
+          case 2:
+            CommandData.power.mcc3.set_count = PCYCLE_HOLD_LEN 
+              + LATCH_PULSE_LEN;
+            CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
+            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+            break;
+          case 3:
+            CommandData.power.mcc4.set_count = PCYCLE_HOLD_LEN 
+              + LATCH_PULSE_LEN;
+            CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
+            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+            break;
+          case 4:
+            CommandData.power.mcc5.set_count = PCYCLE_HOLD_LEN 
+              + LATCH_PULSE_LEN;
+            CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
+            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+            break;
+          case 5:
+            CommandData.power.mcc6.set_count = PCYCLE_HOLD_LEN 
+              + LATCH_PULSE_LEN;
+            CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
+            reboottimer[i] = (int) 300*(ACSData.bbc_rate/FAST_PER_SLOW);
+            break;
+          default:
+            break;
+        }
+        mccSlowCount[i] = 0;
+      }
+    }
+  }
+}
+
 /* called from mcp, should call all nios writing functions */
 void UpdateBBCFrame()
 {
@@ -1436,6 +1499,9 @@ void UpdateBBCFrame()
       break;
     case 14:
       SFTValveMotors();
+      break;
+    case 15:
+      WatchMCC();
       break;
     default:
       break;

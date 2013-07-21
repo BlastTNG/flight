@@ -31,7 +31,7 @@
 #include "mce_counts.h"
 
 #define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}
-#define CHOOSE_INSERT_NO_ALL "Insert", 0, 6, 'i',"INSERT_LAST_HK", {mce_names}
+#define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"INSERT_LAST_HK", {mce_names+1}
 #define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "MCE_LAST_ACTION", {w}
 
 #define MCECMD1(cmd,desc,grp) \
@@ -56,6 +56,12 @@
       {pname, min, max, typ, "NONE"}, \
     }
 
+#define MCECMD2P(cmd,desc,grp,pname,min,max,typ) \
+    COMMAND(cmd), desc, grp | MCECMD, 2, { \
+      {CHOOSE_INSERT_NO_ALL}, \
+      {pname, min, max, typ, "NONE"}, \
+    }
+
 #define MCECMD2A(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 3, { \
       {CHOOSE_INSERT_PARAM}, \
@@ -63,16 +69,23 @@
       {MCE_ACTION_PARAM(3,action_names)}, \
     }
 
+#define MCECMD2AP(cmd,desc,grp,pname,min,max,typ) \
+    COMMAND(cmd), desc, grp | MCECMD, 3, { \
+      {CHOOSE_INSERT_NO_ALL}, \
+      {pname, min, max, typ, "NONE"}, \
+      {MCE_ACTION_PARAM(3,action_names)}, \
+    }
+
 #define MCECMDC(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 3, { \
-      {CHOOSE_INSERT_PARAM}, \
+      {CHOOSE_INSERT_NO_ALL}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
     }
 
 #define MCECMDCA(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
-      {CHOOSE_INSERT_PARAM}, \
+      {CHOOSE_INSERT_NO_ALL}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
       {MCE_ACTION_PARAM(3,action_names)}, \
@@ -80,22 +93,15 @@
 
 #define MCECMDCAD(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
-      {CHOOSE_INSERT_PARAM}, \
+      {CHOOSE_INSERT_NO_ALL}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
       {MCE_ACTION_PARAM(4,daction_names)}, \
     }
 
-#define MCECMDR(cmd,desc,grp,pname,min,max,typ) \
-    COMMAND(cmd), desc, grp | MCECMD, 3, { \
-      {CHOOSE_INSERT_PARAM}, \
-      {"Row", 0, 32, 'i', "NONE"}, \
-      {pname, min, max, typ, "NONE"}, \
-    }
-
 #define MCECMDRAD(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
-      {CHOOSE_INSERT_PARAM}, \
+      {CHOOSE_INSERT_NO_ALL}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
       {MCE_ACTION_PARAM(4,daction_names)}, \
@@ -103,7 +109,7 @@
 
 #define MCECMDCR(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
-      {CHOOSE_INSERT_PARAM}, \
+      {CHOOSE_INSERT_NO_ALL}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
@@ -111,7 +117,7 @@
 
 #define MCECMDCRA(cmd,desc,grp,pname,min,max,typ) \
     COMMAND(cmd), desc, grp | MCECMD, 5, { \
-      {CHOOSE_INSERT_PARAM}, \
+      {CHOOSE_INSERT_NO_ALL}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {pname, min, max, typ, "NONE"}, \
@@ -120,7 +126,7 @@
 
 #define MCECMDCR1A(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
-      {CHOOSE_INSERT_PARAM}, \
+      {CHOOSE_INSERT_NO_ALL}, \
       {"Column", 0, 15, 'i', "NONE"}, \
       {"Row", 0, 32, 'i', "NONE"}, \
       {MCE_ACTION_PARAM(3,action_names)}, \
@@ -716,9 +722,10 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(get_mce_param), "Get MCE Parameter", GR_TELEM, 1,
+  {COMMAND(get_mce_param), "Get MCE Parameter", GR_TELEM, 2,
     {
-      {"Parameter Index", 0, N_MCE_STAT*6, 'i', "mce_cindex"}
+      {CHOOSE_INSERT_NO_ALL},
+      {"Parameter Index", 0, N_MCE_STAT, 'i', "NONE"}
     }
   },
 
@@ -1254,8 +1261,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {MCECMD2A(column_on, "Turn on a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
-  {MCECMD2A(column_off, "Turn off a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
+  {MCECMD2AP(column_on, "Turn on a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
+  {MCECMD2AP(column_off, "Turn off a MCE column", GR_ACQ, "Column", 0, 15,
+      'i')},
   {MCECMD2(sa_offset_bias_ratio, "Set the SA offset bias ratio", GR_TUNE,
       "Ratio", 0, 2, 'f')},
   {MCECMD1(sa_ramp_bias_on, "Turn on SA ramping while tuning", GR_TUNE)},
@@ -1332,7 +1340,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(mce_servo_pid), "Set the servo gains for a column", GR_ACQ | MCECMD,
     6,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"Column", 0, 15, 'i', "NONE"},
       {"P Gain", 0, 65535, 'i', "NONE"}, 
       {"I Gain", 0, 65535, 'i', "NONE"},
@@ -1343,7 +1351,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(pixel_servo_pid), "Set the servo gains for a pixel", GR_ACQ | MCECMD,
     6,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"Column", 0, 15, 'i', "NONE"},
       {"Row", 0, 32, 'i', "NONE"},
       {"P Gain", 0, 65535, 'i', "NONE"}, 
@@ -1353,7 +1361,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_ACQ | MCECMD, 4,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"P Gain", 0, 65535, 'i', "1"}, 
       {"I Gain", 0, 65535, 'i', "2"},
       {"D Gain", 0, 65535, 'i', "3"},
@@ -1377,12 +1385,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCA(sa_fb, "SA feeback", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
-  {MCECMD2(tile_heater_on, "Turn on the tile heater", GR_MCC,
+  {MCECMD2P(tile_heater_on, "Turn on the tile heater", GR_MCC,
       "Level (V)", 0, 5, 'r')},
   {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_MCC)},
   {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_MCC | MCECMD, 3,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"Level (V)", 0, 5, 'r', "NONE"},
       {"Duration (s)", 0, 100, 'f', "NONE"},
     }
@@ -1391,7 +1399,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD2(bias_tess_all, "Set all TES biases", GR_ACQ, "Bias", 0, 65535, 'i')},
   {COMMAND(bias_tess), "Set TES biases", GR_ACQ | MCECMD, 10,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
       {"Column 0", 0, 65535, 'i', "NONE"},
       {"Column 1", 0, 65535, 'i', "NONE"},
@@ -1408,7 +1416,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
     GR_MCC | MCECMD | CONFIRM, 5,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"Card", 0, 6, 'i', "NONE", {wb_cards}},
       {"Block (Parameter) Number", 0, 0xFF, 'i', "NONE"},
       {"Element Number", 0, 41, 'i', "NONE"},
@@ -1418,7 +1426,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(send_iv_curve), "Send down IV curves", GR_IV | MCECMD, 3,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"First curve", 0, NUM_MCE_FIELDS - 1, 'i', "NONE"},
       {"Count", 0, 100, 'i', "NONE"}
     }
@@ -1439,14 +1447,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(send_tuning), "Send the experiment.cfg file resulting from a tuning",
     GR_TUNE | MCECMD, 2,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"Tuning number", 0, 65535, 'i', "NONE"},
     }
   },
 
   {COMMAND(use_tuning), "Apply a previous tuning", GR_TUNE | MCECMD, 2,
     {
-      {CHOOSE_INSERT_PARAM},
+      {CHOOSE_INSERT_NO_ALL},
       {"Tuning number", 0, 65535, 'i', "NONE"},
     }
   },
