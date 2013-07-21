@@ -1386,12 +1386,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
   {MCECMD2P(tile_heater_on, "Turn on the tile heater", GR_MCC,
-      "Level (V)", 0, 5, 'r')},
+      "Level (V)", 0, 5, 'f')},
   {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_MCC)},
   {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_MCC | MCECMD, 3,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"Level (V)", 0, 5, 'r', "NONE"},
+      {"Level (V)", 0, 5, 'f', "NONE"},
       {"Duration (s)", 0, 100, 'f', "NONE"},
     }
   },
