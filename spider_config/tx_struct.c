@@ -876,8 +876,8 @@ struct ChannelStruct SlowChannels[] = {
   {"dmdm_mpc2",       'w',  LOOP6, 47, 1, 0, 'u', U_NONE},
   {"dmdm_mpc3",       'w',  LOOP6, 48, 1, 0, 'u', U_NONE},
   {"dmdm_mpc4",       'w',  LOOP6, 49, 1, 0, 'u', U_NONE},
-  {"dmdm_mpc4",       'w',  LOOP6, 50, 1, 0, 'u', U_NONE},
-  {"dmdm_mpc5",       'w',  LOOP6, 51, 1, 0, 'u', U_NONE},
+  {"dmdm_mpc5",       'w',  LOOP6, 50, 1, 0, 'u', U_NONE},
+  {"dmdm_mpc6",       'w',  LOOP6, 51, 1, 0, 'u', U_NONE},
 
   {"df_0_mcc1",       'w',  LOOP6, 52, (1<<24), 0, 'u', U_NONE},
   {"df_0_mcc2",       'w',  LOOP6, 53, (1<<24), 0, 'u', U_NONE},

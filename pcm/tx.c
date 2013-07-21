@@ -400,7 +400,7 @@ static void WriteMCESlow(void)
       deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
       lastTuneAddr[i] = GetMCCNiosAddr("last_tune_mpc", i);
       lastIVAddr[i] = GetMCCNiosAddr("last_iv_mpc", i);
-      tileHeaterAddr[i] = GetMCCNiosAddr("tile_heater", i);
+      tileHeaterAddr[i] = GetMCCNiosAddr("tile_heater_mce", i);
     }
     blobNumAddr = GetNiosAddr("blob_num_mpc");
     lastActionAddr = GetNiosAddr("last_action_mpc");
