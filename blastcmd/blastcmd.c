@@ -390,7 +390,8 @@ void SendScommand(int sock, int i_cmd, int t_link, int t_route,
 }
 
 void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
-    int np, unsigned int *i_ack) {
+    int np, unsigned int *i_ack)
+{
   unsigned short dataq[DATA_Q_SIZE];
   int dataqsize = 0;
   float flote, max, min;
@@ -528,9 +529,9 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
       strncpy(svalues[i], parms[i], CMD_STRING_LEN);
       svalues[i][CMD_STRING_LEN - 1] = 0;
     } else {
-      printf("\nError in command definitions:\n   invalid parameter type '%c' "
-          "for parameter %i of mutlicommand: %s\n\n", type, i,
-          mcommands[i_cmd].name);
+      snprintf(err_message, ERR_MESSAGE_LEN,
+          "Invalid parameter type '%c' for parameter %i of multicommand: %s",
+          type, i, mcommands[i_cmd].name);
       *i_ack = 0x110;
       return;
     }
@@ -607,7 +608,7 @@ void WriteLogFile(int count, char *token[], unsigned int i_ack)
 
   fprintf(f, "Ack: (0x%02x) %s\n", i_ack, ack[i_ack]);
 
-  if (i_ack == 17) /* parameter validation failed */
+  if (err_message[0]) /* parameter validation failed */
     fprintf(f, "Error: %s\n", err_message);
 
   fprintf(f, "\n");

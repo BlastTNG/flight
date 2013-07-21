@@ -155,6 +155,9 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
   char* token[1024];
   char* ptr = buffer;
 
+  /* reset error message */
+  err_message[0] = 0;
+
   token[count++] = buffer;
 
   for (ptr = buffer + 1; *ptr != '\0'; ++ptr) {
@@ -299,7 +302,7 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
       result = SIPRoute(sock, t_link, t_route, &buffer[3]);
   }
 
-  if (result == 17) { /* parameter validation failed */
+  if (err_message[0]) { /* parameter validation failed */
     sprintf(output, ":::ack:::%i:::%s\r\n", result, err_message);
   } else {
     sprintf(output, ":::ack:::%i\r\n", result);
