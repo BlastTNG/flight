@@ -160,7 +160,7 @@ const char *const GroupNames[N_GROUPS] = {
   "ACS Power",             "The Good SC",      "HK Theo Heat",
   "Telemetry",             "The Bad SC",       "Cryo/HK Power",
   "MCE Power",             "The Ugly SC",      "MCCs",
-  "Array Tuning",          "MCE Acquisition",  "Load Curves"
+  "Array Tuning",          "MCE Acquisition",  "Load Curves",
   "Miscellaneous",         "CMB Grenades",     "Sync Box"
   };
 
