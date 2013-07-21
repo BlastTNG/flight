@@ -872,12 +872,12 @@ struct ChannelStruct SlowChannels[] = {
   {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
 
   /* slow MCE data */
-  {"data_mode_mce1",  'w',  LOOP6, 46, 1, 0, 'u', U_NONE},
-  {"data_mode_mce2",  'w',  LOOP6, 47, 1, 0, 'u', U_NONE},
-  {"data_mode_mce3",  'w',  LOOP6, 48, 1, 0, 'u', U_NONE},
-  {"data_mode_mce4",  'w',  LOOP6, 49, 1, 0, 'u', U_NONE},
-  {"data_mode_mce5",  'w',  LOOP6, 50, 1, 0, 'u', U_NONE},
-  {"data_mode_mce6",  'w',  LOOP6, 51, 1, 0, 'u', U_NONE},
+  {"dmdm_mpc1",       'w',  LOOP6, 46, 1, 0, 'u', U_NONE},
+  {"dmdm_mpc2",       'w',  LOOP6, 47, 1, 0, 'u', U_NONE},
+  {"dmdm_mpc3",       'w',  LOOP6, 48, 1, 0, 'u', U_NONE},
+  {"dmdm_mpc4",       'w',  LOOP6, 49, 1, 0, 'u', U_NONE},
+  {"dmdm_mpc4",       'w',  LOOP6, 50, 1, 0, 'u', U_NONE},
+  {"dmdm_mpc5",       'w',  LOOP6, 51, 1, 0, 'u', U_NONE},
 
   {"df_0_mcc1",       'w',  LOOP6, 52, (1<<24), 0, 'u', U_NONE},
   {"df_0_mcc2",       'w',  LOOP6, 53, (1<<24), 0, 'u', U_NONE},
@@ -962,12 +962,12 @@ struct ChannelStruct SlowChannels[] = {
   {"reporting_mpcs",  'w',  LOOP7, 62,  1,      0, 'u', U_NONE},
   {"alive_mpcs",      'w',  LOOP7, 63,  1,      0, 'u', U_NONE},
 
-  {"drive_map_mcc1",  'w',  LOOP8,  0, 0.5,   0.0, 'u', U_NONE},
-  {"drive_map_mcc2",  'w',  LOOP8,  1, 0.5,   0.0, 'u', U_NONE},
-  {"drive_map_mcc3",  'w',  LOOP8,  2, 0.5,   0.0, 'u', U_NONE},
-  {"drive_map_mcc4",  'w',  LOOP8,  3, 0.5,   0.0, 'u', U_NONE},
-  {"drive_map_mcc5",  'w',  LOOP8,  4, 0.5,   0.0, 'u', U_NONE},
-  {"drive_map_mcc6",  'w',  LOOP8,  5, 0.5,   0.0, 'u', U_NONE},
+  {"tile_heater_mce1",  'w',  LOOP8,  0, 5./32767, 0.0, 'u', U_NONE},
+  {"tile_heater_mce2",  'w',  LOOP8,  1, 5./32767, 0.0, 'u', U_NONE},
+  {"tile_heater_mce3",  'w',  LOOP8,  2, 5./32767, 0.0, 'u', U_NONE},
+  {"tile_heater_mce4",  'w',  LOOP8,  3, 5./32767, 0.0, 'u', U_NONE},
+  {"tile_heater_mce5",  'w',  LOOP8,  4, 5./32767, 0.0, 'u', U_NONE},
+  {"tile_heater_mce6",  'w',  LOOP8,  5, 5./32767, 0.0, 'u', U_NONE},
 
   {"last_tune_mpc1",  'w',  LOOP8,  6, 0.5,   0.0, 'u', U_NONE},
   {"last_tune_mpc2",  'w',  LOOP8,  7, 0.5,   0.0, 'u', U_NONE},
@@ -978,7 +978,6 @@ struct ChannelStruct SlowChannels[] = {
 
   /* END of MCE slow channels */
 
-// add/change the slow data struct in mceserv.h
   END_OF_CHANNELS
 };
 

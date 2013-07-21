@@ -715,5 +715,18 @@ union DerivedUnion DerivedChannels[] = {
   BITWORD( "GOAL_MPC6", "dtg_mpc6", 8, 8),
   BITWORD("DTASK_MPC6", "dtg_mpc6", 0, 8),
 
+  BITWORD( "DATA_MODE_MCE1", "dmdm_mpc1", 8, 8),
+  BITWORD("DRIVE_MASK_MPC1", "dmdm_mpc1", 0, 8),
+  BITWORD( "DATA_MODE_MCE2", "dmdm_mpc2", 8, 8),
+  BITWORD("DRIVE_MASK_MPC2", "dmdm_mpc2", 0, 8),
+  BITWORD( "DATA_MODE_MCE3", "dmdm_mpc3", 8, 8),
+  BITWORD("DRIVE_MASK_MPC3", "dmdm_mpc3", 0, 8),
+  BITWORD( "DATA_MODE_MCE4", "dmdm_mpc4", 8, 8),
+  BITWORD("DRIVE_MASK_MPC4", "dmdm_mpc4", 0, 8),
+  BITWORD( "DATA_MODE_MCE5", "dmdm_mpc5", 8, 8),
+  BITWORD("DRIVE_MASK_MPC5", "dmdm_mpc5", 0, 8),
+  BITWORD( "DATA_MODE_MCE6", "dmdm_mpc6", 8, 8),
+  BITWORD("DRIVE_MASK_MPC6", "dmdm_mpc6", 0, 8),
+
   END_OF_DERIVED_CHANNELS
 };

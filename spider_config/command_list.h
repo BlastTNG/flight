@@ -52,7 +52,7 @@
 #define GR_MCC          0x00100000
 #define GR_TUNE         0x00200000
 #define GR_ACQ          0x00400000
-#define GR_MCE_B        0x00800000
+#define GR_IV           0x00800000
 #define GR_MISC         0x01000000
 #define GR_CMB          0x02000000
 #define GR_SYNC         0x04000000
@@ -201,7 +201,8 @@ enum multiCommand {
   pixel_servo_pid, frail_servo_pid, dead_detector, frail_detector,
   healthy_detector, tes_bias, sa_flux_quantum, sq2_flux_quantum,
   sq1_flux_quantum, sq1_bias, sq1_bias_off, sq2_bias, sq2_fb, sa_bias, sa_fb,
-  sa_offset, adc_offset,
+  sa_offset, adc_offset, sq1_ramp_check_on, sq1_ramp_check_off,
+  write_default_bias_on, write_default_bias_off,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */

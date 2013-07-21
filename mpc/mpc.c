@@ -957,6 +957,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         PRM_SETINTC(sa_fb, "sa_fb");
         PRM_SETINTC(sa_offset, "sa_offset");
         PRM_SETINTCR(adc_offset, "adc_offset_cr");
+        CFG_TOGGLE(sq1_ramp_check_on, sq1_ramp_check_off, "sq1_ramp_check");
+        CFG_TOGGLE(write_default_bias_on, write_default_bias_off,
+            "write_default_bias");
 
       case mce_servo_pid:
         prm_set_servo(ev->ivalues[1], -1, 'p', ev->ivalues[2], ev->ivalues[5]);
@@ -1036,18 +1039,21 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         task_special = TSPEC_STOP_MCE;
         break;
       case tile_heater_on:
-        data[0] = ev->ivalues[1];
+        data[0] = ev->ivalues[1] * 32767 / 5;
         push_block("heater", "bias", 0, data, 1);
+        slow_dat.tile_heater = data[0];
         tile_heater_timeout = -1;
         break;
       case tile_heater_off:
         data[0] = 0;
         push_block("heater", "bias", 0, data, 1);
+        slow_dat.tile_heater = 0;
         tile_heater_timeout = -1;
         break;
       case tile_heater_kick:
-        data[0] = ev->ivalues[1];
+        data[0] = ev->rvalues[1] * 32767 / 5.;
         push_block("heater", "bias", 0, data, 1);
+        slow_dat.tile_heater = data[0];
         tile_heater_timeout = ev->rvalues[2] * 1000;
         break;
       case servo_reset:
@@ -1351,6 +1357,7 @@ int main(void)
       if ((tile_heater_timeout -= UDP_TIMEOUT) <= 0) {
         uint32_t zero = 0;
         push_block("heater", "bias", 0, &zero, 1);
+        slow_dat.tile_heater = 0;
         tile_heater_timeout = -1;
       }
     }

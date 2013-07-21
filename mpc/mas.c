@@ -362,7 +362,7 @@ static void fetch_param(const char *card, const char *param, int offset,
 }
 
 /* read a value from the mce_stat array */
-static void mce_param(const char *card, const char *param, int offset,
+static void read_param(const char *card, const char *param, int offset,
     uint32_t *data, int count)
 {
   int i = param_index(card, param);
@@ -380,13 +380,13 @@ static void mce_param(const char *card, const char *param, int offset,
       if (n > count)
         n = count;
 
-      mce_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
+      read_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
           mstat_virt[i].m[0].o + offset, data, n);
     }
 
     /* do we have data in the second map? */
     if (count > n)
-      mce_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
+      read_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
           mstat_virt[i].m[0].o, data + n, count - n);
   } else {
     if (count + offset > mstat_phys[i].nw)
@@ -422,7 +422,7 @@ static int dump_runfile(FILE *stream)
   for (i = 0; i < N_MCE_SYS; ++i) {
     fprintf(stream, "<RB sys %s>", mstat_sys[i]);
     for (j = 0; all_cards[j]; ++j) {
-      mce_param(all_cards[j], mstat_sys[i], 0, &datum, 1);
+      read_param(all_cards[j], mstat_sys[i], 0, &datum, 1);
       fprintf(stream, " %08i", datum);
     }
     fprintf(stream, "\n");
@@ -436,7 +436,7 @@ static int dump_runfile(FILE *stream)
     if (nr == 41)
       nw = 33;
 
-    mce_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p, mstat_virt[i].m[0].o,
+    read_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p, mstat_virt[i].m[0].o,
         vdata, nw);
     for (j = 0; j < nw; ++j)
       fprintf(stream, " %08i", vdata[j]);
@@ -447,7 +447,7 @@ static int dump_runfile(FILE *stream)
     /* the second map */
     if (mstat_virt[i].m[1].c[0]) {
       nw = nr = mstat_virt[i].m[1].e - mstat_virt[i].m[1].s;
-      mce_param(mstat_virt[i].m[1].c, mstat_virt[i].m[1].p,
+      read_param(mstat_virt[i].m[1].c, mstat_virt[i].m[1].p,
           mstat_virt[i].m[1].o, vdata, nw);
       for (j = 0; j < nw; ++j)
         fprintf(stream, " %08i", vdata[j]);
@@ -961,6 +961,24 @@ static int tune(void)
   return r ? 1 : 0;
 }
 
+static int reconfig(void)
+{
+  uint32_t u32;
+
+  if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_reconfig", NULL, 100, 1,
+        NULL))
+  {
+    comms_lost = 1;
+    return 1;
+  }
+
+  /* update tile heater data */
+  read_param("heater", "bias", 0, &u32, 1);
+  slow_dat.tile_heater = u32;
+
+  return 0;
+}
+
 /* stop rcs ret_dat */
 static int stopacq(void)
 {
@@ -1054,11 +1072,7 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_reconfig:
-        if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_reconfig", NULL, 100,
-              1, NULL))
-        {
-          comms_lost = 1;
-        }
+        dt_error = reconfig();
         data_tk = dt_idle;
         break;
       case dt_status:

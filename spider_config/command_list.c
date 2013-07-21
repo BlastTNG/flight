@@ -154,7 +154,7 @@ const char *const GroupNames[N_GROUPS] = {
   "ACS Power",             "The Good SC",      "HK Theo Heat",
   "Telemetry",             "The Bad SC",       "Cryo/HK Power",
   "MCE Power",             "The Ugly SC",      "MCCs",
-  "Array Tuning",          "MCE Acquisition",  "MCE B",
+  "Array Tuning",          "MCE Acquisition",  "Load Curves"
   "Miscellaneous",         "CMB Grenades",     "Sync Box"
   };
 
@@ -1297,6 +1297,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_TUNE)},
   {MCECMD1(tuning_check_bias_off, "Turn off thermalisation time for tuning",
       GR_TUNE)},
+  {MCECMD1(sq1_ramp_check_on, "Turn on the SQ1 ramp check", GR_TUNE)},
+  {MCECMD1(sq1_ramp_check_off, "Turn off the SQ1 ramp check", GR_TUNE)},
+  {MCECMD1(write_default_bias_on, "Turn on the default bias writeback",
+      GR_TUNE)},
+  {MCECMD1(write_default_bias_off, "Turn off the default bias writeback",
+      GR_TUNE)},
   {MCECMD2(tuning_therm_time, "Thermalisation time for squids", GR_TUNE,
       "Time", 0, 65535, 'i')},
   {MCECMD1(tuning_do_plots_on, "Turn on plot generation for tuning", GR_TUNE)},
@@ -1306,13 +1312,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_TUNE, "Value", 0, 65535, 'i')},
   {MCECMD2(sq1servo_sq2fb_init, "Override start point for sq1servo call",
       GR_TUNE, "Value", 0, 65535, 'i')},
-  {MCECMDSCS(ramp_tes, "set the TES bias ramp parameters", GR_TUNE)},
-  {MCECMD2(ramp_tes_final_bias, "Final bias for the TES bias ramp", GR_TUNE,
+  {MCECMDSCS(ramp_tes, "set the TES bias ramp parameters", GR_IV)},
+  {MCECMD2(ramp_tes_final_bias, "Final bias for the TES bias ramp", GR_IV,
       "Level", 0, 65535, 'i')},
-  {MCECMD2(ramp_tes_initial_pause, "Initial pause for the TES bias ramp",
-      GR_TUNE, "Time (us)", 0, 65535, 'i')},
-  {MCECMD2(ramp_tes_period, "Period for the TES bias ramp", GR_TUNE,
-      "Time (us)", 0, 1000000000, 'l')},
+  {MCECMD2(ramp_tes_initial_pause, "Initial pause for the TES bias ramp", GR_IV,
+      "Time (us)", 0, 65535, 'i')},
+  {MCECMD2(ramp_tes_period, "Period for the TES bias ramp", GR_IV, "Time (us)",
+      0, 1000000000, 'l')},
   {MCECMD2A(num_rows_reported, "MCE num rows reported", GR_ACQ,
       "Num Rows", 0, 32, 'i')},
   {MCECMD2A(readout_row_index, "Readout Row index", GR_ACQ, "Row", 0, 32, 'i')},
@@ -1371,19 +1377,19 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCA(sa_fb, "SA feeback", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
-  {MCECMD2(tile_heater_on, "Turn on the tile heater", GR_MCC, "Level", 0, 32767,
-      'i')},
+  {MCECMD2(tile_heater_on, "Turn on the tile heater", GR_MCC,
+      "Level (V)", 0, 5, 'r')},
   {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_MCC)},
   {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_MCC | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Level", 0, 32767, 'i', "NONE"},
+      {"Level (V)", 0, 5, 'r', "NONE"},
       {"Duration (s)", 0, 100, 'f', "NONE"},
     }
   },
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_ACQ, "Row", 0, 32, 'i')},
-  {MCECMD2(bias_tess_all, "Set all TES biases", GR_MCC, "Bias", 0, 65535, 'i')},
-  {COMMAND(bias_tess), "Set TES biases", GR_MCC | MCECMD, 10,
+  {MCECMD2(bias_tess_all, "Set all TES biases", GR_ACQ, "Bias", 0, 65535, 'i')},
+  {COMMAND(bias_tess), "Set TES biases", GR_ACQ | MCECMD, 10,
     {
       {CHOOSE_INSERT_PARAM},
       {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
@@ -1410,7 +1416,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(send_iv_curve), "Send down IV curves", GR_MCC | MCECMD, 3,
+  {COMMAND(send_iv_curve), "Send down IV curves", GR_IV | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
       {"First curve", 0, NUM_MCE_FIELDS - 1, 'i', "NONE"},
@@ -1418,7 +1424,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(acq_iv_curve), "Acquire IV curves (lcacq)", GR_MCC | MCECMD, 7,
+  {COMMAND(acq_iv_curve), "Acquire IV curves (lcacq)", GR_IV | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick", 0, 2, 'i', "NONE", {kick_names}},
@@ -1431,14 +1437,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(send_tuning), "Send the experiment.cfg file resulting from a tuning",
-    GR_MCC | MCECMD, 2,
+    GR_TUNE | MCECMD, 2,
     {
       {CHOOSE_INSERT_PARAM},
       {"Tuning number", 0, 65535, 'i', "NONE"},
     }
   },
 
-  {COMMAND(use_tuning), "Apply a previous tuning", GR_MCC | MCECMD, 2,
+  {COMMAND(use_tuning), "Apply a previous tuning", GR_TUNE | MCECMD, 2,
     {
       {CHOOSE_INSERT_PARAM},
       {"Tuning number", 0, 65535, 'i', "NONE"},

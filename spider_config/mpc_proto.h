@@ -47,6 +47,7 @@ struct mpc_slow_data {
   uint16_t dead_count; /* count of dead and frail pixels */
   uint16_t last_tune; /* last tuning number */
   uint16_t last_iv; /* last iv curve number */
+  uint16_t tile_heater; /* current tile heater level (in counts) */
 };
 
 extern int16_t mpc_proto_rev;
