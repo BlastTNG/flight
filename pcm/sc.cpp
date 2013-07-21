@@ -175,7 +175,7 @@ void cameraTriggers()
 		bsc_trigger = 0;
   }   
   rscwait++;
-  if ((rscwait%300)==0) {
+  if ((rscwait%(100*CommandData.rsc_wait))==0) {
 	  trigger_flag = 1;
 	  exposing = 1;
 	  rscwait = 0;
@@ -306,7 +306,7 @@ void cameraFields(int which)
   WriteData(GridAddr[which], CommandData.StarCam[which].grid, NIOS_QUEUE);
   WriteData(ThreshAddr[which], (int)(CommandData.StarCam[which].threshold*1000), NIOS_QUEUE);
   WriteData(BlobMdistAddr[which], CommandData.StarCam[which].minBlobDist, NIOS_QUEUE);
-  WriteData(DelayAddr,(int)(CommandData.trigger_delay*1000), NIOS_QUEUE);
+  WriteData(DelayAddr,(int)(CommandData.bsc_delay*1000), NIOS_QUEUE);
 
 //-----------------
 

@@ -1857,8 +1857,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sendTheUglyCommand(buf);
       CommandData.StarCam[2].moveTol = ivalues[0];
       break;
-    case sc_trig_delay:
-      CommandData.trigger_delay = rvalues[0];
+    case rsc_trig_wait:
+      CommandData.rsc_wait = ivalues[0];
+      break;
+    case bsc_trig_delay:
+      CommandData.bsc_delay = rvalues[0];
       break;
     case table_gain:  /* rotary table gains */
       // TODO PID loop performed in controller, figure out how to set gains
@@ -2047,7 +2050,8 @@ void InitCommandData()
   CommandData.hwp.mode = hwp_m_sleep;
   CommandData.hwp.bias_mask = 0x3f << 6;
 
-  CommandData.trigger_delay = 6.935*20.0;
+  CommandData.bsc_delay = 6.935*20.0;
+  CommandData.rsc_wait = 3;
   CommandData.table.vel = 0.0;
   CommandData.table.pos = 0.0;
   CommandData.table.mode = 0;

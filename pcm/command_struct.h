@@ -277,7 +277,8 @@ struct CommandDataStruct {
   struct PivGainStruct pivot_gain;
 
   struct SCCommandData StarCam[3];
-  double trigger_delay;
+  int    rsc_wait;
+  double bsc_delay;
   struct TableStruct table;
 
   struct {
