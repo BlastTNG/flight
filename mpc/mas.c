@@ -276,6 +276,18 @@ static void write_param(const char *card, const char *param, int offset,
   int n, new = 0;
   int i = param_index(card, param);
 
+#if 0
+  {
+    int i;
+    char *ptr, params[1000];
+    ptr = params;
+    for (i = 0; i < count; ++i)
+      ptr += sprintf(ptr, "%u ", data[i]);
+    bprintf(info, "write_param: %s/%s+%i(%i) [ %s]", card, param, offset,
+        count, params);
+  }
+#endif
+
   if (i < 0) { /* virtual parameters */
     int n = 0;
     i = -i - 1;
@@ -295,8 +307,8 @@ static void write_param(const char *card, const char *param, int offset,
 
     /* do we have data in the second map? */
     if (count > n)
-      write_param(mstat_virt[i].m[0].c, mstat_virt[i].m[0].p,
-          mstat_virt[i].m[0].o, data + n, count - n);
+      write_param(mstat_virt[i].m[1].c, mstat_virt[i].m[1].p,
+          mstat_virt[i].m[1].o, data + n, count - n);
   } else {
     if (count + offset > mstat_phys[i].nw)
       bprintf(fatal, "Write of too much data: %i+%i from %s/%s\n", count,
@@ -751,6 +763,7 @@ static int pop_block(void)
   if (blockq_head == blockq_tail)
     return 0;
 
+#if 0
   {
     int i;
     char *ptr, params[1000];
@@ -760,6 +773,7 @@ static int pop_block(void)
     bprintf(info, "unblock: %s/%s+%i(%i) [ %s]", blockq[new_tail].c,
         blockq[new_tail].p, blockq[new_tail].o, blockq[new_tail].n, params);
   }
+#endif
 
   if (blockq[new_tail].raw)
     mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
