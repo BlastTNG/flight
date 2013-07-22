@@ -1025,6 +1025,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"y (0=top)", 0, 1020, 'i', ""}
     }
   },
+  {COMMAND(thegood_platescale), "set The Good plate scale", GR_SCGOOD, 1,
+    {
+      {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
+    }
+  },
   {COMMAND(thegood_blob_params), "set blob finder params on The Good", GR_SCGOOD, 4,
     {
       {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_thegood"},
@@ -1085,6 +1090,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"y (0=top)", 0, 1020, 'i', ""}
     }
   },
+  {COMMAND(thebad_platescale), "set The Bad plate scale", GR_SCBAD, 1,
+    {
+      {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
+    }
+  },
   {COMMAND(thebad_blob_params), "set blob finder params on The Bad", GR_SCBAD, 4,
     {
       {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_thebad"},
@@ -1138,6 +1148,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
       {"x (0=left)", 0, 1530, 'i', ""},
       {"y (0=top)", 0, 1020, 'i', ""}
+    }
+  },
+  {COMMAND(theugly_platescale), "set The Ugly plate scale", GR_SCUGLY, 1,
+    {
+      {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
     }
   },
   {COMMAND(theugly_blob_params), "set blob finder params on The Ugly", GR_SCUGLY, 4,

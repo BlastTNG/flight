@@ -1714,6 +1714,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.StarCam[0].focusRes = ivalues[0];
       CommandData.StarCam[0].focusRng = ivalues[1];
       break;
+    case thegood_platescale:
+      CommandData.StarCam[0].platescale = rvalues[0];
+      break;
     case thegood_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
       sendTheGoodCommand(buf);
@@ -1776,6 +1779,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
       sendTheBadCommand(buf);
       break;
+    case thebad_platescale:
+      CommandData.StarCam[1].platescale = rvalues[0];
+      break;
     case thebad_blob_params:
       sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
       sendTheBadCommand(buf);
@@ -1829,6 +1835,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case theugly_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
       sendTheUglyCommand(buf);
+      break;
+    case theugly_platescale:
+      CommandData.StarCam[2].platescale = rvalues[0];
       break;
     case theugly_blob_params:
       sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
@@ -2050,6 +2059,9 @@ void InitCommandData()
   CommandData.hwp.mode = hwp_m_sleep;
   CommandData.hwp.bias_mask = 0x3f << 6;
 
+  CommandData.StarCam[0].platescale = 9.3;
+  CommandData.StarCam[1].platescale = 9.3;
+  CommandData.StarCam[2].platescale = 9.3;
   CommandData.bsc_delay = 6.935*20.0;
   CommandData.rsc_wait = 3;
   CommandData.table.vel = 0.0;

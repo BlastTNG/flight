@@ -88,7 +88,7 @@ Pyramid pyr;
 static pthread_t send_id;
 static pthread_t read_id;
 
-static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0);
+static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0, int which);
 static void* SendLoop(void* arg);
 static void* ReadLoop(void* arg);
 static string ParseReturn(string rtnStr, int which);
@@ -177,6 +177,7 @@ void cameraTriggers()
   rscwait++;
   if ((rscwait%(100*CommandData.rsc_wait))==0) {
 	  trigger_flag = 1;
+	  //bprintf(info,"EXPOSING...");
 	  exposing = 1;
 	  rscwait = 0;
 	  for (int i=0; i<10; i++) {
@@ -190,8 +191,9 @@ void cameraTriggers()
 
   if (exposing) {
 	exposecount++;
-	if (exposecount == 2) {
+	if (exposecount == 200){//(100*CommandData.StarCam[1].expTime/1000)) {
 		exposecount = 0;
+		//bprintf(info,"...DONE");
 		exposing = 0;
 		docalc = 1;
 	}
@@ -384,8 +386,8 @@ void cameraFields(int which)
 /*
   runs pyramid and solves the field
 */
-static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0) {
-  double plate_scale = 9.3/180./3600.*M_PI; 
+static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double& r0, int which) {
+  double plate_scale = 9.3/180.0/3600.*M_PI;
   double XC = 1530/2;
   double YC = 1020/2;
   double FTOL = 20.*M_PI/180./3600.;//star-blob association angular tolerance (default 20 arcsec as in netisc)
@@ -394,6 +396,7 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
   solution_t *sol = new solution_t [MAXSOLUTION];
   int nsol;
 
+  plate_scale = CommandData.StarCam[which].platescale/180./3600.*M_PI; 
   n_blobs = ((solrtn->numblobs > 15) ? 15 : solrtn->numblobs);
   if (n_blobs > 4) {
 	  double *x = new double [n_blobs];
@@ -582,10 +585,13 @@ static string ParseReturn(string rtnStr, int which)
 	} else { //response is exposure data
 //		bprintf(info,"Exposure data");
 		CamCommunicator::interpretReturn(rtnStr, &camRtn[which][(i_cam[which]+1)%2]);
-		SolveField(&camRtn[which][(i_cam[which]+1)%2],SCra[which],SCdec[which],SCroll[which]);
+		SolveField(&camRtn[which][(i_cam[which]+1)%2],SCra[which],SCdec[which],SCroll[which],which);
+                SCra[which]=(SCra[which]*180/M_PI+360.0)/15.0;
+		SCdec[which]*=180/M_PI;
+	        SCroll[which]*=180/M_PI;
 		radec2azel(SCra[which],SCdec[which], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[which], &SCel[which]);
-		if (which==1) SCaz[which] += BAD_AZ_OFF - ACSData.enc_table;
-		if (which==2) SCaz[which] += UGLY_AZ_OFF - ACSData.enc_table;
+		//if (which==1) SCaz[which] += BAD_AZ_OFF - ACSData.enc_table;
+		//if (which==2) SCaz[which] += UGLY_AZ_OFF - ACSData.enc_table;
 		i_cam[which] = (i_cam[which]+1)%2;
 	}
 	return ""; //doesn't send a response back to camera
