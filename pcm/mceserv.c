@@ -324,7 +324,8 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
 
     /* insert the new data */
     for (i = 0; i < ntes; ++i)
-      tes_recon[n].data[local_set.im[mce][i] + 1] = datain[i + 1 + ntes * f];
+      tes_recon[n].data[local_set.im[mce][i]] = datain[i + ntes * f];
+
     nrx_c[mce] = 0;
 
     /* remember that we got a frame from this MCE */

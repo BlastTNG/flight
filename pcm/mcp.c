@@ -1060,10 +1060,6 @@ void insertMCEData(unsigned short *RxFrame)
     mce_blob_offset = bi0->channel;
   }
   i_tmp++;
-#if 0
-  RxFrame[offset[0]] = tes_nfifo();
-  RxFrame[offset[1]] = 16000*sin((double)i_tmp*0.02) + 32768;
-#endif
 
   mplex_index++;
   if (mplex_index>=N_MCE_STAT*NUM_MCE) 
@@ -1110,7 +1106,7 @@ void insertMCEData(unsigned short *RxFrame)
     RxFrame[mce_frameno + 1] = (unsigned short)(data->frameno >> 16);
 
     /* now the TES data */
-    for (i = 2; i < NUM_MCE_FIELDS; i++) {
+    for (i = 0; i < NUM_MCE_FIELDS; i++) {
       RxFrame[offset[i]] = (unsigned short) (data->data[i]);
     }
     //while (tes_nfifo() > 1)
