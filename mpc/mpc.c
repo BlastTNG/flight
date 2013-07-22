@@ -895,6 +895,10 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case start_acq:
         goal = op_acq;
         break;
+      case force_acq:
+        st |= st_config | st_mcecom;
+        goal = op_acq;
+        break;
       case stop_acq:
         goal = op_ready;
         break;

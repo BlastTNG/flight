@@ -220,6 +220,10 @@ void *task(void *dummy)
       bprintf(warning, "Comms lost.");
       start_tk = stop_tk = 0xFFFF; /* interrupt! */
 
+      /* stop mce comms */
+      mce_veto = 1;
+      bprintf(info, "mce_veto = %i", mce_veto);
+
       /* stop the MCE and reset it */
       if (task_reset_mce() == 0) {
         /* problem solved, I guess.  Get meta to return us to our scheduled

@@ -68,6 +68,9 @@ int pb_last = 0;
 uint32_t *frame[FB_SIZE];
 static uint32_t *fb = NULL;
 
+/* veto on mce communication */
+int mce_veto = 0;
+
 /* number of frames in an acq_go */
 #define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
 
@@ -827,6 +830,8 @@ static void stop_mce(void)
   kill_special = 1;
   if (goal == op_acq)
     goal = op_ready;
+  mce_veto = 1;
+  bprintf(info, "mce_veto = %i", mce_veto);
 }
 
 /* run an iv curve */
@@ -1066,8 +1071,11 @@ void *mas_data(void *dummy)
         } else if (mce_check_cards()) {
           bprintf(err, "Card check failed");
           dt_error = 1;
-        } else
+        } else {
+          mce_veto = 0;
+          bprintf(info, "mce_veto = %i", mce_veto);
           dt_error = 0;
+        }
 
         data_tk = dt_idle;
         break;
@@ -1132,12 +1140,13 @@ void *mas_data(void *dummy)
         break;
     }
 
+    if (!mce_veto)
     /* pop a block from the queue, if there are any,
      * otherwise, poll the temperature, if requested */
-    if (!pop_block() && mas_get_temp) {
-      fetch_param("cc", "box_temp", 0, (uint32_t*)&box_temp, 1);
-      mas_get_temp = 0;
-    }
+      if (!pop_block() && mas_get_temp) {
+        fetch_param("cc", "box_temp", 0, (uint32_t*)&box_temp, 1);
+        mas_get_temp = 0;
+      }
 
     /* check for acq termination */
     if (acq_going && acq_stopped) {

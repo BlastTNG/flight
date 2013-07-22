@@ -1304,6 +1304,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /*************** MCE COMMANDS  *****************/
 
   {MCECMD1(start_acq, "Start data acquisition", GR_MCC)},
+  {MCECMD1(force_acq, "Start data acquisition without reconfiguring", GR_MCC)},
   {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_MCC)},
   {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC)},
   {MCECMD1P(send_exptcfg, "Send down experiment.cfg", GR_MCC)},

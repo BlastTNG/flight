@@ -183,7 +183,7 @@ enum multiCommand {
 
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,
   bias_tess_all, bias_tess, stop_mce, tile_heater_on, tile_heater_off,
-  tile_heater_kick, servo_reset,
+  tile_heater_kick, servo_reset, force_acq,
 
   /* MCE experiment.cfg commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,
