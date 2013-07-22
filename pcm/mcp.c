@@ -1060,8 +1060,10 @@ void insertMCEData(unsigned short *RxFrame)
     mce_blob_offset = bi0->channel;
   }
   i_tmp++;
+#if 0
   RxFrame[offset[0]] = tes_nfifo();
   RxFrame[offset[1]] = 16000*sin((double)i_tmp*0.02) + 32768;
+#endif
 
   mplex_index++;
   if (mplex_index>=N_MCE_STAT*NUM_MCE) 
