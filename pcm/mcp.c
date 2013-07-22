@@ -70,7 +70,7 @@
 /* Define global variables */
 //flc_ip[0] = bitsy, flc_ip[1] = itsy, so that flc_ip[BitsyIAm] gives other flc
 // so flc_ip[2] = {Bitsy_IP, Itsy_IP}
-char* flc_ip[2] = {"192.168.1.31", "192.168.1.30"};
+char* flc_ip[2] = {"192.168.1.251", "192.168.1.250"};
 
 int bbc_fp = -1;
 unsigned int debug = 0;
