@@ -546,9 +546,8 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
   }
 
   // make sure there are enough 'parameters' for extended commanding.
-  for (;dataqsize<11; dataqsize++) {
+  for (;dataqsize<11; dataqsize++)
     dataq[dataqsize] = 0;
-  }
   
   time(&t);
 

@@ -218,7 +218,8 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(elmot_off), "turn off the elevation motor", GR_POWER},
   {COMMAND(elmot_on), "turn on the elevation motor", GR_POWER},
   {COMMAND(elmot_cycle), "power cycle the elevation motor", GR_POWER},
-  {COMMAND(elmot_auto), "el motors automatically power on for a move, and then power off again", GR_POWER},
+  {COMMAND(elmot_auto), "el motors automatically power on for a move, "
+    "and then power off again", GR_POWER},
   {COMMAND(vtx_off), "turn off the video transmitters", GR_TELEM | GR_POWER},
   {COMMAND(vtx_on), "turn on the video transmitters", GR_TELEM | GR_POWER},
   {COMMAND(bi0_off), "turn off the biphase transmitter", GR_TELEM | GR_POWER},
@@ -228,20 +229,26 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(table_cycle), "power cycle the SC rotary table", GR_POWER | CONFIRM},
   {COMMAND(rsc_off), "turn off the rotating star cameras", GR_POWER | CONFIRM},
   {COMMAND(rsc_on), "turn on the rotating star cameras", GR_POWER},
-  {COMMAND(rsc_cycle), "power cycle the rotating star cameras", GR_POWER | CONFIRM},
+  {COMMAND(rsc_cycle), "power cycle the rotating star cameras", GR_POWER |
+    CONFIRM},
   {COMMAND(bsc_off), "turn off the boresight star camera", GR_POWER | CONFIRM},
   {COMMAND(bsc_on), "turn on the boresight star camera", GR_POWER},
-  {COMMAND(bsc_cycle), "power cycle the boresight star camera", GR_POWER | CONFIRM},
+  {COMMAND(bsc_cycle), "power cycle the boresight star camera", GR_POWER |
+    CONFIRM},
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
   {COMMAND(das_off), "turn off the DAS", GR_IFPOWER},
   {COMMAND(das_on), "turn on the DAS", GR_IFPOWER},
   {COMMAND(das_cycle), "power cycle the DAS", GR_IFPOWER},
-  {COMMAND(of_charge_off), "turn off the outer frame charge controller", GR_POWER | CONFIRM},
-  {COMMAND(of_charge_on), "turn on the outer frame charge controller", GR_POWER},
-  {COMMAND(if_charge_off), "turn off the inner frame charge controller", GR_IFPOWER | CONFIRM},
-  {COMMAND(if_charge_on), "turn on the inner frame charge controller", GR_IFPOWER},
+  {COMMAND(of_charge_off), "turn off the outer frame charge controller",
+    GR_POWER | CONFIRM},
+  {COMMAND(of_charge_on), "turn on the outer frame charge controller",
+    GR_POWER},
+  {COMMAND(if_charge_off), "turn off the inner frame charge controller",
+    GR_IFPOWER | CONFIRM},
+  {COMMAND(if_charge_on), "turn on the inner frame charge controller",
+    GR_IFPOWER},
   {COMMAND(of_charge_cycle), "power cycle the outer frame charge controller", 
     GR_POWER | CONFIRM},
   {COMMAND(if_charge_cycle), "power cycle the inner frame charge controller", 
@@ -249,15 +256,18 @@ const struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(mce23_on), "turn on MCE power supply for X2 and X3", GR_MCEPWR},
   {COMMAND(mce23_off), "turn off MCE power supply for X2 and X3", GR_MCEPWR},
-  {COMMAND(mce23_cycle), "power cycle MCE power supply for X2 and X3", GR_MCEPWR},
+  {COMMAND(mce23_cycle), "power cycle MCE power supply for X2 and X3",
+    GR_MCEPWR},
 
   {COMMAND(mce46_on), "turn on MCE power supply for X4 and X6", GR_MCEPWR},
   {COMMAND(mce46_off), "turn off MCE power supply for X4 and X6", GR_MCEPWR},
-  {COMMAND(mce46_cycle), "power cycle MCE power supply for X4 and X6", GR_MCEPWR},
+  {COMMAND(mce46_cycle), "power cycle MCE power supply for X4 and X6",
+    GR_MCEPWR},
 
   {COMMAND(mce15_on), "turn on MCE power supply for X1 and X5", GR_MCEPWR},
   {COMMAND(mce15_off), "turn off MCE power supply for X1 and X5", GR_MCEPWR},
-  {COMMAND(mce15_cycle), "power cycle MCE power supply for X1 and X5", GR_MCEPWR},
+  {COMMAND(mce15_cycle), "power cycle MCE power supply for X1 and X5",
+    GR_MCEPWR},
 
   {COMMAND(mcc1_on), "turn on MCC 1", GR_MCEPWR},
   {COMMAND(mcc1_off), "turn off MCC 1", GR_MCEPWR},
@@ -295,10 +305,14 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hk_preamp_off), "turn off the HK preamp crate", GR_IFPOWER},
   {COMMAND(hk_preamp_cycle), "power cycle the HK preamp crate", GR_IFPOWER},
   
-  {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_GAIN},
-  {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
-  {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_GAIN},
-  {COMMAND(restore_piv), "restore the serial settings for the pivot controller", GR_GAIN},
+  {COMMAND(reset_rw), "reset the serial connection to the RW controller",
+    GR_GAIN},
+  {COMMAND(reset_piv), "reset the serial connection to the pivot controller",
+    GR_GAIN},
+  {COMMAND(reset_elev), "reset the serial connection to the elev controller",
+    GR_GAIN},
+  {COMMAND(restore_piv), "restore the serial settings for the pivot controller",
+    GR_GAIN},
   {COMMAND(az_disable), "disable az motors' gains", GR_GAIN},
   {COMMAND(az_enable), "enable az motors' gains", GR_GAIN},
   {COMMAND(el_disable), "disable el motor gains", GR_GAIN},
@@ -379,21 +393,26 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hwp_step), "step the HWPs to their next position", GR_HWPR},
 
   //The Good commands
-  {COMMAND(thegood_expose), "Start The Good exposure (in triggered mode)", GR_SCGOOD},
+  {COMMAND(thegood_expose), "Start The Good exposure (in triggered mode)",
+    GR_SCGOOD},
   {COMMAND(thegood_autofocus), "The Good autofocus mode", GR_SCGOOD},
-  {COMMAND(thegood_settrig_ext), "Set external The Good trigger mode", GR_SCGOOD},
+  {COMMAND(thegood_settrig_ext), "Set external The Good trigger mode",
+    GR_SCGOOD},
   {COMMAND(thegood_pause), "Stop automatic image capture", GR_SCGOOD},
   {COMMAND(thegood_run), "Start automatic image capture", GR_SCGOOD},
   //The Bad commands
-  {COMMAND(thebad_expose), "Start The Bad exposure (in triggered mode)", GR_SCBAD},
+  {COMMAND(thebad_expose), "Start The Bad exposure (in triggered mode)",
+    GR_SCBAD},
   {COMMAND(thebad_autofocus), "The Bad autofocus mode", GR_SCBAD},
   {COMMAND(thebad_settrig_ext), "Set external The Bad trigger mode", GR_SCBAD},
   {COMMAND(thebad_pause), "Stop automatic image capture", GR_SCBAD},
   {COMMAND(thebad_run), "Start automatic image capture", GR_SCBAD},
   //The Ugly commands
-  {COMMAND(theugly_expose), "Start The Ugly exposure (in triggered mode)", GR_SCUGLY},
+  {COMMAND(theugly_expose), "Start The Ugly exposure (in triggered mode)",
+    GR_SCUGLY},
   {COMMAND(theugly_autofocus), "The Ugly autofocus mode", GR_SCUGLY},
-  {COMMAND(theugly_settrig_ext), "Set external The Ugly trigger mode", GR_SCUGLY},
+  {COMMAND(theugly_settrig_ext), "Set external The Ugly trigger mode",
+    GR_SCUGLY},
   {COMMAND(theugly_pause), "Stop automatic image capture", GR_SCUGLY},
   {COMMAND(theugly_run), "Start automatic image capture", GR_SCUGLY},
   //Star Camera table
@@ -434,7 +453,7 @@ const struct scom scommands[N_SCOMMANDS] = {
 
   //make better use of unused groups
   {COMMAND(pull_cmb_pin), "????", GR_CMB | CONFIRM},
-  {COMMAND(global_thermonuclear_war), "The only winning move is not to play.",
+  {COMMAND(global_thermonuclear_war), "Shall we play a game?",
     GR_CMB | CONFIRM},
 
   {COMMAND(mcc_wdog_enable), "Enable pcm watchdog of MCCs", GR_MCC},
@@ -633,13 +652,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Slew Veto (s)", 0., 1200., 'f', "SVETO_LEN"},
     }
   },
-  {COMMAND(cov_gps), "set the threshhold for allowable DGPS covariance", GR_TRIM,
-    1,
+  {COMMAND(cov_gps), "set the threshhold for allowable DGPS covariance",
+    GR_TRIM, 1,
     {
       {"Covariance (deg^2)", 0, 5.0, 'f', "COV_LIM_DGPS"},
     }
   },
-  {COMMAND(ants_gps), "set the threshhold for allowable DGPS antenna separation error", GR_TRIM,
+  {COMMAND(ants_gps),
+    "set the threshhold for allowable DGPS antenna separation error", GR_TRIM,
     1,
     {
       {"Antenna Separation Error (m)", 0, 10.0, 'f', "ANT_E_DGPS"},
@@ -1001,7 +1021,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  {COMMAND(thegood_settrig_timed), "Use timed exposure mode on The Good", GR_SCGOOD, 1,
+  {COMMAND(thegood_settrig_timed), "Use timed exposure mode on The Good",
+    GR_SCGOOD, 1,
     {
       {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_thegood"}
     }
@@ -1013,11 +1034,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thegood_focus_params), "set The Good autofocus params", GR_SCGOOD, 2,
     {
-      {"Resolution (number total positions)", 0, USHRT_MAX, 'i', "foc_res_thegood"},
+      {"Resolution (number total positions)", 0, USHRT_MAX, 'i',
+        "foc_res_thegood"},
       {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
     }
   },
-  {COMMAND(thegood_bad_pix), "Indicate pixel to ignore on The Good", GR_SCGOOD, 3,
+  {COMMAND(thegood_bad_pix), "Indicate pixel to ignore on The Good", GR_SCGOOD,
+    3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
       //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
@@ -1030,7 +1053,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
     }
   },
-  {COMMAND(thegood_blob_params), "set blob finder params on The Good", GR_SCGOOD, 4,
+  {COMMAND(thegood_blob_params), "set blob finder params on The Good",
+    GR_SCGOOD, 4,
     {
       {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_thegood"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_thegood"},
@@ -1038,7 +1062,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_thegood"}
     }
   },
-  {COMMAND(thegood_lens_any), "execute The Good lens command directly", GR_SCGOOD, 1,
+  {COMMAND(thegood_lens_any), "execute The Good lens command directly",
+    GR_SCGOOD, 1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
@@ -1054,7 +1079,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_thegood"}
     }
   },
-  {COMMAND(thegood_viewer), "switch video (0=TheGood, 1=TheBad, 2=TheUgly)", GR_SCGOOD, 1,
+  {COMMAND(thegood_viewer), "switch video (0=TheGood, 1=TheBad, 2=TheUgly)",
+    GR_SCGOOD, 1,
     {
       {"Camera", 0, 2, 'i', ""}
     }
@@ -1066,7 +1092,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  {COMMAND(thebad_settrig_timed), "Use timed exposure mode on The Bad", GR_SCBAD, 1,
+  {COMMAND(thebad_settrig_timed), "Use timed exposure mode on The Bad",
+    GR_SCBAD, 1,
     {
       {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_thebad"}
     }
@@ -1078,7 +1105,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thebad_focus_params), "set The Bad autofocus params", GR_SCBAD, 2,
     {
-      {"Resolution (number total positions)", 0, USHRT_MAX, 'i', "foc_res_thebad"},
+      {"Resolution (number total positions)", 0, USHRT_MAX, 'i',
+        "foc_res_thebad"},
       {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
     }
   },
@@ -1095,7 +1123,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
     }
   },
-  {COMMAND(thebad_blob_params), "set blob finder params on The Bad", GR_SCBAD, 4,
+  {COMMAND(thebad_blob_params), "set blob finder params on The Bad", GR_SCBAD,
+    4,
     {
       {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_thebad"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_thebad"},
@@ -1103,7 +1132,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_thebad"}
     }
   },
-  {COMMAND(thebad_lens_any), "execute The Bad lens command directly", GR_SCBAD, 1,
+  {COMMAND(thebad_lens_any), "execute The Bad lens command directly", GR_SCBAD,
+    1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
@@ -1126,7 +1156,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Command String", 0, 32, 's', ""}
     }
   },
-  {COMMAND(theugly_settrig_timed), "Use timed exposure mode on The Ugly", GR_SCUGLY, 1,
+  {COMMAND(theugly_settrig_timed), "Use timed exposure mode on The Ugly",
+    GR_SCUGLY, 1,
     {
       {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_theugly"}
     }
@@ -1138,11 +1169,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(theugly_focus_params), "set The Ugly autofocus params", GR_SCUGLY, 2,
     {
-      {"Resolution (number total positions)", 0, USHRT_MAX, 'i', "foc_res_theugly"},
+      {"Resolution (number total positions)", 0, USHRT_MAX, 'i',
+        "foc_res_theugly"},
       {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
     }
   },
-  {COMMAND(theugly_bad_pix), "Indicate pixel to ignore on The Ugly", GR_SCUGLY, 3,
+  {COMMAND(theugly_bad_pix), "Indicate pixel to ignore on The Ugly", GR_SCUGLY,
+    3,
     {
       {"Camera ID (0 or 1)", 0, 1, 'i', ""},
       //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (camstruct.h)
@@ -1155,7 +1188,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
     }
   },
-  {COMMAND(theugly_blob_params), "set blob finder params on The Ugly", GR_SCUGLY, 4,
+  {COMMAND(theugly_blob_params), "set blob finder params on The Ugly",
+    GR_SCUGLY, 4,
     {
       {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_theugly"},
       {"Search grid size (pix)", 1, 1530 , 'i', "grid_theugly"},
@@ -1163,7 +1197,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_theugly"}
     }
   },
-  {COMMAND(theugly_lens_any), "execute The Ugly lens command directly", GR_SCUGLY, 1,
+  {COMMAND(theugly_lens_any), "execute The Ugly lens command directly",
+    GR_SCUGLY, 1,
     {
       {"Lens command string", 0, 32, 's', ""}
     }
@@ -1197,7 +1232,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Derivative Gain",   0, USHRT_MAX, 'i', "g_d_table"}
     }
   },
-  {COMMAND(table_goto), "move RSC table to specific encoder position", GR_SCTAB, 1,
+  {COMMAND(table_goto), "move RSC table to specific encoder position", GR_SCTAB,
+    1,
     {
       {"Goto position (deg)", 0, 360, 'd', "table_goto"}
     }
@@ -1208,7 +1244,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 2,
+  {COMMAND(motors_verbose), "Set verbosity of motor serial threads "
+    "(0=norm, 1=verbose, 2= superverbose )", GR_MISC, 2,
    {
      {"Reaction Wheel", 0, 5, 'i', "VERBOSE_RW"},
      {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
