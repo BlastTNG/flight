@@ -56,7 +56,7 @@ char me[1024];
 char owner[1024];
 char banner[1024];
 int is_free = -1;
-int sock;
+static int sock;
 
 int ReadLine(int sock, char* buffer, int bufflen)
 {
@@ -263,7 +263,8 @@ static char *read_string(int max)
 int NetCmdGetCmdList(void)
 {
   uint16_t u16;
-  int i, n, c = 0;
+  int n, c = 0;
+  size_t i;
   char buffer[1024] = "::list::\r\n";
 
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);

@@ -1686,6 +1686,7 @@ int main(int argc, char* argv[]) {
     MainForm moo(curfile.toStdString().c_str(), 0, "moo", 0);
     moo.show();
     retCode= app.exec();
+    NetCmdDrop();
   }
   return retCode;
 }
