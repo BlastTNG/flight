@@ -1303,15 +1303,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /***********************************************/
   /*************** MCE COMMANDS  *****************/
 
-  {MCECMD1(start_acq, "Start data acquisition", GR_MCC)},
-  {MCECMD1(force_acq, "Start data acquisition without reconfiguring", GR_MCC)},
-  {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_MCC)},
-  {MCECMD1(stop_acq, "Stop data acquisition", GR_MCC)},
+  {MCECMD1(start_acq, "Start data acquisition", GR_ACQ)},
+  {MCECMD1(force_acq, "Start data acquisition without reconfiguring", GR_ACQ)},
+  {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_ACQ)},
+  {MCECMD1(stop_acq, "Stop data acquisition", GR_ACQ)},
   {MCECMD1P(send_exptcfg, "Send down experiment.cfg", GR_MCC)},
+  {MCECMD1P(mce_reload_config, "Reset experiment.cfg to template", GR_MCC)},
 
   {MCECMD2(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12,
       'i')},
-  {COMMAND(tune_array), "Tune MCE (auto_setup)", GR_TUNE | MCECMD, 3,
+  {COMMAND(tune_array), "Tune a focal plane", GR_TUNE | MCECMD, 3,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
+      {"Last stage", 0, 5, 'i', "NONE", {tuning_stages}}
+    }
+  },
+  {COMMAND(tune_biases), "Tune with bias ramping on", GR_TUNE | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
       {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
@@ -1326,8 +1334,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       "Ratio", 0, 2, 'f')},
   {MCECMD1(sa_ramp_bias_on, "Turn on SA ramping while tuning", GR_TUNE)},
   {MCECMD1(sa_ramp_bias_off, "Turn off SA ramping while tuning", GR_TUNE)},
-  {MCECMDSCS(sa_ramp_flux, "Set the SA ramp flux parameters", GR_TUNE)},
-  {MCECMDSCS(sa_ramp_bias, "Set the SA ramp bias parameters", GR_TUNE)},
+  {MCECMDSCS(sa_ramp_flux, "Set the SA flux ramp parameters", GR_TUNE)},
+  {MCECMDSCS(sa_ramp_bias, "Set the SA bias ramp parameters", GR_TUNE)},
   {MCECMD2(sq2_tuning_row, "Set the preferred row for auto tuning", GR_TUNE,
       "Row", 0, 32, 'i')},
   {MCECMDC(sq2_servo_gain, "Set the SQ2 servo gain", GR_TUNE,
@@ -1346,7 +1354,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_TUNE)},
   {MCECMDSCS(sq2_servo_bias, "Set the SQ2 servo bias ramp parameters",
       GR_TUNE)},
-  {MCECMDSCS(sq1_ramp_bias, "Set the SQ1 ramp bias parameters", GR_TUNE)},
+  {MCECMDSCS(sq1_ramp_flux, "Set the SQ1 flux ramp parameters", GR_TUNE)},
   {MCECMD1(sq1_ramp_tes_bias_on,
       "Turn on the final TES bias ramp at the end of tuning", GR_TUNE)},
   {MCECMD1(sq1_ramp_tes_bias_off,
@@ -1443,10 +1451,10 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCA(sa_fb, "SA feeback", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
-  {MCECMD2P(tile_heater_on, "Turn on the tile heater", GR_MCC,
+  {MCECMD2P(tile_heater_on, "Turn on the tile heater", GR_IV,
       "Level (V)", 0, 5, 'f')},
-  {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_MCC)},
-  {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_MCC | MCECMD, 3,
+  {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_IV)},
+  {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_IV | MCECMD, 3,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Level (V)", 0, 5, 'f', "NONE"},
