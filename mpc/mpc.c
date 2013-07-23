@@ -398,19 +398,19 @@ static int nmce_from_ip(void)
     bprintf(fatal, "SIOCGIFADDR failed!");
   close(inet_sock);
   
-  /* Flight computers have addresses of the form 192.168.1.8x for x in [1,6].
+  /* Flight computers have addresses of the form 192.168.1.24x for x in [1,6].
    * IPv4 addresses are encoded as a big endian number in s_addr, so we check
    * whether the lower three bytes are 0x01a8c0 (= 1.168.192) and then use the
-   * top byte minus 80 as the mce number, if in range. */
+   * top byte minus 240 as the mce number, if in range. */
   addr =
     (unsigned long)((struct sockaddr_in*)&ifr.ifr_netmask)->sin_addr.s_addr;
-  if (((addr & 0xFFFFF) != 0x01A8C0) || ((addr >> 24) < 81) ||
-      ((addr >> 24) > 86))
+  if (((addr & 0xFFFFF) != 0x01A8C0) || ((addr >> 24) < 241) ||
+      ((addr >> 24) > 246))
   {
     return -1;
   }
 
-  return (addr >> 24) - 81;
+  return (addr >> 24) - 241;
 }
 
 /* Send a TES data packet */
