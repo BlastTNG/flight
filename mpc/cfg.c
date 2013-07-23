@@ -21,6 +21,7 @@
 #include "expcfg_list.h"
 #include <libconfig.h>
 #include <sys/stat.h>
+#include <string.h>
 #include <unistd.h>
 
 static int have_expt_cfg = 0;
@@ -196,7 +197,7 @@ static int read_experiment_cfg(const char *file, config_t *cfg)
 
 int load_experiment_cfg(void)
 {
-  char file[1024] = "/data#/mce/current_data/experiment.cfg";
+  char file[] = "/data#/mce/current_data/experiment.cfg";
 
   if (have_expt_cfg)
     return 1;
@@ -224,21 +225,21 @@ int load_experiment_cfg(void)
     cfg_set_int("num_rows", 0, deferred_num_rows);
     cfg_set_int("data_rate", 0, deferred_data_rate);
     if (expt_cfg_dirty) {
-      flush_experiment_cfg();
+      flush_experiment_cfg(0);
       state &= ~st_config;
     }
   }
   return 0;
 }
 
-int flush_experiment_cfg(void)
+int flush_experiment_cfg(int force)
 {
   int i, fd;
   FILE *stream;
 
   char xptname[] = "/data#/mce/current_data/experiment.cfg";
 
-  if (!expt_cfg_dirty) /* nothing to do */
+  if (!force && !expt_cfg_dirty) /* nothing to do */
     return 0;
 
   /* write to each physical drive */
@@ -350,7 +351,7 @@ void cfg_update_timing(int row_len, int num_rows, int data_rate)
     cfg_set_int("num_rows", 0, num_rows);
     cfg_set_int("data_rate", 0, data_rate);
     if (expt_cfg_dirty) {
-      flush_experiment_cfg();
+      flush_experiment_cfg(0);
       state &= ~st_config;
     }
   }
@@ -427,11 +428,40 @@ void cfg_apply_tuning(int n)
     }
 
   if (!copy_error) { /* probably means it's completely corrupt, but... meh */
-    flush_experiment_cfg();
+    flush_experiment_cfg(0);
 
     /* force reconfig */
     state &= ~st_config;
   }
 
+  config_destroy(&cfg);
   return;
+}
+
+/* replace the current experiment cfg with the template */
+void cfg_load_template(void)
+{
+  char file[100]; 
+  config_t cfg;
+
+  /* we'll get around to it later */
+  if (!have_expt_cfg)
+    return;
+
+  /* this is data drive agnostic ... -ish */
+  sprintf(file, "/data/mas/experiment_x%i.cfg", nmce);
+
+  config_init(&cfg);
+
+  if (read_experiment_cfg(file, &cfg)) {
+    bprintf(info, "Unable to load experiment.cfg template.");
+    return;
+  }
+
+  /* destroy the old one and replace it with the new */
+  config_destroy(&expt);
+  memcpy(&expt, &cfg, sizeof(cfg));
+
+  /* rewrite */
+  flush_experiment_cfg(1);
 }

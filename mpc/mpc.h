@@ -69,6 +69,7 @@ extern int bias_tess_card;
 extern int kill_special;
 extern int tune_first;
 extern int tune_last;
+extern int tune_force_biases;
 extern int data_drive[3];
 extern char array_id[100];
 extern uint16_t bset_num;
@@ -216,7 +217,7 @@ int cfg_get_int(const char *, int);
 int cfg_set_float(const char *, int, double);
 int cfg_set_int(const char *, int, int);
 int cfg_set_int_cr(const char *, int, int, int);
-int flush_experiment_cfg(void);
+int flush_experiment_cfg(int);
 int serialise_experiment_cfg(void);
 void cfg_update_timing(int, int, int);
 

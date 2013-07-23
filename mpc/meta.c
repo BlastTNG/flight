@@ -30,7 +30,7 @@ const char *const mode_string[] = { MODE_STRINGS };
 unsigned int state = 0;
 
 /* the desired mode */
-enum modes goal = op_acq;
+enum modes goal = op_ready;
 int working = 0;
 
 /* mode -> status lookups */

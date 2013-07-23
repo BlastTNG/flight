@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <libgen.h>
 #include <string.h>
 #include <time.h>
@@ -930,11 +931,41 @@ static const char *last_stage_tune[] = {
   "--last-stage=sq1_ramp_tes", "--last-stage=operate"
 };
 
+/* if experiment.cfg doesn't exist in current_data, force a flush to disk
+ * of the one we have */
+static void ensure_experiment_cfg(void)
+{
+  struct stat buf;
+  char file[] = "/data#/mce/current_data/experiment.cfg";
+  file[5] = data_drive[0] + '0';
+
+  /* if stat fails, force a flush of experiment.cfg */
+  if (stat(file, &buf))
+    flush_experiment_cfg(1);
+}
+
 /* run a tuning */
 static int tune(void)
 {
+  int old_sa_ramp_bias = 0, old_sq2_servo_bias_ramp = 0;
+  int old_sq1_servo_bias_ramp = 0;
   const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
     first_stage_tune[tune_first], last_stage_tune[tune_last], NULL };
+  int local_tune_force_biases = tune_force_biases;
+
+  ensure_experiment_cfg();
+
+  if (local_tune_force_biases) {
+    old_sa_ramp_bias = cfg_get_int("sa_ramp_bias", 0);
+    cfg_set_int("sa_ramp_bias", 0, 1);
+
+    old_sq2_servo_bias_ramp = cfg_get_int("sq2_servo_bias_ramp", 0);
+    cfg_set_int("sq2_servo_bias_ramp", 0, 1);
+
+    old_sq1_servo_bias_ramp = cfg_get_int("sq1_servo_bias_ramp", 0);
+    cfg_set_int("sq1_servo_bias_ramp", 0, 1);
+  }
+  flush_experiment_cfg(0);
 
   dt_error = 0;
   data_tk = dt_idle; /* asynchronise */
@@ -974,6 +1005,13 @@ static int tune(void)
           bprintf(info, "Archived tuning as %s\n", tuning_dir);
         }
     }
+  }
+
+  if (local_tune_force_biases) {
+    cfg_set_int("sa_ramp_bias", 0, old_sa_ramp_bias);
+    cfg_set_int("sq2_servo_bias_ramp", 0, old_sq2_servo_bias_ramp);
+    cfg_set_int("sq1_servo_bias_ramp", 0, old_sq1_servo_bias_ramp);
+    flush_experiment_cfg(0);
   }
 
   state &= ~st_tuning;

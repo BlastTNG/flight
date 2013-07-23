@@ -90,8 +90,8 @@ int terminate = 0;
 /* Initialisation veto */
 static int init = 1;
 
-/* tuning stages */
-int tune_first = 0, tune_last = 0;
+/* tuning stuff */
+int tune_first = 0, tune_last = 0, tune_force_biases = 1;
 
 /* iv curve parameters */
 int iv_start, iv_step, iv_last;
@@ -260,12 +260,6 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     int power_cycle = 0;
     int pong = 0;
     int need_send = 0;
-
-    /* XXX */
-    if (power_cycle_mce) {
-      bprintf(warning, "WANTED TO POWER CYCLE MCE!");
-      power_cycle_mce = 0;
-    }
 
     /* collect pending requests */
     if (power_cycle_mce) {
@@ -902,6 +896,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case stop_acq:
         goal = op_ready;
         break;
+      case tune_biases:
+        tune_force_biases = 1;
+        /* fallthrough */
       case tune_array:
         tune_first = ev->ivalues[1];
         tune_last = ev->ivalues[2];
@@ -920,12 +917,11 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_TOGGLE(sq1_servo_bias_on, sq1_servo_bias_off,
             "sq1_servo_bias_ramp");
         CFG_SETSCS(sq1_servo_flux);
-        CFG_SETSCS(sq1_servo_bias);
         CFG_TOGGLE(sq2_servo_bias_on, sq2_servo_bias_off,
             "sq2_servo_bias_ramp");
         CFG_SETSCS(sq2_servo_flux);
         CFG_SETSCS(sq2_servo_bias);
-        CFG_SETSCS(sq1_ramp_bias);
+        CFG_SETSCS(sq1_ramp_flux);
         CFG_TOGGLE(sq1_ramp_tes_bias_on, sq1_ramp_tes_bias_off,
             "sq1_ramp_tes_bias");
         CFG_SETSCS(sq1_ramp_tes_bias);
@@ -1063,6 +1059,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case servo_reset:
         q_servo_reset(ev->ivalues[1], ev->ivalues[2]);
         break;
+      case mce_reload_config:
+        cfg_load_template();
+        break;
 
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
@@ -1071,7 +1070,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
     }
 
     /* flush the experiment.cfg if it has changed */
-    flush_experiment_cfg();
+    flush_experiment_cfg(0);
   } else {
     bprintf(warning, "Unrecognised single command #%i from %s/%i\n",
         ev->command, peer, port);
