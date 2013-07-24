@@ -999,7 +999,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case acq_iv_curve:
         goal = op_iv;
         iv_kick = (ev->ivalues[1] == 1) ? KICK_1V :
-          (ev->ivalues[2] == 2) ? KICK_2V : 0;
+          (ev->ivalues[1] == 2) ? KICK_2V : 0;
         iv_kickwait = ev->rvalues[2];
         iv_start = ev->ivalues[3];
         iv_last = ev->ivalues[4];

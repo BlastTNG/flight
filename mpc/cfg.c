@@ -443,13 +443,19 @@ void cfg_load_template(void)
 {
   char file[100]; 
   config_t cfg;
+  int row_len, num_rows, data_rate;
 
   /* we'll get around to it later */
   if (!have_expt_cfg)
     return;
 
+  /* save these */
+  row_len = cfg_get_int("row_len", 0);
+  num_rows = cfg_get_int("num_rows", 0);
+  data_rate = cfg_get_int("data_rate", 0);
+
   /* this is data drive agnostic ... -ish */
-  sprintf(file, "/data/mas/experiment_x%i.cfg", nmce);
+  sprintf(file, "/data/mas/config/experiment_x%i.cfg", nmce + 1);
 
   config_init(&cfg);
 
@@ -461,6 +467,11 @@ void cfg_load_template(void)
   /* destroy the old one and replace it with the new */
   config_destroy(&expt);
   memcpy(&expt, &cfg, sizeof(cfg));
+
+  /* ignore the sync box parameters from the template */
+  cfg_set_int("row_len", 0, row_len);
+  cfg_set_int("num_rows", 0, num_rows);
+  cfg_set_int("data_rate", 0, data_rate);
 
   /* rewrite */
   flush_experiment_cfg(1);
