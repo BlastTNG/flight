@@ -17,7 +17,7 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#undef DEBUG_META
+#define DEBUG_META
 
 #include "mpc.h"
 #include "blast.h"
@@ -30,7 +30,7 @@ const char *const mode_string[] = { MODE_STRINGS };
 unsigned int state = 0;
 
 /* the desired mode */
-enum modes goal = op_ready;
+enum modes goal = op_stop;
 int working = 0;
 
 /* mode -> status lookups */
@@ -39,11 +39,13 @@ int working = 0;
 static const int mode_start[op_acq + 1] =
 {
   [op_init] = 0,
-  [op_ready] = st_drives | st_mcecom,
-  [op_tune] = st_drives | st_mcecom | st_config | st_tuning,
-  [op_iv] = st_drives | st_mcecom | st_config | st_ivcurv,
-  [op_acq] = st_drives | st_mcecom | st_config | st_acqcnf | st_retdat,
+  [op_ready] = st_drives | st_active | st_mcecom,
+  [op_tune] = st_drives | st_active | st_mcecom | st_config | st_tuning,
+  [op_iv] = st_drives | st_active | st_mcecom | st_config | st_ivcurv,
+  [op_stop] = st_drives,
+  [op_acq] = st_drives | st_active | st_mcecom | st_config | st_acqcnf | st_retdat,
 };
+
 /* Modes that must be inactive to acheive a goal */
 static const int mode_stop[op_acq + 1] =
 {
@@ -51,6 +53,7 @@ static const int mode_stop[op_acq + 1] =
   [op_ready] = st_retdat | st_acqcnf,
   [op_tune] = st_retdat | st_acqcnf,
   [op_iv] = st_retdat | st_acqcnf,
+  [op_stop] = st_retdat | st_tuning | st_acqcnf | st_ivcurv | st_active,
   [op_acq] = st_tuning | st_ivcurv,
 };
 
@@ -90,6 +93,7 @@ void try_toggle(enum status st, int stop, enum status *do_start,
       case st_retdat:
       case st_tuning:
       case st_ivcurv:
+      case st_active:
         /* always okay */
         *do_stop = st;
         break;
@@ -109,6 +113,7 @@ void try_toggle(enum status st, int stop, enum status *do_start,
         break;
       case st_idle:
       case st_mcecom:
+      case st_active:
         /* always okay */
         *do_start = st;
         break;

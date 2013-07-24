@@ -843,10 +843,6 @@ static void stop_mce(void)
 
   /* stop acq */
   kill_special = 1;
-  if (goal == op_acq)
-    goal = op_ready;
-  mce_veto = 1;
-  bprintf(info, "mce_veto = %i", mce_veto);
 }
 
 /* run an iv curve */
@@ -1123,11 +1119,8 @@ void *mas_data(void *dummy)
         } else if (mce_check_cards()) {
           bprintf(err, "Card check failed");
           dt_error = 1;
-        } else {
-          mce_veto = 0;
-          bprintf(info, "mce_veto = %i", mce_veto);
+        } else
           dt_error = 0;
-        }
 
         data_tk = dt_idle;
         break;

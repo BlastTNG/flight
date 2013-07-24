@@ -896,6 +896,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case stop_acq:
         goal = op_ready;
         break;
+      case stop_mce:
+        goal = op_stop;
+        break;
       case tune_biases:
         tune_force_biases = 1;
         /* fallthrough */
@@ -1034,9 +1037,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
           data[7] = data[8] = data[9] = data[10] = data[11] = data[12] =
           data[13] = data[14] = data[15] = ev->ivalues[1];
         push_block("tes", "bias", 0, data, 16);
-        break;
-      case stop_mce:
-        task_special = TSPEC_STOP_MCE;
         break;
       case tile_heater_on:
         data[0] = ev->ivalues[1] * 32767 / 5;

@@ -47,11 +47,6 @@ struct memory_t {
 extern struct memory_t memory;
 extern int mem_dirty;
 
-/* exceptional tasks */
-#define TSPEC_IDLE      0
-#define TSPEC_STOP_MCE  1
-extern int task_special;
-
 /* MPC globals */
 extern int nmce;
 extern int mas_get_temp;
@@ -113,19 +108,20 @@ enum status {
   st_idle   = 0x0000, /* Not a status bit, just a "task" */
 
   st_drives = 0x0001, /* The drives are ready */
-  st_mcecom = 0x0002, /* MCE is talking */ 
-  st_config = 0x0004, /* MCE is configured */
-  st_acqcnf = 0x0008, /* Acquisition is configured */
-  st_retdat = 0x0010, /* MCE is returning data */
-  st_tuning = 0x0020, /* auto_setup in progress */
-  st_ivcurv = 0x0040, /* IV curve in progress */
+  st_active = 0x0002, /* MCE ops are active */
+  st_mcecom = 0x0004, /* MCE is talking */ 
+  st_config = 0x0008, /* MCE is configured */
+  st_acqcnf = 0x0010, /* Acquisition is configured */
+  st_retdat = 0x0020, /* MCE is returning data */
+  st_tuning = 0x0040, /* auto_setup in progress */
+  st_ivcurv = 0x0080, /* IV curve in progress */
 };
 
 extern unsigned int state;
 
 /* operating modes -- op_acq must be the last mode */
-enum modes { op_init = 0, op_ready, op_tune, op_iv, op_acq };
-#define MODE_STRINGS "init", "ready", "tune", "iv", "acq"
+enum modes { op_init = 0, op_ready, op_tune, op_iv, op_stop, op_acq };
+#define MODE_STRINGS "init", "ready", "tune", "iv", "stop", "acq"
 
 /* drive mapping */
 #define DRIVE0_DATA0 0x0000

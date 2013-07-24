@@ -26,7 +26,6 @@ static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
 int dt_error = 0;
 int comms_lost = 0;
-int task_special = TSPEC_IDLE;
 /* kill switch */
 int kill_special = 0;
 static int cl_count = 0;
@@ -221,6 +220,7 @@ void *task(void *dummy)
       start_tk = stop_tk = 0xFFFF; /* interrupt! */
 
       /* stop mce comms */
+      state &= ~st_active;
       mce_veto = 1;
       bprintf(info, "mce_veto = %i", mce_veto);
 
@@ -233,6 +233,7 @@ void *task(void *dummy)
         cl_count = 0;
         start_tk = stop_tk = st_idle;
         state &= ~(st_config | st_acqcnf | st_mcecom | st_retdat);
+        state |= st_active;
         continue;
       }
 
@@ -254,13 +255,6 @@ void *task(void *dummy)
     } else if (req_dm != cur_dm && state & st_acqcnf) {
       /* change of data mode while acquiring -- restart acq */
       task_reset_mce();
-    } else if (task_special) { /* handle priority tasks */
-      switch (task_special) {
-        case TSPEC_STOP_MCE:
-          dt_wait(dt_stopmce);
-          break;
-      }
-      task_special = 0;
     } else if (start_tk != st_idle) { /* handle start task requests */
       switch (start_tk) {
         case st_idle:
@@ -286,6 +280,11 @@ void *task(void *dummy)
           }
 
           /* done */
+          start_tk = st_idle;
+          break;
+        case st_active:
+          mce_veto = 0;
+          state |= st_active;
           start_tk = st_idle;
           break;
         case st_mcecom:
@@ -374,6 +373,12 @@ void *task(void *dummy)
         case st_config:
           /* sledgehammer based stop acq */
           task_reset_mce();
+          stop_tk = st_idle;
+          break;
+        case st_active:
+          dt_error = dt_wait(dt_stopmce);
+          mce_veto = 1;
+          state &= ~(st_config | st_active);
           stop_tk = st_idle;
           break;
       }
