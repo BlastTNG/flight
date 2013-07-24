@@ -91,9 +91,9 @@ char *mcebits(int n)
   return bits[n];
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
-  DIRFILE *D = gd_open("/data/etc/defile.lnk", GD_RDONLY | GD_VERBOSE);
+  DIRFILE *D = gd_open((argc > 1) ? argv[1] : "/data/etc/defile.lnk", GD_RDONLY | GD_VERBOSE);
   if (!D)
     return 1;
   if (gd_error(D))
