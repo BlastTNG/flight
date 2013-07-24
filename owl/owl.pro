@@ -18,7 +18,7 @@ INSTALLS += target
 CONFIG += link_pkgconfig
 
 owlfiles.path = /data/etc/owl
-owlfiles.files += owl-files/blast2012.owl
+owlfiles.files += owl-files/spider.owl
 INSTALLS += owlfiles
 
 SOURCES += main.cpp\
