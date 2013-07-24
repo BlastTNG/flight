@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 
-man_MANS = defile.1
+man_MANS = defile-blast.1 defile-spider.1
 EXTRA_DIST = fixup.sh bootstrap.sh
 
 blastetcdir = @DATA_ETC_DIR@/blast
@@ -42,6 +42,9 @@ DISTCHECK_CONFIGURE_FLAGS = --with-data-etc="$$dc_install_base/data" --with-etc=
 defile.conf: Makefile $(top_builddir)/defile.conf.in $(top_srcdir)/fixup.sh
 	rm -f defile.conf defile.conf.tmp
 	sh $(top_srcdir)/fixup.sh "$(prefix)" "$(top_builddir)" defile.conf
+
+defile-blast.1 defile-spider.1: defile.1
+	cp $< $@
 
 defile.1: Makefile $(top_builddir)/defile.1.in $(top_srcdir)/fixup.sh
 	rm -f defile.1 defile.1.tmp
