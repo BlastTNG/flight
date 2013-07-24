@@ -1,0 +1,11 @@
+To build (requires ncurses and getdata):
+
+  make
+
+To run:
+ 
+  mccview [dirfile]
+
+To exit:
+
+  ^C

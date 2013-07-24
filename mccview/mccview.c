@@ -1,3 +1,13 @@
+/* MCCview
+ *
+ * Copyright (C) 2013 D. V. Wiebe
+ *
+ * Usage of this software is permitted provided that this license is retained
+ * with the software, so that any entity that uses this software is notified of
+ * this license.
+ *
+ * DISCLAIMER: THIS SOFTWARE IS WITHOUT WARRANTY.
+ */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
