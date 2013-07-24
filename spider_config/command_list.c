@@ -30,8 +30,8 @@
 
 #include "mce_counts.h"
 
-#define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "INSERT_LAST_HK", {mce_names}
-#define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"INSERT_LAST_HK", {mce_names+1}
+#define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "NONE", {mce_names}
+#define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"NONE", {mce_names + 1}
 #define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "MCE_LAST_ACTION", {w}
 
 #define MCECMD1(cmd,desc,grp) \
