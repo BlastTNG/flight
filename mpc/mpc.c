@@ -374,6 +374,10 @@ static void send_slow_data(char *data, int send)
   /* drive map */
   slow_dat.drive_map = drive_map;
 
+  /* last things */
+  slow_dat.last_tune = memory.last_tune;
+  slow_dat.last_iv = memory.last_iv;
+
   /* make packet and send */
   if (send) {
     len = mpc_compose_slow(&slow_dat, nmce, data);
