@@ -91,7 +91,7 @@ int terminate = 0;
 static int init = 1;
 
 /* tuning stuff */
-int tune_first = 0, tune_last = 0, tune_force_biases = 1;
+int tune_first = 0, tune_last = 0, tune_force_biases = 0;
 
 /* iv curve parameters */
 int iv_start, iv_step, iv_last;

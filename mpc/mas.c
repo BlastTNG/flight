@@ -1010,6 +1010,7 @@ static int tune(void)
     flush_experiment_cfg(0);
   }
 
+  tune_force_biases = 0;
   state &= ~st_tuning;
   return r ? 1 : 0;
 }
