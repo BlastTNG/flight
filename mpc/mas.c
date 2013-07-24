@@ -70,7 +70,7 @@ uint32_t *frame[FB_SIZE];
 static uint32_t *fb = NULL;
 
 /* veto on mce communication */
-int mce_veto = 0;
+int mce_veto = 1;
 
 /* number of frames in an acq_go */
 #define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
@@ -1057,7 +1057,7 @@ void crash_stop(int sig)
   terminate = 1;
   bprintf(err, "Crash stop.");
   /* stop acq and zero bias */
-  if (mas) {
+  if (mas && !mce_veto) {
     stopacq();
     stop_mce();
   }

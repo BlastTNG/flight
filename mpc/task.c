@@ -222,7 +222,6 @@ void *task(void *dummy)
       /* stop mce comms */
       state &= ~st_active;
       mce_veto = 1;
-      bprintf(info, "mce_veto = %i", mce_veto);
 
       /* stop the MCE and reset it */
       if (task_reset_mce() == 0) {

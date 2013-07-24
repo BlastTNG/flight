@@ -1462,6 +1462,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_ACQ, "Row", 0, 32, 'i')},
+  {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_ACQ)},
   {MCECMD2(bias_tess_all, "Set all TES biases", GR_ACQ, "Bias", 0, 65535, 'i')},
   {COMMAND(bias_tess), "Set TES biases", GR_ACQ | MCECMD, 10,
     {

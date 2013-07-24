@@ -1062,6 +1062,10 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case mce_reload_config:
         cfg_load_template();
         break;
+      case flux_loop_init:
+        data[0] = 1;
+        push_block("rca", "flx_lp_init", 0, data, 1);
+        break;
 
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",

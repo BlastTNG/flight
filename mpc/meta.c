@@ -17,7 +17,7 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define DEBUG_META
+#undef DEBUG_META
 
 #include "mpc.h"
 #include "blast.h"
