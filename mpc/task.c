@@ -191,7 +191,7 @@ STOPPED:
 
   cl_count = 0;
   state |= st_mcecom;
-  state &= ~st_retdat;
+  state &= ~(st_retdat | st_acqcnf);
 
   return 0;
 }
@@ -279,10 +279,13 @@ void *task(void *dummy)
       /* need complete MCE restart */
       state &= ~(st_config | st_mcecom | st_retdat);
       meta_tk = 0; /* try again */
-    } else if (req_dm != cur_dm && moda != md_none) {
-      bprintf(info, "data mode change detected %i -> %i", req_dm, cur_dm);
-      /* change of data mode while acquiring -- restart acq */
-      task_reset_mce();
+    } else if (req_dm != cur_dm) {
+      if (need_acq(goal)) {
+        bprintf(info, "data mode change detected %i -> %i", cur_dm, req_dm);
+        /* change of data mode while acquiring -- restart acq */
+        task_reset_mce();
+      }
+      cur_dm = req_dm;
     } else if (meta_tk) {
       int stop = meta_tk & STOP_TK;
       enum status status_tk = st_idle;
@@ -298,7 +301,6 @@ void *task(void *dummy)
         if (status_tk != st_idle)
           switch (status_tk) {
             case st_idle:
-            case st_retdat: /* just to shut CC up */
               break;
             case st_drives:
               /* choose drives */
@@ -342,23 +344,18 @@ void *task(void *dummy)
                 meta_tk = 0;
               }
               break;
-          }
-        else /* moda start */
-          switch (moda_tk) {
-            case md_none: /* just to shut CC up */
-              break;
-            case md_acqcnf:
+            case st_acqcnf:
               /* "mce status" */
               if (dt_wait(dt_status))
                 comms_lost = 1;
               else if (dt_wait(dt_acqcnf)) /* acq config */
                 comms_lost = 1;
               else {
-                moda = md_acqcnf;
+                state |= st_acqcnf;
                 meta_tk = 0;
               }
               break;
-            case md_running:
+            case st_retdat:
               if (check_acq) { /* probably means an acquisition immediately
                                   terminated -- try a reset */
                 comms_lost = 1;
@@ -371,9 +368,17 @@ void *task(void *dummy)
                 comms_lost = 1;
               } else {
                 state |= st_retdat;
-                moda = md_running;
                 meta_tk = 0;
               }
+              break;
+          }
+        else /* moda start */
+          switch (moda_tk) {
+            case md_none: /* just to shut CC up */
+              break;
+            case md_running: /* nop mode */
+              moda = md_running;
+              meta_tk = 0;
               break;
             case md_tuning:
               /* auto_setup */
@@ -394,6 +399,7 @@ void *task(void *dummy)
             case st_idle:
               break;
             case st_retdat:
+            case st_acqcnf:
             case st_drives:
             case st_mcecom:
               task_stop_acq(0);
@@ -415,9 +421,7 @@ void *task(void *dummy)
           switch (moda_tk) {
             case md_none: /* just to shut CC up */
               break;
-            case md_running:
-            case md_acqcnf:
-              task_stop_acq(0);
+            case md_running: /* nop mode */
               meta_tk = 0;
               moda = md_none;
               break;

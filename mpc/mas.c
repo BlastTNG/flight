@@ -875,13 +875,16 @@ static int do_ivcurve(uint32_t kick, int kickwait, int start, int last,
     write_param("heater", "bias", 0, &zero, 1);
 
     /* wait */
-    sleep(kickwait);
+    for (i = 0; i < kickwait; ++i) {
+      sleep(1);
+      if (kill_special)
+        return 1;
+    }
   }
 
   /* do the ramp */
-  int r = exec_and_wait(sched, startup, argv[0], (char**)argv, 0, 1,
+  int r = exec_and_wait(sched, none, argv[0], (char**)argv, 0, 1,
       &kill_special);
-  kill_special = 0;
 
   return r;
 }
@@ -918,7 +921,7 @@ static int ivcurve(void)
     for (d = 0; d < 4; ++d)
       if (slow_dat.df[d]) {
         basedir[5] = d + '0';
-        exec_and_wait(sched, startup, argv[0], (char**)argv, 100, 0, NULL);
+        exec_and_wait(sched, none, argv[0], (char**)argv, 100, 0, NULL);
         bprintf(info, "Archived IV curve as %s/iv_%04i", basedir,
             memory.last_iv);
       }
@@ -1021,9 +1024,8 @@ static int tune(void)
 
   dt_error = 0;
   data_tk = dt_idle; /* asynchronise */
-  int r = exec_and_wait(sched, startup, MAS_SCRIPT "/auto_setup", (char**)argv,
+  int r = exec_and_wait(sched, none, MAS_SCRIPT "/auto_setup", (char**)argv,
       0, 1, &kill_special);
-  kill_special = 0;
 
   if (r == 0) { /* archive it */
     int d;
@@ -1220,10 +1222,6 @@ void *mas_data(void *dummy)
           dt_error = 0;
         data_tk = dt_idle;
         break;
-      case dt_autosetup:
-        tune();
-        meta_safe_update(gl_acq, md_none, state); /* back to acq */
-        break;
       case dt_delacq:
         if (acq)
           mcedata_acq_destroy(acq);
@@ -1231,15 +1229,26 @@ void *mas_data(void *dummy)
         dt_error = 0;
         data_tk = dt_idle;
         break;
+      case dt_autosetup:
+        tune();
+        if (!kill_special)
+          meta_safe_update(gl_acq, md_none, state); /* back to acq */
+        else
+          kill_special = 0;
+        break;
       case dt_ivcurve:
         ivcurve();
-        meta_safe_update(gl_acq, md_none, state & ~st_config); /* back to acq */
+        if (!kill_special)
+          meta_safe_update(gl_acq, md_none, state & ~st_config);
+        else
+          kill_special = 0;
         break;
       case dt_lcloop:
         lcloop();
-        dt_error = 0;
-        data_tk = dt_idle;
-        meta_safe_update(gl_acq, md_none, state & ~st_config); /* back to acq */
+        if (!kill_special)
+          meta_safe_update(gl_acq, md_none, state & ~st_config);
+        else
+          kill_special = 0;
         break;
       case dt_stopmce:
         stop_mce();

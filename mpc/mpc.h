@@ -108,7 +108,8 @@ enum status {
   st_active = 0x0002, /* MCE ops are active */
   st_mcecom = 0x0004, /* MCE is talking */ 
   st_config = 0x0008, /* MCE is configured */
-  st_retdat = 0x0010, /* MCE is returning data */
+  st_acqcnf = 0x0010, /* Acquisition is configured */
+  st_retdat = 0x0020, /* MCE is returning data */
 };
 #define STOP_TK 0x8000
 
@@ -117,7 +118,6 @@ extern unsigned int state;
 #define MODA_SHIFT 8 /* bias to prevent modas from clashing with the states */
 enum modas {
   md_none = 0,
-  md_acqcnf, /* acquisition is configured */
   md_running, /* normal data acquisition */
   md_tuning, /* auto_setup in progress */
   md_iv_curve, /* normal IV curve in progress */
@@ -125,8 +125,7 @@ enum modas {
   /* Probably non-flight modes */
   md_lcloop, /* lc-looping */
 };
-#define MODA_STRINGS "none", "acqcnf", "running", "tuning", "iv_curve", \
-  "lcloop"
+#define MODA_STRINGS "none", "running", "tuning", "iv_curve", "lcloop"
 
 extern enum modas moda;
 
@@ -134,12 +133,13 @@ extern enum modas moda;
 enum goals { gl_ready, gl_tune, gl_iv, gl_stop, gl_lcloop, gl_acq };
 #define GOAL_STRINGS "ready", "tune", "iv", "stop", "lcloop", "acq"
 
-extern enum goals      goal;
+extern enum goals goal;
 
 /* The director */
 void meta(void);
 void meta_safe_update(enum goals new_goal, enum modas new_moda,
     unsigned int new_state);
+int need_acq(enum goals goal);
 
 /* meta <-> task communication */
 extern uint32_t meta_tk;

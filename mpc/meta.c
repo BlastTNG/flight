@@ -61,7 +61,7 @@ static int stop_moda(void)
         return 0;
       break;
     case gl_acq:
-      if (moda == md_running || moda == md_acqcnf)
+      if (moda == md_running)
         return 0;
       break;
   }
@@ -72,6 +72,14 @@ static int stop_moda(void)
 #endif
   meta_tk = STOP_TK | (moda << MODA_SHIFT);
   return 1;
+}
+
+/* returns true if this moda wants and acquisition running */
+int need_acq(enum goals goal)
+{
+  if (goal == gl_acq)
+    return 1;
+  return 0;
 }
 
 /* Meta's job is to run the goal and mode */
@@ -85,8 +93,7 @@ void meta(void)
   if (stop_moda())
     return;
 
-  /* now, moda is either be md_none, or one of the allowed modas for this
-   * goal */
+  /* now, moda is either md_none, or one of the allowed modas for this goal */
 
   /* everyone wants this */
   if (~state & st_drives) {
@@ -95,7 +102,11 @@ void meta(void)
   }
 
   if (goal == gl_stop) { /* stop stuff */
-    if (state & st_config)
+    if (state & st_retdat)
+      meta_tk = st_retdat | STOP_TK;
+    else if (state & st_acqcnf)
+      meta_tk = st_acqcnf | STOP_TK;
+    else if (state & st_config)
       meta_tk = st_config | STOP_TK;
     else if (state & st_active)
       meta_tk = st_active | STOP_TK;
@@ -106,15 +117,25 @@ void meta(void)
     meta_tk = st_mcecom;
   else if (~state & st_config)
     meta_tk = st_config;
-  else /* now run the goal */
+  else if (need_acq(goal)) { /* turn acq on */
+    if (~state & st_acqcnf)
+      meta_tk = st_acqcnf;
+    else if (~state & st_retdat)
+      meta_tk = st_retdat;
+  } else { /* turn acq off */
+    if (state & st_retdat)
+      meta_tk = st_retdat | STOP_TK;
+    else if (state & st_acqcnf)
+      meta_tk = st_acqcnf | STOP_TK;
+  }
+
+  if (!meta_tk) /* now run the goal */
     switch (goal) {
       case gl_stop: /* nothing to do */
       case gl_ready:
         break;
       case gl_acq:
         if (moda == md_none)
-          meta_tk = md_acqcnf << MODA_SHIFT;
-        else if (moda == md_acqcnf)
           meta_tk = md_running << MODA_SHIFT;
         break;
       case gl_tune:
@@ -132,8 +153,8 @@ void meta(void)
 
 #ifdef DEBUG_META
   if (meta_tk) {
-    bprintf(info, "M: goal: %s; moda: %s", goal_string[goal],
-        moda_string[moda >> MODA_SHIFT]);
+    bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X", goal_string[goal],
+        moda_string[moda >> MODA_SHIFT], state);
     if ((meta_tk & ~STOP_TK) >= md_none)
       bprintf(info, "M: meta_tk: %s %s", (meta_tk & STOP_TK) ? "stop" : "start",
           moda_string[(meta_tk & ~STOP_TK) >> MODA_SHIFT]);
@@ -144,6 +165,7 @@ void meta(void)
 #endif
 }
 
+/* change mode, state and/or goal without screwing up the director */
 void meta_safe_update(enum goals new_goal, enum modas new_moda,
     unsigned int new_state)
 {
