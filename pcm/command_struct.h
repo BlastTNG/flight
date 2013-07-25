@@ -436,10 +436,9 @@ struct CommandDataStruct {
     double move_i; //hold current in A, shared by all motors
 
     /* command parameters */
-    int who;
-    double delta; //degrees
+    double delta[6]; //degrees
     enum {hwp_m_sleep, hwp_m_panic, hwp_m_halt, hwp_m_rel_move,
-      hwp_m_step} mode;
+      hwp_m_step} mode[6];
     int force_repoll;
     double phase;
 

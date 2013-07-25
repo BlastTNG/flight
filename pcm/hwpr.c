@@ -39,7 +39,9 @@ const int hwp_nteeth[NHWP] = {465, 464, 463, 464, 463, 464};
 
 
 #define	MAX_SERIAL_ERRORS 20		// after this many, repoll bus
-#define POLL_TIMEOUT 25         // in units of slow frames
+#define POLL_TIMEOUT 300        // in units of slow frames
+//extend timeout for seancal tests with incomplete set of phytrons
+//#define POLL_TIMEOUT 30000        // in units of slow frames
 static int poll_timeout = 1;
 
 static unsigned int actuators_init = 0;	// bitfield for when actuators usable
@@ -64,50 +66,37 @@ static void DoHWP()
   int i;
   double to_next;
 
-  // update the HWP move parameters
   for (i=0; i<NHWP; i++) {
+    // update the HWP move parameters
     Phytron_SetVel(&bus, i, CommandData.hwp.vel);
     Phytron_SetIMove(&bus, i, CommandData.hwp.move_i);
-  }
 
-  //execute controls for the given mode
-  switch (CommandData.hwp.mode) {
-    case hwp_m_panic:
-      Phytron_Stop_All(&bus);
-      break;
-    case hwp_m_halt:
-      if (CommandData.hwp.who >= NHWP || CommandData.hwp.who < 0)
-        for (i=0; i<NHWP; i++) Phytron_Stop(&bus, i);
-      else Phytron_Stop(&bus, CommandData.hwp.who);
-      break;
-    case hwp_m_rel_move:
-      if (CommandData.hwp.who >= NHWP || CommandData.hwp.who < 0) {
-        for (i=0; i<NHWP; i++) {
-          hwp_data[i].direction = (CommandData.hwp.delta >= 0);
-          Phytron_Move(&bus, i, CommandData.hwp.delta);
-        }
-      } else {
-        hwp_data[CommandData.hwp.who].direction = (CommandData.hwp.delta >= 0);
-        Phytron_Move(&bus, CommandData.hwp.who, CommandData.hwp.delta);
-      }
-      break;
-    case hwp_m_step:
-      for (i=0; i<NHWP; i++) {
+    //execute controls for the given mode
+    switch (CommandData.hwp.mode[i]) {
+      case hwp_m_panic:
+        Phytron_Stop_All(&bus);
+        break;
+      case hwp_m_halt:
+        Phytron_Stop(&bus, i);
+        break;
+      case hwp_m_rel_move:
+        hwp_data[i].direction = (CommandData.hwp.delta[i] >= 0);
+        Phytron_Move(&bus, i, CommandData.hwp.delta[i]);
+        break;
+      case hwp_m_step:
         to_next = hwpToNext(i);
         hwp_data[i].direction = (to_next >= 0);
         Phytron_Move(&bus, i, to_next);
-      }
-      break;
-    case hwp_m_sleep:
-    default:
-      break;
-  }
+        break;
+      case hwp_m_sleep:
+      default:
+        break;
+    }
 
-  //reset state
-  CommandData.hwp.mode = hwp_m_sleep;
+    //reset state
+    CommandData.hwp.mode[i] = hwp_m_sleep;
 
-  //read absolute step counters
-  for (i=0; i<NHWP; i++) {
+    //read absolute step counters
     Phytron_ReadInt(&bus, i, "P21R", &hwp_data[i].pos);
   }
 }
@@ -314,7 +303,7 @@ void StartHWP(void)
       //    CommandData.hwp.command[my_cindex], 
       //    bus.stepper[CommandData.hwp.caddr[my_cindex]].name);
       //increase print level for uplinked manual commands
-      bus.chatter = PH_CHAT_BUS;
+      //bus.chatter = PH_CHAT_BUS;
       if (CommandData.hwp.command[my_cindex][0] == '\\') {
         //'\\' indicates NAComm. Skip the '\\' character itself
         Phytron_NAComm(&bus, CommandData.hwp.caddr[my_cindex],
@@ -324,7 +313,7 @@ void StartHWP(void)
             CommandData.hwp.command[my_cindex]);
       }
       CommandData.hwp.caddr[my_cindex] = -1;
-      bus.chatter = HWP_CHATTER;
+      //bus.chatter = HWP_CHATTER;
     }
 
     for (i=0; i<NHWP; i++) {

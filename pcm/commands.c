@@ -42,6 +42,7 @@
 #include "sip.h"
 #include "bset.h"
 #include "mceserv.h"
+#include "hwpr.h"
 
 void SetRaDec(double, double); /* defined in pointing.c */
 void SetTrimToSC(int);
@@ -199,6 +200,7 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
 
 void SingleCommand (enum singleCommand command, int scheduled)
 {
+  int i;
   int i_point = GETREADINDEX(point_index);
   double sun_az;
   int is_new;
@@ -763,13 +765,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
     case hwp_panic:
-      CommandData.hwp.mode = hwp_m_panic;
+      for (i=0; i<NHWP; i++) CommandData.hwp.mode[i] = hwp_m_panic;
       break;
     case hwp_repoll:
       CommandData.hwp.force_repoll = 1;
       break;
     case hwp_step:
-      CommandData.hwp.mode = hwp_m_step;
+      for (i=0; i<NHWP; i++) CommandData.hwp.mode[i] = hwp_m_step;
       break;
 
       /***************************************/
@@ -1282,13 +1284,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwp.phase = rvalues[0];
       break;
     case hwp_move:
-      CommandData.hwp.who = ivalues[0] - 1;
-      CommandData.hwp.delta = rvalues[1];
-      CommandData.hwp.mode = hwp_m_rel_move;
+      if (ivalues[0] > 0) {
+        CommandData.hwp.delta[ivalues[0]-1] = rvalues[1];
+        CommandData.hwp.mode[ivalues[0]-1] = hwp_m_rel_move;
+      } else for (i=0; i<NHWP; i++) {
+        CommandData.hwp.delta[i] = rvalues[1];
+        CommandData.hwp.mode[i] = hwp_m_rel_move;
+      }
       break;
     case hwp_halt:
-      CommandData.hwp.who = ivalues[0] - 1;
-      CommandData.hwp.mode = hwp_m_halt;
+      if (ivalues[0] > 0) {
+        CommandData.hwp.mode[ivalues[0]-1] = hwp_m_halt;
+      } else for (i=0; i<NHWP; i++) {
+        CommandData.hwp.mode[i] = hwp_m_halt;
+      }
       break;
     case hwp_bias_off:
       // extra << 6 is to use bits that turn bias off, not always on
@@ -2056,7 +2065,7 @@ void InitCommandData()
   CommandData.hwp.caddr[0] = -1;
   CommandData.hwp.caddr[1] = -1;
   CommandData.hwp.caddr[2] = -1;
-  CommandData.hwp.mode = hwp_m_sleep;
+  for (i=0; i<NHWP; i++) CommandData.hwp.mode[i] = hwp_m_sleep;
   CommandData.hwp.bias_mask = 0x3f << 6;
 
   CommandData.StarCam[0].platescale = 9.3;

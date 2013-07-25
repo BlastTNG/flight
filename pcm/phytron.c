@@ -275,9 +275,9 @@ static int Phytron_DoSend(struct phytron* bus, int who, int useaxis,
     hex_buffer = malloc(3*len+1);
     addrstr[0] = bus->stepper[who].addr;
     if (useaxis) addrstr[1] = bus->stepper[who].axis;
-//    bprintf(info, "%sRequest=%s (%s%s)", bus->name, 
-//        HexDump((unsigned char *)buffer, hex_buffer, len),
-//        addrstr, what);
+    bprintf(info, "%sRequest=%s (%s%s)", bus->name, 
+        HexDump((unsigned char *)buffer, hex_buffer, len),
+        addrstr, what);
     free(hex_buffer);
   }
   //update baud rate to that used by stepper 'who'
