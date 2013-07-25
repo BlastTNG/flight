@@ -32,7 +32,7 @@ unsigned int state = 0;
 
 /* goal and moda */
 enum modas moda = md_none;
-enum goals goal = gl_acq;
+enum goals goal = gl_stop;
 
 uint32_t meta_tk = 0;
 
