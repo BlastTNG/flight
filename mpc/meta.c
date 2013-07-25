@@ -57,7 +57,7 @@ static int stop_moda(void)
         return 0;
       break;
     case gl_lcloop:
-      if (moda == md_lcloop_wait || moda == md_lcloop_acq)
+      if (moda == md_lcloop)
         return 0;
       break;
     case gl_acq:
@@ -126,7 +126,8 @@ void meta(void)
           meta_tk = md_iv_curve << MODA_SHIFT;
         break;
       case gl_lcloop:
-          abort();
+        if (moda == md_none)
+          meta_tk = md_lcloop << MODA_SHIFT;
     }
 
 #ifdef DEBUG_META

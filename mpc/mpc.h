@@ -123,11 +123,10 @@ enum modas {
   md_iv_curve, /* normal IV curve in progress */
 
   /* Probably non-flight modes */
-  md_lcloop_acq, /* lcloop: acquiring loadcurve */
-  md_lcloop_wait, /* lc_loop: waiting */
+  md_lcloop, /* lc-looping */
 };
 #define MODA_STRINGS "none", "acqcnf", "running", "tuning", "iv_curve", \
-  "lcloop_acq", "lcloop_wait"
+  "lcloop"
 
 extern enum modas moda;
 
@@ -201,12 +200,12 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
-  dt_ivcurve, dt_stop, dt_stopmce,
+  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
   "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
-"ivcurve", "stop", "stopmce"
+"ivcurve", "stop", "stopmce", "lcloop"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

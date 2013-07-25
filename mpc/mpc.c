@@ -903,6 +903,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case stop_mce:
         goal = gl_stop;
         break;
+      case lcloop:
+        goal = gl_lcloop;
+        break;
       case tune_biases:
         tune_force_biases = 1;
         /* fallthrough */

@@ -845,20 +845,49 @@ static void stop_mce(void)
   kill_special = 1;
 }
 
-/* run an iv curve */
-static int ivcurve(void)
+/* run a load curve */
+static int do_ivcurve(uint32_t kick, int kickwait, int start, int last,
+    int step, double wait, const char *filename)
 {
   uint32_t data[16];
-  char start_arg[30], step_arg[30], count_arg[30], step_wait[30],
-       filename1[90], filename2[90], filename3[90], last_arg[30];
-  const char *argv[] = { MAS_SCRIPT "/ramp_tes_bias", filename1, "s", start_arg,
+  char start_arg[30], step_arg[30], count_arg[30], step_wait[30], last_arg[30];
+  const char *argv[] = { MAS_SCRIPT "/ramp_tes_bias", filename, "s", start_arg,
     step_arg, count_arg, step_wait, step_wait, start_arg, "0", last_arg, NULL };
 
-  sprintf(start_arg, "%i", iv_start);
-  sprintf(last_arg, "%i", iv_last);
-  sprintf(step_arg, "%i", iv_step);
-  sprintf(count_arg, "%i", (iv_last - iv_start) / iv_step);
-  sprintf(step_wait, "%f", iv_wait);
+  sprintf(start_arg, "%i", start);
+  sprintf(last_arg, "%i", last);
+  sprintf(step_arg, "%i", step);
+  sprintf(count_arg, "%i", (last - start) / step);
+  sprintf(step_wait, "%f", wait);
+
+  /* kick */
+  if (kick > 0) {
+    int i;
+    uint32_t zero = 0;
+    /* bias to the start */
+    for (i = 0; i < 16; ++i)
+      data[i] = start;
+    write_param("tes", "bias", 0, data, 16);
+    write_param("heater", "bias", 0, &kick, 1);
+    sleep(2);
+    write_param("heater", "bias", 0, &zero, 1);
+
+    /* wait */
+    sleep(kickwait);
+  }
+
+  /* do the ramp */
+  int r = exec_and_wait(sched, startup, argv[0], (char**)argv, 0, 1,
+      &kill_special);
+  kill_special = 0;
+
+  return r;
+}
+
+/* run and archive an iv curve */
+static int ivcurve(void)
+{
+  char filename1[90];
 
   /* we burn the index number whether-or-not things are successful */
   sprintf(filename1, "iv_%04i", ++memory.last_iv);
@@ -867,42 +896,23 @@ static int ivcurve(void)
   dt_error = 0;
   data_tk = dt_idle; /* asynchronise */
 
-  /* kick */
-  if (iv_kick > 0) {
-    int i;
-    uint32_t zero = 0;
-    /* bias to the start */
-    for (i = 0; i < 16; ++i)
-      data[i] = iv_start;
-    write_param("tes", "bias", 0, data, 16);
-    write_param("heater", "bias", 0, &iv_kick, 1);
-    sleep(2);
-    write_param("heater", "bias", 0, &zero, 1);
-
-    /* wait */
-    sleep(iv_kickwait);
-  }
-
-  /* do the ramp */
-  int r = exec_and_wait(sched, startup, argv[0], (char**)argv, 0, 1,
-      &kill_special);
-  kill_special = 0;
+  int r = do_ivcurve(iv_kick, iv_kickwait, iv_start, iv_last, iv_step,
+      iv_wait, filename1);
 
   if (r == 0) { /* archive it */
     int d;
+    char filename2[90], filename3[90];
     char basedir[] = "/data#/mce/ivcurves";
+
+    char *argv[] = {"/bin/cp", filename1, filename2, filename3, basedir, NULL};
+
     sprintf(filename1, "/data%c/mce/current_data/iv_%04i", data_drive[0] + '0',
         memory.last_iv);
     sprintf(filename2, "/data%c/mce/current_data/iv_%04i.run",
         data_drive[0] + '0', memory.last_iv);
     sprintf(filename3, "/data%c/mce/current_data/iv_%04i.bias",
         data_drive[0] + '0', memory.last_iv);
-    argv[0] = "/bin/cp";
-    argv[1] = filename1;
-    argv[2] = filename2;
-    argv[3] = filename3;
-    argv[4] = basedir;
-    argv[5] = NULL;
+
     for (d = 0; d < 4; ++d)
       if (slow_dat.df[d]) {
         basedir[5] = d + '0';
@@ -913,6 +923,42 @@ static int ivcurve(void)
   }
 
   return 0;
+}
+
+static void lcloop(void)
+{
+  int r;
+  char filename[90];
+
+  dt_error = 0;
+  data_tk = dt_idle; /* asynchronise */
+
+  /* this just alternates between Al and Ti load curves forever */
+  for (;;) {
+    /* AL */
+    sprintf(filename, "loadcurve_Al_MPC_%li", (long)time(NULL));
+
+    bprintf(info, "LCLOOP: %s", filename);
+    r = do_ivcurve(6554, 300, 32000, 0, -50, 0.06, filename);
+
+    if (r)
+      return;
+
+    /* wait */
+    sleep(900);
+
+    /* Ti */
+    sprintf(filename, "loadcurve_Ti_MPC_%li", (long)time(NULL));
+
+    bprintf(info, "LCLOOP: %s", filename);
+    r = do_ivcurve(6554, 300, 32000, 0, -50, 0.06, filename);
+
+    if (r)
+      return;
+
+    /* wait */
+    sleep(900);
+  }
 }
 
 static const char *first_stage_tune[] = {
@@ -1177,6 +1223,12 @@ void *mas_data(void *dummy)
         break;
       case dt_ivcurve:
         ivcurve();
+        meta_safe_update(gl_acq, md_none, state & ~st_config); /* back to acq */
+        break;
+      case dt_lcloop:
+        lcloop();
+        dt_error = 0;
+        data_tk = dt_idle;
         meta_safe_update(gl_acq, md_none, state & ~st_config); /* back to acq */
         break;
       case dt_stopmce:

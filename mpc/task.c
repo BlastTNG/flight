@@ -203,6 +203,18 @@ static int task_reset_mce()
   return 0;
 }
 
+/* run a dt script */
+static void task_dt_script(enum dtask dt, enum modas new_moda)
+{
+  kill_special = 0;
+  if (dt_wait(dt)) {
+    comms_lost = 1; /* hmm... */
+  } else {
+    moda = new_moda;
+    meta_tk = 0;
+  }
+}
+
 /* run generic tasks */
 void *task(void *dummy)
 {
@@ -285,7 +297,7 @@ void *task(void *dummy)
 
                 /* set directory */
                 dt_wait(dt_setdir);
-            
+
                 /* parse experiment.cfg */
                 if (load_experiment_cfg()) {
                   /* um ... */
@@ -349,23 +361,15 @@ void *task(void *dummy)
               break;
             case md_tuning:
               /* auto_setup */
-              kill_special = 0;
-              if (dt_wait(dt_autosetup)) {
-                comms_lost = 1; /* hmm... */
-              } else {
-                moda = md_tuning;
-                meta_tk = 0;
-              }
+              task_dt_script(dt_autosetup, md_tuning);
               break;
             case md_iv_curve:
               /* iv curve */
-              kill_special = 0;
-              if (dt_wait(dt_ivcurve)) {
-                comms_lost = 1; /* hmm... */
-              } else {
-                meta_tk = st_idle;
-                moda = md_iv_curve;
-              }
+              task_dt_script(dt_ivcurve, md_iv_curve);
+              break;
+            case md_lcloop:
+              /* lcloop script */
+              task_dt_script(dt_lcloop, md_lcloop);
               break;
           }
       } else { /* stop task */
@@ -393,6 +397,8 @@ void *task(void *dummy)
           }
         else /* moda stop */
           switch (moda_tk) {
+            case md_none: /* just to shut CC up */
+              break;
             case md_running:
             case md_acqcnf:
               task_stop_acq(0);
@@ -401,6 +407,7 @@ void *task(void *dummy)
               break;
             case md_tuning:
             case md_iv_curve:
+            case md_lcloop:
               kill_special = 1;
               while (kill_special)
                 usleep(10000);
