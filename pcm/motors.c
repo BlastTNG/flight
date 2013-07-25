@@ -381,7 +381,6 @@ static void GetVElevGoto(double* v_P, double* v_S)
     since_arrival = 0;
     isStopped = 0;
   }
-
   /* check for a stalled motor */
   if ( fabs(ACSData.enc_diff_el) > TWIST_TOL ) {
     isStopped = 1;
