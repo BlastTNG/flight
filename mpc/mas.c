@@ -699,6 +699,8 @@ static int acq_conf(void)
 
   get_acq_metadata();
 
+  bprintf(info, "Starting acquisition #%li", acq_time);
+
   /* done */
   return 0;
 
@@ -927,7 +929,7 @@ static int ivcurve(void)
 
 static void lcloop(void)
 {
-  int r;
+  int r, i;
   char filename[90];
 
   dt_error = 0;
@@ -945,7 +947,11 @@ static void lcloop(void)
       return;
 
     /* wait */
-    sleep(900);
+    for (i = 0; i < 900; ++i) {
+      sleep(1);
+      if (kill_special)
+        return;
+    }
 
     /* Ti */
     sprintf(filename, "loadcurve_Ti_MPC_%li", (long)time(NULL));
@@ -957,7 +963,11 @@ static void lcloop(void)
       return;
 
     /* wait */
-    sleep(900);
+    for (i = 0; i < 900; ++i) {
+      sleep(1);
+      if (kill_special)
+        return;
+    }
   }
 }
 

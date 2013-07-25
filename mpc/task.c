@@ -155,15 +155,30 @@ static unsigned task_set_drives(void)
 /* do a fake stop and empty the data buffer */
 static int task_stop_acq(int fake)
 {
-  /* Stop */
-  if (dt_wait(fake ? dt_fakestop : dt_stop)) {
-    comms_lost = 1;
-    return 1;
-  }
+  int i;
+  int tries = 0;
 
-  /* wait for acq termination */
-  while (state & st_retdat)
-    usleep(10000);
+  for (;;) {
+    tries++;
+    /* Stop */
+    if (dt_wait(fake ? dt_fakestop : dt_stop)) {
+      comms_lost = 1;
+      return 1;
+    }
+
+    /* wait for acq termination */
+    for (i = 0; i < 1000; ++i) {
+      if (!(state & st_retdat))
+        goto STOPPED;
+      usleep(10000);
+    }
+
+    if (tries > 2)
+      fake = 1;
+    if (tries > 10)
+      comms_lost = 1;
+  }
+STOPPED:
 
   /* Empty the buffer */
   if (dt_wait(dt_empty)) {
@@ -265,6 +280,7 @@ void *task(void *dummy)
       state &= ~(st_config | st_mcecom | st_retdat);
       meta_tk = 0; /* try again */
     } else if (req_dm != cur_dm && moda != md_none) {
+      bprintf(info, "data mode change detected %i -> %i", req_dm, cur_dm);
       /* change of data mode while acquiring -- restart acq */
       task_reset_mce();
     } else if (meta_tk) {
