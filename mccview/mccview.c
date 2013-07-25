@@ -69,10 +69,12 @@ const char *dtasks[] = {"idle", "setdir", "dsp_rst", "mce_rst", "reconfig",
   "start_acq", "fakestop", "empty", "status", "acq_cnf", "tuning", "del_acq",
   "iv_curve", "stop", "stop_mce"
 };
-const char *goals[] = {"init", "ready", "tune", "iv", "stop", "acq"};
-#define N_STATES 8
+const char *goals[] = {"ready", "tune", "iv", "stop", "lcloop", "acq"};
+const char *modes[] = {"none", "acqcnf", "running", "tuning", "iv_curve",
+  "lcloop_acq", "lcloop_wait"};
+#define N_STATES 5
 const char *states[N_STATES] = {"drives", "active", "mcecom", "config",
-  "acqcnf", "retdat", "tuning", "ivcurv"};
+  "retdat"};
 
 static char drivemap(uint64_t map, int n)
 {
@@ -181,11 +183,15 @@ int main(int argc, char **argv)
     }
 
     for (x = 0; x < 6; ++x)
+      printw("  mode: %12s     ", modes[d[x][6].u64 >> 8]);
+    printw("\n");
+
+    for (x = 0; x < 6; ++x)
       printw("  goal: %12s     ", goals[d[x][7].u64]);
     printw("\n");
 
     for (x = 0; x < 6; ++x)
-      printw("  task:       %5llu      ", d[x][8].u64);
+      printw("  task:       0x%04X     ", d[x][8].u64);
     printw("\n");
 
     for (x = 0; x < 6; ++x)
