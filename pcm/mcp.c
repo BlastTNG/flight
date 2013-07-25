@@ -1111,6 +1111,10 @@ void insertMCEData(unsigned short *RxFrame)
     }
     //while (tes_nfifo() > 1)
     tes_pop();
+  } else if (~mccs_reporting & ((1U << NUM_MCE) - 1)) {
+    /* mccs_reporting is active low */
+    bprintf(warning, "No MCEs reporting.");
+    mccs_reporting = (1U << NUM_MCE) - 1;
   }
 }
 
