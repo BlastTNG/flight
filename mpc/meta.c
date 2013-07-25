@@ -17,218 +17,138 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#undef DEBUG_META
+#define DEBUG_META
 
 #include "mpc.h"
 #include "blast.h"
-#include "stdlib.h"
+#include <stdlib.h>
 
-/* the operating mode names */
-const char *const mode_string[] = { MODE_STRINGS };
+/* goal and mode names */
+const char *const goal_string[] = { GOAL_STRINGS };
+const char *const moda_string[] = { MODA_STRINGS };
 
 /* the current mode */
 unsigned int state = 0;
 
-/* the desired mode */
-enum modes goal = op_stop;
-int working = 0;
+/* goal and moda */
+enum modas moda = md_none;
+enum goals goal = gl_acq;
 
-/* mode -> status lookups */
+uint32_t meta_tk = 0;
 
-/* Modes that must be active to acheive a goal */
-static const int mode_start[op_acq + 1] =
+static int meta_veto = 0;
+
+/* stop a mode, if necessary; returns non-zero if we needed to stop something */
+static int stop_moda(void)
 {
-  [op_init] = 0,
-  [op_ready] = st_drives | st_active | st_mcecom,
-  [op_tune] = st_drives | st_active | st_mcecom | st_config | st_tuning,
-  [op_iv] = st_drives | st_active | st_mcecom | st_config | st_ivcurv,
-  [op_stop] = st_drives,
-  [op_acq] = st_drives | st_active | st_mcecom | st_config | st_acqcnf | st_retdat,
-};
+  if (moda == md_none)
+    return 0;
 
-/* Modes that must be inactive to acheive a goal */
-static const int mode_stop[op_acq + 1] =
-{
-  [op_init] = 0,
-  [op_ready] = st_retdat | st_acqcnf,
-  [op_tune] = st_retdat | st_acqcnf,
-  [op_iv] = st_retdat | st_acqcnf,
-  [op_stop] = st_retdat | st_tuning | st_acqcnf | st_ivcurv | st_active,
-  [op_acq] = st_tuning | st_ivcurv,
-};
-
-enum status start_tk = st_idle;
-enum status  stop_tk = st_idle;
-
-/* figure out what to do to flip the desired state */
-void try_toggle(enum status st, int stop, enum status *do_start,
-    enum status *do_stop)
-{
-  if (stop) {
-    /* nothing to do */
-    if (~state & st)
-      return;
-
-    switch (st) {
-      case st_drives: /* probably shouldn't ever get here ... */
-        if (state & st_retdat)
-          try_toggle(st_retdat, 1, do_start, do_stop);
-        else if (state & st_ivcurv)
-          try_toggle(st_ivcurv, 1, do_start, do_stop);
-        else if (state & st_tuning)
-          try_toggle(st_tuning, 1, do_start, do_stop);
-        else
-          *do_stop = st;
-        break;
-      case st_acqcnf:
-        if (state & st_retdat)
-          try_toggle(st_retdat, 1, do_start, do_stop);
-        else
-          *do_stop = st;
-        break;
-
-      case st_idle:
-      case st_mcecom:
-      case st_config:
-      case st_retdat:
-      case st_tuning:
-      case st_ivcurv:
-      case st_active:
-        /* always okay */
-        *do_stop = st;
-        break;
-    }
-  } else {
-    /* nothing to do */
-    if (state & st)
-      return;
-
-    switch (st) {
-      case st_drives:
-        /* acquisition must be stopped to intialise a primary */
-        if (state & st_retdat)
-          try_toggle(st_retdat, 1, do_start, do_stop);
-        else 
-          *do_start = st;
-        break;
-      case st_idle:
-      case st_mcecom:
-      case st_active:
-        /* always okay */
-        *do_start = st;
-        break;
-      case st_config:
-        if (state & st_retdat) /* can't be acquiring data */
-          try_toggle(st_retdat, 1, do_start, do_stop);
-        else if (state & st_tuning) /* can't be tuning */
-          try_toggle(st_tuning, 1, do_start, do_stop);
-        else if (state & st_ivcurv) /* can't be ivcurving */
-          try_toggle(st_ivcurv, 1, do_start, do_stop);
-        else if (~state & st_drives) /* must have a drive */
-          try_toggle(st_drives, 0, do_start, do_stop);
-        else if (~state & st_mcecom) /* MCE must be alive */
-          try_toggle(st_mcecom, 0, do_start, do_stop);
-        else
-          *do_start = st;
-        break;
-      case st_acqcnf:
-        if (~state & st_config) /* MCE must be configured */
-          try_toggle(st_config, 0, do_start, do_stop);
-        else if (state & st_tuning) /* can't be tuning */
-          try_toggle(st_tuning, 1, do_start, do_stop);
-        else if (state & st_ivcurv) /* can't be ivcurving */
-          try_toggle(st_ivcurv, 1, do_start, do_stop);
-        else
-          *do_start = st;
-        break;
-      case st_tuning:
-        if (state & st_retdat) /* can't be acquiring */
-          try_toggle(st_retdat, 1, do_start, do_stop);
-        else if (state & st_ivcurv) /* can't be ivcurving */
-          try_toggle(st_ivcurv, 1, do_start, do_stop);
-        else
-          *do_start = st;
-        break;
-      case st_ivcurv:
-        if (state & st_retdat) /* can't be acquiring */
-          try_toggle(st_retdat, 1, do_start, do_stop);
-        else if (state & st_tuning) /* can't be tuning */
-          try_toggle(st_tuning, 1, do_start, do_stop);
-        else
-          *do_start = st;
-        break;
-      case st_retdat:
-        if (~state & st_acqcnf) /* acq must be configured */
-          try_toggle(st_acqcnf, 0, do_start, do_stop);
-        else
-          *do_start = st;
-        break;
-    }
+  switch (goal) {
+    case gl_ready:
+    case gl_stop:
+      break;
+    case gl_tune:
+      if (moda == md_tuning)
+        return 0;
+      break;
+    case gl_iv:
+      if (moda == md_iv_curve)
+        return 0;
+      break;
+    case gl_lcloop:
+      if (moda == md_lcloop_wait || moda == md_lcloop_acq)
+        return 0;
+      break;
+    case gl_acq:
+      if (moda == md_running || moda == md_acqcnf)
+        return 0;
+      break;
   }
 
 #ifdef DEBUG_META
-  bprintf(info, "try_toggle(%04x,%i) = %04x,%04x", st, stop, *do_start, *do_stop);
+  bprintf(info, "Stop moda: %s for goal %s", moda_string[moda],
+      goal_string[goal]);
 #endif
+  meta_tk = STOP_TK | (moda << MODA_SHIFT);
+  return 1;
 }
 
-/* Meta's job is to figure out how walk the graph to turn "state" into
- * the value specified by mode_start and mode_stop
- */
+/* Meta's job is to run the goal and mode */
 void meta(void)
 {
-  int i;
-  unsigned diff;
+  /* something's going on */
+  if (meta_veto || meta_tk)
+    return;
 
-  /* nothing to do */
-  if (((state & mode_start[goal]) == mode_start[goal]) &&
-      ((~state & mode_stop[goal]) == mode_stop[goal]))
-  {
+  /* stop an old mode, if necessary */
+  if (stop_moda())
+    return;
+
+  /* now, moda is either be md_none, or one of the allowed modas for this
+   * goal */
+
+  /* everyone wants this */
+  if (~state & st_drives) {
+    meta_tk = st_drives;
     return;
   }
 
-  if (!working) {
-#ifdef DEBUG_META
-    bprintf(info, "M: state = 0x%04X", state);
-    bprintf(info, "M: goal = 0x%04X/0x%04X (%s)", mode_start[goal],
-        mode_stop[goal], mode_string[goal]);
-#endif
-
-    enum status do_start = st_idle;
-    enum status do_stop  = st_idle;
-
-    /* figure out all the things to do */
-    diff = (~state & mode_start[goal]) | (state & mode_stop[goal]);
-#ifdef DEBUG_META
-    bprintf(info, "M: diff = 0x%04X", diff);
-#endif
-
-    /* find the first thing to do */
-    for (i = 0; i < 32; ++i) {
-      if (diff & (1 << i)) {
-        /* here's a bit that needs fixing, try doing something about it */
-        try_toggle(1 << i, (mode_stop[goal] & (1 << i)), &do_start, &do_stop);
-        if (do_start != st_idle || do_stop != st_idle)
-          break;
-      }
+  if (goal == gl_stop) { /* stop stuff */
+    if (state & st_config)
+      meta_tk = st_config | STOP_TK;
+    else if (state & st_active)
+      meta_tk = st_active | STOP_TK;
+  /* low-level stuff everyone but gl_stop wants */
+  } else if (~state & st_active)
+    meta_tk = st_active;
+  else if (~state & st_mcecom)
+    meta_tk = st_mcecom;
+  else if (~state & st_config)
+    meta_tk = st_config;
+  else /* now run the goal */
+    switch (goal) {
+      case gl_stop: /* nothing to do */
+      case gl_ready:
+        break;
+      case gl_acq:
+        if (moda == md_none)
+          meta_tk = md_acqcnf << MODA_SHIFT;
+        else if (moda == md_acqcnf)
+          meta_tk = md_running << MODA_SHIFT;
+        break;
+      case gl_tune:
+        if (moda == md_none)
+          meta_tk = md_tuning << MODA_SHIFT;
+        break;
+      case gl_iv:
+        if (moda == md_none)
+          meta_tk = md_iv_curve << MODA_SHIFT;
+        break;
+      case gl_lcloop:
+          abort();
     }
 
-    if (do_stop != st_idle) {
-      stop_tk = do_stop;
 #ifdef DEBUG_META
-      bprintf(info, "M: STOP %04x", do_stop);
+  if (meta_tk) {
+    bprintf(info, "M: goal: %s; moda: %s", goal_string[goal],
+        moda_string[moda >> MODA_SHIFT]);
+    if ((meta_tk & ~STOP_TK) >= md_none)
+      bprintf(info, "M: meta_tk: %s %s", (meta_tk & STOP_TK) ? "stop" : "start",
+          moda_string[(meta_tk & ~STOP_TK) >> MODA_SHIFT]);
+    else 
+      bprintf(info, "M: meta_tk: %s 0x%04X",
+          (meta_tk & STOP_TK) ? "stop" : "start", meta_tk & ~STOP_TK);
+  }
 #endif
-      working = 1;
-    } else if (do_start != st_idle) {
-      start_tk = do_start;
-#ifdef DEBUG_META
-      bprintf(info, "M: START %04x", do_start);
-#endif
-      working = 1;
-    } else {
-      /* um.... */
-      bprintf(fatal, "M: Unable to walk graph: 0x%04X -> 0x%04X",
-          state, mode_start[goal]);
-    }
-  } else if (start_tk == st_idle && stop_tk == st_idle)
-    working = 0;
+}
+
+void meta_safe_update(enum goals new_goal, enum modas new_moda,
+    unsigned int new_state)
+{
+  meta_veto = 1;
+  state = new_state;
+  moda = new_moda;
+  goal = new_goal;
+  meta_veto = 0;
 }

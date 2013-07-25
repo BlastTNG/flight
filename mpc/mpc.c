@@ -365,10 +365,10 @@ static void send_slow_data(char *data, int send)
   slow_dat.t_mce = box_temp;
 
   /* state stuff */
-  slow_dat.state = state;
+  slow_dat.state = state | (moda << MODA_SHIFT);
 
   slow_dat.goal = goal;
-  slow_dat.task = (stop_tk == st_idle) ? start_tk : (0x8000 | stop_tk);
+  slow_dat.task = meta_tk;
   slow_dat.dtask = data_tk;
 
   /* drive map */
@@ -888,20 +888,20 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case reconfig:
         state &= ~st_config;
-        goal = op_acq;
+        goal = gl_acq;
         break;
       case start_acq:
-        goal = op_acq;
+        goal = gl_acq;
         break;
       case force_acq:
         state |= st_config | st_mcecom;
-        goal = op_acq;
+        goal = gl_acq;
         break;
       case stop_acq:
-        goal = op_ready;
+        goal = gl_ready;
         break;
       case stop_mce:
-        goal = op_stop;
+        goal = gl_stop;
         break;
       case tune_biases:
         tune_force_biases = 1;
@@ -909,7 +909,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case tune_array:
         tune_first = ev->ivalues[1];
         tune_last = ev->ivalues[2];
-        goal = op_tune;
+        goal = gl_tune;
         break;
 
         /* Experiment config commands */
@@ -1001,7 +1001,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         new_blob_type = BLOB_EXPCFG;
         break;
       case acq_iv_curve:
-        goal = op_iv;
+        goal = gl_iv;
         iv_kick = (ev->ivalues[1] == 1) ? KICK_1V :
           (ev->ivalues[1] == 2) ? KICK_2V : 0;
         iv_kickwait = ev->rvalues[2];

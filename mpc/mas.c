@@ -907,10 +907,10 @@ static int ivcurve(void)
       if (slow_dat.df[d]) {
         basedir[5] = d + '0';
         exec_and_wait(sched, startup, argv[0], (char**)argv, 100, 0, NULL);
-        bprintf(info, "Archived tuning as %s/iv_%04i", basedir, memory.last_iv);
+        bprintf(info, "Archived IV curve as %s/iv_%04i", basedir,
+            memory.last_iv);
       }
   }
-  state &= ~st_ivcurv;
 
   return 0;
 }
@@ -1011,7 +1011,6 @@ static int tune(void)
   }
 
   tune_force_biases = 0;
-  state &= ~st_tuning;
   return r ? 1 : 0;
 }
 
@@ -1167,7 +1166,7 @@ void *mas_data(void *dummy)
         break;
       case dt_autosetup:
         tune();
-        goal = op_acq;
+        meta_safe_update(gl_acq, md_none, state); /* back to acq */
         break;
       case dt_delacq:
         if (acq)
@@ -1178,7 +1177,7 @@ void *mas_data(void *dummy)
         break;
       case dt_ivcurve:
         ivcurve();
-        goal = op_acq; /* back to acquisition */
+        meta_safe_update(gl_acq, md_none, state & ~st_config); /* back to acq */
         break;
       case dt_stopmce:
         stop_mce();

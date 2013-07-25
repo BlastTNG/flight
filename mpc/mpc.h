@@ -93,9 +93,6 @@ extern uint8_t mean[NUM_ROW * NUM_COL];
 extern uint8_t sigma[NUM_ROW * NUM_COL];
 extern uint8_t noise[NUM_ROW * NUM_COL];
 
-/* The director */
-void meta(void);
-
 /* MCE data mode definitions */
 #define N_DATA_MODES 13
 extern struct data_mode_def {
@@ -111,17 +108,42 @@ enum status {
   st_active = 0x0002, /* MCE ops are active */
   st_mcecom = 0x0004, /* MCE is talking */ 
   st_config = 0x0008, /* MCE is configured */
-  st_acqcnf = 0x0010, /* Acquisition is configured */
-  st_retdat = 0x0020, /* MCE is returning data */
-  st_tuning = 0x0040, /* auto_setup in progress */
-  st_ivcurv = 0x0080, /* IV curve in progress */
+  st_retdat = 0x0010, /* MCE is returning data */
 };
+#define STOP_TK 0x8000
 
 extern unsigned int state;
 
-/* operating modes -- op_acq must be the last mode */
-enum modes { op_init = 0, op_ready, op_tune, op_iv, op_stop, op_acq };
-#define MODE_STRINGS "init", "ready", "tune", "iv", "stop", "acq"
+#define MODA_SHIFT 8 /* bias to prevent modas from clashing with the states */
+enum modas {
+  md_none = 0,
+  md_acqcnf, /* acquisition is configured */
+  md_running, /* normal data acquisition */
+  md_tuning, /* auto_setup in progress */
+  md_iv_curve, /* normal IV curve in progress */
+
+  /* Probably non-flight modes */
+  md_lcloop_acq, /* lcloop: acquiring loadcurve */
+  md_lcloop_wait, /* lc_loop: waiting */
+};
+#define MODA_STRINGS "none", "acqcnf", "running", "tuning", "iv_curve", \
+  "lcloop_acq", "lcloop_wait"
+
+extern enum modas moda;
+
+/* operating goals */
+enum goals { gl_ready, gl_tune, gl_iv, gl_stop, gl_lcloop, gl_acq };
+#define GOAL_STRINGS "ready", "tune", "iv", "stop", "lcloop", "acq"
+
+extern enum goals      goal;
+
+/* The director */
+void meta(void);
+void meta_safe_update(enum goals new_goal, enum modas new_moda,
+    unsigned int new_state);
+
+/* meta <-> task communication */
+extern uint32_t meta_tk;
 
 /* drive mapping */
 #define DRIVE0_DATA0 0x0000
@@ -158,11 +180,6 @@ extern int blockq_head, blockq_tail;
 extern int iv_step, iv_start, iv_last;
 extern uint32_t iv_kick;
 extern double iv_kickwait, iv_wait;
-
-/* high-level tasks */
-extern enum status start_tk;
-extern enum status  stop_tk;
-extern enum modes      goal;
 
 /* blob creator */
 #define N_BLOB_DATA 5

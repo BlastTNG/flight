@@ -176,7 +176,7 @@ static int task_stop_acq(int fake)
 
   cl_count = 0;
   state |= st_mcecom;
-  state &= ~(st_acqcnf | st_retdat);
+  state &= ~st_retdat;
 
   return 0;
 }
@@ -217,7 +217,7 @@ void *task(void *dummy)
       return NULL;
     } else if (comms_lost) { /* deal with no MCE communication */
       bprintf(warning, "Comms lost.");
-      start_tk = stop_tk = 0xFFFF; /* interrupt! */
+      meta_tk = 0xFFFFFFFF; /* interrupt! */
 
       /* stop mce comms */
       state &= ~st_active;
@@ -230,8 +230,8 @@ void *task(void *dummy)
         comms_lost = 0;
         check_acq = 0;
         cl_count = 0;
-        start_tk = stop_tk = st_idle;
-        state &= ~(st_config | st_acqcnf | st_mcecom | st_retdat);
+        meta_tk = 0;
+        state &= ~(st_config | st_mcecom | st_retdat);
         state |= st_active;
         continue;
       }
@@ -248,138 +248,167 @@ void *task(void *dummy)
         cl_count++;
       comms_lost = 0;
       check_acq = 0;
+
       /* need complete MCE restart */
-      state &= ~(st_config | st_acqcnf | st_mcecom | st_retdat);
-      start_tk = stop_tk = st_idle; /* try again */
-    } else if (req_dm != cur_dm && state & st_acqcnf) {
+      state &= ~(st_config | st_mcecom | st_retdat);
+      meta_tk = 0; /* try again */
+    } else if (req_dm != cur_dm && moda != md_none) {
       /* change of data mode while acquiring -- restart acq */
       task_reset_mce();
-    } else if (start_tk != st_idle) { /* handle start task requests */
-      switch (start_tk) {
-        case st_idle:
-          break;
-        case st_drives:
-          /* choose drives */
-          if (task_set_drives()) {
-            /* no useable drives -- probably means some one should power cycle
-             * a hard drive can, but we'll just power cycle oursevles */
-            power_cycle_cmp = 1;
-            sleep(60);
-          } else {
-            state |= st_drives;
+    } else if (meta_tk) {
+      int stop = meta_tk & STOP_TK;
+      enum status status_tk = st_idle;
+      enum modas  moda_tk = md_none;
 
-            /* set directory */
-            dt_wait(dt_setdir);
+      if ((meta_tk & ~STOP_TK) >= (1U << MODA_SHIFT))
+        moda_tk = (meta_tk & ~STOP_TK) >> MODA_SHIFT;
+      else 
+        status_tk = (meta_tk & ~STOP_TK);
+      bprintf(info, "0x%04X = %i 0x%04X %i", meta_tk, stop, status_tk, moda_tk);
+
+      if (!stop) { /* handle start task requests */
+        if (status_tk != st_idle)
+          switch (status_tk) {
+            case st_idle:
+            case st_retdat: /* just to shut CC up */
+              break;
+            case st_drives:
+              /* choose drives */
+              if (task_set_drives()) {
+                /* no useable drives -- probably means some one should power
+                 * cycle a hard drive can, but we'll just power cycle oursevles
+                 */
+                power_cycle_cmp = 1;
+                sleep(60);
+              } else {
+                state |= st_drives;
+
+                /* set directory */
+                dt_wait(dt_setdir);
             
-            /* parse experiment.cfg */
-            if (load_experiment_cfg()) {
-              /* um ... */
-            } else
-              send_mceparam = 1;
-          }
+                /* parse experiment.cfg */
+                if (load_experiment_cfg()) {
+                  /* um ... */
+                } else
+                  send_mceparam = 1;
+              }
 
-          /* done */
-          start_tk = st_idle;
-          break;
-        case st_active:
-          mce_veto = 0;
-          state |= st_active;
-          start_tk = st_idle;
-          break;
-        case st_mcecom:
-          task_reset_mce();
-          start_tk = st_idle;
-          break;
-        case st_config:
-          /* MCE reconfig */
-          if (dt_wait(dt_reconfig)) {
-            comms_lost = 1;
-          } else {
-            state |= st_config;
-            start_tk = st_idle;
+              /* done */
+              meta_tk = 0;
+              break;
+            case st_active:
+              mce_veto = 0;
+              state |= st_active;
+              meta_tk = 0;
+              break;
+            case st_mcecom:
+              task_reset_mce();
+              meta_tk = 0;
+              break;
+            case st_config:
+              /* MCE reconfig */
+              if (dt_wait(dt_reconfig)) {
+                comms_lost = 1;
+              } else {
+                state |= st_config;
+                meta_tk = 0;
+              }
+              break;
           }
-          break;
-        case st_acqcnf:
-          /* "mce status" */
-          if (dt_wait(dt_status)) {
-            comms_lost = 1;
-          } else {
-            state |= st_acqcnf;
-            start_tk = st_idle;
+        else /* moda start */
+          switch (moda_tk) {
+            case md_none: /* just to shut CC up */
+              break;
+            case md_acqcnf:
+              /* "mce status" */
+              if (dt_wait(dt_status))
+                comms_lost = 1;
+              else if (dt_wait(dt_acqcnf)) /* acq config */
+                comms_lost = 1;
+              else {
+                moda = md_acqcnf;
+                meta_tk = 0;
+              }
+              break;
+            case md_running:
+              if (check_acq) { /* probably means an acquisition immediately
+                                  terminated -- try a reset */
+                comms_lost = 1;
+                check_acq = 0;
+                continue;
+              } 
+              check_acq = 1;
+              /* start acq */
+              if (dt_wait(dt_startacq)) {
+                comms_lost = 1;
+              } else {
+                state |= st_retdat;
+                moda = md_running;
+                meta_tk = 0;
+              }
+              break;
+            case md_tuning:
+              /* auto_setup */
+              kill_special = 0;
+              if (dt_wait(dt_autosetup)) {
+                comms_lost = 1; /* hmm... */
+              } else {
+                moda = md_tuning;
+                meta_tk = 0;
+              }
+              break;
+            case md_iv_curve:
+              /* iv curve */
+              kill_special = 0;
+              if (dt_wait(dt_ivcurve)) {
+                comms_lost = 1; /* hmm... */
+              } else {
+                meta_tk = st_idle;
+                moda = md_iv_curve;
+              }
+              break;
           }
-          /* acq config */
-          if (dt_wait(dt_acqcnf)) {
-            comms_lost = 1;
-          } else {
-            state |= st_acqcnf;
-            start_tk = st_idle;
+      } else { /* stop task */
+        if (status_tk != st_idle)
+          switch (status_tk) {
+            case st_idle:
+              break;
+            case st_retdat:
+            case st_drives:
+            case st_mcecom:
+              task_stop_acq(0);
+              meta_tk = 0;
+              break;
+            case st_config:
+              /* sledgehammer based stop acq */
+              task_reset_mce();
+              meta_tk = 0;
+              break;
+            case st_active:
+              dt_error = dt_wait(dt_stopmce);
+              mce_veto = 1;
+              state &= ~(st_config | st_active);
+              meta_tk = 0;
+              break;
           }
-          break;
-        case st_retdat:
-          if (check_acq) { /* probably means an acquisition immediately
-                            terminated -- try a reset */
-            comms_lost = 1;
-            check_acq = 0;
-            continue;
-          } 
-          check_acq = 1;
-          /* start acq */
-          if (dt_wait(dt_startacq)) {
-            comms_lost = 1;
-          } else {
-            state |= st_retdat;
-            start_tk = st_idle;
+        else /* moda stop */
+          switch (moda_tk) {
+            case md_running:
+            case md_acqcnf:
+              task_stop_acq(0);
+              meta_tk = 0;
+              moda = md_none;
+              break;
+            case md_tuning:
+            case md_iv_curve:
+              kill_special = 1;
+              while (kill_special)
+                usleep(10000);
+              task_reset_mce();
+              moda = md_none;
+              meta_tk = 0;
+              break;
           }
-          break;
-        case st_tuning:
-          /* auto_setup */
-          kill_special = 0;
-          state |= st_tuning;
-          if (dt_wait(dt_autosetup)) {
-            comms_lost = 1; /* hmm... */
-          }
-          start_tk = st_idle;
-          break;
-        case st_ivcurv:
-          /* iv curve */
-          kill_special = 0;
-          state |= st_ivcurv;
-          if (dt_wait(dt_ivcurve)) {
-            comms_lost = 1; /* hmm... */
-          }
-          start_tk = st_idle;
-          break;
-      }
-    } else if (stop_tk != st_idle) { /* handle stop task requests */
-      switch (stop_tk) {
-        case st_idle:
-          break;
-        case st_acqcnf:
-        case st_retdat:
-        case st_drives:
-        case st_mcecom:
-          task_stop_acq(0);
-          stop_tk = st_idle;
-          break;
-        case st_tuning:
-        case st_ivcurv:
-          kill_special = 1;
-          while (kill_special)
-            usleep(10000);
-          task_reset_mce();
-          stop_tk = st_idle;
-          break;
-        case st_config:
-          /* sledgehammer based stop acq */
-          task_reset_mce();
-          stop_tk = st_idle;
-          break;
-        case st_active:
-          dt_error = dt_wait(dt_stopmce);
-          mce_veto = 1;
-          state &= ~(st_config | st_active);
-          stop_tk = st_idle;
-          break;
       }
     }
     usleep(10000);
