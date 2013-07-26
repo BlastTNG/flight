@@ -251,14 +251,14 @@ void *task(void *dummy)
       mce_veto = 1;
 
       /* stop the MCE and reset it */
-      if (task_reset_mce() == 0) {
+      if (task_reset_mce() == 0 || memory.squidveto) {
         /* problem solved, I guess.  Get meta to return us to our scheduled
          * program */
         comms_lost = 0;
         check_acq = 0;
         cl_count = 0;
         meta_tk = 0;
-        state &= ~(st_config | st_mcecom | st_retdat);
+        state &= ~(st_config | st_mcecom | st_acqcnf | st_retdat);
         state |= st_active;
         continue;
       }

@@ -224,7 +224,7 @@ BAD_DMB:
 static void pcm_special(size_t len, const char *data_in, const char *peer,
     int port)
 {
-  int new_row_len = -1, new_num_rows = -1, new_data_rate = -1;
+  int new_row_len = -1, new_num_rows = -1, new_data_rate = -1, squidveto = 0;
 
   if (data_in) {
     /* reply acknowledgement from PCM */
@@ -232,12 +232,22 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     int ssreq;
 
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
-          &divisor, &ssreq, &new_row_len, &new_num_rows, &new_data_rate, len,
-          data_in, peer, port))
+          &divisor, &ssreq, &new_row_len, &new_num_rows, &new_data_rate,
+          &squidveto, len, data_in, peer, port))
       return;
 
     if (ssreq)
       send_mceparam = 1;
+
+    squidveto = (squidveto & (1U << (nmce + 1))) ? 1 : 0;
+    if (squidveto != memory.squidveto) {
+      if (squidveto)
+        bprintf(info, "Squids vetoed");
+      else
+        bprintf(info, "Squids unvetoed");
+      memory.squidveto = squidveto;
+      mem_dirty = 1;
+    }
     
     if (new_row_len > 1 && new_data_rate > 1 && new_num_rows > 1) {
       row_len = new_row_len;
@@ -900,9 +910,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case stop_acq:
         goal = gl_ready;
         break;
-      case stop_mce:
-        goal = gl_stop;
-        break;
       case lcloop:
         goal = gl_lcloop;
         break;
@@ -1181,6 +1188,7 @@ static int read_mem(void)
     memory.version = MEM_VERS;
     memory.last_tune = find_last_dirent("tuning");
     memory.last_iv = find_last_dirent("ivcurve");
+    memory.squidveto = 0;
     return 1;
   }
 

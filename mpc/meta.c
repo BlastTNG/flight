@@ -32,19 +32,19 @@ unsigned int state = 0;
 
 /* goal and moda */
 enum modas moda = md_none;
-enum goals goal = gl_stop;
+enum goals goal = gl_acq;
 
 uint32_t meta_tk = 0;
 
 static int meta_veto = 0;
 
 /* stop a mode, if necessary; returns non-zero if we needed to stop something */
-static int stop_moda(void)
+static int stop_moda(int working_goal)
 {
   if (moda == md_none)
     return 0;
 
-  switch (goal) {
+  switch (working_goal) {
     case gl_ready:
     case gl_stop:
       break;
@@ -68,7 +68,7 @@ static int stop_moda(void)
 
 #ifdef DEBUG_META
   bprintf(info, "Stop moda: %s for goal %s", moda_string[moda],
-      goal_string[goal]);
+      goal_string[working_goal]);
 #endif
   meta_tk = STOP_TK | (moda << MODA_SHIFT);
   return 1;
@@ -85,23 +85,21 @@ int need_acq(enum goals goal)
 /* Meta's job is to run the goal and mode */
 void meta(void)
 {
+  enum goals working_goal = (memory.squidveto) ? gl_stop : goal;
+
   /* something's going on */
   if (meta_veto || meta_tk)
     return;
 
   /* stop an old mode, if necessary */
-  if (stop_moda())
+  if (stop_moda(working_goal))
     return;
 
   /* now, moda is either md_none, or one of the allowed modas for this goal */
 
-  /* everyone wants this */
-  if (~state & st_drives) {
+  if (~state & st_drives) /* everyone wants this */
     meta_tk = st_drives;
-    return;
-  }
-
-  if (goal == gl_stop) { /* stop stuff */
+  else if (working_goal == gl_stop) { /* stop stuff */
     if (state & st_retdat)
       meta_tk = st_retdat | STOP_TK;
     else if (state & st_acqcnf)
@@ -117,7 +115,7 @@ void meta(void)
     meta_tk = st_mcecom;
   else if (~state & st_config)
     meta_tk = st_config;
-  else if (need_acq(goal)) { /* turn acq on */
+  else if (need_acq(working_goal)) { /* turn acq on */
     if (~state & st_acqcnf)
       meta_tk = st_acqcnf;
     else if (~state & st_retdat)
@@ -130,7 +128,7 @@ void meta(void)
   }
 
   if (!meta_tk) /* now run the goal */
-    switch (goal) {
+    switch (working_goal) {
       case gl_stop: /* nothing to do */
       case gl_ready:
         break;
@@ -153,8 +151,9 @@ void meta(void)
 
 #ifdef DEBUG_META
   if (meta_tk) {
-    bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X", goal_string[goal],
-        moda_string[moda >> MODA_SHIFT], state);
+    bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X %s",
+        goal_string[working_goal], moda_string[moda >> MODA_SHIFT], state,
+        memory.squidveto ? "vetoed" : "");
     if ((meta_tk & ~STOP_TK) >= md_none)
       bprintf(info, "M: meta_tk: %s %s", (meta_tk & STOP_TK) ? "stop" : "start",
           moda_string[(meta_tk & ~STOP_TK) >> MODA_SHIFT]);

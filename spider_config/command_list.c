@@ -30,6 +30,18 @@
 
 #include "mce_counts.h"
 
+const char *const command_list_serial = "$Rev$";
+
+/* parse the above; returns -1 if command_list_serial can't be parsed */
+const int command_list_serial_as_int(void)
+{
+  int cmd_rev = -1;
+  sscanf(command_list_serial, "$R" /* prevent SVN from munging this string */
+      "ev: %i $", &cmd_rev);
+
+  return cmd_rev;
+}
+
 #define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "NONE", {mce_names}, 1
 #define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"NONE", {mce_names + 1}, 2
 #define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "MCE_LAST_ACTION", {w}
@@ -139,18 +151,6 @@
       {"Count", 0, 65535, 'i', "NONE"}, \
       {"Step", -32768, 32767, 'i', "NONE"}, \
     }
-
-const char *const command_list_serial = "$Rev$";
-
-/* parse the above; returns -1 if command_list_serial can't be parsed */
-const int command_list_serial_as_int(void)
-{
-  int cmd_rev = -1;
-  sscanf(command_list_serial, "$R" /* prevent SVN from munging this string */
-      "ev: %i $", &cmd_rev);
-
-  return cmd_rev;
-}
 
 const char *const GroupNames[N_GROUPS] = {
   "Pointing Modes",        "Aux. Electronics", "Waveplate Rotator",
