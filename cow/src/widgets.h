@@ -66,7 +66,6 @@ public:
     virtual void SetType(char t)=0;
     virtual void SetValue(double d)=0;
     virtual void SetStringValue(QString s)=0;
-    virtual void SetIndex(int i) {Q_UNUSED(i)}
     virtual QString Text() const=0;
 protected:
     int command, param;
@@ -140,11 +139,6 @@ class CowComboEntry : public QComboBox, public AbstractCowEntry
         i = findText(s);
       }
       SetValue(i);
-    }
-
-    virtual void SetIndex(int i)
-    {
-      setCurrentIndex(i);
     }
 
     QString Text() const
