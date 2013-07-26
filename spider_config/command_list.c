@@ -1450,11 +1450,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCR1A(frail_detector, "Set a detector as frail", GR_DET)},
   {MCECMDCR1A(healthy_detector, "Set a detector as healthy", GR_DET)},
   {MCECMDCA(tes_bias, "TES bias level", GR_DET, "Level", 0, 65535, 'i')},
-  {MCECMDC(sa_flux_quantum, "SA flux quantum", GR_TUNE,
+  {MCECMDC(sa_flux_quantum, "SA flux quantum", GR_DET,
       "Quantum", 0, 65535, 'i')},
-  {MCECMDC(sq2_flux_quantum, "SQ2 flux quantum", GR_TUNE,
+  {MCECMDC(sq2_flux_quantum, "SQ2 flux quantum", GR_DET,
       "Quantum", 0, 65535, 'i')},
-  {MCECMDCR(sq1_flux_quantum, "SQ1 flux quantum", GR_TUNE,
+  {MCECMDCR(sq1_flux_quantum, "SQ1 flux quantum", GR_DET,
       "Quantum", 0, 65535, 'i')},
   {MCECMDRAD(sq1_bias, "SQ1 bias", GR_DET, "Bias", 0, 65535, 'i')},
   {MCECMDRAD(sq1_bias_off, "SQ1 off bias", GR_DET, "Bias", 0, 65535, 'i')},
@@ -1526,14 +1526,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(send_tuning), "Send the experiment.cfg file resulting from a tuning",
-    GR_TUNE | MCECMD, 2,
+    GR_MPC | MCECMD, 2,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Tuning number", 0, 65535, 'i', "NONE"},
     }
   },
 
-  {COMMAND(use_tuning), "Apply a previous tuning", GR_TUNE | MCECMD, 2,
+  {COMMAND(use_tuning), "Apply a previous tuning", GR_MPC | MCECMD, 2,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Tuning number", 0, 65535, 'i', "NONE"},

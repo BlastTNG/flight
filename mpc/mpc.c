@@ -239,7 +239,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     if (ssreq)
       send_mceparam = 1;
 
-    squidveto = (squidveto & (1U << (nmce + 1))) ? 1 : 0;
+    squidveto = (squidveto & (1U << nmce)) ? 1 : 0;
     if (squidveto != memory.squidveto) {
       if (squidveto)
         bprintf(info, "Squids vetoed");
