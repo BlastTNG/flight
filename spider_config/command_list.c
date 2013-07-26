@@ -1321,19 +1321,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_MPC)},
   {MCECMD1(stop_acq, "Stop data acquisition", GR_MPC)},
   {MCECMD1P(send_exptcfg, "Send down experiment.cfg", GR_MPC)},
-  {MCECMD1P(mce_reload_config, "Reset experiment.cfg to template",
+  {MCECMD1P(reload_mce_config, "Reset experiment.cfg to template",
+      GR_MPC | CONFIRM)},
+  {MCECMD1P(reload_dead_masks, "Reset dead and frail masks to template",
       GR_MPC | CONFIRM)},
 
   {MCECMD2(data_mode, "Set the MCE data mode", GR_MPC, "Data Mode", 0, 12,
       'i')},
-  {COMMAND(tune_array), "Tune a focal plane", GR_MPC | MCECMD, 3,
+  {COMMAND(tune_array), "Tune a focal plane with current tuning parameters",
+    GR_MPC | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
       {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
       {"Last stage", 0, 5, 'i', "NONE", {tuning_stages}}
     }
   },
-  {COMMAND(tune_biases), "Tune with bias ramping on", GR_MPC | MCECMD, 3,
+  {COMMAND(tune_biases), "Tune, with bias ramping forced on", GR_MPC | MCECMD,
+    3,
     {
       {CHOOSE_INSERT_PARAM},
       {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
