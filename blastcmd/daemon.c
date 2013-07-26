@@ -47,6 +47,9 @@
 #include "command_list.h"
 #include "elog.h"
 
+void setDefault(char *cmd, double D); // in cmdlist.c
+double getDefault(char *cmd_in); // in cmdlist.c
+
 #ifdef USE_AUTHENTICATION
 /* read authorized IP addresses from file, and store in list */
 #define AUTH_FILE DATA_ETC_DIR "/blastcmd.auth"
@@ -250,6 +253,48 @@ int SimpleRoute(int sock, int fd, char* buffer)
   return 0;
 }
 
+void StoreDefaultParameters(char *buffer) {
+  char B[SIZE_NAME + MAX_N_PARAMS*(SIZE_PARNAME+2)];
+  char *saveptr;
+  char *cmd;
+  char *param[MAX_N_PARAMS];
+  int n_param=0;
+  int i_cmd;
+  int i_param;
+  char cmdstr[SIZE_CMDPARNAME];
+  int index_serial = 0;
+
+  strncpy(B, buffer, SIZE_NAME + MAX_N_PARAMS*(SIZE_PARNAME+2)-1);
+
+  cmd = strtok_r(B, " ", &saveptr);
+
+  while ((param[n_param] = strtok_r(NULL, " " , &saveptr))!=NULL) {
+    n_param++;
+  }
+
+  if (n_param>0) { // might be a multi-command
+    for (i_cmd = 0; i_cmd < N_MCOMMANDS; i_cmd++) {
+      if (strncmp(cmd, mcommands[i_cmd].name, SIZE_NAME) == 0) {
+        if (mcommands[i_cmd].numparams == n_param) {
+          index_serial = 0;
+          for (i_param = 0; i_param<n_param; i_param++) {
+            // FIXME: index parameter
+            if (index_serial) {
+              sprintf(cmdstr,"%s;%d;%s", cmd, index_serial, mcommands[i_cmd].params[i_param].name);
+            } else {
+              sprintf(cmdstr,"%s;%s", cmd, mcommands[i_cmd].params[i_param].name);
+            }
+            setDefault(cmdstr, atof(param[i_param]));
+            if (mcommands[i_cmd].params[i_param].index_serial>0) {
+              index_serial = atoi(param[i_param]);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 int ExecuteCommand(int sock, int fd, int route, char* buffer)
 {
   int t_link = LINK_DEFAULT;
@@ -295,6 +340,8 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   snprintf(log, 4999, "%sResult = %d\"", log2, result);
 #endif
 
+  StoreDefaultParameters(&buffer[3]);
+
   if (result == 0) {
     if (route)
       result = SimpleRoute(sock, fd, &buffer[3]);
@@ -319,6 +366,13 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
 #else
   return result;
 #endif
+}
+
+void SendCmdDefault(int sock, double d){
+  char output[512];
+
+  sprintf(output, ":::cmddef:::%10g\r\n", d);
+  send(sock, output, strlen(output), MSG_NOSIGNAL);
 }
 
 void SendCommandList(int sock)
@@ -454,6 +508,8 @@ void Daemonise(int route, int no_fork)
   char cmd[512];
   int cmd_from = 0;
   int ack = 0;
+  double d;
+  char dcmd[SIZE_CMDPARNAME];
 
   int fd, n, i, size, pid, reset_lastsock = 0;
   int report = 0;
@@ -640,6 +696,9 @@ void Daemonise(int route, int no_fork)
               conn[n].state = 3;
             } else if (strncmp(buffer, "::list::", 8) == 0) {
               conn[n].state = 4;
+            } else if (strncmp(buffer, "::cmddef::", 10) == 0) {
+              conn[n].state = 6;
+              strncpy(dcmd, buffer+10, SIZE_CMDPARNAME);
             } else if (owner != n) { /* no conn */
               if (strncmp(buffer, "::take::", 8) == 0) {
                 printf("Socket %i has taken the conn.\n", n);
@@ -691,6 +750,10 @@ void Daemonise(int route, int no_fork)
             } else if (conn[n].state == 5) { /* request with no conn */
               strcpy(buffer, ":::noconn:::\r\n");
               conn[n].state = 1;
+            } else if (conn[n].state == 6) { /* get command default */
+              d = getDefault(dcmd);
+              SendCmdDefault(n, d);
+              conn[n].state = 2;
             } else if (conn[n].lurk == 2) { /* request for lurking */
               strcpy(buffer, ":::slink:::\r\n");
               conn[n].lurk = 1;

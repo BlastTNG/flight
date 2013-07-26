@@ -38,7 +38,10 @@
 #define SIZE_NAME 80     /* max length for command name, */
 #define SIZE_ABOUT 80     /* ... description, */
 #define SIZE_PARNAME 80     /* ... and paramenter name */
+#define SIZE_CMDPARNAME (SIZE_NAME+SIZE_PARNAME+2)
 #define CONFIRM         0x80000000  /* group bit if command needs confirm */
+
+#define DEF_NOT_FOUND (-9999.0)
 
 #pragma pack(4) //32-bit and 64-bit sytems disagree on packing
 struct scom {
@@ -58,6 +61,7 @@ struct par {
     const char **nt; /* name look-up for integer parameters; NULL teriminated */
     unsigned long long strut; /* for 32-/64-bit compatiblity */
   };
+  int index_serial;
 };
 
 struct mcom {
@@ -105,6 +109,7 @@ int  NetCmdSendAndReceive(const char*, int, size_t, char*);
 int  NetCmdGetCmdList(void);
 int  NetCmdGetGroupNames(void);
 int  NetCmdTakeConn(int);
+double NetCmdGetDefault(char *cmdstr);
 const char* NetCmdBanner(void);
 int  NetCmdPing(void);
 #endif

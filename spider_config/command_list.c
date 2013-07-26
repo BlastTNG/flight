@@ -30,8 +30,8 @@
 
 #include "mce_counts.h"
 
-#define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "NONE", {mce_names}
-#define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"NONE", {mce_names + 1}
+#define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "NONE", {mce_names}, 1
+#define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"NONE", {mce_names + 1}, 2
 #define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "MCE_LAST_ACTION", {w}
 
 #define MCECMD1(cmd,desc,grp) \
@@ -172,6 +172,7 @@ const char *noyes_names[] = {"no", "yes", NULL};
 const char *rc_names[] = {"RC1", "RC2", NULL};
 const char *kick_names[] = {"none", "1 Volt", "2 Volts", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
+const char *just_mce_names[] = {"X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *tuning_stages[] = {"SA ramp", "SQ2 servo", "SQ1 servo", "SQ1 ramp",
   "SQ1 ramp TES", "Operate", NULL};
 const char *wb_cards[] = {"CC", "RC1", "RC2", "BC1", "BC2", "AC", NULL};
@@ -801,7 +802,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(hk_phase_ntd), "Set NTD bias phase", GR_BIAS, 2,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {"Insert", 1, HK_MAX, 'i', "INSERT_LAST_HK", {just_mce_names}},
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },

@@ -259,6 +259,49 @@ static char *read_string(int max)
   exit(14);
 }
 
+// get back default of one command parameter
+// cmdstr should be <cmdname>;<parname>
+double NetCmdGetDefault(char *cmdstr) {
+  char buffer[1024];
+  char defstr[50];
+  int len;
+  int i, n, c = 0;
+
+  sprintf(buffer, "::cmddef::%s\r\n", cmdstr);
+  send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
+
+  strcpy(buffer, ":::cmddef:::");
+
+  len = strlen(buffer);
+  for (i = 0; i < len; ++i) {
+    if ((n = read(sock, &c, 1)) <= 0) {
+      perror("Unable to receive");
+      exit(14);
+    } else if (buffer[i] != c)
+      goto CMDDEF_READ_ERROR;
+  }
+
+  for (i = 0; i < 100; ++i) {
+    if ((n = read(sock, &c, 1)) <= 0) {
+      perror("Unable to receive");
+      exit(14);
+    } else if (i == 99 && c != '\n')
+      goto CMDDEF_READ_ERROR;
+
+    if (c == '\n') {
+      defstr[i] = '\0';
+      break;
+    } else if (c != '\r')
+      defstr[i] = c;
+  }
+
+  return atof(defstr);
+
+CMDDEF_READ_ERROR:
+  fprintf(stderr, "Protocol error from daemon.\n");
+  exit(14);
+}
+
 //Blocks on reading until list comes through.
 int NetCmdGetCmdList(void)
 {
@@ -266,12 +309,14 @@ int NetCmdGetCmdList(void)
   int n, c = 0;
   size_t i;
   char buffer[1024] = "::list::\r\n";
+  int len;
 
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 
   strcpy(buffer, ":::rev:::");
 
-  for (i = 0; i < strlen(buffer); ++i) {
+  len = strlen(buffer);
+  for (i = 0; i < len; ++i) {
     if ((n = read(sock, &c, 1)) <= 0) {
       perror("Unable to receive");
       exit(14);
