@@ -372,6 +372,7 @@ void SendCmdDefault(int sock, double d){
   char output[512];
 
   sprintf(output, ":::cmddef:::%10g\r\n", d);
+  printf("%i<--%s", sock, output);
   send(sock, output, strlen(output), MSG_NOSIGNAL);
 }
 

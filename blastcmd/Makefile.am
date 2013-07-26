@@ -53,5 +53,9 @@ endif
 	else \
 	  mv -f $(DESTDIR)$(dataetcdir)/blastcmd.auth.orig $(DESTDIR)$(dataetcdir)/blastcmd.auth; \
 	  fi
+	if [ ! -e $(DESTDIR)$(dataetcdir)/cmddefs.txt ]; then \
+		touch $(DESTDIR)$(dataetcdir)/cmddefs.txt; \
+		chmod 666 $(DESTDIR)$(dataetcdir)/cmddefs.txt; \
+	fi
 
 @MAKEFILE_UPDATE@
