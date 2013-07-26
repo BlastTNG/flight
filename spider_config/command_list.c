@@ -159,8 +159,8 @@ const char *const GroupNames[N_GROUPS] = {
   "Pointing Motor Gains",  "SC Table",         "HK Insert Heat",
   "ACS Power",             "The Good SC",      "HK Theo Heat",
   "Telemetry",             "The Bad SC",       "Cryo/HK Power",
-  "MCE Power",             "The Ugly SC",      "MCCs",
-  "Array Tuning",          "MCE Acquisition",  "Load Curves",
+  "MCE Power",             "The Ugly SC",      "MPC Control",
+  "Tuning Params",         "Detectors",        "Load Curves",
   "Miscellaneous",         "CMB Grenades",     "Sync Box"
   };
 
@@ -457,9 +457,9 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(global_thermonuclear_war), "Shall we play a game?",
     GR_CMB | CONFIRM},
 
-  {COMMAND(mcc_wdog_enable), "Enable pcm watchdog of MCCs", GR_MCC},
-  {COMMAND(mcc_wdog_disable), "Disable pcm watchdog of MCCs", GR_MCC},
-  {COMMAND(get_superslow), "Re-fetch the super-slow data from MPC", GR_MCC},
+  {COMMAND(mcc_wdog_enable), "Enable pcm watchdog of MCCs", GR_MCEPWR},
+  {COMMAND(mcc_wdog_disable), "Disable pcm watchdog of MCCs", GR_MCEPWR},
+  {COMMAND(get_superslow), "Re-fetch the super-slow data from MPC", GR_MPC},
 
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
@@ -1015,12 +1015,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(squid_veto), "Set all squid and TES biases to zero, "
-      "disable muxing, and stop data acquisition", GR_MCC | GR_CRYO_HEAT, 1,
+      "disable muxing, and stop data acquisition", GR_MPC | GR_CRYO_HEAT, 1,
       {
         {CHOOSE_INSERT_PARAM}
       }
   },
-  {COMMAND(squid_unveto), "Resume normal MCE operations", GR_MCC | GR_CRYO_HEAT,
+  {COMMAND(squid_unveto), "Resume normal MCE operations", GR_MPC | GR_CRYO_HEAT,
     1,
       {
         {CHOOSE_INSERT_PARAM}
@@ -1279,7 +1279,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(data_mode_bits), "Change how 32->16 bit translation for TES data "
-    "happens", GR_MCC, 5,
+    "happens", GR_MPC, 5,
     {
       {"Data mode", 0, 12, 'i', ""},
       {"Upper subfield first bit", 0, 32, 'i', ""},
@@ -1316,23 +1316,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /***********************************************/
   /*************** MCE COMMANDS  *****************/
 
-  {MCECMD1(start_acq, "Start data acquisition", GR_ACQ)},
-  {MCECMD1(force_acq, "Start data acquisition without reconfiguring", GR_ACQ)},
-  {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_ACQ)},
-  {MCECMD1(stop_acq, "Stop data acquisition", GR_ACQ)},
-  {MCECMD1P(send_exptcfg, "Send down experiment.cfg", GR_MCC)},
-  {MCECMD1P(mce_reload_config, "Reset experiment.cfg to template", GR_MCC)},
+  {MCECMD1(start_acq, "Start data acquisition", GR_MPC)},
+  {MCECMD1(force_acq, "Start data acquisition without reconfiguring", GR_MPC)},
+  {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_MPC)},
+  {MCECMD1(stop_acq, "Stop data acquisition", GR_MPC)},
+  {MCECMD1P(send_exptcfg, "Send down experiment.cfg", GR_MPC)},
+  {MCECMD1P(mce_reload_config, "Reset experiment.cfg to template", GR_MPC)},
 
-  {MCECMD2(data_mode, "Set the MCE data mode", GR_ACQ, "Data Mode", 0, 12,
+  {MCECMD2(data_mode, "Set the MCE data mode", GR_MPC, "Data Mode", 0, 12,
       'i')},
-  {COMMAND(tune_array), "Tune a focal plane", GR_TUNE | MCECMD, 3,
+  {COMMAND(tune_array), "Tune a focal plane", GR_MPC | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
       {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
       {"Last stage", 0, 5, 'i', "NONE", {tuning_stages}}
     }
   },
-  {COMMAND(tune_biases), "Tune with bias ramping on", GR_TUNE | MCECMD, 3,
+  {COMMAND(tune_biases), "Tune with bias ramping on", GR_MPC | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
       {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
@@ -1340,8 +1340,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {MCECMD2AP(column_on, "Turn on a MCE column", GR_ACQ, "Column", 0, 15, 'i')},
-  {MCECMD2AP(column_off, "Turn off a MCE column", GR_ACQ, "Column", 0, 15,
+  {MCECMD2AP(column_on, "Turn on a MCE column", GR_DET, "Column", 0, 15, 'i')},
+  {MCECMD2AP(column_off, "Turn off a MCE column", GR_DET, "Column", 0, 15,
       'i')},
   {MCECMD2(sa_offset_bias_ratio, "Set the SA offset bias ratio", GR_TUNE,
       "Ratio", 0, 2, 'f')},
@@ -1406,17 +1406,17 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       "Time (us)", 0, 65535, 'i')},
   {MCECMD2(ramp_tes_period, "Period for the TES bias ramp", GR_IV, "Time (us)",
       0, 1000000000, 'l')},
-  {MCECMD2A(num_rows_reported, "MCE num rows reported", GR_ACQ,
+  {MCECMD2A(num_rows_reported, "MCE num rows reported", GR_DET,
       "Num Rows", 0, 32, 'i')},
-  {MCECMD2A(readout_row_index, "Readout Row index", GR_ACQ, "Row", 0, 32, 'i')},
-  {MCECMD2A(sample_dly, "Sample delay", GR_ACQ, "Count", 0, 200, 'i')},
-  {MCECMD2A(sample_num, "Sample number", GR_ACQ, "Count", 0, 100, 'i')},
-  {MCECMD2A(fb_dly, "Feedback delay", GR_ACQ, "Count",  0, 100, 'i')},
-  {MCECMD2A(row_dly, "Row delay", GR_ACQ, "Count",  0, 100, 'i')},
-  {MCECMD1AD(flux_jumping_on, "Turn on flux jumping", GR_ACQ)},
-  {MCECMD1AD(flux_jumping_off, "Turn off flux jumping", GR_ACQ)},
-  {MCECMD2(mce_servo_mode, "Set the servo mode", GR_ACQ, "Mode", 0, 3, 'i')},
-  {COMMAND(mce_servo_pid), "Set the servo gains for a column", GR_ACQ | MCECMD,
+  {MCECMD2A(readout_row_index, "Readout Row index", GR_DET, "Row", 0, 32, 'i')},
+  {MCECMD2A(sample_dly, "Sample delay", GR_DET, "Count", 0, 200, 'i')},
+  {MCECMD2A(sample_num, "Sample number", GR_DET, "Count", 0, 100, 'i')},
+  {MCECMD2A(fb_dly, "Feedback delay", GR_DET, "Count",  0, 100, 'i')},
+  {MCECMD2A(row_dly, "Row delay", GR_DET, "Count",  0, 100, 'i')},
+  {MCECMD1AD(flux_jumping_on, "Turn on flux jumping", GR_DET)},
+  {MCECMD1AD(flux_jumping_off, "Turn off flux jumping", GR_DET)},
+  {MCECMD2(mce_servo_mode, "Set the servo mode", GR_DET, "Mode", 0, 3, 'i')},
+  {COMMAND(mce_servo_pid), "Set the servo gains for a column", GR_DET | MCECMD,
     6,
     {
       {CHOOSE_INSERT_NO_ALL},
@@ -1427,7 +1427,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {MCE_ACTION_PARAM(4,daction_names)},
     }
   },
-  {COMMAND(pixel_servo_pid), "Set the servo gains for a pixel", GR_ACQ | MCECMD,
+  {COMMAND(pixel_servo_pid), "Set the servo gains for a pixel", GR_DET | MCECMD,
     6,
     {
       {CHOOSE_INSERT_NO_ALL},
@@ -1438,7 +1438,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"D Gain", 0, 65535, 'i', "NONE"},
     }
   },
-  {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_ACQ | MCECMD, 4,
+  {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_DET | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"P Gain", 0, 65535, 'i', "1"}, 
@@ -1446,24 +1446,24 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"D Gain", 0, 65535, 'i', "3"},
     }
   },
-  {MCECMDCR1A(dead_detector, "Set a detector as dead", GR_ACQ)},
-  {MCECMDCR1A(frail_detector, "Set a detector as frail", GR_ACQ)},
-  {MCECMDCR1A(healthy_detector, "Set a detector as healthy", GR_ACQ)},
-  {MCECMDCA(tes_bias, "TES bias level", GR_ACQ, "Level", 0, 65535, 'i')},
+  {MCECMDCR1A(dead_detector, "Set a detector as dead", GR_DET)},
+  {MCECMDCR1A(frail_detector, "Set a detector as frail", GR_DET)},
+  {MCECMDCR1A(healthy_detector, "Set a detector as healthy", GR_DET)},
+  {MCECMDCA(tes_bias, "TES bias level", GR_DET, "Level", 0, 65535, 'i')},
   {MCECMDC(sa_flux_quantum, "SA flux quantum", GR_TUNE,
       "Quantum", 0, 65535, 'i')},
   {MCECMDC(sq2_flux_quantum, "SQ2 flux quantum", GR_TUNE,
       "Quantum", 0, 65535, 'i')},
   {MCECMDCR(sq1_flux_quantum, "SQ1 flux quantum", GR_TUNE,
       "Quantum", 0, 65535, 'i')},
-  {MCECMDRAD(sq1_bias, "SQ1 bias", GR_ACQ, "Bias", 0, 65535, 'i')},
-  {MCECMDRAD(sq1_bias_off, "SQ1 off bias", GR_ACQ, "Bias", 0, 65535, 'i')},
-  {MCECMDCAD(sq2_bias, "SQ2 bias", GR_ACQ, "Bias", 0, 65535, 'i')},
-  {MCECMDCRA(sq2_fb, "SQ2 feeback", GR_ACQ, "Feeback", 0, 65535, 'i')},
-  {MCECMDCAD(sa_bias, "SA bias", GR_ACQ, "Bias", 0, 65535, 'i')},
-  {MCECMDCA(sa_fb, "SA feeback", GR_ACQ, "Bias", 0, 65535, 'i')},
-  {MCECMDCA(sa_offset, "SA offset", GR_ACQ, "Bias", 0, 65535, 'i')},
-  {MCECMDCRA(adc_offset, "ADC offset ", GR_ACQ, "Offset", 0, 65535, 'i')},
+  {MCECMDRAD(sq1_bias, "SQ1 bias", GR_DET, "Bias", 0, 65535, 'i')},
+  {MCECMDRAD(sq1_bias_off, "SQ1 off bias", GR_DET, "Bias", 0, 65535, 'i')},
+  {MCECMDCAD(sq2_bias, "SQ2 bias", GR_DET, "Bias", 0, 65535, 'i')},
+  {MCECMDCRA(sq2_fb, "SQ2 feeback", GR_DET, "Feeback", 0, 65535, 'i')},
+  {MCECMDCAD(sa_bias, "SA bias", GR_DET, "Bias", 0, 65535, 'i')},
+  {MCECMDCA(sa_fb, "SA feeback", GR_DET, "Bias", 0, 65535, 'i')},
+  {MCECMDCA(sa_offset, "SA offset", GR_DET, "Bias", 0, 65535, 'i')},
+  {MCECMDCRA(adc_offset, "ADC offset ", GR_DET, "Offset", 0, 65535, 'i')},
   {MCECMD2P(tile_heater_on, "Turn on the tile heater", GR_IV,
       "Level (V)", 0, 5, 'f')},
   {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_IV)},
@@ -1474,12 +1474,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Duration (s)", 0, 100, 'f', "NONE"},
     }
   },
-  {MCECMDC(servo_reset, "Reset a detector's servo", GR_ACQ, "Row", 0, 32, 'i')},
-  {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_ACQ)},
-  {MCECMD1(lcloop, "Run load curves forever", GR_MCC)},
-  {MCECMD2A(bias_tess_all, "Set all TES biases", GR_ACQ, "Bias", 0, 65535,
+  {MCECMDC(servo_reset, "Reset a detector's servo", GR_DET, "Row", 0, 32, 'i')},
+  {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_DET)},
+  {MCECMD1(lcloop, "Run load curves forever", GR_IV)},
+  {MCECMD2A(bias_tess_all, "Set all TES biases", GR_DET, "Bias", 0, 65535,
       'i')},
-  {COMMAND(bias_tess), "Set TES biases", GR_ACQ | MCECMD, 11,
+  {COMMAND(bias_tess), "Set TES biases", GR_DET | MCECMD, 11,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
@@ -1495,7 +1495,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
-    GR_MCC | MCECMD | CONFIRM, 5,
+    GR_MPC | MCECMD | CONFIRM, 5,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Card", 0, 6, 'i', "NONE", {wb_cards}},

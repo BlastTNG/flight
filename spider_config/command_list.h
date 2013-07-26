@@ -49,9 +49,9 @@
 #define GR_IFPOWER      0x00020000
 #define GR_MCEPWR       0x00040000
 #define GR_SCUGLY       0x00080000
-#define GR_MCC          0x00100000
+#define GR_MPC          0x00100000
 #define GR_TUNE         0x00200000
-#define GR_ACQ          0x00400000
+#define GR_DET          0x00400000
 #define GR_IV           0x00800000
 #define GR_MISC         0x01000000
 #define GR_CMB          0x02000000

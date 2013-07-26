@@ -152,7 +152,7 @@ void meta(void)
 #ifdef DEBUG_META
   if (meta_tk) {
     bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X %s",
-        goal_string[working_goal], moda_string[moda >> MODA_SHIFT], state,
+        goal_string[goal], moda_string[moda >> MODA_SHIFT], state,
         memory.squidveto ? "vetoed" : "");
     if ((meta_tk & ~STOP_TK) >= md_none)
       bprintf(info, "M: meta_tk: %s %s", (meta_tk & STOP_TK) ? "stop" : "start",
