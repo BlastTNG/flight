@@ -488,7 +488,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(az_el_goto), "goto point in azimuth and elevation", GR_POINT, 2,
     {
       {"Azimuth (deg)",     -360, 360, 'f', "AZ"},
-      {"Elevation (deg)", 20.0,  45.0, 'f', "EL"}
+      {"Elevation (deg)", 15.0,  45.0, 'f', "EL"}
     }
   },
   {COMMAND(az_el_trim), "trim sensors to azimuth and elevation", GR_TRIM, 2,

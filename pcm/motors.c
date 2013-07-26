@@ -38,7 +38,7 @@
 #include "calibrate.h"
 
 // TODO: Revise these el limits for Spider flight:
-#define MIN_EL 20 
+#define MIN_EL 15 
 #define MAX_EL 45
 
 #define VPIV_FILTER_LEN 40
