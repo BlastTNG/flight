@@ -1465,8 +1465,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_ACQ, "Row", 0, 32, 'i')},
   {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_ACQ)},
   {MCECMD1(lcloop, "Run load curves forever", GR_MCC)},
-  {MCECMD2(bias_tess_all, "Set all TES biases", GR_ACQ, "Bias", 0, 65535, 'i')},
-  {COMMAND(bias_tess), "Set TES biases", GR_ACQ | MCECMD, 10,
+  {MCECMD2A(bias_tess_all, "Set all TES biases", GR_ACQ, "Bias", 0, 65535,
+      'i')},
+  {COMMAND(bias_tess), "Set TES biases", GR_ACQ | MCECMD, 11,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
@@ -1477,7 +1478,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Column 4", 0, 65535, 'i', "NONE"},
       {"Column 5", 0, 65535, 'i', "NONE"},
       {"Column 6", 0, 65535, 'i', "NONE"},
-      {"Column 7", 0, 65535, 'i', "NONE"}
+      {"Column 7", 0, 65535, 'i', "NONE"},
+      {MCE_ACTION_PARAM(3,action_names)}
     }
   },
   {MCECMD1(stop_mce, "Set all squid and TES biases to zero, "
