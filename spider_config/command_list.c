@@ -1014,13 +1014,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
-  {COMMAND(squid_veto), "Set all squid and TES biases to zero, "
+  {COMMAND(mce_veto), "Set all squid and TES biases to zero, "
       "disable muxing, and stop data acquisition", GR_MPC | GR_CRYO_HEAT, 1,
       {
         {CHOOSE_INSERT_PARAM}
       }
   },
-  {COMMAND(squid_unveto), "Resume normal MCE operations", GR_MPC | GR_CRYO_HEAT,
+  {COMMAND(mce_unveto), "Resume normal MCE operations", GR_MPC | GR_CRYO_HEAT,
     1,
       {
         {CHOOSE_INSERT_PARAM}
