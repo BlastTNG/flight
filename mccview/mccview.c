@@ -70,11 +70,11 @@ const char *dtasks[] = {"idle", "setdir", "dsp_rst", "mce_rst", "reconfig",
   "iv_curve", "stop", "stop_mce", "lcloop"
 };
 const char *goals[] = {"ready", "tune", "iv", "stop", "lcloop", "acq"};
-const char *modes[] = {"none", "acqcnf", "running", "tuning", "iv_curve",
+const char *modes[] = {"none", "running", "tuning", "iv_curve",
   "lcloop"};
-#define N_STATES 5
+#define N_STATES 6
 const char *states[N_STATES] = {"drives", "active", "mcecom", "config",
-  "retdat"};
+  "acqcnf", "retdat"};
 
 static char drivemap(uint64_t map, int n)
 {
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
   for (;;) {
     int f, x;
     size_t n;
-    off_t fn = gd_nframes64(D) - 20;
+    off_t fn = gd_nframes64(D) - 5;
     printw("Frame: %lli     blob#%-6llu   mce_blob:0x%04llX  "
         "reporting:%s   alive:%s\n", (long long)fn, gd[1].u64, gd[0].u64,
         mcebits(2), mcebits(3));
@@ -174,6 +174,13 @@ int main(int argc, char **argv)
       printw("\n");
     }
 
+    for (x = 0; x < 6; ++x)
+      printw(" d map:          %c%c%c     ",
+          drivemap(d[x][13].u64, 0),
+          drivemap(d[x][13].u64, 1),
+          drivemap(d[x][13].u64, 2));
+    printw("\n");
+
     for (f = 0; f < N_STATES; ++f) {
       unsigned b = 1 << f;
       for (x = 0; x < 6; ++x)
@@ -208,13 +215,6 @@ int main(int argc, char **argv)
 
     for (x = 0; x < 6; ++x)
       printw("  dead:          %2llu      ", d[x][12].u64);
-    printw("\n");
-
-    for (x = 0; x < 6; ++x)
-      printw(" drive:          %c%c%c     ",
-          drivemap(d[x][13].u64, 0),
-          drivemap(d[x][13].u64, 1),
-          drivemap(d[x][13].u64, 2));
     printw("\n");
 
     for (x = 0; x < 6; ++x)
