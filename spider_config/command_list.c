@@ -44,7 +44,7 @@ const int command_list_serial_as_int(void)
 
 #define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "NONE", {mce_names}, 1
 #define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"NONE", {mce_names + 1}, 2
-#define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "MCE_LAST_ACTION", {w}
+#define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "NONE", {w}
 
 #define MCECMD1(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 1, { \

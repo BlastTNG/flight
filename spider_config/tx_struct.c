@@ -958,7 +958,7 @@ struct ChannelStruct SlowChannels[] = {
 
   /* LOOP7, 54-59 are fast or wide-fast */
   {"blob_num_mpc",    'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
-  {"last_action_mpc", 'w',  LOOP7, 61,  1,      0, 'u', U_NONE},
+  {"squid_veto",      'w',  LOOP7, 61,  1,      0, 'u', U_NONE},
   {"reporting_mpcs",  'w',  LOOP7, 62,  1,      0, 'u', U_NONE},
   {"alive_mpcs",      'w',  LOOP7, 63,  1,      0, 'u', U_NONE},
 
@@ -978,7 +978,6 @@ struct ChannelStruct SlowChannels[] = {
 
   /* END of MCE slow channels */
 
-  {"squid_veto",      'w',  LOOP8, 12,   1,     0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };
