@@ -43,6 +43,7 @@ extern "C" {
 #include <QLineEdit>
 #include <limits>
 #include <limits.h>
+#include <QMap>
 
 #include <sys/types.h>
 
@@ -173,11 +174,14 @@ private:
     int dir;
     QPixmap *Images[6];
 
+    QMap<int,int> index_defaults;
+
 public slots:
     void OmniParse(QString filter="__AUTODETECT__");
     void OmniSync();
     void ChangeCommandList(bool really=true);
-    void ChooseCommand();
+    void IndexComboChanged(int i) {ChooseCommand(true, i);}
+    void ChooseCommand(bool index_combo_changed=false, int combo_index = 0);
     void Quit();
     void SendCommand();
     void Tick();
