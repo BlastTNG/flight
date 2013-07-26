@@ -66,6 +66,45 @@ int cfg_get_int(const char *name, int n)
   return -1;
 }
 
+int cfg_set_intarr(const char *name, int o, uint32_t *d, int n)
+{
+  config_setting_t *s;
+  int old_v, v, i;
+
+  /* get the parameter */
+  if ((s = config_lookup(&expt, name)) == NULL) {
+    bprintf(err, "unable to find '%s' in experiment.cfg", name);
+    return -1;
+  }
+
+  /* check type and set */
+  switch (config_setting_type(s))
+  {
+    case CONFIG_TYPE_ARRAY:
+      if (o + n >= config_setting_length(s)) {
+        bprintf(err, "bad index %i > %i trying to set int elem on %s", o + n,
+            config_setting_length(s), name);
+        return -1;
+      }
+      /* get */
+      for (i = o; i < o + n; ++i) { 
+        v = d[i];
+        old_v = config_setting_get_int_elem(s, i);
+
+        if (old_v != v) {
+          /* set */
+          config_setting_set_int_elem(s, i, v);
+          expt_cfg_dirty = 1;
+        }
+      }
+      break;
+    default:
+      bprintf(err, "bad type trying to set int array on %s", name);
+      return -1;
+  }
+  return 0;
+}
+
 int cfg_set_int(const char *name, int n, int v)
 {
   config_setting_t *s;

@@ -637,7 +637,7 @@ static void apply_cmd(int p, const char *name, int n, uint32_t v)
       card[1] = "rc1";
       card[2] = "rc2";
       break;
-    case tes_bias:
+    case bias_tes_col:
       card[0] = "tes";
       param = "bias";
       break;
@@ -848,6 +848,20 @@ static void q_servo_reset(int c, int r)
   push_block_raw(rc, "servo_rst_arm", 0, &zero, 1);
 }
 
+static void q_bias_tess(int o, uint32_t *data, int n, int a)
+{
+  /* apply */
+  if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY)
+    push_block("tes", "bias", o, data, n);
+
+  /* record value */
+  if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY || a == PRM_RECORD_RCONF) {
+    cfg_set_intarr("tes_bias", o, data, n);
+    if (a == PRM_RECORD_RCONF)
+      state &= ~st_config;
+  }
+}
+
 #define CFG_TOGGLE(on,off,name) \
   case on: cfg_set_int(name, 0, 1); break; \
 case off: cfg_set_int(name, 0, 0); break
@@ -962,7 +976,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         PRM_SETINT(row_dly, "row_dly");
         PRM_TOGGLE(flux_jumping_on, flux_jumping_off, "flux_jumping");
         CFG_SETINT(mce_servo_mode, "servo_mode");
-        PRM_SETINTC(tes_bias, "tes_bias");
+        PRM_SETINTC(bias_tes_col, "tes_bias");
         CFG_SETINTC(sa_flux_quantum, "sa_flux_quanta");
         CFG_SETINTC(sq2_flux_quantum, "sq2_flux_quanta");
         CFG_SETINTCR(sq1_flux_quantum, "flux_quanta_all");
@@ -1044,13 +1058,13 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[5] = ev->ivalues[7];
         data[6] = ev->ivalues[8];
         data[7] = ev->ivalues[9];
-        push_block("tes", "bias", ev->ivalues[1] ? 8 : 0, data, 8);
+        q_bias_tess(ev->ivalues[1] ? 8 : 0, data, 8, ev->ivalues[10]);
         break;
       case bias_tess_all:
         data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = data[6] =
           data[7] = data[8] = data[9] = data[10] = data[11] = data[12] =
           data[13] = data[14] = data[15] = ev->ivalues[1];
-        push_block("tes", "bias", 0, data, 16);
+        q_bias_tess(0, data, 16, ev->ivalues[2]);
         break;
       case tile_heater_on:
         data[0] = ev->ivalues[1] * 32767 / 5;

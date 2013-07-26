@@ -230,6 +230,7 @@ int cfg_get_int(const char *, int);
 int cfg_set_float(const char *, int, double);
 int cfg_set_int(const char *, int, int);
 int cfg_set_int_cr(const char *, int, int, int);
+int cfg_set_intarr(const char *name, int o, uint32_t *d, int n);
 int flush_experiment_cfg(int);
 int serialise_experiment_cfg(void);
 void cfg_update_timing(int, int, int);
