@@ -376,7 +376,6 @@ static void WriteMCESlow(void)
   static struct NiosStruct *tileHeaterAddr[NUM_MCE];
 
   static struct NiosStruct *blobNumAddr;
-  static struct NiosStruct *lastActionAddr;
   static struct NiosStruct *reportingMPCsAddr;
   static struct NiosStruct *aliveMPCsAddr;
   static struct NiosStruct *squidVetoAddr;
@@ -404,7 +403,6 @@ static void WriteMCESlow(void)
       tileHeaterAddr[i] = GetMCCNiosAddr("tile_heater_mce", i);
     }
     blobNumAddr = GetNiosAddr("blob_num_mpc");
-    lastActionAddr = GetNiosAddr("last_action_mpc");
     reportingMPCsAddr = GetNiosAddr("reporting_mpcs");
     aliveMPCsAddr = GetNiosAddr("alive_mpcs");
     squidVetoAddr = GetNiosAddr("squid_veto");
@@ -435,7 +433,6 @@ static void WriteMCESlow(void)
   }
 
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
-  WriteData(lastActionAddr, CommandData.mce_last_action, NIOS_QUEUE);
   WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
   WriteData(squidVetoAddr, CommandData.squidveto, NIOS_QUEUE);
 

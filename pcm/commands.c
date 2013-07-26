@@ -123,42 +123,6 @@ static int MCEcmd(int command, const double *rvalues, const int *ivalues,
     cmd = MIndex(command);
     if (!(mcommands[cmd].group & MCECMD))
       return 0;
-    /* update mce_last_action where appropriate */
-    switch (cmd) {
-      case flux_jumping_on:
-      case flux_jumping_off:
-        CommandData.mce_last_action = ivalues[1];
-        break;
-      case column_on:
-      case column_off:
-      case num_rows_reported:
-      case readout_row_index:
-      case sample_dly:
-      case sample_num:
-      case fb_dly:
-      case row_dly:
-        CommandData.mce_last_action = ivalues[2];
-        break;
-      case dead_detector:
-      case frail_detector:
-      case healthy_detector:
-      case tes_bias:
-      case sq1_bias:
-      case sq1_bias_off:
-      case sq2_bias:
-      case sa_bias:
-      case sa_fb:
-      case sa_offset:
-        CommandData.mce_last_action = ivalues[3];
-        break;
-      case sq2_fb:
-      case adc_offset:
-        CommandData.mce_last_action = ivalues[4];
-        break;
-      case mce_servo_pid:
-        CommandData.mce_last_action = ivalues[5];
-        break;
-    }
   } else {
     cmd = SIndex(command);
     if (!(scommands[cmd].group & MCECMD))
@@ -1928,13 +1892,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.data_mode_bits_serial++;
       }
       break;
-    case squid_veto:
+    case mce_veto:
       if (ivalues[0] == 0) /* everybody */
         CommandData.squidveto = (1U << NUM_MCE) - 1; /* set all bits */
       else 
         CommandData.squidveto |= (1U << (ivalues[0] - 1));
       break;
-    case squid_unveto:
+    case mce_unveto:
       if (ivalues[0] == 0) /* everybody */
         CommandData.squidveto = 0;
       else
@@ -2425,7 +2389,6 @@ void InitCommandData()
   CommandData.data_mode_bits_serial = 0;
 
   CommandData.mce_blob_num = 0xEB90;
-  CommandData.mce_last_action = 0;
 
   CommandData.mcc_wdog = 0;
 

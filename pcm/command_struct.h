@@ -476,7 +476,6 @@ struct CommandDataStruct {
   unsigned short questionable_behaviour;
 
   uint16_t mce_blob_num; /* blob serial number */
-  uint16_t mce_last_action;
 
   int bset_num; /* current bolo set number */
 
