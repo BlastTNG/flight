@@ -859,7 +859,7 @@ static int do_ivcurve(uint32_t kick, int kickwait, int start, int last,
   sprintf(start_arg, "%i", start);
   sprintf(last_arg, "%i", last);
   sprintf(step_arg, "%i", step);
-  sprintf(count_arg, "%i", (last - start) / step);
+  sprintf(count_arg, "%i", (last - start) / step + 1);
   sprintf(step_wait, "%f", wait);
 
   /* kick */
@@ -883,7 +883,7 @@ static int do_ivcurve(uint32_t kick, int kickwait, int start, int last,
 
     /* flx_lp_init */
     uint32_t one = 1;
-    write_param("rca","flx_lp_init",0, &one, 1);
+    mas_write_block("rca", "flx_lp_init", &one, 1);
     sleep(2);
   }
 
