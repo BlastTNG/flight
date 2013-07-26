@@ -978,6 +978,8 @@ struct ChannelStruct SlowChannels[] = {
 
   /* END of MCE slow channels */
 
+  {"squid_veto",      'w',  LOOP8, 12,   1,     0, 'u', U_NONE},
+
   END_OF_CHANNELS
 };
 

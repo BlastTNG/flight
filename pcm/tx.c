@@ -379,6 +379,7 @@ static void WriteMCESlow(void)
   static struct NiosStruct *lastActionAddr;
   static struct NiosStruct *reportingMPCsAddr;
   static struct NiosStruct *aliveMPCsAddr;
+  static struct NiosStruct *squidVetoAddr;
 
   int ind;
 
@@ -406,6 +407,7 @@ static void WriteMCESlow(void)
     lastActionAddr = GetNiosAddr("last_action_mpc");
     reportingMPCsAddr = GetNiosAddr("reporting_mpcs");
     aliveMPCsAddr = GetNiosAddr("alive_mpcs");
+    squidVetoAddr = GetNiosAddr("squid_veto");
   }
 
   for (mux=0; mux<NUM_MCE; mux++) {
@@ -435,6 +437,7 @@ static void WriteMCESlow(void)
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
   WriteData(lastActionAddr, CommandData.mce_last_action, NIOS_QUEUE);
   WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
+  WriteData(squidVetoAddr, CommandData.squidveto, NIOS_QUEUE);
 
   /* this field is active low */
   WriteData(reportingMPCsAddr, (~mccs_reporting) & 0x3F, NIOS_QUEUE);

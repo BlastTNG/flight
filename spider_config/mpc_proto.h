@@ -85,11 +85,11 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
     const char *peer, int port);
 
 size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
-    int row_len, int num_rows, int data_rate, char data_mode_bits[13][2][2],
-    char *buffer);
+    int row_len, int num_rows, int data_rate, uint8_t squidveto,
+    char data_mode_bits[13][2][2], char *buffer);
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     int *divisor, int *ssdata_req, int *row_len, int *num_rows, int *data_rate,
-    size_t len, const char *data, const char *peer, int port);
+    int *squidveto, size_t len, const char *data, const char *peer, int port);
 
 size_t mpc_compose_param(const uint32_t *stat, int nmce, char *buffer);
 int mpc_decompose_param(uint32_t *stat, size_t len, const char *data,

@@ -1014,6 +1014,18 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Duration (minutes) (0-1440,-1=infinity)", -1.0, 1440.0, 'f', ""},
     }
   },
+  {COMMAND(squid_veto), "Set all squid and TES biases to zero, "
+      "disable muxing, and stop data acquisition", GR_MCC | GR_CRYO_HEAT, 1,
+      {
+        {CHOOSE_INSERT_PARAM}
+      }
+  },
+  {COMMAND(squid_unveto), "Resume normal MCE operations", GR_MCC | GR_CRYO_HEAT,
+    1,
+      {
+        {CHOOSE_INSERT_PARAM}
+      }
+  },
 
   /***************************************/
   /*************** The Good  *****************/
@@ -1482,8 +1494,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
-  {MCECMD1(stop_mce, "Set all squid and TES biases to zero, "
-      "disable muxing, and stop data acquisition", GR_MCC)},
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
     GR_MCC | MCECMD | CONFIRM, 5,
     {

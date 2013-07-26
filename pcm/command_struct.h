@@ -490,6 +490,9 @@ struct CommandDataStruct {
 
   /* mcc watchdog enable */
   unsigned short mcc_wdog;
+
+  /* squid vetoing */
+  uint8_t squidveto;
 };
 
 void InitCommandData();

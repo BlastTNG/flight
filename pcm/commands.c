@@ -1928,6 +1928,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.data_mode_bits_serial++;
       }
       break;
+    case squid_veto:
+      if (ivalues[0] == 0) /* everybody */
+        CommandData.squidveto = (1U << NUM_MCE) - 1; /* set all bits */
+      else 
+        CommandData.squidveto |= (1U << (ivalues[0] - 1));
+      break;
+    case squid_unveto:
+      if (ivalues[0] == 0) /* everybody */
+        CommandData.squidveto = 0;
+      else
+        CommandData.squidveto &= ~(1U << (ivalues[0] - 1));
+      break;
 
     default:
       if (!MCEcmd(command, rvalues, ivalues, svalues)) {
@@ -2416,6 +2428,8 @@ void InitCommandData()
   CommandData.mce_last_action = 0;
 
   CommandData.mcc_wdog = 0;
+
+  CommandData.squidveto = 0;
 
   CommandData.questionable_behaviour = 0;
 
