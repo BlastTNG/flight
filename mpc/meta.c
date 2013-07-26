@@ -154,7 +154,7 @@ void meta(void)
     bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X %s",
         goal_string[goal], moda_string[moda >> MODA_SHIFT], state,
         memory.squidveto ? "vetoed" : "");
-    if ((meta_tk & ~STOP_TK) >= md_none)
+    if ((meta_tk & ~STOP_TK) >= (1U << MODA_SHIFT))
       bprintf(info, "M: meta_tk: %s %s", (meta_tk & STOP_TK) ? "stop" : "start",
           moda_string[(meta_tk & ~STOP_TK) >> MODA_SHIFT]);
     else 

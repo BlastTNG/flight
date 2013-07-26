@@ -280,7 +280,7 @@ void *task(void *dummy)
       state &= ~(st_config | st_mcecom | st_retdat);
       meta_tk = 0; /* try again */
     } else if (req_dm != cur_dm) {
-      if (need_acq(goal)) {
+      if (need_acq(goal) && !memory.squidveto) {
         bprintf(info, "data mode change detected %i -> %i", cur_dm, req_dm);
         /* change of data mode while acquiring -- restart acq */
         task_reset_mce();
