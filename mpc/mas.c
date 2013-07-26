@@ -880,6 +880,11 @@ static int do_ivcurve(uint32_t kick, int kickwait, int start, int last,
       if (kill_special)
         return 1;
     }
+
+    /* flx_lp_init */
+    uint32_t one = 1;
+    write_param("rca","flx_lp_init",0, &one, 1);
+    sleep(2);
   }
 
   /* do the ramp */
