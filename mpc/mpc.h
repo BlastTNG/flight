@@ -235,6 +235,7 @@ int flush_experiment_cfg(int);
 int serialise_experiment_cfg(void);
 void cfg_update_timing(int, int, int);
 void cfg_load_template(void);
+void cfg_load_dead_masks(void);
 
 /* frame statistics */
 void update_stats(const uint32_t *curr_frame, size_t frame_size,

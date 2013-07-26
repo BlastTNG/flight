@@ -220,7 +220,7 @@ int cfg_set_float(const char *name, int n, double v)
   return 0;
 }
 
-static int read_experiment_cfg(const char *file, config_t *cfg)
+static int read_libconfig_file(const char *file, config_t *cfg)
 {
   config_init(cfg);
 
@@ -253,7 +253,7 @@ int load_experiment_cfg(void)
     return 1;
   }
 
-  if (read_experiment_cfg(file, &expt))
+  if (read_libconfig_file(file, &expt))
     return 1;
 
   have_expt_cfg = 1;
@@ -447,7 +447,7 @@ void cfg_apply_tuning(int n)
     for (d = 0; d < 4; ++d)
       if (slow_dat.df[d]) {
         file[5] = d + '0';
-        if (read_experiment_cfg(file, &cfg) == 0) {
+        if (read_libconfig_file(file, &cfg) == 0) {
           have_cfg = d;
           break;
         }
@@ -498,7 +498,7 @@ void cfg_load_template(void)
 
   config_init(&cfg);
 
-  if (read_experiment_cfg(file, &cfg)) {
+  if (read_libconfig_file(file, &cfg)) {
     bprintf(info, "Unable to load experiment.cfg template.");
     return;
   }
@@ -513,5 +513,53 @@ void cfg_load_template(void)
   cfg_set_int("data_rate", 0, data_rate);
 
   /* rewrite */
+  flush_experiment_cfg(1);
+}
+
+/* replace the current dead and frail masks with the templates */
+#define NLISTS 5
+void cfg_load_dead_masks(void)
+{
+  /* we could get this from the config, but this is much easier */
+  const char *list[NLISTS] = {"connection", "jumpers", "multilock", "other",
+    "squid1"};
+  const char *what[2] = {"dead", "frail"};
+  char file[100], setting[50];
+  int i, j, k;
+  config_setting_t *s;
+  int new_count = 0;
+
+  for (i = 0; i < 2; ++i) {
+    int mask[32 * 41]; /* masks are full sized */ 
+    memset(mask, 0, sizeof(int) * 32 * 41);
+    for (j = 0; j < NLISTS; ++j) {
+      config_t cfg;
+      config_init(&cfg);
+
+      sprintf(file, "/data/mas/config/dead_lists/x%i/%s_%s.cfg", nmce + 1,
+          what[i], list[j]);
+      if (read_libconfig_file(file, &cfg) == 0) {
+        s = config_lookup(&cfg, "mask");
+        if (s && config_setting_type(s) == CONFIG_TYPE_ARRAY)
+          for (k = 0; k < 32 * 41; ++k)
+            if (!mask[k] && config_setting_get_int_elem(s, k)) {
+              mask[k] = 1;
+              new_count++;
+            }
+        bprintf(info, "read: %s; dead_count = %i\n", file, new_count);
+      }
+      config_destroy(&cfg);
+    }
+
+    /* now write it -- why doesn't libconfig allow the writing of a whole
+     * array? */
+    sprintf(setting, "%s_detectors", what[i]);
+    s = config_lookup(&expt, setting);
+    for (k = 0; k < 32 * 41; ++k)
+      config_setting_set_int_elem(s, k, mask[k]);
+
+  }
+
+  /* force save */
   flush_experiment_cfg(1);
 }

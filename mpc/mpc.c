@@ -816,7 +816,6 @@ static void prm_set_pixel(int c, int r, int h, int a)
         cfg_set_int_cr("frail_detectors", c, r, 1);
       }
       break;
-      break;
   }
 
   if (a == PRM_RECORD_RCONF)
@@ -1087,8 +1086,11 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case servo_reset:
         q_servo_reset(ev->ivalues[1], ev->ivalues[2]);
         break;
-      case mce_reload_config:
+      case reload_mce_config:
         cfg_load_template();
+        break;
+      case reload_dead_masks:
+        cfg_load_dead_masks();
         break;
       case flux_loop_init:
         data[0] = 1;
