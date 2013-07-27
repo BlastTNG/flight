@@ -607,7 +607,6 @@ static void apply_cmd(int p, const char *name, int n, uint32_t v)
   int i, c;
 
   switch (p) {
-    case readout_row_index:
     case sample_dly:
     case sample_num:
     case fb_dly:
@@ -623,11 +622,6 @@ static void apply_cmd(int p, const char *name, int n, uint32_t v)
       card[1] = "rc2";
       param = "en_fb_jump";
       break;
-    case num_rows_reported:
-      card[0] = "cc";
-      card[1] = "rc1";
-      card[2] = "rc2";
-      break;
     case bias_tes_col:
       card[0] = "tes";
       param = "bias";
@@ -636,7 +630,7 @@ static void apply_cmd(int p, const char *name, int n, uint32_t v)
       card[0] = "ac";
       param = "on_bias";
       break;
-    case sq1_bias_off:
+    case sq1_off_bias:
       card[0] = "ac";
       param = "off_bias";
       break;
@@ -1046,20 +1040,17 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_SETSCS(ramp_tes);
         CFG_SETINT(ramp_tes_final_bias, "ramp_tes_final_bias");
         CFG_SETINT(ramp_tes_initial_pause, "ramp_tes_initial_pause");
-        PRM_SETINT(num_rows_reported, "num_rows_reported");
-        PRM_SETINT(readout_row_index, "readout_row_index");
         PRM_SETINT(sample_dly, "sample_dly");
         PRM_SETINT(sample_num, "sample_num");
         PRM_SETINT(fb_dly, "fb_dly");
         PRM_SETINT(row_dly, "row_dly");
         PRM_TOGGLE(flux_jumping_on, flux_jumping_off, "flux_jumping");
-        CFG_SETINT(mce_servo_mode, "servo_mode");
         PRM_SETINTC(bias_tes_col, "tes_bias");
         CFG_SETINTC(sa_flux_quantum, "sa_flux_quanta");
         CFG_SETINTC(sq2_flux_quantum, "sq2_flux_quanta");
         CFG_SETINTCR(sq1_flux_quantum, "flux_quanta_all");
         PRM_SETINTR(sq1_bias, "sq1_bias");
-        PRM_SETINTR(sq1_bias_off, "sq1_bias_off");
+        PRM_SETINTR(sq1_off_bias, "sq1_bias_off");
         PRM_SETINTCR(sq2_fb, "sq2_fb_set");
       case sa_bias:
         vet_bias(sa_bias, "sa_bias", ev->ivalues[1], ev->ivalues[2],

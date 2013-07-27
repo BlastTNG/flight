@@ -196,13 +196,13 @@ enum multiCommand {
   tes_bias_normal_time, tuning_check_bias_on, tuning_check_bias_off,
   tuning_therm_time, tuning_do_plots_on, tuning_do_plots_off,
   sq2servo_safb_init, sq1servo_sq2fb_init, ramp_tes, ramp_tes_final_bias,
-  ramp_tes_initial_pause, ramp_tes_period, num_rows_reported, readout_row_index,
-  sample_dly, sample_num, fb_dly, row_dly, flux_jumping_on, flux_jumping_off,
-  mce_servo_mode, servo_pid_col, servo_pid_pixel, servo_pid_frail,
-  dead_detector, frail_detector, healthy_detector, sa_flux_quantum,
-  sq2_flux_quantum, sq1_flux_quantum, sq1_bias, sq1_bias_off, sq2_bias, sq2_fb,
-  sa_bias, sa_fb, sa_offset, adc_offset, sq1_ramp_check_on, sq1_ramp_check_off,
-  write_default_bias_on, write_default_bias_off, bias_tes_col,
+  ramp_tes_initial_pause, ramp_tes_period, sample_dly, sample_num, fb_dly,
+  row_dly, flux_jumping_on, flux_jumping_off, servo_pid_col, servo_pid_pixel,
+  servo_pid_frail, dead_detector, frail_detector, healthy_detector,
+  sa_flux_quantum, sq2_flux_quantum, sq1_flux_quantum, sq1_bias, sq1_off_bias,
+  sq2_bias, sq2_fb, sa_bias, sa_fb, sa_offset, adc_offset, sq1_ramp_check_on,
+  sq1_ramp_check_off, write_default_bias_on, write_default_bias_off,
+  bias_tes_col,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
