@@ -115,7 +115,9 @@ void meta(void)
     meta_tk = st_mcecom;
   else if (~state & st_config) {
     /* need to stop an acquisition to do this */
-    if (state & st_retdat)
+    if (moda != md_none)
+      meta_tk = STOP_TK | (moda << MODA_SHIFT);
+    else if (state & st_retdat)
       meta_tk = st_retdat | STOP_TK;
     else if (state & st_acqcnf)
       meta_tk = st_acqcnf | STOP_TK;
@@ -158,7 +160,7 @@ void meta(void)
 #ifdef DEBUG_META
   if (meta_tk) {
     bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X %s",
-        goal_string[goal], moda_string[moda >> MODA_SHIFT], state,
+        goal_string[goal], moda_string[moda], state,
         memory.squidveto ? "vetoed" : "");
     if ((meta_tk & ~STOP_TK) >= (1U << MODA_SHIFT))
       bprintf(info, "M: meta_tk: %s %s", (meta_tk & STOP_TK) ? "stop" : "start",
