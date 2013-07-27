@@ -399,9 +399,13 @@ void cfg_update_timing(int row_len, int num_rows, int data_rate)
 }
 
 /* copy a parameter between loaded config_ts */
-static int cfg_copy_param(config_t *out, const config_t *in, const char *n)
+static int cfg_copy_param(config_t *out, const config_t *in, const char *n,
+    int vet)
 {
   int i;
+
+  /* vetting vector comes from the destination */
+  config_setting_t *svet = vet ? config_lookup(out, "columns_off") : NULL;
 
   /* find the parameters */
   config_setting_t *sout = config_lookup(out, n);
@@ -426,7 +430,10 @@ static int cfg_copy_param(config_t *out, const config_t *in, const char *n)
 
   /* copy! */
   for (i = 0; i < config_setting_length(sin); ++i)
-    config_setting_set_int_elem(sout, i, config_setting_get_int_elem(sin, i));
+    if (!vet || config_setting_get_int_elem(svet, i))
+      config_setting_set_int_elem(sout, i, config_setting_get_int_elem(sin, i));
+    else
+      config_setting_set_int_elem(sout, i, 0);
 
   return 0;
 }
@@ -440,9 +447,8 @@ void cfg_apply_tuning(int n)
   char file[100];
 
   /* the list of parameters to copy */
-  const char *param[] = {"sa_bias", "adc_offset_c", "adc_offset_cr", "sa_fb",
-    "sa_offset", "sq1_bias", "sq1_bias_off", "sq2_fb", "sq2_bias",
-    "sq2_fb_set", NULL };
+  const char *param[] = {"adc_offset_c", "adc_offset_cr", "sa_fb",
+    "sa_offset", "sq1_bias", "sq1_bias_off", "sq2_fb", "sq2_fb_set", NULL};
 
   /* try to read an archive */
   if (tuning_filename("experiment.cfg", n, file) == 0)
@@ -463,10 +469,14 @@ void cfg_apply_tuning(int n)
   /* copy parameters and record */
   int copy_error = 0;
   for (d = 0; param[d]; ++d)
-    if (cfg_copy_param(&expt, &cfg, param[d])) {
+    if (cfg_copy_param(&expt, &cfg, param[d], 0))
       copy_error = 1;
-      break;
-    }
+
+  /* these need to be vetted by columns_off */
+  if (cfg_copy_param(&expt, &cfg, "sa_bias", 1))
+    copy_error = 1;
+  if (cfg_copy_param(&expt, &cfg, "sq2_bias", 1))
+    copy_error = 1;
 
   if (!copy_error) { /* probably means it's completely corrupt, but... meh */
     flush_experiment_cfg(0);

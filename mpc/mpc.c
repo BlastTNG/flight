@@ -607,24 +607,6 @@ static void apply_cmd(int p, const char *name, int n, uint32_t v)
   int i, c;
 
   switch (p) {
-    case column_off:
-      if (n > 8) {
-        card[0] = "rc2";
-        n -= 8;
-      } else
-        card[0] = "rc1";
-      v = 1;
-      param = "servo_mode";
-      break;
-    case column_on:
-      if (n > 8) {
-        card[0] = "rc2";
-        n -= 8;
-      } else
-        card[0] = "rc1";
-      v = 3;
-      param = "servo_mode";
-      break;
     case readout_row_index:
     case sample_dly:
     case sample_num:
@@ -831,6 +813,76 @@ static void prm_set_pixel(int c, int r, int h, int a)
     state &= ~st_config;
 }
 
+/* ignore this command if the column is off */
+static void vet_bias(int p, const char *name, int c, int v, int a)
+{
+  if (cfg_get_int("columns_off", c))
+    return;
+  prm_set_int(p, name, c, v, a);
+}
+
+static void q_column_on(int c, uint32_t sa, uint32_t sq2, int a)
+{
+  /* column on means: SA and SQ2 are biased and servo mode is 3 */
+
+  /* set biases -- we're synchronous with the meta director here so 
+   * we don't have to worry about multiple PRM_RECORD_RCONF */
+  prm_set_int(sa_bias, "sa_bias", c, sa, a);
+  prm_set_int(sq2_bias, "sq2_bias", c, sq2, a);
+
+  if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
+    /* apply servo mode */
+    uint32_t three = 3;
+    char rc[] = "rc1";
+    int col = c;
+
+    if (c > 8) {
+      rc[3] = '2';
+      col -= 8;
+    }
+
+    push_block(rc, "servo_mode", col, &three, 1);
+  }
+
+  /* record columns off */
+  if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY || a == PRM_RECORD_RCONF) {
+    cfg_set_int("columns_off", c, 0);
+    if (a == PRM_RECORD_RCONF)
+      state &= ~st_config;
+  }
+}
+
+static void q_column_off(int c, int a)
+{
+  /* column off means: SA and SQ2 biases are zeroed and servo mode is 1 */
+
+  /* zero biases -- we're synchronous with the meta director here so 
+   * we don't have to worry about multiple PRM_RECORD_RCONF */
+  prm_set_int(sa_bias, "sa_bias", c, 0, a);
+  prm_set_int(sq2_bias, "sq2_bias", c, 0, a);
+
+  if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
+    /* apply servo mode */
+    uint32_t one = 1;
+    char rc[] = "rc1";
+    int col = c;
+
+    if (c > 8) {
+      rc[3] = '2';
+      col -= 8;
+    }
+
+    push_block(rc, "servo_mode", col, &one, 1);
+  }
+
+  /* record columns off */
+  if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY || a == PRM_RECORD_RCONF) {
+    cfg_set_int("columns_off", c, 1);
+    if (a == PRM_RECORD_RCONF)
+      state &= ~st_config;
+  }
+}
+
 static void q_servo_reset(int c, int r)
 {
   const char *rc = "rc1";
@@ -945,7 +997,12 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
 
         /* Experiment config commands */
-        PRM_TOGGLEC(column_off, column_on, "columns_off");
+      case column_off:
+        q_column_off(ev->ivalues[1], ev->ivalues[2]);
+        break;
+      case column_on:
+        q_column_on(ev->ivalues[1], ev->ivalues[2], ev->ivalues[3],
+            ev->ivalues[4]);
         CFG_SETFLT(sa_offset_bias_ratio);
         CFG_TOGGLE(sa_ramp_bias_on, sa_ramp_bias_off, "sa_ramp_bias");
         CFG_SETSCS(sa_ramp_flux);
@@ -990,9 +1047,15 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_SETINTCR(sq1_flux_quantum, "flux_quanta_all");
         PRM_SETINTR(sq1_bias, "sq1_bias");
         PRM_SETINTR(sq1_bias_off, "sq1_bias_off");
-        PRM_SETINTC(sq2_bias, "sq2_bias");
         PRM_SETINTCR(sq2_fb, "sq2_fb_set");
-        PRM_SETINTC(sa_bias, "sa_bias");
+      case sa_bias:
+        vet_bias(sa_bias, "sa_bias", ev->ivalues[1], ev->ivalues[2],
+            ev->ivalues[3]);
+        break;
+      case sq2_bias:
+        vet_bias(sq2_bias, "sq2_bias", ev->ivalues[1], ev->ivalues[2],
+            ev->ivalues[3]);
+        break;
         PRM_SETINTC(sa_fb, "sa_fb");
         PRM_SETINTC(sa_offset, "sa_offset");
         PRM_SETINTCR(adc_offset, "adc_offset_cr");
