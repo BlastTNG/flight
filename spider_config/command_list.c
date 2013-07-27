@@ -1345,7 +1345,16 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {MCECMD2AP(column_on, "Turn on a MCE column", GR_DET, "Column", 0, 15, 'i')},
+  {COMMAND(column_on), "Turn on a MCE column", GR_DET | MCECMD, 5,
+    {
+      {CHOOSE_INSERT_NO_ALL},
+      {"Column", 0, 15, 'i', "NONE"},
+      {"SA Bias", 0, 65535, 'i', "NONE"},
+      {"SQ2 Bias", 0, 65535, 'i', "NONE"},
+      {MCE_ACTION_PARAM(4,daction_names)}
+    }
+  },
+
   {MCECMD2AP(column_off, "Turn off a MCE column", GR_DET, "Column", 0, 15,
       'i')},
   {MCECMD2(sa_offset_bias_ratio, "Set the SA offset bias ratio", GR_TUNE,
