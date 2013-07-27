@@ -1421,7 +1421,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1AD(flux_jumping_on, "Turn on flux jumping", GR_DET)},
   {MCECMD1AD(flux_jumping_off, "Turn off flux jumping", GR_DET)},
   {MCECMD2(mce_servo_mode, "Set the servo mode", GR_DET, "Mode", 0, 3, 'i')},
-  {COMMAND(mce_servo_pid), "Set the servo gains for a column", GR_DET | MCECMD,
+  {COMMAND(servo_pid_col), "Set the servo gains for a column", GR_DET | MCECMD,
     6,
     {
       {CHOOSE_INSERT_NO_ALL},
@@ -1432,7 +1432,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {MCE_ACTION_PARAM(4,daction_names)},
     }
   },
-  {COMMAND(pixel_servo_pid), "Set the servo gains for a pixel", GR_DET | MCECMD,
+  {COMMAND(servo_pid_pixel), "Set the servo gains for a pixel", GR_DET | MCECMD,
     6,
     {
       {CHOOSE_INSERT_NO_ALL},
@@ -1443,7 +1443,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"D Gain", 0, 65535, 'i', "NONE"},
     }
   },
-  {COMMAND(frail_servo_pid), "Set the frail servo gains", GR_DET | MCECMD, 4,
+  {COMMAND(servo_pid_frail), "Set the frail servo gains", GR_DET | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"P Gain", 0, 65535, 'i', "1"}, 
@@ -1483,9 +1483,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_DET, "Row", 0, 32, 'i')},
   {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_DET)},
   {MCECMD1(lcloop, "Run load curves forever", GR_IV)},
-  {MCECMD2A(bias_tess_all, "Set all TES biases", GR_DET, "Bias", 0, 65535,
+  {MCECMD2A(bias_tes_all, "Set all TES biases", GR_DET, "Bias", 0, 65535,
       'i')},
-  {COMMAND(bias_tess), "Set TES biases", GR_DET | MCECMD, 11,
+  {COMMAND(bias_tes), "Set TES biases", GR_DET | MCECMD, 11,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},

@@ -81,8 +81,8 @@ int cfg_set_intarr(const char *name, int o, uint32_t *d, int n)
   switch (config_setting_type(s))
   {
     case CONFIG_TYPE_ARRAY:
-      if (o + n >= config_setting_length(s)) {
-        bprintf(err, "bad index %i > %i trying to set int elem on %s", o + n,
+      if (o + n > config_setting_length(s)) {
+        bprintf(err, "bad index %i > %i trying to set int array on %s", o + n,
             config_setting_length(s), name);
         return -1;
       }
@@ -315,7 +315,7 @@ int flush_experiment_cfg(int force)
 int serialise_experiment_cfg(void)
 {
   config_setting_t *s;
-  int i, c, r, n;
+  int i, c, r, n, t;
 
   if (!have_expt_cfg)
     return 0;
@@ -363,12 +363,14 @@ int serialise_experiment_cfg(void)
   /* update the dead dead detector count */
   n = 0;
   s = config_lookup(&expt, "dead_detectors");
-  for (i = 0; i < config_setting_length(s); ++i)
+  t = config_setting_length(s);
+  for (i = 0; i < t; ++i)
     if (config_setting_get_int_elem(s, i))
       n++;
 
   s = config_lookup(&expt, "frail_detectors");
-  for (i = 0; i < config_setting_length(s); ++i)
+  t = config_setting_length(s);
+  for (i = 0; i < t; ++i)
     if (config_setting_get_int_elem(s, i))
       n++;
 
@@ -408,7 +410,7 @@ static int cfg_copy_param(config_t *out, const config_t *in, const char *n)
     bprintf(warning, "Can't find for copy settting: %s", n);
     return 1;
   }
-  
+
   /* checks */
   if (config_setting_type(sin) != CONFIG_TYPE_ARRAY ||
       config_setting_type(sout) != CONFIG_TYPE_ARRAY)
@@ -436,7 +438,7 @@ void cfg_apply_tuning(int n)
   config_t cfg;
   int d, have_cfg = -1;
   char file[100];
-  
+
   /* the list of parameters to copy */
   const char *param[] = {"sa_bias", "adc_offset_c", "adc_offset_cr", "sa_fb",
     "sa_offset", "sq1_bias", "sq1_bias_off", "sq2_fb", "sq2_bias",
@@ -557,7 +559,6 @@ void cfg_load_dead_masks(void)
     s = config_lookup(&expt, setting);
     for (k = 0; k < 32 * 41; ++k)
       config_setting_set_int_elem(s, k, mask[k]);
-
   }
 
   /* force save */

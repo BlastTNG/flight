@@ -182,7 +182,7 @@ enum multiCommand {
   stop_acq,           mag_cal,           pss_off_cal,       pss_d_cal,
 
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,
-  bias_tess_all, bias_tess, tile_heater_on, tile_heater_off,
+  bias_tes_all, bias_tes, tile_heater_on, tile_heater_off,
   tile_heater_kick, servo_reset, force_acq, tune_biases, reload_mce_config,
   flux_loop_init, lcloop, mce_veto, mce_unveto, reload_dead_masks,
 
@@ -198,7 +198,7 @@ enum multiCommand {
   sq2servo_safb_init, sq1servo_sq2fb_init, ramp_tes, ramp_tes_final_bias,
   ramp_tes_initial_pause, ramp_tes_period, num_rows_reported, readout_row_index,
   sample_dly, sample_num, fb_dly, row_dly, flux_jumping_on, flux_jumping_off,
-  mce_servo_mode, mce_servo_pid, pixel_servo_pid, frail_servo_pid,
+  mce_servo_mode, servo_pid_col, servo_pid_pixel, servo_pid_frail,
   dead_detector, frail_detector, healthy_detector, sa_flux_quantum,
   sq2_flux_quantum, sq1_flux_quantum, sq1_bias, sq1_bias_off, sq2_bias, sq2_fb,
   sa_bias, sa_fb, sa_offset, adc_offset, sq1_ramp_check_on, sq1_ramp_check_off,
