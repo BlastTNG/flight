@@ -174,7 +174,7 @@ const char *kick_names[] = {"none", "1 Volt", "2 Volts", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *just_mce_names[] = {"X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *tuning_stages[] = {"SA ramp", "SQ2 servo", "SQ1 servo", "SQ1 ramp",
-  "SQ1 ramp TES", "Operate", NULL};
+  "SQ1 ramp TES", NULL};
 const char *wb_cards[] = {"CC", "RC1", "RC2", "BC1", "BC2", "AC", NULL};
 const char *action_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", NULL};
@@ -1332,16 +1332,16 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     GR_MPC | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
-      {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
-      {"Last stage", 0, 5, 'i', "NONE", {tuning_stages}}
+      {"First stage", 0, 4, 'i', "NONE", {tuning_stages}},
+      {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}}
     }
   },
   {COMMAND(tune_biases), "Tune, with bias ramping forced on", GR_MPC | MCECMD,
     3,
     {
       {CHOOSE_INSERT_PARAM},
-      {"First stage", 0, 5, 'i', "NONE", {tuning_stages}},
-      {"Last stage", 0, 5, 'i', "NONE", {tuning_stages}}
+      {"First stage", 0, 4, 'i', "NONE", {tuning_stages}},
+      {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}}
     }
   },
 
