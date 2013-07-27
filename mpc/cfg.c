@@ -66,6 +66,11 @@ int cfg_get_int(const char *name, int n)
   return -1;
 }
 
+int cfg_get_int_cr(const char *name, int c, int r)
+{
+  return cfg_get_int(name, c * 41 + r);
+}
+
 int cfg_set_intarr(const char *name, int o, uint32_t *d, int n)
 {
   config_setting_t *s;
@@ -573,4 +578,22 @@ void cfg_load_dead_masks(void)
 
   /* force save */
   flush_experiment_cfg(1);
+}
+
+enum det_types cfg_det_type(int c, int r)
+{
+  if (cfg_get_int_cr("dead_detectors", c, r))
+    return det_dead;
+  if (cfg_get_int_cr("frail_detectors", c, r))
+    return det_frail;
+  return det_healthy;
+}
+
+int cfg_frail_pid(char l)
+{
+  if (l == 'p')
+    return cfg_get_int("frail_servo_p", 0);
+  else if (l == 'i')
+    return cfg_get_int("frail_servo_i", 0);
+  return cfg_get_int("frail_servo_d", 0);
 }

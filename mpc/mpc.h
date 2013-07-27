@@ -221,6 +221,9 @@ int tuning_filename(const char *file, int n, char *buffer);
 /* The frame acq callback */
 int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);
 
+/* detector types */
+enum det_types {det_dead, det_frail, det_healthy};
+
 /* cfg stuff */
 int load_experiment_cfg(void);
 void cfg_apply_tuning(int n);
@@ -234,6 +237,8 @@ int serialise_experiment_cfg(void);
 void cfg_update_timing(int, int, int);
 void cfg_load_template(void);
 void cfg_load_dead_masks(void);
+enum det_types cfg_det_type(int, int);
+int cfg_frail_pid(char);
 
 /* frame statistics */
 void update_stats(const uint32_t *curr_frame, size_t frame_size,

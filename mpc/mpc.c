@@ -732,9 +732,22 @@ static void prm_set_servo(int c, int r, char l, uint32_t v, int a)
     param[5] = c + '0';
 
     if (r == -1) {
+      /* vet via dead and frail masks */
       uint32_t buffer[33];
-      for (i = 0; i < 33; ++i)
-        buffer[i] = v;
+      for (i = 0; i < 33; ++i) {
+        enum det_types det_type = cfg_det_type(c, i);
+        switch (det_type) {
+          case det_healthy:
+            buffer[i] = v;
+            break;
+          case det_frail:
+            buffer[i] = cfg_frail_pid(l);
+            break;
+          case det_dead:
+            buffer[i] = 0;
+            break;
+        }
+      }
       push_block(rc, param, 0, buffer, 33);
     } else 
       push_block(rc, param, r, &v, 1);
@@ -754,12 +767,12 @@ static void prm_set_servo(int c, int r, char l, uint32_t v, int a)
   }
 }
 
-static void prm_set_pixel(int c, int r, int h, int a)
+static void prm_set_det_type(int c, int r, enum det_types h, int a)
 {
   char name[] = "servo_?";
 
   switch (h) {
-    case 0: /* healthy */
+    case det_healthy:
       if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
         name[6] = 'p';
         prm_set_servo(c, r, 'p', cfg_get_int(name, r), PRM_APPLY_ONLY);
@@ -776,7 +789,7 @@ static void prm_set_pixel(int c, int r, int h, int a)
         cfg_set_int_cr("frail_detectors", c, r, 0);
       }
       break;
-    case 1: /* dead */
+    case det_dead:
       if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
         prm_set_servo(c, r, 'p', 0, PRM_APPLY_ONLY);
         prm_set_servo(c, r, 'i', 0, PRM_APPLY_ONLY);
@@ -790,13 +803,13 @@ static void prm_set_pixel(int c, int r, int h, int a)
         cfg_set_int_cr("frail_detectors", c, r, 0);
       }
       break;
-    case 2: /* frail */
+    case det_frail:
       if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
-        prm_set_servo(c, r, 'p', cfg_get_int("frail_servo_p", r),
+        prm_set_servo(c, r, 'p', cfg_get_int("frail_servo_p", 0),
             PRM_APPLY_ONLY);
-        prm_set_servo(c, r, 'i', cfg_get_int("frail_servo_i", r),
+        prm_set_servo(c, r, 'i', cfg_get_int("frail_servo_i", 0),
             PRM_APPLY_ONLY);
-        prm_set_servo(c, r, 'd', cfg_get_int("frail_servo_d", r),
+        prm_set_servo(c, r, 'd', cfg_get_int("frail_servo_d", 0),
             PRM_APPLY_ONLY);
       }
 
@@ -1084,13 +1097,16 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         cfg_set_int("frail_servo_d", 0, ev->ivalues[3]);
         break;
       case dead_detector:
-        prm_set_pixel(ev->ivalues[1], ev->ivalues[2], 1, ev->ivalues[3]);
+        prm_set_det_type(ev->ivalues[1], ev->ivalues[2], det_dead,
+            ev->ivalues[3]);
         break;
       case frail_detector:
-        prm_set_pixel(ev->ivalues[1], ev->ivalues[2], 2, ev->ivalues[3]);
+        prm_set_det_type(ev->ivalues[1], ev->ivalues[2], det_frail,
+            ev->ivalues[3]);
         break;
       case healthy_detector:
-        prm_set_pixel(ev->ivalues[1], ev->ivalues[2], 0, ev->ivalues[3]);
+        prm_set_det_type(ev->ivalues[1], ev->ivalues[2], det_healthy,
+            ev->ivalues[3]);
         break;
       case send_exptcfg:
         new_blob_type = BLOB_EXPCFG;
