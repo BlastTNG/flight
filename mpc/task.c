@@ -295,7 +295,6 @@ void *task(void *dummy)
         moda_tk = (meta_tk & ~STOP_TK) >> MODA_SHIFT;
       else 
         status_tk = (meta_tk & ~STOP_TK);
-      bprintf(info, "0x%04X = %i 0x%04X %i", meta_tk, stop, status_tk, moda_tk);
 
       if (!stop) { /* handle start task requests */
         if (status_tk != st_idle)
