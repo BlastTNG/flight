@@ -167,10 +167,6 @@ int32_t box_temp = 32767;
 /* DV timing parameters */
 int num_rows = -1, row_len = -1, data_rate = -1;
 
-/* bias_tess values */
-uint32_t bias_tess_val[8];
-int bias_tess_card;
-
 /* tile heater kick timeout */
 static int tile_heater_timeout = -1;
 
@@ -567,12 +563,25 @@ static void push_blockr(const char *c, const char *p, int o, const uint32_t *d,
 
   new_head = (blockq_head + 1) % BLOCKQ_SIZE;
 
-  blockq[new_head].c = c;
-  blockq[new_head].p = p;
+  blockq[new_head].c = strdup(c);
+  blockq[new_head].p = strdup(p);
   memcpy(blockq[new_head].d, d, sizeof(uint32_t) * n);
   blockq[new_head].n = n;
   blockq[new_head].o = o;
   blockq[new_head].raw = raw;
+
+#if 0
+  {
+    int i;
+    char *ptr, params[1000];
+    ptr = params;
+    for (i = 0; i < blockq[new_head].n; ++i)
+      ptr += sprintf(ptr, "%u ", blockq[new_head].d[i]);
+    bprintf(info, "pushblock%s: %s/%s+%i(%i) [ %s]",
+        raw ? " (r)" : "", blockq[new_head].c,
+        blockq[new_head].p, blockq[new_head].o, blockq[new_head].n, params);
+  }
+#endif
 
   blockq_head = new_head;
 }
@@ -991,14 +1000,14 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_TOGGLE(write_default_bias_on, write_default_bias_off,
             "write_default_bias");
 
-      case mce_servo_pid:
+      case servo_pid_col:
         prm_set_servo(ev->ivalues[1], -1, 'p', ev->ivalues[2], ev->ivalues[5]);
         prm_set_servo(ev->ivalues[1], -1, 'i', ev->ivalues[3], ev->ivalues[5]);
         prm_set_servo(ev->ivalues[1], -1, 'd', ev->ivalues[4], ev->ivalues[5]);
         if (ev->ivalues[5] == PRM_RECORD_RCONF)
           state &= ~st_config;
         break;
-      case pixel_servo_pid:
+      case servo_pid_pixel:
         prm_set_servo(ev->ivalues[1], ev->ivalues[2], 'p', ev->ivalues[2],
             PRM_APPLY_ONLY);
         prm_set_servo(ev->ivalues[1], ev->ivalues[2], 'i', ev->ivalues[3],
@@ -1006,7 +1015,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         prm_set_servo(ev->ivalues[1], ev->ivalues[2], 'd', ev->ivalues[4],
             PRM_APPLY_ONLY);
         break;
-      case frail_servo_pid:
+      case servo_pid_frail:
         cfg_set_int("frail_servo_p", 0, ev->ivalues[1]);
         cfg_set_int("frail_servo_i", 0, ev->ivalues[2]);
         cfg_set_int("frail_servo_d", 0, ev->ivalues[3]);
@@ -1048,7 +1057,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         new_blob_type = BLOB_TUNECFG;
         blob_data[0] = ev->ivalues[1];
         break;
-      case bias_tess:
+      case bias_tes:
         data[0] = ev->ivalues[2];
         data[1] = ev->ivalues[3];
         data[2] = ev->ivalues[4];
@@ -1059,7 +1068,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[7] = ev->ivalues[9];
         q_bias_tess(ev->ivalues[1] ? 8 : 0, data, 8, ev->ivalues[10]);
         break;
-      case bias_tess_all:
+      case bias_tes_all:
         data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = data[6] =
           data[7] = data[8] = data[9] = data[10] = data[11] = data[12] =
           data[13] = data[14] = data[15] = ev->ivalues[1];
@@ -1112,7 +1121,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 }
 
 /* find the highest numbered thing */
-int find_last_dirent(const char *what)
+int find_last_dirent(const char *what, int skip_chars)
 {
   DIR *dir;
   struct dirent *ent;
@@ -1128,7 +1137,7 @@ int find_last_dirent(const char *what)
     if (dir == NULL)
       continue;
     while ((ent = readdir(dir))) {
-      n = (int)strtol(ent->d_name, &endptr, 10);
+      n = (int)strtol(ent->d_name + skip_chars, &endptr, 10);
       if (n < 0 || *endptr)
         continue;
       else if (last < n)
@@ -1202,8 +1211,8 @@ static int read_mem(void)
     /* no valid memory */
     bprintf(warning, "Regenerating memory.");
     memory.version = MEM_VERS;
-    memory.last_tune = find_last_dirent("tuning");
-    memory.last_iv = find_last_dirent("ivcurve");
+    memory.last_tune = find_last_dirent("tuning", 0);
+    memory.last_iv = find_last_dirent("ivcurves", 3);
     memory.squidveto = 0;
     return 1;
   }

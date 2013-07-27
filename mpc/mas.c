@@ -785,6 +785,9 @@ static int pop_block(void)
     write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
         blockq[new_tail].d, blockq[new_tail].n);
 
+  free(blockq[new_tail].c);
+  free(blockq[new_tail].p);
+
   blockq_tail = new_tail;
 
   return 1;

@@ -60,8 +60,6 @@ extern int mceveto;
 extern int send_mceparam;
 extern int divisor;
 extern int veto;
-extern uint32_t bias_tess_val[8];
-extern int bias_tess_card;
 extern int kill_special;
 extern int tune_first;
 extern int tune_last;
@@ -169,7 +167,7 @@ extern uint32_t meta_tk;
 /* the block update queue */
 #define BLOCKQ_SIZE 100
 struct block_q {
-  const char *c, *p;
+  char *c, *p;
   uint32_t d[41];
   int n, o, raw;
 };
