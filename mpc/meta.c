@@ -113,9 +113,15 @@ void meta(void)
     meta_tk = st_active;
   else if (~state & st_mcecom)
     meta_tk = st_mcecom;
-  else if (~state & st_config)
-    meta_tk = st_config;
-  else if (need_acq(working_goal)) { /* turn acq on */
+  else if (~state & st_config) {
+    /* need to stop an acquisition to do this */
+    if (state & st_retdat)
+      meta_tk = st_retdat | STOP_TK;
+    else if (state & st_acqcnf)
+      meta_tk = st_acqcnf | STOP_TK;
+    else
+      meta_tk = st_config;
+  } else if (need_acq(working_goal)) { /* turn acq on */
     if (~state & st_acqcnf)
       meta_tk = st_acqcnf;
     else if (~state & st_retdat)
