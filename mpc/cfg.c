@@ -490,6 +490,8 @@ void cfg_apply_tuning(int n)
     state &= ~st_config;
   }
 
+  bprintf(info, "copied parameters from %s\n", file);
+
   config_destroy(&cfg);
   return;
 }

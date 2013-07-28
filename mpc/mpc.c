@@ -1327,7 +1327,7 @@ int tuning_filename(const char *file, int n, char *buffer)
 
   /* glob search */
   r = glob(pattern, GLOB_NOSORT, NULL, &pglob);
-  if (r == 0) {
+  if (r) {
     globfree(&pglob);
     return 1;
   }
