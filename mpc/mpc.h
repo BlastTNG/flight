@@ -123,8 +123,8 @@ enum modas {
   md_bstep, /* bias step (during acquisition) */
   md_bramp, /* stepped bias ramp */
 };
-#define MODA_STRINGS "none", "running", "tuning", "iv_curve", "lcloop", \
-  "bstep", "bramp"
+#define MODA_STRINGS "none", "tuning", "iv_curve", "lcloop", \
+  "running", "bstep", "bramp"
 
 extern enum modas moda;
 
@@ -132,8 +132,8 @@ extern enum modas moda;
 enum goals { gl_ready, gl_tune, gl_iv, gl_stop, gl_lcloop,
   /* goals >= gd_acq involve normal data acquisition */
   gl_acq, gl_bstep, gl_bramp};
-#define GOAL_STRINGS "ready", "tune", "iv", "stop", "lcloop", "acq", "bstep", \
-  "bramp"
+#define GOAL_STRINGS "ready", "tune", "iv", "stop", "lcloop", \
+  "acq", "bstep", "bramp"
 
 /* goal data */
 struct gl_data {

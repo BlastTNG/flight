@@ -472,12 +472,20 @@ void *task(void *dummy)
             case md_tuning:
             case md_iv_curve:
             case md_lcloop:
+              kill_special = 1;
+              while (!dt_done())
+                usleep(10000);
+              kill_special = 0;
+              task_reset_mce();
+              moda = md_none;
+              meta_tk = 0;
+              break;
             case md_bstep:
             case md_bramp:
               kill_special = 1;
-              while (kill_special)
+              while (!dt_done())
                 usleep(10000);
-              task_reset_mce();
+              kill_special = 0;
               moda = md_none;
               meta_tk = 0;
               break;

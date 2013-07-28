@@ -972,16 +972,11 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         new_goal.goal = gl_acq;
         change_goal = 1;
         break;
-      case start_acq:
+      case acquire:
         new_goal.goal = gl_acq;
         change_goal = 1;
         break;
-      case force_acq:
-        state |= st_config | st_mcecom;
-        new_goal.goal = gl_acq;
-        change_goal = 1;
-        break;
-      case stop_acq:
+      case pause_acq:
         new_goal.goal = gl_ready;
         change_goal = 1;
         break;
@@ -1180,6 +1175,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case data_mode:
         req_dm = ev->ivalues[1];
+        break;
+      case force_config:
+        state |= st_config | st_mcecom;
         break;
 
       default:

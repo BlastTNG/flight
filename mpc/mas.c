@@ -612,6 +612,7 @@ static int acq_err(void *user_data, int sync_num, int err,
 static int flux_loop_init(double wait)
 {
   uint32_t one = 1;
+  bprintf(info, "Flux Loop Init");
   mas_write_block("rca", "flx_lp_init", &one, 1);
   return check_wait(wait);
 }
