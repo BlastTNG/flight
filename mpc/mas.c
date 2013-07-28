@@ -1173,6 +1173,13 @@ static int reconfig(void)
 {
   uint32_t u32;
 
+  if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_make_config", NULL, 100, 1,
+        NULL))
+  {
+    comms_lost = 1;
+    return 1;
+  }
+
   if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_reconfig", NULL, 100, 1,
         NULL))
   {
