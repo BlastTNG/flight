@@ -56,6 +56,17 @@ static int dt_done(void)
   return 0;
 }
 
+/* kill a data task, if one is running */
+static void dt_kill(void)
+{
+  if (dt_going) {
+    kill_special = 1;
+    while (!dt_done())
+      usleep(10000);
+    kill_special = 0;
+  }
+}
+
 /* request a data tasklet and wait for it's completion.  returns dt_error */
 static int dt_wait(enum dtask dt)
 {
@@ -472,20 +483,14 @@ void *task(void *dummy)
             case md_tuning:
             case md_iv_curve:
             case md_lcloop:
-              kill_special = 1;
-              while (!dt_done())
-                usleep(10000);
-              kill_special = 0;
+              dt_kill();
               task_reset_mce();
               moda = md_none;
               meta_tk = 0;
               break;
             case md_bstep:
             case md_bramp:
-              kill_special = 1;
-              while (!dt_done())
-                usleep(10000);
-              kill_special = 0;
+              dt_kill();
               moda = md_none;
               meta_tk = 0;
               break;
