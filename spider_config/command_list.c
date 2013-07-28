@@ -1350,6 +1350,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(test_12), "Test command with 12 parameters", GR_MISC, 12,  
+    {
+      {"Param  1", 0, 1000, 'i', "NONE"},
+      {"Param  2", 0, 1000, 'i', "NONE"},
+      {"Param  3", 0, 1000, 'i', "NONE"},
+      {"Param  4", 0, 1000, 'i', "NONE"},
+      {"Param  5", 0, 1000, 'i', "NONE"},
+      {"Param  6", 0, 1000, 'i', "NONE"},
+      {"Param  7", 0, 1000, 'i', "NONE"},
+      {"Param  8", 0, 1000, 'i', "NONE"},
+      {"Param  9", 0, 1000, 'i', "NONE"},
+      {"Param 10", 0, 1000, 'i', "NONE"},
+      {"Param 11", 0, 1000, 'i', "NONE"},
+      {"Param 12", 0, 1000, 'i', "NONE"},
+    }
+  },
+
   {COMMAND(column_on), "Turn on a MCE column", GR_DET | MCECMD, 5,
     {
       {CHOOSE_INSERT_NO_ALL},
