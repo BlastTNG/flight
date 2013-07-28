@@ -1328,6 +1328,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1P(reload_dead_masks, "Reset dead and frail masks to template",
       GR_MPC | CONFIRM)},
 
+  {MCECMD2(integral_clamp, "Set the integral clamping level", GR_DET,
+      "Level", 0, ((uint32_t)(-1)), 'l')},
   {MCECMD2(data_mode, "Set the MCE data mode", GR_MPC, "Data Mode", 0, 12,
       'i')},
   {COMMAND(tune_array), "Tune a focal plane with current tuning parameters",
@@ -1490,9 +1492,15 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_DET, "Row", 0, 32, 'i')},
   {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_DET)},
   {MCECMD1(lcloop, "Run load curves forever", GR_IV)},
-  {MCECMD2A(bias_tes_all, "Set all TES biases", GR_DET, "Bias", 0, 65535,
-      'i')},
-  {COMMAND(bias_tes), "Set TES biases", GR_DET | MCECMD, 11,
+  {COMMAND(bias_tes_all), "Set all TES biases", GR_DET | MCECMD, 3,
+    {
+      {CHOOSE_INSERT_NO_ALL},
+      {"Bias", 0, 65535},
+      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {MCE_ACTION_PARAM(3,action_names)}
+    }
+  },
+  {COMMAND(bias_tes), "Set TES biases", GR_DET | MCECMD, 12,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
@@ -1504,6 +1512,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Column 5", 0, 65535, 'i', "NONE"},
       {"Column 6", 0, 65535, 'i', "NONE"},
       {"Column 7", 0, 65535, 'i', "NONE"},
+      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
@@ -1554,11 +1563,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(bias_step), "Step the TES bias above and then below the current "
-    "level", GR_MPC | MCECMD, 3,
+    "level several times", GR_MPC | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"Step size (count)", 1, 3000, 'i', "NONE"},
-      {"Duration (s)", 0.1, 10, 'f', "NONE"}
+      {"Period (s)", 0.1, 10, 'f', "NONE"},
+      {"Num periods", 0, 100, 'i', "NONE"},
     }
   },
 

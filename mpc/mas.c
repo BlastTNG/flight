@@ -1152,6 +1152,9 @@ static int tune(void)
     flush_experiment_cfg(0);
   }
 
+  /* return to our regularly scheduled program */
+//  set_servo_mode();
+
   return r ? 1 : 0;
 }
 

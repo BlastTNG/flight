@@ -825,7 +825,7 @@ static void q_column_on(int c, uint32_t sa, uint32_t sq2, int a)
   /* column on means: SA and SQ2 are biased and servo mode is 3 */
 
   /* set biases -- we're synchronous with the meta director here so 
-   * we don't have to worry about multiple PRM_RECORD_RCONF */
+   * we don't have to worry about multiple PRM_RECORD_RCONFs */
   prm_set_int(sa_bias, "sa_bias", c, sa, a);
   prm_set_int(sq2_bias, "sq2_bias", c, sq2, a);
 
@@ -856,7 +856,7 @@ static void q_column_off(int c, int a)
   /* column off means: SA and SQ2 biases are zeroed and servo mode is 1 */
 
   /* zero biases -- we're synchronous with the meta director here so 
-   * we don't have to worry about multiple PRM_RECORD_RCONF */
+   * we don't have to worry about multiple PRM_RECORD_RCONFs */
   prm_set_int(sa_bias, "sa_bias", c, 0, a);
   prm_set_int(sq2_bias, "sq2_bias", c, 0, a);
 
@@ -1175,7 +1175,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case flux_loop_init:
         data[0] = 1;
-        push_block("rca", "flx_lp_init", 0, data, 1);
+        push_block_raw("rca", "flx_lp_init", 0, data, 1);
         break;
       case data_mode:
         req_dm = ev->ivalues[1];
