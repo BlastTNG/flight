@@ -50,12 +50,13 @@ static const struct fft ff[NF] = {
   {"TILE_HEATER_MCE%i", GD_UINT16}, /* 16 */
 };
 
-#define NGF 4
+#define NGF 5
 static const struct fft gf[NGF] = {
   {"mce_blob", GD_UINT16},
   {"blob_num_mpc", GD_UINT16},
   {"reporting_mpcs", GD_UINT16},
   {"alive_mpcs", GD_UINT16},
+  {"squid_veto", GD_UINT16},
 };
 
 union du {
@@ -118,8 +119,8 @@ int main(int argc, char **argv)
     size_t n;
     off_t fn = gd_nframes64(D) - 5;
     printw("Frame: %lli     blob#%-6llu   mce_blob:0x%04llX  "
-        "reporting:%s   alive:%s\n", (long long)fn, gd[1].u64, gd[0].u64,
-        mcebits(2), mcebits(3));
+        "reporting:%s   alive:%s   veto:%s\n", (long long)fn, gd[1].u64, gd[0].u64,
+        mcebits(2), mcebits(3), mcebits(4));
     char field[100];
 
     for (f = 0; f < NGF; ++f) {

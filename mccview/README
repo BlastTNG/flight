@@ -19,7 +19,7 @@ The following section briefly explains the data displayed by mccview.
 
 The top line contains some data from PCM itself.  It looks like this:
 
-  Frame: 149012    blob#60304   mce_blob:0x0000  reporting:.23...   alive:1234..
+  Frame: 149012    blob#60304   mce_blob:0x0000  reporting:.23...   alive:1234..   veto:...456
 
 where:
 
@@ -43,6 +43,8 @@ where:
     it's off).  In normal operation, when a dot appears here, PCM will power
     cycle the MCC.
 
+* veto: the MCE has been vetoed by PCM.
+
 --------------
 
 Below the top line is a column of data from each MCC:
@@ -54,6 +56,7 @@ Below the top line is a column of data from each MCC:
    free1:     300.715 GB
    free2:       0.000 GB
    free3:       0.000 GB
+   drive:          0!!
    drives:       ---X---
    active:       -------
    mcecom:       ---X---
@@ -67,7 +70,6 @@ Below the top line is a column of data from each MCC:
    T mcc:     -327.68 oC
    T mce:       37.00 oC
     dead:          45
-   drive:          0!!
   last tune:        5
   last iv:          4
   heater:       0.000 V
@@ -101,12 +103,12 @@ have just dashes:
       in general it will always be on.
 
 * active: MPC is talking to the MCE.  This should always be on in normal
-      operation.  A stop_mce command will turn it off.
+      operation.  Vetoing the MCE will turn it off.
 
 * mcecom: the MCE is communicating with MPC.  If this is off, but active is on
       the MCE is non-responsive and MPC will ask PCM to power cycle it.  NB:
-      this might be on if active is off, which indicates that the MCE was
-      alive when the stop_mce command was issued.
+      this might be on even when active is off, which indicates that the MCE
+      was alive when it was vetoed.
 
 * config: the MCE is configured for normal data acquisition.
 
