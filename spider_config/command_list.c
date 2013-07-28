@@ -1496,7 +1496,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(bias_tes_all), "Set all TES biases", GR_DET | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"Bias", 0, 65535},
+      {"Bias", 0, 65535, 'i', "NONE"},
       {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {MCE_ACTION_PARAM(3,action_names)}
     }
