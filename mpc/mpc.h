@@ -123,7 +123,8 @@ enum modas {
   md_bstep, /* bias step (during acquisition) */
   md_bramp, /* stepped bias ramp */
 };
-#define MODA_STRINGS "none", "running", "tuning", "iv_curve", "lcloop"
+#define MODA_STRINGS "none", "running", "tuning", "iv_curve", "lcloop", \
+  "bstep", "bramp"
 
 extern enum modas moda;
 
