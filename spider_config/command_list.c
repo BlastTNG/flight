@@ -1568,7 +1568,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Last bias", 0, 65535, 'i', "NONE"},
       {"Step size", -1000, 1000, 'i', "NONE"}, /* sign is ignored */
-      {"Step wait (s)", 0, 10, 'f', "NONE"},
+      {"Step wait (s)", 0, 900, 'f', "NONE"},
     }
   },
 

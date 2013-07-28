@@ -130,7 +130,7 @@ extern enum modas moda;
 
 /* operating goals */
 enum goals { gl_ready, gl_tune, gl_iv, gl_stop, gl_lcloop,
-  /* goals >= gd_acl involve normal data acquisition */
+  /* goals >= gd_acq involve normal data acquisition */
   gl_acq, gl_bstep, gl_bramp};
 #define GOAL_STRINGS "ready", "tune", "iv", "stop", "lcloop", "acq", "bstep", \
   "bramp"
