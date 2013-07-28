@@ -180,6 +180,7 @@ const char *action_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", NULL};
 const char *daction_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", "Record default only", NULL};
+const char *tunedata_names[] = {"expt.cfg", "sqtune"};
 
 const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
@@ -1548,10 +1549,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(send_tuning), "Send the experiment.cfg file resulting from a tuning",
-    GR_MPC | MCECMD, 2,
+    GR_MPC | MCECMD, 3,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Tuning number", 0, 65535, 'i', "NONE"},
+      {"Item", 0, 1, 'i', "NONE", {tunedata_names}}
     }
   },
 

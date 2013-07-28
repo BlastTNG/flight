@@ -491,9 +491,10 @@ static int dump_runfile(FILE *stream)
       "  <DATA_FILENAME> mpc_%li\n"
       "  <DATA_FRAMEACQ> %li\n"
       "  <CTIME> %li\n"
+      "  <ARRAY_ID> x%i"
       "  <HOSTNAME> x%i.spider\n"
       "</FRAMEACQ>\n",
-      acq_time, ACQ_FRAMECOUNT, acq_time, nmce + 1);
+      acq_time, ACQ_FRAMECOUNT, acq_time, nmce + 1, nmce + 1);
 
   /* mpc block */
   fprintf(stream, "<MPC>\n"
@@ -776,6 +777,33 @@ static int set_directory(void)
   return 0;
 }
 
+#define KICK_DONT_BIAS 4000000000U
+static int kick(uint32_t bias, uint32_t value, int wait)
+{
+  if (kick > 0) {
+    int i;
+    uint32_t zero = 0;
+    uint32_t data[16];
+
+    if (bias != KICK_DONT_BIAS) {
+      /* bias to the start */
+      for (i = 0; i < 16; ++i)
+        data[i] = bias;
+      write_param("tes", "bias", 0, data, 16);
+    }
+
+    write_param("heater", "bias", 0, &value, 1);
+    sleep(2);
+    write_param("heater", "bias", 0, &zero, 1);
+
+    /* wait */
+    if (check_wait(wait))
+      return 1;
+  }
+  /* flx_lp_init */
+  return flux_loop_init(2);
+}
+
 /* returns non-zero if something was popped */
 static int pop_block(void)
 {
@@ -785,7 +813,9 @@ static int pop_block(void)
   if (blockq_head == blockq_tail)
     return 0;
 
-  if (blockq[new_tail].raw)
+  if (blockq[new_tail].raw == 2) { /* asynchronous kick request */
+    kick(KICK_DONT_BIAS, blockq[new_tail].o, 30);
+  } else if (blockq[new_tail].raw)
     mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
         blockq[new_tail].d, blockq[new_tail].n);
   else
@@ -855,28 +885,6 @@ static void stop_mce(void)
 
   /* stop acq */
   kill_special = 1;
-}
-
-static int kick(uint32_t bias, uint32_t value, int wait)
-{
-  if (kick > 0) {
-    int i;
-    uint32_t zero = 0;
-    uint32_t data[16];
-    /* bias to the start */
-    for (i = 0; i < 16; ++i)
-      data[i] = bias;
-    write_param("tes", "bias", 0, data, 16);
-    write_param("heater", "bias", 0, &value, 1);
-    sleep(2);
-    write_param("heater", "bias", 0, &zero, 1);
-
-    /* wait */
-    if (check_wait(wait))
-      return 1;
-  }
-  /* flx_lp_init */
-  return flux_loop_init(2);
 }
 
 /* run a load curve */
@@ -1004,34 +1012,36 @@ static void ensure_experiment_cfg(void)
 /* bias steppy */
 static int bias_step(void)
 {
-  int i;
+  int i, j;
   uint32_t bias[16];
 
   /* get biases */
   fetch_param("tes", "bias", 0, bias, 16);
 
   /* step up */
-  bprintf(info, "Bias Step up");
-  for (i = 0; i < 16; ++i)
-    bias[i] += goal.step;
-  write_param("tes", "bias", 0, bias, 16);
+  for (j = 0; j < goal.stop; ++j) {
+    bprintf(info, "Bias Step up");
+    for (i = 0; i < 16; ++i)
+      bias[i] += goal.step;
+    write_param("tes", "bias", 0, bias, 16);
 
-  if (check_wait(goal.wait))
-    return 1;
+    if (check_wait(goal.wait))
+      return 1;
 
-  /* step down */
-  bprintf(info, "Bias Step down");
-  for (i = 0; i < 16; ++i)
-    bias[i] -= 2 * goal.step;
-  write_param("tes", "bias", 0, bias, 16);
+    /* step down */
+    bprintf(info, "Bias Step down");
+    for (i = 0; i < 16; ++i)
+      bias[i] -= 2 * goal.step;
+    write_param("tes", "bias", 0, bias, 16);
 
-  if (check_wait(goal.wait))
-    return 1;
+    if (check_wait(goal.wait))
+      return 1;
 
-  /* back to normal */
+    /* back to normal */
+    for (i = 0; i < 16; ++i)
+      bias[i] += goal.step;
+  }
   bprintf(info, "Bias Step finished");
-  for (i = 0; i < 16; ++i)
-    bias[i] += goal.step;
   write_param("tes", "bias", 0, bias, 16);
 
   return 0;
@@ -1149,11 +1159,10 @@ static int tune(void)
     cfg_set_int("sa_ramp_bias", 0, old_sa_ramp_bias);
     cfg_set_int("sq2_servo_bias_ramp", 0, old_sq2_servo_bias_ramp);
     cfg_set_int("sq1_servo_bias_ramp", 0, old_sq1_servo_bias_ramp);
-    flush_experiment_cfg(0);
   }
 
-  /* return to our regularly scheduled program */
-//  set_servo_mode();
+  /* don't apply this tuning, I guess ... ? */
+  flush_experiment_cfg(1);
 
   return r ? 1 : 0;
 }

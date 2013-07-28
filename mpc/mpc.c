@@ -557,7 +557,8 @@ static void push_blockr(const char *c, const char *p, int o, const uint32_t *d,
 
   blockq[new_head].c = strdup(c);
   blockq[new_head].p = strdup(p);
-  memcpy(blockq[new_head].d, d, sizeof(uint32_t) * n);
+  if (n)
+    memcpy(blockq[new_head].d, d, sizeof(uint32_t) * n);
   blockq[new_head].n = n;
   blockq[new_head].o = o;
   blockq[new_head].raw = raw;
@@ -576,6 +577,11 @@ static void push_blockr(const char *c, const char *p, int o, const uint32_t *d,
 #endif
 
   blockq_head = new_head;
+}
+
+static void push_kick(int k)
+{
+  push_blockr("", "", k * 32767. / 5, NULL, 0, 2);
 }
 
 /* cooked push */
@@ -907,11 +913,13 @@ static void q_servo_reset(int c, int r)
   push_block_raw(rc, "servo_rst_arm", 0, &zero, 1);
 }
 
-static void q_bias_tess(int o, uint32_t *data, int n, int a)
+static void q_bias_tess(int k, int o, uint32_t *data, int n, int a)
 {
   /* apply */
-  if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY)
+  if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
     push_block("tes", "bias", o, data, n);
+    push_kick(k);
+  }
 
   /* record value */
   if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY || a == PRM_RECORD_RCONF) {
@@ -990,7 +998,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case bias_step:
         new_goal.step = ev->ivalues[1];
-        new_goal.wait = ev->rvalues[2];
+        new_goal.wait = ev->rvalues[2] / 2; /* this is full period */
+        new_goal.stop = ev->ivalues[3];
         new_goal.goal = gl_bstep;
         change_goal = 1;
         break;
@@ -1138,13 +1147,14 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[5] = ev->ivalues[7];
         data[6] = ev->ivalues[8];
         data[7] = ev->ivalues[9];
-        q_bias_tess(ev->ivalues[1] ? 8 : 0, data, 8, ev->ivalues[10]);
+        q_bias_tess(ev->ivalues[10], ev->ivalues[1] ? 8 : 0, data, 8,
+            ev->ivalues[11]);
         break;
       case bias_tes_all:
         data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = data[6] =
           data[7] = data[8] = data[9] = data[10] = data[11] = data[12] =
           data[13] = data[14] = data[15] = ev->ivalues[1];
-        q_bias_tess(0, data, 16, ev->ivalues[2]);
+        q_bias_tess(ev->ivalues[2], 0, data, 16, ev->ivalues[3]);
         break;
       case tile_heater_on:
         data[0] = ev->ivalues[1] * 32767 / 5;
@@ -1176,6 +1186,10 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case flux_loop_init:
         data[0] = 1;
         push_block_raw("rca", "flx_lp_init", 0, data, 1);
+        break;
+      case integral_clamp:
+        data[0] = ev->ivalues[1];
+        push_block_raw("rca", "integral clamp", 0, data, 1);
         break;
       case data_mode:
         req_dm = ev->ivalues[1];
