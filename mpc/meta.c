@@ -150,12 +150,15 @@ void meta(void)
       case gl_lcloop:
         if (moda == md_none)
           meta_tk = md_lcloop << MODA_SHIFT;
+        break;
       case gl_bstep:
         if (moda == md_none)
           meta_tk = md_bstep << MODA_SHIFT;
+        break;
       case gl_bramp:
         if (moda == md_none)
           meta_tk = md_bramp << MODA_SHIFT;
+        break;
     }
 
 #ifdef DEBUG_META
