@@ -39,7 +39,7 @@ uint32_t meta_tk = 0;
 static int meta_veto = 0;
 
 /* stop a mode, if necessary; returns non-zero if we needed to stop something */
-static int stop_moda(int working_goal)
+static int stop_moda(enum goals working_goal)
 {
   if (moda == md_none)
     return 0;
@@ -62,6 +62,10 @@ static int stop_moda(int working_goal)
       break;
     case gl_acq:
       if (moda == md_running)
+        return 0;
+      break;
+    case gl_bstep:
+      if (moda == md_bstep)
         return 0;
       break;
   }
@@ -155,6 +159,9 @@ void meta(void)
       case gl_lcloop:
         if (moda == md_none)
           meta_tk = md_lcloop << MODA_SHIFT;
+      case gl_bstep:
+        if (moda == md_none)
+          meta_tk = md_bstep << MODA_SHIFT;
     }
 
 #ifdef DEBUG_META

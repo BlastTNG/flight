@@ -61,9 +61,6 @@ extern int send_mceparam;
 extern int divisor;
 extern int veto;
 extern int kill_special;
-extern int tune_first;
-extern int tune_last;
-extern int tune_force_biases;
 extern int data_drive[3];
 extern char array_id[100];
 extern uint16_t bset_num;
@@ -120,6 +117,7 @@ enum modas {
   md_running, /* normal data acquisition */
   md_tuning, /* auto_setup in progress */
   md_iv_curve, /* normal IV curve in progress */
+  md_bstep, /* bias step (during acquisition) */
 
   /* Probably non-flight modes */
   md_lcloop, /* lc-looping */
@@ -129,8 +127,8 @@ enum modas {
 extern enum modas moda;
 
 /* operating goals */
-enum goals { gl_ready, gl_tune, gl_iv, gl_stop, gl_lcloop, gl_acq };
-#define GOAL_STRINGS "ready", "tune", "iv", "stop", "lcloop", "acq"
+enum goals { gl_ready, gl_tune, gl_iv, gl_stop, gl_lcloop, gl_acq, gl_bstep };
+#define GOAL_STRINGS "ready", "tune", "iv", "stop", "lcloop", "acq", "bstep"
 
 extern enum goals goal;
 
@@ -174,10 +172,10 @@ struct block_q {
 extern struct block_q blockq[BLOCKQ_SIZE];
 extern int blockq_head, blockq_tail;
 
-/* iv curve acq */
-extern int iv_step, iv_start, iv_last;
-extern uint32_t iv_kick;
-extern double iv_kickwait, iv_wait;
+/* general purpose goal data */
+extern int goal_start, goal_stop, goal_force;
+extern int goal_step, goal_kick;
+extern double goal_kickwait, goal_wait;
 
 /* blob creator */
 #define N_BLOB_DATA 5
@@ -199,12 +197,12 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
-  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop
+  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop, dt_bstep
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
   "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
-"ivcurve", "stop", "stopmce", "lcloop"
+"ivcurve", "stop", "stopmce", "lcloop", "dt_bstep"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

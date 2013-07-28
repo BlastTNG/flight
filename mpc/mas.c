@@ -75,6 +75,19 @@ int mceveto = 1;
 /* number of frames in an acq_go */
 #define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
 
+/* wait with kill detection */
+static int killwait(int wait)
+{
+  int i;
+
+  for (i = 0; i < wait; ++i) {
+    if (kill_special)
+      return 1;
+    sleep(1);
+  }
+  return kill_special ? 1 : 0;
+}
+
 /* Write a (parital) block to the MCE; returns non-zero on error */
 /* I guess MAS needs to be able to write to it's input data buffer...? */
 static int mas_write_range(const char *card, const char *block, int offset,
@@ -277,7 +290,6 @@ static void write_param(const char *card, const char *param, int offset,
   int n, new = 0;
   int i = param_index(card, param);
 
-#if 0
   {
     int i;
     char *ptr, params[1000];
@@ -287,7 +299,6 @@ static void write_param(const char *card, const char *param, int offset,
     bprintf(info, "write_param: %s/%s+%i(%i) [ %s]", card, param, offset,
         count, params);
   }
-#endif
 
   if (i < 0) { /* virtual parameters */
     int n = 0;
@@ -878,11 +889,8 @@ static int do_ivcurve(uint32_t kick, int kickwait, int start, int last,
     write_param("heater", "bias", 0, &zero, 1);
 
     /* wait */
-    for (i = 0; i < kickwait; ++i) {
-      sleep(1);
-      if (kill_special)
-        return 1;
-    }
+    if (killwait(kickwait))
+      return 1;
 
     /* flx_lp_init */
     uint32_t one = 1;
@@ -906,11 +914,8 @@ static int ivcurve(void)
   sprintf(filename1, "iv_%04i", ++memory.last_iv);
   mem_dirty = 1;
 
-  dt_error = 0;
-  data_tk = dt_idle; /* asynchronise */
-
-  int r = do_ivcurve(iv_kick, iv_kickwait, iv_start, iv_last, iv_step,
-      iv_wait, filename1);
+  int r = do_ivcurve(goal_kick, goal_kickwait, goal_start, goal_stop, goal_step,
+      goal_wait, filename1);
 
   if (r == 0) { /* archive it */
     int d;
@@ -938,13 +943,10 @@ static int ivcurve(void)
   return 0;
 }
 
-static void lcloop(void)
+static int lcloop(void)
 {
-  int r, i;
+  int r;
   char filename[90];
-
-  dt_error = 0;
-  data_tk = dt_idle; /* asynchronise */
 
   /* this just alternates between Al and Ti load curves forever */
   for (;;) {
@@ -955,14 +957,11 @@ static void lcloop(void)
     r = do_ivcurve(6554, 300, 32000, 0, -50, 0.06, filename);
 
     if (r)
-      return;
+      return 1;
 
     /* wait */
-    for (i = 0; i < 900; ++i) {
-      sleep(1);
-      if (kill_special)
-        return;
-    }
+    if (killwait(900))
+      return 1;
 
     /* Ti */
     sprintf(filename, "loadcurve_Ti_MPC_%li", (long)time(NULL));
@@ -971,15 +970,14 @@ static void lcloop(void)
     r = do_ivcurve(6554, 300, 32000, 0, -50, 0.06, filename);
 
     if (r)
-      return;
+      return 1;
 
     /* wait */
-    for (i = 0; i < 900; ++i) {
-      sleep(1);
-      if (kill_special)
-        return;
-    }
+    if (killwait(900))
+      return 1;
   }
+
+  return 0;
 }
 
 static const char *first_stage_tune[] = {
@@ -1007,14 +1005,50 @@ static void ensure_experiment_cfg(void)
     flush_experiment_cfg(1);
 }
 
+/* bias steppy */
+static int bias_step(void)
+{
+  int i;
+  uint32_t bias[16];
+
+  /* get biases */
+  fetch_param("tes", "bias", 0, bias, 16);
+
+  /* step up */
+  bprintf(info, "Bias Step up");
+  for (i = 0; i < 16; ++i)
+    bias[i] += goal_step;
+  write_param("tes", "bias", 0, bias, 16);
+
+  if (killwait(goal_wait))
+    return 1;
+
+  /* step down */
+  bprintf(info, "Bias Step down");
+  for (i = 0; i < 16; ++i)
+    bias[i] -= 2 * goal_step;
+  write_param("tes", "bias", 0, bias, 16);
+
+  if (killwait(goal_wait))
+    return 1;
+
+  /* back to normal */
+  bprintf(info, "Bias Step finished");
+  for (i = 0; i < 16; ++i)
+    bias[i] += goal_step;
+  write_param("tes", "bias", 0, bias, 16);
+
+  return 0;
+}
+
 /* run a tuning */
 static int tune(void)
 {
   int old_sa_ramp_bias = 0, old_sq2_servo_bias_ramp = 0;
   int old_sq1_servo_bias_ramp = 0;
   const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
-    first_stage_tune[tune_first], last_stage_tune[tune_last], NULL };
-  int local_tune_force_biases = tune_force_biases;
+    first_stage_tune[goal_start], last_stage_tune[goal_stop], NULL };
+  int local_tune_force_biases = goal_force;
 
   ensure_experiment_cfg();
 
@@ -1030,8 +1064,6 @@ static int tune(void)
   }
   flush_experiment_cfg(0);
 
-  dt_error = 0;
-  data_tk = dt_idle; /* asynchronise */
   int r = exec_and_wait(sched, none, MAS_SCRIPT "/auto_setup", (char**)argv,
       0, 1, &kill_special);
 
@@ -1069,14 +1101,13 @@ static int tune(void)
     }
   }
 
-  if (local_tune_force_biases) {
+  if (goal_force) {
     cfg_set_int("sa_ramp_bias", 0, old_sa_ramp_bias);
     cfg_set_int("sq2_servo_bias_ramp", 0, old_sq2_servo_bias_ramp);
     cfg_set_int("sq1_servo_bias_ramp", 0, old_sq1_servo_bias_ramp);
     flush_experiment_cfg(0);
   }
 
-  tune_force_biases = 0;
   return r ? 1 : 0;
 }
 
@@ -1238,28 +1269,23 @@ void *mas_data(void *dummy)
         data_tk = dt_idle;
         break;
       case dt_autosetup:
-        tune();
-        if (!kill_special)
-          meta_safe_update(gl_acq, md_none, state); /* back to acq */
-        else
-          kill_special = 0;
+        dt_error = tune();
+        data_tk = dt_idle;
         break;
       case dt_ivcurve:
-        ivcurve();
-        if (!kill_special)
-          meta_safe_update(gl_acq, md_none, state & ~st_config);
-        else
-          kill_special = 0;
+        dt_error = ivcurve();
+        data_tk = dt_idle;
         break;
       case dt_lcloop:
-        lcloop();
-        if (!kill_special)
-          meta_safe_update(gl_acq, md_none, state & ~st_config);
-        else
-          kill_special = 0;
+        dt_error = lcloop();
+        data_tk = dt_idle;
         break;
       case dt_stopmce:
         stop_mce();
+        data_tk = dt_idle;
+        break;
+      case dt_bstep:
+        bias_step();
         data_tk = dt_idle;
         break;
     }

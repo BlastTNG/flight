@@ -184,7 +184,7 @@ enum multiCommand {
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,
   bias_tes_all, bias_tes, tile_heater_on, tile_heater_off,
   tile_heater_kick, servo_reset, force_acq, tune_biases, reload_mce_config,
-  flux_loop_init, lcloop, mce_veto, mce_unveto, reload_dead_masks,
+  flux_loop_init, lcloop, mce_veto, mce_unveto, reload_dead_masks, bias_step,
 
   /* MCE experiment.cfg commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,
@@ -202,7 +202,7 @@ enum multiCommand {
   sa_flux_quantum, sq2_flux_quantum, sq1_flux_quantum, sq1_bias, sq1_off_bias,
   sq2_bias, sq2_fb, sa_bias, sa_fb, sa_offset, adc_offset, sq1_ramp_check_on,
   sq1_ramp_check_off, write_default_bias_on, write_default_bias_off,
-  bias_tes_col,
+  bias_tes_col, 
 
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */

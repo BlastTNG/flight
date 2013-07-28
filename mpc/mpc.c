@@ -90,13 +90,10 @@ int terminate = 0;
 /* Initialisation veto */
 static int init = 1;
 
-/* tuning stuff */
-int tune_first = 0, tune_last = 0, tune_force_biases = 0;
-
-/* iv curve parameters */
-int iv_start, iv_step, iv_last;
-uint32_t iv_kick;
-double iv_kickwait, iv_wait;
+/* general purpose goal data */
+int goal_start, goal_stop, goal_force;
+int goal_step, goal_kick;
+double goal_kickwait, goal_wait;
 
 /* reset the array statistics */
 int stat_reset = 1;
@@ -994,13 +991,28 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case lcloop:
         goal = gl_lcloop;
         break;
+      case bias_step:
+        goal = gl_bstep;
+        break;
       case tune_biases:
-        tune_force_biases = 1;
-        /* fallthrough */
       case tune_array:
-        tune_first = ev->ivalues[1];
-        tune_last = ev->ivalues[2];
+        goal_force = (ev->command == tune_biases) ? 1 : 0;
+        goal_start = ev->ivalues[1];
+        goal_stop = ev->ivalues[2];
         goal = gl_tune;
+        break;
+      case acq_iv_curve:
+        goal_kick = (ev->ivalues[1] == 1) ? KICK_1V :
+          (ev->ivalues[1] == 2) ? KICK_2V : 0;
+        goal_kickwait = ev->rvalues[2];
+        goal_start = ev->ivalues[3];
+        goal_stop = ev->ivalues[4];
+        goal_step = ev->ivalues[5];
+        /* fix sign */
+        if ((goal_stop - goal_start) * goal_step < 0)
+          goal_step = -goal_step;
+        goal_wait = ev->rvalues[6];
+        goal = gl_iv;
         break;
 
         /* Experiment config commands */
@@ -1101,19 +1113,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case send_exptcfg:
         new_blob_type = BLOB_EXPCFG;
-        break;
-      case acq_iv_curve:
-        goal = gl_iv;
-        iv_kick = (ev->ivalues[1] == 1) ? KICK_1V :
-          (ev->ivalues[1] == 2) ? KICK_2V : 0;
-        iv_kickwait = ev->rvalues[2];
-        iv_start = ev->ivalues[3];
-        iv_last = ev->ivalues[4];
-        iv_step = ev->ivalues[5];
-        /* fix sign */
-        if ((iv_last - iv_start) * iv_step < 0)
-          iv_step = -iv_step;
-        iv_wait = ev->rvalues[6];
         break;
       case send_iv_curve:
         new_blob_type = BLOB_IV;

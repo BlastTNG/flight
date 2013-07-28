@@ -1551,6 +1551,16 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(bias_step), "Step the TES bias above and then below the current "
+    "level", GR_MPC | MCECMD, 3,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Step size (count)", 1, 3000, 'i', "NONE"},
+      {"Duration (s)", 0.1, 10, 'f', "NONE"}
+    }
+  },
+
+  /* DON'T PUT ANYTHING BELOW THIS */
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {
       {"Plover", 0, USHRT_MAX, 'i', "PLOVER"}

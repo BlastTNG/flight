@@ -30,17 +30,38 @@ int comms_lost = 0;
 int kill_special = 0;
 static int cl_count = 0;
 
+/* request a data tasklet */
+static int dt_going = 0;
+static void dt_req(enum dtask dt)
+{
+  dt_error = 0;
+  kill_special = 0;
+  bprintf(info, "DTreq: %s", dt_name[dt]);
+  data_tk = dt;
+  dt_going = 1;
+}
+
+/* check whether a data task has completed */
+static int dt_done(void)
+{
+  if (dt_going && data_tk == dt_idle) {
+
+    if (dt_error)
+      bprintf(warning, "DTerr: %i", dt_error);
+
+    dt_going = 0;
+    kill_special = 0;
+    return 1;
+  }
+  return 0;
+}
+
 /* request a data tasklet and wait for it's completion.  returns dt_error */
 static int dt_wait(enum dtask dt)
 {
-  dt_error = 0;
-  bprintf(info, "DTreq: %s", dt_name[dt]);
-  data_tk = dt;
-  while (data_tk != dt_idle)
+  dt_req(dt);
+  while (!dt_done())
     usleep(10000);
-
-  if (dt_error)
-    bprintf(warning, "DTerr: %i", dt_error);
 
   return dt_error;
 }
@@ -218,16 +239,35 @@ static int task_reset_mce()
   return 0;
 }
 
-/* run a dt script */
-static void task_dt_script(enum dtask dt, enum modas new_moda)
+/* handle running a moda */
+static enum modas task_off_moda;
+static int task_off_reconfig;
+static void task_run_moda(void)
 {
-  kill_special = 0;
-  if (dt_wait(dt)) {
-    comms_lost = 1; /* hmm... */
-  } else {
-    moda = new_moda;
-    meta_tk = 0;
+  if (dt_done()) {
+    /* an off_moda of md_none indicates that the goal is completed and
+     * we should switch back to our default */
+    if (task_off_moda == md_none) {
+      bprintf(info, "Goal complete.");
+      meta_safe_update(gl_acq, md_none,
+          task_off_reconfig ? state & ~st_config : state);
+    } else {
+      bprintf(info, "Moda switch.");
+      moda = task_off_moda;
+    }
   }
+}
+
+/* run a dt script without blocking, switching to on_moda while it is running
+ * and then to off_moda when it completes */
+static void task_dt_script(enum dtask dt, enum modas on_moda,
+    enum modas off_moda, int reconfig)
+{
+  dt_req(dt);
+  moda = on_moda;
+  task_off_moda = off_moda;
+  task_off_reconfig = reconfig;
+  meta_tk = 0;
 }
 
 /* run generic tasks */
@@ -381,15 +421,18 @@ void *task(void *dummy)
               break;
             case md_tuning:
               /* auto_setup */
-              task_dt_script(dt_autosetup, md_tuning);
+              task_dt_script(dt_autosetup, moda_tk, md_none, 1);
               break;
             case md_iv_curve:
               /* iv curve */
-              task_dt_script(dt_ivcurve, md_iv_curve);
+              task_dt_script(dt_ivcurve, moda_tk, md_none, 1);
               break;
             case md_lcloop:
               /* lcloop script */
-              task_dt_script(dt_lcloop, md_lcloop);
+              task_dt_script(dt_lcloop, moda_tk, md_none, 1);
+              break;
+            case md_bstep: /* bias step */
+              task_dt_script(dt_bstep, moda_tk, md_none, 0);
               break;
           }
       } else { /* stop task */
@@ -427,6 +470,7 @@ void *task(void *dummy)
             case md_tuning:
             case md_iv_curve:
             case md_lcloop:
+            case md_bstep:
               kill_special = 1;
               while (kill_special)
                 usleep(10000);
@@ -436,7 +480,8 @@ void *task(void *dummy)
               break;
           }
       }
-    }
+    } else /* no new task, run the current moda */
+      task_run_moda();
     usleep(10000);
 
     if (repc++ > 100) {
