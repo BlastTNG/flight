@@ -1493,7 +1493,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_DET, "Row", 0, 32, 'i')},
   {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_DET)},
   {MCECMD1(lcloop, "Run load curves forever", GR_IV)},
-  {COMMAND(bias_tes_all), "Set all TES biases", GR_DET | MCECMD, 3,
+  {COMMAND(bias_tes_all), "Set all TES biases", GR_DET | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Bias", 0, 65535},
@@ -1501,7 +1501,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
-  {COMMAND(bias_tes), "Set TES biases", GR_DET | MCECMD, 12,
+  {COMMAND(bias_tes), "Set TES biases", GR_DET | MCECMD, 11,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
@@ -1513,7 +1513,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Column 5", 0, 65535, 'i', "NONE"},
       {"Column 6", 0, 65535, 'i', "NONE"},
       {"Column 7", 0, 65535, 'i', "NONE"},
-      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      //{"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
