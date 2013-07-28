@@ -491,7 +491,7 @@ static int dump_runfile(FILE *stream)
       "  <DATA_FILENAME> mpc_%li\n"
       "  <DATA_FRAMEACQ> %li\n"
       "  <CTIME> %li\n"
-      "  <ARRAY_ID> x%i"
+      "  <ARRAY_ID> x%i\n"
       "  <HOSTNAME> x%i.spider\n"
       "</FRAMEACQ>\n",
       acq_time, ACQ_FRAMECOUNT, acq_time, nmce + 1, nmce + 1);
