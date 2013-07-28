@@ -161,7 +161,9 @@ int32_t box_temp = 32767;
 int num_rows = -1, row_len = -1, data_rate = -1;
 
 /* tile heater kick timeout */
+#define POST_KICK_WAIT 10 /* seconds */
 static int tile_heater_timeout = -1;
+static int tile_heater_is_off = 0;
 
 static void set_data_mode_bits(int i, int both, const char *dmb)
 {
@@ -1172,7 +1174,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[0] = ev->rvalues[1] * 32767 / 5.;
         push_block("heater", "bias", 0, data, 1);
         slow_dat.tile_heater = data[0];
-        tile_heater_timeout = ev->rvalues[2] * 1000;
+        tile_heater_timeout = (ev->rvalues[2] + POST_KICK_WAIT) * 1000;
+        tile_heater_is_off = 0;
         break;
       case servo_reset:
         q_servo_reset(ev->ivalues[1], ev->ivalues[2]);
@@ -1185,6 +1188,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case flux_loop_init:
         data[0] = 1;
+        bprintf(info, "Flux loop init");
         push_block_raw("rca", "flx_lp_init", 0, data, 1);
         break;
       case integral_clamp:
@@ -1501,10 +1505,18 @@ int main(void)
     /* tile heater timer */
     if (tile_heater_timeout >= 0) {
       if ((tile_heater_timeout -= UDP_TIMEOUT) <= 0) {
-        uint32_t zero = 0;
-        push_block("heater", "bias", 0, &zero, 1);
-        slow_dat.tile_heater = 0;
+        uint32_t one = 1;
+        bprintf(info, "Flux loop init");
+        push_block_raw("rca", "flx_lp_init", 0, &one, 1);
         tile_heater_timeout = -1;
+        tile_heater_is_off = 0;
+      } else if (tile_heater_timeout <= 1000 * POST_KICK_WAIT) {
+        if (!tile_heater_is_off) {
+          uint32_t zero = 0;
+          push_block("heater", "bias", 0, &zero, 1);
+          slow_dat.tile_heater = 0;
+          tile_heater_is_off = 1;
+        }
       }
     }
   }

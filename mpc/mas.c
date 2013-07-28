@@ -793,8 +793,10 @@ static int kick(uint32_t bias, uint32_t value, int wait)
     }
 
     write_param("heater", "bias", 0, &value, 1);
+    slow_dat.tile_heater = value;
     sleep(2);
     write_param("heater", "bias", 0, &zero, 1);
+    slow_dat.tile_heater = 0;
 
     /* wait */
     if (check_wait(wait))
