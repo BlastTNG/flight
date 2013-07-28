@@ -130,7 +130,10 @@ void meta(void)
   if (!meta_tk && !dt_going) /* now run the goal */
     switch (working_goal) {
       case gl_stop: /* nothing to do */
-      case gl_ready:
+      case gl_pause:
+        break;
+      case gl_cycle:
+        goal.goal = gl_acq; /* immediate change goal */
         break;
       case gl_acq:
         if (moda == md_none)

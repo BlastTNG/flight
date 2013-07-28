@@ -976,8 +976,11 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         new_goal.goal = gl_acq;
         change_goal = 1;
         break;
+      case cycle_acq:
+        new_goal.goal = gl_cycle;
+        change_goal = 1;
       case pause_acq:
-        new_goal.goal = gl_ready;
+        new_goal.goal = gl_pause;
         change_goal = 1;
         break;
       case lcloop:

@@ -1317,6 +1317,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /*************** MCE COMMANDS  *****************/
 
   {MCECMD1(acquire, "Acquire regular MCE data", GR_MPC)},
+  {MCECMD1(cycle_acq, "Force a restart of MCE data acquisition", GR_MPC)},
   {MCECMD1(force_config, "Start data acquisition without reconfiguring",
       GR_MPC)},
   {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_MPC)},
