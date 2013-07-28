@@ -68,11 +68,12 @@ static union du gd[NGF];
 
 const char *dtasks[] = {"idle", "setdir", "dsp_rst", "mce_rst", "reconfig",
   "start_acq", "fakestop", "empty", "status", "acq_cnf", "tuning", "del_acq",
-  "iv_curve", "stop", "stop_mce", "lcloop"
+  "iv_curve", "stop", "stop_mce", "lcloop", "bstep", "bramp",
 };
-const char *goals[] = {"ready", "tune", "iv", "stop", "lcloop", "acq"};
-const char *modes[] = {"none", "running", "tuning", "iv_curve",
-  "lcloop"};
+const char *goals[] = {"pause", "tune", "iv", "stop", "lcloop", "cycle",
+  "acq", "bstep", "bramp"};
+const char *modes[] = {"none", "tuning", "iv_curve", "lcloop", "running",
+  "bstep", "bramp"};
 #define N_STATES 6
 const char *states[N_STATES] = {"drives", "active", "mcecom", "config",
   "acqcnf", "retdat"};
