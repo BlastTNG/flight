@@ -780,7 +780,7 @@ static int set_directory(void)
 #define KICK_DONT_BIAS 4000000000U
 static int kick(uint32_t bias, uint32_t value, int wait)
 {
-  if (kick > 0) {
+  if (value > 0) {
     int i;
     uint32_t zero = 0;
     uint32_t data[16];
