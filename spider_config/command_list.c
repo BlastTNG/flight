@@ -1560,6 +1560,18 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(bias_ramp), "Step through a bias range", GR_MPC | MCECMD, 7,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
+      {"Start bias", 0, 65535, 'i', "NONE"},
+      {"Last bias", 0, 65535, 'i', "NONE"},
+      {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
+      {"Step wait (s)", 0, 10, 'f', "NONE"},
+    }
+  },
+
   /* DON'T PUT ANYTHING BELOW THIS */
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
     {

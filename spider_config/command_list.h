@@ -182,7 +182,7 @@ enum multiCommand {
   stop_acq,           mag_cal,           pss_off_cal,       pss_d_cal,
 
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,
-  bias_tes_all, bias_tes, tile_heater_on, tile_heater_off,
+  bias_tes_all, bias_tes, tile_heater_on, tile_heater_off, bias_ramp,
   tile_heater_kick, servo_reset, force_acq, tune_biases, reload_mce_config,
   flux_loop_init, lcloop, mce_veto, mce_unveto, reload_dead_masks, bias_step,
 

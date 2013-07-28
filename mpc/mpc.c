@@ -1004,6 +1004,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         change_goal = 1;
         break;
       case acq_iv_curve:
+      case bias_ramp:
         new_goal.kick = (ev->ivalues[1] == 1) ? KICK_1V :
           (ev->ivalues[1] == 2) ? KICK_2V : 0;
         new_goal.kickwait = ev->rvalues[2];
@@ -1014,7 +1015,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         if ((new_goal.stop - new_goal.start) * new_goal.step < 0)
           new_goal.step = -new_goal.step;
         new_goal.wait = ev->rvalues[6];
-        new_goal.goal = gl_iv;
+        new_goal.goal = (ev->command == acq_iv_curve) ? gl_iv : gl_bramp;
         change_goal = 1;
         break;
 

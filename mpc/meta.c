@@ -74,14 +74,6 @@ static int set_new_goal(enum goals *working_goal)
   return 1;
 }
 
-/* returns true if this moda wants and acquisition running */
-int need_acq(enum goals goal)
-{
-  if (goal == gl_acq || goal == gl_bstep)
-    return 1;
-  return 0;
-}
-
 /* Meta's job is to run the goal and mode */
 void meta(void)
 {
@@ -123,7 +115,7 @@ void meta(void)
       meta_tk = st_acqcnf | STOP_TK;
     else
       meta_tk = st_config;
-  } else if (need_acq(working_goal)) { /* turn acq on */
+  } else if (working_goal >= gl_acq) { /* turn acq on */
     if (~state & st_acqcnf)
       meta_tk = st_acqcnf;
     else if (~state & st_retdat)
@@ -135,7 +127,7 @@ void meta(void)
       meta_tk = st_acqcnf | STOP_TK;
   }
 
-  if (!meta_tk) /* now run the goal */
+  if (!meta_tk && !dt_going) /* now run the goal */
     switch (working_goal) {
       case gl_stop: /* nothing to do */
       case gl_ready:
@@ -158,6 +150,9 @@ void meta(void)
       case gl_bstep:
         if (moda == md_none)
           meta_tk = md_bstep << MODA_SHIFT;
+      case gl_bramp:
+        if (moda == md_none)
+          meta_tk = md_bramp << MODA_SHIFT;
     }
 
 #ifdef DEBUG_META

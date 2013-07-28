@@ -76,14 +76,14 @@ int mceveto = 1;
 #define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
 
 /* wait with kill detection */
-static int killwait(double wait)
+static int check_wait(double wait)
 {
   double i;
 
-  for (i = 0; i < wait; i += 0.1) {
+  for (i = 0; i < wait; i += 0.01) {
     if (kill_special)
       return 1;
-    usleep(100000);
+    usleep(10000);
   }
   return kill_special ? 1 : 0;
 }
@@ -608,20 +608,27 @@ static int acq_err(void *user_data, int sync_num, int err,
   return 1; /* stop this one */
 }
 
+/* restart the servo */
+static int flux_loop_init(double wait)
+{
+  uint32_t one = 1;
+  mas_write_block("rca", "flx_lp_init", &one, 1);
+  return check_wait(wait);
+}
+
 #define ACQ_INTERVAL 50000 /* number of frames in a chunk */
 static int acq_conf(void)
 {
   int r, i;
   mcedata_storage_t *st;
-  uint32_t n = 1;
+  uint32_t n;
   char filename[100];
 
   /* stop the pushback */
   fb_top = pb_last = 0;
 
   /* restart the servo */
-  n = 1;
-  mas_write_block("rca", "flx_lp_init", &n, 1);
+  flux_loop_init(0);
 
   /* set data mode */
   cur_dm = n = req_dm;
@@ -798,7 +805,7 @@ static void stop_mce(void)
   uint32_t one = 1;
   uint32_t zeroes[33] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  uint32_t number[8] = {-8192, -8192, -8192, -8192, -8192, -8192, -8192, -8192};
+  int32_t number[8] = {-8192, -8192, -8192, -8192, -8192, -8192, -8192, -8192};
 
   /* these are row-wise */
   bprintf(info, "Stopping MCE.");
@@ -841,19 +848,40 @@ static void stop_mce(void)
   write_param("rc2", "servo_mode", 0, zeroes, 8);
 
   /* sq1 fb to 0V = -8192 */
-  write_param("rc1", "fb_const", 0, number, 8);
-  write_param("rc2", "fb_const", 0, number, 8);
+  write_param("rc1", "fb_const", 0, (void*)number, 8);
+  write_param("rc2", "fb_const", 0, (void*)number, 8);
   mas_write_block("rca", "flx_lp_init", &one, 1);
 
   /* stop acq */
   kill_special = 1;
 }
 
+static int kick(uint32_t bias, uint32_t value, int wait)
+{
+  if (kick > 0) {
+    int i;
+    uint32_t zero = 0;
+    uint32_t data[16];
+    /* bias to the start */
+    for (i = 0; i < 16; ++i)
+      data[i] = bias;
+    write_param("tes", "bias", 0, data, 16);
+    write_param("heater", "bias", 0, &value, 1);
+    sleep(2);
+    write_param("heater", "bias", 0, &zero, 1);
+
+    /* wait */
+    if (check_wait(wait))
+      return 1;
+  }
+  /* flx_lp_init */
+  return flux_loop_init(2);
+}
+
 /* run a load curve */
-static int do_ivcurve(uint32_t kick, int kickwait, int start, int last,
+static int do_ivcurve(uint32_t kickbias, int kickwait, int start, int last,
     int step, double wait, const char *filename)
 {
-  uint32_t data[16];
   char start_arg[30], step_arg[30], count_arg[30], step_wait[30], last_arg[30];
   const char *argv[] = { MAS_SCRIPT "/ramp_tes_bias", filename, "s", start_arg,
     step_arg, count_arg, step_wait, step_wait, start_arg, "0", last_arg, NULL };
@@ -865,32 +893,11 @@ static int do_ivcurve(uint32_t kick, int kickwait, int start, int last,
   sprintf(step_wait, "%f", wait);
 
   /* kick */
-  if (kick > 0) {
-    int i;
-    uint32_t zero = 0;
-    /* bias to the start */
-    for (i = 0; i < 16; ++i)
-      data[i] = start;
-    write_param("tes", "bias", 0, data, 16);
-    write_param("heater", "bias", 0, &kick, 1);
-    sleep(2);
-    write_param("heater", "bias", 0, &zero, 1);
-
-    /* wait */
-    if (killwait(kickwait))
-      return 1;
-
-    /* flx_lp_init */
-    uint32_t one = 1;
-    mas_write_block("rca", "flx_lp_init", &one, 1);
-    sleep(2);
-  }
+  if (kick(start, kickbias, kickwait))
+    return 1;
 
   /* do the ramp */
-  int r = exec_and_wait(sched, none, argv[0], (char**)argv, 0, 1,
-      &kill_special);
-
-  return r;
+  return exec_and_wait(sched, none, argv[0], (char**)argv, 0, 1, &kill_special);
 }
 
 /* run and archive an iv curve */
@@ -948,7 +955,7 @@ static int lcloop(void)
       return 1;
 
     /* wait */
-    if (killwait(900))
+    if (check_wait(900))
       return 1;
 
     /* Ti */
@@ -961,7 +968,7 @@ static int lcloop(void)
       return 1;
 
     /* wait */
-    if (killwait(900))
+    if (check_wait(900))
       return 1;
   }
 
@@ -1008,7 +1015,7 @@ static int bias_step(void)
     bias[i] += goal.step;
   write_param("tes", "bias", 0, bias, 16);
 
-  if (killwait(goal.wait))
+  if (check_wait(goal.wait))
     return 1;
 
   /* step down */
@@ -1017,7 +1024,7 @@ static int bias_step(void)
     bias[i] -= 2 * goal.step;
   write_param("tes", "bias", 0, bias, 16);
 
-  if (killwait(goal.wait))
+  if (check_wait(goal.wait))
     return 1;
 
   /* back to normal */
@@ -1027,6 +1034,54 @@ static int bias_step(void)
   write_param("tes", "bias", 0, bias, 16);
 
   return 0;
+}
+
+static int bias_ramp(void)
+{
+  uint32_t bias;
+  uint32_t biases[16];
+  uint32_t saved_bias[16];
+  int i, r;
+
+  /* remember biases */
+  fetch_param("tes", "bias", 0, saved_bias, 16);
+
+  /* kick */
+  if (kick(goal.start, goal.kick, goal.kickwait))
+    return 1;
+
+  /* ramp -- goal.step is always negative */
+  for (bias = goal.start; bias > goal.stop; bias += goal.step)
+  {
+    /* set bias */
+    for (i = 0; i < 16; ++i)
+      biases[i] = bias;
+    write_param("tes", "bias", 0, biases, 16);
+
+    if (check_wait(0.1))
+      return 1;
+
+    /* reset servo */
+    flux_loop_init(0);
+
+    /* wait */
+    if (check_wait(goal.wait)) {
+      /* return to normal biases */
+      write_param("tes", "bias", 0, saved_bias, 16);
+      return 1;
+    }
+  }
+
+  /* return to normal biases */
+  write_param("tes", "bias", 0, saved_bias, 16);
+
+  if (check_wait(0.1))
+    return 1;
+
+  /* reset servo */
+  flux_loop_init(0);
+
+  return r;
 }
 
 /* run a tuning */
@@ -1181,7 +1236,6 @@ void *mas_data(void *dummy)
         break;
       case dt_setdir:
         dt_error = set_directory();
-        data_tk = dt_idle;
         break;
       case dt_dsprs:
         slow_veto++; /* watchdog */
@@ -1192,7 +1246,6 @@ void *mas_data(void *dummy)
           dt_error = 1;
         } else
           dt_error = 0;
-        data_tk = dt_idle;
         break;
       case dt_mcers:
         slow_veto++; /* watchdog */
@@ -1206,30 +1259,23 @@ void *mas_data(void *dummy)
           dt_error = 1;
         } else
           dt_error = 0;
-
-        data_tk = dt_idle;
         break;
       case dt_reconfig:
         dt_error = reconfig();
-        data_tk = dt_idle;
         break;
       case dt_status:
         dt_error = mce_status();
-        data_tk = dt_idle;
         break;
       case dt_acqcnf:
         dt_error = acq_conf();
-        data_tk = dt_idle;
         break;
       case dt_startacq:
         acq_going = 1;
         stat_reset = 1;
         dt_error = 0;
-        data_tk = dt_idle;
         break;
       case dt_stop:
         dt_error = stopacq();
-        data_tk = dt_idle;
         break;
       case dt_fakestop:
         ret = mcedata_fake_stopframe(mas);
@@ -1238,7 +1284,6 @@ void *mas_data(void *dummy)
           dt_error = 1;
         } else
           dt_error = 0;
-        data_tk = dt_idle;
         break;
       case dt_empty:
         ret = mcedata_empty_data(mas);
@@ -1247,36 +1292,33 @@ void *mas_data(void *dummy)
           dt_error = 1;
         } else
           dt_error = 0;
-        data_tk = dt_idle;
         break;
       case dt_delacq:
         if (acq)
           mcedata_acq_destroy(acq);
         acq = NULL;
         dt_error = 0;
-        data_tk = dt_idle;
         break;
       case dt_autosetup:
         dt_error = tune();
-        data_tk = dt_idle;
         break;
       case dt_ivcurve:
         dt_error = ivcurve();
-        data_tk = dt_idle;
         break;
       case dt_lcloop:
         dt_error = lcloop();
-        data_tk = dt_idle;
         break;
       case dt_stopmce:
         stop_mce();
-        data_tk = dt_idle;
         break;
       case dt_bstep:
         bias_step();
-        data_tk = dt_idle;
+        break;
+      case dt_bramp:
+        bias_ramp();
         break;
     }
+    data_tk = dt_idle;
 
     if (!mceveto)
     /* pop a block from the queue, if there are any,

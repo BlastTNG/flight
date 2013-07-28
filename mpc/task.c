@@ -28,10 +28,10 @@ int dt_error = 0;
 int comms_lost = 0;
 /* kill switch */
 int kill_special = 0;
+int dt_going = 0;
 static int cl_count = 0;
 
 /* request a data tasklet */
-static int dt_going = 0;
 static void dt_req(enum dtask dt)
 {
   dt_error = 0;
@@ -319,7 +319,7 @@ void *task(void *dummy)
       state &= ~(st_config | st_mcecom | st_retdat);
       meta_tk = 0; /* try again */
     } else if (req_dm != cur_dm) {
-      if (need_acq(goal.goal) && !memory.squidveto) {
+      if ((goal.goal >= gl_acq) && !memory.squidveto) {
         bprintf(info, "data mode change detected %i -> %i", cur_dm, req_dm);
         /* change of data mode while acquiring -- restart acq */
         task_reset_mce();
