@@ -433,6 +433,9 @@ void *task(void *dummy)
             case md_bstep: /* bias step */
               task_dt_script(dt_bstep, moda_tk, md_none, 0);
               break;
+            case md_bramp: /* bias ramp */
+              task_dt_script(dt_bramp, moda_tk, md_none, 0);
+              break;
           }
       } else { /* stop task */
         if (status_tk != st_idle)
@@ -470,6 +473,7 @@ void *task(void *dummy)
             case md_iv_curve:
             case md_lcloop:
             case md_bstep:
+            case md_bramp:
               kill_special = 1;
               while (kill_special)
                 usleep(10000);
