@@ -161,7 +161,7 @@ int32_t box_temp = 32767;
 int num_rows = -1, row_len = -1, data_rate = -1;
 
 /* tile heater kick timeout */
-#define POST_KICK_WAIT 10 /* seconds */
+#define POST_KICK_WAIT 5 /* seconds */
 static int tile_heater_timeout = -1;
 static int tile_heater_is_off = 0;
 
