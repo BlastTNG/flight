@@ -826,7 +826,7 @@ struct ChannelStruct SlowChannels[] = {
   {"pitch_piv_clin",'r',ACS2_A1,  1,   0.001343,          -42.28, 'u', U_NONE},
   {"roll_piv_clin",'r', ACS2_A1,  3,   0.001413,         -44.640, 'u', U_NONE},
   {"t_piv_clin",   'r', ACS2_A1,  5, 100.0*10.0/32768.0, -100.0*10.0,'u',U_T_C},
-  {"pitch_of_clin",'r', ACS2_A1,  7,    0.00147,           -48.5, 'u', U_NONE},
+  {"pitch_of_clin",'r', ACS2_A1,  7,    0.00147,         -48.768, 'u', U_NONE},
   {"roll_of_clin", 'r', ACS2_A1,  9,    0.00144,        -44.78, 'u', U_NONE},
   {"t_of_clin",    'r', ACS2_A1, 11, 100.0*10.0/32768.0, -100.0*10.0,'u',U_T_C},
   {"trig_g",       'r', ACS2_A1, 23, CAL16(1.0,          0.0), 'u',  U_V_V},
