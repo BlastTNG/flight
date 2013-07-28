@@ -90,11 +90,6 @@ int terminate = 0;
 /* Initialisation veto */
 static int init = 1;
 
-/* general purpose goal data */
-int goal_start, goal_stop, goal_force;
-int goal_step, goal_kick;
-double goal_kickwait, goal_wait;
-
 /* reset the array statistics */
 int stat_reset = 1;
 
@@ -370,7 +365,7 @@ static void send_slow_data(char *data, int send)
   /* state stuff */
   slow_dat.state = state | (moda << MODA_SHIFT);
 
-  slow_dat.goal = goal;
+  slow_dat.goal = goal.goal;
   slow_dat.task = meta_tk;
   slow_dat.dtask = data_tk;
 
@@ -971,48 +966,56 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 
   if (ev->is_multi) {
     switch (ev->command) {
-      case data_mode:
-        req_dm = ev->ivalues[1];
-        break;
+      /* goal switching */
       case reconfig:
         state &= ~st_config;
-        goal = gl_acq;
+        new_goal.goal = gl_acq;
+        change_goal = 1;
         break;
       case start_acq:
-        goal = gl_acq;
+        new_goal.goal = gl_acq;
+        change_goal = 1;
         break;
       case force_acq:
         state |= st_config | st_mcecom;
-        goal = gl_acq;
+        new_goal.goal = gl_acq;
+        change_goal = 1;
         break;
       case stop_acq:
-        goal = gl_ready;
+        new_goal.goal = gl_ready;
+        change_goal = 1;
         break;
       case lcloop:
-        goal = gl_lcloop;
+        new_goal.goal = gl_lcloop;
+        change_goal = 1;
         break;
       case bias_step:
-        goal = gl_bstep;
+        new_goal.step = ev->ivalues[1];
+        new_goal.wait = ev->rvalues[2];
+        new_goal.goal = gl_bstep;
+        change_goal = 1;
         break;
       case tune_biases:
       case tune_array:
-        goal_force = (ev->command == tune_biases) ? 1 : 0;
-        goal_start = ev->ivalues[1];
-        goal_stop = ev->ivalues[2];
-        goal = gl_tune;
+        new_goal.force = (ev->command == tune_biases) ? 1 : 0;
+        new_goal.start = ev->ivalues[1];
+        new_goal.stop = ev->ivalues[2];
+        new_goal.goal = gl_tune;
+        change_goal = 1;
         break;
       case acq_iv_curve:
-        goal_kick = (ev->ivalues[1] == 1) ? KICK_1V :
+        new_goal.kick = (ev->ivalues[1] == 1) ? KICK_1V :
           (ev->ivalues[1] == 2) ? KICK_2V : 0;
-        goal_kickwait = ev->rvalues[2];
-        goal_start = ev->ivalues[3];
-        goal_stop = ev->ivalues[4];
-        goal_step = ev->ivalues[5];
+        new_goal.kickwait = ev->rvalues[2];
+        new_goal.start = ev->ivalues[3];
+        new_goal.stop = ev->ivalues[4];
+        new_goal.step = ev->ivalues[5];
         /* fix sign */
-        if ((goal_stop - goal_start) * goal_step < 0)
-          goal_step = -goal_step;
-        goal_wait = ev->rvalues[6];
-        goal = gl_iv;
+        if ((new_goal.stop - new_goal.start) * new_goal.step < 0)
+          new_goal.step = -new_goal.step;
+        new_goal.wait = ev->rvalues[6];
+        new_goal.goal = gl_iv;
+        change_goal = 1;
         break;
 
         /* Experiment config commands */
@@ -1173,6 +1176,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case flux_loop_init:
         data[0] = 1;
         push_block("rca", "flx_lp_init", 0, data, 1);
+        break;
+      case data_mode:
+        req_dm = ev->ivalues[1];
         break;
 
       default:

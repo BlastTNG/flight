@@ -76,14 +76,14 @@ int mceveto = 1;
 #define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
 
 /* wait with kill detection */
-static int killwait(int wait)
+static int killwait(double wait)
 {
-  int i;
+  double i;
 
-  for (i = 0; i < wait; ++i) {
+  for (i = 0; i < wait; i += 0.1) {
     if (kill_special)
       return 1;
-    sleep(1);
+    usleep(100000);
   }
   return kill_special ? 1 : 0;
 }
@@ -777,18 +777,6 @@ static int pop_block(void)
   if (blockq_head == blockq_tail)
     return 0;
 
-#if 0
-  {
-    int i;
-    char *ptr, params[1000];
-    ptr = params;
-    for (i = 0; i < blockq[new_tail].n; ++i)
-      ptr += sprintf(ptr, "%u ", blockq[new_tail].d[i]);
-    bprintf(info, "unblock: %s/%s+%i(%i) [ %s]", blockq[new_tail].c,
-        blockq[new_tail].p, blockq[new_tail].o, blockq[new_tail].n, params);
-  }
-#endif
-
   if (blockq[new_tail].raw)
     mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
         blockq[new_tail].d, blockq[new_tail].n);
@@ -914,8 +902,8 @@ static int ivcurve(void)
   sprintf(filename1, "iv_%04i", ++memory.last_iv);
   mem_dirty = 1;
 
-  int r = do_ivcurve(goal_kick, goal_kickwait, goal_start, goal_stop, goal_step,
-      goal_wait, filename1);
+  int r = do_ivcurve(goal.kick, goal.kickwait, goal.start, goal.stop, goal.step,
+      goal.wait, filename1);
 
   if (r == 0) { /* archive it */
     int d;
@@ -1017,25 +1005,25 @@ static int bias_step(void)
   /* step up */
   bprintf(info, "Bias Step up");
   for (i = 0; i < 16; ++i)
-    bias[i] += goal_step;
+    bias[i] += goal.step;
   write_param("tes", "bias", 0, bias, 16);
 
-  if (killwait(goal_wait))
+  if (killwait(goal.wait))
     return 1;
 
   /* step down */
   bprintf(info, "Bias Step down");
   for (i = 0; i < 16; ++i)
-    bias[i] -= 2 * goal_step;
+    bias[i] -= 2 * goal.step;
   write_param("tes", "bias", 0, bias, 16);
 
-  if (killwait(goal_wait))
+  if (killwait(goal.wait))
     return 1;
 
   /* back to normal */
   bprintf(info, "Bias Step finished");
   for (i = 0; i < 16; ++i)
-    bias[i] += goal_step;
+    bias[i] += goal.step;
   write_param("tes", "bias", 0, bias, 16);
 
   return 0;
@@ -1047,8 +1035,8 @@ static int tune(void)
   int old_sa_ramp_bias = 0, old_sq2_servo_bias_ramp = 0;
   int old_sq1_servo_bias_ramp = 0;
   const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
-    first_stage_tune[goal_start], last_stage_tune[goal_stop], NULL };
-  int local_tune_force_biases = goal_force;
+    first_stage_tune[goal.start], last_stage_tune[goal.stop], NULL };
+  int local_tune_force_biases = goal.force;
 
   ensure_experiment_cfg();
 
@@ -1101,7 +1089,7 @@ static int tune(void)
     }
   }
 
-  if (goal_force) {
+  if (goal.force) {
     cfg_set_int("sa_ramp_bias", 0, old_sa_ramp_bias);
     cfg_set_int("sq2_servo_bias_ramp", 0, old_sq2_servo_bias_ramp);
     cfg_set_int("sq1_servo_bias_ramp", 0, old_sq1_servo_bias_ramp);

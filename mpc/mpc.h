@@ -130,12 +130,21 @@ extern enum modas moda;
 enum goals { gl_ready, gl_tune, gl_iv, gl_stop, gl_lcloop, gl_acq, gl_bstep };
 #define GOAL_STRINGS "ready", "tune", "iv", "stop", "lcloop", "acq", "bstep"
 
-extern enum goals goal;
+/* goal data */
+struct gl_data {
+  enum goals goal;
+
+  /* general purpose registers */
+  int start, stop, force;
+  int step, kick;
+  double kickwait, wait;
+};
+extern struct gl_data goal, new_goal;
+extern int change_goal;
 
 /* The director */
 void meta(void);
-void meta_safe_update(enum goals new_goal, enum modas new_moda,
-    unsigned int new_state);
+void meta_goal_complete(int reconfig);
 int need_acq(enum goals goal);
 
 /* meta <-> task communication */
@@ -171,11 +180,6 @@ struct block_q {
 };
 extern struct block_q blockq[BLOCKQ_SIZE];
 extern int blockq_head, blockq_tail;
-
-/* general purpose goal data */
-extern int goal_start, goal_stop, goal_force;
-extern int goal_step, goal_kick;
-extern double goal_kickwait, goal_wait;
 
 /* blob creator */
 #define N_BLOB_DATA 5

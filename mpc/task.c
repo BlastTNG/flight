@@ -249,8 +249,7 @@ static void task_run_moda(void)
      * we should switch back to our default */
     if (task_off_moda == md_none) {
       bprintf(info, "Goal complete.");
-      meta_safe_update(gl_acq, md_none,
-          task_off_reconfig ? state & ~st_config : state);
+      meta_goal_complete(task_off_reconfig);
     } else {
       bprintf(info, "Moda switch.");
       moda = task_off_moda;
@@ -320,7 +319,7 @@ void *task(void *dummy)
       state &= ~(st_config | st_mcecom | st_retdat);
       meta_tk = 0; /* try again */
     } else if (req_dm != cur_dm) {
-      if (need_acq(goal) && !memory.squidveto) {
+      if (need_acq(goal.goal) && !memory.squidveto) {
         bprintf(info, "data mode change detected %i -> %i", cur_dm, req_dm);
         /* change of data mode while acquiring -- restart acq */
         task_reset_mce();

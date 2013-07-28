@@ -17,11 +17,12 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#undef DEBUG_META
+#define DEBUG_META
 
 #include "mpc.h"
 #include "blast.h"
 #include <stdlib.h>
+#include <string.h>
 
 /* goal and mode names */
 const char *const goal_string[] = { GOAL_STRINGS };
@@ -32,47 +33,42 @@ unsigned int state = 0;
 
 /* goal and moda */
 enum modas moda = md_none;
-enum goals goal = gl_acq;
+
+struct gl_data goal = {gl_acq};
+struct gl_data new_goal;
+int change_goal;
 
 uint32_t meta_tk = 0;
 
 static int meta_veto = 0;
 
-/* stop a mode, if necessary; returns non-zero if we needed to stop something */
-static int stop_moda(enum goals working_goal)
+/* handle a new goal */
+static int set_new_goal(enum goals *working_goal)
 {
-  if (moda == md_none)
+  if (change_goal) {
+    /* we can't actually change goal until the current moda stops */
+    *working_goal = (memory.squidveto) ? gl_stop : new_goal.goal;
+    if (moda == md_none) {
+      bprintf(info, "New goal: %s", goal_string[new_goal.goal]);
+      memcpy(&goal, &new_goal, sizeof(goal));
+      change_goal = 0;
+      return 0;
+    }
+  } else if (memory.squidveto) {
+    /* veto: force stop */
+    *working_goal = gl_stop;
+    if (moda == md_none) {
+      return 0;
+    }
+  } else {
+    /* normal operation: no need to stop */
+    *working_goal = goal.goal;
     return 0;
-
-  switch (working_goal) {
-    case gl_ready:
-    case gl_stop:
-      break;
-    case gl_tune:
-      if (moda == md_tuning)
-        return 0;
-      break;
-    case gl_iv:
-      if (moda == md_iv_curve)
-        return 0;
-      break;
-    case gl_lcloop:
-      if (moda == md_lcloop)
-        return 0;
-      break;
-    case gl_acq:
-      if (moda == md_running)
-        return 0;
-      break;
-    case gl_bstep:
-      if (moda == md_bstep)
-        return 0;
-      break;
   }
 
 #ifdef DEBUG_META
   bprintf(info, "Stop moda: %s for goal %s", moda_string[moda],
-      goal_string[working_goal]);
+      goal_string[*working_goal]);
 #endif
   meta_tk = STOP_TK | (moda << MODA_SHIFT);
   return 1;
@@ -81,7 +77,7 @@ static int stop_moda(enum goals working_goal)
 /* returns true if this moda wants and acquisition running */
 int need_acq(enum goals goal)
 {
-  if (goal == gl_acq)
+  if (goal == gl_acq || goal == gl_bstep)
     return 1;
   return 0;
 }
@@ -89,14 +85,14 @@ int need_acq(enum goals goal)
 /* Meta's job is to run the goal and mode */
 void meta(void)
 {
-  enum goals working_goal = (memory.squidveto) ? gl_stop : goal;
+  enum goals working_goal;
 
-  /* something's going on */
+  /* we're vetoed or something's going on */
   if (meta_veto || meta_tk)
     return;
 
-  /* stop an old mode, if necessary */
-  if (stop_moda(working_goal))
+  /* change goals, if necessary; returns non-zero if it has set meta_tk */
+  if (set_new_goal(&working_goal))
     return;
 
   /* now, moda is either md_none, or one of the allowed modas for this goal */
@@ -167,7 +163,7 @@ void meta(void)
 #ifdef DEBUG_META
   if (meta_tk) {
     bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X %s",
-        goal_string[goal], moda_string[moda], state,
+        goal_string[goal.goal], moda_string[moda], state,
         memory.squidveto ? "vetoed" : "");
     if ((meta_tk & ~STOP_TK) >= (1U << MODA_SHIFT))
       bprintf(info, "M: meta_tk: %s %s", (meta_tk & STOP_TK) ? "stop" : "start",
@@ -179,13 +175,13 @@ void meta(void)
 #endif
 }
 
-/* change mode, state and/or goal without screwing up the director */
-void meta_safe_update(enum goals new_goal, enum modas new_moda,
-    unsigned int new_state)
+/* return to normal operation */
+void meta_goal_complete(int need_reconfig)
 {
   meta_veto = 1;
-  state = new_state;
-  moda = new_moda;
-  goal = new_goal;
+  if (need_reconfig)
+    state &= ~st_config;
+  new_goal.goal = gl_acq;
+  change_goal = 1;
   meta_veto = 0;
 }
