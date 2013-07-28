@@ -58,5 +58,6 @@
 /* blob types */
 #define BLOB_NONE    0
 #define BLOB_EXPCFG  1
-#define BLOB_TUNECFG 2
-#define BLOB_IV      4
+#define BLOB_IV      2
+#define BLOB_TUNECFG 3
+#define BLOB_TUNESQ  4

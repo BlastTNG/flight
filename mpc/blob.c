@@ -283,13 +283,17 @@ void *blobber(void *dummy)
           r = dict_compress(DC_IGNORE_SPACE);
           break;
         case BLOB_IV:
-	  strcpy(blob_source, "/data#/mce/last_iv_completed");
-	  blob_source[5] = '0' + data_drive[0];
-	  r = iv_compress();
-	  break;
+          strcpy(blob_source, "/data#/mce/last_iv_completed");
+          blob_source[5] = '0' + data_drive[0];
+          r = iv_compress();
+          break;
         case BLOB_TUNECFG:
           tuning_filename("experiment.cfg", blob_data[0], blob_source);
           r = dict_compress(DC_IGNORE_SPACE);
+          break;
+        case BLOB_TUNESQ:
+          tuning_filename("*.sqtune", blob_data[0], blob_source);
+          r = dict_compress(0);
           break;
         default:
           bprintf(warning, "Ignoring unknown method: %i", blob_type);

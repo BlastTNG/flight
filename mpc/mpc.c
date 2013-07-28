@@ -40,6 +40,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <glob.h>
 
 /* some timing constants; in the main loop, timing is done using the udp poll
  * timeout.  As a result, all timings are approximate (typically lower bounds)
@@ -1135,7 +1136,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         cfg_apply_tuning(ev->ivalues[1]);
         break;
       case send_tuning:
-        new_blob_type = BLOB_TUNECFG;
+        new_blob_type = BLOB_TUNECFG + ev->ivalues[2];
         blob_data[0] = ev->ivalues[1];
         break;
       case bias_tes:
@@ -1313,19 +1314,26 @@ static int read_mem(void)
   return 0;
 }
 
-/* find a tuning -- returns 1 on error */
+/* find a tuning file -- returns 1 on error */
 int tuning_filename(const char *file, int n, char *buffer)
 {
-  struct stat statbuf;
-  int d = 0;
-  sprintf(buffer, "/data#/mce/tuning/%04i/%s", n, file);
-  for (d = 0; d < 4; ++d) {
-    buffer[5] = d + '0';
-    if (stat(buffer, &statbuf) == 0)
-      return 0;
+  int r;
+  glob_t pglob;
+  char pattern[100];
+  sprintf(pattern, "/data?/mce/tuning/%04i/%s", n, file);
+
+  /* glob search */
+  r = glob(pattern, GLOB_NOSORT, NULL, &pglob);
+  if (r == 0) {
+    globfree(&pglob);
+    return 1;
   }
 
-  return 1;
+  /* use the first one */
+  strcpy(buffer, pglob.gl_pathv[0]);
+  globfree(&pglob);
+
+  return 0;
 }
 
 int main(void)
