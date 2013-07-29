@@ -1128,7 +1128,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         blob_data[1] = ev->ivalues[2];
         break;
       case use_tuning:
-        cfg_apply_tuning(ev->ivalues[1]);
+        cfg_apply_tuning(ev->ivalues[1] ? ev->ivalues[1] : memory.last_tune);
         break;
       case send_tuning:
         new_blob_type = BLOB_TUNECFG + ev->ivalues[2];

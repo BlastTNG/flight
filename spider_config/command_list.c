@@ -1582,7 +1582,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(use_tuning), "Apply a previous tuning", GR_MPC | MCECMD, 2,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"Tuning number", 0, 65535, 'i', "NONE"},
+      {"Tuning number (0 = last)", 0, 65535, 'i', "NONE"},
     }
   },
 
