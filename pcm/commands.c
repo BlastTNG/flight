@@ -2372,24 +2372,43 @@ void InitCommandData()
   CommandData.data_mode = 10;
   CommandData.data_mode_bits[ 0][0][0] = 16;
   CommandData.data_mode_bits[ 0][0][1] = 16;
+  CommandData.data_mode_bits[ 0][1][0] =  0;
+  CommandData.data_mode_bits[ 0][1][1] =  0;
+
   CommandData.data_mode_bits[ 1][0][0] = 16;
   CommandData.data_mode_bits[ 1][0][1] = 16;
+  CommandData.data_mode_bits[ 1][1][0] =  0;
+  CommandData.data_mode_bits[ 1][1][1] =  0;
+
   CommandData.data_mode_bits[ 2][0][0] = 16;
   CommandData.data_mode_bits[ 2][0][1] = 16;
+  CommandData.data_mode_bits[ 2][1][0] =  0;
+  CommandData.data_mode_bits[ 2][1][1] =  0;
+
   CommandData.data_mode_bits[ 4][0][0] = 14;
   CommandData.data_mode_bits[ 4][0][1] =  9;
   CommandData.data_mode_bits[ 4][1][0] =  0;
   CommandData.data_mode_bits[ 4][1][1] =  7;
+
   CommandData.data_mode_bits[ 5][0][0] =  8;
   CommandData.data_mode_bits[ 5][0][1] = 12;
   CommandData.data_mode_bits[ 5][1][0] =  0;
   CommandData.data_mode_bits[ 5][1][1] =  4;
+
   CommandData.data_mode_bits[10][0][0] =  7;
   CommandData.data_mode_bits[10][0][1] = 12;
   CommandData.data_mode_bits[10][1][0] =  0;
   CommandData.data_mode_bits[10][1][1] =  4;
+
+  CommandData.data_mode_bits[11][0][0] =  0;
+  CommandData.data_mode_bits[11][0][0] = 16;
+  CommandData.data_mode_bits[11][1][0] =  0;
+  CommandData.data_mode_bits[11][1][1] =  0;
+
   CommandData.data_mode_bits[12][0][0] = 16;
   CommandData.data_mode_bits[12][0][1] = 16;
+  CommandData.data_mode_bits[12][1][0] =  0;
+  CommandData.data_mode_bits[12][1][1] =  0;
   CommandData.data_mode_bits_serial = 0;
 
   CommandData.mce_blob_num = 0xEB90;
