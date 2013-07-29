@@ -148,7 +148,7 @@ static void ForwardNotices(int sock)
 
   len = mpc_compose_notice(this_divisor, this_turnaround, request_ssdata,
       this_data_mode, this_rl, this_nr, this_dr, this_squidveto,
-      CommandData.data_mode_bits, udp_buffer);
+      CommandData.data_mode_bits[this_data_mode], udp_buffer);
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))

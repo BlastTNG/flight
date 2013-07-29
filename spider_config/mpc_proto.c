@@ -143,12 +143,11 @@ size_t mpc_compose_param(const uint32_t *param, int nmce, char *buffer)
  * n = num_rows
  * r = data_rate
  * V = squid_veto
- * d = 20 bytes of data_mode_bits
+ * d = 4 bytes of data_mode_bits
  */
-#define DMB_OFFSET 11
 size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
     int data_mode, int row_len, int num_rows, int data_rate, uint8_t squidveto,
-    char data_mode_bits[13][2][2], char *buffer)
+    char data_mode_bits[2][2], char *buffer)
 {
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'N';
@@ -160,42 +159,11 @@ size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
   buffer[8] = num_rows;
   buffer[9] = data_rate;
   buffer[10] = squidveto;
-
-  /* we only report the useful data mode bits */
-  /* data mode zero */
-  buffer[DMB_OFFSET +  0] = data_mode_bits[0][0][0];
-  buffer[DMB_OFFSET +  1] = data_mode_bits[0][0][1];
-
-  /* data mode one */
-  buffer[DMB_OFFSET +  2]  = data_mode_bits[1][0][0];
-  buffer[DMB_OFFSET +  3] = data_mode_bits[1][0][1];
-
-  /* data mode two */
-  buffer[DMB_OFFSET +  4] = data_mode_bits[2][0][0];
-  buffer[DMB_OFFSET +  5] = data_mode_bits[2][0][1];
-
-  /* data mode four */
-  buffer[DMB_OFFSET +  6] = data_mode_bits[4][0][0];
-  buffer[DMB_OFFSET +  7] = data_mode_bits[4][0][1];
-  buffer[DMB_OFFSET +  8] = data_mode_bits[4][1][0];
-  buffer[DMB_OFFSET +  9] = data_mode_bits[4][1][1];
-
-  /* data mode five */
-  buffer[DMB_OFFSET + 10] = data_mode_bits[5][0][0];
-  buffer[DMB_OFFSET + 11] = data_mode_bits[5][0][1];
-  buffer[DMB_OFFSET + 12] = data_mode_bits[5][1][0];
-  buffer[DMB_OFFSET + 13] = data_mode_bits[5][1][1];
-
-  /* data mode ten */
-  buffer[DMB_OFFSET + 14] = data_mode_bits[10][0][0];
-  buffer[DMB_OFFSET + 15] = data_mode_bits[10][0][1];
-  buffer[DMB_OFFSET + 16] = data_mode_bits[10][1][0];
-  buffer[DMB_OFFSET + 17] = data_mode_bits[10][1][1];
-
-  /* data mode twelve */
-  buffer[DMB_OFFSET + 18] = data_mode_bits[12][0][0];
-  buffer[DMB_OFFSET + 19] = data_mode_bits[12][0][1];
-  return DMB_OFFSET + 20;
+  buffer[11] = data_mode_bits[0][0];
+  buffer[12] = data_mode_bits[0][1];
+  buffer[13] = data_mode_bits[1][0];
+  buffer[14] = data_mode_bits[1][1];
+  return 15;
 }
 
 /* compose a PCM request packet for transmission to PCM
@@ -654,7 +622,7 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
 {
   static int last_turnaround = -1;
 
-  if (len != DMB_OFFSET + 20) {
+  if (len != 15) {
     bprintf(err, "Bad notice packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
@@ -675,7 +643,7 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
   *data_rate = (int)data[9];
   *squidveto = (int)data[10];
 
-  *data_mode_bits = data + DMB_OFFSET;
+  *data_mode_bits = data + 11;
 
   return 0;
 }
