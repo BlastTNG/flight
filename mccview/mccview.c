@@ -21,7 +21,7 @@
 #include <ncurses.h>
 
 #define DRIVE0_UNMAP 0x0004
-#define DRIVE0_MASK  0x000F
+#define DRIVE0_MASK  0x0007
 #define DRIVE1_UNMAP 0x0020
 #define DRIVE1_MASK  0x0038
 #define DRIVE2_UNMAP 0x0080
