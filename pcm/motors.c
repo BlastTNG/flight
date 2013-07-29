@@ -1318,7 +1318,7 @@ static void DoSineMode(double centre, double ampl, double el_start)
     /* start el step at position corresponding to t_step seconds before 
      * turn-around OR 0.05 deg. before turn-around, whichever is larger  */
     daz_step = ampl*(cos(sqrt(az_accel/ampl)*t_step) - 1.0);
-    daz_step = fabs(daz_step) > 0.05 ? daz_step : -0.05;
+    daz_step = fabs(daz_step) > 0.3 ? daz_step : -0.3;
     if (az >= (right + daz_step)) {
       past_step_point = 1;
       if ( past_step_point_last == 0 ) {
@@ -1377,7 +1377,7 @@ static void DoSineMode(double centre, double ampl, double el_start)
     /* start el step at position corresponding to t_step seconds before 
      * turn-around OR 0.05 deg. before turn_around, whichever is larger */
     daz_step = ampl*(1.0 - cos(sqrt(az_accel/ampl)*t_step));
-    daz_step = fabs(daz_step) > 0.05 ? daz_step : 0.05;
+    daz_step = fabs(daz_step) > 0.3 ? daz_step : 0.3;
     if (az <= (left + daz_step)) {
       past_step_point = 1;
       if ( past_step_point_last == 0 ) {
