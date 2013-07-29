@@ -725,7 +725,7 @@ union DerivedUnion DerivedChannels[] = {
    */
   BITWORD("UPPER_START_DMB", "data_mode_bits", 11, 5),
   BITWORD("UPPER_NBITS_DMB", "data_mode_bits",  6, 4),
-  BITWORD("LOWER_START_DBB", "data_mode_bits",  0, 5),
+  BITWORD("LOWER_START_DMB", "data_mode_bits",  0, 5),
   LINCOM("LOWER_NBITS_DMB", "UPPER_NBITS_DMB", -1, 16),
 
   END_OF_DERIVED_CHANNELS
