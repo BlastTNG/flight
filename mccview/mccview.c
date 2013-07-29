@@ -29,10 +29,10 @@
 
 struct fft { const char *fmt; gd_type_t type; };
 
-#define NF 17
+#define NF 16
 static const struct fft ff[NF] = {
   {"TIME_MCC%i", GD_UINT64},  /* 0 */
-  {"DATA_MODE_MCE%i", GD_UINT16}, /* 1 */
+  {"TILE_HEATER_MCE%i", GD_UINT16}, /* 1 */
   {"DF_0_MCC%i", GD_FLOAT64}, /* 2 */
   {"DF_1_MCC%i", GD_FLOAT64}, /* 3 */
   {"DF_2_MCC%i", GD_FLOAT64}, /* 4 */
@@ -47,16 +47,21 @@ static const struct fft ff[NF] = {
   {"DRIVE_MAP_MPC%i", GD_UINT16}, /* 13 */
   {"last_tune_mpc%i", GD_UINT16}, /* 14 */
   {"last_iv_mpc%i", GD_UINT16}, /* 15 */
-  {"TILE_HEATER_MCE%i", GD_UINT16}, /* 16 */
 };
 
-#define NGF 5
+#define NGF 11
 static const struct fft gf[NGF] = {
-  {"mce_blob", GD_UINT16},
-  {"blob_num_mpc", GD_UINT16},
-  {"reporting_mpcs", GD_UINT16},
-  {"alive_mpcs", GD_UINT16},
-  {"squid_veto", GD_UINT16},
+  {"mce_blob", GD_UINT16}, /* 0 */
+  {"blob_num_mpc", GD_UINT16}, /* 1 */
+  {"reporting_mpcs", GD_UINT16}, /* 2 */
+  {"alive_mpcs", GD_UINT16}, /* 3 */
+  {"squid_veto", GD_UINT16}, /* 4 */
+  {"BSET_NUM", GD_UINT16}, /* 5 */
+  {"data_mode", GD_UINT16}, /* 6 */
+  {"UPPER_START_DMB", GD_UINT16}, /* 7 */
+  {"UPPER_NBITS_DMB", GD_UINT16}, /* 8 */
+  {"LOWER_START_DMB", GD_UINT16}, /* 9 */
+  {"LOWER_NBITS_DMB", GD_UINT16}, /* 10 */
 };
 
 union du {
@@ -119,9 +124,11 @@ int main(int argc, char **argv)
     int f, x;
     size_t n;
     off_t fn = gd_nframes64(D) - 5;
-    printw("Frame: %lli     blob#%-6llu   mce_blob:0x%04llX  "
-        "reporting:%s   alive:%s   veto:%s\n", (long long)fn, gd[1].u64, gd[0].u64,
-        mcebits(2), mcebits(3), mcebits(4));
+    printw("Frame: %lli  blob#%-6llu  mce_blob:0x%04llX  reporting:%s  "
+        "alive:%s  veto:%s  bset:%03llu  dmode:%02llu  "
+        "dbm:%02llu+%02llu/%02llu+%02llu\n", (long long)fn, gd[1].u64,
+        gd[0].u64, mcebits(2), mcebits(3), mcebits(4), gd[5].u64,
+        gd[6].u64, gd[7].u64, gd[8].u64, gd[9].u64, gd[10].u64);
     char field[100];
 
     for (f = 0; f < NGF; ++f) {
@@ -132,6 +139,11 @@ int main(int argc, char **argv)
         n = gd_getdata(D, field, fn, 0, 0, 1, GD_UINT64, &gd[f].u64);
       else if (gf[f].type == GD_FLOAT64)
         n = gd_getdata(D, field, fn, 0, 0, 1, GD_FLOAT64, &gd[f].f64);
+
+      if (gd_error(D)) {
+        endwin();
+        return 1;
+      }
     }
 
     for (x = 0; x < 6; ++x) {
@@ -164,10 +176,6 @@ int main(int argc, char **argv)
       ct[20] = 0;
       printw("   %-22s", ct);
     }
-    printw("\n");
-
-    for (x = 0; x < 6; ++x)
-      printw(" data_mode:     %3llu      ", d[x][1].u64);
     printw("\n");
 
     for (f = 0; f < 4; ++f) {
@@ -228,7 +236,7 @@ int main(int argc, char **argv)
     printw("\n");
 
     for (x = 0; x < 6; ++x)
-      printw("heater: %11.3f V    ", f, d[x][16].f64);
+      printw("heater: %11.3f V    ", f, d[x][1].f64);
     printw("\n");
 
     refresh();
