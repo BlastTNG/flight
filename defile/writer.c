@@ -647,7 +647,8 @@ void InitialiseDirFile(int reset, unsigned long offset)
 
 #ifdef __SPIDER__
   if (rc.extra_format) {
-    sprintf(gpb, "/INCLUDE /data/etc/spider/format.mce_mplex\n");
+    sprintf(gpb, "/INCLUDE /data/etc/spider/format.mce_mplex\n"
+        "/INCLUDE /data/etc/spider/format.bolo_stats\n");
     if (write(fd, gpb, strlen(gpb)) < 0)
       berror(err, "Error writing to format file\n");
   }
