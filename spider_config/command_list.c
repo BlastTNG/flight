@@ -1279,6 +1279,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(data_mode), "Set the MCE data mode", GR_MPC, 1,
+    {
+      {"Data Mode", 0, 12, 'i', "NONE"}
+    }
+  },
+
   {COMMAND(data_mode_bits), "Change how 32->16 bit translation for TES data "
     "happens", GR_MPC, 5,
     {
@@ -1332,8 +1338,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {MCECMD2(integral_clamp, "Set the integral clamping level", GR_DET,
       "Level", 0, ((uint32_t)(-1)), 'l')},
-  {MCECMD2(data_mode, "Set the MCE data mode", GR_MPC, "Data Mode", 0, 12,
-      'i')},
   {COMMAND(tune_array), "Tune a focal plane with current tuning parameters",
     GR_MPC | MCECMD, 3,
     {

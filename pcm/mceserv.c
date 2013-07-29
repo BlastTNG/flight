@@ -123,6 +123,7 @@ static void ForwardNotices(int sock)
   static int last_dmb = 0;
   static int last_divisor = -1;
   static int last_squidveto = -1;
+  static int last_data_mode = -1;
   int this_divisor = CommandData.bbcIsExt ? CommandData.bbcExtFrameRate : 1;
   int this_turnaround = CommandData.pointing_mode.is_turn_around;
   int this_squidveto = CommandData.squidveto;
@@ -130,13 +131,15 @@ static void ForwardNotices(int sock)
   int this_nr = CommandData.sync_box.nr_value;
   int this_dr = CommandData.sync_box.fr_value;
   int this_dmb = CommandData.data_mode_bits_serial;
+  int this_data_mode = CommandData.data_mode;
   size_t len;
 
   /* edge triggers */
   if ((last_turnaround != -1 && last_turnaround == this_turnaround) &&
       (last_divisor == this_divisor) && (last_dmb == this_dmb) &&
       (last_rl == this_rl) && (last_nr == this_nr) && (last_dr == this_dr) &&
-      (last_squidveto == this_squidveto) && (request_ssdata == 0)
+      (last_squidveto == this_squidveto) && (request_ssdata == 0) &&
+      (last_data_mode == this_data_mode)
      )
   {
     /* no notices */
@@ -144,8 +147,8 @@ static void ForwardNotices(int sock)
   }
 
   len = mpc_compose_notice(this_divisor, this_turnaround, request_ssdata,
-      this_rl, this_nr, this_dr, this_squidveto, CommandData.data_mode_bits,
-      udp_buffer);
+      this_data_mode, this_rl, this_nr, this_dr, this_squidveto,
+      CommandData.data_mode_bits, udp_buffer);
 
   /* Broadcast this to everyone */
   if (udp_bcast(sock, MPC_PORT, len, udp_buffer, !InCharge))
@@ -158,6 +161,7 @@ static void ForwardNotices(int sock)
     last_nr = this_nr;
     last_dr = this_dr;
     last_squidveto = this_squidveto;
+    last_data_mode = this_data_mode;
     request_ssdata = 0;
   }
 }

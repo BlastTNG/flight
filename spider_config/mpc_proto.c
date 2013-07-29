@@ -129,7 +129,7 @@ size_t mpc_compose_param(const uint32_t *param, int nmce, char *buffer)
  *
  * PCM notice packet looks like:
  *
- * RRNDSTlnrVddd...
+ * RRNDSTMlnrVddd...
  *
  * where
  *
@@ -138,15 +138,16 @@ size_t mpc_compose_param(const uint32_t *param, int nmce, char *buffer)
  * D = divisor
  * S = super slow data request
  * T = turnaround flag
+ * M = data_mode
  * l = row_len
  * n = num_rows
  * r = data_rate
  * V = squid_veto
  * d = 20 bytes of data_mode_bits
  */
-#define DMB_OFFSET 10
+#define DMB_OFFSET 11
 size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
-    int row_len, int num_rows, int data_rate, uint8_t squidveto,
+    int data_mode, int row_len, int num_rows, int data_rate, uint8_t squidveto,
     char data_mode_bits[13][2][2], char *buffer)
 {
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
@@ -154,10 +155,11 @@ size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
   buffer[3] = divisor & 0xff;
   buffer[4] = request_ssdata ? 1 : 0,
   buffer[5] = turnaround ? 1 : 0;
-  buffer[6] = row_len;
-  buffer[7] = num_rows;
-  buffer[8] = data_rate;
-  buffer[9] = squidveto;
+  buffer[6] = data_mode;
+  buffer[7] = row_len;
+  buffer[8] = num_rows;
+  buffer[9] = data_rate;
+  buffer[10] = squidveto;
 
   /* we only report the useful data mode bits */
   /* data mode zero */
@@ -646,8 +648,9 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
 }
 
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
-    int *divisor, int *ssdata_req, int *row_len, int *num_rows, int *data_rate,
-    int *squidveto, size_t len, const char *data, const char *peer, int port)
+    int *divisor, int *ssdata_req, int *data_mode, int *row_len, int *num_rows,
+    int *data_rate, int *squidveto, size_t len, const char *data,
+    const char *peer, int port)
 {
   static int last_turnaround = -1;
 
@@ -666,10 +669,11 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     bprintf(info, "%s turnaround", data[5] ? "Into" : "Out of");
   last_turnaround = *turnaround = data[5];
 
-  *row_len = (int)data[6] * 2;
-  *num_rows = (int)data[7];
-  *data_rate = (int)data[8];
-  *squidveto = (int)data[9];
+  *data_mode = (int)data[6];
+  *row_len =   (int)data[7] * 2;
+  *num_rows =  (int)data[8];
+  *data_rate = (int)data[9];
+  *squidveto = (int)data[10];
 
   *data_mode_bits = data + DMB_OFFSET;
 

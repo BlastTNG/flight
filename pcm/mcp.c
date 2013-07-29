@@ -1008,6 +1008,7 @@ static void CloseBBC(int signo)
 
 void insertMCEData(unsigned short *RxFrame)
 {
+  static int no_data = 0;
   static int *offset = 0;
   static int mce_frameno;
   static int mce_mplex_offset;
@@ -1100,6 +1101,7 @@ void insertMCEData(unsigned short *RxFrame)
 
   if (tes_nfifo() > 0) {
     int i;
+    no_data = 0;
     data = tes_data();
     /* write the 32-bit MCE frame number */
     RxFrame[mce_frameno] = (unsigned short)(data->frameno & 0xFFFF);
@@ -1112,9 +1114,11 @@ void insertMCEData(unsigned short *RxFrame)
     //while (tes_nfifo() > 1)
     tes_pop();
   } else if (~mccs_reporting & ((1U << NUM_MCE) - 1)) {
-    /* mccs_reporting is active low */
-    bprintf(warning, "No MCEs reporting.");
-    mccs_reporting = (1U << NUM_MCE) - 1;
+    if (no_data++ > 10) {
+      /* mccs_reporting is active low */
+      bprintf(warning, "No MCEs reporting.");
+      mccs_reporting = (1U << NUM_MCE) - 1;
+    }
   }
 }
 

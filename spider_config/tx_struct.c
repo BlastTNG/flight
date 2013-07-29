@@ -872,12 +872,12 @@ struct ChannelStruct SlowChannels[] = {
   {"heat_26_hk",   'w',  RTD_D,  52,            1.0,          0.0, 'u', U_NONE},
 
   /* slow MCE data */
-  {"dmdm_mpc1",       'w',  LOOP6, 46, 1, 0, 'u', U_NONE},
-  {"dmdm_mpc2",       'w',  LOOP6, 47, 1, 0, 'u', U_NONE},
-  {"dmdm_mpc3",       'w',  LOOP6, 48, 1, 0, 'u', U_NONE},
-  {"dmdm_mpc4",       'w',  LOOP6, 49, 1, 0, 'u', U_NONE},
-  {"dmdm_mpc5",       'w',  LOOP6, 50, 1, 0, 'u', U_NONE},
-  {"dmdm_mpc6",       'w',  LOOP6, 51, 1, 0, 'u', U_NONE},
+  {"drive_map_mpc1",  'w',  LOOP6, 46, 1, 0, 'u', U_NONE},
+  {"drive_map_mpc2",  'w',  LOOP6, 47, 1, 0, 'u', U_NONE},
+  {"drive_map_mpc3",  'w',  LOOP6, 48, 1, 0, 'u', U_NONE},
+  {"drive_map_mpc4",  'w',  LOOP6, 49, 1, 0, 'u', U_NONE},
+  {"drive_map_mpc5",  'w',  LOOP6, 50, 1, 0, 'u', U_NONE},
+  {"drive_map_mpc6",  'w',  LOOP6, 51, 1, 0, 'u', U_NONE},
 
   {"df_0_mcc1",       'w',  LOOP6, 52, (1<<24), 0, 'u', U_NONE},
   {"df_0_mcc2",       'w',  LOOP6, 53, (1<<24), 0, 'u', U_NONE},
@@ -978,6 +978,8 @@ struct ChannelStruct SlowChannels[] = {
 
   /* END of MCE slow channels */
 
+  {"data_mode",       'w',  LOOP8, 12,   1,     0, 'u', U_NONE},
+  {"data_mode_bits",  'w',  LOOP8, 13,   1,     0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };

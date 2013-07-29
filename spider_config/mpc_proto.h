@@ -36,7 +36,6 @@ struct mpc_slow_data {
   uint32_t time; /* system time */
 
   uint16_t df[4]; /* data disk free in units of 2**24 bytes (16 MB) */
-  uint16_t data_mode; /* MCE data mode */
   uint16_t state; /* running state */
   uint16_t goal; /* operating goal */
   uint16_t task; /* current high-level task */
@@ -85,11 +84,12 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
     const char *peer, int port);
 
 size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
-    int row_len, int num_rows, int data_rate, uint8_t squidveto,
+    int data_mode, int row_len, int num_rows, int data_rate, uint8_t squidveto,
     char data_mode_bits[13][2][2], char *buffer);
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
-    int *divisor, int *ssdata_req, int *row_len, int *num_rows, int *data_rate,
-    int *squidveto, size_t len, const char *data, const char *peer, int port);
+    int *divisor, int *ssdata_req, int *data_mode, int *row_len, int *num_rows,
+    int *data_rate, int *squidveto, size_t len, const char *data,
+    const char *peer, int port);
 
 size_t mpc_compose_param(const uint32_t *stat, int nmce, char *buffer);
 int mpc_decompose_param(uint32_t *stat, size_t len, const char *data,

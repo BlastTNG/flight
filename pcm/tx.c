@@ -359,7 +359,7 @@ static void WriteMCESlow(void)
   unsigned int mux;
 
   static int firsttime = 1;
-  static struct NiosStruct *dmDmAddr[NUM_MCE];
+  static struct NiosStruct *driveMapAddr[NUM_MCE];
   static struct NiosStruct *df0MccAddr[NUM_MCE];
   static struct NiosStruct *df1MccAddr[NUM_MCE];
   static struct NiosStruct *df2MccAddr[NUM_MCE];
@@ -379,6 +379,8 @@ static void WriteMCESlow(void)
   static struct NiosStruct *reportingMPCsAddr;
   static struct NiosStruct *aliveMPCsAddr;
   static struct NiosStruct *squidVetoAddr;
+  static struct NiosStruct *dataModeAddr;
+  static struct NiosStruct *dataModeBitsAddr;
 
   int ind;
 
@@ -386,7 +388,7 @@ static void WriteMCESlow(void)
     int i;
     firsttime = 0;
     for (i = 0; i < NUM_MCE; i++) {
-      dmDmAddr[i] = GetMCCNiosAddr("dmdm_mpc", i);
+      driveMapAddr[i] = GetMCCNiosAddr("drive_map_mpc", i);
       df0MccAddr[i] = GetMCCNiosAddr("df_0_mcc", i);
       df1MccAddr[i] = GetMCCNiosAddr("df_1_mcc", i);
       df2MccAddr[i] = GetMCCNiosAddr("df_2_mcc", i);
@@ -406,13 +408,14 @@ static void WriteMCESlow(void)
     reportingMPCsAddr = GetNiosAddr("reporting_mpcs");
     aliveMPCsAddr = GetNiosAddr("alive_mpcs");
     squidVetoAddr = GetNiosAddr("squid_veto");
+    dataModeAddr = GetNiosAddr("data_mode");
+    dataModeBitsAddr = GetNiosAddr("data_mode_bits");
   }
 
   for (mux=0; mux<NUM_MCE; mux++) {
     ind = GETREADINDEX(mce_slow_index[mux]);
 
-    WriteData(dmDmAddr[mux], (mce_slow_dat[mux][ind].data_mode & 0xFF << 8)
-        | (mce_slow_dat[mux][ind].drive_map & 0xFF), NIOS_QUEUE);
+    WriteData(driveMapAddr[mux], mce_slow_dat[mux][ind].drive_map, NIOS_QUEUE);
     WriteData(timeMccAddr[mux], mce_slow_dat[mux][ind].time, NIOS_QUEUE);
     WriteData(df0MccAddr[mux], mce_slow_dat[mux][ind].df[0], NIOS_QUEUE);
     WriteData(df1MccAddr[mux], mce_slow_dat[mux][ind].df[1], NIOS_QUEUE);
@@ -435,6 +438,12 @@ static void WriteMCESlow(void)
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
   WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
   WriteData(squidVetoAddr, CommandData.squidveto, NIOS_QUEUE);
+  WriteData(dataModeBitsAddr,
+      ((CommandData.data_mode_bits[CommandData.data_mode][0][0] & 0x1F) << 11) |
+      ((CommandData.data_mode_bits[CommandData.data_mode][0][1] & 0x0F) <<  6) |
+      (CommandData.data_mode_bits[CommandData.data_mode][1][0] & 0x1F),
+      NIOS_QUEUE);
+  WriteData(dataModeAddr, CommandData.data_mode, NIOS_QUEUE);
 
   /* this field is active low */
   WriteData(reportingMPCsAddr, (~mccs_reporting) & 0x3F, NIOS_QUEUE);

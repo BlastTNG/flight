@@ -715,18 +715,18 @@ union DerivedUnion DerivedChannels[] = {
   BITWORD( "GOAL_MPC6", "dtg_mpc6", 8, 8),
   BITWORD("DTASK_MPC6", "dtg_mpc6", 0, 8),
 
-  BITWORD("DATA_MODE_MCE1", "dmdm_mpc1", 8, 8),
-  BITWORD("DRIVE_MAP_MPC1", "dmdm_mpc1", 0, 8),
-  BITWORD("DATA_MODE_MCE2", "dmdm_mpc2", 8, 8),
-  BITWORD("DRIVE_MAP_MPC2", "dmdm_mpc2", 0, 8),
-  BITWORD("DATA_MODE_MCE3", "dmdm_mpc3", 8, 8),
-  BITWORD("DRIVE_MAP_MPC3", "dmdm_mpc3", 0, 8),
-  BITWORD("DATA_MODE_MCE4", "dmdm_mpc4", 8, 8),
-  BITWORD("DRIVE_MAP_MPC4", "dmdm_mpc4", 0, 8),
-  BITWORD("DATA_MODE_MCE5", "dmdm_mpc5", 8, 8),
-  BITWORD("DRIVE_MAP_MPC5", "dmdm_mpc5", 0, 8),
-  BITWORD("DATA_MODE_MCE6", "dmdm_mpc6", 8, 8),
-  BITWORD("DRIVE_MAP_MPC6", "dmdm_mpc6", 0, 8),
+  /* data_mode_bits is:
+   * UUUUU.uuuu.LLLLL
+   *
+   * U = upper start bit
+   * u = upper nbits
+   * L = lower start bit
+   * also: lower nbits = 16 - upper nbits
+   */
+  BITWORD("UPPER_START_DMB", "data_mode_bits", 11, 5),
+  BITWORD("UPPER_NBITS_DMB", "data_mode_bits",  6, 4),
+  BITWORD("LOWER_START_DBB", "data_mode_bits",  0, 5),
+  LINCOM("LOWER_NBITS_DMB", "UPPER_NBITS_DMB", -1, 16),
 
   END_OF_DERIVED_CHANNELS
 };

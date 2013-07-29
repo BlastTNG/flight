@@ -480,6 +480,7 @@ struct CommandDataStruct {
   int bset_num; /* current bolo set number */
 
   /* MCE data mode 32->16 bit conversion stuff */
+  int data_mode;
   char data_mode_bits[13][2][2];
   int data_mode_bits_serial;
 

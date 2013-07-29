@@ -1883,6 +1883,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
       /* MPC related things handled by PCM */
+    case data_mode:
+      CommandData.data_mode = ivalues[0];
+      break;
     case data_mode_bits:
       if (ivalues[0] >= 0 && ivalues[0] <= 12) { /* try to avoid crashing */
         CommandData.data_mode_bits[ivalues[0]][0][0] = (char)ivalues[1];
@@ -2366,6 +2369,7 @@ void InitCommandData()
   CommandData.sync_box.fr_value = 120;
 
   /* some data modes are unsupported and so not initialised here */
+  CommandData.data_mode = 10;
   CommandData.data_mode_bits[ 0][0][0] = 16;
   CommandData.data_mode_bits[ 0][0][1] = 16;
   CommandData.data_mode_bits[ 1][0][0] = 16;
