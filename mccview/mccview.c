@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     off_t fn = gd_nframes64(D) - 5;
     printw("Frame: %lli  blob#%-6llu  mce_blob:0x%04llX  reporting:%s  "
         "alive:%s  veto:%s  bset:%03llu  dmode:%02llu  "
-        "dbm:%02llu+%02llu/%02llu+%02llu\n", (long long)fn, gd[1].u64,
+        "bits:%02llu+%02llu/%02llu+%02llu\n", (long long)fn, gd[1].u64,
         gd[0].u64, mcebits(2), mcebits(3), mcebits(4), gd[5].u64,
         gd[6].u64, gd[7].u64, gd[8].u64, gd[9].u64, gd[10].u64);
     char field[100];
