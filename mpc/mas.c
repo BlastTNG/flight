@@ -1348,7 +1348,7 @@ void *mas_data(void *dummy)
     }
     data_tk = dt_idle;
 
-    if (!mceveto)
+    if (!mceveto && state & st_mcecom)
     /* pop a block from the queue, if there are any,
      * otherwise, poll the temperature, if requested */
       if (!pop_block() && mas_get_temp) {
