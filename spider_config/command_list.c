@@ -1281,14 +1281,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(data_mode), "Set the MCE data mode", GR_MPC, 1,
     {
-      {"Data Mode", 0, 12, 'i', "NONE"}
+      {"Data Mode", 0, 12, 'i', "DATA_MODE"}
     }
   },
 
   {COMMAND(data_mode_bits), "Change how 32->16 bit translation for TES data "
     "happens", GR_MPC, 5,
     {
-      {"Data mode", 0, 12, 'i', ""},
+      {"Data mode", 0, 12, 'i', "DATA_MODE"},
       {"Upper subfield first bit", 0, 32, 'i', ""},
       {"Upper subfield num bits", 0, 32, 'i', ""},
       {"Lower subfield first bit", 0, 32, 'i', ""},

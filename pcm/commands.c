@@ -2411,7 +2411,7 @@ void InitCommandData()
   CommandData.data_mode_bits[12][1][1] =  0;
   CommandData.data_mode_bits_serial = 0;
 
-  CommandData.mce_blob_num = 0xEB90;
+  CommandData.mce_blob_num = (rand() % 0x10000);
 
   CommandData.mcc_wdog = 0;
 
