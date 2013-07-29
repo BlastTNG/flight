@@ -171,47 +171,35 @@ int num_rows = -1, row_len = -1, data_rate = -1;
 static int tile_heater_timeout = -1;
 static int tile_heater_is_off = 0;
 
-static void set_data_mode_bits(int i, int both, const char *dmb)
+static void set_data_mode_bits(int i, const char *dmb)
 {
   if (data_modes[i][0].first_bit != dmb[0] ||
       data_modes[i][0].num_bits != dmb[1] ||
-      (both && (data_modes[i][1].first_bit != dmb[2] ||
-                data_modes[i][1].num_bits != dmb[3])))
+      (data_modes[i][1].first_bit != dmb[2] ||
+                data_modes[i][1].num_bits != dmb[3]))
   {
     /* sanity checks */
     if (dmb[0] + dmb[1] > 32)
       goto BAD_DMB;
 
-    if (both)
-      if (dmb[1] + dmb[3] != 16 || dmb[2] + dmb[3] > 32 ||
-          dmb[2] + dmb[3] > dmb[0])
-        goto BAD_DMB;
+    if (dmb[1] + dmb[3] != 16 || dmb[2] + dmb[3] > 32 ||
+        dmb[2] + dmb[3] > dmb[0])
+      goto BAD_DMB;
 
     /* update */
-    if (both)
-      bprintf(info, "Set extraction bits for data_mode %i to: %i:%i/%i:%i",
-          i, dmb[0], dmb[1], dmb[2], dmb[3]);
-    else
-      bprintf(info, "Set extraction bits for data_mode %i to: %i:%i/-:-",
-          i, dmb[0], dmb[1]);
+    bprintf(info, "Set extraction bits for data_mode %i to: %i:%i/%i:%i",
+        i, dmb[0], dmb[1], dmb[2], dmb[3]);
 
     data_modes[i][0].first_bit = dmb[0];
     data_modes[i][0].num_bits = dmb[1];
-    if (both) {
-      data_modes[i][1].first_bit = dmb[2];
-      data_modes[i][1].num_bits = dmb[3];
-    }
+    data_modes[i][1].first_bit = dmb[2];
+    data_modes[i][1].num_bits = dmb[3];
 
     return;
 
 BAD_DMB:
-    if (both)
-      bprintf(info, "Ignoring bad bits for data_mode %i: %i:%i/%i:%i",
-          i, dmb[0], dmb[1], dmb[2], dmb[3]);
-    else
-      bprintf(info, "Ignoring bad bits for data_mode %i: %i:%i/-:-",
-          i, dmb[0], dmb[1]);
-
+    bprintf(info, "Ignoring bad bits for data_mode %i: %i:%i/%i:%i",
+        i, dmb[0], dmb[1], dmb[2], dmb[3]);
   }
 }
 
@@ -254,13 +242,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     }
 
     /* update the data_modes definition */
-    set_data_mode_bits(0, 0, data_mode_bits + 0);
-    set_data_mode_bits(1, 0, data_mode_bits + 2);
-    set_data_mode_bits(2, 0, data_mode_bits + 4);
-    set_data_mode_bits(4, 1, data_mode_bits + 6);
-    set_data_mode_bits(5, 1, data_mode_bits + 10);
-    set_data_mode_bits(10, 1, data_mode_bits + 14);
-    set_data_mode_bits(12, 0, data_mode_bits + 18);
+    set_data_mode_bits(req_dm, data_mode_bits);
   } else {
     /* send a request, if necessary */
     char data[UDP_MAXSIZE];
