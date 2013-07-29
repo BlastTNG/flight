@@ -1026,7 +1026,8 @@ static int bias_step(void)
   for (j = 0; j < goal.stop; ++j) {
     bprintf(info, "Bias Step up");
     for (i = 0; i < 16; ++i)
-      bias[i] += goal.step;
+      if (bias[i])
+        bias[i] += goal.step;
     write_param("tes", "bias", 0, bias, 16);
 
     if (check_wait(goal.wait))
@@ -1035,7 +1036,8 @@ static int bias_step(void)
     /* step down */
     bprintf(info, "Bias Step down");
     for (i = 0; i < 16; ++i)
-      bias[i] -= 2 * goal.step;
+      if (bias[i])
+        bias[i] -= 2 * goal.step;
     write_param("tes", "bias", 0, bias, 16);
 
     if (check_wait(goal.wait))
@@ -1043,7 +1045,8 @@ static int bias_step(void)
 
     /* back to normal */
     for (i = 0; i < 16; ++i)
-      bias[i] += goal.step;
+      if (bias[i])
+        bias[i] += goal.step;
   }
   bprintf(info, "Bias Step finished");
   write_param("tes", "bias", 0, bias, 16);
