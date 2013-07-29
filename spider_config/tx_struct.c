@@ -370,6 +370,7 @@ struct ChannelStruct SlowChannels[] = {
 
   /* default current cal is 12.5, 0.0 */
   {"i_mce",        'r',  DIOD_A1,   49, CAL16(12.5, 0.0),      'u', U_I_A},
+  {"chopper",      'r',  RTD_A1,    49, CAL16(1.00, 0.0),      'u', U_V_V},
   {"i_hk_misc",    'r',  RTD_A2,    49, CAL16(12.5, 0.0),      'u', U_I_A},
 
   /* spare IF analog inputs */
