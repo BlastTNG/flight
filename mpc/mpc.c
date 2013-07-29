@@ -714,17 +714,18 @@ static void prm_set_int_cr(int p, const char *name, int c, int r, int v, int a)
 static void prm_set_servo(int c, int r, char l, uint32_t v, int a)
 {
   int i;
-  char rc[] = "rc1";
 
   /* apply */
   if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
+    int col = c;
     char param[] = "gain?#";
-    if (c >= 8) {
-      c -= 8;
+    char rc[] = "rc1";
+    if (col >= 8) {
+      col -= 8;
       rc[2] = '2';
     }
     param[4] = l;
-    param[5] = c + '0';
+    param[5] = col + '0';
 
     if (r == -1) {
       /* vet via dead and frail masks */
@@ -747,8 +748,6 @@ static void prm_set_servo(int c, int r, char l, uint32_t v, int a)
     } else 
       push_block(rc, param, r, &v, 1);
   }
-
-  if (rc[2] == '2') c += 8;
 
   /* record default */
   if (a == PRM_DEFAULT_ONLY) {
@@ -980,6 +979,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
   if (ev->is_multi) {
     switch (ev->command) {
       /* goal switching */
+      case drive_check:
+        state &= ~st_drives;
+        break;
       case reconfig:
         state &= ~st_config;
         new_goal.goal = gl_acq;
@@ -1049,7 +1051,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_TOGGLE(sq1_servo_bias_on, sq1_servo_bias_off,
             "sq1_servo_bias_ramp");
         CFG_SETSCS(sq1_servo_flux);
-	CFG_SETSCS(sq1_servo_bias);
+        CFG_SETSCS(sq1_servo_bias);
         CFG_TOGGLE(sq2_servo_bias_on, sq2_servo_bias_off,
             "sq2_servo_bias_ramp");
         CFG_SETSCS(sq2_servo_flux);

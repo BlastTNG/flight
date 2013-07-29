@@ -453,8 +453,7 @@ void cfg_apply_tuning(int n)
 
   /* the list of parameters to copy */
   const char *param[] = {"adc_offset_c", "adc_offset_cr", "sa_fb",
-			 "sa_offset", "sq1_bias", "sq1_bias_off",
-			 "sq2_fb", "sq2_fb_set", NULL};
+    "sa_offset", "sq1_bias", "sq1_bias_off", "sq2_fb", "sq2_fb_set", NULL};
 
   /* try to read an archive */
   if (tuning_filename("experiment.cfg", n, file) == 0)
@@ -485,14 +484,13 @@ void cfg_apply_tuning(int n)
     copy_error = 1;
 
   if (!copy_error) { /* probably means it's completely corrupt, but... meh */
-    expt_cfg_dirty = 1;
-    flush_experiment_cfg(0);
+    flush_experiment_cfg(1);
 
     /* force reconfig */
     state &= ~st_config;
-  }
 
-  bprintf(info, "copied parameters from %s\n", file);
+    bprintf(info, "copied parameters from %s\n", file);
+  }
 
   config_destroy(&cfg);
   return;

@@ -1322,6 +1322,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(force_config, "Start data acquisition without reconfiguring",
       GR_MPC)},
   {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_MPC)},
+  {MCECMD1(drive_check, "Force MPC to recheck its data drives", GR_MPC)},
   {MCECMD1(pause_acq, "Pause data acquisition", GR_MPC)},
   {MCECMD1P(send_exptcfg, "Send down experiment.cfg", GR_MPC)},
   {MCECMD1P(reload_mce_config, "Reset experiment.cfg to template",

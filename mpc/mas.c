@@ -1173,6 +1173,9 @@ static int reconfig(void)
 {
   uint32_t u32;
 
+  /* ensure we're synced */
+  flush_experiment_cfg(0);
+
   if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_make_config", NULL, 100, 1,
         NULL))
   {
