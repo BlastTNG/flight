@@ -716,15 +716,15 @@ union DerivedUnion DerivedChannels[] = {
   BITWORD("DTASK_MPC6", "dtg_mpc6", 0, 8),
 
   /* data_mode_bits is:
-   * UUUUU.uuuu.LLLLL
+   * .UUUUUuuuuuLLLLL
    *
    * U = upper start bit
    * u = upper nbits
    * L = lower start bit
    * also: lower nbits = 16 - upper nbits
    */
-  BITWORD("UPPER_START_DMB", "data_mode_bits", 11, 5),
-  BITWORD("UPPER_NBITS_DMB", "data_mode_bits",  6, 4),
+  BITWORD("UPPER_START_DMB", "data_mode_bits", 10, 5),
+  BITWORD("UPPER_NBITS_DMB", "data_mode_bits",  5, 5),
   BITWORD("LOWER_START_DMB", "data_mode_bits",  0, 5),
   LINCOM("LOWER_NBITS_DMB", "UPPER_NBITS_DMB", -1, 16),
 

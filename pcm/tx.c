@@ -439,8 +439,8 @@ static void WriteMCESlow(void)
   WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
   WriteData(squidVetoAddr, CommandData.squidveto, NIOS_QUEUE);
   WriteData(dataModeBitsAddr,
-      ((CommandData.data_mode_bits[CommandData.data_mode][0][0] & 0x1F) << 11) |
-      ((CommandData.data_mode_bits[CommandData.data_mode][0][1] & 0x0F) <<  6) |
+      ((CommandData.data_mode_bits[CommandData.data_mode][0][0] & 0x1F) << 10) |
+      ((CommandData.data_mode_bits[CommandData.data_mode][0][1] & 0x1F) <<  5) |
       (CommandData.data_mode_bits[CommandData.data_mode][1][0] & 0x1F),
       NIOS_QUEUE);
   WriteData(dataModeAddr, CommandData.data_mode, NIOS_QUEUE);
