@@ -1645,8 +1645,8 @@ int mcom_validate(enum multiCommand cmd, const int *ivalues,
        */
 
       /* everything must fit in 32-bits */
-      if ((ivalues[1] + ivalues[2] >= 32) ||
-          (ivalues[1] + ivalues[2] >= 32))
+      if ((ivalues[1] + ivalues[2] > 32) ||
+          (ivalues[1] + ivalues[2] > 32))
       {
         snprintf(err_buffer, buflen, "Subfields exceed 32-bits");
         return 1;
