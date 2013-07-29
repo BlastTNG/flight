@@ -1319,7 +1319,7 @@ static int read_mem(void)
   }
 
   bprintf(info, "Restored memory from /data%i", have_mem);
-  return 0;
+  return 1;
 }
 
 /* find a tuning file -- returns 1 on error */

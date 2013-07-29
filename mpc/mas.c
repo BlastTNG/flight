@@ -758,7 +758,7 @@ BAD_ARRAY_ID:
 
 static int set_directory(void)
 {
-  int i;
+  int i, r = 1;
   char data_root[] = "/data#/mce";
   char *argv[] = {"set_directory", data_root, NULL};
   for (i = 0; i < 4; ++i) {
@@ -768,13 +768,13 @@ static int set_directory(void)
     data_root[5] = i + '0';
     write_array_id(i);
     if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1,
-        NULL))
+        NULL) == 0)
     {
-      return 1;
+      r = 0; /* at least one drive works */
     }
   }
 
-  return 0;
+  return r;
 }
 
 #define KICK_DONT_BIAS 4000000000U

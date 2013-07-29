@@ -36,6 +36,7 @@ today=`date +%Y%m%d`
 if [ ! -e $today ]; then
   ln -sf current_data $today
 fi
+echo current_data > current_data_name
 
 # Determine array name and names of config files
 array_id=`cat ${data_root}/array_id`
