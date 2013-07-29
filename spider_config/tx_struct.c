@@ -464,7 +464,7 @@ struct ChannelStruct SlowChannels[] = {
   {"cal_d_pss4",       'w', LOOP2, 35,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},
   {"mapsigma_g",       'w', LOOP2, 36,         1.0/10.0,  0.0, 'u',     U_NONE},
   {"size_el_step",     'w', LOOP2, 37,      1.0/65536.0,  0.0, 'u',    U_P_DEG},
-  {"n_el_steps",       'w', LOOP2, 38,    100.0/65536.0,  0.0, 'u',     U_NONE},
+  {"n_el_steps",       'w', LOOP2, 38,    500.0/65536.0,  0.0, 'u',     U_NONE},
   {"foc_rng_g",        'w', LOOP2, 39,              1.0,  0.0, 'u',     U_NONE},
   {"cal_d_pss5",       'w', LOOP2, 40,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},
   {"bbc_sync_auto",    'w', LOOP2, 41,              1.0,  0.0, 'u',     U_NONE},

@@ -68,7 +68,7 @@
 #define CNTS_PER_DEG (65536.0/360.0)
 #define CM_PER_ENC (1000.0/72000.0)
 #define TOLERANCE 0.02    // max acceptable el pointing error (deg)
-#define TWIST_TOL 0.1     // max acceptable port-strbrd enc diff (deg)
+#define TWIST_TOL 0.5     // max acceptable port-strbrd enc diff (deg)
 #define EL_REL_MIN 0.005  // min size of el relative move (= 1 count)
 #define EL_ON_DELAY 0.40  // turn-on delay of el drive when in auto mode
 

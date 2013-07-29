@@ -565,7 +565,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Az MAX Acceleration (deg/s^2)",  0.0, 100.0, 'f', "ACCEL_MAX_AZ"},
       {"Number of half-scans per el microstep", 1, 100, 'i', "N_SCAN_PER_STEP"},
       {"El microstep size (deg)", 0.0, 1.0, 'f', "SIZE_EL_STEP"},
-      {"Total number of el microsteps", 1, 100, 'i', "N_EL_STEPS"},
+      {"Total number of el microsteps", 1, 500, 'i', "N_EL_STEPS"},
       {"Az Overshoot Band (deg)", 0.0, 30.0, 'f', "BAND_AZ"},
       {"Az Time Delay (frames)",     0.0,  10.0, 'f', "DELAY_AZ"}
     }
@@ -590,7 +590,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"scan amplitude (deg)",        0, 90, 'f', "AMPL_P"},
       {"scan az centre (deg)",        0, 360,'f', "AZ"},
-      {"scan elevation (deg)",        20, 50, 'f', "EL"},
+      {"scan elevation (deg)",        15, 50, 'f', "EL"},
     }
   },   
   {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
