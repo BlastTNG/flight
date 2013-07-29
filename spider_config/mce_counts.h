@@ -2,9 +2,9 @@
 #define N_MCE_PHYS 276
 #define N_MCE_SYS  2
 #define N_MCE_VIRT 28
-#define N_EXP_CFG  2179
+#define N_EXP_CFG  2178
 #define N_EXP_OFF  4867
-#define N_MCE_STAT 7046
+#define N_MCE_STAT 7045
 
 #define FIRST_AC_PARAM 261
 #define  LAST_AC_PARAM 275

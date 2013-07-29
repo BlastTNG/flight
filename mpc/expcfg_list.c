@@ -104,7 +104,6 @@ const struct cfg_serial expcfg_list[] = {
   {"default_sq2_bias", CFGSER_INT, 2096, 16},          /* total: 2112 */
   {"default_sq1_bias", CFGSER_INT, 2112, 33},          /* total: 2145 */
   {"default_sq1_bias_off", CFGSER_INT, 2145, 33},      /* total: 2178 */
-  {"sample_num", CFGSER_INT, 2178, 1},                 /* total: 2179 */
   {0}
 };
 
