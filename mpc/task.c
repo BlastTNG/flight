@@ -84,24 +84,33 @@ static const int power_wait[] = { 10, 10, 20, 40, 60, 0 };
 static unsigned task_set_drives(void)
 {
   uint8_t map = 0;
-  int new_data_drive[3];
+  int i, new_data_drive[3];
   char data_root[] = "/data#/mce";
+  uint16_t df[4];
+
+  /* wait for a slow data update */
+  drives_checked = 0;
+  while (!drives_checked)
+    usleep(100000);
+
+  for (i = 0; i < 4; ++i)
+    df[i] = disk_bad[i] ? 0 : slow_dat.df[i];
 
   int best_spinner, second_spinner, the_solid;
 
   /* rate the drives */
-  if (slow_dat.df[2] > slow_dat.df[3]) {
+  if (df[2] > df[3]) {
     best_spinner = 2;
-    second_spinner = (slow_dat.df[3] > 0) ? 3 : -1;
-  } else if (slow_dat.df[3] > 0) {
+    second_spinner = (df[3] > 0) ? 3 : -1;
+  } else if (df[3] > 0) {
     best_spinner = 3;
-    second_spinner = (slow_dat.df[2] > 0) ? 2 : -1;
+    second_spinner = (df[2] > 0) ? 2 : -1;
   } else
     best_spinner = second_spinner = -1;
 
-  if (slow_dat.df[0] > slow_dat.df[1])
+  if (df[0] > df[1])
     the_solid = 0;
-  else if (slow_dat.df[1] > 0)
+  else if (df[1] > 0)
     the_solid = 1;
   else
     the_solid = -1;
@@ -277,7 +286,6 @@ static void task_dt_script(enum dtask dt, enum modas on_moda,
   moda = on_moda;
   task_off_moda = off_moda;
   task_off_reconfig = reconfig;
-  meta_tk = 0;
 }
 
 /* run generic tasks */
@@ -373,25 +381,18 @@ void *task(void *dummy)
               }
 
               /* done */
-              meta_tk = 0;
               break;
             case st_active:
               mceveto = 0;
               state |= st_active;
-              meta_tk = 0;
               break;
             case st_mcecom:
               task_reset_mce();
-              meta_tk = 0;
               break;
             case st_config:
               /* MCE reconfig */
-              if (dt_wait(dt_reconfig)) {
-                comms_lost = 1;
-              } else {
+              if (dt_wait(dt_reconfig) == 0)
                 state |= st_config;
-                meta_tk = 0;
-              }
               break;
             case st_acqcnf:
               /* "mce status" */
@@ -399,10 +400,8 @@ void *task(void *dummy)
                 comms_lost = 1;
               else if (dt_wait(dt_acqcnf)) /* acq config */
                 comms_lost = 1;
-              else {
+              else
                 state |= st_acqcnf;
-                meta_tk = 0;
-              }
               break;
             case st_retdat:
               if (check_acq) { /* probably means an acquisition immediately
@@ -413,12 +412,10 @@ void *task(void *dummy)
               } 
               check_acq = 1;
               /* start acq */
-              if (dt_wait(dt_startacq)) {
+              if (dt_wait(dt_startacq))
                 comms_lost = 1;
-              } else {
+              else
                 state |= st_retdat;
-                meta_tk = 0;
-              }
               break;
           }
         else /* moda start */
@@ -427,7 +424,6 @@ void *task(void *dummy)
               break;
             case md_running: /* nop mode */
               moda = md_running;
-              meta_tk = 0;
               break;
             case md_tuning:
               /* auto_setup */
@@ -458,18 +454,15 @@ void *task(void *dummy)
             case st_drives:
             case st_mcecom:
               task_stop_acq(0);
-              meta_tk = 0;
               break;
             case st_config:
               /* sledgehammer based stop acq */
               task_reset_mce();
-              meta_tk = 0;
               break;
             case st_active:
               dt_error = dt_wait(dt_stopmce);
               mceveto = 1;
               state &= ~(st_config | st_active);
-              meta_tk = 0;
               break;
           }
         else /* moda stop */
@@ -477,7 +470,6 @@ void *task(void *dummy)
             case md_none: /* just to shut CC up */
               break;
             case md_running: /* nop mode */
-              meta_tk = 0;
               moda = md_none;
               break;
             case md_tuning:
@@ -486,16 +478,15 @@ void *task(void *dummy)
               dt_kill();
               task_reset_mce();
               moda = md_none;
-              meta_tk = 0;
               break;
             case md_bstep:
             case md_bramp:
               dt_kill();
               moda = md_none;
-              meta_tk = 0;
               break;
           }
       }
+      meta_tk = 0;
     } else /* no new task, run the current moda */
       task_run_moda();
     usleep(10000);

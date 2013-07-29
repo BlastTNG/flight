@@ -89,7 +89,8 @@ void meta(void)
 
   /* now, moda is either md_none, or one of the allowed modas for this goal */
 
-  else if (working_goal == gl_stop || (state && (~state & st_drives))) {
+  if (working_goal == gl_stop || ((state & ~st_active) && (~state & st_drives)))
+  {
     /* stop stuff */
     if (state & st_retdat)
       meta_tk = st_retdat | STOP_TK;
@@ -97,7 +98,7 @@ void meta(void)
       meta_tk = st_acqcnf | STOP_TK;
     else if (state & st_config)
       meta_tk = st_config | STOP_TK;
-    else if (state & st_active)
+    else if (working_goal == gl_stop && state & st_active)
       meta_tk = st_active | STOP_TK;
   /* low-level stuff everyone but gl_stop wants */
   } else if (~state & st_drives) /* everyone wants this */

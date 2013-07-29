@@ -588,17 +588,17 @@ static int acq_err(void *user_data, int sync_num, int err,
       return 0;
     case 1: /* primary */
       bprintf(info, "primary drive failed; stopping acq");
-      drive_map = (drive_map & ~DRIVE0_MASK) | DRIVE0_UNMAP;
+      drive_error[data_drive[0]] = 1;
       acq_check_drives = 1;
       break;
     case 2: /* secondary */
       bprintf(info, "secondary drive failed; stopping acq");
-      drive_map = (drive_map & ~DRIVE1_MASK) | DRIVE1_UNMAP;
+      drive_error[data_drive[1]] = 1;
       acq_check_drives = 1;
       break;
     case 3: /* teritary */
       bprintf(info, "tertiary drive failed; stopping acq");
-      drive_map = (drive_map & ~DRIVE2_MASK) | DRIVE2_UNMAP;
+      drive_error[data_drive[1]] = 2;
       acq_check_drives = 1;
       break;
   }
@@ -762,16 +762,18 @@ static int set_directory(void)
   char data_root[] = "/data#/mce";
   char *argv[] = {"set_directory", data_root, NULL};
   for (i = 0; i < 4; ++i) {
-    if (slow_dat.df[i] == 0)
+    if (disk_bad[i])
       continue;
 
     data_root[5] = i + '0';
     write_array_id(i);
     if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1,
-        NULL) == 0)
+        NULL))
     {
-      r = 0; /* at least one drive works */
-    }
+      drive_error[i] = 1;
+      state &= ~st_drives;
+    } else
+      r = 0; /* at least one good drive */
   }
 
   return r;
@@ -938,7 +940,7 @@ static int ivcurve(void)
         data_drive[0] + '0', memory.last_iv);
 
     for (d = 0; d < 4; ++d)
-      if (slow_dat.df[d]) {
+      if (!disk_bad[d]) {
         basedir[5] = d + '0';
         exec_and_wait(sched, none, argv[0], (char**)argv, 100, 0, NULL);
         bprintf(info, "Archived IV curve as %s/iv_%04i", basedir,
@@ -1149,7 +1151,7 @@ static int tune(void)
       argv[3] = tuning_dir;
       argv[4] = NULL;
       for (d = 0; d < 4; ++d)
-        if (slow_dat.df[d]) {
+        if (!disk_bad[d]) {
           tuning_dir[5] = '0' + d;
           exec_and_wait(sched, none, argv[0], (char**)argv, 100, 0, NULL);
           bprintf(info, "Archived tuning as %s\n", tuning_dir);
@@ -1179,7 +1181,8 @@ static int reconfig(void)
   if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_make_config", NULL, 100, 1,
         NULL))
   {
-    comms_lost = 1;
+    drive_error[data_drive[0]] = 1; /* must be a drive error */
+    state &= ~st_drives;
     return 1;
   }
 

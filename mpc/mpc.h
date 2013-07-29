@@ -62,7 +62,11 @@ extern int divisor;
 extern int veto;
 extern int kill_special;
 extern int dt_going;
+extern int drives_checked;
 extern int data_drive[3];
+extern int drive_error[4];
+extern int disk_bad[4];
+
 extern char array_id[100];
 extern uint16_t bset_num;
 extern struct mpc_slow_data slow_dat;

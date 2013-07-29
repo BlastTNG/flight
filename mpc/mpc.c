@@ -85,6 +85,9 @@ int cur_dm = -1;
 /* The requested data mode */
 int req_dm = 10;
 
+/* Drive check semaphore */
+int drives_checked;
+
 /* Kill switch */
 int terminate = 0;
 
@@ -116,6 +119,9 @@ int blockq_head = 0, blockq_tail = 0;
 /* drive map */
 uint8_t drive_map = DRIVE0_UNMAP | DRIVE1_UNMAP | DRIVE2_UNMAP;
 int data_drive[3] = {-1, -1, -1};
+int drive_error[4]; /* high level error on drive */
+int disk_bad[4]; /* disk marked bad */
+
 
 /* the list of bolometers to send to PCM */
 uint16_t bset_num = 0xFFFF;
@@ -286,8 +292,6 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
   }
 }
 
-static int disk_bad[4] = { 0, 0, 0, 0 };
-
 #define BAD_DISK_TIMEOUT 30 /* in units of SLOW_TIMEOUT =~ 4 minutes */
 /* get disk free, also determine whether a disk is healthy or not */
 static int check_disk(int n)
@@ -296,6 +300,7 @@ static int check_disk(int n)
 
   struct statvfs buf;
   char path[] = "/data0/mce";
+  int drive_fail = 0;
   path[5] = '0' + n;
 
   if (check_timeout[n]) {
@@ -307,12 +312,15 @@ static int check_disk(int n)
     /* disk free -- units are 2**24 bytes = 16 MB */
     slow_dat.df[n] = (uint16_t)(((unsigned long long)buf.f_bfree * buf.f_bsize)
         >> 24);
-    if (disk_bad[n]) {
+    if (disk_bad[n] && !drive_error[n]) {
       bprintf(info, "/data%i now available", n);
       disk_bad[n] = 0;
     }
     check_timeout[n] = 0;
-  } else {
+  } else
+    drive_fail = 1;
+
+  if (drive_fail || drive_error[n]) {
     slow_dat.df[n] = 0;
     if (!disk_bad[n]) {
       bprintf(warning, "/data%i has failed", n);
@@ -349,6 +357,7 @@ static void send_slow_data(char *data, int send)
   check_disk(1);
   check_disk(2);
   check_disk(3);
+  drives_checked = 1;
 
   /* time -- this wraps around ~16 months after the epoch */
   gettimeofday(&tv, NULL);
@@ -980,6 +989,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
     switch (ev->command) {
       /* goal switching */
       case drive_check:
+        memset(disk_bad, 0, sizeof(int) * 4); 
         state &= ~st_drives;
         break;
       case reconfig:

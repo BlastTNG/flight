@@ -56,7 +56,7 @@ esac
 
 # Populate the new data folder.
 
-cd $today
+cd current_data
 
 if [ ! -e analysis ]; then
   mkdir analysis
