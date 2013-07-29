@@ -229,8 +229,8 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     int ssreq;
 
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
-          &divisor, &ssreq, &new_row_len, &new_num_rows, &new_data_rate,
-          &squidveto, len, data_in, peer, port))
+          &divisor, &ssreq, &req_dm, &new_row_len, &new_num_rows,
+          &new_data_rate, &squidveto, len, data_in, peer, port))
       return;
 
     if (ssreq)
@@ -350,8 +350,6 @@ static void send_slow_data(char *data, int send)
 
   /* get temperature data from MCE */
   mas_get_temp = 1;
-
-  slow_dat.data_mode = cur_dm;
 
   check_disk(0);
   check_disk(1);
@@ -493,7 +491,7 @@ static void pushback(void)
   static uint16_t data[NUM_ROW * NUM_COL];
   uint32_t frameno[PB_SIZE];
 
-  if (ntes > 0 || 1) { /* not sending any TES data */
+  if (ntes > 0) { /* not sending any TES data */
     for (n = 0; n < PB_SIZE; ++n) {
       /* this frame */
       uint32_t *fr = frame[(n + pb_last) % FB_SIZE];
@@ -521,8 +519,6 @@ static void pushback(void)
         }
       }
     }
-
-//    bprintf(info, "PB: %i > %i", frameno[0], frameno[PB_SIZE - 1]);
 
     /* pushback */
     ForwardData(frameno);
@@ -1209,9 +1205,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case integral_clamp:
         data[0] = ev->ivalues[1];
         push_block_raw("rca", "integral_clamp", 0, data, 1);
-        break;
-      case data_mode:
-        req_dm = ev->ivalues[1];
         break;
       case force_config:
         state |= st_config | st_mcecom;
