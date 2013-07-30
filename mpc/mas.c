@@ -140,8 +140,8 @@ static inline int drive_ready(int i)
 }
 
 /* read a (partial) block by name from the MCE; returns non-zero on error */
-static int mas_read_range(const char *card, const char *block, uint32_t *data,
-    size_t num, int offset)
+static int mas_read_range(const char *card, const char *block, int offset,
+    uint32_t *data, size_t num)
 {
   int ret;
 
@@ -172,7 +172,7 @@ static int mas_read_block(const char *card, const char *block, uint32_t *data,
     size_t num)
 {
   /* Boring ... */
-  return mas_read_range(card, block, data, num, 0);
+  return mas_read_range(card, block, 0, data, num);
 }
 
 static void get_acq_metadata(void)
@@ -377,7 +377,7 @@ static void fetch_param(const char *card, const char *param, int offset,
           offset, card, param);
 
     /* fetch data */
-    if (mas_read_range(card, param, data, count, offset) == 0)
+    if (mas_read_range(card, param, offset, data, count) == 0)
       /* update the array */
       memcpy(mce_stat + mstat_phys[i].cd + offset, data,
           sizeof(uint32_t) * count);
@@ -1174,9 +1174,42 @@ static int tune(void)
   return r ? 1 : 0;
 }
 
+static int check_set_sync(void)
+{
+  uint32_t v = 1;
+
+  /* ignore the return value here: if the sync box isn't on, this will usually
+   * time out as the CC waits for lock */
+  mas_write_range("cc", "select_clk", 0, &v, 1);
+
+  sleep(1);
+
+  if (mas_read_range("cc", "select_clk", 0, &v, 1))
+    return 1;
+
+  /* now select_clk is one if the sync box is working, zero otherwise
+   * co-incidentally we set config_sync to those same values to configure
+   * the sync box */
+  cfg_set_int("config_sync", v, 0);
+  if (v)
+    state |= st_syncon;
+  else {
+    state &= ~st_syncon;
+    bprintf(warning, "CC reports sync box unresponsive.");
+  }
+
+  return 0;
+}
+
 static int reconfig(void)
 {
   uint32_t u32;
+  
+  /* check whether the sync box is useable */
+  if (check_set_sync()) {
+    comms_lost = 1;
+    return 1;
+  }
 
   /* ensure we're synced */
   flush_experiment_cfg(0);

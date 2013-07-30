@@ -109,10 +109,13 @@ enum status {
   st_drives = 0x0001, /* The drives are ready */
   st_active = 0x0002, /* MCE ops are active */
   st_mcecom = 0x0004, /* MCE is talking */ 
-  st_config = 0x0008, /* MCE is configured */
-  st_acqcnf = 0x0010, /* Acquisition is configured */
-  st_retdat = 0x0020, /* MCE is returning data */
+  st_syncon = 0x0008, /* the sync box is active */
+  st_config = 0x0010, /* MCE is configured */
+  st_acqcnf = 0x0020, /* Acquisition is configured */
+  st_retdat = 0x0040, /* MCE is returning data */
 };
+/* state that can be on when reconfiguring the data drives */
+#define ST_DRIVE_IGNORE (st_active | st_syncon)
 #define STOP_TK 0x8000
 
 extern unsigned int state;

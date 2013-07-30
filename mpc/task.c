@@ -293,6 +293,7 @@ void *task(void *dummy)
 {
   int repc = 0;
   int check_acq = 0;
+  int no_dat = 0;
   nameThread("Task");
 
   /* wait for a task */
@@ -358,6 +359,7 @@ void *task(void *dummy)
         if (status_tk != st_idle)
           switch (status_tk) {
             case st_idle:
+            case st_syncon:
               break;
             case st_drives:
               /* choose drives */
@@ -411,6 +413,7 @@ void *task(void *dummy)
                 continue;
               } 
               check_acq = 1;
+              no_dat = 0;
               /* start acq */
               if (dt_wait(dt_startacq))
                 comms_lost = 1;
@@ -448,6 +451,7 @@ void *task(void *dummy)
         if (status_tk != st_idle)
           switch (status_tk) {
             case st_idle:
+            case st_syncon:
               break;
             case st_retdat:
             case st_acqcnf:
@@ -491,11 +495,16 @@ void *task(void *dummy)
       task_run_moda();
     usleep(10000);
 
-    if (repc++ > 100) {
+    if (repc++ > 100) { /* ie. this occurs roughly once a second */
       if (state & st_retdat) {
-        if (check_acq && rd_count > 20) {
-          bprintf(info, "start of acquisition detected");
-          check_acq = 0;
+        if (check_acq) {
+          if (rd_count > 20) {
+            bprintf(info, "start of acquisition detected");
+            check_acq = 0;
+          } else if (no_dat++ > 2) {
+            bprintf(info, "acquisition start error");
+            comms_lost = 1;
+          }
         } else if (!check_acq) {
           if (rd_count < 1) {
             bprintf(info, "loss of acquisition detected");

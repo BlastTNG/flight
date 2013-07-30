@@ -89,7 +89,8 @@ void meta(void)
 
   /* now, moda is either md_none, or one of the allowed modas for this goal */
 
-  if (working_goal == gl_stop || ((state & ~st_active) && (~state & st_drives)))
+  if (working_goal == gl_stop ||
+      ((state & ~ST_DRIVE_IGNORE) && (~state & st_drives)))
   {
     /* stop stuff */
     if (state & st_retdat)
