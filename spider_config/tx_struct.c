@@ -977,10 +977,17 @@ struct ChannelStruct SlowChannels[] = {
   {"last_tune_mpc5",  'w',  LOOP8, 10, 0.5,   0.0, 'u', U_NONE},
   {"last_tune_mpc6",  'w',  LOOP8, 11, 0.5,   0.0, 'u', U_NONE},
 
+  {"used_tune_mpc1",  'w',  LOOP8, 12, 0.5,   0.0, 'u', U_NONE},
+  {"used_tune_mpc2",  'w',  LOOP8, 13, 0.5,   0.0, 'u', U_NONE},
+  {"used_tune_mpc3",  'w',  LOOP8, 14, 0.5,   0.0, 'u', U_NONE},
+  {"used_tune_mpc4",  'w',  LOOP8, 15, 0.5,   0.0, 'u', U_NONE},
+  {"used_tune_mpc5",  'w',  LOOP8, 16, 0.5,   0.0, 'u', U_NONE},
+  {"used_tune_mpc6",  'w',  LOOP8, 17, 0.5,   0.0, 'u', U_NONE},
+
   /* END of MCE slow channels */
 
-  {"data_mode",       'w',  LOOP8, 12,   1,     0, 'u', U_NONE},
-  {"data_mode_bits",  'w',  LOOP8, 13,   1,     0, 'u', U_NONE},
+  {"data_mode",       'w',  LOOP8, 18,   1,     0, 'u', U_NONE},
+  {"data_mode_bits",  'w',  LOOP8, 19,   1,     0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };
