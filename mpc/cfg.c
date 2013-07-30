@@ -261,6 +261,8 @@ int load_experiment_cfg(void)
   if (read_libconfig_file(file, &expt))
     return 1;
 
+  bprintf(info, "Read config data from %s\n", file);
+
   have_expt_cfg = 1;
   /* deal with deferred row len */
   if (deferred_timing) {
@@ -319,8 +321,8 @@ int flush_experiment_cfg(int force)
 /* listify experiment.cfg */
 int serialise_experiment_cfg(void)
 {
-  config_setting_t *s;
-  int i, c, r, n, t;
+  config_setting_t *s, *dd, *fd;
+  int i, c, r, n;
 
   if (!have_expt_cfg)
     return 0;
@@ -367,17 +369,20 @@ int serialise_experiment_cfg(void)
 
   /* update the dead dead detector count */
   n = 0;
-  s = config_lookup(&expt, "dead_detectors");
-  t = config_setting_length(s);
-  for (i = 0; i < t; ++i)
-    if (config_setting_get_int_elem(s, i))
-      n++;
+  s = config_lookup(&expt, "columns_off");
+  dd = config_lookup(&expt, "dead_detectors");
+  fd = config_lookup(&expt, "frail_detectors");
 
-  s = config_lookup(&expt, "frail_detectors");
-  t = config_setting_length(s);
-  for (i = 0; i < t; ++i)
-    if (config_setting_get_int_elem(s, i))
-      n++;
+  for (c = 0; c < NUM_COL; ++c)
+    if (config_setting_get_int_elem(s, c))
+      n += NUM_ROW;
+    else
+      for (i = 0; i < NUM_ROW; ++i)
+        /* these masks are full 41x32 sized */
+        if (config_setting_get_int_elem(dd, c * 41 + i))
+          n++;
+        else if (config_setting_get_int_elem(fd, c * 41 + i))
+          n++;
 
   slow_dat.dead_count = n;
   return 0;

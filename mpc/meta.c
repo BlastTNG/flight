@@ -38,7 +38,7 @@ struct gl_data goal = {gl_acq};
 struct gl_data new_goal;
 int change_goal;
 
-uint32_t meta_tk = 0;
+uint32_t meta_tk = st_drives; /* might as well do this right away */
 
 static int meta_veto = 0;
 
