@@ -366,9 +366,9 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
 
   /* These MCE numbers are zero based */
   bank =
-    (mce == 0 || mce == 5) ? 0 :  /* MCE1 and MCE6 are on bank 0 */
+    (mce == 0 || mce == 4) ? 0 :  /* MCE1 and MCE5 are on bank 0 */
     ((mce == 1 || mce == 2) ? 1 : /* MCE2 and MCE3 are on bank 1 */
-     2);                          /* MCE4 and MCE5 are on bank 2 */
+     2);                          /* MCE4 and MCE6 are on bank 2 */
 
   if (power_cycle) {
     bprintf(info, "%s/%i req: cycle MCE#%i on bank %i", peer, port, mce, bank);
