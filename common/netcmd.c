@@ -299,7 +299,8 @@ double NetCmdGetDefault(char *cmdstr) {
 
 CMDDEF_READ_ERROR:
   fprintf(stderr, "Protocol error from daemon.\n");
-  exit(14);
+  return (0);
+  //exit(14);
 }
 
 //Blocks on reading until list comes through.

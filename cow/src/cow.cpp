@@ -282,7 +282,7 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
     }
 
     QStringList words=x.split(" ");
-    int max=MAX_N_PARAMS;
+    int max=MAX_N_PARAMS+1;
     for(int i=1;i<MAX_N_PARAMS;i++) {
       if(!NParamFields[i-1]->isVisible()) {
         max=i;
@@ -430,7 +430,7 @@ void MainForm::ChangeCommandList(bool really) {
 //      as appropiate for the command.
 //-------------------------------------------------------------
 
-void MainForm::ChooseCommand() {
+void MainForm::ChooseCommand(bool index_combo_changed, int combo_index) {
   int i, index;
   double indata;
 
@@ -446,7 +446,8 @@ void MainForm::ChooseCommand() {
   }
 
   // It can happen that this function be called with nothing selected
-  if (!NCommandList->currentIndex().isValid() || (!NCommandList->hasFocus()&&!NOmniBox->hasFocus())) {
+  if (!NCommandList->currentIndex().isValid() ||
+       (!index_combo_changed && (!NCommandList->hasFocus()&&!NOmniBox->hasFocus()))) {
     NSendButton->setDisabled(true);
     lastmcmd = -1;
     NAboutLabel->setText(tr("No command selected."));
@@ -476,8 +477,10 @@ void MainForm::ChooseCommand() {
 
       //bool IsData = DataSource->update();
 
+      int index_serial = 0;
       for (i = 0; i < MAX_N_PARAMS; i++) {
         if (i < client_mcommands[index].numparams) {
+
           NParamLabels[i]->setText(client_mcommands[index].params[i].name);
           NParamLabels[i]->show();
 
@@ -489,21 +492,36 @@ void MainForm::ChooseCommand() {
             connect(NParamFields[i]=new CowStringEntry(NTopFrame,"NParamLabels"),
                 SIGNAL(textEdited(QString)),this,SLOT(OmniSync()));
           } else if (client_mcommands[index].params[i].nt) {
-            CowComboEntry* cce;
-            typeChanged=1;
-            delete NParamFields[i];
-            cce=new CowComboEntry(NTopFrame,"NParamLabels");
+            CowComboEntry* cce = dynamic_cast<CowComboEntry*>(NParamFields[i]);
+            if (cce) {
+              if (client_mcommands[index].params[i].index_serial) {
+                disconnect(cce, SIGNAL(activated(int)), this, SLOT(IndexComboChanged(int)));
+              }
+              cce->clear();
+            } else {
+              typeChanged=1;
+              delete NParamFields[i];
+              cce=new CowComboEntry(NTopFrame,"NParamLabels");
+            }
+            if (client_mcommands[index].params[i].index_serial) {
+              connect(cce, SIGNAL(activated(int)), this, SLOT(IndexComboChanged(int)));
+            }
             NParamFields[i] = cce;
             for (int i_par = 0; client_mcommands[index].params[i].nt[i_par] != 0; i_par++) {
               cce->addItem(client_mcommands[index].params[i].nt[i_par]);
             }
             cce->minVal = client_mcommands[index].params[i].min;
             connect(dynamic_cast<CowComboEntry*>(NParamFields[i]),
-                SIGNAL(valueEdited()),this,SLOT(OmniSync()));
+                    SIGNAL(valueEdited()),this,SLOT(OmniSync()));
           } else if (!(dynamic_cast<CowDoubleEntry*>(NParamFields[i])) && client_mcommands[index].params[i].type!='s'
                      && client_mcommands[index].params[i].nt == 0) {
             typeChanged=1;
-            delete NParamFields[i];
+            if (NParamFields[i]->hasFocus()) {
+              qDebug() << "attempt to delete double entry which had focus! Leaking memory instead...";
+              NParamFields[i]->hide();
+            } else {
+              delete NParamFields[i];
+            }
             NParamFields[i]=new CowDoubleEntry(NTopFrame,"NParamLabels");
             connect(dynamic_cast<CowDoubleEntry*>(NParamFields[i]),
                 SIGNAL(valueEdited()),this,SLOT(OmniSync()));
@@ -524,16 +542,41 @@ void MainForm::ChooseCommand() {
                 client_mcommands[index].params[i].field);
           } else {
             int nf;
-            if ((nf = _dirfile->NFrames())>0) {
-              if (_dirfile->GetData( client_mcommands[index].params[i].field,
-                    nf-1, 0, 0, 1, // 1 sample from frame nf-1
-                    Float64, (void*)(&indata))==0) {
+            if (client_mcommands[index].params[i].index_serial) {
+              int i_s = client_mcommands[index].params[i].index_serial;
+              CowComboEntry *cce=dynamic_cast<CowComboEntry*>(NParamFields[i]);
+              if (cce) {
+                if (index_combo_changed) {
+                  cce->SetDefaultValue(index, i);
+                  index_defaults.insert(i_s, cce->Text().toInt());
+                } else {
+                  cce->SetIndex(index_defaults.value(i_s, client_mcommands[index].params[i].min));
+                  cce->RecordDefaults();
+                  cce->SetDefaultValue(index, i);
+                }
+              }
+            } else if (((nf = _dirfile->NFrames())>0) && (_dirfile->GetData( client_mcommands[index].params[i].field,
+                                                                             nf-1, 0, 0, 1, // 1 sample from frame nf-1
+                                                                             Float64, (void*)(&indata))!=0)) {
+              dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetValue(indata);
+            } else {
+              double d;
+              char cmdstr[SIZE_CMDPARNAME];
+              if (index_serial) {
+                sprintf(cmdstr, "%s;%d;%s", client_mcommands[index].name, index_serial, client_mcommands[index].params[i].name);
+              } else {
+                // FIXME: index parameter
+                sprintf(cmdstr, "%s;%s", client_mcommands[index].name, client_mcommands[index].params[i].name);
+              }
+              d = NetCmdGetDefault(cmdstr);
+              if ((d == DEF_NOT_FOUND) || (client_mcommands[index].params[i].index_serial)) {
                 dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetDefaultValue(index, i);
               } else {
-                dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetValue(indata);
+                dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetValue(d);
               }
-            } else {
-              dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetDefaultValue(index, i);
+            }
+            if (client_mcommands[index].params[i].index_serial>0) {
+              index_serial = dynamic_cast<AbstractCowEntry*>(NParamFields[i])->Text().toInt();
             }
           }
         } else {
