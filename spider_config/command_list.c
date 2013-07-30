@@ -1523,7 +1523,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
-  {COMMAND(bias_tes), "Set TES biases", GR_DET | MCECMD, 11,
+  {COMMAND(bias_tes), "Set TES biases", GR_DET | MCECMD, 12,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
@@ -1535,7 +1535,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Column 5", 0, 65535, 'i', "NONE"},
       {"Column 6", 0, 65535, 'i', "NONE"},
       {"Column 7", 0, 65535, 'i', "NONE"},
-      //{"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },

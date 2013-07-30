@@ -1144,7 +1144,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[5] = ev->ivalues[7];
         data[6] = ev->ivalues[8];
         data[7] = ev->ivalues[9];
-        q_bias_tess(0, ev->ivalues[1] ? 8 : 0, data, 8, ev->ivalues[10]);
+        q_bias_tess(ev->ivalues[10], ev->ivalues[1] ? 8 : 0, data, 8,
+            ev->ivalues[11]);
         break;
       case bias_tes_all:
         data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = data[6] =
