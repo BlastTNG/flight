@@ -54,6 +54,8 @@
 
 PMainWindow* PMainWindow::me=0;
 
+QString PMainWindow::key;
+
 static QString _filename;
 
 PMainWindow::PMainWindow(QString file, QWidget *parent) :
@@ -99,6 +101,10 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     ui->lineEditTDRSSOmni->setCompleter(new QCompleter(fsm));
     ui->lineEditLOS->setCompleter(new QCompleter(fsm));
     ui->lineEditIridum->setCompleter(new QCompleter(fsm));
+    ui->lineEditHtmlPath->setText(key);
+    if (!key.isEmpty()) {
+      ui->checkboxWeb_server_on->setChecked(true);
+    }
 
     curfileLogic();
 

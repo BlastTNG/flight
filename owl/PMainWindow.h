@@ -74,11 +74,13 @@ public:
     friend class PAbstractDataItem;
     friend class PMdiArea;
     static PMainWindow* me;
-    explicit PMainWindow(QString file="",QWidget *parent = 0);
+    explicit PMainWindow(QString file="", QWidget *parent = 0);
     QObject* currentObject() const { return _currentObject; }
     virtual ~PMainWindow();
     void closeEvent(QCloseEvent *);
     bool mouseInactive();
+
+    static QString key;
 
 public slots:
     void readmeHelp();

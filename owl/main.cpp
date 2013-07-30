@@ -36,32 +36,39 @@
 #endif
 
 void usage(QString appname) {
-    std::cout<<"usage: "<<qPrintable(appname)<<" [--new | <filename>]"<<std::endl;
+  std::cout<<"usage: "<<qPrintable(appname)<<"[--webkey <key>] [--new | <filename>]"<<std::endl;
     exit(1);
 }
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
+  QString webkey;
 
   QString filename("__lastfile");
 
-  if (app.arguments().size() > 2) {
+  if (app.arguments().size() > 4) {
       usage(app.arguments()[0]);
   }
 
-  if (app.arguments().size() == 2) {
-      if (app.arguments()[1] == "--new") {
-          filename.clear();
-      } else if (app.arguments()[1].startsWith('-')) {
-          usage(app.arguments()[0]);
-      }
+  for (int i_arg=1; i_arg<app.arguments().size(); i_arg++) {
+    if (app.arguments().at(i_arg)=="--webkey") {
+      webkey = app.arguments().at(i_arg+1);
+      i_arg++;
+    } else if (app.arguments().at(i_arg) == "--new") {
+      filename.clear();
+    } else if (app.arguments().at(i_arg).startsWith('-')) {
+      usage(app.arguments()[0]);
+    } else {
+      filename = app.arguments().at(i_arg);
+    }
   }
 
   time_t seconds= time (NULL);
   qsrand((seconds*1000+QTime::currentTime().msec())%RAND_MAX);  //for concurrent ids. do not remove this line.
 
   Py_Initialize();
-  new PMainWindow((qApp->arguments().size()==2)?qApp->arguments()[1]:filename);
+  PMainWindow::key = webkey;
+  new PMainWindow(filename);
 
   app.exec();
 
