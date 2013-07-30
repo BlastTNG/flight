@@ -367,6 +367,7 @@ static void send_slow_data(char *data, int send)
   /* last things */
   slow_dat.last_tune = memory.last_tune;
   slow_dat.last_iv = memory.last_iv;
+  slow_dat.used_tune = memory.used_tune;
 
   /* make packet and send */
   if (send) {
@@ -1300,6 +1301,7 @@ static int read_mem(void)
     memory.last_tune = find_last_dirent("tuning", 0);
     memory.last_iv = find_last_dirent("ivcurves", 3);
     memory.squidveto = 0;
+    memory.used_tune = 0xFFFF; /* don't know */
     return 1;
   }
 

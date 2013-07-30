@@ -47,6 +47,7 @@ struct mpc_slow_data {
   uint16_t last_tune; /* last tuning number */
   uint16_t last_iv; /* last iv curve number */
   uint16_t tile_heater; /* current tile heater level (in counts) */
+  uint16_t used_tune; /* the last tuning applied */
 };
 
 extern int16_t mpc_proto_rev;

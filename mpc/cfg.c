@@ -489,6 +489,9 @@ void cfg_apply_tuning(int n)
     /* force reconfig */
     state &= ~st_config;
 
+    memory.used_tune = n;
+    mem_dirty = 1;
+
     bprintf(info, "copied parameters from %s\n", file);
   }
 
