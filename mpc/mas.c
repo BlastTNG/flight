@@ -1190,7 +1190,7 @@ static int check_set_sync(void)
   /* now select_clk is one if the sync box is working, zero otherwise
    * co-incidentally we set config_sync to those same values to configure
    * the sync box */
-  cfg_set_int("config_sync", v, 0);
+  cfg_set_int("config_sync", 0, v);
   if (v)
     state |= st_syncon;
   else {
