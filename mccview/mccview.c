@@ -29,7 +29,7 @@
 
 struct fft { const char *fmt; gd_type_t type; };
 
-#define NF 16
+#define NF 17
 static const struct fft ff[NF] = {
   {"TIME_MCC%i", GD_UINT64},  /* 0 */
   {"TILE_HEATER_MCE%i", GD_UINT16}, /* 1 */
@@ -47,6 +47,7 @@ static const struct fft ff[NF] = {
   {"DRIVE_MAP_MPC%i", GD_UINT16}, /* 13 */
   {"last_tune_mpc%i", GD_UINT16}, /* 14 */
   {"last_iv_mpc%i", GD_UINT16}, /* 15 */
+  {"used_tune_mpc%i", GD_UINT16}, /* 16 */
 };
 
 #define NGF 11
@@ -79,9 +80,9 @@ const char *goals[] = {"pause", "tune", "iv", "stop", "lcloop", "cycle",
   "acq", "bstep", "bramp"};
 const char *modes[] = {"none", "tuning", "iv_curve", "lcloop", "running",
   "bstep", "bramp"};
-#define N_STATES 6
-const char *states[N_STATES] = {"drives", "active", "mcecom", "config",
-  "acqcnf", "retdat"};
+#define N_STATES 7
+const char *states[N_STATES] = {"drives", "active", "mcecom", "syncon",
+  "config", "acqcnf", "retdat"};
 
 static char drivemap(uint64_t map, int n)
 {
@@ -224,15 +225,19 @@ int main(int argc, char **argv)
     printw("\n");
 
     for (x = 0; x < 6; ++x)
-      printw("  dead:          %2llu      ", d[x][12].u64);
+      printw("  dead:         %3llu      ", d[x][12].u64);
     printw("\n");
 
     for (x = 0; x < 6; ++x)
-      printw("last tune:       %2llu      ", d[x][14].u64);
+      printw("used tune:    %5llu      ", d[x][16].u64);
     printw("\n");
 
     for (x = 0; x < 6; ++x)
-      printw("last iv:         %2llu      ", d[x][15].u64);
+      printw("last tune:    %5llu      ", d[x][14].u64);
+    printw("\n");
+
+    for (x = 0; x < 6; ++x)
+      printw("last iv:      %5llu      ", d[x][15].u64);
     printw("\n");
 
     for (x = 0; x < 6; ++x)
