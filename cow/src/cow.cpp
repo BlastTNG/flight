@@ -550,7 +550,7 @@ void MainForm::ChooseCommand(bool index_combo_changed, int combo_index) {
                   cce->SetDefaultValue(index, i);
                   index_defaults.insert(i_s, cce->Text().toInt());
                 } else {
-                  cce->SetIndex(index_defaults.value(i_s, client_mcommands[index].params[i].min));
+                  cce->SetIndex(index_defaults.value(i_s, client_mcommands[index].params[i].min) - client_mcommands[index].params[i].min);
                   cce->RecordDefaults();
                   cce->SetDefaultValue(index, i);
                 }
