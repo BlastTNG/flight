@@ -16,14 +16,18 @@
  * along with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#include "sys.h"
 #include "mpc.h"
 #include "mputs.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
 
 static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
+int try_mount = 1; /* attempt to mount data drives */
 int dt_error = 0;
 int comms_lost = 0;
 /* kill switch */
@@ -79,6 +83,54 @@ static int dt_wait(enum dtask dt)
 
 /* wait times after power cycle request (in seconds) */
 static const int power_wait[] = { 10, 10, 20, 40, 60, 0 };
+
+/* try mounting drives -- under linux, if a drive is screwed up, sometimes
+ * attempt to mount it results in a zombie process, so we do this asynchronously
+ * to try and prevent screwing up.
+ */
+static void task_mount_drives(void)
+{
+  int is_mounted[4] = {0, 0, 0, 0};
+  char buffer[1024], l, n;
+  int d;
+  FILE *stream;
+  /* first figure out what is already mounted */
+  stream = fopen("/proc/mounts", "r");
+  if (stream == NULL) {
+    berror(err, "Unable to read /proc/mount");
+    return;
+  }
+
+  while (fgets(buffer, 1024, stream)) {
+    /* looking for interesting lines */
+    if (sscanf(buffer, "/dev/sd%c1 /data%c ext4", &l, &n) == 2)
+      if (n >= '0' && n <= '3') {
+        bprintf(info, "Found /dev/sd%c1 mounted on /data%c", l, n);
+        is_mounted[n - '0'] = 1;
+      }
+  }
+
+  /* unmount bad drives */
+  for (d = 0; d < 4; ++d)
+    if (is_mounted[d] && disk_bad[d]) {
+      bprintf(info, "Lazy unmounting /data%i", d);
+      sprintf(buffer, "/data%i", d);
+      do_umount(buffer);
+      is_mounted[d] = 0;
+    }
+
+  for (d = 0; d < 4; ++d)
+    if (!is_mounted[d]) {
+      bprintf(info, "Attempting to mount /data%i", d);
+      sprintf(buffer, "/data%i", d);
+      do_mount(buffer, 100);
+    }
+
+  /* reset list of bad drives */
+  memset(disk_bad, 0, sizeof(int) * 4); 
+
+  fclose(stream);
+}
 
 /* determine drive priorities */
 static unsigned task_set_drives(void)
@@ -362,12 +414,17 @@ void *task(void *dummy)
             case st_syncon:
               break;
             case st_drives:
+              /* mount shennanigans */
+              if (try_mount)
+                task_mount_drives();
+
               /* choose drives */
               if (task_set_drives()) {
                 /* no useable drives -- probably means some one should power
                  * cycle a hard drive can, but we'll just power cycle oursevles
                  */
                 power_cycle_cmp = 1;
+                try_mount = 1;
                 sleep(60);
               } else {
                 state |= st_drives;

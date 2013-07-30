@@ -746,8 +746,8 @@ static int write_array_id(int d)
 
   if (n < 0) {
     berror(err, "Can't write array id!");
-BAD_ARRAY_ID:
     fclose(stream);
+BAD_ARRAY_ID:
     if (nmce == -1)
       nmce = 0;
     return 1;

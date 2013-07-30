@@ -285,9 +285,9 @@ static int check_disk(int n)
   int drive_fail = 0;
   path[5] = '0' + n;
 
-  if (check_timeout[n]) {
+  if (disk_bad[n] && check_timeout[n]) {
     check_timeout[n]--;
-    return disk_bad[n];
+    return 1;
   }
 
   if (statvfs(path, &buf) == 0) {
@@ -968,7 +968,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
     switch (ev->command) {
       /* goal switching */
       case drive_check:
-        memset(disk_bad, 0, sizeof(int) * 4); 
+        try_mount = 1;
         state &= ~st_drives;
         break;
       case reconfig:

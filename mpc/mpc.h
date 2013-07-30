@@ -61,6 +61,7 @@ extern int mceveto;
 extern int send_mceparam;
 extern int divisor;
 extern int veto;
+extern int try_mount;
 extern int kill_special;
 extern int dt_going;
 extern int drives_checked;
@@ -115,7 +116,7 @@ enum status {
   st_retdat = 0x0040, /* MCE is returning data */
 };
 /* state that can be on when reconfiguring the data drives */
-#define ST_DRIVE_IGNORE (st_active | st_syncon)
+#define ST_DRIVE_IGNORE (st_active | st_syncon | st_mcecom)
 #define STOP_TK 0x8000
 
 extern unsigned int state;

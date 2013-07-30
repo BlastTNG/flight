@@ -57,9 +57,13 @@ static int set_new_goal(enum goals *working_goal)
   } else if (memory.squidveto) {
     /* veto: force stop */
     *working_goal = gl_stop;
-    if (moda == md_none) {
+    if (moda == md_none)
       return 0;
-    }
+  } else if (~state & st_drives) {
+    /* must stop running to fix drives */
+    *working_goal = goal.goal;
+    if (moda == md_none)
+      return 0;
   } else {
     /* normal operation: no need to stop */
     *working_goal = goal.goal;
