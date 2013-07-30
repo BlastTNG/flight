@@ -370,7 +370,6 @@ struct ChannelStruct SlowChannels[] = {
 
   /* default current cal is 12.5, 0.0 */
   {"i_mce",        'r',  DIOD_A1,   49, CAL16(12.5, 0.0),      'u', U_I_A},
-  {"chopper",      'r',  RTD_A1,    49, CAL16(1.00, 0.0),      'u', U_V_V},
   {"i_hk_misc",    'r',  RTD_A2,    49, CAL16(12.5, 0.0),      'u', U_I_A},
 
   /* spare IF analog inputs */
@@ -1103,6 +1102,8 @@ struct ChannelStruct FastChannels[] = {
   // free
   //{"vel_ofpch_gy",  'r', ACS2_A1, 45,   CAL16(14.9925037, 0.0), 'u', U_V_DPS},
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
+
+  {"chopper",      'r',  RTD_A1,    49, CAL16(1.00, 0.0),      'u', U_V_V},
 
   {"mce_index",        'r', LOOP0,  4, 1.0,         0.0,       'u',     U_NONE},
   {"bolo_stats_index", 'r', LOOP0,  5, 1.0,         0.0,       'u',     U_NONE},
