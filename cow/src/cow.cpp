@@ -282,7 +282,7 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
     }
 
     QStringList words=x.split(" ");
-    int max=MAX_N_PARAMS+1;
+    int max=MAX_N_PARAMS;
     for(int i=1;i<MAX_N_PARAMS;i++) {
       if(!NParamFields[i-1]->isVisible()) {
         max=i;
