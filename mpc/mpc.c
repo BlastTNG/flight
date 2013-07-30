@@ -263,6 +263,8 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       pcm_pong = 0;
     }
 
+    power_cycle = 0;
+
     if (need_send) {
       len = mpc_compose_pcmreq(nmce, power_cycle, data);
       udp_bcast(sock, MCESERV_PORT, len, data, 0);

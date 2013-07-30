@@ -124,6 +124,7 @@ static void task_mount_drives(void)
       bprintf(info, "Attempting to mount /data%i", d);
       sprintf(buffer, "/data%i", d);
       do_mount(buffer, 100);
+      drive_error[d] = 0;
     }
 
   /* reset list of bad drives */

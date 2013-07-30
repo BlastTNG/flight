@@ -48,9 +48,6 @@ static unsigned cmd_err = 0;
 /* a big old array of block data */
 uint32_t mce_stat[N_MCE_STAT];
 
-/* check drives when acq finishes */
-int acq_check_drives = 0;
-
 const char *const all_cards[] = {"cc", "rc1", "rc2", "bc1", "bc2", "ac", NULL};
 
 /* mas */
@@ -589,17 +586,17 @@ static int acq_err(void *user_data, int sync_num, int err,
     case 1: /* primary */
       bprintf(info, "primary drive failed; stopping acq");
       drive_error[data_drive[0]] = 1;
-      acq_check_drives = 1;
+      state &= ~st_drives;
       break;
     case 2: /* secondary */
       bprintf(info, "secondary drive failed; stopping acq");
       drive_error[data_drive[1]] = 1;
-      acq_check_drives = 1;
+      state &= ~st_drives;
       break;
     case 3: /* teritary */
       bprintf(info, "tertiary drive failed; stopping acq");
       drive_error[data_drive[1]] = 2;
-      acq_check_drives = 1;
+      state &= ~st_drives;
       break;
   }
   if (drive_map == (DRIVE0_UNMAP | DRIVE1_UNMAP | DRIVE2_UNMAP)) {
@@ -1421,10 +1418,6 @@ void *acquer(void* dummy)
         bprintf(info, "Acquisition stopped");
       acq_stopped = 1;
       acq_init = 0; /* just in case */
-      if (acq_check_drives) {
-        state &= ~st_drives;
-        acq_check_drives = 0;
-      }
     }
   }
 

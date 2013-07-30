@@ -31,7 +31,7 @@ endif
 endif
 
 # Is mas_var new enough?
-MIN_MAS_VERSION=817
+MIN_MAS_VERSION=820
 ifneq (${MAS_VAR},)
 MAS_HAS_INT_VERSION=$(shell if ${MAS_VAR} --int-verson >/dev/null 2>/dev/null; \
 										then echo no; else echo yes; fi)
@@ -192,6 +192,30 @@ install-all: install
 		echo "================== X$$x ====================="; \
 		rsync -avP ${MAS_BIN_STUFF} x$$x.spider:/data/mas/bin; \
 		rsync -avP set_directory x$$x.spider:/data/mas/mce_script/script; \
+		ssh x$$x.spider /data/mas/bin/replicate; \
+		fi; done
+
+install-mce-script:
+	(cd ../../mce_script && make install)
+	/data/mas/bin/replicate
+	for x in 1 2 3 4 5 6; do \
+		if [ `hostname` != "x$$x" ]; then \
+		echo "================== X$$x ====================="; \
+		rsync -avP /data/mas/mce_script x$$x.spider:/data/mas/mce_script; \
+		ssh x$$x.spider /data/mas/bin/replicate; \
+		fi; done
+
+install-mas:
+	(cd ../../mas && make install)
+	/data/mas/bin/replicate
+	for x in 1 2 3 4 5 6; do \
+		if [ `hostname` != "x$$x" ]; then \
+		echo "================== X$$x ====================="; \
+		rsync -avP /data/mas/bin x$$x.spider:/data/mas/; \
+		rsync -avP /data/mas/etc x$$x.spider:/data/mas/; \
+		rsync -avP /data/mas/include x$$x.spider:/data/mas/; \
+		rsync -avP /data/mas/lib x$$x.spider:/data/mas/; \
+		rsync -avP /data/mas/python x$$x.spider:/data/mas/; \
 		ssh x$$x.spider /data/mas/bin/replicate; \
 		fi; done
 
