@@ -181,24 +181,19 @@ format.bolo_stats: make_stats_etc
 MAS_BIN_STUFF=mpc mpc_inf_loop replicate
 install: mpc mpc_inf_loop
 	install -m 744 rc.local /etc || true
-	for x in 0 1 2 3; do \
-		if [ -e /data$$x/mas ]; then \
-		install -d /data$$x/mas/bin; \
-		install -m 755 ${MAS_BIN_STUFF} /data$$x/mas/bin; \
-		if [ -e /data$$x/mas/mce_script ]; then \
-		install -m 755 set_directory /data$$x/mas/mce_script/script; \
-		fi; fi; done
+	install -d /data/mas/bin
+	install -m 755 ${MAS_BIN_STUFF} /data/mas/bin
+	install -m 755 set_directory /data/mas/mce_script/script
 	/data/mas/bin/replicate
 
 install-all: install
 	for x in 1 2 3 4 5 6; do \
 		if [ `hostname` != "x$$x" ]; then \
 		echo "================== X$$x ====================="; \
-		for y in 0 1 2 3; do \
-			rsync -avP ${MAS_BIN_STUFF} x$$x.spider:/data$$y/mas/bin; \
-			rsync -avP set_directory x$$x.spider:/data$$y/mas/mce_script/script; \
-			ssh x$$x.spider /data/mas/bin/replicate; \
-			done; fi; done
+		rsync -avP ${MAS_BIN_STUFF} x$$x.spider:/data/mas/bin; \
+		rsync -avP set_directory x$$x.spider:/data/mas/mce_script/script; \
+		ssh x$$x.spider /data/mas/bin/replicate; \
+		fi; done
 
 mpcrestart: install-all
 	for x in 1 2 3 4 5 6; do ssh x$$x.spider killall mpc; done
