@@ -440,3 +440,34 @@ int do_umount(const char *target)
 
   return ret;
 }
+
+/* open dmesg and associate it with a stream */
+static struct mcp_proc *dmesg_proc = NULL;
+FILE *open_dmesg(void)
+{
+  int fd;
+  char *argv[] = { "/bin/dmesg", "--level=crit,err", NULL };
+
+  if (dmesg_proc)
+    close_dmesg(NULL);
+
+  dmesg_proc = start_proc("/bin/dmesg", argv, 0, 0, NULL, &fd, NULL, NULL);
+  if (!dmesg_proc) {
+    berror(err, "Can't run dmesg");
+    return NULL;
+  }
+
+  return fdopen(fd, "r");
+}
+
+/* close dmesg */
+void close_dmesg(FILE *stream)
+{
+  if (stream)
+    fclose(stream);
+
+  if (dmesg_proc) {
+    stop_proc(dmesg_proc, 1, 0, 0, 1);
+    dmesg_proc = NULL;
+  }
+}

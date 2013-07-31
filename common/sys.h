@@ -18,6 +18,7 @@
  */
 
 #include "blast.h"
+#include <stdio.h>
 #include <unistd.h>
 
 /* mcp process record */
@@ -25,7 +26,8 @@ struct mcp_proc;
 
 /* Start a process, with error handling.  Returns an opaque record describing
  * the process.  The process can be monitored with check_proc(), and should be
- * terminated with stop_proc().
+ * terminated with stop_proc().  After the fork, but before the exec, all open
+ * file descriptors (excluding the standard streams) will be closed.
  *
  * Inputs:
  *    path: path to the executable
@@ -44,9 +46,10 @@ struct mcp_proc;
  *              and its return value (when stop_proc is called) at BUOS level
  *              "info".
  *    in_fd: if non-NULL, a descriptor which can be used to write to the
- *           process's standard input.  May be closed by the caller, but will
- *           be closed by stop_proc() otherwise.  If NULL, the process's
- *           standard input will be redirected from /dev/null.
+ *           process's standard input will be writen to this memory location.
+ *           May be closed by the caller, but will be closed by stop_proc()
+ *           otherwise.  If NULL, the process's standard input will be
+ *           redirected from /dev/null.
  *    out_fd, err_fd: identically, for reading the process's standard output
  *           and standard error.  Again, setting either of these to NULL will
  *           cause the corresponding standard stream to be redirected to 
@@ -66,16 +69,18 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
  * out.  Return value:
  *
  *  0  process is still running
- *  1  process might has finished
+ *  1  process has finished
  *  2  process might be running but has gone over time (or kill_sem active)
  */
 int check_proc(struct mcp_proc *p);
 
 /* Stop a process and clean up.  If the caller has already closed any of the
- * file descriptors it was giving, the corresponding ...fd_closed argument
- * should be non-NULL.  If stop_now is non-zero, the process will be forcibly
- * terminated if it hasn't already finished.  Otherwise, this function blocks
- * until the timeout expires, the kill_sem is raised, or the process terminates.
+ * file descriptors it was given, the corresponding ...fd_closed argument
+ * should be non-zero.  It will close all other open descrptors.
+ *
+ * If stop_now is non-zero, the process will be forcibly terminated, if it
+ * hasn't already finished.  Otherwise, this function blocks until the timeout
+ * expires, the kill_sem is raised, or the process terminates.
  *
  * Returns the exit status of the process (see wait(2)).
  */
@@ -122,3 +127,9 @@ int do_mount(const char *name, int timeout);
 
 /* lazy unmount something; returns non-zero on error */
 int do_umount(const char *target);
+
+/* opens the kernel ring buffer and creates a stream for reading */
+FILE *open_dmesg(void);
+
+/* closes the kernel ring buffer opened by open_dmesg */
+void close_dmesg(FILE *stream);

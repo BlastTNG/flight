@@ -91,6 +91,9 @@ static const int power_wait[] = { 10, 10, 20, 40, 60, 0 };
 static void task_mount_drives(void)
 {
   int is_mounted[4] = {0, 0, 0, 0};
+  int dont_mount[4] = {0, 0, 0, 0};
+  int phy_map[4] = {-1, -1, -1, -1};
+  int nerr[100];
   char buffer[1024], l, n;
   int d;
   FILE *stream;
@@ -105,10 +108,40 @@ static void task_mount_drives(void)
     /* looking for interesting lines */
     if (sscanf(buffer, "/dev/sd%c1 /data%c ext4", &l, &n) == 2)
       if (n >= '0' && n <= '3') {
+        phy_map[n - '0'] = l;
         bprintf(info, "Found /dev/sd%c1 mounted on /data%c", l, n);
         is_mounted[n - '0'] = 1;
       }
   }
+
+  fclose(stream);
+
+  memset(nerr, 0, sizeof(int) * 100);
+  stream = open_dmesg(); 
+
+  /* search dmesg for warning signs */
+  while (fgets(buffer, 1024, stream)) {
+    if (sscanf(buffer + 15, "end_request: critical target error, dev sd%c", &l)
+        == 1)
+    {
+      nerr[(int)l]++;
+    } else if (sscanf(buffer + 15, "end_request: I/O error, dev sd%c", &l) == 1)
+      nerr[(int)l]++;
+    else if (sscanf(buffer + 15, "Buffer I/O error on device sd%c1", &l) == 1)
+      nerr[(int)l]++;
+    usleep(1000);
+  }
+  close_dmesg(stream);
+
+  /* disable mounting of bad drives */
+  for (d = 0; d < 4; ++d)
+    if (phy_map[d] > 0)
+      if (nerr[phy_map[d]] > 10) {
+        bprintf(info, "multiple kernel errors (%i) on device sd%c.  Disabling",
+            nerr[phy_map[d]], phy_map[d]);
+        disk_bad[d] = 1;
+        dont_mount[d] = 1;
+      }
 
   /* unmount bad drives */
   for (d = 0; d < 4; ++d)
@@ -120,7 +153,7 @@ static void task_mount_drives(void)
     }
 
   for (d = 0; d < 4; ++d)
-    if (!is_mounted[d]) {
+    if (!is_mounted[d] && !dont_mount[d]) {
       bprintf(info, "Attempting to mount /data%i", d);
       sprintf(buffer, "/data%i", d);
       do_mount(buffer, 100);
@@ -129,8 +162,6 @@ static void task_mount_drives(void)
 
   /* reset list of bad drives */
   memset(disk_bad, 0, sizeof(int) * 4); 
-
-  fclose(stream);
 }
 
 /* determine drive priorities */
@@ -293,6 +324,7 @@ STOPPED:
 /* do a DSP reset, MCE reset, fake stop and empty the data buffer */
 static int task_reset_mce()
 {
+  state &= ~st_mcecom;
   /* DSP reset */
   if (dt_wait(dt_dsprs)) {
     power_cycle_cmp = 1;
@@ -564,7 +596,7 @@ void *task(void *dummy)
             comms_lost = 1;
           }
         } else if (!check_acq) {
-          if (rd_count < 1) {
+          if (rd_count < 1) { /* no data in a second */
             bprintf(info, "loss of acquisition detected");
             comms_lost = 1;
           }
