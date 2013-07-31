@@ -180,7 +180,6 @@ format.bolo_stats: make_stats_etc
 
 MAS_BIN_STUFF=mpc mpc_inf_loop replicate
 install: mpc mpc_inf_loop
-	install -m 744 rc.local /etc || true
 	install -d /data/mas/bin
 	install -m 755 ${MAS_BIN_STUFF} /data/mas/bin
 	install -m 755 set_directory /data/mas/mce_script/script
