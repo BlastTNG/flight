@@ -392,7 +392,6 @@ void *task(void *dummy)
 
       /* stop mce comms */
       state &= ~st_active;
-      mceveto = 1;
 
       /* stop the MCE and reset it */
       if (task_reset_mce() == 0 || memory.squidveto) {
@@ -475,7 +474,6 @@ void *task(void *dummy)
               /* done */
               break;
             case st_active:
-              mceveto = 0;
               state |= st_active;
               break;
             case st_mcecom:
@@ -555,7 +553,6 @@ void *task(void *dummy)
               break;
             case st_active:
               dt_error = dt_wait(dt_stopmce);
-              mceveto = 1;
               state &= ~(st_config | st_active);
               break;
           }

@@ -116,7 +116,7 @@ all:: mpc make_stats_etc
 FORCE:
 
 mce_status.g: FORCE
-	/data0/mas/bin/mce_status -G > mce_status.g.new
+	/data/mas/bin/mce_status -G > mce_status.g.new
 	@if test -e mce_status.g && diff -q mce_status.g mce_status.g.new; then \
 		echo "mce_status.g is unchanged."; \
 		rm -f mce_status.g.new; \

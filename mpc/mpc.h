@@ -57,7 +57,6 @@ extern int in_turnaround;
 extern int cur_dm, req_dm;
 extern int power_cycle_mce;
 extern int power_cycle_cmp;
-extern int mceveto;
 extern int send_mceparam;
 extern int divisor;
 extern int veto;

@@ -66,9 +66,6 @@ int pb_last = 0;
 uint32_t *frame[FB_SIZE];
 static uint32_t *fb = NULL;
 
-/* veto on mce communication */
-int mceveto = 1;
-
 /* number of frames in an acq_go */
 #define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
 
@@ -1257,7 +1254,7 @@ void crash_stop(int sig)
   terminate = 1;
   bprintf(err, "Crash stop.");
   /* stop acq and zero bias */
-  if (mas && !mceveto) {
+  if (mas && (state & st_active)) {
     stopacq();
     stop_mce();
   }
@@ -1381,13 +1378,14 @@ void *mas_data(void *dummy)
     }
     data_tk = dt_idle;
 
-    if (!mceveto && state & st_mcecom)
+    if ((state & st_active) && (state & st_mcecom)) {
     /* pop a block from the queue, if there are any,
      * otherwise, poll the temperature, if requested */
       if (!pop_block() && mas_get_temp) {
         fetch_param("cc", "box_temp", 0, (uint32_t*)&box_temp, 1);
         mas_get_temp = 0;
       }
+    }
 
     /* check for acq termination */
     if (acq_going && acq_stopped) {
