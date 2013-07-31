@@ -1137,22 +1137,22 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case bias_tes_rc1:
       case bias_tes_rc2:
-        data[0] = ev->ivalues[1];
-        data[1] = ev->ivalues[2];
-        data[2] = ev->ivalues[3];
-        data[3] = ev->ivalues[4];
-        data[4] = ev->ivalues[5];
-        data[5] = ev->ivalues[6];
-        data[6] = ev->ivalues[7];
-        data[7] = ev->ivalues[8];
-        q_bias_tess(ev->ivalues[9], (ev->command == bias_tes_rc2) ? 8 : 0, data,
+        data[0] = ev->ivalues[2];
+        data[1] = ev->ivalues[3];
+        data[2] = ev->ivalues[4];
+        data[3] = ev->ivalues[5];
+        data[4] = ev->ivalues[6];
+        data[5] = ev->ivalues[7];
+        data[6] = ev->ivalues[8];
+        data[7] = ev->ivalues[9];
+        q_bias_tess(ev->ivalues[2], (ev->command == bias_tes_rc2) ? 8 : 0, data,
             8, ev->ivalues[10]);
         break;
       case bias_tes_all:
         data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = data[6] =
           data[7] = data[8] = data[9] = data[10] = data[11] = data[12] =
-          data[13] = data[14] = data[15] = ev->ivalues[1];
-        q_bias_tess(ev->ivalues[2], 0, data, 16, ev->ivalues[3]);
+          data[13] = data[14] = data[15] = ev->ivalues[2];
+        q_bias_tess(ev->ivalues[1], 0, data, 16, ev->ivalues[3]);
         break;
       case tile_heater_on:
         data[0] = ev->ivalues[1] * 32767 / 5;

@@ -1517,8 +1517,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(bias_tes_all), "Set all TES biases", GR_DET | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"Bias", 0, 65535, 'i', "NONE"},
       {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {"Bias", 0, 65535, 'i', "NONE"},
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
@@ -1526,6 +1526,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     11,
     {
       {CHOOSE_INSERT_NO_ALL},
+      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {"Column 0", 0, 65535, 'i', "NONE"},
       {"Column 1", 0, 65535, 'i', "NONE"},
       {"Column 2", 0, 65535, 'i', "NONE"},
@@ -1534,7 +1535,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Column 5", 0, 65535, 'i', "NONE"},
       {"Column 6", 0, 65535, 'i', "NONE"},
       {"Column 7", 0, 65535, 'i', "NONE"},
-      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
@@ -1542,6 +1542,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     11,
     {
       {CHOOSE_INSERT_NO_ALL},
+      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {"Column  8", 0, 65535, 'i', "NONE"},
       {"Column  9", 0, 65535, 'i', "NONE"},
       {"Column 10", 0, 65535, 'i', "NONE"},
@@ -1550,7 +1551,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Column 13", 0, 65535, 'i', "NONE"},
       {"Column 14", 0, 65535, 'i', "NONE"},
       {"Column 15", 0, 65535, 'i', "NONE"},
-      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
