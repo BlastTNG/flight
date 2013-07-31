@@ -93,7 +93,7 @@ int cfg_set_intarr(const char *name, int o, uint32_t *d, int n)
       }
       /* get */
       for (i = o; i < o + n; ++i) { 
-        v = d[i];
+        v = d[i - o];
         old_v = config_setting_get_int_elem(s, i);
 
         if (old_v != v) {
