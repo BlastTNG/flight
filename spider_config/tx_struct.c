@@ -1042,7 +1042,7 @@ struct ChannelStruct WideFastChannels[] = {
   {"vr_ntd3_x4_hk",   'r', RTD_A2, 44, CAL32N(       1.129,           0.0), 'U', U_V_V},
   {"vr_ntd2_x4_hk",   'r', RTD_A2, 46, CAL32N(       1.129,           0.0), 'U', U_V_V},
 
-  {"vp_01_hk",       'r', DIOD_A2, 48, CAL32(1.0, 0.0),                    'U', U_V_V},
+  {"vp_01_hk",       'r',  RTD_A1, 48, CAL32(1.0, 0.0),                    'U', U_V_V},
   {"vp_02_hk",       'r', DIOD_A3, 48, CAL32(1.0, 0.0),                    'U', U_V_V},
 
   {"enc_a_x1_hwp",  'r', HWP_A1,  0,CAL32(1.0,      0.0),      'U',      U_V_V},
@@ -1103,7 +1103,7 @@ struct ChannelStruct FastChannels[] = {
   //{"vel_ofpch_gy",  'r', ACS2_A1, 45,   CAL16(14.9925037, 0.0), 'u', U_V_DPS},
   {"pulse_sc",     'r',  ACS2_A1, 50,                 1.0,            0.0, 'u', U_NONE},
 
-  {"chopper",      'r',  RTD_A1,    49, CAL16(1.00, 0.0),      'u', U_V_V},
+  {"chopper",         'r',DIOD_A2, 49, CAL16(1.00, 0.0),       'u', U_V_V},
 
   {"mce_index",        'r', LOOP0,  4, 1.0,         0.0,       'u',     U_NONE},
   {"bolo_stats_index", 'r', LOOP0,  5, 1.0,         0.0,       'u',     U_NONE},
