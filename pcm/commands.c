@@ -606,31 +606,31 @@ void SingleCommand (enum singleCommand command, int scheduled)
     /* Inner Frame Power */
 
     case mce23_off:
-      CommandData.ifpower.mce_op[0] = off;
+      CommandData.ifpower.mce_op[0] = mce_pow_off;
       break;
     case mce23_on:
-      CommandData.ifpower.mce_op[0] = on;
+      CommandData.ifpower.mce_op[0] = mce_pow_on;
       break;
     case mce23_cycle:
-      CommandData.ifpower.mce_op[0] = cyc;
+      CommandData.ifpower.mce_op[0] = mce_pow_cyc;
       break;
     case mce46_off:
-      CommandData.ifpower.mce_op[1] = off;
+      CommandData.ifpower.mce_op[1] = mce_pow_off;
       break;
     case mce46_on:
-      CommandData.ifpower.mce_op[1] = on;
+      CommandData.ifpower.mce_op[1] = mce_pow_on;
       break;
     case mce46_cycle:
-      CommandData.ifpower.mce_op[1] = cyc;
+      CommandData.ifpower.mce_op[1] = mce_pow_cyc;
       break;
     case mce15_off:
-      CommandData.ifpower.mce_op[2] = off;
+      CommandData.ifpower.mce_op[2] = mce_pow_off;
       break;
     case mce15_on:
-      CommandData.ifpower.mce_op[2] = on;
+      CommandData.ifpower.mce_op[2] = mce_pow_on;
       break;
     case mce15_cycle:
-      CommandData.ifpower.mce_op[2] = cyc;
+      CommandData.ifpower.mce_op[2] = mce_pow_cyc;
       break;
     case sync_off:
       CommandData.power.sync.set_count = 0;
@@ -2110,9 +2110,9 @@ void InitCommandData()
   for (i=0; i<16; i++)
     CommandData.power.adc_reset[i] = 0;
 
-  CommandData.ifpower.mce_op[0] = nop;
-  CommandData.ifpower.mce_op[1] = nop;
-  CommandData.ifpower.mce_op[2] = nop;
+  CommandData.ifpower.mce_op[0] = mce_pow_nop;
+  CommandData.ifpower.mce_op[1] = mce_pow_nop;
+  CommandData.ifpower.mce_op[2] = mce_pow_nop;
   CommandData.ifpower.mce[0].rst_count = 0;
   CommandData.ifpower.mce[0].set_count = 0;
   CommandData.ifpower.mce[1].rst_count = 0;
@@ -2416,6 +2416,7 @@ void InitCommandData()
   CommandData.mcc_wdog = 0;
 
   CommandData.squidveto = 0;
+  CommandData.mce_power = 0; /* assume things are on */
 
   CommandData.questionable_behaviour = 0;
 

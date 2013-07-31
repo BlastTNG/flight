@@ -227,7 +227,9 @@ enum SyncParam {
 };
 
 /* MCE Power operations */
-enum mce_pow_op { nop = 0, on, off, cyc };
+enum mce_pow_op {
+  mce_pow_nop = 0, mce_pow_on, mce_pow_off, mce_pow_cyc, mce_pow_wait
+};
 
 struct CommandDataStruct {
   unsigned short command_count;
@@ -493,6 +495,7 @@ struct CommandDataStruct {
 
   /* squid vetoing */
   uint8_t squidveto;
+  uint8_t mce_power; /* MCE power banks off (will force-veto MCEs */
 };
 
 void InitCommandData();

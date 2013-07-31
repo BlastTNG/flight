@@ -685,9 +685,9 @@ union DerivedUnion DerivedChannels[] = {
 
   /* MCE Power Banks */
   BITFIELD("mce_power",
-      "MCE_BANK1_ON",
-      "MCE_BANK2_ON",
-      "MCE_BANK3_ON",
+      "MCE2_MCE3_OFF",
+      "MCE4_MCE6_OFF",
+      "MCE1_MCE5_OFF",
       ""
       ),
 

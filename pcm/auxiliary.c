@@ -314,42 +314,67 @@ void WriteSyncBox(void)
 
 /* convert mce_pow_op command into a latch_pulse, and tell MCEServ to report
  * it */
-static int do_mce_power_op(int mce_power)
+static void do_mce_power_op(void)
 {
+  static int pwr_timer[3] = {-1, -1, -1};
+
   int i;
 
   for (i = 0; i < 3; ++i) {
-    if (CommandData.ifpower.mce_op[i] == off) {
-      CommandData.ifpower.mce[i].set_count = 0;
-      CommandData.ifpower.mce[i].rst_count = LATCH_PULSE_LEN;
-      CommandData.ifpower.mce_op[i] = nop;
-      //bprintf(info, "MCE Power Bank %i off", i + 1);
-      mce_power &= ~(1 << i);
-    } else if (CommandData.ifpower.mce_op[i] == on) {
-      CommandData.ifpower.mce[i].rst_count = 0;
-      CommandData.ifpower.mce[i].set_count = LATCH_PULSE_LEN;
-      CommandData.ifpower.mce_op[i] = nop;
-      //bprintf(info, "MCE Power Bank %i on", i + 1);
-      mce_power |= (1 << i);
-    } else if (CommandData.ifpower.mce_op[i] == cyc) {
-      CommandData.ifpower.mce[i].set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.ifpower.mce[i].rst_count = LATCH_PULSE_LEN;
-      CommandData.ifpower.mce_op[i] = nop;
-      //bprintf(info, "MCE Power Bank %i cycling", i + 1);
-      /* to avoid race conditions with MPC, the MCE banks are said to be on
-       * in the "mce_power" bitfield all throughout power cycling
-       */
-      mce_power |= (1 << i);
+    if (CommandData.ifpower.mce_op[i] == mce_pow_off ||
+        CommandData.ifpower.mce_op[i] == mce_pow_cyc)
+    { /* turn off */
+      if (pwr_timer[i] == -1) {
+        /* veto the MCEs -- will cause MPC to debias SQUIDs */
+        CommandData.mce_power |= (1U << i);
+        
+        /* wait for debias */
+        pwr_timer[i] = (int)(5.0*(ACSData.bbc_rate/FAST_PER_SLOW)); /* sec */
+        bprintf(info, "veto MCEbank %i", i);
+      } else if (pwr_timer[i] == 0) {
+        CommandData.ifpower.mce[i].set_count = 0;
+        CommandData.ifpower.mce[i].rst_count = LATCH_PULSE_LEN;
+        if (CommandData.ifpower.mce_op[i] == mce_pow_off) {
+          CommandData.ifpower.mce_op[i] = mce_pow_nop;
+          pwr_timer[i] = -1;
+        } else {
+          /* wait for power cycle */
+          CommandData.ifpower.mce_op[i] = mce_pow_wait;
+          pwr_timer[i] = (int)(5.0*(ACSData.bbc_rate/FAST_PER_SLOW)); /* sec */
+        }
+        bprintf(info, "MCEbank off %i", i);
+      } else
+        pwr_timer[i]--;
+    } else if (CommandData.ifpower.mce_op[i] == mce_pow_on) { /* turn on */
+      if (pwr_timer[i] == -1) {
+        CommandData.ifpower.mce[i].rst_count = 0;
+        CommandData.ifpower.mce[i].set_count = LATCH_PULSE_LEN;
+        bprintf(info, "MCEbank on %i", i);
+
+        /* wait for power on */
+        pwr_timer[i] = (int)(5.0*(ACSData.bbc_rate/FAST_PER_SLOW)); /* sec */
+      } else if (pwr_timer[i] == 0) {
+        /* unveto the MCEs */
+        CommandData.mce_power &= ~(1U << i);
+        CommandData.ifpower.mce_op[i] = mce_pow_nop;
+        pwr_timer[i] = -1;
+        bprintf(info, "unveto MCEbank %i", i);
+      } else
+        pwr_timer[i]--;
+    } else if (CommandData.ifpower.mce_op[i] == mce_pow_wait) {
+      /* power cycle wait */
+      if (pwr_timer[i] <= 0) {
+        /* turn on */
+        CommandData.ifpower.mce_op[i] = mce_pow_on;
+        pwr_timer[i] = -1;
+      } else
+        pwr_timer[i]--;
     }
   }
-
-  return mce_power;
 }
 
 /* create latching relay pulses, and update enable/disbale levels */
 void ControlPower(void) {
-  static int mce_power = 0xFFFF; /* in the absense of infomration, assume things
-                                    are on */
   static int firsttime = 1;
   static struct NiosStruct* latchingAddr[2];
   static struct NiosStruct* switchGyAddr;
@@ -568,7 +593,7 @@ void ControlPower(void) {
     if (CommandData.power.sync.rst_count < LATCH_PULSE_LEN) misc |= 0x0080;
   }
 
-  mce_power = do_mce_power_op(mce_power);
+  do_mce_power_op();
 
   if (CommandData.ifpower.mce[0].set_count > 0) {
     CommandData.ifpower.mce[0].set_count--;
@@ -619,7 +644,7 @@ void ControlPower(void) {
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
   WriteData(ifPwrAddr, ifpwr, NIOS_QUEUE);
-  WriteData(mcePowerAddr, mce_power, NIOS_QUEUE);
+  WriteData(mcePowerAddr, CommandData.mce_power, NIOS_QUEUE);
   WriteData(switchGyAddr, gybox, NIOS_QUEUE);
   WriteData(switchMiscAddr, misc, NIOS_QUEUE);
   WriteData(switchGrp2Addr, grp2, NIOS_QUEUE);

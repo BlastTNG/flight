@@ -124,6 +124,10 @@ static void ForwardNotices(int sock)
   static int last_divisor = -1;
   static int last_squidveto = -1;
   static int last_data_mode = -1;
+
+  /* 0 = X2 & X3; 1 = X4 & X6; 2 = X1 & X5 */
+  const uint8_t veto_bits[3] = { 0x6, 0x28, 0x11 };
+
   int this_divisor = CommandData.bbcIsExt ? CommandData.bbcExtFrameRate : 1;
   int this_turnaround = CommandData.pointing_mode.is_turn_around;
   int this_squidveto = CommandData.squidveto;
@@ -133,6 +137,14 @@ static void ForwardNotices(int sock)
   int this_dmb = CommandData.data_mode_bits_serial;
   int this_data_mode = CommandData.data_mode;
   size_t len;
+
+  /* or with the mce_power-induced veto */
+  if (CommandData.mce_power & 1)
+    this_squidveto |= veto_bits[0];
+  if (CommandData.mce_power & 2)
+    this_squidveto |= veto_bits[1];
+  if (CommandData.mce_power & 4)
+    this_squidveto |= veto_bits[2];
 
   /* edge triggers */
   if ((last_turnaround != -1 && last_turnaround == this_turnaround) &&
@@ -366,9 +378,9 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
 
   /* These MCE numbers are zero based */
   bank =
-    (mce == 0 || mce == 4) ? 0 :  /* MCE1 and MCE5 are on bank 0 */
-    ((mce == 1 || mce == 2) ? 1 : /* MCE2 and MCE3 are on bank 1 */
-     2);                          /* MCE4 and MCE6 are on bank 2 */
+    (mce == 2 || mce == 3) ? 0 :  /* MCE2 and MCE3 are on bank 0 */
+    ((mce == 4 || mce == 6) ? 1 : /* MCE4 and MCE6 are on bank 1 */
+     2);                          /* MCE1 and MCE5 are on bank 2 */
 
   if (power_cycle) {
     bprintf(info, "%s/%i req: cycle MCE#%i on bank %i", peer, port, mce, bank);
@@ -377,7 +389,7 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
     int mce_is_on = slow_data[mcePowerAddr->index][mcePowerAddr->channel] &
       (1 << bank);
     if (mce_is_on)
-      CommandData.ifpower.mce_op[bank] = cyc;
+      CommandData.ifpower.mce_op[bank] = mce_pow_cyc;
   }
 }
 
