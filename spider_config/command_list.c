@@ -169,7 +169,6 @@ const char *const GroupNames[N_GROUPS] = {
 
 /* parameter value lists */
 const char *noyes_names[] = {"no", "yes", NULL};
-const char *rc_names[] = {"RC1", "RC2", NULL};
 const char *kick_names[] = {"none", "1 Volt", "2 Volts", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *just_mce_names[] = {"X1", "X2", "X3", "X4", "X5", "X6", NULL};
@@ -1523,10 +1522,10 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
-  {COMMAND(bias_tes), "Set TES biases", GR_DET | MCECMD, 12,
+  {COMMAND(bias_tes_rc1), "Set TES biases for columns 0 to 7", GR_DET | MCECMD,
+    11,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"Readout Card", 0, 1, 'i', "NONE", {rc_names}},
       {"Column 0", 0, 65535, 'i', "NONE"},
       {"Column 1", 0, 65535, 'i', "NONE"},
       {"Column 2", 0, 65535, 'i', "NONE"},
@@ -1535,6 +1534,22 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Column 5", 0, 65535, 'i', "NONE"},
       {"Column 6", 0, 65535, 'i', "NONE"},
       {"Column 7", 0, 65535, 'i', "NONE"},
+      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {MCE_ACTION_PARAM(3,action_names)}
+    }
+  },
+  {COMMAND(bias_tes_rc2), "Set TES biases for columns 8 to 15", GR_DET | MCECMD,
+    11,
+    {
+      {CHOOSE_INSERT_NO_ALL},
+      {"Column  8", 0, 65535, 'i', "NONE"},
+      {"Column  9", 0, 65535, 'i', "NONE"},
+      {"Column 10", 0, 65535, 'i', "NONE"},
+      {"Column 11", 0, 65535, 'i', "NONE"},
+      {"Column 12", 0, 65535, 'i', "NONE"},
+      {"Column 13", 0, 65535, 'i', "NONE"},
+      {"Column 14", 0, 65535, 'i', "NONE"},
+      {"Column 15", 0, 65535, 'i', "NONE"},
       {"Kick", 0, 2, 'i', "NONE", {kick_names}},
       {MCE_ACTION_PARAM(3,action_names)}
     }

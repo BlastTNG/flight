@@ -1133,19 +1133,20 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case send_tuning:
         new_blob_type = BLOB_TUNECFG + ev->ivalues[2];
-        blob_data[0] = ev->ivalues[1];
+        blob_data[0] = ev->ivalues[1] ? ev->ivalues[1] : memory.last_tune;
         break;
-      case bias_tes:
-        data[0] = ev->ivalues[2];
-        data[1] = ev->ivalues[3];
-        data[2] = ev->ivalues[4];
-        data[3] = ev->ivalues[5];
-        data[4] = ev->ivalues[6];
-        data[5] = ev->ivalues[7];
-        data[6] = ev->ivalues[8];
-        data[7] = ev->ivalues[9];
-        q_bias_tess(ev->ivalues[10], ev->ivalues[1] ? 8 : 0, data, 8,
-            ev->ivalues[11]);
+      case bias_tes_rc1:
+      case bias_tes_rc2:
+        data[0] = ev->ivalues[1];
+        data[1] = ev->ivalues[2];
+        data[2] = ev->ivalues[3];
+        data[3] = ev->ivalues[4];
+        data[4] = ev->ivalues[5];
+        data[5] = ev->ivalues[6];
+        data[6] = ev->ivalues[7];
+        data[7] = ev->ivalues[8];
+        q_bias_tess(ev->ivalues[9], (ev->command == bias_tes_rc2) ? 8 : 0, data,
+            8, ev->ivalues[10]);
         break;
       case bias_tes_all:
         data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = data[6] =
