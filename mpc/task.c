@@ -598,6 +598,7 @@ void *task(void *dummy)
         } else if (!check_acq) {
           if (rd_count < 1) { /* no data in a second */
             bprintf(info, "loss of acquisition detected");
+            state &= ~st_drives;
             comms_lost = 1;
           }
         }
