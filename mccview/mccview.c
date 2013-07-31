@@ -50,7 +50,7 @@ static const struct fft ff[NF] = {
   {"used_tune_mpc%i", GD_UINT16}, /* 16 */
 };
 
-#define NGF 11
+#define NGF 12
 static const struct fft gf[NGF] = {
   {"mce_blob", GD_UINT16}, /* 0 */
   {"blob_num_mpc", GD_UINT16}, /* 1 */
@@ -63,6 +63,7 @@ static const struct fft gf[NGF] = {
   {"UPPER_NBITS_DMB", GD_UINT16}, /* 8 */
   {"LOWER_START_DMB", GD_UINT16}, /* 9 */
   {"LOWER_NBITS_DMB", GD_UINT16}, /* 10 */
+  {"mce_power", GD_UINT16}, /* 11 */
 };
 
 union du {
@@ -109,6 +110,15 @@ char *mcebits(int n)
   for (i = 0; i < 6; ++i)
     bits[n][i] = (gd[n].u64 & (1U << i)) ? i + '1' : '.';
   return bits[n];
+}
+
+const char *mce_power(int x)
+{
+  if (x == 1 || x == 2)
+    return (gd[11].u64 & 0x1) ? "off" : "on";
+  if (x == 3 || x == 5)
+    return (gd[11].u64 & 0x2) ? "off" : "on";
+  return (gd[11].u64 & 0x4) ? "off" : "on";
 }
 
 int main(int argc, char **argv)
@@ -177,6 +187,10 @@ int main(int argc, char **argv)
       ct[20] = 0;
       printw("   %-22s", ct);
     }
+    printw("\n");
+
+    for (x = 0; x < 6; ++x)
+      printw(" MCEpwr: %9s       ", mce_power(x));
     printw("\n");
 
     for (f = 0; f < 4; ++f) {
