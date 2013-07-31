@@ -458,7 +458,9 @@ void cfg_apply_tuning(int n)
 
   /* the list of parameters to copy */
   const char *param[] = {"adc_offset_c", "adc_offset_cr", "sa_fb",
-    "sa_offset", "sq1_bias", "sq1_bias_off", "sq2_fb", "sq2_fb_set", NULL};
+    "sa_offset", "sq1_bias", "sq1_bias_off", "sq2_fb", "sq2_fb_set",
+    "default_sa_bias", "default_sq2_bias", "default_sq1_baias",
+    "default_sq1_bias_off", NULL};
 
   /* try to read an archive */
   if (tuning_filename("experiment.cfg", n, file) == 0)
