@@ -48,9 +48,9 @@ static void set_filter_coeffs(const double fsamp,const double flow, const double
   
   bprintf(info, "Science band: %.2f Hz to %.2f Hz, at sample rate of %.2f",
 	  flow, fup, fsamp);
-  bprintf(info, "Science band filter numerator: b0 = %.6f, b1 = %.6f, b2 = %.6f, b3 = %.6f, b4 = %.6f",
+  bprintf(info, "Science band filter: b = [ %.4f, %.4f, %.4f, %.4f, %.4f ]",
 	  filt_coeffb[0], filt_coeffb[1], filt_coeffb[2], filt_coeffb[3], filt_coeffb[4]);
-  bprintf(info, "Science band filter denominator: a0 = %.6f, a1 = %.6f, a2 = %.6f, a3 = %.6f, a4 = %.6f",
+  bprintf(info, "Science band filter: a = [ %.4f, %.4f, %.4f, %.4f, %.4f ]",
 	  filt_coeffa[0], filt_coeffa[1], filt_coeffa[2], filt_coeffa[3], filt_coeffa[4]);
 }
 
