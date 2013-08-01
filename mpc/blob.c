@@ -59,7 +59,7 @@ int dict_compress(unsigned flags)
   while ((c = fgetc(stream)) != EOF)
     d[c & 0xFF] = 1;
   for (i = 0; i < 256; ++i)
-    if (d[i] && (!(flags & DC_IGNORE_SPACE) || i != 0x20))
+    if (d[i] && (i != 0x20 || ~flags & DC_IGNORE_SPACE))
       rd[(int)(d[i] = nd++)] = i;
     else
       d[i] = -1;
@@ -87,7 +87,7 @@ int dict_compress(unsigned flags)
   cpw = 64 * M_LN2 / log(nd);
   rewind(stream);
   while ((c = fgetc(stream)) != EOF) {
-    if (DC_IGNORE_SPACE && c == 0x20)
+    if ((flags & DC_IGNORE_SPACE) && c == 0x20)
       continue;
 
     if (ciw == cpw) {
