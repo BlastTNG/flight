@@ -1370,7 +1370,6 @@ int main(void)
   openMCElog("/data2/mce/mpc.log");
   openMCElog("/data3/mce/mpc.log");
 
-  bputs(startup, "This is MPC.\n");
   if (mpc_init())
     bprintf(fatal, "Unable to initialise MPC subsystem.");
 

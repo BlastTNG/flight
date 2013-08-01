@@ -59,7 +59,7 @@ int dict_compress(unsigned flags)
   while ((c = fgetc(stream)) != EOF)
     d[c & 0xFF] = 1;
   for (i = 0; i < 256; ++i)
-    if (d[i] && (!DC_IGNORE_SPACE || i != 0x20))
+    if (d[i] && (!(flags & DC_IGNORE_SPACE) || i != 0x20))
       rd[(int)(d[i] = nd++)] = i;
     else
       d[i] = -1;
