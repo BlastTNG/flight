@@ -544,6 +544,10 @@ static void push_blockr(const char *c, const char *p, int o, const uint32_t *d,
     return;
   }
 
+  /* if we're vetoed, just discard it */
+  if (~state & st_active)
+    return;
+
   new_head = (blockq_head + 1) % BLOCKQ_SIZE;
 
   blockq[new_head].c = strdup(c);
@@ -1085,8 +1089,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         PRM_SETINTC(sa_offset, "sa_offset");
         PRM_SETINTCR(adc_offset, "adc_offset_cr");
         CFG_TOGGLE(sq1_ramp_check_on, sq1_ramp_check_off, "sq1_ramp_check");
-        CFG_TOGGLE(write_default_bias_on, write_default_bias_off,
-            "write_default_bias");
 
       case servo_pid_col:
         prm_set_servo(ev->ivalues[1], -1, 'p', ev->ivalues[2], ev->ivalues[5]);
