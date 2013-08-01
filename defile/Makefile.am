@@ -20,6 +20,7 @@ spideretc_DATA = ../spider_etc/*
 endif
 
 bin_PROGRAMS = defile-blast defile-spider
+bin_SCRIPTS = bolo_lookup
 
 defile_blast_SOURCES = defile.c ../common/frameread.c reader.c \
 											 ../common/channels.c writer.c ../common/blast.c \

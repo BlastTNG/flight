@@ -1,0 +1,102 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my ($w, $x);
+
+sub get_bset {
+  my ($b, $o, $n) = @_;
+  my @b;
+
+  unless (open BSET, sprintf "/data/etc/spider/%03i.bset", $b) {
+    return () if $o;
+    die "bset $b not found\n";
+  };
+  
+  while (<BSET>) {
+    next if /^#/;
+    next if /^$/;
+    chomp;
+    if (defined $n) {
+      push @b, $_;
+    } else {
+      $n = $_;
+    }
+  }
+
+  @b;
+}
+
+if (scalar @ARGV == 3) {
+  die "Non-numeric argument\n" if ($ARGV[0] =~ /[^0-9]/);
+  die "Non-numeric argument\n" if ($ARGV[1] =~ /[^0-9]/);
+  die "Non-numeric argument\n" if ($ARGV[2] =~ /[^0-9]/);
+  die "Bad insert\n" if ($ARGV[0] < 1 || $ARGV[0] > 6);
+  die "Bad row\n"    if ($ARGV[1] < 0 || $ARGV[1] > 32);
+  die "Bad column\n" if ($ARGV[2] < 0 || $ARGV[2] > 15);
+  $w = sprintf "x%ir%02ic%02i", @ARGV;
+  $_ = "p2c";
+} elsif (scalar @ARGV == 2) {
+  die "Non-numeric argument\n" if ($ARGV[0] =~ /[^0-9]/);
+  die "Bad channel\n" if ($ARGV[0] < 0 || $ARGV[0] > 256);
+  die "Bad bset\n" unless ($ARGV[1] =~ /^b([0-9]+)/);
+  $b = $1;
+  $w = $ARGV[0];
+  $_ = "c2p";
+} elsif (scalar @ARGV == 1) {
+  if ($ARGV[0] =~ /^b([0-9]+)/) {
+    $b = $1;
+    $_ = "b";
+  } elsif ($ARGV[0] =~ /^x([1-6])r([0-9]|[012][0-9]|3[012])c(0?[0-9]|1[0-5])$/) {
+    $w = sprintf "x%ir%02ic%02i", $1, $2, $3;
+    $_ = "p2c";
+  } else {
+    die "Non-numeric argument\n" if ($ARGV[0] =~ /[^0-9]/);
+    $w = $ARGV[0];
+    $_ = "c2p";
+  }
+} else {
+  print "Usage:\n";
+  print "  $0 <INSERT> <ROW> <COLUMN>\n";
+  print "  $0 x<INSERT>r<ROW>c<COLUMN>\n";
+  print "          display BSets containing the indicated pixel.\n\n";
+  print "  $0 <CHANNEL>\n";
+  print "  $0 <CHANNEL> b<BSET>\n";
+  print "          display the pixel(s) corresponding the indicated channel.\n\n";
+  print "  $0 b<BSET>\n";
+  print "          display the channel-pxiel mapping for the indicated bset.\n\n";
+  exit 0;
+}
+
+die "Bad bset" if (defined $b and (not $b or $b > 255));
+
+if ($_ eq "b") {
+  # the easy case: just print a bset */
+  @_ = &get_bset($b);
+  for ($_ = 0; $_ <= $#_; ++$_) {
+    printf "bset %03i     MCE%03i:  %s\n", $b, $_, $_[$_]
+  }
+} elsif ($_ eq "c2p") {
+  # print a pixel based on a channel
+  if (defined $b) {
+    @_ = &get_bset($b);
+    printf "bset %03i     MCE%03i:  %s\n", $b, $w, $_[$w];
+  } else {
+    for ($b = 1; $b < 256; ++$b) {
+      @_ = &get_bset($b, 1);
+      if (scalar @_ > 0) {
+        printf "bset %03i     MCE%03i:  %s\n", $b, $w, $_[$w] if ($_[$w]);
+      }
+    }
+  }
+} elsif ($_ eq "p2c") {
+  # print a channel based on a pixel: note: a pixel is allowed to appear in a bset more than once!
+  for ($b = 1; $b < 256; ++$b) {
+    @_ = &get_bset($b, 1);
+    if (scalar @_ > 0) {
+      for (my $i = 0; $i <= $#_; ++$i) {
+        printf "bset %03i     MCE%03i:  %s\n", $b, $i, $_[$i] if (defined $_[$i] and $_[$i] eq $w);
+      }
+    }
+  }
+}
