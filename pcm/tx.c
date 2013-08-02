@@ -168,6 +168,7 @@ static void WriteAux(void)
   struct timezone tz;
 
   unsigned short mccstatus;
+  unsigned short stat_read;
 
   static int firsttime = 1;
   if (firsttime) {
@@ -238,9 +239,14 @@ static void WriteAux(void)
   if (StartupVeto>0) {
     InCharge = 0;
   } else {
-    InCharge = !(BitsyIAm ^
-        (slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel] &
-         0x1));
+    stat_read = slow_data[statusMCCReadAddr->index][statusMCCReadAddr->channel];
+    if (BitsyIAm) {
+      if ( (stat_read & 0x3) == 0x1 ) InCharge = 1;
+      else InCharge = 0;
+    } else {
+      if ( (stat_read & 0x3) == 0x2 ) InCharge = 1;
+      else InCharge = 0;
+    }
   }
   if (InCharge != incharge && InCharge) {
     bprintf(info, "I, %s, have gained control.\n", BitsyIAm ? "Bitsy"
@@ -313,21 +319,21 @@ static void WriteAux(void)
 
   mccstatus =
     (BitsyIAm ? 0x1 : 0x0) +                 //0x01
-    (CommandData.at_float ? 0x2 : 0x0) +     //0x02
-    (CommandData.bbcIsExt ? 0x4 : 0x0) +     //0x04
-    (CommandData.uplink_sched ? 0x08 : 0x00) + //0x08
-    (CommandData.sucks ? 0x10 : 0x00) +      //0x10
-       //((CommandData.lat_range & 0x3) << 5) +   //0x60
+    (BitsyIAm ? 0x0 : 0x2) +                 //0x02
+    (CommandData.at_float ? 0x4 : 0x0) +     //0x04
+    (CommandData.bbcIsExt ? 0x8 : 0x0) +     //0x08
+    (CommandData.uplink_sched ? 0x10 : 0x00) + //0x10
+    (CommandData.sucks ? 0x20 : 0x00) +      //0x20
+       //((CommandData.lat_range & 0x3) << 6) +   //0xc0
     ((CommandData.slot_sched & 0xFF) << 8);  //0xFF00
 
   if (CommandData.uplink_sched) {
-    mccstatus |= 0x60;
+    mccstatus |= 0xc0;
   } else {
-    mccstatus |= ((CommandData.lat_range & 0x3) << 5);
+    mccstatus |= ((CommandData.lat_range & 0x3) << 6);
   }
 
-  WriteData(statusMCCAddr, mccstatus,
-       NIOS_FLUSH);
+  WriteData(statusMCCAddr, mccstatus, NIOS_FLUSH);
   
   WriteData(lastMeCmdAddr, CommandData.last_command, NIOS_QUEUE);
   WriteData(countMeCmdAddr, CommandData.command_count, NIOS_QUEUE);

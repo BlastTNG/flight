@@ -105,6 +105,7 @@ union DerivedUnion DerivedChannels[] = {
   COMMENT("General BLAST Status"),
   BITFIELD("status_flc",
       "BITSY_I_AM",
+      "ITSY_I_AM",
       "AT_FLOAT",
       "IS_EXT_BBC",
       "UPLINK_SCHED",
