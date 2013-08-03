@@ -1298,7 +1298,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(bset), "Change the bolometer field set in use", GR_TELEM, 1,
     {
-      {"number", 1, 255, 'i', "BSET_NUM"}
+      {"number", 0, 255, 'i', "BSET_NUM"}
     }
   },
 

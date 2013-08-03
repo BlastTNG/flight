@@ -359,6 +359,9 @@ static struct NiosStruct *GetMCCNiosAddr(char *field, int i_mce)
   return (GetNiosAddr(field_name));
 }
 
+/* TES fifo debugging */
+extern int nrx_c[NUM_MCE];
+
 /* write slow MCE data */
 static void WriteMCESlow(void)
 {
@@ -379,6 +382,7 @@ static void WriteMCESlow(void)
   static struct NiosStruct *usedTuneAddr[NUM_MCE];
   static struct NiosStruct *lastIVAddr[NUM_MCE];
   static struct NiosStruct *tileHeaterAddr[NUM_MCE];
+  static struct NiosStruct *nrxAddr[NUM_MCE];
 
   static struct NiosStruct *blobNumAddr;
   static struct NiosStruct *reportingMPCsAddr;
@@ -412,6 +416,7 @@ static void WriteMCESlow(void)
       usedTuneAddr[i] = GetMCCNiosAddr("used_tune_mpc", i);
       lastIVAddr[i] = GetMCCNiosAddr("last_iv_mpc", i);
       tileHeaterAddr[i] = GetMCCNiosAddr("tile_heater_mce", i);
+      nrxAddr[i] = GetMCCNiosAddr("nrx_mpc", i);
     }
     blobNumAddr = GetNiosAddr("blob_num_mpc");
     reportingMPCsAddr = GetNiosAddr("reporting_mpcs");
@@ -444,6 +449,7 @@ static void WriteMCESlow(void)
     WriteData(lastIVAddr[i], mce_slow_dat[i][ind].last_iv, NIOS_QUEUE);
     WriteData(tileHeaterAddr[i], mce_slow_dat[i][ind].tile_heater,
         NIOS_QUEUE);
+    WriteData(nrxAddr[i], nrx_c[i], NIOS_QUEUE);
   }
 
   for (i = 0; i < NUM_MCE; ++i) {

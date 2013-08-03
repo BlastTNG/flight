@@ -989,6 +989,14 @@ struct ChannelStruct SlowChannels[] = {
   {"data_mode_bits",  'w',  LOOP8, 19,   1,     0, 'u', U_NONE},
   {"sync_veto_mpc",   'w',  LOOP8, 20,   1,     0, 'u', U_NONE},
 
+  /* TES fifo debugging */
+  {"nrx_mpc1",        'w',  LOOP8, 21, 1, 0, 'u', U_NONE},
+  {"nrx_mpc2",        'w',  LOOP8, 22, 1, 0, 'u', U_NONE},
+  {"nrx_mpc3",        'w',  LOOP8, 23, 1, 0, 'u', U_NONE},
+  {"nrx_mpc4",        'w',  LOOP8, 24, 1, 0, 'u', U_NONE},
+  {"nrx_mpc5",        'w',  LOOP8, 25, 1, 0, 'u', U_NONE},
+  {"nrx_mpc6",        'w',  LOOP8, 26, 1, 0, 'u', U_NONE},
+
   END_OF_CHANNELS
 };
 

@@ -255,16 +255,16 @@ static uint16_t tes_push(uint16_t nrx, int *nrx_c)
   return nrx;
 }
 
+/* this is a complement of empties, containing non-reporting MCEs */
+int nrx_c[NUM_MCE] = {0, 0, 0, 0, 0, 0};
+
+  struct bset local_set;
 /* do TES data frame reconstruction and push the data into the fifo */
 static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     const char *peer, int port)
 {
   static int last_no[NUM_MCE] = {-1, -1, -1, -1, -1, -1};
 
-  /* this is a complement of empties, containing non-reporting MCEs */
-  static int nrx_c[NUM_MCE] = {0, 0, 0, 0, 0, 0};
-
-  struct bset local_set;
   uint16_t datain[MAX_BSET * PB_SIZE];
   uint16_t bset_num = get_bset(&local_set);
   uint32_t frameno_in[PB_SIZE];
@@ -393,7 +393,7 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
   }
 }
 
-/* recevier routinee */
+/* receiver routinee */
 void *mcerecv(void *unused)
 {
   int port, type;
