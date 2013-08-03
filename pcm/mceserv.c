@@ -257,13 +257,13 @@ static uint16_t tes_push(uint16_t nrx, int *nrx_c)
 
 /* this is a complement of empties, containing non-reporting MCEs */
 int nrx_c[NUM_MCE] = {0, 0, 0, 0, 0, 0};
+int last_mce_no[NUM_MCE] = {-1, -1, -1, -1, -1, -1};
 
   struct bset local_set;
 /* do TES data frame reconstruction and push the data into the fifo */
 static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     const char *peer, int port)
 {
-  static int last_no[NUM_MCE] = {-1, -1, -1, -1, -1, -1};
 
   uint16_t datain[MAX_BSET * PB_SIZE];
   uint16_t bset_num = get_bset(&local_set);
@@ -285,10 +285,10 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
 
   for (f = 0; f < nf; ++f) {
     /* check frame sequencing */
-    if (last_no[mce] != -1 && frameno_in[f] - 1 != last_no[mce])
-      bprintf(warning, "Sequencing error, MCE%i: %i -> %i\n", mce, last_no[mce],
-          frameno_in[f]);
-    last_no[mce] = frameno_in[f];
+    if (last_mce_no[mce] != -1 && frameno_in[f] - 1 != last_mce_no[mce])
+      bprintf(warning, "Sequencing error, MCE%i: %i -> %i\n", mce,
+          last_mce_no[mce], frameno_in[f]);
+    last_mce_no[mce] = frameno_in[f];
 
     new = 1;
     if (tes_recon_top == tes_recon_bot) { /* buffer empty */
