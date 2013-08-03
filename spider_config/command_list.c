@@ -1335,6 +1335,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_MPC | CONFIRM)},
   {MCECMD1P(reload_dead_masks, "Reset dead and frail masks to template",
       GR_MPC | CONFIRM)},
+  {MCECMD1(mce_clock_ext, "Unveto sync box use by the MCE", GR_MPC)},
+  {MCECMD1(mce_clock_int, "Veto sync box use by the MCE", GR_MPC)},
 
   {MCECMD2A(integral_clamp, "Set the integral clamping factor", GR_DET,
       "Factor", 0, 1, 'f')},
@@ -1354,23 +1356,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"First stage", 0, 4, 'i', "NONE", {tuning_stages}},
       {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}},
       {"Apply?", 0, 3, 'i', "NONE", {autonoyes_names}}
-    }
-  },
-
-  {COMMAND(test_12), "Test command with 12 parameters", GR_MISC, 12,  
-    {
-      {"Param  1", 0, 1000, 'i', "NONE"},
-      {"Param  2", 0, 1000, 'i', "NONE"},
-      {"Param  3", 0, 1000, 'i', "NONE"},
-      {"Param  4", 0, 1000, 'i', "NONE"},
-      {"Param  5", 0, 1000, 'i', "NONE"},
-      {"Param  6", 0, 1000, 'i', "NONE"},
-      {"Param  7", 0, 1000, 'i', "NONE"},
-      {"Param  8", 0, 1000, 'i', "NONE"},
-      {"Param  9", 0, 1000, 'i', "NONE"},
-      {"Param 10", 0, 1000, 'i', "NONE"},
-      {"Param 11", 0, 1000, 'i', "NONE"},
-      {"Param 12", 0, 1000, 'i', "NONE"},
     }
   },
 

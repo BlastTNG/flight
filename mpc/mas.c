@@ -1191,24 +1191,32 @@ static int check_set_sync(void)
 {
   uint32_t v = 1;
 
-  /* ignore the return value here: if the sync box isn't on, this will usually
-   * time out as the CC waits for lock */
-  mas_write_range("cc", "select_clk", 0, &v, 1);
+  if (memory.sync_veto) {
+    v = 0; /* vetoed off */
+  } else {
+    /* ignore the return value here: if the sync box isn't on, this will usually
+     * time out as the CC waits for lock */
+    mas_write_range("cc", "select_clk", 0, &v, 1);
 
-  sleep(1);
+    sleep(1);
 
-  if (mas_read_range("cc", "select_clk", 0, &v, 1))
-    return 1;
+    if (mas_read_range("cc", "select_clk", 0, &v, 1))
+      return 1;
 
-  /* now select_clk is one if the sync box is working, zero otherwise
-   * co-incidentally we set config_sync to those same values to configure
-   * the sync box */
+    /* now select_clk is one if the sync box is working, zero otherwise
+     * co-incidentally we set config_sync to those same values to configure
+     * the sync box */
+  }
+
   cfg_set_int("config_sync", 0, v);
   if (v)
     state |= st_syncon;
   else {
     state &= ~st_syncon;
-    bprintf(warning, "CC reports sync box unresponsive.");
+    if (memory.sync_veto)
+      bprintf(warning, "Sync box vetoed on CC.");
+    else
+      bprintf(warning, "CC reports sync box unresponsive.");
   }
 
   return 0;

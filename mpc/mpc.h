@@ -45,6 +45,7 @@ struct memory_t {
   int last_iv;
   int squidveto;
   int used_tune;
+  int sync_veto;
 };
 extern struct memory_t memory;
 extern int mem_dirty;

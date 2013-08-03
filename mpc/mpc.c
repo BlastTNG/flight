@@ -351,6 +351,9 @@ static void send_slow_data(char *data, int send)
   } else
     slow_dat.t_mcc = 0x8000;
 
+  /* sync veto */
+  slow_dat.sync_veto = memory.sync_veto;
+
   /* mce temp */
   slow_dat.t_mce = box_temp;
 
@@ -1257,6 +1260,12 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case force_config:
         state |= st_config | st_mcecom;
         break;
+      case mce_clock_int:
+        memory.sync_veto = 1;
+        break;
+      case mce_clock_ext:
+        memory.sync_veto = 0;
+        break;
 
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
@@ -1367,11 +1376,11 @@ static int read_mem(void)
     memory.last_iv = find_last_dirent("ivcurves", 3);
     memory.squidveto = 0;
     memory.used_tune = 0xFFFF; /* don't know */
-    return 1;
-  }
+    memory.sync_veto = 0;
+  } else
+    bprintf(info, "Restored memory from /data%i", have_mem);
 
-  bprintf(info, "Restored memory from /data%i", have_mem);
-  return 1;
+  return 1; /* always re-write memory on start-up */
 }
 
 /* find a tuning file -- returns 1 on error */

@@ -185,8 +185,8 @@ enum multiCommand {
   bias_tes_all, bias_tes_rc1, tile_heater_on, tile_heater_off, bias_ramp,
   tile_heater_kick, servo_reset, force_config, tune_biases, reload_mce_config,
   flux_loop_init, lcloop, mce_veto, mce_unveto, reload_dead_masks, bias_step,
-  acquire, reconfig, pause_acq, data_mode, cycle_acq, integral_clamp, test_12,
-  drive_check, bias_tes_rc2,
+  acquire, reconfig, pause_acq, data_mode, cycle_acq, mce_clock_int,
+  drive_check, bias_tes_rc2, mce_clock_ext,
 
   /* MCE experiment.cfg commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,
@@ -203,7 +203,7 @@ enum multiCommand {
   servo_pid_frail, dead_detector, frail_detector, healthy_detector,
   sa_flux_quantum, sq2_flux_quantum, sq1_flux_quantum, sq1_bias, sq1_off_bias,
   sq2_bias, sq2_fb, sa_bias, sa_fb, sa_offset, adc_offset, sq1_ramp_check_on,
-  sq1_ramp_check_off, bias_tes_col, 
+  sq1_ramp_check_off, bias_tes_col, integral_clamp,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
