@@ -270,6 +270,10 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
   uint32_t frameno_in[PB_SIZE];
   int f, mce, sync, n, nf, ntes, i, new = 1;
 
+  int divisor = 1;
+  if (CommandData.bbcIsExt && (CommandData.bbcExtFrameRate > 1))
+    divisor = 2;
+
   /* decode input datagram */
   mce = mpc_decompose_tes(&nf, frameno_in, datain, len, data, bset_num,
       local_set.nm, &bad_bset_count, peer, port);
@@ -285,7 +289,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
 
   for (f = 0; f < nf; ++f) {
     /* check frame sequencing */
-    if (last_mce_no[mce] != -1 && frameno_in[f] - 1 != last_mce_no[mce])
+    if (last_mce_no[mce] != -1 && frameno_in[f] - divisor != last_mce_no[mce])
       bprintf(warning, "Sequencing error, MCE%i: %i -> %i\n", mce,
           last_mce_no[mce], frameno_in[f]);
     last_mce_no[mce] = frameno_in[f];
@@ -312,7 +316,6 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     }
 
     if (new) { /* new framenumber */
-
       /* in synchronous mode, frame numbers that have just recently happened
        * are discarded */
       if (sync && frameno_in[f] < tes_recon[tes_recon_bot].frameno &&
