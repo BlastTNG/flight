@@ -1557,7 +1557,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(acq_iv_curve), "Acquire IV curves (lcacq)", GR_IV | MCECMD, 7,
+  {COMMAND(acq_iv_curve), "Acquire IV curves and pick biases", GR_IV | MCECMD,
+    8,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick", 0, 2, 'i', "NONE", {kick_names}},
@@ -1566,6 +1567,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Last bias", 0, 65535, 'i', "NONE"},
       {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
       {"Step wait (s)", 0, 10, 'f', "NONE"},
+      {"Set biases", 0, 1, 'i', "NONE", {noyes_names}}
     }
   },
 

@@ -912,7 +912,7 @@ static void pick_biases(int iv_num)
   struct mcp_proc *p;
   int p_stdout = 0;
   char biases[1024];
-  int data[256];
+  uint32_t data[256];
 
   char ivname[256];
   sprintf(ivname, "iv_%04i", iv_num);
@@ -928,7 +928,7 @@ static void pick_biases(int iv_num)
 
   stop_proc(p, 0, 0, 0, 0);
 
-  if (sscanf(biases, "%i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i",
+  if (sscanf(biases, "%i %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u",
         data + 0, data + 1, data + 2, data + 3, data + 4, data + 5, data + 6,
         data + 7, data + 8, data + 9, data + 10, data + 11, data + 12,
         data + 13, data + 14, data + 15) == 16)
@@ -972,8 +972,8 @@ static int ivcurve(void)
       }
 
     /* analyse */
-    pick_biases(memory.last_iv);
-
+    if (goal.apply)
+      pick_biases(memory.last_iv);
   }
 
   return 0;

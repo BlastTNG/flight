@@ -1083,7 +1083,11 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         if ((new_goal.stop - new_goal.start) * new_goal.step < 0)
           new_goal.step = -new_goal.step;
         new_goal.wait = ev->rvalues[6];
-        new_goal.goal = (ev->command == acq_iv_curve) ? gl_iv : gl_bramp;
+        if (ev->command == acq_iv_curve) {
+          new_goal.goal = gl_iv;
+          new_goal.apply = ev->ivalues[7];
+        } else
+          new_goal.goal = gl_bramp;
         change_goal = 1;
         break;
 
