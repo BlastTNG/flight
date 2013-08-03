@@ -445,8 +445,8 @@ int mpc_decompose_command(struct ScheduleEvent *ev, int mce, size_t len,
   ev->command = *(int16_t*)(ptr);
   ptr += 2;
 
-  bprintf(info, "Received %sword command #%i (%s)", ev->is_multi ? "mutli" :
-      "single ", ev->command, CommandName(ev->is_multi, ev->command));
+  bprintf(info, "Received command #%i (%s)", ev->command,
+      CommandName(ev->is_multi, ev->command));
 
   if (ev->is_multi)
     while (ptr - data < len) {
