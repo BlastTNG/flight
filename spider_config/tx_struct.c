@@ -996,6 +996,12 @@ struct ChannelStruct SlowChannels[] = {
   {"nrx_mpc4",        'w',  LOOP8, 24, 1, 0, 'u', U_NONE},
   {"nrx_mpc5",        'w',  LOOP8, 25, 1, 0, 'u', U_NONE},
   {"nrx_mpc6",        'w',  LOOP8, 26, 1, 0, 'u', U_NONE},
+  {"lmn_mpc1",        'w',  LOOP8, 27, 1, 0, 'u', U_NONE},
+  {"lmn_mpc2",        'w',  LOOP8, 28, 1, 0, 'u', U_NONE},
+  {"lmn_mpc3",        'w',  LOOP8, 29, 1, 0, 'u', U_NONE},
+  {"lmn_mpc4",        'w',  LOOP8, 30, 1, 0, 'u', U_NONE},
+  {"lmn_mpc5",        'w',  LOOP8, 31, 1, 0, 'u', U_NONE},
+  {"lmn_mpc6",        'w',  LOOP8, 32, 1, 0, 'u', U_NONE},
 
   END_OF_CHANNELS
 };
