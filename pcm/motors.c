@@ -1151,7 +1151,7 @@ static void SetAzScanMode(double az, double left, double right, double v,
       }
     }
     /* BSC Trigger flag */
-    before_trig = (CommandData.bsc_delay/ACSData.bbc_rate) - v/CommandData.az_accel 
+    before_trig = (20.0*CommandData.bsc_delay/ACSData.bbc_rate) - v/CommandData.az_accel 
     + CommandData.StarCam[0].expTime/2000;
     if (az < left + before_trig*v) {
       bsc_trigger = 1;  
@@ -1200,7 +1200,7 @@ static void DoSineMode(double centre, double ampl, double el_start)
 
   i_point = GETREADINDEX(point_index);
 
-  t_before = (CommandData.bsc_delay/ACSData.bbc_rate) + CommandData.StarCam[0].expTime/2000.0;
+  t_before = (20.0*CommandData.bsc_delay/ACSData.bbc_rate) + CommandData.StarCam[0].expTime/2000.0;
   //t_step = 0.35; // "on_delay" in GetIElev + (1/2)*(step duration) 
   t_step = 0.5; 
 
