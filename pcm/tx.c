@@ -362,8 +362,6 @@ static struct NiosStruct *GetMCCNiosAddr(char *field, int i_mce)
 /* write slow MCE data */
 static void WriteMCESlow(void)
 {
-  unsigned int mux;
-
   static int firsttime = 1;
   static struct NiosStruct *driveMapAddr[NUM_MCE];
   static struct NiosStruct *df0MccAddr[NUM_MCE];
@@ -386,9 +384,12 @@ static void WriteMCESlow(void)
   static struct NiosStruct *reportingMPCsAddr;
   static struct NiosStruct *aliveMPCsAddr;
   static struct NiosStruct *squidVetoAddr;
+  static struct NiosStruct *syncVetoAddr;
   static struct NiosStruct *dataModeAddr;
   static struct NiosStruct *dataModeBitsAddr;
 
+  uint16_t sync_veto = 0;
+  unsigned int i;
   int ind;
 
   if (firsttime) {
@@ -415,38 +416,46 @@ static void WriteMCESlow(void)
     blobNumAddr = GetNiosAddr("blob_num_mpc");
     reportingMPCsAddr = GetNiosAddr("reporting_mpcs");
     aliveMPCsAddr = GetNiosAddr("alive_mpcs");
-    squidVetoAddr = GetNiosAddr("squid_veto");
-    dataModeAddr = GetNiosAddr("data_mode");
+    squidVetoAddr = GetNiosAddr("squid_veto_mpc");
+    syncVetoAddr = GetNiosAddr("sync_veto_mpc");
+    dataModeAddr = GetNiosAddr("data_mode_mce");
     dataModeBitsAddr = GetNiosAddr("data_mode_bits");
   }
 
-  for (mux=0; mux<NUM_MCE; mux++) {
-    ind = GETREADINDEX(mce_slow_index[mux]);
+  for (i = 0; i < NUM_MCE; i++) {
+    ind = GETREADINDEX(mce_slow_index[i]);
 
-    WriteData(driveMapAddr[mux], mce_slow_dat[mux][ind].drive_map, NIOS_QUEUE);
-    WriteData(timeMccAddr[mux], mce_slow_dat[mux][ind].time, NIOS_QUEUE);
-    WriteData(df0MccAddr[mux], mce_slow_dat[mux][ind].df[0], NIOS_QUEUE);
-    WriteData(df1MccAddr[mux], mce_slow_dat[mux][ind].df[1], NIOS_QUEUE);
-    WriteData(df2MccAddr[mux], mce_slow_dat[mux][ind].df[2], NIOS_QUEUE);
-    WriteData(df3MccAddr[mux], mce_slow_dat[mux][ind].df[3], NIOS_QUEUE);
-    WriteData(stateMpcAddr[mux], mce_slow_dat[mux][ind].state, NIOS_QUEUE);
-    WriteData(dtgMpcAddr[mux], ((mce_slow_dat[mux][ind].goal & 0xFF) << 8)
-        | (mce_slow_dat[mux][ind].dtask & 0xFF), NIOS_QUEUE);
-    WriteData(taskMpcAddr[mux], mce_slow_dat[mux][ind].task, NIOS_QUEUE);
-    WriteData(tMccAddr[mux], mce_slow_dat[mux][ind].t_mcc, NIOS_QUEUE);
-    WriteData(tMceAddr[mux], mce_slow_dat[mux][ind].t_mce, NIOS_QUEUE);
-    WriteData(deadCountAddr[mux], mce_slow_dat[mux][ind].dead_count,
+    WriteData(driveMapAddr[i], mce_slow_dat[i][ind].drive_map, NIOS_QUEUE);
+    WriteData(timeMccAddr[i], mce_slow_dat[i][ind].time, NIOS_QUEUE);
+    WriteData(df0MccAddr[i], mce_slow_dat[i][ind].df[0], NIOS_QUEUE);
+    WriteData(df1MccAddr[i], mce_slow_dat[i][ind].df[1], NIOS_QUEUE);
+    WriteData(df2MccAddr[i], mce_slow_dat[i][ind].df[2], NIOS_QUEUE);
+    WriteData(df3MccAddr[i], mce_slow_dat[i][ind].df[3], NIOS_QUEUE);
+    WriteData(stateMpcAddr[i], mce_slow_dat[i][ind].state, NIOS_QUEUE);
+    WriteData(dtgMpcAddr[i], ((mce_slow_dat[i][ind].goal & 0xFF) << 8)
+        | (mce_slow_dat[i][ind].dtask & 0xFF), NIOS_QUEUE);
+    WriteData(taskMpcAddr[i], mce_slow_dat[i][ind].task, NIOS_QUEUE);
+    WriteData(tMccAddr[i], mce_slow_dat[i][ind].t_mcc, NIOS_QUEUE);
+    WriteData(tMceAddr[i], mce_slow_dat[i][ind].t_mce, NIOS_QUEUE);
+    WriteData(deadCountAddr[i], mce_slow_dat[i][ind].dead_count,
         NIOS_QUEUE);
-    WriteData(lastTuneAddr[mux], mce_slow_dat[mux][ind].last_tune, NIOS_QUEUE);
-    WriteData(usedTuneAddr[mux], mce_slow_dat[mux][ind].used_tune, NIOS_QUEUE);
-    WriteData(lastIVAddr[mux], mce_slow_dat[mux][ind].last_iv, NIOS_QUEUE);
-    WriteData(tileHeaterAddr[mux], mce_slow_dat[mux][ind].tile_heater,
+    WriteData(lastTuneAddr[i], mce_slow_dat[i][ind].last_tune, NIOS_QUEUE);
+    WriteData(usedTuneAddr[i], mce_slow_dat[i][ind].used_tune, NIOS_QUEUE);
+    WriteData(lastIVAddr[i], mce_slow_dat[i][ind].last_iv, NIOS_QUEUE);
+    WriteData(tileHeaterAddr[i], mce_slow_dat[i][ind].tile_heater,
         NIOS_QUEUE);
+  }
+
+  for (i = 0; i < NUM_MCE; ++i) {
+    ind = GETREADINDEX(mce_slow_index[i]);
+    if (mce_slow_dat[i][ind].sync_veto)
+      sync_veto |= (1U << i);
   }
 
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
   WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
   WriteData(squidVetoAddr, CommandData.squidveto, NIOS_QUEUE);
+  WriteData(syncVetoAddr, sync_veto, NIOS_QUEUE);
   WriteData(dataModeBitsAddr,
       ((CommandData.data_mode_bits[CommandData.data_mode][0][0] & 0x1F) << 10) |
       ((CommandData.data_mode_bits[CommandData.data_mode][0][1] & 0x1F) <<  5) |

@@ -495,7 +495,7 @@ struct CommandDataStruct {
 
   /* squid vetoing */
   uint8_t squidveto;
-  uint8_t mce_power; /* MCE power banks off (will force-veto MCEs */
+  uint8_t mce_power; /* MCE power banks off (will force-veto MCEs) */
 };
 
 void InitCommandData();
