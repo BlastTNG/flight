@@ -562,8 +562,8 @@ int mpc_decompose_tes(int *pb_size, uint32_t *frameno, uint16_t *tes_data,
   int mce = data[3];
 
   if ((mce & 0x7F) < 0 || (mce & 0x7F) >= NUM_MCE) {
-    bprintf(err, "Unknown MCE %i in slow data packet from %s/%i", mce, peer,
-        port);
+    bprintf(err, "Unknown MCE %i in slow data packet from %s/%i", mce & 0x7F,
+        peer, port);
     return -1;
   }
 
@@ -577,9 +577,11 @@ int mpc_decompose_tes(int *pb_size, uint32_t *frameno, uint16_t *tes_data,
   *pb_size = nf = *(uint16_t*)(data + 6);
 
   /* check len again */
-  if (len < (set_len[mce] * sizeof(uint16_t) + sizeof(uint32_t)) * nf + 8) {
+  if (len < (set_len[mce & 0x7F] * sizeof(uint16_t) + sizeof(uint32_t)) * nf +
+      8)
+  {
     bprintf(err, "Bad data packet (size %zu) from %s/%i, MCE %i", len, peer,
-        port, mce);
+        port, mce & 0x7F);
     return -1;
   }
 
