@@ -103,9 +103,6 @@ int veto = 1;
 /* MCE temperature poll */
 int mas_get_temp = 0;
 
-/* PCM/MPC divisor */
-int divisor = 2;
-
 /* slow veto -- if vetoed, eventually PCM will reboot the MCC; ergo, we use this
  * as a watchdog */
 int slow_veto = 0;
@@ -147,9 +144,6 @@ int power_cycle_cmp = 0;
 /* ping */
 static int pcm_pong = 0;
    
-/* handles the divide-by-two frequency scaling for PCM transfer */
-static int pcm_strobe = 0;
-
 /* ret_dat counter */
 int rd_count = 0;
 
@@ -210,6 +204,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     int port)
 {
   int new_row_len = -1, new_num_rows = -1, new_data_rate = -1, squidveto = 0;
+  int divisor;
 
   if (data_in) {
     /* reply acknowledgement from PCM */
@@ -231,6 +226,15 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       else
         bprintf(info, "Squids unvetoed");
       memory.squidveto = squidveto;
+      mem_dirty = 1;
+    }
+
+    if (divisor != 1)
+      divisor = 2;
+
+    if (divisor != memory.divisor) {
+      bprintf(info, "New divisor: %i", divisor);
+      memory.divisor = divisor;
       mem_dirty = 1;
     }
     
@@ -422,7 +426,7 @@ static void ForwardData(const uint32_t *frameno)
 
 /* do the frequency division and 16-bit conversion based on the data mode
  * definitions */
-static int16_t coadd(uint32_t datum, uint16_t old_datum)
+static int16_t coadd(uint32_t datum1, uint16_t datum2)
 {
   uint16_t rec[2];
   uint32_t mask[2];
@@ -434,20 +438,20 @@ static int16_t coadd(uint32_t datum, uint16_t old_datum)
   mask[1] = ((1 << data_modes[cur_dm][1].num_bits) - 1);
 
   /* extract the subfield(s) */
-  rec[0] = (uint16_t)(datum >> (data_modes[cur_dm][0].first_bit -
+  rec[0] = (uint16_t)(datum1 >> (data_modes[cur_dm][0].first_bit -
           data_modes[cur_dm][1].num_bits)) & mask[0];
-  rec[1] = (uint16_t)(datum >> data_modes[cur_dm][1].first_bit) & mask[1];
+  rec[1] = (uint16_t)(datum1 >> data_modes[cur_dm][1].first_bit) & mask[1];
 
-  if (pcm_strobe) { /* coadd */
-    /* split the old datum, if neccessary */
+  /* if divisor is two, we have to add two frames together */
+  if (memory.divisor != 1) {
+    /* split dataum2, if neccessary */
     uint16_t old_rec[2];
     
     old_rec[0] = (data_modes[cur_dm][0].coadd_how != coadd_first)
-      ? old_datum & mask[0] : 0;
+      ? datum2 & mask[0] : 0;
 
     old_rec[1] = (data_modes[cur_dm][1].num_bits > 0 &&
-        data_modes[cur_dm][1].coadd_how != coadd_first) ? old_datum & mask[1] :
-      0;
+        data_modes[cur_dm][1].coadd_how != coadd_first) ? datum2 & mask[1] : 0;
 
     /* coadd */
     for (i = 0; i < 2; ++i)
@@ -472,38 +476,27 @@ static void pushback(void)
 {
   int n;
   size_t i, ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
-
-  /* the buffer containing the first frame */
-  static uint16_t data[NUM_ROW * NUM_COL];
   uint32_t frameno[PB_SIZE];
 
   if (ntes > 0) { /* not sending any TES data */
     for (n = 0; n < PB_SIZE; ++n) {
       /* this frame */
-      uint32_t *fr = frame[(n + pb_last) % FB_SIZE];
+      uint32_t *frA = frame[(n + pb_last) % FB_SIZE];
+      uint32_t *frB = frame[(n + pb_last + FB_SIZE - 1) % FB_SIZE];
 
-      const struct mas_header *header = (const struct mas_header *)fr;
+      const struct mas_header *header = (const struct mas_header *)frA;
       frameno[n] = sync_dv ? header->syncno : header->cc_frameno;
 
       if (ndata > NUM_COL * NUM_ROW)
         ndata = NUM_COL * NUM_ROW;
 
-      if (divisor == 1) {
-        pcm_strobe = 0;
+      if (memory.divisor == 1)
         for (i = 0; i < ndata; ++i) 
-          pcm_data[i] = coadd(fr[i + MCE_HEADER_SIZE], 0);
-      } else {
-        if (pcm_strobe) { /* coadd */
-          for (i = 0; i < ndata; ++i) 
-            pcm_data[i] = coadd(fr[i + MCE_HEADER_SIZE], data[i]);
-          pcm_strobe = 0;
-        } else {/* just copy */
-          for (i = 0; i < ndata; ++i) 
-            data[i] = coadd(fr[i + MCE_HEADER_SIZE], 0);
-          pcm_strobe = 1;
-          return;
-        }
-      }
+          pcm_data[i] = coadd(frA[i + MCE_HEADER_SIZE], 0);
+      else
+        for (i = 0; i < ndata; ++i) 
+          pcm_data[i] = coadd(frA[i + MCE_HEADER_SIZE],
+              frB[i + MCE_HEADER_SIZE]);
     }
 
     /* pushback */
@@ -1383,6 +1376,7 @@ static int read_mem(void)
     memory.squidveto = 0;
     memory.used_tune = 0xFFFF; /* don't know */
     memory.sync_veto = 0;
+    memory.divisor = 1;
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 

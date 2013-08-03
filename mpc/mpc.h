@@ -46,6 +46,7 @@ struct memory_t {
   int squidveto;
   int used_tune;
   int sync_veto;
+  int divisor;
 };
 extern struct memory_t memory;
 extern int mem_dirty;
