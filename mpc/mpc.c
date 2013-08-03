@@ -479,30 +479,32 @@ static void pushback(void)
   uint32_t frameno[PB_SIZE];
 
   if (ntes > 0) { /* not sending any TES data */
-    for (n = 0; n < PB_SIZE; ++n) {
+    for (n = 0; n < PB_SIZE * memory.divisor; n += memory.divisor) {
       /* this frame */
       uint32_t *frA = frame[(n + pb_last) % FB_SIZE];
       uint32_t *frB = frame[(n + pb_last + FB_SIZE - 1) % FB_SIZE];
 
       const struct mas_header *header = (const struct mas_header *)frA;
-      frameno[n] = sync_dv ? header->syncno : header->cc_frameno;
+      frameno[n / memory.divisor]
+        = sync_dv ? header->syncno : header->cc_frameno;
 
       if (ndata > NUM_COL * NUM_ROW)
         ndata = NUM_COL * NUM_ROW;
 
       if (memory.divisor == 1)
         for (i = 0; i < ndata; ++i) 
-          pcm_data[i] = coadd(frA[i + MCE_HEADER_SIZE], 0);
+          pcm_data[i + n * NUM_ROW * NUM_COL]
+            = coadd(frA[i + MCE_HEADER_SIZE], 0);
       else
         for (i = 0; i < ndata; ++i) 
-          pcm_data[i] = coadd(frA[i + MCE_HEADER_SIZE],
-              frB[i + MCE_HEADER_SIZE]);
+          pcm_data[i + n * NUM_ROW * NUM_COL / 2]
+            = coadd(frA[i + MCE_HEADER_SIZE], frB[i + MCE_HEADER_SIZE]);
     }
 
     /* pushback */
     ForwardData(frameno);
   }
-  pb_last = (pb_last + PB_SIZE) % FB_SIZE;
+  pb_last = (pb_last + PB_SIZE * memory.divisor) % FB_SIZE;
 }
 
 /* Send GP data to PCM */
@@ -1560,7 +1562,7 @@ int main(void)
         ForwardBlob();
 
       /* send data */
-      while ((fb_top - pb_last + FB_SIZE) % FB_SIZE > PB_SIZE)
+      while ((fb_top - pb_last + FB_SIZE) % FB_SIZE > PB_SIZE * memory.divisor)
         pushback();
 
       /* PCM requests */
