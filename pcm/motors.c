@@ -41,7 +41,7 @@
 #define MIN_EL 14 
 #define MAX_EL 45
 
-#define BEAM_MAP // make horrible changes to scan mode for beam mapping
+//#define BEAM_MAP // make horrible changes to scan mode for beam mapping
 
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000

@@ -739,8 +739,7 @@ struct ChannelStruct SlowChannels[] = {
   {"state_x6_cycle",'w', LOOP6, 33,           1.0,           0.0, 'u', U_NONE},
   {"band_az",       'w', LOOP6, 34,  30.0/65535.0,           0.0, 'u', U_P_DEG},
   
-  // TODO: GET RID OF THIS AFTER TURN AROUND FLAG HAS BEEN TESTED AND WORKS
-  {"is_turn_around", 'w', LOOP6, 35,            1.0,         0.0, 'u', U_NONE},
+  /* LOOP6, 35 is fast */
   {"row_len_sync",   'w', LOOP6, 36,            1.0,         0.0, 'u', U_NONE},
   {"num_rows_sync",  'w', LOOP6, 37,            1.0,         0.0, 'u', U_NONE},
   {"data_rate_sync", 'w', LOOP6, 38,            1.0,         0.0, 'u', U_NONE},
@@ -1124,6 +1123,7 @@ struct ChannelStruct FastChannels[] = {
   {"bolo_stats_index", 'r', LOOP0,  5, 1.0,         0.0,       'u',     U_NONE},
   {"bolo_stats_mplex", 'r', LOOP0,  6, 1.0,         0.0,       'u',     U_NONE},
   {"mce_blob",         'r', LOOP0,  7, 1.0,         0.0,       'u',     U_NONE},
+  {"is_turn_around",   'w', LOOP6, 35, 1.0,         0.0,       'u',     U_NONE},
 
   /* Create the correct number of mce channels in the tx struct.  They
    * will be called "mce###" for ### from zero to the value defined in tes.h
