@@ -149,7 +149,7 @@ struct gl_data {
 
   /* general purpose registers */
   int start, stop, force;
-  int step, kick;
+  int step, kick, apply;
   double kickwait, wait;
 };
 extern struct gl_data goal, new_goal;

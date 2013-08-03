@@ -1096,6 +1096,12 @@ static int bias_ramp(void)
   return r;
 }
 
+/* is the tuning numbered num "good"? */
+static int good_tuning(int num)
+{
+  return 1; /* yeah, it is */
+}
+
 /* run a tuning */
 static int tune(void)
 {
@@ -1162,8 +1168,21 @@ static int tune(void)
     cfg_set_int("sq1_servo_bias_ramp", 0, old_sq1_servo_bias_ramp);
   }
 
-  /* don't apply this tuning, I guess ... ? */
+  /* reset */
   flush_experiment_cfg(1);
+
+  /* apply, if requested */
+  switch (goal.apply) {
+    case 1: /* no */
+      break;
+    case 0: /* auto */
+      if (!good_tuning(memory.last_tune))
+        break;
+      /* FALLTHROUGH */
+    case 2: /* yes */
+      cfg_apply_tuning(memory.last_tune);
+      break;
+  }
 
   return r ? 1 : 0;
 }

@@ -168,6 +168,7 @@ const char *const GroupNames[N_GROUPS] = {
 #define COMMAND(x) (int)x, #x
 
 /* parameter value lists */
+const char *autonoyes_names[] = {"auto", "no", "yes", NULL};
 const char *noyes_names[] = {"no", "yes", NULL};
 const char *kick_names[] = {"none", "1 Volt", "2 Volts", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
@@ -1338,19 +1339,21 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD2A(integral_clamp, "Set the integral clamping factor", GR_DET,
       "Factor", 0, 1, 'f')},
   {COMMAND(tune_array), "Tune a focal plane with current tuning parameters",
-    GR_MPC | MCECMD, 3,
+    GR_MPC | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"First stage", 0, 4, 'i', "NONE", {tuning_stages}},
-      {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}}
+      {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}},
+      {"Apply?", 0, 3, 'i', "NONE", {autonoyes_names}}
     }
   },
   {COMMAND(tune_biases), "Tune, with bias ramping forced on", GR_MPC | MCECMD,
-    3,
+    4,
     {
       {CHOOSE_INSERT_PARAM},
       {"First stage", 0, 4, 'i', "NONE", {tuning_stages}},
-      {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}}
+      {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}},
+      {"Apply?", 0, 3, 'i', "NONE", {autonoyes_names}}
     }
   },
 

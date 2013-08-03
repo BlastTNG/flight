@@ -1069,6 +1069,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         new_goal.force = (ev->command == tune_biases) ? 1 : 0;
         new_goal.start = ev->ivalues[1];
         new_goal.stop = ev->ivalues[2];
+        new_goal.apply = ev->ivalues[3];
         new_goal.goal = gl_tune;
         change_goal = 1;
         break;
