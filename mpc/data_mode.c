@@ -40,7 +40,8 @@ struct data_mode_def data_modes[N_DATA_MODES][2] = {
   OBSOLETE,                             /* 7 -- unsupported */
   OBSOLETE,                             /* 8 -- obsolete */
   OBSOLETE,                             /* 9 -- obsolete */
-  { { 7, 12, coadd_mean }, { 0, 4, coadd_sum } },   /* 10: [31:7] = sq1_fb_filtered
+  { { 16, 16, coadd_mean }, { 0, 0, coadd_sum } }, /* 10:
+                                           -  [31:7] = sq1_fb_filtered
                                            -   [6:0] = num_flux_jumps */
   { { 0, 16, coadd_first }, IGNORED },        /* 11: [9:3] row_index
                                            [2:0] column_index */

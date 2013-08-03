@@ -1261,10 +1261,16 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         state |= st_config | st_mcecom;
         break;
       case mce_clock_int:
-        memory.sync_veto = 1;
+        if (!memory.sync_veto) {
+          memory.sync_veto = 1;
+          mem_dirty = 1;
+        }
         break;
       case mce_clock_ext:
-        memory.sync_veto = 0;
+        if (memory.sync_veto) {
+          memory.sync_veto = 0;
+          mem_dirty = 1;
+        }
         break;
 
       default:
