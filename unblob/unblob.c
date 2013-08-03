@@ -127,7 +127,7 @@ int main(int argc, char **argv)
         break;
       case '?':
       default:
-        printf("unrecognised: '%i'\n", n);
+        printf("unrecognised: '%c'\n", (char)n);
         usage();
     }
   }
@@ -244,6 +244,8 @@ int main(int argc, char **argv)
     case BLOB_TUNECFG:
       dict_decompress("experiment.cfg", payload, payload_len);
       break;
+    case BLOB_TUNESQ:
+      dict_decompress("tuning.sqtune", payload, payload_len);
   }
 
   return 0;
