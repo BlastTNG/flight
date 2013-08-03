@@ -254,6 +254,10 @@ void cfg_load_dead_masks(void);
 enum det_types cfg_det_type(int, int);
 int cfg_frail_pid(char);
 
+/* fake read from the MCE */
+void read_param(const char *card, const char *param, int offset, uint32_t *data,
+    int count);
+
 /* frame statistics */
 void update_stats(const uint32_t *curr_frame, size_t frame_size,
     uint32_t frameno);

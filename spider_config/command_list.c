@@ -1335,8 +1335,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1P(reload_dead_masks, "Reset dead and frail masks to template",
       GR_MPC | CONFIRM)},
 
-  {MCECMD2(integral_clamp, "Set the integral clamping level", GR_DET,
-      "Level", 0, ((uint32_t)(-1)), 'l')},
+  {MCECMD2A(integral_clamp, "Set the integral clamping factor", GR_DET,
+      "Factor", 0, 1, 'f')},
   {COMMAND(tune_array), "Tune a focal plane with current tuning parameters",
     GR_MPC | MCECMD, 3,
     {

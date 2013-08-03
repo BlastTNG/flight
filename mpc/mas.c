@@ -383,8 +383,8 @@ static void fetch_param(const char *card, const char *param, int offset,
 }
 
 /* read a value from the mce_stat array */
-static void read_param(const char *card, const char *param, int offset,
-    uint32_t *data, int count)
+void read_param(const char *card, const char *param, int offset, uint32_t *data,
+    int count)
 {
   int i = param_index(card, param);
 

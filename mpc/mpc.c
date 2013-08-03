@@ -814,8 +814,69 @@ static void prm_set_det_type(int c, int r, enum det_types h, int a)
     state &= ~st_config;
 }
 
+/* integral clamp */
+static void prm_integral_clamp(double v, int a)
+{
+  /* apply -- in this case we have to do the maths oursevles */
+  if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
+    int i, r, c;
+    uint32_t fj = 0, ic = 0;
+    uint32_t data[NUM_ROW], servo[8];
+    char card[] = "rc1";
+    for (r = 1; r <= 2; ++r) {
+      int max_i = 0;
+      char gaini[] = "gaini0";
+
+      card[2] = r + '1';
+
+      /* calculate max_i */
+      read_param(card, "servo_mode", 0, servo, 8);
+      for (c = 0; c < 8; ++c) {
+        /* if servo_mode != 3, ignore this column */
+        if (servo[c] == 3) {
+          gaini[5] = c + '0';
+          read_param(card, gaini, 0, data, NUM_ROW);
+          for (i = 0; i < NUM_ROW; ++i)
+            if (max_i < data[i])
+              max_i = data[i];
+        }
+      }
+
+      if (max_i == 0)
+        ic = 0;
+      else {
+        read_param(card, "en_fb_jump", 0, &fj, 1);
+        if (fj) {
+          /* calcualte min_fq */
+          int min_fq = 999999;
+          char flx_quanta[] = "flx_quanta0";
+          for (c = 0; c < 8; ++c) {
+            flx_quanta[10] = c + '0';
+            read_param(card, flx_quanta, 0, data, NUM_ROW);
+            for (i = 0; i < NUM_ROW; ++i)
+              if (min_fq > data[i])
+                min_fq = data[i];
+          }
+
+          ic = v * 127 * 4096 * min_fq / max_i;
+        } else {
+          ic = v * 8192 * 4096 / max_i;
+        }
+      }
+      push_block(card, "integral_clamp", 0, &ic, 1);
+    }
+  }
+
+  /* record */
+  if (a == PRM_APPLY_RECORD || a == PRM_RECORD_ONLY || a == PRM_RECORD_RCONF) {
+    cfg_set_float("integral_clamp_factor", 0, v);
+    if (a == PRM_RECORD_RCONF)
+      state &= ~st_config;
+  }
+}
+
 /* ignore this command if the column is off */
-static void vet_bias(int p, const char *name, int c, int v, int a)
+static void prm_vet_bias(int p, const char *name, int c, int v, int a)
 {
   if (cfg_get_int("columns_off", c))
     return;
@@ -1078,11 +1139,11 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         PRM_SETINTR(sq1_off_bias, "sq1_bias_off");
         PRM_SETINTCR(sq2_fb, "sq2_fb_set");
       case sa_bias:
-        vet_bias(sa_bias, "sa_bias", ev->ivalues[1], ev->ivalues[2],
+        prm_vet_bias(sa_bias, "sa_bias", ev->ivalues[1], ev->ivalues[2],
             ev->ivalues[3]);
         break;
       case sq2_bias:
-        vet_bias(sq2_bias, "sq2_bias", ev->ivalues[1], ev->ivalues[2],
+        prm_vet_bias(sq2_bias, "sq2_bias", ev->ivalues[1], ev->ivalues[2],
             ev->ivalues[3]);
         break;
         PRM_SETINTC(sa_fb, "sa_fb");
@@ -1190,8 +1251,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         push_block_raw("rca", "flx_lp_init", 0, data, 1);
         break;
       case integral_clamp:
-        data[0] = ev->ivalues[1];
-        push_block_raw("rca", "integral_clamp", 0, data, 1);
+        prm_integral_clamp(ev->rvalues[1], ev->ivalues[2]);
         break;
       case force_config:
         state |= st_config | st_mcecom;
