@@ -358,6 +358,7 @@ void WriteSuperFrame(unsigned short *frame) {
   static int omni1_rate=0;
   static int omni2_rate=0;
   static int highgain_rate=0;
+  static int n_arrays_stats_per_superframe = 0;
 
   int frame_bytes_written = 0;
   int i_field;
@@ -411,6 +412,12 @@ void WriteSuperFrame(unsigned short *frame) {
   
 #ifdef __SPIDER__
   frame_bytes_written += WriteArrayStats(); 
+
+  if (n_arrays_stats_per_superframe != CommandData.n_arrays_stats_per_superframe) {
+    n_arrays_stats_per_superframe = CommandData.n_arrays_stats_per_superframe;
+    reset_rates = 1;
+  }
+
 #if 0
   frame_bytes_written += WriteMCEBlob();
 #endif
