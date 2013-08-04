@@ -909,6 +909,7 @@ static int do_ivcurve(uint32_t kickbias, int kickwait, int start, int last,
 
 static void pick_biases(int iv_num)
 {
+  int good = 1;
   struct mcp_proc *p;
   int p_stdout = 0;
   char biases[1024];
@@ -924,17 +925,22 @@ static void pick_biases(int iv_num)
     return;
   
   /* capture the output */
-  read(p_stdout, &biases, 1024);
+  if (read(p_stdout, &biases, 1024) < 0)
+    good = 0;
 
   stop_proc(p, 0, 0, 0, 0);
 
-  if (sscanf(biases, "%i %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u",
-        data + 0, data + 1, data + 2, data + 3, data + 4, data + 5, data + 6,
-        data + 7, data + 8, data + 9, data + 10, data + 11, data + 12,
-        data + 13, data + 14, data + 15) == 16)
-  {
-    write_param("tes", "bias", 0, data, 16);
-  }
+  if (good)
+    if (sscanf(biases, "%i %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u",
+          data + 0, data + 1, data + 2, data + 3, data + 4, data + 5, data + 6,
+          data + 7, data + 8, data + 9, data + 10, data + 11, data + 12,
+          data + 13, data + 14, data + 15) == 16)
+    {
+      /* aplly and record, then kick */
+      write_param("tes", "bias", 0, data, 16);
+      cfg_set_intarr("tes_bias", 0, data, 16);
+      kick(KICK_DONT_BIAS, 6553, 30);
+    }
 }
 
 /* run and archive an iv curve */
@@ -1206,17 +1212,17 @@ static int tune(void)
   flush_experiment_cfg(1);
 
   /* apply, if requested */
-  switch (goal.apply) {
-    case 1: /* no */
-      break;
-    case 0: /* auto */
-      if (!good_tuning(memory.last_tune))
+    switch (goal.apply) {
+      case 1: /* no */
         break;
-      /* FALLTHROUGH */
-    case 2: /* yes */
-      cfg_apply_tuning(memory.last_tune);
-      break;
-  }
+      case 0: /* auto */
+        if (!good_tuning(memory.last_tune))
+          break;
+        /* FALLTHROUGH */
+      case 2: /* yes */
+        cfg_apply_tuning(memory.last_tune);
+        break;
+    }
 
   return r ? 1 : 0;
 }

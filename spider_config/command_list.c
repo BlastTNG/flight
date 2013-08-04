@@ -1490,7 +1490,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_IV)},
   {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_IV | MCECMD, 3,
     {
-      {CHOOSE_INSERT_NO_ALL},
+      {CHOOSE_INSERT_PARAM},
       {"Level (V)", 0, 5, 'f', "NONE"},
       {"Duration (s)", 0, 100, 'f', "NONE"},
     }

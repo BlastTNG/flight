@@ -415,15 +415,6 @@ static int nmce_from_ip(void)
   return (addr >> 24) - 241;
 }
 
-/* Send a TES data packet */
-static void ForwardData(const uint32_t *frameno)
-{
-  char data[UDP_MAXSIZE];
-  size_t len = mpc_compose_tes(pcm_data, frameno, bset_num, PB_SIZE, sync_dv,
-      nmce, ntes, tes, data);
-  udp_bcast(sock, MCESERV_PORT, len, data, 0);
-}
-
 /* do the frequency division and 16-bit conversion based on the data mode
  * definitions */
 static int16_t coadd(uint32_t datum1, uint16_t datum2)
@@ -477,12 +468,13 @@ static void pushback(void)
   int n;
   size_t i, ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
   uint32_t frameno[PB_SIZE];
+  char data[UDP_MAXSIZE];
+  size_t len;
 
   if (ntes > 0) { /* not sending any TES data */
     for (n = 0; n < PB_SIZE * memory.divisor; n += memory.divisor) {
       /* this frame */
       uint32_t *frA = frame[(n + pb_last) % FB_SIZE];
-      uint32_t *frB = frame[(n + pb_last + FB_SIZE - 1) % FB_SIZE];
 
       const struct mas_header *header = (const struct mas_header *)frA;
       frameno[n / memory.divisor]
@@ -495,14 +487,19 @@ static void pushback(void)
         for (i = 0; i < ndata; ++i) 
           pcm_data[i + n * NUM_ROW * NUM_COL]
             = coadd(frA[i + MCE_HEADER_SIZE], 0);
-      else
+      else {
+        /* previous frame */
+        uint32_t *frB = frame[(n + pb_last + FB_SIZE - 1) % FB_SIZE];
         for (i = 0; i < ndata; ++i) 
           pcm_data[i + n * NUM_ROW * NUM_COL / 2]
             = coadd(frA[i + MCE_HEADER_SIZE], frB[i + MCE_HEADER_SIZE]);
+      }
     }
 
     /* pushback */
-    ForwardData(frameno);
+    len = mpc_compose_tes(pcm_data, frameno, bset_num, PB_SIZE, sync_dv,
+        nmce, ntes, tes, data);
+    udp_bcast(sock, MCESERV_PORT, len, data, 0);
   }
   pb_last = (pb_last + PB_SIZE * memory.divisor) % FB_SIZE;
 }
@@ -825,7 +822,7 @@ static void prm_integral_clamp(double v, int a)
       int max_i = 0;
       char gaini[] = "gaini0";
 
-      card[2] = r + '1';
+      card[2] = r + '0';
 
       /* calculate max_i */
       read_param(card, "servo_mode", 0, servo, 8);

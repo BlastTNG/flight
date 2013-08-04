@@ -224,7 +224,7 @@ size_t mpc_compose_tes(const uint16_t *data, const uint32_t *framenum,
   /* append data */
   for (i = 0; i < nf; ++i)
     for (j = 0; j < ntes; ++j)
-      dbuf[j + i * ntes] = data[tesind[j]];
+      dbuf[j + i * ntes] = data[tesind[j] + i * NUM_ROW * NUM_COL];
 
   return len;
 }
