@@ -28,12 +28,6 @@
 static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
 {
   const struct mas_header *header = (const struct mas_header *)frame;
-  static uint32_t last_frameno = 0;
-
-  /* sequencing check */
-  if (last_frameno && frameno - last_frameno != 1)
-    bprintf(warning, "Sequencing error: %u, %u\n", last_frameno, frameno);
-  last_frameno = frameno;
 
   /* "Helpful" messages */
   if (header->status & MCE_FSB_LAST)
@@ -52,8 +46,9 @@ int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer)
 {
   /* Initialise */
   const struct mas_header *header = (const struct mas_header *)buffer;
-  sync_dv = (header->status & MCE_FSB_ACT_CLK) ? : 0;
+  sync_dv = (header->status & MCE_FSB_ACT_CLK) ? 1 : 0;
   const uint32_t frameno = sync_dv ? header->syncno : header->cc_frameno;
+  static uint32_t last_frameno = 0;
 
   if (acq_init) {
     /* synchronise packets to frameno */
@@ -64,6 +59,12 @@ int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer)
 
   /* copy to the frame buffer */
   memcpy(frame[fb_top], buffer, frame_size * sizeof(uint32_t));
+
+  /* sequencing check */
+  if (last_frameno && frameno - last_frameno != 1)
+    bprintf(warning, "Sequencing error: %u, %u %c | %u %u\n", last_frameno,
+        frameno, sync_dv ? 's' : ' ', header->syncno, header->cc_frameno);
+  last_frameno = frameno;
 
   /* do stuff */
   do_frame(frame[fb_top], (size_t)(sizeof(uint32_t) * frame_size), frameno);
