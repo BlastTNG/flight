@@ -92,41 +92,30 @@ void* syncComm(void* arg)
     usleep(20000);
   }
 
-  
-  /* try to open serial port */
-  while (syncinfo.open == 0) {
-    open_sync();
-
-    if (syncinfo.open == 0) {
-      if (n_conn == 10) {
-        bputs(err, "port failed to open after 10 attempts");
-      }
-      
-      n_conn++;
-      
-      sleep(1);
-    }
-  }
-  if (n_conn>=9) {
-    bprintf(info, "Opened port on attempt %i", n_conn); 
-  }
-  
   /* main loop */
   while (1) {
     if (syncinfo.closing == 1) {
       close_sync();
       usleep(10000); 
     } else if (syncinfo.reset == 1) {
-      /* if there's an error, reset connection to charge controller */
-      close_sync();
-     
-      if (n_reconn == 0) {
-        //bprintf(info,"Error occurred: attempting to re-open serial port.");
+      /* initialize values in sync box info struct */
+      if (syncinfo.open) {
+        /* if there's an error, reset connection */
+        close_sync();
+        if (n_reconn == 0) {
+          bprintf(info,"Error occurred: attempting to re-open serial port.");
+          n_reconn = 1;
+        } 
       }
-
+      
+      syncinfo.open = 0;
+      syncinfo.err = 0;
+      syncinfo.closing = 0;
+      syncinfo.reset = 0;
+      
       while (syncinfo.open == 0) {
         open_sync();
-
+        
         if (syncinfo.open == 0) {
           if (n_reconn == 10) { 
             bprintf(err,"Failed to re-open sync box after 10 attempts.");
@@ -137,7 +126,7 @@ void* syncComm(void* arg)
       }
       
       if (n_reconn>9) { // error had been reported
-        bprintf(info, "Re-opened sync box on attempt %i.",  n_reconn);
+        bprintf(info, "Opened sync box on attempt %i.",  n_reconn);
         syncinfo.reset = syncinfo.err = 0;       
       }
     } else {                       // query the sync box      
@@ -181,7 +170,8 @@ void* syncComm(void* arg)
         SyncBoxData.num_rows = 0;
         SyncBoxData.free_run = 0;
         continue; // go back up to top of infinite loop
-      } else if (n_reconn > 0) {
+      } else if ((SyncBoxData.row_len!=0)&&(n_reconn>0)) {
+        bprintf(info, "Re-established communication with sync box");
         #ifdef SYNCBOX_VERBOSE
         bprintf(info, "Re-established communication with sync box");
         #endif
