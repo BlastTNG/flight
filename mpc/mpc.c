@@ -1268,6 +1268,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
           mem_dirty = 1;
         }
         break;
+      case array_stat_reset:
+        stat_reset = 1;
+        break;
 
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
