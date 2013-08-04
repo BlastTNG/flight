@@ -381,8 +381,8 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
 
   /* These MCE numbers are zero based */
   bank =
-    (mce == 2 || mce == 3) ? 0 :  /* MCE2 and MCE3 are on bank 0 */
-    ((mce == 4 || mce == 6) ? 1 : /* MCE4 and MCE6 are on bank 1 */
+    (mce == 1 || mce == 2) ? 0 :  /* MCE2 and MCE3 are on bank 0 */
+    ((mce == 3 || mce == 5) ? 1 : /* MCE4 and MCE6 are on bank 1 */
      2);                          /* MCE1 and MCE5 are on bank 2 */
 
   if (power_cycle) {
