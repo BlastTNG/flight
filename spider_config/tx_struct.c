@@ -1141,6 +1141,9 @@ struct ChannelStruct FastChannels[] = {
   {"dps_table",    'w', LOOP7, 58,          70.0/32767.0,   0.0, 's', U_V_DPS},
   {"chatter",      'w', LOOP7, 59,                   1.0,   0.0, 'u', U_NONE},
 
+  /* TES debugging */
+  {"tes_nfifo",    'w', LOOP8, 33,                     1,     0, 'u', U_NONE},
+
   END_OF_CHANNELS
 };
 

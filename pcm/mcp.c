@@ -1028,12 +1028,16 @@ void insertMCEData(unsigned short *RxFrame)
 
   const struct tes_frame *data;
 
+  static struct NiosStruct *tesNfifoAddr;
+
   uint32_t D;
 
   if (offset == 0) {
     char mcefield[10];
     int i;
     struct BiPhaseStruct *bi0;
+
+    tesNfifoAddr = GetNiosAddr("tes_nfifo");
 
     offset = (int *) malloc(NUM_MCE_FIELDS * sizeof(int));
     for (i=0; i< NUM_MCE_FIELDS; i++) {
@@ -1098,7 +1102,7 @@ void insertMCEData(unsigned short *RxFrame)
       mce_blob_pos = -1;
   }
 
-
+  WriteData(tesNfifoAddr, tes_nfifo(), NIOS_QUEUE);
   if (tes_nfifo() > 0) {
     int i;
     no_data = 0;
