@@ -971,6 +971,7 @@ static void q_bias_tess(int k, int o, uint32_t *data, int n, int a)
   if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
     push_block("tes", "bias", o, data, n);
     push_kick(k);
+    state |= st_biased;
   }
 
   /* record value */
@@ -1192,7 +1193,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         blob_data[1] = ev->ivalues[2];
         break;
       case use_tuning:
-        cfg_apply_tuning(ev->ivalues[1] ? ev->ivalues[1] : memory.last_tune);
+        cfg_apply_tuning(ev->ivalues[1] ? ev->ivalues[1] : memory.last_tune, 1);
         break;
       case send_tuning:
         new_blob_type = BLOB_TUNECFG + ev->ivalues[2];

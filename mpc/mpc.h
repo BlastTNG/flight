@@ -113,8 +113,9 @@ enum status {
   st_mcecom = 0x0004, /* MCE is talking */ 
   st_syncon = 0x0008, /* the sync box is active */
   st_config = 0x0010, /* MCE is configured */
-  st_acqcnf = 0x0020, /* Acquisition is configured */
-  st_retdat = 0x0040, /* MCE is returning data */
+  st_biased = 0x0020, /* TESes are biased */
+  st_acqcnf = 0x0040, /* Acquisition is configured */
+  st_retdat = 0x0080, /* MCE is returning data */
 };
 /* state that can be on when reconfiguring the data drives */
 #define ST_DRIVE_IGNORE (st_active | st_syncon | st_mcecom)
@@ -215,12 +216,14 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
-  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop, dt_bstep, dt_bramp
+  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop, dt_bstep, dt_bramp,
+  dt_reconfig_kick
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
   "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
-"ivcurve", "stop", "stopmce", "lcloop", "bstep", "bramp"
+"ivcurve", "stop", "stopmce", "lcloop", "bstep", "bramp", \
+"reconfig_kick"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;
@@ -242,7 +245,7 @@ enum det_types {det_dead, det_frail, det_healthy};
 
 /* cfg stuff */
 int load_experiment_cfg(void);
-void cfg_apply_tuning(int n);
+void cfg_apply_tuning(int, int);
 int cfg_get_int(const char *, int);
 int cfg_set_float(const char *, int, double);
 int cfg_set_int(const char *, int, int);

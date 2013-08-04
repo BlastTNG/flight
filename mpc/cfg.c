@@ -450,7 +450,7 @@ static int cfg_copy_param(config_t *out, const config_t *in, const char *n,
 
 /* read an archived experiment.cfg file and transfer relevant parameters into
  * the live system */
-void cfg_apply_tuning(int n)
+void cfg_apply_tuning(int n, int force_reconfig)
 {
   config_t cfg;
   int d, have_cfg = -1;
@@ -494,7 +494,8 @@ void cfg_apply_tuning(int n)
     flush_experiment_cfg(1);
 
     /* force reconfig */
-    state &= ~st_config;
+    if (force_reconfig)
+      state &= ~st_config;
 
     memory.used_tune = n;
     mem_dirty = 1;

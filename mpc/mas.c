@@ -940,6 +940,7 @@ static void pick_biases(int iv_num)
       write_param("tes", "bias", 0, data, 16);
       cfg_set_intarr("tes_bias", 0, data, 16);
       kick(KICK_DONT_BIAS, 6553, 30);
+      state |= st_biased;
     }
 }
 
@@ -1220,7 +1221,7 @@ static int tune(void)
           break;
         /* FALLTHROUGH */
       case 2: /* yes */
-        cfg_apply_tuning(memory.last_tune);
+        cfg_apply_tuning(memory.last_tune, 0);
         break;
     }
 
@@ -1262,7 +1263,7 @@ static int check_set_sync(void)
   return 0;
 }
 
-static int reconfig(void)
+static int reconfig(int do_kick)
 {
   uint32_t u32;
   
@@ -1289,6 +1290,9 @@ static int reconfig(void)
     comms_lost = 1;
     return 1;
   }
+
+  if (do_kick)
+    kick(KICK_DONT_BIAS, 6553, 30);
 
   /* update tile heater data */
   read_param("heater", "bias", 0, &u32, 1);
@@ -1386,7 +1390,10 @@ void *mas_data(void *dummy)
           dt_error = 0;
         break;
       case dt_reconfig:
-        dt_error = reconfig();
+        dt_error = reconfig(0);
+        break;
+      case dt_reconfig_kick:
+        dt_error = reconfig(1);
         break;
       case dt_status:
         dt_error = mce_status();

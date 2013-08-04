@@ -101,6 +101,8 @@ void meta(void)
       meta_tk = st_retdat | STOP_TK;
     else if (state & st_acqcnf)
       meta_tk = st_acqcnf | STOP_TK;
+    else if (state & st_biased)
+      meta_tk = st_biased | STOP_TK;
     else if (state & st_config)
       meta_tk = st_config | STOP_TK;
     else if (working_goal == gl_stop && state & st_active)
@@ -123,7 +125,9 @@ void meta(void)
     else
       meta_tk = st_config;
   } else if (working_goal >= gl_acq) { /* turn acq on */
-    if (~state & st_acqcnf)
+    if (~state & st_biased)
+      meta_tk = st_biased;
+    else if (~state & st_acqcnf)
       meta_tk = st_acqcnf;
     else if (~state & st_retdat)
       meta_tk = st_retdat;

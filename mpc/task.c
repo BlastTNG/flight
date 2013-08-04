@@ -340,7 +340,7 @@ static int task_reset_mce()
     return 1;
 
   state |= st_mcecom;
-  state &= ~st_config;
+  state &= ~(st_config | st_biased);
   return 0;
 }
 
@@ -401,7 +401,7 @@ void *task(void *dummy)
         check_acq = 0;
         cl_count = 0;
         meta_tk = 0;
-        state &= ~(st_config | st_mcecom | st_acqcnf | st_retdat);
+        state &= ~(st_config | st_mcecom | st_acqcnf | st_biased | st_retdat);
         state |= st_active;
         continue;
       }
@@ -420,7 +420,7 @@ void *task(void *dummy)
       check_acq = 0;
 
       /* need complete MCE restart */
-      state &= ~(st_config | st_mcecom | st_retdat);
+      state &= ~(st_config | st_mcecom | st_retdat | st_biased);
       meta_tk = 0; /* try again */
     } else if (req_dm != cur_dm) {
       if ((goal.goal >= gl_acq) && !memory.squidveto && (state & st_config)) {
@@ -480,9 +480,14 @@ void *task(void *dummy)
               task_reset_mce();
               break;
             case st_config:
+            case st_biased:
               /* MCE reconfig */
-              if (dt_wait(dt_reconfig) == 0)
-                state |= st_config;
+              if (state & st_biased) {
+                if (dt_wait(dt_reconfig) == 0)
+                  state |= st_config | st_biased;
+              } else
+                if (dt_wait(dt_reconfig_kick) == 0)
+                  state |= st_config | st_biased;
               break;
             case st_acqcnf:
               /* "mce status" */
@@ -539,7 +544,10 @@ void *task(void *dummy)
         if (status_tk != st_idle)
           switch (status_tk) {
             case st_idle:
+              break;
             case st_syncon:
+            case st_biased:
+              state &= ~status_tk;
               break;
             case st_retdat:
             case st_acqcnf:
@@ -553,7 +561,7 @@ void *task(void *dummy)
               break;
             case st_active:
               dt_error = dt_wait(dt_stopmce);
-              state &= ~(st_config | st_active);
+              state &= ~(st_biased | st_config | st_active);
               break;
           }
         else /* moda stop */
