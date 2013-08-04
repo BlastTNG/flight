@@ -33,6 +33,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+/* empty the fifo on start-up */
+int empty_tes_fifo = 1;
+
 /* number of data packets with the wrong bset to allow before triggering a
  * resend of the bset */
 #define BAD_BSET_THRESHOLD 2
@@ -75,7 +78,7 @@ size_t mce_blob_size = 0; /* size of the blob, including envelope */
 /* TES reconstruction buffer */
 #define MCE_PRESENT(m) (1 << (m))
 #define TES_FRAME_FULL ((1 << NUM_MCE) - 1) /* lowest NUM_MCE bits set */
-#define TR_SIZE (PB_SIZE * 2) /* size of the reconstruction buffer */
+#define TR_SIZE (PB_SIZE * 8) /* size of the reconstruction buffer */
 static struct tes_frame tes_recon[TR_SIZE];
 static int tes_recon_top = 0, tes_recon_bot = 0;
 
@@ -204,9 +207,6 @@ static void ForwardBSet(int sock)
 static uint16_t tes_push(uint16_t nrx, int *nrx_c)
 {
   int i;
-#if 0
-  static int ndisc = 0;
-#endif
 
   /* update nrx */
   for (i = 0; i < NUM_MCE; ++i)
@@ -225,21 +225,15 @@ static uint16_t tes_push(uint16_t nrx, int *nrx_c)
       }
     }
 
+  tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
+
   /* discard if full */
-  if (tes_fifo_top < 0) {
-#if 0
-    if ((++ndisc % 1000) == 0)
-      bprintf(warning, "%i frames discarded on push", ndisc);
-#endif
-    tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
+  if (tes_fifo_top < 0)
     return nrx;
-  }
 
   /* do the push */
   memcpy(tes_fifo + tes_fifo_top, tes_recon + tes_recon_bot,
       sizeof(*tes_recon));
-
-  tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
 
   pthread_mutex_lock(&tes_mex);
 
@@ -298,7 +292,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     if (tes_recon_top == tes_recon_bot) { /* buffer empty */
       ;
     } else if (sync) { /* synchronous mode: find the right buffer */
-      for (n = tes_recon_top; n != tes_recon_bot;
+      for (n = tes_recon_top; n != (tes_recon_bot + 1) % TR_SIZE;
           n = (n + TR_SIZE - 1) % TR_SIZE)
       {
         if (tes_recon[n].frameno == frameno_in[f]) {
@@ -308,11 +302,14 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
       }
     } else { /* asynchronouse mode: find the oldest frame missing data from
                 this MCE */
-      for (n = tes_recon_bot; n != tes_recon_top; n = (n + 1) % TR_SIZE)
+      for (n = (tes_recon_bot + 1) % TR_SIZE; n != tes_recon_top;
+          n = (n + 1) % TR_SIZE)
+      {
         if (!(tes_recon[n].present & MCE_PRESENT(mce))) {
           new = 0;
           break;
         }
+      }
     }
 
     if (new) { /* new framenumber */
@@ -327,8 +324,9 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
 
       /* otherwise, new frame */
       n = tes_recon_top = (tes_recon_top + 1) % TR_SIZE;
-      if (n == tes_recon_bot) /* buffer full */
+      if ((n + 1) % TR_SIZE == tes_recon_bot) { /* buffer full */
         mccs_reporting = tes_push(mccs_reporting, nrx_c); /* push old frame */
+      }
 
       /* zero the new buffer */
       memset(tes_recon + n, 0, sizeof(tes_recon[n]));
@@ -355,7 +353,9 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
     tes_recon[n].present |= MCE_PRESENT(mce);
 
     /* if it's finished, and at the bottom of the buffer, push and then reset */
-    if (n == tes_recon_bot && tes_recon[n].present == TES_FRAME_FULL) {
+    if (n == (tes_recon_bot + 1) % TR_SIZE &&
+        tes_recon[n].present == TES_FRAME_FULL)
+    {
       mccs_reporting = tes_push(mccs_reporting, nrx_c);
       memset(tes_recon + n, 0, sizeof(tes_recon[0]));
     }

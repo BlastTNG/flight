@@ -1066,6 +1066,13 @@ void insertMCEData(unsigned short *RxFrame)
   }
   i_tmp++;
 
+  /* empty the fifo when asked */
+  if (empty_tes_fifo) {
+    while (tes_nfifo() > 1)
+      tes_pop();
+    empty_tes_fifo = 0;
+  }
+
   mplex_index++;
   if (mplex_index>=N_MCE_STAT*NUM_MCE) 
     mplex_index = 0;
@@ -1115,7 +1122,6 @@ void insertMCEData(unsigned short *RxFrame)
     for (i = 0; i < NUM_MCE_FIELDS; i++) {
       RxFrame[offset[i]] = (unsigned short) (data->data[i]);
     }
-    //while (tes_nfifo() > 1)
     tes_pop();
   } else if (~mccs_reporting & ((1U << NUM_MCE) - 1)) {
     if (no_data++ > 10) {

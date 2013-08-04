@@ -51,6 +51,8 @@ void *mcerecv(void*);
 
 /* TES data FIFO read-side functions */
 
+extern int empty_tes_fifo;
+
 /* the TES data frame */
 struct tes_frame {
   uint32_t frameno;
@@ -60,7 +62,7 @@ struct tes_frame {
 };
 
 /* length of the TES FIFO -- FIFO overfilling results in data droppage */
-#define TES_FIFO_DEPTH 51
+#define TES_FIFO_DEPTH 101
 
 /* returns the number of records in the fifo; in the range [0:TES_FIFO_DEPTH] */
 int tes_nfifo(void);

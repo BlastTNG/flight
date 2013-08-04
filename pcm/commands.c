@@ -109,6 +109,9 @@ static void change_bset(int i, int init)
 
   /* update the current bset */
   set_bset(&new_bset, i | (bset_serial++ << 8));
+  
+  /* flush the TES fifo */
+  empty_tes_fifo = 1;
 }
 
 /* forward an unrecognised command to the MCE computers.  Returns zero if this
