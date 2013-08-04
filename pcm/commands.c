@@ -2368,7 +2368,7 @@ void InitCommandData()
   CommandData.bbcAutoExt = 0 /*1*/;
 
   /* sync box parameter defaults*/
-  CommandData.sync_box.rl_value = 50;
+  CommandData.sync_box.rl_value = 53;
   CommandData.sync_box.nr_value = 33;
   CommandData.sync_box.fr_value = 120;
 
