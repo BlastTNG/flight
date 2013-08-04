@@ -76,15 +76,15 @@ static union du gd[NGF];
 
 const char *dtasks[] = {"idle", "setdir", "dsp_rst", "mce_rst", "reconfig",
   "start_acq", "fakestop", "empty", "status", "acq_cnf", "tuning", "del_acq",
-  "iv_curve", "stop", "stop_mce", "lcloop", "bstep", "bramp",
+  "iv_curve", "stop", "stop_mce", "lcloop", "bstep", "bramp", "reconfig(k)",
 };
 const char *goals[] = {"pause", "tune", "iv", "stop", "lcloop", "cycle",
   "acq", "bstep", "bramp"};
 const char *modes[] = {"none", "tuning", "iv_curve", "lcloop", "running",
   "bstep", "bramp"};
-#define N_STATES 7
+#define N_STATES 8
 const char *states[N_STATES] = {"drives", "active", "mcecom", "syncon",
-  "config", "acqcnf", "retdat"};
+  "config", "biased", "acqcnf", "retdat"};
 
 static char drivemap(uint64_t map, int n)
 {
@@ -124,36 +124,31 @@ const char *mce_power(int x)
 
 int main(int argc, char **argv)
 {
+  static int first = 1;
+
   DIRFILE *D = gd_open((argc > 1) ? argv[1] : "/data/etc/defile.lnk", GD_RDONLY | GD_VERBOSE);
   if (!D)
     return 1;
   if (gd_error(D))
     return 1;
 
-  initscr();
-
   for (;;) {
     int f, x;
     size_t n;
-    off_t fn = gd_nframes64(D) - 5;
-    printw("Frame: %lli  blob#%-6llu  mce_blob:0x%04llX  reporting:%s  "
-        "alive:%s  veto:%s  sync_veto:%s  bset:%03llu  dmode:%02llu  "
-        "bits:%02llu+%02llu/%02llu+%02llu\n", (long long)fn, gd[1].u64,
-        gd[0].u64, mcebits(2), mcebits(3), mcebits(4), mcebits(12),
-        gd[5].u64, gd[6].u64, gd[7].u64, gd[8].u64, gd[9].u64, gd[10].u64);
+    off_t fn = gd_nframes64(D) - 2;
     char field[100];
 
     for (f = 0; f < NGF; ++f) {
-      sprintf(field, gf[f].fmt, x + 1);
       if (gf[f].type == GD_UINT16)
-        n = gd_getdata(D, field, fn, 0, 0, 1, GD_UINT64, &gd[f].u64);
+        n = gd_getdata(D, gf[f].fmt, fn, 0, 0, 1, GD_UINT64, &gd[f].u64);
       else if (gf[f].type == GD_UINT64)
-        n = gd_getdata(D, field, fn, 0, 0, 1, GD_UINT64, &gd[f].u64);
+        n = gd_getdata(D, gf[f].fmt, fn, 0, 0, 1, GD_UINT64, &gd[f].u64);
       else if (gf[f].type == GD_FLOAT64)
-        n = gd_getdata(D, field, fn, 0, 0, 1, GD_FLOAT64, &gd[f].f64);
+        n = gd_getdata(D, gf[f].fmt, fn, 0, 0, 1, GD_FLOAT64, &gd[f].f64);
 
       if (gd_error(D)) {
-        endwin();
+        if (!first)
+          endwin();
         return 1;
       }
     }
@@ -168,8 +163,14 @@ int main(int argc, char **argv)
         else if (ff[f].type == GD_FLOAT64)
           n = gd_getdata(D, field, fn, 0, 0, 1, GD_FLOAT64, &d[x][f].f64);
 
+        if (first) {
+          printf("read %i/%i\r", 1 + x * NF + f, NF * 6);
+          fflush(stdout);
+        }
+
         if (gd_error(D)) {
-          endwin();
+          if (!first)
+            endwin();
           return 1;
         }
         if (n == 0)
@@ -177,6 +178,16 @@ int main(int argc, char **argv)
       }
     }
 
+    if (first) {
+      initscr();
+      first = 0;
+    }
+
+    printw("Frame: %lli  blob#%-6llu  mce_blob:0x%04llX  reporting:%s  "
+        "alive:%s  veto:%s  sync_veto:%s  bset:%03llu  dmode:%02llu  "
+        "bits:%02llu+%02llu/%02llu+%02llu\n", (long long)fn, gd[1].u64,
+        gd[0].u64, mcebits(2), mcebits(3), mcebits(4), mcebits(12),
+        gd[5].u64, gd[6].u64, gd[7].u64, gd[8].u64, gd[9].u64, gd[10].u64);
     for (x = 0; x < 6; ++x)
       printw("            X%i           ", x + 1);
     printw("\n");
