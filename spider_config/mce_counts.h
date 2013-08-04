@@ -3,8 +3,8 @@
 #define N_MCE_SYS  2
 #define N_MCE_VIRT 28
 #define N_EXP_CFG  2180
-#define N_EXP_OFF  4867
-#define N_MCE_STAT 7047
+#define N_EXP_OFF  4787
+#define N_MCE_STAT 6967
 
 #define FIRST_AC_PARAM 261
 #define  LAST_AC_PARAM 275

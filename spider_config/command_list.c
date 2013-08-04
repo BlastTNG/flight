@@ -1337,7 +1337,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_MPC | CONFIRM)},
   {MCECMD1(mce_clock_ext, "Unveto sync box use by the MCE", GR_MPC)},
   {MCECMD1(mce_clock_int, "Veto sync box use by the MCE", GR_MPC)},
-
+  {MCECMD1(array_stat_reset, "Reset the array stats", GR_MPC)},
   {MCECMD2A(integral_clamp, "Set the integral clamping factor", GR_DET,
       "Factor", 0, 1, 'f')},
   {COMMAND(tune_array), "Tune a focal plane with current tuning parameters",

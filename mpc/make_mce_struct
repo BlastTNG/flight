@@ -81,6 +81,29 @@ sub format_mce_mplex {
         }
       }
     }
+    for (@v) {
+      my $n = $$_[2];
+      $n = 33 if ($n == 41);
+      if ($n == 1) {
+        my $fi = ($$_[7] < 10) ? "0$$_[7]" : $$_[7];
+        print "/ALIAS X$m:$$_[0]:$$_[1] X$m:$$_[5]:$$_[6]($fi)\n";
+      } else {
+        for (my $i = 0; $i < $n; ++$i) {
+          my $fi = ($i < 10) ? "0$i" : $i;
+          if ($i < $$_[4]) {
+            # map 1
+            my $j = ($$_[7] + $i);
+            $j = "0$j" if ($j < 10 and $$_[4] > 9);
+            print "/ALIAS X$m:$$_[0]:$$_[1]($fi) X$m:$$_[5]:$$_[6]($j)\n";
+          } else {
+            # map 2
+            my $j = ($$_[12] + $i - $$_[8]);
+            $j = "0$j" if ($j < 10 and $$_[9] > 9);
+            print "/ALIAS X$m:$$_[0]:$$_[1]($fi) X$m:$$_[10]:$$_[11]($j)\n";
+          }
+        }
+      }
+    }
     for (@e) {
       my $n = $nx + $$_[2] + $nn * ($m - 1);
       if ($$_[3] == 1) {
@@ -169,6 +192,7 @@ while (<IN>) {
       $ns++;
     } else {
       my $n = ($3 == 41) ? 33 : $3;
+      $n = 16 if ($n == 32 and $2 ne "flux_fb");
       $fp{uc $1} = $np unless(exists $fp{uc $1});
       $lp{uc $1} = $np;
       push @p, [ $1, $2, $3, $n, $4, $nx, $6 ];
@@ -218,4 +242,4 @@ die "Count mismatch in expcfg_list" unless ($l eq $ne);
 
 &mce_struct_c;
 &mce_counts_h;
-&format_mce_mplex;;
+&format_mce_mplex;

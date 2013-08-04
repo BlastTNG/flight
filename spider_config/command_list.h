@@ -186,7 +186,7 @@ enum multiCommand {
   tile_heater_kick, servo_reset, force_config, tune_biases, reload_mce_config,
   flux_loop_init, lcloop, mce_veto, mce_unveto, reload_dead_masks, bias_step,
   acquire, reconfig, pause_acq, data_mode, cycle_acq, mce_clock_int,
-  drive_check, bias_tes_rc2, mce_clock_ext,
+  drive_check, bias_tes_rc2, mce_clock_ext, array_stat_reset,
 
   /* MCE experiment.cfg commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,
