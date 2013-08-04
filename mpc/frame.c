@@ -61,9 +61,10 @@ int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer)
   memcpy(frame[fb_top], buffer, frame_size * sizeof(uint32_t));
 
   /* sequencing check */
-  if (last_frameno && frameno - last_frameno != 1)
+  if (last_frameno && frameno - last_frameno != 1) {
     bprintf(warning, "Sequencing error: %u, %u %c | %u %u\n", last_frameno,
         frameno, sync_dv ? 's' : ' ', header->syncno, header->cc_frameno);
+  }
   last_frameno = frameno;
 
   /* do stuff */
