@@ -746,7 +746,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   
   {COMMAND(arraystat_oth), "OTH Link array stats allocation", GR_TELEM, 1,
     {
-      {"N Array Stats", 0, 1000, 'i', "n_arraystats"}
+      {"N Array Stats", 0, 10000, 'i', "n_arraystats"}
     }
   },
 
