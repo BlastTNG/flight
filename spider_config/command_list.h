@@ -142,7 +142,8 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,           dac2_level,
   set_scan_params,
   az_el_trim,        drift,             el_gain,           
-  pivot_gain,        ra_dec_goto,       ra_dec_set,        oth_set,  
+  pivot_gain,        ra_dec_goto,       ra_dec_set,        oth_set,
+  arraystat_oth,  
   t_gyro_set,        tdrss_bw,          iridium_bw,        pilot_bw,
   t_gyro_gain,       timeout,           slot_sched,        az_gyro_offset,
   cov_gps,           reset_adc,
@@ -186,7 +187,7 @@ enum multiCommand {
   tile_heater_kick, servo_reset, force_config, tune_biases, reload_mce_config,
   flux_loop_init, lcloop, mce_veto, mce_unveto, reload_dead_masks, bias_step,
   acquire, reconfig, pause_acq, data_mode, cycle_acq, mce_clock_int,
-  drive_check, bias_tes_rc2, mce_clock_ext, array_stat_reset,
+  drive_check, bias_tes_rc2, mce_clock_ext,
 
   /* MCE experiment.cfg commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,

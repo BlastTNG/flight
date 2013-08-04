@@ -109,9 +109,6 @@ static void change_bset(int i, int init)
 
   /* update the current bset */
   set_bset(&new_bset, i | (bset_serial++ << 8));
-  
-  /* flush the TES fifo */
-  empty_tes_fifo = 1;
 }
 
 /* forward an unrecognised command to the MCE computers.  Returns zero if this
@@ -1332,6 +1329,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case oth_set:
       CommandData.channelset_oth = ivalues[0];
       break;
+    case arraystat_oth:
+      CommandData.n_arrays_stats_per_superframe = ivalues[0];
+      break;
     case get_mce_param:
       CommandData.mce_param_index = (ivalues[0] - 1) * N_MCE_STAT + ivalues[1];
       break;
@@ -2174,6 +2174,7 @@ void InitCommandData()
   CommandData.tdrss_bw = 6000;
   CommandData.iridium_bw = 2000;
   CommandData.channelset_oth = 0;
+  CommandData.n_arrays_stats_per_superframe = 100;
   CommandData.vtx_sel[0] = vtx_isc;
   CommandData.vtx_sel[1] = vtx_osc;
 

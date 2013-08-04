@@ -25,7 +25,7 @@
 // STREAMFRAMES: FASTFRAMES/100 - minimum speed from streams.  
 // SUPERFRAMES: FASTFRAMES/2000 - slow fields and stream offsets
 
-#define N_ARRAY_STATS_PER_SUPERFRAME 100
+//#define N_ARRAY_STATS_PER_SUPERFRAME 100
 #define MAX_BLOB_WORDS_PER_SUPERFRAME 100
 
 struct streamDataStruct {
@@ -319,7 +319,7 @@ int WriteMCEBlob()
 int WriteArrayStats() {
   static uint16_t i_stat = 0;
   int nw = 0;
-  uint16_t n_as = N_ARRAY_STATS_PER_SUPERFRAME;
+  uint16_t n_as = CommandData.n_arrays_stats_per_superframe; //N_ARRAY_STATS_PER_SUPERFRAME;
   int i;
   
   writeData((char *)(&n_as), 2, 0);
