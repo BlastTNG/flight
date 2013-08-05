@@ -713,6 +713,7 @@ struct ChannelStruct SlowChannels[] = {
   {"v_heat_last_hk",'w', LOOP6,  8,    CALDAC(1.0,           0.0), 'u', U_V_V},
   //{"pulse_last_hk", 'w', LOOP6,  9,           1.0,           0.0, 'u',U_NONE},
   // sum of currents read through ACS1 A1
+  {"bsc_trigger",   'w', LOOP6,  9,           1.0,           0.0, 'u', U_NONE},
   {"i_of_tot",      'w', LOOP6, 10,        1.0e-3,           0.0, 'u', U_I_A},
   {"cov_lim_dgps",  'w', LOOP6, 11,(100.0/32768.0),          0.0, 'u', U_NONE},
   {"ant_e_dgps",    'w', LOOP6, 12,     1.0/100.0,           0.0, 's',U_NONE},
@@ -989,6 +990,9 @@ struct ChannelStruct SlowChannels[] = {
   {"data_mode_bits",  'w',  LOOP8, 20,   1,     0, 'u', U_NONE},
   {"sync_veto_mpc",   'w',  LOOP8, 21,   1,     0, 'u', U_NONE},
 
+  {"plate_g",         'w', LOOP8, 22, 1.0/1000.0, 0.0, 'u',U_NONE},
+  {"plate_b",         'w', LOOP8, 23, 1.0/1000.0, 0.0, 'u',U_NONE},
+  {"plate_u",         'w', LOOP8, 24, 1.0/1000.0, 0.0, 'u',U_NONE},
   END_OF_CHANNELS
 };
 
