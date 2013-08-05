@@ -64,9 +64,9 @@ extern "C" void nameThread(const char*);  /* in mcp.c */
 extern "C" short int InCharge;		  /* in tx.c */
 extern "C" int EthernetSC[3];      /* tx.c */
 
-const char* thegood_servername = "good";//"192.168.1.11";
-const char* thebad_servername = "bad";//"192.168.1.12";
-const char* theugly_servername = "ugly";//"192.168.1.13";
+const char* thegood_servername = "good";//"192.168.1.247";
+const char* thebad_servername = "bad";//"192.168.1.248";
+const char* theugly_servername = "ugly";//"192.168.1.249";
 
 string cam_serial[3]={"110794466","08073506","08073507"};
 extern double goodPos[10];	/* table.cpp */
