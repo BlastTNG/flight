@@ -21,6 +21,8 @@
 #include "mputs.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -162,6 +164,26 @@ static void task_mount_drives(void)
 
   /* reset list of bad drives */
   memset(disk_bad, 0, sizeof(int) * 4); 
+}
+
+static void task_fix_data(void)
+{
+  struct stat stat_buf;
+
+  /* try to stat our stored self -- this will tell us whether the
+   * /data symlink has been screwed up
+   */
+  if (stat("/data/mas/bin/mpc", &stat_buf) < 0) {
+    char mount[] = "/data#";
+
+    /* need a new /data partition; remove the old symlink */
+    unlink("/run/data");
+
+    /* link it to our primary */
+    mount[5] = data_drive[0] + '0';
+    if (symlink(mount, "/run/data") == 0)
+      bprintf(info, "linked %s to /data", mount);
+  }
 }
 
 /* determine drive priorities */
@@ -459,6 +481,9 @@ void *task(void *dummy)
                 try_mount = 1;
                 sleep(60);
               } else {
+                /* check that /data exists */
+                task_fix_data();
+
                 state |= st_drives;
 
                 /* set directory */
