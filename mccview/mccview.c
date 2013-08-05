@@ -76,15 +76,14 @@ static union du gd[NGF];
 
 const char *dtasks[] = {"idle", "setdir", "dsp_rst", "mce_rst", "reconfig",
   "start_acq", "fakestop", "empty", "status", "acq_cnf", "tuning", "del_acq",
-  "iv_curve", "stop", "stop_mce", "lcloop", "bstep", "bramp", "reconfig(k)",
+  "iv_curve", "stop", "stop_mce", "lcloop", "bstep", "bramp", "kick"
 };
 const char *goals[] = {"pause", "tune", "iv", "stop", "lcloop", "cycle",
   "acq", "bstep", "bramp"};
 const char *modes[] = {"none", "tuning", "iv_curve", "lcloop", "running",
   "bstep", "bramp"};
-#define N_STATES 8
-const char *states[N_STATES] = {"drives", "active", "mcecom", "syncon",
-  "config", "biased", "acqcnf", "retdat"};
+#define N_STATES 9
+const char *states[N_STATES] = {"POW", "DRI", "ACT", "COM", "SYN", "CFG", "BIA", "ACF", "RET"};
 
 static char drivemap(uint64_t map, int n)
 {
@@ -113,14 +112,16 @@ char *mcebits(int n)
   return bits[n];
 }
 
-const char *mce_power(int x)
+int mce_power(int x)
 {
   if (x == 1 || x == 2)
-    return (gd[11].u64 & 0x1) ? "off" : "on";
+    return !(gd[11].u64 & 0x1);
   if (x == 3 || x == 5)
-    return (gd[11].u64 & 0x2) ? "off" : "on";
-  return (gd[11].u64 & 0x4) ? "off" : "on";
+    return !(gd[11].u64 & 0x2);
+  return !(gd[11].u64 & 0x4);
 }
+
+unsigned state[6];
 
 int main(int argc, char **argv)
 {
@@ -135,7 +136,11 @@ int main(int argc, char **argv)
   for (;;) {
     int f, x;
     size_t n;
-    off_t fn = gd_nframes64(D) - 2;
+    off_t fn = gd_nframes64(D) - 4;
+    if (fn < 1) {
+      fprintf(stderr, "No data.\n");
+      return 1;
+    }
     char field[100];
 
     for (f = 0; f < NGF; ++f) {
@@ -201,9 +206,14 @@ int main(int argc, char **argv)
     }
     printw("\n");
 
+#if 0
     for (x = 0; x < 6; ++x)
       printw(" MCEpwr: %9s       ", mce_power(x));
     printw("\n");
+#endif
+    /* add MCE power to the bottom of the state bitmap */
+    for (x = 0; x < 6; ++x)
+      state[x] = (unsigned)(d[x][6].u64 << 1) | (mce_power(x) ? 1 : 0);
 
     for (f = 0; f < 4; ++f) {
       for (x = 0; x < 6; ++x)
@@ -218,11 +228,14 @@ int main(int argc, char **argv)
           drivemap(d[x][13].u64, 2));
     printw("\n");
 
-    for (f = 0; f < N_STATES; ++f) {
+    for (f = 0; f < N_STATES; f += 3) {
       unsigned b = 1 << f;
       for (x = 0; x < 6; ++x)
-        printw(" %6s:       ---%c---   ", states[f],
-            (d[x][6].u64 & b) ? 'X' : '-');
+        printw(" %6s    %3s %3s %3s   ",
+            (f == 3) ? "state:" : "",
+            (state[x] & b) ? states[f] : "...",
+            (state[x] & (b << 1)) ? states[f + 1] : "...",
+            (state[x] & (b << 2)) ? states[f + 2] : "...");
       printw("\n");
     }
 
