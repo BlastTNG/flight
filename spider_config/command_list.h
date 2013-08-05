@@ -183,6 +183,7 @@ enum multiCommand {
   hwp_bias_on,        hwp_bias_off,      mce_row_len,       mce_num_rows,
   mce_data_rate,      bset,              set_piv_mode,      tune_array,
   data_mode_bits,     mag_cal,           pss_off_cal,       pss_d_cal,
+  beam_map, //TODO: get rid of beam_map before flight 
 
   /* mce stuff */
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,

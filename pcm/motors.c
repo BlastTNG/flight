@@ -41,8 +41,6 @@
 #define MIN_EL 14 
 #define MAX_EL 45
 
-//#define BEAM_MAP // make horrible changes to scan mode for beam mapping
-
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
 
@@ -1206,10 +1204,10 @@ static void DoSineMode(double centre, double ampl, double el_start)
 
   az_accel = CommandData.az_accel;
   az_accel_dv = az_accel/(ACSData.bbc_rate);
-  //HACK for beam mapping:
-  #ifdef BEAM_MAP
-  az_accel_max_dv = (CommandData.az_accel_max)/(ACSData.bbc_rate);
-  #endif
+  //TODO: HACK for beam mapping, remove it!
+  if (CommandData.pointing_mode.is_beam_map) {
+    az_accel_max_dv = (CommandData.az_accel_max)/(ACSData.bbc_rate);
+  }
 
   N_scans = CommandData.pointing_mode.Nscans;
 
@@ -1311,10 +1309,12 @@ static void DoSineMode(double centre, double ampl, double el_start)
   
     scan_region_last = scan_region;	       
     v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
-    //HACK for beam mapping
-    #ifdef BEAM_MAP
-    v_az = sqrt(az_accel*ampl);
-    #endif
+    
+    //TODO: HACK for beam mapping, remove it!
+    if (CommandData.pointing_mode.is_beam_map) {
+      v_az = CommandData.pointing_mode.vaz;
+    }
+
     a_az = az_accel*( (centre - az)/ampl ); 
 
     /* star camera trigger (lemur?) */
@@ -1329,10 +1329,12 @@ static void DoSineMode(double centre, double ampl, double el_start)
      * turn-around OR 0.05 deg. before turn-around, whichever is larger  */
     daz_step = ampl*(cos(sqrt(az_accel/ampl)*t_step) - 1.0);
     daz_step = fabs(daz_step) > 0.05 ? daz_step : -0.05;
-    //HACK for beam mapping
-    #ifdef BEAM_MAP
-    daz_step = -0.5;
-    #endif
+    
+    //TODO: HACK for beam mapping, remove it!
+    if (CommandData.pointing_mode.is_beam_map) {
+      daz_step = -turn_around - 0.02;
+    }
+
     if (az >= (right + daz_step)) {
       past_step_point = 1;
       if ( past_step_point_last == 0 ) {
@@ -1378,10 +1380,12 @@ static void DoSineMode(double centre, double ampl, double el_start)
   
     scan_region_last = scan_region;
     v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
-    //HACK for beam mapping:
-    #ifdef BEAM_MAP
-    v_az = -sqrt(az_accel*ampl);
-    #endif
+
+    //TODO: HACK for beam mapping, remove it!
+    if (CommandData.pointing_mode.is_beam_map) {
+      v_az = -CommandData.pointing_mode.vaz;
+    }
+
     a_az = az_accel*( (centre - az)/ampl );
   
     // star camera trigger (lemur?)
@@ -1396,10 +1400,12 @@ static void DoSineMode(double centre, double ampl, double el_start)
      * turn-around OR 0.05 deg. before turn_around, whichever is larger */
     daz_step = ampl*(1.0 - cos(sqrt(az_accel/ampl)*t_step));
     daz_step = fabs(daz_step) > 0.05 ? daz_step : 0.05;
-    //HACK for beam mapping
-    #ifdef BEAM_MAP
-    daz_step = 0.5;
-    #endif
+
+    //TODO: HACK for beam mapping, remove it!
+    if (CommandData.pointing_mode.is_beam_map) {
+      daz_step = turn_around + 0.02;
+    }
+    
     if (az <= (left + daz_step)) {
       past_step_point = 1;
       if ( past_step_point_last == 0 ) {
@@ -1444,10 +1450,12 @@ static void DoSineMode(double centre, double ampl, double el_start)
     if (v_az > V_AZ_MIN) {
       v_az = V_AZ_MIN;
     }
-    //HACK for beam mapping: 
-    #ifdef BEAM_MAP
-    v_az = last_v + az_accel_max_dv;
-    #endif
+    
+    //TODO: HACK for beam mapping, remove it!
+    if (CommandData.pointing_mode.is_beam_map) {
+      v_az = last_v + az_accel_max_dv;
+    }
+
     a_az = az_accel*( (centre - az)/ampl );
     
     axes_mode.az_vel = v_az; 
@@ -1468,10 +1476,11 @@ static void DoSineMode(double centre, double ampl, double el_start)
       v_az = -V_AZ_MIN;
     }
 
-    //HACK for beam mapping:
-    #ifdef BEAM_MAP
-    v_az = last_v - az_accel_max_dv;
-    #endif
+    //TODO: HACK for beam mapping:
+    if (CommandData.pointing_mode.is_beam_map) {
+      v_az = last_v - az_accel_max_dv;
+    }
+
     a_az = az_accel*( (centre - az)/ampl );
     
     axes_mode.az_vel = v_az;

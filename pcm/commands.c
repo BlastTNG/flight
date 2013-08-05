@@ -1083,6 +1083,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case spider_scan:
       is_new = 0;
+      CommandData.pointing_mode.is_beam_map = 0;
       if ( (CommandData.pointing_mode.mode != P_SPIDER) ||
           (CommandData.pointing_mode.X != rvalues[8]) || /* starting ra */
           (CommandData.pointing_mode.Y != rvalues[9]) ) { /* starting dec */
@@ -1120,6 +1121,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case sine_scan:
       is_new = 0;
+      CommandData.pointing_mode.is_beam_map = 0;
       if ( (CommandData.pointing_mode.mode != P_SINE) ||
            (CommandData.pointing_mode.w != 2.0*rvalues[0]) || // scan width
            (CommandData.pointing_mode.X != rvalues[1]) || // scan centre
@@ -1137,6 +1139,32 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.mode = P_SINE;
       CommandData.pointing_mode.el_mode = P_EL_GOTO;
       break;
+    /* TODO FIXME HACK: Strip this out for flight. Axe it. Eliminate. */
+    case beam_map:
+      is_new = 0;
+      CommandData.pointing_mode.is_beam_map = 1; // sigh
+      if ( (CommandData.pointing_mode.mode != P_SINE) ||
+           (CommandData.pointing_mode.vaz != rvalues[0]) ||
+           (CommandData.pointing_mode.X != rvalues[1]) || // scan centre
+           (CommandData.pointing_mode.w != rvalues[2]) || // scan width
+           (CommandData.pointing_mode.el_step != rvalues[4]) ||
+           (CommandData.pointing_mode.Y != rvalues[5]) ) {
+        is_new = 1;
+      }
+      if (is_new) {
+        CommandData.pointing_mode.new_sine = 1;
+      }
+      CommandData.pointing_mode.vaz = rvalues[0];
+      CommandData.pointing_mode.X = rvalues[1];
+      CommandData.pointing_mode.w = rvalues[2];
+      CommandData.pointing_mode.Nsteps = (int) rvalues[3]/rvalues[4];
+      CommandData.pointing_mode.Y = rvalues[5];
+      CommandData.ele_gain.manual_pulses = 0;
+      CommandData.pointing_mode.is_turn_around = 0;
+      CommandData.pointing_mode.mode = P_SINE;
+      CommandData.pointing_mode.el_mode = P_EL_GOTO;
+      break;
+
       /***************************************/
       /********** Pointing Motor Trims *******/
     case az_el_trim:
@@ -2182,6 +2210,9 @@ void InitCommandData()
   CommandData.sync_box.write_param = sync_none;
   CommandData.sync_box.cmd = 0;
   CommandData.sync_box.param_value = 0;
+
+  /* TODO: remove this before flight */
+  CommandData.pointing_mode.is_beam_map = 0;
 
   /** return if we succsesfully read the previous status **/
   if (n_read != sizeof(struct CommandDataStruct))

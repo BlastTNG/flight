@@ -593,6 +593,19 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"scan elevation (deg)",        15, 50, 'f', "EL"},
     }
   },   
+  /* TODO FIXME HACK: Strip this out for flight. Axe it. Eliminate. */
+  {COMMAND(beam_map), "hack sine_scan into const. vel. az scan + el-stepping",
+   GR_POINT, 6,
+    {
+      {"az scan speed (deg/s)",             0.0,  10.0, 'f', "VEL_AZ_P"}, 
+      {"az scan centre (deg)",              0.0, 360.0, 'f', "AZ"},
+      {"az scan width (peak-to-peak, deg)", 0.0, 180.0, 'f', "W_P"},
+      {"el scan height (deg)",              0.0,  25.0, 'f', "NONE"},
+      {"el step size (deg)",                0.0,   1.0, 'f', "SIZE_EL_STEP"},
+      {" el starting elevation (deg)",     15.0,  50.0, 'f', "EL"},
+    }
+  },
+    
   {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
     {
       {"Current RA (h)",      0, 24, 'f', "RA"},

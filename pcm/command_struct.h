@@ -156,6 +156,8 @@ struct PointingModeStruct {
   unsigned short is_turn_around; // flag to indicate we're in a scan turn around
   double az_delay; // propagate az sol'n forward by this (frames)
   int piv_mode;
+  //TODO: get rid of this before flight:
+  int is_beam_map; // it's a beam map
 };
 
 struct latch_pulse {
