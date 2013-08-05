@@ -94,6 +94,9 @@ int terminate = 0;
 /* Initialisation veto */
 static int init = 1;
 
+/* maximum lookback for dmesg parsing */
+time_t dmesg_lookback = 0;
+
 /* reset the array statistics */
 int stat_reset = 1;
 
@@ -1031,6 +1034,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case drive_check:
         try_mount = 1;
         state &= ~st_drives;
+        /* reset lookback */
+        if (ev->ivalues[1])
+          dmesg_lookback = time(NULL);
         break;
       case reconfig:
         state &= ~st_config;
