@@ -2083,9 +2083,6 @@ void InitCommandData()
   for (i=0; i<NHWP; i++) CommandData.hwp.mode[i] = hwp_m_sleep;
   CommandData.hwp.bias_mask = 0x3f << 6;
 
-  CommandData.StarCam[0].platescale = 9.3;
-  CommandData.StarCam[1].platescale = 9.3;
-  CommandData.StarCam[2].platescale = 9.3;
   CommandData.bsc_delay = 6.935*20.0;
   CommandData.rsc_wait = 3;
   CommandData.table.vel = 0.0;
@@ -2276,6 +2273,10 @@ void InitCommandData()
   CommandData.table.tableGain.P = 6652;  //thousandths
   CommandData.table.tableGain.I = 302;   //ten-thousandths
   CommandData.table.tableGain.D = 13520; //hundredths
+
+  CommandData.StarCam[0].platescale = 9.3;
+  CommandData.StarCam[1].platescale = 9.3;
+  CommandData.StarCam[2].platescale = 9.3;
 
   CommandData.use_elenc1 = 1;
   CommandData.use_elenc2 = 1;
