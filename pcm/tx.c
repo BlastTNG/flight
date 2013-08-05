@@ -383,8 +383,6 @@ static void WriteMCESlow(void)
   static struct NiosStruct *usedTuneAddr[NUM_MCE];
   static struct NiosStruct *lastIVAddr[NUM_MCE];
   static struct NiosStruct *tileHeaterAddr[NUM_MCE];
-  static struct NiosStruct *nrxAddr[NUM_MCE];
-  static struct NiosStruct *lmnAddr[NUM_MCE];
 
   static struct NiosStruct *blobNumAddr;
   static struct NiosStruct *reportingMPCsAddr;
@@ -418,8 +416,6 @@ static void WriteMCESlow(void)
       usedTuneAddr[i] = GetMCCNiosAddr("used_tune_mpc", i);
       lastIVAddr[i] = GetMCCNiosAddr("last_iv_mpc", i);
       tileHeaterAddr[i] = GetMCCNiosAddr("tile_heater_mce", i);
-      nrxAddr[i] = GetMCCNiosAddr("nrx_mpc", i);
-      lmnAddr[i] = GetMCCNiosAddr("lmn_mpc", i);
     }
     blobNumAddr = GetNiosAddr("blob_num_mpc");
     reportingMPCsAddr = GetNiosAddr("reporting_mpcs");
@@ -452,8 +448,6 @@ static void WriteMCESlow(void)
     WriteData(lastIVAddr[i], mce_slow_dat[i][ind].last_iv, NIOS_QUEUE);
     WriteData(tileHeaterAddr[i], mce_slow_dat[i][ind].tile_heater,
         NIOS_QUEUE);
-    WriteData(nrxAddr[i], nrx_c[i], NIOS_QUEUE);
-    WriteData(lmnAddr[i], last_mce_no[i], NIOS_QUEUE);
   }
 
   for (i = 0; i < NUM_MCE; ++i) {
@@ -466,11 +460,13 @@ static void WriteMCESlow(void)
   WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
   WriteData(squidVetoAddr, CommandData.squidveto, NIOS_QUEUE);
   WriteData(syncVetoAddr, sync_veto, NIOS_QUEUE);
-  WriteData(dataModeBitsAddr,
-      ((CommandData.data_mode_bits[CommandData.data_mode][0][0] & 0x1F) << 10) |
-      ((CommandData.data_mode_bits[CommandData.data_mode][0][1] & 0x1F) <<  5) |
-      (CommandData.data_mode_bits[CommandData.data_mode][1][0] & 0x1F),
-      NIOS_QUEUE);
+  /* Don't crash */
+  if (CommandData.data_mode >= 0 && CommandData.data_mode <= 12)
+    WriteData(dataModeBitsAddr,
+        ((CommandData.data_mode_bits[CommandData.data_mode][0][0] & 0x1F) << 10)
+        | ((CommandData.data_mode_bits[CommandData.data_mode][0][1] & 0x1F) <<5)
+        | (CommandData.data_mode_bits[CommandData.data_mode][1][0] & 0x1F),
+        NIOS_QUEUE);
   WriteData(dataModeAddr, CommandData.data_mode, NIOS_QUEUE);
 
   /* this field is active low */
