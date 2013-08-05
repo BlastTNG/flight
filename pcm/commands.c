@@ -1691,13 +1691,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.StarCam[0].expTime = ivalues[0];
       sendTheGoodCommand(buf);
       break;
-    case thegood_focus_params:
+    case thegood_focus_res:
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendTheGoodCommand(buf);
-      sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendTheGoodCommand(buf);
       CommandData.StarCam[0].focusRes = ivalues[0];
-      CommandData.StarCam[0].focusRng = ivalues[1];
+      break;
+    case thegood_focus_range:
+      sprintf(buf, "CsetFocRnge=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
+      CommandData.StarCam[0].focusRng = ivalues[0];
       break;
     case thegood_platescale:
       CommandData.StarCam[0].platescale = rvalues[0];
@@ -1706,19 +1708,25 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
       sendTheGoodCommand(buf);
       break;
-    case thegood_blob_params:
+    case thegood_maxblobs:
       sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
       sendTheGoodCommand(buf);
-      sprintf(buf, "IsetGrid=%d", ivalues[1]);
-      sendTheGoodCommand(buf);
-      sprintf(buf, "IsetThreshold=%f", rvalues[2]);
-      sendTheGoodCommand(buf);
-      sprintf(buf, "IsetDisttol=%d", ivalues[3]);
-      sendTheGoodCommand(buf);
       CommandData.StarCam[0].maxBlobs = ivalues[0];
-      CommandData.StarCam[0].grid = ivalues[1];
-      CommandData.StarCam[0].threshold = rvalues[2];
-      CommandData.StarCam[0].minBlobDist = ivalues[3];
+      break;
+    case thegood_grid:
+      sprintf(buf, "IsetGrid=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
+      CommandData.StarCam[0].grid = ivalues[0];
+      break;
+    case thegood_thresh:
+      sprintf(buf, "IsetThreshold=%f", rvalues[0]);
+      sendTheGoodCommand(buf);
+      CommandData.StarCam[0].threshold = rvalues[0];
+      break;
+    case thegood_mdist:
+      sprintf(buf, "IsetDisttol=%d", ivalues[0]);
+      sendTheGoodCommand(buf);
+      CommandData.StarCam[0].minBlobDist = ivalues[0];
       break;
     case thegood_lens_any:
       sprintf(buf, "L=%s", svalues[0]);
@@ -1752,13 +1760,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.StarCam[1].expTime = ivalues[0];
       sendTheBadCommand(buf);
       break;
-    case thebad_focus_params:
+    case thebad_focus_res:
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendTheBadCommand(buf);
-      sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendTheBadCommand(buf);
       CommandData.StarCam[1].focusRes = ivalues[0];
-      CommandData.StarCam[1].focusRng = ivalues[1];
+      break;
+    case thebad_focus_range:
+      sprintf(buf, "CsetFocRnge=%d", ivalues[0]);
+      sendTheBadCommand(buf);
+      CommandData.StarCam[1].focusRng = ivalues[0];
       break;
     case thebad_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
@@ -1767,19 +1777,25 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case thebad_platescale:
       CommandData.StarCam[1].platescale = rvalues[0];
       break;
-    case thebad_blob_params:
+    case thebad_maxblobs:
       sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
       sendTheBadCommand(buf);
-      sprintf(buf, "IsetGrid=%d", ivalues[1]);
-      sendTheBadCommand(buf);
-      sprintf(buf, "IsetThreshold=%f", rvalues[2]);
-      sendTheBadCommand(buf);
-      sprintf(buf, "IsetDisttol=%d", ivalues[3]);
-      sendTheBadCommand(buf);
       CommandData.StarCam[1].maxBlobs = ivalues[0];
-      CommandData.StarCam[1].grid = ivalues[1];
-      CommandData.StarCam[1].threshold = rvalues[2];
-      CommandData.StarCam[1].minBlobDist = ivalues[3];
+      break;
+    case thebad_grid:
+      sprintf(buf, "IsetGrid=%d", ivalues[0]);
+      sendTheBadCommand(buf);
+      CommandData.StarCam[1].grid = ivalues[0];
+      break;
+    case thebad_thresh:
+      sprintf(buf, "IsetThreshold=%f", rvalues[0]);
+      sendTheBadCommand(buf);
+      CommandData.StarCam[1].threshold = rvalues[0];
+      break;
+    case thebad_mdist:
+      sprintf(buf, "IsetDisttol=%d", ivalues[0]);
+      sendTheBadCommand(buf);
+      CommandData.StarCam[1].minBlobDist = ivalues[0];
       break;
     case thebad_lens_any:
       sprintf(buf, "L=%s", svalues[0]);
@@ -1809,13 +1825,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.StarCam[2].expTime = ivalues[0];
       sendTheUglyCommand(buf);
       break;
-    case theugly_focus_params:
+    case theugly_focus_res:
       sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
       sendTheUglyCommand(buf);
-      sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendTheUglyCommand(buf);
       CommandData.StarCam[2].focusRes = ivalues[0];
-      CommandData.StarCam[2].focusRng = ivalues[1];
+      break;
+    case theugly_focus_range:
+      sprintf(buf, "CsetFocRnge=%d", ivalues[0]);
+      sendTheUglyCommand(buf);
+      CommandData.StarCam[2].focusRng = ivalues[0];
       break;
     case theugly_bad_pix:
       sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
@@ -1824,19 +1842,25 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case theugly_platescale:
       CommandData.StarCam[2].platescale = rvalues[0];
       break;
-    case theugly_blob_params:
+    case theugly_maxblobs:
       sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
       sendTheUglyCommand(buf);
-      sprintf(buf, "IsetGrid=%d", ivalues[1]);
-      sendTheUglyCommand(buf);
-      sprintf(buf, "IsetThreshold=%f", rvalues[2]);
-      sendTheUglyCommand(buf);
-      sprintf(buf, "IsetDisttol=%d", ivalues[3]);
-      sendTheUglyCommand(buf);
       CommandData.StarCam[2].maxBlobs = ivalues[0];
-      CommandData.StarCam[2].grid = ivalues[1];
-      CommandData.StarCam[2].threshold = rvalues[2];
-      CommandData.StarCam[2].minBlobDist = ivalues[3];
+      break;
+    case theugly_grid:
+      sprintf(buf, "IsetGrid=%d", ivalues[0]);
+      sendTheUglyCommand(buf);
+      CommandData.StarCam[2].grid = ivalues[0];
+      break;
+    case theugly_thresh:
+      sprintf(buf, "IsetThreshold=%f", rvalues[0]);
+      sendTheUglyCommand(buf);
+      CommandData.StarCam[2].threshold = rvalues[0];
+      break;
+    case theugly_mdist:
+      sprintf(buf, "IsetDisttol=%d", ivalues[0]);
+      sendTheUglyCommand(buf);
+      CommandData.StarCam[2].minBlobDist = ivalues[0];
       break;
     case theugly_lens_any:
       sprintf(buf, "L=%s", svalues[0]);

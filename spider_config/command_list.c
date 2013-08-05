@@ -1044,19 +1044,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(thegood_settrig_timed), "Use timed exposure mode on The Good",
     GR_SCGOOD, 1,
     {
-      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_thegood"}
+      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_g"}
     }
   },
   {COMMAND(thegood_exp_params), "set The Good exposure commands", GR_SCGOOD, 1,
     {
-      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_thegood"}
+      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_g"}
     }
   },
-  {COMMAND(thegood_focus_params), "set The Good autofocus params", GR_SCGOOD, 2,
+  {COMMAND(thegood_focus_res), "set The Good autofocus resolution", GR_SCGOOD, 1,
     {
       {"Resolution (number total positions)", 0, USHRT_MAX, 'i',
-        "foc_res_thegood"},
-      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
+        "foc_res_g"},
+    }
+  },
+  {COMMAND(thegood_focus_range), "set The Good autofocus range", GR_SCGOOD, 1,
+    {
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_g"} 
     }
   },
   {COMMAND(thegood_bad_pix), "Indicate pixel to ignore on The Good", GR_SCGOOD,
@@ -1073,13 +1077,28 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
     }
   },
-  {COMMAND(thegood_blob_params), "set blob finder params on The Good",
-    GR_SCGOOD, 4,
+  {COMMAND(thegood_maxblobs), "set max number of blobs on The Good",
+    GR_SCGOOD, 1,
     {
-      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_thegood"},
-      {"Search grid size (pix)", 1, 1530 , 'i', "grid_thegood"},
-      {"Threshold (# sigma)", 0, 100, 'f', "thresh_thegood"},
-      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_thegood"}
+      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_g"},
+    }
+  },
+  {COMMAND(thegood_grid), "set blob finder grid size on The Good",
+    GR_SCGOOD, 1,
+    {
+      {"Search grid size (pix)", 1, 1530 , 'i', "grid_g"},
+    }
+  },
+  {COMMAND(thegood_thresh), "set blob finder S/N threshold on The Good",
+    GR_SCGOOD, 1,
+    {
+      {"Threshold (# sigma)", 0, 100, 'f', "thresh_g"},
+    }
+  },
+  {COMMAND(thegood_mdist), "set blob finder min blob separation on The Good",
+    GR_SCGOOD, 1,
+    {
+      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_g"}
     }
   },
   {COMMAND(thegood_lens_any), "execute The Good lens command directly",
@@ -1096,7 +1115,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thegood_lens_params), "set The Good lens params", GR_SCGOOD, 1,
     {
-      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_thegood"}
+      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_g"}
     }
   },
   {COMMAND(thegood_viewer), "switch video (0=TheGood, 1=TheBad, 2=TheUgly)",
@@ -1115,19 +1134,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(thebad_settrig_timed), "Use timed exposure mode on The Bad",
     GR_SCBAD, 1,
     {
-      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_thebad"}
+      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_b"}
     }
   },
   {COMMAND(thebad_exp_params), "set The Bad exposure commands", GR_SCBAD, 1,
     {
-      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_thebad"}
+      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_b"}
     }
   },
-  {COMMAND(thebad_focus_params), "set The Bad autofocus params", GR_SCBAD, 2,
+  {COMMAND(thebad_focus_res), "set The Bad autofocus resolution", GR_SCBAD, 1,
     {
       {"Resolution (number total positions)", 0, USHRT_MAX, 'i',
-        "foc_res_thebad"},
-      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
+        "foc_res_b"},
+    }
+  },
+  {COMMAND(thebad_focus_range), "set The Bad autofocus range", GR_SCBAD, 1,
+    {
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_b"} 
     }
   },
   {COMMAND(thebad_bad_pix), "Indicate pixel to ignore on The Bad", GR_SCBAD, 3,
@@ -1143,13 +1166,28 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
     }
   },
-  {COMMAND(thebad_blob_params), "set blob finder params on The Bad", GR_SCBAD,
-    4,
+  {COMMAND(thebad_maxblobs), "set max number of blobs on The Bad",
+    GR_SCBAD, 1,
     {
-      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_thebad"},
-      {"Search grid size (pix)", 1, 1530 , 'i', "grid_thebad"},
-      {"Threshold (# sigma)", 0, 100, 'f', "thresh_thebad"},
-      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_thebad"}
+      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_b"},
+    }
+  },
+  {COMMAND(thebad_grid), "set blob finder grid size on The Bad",
+    GR_SCBAD, 1,
+    {
+      {"Search grid size (pix)", 1, 1530 , 'i', "grid_b"},
+    }
+  },
+  {COMMAND(thebad_thresh), "set blob finder S/N threshold on The Bad",
+    GR_SCBAD, 1,
+    {
+      {"Threshold (# sigma)", 0, 100, 'f', "thresh_b"},
+    }
+  },
+  {COMMAND(thebad_mdist), "set blob finder min blob separation on The Bad",
+    GR_SCBAD, 1,
+    {
+      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_b"}
     }
   },
   {COMMAND(thebad_lens_any), "execute The Bad lens command directly", GR_SCBAD,
@@ -1166,7 +1204,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thebad_lens_params), "set The Bad lens params", GR_SCBAD, 1,
     {
-      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_thebad"}
+      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_b"}
     }
   },
   /***************************************/
@@ -1179,19 +1217,23 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(theugly_settrig_timed), "Use timed exposure mode on The Ugly",
     GR_SCUGLY, 1,
     {
-      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_theugly"}
+      {"Exposure Interval (ms)", 0, USHRT_MAX, 'i', "exp_int_u"}
     }
   },
   {COMMAND(theugly_exp_params), "set The Ugly exposure commands", GR_SCUGLY, 1,
     {
-      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_theugly"}
+      {"Exposure duration (ms)", 40, USHRT_MAX, 'i', "exp_time_u"}
     }
   },
-  {COMMAND(theugly_focus_params), "set The Ugly autofocus params", GR_SCUGLY, 2,
+  {COMMAND(theugly_focus_res), "set The Ugly autofocus resolution", GR_SCUGLY, 1,
     {
       {"Resolution (number total positions)", 0, USHRT_MAX, 'i',
-        "foc_res_theugly"},
-      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "NONE"} 
+        "foc_res_u"},
+    }
+  },
+  {COMMAND(theugly_focus_range), "set The Ugly autofocus range", GR_SCUGLY, 1,
+    {
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_u"} 
     }
   },
   {COMMAND(theugly_bad_pix), "Indicate pixel to ignore on The Ugly", GR_SCUGLY,
@@ -1208,13 +1250,28 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Plate scale (arcsec/pixel)", 0, 20, 'f', ""}
     }
   },
-  {COMMAND(theugly_blob_params), "set blob finder params on The Ugly",
-    GR_SCUGLY, 4,
+  {COMMAND(theugly_maxblobs), "set max number of blobs on The Ugly",
+    GR_SCUGLY, 1,
     {
-      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_theugly"},
-      {"Search grid size (pix)", 1, 1530 , 'i', "grid_theugly"},
-      {"Threshold (# sigma)", 0, 100, 'f', "thresh_theugly"},
-      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_theugly"}
+      {"Max number of blobs", 1, USHRT_MAX, 'i', "maxblob_u"},
+    }
+  },
+  {COMMAND(theugly_grid), "set blob finder grid size on The Ugly",
+    GR_SCUGLY, 1,
+    {
+      {"Search grid size (pix)", 1, 1530 , 'i', "grid_u"},
+    }
+  },
+  {COMMAND(theugly_thresh), "set blob finder S/N threshold on The Ugly",
+    GR_SCUGLY, 1,
+    {
+      {"Threshold (# sigma)", 0, 100, 'f', "thresh_u"},
+    }
+  },
+  {COMMAND(theugly_mdist), "set blob finder min blob separation on The Ugly",
+    GR_SCUGLY, 1,
+    {
+      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "mdist_u"}
     }
   },
   {COMMAND(theugly_lens_any), "execute The Ugly lens command directly",
@@ -1231,7 +1288,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(theugly_lens_params), "set The Ugly lens params", GR_SCUGLY, 1,
     {
-      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_theugly"}
+      {"Allowed move error (ticks)", 0, USHRT_MAX, 'i', "move_tol_u"}
     }
   },
   {COMMAND(rsc_trig_wait), "rotating star camera trigger interval", GR_TRIM, 1,
