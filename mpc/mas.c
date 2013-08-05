@@ -763,7 +763,7 @@ static int set_directory(void)
 
     data_root[5] = i + '0';
     write_array_id(i);
-    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 1,
+    if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 0,
         NULL))
     {
       drive_error[i] = 1;
@@ -908,7 +908,7 @@ static int do_ivcurve(uint32_t kickbias, int kickwait, int start, int last,
     return 1;
 
   /* do the ramp */
-  return exec_and_wait(sched, none, argv[0], (char**)argv, 0, 1, &kill_special);
+  return exec_and_wait(sched, none, argv[0], (char**)argv, 0, 0, &kill_special);
 }
 
 static void pick_biases(int iv_num)
@@ -1193,7 +1193,7 @@ static int tune(void)
   flush_experiment_cfg(0);
 
   int r = exec_and_wait(sched, none, MAS_SCRIPT "/auto_setup", (char**)argv,
-      0, 1, &kill_special);
+      0, 0, &kill_special);
 
   if (r == 0) { /* archive it */
     int d;
@@ -1302,7 +1302,7 @@ static int reconfig(int do_kick)
   /* ensure we're synced */
   flush_experiment_cfg(0);
 
-  if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_make_config", NULL, 100, 1,
+  if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_make_config", NULL, 100, 0,
         NULL))
   {
     drive_error[data_drive[0]] = 1; /* must be a drive error */
@@ -1310,7 +1310,7 @@ static int reconfig(int do_kick)
     return 1;
   }
 
-  if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_reconfig", NULL, 100, 1,
+  if (exec_and_wait(sched, none, MAS_SCRIPT "/mce_reconfig", NULL, 100, 0,
         NULL))
   {
     comms_lost = 1;
