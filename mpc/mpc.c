@@ -1039,8 +1039,10 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         try_mount = 1;
         state &= ~st_drives;
         /* reset lookback */
-        if (ev->ivalues[1])
+        if (ev->ivalues[1]) {
           memory.dmesg_lookback = time(NULL);
+          mem_dirty = 1;
+        }
         break;
       case reconfig:
         state &= ~st_config;
