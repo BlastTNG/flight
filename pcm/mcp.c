@@ -511,7 +511,6 @@ static void GetCurrents()
   double i_dgps;
   double i_step;
   double i_flc;
-  double i_gy;
   double i_rw;
   double i_el;
   double i_piv;
@@ -525,7 +524,6 @@ static void GetCurrents()
   static struct BiPhaseStruct* i_dgpsAddr;
   static struct BiPhaseStruct* i_stepAddr;
   static struct BiPhaseStruct* i_flcAddr;
-  static struct BiPhaseStruct* i_gyAddr;
   static struct BiPhaseStruct* i_rwAddr;
   static struct BiPhaseStruct* i_elAddr;
   static struct BiPhaseStruct* i_pivAddr;
@@ -538,7 +536,6 @@ static void GetCurrents()
   static struct NiosStruct* i_dgpsNios;
   static struct NiosStruct* i_stepNios;
   static struct NiosStruct* i_flcNios;
-  static struct NiosStruct* i_gyNios;
   static struct NiosStruct* i_rwNios;
   static struct NiosStruct* i_elNios;
   static struct NiosStruct* i_pivNios;
@@ -559,7 +556,6 @@ static void GetCurrents()
     i_dgpsAddr = GetBiPhaseAddr("i_dgps");
     i_stepAddr = GetBiPhaseAddr("i_step");
     i_flcAddr = GetBiPhaseAddr("i_flc");
-    i_gyAddr = GetBiPhaseAddr("i_gy");
     i_rwAddr = GetBiPhaseAddr("i_rw");
     i_elAddr = GetBiPhaseAddr("i_el");
     i_pivAddr = GetBiPhaseAddr("i_piv");
@@ -572,7 +568,6 @@ static void GetCurrents()
     i_dgpsNios = GetNiosAddr("i_dgps");
     i_stepNios = GetNiosAddr("i_step");
     i_flcNios  = GetNiosAddr("i_flc");
-    i_gyNios = GetNiosAddr("i_gy");
     i_rwNios = GetNiosAddr("i_rw");
     i_elNios = GetNiosAddr("i_el");
     i_pivNios = GetNiosAddr("i_piv");
@@ -589,7 +584,6 @@ static void GetCurrents()
   i_dgps = (double)(slow_data[i_dgpsAddr->index][i_dgpsAddr->channel])*i_dgpsNios->m + i_dgpsNios->b;
   i_step = (double)(slow_data[i_stepAddr->index][i_stepAddr->channel])*i_stepNios->m + i_stepNios->b;
   i_flc = (double)(slow_data[i_flcAddr->index][i_flcAddr->channel])*i_flcNios->m + i_flcNios->b;
-  i_gy = (double)(slow_data[i_gyAddr->index][i_gyAddr->channel])*i_gyNios->m + i_gyNios->b;
   i_rw = (double)(slow_data[i_rwAddr->index][i_rwAddr->channel])*i_rwNios->m + i_rwNios->b;
   i_el = (double)(slow_data[i_elAddr->index][i_elAddr->channel])*i_elNios->m + i_elNios->b;
   i_piv = (double)(slow_data[i_pivAddr->index][i_pivAddr->channel])*i_pivNios->m + i_pivNios->b;
@@ -601,7 +595,7 @@ static void GetCurrents()
     CommandData.power.elmot_is_on = 0;
   }
 
-  i_tot = i_trans + i_das + i_acs + i_mcc + i_sc + i_dgps + i_step + i_flc + i_gy + i_rw + i_el + i_piv;
+  i_tot = i_trans + i_das + i_acs + i_mcc + i_sc + i_dgps + i_step + i_flc + i_rw + i_el + i_piv;
 
   WriteData(i_totNios, 1000*i_tot, NIOS_QUEUE);
 
@@ -664,7 +658,27 @@ void check_bbc_sync()
   }
 }
 
-unsigned int read_from_bbc()
+unsigned int read_from_bbc() {
+  unsigned int in_data = 0;
+  int size_read;
+  int num_delay = 0;
+  
+  do {
+    size_read = read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int));
+    if (size_read<=0) {
+      num_delay++;
+      if (num_delay > 700) {
+        check_bbc_sync();
+        num_delay = 0;
+      }
+      usleep(1000);
+    }
+  } while (size_read <= 0);
+  
+  return in_data;
+}
+
+unsigned int old_read_from_bbc()
 {
   unsigned int in_data = 0;
   int fd;

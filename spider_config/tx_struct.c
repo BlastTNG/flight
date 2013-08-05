@@ -775,7 +775,7 @@ struct ChannelStruct SlowChannels[] = {
   {"i_flc",        'r',  ACS1_A1, 17, CAL16(12.5, -0.09),       'u', U_I_A},
   {"i_rw",         'r',  ACS1_A1, 19, CAL16(12.5, -0.0742),       'u', U_I_A},
   {"i_step",       'r',  ACS1_A1, 21, CAL16(11.0, -0.099),       'u', U_I_A},
-  {"i_gy",         'r',  ACS1_A1, 23, CAL16(12.5,  -0.04),        'u', U_I_A},
+  //{"i_gy",         'r',  ACS1_A1, 23, CAL16(12.5,  -0.04),        'u', U_I_A},
 /* ACS_A1 24-41 are unused. */
 
 /* ACS1 Temperature card */
