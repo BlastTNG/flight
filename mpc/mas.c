@@ -17,6 +17,8 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#undef SHOW_WRITE_PARAM
+
 #include "mpc_proto.h"
 #include "mpc.h"
 #include "mputs.h"
@@ -284,6 +286,7 @@ static void write_param(const char *card, const char *param, int offset,
   int n, new = 0;
   int i = param_index(card, param);
 
+#ifdef SHOW_WRITE_PARAM
   {
     int i;
     char *ptr, params[1000];
@@ -293,6 +296,7 @@ static void write_param(const char *card, const char *param, int offset,
     bprintf(info, "write_param: %s/%s+%i(%i) [ %s]", card, param, offset,
         count, params);
   }
+#endif
 
   if (i < 0) { /* virtual parameters */
     int n = 0;
@@ -667,11 +671,11 @@ static int acq_conf(void)
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
         "/data/mas/etc/mpc.lnk");
     if (st == NULL) {
-      bprintf(err, "Couldn't set up file sequencer for data0");
+      bprintf(err, "Couldn't set up file sequencer for primary drive");
       goto ACQ_CONFIG_ERR;
     }
     if (mcedata_multisync_add(acq, st)) {
-      bprintf(err, "Couldn't append file sequencer for data0");
+      bprintf(err, "Couldn't append file sequencer for primary drive");
       goto ACQ_CONFIG_ERR;
     }
   }
@@ -681,11 +685,11 @@ static int acq_conf(void)
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
         NULL);
     if (st == NULL) {
-      bprintf(err, "Couldn't set up file sequencer for data1");
+      bprintf(err, "Couldn't set up file sequencer for secondary drive");
       goto ACQ_CONFIG_ERR;
     }
     if (mcedata_multisync_add(acq, st)) {
-      bprintf(err, "Couldn't append file sequencer for data1");
+      bprintf(err, "Couldn't append file sequencer for secondary drive");
       goto ACQ_CONFIG_ERR;
     }
   }
@@ -695,11 +699,11 @@ static int acq_conf(void)
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
         NULL);
     if (st == NULL) {
-      bprintf(err, "Couldn't set up file sequencer for data2");
+      bprintf(err, "Couldn't set up file sequencer for tertiary drive");
       goto ACQ_CONFIG_ERR;
     }
     if (mcedata_multisync_add(acq, st)) {
-      bprintf(err, "Couldn't append file sequencer for data2");
+      bprintf(err, "Couldn't append file sequencer for tertiary drive");
       goto ACQ_CONFIG_ERR;
     }
   }
@@ -712,8 +716,6 @@ static int acq_conf(void)
     frame[i] = fb + i * acq->frame_size;
 
   get_acq_metadata();
-
-  bprintf(info, "Starting acquisition #%li", acq_time);
 
   /* done */
   return 0;
@@ -787,6 +789,8 @@ static int kick(uint32_t bias, uint32_t value, int wait)
         data[i] = bias;
       write_param("tes", "bias", 0, data, 16);
     }
+
+    bprintf(info, "Kick %i counts and wait %i sec.", value, wait);
 
     write_param("heater", "bias", 0, &value, 1);
     slow_dat.tile_heater = value;
@@ -1048,42 +1052,64 @@ static void ensure_experiment_cfg(void)
     flush_experiment_cfg(1);
 }
 
-/* bias steppy */
+/* tes bias step via internal commanding */
 static int bias_step(void)
 {
-  int i, j;
+  uint32_t data[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+  };
+  uint32_t bc2 = 0x08;
+  uint32_t mod_val = 0x27;
+  uint32_t thirty_two = 32;
+  uint32_t zero = 0;
+  uint32_t two = 2;
+  uint32_t step = goal.step;
+  uint32_t period;
   uint32_t bias[16];
 
-  /* get biases */
+  /* store biases */
   fetch_param("tes", "bias", 0, bias, 16);
 
-  /* step up */
-  for (j = 0; j < goal.stop; ++j) {
-    bprintf(info, "Bias Step up");
-    for (i = 0; i < 16; ++i)
-      if (bias[i])
-        bias[i] += goal.step;
-    write_param("tes", "bias", 0, bias, 16);
+  /* set up for the internal ramp */
 
-    if (check_wait(goal.wait))
-      return 1;
+  /* turn off internal commanding */
+  mas_write_range("cc", "internal_cmd_mode", 0, &zero, 1);
 
-    /* step down */
-    bprintf(info, "Bias Step down");
-    for (i = 0; i < 16; ++i)
-      if (bias[i])
-        bias[i] -= 2 * goal.step;
-    write_param("tes", "bias", 0, bias, 16);
+  /* set card and parameter (bc2 mod_val) */
+  mas_write_range("cc", "ramp_card_addr", 0, &bc2, 1);
+  mas_write_range("cc", "ramp_param_id", 0, &mod_val, 1);
 
-    if (check_wait(goal.wait))
-      return 1;
+  /* we have to ramp all 32 mod_vals, but only the top 16 of them will
+   * be used because of enbl_flux_fb_mod */
+  mas_write_range("cc", "ramp_step_data_num", 0, &thirty_two, 1);
 
-    /* back to normal */
-    for (i = 0; i < 16; ++i)
-      if (bias[i])
-        bias[i] += goal.step;
-  }
-  bprintf(info, "Bias Step finished");
+  /* min val is always zero */
+  mas_write_range("cc", "ramp_min_val", 0, &zero, 1);
+
+  /* max val and step size are both the commanded step value */
+  mas_write_range("cc", "ramp_max_val", 0, &step, 1);
+  mas_write_range("cc", "ramp_step_size", 0, &step, 1);
+
+  /* the width of the pulse in ARZs -- goal.wait is this value in seconds */
+  period = 50e6 / row_len / num_rows / goal.wait;
+  mas_write_range("cc", "ramp_step_period", 0, &period, 1);
+
+  /* mod_val-ify the upper 16 elements of bc2/flux_fb = tes/bias */
+  mas_write_range("bc2", "enbl_flux_fb_mod", 0, data, 32);
+
+  /* start the ramp */
+  bprintf(info, "Starting bias step");
+  mas_write_range("cc", "internal_cmd_mode", 0, &two, 1);
+
+  /* wait -- times two for full period */
+  check_wait(goal.wait * goal.stop * 2);
+
+  /* stop the ramp */
+  bprintf(info, "Stopping bias step");
+  mas_write_range("cc", "internal_cmd_mode", 0, &zero, 1);
+
+  /* restore biases */
   write_param("tes", "bias", 0, bias, 16);
 
   return 0;

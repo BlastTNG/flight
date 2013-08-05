@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
+#include <sys/sysinfo.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -94,8 +95,11 @@ int terminate = 0;
 /* Initialisation veto */
 static int init = 1;
 
-/* maximum lookback for dmesg parsing */
-time_t dmesg_lookback = 0;
+/* boot time */
+time_t btime;
+
+/* uuid map */
+char *uuid[4];
 
 /* reset the array statistics */
 int stat_reset = 1;
@@ -1036,7 +1040,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         state &= ~st_drives;
         /* reset lookback */
         if (ev->ivalues[1])
-          dmesg_lookback = time(NULL);
+          memory.dmesg_lookback = time(NULL);
         break;
       case reconfig:
         state &= ~st_config;
@@ -1390,6 +1394,7 @@ static int read_mem(void)
     memory.used_tune = 0xFFFF; /* don't know */
     memory.sync_veto = 0;
     memory.divisor = 1;
+    memory.dmesg_lookback = btime;
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 
@@ -1418,13 +1423,52 @@ int tuning_filename(const char *file, int n, char *buffer)
   return 0;
 }
 
+/* figure out the boot time (needed for dmesg scraping) */
+static void set_btime(void)
+{
+  struct sysinfo sinfo;
+  sysinfo(&sinfo);
+
+  btime = time(NULL) - sinfo.uptime;
+  bprintf(info, "System boot time: %s", asctime(gmtime(&btime)));
+}
+
+/* load uuids for the /data drives */
+static void get_uuids(void)
+{
+  FILE *stream;
+  char buffer[1024];
+  char data[1024], c;
+
+  stream = fopen("/etc/fstab", "r");
+  if (stream == NULL) {
+    bprintf(err, "Unable to read /etc/fstab");
+    return;
+  }
+
+  /* look for "^UUID=[^ ]* /data[0-3]" */
+  while (fgets(buffer, 1024, stream)) {
+    if (buffer[0] != 'U')
+      continue;
+
+    if (sscanf(buffer, "UUID=%s /data%c", data, &c) == 2) {
+      if (c >= '0' && c <= '3') {
+        bprintf(info, "Found UUID=%s mapped to /data%c", data, c);
+        uuid[(int)c - '0'] = strdup(data);
+      }
+    }
+  }
+
+  fclose(stream);
+}
+
 int main(void)
 {
   int port, type;
   ssize_t n;
   size_t len;
 
-  pthread_t data_thread;
+  pthread_t mas_thread;
   pthread_t task_thread;
   pthread_t acq_thread;
   pthread_t blob_thread;
@@ -1443,7 +1487,7 @@ int main(void)
 
   /* for scripts */
   setenv("PYTHONPATH", "/data/mas/mce_script/python:/data/mas/python", 1);
-  setenv("PATH", "usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"
+  setenv("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:"
       "/data/mas/bin:/data/mas/mce_script/script:"
       "/data/mas/mce_script/test_suite", 1);
 
@@ -1455,6 +1499,9 @@ int main(void)
 
   if (mpc_init())
     bprintf(fatal, "Unable to initialise MPC subsystem.");
+
+  /* figure out the boot time */
+  set_btime();
 
   /* load non-volatile memory */
   mem_dirty = read_mem();
@@ -1477,11 +1524,11 @@ int main(void)
 
   bprintf(info, "Controlling MCE #%i.  Array ID: %s", nmce, array_id);
 
-  /* init slow data */
-  send_slow_data(data, 0);
+  /* get the UUIDs of the /data drives */
+  get_uuids();
 
   /* create the threads */
-  pthread_create(&data_thread, NULL, mas_data, NULL);
+  pthread_create(&mas_thread, NULL, mas_data, NULL);
   pthread_create(&task_thread, NULL, task, NULL);
   pthread_create(&blob_thread, NULL, blobber, NULL);
   pthread_create(&acq_thread, NULL, acquer, NULL);
@@ -1543,13 +1590,15 @@ int main(void)
         /* send init packet */
         len = mpc_compose_init(nmce, data);
 
-        /* Broadcast this to everyone */
         if (udp_bcast(sock, MCESERV_PORT, len, data, 0) == 0)
           bputs(info, "Broadcast awake ping.\n");
 
         init_timer = INIT_TIMEOUT;
       } else if (n == 0)
         init_timer -= UDP_TIMEOUT;
+
+      /* update but don't send slow data */
+      send_slow_data(data, 0);
     } else if (!power_cycle_cmp) {
       /* finished the init; slow data */
       if (slow_timer <= 0) {

@@ -47,11 +47,13 @@ struct memory_t {
   int used_tune;
   int sync_veto;
   int divisor;
+  time_t dmesg_lookback;
 };
 extern struct memory_t memory;
 extern int mem_dirty;
 
 /* MPC globals */
+extern time_t btime;
 extern int nmce;
 extern int mas_get_temp;
 extern int sock;
@@ -60,6 +62,7 @@ extern int cur_dm, req_dm;
 extern int power_cycle_mce;
 extern int power_cycle_cmp;
 extern int send_mceparam;
+extern char *uuid[4];
 extern int divisor;
 extern int veto;
 extern int try_mount;

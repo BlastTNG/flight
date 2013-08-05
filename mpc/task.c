@@ -94,11 +94,16 @@ static void task_mount_drives(void)
 {
   int is_mounted[4] = {0, 0, 0, 0};
   int dont_mount[4] = {0, 0, 0, 0};
-  int phy_map[4] = {-1, -1, -1, -1};
+  int phy_map[100];
   int nerr[100];
+  int last_phy = 0;
   char buffer[1024], l, n;
-  int d;
+  int d, i;
   FILE *stream;
+
+  memset(nerr, 0, sizeof(int) * 100);
+  memset(phy_map, 0, sizeof(int) * 100);
+
   /* first figure out what is already mounted */
   stream = fopen("/proc/mounts", "r");
   if (stream == NULL) {
@@ -110,7 +115,7 @@ static void task_mount_drives(void)
     /* looking for interesting lines */
     if (sscanf(buffer, "/dev/sd%c1 /data%c ext4", &l, &n) == 2)
       if (n >= '0' && n <= '3') {
-        phy_map[n - '0'] = l;
+        phy_map[(int)l] = n - '0';
         bprintf(info, "Found /dev/sd%c1 mounted on /data%c", l, n);
         is_mounted[n - '0'] = 1;
       }
@@ -118,32 +123,60 @@ static void task_mount_drives(void)
 
   fclose(stream);
 
-  memset(nerr, 0, sizeof(int) * 100);
   stream = open_dmesg(); 
 
   /* search dmesg for warning signs */
   while (fgets(buffer, 1024, stream)) {
+    double offset = strtod(buffer + 1, NULL);
+    if (btime + offset < memory.dmesg_lookback)
+      continue;
     if (sscanf(buffer + 15, "end_request: critical target error, dev sd%c", &l)
         == 1)
     {
+      if (last_phy < l)
+        last_phy = l;
       nerr[(int)l]++;
     } else if (sscanf(buffer + 15, "end_request: I/O error, dev sd%c", &l) == 1)
+    {
+      if (last_phy < l)
+        last_phy = l;
       nerr[(int)l]++;
-    else if (sscanf(buffer + 15, "Buffer I/O error on device sd%c1", &l) == 1)
+    } else if (sscanf(buffer + 15, "Buffer I/O error on device sd%c1", &l) == 1)
+    {
+      if (last_phy < l)
+        last_phy = l;
       nerr[(int)l]++;
+    }
     usleep(1000);
   }
   close_dmesg(stream);
 
-  /* disable mounting of bad drives */
-  for (d = 0; d < 4; ++d)
-    if (phy_map[d] > 0)
-      if (nerr[phy_map[d]] > 10) {
-        bprintf(info, "multiple kernel errors (%i) on device sd%c.  Disabling",
-            nerr[phy_map[d]], phy_map[d]);
-        disk_bad[d] = 1;
-        dont_mount[d] = 1;
+  /* deal with bad drives */
+  for (i = 'a'; i <= last_phy; ++i)
+    if (nerr[i] > 10) {
+      if (phy_map[i] > 0) {
+        bprintf(info, "%i kernel errors on device sd%c.  Disabling.",
+            nerr[i], i);
+        disk_bad[phy_map[i]] = 1;
+        dont_mount[phy_map[i]] = 1;
+      } else {
+        /* try to find an unmounted drive associated with this device */
+        for (d = 0; d < 4; ++d)
+          if (!is_mounted[d]) {
+            char link[1024];
+            sprintf(link, "/dev/disk/by-uuid/%s", uuid[d]);
+            if (readlink(link, buffer, 1024) > 0) {
+              /* this will be of the form ../../sd?1 */
+              if (buffer[8] == i) {
+                bprintf(info, "%i kernel errors on device sd%c "
+                    "intended as /data%i.  Disabling.", nerr[i], i, d);
+                dont_mount[d] = 1;
+                disk_bad[d] = 1;
+              }
+            }
+          }
       }
+    }
 
   /* unmount bad drives */
   for (d = 0; d < 4; ++d)
@@ -559,10 +592,12 @@ void *task(void *dummy)
               task_dt_script(dt_lcloop, moda_tk, md_none, 1);
               break;
             case md_bstep: /* bias step */
-              task_dt_script(dt_bstep, moda_tk, md_none, 0);
+              if (check_acq == 0)
+                task_dt_script(dt_bstep, moda_tk, md_none, 0);
               break;
             case md_bramp: /* bias ramp */
-              task_dt_script(dt_bramp, moda_tk, md_none, 0);
+              if (check_acq == 0)
+                task_dt_script(dt_bramp, moda_tk, md_none, 0);
               break;
           }
       } else { /* stop task */
