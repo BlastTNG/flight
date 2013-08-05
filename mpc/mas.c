@@ -1289,7 +1289,7 @@ static int check_set_sync(void)
   return 0;
 }
 
-static int reconfig(int do_kick)
+static int reconfig(void)
 {
   uint32_t u32;
   
@@ -1316,9 +1316,6 @@ static int reconfig(int do_kick)
     comms_lost = 1;
     return 1;
   }
-
-  if (do_kick)
-    kick(KICK_DONT_BIAS, 6553, 30);
 
   /* update tile heater data */
   read_param("heater", "bias", 0, &u32, 1);
@@ -1416,10 +1413,10 @@ void *mas_data(void *dummy)
           dt_error = 0;
         break;
       case dt_reconfig:
-        dt_error = reconfig(0);
+        dt_error = reconfig();
         break;
-      case dt_reconfig_kick:
-        dt_error = reconfig(1);
+      case dt_kick:
+        dt_error = kick(KICK_DONT_BIAS, 6553, 30);
         break;
       case dt_status:
         dt_error = mce_status();

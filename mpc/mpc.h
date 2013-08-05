@@ -219,14 +219,12 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
-  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop, dt_bstep, dt_bramp,
-  dt_reconfig_kick
+  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop, dt_bstep, dt_bramp, dt_kick
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
   "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
-"ivcurve", "stop", "stopmce", "lcloop", "bstep", "bramp", \
-"reconfig_kick"
+"ivcurve", "stop", "stopmce", "lcloop", "bstep", "bramp", "kick"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

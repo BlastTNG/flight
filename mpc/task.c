@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+static int running_state = 0;
 static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
 int try_mount = 1; /* attempt to mount data drives */
@@ -491,8 +492,15 @@ void *task(void *dummy)
 
       if ((meta_tk & ~STOP_TK) >= (1U << MODA_SHIFT))
         moda_tk = (meta_tk & ~STOP_TK) >> MODA_SHIFT;
-      else 
+      else {
         status_tk = (meta_tk & ~STOP_TK);
+        if (running_state && status_tk != running_state) {
+          /* stop an in-progress state */
+          status_tk = running_state;
+          stop = 1;
+          running_state = 0;
+        }
+      }
 
       if (!stop) { /* handle start task requests */
         if (status_tk != st_idle)
@@ -538,14 +546,18 @@ void *task(void *dummy)
               task_reset_mce();
               break;
             case st_config:
-            case st_biased:
               /* MCE reconfig */
-              if (state & st_biased) {
-                if (dt_wait(dt_reconfig) == 0)
-                  state |= st_config | st_biased;
-              } else
-                if (dt_wait(dt_reconfig_kick) == 0)
-                  state |= st_config | st_biased;
+              if (dt_wait(dt_reconfig) == 0)
+                state |= st_config;
+              break;
+            case st_biased:
+              if (running_state == 0) {
+                dt_req(dt_kick);
+                running_state = st_biased;
+              } else if (dt_done()) {
+                running_state = 0;
+                state |= st_biased;
+              }
               break;
             case st_acqcnf:
               /* "mce status" */
@@ -607,6 +619,7 @@ void *task(void *dummy)
               break;
             case st_syncon:
             case st_biased:
+              dt_kill();
               state &= ~status_tk;
               break;
             case st_retdat:
