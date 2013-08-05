@@ -607,30 +607,39 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
     case mce23_off:
       CommandData.ifpower.mce_op[0] = mce_pow_off;
+      CommandData.ifpower.mce_mpcveto[0] = MPC_POWER_VETO;
       break;
     case mce23_on:
       CommandData.ifpower.mce_op[0] = mce_pow_on;
+      CommandData.ifpower.mce_mpcveto[0] = MPC_POWER_VETO;
       break;
     case mce23_cycle:
       CommandData.ifpower.mce_op[0] = mce_pow_cyc;
+      CommandData.ifpower.mce_mpcveto[0] = MPC_POWER_VETO;
       break;
     case mce46_off:
       CommandData.ifpower.mce_op[1] = mce_pow_off;
+      CommandData.ifpower.mce_mpcveto[1] = MPC_POWER_VETO;
       break;
     case mce46_on:
       CommandData.ifpower.mce_op[1] = mce_pow_on;
+      CommandData.ifpower.mce_mpcveto[1] = MPC_POWER_VETO;
       break;
     case mce46_cycle:
       CommandData.ifpower.mce_op[1] = mce_pow_cyc;
+      CommandData.ifpower.mce_mpcveto[1] = MPC_POWER_VETO;
       break;
     case mce15_off:
       CommandData.ifpower.mce_op[2] = mce_pow_off;
+      CommandData.ifpower.mce_mpcveto[2] = MPC_POWER_VETO;
       break;
     case mce15_on:
       CommandData.ifpower.mce_op[2] = mce_pow_on;
+      CommandData.ifpower.mce_mpcveto[2] = MPC_POWER_VETO;
       break;
     case mce15_cycle:
       CommandData.ifpower.mce_op[2] = mce_pow_cyc;
+      CommandData.ifpower.mce_mpcveto[2] = MPC_POWER_VETO;
       break;
     case sync_off:
       CommandData.power.sync.set_count = 0;
@@ -2116,6 +2125,9 @@ void InitCommandData()
   CommandData.ifpower.mce_op[0] = mce_pow_nop;
   CommandData.ifpower.mce_op[1] = mce_pow_nop;
   CommandData.ifpower.mce_op[2] = mce_pow_nop;
+  CommandData.ifpower.mce_mpcveto[0] = 10;
+  CommandData.ifpower.mce_mpcveto[1] = 10;
+  CommandData.ifpower.mce_mpcveto[2] = 10;
   CommandData.ifpower.mce[0].rst_count = 0;
   CommandData.ifpower.mce[0].set_count = 0;
   CommandData.ifpower.mce[1].rst_count = 0;

@@ -317,6 +317,7 @@ struct CommandDataStruct {
 
   struct {
     enum mce_pow_op mce_op[3];
+    int mce_mpcveto[3];
     struct latch_pulse mce[3];
     struct latch_pulse hwp;
     struct latch_pulse sftv;

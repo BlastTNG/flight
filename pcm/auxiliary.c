@@ -370,6 +370,9 @@ static void do_mce_power_op(void)
       } else
         pwr_timer[i]--;
     }
+
+    if (CommandData.ifpower.mce_mpcveto[i])
+      CommandData.ifpower.mce_mpcveto[i]--;
   }
 }
 

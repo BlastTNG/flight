@@ -28,6 +28,9 @@
 #include "mce_blob.h"
 #include "tes.h"
 
+/* Timeout on MPC-induced MCE power state changes */
+#define MPC_POWER_VETO 200 /* slow frames */
+
 extern int mce_slow_index[NUM_MCE];
 extern struct mpc_slow_data mce_slow_dat[NUM_MCE][3];
 extern int request_ssdata;

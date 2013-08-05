@@ -389,10 +389,12 @@ static void handle_pcm_request(size_t n, const char *peer, int port)
     bprintf(info, "%s/%i req: cycle MCE#%i on bank %i", peer, port, mce, bank);
 
     /* Don't cycle the power if someone else turned it off */
-    int mce_is_on = slow_data[mcePowerAddr->index][mcePowerAddr->channel] &
+    int mce_is_off = slow_data[mcePowerAddr->index][mcePowerAddr->channel] &
       (1 << bank);
-    if (mce_is_on)
+    if (!mce_is_off && CommandData.ifpower.mce_mpcveto[bank] == 0) {
       CommandData.ifpower.mce_op[bank] = mce_pow_cyc;
+      CommandData.ifpower.mce_mpcveto[bank] = MPC_POWER_VETO;
+    }
   }
 }
 
