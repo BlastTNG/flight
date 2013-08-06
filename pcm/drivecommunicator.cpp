@@ -200,8 +200,7 @@ void DriveCommunicator::synchronize()
     if (receive == 0x0d) {
       err = DC_NO_ERROR;        //received echo of synchronization character
       return;
-    }
-    else {
+    } else {
       err = DC_SYNCH_ERROR;
 #if DRIVE_COMM_DEBUG
       cout << "[DriveComm debug]: ...error: " << err << endl;

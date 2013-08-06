@@ -276,30 +276,30 @@ void* rotaryTableComm(void* arg)
   tableComm->sendCommand(&axison);
 
   while (1) {
-      currSpeed = tableSpeed;
-      dTableSpeed = (double) tableSpeed * 
-        MAX_TABLE_SPEED * DPS_TO_TABLE / (INT_MAX - 1);
-      tableComm->sendSpeedCommand(TABLE_ADDR,dTableSpeed);
-      if (tableComm->getError() != DC_NO_ERROR) {
-        bprintf(err, "rotary table comm failure, trying re-synch");
-        while (tableComm->getError() != DC_NO_ERROR) {
-          //command failed, keep trying to resynchronize communications
-          usleep(10000);
-          tableComm->synchronize();
-        }
-        //may also need to resend volatile memory commands (if I use any)
-        bprintf(info, "successful reconnection to rotary table");
-    	CommandData.table.mode = 2;
-	CommandData.table.vel = 0.0;
-	homing = 1;
-	if (last_direction) direction = 0;
-	else direction = 1;
+    currSpeed = tableSpeed;
+    dTableSpeed = (double) tableSpeed * 
+    MAX_TABLE_SPEED * DPS_TO_TABLE / (INT_MAX - 1);
+    tableComm->sendSpeedCommand(TABLE_ADDR,dTableSpeed);
+    if (tableComm->getError() != DC_NO_ERROR) {
+      bprintf(err, "rotary table comm failure, trying re-synch");
+      while (tableComm->getError() != DC_NO_ERROR) {
+        //command failed, keep trying to resynchronize communications
+        usleep(10000);
+        tableComm->synchronize();
       }
-
-      //can also put queries here for (eg) motor temperature
-      gettimeofday(&time, NULL);
-      thisTime = time.tv_sec + time.tv_usec/1000000.0;
-      lastTime = thisTime;
+      //may also need to resend volatile memory commands (if I use any)
+      bprintf(info, "successful reconnection to rotary table");
+      CommandData.table.mode = 2;
+      CommandData.table.vel = 0.0;
+      homing = 1;
+      if (last_direction) direction = 0;
+      else direction = 1;
+    }
+    
+    //can also put queries here for (eg) motor temperature
+    gettimeofday(&time, NULL);
+    thisTime = time.tv_sec + time.tv_usec/1000000.0;
+    lastTime = thisTime;
   }
   return NULL;
 }
