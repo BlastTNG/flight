@@ -29,8 +29,10 @@
  * the number of entries in the set.  Excess elements are ignored.
  */
 
+#include "channels.h"
 #include "command_struct.h"
 #include "bset.h"
+#include "mcp.h"
 #include "tes.h"
 #include "blast.h"
 #include <string.h>
@@ -42,34 +44,22 @@
 
 #define SET_DIR "/data/etc/spider"
 
+/* serial number for bsets */
+static uint8_t bset_serial = 0xF9;
+
 /* currently loaded set in PCM */
 static struct bset curr_bset;
 
-static pthread_mutex_t set_mex = PTHREAD_MUTEX_INITIALIZER;
-
-/* get/set the global sets along with their numbers */
-int get_bset(struct bset *local_set)
+/* set the global sets along with their numbers; also sets CommandData for
+ * consistency */
+static void set_bset(const struct bset *local_set, int num)
 {
-  int num;
-  pthread_mutex_lock(&set_mex);
-  num = CommandData.bset_num;
-  memcpy(local_set, &curr_bset, sizeof(curr_bset));
-  pthread_mutex_unlock(&set_mex);
-  return num;
-}
-
-void set_bset(const struct bset *local_set, int num)
-{
-  pthread_mutex_lock(&set_mex);
-  CommandData.bset_num = num;
   memcpy(&curr_bset, local_set, sizeof(curr_bset));
-  pthread_mutex_unlock(&set_mex);
+  CommandData.bset_num = curr_bset.num = num;
 }
 
-/* parse bset file number 'i' and store it in 'set'.  Returns 'set' or NULL
- * on error
- */
-int read_bset(int i, struct bset *set)
+/* parse bset file number 'i' and store it in 'set'.  Returns -1 on error */
+static int read_bset(int i, struct bset *set)
 {
   struct bset new_set = { .n = -1 };
   int lineno = 1, c = 0;
@@ -83,7 +73,7 @@ int read_bset(int i, struct bset *set)
   if ((stream = fopen(name, "r")) == NULL) {
     /* a missing file isn't interesting */
     if (errno != ENOENT)
-      berror(err, "Set: unable to open %s as BSET%03i", name, i);
+      berror(err, "Unable to open %s as BSET%03i", name, i);
     return -1;
   }
 
@@ -92,7 +82,7 @@ int read_bset(int i, struct bset *set)
     size_t len = strlen(line);
     /* check for line length */
     if (line[len - 1] != '\n') {
-      bprintf(err, "Set: Error reading BSET%03i: line %i too long.", i,
+      bprintf(err, "Error reading BSET%03i: line %i too long.", i,
           lineno);
       goto LOAD_BSET_ERROR;
     }
@@ -109,11 +99,11 @@ int read_bset(int i, struct bset *set)
       new_set.n = strtol(line, &endptr, 10);
       /* check for trailing garbage and/or crazy numbers */
       if (*endptr != '\n' || new_set.n <= 0) {
-        bprintf(err, "Set: Error reading BSET%03i: bad count on line %i", i,
+        bprintf(err, "Error reading BSET%03i: bad count on line %i", i,
             lineno);
         goto LOAD_BSET_ERROR;
       } else if (new_set.n > MAX_BSET) {
-        bprintf(warning, "Set: BSET%03i too long; dropping %i %s", i,
+        bprintf(warning, "BSET%03i too long; dropping %i %s", i,
             new_set.n - MAX_BSET,
             (new_set.n - MAX_BSET == 1) ? "entry" : "entries");
         new_set.n = MAX_BSET;
@@ -127,7 +117,7 @@ int read_bset(int i, struct bset *set)
       /* parse "x#c##r##\n" */
       if (line[0] != 'x' || line[2] != 'r' || line[5] != 'c' || line[8] != '\n')
       {
-        bprintf(err, "Set: Bad syntax line %i of BSET%03i", lineno, i);
+        bprintf(err, "Bad syntax line %i of BSET%03i", lineno, i);
         goto LOAD_BSET_ERROR;
       }
 
@@ -139,7 +129,7 @@ int read_bset(int i, struct bset *set)
           (line[6] - '0') * 10 + line[7] - '0');
 
       if (new_set.v[c] < 0) {
-        bprintf(err, "Set: Bad bolometer number on line %i of BSET%03i",
+        bprintf(err, "Bad bolometer number on line %i of BSET%03i",
             lineno, i);
         goto LOAD_BSET_ERROR;
       }
@@ -151,7 +141,7 @@ int read_bset(int i, struct bset *set)
   }
 
   if (c != new_set.n) {
-    bprintf(err, "Set: Unexpected EOF reading BSET%03i", i);
+    bprintf(err, "Unexpected EOF reading BSET%03i", i);
     goto LOAD_BSET_ERROR;
   }
 
@@ -168,4 +158,75 @@ int read_bset(int i, struct bset *set)
 LOAD_BSET_ERROR:
   fclose(stream);
   return -1;
+}
+
+/* (re-)load the bset number 'i' into the local buffer -- no change on error;
+ * 'init'=1 occurs at start up, when there's no fallback initialised.
+ */
+static void change_bset(int i)
+{
+  static int init = 1;
+  struct bset new_bset;
+
+  /* range checking */
+  if (i < 0 || i > 255) {
+    bprintf(warning, "Ignoring out-of-range BSET index %i\n", i);
+    return;
+  }
+
+  /* special empty sets -- always succeeds */
+  if (i == 0) {
+    memset(&new_bset, 0, sizeof(new_bset));
+    set_bset(&new_bset, new_bset_num(0));
+    return;
+  }
+
+  /* try to load the bset */
+  if (read_bset(i, &new_bset) == -1) {
+    /* no bset loaded -- load the empty default */
+    if (init) {
+      init = 0;
+      change_bset(0);
+      return;
+    }
+
+    bprintf(warning, "Unable to read BSET%03i; still using BSET%03i", i,
+        (CommandData.bset_num & 0xFF));
+    return;
+  }
+
+  /* update the current bset */
+  init = 0;
+  set_bset(&new_bset, new_bset_num(i));
+}
+
+int new_bset_num(int i)
+{
+  /* avoid the forbidden serial number */
+  if (bset_serial == 0xFF)
+    bset_serial++;
+
+  return (i | (bset_serial++ << 8));
+}
+
+/* read the current bset num from the data return; if it has changed, update it
+ */
+int get_bset(struct bset *local_set)
+{
+  static struct BiPhaseStruct *bsetNumAddr = NULL;
+  int new_bset;
+
+  if (bsetNumAddr == NULL)
+    bsetNumAddr = GetBiPhaseAddr("bset_num");
+
+  /* check for a bset change */
+  new_bset = slow_data[bsetNumAddr->index][bsetNumAddr->channel];
+
+  /* if it's different than the stored address, try loading the new number */
+  if (new_bset != curr_bset.num)
+    change_bset(new_bset);
+
+  /* return the bset */
+  memcpy(local_set, &curr_bset, sizeof(curr_bset));
+  return curr_bset.num;
 }

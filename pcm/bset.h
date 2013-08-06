@@ -36,7 +36,8 @@
 
 /* set buffers */
 struct bset {
-  int n;
+  int num; /* bset num */
+  int n; /* bset count */
   int16_t v[MAX_BSET];
 
   int nm[NUM_MCE]; /* per-MCE counts */
@@ -44,9 +45,7 @@ struct bset {
   int empties; /* indicating MCEs for which no data will be returned */
 };
 
-int read_bset(int i, struct bset *set);
-
 int get_bset(struct bset *local_set);
-void set_bset(const struct bset *local_set, int num);
+int new_bset_num(int);
 
 #endif

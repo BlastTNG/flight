@@ -69,48 +69,6 @@ int sendTheGoodCommand(const char *cmd);
 int sendTheBadCommand(const char *cmd);
 int sendTheUglyCommand(const char *cmd);
 
-/* (re-)load the [bf]set number 'i' into the local buffer -- no change on error;
- * 'init'=1 occurs at start up, when there's no fallback initialised.
- */
-static void change_bset(int i, int init)
-{
-  static uint8_t bset_serial = 0xF9;
-  struct bset new_bset;
-
-  /* range checking */
-  if (i < 0 || i > 255) {
-    bprintf(warning, "Set: ignoring out-of-range BSET index %i\n", i);
-    return;
-  }
-
-  /* avoid the forbidden serial number */
-  if (bset_serial == 0xFF)
-    bset_serial++;
-
-  /* special empty sets -- always succeeds */
-  if (i == 0) {
-    memset(&new_bset, 0, sizeof(new_bset));
-    set_bset(&new_bset, bset_serial++ << 8);
-    return;
-  }
-
-  /* try to load the bset */
-  if (read_bset(i, &new_bset) == -1) {
-    /* no bset loaded -- load the empty default */
-    if (init) {
-      change_bset(0, 0);
-      return;
-    }
-
-    bprintf(warning, "Set: unable to read BSET%03i; still using BSET%03i", i,
-        (CommandData.bset_num & 0xFF));
-    return;
-  }
-
-  /* update the current bset */
-  set_bset(&new_bset, i | (bset_serial++ << 8));
-}
-
 /* forward an unrecognised command to the MCE computers.  Returns zero if this
  * isn't in fact, a mce command */
 static int MCEcmd(int command, const double *rvalues, const int *ivalues,
@@ -1387,7 +1345,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       setup_bbc();
       break;
     case bset:
-      change_bset(ivalues[0], 0);
+      CommandData.bset_num = new_bset_num(ivalues[0]);
       break;
 
     case plugh:/* A hollow voice says "Plugh". */
@@ -2061,12 +2019,6 @@ void CheckCommandList(void)
   //bprintf(info, "Commands: All Checks Passed.\n");
 }
 
-/* do necessary stuff after reading prev_status */
-static void PostProcessInitCommand(void)
-{
-  change_bset(CommandData.bset_num & 0xFF, 1);
-}
-
 /************************************************************/
 /*                                                          */
 /*  Initialize CommandData: read last valid state: if there */
@@ -2220,10 +2172,8 @@ void InitCommandData()
         (int) sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
     bputs(warning, "prev_status: Extra bytes found.\n");
-  else {
-    PostProcessInitCommand();
+  else
     return;
-  }
 
   bputs(warning, "Regenerating Command Data and prev_status\n");
 
@@ -2493,5 +2443,4 @@ void InitCommandData()
   CommandData.questionable_behaviour = 0;
 
   WritePrevStatus();
-  PostProcessInitCommand();
 }
