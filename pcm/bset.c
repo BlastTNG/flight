@@ -56,6 +56,9 @@ static void set_bset(const struct bset *local_set, int num)
 {
   memcpy(&curr_bset, local_set, sizeof(curr_bset));
   CommandData.bset_num = curr_bset.num = num;
+
+  /* Delete this XXX */
+  bprintf(info, "New BSET: 0x%04X", num);
 }
 
 /* parse bset file number 'i' and store it in 'set'.  Returns -1 on error */
@@ -163,10 +166,11 @@ LOAD_BSET_ERROR:
 /* (re-)load the bset number 'i' into the local buffer -- no change on error;
  * 'init'=1 occurs at start up, when there's no fallback initialised.
  */
-static void change_bset(int i)
+static void change_bset(int j)
 {
   static int init = 1;
   struct bset new_bset;
+  int i = j & 0xFF;
 
   /* range checking */
   if (i < 0 || i > 255) {
@@ -186,18 +190,19 @@ static void change_bset(int i)
     /* no bset loaded -- load the empty default */
     if (init) {
       init = 0;
-      change_bset(0);
+      change_bset(new_bset_num(0));
       return;
     }
 
     bprintf(warning, "Unable to read BSET%03i; still using BSET%03i", i,
-        (CommandData.bset_num & 0xFF));
+        (curr_bset.num & 0xFF));
+    CommandData.bset_num = curr_bset.num;
     return;
   }
 
   /* update the current bset */
   init = 0;
-  set_bset(&new_bset, new_bset_num(i));
+  set_bset(&new_bset, j);
 }
 
 int new_bset_num(int i)
@@ -213,17 +218,17 @@ int new_bset_num(int i)
  */
 int get_bset(struct bset *local_set)
 {
-  static struct BiPhaseStruct *bsetNumAddr = NULL;
+  static struct BiPhaseStruct *bsetAddr = NULL;
   int new_bset;
 
-  if (bsetNumAddr == NULL)
-    bsetNumAddr = GetBiPhaseAddr("bset_num");
+  if (bsetAddr == NULL)
+    bsetAddr = GetBiPhaseAddr("bset");
 
   /* check for a bset change */
-  new_bset = slow_data[bsetNumAddr->index][bsetNumAddr->channel];
+  new_bset = slow_data[bsetAddr->index][bsetAddr->channel];
 
   /* if it's different than the stored address, try loading the new number */
-  if (new_bset != curr_bset.num)
+  if ((new_bset & 0xFF) != (curr_bset.num & 0xFF))
     change_bset(new_bset);
 
   /* return the bset */

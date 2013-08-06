@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+extern int StartupVeto; /* mcp.c */
+
 /* empty the fifo on start-up */
 int empty_tes_fifo = 1;
 
@@ -408,6 +410,10 @@ void *mcerecv(void *unused)
   int mccnum;
 
   nameThread("MCE->");
+
+  /* wait for resumption of sanity */
+  while (StartupVeto)
+    usleep(10000);
 
   sock = udp_bind_port(MCESERV_PORT, 1);
 
