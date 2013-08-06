@@ -189,7 +189,7 @@ enum multiCommand {
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,
   bias_tes_all, bias_tes_rc1, tile_heater_on, tile_heater_off, bias_ramp,
   tile_heater_kick, servo_reset, force_config, tune_biases, reload_mce_config,
-  flux_loop_init, lcloop, mce_veto, mce_unveto, reload_dead_masks, bias_step,
+  flux_loop_init, lcloop, mce_veto, mce_unveto, bias_step,
   acquire, reconfig, pause_acq, data_mode, cycle_acq, mce_clock_int,
   drive_check, bias_tes_rc2, mce_clock_ext, array_stat_reset,
 

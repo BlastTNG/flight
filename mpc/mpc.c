@@ -1254,8 +1254,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case reload_mce_config:
         cfg_load_template();
-        break;
-      case reload_dead_masks:
         cfg_load_dead_masks();
         break;
       case flux_loop_init:
