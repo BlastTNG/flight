@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <termios.h>
 #include <fcntl.h>   /* File control definitions */
 #include <sys/select.h>
@@ -5,6 +6,9 @@
 #include <math.h>         //for powers and float parsing
 #include <limits.h>       //for numerical limits of integer types
 #include "drivecommunicator.h"
+extern "C" {
+#include "blast.h"
+}
 
 #define DRIVE_COMM_DEBUG 0
 #if DRIVE_COMM_DEBUG
@@ -22,7 +26,7 @@ default constructor performs minimal initiation
 DriveCommunicator::DriveCommunicator()
 {
   dirForward = true;
-  err = DC_UNKNOWN;
+  derr = DC_UNKNOWN;
   portFD = -1;
   highspeed = false;
 }
@@ -34,7 +38,7 @@ perform minimal initialization and then open connection
 DriveCommunicator::DriveCommunicator(string deviceName)
 {
   dirForward = true;
-  err = DC_UNKNOWN;
+  derr = DC_UNKNOWN;
   portFD = -1;
   highspeed = false;
   openConnection(deviceName);
@@ -64,8 +68,9 @@ void DriveCommunicator::openConnection(string deviceName,
   serialDeviceName = deviceName;
   portFD = open(deviceName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
   if (portFD == -1) { //open failed
+    berror(err,"DriveComm error: ");
     serialDeviceName = "";
-    err = DC_SERIAL_ERROR;
+    derr = DC_SERIAL_ERROR;
     return;
   }
 
@@ -96,7 +101,7 @@ void DriveCommunicator::openConnection(string deviceName,
   synchronize();
 
   //try seeing if controller is running at low speed (shouldn't)
-//  if (!highspeed && err != DC_NO_ERROR) {
+//  if (!highspeed && derr != DC_NO_ERROR) {
 //#if DRIVE_COMM_DEBUG
 //    cout << "[DriveComm debug]: synchronize failed, trying low speed" << endl;
 //#endif
@@ -116,12 +121,12 @@ void DriveCommunicator::closeConnection()
   cout << "[DriveComm debug]: closing connection to the device." << endl;
 #endif
   if (close(portFD) < 0) {
-    err = DC_SERIAL_ERROR;
+    derr = DC_SERIAL_ERROR;
     return;
   }
   portFD = -1;
   serialDeviceName = "";	
-  err = DC_NO_ERROR;
+  derr = DC_NO_ERROR;
 }
 
 /*
@@ -154,17 +159,17 @@ void DriveCommunicator::synchronize()
 #endif
     n = select(portFD+1, NULL, &output, NULL, &timeout);              //wait until a write won't block
     if (n <= 0 || !FD_ISSET(portFD, &output)) {    //error, timeout, or something probably impossible
-      err = DC_SERIAL_ERROR;
+      derr = DC_SERIAL_ERROR;
 #if DRIVE_COMM_DEBUG
-      cout << "[DriveComm debug]: ...error: " << err << endl;
+      cout << "[DriveComm debug]: ...error: " << derr << endl;
 #endif
       continue;
     }
     n = write(portFD, &send, 1);    //write single test character
     if (n < 0) {    //error
-      err = DC_SERIAL_ERROR;
+      derr = DC_SERIAL_ERROR;
 #if DRIVE_COMM_DEBUG
-      cout << "[DriveComm debug]: ...error: " << err << endl;
+      cout << "[DriveComm debug]: ...error: " << derr << endl;
 #endif
       continue;
     }
@@ -178,17 +183,17 @@ void DriveCommunicator::synchronize()
 #endif
     n = select(portFD+1, &input, NULL, NULL, &timeout);         //wait until read won't block
     if (n <= 0 || !FD_ISSET(portFD, &input)) {
-      err = DC_SERIAL_ERROR;
+      derr = DC_SERIAL_ERROR;
 #if DRIVE_COMM_DEBUG
-      cout << "[DriveComm debug]: ...error: " << err << endl;
+      cout << "[DriveComm debug]: ...error: " << derr << endl;
 #endif
       continue;
     }
     n = read(portFD, &receive, 1);                      //read only single return byte
     if (n < 0) {    //error
-      err = DC_SERIAL_ERROR;
+      derr = DC_SERIAL_ERROR;
 #if DRIVE_COMM_DEBUG
-      cout << "[DriveComm debug]: ...error: " << err << endl;
+      cout << "[DriveComm debug]: ...error: " << derr << endl;
 #endif
       continue;
     }
@@ -198,12 +203,12 @@ void DriveCommunicator::synchronize()
       << "\" (sent: \"" << (int)send << "\")" << endl;
 #endif
     if (receive == 0x0d) {
-      err = DC_NO_ERROR;        //received echo of synchronization character
+      derr = DC_NO_ERROR;        //received echo of synchronization character
       return;
     } else {
-      err = DC_SYNCH_ERROR;
+      derr = DC_SYNCH_ERROR;
 #if DRIVE_COMM_DEBUG
-      cout << "[DriveComm debug]: ...error: " << err << endl;
+      cout << "[DriveComm debug]: ...error: " << derr << endl;
 #endif
       continue;
     }
@@ -267,7 +272,7 @@ void DriveCommunicator::sendCommand(MotorCommand *cmd)
 #endif
   n = select(portFD+1, NULL, &output, NULL, &timeout);              //wait until a write won't block
   if (n <= 0 || !FD_ISSET(portFD, &output)) {    //error, timeout, or something probably impossible
-    err = DC_SERIAL_ERROR;
+    derr = DC_SERIAL_ERROR;
     return;
   }
   n = write(portFD, lastCommand.getCommand(), (size_t)lastCommand.getCommandLength()); //if no error or timeout, then able to write
@@ -275,7 +280,7 @@ void DriveCommunicator::sendCommand(MotorCommand *cmd)
   cout << "[DriveComm debug]: ...wrote " << n << " bytes, command has a total of: " << lastCommand.getCommandLength() << endl;
 #endif
   if (n < 0) {    //error
-    err = DC_SERIAL_ERROR;
+    derr = DC_SERIAL_ERROR;
     return;
   }
 
@@ -288,7 +293,7 @@ void DriveCommunicator::sendCommand(MotorCommand *cmd)
 #endif
   n = select(portFD+1, &input, NULL, NULL, &timeout);         //wait until read won't block
   if (n <= 0 || !FD_ISSET(portFD, &input)) {
-    err = DC_SERIAL_ERROR;
+    derr = DC_SERIAL_ERROR;
 #if DRIVE_COMM_DEBUG
     cout << "[DriveComm debug]: ...could not read confirmation" << endl;
 #endif
@@ -299,12 +304,12 @@ void DriveCommunicator::sendCommand(MotorCommand *cmd)
   cout << "[DriveComm debug]: ...read confirmation character: \"" << ret << "\"" << endl;
 #endif
   if (n < 0) {    //error
-    err = DC_SERIAL_ERROR;
+    derr = DC_SERIAL_ERROR;
     return;
   }
 
-  if (ret == 0x4f) err = DC_NO_ERROR;        //received correct confirmation character
-  else err = DC_BAD_RETURN;
+  if (ret == 0x4f) derr = DC_NO_ERROR;        //received correct confirmation character
+  else derr = DC_BAD_RETURN;
 
 }
 
@@ -359,7 +364,7 @@ MotorCommand* DriveCommunicator::sendQuery(unsigned short dest, unsigned short d
 #endif
   n = select(portFD+1, NULL, &output, NULL, &timeout);              //wait until a write won't block
   if (n <= 0 || !FD_ISSET(portFD, &output)) {    //error, timeout, or something probably impossible
-    err = DC_SERIAL_ERROR;
+    derr = DC_SERIAL_ERROR;
     return NULL;
   }
   n = write(portFD, lastCommand.getCommand(), (size_t)lastCommand.getCommandLength()); //if no error or timeout, then able to write
@@ -367,7 +372,7 @@ MotorCommand* DriveCommunicator::sendQuery(unsigned short dest, unsigned short d
   cout << "[DriveComm debug]: ...wrote " << n << " bytes, command has a total of: " << lastCommand.getCommandLength() << endl;
 #endif
   if (n < 0) {    //error
-    err = DC_SERIAL_ERROR;
+    derr = DC_SERIAL_ERROR;
     return NULL;
   }
 
@@ -384,7 +389,7 @@ MotorCommand* DriveCommunicator::sendQuery(unsigned short dest, unsigned short d
 #endif
     n = select(portFD+1, &input, NULL, NULL, &timeout);         //wait until read won't block
     if (n <= 0 || !FD_ISSET(portFD, &input)) {
-      err = DC_SERIAL_ERROR;
+      derr = DC_SERIAL_ERROR;
 #if DRIVE_COMM_DEBUG
       cout << "[DriveComm debug]: ...could not read confirmation" << endl;
 #endif
@@ -395,14 +400,14 @@ MotorCommand* DriveCommunicator::sendQuery(unsigned short dest, unsigned short d
     cout << "[DriveComm debug]: ...read " << n << " bytes out of " << charsremaining << endl;
 #endif
     if (n < 0) {    //error
-      err = DC_SERIAL_ERROR;
+      derr = DC_SERIAL_ERROR;
       return NULL;
     } 
     //transfer result from the read buffer
     for (int i=0; i<n; i++) answer[readLength+1-charsremaining+i] = buf[i];
     //check confirmation character...if it is invalid, there is no sense in continuing to try to read
     if (answer[0] != 0x4f) {
-      err = DC_BAD_RETURN;
+      derr = DC_BAD_RETURN;
       return NULL;
     }
   }
@@ -414,7 +419,7 @@ MotorCommand* DriveCommunicator::sendQuery(unsigned short dest, unsigned short d
 
   returnVal.setCommand(&answer[1]); //don't include confirm character in return command
   if (!returnVal.isValid()) {
-    err = DC_BAD_RETURN;
+    derr = DC_BAD_RETURN;
     return NULL;
   }
 
@@ -422,7 +427,7 @@ MotorCommand* DriveCommunicator::sendQuery(unsigned short dest, unsigned short d
 #if DRIVE_COMM_DEBUG
   cout << "[DriveComm debug]: ...successfully parsed answer" << endl;
 #endif
-  err = DC_NO_ERROR;        //received well formed return
+  derr = DC_NO_ERROR;        //received well formed return
   return &returnVal;
 }
 
@@ -474,7 +479,7 @@ void DriveCommunicator::sendSpeedCommand(unsigned short dest, double speed)
   cspd.buildCommand();
   upd.buildCommand();
   this->sendCommand(&cspd);
-  if (err != DC_NO_ERROR) return;  //command failed
+  if (derr != DC_NO_ERROR) return;  //command failed
 
   //if speed is different direction than currently, need to change CPOS
   if (!this->dirForward && speed > 0) {       //currently going backward, forward speed command
@@ -483,7 +488,7 @@ void DriveCommunicator::sendSpeedCommand(unsigned short dest, double speed)
     MotorCommand cpos(dest, 0x249e, pdata, 2);
     cpos.buildCommand();
     this->sendCommand(&cpos);
-    if (err != DC_NO_ERROR) return;  //command failed
+    if (derr != DC_NO_ERROR) return;  //command failed
     this->dirForward = true;
   }
   else if (this->dirForward && speed < 0) {      //currently going forward, backward speed command
@@ -492,13 +497,13 @@ void DriveCommunicator::sendSpeedCommand(unsigned short dest, double speed)
     MotorCommand cpos(dest, 0x249e, pdata, 2);
     cpos.buildCommand();
     this->sendCommand(&cpos);
-    if (err != DC_NO_ERROR) return;  //command failed
+    if (derr != DC_NO_ERROR) return;  //command failed
     this->dirForward = false;
   }
 
   //send update
   this->sendCommand(&upd);
-  if (err != DC_NO_ERROR) return;  //command failed
+  if (derr != DC_NO_ERROR) return;  //command failed
 }
 
 /*

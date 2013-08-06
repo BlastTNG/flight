@@ -30,7 +30,7 @@ public:
 	MotorCommand* getLastCommand() { return &this->lastCommand; }
 	MotorCommand* getReply() { return &this->returnVal; }
 	string getDeviceName() { return this->serialDeviceName; }
-	DRIVE_ERROR getError() { return this->err; }
+	DRIVE_ERROR getError() { return this->derr; }
 	bool isGoingForward() { return this->dirForward; }
 	bool isOpen() { return portFD > 0; }
 	
@@ -56,7 +56,7 @@ private:
 	bool dirForward;                     //true when drive is set to move in "forward" direction
 	int portFD;                          //file descriptor for serial port communications
 	string serialDeviceName;             //name of file in /dev/ folder corresponding to serial device
-	DRIVE_ERROR err;                     //error status
+	DRIVE_ERROR derr;                     //error status
 	bool highspeed;                      //are communications set to high speed
 
 };
