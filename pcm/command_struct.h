@@ -257,8 +257,6 @@ struct CommandDataStruct {
   unsigned int n_arrays_stats_per_superframe;
   unsigned short mce_param_index;
 
-  enum {vtx_isc, vtx_osc, vtx_bsc} vtx_sel[2];
-
   //struct GainStruct ele_gain;
 
   struct {
@@ -284,6 +282,7 @@ struct CommandDataStruct {
 
   struct SCCommandData StarCam[3];
   int    rsc_wait;
+  int    pyramid;
   double bsc_delay;
   struct TableStruct table;
 

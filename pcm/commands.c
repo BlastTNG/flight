@@ -763,6 +763,12 @@ void SingleCommand (enum singleCommand command, int scheduled)
       /********** Star Camera Table *********/
     case table_track:
       CommandData.table.mode = 0;
+    case use_pyramid:
+      CommandData.pyramid = 1;
+      break;
+    case no_pyramid:
+      CommandData.pyramid = 0;
+      break;
 
     case blast_rocks:
       CommandData.sucks = 0;
@@ -778,24 +784,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case not_at_float:
       CommandData.at_float = 0;
-      break;
-    case vtx1_isc:
-      CommandData.vtx_sel[0] = vtx_isc;
-      break;
-    case vtx1_osc:
-      CommandData.vtx_sel[0] = vtx_osc;
-      break;
-    case vtx1_bsc:
-      CommandData.vtx_sel[0] = vtx_bsc;
-      break;
-    case vtx2_isc:
-      CommandData.vtx_sel[1] = vtx_isc;
-      break;
-    case vtx2_osc:
-      CommandData.vtx_sel[1] = vtx_osc;
-      break;
-    case vtx2_bsc:
-      CommandData.vtx_sel[1] = vtx_bsc;
       break;
 
     case reap_itsy:  /* Miscellaneous commands */
@@ -2189,8 +2177,6 @@ void InitCommandData()
   CommandData.iridium_bw = 2000;
   CommandData.channelset_oth = 0;
   CommandData.n_arrays_stats_per_superframe = 100;
-  CommandData.vtx_sel[0] = vtx_isc;
-  CommandData.vtx_sel[1] = vtx_osc;
 
   CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 
@@ -2258,6 +2244,7 @@ void InitCommandData()
   CommandData.StarCam[0].platescale = 9.3;
   CommandData.StarCam[1].platescale = 9.3;
   CommandData.StarCam[2].platescale = 9.3;
+  CommandData.pyramid = 0;
 
   CommandData.use_elenc1 = 1;
   CommandData.use_elenc2 = 1;

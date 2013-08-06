@@ -591,13 +591,15 @@ static string ParseReturn(string rtnStr, int which)
 	} else { //response is exposure data
 //		bprintf(info,"Exposure data");
 		CamCommunicator::interpretReturn(rtnStr, &camRtn[which][(i_cam[which]+1)%2]);
-		SolveField(&camRtn[which][(i_cam[which]+1)%2],SCra[which],SCdec[which],SCroll[which],which);
-                SCra[which]=(SCra[which]*180/M_PI+360.0)/15.0;
-		SCdec[which]*=180/M_PI;
-	        SCroll[which]*=180/M_PI;
-		radec2azel(SCra[which],SCdec[which], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[which], &SCel[which]);
+		if (CommandData.pyramid) {
+      SolveField(&camRtn[which][(i_cam[which]+1)%2],SCra[which],SCdec[which],SCroll[which],which);
+      SCra[which]=(SCra[which]*180/M_PI+360.0)/15.0;
+		  SCdec[which]*=180/M_PI;
+	    SCroll[which]*=180/M_PI;
+		  radec2azel(SCra[which],SCdec[which], PointingData[i_point].lst, PointingData[i_point].lat, &SCaz[which], &SCel[which]);
 		//if (which==1) SCaz[which] += BAD_AZ_OFF - ACSData.enc_table;
 		//if (which==2) SCaz[which] += UGLY_AZ_OFF - ACSData.enc_table;
+    }
 		i_cam[which] = (i_cam[which]+1)%2;
 	}
 	return ""; //doesn't send a response back to camera

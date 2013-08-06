@@ -347,8 +347,6 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(az_auto_gyro), "automatically calculate az gyro offsets", GR_TRIM},
   {COMMAND(el_auto_gyro), "automatically calculate el gyro offset", GR_TRIM},
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
-  {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
-  {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -359,12 +357,6 @@ const struct scom scommands[N_SCOMMANDS] = {
     GR_TELEM},
   {COMMAND(not_at_float), "tell the scheduler that we're not at float",
     GR_TELEM},
-  {COMMAND(vtx1_isc), "put ISC video on transmitter #1", GR_TELEM},
-  {COMMAND(vtx1_osc), "put OSC video on transmitter #1", GR_TELEM},
-  {COMMAND(vtx1_bsc), "put BSC video on transmitter #1", GR_TELEM},
-  {COMMAND(vtx2_isc), "put ISC video on transmitter #2", GR_TELEM},
-  {COMMAND(vtx2_osc), "put OSC video on transmitter #2", GR_TELEM},
-  {COMMAND(vtx2_bsc), "put BSC video on transmitter #2", GR_TELEM},
 
   {COMMAND(halt_itsy), "ask MCP to halt *ITSY* MCC", GR_MISC | CONFIRM},
   {COMMAND(halt_bitsy), "ask MCP to halt *BITSY* MCC", GR_MISC | CONFIRM},
@@ -416,6 +408,8 @@ const struct scom scommands[N_SCOMMANDS] = {
     GR_SCUGLY},
   {COMMAND(theugly_pause), "Stop automatic image capture", GR_SCUGLY},
   {COMMAND(theugly_run), "Start automatic image capture", GR_SCUGLY},
+  {COMMAND(use_pyramid), "Use lost-in-space for star cameras", GR_TRIM},
+  {COMMAND(no_pyramid), "Turn off lost-in-space for star cameras", GR_TRIM},
   //Star Camera table
   {COMMAND(table_track), "Put the table in track mode", GR_SCTAB},
   //Theo heater housekeeping commands
