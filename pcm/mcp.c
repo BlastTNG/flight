@@ -1261,7 +1261,7 @@ int main(int argc, char *argv[])
   openTable();	// opens communications and creates thread in table.cpp
 
 #ifndef TEST_RUN //ethernet threads should start in test versions
-  //openSC();  // SC - creates threads in sc.cpp
+  openSC();  // SC - creates threads in sc.cpp
 #endif
 
 
