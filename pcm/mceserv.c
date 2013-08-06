@@ -489,8 +489,7 @@ void *mcerecv(void *unused)
         bad_bset_count = insert_tes_data(bad_bset_count, n, udp_buffer, peer,
             port);
         if (bad_bset_count > BAD_BSET_THRESHOLD) {
-          if (InCharge)
-            bprintf(warning, "Resending BSet: %i bad packets", bad_bset_count);
+          bprintf(warning, "Resending BSet: %i bad packets", bad_bset_count);
           sent_bset = -1; /* resend bset */
           bad_bset_count = 0;
         }
