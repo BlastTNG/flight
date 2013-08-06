@@ -35,7 +35,7 @@ void Usage() {
 //*********************************************************
 // connect to the political party server
 //*********************************************************
-int party_connect(const char *hostname) {
+int party_connect(const char *hostname, int port) {
   int s;
   struct sockaddr_in sn;
   struct hostent *hostinfo;
@@ -44,7 +44,7 @@ int party_connect(const char *hostname) {
   int on =1 ;
 
   sp = &sp_real;
-  sp->s_port = htons(RNC_PORT);
+  sp->s_port = htons(port);
 
   sn.sin_family = AF_INET;
   sn.sin_port = sp->s_port;
@@ -76,6 +76,7 @@ int party_connect(const char *hostname) {
 
 int main(int argc, char *argv[]) {
   char remote_server[2][256];
+  int port[2];
   int n_servers;
   char out_filename[256];
   char inbuf[BUFSIZE];
@@ -86,6 +87,7 @@ int main(int argc, char *argv[]) {
   time_t t, last_t = 0;
   int blockread = 0;
   int i_server = 0;
+  int i_ch;
 
   time_t t_r, t_lr;
   
@@ -93,13 +95,27 @@ int main(int argc, char *argv[]) {
 
   n_servers = argc-1;
   
-  if (argc<=2) Usage();
+  if (argc<2) Usage();
   n_servers = argc-1;
   
   for (i_server=0; i_server<n_servers; i_server++) {
     if (argv[i_server+1][0]=='-') Usage();
-    strncpy(remote_server[i_server], argv[i_server+1], 254);
+    for (i_ch = 0; (argv[i_server+1][i_ch] != '\0') && (argv[i_server+1][i_ch] != ':'); i_ch++) {
+      remote_server[i_server][i_ch] = argv[i_server+1][i_ch];
+    }
+    remote_server[i_server][i_ch] = '\0';
+    if (argv[i_server+1][i_ch] == ':') {
+      port[i_server] = atoi(argv[i_server+1]+i_ch+1);
+    } else {
+      port[i_server] = RNC_PORT;
+    }
+    //strncpy(remote_server[i_server], argv[i_server+1], 254);
   }
+
+  for (i_server=0; i_server<n_servers; i_server++) {
+    printf("Using host: %s port: %d\n", remote_server[i_server], port[i_server]);
+  }
+
   i_server = 0;
   
   sprintf(out_filename, "%s/%lu.highgain", RAWDIR, time(NULL));
@@ -116,7 +132,7 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  tty_fd = party_connect(remote_server[i_server]);
+  tty_fd = party_connect(remote_server[i_server], port[i_server]);
   
   while (1) {
     ioctl(tty_fd, FIONREAD, &numin);
@@ -136,14 +152,14 @@ int main(int argc, char *argv[]) {
         shutdown(tty_fd, SHUT_RDWR);
         i_server++;
         if (i_server>=n_servers) i_server = 0;
-        tty_fd = party_connect(remote_server[i_server]);
+        tty_fd = party_connect(remote_server[i_server], port[i_server]);
       } 
       usleep(30000);
     }
     t = time(NULL);
     
     if (t-last_t > 10) {
-      printf("Host %s: %7d bytes at %.0f bps at %s", remote_server[i_server],totalread, (double)blockread*8.0/(t-last_t), ctime(&t));
+      printf("Host %s:%d %7d bytes at %.0f bps at %s", remote_server[i_server],port[i_server], totalread, (double)blockread*8.0/(t-last_t), ctime(&t));
       last_t = t;
       blockread = 0;
     }
