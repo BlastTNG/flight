@@ -66,10 +66,6 @@
  */
 #define SYNOP_TIMEOUT 10000 /* milliseconds */
 
-/* Heater-based kick depths */
-#define KICK_1V  6550
-#define KICK_2V 26200
-
 /* non-volatile memory */
 int mem_dirty;
 struct memory_t memory;
@@ -576,7 +572,7 @@ static void push_blockr(const char *c, const char *p, int o, const uint32_t *d,
   blockq_head = new_head;
 }
 
-static void push_kick(int k)
+static void push_kick(double k)
 {
   push_blockr("", "", k * 32767. / 5, NULL, 0, 2);
 }
@@ -972,7 +968,7 @@ static void q_servo_reset(int c, int r)
   push_block_raw(rc, "servo_rst_arm", 0, &zero, 1);
 }
 
-static void q_bias_tess(int k, int o, uint32_t *data, int n, int a)
+static void q_bias_tess(double k, int o, uint32_t *data, int n, int a)
 {
   /* apply */
   if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
@@ -1083,8 +1079,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case acq_iv_curve:
       case bias_ramp:
-        new_goal.kick = (ev->ivalues[1] == 1) ? KICK_1V :
-          (ev->ivalues[1] == 2) ? KICK_2V : 0;
+        new_goal.kick = ev->rvalues[1] * 32767 / 5.;
         new_goal.kickwait = ev->rvalues[2];
         new_goal.start = ev->ivalues[3];
         new_goal.stop = ev->ivalues[4];
@@ -1221,14 +1216,14 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[5] = ev->ivalues[7];
         data[6] = ev->ivalues[8];
         data[7] = ev->ivalues[9];
-        q_bias_tess(ev->ivalues[1], (ev->command == bias_tes_rc2) ? 8 : 0, data,
-            8, ev->ivalues[10]);
+        q_bias_tess(ev->rvalues[1], (ev->command == bias_tes_rc2) ? 8 : 0,
+            data, 8, ev->ivalues[10]);
         break;
       case bias_tes_all:
         data[0] = data[1] = data[2] = data[3] = data[4] = data[5] = data[6] =
           data[7] = data[8] = data[9] = data[10] = data[11] = data[12] =
           data[13] = data[14] = data[15] = ev->ivalues[2];
-        q_bias_tess(ev->ivalues[1], 0, data, 16, ev->ivalues[3]);
+        q_bias_tess(ev->rvalues[1], 0, data, 16, ev->ivalues[3]);
         break;
       case tile_heater_on:
         data[0] = ev->ivalues[1] * 32767 / 5;

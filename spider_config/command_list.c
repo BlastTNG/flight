@@ -170,7 +170,6 @@ const char *const GroupNames[N_GROUPS] = {
 /* parameter value lists */
 const char *autonoyes_names[] = {"auto", "no", "yes", NULL};
 const char *noyes_names[] = {"no", "yes", NULL};
-const char *kick_names[] = {"none", "1 Volt", "2 Volts", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *just_mce_names[] = {"X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *tuning_stages[] = {"SA ramp", "SQ2 servo", "SQ1 servo", "SQ1 ramp",
@@ -1405,10 +1404,10 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_MPC)},
   {MCECMD1(reconfig, "Reconfig the MCE and re-start data acquisition", GR_MPC)},
   {COMMAND(drive_check), "Force MPC to recheck its data drives "
-    "after optional lookback time reset", GR_MPC | MCECMD, 2,
+    "after optionally clearing the error cache", GR_MPC | MCECMD, 2,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Reset lookback?", 0, 1, 'i', "NONE", {noyes_names}}
+      {"Clear error cache?", 0, 1, 'i', "NONE", {noyes_names}}
     }
   },
   {MCECMD1(pause_acq, "Pause data acquisition", GR_MPC)},
@@ -1582,7 +1581,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(bias_tes_all), "Set all TES biases", GR_DET | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {"Kick (V)", 0, 5, 'f', "NONE"},
       {"Bias", 0, 65535, 'i', "NONE"},
       {MCE_ACTION_PARAM(3,action_names)}
     }
@@ -1591,7 +1590,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     11,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {"Kick (V)", 0, 5, 'f', "NONE"},
       {"Column 0", 0, 65535, 'i', "NONE"},
       {"Column 1", 0, 65535, 'i', "NONE"},
       {"Column 2", 0, 65535, 'i', "NONE"},
@@ -1607,7 +1606,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     11,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {"Kick (V)", 0, 5, 'f', "NONE"},
       {"Column  8", 0, 65535, 'i', "NONE"},
       {"Column  9", 0, 65535, 'i', "NONE"},
       {"Column 10", 0, 65535, 'i', "NONE"},
@@ -1642,7 +1641,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     GR_IV | GR_MPC | MCECMD, 8,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {"Kick (V)", 0, 5, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Last bias", 0, 65535, 'i', "NONE"},
@@ -1681,7 +1680,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(bias_ramp), "Step through a bias range", GR_MPC | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Kick", 0, 2, 'i', "NONE", {kick_names}},
+      {"Kick (V)", 0, 5, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Last bias", 0, 65535, 'i', "NONE"},
