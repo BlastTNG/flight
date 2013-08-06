@@ -308,9 +308,8 @@ int NetCmdGetCmdList(void)
 {
   uint16_t u16;
   int n, c = 0;
-  size_t i;
+  size_t i, len;
   char buffer[1024] = "::list::\r\n";
-  int len;
 
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 
