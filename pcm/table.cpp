@@ -74,11 +74,6 @@ extern "C" {
 /*opens communications with table motor controller*/
 void openTable()
 {
-  //bprintf(info, "connecting to the rotary table");
-  tableComm = new DriveCommunicator(TABLE_DEVICE);
-  if (tableComm->getError() != DC_NO_ERROR) {
-	bprintf(err, "Table: rotary table initialization gave error code: %d", tableComm->getError());
-  }
   pthread_create(&tablecomm_id, NULL, &rotaryTableComm, NULL);
 }
 
@@ -252,12 +247,17 @@ void updateTableSpeed()
 void* rotaryTableComm(void* arg)
 {
   int first_time=1;
+  int errorshown=0;
   nameThread("SCTabl");
   while (!InCharge) {
     if (first_time) {
       first_time = 0;
     }
     usleep(20000);
+  }
+  tableComm = new DriveCommunicator(TABLE_DEVICE);
+  if (tableComm->getError() != DC_NO_ERROR) {
+	bprintf(err, "Table: rotary table initialization gave error code: %d", tableComm->getError());
   }
   static int currSpeed=0;
   double dTableSpeed;  //speed (global int) converted to double
@@ -267,6 +267,10 @@ void* rotaryTableComm(void* arg)
   //perform initialization
   while (!tableComm->isOpen()) {  //needed when original open fails
     sleep(1);
+    if (!errorshown) {
+      bprintf(info,"Trying to open table device");
+      errorshown=1;
+    }
     tableComm->openConnection(tableComm->getDeviceName());
   }
     
