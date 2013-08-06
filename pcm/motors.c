@@ -1168,7 +1168,7 @@ static void DoSineMode(double centre, double ampl, double el_start)
   double az, el;
   double az_accel;
   double az_accel_dv;
-  double az_accel_max_dv;
+  double az_accel_max_dv = 0;
   double v_az_max;
   double left, right; 
   double turn_around;

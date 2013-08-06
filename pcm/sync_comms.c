@@ -77,7 +77,7 @@ void endSync()  // declare in mcp.c along with startChrgCtrl
 
 void* syncComm(void* arg)
 {
-  int n_conn=0, n_reconn=0; // loop constants
+  int n_reconn=0; // loop constants
 
   /* initialize values in sync box info struct */
   syncinfo.open = 0;
