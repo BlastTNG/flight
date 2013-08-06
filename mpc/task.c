@@ -64,7 +64,7 @@ static int dt_done(void)
 }
 
 /* kill a data task, if one is running */
-static void dt_kill(void)
+static int dt_kill(void)
 {
   if (dt_going) {
     kill_special = 1;
@@ -72,6 +72,8 @@ static void dt_kill(void)
       usleep(10000);
     kill_special = 0;
   }
+
+  return dt_error;
 }
 
 /* request a data tasklet and wait for it's completion.  returns dt_error */
@@ -644,8 +646,14 @@ void *task(void *dummy)
             case md_running: /* nop mode */
               moda = md_none;
               break;
-            case md_tuning:
             case md_iv_curve:
+              if (dt_kill())
+                task_reset_mce();
+              else
+                state &= ~st_config;
+              moda = md_none;
+              break;
+            case md_tuning:
             case md_lcloop:
               dt_kill();
               task_reset_mce();

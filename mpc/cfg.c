@@ -268,6 +268,8 @@ int load_experiment_cfg(void)
   if (deferred_timing) {
     deferred_timing = 0;
     cfg_set_int("row_len", 0, deferred_row_len);
+    cfg_set_int("sample_dly", 0, deferred_row_len -
+        cfg_get_int("sample_num", 0));
     cfg_set_int("num_rows", 0, deferred_num_rows);
     cfg_set_int("data_rate", 0, deferred_data_rate);
     if (expt_cfg_dirty) {
@@ -399,6 +401,7 @@ void cfg_update_timing(int row_len, int num_rows, int data_rate)
     deferred_data_rate = data_rate;
   } else {
     cfg_set_int("row_len", 0, row_len);
+    cfg_set_int("sample_dly", 0, row_len - cfg_get_int("sample_num", 0));
     cfg_set_int("num_rows", 0, num_rows);
     cfg_set_int("data_rate", 0, data_rate);
     if (expt_cfg_dirty) {
@@ -539,6 +542,7 @@ void cfg_load_template(void)
 
   /* ignore the sync box parameters from the template */
   cfg_set_int("row_len", 0, row_len);
+  cfg_set_int("sample_dly", 0, row_len - cfg_get_int("sample_num", 0));
   cfg_set_int("num_rows", 0, num_rows);
   cfg_set_int("data_rate", 0, data_rate);
 

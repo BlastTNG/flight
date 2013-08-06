@@ -903,6 +903,9 @@ static int do_ivcurve(uint32_t kickbias, int kickwait, int start, int last,
   sprintf(count_arg, "%i", (last - start) / step + 1);
   sprintf(step_wait, "%f", wait);
 
+  /* no longer properly biased */
+  state &= ~st_biased;
+
   /* kick */
   if (kick(start, kickbias, kickwait))
     return 1;
@@ -943,7 +946,8 @@ static void pick_biases(int iv_num)
       /* aplly and record, then kick */
       write_param("tes", "bias", 0, data, 16);
       cfg_set_intarr("tes_bias", 0, data, 16);
-      kick(KICK_DONT_BIAS, 6553, 30);
+      kick(KICK_DONT_BIAS, 6553, 20); /* wait less because the reconfig will
+                                         ea up some time */
       state |= st_biased;
     }
 }
@@ -952,10 +956,15 @@ static void pick_biases(int iv_num)
 static int ivcurve(void)
 {
   char filename1[90];
+  uint32_t zero = 0;
 
   /* we burn the index number whether-or-not things are successful */
   sprintf(filename1, "iv_%04i", ++memory.last_iv);
   mem_dirty = 1;
+
+  /* disable integral clamping */
+  write_param("rc1", "integral_clamp", 0, &zero, 1);
+  write_param("rc2", "integral_clamp", 0, &zero, 1);
 
   int r = do_ivcurve(goal.kick, goal.kickwait, goal.start, goal.stop, goal.step,
       goal.wait, filename1);
@@ -994,6 +1003,11 @@ static int lcloop(void)
 {
   int r;
   char filename[90];
+  uint32_t zero = 0;
+
+  /* disable integral clamping */
+  write_param("rc1", "integral_clamp", 0, &zero, 1);
+  write_param("rc2", "integral_clamp", 0, &zero, 1);
 
   /* this just alternates between Al and Ti load curves forever */
   for (;;) {
@@ -1065,7 +1079,7 @@ static int bias_step(void)
   uint32_t zero = 0;
   uint32_t two = 2;
   uint32_t step = goal.step;
-  uint32_t period;
+  uint32_t period, phase;
   uint32_t bias[16];
 
   /* store biases */
@@ -1091,9 +1105,17 @@ static int bias_step(void)
   mas_write_range("cc", "ramp_max_val", 0, &step, 1);
   mas_write_range("cc", "ramp_step_size", 0, &step, 1);
 
-  /* the width of the pulse in ARZs -- goal.wait is this value in seconds */
-  period = 50e6 / row_len / num_rows / goal.wait;
+  /* the width of the pulse in ARZs -- goal.wait is this value in seconds
+   * we calculate the period in multiples of data frame rate so we're
+   * synchronous with DVs and can phase shift away from the internal command
+   * collision */
+  period = (uint32_t)(50e6 / row_len / num_rows / data_rate / goal.wait + 0.5)
+    * data_rate;
   mas_write_range("cc", "ramp_step_period", 0, &period, 1);
+
+  /* phase shift by 120 degrees from the DV pulse to avoid collision */
+  phase = data_rate / 3;
+  mas_write_range("cc", "ramp_step_phase", 0, &phase, 1);
 
   /* mod_val-ify the upper 16 elements of bc2/flux_fb = tes/bias */
   mas_write_range("bc2", "enbl_flux_fb_mod", 0, data, 32);

@@ -1638,8 +1638,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(acq_iv_curve), "Acquire IV curves and pick biases", GR_IV | MCECMD,
-    8,
+  {COMMAND(acq_iv_curve), "Acquire IV curves and pick biases",
+    GR_IV | GR_MPC | MCECMD, 8,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick", 0, 2, 'i', "NONE", {kick_names}},
