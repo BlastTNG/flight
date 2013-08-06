@@ -462,7 +462,7 @@ int NetCmdPing(void)
 }
 
 // Initialization Function... All blocking network i/o.
-int NetCmdConnect(const char* host, int silent, int silenter)
+int NetCmdConnect(const char* host_in, int silent, int silenter)
 {
   int i;
   char buffer[1024];
@@ -470,6 +470,19 @@ int NetCmdConnect(const char* host, int silent, int silenter)
   struct sockaddr_in addr;
   struct passwd pw;
   struct passwd *pwptr;
+  char host[255];
+  int i_ch;
+  int port;
+
+  for (i_ch = 0; (host_in[i_ch]!='\0') && (host_in[i_ch]!=':'); i_ch++) {
+    host[i_ch] = host_in[i_ch];
+  }
+  host[i_ch] = '\0';
+  if (host_in[i_ch]==':') {
+    port = atoi(host_in+i_ch+1);
+  } else {
+    port = SOCK_PORT;
+  }
 
   /* get remote host IP */
   the_host = gethostbyname(host);
@@ -480,7 +493,7 @@ int NetCmdConnect(const char* host, int silent, int silenter)
     return -14;
   }
 
-  addr.sin_port = htons(SOCK_PORT);
+  addr.sin_port = htons(port);
   addr.sin_family = AF_INET;
   memcpy(&(addr.sin_addr.s_addr), the_host->h_addr, the_host->h_length);
 
@@ -501,7 +514,7 @@ int NetCmdConnect(const char* host, int silent, int silenter)
 
   if (!silenter)
     printf("Connecting to %s (%s) port %i ...\n", host,
-        inet_ntoa(addr.sin_addr), SOCK_PORT);
+        inet_ntoa(addr.sin_addr), port);
 
   if ((i = connect(sock, (struct sockaddr*)&addr, sizeof(addr))) == -1) {
     perror("Unable to connect to blastcmd daemon");
