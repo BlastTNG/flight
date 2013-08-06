@@ -58,8 +58,17 @@ def nTrans(iv,bins=None,window=0):
             nT[:,bb] = _np.sum(_np.prod(onTrans[...,bin_idx==bb],axis=-1),axis=0)
     return nT
 
-def goodR(iv,bins=None,window=0,rfrac =[0.1,0.9]):
-    '''which detectors have apparent resistance in range rfrac of Rn?'''
+def fomfunc(x,xmin,xmax,half_degree=1):
+    '''Returns a FOM that is zero outside [xmin,xmax] and peaks at 1 at the center'''
+    y = (x - (xmax+xmin)/2.0) / ((xmax-xmin)/2.0) # transformed variable
+    fom = 1-y**(2*half_degree)
+    fom[fom<0] = 0
+    fom[_np.isnan(fom)] = 0
+    return fom
+
+def goodR(iv,bins=None,window=0,rfrac =[0.02,0.9]):
+    '''which detectors have apparent resistance in range rfrac of Rn?
+    Note that rfrac is actually slope ratios, not resistances.'''
     if not bins:
         bins = _set_bins(iv.Bbias)
     # Take a derivative of the smoothed load curve
@@ -79,17 +88,20 @@ def goodR(iv,bins=None,window=0,rfrac =[0.1,0.9]):
         if _np.any(cok):
             slp[...,bb] = _np.mean(dFBdB[...,bin_idx==bb],axis=-1)
     # Slope corresponding to Rn/Rsh
-    slpN = slp[:,:,-2]
+    idxN = _np.digitize([iv.biasN()],bins['edges'])-1
+    slpN = slp[:,:,idxN-1] # Hack by 1 to avoid numerical edge issues
+    slpN[slpN<0]=1e-10
+    # inverse slopes are like resistances
     # Slope range: r = R/Rsh = (1/slp - 1) ~ 1/slp
-    slpMin = -slpN/rfrac[0]
-    slpMax = -slpN/rfrac[1]
-    # did we nail it?
-    rOk = _np.logical_and(slp>_np.expand_dims(slpMin,axis=2),slp<_np.expand_dims(slpMax,axis=2))
-    # sum it up per column
-    nR = _np.sum(rOk,axis=0)
+    rMin = -rfrac[0]/slpN
+    rCtr = -_np.mean(rfrac)/slpN
+    rMax = -rfrac[1]/slpN
+    fom = fomfunc(1/slp,rMin,rMax)
+    # sum up per column
+    nR = _np.sum(fom,axis=0)
     return nR
 
-def choose_biases(iv,window=0,bias_bin=50,rfrac = [0.1,0.9],Nthresh=2,
+def choose_biases(iv,window=0,bias_bin=50,rfrac = [0.2,0.8],Nthresh=2,
                   do_R=True, do_Trans=True):
     ''' Combine a set of figures of merit to choose biases for each column'''
     # Establish BINS IN BIAS for all figures of merit
@@ -128,12 +140,30 @@ class _miniIVcurve:
         import numpy as _np
         self.Bfb = MCEFile(ivname).Read(row_col=True).data
         self.Bbias = _np.loadtxt(ivname+'.bias',comments='<').squeeze()
+        # put in ascending order to simplify computations later
+        if self.Bbias[-1]<self.Bbias[0]:
+            # reverse the data into ascending order
+            self.Bbias = self.Bbias[::-1]
+            self.Bfb = self.Bfb[...,::-1]
+
+    def isAl(self,thresh=10000):
+        """Declare this to be an Al load curve if the applied bias exceeds some threshold"""
+        return (self.Bbias.max() > thresh)
+
+    def biasN(self,thresh=8000):
+        """Return the bias which MAY correspond to Rn/Rsh"""
+        if self.Bbias.max()<=thresh:
+            # count back from the end slightly
+            return self.Bbias.max()
+        else:
+            # get close to the threshold
+            return self.Bbias[_np.argmin(_np.abs(self.Bbias-thresh))]
 
     
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('iv',default=None,type=str,
-                   help='IV curve to work from (relative to ., $MAS_DATA, or /data/mce/ivcurves)')
+                   help='IV curve to work from (relative to . or /data/mce/ivcurves)')
     p.add_argument('--window',default=0,type=int,
                    help='Width of boxcar filter (samples) to smooth load curve')
     p.add_argument('--bin',default=50,type=int,
