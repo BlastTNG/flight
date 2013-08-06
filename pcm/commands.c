@@ -2467,7 +2467,7 @@ void InitCommandData()
   CommandData.data_mode_bits[ 5][1][0] =  0;
   CommandData.data_mode_bits[ 5][1][1] =  4;
 
-  CommandData.data_mode_bits[10][0][0] = 16;
+  CommandData.data_mode_bits[10][0][0] = 14;
   CommandData.data_mode_bits[10][0][1] = 16;
   CommandData.data_mode_bits[10][1][0] =  0;
   CommandData.data_mode_bits[10][1][1] =  0;
