@@ -56,9 +56,6 @@ static void set_bset(const struct bset *local_set, int num)
 {
   memcpy(&curr_bset, local_set, sizeof(curr_bset));
   CommandData.bset_num = curr_bset.num = num;
-
-  /* Delete this XXX */
-  bprintf(info, "New BSET: 0x%04X", num);
 }
 
 /* parse bset file number 'i' and store it in 'set'.  Returns -1 on error */
