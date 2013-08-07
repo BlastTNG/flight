@@ -86,10 +86,22 @@ void fillDLData(unsigned char *b, int len) {
   b+=4;
   
   for (i_ch = 0; (slowDLList[i_ch].name[0]!='\0') && (b<b_end); i_ch++) {
-    if (slowDLList[i_ch].encode == SDL_SCALE) {
+    if ((slowDLList[i_ch].encode == SDL_SCALE) || (slowDLList[i_ch].encode == SDL_LOG)) {
+      double min, max;
+      
+      min = slowDLList[i_ch].min;
+      max = slowDLList[i_ch].max;
+      x = slowDLList[i_ch].X[i_r];
+      
+      if (slowDLList[i_ch].encode == SDL_LOG) {
+        min = log(min);
+        max = log(max);
+        x = log(x);
+      }
+      
       /* scale between 0 and 1 */
       x = (slowDLList[i_ch].X[i_r]-slowDLList[i_ch].min)/
-      (slowDLList[i_ch].max - slowDLList[i_ch].min);
+      (slowDLList[i_ch].max - slowDLList[i_ch].min);      
       if (x>1.0) x = 1.0;
       if (x<0) x = 0;
       

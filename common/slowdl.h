@@ -16,6 +16,7 @@
 
 #define SDL_RAW 0
 #define SDL_SCALE 1
+#define SDL_LOG 2
 struct SlowDlStruct {
   char name[256];
   char type; // c s S u U (c is signed char)
