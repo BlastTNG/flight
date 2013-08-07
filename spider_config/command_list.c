@@ -1670,7 +1670,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(bias_kick_params), "Set parameters for the automatic kick after "
-    "TES biasing", GR_MPC | MCECMD, 2,
+    "TES biasing", GR_MPC | MCECMD, 3,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
