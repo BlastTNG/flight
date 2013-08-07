@@ -140,24 +140,14 @@ int iv_compress()
   char bias_file[1024];
   char bias[1024];
   uint16_t ivb[MCE_BLOB_MAX];
-  
-  memset(bias_file, 0, 1024);
-  
-  /* follow symbolic links */
-  if (readlink(blob_source, bias_file, 1024)<0) {
-    if (errno == EINVAL) strcpy(bias_file, blob_source);
-    else {
-      berror(warning, "Unable to determine absolute path for %s", blob_source);
-      return -1;
-    }
-  } else strcpy(blob_source, bias_file);
-  bprintf(info, "IV-blobbing %s", blob_source);
+
+  bprintf(info, "reading IV curves from %s", blob_source);
   
   /* open the bias file */
-  strcpy(bias_file + strlen(bias_file),".bias");
+  sprintf(bias_file, "%s.bias", blob_source);
   FILE *bstream = fopen(bias_file, "r");
   if (bstream == NULL) {
-    berror(warning, "Unable to open %s", bias_file);
+    bprintf(warning, "Unable to open %s", bias_file);
     return -1;
   }
   
@@ -173,7 +163,7 @@ int iv_compress()
   bias_start = ivb[0];
   bias_step = (bias_start-ivb[n_bias-1])/(n_bias-1);
   bprintf(info, "Found %d biases in range %d to %d", 
-	  n_bias, bias_start, ivb[n_bias-1]);
+      n_bias, bias_start, ivb[n_bias-1]);
   
   /* check TES selection */
   first_tes = blob_data[0];
@@ -183,7 +173,7 @@ int iv_compress()
   if (n_tes <= 0 || n_tes * (n_bias + 6) > MCE_BLOB_MAX)
     n_tes = (uint16_t) MCE_BLOB_MAX / (n_bias + 6);
   if (first_tes + n_tes > NUM_MCE_FIELDS) {
-    berror(warning, "Requesting too many channels, truncating");
+    bprintf(warning, "Requesting too many channels, truncating");
     n_tes = NUM_MCE_FIELDS - first_tes;
   }
   bprintf(info, "Blobbing %d channels", n_tes);
@@ -191,7 +181,7 @@ int iv_compress()
   /* open the data file */
   FILE *stream = fopen(blob_source, "rb");
   if (stream == NULL) {
-    berror(warning, "Unable to open %s", blob_source);
+    bprintf(warning, "Unable to open %s", blob_source);
     return -1;
   }
   
@@ -205,20 +195,20 @@ int iv_compress()
   while (!feof(stream)) {
     /* skip header */
     if (fseek(stream, sizeof(uint32_t)*MCE_HEADER_SIZE, SEEK_CUR)) {
-      berror(warning, "Truncated frame %d header", count);
+      bprintf(warning, "Truncated frame %d header", count);
       break;
     }
     
     /* read data */
     if (fread(ivframe, sizeof(uint32_t), NUM_ROW * NUM_COL, stream) 
-	!= NUM_ROW * NUM_COL){
-      berror(warning, "Truncated frame %d data", count);
+        != NUM_ROW * NUM_COL){
+      bprintf(warning, "Truncated frame %d data", count);
       break;
     }
     
     /* skip footer */
     if (fseek(stream, sizeof(uint32_t), SEEK_CUR)) {
-      berror(warning, "Truncated frame %d footer", count);
+      bprintf(warning, "Truncated frame %d footer", count);
       break;
     }
     
@@ -233,8 +223,8 @@ int iv_compress()
   fclose(stream);
   
   if (count > n_bias) {
-      berror(warning, "Bias file mismatch");
-      return -1;
+    bprintf(warning, "Bias file mismatch");
+    return -1;
   } else if (count < n_bias) n_bias = count;
   
   /* fill blob */
@@ -283,8 +273,7 @@ void *blobber(void *dummy)
           r = dict_compress(DC_IGNORE_SPACE);
           break;
         case BLOB_IV:
-          strcpy(blob_source, "/data#/mce/last_iv_completed");
-          blob_source[5] = '0' + data_drive[0];
+          sprintf(blob_source, "/data/mce/ivcurves/iv_%04i", memory.last_iv);
           r = iv_compress();
           break;
         case BLOB_TUNECFG:
