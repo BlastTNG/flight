@@ -1662,7 +1662,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(pick_biases), "Automatically choose biases based on a previous "
-    "IV curve", GR_MPC | MCECMD, 2,
+    "IV curve", GR_IV | GR_MPC | MCECMD, 2,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"IV curve number (0 = last)", 0, 65535, 'i', "NONE"},
