@@ -69,7 +69,9 @@ uint32_t *frame[FB_SIZE];
 static uint32_t *fb = NULL;
 
 /* number of frames in an acq_go */
-#define ACQ_FRAMECOUNT 1000000000L /* a billion frames = 105 days */
+#define ACQ_FRAMECOUNT 1000000000 /* a billion frames = 105 days */
+
+#define MPC_LNK "/data/mas/etc/mpc.lnk"
 
 /* wait with kill detection */
 static int check_wait(double wait)
@@ -426,7 +428,7 @@ void read_param(const char *card, const char *param, int offset, uint32_t *data,
 static long acq_time; /* for filenames */
 
 /* write the runfile */
-static int dump_runfile(FILE *stream)
+static int dump_runfile(FILE *stream, int n)
 {
   int i, j, nr, nw;
   uint32_t datum;
@@ -487,7 +489,7 @@ static int dump_runfile(FILE *stream)
       "  <MAS_VERSION> " MAS_VERSION "\n"
       "  <RC> 1 2\n"
       "  <DATA_FILENAME> mpc_%li\n"
-      "  <DATA_FRAMEACQ> %li\n"
+      "  <DATA_FRAMEACQ> %i\n"
       "  <CTIME> %li\n"
       "  <ARRAY_ID> x%i\n"
       "  <HOSTNAME> x%i.spider\n"
@@ -543,7 +545,7 @@ static int mce_status(void)
       berror(err, "Unable to create runfile %s", filename);
     else {
       bprintf(info, "Writing runfile: %s\n", filename);
-      dump_runfile(stream);
+      dump_runfile(stream, ACQ_FRAMECOUNT);
       fclose(stream);
     }
   }
@@ -555,7 +557,7 @@ static int mce_status(void)
       berror(err, "Unable to create runfile %s", filename);
     else {
       bprintf(info, "Writing runfile: %s\n", filename);
-      dump_runfile(stream);
+      dump_runfile(stream, ACQ_FRAMECOUNT);
       fclose(stream);
     }
   }
@@ -567,7 +569,7 @@ static int mce_status(void)
       berror(err, "Unable to create runfile %s", filename);
     else {
       bprintf(info, "Writing runfile: %s\n", filename);
-      dump_runfile(stream);
+      dump_runfile(stream, ACQ_FRAMECOUNT);
       fclose(stream);
     }
   }
@@ -634,7 +636,6 @@ static int acq_conf(void)
   cur_dm = n = req_dm;
   mas_write_block("rca", "data_mode", &n, 1);
 
-
   /* start a multiacq -- this follows prepare_outfile in mce_cmd somewhat */
   acq = malloc(sizeof(mce_acq_t));
   if ((st = mcedata_multisync_create(0)) == NULL) {
@@ -669,7 +670,7 @@ static int acq_conf(void)
 
   if ((drive_map & DRIVE0_MASK) != DRIVE0_UNMAP) {
     st = mcedata_fileseq_create(filename, ACQ_INTERVAL, 3 /* sequence digits */,
-        "/data/mas/etc/mpc.lnk");
+        MPC_LNK);
     if (st == NULL) {
       bprintf(err, "Couldn't set up file sequencer for primary drive");
       goto ACQ_CONFIG_ERR;
@@ -890,28 +891,87 @@ static void stop_mce(void)
 }
 
 /* run a load curve */
-static int do_ivcurve(uint32_t kickbias, int kickwait, int start, int last,
+static int do_ivcurve(uint32_t kickvalue, int kickwait, int start, int last,
     int step, double wait, const char *filename)
 {
-  char start_arg[30], step_arg[30], count_arg[30], step_wait[30], last_arg[30];
-  const char *argv[] = { MAS_SCRIPT "/ramp_tes_bias", filename, "s", start_arg,
-    step_arg, count_arg, step_wait, step_wait, start_arg, "0", last_arg, NULL };
-
-  sprintf(start_arg, "%i", start);
-  sprintf(last_arg, "%i", last);
-  sprintf(step_arg, "%i", step);
-  sprintf(count_arg, "%i", (last - start) / step + 1);
-  sprintf(step_wait, "%f", wait);
+  mcedata_storage_t *st;
+  FILE *stream;
+  uint32_t data[16];
+  char *auxfile;
+  int bias, i, r = 0;
 
   /* no longer properly biased */
   state &= ~st_biased;
 
   /* kick */
-  if (kick(start, kickbias, kickwait))
+  if (kick(start, kickvalue, kickwait))
     return 1;
 
-  /* do the ramp */
-  return exec_and_wait(sched, none, argv[0], (char**)argv, 0, 0, &kill_special);
+  /* runfile */
+  auxfile = malloc(strlen(filename) + 5);
+  sprintf(auxfile, "%s.run", filename);
+  stream = fopen(auxfile, "w");
+  if (stream == NULL) {
+    bprintf(err, "Failed to open runfile");
+    return 1;
+  }
+  dump_runfile(stream, (last - start) / step + 1);
+  fclose(stream);
+
+  /* bias file */
+  sprintf(auxfile, "%s.bias", filename);
+  stream = fopen(auxfile, "w");
+  if (stream == NULL) {
+    bprintf(err, "Failed to open bias file");
+    return 1;
+  }
+  fputs("<tes_bias>\n", stream);
+
+  /* set up the acq for the ramp */
+  acq = malloc(sizeof(mce_acq_t));
+  if ((st = mcedata_flatfile_create(filename, NULL)) == NULL) {
+    bprintf(err, "Failed to create frameacq");
+    r = 1;
+    goto IV_DONE;
+  }
+
+  if ((r = mcedata_acq_create(acq, mas, 0, 0 /* rcs */, -1, st))) {
+    bprintf(err, "Loadcurve acquisition failed: %s", mcelib_error_string(r));
+    r = 1;
+    goto IV_DONE;
+  }
+
+  /* bias loop */
+  for (bias = start; bias >= last; bias += step) {
+    /* set and record bias */
+    for (i = 0; i < 16; ++i)
+      data[i] = bias;
+    write_param("tes", "bias", 0, data, 16);
+    fprintf(stream, "%i\n", bias); 
+
+    /* wait */
+    if (check_wait(wait)) {
+      r = 1;
+      goto IV_DONE;
+    }
+
+    /* take a frame of data */
+    acq_going = 1;
+
+    while (!acq_stopped)
+      usleep(1000);
+
+    acq_going = 0;
+    acq_stopped = 0;
+  }
+
+IV_DONE:
+  fclose(stream);
+  free(auxfile);
+  mcedata_acq_destroy(acq);
+  free(acq);
+  acq = NULL;
+  return r;
 }
 
 static void pick_biases(int iv_num)
@@ -1447,7 +1507,7 @@ void *mas_data(void *dummy)
         dt_error = acq_conf();
         break;
       case dt_startacq:
-        acq_going = 1;
+        acq_going = ACQ_FRAMECOUNT;
         stat_reset = 1;
         dt_error = 0;
         break;
@@ -1471,9 +1531,11 @@ void *mas_data(void *dummy)
           dt_error = 0;
         break;
       case dt_delacq:
-        if (acq)
+        if (acq) {
           mcedata_acq_destroy(acq);
-        acq = NULL;
+          free(acq);
+          acq = NULL;
+        }
         dt_error = 0;
         break;
       case dt_autosetup:
@@ -1528,7 +1590,7 @@ void *acquer(void* dummy)
     usleep(100000);
     if (acq_going && !acq_stopped) {
       acq_init = 1;
-      r = mcedata_acq_go(acq, ACQ_FRAMECOUNT); /* blocks */
+      r = mcedata_acq_go(acq, acq_going); /* this blocks */
       if (r)
         bprintf(err, "Acquisition error: %s", mcelib_error_string(r));
       else

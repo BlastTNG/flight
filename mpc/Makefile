@@ -200,7 +200,7 @@ install-mce-script:
 	for x in 1 2 3 4 5 6; do \
 		if [ `hostname` != "x$$x" ]; then \
 		echo "================== X$$x ====================="; \
-		rsync -avP /data/mas/mce_script x$$x.spider:/data/mas/mce_script; \
+		rsync -avP /data/mas/mce_script x$$x.spider:/data/mas/; \
 		ssh x$$x.spider /data/mas/bin/replicate; \
 		fi; done
 

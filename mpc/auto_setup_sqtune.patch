@@ -1,0 +1,259 @@
+Index: python/auto_setup/series_array.py
+===================================================================
+--- python/auto_setup/series_array.py	(revision 1148)
++++ python/auto_setup/series_array.py	(working copy)
+@@ -197,6 +197,24 @@
+         rs.analysis = {'lock_x': self.bias[idx]}
+         return rs
+ 
++    def sqtune_report(self):
++        """
++        Return description of results for runfile block.
++        """
++        def get(key):
++            return self.analysis[key].reshape(self.data_shape[-3:-1]).ravel()
++        data = [
++            {'label': 'Squid_vphi_p2p',
++             'data': get('y_span'),
++             'style': 'col', 'format': '%i', },
++            {'label': 'Squid_vphi_lockrange',
++             'data': get('right_idx') - get('left_idx'),
++             'style': 'col', 'format': '%i', },
++            {'label': 'Squid_lockslope',
++             'data': get('lock_slope'),
++             'style': 'col', 'format': '%.3f', },
++            ]
++        return data
+ 
+ class SARampSummary(servo.RampSummary):
+     xlabel = 'SA BIAS'
+Index: python/auto_setup/sq1_servo.py
+===================================================================
+--- python/auto_setup/sq1_servo.py	(revision 1148)
++++ python/auto_setup/sq1_servo.py	(working copy)
+@@ -281,6 +281,7 @@
+         return self.analysis
+ 
+     def reduce(self, slope=None, lock_amp=True):
++        self.reduce1()
+         self._check_data()
+         self._check_analysis(existence=True)
+         
+@@ -310,8 +311,8 @@
+         an['lock_x'] += (d_fb * an['lock_didx']).astype('int')
+         an['lock_slope'] /= d_fb
+ 
+-        self.analysis = an
+-        return an
++        self.analysis.update(an)
++        return self.analysis
+ 
+     def select_biases(self, bias_idx=None, assoc=None, ic_factor=None):
+         """
+@@ -408,8 +409,26 @@
+         idx = self.analysis['select_row_sel']
+         rs.analysis = {'lock_x': self.bias[idx]}
+         return rs
+-        
+ 
++    def sqtune_report(self):
++        """
++        Return description of results for runfile block.
++        """
++        def get(key):
++            return self.analysis[key].reshape(self.data_shape[-3:-1]).transpose()
++        data = [
++            {'label': 'Col%i_squid_vphi_p2p',
++             'data': get('y_span'),
++             'style': 'col_row', 'format': '%i', },
++            {'label': 'Col%i_squid_vphi_lockrange',
++             'data': get('right_idx') - get('left_idx'),
++             'style': 'col_row', 'format': '%i', },
++            {'label': 'Col%i_squid_lockslope',
++             'data': get('lock_slope'),
++             'style': 'col_row', 'format': '%.3f', },
++            ]
++        return data
++
+ class SQ1ServoSA(SQ1Servo):
+     stage_name = 'SQ1ServoSA'
+     xlabel = 'SQ1 FB / 1000'
+Index: python/auto_setup/sq2_servo.py
+===================================================================
+--- python/auto_setup/sq2_servo.py	(revision 1148)
++++ python/auto_setup/sq2_servo.py	(working copy)
+@@ -211,8 +211,8 @@
+         an['lock_x'] += (d_fb * an['lock_didx']).astype('int')
+         an['lock_slope'] /= d_fb
+ 
+-        self.analysis = an
+-        return an
++        self.analysis.update(an)
++        return self.analysis
+ 
+     def select_biases(self, bias_idx=None, assoc=None, ic_factor=None):
+         """
+@@ -249,6 +249,24 @@
+         rs.analysis = {'lock_x': self.bias[idx]}
+         return rs
+ 
++    def sqtune_report(self):
++        """
++        Return description of results for runfile block.
++        """
++        def get(key):
++            return self.analysis[key].ravel()
++        data = [
++            {'label': 'Squid_vphi_p2p',
++             'data': get('y_span'),
++             'style': 'col', 'format': '%i', },
++            {'label': 'Squid_vphi_lockrange',
++             'data': get('right_idx') - get('left_idx'),
++             'style': 'col', 'format': '%i', },
++            {'label': 'Squid_lockslope',
++             'data': get('lock_slope'),
++             'style': 'col', 'format': '%.3f', },
++            ]
++        return data
+ 
+ class SQ2ServoSummary(servo.RampSummary):
+     xlabel = 'SQ2 BIAS'
+Index: python/auto_setup/main.py
+===================================================================
+--- python/auto_setup/main.py	(revision 1148)
++++ python/auto_setup/main.py	(working copy)
+@@ -195,7 +195,7 @@
+         plot_out = sa.plot()
+         tuning.register_plots(*plot_out['plot_files'])
+ 
+-    return {"status": 0, "column_adc_offset": target}
++    return {"status": 0, "column_adc_offset": target, 'ramp': sa}
+ 
+ 
+ def do_sq2_servo(tuning, rc, rc_indices, tune_data, write_default=False):
+@@ -271,7 +271,7 @@
+     tuning.set_exp_param('sq2_fb_set', fb_set.transpose().ravel())
+ 
+     tuning.write_config()
+-    return {"status": 0}
++    return {"status": 0, "servo": sq}
+ 
+ 
+ def prepare_sq1_servo(tuning):
+@@ -362,7 +362,7 @@
+     tuning.set_exp_param('sq2_fb_set', fb_set.transpose().ravel())
+ 
+     tuning.write_config()
+-    return 0
++    return {"status": 0, "servo": sq}
+ 
+ 
+ def do_sq1_ramp(tuning, rcs, tune_data, init=True, ramp_check=False):
+@@ -604,17 +604,20 @@
+             sa_dict = do_sa_ramp(tuning, c, rc_indices,
+                                  ramp_sa_bias=ramp_sa_bias,
+                                  write_default=write_default_bias)
++            tuning.write_sqtune(sq_data=sa_dict['ramp'], stage='sa_ramp')
+         if 'sq2_servo' in stages:
+             s2_dict = do_sq2_servo(tuning, c, rc_indices, tune_data,
+                                    write_default=write_default_bias)
++            tuning.write_sqtune(sq_data=s2_dict['servo'], stage='sq2_servo')
+             if (s2_dict["status"] != 0):
+                 return s2_dict["status"]
+         if 'sq1_servo' in stages:
+             prepare_sq1_servo(tuning)
+-            e = do_sq1_servo(tuning, c, rc_indices, tune_data,
+-                             write_default=write_default_bias)
+-            if (e != 0):
+-                return e
++            s1_dict = do_sq1_servo(tuning, c, rc_indices, tune_data,
++                                   write_default=write_default_bias)
++            tuning.write_sqtune(sq_data=s1_dict['servo'], stage='sq1_servo')
++            if (s1_dict["status"] != 0):
++                return s1_dict["status"]
+ 
+     if 'rs_servo' in stages:
+         rs = mux11d.do_rs_servo(tuning, rcs, tune_data)
+@@ -625,12 +628,12 @@
+     if 'sq1_ramp' in stages:
+         # sq1 ramp
+         sq1 = do_sq1_ramp(tuning, rcs, tune_data)
+-        tuning.write_sqtune(sq1_ramp=sq1)
++        tuning.write_sqtune(sq_data=sq1, stage='sq1_ramp')
+ 
+     if 'sq1_ramp_check' in stages:
+         # sq1 ramp check
+         sq1 = do_sq1_ramp(tuning, rcs, tune_data, ramp_check=True)
+-        tuning.write_sqtune(sq1_ramp=sq1)
++        tuning.write_sqtune(sq_data=sq1, stage='sq1_ramp_check')
+ 
+     if 'sq1_ramp_tes' in stages:
+         # open-loop ramping of the TES bias
+Index: python/auto_setup/util/tuning.py
+===================================================================
+--- python/auto_setup/util/tuning.py	(revision 1148)
++++ python/auto_setup/util/tuning.py	(working copy)
+@@ -184,31 +184,46 @@
+             if (flush):
+                 self.log.flush()
+ 
+-    def write_sqtune(self, filename=None, sq1_ramp=None, link=False):
++    def write_sqtune(self, filename=None, sq_data=None, link=False, stage='sq1_ramp'):
+         def compose_col_row(label, data, format='%f'):
+             s = ''
+             for i, d in enumerate(data):
+                 s += '<%s> ' % (label % i)
+                 s += ' '.join([format % r for r in d]) + '\n'
+             return s
++        def compose_col(label, data, format='%f'):
++            s = '<%s> ' % (label)
++            s += ' '.join([format %r for r in data]) + '\n'
++            return s
+ 
+         if filename == None:
+             filename = self.sqtune_file
+-        done = sq1_ramp != None
+-        f = open(filename, 'w')
+-        f.write("<SQUID>\n")
++        done = sq_data != None
++        f = open(filename, 'a')
++        if stage in ['sq1_ramp','sq1_ramp_check']:
++            block = 'SQUID'
++        elif stage == 'sa_ramp':
++            block = 'SA_RAMP'
++        elif stage == 'sq2_servo':
++            block = 'SQ2_SERVO'
++        elif stage == 'sq1_servo':
++            block = 'SQ1_SERVO'
++        f.write("<%s>\n" % block)
+         f.write("<SQ_tuning_completed> %i\n" % int(done))
+         f.write("<SQ_tuning_date> %s\n" % self.date)
+         f.write("<SQ_tuning_dir> %s\n" % self.name)
+-        if sq1_ramp != None:
+-            for item in sq1_ramp.sqtune_report():
++        if sq_data != None:
++            for item in sq_data.sqtune_report():
+                 s = item['style']
+                 if s == 'col_row':
+                     f.write(compose_col_row(item['label'], item['data'],
+                                             format=item['format']))
++                elif s == 'col':
++                    f.write(compose_col(item['label'], item['data'],
++                                       format=item['format']))
+                 else:
+                     raise RuntimeError, 'unknown item style "%s"' % s
+-        f.write("</SQUID>\n")
++        f.write("</%s>\n" % block)
+         f.close()
+         
+         #this isn't updated if the user specified a data_dir when initialising
+Index: script/plot_tuning
+===================================================================
+--- script/plot_tuning	(revision 1148)
++++ script/plot_tuning	(working copy)
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/usr/bin/env python
+ 
+ import os
+ import auto_setup as ast
