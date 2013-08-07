@@ -68,7 +68,7 @@ void DriveCommunicator::openConnection(string deviceName,
   serialDeviceName = deviceName;
   portFD = open(deviceName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
   if (portFD == -1) { //open failed
-    berror(err,"DriveComm: open device %s: ",deviceName.c_str());
+    //berror(err,"DriveComm: open device %s: ",deviceName.c_str());
     serialDeviceName = "";
     derr = DC_SERIAL_ERROR;
     return;
