@@ -504,12 +504,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   
   {COMMAND(pss_off_cal), "set pss offsets", GR_TRIM, 6,
     {
-      {"Offset 1", -20.0, 20.0, 'f', "CAL_OFF_PSS1"},
-      {"Offset 2", -20.0, 20.0, 'f', "CAL_OFF_PSS2"},
-      {"Offset 3", -20.0, 20.0, 'f', "CAL_OFF_PSS3"},
-      {"Offset 4", -20.0, 20.0, 'f', "CAL_OFF_PSS4"},
-      {"Offset 5", -20.0, 20.0, 'f', "CAL_OFF_PSS5"},
-      {"Offset 6", -20.0, 20.0, 'f', "CAL_OFF_PSS6"},
+      {"Offset 1", -100.0, 100.0, 'f', "CAL_OFF_PSS1"},
+      {"Offset 2", -100.0, 100.0, 'f', "CAL_OFF_PSS2"},
+      {"Offset 3", -100.0, 100.0, 'f', "CAL_OFF_PSS3"},
+      {"Offset 4", -100.0, 100.0, 'f', "CAL_OFF_PSS4"},
+      {"Offset 5", -100.0, 100.0, 'f', "CAL_OFF_PSS5"},
+      {"Offset 6", -100.0, 100.0, 'f', "CAL_OFF_PSS6"},
     }
   },
 
