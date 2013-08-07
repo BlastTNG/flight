@@ -31,21 +31,12 @@
 
 #define DEFAULT_DIRFILE "/data/etc/defile.lnk"
 
-static void dict_decompress(const char *filename, uint16_t *payload,
-    uint16_t len)
+static void dict_decompress(uint16_t *payload, uint16_t len)
 {
   int i;
-  int fd, cpw, pos;
+  int cpw, pos;
   int nd = payload[0];
   int d[256];
-
-  printf("Writing DC-decompressed blob to %s\n", filename);
-
-  fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, 0666);
-  if (fd < 0) {
-    perror("open");
-    exit(1);
-  }
 
   for (i = 0; i < nd; i += 2) {
     d[i] = payload[i / 2 + 1] & 0xFF;
@@ -59,12 +50,10 @@ static void dict_decompress(const char *filename, uint16_t *payload,
     uint64_t v = *((uint64_t*)(payload + pos));
     for (i = 0; i < cpw; ++i) {
       char c = d[v % nd];
-      write(fd, &c, 1);
+      write(1, &c, 1);
       v /= nd;
     }
   }
-
-  close(fd);
 }
 
 static void usage(void)
@@ -225,9 +214,10 @@ int main(int argc, char **argv)
   /* calcualte CRC */
   payload_crc = CalculateCRC(CRC_SEED, payload, payload_len);
 
-  printf("Found blob #%i at frame %.02f from X%i, type %i, len = %i.\n",
-      blob_num, blob_sample / 20., blob_mce, blob_type, payload_len);
-  printf("  CRC check: lead-in: %s; lead-out %s\n",
+  fprintf(stderr, "Found blob #%i at frame %.02f from X%i, type %i, "
+      "len = %i.\n", blob_num, blob_sample / 20., blob_mce, blob_type,
+      payload_len);
+  fprintf(stderr, "  CRC check: lead-in: %s; lead-out %s\n",
       (blob_crc1 == payload_crc) ? "ok" : "BAD",
       (blob_crc2 == payload_crc) ? "ok" : "BAD");
 
@@ -242,10 +232,9 @@ int main(int argc, char **argv)
       return 1;
     case BLOB_EXPCFG:
     case BLOB_TUNECFG:
-      dict_decompress("experiment.cfg", payload, payload_len);
-      break;
     case BLOB_TUNESQ:
-      dict_decompress("tuning.sqtune", payload, payload_len);
+      dict_decompress(payload, payload_len);
+      break;
   }
 
   return 0;
