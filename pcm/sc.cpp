@@ -175,7 +175,7 @@ void cameraTriggers()
 		bsc_trigger = 0;
   }   
   rscwait++;
-  if ((rscwait%(100*CommandData.rsc_wait))==0) {
+  if (rscwait>(ACSData.bbc_rate*CommandData.rsc_wait)) {
 	  trigger_flag = 1;
 	  //bprintf(info,"EXPOSING...");
 	  exposing = 1;
@@ -191,7 +191,7 @@ void cameraTriggers()
 
   if (exposing) {
 	exposecount++;
-	if (exposecount == 200){//(100*CommandData.StarCam[1].expTime/1000)) {
+	if (exposecount>(ACSData.bbc_rate*(2+CommandData.StarCam[1].expTime/1000))) {
 		exposecount = 0;
 		//bprintf(info,"...DONE");
 		exposing = 0;
