@@ -36,7 +36,8 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
     bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
 
   /* update frame statistics */
-  update_stats(frame, frame_size, frameno);
+  if (!stat_veto)
+    update_stats(frame, frame_size, frameno);
   
   /* do more stuff here, probably */
 }

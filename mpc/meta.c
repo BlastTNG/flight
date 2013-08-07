@@ -101,8 +101,6 @@ void meta(void)
       meta_tk = st_retdat | STOP_TK;
     else if (state & st_acqcnf)
       meta_tk = st_acqcnf | STOP_TK;
-    else if (state & st_biased)
-      meta_tk = st_biased | STOP_TK;
     else if (state & st_config)
       meta_tk = st_config | STOP_TK;
     else if (working_goal == gl_stop && state & st_active)

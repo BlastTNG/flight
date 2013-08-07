@@ -73,6 +73,9 @@ static uint32_t *fb = NULL;
 
 #define MPC_LNK "/data/mas/etc/mpc.lnk"
 
+/* veto stat computation */
+int stat_veto = 0;
+
 /* wait with kill detection */
 static int check_wait(double wait)
 {
@@ -807,6 +810,47 @@ static int kick(uint32_t bias, uint32_t value, int wait)
   return flux_loop_init(2);
 }
 
+static void pick_biases(int iv_num)
+{
+  int good = 1;
+  struct mcp_proc *p;
+  int p_stdout = 0;
+  char biases[1024];
+  uint32_t data[256];
+  char ivname[256];
+  char *argv[] = { "/data/mas/bin/choose_tes_bias", ivname, NULL };
+
+  if (iv_num == 0)
+    iv_num = memory.last_iv;
+
+  sprintf(ivname, "iv_%04i", iv_num);
+
+  p = start_proc(argv[0], argv, 0, 1, NULL, &p_stdout, NULL,
+      &kill_special);
+  if (p == NULL)
+    return;
+  
+  /* capture the output */
+  if (read(p_stdout, &biases, 1024) < 0)
+    good = 0;
+
+  stop_proc(p, 0, 0, 0, 0);
+
+  if (good)
+    if (sscanf(biases, "%i %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u",
+          data + 0, data + 1, data + 2, data + 3, data + 4, data + 5, data + 6,
+          data + 7, data + 8, data + 9, data + 10, data + 11, data + 12,
+          data + 13, data + 14, data + 15) == 16)
+    {
+      /* aplly and record, then kick */
+      write_param("tes", "bias", 0, data, 16);
+      cfg_set_intarr("tes_bias", 0, data, 16);
+      kick(KICK_DONT_BIAS, memory.bias_kick_val, memory.bias_kick_wait);
+      state |= st_biased;
+    }
+}
+
+/* run and archive an iv curve */
 /* returns non-zero if something was popped */
 static int pop_block(void)
 {
@@ -816,14 +860,22 @@ static int pop_block(void)
   if (blockq_head == blockq_tail)
     return 0;
 
-  if (blockq[new_tail].raw == 2) { /* asynchronous kick request */
-    kick(KICK_DONT_BIAS, blockq[new_tail].o, 30);
-  } else if (blockq[new_tail].raw)
-    mas_write_range(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
-        blockq[new_tail].d, blockq[new_tail].n);
-  else
-    write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
-        blockq[new_tail].d, blockq[new_tail].n);
+  switch (blockq[new_tail].raw) {
+    case 3:
+      pick_biases(blockq[new_tail].o);
+      break;
+    case 2: /* asynchronous kick request */
+      kick(KICK_DONT_BIAS, blockq[new_tail].o, memory.bias_kick_wait);
+      break;
+    case 1:
+      mas_write_range(blockq[new_tail].c, blockq[new_tail].p,
+          blockq[new_tail].o, blockq[new_tail].d, blockq[new_tail].n);
+      break;
+    case 0:
+      write_param(blockq[new_tail].c, blockq[new_tail].p, blockq[new_tail].o,
+          blockq[new_tail].d, blockq[new_tail].n);
+      break;
+  }
 
   free(blockq[new_tail].c);
   free(blockq[new_tail].p);
@@ -925,7 +977,7 @@ static int do_ivcurve(uint32_t kickvalue, int kickwait, int start, int last,
     bprintf(err, "Failed to open bias file");
     return 1;
   }
-  fputs("<tes_bias>\n", stream);
+  fputs("<tes_bias>\n", stream); /* why...? */
 
   /* set up the acq for the ramp */
   acq = malloc(sizeof(mce_acq_t));
@@ -941,9 +993,14 @@ static int do_ivcurve(uint32_t kickvalue, int kickwait, int start, int last,
     goto IV_DONE;
   }
 
+  /* don't screw up the stats */
+  stat_veto = 1;
+
   /* bias loop */
   for (bias = start; bias >= last; bias += step) {
     /* set and record bias */
+    if (bias < last)
+      bias = last;
     for (i = 0; i < 16; ++i)
       data[i] = bias;
     write_param("tes", "bias", 0, data, 16);
@@ -966,6 +1023,7 @@ static int do_ivcurve(uint32_t kickvalue, int kickwait, int start, int last,
   }
 
 IV_DONE:
+  stat_veto = 0;
   fclose(stream);
   free(auxfile);
   mcedata_acq_destroy(acq);
@@ -974,45 +1032,6 @@ IV_DONE:
   return r;
 }
 
-static void pick_biases(int iv_num)
-{
-  int good = 1;
-  struct mcp_proc *p;
-  int p_stdout = 0;
-  char biases[1024];
-  uint32_t data[256];
-
-  char ivname[256];
-  sprintf(ivname, "iv_%04i", iv_num);
-  char *argv[] = { "/data/mas/bin/choose_tes_bias", ivname, NULL };
-
-  p = start_proc(argv[0], argv, 0, 1, NULL, &p_stdout, NULL,
-      &kill_special);
-  if (p == NULL)
-    return;
-  
-  /* capture the output */
-  if (read(p_stdout, &biases, 1024) < 0)
-    good = 0;
-
-  stop_proc(p, 0, 0, 0, 0);
-
-  if (good)
-    if (sscanf(biases, "%i %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u",
-          data + 0, data + 1, data + 2, data + 3, data + 4, data + 5, data + 6,
-          data + 7, data + 8, data + 9, data + 10, data + 11, data + 12,
-          data + 13, data + 14, data + 15) == 16)
-    {
-      /* aplly and record, then kick */
-      write_param("tes", "bias", 0, data, 16);
-      cfg_set_intarr("tes_bias", 0, data, 16);
-      kick(KICK_DONT_BIAS, 6553, 20); /* wait less because the reconfig will
-                                         ea up some time */
-      state |= st_biased;
-    }
-}
-
-/* run and archive an iv curve */
 static int ivcurve(void)
 {
   char filename1[90];
@@ -1053,7 +1072,7 @@ static int ivcurve(void)
 
     /* analyse */
     if (goal.apply)
-      pick_biases(memory.last_iv);
+      pick_biases(0);
   }
 
   return 0;
@@ -1165,11 +1184,13 @@ static int bias_step(void)
   mas_write_range("cc", "ramp_max_val", 0, &step, 1);
   mas_write_range("cc", "ramp_step_size", 0, &step, 1);
 
-  /* the width of the pulse in ARZs -- goal.wait is this value in seconds
+  /* the width of the thing in ARZs -- goal.wait is the whole cycle frequency in
+   * hertz
+   *
    * we calculate the period in multiples of data frame rate so we're
    * synchronous with DVs and can phase shift away from the internal command
    * collision */
-  period = (uint32_t)(50e6 / row_len / num_rows / data_rate / goal.wait + 0.5)
+  period = (uint32_t)(50e6 / row_len / num_rows / data_rate * goal.wait + 0.5)
     * data_rate;
   mas_write_range("cc", "ramp_step_period", 0, &period, 1);
 
@@ -1184,12 +1205,16 @@ static int bias_step(void)
   bprintf(info, "Starting bias step");
   mas_write_range("cc", "internal_cmd_mode", 0, &two, 1);
 
-  /* wait -- times two for full period */
-  check_wait(goal.wait * goal.stop * 2);
+  /* wait for completion */
+  check_wait(goal.total);
 
-  /* stop the ramp */
+  /* stop ramping */
   bprintf(info, "Stopping bias step");
   mas_write_range("cc", "internal_cmd_mode", 0, &zero, 1);
+
+  /* disable the bias offset */
+  memset(data, 0, sizeof(uint32_t) * 32);
+  mas_write_range("bc2", "enbl_flux_fb_mod", 0, data, 32);
 
   /* restore biases */
   write_param("tes", "bias", 0, bias, 16);
@@ -1498,7 +1523,8 @@ void *mas_data(void *dummy)
         dt_error = reconfig();
         break;
       case dt_kick:
-        dt_error = kick(KICK_DONT_BIAS, 6553, 30);
+        dt_error = kick(KICK_DONT_BIAS, memory.bias_kick_val,
+            memory.bias_kick_wait);
         break;
       case dt_status:
         dt_error = mce_status();

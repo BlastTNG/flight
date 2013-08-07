@@ -1063,8 +1063,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case bias_step:
         new_goal.step = ev->ivalues[1];
-        new_goal.wait = ev->rvalues[2] / 2; /* this is full period */
-        new_goal.stop = ev->ivalues[3];
+        new_goal.wait = ev->rvalues[2]; /* this is full period */
+        new_goal.total = ev->rvalues[3];
         new_goal.goal = gl_bstep;
         change_goal = 1;
         break;
@@ -1277,6 +1277,14 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case array_stat_reset:
         stat_reset = 1;
         break;
+      case pick_biases:
+        push_blockr("", "", ev->ivalues[1], NULL, 0, 3);
+        break;
+      case bias_kick_params:
+        memory.bias_kick_val = ev->rvalues[1] * 32767 / 5.;
+        memory.bias_kick_wait = ev->ivalues[2];
+        mem_dirty = 1;
+        break;
 
       default:
         bprintf(warning, "Unrecognised multi command #%i from %s/%i\n",
@@ -1390,6 +1398,8 @@ static int read_mem(void)
     memory.sync_veto = 0;
     memory.divisor = 1;
     memory.dmesg_lookback = btime;
+    memory.bias_kick_val = 2 /* Volts */ * 32767 / 5;
+    memory.bias_kick_wait = 30; /* seconds */
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 

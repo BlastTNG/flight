@@ -1661,13 +1661,30 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+  {COMMAND(pick_biases), "Automatically choose biases based on a previous "
+    "IV curve", GR_MPC | MCECMD, 2,
+    {
+      {CHOOSE_INSERT_NO_ALL},
+      {"IV curve number (0 = last)", 0, 65535, 'i', "NONE"},
+    }
+  },
+
+  {COMMAND(bias_kick_params), "Set parameters for the automatic kick after "
+    "TES biasing", GR_MPC | MCECMD, 2,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Kick (V)", 0, 5, 'f', "NONE"},
+      {"Post-kick wait (s)", 0, 1000, 'i', "NONE"}
+    }
+  },
+
   {COMMAND(bias_step), "Step the TES bias above and then below the current "
     "level several times", GR_MPC | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"Step size (count)", 1, 3000, 'i', "NONE"},
-      {"Period (s)", 0.1, 10, 'f', "NONE"},
-      {"Num periods", 0, 100, 'i', "NONE"},
+      {"Frequency (Hz)", 0.1, 10, 'f', "NONE"},
+      {"Run time (s)", 1, 1000, 'f', "NONE"},
     }
   },
 

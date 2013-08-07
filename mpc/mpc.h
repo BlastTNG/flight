@@ -48,12 +48,15 @@ struct memory_t {
   int sync_veto;
   int divisor;
   time_t dmesg_lookback;
+  int bias_kick_val;
+  int bias_kick_wait;
 };
 extern struct memory_t memory;
 extern int mem_dirty;
 
 /* MPC globals */
 extern time_t btime;
+extern int stat_veto;
 extern int nmce;
 extern int mas_get_temp;
 extern int sock;
@@ -156,7 +159,7 @@ struct gl_data {
   /* general purpose registers */
   int start, stop, force;
   int step, kick, apply;
-  double kickwait, wait;
+  double kickwait, wait, total;
 };
 extern struct gl_data goal, new_goal;
 extern int change_goal;
