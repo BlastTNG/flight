@@ -216,8 +216,7 @@ struct TableStruct {
   struct GainStruct tableGain; //PID
   double vel;
   double pos;
-  double move;
-  double mode;  //0=track, 1=move to pos, 2=relative move
+  int mode;  //0=track, 1=move to pos, 2=relative move
 };
 
 /* sync box paramater type */

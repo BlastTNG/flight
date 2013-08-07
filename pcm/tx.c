@@ -768,6 +768,9 @@ static void StoreData(int write_slow)
   static struct NiosStruct *dgpsAntsLimAddr;
   static struct NiosStruct* dgpsNSatAddr;
   static struct NiosStruct *scPyramidAddr;
+  static struct NiosStruct* tableVelAddr;
+  static struct NiosStruct* tablePosAddr;
+  static struct NiosStruct* tableModeAddr;
 
   /* trim fields */
   static struct NiosStruct *trimNullAddr;
@@ -944,6 +947,9 @@ static void StoreData(int write_slow)
     dgpsCovLimAddr = GetNiosAddr("cov_lim_dgps");
     dgpsAntsLimAddr = GetNiosAddr("ants_lim_dgps");
     scPyramidAddr = GetNiosAddr("pyramid");
+    tableVelAddr = GetNiosAddr("vel_table");
+    tablePosAddr = GetNiosAddr("pos_table");
+    tableModeAddr = GetNiosAddr("mode_table");
 
     modeAzMcAddr = GetNiosAddr("mode_az_mc");
     modeElMcAddr = GetNiosAddr("mode_el_mc");
@@ -1130,6 +1136,9 @@ static void StoreData(int write_slow)
       NIOS_QUEUE);
   WriteData(elSunAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
   WriteData(scPyramidAddr, CommandData.pyramid, NIOS_QUEUE);
+  WriteData(tableVelAddr, (int)(CommandData.table.vel/1000.0), NIOS_QUEUE);
+  WriteData(tablePosAddr, (int)(CommandData.table.pos/1000.0), NIOS_QUEUE);
+  WriteData(tableModeAddr, CommandData.table.mode, NIOS_QUEUE);
 
   WriteData(trimNullAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
 
