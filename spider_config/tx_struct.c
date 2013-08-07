@@ -994,7 +994,7 @@ struct ChannelStruct SlowChannels[] = {
   {"plate_b",         'w', LOOP8, 23, 1.0/1000.0, 0.0, 'u',U_NONE},
   {"plate_u",         'w', LOOP8, 24, 1.0/1000.0, 0.0, 'u',U_NONE},
   {"pyramid",         'w', LOOP8, 25,    1,         0, 'u',U_NONE},
-  {"vel_table",       'w', LOOP8, 26, 1.0/1000.0, 0.0, 'u',U_V_DPS},
+  {"vel_table",       'w', LOOP8, 26, 1.0/1000.0, 0.0, 's',U_V_DPS},
   {"pos_table",       'w', LOOP8, 27, 1.0/1000.0, 0.0, 'u',U_P_DEG},
   {"mode_table",      'w', LOOP8, 28,    1,         0, 'u',U_NONE},
   END_OF_CHANNELS

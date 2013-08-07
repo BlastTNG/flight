@@ -1136,8 +1136,8 @@ static void StoreData(int write_slow)
       NIOS_QUEUE);
   WriteData(elSunAddr, (int)(PointingData[i_point].sun_el*DEG2I), NIOS_QUEUE);
   WriteData(scPyramidAddr, CommandData.pyramid, NIOS_QUEUE);
-  WriteData(tableVelAddr, (int)(CommandData.table.vel/1000.0), NIOS_QUEUE);
-  WriteData(tablePosAddr, (int)(CommandData.table.pos/1000.0), NIOS_QUEUE);
+  WriteData(tableVelAddr, (int)(CommandData.table.vel*1000.0), NIOS_QUEUE);
+  WriteData(tablePosAddr, (int)(CommandData.table.pos*1000.0), NIOS_QUEUE);
   WriteData(tableModeAddr, CommandData.table.mode, NIOS_QUEUE);
 
   WriteData(trimNullAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
