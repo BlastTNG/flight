@@ -17,7 +17,7 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#undef DEBUG_META
+#define DEBUG_META
 
 #include "mpc.h"
 #include "blast.h"
@@ -171,7 +171,7 @@ void meta(void)
     }
 
 #ifdef DEBUG_META
-  if (meta_tk) {
+  if (meta_tk && (running_state == 0 || running_state != meta_tk)) {
     bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X %s",
         goal_string[goal.goal], moda_string[moda], state,
         memory.squidveto ? "vetoed" : "");

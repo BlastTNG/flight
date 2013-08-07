@@ -960,7 +960,7 @@ static int do_ivcurve(uint32_t kickvalue, int kickwait, int start, int last,
     return 1;
 
   /* runfile */
-  auxfile = malloc(strlen(filename) + 5);
+  auxfile = malloc(strlen(filename) + 6);
   sprintf(auxfile, "%s.run", filename);
   stream = fopen(auxfile, "w");
   if (stream == NULL) {
@@ -1034,11 +1034,12 @@ IV_DONE:
 
 static int ivcurve(void)
 {
-  char filename1[90];
+  char filename1[1024];
   uint32_t zero = 0;
 
   /* we burn the index number whether-or-not things are successful */
-  sprintf(filename1, "iv_%04i", ++memory.last_iv);
+  sprintf(filename1, "/data%i/mce/current_data/iv_%04i", data_drive[0],
+      ++memory.last_iv);
   mem_dirty = 1;
 
   /* disable integral clamping */
@@ -1081,7 +1082,7 @@ static int ivcurve(void)
 static int lcloop(void)
 {
   int r;
-  char filename[90];
+  char filename[290];
   uint32_t zero = 0;
 
   /* disable integral clamping */
@@ -1091,7 +1092,8 @@ static int lcloop(void)
   /* this just alternates between Al and Ti load curves forever */
   for (;;) {
     /* AL */
-    sprintf(filename, "loadcurve_Al_MPC_%li", (long)time(NULL));
+    sprintf(filename, "/data%i/mce/current_data/loadcurve_Al_MPC_%li",
+        data_drive[0], (long)time(NULL));
 
     bprintf(info, "LCLOOP: %s", filename);
     r = do_ivcurve(6554, 300, 32000, 0, -50, 0.06, filename);
@@ -1104,7 +1106,8 @@ static int lcloop(void)
       return 1;
 
     /* Ti */
-    sprintf(filename, "loadcurve_Ti_MPC_%li", (long)time(NULL));
+    sprintf(filename, "/data%i/mce/current_data/loadcurve_Ti_MPC_%li",
+        data_drive[0], (long)time(NULL));
 
     bprintf(info, "LCLOOP: %s", filename);
     r = do_ivcurve(6554, 300, 32000, 0, -50, 0.06, filename);
@@ -1619,8 +1622,6 @@ void *acquer(void* dummy)
       r = mcedata_acq_go(acq, acq_going); /* this blocks */
       if (r)
         bprintf(err, "Acquisition error: %s", mcelib_error_string(r));
-      else
-        bprintf(info, "Acquisition stopped");
       acq_stopped = 1;
       acq_init = 0; /* just in case */
     }

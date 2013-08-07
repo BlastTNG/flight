@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-static int running_state = 0;
+int running_state = 0;
 static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
 int try_mount = 1; /* attempt to mount data drives */

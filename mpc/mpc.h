@@ -69,6 +69,7 @@ extern char *uuid[4];
 extern int divisor;
 extern int veto;
 extern int try_mount;
+extern int running_state;
 extern int kill_special;
 extern int dt_going;
 extern int drives_checked;

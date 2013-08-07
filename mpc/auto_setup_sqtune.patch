@@ -1,6 +1,6 @@
 Index: python/auto_setup/series_array.py
 ===================================================================
---- python/auto_setup/series_array.py	(revision 1148)
+--- python/auto_setup/series_array.py	(revision 1149)
 +++ python/auto_setup/series_array.py	(working copy)
 @@ -197,6 +197,24 @@
          rs.analysis = {'lock_x': self.bias[idx]}
@@ -29,7 +29,7 @@ Index: python/auto_setup/series_array.py
      xlabel = 'SA BIAS'
 Index: python/auto_setup/sq1_servo.py
 ===================================================================
---- python/auto_setup/sq1_servo.py	(revision 1148)
+--- python/auto_setup/sq1_servo.py	(revision 1149)
 +++ python/auto_setup/sq1_servo.py	(working copy)
 @@ -281,6 +281,7 @@
          return self.analysis
@@ -80,7 +80,7 @@ Index: python/auto_setup/sq1_servo.py
      xlabel = 'SQ1 FB / 1000'
 Index: python/auto_setup/sq2_servo.py
 ===================================================================
---- python/auto_setup/sq2_servo.py	(revision 1148)
+--- python/auto_setup/sq2_servo.py	(revision 1149)
 +++ python/auto_setup/sq2_servo.py	(working copy)
 @@ -211,8 +211,8 @@
          an['lock_x'] += (d_fb * an['lock_didx']).astype('int')
@@ -120,7 +120,7 @@ Index: python/auto_setup/sq2_servo.py
      xlabel = 'SQ2 BIAS'
 Index: python/auto_setup/main.py
 ===================================================================
---- python/auto_setup/main.py	(revision 1148)
+--- python/auto_setup/main.py	(revision 1149)
 +++ python/auto_setup/main.py	(working copy)
 @@ -195,7 +195,7 @@
          plot_out = sa.plot()
@@ -153,7 +153,7 @@ Index: python/auto_setup/main.py
              sa_dict = do_sa_ramp(tuning, c, rc_indices,
                                   ramp_sa_bias=ramp_sa_bias,
                                   write_default=write_default_bias)
-+            tuning.write_sqtune(sq_data=sa_dict['ramp'], stage='sa_ramp')
++            tuning.write_sqtune(sq_data=sa_dict['ramp'], stage='sa_ramp',append=False)
          if 'sq2_servo' in stages:
              s2_dict = do_sq2_servo(tuning, c, rc_indices, tune_data,
                                     write_default=write_default_bias)
@@ -191,14 +191,15 @@ Index: python/auto_setup/main.py
          # open-loop ramping of the TES bias
 Index: python/auto_setup/util/tuning.py
 ===================================================================
---- python/auto_setup/util/tuning.py	(revision 1148)
+--- python/auto_setup/util/tuning.py	(revision 1149)
 +++ python/auto_setup/util/tuning.py	(working copy)
-@@ -184,31 +184,46 @@
+@@ -184,31 +184,47 @@
              if (flush):
                  self.log.flush()
  
 -    def write_sqtune(self, filename=None, sq1_ramp=None, link=False):
-+    def write_sqtune(self, filename=None, sq_data=None, link=False, stage='sq1_ramp'):
++    def write_sqtune(self, filename=None, sq_data=None, link=False, stage='sq1_ramp',
++                     append=True):
          def compose_col_row(label, data, format='%f'):
              s = ''
              for i, d in enumerate(data):
@@ -216,7 +217,7 @@ Index: python/auto_setup/util/tuning.py
 -        f = open(filename, 'w')
 -        f.write("<SQUID>\n")
 +        done = sq_data != None
-+        f = open(filename, 'a')
++        f = open(filename, 'a' if append else 'w')
 +        if stage in ['sq1_ramp','sq1_ramp_check']:
 +            block = 'SQUID'
 +        elif stage == 'sa_ramp':
@@ -249,7 +250,7 @@ Index: python/auto_setup/util/tuning.py
          #this isn't updated if the user specified a data_dir when initialising
 Index: script/plot_tuning
 ===================================================================
---- script/plot_tuning	(revision 1148)
+--- script/plot_tuning	(revision 1149)
 +++ script/plot_tuning	(working copy)
 @@ -1,4 +1,4 @@
 -#!/usr/bin/python
