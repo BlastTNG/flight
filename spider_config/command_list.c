@@ -1410,7 +1410,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       "Reset experiment.cfg and dead masks to template", GR_MPC | CONFIRM)},
   {MCECMD1(mce_clock_ext, "Unveto sync box use by the MCE", GR_MPC)},
   {MCECMD1(mce_clock_int, "Veto sync box use by the MCE", GR_MPC)},
-  {MCECMD1(bolo_stat_reset, "Reset the bolometer statistic accumulators", GR_MPC)},
+  {MCECMD1(bolo_stat_reset, "Reset the bolometer statistic accumulators",
+      GR_MPC)},
   {COMMAND(bolo_stat_gains), "Set gains and offsets for bolometer statistics",
     GR_MPC | MCECMD, 6,
     {
@@ -1422,8 +1423,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Noise offset", 0, 65535, 'i', "NONE"},
     }
   },
-  {COMMAND(bolo_stat_timing), "Set filters and integration time for bolometer statistics",
-   GR_MPC | MCECMD, 3,
+  {COMMAND(bolo_stat_timing), "Set filters and integration time for "
+    "bolometer statistics", GR_MPC | MCECMD, 3,
    {
      {"Noise filter band center", 0., 120., 'f', "BOLO_FILT_FREQ"},
      {"Noise filter band width", 0., 10., 'f', "BOLO_FILT_BW"},

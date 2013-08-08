@@ -129,13 +129,16 @@ size_t mpc_compose_param(const uint32_t *param, int nmce, char *buffer)
  *
  * PCM notice packet looks like:
  *
- * RRNDSTMlnrVddd...
+ * RRND FFFF BBBB LLST Mlnr Vddd d
  *
  * where
  *
  * R = 16-bit protocol revision
  * N = 'N' indicating notice packet
  * D = divisor
+ * F = bolo_filt_freq (float)
+ * B = bolo_filt_bw (float)
+ * L = bolo_filt_len
  * S = super slow data request
  * T = turnaround flag
  * M = data_mode
@@ -147,23 +150,27 @@ size_t mpc_compose_param(const uint32_t *param, int nmce, char *buffer)
  */
 size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
     int data_mode, int row_len, int num_rows, int data_rate, uint8_t squidveto,
+    double bolo_filt_freq, double bolo_filt_bw, uint16_t bolo_filt_len,
     char data_mode_bits[2][2], char *buffer)
 {
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'N';
   buffer[3] = divisor & 0xff;
-  buffer[4] = request_ssdata ? 1 : 0,
-  buffer[5] = turnaround ? 1 : 0;
-  buffer[6] = data_mode;
-  buffer[7] = row_len;
-  buffer[8] = num_rows;
-  buffer[9] = data_rate;
-  buffer[10] = squidveto;
-  buffer[11] = data_mode_bits[0][0];
-  buffer[12] = data_mode_bits[0][1];
-  buffer[13] = data_mode_bits[1][0];
-  buffer[14] = data_mode_bits[1][1];
-  return 15;
+  memcpy(buffer + 4, &bolo_filt_freq, sizeof(double));
+  memcpy(buffer + 8, &bolo_filt_bw, sizeof(double));
+  memcpy(buffer + 12, &bolo_filt_len, sizeof(uint16_t));
+  buffer[14] = request_ssdata ? 1 : 0,
+  buffer[15] = turnaround ? 1 : 0;
+  buffer[16] = data_mode;
+  buffer[17] = row_len;
+  buffer[18] = num_rows;
+  buffer[19] = data_rate;
+  buffer[20] = squidveto;
+  buffer[21] = data_mode_bits[0][0];
+  buffer[22] = data_mode_bits[0][1];
+  buffer[23] = data_mode_bits[1][0];
+  buffer[24] = data_mode_bits[1][1];
+  return 25;
 }
 
 /* compose a PCM request packet for transmission to PCM
@@ -619,12 +626,13 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
 
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     int *divisor, int *ssdata_req, int *data_mode, int *row_len, int *num_rows,
-    int *data_rate, int *squidveto, size_t len, const char *data,
+    int *data_rate, int *squidveto, double *bolo_filt_freq,
+    double *bolo_filt_bw, uint16_t *bolo_filt_len, size_t len, const char *data,
     const char *peer, int port)
 {
   static int last_turnaround = -1;
 
-  if (len != 15) {
+  if (len != 25) {
     bprintf(err, "Bad notice packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
@@ -633,19 +641,24 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
   bprintf(info, "Noticed by %s/%i", peer, port);
 
   *divisor = data[3];
-  *ssdata_req = data[4];
+ 
+  memcpy(bolo_filt_freq, data + 4, sizeof(double));
+  memcpy(bolo_filt_bw, data + 8, sizeof(double));
+  memcpy(bolo_filt_len, data + 12, sizeof(uint16_t));
 
-  if (data[5] != last_turnaround)
-    bprintf(info, "%s turnaround", data[5] ? "Into" : "Out of");
-  last_turnaround = *turnaround = data[5];
+  *ssdata_req = data[14];
 
-  *data_mode = (int)data[6];
-  *row_len =   (int)data[7] * 2;
-  *num_rows =  (int)data[8];
-  *data_rate = (int)data[9];
-  *squidveto = (int)data[10];
+  if (data[15] != last_turnaround)
+    bprintf(info, "%s turnaround", data[15] ? "Into" : "Out of");
+  last_turnaround = *turnaround = data[15];
 
-  *data_mode_bits = data + 11;
+  *data_mode = (int)data[16];
+  *row_len =   (int)data[17] * 2;
+  *num_rows =  (int)data[18];
+  *data_rate = (int)data[19];
+  *squidveto = (int)data[20];
+
+  *data_mode_bits = data + 21;
 
   return 0;
 }

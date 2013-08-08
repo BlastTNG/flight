@@ -500,8 +500,8 @@ struct CommandDataStruct {
   uint8_t mce_power; /* MCE power banks off (will force-veto MCEs) */
   
   /* bolo stats control */
-  float bolo_filt_freq;
-  float bolo_filt_bw;
+  double bolo_filt_freq;
+  double bolo_filt_bw;
   int bolo_filt_len;
 };
 

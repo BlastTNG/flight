@@ -129,6 +129,9 @@ static void ForwardNotices(int sock)
   static int last_divisor = -1;
   static int last_squidveto = -1;
   static int last_data_mode = -1;
+  static double last_bolo_filt_freq;
+  static double last_bolo_filt_bw;
+  static int last_bolo_filt_len;
 
   /* 0 = X2 & X3; 1 = X4 & X6; 2 = X1 & X5 */
   const uint8_t veto_bits[3] = { 0x6, 0x28, 0x11 };
@@ -141,6 +144,9 @@ static void ForwardNotices(int sock)
   int this_dr = CommandData.sync_box.fr_value;
   int this_dmb = CommandData.data_mode_bits_serial;
   int this_data_mode = CommandData.data_mode;
+  double this_bolo_filt_freq = CommandData.bolo_filt_freq;
+  double this_bolo_filt_bw = CommandData.bolo_filt_bw;
+  int this_bolo_filt_len = CommandData.bolo_filt_len;
   size_t len;
 
   /* or with the mce_power-induced veto */
@@ -156,7 +162,10 @@ static void ForwardNotices(int sock)
       (last_divisor == this_divisor) && (last_dmb == this_dmb) &&
       (last_rl == this_rl) && (last_nr == this_nr) && (last_dr == this_dr) &&
       (last_squidveto == this_squidveto) && (request_ssdata == 0) &&
-      (last_data_mode == this_data_mode)
+      (last_data_mode == this_data_mode) &&
+      (this_bolo_filt_freq == last_bolo_filt_freq) &&
+      (this_bolo_filt_bw == last_bolo_filt_bw) &&
+      (this_bolo_filt_len == last_bolo_filt_len)
      )
   {
     /* no notices */
@@ -165,6 +174,7 @@ static void ForwardNotices(int sock)
 
   len = mpc_compose_notice(this_divisor, this_turnaround, request_ssdata,
       this_data_mode, this_rl, this_nr, this_dr, this_squidveto,
+      this_bolo_filt_freq, this_bolo_filt_bw, this_bolo_filt_len,
       CommandData.data_mode_bits[this_data_mode], udp_buffer);
 
   /* Broadcast this to everyone */

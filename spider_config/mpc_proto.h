@@ -20,7 +20,7 @@
 #define MPC_PORT     9271
 
 /* the MPC epoch */
-#define MPC_EPOCH 1373679821
+#define MPC_EPOCH 1376000000
 
 /* power states */
 #define MPCPROTO_POWER_NOP -1
@@ -88,10 +88,12 @@ int mpc_decompose_pcmreq(int *power_cycle, size_t len, const char *data,
 
 size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
     int data_mode, int row_len, int num_rows, int data_rate, uint8_t squidveto,
+    double bolo_filt_freq, double bolo_filt_bw, uint16_t bolo_filt_len,
     char data_mode_bits[2][2], char *buffer);
 int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     int *divisor, int *ssdata_req, int *data_mode, int *row_len, int *num_rows,
-    int *data_rate, int *squidveto, size_t len, const char *data,
+    int *data_rate, int *squidveto, double *bolo_filt_freq,
+    double *bolo_filt_bw, uint16_t *bolo_filt_len, size_t len, const char *data,
     const char *peer, int port);
 
 size_t mpc_compose_param(const uint32_t *stat, int nmce, char *buffer);
