@@ -502,9 +502,12 @@ static int dump_runfile(FILE *stream, int n)
   /* mpc block */
   fprintf(stream, "<MPC>\n"
       "  <PROTO> %i/%i\n"
-      "  <STATE> %08x\n"
+      "  <USED_TUNE> %i\n"
+      "  <LAST_TUNE> %i\n"
+      "  <LAST_IV> %i\n"
       "</MPC>\n",
-      mpc_proto_rev, mpc_cmd_rev, state);
+      mpc_proto_rev, mpc_cmd_rev, memory.used_tune, memory.last_tune,
+      memory.last_iv);
 
   return 0;
 }
