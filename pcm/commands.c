@@ -1920,8 +1920,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case bolo_stat_timing:
       CommandData.bolo_filt_freq = rvalues[0];
       CommandData.bolo_filt_bw = rvalues[1];
-      CommandData.bolo_filt_buff = ivalues[2];
-
+      CommandData.bolo_filt_len = ivalues[2];
+      break;
+      
     default:
       if (!MCEcmd(command, rvalues, ivalues, svalues)) {
         bputs(warning, "Invalid Multi Word Command\n");
@@ -2433,7 +2434,7 @@ void InitCommandData()
 
   CommandData.bolo_filt_freq = 5.;
   CommandData.bolo_filt_bw = 1.2;
-  CommandData.bolo_filt_buff = 5000;
+  CommandData.bolo_filt_len = 5000;
   
   CommandData.questionable_behaviour = 0;
 

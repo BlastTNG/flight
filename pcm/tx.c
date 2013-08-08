@@ -391,6 +391,10 @@ static void WriteMCESlow(void)
   static struct NiosStruct *syncVetoAddr;
   static struct NiosStruct *dataModeAddr;
   static struct NiosStruct *dataModeBitsAddr;
+  
+  static struct NiosStruct *boloFiltFreqAddr;
+  static struct NiosStruct *boloFiltBWAddr;
+  static struct NiosStruct *boloFiltLenAddr;
 
   uint16_t sync_veto = 0;
   unsigned int i;
@@ -424,6 +428,9 @@ static void WriteMCESlow(void)
     syncVetoAddr = GetNiosAddr("sync_veto_mpc");
     dataModeAddr = GetNiosAddr("data_mode_mce");
     dataModeBitsAddr = GetNiosAddr("data_mode_bits");
+    boloFiltFreqAddr = GetNiosAddr("bolo_filt_freq");
+    boloFiltBWAddr = GetNiosAddr("bolo_filt_bw");
+    boloFiltLenAddr = GetNiosAddr("bolo_filt_len");
   }
 
   for (i = 0; i < NUM_MCE; i++) {
@@ -468,7 +475,11 @@ static void WriteMCESlow(void)
         | (CommandData.data_mode_bits[CommandData.data_mode][1][0] & 0x1F),
         NIOS_QUEUE);
   WriteData(dataModeAddr, CommandData.data_mode, NIOS_QUEUE);
-
+  
+  WriteData(boloFiltFreqAddr, CommandData.bolo_filt_freq, NIOS_QUEUE);
+  WriteData(boloFiltBWAddr, CommandData.bolo_filt_bw, NIOS_QUEUE);
+  WriteData(boloFiltLenAddr, CommandData.bolo_filt_len, NIOS_QUEUE);
+  
   /* this field is active low */
   WriteData(reportingMPCsAddr, (~mccs_reporting) & 0x3F, NIOS_QUEUE);
 }

@@ -1425,9 +1425,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(bolo_stat_timing), "Set filters and integration time for bolometer statistics",
    GR_MPC | GR_MCECMD, 3,
    {
-     {"Noise filter band center", 0, 100, 'f', "NONE"},
-     {"Noise filter band width", 0, 10, 'f', "NONE"},
-     {"Integration time (samples)", 0, 5000, 'i', "NONE"},
+     {"Noise filter band center", 0., 120., 'f', "BOLO_FILT_FREQ"},
+     {"Noise filter band width", 0., 10., 'f', "BOLO_FILT_BW"},
+     {"Integration time (samples)", 0, 5000, 'i', "BOLO_FILT_LEN"},
    }
   },
   {MCECMD2A(integral_clamp, "Set the integral clamping factor", GR_DET,

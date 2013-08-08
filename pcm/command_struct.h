@@ -502,7 +502,7 @@ struct CommandDataStruct {
   /* bolo stats control */
   float bolo_filt_freq;
   float bolo_filt_bw;
-  int bolo_filt_buff;
+  int bolo_filt_len;
 };
 
 void InitCommandData();

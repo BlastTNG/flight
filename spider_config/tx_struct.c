@@ -982,7 +982,11 @@ struct ChannelStruct SlowChannels[] = {
   {"used_tune_mpc4",  'w',  LOOP8, 15, 0.5,   0.0, 'u', U_NONE},
   {"used_tune_mpc5",  'w',  LOOP8, 16, 0.5,   0.0, 'u', U_NONE},
   {"used_tune_mpc6",  'w',  LOOP8, 17, 0.5,   0.0, 'u', U_NONE},
-
+  
+  {"bolo_filt_freq",  'w',  LOOP8, 29, 120./32767., 0.0, 'u', U_NONE},
+  {"bolo_filt_bw",    'w',  LOOP8, 30,  10./32767., 0.0, 'u', U_NONE},
+  {"bolo_filt_len",   'w',  LOOP8, 31,           1,   0, 'u', U_NONE},
+  
   /* END of MCE slow channels */
 
   /* LOOP8, 18 is fast */
