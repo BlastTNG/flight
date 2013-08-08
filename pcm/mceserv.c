@@ -189,6 +189,9 @@ static void ForwardNotices(int sock)
     last_dr = this_dr;
     last_squidveto = this_squidveto;
     last_data_mode = this_data_mode;
+    last_bolo_filt_freq = this_bolo_filt_freq;
+    last_bolo_filt_bw = this_bolo_filt_bw;
+    last_bolo_filt_len = this_bolo_filt_len;
     request_ssdata = 0;
   }
 }
