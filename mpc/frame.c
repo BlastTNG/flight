@@ -26,7 +26,7 @@
 #include <string.h>
 
 /* count clamped detectors */
-static void count_clamped(const uint32_t *frame, size_t frame_size,
+static void count_clamped(const int32_t *frame, size_t frame_size,
     uint32_t frameno)
 {
   int i;
@@ -38,7 +38,8 @@ static void count_clamped(const uint32_t *frame, size_t frame_size,
   /* rc1 */
   if (iclamp[0] > 0)
     for (i = 0; i < 8 * NUM_ROW; ++i)
-      if (frame[i] == iclamp[0] || -frame[i] == iclamp[0])
+      if ((frame[i] & DATA_MASK) == iclamp[0] ||
+          ((-frame[i]) & DATA_MASK) == iclamp[0])
         new_clamp_count++;
 
   frame += 8 * NUM_ROW;
@@ -46,7 +47,8 @@ static void count_clamped(const uint32_t *frame, size_t frame_size,
   /* rc2 */
   if (iclamp[1] > 0)
     for (i = 0; i < 8 * NUM_ROW; ++i)
-      if (frame[i] == iclamp[1] || -frame[i] == iclamp[1])
+      if ((frame[i] & DATA_MASK) == iclamp[1] ||
+          ((-frame[i]) & DATA_MASK) == iclamp[1])
         new_clamp_count++;
 
   slow_dat.clamp_count = new_clamp_count;
@@ -67,7 +69,7 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
     update_stats(frame, frame_size, frameno);
 
   if (iclamp[0] > 0 || iclamp[1] > 0)
-    count_clamped(frame, frame_size, frameno);
+    count_clamped((const int32_t*)frame, frame_size, frameno);
   
   /* do more stuff here, probably */
 }

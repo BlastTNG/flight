@@ -1440,6 +1440,10 @@ static int reconfig(void)
   read_param("rc1", "integral_clamp", 0, iclamp + 0, 1);
   read_param("rc2", "integral_clamp", 0, iclamp + 1, 1);
 
+  /* these need to be shifted left by 7 bits and then divided by 8 = << 4 */
+  iclamp[0] = (iclamp[0] << 4) & DATA_MASK;
+  iclamp[1] = (iclamp[1] << 4) & DATA_MASK;
+
   return 0;
 }
 

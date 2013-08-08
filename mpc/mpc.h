@@ -36,6 +36,9 @@
 #define PRM_RECORD_ONLY  3
 #define PRM_DEFAULT_ONLY 4
 
+/* upper 25 bits */
+#define DATA_MASK 0xFFFFFF80
+
 /* non-volatile memory */
 #define MEM_VERS 1
 struct memory_t {
