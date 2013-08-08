@@ -210,6 +210,8 @@ static uint16_t tes_push(uint16_t nrx, int *nrx_c)
 {
   int i;
 
+  tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
+
   /* update nrx */
   for (i = 0; i < NUM_MCE; ++i)
     if (nrx & MCE_PRESENT(i)) { /* currently set as non-reporting */
@@ -226,8 +228,6 @@ static uint16_t tes_push(uint16_t nrx, int *nrx_c)
         }
       }
     }
-
-  tes_recon_bot = (tes_recon_bot + 1) % TR_SIZE;
 
   /* discard if full */
   if (tes_fifo_top < 0)
@@ -342,7 +342,7 @@ static int insert_tes_data(int bad_bset_count, size_t len, const char *data,
       /* discard duplicates */
       bprintf(info, "Duplicate frame# 0x%08X from MCE%i", tes_recon[n].frameno,
           mce);
-      return bad_bset_count;
+      continue;
     }
 
     /* insert the new data */
@@ -449,8 +449,8 @@ void *mcerecv(void *unused)
          */
         n = mpc_decompose_gpdata(mce_blob_payload, n, udp_buffer, peer, port);
         if (n > 0) {
-          bprintf(info, "Received GP blob, type %i, size %zu",
-              mce_blob_payload[0], n);
+          bprintf(info, "Received GP blob, from MCE %i, size %zu",
+              mce_blob_payload[0] + 1, n);
 
           /* compute CRC -- goes immediately before and after the playload */
           mce_blob_payload[-1] = mce_blob_payload[n] = CalculateCRC(CRC_SEED,
