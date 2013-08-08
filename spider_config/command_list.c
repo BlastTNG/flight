@@ -1410,8 +1410,26 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       "Reset experiment.cfg and dead masks to template", GR_MPC | CONFIRM)},
   {MCECMD1(mce_clock_ext, "Unveto sync box use by the MCE", GR_MPC)},
   {MCECMD1(mce_clock_int, "Veto sync box use by the MCE", GR_MPC)},
-  {MCECMD1(array_stat_reset, "Reset the array stats", GR_MPC)},
-
+  {MCECMD1(bolo_stat_reset, "Reset the bolometer statistic accumulators", GR_MPC)},
+  {COMMAND(bolo_stat_gains), "Set gains and offsets for bolometer statistics",
+    GR_MPC | GR_MCECMD, 6,
+    {
+      {"Mean resolution per bin (0-1)", 0, 1, 'f', "NONE"},
+      {"Mean offset", 0, 65535, 'i', "NONE"},
+      {"Sigma resolution per bin (0-1)", 0, 1, 'f', "NONE"},
+      {"Sigma offset", 0, 65535, 'i', "NONE"},
+      {"Noise resolution per bin (0-1)", 0, 1, 'f', "NONE"},
+      {"Noise offset", 0, 65535, 'i', "NONE"},
+    }
+  },
+  {COMMAND(bolo_stat_timing), "Set filters and integration time for bolometer statistics",
+   GR_MPC | GR_MCECMD, 3,
+   {
+     {"Noise filter band center", 0, 100, 'f', "NONE"},
+     {"Noise filter band width", 0, 10, 'f', "NONE"},
+     {"Integration time (samples)", 0, 5000, 'i', "NONE"},
+   }
+  },
   {MCECMD2A(integral_clamp, "Set the integral clamping factor", GR_DET,
       "Factor", 0, 1, 'f')},
   {COMMAND(tune_array), "Tune a focal plane with current tuning parameters",

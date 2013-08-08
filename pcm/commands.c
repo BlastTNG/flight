@@ -1917,6 +1917,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       else
         CommandData.squidveto &= ~(1U << (ivalues[0] - 1));
       break;
+    case bolo_stat_timing:
+      CommandData.bolo_filt_freq = rvalues[0];
+      CommandData.bolo_filt_bw = rvalues[1];
+      CommandData.bolo_filt_buff = ivalues[2];
 
     default:
       if (!MCEcmd(command, rvalues, ivalues, svalues)) {
@@ -2427,6 +2431,10 @@ void InitCommandData()
   CommandData.squidveto = 0;
   CommandData.mce_power = 0; /* assume things are on */
 
+  CommandData.bolo_filt_freq = 5.;
+  CommandData.bolo_filt_bw = 1.2;
+  CommandData.bolo_filt_buff = 5000;
+  
   CommandData.questionable_behaviour = 0;
 
   WritePrevStatus();
