@@ -208,6 +208,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
 {
   int new_row_len = -1, new_num_rows = -1, new_data_rate = -1, squidveto = 0;
   int divisor;
+  uint16_t new_bolo_filt_len;
 
   if (data_in) {
     /* reply acknowledgement from PCM */
@@ -217,7 +218,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
           &divisor, &ssreq, &req_dm, &new_row_len, &new_num_rows,
           &new_data_rate, &squidveto, &bolo_filt_freq, &bolo_filt_bw,
-          &bolo_filt_len, len, data_in, peer, port))
+          &new_bolo_filt_len, len, data_in, peer, port))
       return;
 
     if (ssreq)
@@ -232,6 +233,8 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       memory.squidveto = squidveto;
       mem_dirty = 1;
     }
+
+    bolo_filt_len = new_bolo_filt_len;
 
     if (divisor != 1)
       divisor = 2;
