@@ -1412,7 +1412,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(mce_clock_int, "Veto sync box use by the MCE", GR_MPC)},
   {MCECMD1(bolo_stat_reset, "Reset the bolometer statistic accumulators", GR_MPC)},
   {COMMAND(bolo_stat_gains), "Set gains and offsets for bolometer statistics",
-    GR_MPC | GR_MCECMD, 6,
+    GR_MPC | MCECMD, 6,
     {
       {"Mean resolution per bin (0-1)", 0, 1, 'f', "NONE"},
       {"Mean offset", 0, 65535, 'i', "NONE"},
@@ -1423,7 +1423,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(bolo_stat_timing), "Set filters and integration time for bolometer statistics",
-   GR_MPC | GR_MCECMD, 3,
+   GR_MPC | MCECMD, 3,
    {
      {"Noise filter band center", 0., 120., 'f', "BOLO_FILT_FREQ"},
      {"Noise filter band width", 0., 10., 'f', "BOLO_FILT_BW"},
