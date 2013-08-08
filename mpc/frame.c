@@ -25,6 +25,33 @@
 #include <stdio.h>
 #include <string.h>
 
+/* count clamped detectors */
+static void count_clamped(const uint32_t *frame, size_t frame_size,
+    uint32_t frameno)
+{
+  int i;
+  int new_clamp_count = 0;
+
+  /* skip header */
+  frame += MCE_HEADER_SIZE;
+
+  /* rc1 */
+  if (iclamp[0] > 0)
+    for (i = 0; i < 8 * NUM_ROW; ++i)
+      if (frame[i] == iclamp[0] || -frame[i] == iclamp[0])
+        new_clamp_count++;
+
+  frame += 8 * NUM_ROW;
+
+  /* rc2 */
+  if (iclamp[1] > 0)
+    for (i = 0; i < 8 * NUM_ROW; ++i)
+      if (frame[i] == iclamp[1] || -frame[i] == iclamp[1])
+        new_clamp_count++;
+
+  slow_dat.clamp_count = new_clamp_count;
+}
+
 static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
 {
   const struct mas_header *header = (const struct mas_header *)frame;
@@ -38,6 +65,9 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
   /* update frame statistics */
   if (!stat_veto)
     update_stats(frame, frame_size, frameno);
+
+  if (iclamp[0] > 0 || iclamp[1] > 0)
+    count_clamped(frame, frame_size, frameno);
   
   /* do more stuff here, probably */
 }

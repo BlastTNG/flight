@@ -68,6 +68,8 @@ int pb_last = 0;
 uint32_t *frame[FB_SIZE];
 static uint32_t *fb = NULL;
 
+uint32_t iclamp[2];
+
 /* number of frames in an acq_go */
 #define ACQ_FRAMECOUNT 1000000000 /* a billion frames = 105 days */
 
@@ -1433,6 +1435,10 @@ static int reconfig(void)
   /* update tile heater data */
   read_param("heater", "bias", 0, &u32, 1);
   slow_dat.tile_heater = u32;
+
+  /* update the clamp values */
+  read_param("rc1", "integral_clamp", 0, iclamp + 0, 1);
+  read_param("rc2", "integral_clamp", 0, iclamp + 1, 1);
 
   return 0;
 }

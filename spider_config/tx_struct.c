@@ -1001,6 +1001,13 @@ struct ChannelStruct SlowChannels[] = {
   {"vel_table",       'w', LOOP8, 26, 1.0/1000.0, 0.0, 's',U_V_DPS},
   {"pos_table",       'w', LOOP8, 27, 1.0/1000.0, 0.0, 'u',U_P_DEG},
   {"mode_table",      'w', LOOP8, 28,    1,         0, 'u',U_NONE},
+
+  {"clamp_count_mce1", 'w', LOOP8, 29, 1, 0, 'u', U_NONE},
+  {"clamp_count_mce2", 'w', LOOP8, 30, 1, 0, 'u', U_NONE},
+  {"clamp_count_mce3", 'w', LOOP8, 31, 1, 0, 'u', U_NONE},
+  {"clamp_count_mce4", 'w', LOOP8, 32, 1, 0, 'u', U_NONE},
+  {"clamp_count_mce5", 'w', LOOP8, 33, 1, 0, 'u', U_NONE},
+  {"clamp_count_mce6", 'w', LOOP8, 34, 1, 0, 'u', U_NONE},
   END_OF_CHANNELS
 };
 

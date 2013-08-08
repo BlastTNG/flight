@@ -71,6 +71,7 @@ extern int veto;
 extern int try_mount;
 extern int running_state;
 extern int kill_special;
+extern uint32_t iclamp[2];
 extern int dt_going;
 extern int drives_checked;
 extern int data_drive[3];
