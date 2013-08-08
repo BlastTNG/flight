@@ -1,0 +1,188 @@
+
+{ "OWL FILE rev." : 20120716, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 912135364 }
+, "_boxTitle" : "Power", "_style" : "(P754958780)", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1960898612 }
+, "_caption" : "I RW", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "I_RW", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 2002778651 }
+, "_caption" : "I Piv", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "I_PIV", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1899884156 }
+, "_caption" : "I OF", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "I_OF_TOT", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 463597296 }
+, "_caption" : "V  IF  Batt ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "V_BATT_IF_CC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 25601885 }
+, "_caption" : "V OF Batt", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "V_BATT_OF_CC", "type" : "PNDI" }
+, "geometryHeight" : 121, "geometryWidth" : 121, "geometryX" : 200, "geometryY" : 340 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 325440369 }
+, "_boxTitle" : "Az/El", "_style" : "(P754958780)", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 818511516 }
+, "_caption" : "Az Mag", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "AZ_MAG", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 460812344 }
+, "_caption" : "Az pss", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "AZ_PSS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1086355290 }
+, "_caption" : "Az DGPS", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "AZ_DGPS", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 236792197 }
+, "_caption" : "El ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "EL", "type" : "PNDI" }
+, "geometryHeight" : 100, "geometryWidth" : 120, "geometryX" : 200, "geometryY" : 240 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 1267270285 }
+, "_boxTitle" : "The Ugly", "_style" : "(P754958780)", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1876470917 }
+, "_caption" : "Map Mean  ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "MAPMEAN_U", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1382612554 }
+, "_caption" : "N Blobs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "NBLOBS_U", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 657459711 }
+, "_caption" : "Frame", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "FRAME_U", "type" : "PNDI" }
+, "geometryHeight" : 81, "geometryWidth" : 121, "geometryX" : 200, "geometryY" : 160 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 1992485204 }
+, "_boxTitle" : "The Bad", "_style" : "(P754958780)", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 905411414 }
+, "_caption" : "Map Mean  ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "MAPMEAN_B", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 611894127 }
+, "_caption" : "N Blobs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "NBLOBS_B", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1601266786 }
+, "_caption" : "Frame", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "FRAME_B", "type" : "PNDI" }
+, "geometryHeight" : 81, "geometryWidth" : 121, "geometryX" : 200, "geometryY" : 80 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 1905619824 }
+, "_boxTitle" : "The Good", "_style" : "(P754958780)", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1860364723 }
+, "_caption" : "Map Mean  ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "MAPMEAN_G", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 638948258 }
+, "_caption" : "N Blobs", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "NBLOBS_G", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1852994515 }
+, "_caption" : "Frame", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "FRAME_G", "type" : "PNDI" }
+, "geometryHeight" : 81, "geometryWidth" : 121, "geometryX" : 200, "geometryY" : 0 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 1638274722 }
+, "_boxTitle" : "Amb T", "_style" : "(P754958780)", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 993760156 }
+, "_caption" : "MCE6", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCE6", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 905571054 }
+, "_caption" : "MCE5", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCE5", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 2141202052 }
+, "_caption" : "MCE4", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCE4", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 463201293 }
+, "_caption" : "MCE3", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCE3", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 250953603 }
+, "_caption" : "MCE2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCE2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1326416296 }
+, "_caption" : "MCE1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCE1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 706113216 }
+, "_caption" : "MCC 6", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCC6", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 716130274 }
+, "_caption" : "MCC 5", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCC5", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 954385429 }
+, "_caption" : "MCC 4", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCC4", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 979043072 }
+, "_caption" : "MCC 3", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCC3", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 472655435 }
+, "_caption" : "MCC 2", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCC2", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1410632424 }
+, "_caption" : "MCC 1", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_MCC1", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1442042790 }
+, "_caption" : "CPU Temp - B ", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_CPU_B_FLC", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1593933941 }
+, "_caption" : "CPU Temp - I", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "T_CPU_I_FLC", "type" : "PNDI" }
+, "geometryHeight" : 261, "geometryWidth" : 201, "geometryX" : 0, "geometryY" : 140 }
+, "PBox object" : 
+{ "PObject" : 
+{ "_id" : 1085239932 }
+, "_boxTitle" : "Time", "_style" : "(P754958780)", "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 31665797 }
+, "_caption" : "Last I Cmd", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "LAST_I_CMD", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 38277083 }
+, "_caption" : "Last B Cmd", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "LAST_B_CMD", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 631079802 }
+, "_caption" : "count i cmd", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "COUNT_I_CMD", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1679183331 }
+, "_caption" : "count b cmd", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "COUNT_B_CMD", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 1806742203 }
+, "_caption" : "Plover", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_extrema" : false, "_format" : "", "_source" : "PLOVER", "type" : "PNDI" }
+, "dataItem object" : 
+{ "PObject" : 
+{ "_id" : 261810393 }
+, "_caption" : "Time/Date", "_captionStyle" : "noStyle", "_defaultStyle" : "noStyle", "_format" : "%e %b %Y, %H:%M:%S", "_source" : "TIME_I_FLC", "type" : "PTDI" }
+, "geometryHeight" : 140, "geometryWidth" : 200, "geometryX" : 0, "geometryY" : 0 }
+, "PObject" : 
+{ "_id" : 0 }
+, "PStyle object" : 
+{ "PObject" : 
+{ "_id" : 754958780 }
+, "_bg" : "#ffffff", "_bold" : true, "_fg" : "#0000ff", "_italic" : false, "_linked" : true, "_name" : "defbox" }
+, "windowHeight" : 714, "windowWidth" : 714 }
