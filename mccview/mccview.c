@@ -27,9 +27,11 @@
 #define DRIVE2_UNMAP 0x0080
 #define DRIVE2_MASK  0x00C0
 
+int first = 1;
+
 struct fft { const char *fmt; gd_type_t type; };
 
-#define NF 17
+#define NF 18
 static const struct fft ff[NF] = {
   {"TIME_MCC%i", GD_UINT64},  /* 0 */
   {"TILE_HEATER_MCE%i", GD_UINT16}, /* 1 */
@@ -48,6 +50,7 @@ static const struct fft ff[NF] = {
   {"last_tune_mpc%i", GD_UINT16}, /* 14 */
   {"last_iv_mpc%i", GD_UINT16}, /* 15 */
   {"used_tune_mpc%i", GD_UINT16}, /* 16 */
+  {"clamp_count_mce%i", GD_UINT16}, /* 17 */
 };
 
 #define NGF 13
@@ -83,7 +86,39 @@ const char *goals[] = {"pause", "tune", "iv", "stop", "lcloop", "cycle",
 const char *modes[] = {"none", "tuning", "iv_curve", "lcloop", "running",
   "bstep", "bramp"};
 #define N_STATES 9
-const char *states[N_STATES] = {"POW", "DRI", "ACT", "COM", "SYN", "CFG", "BIA", "ACF", "RET"};
+const char *states[N_STATES] = {"POW", "DRI", "ACT", "COM", "SYN", "CFG",
+  "BIA", "ACF", "RET"};
+
+int sslen;
+
+#define NSS 16
+const char *ssf[NSS] = {
+  "bc2:flux_fb(16)",
+  "bc2:flux_fb(17)",
+  "bc2:flux_fb(18)",
+  "bc2:flux_fb(19)",
+  "bc2:flux_fb(20)",
+  "bc2:flux_fb(21)",
+  "bc2:flux_fb(22)",
+  "bc2:flux_fb(23)",
+  "bc2:flux_fb(24)",
+  "bc2:flux_fb(25)",
+  "bc2:flux_fb(26)",
+  "bc2:flux_fb(27)",
+  "bc2:flux_fb(28)",
+  "bc2:flux_fb(29)",
+  "bc2:flux_fb(30)",
+  "bc2:flux_fb(31)"
+};
+int ssn[NSS][6];
+int sso;
+uint16_t *ssv;
+
+int ptot_count = 0;
+#define PTOT (NF * 6 + NGF + 2 + 6 * NSS)
+#define update_ptot() do { \
+  if (first) { printf("\rinit %i/%i  ", ++ptot_count, PTOT); fflush(stdout); } \
+} while(0)
 
 static char drivemap(uint64_t map, int n)
 {
@@ -121,27 +156,77 @@ int mce_power(int x)
   return !(gd[11].u64 & 0x4);
 }
 
-unsigned state[6];
+void ss_init(void)
+{
+  int i;
+  FILE *stream = fopen("/data/etc/spider/format.mce_mplex", "r");
+  char buffer[1024];
+
+  if (stream == NULL) {
+    perror("Unable to read format.mce_mplex");
+    exit(1);
+  }
+
+  while (fgets(buffer, 1024, stream)) {
+    if (buffer[0] == '#' || buffer[0] == '/')
+      continue;
+
+    /* initialise the length */
+    if (sslen == 0) {
+      sslen = atoi(buffer + 42);
+      if (sslen % 20)
+        sslen = (1 + sslen / 20);
+      else
+        sslen = sslen / 20;
+
+      ssv = malloc(sizeof(uint16_t) * sslen * 20);
+      memset(ssv, 0, sizeof(uint16_t) * sslen * 20);
+      update_ptot();
+    }
+
+    /* is this a match? */
+    for (i = 0; i < NSS; ++i) {
+      size_t len = strlen(ssf[i]);
+      if (strncmp(buffer + 3, ssf[i], len) == 0) {
+        ssn[i][buffer[1] - '1'] = atoi(buffer + 30 + len);
+        update_ptot();
+      }
+    }
+  }
+
+  fclose(stream);
+}
+
+void update_ss(DIRFILE *D, off_t lf, off_t fn)
+{
+  if (fn - lf > sslen)
+    lf = fn - sslen - 1;
+}
 
 int main(int argc, char **argv)
 {
-  static int first = 1;
+  unsigned state[6];
+  char field[100];
+  int f, x;
+  size_t n;
+  off_t fn, lf = 0;
 
-  DIRFILE *D = gd_open((argc > 1) ? argv[1] : "/data/etc/defile.lnk", GD_RDONLY | GD_VERBOSE);
+  DIRFILE *D = gd_open((argc > 1) ? argv[1] : "/data/etc/defile.lnk",
+      GD_RDONLY | GD_VERBOSE);
   if (!D)
     return 1;
   if (gd_error(D))
     return 1;
 
+  ss_init();
+
   for (;;) {
-    int f, x;
-    size_t n;
-    off_t fn = gd_nframes64(D) - 4;
+    fn = gd_nframes64(D) - 4;
     if (fn < 1) {
-      fprintf(stderr, "No data.\n");
+      fprintf(stderr, "\nNo data.\n");
       return 1;
     }
-    char field[100];
+    update_ss(D, lf, fn);
 
     for (f = 0; f < NGF; ++f) {
       if (gf[f].type == GD_UINT16)
@@ -150,6 +235,8 @@ int main(int argc, char **argv)
         n = gd_getdata(D, gf[f].fmt, fn, 0, 0, 1, GD_UINT64, &gd[f].u64);
       else if (gf[f].type == GD_FLOAT64)
         n = gd_getdata(D, gf[f].fmt, fn, 0, 0, 1, GD_FLOAT64, &gd[f].f64);
+
+      update_ptot();
 
       if (gd_error(D)) {
         if (!first)
@@ -168,10 +255,7 @@ int main(int argc, char **argv)
         else if (ff[f].type == GD_FLOAT64)
           n = gd_getdata(D, field, fn, 0, 0, 1, GD_FLOAT64, &d[x][f].f64);
 
-        if (first) {
-          printf("read %i/%i\r", 1 + x * NF + f, NF * 6);
-          fflush(stdout);
-        }
+        update_ptot();
 
         if (gd_error(D)) {
           if (!first)
@@ -184,7 +268,11 @@ int main(int argc, char **argv)
     }
 
     if (first) {
+      puts("");
       initscr();
+      noecho();
+      keypad(stdscr, TRUE);
+      cbreak();
       first = 0;
     }
 
@@ -265,6 +353,10 @@ int main(int argc, char **argv)
 
     for (x = 0; x < 6; ++x)
       printw("  dead:         %3llu      ", d[x][12].u64);
+    printw("\n");
+
+    for (x = 0; x < 6; ++x)
+      printw(" clamp:         %3llu      ", d[x][17].u64);
     printw("\n");
 
     for (x = 0; x < 6; ++x)
