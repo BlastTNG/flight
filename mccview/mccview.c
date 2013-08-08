@@ -115,7 +115,7 @@ int sso;
 uint16_t *ssv;
 
 int ptot_count = 0;
-#define PTOT (NF * 6 + NGF + 2 + 6 * NSS)
+#define PTOT (NF * 6 + NGF + 0 * NSS)
 #define update_ptot() do { \
   if (first) { printf("\rinit %i/%i  ", ++ptot_count, PTOT); fflush(stdout); } \
 } while(0)
@@ -158,6 +158,7 @@ int mce_power(int x)
 
 void ss_init(void)
 {
+#if 0
   int i;
   FILE *stream = fopen("/data/etc/spider/format.mce_mplex", "r");
   char buffer[1024];
@@ -195,12 +196,11 @@ void ss_init(void)
   }
 
   fclose(stream);
+#endif
 }
 
 void update_ss(DIRFILE *D, off_t lf, off_t fn)
 {
-  if (fn - lf > sslen)
-    lf = fn - sslen - 1;
 }
 
 int main(int argc, char **argv)
