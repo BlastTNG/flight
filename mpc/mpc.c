@@ -216,7 +216,8 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
 
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
           &divisor, &ssreq, &req_dm, &new_row_len, &new_num_rows,
-          &new_data_rate, &squidveto, len, data_in, peer, port))
+          &new_data_rate, &squidveto, &bolo_filt_freq, &bolo_filt_bw,
+          &bolo_filt_len, len, data_in, peer, port))
       return;
 
     if (ssreq)
@@ -1274,7 +1275,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
           mem_dirty = 1;
         }
         break;
-      case array_stat_reset:
+      case bolo_stat_reset:
         stat_reset = 1;
         break;
       case pick_biases:

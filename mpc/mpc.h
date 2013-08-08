@@ -73,6 +73,8 @@ extern int running_state;
 extern int kill_special;
 extern uint32_t iclamp[2];
 extern int dt_going;
+extern double bolo_filt_freq, bolo_filt_bw;
+extern int bolo_filt_len;
 extern int drives_checked;
 extern int data_drive[3];
 extern int drive_error[4];

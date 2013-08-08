@@ -9,6 +9,10 @@
 double filt_coeffa[FILT_LEN]; // denominator coefficients
 double filt_coeffb[FILT_LEN]; // numerator coefficients
 
+double bolo_filt_freq = 5.;
+double bolo_filt_bw = 1.2;
+int bolo_filt_len = 5000;
+
 /* buffers */
 uint32_t frame_offset[NUM_ROW * NUM_COL];
 double frame_filt[FB_SIZE][NUM_ROW * NUM_COL];
