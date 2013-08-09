@@ -1413,8 +1413,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(bolo_stat_reset, "Reset the bolometer statistic accumulators",
       GR_MPC)},
   {COMMAND(bolo_stat_gains), "Set gains and offsets for bolometer statistics",
-    GR_MPC | MCECMD, 6,
+    GR_MPC | MCECMD, 7,
     {
+      {CHOOSE_INSERT_PARAM},
       {"Mean resolution per bin (0-1)", 0, 1, 'f', "NONE"},
       {"Mean offset", 0, 65535, 'i', "NONE"},
       {"Sigma resolution per bin (0-1)", 0, 1, 'f', "NONE"},
