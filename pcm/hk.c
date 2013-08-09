@@ -701,7 +701,7 @@ void HouseKeeping()
 }
 /* veto SQUIDs if SSA or FPU temp gets too high */
 #define VETO_MCE_TIMEOUT 30
-#define T_FP_FIR_LEN 60
+#define T_FP_FIR_LEN 100
 void VetoMCE(int index)
 {
   static int insert = 0;
@@ -784,36 +784,36 @@ void VetoMCE(int index)
   if (index != 16)
     return;
 
-  if (timeout[insert] == 0) {
-    /* compute the outer mean */
-    t_fp_mean = 0;
-    for (i = 0; i < T_FP_FIR_LEN; ++i)
-      t_fp_mean += t_fp[insert][i];
-    t_fp_mean /= T_FP_FIR_LEN;
+  /* compute the outer mean */
+  t_fp_mean = 0;
+  for (i = 0; i < T_FP_FIR_LEN; ++i)
+    t_fp_mean += t_fp[insert][i];
+  t_fp_mean /= T_FP_FIR_LEN;
 
-    /* put in units of resistance */
-    t_fp_mean = LutCal(&rFpLut, t_fp_mean);
+  /* put in units of resistance */
+  t_fp_mean = LutCal(&rFpLut, t_fp_mean);
 
-    /* Read the SSA thermometer */
-    t_ssa = ReadCalData(tSsaAddr[insert]);
+  /* Read the SSA thermometer */
+  t_ssa = ReadCalData(tSsaAddr[insert]);
 
-    /* Look-up calibrated temperatures */
-    t_ssa = LutCal(&tSsaLut[insert], t_ssa);
-    t_fp_mean = LutCal(&tFpLut[insert], t_fp_mean);
+  /* Look-up calibrated temperatures */
+  t_ssa = LutCal(&tSsaLut[insert], t_ssa);
+  t_fp_mean = LutCal(&tFpLut[insert], t_fp_mean);
 
-    /* XXX X5 hack */
-    if (insert == 4)
-      t_fp_mean = t_ssa = 0;
+  /* XXX X5 hack */
+  if (insert == 4)
+    t_fp_mean = t_ssa = 0;
 
-    if ( (t_fp_mean > 8.0) || (t_ssa > 8.0) ) {
-      if (~CommandData.thermveto & bit) {
-        bprintf(info, "Vetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
-            insert + 1, t_fp_mean, t_ssa);
-        CommandData.thermveto |= bit;
-        timeout[insert] = VETO_MCE_TIMEOUT;
-      }
+  if ( (t_fp_mean > 8.0) || (t_ssa > 8.0) ) {
+    if (~CommandData.thermveto & bit) {
+      bprintf(info, "Vetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
+          insert + 1, t_fp_mean, t_ssa);
+      CommandData.thermveto |= bit;
+      timeout[insert] = VETO_MCE_TIMEOUT;
     }
+  }
 
+  if (timeout[insert] == 0) {
     if ( (t_fp_mean < 7.0) && (t_ssa < 7.0) ) {
       if (CommandData.thermveto & bit) {
         bprintf(info, "Unvetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
