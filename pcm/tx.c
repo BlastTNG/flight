@@ -1172,7 +1172,7 @@ static void StoreData(int write_slow)
 
   WriteData(yPAddr, (int)(CommandData.pointing_mode.Y * DEG2I), NIOS_QUEUE);
   WriteData(velAzPAddr, (int)(CommandData.pointing_mode.vaz*VEL2I), NIOS_QUEUE);
-  WriteData(delPAddr, (int)(CommandData.pointing_mode.del * VEL2I), NIOS_QUEUE);
+  WriteCalData(delPAddr, CommandData.pointing_mode.del, NIOS_QUEUE);
   WriteData(wPAddr, (int)(CommandData.pointing_mode.w * DEG2I), NIOS_QUEUE);
   WriteData(hPAddr, (int)(CommandData.pointing_mode.h * DEG2I), NIOS_QUEUE);
   WriteData(ra1PAddr, (int)(CommandData.pointing_mode.ra[0] * H2I), NIOS_QUEUE);

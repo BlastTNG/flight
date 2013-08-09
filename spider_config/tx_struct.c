@@ -414,7 +414,7 @@ struct ChannelStruct SlowChannels[] = {
   {"x_p",              'w', LOOP1, 52,            I2DEG,  0.0, 'u',     U_NONE},
   {"y_p",              'w', LOOP1, 53,            I2DEG,  0.0, 's',     U_NONE},
   {"vel_az_p",         'w', LOOP1, 54,            I2VEL,  0.0, 's',     U_NONE},
-  {"del_p",            'w', LOOP1, 55,            I2VEL,  0.0, 'u',     U_NONE},
+  {"del_p",            'w', LOOP1, 55,    (2.0/65536.0), -1.0, 'u',     U_NONE},
   {"nblobs_g",         'w', LOOP1, 56,              1.0,  0.0, 'u',     U_NONE},
   // TODO: add appropriate derived types for these
   {"blob00_x_g",       'w', LOOP1, 57, CAM_WIDTH/SHRT_MAX,0.0, 'u',     U_NONE},
@@ -463,7 +463,7 @@ struct ChannelStruct SlowChannels[] = {
   {"cal_d_pss3",       'w', LOOP2, 34,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},
   {"cal_d_pss4",       'w', LOOP2, 35,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},
   {"mapsigma_g",       'w', LOOP2, 36,         1.0/10.0,  0.0, 'u',     U_NONE},
-  {"size_el_step",     'w', LOOP2, 37,      1.0/65536.0,  0.0, 'u',    U_P_DEG},
+  {"size_el_step",     'w', LOOP2, 37,      2.0/65536.0, -1.0, 'u',    U_P_DEG},
   {"n_el_steps",       'w', LOOP2, 38,    500.0/65536.0,  0.0, 'u',     U_NONE},
   {"foc_rng_g",        'w', LOOP2, 39,              1.0,  0.0, 'u',     U_NONE},
   {"cal_d_pss5",       'w', LOOP2, 40,     40.0/65536.0,  0.0, 's', U_TRIM_DEG},
