@@ -455,6 +455,12 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mcc_wdog_disable), "Disable pcm watchdog of MCCs", GR_MCEPWR},
   {COMMAND(get_superslow), "Re-fetch the super-slow data from MPC", GR_MPC},
 
+  {COMMAND(thermveto_enable), "Enable the automatic thermal veto of the MCEs",
+    GR_CRYO_HEAT},
+  {COMMAND(thermveto_disable), "Disable the automatic thermal veto of the MCEs",
+    GR_CRYO_HEAT},
+
+  /* DON'T PUT ANYTHING BELOW THIS */
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 

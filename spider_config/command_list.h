@@ -128,7 +128,7 @@ enum singleCommand {
   mcc4_on,           mcc4_off,          mcc4_cycle,
   mcc5_on,           mcc5_off,          mcc5_cycle,
   mcc6_on,           mcc6_off,          mcc6_cycle,
-  get_superslow,
+  get_superslow,     thermveto_enable,  thermveto_disable,
   mcc_wdog_enable,   mcc_wdog_disable, 
 
   /* DON'T PUT ANYTHING BELOW THIS */

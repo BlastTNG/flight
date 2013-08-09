@@ -804,7 +804,7 @@ void VetoMCE(int index)
   if (insert == 4)
     t_fp_mean = t_ssa = 0;
 
-  if ( (t_fp_mean > 8.0) || (t_ssa > 8.0) ) {
+  if ( ((t_fp_mean > 8.0) || (t_ssa > 8.0)) && !CommandData.thermveto_veto ) {
     if (~CommandData.thermveto & bit) {
       bprintf(info, "Vetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
           insert + 1, t_fp_mean, t_ssa);
@@ -814,7 +814,7 @@ void VetoMCE(int index)
   }
 
   if (timeout[insert] == 0) {
-    if ( (t_fp_mean < 7.0) && (t_ssa < 7.0) ) {
+    if ( (t_fp_mean < 7.0) && (t_ssa < 7.0) && !CommandData.thermveto_veto ) {
       if (CommandData.thermveto & bit) {
         bprintf(info, "Unvetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
             insert + 1, t_fp_mean, t_ssa);

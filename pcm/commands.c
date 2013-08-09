@@ -906,43 +906,35 @@ void SingleCommand (enum singleCommand command, int scheduled)
    case get_superslow:
       request_ssdata = 1;
       break;
+   case thermveto_enable:
+      CommandData.thermveto_veto = 0;
+      break;
+   case thermveto_disable:
+      CommandData.thermveto_veto = 1;
+      break;
 
-    case pull_cmb_pin:
+   case pull_cmb_pin:
       bputs(info, "... What now?");
       CommandData.questionable_behaviour++;
       break;
-    case global_thermonuclear_war:
+   case global_thermonuclear_war:
       bputs(info, "The only winning move is not to play");
       CommandData.questionable_behaviour++;
       break;
-#if 0
-    case get_some:
-      bputs(info, "Aaaarrrgggh!");
-      CommandData.questionable_behaviour++;
-      break;
-    case stab:
-      bputs(info, "Swish, slash");
-      CommandData.questionable_behaviour++;
-      break;
-    case lock_and_load:
-      bputs(info, "Cachink.");
-      CommandData.questionable_behaviour++;
-      break;
-#endif
 
-    case xyzzy:
+   case xyzzy:
       break;
-    default:
+   default:
       /* Render, therefore, unto Caesar the things which are Caesar's */
       if (!MCEcmd(command, NULL, NULL, NULL)) {
         bputs(warning, "Invalid Single Word Command\n");
         return; /* invalid command - no write or update */
       }
   }
-  
+
   CommandData.command_count++;
   CommandData.last_command = (unsigned short)command;
-  
+
 
   if (!scheduled) {
     if (doing_schedule)
@@ -1076,9 +1068,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       is_new = 0;
       CommandData.pointing_mode.is_beam_map = 0;
       if ( (CommandData.pointing_mode.mode != P_SINE) ||
-           (CommandData.pointing_mode.w != 2.0*rvalues[0]) || // scan width
-           (CommandData.pointing_mode.X != rvalues[1]) || // scan centre
-           (CommandData.pointing_mode.Y != rvalues[2]) ) {
+          (CommandData.pointing_mode.w != 2.0*rvalues[0]) || // scan width
+          (CommandData.pointing_mode.X != rvalues[1]) || // scan centre
+          (CommandData.pointing_mode.Y != rvalues[2]) ) {
         is_new = 1;
       }
       if (is_new) {
@@ -1092,16 +1084,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.mode = P_SINE;
       CommandData.pointing_mode.el_mode = P_EL_GOTO;
       break;
-    /* TODO FIXME HACK: Strip this out for flight. Axe it. Eliminate. */
+      /* TODO FIXME HACK: Strip this out for flight. Axe it. Eliminate. */
     case beam_map:
       is_new = 0;
       CommandData.pointing_mode.is_beam_map = 1; // sigh
       if ( (CommandData.pointing_mode.mode != P_SINE) ||
-           (CommandData.pointing_mode.vaz != rvalues[0]) ||
-           (CommandData.pointing_mode.X != rvalues[1]) || // scan centre
-           (CommandData.pointing_mode.w != rvalues[2]) || // scan width
-           (CommandData.pointing_mode.el_step != rvalues[4]) ||
-           (CommandData.pointing_mode.Y != rvalues[5]) ) {
+          (CommandData.pointing_mode.vaz != rvalues[0]) ||
+          (CommandData.pointing_mode.X != rvalues[1]) || // scan centre
+          (CommandData.pointing_mode.w != rvalues[2]) || // scan width
+          (CommandData.pointing_mode.el_step != rvalues[4]) ||
+          (CommandData.pointing_mode.Y != rvalues[5]) ) {
         is_new = 1;
       }
       if (is_new) {
@@ -1137,21 +1129,21 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case slew_veto:
       CommandData.slew_veto = rvalues[0] * ACSData.bbc_rate;
-            bprintf(info,"CommandData.slew_veto = %i,"
-                " CommandData.pointing_mode.nw = %i",
-                CommandData.slew_veto, CommandData.pointing_mode.nw);
+      bprintf(info,"CommandData.slew_veto = %i,"
+          " CommandData.pointing_mode.nw = %i",
+          CommandData.slew_veto, CommandData.pointing_mode.nw);
       if (CommandData.pointing_mode.nw > CommandData.slew_veto)
         CommandData.pointing_mode.nw = CommandData.slew_veto;
 
       break;
-      
+
     case mag_cal:
       CommandData.cal_xmax_mag = rvalues[0];
       CommandData.cal_xmin_mag = rvalues[1];
       CommandData.cal_ymax_mag = rvalues[2];
       CommandData.cal_ymin_mag = rvalues[3];      
       break;
-      
+
     case pss_off_cal:
       CommandData.cal_off_pss1 = rvalues[0];
       CommandData.cal_off_pss2 = rvalues[1];
@@ -1160,7 +1152,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.cal_off_pss5 = rvalues[4];
       CommandData.cal_off_pss6 = rvalues[5];
       break;
-      
+
     case pss_d_cal:
       CommandData.cal_d_pss1 = rvalues[0];
       CommandData.cal_d_pss2 = rvalues[1];
@@ -1170,19 +1162,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.cal_d_pss6 = rvalues[5];
       CommandData.cal_imin_pss = rvalues[6];
       break;
-      
+
 
       /***************************************/
       /********** Pointing Motor Gains *******/
     case el_gain:  /* ele gains */
       CommandData.ele_gain.com = rvalues[0];
       break;
-   case el_pulse: /* manual el motor pulses */
+    case el_pulse: /* manual el motor pulses */
       CommandData.ele_gain.pulse_port = rvalues[0];
       CommandData.ele_gain.pulse_starboard = rvalues[1];
       CommandData.ele_gain.manual_pulses = 1;
       break;
-   case el_rel_move: /* el relative move (separate for each side) */
+    case el_rel_move: /* el relative move (separate for each side) */
       CommandData.pointing_mode.d_el_p = rvalues[0];
       CommandData.pointing_mode.d_el_s = rvalues[1];
       CommandData.pointing_mode.v_el_p = rvalues[2];
@@ -1294,12 +1286,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /*************** Misc  *****************/
-//    case gyro_off:
-//      CommandData.power.gyro_off[ivalues[0]-1] |= 0x01;
-//      break;
-//    case gyro_on:
-//      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
-//      break;
+      //    case gyro_off:
+      //      CommandData.power.gyro_off[ivalues[0]-1] |= 0x01;
+      //      break;
+      //    case gyro_on:
+      //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
+      //      break;
     case reset_adc:
       if (ivalues[0] < 64)
         CommandData.power.adc_reset[ivalues[0]/4] = RESET_ADC_LEN;
@@ -1878,8 +1870,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.table.vel = rvalues[0];
       break;
 
-    /*******************************************/
-    /*************** Sync Box  *****************/
+      /*******************************************/
+      /*************** Sync Box  *****************/
     case mce_row_len:
       CommandData.sync_box.write_param = sync_rl;
       CommandData.sync_box.param_value = ivalues[0];
@@ -1929,18 +1921,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.bolo_filt_bw = rvalues[1];
       CommandData.bolo_filt_len = ivalues[2];
       break;
-      
+
     default:
       if (!MCEcmd(command, rvalues, ivalues, svalues)) {
         bputs(warning, "Invalid Multi Word Command\n");
         return; /* invalid command - don't update */
       }
   }
-  
+
   CommandData.command_count++;
   //set high bit to differentiate multi-commands from single
   CommandData.last_command = (unsigned short)command | 0x8000;
-  
+
   int i_point = GETREADINDEX(point_index);
 
   if (!scheduled)
@@ -2180,7 +2172,7 @@ void InitCommandData()
   /** prev_status overrides this stuff **/
   CommandData.command_count = 0;
   CommandData.last_command = 0xffff;
-  
+
   CommandData.at_float = 0;
   CommandData.timeout = 3600;
   CommandData.slot_sched = 0;
@@ -2278,7 +2270,7 @@ void InitCommandData()
   CommandData.cal_ymax_mag = 5000;
   CommandData.cal_xmin_mag = -5000;
   CommandData.cal_ymin_mag = -5000;
-  
+
   CommandData.cal_off_pss1 = 0.0;
   CommandData.cal_off_pss2 = 0.0;
   CommandData.cal_off_pss3 = 0.0;
@@ -2438,12 +2430,13 @@ void InitCommandData()
 
   CommandData.squidveto = 0;
   CommandData.thermveto = 0;
+  CommandData.thermveto_veto = 0;
   CommandData.mce_power = 0; /* assume things are on */
 
   CommandData.bolo_filt_freq = 5.;
   CommandData.bolo_filt_bw = 1.2;
   CommandData.bolo_filt_len = 5000;
-  
+
   CommandData.questionable_behaviour = 0;
 
   WritePrevStatus();
