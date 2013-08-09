@@ -80,10 +80,10 @@ int main() {
 		    "%s LINCOM 1 %s %.6f %.6f\n",
 		    GetArrayFieldName(i,0), i, NUM_ARRAY_STAT,
 		    GetArrayFieldName(i,1), GetArrayFieldName(i,0),
-		    5.e5/256, 3.33e5,
+		    5.e5/256, -3.33e5,
 		    GetArrayFieldName(i+1,0), i, NUM_ARRAY_STAT,
 		    GetArrayFieldName(i+1,1), GetArrayFieldName(i+1,0),
-		    5.e5/256, 3.33e5
+		    5.e5/256, -3.33e5
 		    );
 	  } else {
 	    fprintf(fid,"%s MPLEX bolo_stats_mplex_0 bolo_stats_index %d %d\n"
