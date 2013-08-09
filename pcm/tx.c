@@ -477,8 +477,8 @@ static void WriteMCESlow(void)
         NIOS_QUEUE);
   WriteData(dataModeAddr, CommandData.data_mode, NIOS_QUEUE);
   
-  WriteData(boloFiltFreqAddr, CommandData.bolo_filt_freq, NIOS_QUEUE);
-  WriteData(boloFiltBWAddr, CommandData.bolo_filt_bw, NIOS_QUEUE);
+  WriteCalData(boloFiltFreqAddr, CommandData.bolo_filt_freq, NIOS_QUEUE);
+  WriteCalData(boloFiltBWAddr, CommandData.bolo_filt_bw, NIOS_QUEUE);
   WriteData(boloFiltLenAddr, CommandData.bolo_filt_len, NIOS_QUEUE);
   
   /* this field is active low */
