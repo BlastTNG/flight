@@ -1305,7 +1305,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case bias_kick_params:
         memory.bias_kick_val = ev->rvalues[1] * 32767 / 5.;
-        memory.bias_kick_wait = ev->ivalues[2];
+        memory.bias_kick_time = ev->rvalues[2] * 1e6;
+        memory.bias_kick_wait = ev->ivalues[3];
         mem_dirty = 1;
         break;
 
@@ -1422,6 +1423,7 @@ static int read_mem(void)
     memory.divisor = 1;
     memory.dmesg_lookback = btime;
     memory.bias_kick_val = 2 /* Volts */ * 32767 / 5;
+    memory.bias_kick_time = 500000; /* microseconds */
     memory.bias_kick_wait = 30; /* seconds */
     memory.bolo_filt_len = 5000;
     memory.bolo_filt_freq = 5.0;

@@ -803,7 +803,7 @@ static int kick(uint32_t bias, uint32_t value, int wait)
 
     write_param("heater", "bias", 0, &value, 1);
     slow_dat.tile_heater = value;
-    sleep(2);
+    usleep(memory.bias_kick_time);
     write_param("heater", "bias", 0, &zero, 1);
     slow_dat.tile_heater = 0;
 
@@ -1198,8 +1198,8 @@ static int bias_step(void)
    * we calculate the period in multiples of data frame rate so we're
    * synchronous with DVs and can phase shift away from the internal command
    * collision */
-  period = (uint32_t)(50e6 / row_len / num_rows / data_rate * goal.wait + 0.5)
-    * data_rate;
+  period = (uint32_t)(50e6 / row_len / num_rows / data_rate * goal.wait / 2
+      + 0.5) * data_rate;
   mas_write_range("cc", "ramp_step_period", 0, &period, 1);
 
   /* phase shift by 120 degrees from the DV pulse to avoid collision */

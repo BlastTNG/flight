@@ -1695,11 +1695,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(bias_kick_params), "Set parameters for the automatic kick after "
-    "TES biasing", GR_MPC | MCECMD, 3,
+  {COMMAND(bias_kick_params), "Set default FP kick parameters",
+    GR_MPC | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
+      {"Kick time (s)", 0.01, 3, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'i', "NONE"}
     }
   },

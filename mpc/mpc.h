@@ -52,6 +52,7 @@ struct memory_t {
   int divisor;
   time_t dmesg_lookback;
   int bias_kick_val;
+  int bias_kick_time;
   int bias_kick_wait;
   double bolo_filt_freq;
   double bolo_filt_bw;

@@ -25,10 +25,104 @@
 #include <stdio.h>
 #include <string.h>
 
+#define BSA_MAX  166667
+#define BSA_MIN -333333
+
+static double find_delta(int i, double delta, double dv, uint32_t ramp_val,
+    int nd)
+{
+  delta = (nd * delta + dv / ramp_val) / (nd + 1);
+
+  /* store */
+  if (delta >= BSA_MAX)
+    bolo_stat_buff[bs_step][i] = 255;
+  else if (delta <= BSA_MIN)
+    bolo_stat_buff[bs_step][i] = 0;
+  else
+    bolo_stat_buff[bs_step][i] = 256 * (delta - BSA_MIN) / (BSA_MAX - BSA_MIN);
+
+  if (i == 0) bprintf(info, "delta = %g/%u (%i) [%i]", delta,
+      bolo_stat_buff[bs_step][i], ramp_val, nd + 1);
+
+  return delta;
+}
+
 int bsa_init = 1;
-static void bias_step_analysis(const uint32_t *frame, size_t frame_size,
+static void bias_step_analysis(const int32_t *frame, size_t frame_size,
     uint32_t frameno)
 {
+  static int is_on = 0;
+  static int n;
+  static double von[NUM_COL * NUM_ROW], voff[NUM_COL * NUM_ROW];
+  static double delta[NUM_COL * NUM_ROW];
+  static int nd;
+
+  static uint32_t ramp_val;
+
+  int i;
+
+  const struct mas_header *header = (const struct mas_header *)frame;
+
+  frame += MCE_HEADER_SIZE;
+
+  /* initialisation */
+  if (bsa_init) {
+    /* wait for bias step on */
+    if (header->ramp_val == 0)
+      return;
+
+    ramp_val = header->ramp_val;
+
+    bsa_init = 0;
+
+    n = nd = 0;
+    is_on = 1;
+    memset(von, 0, sizeof(double) * NUM_COL * NUM_ROW);
+    memset(voff, 0, sizeof(double) * NUM_COL * NUM_ROW);
+    memset(delta, 0, sizeof(double) * NUM_COL * NUM_ROW);
+  }
+
+  /* check whether we're on or not */
+  if (header->ramp_val) {
+    if (!is_on) {
+      if (n > 0) {
+        bprintf(info, "off = %i", n);
+        for (i = 0; i < NUM_ROW * NUM_COL; ++i) {
+          voff[i] /= n;
+
+          if (i == 0) bprintf(info, "voff = %g", voff[i]);
+
+          delta[i] = find_delta(i, delta[i], von[i] - voff[i], ramp_val, nd);
+        }
+        nd++;
+      }
+      is_on = 1;
+      n = 0;
+    }
+
+    for (i = 0; i < NUM_ROW * NUM_COL; ++i)
+      von[i] += (frame[i] >> 7);
+    n++;
+  } else {
+    if (is_on) {
+      if (n > 0) {
+        bprintf(info, "on = %i", n);
+        for (i = 0; i < NUM_ROW * NUM_COL; ++i) {
+          von[i] /= n;
+
+          if (i == 0) bprintf(info, "von = %g", von[i]);
+
+          delta[i] = find_delta(i, delta[i], von[i] - voff[i], ramp_val, nd);
+        }
+      }
+      is_on = 0;
+      n = 0;
+    }
+
+    for (i = 0; i < NUM_ROW * NUM_COL; ++i)
+      voff[i] += (frame[i] >> 7);
+    n++;
+  }
 }
 
 /* count clamped detectors */
@@ -72,7 +166,7 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
   /* update frame statistics */
   if (!stat_veto) {
     if (moda == md_bstep)
-      bias_step_analysis(frame, frame_size, frameno);
+      bias_step_analysis((const int32_t *)frame, frame_size, frameno);
     else {
       update_stats(frame, frame_size, frameno);
       bsa_init = 1;
