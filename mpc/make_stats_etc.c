@@ -27,6 +27,8 @@ char *GetArrayFieldLut(int i_field) {
     return "mce_sigma.lut";
   case 'n':
     return "mce_noise.lut";
+  case 'b':
+    return "mce_bstep.lut";
   default:
     return "";
   }
@@ -35,7 +37,7 @@ char *GetArrayFieldLut(int i_field) {
 int main() {
   int i, j;
   int type, tel, row, col;
-  char types[N_STAT_TYPES][10] = {"mean", "sigma", "noise"};
+  char types[N_STAT_TYPES][10] = {"mean", "sigma", "noise", "bstep"};
   FILE *fid;
   char fname[50];
   
@@ -79,7 +81,8 @@ int main() {
 	    LUT_DIR, GetArrayFieldLut(i+1));
   }
   fclose(fid);
-  
+
+  /*
   for (type = 0; type < N_STAT_TYPES; type++) {
     sprintf(fname,ETC_DIR "mce_%s.lut",types[type]);
     fid = fopen(fname,"w");
@@ -100,6 +103,7 @@ int main() {
     }
     fclose(fid);
   }
+  */
   
   for (i=0; i<NUM_ARRAY_STAT; i++) {
     free(names[i]);

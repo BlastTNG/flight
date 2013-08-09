@@ -111,7 +111,7 @@ include ../common/Makefile.shared
 
 .PHONY: all
 
-all:: mpc
+all:: mpc format.bolo_stats
 
 FORCE:
 
