@@ -875,11 +875,18 @@ static void pick_biases(int iv_num)
 /* returns non-zero if something was popped */
 static int pop_block(void)
 {
+  static int dont_pop = 0;
+
+  if (dont_pop)
+    return 0;
+
   int new_tail = (blockq_tail + 1) % BLOCKQ_SIZE;
 
   /* no pending requests */
   if (blockq_head == blockq_tail)
     return 0;
+
+  dont_pop = 1;
 
   switch (blockq[new_tail].raw) {
     case 3:
@@ -903,6 +910,7 @@ static int pop_block(void)
 
   blockq_tail = new_tail;
 
+  dont_pop = 0;
   return 1;
 }
 
