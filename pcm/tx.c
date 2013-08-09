@@ -1511,6 +1511,7 @@ void UpdateBBCFrame()
   WriteChatter(index);
   countHWPEncoder(index);
   cameraTriggers();
+  VetoMCE(index);
 
   WriteAux();
   
@@ -1562,9 +1563,6 @@ void UpdateBBCFrame()
       break;
     case 15:
       WatchMCC();
-      break;
-    case 16:
-      VetoMCE();
       break;
     default:
       break;

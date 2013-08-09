@@ -157,7 +157,7 @@ static void ForwardNotices(int sock)
   if (CommandData.mce_power & 4)
     this_squidveto |= pow_veto_bits[2];
 
-//  this_squidveto |= CommandData.thermveto;
+  this_squidveto |= CommandData.thermveto;
 
   /* edge triggers */
   if ((last_turnaround != -1 && last_turnaround == this_turnaround) &&

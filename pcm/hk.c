@@ -24,6 +24,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "mcp.h"
 #include "lut.h"
@@ -699,18 +700,23 @@ void HouseKeeping()
   WriteCalData(vHeatLastHkAddr, CommandData.hk_vheat_last, NIOS_QUEUE);
 }
 /* veto SQUIDs if SSA or FPU temp gets too high */
-void VetoMCE()
+#define VETO_MCE_TIMEOUT 30
+#define T_FP_FIR_LEN 60
+void VetoMCE(int index)
 {
   static int insert = 0;
-  static int firsttime[6] = {1, 1, 1, 1, 1, 1};
+  static int firsttime[6] = {300, 1, 1, 1, 1, 1};
   
   static struct BiPhaseStruct* tSsaAddr[6];
   static struct BiPhaseStruct* tFpAddr[6]; 
   static struct BiPhaseStruct* vCnxAddr[6];
 
-  double v_cnx, t_ssa, t_fp;
+  static double t_fp[6][T_FP_FIR_LEN];
+  static int t_fp_ind[6] = {0, 0, 0, 0, 0, 0};
 
-  char field[64];
+  double v_cnx, t_ssa, t_fp_mean;
+  
+  int i;
 
   static struct LutType tSsaLut[6] = {
     {.filename = LUT_DIR "D84461.lut"},
@@ -733,10 +739,16 @@ void VetoMCE()
   static struct LutType rFpLut = 
   {.filename = LUT_DIR "r_cernox.lut"};
 
+  static int timeout[6] = {0, 0, 0, 0, 0, 0};
+
   uint16_t bit = 1U << insert;
 
-  if (firsttime[insert]) {
-    firsttime[insert] = 0; 
+  if (firsttime[insert] > 1) {
+    firsttime[insert]--;
+    return;
+  } else if (firsttime[insert]) {
+    char field[64];
+
     sprintf(field, "vd_ssa_x%1d_hk", insert+1);
     tSsaAddr[insert] = GetBiPhaseAddr(field);
     sprintf(field, "vr_fp_x%1d_hk", insert+1);
@@ -751,36 +763,67 @@ void VetoMCE()
       LutInit(&rFpLut);
   }
 
-  /* Read voltages for all the thermometers of interest */
-  t_ssa = ReadCalData(tSsaAddr[insert]);
-  t_fp = ReadCalData(tFpAddr[insert]);
+  /* read and calibrate the FP themometer */
+  t_fp[insert][t_fp_ind[insert]] = ReadCalData(tFpAddr[insert]);
   v_cnx = ReadCalData(vCnxAddr[insert]);
 
   /* normalize the cernox readings with bias level */
-  t_fp /= v_cnx;
+  t_fp[insert][t_fp_ind[insert]] /= v_cnx;
 
-  /* put in units of resistance */
-  t_fp = LutCal(&rFpLut, t_fp);
+  /* initialise FIR */
+  if (firsttime[insert]) {
+    firsttime[insert] = 0; 
 
-  /* Look-up calibrated temperatures */
-  t_ssa = LutCal(&tSsaLut[insert], t_ssa);
-  t_fp = LutCal(&tFpLut[insert], t_fp);
-
-  if ( (t_fp > 8.0) || (t_ssa > 8.0) ) {
-    if (~CommandData.thermveto & bit) {
-      bprintf(info, "Vetoing MCE#%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
-          insert, t_fp, t_ssa);
-      CommandData.thermveto |= bit;
-    }
+    for (i = 0; i < T_FP_FIR_LEN; ++i)
+      t_fp[insert][i] = t_fp[insert][t_fp_ind[insert]];
   }
 
-  if ( (t_fp < 7.0) && (t_ssa < 7.0) ) {
-    if (CommandData.thermveto & bit) {
-      bprintf(info, "Unvetoing MCE#%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
-          insert, t_fp, t_ssa);
-      CommandData.thermveto &= ~bit;
+  t_fp_ind[insert] = (t_fp_ind[insert] + 1) % T_FP_FIR_LEN;
+
+  /* do the rest of this at the slow rate */
+  if (index != 16)
+    return;
+
+  if (timeout[insert] == 0) {
+    /* compute the outer mean */
+    t_fp_mean = 0;
+    for (i = 0; i < T_FP_FIR_LEN; ++i)
+      t_fp_mean += t_fp[insert][i];
+    t_fp_mean /= T_FP_FIR_LEN;
+
+    /* put in units of resistance */
+    t_fp_mean = LutCal(&rFpLut, t_fp_mean);
+
+    /* Read the SSA thermometer */
+    t_ssa = ReadCalData(tSsaAddr[insert]);
+
+    /* Look-up calibrated temperatures */
+    t_ssa = LutCal(&tSsaLut[insert], t_ssa);
+    t_fp_mean = LutCal(&tFpLut[insert], t_fp_mean);
+
+    /* XXX X5 hack */
+    if (insert == 4)
+      t_fp_mean = t_ssa = 0;
+
+    if ( (t_fp_mean > 8.0) || (t_ssa > 8.0) ) {
+      if (~CommandData.thermveto & bit) {
+        bprintf(info, "Vetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
+            insert + 1, t_fp_mean, t_ssa);
+        CommandData.thermveto |= bit;
+        timeout[insert] = VETO_MCE_TIMEOUT;
+      }
     }
-  }
+
+    if ( (t_fp_mean < 7.0) && (t_ssa < 7.0) ) {
+      if (CommandData.thermveto & bit) {
+        bprintf(info, "Unvetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
+            insert + 1, t_fp_mean, t_ssa);
+        CommandData.thermveto &= ~bit;
+        timeout[insert] = VETO_MCE_TIMEOUT;
+      }
+    }
+  } else
+    timeout[insert]--;
 
   insert = (insert+1) % 6;
 } 
