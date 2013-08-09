@@ -64,7 +64,7 @@
 // Used by higain and bi0.  Number of frames in buffer.
 #define BI0_FRAME_BUFLEN (400)
 
-#define MCE_RATE ( 25.0e6/(57.0*33.0*120.0) ) // 25 MHz/(rl*nr*fr) ~ 110.76 Hz
+#define MCE_RATE ( 25.0e6/(50.0*33.0*120.0) ) // 25 MHz/(rl*nr*fr) ~ 119 Hz
                                               // default, still required by pcm
 
 /* Define global variables */

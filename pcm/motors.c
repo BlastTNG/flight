@@ -1183,8 +1183,6 @@ static void DoSineMode(double centre, double ampl, double el_start)
   int N_scans; // number of azimuth half-scans per el step
   int i_point;
 
-  static int past_step_point = 0;
-  static int past_step_point_last = 0;
   static int in_scan = 0;
 
   if (CommandData.pointing_mode.new_sine) {
@@ -1300,6 +1298,11 @@ static void DoSineMode(double centre, double ampl, double el_start)
 	           +PointingData[i_point].offset_ofyaw_gy)  > 0.0) ) {
              //&& (PointingData[i_point].v_az > V_AZ_MIN) ) {
     scan_region = SCAN_L_TO_R;
+    if (scan_region_last == SCAN_R_TO_L) {
+      n_scans++;
+    }
+    scan_region_last = scan_region;	       
+
     CommandData.pointing_mode.is_turn_around = 0;
   
     if ( ((az - left) > ampl/10.0) && ( (az-left) < (ampl/10.0 + 1.0) ) ) { 
@@ -1307,7 +1310,6 @@ static void DoSineMode(double centre, double ampl, double el_start)
       el_dest_pre = axes_mode.el_dest;
     }
   
-    scan_region_last = scan_region;	       
     v_az = sqrt(az_accel*ampl)*sin(acos((centre-az)/ampl));
     
     //TODO: HACK for beam mapping, remove it!
@@ -1336,30 +1338,26 @@ static void DoSineMode(double centre, double ampl, double el_start)
     }
 
     if (az >= (right + daz_step)) {
-      past_step_point = 1;
-      if ( past_step_point_last == 0 ) {
-        n_scans++;
-        if ( (n_scans - N_scans*CommandData.pointing_mode.Nsteps) == N_scans) {
-         //bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
-	        //n_scans); 
-          n_scans = 0; 
-        }
-	      if ( (n_scans % N_scans) == 0 ) { // step in elevation
-          bprintf(info, "stepping in el at right turn around");
-          axes_mode.el_mode = AXIS_POSITION;
-          CommandData.pointing_mode.el_mode = P_EL_GOTO;
-          axes_mode.el_dest = el_start + (n_scans/N_scans)
-                              *CommandData.pointing_mode.del;
-          /*
-          bprintf(info, 
-          "n_scans = %d, N_scans = %d, el_start = %f, del = %f, dest = %f",
-          n_scans, N_scans, el_start, CommandData.pointing_mode.del, 
-          axes_mode.el_dest);
-          */
-          axes_mode.el_vel = 0.0;
-        }  
+      if ( ((n_scans+1) - N_scans*CommandData.pointing_mode.Nsteps) 
+          == N_scans) {
+       //bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
+        //n_scans); 
+        n_scans = 0; 
       }
-      past_step_point_last = past_step_point;
+      if ( ((n_scans+1) % N_scans) == 0 ) { // step in elevation
+        //bprintf(info, "stepping in el at right turn around");
+        axes_mode.el_mode = AXIS_POSITION;
+        CommandData.pointing_mode.el_mode = P_EL_GOTO;
+        axes_mode.el_dest = el_start + ((n_scans+1)/N_scans)
+                            *CommandData.pointing_mode.del;
+        /*
+        bprintf(info, 
+        "n_scans = %d, N_scans = %d, el_start = %f, del = %f, dest = %f",
+        n_scans, N_scans, el_start, CommandData.pointing_mode.del, 
+        axes_mode.el_dest);
+        */
+        axes_mode.el_vel = 0.0;
+      }  
     }
     
     axes_mode.az_vel = v_az;
@@ -1371,6 +1369,11 @@ static void DoSineMode(double centre, double ampl, double el_start)
 		          + PointingData[i_point].offset_ofyaw_gy) < 0.0) ) {
               //&& (PointingData[i_point].v_az < -V_AZ_MIN) ) {
     scan_region = SCAN_R_TO_L;
+    if (scan_region_last == SCAN_L_TO_R) {
+      n_scans++;
+    }
+    scan_region_last = scan_region;
+
     CommandData.pointing_mode.is_turn_around = 0;
   
     if ( ((right - az) > ampl/10.0) && ((right - az) < (ampl/10.0 + 1.0))  ) {
@@ -1378,7 +1381,6 @@ static void DoSineMode(double centre, double ampl, double el_start)
       el_dest_pre = axes_mode.el_dest;
     }
   
-    scan_region_last = scan_region;
     v_az = sqrt(az_accel*ampl)*sin(-acos((centre-az)/ampl)); 
 
     //TODO: HACK for beam mapping, remove it!
@@ -1407,30 +1409,25 @@ static void DoSineMode(double centre, double ampl, double el_start)
     }
     
     if (az <= (left + daz_step)) {
-      past_step_point = 1;
-      if ( past_step_point_last == 0 ) {
-        n_scans++;
-        if ( (n_scans - N_scans*CommandData.pointing_mode.Nsteps) == N_scans) {
-          bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
-	        n_scans); 
-          n_scans = 0; 
-        }
-	      if ( (n_scans % N_scans) == 0 ) { // step in elevation
-          bprintf(info, "stepping in el at left turn around");
-          axes_mode.el_mode = AXIS_POSITION;
-          CommandData.pointing_mode.el_mode = P_EL_GOTO;
-          axes_mode.el_dest = el_start + (n_scans/N_scans)
-                              *CommandData.pointing_mode.del;
-          /*
-          bprintf(info, 
-          "n_scans = %d, N_scans = %d, el_start = %f, del = %f, dest = %f",
-          n_scans, N_scans, el_start, CommandData.pointing_mode.del, 
-          axes_mode.el_dest);
-          */
-          axes_mode.el_vel = 0.0;
-        }
+      if ( ((n_scans+1) - N_scans*CommandData.pointing_mode.Nsteps) == N_scans) {
+        //bprintf(info, "Number of scans completed: %d. Resetting elevation\n",
+        //n_scans); 
+        n_scans = 0; 
       }
-      past_step_point_last = past_step_point;
+      if ( ((n_scans+1) % N_scans) == 0 ) { // step in elevation
+        //bprintf(info, "stepping in el at left turn around");
+        axes_mode.el_mode = AXIS_POSITION;
+        CommandData.pointing_mode.el_mode = P_EL_GOTO;
+        axes_mode.el_dest = el_start + ((n_scans+1)/N_scans)
+                            *CommandData.pointing_mode.del;
+        /*
+        bprintf(info, 
+        "n_scans = %d, N_scans = %d, el_start = %f, del = %f, dest = %f",
+        n_scans, N_scans, el_start, CommandData.pointing_mode.del, 
+        axes_mode.el_dest);
+        */
+        axes_mode.el_vel = 0.0;
+      }
     }
     
     axes_mode.az_vel = v_az;
@@ -1439,12 +1436,8 @@ static void DoSineMode(double centre, double ampl, double el_start)
   /* case 5: in left turn-around zone */ 
   } else if ( az <= left+turn_around ) {
     scan_region = SCAN_L_TURN;
-    scan_region_last = scan_region;
     CommandData.pointing_mode.is_turn_around = 1;
       
-    past_step_point = 0; // reset for the next half-scan
-    past_step_point_last = past_step_point;
-
     v_az = last_v + az_accel_dv;
     
     if (v_az > V_AZ_MIN) {
@@ -1464,12 +1457,8 @@ static void DoSineMode(double centre, double ampl, double el_start)
   /* case 6: in right turn-around zone */   
   } else if (az >= right-turn_around) {
     scan_region = SCAN_R_TURN;
-    scan_region_last = scan_region;
     CommandData.pointing_mode.is_turn_around = 1;
     
-    past_step_point = 0; // reset for the next half-scan
-    past_step_point_last = past_step_point;
-
     v_az = last_v - az_accel_dv;
     
     if (v_az < -V_AZ_MIN) {

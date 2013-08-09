@@ -65,13 +65,10 @@ extern struct chat_buf chatter_buffer;  /* mcp.c */
 
 double round(double x);
 
-/* in actuators.c */
-void StoreActBus(void);
-void SecondaryMirror(void);
-
 /* in hk.c */
 void HouseKeeping();
 void SFTValveMotors();
+void VetoMCE();
 
 /* in auxiliary.c */
 void ChargeController(void);
@@ -1562,6 +1559,9 @@ void UpdateBBCFrame()
       break;
     case 15:
       WatchMCC();
+      break;
+    case 16:
+      VetoMCE();
       break;
     default:
       break;

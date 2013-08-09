@@ -239,6 +239,10 @@ static unsigned short FridgeCycle(int insert, int reset)
     {.filename = LUT_DIR "d_simonchase.lut"}
   };
 
+  static struct LutType rStillLut = 
+  {.filename = LUT_DIR "r_cernox.lut"};
+  
+
   double t_4k, t_cp, t_pump, t_still, t_hsw, v_cnx;
 
   time_t start_time, state_time;
@@ -280,6 +284,7 @@ static unsigned short FridgeCycle(int insert, int reset)
     LutInit(&tPumpLut[insert]);
     LutInit(&tStillLut[insert]);
     LutInit(&tHswLut[insert]);
+    LutInit(&rStillLut);
   }
 
   if (reset) {
@@ -302,6 +307,9 @@ static unsigned short FridgeCycle(int insert, int reset)
 
   /* normalize the cernox readings with bias level */
   t_still /= v_cnx;
+
+  /* put in units of resistance */
+  t_still = LutCal(&rStillLut, t_still);
 
   /* Look-up calibrated temperatures */
   t_4k = LutCal(&t4kLut, t_4k);
@@ -690,3 +698,70 @@ void HouseKeeping()
   WriteData(insertLastHkAddr, CommandData.hk_last, NIOS_QUEUE);
   WriteCalData(vHeatLastHkAddr, CommandData.hk_vheat_last, NIOS_QUEUE);
 }
+/* veto SQUIDs if SSA or FPU temp gets too high */
+void VetoMCE()
+{
+  static int insert = 0;
+  static int firsttime[6] = {1, 1, 1, 1, 1, 1};
+  
+  static struct BiPhaseStruct* tSsaAddr[6];
+  static struct BiPhaseStruct* tFpAddr[6]; 
+  static struct BiPhaseStruct* vCnxAddr[6];
+
+  double v_cnx, t_ssa, t_fp;
+
+  char field[64];
+
+  static struct LutType tSsaLut[6] = {
+    {.filename = LUT_DIR "D84461.lut"},
+    {.filename = LUT_DIR "d_curve10.lut"},
+    {.filename = LUT_DIR "d_curve10.lut"},
+    {.filename = LUT_DIR "dt670.lut"},
+    {.filename = LUT_DIR "d_curve10.lut"},
+    {.filename = LUT_DIR "dt670.lut"}
+  };
+
+  static struct LutType tFpLut[6] = {
+    {.filename = LUT_DIR "X80210.lut"},
+    {.filename = LUT_DIR "X41767.lut"},
+    {.filename = LUT_DIR "X58085.lut"},
+    {.filename = LUT_DIR "X41468.lut"},
+    {.filename = LUT_DIR "blank_fp_x5.lut"},
+    {.filename = LUT_DIR "X41474.lut"}
+  };
+
+  static struct LutType rFpLut = 
+  {.filename = LUT_DIR "r_cernox.lut"};
+
+  if (firsttime[insert]) {
+    firsttime[insert] = 0; 
+    sprintf(field, "vd_ssa_x%1d_hk", insert+1);
+    tSsaAddr[insert] = GetBiPhaseAddr(field);
+    sprintf(field, "vr_fp_x%1d_hk", insert+1);
+    tFpAddr[insert] = GetBiPhaseAddr(field);
+    sprintf(field, "v_cnx_x%1d_hk", insert+1);
+    vCnxAddr[insert] = GetBiPhaseAddr(field);
+
+    LutInit(&tSsaLut[insert]);
+    LutInit(&tFpLut[insert]);
+    LutInit(&rFpLut);
+  }
+
+  /* Read voltages for all the thermometers of interest */
+  t_ssa = ReadCalData(tSsaAddr[insert]);
+  t_fp = ReadCalData(tFpAddr[insert]);
+  v_cnx = ReadCalData(vCnxAddr[insert]);
+
+  /* normalize the cernox readings with bias level */
+  t_fp /= v_cnx;
+
+  /* put in units of resistance */
+  t_fp = LutCal(&rFpLut, t_fp);
+
+  /* Look-up calibrated temperatures */
+  t_ssa = LutCal(&tSsaLut[insert], t_ssa);
+  t_fp = LutCal(&tFpLut[insert], t_fp);
+
+  insert = (insert+1) % 6;
+
+ } 

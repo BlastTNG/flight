@@ -137,8 +137,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
+      CommandData.pointing_mode.mode = P_EL_NONE;
       CommandData.pointing_mode.X = 0;
-      CommandData.pointing_mode.Y = 0;
+      CommandData.pointing_mode.Y = ACSData.enc_mean_el;
       CommandData.pointing_mode.vaz = 0.0;
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
@@ -280,6 +281,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.power.elmot.rst_count = LATCH_PULSE_LEN;
       break;
     case elmot_on:
+      /* make sure we don't turn on the motors when a non-zero pulse rate
+       * is commanded */
+      CommandData.pointing_mode.el_mode = P_EL_NONE;
       CommandData.power.elmot_auto = 0;
       CommandData.power.elmot.rst_count = 0;
       CommandData.power.elmot.set_count = LATCH_PULSE_LEN;
@@ -291,6 +295,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case elmot_auto:
       CommandData.power.elmot_auto = 1;
+      /* make sure we don't turn on the motors when a non-zero pulse rate
+       * is commanded */
+      CommandData.pointing_mode.el_mode = P_EL_NONE;
       break;
     case vtx_off:
       CommandData.power.sc_tx.set_count = 0;
