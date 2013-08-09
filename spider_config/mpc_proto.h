@@ -20,7 +20,7 @@
 #define MPC_PORT     9271
 
 /* the MPC epoch */
-#define MPC_EPOCH 1376000000
+#define MPC_EPOCH 1376000000 /* 2013-08-08 22:13:20 UTC */
 
 /* power states */
 #define MPCPROTO_POWER_NOP -1

@@ -25,9 +25,14 @@
 #include <stdio.h>
 #include <string.h>
 
-/* count clamped detectors */
-static void count_clamped(const int32_t *frame, size_t frame_size,
+int bsa_init = 1;
+static void bias_step_analysis(const uint32_t *frame, size_t frame_size,
     uint32_t frameno)
+{
+}
+
+/* count clamped detectors */
+static void count_clamped(const int32_t *frame, size_t frame_size)
 {
   int i;
   int new_clamp_count = 0;
@@ -65,13 +70,18 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
     bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
 
   /* update frame statistics */
-  if (!stat_veto)
-    update_stats(frame, frame_size, frameno);
+  if (!stat_veto) {
+    if (moda == md_bstep)
+      bias_step_analysis(frame, frame_size, frameno);
+    else {
+      update_stats(frame, frame_size, frameno);
+      bsa_init = 1;
+    }
+  }
 
+  /* clamp counting */
   if (iclamp[0] > 0 || iclamp[1] > 0)
-    count_clamped((const int32_t*)frame, frame_size, frameno);
-  
-  /* do more stuff here, probably */
+    count_clamped((const int32_t*)frame, frame_size);
 }
 
 /* the rambuff callback */
