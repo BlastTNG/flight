@@ -147,7 +147,7 @@ int power_cycle_cmp = 0;
 
 /* ping */
 static int pcm_pong = 0;
-   
+
 /* ret_dat counter */
 int rd_count = 0;
 
@@ -174,7 +174,7 @@ static void set_data_mode_bits(int i, const char *dmb)
   if (data_modes[i][0].first_bit != dmb[0] ||
       data_modes[i][0].num_bits != dmb[1] ||
       (data_modes[i][1].first_bit != dmb[2] ||
-                data_modes[i][1].num_bits != dmb[3]))
+       data_modes[i][1].num_bits != dmb[3]))
   {
     /* sanity checks */
     if (dmb[0] + dmb[1] > 32)
@@ -237,8 +237,8 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
     }
 
     if (new_bolo_filt_len != memory.bolo_filt_len || 
-	new_bolo_filt_freq != memory.bolo_filt_freq ||
-	new_bolo_filt_bw != memory.bolo_filt_bw) {
+        new_bolo_filt_freq != memory.bolo_filt_freq ||
+        new_bolo_filt_bw != memory.bolo_filt_bw) {
       memory.bolo_filt_len = new_bolo_filt_len;
       memory.bolo_filt_freq = new_bolo_filt_freq;
       memory.bolo_filt_bw = new_bolo_filt_bw;
@@ -254,7 +254,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       memory.divisor = divisor;
       mem_dirty = 1;
     }
-    
+
     if (new_row_len > 1 && new_data_rate > 1 && new_num_rows > 1) {
       row_len = new_row_len;
       num_rows = new_num_rows;
@@ -277,7 +277,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       need_send = 1;
       power_cycle_mce = 0;
     }
-    
+
     /* force send */
     if (pcm_pong) {
       pong = need_send = 1;
@@ -416,7 +416,7 @@ static int nmce_from_ip(void)
   if (ioctl(inet_sock, SIOCGIFADDR, &ifr))
     bprintf(fatal, "SIOCGIFADDR failed!");
   close(inet_sock);
-  
+
   /* Flight computers have addresses of the form 192.168.1.24x for x in [1,6].
    * IPv4 addresses are encoded as a big endian number in s_addr, so we check
    * whether the lower three bytes are 0x01a8c0 (= 1.168.192) and then use the
@@ -447,14 +447,14 @@ static int16_t coadd(uint32_t datum1, uint16_t datum2)
 
   /* extract the subfield(s) */
   rec[0] = (uint16_t)(datum1 >> (data_modes[cur_dm][0].first_bit -
-          data_modes[cur_dm][1].num_bits)) & mask[0];
+        data_modes[cur_dm][1].num_bits)) & mask[0];
   rec[1] = (uint16_t)(datum1 >> data_modes[cur_dm][1].first_bit) & mask[1];
 
   /* if divisor is two, we have to add two frames together */
   if (memory.divisor != 1) {
     /* split dataum2, if neccessary */
     uint16_t old_rec[2];
-    
+
     old_rec[0] = (data_modes[cur_dm][0].coadd_how != coadd_first)
       ? datum2 & mask[0] : 0;
 
@@ -1016,7 +1016,7 @@ case off: cfg_set_int(name, 0, 0); break
                 ev->ivalues[3]); break
 #define CFG_SETSCS(name) \
   case name: \
-    cfg_set_int(#name "_start", 0, ev->ivalues[1]); \
+cfg_set_int(#name "_start", 0, ev->ivalues[1]); \
 cfg_set_int(#name "_count", 0, ev->ivalues[2]); \
 cfg_set_int(#name "_step",  0, ev->ivalues[3]); \
 break
@@ -1293,13 +1293,13 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         stat_reset = 1;
         break;
       case bolo_stat_gains:
-	for (ii =0; ii < N_STAT_TYPES; ii++ ) {
-	  memory.bolo_stat_gain[ii] = 1. / log(1. + ev->rvalues[2*ii + 1]);
-	  memory.bolo_stat_offset[ii] = ev->ivalues[2*ii + 2];
-	}
-	mem_dirty = 1;
-	stat_reset = 1;
-	break;
+        for (ii =0; ii < N_STAT_TYPES; ii++ ) {
+          memory.bolo_stat_gain[ii] = 1. / log(1. + ev->rvalues[2*ii + 1]);
+          memory.bolo_stat_offset[ii] = ev->ivalues[2*ii + 2];
+        }
+        mem_dirty = 1;
+        stat_reset = 1;
+        break;
       case pick_biases:
         push_blockr("", "", ev->ivalues[1], NULL, 0, 3);
         break;

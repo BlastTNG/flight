@@ -155,7 +155,7 @@ size_t mpc_compose_notice(int divisor, int turnaround, int request_ssdata,
   memcpy(buffer + 8, &bolo_filt_bw, sizeof(double));
   memcpy(buffer + 12, &bolo_filt_len, sizeof(uint16_t));
   buffer[14] = request_ssdata ? 1 : 0,
-  buffer[15] = turnaround ? 1 : 0;
+    buffer[15] = turnaround ? 1 : 0;
   buffer[16] = data_mode;
   buffer[17] = row_len;
   buffer[18] = num_rows;
@@ -636,7 +636,7 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
   bprintf(info, "Noticed by %s/%i", peer, port);
 
   *divisor = data[3];
- 
+
   memcpy(bolo_filt_freq, data + 4, sizeof(double));
   memcpy(bolo_filt_bw, data + 8, sizeof(double));
   memcpy(bolo_filt_len, data + 12, sizeof(uint16_t));
@@ -694,7 +694,7 @@ int mpc_decompose_synop(uint8_t *synop, size_t len, const char *data,
   }
 
   memcpy(synop + nmce * N_STAT_TYPES * NUM_ROW * NUM_COL,
-	 data + 4, N_STAT_TYPES * NUM_ROW * NUM_COL);
+      data + 4, N_STAT_TYPES * NUM_ROW * NUM_COL);
   return 0;
 }
 
@@ -706,7 +706,7 @@ ssize_t mpc_decompose_gpdata(uint16_t *serial, size_t len, const char *data,
     bprintf(err, "Bad GP packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
-  
+
   int16_t nmce = data[3];
   if (nmce < 0 || nmce >= NUM_MCE) {
     bprintf(err, "Unknown MCE %i in synopsis packet from %s/%i", nmce, peer,
