@@ -9,10 +9,13 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+
 #include "blast.h"
 
 #include "slowdl.h"
 #include "tx.h"
+
+#include <math.h>
 
 extern struct SlowDlStruct slowDLList[];
 
