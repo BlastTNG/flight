@@ -42,6 +42,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <glob.h>
+#include <math.h>
 
 /* some timing constants; in the main loop, timing is done using the udp poll
  * timeout.  As a result, all timings are approximate (typically lower bounds)
@@ -209,6 +210,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
   int new_row_len = -1, new_num_rows = -1, new_data_rate = -1, squidveto = 0;
   int divisor;
   uint16_t new_bolo_filt_len;
+  double new_bolo_filt_freq, new_bolo_filt_bw;
 
   if (data_in) {
     /* reply acknowledgement from PCM */
@@ -217,7 +219,7 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
 
     if (mpc_decompose_notice(nmce, &data_mode_bits, &in_turnaround,
           &divisor, &ssreq, &req_dm, &new_row_len, &new_num_rows,
-          &new_data_rate, &squidveto, &bolo_filt_freq, &bolo_filt_bw,
+          &new_data_rate, &squidveto, &new_bolo_filt_freq, &new_bolo_filt_bw,
           &new_bolo_filt_len, len, data_in, peer, port))
       return;
 
@@ -234,7 +236,15 @@ static void pcm_special(size_t len, const char *data_in, const char *peer,
       mem_dirty = 1;
     }
 
-    bolo_filt_len = new_bolo_filt_len;
+    if (new_bolo_filt_len != memory.bolo_filt_len || 
+	new_bolo_filt_freq != memory.bolo_filt_freq ||
+	new_bolo_filt_bw != memory.bolo_filt_bw) {
+      memory.bolo_filt_len = new_bolo_filt_len;
+      memory.bolo_filt_freq = new_bolo_filt_freq;
+      memory.bolo_filt_bw = new_bolo_filt_bw;
+      mem_dirty = 1;
+      stat_reset = 1;
+    }
 
     if (divisor != 1)
       divisor = 2;
@@ -329,7 +339,7 @@ static int check_disk(int n)
 static void send_array_synopsis(void)
 {
   char data[UDP_MAXSIZE];
-  size_t len = mpc_compose_synop(mean, sigma, noise, nmce, data);
+  size_t len = mpc_compose_synop(&bolo_stat_buff[0][0], nmce, data);
   udp_bcast(sock, MCESERV_PORT, len, data, 0);
 }
 
@@ -1031,6 +1041,7 @@ case off: prm_set_int(off, name, ev->ivalues[1], 0, ev->ivalues[2]); break
 static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 {
   uint32_t data[16];
+  int ii;
 
   if (ev->is_multi) {
     switch (ev->command) {
@@ -1281,6 +1292,14 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case bolo_stat_reset:
         stat_reset = 1;
         break;
+      case bolo_stat_gains:
+	for (ii =0; ii < N_STAT_TYPES; ii++ ) {
+	  memory.bolo_stat_gain[ii] = 1. / log(1. + ev->rvalues[2*ii + 1]);
+	  memory.bolo_stat_offset[ii] = ev->ivalues[2*ii + 2];
+	}
+	mem_dirty = 1;
+	stat_reset = 1;
+	break;
       case pick_biases:
         push_blockr("", "", ev->ivalues[1], NULL, 0, 3);
         break;
@@ -1404,6 +1423,13 @@ static int read_mem(void)
     memory.dmesg_lookback = btime;
     memory.bias_kick_val = 2 /* Volts */ * 32767 / 5;
     memory.bias_kick_wait = 30; /* seconds */
+    memory.bolo_filt_len = 5000;
+    memory.bolo_filt_freq = 5.0;
+    memory.bolo_filt_bw = 1.2;
+    for (d = 0; d < N_STAT_TYPES; d++) {
+      memory.bolo_stat_gain[d] = 1. / log( 1.03);
+      memory.bolo_stat_offset[d] = 0;
+    }
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 

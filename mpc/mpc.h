@@ -53,6 +53,11 @@ struct memory_t {
   time_t dmesg_lookback;
   int bias_kick_val;
   int bias_kick_wait;
+  double bolo_filt_freq;
+  double bolo_filt_bw;
+  int bolo_filt_len;
+  double bolo_stat_gain[N_STAT_TYPES];
+  int bolo_stat_offset[N_STAT_TYPES];
 };
 extern struct memory_t memory;
 extern int mem_dirty;
@@ -76,8 +81,7 @@ extern int running_state;
 extern int kill_special;
 extern uint32_t iclamp[2];
 extern int dt_going;
-extern double bolo_filt_freq, bolo_filt_bw;
-extern int bolo_filt_len;
+extern uint8_t bolo_stat_buff[N_STAT_TYPES][NUM_ROW * NUM_COL];
 extern int drives_checked;
 extern int data_drive[3];
 extern int drive_error[4];
@@ -105,10 +109,6 @@ extern size_t frame_size;
 extern int pb_last;
 extern int fb_top;
 extern uint32_t *frame[FB_SIZE];
-
-extern uint8_t mean[NUM_ROW * NUM_COL];
-extern uint8_t sigma[NUM_ROW * NUM_COL];
-extern uint8_t noise[NUM_ROW * NUM_COL];
 
 /* MCE data mode definitions */
 #define N_DATA_MODES 13

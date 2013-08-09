@@ -6,7 +6,6 @@
 #include <math.h>
 
 #include "tes.h"
-#include "bolo_stats.h"
 
 #define LUT_DIR "/data/etc/spider/"
 #define ETC_DIR "../spider_etc/"

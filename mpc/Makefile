@@ -88,7 +88,7 @@ SPIDER_ONLY=1
 
 EXPT_HEADERS = command_list.h mce_blob.h mce_counts.h mpc_proto.h tes.h
 SHARED_HEADERS = blast.h command_common.h mcp_sched.h mputs.h sys.h udp.h
-LOCAL_HEADERS = expcfg_list.h mpc.h mce_frame.h mce_struct.h bolo_stats.h
+LOCAL_HEADERS = expcfg_list.h mpc.h mce_frame.h mce_struct.h
 
 EXPT_OBJS = command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
@@ -111,7 +111,7 @@ include ../common/Makefile.shared
 
 .PHONY: all
 
-all:: mpc make_stats_etc
+all:: mpc
 
 FORCE:
 

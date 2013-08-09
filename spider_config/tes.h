@@ -32,6 +32,12 @@
 #define N_STAT_TYPES 3
 #define NUM_ARRAY_STAT (NUM_MCE*N_STAT_TYPES*NUM_COL*NUM_ROW)
 
+enum bolo_stat {
+  bs_mean,
+  bs_sigma,
+  bs_noise,
+  bs_step
+};
 
 /* make a 16-bit TES number from a (subrack/column/row) triplet; returns -1 on
  * out-of-range values.

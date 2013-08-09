@@ -1,17 +1,15 @@
+#include <stdio.h>
+#include <math.h>
+
 #include "mpc.h"
 #include "mce_frame.h"
-#include "bolo_stats.h"
 
 /* filter parameters for band-passed data */
-#define FILT_FREQ  5. // center frequency in Hz
-#define FILT_BW    1.2 // bandwidth in fraction of center frequency
-#define FILT_LEN   5  // length of coefficient arrays
-double filt_coeffa[FILT_LEN]; // denominator coefficients
-double filt_coeffb[FILT_LEN]; // numerator coefficients
+#define NUM_FILT_COEFF   5  // length of coefficient arrays
+double filt_coeffa[NUM_FILT_COEFF]; // denominator coefficients
+double filt_coeffb[NUM_FILT_COEFF]; // numerator coefficients
 
-double bolo_filt_freq = 5.;
-double bolo_filt_bw = 1.2;
-int bolo_filt_len = 5000;
+uint8_t bolo_stat_buff[N_STAT_TYPES][NUM_ROW * NUM_COL];
 
 /* buffers */
 uint32_t frame_offset[NUM_ROW * NUM_COL];
@@ -20,14 +18,18 @@ double frame_sum[NUM_ROW * NUM_COL];
 double frame_sum2[NUM_ROW * NUM_COL];
 double frame_fsum2[NUM_ROW * NUM_COL];
 
+int sb_top = 0;
+
 /* extract data from frame (assumes data mode 10!) */
 #define FRAME_EXTRACT(frm,idx) (double)(frm[idx + MCE_HEADER_SIZE] >> 7)
 
-static void set_filter_coeffs(const double fsamp,const double flow, const double fup)
+static void set_filter_coeffs(const double fsamp)
 {
   /* warp frequencies */
-  double oml = tan(M_PI*flow/fsamp);
-  double omu = tan(M_PI*fup/fsamp);
+  double flow = memory.bolo_filt_freq * ( 1. - memory.bolo_filt_bw / 2. );
+  double fup = memory.bolo_filt_freq * ( 1. + memory.bolo_filt_bw / 2. );
+  double oml = tan(M_PI * flow / fsamp);
+  double omu = tan(M_PI * fup / fsamp);
   double om02 = oml*omu;
   double om04 = om02*om02;
   double dom = omu - oml;
@@ -49,9 +51,9 @@ static void set_filter_coeffs(const double fsamp,const double flow, const double
   filt_coeffa[2] = (3. - 2.*om02 - dom2 + 3.*om04)*2./norm;
   filt_coeffa[3] = (-2. + rt2dom - rt2dom*om02 + 2.*om04)*2./norm;
   filt_coeffa[4] = (1. - rt2dom - rt2dom*om02 + 2.*om02 + dom2 + om04)/norm;
-  
-  bprintf(info, "Science band: %.2f Hz to %.2f Hz, at sample rate of %.2f",
-	  flow, fup, fsamp);
+
+  bprintf(info, "Science band: %.2f Hz center, %.1f\% bandwidth, at sample rate of %.2f",
+	  memory.bolo_filt_freq, memory.bolo_filt_bw*100, fsamp);
   bprintf(info, "Science band filter: b = [ %.4f, %.4f, %.4f, %.4f, %.4f ]",
 	  filt_coeffb[0], filt_coeffb[1], filt_coeffb[2], filt_coeffb[3], filt_coeffb[4]);
   bprintf(info, "Science band filter: a = [ %.4f, %.4f, %.4f, %.4f, %.4f ]",
@@ -62,9 +64,9 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
 {
   const struct mas_header *header = (const struct mas_header *)curr_frame;
   
-  int ii, jj, fb_idx[FILT_LEN];
+  int ii, jj, sb_idx[NUM_FILT_COEFF], fb_idx[NUM_FILT_COEFF];
   size_t ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
-  double datum, datum2, fdatum, dmean, dsigma, dnoise;
+  double datum, datum2, fdatum, dmean, dsigma, dnoise, sgn;
   
   double fsamp = 50.e6 / (double)(header->row_len 
 				  * header->data_rate 
@@ -74,11 +76,20 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   
   if (stat_reset == 1) {
     /* recalculate filter coefficients */
-    set_filter_coeffs((const double) fsamp,
-		      (const double) (FILT_FREQ*(1. - FILT_BW/2.)),
-		      (const double) (FILT_FREQ*(1. + FILT_BW/2.)));
+    set_filter_coeffs((const double) fsamp);
+
+    bprintf(info, "Statistics: buffer %d", memory.bolo_filt_len);
+    bprintf(info, "Statistics: gains M = %.2f, S = %.2f, N = %.2f",
+	    memory.bolo_stat_gain[bs_mean],
+	    memory.bolo_stat_gain[bs_sigma],
+	    memory.bolo_stat_gain[bs_noise]);
+    bprintf(info, "Statistics: offsets M = %i, S = %i, N = %i",
+	    memory.bolo_stat_offset[bs_mean],
+	    memory.bolo_stat_offset[bs_sigma],
+	    memory.bolo_stat_offset[bs_noise]);
     
     /* reset buffers */
+    sb_top = 0;
     for (ii = 0; ii < ndata; ii++) {
       frame_sum[ii] = 0;
       frame_sum2[ii] = 0;
@@ -87,9 +98,9 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
       
       for (jj = 0; jj < FB_SIZE; jj++) frame_filt[jj][ii] = 0;
       
-      mean[ii] = (uint8_t) MEAN_OFFSET;
-      sigma[ii] = (uint8_t) SIGMA_OFFSET;
-      noise[ii] = (uint8_t) NOISE_OFFSET;
+      bolo_stat_buff[bs_mean][ii] = 128;
+      bolo_stat_buff[bs_sigma][ii] = 0;
+      bolo_stat_buff[bs_noise][ii] = 0;
     }
     
     stat_reset = 0;
@@ -97,10 +108,13 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   
   /* neighboring buffer elements */
   fb_idx[0] = (fb_top + 1) % FB_SIZE; // oldest element
+  sb_idx[0] = (sb_top + 1) % memory.bolo_filt_len; // oldest element
   // previous elements for filtering
-  for (jj = 1; jj < FILT_LEN; jj++) {
+  for (jj = 1; jj < NUM_FILT_COEFF; jj++) {
     fb_idx[jj] = (fb_top - jj) % FB_SIZE;
     if (fb_idx[jj] < 0) fb_idx[jj] += FB_SIZE;
+    sb_idx[jj] = (sb_top - jj) % memory.bolo_filt_len;
+    if (sb_idx[jj] < 0) sb_idx[jj] += memory.bolo_filt_len;
   }
   
   /* add new values */
@@ -111,29 +125,42 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     
     /* apply filter */
     fdatum = filt_coeffb[0] * datum;
-    for (jj = 1; jj < FILT_LEN; jj++) {
+    for (jj = 1; jj < NUM_FILT_COEFF; jj++) {
       datum2 = (double) (FRAME_EXTRACT(frame[fb_idx[jj]], ii) - frame_offset[ii]);
       fdatum += (filt_coeffb[jj] * datum2 -
-		 filt_coeffa[jj] * frame_filt[fb_idx[jj]][ii]);
+		 filt_coeffa[jj] * frame_filt[sb_idx[jj]][ii]);
     }
     fdatum /= filt_coeffa[0];
     frame_fsum2[ii] += fdatum*fdatum;
-    frame_filt[fb_top][ii] = fdatum;
+    frame_filt[sb_top][ii] = fdatum;
     
-    /* update statistics */
-    dmean = frame_sum[ii] / (double)(FB_SIZE);
-    mean[ii] = (uint8_t) RESCALE_MEAN(dmean);
-    dsigma = sqrt((frame_sum2[ii] - dmean * dmean * (double) FB_SIZE )
-		  / (double)(FB_SIZE-1));
-    sigma[ii] = (uint8_t) RESCALE_SIGMA(dsigma);
-    dnoise = sqrt(frame_fsum2[ii] / (double)(FB_SIZE-1) / (double)(FILT_BW*FILT_FREQ));
-    noise[ii] = (uint8_t) RESCALE_NOISE(dnoise);
+    /* update statistics */    
+    dmean = frame_sum[ii] / (double)(memory.bolo_filt_len);
+    dsigma = sqrt((frame_sum2[ii] - dmean * dmean * (double) memory.bolo_filt_len )
+		  / (double)(memory.bolo_filt_len - 1));
+    
+    sgn = (dmean > 0) - (dmean < 0);
+    if ( fabs(dmean) < memory.bolo_stat_offset[bs_mean] ) dmean = memory.bolo_stat_offset[bs_mean];
+    dmean = sgn * memory.bolo_stat_gain[0] * log (1. + fabs(dmean) - memory.bolo_stat_offset[0]);
+    bolo_stat_buff[bs_mean][ii] = dmean + 128;
+    
+    if ( dsigma < memory.bolo_stat_offset[bs_sigma] ) dsigma = memory.bolo_stat_offset[bs_sigma];
+    dsigma = memory.bolo_stat_gain[bs_sigma] * log ( 1. + dsigma - memory.bolo_stat_offset[bs_sigma] );
+    bolo_stat_buff[bs_sigma][ii] = dsigma;
+
+    dnoise = sqrt(frame_fsum2[ii] / (double)(memory.bolo_filt_len - 1) /
+		  (double)(memory.bolo_filt_freq * memory.bolo_filt_bw));
+    if ( dnoise < memory.bolo_stat_offset[bs_noise] ) dnoise = memory.bolo_stat_offset[bs_noise];
+    dnoise = memory.bolo_stat_gain[bs_noise] * log ( 1. + dnoise - memory.bolo_stat_offset[bs_noise] );
+    bolo_stat_buff[bs_noise][ii] = dnoise;
     
     /* subtract oldest values from buffers */
     datum = (double) (FRAME_EXTRACT(frame[fb_idx[0]], ii) - frame_offset[ii]);
     frame_sum[ii] -= datum;
     frame_sum2[ii] -= datum * datum;
-    fdatum = frame_filt[fb_idx[0]][ii];
+    fdatum = frame_filt[sb_idx[0]][ii];
     frame_fsum2[ii] -= fdatum * fdatum;
   }
+  
+  sb_top = (sb_top + 1) % memory.bolo_filt_len;
 }

@@ -100,8 +100,7 @@ size_t mpc_compose_param(const uint32_t *stat, int nmce, char *buffer);
 int mpc_decompose_param(uint32_t *stat, size_t len, const char *data,
     const char *peer, int port);
 
-size_t mpc_compose_synop(const uint8_t *mean, const uint8_t *simga,
-    const uint8_t *noise, int nmce, char *buffer);
+size_t mpc_compose_synop(const uint8_t *data, int nmce, char *buffer);
 int mpc_decompose_synop(uint8_t *synop, size_t len, const char *data,
     const char *peer, int port);
 

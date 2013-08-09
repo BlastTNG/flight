@@ -79,27 +79,22 @@ size_t mpc_compose_gpdata(uint16_t type, uint16_t len, const uint16_t *data,
  *
  * MCE array synopsis packet looks like:
  *
- * RRQMmm...ss...nn...
+ * RRQMss...
  *
  * where
  *
  * R = 16-bit protocol revision
  * Q = 'Q' indicating MCE array synopsis
  * M = mce number
- * m = stream of 8-bit means
- * s = stream of 8-bit standard deviations
- * n = stream of 8-bit white noise levels
+ * s = stream of 8-bit statistics
  */
-size_t mpc_compose_synop(const uint8_t *mean, const uint8_t *sigma,
-    const uint8_t *noise, int nmce, char *buffer)
+size_t mpc_compose_synop(const uint8_t *data, int nmce, char *buffer)
 {
   memcpy(buffer, &mpc_proto_rev, sizeof(mpc_proto_rev));
   buffer[2] = 'Q';
   buffer[3] = nmce;
-  memcpy(buffer + 4, mean, NUM_ROW * NUM_COL);
-  memcpy(buffer + 4 + NUM_ROW * NUM_COL, sigma, NUM_ROW * NUM_COL);
-  memcpy(buffer + 4 + 2 * NUM_ROW * NUM_COL, noise, NUM_ROW * NUM_COL);
-  return 4 + 3 * NUM_ROW * NUM_COL;
+  memcpy(buffer + 4, data, N_STAT_TYPES * NUM_ROW * NUM_COL);
+  return 4 + N_STAT_TYPES * NUM_ROW * NUM_COL;
 }
 
 /* compose a MCE parameter packet for transmission to PCM
@@ -686,7 +681,7 @@ int mpc_decompose_param(uint32_t *param, size_t len, const char *data,
 int mpc_decompose_synop(uint8_t *synop, size_t len, const char *data,
     const char *peer, int port)
 {
-  if (len != 4 + 3 * NUM_COL * NUM_ROW) {
+  if (len != 4 + N_STAT_TYPES * NUM_COL * NUM_ROW) {
     bprintf(err, "Bad synopsis packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
@@ -698,7 +693,8 @@ int mpc_decompose_synop(uint8_t *synop, size_t len, const char *data,
     return -1;
   }
 
-  memcpy(synop + nmce * 3 * NUM_ROW * NUM_COL, data + 4, 3 * NUM_ROW * NUM_COL);
+  memcpy(synop + nmce * N_STAT_TYPES * NUM_ROW * NUM_COL,
+	 data + 4, N_STAT_TYPES * NUM_ROW * NUM_COL);
   return 0;
 }
 
