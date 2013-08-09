@@ -762,6 +762,15 @@ void VetoMCE()
   t_ssa = LutCal(&tSsaLut[insert], t_ssa);
   t_fp = LutCal(&tFpLut[insert], t_fp);
 
+  if ( (t_fp > 8.0) || (t_ssa > 8.0) ) {
+    // do something;
+  }
+
+  if ( (t_fp < 7.0) || (t_ssa < 7.0) ) {
+    // do something else;
+  }
+    
+
   insert = (insert+1) % 6;
 
  } 

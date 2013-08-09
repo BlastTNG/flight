@@ -137,7 +137,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.ele_gain.manual_pulses = 0;
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
-      CommandData.pointing_mode.mode = P_EL_NONE;
+      CommandData.pointing_mode.el_mode = P_EL_NONE;
       CommandData.pointing_mode.X = 0;
       CommandData.pointing_mode.Y = ACSData.enc_mean_el;
       CommandData.pointing_mode.vaz = 0.0;
