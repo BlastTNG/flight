@@ -17,7 +17,7 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#undef SHOW_WRITE_PARAM
+#define SHOW_WRITE_PARAM
 
 #include "mpc_proto.h"
 #include "mpc.h"
@@ -78,18 +78,7 @@ uint32_t iclamp[2];
 /* veto stat computation */
 int stat_veto = 0;
 
-/* wait with kill detection */
-static int check_wait(double wait)
-{
-  double i;
-
-  for (i = 0; i < wait; i += 0.01) {
-    if (kill_special)
-      return 1;
-    usleep(10000);
-  }
-  return kill_special ? 1 : 0;
-}
+static int pop_block(void);
 
 /* Write a (parital) block to the MCE; returns non-zero on error */
 /* I guess MAS needs to be able to write to it's input data buffer...? */
@@ -617,6 +606,34 @@ static int acq_err(void *user_data, int sync_num, int err,
   return 1; /* stop this one */
 }
 
+/* send a command, if pending */
+static void deblock(void)
+{
+  if ((state & st_active) && (state & st_mcecom)) {
+    /* pop a block from the queue, if there are any,
+     * otherwise, poll the temperature, if requested */
+    if (!pop_block() && mas_get_temp) {
+      fetch_param("cc", "box_temp", 0, (uint32_t*)&box_temp, 1);
+      mas_get_temp = 0;
+    }
+  }
+}
+
+/* wait with kill detection */
+static int check_wait(double wait)
+{
+  double i;
+
+  for (i = 0; i < wait; i += 0.01) {
+    if (kill_special)
+      return 1;
+    
+    deblock();
+    usleep(10000);
+  }
+  return kill_special ? 1 : 0;
+}
+
 /* restart the servo */
 static int flux_loop_init(double wait)
 {
@@ -855,7 +872,6 @@ static void pick_biases(int iv_num)
     }
 }
 
-/* run and archive an iv curve */
 /* returns non-zero if something was popped */
 static int pop_block(void)
 {
@@ -1601,14 +1617,7 @@ void *mas_data(void *dummy)
     }
     data_tk = dt_idle;
 
-    if ((state & st_active) && (state & st_mcecom)) {
-    /* pop a block from the queue, if there are any,
-     * otherwise, poll the temperature, if requested */
-      if (!pop_block() && mas_get_temp) {
-        fetch_param("cc", "box_temp", 0, (uint32_t*)&box_temp, 1);
-        mas_get_temp = 0;
-      }
-    }
+    deblock();
 
     /* check for acq termination */
     if (acq_going && acq_stopped) {
