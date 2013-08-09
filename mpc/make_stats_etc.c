@@ -68,17 +68,39 @@ int main() {
   fprintf(fid, "bolo_stats_mplex_0 BIT bolo_stats_mplex 0 8\n"
 	  "bolo_stats_mplex_1 BIT bolo_stats_mplex 8 8\n");
   
-  for (i=0; i<NUM_ARRAY_STAT; i+=2) {
-    fprintf(fid,"%s MPLEX bolo_stats_mplex_0 bolo_stats_index %d %d\n"
-	    "%s LINTERP %s %s%s\n"
-	    "%s MPLEX bolo_stats_mplex_1 bolo_stats_index %d %d\n"
-	    "%s LINTERP %s %s%s\n",
-	    GetArrayFieldName(i,0), i, NUM_ARRAY_STAT,
-	    GetArrayFieldName(i,1), GetArrayFieldName(i,0),
-	    LUT_DIR, GetArrayFieldLut(i),
-	    GetArrayFieldName(i+1,0), i, NUM_ARRAY_STAT,
-	    GetArrayFieldName(i+1,1), GetArrayFieldName(i+1,0),
-	    LUT_DIR, GetArrayFieldLut(i+1));
+  i = 0;
+  for (tel = 0; tel < NUM_MCE; tel++) {
+    for (type = 0; type < N_STAT_TYPES; type++) {
+      for (row = 0; row < NUM_ROW; row++) {
+	for (col = 0; col < NUM_COL; col += 2) {
+	  if (type == bs_step) {
+	    fprintf(fid, "%s MPLEX bolo_stats_mplex_0 bolo_stats_index %d %d\n"
+		    "%s LINCOM 1 %s %.6f %.6f \n"
+		    "%s MPLEX bolo_stats_mplex_1 bolo_stats_index %d %d\n"
+		    "%s LINCOM 1 %s %.6f %.6f\n",
+		    GetArrayFieldName(i,0), i, NUM_ARRAY_STAT,
+		    GetArrayFieldName(i,1), GetArrayFieldName(i,0),
+		    5.e5/256, 3.33e5,
+		    GetArrayFieldName(i+1,0), i, NUM_ARRAY_STAT,
+		    GetArrayFieldName(i+1,1), GetArrayFieldName(i+1,0),
+		    5.e5/256, 3.33e5
+		    );
+	  } else {
+	    fprintf(fid,"%s MPLEX bolo_stats_mplex_0 bolo_stats_index %d %d\n"
+		    "%s LINTERP %s %s%s\n"
+		    "%s MPLEX bolo_stats_mplex_1 bolo_stats_index %d %d\n"
+		    "%s LINTERP %s %s%s\n",
+		    GetArrayFieldName(i,0), i, NUM_ARRAY_STAT,
+		    GetArrayFieldName(i,1), GetArrayFieldName(i,0),
+		    LUT_DIR, GetArrayFieldLut(i),
+		    GetArrayFieldName(i+1,0), i, NUM_ARRAY_STAT,
+		    GetArrayFieldName(i+1,1), GetArrayFieldName(i+1,0),
+		    LUT_DIR, GetArrayFieldLut(i+1));
+	  }
+	  i += 2;
+	}
+      }
+    }
   }
   fclose(fid);
 
