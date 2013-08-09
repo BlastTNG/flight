@@ -797,31 +797,31 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   /*************** Bias  *****************/
   {COMMAND(hk_ampl_cernox), "Set cernox bias amplitude", GR_BIAS, 2,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Amplitude (V)", 0.0, 5.0, 'f', ""}
     }
   },
   {COMMAND(hk_ampl_ntd), "Set NTD bias amplitude", GR_BIAS, 2,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Amplitude (V)", 0.0, 5.0, 'f', ""}
     }
   },
   {COMMAND(hk_phase_cernox), "Set cernox bias phase", GR_BIAS, 2,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
   {COMMAND(hk_phase_ntd), "Set NTD bias phase", GR_BIAS, 2,
     {
-      {"Insert", 1, HK_MAX, 'i', "INSERT_LAST_HK", {just_mce_names}},
+      {CHOOSE_INSERT_NO_ALL},
       {"Phase (degrees)", 0.0, 360.0, 'f', ""}
     }
   },
   {COMMAND(hk_phase_step_cernox), "Sweep Cernox bias phase", GR_BIAS, 5,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Phase start (degrees)", 0.0, 360.0, 'f', ""},
       {"Phase end (degrees)",   0.0, 360.0, 'f', ""},
       {"Number of steps", 0, USHRT_MAX, 'i', ""},
@@ -830,7 +830,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(hk_phase_step_ntd), "Sweep NTD bias phase", GR_BIAS, 5,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Phase start (degrees)", 0.0, 360.0, 'f', ""},
       {"Phase end (degrees)",   0.0, 360.0, 'f', ""},
       {"Number of steps", 0, USHRT_MAX, 'i', ""},
@@ -849,131 +849,131 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     "Turn on the pump (charcoal) heater. Disable autocycle or servo",
     GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_pump_heat_off),
     "Turn off the pump (charcoal) heater. Disable autocycle or servo", 
     GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_heat_switch_on),
     "Turn on the heat switch heater. Disable autocycle", GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_heat_switch_off),
     "Turn off the heat switch heater. Disable autocycle", GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_fphi_heat_on), "Turn on the high-current focal plane heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_fphi_heat_off), "Turn off the high-current focal plane heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_fphi_heat_pulse), "Pulse the high-current focal plane heater",
       GR_CRYO_HEAT, 2,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Length (# of ~200ms slow frames)", 0, USHRT_MAX, 'i', "1"},
     }
   },
   {COMMAND(hk_ssa_heat_on), "Turn on the SSA heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_ssa_heat_off), "Turn off the SSA heater",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_htr1_heat_on), "Turn on heater 1",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_htr1_heat_off), "Turn off heater 1",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_htr2_heat_on), "Turn on heater 2",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_htr2_heat_off), "Turn off heater 2",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_htr3_heat_on), "Turn on heater 3",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_htr3_heat_off), "Turn off heater 3",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_ring_heat_set), "Set 300mK ring heater voltage", GR_CRYO_HEAT, 2,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},
     }
   },
   {COMMAND(hk_fplo_heat_set), "Set low-current focal plane heater voltage",
       GR_CRYO_HEAT, 2,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Level (V)", -5.0, 5.0, 'f', "V_HEAT_LAST_HK"},
     }
   },
   {COMMAND(hk_auto_cycle_on), "Enable autocycling of He3 fridge",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_auto_cycle_off), "Disable autocycling of He3 fridge",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_fridge_cycle), "Force an He3 fridge cycle. Enable autocycle",
       GR_CRYO_HEAT, 1,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM}
     }
   },
   {COMMAND(hk_pump_servo_on), 
       "Enable pump servo mode: maintain pump temperature between setpoints.",
       GR_CRYO_HEAT, 3,
     {
-      {"Insert", 0, HK_MAX, 'i', "INSERT_LAST_HK", {mce_names}},
+      {CHOOSE_INSERT_PARAM},
       {"Set Low (K):",           0.0, 50.0,     'f', ""},
       {"Set High (K):",          0.0, 50.0,     'f', ""},
     }
