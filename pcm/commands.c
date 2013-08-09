@@ -2437,6 +2437,7 @@ void InitCommandData()
   CommandData.mcc_wdog = 0;
 
   CommandData.squidveto = 0;
+  CommandData.thermveto = 0;
   CommandData.mce_power = 0; /* assume things are on */
 
   CommandData.bolo_filt_freq = 5.;

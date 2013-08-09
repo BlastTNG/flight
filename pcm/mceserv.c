@@ -133,8 +133,8 @@ static void ForwardNotices(int sock)
   static double last_bolo_filt_bw;
   static int last_bolo_filt_len;
 
-  /* 0 = X2 & X3; 1 = X4 & X6; 2 = X1 & X5 */
-  const uint8_t veto_bits[3] = { 0x6, 0x28, 0x11 };
+  /* Veto bits for MCE banks: 0 = X2 & X3; 1 = X4 & X6; 2 = X1 & X5 */
+  const uint8_t pow_veto_bits[3] = { 0x6, 0x28, 0x11 };
 
   int this_divisor = CommandData.bbcIsExt ? CommandData.bbcExtFrameRate : 1;
   int this_turnaround = CommandData.pointing_mode.is_turn_around;
@@ -151,11 +151,13 @@ static void ForwardNotices(int sock)
 
   /* or with the mce_power-induced veto */
   if (CommandData.mce_power & 1)
-    this_squidveto |= veto_bits[0];
+    this_squidveto |= pow_veto_bits[0];
   if (CommandData.mce_power & 2)
-    this_squidveto |= veto_bits[1];
+    this_squidveto |= pow_veto_bits[1];
   if (CommandData.mce_power & 4)
-    this_squidveto |= veto_bits[2];
+    this_squidveto |= pow_veto_bits[2];
+
+//  this_squidveto |= CommandData.thermveto;
 
   /* edge triggers */
   if ((last_turnaround != -1 && last_turnaround == this_turnaround) &&

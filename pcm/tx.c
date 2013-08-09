@@ -386,6 +386,7 @@ static void WriteMCESlow(void)
   static struct NiosStruct *reportingMPCsAddr;
   static struct NiosStruct *aliveMPCsAddr;
   static struct NiosStruct *squidVetoAddr;
+  static struct NiosStruct *thermVetoAddr;
   static struct NiosStruct *syncVetoAddr;
   static struct NiosStruct *dataModeAddr;
   static struct NiosStruct *dataModeBitsAddr;
@@ -424,6 +425,7 @@ static void WriteMCESlow(void)
     reportingMPCsAddr = GetNiosAddr("reporting_mpcs");
     aliveMPCsAddr = GetNiosAddr("alive_mpcs");
     squidVetoAddr = GetNiosAddr("squid_veto_mpc");
+    thermVetoAddr = GetNiosAddr("therm_veto_mpc");
     syncVetoAddr = GetNiosAddr("sync_veto_mpc");
     dataModeAddr = GetNiosAddr("data_mode_mce");
     dataModeBitsAddr = GetNiosAddr("data_mode_bits");
@@ -467,6 +469,7 @@ static void WriteMCESlow(void)
   WriteData(blobNumAddr, CommandData.mce_blob_num, NIOS_QUEUE);
   WriteData(aliveMPCsAddr, mccs_alive, NIOS_QUEUE);
   WriteData(squidVetoAddr, CommandData.squidveto, NIOS_QUEUE);
+  WriteData(thermVetoAddr, CommandData.thermveto, NIOS_QUEUE);
   WriteData(syncVetoAddr, sync_veto, NIOS_QUEUE);
   /* Don't crash */
   if (CommandData.data_mode >= 0 && CommandData.data_mode <= 12)

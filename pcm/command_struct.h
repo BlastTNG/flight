@@ -496,8 +496,9 @@ struct CommandDataStruct {
   unsigned short mcc_wdog;
 
   /* squid vetoing */
-  uint8_t squidveto;
-  uint8_t mce_power; /* MCE power banks off (will force-veto MCEs) */
+  uint8_t squidveto; /* commandable veto */
+  uint8_t thermveto; /* veto for thermal reasons */
+  uint8_t mce_power; /* MCE power banks are off (will also veto MCEs) */
   
   /* bolo stats control */
   double bolo_filt_freq;

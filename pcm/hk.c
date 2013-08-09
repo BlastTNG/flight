@@ -733,6 +733,8 @@ void VetoMCE()
   static struct LutType rFpLut = 
   {.filename = LUT_DIR "r_cernox.lut"};
 
+  uint16_t bit = 1U << insert;
+
   if (firsttime[insert]) {
     firsttime[insert] = 0; 
     sprintf(field, "vd_ssa_x%1d_hk", insert+1);
@@ -744,7 +746,9 @@ void VetoMCE()
 
     LutInit(&tSsaLut[insert]);
     LutInit(&tFpLut[insert]);
-    LutInit(&rFpLut);
+
+    if (insert == 0)
+      LutInit(&rFpLut);
   }
 
   /* Read voltages for all the thermometers of interest */
@@ -763,14 +767,20 @@ void VetoMCE()
   t_fp = LutCal(&tFpLut[insert], t_fp);
 
   if ( (t_fp > 8.0) || (t_ssa > 8.0) ) {
-    // do something;
+    if (~CommandData.thermveto & bit) {
+      bprintf(info, "Vetoing MCE#%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
+          insert, t_fp, t_ssa);
+      CommandData.thermveto |= bit;
+    }
   }
 
-  if ( (t_fp < 7.0) || (t_ssa < 7.0) ) {
-    // do something else;
+  if ( (t_fp < 7.0) && (t_ssa < 7.0) ) {
+    if (CommandData.thermveto & bit) {
+      bprintf(info, "Unvetoing MCE#%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
+          insert, t_fp, t_ssa);
+      CommandData.thermveto &= ~bit;
+    }
   }
-    
 
   insert = (insert+1) % 6;
-
- } 
+} 

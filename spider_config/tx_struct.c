@@ -1008,6 +1008,8 @@ struct ChannelStruct SlowChannels[] = {
   {"bolo_filt_freq",  'w',  LOOP8, 35, 120./32767., 0.0, 'u', U_NONE},
   {"bolo_filt_bw",    'w',  LOOP8, 36,  10./32767., 0.0, 'u', U_NONE},
   {"bolo_filt_len",   'w',  LOOP8, 37,           1,   0, 'u', U_NONE},
+
+  {"therm_veto_mpc",  'w',  LOOP8, 38,           1,   0, 'u', U_NONE},
   END_OF_CHANNELS
 };
 
