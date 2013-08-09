@@ -174,9 +174,6 @@ static void WriteAux(void)
     statusMCCAddr = GetNiosAddr("status_flc");
     statusMCCReadAddr = ExtractBiPhaseAddr(statusMCCAddr);
 
-    
-    
-    
     tChipFlcAddr = GetNiosAddr("t_chip_flc");
     tMbFlcAddr = GetNiosAddr("t_mb_flc");
     timeAddr = GetNiosAddr("time");
@@ -1511,12 +1508,13 @@ void UpdateBBCFrame()
   WriteChatter(index);
   countHWPEncoder(index);
   cameraTriggers();
-  VetoMCE(index);
+  HouseKeeping(index==9);
 
   WriteAux();
   
   switch (index) {
     case 0:
+      //FIXME WriteAux should be slow. What didn't work?
       //WriteAux();
       break;
     case 1:
@@ -1532,7 +1530,7 @@ void UpdateBBCFrame()
       LockMotor();
       break;
     case 5:
-      ControlGyroHeat();    //TODO made slow. Check that this works
+      ControlGyroHeat();
       break;
     case 6:
       SetGyroMask();
@@ -1544,7 +1542,7 @@ void UpdateBBCFrame()
       WriteMCESlow();
       break;
     case 9:
-      HouseKeeping();
+      //HouseKeeping() slows
       break;
     case 10:
       cameraFields(0);
@@ -1559,9 +1557,15 @@ void UpdateBBCFrame()
       if (!mcp_initial_controls) SyncADC();
       break;
     case 14:
-      SFTValveMotors();
+      //WriteMot() slows
       break;
     case 15:
+      //StoreData() slows
+      break;
+    case 16:
+      SFTValveMotors();
+      break;
+    case 17:
       WatchMCC();
       break;
     default:

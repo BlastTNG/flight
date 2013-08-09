@@ -32,6 +32,19 @@
 #include "command_struct.h"
 #include "pointing_struct.h"
 
+static struct {
+  double ssa;
+  double fp;
+  double pump;
+  double cp;
+  double still;
+  double hsw;
+} insert_temp[6];
+
+static struct {
+  double mt_bot_lo;
+} theo_temp;
+
 /************************************************************************/
 /*                                                                      */
 /* PhaseStep: sweep through phase shifts for the bias channels          */
@@ -126,6 +139,8 @@ static void BiasControl()
     fBiasHkAddr = GetNiosAddr("f_bias_hk");
   }
 
+  // TODO auto increase cernox biases when warm. Commandable?
+
   //otherwise need to change scaling in tx_struct
   for (i=0; i<6; i++) {
     WriteCalData(vCnxAddr[i], CommandData.hk[i].cernox.ampl, NIOS_QUEUE);
@@ -192,13 +207,6 @@ static void BiasControl()
 static unsigned short FridgeCycle(int insert, int reset)
 {
   static int firsttime[6] = {1, 1, 1, 1, 1, 1};
-  static int firsttime_4k = 1;
-  static struct BiPhaseStruct* t4kAddr;
-  static struct BiPhaseStruct* tCpAddr[6];
-  static struct BiPhaseStruct* tPumpAddr[6];
-  static struct BiPhaseStruct* tStillAddr[6];
-  static struct BiPhaseStruct* tHswAddr[6];
-  static struct BiPhaseStruct* vCnxAddr[6];
   static struct NiosStruct*    startCycleWAddr[6];
   static struct BiPhaseStruct* startCycleRAddr[6];
   static struct NiosStruct*    stimeCycleWAddr[6];
@@ -206,45 +214,7 @@ static unsigned short FridgeCycle(int insert, int reset)
   static struct NiosStruct*    stateCycleWAddr[6];
   static struct BiPhaseStruct* stateCycleRAddr[6];
 
-  static struct LutType t4kLut = {.filename = LUT_DIR "D75551.lut"};
-  static struct LutType tCpLut[6] = {
-    {.filename = LUT_DIR "thelma3_cp.lut"},
-    {.filename = LUT_DIR "thelma4_cp.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"}
-  };
-  static struct LutType tPumpLut[6] = {
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"}
-  };
-  static struct LutType tStillLut[6] = {
-    {.filename = LUT_DIR "thelma3_still.lut"},
-    {.filename = LUT_DIR "thelma4_still.lut"},
-    {.filename = LUT_DIR "X42401.lut"},
-    {.filename = LUT_DIR "thelma7_still.lut"},
-    {.filename = LUT_DIR "thelma2_still.lut"},
-    {.filename = LUT_DIR "thelma6_still.lut"}
-  };
-  static struct LutType tHswLut[6] = {
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"}
-  };
-
-  static struct LutType rStillLut = 
-  {.filename = LUT_DIR "r_cernox.lut"};
-  
-
-  double t_4k, t_cp, t_pump, t_still, t_hsw, v_cnx;
+  double t_4k, t_cp, t_pump, t_still, t_hsw;
 
   time_t start_time, state_time;
   unsigned short cycle_state, next_state;
@@ -254,22 +224,6 @@ static unsigned short FridgeCycle(int insert, int reset)
   if (firsttime[insert]) {
     char field[64];
     firsttime[insert] = 0; 
-    if (firsttime_4k) {
-      firsttime_4k = 0;
-      sprintf(field, "vd_mt_botlo_t_hk");
-      t4kAddr = GetBiPhaseAddr(field);
-      LutInit(&t4kLut);
-    }
-    sprintf(field, "vd_cp_x%1d_hk", insert+1);
-    tCpAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "vd_pump_x%1d_hk", insert+1);
-    tPumpAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "vr_still_x%1d_hk", insert+1);
-    tStillAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "vd_hsw_x%1d_hk", insert+1);
-    tHswAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "v_cnx_x%1d_hk", insert+1);
-    vCnxAddr[insert] = GetBiPhaseAddr(field);
     sprintf(field, "time_start_x%1d_cycle", insert+1);
     startCycleWAddr[insert] = GetNiosAddr(field);
     startCycleRAddr[insert] = ExtractBiPhaseAddr(startCycleWAddr[insert]);
@@ -280,12 +234,6 @@ static unsigned short FridgeCycle(int insert, int reset)
     sprintf(field, "time_state_x%1d_cycle", insert+1);
     stimeCycleWAddr[insert] = GetNiosAddr(field);
     stimeCycleRAddr[insert] = ExtractBiPhaseAddr(stimeCycleWAddr[insert]);
-
-    LutInit(&tCpLut[insert]);
-    LutInit(&tPumpLut[insert]);
-    LutInit(&tStillLut[insert]);
-    LutInit(&tHswLut[insert]);
-    LutInit(&rStillLut);
   }
 
   if (reset) {
@@ -298,26 +246,11 @@ static unsigned short FridgeCycle(int insert, int reset)
   state_time = ReadData(stimeCycleRAddr[insert]);
   cycle_state = ReadData(stateCycleRAddr[insert]);
 
-  /* Read voltages for all the thermometers of interest */
-  t_4k = ReadCalData(t4kAddr);
-  t_cp = ReadCalData(tCpAddr[insert]);
-  t_pump = ReadCalData(tPumpAddr[insert]);
-  t_still = ReadCalData(tStillAddr[insert]);
-  t_hsw = ReadCalData(tHswAddr[insert]);
-  v_cnx = ReadCalData(vCnxAddr[insert]);
-
-  /* normalize the cernox readings with bias level */
-  t_still /= v_cnx;
-
-  /* put in units of resistance */
-  t_still = LutCal(&rStillLut, t_still);
-
-  /* Look-up calibrated temperatures */
-  t_4k = LutCal(&t4kLut, t_4k);
-  t_cp = LutCal(&tCpLut[insert], t_cp);
-  t_pump = LutCal(&tPumpLut[insert], t_pump);
-  t_hsw = LutCal(&tHswLut[insert], t_hsw);
-  t_still = LutCal(&tStillLut[insert], t_still);
+  t_4k = theo_temp.mt_bot_lo;
+  t_cp = insert_temp[insert].cp;
+  t_pump = insert_temp[insert].pump;
+  t_still = insert_temp[insert].still;
+  t_hsw = insert_temp[insert].hsw;
 
   /* figure out next_state of finite state machine */
 
@@ -458,36 +391,11 @@ static void PulseHeater(struct PWMStruct *heater) {
 /************************************************************************/
 static void PumpServo(int insert)
 {
-  static int firsttime[6] = {1, 1, 1, 1, 1, 1};
   static int servo_ctr[6] = {0, 0, 0, 0, 0, 0};
-  static struct BiPhaseStruct* tPumpAddr[6];
-  
-  //TODO update these calibrations
-  static struct LutType tPumpLut[6] = {
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"},
-    {.filename = LUT_DIR "d_simonchase.lut"}
-  };
-  
   double t_pump;
   
-  if (firsttime[insert]) {
-    char field[64];
-    firsttime[insert] = 0;
-    sprintf(field, "vd_pump_x%1d_hk", insert+1);
-    tPumpAddr[insert] = GetBiPhaseAddr(field);
-    LutInit(&tPumpLut[insert]);
-  }
-  
   if (servo_ctr[insert] <= 0) {
-    /* Read pump thermometer voltage */
-    t_pump = ReadCalData(tPumpAddr[insert]);
-    
-    /* Look-up calibrated temperature */
-    t_pump = LutCal(&tPumpLut[insert], t_pump);
+    t_pump = insert_temp[insert].pump;
     
     /* figure out next pump heater state */
     if (t_pump > CommandData.hk[insert].pump_servo_high) {
@@ -681,42 +589,22 @@ void SFTValveMotors()
       , NIOS_QUEUE);
 }
 
-void HouseKeeping()
-{
-  static struct NiosStruct* insertLastHkAddr;
-  static struct NiosStruct* vHeatLastHkAddr;
-  static int first_time = 1;
-  if (first_time) {
-    first_time = 0;
-    insertLastHkAddr = GetNiosAddr("insert_last_hk");
-    vHeatLastHkAddr = GetNiosAddr("v_heat_last_hk");
-  }
-
-  BiasControl();
-  PhaseControl();
-  HeatControl();
-
-  WriteData(insertLastHkAddr, CommandData.hk_last, NIOS_QUEUE);
-  WriteCalData(vHeatLastHkAddr, CommandData.hk_vheat_last, NIOS_QUEUE);
-}
-/* veto SQUIDs if SSA or FPU temp gets too high */
-#define VETO_MCE_TIMEOUT 30
 #define T_FP_FIR_LEN 100
-void VetoMCE(int index)
+#define T_STILL_FIR_LEN 100
+
+void GetHKTemperatures(int do_slow, int do_init)
 {
-  static int insert = 0;
-  static int firsttime[6] = {300, 1, 1, 1, 1, 1};
-  
+  static struct BiPhaseStruct* vCnxAddr[6];
   static struct BiPhaseStruct* tSsaAddr[6];
   static struct BiPhaseStruct* tFpAddr[6]; 
-  static struct BiPhaseStruct* vCnxAddr[6];
+  static struct BiPhaseStruct* tPumpAddr[6];
+  static struct BiPhaseStruct* tCpAddr[6];
+  static struct BiPhaseStruct* tStillAddr[6];
+  static struct BiPhaseStruct* tHswAddr[6];
 
-  static double t_fp[6][T_FP_FIR_LEN];
-  static int t_fp_ind[6] = {0, 0, 0, 0, 0, 0};
-
-  double v_cnx, t_ssa, t_fp_mean;
+  static struct BiPhaseStruct* tMtBotLoAddr;
   
-  int i;
+  static struct LutType rFpLut = {.filename = LUT_DIR "r_cernox.lut"};
 
   static struct LutType tSsaLut[6] = {
     {.filename = LUT_DIR "D84461.lut"},
@@ -736,94 +624,246 @@ void VetoMCE(int index)
     {.filename = LUT_DIR "X41474.lut"}
   };
 
-  static struct LutType rFpLut = 
-  {.filename = LUT_DIR "r_cernox.lut"};
+  static struct LutType tPumpLut[6] = {
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"}
+  };
+  static struct LutType tCpLut[6] = {
+    {.filename = LUT_DIR "thelma3_cp.lut"},
+    {.filename = LUT_DIR "thelma4_cp.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"}
+  };
+  static struct LutType tStillLut[6] = {
+    {.filename = LUT_DIR "thelma3_still.lut"},
+    {.filename = LUT_DIR "thelma4_still.lut"},
+    {.filename = LUT_DIR "X42401.lut"},
+    {.filename = LUT_DIR "thelma7_still.lut"},
+    {.filename = LUT_DIR "thelma2_still.lut"},
+    {.filename = LUT_DIR "thelma6_still.lut"}
+  };
+  static struct LutType tHswLut[6] = {
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"},
+    {.filename = LUT_DIR "d_simonchase.lut"}
+  };
 
-  static int timeout[6] = {0, 0, 0, 0, 0, 0};
+  static struct LutType tMtBotLoLut = {.filename = LUT_DIR "D75551.lut"};
 
-  uint16_t bit = 1U << insert;
+  /* FIR filter buffers for cernoxes. TODO remove once warm bias incresased? */
+  static double t_fp_buf[6][T_FP_FIR_LEN];
+  static int t_fp_ind[6] = {0, 0, 0, 0, 0, 0};
+  static double t_still_buf[6][T_STILL_FIR_LEN];
+  static int t_still_ind[6] = {0, 0, 0, 0, 0, 0};
 
-  if (firsttime[insert] > 1) {
-    firsttime[insert]--;
-    return;
-  } else if (firsttime[insert]) {
+  double v_cnx, t_ssa, t_fp, t_pump, t_cp, t_still, t_hsw;
+  double t_mt_bot_lo;
+  
+  int insert, i;
+
+  static int firsttime = 1;   // for setting up FIR buffers, not lookups
+  
+  if (do_init) {
     char field[64];
 
-    sprintf(field, "vd_ssa_x%1d_hk", insert+1);
-    tSsaAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "vr_fp_x%1d_hk", insert+1);
-    tFpAddr[insert] = GetBiPhaseAddr(field);
-    sprintf(field, "v_cnx_x%1d_hk", insert+1);
-    vCnxAddr[insert] = GetBiPhaseAddr(field);
+    for (insert = 0; insert < 6; insert++) {
+      sprintf(field, "v_cnx_x%1d_hk", insert+1);
+      vCnxAddr[insert] = GetBiPhaseAddr(field);
+      sprintf(field, "vd_ssa_x%1d_hk", insert+1);
+      tSsaAddr[insert] = GetBiPhaseAddr(field);
+      sprintf(field, "vr_fp_x%1d_hk", insert+1);
+      tFpAddr[insert] = GetBiPhaseAddr(field);
+      sprintf(field, "vd_pump_x%1d_hk", insert+1);
+      tPumpAddr[insert] = GetBiPhaseAddr(field);
+      sprintf(field, "vd_cp_x%1d_hk", insert+1);
+      tCpAddr[insert] = GetBiPhaseAddr(field);
+      sprintf(field, "vr_still_x%1d_hk", insert+1);
+      tStillAddr[insert] = GetBiPhaseAddr(field);
+      sprintf(field, "vd_hsw_x%1d_hk", insert+1);
+      tHswAddr[insert] = GetBiPhaseAddr(field);
 
-    LutInit(&tSsaLut[insert]);
-    LutInit(&tFpLut[insert]);
+      LutInit(&tSsaLut[insert]);
+      LutInit(&tFpLut[insert]);
+      LutInit(&tPumpLut[insert]);
+      LutInit(&tCpLut[insert]);
+      LutInit(&tStillLut[insert]);
+      LutInit(&tHswLut[insert]);
+    }
 
-    if (insert == 0)
-      LutInit(&rFpLut);
-  }
+    tMtBotLoAddr = GetBiPhaseAddr("vd_mt_botlo_t_hk");
 
-  /* read and calibrate the FP themometer */
-  t_fp[insert][t_fp_ind[insert]] = ReadCalData(tFpAddr[insert]);
-  v_cnx = ReadCalData(vCnxAddr[insert]);
+    LutInit(&rFpLut);
+    LutInit(&tMtBotLoLut);
 
-  /* normalize the cernox readings with bias level */
-  t_fp[insert][t_fp_ind[insert]] /= v_cnx;
-
-  /* initialise FIR */
-  if (firsttime[insert]) {
-    firsttime[insert] = 0; 
-
-    for (i = 0; i < T_FP_FIR_LEN; ++i)
-      t_fp[insert][i] = t_fp[insert][t_fp_ind[insert]];
-  }
-
-  t_fp_ind[insert] = (t_fp_ind[insert] + 1) % T_FP_FIR_LEN;
-
-  /* do the rest of this at the slow rate */
-  if (index != 16)
     return;
+  }
 
-  /* compute the outer mean */
-  t_fp_mean = 0;
-  for (i = 0; i < T_FP_FIR_LEN; ++i)
-    t_fp_mean += t_fp[insert][i];
-  t_fp_mean /= T_FP_FIR_LEN;
+  /******************** fast controls. sample filtered data */
 
-  /* put in units of resistance */
-  t_fp_mean = LutCal(&rFpLut, t_fp_mean);
+  for (insert = 0; insert < 6; insert++) {
+    /* read the FP themometer for filetering */
+    t_fp_buf[insert][t_fp_ind[insert]] = ReadCalData(tFpAddr[insert]);
+    t_still_buf[insert][t_still_ind[insert]] = ReadCalData(tStillAddr[insert]);
 
-  /* Read the SSA thermometer */
-  t_ssa = ReadCalData(tSsaAddr[insert]);
+    /* initialise FIR */
+    if (firsttime) {
+      firsttime = 0; 
+
+      for (i = 0; i < T_FP_FIR_LEN; ++i)
+        t_fp_buf[insert][i] = t_fp_buf[insert][t_fp_ind[insert]];
+
+      for (i = 0; i < T_STILL_FIR_LEN; ++i)
+        t_still_buf[insert][i] = t_still_buf[insert][t_still_ind[insert]];
+    }
+
+    t_fp_ind[insert] = (t_fp_ind[insert] + 1) % T_FP_FIR_LEN;
+    t_still_ind[insert] = (t_still_ind[insert] + 1) % T_STILL_FIR_LEN;
+  }
+
+  /* do everything else slowly */
+  if (!do_slow) return;
+
+  /************ slow controls. do averaging and calibration into real units */
+
+  /* Per-insert temperatures */
+
+  for (insert = 0; insert < 6; insert++) {
+    /* compute the outer mean of filtered data */
+    t_fp = 0;
+    for (i = 0; i < T_FP_FIR_LEN; ++i)
+      t_fp += t_fp_buf[insert][i];
+    t_fp /= T_FP_FIR_LEN;
+
+    t_still = 0;
+    for (i = 0; i < T_STILL_FIR_LEN; ++i)
+      t_still += t_still_buf[insert][i];
+    t_still /= T_STILL_FIR_LEN;
+
+    /* normalize cernoxes by bias voltage, and convert to resistance */
+    v_cnx = ReadCalData(vCnxAddr[insert]);
+    t_fp /= v_cnx;
+    t_fp = LutCal(&rFpLut, t_fp);
+    t_still /= v_cnx;
+    t_still = LutCal(&rFpLut, t_still);
+
+    /* Read the diode voltages */
+    t_ssa = ReadCalData(tSsaAddr[insert]);
+    t_pump = ReadCalData(tPumpAddr[insert]);
+    t_cp = ReadCalData(tCpAddr[insert]);
+    t_hsw = ReadCalData(tHswAddr[insert]);
+    
+    /* Look-up calibrated temperatures */
+    t_ssa = LutCal(&tSsaLut[insert], t_ssa);
+    t_fp = LutCal(&tFpLut[insert], t_fp);
+    t_pump = LutCal(&tPumpLut[insert], t_pump);
+    t_cp = LutCal(&tCpLut[insert], t_cp);
+    t_still = LutCal(&tStillLut[insert], t_still);
+    t_hsw = LutCal(&tHswLut[insert], t_hsw);
+
+    /* store data in global struct */
+    insert_temp[insert].ssa = t_ssa;
+    insert_temp[insert].fp = t_fp;
+    insert_temp[insert].pump = t_pump;
+    insert_temp[insert].cp = t_cp;
+    insert_temp[insert].still = t_still;
+    insert_temp[insert].hsw = t_hsw;
+  }
+
+  /* Theo temperatures */
+
+  /* Read the diode voltages */
+  t_mt_bot_lo = ReadCalData(tMtBotLoAddr);
 
   /* Look-up calibrated temperatures */
-  t_ssa = LutCal(&tSsaLut[insert], t_ssa);
-  t_fp_mean = LutCal(&tFpLut[insert], t_fp_mean);
+  t_mt_bot_lo = LutCal(&tMtBotLoLut, t_mt_bot_lo);
 
-  /* XXX X5 hack */
-  if (insert == 4)
-    t_fp_mean = t_ssa = 0;
+  /* store data in global struct */
+  theo_temp.mt_bot_lo = t_mt_bot_lo;
 
-  if ( ((t_fp_mean > 8.0) || (t_ssa > 8.0)) && !CommandData.thermveto_veto ) {
-    if (~CommandData.thermveto & bit) {
-      bprintf(info, "Vetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
-          insert + 1, t_fp_mean, t_ssa);
-      CommandData.thermveto |= bit;
-      timeout[insert] = VETO_MCE_TIMEOUT;
-    }
-  }
+}
 
-  if (timeout[insert] == 0) {
-    if ( (t_fp_mean < 7.0) && (t_ssa < 7.0) && !CommandData.thermveto_veto ) {
-      if (CommandData.thermveto & bit) {
-        bprintf(info, "Unvetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
-            insert + 1, t_fp_mean, t_ssa);
-        CommandData.thermveto &= ~bit;
+/* veto SQUIDs if SSA or FPU temp gets too high */
+#define VETO_MCE_TIMEOUT 30
+void VetoMCE()
+{
+  int insert;
+  static int timeout[6] = {0, 0, 0, 0, 0, 0};
+  uint16_t bit;
+
+  double t_fp, t_ssa;
+
+  for (insert=0; insert<6; insert++) {
+    bit = 1U << insert;
+
+    /* get temperatures from central resource */
+    t_fp = insert_temp[insert].fp;
+    t_ssa = insert_temp[insert].ssa;
+
+    /* XXX X5 hack */
+    if (insert == 4)
+      t_fp = t_ssa = 0;
+
+    if ( ((t_fp > 8.0) || (t_ssa > 8.0)) && !CommandData.thermveto_veto ) {
+      if (~CommandData.thermveto & bit) {
+        bprintf(info, "Vetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
+            insert + 1, t_fp, t_ssa);
+        CommandData.thermveto |= bit;
         timeout[insert] = VETO_MCE_TIMEOUT;
       }
     }
-  } else
-    timeout[insert]--;
 
-  insert = (insert+1) % 6;
+    if (timeout[insert] == 0) {
+      if ( (t_fp < 7.0) && (t_ssa < 7.0) && !CommandData.thermveto_veto ) {
+        if (CommandData.thermveto & bit) {
+          bprintf(info, "Unvetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
+              insert + 1, t_fp, t_ssa);
+          CommandData.thermveto &= ~bit;
+          timeout[insert] = VETO_MCE_TIMEOUT;
+        }
+      }
+    } else
+      timeout[insert]--;
+  }
 } 
+
+void HouseKeeping(int do_slow)
+{
+  static struct NiosStruct* insertLastHkAddr;
+  static struct NiosStruct* vHeatLastHkAddr;
+  static int first_time = 1;
+
+  // hack. number of fast frames to wait for good data
+  static int startup_timeout = 300;
+
+  if (first_time) {
+    first_time = 0;
+    insertLastHkAddr = GetNiosAddr("insert_last_hk");
+    vHeatLastHkAddr = GetNiosAddr("v_heat_last_hk");
+    GetHKTemperatures(0, 1);
+  }
+
+  if (startup_timeout-- > 0) return;
+
+  GetHKTemperatures(do_slow, 0);
+
+  // do everything else slowly
+  if (!do_slow) return;
+
+  BiasControl();
+  PhaseControl();
+  HeatControl();
+  VetoMCE();
+
+  WriteData(insertLastHkAddr, CommandData.hk_last, NIOS_QUEUE);
+  WriteCalData(vHeatLastHkAddr, CommandData.hk_vheat_last, NIOS_QUEUE);
+}
+
