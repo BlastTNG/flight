@@ -52,7 +52,7 @@ static void set_filter_coeffs(const double fsamp, const double flow, const doubl
   filt_coeffa[4] = (1. - rt2dom - rt2dom*om02 + 2.*om02 + dom2 + om04)/norm;
 
   bprintf(info, "Science band: %.2f Hz center, %.2f Hz bandwidth, at sample rate of %.2f",
-      (flow + fup) / 2., flow - fup, fsamp);
+      (flow + fup) / 2., fup - flow, fsamp);
   bprintf(info, "Science band filter: b = [ %.4f, %.4f, %.4f, %.4f, %.4f ]",
       filt_coeffb[0], filt_coeffb[1], filt_coeffb[2], filt_coeffb[3], filt_coeffb[4]);
   bprintf(info, "Science band filter: a = [ %.4f, %.4f, %.4f, %.4f, %.4f ]",
