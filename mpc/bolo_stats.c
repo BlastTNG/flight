@@ -21,7 +21,7 @@ double frame_fsum2[NUM_ROW * NUM_COL];
 int sb_top = 0;
 
 /* extract data from frame (assumes data mode 10!) */
-#define FRAME_EXTRACT(frm,idx) (double)(frm[idx + MCE_HEADER_SIZE] >> 7)
+#define FRAME_EXTRACT(frm,idx) (double)((frm[idx + MCE_HEADER_SIZE] >> 7) << 3)
 
 static void set_filter_coeffs(const double fsamp, const double flow, const double fup)
 {

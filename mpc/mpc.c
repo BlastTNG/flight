@@ -876,6 +876,7 @@ static void prm_integral_clamp(double v, int a)
         }
       }
       push_block(card, "integral_clamp", 0, &ic, 1);
+      iclamp[r-1] = ic;
     }
   }
 

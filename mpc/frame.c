@@ -101,7 +101,7 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
     }
 
     for (i = 0; i < NUM_ROW * NUM_COL; ++i)
-      von[i] += (frame[i] >> 7);
+      von[i] += ((frame[i] >> 7) << 3);
     n++;
   } else {
     if (is_on) {
@@ -120,7 +120,7 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
     }
 
     for (i = 0; i < NUM_ROW * NUM_COL; ++i)
-      voff[i] += (frame[i] >> 7);
+      voff[i] += ((frame[i] >> 7) << 3);
     n++;
   }
 }
@@ -130,25 +130,35 @@ static void count_clamped(const int32_t *frame, size_t frame_size)
 {
   int i;
   int new_clamp_count = 0;
+  uint32_t data;
+  char gaini[] = "gaini0";
+  char card[] = "rc1";
 
   /* skip header */
   frame += MCE_HEADER_SIZE;
 
   /* rc1 */
   if (iclamp[0] > 0)
-    for (i = 0; i < 8 * NUM_ROW; ++i)
-      if ((frame[i] & DATA_MASK) == iclamp[0] ||
-          ((-frame[i]) & DATA_MASK) == iclamp[0])
+    for (i = 0; i < 8 * NUM_ROW; ++i) {
+      gaini[5] = i / NUM_ROW + '0';
+      read_param(card, gaini, i % NUM_ROW, &data, 1);
+      if ((frame[i] & DATA_MASK) == (iclamp[0] * data)>>12 ||
+          ((-frame[i]) & DATA_MASK) == (iclamp[0] * data)>>12 )
         new_clamp_count++;
+    }
 
   frame += 8 * NUM_ROW;
 
   /* rc2 */
+  card[2] = '2';
   if (iclamp[1] > 0)
-    for (i = 0; i < 8 * NUM_ROW; ++i)
-      if ((frame[i] & DATA_MASK) == iclamp[1] ||
-          ((-frame[i]) & DATA_MASK) == iclamp[1])
+    for (i = 0; i < 8 * NUM_ROW; ++i) {
+      gaini[5] = i / NUM_ROW + '0';
+      read_param(card, gaini, i % NUM_ROW, &data, 1);
+      if ((frame[i] & DATA_MASK) == (iclamp[1] * data)>>12 ||
+	  ((-frame[i]) & DATA_MASK) == (iclamp[1] * data)>>12 )
         new_clamp_count++;
+    }
 
   slow_dat.clamp_count = new_clamp_count;
 }
@@ -172,6 +182,14 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
       bsa_init = 1;
     }
   }
+
+  /* update the clamp values */
+  read_param("rc1", "integral_clamp", 0, iclamp + 0, 1);
+  read_param("rc2", "integral_clamp", 0, iclamp + 1, 1);
+
+  /* these need to be shifted left by 7 bits and then divided by 8 = << 4 */
+  iclamp[0] = (iclamp[0] << 4) & DATA_MASK;
+  iclamp[1] = (iclamp[1] << 4) & DATA_MASK;
 
   /* clamp counting */
   if (iclamp[0] > 0 || iclamp[1] > 0)
