@@ -30,9 +30,7 @@
  */
 
 #include "channels.h"
-#include "command_struct.h"
 #include "bset.h"
-#include "mcp.h"
 #include "tes.h"
 #include "blast.h"
 #include <string.h>
@@ -48,14 +46,15 @@
 static uint8_t bset_serial = 0xF9;
 
 /* currently loaded set in PCM */
-static struct bset curr_bset;
+struct bset curr_bset;
 
 /* set the global sets along with their numbers; also sets CommandData for
  * consistency */
-static void set_bset(const struct bset *local_set, int num)
+static int set_bset(const struct bset *local_set, int num)
 {
   memcpy(&curr_bset, local_set, sizeof(curr_bset));
-  CommandData.bset_num = curr_bset.num = num;
+  curr_bset.num = num;
+  return num;
 }
 
 /* parse bset file number 'i' and store it in 'set'.  Returns -1 on error */
@@ -163,7 +162,7 @@ LOAD_BSET_ERROR:
 /* (re-)load the bset number 'i' into the local buffer -- no change on error;
  * 'init'=1 occurs at start up, when there's no fallback initialised.
  */
-static void change_bset(int j)
+int change_bset(int j)
 {
   static int init = 1;
   struct bset new_bset;
@@ -172,14 +171,13 @@ static void change_bset(int j)
   /* range checking */
   if (i < 0 || i > 255) {
     bprintf(warning, "Ignoring out-of-range BSET index %i\n", i);
-    return;
+    return curr_bset.num;
   }
 
   /* special empty sets -- always succeeds */
   if (i == 0) {
     memset(&new_bset, 0, sizeof(new_bset));
-    set_bset(&new_bset, new_bset_num(0));
-    return;
+    return set_bset(&new_bset, new_bset_num(0));
   }
 
   /* try to load the bset */
@@ -187,19 +185,17 @@ static void change_bset(int j)
     /* no bset loaded -- load the empty default */
     if (init) {
       init = 0;
-      change_bset(new_bset_num(0));
-      return;
+      return change_bset(new_bset_num(0));
     }
 
     bprintf(warning, "Unable to read BSET%03i; still using BSET%03i", i,
         (curr_bset.num & 0xFF));
-    CommandData.bset_num = curr_bset.num;
-    return;
+    return curr_bset.num;
   }
 
   /* update the current bset */
   init = 0;
-  set_bset(&new_bset, j);
+  return set_bset(&new_bset, j);
 }
 
 int new_bset_num(int i)
@@ -209,26 +205,4 @@ int new_bset_num(int i)
     bset_serial++;
 
   return (i | (bset_serial++ << 8));
-}
-
-/* read the current bset num from the data return; if it has changed, update it
- */
-int get_bset(struct bset *local_set)
-{
-  static struct BiPhaseStruct *bsetAddr = NULL;
-  int new_bset;
-
-  if (bsetAddr == NULL)
-    bsetAddr = GetBiPhaseAddr("bset");
-
-  /* check for a bset change */
-  new_bset = slow_data[bsetAddr->index][bsetAddr->channel];
-
-  /* if it's different than the stored address, try loading the new number */
-  if ((new_bset & 0xFF) != (curr_bset.num & 0xFF))
-    change_bset(new_bset);
-
-  /* return the bset */
-  memcpy(local_set, &curr_bset, sizeof(curr_bset));
-  return curr_bset.num;
 }

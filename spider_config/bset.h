@@ -24,7 +24,6 @@
 
 #include "channels.h" /* for FIELD_LEN */
 #include "tes.h" /* for NUM_MCE */
-#include "tx.h" /* for NUM_MCE_FIELDS */
 #include <stdint.h>
 
 /* maximum number of fields in the sets */
@@ -44,8 +43,9 @@ struct bset {
   int8_t im[NUM_MCE][MAX_BSET]; /* per-MCE reverse lookups */
   int empties; /* indicating MCEs for which no data will be returned */
 };
+extern struct bset curr_bset;
 
-int get_bset(struct bset *local_set);
 int new_bset_num(int);
+int change_bset(int j);
 
 #endif

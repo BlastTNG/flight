@@ -24,6 +24,7 @@
 #include "mce_counts.h"
 #include "command_struct.h"
 #include "mpc_proto.h"
+#include "tx.h"
 #include "sync_comms.h"
 #include "udp.h"
 #include "tes.h"
@@ -196,6 +197,28 @@ static void ForwardNotices(int sock)
     last_bolo_filt_len = this_bolo_filt_len;
     request_ssdata = 0;
   }
+}
+
+/* read the current bset num from the data return; if it has changed, update it
+ */
+static int get_bset(struct bset *local_set)
+{
+  static struct BiPhaseStruct *bsetAddr = NULL;
+  int new_bset;
+
+  if (bsetAddr == NULL)
+    bsetAddr = GetBiPhaseAddr("bset");
+
+  /* check for a bset change */
+  new_bset = slow_data[bsetAddr->index][bsetAddr->channel];
+
+  /* if it's different than the stored address, try loading the new number */
+  if ((new_bset & 0xFF) != (curr_bset.num & 0xFF))
+    CommandData.bset_num = change_bset(new_bset);
+
+  /* return the bset */
+  memcpy(local_set, &curr_bset, sizeof(curr_bset));
+  return curr_bset.num;
 }
 
 static void ForwardBSet(int sock)
