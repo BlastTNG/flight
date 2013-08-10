@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <errno.h>
+#include "bset.h"
 #include "mpc.h"
 #include "mce_frame.h"
 #include "mputs.h"
@@ -132,14 +133,16 @@ int dict_compress(unsigned flags)
 int iv_compress()
 {
   uint32_t ivframe[NUM_ROW * NUM_COL];
-  uint32_t ivc[NUM_MCE_FIELDS][FB_SIZE];
-  int ii, jj, count, first_tes, n_tes;
-  uint32_t iv_min[NUM_MCE_FIELDS], iv_max[NUM_MCE_FIELDS];
+  uint32_t ivc[MAX_BSET][FB_SIZE];
+  int ii, jj, count, bset_offset, n_chan;
+  uint32_t iv_min[MAX_BSET], iv_max[MAX_BSET];
   double iv_scale;
   uint16_t bias_start, bias_step, n_bias;
   char bias_file[1024];
   char bias[1024];
   uint16_t ivb[MCE_BLOB_MAX];
+  int iv_bset;
+  int chan[MAX_BSET];
 
   bprintf(info, "reading IV curves from %s", blob_source);
   
@@ -166,17 +169,36 @@ int iv_compress()
       n_bias, bias_start, ivb[n_bias-1]);
   
   /* check TES selection */
-  first_tes = blob_data[0];
-  if (first_tes < 0) first_tes = 0;
-  if (first_tes >= NUM_MCE_FIELDS) first_tes = NUM_MCE_FIELDS - 1;
-  n_tes = blob_data[1];
-  if (n_tes <= 0 || n_tes * (n_bias + 6) > MCE_BLOB_MAX)
-    n_tes = (uint16_t) MCE_BLOB_MAX / (n_bias + 6);
-  if (first_tes + n_tes > NUM_MCE_FIELDS) {
-    bprintf(warning, "Requesting too many channels, truncating");
-    n_tes = NUM_MCE_FIELDS - first_tes;
+  iv_bset = blob_data[0];
+  bset_offset = blob_data[1];
+  count = blob_data[2];
+  if (count > MAX_BSET)
+    count = MAX_BSET;
+
+  /* use current PCM bset on out of range bset */
+  if (iv_bset <= 0 || iv_bset > 255)
+    iv_bset = bset_num & 0xFF;
+
+  /* load the bset -- on error this will make an empty bset */
+  iv_bset = change_bset(iv_bset);
+
+  /* extract a channel list from the bset */
+  n_chan = 0;
+  for (ii = bset_offset; ii < curr_bset.n; ++ii) {
+    if (TES_MCE(curr_bset.v[ii]) == nmce) {
+      chan[n_chan++] = TES_OFFSET(curr_bset.v[ii]);
+      if (n_chan == count)
+        break;
+    }
   }
-  bprintf(info, "Blobbing %d channels", n_tes);
+
+  /* nothing to send */
+  if (n_chan == 0)
+    return -1;
+
+  if (n_chan * (n_bias + 6) > MCE_BLOB_MAX)
+    n_chan = (uint16_t) MCE_BLOB_MAX / (n_bias + 6);
+  bprintf(info, "Blobbing %d channels", n_chan);
   
   /* open the data file */
   FILE *stream = fopen(blob_source, "rb");
@@ -186,7 +208,8 @@ int iv_compress()
   }
   
   count = 0;
-  for (ii = 0; ii < n_tes; ii++) {
+  for (ii = 0; ii < n_chan; ii++) {
+    bprintf(info, "Curve #%i = %i", ii, chan[ii]);
     iv_min[ii] = -1;
     iv_max[ii] = 0;
   }
@@ -213,8 +236,8 @@ int iv_compress()
     }
     
     /* extract desired channels */
-    for (ii = 0; ii < n_tes; ii++) {
-      ivc[ii][count] = (ivframe[tes[first_tes + ii]] >> 7);
+    for (ii = 0; ii < n_chan; ii++) {
+      ivc[ii][count] = (ivframe[chan[ii]] >> 7);
       if (ivc[ii][count] < iv_min[ii]) iv_min[ii] = ivc[ii][count];
       if (ivc[ii][count] > iv_max[ii]) iv_max[ii] = ivc[ii][count];
     }
@@ -230,12 +253,12 @@ int iv_compress()
   /* fill blob */
   blob_size = 0;
   // blob[blob_size++] = n_tes; // number of IV curves expected
-  for (ii = 0; ii < n_tes; ii++) {
+  for (ii = 0; ii < n_chan; ii++) {
     // rescale to 16-bits
     iv_scale = 65536. / (double)(iv_max[ii] - iv_min[ii]);
   
     /* iv header */
-    blob[blob_size++] = tes[first_tes + ii]; // TES ID
+    blob[blob_size++] = tes[ii]; // TES ID
     bprintf(info,"Blobbing IV curve for TES %d",blob[blob_size-1]);
     blob[blob_size++] = bias_start;          // starting bias
     blob[blob_size++] = n_bias;              // number of bias steps

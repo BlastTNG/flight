@@ -26,9 +26,6 @@
 #include "tes.h" /* for NUM_MCE */
 #include <stdint.h>
 
-/* maximum number of fields in the sets */
-#define MAX_FSET 200
-
 /* if this is more than 255, the type of .im in the struct bset must also be
  * changed to accomodate */
 #define MAX_BSET NUM_MCE_FIELDS

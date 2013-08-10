@@ -1669,6 +1669,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {MCE_ACTION_PARAM(3,action_names)}
     }
   },
+
   {COMMAND(mce_wb), "General purpose MCE write block (wb)",
     GR_MPC | MCECMD | CONFIRM, 5,
     {
@@ -1680,11 +1681,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(send_iv_curve), "Send down IV curves", GR_IV | MCECMD, 3,
+  {COMMAND(send_iv_curve), "Send down IV curves", GR_IV | GR_MPC | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"First curve", 0, NUM_MCE_FIELDS - 1, 'i', "NONE"},
-      {"Count", 0, 100, 'i', "NONE"}
+      {"BSet", 1, 255, 'i', "NONE"},
+      {"Offset", 0, NUM_MCE_FIELDS - 1, 'i', "NONE"},
+      {"Count", 0, 20, 'i', "NONE"}
     }
   },
 

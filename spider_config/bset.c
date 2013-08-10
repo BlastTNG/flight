@@ -30,6 +30,7 @@
  */
 
 #include "channels.h"
+#include "bset_dir.h"
 #include "bset.h"
 #include "tes.h"
 #include "blast.h"
@@ -39,8 +40,6 @@
 #include <errno.h>
 #include <stdint.h>
 #include <pthread.h>
-
-#define SET_DIR "/data/etc/spider"
 
 /* serial number for bsets */
 static uint8_t bset_serial = 0xF9;

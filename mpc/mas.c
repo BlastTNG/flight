@@ -1191,10 +1191,6 @@ static int bias_step(void)
   uint32_t two = 2;
   uint32_t step = goal.step;
   uint32_t period, phase;
-  uint32_t bias[16];
-
-  /* store biases */
-  fetch_param("tes", "bias", 0, bias, 16);
 
   /* set up for the internal ramp */
 
@@ -1247,9 +1243,6 @@ static int bias_step(void)
   /* disable the bias offset */
   memset(data, 0, sizeof(uint32_t) * 32);
   mas_write_range("bc2", "enbl_flux_fb_mod", 0, data, 32);
-
-  /* restore biases */
-  write_param("tes", "bias", 0, bias, 16);
 
   return 0;
 }

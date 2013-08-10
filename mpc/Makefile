@@ -88,7 +88,7 @@ SPIDER_ONLY=1
 
 EXPT_HEADERS = bset.h command_list.h mce_blob.h mce_counts.h mpc_proto.h tes.h
 SHARED_HEADERS = blast.h command_common.h mcp_sched.h mputs.h sys.h udp.h
-LOCAL_HEADERS = expcfg_list.h mpc.h mce_frame.h mce_struct.h
+LOCAL_HEADERS = bset_dir.h expcfg_list.h mpc.h mce_frame.h mce_struct.h
 
 EXPT_OBJS = bset.o command_list.o mpc_proto.o
 SHARED_OBJS = blast.o command_common.o mputs.o sys.o udp.o
