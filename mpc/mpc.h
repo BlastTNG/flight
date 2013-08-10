@@ -81,6 +81,7 @@ extern int try_mount;
 extern int running_state;
 extern int kill_special;
 extern uint32_t iclamp[2];
+extern uint32_t igain[NUM_ROW * NUM_COL];
 extern int dt_going;
 extern uint8_t bolo_stat_buff[N_STAT_TYPES][NUM_ROW * NUM_COL];
 extern int drives_checked;
@@ -147,18 +148,19 @@ enum modas {
   md_running, /* normal data acquisition */
   md_bstep, /* bias step (during acquisition) */
   md_bramp, /* stepped bias ramp */
+  md_partial, /* partial load curve */
 };
 #define MODA_STRINGS "none", "tuning", "iv_curve", "lcloop", \
-  "running", "bstep", "bramp"
+  "running", "bstep", "bramp", "partial"
 
 extern enum modas moda;
 
 /* operating goals */
 enum goals { gl_pause, gl_tune, gl_iv, gl_stop, gl_lcloop, gl_cycle,
   /* goals >= gd_acq involve normal data acquisition */
-  gl_acq, gl_bstep, gl_bramp};
+  gl_acq, gl_bstep, gl_bramp, gl_partial};
 #define GOAL_STRINGS "pause", "tune", "iv", "stop", "lcloop", "cycle", \
-  "acq", "bstep", "bramp"
+  "acq", "bstep", "bramp", "partial"
 
 /* goal data */
 struct gl_data {
@@ -230,12 +232,14 @@ void *task(void *dummy);
 enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
-  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop, dt_bstep, dt_bramp, dt_kick
+  dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop, dt_bstep, dt_bramp, dt_kick,
+  dt_partial
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
   "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
-"ivcurve", "stop", "stopmce", "lcloop", "bstep", "bramp", "kick"
+"ivcurve", "stop", "stopmce", "lcloop", "bstep", "bramp", "kick", \
+"partial"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

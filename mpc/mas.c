@@ -1222,7 +1222,7 @@ static int bias_step(void)
    * we calculate the period in multiples of data frame rate so we're
    * synchronous with DVs and can phase shift away from the internal command
    * collision */
-  period = (uint32_t)(50e6 / row_len / num_rows / data_rate * goal.wait / 2
+  period = (uint32_t)(50e6 / row_len / num_rows / data_rate / goal.wait / 2
       + 0.5) * data_rate;
   mas_write_range("cc", "ramp_step_period", 0, &period, 1);
 
@@ -1252,6 +1252,46 @@ static int bias_step(void)
   write_param("tes", "bias", 0, bias, 16);
 
   return 0;
+}
+
+static int partial_iv(void)
+{
+  uint32_t offset;
+  uint32_t biases[16];
+  uint32_t saved_bias[16];
+  int i, r;
+
+  /* remember biases */
+  fetch_param("tes", "bias", 0, saved_bias, 16);
+
+  /* ramp down from offset -- goal.step is always negative */
+  for (offset = goal.start; offset > 0; offset += goal.step)
+  {
+    /* set bias */
+    for (i = 0; i < 16; ++i) {
+      biases[i] = saved_bias[i] + offset;
+      if (biases[i] < 0)
+        biases[i] = saved_bias[i];
+    }
+    write_param("tes", "bias", 0, biases, 16);
+
+    /* wait */
+    if (check_wait(goal.wait)) {
+      r = 1;
+      break;
+    }
+  }
+
+  /* return to normal biases */
+  write_param("tes", "bias", 0, saved_bias, 16);
+
+  if (r == 0 && check_wait(0.1))
+    return 1;
+
+  /* reset servo */
+  flux_loop_init(0);
+
+  return r;
 }
 
 static int bias_ramp(void)
@@ -1430,6 +1470,8 @@ static int check_set_sync(void)
 
 static int reconfig(void)
 {
+  char gaini[] = "gaini0";
+  int c;
   uint32_t u32;
   
   /* check whether the sync box is useable */
@@ -1464,9 +1506,11 @@ static int reconfig(void)
   read_param("rc1", "integral_clamp", 0, iclamp + 0, 1);
   read_param("rc2", "integral_clamp", 0, iclamp + 1, 1);
 
-  /* these need to be shifted left by 7 bits and then divided by 8 = << 4 */
-  iclamp[0] = (iclamp[0] << 4) & DATA_MASK;
-  iclamp[1] = (iclamp[1] << 4) & DATA_MASK;
+  /* update igains */
+  for (c = 0; c < NUM_COL; ++c) {
+    gaini[5] = (c % 8) + '0';
+    read_param((c < 8) ? "rc1" : "rc2", gaini, 0, igain + c * NUM_ROW, NUM_ROW);
+  }
 
   return 0;
 }
@@ -1621,6 +1665,9 @@ void *mas_data(void *dummy)
         break;
       case dt_bramp:
         bias_ramp();
+        break;
+      case dt_partial:
+        partial_iv();
         break;
     }
     data_tk = dt_idle;

@@ -156,6 +156,10 @@ void meta(void)
         if (moda == md_none)
           meta_tk = md_iv_curve << MODA_SHIFT;
         break;
+      case gl_partial:
+        if (moda == md_none)
+          meta_tk = md_partial << MODA_SHIFT;
+        break;
       case gl_lcloop:
         if (moda == md_none)
           meta_tk = md_lcloop << MODA_SHIFT;

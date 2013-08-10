@@ -593,16 +593,13 @@ void *task(void *dummy)
             case md_running: /* nop mode */
               moda = md_running;
               break;
-            case md_tuning:
-              /* auto_setup */
+            case md_tuning: /* auto_setup */
               task_dt_script(dt_autosetup, moda_tk, md_none, 1);
               break;
-            case md_iv_curve:
-              /* iv curve */
+            case md_iv_curve: /* iv curve */
               task_dt_script(dt_ivcurve, moda_tk, md_none, 1);
               break;
-            case md_lcloop:
-              /* lcloop script */
+            case md_lcloop: /* lcloop script */
               task_dt_script(dt_lcloop, moda_tk, md_none, 1);
               break;
             case md_bstep: /* bias step */
@@ -612,6 +609,10 @@ void *task(void *dummy)
             case md_bramp: /* bias ramp */
               if (check_acq == 0)
                 task_dt_script(dt_bramp, moda_tk, md_none, 0);
+              break;
+            case md_partial: /* partial load curve */
+              if (check_acq == 0)
+                task_dt_script(dt_partial, moda_tk, md_none, 0);
               break;
           }
       } else { /* stop task */
@@ -661,6 +662,7 @@ void *task(void *dummy)
               break;
             case md_bstep:
             case md_bramp:
+            case md_partial:
               dt_kill();
               moda = md_none;
               break;

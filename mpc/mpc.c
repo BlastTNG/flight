@@ -733,8 +733,8 @@ static void prm_set_servo(int c, int r, char l, uint32_t v, int a)
 
     if (r == -1) {
       /* vet via dead and frail masks */
-      uint32_t buffer[33];
-      for (i = 0; i < 33; ++i) {
+      uint32_t buffer[NUM_ROW];
+      for (i = 0; i < NUM_ROW; ++i) {
         enum det_types det_type = cfg_det_type(c, i);
         switch (det_type) {
           case det_healthy:
@@ -748,7 +748,9 @@ static void prm_set_servo(int c, int r, char l, uint32_t v, int a)
             break;
         }
       }
-      push_block(rc, param, 0, buffer, 33);
+      push_block(rc, param, 0, buffer, NUM_ROW);
+      if (l == 'i')
+        memcpy(igain + c * NUM_ROW, buffer, sizeof(uint32_t) * NUM_ROW);
     } else 
       push_block(rc, param, r, &v, 1);
   }
@@ -837,7 +839,6 @@ static void prm_integral_clamp(double v, int a)
     char card[] = "rc1";
     for (r = 1; r <= 2; ++r) {
       int max_i = 0;
-      char gaini[] = "gaini0";
 
       card[2] = r + '0';
 
@@ -846,11 +847,9 @@ static void prm_integral_clamp(double v, int a)
       for (c = 0; c < 8; ++c) {
         /* if servo_mode != 3, ignore this column */
         if (servo[c] == 3) {
-          gaini[5] = c + '0';
-          read_param(card, gaini, 0, data, NUM_ROW);
-          for (i = 0; i < NUM_ROW; ++i)
-            if (max_i < data[i])
-              max_i = data[i];
+          for (r = 0; r < NUM_ROW; ++r)
+            if (max_i < igain[c * NUM_ROW + r])
+              max_i = igain[c * NUM_ROW + r];
         }
       }
 
@@ -876,7 +875,7 @@ static void prm_integral_clamp(double v, int a)
         }
       }
       push_block(card, "integral_clamp", 0, &ic, 1);
-      iclamp[r-1] = ic;
+      iclamp[r - 1] = ic;
     }
   }
 
@@ -1091,6 +1090,16 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         new_goal.stop = ev->ivalues[2];
         new_goal.apply = ev->ivalues[3];
         new_goal.goal = gl_tune;
+        change_goal = 1;
+        break;
+      case partial_load_curve:
+        new_goal.start = ev->ivalues[1];
+        new_goal.step = ev->ivalues[2];
+        /* fix sign */
+        if (new_goal.step > 0)
+          new_goal.step = -new_goal.step;
+        new_goal.wait = ev->rvalues[3];
+        new_goal.goal = gl_partial;
         change_goal = 1;
         break;
       case acq_iv_curve:

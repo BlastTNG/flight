@@ -28,10 +28,12 @@
 #define BSA_MAX  166667
 #define BSA_MIN -333333
 
+uint32_t igain[NUM_ROW * NUM_COL];
+
 static double find_delta(int i, double delta, double dv, uint32_t ramp_val,
     int nd)
 {
-  delta = (nd * delta + dv / ramp_val) / (nd + 1);
+  delta = (nd * delta + 8 * dv / ramp_val) / (nd + 1);
 
   /* store */
   if (delta >= BSA_MAX)
@@ -41,7 +43,7 @@ static double find_delta(int i, double delta, double dv, uint32_t ramp_val,
   else
     bolo_stat_buff[bs_step][i] = 256 * (delta - BSA_MIN) / (BSA_MAX - BSA_MIN);
 
-  if (i == 0) bprintf(info, "delta = %g/%u (%i) [%i]", delta,
+  if (i == 100) bprintf(info, "delta = %g/%u (%i) [%i]", delta,
       bolo_stat_buff[bs_step][i], ramp_val, nd + 1);
 
   return delta;
@@ -90,7 +92,7 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
         for (i = 0; i < NUM_ROW * NUM_COL; ++i) {
           voff[i] /= n;
 
-          if (i == 0) bprintf(info, "voff = %g", voff[i]);
+          if (i == 100) bprintf(info, "voff = %g", voff[i]);
 
           delta[i] = find_delta(i, delta[i], von[i] - voff[i], ramp_val, nd);
         }
@@ -101,7 +103,7 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
     }
 
     for (i = 0; i < NUM_ROW * NUM_COL; ++i)
-      von[i] += ((frame[i] >> 7) << 3);
+      von[i] += (frame[i] >> 7);
     n++;
   } else {
     if (is_on) {
@@ -110,7 +112,7 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
         for (i = 0; i < NUM_ROW * NUM_COL; ++i) {
           von[i] /= n;
 
-          if (i == 0) bprintf(info, "von = %g", von[i]);
+          if (i == 100) bprintf(info, "von = %g", von[i]);
 
           delta[i] = find_delta(i, delta[i], von[i] - voff[i], ramp_val, nd);
         }
@@ -120,7 +122,7 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
     }
 
     for (i = 0; i < NUM_ROW * NUM_COL; ++i)
-      voff[i] += ((frame[i] >> 7) << 3);
+      voff[i] += (frame[i] >> 7);
     n++;
   }
 }
@@ -130,9 +132,6 @@ static void count_clamped(const int32_t *frame, size_t frame_size)
 {
   int i;
   int new_clamp_count = 0;
-  uint32_t data;
-  char gaini[] = "gaini0";
-  char card[] = "rc1";
 
   /* skip header */
   frame += MCE_HEADER_SIZE;
@@ -140,24 +139,25 @@ static void count_clamped(const int32_t *frame, size_t frame_size)
   /* rc1 */
   if (iclamp[0] > 0)
     for (i = 0; i < 8 * NUM_ROW; ++i) {
-      gaini[5] = i / NUM_ROW + '0';
-      read_param(card, gaini, i % NUM_ROW, &data, 1);
-      if ((frame[i] & DATA_MASK) == (iclamp[0] * data)>>12 ||
-          ((-frame[i]) & DATA_MASK) == (iclamp[0] * data)>>12 )
+      uint32_t clamp_val = (iclamp[0] * igain[i] / 4096 / 8) & DATA_MASK;
+      if (clamp_val > 0 && ((frame[i] & DATA_MASK) == clamp_val ||
+          ((-frame[i]) & DATA_MASK) == clamp_val))
+      {
         new_clamp_count++;
+      }
     }
 
   frame += 8 * NUM_ROW;
 
   /* rc2 */
-  card[2] = '2';
   if (iclamp[1] > 0)
     for (i = 0; i < 8 * NUM_ROW; ++i) {
-      gaini[5] = i / NUM_ROW + '0';
-      read_param(card, gaini, i % NUM_ROW, &data, 1);
-      if ((frame[i] & DATA_MASK) == (iclamp[1] * data)>>12 ||
-	  ((-frame[i]) & DATA_MASK) == (iclamp[1] * data)>>12 )
+      uint32_t clamp_val = (iclamp[1] * igain[i] / 4096 / 8) & DATA_MASK;
+      if (clamp_val > 0 && ((frame[i] & DATA_MASK) == clamp_val ||
+          ((-frame[i]) & DATA_MASK) == clamp_val))
+      {
         new_clamp_count++;
+      }
     }
 
   slow_dat.clamp_count = new_clamp_count;
@@ -182,14 +182,6 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
       bsa_init = 1;
     }
   }
-
-  /* update the clamp values */
-  read_param("rc1", "integral_clamp", 0, iclamp + 0, 1);
-  read_param("rc2", "integral_clamp", 0, iclamp + 1, 1);
-
-  /* these need to be shifted left by 7 bits and then divided by 8 = << 4 */
-  iclamp[0] = (iclamp[0] << 4) & DATA_MASK;
-  iclamp[1] = (iclamp[1] << 4) & DATA_MASK;
 
   /* clamp counting */
   if (iclamp[0] > 0 || iclamp[1] > 0)
