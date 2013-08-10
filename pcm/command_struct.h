@@ -403,8 +403,7 @@ struct CommandDataStruct {
     double fplo_heat;
     double ring_heat;
 
-    bool auto_cycle_on;
-    bool force_cycle;
+    bool cernox_full_bias;
 
     bool pump_servo_on;
     double pump_servo_low;
@@ -412,7 +411,37 @@ struct CommandDataStruct {
 
     struct RTDStruct cernox;
     struct RTDStruct ntd;
+
+    struct {
+      bool enabled;           // autocycle enabled
+      bool force;             // force a cycle
+
+      // "normal" fridge cycle parameters
+      double t_fp_warm;       // fp temp above which to start a cycle
+      int hsw_timeout;        // time for heat switch transition (s)
+      double t_pump_hi;       // upper limit of pump servo
+      double t_pump_lo;       // lower limit of pump servo
+      double t_fp_cool;       // fp temp below which to stop pump heat
+      int pump_timeout;       // time for pump heating (s)
+      int settle_time;        // wait after heating pump (s)
+      double t_fp_cold;       // temperature below which to call cycle done
+      int cool_timeout;       // timeout on waiting for cold (s)
+    } cycle;
   } hk[6];    //one per insert
+
+  struct {
+    double p_sft_boil;        // power level for boiling off the sft
+    double p_cap_boil;        // power level for boiling off the capillaries
+    double t_empty_sft;       // sft temp above which it's deemed empty
+    int boil_timeout;         // timeout on sft boiling (s)
+    double t_sft_bake;        // sft temperature target during bake
+    double t_cap_bake;        // capillary temperature target during bake
+    double t_fp_hi;           // upper fp temperature limit during bake
+    double t_fp_lo;           // lower fp temperature limit during bake
+    double t_mt_cool;         // min tank temp below which bake is finished
+    int bake_timeout;         // time after which to terminate bake (s)
+    int settle_time;          // time after burp before fridge cycle (s)
+  } burp_cycle;
 
   struct PWMStruct hk_theo_heat[8];
 

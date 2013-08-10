@@ -43,6 +43,8 @@ static struct {
 
 static struct {
   double mt_bot_lo;
+  double sft_bottom;
+  double capillary;
 } theo_temp;
 
 /************************************************************************/
@@ -116,6 +118,14 @@ static void PhaseControl()
 /*   BiasControl: Amplitude of HK DAC signals (bias and heat)           */
 /*                                                                      */
 /************************************************************************/
+
+// FP temperature (K) above which to automatically bias cernoxes to full
+#define T_FP_FULL_BIAS  2.2
+// FP temperature (K) below which to use commnded cernox bias
+#define T_FP_COMM_BIAS  2.0
+// timeout on full bias scale changes (in slow frames)
+#define FULL_BIAS_TIMEOUT 100
+
 static void BiasControl()
 {
   static struct NiosStruct* vCnxAddr[6];
@@ -126,6 +136,10 @@ static void BiasControl()
   int i;
   unsigned short period;
 
+  double t_fp;
+
+  static int full_bias_timeout[6];
+
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -134,20 +148,46 @@ static void BiasControl()
       vCnxAddr[i] = GetNiosAddr(field);
       sprintf(field, "v_ntd_x%1d_hk", i+1);
       vNtdAddr[i] = GetNiosAddr(field);
+      full_bias_timeout[i] = FULL_BIAS_TIMEOUT;
     }
     fBiasCmdHkAddr = GetNiosAddr("f_bias_cmd_hk");
     fBiasHkAddr = GetNiosAddr("f_bias_hk");
   }
 
-  // TODO auto increase cernox biases when warm. Commandable?
-
-  //otherwise need to change scaling in tx_struct
   for (i=0; i<6; i++) {
-    WriteCalData(vCnxAddr[i], CommandData.hk[i].cernox.ampl, NIOS_QUEUE);
+    if (full_bias_timeout[i] <= 0) {
+      t_fp = insert_temp[i].fp;
+      if (i== 4) t_fp = 0;    //FIXME X5 autobias disabled
+      if ( t_fp > T_FP_FULL_BIAS ) {
+        if (!CommandData.hk[i].cernox_full_bias) {
+          bprintf(info, "Biasing X%i cernoxes full (FP:%.1f)\n",
+              i+ 1, t_fp);
+          CommandData.hk[i].cernox_full_bias = 1;
+          full_bias_timeout[i] = FULL_BIAS_TIMEOUT;
+        }
+      }
+
+      if ( t_fp < T_FP_COMM_BIAS ) {
+        if (CommandData.hk[i].cernox_full_bias) {
+          bprintf(info, "Restoring X%i cernox bias (FP:%.1f)\n",
+              i+ 1, t_fp);
+          CommandData.hk[i].cernox_full_bias = 0;
+          full_bias_timeout[i] = FULL_BIAS_TIMEOUT;
+        }
+      }
+    } else full_bias_timeout[i]--;
+
+    if (CommandData.hk[i].cernox_full_bias) {
+      WriteCalData(vCnxAddr[i], 5.0, NIOS_QUEUE);
+    } else {
+      WriteCalData(vCnxAddr[i], CommandData.hk[i].cernox.ampl, NIOS_QUEUE);
+    }
     WriteCalData(vNtdAddr[i], CommandData.hk[i].ntd.ampl, NIOS_QUEUE);
   }
+
   WriteData(fBiasCmdHkAddr, CommandData.hk_bias_freq, NIOS_QUEUE);
-  period = (ACSData.adc_rate)/CommandData.hk_bias_freq; //cast as short important here!
+  //cast as short important for reporting correct period
+  period = (ACSData.adc_rate)/CommandData.hk_bias_freq;
   WriteCalData(fBiasHkAddr, (ACSData.adc_rate)/period, NIOS_QUEUE);
 }
 
@@ -168,184 +208,331 @@ static void BiasControl()
 
 /* wait this many slow frames before starting to run fridge cycle */
 #define FRIDGE_CYCLE_START_WAIT 50
-/* update fridge cycle state once per this many slow frames. At least 6 */
-#define FRIDGE_CYCLE_WAIT       10
 
 /* state machine states */
-#define CRYO_CYCLE_OUT        0x0000
-#define CRYO_CYCLE_COLD       0x0001
-#define CRYO_CYCLE_HSW_OFF    0x0010
-#define CRYO_CYCLE_ON_HEAT    0x0002
-#define CRYO_CYCLE_ON_SETTLE  0x0004
-#define CRYO_CYCLE_COOL       0x0008
+#define CYCLE_COLD        0x0001
+#define CYCLE_SFT_BOIL    0x0002
+#define CYCLE_FP_BAKE     0x0004
+#define CYCLE_BAKE_SETTLE 0x0008
+#define CYCLE_HSW_OFF     0x0010
+#define CYCLE_PUMP_HEAT   0x0020
+#define CYCLE_SETTLE      0x0040
+#define CYCLE_COOL        0x0080
+#define CYCLE_OUT         0x0100
 
-/* auto-cycle timeouts (all in seconds from start of cycle) */
-#define CRYO_CYCLE_HSW_TIMEOUT    (5*60)
-#define CRYO_CYCLE_HEAT_TIMEOUT   (35*60)
-#define CRYO_CYCLE_SET_TIMEOUT    (1.5*60*60)
-#define CRYO_CYCLE_COOL_TIMEOUT   (2*60*60)
+/* extra state bits used for servoing */
+#define CYCLE_PUMP_ON     0x1000
+#define CYCLE_FP_ON       0x2000
+#define CYCLE_STATE_MASK  0x0fff
 
-/* minimum times for each state (in seconds from start of state) */
-#define CRYO_CYCLE_HEAT_MIN       (20*60) // time that pump is above minimum
-#define CRYO_CYCLE_SET_MIN        (5*60) // time between pump off and hsw on
+/* temperature limits for the auto-cycle */
+//TODO is this 4K dry limit reasonable in Theo?
+#define T_4K_MAX      10.000      /* above this, LHe gone. Do nothing */
+//#define T_STILL_MAX   2.500     /* stop heating pump if still gets too hot */
+// TODO do I want to have T_STILL_MAX again? commandable?
 
-/* temperature limits/control points for the auto-cycle */
-#define T_4K_MAX      5.000     /* above this, LHe gone. Do nothing */
-#define T_STILL_HOT   0.600     /* above this, start a cycle */
-#define T_HSW_COLD    10.000    /* don't turn on pump until hsw this cold */
-#define T_STILL_MAX   2.500     /* stop heating pump if still gets too hot */
-#define T_PUMP_MAX    38.000    /* stop heating pump when it gets too hot */
-#define T_PUMP_MIN    30.000    /* above this, pump is hot enough */
-#define T_CP_SET      1.800     /* turn hsw on after settling below this */
-#define T_STILL_COLD  0.350     /* below this, cycle is complete */
-
-#ifndef LUT_DIR
-#define LUT_DIR "/data/etc/spider/"
-#endif
+/* parameters for capillary/SFT servo loop */
+#define SFT_SERVO_DT 30    /* seconds between power updates */
+#define SFT_SERVO_DP 0.05  /* power (W) to add or subtract */
 
 //NB: insert numbered from 0
 static unsigned short FridgeCycle(int insert, int reset)
 {
   static int firsttime[6] = {1, 1, 1, 1, 1, 1};
-  static struct NiosStruct*    startCycleWAddr[6];
-  static struct BiPhaseStruct* startCycleRAddr[6];
   static struct NiosStruct*    stimeCycleWAddr[6];
   static struct BiPhaseStruct* stimeCycleRAddr[6];
   static struct NiosStruct*    stateCycleWAddr[6];
   static struct BiPhaseStruct* stateCycleRAddr[6];
 
-  double t_4k, t_cp, t_pump, t_still, t_hsw;
+  double t_4k, t_pump, t_fp, t_sft, t_capillary;
+  double duty_cycle;
+  static int last_sft_servo_update = 0;
 
-  time_t start_time, state_time;
+  time_t state_elapsed;
   unsigned short cycle_state, next_state;
-  unsigned short heat_pump, heat_hsw;
+  unsigned short heat_pump, heat_hsw, heat_fp;
   unsigned short retval = 0;
 
   if (firsttime[insert]) {
     char field[64];
     firsttime[insert] = 0; 
-    sprintf(field, "time_start_x%1d_cycle", insert+1);
-    startCycleWAddr[insert] = GetNiosAddr(field);
-    startCycleRAddr[insert] = ExtractBiPhaseAddr(startCycleWAddr[insert]);
     sprintf(field, "state_x%1d_cycle", insert+1);
     stateCycleWAddr[insert] = GetNiosAddr(field);
     stateCycleRAddr[insert] = ExtractBiPhaseAddr(stateCycleWAddr[insert]);
-    WriteData(stateCycleWAddr[insert], CRYO_CYCLE_OUT, NIOS_QUEUE);
+    WriteData(stateCycleWAddr[insert], CYCLE_OUT, NIOS_QUEUE);
     sprintf(field, "time_state_x%1d_cycle", insert+1);
     stimeCycleWAddr[insert] = GetNiosAddr(field);
     stimeCycleRAddr[insert] = ExtractBiPhaseAddr(stimeCycleWAddr[insert]);
   }
 
   if (reset) {
-    WriteData(stateCycleWAddr[insert], CRYO_CYCLE_OUT, NIOS_QUEUE);
+    WriteData(stateCycleWAddr[insert], CYCLE_OUT, NIOS_QUEUE);
     return 0;
   }
 
   /* get current cycle state */
-  start_time = ReadData(startCycleRAddr[insert]);
-  state_time = ReadData(stimeCycleRAddr[insert]);
+  state_elapsed = mcp_systime(NULL) - ReadData(stimeCycleRAddr[insert]);
   cycle_state = ReadData(stateCycleRAddr[insert]);
+  next_state = cycle_state;   // stay the same unless told otherwise
 
   t_4k = theo_temp.mt_bot_lo;
-  t_cp = insert_temp[insert].cp;
+  t_sft = theo_temp.sft_bottom;
+  t_capillary = theo_temp.capillary;
   t_pump = insert_temp[insert].pump;
-  t_still = insert_temp[insert].still;
-  t_hsw = insert_temp[insert].hsw;
+  t_fp = insert_temp[insert].fp;
 
-  /* figure out next_state of finite state machine */
+  /****************** figure out next_state of finite state machine */
 
   /* do nothing if out of liquid helium -> OUT */
   if (t_4k > T_4K_MAX) {
-    next_state = CRYO_CYCLE_OUT;
-    if (cycle_state != CRYO_CYCLE_OUT)
-      bprintf(info, "Auto Cycle X%1d: LHe is DRY!\n", insert+1);
+    next_state = CYCLE_OUT;
+    if (cycle_state != CYCLE_OUT)
+      if (insert == 0) {
+        bprintf(info, "Auto Cycle: LHe is DRY!\n");
+      }
   }
-  /* COLD: start a cycle when FP too hot (or forced by command) -> HSW_OFF */
-  else if (cycle_state == CRYO_CYCLE_COLD) {
-    if ((t_still > T_STILL_HOT)
-        || CommandData.hk[insert].force_cycle) {
-      CommandData.hk[insert].force_cycle = 0;
-      WriteData(startCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
-      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
-      next_state = CRYO_CYCLE_HSW_OFF;
-      bprintf(info, "Auto Cycle X%1d: Turning heat switch off.", insert+1);
-    } else next_state = CRYO_CYCLE_COLD;
+
+  /* COLD: start a cycle when FP too hot (or forced by command)
+   * -> SFT_BOIL, with FP_ON to start */
+  else if (cycle_state & CYCLE_COLD) {
+    /* TODO for now, only allow forced cycle starts. Use X1's force flag
+    if ((t_fp > CommandData.hk[insert].cycle.t_fp_warm)
+      || CommandData.hk[insert].cycle.force) {
+      */
+    if (CommandData.hk[insert].cycle.force) {
+      CommandData.hk[insert].cycle.force = 0;
+      next_state = CYCLE_SFT_BOIL | CYCLE_FP_ON;
+      if (insert == 0) {
+        bprintf(info, "Auto Cycle: Starting SFT boil-off.");
+      }
+    }
   }
-  /* HSW_OFF: wait for heat switch to cool -> ON_HEAT */
-  else if (cycle_state == CRYO_CYCLE_HSW_OFF) {
-    if (t_hsw < T_HSW_COLD
-        || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HSW_TIMEOUT)) {
-      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
-      next_state = CRYO_CYCLE_ON_HEAT;
-      bprintf(info, "Auto Cycle X%1d: Turning pump heat on.", insert+1);
-    } else next_state = CRYO_CYCLE_HSW_OFF;
+
+  /* SFT_BOIL: heat SFT and capillaries until sft empty
+   * -> SFT_BAKE, with FP_ON in existing state
+   * Also servos focal planes */
+  else if (cycle_state & CYCLE_SFT_BOIL) {
+    if (t_sft > CommandData.burp_cycle.t_empty_sft
+       || state_elapsed > CommandData.burp_cycle.boil_timeout) {
+      next_state = CYCLE_FP_BAKE | (next_state & CYCLE_FP_ON);
+      last_sft_servo_update = 0;
+      if (insert == 0) {
+        bprintf(info, "Auto Cycle: SFT boiled. Continuing with FP bake.");
+      }
+    }
   }
-  /* ON_HEAT: heat pump until timeout -> COOL
-   *          or if pump or still too hot, let it settle -> ON_SETTLE */
-  else if (cycle_state == CRYO_CYCLE_ON_HEAT) {
-    if (((mcp_systime(NULL) - start_time) > CRYO_CYCLE_HEAT_TIMEOUT) || 
-	t_pump > T_PUMP_MAX) {
-      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
-      next_state = CRYO_CYCLE_ON_SETTLE;
-      bprintf(info, "Auto Cycle X%1d: Turning pump heat off.", insert+1);
-    } else next_state = CRYO_CYCLE_ON_HEAT;
+
+  /* FP_BAKE: servo the FP, SFT, and capillary temperatures until MT cold
+   * -> BAKE_SETTLE */
+  else if (cycle_state & CYCLE_FP_BAKE) {
+    if (t_4k < CommandData.burp_cycle.t_mt_cool
+       || state_elapsed > CommandData.burp_cycle.bake_timeout) {
+      next_state = CYCLE_BAKE_SETTLE;
+      if (insert == 0) {
+        bprintf(info, "Auto Cycle: Bake completed. Settling");
+      }
+    }
   }
-  /* ON_SETTLE: let hot pump settle until timeout, or CP cold enough -> COOL */
-  else if (cycle_state == CRYO_CYCLE_ON_SETTLE) {
-    if (((mcp_systime(NULL) - state_time) > CRYO_CYCLE_SET_MIN) && 
-	(t_cp < T_CP_SET ||
-	 ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_SET_TIMEOUT))) {
-      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
-      next_state = CRYO_CYCLE_COOL;
+
+  /* BAKE_SETTLE: wait for things to settle after baking
+   * -> HSW_OFF */
+  else if (cycle_state & CYCLE_BAKE_SETTLE) {
+    if (state_elapsed > CommandData.burp_cycle.settle_time) {
+      next_state = CYCLE_HSW_OFF;
+      bprintf(info, "Auto Cycle X%1d: Turning HSw off", insert+1);
+    }
+  }
+
+  /* HSW_OFF: wait for heat switch to cool
+   * -> PUMP_HEAT, starting with PUMP_ON */
+  else if (cycle_state & CYCLE_HSW_OFF) {
+    if (state_elapsed > CommandData.hk[insert].cycle.hsw_timeout) {
+      next_state = CYCLE_PUMP_HEAT | CYCLE_PUMP_ON;
+      bprintf(info, "Auto Cycle X%1d: Starting pump servo.", insert+1);
+    }
+  }
+
+  /* PUMP_HEAT: heat pump (servo) until timeout
+   * -> SETTLE */
+  else if (cycle_state & CYCLE_PUMP_HEAT) {
+    if (state_elapsed > CommandData.hk[insert].cycle.pump_timeout
+        || t_fp < CommandData.hk[insert].cycle.t_fp_cool) {
+      next_state = CYCLE_SETTLE;
+      bprintf(info, "Auto Cycle X%1d: Stopping pump servo.", insert+1);
+    }
+  }
+
+  /* SETTLE: let hot pump settle until timeout
+   * -> COOL */
+  else if (cycle_state & CYCLE_SETTLE) {
+    if (state_elapsed > CommandData.hk[insert].cycle.settle_time) {
+      next_state = CYCLE_COOL;
       bprintf(info, "Auto Cycle X%1d: Turning heat switch on.", insert+1);
-    } else next_state = CRYO_CYCLE_ON_SETTLE;
+    }
   }
-  /* COOL: wait until fridge is cold -> COLD */
-  else if (cycle_state == CRYO_CYCLE_COOL) {
-    if ((t_still < T_STILL_COLD)
-        || ((mcp_systime(NULL) - start_time) > CRYO_CYCLE_COOL_TIMEOUT) ) {
-      CommandData.hk[insert].force_cycle = 0; //clear pending cycles
-      WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
-      next_state = CRYO_CYCLE_COLD;
-      bprintf(info, "Auto Cycle X%1d: Fridge is now cold!.", insert+1);
-    } else next_state = CRYO_CYCLE_COOL;
+  /* COOL: wait until fridge is cold
+   * -> COLD */
+  else if (cycle_state & CYCLE_COOL) {
+    if (t_fp < CommandData.hk[insert].cycle.t_fp_cold
+        || state_elapsed > CommandData.hk[insert].cycle.cool_timeout) {
+      CommandData.hk[insert].cycle.force = 0; //clear pending cycles
+      next_state = CYCLE_COLD;
+      bprintf(info, "Auto Cycle X%1d: Complete.", insert+1);
+    }
   }
   /* OUT: do nothing if out of LHe. Unless not, then be cold -> COLD */
-  else if (cycle_state == CRYO_CYCLE_OUT) {
+  else if (cycle_state & CYCLE_OUT) {
     if (t_4k < T_4K_MAX) {
-      next_state = CRYO_CYCLE_COLD;
+      next_state = CYCLE_COLD;
       bprintf(info, "Auto Cycle X%1d: Activated.", insert+1);
-    } else next_state = CRYO_CYCLE_OUT;
+    }
   }
   else {
     bprintf(err, "Auto Cycle X%1d: cycle_state: %i unknown!",
         insert+1, cycle_state);
-    next_state = CRYO_CYCLE_COLD;
+    next_state = CYCLE_COLD;
   }
 
-  WriteData(stateCycleWAddr[insert], next_state, NIOS_QUEUE);
 
-  /* set outputs of finite state machine */
-  if (next_state == CRYO_CYCLE_COLD) {
+  /****************** set outputs of state machine */
+
+  /* servo the FP temperature  in SFT_BOIL and FP_BAKE states*/
+  if (next_state & CYCLE_SFT_BOIL || next_state & CYCLE_FP_BAKE) {
+    if (next_state & CYCLE_FP_ON) {
+      if (t_fp > CommandData.burp_cycle.t_fp_hi) {
+        next_state &= ~CYCLE_FP_ON;
+        bprintf(info, "Auto Cycle X%1d: Turning off FP heat", insert+1);
+      }
+    } else {
+      if (t_fp < CommandData.burp_cycle.t_fp_lo) {
+        next_state |= CYCLE_FP_ON;
+        bprintf(info, "Auto Cycle X%1d: Turning on FP heat", insert+1);
+      }
+    }
+  }
+
+  /* servo the Pump temperature in PUMP_HEAT state */
+  if (next_state & CYCLE_PUMP_HEAT) {
+    if (next_state & CYCLE_PUMP_ON) {
+      if (t_pump > CommandData.hk[insert].cycle.t_pump_hi) {
+        next_state &= ~CYCLE_PUMP_ON;
+        bprintf(info, "Auto Cycle X%1d: Turning off pump heat", insert+1);
+      }
+    } else {
+      if (t_pump < CommandData.hk[insert].cycle.t_pump_lo) {
+        next_state |= CYCLE_PUMP_ON;
+        bprintf(info, "Auto Cycle X%1d: Turning on pump heat", insert+1);
+      }
+    }
+  }
+
+  if (insert == 0) {
+    /* adjust power while servoing during bake */
+    // TODO change this to use thermostat servo like everything else
+    if (next_state & CYCLE_FP_BAKE) {
+      // TODO capillary/sft servo not fully safe against control switches
+      if (state_elapsed / SFT_SERVO_DT > last_sft_servo_update) {
+        last_sft_servo_update = state_elapsed / SFT_SERVO_DT;
+        if (t_capillary > CommandData.burp_cycle.t_cap_bake) {
+          CommandData.burp_cycle.p_cap_boil -= SFT_SERVO_DP;
+        } else {
+          CommandData.burp_cycle.p_cap_boil += SFT_SERVO_DP;
+        }
+        if (t_sft > CommandData.burp_cycle.t_sft_bake) {
+          CommandData.burp_cycle.p_sft_boil -= SFT_SERVO_DP;
+        } else {
+          CommandData.burp_cycle.p_sft_boil += SFT_SERVO_DP;
+        }
+      }
+    }
+
+    /* setup PWN parameters based on desired power */
+    if (next_state & CYCLE_SFT_BOIL || next_state & CYCLE_FP_BAKE) {
+      /* hk_capillary_pulse */
+      duty_cycle = CommandData.burp_cycle.p_cap_boil/HK_CAPILLARY_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
+      CommandData.hk_theo_heat[2].duty_target = ((int)(duty_cycle*256) << 8);
+      CommandData.hk_theo_heat[2].duration = -1;
+      if (!(cycle_state & CYCLE_SFT_BOIL) && !(cycle_state & CYCLE_FP_BAKE)) {
+        /* initialize on start of new state */
+        CommandData.hk_theo_heat[2].duty_avg =
+          CommandData.hk_theo_heat[2].duty_target;
+      }
+
+      /* hk_sft_bottom_pulse */
+      duty_cycle = CommandData.burp_cycle.p_sft_boil/HK_SFT_BOTTOM_PMAX;
+      if (duty_cycle>=1) duty_cycle = 0.999;
+      CommandData.hk_theo_heat[6].duty_target = ((int)(duty_cycle*256) << 8);
+      CommandData.hk_theo_heat[6].duration = -1;
+      if (!(cycle_state & CYCLE_SFT_BOIL) && !(cycle_state & CYCLE_FP_BAKE)) {
+        /* initialize on start of new state */
+        CommandData.hk_theo_heat[6].duty_avg =
+          CommandData.hk_theo_heat[6].duty_target;
+      }
+    } else {
+      /* hk_capillary_heat_off */
+      CommandData.hk_theo_heat[2].state = 0;
+      CommandData.hk_theo_heat[2].duration = 0;
+      CommandData.hk_theo_heat[2].start_time = 0;
+      /* hk_sft_bottom_heat_off */
+      CommandData.hk_theo_heat[6].state = 0;
+      CommandData.hk_theo_heat[6].duration = 0;
+      CommandData.hk_theo_heat[6].start_time = 0;
+    }
+  }
+
+  /* set per-insert outputs of finite state machine */
+  if (next_state & CYCLE_COLD || next_state & CYCLE_OUT) {
+    heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 1;
-  } else if (next_state == CRYO_CYCLE_HSW_OFF) {
+  } else if (next_state & CYCLE_SFT_BOIL) {
+    heat_fp = (next_state & CYCLE_FP_ON) ? 1 : 0;
+    heat_pump = 0;
+    heat_hsw = 1;
+  } else if (next_state & CYCLE_FP_BAKE) {
+    heat_fp = (next_state & CYCLE_FP_ON) ? 1 : 0;
+    heat_pump = 0;
+    heat_hsw = 1;
+  } else if (next_state & CYCLE_BAKE_SETTLE) {
+    heat_fp = 0;
+    heat_pump = 0;
+    heat_hsw = 1;
+  } else if (next_state & CYCLE_HSW_OFF) {
+    heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 0;
-  } else if (next_state == CRYO_CYCLE_ON_HEAT) {
-    heat_pump = 1;
+  } else if (next_state & CYCLE_PUMP_HEAT) {
+    heat_fp = 0;
+    heat_pump = (next_state & CYCLE_PUMP_ON) ? 1 : 0;
     heat_hsw = 0;
-  } else if (next_state == CRYO_CYCLE_ON_SETTLE) {
+  } else if (next_state & CYCLE_SETTLE) {
+    heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 0;
-  } else {    /* CRYO_CYCLE_COOL, CRYO_CYCLE_OUT, or bad state */
+  } else if (next_state & CYCLE_COOL) {
+    heat_fp = 0;
+    heat_pump = 0;
+    heat_hsw = 1;
+  } else {
+    // catch bad state
+    heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 1;
   }
 
   /* set the heater control bits in the output, as needed */
+  if (heat_fp)   retval |= HK_PWM_FPHI;
   if (heat_pump) retval |= HK_PWM_PUMP;
   if (!heat_hsw) retval |= HK_PWM_HSW;  /* inverted logic because normally on */
+
+  /* update state time when state changes */
+  if ((next_state & CYCLE_STATE_MASK) != (cycle_state & CYCLE_STATE_MASK)) {
+    WriteData(stimeCycleWAddr[insert], mcp_systime(NULL), NIOS_QUEUE);
+  }
+
+  /* store next state in bus */
+  WriteData(stateCycleWAddr[insert], next_state, NIOS_QUEUE);
 
   return retval;
 }
@@ -424,7 +611,6 @@ static void HeatControl()
   static struct NiosStruct* heatFploAddr[6];
 
   static int fridge_start_wait = FRIDGE_CYCLE_START_WAIT;
-  static int fridge_wait = 0;
 
   int i;
   unsigned short temp;
@@ -449,14 +635,13 @@ static void HeatControl()
   }	
 
   if (fridge_start_wait > 0) fridge_start_wait--;
-  fridge_wait = (fridge_wait + 1) % FRIDGE_CYCLE_WAIT;
 
   //PWM heaters
   for (i=0; i<6; i++) {
     bits[i] = 0;
-    if (CommandData.hk[i].auto_cycle_on && fridge_start_wait <= 0) {
-      //using auto cycle, get PUMP and HSW bits from fridge control
-      if (fridge_wait == i) bits[i] |= FridgeCycle(i, 0);
+    if (CommandData.hk[i].cycle.enabled && fridge_start_wait <= 0) {
+      //using auto cycle, get PUMP, HSW and FPhi bits from fridge control
+      bits[i] |= FridgeCycle(i, 0);
     } else {
       //not using auto cycle. Command PUMP and HSW manually
       FridgeCycle(i, 1);  //reset cycle state
@@ -465,10 +650,11 @@ static void HeatControl()
       if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
       //NB: heat switch is normally closed, so logic inverted
       if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
-    }
-    if (CommandData.hk[i].fphi_heat) {
-      if (CommandData.hk[i].fphi_heat > 0) CommandData.hk[i].fphi_heat--;
-      bits[i] |= HK_PWM_FPHI;
+      //pulse fphi heater
+      if (CommandData.hk[i].fphi_heat) {
+        if (CommandData.hk[i].fphi_heat > 0) CommandData.hk[i].fphi_heat--;
+        bits[i] |= HK_PWM_FPHI;
+      }
     }
     if (CommandData.hk[i].ssa_heat) bits[i] |= HK_PWM_SSA;
     if (CommandData.hk[i].htr1_heat) bits[i] |= HK_PWM_HTR1;
@@ -589,6 +775,10 @@ void SFTValveMotors()
       , NIOS_QUEUE);
 }
 
+#ifndef LUT_DIR
+#define LUT_DIR "/data/etc/spider/"
+#endif
+
 #define T_FP_FIR_LEN 100
 #define T_STILL_FIR_LEN 100
 
@@ -603,6 +793,8 @@ void GetHKTemperatures(int do_slow, int do_init)
   static struct BiPhaseStruct* tHswAddr[6];
 
   static struct BiPhaseStruct* tMtBotLoAddr;
+  static struct BiPhaseStruct* tSftBottomAddr;
+  static struct BiPhaseStruct* tCapillaryAddr;
   
   static struct LutType rFpLut = {.filename = LUT_DIR "r_cernox.lut"};
 
@@ -658,6 +850,8 @@ void GetHKTemperatures(int do_slow, int do_init)
   };
 
   static struct LutType tMtBotLoLut = {.filename = LUT_DIR "D75551.lut"};
+  static struct LutType tSftBottomLut = {.filename = LUT_DIR "D77239.lut"};
+  static struct LutType tCapillaryLut = {.filename = LUT_DIR "D77232.lut"};
 
   /* FIR filter buffers for cernoxes. TODO remove once warm bias incresased? */
   static double t_fp_buf[6][T_FP_FIR_LEN];
@@ -666,7 +860,7 @@ void GetHKTemperatures(int do_slow, int do_init)
   static int t_still_ind[6] = {0, 0, 0, 0, 0, 0};
 
   double v_cnx, t_ssa, t_fp, t_pump, t_cp, t_still, t_hsw;
-  double t_mt_bot_lo;
+  double t_mt_bot_lo, t_sft_bottom, t_capillary;
   
   int insert, i;
 
@@ -700,9 +894,13 @@ void GetHKTemperatures(int do_slow, int do_init)
     }
 
     tMtBotLoAddr = GetBiPhaseAddr("vd_mt_botlo_t_hk");
+    tSftBottomAddr = GetBiPhaseAddr("vd_sft_bottom_t_hk");
+    tCapillaryAddr = GetBiPhaseAddr("vd_capillary_t_hk");
 
     LutInit(&rFpLut);
     LutInit(&tMtBotLoLut);
+    LutInit(&tSftBottomLut);
+    LutInit(&tCapillaryLut);
 
     return;
   }
@@ -782,12 +980,18 @@ void GetHKTemperatures(int do_slow, int do_init)
 
   /* Read the diode voltages */
   t_mt_bot_lo = ReadCalData(tMtBotLoAddr);
+  t_sft_bottom = ReadCalData(tSftBottomAddr);
+  t_capillary = ReadCalData(tCapillaryAddr);
 
   /* Look-up calibrated temperatures */
   t_mt_bot_lo = LutCal(&tMtBotLoLut, t_mt_bot_lo);
+  t_sft_bottom = LutCal(&tSftBottomLut, t_sft_bottom);
+  t_capillary = LutCal(&tCapillaryLut, t_capillary);
 
   /* store data in global struct */
   theo_temp.mt_bot_lo = t_mt_bot_lo;
+  theo_temp.sft_bottom = t_sft_bottom;
+  theo_temp.capillary = t_capillary;
 
 }
 
@@ -857,6 +1061,22 @@ void HouseKeeping(int do_slow)
 
   // do everything else slowly
   if (!do_slow) return;
+
+#if 0
+  static int print_now = 0;
+  int i;
+
+  if (print_now-- <= 0) {
+    print_now = 150;
+    bprintf(info, "erase me: temperatures\n");
+    for (i=0; i<6; i++) {
+      bprintf(info, "X%1d: fp %.2f, pump %.2f, ssa %.2f\n", i+1,
+          insert_temp[i].fp, insert_temp[i].pump, insert_temp[i].ssa);
+    }
+    bprintf(info, "Theo: mt %.2f sft %.2f capillary %.2f\n",
+        theo_temp.mt_bot_lo, theo_temp.sft_bottom, theo_temp.capillary);
+  }
+#endif
 
   BiasControl();
   PhaseControl();

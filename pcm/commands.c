@@ -1423,11 +1423,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
         CommandData.hk[ivalues[0]-1].pump_heat = 1;
-        CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
+        CommandData.hk[ivalues[0]-1].cycle.enabled = 0;
         CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
       } else for (i=0; i<HK_MAX; i++) {
         CommandData.hk[i].pump_heat = 1;
-        CommandData.hk[i].auto_cycle_on = 0;
+        CommandData.hk[i].cycle.enabled = 0;
         CommandData.hk[i].pump_servo_on = 0;
       }
       break;
@@ -1435,11 +1435,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
         CommandData.hk[ivalues[0]-1].pump_heat = 0;
-        CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
+        CommandData.hk[ivalues[0]-1].cycle.enabled = 0;
         CommandData.hk[ivalues[0]-1].pump_servo_on = 0;
       } else for (i=0; i<HK_MAX; i++) {
         CommandData.hk[i].pump_heat = 0;
-        CommandData.hk[i].auto_cycle_on = 0;
+        CommandData.hk[i].cycle.enabled = 0;
         CommandData.hk[i].pump_servo_on = 0;
       }
       break;
@@ -1447,36 +1447,54 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
         CommandData.hk[ivalues[0]-1].heat_switch = 1;
-        CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
+        CommandData.hk[ivalues[0]-1].cycle.enabled = 0;
       } else for (i=0; i<HK_MAX; i++) {
         CommandData.hk[i].heat_switch = 1;
-        CommandData.hk[i].auto_cycle_on = 0;
+        CommandData.hk[i].cycle.enabled = 0;
       }
       break;
     case hk_heat_switch_off:
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
         CommandData.hk[ivalues[0]-1].heat_switch = 0;
-        CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
+        CommandData.hk[ivalues[0]-1].cycle.enabled = 0;
       } else for (i=0; i<HK_MAX; i++) {
         CommandData.hk[i].heat_switch = 0;
-        CommandData.hk[i].auto_cycle_on = 0;
+        CommandData.hk[i].cycle.enabled = 0;
       }
       break;
     case hk_fphi_heat_on:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = -1;
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].fphi_heat = -1;
+      if (ivalues[0] > 0) {
+        CommandData.hk[ivalues[0]-1].fphi_heat = -1;
+        CommandData.hk[ivalues[0]-1].cycle.enabled = 0;
+      }
+      else for (i=0; i<HK_MAX; i++) {
+        CommandData.hk[i].fphi_heat = -1;
+        CommandData.hk[i].cycle.enabled = 0;
+      }
       break;
     case hk_fphi_heat_off:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = 0;
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].fphi_heat = 0;
+      if (ivalues[0] > 0) {
+        CommandData.hk[ivalues[0]-1].fphi_heat = 0;
+        CommandData.hk[i].cycle.enabled = 0;
+      }
+      else for (i=0; i<HK_MAX; i++) {
+        CommandData.hk[i].fphi_heat = 0;
+        CommandData.hk[i].cycle.enabled = 0;
+      }
       break;
     case hk_fphi_heat_pulse:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].fphi_heat = ivalues[1];
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].fphi_heat = ivalues[1];
+      if (ivalues[0] > 0) {
+        CommandData.hk[ivalues[0]-1].fphi_heat = ivalues[1];
+        CommandData.hk[i].cycle.enabled = 0;
+      }
+      else for (i=0; i<HK_MAX; i++) {
+        CommandData.hk[i].fphi_heat = ivalues[1];
+        CommandData.hk[i].cycle.enabled = 0;
+      }
       break;
     case hk_ssa_heat_on:
       CommandData.hk_last = ivalues[0];
@@ -1533,23 +1551,60 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
     case hk_auto_cycle_on:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].auto_cycle_on = 1;
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].auto_cycle_on = 1;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].cycle.enabled = 1;
+      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].cycle.enabled = 1;
       break;
     case hk_auto_cycle_off:
       CommandData.hk_last = ivalues[0];
-      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].auto_cycle_on = 0;
-      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].auto_cycle_on = 0;
+      if (ivalues[0] > 0) CommandData.hk[ivalues[0]-1].cycle.enabled = 0;
+      else for (i=0; i<HK_MAX; i++) CommandData.hk[i].cycle.enabled = 0;
       break;
     case hk_fridge_cycle:
       CommandData.hk_last = ivalues[0];
       if (ivalues[0] > 0) {
-        CommandData.hk[ivalues[0]-1].auto_cycle_on = 1;
-        CommandData.hk[ivalues[0]-1].force_cycle = 1;
+        CommandData.hk[ivalues[0]-1].cycle.enabled = 1;
+        CommandData.hk[ivalues[0]-1].cycle.force = 1;
       } else for (i=0; i<HK_MAX; i++) {
-        CommandData.hk[i].auto_cycle_on = 1;
-        CommandData.hk[i].force_cycle = 1;
+        CommandData.hk[i].cycle.enabled = 1;
+        CommandData.hk[i].cycle.force = 1;
       }
+      break;
+    case hk_cycle_params:
+      CommandData.hk_last = ivalues[0];
+      if (ivalues[0] > 0) {
+        CommandData.hk[ivalues[0]-1].cycle.t_fp_warm = rvalues[1];
+        CommandData.hk[ivalues[0]-1].cycle.hsw_timeout = ivalues[2];
+        CommandData.hk[ivalues[0]-1].cycle.t_pump_hi = rvalues[3];
+        CommandData.hk[ivalues[0]-1].cycle.t_pump_lo = rvalues[4];
+        CommandData.hk[ivalues[0]-1].cycle.t_fp_cool = rvalues[5];
+        CommandData.hk[ivalues[0]-1].cycle.pump_timeout = ivalues[6];
+        CommandData.hk[ivalues[0]-1].cycle.settle_time = ivalues[7];
+        CommandData.hk[ivalues[0]-1].cycle.t_fp_cold = rvalues[8];
+        CommandData.hk[ivalues[0]-1].cycle.cool_timeout = ivalues[9];
+      } else for (i=0; i<HK_MAX; i++) {
+        CommandData.hk[i].cycle.t_fp_warm = rvalues[1];
+        CommandData.hk[i].cycle.hsw_timeout = ivalues[2];
+        CommandData.hk[i].cycle.t_pump_hi = rvalues[3];
+        CommandData.hk[i].cycle.t_pump_lo = rvalues[4];
+        CommandData.hk[i].cycle.t_fp_cool = rvalues[5];
+        CommandData.hk[i].cycle.pump_timeout = ivalues[6];
+        CommandData.hk[i].cycle.settle_time = ivalues[7];
+        CommandData.hk[i].cycle.t_fp_cold = rvalues[8];
+        CommandData.hk[i].cycle.cool_timeout = ivalues[9];
+      }
+      break;
+    case hk_burp_params:
+      CommandData.burp_cycle.p_sft_boil = rvalues[0];
+      CommandData.burp_cycle.p_cap_boil = rvalues[1];
+      CommandData.burp_cycle.t_empty_sft = rvalues[2];
+      CommandData.burp_cycle.boil_timeout = ivalues[3];
+      CommandData.burp_cycle.t_sft_bake = rvalues[4];
+      CommandData.burp_cycle.t_cap_bake = rvalues[5];
+      CommandData.burp_cycle.t_fp_hi = rvalues[6];
+      CommandData.burp_cycle.t_fp_lo = rvalues[7];
+      CommandData.burp_cycle.t_mt_cool = rvalues[8];
+      CommandData.burp_cycle.bake_timeout = ivalues[9];
+      CommandData.burp_cycle.settle_time = ivalues[10];
       break;
     case hk_pump_servo_on:
       CommandData.hk_last = ivalues[0];
@@ -2044,6 +2099,10 @@ void InitCommandData()
   CommandData.sftv.goal_atm = sft_do_nothing;
   CommandData.sftv.goal_pump = sft_do_nothing;
 
+  for (i=0; i<6; i++) {
+    CommandData.hk[i].cernox_full_bias = 0;
+  }
+
   CommandData.xystage.is_new = 0;
   CommandData.xystage.force_repoll = 0;
 
@@ -2318,8 +2377,18 @@ void InitCommandData()
     CommandData.hk[i].fplo_heat = 0.0;
     CommandData.hk[i].ring_heat = 0.0;
 
-    CommandData.hk[i].auto_cycle_on = 0;
-    CommandData.hk[i].force_cycle = 0;
+    CommandData.hk[i].cycle.enabled = 0;
+    CommandData.hk[i].cycle.force = 0;
+    CommandData.hk[i].cycle.t_fp_warm = 0.6;
+    CommandData.hk[i].cycle.hsw_timeout = 5*60;
+    CommandData.hk[i].cycle.t_pump_hi = 35.0;
+    CommandData.hk[i].cycle.t_pump_lo = 30.0;
+    CommandData.hk[i].cycle.t_fp_cool = 1.8;
+    CommandData.hk[i].cycle.pump_timeout = 10*60*60;
+    CommandData.hk[i].cycle.settle_time = 5*60;
+    CommandData.hk[i].cycle.t_fp_cold = 0.35;
+    CommandData.hk[i].cycle.cool_timeout = 60*60;
+
     CommandData.hk[i].pump_servo_on = 0;
     CommandData.hk[i].pump_servo_low = 20.0;
     CommandData.hk[i].pump_servo_high = 25.0;
@@ -2339,6 +2408,19 @@ void InitCommandData()
     CommandData.hk[i].cernox.phase_dt = 0;
     CommandData.hk[i].cernox.phase_time = 0;
   }
+
+  CommandData.burp_cycle.p_sft_boil = 1.0;
+  CommandData.burp_cycle.p_cap_boil = 0.7;
+  CommandData.burp_cycle.t_empty_sft = 6.0;
+  CommandData.burp_cycle.boil_timeout = 2.5*60*60;
+  CommandData.burp_cycle.t_sft_bake = 20.0;
+  CommandData.burp_cycle.t_cap_bake = 16.0;
+  CommandData.burp_cycle.t_fp_hi = 38.0;
+  CommandData.burp_cycle.t_fp_lo = 33.0;
+  CommandData.burp_cycle.t_mt_cool = 4.5;
+  CommandData.burp_cycle.bake_timeout = 2*60*60;
+  CommandData.burp_cycle.settle_time = 5*60;
+
   for (i=0; i<8; i++) {
     CommandData.hk_theo_heat[i].state = 0;
     CommandData.hk_theo_heat[i].duration = 0;
