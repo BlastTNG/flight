@@ -1688,7 +1688,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(acq_iv_curve), "Acquire IV curves and pick biases",
+  {COMMAND(acq_iv_curve), "Acquire load curves and pick biases",
     GR_IV | GR_MPC | MCECMD, 8,
     {
       {CHOOSE_INSERT_PARAM},
@@ -1699,6 +1699,16 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
       {"Step wait (s)", 0, 10, 'f', "NONE"},
       {"Set biases", 0, 1, 'i', "NONE", {noyes_names}}
+    }
+  },
+
+  {COMMAND(partial_load_curve), "Acquire a partial load curve",
+    GR_IV | GR_MPC | MCECMD, 4,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Start offset", 0, 5000, 'i', "NONE"},
+      {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
+      {"Step wait (s)", 0, 10, 'f', "NONE"}
     }
   },
 
