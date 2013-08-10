@@ -27,7 +27,7 @@ LOCAL_HEADERS = amccommand.h command_struct.h chrgctrl.h drivecommunicator.h \
 # These are needed by both bolotest and flight versions
 SHARED_OBJS = blast.o channels.o command_common.o framefile.o lut.o mputs.o \
 							sip.o udp.o
-EXPT_OBJS = bset.h command_list.o derived.o tx_struct.o
+EXPT_OBJS = bset.o command_list.o derived.o tx_struct.o
 LOCAL_OBJS = commands.o hk.o hwpr.o mcp.o phytron.o tx.o
 
 # These are only needed by the flight version
