@@ -990,7 +990,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Cool timeout (s)",          0,  USHRT_MAX,   'i', ""}
     }
   },
-  {COMMAND(hk_cycle_params), "Set fridge autocycle parameters",
+  {COMMAND(hk_burp_params), "Set fridge autocycle parameters",
       GR_CRYO_HEAT, 11,
     {
       {"SFT boil power (W,max=4.5)",        0.0,       4.5,  'f', ""},
