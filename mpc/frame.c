@@ -43,9 +43,6 @@ static double find_delta(int i, double delta, double dv, uint32_t ramp_val,
   else
     bolo_stat_buff[bs_step][i] = 256 * (delta - BSA_MIN) / (BSA_MAX - BSA_MIN);
 
-  if (i == 100) bprintf(info, "delta = %g/%u (%i) [%i]", delta,
-      bolo_stat_buff[bs_step][i], ramp_val, nd + 1);
-
   return delta;
 }
 
@@ -88,11 +85,8 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
   if (header->ramp_val) {
     if (!is_on) {
       if (n > 0) {
-        bprintf(info, "off = %i", n);
         for (i = 0; i < NUM_ROW * NUM_COL; ++i) {
           voff[i] /= n;
-
-          if (i == 100) bprintf(info, "voff = %g", voff[i]);
 
           delta[i] = find_delta(i, delta[i], von[i] - voff[i], ramp_val, nd);
         }
@@ -108,11 +102,8 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
   } else {
     if (is_on) {
       if (n > 0) {
-        bprintf(info, "on = %i", n);
         for (i = 0; i < NUM_ROW * NUM_COL; ++i) {
           von[i] /= n;
-
-          if (i == 100) bprintf(info, "von = %g", von[i]);
 
           delta[i] = find_delta(i, delta[i], von[i] - voff[i], ramp_val, nd);
         }
@@ -128,6 +119,9 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
 }
 
 /* count clamped detectors */
+static uint32_t cval[NUM_ROW * NUM_COL];
+static int ccount[NUM_ROW * NUM_COL];
+#define MIN_CLAMP_COUNT 500
 static void count_clamped(const int32_t *frame, size_t frame_size)
 {
   int i;
@@ -136,28 +130,15 @@ static void count_clamped(const int32_t *frame, size_t frame_size)
   /* skip header */
   frame += MCE_HEADER_SIZE;
 
-  /* rc1 */
-  if (iclamp[0] > 0)
-    for (i = 0; i < 8 * NUM_ROW; ++i) {
-      uint32_t clamp_val = (iclamp[0] * igain[i] / 4096 / 8) & DATA_MASK;
-      if (clamp_val > 0 && ((frame[i] & DATA_MASK) == clamp_val ||
-          ((-frame[i]) & DATA_MASK) == clamp_val))
-      {
+  for (i = 0; i < NUM_COL * NUM_ROW; ++i)
+    if (cval[i] && frame[i] == cval[i]) {
+      if (ccount[i] > MIN_CLAMP_COUNT)
         new_clamp_count++;
-      }
-    }
-
-  frame += 8 * NUM_ROW;
-
-  /* rc2 */
-  if (iclamp[1] > 0)
-    for (i = 0; i < 8 * NUM_ROW; ++i) {
-      uint32_t clamp_val = (iclamp[1] * igain[i] / 4096 / 8) & DATA_MASK;
-      if (clamp_val > 0 && ((frame[i] & DATA_MASK) == clamp_val ||
-          ((-frame[i]) & DATA_MASK) == clamp_val))
-      {
-        new_clamp_count++;
-      }
+      else
+        ccount[i]++;
+    } else {
+      cval[i] = frame[i];
+      ccount[i] = 0;
     }
 
   slow_dat.clamp_count = new_clamp_count;

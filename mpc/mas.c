@@ -1496,17 +1496,18 @@ static int reconfig(void)
   }
 
   /* update tile heater data */
-  read_param("heater", "bias", 0, &u32, 1);
+  fetch_param("heater", "bias", 0, &u32, 1);
   slow_dat.tile_heater = u32;
 
   /* update the clamp values */
-  read_param("rc1", "integral_clamp", 0, iclamp + 0, 1);
-  read_param("rc2", "integral_clamp", 0, iclamp + 1, 1);
+  fetch_param("rc1", "integral_clamp", 0, iclamp + 0, 1);
+  fetch_param("rc2", "integral_clamp", 0, iclamp + 1, 1);
 
   /* update igains */
   for (c = 0; c < NUM_COL; ++c) {
     gaini[5] = (c % 8) + '0';
-    read_param((c < 8) ? "rc1" : "rc2", gaini, 0, igain + c * NUM_ROW, NUM_ROW);
+    fetch_param((c < 8) ? "rc1" : "rc2", gaini, 0, igain + c * NUM_ROW,
+        NUM_ROW);
   }
 
   return 0;
