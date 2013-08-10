@@ -866,7 +866,7 @@ static void prm_integral_clamp(double v, int a)
             flx_quanta[10] = c + '0';
             read_param(card, flx_quanta, 0, data, NUM_ROW);
             for (i = 0; i < NUM_ROW; ++i)
-              if (min_fq > data[i])
+              if (min_fq > data[i] && data[i] > 0)
                 min_fq = data[i];
           }
 
