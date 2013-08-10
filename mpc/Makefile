@@ -192,6 +192,7 @@ install-all: install
 		echo "================== X$$x ====================="; \
 		rsync -avP ${MAS_BIN_STUFF} x$$x.spider:/data/mas/bin; \
 		rsync -avP set_directory x$$x.spider:/data/mas/mce_script/script; \
+		rsync -avP $(ETC_DATA) x$$x.spider:/data/mas/etc; \
 		ssh x$$x.spider /data/mas/bin/replicate; \
 		fi; done
 
