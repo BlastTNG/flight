@@ -75,15 +75,15 @@ int main() {
 	for (col = 0; col < NUM_COL; col += 2) {
 	  if (type == bs_step) {
 	    fprintf(fid, "%s MPLEX bolo_stats_mplex_0 bolo_stats_index %d %d\n"
-		    "%s LINCOM 1 %s %.6f %.6f \n"
+		    "%s LINCOM 1 %s %d %d \n"
 		    "%s MPLEX bolo_stats_mplex_1 bolo_stats_index %d %d\n"
-		    "%s LINCOM 1 %s %.6f %.6f\n",
+		    "%s LINCOM 1 %s %d %d\n",
 		    GetArrayFieldName(i,0), i, NUM_ARRAY_STAT,
 		    GetArrayFieldName(i,1), GetArrayFieldName(i,0),
-		    5.e5/256, -3.33e5,
+		    500000/256, -333333,
 		    GetArrayFieldName(i+1,0), i, NUM_ARRAY_STAT,
 		    GetArrayFieldName(i+1,1), GetArrayFieldName(i+1,0),
-		    5.e5/256, -3.33e5
+		    500000/256, -333333
 		    );
 	  } else {
 	    fprintf(fid,"%s MPLEX bolo_stats_mplex_0 bolo_stats_index %d %d\n"
