@@ -1256,7 +1256,7 @@ static int bias_step(void)
 
 static int partial_iv(void)
 {
-  uint32_t offset;
+  int offset;
   uint32_t biases[16];
   uint32_t saved_bias[16];
   int i, r;
@@ -1268,11 +1268,8 @@ static int partial_iv(void)
   for (offset = goal.start; offset > 0; offset += goal.step)
   {
     /* set bias */
-    for (i = 0; i < 16; ++i) {
+    for (i = 0; i < 16; ++i)
       biases[i] = saved_bias[i] + offset;
-      if (biases[i] < 0)
-        biases[i] = saved_bias[i];
-    }
     write_param("tes", "bias", 0, biases, 16);
 
     /* wait */
