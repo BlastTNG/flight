@@ -975,6 +975,37 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {CHOOSE_INSERT_PARAM}
     }
   },
+  {COMMAND(hk_cycle_params), "Set fridge autocycle parameters",
+      GR_CRYO_HEAT, 10,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Cycle start T (FP K)",    0.0,       50.0,   'f', ""},
+      {"HSw timeout (s)",           0,  USHRT_MAX,   'i', ""},
+      {"Pump servo hi (K)",       0.0,       80.0,   'f', ""},
+      {"Pump servo lo (K)",       0.0,       80.0,   'f', ""},
+      {"Servo stop T (FP K)",     0.0,       50.0,   'f', ""},
+      {"Pump heat timeout (s)",     0,  USHRT_MAX,   'i', ""},
+      {"Settle time (s)",           0,  USHRT_MAX,   'i', ""},
+      {"Cold again T (FP K)",     0.0,       50.0,   'f', ""},
+      {"Cool timeout (s)",          0,  USHRT_MAX,   'i', ""}
+    }
+  },
+  {COMMAND(hk_cycle_params), "Set fridge autocycle parameters",
+      GR_CRYO_HEAT, 11,
+    {
+      {"SFT boil power (W,max=4.5)",        0.0,       4.5,  'f', ""},
+      {"Capillary boil power (W,max=4.5)",  0.0,       4.5,  'f', ""},
+      {"SFT empty T (SFT K)",               0.0,      50.0,  'f', ""},
+      {"SFT boil timeout (s)",                0, USHRT_MAX,  'i', ""},
+      {"SFT bake set T (K)",                0.0,      50.0,  'f', ""},
+      {"Capillary bake set T (K)",          0.0,      50.0,  'f', ""},
+      {"FP servo hi (K)",                   0.0,      50.0,  'f', ""},
+      {"FP servo lo (K)",                   0.0,      50.0,  'f', ""},
+      {"Bake stop T (MT K)",                0.0,      50.0,  'f', ""},
+      {"Bake timeout (s)",                    0, USHRT_MAX,  'i', ""},
+      {"Settle time (s)",                     0, USHRT_MAX,  'i', ""}
+    }
+  },
   {COMMAND(hk_pump_servo_on), 
       "Enable pump servo mode: maintain pump temperature between setpoints.",
       GR_CRYO_HEAT, 3,

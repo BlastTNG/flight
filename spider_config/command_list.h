@@ -145,7 +145,7 @@ enum multiCommand {
   arraystat_oth,  
   t_gyro_set,        tdrss_bw,          iridium_bw,        pilot_bw,
   t_gyro_gain,       timeout,           slot_sched,        az_gyro_offset,
-  cov_gps,           reset_adc,
+  cov_gps,           reset_adc,         hk_cycle_params,   hk_burp_params,
   hk_auto_cycle_on,  hk_auto_cycle_off, hk_fridge_cycle,
   el_gyro_offset,    slew_veto,
   motors_verbose,    get_mce_param,
