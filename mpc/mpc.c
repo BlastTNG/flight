@@ -847,9 +847,10 @@ static void prm_integral_clamp(double v, int a)
       for (c = 0; c < 8; ++c) {
         /* if servo_mode != 3, ignore this column */
         if (servo[c] == 3) {
-          for (r = 0; r < NUM_ROW; ++r)
-            if (max_i < igain[c * NUM_ROW + r])
-              max_i = igain[c * NUM_ROW + r];
+          for (i = 0; i < NUM_ROW; ++i) {
+            if (max_i < igain[(8 * (r - 1) + c) * NUM_ROW + i])
+              max_i = igain[(8 * (r - 1) + c) * NUM_ROW + i];
+          }
         }
       }
 
