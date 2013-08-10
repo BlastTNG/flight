@@ -156,7 +156,7 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
 
     sgn = (dmean > 0) - (dmean < 0);
     if ( fabs(dmean) < loc_bs_offset[bs_mean] ) dmean = loc_bs_offset[bs_mean];
-    dmean = sgn * loc_bs_gain[0] * log (1. + fabs(dmean) - loc_bs_offset[0]);
+    dmean = sgn * loc_bs_gain[bs_mean] * log (1. + fabs(dmean) - loc_bs_offset[bs_mean]);
     bolo_stat_buff[bs_mean][ii] = dmean + 128;
 
     if ( dsigma < loc_bs_offset[bs_sigma] ) dsigma = loc_bs_offset[bs_sigma];
