@@ -209,7 +209,6 @@ int iv_compress()
   
   count = 0;
   for (ii = 0; ii < n_chan; ii++) {
-    bprintf(info, "Curve #%i = %i", ii, chan[ii]);
     iv_min[ii] = -1;
     iv_max[ii] = 0;
   }
@@ -258,7 +257,7 @@ int iv_compress()
     iv_scale = 65536. / (double)(iv_max[ii] - iv_min[ii]);
   
     /* iv header */
-    blob[blob_size++] = tes[ii]; // TES ID
+    blob[blob_size++] = chan[ii]; // TES ID
     bprintf(info,"Blobbing IV curve for TES %d",blob[blob_size-1]);
     blob[blob_size++] = bias_start;          // starting bias
     blob[blob_size++] = n_bias;              // number of bias steps
