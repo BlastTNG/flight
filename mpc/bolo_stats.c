@@ -12,16 +12,16 @@ double filt_coeffb[NUM_FILT_COEFF]; // numerator coefficients
 uint8_t bolo_stat_buff[N_STAT_TYPES][NUM_ROW * NUM_COL];
 
 /* buffers */
-uint32_t frame_offset[NUM_ROW * NUM_COL];
+int32_t frame_offset[NUM_ROW * NUM_COL];
 double frame_filt[FB_SIZE][NUM_ROW * NUM_COL];
-double frame_sum[NUM_ROW * NUM_COL];
-double frame_sum2[NUM_ROW * NUM_COL];
-double frame_fsum2[NUM_ROW * NUM_COL];
+double frame_mean[NUM_ROW * NUM_COL];
+double frame_var[NUM_ROW * NUM_COL];
+double frame_fvar[NUM_ROW * NUM_COL];
 
 int sb_top = 0;
 
 /* extract data from frame (assumes data mode 10!) */
-#define FRAME_EXTRACT(frm,idx) (double)((frm[idx + MCE_HEADER_SIZE] >> 7) << 3)
+#define FRAME_EXTRACT(frm,idx) (double)(((int32_t)frm[idx + MCE_HEADER_SIZE] >> 7) << 3)
 
 static void set_filter_coeffs(const double fsamp, const double flow, const double fup)
 {
@@ -59,6 +59,9 @@ static void set_filter_coeffs(const double fsamp, const double flow, const doubl
       filt_coeffa[0], filt_coeffa[1], filt_coeffa[2], filt_coeffa[3], filt_coeffa[4]);
 }
 
+
+#define RESCALE_LOG(x,g,o) (g) * log( (1. + ((x)<(o) ? (o) : (x))) / (1. + (o)) )
+
 void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t frameno)
 {
   const struct mas_header *header = (const struct mas_header *)curr_frame;
@@ -67,10 +70,11 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   static int loc_filt_len;
   static double loc_bs_gain[N_STAT_TYPES];
   static int loc_bs_offset[N_STAT_TYPES];
+  static int count = 0, scount = 0;
 
   int ii, jj, sb_idx[NUM_FILT_COEFF], fb_idx[NUM_FILT_COEFF];
   size_t ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
-  double datum, datum2, fdatum, dmean, dsigma, dnoise, sgn;
+  double datum, datum2, fdatum, dmean, dsigma, dnoise;
 
   double fsamp = 50.e6 / (double)(header->row_len 
       * header->data_rate 
@@ -106,9 +110,9 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     /* reset buffers */
     sb_top = 0;
     for (ii = 0; ii < ndata; ii++) {
-      frame_sum[ii] = 0;
-      frame_sum2[ii] = 0;
-      frame_fsum2[ii] = 0;
+      frame_mean[ii] = 0;
+      frame_var[ii] = 0;
+      frame_fvar[ii] = 0;
       frame_offset[ii] = FRAME_EXTRACT(curr_frame, ii);
 
       for (jj = 0; jj < FB_SIZE; jj++) frame_filt[jj][ii] = 0;
@@ -119,6 +123,7 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     }
 
     stat_reset = 0;
+    scount = 0;
   }
 
   /* neighboring buffer elements */
@@ -134,47 +139,62 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
 
   /* add new values */
   for (ii = 0; ii < ndata; ii++) {
-    datum = (double) (FRAME_EXTRACT(curr_frame, ii) - frame_offset[ii]);
-    frame_sum[ii] += datum;
-    frame_sum2[ii] += datum * (double) datum;
+    /* update statistics */
+    datum = FRAME_EXTRACT(curr_frame, ii) - frame_offset[ii];
+    frame_mean[ii] += datum / (double) loc_filt_len;
+    dmean = frame_mean[ii];
+    frame_var[ii] += (datum - dmean) * (datum - dmean) 
+      / (loc_filt_len - 1.);
+    dsigma = sqrt(frame_var[ii]);
 
     /* apply filter */
     fdatum = filt_coeffb[0] * datum;
     for (jj = 1; jj < NUM_FILT_COEFF; jj++) {
-      datum2 = (double) (FRAME_EXTRACT(frame[fb_idx[jj]], ii) - frame_offset[ii]);
+      datum2 = FRAME_EXTRACT(frame[fb_idx[jj]], ii) - frame_offset[ii];
       fdatum += (filt_coeffb[jj] * datum2 -
           filt_coeffa[jj] * frame_filt[sb_idx[jj]][ii]);
     }
     fdatum /= filt_coeffa[0];
-    frame_fsum2[ii] += fdatum*fdatum;
+    frame_fvar[ii] += fdatum * fdatum / (loc_filt_len - 1.) 
+      / (double)(loc_filt_freq * loc_filt_bw);
     frame_filt[sb_top][ii] = fdatum;
+    dnoise = sqrt(frame_fvar[ii]);
 
-    /* update statistics */    
-    dmean = frame_sum[ii] / (double)(loc_filt_len);
-    dsigma = sqrt((frame_sum2[ii] - dmean * dmean * (double) loc_filt_len )
-        / (double)(loc_filt_len - 1));
+    // if ( fabs(dmean) < loc_bs_offset[bs_mean] ) dmean = loc_bs_offset[bs_mean];
+    bolo_stat_buff[bs_mean][ii] = 128 + ((dmean > 0) - (dmean < 0)) * 
+      RESCALE_LOG(fabs(dmean), loc_bs_gain[bs_mean], loc_bs_offset[bs_mean]);
 
-    sgn = (dmean > 0) - (dmean < 0);
-    if ( fabs(dmean) < loc_bs_offset[bs_mean] ) dmean = loc_bs_offset[bs_mean];
-    dmean = sgn * loc_bs_gain[bs_mean] * log (1. + fabs(dmean) - loc_bs_offset[bs_mean]);
-    bolo_stat_buff[bs_mean][ii] = dmean + 128;
+    // if ( dsigma < loc_bs_offset[bs_sigma] ) dsigma = loc_bs_offset[bs_sigma];
+    bolo_stat_buff[bs_sigma][ii] = RESCALE_LOG(dsigma, loc_bs_gain[bs_sigma],
+					       loc_bs_offset[bs_sigma]);;
 
-    if ( dsigma < loc_bs_offset[bs_sigma] ) dsigma = loc_bs_offset[bs_sigma];
-    dsigma = loc_bs_gain[bs_sigma] * log ( 1. + dsigma - loc_bs_offset[bs_sigma] );
-    bolo_stat_buff[bs_sigma][ii] = dsigma;
+    // if ( dnoise < loc_bs_offset[bs_noise] ) dnoise = loc_bs_offset[bs_noise];
+    bolo_stat_buff[bs_noise][ii] = RESCALE_LOG(dnoise, loc_bs_gain[bs_noise],
+					       loc_bs_offset[bs_noise]);;
 
-    dnoise = sqrt(frame_fsum2[ii] / (double)(loc_filt_len - 1) /
-        (double)(loc_filt_freq * loc_filt_bw));
-    if ( dnoise < loc_bs_offset[bs_noise] ) dnoise = loc_bs_offset[bs_noise];
-    dnoise = loc_bs_gain[bs_noise] * log ( 1. + dnoise - loc_bs_offset[bs_noise] );
-    bolo_stat_buff[bs_noise][ii] = dnoise;
+#if 0
+    if (ii==100) {
+      if (count==loc_filt_len || scount < loc_filt_len) {
+	bprintf(info, "(%d) Mean: %f / %d", scount, dmean, bolo_stat_buff[bs_mean][ii]);
+	bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_var[ii], dsigma, bolo_stat_buff[bs_sigma][ii]);
+	bprintf(info, "(%d) Noise: %f / %d", scount, dnoise, bolo_stat_buff[bs_noise][ii]);
+	count = 0;
+	scount++;
+      } else {
+	count++;
+      }
+    }
+#endif
 
-    /* subtract oldest values from buffers */
-    datum = (double) (FRAME_EXTRACT(frame[fb_idx[0]], ii) - frame_offset[ii]);
-    frame_sum[ii] -= datum;
-    frame_sum2[ii] -= datum * datum;
-    fdatum = frame_filt[sb_idx[0]][ii];
-    frame_fsum2[ii] -= fdatum * fdatum;
+    if (scount > loc_filt_len) {
+      /* subtract oldest values from buffers */
+      datum = FRAME_EXTRACT(frame[fb_idx[0]], ii) - frame_offset[ii];
+      frame_mean[ii] -= datum / (double) loc_filt_len;
+      frame_var[ii] -= (datum - dmean) * (datum - dmean) / (loc_filt_len - 1.);
+      fdatum = frame_filt[sb_idx[0]][ii];
+      frame_fvar[ii] -= fdatum * fdatum / (loc_filt_len - 1.)
+	/ (double)(loc_filt_freq * loc_filt_bw);
+    }
   }
 
   sb_top = (sb_top + 1) % loc_filt_len;

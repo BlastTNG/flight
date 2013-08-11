@@ -10,6 +10,17 @@
 #define LUT_DIR "/data/etc/spider/"
 #define ETC_DIR "../spider_etc/"
 
+/* gains and offsets for statistics */
+#define MEAN_GAIN        (1./log(1.07))
+#define MEAN_OFFSET      5000
+#define SIGMA_GAIN       (1./log(1.03))
+#define SIGMA_OFFSET     1000
+#define NOISE_GAIN       (1./log(1.03))
+#define NOISE_OFFSET     200
+
+#define RESCALE_LOG(x,g,o) ((g) * log( (1. + ((x)<(o) ? (o) : (x))) / (1. + (o)) ))
+#define LOOKUP_LOG(x,g,o)  ((1. + (o)) * exp((x) / (g)) - 1.)
+
 char **names;
 char **upnames;
 
@@ -27,8 +38,6 @@ char *GetArrayFieldLut(int i_field) {
     return "mce_sigma.lut";
   case 'n':
     return "mce_noise.lut";
-  case 'b':
-    return "mce_bstep.lut";
   default:
     return "";
   }
@@ -104,20 +113,20 @@ int main() {
   }
   fclose(fid);
 
-  /*
   for (type = 0; type < N_STAT_TYPES; type++) {
+    if (type == bs_step) continue;
     sprintf(fname,ETC_DIR "mce_%s.lut",types[type]);
     fid = fopen(fname,"w");
     for (i = 0; i < 256; i++) {
-      switch (types[type][0]) {
-        case 'm':
-	  fprintf(fid, "%3i %16.3f\n", i, LOOKUP_MEAN(i));
+      switch (type) {
+        case bs_mean:
+	  fprintf(fid, "%3i %16.3f\n", i, ((i>128)-(i<128)) * LOOKUP_LOG( fabs(i-128),MEAN_GAIN,MEAN_OFFSET));
 	  break;
-        case 's':
-	  fprintf(fid, "%3i %16.3f\n", i, LOOKUP_SIGMA(i));
+        case bs_sigma:
+	  fprintf(fid, "%3i %16.3f\n", i, LOOKUP_LOG(i,SIGMA_GAIN,SIGMA_OFFSET));
 	  break;
-        case 'n':
-	  fprintf(fid, "%3i %16.3f\n", i, LOOKUP_NOISE(i));
+        case bs_noise:
+	  fprintf(fid, "%3i %16.3f\n", i, LOOKUP_LOG(i,NOISE_GAIN,NOISE_OFFSET));
 	  break;
         default:
 	  break;
@@ -125,7 +134,6 @@ int main() {
     }
     fclose(fid);
   }
-  */
   
   for (i=0; i<NUM_ARRAY_STAT; i++) {
     free(names[i]);
