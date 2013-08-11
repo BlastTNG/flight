@@ -1,0 +1,183 @@
+#!/usr/bin/env python
+
+import numpy as np
+import os, glob, sys
+from mce_data import MCERunfile
+from auto_setup import config
+# from spider_instrument.mce import MCEConfig
+
+# load the template sqtune and experiment.cfg
+# load the desired sqtune and experiment.cfg
+# apply various comparisons
+# ...
+# profit
+
+MCE_COLS = 8 # columns per readout card
+
+class SQConfig:
+    '''Encapsulates a sqtune and its associated experiment.cfg file'''
+    
+    def __init__(self,tundir):
+        if not os.path.exists(tundir):
+            raise IOError('Tuning directory %s not found'%tundir)
+        self.tundir = tundir
+        # load the experiment.cfg file
+        self.config = config.configFile(os.path.join(self.tundir,'experiment.cfg'))
+        # load the sqtune file
+        fname_tune = glob.glob(os.path.join(self.tundir,'*.sqtune'))
+        if len(fname_tune)==0:
+            raise IOError('SQtune file not found')
+        self.sqtune = MCERunfile(fname_tune[0])
+        # basic array dimensions, for convenience
+        self.num_rows = self.config.get_param('num_rows')
+        self.num_cols = sum(self.config.get_param('hardware_rc'))*MCE_COLS
+                            
+    def get_lock_slopes(self):
+        '''Extract array of sq1ramp locking slopes.'''
+        # load both locking slopes for all detectors
+        slope_up = self.sqtune.Item2d('SQUID','Col%d_squid_lockslope_up',type='float')
+        slope_down = self.sqtune.Item2d('SQUID','Col%d_squid_lockslope_down',type='float')
+        # pick correct slope for each column
+        gainI = self.config.get_param('servo_i')[:self.num_cols]
+        lock_slopes = np.where(gainI<0,slope_up,slope_down)
+        # zero out deactivated columns
+        columns_off = self.config.get_param('columns_off')[:self.num_cols]
+        lock_slopes[columns_off.nonzero()[0]] = 0
+        # Transpose to get into conventional (row,col) format
+        return np.array(lock_slopes).T
+
+    def get_p2p(self):
+        '''Extract array of sq1ramp peak-to-peak amplitudes'''
+        return np.array(self.sqtune.Item2d('SQUID','Col%d_squid_vphi_p2p',type='int')).T
+
+    def get_lockrange(self):
+        '''Extract array of sq1ramp lockranges'''
+        return np.array(self.sqtune.Item2d('SQUID','Col%d_squid_lockrange',type='int')).T
+
+    def tuning_completed(self):
+        return self.sqtune.Item('SQUID','SQ_tuning_completed',array=False,type='int')
+
+def compare_p2p(tune,tune0,reltol=0.1,abstol=0.3,detailed=False):
+    p2p0 = tune0.get_p2p().ravel().astype(float)
+    p2p = tune.get_p2p().ravel().astype(float)
+    # Identify small-amplitude channels in both files
+    med_p2p0 = np.median(p2p0)
+    idx_small0 = set(np.nonzero(p2p0<med_p2p0*abstol)[0])
+    med_p2p = np.median(p2p)
+    idx_small = set(np.nonzero(p2p<med_p2p*abstol)[0])
+    # Identify channels that have changed in fractional terms
+    idx_shrunk = set(np.nonzero(np.abs(p2p/p2p0-1)>reltol)[0])
+    # Collect channels that were good before and have gotten less good
+    idx_worse = (idx_shrunk | idx_small) - idx_small0
+    
+    if detailed:
+        # return number of failures and indices
+        print 'small ref',idx_small0
+        print 'small',idx_small
+        print 'shrunk',idx_shrunk
+        print 'worse',idx_worse
+        
+        if len(idx_worse):
+            return len(idx_worse), np.unravel_index(list(idx_worse),(tune0.num_rows,tune0.num_cols))
+        else:
+            return len(idx_worse), (np.array([]), np.array([]))
+        # return (len(idx_worse),idx_worse)
+    else:
+        # just return number of failures
+        return len(idx_worse)
+
+def compare_lockslope(tune,tune0,reltol=0.25,abstol=0.5,detailed=False):
+    # N.B. THIS NEEDS TO KNOW ABOUT THE DEAD MASK?  OR AT LEAST IGAINS?
+    lock0 = tune0.get_lock_slopes().ravel()
+    lock = tune.get_lock_slopes().ravel()
+    # find a typical slope for each column
+    lock0_typ = np.expand_dims(np.median(lock0,axis=0),axis=0)
+    # ignore slopes very different from their medians
+    idx_weird = set(np.nonzero(np.abs(lock0/lock0_typ-1)>abstol)[0])
+    # identify slopes that have changed substantially
+    idx_changed = set(np.nonzero(np.abs(lock/lock0-1)>reltol)[0])
+    # Collect channels with typical slopes that have changed substantially
+    idx_worse = idx_changed - idx_weird
+    if detailed:
+        # return number of failures and indices
+        if len(idx_worse):
+            return len(idx_worse), np.unravel_index(list(idx_worse),(tune0.num_rows,tune0.num_cols))
+        else:
+            return len(idx_worse), (np.array([]), np.array([]))
+        # return (len(idx_worse),idx_worse)
+    else:
+        # just return number of failures
+        return len(idx_worse)
+
+def compare_tunings(tundir,tundir0,do_p2p=True,do_lockslope=False,threshold=10,detailed=False):
+    '''Compare a tuning to a reference tuning using various figures of merit.'''
+    # load the data
+    tune0 = SQConfig(tundir0)
+    tune = SQConfig(tundir)
+    # apply a set of comparisons which yield figures of merit (0=good)
+    fom = []
+    if do_p2p:
+        out = compare_p2p(tune,tune0,detailed=detailed)
+        if detailed:
+            print 'Found %d bad channels with p2p criterion:\n %s' % (out[0],out[1])
+            out = out[0]
+        fom.append(out)
+    if do_lockslope:
+        out = compare_lockslope(tune,tune0,detailed=detailed)
+        if detailed:
+            print 'Found %d bad channels with lockslope criterion:\n %s' % (out[0],out[1])
+            out = out[0]
+        fom.append(out)
+    if len(fom)==0:
+        return None
+    fom = np.sum(fom)
+    if fom>threshold:
+        return False
+    else:
+        return True
+
+
+if __name__ == "__main__":
+    
+    import argparse as ap
+    P = ap.ArgumentParser()
+    P.add_argument('tuning', help='Tuning to check')
+    P.add_argument('ref_tuning', help='Reference tuning')
+    P.add_argument('-n','--no-p2p',default=True,dest='p2p',action='store_false',
+                   help="Don't use p2p criterion to check tuning")
+    P.add_argument('-l','--do-lockslope',default=False,dest='lockslope',action='store_true',
+                   help="Use lockslope criterion to check tuning")
+    P.add_argument('-t','--threshold',default=10,type=int,
+                   help='Threshold for number of failed squids')
+    P.add_argument('-d','--detail',default=False,action='store_true',
+                   help='More words')
+    args = P.parse_args()
+    
+    if not os.path.exists(args.tuning):
+        args.tuning = os.path.join('/data/mce/tuning',args.tuning) 
+    if not os.path.exists(args.tuning):
+        args.tuning = os.path.join('/data/mce/current_data',
+                                   os.path.basename(args.tuning))
+    if not os.path.exists(args.tuning):
+        print "Can't find %s" % args.tuning
+        sys.exit(-1)
+    
+    if not os.path.exists(args.ref_tuning):
+        args.ref_tuning = os.path.join('/data/mce/tuning',args.ref_tuning)
+    if not os.path.exists(args.ref_tuning):
+        args.ref_tuning = os.path.join('/data/mce/current_data',
+                                       os.path.basename(args.ref_tuning))
+    if not os.path.exists(args.ref_tuning):
+        print "Can't find %s" % args.ref_tuning
+        sys.exit(-1)
+    
+    out = compare_tunings(args.tuning,args.ref_tuning,do_p2p=args.p2p,
+                          do_lockslope=args.lockslope,threshold=args.threshold,
+                          detailed=args.detail)
+    
+    if out:
+        print 'Passed!'
+        sys.exit(0)
+    else:
+        print 'Failed!'
+        sys.exit(-1)
