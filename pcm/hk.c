@@ -1048,7 +1048,7 @@ void HouseKeeping(int do_slow)
   static int first_time = 1;
 
   // hack. number of fast frames to wait for good data
-  static int startup_timeout = 300;
+  static int startup_timeout = 1800;
 
   if (first_time) {
     first_time = 0;
