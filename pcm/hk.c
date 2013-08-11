@@ -1048,7 +1048,9 @@ void HouseKeeping(int do_slow)
   static int first_time = 1;
 
   // hack. number of fast frames to wait for good data
-  static int startup_timeout = 1800;
+  static int startup_timeout = 300;
+
+  if (startup_timeout-- > 0) return;
 
   if (first_time) {
     first_time = 0;
@@ -1056,8 +1058,6 @@ void HouseKeeping(int do_slow)
     vHeatLastHkAddr = GetNiosAddr("v_heat_last_hk");
     GetHKTemperatures(0, 1);
   }
-
-  if (startup_timeout-- > 0) return;
 
   GetHKTemperatures(do_slow, 0);
 
