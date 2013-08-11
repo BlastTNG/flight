@@ -451,6 +451,7 @@ static unsigned short FridgeCycle(int insert, int reset)
       /* hk_capillary_pulse */
       duty_cycle = CommandData.burp_cycle.p_cap_boil/HK_CAPILLARY_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
+      if (duty_cycle<0) duty_cycle = 0.0;
       CommandData.hk_theo_heat[2].duty_target = ((int)(duty_cycle*256) << 8);
       CommandData.hk_theo_heat[2].duration = -1;
       if (!(cycle_state & CYCLE_SFT_BOIL) && !(cycle_state & CYCLE_FP_BAKE)) {
@@ -462,6 +463,7 @@ static unsigned short FridgeCycle(int insert, int reset)
       /* hk_sft_bottom_pulse */
       duty_cycle = CommandData.burp_cycle.p_sft_boil/HK_SFT_BOTTOM_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
+      if (duty_cycle<0) duty_cycle = 0.0;
       CommandData.hk_theo_heat[6].duty_target = ((int)(duty_cycle*256) << 8);
       CommandData.hk_theo_heat[6].duration = -1;
       if (!(cycle_state & CYCLE_SFT_BOIL) && !(cycle_state & CYCLE_FP_BAKE)) {
