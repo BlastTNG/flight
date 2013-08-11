@@ -2430,7 +2430,7 @@ void InitCommandData()
   }
   CommandData.hk_last = 0;
   CommandData.hk_vheat_last = 0.0;
-  CommandData.hk_bias_freq = 50;
+  CommandData.hk_bias_freq = 10;
   CommandData.ifpower.hk_preamp_off = 0;
 
   CommandData.hwp.vel = 1.0;
