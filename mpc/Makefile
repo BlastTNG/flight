@@ -206,6 +206,16 @@ install-mce-script:
 		ssh x$$x.spider /data/mas/bin/replicate; \
 		fi; done
 
+install-config:
+	(cd ../../spider_tools/config/mce && make install )
+	/data/mas/bin/replicate
+	for x in 1 2 3 4 5 6; do \
+		if [ `hostname` != "x$$x" ]; then \
+		echo "================== X$$x ====================="; \
+		rsync -avP /data/mas/config x$$x.spider:/data/mas/; \
+		ssh x$$x.spider /data/mas/bin/replicate; \
+		fi; done
+
 install-mas:
 	(cd ../../mas && make install)
 	/data/mas/bin/replicate

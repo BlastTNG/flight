@@ -1691,10 +1691,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(acq_iv_curve), "Acquire load curves and pick biases",
-    GR_IV | GR_MPC | MCECMD, 8,
+    GR_IV | GR_MPC | MCECMD, 9,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
+      {"Kick time (s)", 0.01, 3, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Last bias", 0, 65535, 'i', "NONE"},
@@ -1705,9 +1706,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(partial_load_curve), "Acquire a partial load curve",
-    GR_IV | GR_MPC | MCECMD, 4,
+    GR_IV | GR_MPC | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
+      {"Kick (V)", 0, 5, 'f', "NONE"},
+      {"Kick time (s)", 0.01, 3, 'f', "NONE"},
+      {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start offset", 0, 5000, 'i', "NONE"},
       {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
       {"Step wait (s)", 0, 10, 'f', "NONE"}
@@ -1758,10 +1762,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(bias_ramp), "Step through a bias range", GR_MPC | MCECMD, 7,
+  {COMMAND(bias_ramp), "Step through a bias range", GR_MPC | MCECMD, 8,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
+      {"Kick time (s)", 0.01, 3, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Last bias", 0, 65535, 'i', "NONE"},

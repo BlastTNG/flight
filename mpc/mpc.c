@@ -1094,29 +1094,33 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         change_goal = 1;
         break;
       case partial_load_curve:
-        new_goal.start = ev->ivalues[1];
-        new_goal.step = ev->ivalues[2];
+        new_goal.kick = ev->rvalues[1] * 32767 / 5.;
+        new_goal.kicktime = ev->rvalues[2];
+        new_goal.kickwait = ev->rvalues[3];
+        new_goal.start = ev->ivalues[4];
+        new_goal.step = ev->ivalues[5];
         /* fix sign */
         if (new_goal.step > 0)
           new_goal.step = -new_goal.step;
-        new_goal.wait = ev->rvalues[3];
+        new_goal.wait = ev->rvalues[6];
         new_goal.goal = gl_partial;
         change_goal = 1;
         break;
       case acq_iv_curve:
       case bias_ramp:
         new_goal.kick = ev->rvalues[1] * 32767 / 5.;
-        new_goal.kickwait = ev->rvalues[2];
-        new_goal.start = ev->ivalues[3];
-        new_goal.stop = ev->ivalues[4];
-        new_goal.step = ev->ivalues[5];
+        new_goal.kicktime = ev->rvalues[2];
+        new_goal.kickwait = ev->rvalues[3];
+        new_goal.start = ev->ivalues[4];
+        new_goal.stop = ev->ivalues[5];
+        new_goal.step = ev->ivalues[6];
         /* fix sign */
         if ((new_goal.stop - new_goal.start) * new_goal.step < 0)
           new_goal.step = -new_goal.step;
-        new_goal.wait = ev->rvalues[6];
+        new_goal.wait = ev->rvalues[7];
         if (ev->command == acq_iv_curve) {
           new_goal.goal = gl_iv;
-          new_goal.apply = ev->ivalues[7];
+          new_goal.apply = ev->ivalues[8];
         } else
           new_goal.goal = gl_bramp;
         change_goal = 1;

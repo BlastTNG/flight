@@ -802,12 +802,19 @@ static int set_directory(void)
 }
 
 #define KICK_DONT_BIAS 4000000000U
-static int kick(uint32_t bias, uint32_t value, int wait)
+static int kick(uint32_t bias, uint32_t value, double time, int wait)
 {
   if (value > 0) {
     int i;
     uint32_t zero = 0;
     uint32_t data[16];
+    int kick_time;
+
+    /* convert to microseconds, and set default if necessary */
+    if (time == 0)
+      kick_time = memory.bias_kick_time;
+    else
+      kick_time = time * 1000000;
 
     if (bias != KICK_DONT_BIAS) {
       /* bias to the start */
@@ -816,11 +823,12 @@ static int kick(uint32_t bias, uint32_t value, int wait)
       write_param("tes", "bias", 0, data, 16);
     }
 
-    bprintf(info, "Kick %i counts and wait %i sec.", value, wait);
+    bprintf(info, "Kick %i counts for %i usec, then wait %i sec.", value,
+        kick_time, wait);
 
     write_param("heater", "bias", 0, &value, 1);
     slow_dat.tile_heater = value;
-    usleep(memory.bias_kick_time);
+    usleep(kick_time);
     write_param("heater", "bias", 0, &zero, 1);
     slow_dat.tile_heater = 0;
 
@@ -864,10 +872,10 @@ static void pick_biases(int iv_num)
           data + 7, data + 8, data + 9, data + 10, data + 11, data + 12,
           data + 13, data + 14, data + 15) == 16)
     {
-      /* aplly and record, then kick */
+      /* apply and record, then kick */
       write_param("tes", "bias", 0, data, 16);
       cfg_set_intarr("tes_bias", 0, data, 16);
-      kick(KICK_DONT_BIAS, memory.bias_kick_val, memory.bias_kick_wait);
+      kick(KICK_DONT_BIAS, memory.bias_kick_val, 0, memory.bias_kick_wait);
       state |= st_biased;
     }
 }
@@ -893,7 +901,7 @@ static int pop_block(void)
       pick_biases(blockq[new_tail].o);
       break;
     case 2: /* asynchronous kick request */
-      kick(KICK_DONT_BIAS, blockq[new_tail].o, memory.bias_kick_wait);
+      kick(KICK_DONT_BIAS, blockq[new_tail].o, 0, memory.bias_kick_wait);
       break;
     case 1:
       mas_write_range(blockq[new_tail].c, blockq[new_tail].p,
@@ -972,8 +980,8 @@ static void stop_mce(void)
 }
 
 /* run a load curve */
-static int do_ivcurve(uint32_t kickvalue, int kickwait, int start, int last,
-    int step, double wait, const char *filename)
+static int do_ivcurve(uint32_t kickvalue, double kicktime, int kickwait,
+    int start, int last, int step, double wait, const char *filename)
 {
   mcedata_storage_t *st;
   FILE *stream;
@@ -985,7 +993,7 @@ static int do_ivcurve(uint32_t kickvalue, int kickwait, int start, int last,
   state &= ~st_biased;
 
   /* kick */
-  if (kick(start, kickvalue, kickwait))
+  if (kick(start, kickvalue, kicktime, kickwait))
     return 1;
 
   /* runfile */
@@ -1075,8 +1083,8 @@ static int ivcurve(void)
   write_param("rc1", "integral_clamp", 0, &zero, 1);
   write_param("rc2", "integral_clamp", 0, &zero, 1);
 
-  int r = do_ivcurve(goal.kick, goal.kickwait, goal.start, goal.stop, goal.step,
-      goal.wait, filename1);
+  int r = do_ivcurve(goal.kick, goal.kicktime, goal.kickwait, goal.start,
+      goal.stop, goal.step, goal.wait, filename1);
 
   if (r == 0) { /* archive it */
     int d;
@@ -1125,7 +1133,7 @@ static int lcloop(void)
         data_drive[0], (long)time(NULL));
 
     bprintf(info, "LCLOOP: %s", filename);
-    r = do_ivcurve(6554, 300, 32000, 0, -50, 0.06, filename);
+    r = do_ivcurve(6554, 0, 300, 32000, 0, -50, 0.06, filename);
 
     if (r)
       return 1;
@@ -1139,7 +1147,7 @@ static int lcloop(void)
         data_drive[0], (long)time(NULL));
 
     bprintf(info, "LCLOOP: %s", filename);
-    r = do_ivcurve(6554, 300, 32000, 0, -50, 0.06, filename);
+    r = do_ivcurve(6554, 0, 300, 32000, 0, -50, 0.06, filename);
 
     if (r)
       return 1;
@@ -1254,15 +1262,26 @@ static int partial_iv(void)
   uint32_t saved_bias[16];
   int i, r;
 
+  uint32_t saved_user_word;
+
+  /* remember userword */
+  fetch_param("cc", "user_word", 0, &saved_user_word, 1);
+
   /* remember biases */
   fetch_param("tes", "bias", 0, saved_bias, 16);
+
+  /* kick */
+  if (kick(goal.start, goal.kick, goal.kicktime, goal.kickwait))
+    return 1;
 
   /* ramp down from offset -- goal.step is always negative */
   for (offset = goal.start; offset > 0; offset += goal.step)
   {
+    uint32_t user_word = offset;
     /* set bias */
     for (i = 0; i < 16; ++i)
       biases[i] = saved_bias[i] + offset;
+    write_param("cc", "user_word", 0, &user_word, 1);
     write_param("tes", "bias", 0, biases, 16);
 
     /* wait */
@@ -1272,7 +1291,8 @@ static int partial_iv(void)
     }
   }
 
-  /* return to normal biases */
+  /* return to normal biases; also user_word */
+  write_param("cc", "user_word", 0, &saved_user_word, 1);
   write_param("tes", "bias", 0, saved_bias, 16);
 
   if (r == 0 && check_wait(0.1))
@@ -1295,7 +1315,7 @@ static int bias_ramp(void)
   fetch_param("tes", "bias", 0, saved_bias, 16);
 
   /* kick */
-  if (kick(goal.start, goal.kick, goal.kickwait))
+  if (kick(goal.start, goal.kick, goal.kicktime, goal.kickwait))
     return 1;
 
   /* ramp -- goal.step is always negative */
@@ -1598,7 +1618,7 @@ void *mas_data(void *dummy)
         dt_error = reconfig();
         break;
       case dt_kick:
-        dt_error = kick(KICK_DONT_BIAS, memory.bias_kick_val,
+        dt_error = kick(KICK_DONT_BIAS, memory.bias_kick_val, 0,
             memory.bias_kick_wait);
         break;
       case dt_status:
