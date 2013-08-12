@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 
 #include "mpc.h"
@@ -21,7 +22,10 @@ double frame_fvar[NUM_ROW * NUM_COL];
 int sb_top = 0;
 
 /* extract data from frame (assumes data mode 10!) */
-#define FRAME_EXTRACT(frm,idx) (double)(((int32_t)frm[idx + MCE_HEADER_SIZE] >> 7) << 3)
+#define FRAME_EXTRACT(frm,idx) (((int32_t)frm[idx + MCE_HEADER_SIZE] >> 7) << 3)
+
+/* log rescale */
+#define RESCALE_LOG(x,g,o) (g) * log( (1. + ((x)<(o) ? (o) : (x))) / (1. + (o)) )
 
 static void set_filter_coeffs(const double fsamp, const double flow, const double fup)
 {
@@ -60,8 +64,6 @@ static void set_filter_coeffs(const double fsamp, const double flow, const doubl
 }
 
 
-#define RESCALE_LOG(x,g,o) (g) * log( (1. + ((x)<(o) ? (o) : (x))) / (1. + (o)) )
-
 void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t frameno)
 {
   const struct mas_header *header = (const struct mas_header *)curr_frame;
@@ -71,10 +73,12 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   static double loc_bs_gain[N_STAT_TYPES];
   static int loc_bs_offset[N_STAT_TYPES];
   static int scount = 0;
+  static int count = 0;
 
   int ii, jj, sb_idx[NUM_FILT_COEFF], fb_idx[NUM_FILT_COEFF];
   size_t ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
-  double datum, datum2, fdatum, dmean, dsigma, dnoise;
+  double vthis, vlast, vfilt, v, vflast, dmean, dsigma, dnoise, norm;
+  // double datum, datum2, fdatum, dmean, dsigma, dnoise;
 
   double fsamp = 50.e6 / (double)(header->row_len 
       * header->data_rate 
@@ -109,22 +113,24 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
 
     /* reset buffers */
     sb_top = 0;
+    memset(frame_mean, 0, sizeof(double) * NUM_ROW * NUM_COL);
+    memset(frame_var, 0, sizeof(double) * NUM_ROW * NUM_COL);
+    memset(frame_fvar, 0, sizeof(double) * NUM_ROW * NUM_COL);
+    memset(frame_filt, 0, sizeof(double) * NUM_ROW * NUM_COL * FB_SIZE);
+
+    memset(bolo_stat_buff[bs_sigma], 0, sizeof(uint8_t) * NUM_ROW * NUM_COL);
+    memset(bolo_stat_buff[bs_noise], 0, sizeof(uint8_t) * NUM_ROW * NUM_COL);
+
     for (ii = 0; ii < ndata; ii++) {
-      frame_mean[ii] = 0;
-      frame_var[ii] = 0;
-      frame_fvar[ii] = 0;
       frame_offset[ii] = FRAME_EXTRACT(curr_frame, ii);
-
-      for (jj = 0; jj < FB_SIZE; jj++) frame_filt[jj][ii] = 0;
-
       bolo_stat_buff[bs_mean][ii] = 128;
-      bolo_stat_buff[bs_sigma][ii] = 0;
-      bolo_stat_buff[bs_noise][ii] = 0;
     }
 
     stat_reset = 0;
     scount = 0;
   }
+
+  norm = loc_filt_len;
 
   /* neighboring buffer elements */
   fb_idx[0] = (fb_top + 1) % FB_SIZE; // oldest element
@@ -140,62 +146,58 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   /* add new values */
   for (ii = 0; ii < ndata; ii++) {
     /* update statistics */
-    datum = FRAME_EXTRACT(curr_frame, ii) - frame_offset[ii];
-    frame_mean[ii] += datum / (double) loc_filt_len;
+    vthis = FRAME_EXTRACT(curr_frame, ii) - frame_offset[ii];
+    vlast = (scount < loc_filt_len) ? 0 :
+      (FRAME_EXTRACT(frame[fb_idx[0]], ii) - frame_offset[ii]);
+
+    frame_mean[ii] += (vthis - vlast) / norm;
     dmean = frame_mean[ii];
-    frame_var[ii] += (datum - dmean) * (datum - dmean) 
-      / (loc_filt_len - 1.);
-    dsigma = sqrt(frame_var[ii]);
+
+    frame_var[ii] += (vthis * vthis - vlast * vlast) / norm;
+    dsigma = sqrt( (frame_var[ii] - frame_mean[ii] * frame_mean[ii] / norm) 
+		   / (norm-1.) );
 
     /* apply filter */
-    fdatum = filt_coeffb[0] * datum;
+    vfilt = filt_coeffb[0] * vthis;
     for (jj = 1; jj < NUM_FILT_COEFF; jj++) {
-      datum2 = FRAME_EXTRACT(frame[fb_idx[jj]], ii) - frame_offset[ii];
-      fdatum += (filt_coeffb[jj] * datum2 -
+      v = FRAME_EXTRACT(frame[fb_idx[jj]], ii) - frame_offset[ii];
+      vfilt += (filt_coeffb[jj] * v -
           filt_coeffa[jj] * frame_filt[sb_idx[jj]][ii]);
     }
-    fdatum /= filt_coeffa[0];
-    frame_fvar[ii] += fdatum * fdatum / (loc_filt_len - 1.) 
-      / (double)(loc_filt_freq * loc_filt_bw);
-    frame_filt[sb_top][ii] = fdatum;
-    dnoise = sqrt(frame_fvar[ii]);
+    vfilt /= filt_coeffa[0];
+    vflast = (scount < loc_filt_len) ? 0 : frame_filt[sb_idx[0]][ii];
+    frame_fvar[ii] += (vfilt * vfilt - vflast * vflast);
+    frame_filt[sb_top][ii] = vfilt;
+    dnoise = sqrt(frame_fvar[ii] / (norm - 1.) / (loc_filt_freq * loc_filt_bw));
 
-    // if ( fabs(dmean) < loc_bs_offset[bs_mean] ) dmean = loc_bs_offset[bs_mean];
-    bolo_stat_buff[bs_mean][ii] = 128 + ((dmean > 0) - (dmean < 0)) * 
+    /* compress */
+    v = 128 + ((dmean > 0) - (dmean < 0)) * 
       RESCALE_LOG(fabs(dmean), loc_bs_gain[bs_mean], loc_bs_offset[bs_mean]);
+    bolo_stat_buff[bs_mean][ii] = (v < 0) ? 0 : ( (v > 255) ? 255 : v );
 
-    // if ( dsigma < loc_bs_offset[bs_sigma] ) dsigma = loc_bs_offset[bs_sigma];
-    bolo_stat_buff[bs_sigma][ii] = RESCALE_LOG(dsigma, loc_bs_gain[bs_sigma],
-        loc_bs_offset[bs_sigma]);;
+    v = RESCALE_LOG(dsigma, loc_bs_gain[bs_sigma], loc_bs_offset[bs_sigma]);
+    bolo_stat_buff[bs_sigma][ii] = (v < 0) ? 0 : ( (v > 255) ? 255 : v );
 
-    // if ( dnoise < loc_bs_offset[bs_noise] ) dnoise = loc_bs_offset[bs_noise];
-    bolo_stat_buff[bs_noise][ii] = RESCALE_LOG(dnoise, loc_bs_gain[bs_noise],
-        loc_bs_offset[bs_noise]);;
+    v = RESCALE_LOG(dnoise, loc_bs_gain[bs_noise], loc_bs_offset[bs_noise]);
+    bolo_stat_buff[bs_noise][ii] = (v < 0) ? 0 : ( (v > 255) ? 255 : v );
 
-#if 0
-    if (ii==100) {
-      if (count==loc_filt_len || scount < loc_filt_len) {
-        bprintf(info, "(%d) Mean: %f / %d", scount, dmean, bolo_stat_buff[bs_mean][ii]);
-        bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_var[ii], dsigma, bolo_stat_buff[bs_sigma][ii]);
-        bprintf(info, "(%d) Noise: %f / %d", scount, dnoise, bolo_stat_buff[bs_noise][ii]);
-        count = 0;
-        scount++;
+    if (ii==41) {
+      if (count==loc_filt_len || scount < loc_filt_len + 5) {
+	bprintf(info, "(%d) Last: off %d / this %d / last %d", scount, frame_offset[ii],
+		(int) vthis, (int) vlast);
+	bprintf(info, "(%d) Mean: %f / %d", scount, dmean, bolo_stat_buff[bs_mean][ii]);
+	bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_var[ii], dsigma, 
+		bolo_stat_buff[bs_sigma][ii]);
+	bprintf(info, "(%d) Noise: %f / %d", scount, dnoise, 
+		bolo_stat_buff[bs_noise][ii]);
+	count = 0;
       } else {
         count++;
       }
     }
-#endif
 
-    if (scount > loc_filt_len) {
-      /* subtract oldest values from buffers */
-      datum = FRAME_EXTRACT(frame[fb_idx[0]], ii) - frame_offset[ii];
-      frame_mean[ii] -= datum / (double) loc_filt_len;
-      frame_var[ii] -= (datum - dmean) * (datum - dmean) / (loc_filt_len - 1.);
-      fdatum = frame_filt[sb_idx[0]][ii];
-      frame_fvar[ii] -= fdatum * fdatum / (loc_filt_len - 1.)
-        / (double)(loc_filt_freq * loc_filt_bw);
-    }
   }
 
+  scount++;
   sb_top = (sb_top + 1) % loc_filt_len;
 }
