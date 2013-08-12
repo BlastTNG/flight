@@ -1012,6 +1012,11 @@ void VetoMCE()
 
   double t_fp, t_ssa;
 
+  if (CommandData.thermveto_veto) {
+    CommandData.thermveto = 0;
+    return;
+  }
+
   for (insert=0; insert<6; insert++) {
     /* wait for things to settle down, I guess...? */
     if (veto_mce_veto[insert]) {
@@ -1019,7 +1024,7 @@ void VetoMCE()
         bprintf(info, "HK: Stopping X%i thermal veto watch.", insert + 1);
 
       veto_mce_veto[insert]--;
-      if (timeout[insert] == 0)
+      if (timeout[insert] > 0)
         timeout[insert]--;
 
       if (veto_mce_veto[insert] == 0)
@@ -1038,7 +1043,7 @@ void VetoMCE()
     if (insert == 4)
       t_fp = t_ssa = 0;
 
-    if ( ((t_fp > 8.0) || (t_ssa > 8.0)) && !CommandData.thermveto_veto ) {
+    if ( ((t_fp > 8.0) || (t_ssa > 8.0)) ) {
       if (~CommandData.thermveto & bit) {
         bprintf(info, "Vetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
             insert + 1, t_fp, t_ssa);
@@ -1048,9 +1053,10 @@ void VetoMCE()
     }
 
     if (timeout[insert] == 0) {
-      if ( (t_fp < 7.0) && (t_ssa < 7.0) && !CommandData.thermveto_veto ) {
+      if ( (t_fp < 7.0) && (t_ssa < 7.0) ) {
         if (CommandData.thermveto & bit) {
-          bprintf(info, "Unvetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
+          bprintf(info,
+              "Unvetoing X%i for thermal reasons (FP:%.1f SSA:%.1f)\n",
               insert + 1, t_fp, t_ssa);
           CommandData.thermveto &= ~bit;
           timeout[insert] = VETO_MCE_TIMEOUT;
