@@ -59,6 +59,7 @@ struct memory_t {
   int bolo_filt_len;
   double bolo_stat_gain[N_STAT_TYPES];
   int bolo_stat_offset[N_STAT_TYPES];
+  int restart_reset;
 };
 extern struct memory_t memory;
 extern int mem_dirty;
@@ -237,7 +238,7 @@ enum dtask {
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
-  "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
+"fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
 "ivcurve", "stop", "stopmce", "lcloop", "bstep", "bramp", "kick", \
 "partial"
 extern enum dtask data_tk;

@@ -161,7 +161,7 @@ const char *const GroupNames[N_GROUPS] = {
   "Telemetry",             "The Bad SC",       "Cryo/HK Power",
   "MCE Power",             "The Ugly SC",      "MPC Control",
   "Tuning Params",         "Detectors",        "Load Curves",
-  "Miscellaneous",         "CMB Grenades",     "Sync Box"
+  "Miscellaneous",         "CMB Grenades",     "Frame Timing"
   };
 
 //echoes as string; makes enum name the command name string
@@ -365,10 +365,11 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(reap_bitsy), "ask MCP to reap the *BITSY* watchdog tickle", 
     GR_MISC | CONFIRM},
   {COMMAND(bbc_sync_ext), "Set BBC to external (sync box) mode", 
-    GR_MISC | CONFIRM},
-  {COMMAND(bbc_sync_int), "Set BBC to internal sync mode", GR_MISC | CONFIRM},
+    GR_TIMING | CONFIRM},
+  {COMMAND(bbc_sync_int), "Set BBC to internal sync mode", GR_TIMING | CONFIRM},
   {COMMAND(bbc_sync_auto),
-    "Auto-set BBC to external (sync box) mode if possible", GR_MISC | CONFIRM},
+    "Auto-set BBC to external (sync box) mode if possible",
+    GR_TIMING | CONFIRM},
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
   {COMMAND(lock), "lock inner frame", GR_LOCK | GR_POINT},
@@ -459,6 +460,11 @@ const struct scom scommands[N_SCOMMANDS] = {
     GR_CRYO_HEAT},
   {COMMAND(thermveto_disable), "Disable the automatic thermal veto of the MCEs",
     GR_CRYO_HEAT},
+
+  {COMMAND(restart_reset_on), "Turn on the MCE reset on MPC startup",
+    GR_MPC | MCECMD},
+  {COMMAND(restart_reset_off), "Turn off the MCE reset on MPC startup",
+    GR_MPC | MCECMD},
 
   /* DON'T PUT ANYTHING BELOW THIS */
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
@@ -1373,13 +1379,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(bbc_rate_ext), "Set BBC external (sync box) sample rate",
-    GR_MISC | CONFIRM, 1,
+    GR_TIMING | CONFIRM, 1,
     {
       {"Rate (Sync frames per BBC)", 1, USHRT_MAX, 'i', "FRAME_EXT_BBC"}
     }
   },
   {COMMAND(bbc_rate_int), "Set BBC internal sample rate",
-    GR_MISC | CONFIRM, 1,
+    GR_TIMING | CONFIRM, 1,
     {
       {"Rate (# ADC samples (~10kHz))", 1, USHRT_MAX, 'i', "FRAME_INT_BBC"}
     }
@@ -1409,18 +1415,18 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   /* Sync Box Commands */
-  {COMMAND(mce_row_len), "Set the MCE per-row dwell time", GR_SYNC, 1,
+  {COMMAND(mce_row_len), "Set the MCE per-row dwell time", GR_TIMING, 1,
     {
       {"Row Len (25MHz cycles)", 5, 4094, 'i', "ROW_LEN_SYNC"}
     }
   },
-  {COMMAND(mce_num_rows), "Set the number of MCE rows servoed", GR_SYNC, 1,
+  {COMMAND(mce_num_rows), "Set the number of MCE rows servoed", GR_TIMING, 1,
     {
       {"Num Rows", 1, 41, 'i', "NUM_ROWS_SYNC"}
     }
   },
   {COMMAND(mce_data_rate), "Set the MCE data rate (ARZ per data frame)",
-    GR_SYNC, 1,
+    GR_TIMING, 1,
     {
       {"Data Rate", 1, 4095, 'i', "DATA_RATE_SYNC"}
     }
@@ -1554,14 +1560,6 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_TUNE, "Value", 0, 65535, 'i')},
   {MCECMD2(sq1servo_sq2fb_init, "Override start point for sq1servo call",
       GR_TUNE, "Value", 0, 65535, 'i')},
-  {MCECMDSCS(ramp_tes, "set the TES bias ramp parameters", GR_IV)},
-  {MCECMD2(ramp_tes_final_bias, "Final bias for the TES bias ramp", GR_IV,
-      "Level", 0, 65535, 'i')},
-  {MCECMD2(ramp_tes_initial_pause, "Initial pause for the TES bias ramp", GR_IV,
-      "Time (us)", 0, 65535, 'i')},
-  {MCECMD2(ramp_tes_period, "Period for the TES bias ramp", GR_IV, "Time (us)",
-      0, 1000000000, 'l')},
-  {MCECMD2A(sample_dly, "Sample delay", GR_DET, "Count", 0, 200, 'i')},
   {MCECMD2A(sample_num, "Sample number", GR_DET, "Count", 0, 100, 'i')},
   {MCECMD2A(fb_dly, "Feedback delay", GR_DET, "Count",  0, 100, 'i')},
   {MCECMD2A(row_dly, "Row delay", GR_DET, "Count",  0, 100, 'i')},
@@ -1695,7 +1693,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
-      {"Kick time (s)", 0.01, 3, 'f', "NONE"},
+      {"Kick time (s)", 0, 3, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Last bias", 0, 65535, 'i', "NONE"},
@@ -1710,7 +1708,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
-      {"Kick time (s)", 0.01, 3, 'f', "NONE"},
+      {"Kick time (s)", 0, 3, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start offset", 0, 5000, 'i', "NONE"},
       {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
@@ -1766,7 +1764,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
-      {"Kick time (s)", 0.01, 3, 'f', "NONE"},
+      {"Kick time (s)", 0, 3, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
       {"Start bias", 0, 65535, 'i', "NONE"},
       {"Last bias", 0, 65535, 'i', "NONE"},

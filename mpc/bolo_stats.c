@@ -70,7 +70,7 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   static int loc_filt_len;
   static double loc_bs_gain[N_STAT_TYPES];
   static int loc_bs_offset[N_STAT_TYPES];
-  static int count = 0, scount = 0;
+  static int scount = 0;
 
   int ii, jj, sb_idx[NUM_FILT_COEFF], fb_idx[NUM_FILT_COEFF];
   size_t ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
@@ -166,22 +166,22 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
 
     // if ( dsigma < loc_bs_offset[bs_sigma] ) dsigma = loc_bs_offset[bs_sigma];
     bolo_stat_buff[bs_sigma][ii] = RESCALE_LOG(dsigma, loc_bs_gain[bs_sigma],
-					       loc_bs_offset[bs_sigma]);;
+        loc_bs_offset[bs_sigma]);;
 
     // if ( dnoise < loc_bs_offset[bs_noise] ) dnoise = loc_bs_offset[bs_noise];
     bolo_stat_buff[bs_noise][ii] = RESCALE_LOG(dnoise, loc_bs_gain[bs_noise],
-					       loc_bs_offset[bs_noise]);;
+        loc_bs_offset[bs_noise]);;
 
 #if 0
     if (ii==100) {
       if (count==loc_filt_len || scount < loc_filt_len) {
-	bprintf(info, "(%d) Mean: %f / %d", scount, dmean, bolo_stat_buff[bs_mean][ii]);
-	bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_var[ii], dsigma, bolo_stat_buff[bs_sigma][ii]);
-	bprintf(info, "(%d) Noise: %f / %d", scount, dnoise, bolo_stat_buff[bs_noise][ii]);
-	count = 0;
-	scount++;
+        bprintf(info, "(%d) Mean: %f / %d", scount, dmean, bolo_stat_buff[bs_mean][ii]);
+        bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_var[ii], dsigma, bolo_stat_buff[bs_sigma][ii]);
+        bprintf(info, "(%d) Noise: %f / %d", scount, dnoise, bolo_stat_buff[bs_noise][ii]);
+        count = 0;
+        scount++;
       } else {
-	count++;
+        count++;
       }
     }
 #endif
@@ -193,7 +193,7 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
       frame_var[ii] -= (datum - dmean) * (datum - dmean) / (loc_filt_len - 1.);
       fdatum = frame_filt[sb_idx[0]][ii];
       frame_fvar[ii] -= fdatum * fdatum / (loc_filt_len - 1.)
-	/ (double)(loc_filt_freq * loc_filt_bw);
+        / (double)(loc_filt_freq * loc_filt_bw);
     }
   }
 

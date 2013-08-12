@@ -55,7 +55,7 @@
 #define GR_IV           0x00800000
 #define GR_MISC         0x01000000
 #define GR_CMB          0x02000000
-#define GR_SYNC         0x04000000
+#define GR_TIMING       0x04000000
 
 #define MCECMD          0x40000000 /* MCE command flag */
 //reserved for CONFIRM  0x80000000
@@ -129,7 +129,7 @@ enum singleCommand {
   mcc5_on,           mcc5_off,          mcc5_cycle,
   mcc6_on,           mcc6_off,          mcc6_cycle,
   get_superslow,     thermveto_enable,  thermveto_disable,
-  mcc_wdog_enable,   mcc_wdog_disable, 
+  mcc_wdog_enable,   mcc_wdog_disable,  restart_reset_on, restart_reset_off,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   xyzzy, N_SCOMMANDS /* SENTINAL: this must be the last thing in this list */
@@ -202,8 +202,7 @@ enum multiCommand {
   sq1_ramp_tes_bias_off, sq1_ramp_tes_bias, tes_bias_idle, tes_bias_normal,
   tes_bias_normal_time, tuning_check_bias_on, tuning_check_bias_off,
   tuning_therm_time, tuning_do_plots_on, tuning_do_plots_off,
-  sq2servo_safb_init, sq1servo_sq2fb_init, ramp_tes, ramp_tes_final_bias,
-  ramp_tes_initial_pause, ramp_tes_period, sample_dly, sample_num, fb_dly,
+  sq2servo_safb_init, sq1servo_sq2fb_init, sample_num, fb_dly,
   row_dly, flux_jumping_on, flux_jumping_off, servo_pid_col, servo_pid_pixel,
   servo_pid_frail, dead_detector, frail_detector, healthy_detector,
   sa_flux_quantum, sq2_flux_quantum, sq1_flux_quantum, sq1_bias, sq1_off_bias,

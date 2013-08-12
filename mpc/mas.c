@@ -824,8 +824,8 @@ static int kick(uint32_t bias, uint32_t value, double time, int wait)
       write_param("tes", "bias", 0, data, 16);
     }
 
-    bprintf(info, "Kick %i counts for %i usec, then wait %i sec.", value,
-        kick_time, wait);
+    bprintf(info, "Kick %i counts for %i msec, then wait %i sec.", value,
+        kick_time / 1000, wait);
 
     write_param("heater", "bias", 0, &value, 1);
     slow_dat.tile_heater = value;

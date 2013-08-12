@@ -612,7 +612,6 @@ static void apply_cmd(int p, const char *name, int n, uint32_t v)
   int i, c;
 
   switch (p) {
-    case sample_dly:
     case sample_num:
     case fb_dly:
       card[0] = "rc1";
@@ -1161,10 +1160,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         CFG_TOGGLE(tuning_do_plots_on, tuning_do_plots_off, "tuning_do_plots");
         CFG_SETINTC(sq2servo_safb_init, "sq2servo_safb_init");
         CFG_SETINTC(sq1servo_sq2fb_init, "sq1servo_sq2fb_init");
-        CFG_SETSCS(ramp_tes);
-        CFG_SETINT(ramp_tes_final_bias, "ramp_tes_final_bias");
-        CFG_SETINT(ramp_tes_initial_pause, "ramp_tes_initial_pause");
-        PRM_SETINT(sample_dly, "sample_dly");
         PRM_SETINT(sample_num, "sample_num");
         PRM_SETINT(fb_dly, "fb_dly");
         PRM_SETINT(row_dly, "row_dly");
@@ -1286,7 +1281,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[0] = 1;
         bprintf(info, "Flux loop init");
         push_block_raw("rca", "flx_lp_init", 0, data, 1);
-	stat_reset = 1;
+        stat_reset = 1;
         break;
       case integral_clamp:
         prm_integral_clamp(ev->rvalues[1], ev->ivalues[2]);
@@ -1336,8 +1331,19 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
     /* flush the experiment.cfg if it has changed */
     flush_experiment_cfg(0);
   } else {
-    bprintf(warning, "Unrecognised single command #%i from %s/%i\n",
-        ev->command, peer, port);
+    switch (ev->command) {
+      case restart_reset_on:
+        memory.restart_reset = 1;
+        mem_dirty = 1;
+        break;
+      case restart_reset_off:
+        memory.restart_reset = 0;
+        mem_dirty = 1;
+        break;
+      default:
+        bprintf(warning, "Unrecognised single command #%i from %s/%i\n",
+            ev->command, peer, port);
+    }
   }
 }
 
@@ -1449,6 +1455,7 @@ static int read_mem(void)
       memory.bolo_stat_gain[d] = 1. / log( 1.03);
       memory.bolo_stat_offset[d] = 0;
     }
+    memory.restart_reset = 1;
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 
@@ -1559,6 +1566,10 @@ int main(void)
 
   /* load non-volatile memory */
   mem_dirty = read_mem();
+
+  /* hack for getting rid fo the initial reset */
+  if (!memory.restart_reset)
+    state = st_mcecom | st_biased;
 
   /* bind to the UDP port */
   sock = udp_bind_port(MPC_PORT, 1);
