@@ -126,6 +126,10 @@ static void PhaseControl()
 // timeout on full bias scale changes (in slow frames)
 #define FULL_BIAS_TIMEOUT 100
 
+#define VETO_MCE_TIMEOUT 30
+static int veto_mce_veto[6] = {VETO_MCE_TIMEOUT, VETO_MCE_TIMEOUT,
+  VETO_MCE_TIMEOUT, VETO_MCE_TIMEOUT, VETO_MCE_TIMEOUT, VETO_MCE_TIMEOUT};
+
 static void BiasControl()
 {
   static struct NiosStruct* vCnxAddr[6];
@@ -163,6 +167,7 @@ static void BiasControl()
           bprintf(info, "Biasing X%i cernoxes full (FP:%.1f)\n",
               i+ 1, t_fp);
           CommandData.hk[i].cernox_full_bias = 1;
+          veto_mce_veto[i] = VETO_MCE_TIMEOUT;
           full_bias_timeout[i] = FULL_BIAS_TIMEOUT;
         }
       }
@@ -172,6 +177,7 @@ static void BiasControl()
           bprintf(info, "Restoring X%i cernox bias (FP:%.1f)\n",
               i+ 1, t_fp);
           CommandData.hk[i].cernox_full_bias = 0;
+          veto_mce_veto[i] = VETO_MCE_TIMEOUT;
           full_bias_timeout[i] = FULL_BIAS_TIMEOUT;
         }
       }
@@ -998,7 +1004,6 @@ void GetHKTemperatures(int do_slow, int do_init)
 }
 
 /* veto SQUIDs if SSA or FPU temp gets too high */
-#define VETO_MCE_TIMEOUT 30
 void VetoMCE()
 {
   int insert;
@@ -1008,6 +1013,21 @@ void VetoMCE()
   double t_fp, t_ssa;
 
   for (insert=0; insert<6; insert++) {
+    /* wait for things to settle down, I guess...? */
+    if (veto_mce_veto[insert]) {
+      if (veto_mce_veto[insert] == VETO_MCE_TIMEOUT)
+        bprintf(info, "HK: Stopping X%i thermal veto watch.", insert + 1);
+
+      veto_mce_veto[insert]--;
+      if (timeout[insert] == 0)
+        timeout[insert]--;
+
+      if (veto_mce_veto[insert] == 0)
+        bprintf(info, "HK: Starting X%i thermal veto watch.", insert + 1);
+
+      continue;
+    }
+
     bit = 1U << insert;
 
     /* get temperatures from central resource */
