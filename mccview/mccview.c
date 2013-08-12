@@ -53,7 +53,7 @@ static const struct fft ff[NF] = {
   {"clamp_count_mce%i", GD_UINT16}, /* 17 */
 };
 
-#define NGF 13
+#define NGF 14
 static const struct fft gf[NGF] = {
   {"mce_blob", GD_UINT16}, /* 0 */
   {"blob_num_mpc", GD_UINT16}, /* 1 */
@@ -68,6 +68,7 @@ static const struct fft gf[NGF] = {
   {"LOWER_NBITS_DMB", GD_UINT16}, /* 10 */
   {"mce_power", GD_UINT16}, /* 11 */
   {"sync_veto_mpc", GD_UINT16}, /* 12 */
+  {"therm_veto_mpc", GD_UINT16}, /* 13 */
 };
 
 union du {
@@ -77,12 +78,15 @@ union du {
 static union du d[6][NF];
 static union du gd[NGF];
 
+#define N_DTASKS 19
 const char *dtasks[] = {"idle", "setdir", "dsp_rst", "mce_rst", "reconfig",
   "start_acq", "fakestop", "empty", "status", "acq_cnf", "tuning", "del_acq",
   "iv_curve", "stop", "stop_mce", "lcloop", "bstep", "bramp", "kick"
 };
+#define N_GOALS 9
 const char *goals[] = {"pause", "tune", "iv", "stop", "lcloop", "cycle",
   "acq", "bstep", "bramp"};
+#define N_MODES 7
 const char *modes[] = {"none", "tuning", "iv_curve", "lcloop", "running",
   "bstep", "bramp"};
 #define N_STATES 9
@@ -137,16 +141,6 @@ static char drivemap(uint64_t map, int n)
   }
 }
 
-static char bits[NGF][7];
-char *mcebits(int n)
-{
-  int i;
-
-  for (i = 0; i < 6; ++i)
-    bits[n][i] = (gd[n].u64 & (1U << i)) ? i + '1' : '.';
-  return bits[n];
-}
-
 int mce_power(int x)
 {
   if (x == 1 || x == 2)
@@ -154,6 +148,41 @@ int mce_power(int x)
   if (x == 3 || x == 5)
     return !(gd[11].u64 & 0x2);
   return !(gd[11].u64 & 0x4);
+}
+
+static char bits[NGF][7];
+char *vetobits(int q, int t)
+{
+  int i;
+
+  for (i = 0; i < 6; ++i)
+    bits[q][i] = '.';
+
+  /* power veto */
+  for (i = 0; i < 6; ++i)
+    if (!mce_power(i))
+      bits[q][i] = 'p';
+
+  /* thermal veto */
+  for (i = 0; i < 6; ++i)
+    if (gd[t].u64 & (1U << i))
+      bits[q][i] = 't';
+
+  /* user veto */
+  for (i = 0; i < 6; ++i)
+    if (gd[q].u64 & (1U << i))
+      bits[q][i] = 'V';
+
+  return bits[q];
+}
+
+char *mcebits(int n)
+{
+  int i;
+
+  for (i = 0; i < 6; ++i)
+    bits[n][i] = (gd[n].u64 & (1U << i)) ? i + '1' : '.';
+  return bits[n];
 }
 
 void ss_init(void)
@@ -201,6 +230,16 @@ void ss_init(void)
 
 void update_ss(DIRFILE *D, off_t lf, off_t fn)
 {
+}
+
+char Abuffer[100];
+const char *A(const char **v, int i, int l)
+{
+  if (i >= l) {
+    sprintf(Abuffer, "(%i)", i);
+    return Abuffer;
+  }
+  return v[i];
 }
 
 int main(int argc, char **argv)
@@ -279,7 +318,7 @@ int main(int argc, char **argv)
     printw("Frame: %lli  blob#%-6llu  mce_blob:0x%04llX  reporting:%s  "
         "alive:%s  veto:%s  sync_veto:%s  bset:%03llu  dmode:%02llu  "
         "bits:%02llu+%02llu/%02llu+%02llu\n", (long long)fn, gd[1].u64,
-        gd[0].u64, mcebits(2), mcebits(3), mcebits(4), mcebits(12),
+        gd[0].u64, mcebits(2), mcebits(3), vetobits(4, 13), mcebits(12),
         gd[5].u64, gd[6].u64, gd[7].u64, gd[8].u64, gd[9].u64, gd[10].u64);
     for (x = 0; x < 6; ++x)
       printw("            X%i           ", x + 1);
@@ -328,11 +367,11 @@ int main(int argc, char **argv)
     }
 
     for (x = 0; x < 6; ++x)
-      printw("  mode: %12s     ", modes[d[x][6].u64 >> 8]);
+      printw("  mode: %12s     ", A(modes, d[x][6].u64 >> 8, N_MODES));
     printw("\n");
 
     for (x = 0; x < 6; ++x)
-      printw("  goal: %12s     ", goals[d[x][7].u64]);
+      printw("  goal: %12s     ", A(goals, d[x][7].u64, N_GOALS));
     printw("\n");
 
     for (x = 0; x < 6; ++x)
@@ -340,7 +379,7 @@ int main(int argc, char **argv)
     printw("\n");
 
     for (x = 0; x < 6; ++x)
-      printw(" dtask: %12s     ", dtasks[d[x][9].u64]);
+      printw(" dtask: %12s     ", A(dtasks, d[x][9].u64, N_DTASKS));
     printw("\n");
 
     for (x = 0; x < 6; ++x)
