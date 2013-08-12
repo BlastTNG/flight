@@ -179,7 +179,7 @@ const char *action_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", NULL};
 const char *daction_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", "Record default only", NULL};
-const char *tunedata_names[] = {"expt.cfg", "sqtune"};
+const char *tunedata_names[] = {"expt.cfg", "sqtune", NULL};
 
 const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
