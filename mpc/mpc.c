@@ -1286,6 +1286,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[0] = 1;
         bprintf(info, "Flux loop init");
         push_block_raw("rca", "flx_lp_init", 0, data, 1);
+	stat_reset = 1;
         break;
       case integral_clamp:
         prm_integral_clamp(ev->rvalues[1], ev->ivalues[2]);

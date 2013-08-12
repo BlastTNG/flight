@@ -640,6 +640,7 @@ static int flux_loop_init(double wait)
   uint32_t one = 1;
   bprintf(info, "Flux Loop Init");
   mas_write_block("rca", "flx_lp_init", &one, 1);
+  stat_reset = 1;
   return check_wait(wait);
 }
 
