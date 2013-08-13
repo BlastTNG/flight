@@ -61,6 +61,7 @@ struct memory_t {
   double bolo_stat_gain[N_STAT_TYPES];
   int bolo_stat_offset[N_STAT_TYPES];
   int restart_reset;
+  int ref_tune;
 };
 extern struct memory_t memory;
 extern int mem_dirty;
@@ -73,6 +74,7 @@ extern int mas_get_temp;
 extern int sock;
 extern int in_turnaround;
 extern int cur_dm, req_dm;
+extern unsigned tuning_status;
 extern int power_cycle_mce;
 extern int power_cycle_cmp;
 extern int send_mceparam;

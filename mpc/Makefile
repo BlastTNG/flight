@@ -178,7 +178,7 @@ format.bolo_stats: make_stats_etc
 # Install Stuff
 #
 
-MAS_BIN_STUFF=mpc mpc_inf_loop replicate choose_tes_bias
+MAS_BIN_STUFF=mpc mpc_inf_loop replicate choose_tes_bias eval_squid_tune
 install: mpc mpc_inf_loop
 	install -d /data/mas/bin
 	install -m 755 ${MAS_BIN_STUFF} /data/mas/bin

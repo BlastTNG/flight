@@ -383,10 +383,12 @@ static void send_slow_data(char *data, int send)
   /* drive map */
   slow_dat.drive_map = drive_map;
 
-  /* last things */
+  /* tuning and iv curves */
   slow_dat.last_tune = memory.last_tune;
   slow_dat.last_iv = memory.last_iv;
   slow_dat.used_tune = memory.used_tune;
+  slow_dat.ref_tune = memory.ref_tune;
+  slow_dat.tune_stat = tuning_status;
 
   /* make packet and send */
   if (send) {
@@ -1226,6 +1228,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case use_tuning:
         cfg_apply_tuning(ev->ivalues[1] ? ev->ivalues[1] : memory.last_tune, 1);
         break;
+      case ref_tuning:
+        memory.ref_tune = ev->ivalues[1];
+        break;
       case send_tuning:
         new_blob_type = BLOB_TUNECFG + ev->ivalues[2];
         blob_data[0] = ev->ivalues[1] ? ev->ivalues[1] : memory.last_tune;
@@ -1432,14 +1437,15 @@ static int read_mem(void)
     bprintf(warning, "Regenerating memory.");
     memory.version = MEM_VERS;
     memory.last_tune = find_last_dirent("tuning", 0);
+    memory.ref_tune = memory.last_tune; /* why not...? */
     memory.last_iv = find_last_dirent("ivcurves", 3);
     memory.squidveto = 0;
     memory.used_tune = 0xFFFF; /* don't know */
     memory.sync_veto = 0;
     memory.divisor = 1;
     memory.dmesg_lookback = btime;
-    memory.bias_kick_val = 2 /* Volts */ * 32767 / 5;
-    memory.bias_kick_bias = 0;
+    memory.bias_kick_val = 3 /* Volts */ * 32767 / 5;
+    memory.bias_kick_bias = 0; /* off */
     memory.bias_kick_time = 500000; /* microseconds */
     memory.bias_kick_wait = 30; /* seconds */
     memory.bolo_filt_len = 5000;

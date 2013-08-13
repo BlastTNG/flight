@@ -143,6 +143,8 @@ if __name__ == "__main__":
     P = ap.ArgumentParser()
     P.add_argument('tuning', help='Tuning to check')
     P.add_argument('ref_tuning', help='Reference tuning')
+    P.add_argument('stage',
+                   help='Stage to check (one of "sa", "sq2", "sq1_servo", "sq1_ramp")')
     P.add_argument('-n','--no-p2p',default=True,dest='p2p',action='store_false',
                    help="Don't use p2p criterion to check tuning")
     P.add_argument('-l','--do-lockslope',default=False,dest='lockslope',action='store_true',

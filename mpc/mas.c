@@ -29,12 +29,15 @@
 #include <mce/data_ioctl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <libgen.h>
 #include <string.h>
 #include <time.h>
 #include <signal.h>
+
+unsigned tuning_status = 0;
 
 static unsigned cmd_err = 0;
 
@@ -44,7 +47,7 @@ static unsigned cmd_err = 0;
     if (++cmd_err >= MAS_CMD_ERR) { \
       comms_lost = 1; \
     } else \
-      cmd_err = 0; \
+    cmd_err = 0; \
   } while(0)
 
 /* a big old array of block data */
@@ -267,8 +270,8 @@ static int param_index(const char *card, const char *param)
         return -1 - i;
   } else 
     for (i = first; i <= last; i++)
-    if (strcmp(param, mstat_phys[i].p) == 0)
-      return i;
+      if (strcmp(param, mstat_phys[i].p) == 0)
+        return i;
 
   /* Be unforgiving */
   bprintf(fatal, "Parameter look-up error: %s/%s\n", card, param);
@@ -627,7 +630,7 @@ static int check_wait(double wait)
   for (i = 0; i < wait; i += 0.01) {
     if (kill_special)
       return 1;
-    
+
     deblock();
     usleep(10000);
   }
@@ -791,7 +794,7 @@ static int set_directory(void)
     data_root[5] = i + '0';
     write_array_id(i);
     if (exec_and_wait(sched, none, MAS_SCRIPT "/set_directory", argv, 20, 0,
-        NULL))
+          NULL))
     {
       drive_error[i] = 1;
       state &= ~st_drives;
@@ -1187,18 +1190,6 @@ static int lcloop(void)
   return 0;
 }
 
-static const char *first_stage_tune[] = {
-  "--first-stage=sa_ramp", "--first-stage=sq2_servo",
-  "--first-stage=sq1_servo", "--first-stage=sq1_ramp",
-  "--first-stage=sq1_ramp_tes", "--first-stage=operate"
-};
-
-static const char *last_stage_tune[] = {
-  "--last-stage=sa_ramp", "--last-stage=sq2_servo",
-  "--last-stage=sq1_servo", "--last-stage=sq1_ramp",
-  "--last-stage=sq1_ramp_tes", "--last-stage=operate"
-};
-
 /* if experiment.cfg doesn't exist in current_data, force a flush to disk
  * of the one we have */
 static void ensure_experiment_cfg(void)
@@ -1391,14 +1382,197 @@ static int good_tuning(int num)
   return 1; /* yeah, it is */
 }
 
+static int get_tune_dir(char buffer[100])
+{
+  char linkval[100];
+  char link[] = "/data#/mce/last_squid_tune";
+  link[5] = data_drive[0] + '0';
+
+  if (readlink(link, linkval, 100) < 0) {
+    bprintf(warning, "Bad link: %s", link);
+    return 1;
+  }
+
+  strcpy(buffer, dirname(linkval));
+  return 0;
+}
+
+/* update an experiment.cfg parameter based on output from the tuning evaluation
+ * script
+ */
+static void check_tune_update(char *line)
+{
+  char *ptr;
+  char *endptr;
+  uint32_t data[NUM_COL * NUM_ROW];
+  int offset;
+  int n;
+  /* this should have the form: <param_name> <offset> <data>... */
+
+  /* find the first whitespace character */
+  for (ptr = line; *ptr; ++ptr)
+    ;
+
+  /* zero it */
+  *ptr = 0;
+
+  /* offset */
+  offset = (int)strtoul(ptr + 1, &endptr, 10);
+
+  /* get the data */
+  n = 0;
+  do {
+    /* strip leading whitespace */
+    for (ptr = endptr; !isblank(*ptr); ++ptr)
+      ;
+
+    /* convert */
+    data[n++] = (uint32_t)strtoul(ptr, &endptr, 10);
+
+    if (n == NUM_COL * NUM_ROW)
+      break;
+  } while (*endptr);
+
+  /* run it */
+  if (n == 1)
+    cfg_set_int(line, offset, data[0]);
+  else if (n > 0)
+    cfg_set_intarr(line, offset, data, n);
+}
+
+#define CHECK_TUNE_ERR (2 << 8)
+static int check_tune(const char *stage_name, const char *ref_tune_dir)
+{
+  struct mcp_proc *p;
+  int p_stdout = -1;
+  int p_stderr = -1;
+  char lst_dir[100];
+  char obuffer[8192], ebuffer[8192];
+  char *opos = obuffer;
+  char *epos = ebuffer;
+  const char *argv[5] = { "/data/mas/bin/eval_squid_tuning",
+    lst_dir /* tuning dir */, ref_tune_dir, stage_name, NULL };
+  int nfds = 0;
+  int proc_state;
+  struct timeval seltime;
+  fd_set fdset;
+  ssize_t n;
+
+  if (get_tune_dir(lst_dir))
+    return CHECK_TUNE_ERR;
+
+  p = start_proc(argv[0], (char**)argv, 0, 1, NULL, &p_stdout, &p_stderr,
+      &kill_special);
+  if (p == NULL)
+    return CHECK_TUNE_ERR;
+
+  /* capture the output */
+  while ((proc_state = check_proc(p)) == 0) {
+    FD_ZERO(&fdset);
+    FD_SET(p_stderr, &fdset);
+    FD_SET(p_stdout, &fdset);
+
+    seltime.tv_sec = 1;
+    seltime.tv_usec = 0;
+
+    n = select(nfds, &fdset, NULL, NULL, &seltime);
+
+    /* parrot the child's standard error */
+    if (FD_ISSET(p_stderr, &fdset)) {
+      n = read(p_stderr, epos, 1);
+      if (n < 0)
+        break;
+      else if (n > 0) {
+        if (*epos == '\n' || (epos - ebuffer) >= 8192) {
+          *epos = 0;
+          epos = ebuffer;
+          bprintf(sched, "%s", ebuffer);
+        } else
+          epos++;
+      }
+    }
+
+    /* collect stdout and do stuff with it when we have a line */
+    if (FD_ISSET(p_stdout, &fdset)) {
+      n = read(p_stdout, opos, 1);
+      if (n < 0)
+        break;
+      else if (n > 0) {
+        if (*opos == '\n' || (opos - obuffer) >= 8192) {
+          *opos = 0;
+          opos = obuffer;
+          check_tune_update(obuffer);
+        } else
+          opos++;
+      }
+    }
+  }
+
+  if (proc_state == 1) {
+    /* clear the buffers */
+    for (;;) {
+      n = read(p_stderr, epos, 1);
+      if (n <= 0)
+        break;
+      else if (n > 0) {
+        if (*epos == '\n' || (epos - ebuffer) >= 8192) {
+          *epos = 0;
+          epos = ebuffer;
+          bprintf(sched, "%s", ebuffer);
+        } else
+          epos++;
+      }
+    }
+    close(p_stderr);
+
+    for (;;) {
+      n = read(p_stdout, opos, 1);
+      if (n <= 0)
+        break;
+      else if (n > 0) {
+        if (*opos == '\n' || (opos - obuffer) >= 8192) {
+          *opos = 0;
+          opos = obuffer;
+          check_tune_update(obuffer);
+        } else
+          opos++;
+      }
+    }
+    close(p_stdout);
+  }
+
+  return stop_proc(p, 0, 0, 0, 1);
+}
+
 /* run a tuning */
 static int tune(void)
 {
+  const char *first_stage_tune[] = {
+    "--first-stage=sa_ramp", "--first-stage=sq2_servo",
+    "--first-stage=sq1_servo", "--first-stage=sq1_ramp",
+    "--first-stage=sq1_ramp_tes"
+  };
+
+  const char *last_stage_tune[] = {
+    "--last-stage=sa_ramp", "--last-stage=sq2_servo",
+    "--last-stage=sq1_servo", "--last-stage=sq1_ramp",
+    "--last-stage=sq1_ramp_tes"
+  };
+
+  const char *stage_name[] = {"sa", "sq2", "sq1_servo", "sq1_ramp", NULL};
+
   int old_sa_ramp_bias = 0, old_sq2_servo_bias_ramp = 0;
   int old_sq1_servo_bias_ramp = 0;
-  const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
-    first_stage_tune[goal.start], last_stage_tune[goal.stop], NULL };
+  char ref_tune_dir[100];
+  char lst_dir[100];
+  int stage, r = 0;
+
+  const char *argv[5] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
+    NULL /* first stage */, NULL /* last stage */, NULL };
   int local_tune_force_biases = goal.force;
+
+  sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i", data_drive[0] + '0',
+      memory.ref_tune);
 
   ensure_experiment_cfg();
 
@@ -1412,23 +1586,47 @@ static int tune(void)
     old_sq1_servo_bias_ramp = cfg_get_int("sq1_servo_bias_ramp", 0);
     cfg_set_int("sq1_servo_bias_ramp", 0, 1);
   }
-  flush_experiment_cfg(0);
 
-  int r = exec_and_wait(sched, none, MAS_SCRIPT "/auto_setup", (char**)argv,
-      0, 0, &kill_special);
+  /* run each stage in turn */
+  for (stage = goal.start; stage <= goal.stop; ++stage)
+  {
+    flush_experiment_cfg(0);
+
+    argv[2] = first_stage_tune[stage];
+    argv[3] = last_stage_tune[stage];
+    r = exec_and_wait(sched, none, argv[0], (char**)argv, 0, 1, &kill_special);
+
+    if (r)
+      break;
+
+    /* check, if necessary */
+    if (stage_name[stage]) {
+      int check = check_tune(stage_name[stage], ref_tune_dir);
+
+      if (WIFEXITED(check)) {
+        switch (WEXITSTATUS(check)) {
+          case 1: /* redo */
+            stage--;
+            break;
+          case 0: /* success */
+            break;
+          default: /* irrecoverable error */
+            r = 1;
+            break;
+        }
+      } else {
+        r = 1;
+        break;
+      }
+    }
+  }
 
   if (r == 0) { /* archive it */
     int d;
-    char *dir;
-    char lst[100];
-    char link[] = "/data#/mce/last_squid_tune";
-    link[5] = data_drive[0] + '0';
 
-    if (readlink(link, lst, 100) < 0) {
-      bprintf(warning, "Bad link: %s", link);
+    if (get_tune_dir(lst_dir))
       r = 1;
-    } else {
-      dir = dirname(lst);
+    else {
       char tuning_dir[100];
 
       /* increment tuning */
@@ -1439,7 +1637,7 @@ static int tune(void)
       sprintf(tuning_dir, "/data#/mce/tuning/%04i", memory.last_tune);
       argv[0] = "/bin/cp";
       argv[1] = "-r";
-      argv[2] = dir;
+      argv[2] = lst_dir;
       argv[3] = tuning_dir;
       argv[4] = NULL;
       for (d = 0; d < 4; ++d)

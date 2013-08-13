@@ -388,28 +388,28 @@ int exec_and_wait(buos_t errlev, buos_t outlev, const char *path, char *argv[],
               epos = ebuffer;
               bprintf(errlev, "%s", ebuffer);
             } else
-            epos++;
+              epos++;
+          }
         }
+        close(p_stderr);
       }
-      close(p_stderr);
-    }
-    if (outlev != none) {
-      for (;;) {
-        n = read(p_stdout, opos, 1);
-        if (n <= 0)
-          break;
-        else if (n > 0) {
-          if (*opos == '\n' || (opos - obuffer) >= EXEC_BUFLEN) {
-            *opos = 0;
-            opos = obuffer;
-            bprintf(outlev, "%s", obuffer);
-          } else
-            opos++;
+      if (outlev != none) {
+        for (;;) {
+          n = read(p_stdout, opos, 1);
+          if (n <= 0)
+            break;
+          else if (n > 0) {
+            if (*opos == '\n' || (opos - obuffer) >= EXEC_BUFLEN) {
+              *opos = 0;
+              opos = obuffer;
+              bprintf(outlev, "%s", obuffer);
+            } else
+              opos++;
+          }
         }
+        close(p_stdout);
       }
-      close(p_stdout);
     }
-  }
 
     if (errlev != none && epos > ebuffer) {
       *(++epos) = 0;
