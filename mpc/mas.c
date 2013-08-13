@@ -18,6 +18,7 @@
  */
 
 #define SHOW_WRITE_PARAM
+#undef CHECK_TUNING
 
 #include "mpc_proto.h"
 #include "mpc.h"
@@ -1408,9 +1409,10 @@ static void check_tune_update(char *line)
   int offset;
   int n;
   /* this should have the form: <param_name> <offset> <data>... */
+  bprintf(info, "cfg-do: %s", line);
 
   /* find the first whitespace character */
-  for (ptr = line; *ptr; ++ptr)
+  for (ptr = line; *ptr && !isblank(*ptr); ++ptr)
     ;
 
   /* zero it */
@@ -1423,8 +1425,11 @@ static void check_tune_update(char *line)
   n = 0;
   do {
     /* strip leading whitespace */
-    for (ptr = endptr; !isblank(*ptr); ++ptr)
+    for (ptr = endptr; *ptr && !isblank(*ptr); ++ptr)
       ;
+
+    if (!*ptr)
+      break;
 
     /* convert */
     data[n++] = (uint32_t)strtoul(ptr, &endptr, 10);
@@ -1438,6 +1443,9 @@ static void check_tune_update(char *line)
     cfg_set_int(line, offset, data[0]);
   else if (n > 0)
     cfg_set_intarr(line, offset, data, n);
+  else
+    bprintf(warning, "ignoring malformed eval_squid_tune output starting %s",
+        line);
 }
 
 #define CHECK_TUNE_ERR (2 << 8)
@@ -1450,7 +1458,7 @@ static int check_tune(const char *stage_name, const char *ref_tune_dir)
   char obuffer[8192], ebuffer[8192];
   char *opos = obuffer;
   char *epos = ebuffer;
-  const char *argv[5] = { "/data/mas/bin/eval_squid_tuning",
+  const char *argv[5] = { "/data/mas/bin/eval_squid_tune",
     lst_dir /* tuning dir */, ref_tune_dir, stage_name, NULL };
   int nfds = 0;
   int proc_state;
@@ -1545,6 +1553,7 @@ static int check_tune(const char *stage_name, const char *ref_tune_dir)
 }
 
 /* run a tuning */
+#define MAX_STAGE_TRIES 3
 static int tune(void)
 {
   const char *first_stage_tune[] = {
@@ -1565,9 +1574,10 @@ static int tune(void)
   int old_sq1_servo_bias_ramp = 0;
   int local_tune_force_biases = goal.force;
   char lst_dir[100];
-#if 0
+#if CHECK_TUNING
   char ref_tune_dir[100];
   int stage, r = 0;
+  int stage_tries[5] = {0, 0, 0, 0, 0};
 
   const char *argv[5] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
     NULL /* first stage */, NULL /* last stage */, NULL };
@@ -1606,8 +1616,9 @@ static int tune(void)
 
       if (WIFEXITED(check)) {
         switch (WEXITSTATUS(check)) {
-          case 1: /* redo */
-            stage--;
+          case 2: /* redo */
+            if (++stage_tries[stage] < MAX_STAGE_TRIES)
+              stage--;
             break;
           case 0: /* success */
             break;
@@ -1620,6 +1631,9 @@ static int tune(void)
         break;
       }
     }
+
+    if (r)
+      break;
   }
 #else
   const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
