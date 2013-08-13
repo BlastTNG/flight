@@ -164,11 +164,6 @@ int32_t box_temp = 32767;
 /* DV timing parameters */
 int num_rows = -1, row_len = -1, data_rate = -1;
 
-/* tile heater kick timeout */
-#define POST_KICK_WAIT 5 /* seconds */
-static int tile_heater_timeout = -1;
-static int tile_heater_is_off = 0;
-
 static void set_data_mode_bits(int i, const char *dmb)
 {
   if (data_modes[i][0].first_bit != dmb[0] ||
@@ -586,9 +581,12 @@ static void push_blockr(const char *c, const char *p, int o, const uint32_t *d,
   blockq_head = new_head;
 }
 
-static void push_kick(double k)
+static void push_kick(double heater_bias, double time, int kick_bias)
 {
-  push_blockr("", "", k * 32767. / 5, NULL, 0, 2);
+  uint32_t data[3];
+  memcpy(data, &time, sizeof(double));
+  data[2] = kick_bias;
+  push_blockr("", "", heater_bias * 32767. / 5, data, 3, 2);
 }
 
 /* cooked push */
@@ -987,7 +985,7 @@ static void q_bias_tess(double k, int o, uint32_t *data, int n, int a)
   /* apply */
   if (a == PRM_APPLY_RECORD || a == PRM_APPLY_ONLY) {
     push_block("tes", "bias", o, data, n);
-    push_kick(k);
+    push_kick(k, 0, memory.bias_kick_bias);
     state |= st_biased;
   }
 
@@ -1092,7 +1090,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         new_goal.goal = gl_tune;
         change_goal = 1;
         break;
-      case partial_load_curve:
+      case partial_iv_curve:
         new_goal.kick = ev->rvalues[1] * 32767 / 5.;
         new_goal.kicktime = ev->rvalues[2];
         new_goal.kickwait = ev->rvalues[3];
@@ -1255,20 +1253,14 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         data[0] = ev->ivalues[1] * 32767 / 5;
         push_block("heater", "bias", 0, data, 1);
         slow_dat.tile_heater = data[0];
-        tile_heater_timeout = -1;
         break;
       case tile_heater_off:
         data[0] = 0;
         push_block("heater", "bias", 0, data, 1);
         slow_dat.tile_heater = 0;
-        tile_heater_timeout = -1;
         break;
       case tile_heater_kick:
-        data[0] = ev->rvalues[1] * 32767 / 5.;
-        push_block("heater", "bias", 0, data, 1);
-        slow_dat.tile_heater = data[0];
-        tile_heater_timeout = (ev->rvalues[2] + POST_KICK_WAIT) * 1000;
-        tile_heater_is_off = 0;
+        push_kick(ev->rvalues[1], ev->rvalues[3], ev->ivalues[2]);
         break;
       case servo_reset:
         q_servo_reset(ev->ivalues[1], ev->ivalues[2]);
@@ -1317,8 +1309,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case bias_kick_params:
         memory.bias_kick_val = ev->rvalues[1] * 32767 / 5.;
-        memory.bias_kick_time = ev->rvalues[2] * 1e6;
-        memory.bias_kick_wait = ev->ivalues[3];
+        memory.bias_kick_bias = ev->ivalues[2];
+        memory.bias_kick_time = ev->rvalues[3] * 1e6;
+        memory.bias_kick_wait = ev->ivalues[4];
         mem_dirty = 1;
         break;
 
@@ -1446,6 +1439,7 @@ static int read_mem(void)
     memory.divisor = 1;
     memory.dmesg_lookback = btime;
     memory.bias_kick_val = 2 /* Volts */ * 32767 / 5;
+    memory.bias_kick_bias = 0;
     memory.bias_kick_time = 500000; /* microseconds */
     memory.bias_kick_wait = 30; /* seconds */
     memory.bolo_filt_len = 5000;
@@ -1692,24 +1686,6 @@ int main(void)
 
       /* PCM requests */
       pcm_special(0, NULL, NULL, 0);
-    }
-
-    /* tile heater timer */
-    if (tile_heater_timeout >= 0) {
-      if ((tile_heater_timeout -= UDP_TIMEOUT) <= 0) {
-        uint32_t one = 1;
-        bprintf(info, "Flux loop init");
-        push_block_raw("rca", "flx_lp_init", 0, &one, 1);
-        tile_heater_timeout = -1;
-        tile_heater_is_off = 0;
-      } else if (tile_heater_timeout <= 1000 * POST_KICK_WAIT) {
-        if (!tile_heater_is_off) {
-          uint32_t zero = 0;
-          push_block("heater", "bias", 0, &zero, 1);
-          slow_dat.tile_heater = 0;
-          tile_heater_is_off = 1;
-        }
-      }
     }
   }
 

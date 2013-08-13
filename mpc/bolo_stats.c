@@ -73,7 +73,6 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   static double loc_bs_gain[N_STAT_TYPES];
   static int loc_bs_offset[N_STAT_TYPES];
   static int scount = 0;
-  static int count = 0;
 
   int ii, jj, sb_idx[NUM_FILT_COEFF], fb_idx[NUM_FILT_COEFF];
   size_t ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
@@ -181,16 +180,17 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     bolo_stat_buff[bs_noise][ii] = (v < 0) ? 0 : ( (v > 255) ? 255 : v );
 
 #if 0
+    static int count = 0;
     if (ii==41) {
       if (count==loc_filt_len || scount < loc_filt_len + 5) {
-	bprintf(info, "(%d) Last: off %d / this %d / last %d", scount, frame_offset[ii],
-		(int) vthis, (int) vlast);
-	bprintf(info, "(%d) Mean: %f / %d", scount, dmean, bolo_stat_buff[bs_mean][ii]);
-	bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_sum2[ii], dsigma, 
-		bolo_stat_buff[bs_sigma][ii]);
-	bprintf(info, "(%d) Noise: %f / %d", scount, dnoise, 
-		bolo_stat_buff[bs_noise][ii]);
-	count = 0;
+        bprintf(info, "(%d) Last: off %d / this %d / last %d", scount, frame_offset[ii],
+            (int) vthis, (int) vlast);
+        bprintf(info, "(%d) Mean: %f / %d", scount, dmean, bolo_stat_buff[bs_mean][ii]);
+        bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_sum2[ii], dsigma, 
+            bolo_stat_buff[bs_sigma][ii]);
+        bprintf(info, "(%d) Noise: %f / %d", scount, dnoise, 
+            bolo_stat_buff[bs_noise][ii]);
+        count = 0;
       } else {
         count++;
       }

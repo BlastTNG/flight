@@ -180,6 +180,7 @@ const char *action_names[] = {"Apply & Record", "Apply only",
 const char *daction_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", "Record default only", NULL};
 const char *tunedata_names[] = {"expt.cfg", "sqtune", NULL};
+const char *zbias_names[] = {"TES", "squids", "all", NULL};
 
 const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
@@ -1617,11 +1618,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD2P(tile_heater_on, "Turn on the tile heater", GR_IV,
       "Level (V)", 0, 5, 'f')},
   {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_IV)},
-  {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_IV | MCECMD, 3,
+  {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_IV | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"Level (V)", 0, 5, 'f', "NONE"},
-      {"Duration (s)", 0, 100, 'f', "NONE"},
+      {"Kick bias (0 = ignore)", 0, 65535, 'i', "NONE"},
+      {"Kick time (s)", 0.01, 30, 'f', "NONE"}
     }
   },
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_DET, "Row", 0, 32, 'i')},
@@ -1703,7 +1705,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(partial_load_curve), "Acquire a partial load curve",
+  {COMMAND(partial_iv_curve), "Acquire a partial load curve",
     GR_IV | GR_MPC | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
@@ -1741,11 +1743,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(bias_kick_params), "Set default FP kick parameters",
-    GR_MPC | MCECMD, 4,
+    GR_MPC | MCECMD, 5,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
-      {"Kick time (s)", 0.01, 3, 'f', "NONE"},
+      {"Kick bias", 0, 65535, 'i', "NONE"},
+      {"Kick time (s)", 0.01, 30, 'f', "NONE"},
       {"Post-kick wait (s)", 0, 1000, 'i', "NONE"}
     }
   },

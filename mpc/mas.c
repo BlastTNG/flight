@@ -803,40 +803,59 @@ static int set_directory(void)
 }
 
 #define KICK_DONT_BIAS 4000000000U
-static int kick(uint32_t bias, uint32_t value, double time, int wait)
+static int kick(uint32_t tes_bias, uint32_t kick_bias, uint32_t heater_bias,
+    double time, int wait)
 {
-  if (value > 0) {
-    int i;
-    uint32_t zero = 0;
-    uint32_t data[16];
-    int kick_time;
+  int i, need_rebias = 0;
+  uint32_t zero = 0;
+  uint32_t data[16];
+  uint32_t saved_bias[16];
+  int kick_time;
 
-    /* convert to microseconds, and set default if necessary */
-    if (time == 0)
-      kick_time = memory.bias_kick_time;
+  if (heater_bias == 0)
+    return 0;
+
+  /* convert to microseconds, and set default if necessary */
+  if (time == 0)
+    kick_time = memory.bias_kick_time;
+  else
+    kick_time = time * 1000000;
+
+  if (kick_bias > 0) {
+    /* remember biases */
+    if (tes_bias == KICK_DONT_BIAS)
+      fetch_param("tes", "bias", 0, saved_bias, 16);
     else
-      kick_time = time * 1000000;
-
-    if (bias != KICK_DONT_BIAS) {
-      /* bias to the start */
       for (i = 0; i < 16; ++i)
-        data[i] = bias;
-      write_param("tes", "bias", 0, data, 16);
-    }
+        saved_bias[i] = tes_bias;
 
-    bprintf(info, "Kick %i counts for %i msec, then wait %i sec.", value,
-        kick_time / 1000, wait);
-
-    write_param("heater", "bias", 0, &value, 1);
-    slow_dat.tile_heater = value;
-    usleep(kick_time);
-    write_param("heater", "bias", 0, &zero, 1);
-    slow_dat.tile_heater = 0;
-
-    /* wait */
-    if (check_wait(wait))
-      return 1;
+    for (i = 0; i < 16; ++i)
+      data[i] = kick_bias;
+    write_param("tes", "bias", 0, data, 16);
+    need_rebias = 1;
+  } else if (tes_bias != KICK_DONT_BIAS) {
+    for (i = 0; i < 16; ++i)
+      data[i] = tes_bias;
+    write_param("tes", "bias", 0, data, 16);
   }
+
+  bprintf(info, "Kick %i counts for %i msec, then wait %i sec.", heater_bias,
+      kick_time / 1000, wait);
+
+  write_param("heater", "bias", 0, &heater_bias, 1);
+  slow_dat.tile_heater = heater_bias;
+  usleep(kick_time);
+  write_param("heater", "bias", 0, &zero, 1);
+  slow_dat.tile_heater = 0;
+
+  /* rebias, if necessary */
+  if (need_rebias)
+    write_param("tes", "bias", 0, saved_bias, 16);
+
+  /* wait */
+  if (check_wait(wait))
+    return 1;
+
   /* flx_lp_init */
   return flux_loop_init(2);
 }
@@ -860,7 +879,7 @@ static void pick_biases(int iv_num)
       &kill_special);
   if (p == NULL)
     return;
-  
+
   /* capture the output */
   if (read(p_stdout, &biases, 1024) < 0)
     good = 0;
@@ -876,9 +895,16 @@ static void pick_biases(int iv_num)
       /* apply and record, then kick */
       write_param("tes", "bias", 0, data, 16);
       cfg_set_intarr("tes_bias", 0, data, 16);
-      kick(KICK_DONT_BIAS, memory.bias_kick_val, 0, memory.bias_kick_wait);
+      kick(KICK_DONT_BIAS, memory.bias_kick_bias, memory.bias_kick_val, 0,
+          memory.bias_kick_wait);
       state |= st_biased;
     }
+}
+
+static void pop_kick(const struct block_q *req)
+{
+  const double *time = (const double*)(req->d);
+  kick(KICK_DONT_BIAS, req->d[2], req->o, *time, memory.bias_kick_wait);
 }
 
 /* returns non-zero if something was popped */
@@ -902,7 +928,7 @@ static int pop_block(void)
       pick_biases(blockq[new_tail].o);
       break;
     case 2: /* asynchronous kick request */
-      kick(KICK_DONT_BIAS, blockq[new_tail].o, 0, memory.bias_kick_wait);
+      pop_kick(blockq + new_tail);
       break;
     case 1:
       mas_write_range(blockq[new_tail].c, blockq[new_tail].p,
@@ -936,7 +962,7 @@ static void stop_mce(void)
   write_param("ac", "on_bias", 0, zeroes, 33);
   write_param("ac", "off_bias", 0, zeroes, 33);
   write_param("ac", "enbl_mux", 0, &one, 1);
-  
+
   /* these are column-wise */
   write_param("sq2", "fb", 0, zeroes, 16);
   write_param("sq2", "bias", 0, zeroes, 16);
@@ -994,7 +1020,7 @@ static int do_ivcurve(uint32_t kickvalue, double kicktime, int kickwait,
   state &= ~st_biased;
 
   /* kick */
-  if (kick(start, kickvalue, kicktime, kickwait))
+  if (kick(start, memory.bias_kick_bias, kickvalue, kicktime, kickwait))
     return 1;
 
   /* runfile */
@@ -1272,8 +1298,11 @@ static int partial_iv(void)
   fetch_param("tes", "bias", 0, saved_bias, 16);
 
   /* kick */
-  if (kick(goal.start, goal.kick, goal.kicktime, goal.kickwait))
+  if (kick(goal.start, memory.bias_kick_bias, goal.kick, goal.kicktime,
+        goal.kickwait))
+  {
     return 1;
+  }
 
   /* ramp down from offset -- goal.step is always negative */
   for (offset = goal.start; offset > 0; offset += goal.step)
@@ -1316,8 +1345,11 @@ static int bias_ramp(void)
   fetch_param("tes", "bias", 0, saved_bias, 16);
 
   /* kick */
-  if (kick(goal.start, goal.kick, goal.kicktime, goal.kickwait))
+  if (kick(goal.start, memory.bias_kick_bias, goal.kick, goal.kicktime,
+        goal.kickwait))
+  {
     return 1;
+  }
 
   /* ramp -- goal.step is always negative */
   for (bias = goal.start; bias > goal.stop; bias += goal.step)
@@ -1429,17 +1461,17 @@ static int tune(void)
   flush_experiment_cfg(1);
 
   /* apply, if requested */
-    switch (goal.apply) {
-      case 1: /* no */
+  switch (goal.apply) {
+    case 1: /* no */
+      break;
+    case 0: /* auto */
+      if (!good_tuning(memory.last_tune))
         break;
-      case 0: /* auto */
-        if (!good_tuning(memory.last_tune))
-          break;
-        /* FALLTHROUGH */
-      case 2: /* yes */
-        cfg_apply_tuning(memory.last_tune, 0);
-        break;
-    }
+      /* FALLTHROUGH */
+    case 2: /* yes */
+      cfg_apply_tuning(memory.last_tune, 0);
+      break;
+  }
 
   return r ? 1 : 0;
 }
@@ -1484,7 +1516,7 @@ static int reconfig(void)
   char gaini[] = "gaini0";
   int c;
   uint32_t u32;
-  
+
   /* check whether the sync box is useable */
   if (check_set_sync()) {
     comms_lost = 1;
@@ -1619,8 +1651,8 @@ void *mas_data(void *dummy)
         dt_error = reconfig();
         break;
       case dt_kick:
-        dt_error = kick(KICK_DONT_BIAS, memory.bias_kick_val, 0,
-            memory.bias_kick_wait);
+        dt_error = kick(KICK_DONT_BIAS, memory.bias_kick_bias,
+            memory.bias_kick_val, 0, memory.bias_kick_wait);
         break;
       case dt_status:
         dt_error = mce_status();
