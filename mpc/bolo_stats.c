@@ -15,14 +15,14 @@ uint8_t bolo_stat_buff[N_STAT_TYPES][NUM_ROW * NUM_COL];
 /* buffers */
 int32_t frame_offset[NUM_ROW * NUM_COL];
 double frame_filt[FB_SIZE][NUM_ROW * NUM_COL];
-double frame_mean[NUM_ROW * NUM_COL];
-double frame_var[NUM_ROW * NUM_COL];
-double frame_fvar[NUM_ROW * NUM_COL];
+double frame_sum[NUM_ROW * NUM_COL];
+double frame_sum2[NUM_ROW * NUM_COL];
+double frame_fsum2[NUM_ROW * NUM_COL];
 
 int sb_top = 0;
 
 /* extract data from frame (assumes data mode 10!) */
-#define FRAME_EXTRACT(frm,idx) (((int32_t)frm[idx + MCE_HEADER_SIZE] >> 7) << 3)
+#define FRAME_EXTRACT(frm,idx) (int32_t)((frm[idx + MCE_HEADER_SIZE] >> 7) << 3)
 
 /* log rescale */
 #define RESCALE_LOG(x,g,o) (g) * log( (1. + ((x)<(o) ? (o) : (x))) / (1. + (o)) )
@@ -78,7 +78,6 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   int ii, jj, sb_idx[NUM_FILT_COEFF], fb_idx[NUM_FILT_COEFF];
   size_t ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
   double vthis, vlast, vfilt, v, vflast, dmean, dsigma, dnoise, norm;
-  // double datum, datum2, fdatum, dmean, dsigma, dnoise;
 
   double fsamp = 50.e6 / (double)(header->row_len 
       * header->data_rate 
@@ -113,9 +112,9 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
 
     /* reset buffers */
     sb_top = 0;
-    memset(frame_mean, 0, sizeof(double) * NUM_ROW * NUM_COL);
-    memset(frame_var, 0, sizeof(double) * NUM_ROW * NUM_COL);
-    memset(frame_fvar, 0, sizeof(double) * NUM_ROW * NUM_COL);
+    memset(frame_sum, 0, sizeof(double) * NUM_ROW * NUM_COL);
+    memset(frame_sum2, 0, sizeof(double) * NUM_ROW * NUM_COL);
+    memset(frame_fsum2, 0, sizeof(double) * NUM_ROW * NUM_COL);
     memset(frame_filt, 0, sizeof(double) * NUM_ROW * NUM_COL * FB_SIZE);
 
     memset(bolo_stat_buff[bs_sigma], 0, sizeof(uint8_t) * NUM_ROW * NUM_COL);
@@ -150,12 +149,12 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     vlast = (scount < loc_filt_len) ? 0 :
       (FRAME_EXTRACT(frame[fb_idx[0]], ii) - frame_offset[ii]);
 
-    frame_mean[ii] += (vthis - vlast) / norm;
-    dmean = frame_mean[ii];
+    frame_sum[ii] += (vthis - vlast);
+    dmean = frame_sum[ii] / norm;
 
-    frame_var[ii] += (vthis * vthis - vlast * vlast) / norm;
-    dsigma = sqrt( (frame_var[ii] - frame_mean[ii] * frame_mean[ii] / norm) 
-		   / (norm-1.) );
+    frame_sum2[ii] += (vthis * vthis - vlast * vlast);
+    dsigma = sqrt((frame_sum2[ii] - frame_sum[ii] * frame_sum[ii] / norm )
+		  / (norm - 1.));
 
     /* apply filter */
     vfilt = filt_coeffb[0] * vthis;
@@ -166,9 +165,9 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     }
     vfilt /= filt_coeffa[0];
     vflast = (scount < loc_filt_len) ? 0 : frame_filt[sb_idx[0]][ii];
-    frame_fvar[ii] += (vfilt * vfilt - vflast * vflast);
+    frame_fsum2[ii] += (vfilt * vfilt - vflast * vflast);
     frame_filt[sb_top][ii] = vfilt;
-    dnoise = sqrt(frame_fvar[ii] / (norm - 1.) / (loc_filt_freq * loc_filt_bw));
+    dnoise = sqrt(frame_fsum2[ii] / (norm - 1.) / (loc_filt_freq * loc_filt_bw));
 
     /* compress */
     v = 128 + ((dmean > 0) - (dmean < 0)) * 
@@ -181,12 +180,13 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     v = RESCALE_LOG(dnoise, loc_bs_gain[bs_noise], loc_bs_offset[bs_noise]);
     bolo_stat_buff[bs_noise][ii] = (v < 0) ? 0 : ( (v > 255) ? 255 : v );
 
+#if 0
     if (ii==41) {
       if (count==loc_filt_len || scount < loc_filt_len + 5) {
 	bprintf(info, "(%d) Last: off %d / this %d / last %d", scount, frame_offset[ii],
 		(int) vthis, (int) vlast);
 	bprintf(info, "(%d) Mean: %f / %d", scount, dmean, bolo_stat_buff[bs_mean][ii]);
-	bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_var[ii], dsigma, 
+	bprintf(info, "(%d) Sigma: %f / %f / %d", scount, frame_sum2[ii], dsigma, 
 		bolo_stat_buff[bs_sigma][ii]);
 	bprintf(info, "(%d) Noise: %f / %d", scount, dnoise, 
 		bolo_stat_buff[bs_noise][ii]);
@@ -195,6 +195,7 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
         count++;
       }
     }
+#endif
 
   }
 
