@@ -211,6 +211,7 @@ static void BiasControl()
 #define HK_PWM_SSA    0x10
 #define HK_PWM_FPHI   0x20
 #define HK_PWM_HTR3   0x40
+#define HK_SERVO_PUMP 0x80
 
 /* wait this many slow frames before starting to run fridge cycle */
 #define FRIDGE_CYCLE_START_WAIT 50
@@ -256,7 +257,7 @@ static unsigned short FridgeCycle(int insert, int reset)
 
   time_t state_elapsed;
   unsigned short cycle_state, next_state;
-  unsigned short heat_pump, heat_hsw, heat_fp;
+  unsigned short heat_pump, heat_hsw, heat_fp, servo_pump;
   unsigned short retval = 0;
 
   if (firsttime[insert]) {
@@ -494,44 +495,54 @@ static unsigned short FridgeCycle(int insert, int reset)
     heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 1;
+    servo_pump = 0;
   } else if (next_state & CYCLE_SFT_BOIL) {
     heat_fp = (next_state & CYCLE_FP_ON) ? 1 : 0;
     heat_pump = 0;
     heat_hsw = 1;
+    servo_pump = 0;
   } else if (next_state & CYCLE_FP_BAKE) {
     heat_fp = (next_state & CYCLE_FP_ON) ? 1 : 0;
     heat_pump = 0;
     heat_hsw = 1;
+    servo_pump = 0;
   } else if (next_state & CYCLE_BAKE_SETTLE) {
     heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 1;
+    servo_pump = 0;
   } else if (next_state & CYCLE_HSW_OFF) {
     heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 0;
+    servo_pump = 0;
   } else if (next_state & CYCLE_PUMP_HEAT) {
     heat_fp = 0;
     heat_pump = (next_state & CYCLE_PUMP_ON) ? 1 : 0;
     heat_hsw = 0;
+    servo_pump = 1;
   } else if (next_state & CYCLE_SETTLE) {
     heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 0;
+    servo_pump = 0;
   } else if (next_state & CYCLE_COOL) {
     heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 1;
+    servo_pump = 0;
   } else {
     // catch bad state
     heat_fp = 0;
     heat_pump = 0;
     heat_hsw = 1;
+    servo_pump = 0;
   }
 
   /* set the heater control bits in the output, as needed */
   if (heat_fp)   retval |= HK_PWM_FPHI;
   if (heat_pump) retval |= HK_PWM_PUMP;
+  if (servo_pump) retval |= HK_SERVO_PUMP;
   if (!heat_hsw) retval |= HK_PWM_HSW;  /* inverted logic because normally on */
 
   /* update state time when state changes */
@@ -654,7 +665,10 @@ static void HeatControl()
       //not using auto cycle. Command PUMP and HSW manually
       FridgeCycle(i, 1);  //reset cycle state
       //servo pump temperature
-      if (CommandData.hk[i].pump_servo_on) PumpServo(i);
+      if (CommandData.hk[i].pump_servo_on) {
+	PumpServo(i);
+	bits[i] |= HK_SERVO_PUMP;
+      }
       if (CommandData.hk[i].pump_heat) bits[i] |= HK_PWM_PUMP;
       //NB: heat switch is normally closed, so logic inverted
       if (!CommandData.hk[i].heat_switch) bits[i] |= HK_PWM_HSW;
