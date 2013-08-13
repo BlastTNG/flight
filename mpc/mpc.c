@@ -1445,10 +1445,12 @@ static int read_mem(void)
     memory.bolo_filt_len = 5000;
     memory.bolo_filt_freq = 5.0;
     memory.bolo_filt_bw = 1.2;
-    for (d = 0; d < N_STAT_TYPES; d++) {
-      memory.bolo_stat_gain[d] = 1. / log( 1.03);
-      memory.bolo_stat_offset[d] = 0;
-    }
+    memory.bolo_stat_gain[bs_mean] = 1. / log( 1.07);
+    memory.bolo_stat_gain[bs_sigma] = 1. / log( 1.03);
+    memory.bolo_stat_gain[bs_noise] = 1. / log( 1.03);
+    memory.bolo_stat_offset[bs_mean] = 5000;
+    memory.bolo_stat_offset[bs_sigma] = 1000;
+    memory.bolo_stat_offset[bs_noise] = 200;
     memory.restart_reset = 1;
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
