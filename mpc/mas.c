@@ -1563,13 +1563,14 @@ static int tune(void)
 
   int old_sa_ramp_bias = 0, old_sq2_servo_bias_ramp = 0;
   int old_sq1_servo_bias_ramp = 0;
-  char ref_tune_dir[100];
+  int local_tune_force_biases = goal.force;
   char lst_dir[100];
+#if 0
+  char ref_tune_dir[100];
   int stage, r = 0;
 
   const char *argv[5] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
     NULL /* first stage */, NULL /* last stage */, NULL };
-  int local_tune_force_biases = goal.force;
 
   sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i", data_drive[0] + '0',
       memory.ref_tune);
@@ -1620,6 +1621,28 @@ static int tune(void)
       }
     }
   }
+#else
+  const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
+    first_stage_tune[goal.start], last_stage_tune[goal.stop], NULL };
+
+  ensure_experiment_cfg();
+
+  if (local_tune_force_biases) {
+    old_sa_ramp_bias = cfg_get_int("sa_ramp_bias", 0);
+    cfg_set_int("sa_ramp_bias", 0, 1);
+
+    old_sq2_servo_bias_ramp = cfg_get_int("sq2_servo_bias_ramp", 0);
+    cfg_set_int("sq2_servo_bias_ramp", 0, 1);
+
+    old_sq1_servo_bias_ramp = cfg_get_int("sq1_servo_bias_ramp", 0);
+    cfg_set_int("sq1_servo_bias_ramp", 0, 1);
+  }
+  flush_experiment_cfg(0);
+
+  int r = exec_and_wait(sched, none, MAS_SCRIPT "/auto_setup", (char**)argv,
+      0, 0, &kill_special);
+
+#endif
 
   if (r == 0) { /* archive it */
     int d;
