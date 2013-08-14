@@ -434,10 +434,12 @@ struct CommandDataStruct {
     double p_cap_boil;        // power level for boiling off the capillaries
     double t_empty_sft;       // sft temp above which it's deemed empty
     int boil_timeout;         // timeout on sft boiling (s)
-    double t_sft_bake;        // sft temperature target during bake
-    double t_cap_bake;        // capillary temperature target during bake
-    double t_fp_hi;           // upper fp temperature limit during bake
-    double t_fp_lo;           // lower fp temperature limit during bake
+    double t_fp_hi;           // upper fp temperature limit during boil/bake
+    double t_fp_lo;           // lower fp temperature limit during boil/bake
+    double t_sft_bake_hi;     // upper sft temperature limit during bake
+    double t_sft_bake_lo;     // lower sft temperature limit during bake
+    double t_cap_bake_hi;     // upper capillary temperature limit during bake
+    double t_cap_bake_lo;     // lower capillary temperature limit during bake
     double t_mt_cool;         // min tank temp below which bake is finished
     int bake_timeout;         // time after which to terminate bake (s)
     int settle_time;          // time after burp before fridge cycle (s)

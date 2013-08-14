@@ -230,6 +230,8 @@ static void BiasControl()
 /* extra state bits used for servoing */
 #define CYCLE_PUMP_ON     0x1000
 #define CYCLE_FP_ON       0x2000
+#define CYCLE_SFT_ON      0x4000
+#define CYCLE_CAP_ON      0x8000
 #define CYCLE_STATE_MASK  0x0fff
 
 /* temperature limits for the auto-cycle */
@@ -321,7 +323,8 @@ static unsigned short FridgeCycle(int insert, int reset)
   else if (cycle_state & CYCLE_SFT_BOIL) {
     if (t_sft > CommandData.burp_cycle.t_empty_sft
        || state_elapsed > CommandData.burp_cycle.boil_timeout) {
-      next_state = CYCLE_FP_BAKE | (next_state & CYCLE_FP_ON);
+      next_state = CYCLE_FP_BAKE | (next_state & CYCLE_FP_ON)
+        | CYCLE_SFT_ON | CYCLE_CAP_ON;
       last_sft_servo_update = 0;
       if (insert == 0) {
         bprintf(info, "Auto Cycle: SFT boiled. Continuing with FP bake.");
@@ -434,34 +437,27 @@ static unsigned short FridgeCycle(int insert, int reset)
   }
 
   if (insert == 0) {
-    /* adjust power while servoing during bake */
-    // TODO change this to use thermostat servo like everything else
-    if (next_state & CYCLE_FP_BAKE) {
-      // TODO capillary/sft servo not fully safe against control switches
-      if (state_elapsed / SFT_SERVO_DT > last_sft_servo_update) {
-        last_sft_servo_update = state_elapsed / SFT_SERVO_DT;
-        if (t_capillary > CommandData.burp_cycle.t_cap_bake) {
-          CommandData.burp_cycle.p_cap_boil -= SFT_SERVO_DP;
-        } else {
-          CommandData.burp_cycle.p_cap_boil += SFT_SERVO_DP;
-        }
-        if (t_sft > CommandData.burp_cycle.t_sft_bake) {
-          CommandData.burp_cycle.p_sft_boil -= SFT_SERVO_DP;
-        } else {
-          CommandData.burp_cycle.p_sft_boil += SFT_SERVO_DP;
-        }
-      }
-    }
+    /* control the SFT and capillary heaters, during boil and bake */
 
-    /* setup PWN parameters based on desired power */
-    if (next_state & CYCLE_SFT_BOIL || next_state & CYCLE_FP_BAKE) {
+    /* SFT and capillary should default to off */
+    /* hk_capillary_heat_off */
+    CommandData.hk_theo_heat[2].state = 0;
+    CommandData.hk_theo_heat[2].duration = 0;
+    CommandData.hk_theo_heat[2].start_time = 0;
+    /* hk_sft_bottom_heat_off */
+    CommandData.hk_theo_heat[6].state = 0;
+    CommandData.hk_theo_heat[6].duration = 0;
+    CommandData.hk_theo_heat[6].start_time = 0;
+
+    if (next_state & CYCLE_SFT_BOIL) {
+      /* during boil, use PWM to set constant power */
       /* hk_capillary_pulse */
       duty_cycle = CommandData.burp_cycle.p_cap_boil/HK_CAPILLARY_PMAX;
       if (duty_cycle>=1) duty_cycle = 0.999;
       if (duty_cycle<0) duty_cycle = 0.0;
       CommandData.hk_theo_heat[2].duty_target = ((int)(duty_cycle*256) << 8);
       CommandData.hk_theo_heat[2].duration = -1;
-      if (!(cycle_state & CYCLE_SFT_BOIL) && !(cycle_state & CYCLE_FP_BAKE)) {
+      if (!(cycle_state & CYCLE_SFT_BOIL)) {
         /* initialize on start of new state */
         CommandData.hk_theo_heat[2].duty_avg =
           CommandData.hk_theo_heat[2].duty_target;
@@ -473,20 +469,39 @@ static unsigned short FridgeCycle(int insert, int reset)
       if (duty_cycle<0) duty_cycle = 0.0;
       CommandData.hk_theo_heat[6].duty_target = ((int)(duty_cycle*256) << 8);
       CommandData.hk_theo_heat[6].duration = -1;
-      if (!(cycle_state & CYCLE_SFT_BOIL) && !(cycle_state & CYCLE_FP_BAKE)) {
+      if (!(cycle_state & CYCLE_SFT_BOIL)) {
         /* initialize on start of new state */
         CommandData.hk_theo_heat[6].duty_avg =
           CommandData.hk_theo_heat[6].duty_target;
       }
-    } else {
-      /* hk_capillary_heat_off */
-      CommandData.hk_theo_heat[2].state = 0;
-      CommandData.hk_theo_heat[2].duration = 0;
-      CommandData.hk_theo_heat[2].start_time = 0;
-      /* hk_sft_bottom_heat_off */
-      CommandData.hk_theo_heat[6].state = 0;
-      CommandData.hk_theo_heat[6].duration = 0;
-      CommandData.hk_theo_heat[6].start_time = 0;
+
+    } else if (next_state & CYCLE_FP_BAKE) {
+      /* during bake, servo the temperature */
+      if (next_state & CYCLE_SFT_ON) {
+        if (t_sft > CommandData.burp_cycle.t_sft_bake_hi) {
+          next_state &= ~CYCLE_SFT_ON;
+          bprintf(info, "Auto Cycle: Turning off SFT heat");
+        }
+      } else {
+        if (t_sft < CommandData.burp_cycle.t_sft_bake_lo) {
+          next_state |= CYCLE_SFT_ON;
+          CommandData.hk_theo_heat[6].state = 1;
+          bprintf(info, "Auto Cycle: Turning on SFT heat");
+        }
+      }
+
+      if (next_state & CYCLE_CAP_ON) {
+        if (t_capillary > CommandData.burp_cycle.t_cap_bake_hi) {
+          next_state &= ~CYCLE_CAP_ON;
+          bprintf(info, "Auto Cycle: Turning off capillary heat");
+        }
+      } else {
+        if (t_capillary < CommandData.burp_cycle.t_cap_bake_lo) {
+          next_state |= CYCLE_CAP_ON;
+          CommandData.hk_theo_heat[2].state = 1;
+          bprintf(info, "Auto Cycle: Turning on capillary heat");
+        }
+      }
     }
   }
 
@@ -1090,14 +1105,14 @@ void HouseKeeping(int do_slow)
   // hack. number of fast frames to wait for good data
   static int startup_timeout = 300;
 
-  if (startup_timeout-- > 0) return;
-
   if (first_time) {
     first_time = 0;
     insertLastHkAddr = GetNiosAddr("insert_last_hk");
     vHeatLastHkAddr = GetNiosAddr("v_heat_last_hk");
     GetHKTemperatures(0, 1);
   }
+
+  if (startup_timeout-- > 0) return;
 
   GetHKTemperatures(do_slow, 0);
 

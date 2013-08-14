@@ -1593,18 +1593,22 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.hk[i].cycle.cool_timeout = ivalues[9];
       }
       break;
-    case hk_burp_params:
+    case hk_burp_params_1:
       CommandData.burp_cycle.p_sft_boil = rvalues[0];
       CommandData.burp_cycle.p_cap_boil = rvalues[1];
       CommandData.burp_cycle.t_empty_sft = rvalues[2];
       CommandData.burp_cycle.boil_timeout = ivalues[3];
-      CommandData.burp_cycle.t_sft_bake = rvalues[4];
-      CommandData.burp_cycle.t_cap_bake = rvalues[5];
-      CommandData.burp_cycle.t_fp_hi = rvalues[6];
-      CommandData.burp_cycle.t_fp_lo = rvalues[7];
-      CommandData.burp_cycle.t_mt_cool = rvalues[8];
-      CommandData.burp_cycle.bake_timeout = ivalues[9];
-      CommandData.burp_cycle.settle_time = ivalues[10];
+      CommandData.burp_cycle.t_fp_hi = rvalues[4];
+      CommandData.burp_cycle.t_fp_lo = rvalues[5];
+      break;
+    case hk_burp_params_2:
+      CommandData.burp_cycle.t_sft_bake_hi = rvalues[0];
+      CommandData.burp_cycle.t_sft_bake_lo = rvalues[1];
+      CommandData.burp_cycle.t_cap_bake_hi = rvalues[2];
+      CommandData.burp_cycle.t_cap_bake_lo = rvalues[3];
+      CommandData.burp_cycle.t_mt_cool = rvalues[4];
+      CommandData.burp_cycle.bake_timeout = ivalues[5];
+      CommandData.burp_cycle.settle_time = ivalues[6];
       break;
     case hk_pump_servo_on:
       CommandData.hk_last = ivalues[0];
@@ -2413,10 +2417,12 @@ void InitCommandData()
   CommandData.burp_cycle.p_cap_boil = 0.7;
   CommandData.burp_cycle.t_empty_sft = 6.0;
   CommandData.burp_cycle.boil_timeout = 2.5*60*60;
-  CommandData.burp_cycle.t_sft_bake = 20.0;
-  CommandData.burp_cycle.t_cap_bake = 16.0;
-  CommandData.burp_cycle.t_fp_hi = 38.0;
-  CommandData.burp_cycle.t_fp_lo = 33.0;
+  CommandData.burp_cycle.t_fp_hi = 22.0;
+  CommandData.burp_cycle.t_fp_lo = 20.0;
+  CommandData.burp_cycle.t_sft_bake_hi = 22.0;
+  CommandData.burp_cycle.t_sft_bake_lo = 20.0;
+  CommandData.burp_cycle.t_cap_bake_hi = 18.0;
+  CommandData.burp_cycle.t_cap_bake_lo = 16.0;
   CommandData.burp_cycle.t_mt_cool = 4.5;
   CommandData.burp_cycle.bake_timeout = 2*60*60;
   CommandData.burp_cycle.settle_time = 5*60;

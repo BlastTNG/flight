@@ -997,17 +997,24 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Cool timeout (s)",          0,  USHRT_MAX,   'i', ""}
     }
   },
-  {COMMAND(hk_burp_params), "Set fridge autocycle parameters",
-      GR_CRYO_HEAT, 11,
+  {COMMAND(hk_burp_params_1), "Set Theo burp cycle parameters (1 of 2)",
+      GR_CRYO_HEAT, 6,
     {
       {"SFT boil power (W,max=4.5)",        0.0,       4.5,  'f', ""},
       {"Capillary boil power (W,max=4.5)",  0.0,       4.5,  'f', ""},
       {"SFT empty T (SFT K)",               0.0,      50.0,  'f', ""},
       {"SFT boil timeout (s)",                0, USHRT_MAX,  'i', ""},
-      {"SFT bake set T (K)",                0.0,      50.0,  'f', ""},
-      {"Capillary bake set T (K)",          0.0,      50.0,  'f', ""},
       {"FP servo hi (K)",                   0.0,      50.0,  'f', ""},
       {"FP servo lo (K)",                   0.0,      50.0,  'f', ""},
+    }
+  },
+  {COMMAND(hk_burp_params_2), "Set Theo burp cycle parameters (2 of 2)",
+      GR_CRYO_HEAT, 7,
+    {
+      {"SFT bake servo hi (K)",             0.0,      50.0,  'f', ""},
+      {"SFT bake servo lo (K)",             0.0,      50.0,  'f', ""},
+      {"Capillary bake servo hi (K)",       0.0,      50.0,  'f', ""},
+      {"Capillary bake servo lo (K)",       0.0,      50.0,  'f', ""},
       {"Bake stop T (MT K)",                0.0,      50.0,  'f', ""},
       {"Bake timeout (s)",                    0, USHRT_MAX,  'i', ""},
       {"Settle time (s)",                     0, USHRT_MAX,  'i', ""}
