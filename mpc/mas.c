@@ -1820,7 +1820,6 @@ void crash_stop(int sig)
   /* stop acq and zero bias */
   if (mas && (state & st_active)) {
     stopacq();
-    stop_mce();
   }
   signal(sig, SIG_DFL);
   raise(sig);
