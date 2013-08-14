@@ -160,8 +160,8 @@ const char *const GroupNames[N_GROUPS] = {
   "ACS Power",             "The Good SC",      "HK Theo Heat",
   "Telemetry",             "The Bad SC",       "Cryo/HK Power",
   "MCE Power",             "The Ugly SC",      "MPC Control",
-  "Tuning Params",         "Detectors",        "Load Curves",
-  "Miscellaneous",         "CMB Grenades",     "Frame Timing"
+  "Tuning Params",         "TESes",            "MPC Params",
+  "Miscellaneous",         "Squids",           "Frame Timing"
   };
 
 //echoes as string; makes enum name the command name string
@@ -449,9 +449,9 @@ const struct scom scommands[N_SCOMMANDS] = {
    "Turn off Theo's SFT Bottom Heater. Disable pulse", GR_THEO_HEAT},
 
   //make better use of unused groups
-  {COMMAND(pull_cmb_pin), "????", GR_CMB | CONFIRM},
+  {COMMAND(pull_cmb_pin), "????", GR_MISC | CONFIRM},
   {COMMAND(global_thermonuclear_war), "Shall we play a game?",
-    GR_CMB | CONFIRM},
+    GR_MISC | CONFIRM},
 
   {COMMAND(mcc_wdog_enable), "Enable pcm watchdog of MCCs", GR_MCEPWR},
   {COMMAND(mcc_wdog_disable), "Disable pcm watchdog of MCCs", GR_MCEPWR},
@@ -463,9 +463,9 @@ const struct scom scommands[N_SCOMMANDS] = {
     GR_CRYO_HEAT},
 
   {COMMAND(restart_reset_on), "Turn on the MCE reset on MPC startup",
-    GR_MPC | MCECMD},
+    GR_MPCPARAM | MCECMD},
   {COMMAND(restart_reset_off), "Turn off the MCE reset on MPC startup",
-    GR_MPC | MCECMD},
+    GR_MPCPARAM | MCECMD},
 
   /* DON'T PUT ANYTHING BELOW THIS */
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
@@ -1072,13 +1072,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(mce_veto), "Set all squid and TES biases to zero, "
-      "disable muxing, and stop data acquisition", GR_MPC | GR_CRYO_HEAT, 1,
+      "disable muxing, and stop data acquisition", GR_MPC, 1,
       {
         {CHOOSE_INSERT_PARAM}
       }
   },
-  {COMMAND(mce_unveto), "Resume normal MCE operations", GR_MPC | GR_CRYO_HEAT,
-    1,
+  {COMMAND(mce_unveto), "Resume normal MCE operations", GR_MPC, 1,
       {
         {CHOOSE_INSERT_PARAM}
       }
@@ -1392,14 +1391,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(data_mode), "Set the MCE data mode", GR_MPC, 1,
+  {COMMAND(data_mode), "Set the MCE data mode", GR_MPCPARAM, 1,
     {
       {"Data Mode", 0, 12, 'i', "DATA_MODE"}
     }
   },
 
   {COMMAND(data_mode_bits), "Change how 32->16 bit translation for TES data "
-    "happens", GR_MPC, 5,
+    "happens", GR_MPCPARAM, 5,
     {
       {"Data mode", 0, 12, 'i', "DATA_MODE"},
       {"Upper subfield first bit", 0, 32, 'i', ""},
@@ -1451,13 +1450,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(pause_acq, "Pause data acquisition", GR_MPC)},
   {MCECMD1P(send_exptcfg, "Send down experiment.cfg", GR_MPC)},
   {MCECMD1P(reload_mce_config,
-      "Reset experiment.cfg and dead masks to template", GR_MPC | CONFIRM)},
+      "Reset experiment.cfg and dead masks to template",
+      GR_MPCPARAM | CONFIRM)},
   {MCECMD1(mce_clock_ext, "Unveto sync box use by the MCE", GR_MPC)},
   {MCECMD1(mce_clock_int, "Veto sync box use by the MCE", GR_MPC)},
   {MCECMD1(bolo_stat_reset, "Reset the bolometer statistic accumulators",
       GR_MPC)},
   {COMMAND(bolo_stat_gains), "Set gains and offsets for bolometer statistics",
-    GR_MPC | MCECMD, 7,
+    GR_MPCPARAM | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
       {"Mean resolution per bin (0-1)", 0, 1, 'f', "NONE"},
@@ -1469,7 +1469,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(bolo_stat_timing), "Set filters and integration time for "
-    "bolometer statistics", GR_MPC | MCECMD, 3,
+    "bolometer statistics", GR_MPCPARAM | MCECMD, 3,
    {
      {"Noise filter band center", 0., 120., 'f', "BOLO_FILT_FREQ"},
      {"Noise filter band width", 0., 10., 'f', "BOLO_FILT_BW"},
@@ -1497,7 +1497,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(column_on), "Turn on a MCE column", GR_DET | MCECMD, 5,
+  {COMMAND(column_on), "Turn on a MCE column", GR_SQUID | MCECMD, 5,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Column", 0, 15, 'i', "NONE"},
@@ -1507,7 +1507,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {MCECMD2AP(column_off, "Turn off a MCE column", GR_DET, "Column", 0, 15,
+  {MCECMD2AP(column_off, "Turn off a MCE column", GR_SQUID, "Column", 0, 15,
       'i')},
   {MCECMD2(sa_offset_bias_ratio, "Set the SA offset bias ratio", GR_TUNE,
       "Ratio", 0, 2, 'f')},
@@ -1599,24 +1599,24 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDCR1A(healthy_detector, "Set a detector as healthy", GR_DET)},
   {MCECMDCA(bias_tes_col, "Set the TES bias level for a column", GR_DET,
       "Bias", 0, 65535, 'i')},
-  {MCECMDC(sa_flux_quantum, "SA flux quantum", GR_DET,
+  {MCECMDC(sa_flux_quantum, "SA flux quantum", GR_SQUID,
       "Quantum", 0, 65535, 'i')},
-  {MCECMDC(sq2_flux_quantum, "SQ2 flux quantum", GR_DET,
+  {MCECMDC(sq2_flux_quantum, "SQ2 flux quantum", GR_SQUID,
       "Quantum", 0, 65535, 'i')},
-  {MCECMDCR(sq1_flux_quantum, "SQ1 flux quantum", GR_DET,
+  {MCECMDCR(sq1_flux_quantum, "SQ1 flux quantum", GR_SQUID,
       "Quantum", 0, 65535, 'i')},
-  {MCECMDRAD(sq1_bias, "SQ1 bias", GR_DET, "Bias", 0, 65535, 'i')},
-  {MCECMDRAD(sq1_off_bias, "SQ1 off bias", GR_DET, "Bias", 0, 65535, 'i')},
-  {MCECMDCAD(sq2_bias, "SQ2 bias", GR_DET, "Bias", 0, 65535, 'i')},
-  {MCECMDCRA(sq2_fb, "SQ2 feeback", GR_DET, "Feeback", 0, 65535, 'i')},
-  {MCECMDCAD(sa_bias, "SA bias", GR_DET, "Bias", 0, 65535, 'i')},
-  {MCECMDCA(sa_fb, "SA feeback", GR_DET, "Bias", 0, 65535, 'i')},
-  {MCECMDCA(sa_offset, "SA offset", GR_DET, "Bias", 0, 65535, 'i')},
+  {MCECMDRAD(sq1_bias, "SQ1 bias", GR_SQUID, "Bias", 0, 65535, 'i')},
+  {MCECMDRAD(sq1_off_bias, "SQ1 off bias", GR_SQUID, "Bias", 0, 65535, 'i')},
+  {MCECMDCAD(sq2_bias, "SQ2 bias", GR_SQUID, "Bias", 0, 65535, 'i')},
+  {MCECMDCRA(sq2_fb, "SQ2 feeback", GR_SQUID, "Feeback", 0, 65535, 'i')},
+  {MCECMDCAD(sa_bias, "SA bias", GR_SQUID, "Bias", 0, 65535, 'i')},
+  {MCECMDCA(sa_fb, "SA feeback", GR_SQUID, "Bias", 0, 65535, 'i')},
+  {MCECMDCA(sa_offset, "SA offset", GR_SQUID, "Bias", 0, 65535, 'i')},
   {MCECMDCRA(adc_offset, "ADC offset ", GR_DET, "Offset", 0, 65535, 'i')},
-  {MCECMD2P(tile_heater_on, "Turn on the tile heater", GR_IV,
+  {MCECMD2P(tile_heater_on, "Turn on the tile heater", GR_MPC,
       "Level (V)", 0, 5, 'f')},
-  {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_IV)},
-  {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_IV | MCECMD, 4,
+  {MCECMD1(tile_heater_off, "Turn off the tile heater", GR_MPC)},
+  {COMMAND(tile_heater_kick), "Pulse the tile heater", GR_MPC | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
       {"Level (V)", 0, 5, 'f', "NONE"},
@@ -1626,8 +1626,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_DET, "Row", 0, 32, 'i')},
   {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_DET)},
-  {MCECMD1(lcloop, "Run load curves forever", GR_IV)},
-  {MCECMD2(ref_tuning, "Set the reference tuning", GR_MPC,
+  {MCECMD1(lcloop, "Run load curves forever", GR_MPC)},
+  {MCECMD2(ref_tuning, "Set the reference tuning", GR_MPCPARAM,
       "Tuning number", 1, 65535, 'i')},
   {COMMAND(bias_tes_all), "Set all TES biases", GR_DET | MCECMD, 4,
     {
@@ -1681,7 +1681,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(send_iv_curve), "Send down IV curves", GR_IV | GR_MPC | MCECMD, 4,
+  {COMMAND(send_iv_curve), "Send down IV curves", GR_MPC | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"BSet", 1, 255, 'i', "NONE"},
@@ -1691,7 +1691,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(acq_iv_curve), "Acquire load curves and pick biases",
-    GR_IV | GR_MPC | MCECMD, 9,
+    GR_DET | GR_MPC | MCECMD, 9,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
@@ -1706,7 +1706,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(partial_iv_curve), "Acquire a partial load curve",
-    GR_IV | GR_MPC | MCECMD, 7,
+    GR_DET | GR_MPC | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},
@@ -1727,7 +1727,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(use_tuning), "Apply a previous tuning", GR_MPC | MCECMD, 2,
+  {COMMAND(use_tuning), "Apply a previous tuning", GR_MPCPARAM | MCECMD, 2,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Tuning number (0 = last)", 0, 65535, 'i', "NONE"},
@@ -1735,15 +1735,15 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(pick_biases), "Automatically choose biases based on a previous "
-    "IV curve", GR_IV | GR_MPC | MCECMD, 2,
+    "IV curve", GR_DET | GR_MPCPARAM | MCECMD, 2,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"IV curve number (0 = last)", 0, 65535, 'i', "NONE"},
     }
   },
 
-  {COMMAND(bias_kick_params), "Set default FP kick parameters",
-    GR_MPC | MCECMD, 5,
+  {COMMAND(bias_kick_params), "Set default kick parameters",
+    GR_MPCPARAM | MCECMD, 5,
     {
       {CHOOSE_INSERT_PARAM},
       {"Kick (V)", 0, 5, 'f', "NONE"},

@@ -52,9 +52,9 @@
 #define GR_MPC          0x00100000
 #define GR_TUNE         0x00200000
 #define GR_DET          0x00400000
-#define GR_IV           0x00800000
+#define GR_MPCPARAM     0x00800000
 #define GR_MISC         0x01000000
-#define GR_CMB          0x02000000
+#define GR_SQUID        0x02000000
 #define GR_TIMING       0x04000000
 
 #define MCECMD          0x40000000 /* MCE command flag */
