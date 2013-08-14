@@ -1182,7 +1182,6 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         PRM_SETINTC(sa_fb, "sa_fb");
         PRM_SETINTC(sa_offset, "sa_offset");
         PRM_SETINTCR(adc_offset, "adc_offset_cr");
-        CFG_TOGGLE(sq1_ramp_check_on, sq1_ramp_check_off, "sq1_ramp_check");
 
       case servo_pid_col:
         prm_set_servo(ev->ivalues[1], -1, 'p', ev->ivalues[2], ev->ivalues[5]);

@@ -206,8 +206,8 @@ enum multiCommand {
   row_dly, flux_jumping_on, flux_jumping_off, servo_pid_col, servo_pid_pixel,
   servo_pid_frail, dead_detector, frail_detector, healthy_detector,
   sa_flux_quantum, sq2_flux_quantum, sq1_flux_quantum, sq1_bias, sq1_off_bias,
-  sq2_bias, sq2_fb, sa_bias, sa_fb, sa_offset, adc_offset, sq1_ramp_check_on,
-  sq1_ramp_check_off, bias_tes_col, integral_clamp,
+  sq2_bias, sq2_fb, sa_bias, sa_fb, sa_offset, adc_offset, bias_tes_col,
+  integral_clamp,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   plugh,   N_MCOMMANDS, /* SENTINAL: this must be the last thing in the list */
