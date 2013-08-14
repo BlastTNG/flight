@@ -485,7 +485,6 @@ static unsigned short FridgeCycle(int insert, int reset)
       } else {
         if (t_sft < CommandData.burp_cycle.t_sft_bake_lo) {
           next_state |= CYCLE_SFT_ON;
-          CommandData.hk_theo_heat[6].state = 1;
           bprintf(info, "Auto Cycle: Turning on SFT heat");
         }
       }
@@ -498,10 +497,13 @@ static unsigned short FridgeCycle(int insert, int reset)
       } else {
         if (t_capillary < CommandData.burp_cycle.t_cap_bake_lo) {
           next_state |= CYCLE_CAP_ON;
-          CommandData.hk_theo_heat[2].state = 1;
           bprintf(info, "Auto Cycle: Turning on capillary heat");
         }
       }
+
+      if (next_state & CYCLE_SFT_ON) CommandData.hk_theo_heat[6].state = 1;
+      if (next_state & CYCLE_CAP_ON) CommandData.hk_theo_heat[2].state = 1;
+
     }
   }
 
