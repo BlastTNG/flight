@@ -42,7 +42,7 @@ extern int h_errno;
 
 #define LEN 500
 #define BUF_LEN 5000
-#define PAST_SEND 4800
+#define PAST_SEND 100
 #define SLEEP_PERIOD 100000000
 #define NO_DATA_LIMIT 2000
 

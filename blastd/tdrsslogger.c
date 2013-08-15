@@ -15,6 +15,10 @@
 #define NDATA 8192
 unsigned char data[2][NDATA];
 
+// port 0 is tdrss highgain.  Port 1 is tdrss omni, iridium dialup, and slow packets
+#define FIRSTPORT 0
+#define LASTPORT 1
+
 char *ttydev[2] = {"/dev/ttyHIGAIN", "/dev/ttyOMNI"};
 char *linkfile[5] = {"/data/etc/highgain.lnk","/data/etc/omni.lnk", "/data/etc/iromni.lnk", "/data/etc/tdomni.lnk", "/data/etc/irslow.lnk"};
 char *ext[5]={"highgain", "omni", "iromni", "tdomni", "irslow"};
@@ -266,9 +270,8 @@ int main(void) {
   time_t last_t=0;
 
   int i;
-  int j_print=0;
 
-  for (i=0; i<2; i++) {
+  for (i=FIRSTPORT; i<=LASTPORT; i++) {
     if( (tty[i] = OpenSerial(ttydev[i])) < 0) return 1;
     if( (fd[i] = InitialiseStreamFile(i)) < 0 ) return 1;
 
@@ -278,7 +281,7 @@ int main(void) {
   }
   
   while (1) {
-    for (i=0; i<2; i++) {
+    for (i=FIRSTPORT; i<=LASTPORT; i++) {
       b_in[i] = read(tty[i], data[i], NDATA);
 
       if (b_in[i]>0) {
