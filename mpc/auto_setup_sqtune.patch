@@ -273,7 +273,7 @@ Index: python/auto_setup/main.py
              sa_dict = do_sa_ramp(tuning, c, rc_indices,
                                   ramp_sa_bias=ramp_sa_bias,
                                   write_default=write_default_bias)
-+            tuning.write_sqtune(sq_data=sa_dict['ramp'], stage='sa_ramp',append=False)
++            tuning.write_sqtune(sq_data=sa_dict['ramp'], stage='sa_ramp')
          if 'sq2_servo' in stages:
              s2_dict = do_sq2_servo(tuning, c, rc_indices, tune_data,
                                     write_default=write_default_bias)
@@ -313,12 +313,12 @@ Index: python/auto_setup/util/tuning.py
 ===================================================================
 --- python/auto_setup/util/tuning.py	(revision 1151)
 +++ python/auto_setup/util/tuning.py	(working copy)
-@@ -184,31 +184,47 @@
+@@ -184,31 +184,48 @@
              if (flush):
                  self.log.flush()
  
 -    def write_sqtune(self, filename=None, sq1_ramp=None, link=False):
-+    def write_sqtune(self, filename=None, sq_data=None, link=False, stage='sq1_ramp',
++    def write_sqtune(self, filename=None, sq_data=None, link=False, stage=None,
 +                     append=True):
          def compose_col_row(label, data, format='%f'):
              s = ''
@@ -346,6 +346,7 @@ Index: python/auto_setup/util/tuning.py
 +            block = 'SQ2_SERVO'
 +        elif stage == 'sq1_servo':
 +            block = 'SQ1_SERVO'
++        else: block = 'INIT'
 +        f.write("<%s>\n" % block)
          f.write("<SQ_tuning_completed> %i\n" % int(done))
          f.write("<SQ_tuning_date> %s\n" % self.date)
