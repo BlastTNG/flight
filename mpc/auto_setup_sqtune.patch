@@ -1,8 +1,8 @@
 Index: python/auto_setup/series_array.py
 ===================================================================
---- python/auto_setup/series_array.py	(revision 1149)
+--- python/auto_setup/series_array.py	(revision 1151)
 +++ python/auto_setup/series_array.py	(working copy)
-@@ -197,6 +197,24 @@
+@@ -197,6 +197,27 @@
          rs.analysis = {'lock_x': self.bias[idx]}
          return rs
  
@@ -16,20 +16,66 @@ Index: python/auto_setup/series_array.py
 +            {'label': 'Squid_vphi_p2p',
 +             'data': get('y_span'),
 +             'style': 'col', 'format': '%i', },
-+            {'label': 'Squid_vphi_lockrange',
++            {'label': 'Squid_lockrange',
 +             'data': get('right_idx') - get('left_idx'),
 +             'style': 'col', 'format': '%i', },
 +            {'label': 'Squid_lockslope',
 +             'data': get('lock_slope'),
 +             'style': 'col', 'format': '%.3f', },
++            {'label': 'Squid_lock_count',
++             'data': get('lock_count'),
++             'style': 'col', 'format': '%i', },
 +            ]
 +        return data
  
  class SARampSummary(servo.RampSummary):
      xlabel = 'SA BIAS'
+Index: python/auto_setup/servo.py
+===================================================================
+--- python/auto_setup/servo.py	(revision 1151)
++++ python/auto_setup/servo.py	(working copy)
+@@ -167,6 +167,19 @@
+                                         n_points=scale,
+                                         min_index=i_left, max_index=i_right)
+         dx = zeros(y.shape[0])
++    
++    n_locks = []
++    for ok, yy, lidx in zip(oks,y, lock_idx):
++        if not ok:
++            n = 0
++        else:
++            # find all slopy regions
++            locks = [array([max(0,x[0]), min(len(yy)-1,x[1])])
++                     for x in get_curve_regions(yy, slopes=True, extremality=extremality)
++                     if x[0] != x[1]]
++            # count the regions that cross the lock point
++            n = sum([(min(yy[x])<yy[lidx] and max(yy[x])>yy[lidx]) for x in locks])
++        n_locks.append(n)
+ 
+     return {'lock_idx': lock_idx,
+             'lock_didx': dx,
+@@ -175,6 +188,7 @@
+             'slope': slope,
+             'left_idx': i_left,
+             'right_idx': i_right,
++            'lock_count': array(n_locks),
+             'ok': array(oks)
+             }
+ 
+@@ -819,6 +833,10 @@
+     print 'Expected: ', N/array(F)
+     lp = get_lock_points(y, slope=array([1,1,1,-1]))
+     print 'Lock-x: ', lp['lock_idx']
++    reg = []
++    for yy in y:
++        reg.append(get_curve_regions(yy, slopes=True))
++        print 'Crossings: ', reg[-1]
+     print 'Plotting...'
+     fp = biggles.Table(2,2)
+     for i in range(4):
 Index: python/auto_setup/sq1_servo.py
 ===================================================================
---- python/auto_setup/sq1_servo.py	(revision 1149)
+--- python/auto_setup/sq1_servo.py	(revision 1151)
 +++ python/auto_setup/sq1_servo.py	(working copy)
 @@ -281,6 +281,7 @@
          return self.analysis
@@ -50,7 +96,7 @@ Index: python/auto_setup/sq1_servo.py
  
      def select_biases(self, bias_idx=None, assoc=None, ic_factor=None):
          """
-@@ -408,8 +409,26 @@
+@@ -408,8 +409,29 @@
          idx = self.analysis['select_row_sel']
          rs.analysis = {'lock_x': self.bias[idx]}
          return rs
@@ -66,21 +112,92 @@ Index: python/auto_setup/sq1_servo.py
 +            {'label': 'Col%i_squid_vphi_p2p',
 +             'data': get('y_span'),
 +             'style': 'col_row', 'format': '%i', },
-+            {'label': 'Col%i_squid_vphi_lockrange',
++            {'label': 'Col%i_squid_lockrange',
 +             'data': get('right_idx') - get('left_idx'),
 +             'style': 'col_row', 'format': '%i', },
 +            {'label': 'Col%i_squid_lockslope',
 +             'data': get('lock_slope'),
 +             'style': 'col_row', 'format': '%.3f', },
++            {'label': 'Col%i_squid_lock_count',
++             'data': get('lock_count'),
++             'style': 'col_row', 'format': '%i', },
 +            ]
 +        return data
 +
  class SQ1ServoSA(SQ1Servo):
      stage_name = 'SQ1ServoSA'
      xlabel = 'SQ1 FB / 1000'
+Index: python/auto_setup/sq1_ramp.py
+===================================================================
+--- python/auto_setup/sq1_ramp.py	(revision 1151)
++++ python/auto_setup/sq1_ramp.py	(working copy)
+@@ -202,8 +202,8 @@
+         Finds curve amplitudes, locking levels, locking points.
+         Creates analysis elements
+                {min,max}_y
+-               {left,,right}_idx
+-               lock_{idx,y}
++               {left,right}_idx
++               lock_{idx,y,count}
+         """
+         self._check_data()
+         # Analyze every single stupid rampc curve
+@@ -233,7 +233,7 @@
+             # Find largest y-separation between local extrema
+             lims = []
+             for T_set, yy in zip(Tex, y):
+-                z = sorted([(yy[x], x) for x in T_set])
++                z = [(yy[x], x) for x in T_set]
+                 dz = [a[0] - b[0] for a, b in zip(z[1:],z[:-1])]
+                 idx = argmax(dz)
+                 lims.append((z[idx][1], z[idx+1][1]))
+@@ -277,20 +277,27 @@
+         #left = result['left_idx'] - x_offset
+         targets = result['lock_y']
+         for word, sgn in [('up', 1), ('dn',-1)]:
+-            ok, idx, sl = [zeros(y.shape[0], x) for x in ['bool','int','float']]
++            ok, idx, sl, nl = [zeros(y.shape[0], x) for x in ['bool','int','float','int']]
+             for i, (yy, t) in enumerate(zip(y, targets)):
+                 rg = (len(yy)/4, len(yy))
+                 o, d, s = lock_stats(yy, target=t, slope_points=scale/2, slope=sgn,
+                                      range=rg)
+-                if d > len(yy): d = len(yy)
++                if d > len(yy): d = len(yy)-1
+                 if d < 0: d = 0
+-                ok[i], idx[i], sl[i] = o, d, s
++                # find all slopy regions
++                locks = [array([max(0,x[0]), min(len(yy)-1,x[1])])
++                         for x in servo.get_curve_regions(yy, slope=sgn)
++                         if x[0] != x[1]]
++                # count the regions that cross the lock point
++                n = sum([(min(yy[x])<yy[d] and max(yy[x])>yy[d]) for x in locks])
++                ok[i], idx[i], sl[i], nl[i] = o, d, s, n
+             idx[idx<abs_lims[0]] = abs_lims[0]
+             idx[idx>abs_lims[1]] = abs_lims[1]
+             result['lock_%s_idx'%word] = idx + x_offset
+             result['lock_%s_slope'%word] = sl / self.d_fb
+             result['lock_%s_ok'%word] = ok.astype('int')
+             result['lock_%s_x'%word] = self.fb[result['lock_%s_idx'%word]]
++            result['lock_%s_count'%word] = nl
+         return result
+ 
+     def reduce(self):
+@@ -352,6 +359,12 @@
+             {'label': 'Col%i_squid_lockslope_up',
+              'data': get('lock_up_slope'),
+              'style': 'col_row', 'format': '%.3f', },
++            {'label': 'Col%i_squid_lock_count_dn',
++             'data': get('lock_dn_count'),
++             'style': 'col_row', 'format': '%i', },
++            {'label': 'Col%i_squid_lock_count_up',
++             'data': get('lock_up_count'),
++             'style': 'col_row', 'format': '%i', },
+ #            {'label': 'Col%i_squid_multilock',
+ #             'data': get(''),
+ #             'style': 'col_row', 'format': '%i', },
 Index: python/auto_setup/sq2_servo.py
 ===================================================================
---- python/auto_setup/sq2_servo.py	(revision 1149)
+--- python/auto_setup/sq2_servo.py	(revision 1151)
 +++ python/auto_setup/sq2_servo.py	(working copy)
 @@ -211,8 +211,8 @@
          an['lock_x'] += (d_fb * an['lock_didx']).astype('int')
@@ -93,7 +210,7 @@ Index: python/auto_setup/sq2_servo.py
  
      def select_biases(self, bias_idx=None, assoc=None, ic_factor=None):
          """
-@@ -249,6 +249,24 @@
+@@ -249,6 +249,27 @@
          rs.analysis = {'lock_x': self.bias[idx]}
          return rs
  
@@ -107,12 +224,15 @@ Index: python/auto_setup/sq2_servo.py
 +            {'label': 'Squid_vphi_p2p',
 +             'data': get('y_span'),
 +             'style': 'col', 'format': '%i', },
-+            {'label': 'Squid_vphi_lockrange',
++            {'label': 'Squid_lockrange',
 +             'data': get('right_idx') - get('left_idx'),
 +             'style': 'col', 'format': '%i', },
 +            {'label': 'Squid_lockslope',
 +             'data': get('lock_slope'),
 +             'style': 'col', 'format': '%.3f', },
++            {'label': 'Squid_lock_count',
++             'data': get('lock_count'),
++             'style': 'col', 'format': '%i', },
 +            ]
 +        return data
  
@@ -120,7 +240,7 @@ Index: python/auto_setup/sq2_servo.py
      xlabel = 'SQ2 BIAS'
 Index: python/auto_setup/main.py
 ===================================================================
---- python/auto_setup/main.py	(revision 1149)
+--- python/auto_setup/main.py	(revision 1151)
 +++ python/auto_setup/main.py	(working copy)
 @@ -195,7 +195,7 @@
          plot_out = sa.plot()
@@ -191,7 +311,7 @@ Index: python/auto_setup/main.py
          # open-loop ramping of the TES bias
 Index: python/auto_setup/util/tuning.py
 ===================================================================
---- python/auto_setup/util/tuning.py	(revision 1149)
+--- python/auto_setup/util/tuning.py	(revision 1151)
 +++ python/auto_setup/util/tuning.py	(working copy)
 @@ -184,31 +184,47 @@
              if (flush):
@@ -250,7 +370,7 @@ Index: python/auto_setup/util/tuning.py
          #this isn't updated if the user specified a data_dir when initialising
 Index: script/plot_tuning
 ===================================================================
---- script/plot_tuning	(revision 1149)
+--- script/plot_tuning	(revision 1151)
 +++ script/plot_tuning	(working copy)
 @@ -1,4 +1,4 @@
 -#!/usr/bin/python
