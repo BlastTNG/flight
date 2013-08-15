@@ -375,6 +375,8 @@ static void WriteMCESlow(void)
   static struct NiosStruct *deadCountAddr[NUM_MCE];
   static struct NiosStruct *clampCountAddr[NUM_MCE];
   static struct NiosStruct *lastTuneAddr[NUM_MCE];
+  static struct NiosStruct *refTuneAddr[NUM_MCE];
+  static struct NiosStruct *tuneStatAddr[NUM_MCE];
   static struct NiosStruct *usedTuneAddr[NUM_MCE];
   static struct NiosStruct *lastIVAddr[NUM_MCE];
   static struct NiosStruct *tileHeaterAddr[NUM_MCE];
@@ -414,6 +416,8 @@ static void WriteMCESlow(void)
       deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
       clampCountAddr[i] = GetMCCNiosAddr("clamp_count_mce", i);
       lastTuneAddr[i] = GetMCCNiosAddr("last_tune_mpc", i);
+      tuneStatAddr[i] = GetMCCNiosAddr("tune_stat_mpc", i);
+      refTuneAddr[i] = GetMCCNiosAddr("ref_tune_mpc", i);
       usedTuneAddr[i] = GetMCCNiosAddr("used_tune_mpc", i);
       lastIVAddr[i] = GetMCCNiosAddr("last_iv_mpc", i);
       tileHeaterAddr[i] = GetMCCNiosAddr("tile_heater_mce", i);
@@ -450,6 +454,8 @@ static void WriteMCESlow(void)
         NIOS_QUEUE);
     WriteData(clampCountAddr[i], mce_slow_dat[i][ind].clamp_count,
         NIOS_QUEUE);
+    WriteData(refTuneAddr[i], mce_slow_dat[i][ind].ref_tune, NIOS_QUEUE);
+    WriteData(tuneStatAddr[i], mce_slow_dat[i][ind].tune_stat, NIOS_QUEUE);
     WriteData(lastTuneAddr[i], mce_slow_dat[i][ind].last_tune, NIOS_QUEUE);
     WriteData(usedTuneAddr[i], mce_slow_dat[i][ind].used_tune, NIOS_QUEUE);
     WriteData(lastIVAddr[i], mce_slow_dat[i][ind].last_iv, NIOS_QUEUE);

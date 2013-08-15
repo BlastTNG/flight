@@ -1010,6 +1010,20 @@ struct ChannelStruct SlowChannels[] = {
   {"bolo_filt_len",   'w',  LOOP8, 37,           1,   0, 'u', U_NONE},
 
   {"therm_veto_mpc",  'w',  LOOP8, 38,           1,   0, 'u', U_NONE},
+
+  {"ref_tune_mpc1",  'w',   LOOP8, 39, 0.5,   0.0, 'u', U_NONE},
+  {"ref_tune_mpc2",  'w',   LOOP8, 40, 0.5,   0.0, 'u', U_NONE},
+  {"ref_tune_mpc3",  'w',   LOOP8, 41, 0.5,   0.0, 'u', U_NONE},
+  {"ref_tune_mpc4",  'w',   LOOP8, 42, 0.5,   0.0, 'u', U_NONE},
+  {"ref_tune_mpc5",  'w',   LOOP8, 43, 0.5,   0.0, 'u', U_NONE},
+  {"ref_tune_mpc6",  'w',   LOOP8, 44, 0.5,   0.0, 'u', U_NONE},
+
+  {"tune_stat_mpc1",  'w',  LOOP8, 45, 0.5,   0.0, 'u', U_NONE},
+  {"tune_stat_mpc2",  'w',  LOOP8, 46, 0.5,   0.0, 'u', U_NONE},
+  {"tune_stat_mpc3",  'w',  LOOP8, 47, 0.5,   0.0, 'u', U_NONE},
+  {"tune_stat_mpc4",  'w',  LOOP8, 48, 0.5,   0.0, 'u', U_NONE},
+  {"tune_stat_mpc5",  'w',  LOOP8, 49, 0.5,   0.0, 'u', U_NONE},
+  {"tune_stat_mpc6",  'w',  LOOP8, 50, 0.5,   0.0, 'u', U_NONE},
   END_OF_CHANNELS
 };
 

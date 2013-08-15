@@ -1051,15 +1051,10 @@ void VetoMCE()
   for (insert=0; insert<6; insert++) {
     /* wait for things to settle down, I guess...? */
     if (veto_mce_veto[insert]) {
-      if (veto_mce_veto[insert] == VETO_MCE_TIMEOUT)
-        bprintf(info, "HK: Stopping X%i thermal veto watch.", insert + 1);
 
       veto_mce_veto[insert]--;
       if (timeout[insert] > 0)
         timeout[insert]--;
-
-      if (veto_mce_veto[insert] == 0)
-        bprintf(info, "HK: Starting X%i thermal veto watch.", insert + 1);
 
       continue;
     }
