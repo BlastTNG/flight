@@ -1183,7 +1183,7 @@ char *GetArrayFieldName(int i_field) {
 
   if (names == 0) {
     int type, tel, row, col;
-    char types[N_STAT_TYPES][10] = {"mean", "sigma", "noise"};
+    char types[N_STAT_TYPES][10] = {"mean", "sigma", "noise", "bstep"};
     names = (char **) malloc(NUM_ARRAY_STAT * sizeof(char *));
     for (i=0; i < NUM_ARRAY_STAT; i++) {
       names[i] = (char *) malloc(21*sizeof(char));

@@ -9,13 +9,13 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#include <math.h>
 
 #include "blast.h"
 
 #include "slowdl.h"
 #include "tx.h"
 
-#include <math.h>
 
 extern struct SlowDlStruct slowDLList[];
 
@@ -65,6 +65,8 @@ void updateSlowDL() {
       slowDLList[i_ch].iX[i_w] = ReadData(slowDLList[i_ch].bi0s);
     } else if (slowDLList[i_ch].encode == SDL_SCALE) {
       slowDLList[i_ch].X[i_w] = ReadCalData(slowDLList[i_ch].bi0s);
+    } else if (slowDLList[i_ch].encode == SDL_LOG) {
+      slowDLList[i_ch].X[i_w] = ReadCalData(slowDLList[i_ch].bi0s);
     }
   }
   slow_dl_read_index = i_w;
@@ -103,8 +105,7 @@ void fillDLData(unsigned char *b, int len) {
       }
       
       /* scale between 0 and 1 */
-      x = (slowDLList[i_ch].X[i_r]-slowDLList[i_ch].min)/
-      (slowDLList[i_ch].max - slowDLList[i_ch].min);      
+      x = (x - min)/(max - min);      
       if (x>1.0) x = 1.0;
       if (x<0) x = 0;
       
