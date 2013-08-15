@@ -1568,7 +1568,7 @@ static int tune(void)
     "--last-stage=sq1_ramp_tes"
   };
 
-  const char *stage_name[] = {"sa", "sq2", "sq1_servo", "sq1_ramp", NULL};
+  const char *stage_name[] = {"sa_ramp", "sq2_servo", "sq1_servo", "sq1_ramp", NULL};
 
   int old_sa_ramp_bias = 0, old_sq2_servo_bias_ramp = 0;
   int old_sq1_servo_bias_ramp = 0;
