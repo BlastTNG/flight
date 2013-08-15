@@ -38,7 +38,7 @@
 #include <time.h>
 #include <signal.h>
 
-unsigned tuning_status = 0;
+uint16_t tuning_status = 0;
 
 static unsigned cmd_err = 0;
 
@@ -1544,7 +1544,7 @@ static int check_tune(const char *lst_dir, const char *ref_tune_dir,
 }
 
 /* run a tuning */
-#define MAX_STAGE_TRIES 3
+#define MAX_STAGE_TRIES 7
 static int tune(void)
 {
   const char *first_stage_tune[] = {
@@ -1566,7 +1566,7 @@ static int tune(void)
   char ref_tune_dir[100];
   char stage_dirs[4][MAX_STAGE_TRIES][100];
   int stage, r = 0;
-  int stage_tries[5] = {0, 0, 0, 0, 0};
+  int stage_tries[4] = {0, 0, 0, 0};
 
   const char *argv[5] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
     NULL /* first stage */, NULL /* last stage */, NULL };
@@ -1609,10 +1609,12 @@ static int tune(void)
       int check = check_tune(stage_dirs[stage][stage_tries[stage]],
           ref_tune_dir, stage_name[stage]);
 
+      stage_tries[stage]++;
+
       if (WIFEXITED(check)) {
         switch (WEXITSTATUS(check)) {
           case 2: /* redo */
-            if (++stage_tries[stage] < MAX_STAGE_TRIES)
+            if (stage_tries[stage] < MAX_STAGE_TRIES)
               stage--;
             break;
           case 0: /* success */
@@ -1647,8 +1649,8 @@ static int tune(void)
         if (mkdir(tuning_dir, 0777) == 0) {
           /* copy all the things to all the places */
           for (stage = goal.start; stage <= goal.stop; ++stage)
-            for (i = 0; i <= stage_tries[stage]; ++i) {
-              if (i == stage_tries[stage]) /* the good one */
+            for (i = 0; i < stage_tries[stage]; ++i) {
+              if (i == stage_tries[stage] - 1) /* the good one */
                 strcpy(stage_part, stage_name[stage]);
               else 
                 sprintf(stage_part, "%s_try%i", stage_name[stage], i + 1);
@@ -1737,6 +1739,9 @@ static int tune(void)
       cfg_apply_tuning(memory.last_tune, 0);
       break;
   }
+
+  tuning_status = (stage_tries[3] << 9) | (stage_tries[2] << 6) |
+    (stage_tries[1] << 3) | (stage_tries[0] << 0);
 
   return r ? 1 : 0;
 }

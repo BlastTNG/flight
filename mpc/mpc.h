@@ -74,7 +74,7 @@ extern int mas_get_temp;
 extern int sock;
 extern int in_turnaround;
 extern int cur_dm, req_dm;
-extern unsigned tuning_status;
+extern uint16_t tuning_status;
 extern int power_cycle_mce;
 extern int power_cycle_cmp;
 extern int send_mceparam;
