@@ -59,7 +59,7 @@
 #define FIR_LENGTH (60.0*30.0)
 
 /* Calibrations of the az of each sensor  */
-#define MAG_ALIGNMENT      -164.6968
+#define MAG_ALIGNMENT   0.0
 #define PSS_ALIGNMENT	  0.0
 #define PSS1_ALIGNMENT    (PSS_ALIGNMENT + 35.0)
 #define PSS2_ALIGNMENT    (PSS_ALIGNMENT + 70.0)
