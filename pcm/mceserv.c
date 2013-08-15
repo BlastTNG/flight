@@ -567,7 +567,7 @@ void *mcesend(void *unused)
     ForwardNotices(sock);
 
     /* broadcast the field set, when necessary */
-    if (sent_bset != CommandData.bset_num)
+    if (sent_bset != curr_bset.num)
       ForwardBSet(sock);
 
     usleep(10000);
