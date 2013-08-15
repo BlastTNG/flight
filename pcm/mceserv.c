@@ -62,7 +62,6 @@ uint16_t mccs_alive, mccs_reporting;
 /* super slow data */
 uint32_t mce_param[N_MCE_STAT * NUM_MCE];
 int request_ssdata = 1; /* start-up request */
-static int mceserv_InCharge; /* to look for edges */
 
 /* array statistics */
 uint8_t array_statistics[NUM_ARRAY_STAT];
@@ -228,6 +227,10 @@ static void ForwardBSet(int sock)
   struct bset set;
 
   num = get_bset(&set);
+
+  /* nothing to do */
+  if (sent_bset == num)
+    return;
 
   /* compose the packet */
   len = mpc_compose_bset(set.v, set.n, (uint16_t)num, udp_buffer);
@@ -546,6 +549,7 @@ void *mcerecv(void *unused)
 /* send routine */
 void *mcesend(void *unused)
 {
+  int mceserv_InCharge; /* to look for edges */
   nameThread("->MCE");
 
   /* wait for socket initialisation */
@@ -567,8 +571,7 @@ void *mcesend(void *unused)
     ForwardNotices(sock);
 
     /* broadcast the field set, when necessary */
-    if (sent_bset != curr_bset.num)
-      ForwardBSet(sock);
+    ForwardBSet(sock);
 
     usleep(10000);
   }
