@@ -190,6 +190,7 @@ static void task_mount_drives(void)
       is_mounted[d] = 0;
     }
 
+  /* mount good drives */
   for (d = 0; d < 4; ++d)
     if (!is_mounted[d] && !dont_mount[d]) {
       bprintf(info, "Attempting to mount /data%i", d);

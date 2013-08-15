@@ -1668,8 +1668,7 @@ int main(void)
     } else if (!power_cycle_cmp) {
       /* finished the init; slow data */
       if (slow_timer <= 0) {
-        if (!slow_veto)
-          send_slow_data(data, 1);
+        send_slow_data(data, !slow_veto);
         slow_timer = SLOW_TIMEOUT;
       } else if (n == 0)
         slow_timer -= UDP_TIMEOUT;
