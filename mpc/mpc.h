@@ -62,6 +62,9 @@ struct memory_t {
   int bolo_stat_offset[N_STAT_TYPES];
   int restart_reset;
   int ref_tune;
+  int tune_tries[4];
+  int tune_global_tries; /* number of retries of the whole tuning */
+  int tune_check_off;
 };
 extern struct memory_t memory;
 extern int mem_dirty;

@@ -147,7 +147,7 @@ const int command_list_serial_as_int(void)
 #define MCECMDSCS(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 4, { \
       {CHOOSE_INSERT_PARAM}, \
-      {"Start", -32768, 32767, 'i', "NONE"}, \
+      {"Start", -65536, 65535, 'l', "NONE"}, \
       {"Count", 0, 65535, 'i', "NONE"}, \
       {"Step", -32768, 32767, 'i', "NONE"}, \
     }
@@ -168,12 +168,9 @@ const char *const GroupNames[N_GROUPS] = {
 #define COMMAND(x) (int)x, #x
 
 /* parameter value lists */
-const char *autonoyes_names[] = {"auto", "no", "yes", NULL};
 const char *noyes_names[] = {"no", "yes", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *just_mce_names[] = {"X1", "X2", "X3", "X4", "X5", "X6", NULL};
-const char *tuning_stages[] = {"SA ramp", "SQ2 servo", "SQ1 servo", "SQ1 ramp",
-   NULL};
 const char *wb_cards[] = {"CC", "RC1", "RC2", "BC1", "BC2", "AC", NULL};
 const char *action_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", NULL};
@@ -1460,10 +1457,10 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1P(reload_mce_config,
       "Reset experiment.cfg and dead masks to template",
       GR_MPCPARAM | CONFIRM)},
-  {MCECMD1(mce_clock_ext, "Unveto sync box use by the MCE", GR_MPC)},
-  {MCECMD1(mce_clock_int, "Veto sync box use by the MCE", GR_MPC)},
+  {MCECMD1(mce_clock_ext, "Unveto sync box use by the MCE", GR_MPCPARAM)},
+  {MCECMD1(mce_clock_int, "Veto sync box use by the MCE", GR_MPCPARAM)},
   {MCECMD1(bolo_stat_reset, "Reset the bolometer statistic accumulators",
-      GR_MPC)},
+      GR_MPCPARAM)},
   {COMMAND(bolo_stat_gains), "Set gains and offsets for bolometer statistics",
     GR_MPCPARAM | MCECMD, 7,
     {
@@ -1486,24 +1483,38 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {MCECMD2A(integral_clamp, "Set the integral clamping factor", GR_DET,
       "Factor", 0, 1, 'f')},
+
   {COMMAND(tune_array), "Tune a focal plane with current tuning parameters",
-    GR_MPC | MCECMD, 4,
+    GR_MPC | MCECMD, 2,
     {
       {CHOOSE_INSERT_PARAM},
-      {"First stage", 0, 3, 'i', "NONE", {tuning_stages}},
-      {"Last stage", 0, 3, 'i', "NONE", {tuning_stages}},
-      {"Apply?", 0, 3, 'i', "NONE", {autonoyes_names}}
+      {"Apply?", 0, 3, 'i', "NONE", {noyes_names}}
     }
   },
+
   {COMMAND(tune_biases), "Tune, with bias ramping forced on", GR_MPC | MCECMD,
-    4,
+    2,
     {
       {CHOOSE_INSERT_PARAM},
-      {"First stage", 0, 3, 'i', "NONE", {tuning_stages}},
-      {"Last stage", 0, 3, 'i', "NONE", {tuning_stages}},
-      {"Apply?", 0, 3, 'i', "NONE", {autonoyes_names}}
+      {"Apply?", 0, 3, 'i', "NONE", {noyes_names}}
     }
   },
+
+  {COMMAND(tune_tries),
+    "Set the maximum number of times part (or all) of a tuning is attempted",
+    GR_MPCPARAM | MCECMD, 6,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Whole tuning", 1, 7, 'i', "NONE"},
+      {"SA ramp", 1, 7, 'i', "NONE"},
+      {"SQ2 servo", 1, 7, 'i', "NONE"},
+      {"SQ1 servo", 1, 7, 'i', "NONE"},
+      {"SQ1 ramp", 1, 7, 'i', "NONE"}
+    }
+  },
+  {MCECMD1(tune_check_off, "Turn off the automatic tuning checks",
+      GR_MPCPARAM)},
+  {MCECMD1(tune_check_on, "Turn on the automatic tuning checks", GR_MPCPARAM)},
 
   {COMMAND(column_on), "Turn on a MCE column", GR_SQUID | MCECMD, 5,
     {
@@ -1726,8 +1737,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(send_tuning), "Send the experiment.cfg file resulting from a tuning",
-    GR_MPC | MCECMD, 3,
+  {COMMAND(send_tuning), "Send data from a tuning", GR_MPC | MCECMD, 3,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Tuning number", 0, 65535, 'i', "NONE"},

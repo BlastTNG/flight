@@ -1041,7 +1041,7 @@ case off: prm_set_int(off, name, ev->ivalues[1], 0, ev->ivalues[2]); break
 static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 {
   uint32_t data[16];
-  int ii;
+  int i;
 
   if (ev->is_multi) {
     switch (ev->command) {
@@ -1086,9 +1086,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
       case tune_biases:
       case tune_array:
         new_goal.force = (ev->command == tune_biases) ? 1 : 0;
-        new_goal.start = ev->ivalues[1];
-        new_goal.stop = ev->ivalues[2];
-        new_goal.apply = ev->ivalues[3];
+        new_goal.apply = ev->ivalues[1];
         new_goal.goal = gl_tune;
         change_goal = 1;
         break;
@@ -1123,6 +1121,20 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         } else
           new_goal.goal = gl_bramp;
         change_goal = 1;
+        break;
+
+      case tune_tries:
+        memory.tune_global_tries = ev->ivalues[1];
+        for (i = 0; i < 4; ++i)
+          memory.tune_tries[i] = ev->ivalues[2 + i];
+        mem_dirty = 1;
+        break;
+      case tune_check_off:
+        memory.tune_check_off = 1;
+        mem_dirty = 1;
+      case tune_check_on:
+        memory.tune_check_off = 0;
+        mem_dirty = 1;
         break;
 
         /* Experiment config commands */
@@ -1302,9 +1314,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         stat_reset = 1;
         break;
       case bolo_stat_gains:
-        for (ii =0; ii < N_STAT_TYPES; ii++ ) {
-          memory.bolo_stat_gain[ii] = 1. / log(1. + ev->rvalues[2*ii + 1]);
-          memory.bolo_stat_offset[ii] = ev->ivalues[2*ii + 2];
+        for (i = 0; i < N_STAT_TYPES; i++) {
+          memory.bolo_stat_gain[i] = 1. / log(1. + ev->rvalues[2 * i + 1]);
+          memory.bolo_stat_offset[i] = ev->ivalues[2 * i + 2];
         }
         mem_dirty = 1;
         stat_reset = 1;
@@ -1458,6 +1470,12 @@ static int read_mem(void)
     memory.bolo_stat_offset[bs_sigma] = 1000;
     memory.bolo_stat_offset[bs_noise] = 200;
     memory.restart_reset = 1;
+    memory.tune_check_off = 0;
+    memory.tune_tries[0] = 3;
+    memory.tune_tries[1] = 3;
+    memory.tune_tries[2] = 3;
+    memory.tune_tries[3] = 3;
+    memory.tune_global_tries = 1;
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 

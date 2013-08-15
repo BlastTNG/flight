@@ -18,7 +18,6 @@
  */
 
 #define SHOW_WRITE_PARAM
-#define CHECK_TUNING
 
 #include "mpc_proto.h"
 #include "mpc.h"
@@ -1557,16 +1556,17 @@ static int tune(void)
     "--last-stage=sq1_servo", "--last-stage=sq1_ramp"
   };
 
-  const char *stage_name[] = {"sa_ramp", "sq2_servo", "sq1_servo", "sq1_ramp", NULL};
+  const char *stage_name[] = {"sa_ramp", "sq2_servo", "sq1_servo", "sq1_ramp",
+    NULL};
 
   int old_sa_ramp_bias = 0, old_sq2_servo_bias_ramp = 0;
   int old_sq1_servo_bias_ramp = 0;
   int local_tune_force_biases = goal.force;
-#ifdef CHECK_TUNING
   char ref_tune_dir[100];
   char stage_dirs[4][MAX_STAGE_TRIES][100];
   int stage, r = 0;
   int stage_tries[4] = {0, 0, 0, 0};
+  int nt;
 
   const char *argv[5] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
     NULL /* first stage */, NULL /* last stage */, NULL };
@@ -1584,37 +1584,43 @@ static int tune(void)
     cfg_set_int("sq1_servo_bias_ramp", 0, 1);
   }
 
-  /* run each stage in turn */
-  for (stage = goal.start; stage <= goal.stop; ++stage)
-  {
-    flush_experiment_cfg(0);
+  /* global tuning attempt counter */
+  for (nt = 0; nt < memory.tune_global_tries; ++nt) {
+    /* run each stage in turn */
+    for (stage = goal.start; stage <= goal.stop; ++stage) {
+      flush_experiment_cfg(0);
 
-    argv[2] = first_stage_tune[stage];
-    argv[3] = last_stage_tune[stage];
-    r = exec_and_wait(sched, none, argv[0], (char**)argv, 0, 1, &kill_special);
+      argv[2] = first_stage_tune[stage];
+      argv[3] = last_stage_tune[stage];
+      r = exec_and_wait(sched, none, argv[0], (char**)argv, 0, 1,
+          &kill_special);
 
-    if (r)
-      break;
+      stage_tries[stage]++;
 
-    /* check, if necessary */
-    if (stage_name[stage]) {
+      if (r)
+        break;
+
+      /* skip check */
+      if (memory.tune_check_off)
+        continue;
+
       sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i", data_drive[0] + '0',
           memory.ref_tune);
       //sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i/%s", data_drive[0] + '0',
       //    memory.ref_tune, stage_name[stage]);
 
-      if (get_tune_dir(stage_dirs[stage][stage_tries[stage]]))
-        return CHECK_TUNE_ERR;
+      if (get_tune_dir(stage_dirs[stage][stage_tries[stage]])) {
+        r = 1;
+        break;
+      }
 
       int check = check_tune(stage_dirs[stage][stage_tries[stage]],
           ref_tune_dir, stage_name[stage]);
 
-      stage_tries[stage]++;
-
       if (WIFEXITED(check)) {
         switch (WEXITSTATUS(check)) {
           case 2: /* redo */
-            if (stage_tries[stage] < MAX_STAGE_TRIES)
+            if (stage_tries[stage] < memory.tune_tries[stage])
               stage--;
             break;
           case 0: /* success */
@@ -1623,13 +1629,15 @@ static int tune(void)
             r = 1;
             break;
         }
-      } else {
+      } else
         r = 1;
-        break;
-      }
+
+        if (r)
+          break;
     }
 
-    if (r)
+    /* done with global tries */
+    if (r == 0)
       break;
   }
 
@@ -1667,57 +1675,6 @@ static int tune(void)
       }
   }
 
-#else
-  char lst_dir[100];
-  const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
-    first_stage_tune[goal.start], last_stage_tune[goal.stop], NULL };
-
-  ensure_experiment_cfg();
-
-  if (local_tune_force_biases) {
-    old_sa_ramp_bias = cfg_get_int("sa_ramp_bias", 0);
-    cfg_set_int("sa_ramp_bias", 0, 1);
-
-    old_sq2_servo_bias_ramp = cfg_get_int("sq2_servo_bias_ramp", 0);
-    cfg_set_int("sq2_servo_bias_ramp", 0, 1);
-
-    old_sq1_servo_bias_ramp = cfg_get_int("sq1_servo_bias_ramp", 0);
-    cfg_set_int("sq1_servo_bias_ramp", 0, 1);
-  }
-  flush_experiment_cfg(0);
-
-  int r = exec_and_wait(sched, none, MAS_SCRIPT "/auto_setup", (char**)argv,
-      0, 0, &kill_special);
-
-  if (r == 0) { /* archive it */
-    int d;
-
-    if (get_tune_dir(lst_dir))
-      r = 1;
-    else {
-      char tuning_dir[100];
-
-      /* increment tuning */
-      memory.last_tune++;
-      mem_dirty = 1;
-
-      /* copy to all available drives */
-      sprintf(tuning_dir, "/data#/mce/tuning/%04i", memory.last_tune);
-      argv[0] = "/bin/cp";
-      argv[1] = "-r";
-      argv[2] = lst_dir;
-      argv[3] = tuning_dir;
-      argv[4] = NULL;
-      for (d = 0; d < 4; ++d)
-        if (!disk_bad[d]) {
-          tuning_dir[5] = '0' + d;
-          exec_and_wait(sched, none, argv[0], (char**)argv, 100, 0, NULL);
-          bprintf(info, "Archived tuning as %s\n", tuning_dir);
-        }
-    }
-  }
-#endif
-
   if (goal.force) {
     cfg_set_int("sa_ramp_bias", 0, old_sa_ramp_bias);
     cfg_set_int("sq2_servo_bias_ramp", 0, old_sq2_servo_bias_ramp);
@@ -1728,19 +1685,10 @@ static int tune(void)
   flush_experiment_cfg(1);
 
   /* apply, if requested */
-  switch (goal.apply) {
-    case 1: /* no */
-      break;
-    case 0: /* auto */
-      if (r == 1)
-        break;
-      /* FALLTHROUGH */
-    case 2: /* yes */
-      cfg_apply_tuning(memory.last_tune, 0);
-      break;
-  }
+  if (goal.apply)
+    cfg_apply_tuning(memory.last_tune, 0);
 
-  tuning_status = (stage_tries[3] << 9) | (stage_tries[2] << 6) |
+  tuning_status = (nt << 12) | (stage_tries[3] << 9) | (stage_tries[2] << 6) |
     (stage_tries[1] << 3) | (stage_tries[0] << 0);
 
   return r ? 1 : 0;
