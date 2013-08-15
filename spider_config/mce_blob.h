@@ -60,4 +60,7 @@
 #define BLOB_EXPCFG  1
 #define BLOB_IV      2
 #define BLOB_TUNECFG 3
-#define BLOB_TUNESQ  4
+#define BLOB_TUNESQ_SA   4
+#define BLOB_TUNESQ_SQ2  5
+#define BLOB_TUNESQ_SQ1S 6
+#define BLOB_TUNESQ_SQ1R 7

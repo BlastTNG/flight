@@ -1228,7 +1228,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         cfg_apply_tuning(ev->ivalues[1] ? ev->ivalues[1] : memory.last_tune, 1);
         break;
       case ref_tuning:
-        memory.ref_tune = ev->ivalues[1];
+        memory.ref_tune = ev->ivalues[1] ? ev->ivalues[1] : memory.last_tune;
         mem_dirty = 1;
         break;
       case send_tuning:
@@ -1465,12 +1465,12 @@ static int read_mem(void)
 }
 
 /* find a tuning file -- returns 1 on error */
-int tuning_filename(const char *file, int n, char *buffer)
+int tuning_filename(const char *stage, const char *file, int n, char *buffer)
 {
   int r;
   glob_t pglob;
   char pattern[100];
-  sprintf(pattern, "/data?/mce/tuning/%04i/%s", n, file);
+  sprintf(pattern, "/data?/mce/tuning/%04i/%s/%s", n, stage, file);
 
   /* glob search */
   r = glob(pattern, GLOB_NOSORT, NULL, &pglob);

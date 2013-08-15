@@ -466,7 +466,7 @@ void cfg_apply_tuning(int n, int force_reconfig)
     "default_sq1_bias_off", NULL};
 
   /* try to read an archive */
-  if (tuning_filename("experiment.cfg", n, file) == 0)
+  if (tuning_filename("sq1_ramp", "experiment.cfg", n, file) == 0)
     for (d = 0; d < 4; ++d)
       if (slow_dat.df[d]) {
         file[5] = d + '0';

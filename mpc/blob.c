@@ -299,11 +299,24 @@ void *blobber(void *dummy)
           r = iv_compress();
           break;
         case BLOB_TUNECFG:
-          tuning_filename("experiment.cfg", blob_data[0], blob_source);
+          tuning_filename("sq1_ramp", "experiment.cfg", blob_data[0],
+              blob_source);
           r = dict_compress(DC_IGNORE_SPACE);
           break;
-        case BLOB_TUNESQ:
-          tuning_filename("*.sqtune", blob_data[0], blob_source);
+        case BLOB_TUNESQ_SA:
+          tuning_filename("sa_ramp", "*.sqtune", blob_data[0], blob_source);
+          r = dict_compress(0);
+          break;
+        case BLOB_TUNESQ_SQ2:
+          tuning_filename("sq2_servo", "*.sqtune", blob_data[0], blob_source);
+          r = dict_compress(0);
+          break;
+        case BLOB_TUNESQ_SQ1S:
+          tuning_filename("sq1_servo", "*.sqtune", blob_data[0], blob_source);
+          r = dict_compress(0);
+          break;
+        case BLOB_TUNESQ_SQ1R:
+          tuning_filename("sq1_ramp", "*.sqtune", blob_data[0], blob_source);
           r = dict_compress(0);
           break;
         default:

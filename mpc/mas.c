@@ -18,7 +18,7 @@
  */
 
 #define SHOW_WRITE_PARAM
-#undef CHECK_TUNING
+#define CHECK_TUNING
 
 #include "mpc_proto.h"
 #include "mpc.h"
@@ -1377,12 +1377,6 @@ static int bias_ramp(void)
   return r;
 }
 
-/* is the tuning numbered num "good"? */
-static int good_tuning(int num)
-{
-  return 1; /* yeah, it is */
-}
-
 static int get_tune_dir(char buffer[100])
 {
   char linkval[100];
@@ -1448,13 +1442,13 @@ static void check_tune_update(char *line)
         line);
 }
 
-#define CHECK_TUNE_ERR (2 << 8)
-static int check_tune(const char *stage_name, const char *ref_tune_dir)
+#define CHECK_TUNE_ERR (1 << 8)
+static int check_tune(const char *lst_dir, const char *ref_tune_dir,
+    const char *stage_name)
 {
   struct mcp_proc *p;
   int p_stdout = -1;
   int p_stderr = -1;
-  char lst_dir[100];
   char obuffer[8192], ebuffer[8192];
   char *opos = obuffer;
   char *epos = ebuffer;
@@ -1465,9 +1459,6 @@ static int check_tune(const char *stage_name, const char *ref_tune_dir)
   struct timeval seltime;
   fd_set fdset;
   ssize_t n;
-
-  if (get_tune_dir(lst_dir))
-    return CHECK_TUNE_ERR;
 
   p = start_proc(argv[0], (char**)argv, 0, 1, NULL, &p_stdout, &p_stderr,
       &kill_special);
@@ -1558,14 +1549,12 @@ static int tune(void)
 {
   const char *first_stage_tune[] = {
     "--first-stage=sa_ramp", "--first-stage=sq2_servo",
-    "--first-stage=sq1_servo", "--first-stage=sq1_ramp",
-    "--first-stage=sq1_ramp_tes"
+    "--first-stage=sq1_servo", "--first-stage=sq1_ramp"
   };
 
   const char *last_stage_tune[] = {
     "--last-stage=sa_ramp", "--last-stage=sq2_servo",
-    "--last-stage=sq1_servo", "--last-stage=sq1_ramp",
-    "--last-stage=sq1_ramp_tes"
+    "--last-stage=sq1_servo", "--last-stage=sq1_ramp"
   };
 
   const char *stage_name[] = {"sa_ramp", "sq2_servo", "sq1_servo", "sq1_ramp", NULL};
@@ -1573,17 +1562,14 @@ static int tune(void)
   int old_sa_ramp_bias = 0, old_sq2_servo_bias_ramp = 0;
   int old_sq1_servo_bias_ramp = 0;
   int local_tune_force_biases = goal.force;
-  char lst_dir[100];
-#if CHECK_TUNING
+#ifdef CHECK_TUNING
   char ref_tune_dir[100];
+  char stage_dirs[4][MAX_STAGE_TRIES][100];
   int stage, r = 0;
   int stage_tries[5] = {0, 0, 0, 0, 0};
 
   const char *argv[5] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
     NULL /* first stage */, NULL /* last stage */, NULL };
-
-  sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i", data_drive[0] + '0',
-      memory.ref_tune);
 
   ensure_experiment_cfg();
 
@@ -1612,7 +1598,16 @@ static int tune(void)
 
     /* check, if necessary */
     if (stage_name[stage]) {
-      int check = check_tune(stage_name[stage], ref_tune_dir);
+      sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i", data_drive[0] + '0',
+          memory.ref_tune);
+      //sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i/%s", data_drive[0] + '0',
+      //    memory.ref_tune, stage_name[stage]);
+
+      if (get_tune_dir(stage_dirs[stage][stage_tries[stage]]))
+        return CHECK_TUNE_ERR;
+
+      int check = check_tune(stage_dirs[stage][stage_tries[stage]],
+          ref_tune_dir, stage_name[stage]);
 
       if (WIFEXITED(check)) {
         switch (WEXITSTATUS(check)) {
@@ -1635,7 +1630,43 @@ static int tune(void)
     if (r)
       break;
   }
+
+  if (r == 0) { /* archive it */
+    int d, i;
+    char tuning_dir[100];
+    char *stage_part = tuning_dir + 23;
+
+    /* increment tuning */
+    memory.last_tune++;
+    mem_dirty = 1;
+
+    for (d = 0; d < 4; ++d) 
+      if (!disk_bad[d]) {
+        sprintf(tuning_dir, "/data#/mce/tuning/%04i/", memory.last_tune);
+        tuning_dir[5] = '0' + d;
+        if (mkdir(tuning_dir, 0777) == 0) {
+          /* copy all the things to all the places */
+          for (stage = goal.start; stage <= goal.stop; ++stage)
+            for (i = 0; i <= stage_tries[stage]; ++i) {
+              if (i == stage_tries[stage]) /* the good one */
+                strcpy(stage_part, stage_name[stage]);
+              else 
+                sprintf(stage_part, "%s_try%i", stage_name[stage], i + 1);
+              argv[0] = "/bin/cp";
+              argv[1] = "-r";
+              argv[2] = stage_dirs[stage][i];
+              argv[3] = tuning_dir;
+              argv[4] = NULL;
+              exec_and_wait(sched, none, argv[0], (char**)argv, 100, 0, NULL);
+              bprintf(info, "Archived tuning %s as %s\n", stage_dirs[stage][i],
+                  tuning_dir);
+            }
+        }
+      }
+  }
+
 #else
+  char lst_dir[100];
   const char *argv[] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
     first_stage_tune[goal.start], last_stage_tune[goal.stop], NULL };
 
@@ -1655,8 +1686,6 @@ static int tune(void)
 
   int r = exec_and_wait(sched, none, MAS_SCRIPT "/auto_setup", (char**)argv,
       0, 0, &kill_special);
-
-#endif
 
   if (r == 0) { /* archive it */
     int d;
@@ -1685,6 +1714,7 @@ static int tune(void)
         }
     }
   }
+#endif
 
   if (goal.force) {
     cfg_set_int("sa_ramp_bias", 0, old_sa_ramp_bias);
@@ -1700,7 +1730,7 @@ static int tune(void)
     case 1: /* no */
       break;
     case 0: /* auto */
-      if (!good_tuning(memory.last_tune))
+      if (r == 1)
         break;
       /* FALLTHROUGH */
     case 2: /* yes */

@@ -173,13 +173,14 @@ const char *noyes_names[] = {"no", "yes", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *just_mce_names[] = {"X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *tuning_stages[] = {"SA ramp", "SQ2 servo", "SQ1 servo", "SQ1 ramp",
-  "SQ1 ramp TES", NULL};
+   NULL};
 const char *wb_cards[] = {"CC", "RC1", "RC2", "BC1", "BC2", "AC", NULL};
 const char *action_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", NULL};
 const char *daction_names[] = {"Apply & Record", "Apply only",
   "Record & Reconfig", "Record only", "Record default only", NULL};
-const char *tunedata_names[] = {"expt.cfg", "sqtune", NULL};
+const char *tunedata_names[] = {"expt.cfg", "SA Ramp sqtune",
+  "SQ2 Servo sqtune", "SQ1 Servo sqtune", "SQ1 Ramp sqtune", NULL};
 const char *zbias_names[] = {"TES", "squids", "all", NULL};
 
 const struct scom scommands[N_SCOMMANDS] = {
@@ -1489,8 +1490,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     GR_MPC | MCECMD, 4,
     {
       {CHOOSE_INSERT_PARAM},
-      {"First stage", 0, 4, 'i', "NONE", {tuning_stages}},
-      {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}},
+      {"First stage", 0, 3, 'i', "NONE", {tuning_stages}},
+      {"Last stage", 0, 3, 'i', "NONE", {tuning_stages}},
       {"Apply?", 0, 3, 'i', "NONE", {autonoyes_names}}
     }
   },
@@ -1498,8 +1499,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     4,
     {
       {CHOOSE_INSERT_PARAM},
-      {"First stage", 0, 4, 'i', "NONE", {tuning_stages}},
-      {"Last stage", 0, 4, 'i', "NONE", {tuning_stages}},
+      {"First stage", 0, 3, 'i', "NONE", {tuning_stages}},
+      {"Last stage", 0, 3, 'i', "NONE", {tuning_stages}},
       {"Apply?", 0, 3, 'i', "NONE", {autonoyes_names}}
     }
   },
@@ -1730,7 +1731,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Tuning number", 0, 65535, 'i', "NONE"},
-      {"Item", 0, 1, 'i', "NONE", {tunedata_names}}
+      {"Item", 0, 4, 'i', "NONE", {tunedata_names}}
     }
   },
 

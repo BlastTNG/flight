@@ -255,7 +255,7 @@ void *acquer(void *dummy);
 void crash_stop(int);
 
 /* figure out tuning paths */
-int tuning_filename(const char *file, int n, char *buffer);
+int tuning_filename(const char *stage, const char *file, int n, char *buffer);
 
 /* The frame acq callback */
 int frame_acq(unsigned long user_data, int frame_size, uint32_t *buffer);
