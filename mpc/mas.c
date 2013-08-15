@@ -1587,7 +1587,7 @@ static int tune(void)
   /* global tuning attempt counter */
   for (nt = 0; nt < memory.tune_global_tries; ++nt) {
     /* run each stage in turn */
-    for (stage = goal.start; stage <= goal.stop; ++stage) {
+    for (stage = 0; stage < 4; ++stage) {
       flush_experiment_cfg(0);
 
       argv[2] = first_stage_tune[stage];
