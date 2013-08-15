@@ -309,6 +309,25 @@ Index: python/auto_setup/main.py
  
      if 'sq1_ramp_tes' in stages:
          # open-loop ramping of the TES bias
+Index: python/auto_setup/util/plotter.py
+===================================================================
+--- python/auto_setup/util/plotter.py	(revision 1151)
++++ python/auto_setup/util/plotter.py	(working copy)
+@@ -1,4 +1,4 @@
+-import os, shutil
++import os, shutil, sys
+ import distutils.version as dvs
+ import biggles
+ 
+@@ -412,7 +412,7 @@
+     from svglib.svglib import svg2rlg
+     from reportlab.graphics import renderPDF
+ except:
+-    print 'Failed to load PDF collation libraries.'
++    print >> sys.stderr, 'Failed to load PDF collation libraries.'
+ 
+ 
+ class pdfCollator:
 Index: python/auto_setup/util/tuning.py
 ===================================================================
 --- python/auto_setup/util/tuning.py	(revision 1151)
