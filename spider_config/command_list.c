@@ -1634,8 +1634,8 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMDC(servo_reset, "Reset a detector's servo", GR_DET, "Row", 0, 32, 'i')},
   {MCECMD1(flux_loop_init, "Reset the MCE flux-loop servo", GR_DET)},
   {MCECMD1(lcloop, "Run load curves forever", GR_MPC)},
-  {MCECMD2(ref_tuning, "Set the reference tuning", GR_MPCPARAM,
-      "Tuning number", 1, 65535, 'i')},
+  {MCECMD2P(ref_tuning, "Set the reference tuning", GR_MPCPARAM,
+      "Tuning number", 0, 65535, 'i')},
   {COMMAND(bias_tes_all), "Set all TES biases", GR_DET | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},

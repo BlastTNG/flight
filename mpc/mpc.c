@@ -1229,6 +1229,7 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         break;
       case ref_tuning:
         memory.ref_tune = ev->ivalues[1];
+        mem_dirty = 1;
         break;
       case send_tuning:
         new_blob_type = BLOB_TUNECFG + ev->ivalues[2];
