@@ -1522,6 +1522,126 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD2(ramp_max, "Maximum number of ramping detectors allowed before "
       "resetting the servo", GR_MPCPARAM, "Num (0=off)", 0, 500, 'i')},
 
+  {COMMAND(sa_ramp_check_crit),
+   "Choose which criteria to use for evaluating the sa_ramp tuning stage",
+   GR_MPCPARAM | MCECMD, 6,
+   {
+     {CHOOSE_INSERT_PARAM},
+     {NO_YES_PARAM("Check amplitude")},
+     {NO_YES_PARAM("Check locking slope")},
+     {NO_YES_PARAM("Check lock range")},
+     {NO_YES_PARAM("Check lock point count")}
+   }
+  },
+
+  {COMMAND(sq2_servo_check_crit),
+   "Choose which criteria to use for evaluating the sq2_servo tuning stage",
+   GR_MPCPARAM | MCECMD, 6,
+   {
+     {CHOOSE_INSERT_PARAM},
+     {NO_YES_PARAM("Check amplitude")},
+     {NO_YES_PARAM("Check locking slope")},
+     {NO_YES_PARAM("Check lock range")},
+     {NO_YES_PARAM("Check lock point count")}
+   }
+  },
+
+  {COMMAND(sq1_servo_check_crit),
+   "Choose which criteria to use for evaluating the sq1_servo tuning stage",
+   GR_MPCPARAM | MCECMD, 6,
+   {
+     {CHOOSE_INSERT_PARAM},
+     {NO_YES_PARAM("Check amplitude")},
+     {NO_YES_PARAM("Check locking slope")},
+     {NO_YES_PARAM("Check lock range")},
+     {NO_YES_PARAM("Check lock point count")}
+   }
+  },
+
+  {COMMAND(sq1_ramp_check_crit),
+   "Choose which criteria to use for evaluating the sq1_ramp tuning stage",
+   GR_MPCPARAM | MCECMD, 6,
+   {
+     {CHOOSE_INSERT_PARAM},
+     {NO_YES_PARAM("Check amplitude")},
+     {NO_YES_PARAM("Check locking slope")},
+     {NO_YES_PARAM("Check lock range")},
+     {NO_YES_PARAM("Check lock point count")}
+   }
+  },
+
+  {COMMAND(sa_ramp_check_params),
+   "Thresholds for evaluating the sa_ramp tuning stage",
+   GR_MPCPARAM | MCECMD, 11,
+   {
+     {CHOOSE_INSERT_PARAM},
+     {"Amplitude absolute threshold", 0, 1, 'f', "NONE"},
+     {"Amplitude relative threshold", 0, 1, 'f', "NONE"},
+     {"Locking slope absolute threshold", 0, 1, 'f', "NONE"},
+     {"Locking slope relative threshold", 0, 1, 'f', "NONE"},
+     {"Lock range absolute threshold", 0, 1, 'f', "NONE"},
+     {"Lock range relative threshold", 0, 1, 'f', "NONE"},
+     {"Lock point count threshold", 0, 2, 'i', "NONE"},
+     {"Bias ramp shift", 0, 1, 'f', "NONE"},
+     {"Bias ramp buffer", 0, 10, 'i', "NONE"},
+     {"Failed count threshold", 0, 100, 'i', "NONE"},
+   }
+  },
+
+  {COMMAND(sq2_servo_check_params),
+   "Thresholds for evaluating the ssq2_servo tuning stage",
+   GR_MPCPARAM | MCECMD, 11,
+   {
+     {CHOOSE_INSERT_PARAM},
+     {"Amplitude absolute threshold", 0, 1, 'f', "NONE"},
+     {"Amplitude relative threshold", 0, 1, 'f', "NONE"},
+     {"Locking slope absolute threshold", 0, 1, 'f', "NONE"},
+     {"Locking slope relative threshold", 0, 1, 'f', "NONE"},
+     {"Lock range absolute threshold", 0, 1, 'f', "NONE"},
+     {"Lock range relative threshold", 0, 1, 'f', "NONE"},
+     {"Lock point count threshold", 0, 2, 'i', "NONE"},
+     {"Bias ramp shift", 0, 1, 'f', "NONE"},
+     {"Bias ramp buffer", 0, 10, 'i', "NONE"},
+     {"Failed count threshold", 0, 100, 'i', "NONE"},
+   }
+  },
+
+  {COMMAND(sq1_servo_check_params),
+   "Thresholds for evaluating the sq1_servo tuning stage",
+   GR_MPCPARAM | MCECMD, 11,
+   {
+     {CHOOSE_INSERT_PARAM},
+     {"Amplitude absolute threshold", 0, 1, 'f', "NONE"},
+     {"Amplitude relative threshold", 0, 1, 'f', "NONE"},
+     {"Locking slope absolute threshold", 0, 1, 'f', "NONE"},
+     {"Locking slope relative threshold", 0, 1, 'f', "NONE"},
+     {"Lock range absolute threshold", 0, 1, 'f', "NONE"},
+     {"Lock range relative threshold", 0, 1, 'f', "NONE"},
+     {"Lock point count threshold", 0, 2, 'i', "NONE"},
+     {"Bias ramp shift", 0, 1, 'f', "NONE"},
+     {"Bias ramp buffer", 0, 10, 'i', "NONE"},
+     {"Failed count threshold", 0, 100, 'i', "NONE"},
+   }
+  },
+
+  {COMMAND(sq1_ramp_check_params),
+   "Thresholds for evaluating the sq1_ramp tuning stage",
+   GR_MPCPARAM | MCECMD, 11,
+   {
+     {CHOOSE_INSERT_PARAM},
+     {"Amplitude absolute threshold", 0, 1, 'f', "NONE"},
+     {"Amplitude relative threshold", 0, 1, 'f', "NONE"},
+     {"Locking slope absolute threshold", 0, 1, 'f', "NONE"},
+     {"Locking slope relative threshold", 0, 1, 'f', "NONE"},
+     {"Lock range absolute threshold", 0, 1, 'f', "NONE"},
+     {"Lock range relative threshold", 0, 1, 'f', "NONE"},
+     {"Lock point count threshold", 0, 2, 'i', "NONE"},
+     {"Bias ramp shift", 0, 1, 'f', "NONE"},
+     {"Bias ramp buffer", 0, 10, 'i', "NONE"},
+     {"Failed count threshold", 0, 100, 'i', "NONE"},
+   }
+  },
+
   {COMMAND(column_on), "Turn on a MCE column", GR_SQUID | MCECMD, 5,
     {
       {CHOOSE_INSERT_NO_ALL},

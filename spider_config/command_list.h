@@ -193,6 +193,9 @@ enum multiCommand {
   drive_check, bias_tes_rc2, mce_clock_ext, bolo_stat_reset, bolo_stat_gains,
   bolo_stat_timing, bias_kick_params, partial_iv_curve, ref_tuning,
   tuning_tries, tuning_check_on, tuning_check_off, ramp_max, ref_biases,
+  sa_ramp_check_crit, sq2_servo_check_crit, sq1_servo_check_crit, sq1_ramp_check_crit,
+  sa_ramp_check_params, sq2_servo_check_params, sq1_servo_check_params,
+  sq1_ramp_check_params,
 
   /* MCE experiment.cfg commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,
