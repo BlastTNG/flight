@@ -344,11 +344,16 @@ static int task_stop_acq(int fake)
 
   for (;;) {
     tries++;
+
     /* Stop */
-    if (dt_wait(fake ? dt_fakestop : dt_stop)) {
+    if (dt_wait(dt_stop)) {
       comms_lost = 1;
       return 1;
     }
+
+    /* fakestop */
+    if (fake)
+      dt_wait(dt_fakestop);
 
     /* wait for acq termination */
     for (i = 0; i < 1000; ++i) {
@@ -408,6 +413,12 @@ static enum modas task_off_moda;
 static int task_off_reconfig;
 static void task_run_moda(void)
 {
+  if (running_state) {
+    dt_kill();
+    running_state = 0;
+    return;
+  }
+
   if (dt_done()) {
     /* an off_moda of md_none indicates that the goal is completed and
      * we should switch back to our default */

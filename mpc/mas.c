@@ -17,7 +17,7 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define SHOW_WRITE_PARAM
+#undef SHOW_WRITE_PARAM
 
 #include "mpc_proto.h"
 #include "mpc.h"
@@ -1565,7 +1565,7 @@ static int tune(void)
   char ref_tune_dir[100];
   char stage_dirs[4][MAX_STAGE_TRIES][100];
   int stage, r = 0;
-  int stage_tries[4] = {0, 0, 0, 0};
+  int stage_tries[4];
   int nt;
 
   const char *argv[5] = { MAS_SCRIPT "/auto_setup", "--set-directory=0",
@@ -1588,6 +1588,7 @@ static int tune(void)
   for (nt = 0; nt < memory.tune_global_tries; ++nt) {
     /* run each stage in turn */
     for (stage = 0; stage < 4; ++stage) {
+      stage_tries[stage] = 0;
       flush_experiment_cfg(0);
 
       argv[2] = first_stage_tune[stage];
@@ -1600,6 +1601,11 @@ static int tune(void)
       if (r)
         break;
 
+      if (get_tune_dir(stage_dirs[stage][stage_tries[stage] - 1])) {
+        r = 1;
+        break;
+      }
+
       /* skip check */
       if (memory.tune_check_off)
         continue;
@@ -1609,12 +1615,7 @@ static int tune(void)
       //sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i/%s", data_drive[0] + '0',
       //    memory.ref_tune, stage_name[stage]);
 
-      if (get_tune_dir(stage_dirs[stage][stage_tries[stage]])) {
-        r = 1;
-        break;
-      }
-
-      int check = check_tune(stage_dirs[stage][stage_tries[stage]],
+      int check = check_tune(stage_dirs[stage][stage_tries[stage] - 1],
           ref_tune_dir, stage_name[stage]);
 
       if (WIFEXITED(check)) {
@@ -1656,7 +1657,7 @@ static int tune(void)
         tuning_dir[5] = '0' + d;
         if (mkdir(tuning_dir, 0777) == 0) {
           /* copy all the things to all the places */
-          for (stage = goal.start; stage <= goal.stop; ++stage)
+          for (stage = 0; stage <= 4; ++stage)
             for (i = 0; i < stage_tries[stage]; ++i) {
               if (i == stage_tries[stage] - 1) /* the good one */
                 strcpy(stage_part, stage_name[stage]);
@@ -1688,8 +1689,8 @@ static int tune(void)
   if (goal.apply)
     cfg_apply_tuning(memory.last_tune, 0);
 
-  tuning_status = (nt << 12) | (stage_tries[3] << 9) | (stage_tries[2] << 6) |
-    (stage_tries[1] << 3) | (stage_tries[0] << 0);
+  tuning_status = (r << 15) | ((nt + 1) << 12) | (stage_tries[3] << 9) |
+    (stage_tries[2] << 6) | (stage_tries[1] << 3) | (stage_tries[0] << 0);
 
   return r ? 1 : 0;
 }
