@@ -1460,7 +1460,7 @@ static int read_mem(void)
     memory.bias_kick_bias = 0; /* off */
     memory.bias_kick_time = 500000; /* microseconds */
     memory.bias_kick_wait = 30; /* seconds */
-    memory.bolo_filt_len = 5000;
+    memory.bolo_filt_len = 120;
     memory.bolo_filt_freq = 5.0;
     memory.bolo_filt_bw = 1.2;
     memory.bolo_stat_gain[bs_mean] = 1. / log( 1.07);

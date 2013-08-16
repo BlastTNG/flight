@@ -15,11 +15,14 @@ uint8_t bolo_stat_buff[N_STAT_TYPES][NUM_ROW * NUM_COL];
 /* buffers */
 int32_t frame_offset[NUM_ROW * NUM_COL];
 double frame_filt[FB_SIZE][NUM_ROW * NUM_COL];
+double frame_local[FB_SIZE][NUM_ROW * NUM_COL];
 double frame_sum[NUM_ROW * NUM_COL];
 double frame_sum2[NUM_ROW * NUM_COL];
 double frame_fsum2[NUM_ROW * NUM_COL];
 
 int sb_top = 0;
+
+#define STAT_RESET_TIMEOUT 10
 
 /* extract data from frame (assumes data mode 10!) */
 #define FRAME_EXTRACT(frm,idx) (int32_t)((frm[idx + MCE_HEADER_SIZE] >> 7) << 3)
@@ -72,11 +75,13 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   static int loc_filt_len;
   static double loc_bs_gain[N_STAT_TYPES];
   static int loc_bs_offset[N_STAT_TYPES];
+  static int reset_count = 0;
   static int scount = 0;
-
-  int ii, jj, sb_idx[NUM_FILT_COEFF], fb_idx[NUM_FILT_COEFF];
+  // static int count = 0;
+  
+  int ii, jj, sb_idx[NUM_FILT_COEFF];
   size_t ndata = frame_size / sizeof(uint32_t) - MCE_HEADER_SIZE - 1;
-  double vthis, vlast, vfilt, v, vflast, dmean, dsigma, dnoise, norm;
+  double vthis, vlast, vfilt, vflast, v, dmean, dsigma, dnoise, norm;
 
   double fsamp = 50.e6 / (double)(header->row_len 
       * header->data_rate 
@@ -115,6 +120,7 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     memset(frame_sum2, 0, sizeof(double) * NUM_ROW * NUM_COL);
     memset(frame_fsum2, 0, sizeof(double) * NUM_ROW * NUM_COL);
     memset(frame_filt, 0, sizeof(double) * NUM_ROW * NUM_COL * FB_SIZE);
+    memset(frame_local, 0, sizeof(double) * NUM_ROW * NUM_COL * FB_SIZE);
 
     memset(bolo_stat_buff[bs_sigma], 0, sizeof(uint8_t) * NUM_ROW * NUM_COL);
     memset(bolo_stat_buff[bs_noise], 0, sizeof(uint8_t) * NUM_ROW * NUM_COL);
@@ -126,17 +132,21 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
 
     stat_reset = 0;
     scount = 0;
+    reset_count = 0;
   }
-
+  
+  /* ignore the first few frames after a reset */
+  if (reset_count < STAT_RESET_TIMEOUT) {
+    reset_count++;
+    return;
+  }
+  
   norm = loc_filt_len;
 
   /* neighboring buffer elements */
-  fb_idx[0] = (fb_top + 1) % FB_SIZE; // oldest element
   sb_idx[0] = (sb_top + 1) % loc_filt_len; // oldest element
   // previous elements for filtering
   for (jj = 1; jj < NUM_FILT_COEFF; jj++) {
-    fb_idx[jj] = (fb_top - jj) % FB_SIZE;
-    if (fb_idx[jj] < 0) fb_idx[jj] += FB_SIZE;
     sb_idx[jj] = (sb_top - jj) % loc_filt_len;
     if (sb_idx[jj] < 0) sb_idx[jj] += loc_filt_len;
   }
@@ -145,8 +155,8 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
   for (ii = 0; ii < ndata; ii++) {
     /* update statistics */
     vthis = FRAME_EXTRACT(curr_frame, ii) - frame_offset[ii];
-    vlast = (scount < loc_filt_len) ? 0 :
-      (FRAME_EXTRACT(frame[fb_idx[0]], ii) - frame_offset[ii]);
+    vlast = frame_local[sb_idx[0]][ii];
+    frame_local[sb_top][ii] = vthis;
 
     frame_sum[ii] += (vthis - vlast);
     dmean = frame_sum[ii] / norm;
@@ -158,12 +168,11 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     /* apply filter */
     vfilt = filt_coeffb[0] * vthis;
     for (jj = 1; jj < NUM_FILT_COEFF; jj++) {
-      v = FRAME_EXTRACT(frame[fb_idx[jj]], ii) - frame_offset[ii];
-      vfilt += (filt_coeffb[jj] * v -
-          filt_coeffa[jj] * frame_filt[sb_idx[jj]][ii]);
+      vfilt += (filt_coeffb[jj] * frame_local[sb_idx[jj]][ii] -
+		filt_coeffa[jj] * frame_filt[sb_idx[jj]][ii]);
     }
     vfilt /= filt_coeffa[0];
-    vflast = (scount < loc_filt_len) ? 0 : frame_filt[sb_idx[0]][ii];
+    vflast = frame_filt[sb_idx[0]][ii];
     frame_fsum2[ii] += (vfilt * vfilt - vflast * vflast);
     frame_filt[sb_top][ii] = vfilt;
     dnoise = sqrt(frame_fsum2[ii] / (norm - 1.) / (loc_filt_freq * loc_filt_bw));
@@ -180,7 +189,6 @@ void update_stats(const uint32_t *curr_frame, size_t frame_size, uint32_t framen
     bolo_stat_buff[bs_noise][ii] = (v < 0) ? 0 : ( (v > 255) ? 255 : v );
 
 #if 0
-    static int count = 0;
     if (ii==41) {
       if (count==loc_filt_len || scount < loc_filt_len + 5) {
         bprintf(info, "(%d) Last: off %d / this %d / last %d", scount, frame_offset[ii],

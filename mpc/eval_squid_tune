@@ -4,7 +4,6 @@ import numpy as np
 import os, glob, sys
 from mce_data import MCERunfile
 import auto_setup as ast
-# from spider_instrument.mce import MCEConfig
 
 # load the template sqtune and experiment.cfg
 # load the desired sqtune and experiment.cfg
