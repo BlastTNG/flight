@@ -118,11 +118,55 @@ static void bias_step_analysis(const int32_t *frame, size_t frame_size,
   }
 }
 
+/* count raming detectors */
+#define RAMP_LOOKBACK_LEN 10
+#define RAMP_THRESHOLD (1U << 24)
+static void count_ramped(const int32_t *frame)
+{
+  static int counter = 0;
+  static int32_t vmin[NUM_COL * NUM_ROW];
+  static int32_t vmax[NUM_COL * NUM_ROW];
+  int new_ramp_count = 0;
+  int i;
+
+  /* skip header */
+  frame += MCE_HEADER_SIZE;
+
+  /* reset */
+  if (stat_reset)
+    counter = 0;
+
+  if (counter == 0) { /* initialise */
+    for (i = 0; i < NUM_ROW * NUM_COL; ++i)
+      vmin[i] = vmax[i] = (frame[i] >> 7);
+  } else {
+    /* update */
+    for (i = 0; i < NUM_ROW * NUM_COL; ++i) {
+      int32_t v = frame[i] >> 7;
+      if (v < vmin[i])
+        vmin[i] = v;
+      else if (v > vmax[i])
+        vmax[i] = v;
+    }
+
+    /* check */
+    if (counter == RAMP_LOOKBACK_LEN - 1) {
+      for (i = 0; i < NUM_ROW * NUM_COL; ++i)
+        if (vmax[i] - vmin[i] > RAMP_THRESHOLD)
+          new_ramp_count++;
+
+      slow_dat.ramp_count = new_ramp_count;
+    }
+  }
+
+  counter = (counter + 1) % RAMP_LOOKBACK_LEN;
+}
+
 /* count clamped detectors */
 static uint32_t cval[NUM_ROW * NUM_COL];
 static int ccount[NUM_ROW * NUM_COL];
 #define MIN_CLAMP_COUNT 500
-static void count_clamped(const int32_t *frame, size_t frame_size)
+static void count_clamped(const int32_t *frame)
 {
   int i;
   int new_clamp_count = 0;
@@ -154,6 +198,13 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
   if (header->status & MCE_FSB_STOP)
     bprintf(info, "STOP bit in CC frame %u", header->cc_frameno);
 
+  /* clamp counting */
+  if (iclamp[0] > 0 || iclamp[1] > 0)
+    count_clamped((const int32_t*)frame);
+
+  /* ramp counting */
+  count_ramped((const int32_t*)frame);
+
   /* update frame statistics */
   if (!stat_veto) {
     if (moda == md_bstep)
@@ -163,10 +214,6 @@ static void do_frame(const uint32_t *frame, size_t frame_size, uint32_t frameno)
       bsa_init = 1;
     }
   }
-
-  /* clamp counting */
-  if (iclamp[0] > 0 || iclamp[1] > 0)
-    count_clamped((const int32_t*)frame, frame_size);
 }
 
 /* the rambuff callback */
