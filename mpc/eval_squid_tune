@@ -3,7 +3,7 @@
 import numpy as np
 import os, glob, sys
 from mce_data import MCERunfile
-from auto_setup import config
+import auto_setup as ast
 # from spider_instrument.mce import MCEConfig
 
 # load the template sqtune and experiment.cfg
@@ -20,11 +20,12 @@ def stage_params(stage):
     if stage == 'sa_ramp':
         out['block'] = 'SA_RAMP'
         out['prefix'] = 'Squid_'
-        out['ramp_params'] = {'set':   'sa_ramp_bias',
+        out['ramp_params'] = {'set': 'sa_ramp_bias',
                               'start': 'sa_ramp_bias_start',
-                              'step':  'sa_ramp_bias_step',
+                              'step': 'sa_ramp_bias_step',
                               'count': 'sa_ramp_bias_count',
-                              'bias':  'sa_bias'}
+                              'bias': 'sa_bias'}
+        out['data_class'] = ast.SARamp
     elif stage == 'sq2_servo':
         out['block'] = 'SQ2_SERVO'
         out['prefix'] = 'Squid_'
@@ -33,6 +34,7 @@ def stage_params(stage):
                               'step':  'sq2_servo_bias_step',
                               'count': 'sq2_servo_bias_count',
                               'bias':  'sq2_bias'}
+        out['data_class'] = ast.SQ2Servo
     elif stage == 'sq1_servo':
         out['block'] = 'SQ1_SERVO'
         out['prefix'] = 'Col%i_squid_'
@@ -41,6 +43,7 @@ def stage_params(stage):
                               'step':  'sq1_servo_bias_step',
                               'count': 'sq1_servo_bias_count',
                               'bias':  'sq1_bias'}
+        out['data_class'] = ast.SQ1Servo
     elif stage == 'sq1_ramp':
         out['block'] = 'SQUID'
         out['prefix'] = 'Col%i_squid_'
@@ -48,6 +51,7 @@ def stage_params(stage):
                               'start': None,
                               'step':  None,
                               'count': None}
+        out['data_class'] = ast.SQ1Ramp
     return out
 
 class SQConfig:
@@ -56,19 +60,23 @@ class SQConfig:
     def __init__(self,tuning,ref,stage, mask=False, verbose=False):
         if not os.path.exists(tuning):
             raise IOError,'Tuning directory %s not found'%tuning
-        self.tuning = tuning
+        self.tuning_dir = tuning
+        self.file_set = ast.util.FileSet(args.tuning)
+        self.tuning = ast.util.tuningData(name=os.path.basename(args.tuning),
+                                          exp_file=self.file_set.get('cfg_file',None),
+                                          data_dir=os.path.dirname(args.tuning))
         # load the experiment.cfg file
-        self.config = config.configFile(os.path.join(self.tuning,'experiment.cfg'))
+        self.config = self.tuning.exptfile
         # load the sqtune file
-        fname = glob.glob(os.path.join(self.tuning,'*.sqtune'))
+        fname = glob.glob(os.path.join(self.tuning_dir,'*.sqtune'))
         if len(fname)==0:
             raise IOError('SQtune file not found')
         self.sqtune = MCERunfile(fname[0])
         
         if not os.path.exists(ref):
             raise IOError,'Tuning directory %s not found'%ref
-        self.ref_tuning = ref
-        fname_tune = glob.glob(os.path.join(self.ref_tuning,'*.sqtune'))
+        self.ref_tuning_dir = ref
+        fname_tune = glob.glob(os.path.join(self.ref_tuning_dir,'*.sqtune'))
         if len(fname) == 0:
             raise IOError('SQtune file not found')
         self.ref_sqtune = MCERunfile(fname[0])
@@ -92,29 +100,55 @@ class SQConfig:
         self.columns_off = self.config.get_param('columns_off')[:self.num_cols].astype(bool)
         self.dead_mask = self.config.get_param('dead_detectors').reshape(32,41)
         self.dead_mask = self.dead_mask[:self.num_cols,:self.num_rows].astype(bool)
+    
+    def load_ramp_summary(self):
+        if not self.is_ramp: return None
+        if self.stage not in ['sa_ramp','sq2_servo','sq1_servo']: return None
+        cls = self.data_class
+        S = [self.data_class(x, tuning=self.tuning)
+             for x in self.file_set.stage_all(self.stage)]
+        if len(S) == 0:
+            raise IOError,'No data found for stage %s' % self.stage
+        S = cls.join(S)
+        if S.bias_style != 'ramp': return None
+        S.reduce1()
+        return S.ramp_summary()
         
     def _print(self, msg):
         print >> sys.stderr, msg
         
-    def check_ramp(self, shift = 0.5, buffer = [3, -3]):
+    def check_ramp(self, shift = 0.5, buffer = 3):
         if not self.is_ramp: return 0
         
         self._print('Checking bias ramp')
         
         # otherwise check if centered
-        bias, ramp_start, ramp_step, ramp_count = (self.config.get_param(self.ramp_params[s])
-                                                   for s in ('bias','start','step','count'))
+        bias, ramp_start, ramp_step, ramp_count = \
+            (self.config.get_param(self.ramp_params[s])
+             for s in ('bias','start','step','count'))
         if len(bias)==32:
             bias = bias[:self.num_cols]
         elif len(bias)==41:
             bias = bias[:self.num_rows]
         ramp_end = ramp_start + ramp_step * (ramp_count - 1)
         
+        if 'servo' in self.stage:
+            S = self.load_ramp_summary()
+            bias0 = S.analysis['lock_x']
+            ic_factor = self.config.get_param(self.stage + '_ic_factor')
+            if len(bias0)==32:
+                bias0 = bias0[:self.num_cols]
+            elif len(bias0)==41:
+                bias0 = bias0[:self.num_rows]
+        else: bias0 = bias.copy()
+        
         self._print('Biases: %s' % bias)
-        self._print('Start %d step %d count %d end %d' % (ramp_start, ramp_step, ramp_count, ramp_end))
+        self._print('Start %d step %d count %d end %d' %
+                    (ramp_start, ramp_step, ramp_count, ramp_end))
+        self._print('Pre-shifted biases: %s' % bias0)
         
         # return if bias within range
-        if all(bias > ramp_start) and all(bias < ramp_end): return 0
+        if all(bias0 > ramp_start) and all(bias < ramp_end): return 0
         
         if self.do_mask:
             if self.stage in ['sa_ramp','sq2_servo']:
@@ -123,26 +157,32 @@ class SQConfig:
                 mask = np.ones_like(bias)
         
         # shift ramp edges by a fraction of the current ramp width
-        plo = np.where((bias <= ramp_start)*mask)[0]
-        phi = np.where((bias >= ramp_end)*mask)[0] 
-        ramp_shift = ramp_step * int(ramp_count * shift)
-        
+        plo = np.where((bias0 <= ramp_start)*mask)[0]
+        phi = np.where((bias >= ramp_end)*mask)[0]
         if len(plo):
             self._print('Found these below bias range: %s' % plo)
         if len(phi):
             self._print('Found these above bias range: %s' % phi)
         
+        if not len(plo) and len(phi) and \
+                all(np.logical_or(bias0 < ramp_end, np.logical_not(mask))):
+            rbias = int(bias0 * ic_factor)
+            ramp_shift = ramp_step * ((max(rbias) - ramp_end) / ramp_step + buffer)
+        else: ramp_shift = ramp_step * int(ramp_count * shift)
+                
         ramp_start0 = ramp_start
         ramp_count0 = ramp_count
         
         if len(plo):
             ramp_start -= ramp_shift
             if not len(phi):
-                ramp_end = np.append(bias + buffer[1] * ramp_step, ramp_end - ramp_shift).max()
+                ramp_end = np.append(bias + buffer * ramp_step,
+                                     ramp_end - ramp_shift).max()
         if len(phi):
             ramp_end += ramp_shift
             if not len(plo):
-                ramp_start = np.append(bias - buffer[0] * ramp_step, ramp_start + ramp_shift).min()
+                ramp_start = np.append(bias0 - buffer * ramp_step,
+                                       ramp_start + ramp_shift).min()                
         ramp_count = (ramp_end - ramp_start) / ramp_step + 1
         
         rerun = False
@@ -248,7 +288,7 @@ class SQConfig:
             + self.get_lock_count(slope=-1,ref=True).ravel()
         count = self.get_lock_count(slope=1,ref=False).ravel() \
             + self.get_lock_count(slope=-1,ref=False).ravel()
-        idx = set(np.nonzero(np.abs(count-count0)>1)[0])
+        idx = set(np.nonzero(np.abs(count-count0)>tol)[0])
         return idx
     
     def check_tuning(self, crit=['p2p','range','count'], threshold=10):
@@ -278,13 +318,14 @@ class SQConfig:
             print self.ramp_params['set'], '0', int(not self.is_ramp)
         elif self.stage == 'sq1_ramp':
             for stg in ['sa_ramp','sq2_servo','sq1_servo']:
-                p = stage_params(stg)
-                if self.config.get_param(p['ramp_params']['set']):
-                    print p['ramp_params']['set'], '0', int(not self.config.get_param(p['ramp_params']['set']))
+                p = stage_params(stg)['ramp_params']['set']
+                v = self.config.get_param(p)
+                if v:
+                    print p, '0', int(not v)
         
         return 2
 
-def debug_exit(err):
+def print_exit(err):
     print >> sys.stderr, 'Exiting with error code',err
     sys.exit(err)
 
@@ -319,10 +360,10 @@ if __name__ == "__main__":
     S = SQConfig(args.tuning,args.ref_tuning,args.stage,mask=True,verbose=args.verbose)
     
     out = S.check_ramp()
-    if out == 2: debug_exit(2)
-    elif out != 0: debug_exit(1)
+    if out == 2: print_exit(2)
+    elif out != 0: print_exit(1)
     
     if 'sq1' in args.stage: threshold = 10
     else: threshold = 0
     
-    debug_exit(S.check_tuning(threshold=threshold))
+    print_exit(S.check_tuning(threshold=threshold))
