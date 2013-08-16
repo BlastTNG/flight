@@ -178,6 +178,8 @@ def main():
                    help='Should I print intermediate messages?')
     p.add_argument('--darks',default=False,type=bool,
                    help='Should I bias for the dark detectors?')
+    p.add_argument('--ref',default=[],type=int,nargs=16,
+                   help='List of reference biases from a previous load curve')
     args = p.parse_args()
 
     # Load the IV curve
