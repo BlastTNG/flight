@@ -102,7 +102,7 @@ def goodR(iv,bins=None,window=0,rfrac =[0.02,0.9]):
     return nR
 
 def choose_biases(iv,window=0,bias_bin=50,rfrac = [0.2,0.8],Nthresh=2,
-                  do_R=True, do_Trans=True):
+                  do_R=True, do_Trans=True, darks=False):
     ''' Combine a set of figures of merit to choose biases for each column'''
     # Establish BINS IN BIAS for all figures of merit
     bins = _set_bins(iv.Bbias,bias_bin=bias_bin)
@@ -176,6 +176,8 @@ def main():
                    help='Approx. minimum number of TESs required for tuning figure-of-merit')
     p.add_argument('--verbose',default=False,type=bool,
                    help='Should I print intermediate messages?')
+    p.add_argument('--darks',default=False,type=bool,
+                   help='Should I bias for the dark detectors?')
     args = p.parse_args()
 
     # Load the IV curve
@@ -192,7 +194,7 @@ def main():
     except Exception:
         sys.exit('Failed to load IV curve')
     bias=choose_biases(iv,window=args.window,bias_bin=args.bin,
-                       rfrac=[args.rmin,args.rmax],Nthresh=args.Nmin)
+                       rfrac=[args.rmin,args.rmax],Nthresh=args.Nmin,darks=args.darks)
     print ''.join(['%d '%b for b in bias])
 
 
