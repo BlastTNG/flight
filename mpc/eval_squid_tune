@@ -338,6 +338,19 @@ if __name__ == "__main__":
                    help='Stage to check (one of "%s")' % ', '.join(stages))
     P.add_argument('-v','--verbose',default=False,action='store_true',
                    help='moar words')
+    P.add_argument('-c','--criteria',default=[],action='append',nargs='+',
+                   choices=['p2p','range','slope','count'],
+                   help='Which criteria should be used to check against reference tuning?')
+    P.add_argument('--p2p-abs-thresh',default=0.3)
+    P.add_argument('--p2p-rel-thresh',default=0.1)
+    P.add_argument('--slope-abs-thresh',default=0.5)
+    P.add_argument('--slope-rel-thresh',default=0.25)
+    P.add_argument('--range-abs-thresh',default=0.5)
+    P.add_argument('--range-rel-thresh',default=0.25)
+    P.add_argument('--count-thresh',default=1)
+    P.add_argument('--fail-thresh',default=10)
+    P.add_argument('--ramp-shift',default=0.5)
+    P.add_argument('--ramp-buffer',default=3)
     args = P.parse_args()
     
     if not os.path.exists(args.tuning):
