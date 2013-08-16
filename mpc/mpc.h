@@ -63,8 +63,9 @@ struct memory_t {
   int restart_reset;
   int ref_tune;
   int tune_tries[4];
-  int tune_global_tries; /* number of retries of the whole tuning */
+  int tune_global_tries;
   int tune_check_off;
+  int ramp_max;
 };
 extern struct memory_t memory;
 extern int mem_dirty;
@@ -240,13 +241,13 @@ enum dtask {
   dt_idle = 0, dt_setdir, dt_dsprs, dt_mcers, dt_reconfig, dt_startacq,
   dt_fakestop, dt_empty, dt_status, dt_acqcnf, dt_autosetup, dt_delacq,
   dt_ivcurve, dt_stop, dt_stopmce, dt_lcloop, dt_bstep, dt_bramp, dt_kick,
-  dt_partial
+  dt_partial, dt_rstsrvo
 };
 #define DT_STRINGS \
   "idle", "setdir", "dsprs", "mcers", "reconfig", "startacq", \
 "fakestop", "empty", "status", "acqcnf", "autosetup", "delacq", \
 "ivcurve", "stop", "stopmce", "lcloop", "bstep", "bramp", "kick", \
-"partial"
+"partial", "rstsrvo"
 extern enum dtask data_tk;
 extern int dt_error;
 extern int comms_lost;

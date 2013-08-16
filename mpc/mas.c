@@ -1938,6 +1938,9 @@ void *mas_data(void *dummy)
       case dt_partial:
         partial_iv();
         break;
+      case dt_rstsrvo:
+        dt_error = flux_loop_init(2);
+        break;
     }
     data_tk = dt_idle;
 

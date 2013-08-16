@@ -412,8 +412,21 @@ static int task_reset_mce()
 /* handle running a moda */
 static enum modas task_off_moda;
 static int task_off_reconfig;
+#define RSTSRVO_WAIT 6000 /* ten minutes */
 static void task_run_moda(void)
 {
+  static int rstsrvo_wait = RSTSRVO_WAIT;
+  /* do things while acquiring data */
+  if (moda == md_running) {
+    if (rstsrvo_wait == 0) {
+      if (memory.ramp_max > 0 && slow_dat.ramp_count > memory.ramp_max) {
+        dt_wait(dt_rstsrvo);
+        rstsrvo_wait = RSTSRVO_WAIT;
+      }
+    } else
+      rstsrvo_wait--;
+  }
+
   if (dt_done()) {
     /* an off_moda of md_none indicates that the goal is completed and
      * we should switch back to our default */

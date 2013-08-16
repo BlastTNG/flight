@@ -1136,6 +1136,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         memory.tune_check_off = 0;
         mem_dirty = 1;
         break;
+      case ramp_max:
+        memory.ramp_max = ev->ivalues[1];
+        break;
 
         /* Experiment config commands */
       case column_off:
@@ -1476,6 +1479,7 @@ static int read_mem(void)
     memory.tune_tries[2] = 3;
     memory.tune_tries[3] = 3;
     memory.tune_global_tries = 1;
+    memory.ramp_max = 20;
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 

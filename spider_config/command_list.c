@@ -1516,6 +1516,9 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_MPCPARAM)},
   {MCECMD1(tune_check_on, "Turn on the automatic tuning checks", GR_MPCPARAM)},
 
+  {MCECMD2(ramp_max, "Maximum number of ramping detectors allowed before "
+      "resetting the servo", GR_MPCPARAM, "Num (0=off)", 0, 500, 'i')},
+
   {COMMAND(column_on), "Turn on a MCE column", GR_SQUID | MCECMD, 5,
     {
       {CHOOSE_INSERT_NO_ALL},
