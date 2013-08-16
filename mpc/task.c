@@ -412,7 +412,7 @@ static int task_reset_mce()
 /* handle running a moda */
 static enum modas task_off_moda;
 static int task_off_reconfig;
-#define RSTSRVO_WAIT 6000 /* ten minutes */
+#define RSTSRVO_WAIT 60000 /* ten minutes */
 static void task_run_moda(void)
 {
   static int rstsrvo_wait = RSTSRVO_WAIT;
