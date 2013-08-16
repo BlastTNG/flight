@@ -66,6 +66,8 @@ struct memory_t {
   int tune_global_tries;
   int tune_check_off;
   int ramp_max;
+  int rst_wait;
+  int rst_tries;
   int ref_iv;
   int ref_iv_dark;
 };

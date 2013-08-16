@@ -884,12 +884,14 @@ static void pick_biases(int iv_num, int dark, int set_ref)
     NULL };
 
   /* read the reference tuning, if needed */
-  if (dark) {
-    if (!ref_biases_dark_ok)
-      pick_biases(memory.ref_iv, 1, 1);
-  } else
-    if (!ref_biases_lite_ok)
-      pick_biases(memory.ref_iv, 0, 1);
+  if (!set_ref) {
+    if (dark) {
+      if (!ref_biases_dark_ok)
+        pick_biases(memory.ref_iv, 1, 1);
+    } else
+      if (!ref_biases_lite_ok)
+        pick_biases(memory.ref_iv, 0, 1);
+  }
 
   if (dark)
     argv[2] = darks;
@@ -1663,8 +1665,8 @@ static int tune(void)
       } else
         r = 1;
 
-        if (r)
-          break;
+      if (r)
+        break;
     }
 
     /* abort */

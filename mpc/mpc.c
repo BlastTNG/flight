@@ -1136,8 +1136,10 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         memory.tune_check_off = 0;
         mem_dirty = 1;
         break;
-      case ramp_max:
+      case array_monitor:
         memory.ramp_max = ev->ivalues[1];
+        memory.rst_wait = ev->ivalues[2] * 100; /* in units of 10 msec */
+        memory.rst_tries = ev->ivalues[3];
         break;
 
         /* Experiment config commands */
@@ -1329,7 +1331,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         push_blockr("", "", ev->ivalues[1], data, 1, 3);
         break;
       case ref_biases:
-        memory.ref_iv = ev->ivalues[1];
+        memory.ref_iv = ev->ivalues[1] ? ev->ivalues[1] : memory.last_iv;
+        mem_dirty = 1;
         ref_biases_lite_ok = ref_biases_dark_ok = 0;
         break;
       case bias_kick_params:
@@ -1486,6 +1489,8 @@ static int read_mem(void)
     memory.tune_tries[3] = 3;
     memory.tune_global_tries = 1;
     memory.ramp_max = 20;
+    memory.rst_wait = 60000; /* ten minutes */
+    memory.rst_tries = 5;
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 

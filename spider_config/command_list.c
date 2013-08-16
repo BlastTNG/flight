@@ -1519,8 +1519,15 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {MCECMD1(tuning_check_on, "Turn on the automatic tuning checks",
       GR_MPCPARAM)},
 
-  {MCECMD2(ramp_max, "Maximum number of ramping detectors allowed before "
-      "resetting the servo", GR_MPCPARAM, "Num (0=off)", 0, 500, 'i')},
+  {COMMAND(array_monitor), "Set the array health monitoring parameters",
+    GR_MPCPARAM | MCECMD, 4,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Max ramp + clamp (0=off)", 0, NUM_ROW * NUM_COL, 'i', "NONE"},
+      {"Check period (s)", 1, 65535, 'i', "NONE"},
+      {"Max servo reset tries", 1, 100, 'i', "NONE"}
+    }
+  },
 
   {COMMAND(sa_ramp_check_crit),
    "Choose which criteria to use for evaluating the sa_ramp tuning stage",

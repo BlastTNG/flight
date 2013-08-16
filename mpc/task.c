@@ -409,23 +409,49 @@ static int task_reset_mce()
   return 0;
 }
 
+static int rst_level;
+static int rst_wait;
+
+static void reset_array_health(void)
+{
+  rst_level = 0;
+  rst_wait = memory.rst_wait;
+}
+
+static void array_health(void)
+{
+  if (rst_wait == 0) {
+    if (memory.ramp_max > 0 &&
+        (slow_dat.ramp_count + slow_dat.clamp_count) > memory.ramp_max)
+    {
+      /* kick it up a notch */
+      rst_level++;
+    } else /* we're totally fine */
+      rst_level = 0;
+
+    /* wait a bit before rechecking */
+    rst_wait = memory.rst_wait;
+
+    /* do something abut the level */
+    if (rst_level > memory.rst_tries) {
+      /* try a tune */
+      new_goal.force = 0; /* don't force-tune biases */
+      new_goal.apply = 1; /* apply tuning */
+      new_goal.goal = gl_tune;
+    } else if (rst_level > 0) /* flux loop init */
+      dt_wait(dt_rstsrvo);
+  } else
+    rst_wait--;
+}
+
 /* handle running a moda */
 static enum modas task_off_moda;
 static int task_off_reconfig;
-#define RSTSRVO_WAIT 60000 /* ten minutes */
 static void task_run_moda(void)
 {
-  static int rstsrvo_wait = RSTSRVO_WAIT;
   /* do things while acquiring data */
-  if (moda == md_running) {
-    if (rstsrvo_wait == 0) {
-      if (memory.ramp_max > 0 && slow_dat.ramp_count > memory.ramp_max) {
-        dt_wait(dt_rstsrvo);
-        rstsrvo_wait = RSTSRVO_WAIT;
-      }
-    } else
-      rstsrvo_wait--;
-  }
+  if (moda == md_running)
+    array_health();
 
   if (dt_done()) {
     /* an off_moda of md_none indicates that the goal is completed and
@@ -614,6 +640,7 @@ void *task(void *dummy)
             case md_none: /* just to shut CC up */
               break;
             case md_running: /* nop mode */
+              reset_array_health();
               moda = md_running;
               break;
             case md_tuning: /* auto_setup */
