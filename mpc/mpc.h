@@ -66,6 +66,8 @@ struct memory_t {
   int tune_global_tries;
   int tune_check_off;
   int ramp_max;
+  int ref_iv;
+  int ref_iv_dark;
 };
 extern struct memory_t memory;
 extern int mem_dirty;
@@ -108,6 +110,8 @@ extern int terminate;
 extern int sync_dv;
 extern int16_t tes[NUM_ROW * NUM_COL];
 extern int rd_count;
+extern int ref_biases_dark_ok;
+extern int ref_biases_lite_ok;
 extern uint32_t pcm_frameno;
 extern int pcm_ret_dat;
 extern uint32_t mce_stat[N_MCE_STAT];

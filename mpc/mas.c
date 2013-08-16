@@ -41,6 +41,11 @@ uint16_t tuning_status = 0;
 
 static unsigned cmd_err = 0;
 
+static uint32_t ref_biases_dark[16];
+static uint32_t ref_biases_lite[16];
+int ref_biases_dark_ok = 0;
+int ref_biases_lite_ok = 0;
+
 #define MAS_CMD_ERR 2
 #define CHECK_COMMAND_ERR() \
   do { \
@@ -866,7 +871,7 @@ static int kick(uint32_t tes_bias, uint32_t kick_bias, uint32_t heater_bias,
   return flux_loop_init(2);
 }
 
-static void pick_biases(int iv_num)
+static void pick_biases(int iv_num, int dark, int set_ref)
 {
   int good = 1;
   struct mcp_proc *p;
@@ -874,7 +879,20 @@ static void pick_biases(int iv_num)
   char biases[1024];
   uint32_t data[256];
   char ivname[256];
-  char *argv[] = { "/data/mas/bin/choose_tes_bias", ivname, NULL };
+  char *darks = "--darks";
+  char *argv[] = { "/data/mas/bin/choose_tes_bias", ivname, NULL /* darks */,
+    NULL };
+
+  /* read the reference tuning, if needed */
+  if (dark) {
+    if (!ref_biases_dark_ok)
+      pick_biases(memory.ref_iv, 1, 1);
+  } else
+    if (!ref_biases_lite_ok)
+      pick_biases(memory.ref_iv, 0, 1);
+
+  if (dark)
+    argv[2] = darks;
 
   if (iv_num == 0)
     iv_num = memory.last_iv;
@@ -898,12 +916,23 @@ static void pick_biases(int iv_num)
           data + 7, data + 8, data + 9, data + 10, data + 11, data + 12,
           data + 13, data + 14, data + 15) == 16)
     {
-      /* apply and record, then kick */
-      write_param("tes", "bias", 0, data, 16);
-      cfg_set_intarr("tes_bias", 0, data, 16);
-      kick(KICK_DONT_BIAS, memory.bias_kick_bias, memory.bias_kick_val, 0,
-          memory.bias_kick_wait);
-      state |= st_biased;
+      if (set_ref) {
+        memory.ref_iv = iv_num;
+        if (dark) {
+          ref_biases_dark_ok = 1;
+          memcpy(ref_biases_dark, data, sizeof(uint32_t) * 16);
+        } else {
+          ref_biases_lite_ok = 1;
+          memcpy(ref_biases_lite, data, sizeof(uint32_t) * 16);
+        }
+      } else {
+        /* apply and record, then kick */
+        write_param("tes", "bias", 0, data, 16);
+        cfg_set_intarr("tes_bias", 0, data, 16);
+        kick(KICK_DONT_BIAS, memory.bias_kick_bias, memory.bias_kick_val, 0,
+            memory.bias_kick_wait);
+        state |= st_biased;
+      }
     }
 }
 
@@ -931,7 +960,7 @@ static int pop_block(void)
 
   switch (blockq[new_tail].raw) {
     case 3:
-      pick_biases(blockq[new_tail].o);
+      pick_biases(blockq[new_tail].o, blockq[new_tail].d[0], 0);
       break;
     case 2: /* asynchronous kick request */
       pop_kick(blockq + new_tail);
@@ -1143,7 +1172,7 @@ static int ivcurve(void)
 
     /* analyse */
     if (goal.apply)
-      pick_biases(0);
+      pick_biases(0, goal.apply == 2, 0);
   }
 
   return 0;

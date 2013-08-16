@@ -1123,16 +1123,16 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         change_goal = 1;
         break;
 
-      case tune_tries:
+      case tuning_tries:
         memory.tune_global_tries = ev->ivalues[1];
         for (i = 0; i < 4; ++i)
           memory.tune_tries[i] = ev->ivalues[2 + i];
         mem_dirty = 1;
         break;
-      case tune_check_off:
+      case tuning_check_off:
         memory.tune_check_off = 1;
         mem_dirty = 1;
-      case tune_check_on:
+      case tuning_check_on:
         memory.tune_check_off = 0;
         mem_dirty = 1;
         break;
@@ -1325,7 +1325,12 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         stat_reset = 1;
         break;
       case pick_biases:
-        push_blockr("", "", ev->ivalues[1], NULL, 0, 3);
+        data[0] = ev->ivalues[2]; /* darks? */
+        push_blockr("", "", ev->ivalues[1], data, 1, 3);
+        break;
+      case ref_biases:
+        memory.ref_iv = ev->ivalues[1];
+        ref_biases_lite_ok = ref_biases_dark_ok = 0;
         break;
       case bias_kick_params:
         memory.bias_kick_val = ev->rvalues[1] * 32767 / 5.;
@@ -1454,6 +1459,7 @@ static int read_mem(void)
     memory.last_tune = find_last_dirent("tuning", 0);
     memory.ref_tune = memory.last_tune; /* why not...? */
     memory.last_iv = find_last_dirent("ivcurves", 3);
+    memory.ref_iv = memory.last_iv; /* I guess...? */
     memory.squidveto = 0;
     memory.used_tune = 0xFFFF; /* don't know */
     memory.sync_veto = 0;

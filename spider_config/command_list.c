@@ -45,6 +45,7 @@ const int command_list_serial_as_int(void)
 #define CHOOSE_INSERT_PARAM "Insert", 0, 6, 'i', "NONE", {mce_names}, 1
 #define CHOOSE_INSERT_NO_ALL "Insert", 1, 6, 'i',"NONE", {mce_names + 1}, 2
 #define MCE_ACTION_PARAM(n,w) "Action", 0, n, 'i', "NONE", {w}
+#define NO_YES_PARAM(n) n "?", 0, 1, 'i', "NONE", {noyes_names}
 
 #define MCECMD1(cmd,desc,grp) \
     COMMAND(cmd), desc, grp | MCECMD, 1, { \
@@ -168,7 +169,8 @@ const char *const GroupNames[N_GROUPS] = {
 #define COMMAND(x) (int)x, #x
 
 /* parameter value lists */
-const char *noyes_names[] = {"no", "yes", NULL};
+const char *noyes_names[] = {"No", "Yes", NULL};
+const char *nyd_names[] = {"No", "Yes", "On darks", NULL};
 const char *mce_names[] = {"all", "X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *just_mce_names[] = {"X1", "X2", "X3", "X4", "X5", "X6", NULL};
 const char *wb_cards[] = {"CC", "RC1", "RC2", "BC1", "BC2", "AC", NULL};
@@ -1449,7 +1451,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     "after optionally clearing the error cache", GR_MPC | MCECMD, 2,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Clear error cache?", 0, 1, 'i', "NONE", {noyes_names}}
+      {NO_YES_PARAM("Clear error cache")},
     }
   },
   {MCECMD1(pause_acq, "Pause data acquisition", GR_MPC)},
@@ -1488,7 +1490,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     GR_MPC | MCECMD, 2,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Apply?", 0, 3, 'i', "NONE", {noyes_names}}
+      {NO_YES_PARAM("Apply")}
     }
   },
 
@@ -1496,11 +1498,11 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     2,
     {
       {CHOOSE_INSERT_PARAM},
-      {"Apply?", 0, 3, 'i', "NONE", {noyes_names}}
+      {NO_YES_PARAM("Apply")}
     }
   },
 
-  {COMMAND(tune_tries),
+  {COMMAND(tuning_tries),
     "Set the maximum number of times part (or all) of a tuning is attempted",
     GR_MPCPARAM | MCECMD, 6,
     {
@@ -1512,9 +1514,10 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"SQ1 ramp", 1, 7, 'i', "NONE"}
     }
   },
-  {MCECMD1(tune_check_off, "Turn off the automatic tuning checks",
+  {MCECMD1(tuning_check_off, "Turn off the automatic tuning checks",
       GR_MPCPARAM)},
-  {MCECMD1(tune_check_on, "Turn on the automatic tuning checks", GR_MPCPARAM)},
+  {MCECMD1(tuning_check_on, "Turn on the automatic tuning checks",
+      GR_MPCPARAM)},
 
   {MCECMD2(ramp_max, "Maximum number of ramping detectors allowed before "
       "resetting the servo", GR_MPCPARAM, "Num (0=off)", 0, 500, 'i')},
@@ -1723,7 +1726,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Last bias", 0, 65535, 'i', "NONE"},
       {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
       {"Step wait (s)", 0, 10, 'f', "NONE"},
-      {"Set biases", 0, 1, 'i', "NONE", {noyes_names}}
+      {"Set biases", 0, 2, 'i', "NONE", {nyd_names}},
     }
   },
 
@@ -1756,10 +1759,18 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
 
   {COMMAND(pick_biases), "Automatically choose biases based on a previous "
-    "IV curve", GR_DET | GR_MPCPARAM | MCECMD, 2,
+    "IV curve", GR_DET | GR_MPCPARAM | MCECMD, 3,
     {
       {CHOOSE_INSERT_NO_ALL},
       {"IV curve number (0 = last)", 0, 65535, 'i', "NONE"},
+      {NO_YES_PARAM("Bias on darks")},
+    }
+  },
+  {COMMAND(ref_biases), "Calculate reference biases from a previous IV curve",
+    GR_MPCPARAM | MCECMD, 2,
+    {
+      {CHOOSE_INSERT_NO_ALL},
+      {"IV curve number (0 = last)", 0, 65535, 'i', "NONE"}
     }
   },
 
