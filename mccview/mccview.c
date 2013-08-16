@@ -31,7 +31,7 @@ int first = 1;
 
 struct fft { const char *fmt; gd_type_t type; };
 
-#define NF 18
+#define NF 20
 static const struct fft ff[NF] = {
   {"TIME_MCC%i", GD_UINT64},  /* 0 */
   {"TILE_HEATER_MCE%i", GD_UINT16}, /* 1 */
@@ -45,12 +45,14 @@ static const struct fft ff[NF] = {
   {"DTASK_MPC%i", GD_UINT16}, /* 9 */
   {"T_MCC%i", GD_FLOAT64},    /* 10 */
   {"T_MCE%i", GD_FLOAT64},    /* 11 */
-  {"dead_count_mce%i", GD_UINT16}, /* 12 */
+  {"ramp_count_mce%i", GD_UINT16}, /* 12 */
   {"DRIVE_MAP_MPC%i", GD_UINT16}, /* 13 */
   {"last_tune_mpc%i", GD_UINT16}, /* 14 */
   {"last_iv_mpc%i", GD_UINT16}, /* 15 */
   {"used_tune_mpc%i", GD_UINT16}, /* 16 */
   {"clamp_count_mce%i", GD_UINT16}, /* 17 */
+  {"ref_tune_mpc%i", GD_UINT16}, /* 18 */
+  {"tune_stat_mpc%i", GD_UINT16}, /* 19 */
 };
 
 #define NGF 14
@@ -391,7 +393,7 @@ int main(int argc, char **argv)
     printw("\n");
 
     for (x = 0; x < 6; ++x)
-      printw("  dead:         %3llu      ", d[x][12].u64);
+      printw("  ramp:         %3llu      ", d[x][12].u64);
     printw("\n");
 
     for (x = 0; x < 6; ++x)
@@ -404,6 +406,14 @@ int main(int argc, char **argv)
 
     for (x = 0; x < 6; ++x)
       printw("last tune:    %5llu      ", d[x][14].u64);
+    printw("\n");
+
+    for (x = 0; x < 6; ++x)
+      printw(" ref tune:    %5llu      ", d[x][18].u64);
+    printw("\n");
+
+    for (x = 0; x < 6; ++x)
+      printw("tune stat:     %04llx      ", d[x][19].u64);
     printw("\n");
 
     for (x = 0; x < 6; ++x)
