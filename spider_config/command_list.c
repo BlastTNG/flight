@@ -1524,7 +1524,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(sa_ramp_check_crit),
    "Choose which criteria to use for evaluating the sa_ramp tuning stage",
-   GR_MPCPARAM | MCECMD, 6,
+   GR_MPCPARAM | MCECMD, 5,
    {
      {CHOOSE_INSERT_PARAM},
      {NO_YES_PARAM("Check amplitude")},
@@ -1536,7 +1536,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(sq2_servo_check_crit),
    "Choose which criteria to use for evaluating the sq2_servo tuning stage",
-   GR_MPCPARAM | MCECMD, 6,
+   GR_MPCPARAM | MCECMD, 5,
    {
      {CHOOSE_INSERT_PARAM},
      {NO_YES_PARAM("Check amplitude")},
@@ -1548,7 +1548,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(sq1_servo_check_crit),
    "Choose which criteria to use for evaluating the sq1_servo tuning stage",
-   GR_MPCPARAM | MCECMD, 6,
+   GR_MPCPARAM | MCECMD, 5,
    {
      {CHOOSE_INSERT_PARAM},
      {NO_YES_PARAM("Check amplitude")},
@@ -1560,7 +1560,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(sq1_ramp_check_crit),
    "Choose which criteria to use for evaluating the sq1_ramp tuning stage",
-   GR_MPCPARAM | MCECMD, 6,
+   GR_MPCPARAM | MCECMD, 5,
    {
      {CHOOSE_INSERT_PARAM},
      {NO_YES_PARAM("Check amplitude")},
