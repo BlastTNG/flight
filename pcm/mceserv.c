@@ -549,7 +549,7 @@ void *mcerecv(void *unused)
 /* send routine */
 void *mcesend(void *unused)
 {
-  int mceserv_InCharge; /* to look for edges */
+  int mceserv_InCharge = 0; /* to look for edges */
   nameThread("->MCE");
 
   /* wait for socket initialisation */

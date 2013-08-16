@@ -372,7 +372,7 @@ static void WriteMCESlow(void)
   static struct NiosStruct *tMccAddr[NUM_MCE];
   static struct NiosStruct *tMceAddr[NUM_MCE];
   static struct NiosStruct *timeMccAddr[NUM_MCE];
-  static struct NiosStruct *deadCountAddr[NUM_MCE];
+  static struct NiosStruct *rampCountAddr[NUM_MCE];
   static struct NiosStruct *clampCountAddr[NUM_MCE];
   static struct NiosStruct *lastTuneAddr[NUM_MCE];
   static struct NiosStruct *refTuneAddr[NUM_MCE];
@@ -413,7 +413,7 @@ static void WriteMCESlow(void)
       tMccAddr[i] = GetMCCNiosAddr("t_mcc", i);
       tMceAddr[i] = GetMCCNiosAddr("t_mce", i);
       timeMccAddr[i] = GetMCCNiosAddr("time_mcc", i);
-      deadCountAddr[i] = GetMCCNiosAddr("dead_count_mce", i);
+      rampCountAddr[i] = GetMCCNiosAddr("ramp_count_mce", i);
       clampCountAddr[i] = GetMCCNiosAddr("clamp_count_mce", i);
       lastTuneAddr[i] = GetMCCNiosAddr("last_tune_mpc", i);
       tuneStatAddr[i] = GetMCCNiosAddr("tune_stat_mpc", i);
@@ -450,7 +450,7 @@ static void WriteMCESlow(void)
     WriteData(taskMpcAddr[i], mce_slow_dat[i][ind].task, NIOS_QUEUE);
     WriteData(tMccAddr[i], mce_slow_dat[i][ind].t_mcc, NIOS_QUEUE);
     WriteData(tMceAddr[i], mce_slow_dat[i][ind].t_mce, NIOS_QUEUE);
-    WriteData(deadCountAddr[i], mce_slow_dat[i][ind].dead_count,
+    WriteData(rampCountAddr[i], mce_slow_dat[i][ind].ramp_count,
         NIOS_QUEUE);
     WriteData(clampCountAddr[i], mce_slow_dat[i][ind].clamp_count,
         NIOS_QUEUE);

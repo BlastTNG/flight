@@ -949,12 +949,12 @@ struct ChannelStruct SlowChannels[] = {
   {"t_mce5",          'w',  LOOP7, 46, 0.5,   0.0, 's', U_NONE},
   {"t_mce6",          'w',  LOOP7, 47, 0.5,   0.0, 's', U_NONE},
 
-  {"dead_count_mce1", 'w',  LOOP7, 48, 0.5,   0.0, 'u', U_NONE},
-  {"dead_count_mce2", 'w',  LOOP7, 49, 0.5,   0.0, 'u', U_NONE},
-  {"dead_count_mce3", 'w',  LOOP7, 50, 0.5,   0.0, 'u', U_NONE},
-  {"dead_count_mce4", 'w',  LOOP7, 51, 0.5,   0.0, 'u', U_NONE},
-  {"dead_count_mce5", 'w',  LOOP7, 52, 0.5,   0.0, 'u', U_NONE},
-  {"dead_count_mce6", 'w',  LOOP7, 53, 0.5,   0.0, 'u', U_NONE},
+  {"ramp_count_mce1", 'w',  LOOP7, 48, 0.5,   0.0, 'u', U_NONE},
+  {"ramp_count_mce2", 'w',  LOOP7, 49, 0.5,   0.0, 'u', U_NONE},
+  {"ramp_count_mce3", 'w',  LOOP7, 50, 0.5,   0.0, 'u', U_NONE},
+  {"ramp_count_mce4", 'w',  LOOP7, 51, 0.5,   0.0, 'u', U_NONE},
+  {"ramp_count_mce5", 'w',  LOOP7, 52, 0.5,   0.0, 'u', U_NONE},
+  {"ramp_count_mce6", 'w',  LOOP7, 53, 0.5,   0.0, 'u', U_NONE},
 
   /* LOOP7, 54-59 are fast or wide-fast */
   {"blob_num_mpc",    'w',  LOOP7, 60,  1,      0, 'u', U_NONE},
