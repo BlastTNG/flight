@@ -55,8 +55,8 @@ static int last_direction = 0;
 static int homing = 0;
 short int exposing;
 short int docalc;
-short int zerodist[10];
-double goodPos[10] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+//short int zerodist[10];
+//double goodPos[10] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 #define TABLE_DEVICE "/dev/ttySI8"
 #define TABLE_ADDR 0x0ff0 //destination address on IDM controller bus (only one drive)
@@ -106,10 +106,10 @@ void updateTableSpeed()
   static double lastTime, lastPos, homing_lastPos;
   double thisTime, thisPos, homing_thisPos;
   static int firsttime = 1;
-  static double yawdist[10];
+//  static double yawdist[10];
   static int sendvel = 1;
   static NiosStruct* dpsAddr = NULL;
-  int i;
+//  int i;
   int i_point;
   i_point = GETREADINDEX(point_index);
 
@@ -139,34 +139,34 @@ void updateTableSpeed()
   lastPos = thisPos;
   lastTime = thisTime;
 
-  for (i=0; i<10; i++) {
-	if (zerodist[i]) {	//zero yawdist every time a trigPos is set (in sc.cpp)
-		yawdist[i] = 0.0;
-		zerodist[i] = 0;
-  	}
-  	yawdist[i] += PointingData[i_point].v_az*dt;
-	FixAngle(&yawdist[i]);
-  }
+//  for (i=0; i<10; i++) {
+//	  if (zerodist[i]) {	//zero yawdist every time a trigPos is set (in sc.cpp)
+//		  yawdist[i] = 0.0;
+//		  zerodist[i] = 0;
+//   	}
+//    yawdist[i] += PointingData[i_point].v_az*dt;
+//	  FixAngle(&yawdist[i]);
+//  }
   if (docalc) {
-	  for (i=0; i<10; i++) {
-		if (goodPos[i] == 0.0) targPos = 0.0;
-		else targPos = goodPos[i] + yawdist[i];
-		if ((targPos > 25) && (targPos < 335)) {//TODO find real limits
+//	  for (i=0; i<10; i++) {
+//		if (goodPos[i] == 0.0) targPos = 0.0;
+//		else targPos = goodPos[i] + yawdist[i];
+//		if ((targPos > 25) && (targPos < 335)) {//TODO find real limits
 			targPos = 0.0;
-	  		calcdist = thisPos - targPos;
+	  	calcdist = thisPos - targPos;
 			FixAngle(&calcdist);
-		} else {
-			calcdist = thisPos - targPos;
-			FixAngle(&calcdist);
-			if ((fabs(calcdist)) > 5.0) {
-				targPos = 0.0;
-	  			calcdist = thisPos - targPos;
-				FixAngle(&calcdist);
-			} else {	
-				if (targPos != 0.0) break;
-			}
-		}
-	  }
+//		} else {
+//			calcdist = thisPos - targPos;
+//			FixAngle(&calcdist);
+//			if ((fabs(calcdist)) > 5.0) {
+//				targPos = 0.0;
+//	  			calcdist = thisPos - targPos;
+//				FixAngle(&calcdist);
+//			} else {	
+//				if (targPos != 0.0) break;
+//			}
+//		}
+//	  }
   docalc = 0;
   sendvel = 1;
   }

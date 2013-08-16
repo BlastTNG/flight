@@ -73,8 +73,8 @@ extern double goodPos[10];	/* table.cpp */
 short int bsc_trigger;		/* flag for boresite exposure, set by motors.c */
 extern short int exposing;	//in table.cpp
 extern short int docalc;	//in table.cpp
-extern short int zerodist[10];	//in table.cpp
-double trigPos[10];
+//extern short int zerodist[10];	//in table.cpp
+//double trigPos[10];
 
 //Stuff for Pyramid
 #define CAT "/data/etc/spider/gsc_mag08_res20.bin"
@@ -180,13 +180,12 @@ void cameraTriggers()
 	  //bprintf(info,"EXPOSING...");
 	  exposing = 1;
 	  rscwait = 0;
-	  for (int i=0; i<10; i++) {
-		if (goodPos[i] == 0.0) { 
-			trigPos[i] = ACSData.enc_table;
-			zerodist[i] = 1;
-		}
-	
-	  }
+//	  for (int i=0; i<10; i++) {
+//		if (goodPos[i] == 0.0) { 
+//			trigPos[i] = ACSData.enc_table;
+//			zerodist[i] = 1;
+//		}
+//	  }
   }
 
   if (exposing) {
@@ -210,7 +209,7 @@ void cameraFields(int which)
   StarcamReturn* sc = NULL;
   static bool unrecFlag = false;
   static int blobindex[3] = {0,0,0};
-  static unsigned long int posFrame;
+//  static unsigned long int posFrame;
   static int i_cam_local;
 
   static NiosStruct* ForceAddr[3];
@@ -340,49 +339,48 @@ void cameraFields(int which)
     	WriteData(FocPosAddr[which], (int)(sc->focusposition*10), NIOS_QUEUE);
     	WriteData(NumBlobsAddr[which], sc->numblobs, NIOS_QUEUE);
 
-	WriteData(RaAddr[which], (unsigned int)(SCra[which] * H2I), NIOS_QUEUE);
-	WriteData(DecAddr[which], (unsigned int)(SCdec[which] * DEG2I), NIOS_QUEUE);
-	WriteData(RollAddr[which], (int)(SCroll[which] * DEG2I), NIOS_QUEUE);
-	WriteData(AzAddr[which], (unsigned int)(SCaz[which] * DEG2I), NIOS_QUEUE);
-	WriteData(ElAddr[which], (unsigned int)(SCel[which] * DEG2I), NIOS_QUEUE);
-	if (sc->numblobs > 0) {
-		WriteData(Blob0XAddr[which],(unsigned int)(sc->x[blobindex[which] * 3 + 0]/CAM_WIDTH*SHRT_MAX),
+	    WriteData(RaAddr[which], (unsigned int)(SCra[which] * H2I), NIOS_QUEUE);
+	    WriteData(DecAddr[which], (unsigned int)(SCdec[which] * DEG2I), NIOS_QUEUE);
+	    WriteData(RollAddr[which], (int)(SCroll[which] * DEG2I), NIOS_QUEUE);
+	    WriteData(AzAddr[which], (unsigned int)(SCaz[which] * DEG2I), NIOS_QUEUE);
+	    WriteData(ElAddr[which], (unsigned int)(SCel[which] * DEG2I), NIOS_QUEUE);
+	    if (sc->numblobs > 0) {
+		  WriteData(Blob0XAddr[which],(unsigned int)(sc->x[blobindex[which] * 3 + 0]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-    		WriteData(Blob1XAddr[which],(unsigned int)(sc->x[blobindex[which] * 3 + 1]/CAM_WIDTH*SHRT_MAX),
+      WriteData(Blob1XAddr[which],(unsigned int)(sc->x[blobindex[which] * 3 + 1]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-    		WriteData(Blob2XAddr[which],(unsigned int)(sc->x[blobindex[which] * 3 + 2]/CAM_WIDTH*SHRT_MAX),
+      WriteData(Blob2XAddr[which],(unsigned int)(sc->x[blobindex[which] * 3 + 2]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-		WriteData(Blob0YAddr[which],(unsigned int)(sc->y[blobindex[which] * 3 + 0]/CAM_WIDTH*SHRT_MAX),
+		  WriteData(Blob0YAddr[which],(unsigned int)(sc->y[blobindex[which] * 3 + 0]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-		WriteData(Blob1YAddr[which],(unsigned int)(sc->y[blobindex[which] * 3 + 1]/CAM_WIDTH*SHRT_MAX),
+		  WriteData(Blob1YAddr[which],(unsigned int)(sc->y[blobindex[which] * 3 + 1]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-		WriteData(Blob2YAddr[which],(unsigned int)(sc->y[blobindex[which] * 3 + 2]/CAM_WIDTH*SHRT_MAX),
+		  WriteData(Blob2YAddr[which],(unsigned int)(sc->y[blobindex[which] * 3 + 2]/CAM_WIDTH*SHRT_MAX),
 			  NIOS_QUEUE);
-		WriteData(Blob0FAddr[which], (unsigned int)sc->flux[blobindex[which] * 3 + 0], NIOS_QUEUE);
-		WriteData(Blob1FAddr[which], (unsigned int)sc->flux[blobindex[which] * 3 + 1], NIOS_QUEUE);
-		WriteData(Blob2FAddr[which], (unsigned int)sc->flux[blobindex[which] * 3 + 2], NIOS_QUEUE);
-		unsigned int snr = (sc->snr[blobindex[which] * 3 + 0] >= SHRT_MAX / 100.0) ? 
-			SHRT_MAX : (unsigned int)sc->snr[blobindex[which] * 3 + 0]*100;
-		WriteData(Blob0SAddr[which], snr, NIOS_QUEUE);
-		snr = (sc->snr[blobindex[which] * 3 + 1] >= SHRT_MAX / 100.0) ? 
-			SHRT_MAX : (unsigned int)sc->snr[blobindex[which] * 3 + 1]*100;
-		WriteData(Blob1SAddr[which], snr, NIOS_QUEUE);
-		snr = (sc->snr[blobindex[which] * 3 + 2] >= SHRT_MAX / 100.0) ? 
-			SHRT_MAX : (unsigned int)sc->snr[blobindex[which] * 3 + 2]*100;
-		WriteData(Blob2SAddr[which], snr, NIOS_QUEUE);
-		
+		  WriteData(Blob0FAddr[which], (unsigned int)sc->flux[blobindex[which] * 3 + 0], NIOS_QUEUE);
+		  WriteData(Blob1FAddr[which], (unsigned int)sc->flux[blobindex[which] * 3 + 1], NIOS_QUEUE);
+		  WriteData(Blob2FAddr[which], (unsigned int)sc->flux[blobindex[which] * 3 + 2], NIOS_QUEUE);
+		  unsigned int snr = (sc->snr[blobindex[which] * 3 + 0] >= SHRT_MAX / 100.0) ? 
+			  SHRT_MAX : (unsigned int)sc->snr[blobindex[which] * 3 + 0]*100;
+		  WriteData(Blob0SAddr[which], snr, NIOS_QUEUE);
+		  snr = (sc->snr[blobindex[which] * 3 + 1] >= SHRT_MAX / 100.0) ? 
+			  SHRT_MAX : (unsigned int)sc->snr[blobindex[which] * 3 + 1]*100;
+		  WriteData(Blob1SAddr[which], snr, NIOS_QUEUE);
+		  snr = (sc->snr[blobindex[which] * 3 + 2] >= SHRT_MAX / 100.0) ? 
+			  SHRT_MAX : (unsigned int)sc->snr[blobindex[which] * 3 + 2]*100;
+		  WriteData(Blob2SAddr[which], snr, NIOS_QUEUE);	
 	}
 	WriteData(BlobIdxAddr[which], blobindex[which], NIOS_QUEUE);
 	blobindex[which] = (blobindex[which] + 1) % 5;
-	if ((which == 1) && (sc->numblobs > 8)) {
-		for (int j=0; j<10; j++) {
-			if ((goodPos[j] == 0.0) && (sc->frameNum != posFrame)) {
-				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
-				posFrame = sc->frameNum;
-				break;
-			}
-		}
-	}
+//	if ((which == 1) && (sc->numblobs > 8)) {
+//		for (int j=0; j<10; j++) {
+//			if ((goodPos[j] == 0.0) && (sc->frameNum != posFrame)) {
+//				goodPos[j] = trigPos[j]; //overwrite the first 'dead' one it finds
+//				posFrame = sc->frameNum;
+//				break;
+//			}
+//		}
+//	}
   }	
 
 }
