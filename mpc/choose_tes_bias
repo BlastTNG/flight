@@ -180,6 +180,10 @@ def main():
                    help='Should I bias for the dark detectors?')
     p.add_argument('--ref',default=[],type=int,nargs=16,
                    help='List of reference biases from a previous load curve')
+    p.add_argument('--kick-volts',type=float,default=None)
+    p.add_argument('--kick-time',type=float,default=None)
+    p.add_argument('--kick-wait',type=float,default=None)
+    p.add_argument('--step-wait',type=float,default=None)
     args = p.parse_args()
 
     # Load the IV curve
