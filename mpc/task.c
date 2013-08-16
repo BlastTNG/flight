@@ -27,7 +27,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-int running_state = 0;
+int wait_state = st_idle;
+static int wait_time = 0;
 static const char *dt_name[] = { DT_STRINGS };
 enum dtask data_tk = dt_idle;
 int try_mount = 1; /* attempt to mount data drives */
@@ -413,12 +414,6 @@ static enum modas task_off_moda;
 static int task_off_reconfig;
 static void task_run_moda(void)
 {
-  if (running_state) {
-    dt_kill();
-    running_state = 0;
-    return;
-  }
-
   if (dt_done()) {
     /* an off_moda of md_none indicates that the goal is completed and
      * we should switch back to our default */
@@ -459,6 +454,7 @@ void *task(void *dummy)
     } else if (comms_lost) { /* deal with no MCE communication */
       bprintf(warning, "Comms lost.");
       meta_tk = 0xFFFFFFFF; /* interrupt! */
+      wait_state = 0;
 
       /* stop mce comms */
       state &= ~st_active;
@@ -492,6 +488,17 @@ void *task(void *dummy)
       /* need complete MCE restart */
       state &= ~(st_config | st_mcecom | st_retdat | st_biased);
       meta_tk = 0; /* try again */
+    } else if (wait_state) {
+      /* waiting */
+      if (meta_tk & STOP_TK) {
+        wait_time = 0;
+        wait_state = 0;
+        meta_tk = 0;
+      } else if (wait_time == 0) {
+        state |= wait_state;
+        wait_state = 0;
+      } else
+        wait_time--;
     } else if (req_dm != cur_dm) {
       if ((goal.goal >= gl_acq) && !memory.squidveto && (state & st_config)) {
         bprintf(info, "data mode change detected %i -> %i", cur_dm, req_dm);
@@ -506,15 +513,8 @@ void *task(void *dummy)
 
       if ((meta_tk & ~STOP_TK) >= (1U << MODA_SHIFT))
         moda_tk = (meta_tk & ~STOP_TK) >> MODA_SHIFT;
-      else {
+      else
         status_tk = (meta_tk & ~STOP_TK);
-        if (running_state && status_tk != running_state) {
-          /* stop an in-progress state */
-          status_tk = running_state;
-          stop = 1;
-          running_state = 0;
-        }
-      }
 
       if (!stop) { /* handle start task requests */
         if (status_tk != st_idle)
@@ -565,12 +565,10 @@ void *task(void *dummy)
                 state |= st_config;
               break;
             case st_biased:
-              if (running_state == 0) {
-                dt_req(dt_kick);
-                running_state = st_biased;
-              } else if (dt_done()) {
-                running_state = 0;
-                state |= st_biased;
+              if (dt_wait(dt_kick) == 0) {
+                wait_state = st_biased;
+                wait_time = memory.bias_kick_wait * 100; /* convert to units
+                                                            of 10 msec */
               }
               break;
             case st_acqcnf:

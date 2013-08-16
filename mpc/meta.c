@@ -93,7 +93,14 @@ void meta(void)
 
   /* now, moda is either md_none, or one of the allowed modas for this goal */
 
-  if (working_goal == gl_stop ||
+  /* if we're waiting for a state that the current goal doesn't need, stop it
+   */
+  if (wait_state == st_biased) {
+    if (working_goal < gl_acq) /* don't need this */
+      meta_tk = STOP_TK;
+    else
+      return; /* wait */
+  } else if (working_goal == gl_stop ||
       ((state & ~ST_DRIVE_IGNORE) && (~state & st_drives)))
   {
     /* stop stuff */
@@ -175,9 +182,9 @@ void meta(void)
     }
 
 #ifdef DEBUG_META
-  if (meta_tk && (running_state == 0 || running_state != meta_tk)) {
-    bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X %s",
-        goal_string[goal.goal], moda_string[moda], state,
+  if (meta_tk) {
+    bprintf(info, "M: goal: %s; moda: %s; state: 0x%04X wait: 0x%04X %s",
+        goal_string[goal.goal], moda_string[moda], state, wait_state,
         memory.squidveto ? "vetoed" : "");
     if ((meta_tk & ~STOP_TK) >= (1U << MODA_SHIFT)) {
       bprintf(info, "M: meta_tk: %s %s", (meta_tk & STOP_TK) ? "stop" : "start",

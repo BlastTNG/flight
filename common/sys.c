@@ -181,6 +181,15 @@ int check_proc(struct mcp_proc *p)
   return 1;
 }
 
+/* reset all signals to default */
+static void reset_signals(void)
+{
+  signal(SIGHUP, SIG_DFL);
+  signal(SIGINT, SIG_DFL);
+  signal(SIGTERM, SIG_DFL);
+  signal(SIGPIPE, SIG_DFL);
+}
+
 /* run a process, with plumbing.  If provided, returns fds attached to the
  * subprocess's standard streams.  Returns NULL on error, or a process record.
  * Use stop_proc() to terminate and clean up.
@@ -281,6 +290,9 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
 
     /* close all other descriptors */
     closeallfds();
+    
+    /* reset the interrupt vector */
+    reset_signals();
 
     /* now exec the process -- this shouldn't return */
     execvp(path, argv);

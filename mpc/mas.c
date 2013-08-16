@@ -842,8 +842,7 @@ static int kick(uint32_t tes_bias, uint32_t kick_bias, uint32_t heater_bias,
     write_param("tes", "bias", 0, data, 16);
   }
 
-  bprintf(info, "Kick %i counts for %i msec, then wait %i sec.", heater_bias,
-      kick_time / 1000, wait);
+  bprintf(info, "Kick %i counts for %i msec", heater_bias, kick_time / 1000);
 
   write_param("heater", "bias", 0, &heater_bias, 1);
   slow_dat.tile_heater = heater_bias;
@@ -854,6 +853,10 @@ static int kick(uint32_t tes_bias, uint32_t kick_bias, uint32_t heater_bias,
   /* rebias, if necessary */
   if (need_rebias)
     write_param("tes", "bias", 0, saved_bias, 16);
+
+  /* fast exit? */
+  if (wait == 0)
+    return 0;
 
   /* wait */
   if (check_wait(wait))
@@ -1610,10 +1613,8 @@ static int tune(void)
       if (memory.tune_check_off)
         continue;
 
-      sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i", data_drive[0] + '0',
-          memory.ref_tune);
-      //sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i/%s", data_drive[0] + '0',
-      //    memory.ref_tune, stage_name[stage]);
+      sprintf(ref_tune_dir, "/data%c/mce/tuning/%04i/%s", data_drive[0] + '0',
+          memory.ref_tune, stage_name[stage]);
 
       int check = check_tune(stage_dirs[stage][stage_tries[stage] - 1],
           ref_tune_dir, stage_name[stage]);
@@ -1635,6 +1636,12 @@ static int tune(void)
 
         if (r)
           break;
+    }
+
+    /* abort */
+    if (kill_special) {
+      r = 1;
+      break;
     }
 
     /* done with global tries */
@@ -1870,7 +1877,7 @@ void *mas_data(void *dummy)
         break;
       case dt_kick:
         dt_error = kick(KICK_DONT_BIAS, memory.bias_kick_bias,
-            memory.bias_kick_val, 0, memory.bias_kick_wait);
+            memory.bias_kick_val, 0, 0);
         break;
       case dt_status:
         dt_error = mce_status();
