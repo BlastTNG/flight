@@ -1520,7 +1520,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_MPCPARAM)},
 
   {COMMAND(array_monitor), "Set the array health monitoring parameters",
-    GR_MPCPARAM | MCECMD, 6,
+    GR_MPCPARAM | MCECMD, 7,
     {
       {CHOOSE_INSERT_PARAM},
       {"Max ramp + clamp (0=off)", 0, NUM_ROW * NUM_COL, 'i', "NONE"},
@@ -1528,6 +1528,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Max servo reset tries", 1, 100, 'i', "NONE"},
       {"Max off transition (0=off)", 0, NUM_ROW * NUM_COL, 'i', "NONE"},
       {"Off transition check period (s)", 30, 65535, 'i', "NONE"},
+      {"Off transition threshold", 0, 65535, 'i', "NONE"},
     }
   },
 
