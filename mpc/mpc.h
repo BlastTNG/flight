@@ -68,6 +68,7 @@ struct memory_t {
   int ramp_max;
   int off_trans_max;
   int off_trans_wait;
+  int off_trans_thresh;
   int rst_wait;
   int rst_tries;
   int ref_iv;
@@ -86,6 +87,13 @@ struct memory_t {
   double ramp_shift[4];
   int ramp_buffer[4];
   int fail_thresh[4];
+  int auto_iv_kick;
+  double auto_iv_kicktime;
+  int auto_iv_kickwait;
+  int auto_iv_start;
+  int auto_iv_stop;
+  int auto_iv_step;
+  double auto_iv_wait;
 };
 
 extern struct memory_t memory;

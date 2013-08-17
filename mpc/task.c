@@ -457,10 +457,20 @@ static void array_health(void)
     rst_wait = memory.rst_wait;
 
     /* do something abut the levels */
-    if (rst_iv > 0)
-      /* ... */;
+    if (rst_iv > 0) {
+      new_goal.kick = memory.auto_iv_kick;
+      new_goal.kicktime = memory.auto_iv_kicktime;
+      new_goal.kickwait = memory.auto_iv_kickwait;
+      new_goal.start = memory.auto_iv_start;
+      new_goal.stop = memory.auto_iv_stop;
+      new_goal.step = memory.auto_iv_step;
+      new_goal.wait = memory.auto_iv_wait;
+      new_goal.apply = 1;
+      new_goal.goal = gl_iv;
+      change_goal = 1;
+    }
   } else
-    rst_wait--;
+    off_trans_wait--;
 }
 
 /* handle running a moda */

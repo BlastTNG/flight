@@ -1103,6 +1103,21 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         new_goal.goal = gl_partial;
         change_goal = 1;
         break;
+      case auto_iv_params:
+        memory.auto_iv_kick = ev->rvalues[1] * 32767 / 5.;
+        memory.auto_iv_kicktime = ev->rvalues[2];
+        memory.auto_iv_kickwait = ev->rvalues[3];
+        memory.auto_iv_start = ev->ivalues[4];
+        memory.auto_iv_stop = ev->ivalues[5];
+        memory.auto_iv_step = ev->ivalues[6];
+        /* fix sign */
+        if ((memory.auto_iv_stop - memory.auto_iv_start) * memory.auto_iv_step <
+            0)
+        {
+          memory.auto_iv_step = -memory.auto_iv_step;
+        }
+        memory.auto_iv_wait = ev->rvalues[7];
+        break;
       case acq_iv_curve:
       case bias_ramp:
         new_goal.kick = ev->rvalues[1] * 32767 / 5.;
@@ -1178,6 +1193,9 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         memory.ramp_max = ev->ivalues[1];
         memory.rst_wait = ev->ivalues[2] * 100; /* in units of 10 msec */
         memory.rst_tries = ev->ivalues[3];
+        memory.off_trans_max = ev->ivalues[4];
+        memory.off_trans_wait = ev->ivalues[5] * 100;
+        memory.off_trans_thresh = ev->ivalues[6];
         mem_dirty = 1;
         reset_array_health();
         break;
@@ -1532,6 +1550,7 @@ static int read_mem(void)
     memory.rst_wait = 60000; /* ten minutes */
     memory.off_trans_max = 20;
     memory.off_trans_wait = 60000; /* ten minutes */
+    memory.off_trans_thresh = 0;
     memory.rst_tries = 5;
     for (i = 0; i < 4; ++i) {
       memory.check_count[i] = 1;
@@ -1549,6 +1568,13 @@ static int read_mem(void)
       memory.ramp_shift[i] = 0.5;
       memory.ramp_buffer[i] = 3;
     }
+    memory.auto_iv_kick = 19660; /* 3 volts */
+    memory.auto_iv_kicktime = 0.3;
+    memory.auto_iv_kickwait = 300;
+    memory.auto_iv_start = 8000;
+    memory.auto_iv_stop = 0;
+    memory.auto_iv_step = -5;
+    memory.auto_iv_wait = 0.2;
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 

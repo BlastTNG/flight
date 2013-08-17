@@ -17,7 +17,7 @@
  * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#undef SHOW_WRITE_PARAM
+#define SHOW_WRITE_PARAM
 
 #include "mpc_proto.h"
 #include "mpc.h"
