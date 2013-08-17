@@ -1024,6 +1024,10 @@ struct ChannelStruct SlowChannels[] = {
   {"tune_stat_mpc4",  'w',  LOOP8, 48, 0.5,   0.0, 'u', U_NONE},
   {"tune_stat_mpc5",  'w',  LOOP8, 49, 0.5,   0.0, 'u', U_NONE},
   {"tune_stat_mpc6",  'w',  LOOP8, 50, 0.5,   0.0, 'u', U_NONE},
+
+  {"t_cpu_g",         'w',  LOOP8, 51, 0.01,  0.0, 'u', U_T_C},
+  {"t_cpu_b",         'w',  LOOP8, 52, 0.01,  0.0, 'u', U_T_C},
+  {"t_cpu_u",         'w',  LOOP8, 53, 0.01,  0.0, 'u', U_T_C},
   END_OF_CHANNELS
 };
 
