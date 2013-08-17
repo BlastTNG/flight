@@ -239,7 +239,7 @@ void* CopyLoop(void* arg)
       usleep(10000);
     }
     system("mv /data/etc/tmp_bad.sbig /data/etc/current_bad.sbig");
-    system("cat /data/etc/current_bad.sbig | ssh good.spider -c arcfour 'cat > /data/etc/tmp_bad.sbig && mv /data/etc/tmp_bad.sbig /data/etc/current_bad.sbig'");
+    system("cat /data/etc/current_bad.sbig | ssh spider@good.spider -c arcfour 'cat > /data/etc/tmp_bad.sbig && mv /data/etc/tmp_bad.sbig /data/etc/current_bad.sbig'");
     copyFlag=0;
   }
   return NULL;
@@ -293,7 +293,7 @@ void* pictureLoop(void* arg)
 
     //grab new image (lock camera so settings can't change during exposure)
     lock(&camLock, "camLock", "pictureLoop");
-    //sclog(info, (char*)"grabbing image.");
+    sclog(info, (char*)"grabbing image.");
     err = globalCam.GrabImage(&globalImages[imageIndex], SBDF_LIGHT_ONLY);
     if (err != CE_NO_ERROR) {
       failureCount++;
