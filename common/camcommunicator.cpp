@@ -297,7 +297,7 @@ string CamCommunicator::buildReturn(const StarcamReturn* rtn)
 	ostringstream sout;
 	sout << rtn->frameNum << " " << rtn->mapmean << " " << rtn->sigma << " " << rtn->exposuretime << " " 
 			<< rtn->imagestarttime.tv_sec << " " << rtn->imagestarttime.tv_usec 
-			<< " " << rtn->camID << " " << rtn->ccdtemperature << " " << rtn->focusposition << " " << rtn->numblobs << " ";
+			<< " " << rtn->camID << " " << rtn->ccdtemperature << " " << rtn->cputemperature << " " << rtn->focusposition << " " << rtn->numblobs << " ";
 	
 	int top = 15;
 	if (rtn->numblobs < 15) top = rtn->numblobs;
@@ -357,7 +357,7 @@ StarcamReturn* CamCommunicator::interpretReturn(string returnString, StarcamRetu
 	sin.str(returnString);
 	
 	sin >> rtn->frameNum >> rtn->mapmean >> rtn->sigma >> rtn->exposuretime >> rtn->imagestarttime.tv_sec
-			>> rtn->imagestarttime.tv_usec >> rtn->camID >> rtn->ccdtemperature >> rtn->focusposition >> rtn->numblobs;
+			>> rtn->imagestarttime.tv_usec >> rtn->camID >> rtn->ccdtemperature >> rtn->cputemperature >> rtn->focusposition >> rtn->numblobs;
 	
 	int top = 15;
 	if (rtn->numblobs < 15) top = rtn->numblobs;
