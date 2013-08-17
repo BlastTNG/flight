@@ -1520,12 +1520,28 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       GR_MPCPARAM)},
 
   {COMMAND(array_monitor), "Set the array health monitoring parameters",
-    GR_MPCPARAM | MCECMD, 4,
+    GR_MPCPARAM | MCECMD, 6,
     {
       {CHOOSE_INSERT_PARAM},
       {"Max ramp + clamp (0=off)", 0, NUM_ROW * NUM_COL, 'i', "NONE"},
-      {"Check period (s)", 1, 65535, 'i', "NONE"},
-      {"Max servo reset tries", 1, 100, 'i', "NONE"}
+      {"Ramp + clamp check period (s)", 30, 65535, 'i', "NONE"},
+      {"Max servo reset tries", 1, 100, 'i', "NONE"},
+      {"Max off transition (0=off)", 0, NUM_ROW * NUM_COL, 'i', "NONE"},
+      {"Off transition check period (s)", 30, 65535, 'i', "NONE"},
+    }
+  },
+
+  {COMMAND(auto_iv_params), "Set the parameters for the automatic IV curves",
+    GR_MPCPARAM | MCECMD, 8,
+    {
+      {CHOOSE_INSERT_PARAM},
+      {"Kick (V)", 0, 5, 'f', "NONE"},
+      {"Kick time (s)", 0, 3, 'f', "NONE"},
+      {"Post-kick wait (s)", 0, 1000, 'f', "NONE"},
+      {"Start bias", 0, 65535, 'i', "NONE"},
+      {"Last bias", 0, 65535, 'i', "NONE"},
+      {"Step size", -200, 200, 'i', "NONE"}, /* sign is ignored */
+      {"Step wait (s)", 0, 10, 'f', "NONE"}
     }
   },
 

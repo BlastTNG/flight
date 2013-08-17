@@ -180,7 +180,7 @@ enum multiCommand {
   spider_scan,        sine_scan,         bbc_rate_ext,      bbc_rate_int,
   el_pulse,           hwp_halt,          hwp_phase,         el_rel_move,
   hwp_bias_on,        hwp_bias_off,      mce_row_len,       mce_num_rows,
-  mce_data_rate,      bset,              set_piv_mode,      tune_array,
+  mce_data_rate,      bset,              set_piv_mode,
   data_mode_bits,     mag_cal,           pss_off_cal,       pss_d_cal,
   beam_map, //TODO: get rid of beam_map before flight 
 
@@ -195,7 +195,7 @@ enum multiCommand {
   tuning_tries, tuning_check_on, tuning_check_off, array_monitor, ref_biases,
   sa_ramp_check_crit, sq2_servo_check_crit, sq1_servo_check_crit,
   sq1_ramp_check_crit, sa_ramp_check_params, sq2_servo_check_params,
-  sq1_servo_check_params, sq1_ramp_check_params,
+  sq1_servo_check_params, sq1_ramp_check_params, auto_iv_params, tune_array,
 
   /* MCE experiment.cfg commands */
   column_on, column_off, sa_offset_bias_ratio, sa_ramp_bias_on,

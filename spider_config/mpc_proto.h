@@ -53,6 +53,7 @@ struct mpc_slow_data {
   uint16_t ramp_count; /* count of ramping detectors */
   uint16_t ref_tune; /* reference tuning */
   uint16_t tune_stat; /* tuning status */
+  uint16_t off_trans; /* count of off-transition detectors */
 };
 
 extern int16_t mpc_proto_rev;

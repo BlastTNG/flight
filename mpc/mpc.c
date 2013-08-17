@@ -1041,7 +1041,7 @@ case off: prm_set_int(off, name, ev->ivalues[1], 0, ev->ivalues[2]); break
 static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
 {
   uint32_t data[16];
-  int i;
+  int i = 0;
 
   if (ev->is_multi) {
     switch (ev->command) {
@@ -1123,6 +1123,44 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         change_goal = 1;
         break;
 
+      case sq1_ramp_check_params:
+        i++;
+        /* FALLTHROUGH */
+      case sq1_servo_check_params:
+        i++;
+        /* FALLTHROUGH */
+      case sq2_servo_check_params:
+        i++;
+        /* FALLTHROUGH */
+      case sa_ramp_check_params:
+        memory.p2p_abs_thresh[i] = ev->rvalues[1];
+        memory.p2p_rel_thresh[i] = ev->rvalues[2];
+        memory.slope_abs_thresh[i] = ev->rvalues[3];
+        memory.slope_rel_thresh[i] = ev->rvalues[4];
+        memory.range_abs_thresh[i] = ev->rvalues[5];
+        memory.range_rel_thresh[i] = ev->rvalues[6];
+        memory.count_thresh[i] = ev->ivalues[7];
+        memory.ramp_shift[i] = ev->rvalues[8];
+        memory.ramp_buffer[i] = ev->ivalues[9];
+        memory.fail_thresh[i] = ev->ivalues[10];
+        break;
+
+      case sq1_ramp_check_crit:
+        i++;
+        /* FALLTHROUGH */
+      case sq1_servo_check_crit:
+        i++;
+        /* FALLTHROUGH */
+      case sq2_servo_check_crit:
+        i++;
+        /* FALLTHROUGH */
+      case sa_ramp_check_crit:
+        memory.check_p2p[i] = ev->ivalues[1];
+        memory.check_slope[i] = ev->ivalues[2];
+        memory.check_range[i] = ev->ivalues[3];
+        memory.check_count[i] = ev->ivalues[4];
+        break;
+
       case tuning_tries:
         memory.tune_global_tries = ev->ivalues[1];
         for (i = 0; i < 4; ++i)
@@ -1140,6 +1178,8 @@ static void do_ev(const struct ScheduleEvent *ev, const char *peer, int port)
         memory.ramp_max = ev->ivalues[1];
         memory.rst_wait = ev->ivalues[2] * 100; /* in units of 10 msec */
         memory.rst_tries = ev->ivalues[3];
+        mem_dirty = 1;
+        reset_array_health();
         break;
 
         /* Experiment config commands */
@@ -1426,7 +1466,7 @@ static void save_mem(void)
 /* read or regenerate memory data -- this must run before thread creation */
 static int read_mem(void)
 {
-  int d, have_mem = -1;
+  int i, d, have_mem = -1;
   struct memory_t new_memory;
 
   char name[] = {"/data#/mce/mpc_mem"};
@@ -1490,7 +1530,25 @@ static int read_mem(void)
     memory.tune_global_tries = 1;
     memory.ramp_max = 20;
     memory.rst_wait = 60000; /* ten minutes */
+    memory.off_trans_max = 20;
+    memory.off_trans_wait = 60000; /* ten minutes */
     memory.rst_tries = 5;
+    for (i = 0; i < 4; ++i) {
+      memory.check_count[i] = 1;
+      memory.check_range[i] = 1;
+      memory.check_slope[i] = 1;
+      memory.check_p2p[i] = 1;
+      memory.p2p_abs_thresh[i] = 0.3;
+      memory.p2p_rel_thresh[i] = 0.1;
+      memory.slope_abs_thresh[i] = 0.5;
+      memory.slope_rel_thresh[i] = 0.25;
+      memory.range_abs_thresh[i] = 0.5;
+      memory.range_rel_thresh[i] = 0.25;
+      memory.count_thresh[i] = 1;
+      memory.fail_thresh[i] = 10;
+      memory.ramp_shift[i] = 0.5;
+      memory.ramp_buffer[i] = 3;
+    }
   } else
     bprintf(info, "Restored memory from /data%i", have_mem);
 

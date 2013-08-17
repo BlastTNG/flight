@@ -66,11 +66,28 @@ struct memory_t {
   int tune_global_tries;
   int tune_check_off;
   int ramp_max;
+  int off_trans_max;
+  int off_trans_wait;
   int rst_wait;
   int rst_tries;
   int ref_iv;
   int ref_iv_dark;
+  int check_count[4];
+  int check_range[4];
+  int check_slope[4];
+  int check_p2p[4];
+  double p2p_abs_thresh[4];
+  double p2p_rel_thresh[4];
+  double slope_abs_thresh[4];
+  double slope_rel_thresh[4];
+  double range_abs_thresh[4];
+  double range_rel_thresh[4];
+  int count_thresh[4];
+  double ramp_shift[4];
+  int ramp_buffer[4];
+  int fail_thresh[4];
 };
+
 extern struct memory_t memory;
 extern int mem_dirty;
 
@@ -263,6 +280,9 @@ extern int comms_lost;
 void *mas_data(void *dummy);
 void *acquer(void *dummy);
 void crash_stop(int);
+
+/* reset the array monitoring */
+void reset_array_health(void);
 
 /* figure out tuning paths */
 int tuning_filename(const char *stage, const char *file, int n, char *buffer);

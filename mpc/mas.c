@@ -913,7 +913,7 @@ static void pick_biases(int iv_num, int dark, int set_ref)
   stop_proc(p, 0, 0, 0, 0);
 
   if (good)
-    if (sscanf(biases, "%i %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u",
+    if (sscanf(biases, "%u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u",
           data + 0, data + 1, data + 2, data + 3, data + 4, data + 5, data + 6,
           data + 7, data + 8, data + 9, data + 10, data + 11, data + 12,
           data + 13, data + 14, data + 15) == 16)
@@ -1476,22 +1476,66 @@ static void check_tune_update(char *line)
 }
 
 #define CHECK_TUNE_ERR (1 << 8)
+#define FLOAT_TO_STRING(n) sprintf(n, "%.9f", memory.n[stage])
+#define INT_TO_STRING(n) sprintf(n, "%i", memory.n[stage])
 static int check_tune(const char *lst_dir, const char *ref_tune_dir,
-    const char *stage_name)
+    const char *stage_name, int stage)
 {
   struct mcp_proc *p;
   int p_stdout = -1;
   int p_stderr = -1;
   char obuffer[8192], ebuffer[8192];
+  char p2p_abs_thresh[40];
+  char p2p_rel_thresh[40];
+  char slope_abs_thresh[40];
+  char slope_rel_thresh[40];
+  char range_abs_thresh[40];
+  char range_rel_thresh[40];
+  char count_thresh[40];
+  char fail_thresh[40];
+  char ramp_shift[40];
+  char ramp_buffer[40];
   char *opos = obuffer;
   char *epos = ebuffer;
-  const char *argv[5] = { "/data/mas/bin/eval_squid_tune",
-    lst_dir /* tuning dir */, ref_tune_dir, stage_name, NULL };
+  int argc = 25;
+  const char *argv[30] = { "/data/mas/bin/eval_squid_tune",
+    lst_dir, ref_tune_dir, stage_name, "--p2p-abs-thresh", p2p_abs_thresh,
+    "--p2p-rel-thresh", p2p_rel_thresh, "--slope-abs-thresh", slope_abs_thresh,
+    "--slope-rel-thresh", slope_rel_thresh, "--range-abs-thresh",
+    range_abs_thresh, "--range-rel-thresh", range_rel_thresh, "--count-thresh",
+    count_thresh, "--fail-thresh", fail_thresh, "--ramp-shift", ramp_shift,
+    "--ramp-buffer", ramp_buffer, "--criteria"
+  };
   int nfds = 0;
   int proc_state;
   struct timeval seltime;
   fd_set fdset;
   ssize_t n;
+
+  /* stringify numbers */
+  FLOAT_TO_STRING(p2p_abs_thresh);
+  FLOAT_TO_STRING(p2p_rel_thresh);
+  FLOAT_TO_STRING(slope_abs_thresh);
+  FLOAT_TO_STRING(slope_rel_thresh);
+  FLOAT_TO_STRING(range_abs_thresh);
+  FLOAT_TO_STRING(range_rel_thresh);
+  INT_TO_STRING(count_thresh);
+  INT_TO_STRING(fail_thresh);
+  FLOAT_TO_STRING(ramp_shift);
+  INT_TO_STRING(ramp_buffer);
+
+  /* add criteria */
+  if (memory.check_count[stage])
+    argv[argc++] = "count";
+  if (memory.check_range[stage])
+    argv[argc++] = "range";
+  if (memory.check_slope[stage])
+    argv[argc++] = "slope";
+  if (memory.check_p2p[stage])
+    argv[argc++] = "p2p";
+
+  /* terminate */
+  argv[argc] = 0;
 
   p = start_proc(argv[0], (char**)argv, 0, 1, NULL, &p_stdout, &p_stderr,
       &kill_special);
@@ -1555,7 +1599,6 @@ static int check_tune(const char *lst_dir, const char *ref_tune_dir,
           epos++;
       }
     }
-    close(p_stderr);
 
     for (;;) {
       n = read(p_stdout, opos, 1);
@@ -1570,10 +1613,9 @@ static int check_tune(const char *lst_dir, const char *ref_tune_dir,
           opos++;
       }
     }
-    close(p_stdout);
   }
 
-  return stop_proc(p, 0, 0, 0, 1);
+  return stop_proc(p, 0, 0, 0, 0);
 }
 
 /* run a tuning */
@@ -1648,7 +1690,7 @@ static int tune(void)
           memory.ref_tune, stage_name[stage]);
 
       int check = check_tune(stage_dirs[stage][stage_tries[stage] - 1],
-          ref_tune_dir, stage_name[stage]);
+          ref_tune_dir, stage_name[stage], stage);
 
       if (WIFEXITED(check)) {
         switch (WEXITSTATUS(check)) {

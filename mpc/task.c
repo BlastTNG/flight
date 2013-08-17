@@ -409,13 +409,17 @@ static int task_reset_mce()
   return 0;
 }
 
-static int rst_level;
+static int rst_tune;
+static int rst_iv;
 static int rst_wait;
+static int off_trans_wait;
 
-static void reset_array_health(void)
+void reset_array_health(void)
 {
-  rst_level = 0;
+  rst_tune = 0;
+  rst_iv = 0;
   rst_wait = memory.rst_wait;
+  off_trans_wait = memory.off_trans_wait;
 }
 
 static void array_health(void)
@@ -424,22 +428,37 @@ static void array_health(void)
     if (memory.ramp_max > 0 &&
         (slow_dat.ramp_count + slow_dat.clamp_count) > memory.ramp_max)
     {
-      /* kick it up a notch */
-      rst_level++;
-    } else /* we're totally fine */
-      rst_level = 0;
+      rst_tune++; /* kick it up a notch */
+    } else
+      rst_tune = 0; /* we're totally fine */
 
     /* wait a bit before rechecking */
     rst_wait = memory.rst_wait;
 
-    /* do something abut the level */
-    if (rst_level > memory.rst_tries) {
+    /* do something abut the levels */
+    if (rst_tune > memory.rst_tries) {
       /* try a tune */
       new_goal.force = 0; /* don't force-tune biases */
       new_goal.apply = 1; /* apply tuning */
       new_goal.goal = gl_tune;
-    } else if (rst_level > 0) /* flux loop init */
+      change_goal = 1; /* do it */
+    } else if (rst_tune > 0) /* flux loop init */
       dt_wait(dt_rstsrvo);
+  } else
+    rst_wait--;
+
+  if (off_trans_wait == 0) {
+    if (memory.off_trans_max > 0 && slow_dat.off_trans > memory.off_trans_max)
+      rst_iv++;
+    else
+      rst_iv = 0;
+
+    /* wait a bit before rechecking */
+    rst_wait = memory.rst_wait;
+
+    /* do something abut the levels */
+    if (rst_iv > 0)
+      /* ... */;
   } else
     rst_wait--;
 }
