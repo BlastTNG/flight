@@ -783,16 +783,13 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Node number",  0, 64, 'i', ""}
     }
   },
-  {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
+  {COMMAND(set_heaters), "Heater Set Points (deg C)", GR_ELECT, 5,
     {
-      {"Proportional Gain", 0, USHRT_MAX, 'i', "g_p_heat_gy"},
-      {"Integral Gain",     0, USHRT_MAX, 'i', "g_i_heat_gy"},
-      {"Derrivative Gain",  0, USHRT_MAX, 'i', "g_d_heat_gy"}
-    }
-  },
-  {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
-    {
-      {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
+      {"Gyro Box", 0, 60, 'f', "T_SET_GY"},
+      {"Pivot", 0, 60, 'f', "T_SET_PIVOT"},
+      {"El Mot", 0, 60, 'f', "T_SET_ELMOT"},
+      {"MT Tavco", 0, 60, 'f', "T_SET_MTTAVCO"},
+      {"Mot Valves", 0, 60, 'f', "T_SET_MOTVALVES"}
     }
   },
   {COMMAND(t_rsc_set), "RSC temperature set point", GR_ELECT, 1,

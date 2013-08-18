@@ -343,11 +343,13 @@ struct CommandDataStruct {
   double offset_ofyaw_gy;
   unsigned int gymask;
 
-  struct {
-    double setpoint;
-    struct GainStruct gain;
-  } gyheat;
 
+  double t_set_gybox;
+  double t_set_pivot;
+  double t_set_elmot;
+  double t_set_mttavco;
+  double t_set_motvalve;
+  
   double t_set_bsc;
   double t_set_rsc;
 

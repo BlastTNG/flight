@@ -1269,13 +1269,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
       /***************************************/
       /******** Electronics Heaters  *********/
-    case t_gyro_set:  /* gyro heater setpoint */
-      CommandData.gyheat.setpoint = rvalues[0];
-      break;
-    case t_gyro_gain:  /* gyro heater gains */
-      CommandData.gyheat.gain.P = ivalues[0];
-      CommandData.gyheat.gain.I = ivalues[1];
-      CommandData.gyheat.gain.D = ivalues[2];
+    case set_heaters:  /* gyro heater setpoint */
+      CommandData.t_set_gybox = rvalues[0];
+      CommandData.t_set_pivot = rvalues[1];
+      CommandData.t_set_elmot = rvalues[2];
+      CommandData.t_set_mttavco = rvalues[3];
+      CommandData.t_set_motvalve = rvalues[4];
       break;
     case t_rsc_set:  /* RSC heater setpoint */
       CommandData.t_set_rsc = rvalues[0];
@@ -2299,11 +2298,12 @@ void InitCommandData()
   CommandData.verbose_rw = 0;
   CommandData.verbose_piv = 0;
 
-  CommandData.gyheat.setpoint = 15.0;
-  CommandData.gyheat.gain.P = 30;
-  CommandData.gyheat.gain.I = 10;
-  CommandData.gyheat.gain.D = 3;
-
+  CommandData.t_set_gybox = -5.0;
+  CommandData.t_set_pivot = -20.0;
+  CommandData.t_set_elmot = -20.0;
+  CommandData.t_set_mttavco = 5.0;
+  CommandData.t_set_motvalve = -20.0;
+  
   CommandData.table.tableGain.P = 6652;  //thousandths
   CommandData.table.tableGain.I = 302;   //ten-thousandths
   CommandData.table.tableGain.D = 13520; //hundredths

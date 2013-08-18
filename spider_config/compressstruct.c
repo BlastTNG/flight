@@ -1015,6 +1015,98 @@ END_OF_STREAM
     {"mce127",1, 5, NOAVG, NODX, 16, SLOW},
     
     END_OF_STREAM
+  },
+
+  
+  {  // field set 6
+    {"time",1,1,NOAVG,NODX,8,SLOW},
+    {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
+    {"enc_a_x1_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x1_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x1_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x2_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x2_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x2_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x3_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x3_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x3_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x4_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x4_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x4_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x5_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x5_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x5_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x6_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x6_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x6_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    
+    {"ofpch_gy", 5, 10, AVG, NODX, 8, SLOW},
+    {"ofyaw_gy", 5, 10, AVG, NODX, 8, SLOW},
+    {"ofroll_gy", 5, 10, AVG, NODX, 8, SLOW},
+    {"az", 33140, 5, AVG, DX, 8, SLOW},
+    {"el", 33140, 5, AVG, DX, 8, SLOW},
+    {"ra", 16570, 1, NOAVG, DX, 8, SLOW},
+    {"dec", 16570, 1, NOAVG, DX, 8, SLOW},
+    {"el_raw_1_enc", 5, 1, AVG, DX, 8, SLOW},
+    {"el_raw_2_enc", 5, 1, AVG, DX, 8, SLOW},
+    {"az_pss", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_dgps", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_mag", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_raw_dgps", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_raw_pss1", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_raw_pss2", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_raw_pss3", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_raw_pss4", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_raw_pss5", 5, 1, NOAVG, DX, 8, SLOW},
+    {"az_raw_pss6", 5, 1, NOAVG, DX, 8, SLOW},
+    {"step_1_el", 3, 1, NOAVG, NODX, 8, SLOW},
+    {"step_2_el", 3, 1, NOAVG, NODX, 8, SLOW},
+    {"dest_el_mc", 5, 1, NOAVG, NODX, 8, SLOW},
+    {"dac_rw", 256, 1, NOAVG, NODX, 8, SLOW},
+    {"dac_piv", 256, 1, NOAVG, NODX, 8, SLOW},
+    {"i_el", 256, 1, NOAVG, NODX, 8, SLOW},
+    {"i_ser_piv", 100, 1, NOAVG, NODX, 8, SLOW},
+    {"i_ser_rw", 100, 1, NOAVG, NODX, 8, SLOW},
+    {"term_i_az", 256, 1, NOAVG, NODX, 8, SLOW},
+    {"term_p_az", 256, 1, NOAVG, NODX, 8, SLOW},
+    {"term_p_t_rw_piv", 256, 1, NOAVG, NODX, 8, SLOW},
+    {"term_p_v_req_az_piv", 256, 1, NOAVG, NODX, 8, SLOW},
+    {"term_p_v_rw_piv", 256, 1, NOAVG, NODX, 8, SLOW},
+    {"res_piv", 1, 1, NOAVG, DX, 8, SLOW},
+    {"vel_ser_rw", 1, 1, NOAVG, DX, 8, SLOW},
+    
+    {"ofpch_1_gy", 5461, 10, AVG, NODX, 8, SLOW},
+    {"ofyaw_1_gy", 5461, 10, AVG, NODX, 8, SLOW},
+    {"ofroll_1_gy", 5461, 10, AVG, NODX, 8, SLOW},
+    {"ofpch_2_gy", 5461, 10, AVG, NODX, 8, SLOW},
+    {"ofyaw_2_gy", 5461, 10, AVG, NODX, 8, SLOW},
+    {"ofroll_2_gy", 5461, 10, AVG, NODX, 8, SLOW},
+    
+    {"mce000",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce001",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce002",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce003",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce004",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce005",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce006",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce007",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce008",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce009",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce010",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce011",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce012",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce013",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce014",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce015",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce016",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce017",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce018",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce019",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce020",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce021",1, 10, NOAVG, NODX, 16, SLOW},
+    {"mce022",1, 10, NOAVG, NODX, 16, SLOW},
+    
+    END_OF_STREAM
   }
 
 };

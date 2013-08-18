@@ -33,6 +33,12 @@
 #include "chrgctrl.h"
 #include "sync_comms.h"
 #include "mceserv.h"
+#include "lut.h"
+
+#ifndef LUT_DIR
+#define LUT_DIR "/data/etc/spider/"
+#endif
+
 
 /* Define to 1 to send synchronous star camera triggers based on ISC
  * handshaking */
@@ -62,8 +68,8 @@
 /* limits for thermometers.  If the reading is outside this range,
  * we don't regulate the temperature at all, since it means the thermometer is probably
  * broken */
-#define MIN_GYBOX_TEMP ((223.15 / M_16T) - B_16T)   /* -50 C */
-#define MAX_GYBOX_TEMP ((333.15 / M_16T) - B_16T)   /* +60 C */
+#define MIN_GYBOX_TEMP -50.0
+#define MAX_GYBOX_TEMP 60.0
 #define MIN_BSC_TEMP  ((223.15 / M_16T) - B_16T)   /* -50 C */
  
 /* Gybox heater stuff */
@@ -87,7 +93,63 @@ extern short int InCharge; /* tx.c */
 /* in commands.c */
 double LockPosition(double elevation);
 
+#define PGR_NSUM 4.0
+#define PGR_OFF PGR_NSUM/2.0
+// #define PGR_NORM sqrt(PGR_NSUM / 12.0)
+#define PGR_NORM 1.7320508 
+double pseudoGaussianRand() {
+  double x;
+  
+  x = ((double)rand() 
+    + (double)rand() 
+    + (double)rand() 
+    + (double)rand()
+  ) * (1.0/(double)RAND_MAX);
+  x-= PGR_OFF;
+  x *= PGR_NORM;
+  
+  return x;
+}
 
+
+/************************************************************************/
+/*    ControlGyroHeat:  Controls gyro box temp                          */
+/************************************************************************/
+void ControlGyroHeat()
+{
+  static struct BiPhaseStruct* tGyAddr;
+  static struct NiosStruct *heatGyAddr, *tSetGyAddr;
+
+  static struct LutType tGyLut = {.filename = LUT_DIR "thermistor.lut"};
+
+  static int firsttime = 1;
+  
+  double set_point;
+  double t_gy;
+
+  if (firsttime) {
+    firsttime = 0;
+    tGyAddr = GetBiPhaseAddr("vt_gy");
+    heatGyAddr = GetNiosAddr("heat_gy");
+    tSetGyAddr = GetNiosAddr("t_set_gybox");
+
+    LutInit(&tGyLut);
+  }
+  WriteData(tSetGyAddr, CommandData.t_set_gybox * 327.68, NIOS_QUEUE);
+
+  t_gy = ReadCalData(tGyAddr);
+  t_gy = LutCal(&tGyLut, t_gy);
+  
+  set_point = CommandData.t_set_gybox + 0.1 * pseudoGaussianRand();
+    /* Only run these controls if we think the thermometer isn't broken */
+  if (t_gy < MAX_GYBOX_TEMP && t_gy > MIN_GYBOX_TEMP && t_gy<set_point) {
+    WriteData(heatGyAddr, 0x1, NIOS_FLUSH);
+  } else {
+    WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
+  }
+}
+
+#if 0
 /************************************************************************/
 /*    ControlGyroHeat:  Controls gyro box temp                          */
 /************************************************************************/
@@ -103,11 +165,12 @@ void ControlGyroHeat()
   static int p_off = -1;
 
   float error = 0, set_point;
-  unsigned int temp;
+  double t_gy;
   static float integral = 0;
   static float deriv = 0;
   static float error_last = 0;
   float P, I, D;
+  static struct LutType tGyLut = {.filename = LUT_DIR "thermistor.lut"};
 
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
@@ -119,6 +182,7 @@ void ControlGyroHeat()
     gPHeatGyAddr = GetNiosAddr("g_p_heat_gy");
     gIHeatGyAddr = GetNiosAddr("g_i_heat_gy");
     gDHeatGyAddr = GetNiosAddr("g_d_heat_gy");
+    LutInit(&tGyLut);
   }
 
   /* send down the setpoints and gains values */
@@ -127,54 +191,56 @@ void ControlGyroHeat()
   WriteData(gIHeatGyAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
   WriteData(gDHeatGyAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
 
-  temp = slow_data[tGyAddr->index][tGyAddr->channel];
+  t_gy = ReadCalData(tGyAddr);
+  t_gy = LutCal(&tGyLut, t_gy);
   
+  set_point = CommandData.gyheat.setpoint;
   /* Only run these controls if we think the thermometer isn't broken */
-  if (temp < MAX_GYBOX_TEMP && temp > MIN_GYBOX_TEMP) {
-    set_point = ((CommandData.gyheat.setpoint + 273.15) / M_16T) - B_16T;
-    P = CommandData.gyheat.gain.P * (1.0 / 10.0);
-    I = CommandData.gyheat.gain.I * (1.0 / 110000.0);
-    D = CommandData.gyheat.gain.D * ( 1.0 / 1000.0);
-
+  if (t_gy < MAX_GYBOX_TEMP && t_gy > MIN_GYBOX_TEMP) {
+    P = CommandData.gyheat.gain.P * (1);
+    I = CommandData.gyheat.gain.I * (1.0 / 11.0);
+    D = CommandData.gyheat.gain.D * ( 10.0 );
+    
     /********* if end of pulse, calculate next pulse *********/
     if (p_off <= 0 && p_on <= 0) {
-      error = set_point - temp;
+      error = set_point - t_gy;
 
       integral = integral * 0.999 + 0.001 * error;
-      if (integral * I > 60)
-        integral = 60.0 / I;
+      if (integral * I > 10)
+        integral = 10.0 / I;
 
       if (integral * I < 0)
         integral = 0;
 
-      deriv = error_last - error;
+      deriv = error - error_last;
       error_last = error;
 
-      p_on = P * error + (deriv / 60.0) * D + integral * I;
+      p_on = P * error + (deriv / 10.0) * D + integral * I;
 
-      if (p_on > 60)
-        p_on = 60;
+      if (p_on > 10)
+        p_on = 10;
       else if (p_on < 0)
         p_on = 0;
 
-      p_off = 60 - p_on;
+      p_off = 10 - p_on;
 
     }
 
     /******** do the pulse *****/
     if (p_on > 0) {
-      //WriteData(heatGyAddr, 0x1, NIOS_FLUSH);
-      WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
+      WriteData(heatGyAddr, 0x1, NIOS_FLUSH);
+      //WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
       p_on--;
     } else if (p_off > 0) {
       WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
       p_off--;
     }
-  } else
+  } else {
     /* Turn off heater if thermometer appears broken */
-    WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
-
+    WriteData(heatGyAddr, 0x0, NIOS_FLUSH);  
+  }
 }
+#endif
 
 /************************************************************************/
 /*    ControlBSCHeat:  Controls BSC temp		                */

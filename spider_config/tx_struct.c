@@ -534,10 +534,10 @@ struct ChannelStruct SlowChannels[] = {
   {"plover",           'w', LOOP3, 39,              1.0,  0.0, 'u',     U_NONE},
   {"t_ccd_g",          'w', LOOP3, 40,        1.0/100.0,  0.0, 's',      U_T_C},
   {"t_ccd_b",          'w', LOOP3, 41,        1.0/100.0,  0.0, 's',      U_T_C},
-  {"g_p_heat_gy",      'w', LOOP3, 42,              1.0,  0.0, 'u',     U_NONE},
-  {"g_i_heat_gy",      'w', LOOP3, 43,              1.0,  0.0, 'u',     U_NONE},
-  {"g_d_heat_gy",      'w', LOOP3, 44,              1.0,  0.0, 'u',     U_NONE},
-  {"t_set_gy",         'w', LOOP3, 45,  (100.0/32768.0),  0.0, 'u',      U_T_C},
+  {"t_set_pivot",      'w', LOOP3, 42,  (100.0/32768.0),  0.0, 's',      U_T_C},
+  {"t_set_elmot",      'w', LOOP3, 43,  (100.0/32768.0),  0.0, 's',      U_T_C},
+  {"t_set_mttavco",    'w', LOOP3, 44,  (100.0/32768.0),  0.0, 's',      U_T_C},
+  {"t_set_gybox",      'w', LOOP3, 45,  (100.0/32768.0),  0.0, 's',      U_T_C},
   {"trim_pss",         'w', LOOP3, 46,            I2DEG,  0.0, 's',     U_NONE},
   {"az_pss",           'w', LOOP3, 47,            I2DEG,  0.0, 'u',    U_P_DEG},
 
@@ -1036,6 +1036,7 @@ struct ChannelStruct SlowChannels[] = {
   {"uptime_mpc4",     'w',  LOOP8, 57, 40./3600,   0.0, 'u', U_T_H},
   {"uptime_mpc5",     'w',  LOOP8, 58, 40./3600,   0.0, 'u', U_T_H},
   {"uptime_mpc6",     'w',  LOOP8, 59, 40./3600,   0.0, 'u', U_T_H},
+  {"t_set_motvalve",  'w',  LOOP8, 60,  (100.0/32768.0),  0.0, 's', U_T_C},
   END_OF_CHANNELS
 };
 
