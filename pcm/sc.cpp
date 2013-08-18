@@ -161,12 +161,11 @@ void openSC()
  */
 void cameraTriggers()
 {
-  static int bscwait,rscwait;
+  static int rscwait;
   static int exposecount;
   static int firsttime;
   if (firsttime) {
     firsttime=0;
-    bscwait = 0;
     rscwait = 0;
     exposecount = 0;
   }
@@ -398,7 +397,7 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
   double XC = 1530/2;
   double YC = 1020/2;
   double FTOL = 20.*M_PI/180./3600.;//star-blob association angular tolerance (default 20 arcsec as in netisc)
-  int retval_pyr,k;
+  int k;
   int n_blobs = 0;
   solution_t *sol = new solution_t [MAXSOLUTION];
   int nsol;
@@ -422,7 +421,7 @@ static void SolveField(StarcamReturn* solrtn, double& ra0, double& dec0, double&
 		y_p[k] = (y[k] - YC)*plate_scale;
   	}
   	//launch pyramid
-  	retval_pyr = pyr.GetSolution(FTOL, x_p, y_p,n_blobs, &sol, &nsol, &ra0, &dec0, &r0);
+  	pyr.GetSolution(FTOL, x_p, y_p,n_blobs, &sol, &nsol, &ra0, &dec0, &r0);
   	delete[] x;
   	delete[] y;
   	delete[] x_p;

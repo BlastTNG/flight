@@ -223,7 +223,6 @@ void StartHWP(void)
   int i;
   int j=0;
   int my_cindex = 0;
-  int caddr_match = 0;
   int is_init = 0;
   int first_time=1;
 
@@ -297,7 +296,6 @@ void StartHWP(void)
 
     // Send the uplinked command, if any
     my_cindex = GETREADINDEX(CommandData.hwp.cindex);
-    caddr_match = 0;
     if (CommandData.hwp.caddr[my_cindex] >= 0) {
       //bprintf(info, "Sending command \"%s\" to \"%s\"\n",
       //    CommandData.hwp.command[my_cindex], 

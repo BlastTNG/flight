@@ -872,7 +872,6 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
   amcinfo->init=2;
   amcinfo->writeset=2;
   //  int count = 10;
-  int num;
   close_amc(amcinfo);
   //  while(amcinfo->open==0 && count > 0) {
   open_amc(address,amcinfo);
@@ -887,8 +886,7 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
 
   //  count = 10;
   //  while(amcinfo->init==0  && count > 0 ) {
-    num = send_amccmd(3,2, 0x0040, 1, cmd, amcinfo); // reset drive status 
-                                                    // events
+    send_amccmd(3,2, 0x0040, 1, cmd, amcinfo); // reset drive status events
     configure_amc(amcinfo);
     //    count--;
     //  }

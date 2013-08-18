@@ -259,10 +259,8 @@ void* rotaryTableComm(void* arg)
   if (tableComm->getError() != DC_NO_ERROR) {
 	bprintf(err, "Table: rotary table initialization gave error code: %d", tableComm->getError());
   }
-  static int currSpeed=0;
   double dTableSpeed;  //speed (global int) converted to double
   timeval time;
-  static double lastTime=0;
   double thisTime;
   //perform initialization
   while (!tableComm->isOpen()) {  //needed when original open fails
@@ -280,7 +278,6 @@ void* rotaryTableComm(void* arg)
   tableComm->sendCommand(&axison);
 
   while (1) {
-    currSpeed = tableSpeed;
     dTableSpeed = (double) tableSpeed * 
     MAX_TABLE_SPEED * DPS_TO_TABLE / (INT_MAX - 1);
     tableComm->sendSpeedCommand(TABLE_ADDR,dTableSpeed);
@@ -303,7 +300,6 @@ void* rotaryTableComm(void* arg)
     //can also put queries here for (eg) motor temperature
     gettimeofday(&time, NULL);
     thisTime = time.tv_sec + time.tv_usec/1000000.0;
-    lastTime = thisTime;
   }
   return NULL;
 }

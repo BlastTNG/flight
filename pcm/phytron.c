@@ -501,12 +501,11 @@ int Phytron_NAComm(struct phytron* bus, int who, const char* what)
 int __attribute__((format(printf,3,4))) Phytron_CommVarg(struct phytron* bus,
     int who, const char* fmt, ...)
 {
-  int ret;
   va_list argptr;
   char buf[PH_BUS_BUF_LEN];
 
   va_start(argptr, fmt);
-  ret = vsnprintf(buf, PH_BUS_BUF_LEN, fmt, argptr);
+  vsnprintf(buf, PH_BUS_BUF_LEN, fmt, argptr);
   buf[PH_BUS_BUF_LEN-1] = '\0';
   va_end(argptr);
 
@@ -516,12 +515,11 @@ int __attribute__((format(printf,3,4))) Phytron_CommVarg(struct phytron* bus,
 int __attribute__((format(printf,3,4))) Phytron_NACommVarg(struct phytron* bus,
     int who, const char* fmt, ...)
 {
-  int ret;
   va_list argptr;
   char buf[PH_BUS_BUF_LEN];
 
   va_start(argptr, fmt);
-  ret = vsnprintf(buf, PH_BUS_BUF_LEN, fmt, argptr);
+  vsnprintf(buf, PH_BUS_BUF_LEN, fmt, argptr);
   buf[PH_BUS_BUF_LEN-1] = '\0';
   va_end(argptr);
 

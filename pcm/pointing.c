@@ -1222,9 +1222,9 @@ void SetRaDec(double ra, double dec)
 
 void SetTrimToSC(int which)
 {
-  int i_point;
+  //int i_point;
 
-  i_point = GETREADINDEX(point_index);
+  //i_point = GETREADINDEX(point_index);
   if (which == 0) {
     //NewAzEl.az = PointingData[i_point].isc_az;
     //NewAzEl.el = PointingData[i_point].isc_el;

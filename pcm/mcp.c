@@ -338,8 +338,6 @@ static void GetACS()
   static struct BiPhaseStruct* elRaw1EncAddr; // Spider PORT el encoder
   static struct BiPhaseStruct* elRaw2EncAddr; // Souder STARBOARD el encoder
 
-  unsigned int rx_frame_index = 0;
-
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
@@ -378,9 +376,6 @@ static void GetACS()
     elRaw2EncAddr = GetBiPhaseAddr("el_raw_2_enc");
   }
 
-  rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
-      (RxFrame[2] & 0x0000ffff) << 16);
-
   //enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
 
   enc_raw_el_1 = ReadCalData(elRaw1EncAddr);
@@ -398,6 +393,8 @@ static void GetACS()
     enc_diff_el = enc_raw_el_1 - enc_raw_el_2;
   } else {
     /*don't update ACSData -- deal with this problem in pointing.c */
+    enc_diff_el = ACSData.enc_diff_el;
+    enc_mean_el = ACSData.enc_mean_el;
   }
 
   vel_rw = ReadCalData(velSerRWAddr); 

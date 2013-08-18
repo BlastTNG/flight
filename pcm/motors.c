@@ -563,7 +563,6 @@ static double GetVPivot(int write_slow, unsigned int gP_v_rw,
 
   double v_req = 0.0;
   int v_req_dac = 0;
-  int i_point;
   double P_v_rw_term, P_t_rw_term, P_v_req_term;
   int P_v_rw_term_dac, P_t_rw_term_dac,
       P_v_req_term_dac;
@@ -585,7 +584,6 @@ static double GetVPivot(int write_slow, unsigned int gP_v_rw,
     
     firsttime = 0;
   }
-  i_point = GETREADINDEX(point_index);
 
   int_v_rw = (1.0-a)*ACSData.vel_rw + a*int_v_rw; 
 
@@ -697,8 +695,6 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv,
   static unsigned int ib_last=0;
   double I_req = 0.0;
   int I_req_dac = 0;
-  int I_req_dac_init = 0;
-  int i_point;
   double v_az_req,i_frict,i_frict_filt;
   double p_rw_term, p_err_term;
   int p_rw_term_dac, p_err_term_dac;
@@ -718,7 +714,6 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv,
 
   v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
 
-  i_point = GETREADINDEX(point_index);
   p_rw_term = (-1.0)*((double)g_rw_piv/10.0)
               *(ACSData.vel_rw-CommandData.pivot_gain.SP);
   p_err_term = (double)g_err_piv*5.0*(v_az_req-PointingData[point_index].v_az);
@@ -751,7 +746,6 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv,
       I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
     }
   }
-  I_req_dac_init=I_req_dac;
 
   a+=(i_frict-buf_frictPiv[ib_last]);
   buf_frictPiv[ib_last]=i_frict;
@@ -881,7 +875,6 @@ void WriteMot(int write_slow)
   int azGainP, azGainI, pivGainVelRW, pivGainTorqueRW, pivGainVelReqAz, 
       pivGainRW, pivGainErr;
   double pivFrictOff;
-  int i_point;
 
   /******** Obtain correct indexes the first time here ***********/
   static int firsttime = 1;
@@ -915,8 +908,6 @@ void WriteMot(int write_slow)
     modePivAddr = GetNiosAddr("mode_piv");
     modeElAddr = GetNiosAddr("mode_el");
   }
-
-  i_point = GETREADINDEX(point_index);
 
   //NOTE: this is only used to program the extra DAC - not used for
   // flight.
@@ -1165,7 +1156,7 @@ static void SetAzScanMode(double az, double left, double right, double v,
 static void DoSineMode(double centre, double ampl, double el_start)
 {
   /* scan parameters */
-  double az, el;
+  double az;
   double az_accel;
   double az_accel_dv;
   double az_accel_max_dv = 0;
@@ -1182,8 +1173,6 @@ static void DoSineMode(double centre, double ampl, double el_start)
 
   int N_scans; // number of azimuth half-scans per el step
   int i_point;
-
-  static int in_scan = 0;
 
   if (CommandData.pointing_mode.new_sine) {
     n_scans = 0;
@@ -1212,7 +1201,6 @@ static void DoSineMode(double centre, double ampl, double el_start)
   /* propagate az sol'n forward by az_delay */ 
   az = PointingData[i_point].az + PointingData[i_point].v_az 
        * (CommandData.pointing_mode.az_delay/ACSData.bbc_rate);
-  el = PointingData[i_point].el;
 
   /* make sure we don't cross the sun between here and scan centre */
   SetSafeDAz(az, &centre);
@@ -1261,7 +1249,6 @@ static void DoSineMode(double centre, double ampl, double el_start)
 
   /* case 1: moving into scan from beyond left endpoint: */
   if (az < left - CommandData.pointing_mode.overshoot_band) {
-    in_scan = 0;
     scan_region = SCAN_BEYOND_L;
     scan_region_last = scan_region;
     CommandData.pointing_mode.is_turn_around = 0;

@@ -156,7 +156,10 @@ void Magnetometer()
     } else {
       do {
         n = read(fd,&buf,1);
-        buffer[o] = buf;
+        if (n < 0)
+          berror(warning, "Read error");
+        else
+          buffer[o] = buf;
         o++;
       } while (buf != '\r');
     }

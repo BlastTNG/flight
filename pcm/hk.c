@@ -255,7 +255,6 @@ static unsigned short FridgeCycle(int insert, int reset)
 
   double t_4k, t_pump, t_fp, t_sft, t_capillary;
   double duty_cycle;
-  static int last_sft_servo_update = 0;
 
   time_t state_elapsed;
   unsigned short cycle_state, next_state;
@@ -325,7 +324,6 @@ static unsigned short FridgeCycle(int insert, int reset)
        || state_elapsed > CommandData.burp_cycle.boil_timeout) {
       next_state = CYCLE_FP_BAKE | (next_state & CYCLE_FP_ON)
         | CYCLE_SFT_ON | CYCLE_CAP_ON;
-      last_sft_servo_update = 0;
       if (insert == 0) {
         bprintf(info, "Auto Cycle: SFT boiled. Continuing with FP bake.");
       }

@@ -372,6 +372,7 @@ static void WriteMCESlow(void)
   static struct NiosStruct *tMccAddr[NUM_MCE];
   static struct NiosStruct *tMceAddr[NUM_MCE];
   static struct NiosStruct *timeMccAddr[NUM_MCE];
+  static struct NiosStruct *uptimeMpcAddr[NUM_MCE];
   static struct NiosStruct *rampCountAddr[NUM_MCE];
   static struct NiosStruct *clampCountAddr[NUM_MCE];
   static struct NiosStruct *lastTuneAddr[NUM_MCE];
@@ -413,6 +414,7 @@ static void WriteMCESlow(void)
       tMccAddr[i] = GetMCCNiosAddr("t_mcc", i);
       tMceAddr[i] = GetMCCNiosAddr("t_mce", i);
       timeMccAddr[i] = GetMCCNiosAddr("time_mcc", i);
+      uptimeMpcAddr[i] = GetMCCNiosAddr("uptime_mpc", i);
       rampCountAddr[i] = GetMCCNiosAddr("ramp_count_mce", i);
       clampCountAddr[i] = GetMCCNiosAddr("clamp_count_mce", i);
       lastTuneAddr[i] = GetMCCNiosAddr("last_tune_mpc", i);
@@ -440,6 +442,7 @@ static void WriteMCESlow(void)
 
     WriteData(driveMapAddr[i], mce_slow_dat[i][ind].drive_map, NIOS_QUEUE);
     WriteData(timeMccAddr[i], mce_slow_dat[i][ind].time, NIOS_QUEUE);
+    WriteData(uptimeMpcAddr[i], mce_slow_dat[i][ind].uptime, NIOS_QUEUE);
     WriteData(df0MccAddr[i], mce_slow_dat[i][ind].df[0], NIOS_QUEUE);
     WriteData(df1MccAddr[i], mce_slow_dat[i][ind].df[1], NIOS_QUEUE);
     WriteData(df2MccAddr[i], mce_slow_dat[i][ind].df[2], NIOS_QUEUE);

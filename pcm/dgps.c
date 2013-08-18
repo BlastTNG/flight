@@ -445,7 +445,6 @@ void WatchDGPS()
   VoidBlock_t *VBlock = (VoidBlock_t*)SBFBlock;
   double lat=0,lon=0,dir=0;
   struct tm ts;
-  int pos_ok;
   static int firsttime = 1;
   static struct BiPhaseStruct* dgpsAzAddr;
   static struct BiPhaseStruct* dgpsPitchAddr;
@@ -693,9 +692,8 @@ void WatchDGPS()
       if ((PVT->Lat == DONOTUSE)  ||
           (PVT->Lon == DONOTUSE)  || 
           (DGPSPos[dgpspos_index].n_sat < 4)) {
-        pos_ok = 0;
+        ;
       } else {
-        pos_ok = 1;
         dgpspos_index = INC_INDEX(dgpspos_index);
       }
     } else if  (VBlock->ID == SBFID_ATTEULER) {

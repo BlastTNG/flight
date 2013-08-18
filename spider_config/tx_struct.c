@@ -102,6 +102,7 @@
 #define U_V_V   "Voltage","V"
 #define U_I_A   "Current","A"
 #define U_T_MS  "Time","ms"
+#define U_T_H   "Time","hours"
 #define U_R_O   "Resistance","Ohms"
 #define U_RATE "Rate", "bps"
 #define U_F_HZ "Frequency", "Hz"
@@ -935,19 +936,19 @@ struct ChannelStruct SlowChannels[] = {
   {"last_iv_mpc5",    'w',  LOOP7, 34, 1.0,   0.0, 'u', U_NONE},
   {"last_iv_mpc6",    'w',  LOOP7, 35, 1.0,   0.0, 'u', U_NONE},
 
-  {"t_mcc1",          'w',  LOOP7, 36, 0.01,  0.0, 's', U_NONE},
-  {"t_mcc2",          'w',  LOOP7, 37, 0.01,  0.0, 's', U_NONE},
-  {"t_mcc3",          'w',  LOOP7, 38, 0.01,  0.0, 's', U_NONE},
-  {"t_mcc4",          'w',  LOOP7, 39, 0.01,  0.0, 's', U_NONE},
-  {"t_mcc5",          'w',  LOOP7, 40, 0.01,  0.0, 's', U_NONE},
-  {"t_mcc6",          'w',  LOOP7, 41, 0.01,  0.0, 's', U_NONE},
+  {"t_mcc1",          'w',  LOOP7, 36, 0.01,  0.0, 's', U_T_C},
+  {"t_mcc2",          'w',  LOOP7, 37, 0.01,  0.0, 's', U_T_C},
+  {"t_mcc3",          'w',  LOOP7, 38, 0.01,  0.0, 's', U_T_C},
+  {"t_mcc4",          'w',  LOOP7, 39, 0.01,  0.0, 's', U_T_C},
+  {"t_mcc5",          'w',  LOOP7, 40, 0.01,  0.0, 's', U_T_C},
+  {"t_mcc6",          'w',  LOOP7, 41, 0.01,  0.0, 's', U_T_C},
 
-  {"t_mce1",          'w',  LOOP7, 42, 0.5,   0.0, 's', U_NONE},
-  {"t_mce2",          'w',  LOOP7, 43, 0.5,   0.0, 's', U_NONE},
-  {"t_mce3",          'w',  LOOP7, 44, 0.5,   0.0, 's', U_NONE},
-  {"t_mce4",          'w',  LOOP7, 45, 0.5,   0.0, 's', U_NONE},
-  {"t_mce5",          'w',  LOOP7, 46, 0.5,   0.0, 's', U_NONE},
-  {"t_mce6",          'w',  LOOP7, 47, 0.5,   0.0, 's', U_NONE},
+  {"t_mce1",          'w',  LOOP7, 42, 0.5,   0.0, 's', U_T_C},
+  {"t_mce2",          'w',  LOOP7, 43, 0.5,   0.0, 's', U_T_C},
+  {"t_mce3",          'w',  LOOP7, 44, 0.5,   0.0, 's', U_T_C},
+  {"t_mce4",          'w',  LOOP7, 45, 0.5,   0.0, 's', U_T_C},
+  {"t_mce5",          'w',  LOOP7, 46, 0.5,   0.0, 's', U_T_C},
+  {"t_mce6",          'w',  LOOP7, 47, 0.5,   0.0, 's', U_T_C},
 
   {"ramp_count_mce1", 'w',  LOOP7, 48, 0.5,   0.0, 'u', U_NONE},
   {"ramp_count_mce2", 'w',  LOOP7, 49, 0.5,   0.0, 'u', U_NONE},
@@ -962,12 +963,12 @@ struct ChannelStruct SlowChannels[] = {
   {"reporting_mpcs",  'w',  LOOP7, 62,  1,      0, 'u', U_NONE},
   {"alive_mpcs",      'w',  LOOP7, 63,  1,      0, 'u', U_NONE},
 
-  {"tile_heater_mce1",  'w',  LOOP8,  0, 5./32767, 0.0, 'u', U_NONE},
-  {"tile_heater_mce2",  'w',  LOOP8,  1, 5./32767, 0.0, 'u', U_NONE},
-  {"tile_heater_mce3",  'w',  LOOP8,  2, 5./32767, 0.0, 'u', U_NONE},
-  {"tile_heater_mce4",  'w',  LOOP8,  3, 5./32767, 0.0, 'u', U_NONE},
-  {"tile_heater_mce5",  'w',  LOOP8,  4, 5./32767, 0.0, 'u', U_NONE},
-  {"tile_heater_mce6",  'w',  LOOP8,  5, 5./32767, 0.0, 'u', U_NONE},
+  {"tile_heater_mce1",  'w',  LOOP8,  0, 5./32767, 0.0, 'u', U_V_V},
+  {"tile_heater_mce2",  'w',  LOOP8,  1, 5./32767, 0.0, 'u', U_V_V},
+  {"tile_heater_mce3",  'w',  LOOP8,  2, 5./32767, 0.0, 'u', U_V_V},
+  {"tile_heater_mce4",  'w',  LOOP8,  3, 5./32767, 0.0, 'u', U_V_V},
+  {"tile_heater_mce5",  'w',  LOOP8,  4, 5./32767, 0.0, 'u', U_V_V},
+  {"tile_heater_mce6",  'w',  LOOP8,  5, 5./32767, 0.0, 'u', U_V_V},
 
   {"last_tune_mpc1",  'w',  LOOP8,  6, 0.5,   0.0, 'u', U_NONE},
   {"last_tune_mpc2",  'w',  LOOP8,  7, 0.5,   0.0, 'u', U_NONE},
@@ -1028,6 +1029,13 @@ struct ChannelStruct SlowChannels[] = {
   {"t_cpu_g",         'w',  LOOP8, 51, 0.01,  0.0, 'u', U_T_C},
   {"t_cpu_b",         'w',  LOOP8, 52, 0.01,  0.0, 'u', U_T_C},
   {"t_cpu_u",         'w',  LOOP8, 53, 0.01,  0.0, 'u', U_T_C},
+
+  {"uptime_mpc1",     'w',  LOOP8, 54, 40./3600,   0.0, 'u', U_T_H},
+  {"uptime_mpc2",     'w',  LOOP8, 55, 40./3600,   0.0, 'u', U_T_H},
+  {"uptime_mpc3",     'w',  LOOP8, 56, 40./3600,   0.0, 'u', U_T_H},
+  {"uptime_mpc4",     'w',  LOOP8, 57, 40./3600,   0.0, 'u', U_T_H},
+  {"uptime_mpc5",     'w',  LOOP8, 58, 40./3600,   0.0, 'u', U_T_H},
+  {"uptime_mpc6",     'w',  LOOP8, 59, 40./3600,   0.0, 'u', U_T_H},
   END_OF_CHANNELS
 };
 

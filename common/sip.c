@@ -43,6 +43,7 @@
 #include "command_common.h"
 #include "command_struct.h"
 #include "mcp.h"
+#include "sys.h"
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
@@ -435,9 +436,12 @@ void WatchFIFO (void* void_other_ip)
 
   int i;
   int send_to_other;
-  char *other_ip;
+  char other_ip[100] = "@localhost";
 
-  nameThread("SIPSS");
+  if (void_other_ip)
+    sprintf(other_ip, "@%s", (char*)void_other_ip);
+
+  nameThread("FIFO");
   for (i = 0; i < DATA_Q_SIZE; ++i) {
     mcommand_data[i] = NULL;
   }
@@ -466,8 +470,7 @@ void WatchFIFO (void* void_other_ip)
     
 #ifndef TEST_RUN
     if (void_other_ip != NULL) {
-      other_ip = (char *) void_other_ip;
-      // if the command has an _ prepended, then it came from the other computer, 
+      // if the command has an _ prepended, then it came from the other computer
       // and should not be sent back.
       if (command[0] == '_') {
         for (i=1; i<index; i++) {
@@ -479,10 +482,21 @@ void WatchFIFO (void* void_other_ip)
       }
       
       if (send_to_other) {
-        char sys_str[512];
-        sprintf(sys_str, "/usr/local/bin/spidercmd @%s _%s", other_ip, command);
-        bputs(info, sys_str);
-        system(sys_str);
+        char arg_command[100];
+        char *ptr = arg_command;
+        char *argv[16] = { "/usr/local/bin/spidercmd", other_ip, arg_command };
+        int argc = 3;
+        strcpy(arg_command, command);
+        for (ptr = arg_command; *ptr; ++ptr) {
+          if (*ptr == ' ') {
+            *ptr = 0;
+            if (*(ptr + 1) != ' ' && *(ptr + 1))
+              argv[argc++] = ptr + 1;
+          }
+        }
+        argv[argc] = 0;
+
+        exec_and_wait(err, none, argv[0], argv, 100, 1, NULL);
       }    
     }
 #endif
