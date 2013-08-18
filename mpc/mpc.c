@@ -111,6 +111,8 @@ int mas_get_temp = 0;
  * as a watchdog */
 int slow_veto = 0;
 
+time_t start_time;
+
 /* The slow data struct */
 struct mpc_slow_data slow_dat;
 
@@ -358,6 +360,12 @@ static void send_slow_data(char *data, int send)
   /* time -- this wraps around ~16 months after the epoch */
   gettimeofday(&tv, NULL);
   slow_dat.time = (tv.tv_sec - MPC_EPOCH) * 100 + tv.tv_usec / 10000;
+
+  /* uptime -- this wraps around every ~30 days */
+  if ((tv.tv_sec - start_time) > 65535 * 40)
+    slow_dat.uptime = 65535;
+  else
+    slow_dat.uptime = (tv.tv_sec - start_time) / 40;
 
   /* mcc temperature */
   if ((stream = fopen("/sys/devices/platform/coretemp.0/temp2_input", "r"))) {
@@ -1679,6 +1687,9 @@ int main(void)
 
   if (mpc_init())
     bprintf(fatal, "Unable to initialise MPC subsystem.");
+
+  /* start time */
+  start_time = time(NULL);
 
   /* figure out the boot time */
   set_btime();

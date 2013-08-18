@@ -54,6 +54,7 @@ struct mpc_slow_data {
   uint16_t ref_tune; /* reference tuning */
   uint16_t tune_stat; /* tuning status */
   uint16_t off_trans; /* count of off-transition detectors */
+  uint16_t uptime; /* time since program start (in units of 40 seconds) */
 };
 
 extern int16_t mpc_proto_rev;
