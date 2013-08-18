@@ -141,8 +141,8 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 {
 #ifdef INPUTTER
   int version = 0;
-#endif
   int n_fast_bolos;
+#endif
   char versionMagic[6] = "DFI" STRINGIFY(SPEC_VERSION);
 
   if (FREADORWRITE(&versionMagic, 6, 1, fp) < 1)
@@ -165,7 +165,10 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
 
   if (FREADORWRITE(&das_cards, sizeof(unsigned short), 1, fp) < 1)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
+
+#ifdef INPUTTER
   n_fast_bolos = das_cards * (DAS_CHS + DAS_CHS / 2);
+#endif
 
   if (FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp) < 1)
     bprintf(err, "FREADORWRITE failed with code %d", ferror(fp));
