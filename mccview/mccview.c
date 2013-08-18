@@ -31,7 +31,7 @@ int first = 1;
 
 struct fft { const char *fmt; gd_type_t type; };
 
-#define NF 20
+#define NF 21
 static const struct fft ff[NF] = {
   {"TIME_MCC%i", GD_UINT64},  /* 0 */
   {"TILE_HEATER_MCE%i", GD_UINT16}, /* 1 */
@@ -53,6 +53,7 @@ static const struct fft ff[NF] = {
   {"clamp_count_mce%i", GD_UINT16}, /* 17 */
   {"ref_tune_mpc%i", GD_UINT16}, /* 18 */
   {"tune_stat_mpc%i", GD_UINT16}, /* 19 */
+  {"UPTIME_MPC%i", GD_FLOAT64}, /* 20 */
 };
 
 #define NGF 14
@@ -244,6 +245,20 @@ const char *A(const char **v, int i, int l)
   return v[i];
 }
 
+char delta_t_buffer[100];
+const char *delta_t(double hours)
+{
+  int d = hours / 24;
+  int h = hours - d * 24;
+  int m = (hours - d * 24 - h) * 60;
+  if (d > 0)
+    sprintf(delta_t_buffer, "% 2i %02i:%02i", d, h, m);
+  else
+    sprintf(delta_t_buffer, "   %02i:%02i", h, m);
+
+  return delta_t_buffer;
+}
+
 int main(int argc, char **argv)
 {
   unsigned state[6];
@@ -329,20 +344,19 @@ int main(int argc, char **argv)
     for (x = 0; x < 6; ++x) {
       time_t t = d[x][0].u64;
       char ct[100];
-      strcpy(ct, ctime(&t));
+      strcpy(ct, asctime(gmtime(&t)));
       ct[20] = 0;
       printw("   %-22s", ct);
     }
     printw("\n");
 
-#if 0
-    for (x = 0; x < 6; ++x)
-      printw(" MCEpwr: %9s       ", mce_power(x));
-    printw("\n");
-#endif
     /* add MCE power to the bottom of the state bitmap */
     for (x = 0; x < 6; ++x)
       state[x] = (unsigned)(d[x][6].u64 << 1) | (mce_power(x) ? 1 : 0);
+
+    for (x = 0; x < 6; ++x)
+      printw("uptime:  %12s    ", delta_t(d[x][20].f64));
+    printw("\n");
 
     for (f = 0; f < 4; ++f) {
       for (x = 0; x < 6; ++x)
