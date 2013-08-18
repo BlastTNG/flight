@@ -482,11 +482,11 @@ void WatchFIFO (void* void_other_ip)
       }
       
       if (send_to_other) {
-        char arg_command[100];
+        char arg_command[100] = "_";
         char *ptr = arg_command;
         char *argv[16] = { "/usr/local/bin/spidercmd", other_ip, arg_command };
         int argc = 3;
-        strcpy(arg_command, command);
+        strcpy(arg_command + 1, command);
         for (ptr = arg_command; *ptr; ++ptr) {
           if (*ptr == ' ') {
             *ptr = 0;
