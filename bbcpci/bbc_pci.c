@@ -59,7 +59,7 @@
 #if LINUX_VERSION_CODE < VERSION_CODE(2,6,0)
 # error "This kernel is too old and is not supported" 
 #endif
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,7,0)
+#if LINUX_VERSION_CODE >= VERSION_CODE(3,3,0)
 # error "This kernel version is not supported"
 #endif
 //incompatible API change, may have changed before 2.6.27
