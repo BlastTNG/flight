@@ -162,9 +162,9 @@ void countHWPEncoder(int index)
   static double last_tick_data[NHWP];
 
   //sanity check the number of samples between ticks: half an expected period
-  int samples_per_tick = ceil(( (360.0/465.0)/40.0 )
-      * (ACSData.bbc_rate / CommandData.hwp.vel));
-  int min_tick_spacing = ceil(samples_per_tick / 2.0);
+  double samples_per_tick = ( (360.0/465.0)/40.0 )
+      * (ACSData.bbc_rate / CommandData.hwp.vel);
+  int min_tick_spacing = samples_per_tick / 2.0;
   static int since_last_tick[NHWP];
 
   if (firsttime)
@@ -189,11 +189,13 @@ void countHWPEncoder(int index)
     since_last_tick[i]++;
 
     //check to see if this is a minimum or maximium
-    if ( ((data[i][0] < data[i][2]) && (data[i][4] < data[i][2]))
-        || ((data[i][0] > data[i][2]) && (data[i][4] > data[i][2])) )
+    //if ( ((data[i][0] < data[i][2]) && (data[i][4] < data[i][2]))
+        //|| ((data[i][0] > data[i][2]) && (data[i][4] > data[i][2])) )
+    if ( ((data[i][1] < data[i][2]) && (data[i][3] < data[i][2]))
+        || ((data[i][1] > data[i][2]) && (data[i][3] > data[i][2])) )
     {
       if (fabs(data[i][2] - last_tick_data[i]) > min_amp) {
-        if (since_last_tick[i] > min_tick_spacing) {
+        if (since_last_tick[i] >= min_tick_spacing) {
           //tick.
           since_last_tick[i] = 0;
           last_tick_data[i] = data[i][2];
