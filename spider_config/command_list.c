@@ -791,23 +791,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Node number",  0, 64, 'i', ""}
     }
   },
-  {COMMAND(set_heaters), "Heater Set Points (deg C)", GR_ELECT, 5,
+  {COMMAND(set_heaters), "Heater Set Points (deg C)", GR_ELECT, N_HEATERS,
     {
       {"Gyro Box", 0, 60, 'f', "T_SET_GY"},
       {"Pivot", 0, 60, 'f', "T_SET_PIVOT"},
-      {"El Mot", 0, 60, 'f', "T_SET_ELMOT"},
+      {"El Mot (P)", 0, 60, 'f', "T_SET_ELMOT_P"},
+      {"El Mot (S)", 0, 60, 'f', "T_SET_ELMOT_S"},
       {"MT Tavco", 0, 60, 'f', "T_SET_MTTAVCO"},
       {"Mot Valves", 0, 60, 'f', "T_SET_MOTVALVES"}
-    }
-  },
-  {COMMAND(t_rsc_set), "RSC temperature set point", GR_ELECT, 1,
-    {
-      {"Set Point (deg C)", 0, 60, 'f', "T_SET_RSC"}
-    }
-  },
-  {COMMAND(t_bsc_set), "BSC temperature set point", GR_ELECT, 1,
-    {
-      {"Set Point (deg C)", 0, 60, 'f', "T_SET_BSC"}
     }
   },
 

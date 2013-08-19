@@ -356,13 +356,14 @@ struct ChannelStruct SlowChannels[] = {
   {"ifpwr",         'w', HWP_D,  50,         1.0,           0.0, 'u', U_NONE},
   {"ctl_sftv",      'w', HWP_D,  51,         1.0,           0.0, 'u', U_NONE},
   {"lim_sftv",      'r', HWP_D,  51,         1.0,           0.0, 'u', U_NONE},
+  {"heat_if",       'w', HWP_D,  52,         1.0,           0.0, 'u', U_NONE},
   {"hwp_bias",      'w', HWP_D,  54,         1.0,           0.0, 'u', U_NONE},
   //with quadrature code, phase_hwp is deprecated
   {"phase_hwp",     'w', HWP_A1,  0,       I2DEG,           0.0, 'u', U_PH_DEG},
 
   // TODO: Give these real names.
-  {"vt_1_if",      'r', HWP_A2, 37, CAL16B(    1.0,           0.0), 'u', U_V_V},
-  {"vt_2_if",      'r', HWP_A2, 39, CAL16B(    1.0,           0.0), 'u', U_V_V},
+  {"vt_mt_tavco",      'r', HWP_A2, 37, CAL16B(    1.0,           0.0), 'u', U_V_V},
+  {"vt_sftv",      'r', HWP_A2, 39, CAL16B(    1.0,           0.0), 'u', U_V_V},
   {"vt_3_if",      'r', HWP_A2, 41, CAL16B(    1.0,           0.0), 'u', U_V_V},
   {"vt_4_if",      'r', HWP_A2, 43, CAL16B(    1.0,           0.0), 'u', U_V_V},
   {"vt_5_if",      'r', HWP_A2, 45, CAL16B(    1.0,           0.0), 'u', U_V_V},
@@ -535,7 +536,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_ccd_g",          'w', LOOP3, 40,        1.0/100.0,  0.0, 's',      U_T_C},
   {"t_ccd_b",          'w', LOOP3, 41,        1.0/100.0,  0.0, 's',      U_T_C},
   {"t_set_pivot",      'w', LOOP3, 42,  (100.0/32768.0),  0.0, 's',      U_T_C},
-  {"t_set_elmot",      'w', LOOP3, 43,  (100.0/32768.0),  0.0, 's',      U_T_C},
+  {"t_set_elmot_p",    'w', LOOP3, 43,  (100.0/32768.0),  0.0, 's',      U_T_C},
   {"t_set_mttavco",    'w', LOOP3, 44,  (100.0/32768.0),  0.0, 's',      U_T_C},
   {"t_set_gybox",      'w', LOOP3, 45,  (100.0/32768.0),  0.0, 's',      U_T_C},
   {"trim_pss",         'w', LOOP3, 46,            I2DEG,  0.0, 's',     U_NONE},
@@ -1039,6 +1040,7 @@ struct ChannelStruct SlowChannels[] = {
   {"t_set_motvalve",  'w',  LOOP8, 60,  (100.0/32768.0),  0.0, 's', U_T_C},
   {"twist_default",   'w',  LOOP8, 61,  I2DEG,     0.0, 's', U_P_DEG},
   {"twist_limit",     'w',  LOOP8, 62,  I2DEG,     0.0, 's', U_P_DEG},
+  {"t_set_elmot_s",    'w', LOOP8, 63,  (100.0/32768.0),  0.0, 's',      U_T_C},
   END_OF_CHANNELS
 };
 

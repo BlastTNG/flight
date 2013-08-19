@@ -1021,24 +1021,24 @@ END_OF_STREAM
   {  // field set 6
     {"time",1,1,NOAVG,NODX,8,SLOW},
     {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
-    {"enc_a_x1_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_b_x1_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_i_x1_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_a_x2_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_b_x2_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_i_x2_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_a_x3_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_b_x3_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_i_x3_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_a_x4_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_b_x4_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_i_x4_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_a_x5_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_b_x5_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_i_x5_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_a_x6_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_b_x6_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
-    {"enc_i_x6_hwp", 8, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x1_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x1_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x1_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x2_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x2_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x2_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x3_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x3_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x3_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x4_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x4_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x4_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x5_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x5_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x5_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_a_x6_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_b_x6_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
+    {"enc_i_x6_hwp", 1024, 25, NOAVG, NODX, 8, SLOW}, // FIXME Range
     
     {"ofpch_gy", 5, 10, AVG, NODX, 8, SLOW},
     {"ofyaw_gy", 5, 10, AVG, NODX, 8, SLOW},

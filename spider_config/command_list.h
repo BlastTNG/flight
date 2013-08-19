@@ -60,6 +60,7 @@
 #define MCECMD          0x40000000 /* MCE command flag */
 //reserved for CONFIRM  0x80000000
 
+#define N_HEATERS 6
 extern const char *const command_list_serial;
 extern const int command_list_serial_as_int(void);
 
@@ -167,7 +168,7 @@ enum multiCommand {
   theugly_lens_any,   theugly_lens_move,  rsc_trig_wait,
   thegood_lens_params,thebad_lens_params,   theugly_lens_params, bsc_trig_delay,
   table_gain,        table_goto,        table_drift,
-  t_bsc_set,         t_rsc_set,         ants_gps,          
+  ants_gps,          
   hwp_vel,           hwp_i,             hwp_move,          hwp_general,
   hk_pump_heat_on,   hk_pump_heat_off,  hk_heat_switch_on, hk_heat_switch_off,
   hk_ssa_heat_on,    hk_ssa_heat_off,   hk_htr1_heat_on,   hk_htr1_heat_off,

@@ -343,16 +343,8 @@ struct CommandDataStruct {
   double offset_ofyaw_gy;
   unsigned int gymask;
 
-
-  double t_set_gybox;
-  double t_set_pivot;
-  double t_set_elmot;
-  double t_set_mttavco;
-  double t_set_motvalve;
+  double t_set[N_HEATERS];
   
-  double t_set_bsc;
-  double t_set_rsc;
-
   unsigned char use_elenc1;
   unsigned char use_elenc2;
   unsigned char use_pss;

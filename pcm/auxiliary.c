@@ -68,9 +68,8 @@
 /* limits for thermometers.  If the reading is outside this range,
  * we don't regulate the temperature at all, since it means the thermometer is probably
  * broken */
-#define MIN_GYBOX_TEMP -50.0
-#define MAX_GYBOX_TEMP 60.0
-#define MIN_BSC_TEMP  ((223.15 / M_16T) - B_16T)   /* -50 C */
+#define MIN_TEMP -53.0
+#define MAX_TEMP 60.0
  
 /* Gybox heater stuff */
 #define GY_HEAT_MAX 40 /* percent */
@@ -81,9 +80,6 @@
 #define GY_HEAT_TC 30000 /* integral/age characteristic time in 100Hz Frames */
 
 extern short int InCharge; /* tx.c */
-
-/* ACS2 digital signals */
-#define BSC_HEAT    0x01  /* ACS1_D Spare-0 */
 
 #define PUMP_MAX 26214      /*  3.97*2.0V   */
 #define PUMP_MIN  3277      /*  3.97*0.25V   */
@@ -113,40 +109,66 @@ double pseudoGaussianRand() {
 
 
 /************************************************************************/
-/*    ControlGyroHeat:  Controls gyro box temp                          */
+/*    ControlHeaters:  Controls gyro box temp                          */
 /************************************************************************/
 void ControlHeaters()
 {
-  static struct BiPhaseStruct* tGyAddr;
-  static struct NiosStruct *heatGyAddr, *tSetGyAddr;
-
-  static struct LutType tGyLut = {.filename = LUT_DIR "thermistor.lut"};
+  static struct BiPhaseStruct* tAddrs[N_HEATERS];
+  static struct NiosStruct *tSetAddrs[N_HEATERS];
+  static struct NiosStruct *heatIFAddr;
+  static struct NiosStruct *heatGyAddr; 
+  
+  const char *tNames[] = {"vt_gy", "vt_piv", "vt_elport_mot", 
+    "vt_elstar_mot", "vt_mt_tavco", "vt_sftv",""
+  };
+  const char *setNames[] = {"t_set_gybox", "t_set_pivot", "t_set_elmot_p",
+    "t_set_elmot_s", "t_set_mttavco", "t_set_motvalve", ""
+  };
+    
+  static struct LutType tLut = {.filename = LUT_DIR "thermistor.lut"};
 
   static int firsttime = 1;
   
   double set_point;
-  double t_gy;
-
+  double T;
+  int i;
+  
+  unsigned short outbits = 0, gy_on = 0;
+  
   if (firsttime) {
     firsttime = 0;
-    tGyAddr = GetBiPhaseAddr("vt_gy");
+    for (i=0; i<N_HEATERS; i++) {
+      tAddrs[i] =  GetBiPhaseAddr(tNames[i]);
+      tSetAddrs[i] = GetNiosAddr(setNames[i]);
+    }
     heatGyAddr = GetNiosAddr("heat_gy");
-    tSetGyAddr = GetNiosAddr("t_set_gybox");
+    heatIFAddr = GetNiosAddr("heat_if");
 
-    LutInit(&tGyLut);
+    LutInit(&tLut);
   }
-  WriteData(tSetGyAddr, CommandData.t_set_gybox * 327.68, NIOS_QUEUE);
-
-  t_gy = ReadCalData(tGyAddr);
-  t_gy = LutCal(&tGyLut, t_gy);
   
-  set_point = CommandData.t_set_gybox + 0.1 * pseudoGaussianRand();
+  for (i=0; i<N_HEATERS; i++) {
+    WriteCalData(tSetAddrs[i], CommandData.t_set[i], NIOS_QUEUE);
+  
+    T = ReadCalData(tAddrs[i]);
+    T = LutCal(&tLut, T);
+ 
+    set_point = CommandData.t_set[i] + 0.1 * pseudoGaussianRand();
     /* Only run these controls if we think the thermometer isn't broken */
-  if (t_gy < MAX_GYBOX_TEMP && t_gy > MIN_GYBOX_TEMP && t_gy<set_point) {
-    WriteData(heatGyAddr, 0x1, NIOS_FLUSH);
-  } else {
-    WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
+    if (T < MAX_TEMP && T > MIN_TEMP && T<set_point) {
+      if (i>0) {
+        outbits |= 0x01 << (i+7);
+      } else { 
+        gy_on = 1;
+      }
+    }
   }
+  if (gy_on) {
+    WriteData(heatGyAddr, 0x01, NIOS_FLUSH);
+  } else {
+    WriteData(heatGyAddr, 0x00, NIOS_FLUSH);
+  }
+  WriteData(heatIFAddr, outbits, NIOS_FLUSH);
 }
 
 #if 0
@@ -708,7 +730,6 @@ void ControlPower(void) {
     if (CommandData.ifpower.hk_preamp_off > 0) CommandData.ifpower.hk_preamp_off--;
     ifpwr &= ~0x4000;
   } else ifpwr |= 0x4000;
-  //  misc |= ControlBSCHeat();
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
