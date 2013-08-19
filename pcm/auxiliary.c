@@ -115,7 +115,7 @@ double pseudoGaussianRand() {
 /************************************************************************/
 /*    ControlGyroHeat:  Controls gyro box temp                          */
 /************************************************************************/
-void ControlGyroHeat()
+void ControlHeaters()
 {
   static struct BiPhaseStruct* tGyAddr;
   static struct NiosStruct *heatGyAddr, *tSetGyAddr;

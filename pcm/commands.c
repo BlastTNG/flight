@@ -1169,6 +1169,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case el_gain:  /* ele gains */
       CommandData.ele_gain.com = rvalues[0];
       break;
+    case el_twist:  /* ele twist limits */
+      CommandData.twist_default = rvalues[0];
+      CommandData.twist_limit = rvalues[1];
+      break;
     case el_pulse: /* manual el motor pulses */
       CommandData.ele_gain.pulse_port = rvalues[0];
       CommandData.ele_gain.pulse_starboard = rvalues[1];
@@ -2278,6 +2282,8 @@ void InitCommandData()
   CommandData.ele_gain.manual_pulses = 0;
   CommandData.ele_gain.pulse_port = 0.0;
   CommandData.ele_gain.pulse_starboard = 0.0;
+  CommandData.twist_default = 0.0;
+  CommandData.twist_limit = 0.5;
 
   CommandData.power.elmot_auto = 0;
 

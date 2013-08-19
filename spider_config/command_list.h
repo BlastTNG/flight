@@ -140,9 +140,9 @@ enum singleCommand {
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,           dac2_level,
   set_scan_params,
-  az_el_trim,        drift,             el_gain,           
+  az_el_trim,        drift,             el_gain,           el_twist,
   pivot_gain,        ra_dec_goto,       ra_dec_set,        oth_set,
-  arraystat_oth,  
+  arraystat_oth,     
   set_heaters,       tdrss_bw,          iridium_bw,        pilot_bw,
   timeout,           slot_sched,        az_gyro_offset,
   cov_gps,           reset_adc,         hk_cycle_params,   hk_burp_params_1,

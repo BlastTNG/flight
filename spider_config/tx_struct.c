@@ -1037,6 +1037,8 @@ struct ChannelStruct SlowChannels[] = {
   {"uptime_mpc5",     'w',  LOOP8, 58, 40./3600,   0.0, 'u', U_T_H},
   {"uptime_mpc6",     'w',  LOOP8, 59, 40./3600,   0.0, 'u', U_T_H},
   {"t_set_motvalve",  'w',  LOOP8, 60,  (100.0/32768.0),  0.0, 's', U_T_C},
+  {"twist_default",   'w',  LOOP8, 61,  I2DEG,     0.0, 's', U_P_DEG},
+  {"twist_limit",     'w',  LOOP8, 62,  I2DEG,     0.0, 's', U_P_DEG},
   END_OF_CHANNELS
 };
 

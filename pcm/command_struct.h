@@ -373,6 +373,9 @@ struct CommandDataStruct {
   double dgps_az_trim;
   double pss_az_trim;
 
+  double twist_default;
+  double twist_limit;
+  
   double cal_xmax_mag;
   double cal_xmin_mag;
   double cal_ymax_mag;

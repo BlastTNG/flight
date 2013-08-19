@@ -640,6 +640,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Common-Mode Gain (sqrt(accel))", 0.0,  3.0, 'f', "G_COM_EL"}
     }
   },
+  {COMMAND(el_twist), "elevation twist parameters", GR_GAIN, 2,
+    {
+      {"default twist", -10.0,  10.0, 'f', "TWIST_EL"},
+      {"twist limit", -10.0, 10.0, 'f', ""}
+    }
+  },
   {COMMAND(el_pulse), "manually set el motor pulse rates", GR_GAIN, 2,
     {
       {"port motor pulse rate (Hz)", -10000.0, 10000.0, 'f', "STEP_1_EL"},

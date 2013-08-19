@@ -74,7 +74,7 @@ void VetoMCE();
 void ChargeController(void);
 void WriteSyncBox(void);
 void ControlAuxMotors();
-void ControlGyroHeat();
+void ControlHeaters();
 void CameraTrigger(int which);
 void ControlPower(void);
 void LockMotor();
@@ -1539,7 +1539,7 @@ void UpdateBBCFrame()
       LockMotor();
       break;
     case 5:
-      ControlGyroHeat();
+      ControlHeaters();
       break;
     case 6:
       SetGyroMask();

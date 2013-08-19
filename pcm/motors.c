@@ -381,7 +381,7 @@ static void GetVElevGoto(double* v_P, double* v_S)
     isStopped = 0;
   }
   /* check for a stalled motor */
-  if ( fabs(ACSData.enc_diff_el) > TWIST_TOL ) {
+  if ( fabs(ACSData.enc_diff_el-CommandData.twist_default) > CommandData.twist_limit) {
     isStopped = 1;
     el_dest = axes_mode.el_dest = CommandData.pointing_mode.Y
             = ACSData.enc_mean_el;
@@ -829,6 +829,9 @@ void WriteMot(int write_slow)
 {
   static struct NiosStruct* velReqAzAddr;
   static struct NiosStruct* gComElAddr;
+  static struct NiosStruct* twistDefaultAddr;
+  static struct NiosStruct* twistLimitAddr;
+  
   static struct NiosStruct* gPAzAddr;
   static struct NiosStruct* gIAzAddr;
   static struct NiosStruct* gPtAzAddr;
@@ -884,6 +887,8 @@ void WriteMot(int write_slow)
     velReqAzAddr = GetNiosAddr("vel_req_az");
     dacPivAddr = GetNiosAddr("dac_piv");
     gComElAddr = GetNiosAddr("g_com_el");
+    twistDefaultAddr = GetNiosAddr("twist_default");
+    twistLimitAddr = GetNiosAddr("twist_limit");
     gPAzAddr = GetNiosAddr("g_p_az");
     gIAzAddr = GetNiosAddr("g_i_az");
     gPtAzAddr = GetNiosAddr("g_pt_az");
@@ -977,7 +982,8 @@ void WriteMot(int write_slow)
     /*common-mode gain term for el motors*/
     WriteCalData(gComElAddr, elGainCom, NIOS_QUEUE);
 
-    
+    WriteCalData(twistDefaultAddr, CommandData.twist_default, NIOS_QUEUE);
+    WriteCalData(twistLimitAddr, CommandData.twist_limit, NIOS_QUEUE);
   }
 
   /***************************************************/
