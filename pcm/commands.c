@@ -695,11 +695,17 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case sftv_atm_close:
       CommandData.sftv.goal_atm = sft_do_close;
       break;
+    case sftv_atm_stop:
+      CommandData.sftv.goal_atm = sft_do_nothing;
+      break;
     case sftv_pump_open:
       CommandData.sftv.goal_pump = sft_do_open;
       break;
     case sftv_pump_close:
       CommandData.sftv.goal_pump = sft_do_close;
+      break;
+    case sftv_pump_stop:
+      CommandData.sftv.goal_pump = sft_do_nothing;
       break;
 
     case hwp_panic:
