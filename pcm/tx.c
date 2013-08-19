@@ -61,6 +61,8 @@ extern unsigned int sched_lst; /* sched_lst */
 
 extern int bbc_fp;
 
+extern short int bsc_trigger; /* sc.cpp */
+
 extern struct chat_buf chatter_buffer;  /* mcp.c */
 
 double round(double x);
@@ -792,6 +794,7 @@ static void StoreData(int write_slow)
   static struct NiosStruct* tableVelAddr;
   static struct NiosStruct* tablePosAddr;
   static struct NiosStruct* tableModeAddr;
+  static struct NiosStruct* bscTrigAddr;
 
   /* trim fields */
   static struct NiosStruct *trimNullAddr;
@@ -971,6 +974,7 @@ static void StoreData(int write_slow)
     tableVelAddr = GetNiosAddr("vel_table");
     tablePosAddr = GetNiosAddr("pos_table");
     tableModeAddr = GetNiosAddr("mode_table");
+    bscTrigAddr = GetNiosAddr("bsc_trigger");
 
     modeAzMcAddr = GetNiosAddr("mode_az_mc");
     modeElMcAddr = GetNiosAddr("mode_el_mc");
@@ -1160,6 +1164,7 @@ static void StoreData(int write_slow)
   WriteData(tableVelAddr, (int)(CommandData.table.vel*1000.0), NIOS_QUEUE);
   WriteData(tablePosAddr, (int)(CommandData.table.pos*1000.0), NIOS_QUEUE);
   WriteData(tableModeAddr, CommandData.table.mode, NIOS_QUEUE);
+  WriteData(bscTrigAddr, bsc_trigger, NIOS_QUEUE);
 
   WriteData(trimNullAddr, CommandData.null_az_trim * DEG2I, NIOS_QUEUE);
 
