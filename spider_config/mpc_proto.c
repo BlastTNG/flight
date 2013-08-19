@@ -625,24 +625,17 @@ int mpc_decompose_notice(int nmce, const char **data_mode_bits, int *turnaround,
     double *bolo_filt_bw, uint16_t *bolo_filt_len, size_t len, const char *data,
     const char *peer, int port)
 {
-  static int last_turnaround = -1;
-
   if (len != 33) {
     bprintf(err, "Bad notice packet (size %zu) from %s/%i", len, peer, port);
     return -1;
   }
-
-  /* we just do this to get an idea of with whom where conversing */
-  bprintf(info, "Noticed by %s/%i", peer, port);
 
   *divisor = data[3];
   *data_mode = (int)data[4];
   *squidveto = (int)data[5];
   *ssdata_req = data[6];
 
-  if (data[7] != last_turnaround)
-    bprintf(info, "%s turnaround", data[7] ? "Into" : "Out of");
-  last_turnaround = *turnaround = data[7];
+  *turnaround = data[7];
 
   memcpy(bolo_filt_freq, data + 8, sizeof(double));
   memcpy(bolo_filt_bw, data + 16, sizeof(double));
