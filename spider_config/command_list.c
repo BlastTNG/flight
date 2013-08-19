@@ -767,7 +767,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
 
   {COMMAND(oth_set), "OTH Link channel set", GR_TELEM, 1,
     {
-      {"Channel Set", 0, 2, 'i', "channelset_oth"}
+      {"Channel Set", 0, 6, 'i', "channelset_oth"}
     }
   },
   
