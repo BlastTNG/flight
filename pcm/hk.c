@@ -164,8 +164,7 @@ static void BiasControl()
       if (i== 4) t_fp = 0;    //FIXME X5 autobias disabled
       if ( t_fp > T_FP_FULL_BIAS ) {
         if (!CommandData.hk[i].cernox_full_bias) {
-          bprintf(info, "Biasing X%i cernoxes full (FP:%.1f)\n",
-              i+ 1, t_fp);
+//          bprintf(info, "Biasing X%i cernoxes full (FP:%.1f)\n", i+ 1, t_fp);
           CommandData.hk[i].cernox_full_bias = 1;
           veto_mce_veto[i] = VETO_MCE_TIMEOUT;
           full_bias_timeout[i] = FULL_BIAS_TIMEOUT;
@@ -174,8 +173,7 @@ static void BiasControl()
 
       if ( t_fp < T_FP_COMM_BIAS ) {
         if (CommandData.hk[i].cernox_full_bias) {
-          bprintf(info, "Restoring X%i cernox bias (FP:%.1f)\n",
-              i+ 1, t_fp);
+//          bprintf(info, "Restoring X%i cernox bias (FP:%.1f)\n", i+ 1, t_fp);
           CommandData.hk[i].cernox_full_bias = 0;
           veto_mce_veto[i] = VETO_MCE_TIMEOUT;
           full_bias_timeout[i] = FULL_BIAS_TIMEOUT;
