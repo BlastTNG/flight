@@ -813,12 +813,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(set_heaters), "Heater Set Points (deg C)", GR_ELECT, N_HEATERS,
     {
-      {"Gyro Box", 0, 60, 'f', "T_SET_GY"},
-      {"Pivot", 0, 60, 'f', "T_SET_PIVOT"},
-      {"El Mot (P)", 0, 60, 'f', "T_SET_ELMOT_P"},
-      {"El Mot (S)", 0, 60, 'f', "T_SET_ELMOT_S"},
-      {"MT Tavco", 0, 60, 'f', "T_SET_MTTAVCO"},
-      {"Mot Valves", 0, 60, 'f', "T_SET_MOTVALVES"}
+      {"Gyro Box", -60, 60, 'f', "T_SET_GY"},
+      {"Pivot", -60, 60, 'f', "T_SET_PIVOT"},
+      {"El Mot (P)", -60, 60, 'f', "T_SET_ELMOT_P"},
+      {"El Mot (S)", -60, 60, 'f', "T_SET_ELMOT_S"},
+      {"MT Tavco", -60, 60, 'f', "T_SET_MTTAVCO"},
+      {"Mot Valves", -60, 60, 'f', "T_SET_MOTVALVES"}
     }
   },
 
