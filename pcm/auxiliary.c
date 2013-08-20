@@ -70,7 +70,7 @@
  * broken */
 #define MIN_TEMP -53.0
 #define MAX_TEMP 60.0
- 
+
 /* Gybox heater stuff */
 #define GY_HEAT_MAX 40 /* percent */
 #define GY_HEAT_MIN 5  /* percent */
@@ -215,7 +215,7 @@ void ControlGyroHeat()
 
   t_gy = ReadCalData(tGyAddr);
   t_gy = LutCal(&tGyLut, t_gy);
-  
+
   set_point = CommandData.gyheat.setpoint;
   /* Only run these controls if we think the thermometer isn't broken */
   if (t_gy < MAX_GYBOX_TEMP && t_gy > MIN_GYBOX_TEMP) {
@@ -264,37 +264,6 @@ void ControlGyroHeat()
 }
 #endif
 
-/************************************************************************/
-/*    ControlBSCHeat:  Controls BSC temp		                */
-/************************************************************************/
-/*
-static int ControlBSCHeat()
-{
-
-  static struct BiPhaseStruct *tBSCAddr;
-  static int firsttime = 1;
-
-  unsigned int temp;
-
-  if (firsttime) {
-    firsttime = 0;
-    tBSCAddr = GetBiPhaseAddr("t_bsc");
-  }
-
-  temp = slow_data[tBSCAddr->index][tBSCAddr->channel]; 
-
-  if (temp > MIN_BSC_TEMP) {
-      if (temp < CommandData.t_set_bsc) {
-	return 0x1;	
-      } else {
-	return 0x0;
-      }
-  } else {
-    // Turn off heater if thermometer appears broken 
-    return 0x0;
-  }
-}
-*/
 void ChargeController(void)
 {
 
@@ -322,7 +291,7 @@ void ChargeController(void)
   static struct NiosStruct *LEDIfCCAddr;
 
   static int firsttime = 1;
-  
+
   if (firsttime) {
 
     firsttime = 0;
@@ -338,7 +307,7 @@ void ChargeController(void)
     AlarmLoOfCCAddr = GetNiosAddr("alarm_lo_of_cc");
     ChargeOfCCAddr = GetNiosAddr("state_of_cc");
     LEDOfCCAddr = GetNiosAddr("led_of_cc");
-  
+
     VBattIfCCAddr = GetNiosAddr("v_batt_if_cc");
     VArrIfCCAddr = GetNiosAddr("v_arr_if_cc");
     IBattIfCCAddr = GetNiosAddr("i_batt_if_cc");
@@ -350,11 +319,11 @@ void ChargeController(void)
     AlarmLoIfCCAddr = GetNiosAddr("alarm_lo_if_cc");
     ChargeIfCCAddr = GetNiosAddr("state_if_cc");
     LEDIfCCAddr = GetNiosAddr("led_if_cc");
-  
-  
+
+
   }
 
-  WriteData(VBattOfCCAddr, 180.0*ChrgCtrlData[0].V_batt + 32400.0, NIOS_QUEUE); 
+  WriteData(VBattOfCCAddr, 180.0*ChrgCtrlData[0].V_batt + 32400.0, NIOS_QUEUE);
   WriteData(VArrOfCCAddr, 180.0*ChrgCtrlData[0].V_arr + 32400.0, NIOS_QUEUE);
   WriteData(IBattOfCCAddr, 400.0*ChrgCtrlData[0].I_batt + 32000.0, NIOS_QUEUE);
   WriteData(IArrOfCCAddr,  400.0*ChrgCtrlData[0].I_arr + 32000.0, NIOS_QUEUE);
@@ -366,7 +335,7 @@ void ChargeController(void)
   WriteData(ChargeOfCCAddr, ChrgCtrlData[0].charge_state, NIOS_QUEUE);
   WriteData(LEDOfCCAddr, ChrgCtrlData[0].led_state, NIOS_QUEUE);
 
-  WriteData(VBattIfCCAddr, 180.0*ChrgCtrlData[1].V_batt + 32400.0, NIOS_QUEUE); 
+  WriteData(VBattIfCCAddr, 180.0*ChrgCtrlData[1].V_batt + 32400.0, NIOS_QUEUE);
   WriteData(VArrIfCCAddr, 180.0*ChrgCtrlData[1].V_arr + 32400.0, NIOS_QUEUE);
   WriteData(IBattIfCCAddr, 400.0*ChrgCtrlData[1].I_batt + 32000.0, NIOS_QUEUE);
   WriteData(IArrIfCCAddr,  400.0*ChrgCtrlData[1].I_arr + 32000.0, NIOS_QUEUE);
@@ -387,7 +356,7 @@ void WriteSyncBox(void)
   static struct NiosStruct* freeRunSyncAddr;
 
   static int firsttime = 1;
-  
+
   if (firsttime) {
     firsttime = 0;
     rowLenSyncAddr = GetNiosAddr("row_len_sync");
@@ -395,13 +364,13 @@ void WriteSyncBox(void)
     freeRunSyncAddr = GetNiosAddr("data_rate_sync");
   }
 
-  WriteData(rowLenSyncAddr, SyncBoxData.row_len, NIOS_QUEUE); 
+  WriteData(rowLenSyncAddr, SyncBoxData.row_len, NIOS_QUEUE);
   WriteData(numRowsSyncAddr, SyncBoxData.num_rows, NIOS_QUEUE);
   WriteData(freeRunSyncAddr, SyncBoxData.free_run, NIOS_QUEUE);
 }
 
-/* convert mce_pow_op command into a latch_pulse, and tell MCEServ to report
- * it */
+/* convert mce_pow_op command into a latch_pulse, and have MCEServ veto
+ * appropriately */
 static void do_mce_power_op(void)
 {
   static int pwr_timer[3] = {-1, -1, -1};
@@ -415,7 +384,7 @@ static void do_mce_power_op(void)
       if (pwr_timer[i] == -1) {
         /* veto the MCEs -- will cause MPC to debias SQUIDs */
         CommandData.mce_power |= (1U << i);
-        
+
         /* wait for debias */
         pwr_timer[i] = (int)(5.0*(ACSData.bbc_rate/FAST_PER_SLOW)); /* sec */
         bprintf(info, "veto MCEbank %i", i);
@@ -474,7 +443,7 @@ void ControlPower(void) {
   static struct NiosStruct* mcePowerAddr;
   /* grp2 = MCC and charge controller relays */
   static struct NiosStruct* switchGrp2Addr;
-  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0, grp2 = 0; 
+  int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0, grp2 = 0;
   int i;
 
   if (firsttime) {
@@ -488,6 +457,7 @@ void ControlPower(void) {
     switchGrp2Addr = GetNiosAddr("switch_grp2");
   }
 
+  /* misc */
   if (CommandData.power.hub232_off) {
     if (CommandData.power.hub232_off > 0) CommandData.power.hub232_off--;
     misc |= 0x08;
@@ -497,7 +467,41 @@ void ControlPower(void) {
   if (CommandData.power.lock_off) {
     if (CommandData.power.lock_off > 0) CommandData.power.lock_off--;
     misc &= ~0x20;
-  } else misc |= 0x20;
+  } else
+    misc |= 0x20;
+
+  if (CommandData.power.sync.set_count > 0) {
+    CommandData.power.sync.set_count--;
+    if (CommandData.power.sync.set_count < LATCH_PULSE_LEN) misc |= 0x40;
+  }
+  if (CommandData.power.sync.rst_count > 0) {
+    CommandData.power.sync.rst_count--;
+    if (CommandData.power.sync.rst_count < LATCH_PULSE_LEN) misc |= 0x80;
+  }
+
+  if (CommandData.power.pv_data2_145_off) {
+    if (CommandData.power.pv_data2_145_off > 0)
+      CommandData.power.pv_data2_145_off--;
+    misc |= 0x01;
+  }
+
+  if (CommandData.power.pv_data2_236_off) {
+    if (CommandData.power.pv_data2_236_off > 0)
+      CommandData.power.pv_data2_236_off--;
+    misc |= 0x02;
+  }
+
+  if (CommandData.power.pv_data3_245_off) {
+    if (CommandData.power.pv_data3_245_off > 0)
+      CommandData.power.pv_data3_245_off--;
+    misc |= 0x04;
+  }
+
+  if (CommandData.power.pv_data3_136_off) {
+    if (CommandData.power.pv_data3_136_off > 0)
+      CommandData.power.pv_data3_136_off--;
+    misc |= 0x10;
+  }
 
   if (CommandData.power.charge.set_count > 0) {
     CommandData.power.charge.set_count--;
@@ -517,9 +521,9 @@ void ControlPower(void) {
   }
   for (i=0; i<6; i++) {
     if (CommandData.power.gyro_off[i] || CommandData.power.gyro_off_auto[i]) {
-      if (CommandData.power.gyro_off[i] > 0) 
+      if (CommandData.power.gyro_off[i] > 0)
         CommandData.power.gyro_off[i]--;
-      if (CommandData.power.gyro_off_auto[i] > 0) 
+      if (CommandData.power.gyro_off_auto[i] > 0)
         CommandData.power.gyro_off_auto[i]--;
       gybox |= 0x01 << i;
     }
@@ -675,15 +679,6 @@ void ControlPower(void) {
     if (CommandData.power.mcc6.rst_count < LATCH_PULSE_LEN) grp2 |= 0x0080;
   }
 
-  if (CommandData.power.sync.set_count > 0) {
-    CommandData.power.sync.set_count--;
-    if (CommandData.power.sync.set_count < LATCH_PULSE_LEN) misc |= 0x0040;
-  }
-  if (CommandData.power.sync.rst_count > 0) {
-    CommandData.power.sync.rst_count--;
-    if (CommandData.power.sync.rst_count < LATCH_PULSE_LEN) misc |= 0x0080;
-  }
-
   do_mce_power_op();
 
   if (CommandData.ifpower.mce[0].set_count > 0) {
@@ -718,18 +713,20 @@ void ControlPower(void) {
     CommandData.ifpower.hwp.rst_count--;
     if (CommandData.ifpower.hwp.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0080;
   }
-  if (CommandData.ifpower.sftv.set_count > 0) {   
-    CommandData.ifpower.sftv.set_count--;  
-    if (CommandData.ifpower.sftv.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0100;  
-  }  
-  if (CommandData.ifpower.sftv.rst_count > 0) {  
-    CommandData.ifpower.sftv.rst_count--;   
-    if (CommandData.ifpower.sftv.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0200;   
+  if (CommandData.ifpower.sftv.set_count > 0) {
+    CommandData.ifpower.sftv.set_count--;
+    if (CommandData.ifpower.sftv.set_count < LATCH_PULSE_LEN) ifpwr |= 0x0100;
+  }
+  if (CommandData.ifpower.sftv.rst_count > 0) {
+    CommandData.ifpower.sftv.rst_count--;
+    if (CommandData.ifpower.sftv.rst_count < LATCH_PULSE_LEN) ifpwr |= 0x0200;
   }
   if (CommandData.ifpower.hk_preamp_off) {
-    if (CommandData.ifpower.hk_preamp_off > 0) CommandData.ifpower.hk_preamp_off--;
+    if (CommandData.ifpower.hk_preamp_off > 0)
+      CommandData.ifpower.hk_preamp_off--;
     ifpwr &= ~0x4000;
-  } else ifpwr |= 0x4000;
+  } else
+    ifpwr |= 0x4000;
 
   WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
   WriteData(latchingAddr[1], latch1, NIOS_QUEUE);

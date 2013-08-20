@@ -76,10 +76,10 @@ struct PivGainStruct {
   unsigned short int T_RW; // prop to gondola az accel
   unsigned short int V_REQ; // prop to gondoal az speed *request*
   /* gains for torque mode */
-  unsigned short int PE; // prop to gondola az speed err 
-  unsigned short int PV; // prop to RW speed err 
+  unsigned short int PE; // prop to gondola az speed err
+  unsigned short int PV; // prop to RW speed err
   double F; // current offset for stiction
-  
+
   double SP; // RW velocity Set Point
 };
 
@@ -117,7 +117,7 @@ struct PivGainStruct {
 // LOCK              el
 // AZEL_GOTO   az    el
 // AZ_SCAN     az    el   vaz
-// DRIFT                  vaz   
+// DRIFT                  vaz
 // RADEC_GOTO  ra    dec
 // VCAP*       ra    dec  vaz   vel    r
 // CAP*        ra    dec  vaz   elstep r
@@ -235,7 +235,7 @@ enum mce_pow_op {
 struct CommandDataStruct {
   unsigned short command_count;
   unsigned short last_command;
- 
+
   struct {
     unsigned short dac_out[5];
     unsigned char setLevel[5];
@@ -305,6 +305,10 @@ struct CommandDataStruct {
     struct latch_pulse mcc5;
     struct latch_pulse mcc6;
     struct latch_pulse sync;
+    int pv_data2_145_off;
+    int pv_data2_236_off;
+    int pv_data3_136_off;
+    int pv_data3_245_off;
     int gybox_off;
     int gyro_off[6];
     int gyro_off_auto[6];
@@ -344,7 +348,7 @@ struct CommandDataStruct {
   unsigned int gymask;
 
   double t_set[N_HEATERS];
-  
+
   unsigned char use_elenc1;
   unsigned char use_elenc2;
   unsigned char use_pss;
@@ -367,12 +371,12 @@ struct CommandDataStruct {
 
   double twist_default;
   double twist_limit;
-  
+
   double cal_xmax_mag;
   double cal_xmin_mag;
   double cal_ymax_mag;
   double cal_ymin_mag;
-  
+
   double cal_off_pss1;
   double cal_off_pss2;
   double cal_off_pss3;
@@ -528,7 +532,7 @@ struct CommandDataStruct {
   uint8_t thermveto; /* veto for thermal reasons */
   uint8_t mce_power; /* MCE power banks are off (will also veto MCEs) */
   int thermveto_veto; /* veto the vetoing */
-  
+
   /* bolo stats control */
   double bolo_filt_freq;
   double bolo_filt_bw;

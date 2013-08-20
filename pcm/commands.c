@@ -495,6 +495,42 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case hub232_cycle:
       CommandData.power.hub232_off = PCYCLE_HOLD_LEN;
       break;
+    case pv_data2_145_on:
+      CommandData.power.pv_data2_145_off = 0;
+      break;
+    case pv_data2_145_off:
+      CommandData.power.pv_data2_145_off = -1;
+      break;
+    case pv_data2_145_cycle:
+      CommandData.power.pv_data2_145_off = PCYCLE_HOLD_LEN;
+      break;
+    case pv_data2_236_on:
+      CommandData.power.pv_data2_236_off = 0;
+      break;
+    case pv_data2_236_off:
+      CommandData.power.pv_data2_236_off = -1;
+      break;
+    case pv_data2_236_cycle:
+      CommandData.power.pv_data2_236_off = PCYCLE_HOLD_LEN;
+      break;
+    case pv_data3_245_on:
+      CommandData.power.pv_data3_245_off = 0;
+      break;
+    case pv_data3_245_off:
+      CommandData.power.pv_data3_245_off = -1;
+      break;
+    case pv_data3_245_cycle:
+      CommandData.power.pv_data3_245_off = PCYCLE_HOLD_LEN;
+      break;
+    case pv_data3_136_on:
+      CommandData.power.pv_data3_136_off = 0;
+      break;
+    case pv_data3_136_off:
+      CommandData.power.pv_data3_136_off = -1;
+      break;
+    case pv_data3_136_cycle:
+      CommandData.power.pv_data3_136_off = PCYCLE_HOLD_LEN;
+      break;
     case mcc1_on:
       CommandData.power.mcc1.set_count = LATCH_PULSE_LEN;
       CommandData.power.mcc1.rst_count = 0;
@@ -1016,7 +1052,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.Y = 0;
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.vaz = rvalues[0]; /* az speed */
-      CommandData.pointing_mode.del = 0; 
+      CommandData.pointing_mode.del = 0;
       CommandData.pointing_mode.h = 0;
       CommandData.pointing_mode.is_turn_around = 0;
       break;
@@ -1147,7 +1183,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.cal_xmax_mag = rvalues[0];
       CommandData.cal_xmin_mag = rvalues[1];
       CommandData.cal_ymax_mag = rvalues[2];
-      CommandData.cal_ymin_mag = rvalues[3];      
+      CommandData.cal_ymin_mag = rvalues[3];
       break;
 
     case pss_off_cal:
@@ -1967,7 +2003,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case mce_veto:
       if (ivalues[0] == 0) /* everybody */
         CommandData.squidveto = (1U << NUM_MCE) - 1; /* set all bits */
-      else 
+      else
         CommandData.squidveto |= (1U << (ivalues[0] - 1));
       break;
     case mce_unveto:
@@ -2308,7 +2344,7 @@ void InitCommandData()
   CommandData.t_set[3] = -15.0; // star el
   CommandData.t_set[4] = 5.0; // mt_tavco
   CommandData.t_set[5] = -20.0; // mot valve
-  
+
   CommandData.table.tableGain.P = 6652;  //thousandths
   CommandData.table.tableGain.I = 302;   //ten-thousandths
   CommandData.table.tableGain.D = 13520; //hundredths

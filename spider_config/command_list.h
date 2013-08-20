@@ -37,7 +37,7 @@
 #define GR_BIAS         0x00000020
 #define GR_VETO         0x00000040
 #define GR_LOCK         0x00000080
-#define GR_GYPWR        0x00000100  
+#define GR_GYPWR        0x00000100
 #define GR_GAIN         0x00000200
 #define GR_SCTAB        0x00000400
 #define GR_CRYO_HEAT    0x00000800
@@ -93,9 +93,8 @@ enum singleCommand {
   ofpch_1_gy_off,    ofpch_1_gy_on,     ofpch_2_gy_off,    ofpch_2_gy_on,
   ofroll_1_gy_cycle, ofroll_2_gy_cycle, ofyaw_1_gy_cycle,  ofyaw_2_gy_cycle,
   ofpch_1_gy_cycle,  ofpch_2_gy_cycle,  gybox_off,         gybox_on,
-  hub232_off,        hub232_on,         gybox_cycle,
-  reap_itsy,         reap_bitsy,        
-  antisun,           blast_rocks,       blast_sucks,
+  hub232_off,        hub232_on,         gybox_cycle,       reap_itsy,
+  reap_bitsy,        antisun,           blast_rocks,       blast_sucks,
   at_float,          not_at_float,      el_auto_gyro,
   halt_itsy,         halt_bitsy,        restore_piv,
   reset_rw,          reset_piv,         reset_elev,
@@ -106,7 +105,7 @@ enum singleCommand {
   thegood_run,       thebad_run,        theugly_run,       table_track,
   hwp_step,          hwp_repoll,        sftv_on,           sftv_off,
   sftv_atm_open,     sftv_atm_close,    sftv_pump_open,    sftv_pump_close,
-  sftv_atm_stop,     sftv_pump_stop,    
+  sftv_atm_stop,     sftv_pump_stop,
   //theo heater commands
   hk_mt_bottom_heat_on,   hk_mt_bottom_heat_off,
   hk_sft_lines_heat_on,   hk_sft_lines_heat_off,
@@ -132,6 +131,10 @@ enum singleCommand {
   mcc6_on,           mcc6_off,          mcc6_cycle,
   get_superslow,     thermveto_enable,  thermveto_disable,
   mcc_wdog_enable,   mcc_wdog_disable,  restart_reset_on, restart_reset_off,
+  pv_data2_145_on, pv_data2_145_off, pv_data2_145_cycle,
+  pv_data2_236_on, pv_data2_236_off, pv_data2_236_cycle,
+  pv_data3_245_on, pv_data3_245_off, pv_data3_245_cycle,
+  pv_data3_136_on, pv_data3_136_off, pv_data3_136_cycle,
 
   /* DON'T PUT ANYTHING BELOW THIS */
   xyzzy, N_SCOMMANDS /* SENTINAL: this must be the last thing in this list */
@@ -144,12 +147,11 @@ enum multiCommand {
   set_scan_params,
   az_el_trim,        drift,             el_gain,           el_twist,
   pivot_gain,        ra_dec_goto,       ra_dec_set,        oth_set,
-  arraystat_oth,     
   set_heaters,       tdrss_bw,          iridium_bw,        pilot_bw,
   timeout,           slot_sched,        az_gyro_offset,
   cov_gps,           reset_adc,         hk_cycle_params,   hk_burp_params_1,
   hk_auto_cycle_on,  hk_auto_cycle_off, hk_fridge_cycle,   hk_burp_params_2,
-  el_gyro_offset,    slew_veto,
+  el_gyro_offset,    slew_veto,         arraystat_oth,
   motors_verbose,    get_mce_param,
   thegood_any,        thegood_settrig_timed,
   thegood_exp_params, thegood_focus_res, thegood_focus_range,
@@ -167,8 +169,7 @@ enum multiCommand {
   theugly_maxblobs,   theugly_grid,      theugly_thresh,   theugly_mdist,
   theugly_lens_any,   theugly_lens_move,  rsc_trig_wait,
   thegood_lens_params,thebad_lens_params,   theugly_lens_params, bsc_trig_delay,
-  table_gain,        table_goto,        table_drift,
-  ants_gps,          
+  table_gain,        table_goto,        table_drift,       ants_gps,
   hwp_vel,           hwp_i,             hwp_move,          hwp_general,
   hk_pump_heat_on,   hk_pump_heat_off,  hk_heat_switch_on, hk_heat_switch_off,
   hk_ssa_heat_on,    hk_ssa_heat_off,   hk_htr1_heat_on,   hk_htr1_heat_off,
@@ -184,7 +185,7 @@ enum multiCommand {
   hwp_bias_on,        hwp_bias_off,      mce_row_len,       mce_num_rows,
   mce_data_rate,      bset,              set_piv_mode,
   data_mode_bits,     mag_cal,           pss_off_cal,       pss_d_cal,
-  beam_map, //TODO: get rid of beam_map before flight 
+  beam_map, //TODO: get rid of beam_map before flight
 
   /* mce stuff */
   send_exptcfg, mce_wb, acq_iv_curve, send_iv_curve, send_tuning, use_tuning,

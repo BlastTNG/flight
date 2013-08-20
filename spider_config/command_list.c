@@ -191,7 +191,7 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(gps_cycle), "power cycle the dGPS", GR_POWER | CONFIRM},
   {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER | GR_GYPWR},
   {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER | GR_GYPWR},
-  {COMMAND(gybox_cycle), "power cycle the digital gyros' box", 
+  {COMMAND(gybox_cycle), "power cycle the digital gyros' box",
    GR_POWER | GR_GYPWR},
   {COMMAND(ofroll_1_gy_off), "turn off ofroll_1_gy", GR_GYPWR},
   {COMMAND(ofroll_1_gy_on), "turn on ofroll_1_gy", GR_GYPWR},
@@ -251,9 +251,9 @@ const struct scom scommands[N_SCOMMANDS] = {
     GR_IFPOWER | CONFIRM},
   {COMMAND(if_charge_on), "turn on the inner frame charge controller",
     GR_IFPOWER},
-  {COMMAND(of_charge_cycle), "power cycle the outer frame charge controller", 
+  {COMMAND(of_charge_cycle), "power cycle the outer frame charge controller",
     GR_POWER | CONFIRM},
-  {COMMAND(if_charge_cycle), "power cycle the inner frame charge controller", 
+  {COMMAND(if_charge_cycle), "power cycle the inner frame charge controller",
     GR_IFPOWER | CONFIRM},
 
   {COMMAND(mce23_on), "turn on MCE power supply for X2 and X3", GR_MCEPWR},
@@ -271,6 +271,26 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mce15_cycle), "power cycle MCE power supply for X1 and X5",
     GR_MCEPWR},
 
+  {COMMAND(pv_data2_145_on), "turn on PV /data2 for MCE1,4,5", GR_MCEPWR},
+  {COMMAND(pv_data2_145_off), "turn off PV /data2 for MCE1,4,5", GR_MCEPWR},
+  {COMMAND(pv_data2_145_cycle), "power cycle PV /data2 for MCE1,4,5",
+    GR_MCEPWR},
+
+  {COMMAND(pv_data2_236_on), "turn on PV /data2 for MCE2,3,6", GR_MCEPWR},
+  {COMMAND(pv_data2_236_off), "turn off PV /data2 for MCE2,3,6", GR_MCEPWR},
+  {COMMAND(pv_data2_236_cycle), "power cycle PV /data2 for MCE2,3,6",
+    GR_MCEPWR},
+
+  {COMMAND(pv_data3_245_on), "turn on PV /data3 for MCE2,4,5", GR_MCEPWR},
+  {COMMAND(pv_data3_245_off), "turn off PV /data3 for MCE2,4,5", GR_MCEPWR},
+  {COMMAND(pv_data3_245_cycle), "power cycle PV /data3 for MCE2,4,5",
+    GR_MCEPWR},
+
+  {COMMAND(pv_data3_136_on), "turn on PV /data3 for MCE1,3,6", GR_MCEPWR},
+  {COMMAND(pv_data3_136_off), "turn off PV /data3 for MCE1,3,6", GR_MCEPWR},
+  {COMMAND(pv_data3_136_cycle), "power cycle PV /data3 for MCE1,3,6",
+    GR_MCEPWR},
+
   {COMMAND(mcc1_on), "turn on MCC 1", GR_MCEPWR},
   {COMMAND(mcc1_off), "turn off MCC 1", GR_MCEPWR},
   {COMMAND(mcc1_cycle), "power cycle MCC 1", GR_MCEPWR},
@@ -282,15 +302,15 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mcc3_on), "turn on MCC 3", GR_MCEPWR},
   {COMMAND(mcc3_off), "turn off MCC 3", GR_MCEPWR},
   {COMMAND(mcc3_cycle), "power cycle MCC 3", GR_MCEPWR},
-  
+
   {COMMAND(mcc4_on), "turn on MCC 4", GR_MCEPWR},
   {COMMAND(mcc4_off), "turn off MCC 4", GR_MCEPWR},
   {COMMAND(mcc4_cycle), "power cycle MCC 4", GR_MCEPWR},
-  
+
   {COMMAND(mcc5_on), "turn on MCC 5", GR_MCEPWR},
   {COMMAND(mcc5_off), "turn off MCC 5", GR_MCEPWR},
   {COMMAND(mcc5_cycle), "power cycle MCC 5", GR_MCEPWR},
-  
+
   {COMMAND(mcc6_on), "turn on MCC 6", GR_MCEPWR},
   {COMMAND(mcc6_off), "turn off MCC 6", GR_MCEPWR},
   {COMMAND(mcc6_cycle), "power cycle MCC 6", GR_MCEPWR},
@@ -298,15 +318,15 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(sync_on), "turn on the sync box", GR_MCEPWR},
   {COMMAND(sync_off), "turn off the sync box", GR_MCEPWR},
   {COMMAND(sync_cycle), "power cycle the sync box", GR_MCEPWR},
-  
+
   {COMMAND(hwp_on), "turn on the HWP rotators", GR_IFPOWER},
   {COMMAND(hwp_off), "turn off the HWP rotators", GR_IFPOWER},
   {COMMAND(hwp_cycle), "power cycle HWP rotators", GR_IFPOWER},
-  
+
   {COMMAND(hk_preamp_on), "turn on the HK preamp crate", GR_IFPOWER},
   {COMMAND(hk_preamp_off), "turn off the HK preamp crate", GR_IFPOWER},
   {COMMAND(hk_preamp_cycle), "power cycle the HK preamp crate", GR_IFPOWER},
-  
+
   {COMMAND(reset_rw), "reset the serial connection to the RW controller",
     GR_GAIN},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller",
@@ -361,11 +381,11 @@ const struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(halt_itsy), "ask MCP to halt *ITSY* MCC", GR_MISC | CONFIRM},
   {COMMAND(halt_bitsy), "ask MCP to halt *BITSY* MCC", GR_MISC | CONFIRM},
-  {COMMAND(reap_itsy), "ask MCP to reap the *ITSY* watchdog tickle", 
+  {COMMAND(reap_itsy), "ask MCP to reap the *ITSY* watchdog tickle",
     GR_MISC | CONFIRM},
-  {COMMAND(reap_bitsy), "ask MCP to reap the *BITSY* watchdog tickle", 
+  {COMMAND(reap_bitsy), "ask MCP to reap the *BITSY* watchdog tickle",
     GR_MISC | CONFIRM},
-  {COMMAND(bbc_sync_ext), "Set BBC to external (sync box) mode", 
+  {COMMAND(bbc_sync_ext), "Set BBC to external (sync box) mode",
     GR_TIMING | CONFIRM},
   {COMMAND(bbc_sync_int), "Set BBC to internal sync mode", GR_TIMING | CONFIRM},
   {COMMAND(bbc_sync_auto),
@@ -417,30 +437,30 @@ const struct scom scommands[N_SCOMMANDS] = {
   //Star Camera table
   {COMMAND(table_track), "Put the table in track mode", GR_SCTAB},
   //Theo heater housekeeping commands
-  {COMMAND(hk_mt_bottom_heat_on), 
+  {COMMAND(hk_mt_bottom_heat_on),
    "Turn on Theo's MT Bottom heaters. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_mt_bottom_heat_off), 
+  {COMMAND(hk_mt_bottom_heat_off),
    "Turn off Theo's MT Bottom heaters. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_sft_lines_heat_on), 
+  {COMMAND(hk_sft_lines_heat_on),
    "Turn on Theo's SFT fill and vent line heaters. Disable pulse",
    GR_THEO_HEAT},
-  {COMMAND(hk_sft_lines_heat_off), 
+  {COMMAND(hk_sft_lines_heat_off),
    "Turn off Theo's SFT fill and vent line heaters. Disable pulse",
    GR_THEO_HEAT},
-  {COMMAND(hk_capillary_heat_on), 
+  {COMMAND(hk_capillary_heat_on),
    "Turn on Theo's capillary heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_capillary_heat_off), 
+  {COMMAND(hk_capillary_heat_off),
    "Turn off Theo's capillary heater. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx_heat_on), 
+  {COMMAND(hk_vcs2_hx_heat_on),
    "Turn on Theo's VCS2 HX heaters. Disable pulse", GR_THEO_HEAT},
-  {COMMAND(hk_vcs2_hx_heat_off), 
+  {COMMAND(hk_vcs2_hx_heat_off),
    "Turn off Theo's VCS2 HX heaters. Disable pulse", GR_THEO_HEAT},
   {COMMAND(hk_vcs1_hx_heat_on),
    "Turn on Theo's VCS1 HX heaters. Disable pulse", GR_THEO_HEAT},
   {COMMAND(hk_vcs1_hx_heat_off),
    "Turn off Theo's VCS1 HX heaters. Disable pulse", GR_THEO_HEAT},
   {COMMAND(hk_mt_lines_heat_on),
-   "Turn on Theo's MT fill and vent line heaters. Disable pulse", 
+   "Turn on Theo's MT fill and vent line heaters. Disable pulse",
    GR_THEO_HEAT},
   {COMMAND(hk_mt_lines_heat_off),
    "Turn off Theo's MT fill and vent line heaters. Disable pulse",
@@ -507,7 +527,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Elevation (deg)", 0, 90, 'f', "EL"}
     }
   },
-  
+
   {COMMAND(mag_cal), "set magnetometer calibration", GR_TRIM, 4,
     {
       {"Max X", -65535, 65535, 'f', "cal_xmax_mag"},
@@ -516,7 +536,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Min Y", -65535, 65535, 'f', "cal_ymin_mag"}
     }
   }, // 10 10 10.5 10.34
-  
+
   {COMMAND(pss_off_cal), "set pss offsets", GR_TRIM, 6,
     {
       {"Offset 1", -100.0, 100.0, 'f', "CAL_OFF_PSS1"},
@@ -566,7 +586,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Centre (deg)", -90, 90, 'f', "DEC"}
     }
   },
-  {COMMAND(set_scan_params), "set common scan parameters for flight", 
+  {COMMAND(set_scan_params), "set common scan parameters for flight",
    GR_POINT, 7,
     {
       {"Az Scan Accel (deg/s^2)",   0,  2, 'f', "ACCEL_AZ"},
@@ -578,7 +598,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Az Time Delay (frames)",     0.0,  10.0, 'f', "DELAY_AZ"}
     }
   },
-  {COMMAND(spider_scan), "scan in azimuth within a quad region in RA/Dec", 
+  {COMMAND(spider_scan), "scan in azimuth within a quad region in RA/Dec",
    GR_POINT, 10,
     {
       {"RA of Corner 1 (h)",        0, 24, 'f', "RA_1_P"},
@@ -600,12 +620,12 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"scan az centre (deg)",        0, 360,'f', "AZ"},
       {"scan elevation (deg)",        15, 50, 'f', "EL"},
     }
-  },   
+  },
   /* TODO FIXME HACK: Strip this out for flight. Axe it. Eliminate. */
   {COMMAND(beam_map), "hack sine_scan into const. vel. az scan + el-stepping",
    GR_POINT, 6,
     {
-      {"az scan speed (deg/s)",             0.0,  10.0, 'f', "VEL_AZ_P"}, 
+      {"az scan speed (deg/s)",             0.0,  10.0, 'f', "VEL_AZ_P"},
       {"az scan centre (deg)",              0.0, 360.0, 'f', "AZ"},
       {"az scan width (peak-to-peak, deg)", 0.0, 180.0, 'f', "W_P"},
       {"el scan height (deg)",              0.0,  25.0, 'f', "NONE"},
@@ -613,14 +633,14 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {" el starting elevation (deg)",     15.0,  50.0, 'f', "EL"},
     }
   },
-    
+
   {COMMAND(ra_dec_set), "define RA/Dec of current position", GR_TRIM, 2,
     {
       {"Current RA (h)",      0, 24, 'f', "RA"},
       {"Current Dec (deg)", -90, 90, 'f', "DEC"}
     }
   },
-  {COMMAND(pivot_gain), 
+  {COMMAND(pivot_gain),
    "pivot gains ([v] = velocity mode only, [t] = torque mode only)", GR_GAIN, 7,
     {
       {"RW Set Point (dps)",   -500, 500, 'f', "SET_RW"},
@@ -654,7 +674,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"starboard motor pulse rate (Hz)", -10000.0, 10000.0, 'f', "STEP_2_EL"}
     }
   },
-  {COMMAND(el_rel_move), "El relative move, separate for each side", 
+  {COMMAND(el_rel_move), "El relative move, separate for each side",
    GR_POINT, 4,
     {
       {"port distance (deg)", -1.0, 1.0, 'f', "DEL_RELMOVE_PORT"},
@@ -770,7 +790,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Channel Set", 0, 6, 'i', "channelset_oth"}
     }
   },
-  
+
   {COMMAND(arraystat_oth), "OTH Link array stats allocation", GR_TELEM, 1,
     {
       {"N Array Stats", 0, 10000, 'i', "n_arraystats"}
@@ -862,7 +882,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(hk_pump_heat_off),
-    "Turn off the pump (charcoal) heater. Disable autocycle or servo", 
+    "Turn off the pump (charcoal) heater. Disable autocycle or servo",
     GR_CRYO_HEAT, 1,
     {
       {CHOOSE_INSERT_PARAM}
@@ -1016,7 +1036,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {"Settle time (s)",                     0, USHRT_MAX,  'i', ""}
     }
   },
-  {COMMAND(hk_pump_servo_on), 
+  {COMMAND(hk_pump_servo_on),
       "Enable pump servo mode: maintain pump temperature between setpoints.",
       GR_CRYO_HEAT, 3,
     {
@@ -1112,7 +1132,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thegood_focus_range), "set The Good autofocus range", GR_SCGOOD, 1,
     {
-      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_g"} 
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_g"}
     }
   },
   {COMMAND(thegood_bad_pix), "Indicate pixel to ignore on The Good", GR_SCGOOD,
@@ -1202,7 +1222,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(thebad_focus_range), "set The Bad autofocus range", GR_SCBAD, 1,
     {
-      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_b"} 
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_b"}
     }
   },
   {COMMAND(thebad_bad_pix), "Indicate pixel to ignore on The Bad", GR_SCBAD, 3,
@@ -1285,7 +1305,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(theugly_focus_range), "set The Ugly autofocus range", GR_SCUGLY, 1,
     {
-      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_u"} 
+      {"Range (inverse fraction of total range)", 0, USHRT_MAX, 'i', "foc_rng_u"}
     }
   },
   {COMMAND(theugly_bad_pix), "Indicate pixel to ignore on The Ugly", GR_SCUGLY,
@@ -1734,7 +1754,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
     {
       {CHOOSE_INSERT_NO_ALL},
       {"Column", 0, 15, 'i', "NONE"},
-      {"P Gain", 0, 65535, 'i', "NONE"}, 
+      {"P Gain", 0, 65535, 'i', "NONE"},
       {"I Gain", 0, 65535, 'i', "NONE"},
       {"D Gain", 0, 65535, 'i', "NONE"},
       {MCE_ACTION_PARAM(4,daction_names)},
@@ -1746,7 +1766,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
       {CHOOSE_INSERT_NO_ALL},
       {"Column", 0, 15, 'i', "NONE"},
       {"Row", 0, 32, 'i', "NONE"},
-      {"P Gain", 0, 65535, 'i', "NONE"}, 
+      {"P Gain", 0, 65535, 'i', "NONE"},
       {"I Gain", 0, 65535, 'i', "NONE"},
       {"D Gain", 0, 65535, 'i', "NONE"},
     }
@@ -1754,7 +1774,7 @@ const struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(servo_pid_frail), "Set the frail servo gains", GR_DET | MCECMD, 4,
     {
       {CHOOSE_INSERT_NO_ALL},
-      {"P Gain", 0, 65535, 'i', "1"}, 
+      {"P Gain", 0, 65535, 'i', "1"},
       {"I Gain", 0, 65535, 'i', "2"},
       {"D Gain", 0, 65535, 'i', "3"},
     }
