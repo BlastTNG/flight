@@ -762,6 +762,7 @@ struct ChannelStruct SlowChannels[] = {
   //this may be unused because of the new program
   {"switch_grp2",  'w',  ACS1_D,  3,         1.0,             0.0, 'u', U_NONE},
   {"switch_misc",  'w',  ACS1_D,  4,         1.0,             0.0, 'u', U_NONE},
+  {"switch_pv",    'w',  ACS1_D,  5,         1.0,             0.0, 'u', U_NONE},
   {"heat_gy",      'w',  ACS1_D,  6,         1.0,             0.0, 'u', U_NONE},
 
 /* ACS1 Analog card 1 */

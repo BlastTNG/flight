@@ -445,11 +445,13 @@ void ControlPower(void) {
   static struct NiosStruct* latchingAddr[2];
   static struct NiosStruct* switchGyAddr;
   static struct NiosStruct* switchMiscAddr;
+  static struct NiosStruct* switchPvAddr;
   static struct NiosStruct* ifPwrAddr;
   static struct NiosStruct* mcePowerAddr;
   /* grp2 = MCC and charge controller relays */
   static struct NiosStruct* switchGrp2Addr;
   int latch0 = 0, latch1 = 0, gybox = 0, misc = 0, ifpwr = 0, grp2 = 0;
+  int pv = 0;
   int i;
 
   if (firsttime) {
@@ -460,31 +462,11 @@ void ControlPower(void) {
     mcePowerAddr = GetNiosAddr("mce_power");
     switchGyAddr = GetNiosAddr("switch_gy");
     switchMiscAddr = GetNiosAddr("switch_misc");
+    switchPvAddr = GetNiosAddr("switch_pv");
     switchGrp2Addr = GetNiosAddr("switch_grp2");
   }
 
   /* misc */
-  if (CommandData.power.hub232_off) {
-    if (CommandData.power.hub232_off > 0) CommandData.power.hub232_off--;
-    misc |= 0x08;
-  }
-
-  //NB: the bit for lock power is asserted with the motors are ON
-  if (CommandData.power.lock_off) {
-    if (CommandData.power.lock_off > 0) CommandData.power.lock_off--;
-    misc &= ~0x20;
-  } else
-    misc |= 0x20;
-
-  if (CommandData.power.sync.set_count > 0) {
-    CommandData.power.sync.set_count--;
-    if (CommandData.power.sync.set_count < LATCH_PULSE_LEN) misc |= 0x40;
-  }
-  if (CommandData.power.sync.rst_count > 0) {
-    CommandData.power.sync.rst_count--;
-    if (CommandData.power.sync.rst_count < LATCH_PULSE_LEN) misc |= 0x80;
-  }
-
   if (CommandData.power.pv_data2_145_off) {
     if (CommandData.power.pv_data2_145_off > 0)
       CommandData.power.pv_data2_145_off--;
@@ -503,10 +485,31 @@ void ControlPower(void) {
     misc |= 0x04;
   }
 
+  if (CommandData.power.hub232_off) {
+    if (CommandData.power.hub232_off > 0) CommandData.power.hub232_off--;
+    misc |= 0x08;
+  }
+
   if (CommandData.power.pv_data3_136_off) {
     if (CommandData.power.pv_data3_136_off > 0)
       CommandData.power.pv_data3_136_off--;
-    misc |= 0x10;
+    pv = 1; /* this is bit 0x10 on the MISC group */
+  }
+
+  //NB: the bit for lock power is asserted with the motors are ON
+  if (CommandData.power.lock_off) {
+    if (CommandData.power.lock_off > 0) CommandData.power.lock_off--;
+    misc &= ~0x20;
+  } else
+    misc |= 0x20;
+
+  if (CommandData.power.sync.set_count > 0) {
+    CommandData.power.sync.set_count--;
+    if (CommandData.power.sync.set_count < LATCH_PULSE_LEN) misc |= 0x40;
+  }
+  if (CommandData.power.sync.rst_count > 0) {
+    CommandData.power.sync.rst_count--;
+    if (CommandData.power.sync.rst_count < LATCH_PULSE_LEN) misc |= 0x80;
   }
 
   if (CommandData.power.charge.set_count > 0) {
@@ -740,6 +743,7 @@ void ControlPower(void) {
   WriteData(mcePowerAddr, CommandData.mce_power, NIOS_QUEUE);
   WriteData(switchGyAddr, gybox, NIOS_QUEUE);
   WriteData(switchMiscAddr, misc, NIOS_QUEUE);
+  WriteData(switchPvAddr, pv, NIOS_QUEUE);
   WriteData(switchGrp2Addr, grp2, NIOS_QUEUE);
 }
 

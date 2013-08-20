@@ -30,32 +30,32 @@
 #define N_GROUPS 27
 
 #define GR_POINT        0x00000001
-#define GR_ELECT        0x00000002
+#define GR_SCTAB        0x00000002
 #define GR_HWPR         0x00000004
 #define GR_TRIM         0x00000008
-#define GR_SFTV         0x00000010
-#define GR_BIAS         0x00000020
+#define GR_SCGOOD       0x00000010
+#define GR_SFTV         0x00000020
 #define GR_VETO         0x00000040
-#define GR_LOCK         0x00000080
-#define GR_GYPWR        0x00000100
+#define GR_SCBAD        0x00000080
+#define GR_BIAS         0x00000100
 #define GR_GAIN         0x00000200
-#define GR_SCTAB        0x00000400
+#define GR_SCUGLY       0x00000400
 #define GR_CRYO_HEAT    0x00000800
 #define GR_POWER        0x00001000
-#define GR_SCGOOD       0x00002000
+#define GR_MPC          0x00002000
 #define GR_THEO_HEAT    0x00004000
-#define GR_TELEM        0x00008000
-#define GR_SCBAD        0x00010000
-#define GR_IFPOWER      0x00020000
-#define GR_MCEPWR       0x00040000
-#define GR_SCUGLY       0x00080000
-#define GR_MPC          0x00100000
-#define GR_TUNE         0x00200000
-#define GR_DET          0x00400000
-#define GR_MPCPARAM     0x00800000
-#define GR_MISC         0x01000000
-#define GR_SQUID        0x02000000
-#define GR_TIMING       0x04000000
+#define GR_MOTPWR       0x00008000
+#define GR_MPCPARAM     0x00010000
+#define GR_TELEM        0x00020000
+#define GR_GYPWR        0x00040000
+#define GR_TUNE         0x00080000
+#define GR_LOCK         0x00100000
+#define GR_IFPOWER      0x00200000
+#define GR_SQUID        0x00400000
+#define GR_TIMING       0x00800000
+#define GR_MCCPWR       0x01000000
+#define GR_DET          0x02000000
+#define GR_MISC         0x04000000
 
 #define MCECMD          0x40000000 /* MCE command flag */
 //reserved for CONFIRM  0x80000000
