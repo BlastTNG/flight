@@ -315,9 +315,9 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(mcc6_off), "turn off MCC 6", GR_MCCPWR},
   {COMMAND(mcc6_cycle), "power cycle MCC 6", GR_MCCPWR},
 
-  {COMMAND(sync_on), "turn on the sync box", GR_MCCPWR},
-  {COMMAND(sync_off), "turn off the sync box", GR_MCCPWR},
-  {COMMAND(sync_cycle), "power cycle the sync box", GR_MCCPWR},
+  {COMMAND(sync_on), "turn on the sync box", GR_POWER},
+  {COMMAND(sync_off), "turn off the sync box", GR_POWER},
+  {COMMAND(sync_cycle), "power cycle the sync box", GR_POWER},
 
   {COMMAND(hwp_on), "turn on the HWP rotators", GR_IFPOWER},
   {COMMAND(hwp_off), "turn off the HWP rotators", GR_IFPOWER},
