@@ -20,10 +20,9 @@ struct fieldStreamStruct {
 // el_dest_mc, i_el
 struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS] = {
   { // field set 0
-  {"framenum", 2, 10, AVG, DX, 8, SLOW},
-  {"time",1,5,NOAVG,NODX,8,SLOW},
-  {"time_usec", 5000, 5, NOAVG, NODX, 8,SLOW},
-  //{"framenum",1,1,NOAVG,DX,8,SLOW},
+  {"time",1,1,NOAVG,NODX,8,SLOW},
+  {"time_usec", 5000, 1, NOAVG, NODX, 8,SLOW},
+  {"framenum",1,1,NOAVG,DX,8,SLOW},
   {"bi0_fifo_size", 1, 1, NOAVG, NODX, 16, SLOW},
   {"bbc_fifo_size", 1, 1, NOAVG, NODX, 16, SLOW},
   {"timeout_b",1,1,NOAVG,DX,8,SLOW},
