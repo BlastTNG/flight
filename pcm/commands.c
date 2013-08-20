@@ -534,74 +534,92 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case mcc1_on:
       CommandData.power.mcc1.set_count = LATCH_PULSE_LEN;
       CommandData.power.mcc1.rst_count = 0;
+      CommandData.mccs_off &= ~0x01;
       break;
     case mcc1_off:
       CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
       CommandData.power.mcc1.set_count = 0;
+      CommandData.mccs_off |= 0x01;
       break;
     case mcc1_cycle:
       CommandData.power.mcc1.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.mcc1.rst_count = LATCH_PULSE_LEN;
+      CommandData.mccs_off &= ~0x01;
       break;
     case mcc2_on:
       CommandData.power.mcc2.set_count = LATCH_PULSE_LEN;
       CommandData.power.mcc2.rst_count = 0;
+      CommandData.mccs_off &= ~0x02;
       break;
     case mcc2_off:
       CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
       CommandData.power.mcc2.set_count = 0;
+      CommandData.mccs_off |= 0x02;
       break;
     case mcc2_cycle:
       CommandData.power.mcc2.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.mcc2.rst_count = LATCH_PULSE_LEN;
+      CommandData.mccs_off &= ~0x02;
       break;
     case mcc3_on:
       CommandData.power.mcc3.set_count = LATCH_PULSE_LEN;
       CommandData.power.mcc3.rst_count = 0;
+      CommandData.mccs_off &= ~0x04;
       break;
     case mcc3_off:
       CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
       CommandData.power.mcc3.set_count = 0;
+      CommandData.mccs_off |= 0x04;
       break;
     case mcc3_cycle:
       CommandData.power.mcc3.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.mcc3.rst_count = LATCH_PULSE_LEN;
+      CommandData.mccs_off &= ~0x04;
       break;
     case mcc4_on:
       CommandData.power.mcc4.set_count = LATCH_PULSE_LEN;
       CommandData.power.mcc4.rst_count = 0;
+      CommandData.mccs_off &= ~0x08;
       break;
     case mcc4_off:
       CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
       CommandData.power.mcc4.set_count = 0;
+      CommandData.mccs_off |= 0x08;
       break;
     case mcc4_cycle:
       CommandData.power.mcc4.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.mcc4.rst_count = LATCH_PULSE_LEN;
+      CommandData.mccs_off &= ~0x08;
       break;
     case mcc5_on:
       CommandData.power.mcc5.set_count = LATCH_PULSE_LEN;
       CommandData.power.mcc5.rst_count = 0;
+      CommandData.mccs_off &= ~0x10;
       break;
     case mcc5_off:
       CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
       CommandData.power.mcc5.set_count = 0;
+      CommandData.mccs_off |= 0x10;
       break;
     case mcc5_cycle:
       CommandData.power.mcc5.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.mcc5.rst_count = LATCH_PULSE_LEN;
+      CommandData.mccs_off &= ~0x10;
       break;
     case mcc6_on:
       CommandData.power.mcc6.set_count = LATCH_PULSE_LEN;
       CommandData.power.mcc6.rst_count = 0;
+      CommandData.mccs_off &= ~0x20;
       break;
     case mcc6_off:
       CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
       CommandData.power.mcc6.set_count = 0;
+      CommandData.mccs_off |= 0x20;
       break;
     case mcc6_cycle:
       CommandData.power.mcc6.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.mcc6.rst_count = LATCH_PULSE_LEN;
+      CommandData.mccs_off &= ~0x20;
       break;
 
     /* Inner Frame Power */

@@ -1454,6 +1454,12 @@ static void WatchMCC()
   timeout = (timeout > 0) ? timeout : 25;
 
   for (i=0; i<6; i++) {
+    /* ignore MCCs which have been turned off */
+    if (CommandData.mccs_off & (1U << i)) {
+      mccs_alive &= (1U << i);
+      continue;
+    }
+
     mccSlowCount[i]++;
     if (reboottimer[i] > 0) {
       reboottimer[i]--;

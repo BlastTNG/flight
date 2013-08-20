@@ -528,6 +528,7 @@ struct CommandDataStruct {
 
   /* mcc watchdog enable */
   unsigned short mcc_wdog;
+  int mccs_off; /* mccs which are off */
 
   /* squid vetoing */
   uint8_t squidveto; /* commandable veto */
