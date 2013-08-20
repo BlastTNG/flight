@@ -269,7 +269,7 @@ void* rotaryTableComm(void* arg)
       bprintf(info,"Trying to open table device");
       errorshown=1;
     }
-    tableComm->openConnection(tableComm->getDeviceName());
+    tableComm->openConnection(TABLE_DEVICE);
   }
     
   //turn on motor power
