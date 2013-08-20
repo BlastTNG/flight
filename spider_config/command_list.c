@@ -240,7 +240,7 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
-  {COMMAND(das_off), "turn off the DAS", GR_MCCPWR},
+  {COMMAND(das_off), "turn off the DAS", GR_IFPOWER},
   {COMMAND(das_on), "turn on the DAS", GR_IFPOWER},
   {COMMAND(das_cycle), "power cycle the DAS", GR_IFPOWER},
   {COMMAND(of_charge_off), "turn off the outer frame charge controller",
