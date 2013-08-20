@@ -362,7 +362,7 @@ struct ChannelStruct SlowChannels[] = {
   {"phase_hwp",     'w', HWP_A1,  0,       I2DEG,           0.0, 'u', U_PH_DEG},
 
   // TODO: Give these real names.
-  {"vt_mt_tavco",      'r', HWP_A2, 37, CAL16B(    1.0,           0.0), 'u', U_V_V},
+  {"vt_mt_tavco",  'r', HWP_A2, 37, CAL16B(    1.0,           0.0), 'u', U_V_V},
   {"vt_sftv",      'r', HWP_A2, 39, CAL16B(    1.0,           0.0), 'u', U_V_V},
   {"vt_3_if",      'r', HWP_A2, 41, CAL16B(    1.0,           0.0), 'u', U_V_V},
   {"vt_4_if",      'r', HWP_A2, 43, CAL16B(    1.0,           0.0), 'u', U_V_V},
