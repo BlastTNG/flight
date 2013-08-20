@@ -153,7 +153,7 @@ void ControlHeaters()
     T = ReadCalData(tAddrs[i]);
     T = LutCal(&tLut, T);
  
-    if (T<55) T = 10; // FIXME testing only!
+    if (T<-55) T = 59; // so we can heaters in an emergency
     set_point = CommandData.t_set[i] + 0.1 * pseudoGaussianRand();
     /* Only run these controls if we think the thermometer isn't broken */
     if (T < MAX_TEMP && T > MIN_TEMP && T<set_point) {
