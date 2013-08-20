@@ -105,7 +105,7 @@ enum singleCommand {
   thegood_run,       thebad_run,        theugly_run,       table_track,
   hwp_step,          hwp_repoll,        sftv_on,           sftv_off,
   sftv_atm_open,     sftv_atm_close,    sftv_pump_open,    sftv_pump_close,
-  sftv_atm_stop,     sftv_pump_stop,
+  sftv_atm_stop,     sftv_pump_stop,    sft_pump_on,       sft_pump_off,
   //theo heater commands
   hk_mt_bottom_heat_on,   hk_mt_bottom_heat_off,
   hk_sft_lines_heat_on,   hk_sft_lines_heat_off,

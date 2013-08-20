@@ -327,6 +327,8 @@ struct CommandDataStruct {
     struct latch_pulse sftv;
     int hk_preamp_off;
   } ifpower;
+  
+  unsigned short sft_pump;
 
   unsigned short disable_az;
   unsigned short disable_el;

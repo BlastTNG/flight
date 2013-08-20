@@ -164,6 +164,11 @@ void ControlHeaters()
       }
     }
   }
+  // turn on the SFT pump
+  if (CommandData.sft_pump) {
+    outbits |= (0x01 << (N_HEATERS+7));
+  }
+  
   if (gy_on) {
     WriteData(heatGyAddr, 0x01, NIOS_FLUSH);
   } else {

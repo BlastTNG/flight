@@ -405,6 +405,8 @@ const struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(sftv_pump_open), "open the SFT to its pump", GR_SFTV | CONFIRM},
   {COMMAND(sftv_pump_close), "close the SFT to its pump", GR_SFTV | CONFIRM},
   {COMMAND(sftv_pump_stop), "stop the SFT-pump valve motor", GR_SFTV},
+  {COMMAND(sft_pump_on), "turn on the membrane pump", GR_SFTV},
+  {COMMAND(sft_pump_off), "turn off the membrane pump", GR_SFTV},
   {COMMAND(hwp_repoll), "repoll HWP bus for stepper controllers", GR_HWPR},
   {COMMAND(hwp_panic), "stop all HWP rotators immediately", GR_HWPR},
   {COMMAND(hwp_step), "step the HWPs to their next position", GR_HWPR},

@@ -744,6 +744,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.sftv.goal_pump = sft_do_nothing;
       break;
 
+    case sft_pump_on:
+      CommandData.sft_pump = 1;
+      break;
+    case sft_pump_off:
+      CommandData.sft_pump = 0;
+      break;
+      
     case hwp_panic:
       for (i=0; i<NHWP; i++) CommandData.hwp.mode[i] = hwp_m_panic;
       break;
@@ -2284,6 +2291,8 @@ void InitCommandData()
 
   CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 
+  CommandData.sft_pump = 0;
+  
   CommandData.pointing_mode.nw = 0;
   CommandData.pointing_mode.mode = P_DRIFT;
   CommandData.pointing_mode.el_mode = P_EL_NONE;
