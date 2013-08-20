@@ -466,19 +466,28 @@ void ControlPower(void) {
     switchGrp2Addr = GetNiosAddr("switch_grp2");
   }
 
-  /* misc */
-  if (CommandData.power.pv_data2_145_off) {
-    if (CommandData.power.pv_data2_145_off > 0)
-      CommandData.power.pv_data2_145_off--;
-    misc |= 0x01;
-  }
-
-  if (CommandData.power.pv_data2_236_off) {
-    if (CommandData.power.pv_data2_236_off > 0)
-      CommandData.power.pv_data2_236_off--;
+  /* PV1 */
+  if (CommandData.power.pv_data3_136_off) {
+    if (CommandData.power.pv_data3_136_off > 0)
+      CommandData.power.pv_data3_136_off--;
     misc |= 0x02;
   }
 
+  /* PV2 */
+  if (CommandData.power.pv_data2_236_off) {
+    if (CommandData.power.pv_data2_236_off > 0)
+      CommandData.power.pv_data2_236_off--;
+    misc |= 0x01;
+  }
+
+  /* PV3 */
+  if (CommandData.power.pv_data2_145_off) {
+    if (CommandData.power.pv_data2_145_off > 0)
+      CommandData.power.pv_data2_145_off--;
+    pv = 1; /* this is bit 0x10 on the MISC group */
+  }
+
+  /* PV4 */
   if (CommandData.power.pv_data3_245_off) {
     if (CommandData.power.pv_data3_245_off > 0)
       CommandData.power.pv_data3_245_off--;
@@ -488,12 +497,6 @@ void ControlPower(void) {
   if (CommandData.power.hub232_off) {
     if (CommandData.power.hub232_off > 0) CommandData.power.hub232_off--;
     misc |= 0x08;
-  }
-
-  if (CommandData.power.pv_data3_136_off) {
-    if (CommandData.power.pv_data3_136_off > 0)
-      CommandData.power.pv_data3_136_off--;
-    pv = 1; /* this is bit 0x10 on the MISC group */
   }
 
   //NB: the bit for lock power is asserted with the motors are ON
