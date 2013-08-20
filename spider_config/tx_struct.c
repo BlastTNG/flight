@@ -112,8 +112,8 @@
 struct ChannelStruct WideSlowChannels[] = {
   {"count_1_el", 'r',ACS2_D, 58,            1.0,             0.0, 'U', U_NONE},
   {"count_2_el", 'r',ACS2_D, 60,            1.0,             0.0, 'U', U_NONE},
-  //{"time",       'w', LOOP0,  0,            1.0,             0.0, 'U', U_NONE},
-  //{"time_usec",  'w', LOOP0,  2,            1.0,             0.0, 'U', U_NONE},
+  {"time",       'w', LOOP0,  0,            1.0,             0.0, 'U', U_NONE},
+  {"time_usec",  'w', LOOP0,  2,            1.0,             0.0, 'U', U_NONE},
   {"time_sip",   'w', LOOP0,  4,            1.0,             0.0, 'U', U_NONE},
   {"time_dgps",  'w', LOOP0,  6,            1.0,             0.0, 'U', U_NONE},
   {"lst",        'w', LOOP0,  8,     1.0/3600.0,             0.0, 'U', U_NONE},
@@ -1054,8 +1054,6 @@ struct ChannelStruct WideFastChannels[] = {
   {"ofpch_1_gy",  'r', ACS2_D, 10, DGY32_TO_DPS, -DGY32_OFFSET*DGY32_TO_DPS, 'U', U_V_DPS},
   {"enc_table",   'r', ACS2_D, 54, 360.0/144000.0,           0.0, 'U', U_P_DEG},
 #endif
-  {"time",       'w', LOOP0,  0,            1.0,             0.0, 'U', U_NONE},
-  {"time_usec",  'w', LOOP0,  2,            1.0,             0.0, 'U', U_NONE},
 
 /* housekeeping channels */  /* TODO many can probably be slow */
   {"vr_ntd1_x2_hk",   'r', RTD_A1,  4, CAL32N(       1.129,           0.0), 'U', U_V_V},
