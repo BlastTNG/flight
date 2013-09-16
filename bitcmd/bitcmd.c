@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 	int nc = 0;
 	int group = -1;
 
-	daemon_route = 1; /* route to BIT MCC */
+	daemon_route = 3; /* route to BIT MCC */
 	daemon_fork = 0;  /* fork into background process */
 	
 	/* Parse switches */
@@ -120,7 +120,10 @@ int main(int argc, char *argv[]) {
 	}
 	
 	if (daemonise) Daemonise(daemon_route, daemon_fork);
+	if (daemon_route || daemon_fork) USAGE(0);
 
+	fprintf(stderr, "Unexpected trap in main. Stop.\n");
+	return -1;
 
 
 

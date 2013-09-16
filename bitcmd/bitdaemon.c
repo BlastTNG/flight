@@ -49,6 +49,13 @@ void setDefault(char *cmd, double D); // in cmdlist.c
 double getDefault(char *cmd_in); // in cmdlist.c
 struct sockaddr_in serv_addr, my_addr; // UDP sockets
 
+// error generator
+void err(char *s)
+{
+    perror(s);
+    exit(1);
+}
+
 void SendCmdDefault(int sock, double d){
   char output[512];
 
@@ -166,36 +173,38 @@ int MakeSock(void)
 
 int CreateUDPSock()
 {
-	int sockfd; // socket file descripter
-	struct hostent* the_target;
-	
-	if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
+  int sockfd; // socket file descripter
+  struct hostent* the_target;
+
+  if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
         err("socket");
         
-	// setup host UDP socket
+  // setup host UDP socket
     bzero(&my_addr, sizeof(my_addr));
     my_addr.sin_family = AF_INET;
     my_addr.sin_port = htons(TARGET_PORT);
     my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
- 	if (bind(sockfd, (struct sockaddr *) &my_addr, sizeof(my_addr)) < 0) err("bind");
+  if (bind(sockfd, (struct sockaddr *) &my_addr, sizeof(my_addr)) < 0) err("bind");
 
-	// setup target UDP socket
-	the_target = gethostbyname(target); /* get remote host IP */
+  // setup target UDP socket
+  the_target = gethostbyname(target); /* get remote host IP */
 
-	if (the_target == NULL) 
-	{
-		fprintf(stderr, "host lookup failed for `%s': %s\n", target,
-			hstrerror(h_errno));
-		return -14;
-	}
-	
-	bzero(&serv_addr, sizeof(serv_addr));
+  if (the_target == NULL) 
+  {
+    fprintf(stderr, "host lookup failed for `%s': %s\n", target,
+      hstrerror(h_errno));
+    return -14;
+  }
+
+  bzero(&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(TARGET_PORT);
-	memcpy(&(serv_addr.sin_addr.s_addr), the_target->h_addr, the_target->h_length);
-    
-    return sockfd;
+  memcpy(&(serv_addr.sin_addr.s_addr), the_target->h_addr, the_target->h_length);
+  
+  printf("UDP link to %s estabalished.\n",target);
+  
+  return sockfd;
 }
 
 int UDPRoute(int fd, char* buffer)
@@ -268,7 +277,7 @@ void Daemonise(int route, int no_fork)
   sleep_time.tv_nsec = 10000000; /* 10ms */
 
   /* open our output before daemonising just in case it fails. */
-  if (route == 1) /* UDP socket */
+  if (route == 3) /* UDP socket */
     fd = CreateUDPSock();
   else
     fd = -1;
