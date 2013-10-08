@@ -6,8 +6,8 @@ AUTOMAKE_OPTIONS = foreign
 
 if INSTALL_BIT
 bit_config=$(top_srcdir)/../bit_config
-bitcmd_SOURCES = bitcmd.c $(bit_config)/command_list.c bitdaemon.c paramdefs.c  $(shared)/netcmd.c \
-		   $(bit_config)/command_list.h bitdaemon.h \
+bitcmd_SOURCES = bitcmd.c bitdaemon.c paramdefs.c  $(shared)/netcmd.c \
+		   bitdaemon.h \
 			 $(shared)/netcmd.h
 bitcmd_CPPFLAGS = -D__BIT__ -I$(bit_config)
 BITCMD=bitcmd

@@ -32,4 +32,12 @@ void WriteLogFile(int, char *[], unsigned int);
 extern char err_message[ERR_MESSAGE_LEN];
 extern char host[1024];
 extern char target[1024];
+
+extern unsigned short N_SCOMMANDS;
+extern unsigned short N_MCOMMANDS;
+extern struct scom *scommands;
+extern struct mcom *mcommands;
+extern int N_GROUPS;
+extern char **GroupNames;
+extern char command_list_serial[1024];
 #endif
