@@ -1,7 +1,8 @@
 /* -----------------------------------------------------------------------
  * ------------------------- BIT ADCS MAIN PROGRAM -----------------------
  * -----------------------------------------------------------------------
- * This program is distributed under the GNU General Public License (GPL).
+ * This program is distributed under the GNU General Public License (GPL)
+ * Version 2 or higher.
  *
  * The following was developed in the QNX Momentics IDE and compiled on
  * using QNX RTOS version 6.5.
