@@ -47,7 +47,7 @@
 #include "mcp.h"
 #include "pointing_struct.h"
 #include "starpos.h"
-#include "channels.h"
+#include "channels_tng.h"
 #include "tx.h"
 #include "flcdataswap.h"
 #include "lut.h"
@@ -69,17 +69,13 @@ unsigned int debug = 0;
 short int SouthIAm;
 struct ACSDataStruct ACSData;
 
-unsigned int RxFrameFastSamp;
-unsigned short* slow_data[FAST_PER_SLOW];
 pthread_t watchdog_id;
 
 int StartupVeto = STARTUP_VETO_LENGTH + 1;
 int UsefulnessVeto = 2*STARTUP_VETO_LENGTH;
 int BLASTBusUseful = 0;
 
-static int bi0_fp = -2;
 static int Death = -STARTUP_VETO_LENGTH * 2;
-static int RxFrameIndex;
 
 extern short int InCharge; /* tx.c */
 extern pthread_mutex_t mutex;  //commands.c
@@ -469,20 +465,20 @@ static void Chatter(void* arg)
 
   chatter_buffer.reading = chatter_buffer.writing = 0;
       /* decimal 22 is "Synchronous Idle" in ascii */
-  memset(chatter_buffer.msg, 22, sizeof(char) * FAST_PER_SLOW * 2 * 4);
+  memset(chatter_buffer.msg, 22, sizeof(char) * 20 * 2 * 4);
 
   while (1)
   {
     if (chatter_buffer.writing != ((chatter_buffer.reading - 1) & 0x3))
     {
-      ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * FAST_PER_SLOW * sizeof(char));
+      ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * 20 * sizeof(char));
       if (ch_got == -1)
       {
         bprintf(tfatal, "Error reading from /data/etc/blast/mcp.log (%d)\n", errno);
       }
-      if (ch_got < (2 * FAST_PER_SLOW * sizeof(char)))
+      if (ch_got < (2 * 20 * sizeof(char)))
       {
-        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, (2 * FAST_PER_SLOW * sizeof(char)) - ch_got);
+        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, (2 * 20 * sizeof(char)) - ch_got);
       }
       chatter_buffer.writing = ((chatter_buffer.writing + 1) & 0x3);
     }
@@ -503,108 +499,107 @@ static void GetACS(unsigned short *RxFrame)
   double res_piv;
   int hwpr_pot;
 
-  static struct BiPhaseStruct* ifElgyAddr;
-  static struct BiPhaseStruct* ifRollgyAddr;
-  static struct BiPhaseStruct* ifYawgyAddr;
-  static struct BiPhaseStruct* elRawEncAddr;
-  static struct BiPhaseStruct* elRawIfClinAddr;
-  static struct BiPhaseStruct* xMagAddr;
-  static struct BiPhaseStruct* yMagAddr;
-  static struct BiPhaseStruct* zMagAddr;
-  static struct BiPhaseStruct* velRWAddr;
-  static struct BiPhaseStruct* resPivAddr;
-  static struct BiPhaseStruct* v11PssAddr;
-  static struct BiPhaseStruct* v21PssAddr;
-  static struct BiPhaseStruct* v31PssAddr;
-  static struct BiPhaseStruct* v41PssAddr;
-  static struct BiPhaseStruct* v12PssAddr;
-  static struct BiPhaseStruct* v22PssAddr;
-  static struct BiPhaseStruct* v32PssAddr;
-  static struct BiPhaseStruct* v42PssAddr;
-  static struct BiPhaseStruct* v13PssAddr;
-  static struct BiPhaseStruct* v23PssAddr;
-  static struct BiPhaseStruct* v33PssAddr;
-  static struct BiPhaseStruct* v43PssAddr;
-  static struct BiPhaseStruct* v14PssAddr;
-  static struct BiPhaseStruct* v24PssAddr;
-  static struct BiPhaseStruct* v34PssAddr;
-  static struct BiPhaseStruct* v44PssAddr;
-  static struct BiPhaseStruct* potHwprAddr;
+  static channel_t* ifElgyAddr;
+  static channel_t* ifRollgyAddr;
+  static channel_t* ifYawgyAddr;
+  static channel_t* elRawEncAddr;
+  static channel_t* elRawIfClinAddr;
+  static channel_t* xMagAddr;
+  static channel_t* yMagAddr;
+  static channel_t* zMagAddr;
+  static channel_t* velRWAddr;
+  static channel_t* resPivAddr;
+  static channel_t* v11PssAddr;
+  static channel_t* v21PssAddr;
+  static channel_t* v31PssAddr;
+  static channel_t* v41PssAddr;
+  static channel_t* v12PssAddr;
+  static channel_t* v22PssAddr;
+  static channel_t* v32PssAddr;
+  static channel_t* v42PssAddr;
+  static channel_t* v13PssAddr;
+  static channel_t* v23PssAddr;
+  static channel_t* v33PssAddr;
+  static channel_t* v43PssAddr;
+  static channel_t* v14PssAddr;
+  static channel_t* v24PssAddr;
+  static channel_t* v34PssAddr;
+  static channel_t* v44PssAddr;
+  static channel_t* potHwprAddr;
 
   unsigned int rx_frame_index = 0;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    elRawEncAddr = GetBiPhaseAddr("el_raw_enc");
-    elRawIfClinAddr = GetBiPhaseAddr("el_raw_if_clin");
-    ifElgyAddr = GetBiPhaseAddr("ifel_gy");
-    ifRollgyAddr = GetBiPhaseAddr("ifroll_gy");
-    ifYawgyAddr = GetBiPhaseAddr("ifyaw_gy");
-    xMagAddr = GetBiPhaseAddr("x_mag");
-    yMagAddr = GetBiPhaseAddr("y_mag");
-    zMagAddr = GetBiPhaseAddr("z_mag");
-    velRWAddr = GetBiPhaseAddr("vel_rw");
-    resPivAddr = GetBiPhaseAddr("res_piv");
-    v11PssAddr = GetBiPhaseAddr("v1_1_pss");
-    v21PssAddr = GetBiPhaseAddr("v2_1_pss");
-    v31PssAddr = GetBiPhaseAddr("v3_1_pss");
-    v41PssAddr = GetBiPhaseAddr("v4_1_pss");
-    v12PssAddr = GetBiPhaseAddr("v1_2_pss");
-    v22PssAddr = GetBiPhaseAddr("v2_2_pss");
-    v32PssAddr = GetBiPhaseAddr("v3_2_pss");
-    v42PssAddr = GetBiPhaseAddr("v4_2_pss");
-    v13PssAddr = GetBiPhaseAddr("v1_3_pss");
-    v23PssAddr = GetBiPhaseAddr("v2_3_pss");
-    v33PssAddr = GetBiPhaseAddr("v3_3_pss");
-    v43PssAddr = GetBiPhaseAddr("v4_3_pss");
-    v14PssAddr = GetBiPhaseAddr("v1_4_pss");
-    v24PssAddr = GetBiPhaseAddr("v2_4_pss");
-    v34PssAddr = GetBiPhaseAddr("v3_4_pss");
-    v44PssAddr = GetBiPhaseAddr("v4_4_pss");
-    potHwprAddr = GetBiPhaseAddr("pot_hwpr");
+    elRawEncAddr = channels_find_by_name("el_raw_enc");
+    elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
+    ifElgyAddr = channels_find_by_name("ifel_gy");
+    ifRollgyAddr = channels_find_by_name("ifroll_gy");
+    ifYawgyAddr = channels_find_by_name("ifyaw_gy");
+    xMagAddr = channels_find_by_name("x_mag");
+    yMagAddr = channels_find_by_name("y_mag");
+    zMagAddr = channels_find_by_name("z_mag");
+    velRWAddr = channels_find_by_name("vel_rw");
+    resPivAddr = channels_find_by_name("res_piv");
+    v11PssAddr = channels_find_by_name("v1_1_pss");
+    v21PssAddr = channels_find_by_name("v2_1_pss");
+    v31PssAddr = channels_find_by_name("v3_1_pss");
+    v41PssAddr = channels_find_by_name("v4_1_pss");
+    v12PssAddr = channels_find_by_name("v1_2_pss");
+    v22PssAddr = channels_find_by_name("v2_2_pss");
+    v32PssAddr = channels_find_by_name("v3_2_pss");
+    v42PssAddr = channels_find_by_name("v4_2_pss");
+    v13PssAddr = channels_find_by_name("v1_3_pss");
+    v23PssAddr = channels_find_by_name("v2_3_pss");
+    v33PssAddr = channels_find_by_name("v3_3_pss");
+    v43PssAddr = channels_find_by_name("v4_3_pss");
+    v14PssAddr = channels_find_by_name("v1_4_pss");
+    v24PssAddr = channels_find_by_name("v2_4_pss");
+    v34PssAddr = channels_find_by_name("v3_4_pss");
+    v44PssAddr = channels_find_by_name("v4_4_pss");
+    potHwprAddr = channels_find_by_name("pot_hwpr");
   }
 
-  rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
-      (RxFrame[2] & 0x0000ffff) << 16);
+//  rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
+//      (RxFrame[2] & 0x0000ffff) << 16);
 
-  enc_raw_el = (((double)RxFrame[elRawEncAddr->channel])/DEG2I);
-  vel_rw = (((double)((short)RxFrame[velRWAddr->channel]))*4.0/DEG2I);
-  ifel_gy = (double)((RxFrame[ifElgyAddr->channel])-GY16_OFFSET)*GY16_TO_DPS;
-  ifroll_gy = (double)(RxFrame[ifRollgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
-  ifyaw_gy = (double)(RxFrame[ifYawgyAddr->channel]-GY16_OFFSET)*GY16_TO_DPS;
+  enc_raw_el = ReadCalData(elRawEncAddr);
+  vel_rw = ReadCalData(velRWAddr);
+  ifel_gy = ReadCalData(ifElgyAddr);
+  ifroll_gy = ReadCalData(ifRollgyAddr);
+  ifyaw_gy = ReadCalData(ifYawgyAddr);;
 
-  res_piv = (((double)
-	((short)slow_data[resPivAddr->index][resPivAddr->channel]))/DEG2I);
+  res_piv = ReadCalData(resPivAddr);
 
 #ifndef FAST_MAG
-  x_comp = (double)(slow_data[xMagAddr->index][xMagAddr->channel]);
-  y_comp = (double)(slow_data[yMagAddr->index][yMagAddr->channel]);
+  x_comp = ReadCalData(xMagAddr);
+  y_comp = ReadCalData(yMagAddr);
 #else
-  x_comp = (double)(RxFrame[xMagAddr->channel]);
-  y_comp = (double)(RxFrame[yMagAddr->channel]);
+  x_comp = ReadCalData(xMagAddr);
+  y_comp = ReadCalData(yMagAddr);
 #endif
-  z_comp = (double)(slow_data[zMagAddr->index][zMagAddr->channel]);
+  z_comp = ReadCalData(zMagAddr);
 
-  pss1_i1 = (double)(slow_data[v11PssAddr->index][v11PssAddr->channel]);
-  pss1_i2 = (double)(slow_data[v21PssAddr->index][v21PssAddr->channel]);
-  pss1_i3 = (double)(slow_data[v31PssAddr->index][v31PssAddr->channel]);
-  pss1_i4 = (double)(slow_data[v41PssAddr->index][v41PssAddr->channel]);
-  pss2_i1 = (double)(slow_data[v12PssAddr->index][v12PssAddr->channel]);
-  pss2_i2 = (double)(slow_data[v22PssAddr->index][v22PssAddr->channel]);
-  pss2_i3 = (double)(slow_data[v32PssAddr->index][v32PssAddr->channel]);
-  pss2_i4 = (double)(slow_data[v42PssAddr->index][v42PssAddr->channel]);
-  pss3_i1 = (double)(slow_data[v13PssAddr->index][v13PssAddr->channel]);
-  pss3_i2 = (double)(slow_data[v23PssAddr->index][v23PssAddr->channel]);
-  pss3_i3 = (double)(slow_data[v33PssAddr->index][v33PssAddr->channel]);
-  pss3_i4 = (double)(slow_data[v43PssAddr->index][v43PssAddr->channel]);
-  pss4_i1 = (double)(slow_data[v14PssAddr->index][v14PssAddr->channel]);
-  pss4_i2 = (double)(slow_data[v24PssAddr->index][v24PssAddr->channel]);
-  pss4_i3 = (double)(slow_data[v34PssAddr->index][v34PssAddr->channel]);
-  pss4_i4 = (double)(slow_data[v44PssAddr->index][v44PssAddr->channel]);
-  hwpr_pot = (double)(slow_data[potHwprAddr->index][potHwprAddr->channel]);
+  pss1_i1 = ReadCalData(v11PssAddr);
+  pss1_i2 = ReadCalData(v21PssAddr);
+  pss1_i3 = ReadCalData(v31PssAddr);
+  pss1_i4 = ReadCalData(v41PssAddr);
+  pss2_i1 = ReadCalData(v12PssAddr);
+  pss2_i2 = ReadCalData(v22PssAddr);
+  pss2_i3 = ReadCalData(v32PssAddr);
+  pss2_i4 = ReadCalData(v42PssAddr);
+  pss3_i1 = ReadCalData(v13PssAddr);
+  pss3_i2 = ReadCalData(v23PssAddr);
+  pss3_i3 = ReadCalData(v33PssAddr);
+  pss3_i4 = ReadCalData(v43PssAddr);
+  pss4_i1 = ReadCalData(v14PssAddr);
+  pss4_i2 = ReadCalData(v24PssAddr);
+  pss4_i3 = ReadCalData(v34PssAddr);
+  pss4_i4 = ReadCalData(v44PssAddr);
+  hwpr_pot = ReadCalData(potHwprAddr);
 
-  ACSData.clin_elev = (double)(slow_data[elRawIfClinAddr->index][elRawIfClinAddr->channel]);
+  ACSData.clin_elev = ReadCalData(elRawIfClinAddr);
 
   ACSData.t = mcp_systime(NULL);
   ACSData.mcp_frame = rx_frame_index;
@@ -657,33 +652,33 @@ static void GetCurrents(unsigned short *RxFrame)
   double i_piv;
   double i_tot;
 
-  static struct BiPhaseStruct* i_transAddr;
-  static struct BiPhaseStruct* i_dasAddr;
-  static struct BiPhaseStruct* i_acsAddr;
-  static struct BiPhaseStruct* i_recAddr;
-  static struct BiPhaseStruct* i_scAddr;
-  static struct BiPhaseStruct* i_sbscAddr;
-  static struct BiPhaseStruct* i_stepAddr;
-  static struct BiPhaseStruct* i_flcAddr;
-  static struct BiPhaseStruct* i_gyAddr;
-  static struct BiPhaseStruct* i_rwAddr;
-  static struct BiPhaseStruct* i_elAddr;
-  static struct BiPhaseStruct* i_pivAddr;
+  static channel_t* i_transAddr;
+  static channel_t* i_dasAddr;
+  static channel_t* i_acsAddr;
+  static channel_t* i_recAddr;
+  static channel_t* i_scAddr;
+  static channel_t* i_sbscAddr;
+  static channel_t* i_stepAddr;
+  static channel_t* i_flcAddr;
+  static channel_t* i_gyAddr;
+  static channel_t* i_rwAddr;
+  static channel_t* i_elAddr;
+  static channel_t* i_pivAddr;
 
-  static struct NiosStruct* i_transNios;
-  static struct NiosStruct* i_dasNios;
-  static struct NiosStruct* i_acsNios;
-  static struct NiosStruct* i_recNios;
-  static struct NiosStruct* i_scNios;
-  static struct NiosStruct* i_sbscNios;
-  static struct NiosStruct* i_stepNios;
-  static struct NiosStruct* i_flcNios;
-  static struct NiosStruct* i_gyNios;
-  static struct NiosStruct* i_rwNios;
-  static struct NiosStruct* i_elNios;
-  static struct NiosStruct* i_pivNios;
+  static channel_t* i_transNios;
+  static channel_t* i_dasNios;
+  static channel_t* i_acsNios;
+  static channel_t* i_recNios;
+  static channel_t* i_scNios;
+  static channel_t* i_sbscNios;
+  static channel_t* i_stepNios;
+  static channel_t* i_flcNios;
+  static channel_t* i_gyNios;
+  static channel_t* i_rwNios;
+  static channel_t* i_elNios;
+  static channel_t* i_pivNios;
 
-  static struct NiosStruct* i_totNios;
+  static channel_t* i_totNios;
 
   static int firsttime = 1;
 
@@ -691,100 +686,57 @@ static void GetCurrents(unsigned short *RxFrame)
   
     firsttime = 0;
 
-    i_transAddr = GetBiPhaseAddr("i_trans");
-    i_dasAddr = GetBiPhaseAddr("i_das");
-    i_acsAddr = GetBiPhaseAddr("i_acs");
-    i_recAddr = GetBiPhaseAddr("i_rec");
-    i_scAddr = GetBiPhaseAddr("i_sc");
-    i_sbscAddr = GetBiPhaseAddr("i_sbsc");
-    i_stepAddr = GetBiPhaseAddr("i_step");
-    i_flcAddr = GetBiPhaseAddr("i_flc");
-    i_gyAddr = GetBiPhaseAddr("i_gy");
-    i_rwAddr = GetBiPhaseAddr("i_rw");
-    i_elAddr = GetBiPhaseAddr("i_el");
-    i_pivAddr = GetBiPhaseAddr("i_piv");
+    i_transAddr = channels_find_by_name("i_trans");
+    i_dasAddr = channels_find_by_name("i_das");
+    i_acsAddr = channels_find_by_name("i_acs");
+    i_recAddr = channels_find_by_name("i_rec");
+    i_scAddr = channels_find_by_name("i_sc");
+    i_sbscAddr = channels_find_by_name("i_sbsc");
+    i_stepAddr = channels_find_by_name("i_step");
+    i_flcAddr = channels_find_by_name("i_flc");
+    i_gyAddr = channels_find_by_name("i_gy");
+    i_rwAddr = channels_find_by_name("i_rw");
+    i_elAddr = channels_find_by_name("i_el");
+    i_pivAddr = channels_find_by_name("i_piv");
 
-    i_transNios = GetNiosAddr("i_trans");
-    i_dasNios = GetNiosAddr("i_das");
-    i_acsNios = GetNiosAddr("i_acs");
-    i_recNios = GetNiosAddr("i_rec");
-    i_scNios = GetNiosAddr("i_sc");
-    i_sbscNios = GetNiosAddr("i_sbsc");
-    i_stepNios = GetNiosAddr("i_step");
-    i_flcNios  = GetNiosAddr("i_flc");
-    i_gyNios = GetNiosAddr("i_gy");
-    i_rwNios = GetNiosAddr("i_rw");
-    i_elNios = GetNiosAddr("i_el");
-    i_pivNios = GetNiosAddr("i_piv");
+    i_transNios = channels_find_by_name("i_trans");
+    i_dasNios = channels_find_by_name("i_das");
+    i_acsNios = channels_find_by_name("i_acs");
+    i_recNios = channels_find_by_name("i_rec");
+    i_scNios = channels_find_by_name("i_sc");
+    i_sbscNios = channels_find_by_name("i_sbsc");
+    i_stepNios = channels_find_by_name("i_step");
+    i_flcNios  = channels_find_by_name("i_flc");
+    i_gyNios = channels_find_by_name("i_gy");
+    i_rwNios = channels_find_by_name("i_rw");
+    i_elNios = channels_find_by_name("i_el");
+    i_pivNios = channels_find_by_name("i_piv");
 
-    i_totNios = GetNiosAddr("i_tot");
+    i_totNios = channels_find_by_name("i_tot");
 
   }
 
-  i_trans = (double)(slow_data[i_transAddr->index][i_transAddr->channel])*i_transNios->m + i_transNios->b;
-  i_das = (double)(slow_data[i_dasAddr->index][i_dasAddr->channel])*i_dasNios->m + i_dasNios->b;
-  i_acs = (double)(slow_data[i_acsAddr->index][i_acsAddr->channel])*i_acsNios->m + i_acsNios->b;
-  i_rec = (double)(slow_data[i_recAddr->index][i_recAddr->channel])*i_recNios->m + i_recNios->b;
-  i_sc = (double)(slow_data[i_scAddr->index][i_scAddr->channel])*i_scNios->m + i_scNios->b;
-  i_sbsc = (double)(slow_data[i_sbscAddr->index][i_sbscAddr->channel])*i_sbscNios->m + i_sbscNios->b;
-  i_step = (double)(slow_data[i_stepAddr->index][i_stepAddr->channel])*i_stepNios->m + i_stepNios->b;
-  i_flc = (double)(slow_data[i_flcAddr->index][i_flcAddr->channel])*i_flcNios->m + i_flcNios->b;
-  i_gy = (double)(slow_data[i_gyAddr->index][i_gyAddr->channel])*i_gyNios->m + i_gyNios->b;
-  i_rw = (double)(slow_data[i_rwAddr->index][i_rwAddr->channel])*i_rwNios->m + i_rwNios->b;
-  i_el = (double)(slow_data[i_elAddr->index][i_elAddr->channel])*i_elNios->m + i_elNios->b;
-  i_piv = (double)(slow_data[i_pivAddr->index][i_pivAddr->channel])*i_pivNios->m + i_pivNios->b;
+  i_trans = ReadCalData(i_transAddr);
+  i_das = ReadCalData(i_dasAddr);
+  i_acs = ReadCalData(i_acsAddr);
+  i_rec = ReadCalData(i_recAddr);
+  i_sc = ReadCalData(i_scAddr);
+  i_sbsc = ReadCalData(i_sbscAddr);
+  i_step = ReadCalData(i_stepAddr);
+  i_flc = ReadCalData(i_flcAddr);
+  i_gy = ReadCalData(i_gyAddr);
+  i_rw = ReadCalData(i_rwAddr);
+  i_el = ReadCalData(i_elAddr);
+  i_piv = ReadCalData(i_pivAddr);
 
   i_tot = i_trans + i_das + i_acs + i_rec + i_sc + i_sbsc + i_step + i_flc + i_gy + i_rw + i_el + i_piv;
 
-  WriteData(i_totNios, 1000*i_tot, NIOS_QUEUE);
+  SET_VALUE(i_totNios, 1000*i_tot);
 
 }
 
 #endif
 
-/* fill_Rx_frame: places one 32 bit word into the RxFrame. 
- * Returns true on success */
-static int fill_Rx_frame(unsigned int in_data, unsigned short *RxFrame)
-{
-  static int n_not_found = 0;
-  struct BiPhaseStruct BiPhaseData;
-
-  if (in_data == 0xffffffff)
-    return 1;
-
-  /* discard ADC sync words */
-  if (in_data & BBC_ADC_SYNC)
-    return 1;
-
-  /* words with no write flag are ignored, don't process them */
-  if (~in_data & BBC_WRITE)
-    return 1;
-
-  /* BBC reverse address lookup */
-  BiPhaseData = BiPhaseLookup[BI0_MAGIC(in_data)];
-
-  /* Return error if the lookup failed */
-  if (BiPhaseData.index == -1) {
-    if (++n_not_found > 2)
-      return 0;
-    else
-      return 1;
-  }
-
-  n_not_found = 0;
-
-  /* Discard words we're not saving */
-  if (BiPhaseData.index == DISCARD_WORD)
-    return 1;
-
-  /* Write the data to the local buffers */
-  if (BiPhaseData.index == NOT_MULTIPLEXED)
-    RxFrame[BiPhaseData.channel] = BBC_DATA(in_data);
-  else
-    slow_data[BiPhaseData.index][BiPhaseData.channel] = BBC_DATA(in_data);
-
-  return(1);
-}
 
 #ifndef BOLOTEST
 static void WatchDog (void)
@@ -807,100 +759,6 @@ static void WatchDog (void)
   }
 }
 
-static void write_to_biphase(unsigned short *RxFrame)
-{
-  int i;
-  static unsigned short nothing[BI0_FRAME_SIZE];
-  static unsigned short sync = 0xEB90;
-  static unsigned int do_skip = 0;
-
-  if (bi0_fp == -2) {
-    bi0_fp = open("/dev/bbc_bi0", O_RDWR);
-    if (bi0_fp == -1) {
-      berror(tfatal, "Error opening biphase device");
-    }
-
-    for (i = 0; i < BI0_FRAME_SIZE; i++) {
-      nothing[i] = 0xEEEE;
-    }
-  }
-
-  if ((bi0_fp >= 0) && InCharge) {
-
-    RxFrame[0] = 0xEB90;
-    nothing[0] = CalculateCRC(0xEB90, RxFrame, BiPhaseFrameWords);
-
-    RxFrame[0] = sync;
-    sync = ~sync;
-
-    if (do_skip) {
-      --do_skip;
-    } else {
-      i = write(bi0_fp, RxFrame, BiPhaseFrameWords * sizeof(unsigned short));
-      if (i < 0) {
-        berror(err, "bi-phase write for RxFrame failed");
-      } else if (i != BiPhaseFrameWords * sizeof(unsigned short)) {
-        bprintf(err, "Short write for RxFrame: %i of %u", i,
-            (unsigned int)(BiPhaseFrameWords * sizeof(unsigned short)));
-      }
-
-      i = write(bi0_fp, nothing, (BI0_FRAME_SIZE - BiPhaseFrameWords) *
-          sizeof(unsigned short));
-      if (i < 0) 
-        berror(err, "bi-phase write for padding failed");
-      else if (i != (BI0_FRAME_SIZE - BiPhaseFrameWords)
-          * sizeof(unsigned short))
-        bprintf(err, "Short write for padding: %i of %u", i,
-            (unsigned int)
-              ((BI0_FRAME_SIZE - BiPhaseFrameWords) * sizeof(unsigned short)));
-    }
-
-    CommandData.bi0FifoSize = ioctl(bi0_fp, BBCPCI_IOC_BI0_FIONREAD);
-  }
-}
-
-static void InitFrameBuffer(struct frameBuffer *buffer) {
-  int i,j;
-
-  buffer->i_in = 0;
-  buffer->i_out = 0;
-  for (i = 0; i<BI0_FRAME_BUFLEN; i++) {
-    buffer->framelist[i] = balloc(fatal, BiPhaseFrameWords *
-        sizeof(unsigned short));
-
-    memset(buffer->framelist[i],0,BiPhaseFrameWords*sizeof(unsigned short));
-
-    buffer->slow_data_list[i] = (unsigned short **)balloc(fatal, FAST_PER_SLOW*sizeof(unsigned short *));
-    for (j = 0; j < FAST_PER_SLOW; ++j) {
-      buffer->slow_data_list[i][j] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
-      memset(buffer->slow_data_list[i][j], 0, slowsPerBi0Frame * sizeof(unsigned short));
-    }
-  }
-}
-
-// warning: there is no checking for an overfull buffer.  Just make sure it is big
-// enough that it can never happen.
-static void PushFrameBuffer(struct frameBuffer *buffer, unsigned short *RxFrame) {
-  int i, j, fw, i_in;
-
-  i_in = buffer->i_in + 1;
-  if (i_in>=BI0_FRAME_BUFLEN)
-    i_in = 0;
-
-  fw = BiPhaseFrameWords;
-
-  for (i = 0; i<fw; i++) {
-    buffer->framelist[i_in][i] = RxFrame[i];
-  }
-  
-  for (i=0; i<FAST_PER_SLOW; i++) {
-    for (j=0; j<slowsPerBi0Frame; j++) {
-      buffer->slow_data_list[i_in][i][j] = slow_data[i][j];
-    }
-  }
-  
-  buffer->i_in = i_in;
-}
 
 void ClearBuffer(struct frameBuffer *buffer) {
   buffer->i_out = buffer->i_in;
@@ -943,49 +801,41 @@ unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
   
 #endif
 
-static void zero(unsigned short *RxFrame)
-{
-  int i;
-
-  for (i = 0; i < SLOW_OFFSET + slowsPerBi0Frame; i++)
-    RxFrame[i] = 0;
-}
-
-#ifndef BOLOTEST
-static void BiPhaseWriter(void)
-{
-  unsigned short *frame;
-  
-  nameThread("Bi0");
-  bputs(startup, "Startup\n");
-
-  while (!biphase_is_on)
-    usleep(10000);
-
-  bputs(info, "Veto has ended.  Here we go.\n");
-
-  while (1) {
-    frame = PopFrameBuffer(&bi0_buffer);
-    
-    if (!frame) { 
-      /* Death meausres how long the BiPhaseWriter has gone without receiving
-       * any data -- an indication that we aren't receiving FSYNCs from the
-       * BLASTBus anymore */
-      if (InCharge && (++Death > 25)) {
-        bprintf(err, "Death is reaping the watchdog tickle.");
-        pthread_cancel(watchdog_id);
-      }
-      usleep(10000); // 100 Hz
-    } else {
-      write_to_biphase(frame);
-      if (Death > 0) {
-        Death = 0;
-      }
-    }
-  }
-}
-
-#endif
+//#ifndef BOLOTEST
+//static void BiPhaseWriter(void)
+//{
+//  unsigned short *frame;
+//
+//  nameThread("Bi0");
+//  bputs(startup, "Startup\n");
+//
+//  while (!biphase_is_on)
+//    usleep(10000);
+//
+//  bputs(info, "Veto has ended.  Here we go.\n");
+//
+//  while (1) {
+//    frame = PopFrameBuffer(&bi0_buffer);
+//
+//    if (!frame) {
+//      /* Death meausres how long the BiPhaseWriter has gone without receiving
+//       * any data -- an indication that we aren't receiving FSYNCs from the
+//       * BLASTBus anymore */
+//      if (InCharge && (++Death > 25)) {
+//        bprintf(err, "Death is reaping the watchdog tickle.");
+//        pthread_cancel(watchdog_id);
+//      }
+//      usleep(10000); // 100 Hz
+//    } else {
+//      write_to_biphase(frame);
+//      if (Death > 0) {
+//        Death = 0;
+//      }
+//    }
+//  }
+//}
+//
+//#endif
 
 /******************************************************************/
 /*                                                                */
@@ -1030,15 +880,9 @@ static void CloseBBC(int signo)
 
   endChrgCtrl();  // is this needed?
 #endif
-  RawNiosWrite(0, BBC_ENDWORD, NIOS_FLUSH);
-  RawNiosWrite(BBCPCI_MAX_FRAME_SIZE, BBC_ENDWORD, NIOS_FLUSH);
-  bprintf(err, "System: Closing BBC and Bi0");
-  if (bi0_fp >= 0)
-    close(bi0_fp);
-  if (bbc_fp >= 0)
-    close(bbc_fp);
 
-  ShutdownFrameFile();
+
+//  ShutdownFrameFile();
 
   /* restore default handler and raise the signal again */
   signal(signo, SIG_DFL);
@@ -1131,11 +975,9 @@ int main(int argc, char *argv[])
   pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
 #endif
 
-  if ((bbc_fp = open("/dev/bbcpci", O_RDWR)) < 0)
-    berror(fatal, "System: Error opening BBC");
 
   //populate nios addresses, based off of tx_struct, derived
-  MakeAddressLookups("/data/etc/blast/Nios.map");
+  channels_initialize("/data/etc/blast/channel.map");
 
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
@@ -1154,27 +996,20 @@ int main(int argc, char *argv[])
 
   bprintf(info, "System: Slow Downlink Initialisation");
 
-  InitFrameBuffer(&bi0_buffer);
-  InitFrameBuffer(&hiGain_buffer);
+//  InitFrameBuffer(&bi0_buffer);
+//  InitFrameBuffer(&hiGain_buffer);
 
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
-  InitialiseFrameFile(argv[1][0]);
-  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
+//  InitialiseFrameFile(argv[1][0]);
+//  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
   signal(SIGHUP, CloseBBC);
   signal(SIGINT, CloseBBC);
   signal(SIGTERM, CloseBBC);
   signal(SIGPIPE, SIG_IGN);
 
-  /* Allocate the local data buffers */
-  RxFrame = balloc(fatal, BiPhaseFrameSize);
-
-  for (i = 0; i < FAST_PER_SLOW; ++i) {
-    slow_data[i] = balloc(fatal, slowsPerBi0Frame * sizeof(unsigned short));
-    memset(slow_data[i], 0, slowsPerBi0Frame * sizeof(unsigned short));
-  }
 
 #ifndef BOLOTEST
   pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
@@ -1210,29 +1045,15 @@ int main(int argc, char *argv[])
 
   pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
 
-  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
-  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
+//  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
+//  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
   pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
   start_flc_data_swapper(flc_ip[SouthIAm]);
 
   while (1) {
-    if (read(bbc_fp, (void *)(&in_data), 1 * sizeof(unsigned int)) <= 0)
-      berror(err, "System: Error on BBC read");
-
-    if (!fill_Rx_frame(in_data, RxFrame))
-      bprintf(err, "System: Unrecognised word received from BBC (%08x)",
-          in_data);
-
-    if (IsNewFrame(in_data)) {
-      if (UsefulnessVeto > 0) {
-        UsefulnessVeto--;
-        BLASTBusUseful = 0;
-      } else BLASTBusUseful = 1;
-      if (StartupVeto > 1) {
-        --StartupVeto;
-      } else {
+      sleep(1);
 #ifndef BOLOTEST
         GetACS(RxFrame);
         GetCurrents(RxFrame);
@@ -1240,43 +1061,23 @@ int main(int argc, char *argv[])
 
 #endif
 
-        /* Frame sequencing check */
-        if (StartupVeto) {
-          bputs(info, "System: Startup Veto Ends\n");
-          StartupVeto = 0;
-          Death = 0;
-        } else if (RxFrame[3] != (RxFrameIndex + 1) % FAST_PER_SLOW
-            && RxFrameIndex >= 0) {
-          bprintf(err, "System: Frame sequencing error detected: wanted %i, "
-          "got %i\n", RxFrameIndex + 1, RxFrame[3]);
-        }
-        RxFrameIndex = RxFrame[3];
-
-#if 0 //FastSamp from the PCI card isn't working, use one from a DSP
-      //this is done at the beginning of UpdateBBCFrame
-        /* Save current fastsamp */
-        RxFrameFastSamp = (RxFrame[1] + RxFrame[2] * 0x10000);
-#endif
-
-        UpdateBBCFrame(RxFrame);
-        CommandData.bbcFifoSize = ioctl(bbc_fp, BBCPCI_IOC_BBC_FIONREAD);
 
         /* pushDiskFrame must be called before PushBi0Buffer to get the slow
            data right */
-        pushDiskFrame(RxFrame);
+//        pushDiskFrame(RxFrame);
 #ifndef BOLOTEST
-        if (biphase_is_on) {
-          PushFrameBuffer(&bi0_buffer, RxFrame);
-          PushFrameBuffer(&hiGain_buffer, RxFrame);
-        } else if (biphase_timer < mcp_systime(NULL)) {
-          biphase_is_on = 1;
-        }
-        updateSlowDL();
+//        if (biphase_is_on) {
+//          PushFrameBuffer(&bi0_buffer, RxFrame);
+//          PushFrameBuffer(&hiGain_buffer, RxFrame);
+//        } else if (biphase_timer < mcp_systime(NULL)) {
+//          biphase_is_on = 1;
+//        }
+//        updateSlowDL();
 
 #endif
-        zero(RxFrame);
-      }
-    }
+//        zero(RxFrame);
+
+
   }
   return(0);
 }

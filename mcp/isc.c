@@ -185,7 +185,7 @@ void IntegratingStarCamera(void* parameter)
 {
   fd_set fdr, fdw;
   struct PointingDataStruct MyPointData;
-  int which = (int)parameter;
+  int which = (intptr_t)parameter;
   int waiting_for_ACK = 0;
 
   int sock = -1;
@@ -322,7 +322,7 @@ void IntegratingStarCamera(void* parameter)
         CommandData.ISCState[which].el = MyPointData.el * DEG2RAD;
         CommandData.ISCState[which].lst = MyPointData.lst * SEC2RAD;
         CommandData.ISCState[which].maxSlew = GetNominalVel(MyPointData);
-        CommandData.ISCState[which].MCPFrameNum = RxFrameFastSamp;
+
 
         /* request for one automaticly saved image */
         if (CommandData.ISCControl[which].auto_save) {

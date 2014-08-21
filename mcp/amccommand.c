@@ -771,6 +771,7 @@ void checkAMCStatus(int stat, struct MotorInfoStruct* amcinfo)
     case AMC_INCOMPLETE:
       amcinfo->err |= 0x0008;
       bprintfverb(warning,amcinfo->verbose,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Command was not completed.",amcinfo->motorstr);
+      break;
     case AMC_INVALID:
       amcinfo->err |= 0x0008;
       bprintfverb(warning,amcinfo->verbose,MC_EXTRA_VERBOSE,"%sComm checkAMCStatus: Invalid Command.",amcinfo->motorstr);

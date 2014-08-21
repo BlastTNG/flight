@@ -1,7 +1,7 @@
 #ifndef COMPRESSSTRUCT_H
 #define COMPRESSSTRUCT_H
 
-#include "channels.h"
+#include "channels_tng.h"
 
 #define END_OF_STREAM {"", 0, 0, 0, 0, 0,0}
 #define NOAVG 0

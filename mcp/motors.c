@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "channels.h"
+#include "channels_tng.h"
 #include "tx.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
@@ -305,10 +305,10 @@ static double GetVAz(void)
 /************************************************************************/
 static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
 {
-  static struct NiosStruct* pRWTermPivAddr;
-  static struct NiosStruct* pErrTermPivAddr;
-  static struct NiosStruct* frictTermPivAddr;
-  static struct NiosStruct* frictTermUnfiltPivAddr; // For debugging only.  Remove later!
+  static channel_t* pRWTermPivAddr;
+  static channel_t* pErrTermPivAddr;
+  static channel_t* frictTermPivAddr;
+  static channel_t* frictTermUnfiltPivAddr; // For debugging only.  Remove later!
   static double buf_frictPiv[FPIV_FILTER_LEN]; // Buffer for Piv friction term boxcar filter.
   static double a=0.0; 
   static unsigned int ib_last=0;
@@ -324,10 +324,10 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   static unsigned int firsttime = 1;
 
   if(firsttime) {
-    pRWTermPivAddr = GetNiosAddr("p_rw_term_piv");
-    pErrTermPivAddr = GetNiosAddr("p_err_term_piv");
-    frictTermPivAddr = GetNiosAddr("frict_term_piv");
-    frictTermUnfiltPivAddr = GetNiosAddr("frict_term_uf_piv");
+    pRWTermPivAddr = channels_find_by_name("p_rw_term_piv");
+    pErrTermPivAddr = channels_find_by_name("p_err_term_piv");
+    frictTermPivAddr = channels_find_by_name("frict_term_piv");
+    frictTermUnfiltPivAddr = channels_find_by_name("frict_term_uf_piv");
     // Initialize the buffer.  Assume all zeros to begin
     for(i=0;i<(FPIV_FILTER_LEN-1);i++) buf_frictPiv[i]=0.0;
     firsttime = 0;
@@ -421,10 +421,10 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 
   i++;
 
-  WriteData(pRWTermPivAddr,p_rw_term,NIOS_QUEUE);
-  WriteData(pErrTermPivAddr,p_err_term,NIOS_QUEUE);
-  WriteData(frictTermPivAddr,i_frict_filt*32767.0/2.0,NIOS_QUEUE);
-  WriteData(frictTermUnfiltPivAddr,i_frict*32767.0/2.0,NIOS_QUEUE);
+  SET_VALUE(pRWTermPivAddr,p_rw_term);
+  SET_VALUE(pErrTermPivAddr,p_err_term);
+  SET_VALUE(frictTermPivAddr,i_frict_filt*32767.0/2.0);
+  SET_VALUE(frictTermUnfiltPivAddr,i_frict*32767.0/2.0);
   return I_req_dac;
 }
 
@@ -435,27 +435,27 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 /************************************************************************/
 void WriteMot(int TxIndex)
 {
-  static struct NiosStruct* velReqElAddr;
-  static struct NiosStruct* velReqAzAddr;
-  static struct NiosStruct* cosElAddr;
-  static struct NiosStruct* sinElAddr;
+  static channel_t* velReqElAddr;
+  static channel_t* velReqAzAddr;
+  static channel_t* cosElAddr;
+  static channel_t* sinElAddr;
 
-  static struct NiosStruct* gPElAddr;
-  static struct NiosStruct* gIElAddr;
-  static struct NiosStruct* gPtElAddr;
-  static struct NiosStruct* gPAzAddr;
-  static struct NiosStruct* gIAzAddr;
-  static struct NiosStruct* gPtAzAddr;
-  static struct NiosStruct* gPVPivAddr;
-  static struct NiosStruct* gPEPivAddr;
-  static struct NiosStruct* setRWAddr;
-  static struct NiosStruct* frictOffPivAddr;
-  static struct NiosStruct* dacPivAddr;
-  static struct NiosStruct* velCalcPivAddr;
-  static struct NiosStruct* accelAzAddr;
+  static channel_t* gPElAddr;
+  static channel_t* gIElAddr;
+  static channel_t* gPtElAddr;
+  static channel_t* gPAzAddr;
+  static channel_t* gIAzAddr;
+  static channel_t* gPtAzAddr;
+  static channel_t* gPVPivAddr;
+  static channel_t* gPEPivAddr;
+  static channel_t* setRWAddr;
+  static channel_t* frictOffPivAddr;
+  static channel_t* dacPivAddr;
+  static channel_t* velCalcPivAddr;
+  static channel_t* accelAzAddr;
  
   // Used only for Lab Controller tests
-  static struct NiosStruct* dacAmplAddr[5];
+  static channel_t* dacAmplAddr[5];
   int i;
   static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;
@@ -472,30 +472,30 @@ void WriteMot(int TxIndex)
 
   if (firsttime) {
     firsttime = 0;
-    velReqElAddr = GetNiosAddr("vel_req_el");
-    velReqAzAddr = GetNiosAddr("vel_req_az");
-    cosElAddr = GetNiosAddr("cos_el");
-    sinElAddr = GetNiosAddr("sin_el");
-    dacPivAddr = GetNiosAddr("dac_piv");
-    gPElAddr = GetNiosAddr("g_p_el");
-    gIElAddr = GetNiosAddr("g_i_el");
-    gPtElAddr = GetNiosAddr("g_pt_el");
-    gPAzAddr = GetNiosAddr("g_p_az");
-    gIAzAddr = GetNiosAddr("g_i_az");
-    gPtAzAddr = GetNiosAddr("g_pt_az");
-    gPVPivAddr = GetNiosAddr("g_pv_piv");
-    gPEPivAddr = GetNiosAddr("g_pe_piv");
-    setRWAddr = GetNiosAddr("set_rw");
-    frictOffPivAddr = GetNiosAddr("frict_off_piv");
-    velCalcPivAddr = GetNiosAddr("vel_calc_piv");
-    accelAzAddr = GetNiosAddr("accel_az");
+    velReqElAddr = channels_find_by_name("vel_req_el");
+    velReqAzAddr = channels_find_by_name("vel_req_az");
+    cosElAddr = channels_find_by_name("cos_el");
+    sinElAddr = channels_find_by_name("sin_el");
+    dacPivAddr = channels_find_by_name("dac_piv");
+    gPElAddr = channels_find_by_name("g_p_el");
+    gIElAddr = channels_find_by_name("g_i_el");
+    gPtElAddr = channels_find_by_name("g_pt_el");
+    gPAzAddr = channels_find_by_name("g_p_az");
+    gIAzAddr = channels_find_by_name("g_i_az");
+    gPtAzAddr = channels_find_by_name("g_pt_az");
+    gPVPivAddr = channels_find_by_name("g_pv_piv");
+    gPEPivAddr = channels_find_by_name("g_pe_piv");
+    setRWAddr = channels_find_by_name("set_rw");
+    frictOffPivAddr = channels_find_by_name("frict_off_piv");
+    velCalcPivAddr = channels_find_by_name("vel_calc_piv");
+    accelAzAddr = channels_find_by_name("accel_az");
 
-    dacAmplAddr[0] = GetNiosAddr("v_pump_bal");    // is now ifpm_ampl
-    //    dacAmplAddr[0] = GetNiosAddr("dac1_ampl"); // is now ifpm_ampl
-    dacAmplAddr[1] = GetNiosAddr("dac2_ampl");
-    //    dacAmplAddr[2] = GetNiosAddr("dac3_ampl"); // is now dac_piv
-    //    dacAmplAddr[3] = GetNiosAddr("dac4_ampl"); // is now dac_el
-    //    dacAmplAddr[4] = GetNiosAddr("dac5_ampl"); // is now dac_rw 
+    dacAmplAddr[0] = channels_find_by_name("v_pump_bal");    // is now ifpm_ampl
+    //    dacAmplAddr[0] = channels_find_by_name("dac1_ampl"); // is now ifpm_ampl
+    dacAmplAddr[1] = channels_find_by_name("dac2_ampl");
+    //    dacAmplAddr[2] = channels_find_by_name("dac3_ampl"); // is now dac_piv
+    //    dacAmplAddr[3] = channels_find_by_name("dac4_ampl"); // is now dac_el
+    //    dacAmplAddr[4] = channels_find_by_name("dac5_ampl"); // is now dac_rw 
   }
 
   i_point = GETREADINDEX(point_index);
@@ -505,7 +505,7 @@ void WriteMot(int TxIndex)
   if (wait <= 0)
     for (i=1; i<2; i++)
       if (CommandData.Temporary.setLevel[i]) {
-	WriteData(dacAmplAddr[i], CommandData.Temporary.dac_out[i], NIOS_QUEUE);
+	SET_VALUE(dacAmplAddr[i], CommandData.Temporary.dac_out[i]);
 	CommandData.Temporary.setLevel[i] = 0;
       }
 
@@ -518,7 +518,7 @@ void WriteMot(int TxIndex)
     v_elev = 32767;
   if (v_elev < -32768)
     v_elev = -32768;
-  WriteData(velReqElAddr, 32768 + v_elev, NIOS_QUEUE);
+  SET_VALUE(velReqElAddr, 32768 + v_elev);
 
   /* zero motor gains if the pin is in */
   if ((CommandData.pin_is_in && !CommandData.force_el)
@@ -529,11 +529,11 @@ void WriteMot(int TxIndex)
     elGainI = CommandData.ele_gain.I;	
   }
   /* proportional term for el motor */
-  WriteData(gPElAddr, elGainP, NIOS_QUEUE);
+  SET_VALUE(gPElAddr, elGainP);
   /* integral term for el_motor */
-  WriteData(gIElAddr, elGainI, NIOS_QUEUE);
+  SET_VALUE(gIElAddr, elGainI);
   /* pointing gain term for elevation drive */
-  WriteData(gPtElAddr, CommandData.ele_gain.PT, NIOS_QUEUE);
+  SET_VALUE(gPtElAddr, CommandData.ele_gain.PT);
 
 
   /***************************************************/
@@ -541,10 +541,10 @@ void WriteMot(int TxIndex)
   /* cos of el enc */
   el_rad = (M_PI / 180.0) * PointingData[i_point].el; /* convert to radians */
   ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
-  WriteData(cosElAddr, ucos_el, NIOS_QUEUE);
+  SET_VALUE(cosElAddr, ucos_el);
   /* sin of el enc */
   usin_el = (unsigned int)((sin(el_rad) + 1.0) * 32768.0);
-  WriteData(sinElAddr, usin_el, NIOS_QUEUE);
+  SET_VALUE(sinElAddr, usin_el);
 
   /***************************************************/
   /**            Azimuth Drive Motors              **/
@@ -554,7 +554,7 @@ void WriteMot(int TxIndex)
     v_az = 32767;
   if (v_az < -32768)
     v_az = -32768;
-  WriteData(velReqAzAddr, 32768 + v_az, NIOS_QUEUE);
+  SET_VALUE(velReqAzAddr, 32768 + v_az);
 
 
   if ((CommandData.disable_az) || (wait > 0)) {
@@ -574,26 +574,26 @@ void WriteMot(int TxIndex)
   }
   //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
   /* requested pivot current*/
-  WriteData(dacPivAddr, i_piv*2, NIOS_QUEUE);
+  SET_VALUE(dacPivAddr, i_piv*2);
   /* p term for az motor */
-  WriteData(gPAzAddr, azGainP, NIOS_QUEUE);
+  SET_VALUE(gPAzAddr, azGainP);
   /* I term for az motor */
-  WriteData(gIAzAddr, azGainI, NIOS_QUEUE);
+  SET_VALUE(gIAzAddr, azGainI);
   /* pointing gain term for az drive */
-  WriteData(gPtAzAddr, CommandData.azi_gain.PT, NIOS_QUEUE);
+  SET_VALUE(gPtAzAddr, CommandData.azi_gain.PT);
 
   /* p term to rw vel for pivot motor */
-  WriteData(gPVPivAddr, pivGainRW, NIOS_QUEUE);
+  SET_VALUE(gPVPivAddr, pivGainRW);
   /* p term to vel error for pivot motor */
-  WriteData(gPEPivAddr, pivGainErr, NIOS_QUEUE);
+  SET_VALUE(gPEPivAddr, pivGainErr);
   /* setpoint for reaction wheel */
-  WriteData(setRWAddr, CommandData.pivot_gain.SP*32768.0/200.0, NIOS_QUEUE);
+  SET_VALUE(setRWAddr, CommandData.pivot_gain.SP*32768.0/200.0);
   /* Pivot current offset to compensate for static friction. */
-  WriteData(frictOffPivAddr, pivFrictOff/2.0*65535, NIOS_QUEUE);
+  SET_VALUE(frictOffPivAddr, pivFrictOff/2.0*65535);
   /* Pivot velocity */
-  WriteData(velCalcPivAddr, (calcVPiv()/20.0*32768.0), NIOS_QUEUE);
+  SET_VALUE(velCalcPivAddr, (calcVPiv()/20.0*32768.0));
   /* Azimuth Scan Acceleration */
-  WriteData(accelAzAddr, (CommandData.az_accel/2.0*65536.0), NIOS_QUEUE);
+  SET_VALUE(accelAzAddr, (CommandData.az_accel/2.0*65536.0));
 
   if (wait > 0)
     wait--;

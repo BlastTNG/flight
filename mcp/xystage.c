@@ -108,44 +108,44 @@ void StoreStageBus(int index)
 {
   static int firsttime = 1;
 
-  static struct NiosStruct* xStageAddr;
-  static struct NiosStruct* xLimStageAddr;
-  static struct NiosStruct* xStpStageAddr;
-  static struct NiosStruct* xStrStageAddr;
-  static struct NiosStruct* xVelStageAddr;
+  static channel_t* xStageAddr;
+  static channel_t* xLimStageAddr;
+  static channel_t* xStpStageAddr;
+  static channel_t* xStrStageAddr;
+  static channel_t* xVelStageAddr;
 
-  static struct NiosStruct* yStageAddr;
-  static struct NiosStruct* yLimStageAddr;
-  static struct NiosStruct* yStpStageAddr;
-  static struct NiosStruct* yStrStageAddr;
-  static struct NiosStruct* yVelStageAddr;
+  static channel_t* yStageAddr;
+  static channel_t* yLimStageAddr;
+  static channel_t* yStpStageAddr;
+  static channel_t* yStrStageAddr;
+  static channel_t* yVelStageAddr;
 
   if (firsttime) {
     firsttime = 0;
 
-    xStageAddr = GetNiosAddr("x_stage");
-    xLimStageAddr = GetNiosAddr("x_lim_stage");
-    xStrStageAddr = GetNiosAddr("x_str_stage");
-    xStpStageAddr = GetNiosAddr("x_stp_stage");
-    xVelStageAddr = GetNiosAddr("x_vel_stage");
-    yStageAddr = GetNiosAddr("y_stage");
-    yLimStageAddr = GetNiosAddr("y_lim_stage");
-    yStrStageAddr = GetNiosAddr("y_str_stage");
-    yStpStageAddr = GetNiosAddr("y_stp_stage");
-    yVelStageAddr = GetNiosAddr("y_vel_stage");
+    xStageAddr = channels_find_by_name("x_stage");
+    xLimStageAddr = channels_find_by_name("x_lim_stage");
+    xStrStageAddr = channels_find_by_name("x_str_stage");
+    xStpStageAddr = channels_find_by_name("x_stp_stage");
+    xVelStageAddr = channels_find_by_name("x_vel_stage");
+    yStageAddr = channels_find_by_name("y_stage");
+    yLimStageAddr = channels_find_by_name("y_lim_stage");
+    yStrStageAddr = channels_find_by_name("y_str_stage");
+    yStpStageAddr = channels_find_by_name("y_stp_stage");
+    yVelStageAddr = channels_find_by_name("y_vel_stage");
   }
 
-  WriteData(xStageAddr, stage_data.xpos/2, NIOS_QUEUE);
-  WriteData(yStageAddr, stage_data.ypos/2, NIOS_QUEUE);
+  SET_VALUE(xStageAddr, stage_data.xpos/2);
+  SET_VALUE(yStageAddr, stage_data.ypos/2);
   if (index == 0) {
-    WriteData(xLimStageAddr, stage_data.xlim, NIOS_QUEUE);
-    WriteData(xStrStageAddr, stage_data.xstr, NIOS_QUEUE);
-    WriteData(xStpStageAddr, stage_data.xstp, NIOS_QUEUE);
-    WriteData(xVelStageAddr, stage_data.xvel, NIOS_QUEUE);
-    WriteData(yStrStageAddr, stage_data.ystr, NIOS_QUEUE);
-    WriteData(yStpStageAddr, stage_data.ystp, NIOS_QUEUE);
-    WriteData(yVelStageAddr, stage_data.yvel, NIOS_QUEUE);
-    WriteData(yLimStageAddr, stage_data.ylim, NIOS_FLUSH);
+    SET_VALUE(xLimStageAddr, stage_data.xlim);
+    SET_VALUE(xStrStageAddr, stage_data.xstr);
+    SET_VALUE(xStpStageAddr, stage_data.xstp);
+    SET_VALUE(xVelStageAddr, stage_data.xvel);
+    SET_VALUE(yStrStageAddr, stage_data.ystr);
+    SET_VALUE(yStpStageAddr, stage_data.ystp);
+    SET_VALUE(yVelStageAddr, stage_data.yvel);
+    SET_VALUE(yLimStageAddr, stage_data.ylim);
   }
 }
 

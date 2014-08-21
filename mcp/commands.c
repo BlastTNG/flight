@@ -38,7 +38,7 @@
 #include "mcp.h"
 #include "tx.h"
 #include "pointing_struct.h"
-#include "channels.h"
+#include "channels_tng.h"
 #include "sip.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
@@ -707,7 +707,8 @@ void SingleCommand (enum singleCommand command, int scheduled)
     /* Actuators */
     case actuator_stop:
       CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
-      /* fallthrough */
+      CommandData.actbus.tc_mode = TC_MODE_VETOED;
+      break;
     case autofocus_veto:
       CommandData.actbus.tc_mode = TC_MODE_VETOED;
       break;
@@ -834,6 +835,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       /********* SBSC Commanding  *************/
     case cam_cycle:
       sendSBSCCommand("Cpower");
+      break;
     case cam_expose:
       sendSBSCCommand("CtrigExp");
       break;
@@ -925,6 +927,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case xy_panic:
       CommandData.xystage.mode = XYSTAGE_PANIC;
       CommandData.xystage.is_new = 1;
+      break;
     case xyzzy:
       break;
     default:
@@ -1550,24 +1553,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Bias.bias[4] = ivalues[0];
       CommandData.Bias.setLevel[4] = 1;
       break;
-    case phase:
-      CommandData.phaseStep.do_step=0;
-      if (ivalues[0] >= DAS_START && ivalues[0] <= DAS_START + DAS_CARDS*4/3
-	  && ivalues[0]%4 != 0)
-        CommandData.Phase[(ivalues[0] - DAS_START)*3/4] = ivalues[1];
-      else if (ivalues[0] == 0)
-        for (i = 0; i < DAS_CARDS; ++i)
-          CommandData.Phase[i] = ivalues[1];
-      else if (ivalues[0] == 13)
-        CommandData.Phase[DAS_CARDS] = ivalues[1];
-      break;
-    case phase_step:
-      CommandData.phaseStep.do_step=1;
-      CommandData.phaseStep.start=ivalues[0];
-      CommandData.phaseStep.end=ivalues[1];
-      CommandData.phaseStep.nsteps=ivalues[2];
-      CommandData.phaseStep.dt=ivalues[3];
-      break;
     case bias_step:
       CommandData.Bias.biasStep.do_step = 1;
       CommandData.Bias.biasStep.start = ivalues[0];
@@ -1869,12 +1854,6 @@ void InitCommandData()
   CommandData.Bias.biasStep.pulse_len = 10;
   CommandData.Bias.biasStep.dt = 1000;
   CommandData.Bias.biasStep.arr_ind = 0;
-
-  CommandData.phaseStep.do_step = 0;
-  CommandData.phaseStep.start = 1;
-  CommandData.phaseStep.end = 32767;
-  CommandData.phaseStep.nsteps = 1000;
-  CommandData.phaseStep.dt = 1000;
 
   //forces reload of saved bias values
   CommandData.Bias.setLevel[0] = 1;
@@ -2273,19 +2252,6 @@ void InitCommandData()
   CommandData.lat = -77.86;  //McMurdo Building 096
   CommandData.lon = -167.04; //Willy Field Dec 2010
 
-  CommandData.Phase[0] = 25450;
-  CommandData.Phase[1] = 26370;
-  CommandData.Phase[2] = 25620;
-  CommandData.Phase[3] = 25470;
-  CommandData.Phase[4] = 25400;
-  CommandData.Phase[5] = 24900;
-  CommandData.Phase[6] =  9050;
-  CommandData.Phase[7] =  9350;
-  CommandData.Phase[8] =  9120;
-  CommandData.Phase[9] =  9120;
-  CommandData.Phase[10] = 9320;
-  CommandData.Phase[11] =  8820;
-  CommandData.Phase[12] = 11600;    //ROX
 
   WritePrevStatus();
 }

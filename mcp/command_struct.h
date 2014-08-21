@@ -25,7 +25,7 @@
 
 #include "isc_protocol.h"
 #include "command_list.h"
-#include "channels.h"
+#include "channels_tng.h"
 #include "mcp_sched.h"
 #include <time.h>
 
@@ -365,9 +365,6 @@ struct CommandDataStruct {
     unsigned short potvalve_open, potvalve_on, potvalve_close;
     unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   } Cryo;
-
-  int Phase[DAS_CARDS + 1];
-  struct Step phaseStep;
 
   struct {
     enum {bal_rest, bal_manual, bal_auto} mode;

@@ -13,7 +13,7 @@
 #ifndef DERIVED_H
 #define DERIVED_H
 
-#include "channels.h"
+#include "channels_tng.h"
 
 #pragma pack(4)
 

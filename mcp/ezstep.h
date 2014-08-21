@@ -1,4 +1,4 @@
-/* channels.h: contains channel list specific prototypes and definitions
+/* ezstep.h: contains channel list specific prototypes and definitions
  *
  * This software is copyright (C) 2010 University of Toronto
  *

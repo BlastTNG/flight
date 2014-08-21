@@ -174,6 +174,9 @@ extern "C" {
 
 #define FAST_MAG
 
+#define LOCKIN_C2V (6.90336327e-7)
+#define LOCKIN_OFFSET (-5.78715355)
+
 #ifdef __cplusplus
 }
 #endif

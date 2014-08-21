@@ -1,0 +1,5 @@
+*.o
+**~
+Default/**
+uei_of
+/Default/

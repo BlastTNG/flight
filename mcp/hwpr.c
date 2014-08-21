@@ -108,76 +108,76 @@ void StoreHWPRBus(void)
 {
   int hwpr_stat_field = 0;
   static int firsttime = 1;
-  static struct NiosStruct* velHwprAddr;
-  static struct NiosStruct* accHwprAddr;
-  static struct NiosStruct* iMoveHwprAddr;
-  static struct NiosStruct* iHoldHwprAddr;
-  static struct NiosStruct* posHwprAddr;
-  static struct NiosStruct* encHwprAddr;
-  static struct NiosStruct* pos0HwprAddr;
-  static struct NiosStruct* pos1HwprAddr;
-  static struct NiosStruct* pos2HwprAddr;
-  static struct NiosStruct* pos3HwprAddr;
-  static struct NiosStruct* overshootHwprAddr;
-  static struct NiosStruct* iposRqHwprAddr;
-  static struct NiosStruct* iposHwprAddr;
-  static struct NiosStruct* readWaitHwprAddr;
-  static struct NiosStruct* stopCntHwprAddr;
-  static struct NiosStruct* relMoveHwprAddr;
-  static struct NiosStruct* statControlHwprAddr;
-  static struct NiosStruct* potTargHwprAddr;
-  static struct NiosStruct* encTargHwprAddr;
-  static struct NiosStruct* encErrHwprAddr;
-  static struct NiosStruct* potErrHwprAddr;
+  static channel_t* velHwprAddr;
+  static channel_t* accHwprAddr;
+  static channel_t* iMoveHwprAddr;
+  static channel_t* iHoldHwprAddr;
+  static channel_t* posHwprAddr;
+  static channel_t* encHwprAddr;
+  static channel_t* pos0HwprAddr;
+  static channel_t* pos1HwprAddr;
+  static channel_t* pos2HwprAddr;
+  static channel_t* pos3HwprAddr;
+  static channel_t* overshootHwprAddr;
+  static channel_t* iposRqHwprAddr;
+  static channel_t* iposHwprAddr;
+  static channel_t* readWaitHwprAddr;
+  static channel_t* stopCntHwprAddr;
+  static channel_t* relMoveHwprAddr;
+  static channel_t* statControlHwprAddr;
+  static channel_t* potTargHwprAddr;
+  static channel_t* encTargHwprAddr;
+  static channel_t* encErrHwprAddr;
+  static channel_t* potErrHwprAddr;
 
   if (firsttime)
   {
     firsttime = 0;
-    velHwprAddr = GetNiosAddr("vel_hwpr");
-    accHwprAddr = GetNiosAddr("acc_hwpr");
-    iMoveHwprAddr = GetNiosAddr("i_move_hwpr");
-    iHoldHwprAddr = GetNiosAddr("i_hold_hwpr");
-    posHwprAddr = GetNiosAddr("pos_hwpr");
-    encHwprAddr = GetNiosAddr("enc_hwpr");
-    overshootHwprAddr = GetNiosAddr("overshoot_hwpr");
-    pos0HwprAddr = GetNiosAddr("pos0_hwpr");
-    pos1HwprAddr = GetNiosAddr("pos1_hwpr");
-    pos2HwprAddr = GetNiosAddr("pos2_hwpr");
-    pos3HwprAddr = GetNiosAddr("pos3_hwpr");
-    iposRqHwprAddr = GetNiosAddr("i_pos_rq_hwpr");
-    iposHwprAddr = GetNiosAddr("i_pos_hwpr");
-    readWaitHwprAddr = GetNiosAddr("read_wait_hwpr");
-    stopCntHwprAddr = GetNiosAddr("stop_cnt_hwpr");
-    relMoveHwprAddr = GetNiosAddr("rel_move_hwpr");
-    statControlHwprAddr = GetNiosAddr("stat_control_hwpr");
-    potTargHwprAddr = GetNiosAddr("pot_targ_hwpr");
-    encTargHwprAddr = GetNiosAddr("enc_targ_hwpr");
-    encErrHwprAddr = GetNiosAddr("enc_err_hwpr");
-    potErrHwprAddr = GetNiosAddr("pot_err_hwpr");
+    velHwprAddr = channels_find_by_name("vel_hwpr");
+    accHwprAddr = channels_find_by_name("acc_hwpr");
+    iMoveHwprAddr = channels_find_by_name("i_move_hwpr");
+    iHoldHwprAddr = channels_find_by_name("i_hold_hwpr");
+    posHwprAddr = channels_find_by_name("pos_hwpr");
+    encHwprAddr = channels_find_by_name("enc_hwpr");
+    overshootHwprAddr = channels_find_by_name("overshoot_hwpr");
+    pos0HwprAddr = channels_find_by_name("pos0_hwpr");
+    pos1HwprAddr = channels_find_by_name("pos1_hwpr");
+    pos2HwprAddr = channels_find_by_name("pos2_hwpr");
+    pos3HwprAddr = channels_find_by_name("pos3_hwpr");
+    iposRqHwprAddr = channels_find_by_name("i_pos_rq_hwpr");
+    iposHwprAddr = channels_find_by_name("i_pos_hwpr");
+    readWaitHwprAddr = channels_find_by_name("read_wait_hwpr");
+    stopCntHwprAddr = channels_find_by_name("stop_cnt_hwpr");
+    relMoveHwprAddr = channels_find_by_name("rel_move_hwpr");
+    statControlHwprAddr = channels_find_by_name("stat_control_hwpr");
+    potTargHwprAddr = channels_find_by_name("pot_targ_hwpr");
+    encTargHwprAddr = channels_find_by_name("enc_targ_hwpr");
+    encErrHwprAddr = channels_find_by_name("enc_err_hwpr");
+    potErrHwprAddr = channels_find_by_name("pot_err_hwpr");
   }
 
   hwpr_wait_cnt--;
 
-  WriteData(velHwprAddr, CommandData.hwpr.vel, NIOS_QUEUE);
-  WriteData(accHwprAddr, CommandData.hwpr.acc, NIOS_QUEUE);
-  WriteData(iMoveHwprAddr, CommandData.hwpr.move_i, NIOS_QUEUE);
-  WriteData(iHoldHwprAddr, CommandData.hwpr.hold_i, NIOS_QUEUE);
-  WriteData(posHwprAddr, hwpr_data.pos, NIOS_QUEUE);
-  WriteData(encHwprAddr, hwpr_data.enc, NIOS_FLUSH);
-  WriteData(overshootHwprAddr, CommandData.hwpr.overshoot, NIOS_FLUSH);
-  WriteData(pos0HwprAddr, CommandData.hwpr.pos[0]*65535, NIOS_FLUSH);
-  WriteData(pos1HwprAddr, CommandData.hwpr.pos[1]*65535, NIOS_FLUSH);
-  WriteData(pos2HwprAddr, CommandData.hwpr.pos[2]*65535, NIOS_FLUSH);
-  WriteData(pos3HwprAddr, CommandData.hwpr.pos[3]*65535, NIOS_FLUSH);
-  WriteData(iposRqHwprAddr, CommandData.hwpr.i_pos, NIOS_FLUSH);
-  WriteData(potTargHwprAddr, hwpr_control.pot_targ*65535, NIOS_FLUSH);
-  WriteData(iposHwprAddr, hwpr_control.i_next_step, NIOS_FLUSH);
-  WriteData(readWaitHwprAddr, hwpr_control.read_wait_cnt, NIOS_FLUSH);
-  WriteData(stopCntHwprAddr, hwpr_control.stop_cnt, NIOS_FLUSH);
-  WriteData(relMoveHwprAddr, hwpr_control.rel_move/2, NIOS_FLUSH);
-  WriteData(encTargHwprAddr, hwpr_control.enc_targ, NIOS_FLUSH);
-  WriteData(encErrHwprAddr, hwpr_control.enc_err, NIOS_FLUSH);
-  WriteData(potErrHwprAddr, hwpr_control.pot_err*32767, NIOS_FLUSH);
+  SET_VALUE(velHwprAddr, CommandData.hwpr.vel);
+  SET_VALUE(accHwprAddr, CommandData.hwpr.acc);
+  SET_VALUE(iMoveHwprAddr, CommandData.hwpr.move_i);
+  SET_VALUE(iHoldHwprAddr, CommandData.hwpr.hold_i);
+  SET_VALUE(posHwprAddr, hwpr_data.pos);
+  SET_VALUE(encHwprAddr, hwpr_data.enc);
+  SET_VALUE(overshootHwprAddr, CommandData.hwpr.overshoot);
+  SET_VALUE(pos0HwprAddr, CommandData.hwpr.pos[0]*65535);
+  SET_VALUE(pos1HwprAddr, CommandData.hwpr.pos[1]*65535);
+  SET_VALUE(pos2HwprAddr, CommandData.hwpr.pos[2]*65535);
+  SET_VALUE(pos3HwprAddr, CommandData.hwpr.pos[3]*65535);
+  SET_VALUE(iposRqHwprAddr, CommandData.hwpr.i_pos);
+  SET_VALUE(potTargHwprAddr, hwpr_control.pot_targ*65535);
+  SET_VALUE(iposHwprAddr, hwpr_control.i_next_step);
+  SET_VALUE(readWaitHwprAddr, hwpr_control.read_wait_cnt);
+  SET_VALUE(stopCntHwprAddr, hwpr_control.stop_cnt);
+  SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move/2);
+  SET_VALUE(encTargHwprAddr, hwpr_control.enc_targ);
+  SET_VALUE(encErrHwprAddr, hwpr_control.enc_err);
+  SET_VALUE(potErrHwprAddr, hwpr_control.pot_err*32767);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007 ;
@@ -191,7 +191,7 @@ void StoreHWPRBus(void)
   hwpr_stat_field |= ((hwpr_control.do_calpulse) & 0x0001)<<14 ;
   hwpr_stat_field |= ((hwpr_control.reset_enc) & 0x0001)<<15 ;
 
-  WriteData(statControlHwprAddr, hwpr_stat_field, NIOS_FLUSH);
+  SET_VALUE(statControlHwprAddr, hwpr_stat_field);
 
 }
 

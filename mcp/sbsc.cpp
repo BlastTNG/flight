@@ -33,7 +33,7 @@
 extern "C" {
 #include "blast.h"
 #include "tx.h"
-#include "channels.h"
+#include "channels_tng.h"
 #include "pointing_struct.h"
 #include "mcp.h"
 #include "command_struct.h"
@@ -100,84 +100,84 @@ void cameraFields()
   static bool unrecFlag = false;
   static int blobindex = 0;
 
-  static NiosStruct* forceAddr = NULL;
-  static NiosStruct* expIntAddr = NULL;
-  static NiosStruct* expTimeAddr = NULL;
-  static NiosStruct* focResAddr = NULL;
-  static NiosStruct* moveTolAddr = NULL;
-  static NiosStruct* maxBlobAddr = NULL;
-  static NiosStruct* gridAddr = NULL;
-  static NiosStruct* threshAddr = NULL;
-  static NiosStruct* delayAddr = NULL;
-  static NiosStruct* blobMdistAddr = NULL;
+  channel_t* forceAddr = NULL;
+  channel_t* expIntAddr = NULL;
+  channel_t* expTimeAddr = NULL;
+  channel_t* focResAddr = NULL;
+  channel_t* moveTolAddr = NULL;
+  channel_t* maxBlobAddr = NULL;
+  channel_t* gridAddr = NULL;
+  channel_t* threshAddr = NULL;
+  channel_t* delayAddr = NULL;
+  channel_t* blobMdistAddr = NULL;
 
-  static NiosStruct* sbscFrameAddr = NULL;
-  static NiosStruct* sbscMeanAddr = NULL;
-  static NiosStruct* sbscSigmaAddr = NULL;
-  static NiosStruct* sbscTimeAddr = NULL;
-  static NiosStruct* sbscUsecAddr = NULL;
-  static NiosStruct* sbscCcdTempAddr = NULL;
-  static NiosStruct* sbscFocPosAddr = NULL;
-  static NiosStruct* sbscNumBlobsAddr = NULL;
+  channel_t* sbscFrameAddr = NULL;
+  channel_t* sbscMeanAddr = NULL;
+  channel_t* sbscSigmaAddr = NULL;
+  channel_t* sbscTimeAddr = NULL;
+  channel_t* sbscUsecAddr = NULL;
+  channel_t* sbscCcdTempAddr = NULL;
+  channel_t* sbscFocPosAddr = NULL;
+  channel_t* sbscNumBlobsAddr = NULL;
 
-  static NiosStruct* sbscBlobX[5];
-  static NiosStruct* sbscBlobY[5];
-  static NiosStruct* sbscBlobF[5];
-  static NiosStruct* sbscBlobS[5];
-  static NiosStruct* sbscBlobIdxAddr;
+  channel_t* sbscBlobX[5];
+  channel_t* sbscBlobY[5];
+  channel_t* sbscBlobF[5];
+  channel_t* sbscBlobS[5];
+  channel_t* sbscBlobIdxAddr;
 
-  static NiosStruct* sbscRAAddr = NULL;
-  static NiosStruct* sbscDECAddr = NULL;
+  channel_t* sbscRAAddr = NULL;
+  channel_t* sbscDECAddr = NULL;
 
   //initialization
   if (firsttime) {
     firsttime = 0;
-    forceAddr = GetNiosAddr("force_sbsc");
-    expIntAddr = GetNiosAddr("exp_int_sbsc");
-    expTimeAddr = GetNiosAddr("exp_time_sbsc");
-    focResAddr = GetNiosAddr("foc_res_sbsc");
-    moveTolAddr = GetNiosAddr("move_tol_sbsc");
-    maxBlobAddr = GetNiosAddr("maxblob_sbsc");
-    gridAddr = GetNiosAddr("grid_sbsc");
-    threshAddr = GetNiosAddr("thresh_sbsc");
-    delayAddr = GetNiosAddr("delay_sbsc");
-    blobMdistAddr = GetNiosAddr("mdist_sbsc");
+    forceAddr = channels_find_by_name("force_sbsc");
+    expIntAddr = channels_find_by_name("exp_int_sbsc");
+    expTimeAddr = channels_find_by_name("exp_time_sbsc");
+    focResAddr = channels_find_by_name("foc_res_sbsc");
+    moveTolAddr = channels_find_by_name("move_tol_sbsc");
+    maxBlobAddr = channels_find_by_name("maxblob_sbsc");
+    gridAddr = channels_find_by_name("grid_sbsc");
+    threshAddr = channels_find_by_name("thresh_sbsc");
+    delayAddr = channels_find_by_name("delay_sbsc");
+    blobMdistAddr = channels_find_by_name("mdist_sbsc");
 
-    sbscFrameAddr = GetNiosAddr("frame_sbsc");
-    sbscMeanAddr = GetNiosAddr("mapmean_sbsc");
-    sbscSigmaAddr = GetNiosAddr("mapsigma_sbsc");
-    sbscTimeAddr = GetNiosAddr("sec_sbsc");
-    sbscUsecAddr = GetNiosAddr("usec_sbsc");
-    sbscCcdTempAddr = GetNiosAddr("ccd_t_sbsc");
-    sbscFocPosAddr = GetNiosAddr("focpos_sbsc");
-    sbscNumBlobsAddr = GetNiosAddr("nblobs_sbsc");
+    sbscFrameAddr = channels_find_by_name("frame_sbsc");
+    sbscMeanAddr = channels_find_by_name("mapmean_sbsc");
+    sbscSigmaAddr = channels_find_by_name("mapsigma_sbsc");
+    sbscTimeAddr = channels_find_by_name("sec_sbsc");
+    sbscUsecAddr = channels_find_by_name("usec_sbsc");
+    sbscCcdTempAddr = channels_find_by_name("ccd_t_sbsc");
+    sbscFocPosAddr = channels_find_by_name("focpos_sbsc");
+    sbscNumBlobsAddr = channels_find_by_name("nblobs_sbsc");
 
     for (int i=0; i<3; i++) {
       char buf[99];
       sprintf(buf, "blob%02d_x_sbsc", i);
-      sbscBlobX[i] = GetNiosAddr(buf);
+      sbscBlobX[i] = channels_find_by_name(buf);
       sprintf(buf, "blob%02d_y_sbsc", i);
-      sbscBlobY[i] = GetNiosAddr(buf);
+      sbscBlobY[i] = channels_find_by_name(buf);
       sprintf(buf, "blob%02d_f_sbsc", i);
-      sbscBlobF[i] = GetNiosAddr(buf);
+      sbscBlobF[i] = channels_find_by_name(buf);
       sprintf(buf, "blob%02d_s_sbsc", i);
-      sbscBlobS[i] = GetNiosAddr(buf);
+      sbscBlobS[i] = channels_find_by_name(buf);
     }
-    sbscBlobIdxAddr = GetNiosAddr("blob_idx_sbsc");
-    sbscRAAddr = GetNiosAddr("ra_sbsc");
-    sbscDECAddr = GetNiosAddr("dec_sbsc");
+    sbscBlobIdxAddr = channels_find_by_name("blob_idx_sbsc");
+    sbscRAAddr = channels_find_by_name("ra_sbsc");
+    sbscDECAddr = channels_find_by_name("dec_sbsc");
   }
 
-  WriteData(forceAddr, CommandData.cam.forced, NIOS_QUEUE);
-  WriteData(expIntAddr, CommandData.cam.expInt, NIOS_QUEUE);
-  WriteData(expTimeAddr, CommandData.cam.expTime, NIOS_QUEUE);
-  WriteData(focResAddr, CommandData.cam.focusRes, NIOS_QUEUE);
-  WriteData(moveTolAddr, CommandData.cam.moveTol, NIOS_QUEUE);
-  WriteData(maxBlobAddr, CommandData.cam.maxBlobs, NIOS_QUEUE);
-  WriteData(gridAddr, CommandData.cam.grid, NIOS_QUEUE);
-  WriteData(threshAddr, (int)(CommandData.cam.threshold*1000), NIOS_QUEUE);
-  WriteData(delayAddr, (int)(CommandData.cam.delay*1000), NIOS_QUEUE);
-  WriteData(blobMdistAddr, CommandData.cam.minBlobDist, NIOS_QUEUE);
+  SET_VALUE(forceAddr, CommandData.cam.forced);
+  SET_VALUE(expIntAddr, CommandData.cam.expInt);
+  SET_VALUE(expTimeAddr, CommandData.cam.expTime);
+  SET_VALUE(focResAddr, CommandData.cam.focusRes);
+  SET_VALUE(moveTolAddr, CommandData.cam.moveTol);
+  SET_VALUE(maxBlobAddr, CommandData.cam.maxBlobs);
+  SET_VALUE(gridAddr, CommandData.cam.grid);
+  SET_VALUE(threshAddr, (int)(CommandData.cam.threshold*1000));
+  SET_VALUE(delayAddr, (int)(CommandData.cam.delay*1000));
+  SET_VALUE(blobMdistAddr, CommandData.cam.minBlobDist);
 
   //persistently identify cameras by serial number (camID)
   if (camRtn[i_cam].camID == SBSC_SERIAL)  {
@@ -191,31 +191,29 @@ void cameraFields()
   }
 
   if (sbsc != NULL) {
-    WriteData(sbscFrameAddr, sbsc->frameNum, NIOS_QUEUE);
-    WriteData(sbscMeanAddr, (int)sbsc->mapmean, NIOS_QUEUE);
-    WriteData(sbscSigmaAddr, (int)(sbsc->sigma*10), NIOS_QUEUE);
-    WriteData(sbscTimeAddr, sbsc->imagestarttime.tv_sec, NIOS_QUEUE);
-    WriteData(sbscUsecAddr, sbsc->imagestarttime.tv_usec, NIOS_QUEUE);
+    SET_VALUE(sbscFrameAddr, sbsc->frameNum);
+    SET_VALUE(sbscMeanAddr, (int)sbsc->mapmean);
+    SET_VALUE(sbscSigmaAddr, (int)(sbsc->sigma*10));
+    SET_VALUE(sbscTimeAddr, sbsc->imagestarttime.tv_sec);
+    SET_VALUE(sbscUsecAddr, sbsc->imagestarttime.tv_usec);
     //it looks like this is in deg C. just scale to get better resolution
-    WriteData(sbscCcdTempAddr, (int)(sbsc->ccdtemperature*100), NIOS_QUEUE);
-    WriteData(sbscFocPosAddr, (int)(sbsc->focusposition*10), NIOS_QUEUE);
-    WriteData(sbscNumBlobsAddr, sbsc->numblobs, NIOS_QUEUE);
+    SET_VALUE(sbscCcdTempAddr, (int)(sbsc->ccdtemperature*100));
+    SET_VALUE(sbscFocPosAddr, (int)(sbsc->focusposition*10));
+    SET_VALUE(sbscNumBlobsAddr, sbsc->numblobs);
 
     for (int i=0; i<3; i++)
     {
-      WriteData(sbscBlobX[i],(unsigned int)(sbsc->x[blobindex * 3 + i]/CAM_WIDTH*SHRT_MAX),
-	  NIOS_QUEUE);
-      WriteData(sbscBlobY[i],(unsigned int)(sbsc->y[blobindex * 3 + i]/CAM_WIDTH*SHRT_MAX),
-	  NIOS_QUEUE);
-      WriteData(sbscBlobF[i], (unsigned int)sbsc->flux[blobindex * 3 + i], NIOS_QUEUE);
+      SET_VALUE(sbscBlobX[i],(unsigned int)(sbsc->x[blobindex * 3 + i]/CAM_WIDTH*SHRT_MAX));
+      SET_VALUE(sbscBlobY[i],(unsigned int)(sbsc->y[blobindex * 3 + i]/CAM_WIDTH*SHRT_MAX));
+      SET_VALUE(sbscBlobF[i], (unsigned int)sbsc->flux[blobindex * 3 + i]);
       unsigned int snr = (sbsc->snr[blobindex * 3 + i] >= SHRT_MAX / 100.0) ? 
 	SHRT_MAX : (unsigned int)sbsc->snr[blobindex * 3 + i]*100;
-      WriteData(sbscBlobS[i], snr, NIOS_QUEUE);
+      SET_VALUE(sbscBlobS[i], snr);
     }
-    WriteData(sbscBlobIdxAddr, blobindex, NIOS_QUEUE);
+    SET_VALUE(sbscBlobIdxAddr, blobindex);
     blobindex = (blobindex + 1) % 5;
-    WriteData(sbscRAAddr, (int)(sbsc->ra*1000), NIOS_QUEUE);
-    WriteData(sbscDECAddr, (int)(sbsc->dec*1000), NIOS_QUEUE);
+    SET_VALUE(sbscRAAddr, (int)(sbsc->ra*1000));
+    SET_VALUE(sbscDECAddr, (int)(sbsc->dec*1000));
   }
 
 }

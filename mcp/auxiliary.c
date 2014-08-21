@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 #include "mcp.h"
-#include "channels.h"
+#include "channels_tng.h"
 #include "tx.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
@@ -106,10 +106,10 @@ double LockPosition(double elevation);
 /************************************************************************/
 void ControlGyroHeat()
 {
-  static struct BiPhaseStruct* tGyAddr;
-  static struct NiosStruct *heatGyAddr, *tSetGyAddr, *gPHeatGyAddr;
-  static struct NiosStruct *gIHeatGyAddr;
-  static struct NiosStruct *gDHeatGyAddr, *hHistGyAddr, *hAgeGyAddr;
+  static channel_t* tGyAddr;
+  static channel_t *heatGyAddr, *tSetGyAddr, *gPHeatGyAddr;
+  static channel_t *gIHeatGyAddr;
+  static channel_t *gDHeatGyAddr, *hHistGyAddr, *hAgeGyAddr;
   static int firsttime = 1;
   static double history = 0;
 
@@ -126,24 +126,24 @@ void ControlGyroHeat()
   /******** Obtain correct indexes the first time here ***********/
   if (firsttime) {
     firsttime = 0;
-    tGyAddr = GetBiPhaseAddr("t_gy");
-    heatGyAddr = GetNiosAddr("heat_gy");
-    hHistGyAddr = GetNiosAddr("h_hist_gy");
-    hAgeGyAddr = GetNiosAddr("h_age_gy");
-    tSetGyAddr = GetNiosAddr("t_set_gy");
+    tGyAddr = channels_find_by_name("t_gy");
+    heatGyAddr = channels_find_by_name("heat_gy");
+    hHistGyAddr = channels_find_by_name("h_hist_gy");
+    hAgeGyAddr = channels_find_by_name("h_age_gy");
+    tSetGyAddr = channels_find_by_name("t_set_gy");
 
-    gPHeatGyAddr = GetNiosAddr("g_p_heat_gy");
-    gIHeatGyAddr = GetNiosAddr("g_i_heat_gy");
-    gDHeatGyAddr = GetNiosAddr("g_d_heat_gy");
+    gPHeatGyAddr = channels_find_by_name("g_p_heat_gy");
+    gIHeatGyAddr = channels_find_by_name("g_i_heat_gy");
+    gDHeatGyAddr = channels_find_by_name("g_d_heat_gy");
   }
 
   /* send down the setpoints and gains values */
-  WriteData(tSetGyAddr, CommandData.gyheat.setpoint * 327.68, NIOS_QUEUE);
-  WriteData(gPHeatGyAddr, CommandData.gyheat.gain.P, NIOS_QUEUE);
-  WriteData(gIHeatGyAddr, CommandData.gyheat.gain.I, NIOS_QUEUE);
-  WriteData(gDHeatGyAddr, CommandData.gyheat.gain.D, NIOS_QUEUE);
+  SET_VALUE(tSetGyAddr, CommandData.gyheat.setpoint * 327.68);
+  SET_VALUE(gPHeatGyAddr, CommandData.gyheat.gain.P);
+  SET_VALUE(gIHeatGyAddr, CommandData.gyheat.gain.I);
+  SET_VALUE(gDHeatGyAddr, CommandData.gyheat.gain.D);
 
-  temp = slow_data[tGyAddr->index][tGyAddr->channel];
+  temp = GET_UINT16(tGyAddr);
   
   /* Only run these controls if we think the thermometer isn't broken */
   if (temp < MAX_GYBOX_TEMP && temp > MIN_GYBOX_TEMP) {
@@ -186,18 +186,18 @@ void ControlGyroHeat()
 
     /******** do the pulse *****/
     if (p_on > 0) {
-      WriteData(heatGyAddr, 0x1, NIOS_FLUSH);
+      SET_VALUE(heatGyAddr, 0x1);
       p_on--;
     } else if (p_off > 0) {
-      WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
+      SET_VALUE(heatGyAddr, 0x0);
       p_off--;
     }
   } else
     /* Turn off heater if thermometer appears broken */
-    WriteData(heatGyAddr, 0x0, NIOS_FLUSH);
+    SET_VALUE(heatGyAddr, 0x0);
 
-  WriteData(hAgeGyAddr, CommandData.gyheat.age, NIOS_QUEUE);
-  WriteData(hHistGyAddr, (history * 32768. / 100.), NIOS_QUEUE);
+  SET_VALUE(hAgeGyAddr, CommandData.gyheat.age);
+  SET_VALUE(hHistGyAddr, (history * 32768. / 100.));
 }
 
 /******************************************************************/
@@ -207,9 +207,9 @@ void ControlGyroHeat()
 /******************************************************************/
 static int Balance(int bits_bal)
 {
-  static struct BiPhaseStruct *dacElAddr;
-  static struct NiosStruct *vPumpBalAddr;
-  static struct NiosStruct *modeBalAddr;
+  static channel_t *dacElAddr;
+  static channel_t *vPumpBalAddr;
+  static channel_t *modeBalAddr;
   static int pumpon = 0;
   int level;
   int error;
@@ -219,9 +219,9 @@ static int Balance(int bits_bal)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    dacElAddr = GetBiPhaseAddr("dac_el");
-    vPumpBalAddr = GetNiosAddr("v_pump_bal");
-    modeBalAddr = GetNiosAddr("mode_bal");
+    dacElAddr = channels_find_by_name("dac_el");
+    vPumpBalAddr = channels_find_by_name("v_pump_bal");
+    modeBalAddr = channels_find_by_name("mode_bal");
   }
  
 
@@ -259,7 +259,7 @@ static int Balance(int bits_bal)
   } else {
 
     //   calculate speed and direction
-    smoothed_i = slow_data[dacElAddr->index][dacElAddr->channel] / 500. +
+    smoothed_i = GET_UINT16(dacElAddr) / 500. +
           smoothed_i * (499. / 500.);
     error = smoothed_i - I_EL_ZERO - CommandData.pumps.level_target_bal;
 
@@ -311,8 +311,8 @@ static int Balance(int bits_bal)
   }
 
   // write direction and valve bits
-  WriteData(vPumpBalAddr, (int) PUMP_ZERO + level, NIOS_QUEUE);
-  WriteData(modeBalAddr, CommandData.pumps.mode, NIOS_FLUSH);
+  SET_VALUE(vPumpBalAddr, (int) PUMP_ZERO + level);
+  SET_VALUE(modeBalAddr, CommandData.pumps.mode);
   return bits_bal;
 
 }
@@ -324,7 +324,7 @@ static int Balance(int bits_bal)
 static int ControlPumpHeat(int bits_bal)
 {
 
-  static struct BiPhaseStruct *tBoxBalAddr, *vtPumpBalAddr;
+  static channel_t *tBoxBalAddr, *vtPumpBalAddr;
   static struct LutType tPumpBalLut =
      {"/data/etc/blast/thermistor.lut", 0, NULL, NULL, 0};
   static int firsttime = 1;
@@ -333,14 +333,14 @@ static int ControlPumpHeat(int bits_bal)
 
   if (firsttime) {
     firsttime = 0;
-    tBoxBalAddr = GetBiPhaseAddr("t_box_bal");
-    vtPumpBalAddr = GetBiPhaseAddr("vt_pump_bal");  
+    tBoxBalAddr = channels_find_by_name("t_box_bal");
+    vtPumpBalAddr = channels_find_by_name("vt_pump_bal");  
     LutInit(&tPumpBalLut);
   }
 
 
-  temp1 = (double)slow_data[tBoxBalAddr->index][tBoxBalAddr->channel];
-  temp2 = (double)slow_data[vtPumpBalAddr->index][vtPumpBalAddr->channel];
+  temp1 = (double)GET_UINT16(tBoxBalAddr);
+  temp2 = (double)GET_UINT16(vtPumpBalAddr);
   
   temp1 = CalibrateAD590(temp1) - 273.15;
   temp2 = CalibrateThermister(temp2) - 273.15;
@@ -363,29 +363,29 @@ static int ControlPumpHeat(int bits_bal)
 void ChargeController(void)
 {
 
-  static struct NiosStruct *VBattCC1Addr;
-  static struct NiosStruct *VArrCC1Addr;
-  static struct NiosStruct *IBattCC1Addr;
-  static struct NiosStruct *IArrCC1Addr;
-  static struct NiosStruct *VTargCC1Addr;
-  static struct NiosStruct *ThsCC1Addr;
-  static struct NiosStruct *FaultCC1Addr;
-  static struct NiosStruct *AlarmHiCC1Addr;
-  static struct NiosStruct *AlarmLoCC1Addr;
-  static struct NiosStruct *ChargeCC1Addr;
-  static struct NiosStruct *LEDCC1Addr;
+  static channel_t *VBattCC1Addr;
+  static channel_t *VArrCC1Addr;
+  static channel_t *IBattCC1Addr;
+  static channel_t *IArrCC1Addr;
+  static channel_t *VTargCC1Addr;
+  static channel_t *ThsCC1Addr;
+  static channel_t *FaultCC1Addr;
+  static channel_t *AlarmHiCC1Addr;
+  static channel_t *AlarmLoCC1Addr;
+  static channel_t *ChargeCC1Addr;
+  static channel_t *LEDCC1Addr;
 
-  static struct NiosStruct *VBattCC2Addr;
-  static struct NiosStruct *VArrCC2Addr;
-  static struct NiosStruct *IBattCC2Addr;
-  static struct NiosStruct *IArrCC2Addr;
-  static struct NiosStruct *VTargCC2Addr;
-  static struct NiosStruct *ThsCC2Addr;
-  static struct NiosStruct *FaultCC2Addr;
-  static struct NiosStruct *AlarmHiCC2Addr;
-  static struct NiosStruct *AlarmLoCC2Addr;
-  static struct NiosStruct *ChargeCC2Addr;
-  static struct NiosStruct *LEDCC2Addr;
+  static channel_t *VBattCC2Addr;
+  static channel_t *VArrCC2Addr;
+  static channel_t *IBattCC2Addr;
+  static channel_t *IArrCC2Addr;
+  static channel_t *VTargCC2Addr;
+  static channel_t *ThsCC2Addr;
+  static channel_t *FaultCC2Addr;
+  static channel_t *AlarmHiCC2Addr;
+  static channel_t *AlarmLoCC2Addr;
+  static channel_t *ChargeCC2Addr;
+  static channel_t *LEDCC2Addr;
 
   static int firsttime = 1;
   
@@ -393,55 +393,55 @@ void ChargeController(void)
 
     firsttime = 0;
 
-    VBattCC1Addr = GetNiosAddr("v_batt_cc1");
-    VArrCC1Addr = GetNiosAddr("v_arr_cc1");
-    IBattCC1Addr = GetNiosAddr("i_batt_cc1");
-    IArrCC1Addr  = GetNiosAddr("i_arr_cc1");
-    VTargCC1Addr = GetNiosAddr("v_targ_cc1");
-    ThsCC1Addr = GetNiosAddr("t_hs_cc1");
-    FaultCC1Addr = GetNiosAddr("fault_cc1");
-    AlarmHiCC1Addr = GetNiosAddr("alarm_hi_cc1");
-    AlarmLoCC1Addr = GetNiosAddr("alarm_lo_cc1");
-    ChargeCC1Addr = GetNiosAddr("state_cc1");
-    LEDCC1Addr = GetNiosAddr("led_cc1");
+    VBattCC1Addr = channels_find_by_name("v_batt_cc1");
+    VArrCC1Addr = channels_find_by_name("v_arr_cc1");
+    IBattCC1Addr = channels_find_by_name("i_batt_cc1");
+    IArrCC1Addr  = channels_find_by_name("i_arr_cc1");
+    VTargCC1Addr = channels_find_by_name("v_targ_cc1");
+    ThsCC1Addr = channels_find_by_name("t_hs_cc1");
+    FaultCC1Addr = channels_find_by_name("fault_cc1");
+    AlarmHiCC1Addr = channels_find_by_name("alarm_hi_cc1");
+    AlarmLoCC1Addr = channels_find_by_name("alarm_lo_cc1");
+    ChargeCC1Addr = channels_find_by_name("state_cc1");
+    LEDCC1Addr = channels_find_by_name("led_cc1");
 
-    VBattCC2Addr = GetNiosAddr("v_batt_cc2");
-    VArrCC2Addr = GetNiosAddr("v_arr_cc2");
-    IBattCC2Addr = GetNiosAddr("i_batt_cc2");
-    IArrCC2Addr  = GetNiosAddr("i_arr_cc2");
-    VTargCC2Addr = GetNiosAddr("v_targ_cc2");
-    ThsCC2Addr = GetNiosAddr("t_hs_cc2");
-    FaultCC2Addr = GetNiosAddr("fault_cc2");
-    AlarmHiCC2Addr = GetNiosAddr("alarm_hi_cc2");
-    AlarmLoCC2Addr = GetNiosAddr("alarm_lo_cc2");
-    ChargeCC2Addr = GetNiosAddr("state_cc2");
-    LEDCC2Addr = GetNiosAddr("led_cc2");
+    VBattCC2Addr = channels_find_by_name("v_batt_cc2");
+    VArrCC2Addr = channels_find_by_name("v_arr_cc2");
+    IBattCC2Addr = channels_find_by_name("i_batt_cc2");
+    IArrCC2Addr  = channels_find_by_name("i_arr_cc2");
+    VTargCC2Addr = channels_find_by_name("v_targ_cc2");
+    ThsCC2Addr = channels_find_by_name("t_hs_cc2");
+    FaultCC2Addr = channels_find_by_name("fault_cc2");
+    AlarmHiCC2Addr = channels_find_by_name("alarm_hi_cc2");
+    AlarmLoCC2Addr = channels_find_by_name("alarm_lo_cc2");
+    ChargeCC2Addr = channels_find_by_name("state_cc2");
+    LEDCC2Addr = channels_find_by_name("led_cc2");
 
   }
 
-  WriteData(VBattCC1Addr, 180.0*ChrgCtrlData[0].V_batt + 32400.0, NIOS_QUEUE); 
-  WriteData(VArrCC1Addr, 180.0*ChrgCtrlData[0].V_arr + 32400.0, NIOS_QUEUE);
-  WriteData(IBattCC1Addr, 400.0*ChrgCtrlData[0].I_batt + 32000.0, NIOS_QUEUE);
-  WriteData(IArrCC1Addr,  400.0*ChrgCtrlData[0].I_arr + 32000.0, NIOS_QUEUE);
-  WriteData(VTargCC1Addr, 180.0*ChrgCtrlData[0].V_targ + 32400.0, NIOS_QUEUE);
-  WriteData(ThsCC1Addr, ChrgCtrlData[0].T_hs, NIOS_QUEUE);
-  WriteData(FaultCC1Addr, ChrgCtrlData[0].fault_field, NIOS_QUEUE);
-  WriteData(AlarmHiCC1Addr, ChrgCtrlData[0].alarm_field_hi, NIOS_QUEUE);
-  WriteData(AlarmLoCC1Addr, ChrgCtrlData[0].alarm_field_lo, NIOS_QUEUE);
-  WriteData(ChargeCC1Addr, ChrgCtrlData[0].charge_state, NIOS_QUEUE);
-  WriteData(LEDCC1Addr, ChrgCtrlData[0].led_state, NIOS_QUEUE);
+  SET_VALUE(VBattCC1Addr, 180.0*ChrgCtrlData[0].V_batt + 32400.0); 
+  SET_VALUE(VArrCC1Addr, 180.0*ChrgCtrlData[0].V_arr + 32400.0);
+  SET_VALUE(IBattCC1Addr, 400.0*ChrgCtrlData[0].I_batt + 32000.0);
+  SET_VALUE(IArrCC1Addr,  400.0*ChrgCtrlData[0].I_arr + 32000.0);
+  SET_VALUE(VTargCC1Addr, 180.0*ChrgCtrlData[0].V_targ + 32400.0);
+  SET_VALUE(ThsCC1Addr, ChrgCtrlData[0].T_hs);
+  SET_VALUE(FaultCC1Addr, ChrgCtrlData[0].fault_field);
+  SET_VALUE(AlarmHiCC1Addr, ChrgCtrlData[0].alarm_field_hi);
+  SET_VALUE(AlarmLoCC1Addr, ChrgCtrlData[0].alarm_field_lo);
+  SET_VALUE(ChargeCC1Addr, ChrgCtrlData[0].charge_state);
+  SET_VALUE(LEDCC1Addr, ChrgCtrlData[0].led_state);
 
-  WriteData(VBattCC2Addr, 180.0*ChrgCtrlData[1].V_batt + 32400.0, NIOS_QUEUE); 
-  WriteData(VArrCC2Addr, 180.0*ChrgCtrlData[1].V_arr + 32400.0, NIOS_QUEUE);
-  WriteData(IBattCC2Addr, 400.0*ChrgCtrlData[1].I_batt + 32000.0, NIOS_QUEUE);
-  WriteData(IArrCC2Addr,  400.0*ChrgCtrlData[1].I_arr + 32000.0, NIOS_QUEUE);
-  WriteData(VTargCC2Addr, 180.0*ChrgCtrlData[1].V_targ + 32400.0, NIOS_QUEUE);
-  WriteData(ThsCC2Addr, ChrgCtrlData[1].T_hs, NIOS_QUEUE);
-  WriteData(FaultCC2Addr, ChrgCtrlData[1].fault_field, NIOS_QUEUE);
-  WriteData(AlarmHiCC2Addr, ChrgCtrlData[1].alarm_field_hi, NIOS_QUEUE);
-  WriteData(AlarmLoCC2Addr, ChrgCtrlData[1].alarm_field_lo, NIOS_QUEUE);
-  WriteData(ChargeCC2Addr, ChrgCtrlData[1].charge_state, NIOS_QUEUE);
-  WriteData(LEDCC2Addr, ChrgCtrlData[1].led_state, NIOS_QUEUE);
+  SET_VALUE(VBattCC2Addr, 180.0*ChrgCtrlData[1].V_batt + 32400.0); 
+  SET_VALUE(VArrCC2Addr, 180.0*ChrgCtrlData[1].V_arr + 32400.0);
+  SET_VALUE(IBattCC2Addr, 400.0*ChrgCtrlData[1].I_batt + 32000.0);
+  SET_VALUE(IArrCC2Addr,  400.0*ChrgCtrlData[1].I_arr + 32000.0);
+  SET_VALUE(VTargCC2Addr, 180.0*ChrgCtrlData[1].V_targ + 32400.0);
+  SET_VALUE(ThsCC2Addr, ChrgCtrlData[1].T_hs);
+  SET_VALUE(FaultCC2Addr, ChrgCtrlData[1].fault_field);
+  SET_VALUE(AlarmHiCC2Addr, ChrgCtrlData[1].alarm_field_hi);
+  SET_VALUE(AlarmLoCC2Addr, ChrgCtrlData[1].alarm_field_lo);
+  SET_VALUE(ChargeCC2Addr, ChrgCtrlData[1].charge_state);
+  SET_VALUE(LEDCC2Addr, ChrgCtrlData[1].led_state);
   
 }
 
@@ -450,7 +450,7 @@ void ChargeController(void)
 void CameraTrigger(int which)
 {
   static int firsttime = 1;
-  static struct NiosStruct* TriggerAddr[2];
+  static channel_t* TriggerAddr[2];
   static int delay[2] = {0, 0};
   static int waiting[2] = {0, 0};
 #if SYNCHRONOUS_CAMERAS
@@ -462,8 +462,8 @@ void CameraTrigger(int which)
   if (firsttime) {
     firsttime = 0;
     //NB before renaming, 0 was osc, 1 was isc. I think that was wrong
-    TriggerAddr[0] = GetNiosAddr("trigger_isc");
-    TriggerAddr[1] = GetNiosAddr("trigger_osc");
+    TriggerAddr[0] = channels_find_by_name("trigger_isc");
+    TriggerAddr[1] = channels_find_by_name("trigger_osc");
   }
 
   /* age is needed by pointing.c to tell it how old the solution is */
@@ -627,13 +627,12 @@ void CameraTrigger(int which)
             cameras_ready |= 1;
 
           if (cameras_ready == 3) {
-            WriteData(TriggerAddr[0], isc_pulses[0].pulse_req, NIOS_FLUSH);
-            WriteData(TriggerAddr[1], isc_pulses[1].pulse_req, NIOS_FLUSH);
+            SET_VALUE(TriggerAddr[0], isc_pulses[0].pulse_req);
+            SET_VALUE(TriggerAddr[1], isc_pulses[1].pulse_req);
             cameras_ready = 0;
           }
 #else
-          WriteData(TriggerAddr[which], isc_pulses[which].pulse_req,
-              NIOS_FLUSH);
+          SET_VALUE(TriggerAddr[which], isc_pulses[which].pulse_req);
 #endif
 
           if (WHICH)
@@ -706,21 +705,21 @@ void CameraTrigger(int which)
 /*****************************************************************/
 void ControlAuxMotors()
 {
-  static struct NiosStruct* levelOnBalAddr, *levelOffBalAddr;
-  static struct NiosStruct* levelTargetBalAddr;
-  static struct NiosStruct* gainBalAddr;
-  static struct NiosStruct* bitsBalAddr;
+  static channel_t* levelOnBalAddr, *levelOffBalAddr;
+  static channel_t* levelTargetBalAddr;
+  static channel_t* gainBalAddr;
+  static channel_t* bitsBalAddr;
 
   int bits_bal = 0;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    bitsBalAddr = GetNiosAddr("bits_bal");
-    levelOnBalAddr = GetNiosAddr("level_on_bal");
-    levelOffBalAddr = GetNiosAddr("level_off_bal");
-    levelTargetBalAddr = GetNiosAddr("level_target_bal");
-    gainBalAddr = GetNiosAddr("gain_bal");
+    bitsBalAddr = channels_find_by_name("bits_bal");
+    levelOnBalAddr = channels_find_by_name("level_on_bal");
+    levelOffBalAddr = channels_find_by_name("level_off_bal");
+    levelTargetBalAddr = channels_find_by_name("level_target_bal");
+    gainBalAddr = channels_find_by_name("gain_bal");
   }
 
   /* inner frame box */
@@ -733,12 +732,11 @@ void ControlAuxMotors()
   /* Run Heating card, maybe */
   bits_bal = ControlPumpHeat(bits_bal);
   
-  WriteData(levelOnBalAddr, CommandData.pumps.level_on_bal, NIOS_QUEUE);
-  WriteData(levelOffBalAddr, CommandData.pumps.level_off_bal, NIOS_QUEUE);
-  WriteData(levelTargetBalAddr, (CommandData.pumps.level_target_bal + 1990.13*5.),
-      NIOS_QUEUE);
-  WriteData(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.), NIOS_QUEUE);
-  WriteData(bitsBalAddr, bits_bal, NIOS_FLUSH);
+  SET_VALUE(levelOnBalAddr, CommandData.pumps.level_on_bal);
+  SET_VALUE(levelOffBalAddr, CommandData.pumps.level_off_bal);
+  SET_VALUE(levelTargetBalAddr, (CommandData.pumps.level_target_bal + 1990.13*5.));
+  SET_VALUE(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.));
+  SET_VALUE(bitsBalAddr, bits_bal);
 
 }
 
@@ -747,18 +745,18 @@ void ControlAuxMotors()
 void ControlPower(void) {
 
   static int firsttime = 1;
-  static struct NiosStruct* latchingAddr[2];
-  static struct NiosStruct* switchGyAddr;
-  static struct NiosStruct* switchMiscAddr;
+  static channel_t* latchingAddr[2];
+  static channel_t* switchGyAddr;
+  static channel_t* switchMiscAddr;
   int latch0 = 0, latch1 = 0, gybox = 0, misc = 0;
   int i;
 
   if (firsttime) {
     firsttime = 0;
-    latchingAddr[0] = GetNiosAddr("latch0");
-    latchingAddr[1] = GetNiosAddr("latch1");
-    switchGyAddr = GetNiosAddr("switch_gy");
-    switchMiscAddr = GetNiosAddr("switch_misc");
+    latchingAddr[0] = channels_find_by_name("latch0");
+    latchingAddr[1] = channels_find_by_name("latch1");
+    switchGyAddr = channels_find_by_name("switch_gy");
+    switchMiscAddr = channels_find_by_name("switch_misc");
   }
 
   if (CommandData.power.hub232_off) {
@@ -887,21 +885,21 @@ void ControlPower(void) {
     if (CommandData.power.rx_amps.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0a00;
   }
 
-  WriteData(latchingAddr[0], latch0, NIOS_QUEUE);
-  WriteData(latchingAddr[1], latch1, NIOS_QUEUE);
-  WriteData(switchGyAddr, gybox, NIOS_QUEUE);
-  WriteData(switchMiscAddr, misc, NIOS_QUEUE);
+  SET_VALUE(latchingAddr[0], latch0);
+  SET_VALUE(latchingAddr[1], latch1);
+  SET_VALUE(switchGyAddr, gybox);
+  SET_VALUE(switchMiscAddr, misc);
 }
 
 void VideoTx(void)
 {
-  static struct NiosStruct* bitsVtxAddr;  
+  static channel_t* bitsVtxAddr;  
   static int firsttime =1;
   int vtx_bits = 0;
 
   if (firsttime) {
     firsttime = 0;
-    bitsVtxAddr = GetNiosAddr("bits_vtx");
+    bitsVtxAddr = channels_find_by_name("bits_vtx");
   }
 
   if (CommandData.vtx_sel[0] == vtx_sbsc) vtx_bits |= 0x3;
@@ -909,5 +907,5 @@ void VideoTx(void)
   if (CommandData.vtx_sel[1] == vtx_sbsc) vtx_bits |= 0xc;
   else if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0x4;
 
-  WriteData(bitsVtxAddr, vtx_bits, NIOS_QUEUE);
+  SET_VALUE(bitsVtxAddr, vtx_bits);
 }

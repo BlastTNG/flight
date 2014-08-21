@@ -1,11 +1,13 @@
 CC = gcc
 CXX = g++
-CFLAGS = -g -O3 -Wall
+CFLAGS = -g -Wall -std=gnu99
 CPPFLAGS = -D__MCP__  $(BOLOTEST) -DDAS_CARDS=12 
-LDLIBS = -pthread -lm -lstdc++ -lgsl -lgslcblas
+LDLIBS = -pthread -lm -lstdc++ -lgsl -lgslcblas $(shell pkg-config --libs glib-2.0)
 ifeq ($(DEBUG), 1)
-	CPPFLAGS := $(CPPFLAGS) -DDEBUG
+	CPPFLAGS := $(CPPFLAGS) -O0 -DDEBUG
 	LDFLAGS := $(LDFLAGS) -g -DDEBUG
+else
+	CPPFLAGS := $(CPPFLAGS) -O2
 endif
 
 ########################################################
@@ -19,24 +21,25 @@ BLAST_ONLY=1
 #
 
 EXPT_HEADERS = calibrate.h command_list.h isc_protocol.h
-SHARED_HEADERS = bbc_pci.h blast.h channels.h command_common.h \
-								 compressstruct.h crc.h derived.h ephem_read.h ephem_types.h \
-								 fir.h flcdataswap.h lut.h mcp_sched.h netcmd.h sip.h \
-								 starpos.h slowdl.h
+SHARED_HEADERS = bbc_pci.h blast.h channels_tng.h command_common.h \
+								 crc.h derived.h ephem_read.h ephem_types.h \
+								 fir.h flcdataswap.h lut.h mcp_sched.h netcmd.h \
+								 PMurHash.h \
+								 sip.h starpos.h slowdl.h
 LOCAL_HEADERS = amccommand.h chrgctrl.h command_struct.h copleycommand.h \
 								hwpr.h ezstep.h mcp.h motordefs.h pointing_struct.h \
 								sbsc_protocol.h sbsccommunicator.h tx.h
 
 # These are needed by both bolotest and flight versions
-EXPT_OBJS = command_list.o derived.o tx_struct.o
-SHARED_OBJS = blast.o channels.o command_common.o framefile.o lut.o sip.o
+EXPT_OBJS = command_list.o derived.o tx_struct_tng.o
+SHARED_OBJS = blast.o channels_tng.o command_common.o lut.o sip.o PMurHash.o
 LOCAL_OBJS = actuators.o commands.o das.o ezstep.o hwpr.o mcp.o tx.o xystage.o
 
 # These are only needed by the flight version
 ifndef BOLOTEST
 EXPT_OBJS += compressstruct.o slowdl_struct.o
-SHARED_OBJS += compressfuncs.o compressionwriter.o crc.o ephem_read.o fir.o \
-							 flcdataswap.o geomag.o radbox.o starpos.o slowdl.o
+SHARED_OBJS += crc.o ephem_read.o fir.o \
+							 flcdataswap.o geomag.o radbox.o starpos.o #slowdl.o
 LOCAL_OBJS += amccommand.o auxiliary.o chrgctrl.o copleycommand.o dgps.o isc.o \
 							motors.o pointing.o sbsc.o sbsccommunicator.o sched.o
 endif

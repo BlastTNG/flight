@@ -46,10 +46,6 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
 
 #include "mcp.h" 
 
-/*
-#include "share/channels.h"
-#include "tx.h"
- */
 
 #define CHRGCTRL1_DEVICE "/dev/ttySI3" // change depending upon serial hub port
 #define CHRGCTRL2_DEVICE "/dev/ttySI6" // change depending upon serial hub port
@@ -110,7 +106,7 @@ void* chrgctrlComm(void* cc)
   const char *COMM[] = {CHRGCTRL2_DEVICE, CHRGCTRL1_DEVICE};
   const int slave = 0x01;   // default MODBUS device address   
                             // for charge controller
-  int i_cc = (int)cc;       // which charge controller we should be talking to
+  int i_cc = (intptr_t)cc;       // which charge controller we should be talking to
 
   char tname[10];
   

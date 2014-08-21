@@ -847,20 +847,20 @@ static void SetLockState(int nic)
   int pot;
   unsigned int state;
 
-  static struct BiPhaseStruct* potLockAddr;
-  static struct BiPhaseStruct* stateLockAddr;
+  static channel_t* potLockAddr;
+  static channel_t* stateLockAddr;
 
   if (firsttime) {
     firsttime = 0;
-    potLockAddr = GetBiPhaseAddr("pot_lock");
-    stateLockAddr = GetBiPhaseAddr("state_lock");
+    potLockAddr = channels_find_by_name("pot_lock");
+    stateLockAddr = channels_find_by_name("state_lock");
   }
 
   //get lock data
   if (nic) {
     //use bbus when nic
-    pot = slow_data[potLockAddr->index][potLockAddr->channel];
-    state = slow_data[stateLockAddr->index][stateLockAddr->channel];
+    pot = GET_UINT16(potLockAddr);
+    state = GET_UINT16(stateLockAddr);
     lock_data.adc[1] = pot;
   } else {
     //otherwise (in charge) use lock_data
@@ -907,132 +907,130 @@ static void SetLockState(int nic)
 #define LA_RETRACT 4
 static void DoLock(void)
 {
-  int action = LA_EXIT;
+    int action = LA_EXIT;
 
-  do {
-    GetLockData();
+    do {
+        GetLockData();
 
-    /* Fix weird states */
-    if ((lock_data.state & (LS_DRIVE_EXT | LS_DRIVE_RET | LS_DRIVE_UNK)
-          && lock_data.state & LS_DRIVE_OFF)
-        || CommandData.actbus.lock_goal & LS_DRIVE_FORCE) {
-      lock_data.state &= ~LS_DRIVE_MASK | LS_DRIVE_UNK;
-      CommandData.actbus.lock_goal &= ~LS_DRIVE_FORCE;
-      bprintf(warning, "Reset lock motor state.");
-    }
+        /* Fix weird states */
+        if (((lock_data.state & (LS_DRIVE_EXT | LS_DRIVE_RET | LS_DRIVE_UNK)) && (lock_data.state & LS_DRIVE_OFF))
+                || (CommandData.actbus.lock_goal & LS_DRIVE_FORCE)) {
+            lock_data.state &= ~LS_DRIVE_MASK | LS_DRIVE_UNK;
+            CommandData.actbus.lock_goal &= ~LS_DRIVE_FORCE;
+            bprintf(warning, "Reset lock motor state.");
+        }
 
-    SetLockState(0);
+        SetLockState(0);
 
-    /* compare goal to current state -- only 3 goals are supported:
-     * open + off, closed + off and off */
-    if ((CommandData.actbus.lock_goal & 0x7) == (LS_OPEN | LS_DRIVE_OFF)) {
-      /*                                       ORe -.
-       * cUe -+-(stp)- cFe -(ext)- cXe -(---)- OXe -+-(stp)- OFe ->
-       * cRe -'                                OUe -'
-       */
-      if ((lock_data.state & (LS_OPEN | LS_DRIVE_OFF))
-          == (LS_OPEN | LS_DRIVE_OFF))
-        action = LA_EXIT;
-      else if (lock_data.state & LS_OPEN)
-        action = LA_STOP;
-      else if (lock_data.state & (LS_DRIVE_RET))
-        action = LA_WAIT;
-      else if (lock_data.state & LS_DRIVE_OFF)
-        action = LA_RETRACT;
-      else
-        action = LA_STOP;
-    } else if ((CommandData.actbus.lock_goal & 0x7) == (LS_CLOSED
-          | LS_DRIVE_OFF)) {
-      /* oX -.         oUE -(stp)-.              CRe -(stp)-+
-       * oR -+-(stp) - oF  -(---)-+- oFE -(ret)- oRE -(---)-+- CFe ->
-       * oU -'         oXE -(stp)-'              CUe -(stp)-+
-       *                                         CXe -(stp)-'
-       */
-      if ((lock_data.state & (LS_CLOSED | LS_DRIVE_OFF))
-          == (LS_CLOSED | LS_DRIVE_OFF)) 
-        action = LA_EXIT;
-      else if (lock_data.state & LS_CLOSED)
-        action = LA_STOP;
-      else if (lock_data.state & LS_EL_OK
-          || CommandData.actbus.lock_goal & LS_IGNORE_EL) { /* el in range */
-        if ((lock_data.state & (LS_OPEN | LS_DRIVE_STP))
-            == (LS_OPEN | LS_DRIVE_STP))
-          action = LA_WAIT;
-        else if (lock_data.state & LS_DRIVE_EXT)
-          action = LA_WAIT;
-        else if (lock_data.state & LS_DRIVE_STP)
-          action = LA_STOP;
-        else if (lock_data.state & LS_DRIVE_OFF)
-          action = LA_EXTEND;
+        /* compare goal to current state -- only 3 goals are supported:
+         * open + off, closed + off and off */
+        if ((CommandData.actbus.lock_goal & 0x7) == (LS_OPEN | LS_DRIVE_OFF)) {
+            /*                                       ORe -.
+             * cUe -+-(stp)- cFe -(ext)- cXe -(---)- OXe -+-(stp)- OFe ->
+             * cRe -'                                OUe -'
+             */
+            if ((lock_data.state & (LS_OPEN | LS_DRIVE_OFF)) == (LS_OPEN | LS_DRIVE_OFF))
+                action = LA_EXIT;
+            else if (lock_data.state & LS_OPEN)
+                action = LA_STOP;
+            else if (lock_data.state & (LS_DRIVE_RET))
+                action = LA_WAIT;
+            else if (lock_data.state & LS_DRIVE_OFF)
+                action = LA_RETRACT;
+            else
+                action = LA_STOP;
+        }
+        else if ((CommandData.actbus.lock_goal & 0x7) == (LS_CLOSED | LS_DRIVE_OFF)) {
+            /* oX -.         oUE -(stp)-.              CRe -(stp)-+
+             * oR -+-(stp) - oF  -(---)-+- oFE -(ret)- oRE -(---)-+- CFe ->
+             * oU -'         oXE -(stp)-'              CUe -(stp)-+
+             *                                         CXe -(stp)-'
+             */
+            if ((lock_data.state & (LS_CLOSED | LS_DRIVE_OFF)) == (LS_CLOSED | LS_DRIVE_OFF))
+                action = LA_EXIT;
+            else if (lock_data.state & LS_CLOSED)
+                action = LA_STOP;
+            else if ((lock_data.state & LS_EL_OK)
+                        || (CommandData.actbus.lock_goal & LS_IGNORE_EL)) { /* el in range */
+                if ((lock_data.state & (LS_OPEN | LS_DRIVE_STP)) == (LS_OPEN | LS_DRIVE_STP))
+                    action = LA_WAIT;
+                else if (lock_data.state & LS_DRIVE_EXT)
+                    action = LA_WAIT;
+                else if (lock_data.state & LS_DRIVE_STP)
+                    action = LA_STOP;
+                else if (lock_data.state & LS_DRIVE_OFF)
+                    action = LA_EXTEND;
+                else
+                    action = LA_STOP;
+            }
+            else { /* el out of range */
+                action = (lock_data.state & LS_DRIVE_OFF) ? LA_WAIT : LA_STOP;
+            }
+        }
+        else if ((CommandData.actbus.lock_goal & 0x7) == LS_DRIVE_OFF) {
+            /* ocXe -.
+             * ocRe -+-(stp)- ocFe ->
+             * ocUe -+
+             * ocSe -'
+             */
+            action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
+        }
+        else {
+            bprintf(warning, "Unhandled lock goal (%x) ignored.", CommandData.actbus.lock_goal);
+            CommandData.actbus.lock_goal = LS_DRIVE_OFF;
+        }
+
+        /* Timeout check */
+        if (lock_timeout == 0) {
+            bputs(warning, "Lock Motor drive timeout.");
+            action = LA_STOP;
+        }
+        /* Seize the bus */
+        if (action == LA_EXIT)
+            EZBus_Release(&bus, id[LOCKNUM]);
         else
-          action = LA_STOP;
-      } else { /* el out of range */
-        action = (lock_data.state & LS_DRIVE_OFF) ? LA_WAIT : LA_STOP;
-      }
-    } else if ((CommandData.actbus.lock_goal & 0x7) == LS_DRIVE_OFF) {
-      /* ocXe -.
-       * ocRe -+-(stp)- ocFe ->
-       * ocUe -+
-       * ocSe -'
-       */
-      action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
-    } else {
-      bprintf(warning, "Unhandled lock goal (%x) ignored.",
-          CommandData.actbus.lock_goal);
-      CommandData.actbus.lock_goal = LS_DRIVE_OFF;
-    }
+            EZBus_Take(&bus, id[LOCKNUM]);
 
-    /* Timeout check */
-    if (lock_timeout == 0) {
-      bputs(warning, "Lock Motor drive timeout.");
-      action = LA_STOP;
-    }
-    /* Seize the bus */
-    if (action == LA_EXIT)
-      EZBus_Release(&bus, id[LOCKNUM]);
-    else
-      EZBus_Take(&bus, id[LOCKNUM]);
+        /* Figure out what to do... */
+        switch (action) {
+            case LA_STOP:
+                lock_timeout = -1;
+                bputs(info, "Stopping lock motor.");
+                EZBus_Stop(&bus, id[LOCKNUM]); /* terminate all strings */
+                usleep(SEND_SLEEP); /* wait for a bit */
+                lock_data.state &= ~LS_DRIVE_MASK;
+                lock_data.state |= LS_DRIVE_OFF;
+                break;
+            case LA_EXTEND:
+                lock_timeout = DRIVE_TIMEOUT;
+                bputs(info, "Extending lock motor.");
+                EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
+                EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
+                usleep(SEND_SLEEP); /* wait for a bit */
+                lock_data.state &= ~LS_DRIVE_MASK;
+                lock_data.state |= LS_DRIVE_EXT;
+                break;
+            case LA_RETRACT:
+                lock_timeout = DRIVE_TIMEOUT;
+                bputs(info, "Retracting lock motor.");
+                EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
+                EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
+                usleep(SEND_SLEEP); /* wait for a bit */
+                lock_data.state &= ~LS_DRIVE_MASK;
+                lock_data.state |= LS_DRIVE_RET;
+                break;
+            case LA_WAIT:
+                usleep(WAIT_SLEEP); /* wait for a bit */
+                break;
+        }
 
-    /* Figure out what to do... */
-    switch (action) {
-      case LA_STOP:
-        lock_timeout = -1;
-        bputs(info, "Stopping lock motor.");
-        EZBus_Stop(&bus, id[LOCKNUM]); /* terminate all strings */
-	usleep(SEND_SLEEP); /* wait for a bit */
-        lock_data.state &= ~LS_DRIVE_MASK;
-        lock_data.state |= LS_DRIVE_OFF;
-        break;
-      case LA_EXTEND:
-        lock_timeout = DRIVE_TIMEOUT;
-        bputs(info, "Extending lock motor.");
-        EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
-	EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
-	usleep(SEND_SLEEP); /* wait for a bit */
-        lock_data.state &= ~LS_DRIVE_MASK;
-        lock_data.state |= LS_DRIVE_EXT;
-        break;
-      case LA_RETRACT:
-        lock_timeout = DRIVE_TIMEOUT;
-        bputs(info, "Retracting lock motor.");
-        EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
-	EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
-	usleep(SEND_SLEEP); /* wait for a bit */
-        lock_data.state &= ~LS_DRIVE_MASK;
-        lock_data.state |= LS_DRIVE_RET;
-        break;
-      case LA_WAIT:
-	usleep(WAIT_SLEEP); /* wait for a bit */
-	break;
-    }
+        //quit if timeout
+        if (lock_timeout == 0) {
+            lock_timeout = -1;
+            action = LA_EXIT;
+        }
 
-    //quit if timeout
-    if (lock_timeout == 0) {
-      lock_timeout = -1;
-      action = LA_EXIT;
-    }
-
-  } while (action != LA_EXIT);
+    } while (action != LA_EXIT);
 }
 
 /************************************************************************/
@@ -1044,131 +1042,129 @@ static void DoLock(void)
 #define TEMP_FILT_LEN 300   //60s @ 5Hz
 static double filterTemp(int num, double data)
 {
-  static double temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = {}; //init to 0
-  static double temp_sum[N_FILT_TEMP] = {};
-  static int ibuf[N_FILT_TEMP] = {};
+    static double temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = { }; //init to 0
+    static double temp_sum[N_FILT_TEMP] = { };
+    static int ibuf[N_FILT_TEMP] = { };
 
-  temp_sum[num] += (data - temp_buf[num][ibuf[num]]);
-  temp_buf[num][ibuf[num]] = data;
-  ibuf[num] = (ibuf[num] + 1) % TEMP_FILT_LEN;
-  return temp_sum[num]/TEMP_FILT_LEN;
+    temp_sum[num] += (data - temp_buf[num][ibuf[num]]);
+    temp_buf[num][ibuf[num]] = data;
+    ibuf[num] = (ibuf[num] + 1) % TEMP_FILT_LEN;
+    return temp_sum[num] / TEMP_FILT_LEN;
 }
 
 /* decide on primary and secondary temperature, write focus-related fields */
 void SecondaryMirror(void)
 {
-  static int firsttime = 1;
+    static int firsttime = 1;
 
-  static struct NiosStruct* correctionSfAddr;
-  static struct NiosStruct* ageSfAddr;
-  static struct NiosStruct* offsetSfAddr;
-  static struct NiosStruct* tPrimeSfAddr;
-  static struct NiosStruct* tSecondSfAddr;
+    static channel_t* correctionSfAddr;
+    static channel_t* ageSfAddr;
+    static channel_t* offsetSfAddr;
+    static channel_t* tPrimeSfAddr;
+    static channel_t* tSecondSfAddr;
 
-  static struct BiPhaseStruct* t1PrimeAddr;
-  static struct BiPhaseStruct* t1SecondAddr;
-  static struct BiPhaseStruct* t2PrimeAddr;
-  static struct BiPhaseStruct* t2SecondAddr;
-  double t_primary1, t_secondary1;
-  double t_primary2, t_secondary2;
+    static channel_t* t1PrimeAddr;
+    static channel_t* t1SecondAddr;
+    static channel_t* t2PrimeAddr;
+    static channel_t* t2SecondAddr;
+    double t_primary1, t_secondary1;
+    double t_primary2, t_secondary2;
 
-  double correction_temp = 0;
-  if (firsttime) {
-    firsttime = 0;
-    t1PrimeAddr = GetBiPhaseAddr("vt_1_prime");
-    t1SecondAddr = GetBiPhaseAddr("t_1_second");
-    t2PrimeAddr = GetBiPhaseAddr("vt_2_prime");
-    t2SecondAddr = GetBiPhaseAddr("t_2_second");
-    correctionSfAddr = GetNiosAddr("correction_sf");
-    ageSfAddr = GetNiosAddr("age_sf");
-    offsetSfAddr = GetNiosAddr("offset_sf");
-    tPrimeSfAddr = GetNiosAddr("t_prime_sf");
-    tSecondSfAddr = GetNiosAddr("t_second_sf");
-  }
+    double correction_temp = 0;
+    if (firsttime) {
+        firsttime = 0;
+        t1PrimeAddr = channels_find_by_name("vt_1_prime");
+        t1SecondAddr = channels_find_by_name("t_1_second");
+        t2PrimeAddr = channels_find_by_name("vt_2_prime");
+        t2SecondAddr = channels_find_by_name("t_2_second");
+        correctionSfAddr = channels_find_by_name("correction_sf");
+        ageSfAddr = channels_find_by_name("age_sf");
+        offsetSfAddr = channels_find_by_name("offset_sf");
+        tPrimeSfAddr = channels_find_by_name("t_prime_sf");
+        tSecondSfAddr = channels_find_by_name("t_second_sf");
+    }
 
-  t_primary1 = CalibrateThermister(
-      slow_data[t1PrimeAddr->index][t1PrimeAddr->channel]);
-  t_primary2 = CalibrateThermister(
-      slow_data[t2PrimeAddr->index][t2PrimeAddr->channel]);
+    t_primary1 = CalibrateThermister(GET_UINT16(t1PrimeAddr));
+    t_primary2 = CalibrateThermister(GET_UINT16(t2PrimeAddr));
 
-  t_secondary1 = CalibrateAD590(
-      slow_data[t1SecondAddr->index][t1SecondAddr->channel]);
-  t_secondary2 = CalibrateAD590(
-      slow_data[t2SecondAddr->index][t2SecondAddr->channel]);
+    t_secondary1 = CalibrateAD590(GET_UINT16(t1SecondAddr));
+    t_secondary2 = CalibrateAD590(GET_UINT16(t2SecondAddr));
 
-  if (t_primary1 < 0 || t_primary2 < 0)
-    t_primary = -1; /* autoveto */
-  else if (fabs(t_primary1 - t_primary2) < CommandData.actbus.tc_spread) {
-    if (t_primary1 >= 0 && t_primary2 >= 0)
-      t_primary = filterTemp(0, (t_primary1 + t_primary2)/2);
-    else if (t_primary1 >= 0)
-      t_primary = filterTemp(0, t_primary1);
-    else
-      t_primary = filterTemp(0, t_primary2);
-  } else {
-    if (t_primary1 >= 0 && CommandData.actbus.tc_prefp == 1)
-      t_primary = filterTemp(0, t_primary1);
-    else if (t_primary2 >= 0 && CommandData.actbus.tc_prefp == 2)
-      t_primary = filterTemp(0, t_primary2);
-    else
-      t_primary = -1; /* autoveto */
-  }
+    if (t_primary1 < 0 || t_primary2 < 0)
+        t_primary = -1; /* autoveto */
+    else if (fabs(t_primary1 - t_primary2) < CommandData.actbus.tc_spread) {
+        if (t_primary1 >= 0 && t_primary2 >= 0)
+            t_primary = filterTemp(0, (t_primary1 + t_primary2) / 2);
+        else if (t_primary1 >= 0)
+            t_primary = filterTemp(0, t_primary1);
+        else
+            t_primary = filterTemp(0, t_primary2);
+    }
+    else {
+        if (t_primary1 >= 0 && CommandData.actbus.tc_prefp == 1)
+            t_primary = filterTemp(0, t_primary1);
+        else if (t_primary2 >= 0 && CommandData.actbus.tc_prefp == 2)
+            t_primary = filterTemp(0, t_primary2);
+        else
+            t_primary = -1; /* autoveto */
+    }
 
-  if (t_secondary1 < 0 || t_secondary2 < 0)
-    t_secondary = -1; /* autoveto */
-  else if (fabs(t_secondary1 - t_secondary2) < CommandData.actbus.tc_spread) {
-    if (t_secondary1 >= 0 && t_secondary2 >= 0)
-      t_secondary = filterTemp(1, (t_secondary1 + t_secondary2)/2);
-    else if (t_secondary1 >= 0)
-      t_secondary = filterTemp(1, t_secondary1);
-    else
-      t_secondary = filterTemp(1, t_secondary2);
-  } else {
-    if (t_secondary1 >= 0 && CommandData.actbus.tc_prefs == 1)
-      t_secondary = filterTemp(1, t_secondary1);
-    else if (t_secondary2 >= 0 && CommandData.actbus.tc_prefs == 2)
-      t_secondary = filterTemp(1, t_secondary2);
-    else
-      t_secondary = -1; /* autoveto */
-  }
+    if (t_secondary1 < 0 || t_secondary2 < 0)
+        t_secondary = -1; /* autoveto */
+    else if (fabs(t_secondary1 - t_secondary2) < CommandData.actbus.tc_spread) {
+        if (t_secondary1 >= 0 && t_secondary2 >= 0)
+            t_secondary = filterTemp(1, (t_secondary1 + t_secondary2) / 2);
+        else if (t_secondary1 >= 0)
+            t_secondary = filterTemp(1, t_secondary1);
+        else
+            t_secondary = filterTemp(1, t_secondary2);
+    }
+    else {
+        if (t_secondary1 >= 0 && CommandData.actbus.tc_prefs == 1)
+            t_secondary = filterTemp(1, t_secondary1);
+        else if (t_secondary2 >= 0 && CommandData.actbus.tc_prefs == 2)
+            t_secondary = filterTemp(1, t_secondary2);
+        else
+            t_secondary = -1; /* autoveto */
+    }
 
-  if (CommandData.actbus.tc_mode != TC_MODE_VETOED &&
-      (t_primary < 0 || t_secondary < 0)) {
-    if (CommandData.actbus.tc_mode == TC_MODE_ENABLED)
-      bputs(info, "Thermal Compensation: Autoveto raised.");
-    CommandData.actbus.tc_mode = TC_MODE_AUTOVETO;
-  } else if (CommandData.actbus.tc_mode == TC_MODE_AUTOVETO) {
-    bputs(info, "Thermal Compensation: Autoveto lowered.");
-    CommandData.actbus.tc_mode = TC_MODE_ENABLED;
-  }
+    if (CommandData.actbus.tc_mode != TC_MODE_VETOED && (t_primary < 0 || t_secondary < 0)) {
+        if (CommandData.actbus.tc_mode == TC_MODE_ENABLED)
+            bputs(info, "Thermal Compensation: Autoveto raised.");
+        CommandData.actbus.tc_mode = TC_MODE_AUTOVETO;
+    }
+    else if (CommandData.actbus.tc_mode == TC_MODE_AUTOVETO) {
+        bputs(info, "Thermal Compensation: Autoveto lowered.");
+        CommandData.actbus.tc_mode = TC_MODE_ENABLED;
+    }
 
-  correction_temp = CommandData.actbus.g_primary * (t_primary - T_PRIMARY_FOCUS)
-    - CommandData.actbus.g_secondary * (t_secondary - T_SECONDARY_FOCUS);
+    correction_temp = CommandData.actbus.g_primary * (t_primary - T_PRIMARY_FOCUS)
+            - CommandData.actbus.g_secondary * (t_secondary - T_SECONDARY_FOCUS);
 
-  /* convert to counts */
-  correction_temp /= ACTENC_TO_UM;
+    /* convert to counts */
+    correction_temp /= ACTENC_TO_UM;
 
-  /* re-adjust */
-  correction_temp += focus - POSITION_FOCUS - CommandData.actbus.sf_offset;
+    /* re-adjust */
+    correction_temp += focus - POSITION_FOCUS - CommandData.actbus.sf_offset;
 
-  correction = correction_temp;  //slightly more thread safe
+    correction = correction_temp;  //slightly more thread safe
 
-  if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
-    CommandData.actbus.sf_time++;
+    if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
+        CommandData.actbus.sf_time++;
 
-  WriteData(tPrimeSfAddr, t_primary/M_16_AD590 + B_16_AD590, NIOS_QUEUE);
-  WriteData(tSecondSfAddr, t_secondary/M_16_AD590 + B_16_AD590, NIOS_QUEUE);
-  WriteData(correctionSfAddr, correction, NIOS_QUEUE);
-  WriteData(ageSfAddr, CommandData.actbus.sf_time / 10., NIOS_QUEUE);
-  WriteData(offsetSfAddr, CommandData.actbus.sf_offset, NIOS_FLUSH);
+    SET_UINT16(tPrimeSfAddr, t_primary/M_16_AD590 + B_16_AD590);
+    SET_UINT16(tSecondSfAddr, t_secondary/M_16_AD590 + B_16_AD590);
+    SET_UINT16(correctionSfAddr, correction);
+    SET_UINT16(ageSfAddr, CommandData.actbus.sf_time / 10.);
+    SET_UINT16(offsetSfAddr, CommandData.actbus.sf_offset);
 }
 
 static char name_buffer[100];
-static inline struct NiosStruct* GetActNiosAddr(int i, const char* field)
+static inline channel_t* GetActNiosAddr(int i, const char* field)
 {
   sprintf(name_buffer, "%s_%i_act", field, i);
 
-  return GetNiosAddr(name_buffer);
+  return channels_find_by_name(name_buffer);
 }
 
 static int filterLVDT(int num, int data)
@@ -1209,207 +1205,198 @@ void UpdateActFlags()
 
 void StoreActBus(void)
 {
-  int j;
-  static int firsttime = 1;
-  int lvdt_filt[3];
+    int j;
+    static int firsttime = 1;
+    int lvdt_filt[3];
 
-  static struct BiPhaseStruct* lvdt63ActAddr;
-  static struct BiPhaseStruct* lvdt64ActAddr;
-  static struct BiPhaseStruct* lvdt65ActAddr;
+    static channel_t* lvdt63ActAddr;
+    static channel_t* lvdt64ActAddr;
+    static channel_t* lvdt65ActAddr;
 
-  static struct NiosStruct* busResetActAddr;
-  static struct NiosStruct* posLockAddr;
-  static struct NiosStruct* stateLockAddr;
-  static struct NiosStruct* goalLockAddr;
-  static struct NiosStruct* seizedActAddr;
-  static struct NiosStruct* potLockAddr;
-  static struct NiosStruct* pinInLockAddr;
+    static channel_t* busResetActAddr;
+    static channel_t* posLockAddr;
+    static channel_t* stateLockAddr;
+    static channel_t* goalLockAddr;
+    static channel_t* seizedActAddr;
+    static channel_t* potLockAddr;
+    static channel_t* pinInLockAddr;
 
-  static struct NiosStruct* velLockAddr;
-  static struct NiosStruct* accLockAddr;
-  static struct NiosStruct* iMoveLockAddr;
-  static struct NiosStruct* iLockHoldAddr;
+    static channel_t* velLockAddr;
+    static channel_t* accLockAddr;
+    static channel_t* iMoveLockAddr;
+    static channel_t* iLockHoldAddr;
 
-  static struct NiosStruct* posShutterAddr;
-  static struct NiosStruct* outShutterAddr;
-  static struct NiosStruct* stepShutterAddr;
-  static struct NiosStruct* stepSlowShutterAddr;
+    static channel_t* posShutterAddr;
+    static channel_t* outShutterAddr;
+    static channel_t* stepShutterAddr;
+    static channel_t* stepSlowShutterAddr;
 
-  static struct NiosStruct* velActAddr;
-  static struct NiosStruct* accActAddr;
-  static struct NiosStruct* iMoveActAddr;
-  static struct NiosStruct* iHoldActAddr;
-  static struct NiosStruct* tolActAddr;
-  static struct NiosStruct* flagsActAddr;
-  static struct NiosStruct* modeActAddr;
+    static channel_t* velActAddr;
+    static channel_t* accActAddr;
+    static channel_t* iMoveActAddr;
+    static channel_t* iHoldActAddr;
+    static channel_t* tolActAddr;
+    static channel_t* flagsActAddr;
+    static channel_t* modeActAddr;
 
-  static struct NiosStruct* posActAddr[3];
-  static struct NiosStruct* encActAddr[3];
-  static struct NiosStruct* lvdtActAddr[3];
-  static struct NiosStruct* offsetActAddr[3];
-  static struct NiosStruct* goalActAddr[3];
-  static struct NiosStruct* drActAddr[3];
+    static channel_t* posActAddr[3];
+    static channel_t* encActAddr[3];
+    static channel_t* lvdtActAddr[3];
+    static channel_t* offsetActAddr[3];
+    static channel_t* goalActAddr[3];
+    static channel_t* drActAddr[3];
 
-  static struct NiosStruct* lvdtSpreadActAddr;
-  static struct NiosStruct* lvdtLowActAddr;
-  static struct NiosStruct* lvdtHighActAddr;
+    static channel_t* lvdtSpreadActAddr;
+    static channel_t* lvdtLowActAddr;
+    static channel_t* lvdtHighActAddr;
 
-  static struct NiosStruct* gPrimeSfAddr;
-  static struct NiosStruct* gSecondSfAddr;
-  static struct NiosStruct* stepSfAddr;
-  static struct NiosStruct* waitSfAddr;
-  static struct NiosStruct* modeSfAddr;
-  static struct NiosStruct* spreadSfAddr;
-  static struct NiosStruct* prefTpSfAddr;
-  static struct NiosStruct* prefTsSfAddr;
-  static struct NiosStruct* goalSfAddr;
-  static struct NiosStruct* focusSfAddr;
+    static channel_t* gPrimeSfAddr;
+    static channel_t* gSecondSfAddr;
+    static channel_t* stepSfAddr;
+    static channel_t* waitSfAddr;
+    static channel_t* modeSfAddr;
+    static channel_t* spreadSfAddr;
+    static channel_t* prefTpSfAddr;
+    static channel_t* prefTsSfAddr;
+    static channel_t* goalSfAddr;
+    static channel_t* focusSfAddr;
 
-  static struct NiosStruct* statusActbusAddr;
+    static channel_t* statusActbusAddr;
 
-  if (firsttime) {
-    firsttime = 0;
+    if (firsttime) {
+        firsttime = 0;
 
-    lvdt63ActAddr = GetBiPhaseAddr("lvdt_63_act");
-    lvdt64ActAddr = GetBiPhaseAddr("lvdt_64_act");
-    lvdt65ActAddr = GetBiPhaseAddr("lvdt_65_act");
+        lvdt63ActAddr = channels_find_by_name("lvdt_63_act");
+        lvdt64ActAddr = channels_find_by_name("lvdt_64_act");
+        lvdt65ActAddr = channels_find_by_name("lvdt_65_act");
 
-    busResetActAddr = GetNiosAddr("bus_reset_act");
-    pinInLockAddr = GetNiosAddr("pin_in_lock");
-    posLockAddr = GetNiosAddr("pos_lock");
-    stateLockAddr = GetNiosAddr("state_lock");
-    seizedActAddr = GetNiosAddr("seized_act");
-    goalLockAddr = GetNiosAddr("goal_lock");
-    potLockAddr = GetNiosAddr("pot_lock");
+        busResetActAddr = channels_find_by_name("bus_reset_act");
+        pinInLockAddr = channels_find_by_name("pin_in_lock");
+        posLockAddr = channels_find_by_name("pos_lock");
+        stateLockAddr = channels_find_by_name("state_lock");
+        seizedActAddr = channels_find_by_name("seized_act");
+        goalLockAddr = channels_find_by_name("goal_lock");
+        potLockAddr = channels_find_by_name("pot_lock");
 
-    for (j = 0; j < 3; ++j) {
-      posActAddr[j] = GetActNiosAddr(j, "pos");
-      encActAddr[j] = GetActNiosAddr(j, "enc");
-      lvdtActAddr[j] = GetActNiosAddr(j, "lvdt");
-      offsetActAddr[j] = GetActNiosAddr(j, "offset");
-      goalActAddr[j] = GetActNiosAddr(j, "goal");
-      drActAddr[j] = GetActNiosAddr(j, "dr");
+        for (j = 0; j < 3; ++j) {
+            posActAddr[j] = GetActNiosAddr(j, "pos");
+            encActAddr[j] = GetActNiosAddr(j, "enc");
+            lvdtActAddr[j] = GetActNiosAddr(j, "lvdt");
+            offsetActAddr[j] = GetActNiosAddr(j, "offset");
+            goalActAddr[j] = GetActNiosAddr(j, "goal");
+            drActAddr[j] = GetActNiosAddr(j, "dr");
+        }
+
+        gPrimeSfAddr = channels_find_by_name("g_prime_sf");
+        gSecondSfAddr = channels_find_by_name("g_second_sf");
+        stepSfAddr = channels_find_by_name("step_sf");
+        waitSfAddr = channels_find_by_name("wait_sf");
+        modeSfAddr = channels_find_by_name("mode_sf");
+        spreadSfAddr = channels_find_by_name("spread_sf");
+        prefTpSfAddr = channels_find_by_name("pref_tp_sf");
+        prefTsSfAddr = channels_find_by_name("pref_ts_sf");
+        goalSfAddr = channels_find_by_name("goal_sf");
+        focusSfAddr = channels_find_by_name("focus_sf");
+
+        lvdtSpreadActAddr = channels_find_by_name("lvdt_spread_act");
+        lvdtLowActAddr = channels_find_by_name("lvdt_low_act");
+        lvdtHighActAddr = channels_find_by_name("lvdt_high_act");
+
+        velActAddr = channels_find_by_name("vel_act");
+        accActAddr = channels_find_by_name("acc_act");
+        iMoveActAddr = channels_find_by_name("i_move_act");
+        iHoldActAddr = channels_find_by_name("i_hold_act");
+        tolActAddr = channels_find_by_name("tol_act");
+        flagsActAddr = channels_find_by_name("flags_act");
+        modeActAddr = channels_find_by_name("mode_act");
+
+        velLockAddr = channels_find_by_name("vel_lock");
+        accLockAddr = channels_find_by_name("acc_lock");
+        iMoveLockAddr = channels_find_by_name("i_move_lock");
+        iLockHoldAddr = channels_find_by_name("i_hold_lock");
+
+        posShutterAddr = channels_find_by_name("pos_shutter");
+        outShutterAddr = channels_find_by_name("out_shutter");
+        stepShutterAddr = channels_find_by_name("steps_shutter");
+        stepSlowShutterAddr = channels_find_by_name("steps_slow_shutter");
+
+        statusActbusAddr = channels_find_by_name("status_actbus");
     }
 
-    gPrimeSfAddr = GetNiosAddr("g_prime_sf");
-    gSecondSfAddr = GetNiosAddr("g_second_sf");
-    stepSfAddr = GetNiosAddr("step_sf");
-    waitSfAddr = GetNiosAddr("wait_sf");
-    modeSfAddr = GetNiosAddr("mode_sf");
-    spreadSfAddr = GetNiosAddr("spread_sf");
-    prefTpSfAddr = GetNiosAddr("pref_tp_sf");
-    prefTsSfAddr = GetNiosAddr("pref_ts_sf");
-    goalSfAddr = GetNiosAddr("goal_sf");
-    focusSfAddr = GetNiosAddr("focus_sf");
+    UpdateActFlags();
 
-    lvdtSpreadActAddr = GetNiosAddr("lvdt_spread_act");
-    lvdtLowActAddr = GetNiosAddr("lvdt_low_act");
-    lvdtHighActAddr = GetNiosAddr("lvdt_high_act");
+    //filter the LVDTs, scale into encoder units, rotate to motor positions
+    lvdt_filt[0] = filterLVDT(0, GET_UINT16(lvdt63ActAddr));
+    lvdt_filt[1] = filterLVDT(1, GET_UINT16(lvdt64ActAddr));
+    lvdt_filt[2] = filterLVDT(2, GET_UINT16(lvdt65ActAddr));
+    lvdt_filt[0] = (int) ((double) lvdt_filt[0] * LVDT63_ADC_TO_ENC + LVDT63_ZERO);
+    lvdt_filt[1] = (int) ((double) lvdt_filt[1] * LVDT64_ADC_TO_ENC + LVDT64_ZERO);
+    lvdt_filt[2] = (int) ((double) lvdt_filt[2] * LVDT65_ADC_TO_ENC + LVDT65_ZERO);
+    act_data[0].lvdt = (int) ((double) (-lvdt_filt[2] + 2 * lvdt_filt[0] + 2 * lvdt_filt[1]) / 3.0);
+    act_data[1].lvdt = (int) ((double) (-lvdt_filt[0] + 2 * lvdt_filt[1] + 2 * lvdt_filt[2]) / 3.0);
+    act_data[2].lvdt = (int) ((double) (-lvdt_filt[1] + 2 * lvdt_filt[2] + 2 * lvdt_filt[0]) / 3.0);
 
-    velActAddr = GetNiosAddr("vel_act");
-    accActAddr = GetNiosAddr("acc_act");
-    iMoveActAddr = GetNiosAddr("i_move_act");
-    iHoldActAddr = GetNiosAddr("i_hold_act");
-    tolActAddr = GetNiosAddr("tol_act");
-    flagsActAddr = GetNiosAddr("flags_act");
-    modeActAddr = GetNiosAddr("mode_act");
+    if (CommandData.actbus.off) {
+        if (CommandData.actbus.off > 0)
+            CommandData.actbus.off--;
+        actbus_reset = 0;   //turn actbus off
+    }
+    else
+        actbus_reset = 1;
+    SET_UINT16(busResetActAddr, actbus_reset);
 
-    velLockAddr = GetNiosAddr("vel_lock");
-    accLockAddr = GetNiosAddr("acc_lock");
-    iMoveLockAddr = GetNiosAddr("i_move_lock");
-    iLockHoldAddr = GetNiosAddr("i_hold_lock");
+    SET_UINT16(pinInLockAddr, CommandData.pin_is_in);
 
-    posShutterAddr = GetNiosAddr("pos_shutter");
-    outShutterAddr = GetNiosAddr("out_shutter");
-    stepShutterAddr = GetNiosAddr("steps_shutter");
-    stepSlowShutterAddr = GetNiosAddr("steps_slow_shutter");
+    for (j = 0; j < 3; ++j) {
+        SET_UINT16(posActAddr[j], act_data[j].pos - CommandData.actbus.offset[j]);
+        SET_UINT16(encActAddr[j], act_data[j].enc - CommandData.actbus.offset[j]);
+        SET_UINT16(lvdtActAddr[j], act_data[j].lvdt - CommandData.actbus.offset[j]);
+        SET_UINT16(offsetActAddr[j], CommandData.actbus.offset[j]);
+        SET_UINT16(goalActAddr[j], CommandData.actbus.goal[j] - CommandData.actbus.offset[j]);
+        SET_UINT16(drActAddr[j], act_data[j].dr - CommandData.actbus.offset[j]);
+    }
+    SET_UINT16(focusSfAddr, (int) focus - POSITION_FOCUS - CommandData.actbus.sf_offset);
 
-    statusActbusAddr = GetNiosAddr("status_actbus");
-  }
+    SET_UINT16(potLockAddr, lock_data.adc[1]);
+    SET_UINT16(stateLockAddr, lock_data.state);
+    SET_UINT16(seizedActAddr, bus.seized);
+    SET_UINT16(goalLockAddr, CommandData.actbus.lock_goal);
+    SET_UINT16(posLockAddr, lock_data.pos);
 
-  UpdateActFlags();
+    SET_UINT16(velActAddr, CommandData.actbus.act_vel);
+    SET_UINT16(accActAddr, CommandData.actbus.act_acc);
+    SET_UINT16(iMoveActAddr, CommandData.actbus.act_move_i);
+    SET_UINT16(iHoldActAddr, CommandData.actbus.act_hold_i);
+    SET_UINT16(tolActAddr, CommandData.actbus.act_tol);
+    SET_UINT16(flagsActAddr, actbus_flags);
+    SET_UINT16(modeActAddr, CommandData.actbus.focus_mode);
 
-  //filter the LVDTs, scale into encoder units, rotate to motor positions
-  lvdt_filt[0] = filterLVDT(0, 
-      slow_data[lvdt63ActAddr->index][lvdt63ActAddr->channel]);
-  lvdt_filt[1] = filterLVDT(1, 
-      slow_data[lvdt64ActAddr->index][lvdt64ActAddr->channel]);
-  lvdt_filt[2] = filterLVDT(2, 
-      slow_data[lvdt65ActAddr->index][lvdt65ActAddr->channel]);
-  lvdt_filt[0] = (int)((double)lvdt_filt[0] * LVDT63_ADC_TO_ENC + LVDT63_ZERO);
-  lvdt_filt[1] = (int)((double)lvdt_filt[1] * LVDT64_ADC_TO_ENC + LVDT64_ZERO);
-  lvdt_filt[2] = (int)((double)lvdt_filt[2] * LVDT65_ADC_TO_ENC + LVDT65_ZERO);
-  act_data[0].lvdt = (int)(
-      (double)(-lvdt_filt[2] + 2 * lvdt_filt[0] + 2 * lvdt_filt[1]) / 3.0);
-  act_data[1].lvdt = (int)(
-      (double)(-lvdt_filt[0] + 2 * lvdt_filt[1] + 2 * lvdt_filt[2]) / 3.0);
-  act_data[2].lvdt = (int)(
-      (double)(-lvdt_filt[1] + 2 * lvdt_filt[2] + 2 * lvdt_filt[0]) / 3.0);
+    SET_UINT16(lvdtSpreadActAddr, CommandData.actbus.lvdt_delta);
+    SET_UINT16(lvdtLowActAddr, CommandData.actbus.lvdt_low + 5000);
+    SET_UINT16(lvdtHighActAddr, CommandData.actbus.lvdt_high + 5000);
 
-  if (CommandData.actbus.off) {
-    if (CommandData.actbus.off > 0) CommandData.actbus.off--;
-    actbus_reset = 0;   //turn actbus off
-  } else actbus_reset = 1;
-  WriteData(busResetActAddr, actbus_reset, NIOS_QUEUE);
+    SET_UINT16(velLockAddr, CommandData.actbus.lock_vel / 100);
+    SET_UINT16(accLockAddr, CommandData.actbus.lock_acc);
+    SET_UINT16(iMoveLockAddr, CommandData.actbus.lock_move_i);
+    SET_UINT16(iLockHoldAddr, CommandData.actbus.lock_hold_i);
 
-  WriteData(pinInLockAddr, CommandData.pin_is_in, NIOS_QUEUE);
+    // Shutter data
+    SET_UINT16(stepShutterAddr, CommandData.actbus.shutter_step);
+    SET_UINT16(stepSlowShutterAddr, CommandData.actbus.shutter_step_slow);
+    SET_UINT16(posShutterAddr, (shutter_data.in & SHUTTER_CLOSED_BIT));
+    SET_UINT16(outShutterAddr, shutter_data.pos);
 
-  for (j = 0; j < 3; ++j) {
-    WriteData(posActAddr[j], 
-	act_data[j].pos - CommandData.actbus.offset[j], NIOS_QUEUE);
-    WriteData(encActAddr[j], 
-	act_data[j].enc - CommandData.actbus.offset[j], NIOS_QUEUE);
-    WriteData(lvdtActAddr[j], 
-	act_data[j].lvdt - CommandData.actbus.offset[j], NIOS_QUEUE);
-    WriteData(offsetActAddr[j], CommandData.actbus.offset[j], NIOS_QUEUE);
-    WriteData(goalActAddr[j], 
-	CommandData.actbus.goal[j] - CommandData.actbus.offset[j], NIOS_QUEUE);
-    WriteData(drActAddr[j], 
-	act_data[j].dr - CommandData.actbus.offset[j], NIOS_QUEUE);
-  }
-  WriteData(focusSfAddr, 
-      (int)focus - POSITION_FOCUS - CommandData.actbus.sf_offset, NIOS_QUEUE);
+    SET_UINT16(gPrimeSfAddr, CommandData.actbus.g_primary * 100.);
+    SET_UINT16(gSecondSfAddr, CommandData.actbus.g_secondary * 100.);
+    SET_UINT16(modeSfAddr, CommandData.actbus.tc_mode);
+    SET_UINT16(stepSfAddr, CommandData.actbus.tc_step);
+    SET_UINT16(spreadSfAddr, CommandData.actbus.tc_spread * 500.);
+    SET_UINT16(prefTpSfAddr, CommandData.actbus.tc_prefp);
+    SET_UINT16(prefTsSfAddr, CommandData.actbus.tc_prefs);
+    SET_UINT16(waitSfAddr, CommandData.actbus.tc_wait / 10.);
+    SET_UINT16(goalSfAddr, CommandData.actbus.focus);
 
-  WriteData(potLockAddr, lock_data.adc[1], NIOS_QUEUE);
-  WriteData(stateLockAddr, lock_data.state, NIOS_QUEUE);
-  WriteData(seizedActAddr, bus.seized, NIOS_QUEUE);
-  WriteData(goalLockAddr, CommandData.actbus.lock_goal, NIOS_QUEUE);
-  WriteData(posLockAddr, lock_data.pos, NIOS_QUEUE);
-  
-  WriteData(velActAddr, CommandData.actbus.act_vel, NIOS_QUEUE);
-  WriteData(accActAddr, CommandData.actbus.act_acc, NIOS_QUEUE);
-  WriteData(iMoveActAddr, CommandData.actbus.act_move_i, NIOS_QUEUE);
-  WriteData(iHoldActAddr, CommandData.actbus.act_hold_i, NIOS_QUEUE);
-  WriteData(tolActAddr, CommandData.actbus.act_tol, NIOS_QUEUE);
-  WriteData(flagsActAddr, actbus_flags, NIOS_QUEUE);
-  WriteData(modeActAddr, CommandData.actbus.focus_mode, NIOS_QUEUE);
-
-  WriteData(lvdtSpreadActAddr, CommandData.actbus.lvdt_delta, NIOS_QUEUE);
-  WriteData(lvdtLowActAddr, CommandData.actbus.lvdt_low+5000, NIOS_QUEUE);
-  WriteData(lvdtHighActAddr, CommandData.actbus.lvdt_high+5000, NIOS_QUEUE);
-
-  WriteData(velLockAddr, CommandData.actbus.lock_vel / 100, NIOS_QUEUE);
-  WriteData(accLockAddr, CommandData.actbus.lock_acc, NIOS_QUEUE);
-  WriteData(iMoveLockAddr, CommandData.actbus.lock_move_i, NIOS_QUEUE);
-  WriteData(iLockHoldAddr, CommandData.actbus.lock_hold_i, NIOS_QUEUE);
-
-  // Shutter data
-  WriteData(stepShutterAddr, CommandData.actbus.shutter_step, NIOS_QUEUE);
-  WriteData(stepSlowShutterAddr, CommandData.actbus.shutter_step_slow, NIOS_QUEUE);
-  WriteData(posShutterAddr, (shutter_data.in & SHUTTER_CLOSED_BIT), NIOS_QUEUE);
-  WriteData(outShutterAddr, shutter_data.pos, NIOS_QUEUE);
-
-  WriteData(gPrimeSfAddr, CommandData.actbus.g_primary * 100., NIOS_QUEUE);
-  WriteData(gSecondSfAddr, CommandData.actbus.g_secondary*100., NIOS_QUEUE);
-  WriteData(modeSfAddr, CommandData.actbus.tc_mode, NIOS_QUEUE);
-  WriteData(stepSfAddr, CommandData.actbus.tc_step, NIOS_QUEUE);
-  WriteData(spreadSfAddr, CommandData.actbus.tc_spread * 500., NIOS_QUEUE);
-  WriteData(prefTpSfAddr, CommandData.actbus.tc_prefp, NIOS_QUEUE);
-  WriteData(prefTsSfAddr, CommandData.actbus.tc_prefs, NIOS_QUEUE);
-  WriteData(waitSfAddr, CommandData.actbus.tc_wait / 10., NIOS_QUEUE);
-  WriteData(goalSfAddr, CommandData.actbus.focus, NIOS_FLUSH);
-
-  WriteData(statusActbusAddr, actuators_init, NIOS_FLUSH);
+    SET_UINT16(statusActbusAddr, actuators_init);
 }
 
 /************************************************************************/
@@ -1422,25 +1409,25 @@ void SyncDR()
 {
   int i;
   static int firsttime = 1;
-  static struct BiPhaseStruct* drActAddr[3];
-  static struct BiPhaseStruct* offsetActAddr[3];
+  static channel_t* drActAddr[3];
+  static channel_t* offsetActAddr[3];
   short dr;
   unsigned short offset;
 
   if (firsttime) {
     firsttime = 0;
-    drActAddr[0] = GetBiPhaseAddr("dr_0_act");
-    drActAddr[1] = GetBiPhaseAddr("dr_1_act");
-    drActAddr[2] = GetBiPhaseAddr("dr_2_act");
-    offsetActAddr[0] = GetBiPhaseAddr("offset_0_act");
-    offsetActAddr[1] = GetBiPhaseAddr("offset_1_act");
-    offsetActAddr[2] = GetBiPhaseAddr("offset_2_act");
+    drActAddr[0] = channels_find_by_name("dr_0_act");
+    drActAddr[1] = channels_find_by_name("dr_1_act");
+    drActAddr[2] = channels_find_by_name("dr_2_act");
+    offsetActAddr[0] = channels_find_by_name("offset_0_act");
+    offsetActAddr[1] = channels_find_by_name("offset_1_act");
+    offsetActAddr[2] = channels_find_by_name("offset_2_act");
   }
 
   //get dead reckoning data
   for (i=0; i<3; i++) {
-    dr = slow_data[drActAddr[i]->index][drActAddr[i]->channel];
-    offset = slow_data[offsetActAddr[i]->index][offsetActAddr[i]->channel];
+    dr = GET_UINT16(drActAddr[i]);
+    offset = GET_UINT16(offsetActAddr[i]);
     act_data[i].dr = dr + offset;
   }
 

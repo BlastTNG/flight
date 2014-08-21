@@ -330,163 +330,162 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
 
 int EZBus_Recv(struct ezbus* bus)
 {
-  int fd;
-  fd_set rfds;
-  struct timeval timeout = {.tv_sec = 2, .tv_usec = 0};
-  unsigned char byte;
-  unsigned char checksum = 0;
-  char full_response[EZ_BUS_BUF_LEN];
-  char* ptr = bus->buffer;
-  char* fullptr = full_response;
-  char* hex_buffer;
-  int retval = EZ_ERR_OK;
+    int fd;
+    fd_set rfds;
+    struct timeval timeout = { .tv_sec = 2, .tv_usec = 0 };
+    unsigned char byte;
+    unsigned char checksum = 0;
+    char full_response[EZ_BUS_BUF_LEN];
+    char* ptr = bus->buffer;
+    char* fullptr = full_response;
+    char* hex_buffer;
+    int retval = EZ_ERR_OK;
 
-  FD_ZERO(&rfds);
-  FD_SET(bus->fd, &rfds);
+    FD_ZERO(&rfds);
+    FD_SET(bus->fd, &rfds);
 
-  fd = select(bus->fd + 1, &rfds, NULL, NULL, &timeout);
+    fd = select(bus->fd + 1, &rfds, NULL, NULL, &timeout);
 
-  if (fd == -1) {
-    //on error, don't return immediately, allow response to be terminated
-    if (bus->chatter >= EZ_CHAT_ERR)
-      berror(err, "%sError waiting for input on bus",bus->name);
-    retval |= EZ_ERR_TTY;
-  } else if (!fd) { /* Timeout */
-    retval |= EZ_ERR_TIMEOUT;
-  } else {
-    int state = 0;
-    int had_errors = 0;
-    int read_tries = 100;
-    int len;
-
-    for(;;) {
-      len = read(bus->fd, &byte, 1);
-      if (len <= 0) {
-        if (state == 6 || state == EZ_BUS_RECV_ABORT)
-          break;
-        if (errno == EAGAIN && read_tries > 0) {
-          read_tries--;
-          usleep(1000);
-          continue;
-        } else {
-	  if (bus->chatter >= EZ_CHAT_ERR)
-	    berror(warning, "%sUnexpected out-of-data reading bus (%i)", 
-		bus->name, state);
-          return EZ_ERR_OOD;
-        }
-      }
-      *(fullptr++) = byte;
-      checksum ^= byte;
-
-      /* The following involves a number of semi-hidden fallthroughs which
-       * attempt to recover malformed strings */
-      switch (state) {
-        case 0: /* RS-485 turnaround */
-	  //NOTE: this was needed for xystage on 19 Nov 2010, I don't know why
-	  if (byte == 0x00) {
-	    /*
-	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(warning, "%sdisregarding unexpected word of 0x00", 
-		bus->name);
-		*/
-	    break;
-	  }
-          state++;
-          if (byte != 0xFF) { /* RS-485 turnaround */
-	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(warning, "%sRS-485 turnaround not found in response", 
-		bus->name);
-            had_errors++;
-          } else
-            break;
-        case 1: /* start byte */
-          state++;
-          if (byte != 0x02) { /* STX */
-            had_errors++;
-	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(warning, "%sStart byte not found in response", 
-		  bus->name);
-          } else
-            break;
-        case 2: /* address byte */
-          state++;
-          if (byte != 0x30) { /* Recipient address (should be '0') */
-            had_errors++;
-	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(warning, "%sFound misaddressed response", bus->name);
-          }
-          if (had_errors > 1) {
-	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(err, "%sToo many errors parsing response, aborting.",
-	       	bus->name);
-	    retval|= EZ_ERR_RESPONSE;
-            state = EZ_BUS_RECV_ABORT;
-          }
-          break;
-        case 3: /* status byte */
-          state++;
-          if (byte & EZ_STATUS)
-            retval |= byte & (EZ_ERROR | EZ_READY);
-          else {
-	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(err, "%sStatus byte malfomed in response, aborting.",
-	       	bus->name);
-	    retval|= EZ_ERR_RESPONSE;
-            state = EZ_BUS_RECV_ABORT;
-          }
-          break;
-        case 4: /* response */
-          if (byte == 0x3) /* ETX */
-            state++;
-          else
-            *(ptr++) = byte;
-          break;
-        case 5: /* checksum */
-          state++;
-          /* Remember: the checksum here should be 0xff instead of 0 because
-           * we've added the turnaround byte into the checksum */
-          if (checksum != 0xff) {
-	    if (bus->chatter >= EZ_CHAT_ERR)
-	      bprintf(err, "%sChecksum error in response (%02x).", bus->name,
-                checksum);
-	    retval|= EZ_ERR_RESPONSE;
-	  }
-          break;
-        case 6: /* End of string check */
-	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(err, "%sMalformed footer in response string, aborting.",
-		bus->name);
-	  retval|= EZ_ERR_RESPONSE;
-          state = EZ_BUS_RECV_ABORT;
-        case EZ_BUS_RECV_ABORT: /* General abort: flush input */
-          break;
-      }
+    if (fd == -1) {
+        //on error, don't return immediately, allow response to be terminated
+        if (bus->chatter >= EZ_CHAT_ERR)
+            berror(err, "%sError waiting for input on bus", bus->name);
+        retval |= EZ_ERR_TTY;
     }
-  }
+    else if (!fd) { /* Timeout */
+        retval |= EZ_ERR_TIMEOUT;
+    }
+    else {
+        int state = 0;
+        int had_errors = 0;
+        int read_tries = 100;
+        int len;
 
-  *ptr = '\0';  //terminate response string
-  *fullptr = '\0';
+        for (;;) {
+            len = read(bus->fd, &byte, 1);
+            if (len <= 0) {
+                if (state == 6 || state == EZ_BUS_RECV_ABORT)
+                    break;
+                if (errno == EAGAIN && read_tries > 0) {
+                    read_tries--;
+                    usleep(1000);
+                    continue;
+                }
+                else {
+                    if (bus->chatter >= EZ_CHAT_ERR)
+                        berror(warning, "%sUnexpected out-of-data reading bus (%i)", bus->name, state);
+                    return EZ_ERR_OOD;
+                }
+            }
+            *(fullptr++) = byte;
+            checksum ^= byte;
 
-  if (bus->chatter >= EZ_CHAT_BUS) {
-    size_t len;
-    len = strlen(full_response);
-    hex_buffer = malloc(3*len+1);
-    bprintf(info, "%sResponse=%s (%s) Status=%x\n", bus->name, 
-	HexDump((unsigned char *)full_response, hex_buffer, len), 
-	bus->buffer, retval&0xff);
-    free(hex_buffer);
-  }
+            /* The following involves a number of semi-hidden fallthroughs which
+             * attempt to recover malformed strings */
+            switch (state) {
+                case 0: /* RS-485 turnaround */
+                    //NOTE: this was needed for xystage on 19 Nov 2010, I don't know why
+                    if (byte == 0x00) {
+                        /*
+                         if (bus->chatter >= EZ_CHAT_ERR)
+                         bprintf(warning, "%sdisregarding unexpected word of 0x00",
+                         bus->name);
+                         */
+                        break;
+                    }
+                    state++;
+                    if (byte != 0xFF) { /* RS-485 turnaround */
+                        if (bus->chatter >= EZ_CHAT_ERR)
+                            bprintf(warning, "%sRS-485 turnaround not found in response", bus->name);
+                        had_errors++;
+                    }
+                    else
+                        break;
+                case 1: /* start byte */
+                    state++;
+                    if (byte != 0x02) { /* STX */
+                        had_errors++;
+                        if (bus->chatter >= EZ_CHAT_ERR)
+                            bprintf(warning, "%sStart byte not found in response", bus->name);
+                    }
+                    else
+                        break;
+                case 2: /* address byte */
+                    state++;
+                    if (byte != 0x30) { /* Recipient address (should be '0') */
+                        had_errors++;
+                        if (bus->chatter >= EZ_CHAT_ERR)
+                            bprintf(warning, "%sFound misaddressed response", bus->name);
+                    }
+                    if (had_errors > 1) {
+                        if (bus->chatter >= EZ_CHAT_ERR)
+                            bprintf(err, "%sToo many errors parsing response, aborting.", bus->name);
+                        retval |= EZ_ERR_RESPONSE;
+                        state = EZ_BUS_RECV_ABORT;
+                    }
+                    break;
+                case 3: /* status byte */
+                    state++;
+                    if (byte & EZ_STATUS)
+                        retval |= byte & (EZ_ERROR | EZ_READY);
+                    else {
+                        if (bus->chatter >= EZ_CHAT_ERR)
+                            bprintf(err, "%sStatus byte malfomed in response, aborting.", bus->name);
+                        retval |= EZ_ERR_RESPONSE;
+                        state = EZ_BUS_RECV_ABORT;
+                    }
+                    break;
+                case 4: /* response */
+                    if (byte == 0x3) /* ETX */
+                        state++;
+                    else
+                        *(ptr++) = byte;
+                    break;
+                case 5: /* checksum */
+                    state++;
+                    /* Remember: the checksum here should be 0xff instead of 0 because
+                     * we've added the turnaround byte into the checksum */
+                    if (checksum != 0xff) {
+                        if (bus->chatter >= EZ_CHAT_ERR)
+                            bprintf(err, "%sChecksum error in response (%02x).", bus->name, checksum);
+                        retval |= EZ_ERR_RESPONSE;
+                    }
+                    break;
+                case 6: /* End of string check */
+                    if (bus->chatter >= EZ_CHAT_ERR)
+                        bprintf(err, "%sMalformed footer in response string, aborting.", bus->name);
+                    retval |= EZ_ERR_RESPONSE;
+                    state = EZ_BUS_RECV_ABORT;
+                case EZ_BUS_RECV_ABORT: /* General abort: flush input */
+                    break;
+            }
+        }
+    }
 
-  // Was there a serial error?  If so increment err_count.
-  if((retval & EZ_ERR_MASK) > 0) {
-    bus->err_count++;
-    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: Serial error madness! err_count=%i",bus->err_count);
-  } else {
-    bus->err_count = 0;
-    //if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: No serial error! Resetting error count to 0.");
-  }
+    *ptr = '\0';  //terminate response string
+    *fullptr = '\0';
 
-  return (bus->error=retval);
+    if (bus->chatter >= EZ_CHAT_BUS) {
+        size_t len;
+        len = strlen(full_response);
+        hex_buffer = malloc(3 * len + 1);
+        bprintf(info, "%sResponse=%s (%s) Status=%x\n", bus->name, HexDump((unsigned char *) full_response, hex_buffer, len), bus->buffer, retval
+                & 0xff);
+        free(hex_buffer);
+    }
+
+    // Was there a serial error?  If so increment err_count.
+    if ((retval & EZ_ERR_MASK) > 0) {
+        bus->err_count++;
+        if (bus->chatter >= EZ_CHAT_BUS)
+            bprintf(err, "EZBus_Recv: Serial error madness! err_count=%i", bus->err_count);
+    }
+    else {
+        bus->err_count = 0;
+        //if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: No serial error! Resetting error count to 0.");
+    }
+
+    return (bus->error = retval);
 }
 
 int EZBus_Comm(struct ezbus* bus, char who, const char* what)
@@ -662,7 +661,7 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*,char) )
       retval |= EZ_ERR_POLL;
     }
 
-    if ( bus->stepper[iWho(i)].status & EZ_STEP_OK &&
+    if ( (bus->stepper[iWho(i)].status & EZ_STEP_OK) &&
 	!(bus->stepper[iWho(i)].status & EZ_STEP_INIT) ) {
       if (ezinit(bus,i)) bus->stepper[iWho(i)].status |= EZ_STEP_INIT;
       else bus->stepper[iWho(i)].status &= ~EZ_STEP_INIT;

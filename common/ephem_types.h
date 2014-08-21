@@ -36,6 +36,8 @@
 /*     macros are defined for convenience.                                   **/
 /**==========================================================================**/
 
+#include <stdint.h>
+
 #define EPHEMERIS 405                /* Note the obvious: input XXX for DEXXX */
 
 #if EPHEMERIS==200
@@ -86,18 +88,19 @@
    /*-------------------------------------------------------------------------*/
    /* Define the content of binary header records                             */
    /*-------------------------------------------------------------------------*/
-
+#pragma pack(push, 4)
    struct recOneData {
          char label[3][84];
          char constName[400][6];
        double timeData[3];
-     long int numConst;
+      int32_t numConst;
        double AU;
        double EMRAT;
-     long int coeffPtr[12][3];
-     long int DENUM;
-     long int libratPtr[3];
+       int32_t coeffPtr[12][3];
+       int32_t DENUM;
+       int32_t libratPtr[3];
      };
+#pragma pack(pop)
 
    struct recTwoData {
      double constValue[400];

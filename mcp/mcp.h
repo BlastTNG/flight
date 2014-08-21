@@ -24,12 +24,9 @@
 #define MCP_H
 
 #include <pthread.h>
-#include "channels.h"
+#include "channels_tng.h"
 #include "calibrate.h"
 #include "blast.h"
-
-extern unsigned short* slow_data[FAST_PER_SLOW];
-extern unsigned int RxFrameFastSamp;
 
 extern time_t mcp_systime(time_t *t);
 extern struct frameBuffer hiGain_buffer;
@@ -45,7 +42,7 @@ double CalibrateThermister(int counts);
 //#define USE_FIFO_CMD
 
 struct chat_buf {
-  char msg[4][2 * FAST_PER_SLOW]; /* 4 buffers of FAST_PER_SLOW BLASTbus words of characters */
+  char msg[4][2 * 20]; /* 4 buffers of FAST_PER_SLOW BLASTbus words of characters */
   int reading; /* the buffer we're currently reading from */
   int writing; /* the buffer we're currently writing to */
 };

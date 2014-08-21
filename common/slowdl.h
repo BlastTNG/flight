@@ -10,7 +10,7 @@
  *
  */
 
-#include "channels.h"
+#include "channels_tng.h"
 
 #define SLOWDLSYNCWORD 0xeb90a174
 
@@ -24,7 +24,7 @@ struct SlowDlStruct {
   double min;
   double max;
   // 'private' variables: set by updateSlowDL
-  struct BiPhaseStruct *bi0s;
+  channel_t *bi0s;
   double X[3]; // data as read by ReadCalData
   unsigned iX[3]; // data as read by ReadData
   int i_read; // for buffer
