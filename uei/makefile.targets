@@ -1,27 +1,19 @@
-COMMON_SOURCES = PMurHash.c channels_tng.c
-CONFIG_SOURCES = tx_struct_tng.c
-
-COMMON_DIR = ../../common
-CONFIG_DIR = ../../blast_config
-
-BLAST_COMMON_OBJS = $(patsubst %.c,%.o,$(COMMON_SOURCES)) 
-BLAST_CONFIG_OBJS = $(patsubst %.c,%.o,$(CONFIG_SOURCES)) 
-
-BLAST_FLAGS = -std=gnu99 -D__XENO__ -D_GNU_SOURCE -D_REENTRANT -D__BLAST__ \
-    -I/home/seth/uei/ueipac-2.5.9/include -I$(COMMON_DIR) -I$(CONFIG_DIR) \
-    $(shell pkg-config --cflags glib-2.0) \
-    -Wall -fmessage-length=0
-
-ifeq ($(DEBUG), 1)
-    BLAST_FLAGS += -ggdb -O0
-else
-    BLAST_FLAGS += -O2 -g
-endif
- 
-# Each subdirectory must supply rules for building sources it contributes
-$(BLAST_COMMON_OBJS): $(addprefix $(COMMON_DIR)/,%.c)
+	
+$(BLAST_COMMON_OBJS): %.o: $(addprefix $(COMMON_DIR)/,%.c)
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross GCC Compiler'
-	powerpc-604-linux-gnu-gcc -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	powerpc-604-linux-gnu-gcc $(BLAST_FLAGS) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
+
+$(BLAST_CONFIG_OBJS): %.o: $(addprefix $(CONFIG_DIR)/,%.c)
+	@echo 'Building file: $<'
+	@echo 'Invoking: Cross GCC Compiler'
+	powerpc-604-linux-gnu-gcc $(BLAST_FLAGS) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+	
+clean:
+	-$(RM) -f $(BLAST_CONFIG_OBJS) $(BLAST_COMMON_OBJS)
+	-$(RM) -f $(OBJS)$(C_DEPS)$(EXECUTABLES) uei_of
+	-@echo ' '
