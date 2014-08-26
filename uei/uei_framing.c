@@ -91,8 +91,8 @@ void uei_log_callback(struct mosquitto *mosq, void *userdata, int level, const c
 
 int uei_framing_init(void)
 {
-    char id[30];
-    char *host = "fc1";
+    const char *id = "uei1";
+    const char *host = "fc1";
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
@@ -100,7 +100,7 @@ int uei_framing_init(void)
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
     if (!mosq) {
-        fprintf(stderr, "Error: Out of memory.\n");
+		perror("mosquitto_new() failed");
         return -1;
     }
     mosquitto_log_callback_set(mosq, uei_log_callback);

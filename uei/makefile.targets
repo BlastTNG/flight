@@ -13,7 +13,9 @@ $(BLAST_CONFIG_OBJS): %.o: $(addprefix $(CONFIG_DIR)/,%.c)
 	@echo 'Finished building: $<'
 	@echo ' '
 	
-clean:
-	-$(RM) -f $(BLAST_CONFIG_OBJS) $(BLAST_COMMON_OBJS)
-	-$(RM) -f $(OBJS)$(C_DEPS)$(EXECUTABLES) uei_of
+myclean: clean
+	-$(RM) $(BLAST_CONFIG_OBJS) $(BLAST_COMMON_OBJS) $(USER_C_DEPS)
 	-@echo ' '
+	
+upload_uei1: uei
+	-@scp uei root@uei1:/tmp/

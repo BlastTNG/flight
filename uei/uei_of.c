@@ -72,7 +72,7 @@ int stop = 0;
 
 #define GYRO_SERIAL_SLOT 2
 static const int gyro_channel[6] = {0, 1, 2, 3, 4, 5};
-
+float raw_gyro[6] = {0.0};
 
 float gy_ifroll, gy_ifyaw, gy_ifel;
 int gyro_timeout[N_GYRO] = {0,0,0,0,0,0};
@@ -88,8 +88,6 @@ int gyro_timeout[N_GYRO] = {0,0,0,0,0,0};
 // Max expected size of messages received from the serial ports
 #define RX_BUFSIZE 64
 
-unsigned int gyro_raw = 0;
-
 #define GYRO1_OFFSET 0.0
 #define GYRO2_OFFSET 0.0
 #define GYRO3_OFFSET 0.0
@@ -100,7 +98,7 @@ unsigned int gyro_raw = 0;
 
 #define GYRO_TIMEOUT ((int)SR*3)
 
-unsigned int gymask = 7;
+unsigned int gymask = 21;
 unsigned int gyfault = 0;
 
 uei_filter_t gyro_filter[N_GYRO] = {{0}};
@@ -254,12 +252,14 @@ static int uei_of_sync_gyro(uint8_t *m_word, int m_length, int m_which, uint32_t
     return GYRO_CANT_SYNC;
 }
 
-void uei_process_gyro_packets(uint32_t *m_data, int m_which_gyro)
+static inline void uei_process_gyro_packets(uint32_t *m_data, int m_which_gyro)
 {
-
-    gyro_raw = (m_data[m_which_gyro] & GYRO_CONTENT_MASK) ^ 0x2000000;
-    uei_filter_put(&gyro_filter[m_which_gyro], GYRO_CONTENT(m_data[m_which_gyro]));
-
+	raw_gyro[m_which_gyro] =  6e-5 * GYRO_CONTENT(*m_data);
+	if (!GYRO_VALID(*m_data)) {
+		printf("Invalid data packet on Gyro %d!\n", m_which_gyro);
+		return;
+	}
+    uei_filter_put(&gyro_filter[m_which_gyro], raw_gyro[m_which_gyro]);
 }
 
 void uei_gyro_update_output(void)
@@ -269,19 +269,18 @@ void uei_gyro_update_output(void)
     float gy_ifel1, gy_ifel2;
     float gy_ifroll1, gy_ifroll2;
 
-    /* rescale to 16 bit; remove offset*/
     /* timesed ifroll and ifel by -1.0 to make the signs correct in mcp. */
     gy_ifyaw1  = uei_filter_get(&gyro_filter[0]);
     gy_ifroll1 = uei_filter_get(&gyro_filter[1])*(-1.0);
-    gy_ifyaw2  = uei_filter_get(&gyro_filter[2]);
-    gy_ifel1   = uei_filter_get(&gyro_filter[3])*(-1.0);
-    gy_ifel2   = uei_filter_get(&gyro_filter[4])*(-1.0);
-    gy_ifroll2 = uei_filter_get(&gyro_filter[5])*(-1.0);
+    gy_ifel1   = uei_filter_get(&gyro_filter[2]);
+    gy_ifyaw2  = uei_filter_get(&gyro_filter[3])*(-1.0);
+    gy_ifroll2 = uei_filter_get(&gyro_filter[4])*(-1.0);
+    gy_ifel2   = uei_filter_get(&gyro_filter[5])*(-1.0);
 
     /* rotate gyros into inner frame coordinates, and mask*/
-    gy_ifroll= 6e-5 * (gy_inv[gymask][0][0]*gy_ifroll1 + gy_inv[gymask][0][1]*gy_ifroll2 + gy_inv[gymask][0][2]*gy_ifyaw1 + gy_inv[gymask][0][3]*gy_ifyaw2 + gy_inv[gymask][0][4]*gy_ifel1 + gy_inv[gymask][0][5]*gy_ifel2);
-    gy_ifyaw = 6e-5 * (gy_inv[gymask][1][0]*gy_ifroll1 + gy_inv[gymask][1][1]*gy_ifroll2 + gy_inv[gymask][1][2]*gy_ifyaw1 + gy_inv[gymask][1][3]*gy_ifyaw2 + gy_inv[gymask][1][4]*gy_ifel1 + gy_inv[gymask][1][5]*gy_ifel2);
-    gy_ifel  = 6e-5 * (gy_inv[gymask][2][0]*gy_ifroll1 + gy_inv[gymask][2][1]*gy_ifroll2 + gy_inv[gymask][2][2]*gy_ifyaw1 + gy_inv[gymask][2][3]*gy_ifyaw2 + gy_inv[gymask][2][4]*gy_ifel1 + gy_inv[gymask][2][5]*gy_ifel2);
+    gy_ifroll= (gy_inv[gymask][0][0]*gy_ifroll1 + gy_inv[gymask][0][1]*gy_ifroll2 + gy_inv[gymask][0][2]*gy_ifyaw1 + gy_inv[gymask][0][3]*gy_ifyaw2 + gy_inv[gymask][0][4]*gy_ifel1 + gy_inv[gymask][0][5]*gy_ifel2);
+    gy_ifyaw = (gy_inv[gymask][1][0]*gy_ifroll1 + gy_inv[gymask][1][1]*gy_ifroll2 + gy_inv[gymask][1][2]*gy_ifyaw1 + gy_inv[gymask][1][3]*gy_ifyaw2 + gy_inv[gymask][1][4]*gy_ifel1 + gy_inv[gymask][1][5]*gy_ifel2);
+    gy_ifel  = (gy_inv[gymask][2][0]*gy_ifroll1 + gy_inv[gymask][2][1]*gy_ifroll2 + gy_inv[gymask][2][2]*gy_ifyaw1 + gy_inv[gymask][2][3]*gy_ifyaw2 + gy_inv[gymask][2][4]*gy_ifel1 + gy_inv[gymask][2][5]*gy_ifel2);
 
 }
 
@@ -362,6 +361,7 @@ void gyro_read_routine(void* arg)
                         offset_bytes[i] = rx_bytes + offset_bytes[i] - consumed_bytes;
                         break;
                     case GYRO_CANT_SYNC:
+                    	printf("Can't SYNC Gyro %d!\n", i);
                         consumed_bytes += 4;
                         break;
                     default: {
@@ -417,55 +417,57 @@ int main(void)
         exit(1);
     if (uei_framing_init() < 0)
         exit(1);
-    if (uei_vals_initialize() < 0)
-        exit(1);
 
     printf("Initialized!\n");
 
     atexit(uei_cleanup);
 
-    // Begin acquisition task
+    // Create our Tasks
     ret = rt_task_create(&gyro_read_task, "read_serial", 0, T_HIPRIO, T_JOINABLE|T_FPU);
     if (ret) {
-        printf("failed to create task, code %d\n", ret);
+    	perror("failed to create task");
         exit(1);
     }
 
     ret = rt_task_create(&motor_cmd_task, "motor_cmds", 0, 30, T_JOINABLE);
     if (ret) {
-        printf("failed to create motor task, code %d\n", ret);
+    	perror("failed to create motor task");
         exit(1);
     }
 
     ret = rt_task_create(&mosq_task, "mosq_monitor", 0, 40, T_JOINABLE);
     if (ret) {
-        printf("failed to create Mosquitto task, code %d\n", ret);
+        perror("failed to create Mosquitto task");
         exit(1);
     }
 
+
     ret = rt_task_start(&gyro_read_task, &gyro_read_routine, NULL);
     if (ret) {
-        printf("failed to start gyro_read_task, code %d\n", ret);
+    	perror("failed to start gyro_read_task");
         exit(1);
     }
 
     ret = rt_task_start(&motor_cmd_task, &motor_cmd_routine, NULL);
     if (ret) {
-        printf("failed to start motor_cmd_task, code %d\n", ret);
+    	perror("failed to start motor_cmd_task");
         exit(1);
     }
 
     ret = rt_task_start(&mosq_task, &uei_framing_routine, NULL);
     if (ret) {
-        printf("failed to start Mosquitto routine, code %d\n", ret);
+    	perror("failed to start frame handling routine");
         exit(1);
     }
 
     while (!stop) {
         usleep(1000000);
-        printf("%f,%f,%f\n", rt_timer_ticks2ns(rt_timer_read()) / 1000000000.0,
-                uei_filter_get(&gyro_filter[0]) * (6e-5),
-                ((double) gyro_raw - (double) 0x2000000) * (6e-5));
+        printf("%f\t--\t%f\t%f\t%f\n", rt_timer_ticks2ns(rt_timer_read()) / 1000000000.0,
+        		uei_filter_get(&gyro_filter[0]),
+        		uei_filter_get(&gyro_filter[1]),
+        		uei_filter_get(&gyro_filter[2]));
+        printf("\t\t--\t%f\t%f\t%f\n",
+                raw_gyro[0], raw_gyro[1], raw_gyro[2]);
         fflush(stdout);
     }
 

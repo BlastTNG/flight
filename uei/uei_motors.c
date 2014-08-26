@@ -31,51 +31,162 @@
 
 #include <ecrt.h>
 
+#include "uei_motors.h"
+
 extern int stop;
 extern float gy_ifroll;
 extern float gy_ifyaw;
 
 typedef struct {
 
-    ec_sdo_request_t *amp_state_sdo;            /// 0x2300 (INT16) 0=disabled, 1=commanded current, 11=commanded velocity
+    uint16_t *amp_state;
+    int16_t *amp_temp;
+    int16_t *motor_temp;
 
-    ec_sdo_request_t *amp_temp_sdo;             /// 0x2202 (INT16) (Celcius)
+    uint16_t *current_loop_ci;
+    uint16_t *current_loop_cp;
+    int16_t *current_loop_offset;
+    int16_t *current_val;
 
-    ec_sdo_request_t *motor_velocity_sdo;       /// 0x606C (INT32)
-    ec_sdo_request_t *motor_position_sdo;       /// 0x6064 (INT32)
+    int32_t *motor_position;
+    int32_t *motor_position_wrap_val;
 
-    ec_sdo_request_t *programmed_current_sdo;   /// 0x2340 (INT16)
+    uint32_t *drive_status;
+    uint32_t *latched_drive_status;
+    uint32_t *latched_drive_faults;
 
     unsigned int config_error;
 
 } copley_state_t;
 
-copley_state_t rx_controller_state = {0};
-ec_slave_config_t *rx_controller = NULL;
-ec_master_t *master;
-ec_domain_t *domain;
+
+static copley_state_t rx_controller_state = {0};
+static copley_state_t el_controller_state = {0};
+static copley_state_t pv_controller_state = {0};
+
+static ec_slave_config_t *rx_controller = NULL;
+static ec_slave_config_t *pv_controller = NULL;
+static ec_slave_config_t *el_controller = NULL;
+
+static ec_master_t *master;
+static ec_domain_t *domain;
+static ec_domain_state_t domain1_state = {0};
+static ec_master_state_t master_state = {0};
+
+static unsigned int current_ci_off[3];
+static unsigned int current_cp_off[3];
+static unsigned int current_offset_off[3];
+static unsigned int current_val_off[3];
+static unsigned int status_off[3];
+static unsigned int state_off[3];
+static unsigned int drive_temp_off[3];
+static unsigned int latched_fault_off[3];
+static unsigned int latched_status_off[3];
+static unsigned int motor_pos_off[3];
+static unsigned int motor_temp_v_off[3];
+static unsigned int motor_enc_wrap_off[3];
+
+void static inline ethercat_set_offsets(copley_state_t *m_state, const uint8_t *m_data, int m_index)
+{
+
+    m_state->amp_state = (uint16_t*)(m_data + state_off[m_index]);
+    m_state->amp_temp = (int16_t*)(m_data + drive_temp_off[m_index]);
+    m_state->current_loop_ci = (uint16_t*)(m_data + current_ci_off[m_index]);
+    m_state->current_loop_cp = (uint16_t*)(m_data + current_cp_off[m_index]);
+    m_state->current_loop_offset = (int16_t*)(m_data + current_offset_off[m_index]);
+    m_state->current_val = (int16_t*)(m_data + current_val_off[m_index]);
+    m_state->drive_status = (uint32_t*)(m_data + status_off[m_index]);
+    m_state->latched_drive_faults = (uint32_t*)(m_data + latched_fault_off[m_index]);
+    m_state->latched_drive_status = (uint32_t*)(m_data + latched_status_off[m_index]);
+    m_state->motor_position = (int32_t*)(m_data + motor_pos_off[m_index]);
+    m_state->motor_position_wrap_val = (int32_t*)(m_data + motor_enc_wrap_off[m_index]);
+    m_state->motor_temp = (int16_t*)(m_data + motor_temp_v_off[m_index]);
+}
+/*****************************************************************************/
+
+static inline void check_domain1_state(void)
+{
+    ec_domain_state_t ds;
+
+    ecrt_domain_state(domain, &ds);
+
+    if (ds.working_counter != domain1_state.working_counter)
+        printf("Domain1: WC %u.\n", ds.working_counter);
+    if (ds.wc_state != domain1_state.wc_state)
+        printf("Domain1: State %u.\n", ds.wc_state);
+
+    memcpy(&domain1_state, &ds, sizeof(ds));
+}
+
+/*****************************************************************************/
+
+static inline void check_master_state(void)
+{
+    ec_master_state_t ms;
+
+    ecrt_master_state(master, &ms);
+
+	if (ms.slaves_responding != master_state.slaves_responding)
+        printf("%u slave(s).\n", ms.slaves_responding);
+    if (ms.al_states != master_state.al_states)
+        printf("AL states: 0x%02X.\n", ms.al_states);
+    if (ms.link_up != master_state.link_up)
+        printf("Link is %s.\n", ms.link_up ? "up" : "down");
+
+    memcpy(&master_state, &ms, sizeof(ms));
+}
 
 int uei_ethercat_initialize (void)
 {
-    uint16_t data_16[4] = {0};
-    uint8_t *data = (uint8_t*)data_16;
-    uint32_t abort_code;
+
+    uint8_t *data;
+
+    ec_pdo_entry_reg_t rw_pdos[] = {
+		{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_CURRENT_LOOP_CI,  current_ci_off, NULL},
+		{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_CURRENT_LOOP_CP,  current_cp_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_CURRENT_LOOP_OFFSET,  current_offset_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_CURRENT_LOOP_VAL,  current_val_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_DRIVE_STATUS,  status_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_DRIVE_TEMP,  drive_temp_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_LATCHED_DRIVE_FAULT,  latched_fault_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_LATCHED_DRIVE_STATUS,  latched_status_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_MOTOR_POSITION,  motor_pos_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_MOTOR_TEMP_VOLTAGE,  motor_temp_v_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_MOTOR_ENC_WRAP_POS,  motor_enc_wrap_off, NULL},
+    	{RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_DRIVE_STATE,  state_off, NULL},
+    	{0, 0,      0x00,         0x00, 0x0, 0x0,           NULL, NULL}};
+    ec_pdo_entry_reg_t pv_pdos[] = {
+		{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_CURRENT_LOOP_CI,  current_ci_off+1, NULL},
+		{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_CURRENT_LOOP_CP,  current_cp_off+1, NULL},
+		{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_CURRENT_LOOP_OFFSET,  current_offset_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_CURRENT_LOOP_VAL,  current_val_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_DRIVE_STATUS,  status_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_DRIVE_TEMP,  drive_temp_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_LATCHED_DRIVE_FAULT,  latched_fault_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_LATCHED_DRIVE_STATUS,  latched_status_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_MOTOR_POSITION,  motor_pos_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_MOTOR_TEMP_VOLTAGE,  motor_temp_v_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_MOTOR_ENC_WRAP_POS,  motor_enc_wrap_off+1, NULL},
+    	{PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE, ECAT_DRIVE_STATE,  state_off+1, NULL},
+    	{0, 0,      0x00,         0x00, 0x0, 0x0,           NULL, NULL}};
+    ec_pdo_entry_reg_t el_pdos[] = {
+		{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_CURRENT_LOOP_CI,  current_ci_off+2, NULL},
+		{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_CURRENT_LOOP_CP,  current_cp_off+2, NULL},
+		{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_CURRENT_LOOP_OFFSET,  current_offset_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_CURRENT_LOOP_VAL,  current_val_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_DRIVE_STATUS,  status_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_DRIVE_TEMP,  drive_temp_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_LATCHED_DRIVE_FAULT,  latched_fault_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_LATCHED_DRIVE_STATUS,  latched_status_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_MOTOR_POSITION,  motor_pos_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_MOTOR_TEMP_VOLTAGE,  motor_temp_v_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_MOTOR_ENC_WRAP_POS,  motor_enc_wrap_off+2, NULL},
+    	{EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE, ECAT_DRIVE_STATE,  state_off+2, NULL},
+    	{0, 0,      0x00,         0x00, 0x0, 0x0,           NULL, NULL}};
 
     master = ecrt_request_master(0);
     if (!master){
         printf("Could not request master!\n");
-        return -1;
-    }
-
-    data_16[0] = 0;
-    if (ecrt_master_sdo_download_complete(master, 0, 0x2340, data, 2, &abort_code) < 0) {
-        printf("Could not set current value!\n");
-        return -1;
-    }
-
-    data_16[0] = cpu_to_le16(1); /// Set to commanded current mode
-    if (ecrt_master_sdo_download_complete(master, 0, 0x2300, data, 2, &abort_code) < 0) {
-        printf("Could not set amplifier state!\n");
         return -1;
     }
 
@@ -87,38 +198,91 @@ int uei_ethercat_initialize (void)
 
     printf("Created Domain\n");
 
-    if (!(rx_controller = ecrt_master_slave_config(master,0, 0, 0x000000ab,
-            0x00000380))) {
-        fprintf(stderr, "Failed to get slave configuration.\n");
+    if (!(rx_controller = ecrt_master_slave_config(master,RW_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE))) {
+        fprintf(stderr, "Failed to get slave configuration for Reaction Wheel controller!\n");
+        return -1;
+    }
+    if (!(pv_controller = ecrt_master_slave_config(master,PV_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, BEL_090_020_PRODCODE))) {
+        fprintf(stderr, "Failed to get slave configuration for Pivot Motor controller!\n");
+        return -1;
+    }
+    if (!(el_controller = ecrt_master_slave_config(master,EL_ETHERCAT_ALIAS, 0, COPLEY_ETHERCAT_VENDOR, AEP_090_036_PRODCODE))) {
+        fprintf(stderr, "Failed to get slave configuration for Elevation Motor controller!\n");
         return -1;
     }
 
+	if (ecrt_slave_config_pdos(rx_controller, 2, copley_pdo_syncs)) {
+		perror("ecrt_slave_config_pdos() failed for RX controller.");
+		ecrt_release_master(master);
+		return 3;
+	}
+	if (ecrt_slave_config_pdos(pv_controller, 2, copley_pdo_syncs)) {
+		perror("ecrt_slave_config_pdos() failed for Pivot controller.");
+		ecrt_release_master(master);
+		return 3;
+	}
+	if (ecrt_slave_config_pdos(el_controller, 2, copley_pdo_syncs)) {
+		perror("ecrt_slave_config_pdos() failed for Elevation controller.");
+		ecrt_release_master(master);
+		return 3;
+	}
+
+	/// Register the PDO list and variable mappings
+	if (ecrt_domain_reg_pdo_entry_list(domain, rw_pdos)) {
+		perror("ecrt_domain_reg_pdo_entry_list() failed for reaction wheel!");
+		ecrt_release_master(master);
+		return -1;
+	}
+	if (ecrt_domain_reg_pdo_entry_list(domain, pv_pdos)) {
+		perror("ecrt_domain_reg_pdo_entry_list() failed for pivot motor!");
+		ecrt_release_master(master);
+		return -1;
+	}
+	if (ecrt_domain_reg_pdo_entry_list(domain, el_pdos)) {
+		perror("ecrt_domain_reg_pdo_entry_list() failed for Elevation motor!");
+		ecrt_release_master(master);
+		return -1;
+	}
+
+
     printf("Set Master/Slave Configuration\n");
-
-    rx_controller_state.amp_state_sdo = ecrt_slave_config_create_sdo_request(rx_controller, 0x2300, 0, 2);
-    rx_controller_state.amp_temp_sdo = ecrt_slave_config_create_sdo_request(rx_controller, 0x2202, 0, 2);
-    rx_controller_state.motor_position_sdo = ecrt_slave_config_create_sdo_request(rx_controller, 0x6064, 0, 4);
-    rx_controller_state.motor_velocity_sdo = ecrt_slave_config_create_sdo_request(rx_controller, 0x6063, 0, 4);
-    rx_controller_state.programmed_current_sdo = ecrt_slave_config_create_sdo_request(rx_controller, 0x2340, 0, 2);
-
 
     if (ecrt_master_activate(master) < 0) {
         printf("Could not activate master!\n");
         return -1;
     }
 
-//    ecrt_master_reset(master);
+    if (!(data = ecrt_domain_data(domain))) {
+    	perror("ecrt_domain_data() failed!");
+    	ecrt_release_master(master);
+    	return -1;
+    }
+
+    ethercat_set_offsets(&rx_controller_state, data, 0);
+    ethercat_set_offsets(&pv_controller_state, data, 1);
+    ethercat_set_offsets(&el_controller_state, data, 2);
+
+    check_domain1_state();
+    check_master_state();
     return 0;
 }
 
 void uei_ethercat_cleanup(void)
 {
-    uint16_t data_16[4] = {0};
-    uint8_t *data = (uint8_t*)data_16;
-    uint32_t abort_code;
+    ecrt_master_receive(master);
+    ecrt_domain_process(domain);
+    EC_WRITE_S16(rx_controller_state.current_val, 0);
+    EC_WRITE_U16(rx_controller_state.amp_state, ECAT_STATE_DISABLED);
 
-    ecrt_master_deactivate(master);
-    ecrt_master_sdo_download_complete(master, 0, 0x2300, data, 2, &abort_code);
+    EC_WRITE_S16(pv_controller_state.current_val, 0);
+    EC_WRITE_U16(pv_controller_state.amp_state, ECAT_STATE_DISABLED);
+
+    EC_WRITE_S16(el_controller_state.current_val, 0);
+    EC_WRITE_U16(el_controller_state.amp_state, ECAT_STATE_DISABLED);
+
+    ecrt_domain_queue(domain);
+    ecrt_master_send(master);
+
     ecrt_release_master(master);
 }
 
@@ -219,14 +383,7 @@ void motor_cmd_routine(void *m_arg)
         if (req_current > 200)
             printf("Error!  Requested current is %d\n", req_current);
         else {
-            if (ecrt_sdo_request_state(rx_controller_state.programmed_current_sdo) != EC_REQUEST_BUSY) {
-
-                EC_WRITE_S16(
-                        ecrt_sdo_request_data(
-                                rx_controller_state.programmed_current_sdo),
-                        req_current);
-                ecrt_sdo_request_write(rx_controller_state.programmed_current_sdo);
-            }
+            EC_WRITE_S16(rx_controller_state.current_val, req_current);
         }
 
         ecrt_domain_queue(domain);
