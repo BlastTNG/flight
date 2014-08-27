@@ -28,51 +28,52 @@
 #define CHANNELS_V2_H_
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <channel_macros.h>
+#include "lookup.h"
 
 #define FIELD_LEN 32
 #define UNITS_LEN 48
 #define CHANNELS_HASH_SEED 0xEB90
 
-typedef enum frame_rate{
-    RATE_1HZ = 0,
-    RATE_5HZ,
-    RATE_100HZ,
-    RATE_200HZ,
-    RATE_END
-} e_rates;
+#define _RATES(x,_)	\
+	_(x, 1HZ)					\
+	_(x, 5HZ)					\
+	_(x, 100HZ)					\
+	_(x, 200HZ)
 
-typedef enum variable_type{
-    TYPE_UINT8 = 0,
-    TYPE_UINT16,
-    TYPE_UINT32,
-    TYPE_UINT64,
-    TYPE_INT8,
-    TYPE_INT16,
-    TYPE_INT32,
-    TYPE_INT64,
-    TYPE_FLOAT,
-    TYPE_DOUBLE,
-    TYPE_END
-} e_vartypes;
+BLAST_LOOKUP_TABLE(RATE, static);
 
-typedef enum data_source{
-    SRC_UEI1 = 0,
-    SRC_UEI2,
-    SRC_FC,
-    SRC_SC,
-    SRC_END
-} e_datasources;
+#define _TYPES(x,_)	\
+	_(x, UINT8)		\
+	_(x, UINT16)	\
+	_(x, UINT32)	\
+	_(x, UINT64)	\
+	_(x, INT8)		\
+	_(x, INT16)		\
+	_(x, INT32)		\
+	_(x, INT64)		\
+	_(x, FLOAT)		\
+	_(x, DOUBLE)
+BLAST_LOOKUP_TABLE(TYPE, static);
+
+#define _SRCS(x,_)	\
+	_(x, OF_UEI)	\
+	_(x, IF_UEI)	\
+	_(x, FC)		\
+	_(x, SC)
+BLAST_LOOKUP_TABLE(SRC, static);
+
 
 #pragma pack(push,1)
 struct channel {
 	char field[FIELD_LEN]; 		/// name of channel for FileFormats and CalSpecs
 	double m_c2e; 				/// Conversion from counts to enginering units is
 	double b_e2e; 				///   e = c * m_c2e + b_e2e
-	e_vartypes type;			/// Type of data stored
-	e_rates rate; 				/// Rate at which the channel is recorded
-	e_datasources source;       /// Source of the data channel (who writes)
+	e_TYPE type;			/// Type of data stored
+	e_RATE rate; 				/// Rate at which the channel is recorded
+	e_SRC source;       /// Source of the data channel (who writes)
 	char quantity[UNITS_LEN]; 	/// eg, "Temperature" or "Angular Velocity"
 	char units[UNITS_LEN]; 		/// eg, "K" or "^o/s"
 	void *var;                  /// Pointer to the variable in the current frame
@@ -86,9 +87,11 @@ typedef struct {
 } frame_header_t;
 #pragma pack(pop)
 
+extern void *channel_data[SRC_END][RATE_END];
+extern size_t frame_size[SRC_END][RATE_END];
 
 int channels_initialize(const char *m_filename);
 channel_t *channels_find_by_name(const char *m_name);
-
+int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len);
 
 #endif /* CHANNELS_V2_H_ */

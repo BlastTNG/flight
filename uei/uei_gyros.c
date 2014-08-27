@@ -33,6 +33,8 @@
 #include <native/timer.h>
 #include <PDNA.h>
 
+#include <channels_tng.h>
+
 #include "uei_filter.h"
 #include "uei_gyros.h"
 #include "gyros_ideal.h"
@@ -49,6 +51,18 @@ int gyro_timeout[N_GYRO] = {0,0,0,0,0,0};
 
 unsigned int gymask = 21;
 unsigned int gyfault = 0;
+
+static channel_t *g_p_az = NULL;
+static channel_t *g_i_az = NULL;
+static channel_t *gy1_yaw = NULL;
+static channel_t *gy1_el = NULL;
+static channel_t *gy1_roll = NULL;
+static channel_t *gy2_yaw = NULL;
+static channel_t *gy2_el = NULL;
+static channel_t *gy2_roll = NULL;
+static channel_t *gy_yaw = NULL;
+static channel_t *gy_roll = NULL;
+static channel_t *gy_el = NULL;
 
 uei_filter_t gyro_filter[N_GYRO] = {{0}};
 
@@ -134,6 +148,17 @@ static void uei_gyro_update_output(void)
     gy_ifyaw = (gy_inv[gymask][1][0]*gy_ifroll1 + gy_inv[gymask][1][1]*gy_ifroll2 + gy_inv[gymask][1][2]*gy_ifyaw1 + gy_inv[gymask][1][3]*gy_ifyaw2 + gy_inv[gymask][1][4]*gy_ifel1 + gy_inv[gymask][1][5]*gy_ifel2);
     gy_ifel  = (gy_inv[gymask][2][0]*gy_ifroll1 + gy_inv[gymask][2][1]*gy_ifroll2 + gy_inv[gymask][2][2]*gy_ifyaw1 + gy_inv[gymask][2][3]*gy_ifyaw2 + gy_inv[gymask][2][4]*gy_ifel1 + gy_inv[gymask][2][5]*gy_ifel2);
 
+
+    SET_FLOAT(gy1_el, gy_ifel1);
+    SET_FLOAT(gy1_roll, gy_ifroll1);
+    SET_FLOAT(gy1_yaw, gy_ifyaw1);
+    SET_FLOAT(gy2_el, gy_ifel2);
+    SET_FLOAT(gy2_roll, gy_ifroll2);
+    SET_FLOAT(gy2_yaw, gy_ifyaw2);
+
+    SET_FLOAT(gy_el, gy_ifel);
+    SET_FLOAT(gy_yaw, gy_ifyaw);
+    SET_FLOAT(gy_roll, gy_ifroll);
 }
 
 void uei_gyro_get_vals (float *m_roll, float *m_yaw, float *m_el)
@@ -162,7 +187,20 @@ void gyro_read_routine(void* arg)
 
     uint32_t *gyro_data;
 
+
     printf("Starting Gyroscope reading task\n");
+
+    g_p_az = channels_find_by_name("g_p_az");
+    g_i_az = channels_find_by_name("g_i_az");
+    gy1_yaw = channels_find_by_name("ifyaw_1_gy");
+    gy2_yaw = channels_find_by_name("ifyaw_2_gy");
+    gy1_el = channels_find_by_name("ifel_1_gy");
+    gy2_el = channels_find_by_name("ifel_2_gy");
+    gy1_roll = channels_find_by_name("ifroll_1_gy");
+    gy2_roll = channels_find_by_name("ifroll_2_gy");
+    gy_yaw = channels_find_by_name("ifyaw_gy");
+    gy_roll = channels_find_by_name("ifroll_gy");
+    gy_el = channels_find_by_name("ifel_gy");
 
     rt_timer_inquire(&timer_info);
     if (timer_info.period == TM_ONESHOT)

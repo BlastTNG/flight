@@ -31,7 +31,7 @@
 
 typedef struct {
     char name[32];
-    e_vartypes type;
+    e_TYPE type;
     void *data;
 } varentry_t;
 

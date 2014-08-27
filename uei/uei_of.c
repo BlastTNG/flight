@@ -88,6 +88,7 @@ void warn_upon_switch(int sig)
        secondary mode: */
     nentries = backtrace(bt,sizeof(bt) / sizeof(bt[0]));
     backtrace_symbols_fd(bt,nentries,fileno(stdout));
+    exit(1);
 }
 
 static int uei_of_initialize(void)
@@ -100,6 +101,7 @@ static int uei_of_initialize(void)
     printf("Initialized DAQLib\n");
     signal(SIGINT, handler);
     signal(SIGTERM, handler);
+    signal(SIGSEGV, warn_upon_switch);
 //  signal(SIGXCPU, warn_upon_switch);
 
     // no memory-swapping for this program
@@ -213,6 +215,7 @@ int main(void)
     while (!stop) {
     	float yaw,pitch,roll;
         usleep(100000);
+//        printf("%d\n", ethercat_get_current());
         uei_gyro_get_vals(&roll,&yaw,&pitch);
         printf("%f\t--\t%f\t%f\t%f\n", rt_timer_ticks2ns(rt_timer_read()) / 1000000000.0,
         		yaw, pitch,roll);

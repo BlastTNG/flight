@@ -44,6 +44,7 @@
  */
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <glib.h>
 
@@ -57,6 +58,7 @@ static int channel_count[SRC_END][RATE_END][TYPE_END] = {{{0}}};
 extern channel_t channel_list[];
 
 void *channel_data[SRC_END][RATE_END] = {{0}};
+size_t frame_size[SRC_END][RATE_END] = {{0}};
 static void *channel_ptr[SRC_END][RATE_END] = {{0}};
 
 static inline size_t channel_size(channel_t *m_channel)
@@ -114,8 +116,21 @@ static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_us
 
 channel_t *channels_find_by_name(const char *m_name)
 {
-    guint name_hash = PMurHash32(CHANNELS_HASH_SEED, m_name, strnlen(m_name, FIELD_LEN));
-    return (channel_t*)g_hash_table_lookup(frame_table, m_name);
+    channel_t *retval = (channel_t*)g_hash_table_lookup(frame_table, m_name);
+
+    if (!retval) printf("Could not find %s!\n", m_name);
+    return retval;
+}
+
+int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len)
+{
+	if (m_len != frame_size[m_src][m_rate]) {
+		printf("Size mismatch storing data for %s:%s!\n", SRC_lookup_table[m_src].text, RATE_lookup_table[m_rate].text );
+		return -1;
+	}
+
+	memcpy(channel_data[m_src][m_rate], m_data, m_len);
+	return 0;
 }
 
 int channels_initialize(const char *m_datafile)
@@ -157,13 +172,13 @@ int channels_initialize(const char *m_datafile)
      */
     for (int src = 0; src < SRC_END; src++) {
         for (int rate = 0; rate < RATE_END; rate++) {
-            size_t frame_size = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
+            frame_size[src][rate] = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                     2 * (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
                     4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
                     8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
 
-            if (frame_size) {
-                channel_data[src][rate] = malloc(frame_size);
+            if (frame_size[src][rate]) {
+                channel_data[src][rate] = malloc(frame_size[src][rate]);
             }
             else {
                 channel_data[src][rate] = NULL;

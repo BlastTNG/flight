@@ -138,55 +138,11 @@
 #define ECAT_PDO_TEMPS_RD 0x1a04
 
 
-static ec_pdo_entry_info_t copley_pdo_entries[] = {
-    {ECAT_CURRENT_LOOP_CI, 16},
-    {ECAT_CURRENT_LOOP_CP, 16},
-    {ECAT_CURRENT_LOOP_OFFSET, 16},
-    {ECAT_CURRENT_LOOP_VAL, 16},
-
-    {ECAT_DRIVE_STATE, 32},
-    {ECAT_DRIVE_STATUS, 32},
-
-    {ECAT_LATCHED_DRIVE_FAULT, 32},
-    {ECAT_LATCHED_DRIVE_STATUS, 32},
-
-    {ECAT_MOTOR_ENC_WRAP_POS, 32},
-    {ECAT_MOTOR_POSITION, 32},
-
-    {ECAT_DRIVE_TEMP, 16},
-    {ECAT_MOTOR_TEMP_VOLTAGE, 16},
-};
-
-
-static ec_pdo_info_t copley_pdos[] = {
-    {ECAT_PDO_CURRENT_LOOP_STATUS_RD, 4, copley_pdo_entries + 0}, /* Current Loop Status - READ */
-    {ECAT_PDO_DRIVE_INFO_RD, 2, copley_pdo_entries + 4}, /* Drive Info - READ */
-    {ECAT_PDO_LATCHED_DRIVE_FLAGS_RD, 2, copley_pdo_entries + 6}, /* Latched Drive Flags - READ */
-    {ECAT_PDO_MOTOR_POS_RD, 2, copley_pdo_entries + 8}, /* Motor Pos - READ */
-    {ECAT_PDO_TEMPS_RD, 2, copley_pdo_entries + 10}, /* Temps - READ */
-
-    {ECAT_CURRENT_LOOP_CI_PDO_WR, 1, copley_pdo_entries + 0}, /* Loop Ci - WRITE */
-    {ECAT_CURRENT_LOOP_CP_PDO_WR, 1, copley_pdo_entries + 1}, /* Loop Cp - WRITE */
-    {ECAT_CURRENT_LOOP_OFFSET_PDO_WR, 1, copley_pdo_entries + 2}, /* Loop Offset - WRITE */
-    {ECAT_CURRENT_LOOP_VAL_PDO_WR, 1, copley_pdo_entries + 3}, /* Loop Current Val - WRITE */
-
-    {ECAT_DRIVE_STATE_PDO_WR, 1, copley_pdo_entries + 4}, /* Drive State - WRITE */
-
-    {ECAT_LATCHED_DRIVE_FAULT_PDO_WR, 1, copley_pdo_entries + 6}, /* Latched Fault - WRITE */
-    {ECAT_LATCHED_DRIVE_STATUS_PDO_WR, 1, copley_pdo_entries + 7}, /* Latched Status - WRITE */
-
-    {ECAT_MOTOR_ENC_WRAP_POS_PDO_WR, 1, copley_pdo_entries + 8}, /* Encoder Wrap Pos - WRITE */
-};
-static ec_sync_info_t copley_pdo_syncs[] = {
-    {0, EC_DIR_INPUT, 5, copley_pdos, EC_WD_DISABLE},
-    {1, EC_DIR_OUTPUT, 8, copley_pdos + 5, EC_WD_DISABLE},
-    {0xff}
-};
-
 int uei_ethercat_initialize (void);
 
 void motor_cmd_routine(void *m_arg);
 
 void uei_ethercat_cleanup(void);
+int16_t ethercat_get_current(void);
 
 #endif /* UEI_MOTORS_H_ */

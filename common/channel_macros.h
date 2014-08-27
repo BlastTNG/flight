@@ -27,6 +27,15 @@
 #ifndef CHANNEL_MACROS_H_
 #define CHANNEL_MACROS_H_
 
+#include <stdint.h>
+
+/**
+ * These intermediate types are necessary to allow GCC to use its strict-aliasing
+ * optimization without breaking our big-endian/little-endian conversion logic
+ */
+typedef uint32_t __attribute__((__may_alias__)) u32_a;
+typedef uint64_t __attribute__((__may_alias__)) u64_a;
+
 typedef struct channel channel_t;
 
 # ifndef _BSD_SOURCE
@@ -36,31 +45,31 @@ typedef struct channel channel_t;
 
 # if __BYTE_ORDER == __LITTLE_ENDIAN
 #   define beftoh(x) ({                             \
-            float _tmp;                             \
-            uint32_t *infloat = (uint32_t*)&(x);    \
-            uint32_t *outfloat = (uint32_t*)(&_tmp);\
+            float   _tmp;                           \
+            u32_a *infloat = (u32_a*)&(x);    \
+            u32_a *outfloat = (u32_a*)(&_tmp);\
             *outfloat = be32toh(*infloat);          \
             _tmp;                                   \
     })
 #   define bedtoh(x) ({                             \
-            double _tmp;                            \
-            uint64_t *infloat = (uint64_t*)&(x);    \
-            uint64_t *outfloat = (uint64_t*)(&_tmp);\
+            double   _tmp;                          \
+            u64_a *infloat = (u64_a*)&(x);    \
+            u64_a *outfloat = (u64_a*)(&_tmp);\
             *outfloat = be64toh(*infloat);          \
             _tmp;                                   \
     })
-#   define htobed(in,out) ({                        \
-            double in_dbl = (in);                   \
-            uint64_t *indouble = (uint64_t*)&in_dbl;\
-            uint64_t *outdouble = (uint64_t*)&(out);\
+#   define htobed(in,out) {                         \
+            double   in_dbl = (in);                 \
+            u64_a *indouble = (u64_a*)&in_dbl;\
+            u64_a *outdouble = (u64_a*)&(out);\
             *outdouble = htobe64(*indouble);        \
-    })
-#   define htobef(in,out) ({                        \
-            float in_flt = (in);                    \
-            uint32_t *infloat = (uint32_t*)&in_flt; \
-            uint32_t *outfloat = (uint32_t*)&(out); \
+    }
+#   define htobef(in,out)  {                        \
+            float   in_flt = (in);                  \
+            u32_a *infloat = (u32_a*)&in_flt; \
+            u32_a *outfloat = (u32_a*)&(out); \
             *outfloat = htobe32(*infloat);          \
-    })
+    }
 # else
 #   define beftoh(x) (x)
 #   define bedtoh(x) (x)
@@ -81,8 +90,8 @@ typedef struct channel channel_t;
 #define GET_INT32(_ch) (int32_t)be32toh(*(int32_t*)((_ch)->var))
 #define GET_UINT64(_ch) be64toh(*(uint64_t*)((_ch)->var))
 #define GET_INT64(_ch) (int64_t)be64toh(*(int64_t*)((_ch)->var))
-#define GET_FLOAT(_ch) beftoh(*(uint32_t*)_ch->var)
-#define GET_DOUBLE(_ch) bedtoh(*(uint64_t*)_ch->var)
+#define GET_FLOAT(_ch) beftoh(*(u32_a*)_ch->var)
+#define GET_DOUBLE(_ch) bedtoh(*(u64_a*)_ch->var)
 
 /**
  * Provides a type-agnostic return function
@@ -142,8 +151,8 @@ typedef struct channel channel_t;
 #define SET_INT32(_ch,_val) (*(uint32_t*)((_ch)->var) = htobe32(_val))
 #define SET_UINT64(_ch,_val) (*(uint64_t*)((_ch)->var) = htobe64(_val))
 #define SET_INT64(_ch,_val) (*(uint64_t*)((_ch)->var) = htobe64(_val))
-#define SET_FLOAT(_ch,_val) (*(uint32_t*)((_ch)->var) = htobef(_val))
-#define SET_DOUBLE(_ch,_val) (*(uint64_t*)((_ch)->var) = htobed(_val))
+#define SET_FLOAT(_ch,_val) htobef(_val,*(uint32_t*)((_ch)->var))
+#define SET_DOUBLE(_ch,_val) htobed(_val,*(uint64_t*)((_ch)->var))
 
 /**
  * Provides a type-agnostic value setting function
@@ -177,10 +186,10 @@ typedef struct channel channel_t;
             *(uint64_t*)_ch->var = htobe64(in);    \
             break;                          \
         case TYPE_FLOAT:                    \
-            htobef(in, *(uint32_t*)_ch->var);       \
+            htobef(in, _ch->var);           \
             break;                          \
         case TYPE_DOUBLE:                   \
-            htobed(in, *(uint64_t*)_ch->var);       \
+            htobed(in, _ch->var);           \
             break;                          \
         default:                            \
             bprintf(err, "Invalid type %d", _ch->type);  \

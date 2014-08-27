@@ -18,7 +18,7 @@ BLAST_FLAGS = -std=gnu99 -D__BLAST__ \
     $(shell pkg-config --cflags glib-2.0) \
     -Wall -fmessage-length=0
 
-ifeq ($(DEBUG), 1)
+ifdef $(DEBUG)
     BLAST_FLAGS += -ggdb -O0
 else
     BLAST_FLAGS += -O2 -g

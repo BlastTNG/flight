@@ -32,12 +32,42 @@
 
 #include <mosquitto.h>
 
+#include <channels_tng.h>
+
 extern int stop;
 
 static struct mosquitto *mosq = NULL;
 
 void uei_message_handle_frame(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
 {
+	RATE_lookup_t *rate;
+	SRC_lookup_t *src;
+
+	if (!m_fc || !m_rate) {
+		printf("Err in pointers\n");
+		return;
+	}
+	if (!m_len) {
+		printf("Zero-length string for frame\n");
+		return;
+	}
+
+	for (rate = RATE_lookup_table; rate->position < RATE_END; rate++) {
+		if (strcmp(rate->text, m_rate) == 0) break;
+	}
+	if (rate->position == RATE_END) {
+		printf("Did not recognize rate %s!\n", m_rate);
+		return;
+	}
+
+	for (src = SRC_lookup_table; src->position < SRC_END; src++) {
+		if (strncmp(src->text, m_fc, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
+	}
+	if (src->position == SRC_END) {
+		printf("Did not recognize source %s\n", m_fc);
+		return;
+	}
+	channels_store_data(src->position, rate->position, m_data, m_len);
 
 }
 
@@ -49,9 +79,7 @@ void uei_message_callback(struct mosquitto *mosq, void *userdata, const struct m
     if(message->payloadlen){
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
 
-        	if (strcmp(topics[0], "$SYS") == 0) {
-
-        	} else if ( count > 1 && strcmp(topics[1], "frames") == 0) {
+        	if ( count == 3 && strcmp(topics[1], "frames") == 0) {
         		uei_message_handle_frame(topics[0], topics[2], message->payload, message->payloadlen);
 			}
 
@@ -97,6 +125,8 @@ int uei_framing_init(void)
     int keepalive = 60;
     bool clean_session = true;
 
+    channels_initialize(NULL);
+
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
     if (!mosq) {
@@ -116,6 +146,7 @@ int uei_framing_init(void)
 
     mosquitto_subscribe(mosq, NULL, "fc1/frames/#", 2);
     mosquitto_subscribe(mosq, NULL, "fc2/frames/#", 2);
+    mosquitto_subscribe(mosq, NULL, "uei_if/frames/#", 2);
 
     return 0;
 }
@@ -124,6 +155,9 @@ int uei_framing_init(void)
 void uei_framing_routine(void *m_arg)
 {
     int ret;
+    int counter_100hz = 1;
+    int counter_5hz=40;
+    int counter_1hz=200;
 
     RT_TIMER_INFO timer_info;
     long long task_period;
@@ -163,6 +197,32 @@ void uei_framing_routine(void *m_arg)
             printf("error while rt_task_wait_period, code %d (%s)\n", ret,
                     strerror(-ret));
             break;
+        }
+        if (frame_size[SRC_OF_UEI][RATE_200HZ]) {
+        	mosquitto_publish(mosq, NULL, "uei_of/frames/200HZ",
+        			frame_size[SRC_OF_UEI][RATE_200HZ], channel_data[SRC_OF_UEI][RATE_200HZ],0, false);
+        }
+
+        if (!counter_100hz--) {
+        	counter_100hz = 1;
+            if (frame_size[SRC_OF_UEI][RATE_100HZ]) {
+            	mosquitto_publish(mosq, NULL, "uei_of/frames/100HZ",
+            			frame_size[SRC_OF_UEI][RATE_100HZ], channel_data[SRC_OF_UEI][RATE_100HZ],0, false);
+            }
+        }
+        if (!counter_5hz--) {
+        	counter_5hz = 40;
+        	if (frame_size[SRC_OF_UEI][RATE_5HZ]) {
+        		mosquitto_publish(mosq, NULL, "uei_of/frames/5HZ",
+        				frame_size[SRC_OF_UEI][RATE_5HZ], channel_data[SRC_OF_UEI][RATE_5HZ], 0, false);
+        	}
+        }
+        if (!counter_1hz--) {
+        	counter_1hz = 200;
+        	if (frame_size[SRC_OF_UEI][RATE_5HZ]) {
+        		mosquitto_publish(mosq, NULL, "uei_of/frames/1HZ",
+        				frame_size[SRC_OF_UEI][RATE_1HZ], channel_data[SRC_OF_UEI][RATE_1HZ], 0, false);
+        	}
         }
 
         if ((ret = mosquitto_loop(mosq, 0, 100)) != MOSQ_ERR_SUCCESS) {
