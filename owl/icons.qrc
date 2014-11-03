@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>owl0.png</file>
+        <file>owl1.png</file>
+        <file>owl2.png</file>
+        <file>owl3.png</file>
+        <file>owl-1.png</file>
+    </qresource>
+</RCC>

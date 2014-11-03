@@ -1,0 +1,10 @@
+#!/bin/bash
+
+ulimit -c unlimited
+cd /run
+
+while true
+do
+  [ -e /dev/mce_dsp0 ] || udevadm trigger &> /dev/null
+  /data/mas/bin/mpc &> /dev/null
+done

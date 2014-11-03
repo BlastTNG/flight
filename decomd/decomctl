@@ -1,0 +1,162 @@
+#!/usr/bin/perl -wT
+#
+# decomctl: front-end for the decom userspace daemon
+#
+# This software is copyright (C) 2004 University of Toronto
+# 
+# decomctl is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# decomctl is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with decomctl; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+use strict;
+use Socket;
+
+my $DECOMD_DIR = "/usr/local/sbin/";
+
+my $VERSION = "1.2.0";
+$ENV{'PATH'} = "/usr/sbin:/usr/local/sbin";
+delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
+PrintUsage() unless scalar @ARGV;
+
+my $SIGHUP = 1;
+my $SIGINT = 2;
+my $SIGTERM = 15;
+
+for (@ARGV) {
+  if (/^stop$/) {
+    SendSig($SIGTERM, 0);
+  } elsif (/^start$/) {
+    StartDecomd();
+  } elsif (/^restart$/) {
+    SendSig($SIGTERM, 1);
+    sleep 5;
+    StartDecomd();
+  } elsif (/^cycle$/) {
+    SendSig($SIGHUP, 0);
+  } elsif (/^status$/) {
+    Status();
+  } elsif (/^pause$/) {
+    SendSig($SIGINT, 0);
+  } else {
+    PrintUsage();
+  }
+}
+
+sub PrintUsage {
+  print "usage: $0 (start|restart|stop|status|pause|cycle|help)\n\n",
+  "start   - start decomd\n",
+  "restart - stop decomd and then start it again\n",
+  "stop    - stop decomd\n",
+  "status  - dump a short status screen\n",
+  "pause   - pause decomd: stop writing data to disk\n",
+  "cycle   - cycle decomd: start writing to a new data file\n",
+  "help    - this screen\n\n",
+  "This program comes with NO WARRANTY, not even for MERCHANTABILITY or ",
+  "FITNESS\n",
+  "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of ",
+  "the GNU\n",
+  "General Public License; see the file named COPYING for details.\n\n",
+  "Version $VERSION  --  Written by D.V. Wiebe.\n";
+  exit;
+}
+
+sub GetPid {
+  open PID, "/var/run/decomd.pid" or return 0;
+  my $pid = <PID>;
+  close PID;
+  chomp $pid;
+  return $pid;
+}
+
+sub StartDecomd {
+  if (GetPid) {
+    die "decomd already appears to be running (/var/run/decomd.pid exists).\n";
+  } else {
+    print "Starting decom daemon:    " . $DECOMD_DIR . "decomd\n";
+    system($DECOMD_DIR . "decomd");
+  }
+}
+
+sub SendSig {
+  my $signo = shift;
+  my $nopidok = shift;
+  if (my $pid = GetPid) {
+    my ($untainted_pid) = $pid =~ /([0-9]*)/;
+    if ($untainted_pid > 100) {
+      kill $signo, $untainted_pid;
+      print "sent signal $signo to PID $untainted_pid\n";
+    } else {
+      if ($nopidok) {
+        print "didn't send signal $signo: the pid appears to be wrong\n";
+      } else {
+        die "the decomd pid appears to be wrong (PID = $untainted_pid)\n";
+      }
+    }
+  } else {
+    if ($nopidok) {
+      print "didn't send signal $signo: the decom doesn't appear to be running\n";
+    } else {
+      die "decomd doesn't appear to be running (/var/run/decomd.pid doesn't exist).\n";
+    }
+  }
+}
+
+sub Status {
+  if (GetPid) {
+    my @statuses = ('Lost', 'Searching', 'Locked', undef, 'Lost/Paused',
+      'Searching/Paused', 'Locked/Paused');
+
+    socket(SOCK, PF_INET, SOCK_STREAM, getprotobyname('tcp'))
+      or die "socket error: $!";
+    connect(SOCK, sockaddr_in(11411, inet_aton("127.0.0.1")))
+      or die "connection error: $!";
+    my $response = <SOCK>;
+    print "RAW $response\n";
+    my ($status, $polarity, $du, $fs_bad, $dq_bad, $disk_free, $fc,
+      $name) = split " ", $response;
+    print "Status        : ";
+    if ($statuses[$status]) {
+      print $statuses[$status], "\n";
+    } else {
+      print "UNKOWN ($status)\n";
+    }
+    print "Polarity      : ", (($polarity) ? "Normal" : "Inverted"), "\n";
+    print "Decom Unlocks : $du\n";
+    print "Loss Rate     : ", (100 * $fs_bad), "\n";
+    print "Data Quality  : ", (100 - 100 * $dq_bad), "\n";
+    printf "Disk Free     : %6.2f GB\n", ($disk_free / 1024 / 1024 / 1024);
+    print "Frame Count:  : $fc\n";
+    print "Filename      : $name\n";
+    my ($bof) = $name =~ /(^[0-9]*)\.y/;
+    print "Time since BOF: ";
+    if ($bof) {
+      my $delta = time() - $bof;
+      my $min = int($delta / 60);
+      $delta -= $min * 60;
+      my $hour = int($min / 60);
+      $min -= $hour * 60;
+      my $day = int($hour / 24);
+      $hour -= $day * 24;
+      print $day, "d" if ($day eq "??" or $day > 0);
+      print $hour, "h" if ($day eq "??" or $day > 0 || $hour > 0);
+      print $min, "m" if ($day eq "??" or $day > 0 || $hour > 0 || $min > 0);
+      print $delta, "s\n";
+    } else {
+      print "???\n";
+    }
+    close SOCK;
+  } else {
+    die "decomd doesn't appear to be running (/var/run/decomd.pid doesn't exist).\n";
+  }
+}

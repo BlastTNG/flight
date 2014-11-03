@@ -1,0 +1,17 @@
+singalong:
+
+Plays muic from a mpd server depending on scans encountered in a schedule file
+
+Dependencies (on ubuntu with kst2 ppa):
+sudo apt-get install python-mpd libgetdata-python
+
+To use:
+Edit lines 11 and 12 of singalong.py to correspond to your mpd server
+Edit line 14 to point to a current dirfile containing LST_SCHED
+Starting at line 16 is a dictionary, refereced by region names containing
+  (songName, artist) tuples describing the song to play in that region
+  these must be exactly (case sensitive) as they appear in the mpd database
+
+run:
+  $ ./singalong <schedule file>
+  where <schedule file> is the path to the currently-executing schedule file

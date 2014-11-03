@@ -1,0 +1,136 @@
+<!--
+ * Owl: BLAST status GUI
+ *
+ * This file is part of Owl.
+ *
+ * Owl (originally "palantir") is copyright (C) 2002-2012 University of Toronto
+ *
+ * Owl is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Owl is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Owl; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<html>
+<head>
+<title>Owl Web Client</title>
+<script type="text/javascript">
+
+var cssVer=-1;
+var layVer=-1;
+var updating=false;
+
+function updateCSS()
+{
+        location.reload(true);
+}
+
+function updateLay()
+{
+        var xmlhttp=new XMLHttpRequest();
+        xmlhttp.open("POST","owl-cgi?SERVERNAME:layout",true);
+        xmlhttp.onreadystatechange=function()
+        {
+                if (xmlhttp.readyState==4 && xmlhttp.status==200)
+                {
+                        var txt="";
+                        var xx,xxx;
+                        var x=xmlhttp.responseXML.documentElement.getElementsByTagName("PBox");
+                        for(var i=0;i<x.length;i++) {
+                                txt+="<DIV class=\"S"+x[i].getElementsByTagName("boxStyle")[0].firstChild.nodeValue+"\" ";
+                                txt+="style=\"padding: 0px; position: absolute; border:2px solid black; line-height:100%;";
+                                xx=x[i].getElementsByTagName("top"); txt=txt + "top:" + xx[0].firstChild.nodeValue+"px;";
+                                xx=x[i].getElementsByTagName("left"); txt=txt + "left:" + xx[0].firstChild.nodeValue+"px;";
+                                xx=x[i].getElementsByTagName("width"); txt=txt + "width:" + xx[0].firstChild.nodeValue+"px;";
+                                xx=x[i].getElementsByTagName("height"); txt=txt + "height:" + xx[0].firstChild.nodeValue+"px;";
+                                txt=txt + "font-size:10px;";
+                                txt+="\"><DIV style=\"text-align:center; line-height:100%;\"\">";
+                                xx=x[i].getElementsByTagName("title"); txt=txt + xx[0].firstChild.nodeValue;
+                                txt+="</DIV><table border=\"0\">";
+                                xx=x[i].getElementsByTagName("PDataItem");
+                                for(var j=0;j<xx.length;j++) {
+                                        txt+="<tr><td style=\"font-size: 10px; line-height:100%\">";
+                                        txt+="<span class=\"S"+xx[j].getElementsByTagName("capStyle")[0].firstChild.nodeValue+"\">";
+                                        xxx=xx[j].getElementsByTagName("caption"); txt=txt + xxx[0].firstChild.nodeValue;
+                                        txt+="</span></td><td style=\"font-size: 10px; line-height:100%\">";
+                                        txt+="<span id=\"X"+xx[j].getElementsByTagName("dataID")[0].firstChild.nodeValue+"\">";
+                                        txt+="</span></tr></td>";
+                                }
+                                txt+="</table></DIV>"
+                        }
+                        try{
+                            x=xmlhttp.responseXML.documentElement.getElementsByTagName("Owl");
+                            for(var i=0;i<x.length;i++) {
+                                    txt+="<DIV style=\"padding: 0px; position: absolute; border:0px solid black; line-height:100%; background-color:white;";
+                                    xx=x[i].getElementsByTagName("top"); txt=txt + "top:" + xx[0].firstChild.nodeValue+"px;";
+                                    xx=x[i].getElementsByTagName("left"); txt=txt + "left:" + xx[0].firstChild.nodeValue+"px;";
+                                    xx=x[i].getElementsByTagName("width"); txt=txt + "width:" + xx[0].firstChild.nodeValue+"px;";
+                                    xx=x[i].getElementsByTagName("height"); txt=txt + "height:" + xx[0].firstChild.nodeValue+"px;\">";
+                                    txt+="<span id=\"OWL\"";
+                                    txt+="</span></DIV>";
+                            }
+                            document.getElementById("MAIN").innerHTML=txt;
+                        } catch(err) {}
+                }
+        }
+        xmlhttp.send();
+}
+
+function updateDat()
+{
+    if(updating) {
+        return;
+    }
+    var updateReq=new XMLHttpRequest();
+    updateReq.open("POST","owl-cgi?SERVERNAME:data",true);
+    updateReq.onreadystatechange=function()
+    {
+        if (updateReq.readyState==4 && updateReq.status==200)
+        {
+            updating=true;
+            try {
+                var tree = JSON.parse(updateReq.responseText);
+            } catch(err) { return; }
+            for(var i=0;i<tree.owlData.Obj.length-1;i++) {
+                try{
+                    document.getElementById("X"+tree.owlData.Obj[i].i.toString()).innerHTML=
+                        "<span class=\"S"+tree.owlData.Obj[i].s.toString()+"\">"+tree.owlData.Obj[i].d+"</span>";
+                } catch(err) {}
+            }
+
+            cssVer=tree.owlData.styleVer;
+            if(tree.owlData.styleVer>cssVer&&cssVer!=-1) {
+                try{updateCSS(); } catch(err) {return;}
+            }
+            if(tree.owlData.layoutVer>layVer) {
+                updateLay();
+                layVer=tree.owlData.layoutVer;
+            }
+            try{
+                document.getElementById("OWL").innerHTML="<img src=\"/owl"+tree.owlData.owlStage.toString()+".png\">";
+            } catch(err) {}
+            updating=false;
+        }
+    }
+    updateReq.send();
+    var t=setTimeout("updateDat()",300);
+}
+
+</script>
+</head>
+<body onload="updateLay();updateDat();">
+
+<link rel=stylesheet href="owl-cgi?SERVERNAME:css">
+<div id="MAIN">Loading...</div>
+
+</body>
+</html>

@@ -1,0 +1,412 @@
+<?xml version="1.0"?>
+<DOCUMENT>
+  <SETTINGS>
+    <TEXTSTYLE name="xhiwarn" colour="#ff0000" backcolour="#00ffff" size="10" bold="true"/>
+    <TEXTSTYLE name="hiwarn" colour="#cc0000" font="adobe-helvetica" size="10" bold="true"/>
+    <TEXTSTYLE name="lowarn" colour="#00cc00" font="adobe-helvetica" size="10" bold="true"/>
+    <TEXTSTYLE name="xlowarn" colour="#00ff00" backcolour="#ff00ff" font="adobe-helvetica" size="10" bold="true"/>
+    <TEXTSTYLE name="increasing" colour="#FF0000" font="adobe-helvetica" size="10" bold="true"/>
+    <TEXTSTYLE name="decreasing" colour="#0000CC" font="adobe-helvetica" size="10" bold="true"/>
+    <TEXTSTYLE name="evenrow" colour="#000000" font="adobe-helvetica" size="10"/>
+    <TEXTSTYLE name="oddrow" colour="#000000" font="adobe-helvetica" size="10"/>
+    <TEXTSTYLE name="spacer" font="adobe-helvetica" size="6"/>
+    <TEXTSTYLE name="OK_BIT" backcolour="#00ff00" colour="#000055" font="adobe-helvetica" size="10"/>
+    <TEXTSTYLE name="W_BIT" backcolour="#ffff00" colour="#000055" font="adobe-helvetica" size="10"/>
+    <TEXTSTYLE name="E_BIT" backcolour="#ff0000" colour="#000055" font="adobe-helvetica" size="10"/>
+    <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" colour="#000055" font="adobe-helvetica" size="10"/>
+    <EXTREMA name="slope">
+      <HI value="0" textstyle="increasing"/>
+      <LO value="0" textstyle="decreasing"/>
+      <XHI value="32768" alarm="doh.wav"/>
+      <XLO value="-32768" alarm="doh.wav"/>
+    </EXTREMA>
+    <EXTREMA name="gains">
+      <HI value="32768"/>
+      <LO value="0"/>
+      <XHI value="32768" alarm="doh.wav"/>
+      <XLO value="0" alarm="doh.wav"/>
+    </EXTREMA>
+    <EXTREMA name="temp">
+      <HI value="40"/>
+      <LO value="-20"/>
+      <XHI value="60" alarm="doh.wav"/>
+      <XLO value="-40" alarm="doh.wav"/>
+    </EXTREMA>
+    <EXTREMA name="current">
+      <HI value="35"/>
+      <LO value="0"/>
+      <XHI value="70" alarm="doh.wav"/>
+      <XLO value="-40" alarm="doh.wav"/>
+    </EXTREMA>
+    <EXTREMA name="cpufan">
+      <HI value="15000"/>
+      <LO value="6000"/>
+      <XHI value="20000" alarm="doh.wav"/>
+      <XLO value="5000" alarm="doh.wav"/>
+    </EXTREMA>
+    <EXTREMA name="unknown">
+      <HI value="64400"/>
+      <LO value="-64400"/>
+      <XHI value="64400" alarm="doh.wav"/>
+      <XLO value="-64400" alarm="doh.wav"/>
+    </EXTREMA>
+    <EXTREMA name="hours">
+      <XLO value="-1000" alarm="uvavu.wav"/>
+      <LO value="-999"/>
+      <HI value="999"/>
+      <XHI value="1000" alarm="eranu.wav"/>
+    </EXTREMA>
+    <EXTREMA name="opticsboxwintemp">
+      <XLO value="3" alarm="uvavu.wav"/>
+      <LO value="3.5"/>
+      <HI value="5"/>
+      <XHI value="6" alarm="eranu.wav"/>
+    </EXTREMA>
+    <EXTREMA name="lhetemp">
+      <XLO value="1" alarm="uvavu.wav"/>
+      <LO value="3"/>
+      <HI value="6"/>
+      <XHI value="10" alarm="eranu.wav"/>
+    </EXTREMA>
+    <EXTREMA name="lntemp">
+      <XLO value="70" alarm="uvavu.wav"/>
+      <LO value="75"/>
+      <HI value="81"/>
+      <XHI value="85" alarm="eranu.wav"/>
+    </EXTREMA>
+    <EXTREMA name="vcstemp">
+      <XLO value="15" alarm="uvavu.wav"/>
+      <LO value="20"/>
+      <HI value="60"/>
+      <XHI value="75" alarm="eranu.wav"/>
+    </EXTREMA>
+    <EXTREMA name="jfettemp">
+      <XLO value="100" alarm="uvavu.wav"/>
+      <LO value="120"/>
+      <HI value="130"/>
+      <XHI value="150" alarm="eranu.wav"/>
+    </EXTREMA>
+    <EXTREMA name="pottemp">
+      <XLO value="0" alarm="uvavu.wav"/>
+      <LO value="1"/>
+      <HI value="2.2"/>
+      <XHI value="4" alarm="eranu.wav"/>
+    </EXTREMA>
+    <EXTREMA name="he3fridge">
+      <XLO value="0" alarm="uvavu.wav"/>
+      <LO value=".220"/>
+      <HI value=".300"/>
+      <XHI value="4" alarm="eranu.wav"/>
+    </EXTREMA>
+    <CURFILE name="/data/etc/defile.cur"/>
+  </SETTINGS>
+  <DEFAULTS>
+    <TEXTSTYLE>
+      <BOX colour="#0000cc" font="adobe-times" size="10" bold="true"/>
+      <LABEL colour="#000000" font="adobe-helvetica" size="10"/>
+      <DATUM colour="#000055" font="adobe-helvetica" size="10" bold="true">
+        <ERROR colour="#aa4444" size="10" font="adobe-helvetica" bold="true"/>
+        <WORD textstyle="evenrow"/>
+        <HI textstyle="hiwarn"/>
+        <LO textstyle="lowarn"/>
+        <XHI textstyle="xhiwarn"/>
+        <XLO textstyle="xlowarn"/>
+      </DATUM>
+      <INFOCAPTION colour="#000000" font="adobe-helvetica" size="10" bold="true"/>
+      <INFODATA colour="#000000" font="adobe-courier" size="10" bold="false"/>
+      <INFOCOMBO colour="#000000" font="adobe-courier" size="10" bold="false"/>
+      <INFOBUTTON colour="#000000" font="adobe-helvetica" size="10" bold="true"/>
+    </TEXTSTYLE>
+  </DEFAULTS>
+  <BOX caption="DAS Power Module" row="2" col="2">
+    <NUMBER caption="I DPM 3V" textstyle="oddrow">
+      <DATUM format="%.2f" src="I_DPM_3V" extrema="current"/>
+    </NUMBER>
+    <NUMBER caption="I DPM 5V" textstyle="oddrow">
+      <DATUM format="%.2f" src="I_DPM_5V" extrema="current"/>
+    </NUMBER>
+    <NUMBER caption="I DPM 10V" textstyle="oddrow">
+      <DATUM format="%.2f" src="I_DPM_10V" extrema="current"/>
+    </NUMBER>
+    <NUMBER caption="I DPM 28V" textstyle="oddrow">
+      <DATUM format="%.2f" src="I_DPM_28V" extrema="current"/>
+    </NUMBER>
+    <NUMBER caption="I REC" textstyle="oddrow">
+      <DATUM format="%.2f" src="I_REC" extrema="current"/>
+    </NUMBER>
+    <NUMBER caption="T DPM 3V" textstyle="evenrow">
+      <DATUM format="%.2f" src="T_DPM_3V" extrema="temp"/>
+    </NUMBER>
+    <NUMBER caption="T DPM 7.5V" textstyle="evenrow">
+      <DATUM format="%.2f" src="T_DPM_7.5V" extrema="temp"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Bias Generator" row="3" col="2">
+    <MULTI caption="Bias Type" textstyle="oddrow">
+      <DATUM src="BIAS_IS_DC">
+        <WORD value="1" caption="DC" textstyle="W_BIT"/>
+        <WORD value="0" caption="AC" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Bias Clock" textstyle="oddrow">
+      <DATUM src="BIAS_CLK_IS_INT">
+        <WORD value="1" caption="Internal" textstyle="OK_BIT"/>
+        <WORD value="0" caption="External" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Bias Source" textstyle="oddrow">
+      <DATUM src="BIAS_IS_INT">
+        <WORD value="1" caption="Internal" textstyle="OK_BIT"/>
+        <WORD value="0" caption="External" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="Bias Level 1" textstyle="oddrow">
+      <DATUM format="%.0f" src="bias_lev1" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Bias Level 2" textstyle="oddrow">
+      <DATUM format="%.0f" src="bias_lev2" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Bias Level 3" textstyle="oddrow">
+      <DATUM format="%.0f" src="bias_lev3" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Time" row="1" col="1" colspan="1">
+    <NUMBER caption="Hours" textstyle="oddrow">
+      <DATUM format="%.2f" src="CPU_HOUR" extrema="hours"/>
+    </NUMBER>
+    <DATETIME caption="CPU Time" textstyle="evenrow">
+      <DATUM format="%e %b %Y, %H:%M:%S" src="CPU_TIME"/>
+    </DATETIME>
+  </BOX>
+  <BOX caption="Diodes" row="1" col="3" rowspan="1">
+    <NUMBER caption="LN2 Filter" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_ln2_filt" extrema="lhetemp"/>
+    </NUMBER>
+    <NUMBER caption="LN2" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_ln2" extrema="lhetemp"/>
+    </NUMBER>
+    <NUMBER caption="VCS Filter" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_vcs_filt" extrema="pottemp"/>
+    </NUMBER>
+    <NUMBER caption="VCS" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_vcs" extrema="pottemp"/>
+    </NUMBER>
+    <NUMBER caption="LHE Filter" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_lhe_filt" extrema="lhetemp"/>
+    </NUMBER>
+    <NUMBER caption="ColdPlate" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_cold_plate" extrema="pottemp"/>
+    </NUMBER>
+    <NUMBER caption="4He pot" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_he4pot_d" extrema="pottemp"/>
+    </NUMBER>
+    <NUMBER caption="Opt.Box Win" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_opt_box_w" extrema="opticsboxwintemp"/>
+    </NUMBER>
+    <NUMBER caption="Optics Box" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_optics_box" extrema="pottemp"/>
+    </NUMBER>
+    <NUMBER caption="JFET" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_jfet" extrema="jfettemp"/>
+    </NUMBER>
+    <NUMBER caption="Charcoal" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_charcoal" extrema="pottemp"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Diodes d/dt (K per hour)" row="1" col="4" rowspan="1">
+    <DERIV caption="LN2" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_ln2" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="LN2 Filter" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_ln2_filt" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="VCS" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_vcs" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="VCS Filter" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_vcs_filt" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="LHE Filter" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_lhe_filt" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="ColdPlate" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_cold_plate" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="4He Pot" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_he4pot_d" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="OptBox Win" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_opt_box_w" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="Optics Box" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_optics_box" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="JFET" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_jfet" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="Charcoal" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_charcoal" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+  </BOX>
+  <BOX caption="ROXs" row="3" col="3">
+    <NUMBER caption="He3 Fridge" textstyle="oddrow">
+      <DATUM format="%.3f" src="T_he3fridge" extrema="he3fridge"/>
+    </NUMBER>
+    <NUMBER caption="He4 Pot" textstyle="oddrow">
+      <DATUM format="%.3f" src="T_he4pot" extrema="pottemp"/>
+    </NUMBER>
+    <NUMBER caption="500 um Horn" textstyle="oddrow">
+      <DATUM format="%.3f" src="T_horn_500" extrema="he3fridge"/>
+    </NUMBER>
+    <NUMBER caption="500 um Base" textstyle="oddrow">
+      <DATUM format="%.3f" src="T_base_500" extrema="pottemp"/>
+    </NUMBER>
+    <NUMBER caption="250 um Base" textstyle="oddrow">
+      <DATUM format="%.3f" src="T_base_250" extrema="pottemp"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="ROXs d/dt (K per hour)" row="3" col="4">
+    <DERIV caption="He3 Fridge" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_he3fridge" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="He4 Pot" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_he4pot" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="500 um Horn" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_horn_500" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="500 um Base" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_base_500" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+    <DERIV caption="250 um Base" textstyle="oddrow">
+      <DATUM format="%.2f" src="T_base_250" extrema="slope" length="220" tunit="h"/>
+    </DERIV>
+  </BOX>
+  <BOX caption="DAS Phases" row="2" col="1">
+    <NUMBER caption="DAS 5" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase5" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 6" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase6" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 7" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase7" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 8" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase8" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 9" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase9" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 10" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase10" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 11" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase11" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 12" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase12" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 13" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase13" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 14" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase14" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 15" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase15" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="DAS 16" textstyle="oddrow">
+      <DATUM format="%.0f" src="phase16" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Cryostat" row="1" col="5" rowspan="1">
+    <NUMBER caption="I Charcoal" textstyle="oddrow">
+      <DATUM format="%.2f" src="I_CHARCOAL" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Helium 4 Level" textstyle="oddrow">
+      <DATUM format="%.2f" src="HE4_LEV" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="I Cold Plate" textstyle="oddrow">
+      <DATUM format="%.2f" src="I_COLDPLATE" extrema="unknown"/>
+    </NUMBER>
+    <MULTI caption="He Level Sensor" textstyle="oddrow">
+      <DATUM src="HE_LEV_SENS">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Charcoal Heat" textstyle="oddrow">
+      <DATUM src="CHARC_HEATER">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Coldplate Heat" textstyle="oddrow">
+      <DATUM src="COLDP_HEATER">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="Calibrator" textstyle="oddrow">
+      <DATUM src="CALIBRATOR">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="He3 Heat (%)" textstyle="oddrow">
+      <DATUM format="%.2f" src="HE3PWM" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Heat Switch Heat (%)" textstyle="oddrow">
+      <DATUM format="%.2f" src="HSPWM" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="JFET Heat (%)" textstyle="oddrow">
+      <DATUM format="%.2f" src="JFETPWM" extrema="unknown"/>
+    </NUMBER>
+    <NUMBER caption="Cryo PWM (%)" textstyle="oddrow">
+      <DATUM format="%.2f" src="CRYOPWM" extrema="unknown"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Valves" row="3" col="5">
+    <MULTI caption="LN Valve" textstyle="oddrow">
+      <DATUM src="LN_VALVE">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="LN Valve Direction" textstyle="oddrow">
+      <DATUM src="LN_DIREC">
+        <WORD value="1" caption="Opening" textstyle="W_BIT"/>
+        <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="LN Valve State" textstyle="oddrow">
+      <DATUM src="LN_STATE">
+        <WORD value="3" caption="Error" textstyle="E_BIT"/>
+        <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
+        <WORD value="1" caption="Open" textstyle="W_BIT"/>
+        <WORD value="2" caption="Closed" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="LHe Valve" textstyle="oddrow">
+      <DATUM src="LHE_VALVE">
+        <WORD value="1" caption="On" textstyle="W_BIT"/>
+        <WORD value="0" caption="Off" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="LHe Valve Direction" textstyle="oddrow">
+      <DATUM src="LHE_DIREC">
+        <WORD value="1" caption="Opening" textstyle="W_BIT"/>
+        <WORD value="0" caption="Closing" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <MULTI caption="LHe Valve State" textstyle="oddrow">
+      <DATUM src="LHE_STATE">
+        <WORD value="3" caption="Error" textstyle="E_BIT"/>
+        <WORD value="0" caption="No Limit" textstyle="P_BIT"/>
+        <WORD value="1" caption="Open" textstyle="W_BIT"/>
+        <WORD value="2" caption="Closed" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+  </BOX>
+</DOCUMENT>

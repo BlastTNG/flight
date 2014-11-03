@@ -1,0 +1,25 @@
+0		 NO_CAMERA: 0=using CCD 1=use ISC test.tif 2=use OSC test.tif
+2000             1st client port (Frodo)
+2001             2nd client port (Sam)
+2002             3rd client port (Extra)
+0		 Turn off pointing solution calculation
+-75.188           East longitude of telescope on startup (deg)
+39.952           Latitude of telescope on startup (deg)
+3		 Trigger: 0=now, 1=edge, 2=pulse hi, 3=pulse low
+4.5              S/N ratio threshold for source detection 
+30               threshold distance for multiple detection rejection
+38               Side length of coarse grid for search (38)
+20               Centroiding box side length (20)
+5                Photometry box side length (5)
+1                If 1 we can use the pyramid pointing solution
+3                Min blobs required for pointing solution
+7                Max blobs used in pointing solution
+9.5              Magnitude limit
+2.0              Rotation tolerance (not lost) for pointing solutions
+COM3             Serial port for stepper motor communications	
+50               Velocity for the stepper motors
+0          	 Set =0 for immediate picture taking, set =1 for PAUSE
+0	         Offset to home focus (LABFLIGHT)
+E:/catalog/gsc1
+E:/catalog/gsc_mag08_res21.bin
+E:/catalog/k.bin

@@ -1,0 +1,21 @@
+	
+$(BLAST_COMMON_OBJS): %.o: $(addprefix $(COMMON_DIR)/,%.c)
+	@echo 'Building file: $<'
+	@echo 'Invoking: Cross GCC Compiler'
+	powerpc-604-linux-gnu-gcc $(BLAST_FLAGS) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+$(BLAST_CONFIG_OBJS): %.o: $(addprefix $(CONFIG_DIR)/,%.c)
+	@echo 'Building file: $<'
+	@echo 'Invoking: Cross GCC Compiler'
+	powerpc-604-linux-gnu-gcc $(BLAST_FLAGS) -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+	
+myclean: clean
+	-$(RM) $(BLAST_CONFIG_OBJS) $(BLAST_COMMON_OBJS) $(USER_C_DEPS)
+	-@echo ' '
+	
+upload_uei1: uei
+	-@scp uei root@uei1:/tmp/

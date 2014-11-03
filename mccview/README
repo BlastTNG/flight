@@ -1,0 +1,172 @@
+=== QUICK START GUIDE ==
+
+  To build (requires ncurses and getdata):
+
+    make
+
+  To run (requires "defile-spider widow" running):
+
+    mccview [dirfile]
+
+  To exit:
+
+    ^C
+
+
+=== A TOUR OF MCCVIEW ===
+
+The following section briefly explains the data displayed by mccview.
+
+The top line contains some data from PCM itself.  It looks like this:
+
+  Frame: 149012    blob#60304   mce_blob:0x0000  reporting:.23...   alive:1234..   veto:...456
+
+where:
+
+* Frame: the PCM frame number.  If this is increasing, mccview is getting data.
+
+* blob#  the number of the last MCC data blob.  It increases by one every time
+    a blob is sent.
+
+* mce_blob: the 16-bit blob channel.  The value of this field is not important,
+    but if a blob is being transmitted, it will display a number that isn't
+    zero (except roughly 1 in 2**16 times, when the blob actually does contain
+    a zero).
+
+* reporting: the MCCs which are sending fast TES data back to PCM.  A dot
+    indicates not reporting.  Note: if the current BSet contains no channels
+    from a given insert, the corresponding MCC won't be reporting any data
+    since it won't have anything to say.
+
+* alive: the MCCs which are sending slow housekeeping data back to PCM.  A dot
+    indicates a MCC which is not communicating with PCM at all (maybe because
+    it's off).  In normal operation, when a dot appears here, PCM will power
+    cycle the MCC.
+
+* veto: the MCE has been vetoed by PCM.
+
+--------------
+
+Below the top line is a column of data from each MCC:
+
+              X1
+     Thu Jul 25 09:07:52
+   data_mode:       0
+   free0:     360.039 GB
+   free1:     300.715 GB
+   free2:       0.000 GB
+   free3:       0.000 GB
+   drive:          0!!
+   drives:       ---X---
+   active:       -------
+   mcecom:       ---X---
+   config:       -------
+   acqcnf:       -------
+   retdat:       -------
+    mode:         none
+    goal:         stop
+    task:       0x0000
+   dtask:         idle
+   T mcc:     -327.68 oC
+   T mce:       37.00 oC
+    dead:          45
+  last tune:        5
+  last iv:          4
+  heater:       0.000 V
+
+where:
+* the first line below the label is the MCC's system time.  If this is
+      now, the data is current.
+
+* data_mode: the MCE data mode.  Should be 10.
+
+* free[0123]: the amount of free space on each of the four data drives.
+      Resolution is low, but it should decrease chunkily when data acquisition
+      is in progress.
+
+* d map: the drive map.  Of the four data drives, MPC will pick up to three to
+      use for data archiving.  This field provides information on which drives
+      are in use.  There are three characters in this field which will display
+      either a number between 0-3 indicating that this drive is configured in
+      that slot, or else a ! indicating that no suitable drive was found for
+      the slot.
+
+      The most important slot is the left-most one: MPC presents the drive there
+      as $MAS_DATA to mce_script.
+
+
+The next few fields are bits.  A set bit will show an X.  A not set bit will
+have just dashes:
+
+* drives: if set, MPC found at least one useable data drive.  Sometimes when
+      a data drive fails, this will turn off as MPC tries to recover, but
+      in general it will always be on.
+
+* active: MPC is talking to the MCE.  This should always be on in normal
+      operation.  Vetoing the MCE will turn it off.
+
+* mcecom: the MCE is communicating with MPC.  If this is off, but active is on
+      the MCE is non-responsive and MPC will ask PCM to power cycle it.  NB:
+      this might be on even when active is off, which indicates that the MCE
+      was alive when it was vetoed.
+
+* config: the MCE is configured for normal data acquisition.
+
+* acqcnf: an acquisition is configured.  This is a bookkeeping bit that tells
+      you little: the retdat bit below should also be on, if this one is.
+
+* retdat: MPC is doing a normal data acquisition.
+
+
+Then there are some fields indicating the state of MPC:
+
+* mode: the current operating mode.  There are a bunch of these, they should
+      be fairly self explanitory.  This indicates what MPC is actually doing
+      right now.
+
+* goal: MPC's goal: the high-level task requested of MPC.  Again, the values are
+      probably self explanitory.  This indicates what MPC wants to do.
+
+* task: a mid-level task indicator.  Mid-level tasks generally only run when
+      changing states, so generally this should be zero.  If it stays non-zero
+      for a long time, it probably means the task has gotten stuck trying to do
+      something, which is bad: usually MPC becomes unresponsive to commands
+      when that happens.  MPC bugs are the only way this can happen.
+
+      The exception to this is a value of 0xFFFF which occurs when MPC has
+      detected a serious problem and has interrupted itself to trying to correct
+      it.  Most commonly, this occurs when it has lost communication with the
+      MCE.
+
+* dtask: the data tasklet.  This generally corresponds to a low-level task
+      being performed on the MCE.  Most of these are probably self explanitory.
+
+Then there are more housekeeping fields:
+
+* T mcc: the temperature of the MCC.  Currently the only one who reports
+      something sensible here is X4.
+
+* T mce: the temperature of the MCE.  This won't update if the MPC isn't talking
+      to the MCE (ie when the active bit above is off).
+
+* dead: the total number of dead and frail detectors
+
+* last tune: the serial number of the last auto tuning
+
+* last iv: the serial number of the last load curve
+
+* heater: the current commanded value of the tile heater.  5V is full scale
+      (=32767 counts).
+
+
+=== OTHER "DESIGN" CONSIDERATIONS ===
+
+As part of mccview's general hackiness, it doesn't understand dirfile cycling:
+if the dirfile changes, either because you restarted defile or because someone
+restarted the decom daemon on widow, you'll have to restart mccview manually.
+
+You can detect this by checking whether the frame number in the top left is
+increasing or not.
+
+Expect things to change as MPC is developed.  It's a good idea to do an SVN
+update on mccview at the start of your shift every day.

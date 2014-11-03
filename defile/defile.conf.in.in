@@ -1,0 +1,142 @@
+# @fixup_input@
+# @configure_input@
+#
+# Sample defile.conf for defile @VERSION@
+#
+# Report bugs to <@PACKAGE_BUGREPORT@>
+
+# ---
+
+# Set AutoReconnect if you want defile to attempt to reconnect to a remote host
+# when the connection is unexpectedly dropped.  Default: don't reconnect but
+# terminate.
+
+AutoReconnect
+
+# ---
+
+# Set CompressedOutput if you want defile to write gzipped dirfiles by
+# default.  Default: don't compress
+
+# CompressedOutput
+
+# ---
+
+# Set Daemonise if you want defile to daemonise on start up by default.
+# Setting this will also force Persistent and Quiet. Default: don't
+# daemonise
+
+# Daemonise
+
+# ---
+
+# Set FlakeySource if you are reading from a local file which is on an
+# unreliable filesystem, such as an overloaded NFS mount.  This will reduce
+# the number of times defile exits due to read errors.  Default: exit if a
+# source chunk cannot be read.
+
+# FlakeySource
+
+# ---
+
+# Set InputSource to the default input filename or hostname[:port].  Default:
+# decom.
+
+InputSource decom
+
+# ---
+
+# Set OutputDirectory to the default parent directory for defile created
+# dirfiles.  Default: /data/rawdir
+
+# OutputDirectory /data/rawdir
+
+# ---
+
+# Set OutpuCurFileName to the default output dirfile name.  This can be either
+# an absolute path, or a path relative to OutputDirectory. Default: none
+
+# OutputDirFile defile.d
+
+# ---
+
+# Set OutpuCurFileName to the default output curfile name.  Only used if
+# WriteCurFile is also specified. Default: @DATA_ETC_DIR@/defile.cur
+# Note: .cur will be appended to old curfile names, and .lnk to the link
+# style curfile
+
+OutputCurFileName /data/etc/defile
+
+# ---
+
+# Set Persistent if you don't want defile to exit when it reaches the end
+# of the input, but instead wait for more data.  Default: exit on EOF
+
+# Persistent
+
+# ---
+
+# Set PidFile to the name of the file to write defile's pid to when in daemon
+# mode. This has no effect when not in daemon mode.
+# Default: @localstatedir@/run/defile.pid
+
+# PidFile /var/run/defile.pid
+
+# ---
+
+# Set Quiet to have defile supress normal console output.  Default: don't
+# be quiet.
+
+# Quiet
+
+# ---
+
+# Set RemoteInputSource if the InputSource directive defines a remote host,
+# instead of a local fine name.  Default: assume that InputSource is a local
+# filename.
+
+RemoteInputSource
+
+# ---
+
+# Set RemountPath to the relative path from the curfile directory in which to
+# find the dirfile it points to.  Default: ../rawdir
+
+# RemountPath ../rawdir
+
+# ---
+
+# Set RemountedSource to have defile assume that the datafile the input
+# curfile points to has been mounted in another location.  Default: don't
+# remount.
+
+RemountedSource
+
+# ---
+
+# Set ResumeMode to have defile resume a defiling if it finds the
+# destination dirfile already exists.  Default: don't resume.
+
+# ResumeMode
+
+# ---
+
+# Set SpecFile to the name of the channel specification file for defile to use.
+# This overrides defile's automatically generated specification file name.
+# Default: none.
+
+# SpecFile channel.spec
+
+# ---
+
+# Set SuffixLength to the default length of the framefile suffix (the
+# hexidecimal chunk counter at the end of the chunk name).  Default: 4
+
+SuffixLength 3
+
+# ---
+
+# Set WriteCurfile to get data to write a curfile pointing to the defiled
+# data.  Default: don't write a curfile.
+
+WriteCurfile

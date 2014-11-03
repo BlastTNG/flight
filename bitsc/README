@@ -1,0 +1,62 @@
+24/8/2012
+
+This is a readme file detailing the BIT star camera code as it currently stands. 
+Author: Mathew Galloway
+
+Part One - Table of Contents
+
+I 	- 	Table of Contents
+II	-	Installation of uEye software
+III	-	Configuration of the Camera
+IV	-	Using the star camera code
+V	-	Steps for using the code with a new camera
+
+
+Part Two - Installation of uEye software
+
+To do a new install of the uEye drivers on a fresh system, the basica install guide can be found at http://www.ids-imaging.de/frontend/files/ReadMe_4.00_Linux.txt. A link to the actual driver files can be found at http://www.ueyesetup.com.
+
+The basic steps are as follows:
+
+1 - Download, decompress and install the drivers as detailed in their readme
+2 - Add the ueyeethdrc daemon to the startup daemons array. This should make it start at boot. To start it without having to reboot, execute /usr/local/share/ueye/uyeeethd.
+3 - try running the ueyecameramanager. This requires that you have xwindows working on the system, but that is beyond the scope of this file
+4 - if the manager detects the camera, success! Otherwise, you will have to muck about with configuring the camera and ethernet adapter (part 3)
+
+Part Three - Configuration of the Camera
+
+If the camera was not detected by the ueyecameramanager in part 2, you are in for a world of hurt. The camera uses a static ethernet address to do all of its communication with the computer, and determining what this is is non trivial. In theory, it should be done with the ueyesetip tool, but that has varying degrees of usefulness. The best approach I have found so far is to use the camera under windows (the software is all installed on the spider laptop) and set the persistant ip there before making a note of that and then trying to connect to that ip under linux.
+
+The default networks daemon does not appear to recognize the camera properly, and thus the current approach that seems to work is to use the netcfg tool under arch linux, about which documentation can be found here: https://wiki.archlinux.org/index.php/Netcfg. Check the configuration files on snaffle as a model for how to get it to recognize the camera. 
+
+The other lovely feature of the camera is that it only supports being on the 192.168.1.xxx subnet. Due to the fact that the lab computers were already on this subnet, the .1 subnet has been split, allowing for the cameras to be on the upper half and the router to never assign their IPs. So when selecting an IP for the camera, ensure that it is above .1.126 and is not one that has already been assigned to another camera.
+
+By this point, hopefully the camera is found under the camera manager, at which point you can do other configuration type things if you so desire. If this is not the case, you are on your own. The report generating program report.sh that the ueye people provide is mildly useful but be sure to run it as root.
+
+Part Four - Using the star camera code
+
+The star camera code is a c++ program divided into several distinct classes. As a user who is not me, you will probably just want to change CameraAlignment.cpp which contains the main method and should be configured so as to actually use the code. At time of writing it is configured to track stars accross the sky for the running of the night sky tests, so if you want that you can leave it.
+
+Here is an overview of all the classes provided:
+CameraAlignment.cpp : this class contains the main method and is where you should write the code to use the other classes in the way you desire.
+
+cameraCommunicator.cpp : this class communicates with the server class that can be found on bradoon. At time of writing it is configured to do networking tests, so it just pings back and forth. To get it to do what you want it to, edit the main control loop which starts around line 215 (I am assuming the ability to read and write c code here);
+
+camera.cpp : this is the wrapper class for the camera functionality. It covers taking images and saving them to files. You can take either full frame or subframe images. 
+
+locator.cpp : this class finds blob locations and outputs them. It currently has 3 modes implemented, of which I can only vouch for the performance of two. spiderMode does blob tracking in real time using the full field, and light_test is a mode that was designed to do some sort of led-based timing test, and thus computes an average to determine if a light is on or off.
+
+pixelFixer.cpp : this class implements the bad pixel fixing code. It uses a list stored as "badPixels.txt" to load the bad pixels into the camera. If this list does not exist, it will generate one using the camera. Follow the on screen instructions and ensure that the lens cap is on.
+
+Part Five - Steps for Moving the Code with a new Camera
+
+This section should in theory a comprehensive list of things that would be required to start with a standard unix system and get the star camera pointing code working on it. I'm sorry if I leave off something incredibly important and you are the poor guy whose job it is to reinvent the wheel but I am writing this after the fact and I will try my best.
+
+Step zero: purchase a camera. The list of cameras can be found as of time of writing here: http://www.ids-imaging.com/frontend/products.php?interface=GigE&family=RE. The issue appears to be that the newer generation uses 12 bit clour depth instead of eight, which means that large sections of the code will have to be fixed to work with this new pixel size. I have tried to make the code support variable pixel sizes, however as far as I can tell it will not support addressing the middle of a byte which is wat appears to be required to use the 12 bit colour depth that is used on the latest models.
+Step one: install the camera drivers as decribed in part 2 above.
+Step two: get the camera working just using their software as described in part 3.
+Step three: configure the code to do whatever it is that you want to do
+Step four: run the code for the first time, where the bad pixel correction functions will generate the bad pixel maps and then save them to a file.
+Step five: Run the code so as to get your results
+Step six: ???
+Step seven: Profit!

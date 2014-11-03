@@ -1,0 +1,102 @@
+#ifndef CSBIGIMGDEFS_H
+#define CSBIGIMGDEFS_H
+
+// Compile Time Options
+#define	INCLUDE_FITSIO	0		/* set to 1 to compile and link with FITSIO Library */
+
+/*
+
+ Exposure State Field Defines
+
+*/
+#define ES_ABG_MASK				0x0003
+#define ES_ABG_UNKNOWN			0x0000
+#define ES_ABG_LOW				0x0001
+#define ES_ABG_CLOCKED			0x0002
+#define ES_ABG_MID				0x0003
+
+#define ES_ABG_RATE_MASK		0x00C0
+#define ES_ABG_RATE_FIXED		0x0000
+#define ES_ABG_RATE_LOW			0x0040
+#define ES_ABG_RATE_MED			0x0080
+#define ES_ABG_RATE_HI			0x00C0
+
+#define ES_DCS_MASK				0x000c
+#define ES_DCS_UNKNOWN			0x0000
+#define ES_DCS_ENABLED			0x0004
+#define ES_DCS_DISABLED			0x0008
+
+#define ES_DCR_MASK				0x0030
+#define ES_DCR_UNKNOWN			0x0000
+#define ES_DCR_ENABLED			0x0010
+#define ES_DCR_DISABLED			0x0020
+
+#define ES_AUTOBIAS_MASK		0x0100
+#define ES_AUTOBIAS_ENABLED		0x0100
+#define ES_AUTOBIAS_DISABLED	0x0000
+
+typedef enum { SBIF_COMPRESSED,
+               SBIF_UNCOMPRESSED,
+			   SBIF_FITS,
+			   SBIF_DEFAULT 
+} SBIG_IMAGE_FORMAT;
+
+typedef enum
+{
+   SBFE_NO_ERROR,
+   SBFE_OPEN_ERROR,
+   SBRE_CLOSE_ERROR,
+   SBFE_READ_ERROR,
+   SBFE_WRITE_ERROR,
+   SBFE_FORMAT_ERROR,
+   SBFE_MEMORY_ERROR,
+   SBFE_FITS_HEADER_ERROR
+} SBIG_FILE_ERROR;
+
+//from .cpp file:
+#define FILE_VERSION	3		/* current header version written */
+#define DATA_VERSION	1		/* current data version written */
+#define HEADER_LEN		2048
+#define VERSION_STR		"1.1"	/* version of this class */
+#ifndef PI
+#define PI	3.1415926535
+#endif
+typedef enum
+{
+	HH_FILE_VERSION,
+	HH_DATA_VERSION,
+	HH_EXPOSURE,
+	HH_FOCAL_LENGTH,
+	HH_APERTURE,
+	HH_RESPONSE_FACTOR,
+	HH_NOTE,
+	HH_BACKGROUND,
+	HH_RANGE,
+	HH_HEIGHT,
+	HH_WIDTH,
+	HH_DATE,
+	HH_TIME,
+	HH_EXPOSURE_STATE,
+	HH_TEMPERATURE,
+	HH_NUMBER_EXPOSURES,
+	HH_EACH_EXPOSURE,
+	HH_HISTORY,
+	HH_OBSERVER,
+	HH_X_PIXEL_SIZE,
+	HH_Y_PIXEL_SIZE,
+	HH_PEDESTAL,
+	HH_E_GAIN,
+	HH_USER_1,
+	HH_USER_2,
+	HH_USER_3,
+	HH_USER_4,
+	HH_FILTER,
+	HH_READOUT_MODE,
+	HH_TRACK_TIME,
+	HH_SAT_LEVEL,
+	HH_END
+} SBIG_HEADER_HEADING;
+
+
+
+#endif      //CSBIGIMGDEFS_H

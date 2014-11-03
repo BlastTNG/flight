@@ -1,0 +1,34 @@
+RM = rm -f
+
+COMMON_SOURCES = PMurHash.c channels_tng.c blast.c
+CONFIG_SOURCES = tx_struct_tng.c
+
+COMMON_DIR = ../../common
+CONFIG_DIR = ../../blast_config
+
+BLAST_COMMON_OBJS = $(patsubst %.c,%.o,$(COMMON_SOURCES)) 
+BLAST_CONFIG_OBJS = $(patsubst %.c,%.o,$(CONFIG_SOURCES)) 
+
+USER_OBJS += $(BLAST_COMMON_OBJS) $(BLAST_CONFIG_OBJS)
+
+USER_C_DEPS += $(patsubst %.o,%.d,$(BLAST_COMMON_OBJS) $(BLAST_CONFIG_OBJS))
+
+BLAST_FLAGS = -std=gnu99 -D__BLAST__ \
+    -I/home/seth/uei/ueipac-2.5.9/include -I$(COMMON_DIR) -I$(CONFIG_DIR) \
+    $(shell pkg-config --cflags glib-2.0) \
+    -Wall -fmessage-length=0
+
+ifdef $(DEBUG)
+    BLAST_FLAGS += -ggdb -O0
+else
+    BLAST_FLAGS += -O2 -g
+endif
+
+BLAST_FLAGS += $(shell xeno-config --posix-cflags)
+LIBS += $(shell xeno-config --posix-ldflags)
+
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(strip $(USER_C_DEPS)),)
+-include $(USER_C_DEPS)
+endif
+endif

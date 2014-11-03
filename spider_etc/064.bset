@@ -1,0 +1,84 @@
+# Example bolo set file.  Comments have # in column zero.  Blank lines are
+# allowed.
+
+# The first (non-blank, non-comment line) is the number of fields in this file
+72
+
+# Then there's a list of fields, one per line.  Fields are indicated by a
+# string of the form x#r##c## indicating MCE, column and row number.  Row and
+# column are zero padded, MCE number counts from one; row and column count from
+# zero.  and all three count from one.  Excess fields are ignored.  Too few
+# fields is an error.
+
+x6r24c12
+x6r23c12
+x6r08c13
+x6r07c13
+x6r24c13
+x6r23c13
+x6r08c14
+x6r07c14
+x6r24c14
+x6r23c14
+x6r08c15
+x6r07c15
+x6r26c12
+x6r25c12
+x6r10c13
+x6r09c13
+x6r26c13
+x6r25c13
+x6r10c14
+x6r09c14
+x6r26c14
+x6r25c14
+x6r10c15
+x6r09c15
+x6r22c12
+x6r21c12
+x6r06c13
+x6r05c13
+x6r22c13
+x6r21c13
+x6r06c14
+x6r05c14
+x6r22c14
+x6r21c14
+x6r06c15
+x6r05c15
+x6r28c12
+x6r27c12
+x6r12c13
+x6r11c13
+x6r28c13
+x6r27c13
+x6r12c14
+x6r11c14
+x6r28c14
+x6r27c14
+x6r12c15
+x6r11c15
+x6r20c12
+x6r19c12
+x6r04c13
+x6r03c13
+x6r20c13
+x6r19c13
+x6r04c14
+x6r03c14
+x6r20c14
+x6r19c14
+x6r04c15
+x6r03c15
+x6r30c12
+x6r29c12
+x6r14c13
+x6r13c13
+x6r30c13
+x6r29c13
+x6r14c14
+x6r13c14
+x6r30c14
+x6r29c14
+x6r14c15
+x6r13c15

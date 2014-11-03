@@ -1,0 +1,1349 @@
+<?xml version="1.0"?>
+<DOCUMENT>
+  <SETTINGS>
+    <TEXTSTYLE name="xhiwarn" colour="#000055" backcolour="#ffaaaa" size="8" bold="true"/>
+    <TEXTSTYLE name="hiwarn" colour="#ff0000" size="8" bold="true"/>
+    <TEXTSTYLE name="lowarn" colour="#00bb00" size="8" bold="true"/>
+    <TEXTSTYLE name="xlowarn" colour="#000033" backcolour="#00ff00" size="8" bold="true"/>
+    <TEXTSTYLE name="increasing" colour="#cc0000" size="8" bold="true"/>
+    <TEXTSTYLE name="decreasing" colour="#0000CC" size="8" bold="true"/>
+    <TEXTSTYLE name="standard" colour="#000000" size="8"/>
+    <TEXTSTYLE name="spacer" size="0"/>
+    <TEXTSTYLE name="OK_BIT" colour="#000055" size="8"/>
+    <TEXTSTYLE name="W_BIT" colour="#cc0000" size="8" bold="true"/>
+    <TEXTSTYLE name="E_BIT" backcolour="#faa" colour="#000055" size="8" bold="true"/>
+    <TEXTSTYLE name="P_BIT" backcolour="#ffaaff" colour="#000055" size="8"/>
+    <EXTREMA name="index">
+      <XLO value="-2"/>
+      <LO value="0"/>
+      <HI value="100000"/>
+      <XHI value="100001"/>
+    </EXTREMA>
+    <EXTREMA name="p_pv">
+      <XLO value="0.5"/>
+      <LO value="0.8"/>
+      <HI value="1.1"/>
+      <XHI value="1.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_pv">
+      <XLO value="-10"/>
+      <LO value="-10"/>
+      <HI value="65"/>
+      <XHI value="65"/>
+    </EXTREMA>
+    <EXTREMA name="i_pv">
+      <XLO value="1.5"/>
+      <LO value="2.0"/>
+      <HI value="3.0"/>
+      <XHI value="3.5"/>
+    </EXTREMA>
+    <EXTREMA name="time">
+      <XLO value="-10.0"/>
+      <LO value="-0.1"/>
+      <HI value="24.1"/>
+      <XHI value="25"/>
+    </EXTREMA>
+    <EXTREMA name="sam_i_am">
+      <XLO value="-2"/>
+      <LO value="-1"/>
+      <HI value="2"/>
+      <XHI value="3"/>
+    </EXTREMA>
+    <EXTREMA name="lat">
+      <XLO value="-89.9"/>
+      <LO value="-89.0"/>
+      <HI value="-71"/>
+      <XHI value="-70"/>
+    </EXTREMA>
+    <EXTREMA name="alt">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="40000"/>
+      <XHI value="40000"/>
+    </EXTREMA>
+    <EXTREMA name="disk_free">
+      <XLO value="1"/>
+      <LO value="10"/>
+      <HI value="230"/>
+      <XHI value="250"/>
+    </EXTREMA>
+    <EXTREMA name="timeout">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="7200"/>
+      <XHI value="7200"/>
+    </EXTREMA>
+    <EXTREMA name="bitfield">
+      <XLO value="-2"/>
+      <LO value="-1"/>
+      <HI value="256"/>
+      <XHI value="257"/>
+    </EXTREMA>
+    <EXTREMA name="ra">
+      <XLO value="-1"/>
+      <LO value="-1"/>
+      <HI value="25"/>
+      <XHI value="25"/>
+    </EXTREMA>
+    <EXTREMA name="p_mode">
+      <XLO value="-2"/>
+      <LO value="-1"/>
+      <HI value="16"/>
+      <XHI value="17"/>
+    </EXTREMA>
+    <EXTREMA name="p_vaz">
+      <XLO value="-1"/>
+      <LO value="0"/>
+      <HI value="1"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="p_del">
+      <XLO value="-1"/>
+      <LO value="0"/>
+      <HI value="1"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="p_w">
+      <XLO value="-1"/>
+      <LO value="0"/>
+      <HI value="30"/>
+      <XHI value="40"/>
+    </EXTREMA>
+    <EXTREMA name="ra">
+      <XLO value="-13"/>
+      <LO value="-12"/>
+      <HI value="25"/>
+      <XHI value="26"/>
+    </EXTREMA>
+    <EXTREMA name="dec">
+      <XLO value="-90"/>
+      <LO value="-90"/>
+      <HI value="90"/>
+      <XHI value="90"/>
+    </EXTREMA>
+    <EXTREMA name="az">
+      <XLO value="-182"/>
+      <LO value="-181"/>
+      <HI value="361"/>
+      <XHI value="362"/>
+    </EXTREMA>
+    <EXTREMA name="el">
+      <XLO value="20"/>
+      <LO value="22"/>
+      <HI value="59"/>
+      <XHI value="61"/>
+    </EXTREMA>
+    <EXTREMA name="t_amb">
+      <XLO value="-55"/>
+      <LO value="-55"/>
+      <HI value="55"/>
+      <XHI value="55"/>
+    </EXTREMA>
+    <EXTREMA name="i_roll">
+      <XLO value="-10"/>
+      <LO value="-10"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_piv">
+      <XLO value="-10"/>
+      <LO value="-10"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_reac">
+      <XLO value="-10"/>
+      <LO value="-10"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_el">
+      <XLO value="-10"/>
+      <LO value="-10"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="g_p_el">
+      <XLO value="-1"/>
+      <LO value="5000"/>
+      <HI value="15000"/>
+      <XHI value="30000"/>
+    </EXTREMA>
+    <EXTREMA name="g_i_el">
+      <XLO value="-1"/>
+      <LO value="5000"/>
+      <HI value="15000"/>
+      <XHI value="30000"/>
+    </EXTREMA>
+    <EXTREMA name="g_p_roll">
+      <XLO value="-1"/>
+      <LO value="15000"/>
+      <HI value="35000"/>
+      <XHI value="50000"/>
+    </EXTREMA>
+    <EXTREMA name="g_p_az">
+      <XLO value="-1"/>
+      <LO value="10000"/>
+      <HI value="25000"/>
+      <XHI value="50000"/>
+    </EXTREMA>
+    <EXTREMA name="g_i_az">
+      <XLO value="-1"/>
+      <LO value="2500"/>
+      <HI value="7000"/>
+      <XHI value="30000"/>
+    </EXTREMA>
+    <EXTREMA name="g_p_pivot">
+      <XLO value="-1"/>
+      <LO value="100"/>
+      <HI value="250"/>
+      <XHI value="300"/>
+    </EXTREMA>
+    <EXTREMA name="set_reac">
+      <XLO value="-5"/>
+      <LO value="-0.4"/>
+      <HI value="0.4"/>
+      <XHI value="5"/>
+    </EXTREMA>
+    <EXTREMA name="rps_reac">
+      <XLO value="-3"/>
+      <LO value="-3"/>
+      <HI value="3"/>
+      <XHI value="3"/>
+    </EXTREMA>
+    <EXTREMA name="i_apm_3v">
+      <XLO value="-1"/>
+      <LO value="0"/>
+      <HI value="0.2"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_apm_5v">
+      <XLO value="0"/>
+      <LO value="0.3"/>
+      <HI value="0.8"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_apm_10v">
+      <XLO value="0"/>
+      <LO value="0.4"/>
+      <HI value="0.8"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="lock_pot">
+      <XLO value="-5"/>
+      <LO value="-3"/>
+      <HI value="10"/>
+      <XHI value="120"/>
+    </EXTREMA>
+    <EXTREMA name="pump_lev">
+      <XLO value="-2"/>
+      <LO value="0"/>
+      <HI value="100"/>
+      <XHI value="100"/>
+    </EXTREMA>
+    <EXTREMA name="bal_veto">
+      <XLO value="-2"/>
+      <LO value="-1"/>
+      <HI value="1010"/>
+      <XHI value="1020"/>
+    </EXTREMA>
+    <EXTREMA name="pitch_roll">
+      <XLO value="-10"/>
+      <LO value="-2"/>
+      <HI value="2"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="dgps_att_ok">
+      <XLO value="-1"/>
+      <LO value="0"/>
+      <HI value="2"/>
+      <XHI value="3"/>
+    </EXTREMA>
+    <EXTREMA name="dgps_n_sat">
+      <XLO value="-1"/>
+      <LO value="3"/>
+      <HI value="15"/>
+      <XHI value="15"/>
+    </EXTREMA>
+    <EXTREMA name="dgps_climb">
+      <XLO value="-5"/>
+      <LO value="-5"/>
+      <HI value="25"/>
+      <XHI value="25"/>
+    </EXTREMA>
+    <EXTREMA name="dgps_speed">
+      <XLO value="-2"/>
+      <LO value="-1"/>
+      <HI value="100"/>
+      <XHI value="100"/>
+    </EXTREMA>
+    <EXTREMA name="bit4">
+      <XLO value="-2"/>
+      <LO value="-1"/>
+      <HI value="16"/>
+      <XHI value="17"/>
+    </EXTREMA>
+    <EXTREMA name="i_starcam">
+      <XLO value="0"/>
+      <LO value="-.2"/>
+      <HI value="4"/>
+      <XHI value="5"/>
+    </EXTREMA>
+    <EXTREMA name="pulse">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="1000"/>
+      <XHI value="1000"/>
+    </EXTREMA>
+    <EXTREMA name="sc_framenum">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="2555"/>
+      <XHI value="2555"/>
+    </EXTREMA>
+    <EXTREMA name="isc_mapmean">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="16383"/>
+      <XHI value="16383"/>
+    </EXTREMA>
+    <EXTREMA name="nblobs">
+      <XLO value="-1"/>
+      <LO value="0"/>
+      <HI value="25"/>
+      <XHI value="27"/>
+    </EXTREMA>
+    <EXTREMA name="pressure_psi">
+      <XLO value="6"/>
+      <LO value="9"/>
+      <HI value="16"/>
+      <XHI value="20"/>
+    </EXTREMA>
+    <EXTREMA name="isc_sigma">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="50"/>
+      <XHI value="50"/>
+    </EXTREMA>
+    <EXTREMA name="osc_mapmean">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="4095"/>
+      <XHI value="4095"/>
+    </EXTREMA>
+    <EXTREMA name="az">
+      <XLO value="-182"/>
+      <LO value="-181"/>
+      <HI value="362"/>
+      <XHI value="361"/>
+    </EXTREMA>
+    <EXTREMA name="osc_sigma">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="50"/>
+      <XHI value="50"/>
+    </EXTREMA>
+    <EXTREMA name="i_sun">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="5"/>
+      <XHI value="5"/>
+    </EXTREMA>
+    <EXTREMA name="ss_az_snr">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="150"/>
+      <XHI value="150"/>
+    </EXTREMA>
+    <EXTREMA name="pcu_reg">
+      <XLO value="24"/>
+      <LO value="24"/>
+      <HI value="34"/>
+      <XHI value="34"/>
+    </EXTREMA>
+    <EXTREMA name="v_batt">
+      <XLO value="17"/>
+      <LO value="24"/>
+      <HI value="32"/>
+      <XHI value="37"/>
+    </EXTREMA>
+    <EXTREMA name="t_pcu">
+      <XLO value="-55"/>
+      <LO value="-55"/>
+      <HI value="65"/>
+      <XHI value="95"/>
+    </EXTREMA>
+    <EXTREMA name="t_sol">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="110"/>
+      <XHI value="111"/>
+    </EXTREMA>
+    <EXTREMA name="t_batt">
+      <XLO value="-25"/>
+      <LO value="-10"/>
+      <HI value="32"/>
+      <XHI value="45"/>
+    </EXTREMA>
+    <EXTREMA name="i_gond_acs">
+      <XLO value="0"/>
+      <LO value="10"/>
+      <HI value="20"/>
+      <XHI value="30"/>
+    </EXTREMA>
+    <EXTREMA name="i_gond_das">
+      <XLO value="0"/>
+      <LO value="7"/>
+      <HI value="9"/>
+      <XHI value="30"/>
+    </EXTREMA>
+    <EXTREMA name="i_batt_acs">
+      <XLO value="-30"/>
+      <LO value="-18"/>
+      <HI value="18"/>
+      <XHI value="30"/>
+    </EXTREMA>
+    <EXTREMA name="i_batt_das">
+      <XLO value="-30"/>
+      <LO value="-9"/>
+      <HI value="18"/>
+      <XHI value="30"/>
+    </EXTREMA>
+    <EXTREMA name="i_sol">
+      <XLO value="-2"/>
+      <LO value="-.5"/>
+      <HI value="30"/>
+      <XHI value="30"/>
+    </EXTREMA>
+    <EXTREMA name="v_sol">
+      <XLO value="20"/>
+      <LO value="20"/>
+      <HI value="60"/>
+      <XHI value="60"/>
+    </EXTREMA>
+    <EXTREMA name="t_elect">
+      <XLO value="-55"/>
+      <LO value="-30"/>
+      <HI value="35"/>
+      <XHI value="55"/>
+    </EXTREMA>
+    <EXTREMA name="t_pm">
+      <XLO value="-55"/>
+      <LO value="-30"/>
+      <HI value="45"/>
+      <XHI value="55"/>
+    </EXTREMA>
+    <EXTREMA name="i_dpm_28v">
+      <XLO value="-2"/>
+      <LO value="0"/>
+      <HI value="0.3"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_dpm_3v">
+      <XLO value="-2"/>
+      <LO value="0"/>
+      <HI value=".3"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_dpm_5v">
+      <XLO value="-2"/>
+      <LO value="2.0"/>
+      <HI value="2.5"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_dpm_10v">
+      <XLO value="-2"/>
+      <LO value="1.5"/>
+      <HI value="2.0"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="i_rec">
+      <XLO value="-2"/>
+      <LO value="3.5"/>
+      <HI value="4.0"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="biasin">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="255"/>
+      <XHI value="255"/>
+    </EXTREMA>
+    <EXTREMA name="bias_lev1">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="127"/>
+      <XHI value="127"/>
+    </EXTREMA>
+    <EXTREMA name="bias_lev2">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="127"/>
+      <XHI value="127"/>
+    </EXTREMA>
+    <EXTREMA name="bias_lev3">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="127"/>
+      <XHI value="127"/>
+    </EXTREMA>
+    <EXTREMA name="b_amp1">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="127"/>
+      <XHI value="127"/>
+    </EXTREMA>
+    <EXTREMA name="b_amp2">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="127"/>
+      <XHI value="127"/>
+    </EXTREMA>
+    <EXTREMA name="b_amp3">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="127"/>
+      <XHI value="127"/>
+    </EXTREMA>
+    <EXTREMA name="use_analogue">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="1"/>
+      <XHI value="1"/>
+    </EXTREMA>
+    <EXTREMA name="i_gybox">
+      <XLO value="-10"/>
+      <LO value="1.0"/>
+      <HI value="3.0"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="he4_lev">
+      <XLO value="-2"/>
+      <LO value="-1"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="cryoin">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="63"/>
+      <XHI value="63"/>
+    </EXTREMA>
+    <EXTREMA name="cryostate">
+      <XLO value="0"/>
+      <LO value="0"/>
+      <HI value="1023"/>
+      <XHI value="1023"/>
+    </EXTREMA>
+    <EXTREMA name="t_lhe">
+      <XLO value="8.98"/>
+      <LO value="8.98"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="t_lhe_filt">
+      <XLO value="8.98"/>
+      <LO value="8.98"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="t_he4pot_d">
+      <XLO value="8.98"/>
+      <LO value="8.98"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="t_vcs_filt">
+      <XLO value="6"/>
+      <LO value="6"/>
+      <HI value="7.5"/>
+      <XHI value="7.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_ln2">
+      <XLO value="5.5"/>
+      <LO value="5.5"/>
+      <HI value="7"/>
+      <XHI value="7"/>
+    </EXTREMA>
+    <EXTREMA name="t_ln2_filt">
+      <XLO value="5.5"/>
+      <LO value="5.5"/>
+      <HI value="7"/>
+      <XHI value="7"/>
+    </EXTREMA>
+    <EXTREMA name="t_charcoal">
+      <XLO value="6"/>
+      <LO value="6"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="t_heatswitch">
+      <XLO value="6"/>
+      <LO value="6"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="t_jfet">
+      <XLO value="4.5"/>
+      <LO value="4.5"/>
+      <HI value="6.5"/>
+      <XHI value="6.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_vcs_fet">
+      <XLO value="6"/>
+      <LO value="6"/>
+      <HI value="7.5"/>
+      <XHI value="7.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_opt_box_ext">
+      <XLO value="5"/>
+      <LO value="5"/>
+      <HI value="10"/>
+      <XHI value="10"/>
+    </EXTREMA>
+    <EXTREMA name="t_he3fridge">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_m3">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_m4">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_m5">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_horn_250">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_horn_350">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_horn_500">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_300mk_strap">
+      <XLO value="1.25"/>
+      <LO value="1.25"/>
+      <HI value="5.5"/>
+      <XHI value="5.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_he4pot">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <EXTREMA name="t_optbox_filt">
+      <XLO value="1"/>
+      <LO value="1"/>
+      <HI value="2.5"/>
+      <XHI value="2.5"/>
+    </EXTREMA>
+    <CURFILE name="/data/etc/slow_dl.cur"/>
+  </SETTINGS>
+  <DEFAULTS>
+    <TEXTSTYLE>
+      <BOX colour="#0000cc" bold="true"/>
+      <LABEL textstyle="standard"/>
+      <DATUM colour="#000055" bold="true">
+        <ERROR colour="#aa4444" bold="true"/>
+        <WORD textstyle="standard"/>
+        <HI textstyle="hiwarn"/>
+        <LO textstyle="lowarn"/>
+        <XHI textstyle="xhiwarn"/>
+        <XLO textstyle="xlowarn"/>
+      </DATUM>
+      <INFOCAPTION colour="#000000" bold="true"/>
+      <INFODATA colour="#000000" bold="false"/>
+      <INFOCOMBO colour="#000000" bold="false"/>
+      <INFOBUTTON colour="#000000" bold="true"/>
+    </TEXTSTYLE>
+  </DEFAULTS>
+  <BOX caption="Pointing Mode" colour="#880000" row="0" col="3" rowspan="1">
+    <MULTI caption="Mode">
+      <DATUM src="16">
+        <WORD value="0" caption="Not Set" textstyle="E_BIT"/>
+        <WORD value="1" caption="Az El Goto" textstyle="W_BIT"/>
+        <WORD value="2" caption="Az Scan" textstyle="W_BIT"/>
+        <WORD value="3" caption="Drift" textstyle="W_BIT"/>
+        <WORD value="4" caption="RA Dec Goto" textstyle="W_BIT"/>
+        <WORD value="5" caption="VCap" textstyle="OK_BIT"/>
+        <WORD value="6" caption="Cap" textstyle="OK_BIT"/>
+        <WORD value="7" caption="Box" textstyle="OK_BIT"/>
+        <WORD value="8" caption="Lock" textstyle="W_BIT"/>
+        <WORD value="9" caption="VBox" textstyle="OK_BIT"/>
+        <WORD value="10" caption="Quad" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="X (deg)" textstyle="standard">
+      <DATUM format="%.2f" src="17" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="Az Vel" textstyle="standard">
+      <DATUM format="%.2f" src="18" extrema="p_vaz"/>
+    </NUMBER>
+    <NUMBER caption="dEl" textstyle="standard">
+      <DATUM format="%.2f" src="19" extrema="p_del"/>
+    </NUMBER>
+    <NUMBER caption="W" textstyle="standard">
+      <DATUM format="%.2f" src="20" extrema="p_w"/>
+    </NUMBER>
+    <NUMBER caption="H" textstyle="standard">
+      <DATUM format="%.2f" src="15" extrema="ra"/>
+    </NUMBER>
+    <NUMBER caption="RA 1" textstyle="standard">
+      <DATUM format="%.2f" src="204" extrema="ra"/>
+    </NUMBER>
+    <NUMBER caption="Dec 1" textstyle="standard">
+      <DATUM format="%.2f" src="205" extrema="dec"/>
+    </NUMBER>
+    <NUMBER caption="RA 2" textstyle="standard">
+      <DATUM format="%.2f" src="206" extrema="ra"/>
+    </NUMBER>
+    <NUMBER caption="Dec 2" textstyle="standard">
+      <DATUM format="%.2f" src="207" extrema="dec"/>
+    </NUMBER>
+    <NUMBER caption="RA 3" textstyle="standard">
+      <DATUM format="%.2f" src="208" extrema="ra"/>
+    </NUMBER>
+    <NUMBER caption="Dec 3" textstyle="standard">
+      <DATUM format="%.2f" src="209" extrema="dec"/>
+    </NUMBER>
+    <NUMBER caption="RA 4" textstyle="standard">
+      <DATUM format="%.2f" src="210" extrema="ra"/>
+    </NUMBER>
+    <NUMBER caption="Dec 4" textstyle="standard">
+      <DATUM format="%.2f" src="211" extrema="dec"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Currents" colour="#707" row="0" col="4" rowspan="1">
+    <NUMBER caption="i_dpm_28v" textstyle="standard">
+      <DATUM format="%.2f" src="155" extrema="i_dpm_28v"/>
+    </NUMBER>
+    <NUMBER caption="i_dpm_3v" textstyle="standard">
+      <DATUM format="%.2f" src="156" extrema="i_dpm_3v"/>
+    </NUMBER>
+    <NUMBER caption="i_dpm_5v" textstyle="standard">
+      <DATUM format="%.2f" src="157" extrema="i_dpm_5v"/>
+    </NUMBER>
+    <NUMBER caption="i_dpm_10v" textstyle="standard">
+      <DATUM format="%.2f" src="158" extrema="i_dpm_10v"/>
+    </NUMBER>
+    <NUMBER caption="i_rec" textstyle="standard">
+      <DATUM format="%.2f" src="159" extrema="i_rec"/>
+    </NUMBER>
+    <NUMBER caption="i_apm_3v" textstyle="standard">
+      <DATUM format="%.2f" src="43" extrema="i_apm_3v"/>
+    </NUMBER>
+    <NUMBER caption="i_apm_5v" textstyle="standard">
+      <DATUM format="%.2f" src="44" extrema="i_apm_5v"/>
+    </NUMBER>
+    <NUMBER caption="i_apm_10v" textstyle="standard">
+      <DATUM format="%.2f" src="45" extrema="i_apm_10v"/>
+    </NUMBER>
+    <NUMBER caption="i_gybox" textstyle="standard">
+      <DATUM format="%.2f" src="178" extrema="i_gybox"/>
+    </NUMBER>
+    <NUMBER caption="i_pv" textstyle="standard">
+      <DATUM format="%.2f" src="4" extrema="i_pv"/>
+    </NUMBER>
+    <NUMBER caption="i_starcam" textstyle="standard">
+      <DATUM format="%.1f" src="69" extrema="i_starcam"/>
+    </NUMBER>
+    <NUMBER caption="i_sun" textstyle="standard">
+      <DATUM format="%.2f" src="92" extrema="i_sun"/>
+    </NUMBER>
+    <NUMBER caption="i_roll" textstyle="standard">
+      <DATUM format="%.1f" src="31" extrema="i_roll"/>
+    </NUMBER>
+    <NUMBER caption="i_reac" textstyle="standard">
+      <DATUM format="%.1f" src="33" extrema="i_reac"/>
+    </NUMBER>
+    <NUMBER caption="i_el" textstyle="standard">
+      <DATUM format="%.1f" src="34" extrema="i_el"/>
+    </NUMBER>
+    <NUMBER caption="i_piv" textstyle="standard">
+      <DATUM format="%.1f" src="32" extrema="i_piv"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Outer Frame Electronics" colour="#002222" row="0" col="5" rowspan="1">
+    <NUMBER caption="t_apm_3v" textstyle="standard">
+      <DATUM format="%.1f" src="46" extrema="t_pm"/>
+    </NUMBER>
+    <NUMBER caption="t_apm_5v" textstyle="standard">
+      <DATUM format="%.1f" src="47" extrema="t_pm"/>
+    </NUMBER>
+    <NUMBER caption="t_apm_10v" textstyle="standard">
+      <DATUM format="%.1f" src="48" extrema="t_pm"/>
+    </NUMBER>
+    <NUMBER caption="t_acs" textstyle="standard">
+      <DATUM format="%.1f" src="140" extrema="t_pm"/>
+    </NUMBER>
+    <NUMBER caption="t_pv" textstyle="standard">
+      <DATUM format="%.1f" src="3" extrema="t_pv"/>
+    </NUMBER>
+    <NUMBER caption="cpu_temp1" textstyle="standard">
+      <DATUM format="%.1f" src="10" extrema="t_pv"/>
+    </NUMBER>
+    <NUMBER caption="t_clin_pyr" textstyle="standard">
+      <DATUM format="%.1f" src="103" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="ss_cpu_temp" textstyle="standard">
+      <DATUM format="%.1f" src="97" extrema="t_pv"/>
+    </NUMBER>
+    <NUMBER caption="ss_case_temp" textstyle="standard">
+      <DATUM format="%.1f" src="136" extrema="t_elect"/>
+    </NUMBER>
+    <NUMBER caption="t_lock_motor" textstyle="standard">
+      <DATUM format="%.1f" src="138" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="isc_pressure1" textstyle="standard">
+      <DATUM format="%.1f" src="79" extrema="pressure_psi"/>
+    </NUMBER>
+    <NUMBER caption="osc_pressure1" textstyle="standard">
+      <DATUM format="%.1f" src="90" extrema="pressure_psi"/>
+    </NUMBER>
+    <NUMBER caption="p_pv" textstyle="standard">
+      <DATUM format="%.2f" src="2" extrema="p_pv"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Sensors" colour="#880000" row="2" col="5">
+    <NUMBER caption="sensor_veto" textstyle="standard">
+      <DATUM format="%.0f" src="14" extrema="bitfield"/>
+    </NUMBER>
+    <NUMBER caption="sensor_reset" textstyle="standard">
+      <DATUM format="%.0f" src="49" extrema="bitfield"/>
+    </NUMBER>
+    <MULTI caption="dGPS OK">
+      <DATUM src="60">
+        <WORD value="1" caption="OK" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Pissy" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="dgps_n_sat" textstyle="standard">
+      <DATUM format="%.0f" src="61" extrema="dgps_n_sat"/>
+    </NUMBER>
+    <MULTI caption="Gyros">
+      <DATUM src="177">
+        <WORD value="0" caption="Digital" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Analogue" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+  </BOX>
+  <BOX caption="ISC" colour="#707" row="3" col="3" >
+    <NUMBER caption="isc_fpulse" textstyle="standard">
+      <DATUM format="%.0f" src="70" extrema="pulse"/>
+    </NUMBER>
+    <NUMBER caption="isc_spulse" textstyle="standard">
+      <DATUM format="%.0f" src="71" extrema="pulse"/>
+    </NUMBER>
+    <NUMBER caption="isc_framenum" textstyle="standard">
+      <DATUM format="%.0f" src="72" extrema="sc_framenum"/>
+    </NUMBER>
+    <NUMBER caption="isc_mapmean" textstyle="standard">
+      <DATUM format="%.0f" src="73" extrema="isc_mapmean"/>
+    </NUMBER>
+    <NUMBER caption="isc_state" textstyle="standard">
+      <DATUM format="%.0f" src="74" extrema="bitfield"/>
+    </NUMBER>
+    <NUMBER caption="isc_nblobs" textstyle="standard">
+      <DATUM format="%.0f" src="75" extrema="nblobs"/>
+    </NUMBER>
+    <NUMBER caption="t_isc_flange" textstyle="standard">
+      <DATUM format="%.1f" src="78" extrema="t_amb"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="OSC" colour="#707" row="3" col="4" >
+    <NUMBER caption="osc_fpulse" textstyle="standard">
+      <DATUM format="%.0f" src="81" extrema="pulse"/>
+    </NUMBER>
+    <NUMBER caption="osc_spulse" textstyle="standard">
+      <DATUM format="%.0f" src="82" extrema="pulse"/>
+    </NUMBER>
+    <NUMBER caption="osc_framenum" textstyle="standard">
+      <DATUM format="%.0f" src="83" extrema="sc_framenum"/>
+    </NUMBER>
+    <NUMBER caption="osc_mapmean" textstyle="standard">
+      <DATUM format="%.2f" src="84" extrema="osc_mapmean"/>
+    </NUMBER>
+    <NUMBER caption="osc_state" textstyle="standard">
+      <DATUM format="%.0f" src="85" extrema="bitfield"/>
+    </NUMBER>
+    <NUMBER caption="osc_nblobs" textstyle="standard">
+      <DATUM format="%.0f" src="86" extrema="nblobs"/>
+    </NUMBER>
+    <NUMBER caption="t_osc_flange" textstyle="standard">
+      <DATUM format="%.2f" src="89" extrema="t_amb"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Balance/Lock" colour="#880000" row="2" col="4">
+    <MULTI caption="Lock">
+      <DATUM src="203">
+        <WORD mask="0x006" value="6" caption="Locked" textstyle="W_BIT"/>
+        <WORD mask="0x005" value="5" caption="Unlocked" textstyle="OK_BIT"/>
+        <WORD mask="0x002" value="2" caption="Locked, On" textstyle="E_BIT"/>
+        <WORD mask="0x001" value="1" caption="Unlocked, On" textstyle="E_BIT"/>
+        <WORD mask="0x0A0" min="1" max="0xA0" caption="Unlocking" textstyle="W_BIT"/>
+        <WORD mask="0x050" min="1" max="0x50" caption="Locking" textstyle="W_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="Extension (X)" textstyle="standard">
+      <DATUM format="%.1f" src="50" extrema="lock_pot"/>
+    </NUMBER>
+    <MULTI caption="Balance Status">
+      <DATUM src="54">
+        <WORD value="32767" caption="Vetoed" textsyle="E_BIT"/>
+        <WORD value="0" caption="Pumping" textsyle="OK_BIT"/>
+        <WORD min="1" max="32766" caption="Idle" textsyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+   <MULTI caption="IF Cooling">
+      <DATUM src="68">
+        <WORD value="3" caption="Autoveto" textstyle="E_BIT"/>
+        <WORD value="2" caption="Auto On" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Auto Off" textstyle="OK_BIT"/>
+        <WORD value="0" caption="Unknown" textstyle="P_BIT"/>
+        <WORD value="255" caption="Vetoed Off" textstyle="W_BIT"/>
+        <WORD value="254" caption="Vetoed On" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="IF Level (%)" textstyle="standard">
+      <DATUM format="%.1f" src="52" extrema="pump_lev"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Motor Gains" colour="#880000" row="2" col="3">
+    <NUMBER caption="g_p_el" textstyle="standard">
+      <DATUM format="%.0f" src="35" extrema="g_p_el"/>
+    </NUMBER>
+    <NUMBER caption="g_i_el" textstyle="standard">
+      <DATUM format="%.0f" src="36" extrema="g_i_el"/>
+    </NUMBER>
+    <NUMBER caption="g_p_roll" textstyle="standard">
+      <DATUM format="%.0f" src="37" extrema="g_p_roll"/>
+    </NUMBER>
+    <NUMBER caption="g_p_az" textstyle="standard">
+      <DATUM format="%.0f" src="38" extrema="g_p_az"/>
+    </NUMBER>
+    <NUMBER caption="g_i_az" textstyle="standard">
+      <DATUM format="%.0f" src="39" extrema="g_i_az"/>
+    </NUMBER>
+    <NUMBER caption="g_p_pivot" textstyle="standard">
+      <DATUM format="%.0f" src="40" extrema="g_p_pivot"/>
+    </NUMBER>
+    <NUMBER caption="set_reac" textstyle="standard">
+      <DATUM format="%.2f" src="41" extrema="set_reac"/>
+    </NUMBER>
+    <NUMBER caption="rps_reac" textstyle="standard">
+      <DATUM format="%.2f" src="42" extrema="rps_reac"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Inner Frame Electronics" colour="#002222" row="0" col="6" rowspan="1">
+    <NUMBER caption="t_dpm_7.5v" textstyle="standard">
+      <DATUM format="%.1f" src="160" extrema="t_pm"/>
+    </NUMBER>
+    <NUMBER caption="t_dpm_10v" textstyle="standard">
+      <DATUM format="%.1f" src="161" extrema="t_pm"/>
+    </NUMBER>
+    <NUMBER caption="t_dpm_5v" textstyle="standard">
+      <DATUM format="%.1f" src="162" extrema="t_pm"/>
+    </NUMBER>
+    <NUMBER caption="t_das" textstyle="standard">
+      <DATUM format="%.1f" src="163" extrema="t_elect"/>
+    </NUMBER>
+    <NUMBER caption="t_gyro1" textstyle="standard">
+      <DATUM format="%.1f" src="172" extrema="t_elect"/>
+    </NUMBER>
+    <NUMBER caption="t_gyro2" textstyle="standard">
+      <DATUM format="%.1f" src="173" extrema="t_elect"/>
+    </NUMBER>
+    <NUMBER caption="t_gyro3" textstyle="standard">
+      <DATUM format="%.1f" src="174" extrema="t_elect"/>
+    </NUMBER>
+    <NUMBER caption="t_gybox1" textstyle="standard">
+      <DATUM format="%.1f" src="175" extrema="t_elect"/>
+    </NUMBER>
+    <NUMBER caption="t_gybox2" textstyle="standard">
+      <DATUM format="%.1f" src="176" extrema="t_elect"/>
+    </NUMBER>
+    <NUMBER caption="t_rec" textstyle="standard">
+      <DATUM format="%.1f" src="164" extrema="t_elect"/>
+    </NUMBER>
+    <NUMBER caption="t_clin_if" textstyle="standard">
+      <DATUM format="%.1f" src="105" extrema="t_amb"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Ambient Thermometers" colour="#002222" row="2" col="6" rowspan="1">
+    <NUMBER caption="t_l_sshield" textstyle="standard">
+      <DATUM format="%.1f" src="135" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_if_top_frnt" textstyle="standard">
+      <DATUM format="%.1f" src="141" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_if_top_back" textstyle="standard">
+      <DATUM format="%.1f" src="142" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_if_bot_frnt" textstyle="standard">
+      <DATUM format="%.1f" src="143" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_if_bot_back" textstyle="standard">
+      <DATUM format="%.1f" src="144" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_primary_1" textstyle="standard">
+      <DATUM format="%.1f" src="145" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_primary_2" textstyle="standard">
+      <DATUM format="%.1f" src="146" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_secondary_1" textstyle="standard">
+      <DATUM format="%.1f" src="147" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_secondary_2" textstyle="standard">
+      <DATUM format="%.1f" src="148" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_strut_bot" textstyle="standard">
+      <DATUM format="%.1f" src="149" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_strut_side" textstyle="standard">
+      <DATUM format="%.1f" src="150" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_push_plate" textstyle="standard">
+      <DATUM format="%.1f" src="151" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_act_motor" textstyle="standard">
+      <DATUM format="%.1f" src="152" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_ss_back_mid" textstyle="standard">
+      <DATUM format="%.1f" src="153" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_chin_mid" textstyle="standard">
+      <DATUM format="%.1f" src="154" extrema="t_amb"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Motor Temps" colour="#002222" row="3" col="5">
+    <NUMBER caption="t_el_mc" textstyle="standard">
+      <DATUM format="%.1f" src="25" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_el_mot" textstyle="standard">
+      <DATUM format="%.1f" src="26" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_roll" textstyle="standard">
+      <DATUM format="%.1f" src="27" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_reac" textstyle="standard">
+      <DATUM format="%.1f" src="28" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_reac_mc" textstyle="standard">
+      <DATUM format="%.1f" src="29" extrema="t_amb"/>
+    </NUMBER>
+    <NUMBER caption="t_piv_mc" textstyle="standard">
+      <DATUM format="%.1f" src="30" extrema="t_amb"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Bias" colour="#707" row="3" col="2">
+    <NUMBER caption="bias_lev1" textstyle="standard">
+      <DATUM format="%.0f" src="166" extrema="bias_lev1"/>
+    </NUMBER>
+    <NUMBER caption="bias_lev2" textstyle="standard">
+      <DATUM format="%.0f" src="167" extrema="bias_lev2"/>
+    </NUMBER>
+    <NUMBER caption="bias_lev3" textstyle="standard">
+      <DATUM format="%.0f" src="168" extrema="bias_lev3"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="ACS Power System" colour="#777700" row="0" col="7" rowspan="1">
+    <NUMBER caption="apcu_reg" textstyle="standard">
+      <DATUM format="%.1f" src="106" extrema="pcu_reg"/>
+    </NUMBER>
+    <NUMBER caption="v_batt_acs" textstyle="standard">
+      <DATUM format="%.1f" src="108" extrema="v_batt"/>
+    </NUMBER>
+    <NUMBER caption="i_gond_acs" textstyle="standard">
+      <DATUM format="%.2f" src="116" extrema="i_gond_acs"/>
+    </NUMBER>
+    <NUMBER caption="i_batt_acs" textstyle="standard">
+      <DATUM format="%.2f" src="118" extrema="i_batt_acs"/>
+    </NUMBER>
+    <NUMBER caption="i_sol_acs" textstyle="standard">
+      <DATUM format="%.2f" src="120" extrema="i_sol"/>
+    </NUMBER>
+    <NUMBER caption="t_apcu" textstyle="standard">
+      <DATUM format="%.1f" src="110" extrema="t_pcu"/>
+    </NUMBER>
+    <NUMBER caption="t_sol_port" textstyle="standard">
+      <DATUM format="%.1f" src="112" extrema="t_sol"/>
+    </NUMBER>
+    <NUMBER caption="t_batt_acs" textstyle="standard">
+      <DATUM format="%.1f" src="114" extrema="t_batt"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_acs1" textstyle="standard">
+      <DATUM format="%.1f" src="122" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_acs2" textstyle="standard">
+      <DATUM format="%.1f" src="123" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_acs3" textstyle="standard">
+      <DATUM format="%.1f" src="124" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_acs4" textstyle="standard">
+      <DATUM format="%.1f" src="125" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_acs5" textstyle="standard">
+      <DATUM format="%.1f" src="126" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_acs6" textstyle="standard">
+      <DATUM format="%.1f" src="127" extrema="v_sol"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="DAS Power System" colour="#777700" row="0" col="8" rowspan="1">
+    <NUMBER caption="dpcu_reg" textstyle="standard">
+      <DATUM format="%.1f" src="107" extrema="pcu_reg"/>
+    </NUMBER>
+    <NUMBER caption="v_batt_das" textstyle="standard">
+      <DATUM format="%.1f" src="109" extrema="v_batt"/>
+    </NUMBER>
+    <NUMBER caption="i_gond_das" textstyle="standard">
+      <DATUM format="%.2f" src="117" extrema="i_gond_das"/>
+    </NUMBER>
+    <NUMBER caption="i_sol_das" textstyle="standard">
+      <DATUM format="%.2f" src="121" extrema="i_sol"/>
+    </NUMBER>
+    <NUMBER caption="i_batt_das" textstyle="standard">
+      <DATUM format="%.2f" src="119" extrema="i_batt_das"/>
+    </NUMBER>
+    <NUMBER caption="t_dpcu" textstyle="standard">
+      <DATUM format="%.1f" src="111" extrema="t_pcu"/>
+    </NUMBER>
+    <NUMBER caption="t_sol_stbd" textstyle="standard">
+      <DATUM format="%.1f" src="113" extrema="t_sol"/>
+    </NUMBER>
+    <NUMBER caption="t_batt_das" textstyle="standard">
+      <DATUM format="%.1f" src="115" extrema="t_batt"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_das1" textstyle="standard">
+      <DATUM format="%.1f" src="128" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_das2" textstyle="standard">
+      <DATUM format="%.1f" src="129" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_das3" textstyle="standard">
+      <DATUM format="%.1f" src="130" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="v_sol_das4" textstyle="standard">
+      <DATUM format="%.1f" src="131" extrema="v_sol"/>
+    </NUMBER>
+    <NUMBER caption="t_dpcu" textstyle="standard">
+      <DATUM format="%.1f" src="139" extrema="t_pm"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Location" colour="#009911" row="1" col="1">
+    <NUMBER caption="Lat" textstyle="standard">
+      <DATUM format="%.1f" src="7" extrema="lat"/>
+    </NUMBER>
+    <NUMBER caption="Lon" textstyle="standard">
+      <DATUM format="%.1f" src="8" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="SIP Alt (m)" textstyle="standard">
+      <DATUM format="%.0f" src="9" extrema="alt"/>
+    </NUMBER>
+    <NUMBER caption="dGPS Alt (m)" textstyle="standard">
+      <DATUM format="%.0f" src="59" extrema="alt"/>
+    </NUMBER>
+    <NUMBER caption="Speed (Knots)" textstyle="standard">
+      <DATUM format="%.1f" src="65" extrema="dgps_speed"/>
+    </NUMBER>
+    <NUMBER caption="Bearing" textstyle="standard">
+      <DATUM format="%.0f" src="64" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="Climb (m/s)" textstyle="standard">
+      <DATUM format="%.2f" src="63" extrema="dgps_climb"/>
+    </NUMBER>
+    <NUMBER caption="mag_model" textstyle="standard">
+      <DATUM format="%.1f" src="55" extrema="az"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Attitude" colour="#009911" row="1" col="2">
+    <NUMBER caption="Az" textstyle="standard">
+      <DATUM format="%.0f" src="23" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="El" textstyle="standard">
+      <DATUM format="%.1f" src="24" extrema="el"/>
+    </NUMBER>
+    <NUMBER caption="Ra" textstyle="standard">
+      <DATUM format="%.2f" src="21" extrema="ra"/>
+    </NUMBER>
+    <NUMBER caption="Dec" textstyle="standard">
+      <DATUM format="%.1f" src="22" extrema="dec"/>
+    </NUMBER>
+    <NUMBER caption="Clin Pitch" textstyle="standard">
+      <DATUM format="%.2f" src="101" extrema="pitch_roll"/>
+    </NUMBER>
+    <NUMBER caption="Clin Roll" textstyle="standard">
+      <DATUM format="%.2f" src="100" extrema="pitch_roll"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Elevation" colour="#009911" row="2" col="2">
+    <NUMBER caption="ISC" textstyle="standard">
+      <DATUM format="%.1f" src="77" extrema="el"/>
+    </NUMBER>
+    <NUMBER caption="OSC" textstyle="standard">
+      <DATUM format="%.1f" src="88" extrema="el"/>
+    </NUMBER>
+    <NUMBER caption="Encoder" textstyle="standard">
+      <DATUM format="%.1f" src="66" extrema="el"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Azimuth" colour="#009911" row="2" col="1">
+    <NUMBER caption="ISC" textstyle="standard">
+      <DATUM format="%.0f" src="76" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="OSC" textstyle="standard">
+      <DATUM format="%.0f" src="87" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="dGPS" textstyle="standard">
+      <DATUM format="%.0f" src="62" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="Mag" textstyle="standard">
+      <DATUM format="%.0f" src="56" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="SS" textstyle="standard">
+      <DATUM format="%.0f" src="93" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="SS" textstyle="standard">
+      <DATUM format="%.0f" src="94" extrema="az"/>
+    </NUMBER>
+    <NUMBER caption="ISC Sigma" textstyle="standard">
+      <DATUM format="%.2f" src="80" extrema="isc_sigma"/>
+    </NUMBER>
+    <NUMBER caption="OSC Sigma" textstyle="standard">
+      <DATUM format="%.2f" src="91" extrema="osc_sigma"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Cryostat Temps" row="3" col="7" >
+    <NUMBER caption="t_jfet" textstyle="standard">
+      <DATUM format="%.2f" src="190" extrema="t_jfet"/>
+    </NUMBER>
+    <NUMBER caption="t_optbox_filt" textstyle="standard">
+      <DATUM format="%.2f" src="202" extrema="t_optbox_filt"/>
+    </NUMBER>
+    <NUMBER caption="t_ln2" textstyle="standard">
+      <DATUM format="%.2f" src="186" extrema="t_ln2"/>
+    </NUMBER>
+    <NUMBER caption="t_vcs_filt" textstyle="standard">
+      <DATUM format="%.2f" src="185" extrema="t_vcs_filt"/>
+    </NUMBER>
+    <NUMBER caption="t_vcs_fet" textstyle="standard">
+      <DATUM format="%.2f" src="191" extrema="t_vcs_fet"/>
+    </NUMBER>
+    <NUMBER caption="t_lhe_filt" textstyle="standard">
+      <DATUM format="%.2f" src="183" extrema="t_lhe_filt"/>
+    </NUMBER>
+    <NUMBER caption="t_ln2_filt" textstyle="standard">
+      <DATUM format="%.2f" src="187" extrema="t_ln2_filt"/>
+    </NUMBER>
+    <NUMBER caption="t_charcoal" textstyle="standard">
+      <DATUM format="%.2f" src="188" extrema="t_charcoal"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Cold Optics Temps" row="2" col="8" rowspan="1">
+    <NUMBER caption="t_heatswitch" textstyle="standard">
+      <DATUM format="%.2f" src="189" extrema="t_heatswitch"/>
+    </NUMBER>
+    <NUMBER caption="t_opt_box_ext" textstyle="standard">
+      <DATUM format="%.2f" src="192" extrema="t_opt_box_ext"/>
+    </NUMBER>
+    <NUMBER caption="t_he3fridge" textstyle="standard">
+      <DATUM format="%.2f" src="193" extrema="t_he3fridge"/>
+    </NUMBER>
+    <NUMBER caption="t_he4pot" textstyle="standard">
+      <DATUM format="%.2f" src="201" extrema="t_he4pot"/>
+    </NUMBER>
+    <NUMBER caption="t_he4pot_d" textstyle="standard">
+      <DATUM format="%.2f" src="184" extrema="t_he4pot_d"/>
+    </NUMBER>
+    <NUMBER caption="t_horn_250" textstyle="standard">
+      <DATUM format="%.2f" src="197" extrema="t_horn_250"/>
+    </NUMBER>
+    <NUMBER caption="t_horn_350" textstyle="standard">
+      <DATUM format="%.2f" src="198" extrema="t_horn_350"/>
+    </NUMBER>
+    <NUMBER caption="t_horn_500" textstyle="standard">
+      <DATUM format="%.2f" src="199" extrema="t_horn_500"/>
+    </NUMBER>
+    <NUMBER caption="t_300mk_strap" textstyle="standard">
+      <DATUM format="%.2f" src="200" extrema="t_300mk_strap"/>
+    </NUMBER>
+    <NUMBER caption="t_m3" textstyle="standard">
+      <DATUM format="%.2f" src="194" extrema="t_m3"/>
+    </NUMBER>
+    <NUMBER caption="t_m4" textstyle="standard">
+      <DATUM format="%.2f" src="195" extrema="t_m4"/>
+    </NUMBER>
+    <NUMBER caption="t_m5" textstyle="standard">
+      <DATUM format="%.2f" src="196" extrema="t_m5"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="Cryo Heaters" row="2" col="7" >
+    <NUMBER caption="he4_lev" textstyle="standard">
+      <DATUM format="%.2f" src="179" extrema="he4_lev"/>
+    </NUMBER>
+    <NUMBER caption="cryoin" textstyle="standard">
+      <DATUM format="%.2f" src="180" extrema="cryoin"/>
+    </NUMBER>
+    <NUMBER caption="cryostate" textstyle="standard">
+      <DATUM format="%.2f" src="181" extrema="cryostate"/>
+    </NUMBER>
+    <NUMBER caption="t_lhe" textstyle="standard">
+      <DATUM format="%.2f" src="181" extrema="t_lhe"/>
+    </NUMBER>
+  </BOX>
+  <BOX caption="State" colour="#777700" row="0" col="1" colspan="1">
+    <MULTI caption="Source" textstyle="standard">
+      <DATUM src="1">
+        <WORD value="255" caption="TDRSS" textstyle="OK_BIT"/>
+        <WORD value="253" caption="IRIDIUM" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="SlowDL Index" textstyle="standard">
+      <DATUM format="%.0f" src="INDEX" extrema="index"/>
+    </NUMBER>
+    <MULTI caption="Ring Bearer" textstyle="standard">
+      <DATUM src="6">
+        <WORD value="0" caption="Frodo" textstyle="OK_BIT"/>
+        <WORD value="1" caption="Sam" textstyle="OK_BIT"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="Disk Space (GB)" textstyle="standard">
+      <DATUM format="%.2f" src="11" extrema="disk_free"/>
+    </NUMBER>
+    <NUMBER caption="Plover" textstyle="standard">
+      <DATUM format="%.0f" src="13" extrema="bitfield"/>
+    </NUMBER>
+    <NUMBER caption="G-LST" textstyle="standard">
+      <DATUM format="%.2f" src="5" extrema="time"/>
+    </NUMBER>
+    <DATETIME caption="Time to Sched" textstyle="standard">
+      <DATUM format="%H:%M:%S" src="12"/>
+    </DATETIME>
+  </BOX>
+</DOCUMENT>

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+ulimit -c unlimited
+
+while true
+do 
+/usr/local/bin/pcm x &> /dev/null
+done

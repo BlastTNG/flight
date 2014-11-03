@@ -1,0 +1,136 @@
+2006-03-15:
+	Release blastcmd-2.2.0
+
+	* blastcmd.c (ConfirmMultiSend, SendMCommand): Add s-type parameter handling
+	code.
+
+2006-03-10:
+	Release blastcmd-2.1.1
+
+	* configure.ac: Add --disable-authentication argument.
+	* daemon.c: Properly wrap code in USE_AUTHORISATION defines
+
+2005-06-03:
+	Release blastcmd-2.1.0
+
+	* daemon.c (Daemonise): Refuse connexions from unauthorised clients.
+	* netcmd.c (SetOwner): Complain and die on refused connexion.
+
+2005-05-23:
+	* netcmd.c: Include stdio.h ; don't include tcpd.h
+	* daemon.c: Include stdio.h ; don't include tcpd.h
+
+	Release blastcmd-2.0.2
+
+	* netcmd.c (ReadLine): Add.
+	* netcmd.c (NetCmdGetAck, NetCmdUpdateConn): Call ReadLine instead of recv
+	directly.
+
+2005-05-22:
+	Release blastcmd-2.0.1
+
+	* daemon.c (Daemonise): Write to the fd, don't read from it.
+
+2005-05-21:
+	Release blastcmd-2.0.0
+
+	* blastcmd.c (main): Use upper case letters for link (TLI)
+	* daemon.c (ExecuteCommand): Use upper case letters for link (TLI)
+	* daemon.h: Use upper case letters for link (TLI)
+
+	* dummycmd, fifocmd, blastcmd-remote.in: Remove
+	* netcmd.c, netcmd.h: Add
+	* daemon.c, daemon.h: Add
+	* blastcmd.c: Send larger packets, rewrite for daemon
+	* README: Update
+	* configure.ac, Makefile.am: Remove unneeded tests for old scripts
+
+2005-04-22:
+	* configure.ac: Fix typo in help strings
+
+2005-02-09:
+	Release blastmcd-1.2.1
+
+	* blastcmd.c: Add timeout on read from GSE (error code 13)
+
+	Release blastcmd-1.2.0
+
+	* blastcmd.c: Lock serial port
+
+2005-01-05:
+	Release blastcmd-1.1.10
+
+	* blastcmd.c: Fix labeling of ACKs from GSE.
+
+2004-12-19:
+	* blastcmd-remote.in: Force tty allocation?  Huh?  (Removed -t)
+
+2004-12-17:
+	Release blastcmd-1.1.9
+
+	* blastcmd-remote.in: Pass ssh -tx to force tty allocation and disable x11
+	forwarding.  Convert to sh
+	* blastcmd.c: Fix LOGFILE define
+	* Makefile.am: Fix blastcmd.log permissions
+	* configure.ac: Use arwen as default blastcmd server
+
+2004-11-15:
+	* configure.ac: Fix help formatting. Migrate to new-style AC_INIT
+
+2004-10-22 (1.1.8):
+	* Makefile.am: add command_list.c to CONFIG_STATUS_DEPENDENCIES
+
+2004-10-21:
+	* blastcmd.c (PrintCommandListSerial, USAGE): -c returns status 12.
+
+2004-10-12 (1.1.7):
+	* configure.ac, blastcmd-remote.in: Add username option
+
+2004-10-08 (1.1.6):
+	* configure.ac: rename from configure.in ; add BUILDSERIAL
+	* Makefile.am: add BUILDSERIAL
+
+2004-09-27 (1.1.5):
+	* dummycmd: add
+	* blastcmd.c: add -c option ; migrate to autoconf
+
+2004-09-09 (1.1.4):
+	* blastcmd.c: add --license
+
+2004-09-08:
+	* blastcmd: add copyright and license
+
+2004-08-24 (1.1.3):
+	* blastcmd.c: ability to send -ve integer parameters
+
+2004-07-14:
+	* blastcmd.c, Makefile: migrate to command_list.*
+
+2004-06-25 (1.1.2):
+	* blastcmd.c: separate command list from usage
+
+2003-09-12 (1.1.1)  Barth Netterfield:
+	* blastcmd.c: use ttyS1
+
+2003-09-07 (1.1.0):
+	* blastcmd.c: New commanding struct scheme
+
+2003-08-24:
+	* Makefile: Add isc_protocl.h to dependancies
+
+2003-08-15 (1.0.4)  Barth Netterfield:
+	* blastcmd.c: remove busy waiting in ack
+
+2003-07-19 (1.0.3)  Barth Netterfield:
+	* blastcmd.c: compare full field names (up to SIZE_NAME)
+
+2003-06-25 (1.0.2):
+	* fifocmd: Bugfix
+
+2003-06-18 (1.0.1):
+	* fifocmd: Add
+
+2003-06-16 (1.0.0):
+	* blastcmd: Release
+
+vi:ai:noet:sw=2:ts=2

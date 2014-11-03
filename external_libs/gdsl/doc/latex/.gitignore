@@ -1,0 +1,11 @@
+*.tex
+*.toc
+*.log
+*.ind
+*.ilg
+*.idx
+*.ttf
+*.aux
+*.sty
+Makefile
+Makefile.in

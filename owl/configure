@@ -1,0 +1,10 @@
+#!/bin/sh
+echo This script ignores all parameters.
+echo To change where owl will be installed, edit owl.pro!
+if [ `uname` = "Darwin" ]; then
+  /usr/bin/qmake -spec macx-g++ || exit 1
+else
+  qmake-qt4 || exit 1
+fi
+echo Great! Now run \"make\" and \"make install\"!
+

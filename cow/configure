@@ -1,0 +1,14 @@
+#!/bin/sh
+echo This script ignores all parameters.
+echo To change where cow will be installed, edit cow.pro!
+if [ `uname` = "Darwin" ]; then
+  /usr/bin/qmake -spec macx-g++ || exit 1
+elif [ -n `which qmake-qt4` ]; then
+  qmake-qt4 || exit 1
+elif [ -n `which qmake` ]; then
+  qmake || exit 1
+else
+  echo "ERROR: Can't find qmake-qt4 nor qmake in your path!"
+  exit 1
+fi
+echo Great! Now run \"make\" and \"make install\"!

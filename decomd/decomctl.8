@@ -1,0 +1,87 @@
+.TH decomctl 8 "23 September 2004" "version 1.1" "BLAST UTILITIES"
+.SH NAME
+decomctl \(em BLAST decom daemon control script
+.SH SYNOPSIS
+.nh
+.B decomctl 
+.IR ( " start " | " restart " | " stop " | " status " | " pause " | " cycle "
+.IR | " help " )
+.hy
+
+.SH DESCRIPTION
+.B decomctl
+is a perl script that interfaces with the
+.BR decomd (8)
+decom daemon.
+It can be used to both command and monitor the daemons status, and is designed
+in such a way that it can be used as a
+.I SYSV
+init script.
+
+.SH ACTIONS
+.B decomctl
+recognises the following actions:
+.TP
+.I start
+Causes
+.B decomctl
+to spawn a new
+.BR decomd ,
+if it doesn't detect one already running.
+.TP
+.I restart
+Equivalent to
+.B decomctl
+.I stop
+.B && decomctl
+.I start
+.TP
+.I stop
+If
+.B decomd
+is running, signals it to terminate by sending it
+.IR SIGTERM .
+.TP
+.I status
+If
+.B decomd
+is running, attempts to connect to the listening port and pretty prints status
+information as reported by the daemon to the tty.
+.TP
+.I pause
+If
+.B decomd
+is running, signals it to pause by sending it
+.IR SIGINT .
+.TP
+.I cycle
+If
+.B decomd
+is running, signals it to cycle by sending it
+.IR SIGHUP .
+This will bring the daemon out of pause if it was previously sent a
+.IR SIGINT .
+.TP
+.I help
+Prints a usage summary and license information and exits.
+
+.SH FILES
+.TP
+.I /var/run/decomd.pid
+The daemon process-id file.
+
+.SH SEE ALSO
+.BR decomd (8),
+.BR defile (1),
+.BR perl (1)
+
+.SH BUGS
+.B decomctl
+is a little too trusting of 
+.IR decomd.pid :
+if the file doesn't exist, it assumes that decomd isn't running, otherwise it
+assumes that whatever the number is, that's the PID of the daemon and will
+gladly send signals to whatever process that might happen to correspond to.
+
+.SH AUTHOR
+D. V. Wiebe (dwiebe@physics.utoronto.ca)

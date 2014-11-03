@@ -1,0 +1,419 @@
+# AML version of 0.al alice file
+# Gaelen Marsden (gmarsden@physics.ubc.ca)
+# 21 Jan 2005
+
+# Matthew Truch (matt@truch.net)
+# 1 Dec 2006
+
+# N.B. -- any line that does not start with '+' or '-' is treated as a comment
+
+# NOTES:
+# CPU_TIME:   min value is Fri Dec  1 19:06:40 2006
+#	            max value is Thu Mar  8 21:16:47 2007, 2^23-1 seconds later
+# LST:        adjust for Sweden?
+
++SETTINGS     maxbitrate    looplength    samplerate    maxover       minover       
+--1           6000          15            5             11.23         1.25          
+
++SLOWDATA     
+++SINGLE      src           numbits       overbits      minval        maxval        perframe      
+
+### time ###
+--t0          cpu_time      22            1             1165000000    1173388607    1             
+
+### ad590 ###
+--a0          t_roll        7             3             17000         23500         1             
+--a1@a0       t_reac        @             @             @             @             @             
+--a2@a0       t_reac_mc     @             @             @             @             @             
+--a3@a0       t_el_mot      @             @             @             @             @             
+--a4@a0       t_el_mc       @             @             @             @             @             
+--a5@a0       t_piv_mc      @             @             @             @             @             
+--a6@a0       t_clin_pyr    @             @             29835         37035         @             
+--a7@a0       t_pv          @             @             13000         21000         @             
+--a8@a7       t_apm_3v      @             @             @             @             @             
+--a9@a7       t_apm_5v      @             @             @             @             @             
+--a10@a7      t_apm_10v     @             @             @             @             @             
+--a20@a7      t_dpm_7.5v    @             @             @             @             @             
+--a21@a7      t_dpm_10v     @             @             @             @             @             
+--a22@a7      t_dpm_5v      @             @             @             @             @             
+--a23@a7      t_das         @             @             @             @             @             
+--a25@a6      t_clin_if     @             @             @             @             @             
+--a26@a6      t_clin_sip    @             @             @             @             @             
+--a27@a7      t_rec         @             @             @             @             @             
+--a31@a0      t_lock_motor  @             @             @             @             @             
+--a33@a7      t_isc_comp    @             @             @             @             @             
+--a34@a7      t_isc_flange  @             @             @             @             @             
+--a35@a7      t_isc_heat    @             @             @             @             @             
+--a36@a7      t_isc_lens    @             @             @             @             @             
+--a37@a7      t_osc_comp    @             @             @             @             @             
+--a38@a7      t_osc_flange  @             @             @             @             @             
+--a39@a7      t_osc_heat    @             @             @             @             @             
+--a40@a7      t_osc_lens    @             @             @             @             @             
+--a41@a0      t_sol_stbd    @             @             @             @             @             
+--a42@a0      t_sol_port    @             @             @             @             @             
+--a44@a7      t_pv_ext      @             @             @             @             @             
+--a48@a7      t_dpcu        @             @             @             @             @             
+--a49@a7      t_apcu        @             @             @             @             @             
+--a50@a7      t_acs         @             @             @             @             @             
+--a51@a0      t_batt_acs    @             @             @             @             @             
+--a52@a0      t_batt_das    @             @             @             @             @             
+--a53@a0      t_if_top_frnt @             @             @             @             @
+--a54@a0      t_if_top_back @             @             @             @             @
+--a55@a0      t_if_bot_frnt @             @             @             @             @
+--a56@a0      t_if_bot_back @             @             @             @             @
+--a57@a0      t_primary_1   @             @             @             @             @
+--a58@a0      t_primary_2   @             @             @             @             @
+--a59@a0      t_strut_side  @             @             @             @             @
+--a60@a0      t_strut_bot   @             @             @             @             @
+--a61@a0      t_secondary_1 @             @             @             @             @
+--a62@a0      t_secondary_2 @             @             @             @             @
+--a63@a0      t_push_plate  @             @             @             @             @
+--a64@a0      t_act_motor   @             @             @             @             @
+--a65@a0      t_ss_back_mid @             @             @             @             @
+--a66@a0      t_chin_mid    @             @             @             @             @
+
+
+### t_gyro ###
+--y0          t_gyro2       7             2             14000         30000         1             
+--y1@y0       t_gyro3       @             @             @             @             @             
+--y2@y0       t_gyro1       @             @             @             @             @             
+
+### current_monitor ###
+--i0          i_reac        7             2             8048          57488         1             
+--i1@i0       i_roll        @             @             2232          63672         @             
+--i2@i0       i_el          @             @             @             @             @             
+--i3@i0       i_piv         @             @             @             @             @             
+--i4@i0       i_pv          @             @             30000         33000         @             
+--i5@i0       i_gybox       @             @             26368         32768         @             
+--i6@i0       i_starcam     @             @             31500         32800         @             
+--i7@i6       i_sun         @             @             25000         33000         @             
+--i8@i0       i_apm_3v      @             @             32768         39168         @             
+--i9@i0       i_apm_5v      @             @             30849         32769         @             
+--i10@i0      i_apm_10v     @             @             31500         32800         @             
+--i11@i0      i_dpm_28v     @             @             31500         40000         @             
+--i12@i0      i_dpm_3v      @             @             25000         33000         @             
+--i13@i12     i_dpm_5v      @             @             @             @             @             
+--i14@i12     i_dpm_10v     @             @             @             @             @             
+--i15@i0      i_rec         @             @             32768         41000         @             
+
+### gain ###
+--g0          g_p_el        8             2             0             32768         1             
+--g1@g0       g_i_el        @             @             @             @             @             
+--g2@g0       g_p_roll      @             @             @             @             @             
+--g3@g0       g_p_az        @             @             @             @             @             
+--g4@g0       g_i_az        @             @             @             @             @             
+--g5@g0       g_p_pivot     @             @             @             @             @             
+
+### pwm ###
+--w0          bdapwm        8             1             0             2047          1             
+--w1@w0       hspwm         @             @             @             @             @             
+--w2@w0       cryopwm       @             @             @             @             @             
+--w3@w0       jfetpwm       @             @             @             @             @             
+--w4@w0       balpump_lev   @             @             @             @             @             
+--w5@w0       inpump_lev    @             @             @             @             @             
+--w6@w0       outpump_lev   @             @             @             @             @             
+
+### bias ###
+--b0          bias_lev1     7             1             0             127           1             
+--b1@b0       bias_lev2     @             @             @             @             @             
+--b2@b0       bias_lev3     @             @             @             @             @             
+
+### sigma ###
+--s0          mag_sigma     8             2             0             1820          1             
+--s1@s0       dgps_sigma    @             @             @             @             @             
+--s2@s0       ss_sigma      @             @             @             @             @             
+--s3@s0       isc_sigma     @             @             @             @             @             
+--s4@s0       osc_sigma     @             @             @             @             @             
+--s5@s0       enc_sigma     @             @             @             @             @             
+--s6@s0       clin_sigma    @             @             @             @             @             
+
+### cryo ###
+--c0          t_lhe         8             4             12876         21874         1             
+--c1@c0       t_lhe_filt    @             @             12815         21836         @             
+--c2@c0       t_vcs_filt    @             @             30511         34549         @             
+--c3@c0       t_ln2         @             @             30508         34546         @             
+--c5@c0       t_charcoal    @             @             12989         32273         @             
+--c7@c0       t_jfet        @             @             32871         39306         @             
+--c8@c0       t_he4pot_d    @             @             12939         20115         @             
+--c9@c2       t_vcs_fet     @             @             @             @             @             
+--c10         cycle_state   3             1             0             7             1
+
+### ROX ###
+--r0          t_he3fridge   8             4             2949138       13015137      1             
+--r1@r0       t_he4pot      @             @             @             @             @             
+--r2@r0       t_horn_250    @             @             @             @             @             
+--r3@r0       t_horn_350    @             @             @             @             @             
+--r4@r0       t_horn_500    @             @             @             @             @             
+--r5@r0       t_m3          @             @             @             @             @             
+--r6@r0       t_m4          @             @             @             @             @             
+--r7@r0       t_m5          @             @             @             @             @             
+--r8@r0       t_optbox_filt @             @             @             @             @             
+--r9@r0       t_300mk_strap @             @             @             @             @
+
+### phase ###
+--p0          phase5        9             1             0             2000          1             
+--p1@p0       phase6        @             @             @             @             @             
+--p2@p0       phase7        @             @             @             @             @             
+--p3@p0       phase8        @             @             @             @             @             
+--p4@p0       phase9        @             @             @             @             @             
+--p5@p0       phase10       @             @             @             @             @             
+--p6@p0       phase11       @             @             @             @             @             
+--p7@p0       phase12       @             @             @             @             @             
+--p8@p0       phase13       @             @             @             @             @             
+--p9@p0       phase14       @             @             @             @             @             
+--p10@p0      phase15       @             @             @             @             @             
+--p11@p0      phase16       @             @             @             @             @             
+
+### uint to 8bit ###
+--u0          i_charcoal    8             4             0             65535         1             
+--u1@u0       dgps_alt      @             @             0             36250         @             
+--u2@u0       set_reac      @             @             @             @             @             
+--u3@u0       pch_clin_piv  @             @             27435         38101         @             
+--u4@u3       roll_clin_piv @             @             @             @             @             
+--u5@u0       he4_lev_old   @             @             12353         65432         @             
+--u6@u0       pch_clin_pyr  @             @             27435         38101         @             
+--u7@u6       roll_clin_pyr @             @             @             @             @             
+--u8@u0       t_gy1_set     @             @             0             26214         @             
+--u9@u8       t_gy2_set     @             @             @             @             @             
+--u10@u0      cpu_fan       @             @             0             10000         @             
+--u11@u0      cpu_temp1     @             @             0             80            @             
+--u12@u0      mag_model     @             @             @             @             @             
+--u13@u0      isc_framenum  @             @             @             @             @             
+--u14@u0      p_h           @             @             0             1820          @             
+--u15@u0      isc_mapmean   @             @             0             16384         @             
+--u16@u0      dgps_pitch    @             @             -727          728           @             
+--u17@u16     dgps_roll     @             @             @             @             @             
+--u18@u0      dgps_speed    @             @             0             10923         @             
+--u19@u0      dgps_dir      @             @             @             @             @             
+--u20@u0      dgps_climb    @             @             -10922        10923         @             
+--u21@u0      p_vaz         @             @             0             26214         @             
+--u22@u0      p_del         @             @             0             6554          @             
+--u23@u0      isc_rd_sigma  @             @             @             @             @             
+--u24@u0      p_w           @             @             0             1820          @             
+--u25@u0      isc_rtol      @             @             0             16384         @             
+--u26@u0      isc_apert     @             @             0             495           @             
+--u27@u0      isc_maglimit  @             @             0             12000         @             
+--u28@u0      isc_nrad      @             @             0             9102          @             
+--u29@u0      isc_mtol      @             @             @             @             @             
+--u30@u0      isc_qtol      @             @             @             @             @             
+--u31@u0      isc_focus     @             @             0             2550          @             
+--u32@u0      isc_state     @             @             0             255           @             
+--u33@u0      isc_lrad      @             @             0             9102          @             
+--u34@u0      isc_thresh    @             @             0             1000          @             
+--u35@u34     isc_grid      @             @             @             @             @             
+--u36@u0      isc_nblobs    @             @             0             255           @             
+--u37@u34     isc_tol       @             @             @             @             @             
+--u38@u0      gy_roll_amp   @             @             @             @             @             
+--u39@u0      isc_spulse    @             @             0             100           @             
+--u40@u0      isc_brra      @             @             0             65536         @             
+--u41@u0      isc_brdec     @             @             -16383        16384         @             
+--u42@u0      isc_maxblobs  @             @             0             50            1             
+--u43@u0      isc_x_off     @             @             -909          910           @             
+--u44@u43     isc_y_off     @             @             @             @             @             
+--u45@u0      roll_clin_sip @             @             27435         38101         20            
+--u46@u45     pch_clin_sip  @             @             @             @             @             
+--u47@u0      clin_elev     @             @             25698         37586         20            
+--u49@u0      rps_reac      @             @             7610          57926         20            
+--u50@u0      biasin        @             @             0             255           @             
+--u51@u0      disk_free     @             @             0             30720         @             
+--u52@u0      cpu_temp3     @             @             0             80            @             
+--u54@u0      osc_framenum  @             @             @             @             @             
+--u55@u0      osc_mapmean   @             @             0             16384         @             
+--u56@u0      osc_rd_sigma  @             @             @             @             @             
+--u57@u0      osc_rtol      @             @             0             16384         @             
+--u58@u0      osc_apert     @             @             0             495           @             
+--u59@u0      osc_maglimit  @             @             0             12000         @             
+--u60@u0      osc_nrad      @             @             0             9102          @             
+--u61@u0      osc_mtol      @             @             @             @             @             
+--u62@u0      osc_qtol      @             @             @             @             @             
+--u63@u0      osc_focus     @             @             0             2550          @             
+--u64@u0      osc_state     @             @             0             255           @             
+--u65@u0      osc_lrad      @             @             0             9102          @             
+--u66@u0      osc_thresh    @             @             0             1000          @             
+--u67@u34     osc_grid      @             @             @             @             @             
+--u68@u0      osc_nblobs    @             @             0             255           @             
+--u69@u34     osc_tol       @             @             @             @             @             
+--u70@u0      osc_spulse    @             @             0             100           @             
+--u71@u0      osc_brra      @             @             0             65536         @             
+--u72@u0      osc_brdec     @             @             -16383        16384         @             
+--u73@u0      osc_maxblobs  @             @             0             50            1             
+--u74@u0      osc_x_off     @             @             -909          910           @             
+--u75@u43     osc_y_off     @             @             @             @             @             
+--u76@u0      mcp_frame     @             @             @             @             20            
+--u79@u0      sip_mks_hi    @             @             @             @             @             
+--u80@u0      p_pv          @             @             @             @             @             
+--u81@u0      p_ra_1        @             @             @             @             @             
+--u82@u0      p_ra_2        @             @             @             @             @             
+--u83@u0      p_ra_3        @             @             @             @             @             
+--u84@u0      p_ra_4        @             @             @             @             @             
+--u85@u0      p_dec_1       @             @             @             @             @             
+--u86@u0      p_dec_2       @             @             @             @             @             
+--u87@u0      p_dec_3       @             @             @             @             @             
+--u88@u0      p_dec_4       @             @             @             @             @             
+--u89@u0      osc_pressure1 @             @             @             @             @             
+--u90@u0      osc_exposure  @             @             @             @             @             
+--u91@u0      isc_pressure1 @             @             @             @             @             
+--u92@u0      isc_exposure  @             @             @             @             @             
+--u93@u0      gy1_h_hist    @             @             @             @             @             
+--u94@u0      gy2_h_hist    @             @             @             @             @             
+--u95@u0      enc_el        @             @             @             @             @             
+--u96@u0      calstat       @             @             @             @             20            
+--u97@u0      ss_case_temp  @             @             @             @             @
+--u98@u0      ss_cpu_temp   @             @             @             @             @
+--u99@u0      ss_hdd_temp   @             @             @             @             @
+--u100@u0     ss_port_temp  @             @             @             @             @
+--u101@u0     ss_star_temp  @             @             @             @             @
+--u102@u0     bal_target    @             @             @             @             @
+--u103@u0     ifpm_bits     @             @             @             @             @
+--u104@u0     bal_gain      @             @             @             @             @
+--u105@u0     lock_state    11            1             0             2047          @
+--u106@u0     lock_pot      6             1             @             @             @
+--u107        lock_lim_sw   6             1             0             16350         1
+
+### Misc ###
+--m0          lst           20            4             0             311039751     1             
+--m1          cryoin        4             4             0             15            1             
+--m2          lokmot_pin    1             2             0             1             1             
+--m3          isc_fpulse    4             2             0             300           1             
+--m5          sam_i_am      1             2             0             1             1             
+--m6          cryostate     8             4             0             255           1             
+--m7          sensor_veto   9             2             0             511           1             
+--m8          bal_veto      3             3             -1            7             1             
+--m9          lat           16            4             0             65536         1             
+--m10@m9      lon           @             @             @             @             @             
+--m11         isc_error     5             4             0             31            1             
+--m12         dgps_att_ok   1             1             0             1             1             
+--m13         dgps_n_sat    4             4             0             15            1             
+--m14         p_mode        4             4             0             15            1             
+--m15         p_x_deg       16            4             0             65536         1             
+--m16@m15     p_y           @             @             @             @             @             
+--m17         gy1_offset    16            4             -16383        16384         1             
+--m18@m17     gy2_offset    @             @             @             @             @             
+--m19@m17     gy3_offset    @             @             @             @             @             
+--m20         t_gybox1      8             4             591921348     2007499418    20            
+--m21@m20     t_gybox2      @             @             @             @             @             
+--m22         osc_fpulse    4             2             0             300           1             
+--m23         osc_error     5             4             0             31            1             
+--m24         sun_az        5             3             0             360           1             
+--m25         use_analogue  1             1             0             1             1             
+--m26         timeout       4             2             0             2000          1             
+--m28         incool_state  4             1             -8            7             1             
+--m29         schedule      3             1             0             7             1
+--m30         alice_file    4             1             0             15            1
+--m31         plover        4             2             0             15            1
+
+### Charge Controllers ###
+--q0          apcu_reg      7             2             0             65535         1             
+--q1@q0       apcu_trim     @             @             @             @             @             
+--q2@q0       dpcu_reg      @             @             @             @             @             
+--q3@q0       dpcu_trim     @             @             @             @             @             
+--q4@q0       i_batt_acs    @             @             20000         45000         @             
+--q5@q4       i_batt_das    @             @             @             @             @             
+--q6@q0       i_gond_acs    @             @             22000         32500         @             
+--q7@q6       i_gond_das    @             @             @             @             @             
+--q8@q6       i_sol_das     @             @             @             @             @             
+--q9@q6       i_sol_acs     @             @             @             @             @             
+--q10@q0      v_batt_acs    @             @             10000         20000         @             
+--q11@q10     v_batt_das    @             @             @             @             @             
+--q12@q0      v_sol_acs1    @             @             20000         46000         @             
+--q13@q12     v_sol_acs2    @             @             @             @             @             
+--q14@q12     v_sol_acs3    @             @             @             @             @             
+--q15@q12     v_sol_acs4    @             @             @             @             @             
+--q16@q12     v_sol_acs5    @             @             @             @             @             
+--q17@q12     v_sol_acs6    @             @             @             @             @             
+--q18@q12     v_sol_das1    @             @             @             @             @             
+--q19@q12     v_sol_das2    @             @             @             @             @             
+--q20@q12     v_sol_das3    @             @             @             @             @             
+--q21@q12     v_sol_das4    @             @             @             @             @             
+--q22         apcu_auto     1             1             0             1             1
+--q23@q22     dpcu_auto     @             @             @             @             @
+
+
+### Slow Bolometers ###
+--z0          n15c22        8             1             0             65535         20            
+--z1@z0       n15c14        @             @             @             @             @             
+--z2@z0       n15c9         @             @             @             @             @             
+--z3@z0       n7c15         @             @             @             @             @             
+--z4@z0       n7c14_slo     @             @             @             @             @             
+--z5@z0       n10c10        @             @             @             @             @             
+--z6@z0       n10c9         @             @             @             @             @             
+--z7@z0       n10c8         @             @             @             @             @             
+--z8@z0       n7c17         @             @             @             @             @             
+--z9@z0       n7c16         @             @             @             @             @             
+--z10@z0      n7c18         @             @             @             @             @             
+
+### Fucus System ###
+--f0          act0_enc      9             1             9000          15000         1
+--f1@f0       act1_enc      @             @             @             @             @
+--f2@f0       act2_enc      @             @             @             @             @
+--f3@f0       act0_pos      @             @             @             @             @
+--f4@f0       act1_pos      @             @             @             @             @
+--f5@f0       act2_pos      @             @             @             @             @
+--f6@f0       lvdt_10       @             @             30000         43333         @
+--f7@f6       lvdt_11       @             @             @             @             @
+--f8@f6       lvdt_13       @             @             @             @             @
+--f9@u0       act_move_i    5             @             0             100           @
+--f10@u0      act_hold_i    5             @             0             100           @
+--f11@u0      act_vel       6             @             0             4500          @
+--f12         focus_mode    4             1             0             15            1
+--f13         actbus_reset  1             1             0             1             1
+--f14         act_flags     13            1             0             2047          1
+--f15@f0      act0_dead_rec @             @             @             @             @
+--f16@f0      act1_dead_rec @             @             @             @             @
+--f17@f0      act2_dead_rec @             @             @             @             @
+--f18@f0      lvdt_high     @             @             @             @             @
+--f19@f0      lvdt_low      @             @             @             @             @
+--f20@u0      lvdt_spread   7             @             0             3000          @
+--f21@u0      tc_mode       2             1             0             3             1
+--f22@a0      t_prime_fid   @             @             @             @             @
+--f23@a0      t_second_fid  @             @             @             @             @
+--f24@u0      tc_g_prim     7             @             5000          6500          @
+--f25@u0      tc_g_sec      7             @             800           1200          @
+--f26@u0      tc_step       6             @             0             255           @
+--f28@u0      tc_wait       7             @             0             1200          @
+--f29@u0      tc_filter     6             @             0             299           @
+--f30@u0      sf_correction 8             @             -2000         2000          @
+--f31@f0      abs_focus     @             @             @             @             @
+--f33@u0      sf_offset     @             @             -2000         2000          @
+--f34@f28     sf_age        @             @             @             @             @
+
++FASTDATA     
+++INT         src           numbits       overbits      divider       forcediv      perframe      samplefreq    
+--0           gyro2         6             2             5             false         20            8             
+--1           gyro3         6             2             5             false         20            8             
+--2           gyro1         6             2             5             false         20            8             
+
+++DIFF        src           numbits       overbits      divider       forcediv      perframe      samplefreq    
+--0           enc_elev      6             2             3             false         20            4
+--1           az            6             2             3             false         20            20            
+--2           el            6             2             3             false         20            20            
+--3           isc_az        6             2             3             false         1             2             
+--4           isc_el        6             2             3             false         1             2             
+--5           dgps_az       6             2             3             false         1             2             
+--6           isc_ra        6             2             3             false         1             4             
+--7           isc_dec       6             2             3             false         1             4             
+--8           mag_az        6             2             3             false         1             2             
+--9           ra            6             2             3             false         1             2             
+--10          dec           6             2             3             false         1             2             
+--11          clin_el       6             2             3             false         1             2             
+--12          ss_az         6             2             3             false         1             2             
+--13          osc_az        6             2             3             false         1             2             
+--14          osc_el        6             2             3             false         1             2             
+--15          osc_ra        6             2             3             false         1             2             
+--16          osc_dec       6             2             3             false         1             2             
+
+### Bolometers ###
+#++DIFF        src           numbits       overbits      divider       forcediv      perframe      samplefreq    
+--b0          n11c2         7             2             3             false         20            4             
+--b1          n11c3         7             2             3             false         20            4             
+--b2          n11c7         7             2             3             false         20            4             
+--b3          n12c0         7             2             3             false         20            4             
+--b4          n16c10        7             2             3             false         20            4             
+--b5          n7c13         7             2             3             false         20            4             
+--b6          n14c22        7             2             3             false         20            4             
+--b7          n15c13        7             2             3             false         20            4             
+--b8          n16c15        7             2             3             false         20            4             
+--b9          n7c12         7             2             3             false         20            4             
+--b10         n10c11        7             2             3             false         20            4             
+--b11         n7c14         7             2             3             false         20            4             
+--b12         n10c13        7             2             3             false         20            4

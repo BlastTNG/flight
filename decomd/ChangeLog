@@ -1,0 +1,57 @@
+# This ChangeLog is maintained by D.V. Wiebe.  Please forward all defile
+# patches and other updates to <dwiebe@physics.utoronto.ca>
+
+2004-09-23: (1.1.0):
+  * decomd: Update to version 11 Spec file, new derived channel handling
+
+2004-09-21:
+  * framefile.c, channels.c: Migrate to BLAMM (BLAST Memory Manager)
+
+2004-09-20:
+  * decomd.c: Migrate to blog unified output scheme.
+
+2004-09-18 (1.0.7):
+  * decomd.c: Print only filename (not full path) to port 11411; report size of
+  correct filesystem
+  * decomd.c, decomd.8, decomctl: Add versioning
+
+2004-09-15 (1.0.6):
+  * decomctl: Typo
+
+2004-09-12 (1.0.5):
+  * decomctl: Add control
+  * decomd: Move stuff to /mnt/decom
+
+2004-09-09 (1.0.4):
+  * framefile.c: Pause state, write to /mnt/decom
+  * decomd.1: Add man page
+  * decomd.c: Signal handling, better handling of socket numbering, pause
+  state
+
+2004-09-08:
+  * decomd: Add explicit license
+
+2004-09-07 (1.0.3):
+  * decomd.c: Diskspace Check
+  * decomd: Verbosity
+
+2004-09-04 (1.0.2):
+  * decomd.c, framefile.c: Rename data files
+
+2004-09-03 (1.0.1):
+  * decomd.c: Change filename suffix to make defiling less annoying
+  * decomd: Add decom channels; add crc and polarity checks
+  * crc.h: Add crc seed
+
+2004-09-01 (1.0.0):
+  * decomd.c: Basic decom -> framefile pipe seems to work -- need to check it
+  with defile, though
+
+2004-08-14:
+  * framefile.c: Fox for compilation with decomd
+
+2004-07-20:
+  * framefile.c: Remove slow_data stuff from decomd build
+
+2004-07-19:
+  * decomd: release

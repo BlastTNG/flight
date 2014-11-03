@@ -1,0 +1,30 @@
+Total flight: 15 days = 21600 minutes
+
+Available disk space: 68.9 GB
+
+Save Rate: 1 image / minute
+
+ISC: Run from 3:41 -- 4:54  (73 min.)
+     Frame 9812 -- 13296 (3484 frames) = 0.8 frames/sec.
+     47 tif images
+
+     Serverlog  =   2.0 MB
+     Thumbnails =  36.9 MB
+     Images     = 153.0 MB
+ -------------------------
+                  191.9 MB   = 2.62 MB/min
+                               56 GB for entire flight at this rate.
+
+
+
+OSC: Run from 3:41 -- 4:54  (73 min.)
+     Frame 7914 -- 11013 (3099 frames) = 0.71 frames/sec.
+     55 tif images
+
+     193 MB
+
+
+
+
+1 image every 2 minutes should be fine!
+                             

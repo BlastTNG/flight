@@ -1,0 +1,47 @@
+README for netisc
+=================
+
+This directory contains all of the code necessary to compile the
+server used for the BLAST integrating star cameras (ISC). It was
+written in Microsoft Visual Studio .NET (C++) and the project/solution
+files are netisc.vcproj and netisc.sln respectively.
+
+The catalogue accessing classes were not written by us - they were a
+part of the original star camera code provided to BLAST. It is unclear
+what right we have to re-distribute this part of the
+code. Unfortunately this code also has a dependence on QT (which is
+not free for Windows). QT 3.* is crippleware for Windows if the
+demonstration version is installed. However, QT is only crippled once
+you try to do any graphical output. The dependence on QT is only for
+some minor string classes, so even an expired version of the
+demonstration library will work. 
+
+The subset of the full slalib library used for astrometry calculations
+was provided freely to BLAST for scientific use. This code may not be
+re-distributed without prior authorization from its author Patrick Wallace
+ptw@tpsoft.demon.co.uk.
+
+The CSerial class used to command the motors has the GNU General
+Public License.
+
+The CSocket class was found on-line and unfortunately I don't know what
+restrictions it may have. It was modified somewhat to suit our needs.
+
+Direct all questions to
+
+Edward Chapin
+echapin@alumni.uvic.ca
+
+9 March, 2006
+
+NOTE
+libtiff-v3.5.5.lib and WinIo.lib are not part of CVS, but they have to be in
+the source tree for netisc to compile.
+
+The following files have to be in the Release (or Debug) directory
+settings_ISC.cam
+settings_OSC.cam
+setting.cam
+badpixels_ISC.cam
+badpixels_OSC.cam
+WinIo.dll

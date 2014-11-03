@@ -1,0 +1,123 @@
+Edward Chapin   (echapin@phas.ubc.ca)
+July 21, 2006
+
+Star Camera pre-flight checklist
+
+1. Before mounting the star cameras:
+   i)   Check that the home focus position is near infinity.
+
+   ii)  To re-calculate the bad pixel files, cover the end of the camera
+        and take dark frames with the following integration times and send
+        them to Ed:
+        1s, 2s, 5s, 10s 
+
+   iii) Make sure the hard disks are in good shape. First delete any old
+        files (execute batch file that deletes images/serverlog):
+
+        cd \isc_stable\source_netisc\release
+        reset
+
+        The c: drive should have about 68 GB available.
+
+        Then run chkdsk. 
+
+        Solve problems.
+
+
+2. Check that the clocks / NTP clients are setup correctly:
+   i)   The time zone in the windows date/time window should be GMT (un-check
+        the "adjust clock for daylight savings" box!).
+
+   ii) The NTP client settings are accessed through NTPTime in the
+       control panel. Make sure that the servers are setup correctly for
+       the gondola and verify that they give the correct time.
+
+3. Check the settings files for the camera (note that copies of
+settings.cam settings_ISC.cam and settings_OSC.cam, badpixels_ISC.cam
+and badpixels_OSC.cam are in the CVS for netisc on galadriel):
+
+        cd \isc_stable\source_netisc\release                    
+
+settings.cam: non-camera specific server settings (most get overriden
+by MCP but they should still get set to reasonable values for launch). Update
+the longitude and latitude fields to reflect the values at McMurdo.
+
+settings_ISC/OSC.cam: camera-specific server settings (both star
+camera computers have both files present, and netisc detects which camera
+it has on startup to decide which file to read). Put in the best guess for
+the camera rotation (0 is probably fine).
+
+
+4. Install the current badpixels_ISC/OSC.cam onto each camera. Run the
+camera in a dark room with long integration times (1s) to verify that
+no noisy pixels get repeatedly detected as sources.
+
+
+5. Presumably we'll do alignment tests to work out the OSC/ISC offsets to the
+primary beam like we did in Sweden.
+
+6. Before launch while we still have TCP/IP to the gondola
+   i)   Delete old files with the server (netisc) turned off:
+          cd \isc_stable\source_netisc\release
+          reset.
+
+   ii)  Verify that the virus definitions file is up-to-date and turn off
+        windows live updates.
+
+   iii) Re-start the server using the link to master.bat in the startup
+        menu.
+
+7. Before launch set default values with Narsil:
+        (*) = ISC/OSC
+
+        * Housekeeping:
+          *_full_screen
+          *_hold_current 0
+          *_save_period  120 
+          *_trig_ext
+
+        * Modes:
+          *_run
+
+        * Parameters:
+          *_blobs         
+            Min Blobs = 3
+            Max Blobs = 7
+ 
+          *_catalogue
+            Mag Lim. = 9.5
+            Normal Radius = 3
+            Lost Radius = 6
+
+          *_det_set
+            Search Grid = 38
+            S/N Thresh  = 4.5
+            Excl. Dist. = 30
+
+          *_foc_off = 0
+
+          *_gain
+            gain = 1
+            offset = 0
+
+          osc_integrate
+            fast = 60
+            slow = 300
+
+          isc_integrate
+            fast = 80
+            slow = 500
+
+          *_offset
+            Set to values measured in #5
+         
+          *_focus = 0
+
+          *_tolerances
+            Assoc Tol = 10
+            Match Tol = 50
+            Quit Tol = 100
+            Rot Tol = 10
+
+          *_use_pyramid
+        

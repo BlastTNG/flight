@@ -1,0 +1,112 @@
+BLASTbus Controller README:
+
+bbc_pci.c is the device driver for the PCI BLASTbus Controller Card.  
+This card controls both the blast bus, and writes bi0.  It has
+been tested on Linux 2.6. 
+
+*** INSTALLATION ***
+
+1) Make and install the driver
+      $ make
+      $ sudo make install
+
+   This will place bbc_pci.h in /usr/local/include and bbc_pci.ko 
+   in /lib/modules/<kernel version>/kernel/drivers/misc
+
+2) Insert the module
+      $ sudo insmod bbc_pci.ko
+
+   This step may be executed at boot time, depending on your system. If
+   not, you can add the following lines to /etc/rc.local
+
+     echo 'Inserting BBC_PCI device driver'
+     insmod -o bbc /lib/modules/$(uname -r)/kernel/drivers/misc/bbc_pci.ko
+
+   You may also allow access for non-privileged users by adding:
+
+      sudo chmod a+rw /dev/bbcpci
+      sudo chmod a+rw /dev/bbc_bi0
+
+*** USAGE ***
+
+  #include "bbc_pci.h"
+
+The device driver is accessed as a file.  The following file operations
+are defined:
+
+open:
+	#include <sys/types.h>
+	#include <sys/stat.h>
+	#include <fcntl.h>
+
+	int bbc_fd;
+	int bi0_fd;
+
+	...	
+	# this order is important.  bbc first!
+	bbc_fd = open("/dev/bbcpci", O_RDWR);
+	bi0_fd = open("/dev/bi0_pci", O_RDWR);
+
+
+close:
+	# this order is important.  bbc first!
+	close(bbc_fd);
+	close(bi0_fd);
+
+read:
+     #include <unistd.h> 
+     unsigned int buf[1], nread;
+
+     nread = read(fd, (void *)buf, sizeof(unsigned int)):
+
+  fd is the bbc file desriptor from open, buf is where the data is to be
+  written, and nread is the number actually read.  We can only read 1
+  word at a time.  nread returns zero if there is no new words.  The
+  device returns 0xffffffff if the BlastBus is not powered.
+	
+
+writing to the BBC_PCI:
+    #include <unistd.h> 
+    unsigned int buf[2];
+
+    # buf[0] is the address in the frame, and buf[1] is the BBword to
+    # write we only send 1 at a time.
+
+    write(fd, (void *) buf, 2*sizeof(int));     
+
+writing to the BI0_PCI:
+    #include <unistd.h> 
+    unsigned int buf[624*25];
+
+
+    # after buf has been filled (maximum of 25*2 624 word frames): There
+    # are 2 16 bit words per write.
+    write(fd, (void *) buf, 624*25*sizeof(int));
+    
+
+ioctl:
+  Reset board:
+    ioctl(bbc_fd, BBC_IOC_RESET);
+    while (ioctl(fp, BBCPCI_IOC_COMREG) !=0); // wait 'til reset is done
+
+  Sync Bus 1 and Bus 2
+    ioctl(bbc_fd, BBC_IOC_SYNC);
+
+  Get external serial numbers from an MCE sync box (or not):
+    ioctl(fp, BBCPCI_IOC_EXT_SER_ON);  //external serial numbers
+    ioctl(fp, BBCPCI_IOC_EXT_SER_OFF); //internal serial numbers
+
+  In external serial mode, set the frame rate (MCE frames per BBus frame):
+    ioctl(fp, BBCPCI_IOC_FRAME_RATE, 2);  //bbus frame at half MCE rate
+
+  Enable or disable interrupts (for handling, see bbcsync driver):
+    ioctl(fp, BBCPCI_IOC_ON_IRQ);
+    ioctl(fp, BBCPCI_IOC_OFF_IRQ);
+
+  Set the interrupt rate:
+    ioctl(fp, BBCPCI_IOC_IRQ_RATE, 2);	    //in MCE frames for EXT_SER_ON
+    ioctl(fp, BBCPCI_IOC_IRQ_RATE, 40000);  //in bbus clks for EXT_SER_OFF
+  
+  For all others (mainly for debugging), check the device driver code.
+
+test_bbcpci.c is a test example program.

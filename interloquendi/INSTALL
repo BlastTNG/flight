@@ -1,0 +1,10 @@
+interloquendi depends on libwrap. On ubuntu/debian systems install this with:
+ $ sudo apt-get install libwrap0-dev
+
+Then, building requires a simple:
+ $ make
+ $ sudo make install
+
+However, if getting data from decomd (rather than mcp/pcm/minicp), you should:
+ $ sudo make install-decom
+This will install the correct configuration file.

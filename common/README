@@ -1,0 +1,25 @@
+mcp-common:
+
+*** Warning ***
+You (yes, YOU!) should be very careful about modifying any files in this
+directory. These files are shared between different versions of the mcp flight
+code. (eg mcp, pcm, and minicp). Your changes could introduce bugs into other
+experiments.
+
+################################################################################
+#####                     EXTRA BIG ALL CAPS WARNING                       #####
+################################################################################
+Do not under any circumstances execute "cvs rm" on any of these files without
+first consulting the maintainer of the cvs repository. Doing so *will* break
+the code of other experiments in a way that is painful to recover from.
+
+--------------------------------------------------------------------------------
+-----                       no caps erratum                                -----
+--------------------------------------------------------------------------------
+since we've moved to svn, you can no longer "cvs rm" anything. still, you should
+refrain from "svn rm" as well.
+
+
+TODO:
+If they become sufficiently stable and generic, the amccommand and ezstep
+libraries could be added to this collection

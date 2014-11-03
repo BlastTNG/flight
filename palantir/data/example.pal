@@ -1,0 +1,170 @@
+<DOCUMENT>
+
+#-------------------------------------------------------------------------------
+# 
+# EXAMPLE PALANTIR FILE
+#   A walk-through of how to create an XML file for setting up
+#   the fields and layout for palantir
+#
+# Adam Hincks, 6 August 2002
+#
+#-------------------------------------------------------------------------------
+
+# SETTINGS -- global settings and predefines
+<SETTINGS>
+
+  # TEXTSTYLE -- predefine any text styles that are used over and over again
+	# for different fields
+	#   name: a unique identifier for the textstyle
+	#   valid attributes: colour, backcolour, font, size, bold, italic
+  <TEXTSTYLE name="style1" colour="#000000" font="adobe-times"
+	           size="14" bold="true"/>
+  <TEXTSTYLE name="banana" colour="#ffff00" backcolour="#000000" italic="true"/>
+  <TEXTSTYLE name="hiwarning" colour="#770000" bold="true" size="8"/>
+  <TEXTSTYLE name="lowarning" colour="#000077" bold="true" size="8"/>
+  <TEXTSTYLE name="xhiwarning" colour="#ff0000" backcolour="#00ff00"
+	           bold="true" size="8"/>
+  <TEXTSTYLE name="xlowarning" colour="#0000ff" backcolour="#00ff00"
+	           bold="true" size="8"/>
+
+	# EXTREMA -- predefine any extrema that are used many times
+	#   must contain HI, LO, XHI, & XLO
+	#
+	#   name: a unique identifier for the extrema
+	#   value: if the value of the field goes above/below this, it
+	#      will be displayed with the textstyles specified in the tag
+	#   textstyle: a predefined textstyle
+	#   style attributes: colour, backcolour, etc. -- will override any specified
+	#      in predefined textstyle
+  <EXTREMA name="extrema1">
+    <HI value="0.0015" textstyle="hiwarning"/>
+    <LO value="-0.0015" textstyle="lowarning" colour="#000088"/>
+    <XHI value="0.004" textstyle="xhiwarning"/>
+    <XLO value="-0.004" textstyle="xlowarning"/>
+  </EXTREMA>
+	
+	# MULTI -- predefine any combo values
+  <MULTI name="bool1">
+    <WORD value="1" caption="A-OK" textstyle="banana"/>
+    <WORD value="0" caption="UH-OH" textstyle="apricot"/>
+  </MULTI>
+
+  # The place to look for data
+  <CURFILE name="/data/etc/defile.cur"/>
+
+  # A hostname and port to connect to for status information from the
+  # decom daemon.  host can be either an ip address or a hostname
+  <DECOMD host="arwen.blast" port="11411">
+</SETTINGS>
+
+
+# DEFAULTS
+<DEFAULTS>
+  # TEXTSTYLES -- if no other textstyle is specified, these get used
+  <TEXTSTYLE>
+    <BOX textstyle="style1"/>
+    <LABEL colour="#000000" font="adobe-helvetica" size="10"/>
+    <DATUM textstyle="style2">
+      <HI textstyle="warning" font="adobe-helvetica"/>
+      <LO textstyle="warning"/>
+      <XHI textstyle="warning"/>
+      <XLO textstyle="warning"/>
+      <WORD textstyle="banana"/>
+      <ERROR textstyle="error" colour="#aa4444" size="8" font="adobe-helvetica"
+			       bold="true" italic="false"/>
+    </DATUM>
+		# These next four determine the look of the toolbar along the bottom
+		# of Palantir
+		<INFOCAPTION colour="#000000" size="10" bold="true"/>
+		<INFODATA textstyle="banana"/>
+		<INFOCOMBO textstyle="style1"/>
+		<INFOBUTTON textstyle="style1"/>
+  </TEXTSTYLE>
+</DEFAULTS>
+
+# BOX -- a boxed off section of fields
+#   caption: appears as a title for the box
+#   row, col: the boxes are arranged in a grid, and you specify the location
+#   rowspan, colspan (optional): if you want the box to span more than one cell
+#      of the grid
+<BOX caption="Mr. Box" row="1" col="1" rowspan="2" colspan="1">
+  # NUMBER -- prints the value of the field
+	#   caption: the field's label
+	#   textstyle: you can use a predefined textstyle to override the default
+	#   colour, backcolour, etc.: override any textstyle and the default
+	#
+	#   DATUM -- information on the field
+	#     format: C printf string
+	#     src: field in frame to read from
+	#     textstyle: as usual
+	#     extrema: use predefined extrema
+	#
+	#     EXTREMA: if extrema not predefined
+	#       HI, LO, XHI, XLO -- see SETTINGS section above for more information
+  <NUMBER caption="I Roll">
+    <DATUM format="%f units" src="I_ROLL">
+      <HI value="7.394" textstyle="hiwarning"/>
+      <LO value="2.221" textstyle="lowarning"/>
+      <XHI value="12" textstyle="xhiwarning"/>
+      <XLO value="1" textstyle="xlowarning"/>
+    </DATUM>
+  </NUMBER>
+  <NUMBER caption="T Gybox" textstyle="banana" size="14">
+	  <DATUM format="%.2f deg." src="T_GYBOX" extrema="extrema1" textstyle="style1">
+	</NUMBER
+	
+  # MULTI -- prints different words depending on the value of the field
+	#   caption: the field's label
+	#   textstyle: use predefined textstyle
+	#   colour, backcolour, etc.: override any predefines/defaults
+	#
+	#   DATUM -- information on the field
+	#     src: field in frame to read from
+	#     words: predefined multi values
+	#
+	#     WORD -- what to print given a particular value
+	#       caption: what to print if the field is "value"
+	#       value: the value to look for
+	#       textstyle etc.: textstyles specified as usual
+  <MULTI caption="Gyro 1" italic="true">
+    <DATUM src="GY1_OFF">
+      <WORD value="0" caption="Disabled" textstyle="style1"/>
+      <WORD value="1" caption="Stand By" textstyle="style1" bold="true"/>
+			<WORD value="2" caption="Working" colour="#33AAFF"/>
+			<WORD value="3" caption="Time to buy a new one"/>
+    </DATUM>
+  </MULTI>
+
+	# DATETIME -- prints a date
+	#   captiion, textstyle, colour, etc.: as per usual
+	# 
+	#   DATUM -- information on the field
+	#     src: field in frame
+	#     format: a strftime format string.  See 'man strftime' for more
+	#        information.
+	#     textstyles as usual
+	<DATETIME caption="CPU Time">
+	  <DATUM src="CPU_TIME" format="%d %B %Y, %H:%M:%S"></DATETIME>
+</BOX>
+
+<BOX caption="Mrs. Box" row="1" col="2" rowspan="2">
+
+  # A good way to leave an empty line . . .
+  <NUMBER caption=" "/>
+
+  <NUMBER caption="Raw Gyro 1">
+    <DATUM format="%f units" src="RAW_GY1" extrema="extrema1"/>
+  </NUMBER>
+</BOX>
+
+<BOX caption="Master Box" row="3" col="1" colspan="2">
+  <MULTI caption="Gyro Heat">
+    <DATUM src="GY_HEAT">
+      <WORD caption="One" value="3" style="banana"/>
+      <WORD caption="Two" value="2" style="apricot"/>
+      <WORD caption="Three" value="0" colour="#00ff88" backcolour="#aa0000"
+			      font="adobe-courier" bold="false"/>
+      <WORD caption="Four" value="1" style="apricot"/>
+    </DATUM>
+  </MULTI>
+</BOX>

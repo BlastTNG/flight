@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<DOCUMENT>
+  <SETTINGS>
+    <TEXTSTYLE name="style1" colour="#000000" font="adobe-times" size="14" bold="true"/>
+    <TEXTSTYLE name="style2" colour="#000000" size="8" bold="true"/>
+    <TEXTSTYLE name="stylefunny" colour="#ff00ff" font="babelfish" size="12"/>
+    <TEXTSTYLE name="warning" colour="#ff0000" backcolour="#00ff00" size="8" bold="true"/>
+    <TEXTSTYLE name="banana" colour="#ffff00" backcolour="#000000" italic="true"/>
+    <TEXTSTYLE name="apricot" colour="#ff7744" backcolour="#444444" bold="true"/>
+    <TEXTSTYLE name="hiwarning" colour="#770000" bold="true" size="8"/>
+    <TEXTSTYLE name="lowarning" colour="#000077" bold="true" size="8"/>
+    <TEXTSTYLE name="xhiwarning" colour="#ff0000" backcolour="#00ff00" bold="true" size="8"/>
+    <TEXTSTYLE name="xlowarning" colour="#0000ff" backcolour="#00ff00" bold="true" size="8"/>
+    <EXTREMA name="extrema1">
+      <HI value="0.0015" textstyle="hiwarning"/>
+      <LO value="-0.0015" textstyle="lowarning"/>
+      <XHI value="0.004" textstyle="xhiwarning" alarm="doh.wav"/>
+      <XLO value="-0.004" textstyle="xlowarning" alarm="doh.wav"/>
+    </EXTREMA>
+    <MULTI name="bool1">
+      <WORD value="1" caption="A-OK" textstyle="banana"/>
+      <WORD value="0" caption="UH-OH" textstyle="apricot" alarm="doh.wav"/>
+    </MULTI>
+    <CURFILE name="decom.cur"/>
+  </SETTINGS>
+  <DEFAULTS>
+    <TEXTSTYLE>
+      <BOX textstyle="style1"/>
+      <LABEL colour="#000000" font="adobe-helvetica" size="10"/>
+      <DATUM textstyle="style2">
+        <HI textstyle="warning"/>
+        <LO textstyle="warning"/>
+        <XHI textstyle="warning"/>
+        <XLO textstyle="warning"/>
+        <WORD textstyle="banana"/>
+        <ERROR textstyle="error" colour="#aa4444" size="8" font="adobe-helvetica" bold="true" italic="false"/>
+      </DATUM>
+    </TEXTSTYLE>
+  </DEFAULTS>
+  <BOX caption="Mr. Box" row="1" col="1">
+    <NUMBER caption="I Roll">
+      <DATUM format="%f units" src="I_ROLL">
+        <HI value="0.394" textstyle="hiwarning"/>
+        <LO value="3" textstyle="lowarning"/>
+        <XHI value="12" textstyle="xhiwarning" alarm="doh.wav"/>
+        <XLO value="1" textstyle="xlowarning" alarm="doh.wav"/>
+      </DATUM>
+    </NUMBER>
+    <MULTI caption="Gyro 1" italic="true">
+      <DATUM src="GY1_OFF">
+        <WORD value="0" caption="On"/>
+        <WORD value="1" caption="Off"/>
+      </DATUM>
+    </MULTI>
+    <NUMBER caption="I Elev">
+      <DATUM format="%f units" src="I_ELEV" extrema="extrema1"/>
+    </NUMBER>
+    <NUMBER caption="Fill me in" textstyle="apricot"/>
+  </BOX>
+  <BOX caption="Mrs. Box" row="1" col="2" rowspan="2">
+    <NUMBER caption="Fill"/>
+    <NUMBER caption="Empty Blah"/>
+    <NUMBER caption="Raw Gyro 1">
+      <DATUM format="%f units" src="RAW_GY1" extrema="extrema1"/>
+    </NUMBER>
+    <NUMBER caption="Lookin' pretty"/>
+  </BOX>
+  <BOX caption="Master Box" row="2" col="1">
+    <NUMBER caption="Just sitting here"/>
+    <MULTI caption="Gyro Heat">
+      <DATUM src="GY_HEAT">
+        <WORD caption="One" value="3" style="banana"/>
+        <WORD caption="Two" value="2" style="apricot"/>
+        <WORD caption="Three" value="0" colour="#00ff88" backcolour="#aa0000" font="adobe-courier" bold="false"/>
+        <WORD caption="Four" value="1" style="apricot"/>
+      </DATUM>
+    </MULTI>
+  </BOX>
+  <BOX caption="Miss Box" row="2" col="3">
+    <MULTI caption="Roll Motor">
+      <DATUM src="ROLL_MOT" words="bool1"/>
+    </MULTI>
+    <NUMBER caption="Second Datum"/>
+    <NUMBER caption="Third Datum"/>
+  </BOX>
+</DOCUMENT>

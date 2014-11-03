@@ -1,0 +1,18 @@
+#!/bin/bash
+
+DATABASE=spider
+DESCRIPTION_FILE=spider.txt
+
+[ -d out ] || mkdir out
+./sedparser.py $DESCRIPTION_FILE
+if [ "$?" -eq 0 ]
+then
+  [ -d /data/sedweb ] || mkdir /data/sedweb
+  [ -d /data/sedweb/out ] || mkdir /data/sedweb/out
+  cp out/* /data/sedweb/out/
+  echo "**Enter sql root password to update tables**"
+  mysql $DATABASE -u root -p < replacetables.sql > sqlout.txt
+else
+  echo "Parsing failed, not updating database"
+fi
+

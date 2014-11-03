@@ -1,0 +1,209 @@
+2006-12-23 (1.4.1) [cbn]:
+	* palantir.cpp: Add age to status line
+
+2006-12-18 (1.4.0.2):
+	* data/*.pal: Update.
+
+2006-12-16 (1.4.0):
+	* src/palantir.cpp: add mask, min, max to word tags in palantir files.
+
+2006-12-10 (1.3.0):
+	* src/kstfile.cpp: allow field names > 16 characters long
+
+2006-11-24 [cbn]:
+	* src/kstfile.cpp: compile kstfile and getdata instead of using precompiled
+	objects.
+
+2006-11-23 [cbn]:
+	* src/getdata.c, src/getdata.h, src/getdata_struct.h: read the last frame,
+	not the 3rd to last
+
+2006-11-23 (1.2.14):
+	* src/palantir.h, src/adamdom.h: deprecate qt2, update for qt3.4.
+
+2006-06-13 (1.2.13):
+	* src/decompoll.cpp (DecomPoll::DecomPoll): initialise pollDecomd.
+
+2006-06-11 (1.2.12):
+	* configure.ac: Add AC_PROG_CC
+
+2005-06-11 (1.2.11.6):
+	* etc/*.sch: Update.
+
+2005-06-11 (1.2.11.5):
+	* data/default.pal: Update.
+
+2005-06-01 (1.2.11):
+	* src/decompoll.cpp (DecomPoll::start): Remove Priority to premit
+	compilation under qt 3.1.
+
+2005-05-31 (1.2.10.1):
+	* data/default.pal: Update.
+
+2005-05-30 (1.2.10):
+	* src/kstfile.cpp src/getdata.c src/readdata.c src/creaddata.c: Add.
+
+2005-05-29 (1.2.9.1):
+	* data/default.pal: Add more pointing mode info.
+
+2005-05-28 (1.2.9):
+	* configure.ac: Add qt-3.1 to detection check.
+
+2005-05-25 (1.2.8.4):
+	* data/default.pal: Add a few more fields.
+
+2005-05-19 (1.2.8.3):
+	* data/default.pal: Update.
+
+2005-05-19 (1.2.8.2):
+	* data/default.pal: Add SCHEDULE.
+
+2005-05-18 (1.2.8.1):
+	* data/: .pal updates.
+
+2005-05-17 (1.2.8):
+	* src/palantir.cpp: Fix title.
+	* data/default.pal, slowdl.pal: Update.
+
+2005-05-16 (1.2.7.1):
+	* data/palantir.png: Add alpha channel.
+	* data/default.pal: Multiple updates by Barth Netterfield and Matt Truch.
+
+2005-01-21 (1.2.7):
+	* bootstrap.sh: Add
+	* data/palantir.png: Add
+	* data/Makefile.in: install palantir.png
+
+2005-01-14 (1.2.6):
+	* decompoll.cpp: Fixes for new decomd string.
+
+2005-01-13 (1.2.5):
+	* decompoll.cpp, decompoll.h: Split decomd client stuff from palantir.cpp
+	for re-use in logger
+	* palantir.cpp, palantir.h: Fixes for better decomd encapsulation
+
+2005-01-09:
+	* configure.ac: QT detection fixes
+
+2004-11-03 (1.2.4):
+	* configure.ac: fix QT_VERSION code
+	* lib/getdata.o: Update to kst-1.0.0_pre1 version -- this has FRAMEOFFSET
+	code in it
+
+2004-10-24 (1.2.3):
+	* configure.ac, Makefila.am: migrate to auomake 1.9.2 & autoconf 2.59
+
+2004-09-28 (1.2.2):
+	* palantir.cpp: fix argument parsing bug
+
+2004-09-27 (1.2.1):
+	* palantir: migrate to autoconf
+
+2004-09-09 (1.2.0):
+	* palantir: Convert to an application ; add decomd listening ; CURVEFILE ->
+	CURFILE ; copyright and license
+
+2003-09-26 (1.1.6)  Barth Netterfield:
+	* src/palantir.cpp, src/palantir.h: timer
+
+2003-09-23 (1.1.5):
+	* data/default.pal: tweak
+	* src/palantir.cpp, src/palantir.h: increase max # of words in multi
+
+2003-09-21 (1.1.4)  Barth Netterfield:
+	* src/palantir.cpp, src/palantir.h: Reduce palantir's resource consumption
+
+2003-09-19  Enzo Pascale:
+	* data/alice.pal: Palantir conviguration for the 6k line
+
+2003-09-18 (1.1.3)  Barth Netterfield:
+	* src/palantir.cpp: Use default fonts
+
+2003-09-17  Matt Truch <matt@truch.net>:
+	* data/projector.pal: Improve
+
+2003-09-14 (1.1.2)  Matt Truch <matt@truch.net>:
+	* src/palantir.cpp: Fix path length ; allow pal files relative to LIB_DIR
+	* data/projector.pal: Clean
+
+2003-09-13  Matt Truch <matt@truch.net>:
+	* data/default.pal: Fixed LN -> Pot valve
+
+2003-09-11  Matt Truch <matt@truch.net>:
+	* data/projector.pal: Improve
+
+2003-09-10  Matt Truch <matt@truch.net>:
+	* data/projector.pal: Improve
+
+2003-09-09 (1.1.1)  Barth Netterfield:
+	* src/palantir.cpp: bug in command line parsing
+
+2003-09-08 (1.1.0)  Barth Netterfield:
+	* src/palantir.cpp, src/palantir.h: alarms removed
+
+2003-09-08  Matt Truch <matt@truch.net>:
+	* data/projector.pal: Add
+
+2003-09-05  Barth Netterfield:
+	* data/default.pal: New pointing structure
+
+2003-08-27 (1.0.6)  Matt Truch <matt@truch.net>:
+	* src/palantir.cpp, src/palantir.h: Added CURDIR type to palantir, allowing
+	display of current dirfile
+
+2003-08-26:
+	* data/default.pal: (re-)add dGPS time to default.pal
+
+2003-08-25 (1.0.5)  Matt Truch <matt@truch.net>:
+	* src/palantir.cpp: Don't update Deriv (slope) when palantir is blank
+
+2003-08-23:
+	* data/default.pal, data/cryolab.pal: motorised valves
+
+2003-08-22:
+	* data/default.pal: El sensor veto, clinometer lut, current az and el
+
+2003-08-20:
+	* data/default.pal: New rox calib file ; fixed default.pal ; reduced point
+	size to 10
+
+2003-08-15 (1.0.4):
+	* src/palantir.cpp: error messages
+
+2003-08-13:
+	* data/cryo.png: Add
+	* palantir: Fixed bugs in makefile and cryolab.pal ; added calibration files
+	to CVS
+
+2003-08-12:
+	* data/Makefile: Added a new icon for cryolab.pal
+	* data/croylab.pal: datafile.cur -> decom.cur
+
+2003-08-11:
+	* data/default.pal: Changed data file to /mnt/decom/etc/datafile.cur
+
+2003-08-08  Enzo Pascale:
+	* data/cryolab.pal, data/default.pal: Changed diode labels
+
+2003-07-26  Barth Netterfield:
+	* data/default.pal: New default pal
+
+2003-07-25 (1.0.3)  Barth Netterfield:
+	* src/palantir.cpp: Fixed formatting
+
+2003-07-01:
+	* data/cryolab.pal: Add more diodes
+
+2003-06-30 (1.0.2):
+	* data/cryolab.pal: Tweakage
+	* src/palantir.cpp: Fix textstyle label setting for DERIV type
+
+2003-06-25 (1.0.1):
+	* src/palatir.cpp: Fix bug n deriv linreg
+	* lib/: build with common kstfile/libRD/getdata; update to kst_0.88
+	* data/croylab.pal, data/eranu.wav, data/uvavu.wav: add cryolab.pal
+
+2003-06-16 (1.0.0):
+	* palantir: Release
+
+vi:noet:ai:ts=2:sw=2

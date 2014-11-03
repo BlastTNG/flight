@@ -1,0 +1,49 @@
+#!/bin/sh
+
+f0=2522600
+nf=115160
+BOLOTABLE="/data/etc/bolo_table.txt"
+DATA="/data/rawdir/1265241500.x_2517021"
+
+#used to build channel list by parsing bolotable
+#COLOR=350
+#export COLOR
+#ch=`eval cat $BOLOTABLE | 
+	#awk '{
+		#col = tolower($4); 
+		#if(index($1, "N")) 
+			#if(col == ENVIRON["COLOR"]) 
+				#printf("%s ", $1)
+	#}'`
+
+#manual channel list
+#ch="N17C00 N17C01 N17C02 N17C03 N17C04 N17C05 N17C06 N17C07 \
+#	N17C08 N17C09 N17C10 N17C11 N17C12 N17C13 N17C14 N17C15 \
+#	N17C16 N17C17 N17C18 N17C19 N17C20 N17C21 N17C22 N17C23 \
+#	N18C00 N18C01 N18C02 N18C03 N18C04 N18C05 N18C06 N18C07 \
+#	N18C08 N18C09 N18C10 N18C11 N18C12 N18C13 N18C14 N18C15 \
+#	N18C16 N18C17 N18C18 N18C19 N18C20 N18C21 N18C22 N18C23 \
+#	N19C00 N19C01 N19C02 N19C03 N19C04 N19C05 N19C06 N19C07 \
+#	N19C08 N19C09 N19C10 N19C11 N19C12 N19C13 N19C14 N19C15 \
+#	N19C16 N19C17 N19C18 N19C19 N19C20 N19C21 N19C22 N19C23"
+
+#single detector case, for testing
+ch="N17C09"
+
+for i in $ch 
+do
+	COM="./lockinmap -f $DATA -r $f0:$nf -d $i"
+	echo $COM 
+	$COM > tmp.dat
+	echo plotting...
+	gnuplot doplot
+	
+	fname=`eval echo $i | 
+	    awk '{
+		gsub("N", "");
+		split($0, A, "C");
+ 		printf("%d%02d.png", A[1], A[2]);
+	    
+	    }'`
+ 	mv map.png $fname
+done

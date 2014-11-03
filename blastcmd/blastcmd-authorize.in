@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+$blastcmd_auth = "@DATA_ETC_DIR@/blastcmd.auth";
+
+@w = split(/ +/, `/usr/bin/who -m --ips`);
+
+$username = $w[0];
+$addr = substr $w[4], 0, -1; # Get rid of parenthesis!
+
+if ($addr =~ /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+{
+  $ip = $addr;
+  $host = "";
+} else {
+  $host = $addr;
+  @h = split(/ +/, `/usr/bin/host $addr`);
+  $ip = $h[3];
+  chomp $ip; # Get rid of newline.
+}
+
+open(AUTH, "$blastcmd_auth");
+@auth = <AUTH>;
+close(AUTH);
+
+foreach $a (@auth)
+{
+  @authlines = split(/#/, $a); # Delete all comments
+  $authline = $authlines[0];
+  if ($authline =~ /$ip\s/)
+  {
+    print "You ($ip) are already in the auth file!\n";
+    exit;
+  }
+}
+
+open(AUTH, ">>$blastcmd_auth");
+print AUTH  "$ip # $username $host\n";
+print "You ($ip) have been added to the auth file!\n";
+

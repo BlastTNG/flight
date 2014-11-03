@@ -1,0 +1,21 @@
+----------------------------------------------------------------------------
+|
+| Command Operations Window
+|
+| Adam Hincks, 9 August 2002
+| D. V. Wiebe, 12 September 2002   -- updated location of commands.h
+| D. V. Wiebe, 21 October 2004     -- automatic command list version checking
+| D. V. Wiebe, 14 July 2006        -- add NARSIL_HOST environment
+| Joshua Netterfield, 25 July 2011 -- updated to qt4, added awesome bar, changed to use QSettings
+|
+----------------------------------------------------------------------------
+
+Cow is a wrapper for blastcmd, which is used for sending commands to the
+gondala via the SIP.  
+
+But it is a wrapper in the weakest of senses now, as it doesn't actually call
+the blastcmd executable, but contains its own net client which talks to 
+the blastcmd daemon.  
+
+Cow no longer uses the kstfile class from kst, but the actual getdata 
+library.  

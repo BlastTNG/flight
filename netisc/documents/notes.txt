@@ -1,0 +1,1 @@
+Max slew speed at which we can still get solutions is ~0.7 deg/s.

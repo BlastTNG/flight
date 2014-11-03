@@ -1,0 +1,243 @@
+Using *sedpy*
+=============
+*sedpy* parses a description file that describes a complete electrical/cabling
+system. This is done by running the `sedparser.py` script, which accepts the
+filename of a description file as its argument. If unspecified, it will look for
+a file named `description.txt`.
+
+Once parsing is complete, the data is used to produce various outputs. The
+primary output is database files containing the description, but it also creates
+a count of the CONNECTORs used, and a new version of the description file. To
+disable any of these functions, modify the main function of `sedparser.py`. (Or,
+to be really fancy, change it to accept command line switches.)
+
+Statistics output
+-----------------
+This is created by the parser itself and contains a list of all COMPONENTs and
+explicitly declared CABLEs, with the number of JACKs and LINEs that each
+contains. This can be a useful diagnostic tool for finding problems in the 
+description file. The output is in `./out/stats.txt`.
+
+Database "infile" output
+------------------------
+The primary purpose of *sedpy* is to produce a raw dump of database tables to be
+imported into a BEDthingy-style database, for viewing on the web. The parser
+puts this output in the directory `./out`. The script `replacetables`, and the
+accompanying `replacetables.sql` are used to import the data into such a
+database. For security reasons, `replacetables` must be run on the system that
+hosts the BEDthingy database. It must be updated to specify a `DESCTIPTION FILE`
+and `DATABASE`.
+
+Connector count output
+----------------------
+Useful for stocking parts for making the cables in a system. Note that both ends
+of every connection are counted. This is useful when the component is a box that
+will be made in-house. However, it also counts connectors on boxes that may come
+with the connector attached. These will be overcounted. The output is in
+`./out/connector_count.txt`.
+
+New description output
+----------------------
+Description files have several optional or placeholder values for the parser to
+figure out or replace internally. After parsing the description, a new and
+slightly more specific description is saved in `./out/newdescription.txt`. The
+primary difference is that CABLEs and JACKs will be assigned global database
+numbers. Otherwise their names are used as an internal reference only. This 
+change is so that updates to the description won't change previously assigned
+JACK and CABLE numbers. *sedpy* also uses its own preferred syntax (ie sjb's),
+which may change the format of some lines.
+
+All changes that will be made to the new description:
+
+* JACK and CABLE declarations are assigned global database numbers
+    * Directly mated JACKs (without a p2p cable) are assigned a common number
+* p2p CABLEs with unspecified names will be assigned an explicit name
+* Whitespace between tokens is always a single space character
+* Lines containing only whitespace or comments are left unchanged
+* JACK and LINE declarations are indented by 4 spaces
+* For LINE declarations
+    * a semi-colon separates JACK and PIN numbers, no spaces are used
+    * multiple JACK-PIN tuples are separated by a comma and no space
+
+Typical workflow
+----------------
+
+Because `replacetables` does a mass rewrite of the whole database, even for
+small changes, some method is needed to track changes. The easiest way to do so
+is with a Revision Control System, like `cvs`. This section outlines the
+process by which to use *sedpy* and `cvs` to make and track changes to the
+database. It uses *spider* as an example
+
+1. Get an up-to-date version of the description file. If you already have a copy
+   then run  
+      `$ cd /path/to/sedpy`  
+      `$ cvs up`  
+   Or if you don't yet have a copy  
+      `$ cvs checkout sedpy`  
+      `$ cd sedpy`
+2. Check that `DESCTIPTION FILE` and `DATABASE` are correct in `replacetables`.
+   For *spider* these should read `spider.txt` and `spider`
+3. Make changes to the description file, using shorthand and omitting optional
+   tokens where possible/desired
+4. Parse your description file  
+      `$ ./sedparser.py spider.txt`
+5. Reveiw output. Check entries in `./out/stats.txt` for new/modified parts.
+   Compare `./out/newdescription.txt` to the original description.
+   Often uncaught mistakes in the description file will be more evident here, or
+   you might discover a bug in `sedparser.py`. To view differences, try the Unix
+   `diff` utility, or a graphical equivalent (eg `meld` on linux, or `WinMerge`
+   on Windows)  
+      `$ cat ./out/stats.txt`  
+      `$ diff -u spider.txt ./out/newdescription.txt`
+6. If everything looks okay, replace your old description file with
+   `./out/newdescription.txt`  
+      `$ cp ./out/newdescription.txt spider.txt`
+7. If you feel like being extra careful (and you should!) repeat steps 4 and 5.
+   There should be no new changes in `./out/newdescription.txt`
+8. Commit your changes to the description with  
+      `$ cvs commit`
+9. On the database server, get the new changes:  
+      `$ ssh galadriel.astro.utoronto.ca`  
+      `$ cd /path/to/sedpy`  
+      `$ cvs up`
+10. Finally, on the database server, update the database  
+      `$ ./replacetables`
+
+Description File Syntax
+=======================
+*sedpy* description files contain a series of lines for declaring CONNECTORs,
+COMPONENTs, CABLEs, JACKs, and LINEs. White space at the beginning or end of a
+line is stripped, and space between tokens can be of any type and length. Lines
+starting with a `#` character are comments, and ignored by the parser.
+
+CONNECTORs appear at the beginning of the file and declare the possible types of
+JACKs that can be used in the rest of the file. The CONNECTOR section ends with
+a line:  
+    `*ENDCONNECTORLIST`
+
+COMPONENTs are meant to describe boxes or other objects that contain JACKs.
+Usually JACKs on COMPONENTs connect to a CABLE, which then goes to another
+COMPONENT. However, it is possible for JACKs on COMPONENTs to mate directly to
+other COMPONENTs. Within a COMPONENT, the various signals connected to PINs on
+JACKs are described by LINEs. LINEs can connect to one or more PINs on one or
+more JACKs. They name the PINs, and indicate when PINs are connected to each
+other. COMPONENTs can be declared as being physically or logically part of
+another COMPONENT, called its supercomponent.
+
+Like COMPONENTs, CABLEs are objects that contain JACKs and LINEs. Because CABLEs
+are physically different from COMPONENTs, they have different parameters. They
+have lengths, can't have a supercomponent, and are assigned numbers rather than
+names. JACKs and LINEs are declared the same for CABLEs as for COMPONENTs. Most
+CABLEs are pin-to-pin (p2p) and simply route LINEs between identical PINs of
+mating or identical CONNECTORs. Rather than be declared explicitly, p2p CABLEs
+can be created automatically as part of a JACK declaration. Only CABLEs with
+more than two JACKs, or with unmatching CONNECTORs must be declared explicitly.
+
+JACKs specify how COMPONENTs and CABLEs connect to each other. Each JACK has a
+CONNECTOR type, a gender, and a destination JACK of a mating CONNECTOR type. A
+JACK will also contain PINs to describe how and where it passes signals. PINs
+are created as part of LINE declarations. JACKs must be declared after a
+COMPONENT or CABLE, and are taken to be part of the most recently declared one.
+
+LINEs describe an individual signal within a COMPONENT or CABLE. Roughly, LINEs
+can be thought of as a strand of wire. Every electrically distinct signal in a 
+COMPONENT or CABLE has a LINE, and the LINE indicates which PINs on which JACKs
+it is connected to. Like JACKs, LINEs are taken to be a part of the most 
+recently declared COMPONENT or CABLE. They must be declared after any JACK on
+which they have PINs.
+
+In the descriptions below, square brackets `[...]` enclose optional tokens, and
+the token descriptions use simple regular expression syntax to describe the type
+and number of characters allowed. For example, `[A-Z0-9_]{1,8}` allows tokens of
+1 to 8 characters containing uppercase letters (`A-Z`), numerals (`0-9`), and
+underscores (`_`). For the technically inclined, `lineparser.py` contains full
+regular expressions that specify the exact format for the declaration lines. It
+also has some tests and examples, but it might be more instructive to browse a 
+sample description (eg `spider.txt`).
+
+
+CONNECTORs:
+-----------
+    LABEL -> MATE pins "description" [alpha] [bcd] [M-mmate] [F-fmate]
+
+* LABEL: name of the CONNECTOR being declared `[A-Z0-9_]{1,16}`
+* MATE: name of the CONNECTOR to mate to (can be same as LABEL) `[A-Z0-9_]{1,16}`
+* pins: the number of PINs (0 for unlimited) (integer `[0-9]{1,3}`)
+* description: any string not containing double quotes `[^"]{1,255}`
+* alpha: (optional) present if PINs are alphanumeric, otherwise just numbered
+* bcd: (optional) present if box and CABLE mount versions of CONNECTOR differ
+* mmate: (optional) gender of MATE that male CONNECTORs mates to
+       (omit if no male type) (gender `[mMfF]`)
+* fmate: (optional) gender of MATE that female CONNECTORs mates to
+       (omit if no female type) (gender `[mMfF]`)
+       * At least one of mmate and fmate must be specified
+
+
+COMPONENTs:
+-----------
+    CMPNAME "Description of the COMPONENT" [< PARTOF]
+
+* CMPNAME: short reference for the COMPONENT (`[A-Z0-9_]{1,8}`)
+* description: any string not containing double quotes (`[^"]{1,65}`)
+* PARTOF: (optional) reference to supercomponent (`[A-Z0-9_]{1,8}`)
+
+
+CABLEs:
+-------
+    CABLE [&]C## "description" [len]
+
+* CABLE: declarations start with the word `CABLE`
+* C##: the CABLE number (integer `[0-9]{1,8}` optionally preceded by `C`).
+       When the `&` is present, the number will be used as-is in the database.
+       Otherwise, the number is a placeholder and a new one will be assigned.
+       In either case it must be unique, even among COMPONENT names.
+* description: any string not containing double quotes (`[^"]{1,64}`)
+* len: (optional) the length in mm (omitted if unknown) (integer `[0-9]{1,8}`)
+
+
+JACKs:
+------
+    JACK [IN] [&]ref "label" CONN/G -> DEST[/jack] [CABLE [&C##] "[desc]" [len]]
+
+* JACK: declarations start with the word `JACK`
+* IN: (optional) indicates a connection internal to a COMPONENT
+* ref: a string unique to JACKs on the parent part: `[a-z0-9]+`.
+       Like cable numbers, ref can be preceded by `&`, then must be an integer
+       (`[0-9]{1,5}` optionally preceded by `J`) for use as-is in the database.
+       Global jack numbers can't be repeated anywhere in a description, except
+       for jacks that mate directly to each other (with no cable).
+* label: any string not containing double quotes (`[^"]{1,32}`)
+* CONN/G: CONNECTOR label (`[A-Z0-9_]{1,16}`) and gender (`[mMfF]`)
+* DEST: destination: COMPONENT (CMPNAME) or CABLE (C##)
+* jack: (optional) ref value of JACK on mating COMPONENT/CABLE. This can often
+	be omitted and the parser will find the matching JACK.
+* CABLE: (optional) declaration for p2p CABLEs with number (`[0-9]{1,8}`, 
+	 optional `C`), description (`[^"]{1,64}`), and length (`[0-9]{1,8}`).
+	 Similar to full CABLE declarations. If omitted, the JACK is taken to
+	 mate directly to its match on DEST.
+* &C##: (optional) CABLE number. Unlike full CABLEs, when this is present it
+	should always be preceded by `&`.
+	Non-database numbers for p2p cables are of no use
+* desc: (optional) CABLE description. When blank string `""` is used, will look
+	for value at DEST JACK, otherwise will invent a description
+* len: (optional) length in mm. If omitted, will look for value at DEST,
+       otherwise will be treated as unknown
+
+
+LINEs:
+------
+    LINE "description" (jack;pin[,pin2,...])[,(jack;pin[,pin2,...]), ...]
+
+* LINE: declarations start with the word `LINE`
+* description: any string not containing double quotes `[^"]{1,64}`
+* (jack;pin): JACK reference and PIN number (`[A-Za-z0-9]{1,3}`) to connect to.
+	    For non-alphanumeric CONNECTORs, pin must be an integer `[0-9]{1,3}`
+	    and must be less than the total number of pins.
+	    Can specify a comma-separated list of PINs on a single JACK.
+	    Extra (jack,pin[,...]) tuples can be specified for LINEs that
+	    connect to PINs on multiple JACKs.
+
+<!------------------------------------------------------------------------------
+    This file can be compiled with mardown to create an html file:
+    $ mardown README > README.html
+------------------------------------------------------------------------------->

@@ -1,0 +1,381 @@
+#!/usr/bin/env python
+
+import numpy as np
+import os, glob, sys
+from mce_data import MCERunfile
+import auto_setup as ast
+
+# load the template sqtune and experiment.cfg
+# load the desired sqtune and experiment.cfg
+# apply various comparisons
+# ...
+# profit
+
+MCE_COLS = 8 # columns per readout card
+stages = ['sa_ramp','sq2_servo','sq1_servo','sq1_ramp']
+
+def stage_params(stage):
+    out = dict()
+    if stage == 'sa_ramp':
+        out['block'] = 'SA_RAMP'
+        out['prefix'] = 'Squid_'
+        out['ramp_params'] = {'set': 'sa_ramp_bias',
+                              'start': 'sa_ramp_bias_start',
+                              'step': 'sa_ramp_bias_step',
+                              'count': 'sa_ramp_bias_count',
+                              'bias': 'sa_bias'}
+        out['data_class'] = ast.SARamp
+    elif stage == 'sq2_servo':
+        out['block'] = 'SQ2_SERVO'
+        out['prefix'] = 'Squid_'
+        out['ramp_params'] = {'set':   'sq2_servo_bias_ramp',
+                              'start': 'sq2_servo_bias_start',
+                              'step':  'sq2_servo_bias_step',
+                              'count': 'sq2_servo_bias_count',
+                              'bias':  'sq2_bias'}
+        out['data_class'] = ast.SQ2Servo
+    elif stage == 'sq1_servo':
+        out['block'] = 'SQ1_SERVO'
+        out['prefix'] = 'Col%i_squid_'
+        out['ramp_params'] = {'set':   'sq1_servo_bias_ramp',
+                              'start': 'sq1_servo_bias_start',
+                              'step':  'sq1_servo_bias_step',
+                              'count': 'sq1_servo_bias_count',
+                              'bias':  'sq1_bias'}
+        out['data_class'] = ast.SQ1Servo
+    elif stage == 'sq1_ramp':
+        out['block'] = 'SQUID'
+        out['prefix'] = 'Col%i_squid_'
+        out['ramp_params'] = {'set':   None,
+                              'start': None,
+                              'step':  None,
+                              'count': None}
+        out['data_class'] = ast.SQ1Ramp
+    return out
+
+class SQConfig:
+    '''Encapsulates a sqtune and its associated experiment.cfg file'''
+    
+    def __init__(self,tuning,ref,stage, mask=False, verbose=False):
+        if not os.path.exists(tuning):
+            raise IOError,'Tuning directory %s not found'%tuning
+        self.tuning_dir = tuning
+        self.file_set = ast.util.FileSet(args.tuning)
+        self.tuning = ast.util.tuningData(name=os.path.basename(args.tuning),
+                                          exp_file=self.file_set.get('cfg_file',None),
+                                          data_dir=os.path.dirname(args.tuning))
+        # load the experiment.cfg file
+        self.config = self.tuning.exptfile
+        # load the sqtune file
+        fname = glob.glob(os.path.join(self.tuning_dir,'*.sqtune'))
+        if len(fname)==0:
+            raise IOError('SQtune file not found')
+        self.sqtune = MCERunfile(fname[0])
+        
+        if not os.path.exists(ref):
+            raise IOError,'Tuning directory %s not found'%ref
+        self.ref_tuning_dir = ref
+        fname_tune = glob.glob(os.path.join(self.ref_tuning_dir,'*.sqtune'))
+        if len(fname) == 0:
+            raise IOError('SQtune file not found')
+        self.ref_sqtune = MCERunfile(fname[0])
+        
+        if stage not in stages: raise KeyError,'unrecognized stage %s' % stage
+        
+        self.stage = stage
+        self.__dict__.update(**stage_params(stage))
+        
+        if self.ramp_params['set'] == None: self.is_ramp = 0
+        else:
+            self.is_ramp = self.config.get_param(self.ramp_params['set'])
+
+        self.do_mask = mask
+        self.verbose = verbose
+        
+        # basic array dimensions, for convenience
+        self.num_rows = self.config.get_param('num_rows')
+        self.num_cols = sum(self.config.get_param('hardware_rc'))*MCE_COLS
+        self.gainI = self.config.get_param('servo_i')[:self.num_cols]
+        self.columns_off = self.config.get_param('columns_off')[:self.num_cols].astype(bool)
+        self.dead_mask = self.config.get_param('dead_detectors').reshape(32,41)
+        self.dead_mask = self.dead_mask[:self.num_cols,:self.num_rows].astype(bool)
+    
+    def load_ramp_summary(self):
+        if not self.is_ramp: return None
+        if self.stage not in ['sa_ramp','sq2_servo','sq1_servo']: return None
+        cls = self.data_class
+        S = [self.data_class(x, tuning=self.tuning)
+             for x in self.file_set.stage_all(self.stage)]
+        if len(S) == 0:
+            raise IOError,'No data found for stage %s' % self.stage
+        S = cls.join(S)
+        if S.bias_style != 'ramp': return None
+        S.reduce1()
+        return S.ramp_summary()
+        
+    def _print(self, msg):
+        print >> sys.stderr, msg
+        
+    def check_ramp(self, shift = 0.5, buffer = 3):
+        if not self.is_ramp: return 0
+        
+        self._print('Checking bias ramp')
+        
+        # otherwise check if centered
+        bias, ramp_start, ramp_step, ramp_count = \
+            (self.config.get_param(self.ramp_params[s])
+             for s in ('bias','start','step','count'))
+        if len(bias)==32:
+            bias = bias[:self.num_cols]
+        elif len(bias)==41:
+            bias = bias[:self.num_rows]
+        ramp_end = ramp_start + ramp_step * (ramp_count - 1)
+        
+        if 'servo' in self.stage:
+            S = self.load_ramp_summary()
+            bias0 = S.analysis['lock_x']
+            ic_factor = self.config.get_param(self.stage + '_ic_factor')
+            if len(bias0)==32:
+                bias0 = bias0[:self.num_cols]
+            elif len(bias0)==41:
+                bias0 = bias0[:self.num_rows]
+        else: bias0 = bias.copy()
+        
+        self._print('Biases: %s' % bias)
+        self._print('Start %d step %d count %d end %d' %
+                    (ramp_start, ramp_step, ramp_count, ramp_end))
+        self._print('Pre-shifted biases: %s' % bias0)
+        
+        # return if bias within range
+        if all(bias0 > ramp_start) and all(bias < ramp_end): return 0
+        
+        if self.do_mask:
+            if self.stage in ['sa_ramp','sq2_servo']:
+                mask = np.logical_not(self.columns_off)
+            else:
+                mask = np.ones_like(bias)
+        
+        # shift ramp edges by a fraction of the current ramp width
+        plo = np.where((bias0 <= ramp_start)*mask)[0]
+        phi = np.where((bias >= ramp_end)*mask)[0]
+        if len(plo):
+            self._print('Found these below bias range: %s' % plo)
+        if len(phi):
+            self._print('Found these above bias range: %s' % phi)
+        
+        if not len(plo) and len(phi) and \
+                all(np.logical_or(bias0 < ramp_end, np.logical_not(mask))):
+            rbias = int(bias0 * ic_factor)
+            ramp_shift = ramp_step * ((max(rbias) - ramp_end) / ramp_step + buffer)
+        else: ramp_shift = ramp_step * int(ramp_count * shift)
+                
+        ramp_start0 = ramp_start
+        ramp_count0 = ramp_count
+        
+        if len(plo):
+            ramp_start -= ramp_shift
+            if not len(phi):
+                ramp_end = np.append(bias + buffer * ramp_step,
+                                     ramp_end - ramp_shift).max()
+        if len(phi):
+            ramp_end += ramp_shift
+            if not len(plo):
+                ramp_start = np.append(bias0 - buffer * ramp_step,
+                                       ramp_start + ramp_shift).min()                
+        ramp_count = (ramp_end - ramp_start) / ramp_step + 1
+        
+        rerun = False
+        if ramp_start != ramp_start0:
+            print self.ramp_params['start'], '0', ramp_start
+            rerun = True
+        if ramp_count != ramp_count0:
+            print self.ramp_params['count'], '0', ramp_count
+            rerun = True
+        
+        if rerun: return 2
+        return 0
+        
+    def get_sqtune(self, item, type='float', ref=False):
+        if ref: S = self.ref_sqtune
+        else: S = self.sqtune
+        item = '%s%s' % (self.prefix,item)
+        if 'sq1' in self.stage:
+            if self.stage == 'sq1_ramp' and item in ['lockslope','lock_count'] \
+                    and item.split('_')[-1] not in ['up','dn']:
+                out_up = np.array(S.Item2d(self.block,'%s_up' % item,type=type))
+                out_down = np.array(S.Item2d(self.block,'%s_dn' % item,type=type))
+                # pick correct item for each column
+                out = np.where(self.gainI<0,out_up,out_down)
+            else:
+                out = np.array(S.Item2d(self.block, item, type=type))
+        else:
+            out = np.array(S.Item(self.block, item, type=type))
+        if self.do_mask:
+            out[self.columns_off] = 0
+            if 'sq1' in self.stage: out[self.dead_mask] = 0
+        return out
+        
+    def get_lock_slope(self, slope=None, ref=False):
+        '''Extract array of sq1ramp locking slopes.'''
+        if self.stage == 'sq1_ramp':
+            if slope in [1,'up']: suff = '_up'
+            elif slope in [-1,'down','dn']: suff = '_dn'
+            else: suff = ''
+        else: suff = ''
+        return self.get_sqtune('lockslope' + suff, ref=ref, type='float')
+
+    def get_p2p(self, ref=False):
+        '''Extract array of peak-to-peak amplitudes'''
+        return self.get_sqtune('vphi_p2p', ref=ref, type='float')
+
+    def get_lock_range(self, ref=False):
+        '''Extract array of lockranges'''
+        return self.get_sqtune('lockrange', ref=ref, type='int')
+
+    def get_lock_count(self, slope=None, ref=False):
+        '''Extract array of lock point crossings'''
+        if self.stage == 'sq1_ramp':
+            if slope in [1,'up']: suff = '_up'
+            elif slope in [-1,'down','dn']: suff = '_dn'
+            else: suff = ''
+        else: suff = ''
+        return self.get_sqtune('lock_count' + suff, ref=ref, type='int')
+
+    def tuning_completed(self):
+        return self.sqtune.Item(self.block,'SQ_tuning_completed',array=False,type='int')
+
+    def compare_p2p(self, reltol=0.1, abstol=0.3):
+        p2p0 = self.get_p2p(ref=True).ravel().astype(float)
+        p2p = self.get_p2p(ref=False).ravel().astype(float)
+        # Identify small-amplitude channels in both files
+        med_p2p0 = np.median(p2p0)
+        idx_small0 = set(np.nonzero(p2p0<med_p2p0*abstol)[0])
+        med_p2p = np.median(p2p)
+        idx_small = set(np.nonzero(p2p<med_p2p*abstol)[0])
+        # Identify channels that have changed in fractional terms
+        idx_shrunk = set(np.nonzero(np.abs(p2p/p2p0-1)>reltol)[0])
+        # Collect channels that were good before and have gotten less good
+        idx = (idx_shrunk | idx_small) - idx_small0
+        return idx
+
+    def compare_lock_slope(self, reltol=0.25, abstol=0.5):
+        lock0 = self.get_lock_slope(ref=True).ravel()
+        lock = self.get_lock_slope(ref=False).ravel()
+        # find a typical slope for each column
+        lock0_typ = np.median(lock0,axis=0)
+        if 'sq1' in self.stage: lock0_typ = np.expand_dims(lock0_typ,axis=0)
+        # ignore slopes very different from their medians
+        idx_weird = set(np.nonzero(np.abs(lock0/lock0_typ-1)>abstol)[0])
+        # identify slopes that have changed substantially
+        idx_changed = set(np.nonzero(np.abs(lock/lock0-1)>reltol)[0])
+        # Collect channels with typical slopes that have changed substantially
+        idx = idx_changed - idx_weird
+        return idx
+
+    def compare_lock_range(self, reltol=0.25, abstol=0.5):
+        range0 = self.get_lock_range(ref=True).astype(float)
+        range = self.get_lock_range(ref=False).astype(float)
+        range0_typ = np.median(range0,axis=0)
+        if 'sq1' in self.stage: range0_typ = np.expand_dims(range0_typ,axis=0)
+        idx_weird = set(np.nonzero(np.abs(range0/range0_typ-1)>abstol)[0])
+        idx_changed = set(np.nonzero(np.abs(range/range0-1)>reltol)[0])
+        idx = idx_changed - idx_weird
+        return idx
+
+    def compare_lock_count(self, tol = 1):
+        count0 = self.get_lock_count(slope=1,ref=True).ravel() \
+            + self.get_lock_count(slope=-1,ref=True).ravel()
+        count = self.get_lock_count(slope=1,ref=False).ravel() \
+            + self.get_lock_count(slope=-1,ref=False).ravel()
+        idx = set(np.nonzero(np.abs(count-count0)>tol)[0])
+        return idx
+    
+    def check_tuning(self, crit=['p2p','range','count'], threshold=10):
+        '''Compare a tuning to a reference tuning using various figures of merit.'''
+        # load the data
+        # apply a set of comparisons which yield figures of merit (0=good)
+        
+        # ignore criteria checks for sq1's?
+        if self.stage == 'sq1_servo': return 0
+
+        self._print('Checking tuning')
+        
+        # accumulate criteria, don't double-count bad channels
+        idx = set()
+        if 'p2p' in crit:
+            idx |= set(self.compare_p2p())
+        if 'slope' in crit:
+            idx |= set(self.compare_lock_slope())
+        if 'range' in crit:
+            idx |= set(self.compare_lock_range())
+        if 'count' in crit:
+            idx |= set(self.compare_lock_count())
+        
+        if len(idx) <= threshold: return 0
+        
+        if self.stage in ['sa_ramp','sq2_servo']:
+            print self.ramp_params['set'], '0', int(not self.is_ramp)
+        elif self.stage == 'sq1_ramp':
+            for stg in ['sa_ramp','sq2_servo','sq1_servo']:
+                p = stage_params(stg)['ramp_params']['set']
+                v = self.config.get_param(p)
+                if v:
+                    print p, '0', int(not v)
+        
+        return 2
+
+def print_exit(err):
+    print >> sys.stderr, 'Exiting with error code',err
+    sys.exit(err)
+
+if __name__ == "__main__":
+    
+    import argparse as ap
+    P = ap.ArgumentParser()
+    P.add_argument('tuning', help='Tuning to check')
+    P.add_argument('ref_tuning', help='Reference tuning')
+    P.add_argument('stage',choices=stages,
+                   help='Stage to check (one of "%s")' % ', '.join(stages))
+    P.add_argument('-v','--verbose',default=False,action='store_true',
+                   help='moar words')
+    P.add_argument('-c','--criteria',default=[],action='append',nargs='+',
+                   choices=['p2p','range','slope','count'],
+                   help='Which criteria should be used to check against reference tuning?')
+    P.add_argument('--p2p-abs-thresh',default=0.3)
+    P.add_argument('--p2p-rel-thresh',default=0.1)
+    P.add_argument('--slope-abs-thresh',default=0.5)
+    P.add_argument('--slope-rel-thresh',default=0.25)
+    P.add_argument('--range-abs-thresh',default=0.5)
+    P.add_argument('--range-rel-thresh',default=0.25)
+    P.add_argument('--count-thresh',default=1)
+    P.add_argument('--fail-thresh',default=10)
+    P.add_argument('--ramp-shift',default=0.5)
+    P.add_argument('--ramp-buffer',default=3)
+    args = P.parse_args()
+    
+    if not os.path.exists(args.tuning):
+        args.tuning = os.path.join('/data/mce/tuning',args.tuning) 
+    if not os.path.exists(args.tuning):
+        args.tuning = os.path.join('/data/mce/current_data',
+                                   os.path.basename(args.tuning))
+    if not os.path.exists(args.tuning):
+        raise OSError, "Can't find %s" % args.tuning
+    
+    if not os.path.exists(args.ref_tuning):
+        args.ref_tuning = os.path.join('/data/mce/tuning',args.ref_tuning)
+    if not os.path.exists(args.ref_tuning):
+        args.ref_tuning = os.path.join('/data/mce/current_data',
+                                       os.path.basename(args.ref_tuning))
+    if not os.path.exists(args.ref_tuning):
+        raise OSError, "Can't find %s" % args.ref_tuning
+    
+    S = SQConfig(args.tuning,args.ref_tuning,args.stage,mask=True,verbose=args.verbose)
+    
+    out = S.check_ramp()
+    if out == 2: print_exit(2)
+    elif out != 0: print_exit(1)
+    
+    if 'sq1' in args.stage: threshold = 10
+    else: threshold = 0
+    
+    print_exit(S.check_tuning(threshold=threshold))

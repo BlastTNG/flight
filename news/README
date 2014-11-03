@@ -1,0 +1,27 @@
+fox-spider requires more open files thsn allowed by default.
+
+=== LINUX ===
+Under Ubuntu, fix this by adding:
+
+  *       soft    nofile   30000
+  *       hard    nofile   40000
+
+to /etc/security/limits.conf
+
+and then rebooting.  (or maybe just logging out and in again, or maybe just starting a new shell...)
+
+=== MACOS X ===
+Under OSX, add to your /etc/sysctl.conf (create it if it doesn't exist):
+
+  kern.maxfiles=40000
+  kern.maxfilesperproc=30000
+
+and either reboot, or else change them on the fly:
+
+  sysctl -w kern.maxfiles=40000
+  sysctl -w kern.maxfilesperproc=30000
+
+You may also have to add to your .bashrc file (or wherever):
+
+  ulimit -n 30000
+

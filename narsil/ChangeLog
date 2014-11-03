@@ -1,0 +1,211 @@
+2006-12-13 (2.4.3):
+	* src/narsil.cpp: Fork-and-exec elog instead of using system.
+	* configure.ac: Make elog program configurable.
+
+2006-12-12 (2.4.2):
+	* src/narsil.cpp, configure.ac: Make elog port configurable.
+
+2006-12-10 (2.4.1):
+	* src/kstfile.cpp: Allow field names > 16 characters
+
+2006-11-25 (2.4.0):
+	* Release
+
+2006-11-24 [cbn]:
+	* Makefile.am, src/kstfile.cpp, src/narsil.cpp: compile kstfile and getdata
+	instead of using precompiled objects.
+
+2006-11-23 [cbn]:
+	* src/getdata.c, src/getdata.h, src/getdata_struct.h: read the last frame in
+	the file, not the 3rd last.
+
+
+2006-11-10 (2.3.1):
+	* Fix some memory leaks
+
+2006-08-08 (2.3.0):
+	* doubleentry.cpp (DoubleEntry::SetValue, DoubleEntry::SetDefaultValue)
+	(DoubleEntry::value): Support for 30-bit integers.
+
+2006-07-14 (2.2.0):
+	* narsil.cpp (MainForm::MainForm): Add hostname to title bar. 
+	* narsil.cpp (main): Read hostname from NARSIL_HOST.
+
+2006-03-14 (2.1.0):
+	* doubleentry.cpp (DoubleEntry::SetStringValue): Add.
+	* doubleentry.cpp (DoubleEntry::SetDefaultValue, DoubleEntry::value): Update
+	for s-type parameters.
+	* narsil.cpp (Defaults::Defaults, Defaults::Save, Defaults::Set): Add
+	sdefaults code.
+	* narsil.cpp (Defaults::asString): Add.
+	* narsil.cpp (MainForm::ChooseCommand): Set DoubleEntry string directly for
+	s-type parameters.
+	* narsil.cpp (MainForm::SendCommand): Send s-type parameters verbatim.
+
+2005-06-13 (2.0.4):
+	* narsil.cpp (MainForm::SendCommand, MainForm::WriteErr): Fix a clash
+	between narsil error numbers and blastcmd error numbers: make narsil's
+	paramter out of range error 10.
+
+2005-05-25 (2.0.3):
+	* netcmd.c (ReadLine): Reset prebuffer size to zero if the first character
+	happens to be a zero to prevent erroneous connexion errors.
+
+2005-05-23 (2.0.2):
+	* netcmd.c (ReadLine): Add.
+	* netcmd.c (NetCmdUpdateConn, int NetCmdGetAck): Call ReadLine instead of
+	recv directly.
+
+2005-05-22 (2.0.1):
+	* netcmd.c (NetCmdConnect): Replace getlogin with getpwuid to make WMs more
+	happy.
+	* narsil.cpp (MainForm::Tick): Don't bother updating the aragorn pixmap if
+	it hasn't changed.
+
+2005-05-21:
+	* narsil.cpp (MainForm::SendCommand): Use upper case letters for link.
+
+2005-05-20 (2.0.0):
+
+	* data/Makefile.am: Fix log.txt install.
+	* narsil.cpp: Update for daemon mode.
+
+2005-02-18 (1.8.7):
+	* command_list.h: Increase maximum number of parameters
+	* narsil.cpp (MainForm::ChangeCommandList): Sort commands in list
+
+2005-02-12 (1.8.6):
+	* narsil.cpp (MainForm::WriteLog): Stop elog from spamming the console
+
+2005-02-08 (1.8.5):
+	* narsil.cpp (MainForm::WriteErr): Add text for timeout error (13) from
+	blastcmd
+
+2004-12-17:
+	* configure.ac: remove some unwanted stderr messages.  Fix ssh host check
+	for blastcmd-remote 1.1.9
+	* narsil.cpp (main): remove some unwanted stderr messages
+
+2004-11-26 (1.8.4):
+	* narsil.cpp: fix elog host
+	* configure.ac: allow overriding elog host name; fix help formatting
+
+2004-11-18 (1.8.3):
+	* narsil.cpp (main): fix command list version check to work with
+	blastcmd-remote
+
+2004-11-15:
+	* data/Makefile.am: Add install-data-hook target to set permissions
+	properly.
+
+2004-11-03 (1.8.2):
+	* lib/getdata.o: link against getdata.o from kst 1.0.0_pre1 -- this has
+	FASTOFFSET code in it.
+
+2004-10-27 (1.8.1):
+	* narsil.cpp (main): make error message more visible.  fix typo in comment
+
+2004-10-21 (1.8.0):
+	* configure.ac: add elog check; add configuration summary
+	* narsil.cpp (MainForm::WriteLog): make elog support conditional
+	
+	* narsil.cpp (main): add command list version check
+
+	* configure.ac: add command list version check; add
+	--disable-command-list-test option
+
+	* Makefile.am: add command_list.c to CONFIG_STATUS_DEPENDENCIES
+	* configure.ac: add --with-blastcmd=
+
+2004-10-08 (1.7.4):
+	* configure.ac: rename from configure.in ; add CMDVERSION
+	* Makefile.am: add buildserial
+	* narsil.cpp (MainForm::MainForm): add version number to window title
+
+2004-09-28 (1.7.3):
+	* configure.in, data/Makefile.am: Conditional installation of log.txt
+
+2004-09-27 (1.7.2):
+	* narsil: Migrate to autoconf; add command list versioning
+
+2004-09-16 (1.7.1):
+	* narsil.cpp, narsil.h: Stop narsil from spamming data/etc
+
+2004-09-11 (1.7.0):
+	* narsil: Better handling of integer parameters
+
+2004-09-09 (1.6.3):
+	* narsil: Add copyright and license, fix command line parsing
+
+2004-08-14:
+	* Makefile, narsil.h: move to command_list.h
+
+2004-07-13:
+	* Makefile: move to command_list.c
+
+2004-06-25 (1.6.2):
+	* narsil.cpp: use defile curfile by default
+
+2004-05-05 (1.6.1)  Barth Netterfield:
+	* narsil.cpp: Narsil now also submits to elog
+
+2004-05-03 (1.6.0)  Barth Netterfield:
+	* narsil.cpp, narsil.h: file log system (not elog)
+
+2003-09-28 (1.5.1):
+	* narsil.cpp: Confirm box bugfix
+
+2003-09-23 (1.5.0):
+	* narsil.cpp: Add confirmation for dangerous commands
+
+2003-09-11 (1.4.2):
+	* narsil.cpp: Swap settings and send ; remove buffer overflow
+
+2003-09-10 (1.4.1):
+	* narsil.cpp: tweaking
+
+2003-09-10 (1.4.0)  Barth Netterfield:
+	* narsil.cpp, narsil.h: smaller narsil
+
+2003-09-07 (1.3.1):
+	* narsil.cpp: new command struct bugs
+
+2003-09-05 (1.3.0):
+	* narsil.cpp, narsil.h: new command struct scheme ; allow commands to appear
+	in multiple groups ; tweaking
+
+2003-09-02 (1.2.4):
+	* narsil.cpp: Bigify NCommandList
+
+2003-08-29 (1.2.3):
+	* narsil.cpp: Remove precision in output
+
+2003-08-24:
+	* Makefile: Add isc_protocol to dependancies
+
+2003-08-22 (1.2.2):
+	* configure: Fixed bash bug
+
+2003-08-15 (1.2.1):
+	* doubleentry.cpp, narsil.cpp: Add parameter out-of-range error checking
+	* blastcmdatgaladriel, dummycmd: Add
+
+2003-08-15 (1.2.0)  Barth Netterfield:
+	* narsil.cpp: Added RA/DEC commands, allow remote operation (ssh)
+
+2003-07-22 (1.1.2)  Barth Netterfield:
+	* narsil.cpp: Re-formatting
+
+2003-07-21 (1.1.1)  Barth Netterfield:
+	* narsil.cpp: Make narsil more compact
+
+2003-07-18 (1.1.0):
+	* narsil.cpp: Increased command name length
+
+2003-06-25 (1.0.1):
+	* narsil: Update to use kst 0.88
+
+2003-06-16 (1.0.0):
+	* narsil: Release
+
+vi:noet:ts=2:sw=2

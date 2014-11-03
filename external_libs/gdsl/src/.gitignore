@@ -1,0 +1,7 @@
+*.la
+*.lo
+.deps
+.libs
+libgdsl.la
+Makefile
+Makefile.in

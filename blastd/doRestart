@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# restart the blastpol groundstation
+#
+
+killall tdrsslogger rnc dnc tea lnc
+
+/usr/local/sbin/tdrsslogger >& /data/etc/tdrsslogger.log &
+/usr/local/sbin/rnc >& /data/etc/rnc.log &
+/usr/local/sbin/dnc >& /data/etc/dnc.log &
+/usr/local/sbin/tea >& /data/etc/tea.log &
+/usr/local/sbin/lnc >& /data/etc/lnc.log &
+
+exit 0

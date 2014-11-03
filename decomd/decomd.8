@@ -1,0 +1,104 @@
+.TH decomd 8 "23 September 2004" "version 1.1" "BLAST UTILITIES"
+.SH NAME
+decomd \(em BLAST decom daemon
+.SH SYNOPSIS
+.nh
+.B decomd 
+.hy
+
+.SH DESCRIPTION
+.B decomd
+writes the decom stream to disk.  The decom stream is read from
+.B /dev/decom_pci 
+and the data is writen to a
+.BR mcp
+style framefile in
+.nh
+.BR /mnt/decom/rawdir .
+.hy
+The framefile name consists of the seconds since the Epoch (see
+.BR time (2))
+plus a suffix
+.IR y .
+A channel specification file is also writen.  These files are designed to be
+read by
+.BR defile (1).
+
+The daemon is able to detect polarity inversions from the bit synchroniser,
+and rectify the polarity on the fly.  Before writing the data to disk,
+.B decomd
+also verifies the CRC checksum of each frame and inserts into the framefile
+a field indicating whether the CRC check passed or failed.  See the 
+.B "ADDED FIELDS"
+section for a complete list of fields inserted into the frame stream by the
+decom daemon.
+
+In addition to writing the data stream,
+.B decomd
+listens on port
+.I 11411
+and gives information on the status of the decom daemon to clients connected
+to this port.  See the source code for the format of these messages.
+
+When invoked from the command line,
+.B decomd
+will immediately fork to background and report the daemon's process-id
+on the tty.
+
+.SH ADDED FIELDS
+The daemon inserts the following fields into the data stream when writing the
+data to disk:
+.TP
+.I crc_ok
+A single bit which is high when the CRC checksum passed for the frame.
+.TP
+.I polarity
+A single bit which is high when the polarity is normal and low when it is 
+inverted.
+.TP
+.I decom_unlock
+An integer which counts the number of times the decom PCI card has come
+unlocked.
+
+.SH SIGNALS
+.BR decomd
+responds to the following signals:
+.TP
+.I SIGHUP
+Signals the daemon to cycle: the current framefile is flushed and closed and
+a new framefile with a new name is opened.
+.TP
+.I SIGINT
+Signals the daemon to go into a
+.I paused
+state.  The decom stream is still read, but no data is writen to disk.  The
+daemon remains in this state until it gets either a
+.I SIGTERM
+or a
+.IR SIGHUP .
+.TP
+.I SIGTERM
+Signals the daemon to flush the output and terminate.
+.PP
+The results of sending other signals to the daemon are undefined.  A Perl
+utility,
+.BR decomctl (8)
+is provided to simplify controlling the decom daemon.
+
+.SH FILES
+.TP
+.I /var/run/decomd.pid
+The process-id file.
+.TP
+.I /mnt/decom/etc/decom.cur
+The name of the current framefile.
+.TP
+.I /mnt/decom/rawdir
+The directory into which the framefiles are writen.
+
+.SH SEE ALSO
+.BR decomctl (8),
+.BR defile (1)
+
+.SH AUTHOR
+D. V. Wiebe (dwiebe@physics.utoronto.ca)
