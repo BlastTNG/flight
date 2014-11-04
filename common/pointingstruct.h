@@ -42,7 +42,6 @@
 #include "isc_protocol.h"   /* required for ISCData; get updates from
                                Ed Chapin and/or the ISC computer */
 
-#define M_PI 3.14159265359 /* just pi */
 #define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 #define SEC2RAD (1. / RAD2SEC)
 #define DEG2RAD (M_PI / 180.)  /* degrees to radians */

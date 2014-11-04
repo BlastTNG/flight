@@ -43,7 +43,7 @@ extern unsigned long int mccSlowCount[6];
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
 
-#define SR ACSData.bbc_rate
+#define SR (100.16) // Was ACSData.bbc_rate, but conflicted with calibrate.h
 
 struct chat_buf {
   char msg[4][2 * FAST_PER_SLOW]; /* 4 buffers of FAST_PER_SLOW BLASTbus words of characters */

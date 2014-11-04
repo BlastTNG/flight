@@ -1,3 +1,10 @@
+/****************************************************************
+ * Arranges code for transfer from Flight Computer
+ *
+ *
+ *
+ ****************************************************************/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -16,9 +23,11 @@
 #include "compressconst.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
-#ifdef __SPIDER__
-#include "mceserv.h"
-#endif
+
+/* MWG: This include was added manually */
+#include "channels.h"
+
+
 // Structure:
 // FASTFRAMES: 100.16 Hz
 // SLOWFRAMES: FASTFRAMES/20 - multiplex repeated at this rate
@@ -27,6 +36,7 @@
 
 //#define N_ARRAY_STATS_PER_SUPERFRAME 100
 #define MAX_BLOB_WORDS_PER_SUPERFRAME 100
+
 
 struct streamDataStruct {
   double x[FASTFRAME_PER_STREAMFRAME];
@@ -45,20 +55,21 @@ struct streamDataStruct {
   int msw; // offset in bytes in frame_char to the msw
 };
 
+/* File locations */
 #define HIGAIN_TTY "/dev/ttySI2"
 #define PILOT_FILE "/data/etc/highgain.lnk"
 #define OMNI1_TTY "/dev/ttySI1"
 #define OMNI2_TTY "/dev/ttySI7"
 
-void nameThread(const char*);               /* mputs.c */
+void nameThread(const char*);            // In mputs.c
 
 extern char *frameList[];
 extern struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS];
 extern short int InCharge;
 
 int n_framelist;
-unsigned short n_streamlist; // number of fields in the stream list
-unsigned short n_higain_stream = 0; // number of stream fields written to highgain
+unsigned short n_streamlist;  // number of fields in the stream list
+unsigned short n_higain_stream = 0;  // number of stream fields written to highgain
 unsigned short n_omni1_stream = 0;
 unsigned short n_omni2_stream = 0;
 
@@ -66,7 +77,9 @@ struct NiosStruct **frameNiosList;
 struct BiPhaseStruct **frameBi0List;
 struct streamDataStruct *streamData;
 
+
 unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer,  unsigned short ***slow); // mcp.c
+
 void ClearBuffer(struct frameBuffer *buffer);
 
 unsigned short **current_slow_data;
@@ -77,25 +90,37 @@ int cycle_highgain_file = 0;
 // Open High Gain Serial port
 //*********************************************************
 static int OpenSerial(char *tty) {
+
+// MWG:
+//  OpenSerial tries to access:
+//  HIGAIN_TTY: /dev/ttySI2
+//  OMNI1_TTY: /dev/ttySI1
+//  OMNI2_TTY: /dev/ttySI7
+//
+//  With the error message:
+//  "Compressionwriter.c: Could not open downlink serial port X.  Retrying..."
+//  Because fd = 0 through "fd = open(tty, O_RDWR | O_NOCTTY))"
+
+
   static int report_state = -1; // -1 = no reports.  0 == reported error.  1 == reported success
   int fd;
+
   struct termios term;
 
   if ((fd = open(tty, O_RDWR | O_NOCTTY)) < 0) {
-    if (report_state!=0) {
-      bprintf(err, "Could not open downlink serial port %s.  Retrying...", tty);
+    if (report_state != 0) {
+      bprintf(err, "Compressionwriter.c: Could not open downlink serial port %s.  Retrying...", tty);
       report_state = 0;
     }
     return (fd);
   }
 
   if (tcgetattr(fd, &term)) {
-    berror(tfatal, "Unable to get downlink serial port %s attributes", tty);
+    berror(tfatal, "Compressionwriter.c: Unable to get downlink serial port %s attributes", tty);
   }
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-  //term.c_iflag |= INPCK;
   term.c_cc[VMIN] = 0;
   term.c_cc[VTIME] = 0;
 
@@ -114,7 +139,6 @@ static int OpenSerial(char *tty) {
   if (tcsetattr(fd, TCSANOW, &term))
     berror(tfatal, "Unable to set downlink serial port %s attributes", tty);
 
-  //bprintf(info, "downlink serial port %s opened", tty);
   report_state = 1;
   
   return fd;
@@ -222,7 +246,7 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
 
   // record stream data in buffer
   // buffer all stream channels, even ones that might not get written
-  for (i_field=0; i_field < n_streamlist; i_field++) {
+  for (i_field = 0; i_field < n_streamlist; i_field++) {
     if (streamData[i_field].isFast) {
       int i_l, i_m;
       unsigned short *lsw;
@@ -236,7 +260,7 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
       lsw = (unsigned short *) (frame_char + i_l);
       if (mask) {
         msw = (unsigned short *) (frame_char + i_m);
-        xu = (unsigned)(*lsw) | ((unsigned)(*msw & mask)<<16);
+        xu = (unsigned)(*lsw) | ((unsigned)(*msw & mask) << 16);
       } else {
          xu = (unsigned)(*lsw);
       }
@@ -252,7 +276,7 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
     xd = xu;
     // deal with signed data
     if (streamData[i_field].isSigned) {
-      if (streamData[i_field].mask) { // mask is only set if its wide
+      if (streamData[i_field].mask) { // mask is only set if it's wide
         if (xd>=INT_MAX) {
           xd -= UINT_MAX;
         }
@@ -266,7 +290,7 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
     if (streamList[CommandData.channelset_oth][i_field].doDifferentiate) {
       if (i_streamframe==FASTFRAME_PER_STREAMFRAME-1) {
         streamData[i_field].sum = xd;
-        streamData[i_field].n_sum=1;
+        streamData[i_field].n_sum = 1;
       }
     } else {
       streamData[i_field].sum += xd;
@@ -275,71 +299,7 @@ void BufferStreamData(int i_streamframe, unsigned short *frame) {
   }
 }
 
-#ifdef __SPIDER__
-/* Write (part of) a blob, if pending.  The first word is the number of
- * blob words (excluding position), the second word is the blob position,
- * and then there are some blob words. If there's nothing to write, it just
- * writes a single zero as n-blobs (without a position!). */
-int WriteMCEBlob()
-{
-  static uint16_t blob_pos = -1; /* in words */
-  static int last_blob = 0;
 
-  uint16_t n_to_write = MAX_BLOB_WORDS_PER_SUPERFRAME;
-
-  /* start of a new blob */
-  if (last_blob != CommandData.mce_blob_num) {
-    blob_pos = 0;
-    last_blob = CommandData.mce_blob_num;
-  }
-
-  /* idlding -- no blobs. */
-  if (blob_pos == -1) {
-    n_to_write = 0;
-    writeData((void*)&n_to_write, 2, 0);
-    return 2;
-  }
-
-  /* no point in writing more data than necessary */
-  if (blob_pos + n_to_write > mce_blob_size)
-    n_to_write = mce_blob_size - blob_pos;
-
-  writeData((void*)&n_to_write, 2, 0);
-  writeData((void*)&blob_pos, 2, 0);
-  writeData((void*)(mce_blob_envelope + blob_pos), 2 * n_to_write, 0);
-  blob_pos += n_to_write;
-  if (blob_pos >= mce_blob_size) /* done */
-    blob_pos = -1;
-  return 4 + 2 * n_to_write;
-}
-
-//*********************************************************
-// Write the array stats
-//*********************************************************
-int WriteArrayStats() {
-  static uint16_t i_stat = 0;
-  int nw = 0;
-  uint16_t n_as = CommandData.n_arrays_stats_per_superframe; //N_ARRAY_STATS_PER_SUPERFRAME;
-  int i;
-  
-  writeData((char *)(&n_as), 2, 0);
-  nw += 2;
-  
-  writeData((char *)(&i_stat), 2, 0);
-  nw += 2;
-  
-  for (i = 0; i< n_as; i++) {
-    writeData((char *)array_statistics+i_stat, 1, 0);
-    nw++;
-    i_stat++;
-    if (i_stat>=NUM_ARRAY_STAT) {
-      i_stat = 0;
-    }
-  }
-
-  return nw;
-}
-#endif
 
 //*********************************************************
 // Write data that comes once per superframe
@@ -355,9 +315,9 @@ void WriteSuperFrame(unsigned short *frame) {
 
   static int first_time = 1;
   static int reset_rates = 1;
-  static int omni1_rate=0;
-  static int omni2_rate=0;
-  static int highgain_rate=0;
+  static int omni1_rate = 0;
+  static int omni2_rate = 0;
+  static int highgain_rate = 0;
   static int n_arrays_stats_per_superframe = 0;
 
   int frame_bytes_written = 0;
@@ -410,22 +370,9 @@ void WriteSuperFrame(unsigned short *frame) {
 
   frame_bytes_written += sizeof(unsigned short); // account for nfields field;
   
-#ifdef __SPIDER__
-  frame_bytes_written += WriteArrayStats(); 
-
-  if (n_arrays_stats_per_superframe != CommandData.n_arrays_stats_per_superframe) {
-    n_arrays_stats_per_superframe = CommandData.n_arrays_stats_per_superframe;
-    reset_rates = 1;
-  }
-
-#if 0
-  frame_bytes_written += WriteMCEBlob();
-#endif
-#endif
-  
   if (first_time) {
     first_time = 0;
-    BufferStreamData(FASTFRAME_PER_STREAMFRAME-1, frame); // fill buffer with first value;
+    BufferStreamData(FASTFRAME_PER_STREAMFRAME - 1, frame); // fill buffer with first value;
   }
 
   if (highgain_rate != CommandData.pilot_bw) {
@@ -441,8 +388,6 @@ void WriteSuperFrame(unsigned short *frame) {
     reset_rates = 1;
   }
 
-//#define OMNI1_BYTES_PER_FRAME (6000/9 * FASTFRAME_PER_SUPERFRAME/SR)
-//#define HIGAIN_BYTES_PER_FRAME (92000/8 * FASTFRAME_PER_SUPERFRAME/SR)
 
   // Calculate number of stream fields given data rates
   if (reset_rates) {
@@ -455,12 +400,12 @@ void WriteSuperFrame(unsigned short *frame) {
     //bprintf(info, "Bytes per stream frame - High gain: %d  omni1: %d  omni2: %d",
     //        higain_bytes_per_streamframe, omni1_bytes_per_streamframe, omni2_bytes_per_streamframe);
 
-    n_higain_stream=0;
+    n_higain_stream = 0;
     n_omni1_stream = 0;
     n_omni2_stream = 0;
     
     for (i_field = 0; i_field<n_streamlist; i_field++) {
-      double delta=0;
+      double delta = 0;
       delta = streamList[CommandData.channelset_oth][i_field].samples_per_frame*streamList[CommandData.channelset_oth][i_field].bits/8;
       if (streamData[i_field].mask) {
         delta+=6.0/(double)STREAMFRAME_PER_SUPERFRAME;
@@ -560,31 +505,39 @@ void WriteSuperFrame(unsigned short *frame) {
 
   return;
 }
+
+
+
 //*********************************************************
 // write stream field
 //*********************************************************
+
 void WriteStreamFrame() {
   int i_field, i_samp, i_fastsamp;
-  int n=1;
+  int n;
+
+  /* x either passes the value itself OR delta-x down to the user. */
   double x, dx;
   int xi;
   signed char streambuf[FASTFRAME_PER_STREAMFRAME];
   int n_streambuf;
 
-  for (i_field = 0; i_field<n_streamlist; i_field++) {
+  for (i_field = 0; i_field < n_streamlist; i_field++) {
     n_streambuf = 0;
     n = FASTFRAME_PER_STREAMFRAME/streamList[CommandData.channelset_oth][i_field].samples_per_frame;
+
     for (i_samp = 0; i_samp < streamList[CommandData.channelset_oth][i_field].samples_per_frame; i_samp++) {
       if (streamList[CommandData.channelset_oth][i_field].doAverage) {
+
+        /* x = average over i_field of all streamData[i_field].x[i_fastsamp + i_samp * n] */
         // filter
-        n = FASTFRAME_PER_STREAMFRAME/streamList[CommandData.channelset_oth][i_field].samples_per_frame;
         x = 0.0;
         for (i_fastsamp = 0; i_fastsamp < n ; i_fastsamp++) {
-          x+=streamData[i_field].x[i_fastsamp + i_samp * n];
+          x += streamData[i_field].x[i_fastsamp + i_samp * n];
         }
         x /= (double)n;
       } else {
-        x=streamData[i_field].x[i_samp * n];
+        x = streamData[i_field].x[i_samp * n];
       }
       // differentiate
       if (streamList[CommandData.channelset_oth][i_field].doDifferentiate) {
@@ -593,19 +546,20 @@ void WriteStreamFrame() {
         x = dx/(double)streamData[i_field].gain;
       } else {
         // apply gain
-        x = (x-streamData[i_field].offset)/(double)streamData[i_field].gain;
+        x = (x - streamData[i_field].offset) / (double)streamData[i_field].gain;
       }
-      
+      /* Better perhaps: x /= (double)streamData.gain at the end */
+
+      /* So streamData[i_field].residual holds on to the value of x when x = dx instead */
       //preserve integral
       xi = (int)(x + streamData[i_field].residual);
-      streamData[i_field].residual = (x + streamData[i_field].residual) - (double)xi; // preserve integral
+      streamData[i_field].residual = x;
 
-      if (streamList[CommandData.channelset_oth][i_field].bits == 4) {
-      } else if (streamList[CommandData.channelset_oth][i_field].bits == 8) {
+      if (streamList[CommandData.channelset_oth][i_field].bits == 8) {
         // if the derivative exceeds the maximum, truncate, but preserve the
         // integral for later application.  It gets cleared at the slow frame.
         if (streamList[CommandData.channelset_oth][i_field].doDifferentiate) {
-          if (xi>127) {
+          if (xi > 127) {
             streamData[i_field].residual += xi - 127;
             xi = 127;
           } else if (xi < -127) {
@@ -633,34 +587,45 @@ void WriteStreamFrame() {
 
 }
 
+
 //*********************************************************
 // The main compression writer thread
 //*********************************************************
 void CompressionWriterFunction(int channelset) {
   int i_field;
-  int i_streamframe=0;
+  int i_streamframe = 0;
   unsigned short *frame;
   int i_fastframe = -1;
   
-  // determine frameList length
-  for (n_framelist=0; frameList[n_framelist][0]!='\0'; n_framelist++);
+  // Determine frameList length by running through frameList until the \0 is reached.
+  for (n_framelist = 0; frameList[n_framelist][0] != '\0'; n_framelist++);
   
   frameNiosList = (struct NiosStruct **)malloc(n_framelist * sizeof(struct NiosStruct *));
   frameBi0List = (struct BiPhaseStruct **)malloc(n_framelist * sizeof(struct BiPhaseStruct *));
 
-
-  for (i_field =0; i_field < n_framelist; i_field++) {
-    frameNiosList[i_field] = GetNiosAddr(frameList[i_field]);
-    frameBi0List[i_field] = GetBiPhaseAddr(frameList[i_field]);
+  for (i_field = 0; i_field < n_framelist; i_field++) {
+      frameNiosList[i_field] = GetNiosAddr(frameList[i_field]);
+      frameBi0List[i_field] = GetBiPhaseAddr(frameList[i_field]);
   }
 
-  // determine streamlist length
-  bprintf(info, "channelset oth: %d field 1: %s", CommandData.channelset_oth, streamList[1][1].name);
-  for (n_streamlist = 0; streamList[CommandData.channelset_oth][n_streamlist].name[0] != '\0'; n_streamlist++); // count
+  // Determine streamlist length just as with framelist length.
+  bprintf(info, "Compressionwriter.c: channelset oth == %d, field 1 == %s", CommandData.channelset_oth, streamList[1][1].name);
+  for (n_streamlist = 0; streamList[CommandData.channelset_oth][n_streamlist].name[0] != '\0'; n_streamlist++)
+
   streamData = (struct streamDataStruct *)malloc(n_streamlist*sizeof(struct streamDataStruct));
 
   for (i_field = 0; i_field < n_streamlist; i_field++) {
+    //printf ("Compressionwriter.c: (bolostuff) %s\n",streamList[CommandData.channelset_oth][i_field].name);
     if (isBoloField(streamList[CommandData.channelset_oth][i_field].name)) {
+
+        /* MWG: I commented out the following section to get rid
+         * of bolometers - this is a clumsy hack, but I lack more
+         * elegant methods for making the code run right now.
+         * To make the program run properly with bolometers, set
+         * DAS_CARDS to 12 in channels.h, and uncomment this next code.
+         */
+
+        /*
       struct BiPhaseStruct *l_bi0;
       struct BiPhaseStruct *m_bi0;
       char l_name[10];
@@ -672,8 +637,10 @@ void CompressionWriterFunction(int channelset) {
       // OK: bolometers are 24 bit fields.  The msw for odd bolometer
       // channels are stored in the high byte of the even channels.
       if (m_name[5]%2) m_name[5]--; // make sure msw referes to an even field
-        
+
+      printf ("Compresionwriter.c Flag0: looking for field %s\n", l_name);
       l_bi0 = GetBiPhaseAddr(l_name);
+      printf ("Compresionwriter.c Flag1: looking for field %s\n", m_name);
       m_bi0 = GetBiPhaseAddr(m_name);
 
       streamData[i_field].isFast = 1;
@@ -685,6 +652,7 @@ void CompressionWriterFunction(int channelset) {
       } else {
         streamData[i_field].msw = m_bi0->channel*2+1;
       }
+    */
     } else {
       struct NiosStruct *nios;
       struct BiPhaseStruct *bi0;
@@ -727,12 +695,13 @@ void CompressionWriterFunction(int channelset) {
     streamData[i_field].n_sum = 0;
   }
   
-  bprintf(startup, "frame list length: %d  stream list length: %d", n_framelist, n_streamlist);
+  bprintf(startup, "Compressionwriter.c, CompressionWriterFunction: frame list length == %d; stream list length == %d", n_framelist, n_streamlist);
 
   while (!InCharge) {  // wait to be the boss to open the port!
     usleep(10000);
   }
   
+
   // clear the fifo so we have current data
   ClearBuffer(&hiGain_buffer);
   
@@ -742,9 +711,9 @@ void CompressionWriterFunction(int channelset) {
   while (channelset == CommandData.channelset_oth) {
     frame = PopFrameBufferAndSlow(&hiGain_buffer, &current_slow_data);
     if (frame) {
-      ++i_fastframe;
+        printf ("frame == %d",frame);
+        ++i_fastframe;
       
-      //********************************
       // Process the superframe 
       if (i_fastframe >= FASTFRAME_PER_SUPERFRAME) {
         i_fastframe = 0;
@@ -781,4 +750,15 @@ void CompressionWriter() {
     //bprintf(info, "restarting with oth channel set %d", CommandData.channelset_oth);
   }
 }
+
+
+/* MWG: This wrapper function works with test.c to call a static function.
+ * It only works with my test program, and may be removed without affecting
+ * functionality in compressionwriter.c. */
+#ifdef TEST
+int OpenSerialTest(){
+    char *tty = '\0'; // For later
+    return OpenSerial(tty);
+    }
+#endif
 

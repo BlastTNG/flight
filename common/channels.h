@@ -31,13 +31,14 @@ extern "C" {
 /* The maximum number of DAS cards allowed */
 #define MAX_DAS_CARDS 12
 
-/* Number of DAS bolometer cards to include in the frame.  The maximum number
- * of cards is 12. Making 0 will disable bolometer channels
- * Unless specified, will assume 0. Blast should compile with -DDAS_CARDS=12 */
+/* MWG: DAS = Data Acquisition Cards. The maximum number is 12.
+ * Making DAS_CARDS 0 will disable bolometer channels;
+ * Blast compiles with DAS_CARDS at 12 */
 
-/* as of 2013-04-01, this is only the default value; a caller can change
+/* As of 2013-04-01, this is only the default value; a caller can change
  * this at runtime by modifying the das_cards variable before doing anything
  * else with this library */
+
 #ifndef DAS_CARDS
 #define DAS_CARDS 0
 #endif
@@ -50,6 +51,7 @@ extern "C" {
 #define DAS_START 16  //motherboard node of first DAS card
 #define MAX_FAST_BOLOS (MAX_DAS_CARDS * (DAS_CHS + DAS_CHS / 2))
 
+
   extern unsigned short das_cards; /* number of DAS cards -- defaults to
                                       DAS_CARDS */
 
@@ -61,7 +63,7 @@ extern "C" {
 #define LOCKIN_C2V (6.90336327e-7)
 #define LOCKIN_OFFSET (-5.78715355)
 
-#define FIELD_LEN 20
+#define FIELD_LEN 32 // Was 20, but conflicted with DEF from channels_tng
 #define UNITS_LEN 48
 
 #pragma pack(push)

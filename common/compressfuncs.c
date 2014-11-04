@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include "compressstruct.h"
 
+// Makefile isn't finding this properly...
+#include "channels.h"
+
+
 extern struct ChannelStruct WideSlowChannels[];
 extern struct ChannelStruct SlowChannels[];
 extern struct ChannelStruct WideFastChannels[];
@@ -71,4 +75,3 @@ struct ChannelStruct *GetChannelStruct(char *name) {
 
   return (NULL);
 }
-

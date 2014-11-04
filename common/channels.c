@@ -1087,7 +1087,8 @@ inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct* niosAddr)
   return bps;
 }
 
-inline struct BiPhaseStruct* GetBiPhaseAddr(const char* field)
+//MWG: This used to be inline; problems compiling encouraged me to simpplify.
+struct BiPhaseStruct* GetBiPhaseAddr(const char* field)
 {
   struct NiosStruct* niosAddr = GetNiosAddr(field);
   struct BiPhaseStruct* bps = &BiPhaseLookup[BI0_MAGIC(niosAddr->bbcAddr)];

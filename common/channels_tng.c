@@ -44,13 +44,35 @@
  */
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <glib.h>
+#include <string.h>
+
 
 #include "blast.h"
 #include "PMurHash.h"
 #include "channels_tng.h"
+
+
+//
+int iread; // These take a value from 0-2 showing which part of the
+int iwrite; // curcular data buffer is being read from and written to.
+
+/**
+ * MWG: This structure handles the data transfer from FC1 and FC2 to MCP.
+ * The MCP looks for a tag in the datastream (something like 0x12345678),
+ * and then looks at the src to find out what kind of packet it's received.
+ * After reading through the data, it totals up everything in the packet
+ * and compares this to the checksum; if the values match, the packet was
+ * transferred correctly.
+ */
+typedef struct {
+    int tag;
+    unsigned long long src; // First 4 bytes: Source.  Next 4 bytes: Rate.
+    unsigned long long time; // First 4 bytes: Unix Time.  Next 4 bytes: nanoseconds.
+    unsigned int checksum; // Total of everything in the packet.
+    float data[3][4000]; // A circular data buffer: reads 1, writes 1, leaves 1 free.
+} Packet;
 
 
 static GHashTable *frame_table = NULL;
@@ -58,7 +80,6 @@ static int channel_count[SRC_END][RATE_END][TYPE_END] = {{{0}}};
 extern channel_t channel_list[];
 
 void *channel_data[SRC_END][RATE_END] = {{0}};
-size_t frame_size[SRC_END][RATE_END] = {{0}};
 static void *channel_ptr[SRC_END][RATE_END] = {{0}};
 
 static inline size_t channel_size(channel_t *m_channel)
@@ -116,21 +137,8 @@ static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_us
 
 channel_t *channels_find_by_name(const char *m_name)
 {
-    channel_t *retval = (channel_t*)g_hash_table_lookup(frame_table, m_name);
-
-    if (!retval) printf("Could not find %s!\n", m_name);
-    return retval;
-}
-
-int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len)
-{
-	if (m_len != frame_size[m_src][m_rate]) {
-		printf("Size mismatch storing data for %s:%s!\n", SRC_lookup_table[m_src].text, RATE_lookup_table[m_rate].text );
-		return -1;
-	}
-
-	memcpy(channel_data[m_src][m_rate], m_data, m_len);
-	return 0;
+    guint name_hash = PMurHash32(CHANNELS_HASH_SEED, m_name, strnlen(m_name, FIELD_LEN));
+    return (channel_t*)g_hash_table_lookup(frame_table, m_name);
 }
 
 int channels_initialize(const char *m_datafile)
@@ -172,13 +180,13 @@ int channels_initialize(const char *m_datafile)
      */
     for (int src = 0; src < SRC_END; src++) {
         for (int rate = 0; rate < RATE_END; rate++) {
-            frame_size[src][rate] = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
+            size_t frame_size = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                     2 * (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
                     4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
                     8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
 
-            if (frame_size[src][rate]) {
-                channel_data[src][rate] = malloc(frame_size[src][rate]);
+            if (frame_size) {
+                channel_data[src][rate] = malloc(frame_size);
             }
             else {
                 channel_data[src][rate] = NULL;
@@ -195,3 +203,5 @@ int channels_initialize(const char *m_datafile)
     bprintf(startup, "Successfully initialized Channels data structures");
     return 0;
 }
+
+
