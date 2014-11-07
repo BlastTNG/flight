@@ -1087,7 +1087,7 @@ inline struct BiPhaseStruct* ExtractBiPhaseAddr(struct NiosStruct* niosAddr)
   return bps;
 }
 
-//MWG: This used to be inline; problems compiling encouraged me to simpplify.
+//MWG: This used to be inline; problems compiling encouraged me to simplify.
 struct BiPhaseStruct* GetBiPhaseAddr(const char* field)
 {
   struct NiosStruct* niosAddr = GetNiosAddr(field);

@@ -135,13 +135,8 @@ void WritePrevStatus()
 
 int main(int argc, char *argv[]) {
 
-	  /* MWG: Populate the Nios Addresses */
-	  printf (" Test.c: Attempting MakeAddressLookups: ");
-	  MakeAddressLookups('\0');
-	  printf (" ...success\n");
-
-
-
+	/* MWG: Populate the Nios Addresses */
+	MakeAddressLookups('\0');
 
 	int flag[10] = {0}; // Initialize the program to call no functions
 	char *funcname[] = {"CompressionWriter",
