@@ -50,6 +50,7 @@
 #include <string.h>
 #include <time.h> // For finding unix time
 
+
 #include "blast.h"
 #include "PMurHash.h"
 #include "channels_tng.h"
@@ -235,7 +236,7 @@ int channels_initialize(const char *m_datafile)
  * Length refers to the length of the data, calculated below and poked into
  * Packet.length.
  *
- * @param source
+ * @param src
  * @param rate
  * @return Packet
  */
@@ -248,14 +249,21 @@ data_packet_t BuildPacket(int src, int rate)
     int sum = 0;
     int length = 0;
 
-    // Packet.src == source;
-    // Packet.rate == rate;
-    // sum += Packet.src * 16 + Packet.rate; // Packs source & rate into 4 bytes
+    Packet.src == src;
+    Packet.rate == rate;
+    sum += Packet.src + Packet.rate;
 
-    Packet.unix_time = (int)time(NULL); // time in seconds
-    Packet.nano_time = 0; // time in nanoseconds
-    // MWG: Still working out nanosecond time
-    // Packet.nano_time = tms.tv_nsec/1000; // nanoseconds
+
+    /* MWG: This doesn't work properly, but I don't know why.
+
+    timespec tms; // Declared in time.h
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tms);
+
+    Packet.unix_time = tms.tv_sec; // time in seconds
+    Packet.nano_time = tms.tv_nsec; // time in nanoseconds.
+
+    */
+
     sum += Packet.unix_time + Packet.nano_time;
 
     Packet.length = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
