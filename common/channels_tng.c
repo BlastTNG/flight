@@ -48,18 +48,18 @@
 #include <string.h>
 #include <glib.h>
 #include <string.h>
-#include <time.h> // MWG: For finding unix time
+#include <time.h> // For finding unix time
 
 #include "blast.h"
 #include "PMurHash.h"
 #include "channels_tng.h"
 
-int iread;  // MWG: These take a value from 0 to N_ROWS-1, showing which part of
-int iwrite; // the curcular data buffer is being read from and written to.
-int row; // MWG: This indicates which row is being looked at right now.
+static int iread;  // These take a value from 0 to N_ROWS-1, showing which part of
+static int iwrite; // the curcular data buffer is being read from and written to.
+static int row; // This indicates which row is being looked at right now.
 
 /**
-* MWG: DataPacket structures handle the data transfer from FC1 and FC2 to MCP.
+* MWG: data_packet_t structures handle the data transfer from FC1 and FC2 to MCP.
 * The MCP looks for a tag in the datastream (something like 0x12345678),
 * and then looks at the src to find out what kind of packet it's received.
 * After reading through the data, it totals up everything in the packet
@@ -69,15 +69,15 @@ int row; // MWG: This indicates which row is being looked at right now.
 * Note: Not included is the 4-byte tag indicating that a packet is beginning.
 */
 typedef struct {
-    struct src {
-        unsigned s:4; // First 4 bits: Source
-        unsigned r:4; // Next 4 bits: Rate
-    } src;
-    unsigned long long time; // First 4 bytes: Unix Time.  Next 4 bytes: nanoseconds.
-    unsigned int checksum; // Total of everything in the packet.
-    // MWG: I'm allocating 4000 bytes here as discussed, but why 4000?
-    int data[4000]; // All the data contained in the packet
-}DataPacket;
+    uint32_t src:4; // First 4 bits: Source (uint8_t isn't always defined, so use uint32.)
+    uint32_t rate:4; // Next 4 bits: Rate
+    uint32_t unix_time; // Seconds since midnight of January 1, 1970 (UTC)
+    uint32_t nano_time; // Nanoseconds since last second
+    uint64_t time; // First 4 bytes: Unix Time.  Next 4 bytes: nanoseconds.
+    uint32_t checksum; // Total of everything in the packet.
+    uint32_t length; // We don't allocate a specific length for the data, so
+    int data[0]; // length tells how much there is in data[].
+} data_packet_t;
 
 /* MWG: The macros SRC_ RATE_ and TYPE_END are assigned by lookup.h and uei_framing.c
  * to be the size of the source, rate, and type lists - the code also recognizes
@@ -87,8 +87,8 @@ static GHashTable *frame_table = NULL;
 static int channel_count[SRC_END][RATE_END][TYPE_END] = {{{0}}};
 extern channel_t channel_list[];
 
-void *channel_data[N_ROWS][SRC_END][RATE_END] = {{0}};
-static void *channel_ptr[N_ROWS][SRC_END][RATE_END] = {{0}};
+void *channel_data[N_ROWS][SRC_END][RATE_END] = {{{0}}};
+static void *channel_ptr[N_ROWS][SRC_END][RATE_END] = {{{0}}};
 
 static inline size_t channel_size(channel_t *m_channel)
 {
@@ -121,25 +121,28 @@ static guint channel_hash(gconstpointer m_data)
 
 static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_userdata)
 {
-    channel_t *channel = (channel_t*)m_channel;
+    channel_t *channel[N_ROWS];
+    for (row == 0; row < N_ROWS; row ++){
+        channel[row] = (channel_t*)m_channel;
 
-    /// If channel is invalid, do not process
-    if (!channel->field[0]) return;
+        /// If channel is invalid, do not process
+        if (!channel[row]->field[row]) return;
 
-    /**
-     * channel_ptr maintains the current location in the array of the next free element.
-     * We assign this location to the channel pointer, allowing us to reference the
-     * individual location in the future based on a lookup in the hash table.
-     */
-    if (channel->source < SRC_END && channel->rate < RATE_END) {
-        if (!channel_ptr[row][channel->source][channel->rate]) {
-            bprintf(fatal, "Invalid Channel setup");
+        /**
+         * channel_ptr maintains the current location in the array of the next free element.
+         * We assign this location to the channel pointer, allowing us to reference the
+         * individual location in the future based on a lookup in the hash table.
+         */
+        if (channel[row]->source < SRC_END && channel[row]->rate < RATE_END) {
+            if (!channel_ptr[row][channel[row]->source][channel[row]->rate]) {
+                bprintf(fatal, "Invalid Channel setup");
+            }
+            channel[row]->var = channel_ptr[row][channel[row]->source][channel[row]->rate];
+            channel_ptr[row][channel[row]->source][channel[row]->rate] += channel_size(channel[row]);
         }
-        channel->var = channel_ptr[row][channel->source][channel->rate];
-        channel_ptr[row][channel->source][channel->rate] += channel_size(channel);
-    }
-    else {
-        bprintf(fatal, "Could not map %d and %d to source and rate!", channel->source, channel->rate);
+        else {
+            bprintf(fatal, "Could not map %d and %d to source and rate!", channel[row]->source, channel[row]->rate);
+        }
     }
 }
 
@@ -195,14 +198,13 @@ int channels_initialize(const char *m_datafile)
                     4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
                     8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
 
-            if (frame_size) {
-                channel_data[row][src][rate] = malloc(frame_size * N_ROWS);
-            }
-            else {
-                channel_data[row][src][rate] = NULL;
-            }
-            // MWG: The for loop lets it compile, but I didn't mean to assign this to all rows...
-            for (row = 0; row < N_ROWS; row++) {
+            for (row = 0; row < N_ROWS; row++){
+                if (frame_size) {
+                    channel_data[row][src][rate] = malloc(frame_size);
+                }
+                else {
+                    channel_data[row][src][rate] = NULL;
+                }
                 channel_ptr[row][src][rate] = channel_data[row][src][rate];
             }
         }
@@ -218,71 +220,79 @@ int channels_initialize(const char *m_datafile)
     fprintf (fp, "");
     fclose (fp);
 
-
     bprintf(startup, "Successfully initialized Channels data structures");
     return 0;
 }
 
 
 /**
- * Builds a packet's header, calculating and storing the checksum, and includes
- * the data underneath.
+ * Builds a packet's header, calculating and storing the checksum and length.
+ * The data for the given source and rate is packed in underneath.
  *
+ * The checksum is calculated by counting up everything in the packet,
+ * including the TAG and header, but excluding the checksum itself, and
+ * then storing the total value in this integer variable (sum).
+ * Length refers to the length of the data, calculated below and poked into
+ * Packet.length.
+ *
+ * @param source
+ * @param rate
  * @return Packet
  */
-DataPacket BuildPacket()
+
+data_packet_t BuildPacket(int src, int rate)
 {
-    DataPacket Packet;
-    /* MWG: The checksum is calculated by counting up everything in the packet,
-     * including the TAG and header, but excluding the checksum itself, and
-     * then storing the total value in this integer variable (sum).
+    data_packet_t Packet;
+    /*
      */
     int sum = 0;
+    int length = 0;
 
-    // Packet.src.s == source;
-    // Packet.src.r == rate;
-    // sum += Packet.src;
+    // Packet.src == source;
+    // Packet.rate == rate;
+    // sum += Packet.src * 16 + Packet.rate; // Packs source & rate into 4 bytes
 
-    int unixtime = (int)time(NULL); // time in seconds (for the first 4 bytes)
+    Packet.unix_time = (int)time(NULL); // time in seconds
+    Packet.nano_time = 0; // time in nanoseconds
+    // MWG: Still working out nanosecond time
+    // Packet.nano_time = tms.tv_nsec/1000; // nanoseconds
+    sum += Packet.unix_time + Packet.nano_time;
 
-    // MWG: Still working out microsecond time
-    //int microtime = tms.tv_nsec/1000; // microseconds
-    Packet.time == unixtime * 256^4; // need to add + microtime to this line
-    sum += Packet.time;
+    Packet.length = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
+            2 * (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
+            4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
+            8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
 
-    /* MWG: this below isn't right - nothing to loop across, just one line.
-     * (Where is the data?) But the idea is to read the row in the circular
-     * data buffer which is currently being read, on the appropriate source
-     * and rate.
-     */
-    Packet.data[0] += *((int*)channel_data[iread][Packet.src.s][Packet.src.r]);
-    sum += Packet.data[0];
-
+    for (int i = 0; i < Packet.length; i++){
+        Packet.data[i] += *((int*)channel_data[iread][Packet.src][Packet.rate] + i);
+        sum += Packet.data[i];
+    }
+    Packet.length = length;
+    Packet.checksum = sum;
     return Packet;
 }
 
 /**
  * This function takes an existing packet and appends it to Packets.txt
+ *
+ * @param Packet
  */
-void SaveData(DataPacket Packet)
+void SaveData(data_packet_t Packet)
 {
     FILE *fp = fopen("Packets.txt", "a");
 
+    // Header
     fprintf (fp, "%s", TAG);
-    fprintf (fp, "%d", Packet.src.s * 8 + Packet.src.r);
+    fprintf (fp, "%d", Packet.src * 16 + Packet.rate); // packs both into 4 bytes
     fprintf (fp, "%d", Packet.time);
     fprintf (fp, "%d", Packet.checksum);
+    fprintf (fp, "%d", Packet.length);
 
-    /* MWG: Finally, we need to actually print the data to the file.
-     * Again, this is wrong - I don't understand where the data is, or
-     * what to give for source and rate - I only know it must live in
-     * row [iwrite],[source],[rate]. There should ultimately be a for
-     * loop when I understand what to loop over.)
-     */
+    // Channel Data
+    for (int i = 0; i < Packet.length; i++){
+        fprintf (fp, "%d", Packet.data[i]);
+    }
 
     fclose (fp);
 }
-
-
-
 
