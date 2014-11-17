@@ -37,19 +37,18 @@
  *
  * Each frame also has a small header that records the timestamp and computer id.
  *
- * On MCP, there are frame structures for each computer (UEI1, UEI2, FC1, FC2, SC1, SC2).
- * The data are populated by listening to the MQTT server.
+ * On MCP, there are frame structures for each computer (UEI1, UEI2, FC1, FC2, SC1,
+ * SC2). The data are populated by listening to the MQTT server.
  *
  *
  */
 #include <stdio.h>
-#include <stdint.h>
+#include <stdint.h> // For uintX_t types
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
 #include <string.h>
-#include <time.h> // For finding unix time
-
+#include <sys/time.h> // For finding unix_time and nano_time
 
 #include "blast.h"
 #include "PMurHash.h"
@@ -60,27 +59,27 @@ static int iwrite; // the curcular data buffer is being read from and written to
 static int row; // This indicates which row is being looked at right now.
 
 /**
-* MWG: data_packet_t structures handle the data transfer from FC1 and FC2 to MCP.
-* The MCP looks for a tag in the datastream (something like 0x12345678),
-* and then looks at the src to find out what kind of packet it's received.
-* After reading through the data, it totals up everything in the packet
-* and compares this to the checksum; if the values match, the packet was
-* transferred correctly.
+* data_packet_t structures handle the data transfer from FC1 and FC2 to MCP.
+* The MCP looks for a tag in the datastream (something like 0x12345678) to
+* identify the start of a datapacket. Then it then looks at src to find out
+* what kind of packet it's received. After reading through the data, it totals
+* up everything in the packet and compares this to the checksum; if the values
+* match, then we know the packet was transferred correctly.
 *
-* Note: Not included is the 4-byte tag indicating that a packet is beginning.
+* Note: This structure doesn't include the 4-byte tag indicating that a packet
+* is beginning - that tag is always the same, so it doesn't need memory here.
 */
 typedef struct {
     uint32_t src:4; // First 4 bits: Source (uint8_t isn't always defined, so use uint32.)
     uint32_t rate:4; // Next 4 bits: Rate
     uint32_t unix_time; // Seconds since midnight of January 1, 1970 (UTC)
     uint32_t nano_time; // Nanoseconds since last second
-    uint64_t time; // First 4 bytes: Unix Time.  Next 4 bytes: nanoseconds.
     uint32_t checksum; // Total of everything in the packet.
-    uint32_t length; // We don't allocate a specific length for the data, so
-    int data[0]; // length tells how much there is in data[].
+    uint32_t length; // We don't allocate a specific length for data[], so
+    int data[0]; // length tells how much there is in data[] beyond the 0th element.
 } data_packet_t;
 
-/* MWG: The macros SRC_ RATE_ and TYPE_END are assigned by lookup.h and uei_framing.c
+/* The macros SRC_, RATE_, and TYPE_END are assigned by lookup.h and uei_framing.c
  * to be the size of the source, rate, and type lists - the code also recognizes
  * other strings after the prefix; e.g. RATE_1HZ evaluates to 0, RATE_5HZ == 1, etc.
  */
@@ -116,8 +115,9 @@ static inline size_t channel_size(channel_t *m_channel)
 static guint channel_hash(gconstpointer m_data)
 {
     const char *field_name = (const char*)m_data;
-
-    return PMurHash32(CHANNELS_HASH_SEED, field_name, strnlen(field_name, FIELD_LEN));
+    // len takes the length of field_name, to a max of FIELD_LEN.
+    size_t len = (strlen(field_name) < FIELD_LEN) ? strlen(field_name) : FIELD_LEN;
+    return PMurHash32(CHANNELS_HASH_SEED, field_name, len);
 }
 
 static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_userdata)
@@ -149,7 +149,9 @@ static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_us
 
 channel_t *channels_find_by_name(const char *m_name)
 {
-    guint name_hash = PMurHash32(CHANNELS_HASH_SEED, m_name, strnlen(m_name, FIELD_LEN));
+    // len takes the length of m_name, to a max of FIELD_LEN.
+    size_t len = (strlen(m_name) < FIELD_LEN) ? strlen(m_name) : FIELD_LEN;
+    guint name_hash = PMurHash32(CHANNELS_HASH_SEED, m_name, len);
     return (channel_t*)g_hash_table_lookup(frame_table, m_name);
 }
 
@@ -227,14 +229,13 @@ int channels_initialize(const char *m_datafile)
 
 
 /**
- * Builds a packet's header, calculating and storing the checksum and length.
- * The data for the given source and rate is packed in underneath.
+ * Generates a packet's header, calculating and storing the checksum and length.
+ * The data for the given source and rate is then packed in underneath.
  *
- * The checksum is calculated by counting up everything in the packet,
+ * Note that the checksum is calculated by counting up everything in the packet,
  * including the TAG and header, but excluding the checksum itself, and
- * then storing the total value in this integer variable (sum).
- * Length refers to the length of the data, calculated below and poked into
- * Packet.length.
+ * then storing the total value in this integer variable (sum). The integer length
+ * refers to the length of the data, calculated below and poked into Packet.length.
  *
  * @param src
  * @param rate
@@ -244,25 +245,27 @@ int channels_initialize(const char *m_datafile)
 data_packet_t BuildPacket(int src, int rate)
 {
     data_packet_t Packet;
-    /*
-     */
-    int sum = 0;
-    int length = 0;
+    uint64_t sum = 0; // for calculating the packet checksum
+    int length = 0; // for calculating the packet length
+    struct timespec timestamp; // struct timespec is declared in time.h
+    int i; // needed in for loops
 
     Packet.src == src;
     Packet.rate == rate;
     sum += Packet.src + Packet.rate;
 
+    clock_gettime(CLOCK_REALTIME, &timestamp); // Assigns the timestamp
+    /* (Note that although the current goal is simply to get this
+     * code up and running, some careful thinking may ultimately need
+     * to go into the placement of the preceding line, and the way
+     * this function is called. Ideally, all data should have an
+     * accurate timestamp, and the best way to ensure this is to
+     * minimize time between collection and stamping. This is something
+     * to consider as the code is profiled and optimized.)
+     */
 
-    /* MWG: This doesn't work properly, but I don't know why.
-
-    timespec tms; // Declared in time.h
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &tms);
-
-    Packet.unix_time = tms.tv_sec; // time in seconds
-    Packet.nano_time = tms.tv_nsec; // time in nanoseconds.
-
-    */
+    Packet.unix_time = timestamp.tv_sec; // time in seconds
+    Packet.nano_time = timestamp.tv_nsec; // time in nanoseconds.
 
     sum += Packet.unix_time + Packet.nano_time;
 
@@ -271,7 +274,7 @@ data_packet_t BuildPacket(int src, int rate)
             4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
             8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
 
-    for (int i = 0; i < Packet.length; i++){
+    for (i = 0; i < Packet.length; i++){
         Packet.data[i] += *((int*)channel_data[iread][Packet.src][Packet.rate] + i);
         sum += Packet.data[i];
     }
@@ -281,7 +284,8 @@ data_packet_t BuildPacket(int src, int rate)
 }
 
 /**
- * This function takes an existing packet and appends it to Packets.txt
+ * This function takes an existing packet and appends it to Packets.txt.
+ * (Ultimately a better save location may need to be chosen.)
  *
  * @param Packet
  */
@@ -292,7 +296,8 @@ void SaveData(data_packet_t Packet)
     // Header
     fprintf (fp, "%s", TAG);
     fprintf (fp, "%d", Packet.src * 16 + Packet.rate); // packs both into 4 bytes
-    fprintf (fp, "%d", Packet.time);
+    fprintf (fp, "%d", Packet.unix_time);
+    fprintf (fp, "%d", Packet.nano_time);
     fprintf (fp, "%d", Packet.checksum);
     fprintf (fp, "%d", Packet.length);
 

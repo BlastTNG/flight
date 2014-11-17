@@ -10,7 +10,9 @@ IDIR4 = ../pcm
 IDIR5 = /usr/include/glib-2.0 # for glib.h
 IDIR6 = /usr/lib/x86_64-linux-gnu/glib-2.0/include # for glibconfig.h
 CFLAGS = -I$(IDIR0) -I$(IDIR1) -I$(IDIR2) -I$(IDIR3) \
-		-I$(IDIR4) -I$(IDIR5) -I$(IDIR6) -std=c99
+		-I$(IDIR4) -I$(IDIR5) -I$(IDIR6) -std=gnu99
+# Note: using the c99 standard may have advantages, but \
+		it doesn't work with clock_gettime in channels_tng.c.
 
 # Libraries
 LIBS = -L/usr/include/glib-2.0 -lglib-2.0

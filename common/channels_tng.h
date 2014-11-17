@@ -37,11 +37,9 @@
 #define UNITS_LEN 48
 #define CHANNELS_HASH_SEED 0xEB90
 
-/* MWG: The circular buffer will have 1 row for read, 1 for write, and 1 extra, and
- * each row will hold 4000 bytes of information. Each packet will begin with a TAG
- * to indicate the start */
+/* MWG: The circular buffer will have 1 row for read, 1 for write, and 1 extra.
+ * Each packet will begin with a TAG to indicate the start */
 #define N_ROWS 3
-#define PACKET_LENGTH 4000
 #define TAG 0x12345678
 
 #define _RATES(x,_)	\
