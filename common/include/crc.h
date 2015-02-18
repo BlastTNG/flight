@@ -1,20 +1,23 @@
-/* crc.c: performs a crc checksum
- *
- * This software is copyright (C) 1997 Enzo Pascale
- * Updated by Adam Hincks and D.V. Wiebe for BLAST, 2004
- *
- * This file is part of the BLAST flight code licensed under the GNU
- * General Public License.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
+/*
+ * crc32.h
+ * See linux/lib/crc32.c for license and changes
  */
+#ifndef _CRC32_H
+#define _CRC32_H
 
-#ifndef __CRC__
-#define __CRC__
-#define CRC_SEED 0xEB90
-unsigned short CalculateCRC(unsigned int initword, void *buffer,
-                            unsigned int buflen);
+#include <stdint.h>
+#include <endian.h>
+#define CRCPOLY_LE 0xedb88320
+#define CRCPOLY_BE 0x04c11db7
+
+extern uint32_t  crc32_le(uint32_t crc, unsigned char const *p, size_t len);
+extern uint32_t  crc32_be(uint32_t crc, unsigned char const *p, size_t len);
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+# define crc32(seed, data, length)  crc32_le(seed, (unsigned char const *)(data), length)
+#else
+# define crc32(seed, data, length)  crc32_be(seed, (unsigned char const *)(data), length)
 #endif
+
+
+#endif /* _LINUX_CRC32_H */
