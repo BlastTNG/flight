@@ -19,3 +19,13 @@ stamp-h
 stamp-h.in
 gdsl-config
 config.h.in
+/autom4te.cache/
+/compile
+/config.guess
+/config.sub
+/depcomp
+/gdsl.spec
+/install-sh
+/ltmain.sh
+/missing
+/stamp-h1

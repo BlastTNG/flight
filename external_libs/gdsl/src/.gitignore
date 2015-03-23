@@ -5,3 +5,4 @@
 libgdsl.la
 Makefile
 Makefile.in
+/mainpage.h
