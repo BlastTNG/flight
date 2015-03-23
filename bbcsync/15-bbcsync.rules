@@ -1,4 +1,0 @@
-# Rules for bbc_sync binary and text devices
-# University of Toronto, 2007
-SUBSYSTEM=="bbc_sync", SYSFS{dev}=="*:0", NAME="bbc_sync", MODE="0440", OWNER="root", GROUP="bbc"
-SUBSYSTEM=="bbc_sync", SYSFS{dev}=="*:1", NAME="bbc_sync_text", MODE="0444", OWNER="root", GROUP="bbc"
