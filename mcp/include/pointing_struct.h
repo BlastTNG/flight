@@ -39,10 +39,7 @@
 
 #include <math.h>
 #include <time.h>
-#include "isc_protocol.h"   /* required for ISCData; get updates from
-                               Ed Chapin and/or the ISC computer */
 
-#define M_PI 3.14159265359 /* just pi */
 #define RAD2SEC (180. * 3600. / M_PI / 15.)  /* radians to seconds (of time) */
 #define SEC2RAD (1. / RAD2SEC)
 #define DEG2RAD (M_PI / 180.)  /* degrees to radians */
@@ -258,21 +255,6 @@ struct DGPSPosStruct{
   int n_sat;  //
 };
 
-struct ISCPulseType {
-  int age; // time since start of last trigger
-  int pulse_index;  // pulse counter index
-  int is_fast; // if a fast pulse is requested: set in motors.c
-  int last_save;  // time since last autosaved image
-  int pulse_req; // the pulse request waiting to be writen
-  int ack_wait; // whether we are waiting for ACK from SC
-  int ack_timeout; // length of time to wait for ACK before giving up
-  int start_wait; // whether we are waiting for data to come back from SC
-  int start_timeout; // length of time to wait for data before giving up
-  int force_sync; // A semaphore to force MCP into lock-step with ISC
-};
-
-extern struct ISCPulseType isc_pulses[2];
-
 struct AxesModeStruct {
   int az_mode;
   int el_mode;
@@ -296,23 +278,3 @@ extern int dgpsatt_index;
 
 extern time_t DGPSTime;
 
-/**********************************************/
-/* ISC Data struct                            */
-/* ISCSolutionStruct is a struct defined in   */
-/* isc_protocol.h which is copied verbatim    */
-/* from the ISC computer.                     */
-/*                                            */
-/*  Purpose: Store isc pointing and blob data */
-/*   Source: isc thread: isc.c                */
-/*     Used: Main thread;                     */
-extern struct ISCSolutionStruct ISCSolution[2][5]; /* isc.c */
-
-/* Read and write indicies must be separate for the ISC, since the
- * data essentially comes in bursts -- the average data rate is about
- * 0.4 isc packets per slow frame, but the burst rate can be ~2 packets
- * per slow frame.  There's also a separate index for the pointing solution
- * which points to the last solution packet sent back from ISC (which can be
- * different than the last packet sent back */
-extern int iscread_index[2];        /* isc.c */
-extern int iscwrite_index[2];       /* isc.c */
-extern int iscpoint_index[2];       /* isc.c */
