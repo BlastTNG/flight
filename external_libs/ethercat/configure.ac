@@ -551,12 +551,12 @@ else
     fi
     AC_MSG_RESULT([$xenomaidir])
 
-    xeno_native_cflags=`$xenomaidir/bin/xeno-config --skin native --cflags`
-    xeno_native_ldflags=`$xenomaidir/bin/xeno-config --skin native --ldflags`
-    xeno_posix_cflags=`$xenomaidir/bin/xeno-config --skin posix --cflags`
-    xeno_posix_ldflags=`$xenomaidir/bin/xeno-config --skin posix --ldflags`
-    xeno_rtdm_cflags=`$xenomaidir/bin/xeno-config --skin rtdm --cflags`
-    xeno_rtdm_ldflags=`$xenomaidir/bin/xeno-config --skin rtdm --ldflags`
+    xeno_native_cflags=`$xenomaidir/bin/xeno-config --xeno-cflags`
+    xeno_native_ldflags=`$xenomaidir/bin/xeno-config --xeno-ldflags`
+    xeno_posix_cflags=`$xenomaidir/bin/xeno-config --posix-cflags`
+    xeno_posix_ldflags=`$xenomaidir/bin/xeno-config --posix-ldflags`
+    xeno_rtdm_cflags=`$xenomaidir/bin/xeno-config --xeno-cflags`
+    xeno_rtdm_ldflags=`$xenomaidir/bin/xeno-config --xeno-ldflags`
 fi
 
 AC_SUBST(XENOMAI_DIR,[$xenomaidir])

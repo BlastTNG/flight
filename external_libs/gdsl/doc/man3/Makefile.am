@@ -4,7 +4,6 @@ CLEANFILES	= *~ .*~
 
 man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_bstree_is_empty.3 \
-./gdsl_interval_heap_set_name.3 \
 ./_gdsl_bintree_copy.3 \
 ./gdsl_2darray_free.3 \
 ./gdsl_list_cursor_alloc.3 \
@@ -15,7 +14,6 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./_gdsl_node_get_pred.3 \
 ./gdsl_types.h.3 \
 ./gdsl_stack_write_xml.3 \
-./gdsl_interval_heap_is_empty.3 \
 ./gdsl_rbtree_delete.3 \
 ./ulong.3 \
 ./gdsl_perm_randomize.3 \
@@ -49,7 +47,6 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_2darray_dump.3 \
 ./gdsl_rbtree_get_name.3 \
 ./_gdsl_node_set_pred.3 \
-./gdsl_interval_heap_get_name.3 \
 ./_gdsl_bstree_map_infix.3 \
 ./gdsl_heap_set_top.3 \
 ./_gdsl_node_free.3 \
@@ -86,7 +83,6 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_bstree_search.3 \
 ./gdsl_hash_free.3 \
 ./_gdsl_list_alloc.3 \
-./_home_nicolas_projets_gna_gdsl_src_.3 \
 ./gdsl_list_delete.3 \
 ./_gdsl_list_is_empty.3 \
 ./gdsl_list_write.3 \
@@ -121,23 +117,16 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./_gdsl_list_remove.3 \
 ./gdsl_perm_get_element.3 \
 ./gdsl_queue_dump.3 \
-./gdsl_interval_heap_write_xml.3 \
 ./gdsl_map_func_t.3 \
-./gdsl_interval_heap_insert.3 \
 ./gdsl_list_delete_tail.3 \
 ./gdsl_heap_write.3 \
 ./gdsl_stack_search.3 \
 ./_gdsl_list.h.3 \
-./gdsl_interval_heap_alloc.3 \
-./gdsl_interval_heap_delete_min.3 \
 ./gdsl_write_func_t.3 \
 ./gdsl_heap_is_empty.3 \
 ./gdsl_queue_alloc.3 \
 ./gdsl_queue_free.3 \
-./gdsl_interval_heap_delete_max.3 \
-./gdsl_interval_heap_get_size.3 \
 ./GDSL_PERM_POSITION_LAST.3 \
-./gdsl_interval_heap_remove_max.3 \
 ./_gdsl_bintree_map_infix.3 \
 ./gdsl_bstree_write.3 \
 ./gdsl_list_map_forward.3 \
@@ -154,7 +143,6 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_stack_get_name.3 \
 ./gdsl_list_cursor_remove.3 \
 ./gdsl_rbtree_map_infix.3 \
-./gdsl_interval_heap_get_max.3 \
 ./gdsl_perm_multiply.3 \
 ./GDSL_LOCATION_FIRST_COL.3 \
 ./gdsl_list_cursor_step_forward.3 \
@@ -202,7 +190,6 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_rbtree_write.3 \
 ./gdsl_list_cursor_insert_after.3 \
 ./gdsl_list_remove_tail.3 \
-./gdsl_interval_heap_map_forward.3 \
 ./GDSL_LOCATION_FIRST.3 \
 ./gdsl_perm_set_elements_array.3 \
 ./_gdsl_bstree_write_func_t.3 \
@@ -218,7 +205,6 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_list_cursor_step_backward.3 \
 ./gdsl_list_cursor_has_pred.3 \
 ./_gdsl_list_t.3 \
-./gdsl_interval_heap_dump.3 \
 ./gdsl_rbtree_remove.3 \
 ./_gdsl_bstree_remove.3 \
 ./_gdsl_bstree_insert.3 \
@@ -232,12 +218,10 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_bstree_map_prefix.3 \
 ./_gdsl_bstree_t.3 \
 ./_gdsl_bstree_write_xml.3 \
-./gdsl_interval_heap_free.3 \
 ./gdsl_list_cursor_move_to_head.3 \
 ./gdsl_heap.3 \
 ./_gdsl_list_insert_before.3 \
 ./gdsl_perm_position_t.3 \
-./gdsl_interval_heap_t.3 \
 ./gdsl_2darray.3 \
 ./gdsl_stack_map_forward.3 \
 ./_gdsl_bintree_free.3 \
@@ -293,17 +277,14 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_copy_func_t.3 \
 ./gdsl_free_func_t.3 \
 ./gdsl_compare_func_t.3 \
-./gdsl_interval_heap_set_max_size.3 \
 ./gdsl_perm_get_elements_array.3 \
 ./_gdsl_node_set_succ.3 \
 ./gdsl_queue_search.3 \
-./gdsl_interval_heap.3 \
 ./gdsl_hash_delete.3 \
 ./gdsl_hash_map.3 \
 ./gdsl_sort.3 \
 ./GDSL_MIN.3 \
 ./gdsl_constant_t.3 \
-./gdsl_interval_heap_get_min.3 \
 ./gdsl_rbtree_height.3 \
 ./GDSL_MAP_STOP.3 \
 ./gdsl_hash_get_lists_max_size.3 \
@@ -315,11 +296,9 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./_gdsl_list_map_forward.3 \
 ./gdsl_2darray_get_name.3 \
 ./GDSL_FOUND.3 \
-./gdsl_interval_heap_write.3 \
 ./_gdsl_node_alloc.3 \
 ./_gdsl_bintree_map_postfix.3 \
 ./gdsl_bstree_write_xml.3 \
-./gdsl_interval_heap_flush.3 \
 ./_gdsl_bintree_get_content.3 \
 ./_gdsl_bintree_dump.3 \
 ./_gdsl_bstree_copy.3 \
@@ -357,7 +336,6 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_list_cursor_move_to_tail.3 \
 ./gdsl_stack_search_by_position.3 \
 ./gdsl_rbtree_set_name.3 \
-./ushort.3 \
 ./gdsl_rbtree_is_empty.3 \
 ./_gdsl_list_dump.3 \
 ./GDSL_LOCATION_LAST.3 \
@@ -365,10 +343,8 @@ man_MANS	= ./gdsl_perm_canonical_cycles_count.3 \
 ./gdsl_perm_write_xml.3 \
 ./_gdsl_bstree_is_empty.3 \
 ./gdsl_hash_write.3 \
-./gdsl_interval_heap_remove_min.3 \
 ./gdsl.3 \
 ./_gdsl_bintree_set_left.3 \
-./gdsl_interval_heap.h.3 \
 ./gdsl_2darray_get_size.3 \
 ./_gdsl_list_search.3 \
 ./gdsl_location_t.3 \

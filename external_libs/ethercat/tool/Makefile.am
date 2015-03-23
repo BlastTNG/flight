@@ -30,7 +30,7 @@
 #  vim: syntax=automake
 #
 #------------------------------------------------------------------------------
-
+AUTOMAKE_OPTIONS = subdir-objects
 EXTRA_DIST =
 
 bin_PROGRAMS = ethercat
