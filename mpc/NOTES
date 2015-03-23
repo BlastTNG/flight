@@ -1,3 +1,0 @@
-The mas configuration command is:
-
-./configure --disable-driver --disable-sys-links --disable-init-script --with-etc-dir=/data/mas/etc --with-data-root=/data/mce --with-mas-temp=/run/tmp --prefix=/data/mas
