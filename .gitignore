@@ -3,3 +3,6 @@
 **.cproject
 **.settings
 **.o
+**.autotools
+**.deps
+**.dirstamp
