@@ -208,7 +208,7 @@ AC_ARG_ENABLE([8139too],
                 ;;
         esac
     ],
-    [enable8139too=$enablekernel]
+    [enable8139too=0]
 )
 
 AM_CONDITIONAL(ENABLE_8139TOO, test "x$enable8139too" = "x1")
@@ -673,7 +673,7 @@ AC_MSG_CHECKING([whether to build with EoE support])
 
 AC_ARG_ENABLE([eoe],
     AS_HELP_STRING([--enable-eoe],
-                   [Enable EoE support (default: yes)]),
+                   [Enable EoE support (default: no)]),
     [
         case "${enableval}" in
             yes) eoe=1
@@ -684,7 +684,7 @@ AC_ARG_ENABLE([eoe],
                 ;;
         esac
     ],
-    [eoe=1]
+    [eoe=0]
 )
 
 if test "x${eoe}" = "x1"; then
