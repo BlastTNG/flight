@@ -38,6 +38,7 @@
 #include <pthread.h>
 #include <limits.h>
 
+#include <netcmd.h>
 #include "sip.h"
 #include "blast.h"
 #include "command_common.h"
@@ -76,7 +77,8 @@ void fillDLData(unsigned char *b, int len); /* slowdl.c */
 
 extern pthread_mutex_t mutex;
 
-extern char lst0str[82];
+//TODO:lst0str is in the scheduler
+ char lst0str[82];
 
 void SingleCommand (enum singleCommand command, int scheduled); // commands.c
 void MultiCommand(enum multiCommand command, double *rvalues,

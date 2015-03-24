@@ -23,11 +23,14 @@
 #ifndef COMMAND_STRUCT_H
 #define COMMAND_STRUCT_H
 
+#include <stdbool.h>
+#include <time.h>
+
+#include <xsc_protocol.h>
 #include "isc_protocol.h"
 #include "command_list.h"
 #include "channels_tng.h"
 #include "mcp_sched.h"
-#include <time.h>
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -174,29 +177,49 @@ struct Step {
   unsigned short pulse_len;  // only used for bias
 };
 
-#define SBSC_COMM_BUF_SIZE  10000
-#define SBSC_CMD_Q_SIZE 6
-struct SBSCCommandData {
-  //camera and lens configuration
-  short int forced;  //are lens moves forced?
-  int expInt;        //exposure interval (ms) (0=triggered)
-  int expTime;       //exposure duration (ms)
-  int focusRes;      //steps to divide lens range into for focus
-  int focusRng;      //inverse fraction of total focal range to go through for autofocus
-  int moveTol;       //precision (ticks) for lens moves
-  double delay;	     //number of seconds between sending exposure command and pulse_sbsc 
+typedef enum
+{
+    xsc_heater_off, xsc_heater_on, xsc_heater_auto
+} xsc_heater_modes_t;
 
-  //image processing configuration
-  int maxBlobs;      //max number of blobs to find
-  int grid;          //search grid cell size (pix)
-  double threshold;  //# sigma threshold for star finding
-  int minBlobDist;   //min dist (pix) between blobs
-  
-  //uplink commands
-  char uplink_cmd[SBSC_CMD_Q_SIZE][SBSC_COMM_BUF_SIZE];
-  int i_uplink_r;
-  int i_uplink_w;
-};
+typedef struct XSCHeaters
+{
+    xsc_heater_modes_t mode;
+    double setpoint;
+} XSCHeaters;
+
+typedef struct XSCTriggerThresholds
+{
+    bool enabled;
+    double blob_streaking_px;
+}
+XSCTriggerThreshold;
+
+typedef struct XSCTrigger
+{
+    int exposure_time_cs;
+    int grace_period_cs;
+    int post_trigger_counter_fcp_share_delay_cs; // should probably be less than grace period
+
+    int num_triggers;
+    int multi_trigger_time_between_triggers_cs;
+
+    XSCTriggerThreshold threshold;
+    bool scan_force_trigger_enabled;
+
+} XSCTrigger;
+
+typedef struct XSCCommandStruct
+{
+    int is_new_window_period_cs;
+    XSCHeaters heaters;
+    XSCTrigger trigger;
+    XSCClientData net;
+    double cross_el_trim;
+    double el_trim;
+
+} XSCCommandStruct;
+
 
 struct CommandDataStruct {
   unsigned short command_count;
@@ -233,8 +256,6 @@ struct CommandDataStruct {
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
-
-  struct SBSCCommandData cam;
   
   struct {
     struct latch_pulse sc_tx;
@@ -275,12 +296,6 @@ struct CommandDataStruct {
   double offset_ifroll_gy;
   double offset_ifyaw_gy;
   unsigned int gymask;
-
-  struct {
-    double setpoint;
-    int age;
-    struct GainStruct gain;
-  } gyheat;
 
   unsigned char use_elenc;
   unsigned char use_elclin;
@@ -332,6 +347,7 @@ struct CommandDataStruct {
     struct Step biasStep;
   } Bias;
   
+  ///TODO: Remove Cryo cmd
   struct {
     unsigned short charcoalHeater;
     unsigned short hsCharcoal;
@@ -366,6 +382,7 @@ struct CommandDataStruct {
     unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   } Cryo;
 
+  ///TODO: Remove pump cmd
   struct {
     enum {bal_rest, bal_manual, bal_auto} mode;
     double level;
@@ -382,6 +399,7 @@ struct CommandDataStruct {
 
   } pumps;
 
+  ///TODO: Remove actbus cmd
   struct {
     int off;
     int force_repoll;
@@ -483,6 +501,8 @@ struct CommandDataStruct {
     int max_age;    //maximum allowed time between trigger and solution
     int age;	    //last measured time between trigger and solution
   } ISCControl[2];
+
+  struct XSCCommandStruct XSC[2];
 };
 
 void InitCommandData();

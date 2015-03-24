@@ -33,6 +33,7 @@
 #include <math.h>
 #include <pthread.h>
 
+#include <conversions.h>
 #include "command_list.h"
 #include "command_struct.h"
 #include "mcp.h"
@@ -63,7 +64,7 @@ static const double lock_positions[NUM_LOCK_POS] = {4.8, 14.8, 24.82, 34.81, 44.
 
 void RecalcOffset(double, double);  /* actuators.c */
 
-void SetRaDec(double, double); /* defined in pointing.c */
+/* defined in pointing.c */
 void SetTrimToSC(int);
 void TrimOSCToISC();
 void TrimISCToOSC();
@@ -81,8 +82,6 @@ pthread_mutex_t mutex;
 
 struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
-
-int sendSBSCCommand(const char *cmd); //sbsc.cpp
 
 const char* SName(enum singleCommand command); // share/sip.c
 
@@ -107,10 +106,6 @@ double LockPosition (double elevation)
 
 
 
-// These functions have been commented out to let compressionwriter.c compile
-
-
-/*
 void SingleCommand (enum singleCommand command, int scheduled)
 {
 #ifndef BOLOTEST
@@ -122,11 +117,11 @@ void SingleCommand (enum singleCommand command, int scheduled)
     bprintf(info, "Commands: Single command: %d (%s)\n", command,
         SName(command));
 
-   Update CommandData structure with new info
+//   Update CommandData structure with new info
 
   switch (command) {
 #ifndef BOLOTEST
-    case stop:  Pointing abort
+    case stop:  //Pointing abort
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;
@@ -136,14 +131,14 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.h = 0;
       break;
-    case antisun:  turn antisolar (az-only)
-      sun_az = PointingData[i_point].sun_az + 250;  point solar panels to sun
+    case antisun:  // turn antisolar (az-only)
+      sun_az = PointingData[i_point].sun_az + 250;  //point solar panels to sun
       NormalizeAngle(&sun_az);
 
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
-      CommandData.pointing_mode.X = sun_az;   az
-      CommandData.pointing_mode.Y = PointingData[i_point].el;   el
+      CommandData.pointing_mode.X = sun_az;   //az
+      CommandData.pointing_mode.Y = PointingData[i_point].el;   //el
       CommandData.pointing_mode.vaz = 0.0;
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
@@ -182,21 +177,21 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.el_autogyro = 1;
       break;
 
-    case az_off: disable az motors
+    case az_off: //disable az motors
       CommandData.disable_az = 1;
       break;
-    case az_on: enable az motors
+    case az_on: //enable az motors
       CommandData.disable_az = 0;
       break;
-    case el_off:  disable el motors
+    case el_off:  //disable el motors
       CommandData.disable_el = 1;
       CommandData.force_el = 0;
       break;
-    case el_on:  enable el motors
+    case el_on: // enable el motors
       CommandData.disable_el = 0;
       CommandData.force_el = 0;
       break;
-    case force_el_on:  force enabling of el motors
+    case force_el_on:  //force enabling of el motors
       CommandData.disable_el = 0;
       CommandData.force_el = 1;
       break;
@@ -256,7 +251,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.use_elclin = 1;
       break;
 
-    case sbsc_off:           power switching
+    case sbsc_off:          // power switching
       CommandData.power.sbsc.set_count = 0;
       CommandData.power.sbsc.rst_count = LATCH_PULSE_LEN;
       break;
@@ -524,14 +519,14 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.Bias.biasRamp = 0;
       break;
 
-    case level_on:    Cryo commanding
+    case level_on:   // Cryo commanding
       CommandData.Cryo.heliumLevel = -1;
       break;
     case level_off:
       CommandData.Cryo.heliumLevel = 0;
       break;
     case level_pulse:
-      CommandData.Cryo.heliumLevel = 350;   unit is 100Hz frames
+      CommandData.Cryo.heliumLevel = 350;   //unit is 100Hz frames
       break;
     case hwpr_enc_on:
       CommandData.Cryo.hwprPos = -1;
@@ -630,24 +625,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.Cryo.autoJFETheat = 1;
       break;
 
-#ifndef BOLOTEST
-    case balance_off: Balance pump commanding
-      CommandData.pumps.mode = bal_rest;
-      CommandData.pumps.level = 0;
-      break;
-    case balance_auto:
-      CommandData.pumps.mode= bal_auto;
-      break;
-    case balance_heat_on: Balance pump heating card commanding
-      CommandData.pumps.heat_on = 1;
-      break;
-    case balance_heat_off:
-      CommandData.pumps.heat_on = 0;
-      break;
-
-#endif
-
-     Lock
+     //Lock
     case pin_in:
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF | LS_IGNORE_EL;
       break;
@@ -667,7 +645,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
         CommandData.pointing_mode.h = 0;
       }
       break;
-  case lock45:   Lock Inner Frame at 45 (to be sent by CSBF pre-termination)
+  case lock45:   //Lock Inner Frame at 45 (to be sent by CSBF pre-termination)
       if (CommandData.pointing_mode.nw >= 0)
         CommandData.pointing_mode.nw = VETO_MAX;
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF;
@@ -687,7 +665,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.xystage.force_repoll = 1;
       break;
 
-     Shutter
+     //Shutter
     case shutter_init:
       CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
@@ -710,7 +688,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.actbus.shutter_goal = SHUTTER_CLOSED_SLOW;
       break;
 
-     Actuators
+     //Actuators
     case actuator_stop:
       CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
       CommandData.actbus.tc_mode = TC_MODE_VETOED;
@@ -728,8 +706,8 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
 #ifndef BOLOTEST
-      *************************************
-      ******** ISC Commanding  ************
+    //*************************************
+    //******** ISC Commanding  ************
     case isc_run:
       CommandData.ISCState[0].pause = 0;
       break;
@@ -782,8 +760,8 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.ISCState[0].useLost = 1;
       break;
 
-      *************************************
-      ******** OSC Commanding  ************
+    //*************************************
+    //******** OSC Commanding  ************
       break;
     case osc_run:
       CommandData.ISCState[1].pause = 0;
@@ -837,29 +815,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.ISCState[1].useLost = 1;
       break;
 
-      *************************************
-      ******** SBSC Commanding  ************
-    case cam_cycle:
-      sendSBSCCommand("Cpower");
-      break;
-    case cam_expose:
-      sendSBSCCommand("CtrigExp");
-      break;
-    case cam_autofocus:
-      if (CommandData.cam.forced)
-	sendSBSCCommand("CtrigFocusF");
-      else sendSBSCCommand("CtrigFocus");
-      break;
-    case cam_settrig_ext:
-      sendSBSCCommand("CsetExpInt=0");
-      CommandData.cam.expInt = 0;
-      break;
-    case cam_force_lens:
-      CommandData.cam.forced = 1;
-      break;
-    case cam_unforce_lens:
-      CommandData.cam.forced = 0;
-      break;
 
     case blast_rocks:
       CommandData.sucks = 0;
@@ -912,7 +867,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.hwpr.use_pot = 1;
       break;
 
-    case reap_north:   Miscellaneous commands
+    case reap_north:  // Miscellaneous commands
     case reap_south:
       if ((command == reap_north && !SouthIAm) || 
 	  (command == reap_south && SouthIAm)) {
@@ -938,7 +893,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     default:
       bputs(warning, "Commands: ***Invalid Single Word Command***\n");
-      return;  invalid command - no write or update
+      return;  //invalid command - no write or update
   }
 
   CommandData.command_count++;
@@ -946,8 +901,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
 
 #ifndef BOLOTEST
   if (!scheduled) {
-    if (doing_schedule)
-      bprintf(info, "Scheduler: *** Out of schedule file mode ***");
+      //TODO:RE-enable doing_schedule
+//    if (doing_schedule)
+//      bprintf(info, "Scheduler: *** Out of schedule file mode ***");
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
   } else
     CommandData.pointing_mode.t = PointingData[i_point].t;
@@ -969,12 +925,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
   char buf[256]; //for SBSC Commands
   int is_new;
 
-   Update CommandData struct with new info
-   * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
-   * If the parameter is type 'f'/'d' set CommandData using rvalues[i]
+//   Update CommandData struct with new info
+//   * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
+//   * If the parameter is type 'f'/'d' set CommandData using rvalues[i]
 
 
-   Pointing Modes
+//   Pointing Modes
   switch(command) {
 #ifndef BOLOTEST
     case az_el_goto:
@@ -990,8 +946,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
 
       CommandData.pointing_mode.mode = P_AZEL_GOTO;
-      CommandData.pointing_mode.X = rvalues[0];   az
-      CommandData.pointing_mode.Y = rvalues[1];   el
+      CommandData.pointing_mode.X = rvalues[0];   //az
+      CommandData.pointing_mode.Y = rvalues[1];   //el
       CommandData.pointing_mode.vaz = 0.0;
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
@@ -1000,11 +956,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case az_scan:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_AZ_SCAN;
-      CommandData.pointing_mode.X = rvalues[0];   az
-      CommandData.pointing_mode.Y = rvalues[1];   el
+      CommandData.pointing_mode.X = rvalues[0];   //az
+      CommandData.pointing_mode.Y = rvalues[1];   //el
       bprintf(info,"Scan center: %f, %f", CommandData.pointing_mode.X,CommandData.pointing_mode.Y);
-      CommandData.pointing_mode.w = rvalues[2];   width
-      CommandData.pointing_mode.vaz = rvalues[3];  az scan speed
+      CommandData.pointing_mode.w = rvalues[2];   //width
+      CommandData.pointing_mode.vaz = rvalues[3];  //az scan speed
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.h = 0;
       break;
@@ -1012,11 +968,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       //      bprintf(info,"Commands: El scan not enabled yet!");     
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_EL_SCAN;
-      CommandData.pointing_mode.X = rvalues[0];   az
-      CommandData.pointing_mode.Y = rvalues[1];   el
+      CommandData.pointing_mode.X = rvalues[0];   //az
+      CommandData.pointing_mode.Y = rvalues[1];   //el
       //      bprintf(info,"Scan center: %f, %f", CommandData.pointing_mode.X,CommandData.pointing_mode.Y);
-      CommandData.pointing_mode.h = rvalues[2];   height
-      CommandData.pointing_mode.vel = rvalues[3];  az scan speed
+      CommandData.pointing_mode.h = rvalues[2];   //height
+      CommandData.pointing_mode.vel = rvalues[3];  //az scan speed
       CommandData.pointing_mode.vaz = 0.0;
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.w = 0;
@@ -1027,15 +983,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.X = 0;
       CommandData.pointing_mode.Y = 0;
       CommandData.pointing_mode.w = 0;
-      CommandData.pointing_mode.vaz = rvalues[0];  az speed
-      CommandData.pointing_mode.del = rvalues[1];  el speed
+      CommandData.pointing_mode.vaz = rvalues[0];  //az speed
+      CommandData.pointing_mode.del = rvalues[1];  //el speed
       CommandData.pointing_mode.h = 0;
       break;
     case ra_dec_goto:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_RADEC_GOTO;
-      CommandData.pointing_mode.X = rvalues[0];  ra
-      CommandData.pointing_mode.Y = rvalues[1];  dec
+      CommandData.pointing_mode.X = rvalues[0];  //ra
+      CommandData.pointing_mode.Y = rvalues[1];  //dec
       CommandData.pointing_mode.w = 0;
       CommandData.pointing_mode.vaz = 0;
       CommandData.pointing_mode.del = 0;
@@ -1044,22 +1000,22 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case vcap:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_VCAP;
-      CommandData.pointing_mode.X = rvalues[0];  ra
-      CommandData.pointing_mode.Y = rvalues[1];  dec
-      CommandData.pointing_mode.w = rvalues[2];  radius
-      CommandData.pointing_mode.vaz = rvalues[3];  az scan speed
-      CommandData.pointing_mode.del = rvalues[4];  el drift speed
+      CommandData.pointing_mode.X = rvalues[0];  //ra
+      CommandData.pointing_mode.Y = rvalues[1];  //dec
+      CommandData.pointing_mode.w = rvalues[2];  //radius
+      CommandData.pointing_mode.vaz = rvalues[3];  //az scan speed
+      CommandData.pointing_mode.del = rvalues[4];  //el drift speed
       CommandData.pointing_mode.h = 0;
       break;
     case cap:
       
       if ((CommandData.pointing_mode.mode != P_CAP) ||
-          (CommandData.pointing_mode.X != rvalues[0]) ||   ra
-          (CommandData.pointing_mode.Y != rvalues[1]) ||   dec
-          (CommandData.pointing_mode.w != rvalues[2]) ||   radius
-          (CommandData.pointing_mode.vaz != rvalues[3]) ||   az scan speed
-          (CommandData.pointing_mode.del != rvalues[4]) ||   el step size
-          (CommandData.pointing_mode.h != 0))  {  N dither steps
+          (CommandData.pointing_mode.X != rvalues[0]) ||   //ra
+          (CommandData.pointing_mode.Y != rvalues[1]) ||   //dec
+          (CommandData.pointing_mode.w != rvalues[2]) ||   //radius
+          (CommandData.pointing_mode.vaz != rvalues[3]) ||   //az scan speed
+          (CommandData.pointing_mode.del != rvalues[4]) ||   //el step size
+          (CommandData.pointing_mode.h != 0))  {  //N dither steps
         CommandData.pointing_mode.nw = CommandData.slew_veto;
       }
       // zero unused parameters
@@ -1070,23 +1026,23 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
 
       CommandData.pointing_mode.mode = P_CAP;
-      CommandData.pointing_mode.X = rvalues[0];  ra
-      CommandData.pointing_mode.Y = rvalues[1];  dec
-      CommandData.pointing_mode.w = rvalues[2];  radius
-      CommandData.pointing_mode.vaz = rvalues[3];  az scan speed
-      CommandData.pointing_mode.del = rvalues[4];  el step size
+      CommandData.pointing_mode.X = rvalues[0];  //ra
+      CommandData.pointing_mode.Y = rvalues[1];  //dec
+      CommandData.pointing_mode.w = rvalues[2];  //radius
+      CommandData.pointing_mode.vaz = rvalues[3];  //az scan speed
+      CommandData.pointing_mode.del = rvalues[4];  //el step size
       CommandData.pointing_mode.h = 0;
-      CommandData.pointing_mode.n_dith = ivalues[5];  No of dither steps
+      CommandData.pointing_mode.n_dith = ivalues[5];  //No of dither steps
       break;
     case box:
 
       if ((CommandData.pointing_mode.mode != P_BOX) ||
-          (CommandData.pointing_mode.X != rvalues[0]) ||  ra
-          (CommandData.pointing_mode.Y != rvalues[1]) ||  dec
-          (CommandData.pointing_mode.w != rvalues[2]) ||  width
-          (CommandData.pointing_mode.h != rvalues[3]) ||  height
-          (CommandData.pointing_mode.vaz != rvalues[4]) ||  az scan speed
-          (CommandData.pointing_mode.del != rvalues[5])) {  el step size
+          (CommandData.pointing_mode.X != rvalues[0]) ||  //ra
+          (CommandData.pointing_mode.Y != rvalues[1]) ||  //dec
+          (CommandData.pointing_mode.w != rvalues[2]) ||  //width
+          (CommandData.pointing_mode.h != rvalues[3]) ||  //height
+          (CommandData.pointing_mode.vaz != rvalues[4]) ||  //az scan speed
+          (CommandData.pointing_mode.del != rvalues[5])) {  //el step size
         CommandData.pointing_mode.nw = CommandData.slew_veto;
       }
      
@@ -1097,23 +1053,23 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       
       CommandData.pointing_mode.mode = P_BOX;
-      CommandData.pointing_mode.X = rvalues[0];  ra
-      CommandData.pointing_mode.Y = rvalues[1];  dec
-      CommandData.pointing_mode.w = rvalues[2];  width
-      CommandData.pointing_mode.h = rvalues[3];  height
-      CommandData.pointing_mode.vaz = rvalues[4];  az scan speed
-      CommandData.pointing_mode.del = rvalues[5];  el step size
-      CommandData.pointing_mode.n_dith = ivalues[6];  number of el dither steps
+      CommandData.pointing_mode.X = rvalues[0];  //ra
+      CommandData.pointing_mode.Y = rvalues[1];  //dec
+      CommandData.pointing_mode.w = rvalues[2];  //width
+      CommandData.pointing_mode.h = rvalues[3];  //height
+      CommandData.pointing_mode.vaz = rvalues[4];  //az scan speed
+      CommandData.pointing_mode.del = rvalues[5];  //el step size
+      CommandData.pointing_mode.n_dith = ivalues[6];  //number of el dither steps
       break;
     case el_box:
 
       if ((CommandData.pointing_mode.mode != P_EL_BOX) ||
-          (CommandData.pointing_mode.X != rvalues[0]) ||  ra
-          (CommandData.pointing_mode.Y != rvalues[1]) ||  dec
-          (CommandData.pointing_mode.w != rvalues[2]) ||  width
-          (CommandData.pointing_mode.h != rvalues[3]) ||  height
-          (CommandData.pointing_mode.vel != rvalues[4]) ||  az scan speed
-          (CommandData.pointing_mode.daz != rvalues[5])) {  el step size
+          (CommandData.pointing_mode.X != rvalues[0]) ||  //ra
+          (CommandData.pointing_mode.Y != rvalues[1]) ||  //dec
+          (CommandData.pointing_mode.w != rvalues[2]) ||  //width
+          (CommandData.pointing_mode.h != rvalues[3]) ||  //height
+          (CommandData.pointing_mode.vel != rvalues[4]) ||  //az scan speed
+          (CommandData.pointing_mode.daz != rvalues[5])) {  //el step size
 
         CommandData.pointing_mode.nw = CommandData.slew_veto;
       }
@@ -1125,30 +1081,30 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       
       CommandData.pointing_mode.mode = P_EL_BOX;
-      CommandData.pointing_mode.X = rvalues[0];  ra
-      CommandData.pointing_mode.Y = rvalues[1];  dec
-      CommandData.pointing_mode.w = rvalues[2];  width
-      CommandData.pointing_mode.h = rvalues[3];  height
-      CommandData.pointing_mode.vel = rvalues[4];  az scan speed
-      CommandData.pointing_mode.daz = rvalues[5];  el step size
-      CommandData.pointing_mode.n_dith = ivalues[6];  number of el dither steps
+      CommandData.pointing_mode.X = rvalues[0];  //ra
+      CommandData.pointing_mode.Y = rvalues[1];  //dec
+      CommandData.pointing_mode.w = rvalues[2];  //width
+      CommandData.pointing_mode.h = rvalues[3];  //height
+      CommandData.pointing_mode.vel = rvalues[4];  //az scan speed
+      CommandData.pointing_mode.daz = rvalues[5];  //el step size
+      CommandData.pointing_mode.n_dith = ivalues[6];  //number of el dither steps
 
       break;
     case vbox:
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_VBOX;
-      CommandData.pointing_mode.X = rvalues[0];  ra
-      CommandData.pointing_mode.Y = rvalues[1];  dec
-      CommandData.pointing_mode.w = rvalues[2];  width
-      CommandData.pointing_mode.h = rvalues[3];  height
-      CommandData.pointing_mode.vaz = rvalues[4];  az scan speed
-      CommandData.pointing_mode.del = rvalues[5];  el drift speed
+      CommandData.pointing_mode.X = rvalues[0];  //ra
+      CommandData.pointing_mode.Y = rvalues[1];  //dec
+      CommandData.pointing_mode.w = rvalues[2];  //width
+      CommandData.pointing_mode.h = rvalues[3];  //height
+      CommandData.pointing_mode.vaz = rvalues[4];  //az scan speed
+      CommandData.pointing_mode.del = rvalues[5];  //el drift speed
       break;
     case quad:
       is_new = 0;
       if ((CommandData.pointing_mode.mode != P_QUAD) ||
-          (CommandData.pointing_mode.vaz != rvalues[8]) ||  az scan speed
-          (CommandData.pointing_mode.del != rvalues[9])) { el step size
+          (CommandData.pointing_mode.vaz != rvalues[8]) ||  //az scan speed
+          (CommandData.pointing_mode.del != rvalues[9])) { //el step size
         is_new=1;
       }
       for (i = 0; i < 4; i++) {
@@ -1161,19 +1117,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (is_new) {
         CommandData.pointing_mode.nw = CommandData.slew_veto;
       }
-      CommandData.pointing_mode.X = 0;  ra
-      CommandData.pointing_mode.Y = 0;  dec
-      CommandData.pointing_mode.w = 0;  width
-      CommandData.pointing_mode.h = 0;  height
+      CommandData.pointing_mode.X = 0;  //ra
+      CommandData.pointing_mode.Y = 0;  //dec
+      CommandData.pointing_mode.w = 0;  //width
+      CommandData.pointing_mode.h = 0;  //height
       
       CommandData.pointing_mode.mode = P_QUAD;
       for (i = 0; i < 4; i++) {
         CommandData.pointing_mode.ra[i] = rvalues[i * 2];
         CommandData.pointing_mode.dec[i] = rvalues[i * 2 + 1];
       }
-      CommandData.pointing_mode.vaz = rvalues[8];  az scan speed
-      CommandData.pointing_mode.del = rvalues[9];  el step size
-      CommandData.pointing_mode.n_dith = ivalues[10];  N dither steps
+      CommandData.pointing_mode.vaz = rvalues[8];  //az scan speed
+      CommandData.pointing_mode.del = rvalues[9];  //el step size
+      CommandData.pointing_mode.n_dith = ivalues[10];  //N dither steps
       break;
     case az_scan_accel:
       CommandData.az_accel = rvalues[0];
@@ -1186,8 +1142,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.next_i_dith = ivalues[1];
       break;
 
-      *************************************
-      ********* Pointing Sensor Trims ******
+      /*************************************
+      ********* Pointing Sensor Trims ******/
     case az_el_trim:
       AzElTrim(rvalues[0], rvalues[1]);
       break;
@@ -1236,27 +1192,27 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
       
 
-      *************************************
-      ********* Pointing Motor Gains ******
-    case el_gain:   ele gains
+    /*************************************
+     ********* Pointing Motor Gains ******/
+    case el_gain:   //ele gains
       CommandData.ele_gain.P = ivalues[0];
       CommandData.ele_gain.I = ivalues[1];
       CommandData.ele_gain.PT = ivalues[2];
       break;
-    case az_gain:   az gains
+    case az_gain:   //az gains
       CommandData.azi_gain.P = ivalues[0];
       CommandData.azi_gain.I = ivalues[1];
       CommandData.azi_gain.PT = ivalues[2];
       break;
-    case pivot_gain:   pivot gains
+    case pivot_gain:   //pivot gains
       CommandData.pivot_gain.SP = rvalues[0];
       CommandData.pivot_gain.PE = ivalues[1];
       CommandData.pivot_gain.PV = ivalues[2];
       CommandData.pivot_gain.F = rvalues[3];
       break;
 
-      *************************************
-      ****           test of motor DACs ***
+     /*************************************
+      ****           test of motor DACs ***/
     case dac2_level:
       CommandData.Temporary.dac_out[1] = ivalues[0] << 1;
       CommandData.Temporary.setLevel[1] = 1;
@@ -1268,9 +1224,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 #endif
 
-      *************************************
-      ********* Lock / Actuators  *********
-    case lock:   Lock Inner Frame
+     /*************************************
+      ********* Lock / Actuators  *********/
+    case lock:   //Lock Inner Frame
       if (CommandData.pointing_mode.nw >= 0)
         CommandData.pointing_mode.nw = VETO_MAX;
       CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF;
@@ -1298,7 +1254,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case shutter_step_slow:
       CommandData.actbus.shutter_step_slow = ivalues[0];
       break;
-    case general:  General actuator bus command
+    case general:  //General actuator bus command
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
       copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
           svalues[1]);
@@ -1315,7 +1271,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case thermo_gain:
       CommandData.actbus.tc_step = ivalues[2];
-      CommandData.actbus.tc_wait = ivalues[3] * 300;  convert min->5Hz
+      CommandData.actbus.tc_wait = ivalues[3] * 300;  //convert min->5Hz
       CommandData.actbus.sf_time = CommandData.actbus.tc_wait - 5;
       RecalcOffset(rvalues[0], rvalues[1]);
       CommandData.actbus.g_primary = rvalues[0];
@@ -1420,7 +1376,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
-       XY Stage
+       //XY Stage
     case xy_goto:
       CommandData.xystage.x1 = ivalues[0];
       CommandData.xystage.y1 = ivalues[1];
@@ -1466,10 +1422,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
 #ifndef BOLOTEST
-      *************************************
-      ********* Balance System  ***********
+      /*************************************
+      ********* Balance System  ***********/
     case balance_gain:
-      CommandData.pumps.level_on_bal = rvalues[0] * 1990.13;  1990.13 DAC/Amp
+      CommandData.pumps.level_on_bal = rvalues[0] * 1990.13;  //1990.13 DAC/Amp
       CommandData.pumps.level_off_bal = rvalues[1] * 1990.13;
       CommandData.pumps.level_target_bal = rvalues[2] * 1990.13;
       CommandData.pumps.gain_bal = rvalues[3];
@@ -1482,20 +1438,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pumps.heat_tset = rvalues[0];
       break;
 
-      *************************************
-      ******* Electronics Heaters  ********
-    case t_gyro_set:   gyro heater setpoint
-      CommandData.gyheat.setpoint = rvalues[0];
-      CommandData.gyheat.age = 0;
-      break;
-    case t_gyro_gain:   gyro heater gains
-      CommandData.gyheat.gain.P = ivalues[0];
-      CommandData.gyheat.gain.I = ivalues[1];
-      CommandData.gyheat.gain.D = ivalues[2];
-      break;
-
-      *************************************
-      ************** Misc  ****************
+      /*************************************
+      ************** Misc  ****************/
 //    case gyro_off:
 //      CommandData.power.gyro_off[ivalues[0]-1] |= 0x01;
 //      break;
@@ -1506,7 +1450,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (ivalues[0] < 64)
         CommandData.power.adc_reset[ivalues[0]/4] = RESET_ADC_LEN;
       break;
-    case timeout:        Set timeout
+    case timeout:        //Set timeout
       CommandData.timeout = rvalues[0];
       break;
     case tdrss_bw:
@@ -1518,44 +1462,45 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case oth_set:
       CommandData.channelset_oth = ivalues[0];
       break;      
-    case slot_sched:  change uplinked schedule file
-      if (LoadUplinkFile(ivalues[0])) {
-        CommandData.uplink_sched = 1;
-        CommandData.slot_sched = ivalues[0];
-      }
+    case slot_sched:  //change uplinked schedule file
+        //TODO:Re-enable Uplink file loading
+//      if (LoadUplinkFile(ivalues[0])) {
+//        CommandData.uplink_sched = 1;
+//        CommandData.slot_sched = ivalues[0];
+//      }
       break;
-    case params_test: Do nothing, with lots of parameters
+    case params_test: //Do nothing, with lots of parameters
       bprintf(info, "Integer params 'i': %d 'l' %d", ivalues[0], ivalues[1]);
       bprintf(info, "Float params 'f': %g 'd' %g", rvalues[2], rvalues[3]);
       bprintf(info, "String param 's': %s", svalues[4]);
       CommandData.plover = ivalues[0];
       break;
-    case plugh: A hollow voice says "Plugh".
+    case plugh: //A hollow voice says "Plugh".
       CommandData.plover = ivalues[0];
       break;
 #endif
 
-      *************************************
-      ************** Bias  ****************
-       used to be multiplied by 2 here, but screw up prev_satus
-       need to multiply later instead
-    case bias_level_500:     Set bias 1 (500)
+      /*************************************
+      ************** Bias  ****************/
+//       used to be multiplied by 2 here, but screw up prev_satus
+//       need to multiply later instead
+    case bias_level_500:     //Set bias 1 (500)
       CommandData.Bias.bias[0] = ivalues[0];
       CommandData.Bias.setLevel[0] = 1;
       break;
-    case bias_level_350:    Set bias 2 (350)
+    case bias_level_350:     //Set bias 2 (350)
       CommandData.Bias.bias[1] = ivalues[0];
       CommandData.Bias.setLevel[1] = 1;
       break;
-    case bias_level_250:    Set bias 3 (250)
+    case bias_level_250:     //Set bias 3 (250)
       CommandData.Bias.bias[2] = ivalues[0];
       CommandData.Bias.setLevel[2] = 1;
       break;
-    case bias_level_rox:    Set bias 4 (ROX)
+    case bias_level_rox:     //Set bias 4 (ROX)
       CommandData.Bias.bias[3] = ivalues[0];
       CommandData.Bias.setLevel[3] = 1;
       break;
-    case bias_level_x:    Set bias 5 (spare)
+    case bias_level_x:     //Set bias 5 (spare)
       CommandData.Bias.bias[4] = ivalues[0];
       CommandData.Bias.setLevel[4] = 1;
       break;
@@ -1568,8 +1513,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Bias.biasStep.pulse_len = ivalues[4];
       CommandData.Bias.biasStep.arr_ind = ivalues[5];
       break;
-      *************************************
-      ********** Cal Lamp  ****************
+      /*************************************
+      ********** Cal Lamp  ****************/
     case cal_pulse:
       CommandData.Cryo.calibrator = pulse;
       CommandData.Cryo.calib_pulse = ivalues[0] / 10;
@@ -1581,8 +1526,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.calib_hwpr = ivalues[2];
       break;
 
-      *************************************
-      ******** Cryo heat   ****************
+      /*************************************
+      ******** Cryo heat   ****************/
     case jfet_set:
       CommandData.Cryo.JFETSetOn = rvalues[0];
       CommandData.Cryo.JFETSetOff = rvalues[1];
@@ -1598,8 +1543,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
 #ifndef BOLOTEST
-      *************************************
-      ******** ISC Commanding  ************
+      /*************************************
+      ******** ISC Commanding  ************/
     case isc_set_focus:
       CommandData.ISCState[0].focus_pos = ivalues[0];
       break;
@@ -1665,8 +1610,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ISCControl[0].max_age = ivalues[0]/10; //convert from ms to frames
       break;
 
-      *************************************
-      ******** OSC Commanding  ************
+     /*************************************
+      ******** OSC Commanding  ************/
     case osc_set_focus:
       CommandData.ISCState[1].focus_pos = ivalues[0];
       break;
@@ -1731,69 +1676,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case osc_max_age:
       CommandData.ISCControl[1].max_age = ivalues[0]/10; //convert from ms to frames
       break;
-      *************************************
-      ******** SBSC Commanding  ************
-    case cam_any:
-      sendSBSCCommand(svalues[0]);
-      break;
-    case cam_trig_delay:
-      CommandData.cam.delay = rvalues[0];
-      break;
-    case cam_settrig_timed:
-      sprintf(buf, "CsetExpInt=%d", ivalues[0]);
-      sendSBSCCommand(buf);
-      CommandData.cam.expInt = ivalues[0];
-      break;
-    case cam_exp_params:
-      sprintf(buf, "CsetExpTime=%d", ivalues[0]);
-      CommandData.cam.expTime = ivalues[0];
-      sendSBSCCommand(buf);
-      break;
-    case cam_focus_params:
-      sprintf(buf, "CsetFocRsln=%d", ivalues[0]);
-      sendSBSCCommand(buf);
-      sprintf(buf, "CsetFocRnge=%d", ivalues[1]);
-      sendSBSCCommand(buf); 
-      CommandData.cam.focusRes = ivalues[0];
-      CommandData.cam.focusRng = ivalues[1];
-      break;
-    case cam_bad_pix:
-      sprintf(buf, "IsetBadpix=%d %d %d", ivalues[0], ivalues[1], ivalues[2]);
-      sendSBSCCommand(buf);
-      break;
-    case cam_blob_params:
-      sprintf(buf, "IsetMaxBlobs=%d", ivalues[0]);
-      sendSBSCCommand(buf);
-      sprintf(buf, "IsetGrid=%d", ivalues[1]);
-      sendSBSCCommand(buf);
-      sprintf(buf, "IsetThreshold=%f", rvalues[2]);
-      sendSBSCCommand(buf);
-      sprintf(buf, "IsetDisttol=%d", ivalues[3]);
-      sendSBSCCommand(buf);
-      CommandData.cam.maxBlobs = ivalues[0];
-      CommandData.cam.grid = ivalues[1];
-      CommandData.cam.threshold = rvalues[2];
-      CommandData.cam.minBlobDist = ivalues[3];
-      break;
-    case cam_lens_any:
-      sprintf(buf, "L=%s", svalues[0]);
-      sendSBSCCommand(buf);
-      break;
-    case cam_lens_move:
-      if (CommandData.cam.forced)
-	sprintf(buf, "Lforce=%d", ivalues[0]);
-      else sprintf(buf, "Lmove=%d", ivalues[0]);
-      sendSBSCCommand(buf);
-      break;
-    case cam_lens_params:
-      sprintf(buf, "LsetTol=%d", ivalues[0]);
-      sendSBSCCommand(buf);
-      CommandData.cam.moveTol = ivalues[0];
-      break;
+
 #endif
     default:
       bputs(warning, "Commands: ***Invalid Multi Word Command***\n");
-      return;  invalid command - don't update
+      return;  //invalid command - don't update
   }
 
   CommandData.command_count++;
@@ -1811,7 +1698,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
   WritePrevStatus();
 }
-*/
+
 
 
 /************************************************************/
@@ -1878,12 +1765,6 @@ void InitCommandData()
   CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
   CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
 
-  for (i=0; i<SBSC_CMD_Q_SIZE; i++) {
-    CommandData.cam.uplink_cmd[i][0] = '\0';
-  }
-  CommandData.cam.i_uplink_r = 0;
-  CommandData.cam.i_uplink_w = 0;
-
   CommandData.power.sc_tx.rst_count = 0;
   CommandData.power.sc_tx.set_count = 0;
   CommandData.power.das.rst_count = 0;
@@ -1918,8 +1799,6 @@ void InitCommandData()
   CommandData.power.hub232_off = 0;
   for (i=0; i<16; i++)
     CommandData.power.adc_reset[i] = 0;
-
-  CommandData.gyheat.age = 0;
 
   CommandData.Cryo.BDAHeat = 0;
 
@@ -2010,12 +1889,6 @@ void InitCommandData()
   CommandData.verbose_rw = 0;
   CommandData.verbose_el = 0;
   CommandData.verbose_piv = 0;
-
-  CommandData.gyheat.setpoint = 5.0;
-  CommandData.gyheat.age = 0;
-  CommandData.gyheat.gain.P = 30;
-  CommandData.gyheat.gain.I = 10;
-  CommandData.gyheat.gain.D = 3;
 
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;

@@ -38,7 +38,6 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
-#include "bbc_pci.h"
 
 #include "blast.h"
 #include "command_list.h"
@@ -52,32 +51,22 @@
 #include "flcdataswap.h"
 #include "lut.h"
 
-#define BBC_EOF      (0xffff)
-#define BBC_BAD_DATA (0xfffffff0)
 
-#define STARTUP_VETO_LENGTH 250 /* "frames" */
-#define BI0_VETO_LENGTH 5 /* seconds */
-
-#define BI0_FRAME_BUFLEN (400)
 
 /* Define global variables */
+int StartupVeto = 20;
 //flc_ip[0] = south, flc_ip[1] = north, so that flc_ip[SouthIAm] gives other flc
 char* flc_ip[2] = {"192.168.1.6", "192.168.1.5"};
 
 int bbc_fp = -1;
 unsigned int debug = 0;
 short int SouthIAm;
+short int InCharge = 0;
+short int InChargeSet=0;
 struct ACSDataStruct ACSData;
 
 pthread_t watchdog_id;
 
-int StartupVeto = STARTUP_VETO_LENGTH + 1;
-int UsefulnessVeto = 2*STARTUP_VETO_LENGTH;
-int BLASTBusUseful = 0;
-
-static int Death = -STARTUP_VETO_LENGTH * 2;
-
-extern short int InCharge; /* tx.c */
 extern pthread_mutex_t mutex;  //commands.c
 
 void Pointing();
@@ -101,18 +90,18 @@ void InitSched();
 
 static FILE* logfile = NULL;
 
-#ifndef BOLOTEST
-struct frameBuffer {
-  int i_in;
-  int i_out;
-  unsigned short *framelist[BI0_FRAME_BUFLEN];
-  unsigned short** slow_data_list[BI0_FRAME_BUFLEN];
-};
-
-static struct frameBuffer bi0_buffer;
-struct frameBuffer hiGain_buffer;
-
-#endif
+//#ifndef BOLOTEST
+//struct frameBuffer {
+//  int i_in;
+//  int i_out;
+//  unsigned short *framelist[BI0_FRAME_BUFLEN];
+//  unsigned short** slow_data_list[BI0_FRAME_BUFLEN];
+//};
+//
+//static struct frameBuffer bi0_buffer;
+//struct frameBuffer hiGain_buffer;
+//
+//#endif
 
 time_t biphase_timer;
 int biphase_is_on = 0;
@@ -561,75 +550,9 @@ static void GetACS(unsigned short *RxFrame)
     potHwprAddr = channels_find_by_name("pot_hwpr");
   }
 
-//  rx_frame_index = ((RxFrame[1] & 0x0000ffff) |
-//      (RxFrame[2] & 0x0000ffff) << 16);
-
-  enc_raw_el = ReadCalData(elRawEncAddr);
-  vel_rw = ReadCalData(velRWAddr);
-  ifel_gy = ReadCalData(ifElgyAddr);
-  ifroll_gy = ReadCalData(ifRollgyAddr);
-  ifyaw_gy = ReadCalData(ifYawgyAddr);;
-
-  res_piv = ReadCalData(resPivAddr);
-
-#ifndef FAST_MAG
-  x_comp = ReadCalData(xMagAddr);
-  y_comp = ReadCalData(yMagAddr);
-#else
-  x_comp = ReadCalData(xMagAddr);
-  y_comp = ReadCalData(yMagAddr);
-#endif
-  z_comp = ReadCalData(zMagAddr);
-
-  pss1_i1 = ReadCalData(v11PssAddr);
-  pss1_i2 = ReadCalData(v21PssAddr);
-  pss1_i3 = ReadCalData(v31PssAddr);
-  pss1_i4 = ReadCalData(v41PssAddr);
-  pss2_i1 = ReadCalData(v12PssAddr);
-  pss2_i2 = ReadCalData(v22PssAddr);
-  pss2_i3 = ReadCalData(v32PssAddr);
-  pss2_i4 = ReadCalData(v42PssAddr);
-  pss3_i1 = ReadCalData(v13PssAddr);
-  pss3_i2 = ReadCalData(v23PssAddr);
-  pss3_i3 = ReadCalData(v33PssAddr);
-  pss3_i4 = ReadCalData(v43PssAddr);
-  pss4_i1 = ReadCalData(v14PssAddr);
-  pss4_i2 = ReadCalData(v24PssAddr);
-  pss4_i3 = ReadCalData(v34PssAddr);
-  pss4_i4 = ReadCalData(v44PssAddr);
-  hwpr_pot = ReadCalData(potHwprAddr);
-
-  ACSData.clin_elev = ReadCalData(elRawIfClinAddr);
-
-  ACSData.t = mcp_systime(NULL);
-  ACSData.mcp_frame = rx_frame_index;
-  ACSData.enc_raw_el = enc_raw_el;
-  ACSData.ifel_gy = ifel_gy;
-  ACSData.ifroll_gy = ifroll_gy;
-  ACSData.ifyaw_gy = ifyaw_gy;
-  ACSData.mag_x = x_comp;
-  ACSData.mag_y = y_comp;
-  ACSData.mag_z = z_comp;
-  ACSData.vel_rw = vel_rw;
-  ACSData.res_piv = res_piv;
-  ACSData.pss1_i1 = pss1_i1;
-  ACSData.pss1_i2 = pss1_i2;
-  ACSData.pss1_i3 = pss1_i3;
-  ACSData.pss1_i4 = pss1_i4;
-  ACSData.pss2_i1 = pss2_i1;
-  ACSData.pss2_i2 = pss2_i2;
-  ACSData.pss2_i3 = pss2_i3;
-  ACSData.pss2_i4 = pss2_i4;
-  ACSData.pss3_i1 = pss3_i1;
-  ACSData.pss3_i2 = pss3_i2;
-  ACSData.pss3_i3 = pss3_i3;
-  ACSData.pss3_i4 = pss3_i4;
-  ACSData.pss4_i1 = pss4_i1;
-  ACSData.pss4_i2 = pss4_i2;
-  ACSData.pss4_i3 = pss4_i3;
-  ACSData.pss4_i4 = pss4_i4;
-  ACSData.hwpr_pot = hwpr_pot; // keep this as an integer, 
-                               // so it can be read in one atomic cycle...
+  ///TODO: Add MAG read functions
+  ///TODO: Add Clin read functions
+  ///TODO: Add PSS read functions
 
 }
 
@@ -738,68 +661,68 @@ static void GetCurrents(unsigned short *RxFrame)
 #endif
 
 
-#ifndef BOLOTEST
-static void WatchDog (void)
-{
-  nameThread("WDog");
-  bputs(startup, "Startup\n");
-
-  /* Allow other threads to kill this one at any time */
-  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
-  if (ioperm(0x378, 0x0F, 1) != 0)
-    berror(tfatal, "Error setting watchdog permissions");
-  ioperm(0x80, 1, 1);
-
-  for (;;) {
-    outb(0xAA, 0x378);
-    usleep(10000);
-    outb(0x55, 0x378);
-    usleep(10000);
-  }
-}
-
-
-void ClearBuffer(struct frameBuffer *buffer) {
-  buffer->i_out = buffer->i_in;
-}
-
-unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer, unsigned short ***slow) {
-  unsigned short *frame;
-  int i_out = buffer->i_out;
-  
-  if (buffer->i_in == i_out) { // no data
-    return (NULL);
-  }
-  frame = buffer->framelist[i_out];
-  
-  *slow = buffer->slow_data_list[i_out];
-  
-  i_out++;
-  if (i_out>=BI0_FRAME_BUFLEN) {
-    i_out = 0;
-  }
-  buffer->i_out = i_out;
-  return (frame);
-}
-
-unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
-  unsigned short *frame;
-  int i_out = buffer->i_out;
-  
-  if (buffer->i_in == i_out) { // no data
-    return (NULL);
-  }
-  frame = buffer->framelist[i_out];
-  i_out++;
-  if (i_out>=BI0_FRAME_BUFLEN) {
-    i_out = 0;
-  }
-  buffer->i_out = i_out;
-  return (frame);
-}
-  
-#endif
+//#ifndef BOLOTEST
+//static void WatchDog (void)
+//{
+//  nameThread("WDog");
+//  bputs(startup, "Startup\n");
+//
+//  /* Allow other threads to kill this one at any time */
+//  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+//
+//  if (ioperm(0x378, 0x0F, 1) != 0)
+//    berror(tfatal, "Error setting watchdog permissions");
+//  ioperm(0x80, 1, 1);
+//
+//  for (;;) {
+//    outb(0xAA, 0x378);
+//    usleep(10000);
+//    outb(0x55, 0x378);
+//    usleep(10000);
+//  }
+//}
+//
+//
+//void ClearBuffer(struct frameBuffer *buffer) {
+//  buffer->i_out = buffer->i_in;
+//}
+//
+//unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer, unsigned short ***slow) {
+//  unsigned short *frame;
+//  int i_out = buffer->i_out;
+//
+//  if (buffer->i_in == i_out) { // no data
+//    return (NULL);
+//  }
+//  frame = buffer->framelist[i_out];
+//
+//  *slow = buffer->slow_data_list[i_out];
+//
+//  i_out++;
+//  if (i_out>=BI0_FRAME_BUFLEN) {
+//    i_out = 0;
+//  }
+//  buffer->i_out = i_out;
+//  return (frame);
+//}
+//
+//unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
+//  unsigned short *frame;
+//  int i_out = buffer->i_out;
+//
+//  if (buffer->i_in == i_out) { // no data
+//    return (NULL);
+//  }
+//  frame = buffer->framelist[i_out];
+//  i_out++;
+//  if (i_out>=BI0_FRAME_BUFLEN) {
+//    i_out = 0;
+//  }
+//  buffer->i_out = i_out;
+//  return (frame);
+//}
+//
+//#endif
 
 //#ifndef BOLOTEST
 //static void BiPhaseWriter(void)
@@ -837,23 +760,6 @@ unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
 //
 //#endif
 
-/******************************************************************/
-/*                                                                */
-/* IsNewFrame: returns true if d is a begining of frame marker,   */
-/*    unless this is the first beginning of frame.                */
-/*                                                                */
-/******************************************************************/
-static int IsNewFrame(unsigned int d)
-{
-  static int first_bof = 1;
-  int is_bof;
-  is_bof = (d == (BBC_FSYNC | BBC_WRITE | BBC_NODE(63) | BBC_CH(0) | 0xEB90));
-  if (is_bof && first_bof) {
-    is_bof = first_bof = 0;
-  }
-
-  return is_bof;
-}
 
 /* Polarity crisis: am I north or south? */
 static int AmISouth(int *not_cryo_corner)
@@ -871,33 +777,6 @@ static int AmISouth(int *not_cryo_corner)
   return (buffer[0] == 's') ? 1 : 0;
 }
 
-/* Signal handler called when we get a hup, int or term */
-static void CloseBBC(int signo)
-{
-  bprintf(err, "System: Caught signal %i; stopping NIOS", signo);
-#ifndef BOLOTEST
-  closeMotors();
-
-  endChrgCtrl();  // is this needed?
-#endif
-
-
-//  ShutdownFrameFile();
-
-  /* restore default handler and raise the signal again */
-  signal(signo, SIG_DFL);
-  raise(signo);
-}
-
-#if 0
-static char segvregs[100];
-static int segvcnt = 0;
-static void SegV(int signo)
-{
-  fprintf(stderr, "SEGV caught: %s\n", segvregs);
-  raise(SIGTERM);
-}
-#endif
 
 int main(int argc, char *argv[])
 {
@@ -948,7 +827,6 @@ int main(int argc, char *argv[])
     fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
   }
 
-  biphase_timer = mcp_systime(NULL) + BI0_VETO_LENGTH;
 
   /* register the output function */
   nameThread("Dummy"); //insert dummy sentinel node first
@@ -962,7 +840,7 @@ int main(int argc, char *argv[])
   bputs(startup, "System: Startup");
 
   /* Find out whether I'm north or south */
-  SouthIAm = AmISouth(&use_starcams);
+//  SouthIAm = AmISouth(&use_starcams);
 
   if (SouthIAm)
     bputs(info, "System: I am South.\n");
@@ -970,10 +848,10 @@ int main(int argc, char *argv[])
     bputs(info, "System: I am not South.\n");
 
 
-#ifndef BOLOTEST
-  /* Watchdog */
-  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
-#endif
+//#ifndef BOLOTEST
+//  /* Watchdog */
+//  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
+//#endif
 
 
   //populate nios addresses, based off of tx_struct, derived
@@ -992,7 +870,7 @@ int main(int argc, char *argv[])
 
 #ifndef BOLOTEST
   /* Initialize the Ephemeris */
-  ReductionInit("/data/etc/blast/ephem.2000");
+//  ReductionInit("/data/etc/blast/ephem.2000");
 
   bprintf(info, "System: Slow Downlink Initialisation");
 
@@ -1005,23 +883,19 @@ int main(int argc, char *argv[])
 //  InitialiseFrameFile(argv[1][0]);
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
-  signal(SIGHUP, CloseBBC);
-  signal(SIGINT, CloseBBC);
-  signal(SIGTERM, CloseBBC);
-  signal(SIGPIPE, SIG_IGN);
+//  signal(SIGHUP, CloseBBC);
+//  signal(SIGINT, CloseBBC);
+//  signal(SIGTERM, CloseBBC);
+//  signal(SIGPIPE, SIG_IGN);
 
 
 #ifndef BOLOTEST
   pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
 
-  InitSched();
+//  InitSched();
   openMotors();  //open communications with peripherals, creates threads
                  // in motors.c
-  openSBSC();  // SBSC - creates thread in sbsc.cpp
 
-
-  startChrgCtrl(); // create charge controller serial thread
-                   // defined in chrgctrl.c
 #endif
 
   bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
@@ -1031,32 +905,32 @@ int main(int argc, char *argv[])
 
   bputs(info, "System: BBC is up.\n");
 
-  InitTxFrame(RxFrame);
+//  InitTxFrame(RxFrame);
 
 #ifdef USE_XY_THREAD
   pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
 #ifndef BOLOTEST
-  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
-  if (use_starcams) {
-    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
-    pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
-  }
-
-  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+//  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
+//  if (use_starcams) {
+//    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
+//    pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
+//  }
+//
+//  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
 
 //  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 //  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 #endif
-  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
+//  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-  start_flc_data_swapper(flc_ip[SouthIAm]);
+//  start_flc_data_swapper(flc_ip[SouthIAm]);
 
   while (1) {
       sleep(1);
 #ifndef BOLOTEST
-        GetACS(RxFrame);
-        GetCurrents(RxFrame);
+//        GetACS(RxFrame);
+//        GetCurrents(RxFrame);
         Pointing();
 
 #endif

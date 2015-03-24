@@ -73,9 +73,6 @@ void SetSafeDAz(double ref, double *A); /* in pointing.c */
 void SetSafeDAzC(double ref, double *A, double *C); /* in pointing.c */
 void UnwindDiff(double ref, double *A);
 
-void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
-    double *el);
-
 /* in radbox.c */
 void radbox_endpoints( double az[4], double el[4], double el_in,
     double *az_left, double *az_right, double *min_el,
@@ -97,10 +94,6 @@ static void* pivotComm(void *arg);
 extern short int InCharge; /* tx.c */
 
 extern int StartupVeto; /* mcp.c */
-
-extern short int sbsc_trigger; /* Semaphore for SBSC trigger */
-extern short int dir_sbsc_trigger; /* Semaphore for SBSC trigger */
-extern short int sbsc_interval; /* Semaphore for SBSC trigger */
 
 double az_accel = 0.1;
 
@@ -137,16 +130,16 @@ static double calcVPiv(void)
   int i;
   double dtheta=0.0;
   static int j=0;
-  i_point = GETREADINDEX(point_index);
+  i_point = GETREADINDEX(pivot_motor_index);
   if (firsttime) {
     firsttime = 0;
     // Initialize the buffer.  Assume all zeros to begin
     for(i=0;i<(VPIV_FILTER_LEN-1);i++) buf_vPiv[i]=0.0;
     for(i=0;i<(VPIV_FILTER_LEN-1);i++) buf_t[i]=0.0;
   }
-  a+=(ACSData.res_piv-buf_vPiv[ib_last]);
+  a+=(PivotMotorData[i_point].res_piv-buf_vPiv[ib_last]);
   //  dt=((double)(gettimeofday-buf_t[ib_last]));
-  buf_vPiv[ib_last]=ACSData.res_piv;
+  buf_vPiv[ib_last]=PivotMotorData[i_point].res_piv;
   //  dummy=PointingData[i_point].t
     //  buf_t[ib_last]=PointingData[i_point].t;
   ib_last=(ib_last+VPIV_FILTER_LEN+1)%VPIV_FILTER_LEN;
@@ -169,11 +162,13 @@ static double GetVElev(void)
   double vel = 0;
   static double last_vel = 0;
   double dvel;
-  int i_point;
+  int i_point, i_elev;
   double max_dv = 1.6;
   double el_for_limit, el, el_dest;
   double dy;
+
   i_point = GETREADINDEX(point_index);
+  i_elev = GETREADINDEX(elev_motor_index);
 
   if (axes_mode.el_mode == AXIS_VEL) {
     vel = axes_mode.el_vel;
@@ -190,14 +185,14 @@ static double GetVElev(void)
     //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
   } else if (axes_mode.el_mode == AXIS_LOCK) {
     /* for the lock, only use the elevation encoder */
-    vel = (axes_mode.el_dest - ACSData.enc_raw_el) * 0.64;
+    vel = (axes_mode.el_dest - ElevMotorData[i_elev].enc_raw_el) * 0.64;
  }
 
   /* correct offset and convert to Gyro Units */
   vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
 
   if (CommandData.use_elenc) {
-    el_for_limit = ACSData.enc_raw_el;
+    el_for_limit = ElevMotorData[i_elev].enc_raw_el;
   } else {
     el_for_limit = PointingData[i_point].el;
   }
@@ -315,7 +310,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   double I_req = 0.0;
   int I_req_dac = 0;
   int I_req_dac_init = 0;
-  int i_point;
+  int i_point, i_rw;
   double v_az_req,i_frict,i_frict_filt;
   double p_rw_term, p_err_term;
   int p_rw_term_dac, p_err_term_dac;
@@ -336,7 +331,8 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS/10.0; // Convert to dps 
 
   i_point = GETREADINDEX(point_index);
-  p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(ACSData.vel_rw-CommandData.pivot_gain.SP);
+  i_rw = GETREADINDEX(rw_motor_index);
+  p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(RWMotorData[i_rw].vel_rw-CommandData.pivot_gain.SP);
   p_err_term = (double)g_err_piv*5.0*(v_az_req-PointingData[point_index].v_az);
   I_req = p_rw_term+p_err_term;
 
@@ -673,19 +669,19 @@ static void SetAzScanMode(double az, double left, double right, double v,
     double D)
 {
     double before_trig;
-    sbsc_interval = 0;
     if (axes_mode.az_vel < -v + D)
       axes_mode.az_vel = -v + D;
     if (axes_mode.az_vel > v + D)
       axes_mode.az_vel = v + D;
 
+    ///TODO: Update AzScanMode with XSC data
     if (az < left) {
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel < v + D)
         axes_mode.az_vel += az_accel;
     } else if (az > right) {
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > -v + D)
         axes_mode.az_vel -= az_accel;
@@ -693,27 +689,27 @@ static void SetAzScanMode(double az, double left, double right, double v,
       axes_mode.az_mode = AXIS_VEL;
       if (axes_mode.az_vel > 0) {
         axes_mode.az_vel = v + D;
-        if (az > right - 2.0*v) /* within 2 sec of turnaround */
-          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-        else
-          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+//        if (az > right - 2.0*v) /* within 2 sec of turnaround */
+//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//        else
+//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       } else {
         axes_mode.az_vel = -v + D;
-        if (az < left + 2.0*v) /* within 2 sec of turnaround */
-          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-        else
-          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+//        if (az < left + 2.0*v) /* within 2 sec of turnaround */
+//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//        else
+//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       }
     }
     /* SBSC Trigger flag */
-    before_trig = CommandData.cam.delay - v/CommandData.az_accel + CommandData.cam.expTime/2000;
-    if ((az < left + before_trig*v) && (dir_sbsc_trigger==0)) {
-	sbsc_trigger = 1;
-    } else if ((az > right - before_trig*v) && (dir_sbsc_trigger==1)) {
-	sbsc_trigger = 1;
-    } else {
-	sbsc_trigger = 0;
-    }
+//    before_trig = CommandData.cam.delay - v/CommandData.az_accel + CommandData.cam.expTime/2000;
+//    if ((az < left + before_trig*v) && (dir_sbsc_trigger==0)) {
+//	sbsc_trigger = 1;
+//    } else if ((az > right - before_trig*v) && (dir_sbsc_trigger==1)) {
+//	sbsc_trigger = 1;
+//    } else {
+//	sbsc_trigger = 0;
+//    }
 }
 
 static void SetElScanMode(double el, double bottom, double top, double v,
@@ -726,13 +722,14 @@ static void SetElScanMode(double el, double bottom, double top, double v,
     if (axes_mode.el_vel > v + D)
       axes_mode.el_vel = v + D;
 
+    //TODO: Update ElScanMode with XSC routines
     if (el < bottom) {
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.el_mode = AXIS_VEL;
       if (axes_mode.el_vel < v + D)
         axes_mode.el_vel += el_accel;
     } else if (el > top) {
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       axes_mode.el_mode = AXIS_VEL;
       if (axes_mode.el_vel > -v + D)
         axes_mode.el_vel -= el_accel;
@@ -741,16 +738,16 @@ static void SetElScanMode(double el, double bottom, double top, double v,
       if (axes_mode.el_vel > 0) {
         axes_mode.el_vel = v + D;
         if (el > top - 2.0*v) { /* within 2 sec of turnaround */
-	  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//	  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 	}
-        else
-          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+//        else
+//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       } else {
         axes_mode.el_vel = -v + D;
-        if (el < bottom + 2.0*v) /* within 2 sec of turnaround */
-          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-        else
-          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+//        if (el < bottom + 2.0*v) /* within 2 sec of turnaround */
+//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//        else
+//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       }
     }
 }
@@ -776,17 +773,18 @@ static void DoAzScanMode(void)
 
   v = CommandData.pointing_mode.vaz;
 
+  //TODO: Update DoAzScanMode with XSC Routine
   if (last_x!= CommandData.pointing_mode.X || last_w != w) {
     if (az < left) {
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = left;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else if (az > right) {
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = right;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else {
       // once we are within the new az/w range, we can mark this as 'last'.
       last_x = CommandData.pointing_mode.X;
@@ -824,17 +822,18 @@ static void DoElScanMode(void)
 
   v = CommandData.pointing_mode.vel;
 
+  //TODO: Update DoElScanMode with XSC Routines
   if (last_y!= CommandData.pointing_mode.Y || last_h != h) {
     if (el < bottom) {
       axes_mode.el_mode = AXIS_POSITION;
       axes_mode.el_dest = bottom;
       axes_mode.el_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else if (el > top) {
       axes_mode.el_mode = AXIS_POSITION;
       axes_mode.el_dest = top;
       axes_mode.el_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
     } else {
       // once we are within the new az/w range, we can mark this as 'last'.
       last_y = CommandData.pointing_mode.Y;
@@ -870,10 +869,10 @@ static void DoVCapMode(void)
     el = -10; /* very bad situation - dont know how this can happen */
 
   /* get raster center and sky drift speed */
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst, PointingData[i_point].lat,
       &caz, &cel);
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst + 1.0, PointingData[i_point].lat,
       &az2, &el2);
   daz_dt = drem(az2 - caz, 360.0);
@@ -963,10 +962,10 @@ static void DoVBoxMode(void)
     el = -10; /* very bad situation - dont know how this can happen */
 
   /* get raster center and sky drift speed */
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst, PointingData[i_point].lat,
       &caz, &cel);
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst + 1.0, PointingData[i_point].lat,
       &az2, &el2);
   daz_dt = drem(az2 - caz, 360.0);
@@ -1039,7 +1038,7 @@ static void DoRaDecGotoMode(void)
 
   az = PointingData[i_point].az;
 
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
       lst, PointingData[i_point].lat,
       &caz, &cel);
   SetSafeDAz(az, &caz);
@@ -1050,8 +1049,8 @@ static void DoRaDecGotoMode(void)
   axes_mode.el_mode = AXIS_POSITION;
   axes_mode.el_dest = cel;
   axes_mode.el_vel = 0.0;
-  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-  sbsc_interval = 1;
+  //TODO:Update DoRADecGotoMode with XSC
+//  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 }
 
 static void DoNewCapMode(void)
@@ -1085,11 +1084,11 @@ static void DoNewCapMode(void)
   v_az = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
 
   /* get raster center and sky drift speed */
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst, lat,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst, PointingData[i_point].lat,
       &caz, &cel);
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst + 1.0, lat,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst + 1.0, PointingData[i_point].lat,
       &az2, &el2);
 
   /* add in elevation dither */
@@ -1129,7 +1128,8 @@ static void DoNewCapMode(void)
       v_el = 0.0;
       targ_el = -r;
       el_next_dir = 1;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      //TODO:Update DoNewCapMode with XSC Routine
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   } 
@@ -1299,11 +1299,11 @@ static void DoElBoxMode(void)
   v_el = fabs(CommandData.pointing_mode.vel);
 
   /* get raster center and sky drift speed */
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst, lat,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst, PointingData[i_point].lat,
       &caz, &cel);
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst + 1.0, lat,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst + 1.0, PointingData[i_point].lat,
       &az2, &el2);
   /* sky drift terms */
   daz_dt = drem(az2 - caz, 360.0);
@@ -1358,7 +1358,8 @@ static void DoElBoxMode(void)
       v_az = 0.0;
       targ_az = -w*0.5;
       az_next_dir = 1;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;      
+      //TODO:Update ElBoxMode with XSC Routine
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   }
@@ -1491,11 +1492,11 @@ static void DoNewBoxMode(void)
   v_az = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
 
   /* get raster center and sky drift speed */
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst, lat,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst, PointingData[i_point].lat,
       &caz, &cel);
-  radec2azel(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst + 1.0, lat,
+  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+      lst + 1.0, PointingData[i_point].lat,
       &az2, &el2);
 
   /* add the elevation dither term */
@@ -1559,7 +1560,8 @@ static void DoNewBoxMode(void)
       v_el = 0.0;
       targ_el = -h*0.5;
       el_next_dir = 1;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      //TODO:Update DoNewBoxMode with XSC Routine
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   } 
@@ -1689,7 +1691,7 @@ void DoQuadMode(void) // aka radbox
 
   /* convert ra/decs to az/el */
   for (i=0; i<4; i++) {
-    radec2azel(CommandData.pointing_mode.ra[i],
+      equatorial_to_horizontal(CommandData.pointing_mode.ra[i],
         CommandData.pointing_mode.dec[i],
         lst, lat,
         c_az+i, c_el+i);
@@ -1697,7 +1699,7 @@ void DoQuadMode(void) // aka radbox
   }
 
   /* get sky drift speed */
-  radec2azel(CommandData.pointing_mode.ra[0],
+  equatorial_to_horizontal(CommandData.pointing_mode.ra[0],
       CommandData.pointing_mode.dec[0],
       lst+1.0, lat,
       &az2, &el2);
@@ -1759,7 +1761,8 @@ void DoQuadMode(void) // aka radbox
       v_el = 0.0;
       targ_el = 0.0;
       el_next_dir = 1;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
+      //TODO:Update DoQuadMode with XSC Routine
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
       return;
     }
   } 
@@ -1881,11 +1884,11 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = CommandData.pointing_mode.del;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = CommandData.pointing_mode.vaz;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast =
-        (sqrt(CommandData.pointing_mode.vaz * CommandData.pointing_mode.vaz
-              + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
-         > MAX_ISC_SLOW_PULSE_SPEED) ? 1 : 0;
-      sbsc_interval = 1;
+      //Todo:Update UpdateAxesMode with XSC
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast =
+//        (sqrt(CommandData.pointing_mode.vaz * CommandData.pointing_mode.vaz
+//              + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
+//         > MAX_ISC_SLOW_PULSE_SPEED) ? 1 : 0;
       break;
     case P_AZEL_GOTO:
       axes_mode.el_mode = AXIS_POSITION;
@@ -1894,15 +1897,13 @@ void UpdateAxesMode(void)
       axes_mode.az_mode = AXIS_POSITION;
       axes_mode.az_dest = CommandData.pointing_mode.X;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      sbsc_interval = 1;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
     case P_AZ_SCAN:
       DoAzScanMode();
       break;
     case P_EL_SCAN:
       DoElScanMode();
-      sbsc_interval = 1;
       break;
     case P_VCAP:
       DoVCapMode();
@@ -1931,8 +1932,7 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      sbsc_interval = 1;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
     default:
       bprintf(warning, "Pointing: Unknown Elevation Pointing Mode %d: "
@@ -1948,8 +1948,7 @@ void UpdateAxesMode(void)
       axes_mode.el_vel = 0.0;
       axes_mode.az_mode = AXIS_VEL;
       axes_mode.az_vel = 0.0;
-      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      sbsc_interval = 1;
+//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
   }
   last_mode = CommandData.pointing_mode.mode;
@@ -2034,9 +2033,9 @@ void* reactComm(void* arg)
       firsttime=0;
     }
     //in case we switch to ICC when serial communications aren't working
-    RWMotorData[0].vel_rw=ACSData.vel_rw;
-    RWMotorData[1].vel_rw=ACSData.vel_rw;
-    RWMotorData[2].vel_rw=ACSData.vel_rw;
+//    RWMotorData[0].vel_rw=ACSData.vel_rw;
+//    RWMotorData[1].vel_rw=ACSData.vel_rw;
+//    RWMotorData[2].vel_rw=ACSData.vel_rw;
     usleep(20000);
   }
 
@@ -2210,9 +2209,9 @@ void* elevComm(void* arg)
     }
 
     //in case we switch to ICC when serial communications aren't working
-    ElevMotorData[0].enc_raw_el=ACSData.enc_raw_el;
-    ElevMotorData[1].enc_raw_el=ACSData.enc_raw_el;
-    ElevMotorData[2].enc_raw_el=ACSData.enc_raw_el;
+//    ElevMotorData[0].enc_raw_el=ACSData.enc_raw_el;
+//    ElevMotorData[1].enc_raw_el=ACSData.enc_raw_el;
+//    ElevMotorData[2].enc_raw_el=ACSData.enc_raw_el;
     usleep(20000);
   }
 

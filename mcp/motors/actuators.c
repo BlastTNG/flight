@@ -846,6 +846,7 @@ static void SetLockState(int nic)
   static int firsttime = 1;
   int pot;
   unsigned int state;
+  int i_point;
 
   static channel_t* potLockAddr;
   static channel_t* stateLockAddr;
@@ -886,7 +887,8 @@ static void SetLockState(int nic)
       || (pot > LOCK_MAX_POT - LOCK_POT_RANGE))
     state |= lock_data.state & (LS_OPEN | LS_CLOSED);
 
-  if (fabs(ACSData.enc_raw_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
+  i_point = GETREADINDEX(point_index);
+  if (fabs(PointingData[i_point].enc_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
     state |= LS_EL_OK;
 
   /* Assume the pin is out unless we're all the way closed */
@@ -1457,10 +1459,10 @@ void ActuatorBus(void)
     usleep(1000000);
     CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
                                               control */
-    if (BLASTBusUseful) {
-      SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-      SyncDR();	     /* get encoder absolute state from the ICC */
-    }
+
+    SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+    SyncDR();	     /* get encoder absolute state from the ICC */
+
     CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
     CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing 
                                                 twice if we switch to ICC */

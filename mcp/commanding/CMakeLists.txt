@@ -1,0 +1,10 @@
+set(CMD_SRCS
+    ${CMD_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/commands.c
+    PARENT_SCOPE
+)
+set(CMD_HEADERS
+   ${CMD_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/command_struct.h
+   PARENT_SCOPE
+)

@@ -39,7 +39,7 @@
 #include <float.h>
 #include <sys/time.h>
 
-#include "bbc_pci.h"
+#include <conversions.h>
 
 #include "channels_tng.h"
 #include "pointing_struct.h"
@@ -57,7 +57,7 @@ extern short int SouthIAm;
 
 extern int StartupVeto;
 
-short int InCharge = 0;
+extern short int InCharge;
 
 int EthernetIsc = 3;
 int EthernetOsc = 3;
@@ -65,11 +65,8 @@ int EthernetSBSC = 3;
 
 extern struct AxesModeStruct axes_mode; /* motors.c */
 
-extern struct ISCStatusStruct ISCSentState[2];  /* isc.c */
-
-extern unsigned int sched_lst; /* sched_lst */
-
-extern int bbc_fp;
+//TODO: Extern sched_lst after enabling sched.c
+unsigned int sched_lst; /* sched_lst */
 
 extern struct chat_buf chatter_buffer;  /* mcp.c */
 
@@ -414,6 +411,7 @@ static channel_t* GetSCNiosAddr(char* field, int which)
   return channels_find_by_name(buffer);
 }
 
+//TODO: Update StoreStarCameraData for XSC
 static void StoreStarCameraData(int index, int which)
 {
     static int firsttime[2] = { 1, 1 };
@@ -554,126 +552,126 @@ static void StoreStarCameraData(int index, int which)
         Temp4Addr[1] = channels_find_by_name("t_comp_osc");
     }
 
-    /** Increment isc index -- this only happens once per slow frame */
-    if (index == 0)
-        if (((iscread_index[which] + 1) % 5) != iscwrite_index[which]) {
-            iscread_index[which] = (iscread_index[which] + 1) % 5;
-            /* reset blob multiplexing if this is a pointing packet */
-            if (ISCSolution[which][iscread_index[which]].flag == 1)
-                blob_index[which] = 0;
-        }
-
-    i_isc = iscread_index[which];
-
-    /*** State Info ***/
-    SET_VALUE(StateAddr[which], (unsigned int)
-            (ISCSentState[which].save * 0x0001
-            + ISCSentState[which].pause * 0x0002
-            + ISCSentState[which].abort * 0x0004
-            + ISCSentState[which].autofocus * 0x0008
-            + ISCSentState[which].shutdown * 0x0010 /* 2 bits */
-            + ISCSentState[which].eyeOn * 0x0040
-            + ISCSolution[which][i_isc].heaterOn * 0x0080
-            + ISCSentState[which].useLost * 0x0100
-            + ISCSolution[which][i_isc].autofocusOn * 0x0200));
-    SET_VALUE(FocusAddr[which], (unsigned int) ISCSentState[which].focus_pos);
-    SET_VALUE(FocOffAddr[which], (unsigned int) ISCSentState[which].focusOffset);
-    SET_VALUE(ApertAddr[which], (unsigned int) ISCSentState[which].ap_pos);
-    SET_VALUE(ThreshAddr[which], (unsigned int) (ISCSentState[which].sn_threshold * 10.));
-    SET_VALUE(GridAddr[which], (unsigned int) ISCSentState[which].grid);
-    SET_VALUE(MdistAddr[which], (unsigned int) ISCSentState[which].mult_dist);
-    SET_VALUE(MinblobsAddr[which], (unsigned int) ISCSentState[which].minBlobMatch);
-    SET_VALUE(MaxblobsAddr[which], (unsigned int) ISCSentState[which].maxBlobMatch);
-    SET_VALUE(MaglimitAddr[which], (unsigned int) (ISCSentState[which].mag_limit * 1000.));
-    SET_VALUE(NradAddr[which], (unsigned int) (ISCSentState[which].norm_radius * RAD2I));
-    SET_VALUE(LradAddr[which], (unsigned int) (ISCSentState[which].lost_radius * RAD2I));
-    SET_VALUE(TolAddr[which], (unsigned int) (ISCSentState[which].tolerance * RAD2ARCSEC));
-    SET_VALUE(MtolAddr[which], (unsigned int) (ISCSentState[which].match_tol * 65535.));
-    SET_VALUE(QtolAddr[which], (unsigned int) (ISCSentState[which].quit_tol * 65535.));
-    SET_VALUE(RtolAddr[which], (unsigned int) (ISCSentState[which].rot_tol * RAD2I));
-    SET_VALUE(XOffAddr[which], (unsigned int) (ISCSentState[which].azBDA * RAD2I));
-    SET_VALUE(YOffAddr[which], (unsigned int) (ISCSentState[which].elBDA * RAD2I));
-    SET_VALUE(IHoldAddr[which], (unsigned int) (ISCSentState[which].hold_current));
-    SET_VALUE(Temp1Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp1 * 100.));
-    SET_VALUE(Temp2Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp2 * 100.));
-    SET_VALUE(Temp3Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp3 * 100.));
-    SET_VALUE(Temp4Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp4 * 100.));
-    SET_VALUE(PressureAddr[which], (unsigned int) (ISCSolution[which][i_isc].pressure1 * 2000.));
-    SET_VALUE(GainAddr[which], (unsigned int) (ISCSentState[which].gain * 655.36));
-    SET_VALUE(OffsetAddr[which], ISCSentState[which].offset);
-    SET_VALUE(ExposureAddr[which], ISCSentState[which].exposure / 100);
-    SET_VALUE(TrigTypeAddr[which], ISCSentState[which].triggertype);
-    SET_VALUE(MaxslewAddr[which], (unsigned int) ISCSentState[which].maxSlew / RAD2I);
-
-    SET_VALUE(FpulseAddr[which], (unsigned int) (CommandData.ISCControl[which].fast_pulse_width));
-    SET_VALUE(SpulseAddr[which], (unsigned int) (CommandData.ISCControl[which].pulse_width));
-    SET_VALUE(MaxAgeAddr[which], (unsigned int) (CommandData.ISCControl[which].max_age * 10));
-    SET_VALUE(AgeAddr[which], (unsigned int) (CommandData.ISCControl[which].age * 10));
-    SET_VALUE(SavePrdAddr[which], (unsigned int) (CommandData.ISCControl[which].save_period));
-
-    /* The handshake flag -- for handshakes, we only write this. */
-    SET_VALUE(HxFlagAddr[which], (unsigned int) ISCSolution[which][i_isc].flag);
-
-    /*** Blobs ***/
-    /* Save current blob data if the current frame is a pointing solution;
-     * we only do this once per slow frame */
-    if (index == 0 && ISCSolution[which][i_isc].flag)
-        for (i = 0; i < 15; ++i) {
-            blob_data[which][i][0] = (int) (ISCSolution[which][i_isc].blob_x[i] * 40.);
-            blob_data[which][i][1] = (int) (ISCSolution[which][i_isc].blob_y[i] * 40.);
-            blob_data[which][i][2] = ISCSolution[which][i_isc].blob_flux[i];
-            blob_data[which][i][3] = (int) (ISCSolution[which][i_isc].blob_sn[i] * 65.536);
-        }
-
-    if (index == 0) {
-        /* When we're writing a handshake packet, these blobs are still from the
-         * previous pointing packet */
-        SET_VALUE(Blob0XAddr[which], blob_data[which][blob_index[which] * 3 + 0][0]);
-        SET_VALUE(Blob1XAddr[which], blob_data[which][blob_index[which] * 3 + 1][0]);
-        SET_VALUE(Blob2XAddr[which], blob_data[which][blob_index[which] * 3 + 2][0]);
-
-        SET_VALUE(Blob0YAddr[which], blob_data[which][blob_index[which] * 3 + 0][1]);
-        SET_VALUE(Blob1YAddr[which], blob_data[which][blob_index[which] * 3 + 1][1]);
-        SET_VALUE(Blob2YAddr[which], blob_data[which][blob_index[which] * 3 + 2][1]);
-
-        SET_VALUE(Blob0FAddr[which], blob_data[which][blob_index[which] * 3 + 0][2]);
-        SET_VALUE(Blob1FAddr[which], blob_data[which][blob_index[which] * 3 + 1][2]);
-        SET_VALUE(Blob2FAddr[which], blob_data[which][blob_index[which] * 3 + 2][2]);
-
-        SET_VALUE(Blob0SAddr[which], blob_data[which][blob_index[which] * 3 + 0][3]);
-        SET_VALUE(Blob1SAddr[which], blob_data[which][blob_index[which] * 3 + 1][3]);
-        SET_VALUE(Blob2SAddr[which], blob_data[which][blob_index[which] * 3 + 2][3]);
-
-        SET_VALUE(BlobIdxAddr[which], blob_index[which]);
-
-        /* increment blob index once per slow frame */
-        blob_index[which] = (blob_index[which] + 1) % 5;
-    }
-
-    if (!ISCSolution[which][i_isc].flag)
-        return;
-
-    /* Everything after this happens only for pointing packets */
-
-    /*** Solution Info ***/
-    SET_VALUE(FramenumAddr[which], (unsigned int) ISCSolution[which][i_isc].framenum);
-    SET_VALUE(RaAddr[which], (unsigned int) (ISCSolution[which][i_isc].ra * RAD2LI));
-    SET_VALUE(DecAddr[which], (unsigned int) ((ISCSolution[which][i_isc].dec + M_PI / 2) * 2. * RAD2LI));
-    SET_VALUE(NblobsAddr[which], (unsigned int) ISCSolution[which][i_isc].n_blobs);
-
-    if (ISCSolution[which][i_isc].sigma * RAD2ARCSEC > 65535)
-        SET_VALUE(RdSigmaAddr[which], 65535);
-    else
-        SET_VALUE(RdSigmaAddr[which], (unsigned int) (ISCSolution[which][i_isc].sigma * RAD2ARCSEC));
-
-    SET_VALUE(FieldrotAddr[which], (unsigned int) (ISCSolution[which][i_isc].rot * RAD2I));
-
-    SET_VALUE(McpnumAddr[which], (unsigned int) ISCSolution[which][i_isc].MCPFrameNum);
-    SET_VALUE(RealTrigAddr[which], (unsigned int) ISCSolution[which][i_isc].triggertype);
-    SET_VALUE(ErrorAddr[which], (unsigned int) ISCSolution[which][i_isc].cameraerr);
-    SET_VALUE(MapmeanAddr[which], (unsigned int) ISCSolution[which][i_isc].mapMean);
-    SET_VALUE(DiskfreeAddr[which], (unsigned int) ISCSolution[which][i_isc].diskspace / 5);
-    SET_VALUE(PosFocusAddr[which], ISCSolution[which][i_isc].current_focus_pos);
+//    /** Increment isc index -- this only happens once per slow frame */
+//    if (index == 0)
+//        if (((iscread_index[which] + 1) % 5) != iscwrite_index[which]) {
+//            iscread_index[which] = (iscread_index[which] + 1) % 5;
+//            /* reset blob multiplexing if this is a pointing packet */
+//            if (ISCSolution[which][iscread_index[which]].flag == 1)
+//                blob_index[which] = 0;
+//        }
+//
+//    i_isc = iscread_index[which];
+//
+//    /*** State Info ***/
+//    SET_VALUE(StateAddr[which], (unsigned int)
+//            (ISCSentState[which].save * 0x0001
+//            + ISCSentState[which].pause * 0x0002
+//            + ISCSentState[which].abort * 0x0004
+//            + ISCSentState[which].autofocus * 0x0008
+//            + ISCSentState[which].shutdown * 0x0010 /* 2 bits */
+//            + ISCSentState[which].eyeOn * 0x0040
+//            + ISCSolution[which][i_isc].heaterOn * 0x0080
+//            + ISCSentState[which].useLost * 0x0100
+//            + ISCSolution[which][i_isc].autofocusOn * 0x0200));
+//    SET_VALUE(FocusAddr[which], (unsigned int) ISCSentState[which].focus_pos);
+//    SET_VALUE(FocOffAddr[which], (unsigned int) ISCSentState[which].focusOffset);
+//    SET_VALUE(ApertAddr[which], (unsigned int) ISCSentState[which].ap_pos);
+//    SET_VALUE(ThreshAddr[which], (unsigned int) (ISCSentState[which].sn_threshold * 10.));
+//    SET_VALUE(GridAddr[which], (unsigned int) ISCSentState[which].grid);
+//    SET_VALUE(MdistAddr[which], (unsigned int) ISCSentState[which].mult_dist);
+//    SET_VALUE(MinblobsAddr[which], (unsigned int) ISCSentState[which].minBlobMatch);
+//    SET_VALUE(MaxblobsAddr[which], (unsigned int) ISCSentState[which].maxBlobMatch);
+//    SET_VALUE(MaglimitAddr[which], (unsigned int) (ISCSentState[which].mag_limit * 1000.));
+//    SET_VALUE(NradAddr[which], (unsigned int) (ISCSentState[which].norm_radius * RAD2I));
+//    SET_VALUE(LradAddr[which], (unsigned int) (ISCSentState[which].lost_radius * RAD2I));
+//    SET_VALUE(TolAddr[which], (unsigned int) (ISCSentState[which].tolerance * RAD2ARCSEC));
+//    SET_VALUE(MtolAddr[which], (unsigned int) (ISCSentState[which].match_tol * 65535.));
+//    SET_VALUE(QtolAddr[which], (unsigned int) (ISCSentState[which].quit_tol * 65535.));
+//    SET_VALUE(RtolAddr[which], (unsigned int) (ISCSentState[which].rot_tol * RAD2I));
+//    SET_VALUE(XOffAddr[which], (unsigned int) (ISCSentState[which].azBDA * RAD2I));
+//    SET_VALUE(YOffAddr[which], (unsigned int) (ISCSentState[which].elBDA * RAD2I));
+//    SET_VALUE(IHoldAddr[which], (unsigned int) (ISCSentState[which].hold_current));
+//    SET_VALUE(Temp1Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp1 * 100.));
+//    SET_VALUE(Temp2Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp2 * 100.));
+//    SET_VALUE(Temp3Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp3 * 100.));
+//    SET_VALUE(Temp4Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp4 * 100.));
+//    SET_VALUE(PressureAddr[which], (unsigned int) (ISCSolution[which][i_isc].pressure1 * 2000.));
+//    SET_VALUE(GainAddr[which], (unsigned int) (ISCSentState[which].gain * 655.36));
+//    SET_VALUE(OffsetAddr[which], ISCSentState[which].offset);
+//    SET_VALUE(ExposureAddr[which], ISCSentState[which].exposure / 100);
+//    SET_VALUE(TrigTypeAddr[which], ISCSentState[which].triggertype);
+//    SET_VALUE(MaxslewAddr[which], (unsigned int) ISCSentState[which].maxSlew / RAD2I);
+//
+//    SET_VALUE(FpulseAddr[which], (unsigned int) (CommandData.ISCControl[which].fast_pulse_width));
+//    SET_VALUE(SpulseAddr[which], (unsigned int) (CommandData.ISCControl[which].pulse_width));
+//    SET_VALUE(MaxAgeAddr[which], (unsigned int) (CommandData.ISCControl[which].max_age * 10));
+//    SET_VALUE(AgeAddr[which], (unsigned int) (CommandData.ISCControl[which].age * 10));
+//    SET_VALUE(SavePrdAddr[which], (unsigned int) (CommandData.ISCControl[which].save_period));
+//
+//    /* The handshake flag -- for handshakes, we only write this. */
+//    SET_VALUE(HxFlagAddr[which], (unsigned int) ISCSolution[which][i_isc].flag);
+//
+//    /*** Blobs ***/
+//    /* Save current blob data if the current frame is a pointing solution;
+//     * we only do this once per slow frame */
+//    if (index == 0 && ISCSolution[which][i_isc].flag)
+//        for (i = 0; i < 15; ++i) {
+//            blob_data[which][i][0] = (int) (ISCSolution[which][i_isc].blob_x[i] * 40.);
+//            blob_data[which][i][1] = (int) (ISCSolution[which][i_isc].blob_y[i] * 40.);
+//            blob_data[which][i][2] = ISCSolution[which][i_isc].blob_flux[i];
+//            blob_data[which][i][3] = (int) (ISCSolution[which][i_isc].blob_sn[i] * 65.536);
+//        }
+//
+//    if (index == 0) {
+//        /* When we're writing a handshake packet, these blobs are still from the
+//         * previous pointing packet */
+//        SET_VALUE(Blob0XAddr[which], blob_data[which][blob_index[which] * 3 + 0][0]);
+//        SET_VALUE(Blob1XAddr[which], blob_data[which][blob_index[which] * 3 + 1][0]);
+//        SET_VALUE(Blob2XAddr[which], blob_data[which][blob_index[which] * 3 + 2][0]);
+//
+//        SET_VALUE(Blob0YAddr[which], blob_data[which][blob_index[which] * 3 + 0][1]);
+//        SET_VALUE(Blob1YAddr[which], blob_data[which][blob_index[which] * 3 + 1][1]);
+//        SET_VALUE(Blob2YAddr[which], blob_data[which][blob_index[which] * 3 + 2][1]);
+//
+//        SET_VALUE(Blob0FAddr[which], blob_data[which][blob_index[which] * 3 + 0][2]);
+//        SET_VALUE(Blob1FAddr[which], blob_data[which][blob_index[which] * 3 + 1][2]);
+//        SET_VALUE(Blob2FAddr[which], blob_data[which][blob_index[which] * 3 + 2][2]);
+//
+//        SET_VALUE(Blob0SAddr[which], blob_data[which][blob_index[which] * 3 + 0][3]);
+//        SET_VALUE(Blob1SAddr[which], blob_data[which][blob_index[which] * 3 + 1][3]);
+//        SET_VALUE(Blob2SAddr[which], blob_data[which][blob_index[which] * 3 + 2][3]);
+//
+//        SET_VALUE(BlobIdxAddr[which], blob_index[which]);
+//
+//        /* increment blob index once per slow frame */
+//        blob_index[which] = (blob_index[which] + 1) % 5;
+//    }
+//
+//    if (!ISCSolution[which][i_isc].flag)
+//        return;
+//
+//    /* Everything after this happens only for pointing packets */
+//
+//    /*** Solution Info ***/
+//    SET_VALUE(FramenumAddr[which], (unsigned int) ISCSolution[which][i_isc].framenum);
+//    SET_VALUE(RaAddr[which], (unsigned int) (ISCSolution[which][i_isc].ra * RAD2LI));
+//    SET_VALUE(DecAddr[which], (unsigned int) ((ISCSolution[which][i_isc].dec + M_PI / 2) * 2. * RAD2LI));
+//    SET_VALUE(NblobsAddr[which], (unsigned int) ISCSolution[which][i_isc].n_blobs);
+//
+//    if (ISCSolution[which][i_isc].sigma * RAD2ARCSEC > 65535)
+//        SET_VALUE(RdSigmaAddr[which], 65535);
+//    else
+//        SET_VALUE(RdSigmaAddr[which], (unsigned int) (ISCSolution[which][i_isc].sigma * RAD2ARCSEC));
+//
+//    SET_VALUE(FieldrotAddr[which], (unsigned int) (ISCSolution[which][i_isc].rot * RAD2I));
+//
+//    SET_VALUE(McpnumAddr[which], (unsigned int) ISCSolution[which][i_isc].MCPFrameNum);
+//    SET_VALUE(RealTrigAddr[which], (unsigned int) ISCSolution[which][i_isc].triggertype);
+//    SET_VALUE(ErrorAddr[which], (unsigned int) ISCSolution[which][i_isc].cameraerr);
+//    SET_VALUE(MapmeanAddr[which], (unsigned int) ISCSolution[which][i_isc].mapMean);
+//    SET_VALUE(DiskfreeAddr[which], (unsigned int) ISCSolution[which][i_isc].diskspace / 5);
+//    SET_VALUE(PosFocusAddr[which], ISCSolution[which][i_isc].current_focus_pos);
 }
 
 /************************************************************************/
@@ -1092,20 +1090,12 @@ static void StoreData(int index)
     SET_VALUE(iDithMcAddr, axes_mode.i_dith);
 
     /********* PSS data *************/
-    SET_VALUE(azrawPssAddr, PointingData[i_point].pss_azraw * DEG2I);
     SET_VALUE(azrawPss1Addr, PointingData[i_point].pss1_azraw * DEG2I);
     SET_VALUE(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I);
-    SET_VALUE(azrawPss3Addr, PointingData[i_point].pss3_azraw * DEG2I);
-    SET_VALUE(azrawPss4Addr, PointingData[i_point].pss4_azraw * DEG2I);
-    SET_VALUE(elrawPssAddr, PointingData[i_point].pss_elraw * DEG2I);
     SET_VALUE(elrawPss1Addr, PointingData[i_point].pss1_elraw * DEG2I);
     SET_VALUE(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I);
-    SET_VALUE(elrawPss3Addr, PointingData[i_point].pss3_elraw * DEG2I);
-    SET_VALUE(elrawPss4Addr, PointingData[i_point].pss4_elraw * DEG2I);
     SET_VALUE(snrPss1Addr, PointingData[i_point].pss1_snr * 1000.);
     SET_VALUE(snrPss2Addr, PointingData[i_point].pss2_snr * 1000.);
-    SET_VALUE(snrPss3Addr, PointingData[i_point].pss3_snr * 1000.);
-    SET_VALUE(snrPss4Addr, PointingData[i_point].pss4_snr * 1000.);
     SET_VALUE(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim) * DEG2I);
     SET_VALUE(PssOkAddr, PointingData[i_point].pss_ok);
     /********** SIP GPS Data **********/
@@ -1124,12 +1114,12 @@ static void StoreData(int index)
     SET_VALUE(decAddr, (unsigned int) (PointingData[i_point].dec * DEG2LI));
 
     SET_VALUE(OffsetIFelGYAddr, (signed int) (PointingData[i_point].offset_ifel_gy * 32768.));
-    SET_VALUE(OffsetIFelGYiscAddr, (signed int) (PointingData[i_point].offset_ifel_gy_isc * 32768.));
-    SET_VALUE(OffsetIFrollGYiscAddr, (signed int) (PointingData[i_point].offset_ifroll_gy_isc * 32768.));
-    SET_VALUE(OffsetIFyawGYiscAddr, (signed int) (PointingData[i_point].offset_ifyaw_gy_isc * 32768.));
-    SET_VALUE(OffsetIFelGYoscAddr, (signed int) (PointingData[i_point].offset_ifel_gy_osc * 32768.));
-    SET_VALUE(OffsetIFrollGYoscAddr, (signed int) (PointingData[i_point].offset_ifroll_gy_osc * 32768.));
-    SET_VALUE(OffsetIFyawGYoscAddr, (signed int) (PointingData[i_point].offset_ifyaw_gy_osc * 32768.));
+    SET_VALUE(OffsetIFelGYiscAddr, (signed int) (PointingData[i_point].offset_ifel_gy_xsc[0] * 32768.));
+    SET_VALUE(OffsetIFrollGYiscAddr, (signed int) (PointingData[i_point].offset_ifroll_gy_xsc[0] * 32768.));
+    SET_VALUE(OffsetIFyawGYiscAddr, (signed int) (PointingData[i_point].offset_ifyaw_gy_xsc[0] * 32768.));
+    SET_VALUE(OffsetIFelGYoscAddr, (signed int) (PointingData[i_point].offset_ifel_gy_xsc[1] * 32768.));
+    SET_VALUE(OffsetIFrollGYoscAddr, (signed int) (PointingData[i_point].offset_ifroll_gy_xsc[1] * 32768.));
+    SET_VALUE(OffsetIFyawGYoscAddr, (signed int) (PointingData[i_point].offset_ifyaw_gy_xsc[1] * 32768.));
     SET_VALUE(OffsetIFrollGYAddr, (signed int) (PointingData[i_point].offset_ifroll_gy * 32768.));
     SET_VALUE(OffsetIFyawGYAddr, (signed int) (PointingData[i_point].offset_ifyaw_gy * 32768.));
 
@@ -1149,8 +1139,8 @@ static void StoreData(int index)
 
     SET_VALUE(azMagAddr, (unsigned int) ((PointingData[i_point].mag_az + CommandData.mag_az_trim) * DEG2I));
     SET_VALUE(azRawMagAddr, (unsigned int) ((PointingData[i_point].mag_az_raw) * DEG2I));
-    SET_VALUE(pitchMagAddr, (unsigned int) (ACSData.mag_pitch * DEG2I));
-    SET_VALUE(declinationMagAddr, (unsigned int) (PointingData[i_point].mag_model * DEG2I));
+//    SET_VALUE(pitchMagAddr, (unsigned int) (PointingData[i_point].mag_el * DEG2I));
+    SET_VALUE(declinationMagAddr, (unsigned int) (PointingData[i_point].mag_model_dec * DEG2I));
 
     SET_VALUE(calXMaxMagAddr, (unsigned int) (CommandData.cal_xmax_mag));
     SET_VALUE(calXMinMagAddr, (unsigned int) (CommandData.cal_xmin_mag));
@@ -1185,13 +1175,13 @@ static void StoreData(int index)
     SET_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
     SET_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
 
-    SET_VALUE(azIscAddr, (unsigned int) (PointingData[i_point].isc_az * DEG2I));
-    SET_VALUE(elIscAddr, (unsigned int) (PointingData[i_point].isc_el * DEG2I));
-    SET_VALUE(sigmaIscAddr, (unsigned int) (PointingData[i_point].isc_sigma * DEG2I));
+    SET_VALUE(azIscAddr, (unsigned int) (PointingData[i_point].xsc_az[0] * DEG2I));
+    SET_VALUE(elIscAddr, (unsigned int) (PointingData[i_point].xsc_el[0] * DEG2I));
+    SET_VALUE(sigmaIscAddr, (unsigned int) (PointingData[i_point].xsc_sigma[0] * DEG2I));
 
-    SET_VALUE(azOscAddr, (unsigned int) (PointingData[i_point].osc_az * DEG2I));
-    SET_VALUE(elOscAddr, (unsigned int) (PointingData[i_point].osc_el * DEG2I));
-    SET_VALUE(sigmaOscAddr, (unsigned int) (PointingData[i_point].osc_sigma * DEG2I));
+    SET_VALUE(azOscAddr, (unsigned int) (PointingData[i_point].xsc_az[1] * DEG2I));
+    SET_VALUE(elOscAddr, (unsigned int) (PointingData[i_point].xsc_el[1] * DEG2I));
+    SET_VALUE(sigmaOscAddr, (unsigned int) (PointingData[i_point].xsc_sigma[1] * DEG2I));
 
     SET_VALUE(trimEncAddr, CommandData.enc_el_trim * DEG2I);
 
@@ -1324,6 +1314,7 @@ double ReadCalData(channel_t *m_ch)
 /* called from mcp, should call all nios writing functions */
 void UpdateBBCFrame(unsigned short *RxFrame)
 {
+    //TODO: Revise UpdateBBCFrame to fire on time
   static channel_t* frameNumAddr;
   static int firsttime = 1;
   static int index = 0;
@@ -1337,17 +1328,17 @@ void UpdateBBCFrame(unsigned short *RxFrame)
 
 #ifndef BOLOTEST
   if (!mcp_initial_controls)
-    DoSched();
+//    DoSched();
   UpdateAxesMode();
   StoreData(index);
-  ControlGyroHeat();
+//  ControlGyroHeat();
   WriteMot(index);
 #endif
 #ifdef USE_XY_THREAD
   StoreStageBus(index);
 #endif
-  CryoControl(index);
-  BiasControl();
+//  CryoControl(index);
+//  BiasControl();
   WriteChatter(index);
 
   /*** do slow Controls ***/
@@ -1359,10 +1350,10 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     StoreHWPRBus();
 #ifndef BOLOTEST
     SetGyroMask();
-    ChargeController();
-    ControlPower();
-    VideoTx();
-    cameraFields();
+//    ChargeController();
+//    ControlPower();
+//    VideoTx();
+//    cameraFields();
 #endif
   }
 
@@ -1370,9 +1361,9 @@ void UpdateBBCFrame(unsigned short *RxFrame)
     index = (index + 1) % 20;
 
 #ifndef BOLOTEST
-  ControlAuxMotors();
-  CameraTrigger(0); /* isc */
-  CameraTrigger(1); /* osc */
+//  ControlAuxMotors();
+//  CameraTrigger(0); /* isc */
+//  CameraTrigger(1); /* osc */
 #endif
 
 }

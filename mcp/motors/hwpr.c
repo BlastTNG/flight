@@ -75,7 +75,8 @@ void MonitorHWPR(struct ezbus *bus)
 
   EZBus_ReadInt(bus, HWPR_ADDR, "?0", &hwpr_data.pos);
   EZBus_ReadInt(bus, HWPR_ADDR, "?8", &hwpr_data.enc);
-  hwpr_data.pot = ((double) ACSData.hwpr_pot)/65535.0;
+  //TODO:Evaluate whether we will use a potentiometer for HWP
+//  hwpr_data.pot = ((double) ACSData.hwpr_pot)/65535.0;
 }
 
  

@@ -1,0 +1,20 @@
+set(POINTING_SRCS
+    ${POINTING_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/pointing.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/angles.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/time_lst.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/time_julian.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/time_nutation.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/utilities_pointing.c
+    PARENT_SCOPE
+)
+set(POINTING_HEADERS
+   ${POINTING_HEADERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/pointing.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/angles.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/time_lst.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/time_julian.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/time_nutation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/utilities_pointing.h
+   PARENT_SCOPE
+)

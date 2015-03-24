@@ -1,0 +1,16 @@
+set(CMD_SRCS
+    ${CMD_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/command_list.c
+    PARENT_SCOPE
+)
+set(CMD_HEADERS
+   ${CMD_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/command_list.h
+   PARENT_SCOPE
+)
+
+set(MCP_COMMON_SRCS
+    ${MCP_COMMON_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/tx_struct_tng.c
+    PARENT_SCOPE
+)

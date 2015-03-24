@@ -1,0 +1,34 @@
+set(MCP_COMMON_SRCS
+    ${MCP_COMMON_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/fir.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/flcdataswap.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/lut.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/radbox.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sip.c
+    PARENT_SCOPE
+)
+set(MCP_COMMON_HEADERS
+   ${MCP_COMMON_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/blast.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/fir.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/flcdataswap.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/lut.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/sip.h
+   PARENT_SCOPE
+)
+
+set(CMD_SRCS
+    ${CMD_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/command_common.c
+    PARENT_SCOPE
+)
+set(CMD_HEADERS
+   ${CMD_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/command_common.h
+   PARENT_SCOPE
+)

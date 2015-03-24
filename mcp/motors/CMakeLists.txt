@@ -1,0 +1,19 @@
+set(MOTOR_SRCS
+    ${MOTOR_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/motors.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/actuators.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/amccommand.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/copleycommand.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ezstep.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/hwpr.c
+    PARENT_SCOPE
+)
+set(MOTOR_HEADERS
+   ${MOTOR_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/motordefs.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/amccommand.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/copleycommand.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/hwpr.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/ezstep.h
+   PARENT_SCOPE
+)
