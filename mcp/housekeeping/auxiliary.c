@@ -909,3 +909,65 @@ void VideoTx(void)
 
   SET_VALUE(bitsVtxAddr, vtx_bits);
 }
+
+static void SensorReader(void)
+{
+  int data;
+  int nr;
+  struct statvfs vfsbuf;
+  int sensor_error = 0;
+
+  FILE *stream;
+
+  nameThread("Sensor");
+  bputs(startup, "Startup\n");
+
+  while (1) {
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp1_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp1 = data / 10;
+      fclose(stream);
+    } else {
+      if (!sensor_error)
+        berror(warning, "Cannot read temp1 from I2C bus");
+      sensor_error = 5;
+    }
+
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp2_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp2 = data / 10;
+      fclose(stream);
+    } else {
+      if (!sensor_error)
+        berror(warning, "Cannot read temp2 from I2C bus");
+      sensor_error = 5;
+    }
+
+    if ((stream = fopen("/sys/bus/i2c/devices/0-002d/temp3_input", "r"))
+        != NULL) {
+      if ((nr = fscanf(stream, "%i\n", &data)) == 1)
+        CommandData.temp3 = data / 10;
+      fclose(stream);
+    } else {
+      if (!sensor_error)
+        berror(warning, "Cannot read temp3 from I2C bus");
+      sensor_error = 5;
+    }
+
+    if (statvfs("/data", &vfsbuf))
+      berror(warning, "Cannot stat filesystem");
+    else {
+      /* vfsbuf.f_bavail is the # of blocks, the blocksize is vfsbuf.f_bsize
+       * which, in this case is 4096 bytes, so CommandData.df ends up in units
+       * of 4000kb */
+      CommandData.df = vfsbuf.f_bavail / 1000;
+    }
+
+    if (sensor_error)
+      sensor_error--;
+
+    usleep(100000);
+  }
+}
