@@ -1086,11 +1086,11 @@ void SecondaryMirror(void)
         tSecondSfAddr = channels_find_by_name("t_second_sf");
     }
 
-    t_primary1 = CalibrateThermister(GET_UINT16(t1PrimeAddr));
-    t_primary2 = CalibrateThermister(GET_UINT16(t2PrimeAddr));
+    t_primary1 = calibrate_thermister(GET_UINT16(t1PrimeAddr));
+    t_primary2 = calibrate_thermister(GET_UINT16(t2PrimeAddr));
 
-    t_secondary1 = CalibrateAD590(GET_UINT16(t1SecondAddr));
-    t_secondary2 = CalibrateAD590(GET_UINT16(t2SecondAddr));
+    t_secondary1 = calibrate_ad590(GET_UINT16(t1SecondAddr));
+    t_secondary2 = calibrate_ad590(GET_UINT16(t2SecondAddr));
 
     if (t_primary1 < 0 || t_primary2 < 0)
         t_primary = -1; /* autoveto */

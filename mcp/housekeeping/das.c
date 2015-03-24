@@ -82,10 +82,6 @@
 
 extern int hwpr_calpulse_flag; // defined in hwpr.c
 
-void WritePrevStatus();
-
-
-
 /***********************************************************************/
 /* CalLamp: Flash calibrator                                           */
 /***********************************************************************/

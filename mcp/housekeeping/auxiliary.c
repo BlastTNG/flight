@@ -342,8 +342,8 @@ static int ControlPumpHeat(int bits_bal)
   temp1 = (double)GET_UINT16(tBoxBalAddr);
   temp2 = (double)GET_UINT16(vtPumpBalAddr);
   
-  temp1 = CalibrateAD590(temp1) - 273.15;
-  temp2 = CalibrateThermister(temp2) - 273.15;
+  temp1 = calibrate_ad590(temp1) - 273.15;
+  temp2 = calibrate_thermister(temp2) - 273.15;
  
   if (CommandData.pumps.heat_on) {
     if (temp1 < CommandData.pumps.heat_tset) {
