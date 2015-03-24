@@ -1,8 +1,7 @@
 /* 
  * channels_v2.c: 
  *
- * This software is copyright 
- *  (C) 2013-2014 California State University, Sacramento
+ * This software is copyright (C) 2013-2014 Seth Hillbrand
  *
  * This file is part of mcp, created for the BLASTPol Project.
  *
@@ -21,27 +20,9 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * History:
- * Created on: Aug 5, 2014 by Dr. Seth Hillbrand
+ * Created on: Aug 5, 2014 by Seth Hillbrand
  */
 
-/**
- * Code Overview:
- *
- * This file provides the interface to the Channels structure for BLAST-TNG.
- *
- * Channels lives in tx_struct_tng.c and list all known channels for the experiment.
- * On startup, the channels structure is read and separated into a number of distinct
- * frames based on rate.  Thus there is a 1Hz frame, a 5Hz frame, a 100Hz frame,
- * etc.  The frames are packed structures, ordered first by their source and then
- * alphabetically by their channel name and stored in big-endian byte-order.
- *
- * Each frame also has a small header that records the timestamp and computer id.
- *
- * On MCP, there are frame structures for each computer (UEI1, UEI2, FC1, FC2, SC1,
- * SC2). The data are populated by listening to the MQTT server.
- *
- *
- */
 #include <stdio.h>
 #include <stdint.h> // For uintX_t types
 #include <stdlib.h>
@@ -53,10 +34,6 @@
 #include "blast.h"
 #include "PMurHash.h"
 #include "channels_tng.h"
-
-static int iread;  // These take a value from 0 to N_ROWS-1, showing which part of
-static int iwrite; // the curcular data buffer is being read from and written to.
-static int row; // This indicates which row is being looked at right now.
 
 /**
 * data_packet_t structures handle the data transfer from FC1 and FC2 to MCP.
@@ -123,7 +100,7 @@ static guint channel_hash(gconstpointer m_data)
 static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_userdata)
 {
     channel_t *channel[N_ROWS];
-    for (row == 0; row < N_ROWS; row ++){
+    for (int row = 0; row < N_ROWS; row ++){
         channel[row] = (channel_t*)m_channel;
 
         /// If channel is invalid, do not process
@@ -201,7 +178,7 @@ int channels_initialize(const char *m_datafile)
                     4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
                     8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
 
-            for (row = 0; row < N_ROWS; row++){
+            for (int row = 0; row < N_ROWS; row++){
                 if (frame_size) {
                     channel_data[row][src][rate] = malloc(frame_size);
                 }
@@ -216,7 +193,7 @@ int channels_initialize(const char *m_datafile)
     /**
      * Third Pass: Iterate over the hash table and assign the lookup pointers to their place in the frame.
      */
-    for (row = 0; row < N_ROWS; row++) {
+    for (int row = 0; row < N_ROWS; row++) {
         g_hash_table_foreach(frame_table, channel_map_fields, NULL);
     }
     FILE *fp = fopen("HashTbl.txt", "w");
@@ -228,84 +205,4 @@ int channels_initialize(const char *m_datafile)
 }
 
 
-/**
- * Generates a packet's header, calculating and storing the checksum and length.
- * The data for the given source and rate is then packed in underneath.
- *
- * Note that the checksum is calculated by counting up everything in the packet,
- * including the TAG and header, but excluding the checksum itself, and
- * then storing the total value in this integer variable (sum). The integer length
- * refers to the length of the data, calculated below and poked into Packet.length.
- *
- * @param src
- * @param rate
- * @return Packet
- */
-
-data_packet_t BuildPacket(int src, int rate)
-{
-    data_packet_t Packet;
-    uint64_t sum = 0; // for calculating the packet checksum
-    int length = 0; // for calculating the packet length
-    struct timespec timestamp; // struct timespec is declared in time.h
-    int i; // needed in for loops
-
-    Packet.src == src;
-    Packet.rate == rate;
-    sum += Packet.src + Packet.rate;
-
-    clock_gettime(CLOCK_REALTIME, &timestamp); // Assigns the timestamp
-    /* (Note that although the current goal is simply to get this
-     * code up and running, some careful thinking may ultimately need
-     * to go into the placement of the preceding line, and the way
-     * this function is called. Ideally, all data should have an
-     * accurate timestamp, and the best way to ensure this is to
-     * minimize time between collection and stamping. This is something
-     * to consider as the code is profiled and optimized.)
-     */
-
-    Packet.unix_time = timestamp.tv_sec; // time in seconds
-    Packet.nano_time = timestamp.tv_nsec; // time in nanoseconds.
-
-    sum += Packet.unix_time + Packet.nano_time;
-
-    Packet.length = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
-            2 * (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
-            4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
-            8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
-
-    for (i = 0; i < Packet.length; i++){
-        Packet.data[i] += *((int*)channel_data[iread][Packet.src][Packet.rate] + i);
-        sum += Packet.data[i];
-    }
-    Packet.length = length;
-    Packet.checksum = sum;
-    return Packet;
-}
-
-/**
- * This function takes an existing packet and appends it to Packets.txt.
- * (Ultimately a better save location may need to be chosen.)
- *
- * @param Packet
- */
-void SaveData(data_packet_t Packet)
-{
-    FILE *fp = fopen("Packets.txt", "a");
-
-    // Header
-    fprintf (fp, "%s", TAG);
-    fprintf (fp, "%d", Packet.src * 16 + Packet.rate); // packs both into 4 bytes
-    fprintf (fp, "%d", Packet.unix_time);
-    fprintf (fp, "%d", Packet.nano_time);
-    fprintf (fp, "%d", Packet.checksum);
-    fprintf (fp, "%d", Packet.length);
-
-    // Channel Data
-    for (int i = 0; i < Packet.length; i++){
-        fprintf (fp, "%d", Packet.data[i]);
-    }
-
-    fclose (fp);
-}
 
