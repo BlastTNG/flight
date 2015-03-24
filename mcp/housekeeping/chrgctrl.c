@@ -40,7 +40,7 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
 #include <termios.h>         // POSIX terminal control definitions
 #include <fcntl.h>           // file control definitions
 
-
+#include <channels_tng.h>
 #include "chrgctrl.h"        // charge controller MODBUS comms 
                              // function declarations 
 
@@ -72,6 +72,91 @@ extern short int InCharge;            // in tx.c
 
 //FILE *fp;                           // pointer to file chrgctrl.log, which logged 
                                       // frames returned by controller for debugging
+
+void ChargeController(void)
+{
+
+  static channel_t *VBattCC1Addr;
+  static channel_t *VArrCC1Addr;
+  static channel_t *IBattCC1Addr;
+  static channel_t *IArrCC1Addr;
+  static channel_t *VTargCC1Addr;
+  static channel_t *ThsCC1Addr;
+  static channel_t *FaultCC1Addr;
+  static channel_t *AlarmHiCC1Addr;
+  static channel_t *AlarmLoCC1Addr;
+  static channel_t *ChargeCC1Addr;
+  static channel_t *LEDCC1Addr;
+
+  static channel_t *VBattCC2Addr;
+  static channel_t *VArrCC2Addr;
+  static channel_t *IBattCC2Addr;
+  static channel_t *IArrCC2Addr;
+  static channel_t *VTargCC2Addr;
+  static channel_t *ThsCC2Addr;
+  static channel_t *FaultCC2Addr;
+  static channel_t *AlarmHiCC2Addr;
+  static channel_t *AlarmLoCC2Addr;
+  static channel_t *ChargeCC2Addr;
+  static channel_t *LEDCC2Addr;
+
+  static int firsttime = 1;
+
+  if (firsttime) {
+
+    firsttime = 0;
+
+    VBattCC1Addr = channels_find_by_name("v_batt_cc1");
+    VArrCC1Addr = channels_find_by_name("v_arr_cc1");
+    IBattCC1Addr = channels_find_by_name("i_batt_cc1");
+    IArrCC1Addr  = channels_find_by_name("i_arr_cc1");
+    VTargCC1Addr = channels_find_by_name("v_targ_cc1");
+    ThsCC1Addr = channels_find_by_name("t_hs_cc1");
+    FaultCC1Addr = channels_find_by_name("fault_cc1");
+    AlarmHiCC1Addr = channels_find_by_name("alarm_hi_cc1");
+    AlarmLoCC1Addr = channels_find_by_name("alarm_lo_cc1");
+    ChargeCC1Addr = channels_find_by_name("state_cc1");
+    LEDCC1Addr = channels_find_by_name("led_cc1");
+
+    VBattCC2Addr = channels_find_by_name("v_batt_cc2");
+    VArrCC2Addr = channels_find_by_name("v_arr_cc2");
+    IBattCC2Addr = channels_find_by_name("i_batt_cc2");
+    IArrCC2Addr  = channels_find_by_name("i_arr_cc2");
+    VTargCC2Addr = channels_find_by_name("v_targ_cc2");
+    ThsCC2Addr = channels_find_by_name("t_hs_cc2");
+    FaultCC2Addr = channels_find_by_name("fault_cc2");
+    AlarmHiCC2Addr = channels_find_by_name("alarm_hi_cc2");
+    AlarmLoCC2Addr = channels_find_by_name("alarm_lo_cc2");
+    ChargeCC2Addr = channels_find_by_name("state_cc2");
+    LEDCC2Addr = channels_find_by_name("led_cc2");
+
+  }
+
+  SET_VALUE(VBattCC1Addr, 180.0*ChrgCtrlData[0].V_batt + 32400.0);
+  SET_VALUE(VArrCC1Addr, 180.0*ChrgCtrlData[0].V_arr + 32400.0);
+  SET_VALUE(IBattCC1Addr, 400.0*ChrgCtrlData[0].I_batt + 32000.0);
+  SET_VALUE(IArrCC1Addr,  400.0*ChrgCtrlData[0].I_arr + 32000.0);
+  SET_VALUE(VTargCC1Addr, 180.0*ChrgCtrlData[0].V_targ + 32400.0);
+  SET_VALUE(ThsCC1Addr, ChrgCtrlData[0].T_hs);
+  SET_VALUE(FaultCC1Addr, ChrgCtrlData[0].fault_field);
+  SET_VALUE(AlarmHiCC1Addr, ChrgCtrlData[0].alarm_field_hi);
+  SET_VALUE(AlarmLoCC1Addr, ChrgCtrlData[0].alarm_field_lo);
+  SET_VALUE(ChargeCC1Addr, ChrgCtrlData[0].charge_state);
+  SET_VALUE(LEDCC1Addr, ChrgCtrlData[0].led_state);
+
+  SET_VALUE(VBattCC2Addr, 180.0*ChrgCtrlData[1].V_batt + 32400.0);
+  SET_VALUE(VArrCC2Addr, 180.0*ChrgCtrlData[1].V_arr + 32400.0);
+  SET_VALUE(IBattCC2Addr, 400.0*ChrgCtrlData[1].I_batt + 32000.0);
+  SET_VALUE(IArrCC2Addr,  400.0*ChrgCtrlData[1].I_arr + 32000.0);
+  SET_VALUE(VTargCC2Addr, 180.0*ChrgCtrlData[1].V_targ + 32400.0);
+  SET_VALUE(ThsCC2Addr, ChrgCtrlData[1].T_hs);
+  SET_VALUE(FaultCC2Addr, ChrgCtrlData[1].fault_field);
+  SET_VALUE(AlarmHiCC2Addr, ChrgCtrlData[1].alarm_field_hi);
+  SET_VALUE(AlarmLoCC2Addr, ChrgCtrlData[1].alarm_field_lo);
+  SET_VALUE(ChargeCC2Addr, ChrgCtrlData[1].charge_state);
+  SET_VALUE(LEDCC2Addr, ChrgCtrlData[1].led_state);
+
+}
 
 /* create charge controller serial thread */
 

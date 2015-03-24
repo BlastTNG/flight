@@ -39,6 +39,7 @@
 #include <sys/time.h>
 #include <sys/syscall.h>
 
+#include <mputs.h>
 #include "blast.h"
 #include "command_list.h"
 #include "command_struct.h"
@@ -78,7 +79,6 @@ void WatchFIFO(void*);          //commands.c
 void FrameFileWriter(void);
 void CompressionWriter(void);
 void StageBus(void);
-void openSBSC(void);
 
 void InitialiseFrameFile(char);
 void pushDiskFrame(unsigned short *RxFrame);
@@ -136,169 +136,6 @@ time_t mcp_systime(time_t *t) {
     *t = the_time;
 
   return the_time;
-}
-
-/* tid to name lookup list */
-#define TID_NAME_LEN  6	      //always change with TID_NAME_FMT
-#define TID_NAME_FMT  "%6s"   //always change with TID_NAME_LEN
-struct tid_name {
-  int tid;
-  char name[TID_NAME_LEN+1];
-  struct tid_name* next;
-};
-
-struct tid_name* threadNames = NULL;
-
-void nameThread(const char* name)
-{
-  struct tid_name* new_node = (struct tid_name*)malloc(sizeof(struct tid_name));
-  new_node->tid = syscall(SYS_gettid);
-  strncpy(new_node->name, name, TID_NAME_LEN);
-  new_node->name[TID_NAME_LEN] = '\0';
-  new_node->next = threadNames;
-  threadNames = new_node;
-  bprintf(startup, "New thread name for tid %d", new_node->tid);
-}
-
-char failed_lookup_buffer[TID_NAME_LEN+1];
-char* threadNameLookup(int tid)
-{
-  struct tid_name* p;
-  for(p=threadNames; p->next != NULL; p = p->next)
-    if (p->tid == tid) return p->name;
-  //not found, just print tid
-  snprintf(failed_lookup_buffer, TID_NAME_LEN, "%u", (unsigned)tid);
-  failed_lookup_buffer[TID_NAME_LEN] = '\0';
-  return failed_lookup_buffer;
-}
-
-/* I/O function to be used by bputs, bprintf, etc.
- * it is assigned this purpose in main
- */
-void mputs(buos_t flag, const char* message) {
-  char buffer[MPRINT_BUFFER_SIZE];
-  struct timeval t;
-  struct timezone tz; /* We never use this, but gettimeofday won't let us
-                         give it a NULL -- also it's obsolete under linux */
-  struct tm now;
-  char local[1024];
-  char *bufstart, *bufptr, *lastchr, *firstchr;
-  int len;
-  char marker[4];
-
-  /* time */
-  gettimeofday(&t, &tz);
-  t.tv_sec += TEMPORAL_OFFSET;
-
-  switch(flag) {
-    case err:
-      strcpy(marker, "* ");
-      break;
-    case fatal:
-      strcpy(marker, "! ");
-      break;
-    case info:
-      strcpy(marker, "- ");
-      break;
-    case sched:
-      strcpy(marker, "# ");
-      break;
-    case startup:
-      strcpy(marker, "> ");
-      break;
-    case tfatal:
-      strcpy(marker, "$ ");
-      break;
-    case warning:
-      strcpy(marker, "= ");
-      break;
-    case mem:
-      return;  /* don't record mem messages at all */
-      strcpy(marker, "m ");
-      break;
-    default:
-      strcpy(marker, "? ");
-      break;
-  }
-  strcpy(buffer, marker);
-
-  /* we need a writable copy of the string */
-  strncpy(local, message, 1023);
-  local[1023] = '\0';
-
-  for(bufstart = buffer; *bufstart != '\0' && bufstart < buffer
-      + 1024; ++bufstart);
-
-
-  strftime(bufstart, 1023, "%F %T", gmtime_r(&t.tv_sec, &now));
-
-  for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
-
-  sprintf(bufstart, ".%03li ", t.tv_usec/1000);
-  strcat(buffer, marker);
-
-  for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
-
-  sprintf(bufstart, TID_NAME_FMT ": ", threadNameLookup(syscall(SYS_gettid)));
-
-  for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
-
-    /* output the formatted string line by line */
-    for (firstchr = bufptr = local; *bufptr != '\0' &&
-        bufptr < local + 1023; ++bufptr) {
-
-      /* writeout the string when we find a newline or the EOS */
-      if (*bufptr == '\n' || *(bufptr + 1) == '\0') {
-        lastchr = (*bufptr == '\n') ? bufptr : bufptr + 1;
-        *lastchr = '\0';
-
-        /* compute length of string to writeout */
-        len = lastchr - firstchr + 1;
-        if (len > MAX_MPRINT_STRING - 1)
-          len = MAX_MPRINT_STRING - 1;
-
-        /* append string part and a newline to preamble */
-        strncpy(bufstart, firstchr, len);
-        *(bufstart + len + 1) = '\0';
-        strcat(bufstart, "\n");
-        if (logfile != NULL) {
-          fputs(buffer, logfile);
-          fflush(logfile);
-        }
-        if (logfile == NULL || flag != mem) {
-          fputs(buffer, stdout);
-          fflush(stdout);
-        }
-
-        firstchr = bufptr + 1;
-      }
-    }
-
-  if (flag == fatal) {
-    if (logfile != NULL) {
-      fputs("!! Last error is FATAL.  Cannot continue.\n", logfile);
-      fflush(logfile);
-    }
-    fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
-    fflush(stdout);
-
-    exit(1);
-  }
-
-  if (flag == tfatal) {
-    if (logfile != NULL) {
-      fprintf(logfile, "$$ Last error is THREAD FATAL. Thread [" 
-          TID_NAME_FMT " (%5u)] exits.\n",threadNameLookup(syscall(SYS_gettid)),
-          (unsigned)syscall(SYS_gettid));
-      fflush(logfile);
-    }
-    printf("$$ Last error is THREAD FATAL.  Thread [" 
-          TID_NAME_FMT " (%5u)] exits.\n",threadNameLookup(syscall(SYS_gettid)),
-          (unsigned)syscall(SYS_gettid));
-    fflush(stdout);
-
-    pthread_exit(NULL);
-  }
 }
 
 #ifndef BOLOTEST

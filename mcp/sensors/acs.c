@@ -23,7 +23,7 @@
  * Created on: Mar 24, 2015 by Seth Hillbrand
  */
 
-
+#include <channels_tng.h>
 
 static void GetACS(unsigned short *RxFrame)
 {
