@@ -1,5 +1,6 @@
 set(SENSOR_SRCS
     ${SENSOR_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/acs.c    
     ${CMAKE_CURRENT_SOURCE_DIR}/dgps.c
     ${CMAKE_CURRENT_SOURCE_DIR}/geomag.c
     ${CMAKE_CURRENT_SOURCE_DIR}/xsc_channels.c
