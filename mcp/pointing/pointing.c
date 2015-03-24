@@ -960,9 +960,9 @@ void Pointing(void)
   struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};
 
   static struct ElSolutionStruct EncEl = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(60), //sample weight
-    M2DV(20), // systemamatic varience
+    M2DV(20), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, // gy integral
@@ -972,9 +972,9 @@ void Pointing(void)
     NULL // firstruct					
   };
   static struct ElSolutionStruct ClinEl = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(60), //sample weight
-    M2DV(60), // systemamatic varience
+    M2DV(60), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, // gy integral
@@ -984,9 +984,9 @@ void Pointing(void)
     NULL // firstruct					
   };
   static struct ElSolutionStruct ISCEl = {0.0, // starting angle
-    719.9 * 719.9, // starting varience
+    719.9 * 719.9, // starting variance
     1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systemamatic varience
+    M2DV(0.2), // systemamatic variance
     0.0, // trim
     0.0, // last input
     0.0, // gy integral
@@ -1079,391 +1079,402 @@ void Pointing(void)
     NULL, NULL
   };
 
-  if (firsttime) {
-    firsttime = 0;
-    ClinEl.trim = CommandData.clin_el_trim;
-    EncEl.trim = CommandData.enc_el_trim;
-    NullAz.trim = CommandData.null_az_trim;
-    MagAz.trim = CommandData.mag_az_trim;
-    DGPSAz.trim = CommandData.dgps_az_trim;
-    PSSAz.trim = CommandData.pss_az_trim;
-    
-    ClinEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(ClinEl.fs, FIR_LENGTH);
-    EncEl.fs = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(EncEl.fs, FIR_LENGTH);
+    if (firsttime) {
+        firsttime = 0;
+        ClinEl.trim = CommandData.clin_el_trim;
+        EncEl.trim = CommandData.enc_el_trim;
+        NullAz.trim = CommandData.null_az_trim;
+        MagAz.trim = CommandData.mag_az_trim;
+        DGPSAz.trim = CommandData.dgps_az_trim;
+        PSSAz.trim = CommandData.pss_az_trim;
 
-    NullAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    NullAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(NullAz.fs2, (int)(10)); // not used
-    initFir(NullAz.fs3, (int)(10)); // not used
+        ClinEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(ClinEl.fs, FIR_LENGTH);
+        EncEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(EncEl.fs, FIR_LENGTH);
 
-    MagAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    MagAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(MagAz.fs2, FIR_LENGTH);
-    initFir(MagAz.fs3, FIR_LENGTH);
+        NullAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        NullAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(NullAz.fs2, (int) (10)); // not used
+        initFir(NullAz.fs3, (int) (10)); // not used
 
-    DGPSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    DGPSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(DGPSAz.fs2, GPS_FIR_LENGTH);
-    initFir(DGPSAz.fs3, GPS_FIR_LENGTH);
+        MagAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        MagAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(MagAz.fs2, FIR_LENGTH);
+        initFir(MagAz.fs3, FIR_LENGTH);
 
-    PSSAz.fs2 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    PSSAz.fs3 = (struct FirStruct *)balloc(fatal, sizeof(struct FirStruct));
-    initFir(PSSAz.fs2, FIR_LENGTH);
-    initFir(PSSAz.fs3, FIR_LENGTH);
+        DGPSAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        DGPSAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(DGPSAz.fs2, GPS_FIR_LENGTH);
+        initFir(DGPSAz.fs3, GPS_FIR_LENGTH);
 
-    // the first t about to be read needs to be set
-    PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
+        PSSAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        PSSAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(PSSAz.fs2, FIR_LENGTH);
+        initFir(PSSAz.fs3, FIR_LENGTH);
 
-    /* Load lat/lon from disk */
-    last_good_lon = PointingData[0].lon = PointingData[1].lon = PointingData[2].lon
-      = CommandData.lon;
-    last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat
-      = CommandData.lat;
-    last_i_dgpspos = GETREADINDEX(dgpspos_index);
-  }
+        // the first t about to be read needs to be set
+        PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time
 
-  if (elClinLut.n == 0)
-    LutInit(&elClinLut);
-
-  i_dgpspos = GETREADINDEX(dgpspos_index);
-  i_point_read = GETREADINDEX(point_index);
-
-  // Make aristotle correct
-  R = 15.0 / 3600.0;
-  cos_e = cos(PointingData[i_point_read].el * (M_PI / 180.0));
-  sin_e = sin(PointingData[i_point_read].el * (M_PI / 180.0));
-  cos_l = cos(PointingData[i_point_read].lat * (M_PI / 180.0));
-  sin_l = sin(PointingData[i_point_read].lat * (M_PI / 180.0));
-  cos_a = cos(PointingData[i_point_read].az * (M_PI / 180.0));
-  sin_a = sin(PointingData[i_point_read].az * (M_PI / 180.0));
-
-  PointingData[point_index].ifel_earth_gy = R * (-cos_l * sin_a);
-  PointingData[point_index].ifroll_earth_gy = R *
-    (cos_e * sin_l - cos_l * sin_e * cos_a);
-  PointingData[point_index].ifyaw_earth_gy = R *
-    (sin_e * sin_l + cos_l * cos_e * cos_a);
-  RG.ifel_gy = ACSData.ifel_gy - PointingData[point_index].ifel_earth_gy;
-  RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
-  RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
-
-  PointingData[point_index].v_az = (-1.0)*RG.ifroll_gy*sin_e-RG.ifyaw_gy*cos_e;
-  /*************************************/
-  /** Record history for gyro offsets **/
-  RecordHistory(i_point_read);
-
-  PointingData[point_index].t = mcp_systime(NULL); // CPU time
-
-  /************************************************/
-  /** Set the official Lat and Long: prefer dgps **/
-  if ((i_dgpspos != last_i_dgpspos) && (DGPSPos[i_dgpspos].n_sat>0)) { // there has been a new solution
-    if (using_sip_gps != 0)
-      bprintf(info, "Pointing: Using dGPS for positional data");
-    last_i_dgpspos = i_dgpspos;
-    // check for spikes or crazy steps...  
-    dgpspos_ok = ((fabs(last_good_lat - DGPSPos[i_dgpspos].lat) < 0.5) &&
-                 (fabs(last_good_lon - DGPSPos[i_dgpspos].lon) < 0.5)) ||
-	         (since_last_good_dgps_pos >=5); // 5 in a row = ok...
-    
-
-    if (dgpspos_ok) { 
-      last_good_lat = DGPSPos[i_dgpspos].lat;
-      last_good_lon = DGPSPos[i_dgpspos].lon;
-      last_good_alt = DGPSPos[i_dgpspos].alt;
-      using_sip_gps = 0;
-      no_dgps_pos = 0;
-      since_last_good_dgps_pos = 0;
-    } else {
-      since_last_good_dgps_pos++;
-    }
-  } else {
-    no_dgps_pos++;
-    if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
-      if (using_sip_gps != 1)
-        bprintf(info, "Pointing: Using SIP for positional data");
-      last_good_lat = SIPData.GPSpos.lat;
-      last_good_lon = SIPData.GPSpos.lon;
-      last_good_alt = SIPData.GPSpos.alt;
-      using_sip_gps = 1;
-    }
-  }
-  PointingData[point_index].lat = last_good_lat;
-  PointingData[point_index].lon = last_good_lon;
-  PointingData[point_index].alt = last_good_alt;
-
-  /* At float check */
-  if (PointingData[point_index].alt < FLOAT_ALT) {
-    PointingData[point_index].at_float = 0;
-    i_at_float = 0;
-  } else {
-    i_at_float++;
-    if (i_at_float > FRAMES_TO_OK_ATFLOAT) {
-      PointingData[point_index].at_float = 1;
-    } else {
-      PointingData[point_index].at_float = 0;
-    }
-  }
-
-  /* Save lat/lon */
-  CommandData.lat = PointingData[point_index].lat;
-  CommandData.lon = PointingData[point_index].lon;
-
-  /*****************************/
-  /** set time related things **/
-  PointingData[point_index].mcp_frame = ACSData.mcp_frame;
-  PointingData[point_index].t = mcp_systime(NULL); // for now use CPU time
-
-  /** Set LST and local sidereal date **/
-  PointingData[point_index].lst = to_seconds(time_lst_unix(PointingData[point_index].t, from_degrees(PointingData[point_index].lon)));
-
-
-  /*************************************/
-  /**      do ISC Solution            **/
-  EvolveXSCSolution(&ISCEl, &ISCAz,
-      RG.ifel_gy,   PointingData[i_point_read].offset_ifel_gy,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el, 0);
-
-  /*************************************/
-  /**      do OSC Solution            **/
-  EvolveXSCSolution(&OSCEl, &OSCAz,
-      RG.ifel_gy,   PointingData[i_point_read].offset_ifel_gy,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el, 1);
-
-  /*************************************/
-  /**      do elevation solution      **/
-  clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
-  PointingData[i_point_read].clin_el_lut = clin_elev;
-  /* x = ACSData.clin_elev; */
-  /*   clin_elev = ((((1.13288E-19*x - 1.83627E-14)*x + */
-  /* 		 1.17066e-9)*x - 3.66444E-5)*x + 0.567815)*x - 3513.56; */
-
-  EvolveElSolution(&ClinEl, RG.ifel_gy, PointingData[i_point_read].offset_ifel_gy,
-      clin_elev, 1);
-  EvolveElSolution(&EncEl, RG.ifel_gy, PointingData[i_point_read].offset_ifel_gy,
-      ACSData.enc_elev, 1);
-
-  if (CommandData.use_elenc) {
-    AddElSolution(&ElAtt, &EncEl, 1);
-  }
-
-  if (CommandData.use_elclin) {
-    AddElSolution(&ElAtt, &ClinEl, 1);
-  }
-  if (CommandData.use_isc) {
-    AddElSolution(&ElAtt, &ISCEl, 0);
-  }
-
-  if (CommandData.use_osc) {
-    AddElSolution(&ElAtt, &OSCEl, 0);
-  }
-
-  PointingData[point_index].offset_ifel_gy = (CommandData.el_autogyro)
-    ? ElAtt.offset_gy : CommandData.offset_ifel_gy;
-  PointingData[point_index].el = ElAtt.el;
-
-  /*******************************/
-  /**      do az solution      **/
-  /** Convert Sensors **/
-  mag_ok = MagConvert(&mag_az);
-
-  PointingData[point_index].mag_az = mag_az;
-
-  pss_ok = PSSConvert(&pss_az, &pss_el);
-  if (pss_ok) {
-    pss_since_ok = 0;
-  } else {
-    pss_since_ok++;
-  }
-  PointingData[point_index].pss_ok = pss_ok;
-  dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
-  //dgps_ok = fakeDGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
-  if (dgps_ok) {
-    dgps_since_ok = 0;
-  } else {
-    dgps_since_ok++;
-  }
-
-  /** evolve solutions **/
-  EvolveAzSolution(&NullAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
-      0.0, 0);
-  /** MAG Az **/
-  EvolveAzSolution(&MagAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
-      mag_az, mag_ok);
-
-  /** DGPS Az **/
-  EvolveAzSolution(&DGPSAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
-      dgps_az, dgps_ok);
-
-  /** PSS **/
-  EvolveAzSolution(&PSSAz,
-      RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-      RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-      PointingData[point_index].el,
-      pss_az, pss_ok);
-
-  if (CommandData.fast_offset_gy>0) {
-    CommandData.fast_offset_gy--;
-  }
-
-  //bprintf(info, "off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.offset_gy, ClinEl.offset_gy);
-
-  AddAzSolution(&AzAtt, &NullAz, 1);
-  /** add az solutions **/
-  if (CommandData.use_mag) {
-    AddAzSolution(&AzAtt, &MagAz, 1);
-  }
-  if (CommandData.use_pss) {
-    AddAzSolution(&AzAtt, &PSSAz, 1);
-  }
-  if (CommandData.use_gps) {
-    AddAzSolution(&AzAtt, &DGPSAz, 1);
-  }
-  if (CommandData.use_isc) {
-    AddAzSolution(&AzAtt, &ISCAz, 0);
-  }
-  if (CommandData.use_osc) {
-    AddAzSolution(&AzAtt, &OSCAz, 0);
-  }
-
-  PointingData[point_index].offset_ifrollmag_gy = MagAz.offset_ifroll_gy;
-  PointingData[point_index].offset_ifyawmag_gy  = MagAz.offset_ifyaw_gy;
-  
-  PointingData[point_index].offset_ifrolldgps_gy = DGPSAz.offset_ifroll_gy;
-  PointingData[point_index].offset_ifyawdgps_gy  = DGPSAz.offset_ifyaw_gy;
- 
-  PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
-  PointingData[point_index].offset_ifyawpss_gy  = PSSAz.offset_ifyaw_gy;
-  
-  //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
-  PointingData[point_index].az = AzAtt.az;
-  if (CommandData.az_autogyro) {
-    PointingData[point_index].offset_ifroll_gy = AzAtt.offset_ifroll_gy;
-    PointingData[point_index].offset_ifyaw_gy = AzAtt.offset_ifyaw_gy;
-  } else {
-    PointingData[point_index].offset_ifroll_gy = CommandData.offset_ifroll_gy;
-    PointingData[point_index].offset_ifyaw_gy = CommandData.offset_ifyaw_gy;
-  }
-
-  /** calculate ra/dec for convenience on the ground **/
-  horizontal_to_equatorial(PointingData[point_index].az,  PointingData[point_index].el,
-                           PointingData[point_index].lst, PointingData[point_index].lat, &ra, &dec);
-  equatorial_to_horizontal(ra, dec, PointingData[point_index].lst, PointingData[point_index].lat,
-                           &az, &el);
-
-  PointingData[point_index].ra = ra;
-  PointingData[point_index].dec = dec;
-  /** record solutions in pointing data **/
-  //  if (j%500==0) bprintf(info,"Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
-  PointingData[point_index].enc_el = EncEl.angle;
-  PointingData[point_index].enc_sigma = sqrt(EncEl.variance + EncEl.sys_var);
-  PointingData[point_index].clin_el = ClinEl.angle;
-  PointingData[point_index].clin_sigma = sqrt(ClinEl.variance + ClinEl.sys_var);
-
-  PointingData[point_index].mag_az = MagAz.angle;
-  PointingData[point_index].mag_sigma = sqrt(MagAz.variance + MagAz.sys_var);
-  PointingData[point_index].dgps_az = DGPSAz.angle;
-  PointingData[point_index].dgps_pitch = dgps_pitch;
-  PointingData[point_index].dgps_roll = dgps_roll;
-  PointingData[point_index].dgps_sigma = sqrt(DGPSAz.variance + DGPSAz.sys_var);
-
-  // Added 22 June 2010 GT
-  PointingData[point_index].pss_az = PSSAz.angle;
-  PointingData[point_index].pss_sigma = sqrt(PSSAz.variance + PSSAz.sys_var);
-
-  //TODO:Replace ISC/OSC Pointing data with XSC
-  PointingData[point_index].xsc_az[0] = ISCAz.angle;
-  PointingData[point_index].xsc_el[0] = ISCEl.angle;
-  PointingData[point_index].xsc_sigma[0] = sqrt(ISCEl.variance + ISCEl.sys_var);
-  PointingData[point_index].offset_ifel_gy_xsc[0] = ISCEl.offset_gy;
-  PointingData[point_index].offset_ifroll_gy_xsc[0] = ISCAz.offset_ifroll_gy;
-  PointingData[point_index].offset_ifyaw_gy_xsc[0] = ISCAz.offset_ifyaw_gy;
-
-  PointingData[point_index].xsc_az[1] = OSCAz.angle;
-  PointingData[point_index].xsc_el[1] = OSCEl.angle;
-  PointingData[point_index].xsc_sigma[1] = sqrt(OSCEl.variance + OSCEl.sys_var);
-  PointingData[point_index].offset_ifel_gy_xsc[1] = OSCEl.offset_gy;
-  PointingData[point_index].offset_ifroll_gy_xsc[1] = OSCAz.offset_ifroll_gy;
-  PointingData[point_index].offset_ifyaw_gy_xsc[1] = OSCAz.offset_ifyaw_gy;
-
-  /********************/
-  /* Set Manual Trims */
-  if (CommandData.autotrim_enable) AutoTrimToSC();
-
-  if (NewAzEl.fresh == -1) {
-    ClinEl.trim = 0.0;
-    EncEl.trim = 0.0;
-    NullAz.trim = 0.0;
-    MagAz.trim = 0.0;
-    DGPSAz.trim = 0.0;
-    PSSAz.trim = 0.0;
-    NewAzEl.fresh = 0;
-  }
-
-  if (NewAzEl.fresh==1) {
-    trim_change = (NewAzEl.el - ClinEl.angle) - ClinEl.trim;
-    if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
-    else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
-    ClinEl.trim += trim_change;
-
-    trim_change = (NewAzEl.el - EncEl.angle) - EncEl.trim;
-    if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
-    else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
-    EncEl.trim += trim_change;
-
-    trim_change = (NewAzEl.az - NullAz.angle) - NullAz.trim;
-    if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
-    else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
-    NullAz.trim += trim_change;
-
-    trim_change = (NewAzEl.az - MagAz.angle) - MagAz.trim;
-    if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
-    else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
-    MagAz.trim += trim_change;
-
-    if (dgps_since_ok<500) {
-      trim_change = (NewAzEl.az - DGPSAz.angle) - DGPSAz.trim;
-      if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
-      else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
-      DGPSAz.trim += trim_change;
+        /* Load lat/lon from disk */
+        last_good_lon = PointingData[0].lon = PointingData[1].lon = PointingData[2].lon = CommandData.lon;
+        last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat = CommandData.lat;
+        last_i_dgpspos = GETREADINDEX(dgpspos_index);
     }
 
-    if (pss_since_ok<500) {
-      trim_change = (NewAzEl.az - PSSAz.angle) - PSSAz.trim;
-      if (trim_change > NewAzEl.rate) trim_change = NewAzEl.rate;
-      else if (trim_change < -NewAzEl.rate) trim_change = -NewAzEl.rate;
-      PSSAz.trim += trim_change;
+    if (elClinLut.n == 0)
+        LutInit(&elClinLut);
+
+    i_dgpspos = GETREADINDEX(dgpspos_index);
+    i_point_read = GETREADINDEX(point_index);
+
+    // Make aristotle correct
+    R = 15.0 / 3600.0;
+    sincos(from_degrees(PointingData[i_point_read].el), &sin_e, &cos_e);
+    sincos(from_degrees(PointingData[i_point_read].lat), &sin_l, &cos_l);
+    sincos(from_degrees(PointingData[i_point_read].az), &sin_a, &cos_a);
+
+    PointingData[point_index].ifel_earth_gy = R * (-cos_l * sin_a);
+    PointingData[point_index].ifroll_earth_gy = R * (cos_e * sin_l - cos_l * sin_e * cos_a);
+    PointingData[point_index].ifyaw_earth_gy = R * (sin_e * sin_l + cos_l * cos_e * cos_a);
+    RG.ifel_gy = ACSData.ifel_gy - PointingData[point_index].ifel_earth_gy;
+    RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
+    RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
+
+    PointingData[point_index].v_az = (-1.0) * RG.ifroll_gy * sin_e - RG.ifyaw_gy * cos_e;
+    /*************************************/
+    /** Record history for gyro offsets **/
+    RecordHistory(i_point_read);
+
+    PointingData[point_index].t = mcp_systime(NULL); // CPU time
+
+    /************************************************/
+    /** Set the official Lat and Long: prefer dgps **/
+    if ((i_dgpspos != last_i_dgpspos) && (DGPSPos[i_dgpspos].n_sat > 0)) { // there has been a new solution
+        if (using_sip_gps != 0)
+            bprintf(info, "Pointing: Using dGPS for positional data");
+        last_i_dgpspos = i_dgpspos;
+        // check for spikes or crazy steps...
+        dgpspos_ok = ((fabs(last_good_lat - DGPSPos[i_dgpspos].lat) < 0.5) && (fabs(last_good_lon - DGPSPos[i_dgpspos].lon) < 0.5))
+                || (since_last_good_dgps_pos >= 5); // 5 in a row = ok...
+
+        if (dgpspos_ok) {
+            last_good_lat = DGPSPos[i_dgpspos].lat;
+            last_good_lon = DGPSPos[i_dgpspos].lon;
+            last_good_alt = DGPSPos[i_dgpspos].alt;
+            using_sip_gps = 0;
+            no_dgps_pos = 0;
+            since_last_good_dgps_pos = 0;
+        }
+        else {
+            since_last_good_dgps_pos++;
+        }
+    }
+    else {
+        no_dgps_pos++;
+        if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
+            if (using_sip_gps != 1)
+                bprintf(info, "Pointing: Using SIP for positional data");
+            last_good_lat = SIPData.GPSpos.lat;
+            last_good_lon = SIPData.GPSpos.lon;
+            last_good_alt = SIPData.GPSpos.alt;
+            using_sip_gps = 1;
+        }
+    }
+    PointingData[point_index].lat = last_good_lat;
+    PointingData[point_index].lon = last_good_lon;
+    PointingData[point_index].alt = last_good_alt;
+
+    /* At float check */
+    if (PointingData[point_index].alt < FLOAT_ALT) {
+        PointingData[point_index].at_float = 0;
+        i_at_float = 0;
+    }
+    else {
+        i_at_float++;
+        if (i_at_float > FRAMES_TO_OK_ATFLOAT) {
+            PointingData[point_index].at_float = 1;
+        }
+        else {
+            PointingData[point_index].at_float = 0;
+        }
     }
 
-    NewAzEl.fresh = 0;
-  }
+    /* Save lat/lon */
+    CommandData.lat = PointingData[point_index].lat;
+    CommandData.lon = PointingData[point_index].lon;
 
-  point_index = INC_INDEX(point_index);
+    /*****************************/
+    /** set time related things **/
+    PointingData[point_index].mcp_frame = ACSData.mcp_frame;
+    PointingData[point_index].t = mcp_systime(NULL); // for now use CPU time
 
-  CommandData.clin_el_trim = ClinEl.trim;
-  CommandData.enc_el_trim = EncEl.trim;
-  CommandData.null_az_trim = NullAz.trim;
-  CommandData.mag_az_trim = MagAz.trim;
-  CommandData.dgps_az_trim = DGPSAz.trim;
-  CommandData.pss_az_trim = PSSAz.trim;
-  j++;
- 
-  /* If we are in a slew veto decrement the veto count*/ 
-  if (CommandData.pointing_mode.nw > 0)
-    CommandData.pointing_mode.nw--; 
+    /** Set LST and local sidereal date **/
+    PointingData[point_index].lst = to_seconds(time_lst_unix(PointingData[point_index].t, from_degrees(PointingData[point_index].lon)));
+
+
+    /*************************************/
+    /**      do ISC Solution            **/
+    EvolveXSCSolution(&ISCEl, &ISCAz,
+        RG.ifel_gy,   PointingData[i_point_read].offset_ifel_gy,
+        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
+        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+        PointingData[point_index].el, 0);
+
+    /*************************************/
+    /**      do OSC Solution            **/
+    EvolveXSCSolution(&OSCEl, &OSCAz,
+        RG.ifel_gy,   PointingData[i_point_read].offset_ifel_gy,
+        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
+        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+        PointingData[point_index].el, 1);
+
+    /*************************************/
+    /**      do elevation solution      **/
+    clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
+    PointingData[i_point_read].clin_el_lut = clin_elev;
+
+    EvolveElSolution(&ClinEl, RG.ifel_gy,
+            PointingData[i_point_read].offset_ifel_gy,
+            clin_elev, 1);
+    EvolveElSolution(&EncEl, RG.ifel_gy,
+            PointingData[i_point_read].offset_ifel_gy,
+            ACSData.enc_elev, 1);
+
+    if (CommandData.use_elenc) {
+        AddElSolution(&ElAtt, &EncEl, 1);
+    }
+
+    if (CommandData.use_elclin) {
+        AddElSolution(&ElAtt, &ClinEl, 1);
+    }
+    if (CommandData.use_isc) {
+        AddElSolution(&ElAtt, &ISCEl, 0);
+    }
+
+    if (CommandData.use_osc) {
+        AddElSolution(&ElAtt, &OSCEl, 0);
+    }
+
+    if (CommandData.el_autogyro)
+        PointingData[point_index].offset_ifel_gy = ElAtt.offset_gy;
+    else
+        PointingData[point_index].offset_ifel_gy = CommandData.offset_ifel_gy;
+
+    PointingData[point_index].el = ElAtt.el;
+
+    /*******************************/
+    /**      do az solution      **/
+    /** Convert Sensors **/
+    mag_ok = MagConvert(&mag_az);
+
+    PointingData[point_index].mag_az = mag_az;
+
+    pss_ok = PSSConvert(&pss_az, &pss_el);
+    if (pss_ok) {
+        pss_since_ok = 0;
+    }
+    else {
+        pss_since_ok++;
+    }
+    PointingData[point_index].pss_ok = pss_ok;
+    dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
+    //dgps_ok = fakeDGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
+    if (dgps_ok) {
+        dgps_since_ok = 0;
+    }
+    else {
+        dgps_since_ok++;
+    }
+
+    /** evolve solutions **/
+    EvolveAzSolution(&NullAz,
+        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
+        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+        PointingData[point_index].el,
+        0.0, 0);
+    /** MAG Az **/
+    EvolveAzSolution(&MagAz,
+        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
+        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+        PointingData[point_index].el,
+        mag_az, mag_ok);
+
+    /** DGPS Az **/
+    EvolveAzSolution(&DGPSAz,
+        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
+        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+        PointingData[point_index].el,
+        dgps_az, dgps_ok);
+
+    /** PSS **/
+    EvolveAzSolution(&PSSAz,
+        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
+        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+        PointingData[point_index].el,
+        pss_az, pss_ok);
+
+    if (CommandData.fast_offset_gy > 0) {
+        CommandData.fast_offset_gy--;
+    }
+
+    //bprintf(info, "off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.offset_gy, ClinEl.offset_gy);
+
+    AddAzSolution(&AzAtt, &NullAz, 1);
+    /** add az solutions **/
+    if (CommandData.use_mag) {
+        AddAzSolution(&AzAtt, &MagAz, 1);
+    }
+    if (CommandData.use_pss) {
+        AddAzSolution(&AzAtt, &PSSAz, 1);
+    }
+    if (CommandData.use_gps) {
+        AddAzSolution(&AzAtt, &DGPSAz, 1);
+    }
+    if (CommandData.use_isc) {
+        AddAzSolution(&AzAtt, &ISCAz, 0);
+    }
+    if (CommandData.use_osc) {
+        AddAzSolution(&AzAtt, &OSCAz, 0);
+    }
+
+    PointingData[point_index].offset_ifrollmag_gy = MagAz.offset_ifroll_gy;
+    PointingData[point_index].offset_ifyawmag_gy = MagAz.offset_ifyaw_gy;
+
+    PointingData[point_index].offset_ifrolldgps_gy = DGPSAz.offset_ifroll_gy;
+    PointingData[point_index].offset_ifyawdgps_gy = DGPSAz.offset_ifyaw_gy;
+
+    PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
+    PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
+
+    //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
+    PointingData[point_index].az = AzAtt.az;
+    if (CommandData.az_autogyro) {
+        PointingData[point_index].offset_ifroll_gy = AzAtt.offset_ifroll_gy;
+        PointingData[point_index].offset_ifyaw_gy = AzAtt.offset_ifyaw_gy;
+    }
+    else {
+        PointingData[point_index].offset_ifroll_gy = CommandData.offset_ifroll_gy;
+        PointingData[point_index].offset_ifyaw_gy = CommandData.offset_ifyaw_gy;
+    }
+
+    /** calculate ra/dec for convenience on the ground **/
+    horizontal_to_equatorial(PointingData[point_index].az, PointingData[point_index].el, PointingData[point_index].lst, PointingData[point_index].lat, &ra, &dec);
+    equatorial_to_horizontal(ra, dec, PointingData[point_index].lst, PointingData[point_index].lat, &az, &el);
+
+    PointingData[point_index].ra = ra;
+    PointingData[point_index].dec = dec;
+    /** record solutions in pointing data **/
+    //  if (j%500==0) bprintf(info,"Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
+    PointingData[point_index].enc_el = EncEl.angle;
+    PointingData[point_index].enc_sigma = sqrt(EncEl.variance + EncEl.sys_var);
+    PointingData[point_index].clin_el = ClinEl.angle;
+    PointingData[point_index].clin_sigma = sqrt(ClinEl.variance + ClinEl.sys_var);
+
+    PointingData[point_index].mag_az = MagAz.angle;
+    PointingData[point_index].mag_sigma = sqrt(MagAz.variance + MagAz.sys_var);
+    PointingData[point_index].dgps_az = DGPSAz.angle;
+    PointingData[point_index].dgps_pitch = dgps_pitch;
+    PointingData[point_index].dgps_roll = dgps_roll;
+    PointingData[point_index].dgps_sigma = sqrt(DGPSAz.variance + DGPSAz.sys_var);
+
+    // Added 22 June 2010 GT
+    PointingData[point_index].pss_az = PSSAz.angle;
+    PointingData[point_index].pss_sigma = sqrt(PSSAz.variance + PSSAz.sys_var);
+
+    //TODO:Replace ISC/OSC Pointing data with XSC
+    PointingData[point_index].xsc_az[0] = ISCAz.angle;
+    PointingData[point_index].xsc_el[0] = ISCEl.angle;
+    PointingData[point_index].xsc_sigma[0] = sqrt(ISCEl.variance + ISCEl.sys_var);
+    PointingData[point_index].offset_ifel_gy_xsc[0] = ISCEl.offset_gy;
+    PointingData[point_index].offset_ifroll_gy_xsc[0] = ISCAz.offset_ifroll_gy;
+    PointingData[point_index].offset_ifyaw_gy_xsc[0] = ISCAz.offset_ifyaw_gy;
+
+    PointingData[point_index].xsc_az[1] = OSCAz.angle;
+    PointingData[point_index].xsc_el[1] = OSCEl.angle;
+    PointingData[point_index].xsc_sigma[1] = sqrt(OSCEl.variance + OSCEl.sys_var);
+    PointingData[point_index].offset_ifel_gy_xsc[1] = OSCEl.offset_gy;
+    PointingData[point_index].offset_ifroll_gy_xsc[1] = OSCAz.offset_ifroll_gy;
+    PointingData[point_index].offset_ifyaw_gy_xsc[1] = OSCAz.offset_ifyaw_gy;
+
+    /********************/
+    /* Set Manual Trims */
+    if (CommandData.autotrim_enable)
+        AutoTrimToSC();
+
+    if (NewAzEl.fresh == -1) {
+        ClinEl.trim = 0.0;
+        EncEl.trim = 0.0;
+        NullAz.trim = 0.0;
+        MagAz.trim = 0.0;
+        DGPSAz.trim = 0.0;
+        PSSAz.trim = 0.0;
+        NewAzEl.fresh = 0;
+    }
+
+    if (NewAzEl.fresh == 1) {
+        trim_change = (NewAzEl.el - ClinEl.angle) - ClinEl.trim;
+        if (trim_change > NewAzEl.rate)
+            trim_change = NewAzEl.rate;
+        else if (trim_change < -NewAzEl.rate)
+            trim_change = -NewAzEl.rate;
+        ClinEl.trim += trim_change;
+
+        trim_change = (NewAzEl.el - EncEl.angle) - EncEl.trim;
+        if (trim_change > NewAzEl.rate)
+            trim_change = NewAzEl.rate;
+        else if (trim_change < -NewAzEl.rate)
+            trim_change = -NewAzEl.rate;
+        EncEl.trim += trim_change;
+
+        trim_change = (NewAzEl.az - NullAz.angle) - NullAz.trim;
+        if (trim_change > NewAzEl.rate)
+            trim_change = NewAzEl.rate;
+        else if (trim_change < -NewAzEl.rate)
+            trim_change = -NewAzEl.rate;
+        NullAz.trim += trim_change;
+
+        trim_change = (NewAzEl.az - MagAz.angle) - MagAz.trim;
+        if (trim_change > NewAzEl.rate)
+            trim_change = NewAzEl.rate;
+        else if (trim_change < -NewAzEl.rate)
+            trim_change = -NewAzEl.rate;
+        MagAz.trim += trim_change;
+
+        if (dgps_since_ok < 500) {
+            trim_change = (NewAzEl.az - DGPSAz.angle) - DGPSAz.trim;
+            if (trim_change > NewAzEl.rate)
+                trim_change = NewAzEl.rate;
+            else if (trim_change < -NewAzEl.rate)
+                trim_change = -NewAzEl.rate;
+            DGPSAz.trim += trim_change;
+        }
+
+        if (pss_since_ok < 500) {
+            trim_change = (NewAzEl.az - PSSAz.angle) - PSSAz.trim;
+            if (trim_change > NewAzEl.rate)
+                trim_change = NewAzEl.rate;
+            else if (trim_change < -NewAzEl.rate)
+                trim_change = -NewAzEl.rate;
+            PSSAz.trim += trim_change;
+        }
+
+        NewAzEl.fresh = 0;
+    }
+
+    point_index = INC_INDEX(point_index);
+
+    CommandData.clin_el_trim = ClinEl.trim;
+    CommandData.enc_el_trim = EncEl.trim;
+    CommandData.null_az_trim = NullAz.trim;
+    CommandData.mag_az_trim = MagAz.trim;
+    CommandData.dgps_az_trim = DGPSAz.trim;
+    CommandData.pss_az_trim = PSSAz.trim;
+    j++;
+
+    /* If we are in a slew veto decrement the veto count*/
+    if (CommandData.pointing_mode.nw > 0)
+        CommandData.pointing_mode.nw--;
 }
 
 // called from the command thread in command.h
