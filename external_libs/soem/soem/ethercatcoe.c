@@ -1,4 +1,10 @@
+/**
+ * CANOpen over EtherCAT Library routines.  Revisions for BLASTPol (2015) are
+ * made under the GNU General Public License version 2 with the same caveats
+ * as given in the original license below.
+ */
 /*
+ *
  * Simple Open EtherCAT Master Library 
  *
  * File    : ethercatcoe.c
@@ -1359,6 +1365,24 @@ int ec_SDOwrite(uint16 Slave, uint16 Index, uint8 SubIndex,
                 boolean CA, int psize, void *p, int Timeout)
 {
    return ecx_SDOwrite(&ecx_context, Slave, Index, SubIndex, CA, psize, p, Timeout);
+}
+
+int ec_SDOwrite8(uint16 Slave, uint16 Index, uint8 SubIndex,
+                uint8 value)
+{
+    return ecx_SDOwrite(&ecx_context, Slave, Index, SubIndex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
+}
+
+int ec_SDOwrite16(uint16 Slave, uint16 Index, uint8 SubIndex,
+                uint16 value)
+{
+    return ecx_SDOwrite(&ecx_context, Slave, Index, SubIndex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
+}
+
+int ec_SDOwrite32(uint16 Slave, uint16 Index, uint8 SubIndex,
+                uint32 value)
+{
+    return ecx_SDOwrite(&ecx_context, Slave, Index, SubIndex, FALSE, sizeof(value), &value, EC_TIMEOUTRXM);
 }
 
 int ec_RxPDO(uint16 Slave, uint16 RxPDOnumber, int psize, void *p)

@@ -100,6 +100,9 @@ int ec_SDOread(uint16 slave, uint16 index, uint8 subindex,
                       boolean CA, int *psize, void *p, int timeout);
 int ec_SDOwrite(uint16 Slave, uint16 Index, uint8 SubIndex,
     boolean CA, int psize, void *p, int Timeout);
+int ec_SDOwrite8(uint16 Slave, uint16 Index, uint8 SubIndex,uint8 value);
+int ec_SDOwrite16(uint16 Slave, uint16 Index, uint8 SubIndex,uint16 value);
+int ec_SDOwrite32(uint16 Slave, uint16 Index, uint8 SubIndex,uint32 value);
 int ec_RxPDO(uint16 Slave, uint16 RxPDOnumber , int psize, void *p);
 int ec_TxPDO(uint16 slave, uint16 TxPDOnumber , int *psize, void *p, int timeout);
 int ec_readPDOmap(uint16 Slave, int *Osize, int *Isize);
