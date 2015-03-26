@@ -1,0 +1,26 @@
+set(SOEM_SRCS
+    ${SOEM_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatbase.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatcoe.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatconfig.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatdc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatfoe.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatmain.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatprint.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatsoe.c
+    PARENT_SCOPE
+)
+set(OSHW_HEADERS
+   ${OSHW_HEADERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatbase.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatcoe.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatconfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatconfiglist.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatdc.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatfoe.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatmain.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatprint.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercatsoe.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ethercattype.h
+   PARENT_SCOPE
+)
