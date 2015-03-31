@@ -68,4 +68,5 @@
 
 #define SSS_ALIGNMENT     1.5532
 
+void SetRaDec(double ra, double dec);
 #endif /* INCLUDE_POINTING_H_ */

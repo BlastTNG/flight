@@ -34,6 +34,7 @@
 #include <pthread.h>
 
 #include <conversions.h>
+#include <pointing.h>
 #include "command_list.h"
 #include "command_struct.h"
 #include "mcp.h"
