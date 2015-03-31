@@ -46,6 +46,7 @@
 #include <angles.h>
 #include <xsc_network.h>
 #include <conversions.h>
+#include <time_lst.h>
 
 // Include gsl package for the old sun sensor
 #include <gsl/gsl_rng.h>
