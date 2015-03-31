@@ -38,6 +38,8 @@
 #include "amccommand.h"
 #include "motordefs.h"
 
+#include <angles.h>
+
 #define MIN_EL 19.5
 #define MAX_EL 55
 
@@ -70,7 +72,6 @@ struct AxesModeStruct axes_mode = {
 }; /* low level velocity mode */
 
 void SetSafeDAz(double ref, double *A); /* in pointing.c */
-void SetSafeDAzC(double ref, double *A, double *C); /* in pointing.c */
 void UnwindDiff(double ref, double *A);
 
 /* in radbox.c */
