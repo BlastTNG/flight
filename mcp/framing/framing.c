@@ -134,8 +134,6 @@ static void *framing_routine(void *m_arg)
 
     while (!frame_stop)
     {
-        unsigned long ov;
-
         /// Set our wakeup time
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
