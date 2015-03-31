@@ -37,11 +37,6 @@
 #define UNITS_LEN 48
 #define CHANNELS_HASH_SEED 0xEB90
 
-/* MWG: The circular buffer will have 1 row for read, 1 for write, and 1 extra.
- * Each packet will begin with a TAG to indicate the start */
-#define N_ROWS 3
-#define TAG 0x12345678
-
 #define _RATES(x,_)	\
 	_(x, 1HZ)					\
 	_(x, 5HZ)					\
@@ -73,14 +68,14 @@ BLAST_LOOKUP_TABLE(SRC, static);
 
 #pragma pack(push,1)
 struct channel {
-	char field[FIELD_LEN]; 		/// name of channel for FileFormats and CalSpecs
-	double m_c2e; 				/// Conversion from counts to enginering units is
-	double b_e2e; 				///   e = c * m_c2e + b_e2e
-	e_TYPE type;			/// Type of data stored
-	e_RATE rate; 				/// Rate at which the channel is recorded
-	e_SRC source;       /// Source of the data channel (who writes)
+	char field[FIELD_LEN];      /// name of channel for FileFormats and CalSpecs
+	double m_c2e;               /// Conversion from counts to engineering units is
+	double b_e2e;               ///   e = c * m_c2e + b_e2e
+	e_TYPE type;                /// Type of data stored
+	e_RATE rate;                /// Rate at which the channel is recorded
+	e_SRC source;               /// Source of the data channel (who writes)
 	char quantity[UNITS_LEN]; 	/// eg, "Temperature" or "Angular Velocity"
-	char units[UNITS_LEN]; 		/// eg, "K" or "^o/s"
+	char units[UNITS_LEN];      /// eg, "K" or "^o/s"
 	void *var;                  /// Pointer to the variable in the current frame
 };
 #pragma pack(pop)
@@ -92,7 +87,7 @@ typedef struct {
 } frame_header_t;
 #pragma pack(pop)
 
-extern void *channel_data[N_ROWS][SRC_END][RATE_END];
+extern void *channel_data[SRC_END][RATE_END];
 extern size_t frame_size[SRC_END][RATE_END];
 
 int channels_initialize(const char *m_filename);

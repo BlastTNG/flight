@@ -1,7 +1,8 @@
 /* 
  * channels_v2.c: 
  *
- * This software is copyright (C) 2013-2014 Seth Hillbrand
+ * This software is copyright 
+ *  (C) 2013-2014 California State University, Sacramento
  *
  * This file is part of mcp, created for the BLASTPol Project.
  *
@@ -20,52 +21,45 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * History:
- * Created on: Aug 5, 2014 by Seth Hillbrand
+ * Created on: Aug 5, 2014 by seth
  */
 
-#include <stdio.h>
-#include <stdint.h> // For uintX_t types
+/**
+ * Code Overview:
+ *
+ * This file provides the interface to the Channels structure for BLAST-TNG.
+ *
+ * Channels lives in tx_struct_tng.c and list all known channels for the experiment.
+ * On startup, the channels structure is read and separated into a number of distinct
+ * frames based on rate.  Thus there is a 1Hz frame, a 5Hz frame, a 100Hz frame,
+ * etc.  The frames are packed structures, ordered first by their source and then
+ * alphabetically by their channel name and stored in big-endian byte-order.
+ *
+ * Each frame also has a small header that records the timestamp and computer id.
+ *
+ * On MCP, there are frame structures for each computer (UEI1, UEI2, FC1, FC2, SC1, SC2).
+ * The data are populated by listening to the MQTT server.
+ *
+ *
+ */
+#include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <glib.h>
-#include <string.h>
-#include <sys/time.h> // For finding unix_time and nano_time
 
 #include "blast.h"
 #include "PMurHash.h"
 #include "channels_tng.h"
 
-/**
-* data_packet_t structures handle the data transfer from FC1 and FC2 to MCP.
-* The MCP looks for a tag in the datastream (something like 0x12345678) to
-* identify the start of a datapacket. Then it then looks at src to find out
-* what kind of packet it's received. After reading through the data, it totals
-* up everything in the packet and compares this to the checksum; if the values
-* match, then we know the packet was transferred correctly.
-*
-* Note: This structure doesn't include the 4-byte tag indicating that a packet
-* is beginning - that tag is always the same, so it doesn't need memory here.
-*/
-typedef struct {
-    uint32_t src:4; // First 4 bits: Source (uint8_t isn't always defined, so use uint32.)
-    uint32_t rate:4; // Next 4 bits: Rate
-    uint32_t unix_time; // Seconds since midnight of January 1, 1970 (UTC)
-    uint32_t nano_time; // Nanoseconds since last second
-    uint32_t checksum; // Total of everything in the packet.
-    uint32_t length; // We don't allocate a specific length for data[], so
-    int data[0]; // length tells how much there is in data[] beyond the 0th element.
-} data_packet_t;
 
-/* The macros SRC_, RATE_, and TYPE_END are assigned by lookup.h and uei_framing.c
- * to be the size of the source, rate, and type lists - the code also recognizes
- * other strings after the prefix; e.g. RATE_1HZ evaluates to 0, RATE_5HZ == 1, etc.
- */
 static GHashTable *frame_table = NULL;
 static int channel_count[SRC_END][RATE_END][TYPE_END] = {{{0}}};
 extern channel_t channel_list[];
 
-void *channel_data[N_ROWS][SRC_END][RATE_END] = {{{0}}};
-static void *channel_ptr[N_ROWS][SRC_END][RATE_END] = {{{0}}};
+void *channel_data[SRC_END][RATE_END] = {{0}};
+size_t frame_size[SRC_END][RATE_END] = {{0}};
+static void *channel_ptr[SRC_END][RATE_END] = {{0}};
 
 static inline size_t channel_size(channel_t *m_channel)
 {
@@ -92,44 +86,51 @@ static inline size_t channel_size(channel_t *m_channel)
 static guint channel_hash(gconstpointer m_data)
 {
     const char *field_name = (const char*)m_data;
-    // len takes the length of field_name, to a max of FIELD_LEN.
-    size_t len = (strlen(field_name) < FIELD_LEN) ? strlen(field_name) : FIELD_LEN;
-    return PMurHash32(CHANNELS_HASH_SEED, field_name, len);
+
+    return PMurHash32(CHANNELS_HASH_SEED, field_name, strnlen(field_name, FIELD_LEN));
 }
 
 static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_userdata)
 {
-    channel_t *channel[N_ROWS];
-    for (int row = 0; row < N_ROWS; row ++){
-        channel[row] = (channel_t*)m_channel;
+    channel_t *channel = (channel_t*)m_channel;
 
-        /// If channel is invalid, do not process
-        if (!channel[row]->field[row]) return;
+    /// If channel is invalid, do not process
+    if (!channel->field[0]) return;
 
-        /**
-         * channel_ptr maintains the current location in the array of the next free element.
-         * We assign this location to the channel pointer, allowing us to reference the
-         * individual location in the future based on a lookup in the hash table.
-         */
-        if (channel[row]->source < SRC_END && channel[row]->rate < RATE_END) {
-            if (!channel_ptr[row][channel[row]->source][channel[row]->rate]) {
-                bprintf(fatal, "Invalid Channel setup");
-            }
-            channel[row]->var = channel_ptr[row][channel[row]->source][channel[row]->rate];
-            channel_ptr[row][channel[row]->source][channel[row]->rate] += channel_size(channel[row]);
+    /**
+     * channel_ptr maintains the current location in the array of the next free element.
+     * We assign this location to the channel pointer, allowing us to reference the
+     * individual location in the future based on a lookup in the hash table.
+     */
+    if (channel->source < SRC_END && channel->rate < RATE_END) {
+        if (!channel_ptr[channel->source][channel->rate]) {
+            bprintf(fatal, "Invalid Channel setup");
         }
-        else {
-            bprintf(fatal, "Could not map %d and %d to source and rate!", channel[row]->source, channel[row]->rate);
-        }
+        channel->var = channel_ptr[channel->source][channel->rate];
+        channel_ptr[channel->source][channel->rate] += channel_size(channel);
+    }
+    else {
+        bprintf(fatal, "Could not map %d and %d to source and rate!", channel->source, channel->rate);
     }
 }
 
 channel_t *channels_find_by_name(const char *m_name)
 {
-    // len takes the length of m_name, to a max of FIELD_LEN.
-    size_t len = (strlen(m_name) < FIELD_LEN) ? strlen(m_name) : FIELD_LEN;
-    guint name_hash = PMurHash32(CHANNELS_HASH_SEED, m_name, len);
-    return (channel_t*)g_hash_table_lookup(frame_table, m_name);
+    channel_t *retval = (channel_t*)g_hash_table_lookup(frame_table, m_name);
+
+    if (!retval) printf("Could not find %s!\n", m_name);
+    return retval;
+}
+
+int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len)
+{
+	if (m_len != frame_size[m_src][m_rate]) {
+		printf("Size mismatch storing data for %s:%s!\n", SRC_lookup_table[m_src].text, RATE_lookup_table[m_rate].text );
+		return -1;
+	}
+
+	memcpy(channel_data[m_src][m_rate], m_data, m_len);
+	return 0;
 }
 
 int channels_initialize(const char *m_datafile)
@@ -143,11 +144,9 @@ int channels_initialize(const char *m_datafile)
     for (int i = 0; i < SRC_END; i++) {
         for (int j = 0; j < RATE_END; j++) {
             for (int k = 0; k < TYPE_END; k++) channel_count[i][j][k] = 0;
-            for (int k = 0; k < N_ROWS; k++) {
-                if (channel_data[k][i][j]) {
-                    free(channel_data[k][i][j]);
-                    channel_data[k][i][j] = NULL;
-                }
+            if (channel_data[i][j]) {
+                free(channel_data[i][j]);
+                channel_data[i][j] = NULL;
             }
         }
     }
@@ -173,36 +172,26 @@ int channels_initialize(const char *m_datafile)
      */
     for (int src = 0; src < SRC_END; src++) {
         for (int rate = 0; rate < RATE_END; rate++) {
-            size_t frame_size = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
+            frame_size[src][rate] = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                     2 * (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
                     4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
                     8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
 
-            for (int row = 0; row < N_ROWS; row++){
-                if (frame_size) {
-                    channel_data[row][src][rate] = malloc(frame_size);
-                }
-                else {
-                    channel_data[row][src][rate] = NULL;
-                }
-                channel_ptr[row][src][rate] = channel_data[row][src][rate];
+            if (frame_size[src][rate]) {
+                channel_data[src][rate] = malloc(frame_size[src][rate]);
             }
+            else {
+                channel_data[src][rate] = NULL;
+            }
+            channel_ptr[src][rate] = channel_data[src][rate];
         }
     }
 
     /**
      * Third Pass: Iterate over the hash table and assign the lookup pointers to their place in the frame.
      */
-    for (int row = 0; row < N_ROWS; row++) {
-        g_hash_table_foreach(frame_table, channel_map_fields, NULL);
-    }
-    FILE *fp = fopen("HashTbl.txt", "w");
-    fprintf (fp, "");
-    fclose (fp);
+    g_hash_table_foreach(frame_table, channel_map_fields, NULL);
 
     bprintf(startup, "Successfully initialized Channels data structures");
     return 0;
 }
-
-
-
