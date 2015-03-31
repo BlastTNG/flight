@@ -535,6 +535,8 @@ void initialize_motors(void)
 {
   bprintf(info, "Motors: connecting to motors");
   pthread_create(&motor_ctl_id, NULL, &motor_control, NULL);
+  pthread_detach(motor_ctl_id);
+
 }
 
 void shutdown_motors(void)
