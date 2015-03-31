@@ -1,0 +1,10 @@
+set(FRAME_SRCS
+    ${FRAME_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/framing.c
+    PARENT_SCOPE
+)
+set(FRAME_HEADERS
+   ${FRAME_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/framing.h
+   PARENT_SCOPE
+)

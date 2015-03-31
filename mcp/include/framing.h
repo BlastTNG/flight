@@ -27,5 +27,6 @@
 #define INCLUDE_FRAMING_H_
 
 int framing_init(void);
+void framing_shutdown(void);
 
 #endif /* INCLUDE_FRAMING_H_ */

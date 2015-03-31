@@ -38,6 +38,15 @@ find_library(GLIB_LIBRARY NAMES glib-2.0 libglib-2.0
             HINTS ${PC_GLIB_LIBDIR} ${PC_GLIB_LIBRARY_DIRS} )
 include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
 
+# Find mosquitto    
+pkg_check_modules(PC_MOSQ QUIET mosquitto)
+
+find_path(MOSQ_INCLUDE_DIR NAMES mosquitto.h
+          HINTS ${PC_MOS_INCLUDEDIR} ${PC_MOSQ_INCLUDE_DIRS})
+find_library(MOSQ_LIBRARY NAMES mosquitto
+            HINTS ${PC_MOSQ_LIBDIR} ${PC_MOSQ_LIBRARY_DIRS} )
+include_directories(${MOSQ_INCLUDE_DIR})
+
 # configure a header file to pass some of the CMake settings to the source code
 configure_file (
   "${PROJECT_SOURCE_DIR}/mcp_config.h.in"
@@ -72,6 +81,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/sensors")
 # add housekeeping objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/housekeeping")
 
+# add data frame objects
+add_subdirectory("${PROJECT_SOURCE_DIR}/framing")
+
 # add common objects
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 
@@ -80,6 +92,7 @@ add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
 add_library (sensors OBJECT ${SENSOR_SRCS} ${SENSOR_HEADERS})
 add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
+add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
 add_library (blast_common OBJECT ${MCP_COMMON_SRCS} ${MCP_COMMON_HEADERS})
 
 # add mcp objects
@@ -96,10 +109,11 @@ add_executable (mcp
     $<TARGET_OBJECTS:pointing>
     $<TARGET_OBJECTS:motors>
     $<TARGET_OBJECTS:sensors>
+    $<TARGET_OBJECTS:framing>
     $<TARGET_OBJECTS:blast_common>
     $<TARGET_OBJECTS:mcp_obj>
     )
 
-target_link_libraries(mcp ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${GLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} m)
+target_link_libraries(mcp ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${GLIB_LIBRARY} ${MOSQ_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} m)
 
 install(TARGETS mcp DESTINATION bin)

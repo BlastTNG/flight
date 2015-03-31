@@ -26,15 +26,17 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <string.h>
 #include <pthread.h>
 
 #include <mosquitto.h>
 
+#include <blast.h>
 #include <channels_tng.h>
 #include <blast_time.h>
 
-extern int stop;
-
+static int frame_stop;
+static pthread_t frame_thread;
 static struct mosquitto *mosq = NULL;
 
 static void frame_handle_data(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
@@ -115,47 +117,8 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
         bprintf(info, "%s\n", str);
 }
 
-/**
- * Initializes the mosquitto library and associated framing routines.
- * @return
- */
-int framing_init(void)
-{
-    const char *id = "uei1";
-    const char *host = "fc1";
-    int port = 1883;
-    int keepalive = 60;
-    bool clean_session = true;
 
-    channels_initialize(NULL);
-
-    mosquitto_lib_init();
-    mosq = mosquitto_new(id, clean_session, NULL);
-    if (!mosq) {
-        perror("mosquitto_new() failed");
-        return -1;
-    }
-    mosquitto_log_callback_set(mosq, frame_log_callback);
-
-    mosquitto_connect_callback_set(mosq, frame_connect_callback);
-    mosquitto_message_callback_set(mosq, frame_message_callback);
-    mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
-
-    if (mosquitto_connect(mosq, host, port, keepalive)) {
-        fprintf(stderr, "Unable to connect.\n");
-        return -1;
-    }
-
-    mosquitto_subscribe(mosq, NULL, "fc1/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "fc2/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "uei_if/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "uei_of/frames/#", 2);
-
-    return 0;
-}
-
-
-void framing_routine(void *m_arg)
+static void *framing_routine(void *m_arg)
 {
     int ret;
     int counter_100hz = 1;
@@ -169,7 +132,7 @@ void framing_routine(void *m_arg)
 
     clock_gettime(CLOCK_REALTIME, &ts);
 
-    while (!stop)
+    while (!frame_stop)
     {
         unsigned long ov;
 
@@ -218,3 +181,51 @@ void framing_routine(void *m_arg)
     mosquitto_lib_cleanup();
 
 }
+
+/**
+ * Initializes the mosquitto library and associated framing routines.
+ * @return
+ */
+int framing_init(void)
+{
+    const char *id = "fc1";
+    const char *host = "fc1";
+    int port = 1883;
+    int keepalive = 60;
+    bool clean_session = true;
+
+    channels_initialize(NULL);
+
+    mosquitto_lib_init();
+    mosq = mosquitto_new(id, clean_session, NULL);
+    if (!mosq) {
+        perror("mosquitto_new() failed");
+        return -1;
+    }
+    mosquitto_log_callback_set(mosq, frame_log_callback);
+
+    mosquitto_connect_callback_set(mosq, frame_connect_callback);
+    mosquitto_message_callback_set(mosq, frame_message_callback);
+    mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
+
+    if (mosquitto_connect(mosq, host, port, keepalive)) {
+        fprintf(stderr, "Unable to connect.\n");
+        return -1;
+    }
+
+    mosquitto_subscribe(mosq, NULL, "fc1/frames/#", 2);
+    mosquitto_subscribe(mosq, NULL, "fc2/frames/#", 2);
+    mosquitto_subscribe(mosq, NULL, "uei_if/frames/#", 2);
+    mosquitto_subscribe(mosq, NULL, "uei_of/frames/#", 2);
+
+
+    pthread_create(&frame_thread, NULL, &framing_routine, NULL);
+    pthread_detach(frame_thread);
+    return 0;
+}
+
+void framing_shutdown(void)
+{
+    frame_stop = 1;
+}
+
