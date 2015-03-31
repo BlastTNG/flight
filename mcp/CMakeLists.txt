@@ -3,7 +3,7 @@ project (blast_mcp)
 
 # Set global compile flags
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=gnu99")
-
+add_definitions(-D_GNU_SOURCE)
 # Find external libs
 find_package(PkgConfig)
 
