@@ -671,7 +671,7 @@ void WatchPort (void* parameter)
   int readstage = 0;
   int tty_fd;
 
-  int port = (int)parameter;
+  intptr_t port = (intptr_t)parameter;
 
   double rvalues[MAX_N_PARAMS];
   int ivalues[MAX_N_PARAMS];
