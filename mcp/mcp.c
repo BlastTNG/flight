@@ -445,8 +445,7 @@ int main(int argc, char *argv[])
   pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
 
 //  InitSched();
-  openMotors();  //open communications with peripherals, creates threads
-                 // in motors.c
+  initialize_motors();
 
 #endif
 

@@ -28,6 +28,11 @@
 
 #include <stdint.h>
 
+#define MAP(_index,_subindex,_map){\
+    _map.index = _index;\
+    _map.subindex = _subindex;\
+}
+
 /**
  * N.B. Here, RX/TX are from the controller's perspective, so RX is
  * received by the controller and TX is transmitted by the controller
@@ -49,6 +54,20 @@ typedef union {
     };
 } pdo_mapping_t;
 
+/**
+ * Map a PDO mapping structure to its parts.
+ * @param m_map PDO map
+ * @param m_index The object index
+ * @param m_subindex The object sub-index
+ * @param m_bits The number of bits utilized by the object (look it up before assigning!)
+ */
+static inline void map_pdo(pdo_mapping_t *m_map, uint16_t m_index, uint8_t m_subindex, uint8_t m_bits)
+{
+    m_map->index = m_index;
+    m_map->subindex = m_subindex;
+    m_map->size = m_bits;
+}
+
 typedef enum {
     ECAT_MOTOR_COLD,
     ECAT_MOTOR_INIT,
@@ -69,19 +88,30 @@ typedef enum {
  * http://www.copleycontrols.com/Motion/pdf/Parameter_Dictionary.pdf
  *
  * They are stored as index, subindex macros for use in registering
- * PDO/SDO calls.
+ * SDO calls.
  *
  */
 
 #define ECAT_CURRENT_LOOP_CP 0x2380, 1 /* Proportional Gain UINT16 */
 #define ECAT_CURRENT_LOOP_CI 0x2380, 2 /* Integral Gain UINT16 */
-#define ECAT_CURRENT_LOOP_VAL 0x2340, 0 /* Actual current in 0.01A INT16 */
+#define ECAT_CURRENT_LOOP_OFFSET 0x2380, 3 /* Current Offset INT16 */
+#define ECAT_CURRENT_LOOP_CMD 0x2340, 0 /* Commanded current in 0.01A INT16 */
+#define ECAT_CURRENT_ACTUAL 0x221C, 0   /* Measured current in 0.01A INT16 */
+
+#define ECAT_VEL_CMD 0x2341, 0          /* Requested Velocity INT32 */
+#define ECAT_VEL_LOOP_CP 0x2381, 1      /* Velocity Proportional Gain UINT16 */
+#define ECAT_VEL_LOOP_CI 0x2381, 2      /* Velocity Integral Gain UINT16 */
+#define ECAT_VEL_LOOP_CD 0x2381, 5      /* Velocity Vi Drain UINT16 */
+#define ECAT_VEL_ACTUAL 0x6069, 0       /* Actual Velocity 0.1 counts/s INT32 */
+#define ECAT_VEL_ENCODER 0x2231, 0      /* Velocity of the external encoder 0.1 counts/s INT32 */
+
 #define ECAT_DRIVE_STATE 0x2300, 0 /* Desired state of the drive UINT16 */
 #  define ECAT_DRIVE_STATE_DISABLED 0
 #  define ECAT_DRIVE_STATE_PROG_CURRENT 1
 #  define ECAT_DRIVE_STATE_PROG_VELOCITY 11
 
 #define ECAT_MOTOR_POSITION 0x2240, 0 /* Encoder position in counts INT32 */
+#define ECAT_MOTOR_ENC_WRAP_POS 0x2220, 0 /* Position value at which the motor encoder position will wrap. INT32 */
 #define ECAT_DRIVE_TEMP 0x2202, 0 /* A/D Reading in degrees C INT16 */
 
 #define ECAT_DRIVE_STATUS 0x1002, 0 /* Drive status bitmap UINT32 */
@@ -136,9 +166,6 @@ typedef enum {
 #  define ECAT_FAULT_CANT_CONTROL_CURRENT   (1<<15)
 #  define ECAT_FAULT_WIRING_DISCONNECT      (1<<16)
 
-#define ECAT_CURRENT_LOOP_OFFSET 0x60F6, 3 /* Added to commanded current to compensate for drift. 0.01A INT16 */
-#define ECAT_MOTOR_ENC_WRAP_POS 0x2220, 0 /* Position value at which the motor encoder position will wrap. INT32 */
-
 #define ECAT_CTL_STATUS 0x6041,0 /* Status word for Motor controller */
 #  define ECAT_CTL_STATUS_READY             (1<<0)
 #  define ECAT_CTL_STATUS_ON                (1<<1)
@@ -162,4 +189,48 @@ typedef enum {
 #  define ECAT_CTL_ENABLE                   (1<<3)
 #  define ECAT_CTL_RESET_FAULT              (1<<7)
 #  define ECAT_CTL_HALT                     (1<<8)
+
+
+int32_t rw_get_position(void);
+int32_t el_get_position(void);
+int32_t piv_get_position(void);
+int32_t rw_get_velocity(void);
+int32_t el_get_velocity(void);
+int32_t piv_get_velocity(void);
+int32_t rw_get_enc_velocity(void);
+int32_t el_get_enc_velocity(void);
+int32_t piv_get_enc_velocity(void);
+int16_t rw_get_current(void);
+int16_t el_get_current(void);
+int16_t piv_get_current(void);
+uint16_t rw_get_status_word(void);
+uint16_t el_get_status_word(void);
+uint16_t piv_get_status_word(void);
+uint32_t rw_get_status_register(void);
+uint32_t el_get_status_register(void);
+uint32_t piv_get_status_register(void);
+int16_t rw_get_amp_temp(void);
+int16_t el_get_amp_temp(void);
+int16_t piv_get_amp_temp(void);
+
+void rw_set_current(int16_t m_cur);
+void el_set_current(int16_t m_cur);
+void piv_set_current(int16_t m_cur);
+void rw_set_p(int16_t m_p);
+void el_set_p(int16_t m_p);
+void piv_set_p(int16_t m_p);
+void rw_set_i(int16_t m_i);
+void el_set_i(int16_t m_i);
+void piv_set_i(int16_t m_i);
+void rw_set_offset(int16_t m_offset);
+void el_set_offset(int16_t m_offset);
+void piv_set_offset(int16_t m_offset);
+void rw_enable(void);
+void el_enable(void);
+void piv_enable(void);
+void rw_quick_stop(void);
+void el_quick_stop(void);
+void piv_quick_stop(void);
+
+void initialize_motors(void);
 #endif /* INCLUDE_EC_MOTORS_H_ */

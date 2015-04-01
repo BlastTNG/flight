@@ -50,6 +50,7 @@
 #include "flcdataswap.h"
 
 #include "sip.h"
+#include <motors.h>
 
 #define NIOS_BUFFER_SIZE 100
 
@@ -857,9 +858,7 @@ static void StoreData(int index)
     static channel_t *verboseElAddr;
     static channel_t *verbosePivAddr;
 
-    int i_rw_motors;
-    int i_elev_motors;
-    int i_pivot_motors;
+    int i_motors;
     int i_point;
     int i_dgps;
     int sensor_veto;
@@ -1052,9 +1051,7 @@ static void StoreData(int index)
      *             Fast Controls                     *
      ************************************************/
     i_point = GETREADINDEX(point_index);
-    i_rw_motors = GETREADINDEX(rw_motor_index);
-    i_elev_motors = GETREADINDEX(elev_motor_index);
-    i_pivot_motors = GETREADINDEX(pivot_motor_index);
+    i_motors = GETREADINDEX(motor_index);
 
     SET_VALUE(azAddr, (unsigned int) (PointingData[i_point].az * DEG2LI));
     SET_VALUE(elAddr, (unsigned int) (PointingData[i_point].el * DEG2LI));
@@ -1062,10 +1059,10 @@ static void StoreData(int index)
     SET_VALUE(elEncAddr, (unsigned int) ((PointingData[i_point].enc_el + CommandData.enc_el_trim) * DEG2I));
     SET_VALUE(sigmaEncAddr, (unsigned int) (PointingData[i_point].enc_sigma * DEG2I));
 
-    SET_VALUE(velRWAddr, ((long int) (RWMotorData[i_rw_motors].vel_rw / 4.0 * DEG2I)));
-    SET_VALUE(elRawEncAddr, ((long int) (ElevMotorData[i_elev_motors].enc_raw_el * DEG2I)));
+    SET_VALUE(velRWAddr, ((long int) (RWMotorData[i_motors].velocity / 4.0 * DEG2I)));
+    SET_VALUE(elRawEncAddr, ((long int) (ElevMotorData[i_motors].position * DEG2I)));
 
-    SET_VALUE(resPivAddr, PivotMotorData[i_pivot_motors].res_piv * DEG2I);
+    SET_VALUE(resPivAddr, PivotMotorData[i_motors].position * DEG2I);
 
     /*************************************************
      *             Slow Controls                     *
@@ -1260,27 +1257,26 @@ static void StoreData(int index)
     SET_VALUE(dgpsPitchRawAddr, DGPSAtt[i_dgps].pitch * DEG2I);
     SET_VALUE(dgpsRollRawAddr, DGPSAtt[i_dgps].roll * DEG2I);
     SET_VALUE(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok);
-    SET_VALUE(tMCRWAddr, RWMotorData[i_rw_motors].temp);
-    SET_VALUE(iSerRWAddr, ((int) (RWMotorData[i_rw_motors].current / 30.0 * 32768.0)));
-    SET_VALUE(stat1RWAddr, (RWMotorData[i_rw_motors].status & 0xffff));
-    SET_VALUE(stat2RWAddr, ((RWMotorData[i_rw_motors].status & 0xffff0000) >> 16));
-    SET_VALUE(faultRWAddr, RWMotorData[i_rw_motors].fault_reg);
-    SET_VALUE(infoRWAddr, RWMotorData[i_rw_motors].drive_info);
-    SET_VALUE(driveErrCtsRWAddr, RWMotorData[i_rw_motors].err_count);
-    SET_VALUE(tMCElAddr, ElevMotorData[i_elev_motors].temp);
-    SET_VALUE(iSerElAddr, ((int) (ElevMotorData[i_elev_motors].current / 30.0 * 32768.0)));
-    SET_VALUE(stat1ElAddr, (ElevMotorData[i_elev_motors].status & 0xffff));
-    SET_VALUE(stat2ElAddr, ((ElevMotorData[i_elev_motors].status & 0xffff0000) >> 16));
-    SET_VALUE(faultElAddr, ElevMotorData[i_elev_motors].fault_reg);
-    SET_VALUE(iSerPivAddr, PivotMotorData[i_pivot_motors].current * 32768.0 / 20.0);
-    SET_VALUE(statDrPivAddr, (PivotMotorData[i_pivot_motors].db_stat & 0xff) + ((PivotMotorData[i_pivot_motors].dp_stat & 0xff) << 8));
-    SET_VALUE(statS1PivAddr, PivotMotorData[i_pivot_motors].ds1_stat);
-    SET_VALUE(velSerPivAddr, PivotMotorData[i_pivot_motors].dps_piv);
+    SET_VALUE(tMCRWAddr, RWMotorData[i_motors].temp);
+    SET_VALUE(iSerRWAddr, ((int) (RWMotorData[i_motors].current / 30.0 * 32768.0)));
+    SET_VALUE(stat1RWAddr, (RWMotorData[i_motors].status & 0xffff));
+    SET_VALUE(stat2RWAddr, ((RWMotorData[i_motors].status & 0xffff0000) >> 16));
+    SET_VALUE(faultRWAddr, RWMotorData[i_motors].fault_reg);
+    SET_VALUE(infoRWAddr, RWMotorData[i_motors].drive_info);
+    SET_VALUE(driveErrCtsRWAddr, RWMotorData[i_motors].err_count);
+    SET_VALUE(tMCElAddr, ElevMotorData[i_motors].temp);
+    SET_VALUE(iSerElAddr, ((int) (ElevMotorData[i_motors].current / 30.0 * 32768.0)));
+    SET_VALUE(stat1ElAddr, (ElevMotorData[i_motors].status & 0xffff));
+    SET_VALUE(stat2ElAddr, ((ElevMotorData[i_motors].status & 0xffff0000) >> 16));
+    SET_VALUE(faultElAddr, ElevMotorData[i_motors].fault_reg);
+    SET_VALUE(iSerPivAddr, PivotMotorData[i_motors].current * 32768.0 / 20.0);
+    SET_VALUE(statDrPivAddr, (PivotMotorData[i_motors].status & 0xff) + ((PivotMotorData[i_motors].status & 0xff) << 8));///TODO:Fix Pivot Status field
+    SET_VALUE(velSerPivAddr, PivotMotorData[i_motors].velocity);
 
-    SET_VALUE(infoElAddr, ElevMotorData[i_elev_motors].drive_info);
-    SET_VALUE(driveErrCtsElAddr, ElevMotorData[i_elev_motors].err_count);
-    SET_VALUE(infoPivAddr, PivotMotorData[i_pivot_motors].drive_info);
-    SET_VALUE(driveErrCtsPivAddr, PivotMotorData[i_pivot_motors].err_count);
+    SET_VALUE(infoElAddr, ElevMotorData[i_motors].drive_info);
+    SET_VALUE(driveErrCtsElAddr, ElevMotorData[i_motors].err_count);
+    SET_VALUE(infoPivAddr, PivotMotorData[i_motors].drive_info);
+    SET_VALUE(driveErrCtsPivAddr, PivotMotorData[i_motors].err_count);
     SET_VALUE(verboseRWAddr, CommandData.verbose_rw);
     SET_VALUE(verboseElAddr, CommandData.verbose_el);
     SET_VALUE(verbosePivAddr, CommandData.verbose_piv);

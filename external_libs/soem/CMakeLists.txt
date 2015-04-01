@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.0)
 project (libethercat)
 
 # Set global compile flags
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=gnu99 -ffunction-sections -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -fno-strict-aliasing")
+set(CMAKE_C_FLAGS "-std=gnu99 -ffunction-sections -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -fno-strict-aliasing")
 set(CMAKE_LD_FLAGS ${CMAKE_LD_FLAGS} "-Wl,--gc-sections")
 
 # Find external libs

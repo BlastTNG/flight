@@ -69,4 +69,7 @@
 #define SSS_ALIGNMENT     1.5532
 
 void SetRaDec(double ra, double dec);
+void SetSafeDAz(double ref, double *A);
+void UnwindDiff(double ref, double *A);
+
 #endif /* INCLUDE_POINTING_H_ */

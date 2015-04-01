@@ -1,14 +1,48 @@
 cmake_minimum_required (VERSION 3.0)
-project (blast_mcp)
 
-# Set global compile flags
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=gnu99")
+option(USE_CLANG "build mcp using clang" OFF)
+
+if (USE_CLANG)
+    SET (CMAKE_C_COMPILER               "/usr/bin/clang")
+    SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99")
+    SET (CMAKE_C_FLAGS_DEBUG            "-g")
+    SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
+    SET (CMAKE_C_FLAGS_RELEASE          "-O4 -DNDEBUG")
+    SET (CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g")
+    
+    SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
+    SET (CMAKE_CXX_FLAGS                "-Wall")
+    SET (CMAKE_CXX_FLAGS_DEBUG          "-g")
+    SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
+    SET (CMAKE_CXX_FLAGS_RELEASE        "-O4 -DNDEBUG")
+    SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+    
+else(USE_CLANG)
+    SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99")
+    SET (CMAKE_C_FLAGS_DEBUG            "-g")
+    SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
+    SET (CMAKE_C_FLAGS_RELEASE          "-O3 -DNDEBUG")
+    SET (CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g")
+    
+    SET (CMAKE_CXX_FLAGS                "-Wall")
+    SET (CMAKE_CXX_FLAGS_DEBUG          "-g")
+    SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
+    SET (CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG")
+    SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")    
+endif(USE_CLANG)
+
+project (blast_mcp)
+# Set global definitions
 add_definitions(-D_GNU_SOURCE)
+
 # Find external libs
 find_package(PkgConfig)
 
 # Find Threading lib
 find_package (Threads)
+
+# Find ExternalProject module
+include (ExternalProject)
 
 # Find gsl    
 pkg_check_modules(PC_GSL QUIET gsl)
@@ -65,6 +99,17 @@ include_directories (
     "${COMMON_DIR}/include"
     )
 
+# add soem library
+set(ECAT_LIBRARY ${PROJECT_BINARY_DIR}/soem/libethercat.a)
+#add_subdirectory(${PROJECT_SOURCE_DIR}/../external_libs/soem "${PROJECT_BINARY_DIR}/soem")
+ExternalProject_Add(soem 
+    PREFIX ${PROJECT_BINARY_DIR}/soem 
+    INSTALL_DIR ${PROJECT_BINARY_DIR}/soem 
+    URL ${PROJECT_SOURCE_DIR}/../external_libs/soem)
+include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem 
+    ${PROJECT_SOURCE_DIR}/../external_libs/soem/osal
+    ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
+
 # add commanding objects
 add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
 add_subdirectory("${PROJECT_SOURCE_DIR}/commanding")
@@ -112,8 +157,13 @@ add_executable (mcp
     $<TARGET_OBJECTS:framing>
     $<TARGET_OBJECTS:blast_common>
     $<TARGET_OBJECTS:mcp_obj>
-    )
+    ) 
 
-target_link_libraries(mcp ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} ${GLIB_LIBRARY} ${MOSQ_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} m)
+target_link_libraries(mcp 
+    ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} 
+    ${GLIB_LIBRARY} 
+    ${MOSQ_LIBRARY} 
+    ${ECAT_LIBRARY}
+    ${CMAKE_THREAD_LIBS_INIT} m)
 
 install(TARGETS mcp DESTINATION bin)

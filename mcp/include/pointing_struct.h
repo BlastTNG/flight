@@ -76,65 +76,6 @@ struct ACSDataStruct {
 extern struct ACSDataStruct ACSData;
 
 
-/**********************************************/
-/*  RW Motor Data Struct                      */
-/*  - Stores encoder/velocity information     */
-/*  from the RW                               */
-/*  - Written to struct in the serial thread  */
-/*  reactComm in motors.c                     */
-/*  - Written to the frame in the main thread */
-/*  USE A CIRCULAR BUFFER !!!                 */
-struct RWMotorDataStruct{
-  double vel_rw; // in degrees per second
-  int temp; // drive temperature in deg Celcius
-  double current; // drive current read from controller
-  unsigned int status;  // drive status
-  unsigned int fault_reg; // drive fault register
-  unsigned short int drive_info; // motorinfo struct
-  unsigned int err_count; // count of serious serial errors
-};
-extern struct RWMotorDataStruct RWMotorData[3];
-extern int rw_motor_index; // defined in motors.c
-
-/**********************************************/
-/*  Elev Motor Data Struct                    */
-/*  - Stores encoder/velocity information     */
-/*  from the Elevation Drive                  */
-/*  - Written to struct in the serial thread  */
-/*  reactComm in motors.c                     */
-/*  - Written to the frame in the main thread */
-/*  USE A CIRCULAR BUFFER !!!                 */
-struct ElevMotorDataStruct{
-  double enc_raw_el; // in degrees
-  int temp; // drive temperature in deg Celcius
-  double current; // drive current read from controller
-  unsigned int status;  // drive status
-  unsigned int fault_reg; // drive fault register
-  unsigned short int drive_info; // motorinfo struct
-  unsigned int err_count; // count of serious serial errors
-};
-extern struct ElevMotorDataStruct ElevMotorData[3];
-extern int elev_motor_index; // defined in motors.c
-/**********************************************/
-/*  Pivot Motor Data Struct                   */
-/*  - Stores information read from serial     */
-/*  from the Pivot                  */
-/*  - Written to struct in the serial thread  */
-/*  reactComm in motors.c                     */
-/*  - Written to the frame in the main thread */
-/*  USE A CIRCULAR BUFFER !!!                 */
-struct PivotMotorDataStruct{
-  double res_piv; // in degrees
-  double current; // drive current read from controller
-  int dps_piv; // filtered pivot velocity
-  unsigned int db_stat;  // drive bridge status
-  unsigned int dp_stat;  // drive protection status
-  unsigned int ds1_stat;  // drive system 1 status
-  unsigned short int drive_info; // motorinfo struct
-  unsigned int err_count; // count of serious serial errors
-};
-extern struct PivotMotorDataStruct PivotMotorData[3];
-extern int pivot_motor_index; // defined in motors.c
 
 
 /**********************************************/
