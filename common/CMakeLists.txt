@@ -3,7 +3,6 @@ set(MCP_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/fir.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/flcdataswap.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lut.c
     ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
@@ -16,11 +15,28 @@ set(MCP_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/fir.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/include/flcdataswap.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/lut.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/sip.h
+   PARENT_SCOPE
+)
+
+set(DEFRICHER_COMMON_SRCS
+    ${DEFRICHER_COMMON_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
+    PARENT_SCOPE
+)
+set(DEFRICHER_COMMON_HEADERS
+   ${DEFRICHER_COMMON_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/blast.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
    PARENT_SCOPE
 )
 
