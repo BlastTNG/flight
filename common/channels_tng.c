@@ -239,7 +239,7 @@ int channels_initialize(const channel_t * const m_channel_list)
      * Then count each type of channel, separating by source, variable type and rate
      */
     for (channel = m_channel_list; channel->field[0]; channel++) {
-        g_hash_table_insert(frame_table, channel->field, channel);
+        g_hash_table_insert(frame_table, (gpointer)channel->field, (gpointer)channel);
         if (channel->rate < RATE_END && channel->type < TYPE_END) {
             channel_count[channel->source][channel->rate][channel->type]++;
         }
