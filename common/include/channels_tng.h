@@ -35,7 +35,7 @@
 
 #define FIELD_LEN 32
 #define UNITS_LEN 48
-#define CHANNELS_HASH_SEED 0xEB90
+#define BLAST_TNG_CH_VERSION 1
 
 #define _RATES(x,_)	\
 	_(x, 1HZ)					\
@@ -66,18 +66,41 @@ BLAST_LOOKUP_TABLE(TYPE, static);
 BLAST_LOOKUP_TABLE(SRC, static);
 
 
-#pragma pack(push,1)
 struct channel {
-	char field[FIELD_LEN];      /// name of channel for FileFormats and CalSpecs
-	double m_c2e;               /// Conversion from counts to engineering units is
-	double b_e2e;               ///   e = c * m_c2e + b_e2e
-	e_TYPE type;                /// Type of data stored
-	e_RATE rate;                /// Rate at which the channel is recorded
-	e_SRC source;               /// Source of the data channel (who writes)
-	char quantity[UNITS_LEN]; 	/// eg, "Temperature" or "Angular Velocity"
-	char units[UNITS_LEN];      /// eg, "K" or "^o/s"
-	void *var;                  /// Pointer to the variable in the current frame
+    char field[FIELD_LEN];      /// name of channel for FileFormats and CalSpecs
+    double m_c2e;               /// Conversion from counts to engineering units is
+    double b_e2e;               ///   e = c * m_c2e + b_e2e
+    e_TYPE type;                /// Type of data stored
+    e_RATE rate;                /// Rate at which the channel is recorded
+    e_SRC source;               /// Source of the data channel (who writes)
+    char quantity[UNITS_LEN];   /// eg, "Temperature" or "Angular Velocity"
+    char units[UNITS_LEN];      /// eg, "K" or "^o/s"
+    void *var;                  /// Pointer to the variable in the current frame
+} __attribute__((aligned));
+
+/**
+ * These next two structures are packed for network transmission and disk storage.  Do
+ * not use them for working with structures
+ */
+#pragma pack(push,1)
+struct channel_packed {
+    char field[FIELD_LEN];      /// name of channel for FileFormats and CalSpecs
+    double m_c2e;               /// Conversion from counts to engineering units is
+    double b_e2e;               ///   e = c * m_c2e + b_e2e
+    int8_t type;                /// Type of data stored
+    int8_t rate;                /// Rate at which the channel is recorded
+    int8_t source;              /// Source of the data channel (who writes)
+    char quantity[UNITS_LEN];   /// eg, "Temperature" or "Angular Velocity"
+    char units[UNITS_LEN];      /// eg, "K" or "^o/s"
 };
+
+typedef struct {
+    uint32_t    magic;
+    uint8_t     version;
+    uint32_t    length;
+    uint32_t    crc;
+    struct channel_packed data[0];
+} channel_header_t;
 #pragma pack(pop)
 
 #pragma pack(push,1)
@@ -90,7 +113,7 @@ typedef struct {
 extern void *channel_data[SRC_END][RATE_END];
 extern size_t frame_size[SRC_END][RATE_END];
 
-int channels_initialize(const char *m_filename);
+int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
 int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len);
 

@@ -24,10 +24,10 @@
 #include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
 #include <sys/types.h>  /* for size_t */
 
-/* If we're not using GNU C, elide __attribute__ */
-#ifndef __GNUC__
-#  define  __attribute__(x)  /*NOTHING*/
-#endif
+/* Commonly used seed values (generally SYNC words for telemetry)*/
+#define BLAST_MAGIC8    0xEB
+#define BLAST_MAGIC16   0xEB90
+#define BLAST_MAGIC32   0xEB90146F
 
 /* BUOS (BLAST Unified Output Scheme) definitions */
 #define BUOS_MAX 2048

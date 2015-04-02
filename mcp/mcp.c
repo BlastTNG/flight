@@ -52,7 +52,8 @@
 #include "flcdataswap.h"
 #include "lut.h"
 
-
+#include <framing.h>
+#include <ec_motors.h>
 
 /* Define global variables */
 int StartupVeto = 20;
@@ -69,6 +70,8 @@ struct ACSDataStruct ACSData;
 pthread_t watchdog_id;
 
 extern pthread_mutex_t mutex;  //commands.c
+extern channel_t channel_list[]; //tx_struct_tng.c
+
 
 void Pointing();
 void WatchPort(void*);
@@ -119,14 +122,6 @@ struct chat_buf chatter_buffer;
 
 #if (TEMPORAL_OFFSET != 0)
 #warning TEMPORAL_OFFSET NON-ZERO; FIX FOR FLIGHT
-#endif
-
-#ifndef BOLOTEST
-void openMotors();    // motors.c
-void closeMotors();
-
-void startChrgCtrl(); // chrgctrl.c
-void endChrgCtrl();
 #endif
 
 /* gives system time (in s) */
@@ -407,7 +402,7 @@ int main(int argc, char *argv[])
 
 
   //populate nios addresses, based off of tx_struct, derived
-  channels_initialize("/data/etc/blast/channel.map");
+  channels_initialize(channel_list);
 
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
@@ -424,10 +419,7 @@ int main(int argc, char *argv[])
   /* Initialize the Ephemeris */
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
-  bprintf(info, "System: Slow Downlink Initialisation");
-
-//  InitFrameBuffer(&bi0_buffer);
-//  InitFrameBuffer(&hiGain_buffer);
+  framing_init();
 
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif

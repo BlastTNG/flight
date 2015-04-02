@@ -52,10 +52,8 @@
 #include "PMurHash.h"
 #include "channels_tng.h"
 
-
 static GHashTable *frame_table = NULL;
 static int channel_count[SRC_END][RATE_END][TYPE_END] = {{{0}}};
-extern channel_t channel_list[];
 
 void *channel_data[SRC_END][RATE_END] = {{0}};
 size_t frame_size[SRC_END][RATE_END] = {{0}};
@@ -87,7 +85,7 @@ static guint channel_hash(gconstpointer m_data)
 {
     const char *field_name = (const char*)m_data;
 
-    return PMurHash32(CHANNELS_HASH_SEED, field_name, strnlen(field_name, FIELD_LEN));
+    return PMurHash32(BLAST_MAGIC32, field_name, strnlen(field_name, FIELD_LEN));
 }
 
 static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_userdata)
@@ -114,6 +112,87 @@ static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_us
     }
 }
 
+channel_header_t *channels_create_map(channel_t *m_channel_list)
+{
+    channel_header_t *new_pkt = NULL;
+    size_t channel_count;
+
+    for (channel_count = 0; m_channel_list[channel_count].field[0]; channel_count++);
+    channel_count++; // Add one extra channel to allow for the NULL terminating field
+
+    new_pkt = balloc(err, sizeof(channel_header_t) + sizeof(struct channel_packed) * channel_count);
+
+    if (!new_pkt) return NULL;
+
+    new_pkt->magic = BLAST_MAGIC32;
+    new_pkt->version = BLAST_TNG_CH_VERSION;
+    new_pkt->length = channel_count;
+    new_pkt->crc = 0;
+
+    /**
+     * Copy over the data values one at a time from the aligned to the packed structure
+     */
+    for (size_t i = 0; i < channel_count; i++) {
+        memcpy(new_pkt->data[i].field, m_channel_list[i].field, FIELD_LEN);
+        new_pkt->data[i].m_c2e = m_channel_list[i].m_c2e;
+        new_pkt->data[i].b_e2e = m_channel_list[i].b_e2e;
+        new_pkt->data[i].type = m_channel_list[i].type;
+        new_pkt->data[i].rate = m_channel_list[i].rate;
+        new_pkt->data[i].source = m_channel_list[i].source;
+        memcpy(new_pkt->data[i].quantity, m_channel_list[i].quantity, UNITS_LEN);
+        memcpy(new_pkt->data[i].units, m_channel_list[i].units, UNITS_LEN);
+    }
+
+    new_pkt->crc = PMurHash32(BLAST_MAGIC32, new_pkt, sizeof(channel_header_t) + sizeof(struct channel_packed) * channel_count);
+
+    return new_pkt;
+}
+
+/**
+ * Translates a stored channel map to the channel_list structure
+ * @param m_map Pointer to the #channel_header_t structure storing our packet
+ * @param m_channel_list Double pointer to where we will store the channel_list
+ * @return -1 on failure, positive number of channels read otherwise
+ */
+int channels_read_map(channel_header_t *m_map, channel_t **m_channel_list)
+{
+    uint32_t crcval = m_map->crc;
+
+
+    if (m_map->version != BLAST_TNG_CH_VERSION) {
+        bprintf(err, "Unknown channels version %d", m_map->version);
+        return -1;
+    }
+
+    m_map->crc = 0;
+    if (crcval != PMurHash32(BLAST_MAGIC32, m_map, sizeof(channel_header_t) + m_map->length * sizeof(channel_t))) {
+        bprintf(err, "CRC match failed!");
+        return -1;
+    }
+    m_map->crc = crcval;
+
+    *m_channel_list = balloc(err, sizeof(channel_t) * m_map->length);
+    if (!(*m_channel_list)) return -1;
+
+
+    /**
+     * Copy over the data values one at a time from the packed to the aligned structure
+     */
+    for (size_t channel_count = 0; channel_count < m_map->length; channel_count++) {
+        memcpy((*m_channel_list)[channel_count].field, m_map->data[channel_count].field, FIELD_LEN);
+        (*m_channel_list)[channel_count].m_c2e = m_map->data[channel_count].m_c2e;
+        (*m_channel_list)[channel_count].b_e2e = m_map->data[channel_count].b_e2e;
+        (*m_channel_list)[channel_count].type = m_map->data[channel_count].type;
+        (*m_channel_list)[channel_count].rate = m_map->data[channel_count].rate;
+        (*m_channel_list)[channel_count].source = m_map->data[channel_count].source;
+        memcpy((*m_channel_list)[channel_count].quantity, m_map->data[channel_count].quantity, UNITS_LEN);
+        memcpy((*m_channel_list)[channel_count].units, m_map->data[channel_count].units, UNITS_LEN);
+        (*m_channel_list)[channel_count].var = NULL;
+    }
+
+    return m_map->length;
+}
+
 channel_t *channels_find_by_name(const char *m_name)
 {
     channel_t *retval = (channel_t*)g_hash_table_lookup(frame_table, m_name);
@@ -133,13 +212,17 @@ int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m
 	return 0;
 }
 
-int channels_initialize(const char *m_datafile)
+/**
+ * Initialize the channels structure and associated hash tables.
+ * @return 0 on success.  -1 otherwise
+ */
+int channels_initialize(const channel_t * const m_channel_list)
 {
-    channel_t *channel;
+    const channel_t *channel;
 
     frame_table = g_hash_table_new(channel_hash, g_str_equal);
 
-    if (frame_table == NULL) return 1;
+    if (frame_table == NULL) return -1;
 
     for (int i = 0; i < SRC_END; i++) {
         for (int j = 0; j < RATE_END; j++) {
@@ -155,7 +238,7 @@ int channels_initialize(const char *m_datafile)
      * First Pass:  Add each entry in the channels array to a hash table for later lookup.
      * Then count each type of channel, separating by source, variable type and rate
      */
-    for (channel = channel_list; channel->field[0]; channel++) {
+    for (channel = m_channel_list; channel->field[0]; channel++) {
         g_hash_table_insert(frame_table, channel->field, channel);
         if (channel->rate < RATE_END && channel->type < TYPE_END) {
             channel_count[channel->source][channel->rate][channel->type]++;
@@ -191,6 +274,7 @@ int channels_initialize(const char *m_datafile)
      * Third Pass: Iterate over the hash table and assign the lookup pointers to their place in the frame.
      */
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
+
 
     bprintf(startup, "Successfully initialized Channels data structures");
     return 0;
