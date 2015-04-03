@@ -142,7 +142,7 @@ static void *framing_routine(void *m_arg)
         return NULL;
     }
     mosquitto_publish(mosq, NULL, "channels/fc/1",
-            channels_pkg->length * sizeof(channel_header_t) + sizeof(struct channel_packed), channels_pkg, 1, true);
+            sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
 
     while (!frame_stop)
     {
@@ -170,20 +170,44 @@ static void *framing_routine(void *m_arg)
         if (!counter_5hz--) {
             counter_5hz = 40;
             if (frame_size[SRC_FC][RATE_5HZ]) {
+                bprintf(info, "publishing 5HZ data");
                 mosquitto_publish(mosq, NULL, "frames/fc/1/5HZ",
                         frame_size[SRC_FC][RATE_5HZ], channel_data[SRC_FC][RATE_5HZ], 0, false);
             }
         }
         if (!counter_1hz--) {
             counter_1hz = 200;
-            if (frame_size[SRC_FC][RATE_5HZ]) {
+            if (frame_size[SRC_FC][RATE_1HZ]) {
                 mosquitto_publish(mosq, NULL, "frames/fc/1/1HZ",
                         frame_size[SRC_FC][RATE_1HZ], channel_data[SRC_FC][RATE_1HZ], 0, false);
             }
         }
 
         if ((ret = mosquitto_loop(mosq, 0, 1)) != MOSQ_ERR_SUCCESS) {
-            bprintf(err, "Received %d from mosquitto_loop", ret);
+            switch(ret) {
+                case MOSQ_ERR_INVAL:
+                    bprintf(err, "Invalid Parameters for mosquitto_loop");
+                    break;
+                case MOSQ_ERR_NOMEM:
+                    bprintf(err, "Out of memory in mosquitto loop");
+                    break;
+                case MOSQ_ERR_NO_CONN:
+                    bprintf(err, "Not connected");
+                    //TODO: Implement state loop for mosquitto
+                    break;
+                case MOSQ_ERR_CONN_LOST:
+                    bprintf(err, "Lost connection with mosquitto server");
+                    break;
+                case MOSQ_ERR_PROTOCOL:
+                    bprintf(err, "Protocol error communicating with mosquitto server");
+                    break;
+                case MOSQ_ERR_ERRNO:
+                    berror(err, "System error in mosquitto comms");
+                    break;
+                default:
+                    bprintf(err, "Received %d from mosquitto_loop", ret);
+            }
+
         }
     }
 
@@ -222,11 +246,7 @@ int framing_init(channel_t *channel_list)
         return -1;
     }
 
-    mosquitto_subscribe(mosq, NULL, "fc1/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "fc2/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "uei_if/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "uei_of/frames/#", 2);
-
+    mosquitto_subscribe(mosq, NULL, "frames/#", 2);
 
     pthread_create(&frame_thread, NULL, &framing_routine, channel_list);
     pthread_detach(frame_thread);
