@@ -638,6 +638,8 @@ static void* motor_control(void* arg)
     struct timespec interval_ts = { .tv_sec = 0,
                                     .tv_nsec = 2000000}; /// 500HZ interval
 
+    bprintf(startup, "Starting Motor Control");
+    nameThread("Motors");
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
@@ -695,7 +697,6 @@ static void* motor_control(void* arg)
 /* opens communications with motor controllers */
 void initialize_motors(void)
 {
-  bprintf(info, "Motors: connecting to motors");
   memset(ElevMotorData, 0, sizeof(ElevMotorData));
   memset(ElevMotorData, 0, sizeof(RWMotorData));
   memset(ElevMotorData, 0, sizeof(PivotMotorData));

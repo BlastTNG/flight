@@ -132,7 +132,8 @@ static void *framing_routine(void *m_arg)
     struct timespec interval_ts = { .tv_sec = 0,
                                     .tv_nsec = 5000000}; /// 200HZ interval
 
-    printf("Starting Framing task\n");
+    nameThread("framing");
+    bprintf(startup, "Starting Framing task\n");
 
     clock_gettime(CLOCK_REALTIME, &ts);
 
