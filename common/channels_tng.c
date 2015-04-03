@@ -169,8 +169,9 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
         return -1;
     }
 
-    if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(channel_t)) {
-        bprintf(err, "Length of data packet %zu does not match header data %zu", m_len, sizeof(channel_header_t) + m_map->length * sizeof(channel_t));
+    printf("%X\n%X\n%u\n", m_map->magic, m_map->version, m_map->length);
+    if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed)) {
+        bprintf(err, "Length of data packet %zu does not match header data %zu", m_len, sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed));
         return -1;
     }
 
@@ -272,7 +273,7 @@ int channels_initialize(const channel_t * const m_channel_list)
 
             if (frame_size[src][rate]) {
                 channel_data[src][rate] = malloc(frame_size[src][rate]);
-                bprintf(startup, "Allocating %u bytes for %u channels at %s:%s", frame_size[src][rate],
+                bprintf(startup, "Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
                         (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                         (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
                         (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
