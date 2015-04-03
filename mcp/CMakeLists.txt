@@ -1,3 +1,5 @@
+project (blast_mcp)
+
 cmake_minimum_required (VERSION 2.8)
 
 option(USE_CLANG "build mcp using clang" OFF)
@@ -19,7 +21,6 @@ SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")    
 
-project (blast_mcp)
 # Set global definitions
 add_definitions(-D_GNU_SOURCE)
 
