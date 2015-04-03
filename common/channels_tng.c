@@ -151,21 +151,31 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
 /**
  * Translates a stored channel map to the channel_list structure
  * @param m_map Pointer to the #channel_header_t structure storing our packet
+ * @param m_len Length in bytes of the packet passed via m_map
  * @param m_channel_list Double pointer to where we will store the channel_list
  * @return -1 on failure, positive number of channels read otherwise
  */
-int channels_read_map(channel_header_t *m_map, channel_t **m_channel_list)
+int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list)
 {
     uint32_t crcval = m_map->crc;
-
 
     if (m_map->version != BLAST_TNG_CH_VERSION) {
         bprintf(err, "Unknown channels version %d", m_map->version);
         return -1;
     }
 
+    if (m_len < sizeof(channel_header_t)) {
+        bprintf(err, "Invalid size %zu for channel packet", m_len);
+        return -1;
+    }
+
+    if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(channel_t)) {
+        bprintf(err, "Length of data packet %zu does not match header data %zu", m_len, sizeof(channel_header_t) + m_map->length * sizeof(channel_t));
+        return -1;
+    }
+
     m_map->crc = 0;
-    if (crcval != PMurHash32(BLAST_MAGIC32, m_map, sizeof(channel_header_t) + m_map->length * sizeof(channel_t))) {
+    if (crcval != PMurHash32(BLAST_MAGIC32, m_map, m_len)) {
         bprintf(err, "CRC match failed!");
         return -1;
     }
@@ -262,6 +272,13 @@ int channels_initialize(const channel_t * const m_channel_list)
 
             if (frame_size[src][rate]) {
                 channel_data[src][rate] = malloc(frame_size[src][rate]);
+                bprintf(startup, "Allocating %u bytes for %u channels at %s:%s", frame_size[src][rate],
+                        (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
+                        (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
+                        (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
+                        (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]),
+                        SRC_lookup_table[src].text,
+                        RATE_lookup_table[rate].text);
             }
             else {
                 channel_data[src][rate] = NULL;

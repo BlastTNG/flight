@@ -59,10 +59,10 @@ BLAST_LOOKUP_TABLE(RATE, static);
 BLAST_LOOKUP_TABLE(TYPE, static);
 
 #define _SRCS(x,_)	\
-	_(x, OF_UEI)	\
-	_(x, IF_UEI)	\
-	_(x, FC)		\
-	_(x, SC)
+	_(x, OF_UEI)    \
+	_(x, IF_UEI)    \
+    _(x, FC)        \
+    _(x, SC)
 BLAST_LOOKUP_TABLE(SRC, static);
 
 
@@ -116,5 +116,6 @@ extern size_t frame_size[SRC_END][RATE_END];
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
 int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len);
+int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 
 #endif /* CHANNELS_V2_H_ */
