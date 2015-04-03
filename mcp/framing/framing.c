@@ -156,28 +156,28 @@ static void *framing_routine(void *m_arg)
             break;
         }
         if (frame_size[SRC_FC][RATE_200HZ]) {
-            mosquitto_publish(mosq, NULL, "fc/1/frames/200HZ",
+            mosquitto_publish(mosq, NULL, "frames/fc/1/200HZ",
                     frame_size[SRC_FC][RATE_200HZ], channel_data[SRC_FC][RATE_200HZ],0, false);
         }
 
         if (!counter_100hz--) {
             counter_100hz = 1;
             if (frame_size[SRC_FC][RATE_100HZ]) {
-                mosquitto_publish(mosq, NULL, "fc/1/frames/100HZ",
+                mosquitto_publish(mosq, NULL, "frames/fc/1/100HZ",
                         frame_size[SRC_FC][RATE_100HZ], channel_data[SRC_FC][RATE_100HZ],0, false);
             }
         }
         if (!counter_5hz--) {
             counter_5hz = 40;
             if (frame_size[SRC_FC][RATE_5HZ]) {
-                mosquitto_publish(mosq, NULL, "fc/1/frames/5HZ",
+                mosquitto_publish(mosq, NULL, "frames/fc/1/5HZ",
                         frame_size[SRC_FC][RATE_5HZ], channel_data[SRC_FC][RATE_5HZ], 0, false);
             }
         }
         if (!counter_1hz--) {
             counter_1hz = 200;
             if (frame_size[SRC_FC][RATE_5HZ]) {
-                mosquitto_publish(mosq, NULL, "fc/1/frames/1HZ",
+                mosquitto_publish(mosq, NULL, "frames/fc/1/1HZ",
                         frame_size[SRC_FC][RATE_1HZ], channel_data[SRC_FC][RATE_1HZ], 0, false);
             }
         }

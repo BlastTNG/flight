@@ -638,8 +638,9 @@ static void* motor_control(void* arg)
     struct timespec interval_ts = { .tv_sec = 0,
                                     .tv_nsec = 2000000}; /// 500HZ interval
 
-    bprintf(startup, "Starting Motor Control");
     nameThread("Motors");
+    bprintf(startup, "Starting Motor Control");
+
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
