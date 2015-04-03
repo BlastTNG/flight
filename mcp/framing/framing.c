@@ -141,7 +141,7 @@ static void *framing_routine(void *m_arg)
         bprintf(err, "Exiting framing routine because we cannot get the channel list");
         return NULL;
     }
-    mosquitto_publish(mosq, NULL, "fc1/channels",
+    mosquitto_publish(mosq, NULL, "channels/fc/1",
             channels_pkg->length * sizeof(channel_header_t) + sizeof(struct channel_packed), channels_pkg, 1, true);
 
     while (!frame_stop)
