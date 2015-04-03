@@ -1,0 +1,57 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec1248619705/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec1248619705.dir/build.make CMakeFiles/cmTryCompileExec1248619705.dir/build
+make[1]: Entering directory '/home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec1248619705.dir/CheckSymbolExists.c.o
+/usr/bin/cc   -std=gnu99 -ffunction-sections -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -fno-strict-aliasing    -o CMakeFiles/cmTryCompileExec1248619705.dir/CheckSymbolExists.c.o   -c /home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTryCompileExec1248619705
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec1248619705.dir/link.txt --verbose=1
+/usr/bin/cc  -std=gnu99 -ffunction-sections -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -fno-strict-aliasing     CMakeFiles/cmTryCompileExec1248619705.dir/CheckSymbolExists.c.o  -o cmTryCompileExec1248619705 -rdynamic 
+CMakeFiles/cmTryCompileExec1248619705.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text.main+0x15): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTryCompileExec1248619705.dir/build.make:88: recipe for target 'cmTryCompileExec1248619705' failed
+make[1]: Leaving directory '/home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec1248619705] Error 1
+Makefile:118: recipe for target 'cmTryCompileExec1248619705/fast' failed
+make: *** [cmTryCompileExec1248619705/fast] Error 2
+
+File /home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTryCompileExec3227194784/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec3227194784.dir/build.make CMakeFiles/cmTryCompileExec3227194784.dir/build
+make[1]: Entering directory '/home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3227194784.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -std=gnu99 -ffunction-sections -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -fno-strict-aliasing -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTryCompileExec3227194784.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.0/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec3227194784
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3227194784.dir/link.txt --verbose=1
+/usr/bin/cc  -std=gnu99 -ffunction-sections -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -fno-strict-aliasing -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTryCompileExec3227194784.dir/CheckFunctionExists.c.o  -o cmTryCompileExec3227194784 -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTryCompileExec3227194784.dir/build.make:88: recipe for target 'cmTryCompileExec3227194784' failed
+make[1]: Leaving directory '/home/seth/git/blastpol/external_libs/build/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec3227194784] Error 1
+Makefile:118: recipe for target 'cmTryCompileExec3227194784/fast' failed
+make: *** [cmTryCompileExec3227194784/fast] Error 2
+
+

@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/seth/git/blastpol/external_libs/soem/osal/osal.c
+time.h
+-
+sys/time.h
+-
+unistd.h
+-
+stdlib.h
+-
+string.h
+-
+osal.h
+-
+
+/home/seth/git/blastpol/external_libs/soem/osal/osal.h
+osal_defs.h
+-
+stdint.h
+-
+
+/home/seth/git/blastpol/external_libs/soem/osal/osal_defs.h
+pthread.h
+-
+
