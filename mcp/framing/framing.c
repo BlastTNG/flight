@@ -123,6 +123,7 @@ static void *framing_routine(void *m_arg)
 {
     int ret;
     channel_header_t *channels_pkg = NULL;
+    channel_t *channel_list = (channel_t*)m_arg;
 
     int counter_100hz = 1;
     int counter_5hz=40;
@@ -154,28 +155,28 @@ static void *framing_routine(void *m_arg)
             break;
         }
         if (frame_size[SRC_FC][RATE_200HZ]) {
-            mosquitto_publish(mosq, NULL, "fc1/frames/200HZ",
+            mosquitto_publish(mosq, NULL, "fc/1/frames/200HZ",
                     frame_size[SRC_FC][RATE_200HZ], channel_data[SRC_FC][RATE_200HZ],0, false);
         }
 
         if (!counter_100hz--) {
             counter_100hz = 1;
             if (frame_size[SRC_FC][RATE_100HZ]) {
-                mosquitto_publish(mosq, NULL, "fc1/frames/100HZ",
+                mosquitto_publish(mosq, NULL, "fc/1/frames/100HZ",
                         frame_size[SRC_FC][RATE_100HZ], channel_data[SRC_FC][RATE_100HZ],0, false);
             }
         }
         if (!counter_5hz--) {
             counter_5hz = 40;
             if (frame_size[SRC_FC][RATE_5HZ]) {
-                mosquitto_publish(mosq, NULL, "fc1/frames/5HZ",
+                mosquitto_publish(mosq, NULL, "fc/1/frames/5HZ",
                         frame_size[SRC_FC][RATE_5HZ], channel_data[SRC_FC][RATE_5HZ], 0, false);
             }
         }
         if (!counter_1hz--) {
             counter_1hz = 200;
             if (frame_size[SRC_FC][RATE_5HZ]) {
-                mosquitto_publish(mosq, NULL, "fc1/frames/1HZ",
+                mosquitto_publish(mosq, NULL, "fc/1/frames/1HZ",
                         frame_size[SRC_FC][RATE_1HZ], channel_data[SRC_FC][RATE_1HZ], 0, false);
             }
         }
@@ -194,15 +195,13 @@ static void *framing_routine(void *m_arg)
  * Initializes the mosquitto library and associated framing routines.
  * @return
  */
-int framing_init(void)
+int framing_init(channel_t *channel_list)
 {
     const char *id = "fc1";
     const char *host = "fc1";
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
-
-    channels_initialize(NULL);
 
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
@@ -216,6 +215,7 @@ int framing_init(void)
     mosquitto_message_callback_set(mosq, frame_message_callback);
     mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
 
+    //TODO:Move mosquitto to state machine to re-connect if needed
     if (mosquitto_connect(mosq, host, port, keepalive)) {
         fprintf(stderr, "Unable to connect.\n");
         return -1;
@@ -227,7 +227,7 @@ int framing_init(void)
     mosquitto_subscribe(mosq, NULL, "uei_of/frames/#", 2);
 
 
-    pthread_create(&frame_thread, NULL, &framing_routine, NULL);
+    pthread_create(&frame_thread, NULL, &framing_routine, channel_list);
     pthread_detach(frame_thread);
     return 0;
 }

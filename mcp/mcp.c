@@ -419,7 +419,7 @@ int main(int argc, char *argv[])
   /* Initialize the Ephemeris */
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
-  framing_init();
+  framing_init(channel_list);
 
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
