@@ -1,35 +1,23 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 2.8)
 
 option(USE_CLANG "build mcp using clang" OFF)
 
 if (USE_CLANG)
     SET (CMAKE_C_COMPILER               "/usr/bin/clang")
-    SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99")
-    SET (CMAKE_C_FLAGS_DEBUG            "-g")
-    SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
-    SET (CMAKE_C_FLAGS_RELEASE          "-O4 -DNDEBUG")
-    SET (CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g")
-    
     SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
-    SET (CMAKE_CXX_FLAGS                "-Wall")
-    SET (CMAKE_CXX_FLAGS_DEBUG          "-g")
-    SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
-    SET (CMAKE_CXX_FLAGS_RELEASE        "-O4 -DNDEBUG")
-    SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-    
-else(USE_CLANG)
-    SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99")
-    SET (CMAKE_C_FLAGS_DEBUG            "-g")
-    SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
-    SET (CMAKE_C_FLAGS_RELEASE          "-O3 -DNDEBUG")
-    SET (CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g")
-    
-    SET (CMAKE_CXX_FLAGS                "-Wall")
-    SET (CMAKE_CXX_FLAGS_DEBUG          "-g")
-    SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
-    SET (CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG")
-    SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")    
 endif(USE_CLANG)
+
+SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99")
+SET (CMAKE_C_FLAGS_DEBUG            "-g")
+SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
+SET (CMAKE_C_FLAGS_RELEASE          "-O3 -DNDEBUG")
+SET (CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g")
+
+SET (CMAKE_CXX_FLAGS                "-Wall")
+SET (CMAKE_CXX_FLAGS_DEBUG          "-g")
+SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
+SET (CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG")
+SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")    
 
 project (blast_mcp)
 # Set global definitions
@@ -44,42 +32,55 @@ find_package (Threads)
 # Find ExternalProject module
 include (ExternalProject)
 
+# Used to check contents of header files
+include (CheckLibraryExists)
+
 # Find gsl    
 pkg_check_modules(PC_GSL QUIET gsl)
 set(GSL_DEFINITIONS ${PC_GSL_CFLAGS_OTHER})
 
 find_path(GSL_INCLUDE_DIR gsl/gsl_blas.h
           HINTS ${PC_GSL_INCLUDEDIR} ${PC_GSL_INCLUDE_DIRS}
-          PATH_SUFFIXES gsl )
+          PATH_SUFFIXES gsl REQUIRED)
 
 find_library(GSL_LIBRARY NAMES gsl libgsl
-            HINTS ${PC_GSL_LIBDIR} ${PC_GSL_LIBRARY_DIRS} )
+            HINTS ${PC_GSL_LIBDIR} ${PC_GSL_LIBRARY_DIRS} REQUIRED)
 find_library(GSL_CBLAS_LIBRARY NAMES gslcblas libgslcblas
-            HINTS ${PC_GSL_LIBDIR} ${PC_GSL_LIBRARY_DIRS} )
+            HINTS ${PC_GSL_LIBDIR} ${PC_GSL_LIBRARY_DIRS} REQUIRED)
+IF(GSL_INCLUDE_DIR_NOTFOUND)
+    MESSAGE(FATAL_ERROR "Did not find gsl_blas.h.  Is libgsl0-dev installed?")
+ENDIF()
+IF(GSL_LIBRARY_NOTFOUND)  
+    MESSAGE(FATAL_ERROR "Did not find libgsl.  Is libgsl0ldb installed?")
+ENDIF()
 include_directories(${GSL_INCLUDE_DIR})
 
 # Find glib    
 pkg_check_modules(PC_GLIB  glib-2.0)
 set(GLIB_DEFINITIONS ${PC_GLIB_CFLAGS_OTHER})
 
-find_path(GLIB_INCLUDE_DIR NAMES glib.h glibconfig.h
+find_path(GLIB_INCLUDE_DIR NAMES glib.h
           HINTS ${PC_GLIB_INCLUDEDIR} ${PC_GLIB_INCLUDE_DIRS}
-          PATH_SUFFIXES glib-2.0 )
+          PATH_SUFFIXES glib-2.0 REQUIRED)
 find_path(GLIBCONFIG_INCLUDE_DIR NAMES glibconfig.h
           HINTS ${PC_GLIB_INCLUDEDIR} ${PC_GLIB_INCLUDE_DIRS}
-          PATH_SUFFIXES glib-2.0 )
+          PATH_SUFFIXES glib-2.0 REQUIRED)
 find_library(GLIB_LIBRARY NAMES glib-2.0 libglib-2.0
-            HINTS ${PC_GLIB_LIBDIR} ${PC_GLIB_LIBRARY_DIRS} )
+            HINTS ${PC_GLIB_LIBDIR} ${PC_GLIB_LIBRARY_DIRS} REQUIRED)
+IF(GLIB_INCLUDE_DIR_NOTFOUND)
+    MESSAGE(FATAL_ERROR "Did not find glib.h.  Is libglib2.0-dev installed?")
+ENDIF()
+IF( GLIB_LIBRARY_NOTFOUND)  
+    MESSAGE(FATAL_ERROR "Did not find libglib-2.0.  Is libglib2.0-0 installed?")
+ENDIF()
 include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
 
 # Find mosquitto    
-pkg_check_modules(PC_MOSQ QUIET mosquitto)
-
-find_path(MOSQ_INCLUDE_DIR NAMES mosquitto.h
-          HINTS ${PC_MOS_INCLUDEDIR} ${PC_MOSQ_INCLUDE_DIRS})
-find_library(MOSQ_LIBRARY NAMES mosquitto
-            HINTS ${PC_MOSQ_LIBDIR} ${PC_MOSQ_LIBRARY_DIRS} )
-include_directories(${MOSQ_INCLUDE_DIR})
+ExternalProject_add(MOSQ
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libmosquitto-1.4.1
+    URL ${PROJECT_SOURCE_DIR}/../external_libs/mosquitto
+    CMAKE_ARGS -DWITH_TLS:BOOL=OFF -DWITH_SOCKS:BOOL=OFF -DWITH_SRV:BOOL=OFF
+    )
 
 # configure a header file to pass some of the CMake settings to the source code
 configure_file (
@@ -101,11 +102,12 @@ include_directories (
 
 # add soem library
 set(ECAT_LIBRARY ${PROJECT_BINARY_DIR}/soem/libethercat.a)
-#add_subdirectory(${PROJECT_SOURCE_DIR}/../external_libs/soem "${PROJECT_BINARY_DIR}/soem")
 ExternalProject_Add(soem 
-    PREFIX ${PROJECT_BINARY_DIR}/soem 
-    INSTALL_DIR ${PROJECT_BINARY_DIR}/soem 
-    URL ${PROJECT_SOURCE_DIR}/../external_libs/soem)
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/soem 
+    BINARY_DIR ${PROJECT_BINARY_DIR}/soem 
+    URL ${PROJECT_SOURCE_DIR}/../external_libs/soem
+    INSTALL_COMMAND "")
+
 include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem 
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/osal
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
@@ -159,11 +161,13 @@ add_executable (mcp
     $<TARGET_OBJECTS:mcp_obj>
     ) 
 
+add_dependencies(mcp soem)
+
 target_link_libraries(mcp 
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} 
     ${GLIB_LIBRARY} 
-    ${MOSQ_LIBRARY} 
     ${ECAT_LIBRARY}
-    ${CMAKE_THREAD_LIBS_INIT} m)
+    ${CMAKE_THREAD_LIBS_INIT} 
+    mosquitto m)
 
 install(TARGETS mcp DESTINATION bin)

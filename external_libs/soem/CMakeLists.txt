@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.0)
-project (libethercat)
+project (ethercat)
+cmake_minimum_required (VERSION 2.8)
 
 # Set global compile flags
 set(CMAKE_C_FLAGS "-std=gnu99 -ffunction-sections -Wall -Wextra -Wno-unused-parameter -fomit-frame-pointer -fno-strict-aliasing")
