@@ -21,7 +21,8 @@
 #ifndef BLAST_H
 #define BLAST_H
 
-#include <stdarg.h>  /* ANSI C variable arguments (va_list, va_start, va_end) */
+#include <stdlib.h>     /* free() */
+#include <stdarg.h>     /* ANSI C variable arguments (va_list, va_start, va_end) */
 #include <sys/types.h>  /* for size_t */
 
 /* Commonly used seed values (generally SYNC words for telemetry)*/
@@ -58,4 +59,5 @@ char *_bstrdup(buos_t, const char*, const char*, int, const char*);
   _reballoc( x , y , z , __FUNCTION__ , __LINE__ , __FILE__)
 #define bstrdup(x,y) _bstrdup( x , y , __FUNCTION__ , __LINE__ , __FILE__)
 
+#define BLAST_SAFE_FREE(_var){if(_var) free(_var);}
 #endif
