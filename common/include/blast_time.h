@@ -29,6 +29,16 @@
 #include <time.h>
 #include <stdint.h>
 
+typedef union
+{
+    uint64_t    qword;
+    struct
+    {
+        uint32_t    seconds;                /**< seconds - Number of seconds since the epoch */
+        uint32_t    nanoseconds;            /**< nanoseconds - Number of nanoseconds since the last second */
+    } timespec;                             /**< timespec - Because the system standard timespec might not be 32/32 bits */
+} __attribute__((packed)) blast_time_t;
+
 /* Parameters used to convert the timespec values: */
 #define MSEC_PER_SEC    1000L
 #define USEC_PER_MSEC   1000L
@@ -106,5 +116,28 @@ static inline struct timespec timespec_add(const struct timespec lhs,
                 res.tv_sec = TIME_T_MAX;
 
         return res;
+}
+
+/**
+ * Convert a BLAST time into standard POSIX timespec structure
+ * @param m_ts Pointer to timespec structure
+ * @param m_blast Pointer to blast time structure
+ */
+static inline void blast_time_to_timespec(struct timespec *m_ts, blast_time_t *m_blast)
+{
+    set_normalized_timespec(m_ts, m_blast->timespec.seconds, m_blast->timespec.nanoseconds);
+}
+
+/**
+ * Convert a POSIX timespec structure into BLAST time
+ * @param m_blast Pointer to blast time structure
+ * @param m_ts Pointer to timespec structure
+ */
+static inline void timespec_to_blast_time(blast_time_t *m_blast, struct timespec *m_ts)
+{
+    /// Ensure that the nanoseconds fit into 32-bits first
+    set_normalized_timespec(m_ts, m_ts->tv_sec, m_ts->tv_nsec);
+    m_blast->timespec.seconds = m_ts->tv_sec;
+    m_blast->timespec.nanoseconds = m_ts->tv_nsec;
 }
 #endif /* INCLUDE_BLAST_TIME_H_ */
