@@ -78,6 +78,5 @@ char *_bstrdup(buos_t, const char*, const char*, int, const char*);
         }                                                   \
         ptr = alloca(bytes * sizeof(char));                 \
         snprintf(ptr, bytes, format, ##__VA_ARGS__);        \
-        }                                                   \
     }while(0)
 #endif
