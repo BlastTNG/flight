@@ -60,4 +60,24 @@ char *_bstrdup(buos_t, const char*, const char*, int, const char*);
 #define bstrdup(x,y) _bstrdup( x , y , __FUNCTION__ , __LINE__ , __FILE__)
 
 #define BLAST_SAFE_FREE(_var){if(_var) free(_var);}
+
+/**
+ * Allocates a temporary, formated string on the stack.  This memory will be automatically freed
+ * when the function exits, so do not call free or any variant on the pointer
+ */
+#define blast_tmp_sprintf(ptr, format, ...)                 \
+    do{                                                     \
+        int bytes;                                          \
+                                                            \
+        bytes = snprintf(NULL, 0, format, ##__VA_ARGS__)+1; \
+                                                            \
+        if (bytes > 4000 * (int)sizeof(char))               \
+        {                                                   \
+            bputs(loglevel_err, "Out of stack space.  Wanted %zd bytes", bytes * sizeof(char));      \
+            bytes=4000 * sizeof(char);                      \
+        }                                                   \
+        ptr = alloca(bytes * sizeof(char));                 \
+        snprintf(ptr, bytes, format, ##__VA_ARGS__);        \
+        }                                                   \
+    }while(0)
 #endif
