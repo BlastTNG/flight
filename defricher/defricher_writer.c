@@ -33,94 +33,101 @@
 #include <math.h>
 #include <pthread.h>
 #include <getdata.h>
+#include <string.h>
+#include <unistd.h>
 
-#include <channels.h>
+#include <channels_tng.h>
 #include <derived.h>
 #include <blast.h>
 
-#include <defricher.h>
-
+#include "defricher.h"
+#include "defricher_utils.h"
+#include "defricher_data.h"
 
 extern union DerivedUnion DerivedChannels[];
-extern bool is_quitting;
+extern int frame_stop;
+pthread_t write_thread;
 
-void defricher_add_derived(DIRFILE *m_file)
-{
-    char lincom2_fields[2][FIELD_LEN];
-    const char *lincom2_ptrs[2] = {lincom2_fields[0], lincom2_fields[1]};
-    double lincom2_m[2];
-    double lincom2_b[2];
-    const char *lincom_name;
-    for (int i = 0; i < ccDerived; ++i)
-    {
-        switch(DerivedChannels[i].bitfield.type)
-        {
-            case 'b':
-                for (int j = 0; DerivedChannels[i].bitfield.field[j][0]; j++)
-                    gd_add_bit(m_file, DerivedChannels[i].bitfield.field[j],
-                            DerivedChannels[i].bitfield.source, j, 1, 0);
-                break;
-            case 'w':
-                gd_add_bit(m_file, DerivedChannels[i].bitword.field,
-                        DerivedChannels[i].bitword.source,
-                        DerivedChannels[i].bitword.offset,
-                        DerivedChannels[i].bitword.length, 0);
-                break;
-            case 't':
-                gd_add_linterp(m_file, DerivedChannels[i].linterp.field, DerivedChannels[i].linterp.source,
-                        DerivedChannels[i].linterp.lut, 0);
-                break;
-            case 'c':
-                lincom_name = DerivedChannels[i].lincom.source;
-                gd_add_lincom(m_file, DerivedChannels[i].lincom.field, 1,
-                        &lincom_name,
-                        &DerivedChannels[i].lincom.m_c2e,
-                        &DerivedChannels[i].lincom.b_e2e, 0);
-                break;
-            case '2':
-                strcpy(lincom2_fields[0], DerivedChannels[i].lincom2.source);
-                strcpy(lincom2_fields[1], DerivedChannels[i].lincom2.source2);
-                lincom2_b[0] = DerivedChannels[i].lincom2.b_e2e;
-                lincom2_b[1] = DerivedChannels[i].lincom2.b2_e2e;
-                lincom2_m[0] = DerivedChannels[i].lincom2.m_c2e;
-                lincom2_m[1] = DerivedChannels[i].lincom2.m2_c2e;
+static int dirfile_create_new = 0;
+static int dirfile_ready = 0;
 
-                gd_add_lincom(m_file, DerivedChannels[i].lincom2.field, 2, lincom2_ptrs, lincom2_m, lincom2_b, 0);
-                break;
-            case '#':
-                break;
-            case 'u':
-                //Units
-                break;
-            case 'p':
-                gd_add_phase(m_file, DerivedChannels[i].phase.field,
-                        DerivedChannels[i].phase.source,
-                        DerivedChannels[i].phase.shift, 0 );
-                break;
-            case 'r':
-                gd_add_recip(m_file, DerivedChannels[i].recip.field, DerivedChannels[i].recip.source,
-                        DerivedChannels[i].recip.dividend, 0);
-                break;
-            case '*':
-                gd_add_multiply(m_file, DerivedChannels[i].math.field,
-                        DerivedChannels[i].math.source, DerivedChannels[i].math.source2, 0);
-                break;
-            case '/':
-                gd_add_divide(m_file, DerivedChannels[i].math.field,
-                        DerivedChannels[i].math.source, DerivedChannels[i].math.source2, 0);
-                break;
-            case 'x':
-                gd_add_mplex(m_file, DerivedChannels[i].mplex.field,
-                        DerivedChannels[i].mplex.source, DerivedChannels[i].mplex.index,
-                        DerivedChannels[i].mplex.value, DerivedChannels[i].mplex.max, 0);
-                break;
-            default:
-                break;
-        }
-    }
-}
+//static void defricher_add_derived(DIRFILE *m_file)
+//{
+//    char lincom2_fields[2][FIELD_LEN];
+//    const char *lincom2_ptrs[2] = {lincom2_fields[0], lincom2_fields[1]};
+//    double lincom2_m[2];
+//    double lincom2_b[2];
+//    const char *lincom_name;
+//    for (int i = 0; i < ccDerived; ++i)
+//    {
+//        switch(DerivedChannels[i].bitfield.type)
+//        {
+//            case 'b':
+//                for (int j = 0; DerivedChannels[i].bitfield.field[j][0]; j++)
+//                    gd_add_bit(m_file, DerivedChannels[i].bitfield.field[j],
+//                            DerivedChannels[i].bitfield.source, j, 1, 0);
+//                break;
+//            case 'w':
+//                gd_add_bit(m_file, DerivedChannels[i].bitword.field,
+//                        DerivedChannels[i].bitword.source,
+//                        DerivedChannels[i].bitword.offset,
+//                        DerivedChannels[i].bitword.length, 0);
+//                break;
+//            case 't':
+//                gd_add_linterp(m_file, DerivedChannels[i].linterp.field, DerivedChannels[i].linterp.source,
+//                        DerivedChannels[i].linterp.lut, 0);
+//                break;
+//            case 'c':
+//                lincom_name = DerivedChannels[i].lincom.source;
+//                gd_add_lincom(m_file, DerivedChannels[i].lincom.field, 1,
+//                        &lincom_name,
+//                        &DerivedChannels[i].lincom.m_c2e,
+//                        &DerivedChannels[i].lincom.b_e2e, 0);
+//                break;
+//            case '2':
+//                strcpy(lincom2_fields[0], DerivedChannels[i].lincom2.source);
+//                strcpy(lincom2_fields[1], DerivedChannels[i].lincom2.source2);
+//                lincom2_b[0] = DerivedChannels[i].lincom2.b_e2e;
+//                lincom2_b[1] = DerivedChannels[i].lincom2.b2_e2e;
+//                lincom2_m[0] = DerivedChannels[i].lincom2.m_c2e;
+//                lincom2_m[1] = DerivedChannels[i].lincom2.m2_c2e;
+//
+//                gd_add_lincom(m_file, DerivedChannels[i].lincom2.field, 2, lincom2_ptrs, lincom2_m, lincom2_b, 0);
+//                break;
+//            case '#':
+//                break;
+//            case 'u':
+//                //Units
+//                break;
+//            case 'p':
+//                gd_add_phase(m_file, DerivedChannels[i].phase.field,
+//                        DerivedChannels[i].phase.source,
+//                        DerivedChannels[i].phase.shift, 0 );
+//                break;
+//            case 'r':
+//                gd_add_recip(m_file, DerivedChannels[i].recip.field, DerivedChannels[i].recip.source,
+//                        DerivedChannels[i].recip.dividend, 0);
+//                break;
+//            case '*':
+//                gd_add_multiply(m_file, DerivedChannels[i].math.field,
+//                        DerivedChannels[i].math.source, DerivedChannels[i].math.source2, 0);
+//                break;
+//            case '/':
+//                gd_add_divide(m_file, DerivedChannels[i].math.field,
+//                        DerivedChannels[i].math.source, DerivedChannels[i].math.source2, 0);
+//                break;
+//            case 'x':
+//                gd_add_mplex(m_file, DerivedChannels[i].mplex.field,
+//                        DerivedChannels[i].mplex.source, DerivedChannels[i].mplex.index,
+//                        DerivedChannels[i].mplex.value, DerivedChannels[i].mplex.max, 0);
+//                break;
+//            default:
+//                break;
+//        }
+//    }
+//}
 
-const char *defricher_get_new_dirfilename(void)
+static const char *defricher_get_new_dirfilename(void)
 {
     static char *filename = NULL;
     static time_t start_time = 0;
@@ -128,23 +135,23 @@ const char *defricher_get_new_dirfilename(void)
 
     if (!start_time) start_time = time(NULL);
     BLAST_SAFE_FREE(filename);
-    if (asprintf(&filename, "/data/wrangler/%lu_%03X.dirfile", start_time, chunk++) < 0)
+    if (asprintf(&filename, "/data/defricher/%lu_%03X.dirfile", start_time, chunk++) < 0)
     {
-        ebex_fatal("Could not allocate memory for filename!");
+        defricher_fatal("Could not allocate memory for filename!");
         filename=NULL;
     }
 
     return filename;
 }
-void defricher_update_current_link(const char *m_name)
+static void defricher_update_current_link(const char *m_name)
 {
     unlink("/data/etc/defricher.cur");
 
     if (symlink(m_name, "/data/etc/defricher.cur"))
-        berror(err, "Could not create symlink");
+        defricher_err("Could not create symlink");
 }
 
-void defricher_file_close_all(channel_t *m_channel_list)
+static void defricher_file_close_all(channel_t *m_channel_list)
 {
 
     for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
@@ -152,14 +159,14 @@ void defricher_file_close_all(channel_t *m_channel_list)
         if (node && node->magic == BLAST_MAGIC32 && node->output.fp)
         {
             if (fclose(node->output.fp))
-                berror(err, "Could not close %s", node->output.name?node->output.name:"UNK");
+                defricher_err("Could not close %s", node->output.name?node->output.name:"UNK");
             node->output.fp = NULL;
         }
     }
 }
 
 
-int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_list)
+static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_list)
 {
     const char *filename;
     char error_str[2048];
@@ -170,13 +177,13 @@ int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_list)
             filename = gd_raw_filename(m_dirfile, outfile_node->output.name);
             if (!filename) {
                 gd_error_string(m_dirfile, error_str, 2048);
-                bprintf(err,"Could not get filename for %s: %s", outfile_node->output.name, error_str);
+                defricher_err("Could not get filename for %s: %s", outfile_node->output.name, error_str);
                 return -1;
             }
             outfile_node->output.fp = fopen(filename, "w+");
 
             if (!outfile_node->output.fp) {
-                berror(err, "Could not open %s", filename);
+                defricher_err("Could not open %s", filename);
                 return -1;
             }
             outfile_node->output.offset = 0;
@@ -219,7 +226,7 @@ static inline gd_type_t defricher_get_gd_type(const e_TYPE m_type)
             type = GD_FLOAT64;
             break;
         default:
-            bprintf(err, "Unknown type %d", m_type);
+            defricher_err( "Unknown type %d", m_type);
     }
     return type;
 }
@@ -241,12 +248,12 @@ static inline int defricher_get_rate(const e_RATE m_rate)
             rate = 200;
             break;
         default:
-            bprintf(err, "Unknown rate %d", m_rate);
+            defricher_err( "Unknown rate %d", m_rate);
     }
     return rate;
 }
 
-bool defricher_init_new_dirfile(const char *m_name, channel_t *m_channel_list)
+static bool defricher_init_new_dirfile(const char *m_name, channel_t *m_channel_list)
 {
     DIRFILE *new_file;
     gd_type_t type;
@@ -254,10 +261,10 @@ bool defricher_init_new_dirfile(const char *m_name, channel_t *m_channel_list)
     double m,b;
     char *upper_field;
 
-    defricher_file_close_all();
-    if (wrangler_mkdir_file(m_name, true) < 0)
+    defricher_file_close_all(m_channel_list);
+    if (defricher_mkdir_file(m_name, true) < 0)
     {
-        ebex_strerror("Could not make directory for %s", m_name);
+        defricher_strerr("Could not make directory for %s", m_name);
         return false;
     }
 
@@ -287,7 +294,7 @@ bool defricher_init_new_dirfile(const char *m_name, channel_t *m_channel_list)
             if (gd_add_raw(new_file, node->output.name, type, node->output.rate, 0))
             {
                 gd_error_string(new_file, error_str, 2048);
-                bprintf(err, "Could not add %s: %s", node->output.name, error_str);
+                defricher_err( "Could not add %s: %s", node->output.name, error_str);
                 bfree(info, node);
             }
             else
@@ -302,7 +309,7 @@ bool defricher_init_new_dirfile(const char *m_name, channel_t *m_channel_list)
                 if (fabs(m - 1.0) <= DBL_EPSILON && fabs(b - 0.0) <= DBL_EPSILON)
                     gd_add_phase(new_file, upper_field, node->output.name, 0, 0);
                 else
-                    gd_add_lincom(new_file, upper_field, 1, &node->output.name, &m, &b, 0);
+                    gd_add_lincom(new_file, upper_field, 1, &(node->output.name), &m, &b, 0);
 
                 channel->var = node;
             }
@@ -313,7 +320,7 @@ bool defricher_init_new_dirfile(const char *m_name, channel_t *m_channel_list)
     else
     {
         gd_error_string(new_file, error_str, 2048);
-        ebex_fatal("Could not open %s as DIRFILE: %s", m_name, error_str);
+        defricher_fatal("Could not open %s as DIRFILE: %s", m_name, error_str);
         gd_close(new_file);
         return false;
     }
@@ -323,13 +330,10 @@ bool defricher_init_new_dirfile(const char *m_name, channel_t *m_channel_list)
 
 
 
-int defricher_write_packet(channel_t *m_channel_list, e_SRC m_source)
+static int defricher_write_packet(channel_t *m_channel_list, e_SRC m_source)
 {
-    off_t starting_position;
-    off_t previous_position = 0;
-    double delta_time;
 
-    if (is_quitting) return -1;
+    if (frame_stop) return -1;
 
     for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
         if (channel->source != m_source) continue;
@@ -337,12 +341,50 @@ int defricher_write_packet(channel_t *m_channel_list, e_SRC m_source)
         defricher_cache_node_t *outfile_node = channel->var;
         if (outfile_node && outfile_node->magic == BLAST_MAGIC32 ) {
             if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
-                bprintf(err, "Could not write to %s", outfile_node->output.name);
+                defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
             }
         }
 
     }
+
+    return 0;
+}
+
+
+
+static void *defricher_write_loop(void *m_arg)
+{
+    int ret;
+    const char *dirfile_name = NULL;
+
+    bprintf(info, "Starting Defricher Write task\n");
+
+    while (!frame_stop)
+    {
+        if (dirfile_create_new) {
+            dirfile_ready = 0;
+            dirfile_name = defricher_get_new_dirfilename();
+            if (!defricher_init_new_dirfile(dirfile_name, channels)) {
+                defricher_err( "Not creating new DIRFILE %s", dirfile_name);
+                sleep(1);
+            }
+
+        }
+
+    }
+
+    return NULL;
+}
+
+/**
+ * Initializes the Defricher writing variables and loop
+ * @return
+ */
+int defricher_writer_init(void)
+{
+
+    pthread_create(&write_thread, NULL, &defricher_write_loop, NULL);
 
     return 0;
 }

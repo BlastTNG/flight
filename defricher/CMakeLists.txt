@@ -102,6 +102,12 @@ add_executable (defricher
     $<TARGET_OBJECTS:blast_common>
     ${PROJECT_SOURCE_DIR}/defricher.c
     ${PROJECT_SOURCE_DIR}/defricher.h
+    ${PROJECT_SOURCE_DIR}/defricher_utils.c
+    ${PROJECT_SOURCE_DIR}/defricher_utils.h
+    ${PROJECT_SOURCE_DIR}/defricher_netreader.c
+    ${PROJECT_SOURCE_DIR}/defricher_netreader.h
+    ${PROJECT_SOURCE_DIR}/defricher_writer.c
+    ${PROJECT_SOURCE_DIR}/defricher_writer.h
     ) 
 
 target_link_libraries(defricher  

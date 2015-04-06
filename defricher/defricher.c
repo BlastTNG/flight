@@ -28,7 +28,6 @@
 #endif
 
 #include <stdlib.h>     /* ANSI C std library (atoi, exit, realpath) */
-#include <pthread.h>    /* POSIX threads (pthread_create, pthread_join) */
 #include <signal.h>     /* ANSI C signals (SIG(FOO), sigemptyset, sigaddset) */
 #include <string.h>     /* ANSI C strings (strcat, memcpy, &c.)  */
 #include <sys/stat.h>   /* SYSV stat (stat, struct stat S_IS(FOO)) */
@@ -44,16 +43,15 @@
 #include <blast.h>
 #include <blast_time.h>
 #include <channels_tng.h>
+
 #include "defricher.h"
+#include "defricher_writer.h"
+#include "defricher_netreader.h"
 
 static int frame_stop;
-static pthread_t frame_thread;
-static struct mosquitto *mosq = NULL;
 
 char **remaining_args = NULL;
 channel_t *channels = NULL;
-
-uint32_t last_crc = 0;
 
 static GOptionEntry cmdline_options[] =
 {
@@ -80,152 +78,7 @@ void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
 }
 
 
-static void frame_handle_data(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
-{
-    RATE_lookup_t *rate;
-    SRC_lookup_t *src;
 
-    if (!m_fc || !m_rate) {
-        g_error("Err in pointers");
-        return;
-    }
-    if (!m_len) {
-        g_warning("Zero-length string for frame");
-        return;
-    }
-
-    //printf("Got %d bytes from %s!\n", m_len, m_fc);
-
-    for (rate = RATE_lookup_table; rate->position < RATE_END; rate++) {
-        if (strcmp(rate->text, m_rate) == 0) break;
-    }
-    if (rate->position == RATE_END) {
-        g_warning("Did not recognize rate %s!\n", m_rate);
-        return;
-    }
-
-    //TODO:Think about mapping FC1/FC2
-//    for (src = SRC_lookup_table; src->position < SRC_END; src++) {
-//        if (strncmp(src->text, m_fc, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
-//    }
-//    if (src->position == SRC_END) {
-//        g_error("Did not recognize source %s\n", m_fc);
-//        return;
-//    }
-
-}
-
-static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
-{
-    char **topics;
-    int count;
-
-    if(message->payloadlen){
-        if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
-
-            if ( count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
-                frame_handle_data(topics[2], topics[3], message->payload, message->payloadlen);
-            }
-            if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {
-                if (((channel_header_t*)message->payload)->crc != last_crc) {
-                    bprintf(info, "Received updated Channels.  Ready to initialize new DIRFILE!");
-                    channels_read_map(message->payload, message->payloadlen, &channels);
-                    channels_initialize(channels);
-                    last_crc = ((channel_header_t*)message->payload)->crc;
-                }
-            }
-            mosquitto_sub_topic_tokens_free(&topics, count);
-        }
-
-    }
-    fflush(stdout);
-}
-
-static void frame_connect_callback(struct mosquitto *mosq, void *userdata, int result)
-{
-    if(!result){
-        /* Subscribe to broker information topics on successful connect. */
-        mosquitto_subscribe(mosq, NULL, "$SYS/#", 2);
-    }else{
-        berror(err, "Connect failed");
-    }
-}
-
-static void frame_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count, const int *granted_qos)
-{
-    int i;
-
-    bprintf(info, "Subscribed (mid: %d): %d", mid, granted_qos[0]);
-    for(i=1; i<qos_count; i++){
-        bprintf(info, "\t %d", granted_qos[i]);
-    }
-}
-
-static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
-{
-    if (level & ( MOSQ_LOG_ERR | MOSQ_LOG_WARNING ))
-        bprintf(info, "%s\n", str);
-}
-
-
-static void *framing_routine(void *m_arg)
-{
-    int ret;
-
-    bprintf(info, "Starting Framing task\n");
-
-    while (!frame_stop)
-    {
-        if ((ret = mosquitto_loop(mosq, 100, 1)) != MOSQ_ERR_SUCCESS) {
-           g_error("Received %d from mosquitto_loop", ret);
-           sleep(1);
-        }
-    }
-
-    mosquitto_destroy(mosq);
-    mosquitto_lib_cleanup();
-    return NULL;
-}
-
-/**
- * Initializes the mosquitto library and associated framing routines.
- * @return
- */
-int framing_init(void)
-{
-    const char *id = "client";
-    const char *host = "fc1";
-    int port = 1883;
-    int keepalive = 60;
-    bool clean_session = true;
-
-    mosquitto_lib_init();
-    mosq = mosquitto_new(id, clean_session, NULL);
-    if (!mosq) {
-        perror("mosquitto_new() failed");
-        return -1;
-    }
-    mosquitto_log_callback_set(mosq, frame_log_callback);
-
-    mosquitto_connect_callback_set(mosq, frame_connect_callback);
-    mosquitto_message_callback_set(mosq, frame_message_callback);
-    mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
-
-    if (mosquitto_connect(mosq, host, port, keepalive)) {
-        fprintf(stderr, "Unable to connect.\n");
-        return -1;
-    }
-
-    mosquitto_subscribe(mosq, NULL, "frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "channels/#", 2);
-
-    return 0;
-}
-
-void framing_shutdown(void)
-{
-    frame_stop = 1;
-}
 
 
 char* resolve_output_dirfile(char* m_dirfile, const char* parent)
@@ -388,8 +241,8 @@ int main(int argc, char** argv)
 //    pthread_sigmask(SIG_BLOCK, &signals, NULL);
 
     /* Spawn client/reader and writer */
-    framing_init();
-    pthread_create(&read_thread, NULL, &framing_routine, NULL);
+    defricher_writer_init();
+    netreader_init();
 
 //    pthread_create(&write_thread, NULL, (void*) &DirFileWriter, NULL);
 
