@@ -73,13 +73,13 @@ struct ri_struct {
   int old_total;
   int reader_done;
 
-  struct timeval last;
-  int lw;
-  int wrote;
-  int dirfile_init;
+  struct timeval last;  // Last time written to dirfile
+  int lw;               // Total number of samples written previously
+  int wrote;            // Current number of samples written
+  int dirfile_init;     // Is the dirfile initialized and ready for writing (1=yes, 0=no)
   int writer_done;
-  int tty;
-  int frame_rate_reset;
+  int tty;              // Boolean is there a message for output?
+  int frame_rate_reset; // Boolean to reset the framerate to the default
 };
 
 /* interthread communication */

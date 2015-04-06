@@ -53,6 +53,7 @@ static struct mosquitto *mosq = NULL;
 char **remaining_args = NULL;
 channel_t *channels = NULL;
 
+uint32_t last_crc = 0;
 
 static GOptionEntry cmdline_options[] =
 {
@@ -72,6 +73,13 @@ struct rc_struct rc;
 static const double TC = 0.7;
 sigset_t signals;
 
+void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
+                const gchar* message, gpointer user_data)
+{
+    printf("%s\n", message);
+}
+
+
 static void frame_handle_data(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
 {
     RATE_lookup_t *rate;
@@ -86,7 +94,7 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
         return;
     }
 
-    g_info("Got %d bytes from %s!", m_len, m_fc);
+    //printf("Got %d bytes from %s!\n", m_len, m_fc);
 
     for (rate = RATE_lookup_table; rate->position < RATE_END; rate++) {
         if (strcmp(rate->text, m_rate) == 0) break;
@@ -97,13 +105,13 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
     }
 
     //TODO:Think about mapping FC1/FC2
-    for (src = SRC_lookup_table; src->position < SRC_END; src++) {
-        if (strncmp(src->text, m_fc, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
-    }
-    if (src->position == SRC_END) {
-        g_error("Did not recognize source %s\n", m_fc);
-        return;
-    }
+//    for (src = SRC_lookup_table; src->position < SRC_END; src++) {
+//        if (strncmp(src->text, m_fc, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
+//    }
+//    if (src->position == SRC_END) {
+//        g_error("Did not recognize source %s\n", m_fc);
+//        return;
+//    }
 
 }
 
@@ -115,11 +123,16 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
     if(message->payloadlen){
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
 
-            if ( count == 3 && strcmp(topics[1], "frames") == 0) {
-                frame_handle_data(topics[0], topics[2], message->payload, message->payloadlen);
+            if ( count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
+                frame_handle_data(topics[2], topics[3], message->payload, message->payloadlen);
             }
-            if ( count == 2 && strcmp(topics[1], "channels") == 0) {
-                g_info("Ready to initialize DIRFILE!");
+            if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {
+                if (((channel_header_t*)message->payload)->crc != last_crc) {
+                    bprintf(info, "Received updated Channels.  Ready to initialize new DIRFILE!");
+                    channels_read_map(message->payload, message->payloadlen, &channels);
+                    channels_initialize(channels);
+                    last_crc = ((channel_header_t*)message->payload)->crc;
+                }
             }
             mosquitto_sub_topic_tokens_free(&topics, count);
         }
@@ -180,7 +193,7 @@ static void *framing_routine(void *m_arg)
  */
 int framing_init(void)
 {
-    const char *id = "fc1";
+    const char *id = "client";
     const char *host = "fc1";
     int port = 1883;
     int keepalive = 60;
@@ -203,10 +216,8 @@ int framing_init(void)
         return -1;
     }
 
-    mosquitto_subscribe(mosq, NULL, "fc1/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "fc2/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "uei_if/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "uei_of/frames/#", 2);
+    mosquitto_subscribe(mosq, NULL, "frames/#", 2);
+    mosquitto_subscribe(mosq, NULL, "channels/#", 2);
 
     return 0;
 }
@@ -359,6 +370,7 @@ int main(int argc, char** argv)
     if (rc.resume_at > 0)
         bprintf(info, "    starting at frame %li\n", rc.resume_at);
     bprintf(info, "\n");
+    g_log_set_default_handler(log_handler, NULL);
 
     /* Initialise things */
     ri.read = ri.wrote = ri.old_total = ri.lw = ri.frame_rate_reset = 0;
@@ -367,13 +379,13 @@ int main(int argc, char** argv)
     gettimeofday(&ri.last, &rc.tz);
 
     /* set up signal masks */
-    sigemptyset(&signals);
-    sigaddset(&signals, SIGHUP);
-    sigaddset(&signals, SIGINT);
-    sigaddset(&signals, SIGTERM);
-
-    /* block signals */
-    pthread_sigmask(SIG_BLOCK, &signals, NULL);
+//    sigemptyset(&signals);
+//    sigaddset(&signals, SIGHUP);
+//    sigaddset(&signals, SIGINT);
+//    sigaddset(&signals, SIGTERM);
+//
+//    /* block signals */
+//    pthread_sigmask(SIG_BLOCK, &signals, NULL);
 
     /* Spawn client/reader and writer */
     framing_init();
