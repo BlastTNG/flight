@@ -32,6 +32,7 @@
 #include <mosquitto.h>
 
 #include <blast.h>
+#include <mputs.h>
 #include <channels_tng.h>
 #include <blast_time.h>
 
@@ -214,6 +215,7 @@ static void *framing_routine(void *m_arg)
     mosquitto_destroy(mosq);
     mosquitto_lib_cleanup();
 
+    return NULL;
 }
 
 /**
