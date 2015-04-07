@@ -208,14 +208,14 @@ channel_t *channels_find_by_name(const char *m_name)
 {
     channel_t *retval = (channel_t*)g_hash_table_lookup(frame_table, m_name);
 
-    if (!retval) printf("Could not find %s!\n", m_name);
+    if (!retval) bprintf(err,"Could not find %s!\n", m_name);
     return retval;
 }
 
 int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len)
 {
 	if (m_len != frame_size[m_src][m_rate]) {
-		printf("Size mismatch storing data for %s:%s!\n", SRC_lookup_table[m_src].text, RATE_lookup_table[m_rate].text );
+		bprintf(err, "Size mismatch storing data for %s:%s!\n", SRC_lookup_table[m_src].text, RATE_lookup_table[m_rate].text );
 		return -1;
 	}
 
