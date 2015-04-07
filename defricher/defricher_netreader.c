@@ -37,6 +37,7 @@
 #include <channels_tng.h>
 
 #include "defricher_utils.h"
+#include "defricher_writer.h"
 
 extern int frame_stop;
 
@@ -44,12 +45,12 @@ static struct mosquitto *mosq;
 pthread_t netread_thread;
 extern channel_t *channels;
 
-static void frame_handle_data(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
+static void frame_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
     RATE_lookup_t *rate;
     SRC_lookup_t *src;
 
-    if (!m_fc || !m_rate) {
+    if (!m_src || !m_rate) {
         defricher_err("Err in pointers");
         return;
     }
@@ -61,7 +62,7 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
     //printf("Got %d bytes from %s!\n", m_len, m_fc);
 
     for (rate = RATE_lookup_table; rate->position < RATE_END; rate++) {
-        if (strcmp(rate->text, m_rate) == 0) break;
+        if (strncasecmp(rate->text, m_rate, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
     }
     if (rate->position == RATE_END) {
         defricher_err("Did not recognize rate %s!\n", m_rate);
@@ -69,14 +70,16 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
     }
 
     //TODO:Think about mapping FC1/FC2
-//    for (src = SRC_lookup_table; src->position < SRC_END; src++) {
-//        if (strncmp(src->text, m_fc, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
-//    }
-//    if (src->position == SRC_END) {
-//        defricher_err("Did not recognize source %s\n", m_fc);
-//        return;
-//    }
+    for (src = SRC_lookup_table; src->position < SRC_END; src++) {
+        if (strncasecmp(src->text, m_src, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
+    }
+    if (src->position == SRC_END) {
+        defricher_err("Did not recognize source %s\n", m_src);
+        return;
+    }
 
+    channels_store_data(src->position, rate->position, m_data, m_len);
+    defricher_write_packet(channels, src->position, rate->position);
 }
 
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
@@ -89,7 +92,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
 
             if ( count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
-                frame_handle_data(topics[2], topics[3], message->payload, message->payloadlen);
+                frame_handle_data(topics[1], topics[3], message->payload, message->payloadlen);
             }
             if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {
                 if (((channel_header_t*)message->payload)->crc != last_crc) {
@@ -97,6 +100,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                     channels_read_map(message->payload, message->payloadlen, &channels);
                     channels_initialize(channels);
                     last_crc = ((channel_header_t*)message->payload)->crc;
+                    defricher_request_new_dirfile();
                 }
             }
             mosquitto_sub_topic_tokens_free(&topics, count);

@@ -27,5 +27,7 @@
 #define DEFRICHER_WRITER_H_
 
 int defricher_writer_init(void);
+int defricher_write_packet(channel_t *m_channel_list, e_SRC m_source, e_RATE m_rate);
+void defricher_request_new_dirfile(void);
 
 #endif /* DEFRICHER_WRITER_H_ */

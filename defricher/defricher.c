@@ -48,7 +48,7 @@
 #include "defricher_writer.h"
 #include "defricher_netreader.h"
 
-static int frame_stop;
+int frame_stop;
 
 char **remaining_args = NULL;
 channel_t *channels = NULL;
@@ -79,7 +79,7 @@ void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
 
 
 
-
+/// TODO: Test ability to write to output location on startup
 
 char* resolve_output_dirfile(char* m_dirfile, const char* parent)
 {

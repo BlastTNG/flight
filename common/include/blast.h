@@ -73,7 +73,7 @@ char *_bstrdup(buos_t, const char*, const char*, int, const char*);
                                                             \
         if (bytes > 4000 * (int)sizeof(char))               \
         {                                                   \
-            bputs(err, "Out of stack space.  Wanted %zd bytes", bytes * sizeof(char));      \
+            bputs(err, "Out of stack space.");              \
             bytes=4000 * sizeof(char);                      \
         }                                                   \
         ptr = alloca(bytes * sizeof(char));                 \
