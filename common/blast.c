@@ -227,3 +227,53 @@ char* _bstrdup(buos_t l, const char* s, const char* f, int w, const char* n)
 
   return q;
 }
+
+void _basprintf(buos_t l, char **m_dest, const char *m_fmt, const char *m_fn, int m_line, const char *m_file, ...)
+{
+    va_list argptr;
+    int retval;
+
+    va_start(argptr, m_file);
+    retval = vasprintf(m_dest, m_fmt, argptr);
+    va_end(argptr);
+
+    if (retval < 0)
+    {
+        berror(l, "%s:%d (%s): Unable to create string with format '%s'", m_fn, m_line, m_file, m_fmt);
+        *m_dest = NULL;
+    }
+}
+
+char* _bstrndup(buos_t m_level, const char* m_src, size_t m_len, const char* m_fnname, int m_lineno,
+        const char* m_filename)
+{
+    char *dest_ptr;
+
+    size_t len = strnlen(m_src, m_len) + 1;
+    dest_ptr = _balloc(m_level, len, m_filename, m_lineno, m_fnname);
+
+    bprintf(loglevel_mem, "strnduped `%s' in %s as %p", m_src, m_fnname, dest_ptr);
+
+    if (dest_ptr == NULL)
+        berror(m_level, "unable to strndup `%s' at %s:%i in %s", m_src, m_filename, m_lineno, m_fnname);
+    else
+        dest_ptr[len - 1] = '\0';
+
+    return (char*) memcpy(dest_ptr, m_src, len);
+}
+
+void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_line, const char *m_file)
+{
+    void *dest;
+
+    ebex_assert(m_src != NULL, 0);
+    ebex_assert(n > 0, 1);
+
+    dest = _balloc(l,n, m_func, m_line, m_file);
+    if (dest == NULL)
+        bprintf(l, "Previous balloc error originated from _memdup");
+    else
+        memcpy(dest, m_src, n);
+    return dest;
+}
+

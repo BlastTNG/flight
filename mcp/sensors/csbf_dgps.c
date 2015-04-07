@@ -62,7 +62,7 @@ void initialize_csbf_gps_monitor(void)
 	csbf_gps_comm = ebex_serial_new();
 
 	csbf_gps_comm->socket->callbacks = balloc(loglevel_err, sizeof(ebex_netsock_callbacks_t));
-	EBEX_ZERO_P(csbf_gps_comm->socket->callbacks);
+	BLAST_ZERO_P(csbf_gps_comm->socket->callbacks);
 	csbf_gps_comm->socket->callbacks->data = csbf_gps_process_data;
 	csbf_gps_comm->socket->callbacks->error = csbf_gps_handle_error;
 	csbf_gps_comm->socket->callbacks->finished = csbf_gps_handle_finished;
@@ -226,7 +226,7 @@ static int csbf_gps_handle_finished (const void *m_data __attribute__((unused)),
 {
 	ebex_err("Got closed socket on %s!  That shouldn't happen.  BIG ALL CAPS: REPORT THIS ERROR!!!!", CSBFGPSCOM);
 
-	if (csbf_gps_comm && csbf_gps_comm->socket) EBEX_SAFE_FREE(csbf_gps_comm->socket->callbacks);
+	if (csbf_gps_comm && csbf_gps_comm->socket) BLAST_SAFE_FREE(csbf_gps_comm->socket->callbacks);
 	ebex_serial_free(csbf_gps_comm);
 	csbf_gps_comm = NULL;
 

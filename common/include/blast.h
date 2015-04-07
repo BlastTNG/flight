@@ -48,18 +48,72 @@ void buos_allow_mem(void);
 void buos_disable_exit(void);
 void buos_enable_exit(void);
 
-/* BLAMM (BLAST Memory Manager) definitions */
-void *_balloc(buos_t, size_t, const char*, int, const char*);
-void _bfree(buos_t, void*, const char*, int, const char*);
-void *_reballoc(buos_t, void*, size_t, const char*, int, const char*);
-char *_bstrdup(buos_t, const char*, const char*, int, const char*);
-#define balloc(x,y) _balloc( x , y , __FUNCTION__ , __LINE__ , __FILE__ )
-#define bfree(x,y) _bfree( x , y , __FUNCTION__ , __LINE__ , __FILE__ )
-#define reballoc(x,y,z) \
-  _reballoc( x , y , z , __FUNCTION__ , __LINE__ , __FILE__)
-#define bstrdup(x,y) _bstrdup( x , y , __FUNCTION__ , __LINE__ , __FILE__)
+#ifndef __BASE_FILE__
+# define __BASE_FILE__ __FILE__
+#endif
 
-#define BLAST_SAFE_FREE(_var){if(_var) free(_var);}
+/* BLAMM (BLAST Memory Manager) definitions */
+void *_balloc(buos_t, size_t, const char*, int, const char*) __attribute__ ((__malloc__));
+void _bfree(buos_t, void*, const char*, int, const char*);
+void _basprintf(buos_t, char**, const char*, const char*, int, const char*, ...) __attribute__((format(printf,3,7),noinline));
+void *_reballoc(buos_t, void*, size_t, const char*, int, const char*);
+char *_bstrdup(buos_t, const char*, const char*, int, const char*) __attribute__ ((__malloc__));
+char *_bstrndup(buos_t, const char*, size_t n, const char*, int, const char*) __attribute__ ((__malloc__));
+void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_line, const char *m_file) __attribute__ ((__malloc__));
+
+#define balloc(lvl, size) _balloc( lvl, size, __FUNCTION__ , __LINE__ , __BASE_FILE__ )
+#define bfree(lvl, ptr) _bfree( lvl, ptr, __FUNCTION__ , __LINE__ , __BASE_FILE__ )
+#define reballoc(lvl, ptr, newsize) _reballoc(lvl, ptr, newsize, __FUNCTION__ , __LINE__ , __BASE_FILE__)
+#define bstrdup(lvl,ptr) _bstrdup( lvl , ptr , __FUNCTION__ , __LINE__ , __BASE_FILE__)
+#define bstrndup(lvl, ptr, len) _bstrndup( lvl , ptr, len , __FUNCTION__ , __LINE__ , __BASE_FILE__)
+#define basprintf(lvl, ptr, fmt, ...) _basprintf(lvl, ptr, fmt, __FUNCTION__ , __LINE__ , __BASE_FILE__, ##__VA_ARGS__)
+#define memdup(level,ptr,size) _memdup( level, ptr, size, __FUNCTION__ , __LINE__ , __BASE_FILE__)
+
+/** Free memory space */
+#define BLAST_SAFE_FREE(_ptr) do { if (_ptr) {bfree(mem,_ptr); (_ptr)=NULL;} } while(0)
+
+/** Zero an element */
+#define BLAST_ZERO(x) memset((void*)&(x), 0, sizeof(x))
+
+/** Zero dereferenced pointer */
+#define BLAST_ZERO_P(x) do { if (x) memset((void*)(x), 0, sizeof(*(x))); } while(0)
+
+#define blast_fatal(fmt,...) \
+    do {                                                                \
+        bprintf(fatal, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
+#define blast_tfatal(fmt,...) \
+    do {                                                                \
+        bprintf(tfatal, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
+#define blast_err(fmt,...) \
+    do {                                                                \
+        bprintf(err, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
+#define blast_info(fmt,...) \
+    do {                                                                \
+        bprintf(info, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
+#define blast_warn(fmt,...) \
+    do {                                                                \
+        bprintf(warning, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
+#define blast_startup(fmt,...) \
+        do {                                                                \
+            bprintf(startup, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
+#define blast_mem(fmt,...) \
+        do {                                                                \
+            bprintf(mem, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
+
+/**
+ * Prints the error message followed by an explanation of the errno code
+ */
+#define blast_strerror(fmt,...) \
+    do {                                                        \
+        blast_err(fmt ":%s", ##__VA_ARGS__, strerror(errno));    \
+    } while (0)
 
 /**
  * Allocates a temporary, formated string on the stack.  This memory will be automatically freed
