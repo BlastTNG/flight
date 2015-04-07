@@ -24,6 +24,7 @@
 #include <stdlib.h>     /* free() */
 #include <stdarg.h>     /* ANSI C variable arguments (va_list, va_start, va_end) */
 #include <sys/types.h>  /* for size_t */
+#include <string.h>     /* for memset */
 
 /* Commonly used seed values (generally SYNC words for telemetry)*/
 #define BLAST_MAGIC8    0xEB
