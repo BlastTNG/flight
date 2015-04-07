@@ -49,4 +49,4 @@ size_t comms_netbuf_read(comms_netbuf_t *m_buf, void *data, size_t m_len);
 size_t buffer_pass_bytes_end(comms_netbuf_t *m_buf, size_t m_len);
 size_t comms_netbuf_eat(comms_netbuf_t *m_buf, size_t m_len);
 
-#endif /* EBEX_NET_BUFFER_H_ */
+#endif /* BLAST_NET_BUFFER_H_ */

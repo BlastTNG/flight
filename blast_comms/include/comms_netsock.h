@@ -25,8 +25,8 @@
  */
 
 
-#ifndef EBEX_NETSOCK_H_
-#define EBEX_NETSOCK_H_
+#ifndef BLAST_NETSOCK_H_
+#define BLAST_NETSOCK_H_
 #include <stdbool.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -88,4 +88,4 @@ int comms_sock_join_mcast(comms_socket_t *m_socket, in_addr_t m_group);
 
 comms_net_async_handle_t *comms_sock_get_poll_handle(comms_socket_t *m_sock);
 
-#endif /* EBEX_NETSOCK_H_ */
+#endif /* BLAST_NETSOCK_H_ */

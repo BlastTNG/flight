@@ -159,7 +159,7 @@ comms_net_async_ctx_t *comms_net_async_ctx_new(size_t m_step_size)
 	if (ctx)
 	{
 		BLAST_ZERO_P(ctx);
-		ctx->step_size = m_step_size ? m_step_size : EBEX_NET_DEFAULT_CTX_STEP;
+		ctx->step_size = m_step_size ? m_step_size : BLAST_NET_DEFAULT_CTX_STEP;
 		pthread_mutex_init(&ctx->mutex, NULL);
 	}
 

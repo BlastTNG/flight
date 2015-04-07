@@ -25,8 +25,8 @@
  */
 
 
-#ifndef EBEX_NETASYNC_H_
-#define EBEX_NETASYNC_H_
+#ifndef BLAST_NETASYNC_H_
+#define BLAST_NETASYNC_H_
 
 #include <poll.h>
 #include <stdint.h>
@@ -36,7 +36,7 @@
 #include <comms_netasync.h>
 #include <comms_common.h>
 
-#define EBEX_NET_DEFAULT_CTX_STEP 4
+#define BLAST_NET_DEFAULT_CTX_STEP 4
 
 struct comms_net_async_ctx;
 struct comms_net_async_handle;
@@ -90,4 +90,4 @@ int comms_net_async_ctx_add_sock(comms_net_async_ctx_t *m_ctx, struct comms_sock
 void comms_net_async_handler_disconnect_ctx(comms_net_async_handle_t *p);
 int comms_net_async_poll(comms_net_async_ctx_t *ctx, int timeout);
 
-#endif /* EBEX_NETASYNC_H_ */
+#endif /* BLAST_NETASYNC_H_ */

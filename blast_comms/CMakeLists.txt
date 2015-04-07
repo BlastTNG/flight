@@ -8,6 +8,7 @@ set(COMMS_SRCS
 )
 set(COMMS_HEADERS
    ${COMMS_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_packet_format.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/comms_common.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/comms_netasync.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/comms_netbuf.h
