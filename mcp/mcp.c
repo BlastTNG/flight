@@ -54,6 +54,8 @@
 
 #include <framing.h>
 #include <ec_motors.h>
+#include <blast_comms.h>
+#include <blast_sip_interface.h>
 
 /* Define global variables */
 int StartupVeto = 20;
@@ -408,6 +410,8 @@ int main(int argc, char *argv[])
   pthread_mutex_init(&mutex, NULL);
 
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
+  initialize_blast_comms();
+  initialize_sip_interface();
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
 #else

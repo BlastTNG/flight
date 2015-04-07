@@ -58,13 +58,13 @@
 	{																			\
 		_ ## _prefix ## S(_prefix,_BLAST_ENUM_LIST)								\
 		_BLAST_ENUM_LIST(_prefix,END)											\
-	} e_ ## _prefix
+	} E_ ## _prefix
 #endif
 
 #ifndef _BLAST_LOOKUP_TABLE_DECLARATION
 #define _BLAST_LOOKUP_TABLE_DECLARATION(_prefix, _struct_list, _type)			\
-	_type _prefix ##_lookup_t __attribute__((unused))							\
-		_prefix ##_lookup_table[_prefix ## _END + 1] = 						\
+	_type _prefix ##_LOOKUP_T __attribute__((unused))							\
+		_prefix ##_LOOKUP_TABLE[_prefix ## _END + 1] = 						\
 	{_ ## _prefix ## S(_prefix,_struct_list)									\
 	_BLAST_BASE_STRUCT_LIST(_prefix,END)										\
 	}
@@ -72,12 +72,12 @@
 
 #ifndef _BLAST_LOOKUP_TABLE_TYPEDEF
 #define _BLAST_LOOKUP_TABLE_TYPEDEF(_prefix, _extras)							\
-	typedef struct _prefix ## _lookup  											\
+	typedef struct _prefix ## _LOOKUP  											\
 	{																			\
 		const char text[BLAST_LOOKUP_TABLE_TEXT_SIZE];							\
-		e_ ## _prefix position;													\
+		E_ ## _prefix position;													\
 		_extras																	\
-	} _prefix ##_lookup_t
+	} _prefix ##_LOOKUP_T
 #endif
 
 #ifndef BLAST_GENERIC_LOOKUP_TABLE
@@ -121,7 +121,7 @@
 #endif
 
 #ifndef _BLAST_FUNCTION_DEF
-#	define _BLAST_FUNCTION_DEF(_prefix,_ref) void *_prefix ## _ ## _ref ## _callback(void *);
+#	define _BLAST_FUNCTION_DEF(_prefix,_ref) void *_prefix ## _ ## _ref ## _CALLBACK(void *);
 #endif
 
 #ifndef _BLAST_ENUM_LIST
@@ -137,7 +137,7 @@
 #endif
 
 #ifndef _BLAST_FUNCTION_STRUCT_LIST
-#	define _BLAST_FUNCTION_STRUCT_LIST(_prefix,_ref,...) {_BLAST_BASE_STRUCT_ENTRY(_prefix,_ref) _prefix ## _ ## _ref ## _callback},
+#	define _BLAST_FUNCTION_STRUCT_LIST(_prefix,_ref,...) {_BLAST_BASE_STRUCT_ENTRY(_prefix,_ref) _prefix ## _ ## _ref ## _CALLBACK},
 #endif
 
 #ifndef _BLAST_HASH_STRUCT_LIST

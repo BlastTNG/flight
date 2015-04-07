@@ -70,9 +70,9 @@ struct channel {
     char field[FIELD_LEN];      /// name of channel for FileFormats and CalSpecs
     double m_c2e;               /// Conversion from counts to engineering units is
     double b_e2e;               ///   e = c * m_c2e + b_e2e
-    e_TYPE type;                /// Type of data stored
-    e_RATE rate;                /// Rate at which the channel is recorded
-    e_SRC source;               /// Source of the data channel (who writes)
+    E_TYPE type;                /// Type of data stored
+    E_RATE rate;                /// Rate at which the channel is recorded
+    E_SRC source;               /// Source of the data channel (who writes)
     char quantity[UNITS_LEN];   /// eg, "Temperature" or "Angular Velocity"
     char units[UNITS_LEN];      /// eg, "K" or "^o/s"
     void *var;                  /// Pointer to the variable in the current frame
@@ -115,7 +115,7 @@ extern size_t frame_size[SRC_END][RATE_END];
 
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
-int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len);
+int channels_store_data(E_SRC m_src, E_RATE m_rate, const void *m_data, size_t m_len);
 int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 channel_header_t *channels_create_map(channel_t *m_channel_list);
 

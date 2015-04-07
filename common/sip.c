@@ -84,28 +84,7 @@ void SingleCommand (enum singleCommand command, int scheduled); // commands.c
 void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled); // commands.c
     
-/** Write the Previous Status: called whenever anything changes */
-void WritePrevStatus()
-{
-  int fp, n;
 
-  /** write the default file */
-  fp = open(PREV_STATUS_FILE, O_WRONLY|O_CREAT|O_TRUNC, 00666);
-  if (fp < 0) {
-    berror(err, "mcp.prev_status open()");
-    return;
-  }
-
-  if ((n = write(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0) {
-    berror(err, "mcp.prev_status write()");
-    return;
-  }
-
-  if ((n = close(fp)) < 0) {
-    berror(err, "mcp.prev_status close()");
-    return;
-  }
-}
 
 #ifdef USE_SIP_CMD
 int sip_setserial(const char *input_tty)

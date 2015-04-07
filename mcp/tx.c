@@ -40,6 +40,7 @@
 #include <sys/time.h>
 
 #include <conversions.h>
+#include <blast_sip_interface.h>
 
 #include "channels_tng.h"
 #include "pointing_struct.h"
@@ -49,7 +50,6 @@
 #include "chrgctrl.h"
 #include "flcdataswap.h"
 
-#include "sip.h"
 #include <motors.h>
 
 #define NIOS_BUFFER_SIZE 100

@@ -1,30 +1,33 @@
-/* mcp: the BLAST master control program
+/**
+ * @file blast_sip_interface.h
  *
- * sip.h list of functions for listening to and processing sip data (in sip.c)
+ * @date 2011-02-11
+ * @author Seth Hillbrand
  *
- * This software is copyright (C) 2002-2012 University of Toronto
+ * @brief This file is part of FCP, created for the EBEX project
  *
- * This file is part of mcp and pcm
+ * This software is copyright (C) 2011-2015 Seth Hillbrand
  *
- * mcp and pcm are free software; you can redistribute it and/or modify
+ * FCP is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * mcp and pcm are distributed in the hope that it will be useful,
+ * FCP is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * along with FCP; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
 
-
-
-//int sip_setserial(const char *input_tty);
+#ifndef BLAST_SIP_INTERFACE_H_
+#define BLAST_SIP_INTERFACE_H_
+#include <stdint.h>
+#include <stdbool.h>
 
 /**********************************************/
 /*  SIPDataStruct                             */
@@ -63,3 +66,10 @@ struct SIPDataStruct {
 };
 
 extern struct SIPDataStruct SIPData;
+
+bool initialize_sip_interface(void);
+void sip_req_pos(void *m_arg);
+void sip_req_time(void *m_arg);
+void sip_req_alt(void *m_arg);
+
+#endif /* BLAST_SIP_INTERFACE_H_ */

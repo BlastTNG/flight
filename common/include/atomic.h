@@ -25,19 +25,19 @@
  */
 
 
-#ifndef EBEX_ATOMIC_H_
-#define EBEX_ATOMIC_H_
+#ifndef BLAST_ATOMIC_H_
+#define BLAST_ATOMIC_H_
 #include <stdint.h>
 #include <malloc.h>
 
 #define CACHE_LINE_SIZE 64
 
-#define EBEX_ATOMIC_MEM_BLOCK()  __asm__ __volatile__ ("mfence" ::: "memory")
-#define EBEX_ATOMIC_STORE_MEM_BLOCK() __asm__ __volatile__ ("mfence" ::: "memory")
+#define BLAST_ATOMIC_MEM_BLOCK()  __asm__ __volatile__ ("mfence" ::: "memory")
+#define BLAST_ATOMIC_STORE_MEM_BLOCK() __asm__ __volatile__ ("mfence" ::: "memory")
 
-#define EBEX_ATOMIC_BURY(_p)        ((void *)(((uintptr_t)(_p)) | 1))
-#define EBEX_ATOMIC_UNBURY(_p)      ((void *)(((uintptr_t)(_p)) & ~1))
-#define EBEX_ATOMIC_IS_BURIED(_p)   (((uintptr_t)(_p)) & 1)
+#define BLAST_ATOMIC_BURY(_p)        ((void *)(((uintptr_t)(_p)) | 1))
+#define BLAST_ATOMIC_UNBURY(_p)      ((void *)(((uintptr_t)(_p)) & ~1))
+#define BLAST_ATOMIC_IS_BURIED(_p)   (((uintptr_t)(_p)) & 1)
 
 /**
  * If our pointers are 64-bits, we need to use a 128-bit compare and swap for the double-word.  Otherwise, we can
@@ -61,4 +61,4 @@
 
 #define ADD_TO(_v,_x) __sync_add_and_fetch(&(_v), (typeof(_v))(_x))
 
-#endif /* EBEX_ATOMIC_H_ */
+#endif /* BLAST_ATOMIC_H_ */

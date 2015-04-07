@@ -27,11 +27,18 @@
 #ifndef BLAST_COMPILER_H_
 #define BLAST_COMPILER_H_
 
+#include <endian.h>
+
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
-#define tole(x) ((__force uint32_t) __constant_cpu_to_le32(x))
-#define tobe(x) ((__force uint32_t) __constant_cpu_to_be32(x))
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+# define tole(x) (x)
+# define tobe(x) __bswap_constant_32(x)
+#else
+# define tole(x) __bswap_constant_32(x)
+# define tobe(x) (x)
+#endif
 
 /* Are two types/vars the same type (ignoring qualifiers)? */
 #ifndef __same_type
@@ -93,7 +100,6 @@
 #define __printf(a, b)                  __attribute__((format(printf, a, b)))
 #define __scanf(a, b)                   __attribute__((format(scanf, a, b)))
 #define  noinline                       __attribute__((noinline))
-#define __attribute_const__             __attribute__((__const__))
 #define __maybe_unused                  __attribute__((unused))
 #define __always_unused                 __attribute__((unused))
 /*

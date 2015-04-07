@@ -27,17 +27,9 @@
 #ifndef CRC32TABLE_H_
 #define CRC32TABLE_H_
 #include <stdint.h>
-#include <endian.h>
 
 #include "blast_compiler.h"
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-# define tole(x) (x)
-# define tobe(x) __bswap_constant_32(x)
-#else
-# define tole(x) __bswap_constant_32(x)
-# define tobe(x) (x)
-#endif
 
 /* this file is generated - do not edit */
 

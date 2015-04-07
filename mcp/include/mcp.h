@@ -33,6 +33,7 @@ extern struct frameBuffer hiGain_buffer;
 
 extern int BLASTBusUseful;
 
+//TODO: Move to buffer header file
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
 
@@ -52,7 +53,7 @@ struct chat_buf {
 
 #define MAX_LINE_LENGTH 1024
 
-//#define USE_FIFO_CMD
+#define USE_FIFO_CMD
 
 //preserve use of FIFO or SIP, not both
 #ifndef USE_FIFO_CMD

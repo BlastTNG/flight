@@ -1,0 +1,14 @@
+set(MCP_COMMS_SRCS
+    ${MCP_COMMS_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/blast_comms.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/blast_comms_internal.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/blast_sip_interface.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/blast_sip_interface_internal.h
+    PARENT_SCOPE
+)
+set(MCP_COMMS_HEADERS
+   ${MCP_COMMS_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/blast_comms.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/blast_sip_interface.h
+   PARENT_SCOPE
+)

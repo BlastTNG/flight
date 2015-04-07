@@ -32,8 +32,7 @@
  * Channels lives in tx_struct_tng.c and list all known channels for the experiment.
  * On startup, the channels structure is read and separated into a number of distinct
  * frames based on rate.  Thus there is a 1Hz frame, a 5Hz frame, a 100Hz frame,
- * etc.  The frames are packed structures, ordered first by their source and then
- * alphabetically by their channel name and stored in big-endian byte-order.
+ * etc.  The frames are packed structures, ordered first by their source.
  *
  * Each frame also has a small header that records the timestamp and computer id.
  *
@@ -212,10 +211,10 @@ channel_t *channels_find_by_name(const char *m_name)
     return retval;
 }
 
-int channels_store_data(e_SRC m_src, e_RATE m_rate, const void *m_data, size_t m_len)
+int channels_store_data(E_SRC m_src, E_RATE m_rate, const void *m_data, size_t m_len)
 {
 	if (m_len != frame_size[m_src][m_rate]) {
-		bprintf(err, "Size mismatch storing data for %s:%s!\n", SRC_lookup_table[m_src].text, RATE_lookup_table[m_rate].text );
+		bprintf(err, "Size mismatch storing data for %s:%s!\n", SRC_LOOKUP_TABLE[m_src].text, RATE_LOOKUP_TABLE[m_rate].text );
 		return -1;
 	}
 
@@ -278,8 +277,8 @@ int channels_initialize(const channel_t * const m_channel_list)
                         (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
                         (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
                         (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]),
-                        SRC_lookup_table[src].text,
-                        RATE_lookup_table[rate].text);
+                        SRC_LOOKUP_TABLE[src].text,
+                        RATE_LOOKUP_TABLE[rate].text);
             }
             else {
                 channel_data[src][rate] = NULL;

@@ -119,6 +119,9 @@ include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem
 add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
 add_subdirectory("${PROJECT_SOURCE_DIR}/commanding")
 
+# add mcp communication objects
+add_subdirectory("${PROJECT_SOURCE_DIR}/communications")
+
 # add pointing objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/pointing")
 
@@ -144,6 +147,7 @@ add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
 add_library (sensors OBJECT ${SENSOR_SRCS} ${SENSOR_HEADERS})
 add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
+add_library (mcp_comms OBJECT ${MCP_COMMS_SRCS} ${MCP_COMMS_HEADERS})
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
 add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
 add_library (blast_common OBJECT ${MCP_COMMON_SRCS} ${MCP_COMMON_HEADERS})
@@ -160,6 +164,7 @@ add_library(mcp_obj OBJECT
 add_executable (mcp 
     $<TARGET_OBJECTS:housekeeping>
     $<TARGET_OBJECTS:commanding>
+    $<TARGET_OBJECTS:mcp_comms>
     $<TARGET_OBJECTS:pointing>
     $<TARGET_OBJECTS:motors>
     $<TARGET_OBJECTS:sensors>

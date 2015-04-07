@@ -35,13 +35,14 @@
 
 #include <conversions.h>
 #include <pointing.h>
+#include <blast_sip_interface.h>
+
 #include "command_list.h"
 #include "command_struct.h"
 #include "mcp.h"
 #include "tx.h"
 #include "pointing_struct.h"
 #include "channels_tng.h"
-#include "sip.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -86,6 +87,28 @@ struct CommandDataStruct CommandData;
 
 const char* SName(enum singleCommand command); // share/sip.c
 
+/** Write the Previous Status: called whenever anything changes */
+static void WritePrevStatus()
+{
+  int fp, n;
+
+  /** write the default file */
+  fp = open(PREV_STATUS_FILE, O_WRONLY|O_CREAT|O_TRUNC, 00666);
+  if (fp < 0) {
+    berror(err, "mcp.prev_status open()");
+    return;
+  }
+
+  if ((n = write(fp, &CommandData, sizeof(struct CommandDataStruct))) < 0) {
+    berror(err, "mcp.prev_status write()");
+    return;
+  }
+
+  if ((n = close(fp)) < 0) {
+    berror(err, "mcp.prev_status close()");
+    return;
+  }
+}
 
 /* calculate the nearest lockable elevation */
 double LockPosition (double elevation)

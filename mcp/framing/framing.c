@@ -42,8 +42,8 @@ static struct mosquitto *mosq = NULL;
 
 static void frame_handle_data(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
 {
-    RATE_lookup_t *rate;
-    SRC_lookup_t *src;
+    RATE_LOOKUP_T *rate;
+    SRC_LOOKUP_T *src;
 
     if (!m_fc || !m_rate) {
         bprintf(err, "Err in pointers\n");
@@ -54,7 +54,7 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
         return;
     }
 
-    for (rate = RATE_lookup_table; rate->position < RATE_END; rate++) {
+    for (rate = RATE_LOOKUP_TABLE; rate->position < RATE_END; rate++) {
         if (strcmp(rate->text, m_rate) == 0) break;
     }
     if (rate->position == RATE_END) {
@@ -63,7 +63,7 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
     }
 
     //TODO:Think about mapping FC1/FC2
-    for (src = SRC_lookup_table; src->position < SRC_END; src++) {
+    for (src = SRC_LOOKUP_TABLE; src->position < SRC_END; src++) {
         if (strncmp(src->text, m_fc, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
     }
     if (src->position == SRC_END) {

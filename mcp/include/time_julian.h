@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef EBEX_JULIAN_H_
-#define EBEX_JULIAN_H_
+#ifndef BLAST_JULIAN_H_
+#define BLAST_JULIAN_H_
 #include <time.h>
 
 /**
@@ -53,4 +53,4 @@ struct julian_date {
 int calendar_to_julian_date(int year, int month, int day,struct julian_date *jd);
 int julian_to_calendar_date(struct julian_date *m_jd, struct tm *m_time);
 
-#endif /* EBEX_JULIAN_H_ */
+#endif /* BLAST_JULIAN_H_ */

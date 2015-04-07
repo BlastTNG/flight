@@ -25,8 +25,8 @@
  */
 
 
-#ifndef EBEX_FIFO_H_
-#define EBEX_FIFO_H_
+#ifndef BLAST_FIFO_H_
+#define BLAST_FIFO_H_
 #include <unistd.h>
 #include <atomic.h>
 
@@ -57,4 +57,4 @@ static inline intptr_t fifo_count(fifo_t *m_fifo)
 
 #define END_FIFO(...) NULL
 
-#endif /* EBEX_FIFO_H_ */
+#endif /* BLAST_FIFO_H_ */

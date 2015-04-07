@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef EBEX_NUTATION_H_
-#define EBEX_NUTATION_H_
+#ifndef BLAST_NUTATION_H_
+#define BLAST_NUTATION_H_
 
 #include "time_julian.h"
 
@@ -52,4 +52,4 @@ double iau2000a_fundamental_arguments(fund_arguments_t m_arg, double m_centuries
 double iau2000a_mean_obliquity(struct julian_date *m_tdb);
 void iau2000a_nutation(struct julian_date *tdb, double *d_psi, double *d_epsilon);
 
-#endif /* EBEX_NUTATION_H_ */
+#endif /* BLAST_NUTATION_H_ */

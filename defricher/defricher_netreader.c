@@ -47,8 +47,8 @@ extern channel_t *channels;
 
 static void frame_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
-    RATE_lookup_t *rate;
-    SRC_lookup_t *src;
+    RATE_LOOKUP_T *rate;
+    SRC_LOOKUP_T *src;
 
     if (!m_src || !m_rate) {
         defricher_err("Err in pointers");
@@ -61,7 +61,7 @@ static void frame_handle_data(const char *m_src, const char *m_rate, const void 
 
     //printf("Got %d bytes from %s!\n", m_len, m_fc);
 
-    for (rate = RATE_lookup_table; rate->position < RATE_END; rate++) {
+    for (rate = RATE_LOOKUP_TABLE; rate->position < RATE_END; rate++) {
         if (strncasecmp(rate->text, m_rate, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
     }
     if (rate->position == RATE_END) {
@@ -70,7 +70,7 @@ static void frame_handle_data(const char *m_src, const char *m_rate, const void 
     }
 
     //TODO:Think about mapping FC1/FC2
-    for (src = SRC_lookup_table; src->position < SRC_END; src++) {
+    for (src = SRC_LOOKUP_TABLE; src->position < SRC_END; src++) {
         if (strncasecmp(src->text, m_src, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
     }
     if (src->position == SRC_END) {

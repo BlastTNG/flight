@@ -30,8 +30,11 @@
 #include <stdbool.h>
 #include <time.h>
 
+#include <blast.h>
+#include <blast_comms.h>
 #include <comms_common.h>
 #include <comms_serial.h>
+#include <mcp.h>
 #include <tx.h>
 #include <pointing_struct.h>
 
@@ -66,16 +69,16 @@ void initialize_csbf_gps_monitor(void)
 	csbf_gps_comm->sock->callbacks->finished = csbf_gps_handle_finished;
 	csbf_gps_comm->sock->callbacks->priv = NULL;
 	comms_serial_setspeed(csbf_gps_comm, B19200);
-	if (comms_serial_connect(csbf_gps_comm, CSBFGPSCOM) != NETSOCK_OK || !comms_comms_add_port(csbf_gps_comm))
+	if (comms_serial_connect(csbf_gps_comm, CSBFGPSCOM) != NETSOCK_OK || !blast_comms_add_port(csbf_gps_comm))
 	{
-		comms_err("Failed to open CSBF GPS!");
+		blast_err("Failed to open CSBF GPS!");
 		bfree(err, csbf_gps_comm->sock->callbacks);
 		comms_serial_free(csbf_gps_comm);
 		csbf_gps_comm = NULL;
 	}
 	else
 	{
-		comms_startup("Initialized csbf gps status monitor");
+		blast_startup("Initialized csbf gps status monitor");
 	}
 }
 
@@ -217,12 +220,12 @@ static int csbf_gps_process_data(const void *m_data, size_t m_len, void *m_userd
 
 static void csbf_gps_handle_error (int m_code, void *m_priv __attribute__((unused)))
 {
-	comms_err("Got error %d on CSBF GPS comm %s: %s", m_code, CSBFGPSCOM, strerror(m_code));
+	blast_err("Got error %d on CSBF GPS comm %s: %s", m_code, CSBFGPSCOM, strerror(m_code));
 }
 
 static int csbf_gps_handle_finished (const void *m_data __attribute__((unused)), size_t m_len __attribute__((unused)), void *m_userdata __attribute__((unused)))
 {
-	comms_err("Got closed socket on %s!  That shouldn't happen.  BIG ALL CAPS: REPORT THIS ERROR!!!!", CSBFGPSCOM);
+	blast_err("Got closed socket on %s!  That shouldn't happen.  BIG ALL CAPS: REPORT THIS ERROR!!!!", CSBFGPSCOM);
 
 	if (csbf_gps_comm && csbf_gps_comm->sock) BLAST_SAFE_FREE(csbf_gps_comm->sock->callbacks);
 	comms_serial_free(csbf_gps_comm);

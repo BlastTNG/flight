@@ -41,12 +41,12 @@
 #include "lut.h"
 #include "tx.h"
 #include "fir.h"
-#include "sip.h"
 
 #include <angles.h>
 #include <xsc_network.h>
 #include <conversions.h>
 #include <time_lst.h>
+#include <blast_sip_interface.h>
 
 // Include gsl package for the old sun sensor
 #include <gsl/gsl_rng.h>

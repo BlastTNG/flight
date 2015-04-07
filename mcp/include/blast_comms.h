@@ -1,12 +1,12 @@
 /**
- * @file time_lst.h
+ * @file blast_comms.h
  *
- * @date Aug 5, 2011
- * @author seth
+ * @date 2011-02-08
+ * @author Seth Hillbrand
  *
  * @brief This file is part of FCP, created for the EBEX project
  *
- * This software is copyright (C) 2011 Columbia University
+ * This software is copyright (C) 2011-2015 Seth Hillbrand
  *
  * FCP is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,15 +24,23 @@
  *
  */
 
-#ifndef BLAST_LST_H_
-#define BLAST_LST_H_
+#ifndef BLAST_COMMS_H_
+#define BLAST_COMMS_H_
+#include <stddef.h>
+#include <stdbool.h>
 
-#include "time_julian.h"
+#include <comms_serial.h>
+#include <comms_common.h>
+#include <comms_netsock.h>
 
-int unix_to_julian_date(time_t m_unixtime, struct julian_date *m_jd);
-void time_UT1_UTC(int m_year, int m_month, int m_day, double *m_delta_utc);
-void time_TT_UTC (int m_year, int m_month, double *m_delta_utc);
-int time_est_deltat(int m_year, int m_month, double *m_deltat);
-double time_lst_unix(time_t m_unixtime, double m_longitude);
+#define BLAST_CMD_SERVER_PORT 41414
 
-#endif /* BLAST_LST_H_ */
+
+bool initialize_blast_comms(void);
+bool blast_comms_add_socket(comms_socket_t *m_sock);
+bool blast_comms_add_port(comms_serial_t *m_tty);
+bool blast_comms_init_cmd_server(void);
+
+
+#endif /* BLAST_COMMS_H_ */
+
