@@ -135,3 +135,21 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
         snprintf(ptr, bytes, format, ##__VA_ARGS__);        \
     }while(0)
 #endif
+
+/** Min/Max common use */
+#undef max
+#define max(a,b) ((a) >= (b) ? (a) : (b))
+#undef min
+#define min(a,b) ((a) <= (b) ? (a) : (b))
+
+#define min_safe(x,y) ({                    \
+    typeof(x) _min1 = (x);                  \
+    typeof(y) _min2 = (y);                  \
+    (void) (&_min1 == &_min2);              \
+    _min1 < _min2 ? _min1 : _min2; })
+
+#define max_safe(x,y) ({                    \
+    typeof(x) _max1 = (x);                  \
+    typeof(y) _max2 = (y);                  \
+    (void) (&_max1 == &_max2);              \
+    _max1 > _max2 ? _max1 : _max2; })
