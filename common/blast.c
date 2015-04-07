@@ -252,7 +252,7 @@ char* _bstrndup(buos_t m_level, const char* m_src, size_t m_len, const char* m_f
     size_t len = strnlen(m_src, m_len) + 1;
     dest_ptr = _balloc(m_level, len, m_filename, m_lineno, m_fnname);
 
-    bprintf(loglevel_mem, "strnduped `%s' in %s as %p", m_src, m_fnname, dest_ptr);
+    bprintf(mem, "strnduped `%s' in %s as %p", m_src, m_fnname, dest_ptr);
 
     if (dest_ptr == NULL)
         berror(m_level, "unable to strndup `%s' at %s:%i in %s", m_src, m_filename, m_lineno, m_fnname);
@@ -265,9 +265,6 @@ char* _bstrndup(buos_t m_level, const char* m_src, size_t m_len, const char* m_f
 void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_line, const char *m_file)
 {
     void *dest;
-
-    ebex_assert(m_src != NULL, 0);
-    ebex_assert(n > 0, 1);
 
     dest = _balloc(l,n, m_func, m_line, m_file);
     if (dest == NULL)
