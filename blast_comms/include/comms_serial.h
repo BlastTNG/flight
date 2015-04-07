@@ -42,15 +42,15 @@ typedef struct comms_serial
 } comms_serial_t;
 
 
-comms_serial_t *ebex_serial_new(void);
-void ebex_serial_reset(comms_serial_t **m_serial);
-void ebex_serial_free(void *m_serial);
-void ebex_serial_close(comms_serial_t *m_serial);
-void ebex_serial_set_fd(comms_serial_t *m_serial, socket_t m_fd);
-int ebex_serial_write(comms_serial_t *m_serial, const void *m_buf, size_t m_len);
-int ebex_serial_flush(comms_serial_t *m_serial);
-bool ebex_serial_setspeed(comms_serial_t *m_serial, speed_t m_speed);
+comms_serial_t *comms_serial_new(void);
+void comms_serial_reset(comms_serial_t **m_serial);
+void comms_serial_free(void *m_serial);
+void comms_serial_close(comms_serial_t *m_serial);
+void comms_serial_set_fd(comms_serial_t *m_serial, socket_t m_fd);
+int comms_serial_write(comms_serial_t *m_serial, const void *m_buf, size_t m_len);
+int comms_serial_flush(comms_serial_t *m_serial);
+bool comms_serial_setspeed(comms_serial_t *m_serial, speed_t m_speed);
 
-int ebex_serial_connect(comms_serial_t *m_serial, const char *m_terminal);
-int ebex_fifo_connect(comms_serial_t *m_serial, const char *m_fifo, int m_flags);
+int comms_serial_connect(comms_serial_t *m_serial, const char *m_terminal);
+int comms_fifo_connect(comms_serial_t *m_serial, const char *m_fifo, int m_flags);
 #endif /* COMMS_SERIAL_H_ */

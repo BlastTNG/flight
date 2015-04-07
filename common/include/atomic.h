@@ -1,12 +1,12 @@
 /**
- * @file ebex_atomic.h
+ * @file atomic.h
  *
  * @date Feb 14, 2011
  * @author seth
  *
  * @brief This file is part of FCP, created for the EBEX project
  *
- * This software is copyright (C) 2010 Columbia University
+ * This software is copyright (C) 2010-2015 Seth Hillbrand
  *
  * FCP is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

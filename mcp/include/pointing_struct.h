@@ -182,6 +182,9 @@ struct DGPSAttStruct {
   double az;
   double pitch;
   double roll;
+  double mrms;
+  double brms;
+  unsigned int ant[4];
   int att_ok; 
 };
 

@@ -6,7 +6,7 @@
  *
  * @brief This file is part of FCP, created for the EBEX project
  *
- * This software is copyright (C) 2011 Columbia University
+ * This software is copyright (C) 2011-2015 Seth Hillbrand
  *
  * FCP is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1455,7 +1455,7 @@ size_t ecliptic_terms_count = sizeof(iau2000a_ecliptic_model) / sizeof(iau2000a_
  * @param m_centuries Julian centuries since the Millennium
  * @return result of computation in radians or -1 on error
  */
-double iau2000a_fundamental_arguments(ebex_fund_arguments_t m_arg, double m_centuries)
+double iau2000a_fundamental_arguments(fund_arguments_t m_arg, double m_centuries)
 {
 	double val = -1;
 

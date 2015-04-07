@@ -1,12 +1,12 @@
 /**
- * @file ebex_nutation.h
+ * @file time_nutation.h
  *
  * @date Aug 5, 2011
  * @author seth
  *
  * @brief This file is part of FCP, created for the EBEX project
  *
- * This software is copyright (C) 2011 Columbia University
+ * This software is copyright (C) 2011-2015 Seth Hillbrand
  *
  * FCP is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,9 +46,9 @@ typedef enum
 	ARG_ELONGATION_MOON,	///!< Mean elongation of the moon relative to the sun (D)
 	ARG_LONGITUDE_NODE,		///!< Mean longitude of the moon ascension (\Omega)
 	ARG_LONGITUDE_MOON		///!< Mean longitude of the moon (\omega)
-} ebex_fund_arguments_t;
+} fund_arguments_t;
 
-double iau2000a_fundamental_arguments(ebex_fund_arguments_t m_arg, double m_centuries);
+double iau2000a_fundamental_arguments(fund_arguments_t m_arg, double m_centuries);
 double iau2000a_mean_obliquity(struct julian_date *m_tdb);
 void iau2000a_nutation(struct julian_date *tdb, double *d_psi, double *d_epsilon);
 

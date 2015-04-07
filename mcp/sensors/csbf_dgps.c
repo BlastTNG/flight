@@ -30,12 +30,10 @@
 #include <stdbool.h>
 #include <time.h>
 
-#include <ebex_common.h>
-#include <ebex_serial.h>
-#include <ebex_comms.h>
+#include <comms_common.h>
+#include <comms_serial.h>
 #include <tx.h>
 #include <pointing_struct.h>
-#include <fcp.h>
 
 
 static int csbf_gps_process_data(const void *m_data, size_t m_len, void *m_userdata);
@@ -45,7 +43,7 @@ static int csbf_gps_handle_finished (const void *m_data __attribute__((unused)),
 
 #define CSBFGPSCOM "/dev/ttyCSBF"
 
-ebex_serial_t	*csbf_gps_comm = NULL;
+comms_serial_t	*csbf_gps_comm = NULL;
 struct DGPSAttStruct csbf_gps_att[3] = {{.az = 0.0}};
 int csbf_dgpsatt_index = 0;
 
@@ -58,26 +56,26 @@ time_t csbf_gps_time;
 void initialize_csbf_gps_monitor(void)
 {
 
-	if (csbf_gps_comm) ebex_serial_free(csbf_gps_comm);
-	csbf_gps_comm = ebex_serial_new();
+	if (csbf_gps_comm) comms_serial_free(csbf_gps_comm);
+	csbf_gps_comm = comms_serial_new();
 
-	csbf_gps_comm->socket->callbacks = balloc(loglevel_err, sizeof(ebex_netsock_callbacks_t));
-	BLAST_ZERO_P(csbf_gps_comm->socket->callbacks);
-	csbf_gps_comm->socket->callbacks->data = csbf_gps_process_data;
-	csbf_gps_comm->socket->callbacks->error = csbf_gps_handle_error;
-	csbf_gps_comm->socket->callbacks->finished = csbf_gps_handle_finished;
-	csbf_gps_comm->socket->callbacks->priv = NULL;
-	ebex_serial_setspeed(csbf_gps_comm, B19200);
-	if (ebex_serial_connect(csbf_gps_comm, CSBFGPSCOM) != EBEX_SOCK_OK || !ebex_comms_add_port(csbf_gps_comm))
+	csbf_gps_comm->sock->callbacks = balloc(err, sizeof(netsock_callbacks_t));
+	BLAST_ZERO_P(csbf_gps_comm->sock->callbacks);
+	csbf_gps_comm->sock->callbacks->data = csbf_gps_process_data;
+	csbf_gps_comm->sock->callbacks->error = csbf_gps_handle_error;
+	csbf_gps_comm->sock->callbacks->finished = csbf_gps_handle_finished;
+	csbf_gps_comm->sock->callbacks->priv = NULL;
+	comms_serial_setspeed(csbf_gps_comm, B19200);
+	if (comms_serial_connect(csbf_gps_comm, CSBFGPSCOM) != NETSOCK_OK || !comms_comms_add_port(csbf_gps_comm))
 	{
-		ebex_err("Failed to open CSBF GPS!");
-		bfree(loglevel_err, csbf_gps_comm->socket->callbacks);
-		ebex_serial_free(csbf_gps_comm);
+		comms_err("Failed to open CSBF GPS!");
+		bfree(err, csbf_gps_comm->sock->callbacks);
+		comms_serial_free(csbf_gps_comm);
 		csbf_gps_comm = NULL;
 	}
 	else
 	{
-		ebex_startup("Initialized csbf gps status monitor");
+		comms_startup("Initialized csbf gps status monitor");
 	}
 }
 
@@ -219,15 +217,15 @@ static int csbf_gps_process_data(const void *m_data, size_t m_len, void *m_userd
 
 static void csbf_gps_handle_error (int m_code, void *m_priv __attribute__((unused)))
 {
-	ebex_err("Got error %d on CSBF GPS comm %s: %s", m_code, CSBFGPSCOM, strerror(m_code));
+	comms_err("Got error %d on CSBF GPS comm %s: %s", m_code, CSBFGPSCOM, strerror(m_code));
 }
 
 static int csbf_gps_handle_finished (const void *m_data __attribute__((unused)), size_t m_len __attribute__((unused)), void *m_userdata __attribute__((unused)))
 {
-	ebex_err("Got closed socket on %s!  That shouldn't happen.  BIG ALL CAPS: REPORT THIS ERROR!!!!", CSBFGPSCOM);
+	comms_err("Got closed socket on %s!  That shouldn't happen.  BIG ALL CAPS: REPORT THIS ERROR!!!!", CSBFGPSCOM);
 
-	if (csbf_gps_comm && csbf_gps_comm->socket) BLAST_SAFE_FREE(csbf_gps_comm->socket->callbacks);
-	ebex_serial_free(csbf_gps_comm);
+	if (csbf_gps_comm && csbf_gps_comm->sock) BLAST_SAFE_FREE(csbf_gps_comm->sock->callbacks);
+	comms_serial_free(csbf_gps_comm);
 	csbf_gps_comm = NULL;
 
 	return 0;

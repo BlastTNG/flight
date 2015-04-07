@@ -1,5 +1,5 @@
 /**
- * @file ebex_julian.c
+ * @file time_julian.c
  *
  * @date Aug 5, 2011
  * @author seth
