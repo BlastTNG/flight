@@ -94,11 +94,13 @@ include_directories ("${PROJECT_BINARY_DIR}")
 
 set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
+set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 
 include_directories (
     "${PROJECT_SOURCE_DIR}/include"
     "${CONFIG_DIR}/include"
     "${COMMON_DIR}/include"
+    "${COMMS_DIR}/include"
     )
 
 # add soem library
@@ -135,6 +137,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/framing")
 # add common objects
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 
+# add asynchronous communication objects
+add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
+
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
 add_library (sensors OBJECT ${SENSOR_SRCS} ${SENSOR_HEADERS})
@@ -142,6 +147,7 @@ add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
 add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
 add_library (blast_common OBJECT ${MCP_COMMON_SRCS} ${MCP_COMMON_HEADERS})
+add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
 
 # add mcp objects
 add_library(mcp_obj OBJECT 
@@ -159,6 +165,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:sensors>
     $<TARGET_OBJECTS:framing>
     $<TARGET_OBJECTS:blast_common>
+    $<TARGET_OBJECTS:blast_comms>
     $<TARGET_OBJECTS:mcp_obj>
     ) 
 

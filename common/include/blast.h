@@ -25,6 +25,7 @@
 #include <stdarg.h>     /* ANSI C variable arguments (va_list, va_start, va_end) */
 #include <sys/types.h>  /* for size_t */
 #include <string.h>     /* for memset */
+#include <errno.h>      /* for errno */
 
 /* Commonly used seed values (generally SYNC words for telemetry)*/
 #define BLAST_MAGIC8    0xEB
@@ -107,6 +108,15 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
         do {                                                                \
             bprintf(mem, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
+#ifndef NDEBUG
+#define blast_dbg(fmt,...) \
+        do {                                                                \
+            bprintf(info, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
+#else
+#define blast_dbg(...)
+#endif
+
 
 /**
  * Prints the error message followed by an explanation of the errno code
