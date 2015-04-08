@@ -53,6 +53,7 @@
 #include "lut.h"
 
 #include <framing.h>
+#include <dsp1760.h>
 #include <ec_motors.h>
 #include <blast_comms.h>
 #include <blast_sip_interface.h>
@@ -412,6 +413,7 @@ int main(int argc, char *argv[])
   bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
   initialize_blast_comms();
   initialize_sip_interface();
+  initialize_dsp1760_interface();
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
 #else

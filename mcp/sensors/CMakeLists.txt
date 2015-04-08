@@ -2,7 +2,8 @@ set(SENSOR_SRCS
     ${SENSOR_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/acs.c    
     ${CMAKE_CURRENT_SOURCE_DIR}/csbf_dgps.c    
-    ${CMAKE_CURRENT_SOURCE_DIR}/dgps.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/dgps.c 
+    ${CMAKE_CURRENT_SOURCE_DIR}/dsp1760.c
     ${CMAKE_CURRENT_SOURCE_DIR}/geomag.c
     ${CMAKE_CURRENT_SOURCE_DIR}/xsc_channels.c
     ${CMAKE_CURRENT_SOURCE_DIR}/xsc_network.c
@@ -11,6 +12,7 @@ set(SENSOR_SRCS
 )
 set(SENSOR_HEADERS
    ${SENSOR_HEADERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/dsp1760.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/geomag.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_channels.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_network.h
