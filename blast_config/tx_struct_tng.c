@@ -834,7 +834,8 @@ channel_t channel_list[] =
     { "y_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
     #endif
 
-    { "vel_rw",               I2DEG * 4.0,      0.0, TYPE_INT16, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "vel_rw",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "pos_rw",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "dac_piv",              1.0,              0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
     { "el_raw_enc",           I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_P_DEG, 0 },
     { "el_enc",               I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_P_DEG, 0 },

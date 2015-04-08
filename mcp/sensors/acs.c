@@ -146,7 +146,10 @@ void store_100hz_acs(void)
     static channel_t *elAddr;
     static channel_t *elEncAddr;
     static channel_t *sigmaEncAddr;
+
     static channel_t *velRWAddr;
+    static channel_t *posRWAddr;
+
     static channel_t *elRawEncAddr;
     static channel_t *resPivAddr;
 
@@ -161,7 +164,10 @@ void store_100hz_acs(void)
         elAddr = channels_find_by_name("el");
         elEncAddr = channels_find_by_name("el_enc");
         sigmaEncAddr = channels_find_by_name("sigma_enc");
+
         velRWAddr = channels_find_by_name("vel_rw");
+        posRWAddr = channels_find_by_name("pos_rw");
+
         elRawEncAddr = channels_find_by_name("el_raw_enc");
         resPivAddr = channels_find_by_name("res_piv");
     }
@@ -174,7 +180,9 @@ void store_100hz_acs(void)
     SET_VALUE(elEncAddr, (unsigned int) ((PointingData[i_point].enc_el + CommandData.enc_el_trim) * DEG2I));
     SET_VALUE(sigmaEncAddr, (unsigned int) (PointingData[i_point].enc_sigma * DEG2I));
 
-    SET_VALUE(velRWAddr, ((long int) (RWMotorData[i_motors].velocity / 4.0 * DEG2I)));
+    SET_INT32(velRWAddr, RWMotorData[i_motors].velocity);
+    SET_INT32(posRWAddr, RWMotorData[i_motors].position);
+
     SET_VALUE(elRawEncAddr, ((long int) (ElevMotorData[i_motors].position * DEG2I)));
 
     SET_VALUE(resPivAddr, PivotMotorData[i_motors].position * DEG2I);

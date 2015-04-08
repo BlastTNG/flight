@@ -26,6 +26,7 @@
 #ifndef INCLUDE_MOTORS_H_
 #define INCLUDE_MOTORS_H_
 
+#include <stdint.h>
 
 #define MIN_EL 19.5
 #define MAX_EL 55
@@ -50,14 +51,14 @@
 /*  USE A CIRCULAR BUFFER !!!                 */
 ///TODO: Add State/Desired State here
 struct MotorDataStruct{
-  double velocity;                  // in degrees per second
-  int temp;                         // drive temperature in deg Celcius
-  double current;                   // drive current read from controller
-  double position;                  // Resolver position (if available)
-  unsigned int status;              // drive status
-  unsigned int fault_reg;           // drive fault register
-  unsigned short int drive_info;    // motorinfo struct
-  unsigned int err_count;           // count of serious serial errors
+  double velocity;              // in degrees per second
+  int16_t temp;                 // drive temperature in deg Celcius
+  double current;               // drive current read from controller
+  int32_t position;             // Resolver position (if available)
+  uint32_t status;              // drive status
+  uint32_t fault_reg;           // drive fault register
+  uint16_t drive_info;          // motorinfo struct
+  uint32_t err_count;           // count of serious serial errors
 };
 extern struct MotorDataStruct RWMotorData[3];
 extern struct MotorDataStruct ElevMotorData[3];
