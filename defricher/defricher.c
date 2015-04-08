@@ -179,11 +179,6 @@ int main(int argc, char** argv)
     double delta;
     double fr = 200;
     double nf = 0;
-    FILE* stream;
-    const char* herr = NULL;
-
-    pthread_t read_thread;
-    pthread_t write_thread;
 
     /* fill rc struct from command line */
     parse_cmdline(argc, argv, &rc);
@@ -244,8 +239,6 @@ int main(int argc, char** argv)
     defricher_writer_init();
     netreader_init();
 
-//    pthread_create(&write_thread, NULL, (void*) &DirFileWriter, NULL);
-
     /* Main status loop -- if we're in silent mode we skip this entirely and
      * just wait for the read and write threads to exit */
     if (!rc.silent)
@@ -272,7 +265,7 @@ int main(int argc, char** argv)
             }
             usleep(500000);
         } while (!ri.writer_done);
-    pthread_join(read_thread, NULL);
+//    pthread_join(read_thread, NULL);
 //    pthread_join(write_thread, NULL);
     if (!rc.silent) {
         if (rc.quenya)

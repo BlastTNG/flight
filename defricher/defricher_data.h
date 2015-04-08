@@ -73,11 +73,14 @@ typedef struct defricher_stream_data
 typedef struct defricher_cache_node
 {
     uint32_t                        magic;              /**< magic The BLAST MAGIC word allowing quick check of type */
-    e_DEFRICHER_CACHE_TYPE          type;
+    E_DEFRICHER_CACHE_TYPE          type;
     defricher_output_file_data_t    output;
     union
     {
         void                        *raw_data;
+        uint64_t                    *_64bit_data;
+        uint32_t                    *_32bit_data;
+        uint16_t                    *_16bit_data;
         defricher_stream_data_t     *input_stream;
         defricher_periodic_data_t   *input_periodic;
     };

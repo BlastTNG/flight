@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include <channels_tng.h>
+#include <channel_macros.h>
 #include <derived.h>
 #include <blast.h>
 
@@ -193,7 +194,7 @@ static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_li
     }
     return 0;
 }
-static inline gd_type_t defricher_get_gd_type(const e_TYPE m_type)
+static inline gd_type_t defricher_get_gd_type(const E_TYPE m_type)
 {
     gd_type_t type = GD_UNKNOWN;
     switch (m_type) {
@@ -233,9 +234,9 @@ static inline gd_type_t defricher_get_gd_type(const e_TYPE m_type)
     return type;
 }
 
-static inline int defricher_get_rate(const e_RATE m_rate)
+static inline int defricher_get_rate(const E_RATE m_rate)
 {
-    e_RATE rate = -1;
+    E_RATE rate = -1;
     switch (m_rate) {
         case RATE_1HZ:
             rate = 1;
@@ -333,7 +334,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
 
 
 //TODO: Add FIFO buffering
-int defricher_write_packet(channel_t *m_channel_list, e_SRC m_source, e_RATE m_rate)
+int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_rate)
 {
 
     if (frame_stop) {
@@ -352,6 +353,17 @@ int defricher_write_packet(channel_t *m_channel_list, e_SRC m_source, e_RATE m_r
 
         defricher_cache_node_t *outfile_node = channel->var;
         if (outfile_node && outfile_node->magic == BLAST_MAGIC32 ) {
+            switch(outfile_node->output.element_size) {
+                case 2:
+                    *outfile_node->_16bit_data = be16toh(*outfile_node->_16bit_data);
+                    break;
+                case 4:
+                    *outfile_node->_32bit_data = be32toh(*outfile_node->_32bit_data);
+                    break;
+                case 8:
+                    *outfile_node->_64bit_data = be64toh(*outfile_node->_64bit_data);
+                    break;
+            }
             if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
                 defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
