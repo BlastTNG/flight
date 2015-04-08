@@ -172,7 +172,6 @@ static void *framing_routine(void *m_arg)
         if (!counter_5hz--) {
             counter_5hz = 40;
             if (frame_size[SRC_FC][RATE_5HZ]) {
-                bprintf(info, "publishing 5HZ data");
                 mosquitto_publish(mosq, NULL, "frames/fc/1/5HZ",
                         frame_size[SRC_FC][RATE_5HZ], channel_data[SRC_FC][RATE_5HZ], 0, false);
             }
