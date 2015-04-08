@@ -787,7 +787,6 @@ void store_5hz_acs(void)
     StoreStarCameraData(0, 1); /* write OSC data */
 
     i_point = GETREADINDEX(point_index);
-    i_motors = GETREADINDEX(motor_index);
 
     /* scan modes */
     SET_VALUE(modeAzMcAddr, axes_mode.az_mode);
@@ -972,6 +971,11 @@ void store_5hz_acs(void)
     SET_VALUE(dgpsPitchRawAddr, DGPSAtt[i_dgps].pitch * DEG2I);
     SET_VALUE(dgpsRollRawAddr, DGPSAtt[i_dgps].roll * DEG2I);
     SET_VALUE(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok);
+
+    /**
+     * Motor Controller Fields
+     */
+    i_motors = GETREADINDEX(motor_index);
     SET_VALUE(tMCRWAddr, RWMotorData[i_motors].temp);
     SET_VALUE(iSerRWAddr, ((int) (RWMotorData[i_motors].current / 30.0 * 32768.0)));
     SET_VALUE(stat1RWAddr, (RWMotorData[i_motors].status & 0xffff));

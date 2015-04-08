@@ -126,6 +126,15 @@ static void *framing_routine(void *m_arg)
     channel_header_t *channels_pkg = NULL;
     channel_t *channel_list = (channel_t*)m_arg;
 
+    channel_t *mcp_1hz_framenum_addr;
+    channel_t *mcp_5hz_framenum_addr;
+    channel_t *mcp_100hz_framenum_addr;
+    channel_t *mcp_200hz_framenum_addr;
+    uint32_t mcp_1hz_framenum = 0;
+    uint32_t mcp_5hz_framenum = 0;
+    uint32_t mcp_100hz_framenum = 0;
+    uint32_t mcp_200hz_framenum = 0;
+
     int counter_100hz = 1;
     int counter_5hz=40;
     int counter_1hz=200;
@@ -145,6 +154,10 @@ static void *framing_routine(void *m_arg)
     mosquitto_publish(mosq, NULL, "channels/fc/1",
             sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
 
+    mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
+    mcp_5hz_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
+    mcp_100hz_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
+    mcp_200hz_framenum_addr = channels_find_by_name("mcp_200hz_framecount");
     //TODO: Move MOSQ publish routine into main loop
     while (!frame_stop)
     {
@@ -158,26 +171,34 @@ static void *framing_routine(void *m_arg)
             break;
         }
         if (frame_size[SRC_FC][RATE_200HZ]) {
+            mcp_200hz_framenum++;
+            SET_UINT32(mcp_200hz_framenum_addr, mcp_200hz_framenum);
             mosquitto_publish(mosq, NULL, "frames/fc/1/200HZ",
                     frame_size[SRC_FC][RATE_200HZ], channel_data[SRC_FC][RATE_200HZ],0, false);
         }
 
         if (!counter_100hz--) {
             counter_100hz = 1;
+            mcp_100hz_framenum++;
+            SET_UINT32(mcp_100hz_framenum_addr, mcp_100hz_framenum);
             if (frame_size[SRC_FC][RATE_100HZ]) {
                 mosquitto_publish(mosq, NULL, "frames/fc/1/100HZ",
                         frame_size[SRC_FC][RATE_100HZ], channel_data[SRC_FC][RATE_100HZ],0, false);
             }
         }
         if (!counter_5hz--) {
-            counter_5hz = 40;
+            counter_5hz = 39;
+            mcp_5hz_framenum++;
+            SET_UINT32(mcp_5hz_framenum_addr, mcp_5hz_framenum);
             if (frame_size[SRC_FC][RATE_5HZ]) {
                 mosquitto_publish(mosq, NULL, "frames/fc/1/5HZ",
                         frame_size[SRC_FC][RATE_5HZ], channel_data[SRC_FC][RATE_5HZ], 0, false);
             }
         }
         if (!counter_1hz--) {
-            counter_1hz = 200;
+            counter_1hz = 199;
+            mcp_1hz_framenum++;
+            SET_UINT32(mcp_1hz_framenum_addr, mcp_1hz_framenum);
             if (frame_size[SRC_FC][RATE_1HZ]) {
                 mosquitto_publish(mosq, NULL, "frames/fc/1/1HZ",
                         frame_size[SRC_FC][RATE_1HZ], channel_data[SRC_FC][RATE_1HZ], 0, false);

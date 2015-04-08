@@ -840,6 +840,11 @@ channel_t channel_list[] =
     { "el_enc",               I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_P_DEG, 0 },
     { "sigma_enc",            I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_NONE, 0 },
     { "chatter",              1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+
+    { "mcp_1hz_framecount",     1.0,    0.0,        TYPE_UINT32,    RATE_1HZ,   SRC_FC, U_NONE, 0 },
+    { "mcp_5hz_framecount",     1.0,    0.0,        TYPE_UINT32,    RATE_5HZ,   SRC_FC, U_NONE, 0 },
+    { "mcp_100hz_framecount",   1.0,    0.0,        TYPE_UINT32,    RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "mcp_200hz_framecount",   1.0,    0.0,        TYPE_UINT32,    RATE_200HZ, SRC_FC, U_NONE, 0 },
     { {0} }
   };
 

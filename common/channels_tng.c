@@ -168,7 +168,6 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
         return -1;
     }
 
-    printf("%X\n%X\n%u\n", m_map->magic, m_map->version, m_map->length);
     if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed)) {
         bprintf(err, "Length of data packet %zu does not match header data %zu", m_len, sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed));
         return -1;

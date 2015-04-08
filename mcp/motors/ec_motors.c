@@ -629,6 +629,7 @@ static void write_motor_data()
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
 
+    motor_index=INC_INDEX(motor_index);
 }
 
 static void* motor_control(void* arg)
@@ -688,7 +689,7 @@ static void* motor_control(void* arg)
 
         ec_send_processdata();
         wkc = ec_receive_processdata(EC_TIMEOUTRET);
-        if (wkc < expectedWKC) bprintf(warning, "Possible missing data in communicating with Motor Controllers");
+//        if (wkc < expectedWKC) bprintf(warning, "Possible missing data in communicating with Motor Controllers");
         write_motor_data();
     }
 
