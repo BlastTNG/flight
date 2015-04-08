@@ -32,9 +32,7 @@
 #include <dsp1760.h>
 
 static comms_serial_t *gyro_comm[2] = {NULL};
-
-#define GYRO_PORT_1 "/dev/ttyS2"
-#define GYRO_PORT_2 "/dev/ttyS3"
+static const char gyro_port[2][16] = {"/dev/ttyS2","/dev/ttyS3"};
 
 #define DSP1760_NPOLES 10
 #define DSP1760_GAIN   1.994635168
@@ -307,16 +305,16 @@ bool initialize_dsp1760_interface(void)
             gyro_comm[i]->sock->callbacks->finished = dsp1760_handle_finished;
             gyro_comm[i]->sock->callbacks->priv = gyro_comm[i];
 
-            comms_serial_setspeed(gyro_comm[i], B38400);
-            activate_921k_clock(gyro_comm[i]);
-            comms_serial_set_baud_divisor(gyro_comm[i], 921600);
-
-            if (comms_serial_connect(gyro_comm[i], GYRO_PORT_1) != NETSOCK_OK) {
+            if (comms_serial_connect(gyro_comm[i], gyro_port[i]) != NETSOCK_OK) {
                 bfree(err, gyro_comm[i]->sock->callbacks);
                 bfree(err, gyro_comm[i]->sock->priv_data);
                 comms_serial_free(gyro_comm[i]);
                 gyro_comm[i] = NULL;
             }
+
+            comms_serial_setspeed(gyro_comm[i], B38400);
+            activate_921k_clock(gyro_comm[i]);
+            comms_serial_set_baud_divisor(gyro_comm[i], 921600);
         }
 
         if (!gyro_comm[i] || !(blast_comms_add_port(gyro_comm[i]))) {
