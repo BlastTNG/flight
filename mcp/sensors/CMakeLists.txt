@@ -12,6 +12,7 @@ set(SENSOR_SRCS
 )
 set(SENSOR_HEADERS
    ${SENSOR_HEADERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/acs.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/dsp1760.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/geomag.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_channels.h
