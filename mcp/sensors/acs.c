@@ -142,13 +142,13 @@ void read_200hz_acs(void)
 
 void store_100hz_acs(void)
 {
-    channel_t *azAddr;
-    channel_t *elAddr;
-    channel_t *elEncAddr;
-    channel_t *sigmaEncAddr;
-    channel_t *velRWAddr;
-    channel_t *elRawEncAddr;
-    channel_t *resPivAddr;
+    static channel_t *azAddr;
+    static channel_t *elAddr;
+    static channel_t *elEncAddr;
+    static channel_t *sigmaEncAddr;
+    static channel_t *velRWAddr;
+    static channel_t *elRawEncAddr;
+    static channel_t *resPivAddr;
 
     static int firsttime = 1;
     int i_point;
