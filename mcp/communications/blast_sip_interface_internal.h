@@ -51,8 +51,8 @@
 #	error This code will not work on a big endian system
 #endif
 
-#define SIP_PORT_1 "/dev/ttyCOMM1"
-#define SIP_PORT_2 "/dev/ttyCOMM2"
+#define SIP_PORT_1 "/dev/ttyS0"
+#define SIP_PORT_2 "/dev/ttyS1"
 
 #define SUN_JAN_6_1980 315982800L 	/**< Number of seconds from the start of the UNIX epoch to Jan 6, 1980 */
 #define SEC_IN_WEEK  604800L		/**< Number of seconds in a week */
