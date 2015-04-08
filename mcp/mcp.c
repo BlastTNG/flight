@@ -342,7 +342,7 @@ static void mcp_100hz_routines(void)
     Pointing();
 //    DoSched();
     UpdateAxesMode();
-    StoreData();
+    store_100hz_acs();
 //    ControlGyroHeat();
     WriteMot();
 //    CryoControl(index);
@@ -352,6 +352,7 @@ static void mcp_100hz_routines(void)
 static void mcp_5hz_routines(void)
 {
     read_5hz_acs();
+    store_5hz_acs();
     WriteAux();
     StoreActBus();
     SecondaryMirror();

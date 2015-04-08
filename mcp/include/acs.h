@@ -30,4 +30,6 @@ void read_5hz_acs(void);
 void read_100hz_acs(void);
 void read_200hz_acs(void);
 
+void store_100hz_acs(void);
+void store_5hz_acs(void);
 #endif /* INCLUDE_ACS_H_ */
