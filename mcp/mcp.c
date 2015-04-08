@@ -58,6 +58,7 @@
 #include <ec_motors.h>
 #include <blast_comms.h>
 #include <blast_sip_interface.h>
+#include <computer_sensors.h>
 
 /* Define global variables */
 int StartupVeto = 20;
@@ -361,13 +362,12 @@ static void mcp_5hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-
+    blast_store_cpu_health();
+    blast_store_disk_space();
 }
 
 int main(int argc, char *argv[])
 {
-  unsigned int in_data, i;
-  unsigned short* RxFrame;
   pthread_t CommandDatacomm1;
   pthread_t disk_id;
   pthread_t abus_id;
@@ -386,7 +386,6 @@ int main(int argc, char *argv[])
 #endif
 
   pthread_t compression_id;
-  pthread_t sensors_id;
   pthread_t dgps_id;
   pthread_t isc_id;
   pthread_t osc_id;
@@ -486,7 +485,7 @@ int main(int argc, char *argv[])
 
 #endif
 
-
+  initialize_CPU_sensors();
 //  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
 //  if (use_starcams) {
 //    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
