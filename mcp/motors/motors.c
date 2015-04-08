@@ -39,6 +39,7 @@
 #include "motordefs.h"
 
 #include <angles.h>
+#include <conversions.h>
 #include <mputs.h>
 #include <pointing.h>
 #include <radbox.h>
@@ -65,40 +66,6 @@ double az_accel = 0.1;
 
 static int last_mode = -1;
 
-static double calcVPiv(void)
-{
-    double vpiv = 0.0;
-    static double buf_vPiv[VPIV_FILTER_LEN]; // Buffer for Piv boxcar filter.
-    static time_t buf_t[VPIV_FILTER_LEN];
-    static double a = 0.0, alast = 0.0;
-    static unsigned int ib_last = 0;
-    static int firsttime = 1;
-    int i_point;
-    int i;
-    double dtheta = 0.0;
-    static int j = 0;
-    i_point = GETREADINDEX(motor_index);
-    if (firsttime) {
-        firsttime = 0;
-        // Initialize the buffer.  Assume all zeros to begin
-        for (i = 0; i < (VPIV_FILTER_LEN - 1); i++)
-            buf_vPiv[i] = 0.0;
-        for (i = 0; i < (VPIV_FILTER_LEN - 1); i++)
-            buf_t[i] = 0.0;
-    }
-    a += (PivotMotorData[i_point].position - buf_vPiv[ib_last]);
-    //  dt=((double)(gettimeofday-buf_t[ib_last]));
-    buf_vPiv[ib_last] = PivotMotorData[i_point].position;
-    //  dummy=PointingData[i_point].t
-    //  buf_t[ib_last]=PointingData[i_point].t;
-    ib_last = (ib_last + VPIV_FILTER_LEN + 1) % VPIV_FILTER_LEN;
-    dtheta = (a - alast) / VPIV_FILTER_LEN;
-    alast = a;
-    vpiv = dtheta / 0.010016; ///TODO: Adjust calcVPIV magic numbers for velocity
-    //  if (j%100 == 1) bprintf(info,"CalcVPiv vpiv = %f, res_piv = %f, a = %f, alast = %f, dtheta = %f ",vpiv,ACSData.res_piv,a/VPIV_FILTER_LEN,alast/VPIV_FILTER_LEN,dtheta);
-    j++;
-    return vpiv;
-}
 /************************************************************************/
 /*                                                                      */
 /*   GetVElev: get the current elevation velocity, given current        */
@@ -251,6 +218,7 @@ static double GetVAz(void)
 /*       Proportional to the reaction wheel speed error                 */
 /*                                                                      */
 /************************************************************************/
+//TODO: Change GetIPivot to return units of 0.01A for motor controller
 static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
 {
   static channel_t* pRWTermPivAddr;
@@ -262,7 +230,6 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   static unsigned int ib_last=0;
   double I_req = 0.0;
   int I_req_dac = 0;
-  int I_req_dac_init = 0;
   int i_point, i_rw;
   double v_az_req,i_frict,i_frict_filt;
   double p_rw_term, p_err_term;
@@ -286,7 +253,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
   i_point = GETREADINDEX(point_index);
   i_rw = GETREADINDEX(motor_index);
   p_rw_term = (-1.0)*((double)g_rw_piv/10.0)*(RWMotorData[i_rw].velocity-CommandData.pivot_gain.SP);
-  p_err_term = (double)g_err_piv*5.0*(v_az_req-PointingData[point_index].v_az);
+  p_err_term = (double)g_err_piv*5.0*(v_az_req-PointingData[i_point].v_az);
   I_req = p_rw_term+p_err_term;
 
 
@@ -316,7 +283,6 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
       I_req_dac=I_req+16384+PIV_DAC_OFF-PIV_DEAD_BAND;
     }
   }
-  I_req_dac_init=I_req_dac;
 
   a+=(i_frict-buf_frictPiv[ib_last]);
   buf_frictPiv[ib_last]=i_frict;
@@ -370,10 +336,10 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 
   i++;
 
-  SET_VALUE(pRWTermPivAddr,p_rw_term);
-  SET_VALUE(pErrTermPivAddr,p_err_term);
-  SET_VALUE(frictTermPivAddr,i_frict_filt*32767.0/2.0);
-  SET_VALUE(frictTermUnfiltPivAddr,i_frict*32767.0/2.0);
+  SET_INT16(pRWTermPivAddr,p_rw_term);
+  SET_INT16(pErrTermPivAddr,p_err_term);
+  SET_INT16(frictTermPivAddr,i_frict_filt*32767.0/2.0);
+  SET_INT16(frictTermUnfiltPivAddr,i_frict*32767.0/2.0);
   return I_req_dac;
 }
 
@@ -382,7 +348,7 @@ static double GetIPivot(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_e
 /*    WriteMot: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
-void WriteMot(int TxIndex)
+void WriteMot(void)
 {
   static channel_t* velReqElAddr;
   static channel_t* velReqAzAddr;
@@ -403,10 +369,6 @@ void WriteMot(int TxIndex)
   static channel_t* velCalcPivAddr;
   static channel_t* accelAzAddr;
  
-  // Used only for Lab Controller tests
-  static channel_t* dacAmplAddr[5];
-  int i;
-  static int wait = 100; /* wait 20 frames before controlling. */
   double el_rad;
   unsigned int ucos_el;
   unsigned int usin_el;
@@ -438,25 +400,10 @@ void WriteMot(int TxIndex)
     frictOffPivAddr = channels_find_by_name("frict_off_piv");
     velCalcPivAddr = channels_find_by_name("vel_calc_piv");
     accelAzAddr = channels_find_by_name("accel_az");
-
-    dacAmplAddr[0] = channels_find_by_name("v_pump_bal");    // is now ifpm_ampl
-    //    dacAmplAddr[0] = channels_find_by_name("dac1_ampl"); // is now ifpm_ampl
-    dacAmplAddr[1] = channels_find_by_name("dac2_ampl");
-    //    dacAmplAddr[2] = channels_find_by_name("dac3_ampl"); // is now dac_piv
-    //    dacAmplAddr[3] = channels_find_by_name("dac4_ampl"); // is now dac_el
-    //    dacAmplAddr[4] = channels_find_by_name("dac5_ampl"); // is now dac_rw 
   }
 
   i_point = GETREADINDEX(point_index);
 
-  //NOTE: this is only used to program the extra DAC - not used for
-  // flight.
-  if (wait <= 0)
-    for (i=1; i<2; i++)
-      if (CommandData.Temporary.setLevel[i]) {
-	SET_VALUE(dacAmplAddr[i], CommandData.Temporary.dac_out[i]);
-	CommandData.Temporary.setLevel[i] = 0;
-      }
 
   /***************************************************/
   /**           Elevation Drive Motors              **/
@@ -508,7 +455,7 @@ void WriteMot(int TxIndex)
   SET_VALUE(velReqAzAddr, 32768 + v_az);
 
 
-  if ((CommandData.disable_az) || (wait > 0)) {
+  if (CommandData.disable_az) {
     azGainP = 0;
     azGainI = 0;
     pivGainRW = 0;
@@ -542,12 +489,10 @@ void WriteMot(int TxIndex)
   /* Pivot current offset to compensate for static friction. */
   SET_VALUE(frictOffPivAddr, pivFrictOff/2.0*65535);
   /* Pivot velocity */
-  SET_VALUE(velCalcPivAddr, (calcVPiv()/20.0*32768.0));
+  SET_VALUE(velCalcPivAddr, piv_get_velocity());
   /* Azimuth Scan Acceleration */
   SET_VALUE(accelAzAddr, (CommandData.az_accel/2.0*65536.0));
 
-  if (wait > 0)
-    wait--;
 }
 
 /***************************************************************/
@@ -620,90 +565,84 @@ static void InitElDither() {
 /*                                                              */
 /****************************************************************/
 #define MIN_SCAN 0.2
-static void SetAzScanMode(double az, double left, double right, double v,
-    double D)
+static void SetAzScanMode(double az, double left, double right, double v, double D)
 {
-    double before_trig;
     if (axes_mode.az_vel < -v + D)
-      axes_mode.az_vel = -v + D;
+        axes_mode.az_vel = -v + D;
     if (axes_mode.az_vel > v + D)
-      axes_mode.az_vel = v + D;
+        axes_mode.az_vel = v + D;
 
     ///TODO: Update AzScanMode with XSC data
     if (az < left) {
 //      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      axes_mode.az_mode = AXIS_VEL;
-      if (axes_mode.az_vel < v + D)
-        axes_mode.az_vel += az_accel;
-    } else if (az > right) {
+        axes_mode.az_mode = AXIS_VEL;
+        if (axes_mode.az_vel < v + D)
+            axes_mode.az_vel += az_accel;
+    }
+    else if (az > right) {
 //      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      axes_mode.az_mode = AXIS_VEL;
-      if (axes_mode.az_vel > -v + D)
-        axes_mode.az_vel -= az_accel;
-    } else {
-      axes_mode.az_mode = AXIS_VEL;
-      if (axes_mode.az_vel > 0) {
-        axes_mode.az_vel = v + D;
+        axes_mode.az_mode = AXIS_VEL;
+        if (axes_mode.az_vel > -v + D)
+            axes_mode.az_vel -= az_accel;
+    }
+    else {
+        axes_mode.az_mode = AXIS_VEL;
+        if (axes_mode.az_vel > 0) {
+            axes_mode.az_vel = v + D;
 //        if (az > right - 2.0*v) /* within 2 sec of turnaround */
 //          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 //        else
 //          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-      } else {
-        axes_mode.az_vel = -v + D;
+        }
+        else {
+            axes_mode.az_vel = -v + D;
 //        if (az < left + 2.0*v) /* within 2 sec of turnaround */
 //          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 //        else
 //          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-      }
+        }
     }
-    /* SBSC Trigger flag */
-//    before_trig = CommandData.cam.delay - v/CommandData.az_accel + CommandData.cam.expTime/2000;
-//    if ((az < left + before_trig*v) && (dir_sbsc_trigger==0)) {
-//	sbsc_trigger = 1;
-//    } else if ((az > right - before_trig*v) && (dir_sbsc_trigger==1)) {
-//	sbsc_trigger = 1;
-//    } else {
-//	sbsc_trigger = 0;
-//    }
 }
 
-static void SetElScanMode(double el, double bottom, double top, double v,
-    double D)
+static void SetElScanMode(double el, double bottom, double top, double v, double D)
 {
 //    double before_trig;
-    double el_accel=EL_ACCEL/SR;
+    double el_accel = EL_ACCEL / SR;
     if (axes_mode.el_vel < -v + D)
-      axes_mode.el_vel = -v + D;
+        axes_mode.el_vel = -v + D;
     if (axes_mode.el_vel > v + D)
-      axes_mode.el_vel = v + D;
+        axes_mode.el_vel = v + D;
 
     //TODO: Update ElScanMode with XSC routines
     if (el < bottom) {
 //      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      axes_mode.el_mode = AXIS_VEL;
-      if (axes_mode.el_vel < v + D)
-        axes_mode.el_vel += el_accel;
-    } else if (el > top) {
+        axes_mode.el_mode = AXIS_VEL;
+        if (axes_mode.el_vel < v + D)
+            axes_mode.el_vel += el_accel;
+    }
+    else if (el > top) {
 //      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      axes_mode.el_mode = AXIS_VEL;
-      if (axes_mode.el_vel > -v + D)
-        axes_mode.el_vel -= el_accel;
-    } else {
-      axes_mode.el_mode = AXIS_VEL;
-      if (axes_mode.el_vel > 0) {
-        axes_mode.el_vel = v + D;
-        if (el > top - 2.0*v) { /* within 2 sec of turnaround */
-//	  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-	}
+        axes_mode.el_mode = AXIS_VEL;
+        if (axes_mode.el_vel > -v + D)
+            axes_mode.el_vel -= el_accel;
+    }
+    else {
+        axes_mode.el_mode = AXIS_VEL;
+        if (axes_mode.el_vel > 0) {
+            axes_mode.el_vel = v + D;
+//            if (el > top - 2.0 * v) { /* within 2 sec of turnaround */
+//              isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+//            }
 //        else
 //          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-      } else {
-        axes_mode.el_vel = -v + D;
+        }
+        else {
+            axes_mode.el_vel = -v + D;
 //        if (el < bottom + 2.0*v) /* within 2 sec of turnaround */
 //          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 //        else
 //          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-      }
+        }
     }
 }
 
@@ -1938,6 +1877,136 @@ unsigned short int makeMotorField(struct MotorInfoStruct* motorinfo)
   b |= ((motorinfo->err) & 0x001f)<<10 ; 
   b |= ((motorinfo->closing) & 0x0001)<<15 ; 
   return b;
+}
+
+//motor control parameters
+#define MOTORSR 200.0
+#define INTEGRAL_LENGTH  5.0  //length of the integral time constant in seconds
+#define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
+
+static int16_t calculate_el_current(float m_vreq_el)
+{
+    static float el_integral = 0.0;
+    float p_el = 0.0, i_el = 0.0;       //control loop gains
+    float error_el = 0.0, P_term_el = 0.0, I_term_el = 0.0; //intermediate control loop results
+    int16_t dac_out;
+
+    //el gyros measure -el
+    error_el = ACSData.ifel_gy + m_vreq_el;
+
+    P_term_el = p_el*error_el;
+
+
+    if( (p_el == 0.0) || (i_el == 0.0) ) {
+        el_integral = 0.0;
+    } else {
+        el_integral = (1.0 - INTEGRAL_CUTOFF)*el_integral + INTEGRAL_CUTOFF*error_el;
+    }
+
+    I_term_el = el_integral * p_el * i_el;
+    if (I_term_el > 32767.0) {
+        I_term_el = 32767.0;
+        el_integral = el_integral *0.9;
+    }
+    if (I_term_el < -32767.0) {
+        I_term_el = -32767.0;
+        el_integral = el_integral * 0.9;
+    }
+
+    //sign difference in controller requires using -(P_term + I_term)
+    dac_out =-(P_term_el + I_term_el);
+
+    if (dac_out > INT16_MAX) dac_out = INT16_MAX;
+    if (dac_out < INT16_MIN) dac_out = INT16_MIN;
+    return dac_out;
+}
+
+static int16_t calculate_rw_current(float v_req_az)
+{
+    static float az_integral = 0.0;
+    double cos_el, sin_el;
+    float p_az = 0.0, i_az = 0.0;       //control loop gains
+    float error_az = 0.0, P_term_az = 0.0, I_term_az = 0.0; //intermediate control loop results
+    int16_t dac_out;
+
+    int i_point = GETREADINDEX(point_index);
+
+    sincos(from_degrees(PointingData[i_point].el), &sin_el, &cos_el);
+
+    //roll, yaw contributions to az both -'ve (?)
+    error_az = (ACSData.ifroll_gy * sin_el + ACSData.ifyaw_gy * cos_el) + v_req_az;
+
+    P_term_az = p_az * error_az;
+
+    if ((p_az == 0.0) || (i_az == 0.0)) {
+        az_integral = 0.0;
+    }
+    else {
+        az_integral = (1.0 - INTEGRAL_CUTOFF) * az_integral + INTEGRAL_CUTOFF * error_az;
+    }
+
+    I_term_az = az_integral * p_az * i_az;
+    if (I_term_az > 32767.0) {
+        I_term_az = 32767.0;
+        az_integral = az_integral * 0.9;
+    }
+    if (I_term_az < -32767.0) {
+        I_term_az = -32767.0;
+        az_integral = az_integral * 0.9;
+    }
+
+    //TODO check sign of output
+    dac_out = -(P_term_az + I_term_az);
+
+    if (dac_out > INT16_MAX) dac_out = INT16_MAX;
+    if (dac_out < INT16_MIN) dac_out = INT16_MIN;
+    return dac_out;
+
+}
+
+void command_motors(void)
+{
+    static channel_t* velReqElAddr;
+    static channel_t* velReqAzAddr;
+    static channel_t* dacPivAddr;
+
+    float v_req_el = 0.0;
+    float v_req_az = 0.0;
+
+    /******** Obtain correct indexes the first time here ***********/
+    static int firsttime = 1;
+    if (firsttime) {
+      firsttime = 0;
+      velReqElAddr = channels_find_by_name("vel_req_el");
+      velReqAzAddr = channels_find_by_name("vel_req_az");
+      dacPivAddr = channels_find_by_name("dac_piv");
+    }
+    /*******************************************************************\
+    * Drive the Elevation motor                                         *
+    \*******************************************************************/
+
+    v_req_el = (float)(GET_UINT16(velReqElAddr)-32768.0)*(-0.0016276041666666666666666666666667);  // = vreq/614.4
+
+    //TODO: limits in gyro units: revisit these
+    if ((v_req_el < -15000.0) || (v_req_el > 15000.0))
+        v_req_el = 0; // no really really crazy values!
+
+    el_set_current(calculate_el_current(v_req_el));
+
+    /*******************************************************************\
+    * Drive the Reaction Wheel                                          *
+    \*******************************************************************/
+
+    //TODO: Move velReqAz to a floating point value
+    v_req_az = (float)(GET_UINT16(velReqAzAddr)-32768.0)*0.0016276041666666666666666666666667;  // = vreq/614.4
+    rw_set_current(calculate_rw_current(v_req_az));
+
+    /*******************************************************************\
+    * Drive the Pivot Motor                                             *
+    \*******************************************************************/
+
+    piv_set_current(GET_UINT16(dacPivAddr));
+
 }
 
 //void* reactComm(void* arg)

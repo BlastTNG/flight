@@ -65,5 +65,8 @@ extern struct MotorDataStruct PivotMotorData[3];
 
 extern int motor_index;
 
+void command_motors(void);
+void UpdateAxesMode(void);
+void WriteMot(void);
 
 #endif /* INCLUDE_MOTORS_H_ */

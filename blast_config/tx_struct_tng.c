@@ -746,7 +746,6 @@ channel_t channel_list[] =
 
     { "v_pump_bal",           3.91 / 13107.0,   -9.775, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "dac2_ampl",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "dac_piv",              1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
     { "mask_gy",              1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "bits_vtx",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -800,42 +799,43 @@ channel_t channel_list[] =
     #endif
 
     #ifndef BOLOTEST
-    { "ifyaw_1_gy",           1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
-    { "ifroll_1_gy",          1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
-    { "ifyaw_2_gy",           1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
-    { "ifel_1_gy",            1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
-    { "ifel_2_gy",            1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
-    { "ifroll_2_gy",          1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifyaw_1_gy",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifroll_1_gy",          1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifyaw_2_gy",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifel_1_gy",            1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifel_2_gy",            1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifroll_2_gy",          1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
     #endif
-    { "az",                   LI2DEG, 0.0,           TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0 },
-    { "el",                   LI2DEG, 0.0,           TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0 },
+    { "az",                   LI2DEG,   0.0,            TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0 },
+    { "el",                   LI2DEG,   0.0,            TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0 },
 
     #ifndef BOLOTEST
-    { "heat_gy",              1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "uei_if_framenum",             1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
-    { "uei_of_framenum",             1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_NONE, 0 },
+    { "heat_gy",              1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "uei_if_framenum",      1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
+    { "uei_of_framenum",      1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_NONE, 0 },
 
-    { "ifel_gy",              1.0,     0.0, TYPE_FLOAT, RATE_100HZ, SRC_OF_UEI, U_V_DPS, 0 },
-    { "ifroll_gy",            1.0,     0.0, TYPE_FLOAT, RATE_100HZ, SRC_OF_UEI, U_V_DPS, 0 },
-    { "ifyaw_gy",             1.0,     0.0, TYPE_FLOAT, RATE_100HZ, SRC_OF_UEI, U_V_DPS, 0 },
-    { "trigger_isc",          1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "trigger_osc",          1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "ifel_gy",              1.0,      0.0,            TYPE_FLOAT, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifroll_gy",            1.0,      0.0,            TYPE_FLOAT, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifyaw_gy",             1.0,      0.0,            TYPE_FLOAT, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "trigger_isc",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "trigger_osc",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "vel_req_el",           GY16_TO_DPS * 0.1,-3276.8 * GY16_TO_DPS, TYPE_UINT16, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "cos_el",               1.0 / 32768.0,    -1.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "sin_el",               1.0 / 32768.0,    -1.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "vel_req_az",           GY16_TO_DPS * 0.1,-3276.8 * GY16_TO_DPS, TYPE_UINT16, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "pulse_sc",             1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
+    { "pulse_sc",             1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
 
     #endif
-    { "dig43_das",            1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "chopper",              CAL16(1.0, 0.0), TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_V_V, 0 },
+    { "dig43_das",            1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "chopper",              CAL16(1.0, 0.0),          TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_V_V, 0 },
 
     #ifdef FAST_MAG
     { "x_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
     { "y_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
     #endif
 
-    { "vel_rw",               I2DEG * 4.0,      0.0, TYPE_INT16, RATE_100HZ, SRC_OF_UEI, U_V_DPS, 0 },
+    { "vel_rw",               I2DEG * 4.0,      0.0, TYPE_INT16, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "dac_piv",              1.0,              0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
     { "el_raw_enc",           I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_P_DEG, 0 },
     { "el_enc",               I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_P_DEG, 0 },
     { "sigma_enc",            I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_NONE, 0 },

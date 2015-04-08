@@ -28,6 +28,7 @@
 
 extern int mcp_initial_controls;
 
-void InitTxFrame(unsigned short*);
 void UpdateBBCFrame(unsigned short*);
 double ReadCalData(channel_t *m_ch);
+void StoreData(void);
+void WriteAux(void);

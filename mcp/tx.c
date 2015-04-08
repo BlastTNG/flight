@@ -91,10 +91,6 @@ void BiasControl();
 void CryoControl(int index);
 void PhaseControl(void);
 
-/* in motors.c */
-void UpdateAxesMode(void);
-void WriteMot(int TxIndex);
-
 /* in sbsc.cpp */
 void cameraFields();        
 
@@ -113,7 +109,7 @@ int mcp_initial_controls = 0;
 /*  WriteAux: write aux data, like cpu time, temperature                */
 /*                                                                      */
 /************************************************************************/
-static void WriteAux(void)
+void WriteAux(void)
 {
     static channel_t* timeAddr;
     static channel_t* timeUSecAddr;
@@ -680,7 +676,7 @@ static void StoreStarCameraData(int index, int which)
 /*    Store derived acs and pointing data in frame                      */
 /*                                                                      */
 /************************************************************************/
-static void StoreData(int index)
+void StoreData(void)
 {
     static int firsttime = 1;
 
@@ -1284,19 +1280,6 @@ static void StoreData(int index)
 }
 #endif
 
-void InitTxFrame(unsigned short *RxFrame)
-{
-  int bus, m, i, j, niosAddr, m0addr;
-
-  bprintf(info, "Frame Control: Writing Initial Tx Frame.\n");
-
-  /* do initial controls */
-  bprintf(info, "Frame Control: Running Initial Controls.\n");
-  mcp_initial_controls = 1;
-  UpdateBBCFrame(RxFrame);
-  mcp_initial_controls = 0;
-
-}
 
 double ReadCalData(channel_t *m_ch)
 {
@@ -1307,59 +1290,3 @@ double ReadCalData(channel_t *m_ch)
 }
 
 
-/* called from mcp, should call all nios writing functions */
-void UpdateBBCFrame(unsigned short *RxFrame)
-{
-    //TODO: Revise UpdateBBCFrame to fire on time
-  static channel_t* frameNumAddr;
-  static int firsttime = 1;
-  static int index = 0;
-
-  /*** do fast Controls ***/
-  if (firsttime) {
-    firsttime = 0;
-    frameNumAddr = channels_find_by_name("framenum");
-  }
-
-
-#ifndef BOLOTEST
-  if (!mcp_initial_controls)
-//    DoSched();
-  UpdateAxesMode();
-  StoreData(index);
-//  ControlGyroHeat();
-  WriteMot(index);
-#endif
-#ifdef USE_XY_THREAD
-  StoreStageBus(index);
-#endif
-//  CryoControl(index);
-//  BiasControl();
-  WriteChatter(index);
-
-  /*** do slow Controls ***/
-  if (index == 0) {
-    WriteAux();
-    StoreActBus();
-    SecondaryMirror();
-//    PhaseControl();
-    StoreHWPRBus();
-#ifndef BOLOTEST
-    SetGyroMask();
-//    ChargeController();
-//    ControlPower();
-//    VideoTx();
-//    cameraFields();
-#endif
-  }
-
-  if (!mcp_initial_controls)
-    index = (index + 1) % 20;
-
-#ifndef BOLOTEST
-//  ControlAuxMotors();
-//  CameraTrigger(0); /* isc */
-//  CameraTrigger(1); /* osc */
-#endif
-
-}

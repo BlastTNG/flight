@@ -50,6 +50,7 @@
 #include <ec_motors.h>
 #include <motors.h>
 #include <mcp.h>
+#include <mputs.h>
 
 static pthread_t motor_ctl_id;
 
@@ -229,7 +230,7 @@ int16_t piv_get_amp_temp(void)
 
 /**
  * Sets the requested current for the motor
- * @param m_current int32 requested current in units of 0.1 encoder counts / second
+ * @param m_current int32 requested current in units of 0.01 amps
  */
 void rw_set_current(int16_t m_cur)
 {
