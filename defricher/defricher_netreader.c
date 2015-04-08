@@ -59,8 +59,6 @@ static void frame_handle_data(const char *m_src, const char *m_rate, const void 
         return;
     }
 
-    //printf("Got %d bytes from %s!\n", m_len, m_fc);
-
     for (rate = RATE_LOOKUP_TABLE; rate->position < RATE_END; rate++) {
         if (strncasecmp(rate->text, m_rate, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
     }
@@ -149,6 +147,8 @@ static void *netreader_routine(void *m_arg)
            defricher_err("Received %d from mosquitto_loop", ret);
            sleep(1);
         }
+
+        fflush(NULL);
     }
 
     mosquitto_destroy(mosq);

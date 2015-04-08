@@ -278,6 +278,13 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
         m = 1e-5;
         b = 0.0;
 
+        gd_alter_endianness(new_file, GD_BIG_ENDIAN, 0, 0);
+//        for (int rate = 0; rate < RATE_END; rate++) {
+//            char *tmp_string;
+//            uint32_t spf = defricher_get_rate(rate);
+//            blast_tmp_sprintf(tmp_string, "DEFRICHER_FRAMECOUNT_%s", RATE_LOOKUP_TABLE[rate].text);
+//            gd_add_raw(new_file, tmp_string, GD_UINT32, spf, 0);
+//        }
         for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
 
             defricher_cache_node_t *node = balloc(fatal, sizeof(defricher_cache_node_t));
@@ -319,6 +326,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
             }
         }
 
+        gd_reference(new_file, "mcp_200hz_framecount");
         gd_metaflush(new_file);
     }
     else
@@ -332,6 +340,14 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     return new_file;
 }
 
+static void defricher_write_local(E_RATE m_rate)
+{
+    static uint32_t frame_count[RATE_END] = {0};
+
+    frame_count[m_rate]++;
+
+
+}
 
 //TODO: Add FIFO buffering
 int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_rate)
@@ -350,20 +366,19 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
     ri.wrote ++;
     for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
         if (channel->source != m_source || channel->rate != m_rate) continue;
-
         defricher_cache_node_t *outfile_node = channel->var;
         if (outfile_node && outfile_node->magic == BLAST_MAGIC32 ) {
-            switch(outfile_node->output.element_size) {
-                case 2:
-                    *outfile_node->_16bit_data = be16toh(*outfile_node->_16bit_data);
-                    break;
-                case 4:
-                    *outfile_node->_32bit_data = be32toh(*outfile_node->_32bit_data);
-                    break;
-                case 8:
-                    *outfile_node->_64bit_data = be64toh(*outfile_node->_64bit_data);
-                    break;
-            }
+//            switch(outfile_node->output.element_size) {
+//                case 2:
+//                    *outfile_node->_16bit_data = be16toh(*outfile_node->_16bit_data);
+//                    break;
+//                case 4:
+//                    *outfile_node->_32bit_data = be32toh(*outfile_node->_32bit_data);
+//                    break;
+//                case 8:
+//                    *outfile_node->_64bit_data = be64toh(*outfile_node->_64bit_data);
+//                    break;
+//            }
             if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
                 defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
@@ -396,7 +411,7 @@ static void *defricher_write_loop(void *m_arg)
             dirfile_create_new = 0;
             dirfile_ready = 1;
         }
-
+        usleep(100);
     }
 
     return NULL;
