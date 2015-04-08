@@ -60,7 +60,7 @@ void initialize_csbf_gps_monitor(void)
 {
 
 	if (csbf_gps_comm) comms_serial_free(csbf_gps_comm);
-	csbf_gps_comm = comms_serial_new();
+	csbf_gps_comm = comms_serial_new(NULL);
 
 	csbf_gps_comm->sock->callbacks = balloc(err, sizeof(netsock_callbacks_t));
 	BLAST_ZERO_P(csbf_gps_comm->sock->callbacks);

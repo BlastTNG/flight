@@ -52,8 +52,8 @@ bool initialize_sip_interface(void)
 	if (sip_comm1) comms_serial_free(sip_comm1);
 	if (sip_comm2) comms_serial_free(sip_comm2);
 
-	sip_comm1 = comms_serial_new();
-	sip_comm2 = comms_serial_new();
+	sip_comm1 = comms_serial_new(NULL);
+	sip_comm2 = comms_serial_new(NULL);
 
 	if (!sip_comm1 && !sip_comm2 )
 	{

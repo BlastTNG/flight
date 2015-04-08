@@ -31,8 +31,6 @@
 #include <comms_serial.h>
 #include <lookup.h>
 
-static int blast_comms_monitor_sleep_us = 2000;
-
 typedef struct blast_comms_list
 {
 	struct blast_comms_list 	*next;

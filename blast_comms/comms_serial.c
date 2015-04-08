@@ -26,6 +26,8 @@
 #include <stdbool.h>
 #include <termios.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/serial.h>
 
 #include <blast.h>
 #include <comms_common.h>
@@ -35,9 +37,10 @@
 /**
  * The allocate function for a serial line is the same as for a network socket.  The exception is that we set #is_socket
  * to false to ensure we use "write" instead of "send" and "read" instead of "recv"
+ * @param m_data Pointer to custom data.  This will be passed as part of the socket to any handler functions
  * @return New socket pointer on success, NULL on failure
  */
-comms_serial_t *comms_serial_new(void)
+comms_serial_t *comms_serial_new(void *m_data)
 {
 	comms_serial_t *serial;
 
@@ -53,7 +56,7 @@ comms_serial_t *comms_serial_new(void)
 	}
 
 	serial->sock->is_socket = false;
-	serial->sock->priv_data = serial;
+	serial->sock->priv_data = m_data;
 
 	/**
 	 * Sets the terminal to RAW mode (no echo, no special processing, character at a time IO
@@ -74,7 +77,7 @@ void comms_serial_reset(comms_serial_t **m_serial)
 	log_enter();
 	if (!(*m_serial))
 	{
-		*m_serial = comms_serial_new();
+		*m_serial = comms_serial_new(NULL);
 	}
 	else
 	{
@@ -126,6 +129,55 @@ bool comms_serial_setspeed(comms_serial_t *m_serial, speed_t m_speed)
 	return true;
 }
 
+int comms_serial_set_baud_base(comms_serial_t *m_serial, int m_base)
+{
+    struct serial_struct ss;
+    if (ioctl(m_serial->sock->fd, TIOCGSERIAL, &ss) != 0) {
+        blast_strerror("TIOCGSERIAL failed");
+        return -1;
+    }
+
+    ss.baud_base = m_base;
+
+    if (ioctl(m_serial->sock->fd, TIOCSSERIAL, &ss)) {
+        blast_strerror("Count not set base to %d", m_base);
+        return -1;
+    }
+    return 0;
+
+}
+
+int comms_serial_set_baud_divisor(comms_serial_t *m_serial, int m_speed)
+{
+    // default baud was not found, so try to set a custom divisor
+    struct serial_struct ss;
+    if (ioctl (m_serial->sock->fd, TIOCGSERIAL, &ss) != 0)
+      {
+        blast_strerror ("TIOCGSERIAL failed");
+        return -1;
+      }
+
+    ss.flags = (ss.flags & ~ASYNC_SPD_MASK) | ASYNC_SPD_CUST;
+    ss.custom_divisor = (ss.baud_base + (m_speed / 2)) / m_speed;
+
+    if (m_speed > 115200)
+      ss.custom_divisor |= (1 << 15); // Set the High-speed bit
+    /**
+     * It is debatable whether this next line is required.  Generally, we need frob config
+     * bits to get 921600 (despite the SMSC manual's directions).  But it doesn't seem to hurt so we
+     * keep it here for completeness.
+     */
+    if (m_speed > 460800)
+      ss.custom_divisor |= (1 << 14); // Set the Enhanced Freq low bit
+
+    if (ioctl (m_serial->sock->fd, TIOCSSERIAL, &ss))
+      {
+        blast_strerror("Count not set divisor to %d", m_speed);
+        return -1;
+      }
+    return 0;
+
+}
 /**
  * Buffer data for asynchronous writing to the serial device
  * @param m_serial Pointer to the serial structure
@@ -179,8 +231,7 @@ int comms_serial_connect(comms_serial_t *m_serial, const char *m_terminal)
 
 	if ((m_serial->sock->fd = open (m_terminal, O_NOCTTY | O_RDWR | O_NONBLOCK)) == INVALID_SOCK)
 	{
-		blast_err("Could not open terminal '%s'", m_terminal);
-		blast_strerror("\t");
+		blast_strerror("Could not open terminal '%s'", m_terminal);
 		log_leave("Open Error");
 		return NETSOCK_ERR;
 	}

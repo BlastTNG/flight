@@ -43,11 +43,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <time.h>
 
 #include <blast.h>
+#include <blast_time.h>
 #include <crc.h>
 #include <comms_netasync.h>
 #include <comms_serial.h>
+#include <mputs.h>
 
 #include <blast_comms.h>
 #include "blast_comms_internal.h"
@@ -97,20 +100,32 @@ bool initialize_blast_comms(void)
 
 static void *blast_comms_monitor(void *m_arg __attribute__((unused)))
 {
+    int ret;
+    struct timespec ts;
+    struct timespec interval_ts = { .tv_sec = 0,
+                                    .tv_nsec = 1000000}; /// 1000HZ interval
 
-	pthread_cleanup_push(blast_comms_cleanup, comms_ports);
+    nameThread("Comms");
+    pthread_cleanup_push(blast_comms_cleanup, comms_ports);
+    clock_gettime(CLOCK_REALTIME, &ts);
 
-	do
-	{
-		if (comms_net_async_poll(comms_ctx, 0) < 0)
-		{
-			blast_err("Received error while polling COMM ports context");
-		}
+    do {
+        /// Set our wakeup time
+        ts = timespec_add(ts, interval_ts);
+        ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 
-	}while (!usleep(blast_comms_monitor_sleep_us));
+        if (ret && ret != -EINTR) {
+            bprintf(err, "error while sleeping, code %d (%s)\n", ret, strerror(-ret));
+            break;
+        }
+        if (comms_net_async_poll(comms_ctx, 0) < 0) {
+            blast_err("Received error while polling COMM ports context");
+        }
 
-	pthread_cleanup_pop(1);
-	return NULL;
+    } while (1);
+
+    pthread_cleanup_pop(1);
+    return NULL;
 }
 
 /**
@@ -216,6 +231,12 @@ bool blast_comms_init_cmd_server(void)
 
 }
 
+/**
+ * This loop listens on BLAST_CMD_SERVER_PORT for a new connection from a client.  When
+ * a new connection is received, it sets up the socket handlers and adds them to the
+ * general communication context that is polled for activity
+ * @param m_arg
+ */
 static void *blast_comms_network_monitor(void *m_arg __attribute__((unused)))
 {
 	comms_socket_t *cmd_sock = NULL;
