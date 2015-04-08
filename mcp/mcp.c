@@ -51,6 +51,7 @@
 #include "flcdataswap.h"
 #include "lut.h"
 
+#include <acs.h>
 #include <blast.h>
 #include <blast_time.h>
 #include <framing.h>
@@ -332,11 +333,12 @@ static int AmISouth(int *not_cryo_corner)
 
 static void mcp_200hz_routines(void)
 {
-
+    read_200hz_acs();
     command_motors();
 }
 static void mcp_100hz_routines(void)
 {
+    read_100hz_acs();
     Pointing();
 //    DoSched();
     UpdateAxesMode();
@@ -349,6 +351,7 @@ static void mcp_100hz_routines(void)
 }
 static void mcp_5hz_routines(void)
 {
+    read_5hz_acs();
     WriteAux();
     StoreActBus();
     SecondaryMirror();
@@ -525,30 +528,6 @@ int main(int argc, char *argv[])
           mcp_100hz_routines();
       }
       mcp_200hz_routines();
-
-#ifndef BOLOTEST
-//        GetACS(RxFrame);
-//        GetCurrents(RxFrame);
-
-
-#endif
-
-
-        /* pushDiskFrame must be called before PushBi0Buffer to get the slow
-           data right */
-//        pushDiskFrame(RxFrame);
-#ifndef BOLOTEST
-//        if (biphase_is_on) {
-//          PushFrameBuffer(&bi0_buffer, RxFrame);
-//          PushFrameBuffer(&hiGain_buffer, RxFrame);
-//        } else if (biphase_timer < mcp_systime(NULL)) {
-//          biphase_is_on = 1;
-//        }
-//        updateSlowDL();
-
-#endif
-//        zero(RxFrame);
-
 
   }
   return(0);

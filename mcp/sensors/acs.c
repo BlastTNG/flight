@@ -25,9 +25,9 @@
 
 #include <channels_tng.h>
 
-static void GetACS(unsigned short *RxFrame)
+void read_5hz_acs(void)
 {
-  double enc_raw_el, ifel_gy, ifroll_gy, ifyaw_gy;
+  double enc_raw_el;
   double x_comp, y_comp, z_comp;
   double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
   double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
@@ -37,16 +37,8 @@ static void GetACS(unsigned short *RxFrame)
   double res_piv;
   int hwpr_pot;
 
-  static channel_t* ifElgyAddr;
-  static channel_t* ifRollgyAddr;
-  static channel_t* ifYawgyAddr;
   static channel_t* elRawEncAddr;
   static channel_t* elRawIfClinAddr;
-  static channel_t* xMagAddr;
-  static channel_t* yMagAddr;
-  static channel_t* zMagAddr;
-  static channel_t* velRWAddr;
-  static channel_t* resPivAddr;
   static channel_t* v11PssAddr;
   static channel_t* v21PssAddr;
   static channel_t* v31PssAddr;
@@ -72,14 +64,6 @@ static void GetACS(unsigned short *RxFrame)
     firsttime = 0;
     elRawEncAddr = channels_find_by_name("el_raw_enc");
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
-    ifElgyAddr = channels_find_by_name("ifel_gy");
-    ifRollgyAddr = channels_find_by_name("ifroll_gy");
-    ifYawgyAddr = channels_find_by_name("ifyaw_gy");
-    xMagAddr = channels_find_by_name("x_mag");
-    yMagAddr = channels_find_by_name("y_mag");
-    zMagAddr = channels_find_by_name("z_mag");
-    velRWAddr = channels_find_by_name("vel_rw");
-    resPivAddr = channels_find_by_name("res_piv");
     v11PssAddr = channels_find_by_name("v1_1_pss");
     v21PssAddr = channels_find_by_name("v2_1_pss");
     v31PssAddr = channels_find_by_name("v3_1_pss");
@@ -99,8 +83,52 @@ static void GetACS(unsigned short *RxFrame)
     potHwprAddr = channels_find_by_name("pot_hwpr");
   }
 
-  ///TODO: Add MAG read functions
   ///TODO: Add Clin read functions
   ///TODO: Add PSS read functions
 
+}
+
+void read_100hz_acs(void)
+{
+    static channel_t* xMagAddr;
+    static channel_t* yMagAddr;
+    static channel_t* zMagAddr;
+    static channel_t* velRWAddr;
+    static channel_t* resPivAddr;
+
+    unsigned int rx_frame_index = 0;
+
+    static int firsttime = 1;
+    if (firsttime) {
+      firsttime = 0;
+        xMagAddr = channels_find_by_name("x_mag");
+        yMagAddr = channels_find_by_name("y_mag");
+        zMagAddr = channels_find_by_name("z_mag");
+        velRWAddr = channels_find_by_name("vel_rw");
+        resPivAddr = channels_find_by_name("res_piv");
+    }
+    ///TODO: Add MAG read functions
+
+}
+
+
+void read_200hz_acs(void)
+{
+    double ifel_gy, ifroll_gy, ifyaw_gy;
+
+    static channel_t* ifElgyAddr;
+    static channel_t* ifRollgyAddr;
+    static channel_t* ifYawgyAddr;
+
+    unsigned int rx_frame_index = 0;
+
+    static int firsttime = 1;
+    if (firsttime) {
+      firsttime = 0;
+      ifElgyAddr = channels_find_by_name("ifel_gy");
+      ifRollgyAddr = channels_find_by_name("ifroll_gy");
+      ifYawgyAddr = channels_find_by_name("ifyaw_gy");
+    }
+
+    ///TODO: Add if_gyro read functions
 }
