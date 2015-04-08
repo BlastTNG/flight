@@ -40,7 +40,6 @@
 #include <sys/syscall.h>
 
 #include <mputs.h>
-#include "blast.h"
 #include "command_list.h"
 #include "command_struct.h"
 #include "crc.h"
@@ -52,6 +51,8 @@
 #include "flcdataswap.h"
 #include "lut.h"
 
+#include <blast.h>
+#include <blast_time.h>
 #include <framing.h>
 #include <dsp1760.h>
 #include <ec_motors.h>
@@ -328,6 +329,40 @@ static int AmISouth(int *not_cryo_corner)
   return (buffer[0] == 's') ? 1 : 0;
 }
 
+static void mcp_200hz_routines(void)
+{
+
+    command_motors();
+}
+static void mcp_100hz_routines(void)
+{
+    Pointing();
+//    DoSched();
+    UpdateAxesMode();
+    StoreData();
+//    ControlGyroHeat();
+    WriteMot();
+//    CryoControl(index);
+//    BiasControl();
+    WriteChatter();
+}
+static void mcp_5hz_routines(void)
+{
+    WriteAux();
+    StoreActBus();
+    SecondaryMirror();
+//    PhaseControl();
+    StoreHWPRBus();
+    SetGyroMask();
+//    ChargeController();
+//    ControlPower();
+//    VideoTx();
+//    cameraFields();
+}
+static void mcp_1hz_routines(void)
+{
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -338,20 +373,23 @@ int main(int argc, char *argv[])
   pthread_t abus_id;
   int use_starcams = 1;
 
+  int ret;
+  int counter_100hz = 0;
+  int counter_5hz=0;
+  int counter_1hz=0;
+  struct timespec ts;
+  struct timespec interval_ts = { .tv_sec = 0,
+                                  .tv_nsec = 5000000}; /// 200HZ interval
+
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
 #endif
 
-#ifndef BOLOTEST
   pthread_t compression_id;
   pthread_t sensors_id;
   pthread_t dgps_id;
   pthread_t isc_id;
   pthread_t osc_id;
-#endif
-#ifdef USE_XY_THREAD
-  pthread_t xy_id;
-#endif
   pthread_t chatter_id;
   struct stat fstats;
 
@@ -390,7 +428,7 @@ int main(int argc, char *argv[])
   bputs(startup, "System: Startup");
 
   /* Find out whether I'm north or south */
-//  SouthIAm = AmISouth(&use_starcams);
+  SouthIAm = AmISouth(&use_starcams);
 
   if (SouthIAm)
     bputs(info, "System: I am South.\n");
@@ -414,6 +452,7 @@ int main(int argc, char *argv[])
   initialize_blast_comms();
   initialize_sip_interface();
   initialize_dsp1760_interface();
+
 #ifdef USE_FIFO_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
 #else
@@ -447,19 +486,7 @@ int main(int argc, char *argv[])
 
 #endif
 
-  bputs(info, "System: Finished Initialisation, waiting for BBC to come up.\n");
 
-  /* mcp used to wait here for a semaphore from the BBC, which makes the
-   * presence of these messages somewhat "historical" */
-
-  bputs(info, "System: BBC is up.\n");
-
-//  InitTxFrame(RxFrame);
-
-#ifdef USE_XY_THREAD
-  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
-#endif
-#ifndef BOLOTEST
 //  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
 //  if (use_starcams) {
 //    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
@@ -470,17 +497,40 @@ int main(int argc, char *argv[])
 
 //  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 //  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
-#endif
 //  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
 //  start_flc_data_swapper(flc_ip[SouthIAm]);
 
+  clock_gettime(CLOCK_REALTIME, &ts);
   while (1) {
-      sleep(1);
+      /// Set our wakeup time
+      ts = timespec_add(ts, interval_ts);
+      ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+      if (ret && ret != -EINTR)
+      {
+          bprintf(err, "error while sleeping, code %d (%s)\n", ret, strerror(-ret));
+          break;
+      }
+
+      if (!counter_1hz--) {
+          counter_1hz = 199;
+          mcp_1hz_routines();
+      }
+      if (!counter_5hz--) {
+          counter_5hz = 39;
+          mcp_5hz_routines();
+      }
+      if (!counter_100hz--) {
+          counter_100hz = 1;
+          mcp_100hz_routines();
+      }
+      mcp_200hz_routines();
+
 #ifndef BOLOTEST
 //        GetACS(RxFrame);
 //        GetCurrents(RxFrame);
-        Pointing();
+
 
 #endif
 

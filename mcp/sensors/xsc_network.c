@@ -33,7 +33,6 @@ static int port = 2017;
 
 extern short int InCharge;
 extern short int InChargeSet;
-extern short int SamIAm;
 
 void xsc_clear_all_client_data(int which)
 {

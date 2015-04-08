@@ -29,5 +29,6 @@
 
 void initialize_CPU_sensors(void);
 void blast_store_cpu_health(void);
+void blast_store_disk_space(void);
 
 #endif /* INCLUDE_COMPUTER_SENSORS_H_ */

@@ -76,6 +76,23 @@ IF( GLIB_LIBRARY_NOTFOUND)
 ENDIF()
 include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
 
+# Find glib    
+pkg_check_modules(PC_SENSORS  sensors)
+set(GLIB_SENSORS ${PC_SENSORS_CFLAGS_OTHER})
+
+find_path(SENSORS_INCLUDE_DIR NAMES sensors.h
+          HINTS ${PC_SENSORS_INCLUDEDIR} ${PC_SENSORS_INCLUDE_DIRS}
+          PATH_SUFFIXES sensors REQUIRED)
+find_library(SENSORS_LIBRARY NAMES sensors libsensors
+            HINTS ${PC_SENSORS_LIBDIR} ${PC_SENSORS_LIBRARY_DIRS} REQUIRED)
+IF(SENSORS_INCLUDE_DIR_NOTFOUND)
+    MESSAGE(FATAL_ERROR "Did not find sensors.h.  Is libsensors4-dev installed?")
+ENDIF()
+IF( SENSORS_LIBRARY_NOTFOUND)  
+    MESSAGE(FATAL_ERROR "Did not find libsensors.  Is libsensors4 installed?")
+ENDIF()
+include_directories(${SENSORS_INCLUDE_DIR})
+
 # Find mosquitto    
 ExternalProject_add(MOSQ
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libmosquitto-1.4.1
@@ -180,6 +197,7 @@ target_link_libraries(mcp
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} 
     ${GLIB_LIBRARY} 
     ${ECAT_LIBRARY}
+    ${SENSORS_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT} 
     mosquitto m)
 
