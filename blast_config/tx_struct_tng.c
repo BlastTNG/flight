@@ -800,12 +800,12 @@ channel_t channel_list[] =
     #endif
 
     #ifndef BOLOTEST
-    { "ifyaw_1_gy",           1.0,     0.0, TYPE_FLOAT, RATE_200HZ, SRC_OF_UEI, U_V_DPS, 0 },
-    { "ifroll_1_gy",          1.0,     0.0, TYPE_FLOAT, RATE_200HZ, SRC_OF_UEI, U_V_DPS, 0 },
-    { "ifyaw_2_gy",           1.0,     0.0, TYPE_FLOAT, RATE_200HZ, SRC_OF_UEI, U_V_DPS, 0 },
-    { "ifel_1_gy",            1.0,     0.0, TYPE_FLOAT, RATE_200HZ, SRC_OF_UEI, U_V_DPS, 0 },
-    { "ifel_2_gy",            1.0,     0.0, TYPE_FLOAT, RATE_200HZ, SRC_OF_UEI, U_V_DPS, 0 },
-    { "ifroll_2_gy",          1.0,     0.0, TYPE_FLOAT, RATE_200HZ, SRC_OF_UEI, U_V_DPS, 0 },
+    { "ifyaw_1_gy",           1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifroll_1_gy",          1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifyaw_2_gy",           1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifel_1_gy",            1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifel_2_gy",            1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "ifroll_2_gy",          1.0,     0.0,                     TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
     #endif
     { "az",                   LI2DEG, 0.0,           TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0 },
     { "el",                   LI2DEG, 0.0,           TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0 },
