@@ -145,6 +145,7 @@ static void *framing_routine(void *m_arg)
     mosquitto_publish(mosq, NULL, "channels/fc/1",
             sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
 
+    //TODO: Move MOSQ publish routine into main loop
     while (!frame_stop)
     {
         /// Set our wakeup time
