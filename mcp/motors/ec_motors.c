@@ -335,7 +335,8 @@ void piv_quick_stop(void)
  */
 static int find_controllers(void)
 {
-    char name[16] = "eth0";
+    ///TODO: Update find_controllers to utilize specific adapter for motor controllers (control via system)
+    char name[16] = "eth1";
     int ret_init;
     int ret_config;
 
