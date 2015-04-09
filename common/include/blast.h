@@ -50,8 +50,8 @@ void buos_allow_mem(void);
 void buos_disable_exit(void);
 void buos_enable_exit(void);
 
-#ifndef __BASE_FILE__
-# define __BASE_FILE__ __FILE__
+#ifndef __FILENAME__
+# define __FILENAME__ __FILE__
 #endif
 
 /* BLAMM (BLAST Memory Manager) definitions */
@@ -63,13 +63,13 @@ char *_bstrdup(buos_t, const char*, const char*, int, const char*) __attribute__
 char *_bstrndup(buos_t, const char*, size_t n, const char*, int, const char*) __attribute__ ((__malloc__));
 void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_line, const char *m_file) __attribute__ ((__malloc__));
 
-#define balloc(lvl, size) _balloc( lvl, size, __FUNCTION__ , __LINE__ , __BASE_FILE__ )
-#define bfree(lvl, ptr) _bfree( lvl, ptr, __FUNCTION__ , __LINE__ , __BASE_FILE__ )
-#define reballoc(lvl, ptr, newsize) _reballoc(lvl, ptr, newsize, __FUNCTION__ , __LINE__ , __BASE_FILE__)
-#define bstrdup(lvl,ptr) _bstrdup( lvl , ptr , __FUNCTION__ , __LINE__ , __BASE_FILE__)
-#define bstrndup(lvl, ptr, len) _bstrndup( lvl , ptr, len , __FUNCTION__ , __LINE__ , __BASE_FILE__)
-#define basprintf(lvl, ptr, fmt, ...) _basprintf(lvl, ptr, fmt, __FUNCTION__ , __LINE__ , __BASE_FILE__, ##__VA_ARGS__)
-#define memdup(level,ptr,size) _memdup( level, ptr, size, __FUNCTION__ , __LINE__ , __BASE_FILE__)
+#define balloc(lvl, size) _balloc( lvl, size, __FUNCTION__ , __LINE__ , __FILENAME__ )
+#define bfree(lvl, ptr) _bfree( lvl, ptr, __FUNCTION__ , __LINE__ , __FILENAME__ )
+#define reballoc(lvl, ptr, newsize) _reballoc(lvl, ptr, newsize, __FUNCTION__ , __LINE__ , __FILENAME__)
+#define bstrdup(lvl,ptr) _bstrdup( lvl , ptr , __FUNCTION__ , __LINE__ , __FILENAME__)
+#define bstrndup(lvl, ptr, len) _bstrndup( lvl , ptr, len , __FUNCTION__ , __LINE__ , __FILENAME__)
+#define basprintf(lvl, ptr, fmt, ...) _basprintf(lvl, ptr, fmt, __FUNCTION__ , __LINE__ , __FILENAME__, ##__VA_ARGS__)
+#define memdup(level,ptr,size) _memdup( level, ptr, size, __FUNCTION__ , __LINE__ , __FILENAME__)
 
 /** Free memory space */
 #define BLAST_SAFE_FREE(_ptr) do { if (_ptr) {bfree(mem,_ptr); (_ptr)=NULL;} } while(0)
@@ -82,36 +82,36 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
 
 #define blast_fatal(fmt,...) \
     do {                                                                \
-        bprintf(fatal, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        bprintf(fatal, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #define blast_tfatal(fmt,...) \
     do {                                                                \
-        bprintf(tfatal, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        bprintf(tfatal, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #define blast_err(fmt,...) \
     do {                                                                \
-        bprintf(err, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        bprintf(err, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #define blast_info(fmt,...) \
     do {                                                                \
-        bprintf(info, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        bprintf(info, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #define blast_warn(fmt,...) \
     do {                                                                \
-        bprintf(warning, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+        bprintf(warning, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #define blast_startup(fmt,...) \
         do {                                                                \
-            bprintf(startup, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+            bprintf(startup, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #define blast_mem(fmt,...) \
         do {                                                                \
-            bprintf(mem, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+            bprintf(mem, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #ifndef NDEBUG
 #define blast_dbg(fmt,...) \
         do {                                                                \
-            bprintf(info, "%s:%d (%s):" fmt, __BASE_FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+            bprintf(info, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #else
 #define blast_dbg(...)
