@@ -282,12 +282,11 @@ static int dsp1760_handle_finished (const void *m_data, size_t m_len, void *m_us
  */
 bool initialize_dsp1760_interface(void)
 {
-    dsp_storage_t *gyrodata[2];
 
     for (int i = 0; i < 2; i++) {
-        gyrodata[i] = balloc(err, sizeof(dsp_storage_t));
-        BLAST_ZERO_P(gyrodata[i]);
-        gyro_comm[i] = comms_serial_new(gyrodata[i]);
+        BLAST_ZERO(gyro_data[i]);
+        gyro_data[i].which = i;
+        gyro_comm[i] = comms_serial_new(&gyro_data[i]);
     }
 
     if (!gyro_comm[0] && !gyro_comm[1] )

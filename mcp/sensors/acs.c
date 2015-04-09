@@ -23,6 +23,7 @@
  * Created on: Mar 24, 2015 by Seth Hillbrand
  */
 
+#include <stdio.h>
 #include <string.h>
 
 #include <blast.h>
@@ -34,6 +35,7 @@
 #include <motors.h>
 #include <mcp.h>
 #include <pointing_struct.h>
+#include <dsp1760.h>
 
 //TODO: Extern sched_lst after enabling sched.c
 unsigned int sched_lst; /* sched_lst */
@@ -123,21 +125,32 @@ void read_100hz_acs(void)
 
 void read_200hz_acs(void)
 {
-    double ifel_gy, ifroll_gy, ifyaw_gy;
 
-    static channel_t* ifElgyAddr;
-    static channel_t* ifRollgyAddr;
-    static channel_t* ifYawgyAddr;
+    static channel_t* ifElgy1Addr;
+    static channel_t* ifRollgy1Addr;
+    static channel_t* ifYawgy1Addr;
+
+    static channel_t* ifElgy2Addr;
+    static channel_t* ifRollgy2Addr;
+    static channel_t* ifYawgy2Addr;
 
     static int firsttime = 1;
     if (firsttime) {
       firsttime = 0;
-      ifElgyAddr = channels_find_by_name("ifel_gy");
-      ifRollgyAddr = channels_find_by_name("ifroll_gy");
-      ifYawgyAddr = channels_find_by_name("ifyaw_gy");
+      ifElgy1Addr = channels_find_by_name("ifel_1_gy");
+      ifRollgy1Addr = channels_find_by_name("ifroll_1_gy");
+      ifYawgy1Addr = channels_find_by_name("ifyaw_1_gy");
+      ifElgy2Addr = channels_find_by_name("ifel_2_gy");
+      ifRollgy2Addr = channels_find_by_name("ifroll_2_gy");
+      ifYawgy2Addr = channels_find_by_name("ifyaw_2_gy");
     }
 
-    ///TODO: Add if_gyro read functions
+    SET_FLOAT(ifElgy1Addr, dsp1760_getval(0,0));
+    SET_FLOAT(ifRollgy1Addr, dsp1760_getval(0,1));
+    SET_FLOAT(ifYawgy1Addr, dsp1760_getval(0,2));
+    SET_FLOAT(ifElgy2Addr, dsp1760_getval(1,0));
+    SET_FLOAT(ifRollgy2Addr, dsp1760_getval(1,1));
+    SET_FLOAT(ifYawgy2Addr, dsp1760_getval(1,2));
 }
 
 void store_100hz_acs(void)
