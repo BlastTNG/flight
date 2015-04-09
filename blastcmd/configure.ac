@@ -17,7 +17,7 @@ if test -d ../common/; then
   AC_MSG_RESULT([found])
   REMOTEPROJ=common
   MAKEFILE_UPDATE="include ../common/Makefile.update"
-  SHARED_CPPFLAGS="-I\${top_srcdir}/../common"
+  SHARED_CPPFLAGS="-I\${top_srcdir}/../common/include"
 else
   AC_MSG_RESULT([not found])
   SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/common/'`
@@ -43,37 +43,9 @@ else
                svn co $SVNREPO blast_config])
 fi
 
-dnl minicp config repo
-AC_MSG_CHECKING([for minicp config repository])
-if test -d ../minicp_config/; then
-  AC_MSG_RESULT([found])
-  HAVE_MINICONFIG=yes
-  REMOTEPROJ="$REMOTEPROJ minicp_config"
-else
-  AC_MSG_RESULT([not found])
-  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/minicp_config/'`
-  AC_MSG_WARN([*** Cannot find the minicp config repository at ../minicp_config/;
-               Try changing to the parent directory and running:
-               svn co $SVNREPO minicp_config])
-fi
-
-dnl spider config repo
-AC_MSG_CHECKING([for Spider config repository])
-if test -d ../spider_config/; then
-  AC_MSG_RESULT([found])
-  HAVE_SPIDERCONFIG=yes
-  REMOTEPROJ="$REMOTEPROJ spider_config"
-else
-  AC_MSG_RESULT([not found])
-  SVNREPO=`svn info --non-interactive | awk ' /URL/ { print $2 }' | sed -e 's/trunk\/.*/trunk\/spider_config/'`
-  AC_MSG_WARN([*** Cannot find the Spider config repository at ../spider_config/;
-               Try changing to the parent directory and running:
-               svn co $SVNREPO spider_config])
-fi
-
 if test "x$HAVE_BLASTCONFIG$HAVE_MINICONFIG$HAVE_SPIDERCONFIG" = "x"; then
   AC_MSG_ERROR([*** No experimental configuration found])
-fi dnl'
+fi 
 
 
 dnl Programs
