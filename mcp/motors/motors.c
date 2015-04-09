@@ -387,7 +387,7 @@ void WriteMot(void)
     velReqAzAddr = channels_find_by_name("vel_req_az");
     cosElAddr = channels_find_by_name("cos_el");
     sinElAddr = channels_find_by_name("sin_el");
-    dacPivAddr = channels_find_by_name("dac_piv");
+    dacPivAddr = channels_find_by_name("mc_piv_i_cmd");
     gPElAddr = channels_find_by_name("g_p_el");
     gIElAddr = channels_find_by_name("g_i_el");
     gPtElAddr = channels_find_by_name("g_pt_el");
@@ -1968,7 +1968,11 @@ void command_motors(void)
 {
     static channel_t* velReqElAddr;
     static channel_t* velReqAzAddr;
-    static channel_t* dacPivAddr;
+    static channel_t* piv_currentcmd_addr;
+
+    static channel_t* el_current_addr;
+    static channel_t* rw_current_addr;
+    static channel_t* piv_current_addr;
 
     float v_req_el = 0.0;
     float v_req_az = 0.0;
@@ -1979,7 +1983,7 @@ void command_motors(void)
       firsttime = 0;
       velReqElAddr = channels_find_by_name("vel_req_el");
       velReqAzAddr = channels_find_by_name("vel_req_az");
-      dacPivAddr = channels_find_by_name("dac_piv");
+      piv_currentcmd_addr = channels_find_by_name("mc_piv_i_cmd");
     }
     /*******************************************************************\
     * Drive the Elevation motor                                         *
@@ -2005,7 +2009,7 @@ void command_motors(void)
     * Drive the Pivot Motor                                             *
     \*******************************************************************/
 
-    piv_set_current(GET_UINT16(dacPivAddr));
+    piv_set_current(GET_UINT16(piv_currentcmd_addr));
 
 }
 

@@ -376,15 +376,26 @@ static int find_controllers(void)
     }
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        bprintf(startup, "Motor Controller %d: %s", i, ec_slave[i].name);
 
         /**
          * Configure the index values for later use.  These are mapped to the hard-set
          * addresses on the motor controllers (look for the dials on the side)
          */
-        if (ec_slave[i].configadr == RW_ADDR) rw_index = i;
-        if (ec_slave[i].configadr == PIV_ADDR) piv_index = i;
-        if (ec_slave[i].configadr == EL_ADDR) el_index = i;
+        if (ec_slave[i].configadr == RW_ADDR) {
+            bprintf(startup, "Reaction Wheel Motor Controller %d: %s", ec_slave[i].configadr, ec_slave[i].name);
+            rw_index = i;
+        }
+        else if (ec_slave[i].configadr == PIV_ADDR) {
+            bprintf(startup, "Pivot Motor Controller %d: %s", ec_slave[i].configadr, ec_slave[i].name);
+            piv_index = i;
+        }
+        else if (ec_slave[i].configadr == EL_ADDR) {
+            bprintf(startup, "Elevation Motor Controller %d: %s", ec_slave[i].configadr, ec_slave[i].name);
+            el_index = i;
+        }
+        else {
+            bprintf(warning, "Got unknown MC %s at address %d", ec_slave[i].name, ec_slave[i].configadr);
+        }
     }
     return ec_slavecount;
 
@@ -603,7 +614,7 @@ static int motor_set_operational()
     return -1;
 }
 
-static void write_motor_data()
+static void read_motor_data()
 {
     int motor_i = motor_index;
 
@@ -693,7 +704,7 @@ static void* motor_control(void* arg)
         ec_send_processdata();
         wkc = ec_receive_processdata(EC_TIMEOUTRET);
 //        if (wkc < expectedWKC) bprintf(warning, "Possible missing data in communicating with Motor Controllers");
-        write_motor_data();
+        read_motor_data();
     }
 
     return 0;

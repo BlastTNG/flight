@@ -115,8 +115,8 @@ void read_100hz_acs(void)
         xMagAddr = channels_find_by_name("x_mag");
         yMagAddr = channels_find_by_name("y_mag");
         zMagAddr = channels_find_by_name("z_mag");
-        velRWAddr = channels_find_by_name("vel_rw");
-        resPivAddr = channels_find_by_name("res_piv");
+        velRWAddr = channels_find_by_name("mc_rw_vel");
+        resPivAddr = channels_find_by_name("mc_piv_pos");
     }
     ///TODO: Add MAG read functions
 
@@ -160,8 +160,12 @@ void store_100hz_acs(void)
     static channel_t *elEncAddr;
     static channel_t *sigmaEncAddr;
 
-    static channel_t *velRWAddr;
-    static channel_t *posRWAddr;
+    static channel_t *vel_rw_addr;
+    static channel_t *pos_rw_addr;
+    static channel_t *vel_el_addr;
+    static channel_t *pos_el_addr;
+    static channel_t *vel_piv_addr;
+    static channel_t *pos_piv_addr;
 
     static channel_t *elRawEncAddr;
     static channel_t *resPivAddr;
@@ -178,8 +182,14 @@ void store_100hz_acs(void)
         elEncAddr = channels_find_by_name("el_enc");
         sigmaEncAddr = channels_find_by_name("sigma_enc");
 
-        velRWAddr = channels_find_by_name("vel_rw");
-        posRWAddr = channels_find_by_name("pos_rw");
+        vel_rw_addr = channels_find_by_name("mc_rw_vel");
+        pos_rw_addr = channels_find_by_name("mc_rw_pos");
+
+        vel_el_addr = channels_find_by_name("mc_el_vel");
+        pos_el_addr = channels_find_by_name("mc_el_pos");
+
+        vel_piv_addr = channels_find_by_name("mc_piv_vel");
+        pos_piv_addr = channels_find_by_name("mc_piv_pos");
 
         elRawEncAddr = channels_find_by_name("el_raw_enc");
         resPivAddr = channels_find_by_name("res_piv");
@@ -193,8 +203,12 @@ void store_100hz_acs(void)
     SET_INT16(elEncAddr, (unsigned int) ((PointingData[i_point].enc_el + CommandData.enc_el_trim) * DEG2I));
     SET_INT16(sigmaEncAddr, (unsigned int) (PointingData[i_point].enc_sigma * DEG2I));
 
-    SET_INT32(velRWAddr, RWMotorData[i_motors].velocity);
-    SET_INT32(posRWAddr, RWMotorData[i_motors].position);
+    SET_INT32(vel_rw_addr, RWMotorData[i_motors].velocity);
+    SET_INT32(pos_rw_addr, RWMotorData[i_motors].position);
+    SET_INT32(vel_el_addr, ElevMotorData[i_motors].velocity);
+    SET_INT32(pos_el_addr, ElevMotorData[i_motors].position);
+    SET_INT32(vel_piv_addr, PivotMotorData[i_motors].velocity);
+    SET_INT32(pos_piv_addr, PivotMotorData[i_motors].position);
 
     SET_INT16(elRawEncAddr, ((long int) (ElevMotorData[i_motors].position * DEG2I)));
 
