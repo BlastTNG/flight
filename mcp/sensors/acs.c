@@ -174,18 +174,18 @@ void store_100hz_acs(void)
     i_point = GETREADINDEX(point_index);
     i_motors = GETREADINDEX(motor_index);
 
-    SET_VALUE(azAddr, (unsigned int) (PointingData[i_point].az * DEG2LI));
-    SET_VALUE(elAddr, (unsigned int) (PointingData[i_point].el * DEG2LI));
+    SET_INT32(azAddr, (unsigned int) (PointingData[i_point].az * DEG2LI));
+    SET_INT32(elAddr, (unsigned int) (PointingData[i_point].el * DEG2LI));
 
-    SET_VALUE(elEncAddr, (unsigned int) ((PointingData[i_point].enc_el + CommandData.enc_el_trim) * DEG2I));
-    SET_VALUE(sigmaEncAddr, (unsigned int) (PointingData[i_point].enc_sigma * DEG2I));
+    SET_INT16(elEncAddr, (unsigned int) ((PointingData[i_point].enc_el + CommandData.enc_el_trim) * DEG2I));
+    SET_INT16(sigmaEncAddr, (unsigned int) (PointingData[i_point].enc_sigma * DEG2I));
 
     SET_INT32(velRWAddr, RWMotorData[i_motors].velocity);
     SET_INT32(posRWAddr, RWMotorData[i_motors].position);
 
-    SET_VALUE(elRawEncAddr, ((long int) (ElevMotorData[i_motors].position * DEG2I)));
+    SET_INT16(elRawEncAddr, ((long int) (ElevMotorData[i_motors].position * DEG2I)));
 
-    SET_VALUE(resPivAddr, PivotMotorData[i_motors].position * DEG2I);
+    SET_INT16(resPivAddr, PivotMotorData[i_motors].position * DEG2I);
 }
 
 static channel_t* GetSCNiosAddr(char* field, int which)
@@ -984,7 +984,7 @@ void store_5hz_acs(void)
      * Motor Controller Fields
      */
     i_motors = GETREADINDEX(motor_index);
-    SET_VALUE(tMCRWAddr, RWMotorData[i_motors].temp);
+    SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
     SET_VALUE(iSerRWAddr, ((int) (RWMotorData[i_motors].current / 30.0 * 32768.0)));
     SET_VALUE(stat1RWAddr, (RWMotorData[i_motors].status & 0xffff));
     SET_VALUE(stat2RWAddr, ((RWMotorData[i_motors].status & 0xffff0000) >> 16));
