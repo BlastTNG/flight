@@ -348,7 +348,8 @@ static int find_controllers(void)
     }
 
     controller_state = ECAT_MOTOR_INIT;
-    if (!(ret_config = ec_config(false, &io_map))) {
+    ret_config = ec_config(false, &io_map);
+    if (ret_config <= 0) {
         berror(err, "No motor controller slaves found on the network!");
         goto find_err;
     }
@@ -643,6 +644,7 @@ static void* motor_control(void* arg)
     nameThread("Motors");
     bprintf(startup, "Starting Motor Control");
 
+    //TODO: setup state machine for looping in motors
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
