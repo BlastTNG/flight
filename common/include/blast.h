@@ -50,8 +50,8 @@ void buos_allow_mem(void);
 void buos_disable_exit(void);
 void buos_enable_exit(void);
 
-#ifndef __BASE_FILE__
-# define __BASE_FILE__ __FILE__
+#ifndef __FILENAME__
+# define __FILENAME__ __FILE__
 #endif
 
 /* BLAMM (BLAST Memory Manager) definitions */
