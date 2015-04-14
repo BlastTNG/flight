@@ -23,6 +23,7 @@
  * Created on: Apr 6, 2015 by Seth Hillbrand
  */
 
+#include <limits.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -160,13 +161,14 @@ static void *netreader_routine(void *m_arg)
  * Initializes the mosquitto library and associated framing routines.
  * @return
  */
-int netreader_init(void)
+int netreader_init(const char *m_host)
 {
-    const char *id = "client";
-    const char *host = "fc1";
+    char id[HOST_NAME_MAX+1] = {0};
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
+
+    gethostname(id, HOST_NAME_MAX);
 
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
@@ -180,7 +182,7 @@ int netreader_init(void)
     mosquitto_message_callback_set(mosq, frame_message_callback);
     mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
 
-    if (mosquitto_connect(mosq, host, port, keepalive)) {
+    if (mosquitto_connect(mosq, m_host, port, keepalive)) {
         defricher_strerr("Unable to connect.\n");
         return -1;
     }

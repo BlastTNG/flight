@@ -26,7 +26,7 @@
 #ifndef DEFRICHER_NETREADER_H_
 #define DEFRICHER_NETREADER_H_
 
-int netreader_init(void);
+int netreader_init(const char *m_host);
 
 
 #endif /* DEFRICHER_NETREADER_H_ */

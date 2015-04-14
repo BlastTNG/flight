@@ -27,6 +27,7 @@
 #  include "defricher_config.h"
 #endif
 
+#include <libgen.h>
 #include <stdlib.h>     /* ANSI C std library (atoi, exit, realpath) */
 #include <signal.h>     /* ANSI C signals (SIG(FOO), sigemptyset, sigaddset) */
 #include <string.h>     /* ANSI C strings (strcat, memcpy, &c.)  */
@@ -81,9 +82,9 @@ void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
 
 /// TODO: Test ability to write to output location on startup
 
-char* resolve_output_dirfile(char* m_dirfile, const char* parent)
+static char* resolve_output_dirfile(char* m_dirfile, const char* parent)
 {
-    char parent_part[NAME_MAX];
+    char *parent_part;
     char dirfile_part[FR_PATH_MAX];
     char path[FR_PATH_MAX];
     wordexp_t expansion;
@@ -116,7 +117,7 @@ char* resolve_output_dirfile(char* m_dirfile, const char* parent)
     wordfree(&expansion);
 
     /* realpath() will fail with a non-existant path, so strip off dirfile name */
-//    PathSplit_r(path, parent_part, dirfile_part);
+    parent_part = dirname(path);
 
     /* canonicalise the path */
     if (realpath(parent_part, m_dirfile) == NULL)
@@ -130,9 +131,15 @@ char* resolve_output_dirfile(char* m_dirfile, const char* parent)
     return m_dirfile;
 }
 
+static void defricher_defaults(struct rc_struct* m_rc)
+{
+    asprintf(&(m_rc->dest_dir), "/data/defricher/");
+    asprintf(&(m_rc->source), "fc1");
+    asprintf(&(m_rc->symlink_name), "/data/etc/defricher.cur");
+}
 
 
-void parse_cmdline(int argc, char** argv, struct rc_struct* rc)
+void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
 {
 
     GError *error = NULL;
@@ -150,24 +157,24 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* rc)
       }
 
   /* fix up daemon mode */
-  if (rc->daemonise)
-    rc->persist = rc->silent = rc->force_stdio = 1;
+  if (m_rc->daemonise)
+    m_rc->persist = m_rc->silent = m_rc->force_stdio = 1;
 
-  if (!remaining_args || !remaining_args[0]) {
-      g_critical("Must specify a SOURCE from which to read data!\n");
-      exit(1);
-  }
-  g_debug("Source is %s", remaining_args[0]);
-  rc->source = remaining_args[0];
+  if (remaining_args && remaining_args[0]) {
+      g_debug("Source is %s", remaining_args[0]);
+      free(m_rc->source);
+      asprintf(&(m_rc->source), "%s", remaining_args[0]);
 
-  if (remaining_args[1]) {
-      g_debug("Dest is %s", remaining_args[1]);
-      rc->dest_dir = remaining_args[1];
+      if (remaining_args[1]) {
+          g_debug("Dest is %s", remaining_args[1]);
+          free(m_rc->dest_dir);
+          asprintf(&(m_rc->dest_dir), "%s", remaining_args[1]);
+      }
   }
 
   /* Fix up output_dirfile, if present */
-  if (rc->output_dirfile != NULL)
-    rc->output_dirfile = resolve_output_dirfile(rc->output_dirfile, rc->dest_dir);
+  if (m_rc->output_dirfile)
+    m_rc->output_dirfile = resolve_output_dirfile(m_rc->output_dirfile, m_rc->dest_dir);
 
 }
 
@@ -179,6 +186,9 @@ int main(int argc, char** argv)
     double delta;
     double fr = 200;
     double nf = 0;
+
+    /* Load the hard-coded defaults if not over-written by command line */
+    defricher_defaults(&rc);
 
     /* fill rc struct from command line */
     parse_cmdline(argc, argv, &rc);
@@ -212,13 +222,7 @@ int main(int argc, char** argv)
         setsid();
     }
 
-    rc.dirfile = strdupa("outputdirfile");
     /* Start */
-    bprintf(info, "Defiling `%s'\n    into `%s'\n", rc.chunk, rc.dirfile);
-    if (rc.resume_at > 0)
-        bprintf(info, "    starting at frame %li\n", rc.resume_at);
-    bprintf(info, "\n");
-    g_log_set_default_handler(log_handler, NULL);
 
     /* Initialise things */
     ri.read = ri.wrote = ri.old_total = ri.lw = ri.frame_rate_reset = 0;
@@ -237,7 +241,7 @@ int main(int argc, char** argv)
 
     /* Spawn client/reader and writer */
     defricher_writer_init();
-    netreader_init();
+    netreader_init(rc.source);
 
     /* Main status loop -- if we're in silent mode we skip this entirely and
      * just wait for the read and write threads to exit */
@@ -255,11 +259,7 @@ int main(int argc, char** argv)
                     fr = 200;
                 }
 #ifndef DEBUG
-                if (rc.quenya)
-                    printf("%s R:[%i] W:[%i] %.*f Hz\r", rc.dirname, ri.read / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
-                else
-                    printf("%s R:[%i of %i] W:[%i] %.*f Hz\r", rc.dirname, ri.read / 20, (ri.old_total + ri.chunk_total) / 20, ri.wrote / 20,
-                            (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
+                printf("%s R:[%i] W:[%i] %.*f Hz\r", rc.output_dirfile, ri.read, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
                 fflush(stdout);
 #endif
             }
@@ -268,11 +268,7 @@ int main(int argc, char** argv)
 //    pthread_join(read_thread, NULL);
 //    pthread_join(write_thread, NULL);
     if (!rc.silent) {
-        if (rc.quenya)
-            bprintf(info, "%s R:[%i] W:[%i] %.*f Hz", rc.dirname, ri.read / 20, ri.wrote / 20, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
-        else
-            bprintf(info, "%s R:[%i of %i] W:[%i] %.*f Hz", rc.dirname, ri.read / 20, (ri.old_total + ri.chunk_total) / 20, ri.wrote / 20,
-                    (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
+            bprintf(info, "%s R:[%i] W:[%i] %.*f Hz", rc.output_dirfile, ri.read, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
     }
     return 0;
 }

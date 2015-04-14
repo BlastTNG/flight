@@ -130,7 +130,8 @@ static int dirfile_ready = 0;
 //    }
 //}
 
-static const char *defricher_get_new_dirfilename(void)
+//TODO: Fix get_new_dirfilename to take options into account
+static char *defricher_get_new_dirfilename(void)
 {
     static char *filename = NULL;
     static time_t start_time = 0;
@@ -138,7 +139,7 @@ static const char *defricher_get_new_dirfilename(void)
 
     if (!start_time) start_time = time(NULL);
     BLAST_SAFE_FREE(filename);
-    if (asprintf(&filename, "/data/defricher/%lu_%03X.dirfile", start_time, chunk++) < 0)
+    if (asprintf(&filename, "%s/%lu_%03X.dirfile", rc.dest_dir, start_time, chunk++) < 0)
     {
         defricher_fatal("Could not allocate memory for filename!");
         filename=NULL;
@@ -148,10 +149,11 @@ static const char *defricher_get_new_dirfilename(void)
 }
 static void defricher_update_current_link(const char *m_name)
 {
-    unlink("/data/etc/defricher.cur");
+    unlink(rc.symlink_name);
 
-    if (symlink(m_name, "/data/etc/defricher.cur"))
-        defricher_err("Could not create symlink");
+    defricher_mkdir_file(rc.symlink_name,1);
+    if (symlink(m_name, rc.symlink_name))
+        defricher_strerr("Could not create symlink from %s to %s", m_name, rc.symlink_name);
 }
 
 static void defricher_file_close_all(channel_t *m_channel_list)
@@ -162,7 +164,7 @@ static void defricher_file_close_all(channel_t *m_channel_list)
         if (node && node->magic == BLAST_MAGIC32 && node->output.fp)
         {
             if (fclose(node->output.fp))
-                defricher_err("Could not close %s", node->output.name?node->output.name:"UNK");
+                defricher_strerr("Could not close %s", node->output.name?node->output.name:"UNK");
             node->output.fp = NULL;
         }
     }
@@ -352,18 +354,21 @@ static void defricher_write_local(E_RATE m_rate)
 //TODO: Add FIFO buffering
 int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_rate)
 {
+    static int have_warned = 1;
 
     if (frame_stop) {
         defricher_info("Not writing frame due to shutdown request");
         return -1;
     }
 
-    if (!dirfile_ready) {
+    if (!dirfile_ready && !have_warned) {
         defricher_info("Discarding frame due to DIRFILE not being ready for writing");
+        have_warned = 1;
         return -1;
     }
 
     ri.wrote ++;
+    have_warned = 0;
     for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
         if (channel->source != m_source || channel->rate != m_rate) continue;
         defricher_cache_node_t *outfile_node = channel->var;
@@ -392,7 +397,7 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
 static void *defricher_write_loop(void *m_arg)
 {
     DIRFILE *dirfile = NULL;
-    const char *dirfile_name = NULL;
+    char *dirfile_name = NULL;
 
     bprintf(info, "Starting Defricher Write task\n");
 
@@ -400,14 +405,16 @@ static void *defricher_write_loop(void *m_arg)
     {
         if (dirfile_create_new) {
             dirfile_ready = 0;
-            dirfile_name = defricher_get_new_dirfilename();
-            if (!(dirfile = defricher_init_new_dirfile(dirfile_name, channels))) {
-                defricher_err( "Not creating new DIRFILE %s", dirfile_name);
+            dirfile_name = rc.output_dirfile;
+            rc.output_dirfile = defricher_get_new_dirfilename();
+            BLAST_SAFE_FREE(dirfile_name);
+            if (!(dirfile = defricher_init_new_dirfile(rc.output_dirfile, channels))) {
+                defricher_err( "Not creating new DIRFILE %s", rc.output_dirfile);
                 sleep(1);
                 continue;
             }
             defricher_update_cache_fp(dirfile, channels);
-            defricher_update_current_link(gd_dirfilename(dirfile));
+            defricher_update_current_link(rc.output_dirfile);
             dirfile_create_new = 0;
             dirfile_ready = 1;
         }

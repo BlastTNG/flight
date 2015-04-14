@@ -52,13 +52,12 @@ struct rc_struct {
   int sufflen;
   long int resume_at;
   int source_is_curfile;
-  char* curfile_val;
+  char* symlink_name;
   char* remount_dir;
   char* output_curfile;
   char* output_dirfile;
   char* source;
   char* dest_dir;
-  char* spec_file;
 
   struct timezone tz;
   char* chunk;
