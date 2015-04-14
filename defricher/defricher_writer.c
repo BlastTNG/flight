@@ -361,8 +361,8 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
         return -1;
     }
 
-    if (!dirfile_ready && !have_warned) {
-        defricher_info("Discarding frame due to DIRFILE not being ready for writing");
+    if (!dirfile_ready) {
+        if (!have_warned) defricher_info("Discarding frame due to DIRFILE not being ready for writing");
         have_warned = 1;
         return -1;
     }
