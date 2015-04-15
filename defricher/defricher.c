@@ -133,7 +133,7 @@ static char* resolve_output_dirfile(char* m_dirfile, const char* parent)
 
 static void defricher_defaults(struct rc_struct* m_rc)
 {
-    asprintf(&(m_rc->dest_dir), "/data/defricher/");
+    asprintf(&(m_rc->dest_dir), "/data/defricher");
     asprintf(&(m_rc->source), "fc1");
     asprintf(&(m_rc->symlink_name), "/data/etc/defricher.cur");
 }
@@ -169,6 +169,7 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
           g_debug("Dest is %s", remaining_args[1]);
           free(m_rc->dest_dir);
           asprintf(&(m_rc->dest_dir), "%s", remaining_args[1]);
+          if (m_rc->dest_dir[strlen(m_rc->dest_dir) - 1] == '/') m_rc->dest_dir[strlen(m_rc->dest_dir) - 1] = '\0';
       }
   }
 
