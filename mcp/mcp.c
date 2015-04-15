@@ -60,6 +60,7 @@
 #include <blast_comms.h>
 #include <blast_sip_interface.h>
 #include <computer_sensors.h>
+#include <motors.h>
 
 /* Define global variables */
 int StartupVeto = 20;
@@ -353,6 +354,7 @@ static void mcp_5hz_routines(void)
 {
     read_5hz_acs();
     store_5hz_acs();
+    store_axes_mode_data();
     WriteAux();
     StoreActBus();
     SecondaryMirror();

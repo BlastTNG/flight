@@ -610,18 +610,6 @@ void store_5hz_acs(void)
     static channel_t *periodCalAddr;
     static channel_t *lstSchedAddr;
 
-    /* low level scan mode diagnostics */
-    static channel_t *modeAzMcAddr;
-    static channel_t *modeElMcAddr;
-    static channel_t *dirAzMcAddr;
-    static channel_t *dirElMcAddr;
-    static channel_t *destAzMcAddr;
-    static channel_t *destElMcAddr;
-    static channel_t *dithElAddr;
-    static channel_t *velAzMcAddr;
-    static channel_t *velElMcAddr;
-    static channel_t *iDithMcAddr;
-
     /* Motor data read out over serial threads in motors.c */
     static channel_t *tMCRWAddr;
     static channel_t *iSerRWAddr;
@@ -782,17 +770,6 @@ void store_5hz_acs(void)
         timeAtrimAddr = channels_find_by_name("time_atrim");
         rateAtrimAddr = channels_find_by_name("rate_atrim");
 
-        modeAzMcAddr = channels_find_by_name("mode_az_mc");
-        modeElMcAddr = channels_find_by_name("mode_el_mc");
-        destAzMcAddr = channels_find_by_name("dest_az_mc");
-        destElMcAddr = channels_find_by_name("dest_el_mc");
-        velAzMcAddr = channels_find_by_name("vel_az_mc");
-        velElMcAddr = channels_find_by_name("vel_el_mc");
-        dirAzMcAddr = channels_find_by_name("dir_az_mc");
-        dirElMcAddr = channels_find_by_name("dir_el_mc");
-        dithElAddr = channels_find_by_name("dith_el");
-        iDithMcAddr = channels_find_by_name("i_dith_el");
-
         tMCRWAddr = channels_find_by_name("t_mc_rw");
         iSerRWAddr = channels_find_by_name("i_ser_rw");
         stat1RWAddr = channels_find_by_name("stat_1_rw");
@@ -822,18 +799,6 @@ void store_5hz_acs(void)
     StoreStarCameraData(0, 1); /* write OSC data */
 
     i_point = GETREADINDEX(point_index);
-
-    /* scan modes */
-    SET_VALUE(modeAzMcAddr, axes_mode.az_mode);
-    SET_VALUE(modeElMcAddr, axes_mode.el_mode);
-    SET_VALUE(dirAzMcAddr, axes_mode.az_dir);
-    SET_VALUE(dirElMcAddr, axes_mode.el_dir);
-    SET_VALUE(dithElAddr, axes_mode.el_dith * 32767.0 * 2.0);
-    SET_VALUE(destAzMcAddr, axes_mode.az_dest * DEG2I);
-    SET_VALUE(destElMcAddr, axes_mode.el_dest * DEG2I);
-    SET_VALUE(velAzMcAddr, axes_mode.az_vel * 6000.);
-    SET_VALUE(velElMcAddr, axes_mode.el_vel * 6000.);
-    SET_VALUE(iDithMcAddr, axes_mode.i_dith);
 
     /********* PSS data *************/
     SET_VALUE(azrawPss1Addr, PointingData[i_point].pss1_azraw * DEG2I);

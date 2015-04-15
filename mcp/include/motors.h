@@ -50,7 +50,7 @@
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
 ///TODO: Add State/Desired State here
-struct MotorDataStruct{
+typedef struct {
   double velocity;              // in degrees per second
   int16_t temp;                 // drive temperature in deg Celcius
   double current;               // drive current read from controller
@@ -59,15 +59,17 @@ struct MotorDataStruct{
   uint32_t fault_reg;           // drive fault register
   uint16_t drive_info;          // motorinfo struct
   uint32_t err_count;           // count of serious serial errors
-};
-extern struct MotorDataStruct RWMotorData[3];
-extern struct MotorDataStruct ElevMotorData[3];
-extern struct MotorDataStruct PivotMotorData[3];
+} motor_data_t;
+
+extern motor_data_t RWMotorData[3];
+extern motor_data_t ElevMotorData[3];
+extern motor_data_t PivotMotorData[3];
 
 extern int motor_index;
 
 void command_motors(void);
 void update_axes_mode(void);
 void write_motor_channels(void);
+void store_axes_mode_data(void);
 
 #endif /* INCLUDE_MOTORS_H_ */

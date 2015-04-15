@@ -46,9 +46,9 @@
 #include <motors.h>
 #include <ec_motors.h>
 
-struct MotorDataStruct RWMotorData[3] = {{0}};
-struct MotorDataStruct ElevMotorData[3] = {{0}};
-struct MotorDataStruct PivotMotorData[3] = {{0}};
+motor_data_t RWMotorData[3] = {{0}};
+motor_data_t ElevMotorData[3] = {{0}};
+motor_data_t PivotMotorData[3] = {{0}};
 int motor_index = 0;
 
 struct AxesModeStruct axes_mode = {
@@ -57,10 +57,64 @@ struct AxesModeStruct axes_mode = {
   .i_dith = 0
 }; /* low level velocity mode */
 
+//motor control parameters
+#define MOTORSR 200.0
+#define INTEGRAL_LENGTH  5.0  //length of the integral time constant in seconds
+#define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
+#define EL_BORDER 1.0
+#define AZ_BORDER 1.0
+#define MIN_SCAN 0.2
 
-double az_accel = 0.1;
-
+static double az_accel = 0.1;
 static int last_mode = -1;
+
+/**
+ * Writes the axes mode data to the frame
+ */
+void store_axes_mode_data(void)
+{
+
+    /* low level scan mode diagnostics */
+    static channel_t *modeAzMcAddr;
+    static channel_t *modeElMcAddr;
+    static channel_t *dirAzMcAddr;
+    static channel_t *dirElMcAddr;
+    static channel_t *destAzMcAddr;
+    static channel_t *destElMcAddr;
+    static channel_t *dithElAddr;
+    static channel_t *velAzMcAddr;
+    static channel_t *velElMcAddr;
+    static channel_t *iDithMcAddr;
+
+    static int firsttime = 1;
+
+    if (firsttime) {
+        firsttime = 0;
+
+        modeAzMcAddr = channels_find_by_name("mode_az_mc");
+        modeElMcAddr = channels_find_by_name("mode_el_mc");
+        destAzMcAddr = channels_find_by_name("dest_az_mc");
+        destElMcAddr = channels_find_by_name("dest_el_mc");
+        velAzMcAddr = channels_find_by_name("vel_az_mc");
+        velElMcAddr = channels_find_by_name("vel_el_mc");
+        dirAzMcAddr = channels_find_by_name("dir_az_mc");
+        dirElMcAddr = channels_find_by_name("dir_el_mc");
+        dithElAddr = channels_find_by_name("dith_el");
+        iDithMcAddr = channels_find_by_name("i_dith_el");
+    }
+
+    /* scan modes */
+    SET_VALUE(modeAzMcAddr, axes_mode.az_mode);
+    SET_VALUE(modeElMcAddr, axes_mode.el_mode);
+    SET_VALUE(dirAzMcAddr, axes_mode.az_dir);
+    SET_VALUE(dirElMcAddr, axes_mode.el_dir);
+    SET_VALUE(dithElAddr, axes_mode.el_dith * 32767.0 * 2.0);
+    SET_VALUE(destAzMcAddr, axes_mode.az_dest * DEG2I);
+    SET_VALUE(destElMcAddr, axes_mode.el_dest * DEG2I);
+    SET_VALUE(velAzMcAddr, axes_mode.az_vel * 6000.);
+    SET_VALUE(velElMcAddr, axes_mode.el_vel * 6000.);
+    SET_VALUE(iDithMcAddr, axes_mode.i_dith);
+}
 
 /************************************************************************/
 /*                                                                      */
@@ -568,7 +622,6 @@ static void initialize_el_dither()
 /*   Do scan modes                                              */
 /*                                                              */
 /****************************************************************/
-#define MIN_SCAN 0.2
 static void calculate_az_mode_vel(double m_az, double m_leftbound, double m_rightbound, double m_vel, double m_az_drift_vel)
 {
     if (axes_mode.az_vel < -m_vel + m_az_drift_vel)
@@ -750,8 +803,6 @@ static void do_el_scan_mode(void)
     }
 }
 
-#define EL_BORDER 1.0
-#define AZ_BORDER 1.0
 static void do_mode_vcap(void)
 {
     double caz, cel;
@@ -1351,7 +1402,7 @@ static void do_mode_el_box(void)
   return;
 
 }
-#define JJLIM 100
+
 static void do_mode_new_box(void)
 {
     double caz, cel, w, h;
@@ -1838,46 +1889,6 @@ void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int
     bputs(l,message);
   }                                                                                                    
 }
-
-// Makes a motor info bit field
-unsigned short int makeMotorField(struct MotorInfoStruct* motorinfo)
-{
-  unsigned short int b = 0; 
-  b |= (motorinfo->open) & 0x0001;
-
-  if (motorinfo->reset) {
-    b|= 0x02;
-#ifdef MOTORS_VERBOSE
-    bprintf(info, "%sComm makeMotorField: reset set",motorinfo->motorstr);
-#endif
-  }
- 
-  //b |= ((motorinfo->reset) & 0x0001)<<1; 
-  b |= ((motorinfo->init) & 0x0003)<<2; 
-  b |= ((motorinfo->disabled) & 0x0003)<<4; 
-  switch(motorinfo->bdrate) {
-  case 9600:
-    b |= 0x0000<<6;
-    break;
-  case 38400:
-    b |= 0x0001<<6;
-    break;
-  case 112500:
-    b |= 0x0002<<6;
-    break;
-  default:
-    b |= 0x0003;
-  }
-  b |= ((motorinfo->writeset) & 0x0003)<<8 ; 
-  b |= ((motorinfo->err) & 0x001f)<<10 ; 
-  b |= ((motorinfo->closing) & 0x0001)<<15 ; 
-  return b;
-}
-
-//motor control parameters
-#define MOTORSR 200.0
-#define INTEGRAL_LENGTH  5.0  //length of the integral time constant in seconds
-#define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
 
 static int16_t calculate_el_current(float m_vreq_el)
 {

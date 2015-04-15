@@ -216,8 +216,6 @@ struct AxesModeStruct {
   unsigned int i_dith;
 };
 
-extern struct AxesModeStruct axes_mode;
-
 extern struct DGPSPosStruct DGPSPos[3];
 extern int dgpspos_index;
 

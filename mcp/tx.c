@@ -64,9 +64,6 @@ int EthernetIsc = 3;
 int EthernetOsc = 3;
 int EthernetSBSC = 3;
 
-extern struct AxesModeStruct axes_mode; /* motors.c */
-
-
 extern struct chat_buf chatter_buffer;  /* mcp.c */
 
 /* in actuators.c */
