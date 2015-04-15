@@ -143,14 +143,14 @@ typedef struct channel channel_t;
  * type-agnostic one below.  However, be warned that if you change the type of the variable
  * in tx_struct, we can't protect you with these.
  */
-#define SET_UINT8(_ch,_val) (*(uint8_t*)((_ch)->var) = (_val))
-#define SET_INT8(_ch,_val) (*(int8_t*)((_ch)->var) = (_val))
-#define SET_UINT16(_ch,_val) (*(uint16_t*)((_ch)->var) = htobe16(_val))
-#define SET_INT16(_ch,_val) (*(uint16_t*)((_ch)->var) = htobe16(_val))
-#define SET_UINT32(_ch,_val) (*(uint32_t*)((_ch)->var) = htobe32(_val))
-#define SET_INT32(_ch,_val) (*(uint32_t*)((_ch)->var) = htobe32(_val))
-#define SET_UINT64(_ch,_val) (*(uint64_t*)((_ch)->var) = htobe64(_val))
-#define SET_INT64(_ch,_val) (*(uint64_t*)((_ch)->var) = htobe64(_val))
+#define SET_UINT8(_ch,_val)  (*(uint8_t*)((_ch)->var) = (_val))
+#define SET_INT8(_ch,_val)   (*(int8_t*)((_ch)->var) = (_val))
+#define SET_UINT16(_ch,_val) ({uint16_t _x = _val;(*(uint16_t*)((_ch)->var) = htobe16(_x));})
+#define SET_INT16(_ch,_val)  ({int16_t _x = _val;(*(uint16_t*)((_ch)->var) = htobe16(_x));})
+#define SET_UINT32(_ch,_val) ({uint32_t _x = _val;(*(uint32_t*)((_ch)->var) = htobe32(_x));})
+#define SET_INT32(_ch,_val)  ({int32_t _x = _val;(*(uint32_t*)((_ch)->var) = htobe32(_x));})
+#define SET_UINT64(_ch,_val) ({uint64_t _x = _val;(*(uint64_t*)((_ch)->var) = htobe64(_x));})
+#define SET_INT64(_ch,_val)  ({int64_t _x = _val;(*(uint64_t*)((_ch)->var) = htobe64(_x));})
 #define SET_FLOAT(_ch,_val) htobef(_val,*(uint32_t*)((_ch)->var))
 #define SET_DOUBLE(_ch,_val) htobed(_val,*(uint64_t*)((_ch)->var))
 
@@ -160,6 +160,10 @@ typedef struct channel channel_t;
 #define SET_VALUE(channel,in)               \
 ({                                          \
     channel_t *_ch = channel;               \
+    uint32_t in32u = (in);                  \
+    int32_t in32i = (in);                   \
+    uint16_t in16u = (in);                  \
+    int16_t in16i = (in);                   \
     switch (_ch->type)   {                  \
         case TYPE_INT8:                     \
             *(int8_t*)_ch->var = (in);      \
@@ -168,19 +172,19 @@ typedef struct channel channel_t;
             *(uint8_t*)_ch->var = (in);     \
             break;                          \
         case TYPE_INT16:                    \
-            *(int16_t*)_ch->var = (int16_t)htobe16(in);     \
+            *(uint16_t*)_ch->var = htobe16(in16i);     \
             break;                          \
         case TYPE_UINT16:                   \
-            *(uint16_t*)_ch->var = htobe16(in);    \
+            *(uint16_t*)_ch->var = htobe16(in16u);    \
             break;                          \
         case TYPE_INT32:                    \
-            *(int32_t*)_ch->var = (int32_t)htobe32(in);     \
+            *(uint32_t*)_ch->var = htobe32(in32i);     \
             break;                          \
         case TYPE_UINT32:                   \
-            *(uint32_t*)_ch->var = htobe32(in);    \
+            *(uint32_t*)_ch->var = htobe32(in32u);    \
             break;                          \
         case TYPE_INT64:                    \
-            *(int64_t*)_ch->var = (int64_t)htobe64(in);     \
+            *(uint64_t*)_ch->var = htobe64(in);     \
             break;                          \
         case TYPE_UINT64:                   \
             *(uint64_t*)_ch->var = htobe64(in);    \
