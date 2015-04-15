@@ -58,10 +58,6 @@ struct AxesModeStruct axes_mode = {
 }; /* low level velocity mode */
 
 
-extern short int InCharge; /* tx.c */
-
-extern int StartupVeto; /* mcp.c */
-
 double az_accel = 0.1;
 
 static int last_mode = -1;
@@ -1968,7 +1964,6 @@ void command_motors(void)
 {
     static channel_t* velReqElAddr;
     static channel_t* velReqAzAddr;
-    static channel_t* piv_currentcmd_addr;
 
     static channel_t* el_current_addr;
     static channel_t* rw_current_addr;
@@ -1977,13 +1972,20 @@ void command_motors(void)
     float v_req_el = 0.0;
     float v_req_az = 0.0;
 
+    int16_t el_current;
+    int16_t rw_current;
+    int16_t piv_current;
+
     /******** Obtain correct indexes the first time here ***********/
     static int firsttime = 1;
     if (firsttime) {
       firsttime = 0;
       velReqElAddr = channels_find_by_name("vel_req_el");
       velReqAzAddr = channels_find_by_name("vel_req_az");
-      piv_currentcmd_addr = channels_find_by_name("mc_piv_i_cmd");
+
+      piv_current_addr = channels_find_by_name("mc_piv_i_cmd");
+      el_current_addr = channels_find_by_name("mc_el_i_cmd");
+      rw_current_addr = channels_find_by_name("mc_rw_i_cmd");
     }
     /*******************************************************************\
     * Drive the Elevation motor                                         *
@@ -1995,7 +1997,9 @@ void command_motors(void)
     if ((v_req_el < -15000.0) || (v_req_el > 15000.0))
         v_req_el = 0; // no really really crazy values!
 
-    el_set_current(calculate_el_current(v_req_el));
+    el_current = calculate_el_current(v_req_el);
+    SET_INT16(el_current_addr, el_current);
+    el_set_current(el_current);
 
     /*******************************************************************\
     * Drive the Reaction Wheel                                          *
@@ -2003,13 +2007,15 @@ void command_motors(void)
 
     //TODO: Move velReqAz to a floating point value
     v_req_az = (float)(GET_UINT16(velReqAzAddr)-32768.0)*0.0016276041666666666666666666666667;  // = vreq/614.4
-    rw_set_current(calculate_rw_current(v_req_az));
+    rw_current = calculate_rw_current(v_req_az);
+
+    rw_set_current(rw_current);
 
     /*******************************************************************\
     * Drive the Pivot Motor                                             *
     \*******************************************************************/
 
-    piv_set_current(GET_UINT16(piv_currentcmd_addr));
+    piv_set_current(GET_UINT16(piv_current_addr));
 
 }
 
