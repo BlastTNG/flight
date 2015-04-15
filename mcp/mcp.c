@@ -341,10 +341,10 @@ static void mcp_100hz_routines(void)
     read_100hz_acs();
     Pointing();
 //    DoSched();
-    UpdateAxesMode();
+    update_axes_mode();
     store_100hz_acs();
 //    ControlGyroHeat();
-    WriteMot();
+    write_motor_channels();
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();
