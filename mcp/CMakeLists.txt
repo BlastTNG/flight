@@ -1,3 +1,29 @@
+# Helper function to add preprocesor definition of FILE_BASENAME
+# to pass the filename without directory path for debugging use.
+#
+# Example:
+#
+#   define_file_basename_for_sources(my_target)
+#
+# Will add -DFILE_BASENAME="filename" for each source file depended on
+# by my_target, where filename is the name of the file.
+#
+function(define_file_basename_for_sources targetname)
+    get_target_property(source_files "${targetname}" SOURCES)
+    foreach(sourcefile ${source_files})
+        # Get source file's current list of compile definitions.
+        get_property(defs SOURCE "${sourcefile}"
+            PROPERTY COMPILE_DEFINITIONS)
+        # Add the FILE_BASENAME=filename compile definition to the list.
+        get_filename_component(basename "${sourcefile}" NAME)
+        list(APPEND defs "__FILENAME__=\"${basename}\"")
+        # Set the updated compile definitions on the source file.
+        set_property(
+            SOURCE "${sourcefile}"
+            PROPERTY COMPILE_DEFINITIONS ${defs})
+    endforeach()
+endfunction()
+
 project (blast_mcp)
 
 cmake_minimum_required (VERSION 2.8)
@@ -9,13 +35,13 @@ if (USE_CLANG)
     SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 endif(USE_CLANG)
 
-SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99 -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
+SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99")
 SET (CMAKE_C_FLAGS_DEBUG            "-g")
 SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELEASE          "-O3 -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g")
 
-SET (CMAKE_CXX_FLAGS                "-Wall -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
+SET (CMAKE_CXX_FLAGS                "-Wall")
 SET (CMAKE_CXX_FLAGS_DEBUG          "-g")
 SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG")
@@ -192,6 +218,8 @@ add_executable (mcp
     ) 
 
 add_dependencies(mcp soem)
+
+define_file_basename_for_sources(mcp)
 
 target_link_libraries(mcp 
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} 
