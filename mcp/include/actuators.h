@@ -1,6 +1,9 @@
-/* mcp: the master control program
+/* 
+ * actuators.h: 
  *
- * This software is copyright (C) 2003-2011 University of Toronto
+ * This software is copyright (C) 2013-2014 Seth Hillbrand
+ *
+ * This file is part of mcp, created for the BLASTPol Project.
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +19,15 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * History:
+ * Created on: Apr 16, 2015 by Seth Hillbrand
  */
 
+#ifndef INCLUDE_ACTUATORS_H_
+#define INCLUDE_ACTUATORS_H_
 
-/* An ISC/OSC handshaking debugging macro should be set to 0 for flight */
-#define WHICH (0)
+void StoreActBus(void);
+void SecondaryMirror(void);
 
-#include "channels_tng.h"
-#include "calibrate.h"
-#include "channels_tng.h"
 
-extern int mcp_initial_controls;
-
-void UpdateBBCFrame(unsigned short*);
-double ReadCalData(channel_t *m_ch);
-void StoreData(void);
-void WriteAux(void);
-void WriteChatter(void);
-void SetGyroMask(void);
+#endif /* INCLUDE_ACTUATORS_H_ */

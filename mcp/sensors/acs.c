@@ -518,6 +518,7 @@ void store_5hz_acs(void)
     static channel_t* vetoSensorAddr;
 
     /** derived pointing data */
+    static channel_t *azGyAddr;
     static channel_t* OffsetIFelGYAddr;
     static channel_t* OffsetIFelGYiscAddr;
     static channel_t* OffsetIFrollGYiscAddr;
@@ -610,30 +611,6 @@ void store_5hz_acs(void)
     static channel_t *periodCalAddr;
     static channel_t *lstSchedAddr;
 
-    /* Motor data read out over serial threads in motors.c */
-    static channel_t *tMCRWAddr;
-    static channel_t *iSerRWAddr;
-    static channel_t *stat1RWAddr;
-    static channel_t *stat2RWAddr;
-    static channel_t *faultRWAddr;
-    static channel_t *infoRWAddr;
-    static channel_t *driveErrCtsRWAddr;
-    static channel_t *tMCElAddr;
-    static channel_t *iSerElAddr;
-    static channel_t *stat1ElAddr;
-    static channel_t *stat2ElAddr;
-    static channel_t *faultElAddr;
-    static channel_t *infoElAddr;
-    static channel_t *driveErrCtsElAddr;
-    static channel_t *iSerPivAddr;
-    static channel_t *statDrPivAddr;
-    static channel_t *azGyAddr;
-    static channel_t *velSerPivAddr;
-    static channel_t *infoPivAddr;
-    static channel_t *driveErrCtsPivAddr;
-    static channel_t *verboseRWAddr;
-    static channel_t *verboseElAddr;
-    static channel_t *verbosePivAddr;
 
     int i_motors;
     int i_point;
@@ -770,29 +747,6 @@ void store_5hz_acs(void)
         timeAtrimAddr = channels_find_by_name("time_atrim");
         rateAtrimAddr = channels_find_by_name("rate_atrim");
 
-        tMCRWAddr = channels_find_by_name("t_mc_rw");
-        iSerRWAddr = channels_find_by_name("i_ser_rw");
-        stat1RWAddr = channels_find_by_name("stat_1_rw");
-        stat2RWAddr = channels_find_by_name("stat_2_rw");
-        faultRWAddr = channels_find_by_name("fault_rw");
-        infoRWAddr = channels_find_by_name("drive_info_rw");
-        driveErrCtsRWAddr = channels_find_by_name("drive_err_cts_rw");
-        tMCElAddr = channels_find_by_name("t_mc_el");
-        iSerElAddr = channels_find_by_name("i_ser_el");
-        stat1ElAddr = channels_find_by_name("stat_1_el");
-        stat2ElAddr = channels_find_by_name("stat_2_el");
-        faultElAddr = channels_find_by_name("fault_el");
-        iSerPivAddr = channels_find_by_name("i_ser_piv");
-        statDrPivAddr = channels_find_by_name("stat_dr_piv");
-        azGyAddr = channels_find_by_name("az_gy");
-        velSerPivAddr = channels_find_by_name("vel_ser_piv");
-        infoPivAddr = channels_find_by_name("drive_info_piv");
-        driveErrCtsPivAddr = channels_find_by_name("drive_err_cts_piv");
-        infoElAddr = channels_find_by_name("drive_info_el");
-        driveErrCtsElAddr = channels_find_by_name("drive_err_cts_el");
-        verboseRWAddr = channels_find_by_name("verbose_rw");
-        verboseElAddr = channels_find_by_name("verbose_el");
-        verbosePivAddr = channels_find_by_name("verbose_piv");
     }
 
     StoreStarCameraData(0, 0); /* write ISC data */
@@ -972,31 +926,5 @@ void store_5hz_acs(void)
     SET_VALUE(dgpsRollRawAddr, DGPSAtt[i_dgps].roll * DEG2I);
     SET_VALUE(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok);
 
-    /**
-     * Motor Controller Fields
-     */
-    i_motors = GETREADINDEX(motor_index);
-    SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
-    SET_VALUE(iSerRWAddr, ((int) (RWMotorData[i_motors].current / 30.0 * 32768.0)));
-    SET_VALUE(stat1RWAddr, (RWMotorData[i_motors].status & 0xffff));
-    SET_VALUE(stat2RWAddr, ((RWMotorData[i_motors].status & 0xffff0000) >> 16));
-    SET_VALUE(faultRWAddr, RWMotorData[i_motors].fault_reg);
-    SET_VALUE(infoRWAddr, RWMotorData[i_motors].drive_info);
-    SET_VALUE(driveErrCtsRWAddr, RWMotorData[i_motors].err_count);
-    SET_VALUE(tMCElAddr, ElevMotorData[i_motors].temp);
-    SET_VALUE(iSerElAddr, ((int) (ElevMotorData[i_motors].current / 30.0 * 32768.0)));
-    SET_VALUE(stat1ElAddr, (ElevMotorData[i_motors].status & 0xffff));
-    SET_VALUE(stat2ElAddr, ((ElevMotorData[i_motors].status & 0xffff0000) >> 16));
-    SET_VALUE(faultElAddr, ElevMotorData[i_motors].fault_reg);
-    SET_VALUE(iSerPivAddr, PivotMotorData[i_motors].current * 32768.0 / 20.0);
-    SET_VALUE(statDrPivAddr, (PivotMotorData[i_motors].status & 0xff) + ((PivotMotorData[i_motors].status & 0xff) << 8));///TODO:Fix Pivot Status field
-    SET_VALUE(velSerPivAddr, PivotMotorData[i_motors].velocity);
 
-    SET_VALUE(infoElAddr, ElevMotorData[i_motors].drive_info);
-    SET_VALUE(driveErrCtsElAddr, ElevMotorData[i_motors].err_count);
-    SET_VALUE(infoPivAddr, PivotMotorData[i_motors].drive_info);
-    SET_VALUE(driveErrCtsPivAddr, PivotMotorData[i_motors].err_count);
-    SET_VALUE(verboseRWAddr, CommandData.verbose_rw);
-    SET_VALUE(verboseElAddr, CommandData.verbose_el);
-    SET_VALUE(verbosePivAddr, CommandData.verbose_piv);
 }

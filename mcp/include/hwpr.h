@@ -21,5 +21,6 @@
 #define HWPR_DEFAULT_STEP 7292 // used if pot is dead
 
 void DoHWPR(struct ezbus* bus);
+void StoreHWPRBus(void);
 
 #endif

@@ -66,13 +66,6 @@ int EthernetSBSC = 3;
 
 extern struct chat_buf chatter_buffer;  /* mcp.c */
 
-/* in actuators.c */
-void StoreActBus(void);
-void SecondaryMirror(void);
-
-/* in hwpr.c */
-void StoreHWPRBus(void);
-
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors();
@@ -114,7 +107,6 @@ void WriteAux(void)
     static channel_t* tChipFlcAddr;
     static channel_t* tMbFlcAddr;
     static channel_t* statusMCCAddr;
-    static channel_t* statusMCCReadAddr;
     static channel_t* bi0FifoSizeAddr;
     static channel_t* bbcFifoSizeAddr;
     static channel_t* ploverAddr;
@@ -298,7 +290,7 @@ void WriteAux(void)
     SET_VALUE(countOtherCmdAddr, otherData.command_count);
 }
 
-void WriteChatter(int index)
+void WriteChatter(void)
 {
 //    static channel_t* chatterAddr;
 //    static int firsttime = 1;

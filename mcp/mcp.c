@@ -52,14 +52,16 @@
 #include "lut.h"
 
 #include <acs.h>
+#include <actuators.h>
 #include <blast.h>
-#include <blast_time.h>
-#include <framing.h>
-#include <dsp1760.h>
-#include <ec_motors.h>
 #include <blast_comms.h>
 #include <blast_sip_interface.h>
+#include <blast_time.h>
 #include <computer_sensors.h>
+#include <dsp1760.h>
+#include <ec_motors.h>
+#include <framing.h>
+#include <hwpr.h>
 #include <motors.h>
 
 /* Define global variables */
@@ -345,7 +347,7 @@ static void mcp_100hz_routines(void)
     update_axes_mode();
     store_100hz_acs();
 //    ControlGyroHeat();
-    write_motor_channels();
+    write_motor_channels_5hz();
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();
@@ -375,8 +377,8 @@ static void mcp_1hz_routines(void)
 int main(int argc, char *argv[])
 {
   pthread_t CommandDatacomm1;
-  pthread_t disk_id;
-  pthread_t abus_id;
+//  pthread_t disk_id;
+//  pthread_t abus_id;
   int use_starcams = 1;
 
   int ret;
@@ -391,10 +393,10 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm2;
 #endif
 
-  pthread_t compression_id;
-  pthread_t dgps_id;
-  pthread_t isc_id;
-  pthread_t osc_id;
+//  pthread_t compression_id;
+//  pthread_t dgps_id;
+//  pthread_t isc_id;
+//  pthread_t osc_id;
   pthread_t chatter_id;
   struct stat fstats;
 
