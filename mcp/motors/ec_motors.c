@@ -731,7 +731,7 @@ static void* motor_control(void* arg)
 
         ec_send_processdata();
         wkc = ec_receive_processdata(EC_TIMEOUTRET);
-//        if (wkc < expectedWKC) bprintf(warning, "Possible missing data in communicating with Motor Controllers");
+        if (wkc < expectedWKC) bprintf(none, "Possible missing data in communicating with Motor Controllers");
         read_motor_data();
     }
 

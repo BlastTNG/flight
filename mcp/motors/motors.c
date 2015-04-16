@@ -185,8 +185,6 @@ static double get_elev_vel(void)
     if (vel < (-1.0) * MAX_V_EL)
         vel = (-1.0) * MAX_V_EL;
 
-    vel *= DPS_TO_GY16;
-
     /* limit Maximum acceleration */
     dvel = vel - last_vel;
     if (dvel > max_dv)
@@ -196,7 +194,7 @@ static double get_elev_vel(void)
     last_vel = vel;
 
     //bprintf(info, "GetVEl: vel=%f", vel);
-    return (vel * 10.0); // Factor of 10.0 is to improve the dynamic range
+    return vel;
 }
 
 /************************************************************************/
@@ -204,7 +202,7 @@ static double get_elev_vel(void)
 /*   GetVAz: get the current az velocity, given current                 */
 /*   pointing mode, etc..                                               */
 /*                                                                      */
-/*   Units are in 0.1*gyro units                                        */
+/*   Units are in degrees per second                                    */
 /************************************************************************/
 static double get_az_vel(void)
 {
@@ -248,15 +246,13 @@ static double get_az_vel(void)
     if (vel < -MAX_V_AZ)
         vel = -MAX_V_AZ;
 
-    vel *= DPS_TO_GY16;
-
     /* limit Maximum acceleration */
     dvel = vel - last_vel;
     if (dvel > max_dv) vel = last_vel + max_dv;
     if (dvel < -max_dv) vel = last_vel - max_dv;
     last_vel = vel;
 
-    return (vel * 10.0); // Factor of 10 is to increase dynamic range
+    return vel;
 }
 
 /************************************************************************/
@@ -266,7 +262,7 @@ static double get_az_vel(void)
 /*                                                                      */
 /************************************************************************/
 //TODO: Change GetIPivot to return units of 0.01A for motor controller
-static double get_piv_current(int v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
+static double calculate_piv_current(float v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
 {
     static channel_t* pRWTermPivAddr;
     static channel_t* pErrTermPivAddr;
@@ -296,7 +292,7 @@ static double get_piv_current(int v_az_req_gy, unsigned int g_rw_piv, unsigned i
         firsttime = 0;
     }
 
-    v_az_req = ((double) v_az_req_gy) * GY16_TO_DPS / 10.0; // Convert to dps
+    v_az_req = ((double) v_az_req_gy);
 
     i_point = GETREADINDEX(point_index);
     i_rw = GETREADINDEX(motor_index);
@@ -390,10 +386,10 @@ static double get_piv_current(int v_az_req_gy, unsigned int g_rw_piv, unsigned i
 
     i++;
 
-    SET_INT16(pRWTermPivAddr, p_rw_term);
-    SET_INT16(pErrTermPivAddr, p_err_term);
-    SET_INT16(frictTermPivAddr, i_frict_filt * 32767.0 / 2.0);
-    SET_INT16(frictTermUnfiltPivAddr, i_frict * 32767.0 / 2.0);
+    SET_FLOAT(pRWTermPivAddr, p_rw_term);
+    SET_FLOAT(pErrTermPivAddr, p_err_term);
+    SET_FLOAT(frictTermPivAddr, i_frict_filt);
+    SET_FLOAT(frictTermUnfiltPivAddr, i_frict);
     return I_req_dac;
 }
 
@@ -402,150 +398,190 @@ static double get_piv_current(int v_az_req_gy, unsigned int g_rw_piv, unsigned i
 /*    write_motor_channels: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
-void write_motor_channels(void)
+void write_motor_channels_5hz(void)
 {
-  static channel_t* velReqElAddr;
-  static channel_t* velReqAzAddr;
-  static channel_t* cosElAddr;
-  static channel_t* sinElAddr;
+    static channel_t* gPElAddr;
+    static channel_t* gIElAddr;
+    static channel_t* gPtElAddr;
+    static channel_t* gPAzAddr;
+    static channel_t* gIAzAddr;
+    static channel_t* gPtAzAddr;
+    static channel_t* gPVPivAddr;
+    static channel_t* gPEPivAddr;
+    static channel_t* setRWAddr;
+    static channel_t* frictOffPivAddr;
+    static channel_t* accelAzAddr;
 
-  static channel_t* gPElAddr;
-  static channel_t* gIElAddr;
-  static channel_t* gPtElAddr;
-  static channel_t* gPAzAddr;
-  static channel_t* gIAzAddr;
-  static channel_t* gPtAzAddr;
-  static channel_t* gPVPivAddr;
-  static channel_t* gPEPivAddr;
-  static channel_t* setRWAddr;
-  static channel_t* frictOffPivAddr;
-  static channel_t* dacPivAddr;
-  static channel_t* velCalcPivAddr;
-  static channel_t* accelAzAddr;
- 
-  double el_rad;
-  unsigned int ucos_el;
-  unsigned int usin_el;
+    /* Motor data read out over motor thread in ec_motors.c */
+    static channel_t *tMCRWAddr;
+    static channel_t *statusRWAddr;
+    static channel_t *faultRWAddr;
 
-  int v_elev, v_az, i_piv, elGainP, elGainI;
-  int azGainP, azGainI, pivGainRW, pivGainErr;
-  double pivFrictOff;
-  int i_point;
+    static channel_t *tMCElAddr;
+    static channel_t *statusElAddr;
+    static channel_t *faultElAddr;
 
-  /******** Obtain correct indexes the first time here ***********/
-  static int firsttime = 1;
+    static channel_t *tMCPivAddr;
+    static channel_t *statusPivAddr;
+    static channel_t *faultPivAddr;
 
-  if (firsttime) {
-    firsttime = 0;
-    velReqElAddr = channels_find_by_name("vel_req_el");
-    velReqAzAddr = channels_find_by_name("vel_req_az");
-    cosElAddr = channels_find_by_name("cos_el");
-    sinElAddr = channels_find_by_name("sin_el");
-    dacPivAddr = channels_find_by_name("mc_piv_i_cmd");
-    gPElAddr = channels_find_by_name("g_p_el");
-    gIElAddr = channels_find_by_name("g_i_el");
-    gPtElAddr = channels_find_by_name("g_pt_el");
-    gPAzAddr = channels_find_by_name("g_p_az");
-    gIAzAddr = channels_find_by_name("g_i_az");
-    gPtAzAddr = channels_find_by_name("g_pt_az");
-    gPVPivAddr = channels_find_by_name("g_pv_piv");
-    gPEPivAddr = channels_find_by_name("g_pe_piv");
-    setRWAddr = channels_find_by_name("set_rw");
-    frictOffPivAddr = channels_find_by_name("frict_off_piv");
-    velCalcPivAddr = channels_find_by_name("vel_calc_piv");
-    accelAzAddr = channels_find_by_name("accel_az");
-  }
+    int elGainP, elGainI;
+    int azGainP, azGainI, pivGainRW, pivGainErr;
+    double pivFrictOff;
+    int i_motors;
 
-  i_point = GETREADINDEX(point_index);
+    /******** Obtain correct indexes the first time here ***********/
+    static int firsttime = 1;
 
+    if (firsttime) {
+        firsttime = 0;
 
-  /***************************************************/
-  /**           Elevation Drive Motors              **/
-  /* elevation speed */
-  v_elev = floor(get_elev_vel() + 0.5);
-  /* Unit of v_elev are 0.1 gyro units */
-  if (v_elev > 32767)
-    v_elev = 32767;
-  if (v_elev < -32768)
-    v_elev = -32768;
-  SET_VALUE(velReqElAddr, 32768 + v_elev);
+        gPElAddr = channels_find_by_name("g_p_el");
+        gIElAddr = channels_find_by_name("g_i_el");
+        gPtElAddr = channels_find_by_name("g_pt_el");
 
-  /* zero motor gains if the pin is in */
-  if ((CommandData.pin_is_in && !CommandData.force_el)
-      || CommandData.disable_el)
-    elGainP = elGainI = 0;
-  else {
-    elGainP = CommandData.ele_gain.P;
-    elGainI = CommandData.ele_gain.I;	
-  }
-  /* proportional term for el motor */
-  SET_VALUE(gPElAddr, elGainP);
-  el_set_p(elGainP);
-  /* integral term for el_motor */
-  SET_VALUE(gIElAddr, elGainI);
-  el_set_i(elGainI);
-  /* pointing gain term for elevation drive */
-  SET_VALUE(gPtElAddr, CommandData.ele_gain.PT);
-  //TODO:Figure out what to do about the Pointing gain term
+        gPAzAddr = channels_find_by_name("g_p_az");
+        gIAzAddr = channels_find_by_name("g_i_az");
+        gPtAzAddr = channels_find_by_name("g_pt_az");
 
-  /***************************************************/
-  /*** Send elevation angles to acs1 from acs2 ***/
-  /* cos of el enc */
-  el_rad = (M_PI / 180.0) * PointingData[i_point].el; /* convert to radians */
-  ucos_el = (unsigned int)((cos(el_rad) + 1.0) * 32768.0);
-  SET_VALUE(cosElAddr, ucos_el);
-  /* sin of el enc */
-  usin_el = (unsigned int)((sin(el_rad) + 1.0) * 32768.0);
-  SET_VALUE(sinElAddr, usin_el);
+        gPVPivAddr = channels_find_by_name("g_pv_piv");
+        gPEPivAddr = channels_find_by_name("g_pe_piv");
 
-  /***************************************************/
-  /**            Azimuth Drive Motors              **/
-  v_az = floor(get_az_vel() + 0.5);
-  /* Units for v_az are 0.1*(16 bit gyro units)*/
-  if (v_az > 32767)
-    v_az = 32767;
-  if (v_az < -32768)
-    v_az = -32768;
-  SET_VALUE(velReqAzAddr, 32768 + v_az);
+        setRWAddr = channels_find_by_name("set_rw");
+        frictOffPivAddr = channels_find_by_name("frict_off_piv");
+        accelAzAddr = channels_find_by_name("accel_az");
 
+        tMCRWAddr = channels_find_by_name("t_mc_rw");
+        statusRWAddr = channels_find_by_name("status_rw");
+        faultRWAddr = channels_find_by_name("fault_rw");
 
-  if (CommandData.disable_az) {
-    azGainP = 0;
-    azGainI = 0;
-    pivGainRW = 0;
-    pivGainErr = 0;
-    pivFrictOff = 0.0;
-    i_piv=get_piv_current(0,pivGainRW,pivGainErr,pivFrictOff,1);
-  } else {
-    azGainP = CommandData.azi_gain.P;
-    azGainI = CommandData.azi_gain.I;
-    pivGainRW = CommandData.pivot_gain.PV;
-    pivGainErr = CommandData.pivot_gain.PE;
-    pivFrictOff = CommandData.pivot_gain.F;
-    i_piv=get_piv_current(v_az,pivGainRW,pivGainErr,pivFrictOff,0);
-  }
-  //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
-  /* requested pivot current*/
-  SET_VALUE(dacPivAddr, i_piv*2);
-  /* p term for az motor */
-  SET_VALUE(gPAzAddr, azGainP);
-  /* I term for az motor */
-  SET_VALUE(gIAzAddr, azGainI);
-  /* pointing gain term for az drive */
-  SET_VALUE(gPtAzAddr, CommandData.azi_gain.PT);
+        tMCElAddr = channels_find_by_name("t_mc_el");
+        statusElAddr = channels_find_by_name("status_el");
+        faultElAddr = channels_find_by_name("fault_el");
 
-  /* p term to rw vel for pivot motor */
-  SET_VALUE(gPVPivAddr, pivGainRW);
-  /* p term to vel error for pivot motor */
-  SET_VALUE(gPEPivAddr, pivGainErr);
-  /* setpoint for reaction wheel */
-  SET_VALUE(setRWAddr, CommandData.pivot_gain.SP*32768.0/200.0);
-  /* Pivot current offset to compensate for static friction. */
-  SET_VALUE(frictOffPivAddr, pivFrictOff/2.0*65535);
-  /* Pivot velocity */
-  SET_VALUE(velCalcPivAddr, piv_get_velocity());
-  /* Azimuth Scan Acceleration */
-  SET_VALUE(accelAzAddr, (CommandData.az_accel/2.0*65536.0));
+        tMCPivAddr = channels_find_by_name("t_mc_piv");
+        statusPivAddr = channels_find_by_name("status_piv");
+        faultPivAddr = channels_find_by_name("fault_piv");
+
+    }
+
+    /***************************************************/
+    /**           Elevation Drive Motors              **/
+
+    /* zero motor gains if the pin is in */
+    if ((CommandData.pin_is_in && !CommandData.force_el) || CommandData.disable_el)
+        elGainP = elGainI = 0;
+    else {
+        elGainP = CommandData.ele_gain.P;
+        elGainI = CommandData.ele_gain.I;
+    }
+    /* proportional term for el motor */
+    SET_VALUE(gPElAddr, elGainP);
+    el_set_p(elGainP);
+    /* integral term for el_motor */
+    SET_VALUE(gIElAddr, elGainI);
+    el_set_i(elGainI);
+    /* pointing gain term for elevation drive */
+    SET_VALUE(gPtElAddr, CommandData.ele_gain.PT);
+    //TODO:Figure out what to do about the Pointing gain term
+
+    /***************************************************/
+    /**            Azimuth Drive Motors              **/
+
+    if (CommandData.disable_az) {
+        azGainP = 0;
+        azGainI = 0;
+        pivGainRW = 0;
+        pivGainErr = 0;
+        pivFrictOff = 0.0;
+    }
+    else {
+        azGainP = CommandData.azi_gain.P;
+        azGainI = CommandData.azi_gain.I;
+        pivGainRW = CommandData.pivot_gain.PV;
+        pivGainErr = CommandData.pivot_gain.PE;
+        pivFrictOff = CommandData.pivot_gain.F;
+    }
+    //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
+    /* p term for az motor */
+    SET_VALUE(gPAzAddr, azGainP);
+    /* I term for az motor */
+    SET_VALUE(gIAzAddr, azGainI);
+    /* pointing gain term for az drive */
+    SET_VALUE(gPtAzAddr, CommandData.azi_gain.PT);
+
+    /* p term to rw vel for pivot motor */
+    SET_VALUE(gPVPivAddr, pivGainRW);
+    /* p term to vel error for pivot motor */
+    SET_VALUE(gPEPivAddr, pivGainErr);
+    /* setpoint for reaction wheel */
+    SET_VALUE(setRWAddr, CommandData.pivot_gain.SP * 32768.0 / 200.0);
+    /* Pivot current offset to compensate for static friction. */
+    SET_VALUE(frictOffPivAddr, pivFrictOff / 2.0 * 65535);
+    /* Azimuth Scan Acceleration */
+    SET_VALUE(accelAzAddr, (CommandData.az_accel / 2.0 * 65536.0));
+
+    /**
+     * Motor Controller Fields
+     */
+    i_motors = GETREADINDEX(motor_index);
+    SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
+    SET_VALUE(statusRWAddr, RWMotorData[i_motors].status);
+    SET_VALUE(faultRWAddr, RWMotorData[i_motors].fault_reg);
+
+    SET_VALUE(tMCElAddr, ElevMotorData[i_motors].temp);
+    SET_VALUE(statusElAddr, ElevMotorData[i_motors].status);
+    SET_VALUE(faultElAddr, ElevMotorData[i_motors].fault_reg);
+
+    SET_VALUE(tMCPivAddr, PivotMotorData[i_motors].temp);
+    SET_VALUE(statusPivAddr, PivotMotorData[i_motors].status);
+    SET_VALUE(faultPivAddr, PivotMotorData[i_motors].fault_reg);
+
+}
+
+void write_motor_channels_200hz(void)
+{
+    static channel_t* el_current_read;
+    static channel_t* rw_current_read;
+    static channel_t* piv_current_read;
+
+    static channel_t* az_req_velocity;
+    static channel_t* el_req_velocity;
+
+    float v_elev, v_az;
+    int i_motors;
+
+    /******** Obtain correct indexes the first time here ***********/
+    static int firsttime = 1;
+
+    if (firsttime) {
+        firsttime = 0;
+        el_req_velocity = channels_find_by_name("vel_req_el");
+        az_req_velocity = channels_find_by_name("vel_req_az");
+        el_current_read = channels_find_by_name("mc_el_i_read");
+        rw_current_read = channels_find_by_name("mc_rw_i_read");
+        piv_current_read = channels_find_by_name("mc_piv_i_read");
+
+    }
+
+    /***************************************************/
+    /**           Elevation Drive Motors              **/
+    /* elevation speed */
+    v_elev = get_elev_vel();
+    SET_FLOAT(el_req_velocity, v_elev);
+
+    /***************************************************/
+    /**            Azimuth Drive Motors              **/
+    v_az = get_az_vel();
+    SET_FLOAT(az_req_velocity, v_az);
+
+    /**
+     * Motor Controller Fields
+     */
+    i_motors = GETREADINDEX(motor_index);
+    SET_FLOAT(el_current_read, ElevMotorData[i_motors].current);
+    SET_FLOAT(rw_current_read, RWMotorData[i_motors].current);
+    SET_FLOAT(piv_current_read, PivotMotorData[i_motors].current);
 
 }
 
@@ -1893,15 +1929,33 @@ void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int
 static int16_t calculate_el_current(float m_vreq_el)
 {
     static float el_integral = 0.0;
+    static int first_time = 1;
+
+    channel_t *error_el_ch = NULL;
+    channel_t *p_el_ch = NULL;
+    channel_t *i_el_ch = NULL;
+
     float p_el = 0.0, i_el = 0.0;       //control loop gains
     float error_el = 0.0, P_term_el = 0.0, I_term_el = 0.0; //intermediate control loop results
     int16_t dac_out;
 
+    if (first_time) {
+        first_time = 0;
+
+        error_el_ch = channels_find_by_name("error_el");
+        p_el_ch = channels_find_by_name("p_term_el");
+        i_el_ch = channels_find_by_name("i_term_el");
+    }
+
+    p_el = CommandData.ele_gain.P;
+    i_el = CommandData.ele_gain.I;
+
     //el gyros measure -el
     error_el = ACSData.ifel_gy + m_vreq_el;
+    SET_FLOAT(error_el_ch, error_el);
 
     P_term_el = p_el*error_el;
-
+    SET_FLOAT(p_el_ch, P_term_el);
 
     if( (p_el == 0.0) || (i_el == 0.0) ) {
         el_integral = 0.0;
@@ -1918,6 +1972,7 @@ static int16_t calculate_el_current(float m_vreq_el)
         I_term_el = -32767.0;
         el_integral = el_integral * 0.9;
     }
+    SET_FLOAT(i_el_ch, I_term_el);
 
     //sign difference in controller requires using -(P_term + I_term)
     dac_out =-(P_term_el + I_term_el);
@@ -1930,6 +1985,12 @@ static int16_t calculate_el_current(float m_vreq_el)
 static int16_t calculate_rw_current(float v_req_az)
 {
     static float az_integral = 0.0;
+    static int first_time = 1;
+
+    channel_t *error_az_ch = NULL;
+    channel_t *p_az_ch = NULL;
+    channel_t *i_az_ch = NULL;
+
     double cos_el, sin_el;
     float p_az = 0.0, i_az = 0.0;       //control loop gains
     float error_az = 0.0, P_term_az = 0.0, I_term_az = 0.0; //intermediate control loop results
@@ -1937,12 +1998,23 @@ static int16_t calculate_rw_current(float v_req_az)
 
     int i_point = GETREADINDEX(point_index);
 
+    if (first_time) {
+        first_time = 0;
+
+        error_az_ch = channels_find_by_name("error_az");
+        p_az_ch = channels_find_by_name("p_term_az");
+        i_az_ch = channels_find_by_name("i_term_az");
+    }
     sincos(from_degrees(PointingData[i_point].el), &sin_el, &cos_el);
 
+    p_az = CommandData.azi_gain.P;
+    i_az = CommandData.azi_gain.I;
     //roll, yaw contributions to az both -'ve (?)
     error_az = (ACSData.ifroll_gy * sin_el + ACSData.ifyaw_gy * cos_el) + v_req_az;
+    SET_FLOAT(error_az_ch, error_az);
 
     P_term_az = p_az * error_az;
+    SET_FLOAT(p_az_ch, P_term_az);
 
     if ((p_az == 0.0) || (i_az == 0.0)) {
         az_integral = 0.0;
@@ -1960,6 +2032,7 @@ static int16_t calculate_rw_current(float v_req_az)
         I_term_az = -32767.0;
         az_integral = az_integral * 0.9;
     }
+    SET_FLOAT(i_az_ch, I_term_az);
 
     //TODO check sign of output
     dac_out = -(P_term_az + I_term_az);
@@ -1970,6 +2043,11 @@ static int16_t calculate_rw_current(float v_req_az)
 
 }
 
+/**
+ * Sets the current (amperes) values for each of the motor controllers based
+ * on the requested velocities and current status of the system.  Values are
+ * written to the frame and to the motor controller memory maps.
+ */
 void command_motors(void)
 {
     static channel_t* velReqElAddr;
@@ -1977,12 +2055,14 @@ void command_motors(void)
 
     static channel_t* el_current_addr;
     static channel_t* piv_current_addr;
+    static channel_t* rw_current_addr;
 
     float v_req_el = 0.0;
     float v_req_az = 0.0;
 
     int16_t el_current;
     int16_t rw_current;
+    int16_t piv_current;
 
     /******** Obtain correct indexes the first time here ***********/
     static int firsttime = 1;
@@ -1993,15 +2073,19 @@ void command_motors(void)
 
       piv_current_addr = channels_find_by_name("mc_piv_i_cmd");
       el_current_addr = channels_find_by_name("mc_el_i_cmd");
+      rw_current_addr = channels_find_by_name("mc_rw_i_cmd");
     }
     /*******************************************************************\
     * Drive the Elevation motor                                         *
     \*******************************************************************/
 
-    v_req_el = (float)(GET_UINT16(velReqElAddr)-32768.0)*(-0.0016276041666666666666666666666667);  // = vreq/614.4
+    if (CommandData.disable_el) el_disable();
+    else el_enable();
 
-    //TODO: limits in gyro units: revisit these
-    if ((v_req_el < -15000.0) || (v_req_el > 15000.0))
+    v_req_el = GET_FLOAT(velReqElAddr);
+
+    //TODO: limits in dps: revisit these
+    if ((v_req_el < -10.0) || (v_req_el > 10.0))
         v_req_el = 0; // no really really crazy values!
 
     el_current = calculate_el_current(v_req_el);
@@ -2009,588 +2093,27 @@ void command_motors(void)
     el_set_current(el_current);
 
     /*******************************************************************\
-    * Drive the Reaction Wheel                                          *
-    \*******************************************************************/
-
-    //TODO: Move velReqAz to a floating point value
-    v_req_az = (float)(GET_UINT16(velReqAzAddr)-32768.0)*0.0016276041666666666666666666666667;  // = vreq/614.4
-    rw_current = calculate_rw_current(v_req_az);
-
-    rw_set_current(rw_current);
-
-    /*******************************************************************\
     * Drive the Pivot Motor                                             *
     \*******************************************************************/
+    v_req_az = GET_FLOAT(velReqAzAddr);
+    if (CommandData.disable_az) {
+        piv_current = calculate_piv_current(0, 0, 0, 0, 1);
+        rw_disable();
+        piv_disable();
+    }
+    else {
+        rw_enable();
+        piv_enable();
+        piv_current = calculate_piv_current(v_req_az, CommandData.pivot_gain.PV, CommandData.pivot_gain.PE, CommandData.pivot_gain.F, 0);
+    }
+    SET_INT16(piv_current_addr, piv_current);
+    piv_set_current(piv_current);
 
-    piv_set_current(GET_UINT16(piv_current_addr));
+    /*******************************************************************\
+    * Drive the Reaction Wheel                                          *
+    \*******************************************************************/
+    rw_current = calculate_rw_current(v_req_az);
+    SET_INT16(rw_current_addr, rw_current);
+    rw_set_current(rw_current);
 
 }
-
-//void* reactComm(void* arg)
-//{
-//  //mark1
-//  int n=0, j=0;
-//  int i=0;
-//  int temp_raw,curr_raw,stat_raw,faultreg_raw;
-//  int firsttime=1,resetcount=0;
-//  long vel_raw=0;
-//  // Initialize values in the reactinfo structure.
-//  reactinfo.open=0;
-//  reactinfo.init=0;
-//  reactinfo.err=0;
-//  reactinfo.err_count=0;
-//  reactinfo.closing=0;
-//  reactinfo.reset=0;
-//  reactinfo.disabled=2;
-//  reactinfo.bdrate=9600;
-//  reactinfo.writeset=0;
-//  reactinfo.verbose=0;
-//  strncpy(reactinfo.motorstr,"react",6);
-//
-//  nameThread("RWCom");
-//
-//  while(!InCharge) {
-//    if(firsttime==1) {
-//      bprintf(info,"I am not incharge thus I will not communicate with the RW motor.");
-//      firsttime=0;
-//    }
-//    //in case we switch to ICC when serial communications aren't working
-////    RWMotorData[0].vel_rw=ACSData.vel_rw;
-////    RWMotorData[1].vel_rw=ACSData.vel_rw;
-////    RWMotorData[2].vel_rw=ACSData.vel_rw;
-//    usleep(20000);
-//  }
-//
-//  firsttime=1;
-//  bprintf(info,"Bringing the reaction wheel online.");
-//  // Initialize structure RWMotorData.  Follows what was done in dgps.c
-//  //  RWMotorData[0].vel_rw=0;
-//  RWMotorData[0].temp=0;
-//  RWMotorData[0].current=0.0;
-//  RWMotorData[0].status=0;
-//  RWMotorData[0].fault_reg=0;
-//  RWMotorData[0].drive_info=0;
-//  RWMotorData[0].err_count=0;
-//
-//  // Try to open the port.
-//  while (reactinfo.open==0) {
-//    reactinfo.verbose=CommandData.verbose_rw;
-//    open_copley(REACT_DEVICE,&reactinfo); // sets reactinfo.open=1 if sucessful
-//
-//    if (i==10) bputs(err,"Reaction wheel port could not be opened after 10 attempts.\n");
-//
-//    i++;
-//    if (reactinfo.open==1) {
-//      bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i);
-//    } else sleep(1);
-//  }
-//
-//  // Configure the serial port.  If after 10 attempts the port is not initialized it enters
-//  // the main loop where it will trigger a reset command.
-//  i=0;
-//  while (reactinfo.init==0 && i <=9) {
-//    reactinfo.verbose=CommandData.verbose_rw;
-//    configure_copley(&reactinfo);
-//    if (reactinfo.init==1) {
-//      bprintf(info,"Initialized the controller on attempt number %i",i);
-//    } else if (i==9) {
-//      bprintf(info,"Could not initialize the controller after %i attempts.",i);
-//    } else {
-//      sleep(1);
-//    }
-//    i++;
-//  }
-//  rw_motor_index = 1; // index for writing to the RWMotor data struct
-//  while (1){
-//    reactinfo.verbose=CommandData.verbose_rw;
-//    if((reactinfo.err & COP_ERR_MASK) > 0 ) {
-//      reactinfo.err_count+=1;
-//      if(reactinfo.err_count >= COPLEY_ERR_TIMEOUT) {
-//	reactinfo.reset=1;
-//      }
-//    }
-//    if(CommandData.reset_rw==1 ) {
-//      reactinfo.reset=1;
-//      CommandData.reset_rw=0;
-//    }
-//
-//    RWMotorData[rw_motor_index].drive_info=makeMotorField(&reactinfo); // Make bitfield of controller info structure.
-//    RWMotorData[rw_motor_index].err_count=(reactinfo.err_count > 65535) ? 65535: reactinfo.err_count;
-//
-//    // If we are still in the start up veto make sure the drive is disabled.
-//    if(StartupVeto > 0) {
-//      CommandData.disable_az=1;
-//    }
-//
-//    if(reactinfo.closing==1){
-//      rw_motor_index=INC_INDEX(rw_motor_index);
-//      close_copley(&reactinfo);
-//      usleep(10000);
-//    } else if (reactinfo.reset==1){
-//      if(resetcount==0) {
-//	bprintf(warning,"Resetting connection to Reaction Wheel controller.");
-//      } else if ((resetcount % 10)==0) {
-//	//	bprintf(warning,"reset-> Unable to connect to Reaction Wheel after %i attempts.",resetcount);
-//      }
-//
-//      resetcount++;
-//      rw_motor_index=INC_INDEX(rw_motor_index);
-//      resetCopley(REACT_DEVICE,&reactinfo); // if successful sets reactinfo.reset=0
-//      usleep(10000);  // give time for motor bits to get written
-//      if (reactinfo.reset==0) {
-//	resetcount=0;
-//        bprintf(info,"Controller successfuly reset!");
-//      }
-//
-//    } else if(reactinfo.init==1){
-//      if(CommandData.disable_az==0 && reactinfo.disabled > 0) {
-//	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Attempting to enable the reaction wheel motor controller.");
-//	n=enableCopley(&reactinfo);
-//	if(n==0){
-//	  bprintf(info,"Reaction wheel motor controller is now enabled.");
-//	  reactinfo.disabled=0;
-//	}
-//      }
-//      if(CommandData.disable_az==1 && (reactinfo.disabled==0 || reactinfo.disabled==2)) {
-//	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Attempting to disable the reaction wheel motor controller.");
-//	n=disableCopley(&reactinfo);
-//	if(n==0){
-//	  bprintf(info,"Reaction wheel motor controller is now disabled.");
-//	  reactinfo.disabled=1;
-//	}
-//      }
-//
-//      vel_raw=queryCopleyInd(COP_IND_VEL,&reactinfo); // Units are 0.1 counts/sec
-//      RWMotorData[rw_motor_index].vel_rw=((double) vel_raw)/RW_ENC_CTS/10.0*360.0;
-//      j=j%4;
-//      switch(j) {
-//      case 0:
-//	temp_raw=queryCopleyInd(COP_IND_TEMP,&reactinfo);
-//        RWMotorData[rw_motor_index].temp=temp_raw; // units are deg Cel
-//	break;
-//      case 1:
-//	curr_raw=queryCopleyInd(COP_IND_CURRENT,&reactinfo);
-//        RWMotorData[rw_motor_index].current=((double) (curr_raw))/100.0; // units are Amps
-//	break;
-//      case 2:
-//	stat_raw=queryCopleyInd(COP_IND_STATUS,&reactinfo);
-//        RWMotorData[rw_motor_index].status=stat_raw;
-//	break;
-//      case 3:
-//	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&reactinfo);
-//        RWMotorData[rw_motor_index].fault_reg=faultreg_raw;
-//	break;
-//      }
-//      j++;
-//      if (firsttime) {
-//	bprintfverb(info,reactinfo.verbose,MC_VERBOSE,"Raw reaction wheel velocity is %i",vel_raw);
-//	firsttime=0;
-//      }
-//      rw_motor_index=INC_INDEX(rw_motor_index);
-//
-//    } else {
-//      rw_motor_index=INC_INDEX(rw_motor_index);
-//      reactinfo.reset=1;
-//      usleep(10000);
-//    }
-//    i++;
-//  }
-//  return NULL;
-//}
-//
-//
-//void* elevComm(void* arg)
-//{
-//
-//  int n=0, j=0;
-//  int i=0;
-//  long unsigned pos_raw;
-//  int temp_raw,curr_raw,stat_raw,faultreg_raw;
-//  int firsttime=1,resetcount=0;
-//
-//
-//  // Initialize values in the elevinfo structure.
-//  elevinfo.open=0;
-//  elevinfo.init=0;
-//  elevinfo.err=0;
-//  elevinfo.err_count=0;
-//  elevinfo.closing=0;
-//  elevinfo.reset=0;
-//  elevinfo.disabled=2;
-//  elevinfo.bdrate=9600;
-//  elevinfo.writeset=0;
-//  strncpy(elevinfo.motorstr,"elev\0",6);
-//  elevinfo.verbose=1;
-//
-//  nameThread("ElCom");
-//
-//  while(!InCharge) {
-//    if(firsttime==1) {
-//      bprintf(info,"I am not incharge thus I will not communicate with the elevation drive.");
-//      firsttime=0;
-//    }
-//
-//    //in case we switch to ICC when serial communications aren't working
-////    ElevMotorData[0].enc_raw_el=ACSData.enc_raw_el;
-////    ElevMotorData[1].enc_raw_el=ACSData.enc_raw_el;
-////    ElevMotorData[2].enc_raw_el=ACSData.enc_raw_el;
-//    usleep(20000);
-//  }
-//
-//  bprintf(info,"Bringing the elevation drive online.");
-//  i=0;
-//  firsttime=1;
-//
-//  // Initialize structure ElevMotorData.  Follows what was done in dgps.c
-//  //  ElevMotorData[0].enc_raw_el=0;
-//  ElevMotorData[0].temp=0;
-//  ElevMotorData[0].current=0.0;
-//  ElevMotorData[0].status=0;
-//  ElevMotorData[0].fault_reg=0;
-//  ElevMotorData[0].drive_info=0;
-//  ElevMotorData[0].err_count=0;
-//
-//  // Try to open the port.
-//  while(elevinfo.open==0) {
-//    elevinfo.verbose=CommandData.verbose_el;
-//    open_copley(ELEV_DEVICE,&elevinfo); // sets elevinfo.open=1 if sucessful
-//
-//    if(i==10) {
-//      bputs(err,"Elevation drive serial port could not be opened after 10 attempts.\n");
-//    }
-//    i++;
-//
-//    if(elevinfo.open==1) {
-//	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i);
-//    } else {
-//      sleep(1);
-//    }
-//  }
-//
-//  // Configure the serial port.  If after 10 attempts the port is not initialized it enters
-//  // the main loop where it will trigger a reset command.
-//  i=0;
-//  while (elevinfo.init==0 && i <=9) {
-//    elevinfo.verbose=CommandData.verbose_el;
-//    configure_copley(&elevinfo);
-//    if(elevinfo.init==1) {
-//      bprintf(info,"Initialized the controller on attempt number %i",i);
-//    } else if (i==9) {
-//      bprintf(info,"Could not initialize the controller after %i attempts.",i);
-//    } else {
-//      sleep(1);
-//    }
-//    i++;
-//  }
-//
-//  elev_motor_index = 1; // index for writing to the ElevMotor data struct
-//  while (1) {
-//    elevinfo.verbose=CommandData.verbose_el;
-//    if ((elevinfo.err & COP_ERR_MASK) > 0 ) {
-//      elevinfo.err_count+=1;
-//      if (elevinfo.err_count >= COPLEY_ERR_TIMEOUT) {
-//	elevinfo.reset=1;
-//      }
-//    }
-//
-//    if (CommandData.reset_elev==1 ) {
-//      elevinfo.reset=1;
-//      CommandData.reset_elev=0;
-//    }
-//
-//    ElevMotorData[elev_motor_index].drive_info=makeMotorField(&elevinfo); // Make bitfield of controller info structure.
-//    ElevMotorData[elev_motor_index].err_count=(elevinfo.err_count > 65535) ? 65535: elevinfo.err_count;
-//
-//    // If we are still in the start up veto make sure the drive is disabled.
-//    if(StartupVeto > 0) {
-//      CommandData.disable_el=1;
-//    }
-//
-//    if(elevinfo.closing==1){
-//      elev_motor_index=INC_INDEX(elev_motor_index);
-//      close_copley(&elevinfo);
-//      usleep(10000);
-//    } else if (elevinfo.reset==1){
-//      if(resetcount==0) {
-//	bprintf(warning,"Resetting connection to elevation drive controller.");
-//      } else if ((resetcount % 10)==0) {
-//	//	bprintf(warning,"reset-> Unable to connect to elevation drive after %i attempts.",resetcount);
-//      }
-//
-//      resetcount++;
-//      elev_motor_index=INC_INDEX(elev_motor_index);
-//      resetCopley(ELEV_DEVICE,&elevinfo); // if successful sets elevinfo.reset=0
-//
-//      usleep(10000);  // give time for motor bits to get written
-//      if (elevinfo.reset==0) {
-//	resetcount=0;
-//        bprintf(info,"Controller successfuly reset!");
-//      }
-//
-//    } else if (elevinfo.init==1) {
-//      if((CommandData.disable_el==0 || CommandData.force_el==1 ) && elevinfo.disabled > 0) {
-//	bprintf(info,"Attempting to enable the elevation motor controller.,CommandData.disable_el=%i,CommandData.force_el=%i,elevinfo.disabled=%i",CommandData.disable_el,CommandData.force_el,elevinfo.disabled);
-//	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Attempting to enable the elevation motor controller.");
-//	n=enableCopley(&elevinfo);
-//	if(n==0){
-//	  bprintf(info,"Elevation motor controller is now enabled.");
-//	  elevinfo.disabled=0;
-//	}
-//      }
-//      if((CommandData.disable_el==1 && CommandData.force_el==0 ) && (elevinfo.disabled==0 || elevinfo.disabled==2)) {
-//	bprintf(info,"Attempting to enable the elevation motor controller.,CommandData.disable_el=%i,CommandData.force_el=%i,elevinfo.disabled=%i",CommandData.disable_el,CommandData.force_el,elevinfo.disabled);
-//	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Attempting to disable the elevation motor controller.");
-//	n=disableCopley(&elevinfo);
-//	if(n==0){
-//	  bprintf(info,"Elevation motor controller is now disabled.");
-//	  elevinfo.disabled=1;
-//	}
-//      }
-//
-//      pos_raw=queryCopleyInd(COP_IND_POS,&elevinfo); // Units are counts
-//                                                     // For Elev 524288 cts = 360 deg
-//      ElevMotorData[elev_motor_index].enc_raw_el=((double) (pos_raw % ((long int) ELEV_ENC_CTS)))/ELEV_ENC_CTS*360.0-ENC_RAW_EL_OFFSET;
-//      //   getCopleySlowInfo(j,elev_motor_index,&ElevMotorData,&elevinfo); // Reads one of temperature, current, status and fault register and
-//                           // writes to the appropriate frame
-//
-//      if (firsttime) {
-//	bprintfverb(info,elevinfo.verbose,MC_VERBOSE,"Raw elevation encoder position is %i",pos_raw);
-//	firsttime=0;
-//      }
-//      j=j%4;
-//      switch(j) {
-//      case 0:
-//	temp_raw=queryCopleyInd(COP_IND_TEMP,&elevinfo);
-//        ElevMotorData[elev_motor_index].temp=temp_raw; // units are deg Cel
-//	break;
-//      case 1:
-//	curr_raw=queryCopleyInd(COP_IND_CURRENT,&elevinfo);
-//        ElevMotorData[elev_motor_index].current=((double) (curr_raw))/100.0; // units are Amps
-//	break;
-//      case 2:
-//	stat_raw=queryCopleyInd(COP_IND_STATUS,&elevinfo);
-//        ElevMotorData[elev_motor_index].status=stat_raw; // units are Amps
-//	break;
-//      case 3:
-//	faultreg_raw=queryCopleyInd(COP_IND_FAULTREG,&elevinfo);
-//        ElevMotorData[elev_motor_index].fault_reg=faultreg_raw; // units are Amps
-//	break;
-//      }
-//      j++;
-//      elev_motor_index=INC_INDEX(elev_motor_index);
-//    } else {
-//      elevinfo.reset=1;
-//      elev_motor_index=INC_INDEX(elev_motor_index);
-//      usleep(10000);
-//    }
-//  }
-//  return NULL;
-//}
-//
-//void* pivotComm(void* arg)
-//{
-//  int n=0, j=0;
-//  int i=0;
-//  long unsigned pos_raw=0;
-//  int firsttime=1,resetcount=0;
-//  unsigned int dp_stat_raw=0, db_stat_raw=0, ds1_stat_raw=0;
-//  short int current_raw=0;
-//  int piv_vel_raw=0;
-//  unsigned int tmp=0;
-//  // Initialize values in the pivotinfo structure.
-//  pivotinfo.open=0;
-//  pivotinfo.init=0;
-//  pivotinfo.err=0;
-//  pivotinfo.err_count=0;
-//  pivotinfo.closing=0;
-//  pivotinfo.reset=0;
-//  pivotinfo.disabled=2;
-//  pivotinfo.bdrate=9600;
-//  pivotinfo.writeset=0;
-//  strncpy(pivotinfo.motorstr,"pivot",6);
-//  pivotinfo.verbose=0;
-//
-//  nameThread("PivCom");
-//
-//  while (!InCharge) {
-//    if (firsttime==1) {
-//      bprintf(info,"I am not incharge thus I will not communicate with the pivot motor.");
-//      firsttime=0;
-//    }
-//    usleep(20000);
-//  }
-//
-//  bprintf(info,"Bringing the pivot drive online.");
-//  firsttime=1;
-//
-//  i=0;
-//
-//  // Initialize structure PivotMotorData.  Follows what was done in dgps.c
-//  PivotMotorData[0].res_piv=0;
-//  PivotMotorData[0].current=0;
-//  PivotMotorData[0].db_stat=0;
-//  PivotMotorData[0].dp_stat=0;
-//  PivotMotorData[0].ds1_stat=0;
-//  PivotMotorData[0].dps_piv=0;
-//  PivotMotorData[0].drive_info=0;
-//  PivotMotorData[0].err_count=0;
-//
-//  // Try to open the port.
-//  while (pivotinfo.open==0) {
-//    pivotinfo.verbose=CommandData.verbose_piv;
-//    open_amc(PIVOT_DEVICE,&pivotinfo); // sets pivotinfo.open=1 if sucessful
-//
-//    if (i==10) {
-//      bputs(err,"Pivot controller serial port could not be opened after 10 attempts.\n");
-//    }
-//    i++;
-//
-//    if (pivotinfo.open==1) {
-//      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Opened the serial port on attempt number %i",i);
-//    }
-//    else sleep(1);
-//  }
-//
-//  // Configure the serial port.  If after 10 attempts the port is not initialized it enters
-//  // the main loop where it will trigger a reset command.
-//  i=0;
-//  while (pivotinfo.init==0 && i <=9) {
-//    pivotinfo.verbose=CommandData.verbose_piv;
-//    configure_amc(&pivotinfo);
-//    if (pivotinfo.init==1) {
-//      bprintf(info,"Initialized the controller on attempt number %i",i);
-//    } else if (i==9) {
-//      bprintf(info,"Could not initialize the controller after %i attempts.",i);
-//    } else {
-//      sleep(1);
-//    }
-//    i++;
-//  }
-//
-//  while (1) {
-//    pivotinfo.verbose=CommandData.verbose_piv;
-//    if((pivotinfo.err & AMC_ERR_MASK) > 0 ) {
-//      pivotinfo.err_count+=1;
-//      if(pivotinfo.err_count >= AMC_ERR_TIMEOUT) {
-//	pivotinfo.reset=1;
-//      }
-//    }
-//    if(CommandData.reset_piv==1 ) {
-//      pivotinfo.reset=1;
-//      CommandData.reset_piv=0;
-//    }
-//    if(CommandData.restore_piv==1 ) {
-//      restoreAMC(&pivotinfo);
-//      CommandData.restore_piv=0;
-//    }
-//
-//    PivotMotorData[pivot_motor_index].drive_info=makeMotorField(&pivotinfo); // Make bitfield of controller info structure.
-//    PivotMotorData[pivot_motor_index].err_count=(pivotinfo.err_count > 65535) ? 65535: pivotinfo.err_count;
-//    // If we are still in the start up veto make sure the drive is disabled.
-//    if(StartupVeto > 0) {
-//      CommandData.disable_az=1;
-//    }
-//
-//    if(pivotinfo.closing==1){
-//      pivot_motor_index=INC_INDEX(pivot_motor_index);
-//      close_amc(&pivotinfo);
-//      usleep(10000);
-//    } else if (pivotinfo.reset==1){
-//      if(resetcount==0) {
-//	bprintf(warning,"Resetting connection to pivot controller.");
-//      } else if ((resetcount % 50)==0) {
-//	bprintfverb(warning,pivotinfo.verbose,MC_VERBOSE,"reset->Unable to connect to pivot after %i attempts.",resetcount);
-//      }
-//
-//      bprintfverb(warning,pivotinfo.verbose,MC_EXTRA_VERBOSE,"Attempting to reset the pivot controller.",resetcount);
-//      resetcount++;
-//      pivot_motor_index=INC_INDEX(pivot_motor_index);
-//      resetAMC(PIVOT_DEVICE,&pivotinfo); // if successful sets pivotinfo.reset=0
-//
-//      if (pivotinfo.reset==0) {
-//	resetcount=0;
-//        bprintf(info,"Controller successfuly reset!");
-//      }
-//      usleep(10000);  // give time for motor bits to get written
-//
-//    } else if (pivotinfo.init==1) {
-//      if(CommandData.disable_az==0 && pivotinfo.disabled == 1) {
-//      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Attempting to enable the pivot motor contoller.");
-//	n=enableAMC(&pivotinfo);
-//	if(n==0) {
-//	  bprintf(info,"Pivot motor is now enabled");
-//	  pivotinfo.disabled=0;
-//	}
-//      }
-//      if(CommandData.disable_az==1 && (pivotinfo.disabled==0 || pivotinfo.disabled==2)) {
-//      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Attempting to disable the pivot motor controller.");
-//	n=disableAMC(&pivotinfo);
-//	if(n==0){
-//	  bprintf(info,"Pivot motor controller is now disabled.");
-//	  pivotinfo.disabled=1;
-//	}
-//      }
-//
-//      if(firsttime){
-//	firsttime=0;
-//	tmp = queryAMCInd(0x32,8,1,&pivotinfo);
-//	bprintf(info,"Ki = %i",tmp);
-//	tmp = queryAMCInd(0xd8,0x24,1,&pivotinfo);
-//	bprintf(info,"Ks = %i",tmp);
-//	tmp = queryAMCInd(0xd8,0x0c,1,&pivotinfo);
-//	bprintf(info,"d8.0ch = %i",tmp);
-//	tmp = queryAMCInd(216,12,1,&pivotinfo);
-//	bprintf(info,"v2 d8.0ch = %i",tmp);
-//	tmp = queryAMCInd(0xd8,0x12,1,&pivotinfo);
-//	bprintf(info,"d8.12h = %i",tmp);
-//	tmp = queryAMCInd(216,18,1,&pivotinfo);
-//	bprintf(info,"v2 d8.12h = %i",tmp);
-//	tmp = queryAMCInd(0xd8,0x13,1,&pivotinfo);
-//	bprintf(info,"d8.13h = %i",tmp);
-//	tmp = queryAMCInd(216,19,1,&pivotinfo);
-//	bprintf(info,"v2 d8.13h = %i",tmp);
-//      }
-//
-//      pos_raw=getAMCResolver(&pivotinfo);
-//      bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"Resolver Position is: %i",pos_raw);
-//      PivotMotorData[pivot_motor_index].res_piv=((double) pos_raw)/PIV_RES_CTS*360.0;
-//
-//      j=j%5;
-//      switch(j) {
-//      case 0:
-//	current_raw=queryAMCInd(16,3,1,&pivotinfo);
-//        PivotMotorData[pivot_motor_index].current=((double)current_raw)/8192.0*20.0; // *2^13 / peak drive current
-//	                                                                             // Units are Amps
-//	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"current_raw= %i, current= %f",current_raw,PivotMotorData[pivot_motor_index].current);
-//	break;
-//      case 1:
-//	db_stat_raw=queryAMCInd(2,0,1,&pivotinfo);
-//        PivotMotorData[pivot_motor_index].db_stat=db_stat_raw;
-//	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"db_stat_raw= %i, db_stat= %f",db_stat_raw,PivotMotorData[pivot_motor_index].db_stat);
-//	break;
-//      case 2:
-//	dp_stat_raw=queryAMCInd(2,1,1,&pivotinfo);
-//        PivotMotorData[pivot_motor_index].dp_stat=dp_stat_raw;
-//	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"dp_stat_raw= %i, dp_stat= %f",dp_stat_raw,PivotMotorData[pivot_motor_index].dp_stat);
-//	break;
-//      case 3:
-//	ds1_stat_raw=queryAMCInd(2,3,1,&pivotinfo);
-//        PivotMotorData[pivot_motor_index].ds1_stat=ds1_stat_raw;
-//	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"ds1_stat_raw= %i, ds1_stat= %f",ds1_stat_raw,PivotMotorData[pivot_motor_index].ds1_stat);
-//	break;
-//      case 4:
-//	piv_vel_raw=((int) queryAMCInd(17,2,2,&pivotinfo));
-//        PivotMotorData[pivot_motor_index].dps_piv=piv_vel_raw*0.144;
-//	bprintfverb(info,pivotinfo.verbose,MC_VERBOSE,"piv_vel_raw= %i, piv_vel= %f",piv_vel_raw,PivotMotorData[pivot_motor_index].dps_piv);
-//	break;
-//      }
-//      j++;
-//      pivot_motor_index=INC_INDEX(pivot_motor_index);
-//    } else {
-//      pivotinfo.reset=1;
-//      pivot_motor_index=INC_INDEX(pivot_motor_index);
-//      usleep(10000);
-//    }
-//  }
-//  return NULL;
-//}

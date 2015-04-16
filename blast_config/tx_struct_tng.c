@@ -611,6 +611,11 @@ channel_t channel_list[] =
     { "el_raw_pss3",          I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_P_DEG, 0 },
     { "el_raw_pss4",          I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_P_DEG, 0 },
 
+    { "el_raw_enc",           I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_P_DEG, 0 },
+    { "el_enc",               I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_P_DEG, 0 },
+    { "sigma_enc",            I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "chatter",              1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+
     { "focpos_sbsc",          1.0 / 10.0,       0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "delay_sbsc",           1.0 / 1000.0,     0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "daz_p",                I2VEL,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -664,18 +669,6 @@ channel_t channel_list[] =
     { "switch_misc",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "bus_reset_act",        1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
-    { "i_trans",              CAL16(11.32, -0.02), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
-    { "i_das",                CAL16(11.03, -0.04), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
-    { "i_acs",                CAL16(12.5, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
-    { "i_rec",                CAL16(10.75, -0.07), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
-    { "i_sc",                 CAL16(10.89, -0.09), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
-    { "i_sbsc",               CAL16(11.03, -0.19), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
-    { "i_el",                 CAL16(12.5, -0.02), TYPE_UINT16, RATE_5HZ, SRC_OF_UEI, U_I_A, 0 },
-    { "i_piv",                CAL16(12.5, -0.05), TYPE_UINT16, RATE_5HZ, SRC_OF_UEI, U_I_A, 0 },
-    { "i_rw",                 CAL16(12.5, -0.09), TYPE_UINT16, RATE_5HZ, SRC_OF_UEI, U_I_A, 0 },
-    { "i_step",               CAL16(12.5, -0.25), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
-    { "i_gy",                 CAL16(11.0, -0.01), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
-    { "i_flc",                CAL16(12.5, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 },
     { "v1_3_pss",             CAL16(-1., 0.), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
     { "v2_3_pss",             CAL16(-1., 0.), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
     { "v3_3_pss",             CAL16(-1., 0.), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
@@ -684,34 +677,6 @@ channel_t channel_list[] =
     { "v2_4_pss",             CAL16(-1., 0.), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
     { "v3_4_pss",             CAL16(-1., 0.), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
     { "v4_4_pss",             CAL16(-1., 0.), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-
-    { "t_gy",                 CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "t_serial",             CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "t_mc_piv",             CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "t_piv",                CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "t_wd_flc",             CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-
-    { "vt_port_hexc",         CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_1_bat",             CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_2_bat",             CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_port_back",         CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "t_dgps",               CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 }, /* Not used can be re-assigned*/
-    { "vt_star_front",        CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "t_acs",                CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "t_dcdc_acs",           CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "vt_mc_lock",           CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "t_lock",               CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "vt_sbsc",              CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "t_box_bal",            CAL_AD590(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "vt_pump_bal",          CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_el",                CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_array",             CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_sun",               CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_rw",                CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_earth",             CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_chin",              CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-    { "vt_port_pyr",          CAL16T(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
-
 
     { "v_pump_bal",           3.91 / 13107.0,   -9.775, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "dac2_ampl",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -776,10 +741,9 @@ channel_t channel_list[] =
     { "ifyaw_gy",             1.0,      0.0,            TYPE_FLOAT, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "trigger_isc",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "trigger_osc",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "vel_req_el",           GY16_TO_DPS * 0.1,-3276.8 * GY16_TO_DPS, TYPE_UINT16, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "cos_el",               1.0 / 32768.0,    -1.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "sin_el",               1.0 / 32768.0,    -1.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "vel_req_az",           GY16_TO_DPS * 0.1,-3276.8 * GY16_TO_DPS, TYPE_UINT16, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "vel_req_el",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+    { "vel_req_az",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
+
     { "pulse_sc",             1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
 
     #endif
@@ -791,7 +755,7 @@ channel_t channel_list[] =
     { "y_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
     #endif
 
-    /* Motor Channels */
+    /** Motor Channels */
     { "mc_rw_vel",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_rw_pos",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_el_vel",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
@@ -799,61 +763,51 @@ channel_t channel_list[] =
     { "mc_piv_vel",              1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_piv_pos",              1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
 
-    { "mc_piv_i_cmd",           1.0,    0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
-    { "mc_rw_i_cmd",            1.0,    0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
-    { "mc_el_i_cmd",            1.0,    0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_piv_i_cmd",           1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_rw_i_cmd",            1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_el_i_cmd",            1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
 
+    { "mc_piv_i_read",           1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_rw_i_read",            1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_el_i_read",            1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+
+    /** Velocity control loop commanded P/I terms */
     { "g_p_el",               1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_i_el",               1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_p_az",               1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_i_az",               1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "g_pe_piv",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "g_pv_piv",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "set_rw",               200.0 / 32768.0,  0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
+
     { "fault_gy",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "vel_el_p",             I2VEL,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "frict_off_piv",        2.0 / 65535.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "frict_term_piv",       2.0 / 32767.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "frict_term_uf_piv",    2.0 / 32767.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 }, // For debugging remove later
 
-    { "stat_1_rw",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "stat_2_rw",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    /** Motor Controller Fault and Status Registers */
+    { "status_rw",            1.0,              0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "fault_rw",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "stat_1_el",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "stat_2_el",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "status_el",            1.0,              0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "fault_el",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "stat_dr_piv",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "stat_s1_piv",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "status_piv",           1.0,              0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "fault_piv",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+
+    /** Motor Controller Temperatures */
     { "t_mc_rw",              1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_T_C, 0 },
-    { "i_ser_rw",             30.0 / 32768.0,   0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_I_A, 0 },
     { "t_mc_el",              1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_T_C, 0 },
-    { "i_ser_el",             30.0 / 32768.0,   0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_I_A, 0 },
-    { "res_piv",              I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_P_DEG, 0 },
-    { "i_ser_piv",            20.0 / 32768.0,   0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_I_A, 0 },
-    { "g_pe_piv",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "g_pv_piv",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "set_rw",               200.0 / 32768.0,  0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
-    { "vel_dps_az",           20.0 / 32768.0,   0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
+    { "t_mc_piv",             1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_T_C, 0 },
 
-    { "vel_ser_piv",          1.0 / 0.144,      0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "vel_calc_piv",         20.0 / 32768.0,   0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
-
-    { "verbose_rw",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "verbose_el",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "verbose_piv",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "p_rw_term_piv",        1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "p_err_term_piv",       1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-
-    { "dac_el",               1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "p_term_el",            1.0,              -32768.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "i_term_el",            1.0,              -32768.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "error_el",             614.4e-6,         614.4 * (-32768.0e-6), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "dac_rw",               1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "p_term_az",            1.0,              -32768.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "i_term_az",            1.0,              -32768.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "error_az",             614.4e-6,         614.4 * (-32768.0e-6), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-
-    { "el_raw_enc",           I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_P_DEG, 0 },
-    { "el_enc",               I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_P_DEG, 0 },
-    { "sigma_enc",            I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "chatter",              1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    /** Calculated P/I and Error (diff btw commanded/actual velocity) terms from control loop */
+    { "p_term_el",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "i_term_el",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "error_el",             1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "p_term_az",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "i_term_az",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "error_az",             1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "p_rw_term_piv",        1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "p_err_term_piv",       1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
     { "mcp_1hz_framecount",     1.0,    0.0,        TYPE_UINT32,    RATE_1HZ,   SRC_FC, U_NONE, 0 },
     { "mcp_5hz_framecount",     1.0,    0.0,        TYPE_UINT32,    RATE_5HZ,   SRC_FC, U_NONE, 0 },
