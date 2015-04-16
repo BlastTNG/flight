@@ -653,6 +653,7 @@ void store_5hz_acs(void)
         altAddr = channels_find_by_name("alt");
         lonAddr = channels_find_by_name("lon");
         lstAddr = channels_find_by_name("lst");
+        azGyAddr = channels_find_by_name("az_gy");
         azMagAddr = channels_find_by_name("az_mag");
         azRawMagAddr = channels_find_by_name("az_raw_mag");
         declinationMagAddr = channels_find_by_name("declination_mag");
@@ -861,7 +862,7 @@ void store_5hz_acs(void)
     SET_VALUE(timeAtrimAddr, CommandData.autotrim_time);
     SET_VALUE(rateAtrimAddr, CommandData.autotrim_rate * 65536.0 / 30.0);
 
-    SET_VALUE(azGyAddr, (int) (PointingData[i_point].v_az * 32768.0 / 20.0));
+    SET_FLOAT(azGyAddr, (float) (PointingData[i_point].v_az));
 
     /************* Pointing mode fields *************/
     SET_VALUE(slewVetoAddr, (int) (CommandData.pointing_mode.nw) / 4.);

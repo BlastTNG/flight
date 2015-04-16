@@ -532,7 +532,7 @@ channel_t channel_list[] =
     { "lvdt_1_act",           1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "lvdt_2_act",           1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
-    { "az_gy",                20.0 / 32768.0,   0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
+    { "az_gy",                1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "offset_0_act",         1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "offset_1_act",         1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "offset_2_act",         1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
