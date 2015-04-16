@@ -103,6 +103,7 @@ static uint16_t *status_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 static int16_t *target_current[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
+static int16_t *drive_state[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
 static uint16_t *current_p[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 static uint16_t *current_i[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 static int16_t *current_offset[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
@@ -280,7 +281,7 @@ void piv_set_i(int16_t m_i)
 }
 
 /**
- * Sets the current Integral Gain
+ * Sets the current offset (added to each current)
  * @param m_offset uint16 Gain
  */
 void rw_set_offset(int16_t m_offset)
@@ -303,14 +304,37 @@ void piv_set_offset(int16_t m_offset)
 void rw_enable(void)
 {
     *control_word[rw_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    *drive_state[rw_index] = ECAT_DRIVE_STATE_PROG_CURRENT;
 }
 void el_enable(void)
 {
     *control_word[el_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    *drive_state[el_index] = ECAT_DRIVE_STATE_PROG_CURRENT;
 }
 void piv_enable(void)
 {
     *control_word[piv_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    *drive_state[piv_index] = ECAT_DRIVE_STATE_PROG_CURRENT;
+}
+
+/**
+ * Disables the operation of the motor controller.  These are currently set using the
+ * PDO interface
+ */
+void rw_disable(void)
+{
+    *control_word[rw_index] = ECAT_CTL_HALT;
+    *drive_state[rw_index] = ECAT_DRIVE_STATE_DISABLED;
+}
+void el_disable(void)
+{
+    *control_word[el_index] = ECAT_CTL_HALT;
+    *drive_state[el_index] = ECAT_DRIVE_STATE_DISABLED;
+}
+void piv_disable(void)
+{
+    *control_word[piv_index] = ECAT_CTL_HALT;
+    *drive_state[piv_index] = ECAT_DRIVE_STATE_DISABLED;
 }
 
 /**
@@ -490,7 +514,10 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_CURRENT_LOOP_CMD, 16);    // Target Current
     ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING, 2, map.val);
 
-    ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING, 0, 2); /// Set the 0x1600 map to contain 2 elements
+    map_pdo(&map, ECAT_DRIVE_STATE, 16);    // Drive State
+    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING, 3, map.val);
+
+    ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING, 0, 3); /// Set the 0x1600 map to contain 3 elements
     ec_SDOwrite16(m_slave, ECAT_RXPDO_ASSIGNMENT, 1, ECAT_RXPDO_MAPPING); /// Set the 0x1600 map to the first PDO
 
     /**
@@ -537,7 +564,8 @@ static void map_index_vars(int m_index)
     /// Outputs
     control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
     target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
-    current_p[m_index] = (uint16_t*) (target_current[m_index] + 1);
+    drive_state[m_index] = (int16_t*) (target_current[m_index] + 1);
+    current_p[m_index] = (uint16_t*) (drive_state[m_index] + 1);
     current_i[m_index] = (uint16_t*) (current_p[m_index] + 1);
     current_offset[m_index] = (int16_t*) (current_i[m_index] + 1);
 }
