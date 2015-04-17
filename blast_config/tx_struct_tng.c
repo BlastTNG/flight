@@ -762,14 +762,17 @@ channel_t channel_list[] =
     { "mc_el_pos",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_piv_vel",              1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_piv_pos",              1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_rw_encvel",            1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_el_encvel",            1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_piv_encvel",           1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
 
-    { "mc_piv_i_cmd",           1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
-    { "mc_rw_i_cmd",            1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
-    { "mc_el_i_cmd",            1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_piv_i_cmd",           1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_rw_i_cmd",            1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_el_i_cmd",            1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
 
-    { "mc_piv_i_read",           1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
-    { "mc_rw_i_read",            1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
-    { "mc_el_i_read",            1.0,        0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_piv_i_read",          1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_rw_i_read",           1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
+    { "mc_el_i_read",           1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
 
     /** Velocity control loop commanded P/I terms */
     { "g_p_el",               1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -786,13 +789,13 @@ channel_t channel_list[] =
     { "frict_term_piv",       2.0 / 32767.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "frict_term_uf_piv",    2.0 / 32767.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 }, // For debugging remove later
 
-    /** Motor Controller Fault and Status Registers */
+    /** Motor Controller State and Status Registers */
     { "status_rw",            1.0,              0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "fault_rw",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "state_rw",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "status_el",            1.0,              0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "fault_el",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "state_el",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "status_piv",           1.0,              0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "fault_piv",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "state_piv",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
     /** Motor Controller Temperatures */
     { "t_mc_rw",              1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_T_C, 0 },

@@ -81,7 +81,7 @@ static char io_map[4096];
 
 static int motors_exit = false;
 
-#define N_MCs 3
+#define N_MCs 4
 
 /**
  * The following pointers reference data points read from/written to
@@ -92,21 +92,20 @@ static int motors_exit = false;
 static int32_t dummy_var = 0;
 
 /// Read words
-static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var };
-static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var };
-static int32_t *enc_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var };
-static int16_t *motor_current[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
-static uint32_t *status_register[N_MCs] = { (uint32_t*)&dummy_var, (uint32_t*)&dummy_var, (uint32_t*)&dummy_var };
-static int16_t *amp_temp[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
-static uint16_t *status_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
+static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
+static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
+static int32_t *enc_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
+static int16_t *motor_current[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
+static uint32_t *status_register[N_MCs] = { (uint32_t*)&dummy_var, (uint32_t*)&dummy_var, (uint32_t*)&dummy_var, (uint32_t*)&dummy_var };
+static int16_t *amp_temp[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
+static uint16_t *status_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 
 /// Write words
-static uint16_t *control_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
-static int16_t *target_current[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
-static int16_t *drive_state[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
-static uint16_t *current_p[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
-static uint16_t *current_i[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
-static int16_t *current_offset[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
+static uint16_t *control_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
+static int16_t *target_current[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
+static uint16_t *current_p[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
+static uint16_t *current_i[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
+static int16_t *current_offset[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
 
 /**
  * This set of functions return the absolute position read by each motor controller
@@ -304,17 +303,14 @@ void piv_set_offset(int16_t m_offset)
 void rw_enable(void)
 {
     *control_word[rw_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
-    *drive_state[rw_index] = ECAT_DRIVE_STATE_PROG_CURRENT;
 }
 void el_enable(void)
 {
     *control_word[el_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
-    *drive_state[el_index] = ECAT_DRIVE_STATE_PROG_CURRENT;
 }
 void piv_enable(void)
 {
     *control_word[piv_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
-    *drive_state[piv_index] = ECAT_DRIVE_STATE_PROG_CURRENT;
 }
 
 /**
@@ -324,17 +320,14 @@ void piv_enable(void)
 void rw_disable(void)
 {
     *control_word[rw_index] = ECAT_CTL_HALT;
-    *drive_state[rw_index] = ECAT_DRIVE_STATE_DISABLED;
 }
 void el_disable(void)
 {
     *control_word[el_index] = ECAT_CTL_HALT;
-    *drive_state[el_index] = ECAT_DRIVE_STATE_DISABLED;
 }
 void piv_disable(void)
 {
     *control_word[piv_index] = ECAT_CTL_HALT;
-    *drive_state[piv_index] = ECAT_DRIVE_STATE_DISABLED;
 }
 
 /**
@@ -477,7 +470,7 @@ static int motor_pdo_init(int m_slave)
     ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
 
     ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2); /// Set the 0x1a01 map to contain 2 elements
-    ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT+1, 2, ECAT_TXPDO_MAPPING); /// Set the 0x1a01 map to the second PDO
+    ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1); /// Set the 0x1a01 map to the second PDO
 
     /**
      * Third map (0x1a02 register)
@@ -492,7 +485,7 @@ static int motor_pdo_init(int m_slave)
     ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+2, 3, map.val);
 
     ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+2, 0, 3); /// Set the 0x1a01 map to contain 3 elements
-    ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT+2, 3, ECAT_TXPDO_MAPPING); /// Set the 0x1a02 map to the third PDO
+    ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 3, ECAT_TXPDO_MAPPING + 2); /// Set the 0x1a02 map to the third PDO
 
     ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 3); /// There are three maps in the TX PDOs
 
@@ -514,10 +507,7 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_CURRENT_LOOP_CMD, 16);    // Target Current
     ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING, 2, map.val);
 
-    map_pdo(&map, ECAT_DRIVE_STATE, 16);    // Drive State
-    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING, 3, map.val);
-
-    ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING, 0, 3); /// Set the 0x1600 map to contain 3 elements
+    ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING, 0, 2); /// Set the 0x1600 map to contain 2 elements
     ec_SDOwrite16(m_slave, ECAT_RXPDO_ASSIGNMENT, 1, ECAT_RXPDO_MAPPING); /// Set the 0x1600 map to the first PDO
 
     /**
@@ -536,7 +526,7 @@ static int motor_pdo_init(int m_slave)
     ec_SDOwrite16(m_slave, ECAT_RXPDO_ASSIGNMENT, 2, ECAT_RXPDO_MAPPING + 1); /// Set the 0x1601 map to the second PDO
 
 
-    ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 3); /// There are three maps in the RX PDOs
+    ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 2); /// There are two maps in the RX PDOs
 
 
     return 0;
@@ -564,8 +554,7 @@ static void map_index_vars(int m_index)
     /// Outputs
     control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
     target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
-    drive_state[m_index] = (int16_t*) (target_current[m_index] + 1);
-    current_p[m_index] = (uint16_t*) (drive_state[m_index] + 1);
+    current_p[m_index] = (uint16_t*) (target_current[m_index] + 1);
     current_i[m_index] = (uint16_t*) (current_p[m_index] + 1);
     current_offset[m_index] = (int16_t*) (current_i[m_index] + 1);
 }
@@ -653,6 +642,7 @@ static void read_motor_data()
     RWMotorData[motor_i].position = rw_get_position(); ///TODO:Add split between resolver and internal motor pos
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
+    RWMotorData[motor_i].enc_velocity = rw_get_enc_velocity();
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     ElevMotorData[motor_i].drive_info = el_get_status_word();
@@ -661,6 +651,7 @@ static void read_motor_data()
     ElevMotorData[motor_i].position = el_get_position(); ///TODO:Add split between resolver and internal motor pos
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
+    ElevMotorData[motor_i].enc_velocity = rw_get_enc_velocity();
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
@@ -669,6 +660,7 @@ static void read_motor_data()
     PivotMotorData[motor_i].position = piv_get_position(); ///TODO:Add split between resolver and internal motor pos
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
+    PivotMotorData[motor_i].enc_velocity = rw_get_enc_velocity();
 
     motor_index=INC_INDEX(motor_index);
 }
@@ -712,6 +704,12 @@ static void* motor_control(void* arg)
 
     /// Put the motors in Operational mode (EtherCAT Operation)
     motor_set_operational();
+
+    for (int i = 1; i <= ec_slavecount; i++) {
+        len = 2;
+        int16_t state = ECAT_DRIVE_STATE_PROG_CURRENT;
+        ec_SDOwrite(i, ECAT_DRIVE_STATE, false, len, &state, EC_TIMEOUTTXM);
+    }
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
     expectedWKC = (ec_group[0].outputsWKC * 2) + ec_group[0].inputsWKC;

@@ -262,7 +262,7 @@ static double get_az_vel(void)
 /*                                                                      */
 /************************************************************************/
 //TODO: Change GetIPivot to return units of 0.01A for motor controller
-static double calculate_piv_current(float v_az_req_gy, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
+static double calculate_piv_current(float m_az_req_vel, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
 {
     static channel_t* pRWTermPivAddr;
     static channel_t* pErrTermPivAddr;
@@ -272,11 +272,9 @@ static double calculate_piv_current(float v_az_req_gy, unsigned int g_rw_piv, un
     static double a = 0.0;
     static unsigned int ib_last = 0;
     double I_req = 0.0;
-    int I_req_dac = 0;
     int i_point, i_rw;
-    double v_az_req, i_frict, i_frict_filt;
+    double i_frict, i_frict_filt;
     double p_rw_term, p_err_term;
-    int p_rw_term_dac, p_err_term_dac;
 
     static int i = 0;
     static unsigned int firsttime = 1;
@@ -292,12 +290,10 @@ static double calculate_piv_current(float v_az_req_gy, unsigned int g_rw_piv, un
         firsttime = 0;
     }
 
-    v_az_req = ((double) v_az_req_gy);
-
     i_point = GETREADINDEX(point_index);
     i_rw = GETREADINDEX(motor_index);
     p_rw_term = (-1.0) * ((double) g_rw_piv / 10.0) * (RWMotorData[i_rw].velocity - CommandData.pivot_gain.SP);
-    p_err_term = (double) g_err_piv * 5.0 * (v_az_req - PointingData[i_point].v_az);
+    p_err_term = (double) g_err_piv * 5.0 * (m_az_req_vel - PointingData[i_point].v_az);
     I_req = p_rw_term + p_err_term;
 
     if (disabled) { // Don't attempt to send current to the motors if we are disabled.
@@ -313,21 +309,7 @@ static double calculate_piv_current(float v_az_req_gy, unsigned int g_rw_piv, un
             i_frict = frict_off_piv;
         }
         else {
-            i_frict = (-1.0) * frict_off_piv;
-        }
-    }
-
-    /* Convert to DAC Units*/
-
-    if (fabs(I_req) < 100) {
-        I_req_dac = 16384 + PIV_DAC_OFF;
-    }
-    else {
-        if (I_req > 0.0) {
-            I_req_dac = I_req + 16384 + PIV_DAC_OFF + PIV_DEAD_BAND;
-        }
-        else {
-            I_req_dac = I_req + 16384 + PIV_DAC_OFF - PIV_DEAD_BAND;
+            i_frict = -frict_off_piv;
         }
     }
 
@@ -336,53 +318,10 @@ static double calculate_piv_current(float v_az_req_gy, unsigned int g_rw_piv, un
     ib_last = (ib_last + FPIV_FILTER_LEN + 1) % FPIV_FILTER_LEN;
     i_frict_filt = a / ((double) FPIV_FILTER_LEN);
 
-    I_req_dac += i_frict_filt * PIV_I_TO_DAC;
-    //  if(i%20==1) bprintf(info,"Motors: a=%f,ib_last=%i,i_frict=%f,i_frict_filt=%f,I_req=%f,I_req_dac_init=%i,I_req_dac=%i",a,ib_last,i_frict,i_frict_filt,I_req,I_req_dac_init,I_req_dac);
+    I_req += i_frict_filt;
 
-    if (fabs(p_rw_term) < 100) {
-        p_rw_term_dac = 16384 + PIV_DAC_OFF;
-    }
-    else {
-        if (p_rw_term > 0.0) {
-            p_rw_term_dac = p_rw_term + 16384 + PIV_DAC_OFF + PIV_DEAD_BAND;
-        }
-        else {
-            p_rw_term_dac = p_rw_term + 16384 + PIV_DAC_OFF - PIV_DEAD_BAND;
-        }
-    }
-
-    if (fabs(p_err_term) < 100) {
-        p_err_term_dac = 16384 + PIV_DAC_OFF;
-    }
-    else {
-        if (p_err_term > 0.0) {
-            p_err_term_dac = p_err_term + 16384 + PIV_DAC_OFF + PIV_DEAD_BAND;
-        }
-        else {
-            p_err_term_dac = p_err_term + 16384 + PIV_DAC_OFF - PIV_DEAD_BAND;
-        }
-    }
-
-    // Check to make sure the DAC value is in the proper range
-    if (I_req_dac <= 0) {
-        I_req_dac = 1;
-    }
-    if (I_req_dac > 32767) {
-        I_req_dac = 32767;
-    }
-    // Check to make sure the P-terms are in the proper range
-    if (p_rw_term_dac <= 0) {
-        p_rw_term_dac = 1;
-    }
-    if (p_rw_term_dac > 32767) {
-        p_rw_term_dac = 32767;
-    }
-    if (p_err_term_dac <= 0) {
-        p_err_term_dac = 1;
-    }
-    if (p_err_term_dac > 32767) {
-        p_err_term_dac = 32767;
-    }
+    if (I_req > MAX_PIV_CURRENT) I_req = MAX_PIV_CURRENT;
+    if (I_req < MIN_PIV_CURRENT) I_req = MIN_PIV_CURRENT;
 
     i++;
 
@@ -390,7 +329,7 @@ static double calculate_piv_current(float v_az_req_gy, unsigned int g_rw_piv, un
     SET_FLOAT(pErrTermPivAddr, p_err_term);
     SET_FLOAT(frictTermPivAddr, i_frict_filt);
     SET_FLOAT(frictTermUnfiltPivAddr, i_frict);
-    return I_req_dac;
+    return I_req + i_frict_filt;
 }
 
 /************************************************************************/
@@ -415,15 +354,15 @@ void write_motor_channels_5hz(void)
     /* Motor data read out over motor thread in ec_motors.c */
     static channel_t *tMCRWAddr;
     static channel_t *statusRWAddr;
-    static channel_t *faultRWAddr;
+    static channel_t *stateRWAddr;
 
     static channel_t *tMCElAddr;
     static channel_t *statusElAddr;
-    static channel_t *faultElAddr;
+    static channel_t *stateElAddr;
 
     static channel_t *tMCPivAddr;
     static channel_t *statusPivAddr;
-    static channel_t *faultPivAddr;
+    static channel_t *statePivAddr;
 
     int elGainP, elGainI;
     int azGainP, azGainI, pivGainRW, pivGainErr;
@@ -453,15 +392,15 @@ void write_motor_channels_5hz(void)
 
         tMCRWAddr = channels_find_by_name("t_mc_rw");
         statusRWAddr = channels_find_by_name("status_rw");
-        faultRWAddr = channels_find_by_name("fault_rw");
+        stateRWAddr = channels_find_by_name("state_rw");
 
         tMCElAddr = channels_find_by_name("t_mc_el");
         statusElAddr = channels_find_by_name("status_el");
-        faultElAddr = channels_find_by_name("fault_el");
+        stateElAddr = channels_find_by_name("state_el");
 
         tMCPivAddr = channels_find_by_name("t_mc_piv");
         statusPivAddr = channels_find_by_name("status_piv");
-        faultPivAddr = channels_find_by_name("fault_piv");
+        statePivAddr = channels_find_by_name("state_piv");
 
     }
 
@@ -527,15 +466,15 @@ void write_motor_channels_5hz(void)
     i_motors = GETREADINDEX(motor_index);
     SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
     SET_VALUE(statusRWAddr, RWMotorData[i_motors].status);
-    SET_VALUE(faultRWAddr, RWMotorData[i_motors].fault_reg);
+    SET_VALUE(stateRWAddr, RWMotorData[i_motors].drive_info);
 
     SET_VALUE(tMCElAddr, ElevMotorData[i_motors].temp);
     SET_VALUE(statusElAddr, ElevMotorData[i_motors].status);
-    SET_VALUE(faultElAddr, ElevMotorData[i_motors].fault_reg);
+    SET_VALUE(stateElAddr, ElevMotorData[i_motors].drive_info);
 
     SET_VALUE(tMCPivAddr, PivotMotorData[i_motors].temp);
     SET_VALUE(statusPivAddr, PivotMotorData[i_motors].status);
-    SET_VALUE(faultPivAddr, PivotMotorData[i_motors].fault_reg);
+    SET_VALUE(statePivAddr, PivotMotorData[i_motors].drive_info);
 
 }
 
@@ -579,9 +518,9 @@ void write_motor_channels_200hz(void)
      * Motor Controller Fields
      */
     i_motors = GETREADINDEX(motor_index);
-    SET_FLOAT(el_current_read, ElevMotorData[i_motors].current);
-    SET_FLOAT(rw_current_read, RWMotorData[i_motors].current);
-    SET_FLOAT(piv_current_read, PivotMotorData[i_motors].current);
+    SET_INT16(el_current_read, ElevMotorData[i_motors].current * 100.0);
+    SET_INT16(rw_current_read, RWMotorData[i_motors].current * 100.0);
+    SET_INT16(piv_current_read, PivotMotorData[i_motors].current * 100.0);
 
 }
 
@@ -1931,9 +1870,9 @@ static int16_t calculate_el_current(float m_vreq_el)
     static float el_integral = 0.0;
     static int first_time = 1;
 
-    channel_t *error_el_ch = NULL;
-    channel_t *p_el_ch = NULL;
-    channel_t *i_el_ch = NULL;
+    static channel_t *error_el_ch = NULL;
+    static channel_t *p_el_ch = NULL;
+    static channel_t *i_el_ch = NULL;
 
     float p_el = 0.0, i_el = 0.0;       //control loop gains
     float error_el = 0.0, P_term_el = 0.0, I_term_el = 0.0; //intermediate control loop results
@@ -1977,8 +1916,8 @@ static int16_t calculate_el_current(float m_vreq_el)
     //sign difference in controller requires using -(P_term + I_term)
     dac_out =-(P_term_el + I_term_el);
 
-    if (dac_out > INT16_MAX) dac_out = INT16_MAX;
-    if (dac_out < INT16_MIN) dac_out = INT16_MIN;
+    if (dac_out > MAX_EL_CURRENT) dac_out = MAX_EL_CURRENT;
+    if (dac_out < MIN_EL_CURRENT) dac_out = MIN_EL_CURRENT;
     return dac_out;
 }
 
@@ -1987,9 +1926,9 @@ static int16_t calculate_rw_current(float v_req_az)
     static float az_integral = 0.0;
     static int first_time = 1;
 
-    channel_t *error_az_ch = NULL;
-    channel_t *p_az_ch = NULL;
-    channel_t *i_az_ch = NULL;
+    static channel_t *error_az_ch = NULL;
+    static channel_t *p_az_ch = NULL;
+    static channel_t *i_az_ch = NULL;
 
     double cos_el, sin_el;
     float p_az = 0.0, i_az = 0.0;       //control loop gains
@@ -2037,8 +1976,8 @@ static int16_t calculate_rw_current(float v_req_az)
     //TODO check sign of output
     dac_out = -(P_term_az + I_term_az);
 
-    if (dac_out > INT16_MAX) dac_out = INT16_MAX;
-    if (dac_out < INT16_MIN) dac_out = INT16_MIN;
+    if (dac_out > MAX_RW_CURRENT) dac_out = MAX_RW_CURRENT;
+    if (dac_out < MIN_RW_CURRENT) dac_out = MIN_RW_CURRENT;
     return dac_out;
 
 }

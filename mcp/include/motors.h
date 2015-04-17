@@ -34,6 +34,15 @@
 #define MAX_V_AZ 2.0 // was 2000 in gyro units
 #define MAX_V_EL 0.5 // was 0.5
 
+#define MAX_RW_CURRENT 2000 // 20 Amps in 0.01A units
+#define MIN_RW_CURRENT (-2000) // 20 Amps in 0.01A units
+
+#define MAX_EL_CURRENT 2000 // 20 Amps in 0.01A units
+#define MIN_EL_CURRENT (-2000) // 20 Amps in 0.01A units
+
+#define MAX_PIV_CURRENT 3000 // 30 Amps in 0.01A units
+#define MIN_PIV_CURRENT (-3000) // 30 Amps in 0.01A units
+
 #define VPIV_FILTER_LEN 40
 #define FPIV_FILTER_LEN 1000
 
@@ -50,15 +59,17 @@
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
 ///TODO: Add State/Desired State here
-typedef struct {
-  double velocity;              // in degrees per second
-  int16_t temp;                 // drive temperature in deg Celcius
-  double current;               // drive current read from controller
-  int32_t position;             // Resolver position (if available)
-  uint32_t status;              // drive status
-  uint32_t fault_reg;           // drive fault register
-  uint16_t drive_info;          // motorinfo struct
-  uint32_t err_count;           // count of serious serial errors
+typedef struct
+{
+    int32_t velocity;             // in 0.1 counts per second
+    int32_t enc_velocity;         // in 0.1 counts per second
+    int16_t temp;                 // drive temperature in degrees Celsius
+    double current;               // drive current read from controller
+    int32_t position;             // Resolver position (if available)
+    uint32_t status;              // drive status
+    uint32_t fault_reg;           // drive fault register
+    uint16_t drive_info;          // motorinfo struct
+    uint32_t err_count;           // count of serious serial errors
 } motor_data_t;
 
 extern motor_data_t RWMotorData[3];

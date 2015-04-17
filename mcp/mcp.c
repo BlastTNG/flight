@@ -338,6 +338,7 @@ static void mcp_200hz_routines(void)
 {
     read_200hz_acs();
     command_motors();
+    write_motor_channels_200hz();
 }
 static void mcp_100hz_routines(void)
 {
@@ -356,6 +357,7 @@ static void mcp_5hz_routines(void)
 {
     read_5hz_acs();
     store_5hz_acs();
+    write_motor_channels_5hz();
     store_axes_mode_data();
     WriteAux();
     StoreActBus();
