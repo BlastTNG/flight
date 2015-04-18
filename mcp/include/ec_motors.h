@@ -33,6 +33,18 @@
     _map.subindex = _subindex;\
 }
 
+#define RW_DEFAULT_CURRENT_P    6000
+#define RW_DEFAULT_CURRENT_I    200
+#define RW_DEFAULT_CURRENT_OFF  (-8)
+
+#define EL_DEFAULT_CURRENT_P    6000
+#define EL_DEFAULT_CURRENT_I    200
+#define EL_DEFAULT_CURRENT_OFF  (0)
+
+#define PIV_DEFAULT_CURRENT_P    6000
+#define PIV_DEFAULT_CURRENT_I    200
+#define PIV_DEFAULT_CURRENT_OFF  (0)
+
 /**
  * N.B. Here, RX/TX are from the controller's perspective, so RX is
  * received by the controller and TX is transmitted by the controller

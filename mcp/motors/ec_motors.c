@@ -347,6 +347,49 @@ void piv_quick_stop(void)
 }
 
 /**
+ * Sets the current limits for each motor.
+ * TODO: Update the current limits for each motor controller/motor pair
+ */
+void rw_init_current_limit(void)
+{
+    ec_SDOwrite16(rw_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
+    ec_SDOwrite16(rw_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+}
+void el_init_current_limit(void)
+{
+    ec_SDOwrite16(el_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
+    ec_SDOwrite16(el_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+}
+void piv_init_current_limit(void)
+{
+    ec_SDOwrite16(piv_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
+    ec_SDOwrite16(piv_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+}
+
+/**
+ * Sets the current default PID values for each motor
+ * TODO: Update the current PIDs for each motor after tuning
+ */
+void rw_init_current_pid(void)
+{
+    ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_CP, RW_DEFAULT_CURRENT_P);
+    ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_CI, RW_DEFAULT_CURRENT_I);
+    ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_OFFSET, RW_DEFAULT_CURRENT_OFF);
+}
+void el_init_current_pid(void)
+{
+    ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_CP, EL_DEFAULT_CURRENT_P);
+    ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_CI, EL_DEFAULT_CURRENT_I);
+    ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_OFFSET, EL_DEFAULT_CURRENT_OFF);
+}
+void piv_init_current_pid(void)
+{
+    ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_CP, PIV_DEFAULT_CURRENT_P);
+    ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_CI, PIV_DEFAULT_CURRENT_I);
+    ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_OFFSET, PIV_DEFAULT_CURRENT_OFF);
+}
+
+/**
  * Finds all motor controllers on the network and sets them to pre-operational state
  * @return -1 on error, number of controllers found otherwise
  */
@@ -691,13 +734,22 @@ static void* motor_control(void* arg)
      */
     for (int i = 1; i <= ec_slavecount; i++) {
         len = 4;
-        ec_SDOread(i, ECAT_VEL_CMD, false, &len, target_current[i], EC_TIMEOUTRXM);
+        ec_SDOread(i, ECAT_CURRENT_LOOP_CMD, false, &len, target_current[i], EC_TIMEOUTRXM);
         len = 2;
         ec_SDOread(i, ECAT_CTL_WORD, false, &len, control_word[i], EC_TIMEOUTRXM);
         ec_SDOread(i, ECAT_CURRENT_LOOP_CP, false, &len, current_p[i], EC_TIMEOUTRXM);
         ec_SDOread(i, ECAT_CURRENT_LOOP_CI, false, &len, current_i[i], EC_TIMEOUTRXM);
         ec_SDOread(i, ECAT_CURRENT_LOOP_OFFSET, false, &len, current_offset[i], EC_TIMEOUTRXM);
     }
+
+    /// Set the default current limits
+    rw_init_current_limit();
+    el_init_current_limit();
+    piv_init_current_limit();
+
+    rw_init_current_pid();
+    el_init_current_pid();
+    piv_init_current_pid();
 
     /// Start the Distributed Clock cycle
     motor_configure_timing();
@@ -709,6 +761,9 @@ static void* motor_control(void* arg)
         len = 2;
         int16_t state = ECAT_DRIVE_STATE_PROG_CURRENT;
         ec_SDOwrite(i, ECAT_DRIVE_STATE, false, len, &state, EC_TIMEOUTTXM);
+
+        *current_p[i] = 6000;
+        *current_i[i] = 220;
     }
 
     /// Our work counter (WKC) provides a count of the number of items to handle.

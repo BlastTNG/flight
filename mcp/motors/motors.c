@@ -465,16 +465,16 @@ void write_motor_channels_5hz(void)
      */
     i_motors = GETREADINDEX(motor_index);
     SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
-    SET_VALUE(statusRWAddr, RWMotorData[i_motors].status);
-    SET_VALUE(stateRWAddr, RWMotorData[i_motors].drive_info);
+    SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
+    SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
 
-    SET_VALUE(tMCElAddr, ElevMotorData[i_motors].temp);
-    SET_VALUE(statusElAddr, ElevMotorData[i_motors].status);
-    SET_VALUE(stateElAddr, ElevMotorData[i_motors].drive_info);
+    SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
+    SET_UINT32(statusElAddr, ElevMotorData[i_motors].status);
+    SET_UINT16(stateElAddr, ElevMotorData[i_motors].drive_info);
 
-    SET_VALUE(tMCPivAddr, PivotMotorData[i_motors].temp);
-    SET_VALUE(statusPivAddr, PivotMotorData[i_motors].status);
-    SET_VALUE(statePivAddr, PivotMotorData[i_motors].drive_info);
+    SET_INT16(tMCPivAddr, PivotMotorData[i_motors].temp);
+    SET_UINT32(statusPivAddr, PivotMotorData[i_motors].status);
+    SET_UINT16(statePivAddr, PivotMotorData[i_motors].drive_info);
 
 }
 
