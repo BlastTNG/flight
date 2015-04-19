@@ -40,19 +40,13 @@
 //TODO: Extern sched_lst after enabling sched.c
 unsigned int sched_lst; /* sched_lst */
 
+/**
+ * Reads the 5Hz data from the most recent frame received from UEIs and stores
+ * it into the ACSData structure for use in pointing
+ */
 void read_5hz_acs(void)
 {
-  double enc_raw_el;
-  double x_comp, y_comp, z_comp;
-  double pss1_i1, pss1_i2, pss1_i3, pss1_i4;
-  double pss2_i1, pss2_i2, pss2_i3, pss2_i4;
-  double pss3_i1, pss3_i2, pss3_i3, pss3_i4;
-  double pss4_i1, pss4_i2, pss4_i3, pss4_i4;
-  double vel_rw;
-  double res_piv;
-  int hwpr_pot;
 
-  static channel_t* elRawEncAddr;
   static channel_t* elRawIfClinAddr;
   static channel_t* v11PssAddr;
   static channel_t* v21PssAddr;
@@ -62,20 +56,10 @@ void read_5hz_acs(void)
   static channel_t* v22PssAddr;
   static channel_t* v32PssAddr;
   static channel_t* v42PssAddr;
-  static channel_t* v13PssAddr;
-  static channel_t* v23PssAddr;
-  static channel_t* v33PssAddr;
-  static channel_t* v43PssAddr;
-  static channel_t* v14PssAddr;
-  static channel_t* v24PssAddr;
-  static channel_t* v34PssAddr;
-  static channel_t* v44PssAddr;
-  static channel_t* potHwprAddr;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    elRawEncAddr = channels_find_by_name("el_raw_enc");
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
     v11PssAddr = channels_find_by_name("v1_1_pss");
     v21PssAddr = channels_find_by_name("v2_1_pss");
@@ -85,29 +69,31 @@ void read_5hz_acs(void)
     v22PssAddr = channels_find_by_name("v2_2_pss");
     v32PssAddr = channels_find_by_name("v3_2_pss");
     v42PssAddr = channels_find_by_name("v4_2_pss");
-    v13PssAddr = channels_find_by_name("v1_3_pss");
-    v23PssAddr = channels_find_by_name("v2_3_pss");
-    v33PssAddr = channels_find_by_name("v3_3_pss");
-    v43PssAddr = channels_find_by_name("v4_3_pss");
-    v14PssAddr = channels_find_by_name("v1_4_pss");
-    v24PssAddr = channels_find_by_name("v2_4_pss");
-    v34PssAddr = channels_find_by_name("v3_4_pss");
-    v44PssAddr = channels_find_by_name("v4_4_pss");
-    potHwprAddr = channels_find_by_name("pot_hwpr");
   }
 
-  ///TODO: Add Clin read functions
-  ///TODO: Add PSS read functions
+  ACSData.pss1_i1 = GET_UINT16(v11PssAddr);
+  ACSData.pss1_i2 = GET_UINT16(v21PssAddr);
+  ACSData.pss1_i3 = GET_UINT16(v31PssAddr);
+  ACSData.pss1_i4 = GET_UINT16(v41PssAddr);
 
+  ACSData.pss2_i1 = GET_UINT16(v12PssAddr);
+  ACSData.pss2_i2 = GET_UINT16(v22PssAddr);
+  ACSData.pss2_i3 = GET_UINT16(v32PssAddr);
+  ACSData.pss2_i4 = GET_UINT16(v42PssAddr);
+
+  ///TODO: Add PSS3-8 read functions
+
+  ACSData.clin_elev = GET_UINT16(elRawIfClinAddr);
 }
-
+/**
+ * Reads the 100Hz data from the most recent frame received from UEIs and stores
+ * it into the ACSData structure for use in pointing
+ */
 void read_100hz_acs(void)
 {
     static channel_t* xMagAddr;
     static channel_t* yMagAddr;
     static channel_t* zMagAddr;
-    static channel_t* velRWAddr;
-    static channel_t* resPivAddr;
 
     static int firsttime = 1;
     if (firsttime) {
@@ -115,15 +101,17 @@ void read_100hz_acs(void)
         xMagAddr = channels_find_by_name("x_mag");
         yMagAddr = channels_find_by_name("y_mag");
         zMagAddr = channels_find_by_name("z_mag");
-        velRWAddr = channels_find_by_name("mc_rw_vel");
-        resPivAddr = channels_find_by_name("mc_piv_pos");
     }
-    ///TODO: Add MAG read functions
 
+    ACSData.mag_x = GET_UINT16(xMagAddr);
+    ACSData.mag_y = GET_UINT16(yMagAddr);
+    ACSData.mag_z = GET_UINT16(zMagAddr);
 }
 
-
-void read_200hz_acs(void)
+/**
+ * Stores the 200Hz ACS data read by the flight computer into the frame.
+ */
+void store_200hz_acs(void)
 {
 
     static channel_t* ifElgy1Addr;
@@ -153,6 +141,9 @@ void read_200hz_acs(void)
     SET_FLOAT(ifYawgy2Addr, dsp1760_getval(1,2));
 }
 
+/**
+ * Stores the 100Hz ACS data read by the flight computer into the frame.
+ */
 void store_100hz_acs(void)
 {
     static channel_t *azAddr;
@@ -215,154 +206,154 @@ void store_100hz_acs(void)
     SET_INT32(pos_piv_addr, PivotMotorData[i_motors].position);
 }
 
-static channel_t* GetSCNiosAddr(char* field, int which)
-{
-  char buffer[FIELD_LEN];
-  sprintf(buffer, "%s_%s", field, which ? "osc" : "isc");
-
-  return channels_find_by_name(buffer);
-}
+//static channel_t* GetSCNiosAddr(char* field, int which)
+//{
+//  char buffer[FIELD_LEN];
+//  sprintf(buffer, "%s_%s", field, which ? "osc" : "isc");
+//
+//  return channels_find_by_name(buffer);
+//}
 
 //TODO: Update StoreStarCameraData for XSC
 static void StoreStarCameraData(int index, int which)
 {
-    static int firsttime[2] = { 1, 1 };
-    static int blob_index[2] = { 0, 0 };
-    static int blob_data[2][15][4];
-
-    int i, i_isc = 0;
-
-    /** isc fields **/
-    static channel_t* Blob0XAddr[2];
-    static channel_t* Blob1XAddr[2];
-    static channel_t* Blob2XAddr[2];
-    static channel_t* Blob0YAddr[2];
-    static channel_t* Blob1YAddr[2];
-    static channel_t* Blob2YAddr[2];
-    static channel_t* Blob0FAddr[2];
-    static channel_t* Blob1FAddr[2];
-    static channel_t* Blob2FAddr[2];
-    static channel_t* Blob0SAddr[2];
-    static channel_t* Blob1SAddr[2];
-    static channel_t* Blob2SAddr[2];
-    static channel_t* ErrorAddr[2];
-    static channel_t* MapmeanAddr[2];
-    static channel_t* FramenumAddr[2];
-    static channel_t* RdSigmaAddr[2];
-    static channel_t* RaAddr[2];
-    static channel_t* DecAddr[2];
-    static channel_t* HxFlagAddr[2];
-    static channel_t* McpnumAddr[2];
-    static channel_t* ApertAddr[2];
-    static channel_t* MdistAddr[2];
-    static channel_t* NblobsAddr[2];
-    static channel_t* FocusAddr[2];
-    static channel_t* FocOffAddr[2];
-    static channel_t* ThreshAddr[2];
-    static channel_t* GridAddr[2];
-    static channel_t* StateAddr[2];
-    static channel_t* MinblobsAddr[2];
-    static channel_t* MaxblobsAddr[2];
-    static channel_t* MaglimitAddr[2];
-    static channel_t* NradAddr[2];
-    static channel_t* LradAddr[2];
-    static channel_t* TolAddr[2];
-    static channel_t* MtolAddr[2];
-    static channel_t* QtolAddr[2];
-    static channel_t* RtolAddr[2];
-    static channel_t* FpulseAddr[2];
-    static channel_t* SpulseAddr[2];
-    static channel_t* XOffAddr[2];
-    static channel_t* YOffAddr[2];
-    static channel_t* IHoldAddr[2];
-    static channel_t* SavePrdAddr[2];
-    static channel_t* Temp1Addr[2];
-    static channel_t* Temp2Addr[2];
-    static channel_t* Temp3Addr[2];
-    static channel_t* Temp4Addr[2];
-    static channel_t* PressureAddr[2];
-    static channel_t* GainAddr[2];
-    static channel_t* OffsetAddr[2];
-    static channel_t* ExposureAddr[2];
-    static channel_t* TrigTypeAddr[2];
-    static channel_t* RealTrigAddr[2];
-    static channel_t* BlobIdxAddr[2];
-    static channel_t* FieldrotAddr[2];
-    static channel_t* DiskfreeAddr[2];
-    static channel_t* MaxslewAddr[2];
-    static channel_t* MaxAgeAddr[2];
-    static channel_t* AgeAddr[2];
-    static channel_t* PosFocusAddr[2];
-
-    if (firsttime[which]) {
-        firsttime[which] = 0;
-        Blob0XAddr[which] = GetSCNiosAddr("blob00_x", which);
-        Blob1XAddr[which] = GetSCNiosAddr("blob01_x", which);
-        Blob2XAddr[which] = GetSCNiosAddr("blob02_x", which);
-        Blob0YAddr[which] = GetSCNiosAddr("blob00_y", which);
-        Blob1YAddr[which] = GetSCNiosAddr("blob01_y", which);
-        Blob2YAddr[which] = GetSCNiosAddr("blob02_y", which);
-        Blob0FAddr[which] = GetSCNiosAddr("blob00_f", which);
-        Blob1FAddr[which] = GetSCNiosAddr("blob01_f", which);
-        Blob2FAddr[which] = GetSCNiosAddr("blob02_f", which);
-        Blob0SAddr[which] = GetSCNiosAddr("blob00_s", which);
-        Blob1SAddr[which] = GetSCNiosAddr("blob01_s", which);
-        Blob2SAddr[which] = GetSCNiosAddr("blob02_s", which);
-        ErrorAddr[which] = GetSCNiosAddr("error", which);
-        MapmeanAddr[which] = GetSCNiosAddr("mapmean", which);
-        RdSigmaAddr[which] = GetSCNiosAddr("rd_sigma", which);
-        FramenumAddr[which] = GetSCNiosAddr("framenum", which);
-        RaAddr[which] = GetSCNiosAddr("ra", which);
-        DecAddr[which] = GetSCNiosAddr("dec", which);
-        NblobsAddr[which] = GetSCNiosAddr("nblobs", which);
-        HxFlagAddr[which] = GetSCNiosAddr("hx_flag", which);
-        McpnumAddr[which] = GetSCNiosAddr("mcpnum", which);
-
-        StateAddr[which] = GetSCNiosAddr("state", which);
-        FocusAddr[which] = GetSCNiosAddr("focus", which);
-        FocOffAddr[which] = GetSCNiosAddr("foc_off", which);
-        ApertAddr[which] = GetSCNiosAddr("apert", which);
-        ThreshAddr[which] = GetSCNiosAddr("thresh", which);
-        GridAddr[which] = GetSCNiosAddr("grid", which);
-        MdistAddr[which] = GetSCNiosAddr("mdist", which);
-        MinblobsAddr[which] = GetSCNiosAddr("minblobs", which);
-        MaxblobsAddr[which] = GetSCNiosAddr("maxblobs", which);
-        MaglimitAddr[which] = GetSCNiosAddr("maglimit", which);
-        NradAddr[which] = GetSCNiosAddr("nrad", which);
-        LradAddr[which] = GetSCNiosAddr("lrad", which);
-        TolAddr[which] = GetSCNiosAddr("tol", which);
-        MtolAddr[which] = GetSCNiosAddr("mtol", which);
-        QtolAddr[which] = GetSCNiosAddr("qtol", which);
-        RtolAddr[which] = GetSCNiosAddr("rtol", which);
-        FpulseAddr[which] = GetSCNiosAddr("fpulse", which);
-        SpulseAddr[which] = GetSCNiosAddr("spulse", which);
-        XOffAddr[which] = GetSCNiosAddr("x_off", which);
-        YOffAddr[which] = GetSCNiosAddr("y_off", which);
-        IHoldAddr[which] = GetSCNiosAddr("i_hold", which);
-        SavePrdAddr[which] = GetSCNiosAddr("save_prd", which);
-        PressureAddr[which] = GetSCNiosAddr("pressure1", which);
-        GainAddr[which] = GetSCNiosAddr("gain", which);
-        OffsetAddr[which] = GetSCNiosAddr("offset", which);
-        ExposureAddr[which] = GetSCNiosAddr("exposure", which);
-        TrigTypeAddr[which] = GetSCNiosAddr("trig_type", which);
-        FieldrotAddr[which] = GetSCNiosAddr("fieldrot", which);
-        RealTrigAddr[which] = GetSCNiosAddr("real_trig", which);
-        BlobIdxAddr[which] = GetSCNiosAddr("blob_idx", which);
-        DiskfreeAddr[which] = GetSCNiosAddr("diskfree", which);
-        MaxslewAddr[which] = GetSCNiosAddr("maxslew", which);
-        MaxAgeAddr[which] = GetSCNiosAddr("max_age", which);
-        AgeAddr[which] = GetSCNiosAddr("age", which);
-        PosFocusAddr[which] = GetSCNiosAddr("pos_focus", which);
-
-        Temp1Addr[0] = channels_find_by_name("t_flange_isc");
-        Temp2Addr[0] = channels_find_by_name("t_heat_isc");
-        Temp3Addr[0] = channels_find_by_name("t_lens_isc");
-        Temp4Addr[0] = channels_find_by_name("t_comp_isc");
-        Temp1Addr[1] = channels_find_by_name("t_flange_osc");
-        Temp2Addr[1] = channels_find_by_name("t_heat_osc");
-        Temp3Addr[1] = channels_find_by_name("t_lens_osc");
-        Temp4Addr[1] = channels_find_by_name("t_comp_osc");
-    }
+//    static int firsttime[2] = { 1, 1 };
+//    static int blob_index[2] = { 0, 0 };
+//    static int blob_data[2][15][4];
+//
+//    int i, i_isc = 0;
+//
+//    /** isc fields **/
+//    static channel_t* Blob0XAddr[2];
+//    static channel_t* Blob1XAddr[2];
+//    static channel_t* Blob2XAddr[2];
+//    static channel_t* Blob0YAddr[2];
+//    static channel_t* Blob1YAddr[2];
+//    static channel_t* Blob2YAddr[2];
+//    static channel_t* Blob0FAddr[2];
+//    static channel_t* Blob1FAddr[2];
+//    static channel_t* Blob2FAddr[2];
+//    static channel_t* Blob0SAddr[2];
+//    static channel_t* Blob1SAddr[2];
+//    static channel_t* Blob2SAddr[2];
+//    static channel_t* ErrorAddr[2];
+//    static channel_t* MapmeanAddr[2];
+//    static channel_t* FramenumAddr[2];
+//    static channel_t* RdSigmaAddr[2];
+//    static channel_t* RaAddr[2];
+//    static channel_t* DecAddr[2];
+//    static channel_t* HxFlagAddr[2];
+//    static channel_t* McpnumAddr[2];
+//    static channel_t* ApertAddr[2];
+//    static channel_t* MdistAddr[2];
+//    static channel_t* NblobsAddr[2];
+//    static channel_t* FocusAddr[2];
+//    static channel_t* FocOffAddr[2];
+//    static channel_t* ThreshAddr[2];
+//    static channel_t* GridAddr[2];
+//    static channel_t* StateAddr[2];
+//    static channel_t* MinblobsAddr[2];
+//    static channel_t* MaxblobsAddr[2];
+//    static channel_t* MaglimitAddr[2];
+//    static channel_t* NradAddr[2];
+//    static channel_t* LradAddr[2];
+//    static channel_t* TolAddr[2];
+//    static channel_t* MtolAddr[2];
+//    static channel_t* QtolAddr[2];
+//    static channel_t* RtolAddr[2];
+//    static channel_t* FpulseAddr[2];
+//    static channel_t* SpulseAddr[2];
+//    static channel_t* XOffAddr[2];
+//    static channel_t* YOffAddr[2];
+//    static channel_t* IHoldAddr[2];
+//    static channel_t* SavePrdAddr[2];
+//    static channel_t* Temp1Addr[2];
+//    static channel_t* Temp2Addr[2];
+//    static channel_t* Temp3Addr[2];
+//    static channel_t* Temp4Addr[2];
+//    static channel_t* PressureAddr[2];
+//    static channel_t* GainAddr[2];
+//    static channel_t* OffsetAddr[2];
+//    static channel_t* ExposureAddr[2];
+//    static channel_t* TrigTypeAddr[2];
+//    static channel_t* RealTrigAddr[2];
+//    static channel_t* BlobIdxAddr[2];
+//    static channel_t* FieldrotAddr[2];
+//    static channel_t* DiskfreeAddr[2];
+//    static channel_t* MaxslewAddr[2];
+//    static channel_t* MaxAgeAddr[2];
+//    static channel_t* AgeAddr[2];
+//    static channel_t* PosFocusAddr[2];
+//
+//    if (firsttime[which]) {
+//        firsttime[which] = 0;
+//        Blob0XAddr[which] = GetSCNiosAddr("blob00_x", which);
+//        Blob1XAddr[which] = GetSCNiosAddr("blob01_x", which);
+//        Blob2XAddr[which] = GetSCNiosAddr("blob02_x", which);
+//        Blob0YAddr[which] = GetSCNiosAddr("blob00_y", which);
+//        Blob1YAddr[which] = GetSCNiosAddr("blob01_y", which);
+//        Blob2YAddr[which] = GetSCNiosAddr("blob02_y", which);
+//        Blob0FAddr[which] = GetSCNiosAddr("blob00_f", which);
+//        Blob1FAddr[which] = GetSCNiosAddr("blob01_f", which);
+//        Blob2FAddr[which] = GetSCNiosAddr("blob02_f", which);
+//        Blob0SAddr[which] = GetSCNiosAddr("blob00_s", which);
+//        Blob1SAddr[which] = GetSCNiosAddr("blob01_s", which);
+//        Blob2SAddr[which] = GetSCNiosAddr("blob02_s", which);
+//        ErrorAddr[which] = GetSCNiosAddr("error", which);
+//        MapmeanAddr[which] = GetSCNiosAddr("mapmean", which);
+//        RdSigmaAddr[which] = GetSCNiosAddr("rd_sigma", which);
+//        FramenumAddr[which] = GetSCNiosAddr("framenum", which);
+//        RaAddr[which] = GetSCNiosAddr("ra", which);
+//        DecAddr[which] = GetSCNiosAddr("dec", which);
+//        NblobsAddr[which] = GetSCNiosAddr("nblobs", which);
+//        HxFlagAddr[which] = GetSCNiosAddr("hx_flag", which);
+//        McpnumAddr[which] = GetSCNiosAddr("mcpnum", which);
+//
+//        StateAddr[which] = GetSCNiosAddr("state", which);
+//        FocusAddr[which] = GetSCNiosAddr("focus", which);
+//        FocOffAddr[which] = GetSCNiosAddr("foc_off", which);
+//        ApertAddr[which] = GetSCNiosAddr("apert", which);
+//        ThreshAddr[which] = GetSCNiosAddr("thresh", which);
+//        GridAddr[which] = GetSCNiosAddr("grid", which);
+//        MdistAddr[which] = GetSCNiosAddr("mdist", which);
+//        MinblobsAddr[which] = GetSCNiosAddr("minblobs", which);
+//        MaxblobsAddr[which] = GetSCNiosAddr("maxblobs", which);
+//        MaglimitAddr[which] = GetSCNiosAddr("maglimit", which);
+//        NradAddr[which] = GetSCNiosAddr("nrad", which);
+//        LradAddr[which] = GetSCNiosAddr("lrad", which);
+//        TolAddr[which] = GetSCNiosAddr("tol", which);
+//        MtolAddr[which] = GetSCNiosAddr("mtol", which);
+//        QtolAddr[which] = GetSCNiosAddr("qtol", which);
+//        RtolAddr[which] = GetSCNiosAddr("rtol", which);
+//        FpulseAddr[which] = GetSCNiosAddr("fpulse", which);
+//        SpulseAddr[which] = GetSCNiosAddr("spulse", which);
+//        XOffAddr[which] = GetSCNiosAddr("x_off", which);
+//        YOffAddr[which] = GetSCNiosAddr("y_off", which);
+//        IHoldAddr[which] = GetSCNiosAddr("i_hold", which);
+//        SavePrdAddr[which] = GetSCNiosAddr("save_prd", which);
+//        PressureAddr[which] = GetSCNiosAddr("pressure1", which);
+//        GainAddr[which] = GetSCNiosAddr("gain", which);
+//        OffsetAddr[which] = GetSCNiosAddr("offset", which);
+//        ExposureAddr[which] = GetSCNiosAddr("exposure", which);
+//        TrigTypeAddr[which] = GetSCNiosAddr("trig_type", which);
+//        FieldrotAddr[which] = GetSCNiosAddr("fieldrot", which);
+//        RealTrigAddr[which] = GetSCNiosAddr("real_trig", which);
+//        BlobIdxAddr[which] = GetSCNiosAddr("blob_idx", which);
+//        DiskfreeAddr[which] = GetSCNiosAddr("diskfree", which);
+//        MaxslewAddr[which] = GetSCNiosAddr("maxslew", which);
+//        MaxAgeAddr[which] = GetSCNiosAddr("max_age", which);
+//        AgeAddr[which] = GetSCNiosAddr("age", which);
+//        PosFocusAddr[which] = GetSCNiosAddr("pos_focus", which);
+//
+//        Temp1Addr[0] = channels_find_by_name("t_flange_isc");
+//        Temp2Addr[0] = channels_find_by_name("t_heat_isc");
+//        Temp3Addr[0] = channels_find_by_name("t_lens_isc");
+//        Temp4Addr[0] = channels_find_by_name("t_comp_isc");
+//        Temp1Addr[1] = channels_find_by_name("t_flange_osc");
+//        Temp2Addr[1] = channels_find_by_name("t_heat_osc");
+//        Temp3Addr[1] = channels_find_by_name("t_lens_osc");
+//        Temp4Addr[1] = channels_find_by_name("t_comp_osc");
+//    }
 
 //    /** Increment isc index -- this only happens once per slow frame */
 //    if (index == 0)

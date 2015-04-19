@@ -336,7 +336,7 @@ static int AmISouth(int *not_cryo_corner)
 
 static void mcp_200hz_routines(void)
 {
-    read_200hz_acs();
+    store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
 }

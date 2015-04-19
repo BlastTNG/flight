@@ -176,7 +176,6 @@ channel_t channel_list[] =
     { "cryostate",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "upslot_sched",         1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "t_chip_flc",           0.01,             0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "declination_mag",      I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 }, // magnetic declination
     { "veto_sensor",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "level_on_bal",         1. / 1990.13,     0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_I_A, 0 },
     { "level_off_bal",        1. / 1990.13,     0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_I_A, 0 },
@@ -240,8 +239,6 @@ channel_t channel_list[] =
     { "offset_ifel_gy",       1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "offset_ifroll_gy",     1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "offset_ifyaw_gy",      1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
-    { "az_raw_mag",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
-    { "sigma_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "az_dgps",              I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
     { "sigma_dgps",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "lvdt_high_act",        1.0,              -5000.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -251,7 +248,6 @@ channel_t channel_list[] =
     { "pulse_cal",            10.0,             0.,                TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "sigma_pss",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "sigma_clin",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "az_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
     { "spulse_isc",           10.0,             0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "hx_flag_isc",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "brra_isc",             I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -351,11 +347,6 @@ channel_t channel_list[] =
     { "h_age_gy",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "h_hist_gy",            (100.0 / 32768.0),0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
-    { "cal_xmax_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "cal_xmin_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "cal_ymax_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "cal_ymin_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-
     { "ra_1_p",               I2H,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 }, // pointing mode coordinates
     { "dec_1_p",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "ra_2_p",               I2H,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -410,7 +401,6 @@ channel_t channel_list[] =
     { "he4_lev_old",          CAL16(1.0, 0.0), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "focus_isc",            1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "focus_osc",            1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "pitch_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "diskfree_isc",         5.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "diskfree_osc",         5.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "off_ifel_gy_isc",      1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -628,7 +618,7 @@ channel_t channel_list[] =
     { "i_tot",                1.0e-3,           0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0 }, // sum of currents read through ACS1 A1
     { "t_set_sbsc",           (100.0 / 32768.0),0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
 
-    { "pot_hwpr",             1.0 / 65535.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "pot_hwpr",             1.0 / 65535.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_NONE, 0 },
     { "last_n_cmd",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "count_n_cmd",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "last_s_cmd",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -697,12 +687,6 @@ channel_t channel_list[] =
     { "x_stage",              2.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "y_stage",              2.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
-    #ifndef FAST_MAG
-    { "x_mag",                1.0,              0,                 TYPE_UINT16, RATE_5HZ, SRC_OF_UEI, U_NONE, 0},
-    { "y_mag",                1.0,              0,                 TYPE_UINT16, RATE_5HZ, SRC_OF_UEI, U_NONE, 0},
-    #endif
-
-    { "z_mag",                1.0,              0,              TYPE_UINT16, RATE_5HZ, SRC_OF_UEI, U_NONE, 0 },
     { "ifpm_hall",            1.0,              0.0,            TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_NONE, 0 },
     { "lvdt_65_act",          LVDT65_ADC_TO_ENC,LVDT65_ZERO,    TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_NONE, 0 },
     { "lvdt_63_act",          LVDT63_ADC_TO_ENC,LVDT63_ZERO,    TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_NONE, 0 },
@@ -749,10 +733,23 @@ channel_t channel_list[] =
     { "dig43_das",            1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "chopper",              CAL16(1.0, 0.0),          TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_V_V, 0 },
 
-    #ifdef FAST_MAG
     { "x_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
     { "y_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
-    #endif
+    { "z_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
+
+    { "az_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
+    { "az_raw_mag",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
+    { "pitch_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+
+    { "sigma_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+
+    { "declination_mag",      I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 }, // magnetic declination
+
+    { "cal_xmax_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "cal_xmin_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "cal_ymax_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "cal_ymin_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+
 
     /** Motor Channels */
     { "mc_rw_vel",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
