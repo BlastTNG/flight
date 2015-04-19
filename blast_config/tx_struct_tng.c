@@ -182,7 +182,6 @@ channel_t channel_list[] =
     { "level_off_bal",        1. / 1990.13,     0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_I_A, 0 },
     { "level_target_bal",     1. / 1990.13,     -5.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_I_A, 0 },
 
-    { "channelset_oth",       1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "alt_sip",              1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
     { "mapmean_isc",          1.,               0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },

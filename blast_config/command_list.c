@@ -22,9 +22,6 @@
 
 #include "command_list.h"
 #include "isc_protocol.h"  /* required for constants */
-#ifdef __MCP__
-#include "sbsc_protocol.h"
-#endif
 
 const char *command_list_serial = "$Revision: 5.2 $";
 
@@ -47,9 +44,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 
-  {COMMAND(sbsc_off), "turn off the SBSC", GR_POWER | CONFIRM},
-  {COMMAND(sbsc_on), "turn on the SBSC", GR_POWER},
-  {COMMAND(sbsc_cycle), "power cycle the SBSC", GR_POWER | CONFIRM},
   {COMMAND(isc_off), "turn off the ISC", GR_ISC_MODE | GR_POWER | CONFIRM},
   {COMMAND(isc_on), "turn on the ISC", GR_ISC_MODE | GR_POWER},
   {COMMAND(isc_cycle), "power cycle the ISC", GR_ISC_MODE | GR_POWER | CONFIRM},
@@ -220,10 +214,8 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_TELEM},
   {COMMAND(vtx1_isc), "put ISC video on transmitter #1", GR_TELEM},
   {COMMAND(vtx1_osc), "put OSC video on transmitter #1", GR_TELEM},
-  {COMMAND(vtx1_sbsc), "put SBSC video on transmitter #1", GR_TELEM},
   {COMMAND(vtx2_isc), "put ISC video on transmitter #2", GR_TELEM},
   {COMMAND(vtx2_osc), "put OSC video on transmitter #2", GR_TELEM},
-  {COMMAND(vtx2_sbsc), "put SBSC video on transmitter #2", GR_TELEM},
 
   {COMMAND(north_halt), "ask MCP to halt north MCC", GR_MISC | CONFIRM},
   {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
@@ -812,24 +804,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  {COMMAND(oth_set), "OTH Link channel set", GR_TELEM, 1,
-    {
-      {"Channel Set", 0, 2, 'i', "channelset_oth"}
-    }
-  },
-
   /****************************************/
   /*************** Misc.  *****************/
-  {COMMAND(reset_adc), "Reset an ADC motherboard", GR_POWER, 1,
-    {
-      {"Node number",  0, 64, 'i', ""}
-    }
-  },
   {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
     {
       {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_heat_gy"},
       {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_heat_gy"},
-      {"Derrivative Gain",  0, MAX_15BIT, 'i', "g_d_heat_gy"}
+      {"Derivative Gain",  0, MAX_15BIT, 'i', "g_d_heat_gy"}
     }
   },
   {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,

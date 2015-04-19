@@ -275,18 +275,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.use_elclin = 1;
       break;
 
-    case sbsc_off:          // power switching
-      CommandData.power.sbsc.set_count = 0;
-      CommandData.power.sbsc.rst_count = LATCH_PULSE_LEN;
-      break;
-    case sbsc_on:
-      CommandData.power.sbsc.rst_count = 0;
-      CommandData.power.sbsc.set_count = LATCH_PULSE_LEN;
-      break;
-    case sbsc_cycle:
-      CommandData.power.sbsc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.power.sbsc.rst_count = LATCH_PULSE_LEN;
-      break;
     case isc_off:
       CommandData.power.isc.set_count = 0;
       CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
@@ -861,17 +849,11 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case vtx1_osc:
       CommandData.vtx_sel[0] = vtx_osc;
       break;
-    case vtx1_sbsc:
-      CommandData.vtx_sel[0] = vtx_sbsc;
-      break;
     case vtx2_isc:
       CommandData.vtx_sel[1] = vtx_isc;
       break;
     case vtx2_osc:
       CommandData.vtx_sel[1] = vtx_osc;
-      break;
-    case vtx2_sbsc:
-      CommandData.vtx_sel[1] = vtx_sbsc;
       break;
 #endif
     case hwpr_step:
@@ -1237,10 +1219,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
      /*************************************
       ****           test of motor DACs ***/
-    case dac2_level:
-      CommandData.Temporary.dac_out[1] = ivalues[0] << 1;
-      CommandData.Temporary.setLevel[1] = 1;
-      break;
+
     case motors_verbose:
       CommandData.verbose_rw = ivalues[0];
       CommandData.verbose_el = ivalues[1];
@@ -1470,10 +1449,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //    case gyro_on:
 //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
 //      break;
-    case reset_adc:
-      if (ivalues[0] < 64)
-        CommandData.power.adc_reset[ivalues[0]/4] = RESET_ADC_LEN;
-      break;
     case timeout:        //Set timeout
       CommandData.timeout = rvalues[0];
       break;
@@ -1483,9 +1458,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case iridium_bw:
       CommandData.iridium_bw = rvalues[0];
       break;
-    case oth_set:
-      CommandData.channelset_oth = ivalues[0];
-      break;      
     case slot_sched:  //change uplinked schedule file
         //TODO:Re-enable Uplink file loading
 //      if (LoadUplinkFile(ivalues[0])) {
@@ -1780,12 +1752,6 @@ void InitCommandData()
   CommandData.Bias.setLevel[3] = 1;
   CommandData.Bias.setLevel[4] = 1;
 
-  CommandData.Temporary.setLevel[0] = 1;
-  CommandData.Temporary.setLevel[1] = 1;
-  CommandData.Temporary.setLevel[2] = 1;
-  CommandData.Temporary.setLevel[3] = 1;
-  CommandData.Temporary.setLevel[4] = 1;
-
   CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
   CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
 
@@ -1797,8 +1763,6 @@ void InitCommandData()
   CommandData.power.isc.set_count = 0;
   CommandData.power.osc.rst_count = 0;
   CommandData.power.osc.set_count = 0;
-  CommandData.power.sbsc.rst_count = 0;
-  CommandData.power.sbsc.set_count = 0;
   CommandData.power.rw.rst_count = 0;
   CommandData.power.rw.set_count = 0;
   CommandData.power.piv.rst_count = 0;
@@ -1821,8 +1785,6 @@ void InitCommandData()
   CommandData.power.gyro_off[4] = 0;
   CommandData.power.gyro_off[5] = 0;
   CommandData.power.hub232_off = 0;
-  for (i=0; i<16; i++)
-    CommandData.power.adc_reset[i] = 0;
 
   CommandData.Cryo.BDAHeat = 0;
 
@@ -1869,8 +1831,6 @@ void InitCommandData()
   CommandData.slot_sched = 0;
   CommandData.tdrss_bw = 6000;
   CommandData.iridium_bw = 2000;
-  CommandData.pilot_bw = 92000;
-  CommandData.channelset_oth = 0;
   CommandData.vtx_sel[0] = vtx_isc;
   CommandData.vtx_sel[1] = vtx_osc;
 
@@ -1975,12 +1935,6 @@ void InitCommandData()
   CommandData.pumps.mode = bal_auto;
   CommandData.pumps.heat_on = 1;
   CommandData.pumps.heat_tset = 5;
-
-  CommandData.Temporary.dac_out[0] = 0x8000;
-  CommandData.Temporary.dac_out[1] = 0x8000;
-  CommandData.Temporary.dac_out[2] = 0x8000;
-  CommandData.Temporary.dac_out[3] = 0x8000;
-  CommandData.Temporary.dac_out[4] = 0x8000;
 
   CommandData.Bias.bias[0] = 12470;   //500um
   CommandData.Bias.bias[1] = 11690;   //350um

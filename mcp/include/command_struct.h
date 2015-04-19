@@ -55,8 +55,6 @@
 #define LATCH_PULSE_LEN	 2
 /* time (slow frames) to keep power off when power cycling devices */
 #define PCYCLE_HOLD_LEN	 20
-/* time (in slow frames) to suppress ADC card watchdog, to induce reset */
-#define	RESET_ADC_LEN	 80
 
 #define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
 
@@ -225,11 +223,7 @@ struct CommandDataStruct {
   unsigned short command_count;
   unsigned short last_command;
 
-  struct {
-    unsigned short dac_out[5];
-    unsigned char setLevel[5];
-  } Temporary;
-
+  //TODO: Insert these into "Scheduler struct"
   unsigned short int timeout;
   unsigned short int slot_sched; // what slot to use
   unsigned short int upslot_sched; // slot being uplinked
@@ -240,19 +234,9 @@ struct CommandDataStruct {
   unsigned short int at_float;
   unsigned int tdrss_bw;
   unsigned int iridium_bw;
-  unsigned int pilot_bw;
-  unsigned int channelset_oth;
   
-  enum {vtx_isc, vtx_osc, vtx_sbsc} vtx_sel[2];
+  enum {vtx_isc, vtx_osc} vtx_sel[2];
 
-  /*
-  double apcu_reg;
-  double  apcu_trim;
-  short int apcu_auto;
-  double dpcu_reg;
-  double dpcu_trim;
-  short int dpcu_auto;
-  */
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
@@ -262,7 +246,6 @@ struct CommandDataStruct {
     struct latch_pulse das;
     struct latch_pulse isc;
     struct latch_pulse osc;
-    struct latch_pulse sbsc;
     struct latch_pulse rw;
     struct latch_pulse piv;
     struct latch_pulse elmot;
@@ -275,7 +258,6 @@ struct CommandDataStruct {
     int gyro_off[6];
     int gyro_off_auto[6];
     int hub232_off;
-    unsigned char adc_reset[16];
   } power;
 
   unsigned short disable_az;
@@ -480,9 +462,6 @@ struct CommandDataStruct {
   unsigned short df;
 
   unsigned short plover;
-
-  unsigned short bi0FifoSize;
-  unsigned short bbcFifoSize;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
   double lat;

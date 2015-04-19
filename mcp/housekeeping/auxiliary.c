@@ -237,14 +237,6 @@ void ControlPower(void) {
     CommandData.power.osc.rst_count--;
     if (CommandData.power.osc.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0080;
   }
-  if (CommandData.power.sbsc.set_count > 0) {
-    CommandData.power.sbsc.set_count--;
-    if (CommandData.power.sbsc.set_count < LATCH_PULSE_LEN) latch0 |= 0x0100;
-  }
-  if (CommandData.power.sbsc.rst_count > 0) {
-    CommandData.power.sbsc.rst_count--;
-    if (CommandData.power.sbsc.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0200;
-  }
   if (CommandData.power.rw.set_count > 0) {
     CommandData.power.rw.set_count--;
     if (CommandData.power.rw.set_count < LATCH_PULSE_LEN) latch0 |= 0x0400;
@@ -319,10 +311,8 @@ void VideoTx(void)
     bitsVtxAddr = channels_find_by_name("bits_vtx");
   }
 
-  if (CommandData.vtx_sel[0] == vtx_sbsc) vtx_bits |= 0x3;
-  else if (CommandData.vtx_sel[0] == vtx_osc) vtx_bits |= 0x1;
-  if (CommandData.vtx_sel[1] == vtx_sbsc) vtx_bits |= 0xc;
-  else if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0x4;
+  if (CommandData.vtx_sel[0] == vtx_osc) vtx_bits |= 0x1;
+  if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0x4;
 
   SET_VALUE(bitsVtxAddr, vtx_bits);
 }

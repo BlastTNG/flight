@@ -103,12 +103,9 @@ void WriteAux(void)
     static channel_t* timeUSecAddr;
     static channel_t* rateTdrssAddr;
     static channel_t* rateIridiumAddr;
-    static channel_t* channelsetOthAddr;
     static channel_t* tChipFlcAddr;
     static channel_t* tMbFlcAddr;
     static channel_t* statusMCCAddr;
-    static channel_t* bi0FifoSizeAddr;
-    static channel_t* bbcFifoSizeAddr;
     static channel_t* ploverAddr;
     static channel_t* he4LevOldAddr;
     static channel_t* statusEthAddr;
@@ -155,10 +152,7 @@ void WriteAux(void)
         timeUSecAddr = channels_find_by_name("time_usec");
         rateTdrssAddr = channels_find_by_name("rate_tdrss");
         rateIridiumAddr = channels_find_by_name("rate_iridium");
-        channelsetOthAddr = channels_find_by_name("channelset_oth");
 
-        bi0FifoSizeAddr = channels_find_by_name("bi0_fifo_size");
-        bbcFifoSizeAddr = channels_find_by_name("bbc_fifo_size");
         ploverAddr = channels_find_by_name("plover");
         statusEthAddr = channels_find_by_name("status_eth");
         partsSchedAddr = channels_find_by_name("parts_sched");
@@ -250,12 +244,9 @@ void WriteAux(void)
         myData->timeout = 0;
     }
 
-    SET_VALUE(bi0FifoSizeAddr, CommandData.bi0FifoSize);
-    SET_VALUE(bbcFifoSizeAddr, CommandData.bbcFifoSize);
     SET_VALUE(ploverAddr, CommandData.plover);
     SET_VALUE(rateTdrssAddr, CommandData.tdrss_bw);
     SET_VALUE(rateIridiumAddr, CommandData.iridium_bw);
-    SET_VALUE(channelsetOthAddr, CommandData.channelset_oth);
 
     SET_VALUE(statusEthAddr, //first two bits used to be sun sensor
     ((EthernetIsc & 0x3) << 2) + ((EthernetOsc & 0x3) << 4) + ((EthernetSBSC & 0x3) << 6));
