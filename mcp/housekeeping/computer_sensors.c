@@ -48,7 +48,7 @@ static const sensors_chip_name *chip[2] = {NULL};
 void blast_store_cpu_health(void)
 {
     int err;
-    if (!chip) return;
+    if (!chip[0]) return;
 
     if((err = sensors_get_value(chip[1], CH_TEMP_CPU, &sensors_temp_cpu)))
     {
