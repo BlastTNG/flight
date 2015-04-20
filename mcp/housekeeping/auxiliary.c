@@ -102,22 +102,7 @@ static int ControlPumpHeat(int bits_bal)
 /* ISC Pulsing stuff */
 void CameraTrigger(int which)
 {
-  static int firsttime = 1;
-  static channel_t* TriggerAddr[2];
-  static int delay[2] = {0, 0};
-  static int waiting[2] = {0, 0};
-#if SYNCHRONOUS_CAMERAS
-  static int cameras_ready = 0;
-#endif
-  char swhich[4] = "ISC";
-  if (which) swhich[0] = 'O';
 
-  if (firsttime) {
-    firsttime = 0;
-    //NB before renaming, 0 was osc, 1 was isc. I think that was wrong
-    TriggerAddr[0] = channels_find_by_name("trigger_isc");
-    TriggerAddr[1] = channels_find_by_name("trigger_osc");
-  }
 
   //TODO: Add Camera Triggering
 }

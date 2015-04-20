@@ -928,7 +928,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
   int i;
-  char buf[256]; //for SBSC Commands
   int is_new;
 
 //   Update CommandData struct with new info
@@ -1705,7 +1704,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 /************************************************************/
 void InitCommandData()
 {
-	int fp, n_read = 0, junk, extra = 0, i;
+	int fp, n_read = 0, junk, extra = 0;
 
   if ((fp = open(PREV_STATUS_FILE, O_RDONLY)) < 0) {
     berror(err, "Commands: Unable to open prev_status file for reading");
