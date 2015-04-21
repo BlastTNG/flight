@@ -26,7 +26,7 @@ endfunction()
 
 project (blast_mcp)
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.8)
 
 option(USE_CLANG "build mcp using clang" OFF)
 
