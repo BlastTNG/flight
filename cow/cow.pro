@@ -17,11 +17,11 @@ log.files = data/prev_status data/log.txt
 QT += gui 
 QMAKE_INSTALL_FILE = install -m 666 -p 
 INSTALLS += target log 
-INCLUDEPATH += ../common/
+INCLUDEPATH += ../common/include/
 
 HEADERS += \ 
 src/cow.h \ 
-../common/netcmd.h \ 
+../common/include/netcmd.h \ 
 src/widgets.h 
 SOURCES += \ 
 ../common/netcmd.c \ 
