@@ -82,6 +82,9 @@ configure_file (
   "${PROJECT_BINARY_DIR}/include/defricher_config.h"
   )
 
+# add machine directory for OSX builds (needs endian.h)
+include_directories ("/usr/include/machine")
+
 # add the binary tree to the search path for include files so that we will find mcp_config.h
 include_directories ("${PROJECT_BINARY_DIR}/include")
 
