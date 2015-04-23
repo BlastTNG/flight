@@ -73,9 +73,12 @@ static int el_index = 0;
  * Scaling factors for each motor.  These are hard-wired based on the encoder/resolver
  */
 #define RW_ENCODER_COUNTS (1 << 21)
+#define PIV_RESOLVER_COUNTS (1 << 14)
+#define EL_ENCODER_COUNTS (1 << 27)
+
 static double rw_encoder_scaling = 360.0 / RW_ENCODER_COUNTS;
-static double el_encoder_scaling = 1.0;
-static double piv_resolver_scaling = 1.0;
+static double el_encoder_scaling = 360.0 / EL_ENCODER_COUNTS;
+static double piv_resolver_scaling = 360.0 / PIV_RESOLVER_COUNTS;
 
 /**
  * Ethercat driver status
@@ -360,18 +363,24 @@ void piv_quick_stop(void)
  */
 void rw_init_current_limit(void)
 {
-    ec_SDOwrite16(rw_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
-    ec_SDOwrite16(rw_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+    if (rw_index) {
+        ec_SDOwrite16(rw_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
+        ec_SDOwrite16(rw_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+    }
 }
 void el_init_current_limit(void)
 {
-    ec_SDOwrite16(el_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
-    ec_SDOwrite16(el_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+    if (el_index) {
+        ec_SDOwrite16(el_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
+        ec_SDOwrite16(el_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+    }
 }
 void piv_init_current_limit(void)
 {
-    ec_SDOwrite16(piv_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
-    ec_SDOwrite16(piv_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+    if (piv_index) {
+        ec_SDOwrite16(piv_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
+        ec_SDOwrite16(piv_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+    }
 }
 
 /**
@@ -380,26 +389,45 @@ void piv_init_current_limit(void)
  */
 void rw_init_current_pid(void)
 {
-    ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_CP, RW_DEFAULT_CURRENT_P);
-    ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_CI, RW_DEFAULT_CURRENT_I);
-    ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_OFFSET, RW_DEFAULT_CURRENT_OFF);
+    if (rw_index) {
+        ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_CP, RW_DEFAULT_CURRENT_P);
+        ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_CI, RW_DEFAULT_CURRENT_I);
+        ec_SDOwrite16(rw_index, ECAT_CURRENT_LOOP_OFFSET, RW_DEFAULT_CURRENT_OFF);
+    }
 }
 void el_init_current_pid(void)
 {
-    ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_CP, EL_DEFAULT_CURRENT_P);
-    ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_CI, EL_DEFAULT_CURRENT_I);
-    ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_OFFSET, EL_DEFAULT_CURRENT_OFF);
+    if (el_index) {
+        ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_CP, EL_DEFAULT_CURRENT_P);
+        ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_CI, EL_DEFAULT_CURRENT_I);
+        ec_SDOwrite16(el_index, ECAT_CURRENT_LOOP_OFFSET, EL_DEFAULT_CURRENT_OFF);
+    }
 }
 void piv_init_current_pid(void)
 {
-    ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_CP, PIV_DEFAULT_CURRENT_P);
-    ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_CI, PIV_DEFAULT_CURRENT_I);
-    ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_OFFSET, PIV_DEFAULT_CURRENT_OFF);
+    if (piv_index) {
+        ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_CP, PIV_DEFAULT_CURRENT_P);
+        ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_CI, PIV_DEFAULT_CURRENT_I);
+        ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_OFFSET, PIV_DEFAULT_CURRENT_OFF);
+    }
 }
 
 static void rw_init_encoder(void)
 {
-    ec_SDOwrite32(rw_index, ECAT_ENCODER_WRAP, RW_ENCODER_COUNTS);
+    if (rw_index)
+        ec_SDOwrite32(rw_index, ECAT_ENCODER_WRAP, RW_ENCODER_COUNTS);
+}
+
+static void el_init_encoder(void)
+{
+    if (el_index)
+        ec_SDOwrite32(el_index, ECAT_ENCODER_WRAP, EL_ENCODER_COUNTS);
+}
+
+static void piv_init_resolver(void)
+{
+    if (piv_index)
+        ec_SDOwrite32(piv_index, ECAT_ENCODER_WRAP, PIV_RESOLVER_COUNTS);
 }
 
 /**
@@ -766,6 +794,8 @@ static void* motor_control(void* arg)
 
     /// Set the encoder defaults
     rw_init_encoder();
+    el_init_encoder();
+    piv_init_resolver();
 
     /// Start the Distributed Clock cycle
     motor_configure_timing();
