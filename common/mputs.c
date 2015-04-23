@@ -151,6 +151,8 @@ void mputs(buos_t flag, const char* message) {
       return;  /* don't record mem messages at all */
       strcpy(marker, "m ");
       break;
+    case none:
+        return;
     default:
       strcpy(marker, "? ");
       break;
