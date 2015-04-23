@@ -58,9 +58,9 @@ static pthread_t motor_ctl_id;
 #define RW_SN 0x01bbbb5b
 #define PIV_SN 0x02924687
 #define EL_SN 0x01238408
-#define RW_ADDR 0x1003
-#define EL_ADDR 0x1002
-#define PIV_ADDR 0x1001
+#define RW_ADDR 0x3
+#define EL_ADDR 0x2
+#define PIV_ADDR 0x1
 
 /**
  * Index numbers for the slave array.  0 is the master (flight computer)
@@ -441,20 +441,20 @@ static int find_controllers(void)
          * Configure the index values for later use.  These are mapped to the hard-set
          * addresses on the motor controllers (look for the dials on the side)
          */
-        if (ec_slave[i].configadr == RW_ADDR) {
-            bprintf(startup, "Reaction Wheel Motor Controller %d: %s", ec_slave[i].configadr, ec_slave[i].name);
+        if (ec_slave[i].aliasadr == RW_ADDR) {
+            bprintf(startup, "Reaction Wheel Motor Controller %d: %s", ec_slave[i].aliasadr, ec_slave[i].name);
             rw_index = i;
         }
-        else if (ec_slave[i].configadr == PIV_ADDR) {
-            bprintf(startup, "Pivot Motor Controller %d: %s", ec_slave[i].configadr, ec_slave[i].name);
+        else if (ec_slave[i].aliasadr == PIV_ADDR) {
+            bprintf(startup, "Pivot Motor Controller %d: %s", ec_slave[i].aliasadr, ec_slave[i].name);
             piv_index = i;
         }
-        else if (ec_slave[i].configadr == EL_ADDR) {
-            bprintf(startup, "Elevation Motor Controller %d: %s", ec_slave[i].configadr, ec_slave[i].name);
+        else if (ec_slave[i].aliasadr == EL_ADDR) {
+            bprintf(startup, "Elevation Motor Controller %d: %s", ec_slave[i].aliasadr, ec_slave[i].name);
             el_index = i;
         }
         else {
-            bprintf(warning, "Got unknown MC %s at address %d", ec_slave[i].name, ec_slave[i].configadr);
+            bprintf(warning, "Got unknown MC %s at position %d with alias %d", ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
         }
     }
     return ec_slavecount;
