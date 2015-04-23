@@ -70,6 +70,14 @@ static int piv_index = 0;
 static int el_index = 0;
 
 /**
+ * Scaling factors for each motor.  These are hard-wired based on the encoder/resolver
+ */
+#define RW_ENCODER_COUNTS (1 << 21)
+static double rw_encoder_scaling = 360.0 / RW_ENCODER_COUNTS;
+static double el_encoder_scaling = 1.0;
+static double piv_resolver_scaling = 1.0;
+
+/**
  * Ethercat driver status
  */
 static ec_motor_state_t controller_state = ECAT_MOTOR_COLD;
@@ -113,15 +121,15 @@ static int16_t *current_offset[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy
  */
 int32_t rw_get_position(void)
 {
-    return *motor_position[rw_index];
+    return *motor_position[rw_index] * rw_encoder_scaling;
 }
 int32_t el_get_position(void)
 {
-    return *motor_position[el_index];
+    return *motor_position[el_index] * el_encoder_scaling;
 }
 int32_t piv_get_position(void)
 {
-    return *motor_position[piv_index];
+    return *motor_position[piv_index] * piv_resolver_scaling;
 }
 
 /**
@@ -131,15 +139,15 @@ int32_t piv_get_position(void)
  */
 int32_t rw_get_velocity(void)
 {
-    return *motor_velocity[rw_index];
+    return *motor_velocity[rw_index] * rw_encoder_scaling;
 }
 int32_t el_get_velocity(void)
 {
-    return *motor_velocity[el_index];
+    return *motor_velocity[el_index] * el_encoder_scaling;
 }
 int32_t piv_get_velocity(void)
 {
-    return *motor_velocity[piv_index];
+    return *motor_velocity[piv_index] * piv_resolver_scaling;
 }
 
 /**
@@ -387,6 +395,11 @@ void piv_init_current_pid(void)
     ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_CP, PIV_DEFAULT_CURRENT_P);
     ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_CI, PIV_DEFAULT_CURRENT_I);
     ec_SDOwrite16(piv_index, ECAT_CURRENT_LOOP_OFFSET, PIV_DEFAULT_CURRENT_OFF);
+}
+
+static void rw_init_encoder(void)
+{
+    ec_SDOwrite32(rw_index, ECAT_ENCODER_WRAP, RW_ENCODER_COUNTS);
 }
 
 /**
@@ -750,6 +763,9 @@ static void* motor_control(void* arg)
     rw_init_current_pid();
     el_init_current_pid();
     piv_init_current_pid();
+
+    /// Set the encoder defaults
+    rw_init_encoder();
 
     /// Start the Distributed Clock cycle
     motor_configure_timing();
