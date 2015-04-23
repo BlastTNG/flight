@@ -58,9 +58,9 @@ static pthread_t motor_ctl_id;
 #define RW_SN 0x01bbbb5b
 #define PIV_SN 0x02924687
 #define EL_SN 0x01238408
-#define RW_ADDR 0x1001
+#define RW_ADDR 0x1003
 #define EL_ADDR 0x1002
-#define PIV_ADDR 0x1003
+#define PIV_ADDR 0x1001
 
 /**
  * Index numbers for the slave array.  0 is the master (flight computer)
