@@ -457,7 +457,8 @@ static void piv_init_resolver(void)
 {
     if (piv_index) {
         ec_SDOwrite32(piv_index, ECAT_ENCODER_WRAP, PIV_RESOLVER_COUNTS);
-        ec_SDOwrite32(piv_index, 0x6410, 34, PIV_RESOLVER_COUNTS);
+        ec_SDOwrite32(piv_index, 0x2383, 23, PIV_RESOLVER_COUNTS);
+        ec_SDOwrite32(piv_index, 0x2383, 34, 1);
     }
 }
 
