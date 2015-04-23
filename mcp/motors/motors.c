@@ -272,7 +272,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int g_rw_piv, u
     static double a = 0.0;
     static unsigned int ib_last = 0;
     double I_req = 0.0;
-    int i_point, i_rw;
+    int i_point;
     double i_frict, i_frict_filt;
     double p_rw_term, p_err_term;
 
@@ -291,8 +291,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int g_rw_piv, u
     }
 
     i_point = GETREADINDEX(point_index);
-    i_rw = GETREADINDEX(motor_index);
-    p_rw_term = (-1.0) * ((double) g_rw_piv / 10.0) * (RWMotorData[i_rw].velocity - CommandData.pivot_gain.SP);
+    p_rw_term = (-1.0) * ((double) g_rw_piv / 10.0) * (rw_get_velocity_dps() - CommandData.pivot_gain.SP);
     p_err_term = (double) g_err_piv * 5.0 * (m_az_req_vel - PointingData[i_point].v_az);
     I_req = p_rw_term + p_err_term;
 

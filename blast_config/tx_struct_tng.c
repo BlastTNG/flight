@@ -752,15 +752,15 @@ channel_t channel_list[] =
 
 
     /** Motor Channels */
-    { "mc_rw_vel",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_rw_pos",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_el_vel",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_el_pos",               1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_piv_vel",              1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_piv_pos",              1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_rw_encvel",            1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_el_encvel",            1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_piv_encvel",           1.0,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_rw_vel",               RW_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_rw_pos",               RW_ENCODER_SCALING,        0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_el_vel",               EL_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_el_pos",               EL_ENCODER_SCALING,        0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_piv_vel",              PIV_RESOLVER_SCALING * 0.1,0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_piv_pos",              PIV_RESOLVER_SCALING,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_rw_encvel",            RW_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_el_encvel",            EL_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_piv_encvel",           PIV_RESOLVER_SCALING * 0.1,0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
 
     { "mc_piv_i_cmd",           1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
     { "mc_rw_i_cmd",            1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },

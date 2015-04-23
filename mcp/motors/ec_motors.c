@@ -47,6 +47,7 @@
 #include <ethercatdc.h>
 
 #include <blast_time.h>
+#include <calibrate.h>
 #include <ec_motors.h>
 #include <motors.h>
 #include <mcp.h>
@@ -68,17 +69,6 @@ static pthread_t motor_ctl_id;
 static int rw_index = 0;
 static int piv_index = 0;
 static int el_index = 0;
-
-/**
- * Scaling factors for each motor.  These are hard-wired based on the encoder/resolver
- */
-#define RW_ENCODER_COUNTS (1 << 21)
-#define PIV_RESOLVER_COUNTS (1 << 14)
-#define EL_ENCODER_COUNTS (1 << 27)
-
-static double rw_encoder_scaling = 360.0 / RW_ENCODER_COUNTS;
-static double el_encoder_scaling = 360.0 / EL_ENCODER_COUNTS;
-static double piv_resolver_scaling = 360.0 / PIV_RESOLVER_COUNTS;
 
 /**
  * Ethercat driver status
@@ -124,33 +114,68 @@ static int16_t *current_offset[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy
  */
 int32_t rw_get_position(void)
 {
-    return *motor_position[rw_index] * rw_encoder_scaling;
+    return *motor_position[rw_index];
 }
 int32_t el_get_position(void)
 {
-    return *motor_position[el_index] * el_encoder_scaling;
+    return *motor_position[el_index];
 }
 int32_t piv_get_position(void)
 {
-    return *motor_position[piv_index] * piv_resolver_scaling;
+    return *motor_position[piv_index];
+}
+
+/**
+ * This set of functions return the absolute position read by each motor controller
+ * @return double value of the position in degrees (no set zero point)
+ */
+double rw_get_position_degrees(void)
+{
+    return *motor_position[rw_index] * RW_ENCODER_SCALING;
+}
+double el_get_position_degrees(void)
+{
+    return *motor_position[el_index] * EL_ENCODER_SCALING;
+}
+double piv_get_position_degrees(void)
+{
+    return *motor_position[piv_index] * PIV_RESOLVER_SCALING;
 }
 
 /**
  * This set of functions return the calculated motor velocity of each motor
  * controller
- * @return int32 value of the velocity in counts per second
+ * @return double value of the velocity in degrees per second
+ */
+double rw_get_velocity_dps(void)
+{
+    return *motor_velocity[rw_index] * 0.1 * RW_ENCODER_SCALING;
+}
+double el_get_velocity_dps(void)
+{
+    return *motor_velocity[el_index] * 0.1 * EL_ENCODER_SCALING;
+}
+double piv_get_velocity_dps(void)
+{
+    return *motor_velocity[piv_index] * 0.1 * PIV_RESOLVER_SCALING;
+}
+
+/**
+ * This set of functions return the calculated motor velocity of each motor
+ * controller
+ * @return int32 value of the velocity in 0.1 counts per second
  */
 int32_t rw_get_velocity(void)
 {
-    return *motor_velocity[rw_index] * rw_encoder_scaling;
+    return *motor_velocity[rw_index];
 }
 int32_t el_get_velocity(void)
 {
-    return *motor_velocity[el_index] * el_encoder_scaling;
+    return *motor_velocity[el_index];
 }
 int32_t piv_get_velocity(void)
 {
-    return *motor_velocity[piv_index] * piv_resolver_scaling;
+    return *motor_velocity[piv_index];
 }
 
 /**

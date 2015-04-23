@@ -24,6 +24,17 @@ extern "C" {
 /* BLASTBus frame sample rate */
 #define SR (100.16)
 
+/**
+ * Scaling factors for each motor.  These are hard-wired based on the encoder/resolver
+ */
+#define RW_ENCODER_COUNTS (1 << 21)
+#define PIV_RESOLVER_COUNTS (1 << 14)
+#define EL_ENCODER_COUNTS (1 << 27)
+
+#define RW_ENCODER_SCALING (360.0 / RW_ENCODER_COUNTS)
+#define EL_ENCODER_SCALING (360.0 / EL_ENCODER_COUNTS)
+#define PIV_RESOLVER_SCALING (360.0 / PIV_RESOLVER_COUNTS)
+
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */
 #define M_32PRE (10.24/2147483648.0)
 #define B_32PRE	(-2147483648.0)
