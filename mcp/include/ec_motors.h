@@ -205,6 +205,12 @@ typedef enum {
 #  define ECAT_CTL_RESET_FAULT              (1<<7)
 #  define ECAT_CTL_HALT                     (1<<8)
 
+double rw_get_position_degrees(void);
+double el_get_position_degrees(void);
+double piv_get_position_degrees(void);
+double rw_get_velocity_dps(void);
+double el_get_velocity_dps(void);
+double piv_get_velocity_dps(void);
 
 int32_t rw_get_position(void);
 int32_t el_get_position(void);
