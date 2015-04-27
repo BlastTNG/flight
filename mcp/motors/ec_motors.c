@@ -56,7 +56,7 @@
 static pthread_t motor_ctl_id;
 
 // device node Serial Numbers
-#define RW_SN 0x01bbbb5b
+#define RW_SN 0x01bbbb65
 #define PIV_SN 0x02924687
 #define EL_SN 0x01238408
 #define RW_ADDR 0x3
@@ -776,7 +776,7 @@ static void read_motor_data()
     ElevMotorData[motor_i].position = el_get_position(); ///TODO:Add split between resolver and internal motor pos
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
-    ElevMotorData[motor_i].enc_velocity = rw_get_enc_velocity();
+    ElevMotorData[motor_i].enc_velocity = el_get_enc_velocity();
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
@@ -785,7 +785,7 @@ static void read_motor_data()
     PivotMotorData[motor_i].position = piv_get_position(); ///TODO:Add split between resolver and internal motor pos
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
-    PivotMotorData[motor_i].enc_velocity = rw_get_enc_velocity();
+    PivotMotorData[motor_i].enc_velocity = piv_get_enc_velocity();
 
     motor_index=INC_INDEX(motor_index);
 }
