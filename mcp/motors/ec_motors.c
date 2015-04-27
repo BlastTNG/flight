@@ -516,23 +516,35 @@ static int find_controllers(void)
          */
         if (ec_slave[i].aliasadr == RW_ADDR) {
             int32_t serial = 0;
+            uint16_t phasing = 0;
             int size = 4;
             ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
+            size = 2;
+            ec_SDOread(i, 0x21C0, 1, false, &size, &phasing,EC_TIMEOUTRXM);
             bprintf(startup, "Reaction Wheel Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            bprintf(startup, "RW phasing state: %d", phasing);
             rw_index = i;
         }
         else if (ec_slave[i].aliasadr == PIV_ADDR) {
             int32_t serial = 0;
+            uint16_t phasing = 0;
             int size = 4;
             ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
+            size = 2;
+            ec_SDOread(i, 0x21C0, 1, false, &size, &phasing,EC_TIMEOUTRXM);
             bprintf(startup, "Pivot Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            bprintf(startup, "Piv phasing state: %d", phasing);
             piv_index = i;
         }
         else if (ec_slave[i].aliasadr == EL_ADDR) {
             int32_t serial = 0;
+            uint16_t phasing = 0;
             int size = 4;
             ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
+            size = 2;
+            ec_SDOread(i, 0x21C0, 1, false, &size, &phasing,EC_TIMEOUTRXM);
             bprintf(startup, "Elevation Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            bprintf(startup, "EL phasing state: %d", phasing);
             el_index = i;
         }
         else {
