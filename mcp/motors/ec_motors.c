@@ -848,9 +848,6 @@ static void* motor_control(void* arg)
         len = 2;
         int16_t state = ECAT_DRIVE_STATE_PROG_CURRENT;
         ec_SDOwrite(i, ECAT_DRIVE_STATE, false, len, &state, EC_TIMEOUTTXM);
-
-        *current_p[i] = 6000;
-        *current_i[i] = 220;
     }
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
