@@ -2017,16 +2017,21 @@ void command_motors(void)
     * Drive the Elevation motor                                         *
     \*******************************************************************/
 
-    if (CommandData.disable_el) el_disable();
-    else el_enable();
-
     v_req_el = GET_FLOAT(velReqElAddr);
 
     //TODO: limits in dps: revisit these
     if ((v_req_el < -10.0) || (v_req_el > 10.0))
         v_req_el = 0; // no really really crazy values!
 
-    el_current = calculate_el_current(v_req_el);
+    if (CommandData.disable_el) {
+        el_disable();
+        el_current = 0;
+    }
+    else {
+        el_enable();
+        el_current = calculate_el_current(v_req_el);
+    }
+
     SET_INT16(el_current_addr, el_current);
     el_set_current(el_current);
 
