@@ -515,15 +515,24 @@ static int find_controllers(void)
          * addresses on the motor controllers (look for the dials on the side)
          */
         if (ec_slave[i].aliasadr == RW_ADDR) {
-            bprintf(startup, "Reaction Wheel Motor Controller %d: %s", ec_slave[i].aliasadr, ec_slave[i].name);
+            int32_t serial = 0;
+            int size = 4;
+            ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
+            bprintf(startup, "Reaction Wheel Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
             rw_index = i;
         }
         else if (ec_slave[i].aliasadr == PIV_ADDR) {
-            bprintf(startup, "Pivot Motor Controller %d: %s", ec_slave[i].aliasadr, ec_slave[i].name);
+            int32_t serial = 0;
+            int size = 4;
+            ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
+            bprintf(startup, "Pivot Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
             piv_index = i;
         }
         else if (ec_slave[i].aliasadr == EL_ADDR) {
-            bprintf(startup, "Elevation Motor Controller %d: %s", ec_slave[i].aliasadr, ec_slave[i].name);
+            int32_t serial = 0;
+            int size = 4;
+            ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
+            bprintf(startup, "Elevation Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
             el_index = i;
         }
         else {
