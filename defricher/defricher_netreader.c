@@ -37,6 +37,7 @@
 #include <blast.h>
 #include <channels_tng.h>
 
+#include "defricher.h"
 #include "defricher_utils.h"
 #include "defricher_writer.h"
 
@@ -45,6 +46,11 @@ extern int frame_stop;
 static struct mosquitto *mosq;
 pthread_t netread_thread;
 extern channel_t *channels;
+
+static char client_id[HOST_NAME_MAX+1] = {0};
+static char remote_host[HOST_NAME_MAX+1] = {0};
+static int port = 1883;
+static int keepalive = 60;
 
 static void frame_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
@@ -144,9 +150,33 @@ static void *netreader_routine(void *m_arg)
 
     while (!frame_stop)
     {
-        if ((ret = mosquitto_loop(mosq, 100, 1)) != MOSQ_ERR_SUCCESS) {
-           defricher_err("Received %d from mosquitto_loop", ret);
-           sleep(1);
+        ret = mosquitto_loop(mosq, 100, 1);
+        switch(ret) {
+            case MOSQ_ERR_SUCCESS:
+                break;
+            case MOSQ_ERR_NO_CONN:
+                if (rc.auto_reconnect){
+                    sleep(5);
+                    mosquitto_reconnect(mosq);
+                } else {
+                    defricher_err("Not connected to %s.  Quitting.", remote_host);
+                    frame_stop = 1;
+                    ri.writer_done = 1;
+                }
+                break;
+            case MOSQ_ERR_CONN_LOST:
+                if (rc.auto_reconnect){
+                    mosquitto_reconnect(mosq);
+                } else {
+                    defricher_err("Lost connection to %s", remote_host);
+                    frame_stop = 1;
+                    ri.writer_done = 1;
+                }
+                break;
+            default:
+                defricher_err("Received %d from mosquitto_loop", ret);
+                sleep(1);
+                break;
         }
 
         fflush(NULL);
@@ -163,15 +193,12 @@ static void *netreader_routine(void *m_arg)
  */
 int netreader_init(const char *m_host)
 {
-    char id[HOST_NAME_MAX+1] = {0};
-    int port = 1883;
-    int keepalive = 60;
-    bool clean_session = true;
+    bool clean_session = false;
 
-    gethostname(id, HOST_NAME_MAX);
+    gethostname(client_id, HOST_NAME_MAX);
 
     mosquitto_lib_init();
-    mosq = mosquitto_new(id, clean_session, NULL);
+    mosq = mosquitto_new(client_id, clean_session, NULL);
     if (!mosq) {
         defricher_strerr("mosquitto_new() failed");
         return -1;
