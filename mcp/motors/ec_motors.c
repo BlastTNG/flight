@@ -101,12 +101,68 @@ static uint32_t *status_register[N_MCs] = { (uint32_t*)&dummy_var, (uint32_t*)&d
 static int16_t *amp_temp[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
 static uint16_t *status_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 
+static uint32_t *latched_register[N_MCs] = { (uint32_t*)&dummy_var, (uint32_t*)&dummy_var, (uint32_t*)&dummy_var, (uint32_t*)&dummy_var };
+static uint16_t *control_word_read[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
+static uint16_t *network_status[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
+
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 static int16_t *target_current[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
 static uint16_t *current_p[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 static uint16_t *current_i[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 static int16_t *current_offset[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
+
+/**
+ * This set of functions return the latched faults of each motor controller
+ * @return uint32 value latched bitmap
+ */
+uint32_t rw_get_latched(void)
+{
+    return *latched_register[rw_index];
+}
+uint32_t el_get_latched(void)
+{
+    return *latched_register[el_index];
+}
+uint32_t piv_get_latched(void)
+{
+    return *latched_register[piv_index];
+}
+
+/**
+ * This set of functions returns the control word of each motor controller (after being set)
+ * @return uint16 control word bitmap
+ */
+uint16_t rw_get_ctl_word(void)
+{
+    return *control_word_read[rw_index];
+}
+int16_t el_get_ctl_word(void)
+{
+    return *control_word_read[el_index];
+}
+int16_t piv_get_ctl_word(void)
+{
+    return *control_word_read[piv_index];
+}
+
+/**
+ * This set of functions returns the networks status word of each motor controller
+ * @return uint16 network status word bitmap
+ */
+uint16_t rw_get_net_status(void)
+{
+    return *network_status[rw_index];
+}
+int16_t el_get_net_status(void)
+{
+    return *network_status[el_index];
+}
+int16_t piv_get_net_status(void)
+{
+    return *network_status[piv_index];
+}
+
 
 /**
  * This set of functions return the absolute position read by each motor controller
@@ -603,10 +659,13 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_VEL_ENCODER, 32);    // Encoder Velocity
     ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val);
 
-    map_pdo(&map, ECAT_CURRENT_ACTUAL, 16); // Measured current output
+    map_pdo(&map, ECAT_CURRENT_LOOP_CMD, 16); // Commanded current output
     ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
 
-    ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2); /// Set the 0x1a01 map to contain 2 elements
+    map_pdo(&map, ECAT_CURRENT_ACTUAL, 16); // Measured current output
+    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 3, map.val);
+
+    ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 3); /// Set the 0x1a01 map to contain 2 elements
     ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1); /// Set the 0x1a01 map to the second PDO
 
     /**
@@ -621,10 +680,25 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_DRIVE_TEMP, 16); // Amplifier Temp (deg C)
     ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+2, 3, map.val);
 
-    ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+2, 0, 3); /// Set the 0x1a01 map to contain 3 elements
+    ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+2, 0, 3); /// Set the 0x1a02 map to contain 3 elements
     ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 3, ECAT_TXPDO_MAPPING + 2); /// Set the 0x1a02 map to the third PDO
 
-    ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 3); /// There are three maps in the TX PDOs
+    /**
+     * Fourth map (0x1a03 register)
+     */
+    map_pdo(&map, ECAT_LATCHED_DRIVE_FAULT, 32); // Latched Fault Register
+    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 1, map.val);
+
+    map_pdo(&map, ECAT_CTL_WORD, 16); // Control Word Read
+    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 2, map.val);
+
+    map_pdo(&map, ECAT_NET_STATUS, 16); // Network status
+    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 3, map.val);
+
+    ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 3); /// Set the 0x1a03 map to contain 3 elements
+    ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 4, ECAT_TXPDO_MAPPING + 3); /// Set the 0x1a03 map to the fourth PDO
+
+    ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 4); /// There are three maps in the TX PDOs
 
 
     /**
@@ -687,6 +761,10 @@ static void map_index_vars(int m_index)
     status_register[m_index] = (uint32_t*) (motor_current[m_index] + 1);
     status_word[m_index] = (uint16_t*) (status_register[m_index] + 1);
     amp_temp[m_index] = (int16_t*) (status_word[m_index] + 1);
+
+    latched_register[m_index] = (uint32_t*) (amp_temp[m_index] + 1);
+    control_word_read[m_index] = (uint16_t*) (latched_register[m_index] + 1);
+    network_status[m_index] = (uint16_t*) (control_word_read[m_index] + 1);
 
     /// Outputs
     control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
@@ -774,30 +852,36 @@ static void read_motor_data()
 
     RWMotorData[motor_i].current = rw_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     RWMotorData[motor_i].drive_info = rw_get_status_word();
-    RWMotorData[motor_i].fault_reg = 0; ///TODO:Consider whether to map the latching register
+    RWMotorData[motor_i].fault_reg = rw_get_latched();
     RWMotorData[motor_i].status = rw_get_status_register();
     RWMotorData[motor_i].position = rw_get_position(); ///TODO:Add split between resolver and internal motor pos
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
     RWMotorData[motor_i].enc_velocity = rw_get_enc_velocity();
+    RWMotorData[motor_i].state = rw_get_ctl_word();
+    RWMotorData[motor_i].net_status = rw_get_net_status();
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     ElevMotorData[motor_i].drive_info = el_get_status_word();
-    ElevMotorData[motor_i].fault_reg = 0; ///TODO:Consider whether to map the latching register
+    ElevMotorData[motor_i].fault_reg = el_get_latched();
     ElevMotorData[motor_i].status = el_get_status_register();
     ElevMotorData[motor_i].position = el_get_position(); ///TODO:Add split between resolver and internal motor pos
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
     ElevMotorData[motor_i].enc_velocity = el_get_enc_velocity();
+    ElevMotorData[motor_i].state = el_get_ctl_word();
+    ElevMotorData[motor_i].net_status = el_get_net_status();
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
-    PivotMotorData[motor_i].fault_reg = 0; ///TODO:Consider whether to map the latching register
+    PivotMotorData[motor_i].fault_reg = piv_get_latched();
     PivotMotorData[motor_i].status = piv_get_status_register();
     PivotMotorData[motor_i].position = piv_get_position(); ///TODO:Add split between resolver and internal motor pos
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
     PivotMotorData[motor_i].enc_velocity = piv_get_enc_velocity();
+    PivotMotorData[motor_i].state = piv_get_ctl_word();
+    PivotMotorData[motor_i].net_status = piv_get_net_status();
 
     motor_index=INC_INDEX(motor_index);
 }

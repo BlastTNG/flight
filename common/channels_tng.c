@@ -50,6 +50,7 @@
 #include "blast.h"
 #include "PMurHash.h"
 #include "channels_tng.h"
+#include "derived.h"
 
 static GHashTable *frame_table = NULL;
 static int channel_count[SRC_END][RATE_END][TYPE_END] = {{{0}}};
@@ -111,6 +112,12 @@ static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_us
     }
 }
 
+/**
+ * Takes an aligned channel list and re-packs it into a packed structure for sharing over
+ * MQTT.
+ * @param m_channel_list Pointer to the aligned channel list
+ * @return Newly allocated channel_header_t structure or NULL on failure
+ */
 channel_header_t *channels_create_map(channel_t *m_channel_list)
 {
     channel_header_t *new_pkt = NULL;
@@ -143,6 +150,41 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
     }
 
     new_pkt->crc = PMurHash32(BLAST_MAGIC32, new_pkt, sizeof(channel_header_t) + sizeof(struct channel_packed) * channel_count);
+
+    return new_pkt;
+}
+
+
+/**
+ * Takes an aligned channel list and re-packs it into a packed structure for sharing over
+ * MQTT.
+ * @param m_channel_list Pointer to the aligned channel list
+ * @return Newly allocated channel_header_t structure or NULL on failure
+ */
+derived_header_t *channels_create_derived_map(derived_tng_t *m_derived)
+{
+    derived_header_t *new_pkt = NULL;
+    size_t channel_count;
+
+    for (channel_count = 0; m_derived[channel_count].type != DERIVED_EOC_MARKER; channel_count++);
+    channel_count++; // Add one extra channel to allow for the NULL terminating field
+
+    new_pkt = balloc(err, sizeof(derived_header_t) + sizeof(derived_tng_t) * channel_count);
+
+    if (!new_pkt) return NULL;
+
+    new_pkt->magic = BLAST_MAGIC32;
+    new_pkt->version = BLAST_TNG_CH_VERSION | 0x20; // 0x20 marks the packet as a derived packet
+    new_pkt->length = channel_count;
+    new_pkt->crc = 0;
+
+    /**
+     * Copy over the data values.  Union structure is already packed.
+     */
+    memcpy (new_pkt->data, m_derived, channel_count * sizeof(derived_tng_t));
+
+
+    new_pkt->crc = PMurHash32(BLAST_MAGIC32, new_pkt, sizeof(derived_header_t) + sizeof(derived_tng_t) * channel_count);
 
     return new_pkt;
 }
@@ -198,6 +240,51 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
         memcpy((*m_channel_list)[channel_count].units, m_map->data[channel_count].units, UNITS_LEN);
         (*m_channel_list)[channel_count].var = NULL;
     }
+
+    return m_map->length;
+}
+
+/**
+ * Translates a stored derived packet to the derived structure
+ * @param m_map Pointer to the #derived_header_t structure storing our packet
+ * @param m_len Length in bytes of the packet passed via m_map
+ * @param m_channel_list Double pointer to where we will store the channel_list
+ * @return -1 on failure, positive number of channels read otherwise
+ */
+int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list)
+{
+    uint32_t crcval = m_map->crc;
+
+    if (m_map->version != BLAST_TNG_CH_VERSION) {
+        bprintf(err, "Unknown channels version %d", m_map->version);
+        return -1;
+    }
+
+    if (m_len < sizeof(derived_header_t)) {
+        bprintf(err, "Invalid size %zu for derived packet", m_len);
+        return -1;
+    }
+
+    if (m_len != sizeof(derived_header_t) + m_map->length * sizeof(derived_tng_t)) {
+        bprintf(err, "Length of data packet %zu does not match header data %zu", m_len, sizeof(derived_header_t) + m_map->length * sizeof(derived_tng_t));
+        return -1;
+    }
+
+    m_map->crc = 0;
+    if (crcval != PMurHash32(BLAST_MAGIC32, m_map, m_len)) {
+        bprintf(err, "CRC match failed!");
+        return -1;
+    }
+    m_map->crc = crcval;
+
+    *m_channel_list = balloc(err, sizeof(channel_t) * m_map->length);
+    if (!(*m_channel_list)) return -1;
+
+
+    /**
+     * Copy over the data values one at a time from the packed to the aligned structure
+     */
+//TODO:Finish derived channels mapping
 
     return m_map->length;
 }
