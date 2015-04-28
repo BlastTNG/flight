@@ -355,15 +355,15 @@ void piv_enable(void)
  */
 void rw_disable(void)
 {
-    *control_word[rw_index] = ECAT_CTL_HALT;
+    *control_word[rw_index] |= ECAT_CTL_HALT;
 }
 void el_disable(void)
 {
-    *control_word[el_index] = ECAT_CTL_HALT;
+    *control_word[el_index] |= ECAT_CTL_HALT;
 }
 void piv_disable(void)
 {
-    *control_word[piv_index] = ECAT_CTL_HALT;
+    *control_word[piv_index] |= ECAT_CTL_HALT;
 }
 
 /**
