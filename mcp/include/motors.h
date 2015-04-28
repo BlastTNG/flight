@@ -69,6 +69,8 @@ typedef struct
     uint32_t status;              // drive status
     uint32_t fault_reg;           // drive fault register
     uint16_t drive_info;          // motorinfo struct
+    uint16_t state;               // commanded state
+    uint16_t net_status;          // Network status
     uint32_t err_count;           // count of serious serial errors
 } motor_data_t;
 
