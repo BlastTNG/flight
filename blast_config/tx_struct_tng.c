@@ -761,6 +761,16 @@ channel_t channel_list[] =
     { "mc_rw_encvel",            RW_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_el_encvel",            EL_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_piv_encvel",           PIV_RESOLVER_SCALING * 0.1,0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    {"control_word_read_el",     1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},
+    {"control_word_read_rw",     1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},
+    {"control_word_read_piv",     1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},
+    {"latched_fault_el",         1.0,    0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0},
+    {"latched_fault_rw",         1.0,    0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0},
+    {"latched_fault_piv",         1.0,    0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0},
+    {"network_status_el",        1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},
+    {"network_status_rw",        1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},
+    {"network_status_piv",        1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},
+
 
     { "mc_piv_i_cmd",           1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },
     { "mc_rw_i_cmd",            1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, SRC_FC, U_NONE, 0 },

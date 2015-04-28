@@ -205,6 +205,8 @@ typedef enum {
 #  define ECAT_CTL_RESET_FAULT              (1<<7)
 #  define ECAT_CTL_HALT                     (1<<8)
 
+#define ECAT_NET_STATUS 0x21B4,0 /* Motor controller network status */
+
 double rw_get_position_degrees(void);
 double el_get_position_degrees(void);
 double piv_get_position_degrees(void);
@@ -212,6 +214,15 @@ double rw_get_velocity_dps(void);
 double el_get_velocity_dps(void);
 double piv_get_velocity_dps(void);
 
+uint32_t rw_get_latched(void);
+uint32_t el_get_latched(void);
+uint32_t piv_get_latched(void);
+uint16_t rw_get_ctl_word(void);
+int16_t el_get_ctl_word(void);
+int16_t piv_get_ctl_word(void);
+uint16_t rw_get_net_status(void);
+int16_t el_get_net_status(void);
+int16_t piv_get_net_status(void);
 int32_t rw_get_position(void);
 int32_t el_get_position(void);
 int32_t piv_get_position(void);
