@@ -50,7 +50,7 @@ extern channel_t *channels;
 static char client_id[HOST_NAME_MAX+1] = {0};
 static char remote_host[HOST_NAME_MAX+1] = {0};
 static int port = 1883;
-static int keepalive = 60;
+static int keepalive = 1;
 
 static void frame_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
