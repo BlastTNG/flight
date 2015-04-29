@@ -12,5 +12,6 @@ set(CMD_HEADERS
 set(MCP_COMMON_SRCS
     ${MCP_COMMON_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/tx_struct_tng.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/derived.c
     PARENT_SCOPE
 )

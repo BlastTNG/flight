@@ -80,7 +80,7 @@ pthread_t watchdog_id;
 
 extern pthread_mutex_t mutex;  //commands.c
 extern channel_t channel_list[]; //tx_struct_tng.c
-
+extern derived_tng_t derived_list[];
 
 void Pointing();
 void WatchPort(void*);
@@ -473,7 +473,7 @@ int main(int argc, char *argv[])
   /* Initialize the Ephemeris */
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
-  framing_init(channel_list);
+  framing_init(channel_list, derived_list);
 
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif

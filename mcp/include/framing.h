@@ -28,7 +28,7 @@
 
 #include <channel_macros.h>
 
-int framing_init(channel_t *channel_list);
+int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
 void framing_shutdown(void);
 
 #endif /* INCLUDE_FRAMING_H_ */

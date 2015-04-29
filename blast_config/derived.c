@@ -69,7 +69,7 @@
 
 #define LUT_DIR "/data/etc/blast/"
 
-union DerivedUnion DerivedChannels[] = {
+derived_tng_t derived_list[] = {
   /* Pointing */
   COMMENT("Microsecond Resolution Time"),
   LINCOM2("Time", "time_usec", 1.0E-6, 0, "time",  1, 0),

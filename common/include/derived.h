@@ -12,8 +12,14 @@
 
 #ifndef DERIVED_H
 #define DERIVED_H
+#include <stdint.h>
 
-#include "channels_tng.h"
+#ifndef FIELD_LEN
+#   define FIELD_LEN 32
+#endif
+#ifndef UNITS_LEN
+#   define UNITS_LEN 48
+#endif
 
 #pragma pack(push,1)
 
