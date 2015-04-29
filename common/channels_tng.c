@@ -277,14 +277,11 @@ int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng
     }
     m_map->crc = crcval;
 
-    *m_channel_list = balloc(err, sizeof(channel_t) * m_map->length);
+    *m_channel_list = balloc(err, sizeof(derived_tng_t) * m_map->length);
     if (!(*m_channel_list)) return -1;
 
 
-    /**
-     * Copy over the data values one at a time from the packed to the aligned structure
-     */
-//TODO:Finish derived channels mapping
+    memcpy(*m_channel_list, m_map->data, sizeof(derived_tng_t) * m_map->length);
 
     return m_map->length;
 }
@@ -300,7 +297,8 @@ channel_t *channels_find_by_name(const char *m_name)
 int channels_store_data(E_SRC m_src, E_RATE m_rate, const void *m_data, size_t m_len)
 {
 	if (m_len != frame_size[m_src][m_rate]) {
-		bprintf(err, "Size mismatch storing data for %s:%s!\n", SRC_LOOKUP_TABLE[m_src].text, RATE_LOOKUP_TABLE[m_rate].text );
+		bprintf(err, "Size mismatch storing data for %s:%s! Got %zu bytes, expected %zu",
+		        SRC_LOOKUP_TABLE[m_src].text, RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_src][m_rate] );
 		return -1;
 	}
 

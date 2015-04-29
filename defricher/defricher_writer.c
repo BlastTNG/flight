@@ -45,91 +45,72 @@
 #include "defricher_utils.h"
 #include "defricher_data.h"
 
-//extern union DerivedUnion DerivedChannels[];
-extern channel_t *channels;
-extern int frame_stop;
 extern struct ri_struct ri;
 pthread_t write_thread;
 
 static int dirfile_create_new = 0;
+static int dirfile_update_derived = 0;
 static int dirfile_ready = 0;
 static int dirfile_frames_written = 0;
 
-//static void defricher_add_derived(DIRFILE *m_file)
-//{
-//    char lincom2_fields[2][FIELD_LEN];
-//    const char *lincom2_ptrs[2] = {lincom2_fields[0], lincom2_fields[1]};
-//    double lincom2_m[2];
-//    double lincom2_b[2];
-//    const char *lincom_name;
-//    for (int i = 0; i < ccDerived; ++i)
-//    {
-//        switch(DerivedChannels[i].bitfield.type)
-//        {
-//            case 'b':
-//                for (int j = 0; DerivedChannels[i].bitfield.field[j][0]; j++)
-//                    gd_add_bit(m_file, DerivedChannels[i].bitfield.field[j],
-//                            DerivedChannels[i].bitfield.source, j, 1, 0);
-//                break;
-//            case 'w':
-//                gd_add_bit(m_file, DerivedChannels[i].bitword.field,
-//                        DerivedChannels[i].bitword.source,
-//                        DerivedChannels[i].bitword.offset,
-//                        DerivedChannels[i].bitword.length, 0);
-//                break;
-//            case 't':
-//                gd_add_linterp(m_file, DerivedChannels[i].linterp.field, DerivedChannels[i].linterp.source,
-//                        DerivedChannels[i].linterp.lut, 0);
-//                break;
-//            case 'c':
-//                lincom_name = DerivedChannels[i].lincom.source;
-//                gd_add_lincom(m_file, DerivedChannels[i].lincom.field, 1,
-//                        &lincom_name,
-//                        &DerivedChannels[i].lincom.m_c2e,
-//                        &DerivedChannels[i].lincom.b_e2e, 0);
-//                break;
-//            case '2':
-//                strcpy(lincom2_fields[0], DerivedChannels[i].lincom2.source);
-//                strcpy(lincom2_fields[1], DerivedChannels[i].lincom2.source2);
-//                lincom2_b[0] = DerivedChannels[i].lincom2.b_e2e;
-//                lincom2_b[1] = DerivedChannels[i].lincom2.b2_e2e;
-//                lincom2_m[0] = DerivedChannels[i].lincom2.m_c2e;
-//                lincom2_m[1] = DerivedChannels[i].lincom2.m2_c2e;
-//
-//                gd_add_lincom(m_file, DerivedChannels[i].lincom2.field, 2, lincom2_ptrs, lincom2_m, lincom2_b, 0);
-//                break;
-//            case '#':
-//                break;
-//            case 'u':
-//                //Units
-//                break;
-//            case 'p':
-//                gd_add_phase(m_file, DerivedChannels[i].phase.field,
-//                        DerivedChannels[i].phase.source,
-//                        DerivedChannels[i].phase.shift, 0 );
-//                break;
-//            case 'r':
-//                gd_add_recip(m_file, DerivedChannels[i].recip.field, DerivedChannels[i].recip.source,
-//                        DerivedChannels[i].recip.dividend, 0);
-//                break;
-//            case '*':
-//                gd_add_multiply(m_file, DerivedChannels[i].math.field,
-//                        DerivedChannels[i].math.source, DerivedChannels[i].math.source2, 0);
-//                break;
-//            case '/':
-//                gd_add_divide(m_file, DerivedChannels[i].math.field,
-//                        DerivedChannels[i].math.source, DerivedChannels[i].math.source2, 0);
-//                break;
-//            case 'x':
-//                gd_add_mplex(m_file, DerivedChannels[i].mplex.field,
-//                        DerivedChannels[i].mplex.source, DerivedChannels[i].mplex.index,
-//                        DerivedChannels[i].mplex.value, DerivedChannels[i].mplex.max, 0);
-//                break;
-//            default:
-//                break;
-//        }
-//    }
-//}
+static void defricher_add_derived(DIRFILE *m_file, derived_tng_t *m_derived)
+{
+    char lincom2_fields[2][FIELD_LEN];
+    const char *lincom2_ptrs[2] = { lincom2_fields[0], lincom2_fields[1] };
+    double lincom2_m[2];
+    double lincom2_b[2];
+    const char *lincom_name;
+
+    for (derived_tng_t *derived = m_derived; derived && derived->type != DERIVED_EOC_MARKER; derived++) {
+        switch (derived->type) {
+            case 'b':
+                gd_add_bit(m_file, derived->bitword.field, derived->bitword.source, derived->bitword.offset, derived->bitword.length, 0);
+                break;
+            case 't':
+                gd_add_linterp(m_file, derived->linterp.field, derived->linterp.source, derived->linterp.lut, 0);
+                break;
+            case 'c':
+                lincom_name = derived->lincom.source;
+                gd_add_lincom(m_file, derived->lincom.field, 1, &lincom_name, &derived->lincom.m_c2e, &derived->lincom.b_e2e, 0);
+                break;
+            case '2':
+                strcpy(lincom2_fields[0], derived->lincom2.source);
+                strcpy(lincom2_fields[1], derived->lincom2.source2);
+                lincom2_b[0] = derived->lincom2.b_e2e;
+                lincom2_b[1] = derived->lincom2.b2_e2e;
+                lincom2_m[0] = derived->lincom2.m_c2e;
+                lincom2_m[1] = derived->lincom2.m2_c2e;
+
+                gd_add_lincom(m_file, derived->lincom2.field, 2, lincom2_ptrs, lincom2_m, lincom2_b, 0);
+                break;
+            case '#':
+                break;
+            case 'u':
+                if (derived->units.units[0])
+                    gd_madd_string(m_file, derived->units.source, "units", derived->units.units);
+                if (derived->units.quantity[0])
+                    gd_madd_string(m_file, derived->units.source, "quantity", derived->units.quantity);
+                break;
+            case 'p':
+                gd_add_phase(m_file, derived->phase.field, derived->phase.source, derived->phase.shift, 0);
+                break;
+            case 'r':
+                gd_add_recip(m_file, derived->recip.field, derived->recip.source, derived->recip.dividend, 0);
+                break;
+            case '*':
+                gd_add_multiply(m_file, derived->math.field, derived->math.source, derived->math.source2, 0);
+                break;
+            case '/':
+                gd_add_divide(m_file, derived->math.field, derived->math.source, derived->math.source2, 0);
+                break;
+            case 'x':
+                gd_add_mplex(m_file, derived->mplex.field, derived->mplex.source, derived->mplex.index, derived->mplex.value, derived->mplex.max, 0);
+                break;
+            default:
+                break;
+        }
+    }
+}
 
 //TODO: Fix get_new_dirfilename to take options into account
 static char *defricher_get_new_dirfilename(void)
@@ -412,8 +393,13 @@ static void *defricher_write_loop(void *m_arg)
         }
 
         /// We wait until a frame is written to the dirfile before updating the link (for KST)
-        if (dirfile_frames_written > 2000 && !ri.symlink_updated) {
+        if (dirfile_frames_written > 400 && !ri.symlink_updated) {
             defricher_update_current_link(rc.output_dirfile);
+        }
+
+        if (ri.dirfile_ready && dirfile_update_derived) {
+            defricher_add_derived(dirfile, derived_channels);
+            dirfile_update_derived = 0;
         }
         usleep(100);
     }
@@ -424,6 +410,11 @@ static void *defricher_write_loop(void *m_arg)
 void defricher_request_new_dirfile(void)
 {
     dirfile_create_new = 1;
+}
+
+void defricher_request_updated_derived(void)
+{
+    dirfile_update_derived = 1;
 }
 
 /**

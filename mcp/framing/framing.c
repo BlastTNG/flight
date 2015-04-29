@@ -32,9 +32,10 @@
 #include <mosquitto.h>
 
 #include <blast.h>
-#include <mputs.h>
-#include <channels_tng.h>
 #include <blast_time.h>
+#include <channels_tng.h>
+#include <derived.h>
+#include <mputs.h>
 
 static int frame_stop;
 static pthread_t frame_thread;
@@ -123,8 +124,6 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
 static void *framing_routine(void *m_arg)
 {
     int ret;
-    channel_header_t *channels_pkg = NULL;
-    channel_t *channel_list = (channel_t*)m_arg;
 
     channel_t *mcp_1hz_framenum_addr;
     channel_t *mcp_5hz_framenum_addr;
@@ -146,13 +145,6 @@ static void *framing_routine(void *m_arg)
     bprintf(startup, "Starting Framing task\n");
 
     clock_gettime(CLOCK_REALTIME, &ts);
-
-    if (!(channels_pkg = channels_create_map(channel_list))) {
-        bprintf(err, "Exiting framing routine because we cannot get the channel list");
-        return NULL;
-    }
-    mosquitto_publish(mosq, NULL, "channels/fc/1",
-            sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
 
     mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
     mcp_5hz_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
@@ -243,8 +235,11 @@ static void *framing_routine(void *m_arg)
  * Initializes the mosquitto library and associated framing routines.
  * @return
  */
-int framing_init(channel_t *channel_list)
+int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
 {
+    channel_header_t *channels_pkg = NULL;
+    derived_header_t *derived_pkg = NULL;
+
     const char *id = "fc1";
     const char *host = "fc1";
     int port = 1883;
@@ -270,6 +265,24 @@ int framing_init(channel_t *channel_list)
     }
 
     mosquitto_subscribe(mosq, NULL, "frames/#", 2);
+
+    /**
+     * Set up the channels and derived packages for subscribers
+     */
+    if (!(channels_pkg = channels_create_map(channel_list))) {
+        bprintf(err, "Exiting framing routine because we cannot get the channel list");
+        return NULL;
+    }
+    mosquitto_publish(mosq, NULL, "channels/fc/1",
+            sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
+    bfree(err, channels_pkg);
+
+    if (!(derived_pkg = channels_create_derived_map(m_derived))) bprintf(warning, "Failed sending derived packages");
+    else {
+        mosquitto_publish(mosq, NULL, "derived/fc/1",
+                sizeof(derived_header_t) + derived_pkg->length * sizeof(derived_tng_t), derived_pkg, 1, true);
+        bfree(err, derived_pkg);
+    }
 
     pthread_create(&frame_thread, NULL, &framing_routine, channel_list);
     pthread_detach(frame_thread);

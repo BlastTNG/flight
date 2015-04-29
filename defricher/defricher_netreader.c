@@ -43,7 +43,6 @@
 
 static struct mosquitto *mosq;
 pthread_t netread_thread;
-extern channel_t *channels;
 
 static char client_id[HOST_NAME_MAX+1] = {0};
 static char remote_host[HOST_NAME_MAX+1] = {0};
@@ -115,6 +114,14 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                     if (ri.channels_ready) {
                         last_crc = ((channel_header_t*)message->payload)->crc;
                         defricher_request_new_dirfile();
+                    }
+                }
+            }
+            if ( count == 3 && topics[0] && strcmp(topics[0], "derived") == 0) {
+                if (((derived_header_t*)message->payload)->crc != last_crc) {
+                    defricher_info( "Received updated Derived Channels.");
+                    if (channels_read_derived_map(message->payload, message->payloadlen, &derived_channels) > 0 ) {
+
                     }
                 }
             }

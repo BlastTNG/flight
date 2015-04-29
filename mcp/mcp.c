@@ -348,7 +348,7 @@ static void mcp_100hz_routines(void)
     update_axes_mode();
     store_100hz_acs();
 //    ControlGyroHeat();
-    write_motor_channels_5hz();
+//    write_motor_channels_100hz();
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();

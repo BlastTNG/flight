@@ -37,6 +37,8 @@
 #define UNITS_LEN 48
 #define BLAST_TNG_CH_VERSION 1
 
+#include <derived.h>
+
 #define _RATES(x,_)	\
 	_(x, 1HZ)					\
 	_(x, 5HZ)					\
@@ -118,5 +120,8 @@ channel_t *channels_find_by_name(const char *m_name);
 int channels_store_data(E_SRC m_src, E_RATE m_rate, const void *m_data, size_t m_len);
 int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 channel_header_t *channels_create_map(channel_t *m_channel_list);
+
+int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list);
+derived_header_t *channels_create_derived_map(derived_tng_t *m_derived);
 
 #endif /* CHANNELS_V2_H_ */

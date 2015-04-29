@@ -97,6 +97,10 @@ struct ri_struct {
 extern struct rc_struct rc;
 extern struct ri_struct ri;
 
+extern channel_t *channels;
+extern derived_tng_t *derived_channels;
+
+
 extern sigset_t signals;
 
 #ifdef DEBUG

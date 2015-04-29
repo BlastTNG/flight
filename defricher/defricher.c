@@ -51,6 +51,7 @@
 
 char **remaining_args = NULL;
 channel_t *channels = NULL;
+derived_tng_t *derived_channels = NULL;
 
 static GOptionEntry cmdline_options[] =
 {
