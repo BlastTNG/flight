@@ -445,8 +445,8 @@ void piv_quick_stop(void)
 void rw_init_current_limit(void)
 {
     if (rw_index) {
-        ec_SDOwrite16(rw_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
-        ec_SDOwrite16(rw_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+        ec_SDOwrite16(rw_index, 0x2110, 0, 3600);   // 36 Amps peak current limit
+        ec_SDOwrite16(rw_index, 0x2111, 0, 1200);   // 12 Amps continuous current limit
     }
 }
 void el_init_current_limit(void)
