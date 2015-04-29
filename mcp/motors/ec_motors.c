@@ -728,20 +728,20 @@ static int motor_pdo_init(int m_slave)
     /**
      * Second map (0x1601 register)
      */
-    map_pdo(&map, ECAT_CURRENT_LOOP_CP, 16); // current Loop Proportional Gain (P term)
-    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 1, map.val);
+//    map_pdo(&map, ECAT_CURRENT_LOOP_CP, 16); // current Loop Proportional Gain (P term)
+//    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 1, map.val);
+//
+//    map_pdo(&map, ECAT_CURRENT_LOOP_CI, 16); // Current Loop Integral Gain (I term)
+//    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 2, map.val);
+//
+//    map_pdo(&map, ECAT_CURRENT_LOOP_OFFSET, 16); // Current Offset (int16)
+//    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 3, map.val);
+//
+//    ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING + 1, 0, 3); /// Set the 0x1601 map to contain 3 elements
+//    ec_SDOwrite16(m_slave, ECAT_RXPDO_ASSIGNMENT, 2, ECAT_RXPDO_MAPPING + 1); /// Set the 0x1601 map to the second PDO
 
-    map_pdo(&map, ECAT_CURRENT_LOOP_CI, 16); // Current Loop Integral Gain (I term)
-    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 2, map.val);
 
-    map_pdo(&map, ECAT_CURRENT_LOOP_OFFSET, 16); // Current Offset (int16)
-    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 3, map.val);
-
-    ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING + 1, 0, 3); /// Set the 0x1601 map to contain 3 elements
-    ec_SDOwrite16(m_slave, ECAT_RXPDO_ASSIGNMENT, 2, ECAT_RXPDO_MAPPING + 1); /// Set the 0x1601 map to the second PDO
-
-
-    ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 2); /// There are two maps in the RX PDOs
+    ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 1); /// There are two maps in the RX PDOs
 
 
     return 0;
@@ -776,9 +776,9 @@ static void map_index_vars(int m_index)
     control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
     target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
 
-    current_p[m_index] = (uint16_t*) (target_current[m_index] + 1);
-    current_i[m_index] = (uint16_t*) (current_p[m_index] + 1);
-    current_offset[m_index] = (int16_t*) (current_i[m_index] + 1);
+//    current_p[m_index] = (uint16_t*) (target_current[m_index] + 1);
+//    current_i[m_index] = (uint16_t*) (current_p[m_index] + 1);
+//    current_offset[m_index] = (int16_t*) (current_i[m_index] + 1);
 }
 /**
  * Interface function to @map_index_vars.  Maps the variables for each of the motor
@@ -923,9 +923,6 @@ static void* motor_control(void* arg)
         ec_SDOread(i, ECAT_CURRENT_LOOP_CMD, false, &len, target_current[i], EC_TIMEOUTRXM);
         len = 2;
         ec_SDOread(i, ECAT_CTL_WORD, false, &len, control_word[i], EC_TIMEOUTRXM);
-        ec_SDOread(i, ECAT_CURRENT_LOOP_CP, false, &len, current_p[i], EC_TIMEOUTRXM);
-        ec_SDOread(i, ECAT_CURRENT_LOOP_CI, false, &len, current_i[i], EC_TIMEOUTRXM);
-        ec_SDOread(i, ECAT_CURRENT_LOOP_OFFSET, false, &len, current_offset[i], EC_TIMEOUTRXM);
     }
 
     /// Set the default current limits
