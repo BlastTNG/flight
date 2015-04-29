@@ -804,6 +804,7 @@ static void motor_configure_timing(void)
     for (int i = 1; i <= ec_slavecount; i++) {
         if (!found_dc_master && ec_slave[i].hasdc) {
             ec_dcsync0(i, true, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
+            found_dc_master = 1;
         }
         else {
             ec_dcsync0(i, false, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
