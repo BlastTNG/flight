@@ -48,7 +48,7 @@ extern channel_t *channels;
 static char client_id[HOST_NAME_MAX+1] = {0};
 static char remote_host[HOST_NAME_MAX+1] = {0};
 static int port = 1883;
-static int keepalive = 1;
+static int keepalive = 15;
 
 static void frame_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
@@ -93,18 +93,29 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
 
     if(message->payloadlen){
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
-
             if ( count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
-                frame_handle_data(topics[1], topics[3], message->payload, message->payloadlen);
+                if (ri.channels_ready) {
+                    ri.read ++;
+                    frame_handle_data(topics[1], topics[3], message->payload, message->payloadlen);
+                }
             }
             if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {
-                ri.read ++;
                 if (((channel_header_t*)message->payload)->crc != last_crc) {
                     defricher_info( "Received updated Channels.  Ready to initialize new DIRFILE!");
-                    channels_read_map(message->payload, message->payloadlen, &channels);
-                    channels_initialize(channels);
-                    last_crc = ((channel_header_t*)message->payload)->crc;
-                    defricher_request_new_dirfile();
+                    if (channels_read_map(message->payload, message->payloadlen, &channels) > 0 ) {
+                        defricher_startup("Ready to init channels");
+                        if (channels_initialize(channels) < 0) {
+                            defricher_err("Could not initialize channels");
+                        } else {
+                            defricher_startup("Channels initialized");
+                            ri.channels_ready = true;
+                        }
+                    }
+
+                    if (ri.channels_ready) {
+                        last_crc = ((channel_header_t*)message->payload)->crc;
+                        defricher_request_new_dirfile();
+                    }
                 }
             }
             mosquitto_sub_topic_tokens_free(&topics, count);
@@ -156,6 +167,7 @@ static void *netreader_routine(void *m_arg)
             case MOSQ_ERR_NO_CONN:
                 if (rc.auto_reconnect){
                     sleep(5);
+                    defricher_warn("No connection to %s.  Retrying...", remote_host);
                     mosquitto_reconnect(mosq);
                 } else {
                     defricher_err("Not connected to %s.  Quitting.", remote_host);
@@ -165,6 +177,7 @@ static void *netreader_routine(void *m_arg)
                 break;
             case MOSQ_ERR_CONN_LOST:
                 if (rc.auto_reconnect){
+                    defricher_warn("Lost connection to %s.  Trying to reconnect...", remote_host);
                     mosquitto_reconnect(mosq);
                 } else {
                     defricher_err("Lost connection to %s", remote_host);
@@ -195,6 +208,7 @@ int netreader_init(const char *m_host)
     bool clean_session = false;
 
     gethostname(client_id, HOST_NAME_MAX);
+    strncpy(remote_host, m_host, HOST_NAME_MAX);
 
     mosquitto_lib_init();
     mosq = mosquitto_new(client_id, clean_session, NULL);
@@ -208,7 +222,7 @@ int netreader_init(const char *m_host)
     mosquitto_message_callback_set(mosq, frame_message_callback);
     mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
 
-    if (mosquitto_connect(mosq, m_host, port, keepalive)) {
+    if (mosquitto_connect(mosq, remote_host, port, keepalive)) {
         defricher_strerr("Unable to connect.\n");
         return -1;
     }

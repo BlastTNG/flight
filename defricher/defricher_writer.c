@@ -362,7 +362,7 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
         return -1;
     }
 
-    if (!dirfile_ready) {
+    if (!ri.dirfile_ready) {
         if (!have_warned) defricher_info("Discarding frame due to DIRFILE not being ready for writing");
         have_warned = 1;
         return -1;
@@ -381,7 +381,7 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
         }
     }
 
-    dirfile_frames_written = 1;
+    dirfile_frames_written++;
     return 0;
 }
 
@@ -405,10 +405,15 @@ static void *defricher_write_loop(void *m_arg)
                 continue;
             }
             defricher_update_cache_fp(dirfile, channels);
-            defricher_update_current_link(rc.output_dirfile);
             dirfile_create_new = 0;
-            dirfile_ready = 1;
+            ri.dirfile_ready = true;
+            ri.symlink_updated = false;
             dirfile_frames_written = 0;
+        }
+
+        /// We wait until a frame is written to the dirfile before updating the link (for KST)
+        if (dirfile_frames_written > 2000 && !ri.symlink_updated) {
+            defricher_update_current_link(rc.output_dirfile);
         }
         usleep(100);
     }

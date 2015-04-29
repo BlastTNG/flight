@@ -23,11 +23,21 @@
 #ifndef DEFILE_H
 #define DEFILE_H
 
+#include <stdbool.h>
 #include <sys/time.h>   /* SYSV time (struct timeval, struct timezone) */
 #include <netinet/in.h> /* ARPA Internet specification (struct sockaddr_in) */
 
-#include "frameread.h"
-#include "quendiclient.h"
+/* Don't use PATH_MAX.  It isn't. */
+#define FR_PATH_MAX 8192
+
+#include <dirent.h>     /* for MAXNAMELEN on BSD */
+#ifndef NAME_MAX
+#ifdef MAXNAMELEN
+#define NAME_MAX MAXNAMELEN
+#else
+#define NAME_MAX 255 /* iunno */
+#endif
+#endif
 
 /* upped from 50 to 200 to handle high latencies of rsyncing frame files */
 #define INPUT_BUF_SIZE 200 /* Frames are big (~1 kb) and we take a big
@@ -74,11 +84,13 @@ struct ri_struct {
 
   struct timeval last;  // Last time written to dirfile
   int lw;               // Total number of samples written previously
-  int wrote;            // Current number of samples written
-  int dirfile_init;     // Is the dirfile initialized and ready for writing (1=yes, 0=no)
-  int writer_done;
-  int tty;              // Boolean is there a message for output?
-  int frame_rate_reset; // Boolean to reset the framerate to the default
+  int wrote;                // Current number of samples written
+  bool channels_ready;      // Is the channels structure initialized?
+  bool dirfile_ready;       // Is the dirfile initialized and ready for writing
+  bool symlink_updated;     // Is the symbolic link current with the new dirfile?
+  bool writer_done;
+  bool tty;              // Boolean is there a message for output?
+  bool frame_rate_reset; // Boolean to reset the framerate to the default
 };
 
 /* interthread communication */
