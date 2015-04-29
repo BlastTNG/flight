@@ -53,6 +53,7 @@ pthread_t write_thread;
 
 static int dirfile_create_new = 0;
 static int dirfile_ready = 0;
+static int dirfile_frames_written = 0;
 
 //static void defricher_add_derived(DIRFILE *m_file)
 //{
@@ -356,7 +357,7 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
 {
     static int have_warned = 1;
 
-    if (frame_stop) {
+    if (ri.writer_done) {
         defricher_info("Not writing frame due to shutdown request");
         return -1;
     }
@@ -373,17 +374,6 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
         if (channel->source != m_source || channel->rate != m_rate) continue;
         defricher_cache_node_t *outfile_node = channel->var;
         if (outfile_node && outfile_node->magic == BLAST_MAGIC32 ) {
-//            switch(outfile_node->output.element_size) {
-//                case 2:
-//                    *outfile_node->_16bit_data = be16toh(*outfile_node->_16bit_data);
-//                    break;
-//                case 4:
-//                    *outfile_node->_32bit_data = be32toh(*outfile_node->_32bit_data);
-//                    break;
-//                case 8:
-//                    *outfile_node->_64bit_data = be64toh(*outfile_node->_64bit_data);
-//                    break;
-//            }
             if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
                 defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
@@ -391,6 +381,7 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
         }
     }
 
+    dirfile_frames_written = 1;
     return 0;
 }
 
@@ -401,7 +392,7 @@ static void *defricher_write_loop(void *m_arg)
 
     bprintf(info, "Starting Defricher Write task\n");
 
-    while (!frame_stop)
+    while (!ri.writer_done)
     {
         if (dirfile_create_new) {
             dirfile_ready = 0;
@@ -417,6 +408,7 @@ static void *defricher_write_loop(void *m_arg)
             defricher_update_current_link(rc.output_dirfile);
             dirfile_create_new = 0;
             dirfile_ready = 1;
+            dirfile_frames_written = 0;
         }
         usleep(100);
     }

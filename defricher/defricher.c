@@ -49,8 +49,6 @@
 #include "defricher_writer.h"
 #include "defricher_netreader.h"
 
-int frame_stop;
-
 char **remaining_args = NULL;
 channel_t *channels = NULL;
 

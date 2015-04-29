@@ -41,8 +41,6 @@
 #include "defricher_utils.h"
 #include "defricher_writer.h"
 
-extern int frame_stop;
-
 static struct mosquitto *mosq;
 pthread_t netread_thread;
 extern channel_t *channels;
@@ -100,6 +98,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                 frame_handle_data(topics[1], topics[3], message->payload, message->payloadlen);
             }
             if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {
+                ri.read ++;
                 if (((channel_header_t*)message->payload)->crc != last_crc) {
                     defricher_info( "Received updated Channels.  Ready to initialize new DIRFILE!");
                     channels_read_map(message->payload, message->payloadlen, &channels);
@@ -148,7 +147,7 @@ static void *netreader_routine(void *m_arg)
 
     defricher_info( "Starting Framing task\n");
 
-    while (!frame_stop)
+    while (!ri.reader_done)
     {
         ret = mosquitto_loop(mosq, 100, 1);
         switch(ret) {
@@ -160,7 +159,7 @@ static void *netreader_routine(void *m_arg)
                     mosquitto_reconnect(mosq);
                 } else {
                     defricher_err("Not connected to %s.  Quitting.", remote_host);
-                    frame_stop = 1;
+                    ri.reader_done = 1;
                     ri.writer_done = 1;
                 }
                 break;
@@ -169,7 +168,7 @@ static void *netreader_routine(void *m_arg)
                     mosquitto_reconnect(mosq);
                 } else {
                     defricher_err("Lost connection to %s", remote_host);
-                    frame_stop = 1;
+                    ri.reader_done = 1;
                     ri.writer_done = 1;
                 }
                 break;
