@@ -395,6 +395,7 @@ static void *defricher_write_loop(void *m_arg)
         /// We wait until a frame is written to the dirfile before updating the link (for KST)
         if (dirfile_frames_written > 400 && !ri.symlink_updated) {
             defricher_update_current_link(rc.output_dirfile);
+            ri.symlink_updated = true;
         }
 
         if (ri.dirfile_ready && dirfile_update_derived) {
