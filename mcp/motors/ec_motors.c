@@ -659,13 +659,13 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_VEL_ENCODER, 32);    // Encoder Velocity
     ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val);
 
-    map_pdo(&map, ECAT_CURRENT_LOOP_CMD, 16); // Commanded current output
-    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
+//    map_pdo(&map, ECAT_CURRENT_LOOP_CMD, 16); // Commanded current output
+//    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
 
     map_pdo(&map, ECAT_CURRENT_ACTUAL, 16); // Measured current output
-    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 3, map.val);
+    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
 
-    ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 3); /// Set the 0x1a01 map to contain 2 elements
+    ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2); /// Set the 0x1a01 map to contain 2 elements
     ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1); /// Set the 0x1a01 map to the second PDO
 
     /**
@@ -698,7 +698,7 @@ static int motor_pdo_init(int m_slave)
     ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 3); /// Set the 0x1a03 map to contain 3 elements
     ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 4, ECAT_TXPDO_MAPPING + 3); /// Set the 0x1a03 map to the fourth PDO
 
-    ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 4); /// There are three maps in the TX PDOs
+    ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 4); /// There are four maps in the TX PDOs
 
 
     /**
@@ -756,8 +756,10 @@ static void map_index_vars(int m_index)
      */
     motor_position[m_index] = (int32_t*) (ec_slave[m_index].inputs);
     motor_velocity[m_index] = (int32_t*) (motor_position[m_index] + 1);
+
     enc_velocity[m_index] = (int32_t*) (motor_velocity[m_index] + 1);
     motor_current[m_index] = (int16_t*) (enc_velocity[m_index] + 1);
+
     status_register[m_index] = (uint32_t*) (motor_current[m_index] + 1);
     status_word[m_index] = (uint16_t*) (status_register[m_index] + 1);
     amp_temp[m_index] = (int16_t*) (status_word[m_index] + 1);
@@ -769,6 +771,7 @@ static void map_index_vars(int m_index)
     /// Outputs
     control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
     target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
+
     current_p[m_index] = (uint16_t*) (target_current[m_index] + 1);
     current_i[m_index] = (uint16_t*) (current_p[m_index] + 1);
     current_offset[m_index] = (int16_t*) (current_i[m_index] + 1);
