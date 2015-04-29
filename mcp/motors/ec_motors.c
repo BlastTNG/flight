@@ -501,7 +501,7 @@ static void rw_init_encoder(void)
 {
     if (rw_index) {
         ec_SDOwrite32(rw_index, ECAT_ENCODER_WRAP, RW_ENCODER_COUNTS);
-        ec_SDOwrite32(rw_index, 0x6410, 23, RW_ENCODER_COUNTS);
+        ec_SDOwrite32(rw_index, 0x2383, 23, 8192);
     }
 }
 
