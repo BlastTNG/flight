@@ -33,9 +33,9 @@
     _map.subindex = _subindex;\
 }
 
-#define RW_DEFAULT_CURRENT_P    6000
-#define RW_DEFAULT_CURRENT_I    200
-#define RW_DEFAULT_CURRENT_OFF  (-8)
+#define RW_DEFAULT_CURRENT_P    1500
+#define RW_DEFAULT_CURRENT_I    45
+#define RW_DEFAULT_CURRENT_OFF  (0)
 
 #define EL_DEFAULT_CURRENT_P    6000
 #define EL_DEFAULT_CURRENT_I    200
