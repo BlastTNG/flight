@@ -337,6 +337,9 @@ void store_200hz_acs(void)
     static int firsttime = 1;
     if (firsttime) {
       firsttime = 0;
+      ifElgy1Addr = channels_find_by_name("ifel_gy");
+      ifRollgy1Addr = channels_find_by_name("ifroll_gy");
+      ifYawgy1Addr = channels_find_by_name("ifyaw_gy");
       ifElgy1Addr = channels_find_by_name("ifel_1_gy");
       ifRollgy1Addr = channels_find_by_name("ifroll_1_gy");
       ifYawgy1Addr = channels_find_by_name("ifyaw_1_gy");
