@@ -372,7 +372,7 @@ void SetGyroMask(void)
             wait[i]--;
     }
 
-    SET_VALUE(maskGyAddr, GyroMask);
+    SET_UINT16(maskGyAddr, GyroMask);
 }
 
 

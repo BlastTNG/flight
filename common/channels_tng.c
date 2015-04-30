@@ -200,8 +200,8 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
 {
     uint32_t crcval = m_map->crc;
 
-    if (m_map->version != BLAST_TNG_CH_VERSION) {
-        bprintf(err, "Unknown channels version %d", m_map->version);
+    if (m_map->version != BLAST_TNG_CH_VERSION ) {
+        bprintf(err, "Unknown derived channels version %d", m_map->version);
         return -1;
     }
 
@@ -255,7 +255,7 @@ int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng
 {
     uint32_t crcval = m_map->crc;
 
-    if (m_map->version != BLAST_TNG_CH_VERSION) {
+    if (m_map->version != (BLAST_TNG_CH_VERSION | 0x20)) {  // 0x20 marks the packet as a derived packet
         bprintf(err, "Unknown channels version %d", m_map->version);
         return -1;
     }
