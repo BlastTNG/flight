@@ -35,6 +35,7 @@ uint8_t dsp1760_get_seq_error_count(int m_box);
 uint8_t dsp1760_get_crc_error_count(int m_box);
 uint8_t dsp1760_get_seq_number(int m_box);
 uint8_t dsp1760_get_gyro_status_count(int m_box, int m_gyro);
+uint32_t dsp1760_get_valid_packet_count(int m_box, int m_gyro);
 uint32_t dsp1760_get_packet_count(int m_box);
 int16_t dsp1760_get_temp(int m_box);
 

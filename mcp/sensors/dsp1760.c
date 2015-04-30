@@ -82,6 +82,7 @@ typedef struct
     uint8_t         seq_number;
     uint8_t         gyro_status_count[3];
     uint32_t        packet_count;
+    uint32_t        gyro_valid_packet_count[3];
     uint8_t         bpos;
     uint8_t         index;
     float           gyro_input[3][DSP1760_NPOLES+1];
@@ -150,6 +151,10 @@ uint8_t dsp1760_get_gyro_status_count(int m_box, int m_gyro)
 uint32_t dsp1760_get_packet_count(int m_box)
 {
     return gyro_data[m_box].packet_count;
+}
+uint32_t dsp1760_get_valid_packet_count(int m_box, int m_gyro)
+{
+    return gyro_data[m_box].gyro_valid_packet_count[m_gyro];
 }
 int16_t dsp1760_get_temp(int m_box)
 {
@@ -231,10 +236,14 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
                  gyro->packet_count++;
                  gyro->seq_number = pkt->sequence;
 
-                 /// Status is 0 if OK, 1 if faulty
+                 /// Status is 1 if OK, 0 if faulty
                  gyro->gyro_status_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
                  gyro->gyro_status_count[1] += (!(pkt->status & DSP1760_STATUS_MASK_GY2));
                  gyro->gyro_status_count[2] += (!(pkt->status & DSP1760_STATUS_MASK_GY3));
+
+                 gyro->gyro_valid_packet_count[0] += (pkt->status & DSP1760_STATUS_MASK_GY1);
+                 gyro->gyro_valid_packet_count[1] += (pkt->status & DSP1760_STATUS_MASK_GY2);
+                 gyro->gyro_valid_packet_count[2] += (pkt->status & DSP1760_STATUS_MASK_GY3);
 
                  pkt->raw_data[0] = '\0';
                  gyro->bpos = 0;

@@ -332,7 +332,11 @@ void store_200hz_acs(void)
     static channel_t* ifyaw_gy_addr;
 
     uint16_t gymask = 0x3f;
+    uint16_t gyfault = 0;
     static channel_t* mask_gy_addr;
+    static channel_t* fault_gy_addr;
+    static uint32_t gyro_valid_count[2][3] = {{0}};
+    static uint32_t gyro_valid_set[2][3] = {{0}};
 
     static int firsttime = 1;
     if (firsttime) {
@@ -348,6 +352,7 @@ void store_200hz_acs(void)
       ifYawgy2Addr = channels_find_by_name("ifyaw_2_gy");
 
       mask_gy_addr = channels_find_by_name("mask_gy");
+      fault_gy_addr = channels_find_by_name("fault_gy");
     }
 
     gymask = GET_UINT16(mask_gy_addr);
@@ -375,6 +380,24 @@ void store_200hz_acs(void)
     ACSData.ifel_gy = gy_ifel;
     ACSData.ifroll_gy = gy_ifroll;
     ACSData.ifyaw_gy = gy_ifyaw;
+
+    /**
+     * We determine whether a gyro is fault by examining the count of valid packets received.
+     * This should increment by 5 each time.  Not incrementing for 2 sequences indicates a
+     * persistent fault.
+     */
+    for (int box = 0; box < 2; box++) {
+        for (int gyro = 0; gyro < 3; gyro++) {
+            uint32_t gyro_valid = dsp1760_get_valid_packet_count(box, gyro);
+            if (gyro_valid == gyro_valid_count[box][gyro]) gyro_valid_set[box][gyro]++;
+            else gyro_valid_set[box][gyro] = 0;
+
+            if (gyro_valid_set[box][gyro] > 1) gyfault |= (1 << (box * 3 + gyro));
+            else gyfault &= ~(1 << (box * 3 + gyro));
+        }
+    }
+
+    SET_UINT16(fault_gy_addr, gyfault);
 
 }
 
