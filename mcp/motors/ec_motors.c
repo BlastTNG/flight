@@ -509,7 +509,7 @@ static void el_init_encoder(void)
 {
     if (el_index) {
         ec_SDOwrite32(el_index, ECAT_ENCODER_WRAP, EL_ENCODER_COUNTS);
-        ec_SDOwrite32(el_index, 0x6410, 23, EL_ENCODER_COUNTS);
+        ec_SDOwrite32(el_index, 0x2383, 23, EL_ENCODER_COUNTS);
     }
 }
 
