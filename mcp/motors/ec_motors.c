@@ -445,10 +445,10 @@ void piv_quick_stop(void)
 void rw_init_current_limit(void)
 {
     if (rw_index) {
-        ec_SDOwrite16(rw_index, 0x21C0, 0, 5);      // Set to wake and wiggle TODO: Remove this when not needed!
-        ec_SDOwrite16(rw_index, 0x21C2, 0, 1200);   // Set max current for wake and wiggle
-        ec_SDOwrite16(rw_index, 0x21C3, 0, 150);   // Wiggle for 150ms if needed
-        ec_SDOwrite16(rw_index, 0x21C4, 0, 2);   // Wiggle for 150ms if needed
+        ec_SDOwrite16(rw_index, 0x21C2, 0, 200);    // Set max current for wake and wiggle
+        ec_SDOwrite16(rw_index, 0x21C3, 0, 800);    // Wiggle for 150ms if needed
+        ec_SDOwrite16(rw_index, 0x21C4, 0, 0);      // Default wiggle mode
+
         ec_SDOwrite16(rw_index, 0x2110, 0, 3600);   // 36 Amps peak current limit
         ec_SDOwrite16(rw_index, 0x2111, 0, 1200);   // 12 Amps continuous current limit
     }
