@@ -367,9 +367,9 @@ void store_200hz_acs(void)
     ifel_gy2 = dsp1760_getval(1,0);
     ifroll_gy2 = dsp1760_getval(1,1);
     ifyaw_gy2 = dsp1760_getval(1,2);
-    SET_FLOAT(ifElgy2Addr, dsp1760_getval(1,0));
-    SET_FLOAT(ifRollgy2Addr, dsp1760_getval(1,1));
-    SET_FLOAT(ifYawgy2Addr, dsp1760_getval(1,2));
+    SET_FLOAT(ifElgy2Addr, ifel_gy2);
+    SET_FLOAT(ifRollgy2Addr, ifroll_gy2);
+    SET_FLOAT(ifYawgy2Addr, ifyaw_gy2);
 
     gy_ifroll= gy_inv[gymask][0][0]*ifroll_gy1 + gy_inv[gymask][0][1]*ifroll_gy2 + gy_inv[gymask][0][2]*ifyaw_gy1 + gy_inv[gymask][0][3]*ifyaw_gy2 + gy_inv[gymask][0][4]*ifel_gy1 + gy_inv[gymask][0][5]*ifel_gy2;
     gy_ifyaw = gy_inv[gymask][1][0]*ifroll_gy1 + gy_inv[gymask][1][1]*ifroll_gy2 + gy_inv[gymask][1][2]*ifyaw_gy1 + gy_inv[gymask][1][3]*ifyaw_gy2 + gy_inv[gymask][1][4]*ifel_gy1 + gy_inv[gymask][1][5]*ifel_gy2;
@@ -392,8 +392,8 @@ void store_200hz_acs(void)
             if (gyro_valid == gyro_valid_count[box][gyro]) gyro_valid_set[box][gyro]++;
             else gyro_valid_set[box][gyro] = 0;
 
-            if (gyro_valid_set[box][gyro] > 1) gyfault |= (1 << (box * 3 + gyro));
-            else gyfault &= ~(1 << (box * 3 + gyro));
+            if (gyro_valid_set[box][gyro] > 1) gyfault |= (1 << (gyro * 2 + box));
+            else gyfault &= ~(1 << (gyro * 2 + box));
         }
     }
 
