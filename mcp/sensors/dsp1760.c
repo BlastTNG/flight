@@ -42,6 +42,7 @@ static const char gyro_port[2][16] = {"/dev/ttyS2","/dev/ttyS3"};
 
 #define DSP1760_DATA_HEADER 0xFE81FF55
 
+#define DSP1760_1000HZ 1000.0
 typedef union
 {
     struct
@@ -80,7 +81,7 @@ typedef struct
     uint8_t         seq_error_count;
     uint8_t         crc_error_count;
     uint8_t         seq_number;
-    uint8_t         gyro_status_count[3];
+    uint8_t         gyro_invalid_packet_count[3];
     uint32_t        packet_count;
     uint32_t        gyro_valid_packet_count[3];
     uint8_t         bpos;
@@ -95,14 +96,16 @@ static dsp_storage_t    gyro_data[2] = {{0}};
 /**
  * Transfer the packet data from a new gyro packet to the filter and
  * increment the index value, wrapping at the maximum number of filter
- * positions
+ * positions.  Currently output is in delta angle and mcp uses rotation rate,
+ * so convert here to radians / second instead of radians per 0.001 second
  * @param m_gyro Pointer to the gyro storage
  */
+///TODO: Evaluate whether we want to use delta angle instead!
 static void dsp1760_newvals(dsp_storage_t *m_gyro)
 {
-    m_gyro->gyro_input[0][m_gyro->index] = m_gyro->packet.x / DSP1760_GAIN;
-    m_gyro->gyro_input[1][m_gyro->index] = m_gyro->packet.y / DSP1760_GAIN;
-    m_gyro->gyro_input[2][m_gyro->index] = m_gyro->packet.z / DSP1760_GAIN;
+    m_gyro->gyro_input[0][m_gyro->index] = m_gyro->packet.x * DSP1760_1000HZ / DSP1760_GAIN;
+    m_gyro->gyro_input[1][m_gyro->index] = m_gyro->packet.y * DSP1760_1000HZ / DSP1760_GAIN;
+    m_gyro->gyro_input[2][m_gyro->index] = m_gyro->packet.z * DSP1760_1000HZ / DSP1760_GAIN;
 
     if (++(m_gyro->index) > DSP1760_NPOLES) m_gyro->index = 0;
 }
@@ -146,7 +149,7 @@ uint8_t dsp1760_get_seq_number(int m_box)
 }
 uint8_t dsp1760_get_gyro_status_count(int m_box, int m_gyro)
 {
-    return gyro_data[m_box].gyro_status_count[m_gyro];
+    return gyro_data[m_box].gyro_invalid_packet_count[m_gyro];
 }
 uint32_t dsp1760_get_packet_count(int m_box)
 {
@@ -237,9 +240,9 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
                  gyro->seq_number = pkt->sequence;
 
                  /// Status is 1 if OK, 0 if faulty
-                 gyro->gyro_status_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
-                 gyro->gyro_status_count[1] += (!(pkt->status & DSP1760_STATUS_MASK_GY2));
-                 gyro->gyro_status_count[2] += (!(pkt->status & DSP1760_STATUS_MASK_GY3));
+                 gyro->gyro_invalid_packet_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
+                 gyro->gyro_invalid_packet_count[1] += (!(pkt->status & DSP1760_STATUS_MASK_GY2));
+                 gyro->gyro_invalid_packet_count[2] += (!(pkt->status & DSP1760_STATUS_MASK_GY3));
 
                  gyro->gyro_valid_packet_count[0] += (pkt->status & DSP1760_STATUS_MASK_GY1);
                  gyro->gyro_valid_packet_count[1] += (pkt->status & DSP1760_STATUS_MASK_GY2);
