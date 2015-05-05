@@ -501,7 +501,7 @@ static void rw_init_encoder(void)
 {
     if (rw_index) {
         ec_SDOwrite32(rw_index, ECAT_ENCODER_WRAP, RW_ENCODER_COUNTS);
-        ec_SDOwrite32(rw_index, 0x2383, 23, 8192);
+        ec_SDOwrite32(rw_index, ECAT_COUNTS_PER_REV, 8192);
     }
 }
 
@@ -509,7 +509,7 @@ static void el_init_encoder(void)
 {
     if (el_index) {
         ec_SDOwrite32(el_index, ECAT_ENCODER_WRAP, EL_ENCODER_COUNTS);
-        ec_SDOwrite32(el_index, 0x2383, 23, 8192);
+        ec_SDOwrite32(el_index, ECAT_COUNTS_PER_REV, 8192);
     }
 }
 
@@ -517,7 +517,7 @@ static void piv_init_resolver(void)
 {
     if (piv_index) {
         ec_SDOwrite32(piv_index, ECAT_ENCODER_WRAP, PIV_RESOLVER_COUNTS);
-        ec_SDOwrite32(piv_index, 0x2383, 23, PIV_RESOLVER_COUNTS);
+        ec_SDOwrite32(piv_index, ECAT_COUNTS_PER_REV, PIV_RESOLVER_COUNTS);
         ec_SDOwrite32(piv_index, 0x2383, 34, 1);
     }
 }

@@ -104,6 +104,8 @@ typedef enum {
  *
  */
 
+#define ECAT_COUNTS_PER_REV 0x2383, 23 /* Encoder counts per revolution INT32 */
+
 #define ECAT_ENCODER_WRAP 0x2220, 0 /* Encoder wrap position INT32 */
 #define ECAT_LOAD_WRAP 0x2221, 0 /* Encoder Load wrap position INT32 */
 
