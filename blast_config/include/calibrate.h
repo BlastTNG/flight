@@ -29,7 +29,7 @@ extern "C" {
  */
 #define RW_ENCODER_COUNTS (1 << 21)
 #define PIV_RESOLVER_COUNTS (1 << 14)
-#define EL_ENCODER_COUNTS (1 << 19)
+#define EL_ENCODER_COUNTS 655360 /* This is (1 << 19) / 0.8 to correct for the gearbox */
 
 #define RW_ENCODER_SCALING (360.0 / RW_ENCODER_COUNTS)
 #define EL_ENCODER_SCALING (360.0 / EL_ENCODER_COUNTS)
