@@ -29,6 +29,7 @@
 #include <blast.h>
 #include <blast_comms.h>
 #include <comms_serial.h>
+#include <conversions.h>
 #include <dsp1760.h>
 
 static comms_serial_t *gyro_comm[2] = {NULL};
@@ -101,11 +102,12 @@ static dsp_storage_t    gyro_data[2] = {{0}};
  * @param m_gyro Pointer to the gyro storage
  */
 ///TODO: Evaluate whether we want to use delta angle instead!
+///TODO: Change gyros to output degrees
 static void dsp1760_newvals(dsp_storage_t *m_gyro)
 {
-    m_gyro->gyro_input[0][m_gyro->index] = m_gyro->packet.x * DSP1760_1000HZ / DSP1760_GAIN;
-    m_gyro->gyro_input[1][m_gyro->index] = m_gyro->packet.y * DSP1760_1000HZ / DSP1760_GAIN;
-    m_gyro->gyro_input[2][m_gyro->index] = m_gyro->packet.z * DSP1760_1000HZ / DSP1760_GAIN;
+    m_gyro->gyro_input[0][m_gyro->index] = to_degrees(m_gyro->packet.x) * DSP1760_1000HZ / DSP1760_GAIN;
+    m_gyro->gyro_input[1][m_gyro->index] = to_degrees(m_gyro->packet.y) * DSP1760_1000HZ / DSP1760_GAIN;
+    m_gyro->gyro_input[2][m_gyro->index] = to_degrees(m_gyro->packet.z) * DSP1760_1000HZ / DSP1760_GAIN;
 
     if (++(m_gyro->index) > DSP1760_NPOLES) m_gyro->index = 0;
 }
