@@ -32,6 +32,7 @@
 #include <conversions.h>
 #include <channels_tng.h>
 #include <command_struct.h>
+#include <ec_motors.h>
 #include <motors.h>
 #include <mcp.h>
 #include <pointing_struct.h>
