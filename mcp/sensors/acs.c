@@ -290,6 +290,7 @@ void read_100hz_acs(void)
     static channel_t* xMagAddr;
     static channel_t* yMagAddr;
     static channel_t* zMagAddr;
+    int i_motors;
 
     static int firsttime = 1;
     if (firsttime) {
@@ -302,6 +303,10 @@ void read_100hz_acs(void)
     ACSData.mag_x = GET_UINT16(xMagAddr);
     ACSData.mag_y = GET_UINT16(yMagAddr);
     ACSData.mag_z = GET_UINT16(zMagAddr);
+
+    i_motors = GETREADINDEX(motor_index);
+    ACSData.enc_elev = ElevMotorData[i_motors].position;
+
 }
 
 /**
