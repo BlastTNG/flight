@@ -356,6 +356,7 @@ int channels_initialize(const channel_t * const m_channel_list)
 
             if (frame_size[src][rate]) {
                 channel_data[src][rate] = malloc(frame_size[src][rate]);
+                memset(channel_data[src][rate], 0, frame_size[src][rate]);
                 bprintf(startup, "Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
                         (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                         (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
