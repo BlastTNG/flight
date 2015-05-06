@@ -812,6 +812,7 @@ channel_t channel_list[] =
     { "p_term_el",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "i_term_el",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "error_el",             1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "el_integral",          1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "p_term_az",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "i_term_az",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "error_az",             1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },

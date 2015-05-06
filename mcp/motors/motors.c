@@ -1898,6 +1898,7 @@ static int16_t calculate_el_current(float m_vreq_el)
     static channel_t *error_el_ch = NULL;
     static channel_t *p_el_ch = NULL;
     static channel_t *i_el_ch = NULL;
+    static channel_t *el_integral_ch = NULL;
 
     float p_el = 0.0, i_el = 0.0;       //control loop gains
     float error_el = 0.0, P_term_el = 0.0, I_term_el = 0.0; //intermediate control loop results
@@ -1909,6 +1910,7 @@ static int16_t calculate_el_current(float m_vreq_el)
         error_el_ch = channels_find_by_name("error_el");
         p_el_ch = channels_find_by_name("p_term_el");
         i_el_ch = channels_find_by_name("i_term_el");
+        el_integral_ch = channels_find_by_name("el_integral");
     }
 
     p_el = CommandData.ele_gain.P;
@@ -1921,11 +1923,12 @@ static int16_t calculate_el_current(float m_vreq_el)
     P_term_el = p_el*error_el;
     SET_FLOAT(p_el_ch, P_term_el);
 
-    if( (p_el == 0.0) || (i_el == 0.0) ) {
+    if( (CommandData.ele_gain.P == 0) || (CommandData.ele_gain.I == 0) ) {
         el_integral = 0.0;
     } else {
         el_integral = (1.0 - INTEGRAL_CUTOFF)*el_integral + INTEGRAL_CUTOFF*error_el;
     }
+    SET_FLOAT(el_integral_ch, el_integral);
 
     I_term_el = el_integral * p_el * i_el;
     if (I_term_el > 32767.0) {
