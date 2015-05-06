@@ -1913,7 +1913,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     }
     SET_FLOAT(i_az_ch, I_term_az);
 
-    dac_out = P_term_az + I_term_az;
+    milliamp_return = P_term_az + I_term_az;
 
     if (milliamp_return > MAX_RW_CURRENT) milliamp_return = MAX_RW_CURRENT;
     if (milliamp_return < MIN_RW_CURRENT) milliamp_return = MIN_RW_CURRENT;
