@@ -433,10 +433,9 @@ void write_motor_channels_5hz(void)
     }
     /* proportional term for el motor */
     SET_VALUE(gPElAddr, elGainP);
-    el_set_p(elGainP);
     /* integral term for el_motor */
     SET_VALUE(gIElAddr, elGainI);
-    el_set_i(elGainI);
+
     /* pointing gain term for elevation drive */
     SET_VALUE(gPtElAddr, CommandData.ele_gain.PT);
     //TODO:Figure out what to do about the Pointing gain term

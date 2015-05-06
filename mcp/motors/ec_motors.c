@@ -108,9 +108,6 @@ static uint16_t *network_status[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&du
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 static int16_t *target_current[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
-static uint16_t *current_p[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
-static uint16_t *current_i[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
-static int16_t *current_offset[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
 
 /**
  * This set of functions return the latched faults of each motor controller
@@ -335,57 +332,6 @@ void el_set_current(int16_t m_cur)
 void piv_set_current(int16_t m_cur)
 {
     *target_current[piv_index] = m_cur;
-}
-
-/**
- * Sets the current Proportional Gain
- * @param m_p uint16 Gain
- */
-void rw_set_p(int16_t m_p)
-{
-    *current_p[rw_index] = m_p;
-}
-void el_set_p(int16_t m_p)
-{
-    *current_p[el_index] = m_p;
-}
-void piv_set_p(int16_t m_p)
-{
-    *current_p[piv_index] = m_p;
-}
-
-/**
- * Sets the current Integral Gain
- * @param m_i uint16 Gain
- */
-void rw_set_i(int16_t m_i)
-{
-    *current_i[rw_index] = m_i;
-}
-void el_set_i(int16_t m_i)
-{
-    *current_i[el_index] = m_i;
-}
-void piv_set_i(int16_t m_i)
-{
-    *current_i[piv_index] = m_i;
-}
-
-/**
- * Sets the current offset (added to each current)
- * @param m_offset uint16 Gain
- */
-void rw_set_offset(int16_t m_offset)
-{
-    *current_offset[rw_index] = m_offset;
-}
-void el_set_offset(int16_t m_offset)
-{
-    *current_offset[el_index] = m_offset;
-}
-void piv_set_offset(int16_t m_offset)
-{
-    *current_offset[piv_index] = m_offset;
 }
 
 /**
@@ -725,23 +671,7 @@ static int motor_pdo_init(int m_slave)
     ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING, 0, 2); /// Set the 0x1600 map to contain 2 elements
     ec_SDOwrite16(m_slave, ECAT_RXPDO_ASSIGNMENT, 1, ECAT_RXPDO_MAPPING); /// Set the 0x1600 map to the first PDO
 
-    /**
-     * Second map (0x1601 register)
-     */
-//    map_pdo(&map, ECAT_CURRENT_LOOP_CP, 16); // current Loop Proportional Gain (P term)
-//    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 1, map.val);
-//
-//    map_pdo(&map, ECAT_CURRENT_LOOP_CI, 16); // Current Loop Integral Gain (I term)
-//    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 2, map.val);
-//
-//    map_pdo(&map, ECAT_CURRENT_LOOP_OFFSET, 16); // Current Offset (int16)
-//    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING + 1, 3, map.val);
-//
-//    ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING + 1, 0, 3); /// Set the 0x1601 map to contain 3 elements
-//    ec_SDOwrite16(m_slave, ECAT_RXPDO_ASSIGNMENT, 2, ECAT_RXPDO_MAPPING + 1); /// Set the 0x1601 map to the second PDO
-
-
-    ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 1); /// There are two maps in the RX PDOs
+    ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 1); /// There is on map in the RX PDOs
 
 
     return 0;
@@ -776,9 +706,6 @@ static void map_index_vars(int m_index)
     control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
     target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
 
-//    current_p[m_index] = (uint16_t*) (target_current[m_index] + 1);
-//    current_i[m_index] = (uint16_t*) (current_p[m_index] + 1);
-//    current_offset[m_index] = (int16_t*) (current_i[m_index] + 1);
 }
 /**
  * Interface function to @map_index_vars.  Maps the variables for each of the motor
