@@ -1823,8 +1823,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     p_el = CommandData.ele_gain.P;
     i_el = CommandData.ele_gain.I;
 
-    //el gyros measure -el
-    error_el = ACSData.ifel_gy + m_vreq_el;
+    error_el = m_vreq_el - ACSData.ifel_gy;
     SET_FLOAT(error_el_ch, error_el);
 
     P_term_el = p_el*error_el;
@@ -1870,6 +1869,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     static channel_t *p_az_ch = NULL;
     static channel_t *i_az_ch = NULL;
 
+    int i_point;
     double cos_el, sin_el;
     float p_az = 0.0, i_az = 0.0;       //control loop gains
     float error_az = 0.0, P_term_az = 0.0, I_term_az = 0.0; //intermediate control loop results
@@ -1888,8 +1888,9 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
 
     p_az = CommandData.azi_gain.P;
     i_az = CommandData.azi_gain.I;
-    //roll, yaw contributions to az both -'ve (?)
-    error_az = (ACSData.ifroll_gy * sin_el + ACSData.ifyaw_gy * cos_el) + v_req_az;
+
+    i_point = GETREADINDEX(point_index);
+    error_az = v_req_az - PointingData[i_point].v_az;
     SET_FLOAT(error_az_ch, error_az);
 
     P_term_az = p_az * error_az;
