@@ -271,7 +271,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
      */
     if (!(channels_pkg = channels_create_map(channel_list))) {
         bprintf(err, "Exiting framing routine because we cannot get the channel list");
-        return NULL;
+        return -1;
     }
     mosquitto_publish(mosq, NULL, "channels/fc/1",
             sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
