@@ -1809,7 +1809,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
 
     float p_el = 0.0, i_el = 0.0;       //control loop gains
     float error_el = 0.0, P_term_el = 0.0, I_term_el = 0.0; //intermediate control loop results
-    int16_t dac_out;
+    int16_t milliamp_return;
 
     if (first_time) {
         first_time = 0;
@@ -1848,18 +1848,17 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     }
     SET_FLOAT(i_el_ch, I_term_el);
 
-    //sign difference in controller requires using -(P_term + I_term)
-    dac_out =-(P_term_el + I_term_el);
+    milliamp_return =P_term_el + I_term_el;
 
-    if (dac_out > MAX_EL_CURRENT) dac_out = MAX_EL_CURRENT;
-    if (dac_out < MIN_EL_CURRENT) dac_out = MIN_EL_CURRENT;
+    if (milliamp_return > MAX_EL_CURRENT) milliamp_return = MAX_EL_CURRENT;
+    if (milliamp_return < MIN_EL_CURRENT) milliamp_return = MIN_EL_CURRENT;
 
     if (m_disabled) {
         el_integral = 0.0;
-        dac_out = 0;
+        milliamp_return = 0;
     }
 
-    return dac_out;
+    return milliamp_return;
 }
 
 static int16_t calculate_rw_current(float v_req_az, int m_disabled)
@@ -1874,7 +1873,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     double cos_el, sin_el;
     float p_az = 0.0, i_az = 0.0;       //control loop gains
     float error_az = 0.0, P_term_az = 0.0, I_term_az = 0.0; //intermediate control loop results
-    int16_t dac_out;
+    int16_t milliamp_return;
 
     int i_point = GETREADINDEX(point_index);
 
@@ -1914,17 +1913,16 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     }
     SET_FLOAT(i_az_ch, I_term_az);
 
-    //TODO check sign of output
-    dac_out = -(P_term_az + I_term_az);
+    dac_out = P_term_az + I_term_az;
 
-    if (dac_out > MAX_RW_CURRENT) dac_out = MAX_RW_CURRENT;
-    if (dac_out < MIN_RW_CURRENT) dac_out = MIN_RW_CURRENT;
+    if (milliamp_return > MAX_RW_CURRENT) milliamp_return = MAX_RW_CURRENT;
+    if (milliamp_return < MIN_RW_CURRENT) milliamp_return = MIN_RW_CURRENT;
 
     if (m_disabled) {
         az_integral = 0.0;
-        dac_out = 0;
+        milliamp_return = 0;
     }
-    return dac_out;
+    return milliamp_return;
 
 }
 
