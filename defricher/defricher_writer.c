@@ -63,6 +63,7 @@ static void defricher_add_derived(DIRFILE *m_file, derived_tng_t *m_derived)
 
     for (derived_tng_t *derived = m_derived; derived && derived->type != DERIVED_EOC_MARKER; derived++) {
         switch (derived->type) {
+            case 'w':
             case 'b':
                 gd_add_bit(m_file, derived->bitword.field, derived->bitword.source, derived->bitword.offset, derived->bitword.length, 0);
                 break;
@@ -86,6 +87,8 @@ static void defricher_add_derived(DIRFILE *m_file, derived_tng_t *m_derived)
             case '#':
                 break;
             case 'u':
+                ///TODO: Remove this break after getdata library updated to avoid segfault here
+                break;
                 if (derived->units.units[0])
                     gd_madd_string(m_file, derived->units.source, "units", derived->units.units);
                 if (derived->units.quantity[0])
@@ -107,9 +110,11 @@ static void defricher_add_derived(DIRFILE *m_file, derived_tng_t *m_derived)
                 gd_add_mplex(m_file, derived->mplex.field, derived->mplex.source, derived->mplex.index, derived->mplex.value, derived->mplex.max, 0);
                 break;
             default:
+                defricher_warn("Unknown type %c", derived->type);
                 break;
         }
     }
+    gd_metaflush(m_file);
 }
 
 //TODO: Fix get_new_dirfilename to take options into account

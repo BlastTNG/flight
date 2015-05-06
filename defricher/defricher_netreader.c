@@ -121,7 +121,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                 if (((derived_header_t*)message->payload)->crc != last_crc) {
                     defricher_info( "Received updated Derived Channels.");
                     if (channels_read_derived_map(message->payload, message->payloadlen, &derived_channels) > 0 ) {
-
+                        defricher_request_updated_derived();
                     }
                 }
             }
@@ -236,6 +236,7 @@ int netreader_init(const char *m_host)
 
     mosquitto_subscribe(mosq, NULL, "frames/#", 2);
     mosquitto_subscribe(mosq, NULL, "channels/#", 2);
+    mosquitto_subscribe(mosq, NULL, "derived/#", 2);
 
 
     pthread_create(&netread_thread, NULL, &netreader_routine, NULL);
