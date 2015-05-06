@@ -109,7 +109,7 @@ typedef struct {
 #define LINCOM2(f,s1,m1,b1,s2,m2,b2) {.type = '2', .lincom2 = { f, s1, s2, m1, b1 ,\
   m2 , b2 }}
 #define LINTERP(f,s,l) {.type = 't', .linterp = { f , s , l }}
-#define BITWORD(f,s,o,l) {.type = 'w', .bitword = { f , s , o, l }}
+#define BITWORD(f,s,o,l) {.type = 'b', .bitword = { f , s , o, l }}
 #define COMMENT(c) {.type = '#', .comment = { c }}
 #define UNITS(s,q,u) {.type = 'u', .units = { s , q , u}}
 #define PHASE(f,s,p) {.type = 'p', .phase = { f, s, p }}
