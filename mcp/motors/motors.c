@@ -1870,7 +1870,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     static channel_t *i_az_ch = NULL;
 
     int i_point;
-    double cos_el, sin_el;
     float p_az = 0.0, i_az = 0.0;       //control loop gains
     float error_az = 0.0, P_term_az = 0.0, I_term_az = 0.0; //intermediate control loop results
     int16_t milliamp_return;
