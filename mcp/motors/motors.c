@@ -257,82 +257,6 @@ static double get_az_vel(void)
 
 /************************************************************************/
 /*                                                                      */
-/*     GetIPivot: get the current request for the pivot in DAC units    */
-/*       Proportional to the reaction wheel speed error                 */
-/*                                                                      */
-/************************************************************************/
-//TODO: Change GetIPivot to return units of 0.01A for motor controller
-static double calculate_piv_current(float m_az_req_vel, unsigned int g_rw_piv, unsigned int g_err_piv, double frict_off_piv, unsigned int disabled)
-{
-    static channel_t* pRWTermPivAddr;
-    static channel_t* pErrTermPivAddr;
-    static channel_t* frictTermPivAddr;
-    static channel_t* frictTermUnfiltPivAddr; // For debugging only.  Remove later!
-    static double buf_frictPiv[FPIV_FILTER_LEN]; // Buffer for Piv friction term boxcar filter.
-    static double a = 0.0;
-    static unsigned int ib_last = 0;
-    double I_req = 0.0;
-    int i_point;
-    double i_frict, i_frict_filt;
-    double p_rw_term, p_err_term;
-
-    static int i = 0;
-    static unsigned int firsttime = 1;
-
-    if (firsttime) {
-        pRWTermPivAddr = channels_find_by_name("p_rw_term_piv");
-        pErrTermPivAddr = channels_find_by_name("p_err_term_piv");
-        frictTermPivAddr = channels_find_by_name("frict_term_piv");
-        frictTermUnfiltPivAddr = channels_find_by_name("frict_term_uf_piv");
-        // Initialize the buffer.  Assume all zeros to begin
-        for (i = 0; i < (FPIV_FILTER_LEN - 1); i++)
-            buf_frictPiv[i] = 0.0;
-        firsttime = 0;
-    }
-
-    i_point = GETREADINDEX(point_index);
-    p_rw_term = (-1.0) * ((double) g_rw_piv / 10.0) * (rw_get_velocity_dps() - CommandData.pivot_gain.SP);
-    p_err_term = (double) g_err_piv * 5.0 * (m_az_req_vel - PointingData[i_point].v_az);
-    I_req = p_rw_term + p_err_term;
-
-    if (disabled) { // Don't attempt to send current to the motors if we are disabled.
-        I_req = 0.0;
-    }
-
-    // Calculate static friction offset term
-    if (fabs(I_req) < 100) {
-        i_frict = 0.0;
-    }
-    else {
-        if (I_req > 0.0) {
-            i_frict = frict_off_piv;
-        }
-        else {
-            i_frict = -frict_off_piv;
-        }
-    }
-
-    a += (i_frict - buf_frictPiv[ib_last]);
-    buf_frictPiv[ib_last] = i_frict;
-    ib_last = (ib_last + FPIV_FILTER_LEN + 1) % FPIV_FILTER_LEN;
-    i_frict_filt = a / ((double) FPIV_FILTER_LEN);
-
-    I_req += i_frict_filt;
-
-    if (I_req > MAX_PIV_CURRENT) I_req = MAX_PIV_CURRENT;
-    if (I_req < MIN_PIV_CURRENT) I_req = MIN_PIV_CURRENT;
-
-    i++;
-
-    SET_FLOAT(pRWTermPivAddr, p_rw_term);
-    SET_FLOAT(pErrTermPivAddr, p_err_term);
-    SET_FLOAT(frictTermPivAddr, i_frict_filt);
-    SET_FLOAT(frictTermUnfiltPivAddr, i_frict);
-    return I_req + i_frict_filt;
-}
-
-/************************************************************************/
-/*                                                                      */
 /*    write_motor_channels: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
@@ -372,7 +296,6 @@ void write_motor_channels_5hz(void)
     static channel_t *latched_fault_piv_addr;
     static channel_t *net_status_piv_addr;
 
-    int elGainP, elGainI;
     int azGainP, azGainI, pivGainRW, pivGainErr;
     double pivFrictOff;
     int i_motors;
@@ -424,39 +347,23 @@ void write_motor_channels_5hz(void)
     /***************************************************/
     /**           Elevation Drive Motors              **/
 
-    /* zero motor gains if the pin is in */
-    if ((CommandData.pin_is_in && !CommandData.force_el) || CommandData.disable_el)
-        elGainP = elGainI = 0;
-    else {
-        elGainP = CommandData.ele_gain.P;
-        elGainI = CommandData.ele_gain.I;
-    }
     /* proportional term for el motor */
-    SET_VALUE(gPElAddr, elGainP);
+    SET_UINT16(gPElAddr, CommandData.ele_gain.P);
     /* integral term for el_motor */
-    SET_VALUE(gIElAddr, elGainI);
-
+    SET_UINT16(gIElAddr, CommandData.ele_gain.I);
     /* pointing gain term for elevation drive */
-    SET_VALUE(gPtElAddr, CommandData.ele_gain.PT);
+    SET_UINT16(gPtElAddr, CommandData.ele_gain.PT);
     //TODO:Figure out what to do about the Pointing gain term
 
     /***************************************************/
     /**            Azimuth Drive Motors              **/
 
-    if (CommandData.disable_az) {
-        azGainP = 0;
-        azGainI = 0;
-        pivGainRW = 0;
-        pivGainErr = 0;
-        pivFrictOff = 0.0;
-    }
-    else {
-        azGainP = CommandData.azi_gain.P;
-        azGainI = CommandData.azi_gain.I;
-        pivGainRW = CommandData.pivot_gain.PV;
-        pivGainErr = CommandData.pivot_gain.PE;
-        pivFrictOff = CommandData.pivot_gain.F;
-    }
+    azGainP = CommandData.azi_gain.P;
+    azGainI = CommandData.azi_gain.I;
+    pivGainRW = CommandData.pivot_gain.PV;
+    pivGainErr = CommandData.pivot_gain.PE;
+    pivFrictOff = CommandData.pivot_gain.F;
+
     //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
     /* p term for az motor */
     SET_VALUE(gPAzAddr, azGainP);
@@ -1890,7 +1797,7 @@ void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int
   }                                                                                                    
 }
 
-static int16_t calculate_el_current(float m_vreq_el)
+static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
 {
     static float el_integral = 0.0;
     static int first_time = 1;
@@ -1946,10 +1853,16 @@ static int16_t calculate_el_current(float m_vreq_el)
 
     if (dac_out > MAX_EL_CURRENT) dac_out = MAX_EL_CURRENT;
     if (dac_out < MIN_EL_CURRENT) dac_out = MIN_EL_CURRENT;
+
+    if (m_disabled) {
+        el_integral = 0.0;
+        dac_out = 0;
+    }
+
     return dac_out;
 }
 
-static int16_t calculate_rw_current(float v_req_az)
+static int16_t calculate_rw_current(float v_req_az, int m_disabled)
 {
     static float az_integral = 0.0;
     static int first_time = 1;
@@ -2006,8 +1919,91 @@ static int16_t calculate_rw_current(float v_req_az)
 
     if (dac_out > MAX_RW_CURRENT) dac_out = MAX_RW_CURRENT;
     if (dac_out < MIN_RW_CURRENT) dac_out = MIN_RW_CURRENT;
+
+    if (m_disabled) {
+        az_integral = 0.0;
+        dac_out = 0;
+    }
     return dac_out;
 
+}
+
+
+/************************************************************************/
+/*                                                                      */
+/*     GetIPivot: get the current request for the pivot in DAC units    */
+/*       Proportional to the reaction wheel speed error                 */
+/*                                                                      */
+/************************************************************************/
+//TODO: Change GetIPivot to return units of 0.01A for motor controller
+static double calculate_piv_current(float m_az_req_vel, unsigned int g_rw_piv, unsigned int g_err_piv,
+        double frict_off_piv, unsigned int disabled)
+{
+    static channel_t* pRWTermPivAddr;
+    static channel_t* pErrTermPivAddr;
+    static channel_t* frictTermPivAddr;
+    static channel_t* frictTermUnfiltPivAddr; // For debugging only.  Remove later!
+    static double buf_frictPiv[FPIV_FILTER_LEN]; // Buffer for Piv friction term boxcar filter.
+    static double a = 0.0;
+    static unsigned int ib_last = 0;
+    double I_req = 0.0;
+    int i_point;
+    double i_frict, i_frict_filt;
+    double p_rw_term, p_err_term;
+
+    static int i = 0;
+    static unsigned int firsttime = 1;
+
+    if (firsttime) {
+        pRWTermPivAddr = channels_find_by_name("p_rw_term_piv");
+        pErrTermPivAddr = channels_find_by_name("p_err_term_piv");
+        frictTermPivAddr = channels_find_by_name("frict_term_piv");
+        frictTermUnfiltPivAddr = channels_find_by_name("frict_term_uf_piv");
+        // Initialize the buffer.  Assume all zeros to begin
+        for (i = 0; i < (FPIV_FILTER_LEN - 1); i++)
+            buf_frictPiv[i] = 0.0;
+        firsttime = 0;
+    }
+
+    i_point = GETREADINDEX(point_index);
+    p_rw_term = (-1.0) * ((double) g_rw_piv / 10.0) * (rw_get_velocity_dps() - CommandData.pivot_gain.SP);
+    p_err_term = (double) g_err_piv * 5.0 * (m_az_req_vel - PointingData[i_point].v_az);
+    I_req = p_rw_term + p_err_term;
+
+    if (disabled) { // Don't attempt to send current to the motors if we are disabled.
+        I_req = 0.0;
+    }
+
+    // Calculate static friction offset term
+    if (fabs(I_req) < 100) {
+        i_frict = 0.0;
+    }
+    else {
+        if (I_req > 0.0) {
+            i_frict = frict_off_piv;
+        }
+        else {
+            i_frict = -frict_off_piv;
+        }
+    }
+
+    a += (i_frict - buf_frictPiv[ib_last]);
+    buf_frictPiv[ib_last] = i_frict;
+    ib_last = (ib_last + FPIV_FILTER_LEN + 1) % FPIV_FILTER_LEN;
+    i_frict_filt = a / ((double) FPIV_FILTER_LEN);
+
+    I_req += i_frict_filt;
+
+    if (I_req > MAX_PIV_CURRENT) I_req = MAX_PIV_CURRENT;
+    if (I_req < MIN_PIV_CURRENT) I_req = MIN_PIV_CURRENT;
+
+    i++;
+
+    SET_FLOAT(pRWTermPivAddr, p_rw_term);
+    SET_FLOAT(pErrTermPivAddr, p_err_term);
+    SET_FLOAT(frictTermPivAddr, i_frict_filt);
+    SET_FLOAT(frictTermUnfiltPivAddr, i_frict);
+    return I_req + i_frict_filt;
 }
 
 /**
@@ -2052,14 +2048,7 @@ void command_motors(void)
     if ((v_req_el < -10.0) || (v_req_el > 10.0))
         v_req_el = 0; // no really really crazy values!
 
-    if (CommandData.disable_el) {
-        el_disable();
-        el_current = 0;
-    }
-    else {
-        el_enable();
-        el_current = calculate_el_current(v_req_el);
-    }
+    el_current = calculate_el_current(v_req_el, CommandData.disable_el);
 
     SET_INT16(el_current_addr, el_current);
     el_set_current(el_current);
@@ -2068,23 +2057,16 @@ void command_motors(void)
     * Drive the Pivot Motor                                             *
     \*******************************************************************/
     v_req_az = GET_FLOAT(velReqAzAddr);
-    if (CommandData.disable_az) {
-        piv_current = calculate_piv_current(0, 0, 0, 0, 1);
-        rw_disable();
-        piv_disable();
-    }
-    else {
-        rw_enable();
-        piv_enable();
-        piv_current = calculate_piv_current(v_req_az, CommandData.pivot_gain.PV, CommandData.pivot_gain.PE, CommandData.pivot_gain.F, 0);
-    }
+    piv_current = calculate_piv_current(v_req_az, CommandData.pivot_gain.PV,
+            CommandData.pivot_gain.PE, CommandData.pivot_gain.F, CommandData.disable_az);
+
     SET_INT16(piv_current_addr, piv_current);
     piv_set_current(piv_current);
 
     /*******************************************************************\
     * Drive the Reaction Wheel                                          *
     \*******************************************************************/
-    rw_current = calculate_rw_current(v_req_az);
+    rw_current = calculate_rw_current(v_req_az, CommandData.disable_az);
     SET_INT16(rw_current_addr, rw_current);
     rw_set_current(rw_current);
 
