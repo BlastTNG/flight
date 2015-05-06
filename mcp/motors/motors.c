@@ -1875,8 +1875,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     float error_az = 0.0, P_term_az = 0.0, I_term_az = 0.0; //intermediate control loop results
     int16_t milliamp_return;
 
-    int i_point = GETREADINDEX(point_index);
-
     if (first_time) {
         first_time = 0;
 
@@ -1884,7 +1882,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
         p_az_ch = channels_find_by_name("p_term_az");
         i_az_ch = channels_find_by_name("i_term_az");
     }
-    sincos(from_degrees(PointingData[i_point].el), &sin_el, &cos_el);
 
     p_az = CommandData.azi_gain.P;
     i_az = CommandData.azi_gain.I;
