@@ -161,7 +161,7 @@ static double get_elev_vel(void)
     vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
 
     if (CommandData.use_elenc) {
-        el_for_limit = ElevMotorData[i_elev].position + CommandData.enc_el_trim;
+        el_for_limit = el_get_position_degrees() + CommandData.enc_el_trim;
     }
     else {
         el_for_limit = PointingData[i_point].el;
