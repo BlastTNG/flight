@@ -787,13 +787,13 @@ channel_t channel_list[] =
     { "g_i_az",               1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_pe_piv",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_pv_piv",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "set_rw",               200.0 / 32768.0,  0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
+    { "set_rw",               1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
 
     { "fault_gy",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "vel_el_p",             I2VEL,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "frict_off_piv",        2.0 / 65535.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "frict_term_piv",       2.0 / 32767.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "frict_term_uf_piv",    2.0 / 32767.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 }, // For debugging remove later
+    { "frict_off_piv",        1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "frict_term_piv",       1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "frict_term_uf_piv",    1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 }, // For debugging remove later
 
     /** Motor Controller State and Status Registers */
     { "status_rw",            1.0,              0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0 },

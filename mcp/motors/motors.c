@@ -296,8 +296,6 @@ void write_motor_channels_5hz(void)
     static channel_t *latched_fault_piv_addr;
     static channel_t *net_status_piv_addr;
 
-    int azGainP, azGainI, pivGainRW, pivGainErr;
-    double pivFrictOff;
     int i_motors;
 
     /******** Obtain correct indexes the first time here ***********/
@@ -358,28 +356,22 @@ void write_motor_channels_5hz(void)
     /***************************************************/
     /**            Azimuth Drive Motors              **/
 
-    azGainP = CommandData.azi_gain.P;
-    azGainI = CommandData.azi_gain.I;
-    pivGainRW = CommandData.pivot_gain.PV;
-    pivGainErr = CommandData.pivot_gain.PE;
-    pivFrictOff = CommandData.pivot_gain.F;
-
     //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
     /* p term for az motor */
-    SET_VALUE(gPAzAddr, azGainP);
+    SET_UINT16(gPAzAddr, CommandData.azi_gain.P);
     /* I term for az motor */
-    SET_VALUE(gIAzAddr, azGainI);
+    SET_UINT16(gIAzAddr, CommandData.azi_gain.I);
     /* pointing gain term for az drive */
-    SET_VALUE(gPtAzAddr, CommandData.azi_gain.PT);
+    SET_UINT16(gPtAzAddr, CommandData.azi_gain.PT);
 
     /* p term to rw vel for pivot motor */
-    SET_VALUE(gPVPivAddr, pivGainRW);
+    SET_UINT16(gPVPivAddr, CommandData.pivot_gain.PV);
     /* p term to vel error for pivot motor */
-    SET_VALUE(gPEPivAddr, pivGainErr);
+    SET_UINT16(gPEPivAddr, CommandData.pivot_gain.PE);
     /* setpoint for reaction wheel */
-    SET_VALUE(setRWAddr, CommandData.pivot_gain.SP * 32768.0 / 200.0);
+    SET_FLOAT(setRWAddr, CommandData.pivot_gain.SP);
     /* Pivot current offset to compensate for static friction. */
-    SET_VALUE(frictOffPivAddr, pivFrictOff / 2.0 * 65535);
+    SET_FLOAT(frictOffPivAddr, CommandData.pivot_gain.F);
     /* Azimuth Scan Acceleration */
     SET_VALUE(accelAzAddr, (CommandData.az_accel / 2.0 * 65536.0));
 
