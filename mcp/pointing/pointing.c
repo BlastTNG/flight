@@ -46,6 +46,7 @@
 #include <xsc_network.h>
 #include <conversions.h>
 #include <time_lst.h>
+#include <utilities_pointing.h>
 #include <blast_sip_interface.h>
 
 // Include gsl package for the old sun sensor
@@ -335,10 +336,11 @@ static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
 #define  PSS3_PSI   0
 #define  PSS4_PSI   0
 
+//TODO: Separate Sun Az calc
 static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 //TODO:Reenable PSSConvert
-//  int           i, i_point;
-//  double        sun_ra, sun_dec, jd;
+    int     i_point;
+    double  sun_ra, sun_dec;
 //  double        az[4];
 //  double	azraw[4];
 //  double	elraw[4];
@@ -380,7 +382,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 //
 //  pss_imin = CommandData.cal_imin_pss/M_16PRE;
 //
-//  i_point = GETREADINDEX(point_index);
+    i_point = GETREADINDEX(point_index);
 //
 //  PointingData[point_index].pss1_snr = itot[0]/PSS_IMAX;  // 10.
 //  weight[0]= PointingData[point_index].pss1_snr;
@@ -440,22 +442,21 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 ////	PointingData[point_index].pss4_snr = 0.1;  // 0.1
 ////	weight[3]=0.0;
 ////  }
-//
-//  /* get current sun az, el */
-//  jd = GetJulian(PointingData[i_point].t);
-//  SunPos(jd, &sun_ra, &sun_dec);
-//  sun_ra *= (12.0 / M_PI);
-//  sun_dec *= (180.0 / M_PI);
-//
-//  if (sun_ra < 0)
-//    sun_ra += 24;
-//
-//  radec2azel(sun_ra, sun_dec, PointingData[i_point].lst,
-//             PointingData[i_point].lat, &sun_az, &sun_el);
-//
-//  NormalizeAngle(&sun_az);
-//  PointingData[point_index].sun_az = sun_az;
-//  PointingData[point_index].sun_el = sun_el;
+
+    /* get current sun az, el */
+    calc_sun_position(PointingData[i_point].t, &sun_ra, &sun_dec);
+    sun_ra *= (12.0 / M_PI);
+    sun_dec *= (180.0 / M_PI);
+
+    if (sun_ra < 0)
+    sun_ra += 24;
+
+    equatorial_to_horizontal(sun_ra, sun_dec, PointingData[i_point].lst,
+            PointingData[i_point].lat, &sun_az, &sun_el);
+
+    NormalizeAngle(&sun_az);
+    PointingData[point_index].sun_az = sun_az;
+    PointingData[point_index].sun_el = sun_el;
 //
 //  weightsum=weight[0]+weight[1]+weight[2]+weight[3];
 //  if (weightsum == 0 ) {

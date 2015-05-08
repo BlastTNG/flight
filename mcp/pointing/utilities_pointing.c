@@ -1,104 +1,67 @@
+#include <time_lst.h>
+#include <time_julian.h>
+#include <time_nutation.h>
+
 #include "utilities_pointing.h"
 
 #include <math.h>
 #include <time.h>
 
-/* General astronomy related routines */
 
-/* Check out Xephem for some inspiration: */
-/* http://www.clearskyinstitute.com/xephem/xephem-3.7.1.tar.gz */
-/* In particular the codes mjd.c, misc.c, aa_hadec.c, plmoon.c */
-
-
-/* Public function definitions */
-
-//TODO:Unify multiple AZ/EL Conversion Functions
-void azel_2_hadec(double az[], double el[], int n, double cosL, double sinL,
-		  double *ha, double *dec, double *cosdec) 
+/**
+ * Calculates the RA and Dec of the sun, given the current UTC
+ * @param m_utc Seconds since Unix epoch in GMT
+ * @param m_ra Right Ascension of the sun in radians
+ * @param m_dec Declination of the sun in radians
+ */
+void calc_sun_position (time_t m_utc, double *m_ra, double *m_dec)
 {
-  /*Purpose: convert Az, El in radians to HA, Dec in radians and cos(Dec)*/
-
-  double sindec, cosha, sinel,coselcosL;
-  int ii;
-
-  for (ii=0; ii<=n-1; ii++) range_fast(&az[ii],TWOPI);
-
-  for (ii=0;ii<=n-1;ii++){ 
-    sinel = sin(el[ii]);
-    coselcosL= cos(el[ii])*cosL;
-
-    sindec = sinel*sinL + coselcosL*cos(az[ii]);
-    dec[ii] = asin(sindec);
-    cosdec[ii] = cos(dec[ii]);
-    cosha = (sinel - sinL*sindec) / (cosL*cosdec[ii]);
-
-    if(cosha > 1.0) cosha=1.0;
-    if(cosha < -1.0) cosha= -1.0;
-
-    ha[ii] = acos(cosha);
-    if (az[ii] < PI) ha[ii] = TWOPI - ha[ii];    
-  }
-}
+    double julian_days;
+    double ecliptic_lon;
+    double ecliptic_obliquity;
+    struct julian_date julian;
 
 
-void rael_2_az(double RA, double el, double lst, double cosL, double sinL,
-	       double *az) 
-     /*Purpose: Given a target RA and current elevation in radians, LST in hours,
-       work out the two possible azimuth solutions in radians.
+    unix_to_julian_date(m_utc, &julian);
+    julian_days = julian.epoch - J2000_EPOCH + julian.mjd;
 
-       LST = GST + long/15. */
-{     
-     int ii;
-     double ha,cc,bb,aa,sinel,cosha,delta;
-     double *sin_dec,*cos_dec,*azimuth;
-     sin_dec=(double *)(calloc(2,sizeof(double)));   
-     cos_dec=(double *)(calloc(2,sizeof(double)));   
-     azimuth=(double *)(calloc(2,sizeof(double)));   
-
-     ha = lst*HR2RAD - RA;     
-     sinel=sin(el);
-     cosha=cos(ha);
-
-     cc = sinel*sinel-cosha*cosha*cosL*cosL;
-     bb = -2.*sinel*sinL;
-     aa = sinL*sinL + cosha*cosha*cosL*cosL;
-     delta = bb*bb - 4.*aa*cc;
-
-     if (delta < 0.0) delta = 0.;
-     
-     sin_dec[0] = (-bb - sqrt(delta))/(2.*aa) ;
-     sin_dec[1] = (-bb + sqrt(delta))/(2.*aa) ; 
-
-     for (ii=0;ii<2;ii++)
-       {
-	 if (sin_dec[ii] <= 1.) cos_dec[ii] = sqrt(1.-sin_dec[ii]*sin_dec[ii]);
-       }
-
-     for (ii=0;ii<2;ii++)
-       {
-	 azimuth[ii] = PI + atan2(cos_dec[ii]*sin(ha),(-sin_dec[ii]*cosL+cos_dec[ii]*cosha*sinL));
-	 range_fast(&azimuth[ii],TWOPI);
-       }
-     az[0]=azimuth[0];
-     az[1]=azimuth[1];
-
-     free(sin_dec); free(cos_dec);free(azimuth);
-}
-
-
-
-void ha2ra(double ha[], double lst[], long int n, double *ra)
-{
-  /*Purpose: given HA and lst, both in radians, converts to RA, in radians. */
-  long int sample;
-
-  for(sample = 0 ; sample < n ; sample++)
+    // Calculate ecliptic coordinates
     {
-      ra[sample] = lst[sample] - ha[sample];
-      range_fast(&ra[sample],TWOPI);
+        double mean_longitude;
+        double mean_anomaly;
+        double omega;
+        double sin_omega;
+        double cos_omega;
+
+        omega = 2.1429 - 0.0010394594 * julian_days;
+        sincos(omega, &sin_omega, &cos_omega);
+        mean_longitude = 4.8950630 + 0.017202791698 * julian_days; // Radians
+        mean_anomaly = 6.2400600 + 0.0172019699 * julian_days;
+        ecliptic_lon = mean_longitude +
+                0.03341607 * sin(mean_anomaly) +
+                0.00034894 * sin(2 * mean_anomaly) -
+                0.0001134 - 0.0000203 * sin_omega;
+        ecliptic_obliquity = 0.4090928 - 6.2140e-9 * julian_days + 0.0000396 * cos_omega;
     }
+
+    // Calculate celestial coordinates ( right ascension and declination ) in radians
+    {
+        double sin_el;
+        double cos_el;
+        double sin_eo;
+        double cos_eo;
+        double dY;
+
+        sincos(ecliptic_lon, &sin_el, &cos_el);
+        sincos(ecliptic_obliquity, &sin_eo, &cos_eo);
+
+        dY = cos_eo * sin_el;
+        *m_ra = atan2(dY, cos_el);
+        if (*m_ra < 0.0)
+            *m_ra += (2.0 * M_PI);
+        *m_dec = asin(sin_eo * sin_el);
+    }
+
 }
-
-
 
 

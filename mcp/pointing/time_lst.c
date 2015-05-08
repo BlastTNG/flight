@@ -442,7 +442,7 @@ static double equinox_correction(struct julian_date *m_tdb)
  * @param m_longitude Longitude in radians, East is positive
  * @return Local mean Sidereal Time in radians
  */
-static double mean_sidereal_time(struct julian_date *m_ut1, struct julian_date *m_tdb, double m_longitude)
+double mean_sidereal_time(struct julian_date *m_ut1, struct julian_date *m_tdb, double m_longitude)
 {
 	double rot_angle;
 	double gmst;

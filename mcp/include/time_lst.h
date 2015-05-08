@@ -34,5 +34,6 @@ void time_UT1_UTC(int m_year, int m_month, int m_day, double *m_delta_utc);
 void time_TT_UTC (int m_year, int m_month, double *m_delta_utc);
 int time_est_deltat(int m_year, int m_month, double *m_deltat);
 double time_lst_unix(time_t m_unixtime, double m_longitude);
+double mean_sidereal_time(struct julian_date *m_ut1, struct julian_date *m_tdb, double m_longitude);
 
 #endif /* BLAST_LST_H_ */
