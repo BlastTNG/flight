@@ -1828,7 +1828,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     }
     SET_FLOAT(el_integral_ch, el_integral);
 
-    I_term_el = el_integral * p_el * i_el;
+    I_term_el = el_integral * i_el;
     if (I_term_el > 32767.0) {
         I_term_el = 32767.0;
         el_integral = el_integral *0.9;
@@ -1891,7 +1891,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
         az_integral = (1.0 - INTEGRAL_CUTOFF) * az_integral + INTEGRAL_CUTOFF * error_az;
     }
 
-    I_term_az = az_integral * p_az * i_az;
+    I_term_az = az_integral * i_az;
     if (I_term_az > 32767.0) {
         I_term_az = 32767.0;
         az_integral = az_integral * 0.9;
@@ -1954,7 +1954,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int g_rw_piv, u
 
     i_point = GETREADINDEX(point_index);
     p_rw_term = (-1.0) * ((double) g_rw_piv / 10.0) * (rw_get_velocity_dps() - CommandData.pivot_gain.SP);
-    p_err_term = (double) g_err_piv * 5.0 * (m_az_req_vel - PointingData[i_point].v_az);
+    p_err_term = (double) g_err_piv * (m_az_req_vel - PointingData[i_point].v_az);
     I_req = p_rw_term + p_err_term;
 
     if (disabled) { // Don't attempt to send current to the motors if we are disabled.
