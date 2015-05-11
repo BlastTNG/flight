@@ -384,7 +384,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Set rate (deg/s)", 0, 30, 'f', "RATE_ATRIM"}
     }
   },
-  {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,
+  {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 4,
     {
       {"Proportional Gain", 0, CMD_I_MAX, 'f', "g_p_az"},
       {"Integral Time",     0, 200, 'f', "g_i_az"},
@@ -525,7 +525,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Current Dec (deg)", -90, 90, 'f', "DEC"}
     }
   },
-  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 4,
+  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 5,
     {
       {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
       {"V_err Gain (prop)", 0, CMD_I_MAX, 'f', "G_PE_PIV"},
@@ -534,7 +534,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
     }
   },
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 4,
     {
       {"Proportional Gain", 0, CMD_I_MAX, 'f', "G_P_EL"},
       {"Integral Time",     0, 200, 'f', "G_I_EL"},
