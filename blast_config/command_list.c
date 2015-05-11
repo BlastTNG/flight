@@ -386,9 +386,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, CMD_I_MAX, 'i', "g_p_az"},
-      {"Integral Gain",     0, CMD_I_MAX, 'i', "g_i_az"},
-      {"Pointing Gain", 0, CMD_I_MAX, 'i', "g_pt_az"}
+      {"Proportional Gain", 0, CMD_I_MAX, 'f', "g_p_az"},
+      {"Integral Time",     0, 200, 'f', "g_i_az"},
+      {"Derivative Time",     0, 200, 'f', "g_d_az"},
+      {"Pointing Gain", 0, CMD_I_MAX, 'f', "g_pt_az"}
     }
   },
   {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_GAIN, 1,
@@ -527,16 +528,18 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 4,
     {
       {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
-      {"V_err Gain (prop)", 0, CMD_I_MAX, 'i', "G_PE_PIV"},
-      {"V_RW Gain (prop)", 0, CMD_I_MAX, 'i', "G_PV_PIV"},
+      {"V_err Gain (prop)", 0, CMD_I_MAX, 'f', "G_PE_PIV"},
+      {"V_RW Gain (prop)", 0, CMD_I_MAX, 'f', "G_PV_PIV"},
+      {"V_RW Integral time", 0, 200, 'f', "G_IV_PIV"},
       {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
     }
   },
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 3,
     {
-      {"Proportional Gain", 0, CMD_I_MAX, 'i', "g_p_el"},
-      {"Integral Gain",     0, CMD_I_MAX, 'i', "g_i_el"},
-      {"Pointing Gain",     0, CMD_I_MAX, 'i', "g_pt_el"}
+      {"Proportional Gain", 0, CMD_I_MAX, 'f', "G_P_EL"},
+      {"Integral Time",     0, 200, 'f', "G_I_EL"},
+      {"Derivative Time",   0, 200, 'f', "G_D_EL"},
+      {"Pointing Gain",     0, CMD_I_MAX, 'f', "G_PT_EL"}
     }
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,

@@ -59,6 +59,9 @@ struct AxesModeStruct axes_mode = {
 
 //motor control parameters
 #define MOTORSR 200.0
+#define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps
+#define MAX_I  200.0 // Maximum accumulated integral in milliamps
+
 #define INTEGRAL_LENGTH  5.0  //length of the integral time constant in seconds
 #define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
 #define EL_BORDER 1.0
@@ -264,11 +267,16 @@ void write_motor_channels_5hz(void)
 {
     static channel_t* gPElAddr;
     static channel_t* gIElAddr;
+    static channel_t* gDElAddr;
     static channel_t* gPtElAddr;
+
     static channel_t* gPAzAddr;
     static channel_t* gIAzAddr;
+    static channel_t* gDAzAddr;
+
     static channel_t* gPtAzAddr;
     static channel_t* gPVPivAddr;
+    static channel_t* gIVPivAddr;
     static channel_t* gPEPivAddr;
     static channel_t* setRWAddr;
     static channel_t* frictOffPivAddr;
@@ -306,13 +314,16 @@ void write_motor_channels_5hz(void)
 
         gPElAddr = channels_find_by_name("g_p_el");
         gIElAddr = channels_find_by_name("g_i_el");
+        gDElAddr = channels_find_by_name("g_d_el");
         gPtElAddr = channels_find_by_name("g_pt_el");
 
         gPAzAddr = channels_find_by_name("g_p_az");
         gIAzAddr = channels_find_by_name("g_i_az");
+        gDAzAddr = channels_find_by_name("g_i_az");
         gPtAzAddr = channels_find_by_name("g_pt_az");
 
         gPVPivAddr = channels_find_by_name("g_pv_piv");
+        gIVPivAddr = channels_find_by_name("g_iv_piv");
         gPEPivAddr = channels_find_by_name("g_pe_piv");
 
         setRWAddr = channels_find_by_name("set_rw");
@@ -349,6 +360,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(gPElAddr, CommandData.ele_gain.P);
     /* integral term for el_motor */
     SET_UINT16(gIElAddr, CommandData.ele_gain.I);
+    /* derivative term for el_motor */
+    SET_UINT16(gDElAddr, CommandData.ele_gain.D);
     /* pointing gain term for elevation drive */
     SET_UINT16(gPtElAddr, CommandData.ele_gain.PT);
     //TODO:Figure out what to do about the Pointing gain term
@@ -361,11 +374,15 @@ void write_motor_channels_5hz(void)
     SET_UINT16(gPAzAddr, CommandData.azi_gain.P);
     /* I term for az motor */
     SET_UINT16(gIAzAddr, CommandData.azi_gain.I);
+    /* D term for az motor */
+    SET_UINT16(gDAzAddr, CommandData.azi_gain.D);
     /* pointing gain term for az drive */
     SET_UINT16(gPtAzAddr, CommandData.azi_gain.PT);
 
     /* p term to rw vel for pivot motor */
     SET_UINT16(gPVPivAddr, CommandData.pivot_gain.PV);
+    /* I term to rw vel for pivot motor */
+    SET_UINT16(gIVPivAddr, CommandData.pivot_gain.IV);
     /* p term to vel error for pivot motor */
     SET_UINT16(gPEPivAddr, CommandData.pivot_gain.PE);
     /* setpoint for reaction wheel */
@@ -1791,16 +1808,34 @@ void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int
 
 static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
 {
-    static float el_integral = 0.0;
     static int first_time = 1;
 
     static channel_t *error_el_ch = NULL;
     static channel_t *p_el_ch = NULL;
     static channel_t *i_el_ch = NULL;
+    static channel_t *d_el_ch = NULL;
     static channel_t *el_integral_ch = NULL;
 
-    float p_el = 0.0, i_el = 0.0;       //control loop gains
-    float error_el = 0.0, P_term_el = 0.0, I_term_el = 0.0; //intermediate control loop results
+    float K_p = 0.0;        //!< Proportional gain
+    float T_i = 0.0;        //!< Integral time constant
+    float T_d = 0.0;        //!< Derivative time constant
+
+    float error_pv = 0.0;
+    float P_term = 0.0;
+    float I_step = 0.0; //intermediate control loop results
+    float D_term = 0.0;
+
+    static float I_term = 0.0;
+
+    static float last_pv = 0.0; /// Three-point median filter terms
+    static float last_delta_pv = 0.0;
+    static float max_pv = 0.0;
+    static float min_pv = 0.0;
+
+    float pv = ACSData.ifel_gy;
+    float delta_pv;
+    float median_delta_pv;
+
     int16_t milliamp_return;
 
     if (first_time) {
@@ -1809,61 +1844,120 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
         error_el_ch = channels_find_by_name("error_el");
         p_el_ch = channels_find_by_name("p_term_el");
         i_el_ch = channels_find_by_name("i_term_el");
-        el_integral_ch = channels_find_by_name("el_integral");
+        d_el_ch = channels_find_by_name("d_term_el");
+        el_integral_ch = channels_find_by_name("el_integral_step");
     }
 
-    p_el = CommandData.ele_gain.P;
-    i_el = CommandData.ele_gain.I;
+    K_p = CommandData.ele_gain.P;
+    T_i = CommandData.ele_gain.I;
+    T_d = CommandData.ele_gain.D;
 
-    error_el = m_vreq_el - ACSData.ifel_gy;
-    SET_FLOAT(error_el_ch, error_el);
+    /** 
+     * The elevation error is the difference between the requested El velocity and
+     * that measured by the ACS
+     */
+    error_pv = m_vreq_el - pv;
 
-    P_term_el = p_el*error_el;
-    SET_FLOAT(p_el_ch, P_term_el);
+    /**
+     * The P term is the P gain times the error
+     */
+    P_term = K_p*error_pv;
 
-    if( (CommandData.ele_gain.P == 0) || (CommandData.ele_gain.I == 0) ) {
-        el_integral = 0.0;
+    /**
+     * The I gain K_i = K_p / T_i where T_i is measured in seconds and therefore is
+     * multiplied by the sample rate of the motors.  We implement a "bump-less"
+     * transfer here by accumulating the I_term_el
+     */
+    I_step = error_pv * K_p / (T_i * MOTORSR);
+    if (fabsf(I_step) > MAX_DI) {
+        I_step = copysignf(MAX_DI, I_step);
+    }
+    
+    /**
+     * Our integral term exists to remove residual DC offset from the Proportional response,
+     * thus we want to exclude the "integral wind-up" phenomenon where the overshoot in current
+     * is a result of accumulating excessively large I terms.
+     */
+    I_term += I_step;
+    if (fabsf(I_term) > MAX_I) {
+        I_term = copysignf(MAX_I, I_term);
+    }
+
+    /**
+     * The derivative term is calculated based on the change in the process value (our measured speed).
+     * This can be excessively noisey, so we implement a three-point median filter to remove spikes
+     */
+    delta_pv = last_pv - pv;
+    if (delta_pv > max_pv) median_delta_pv = max_pv;
+    else if (delta_pv < min_pv) median_delta_pv = min_pv;
+    else median_delta_pv = delta_pv;
+    /// Store the limits for next cycle
+    if (delta_pv > last_delta_pv) {
+        max_pv = delta_pv;
+        min_pv = last_delta_pv;
     } else {
-        el_integral = (1.0 - INTEGRAL_CUTOFF)*el_integral + INTEGRAL_CUTOFF*error_el;
+        min_pv = delta_pv;
+        max_pv = last_delta_pv;
     }
-    SET_FLOAT(el_integral_ch, el_integral);
+    last_delta_pv = delta_pv;
+    last_pv = pv;
 
-    I_term_el = el_integral * i_el;
-    if (I_term_el > 32767.0) {
-        I_term_el = 32767.0;
-        el_integral = el_integral *0.9;
-    }
-    if (I_term_el < -32767.0) {
-        I_term_el = -32767.0;
-        el_integral = el_integral * 0.9;
-    }
-    SET_FLOAT(i_el_ch, I_term_el);
+    D_term = K_p * T_d * MOTORSR * median_delta_pv;
 
-    milliamp_return =P_term_el + I_term_el;
+    milliamp_return = P_term + I_term + D_term;
 
     if (milliamp_return > MAX_EL_CURRENT) milliamp_return = MAX_EL_CURRENT;
     if (milliamp_return < MIN_EL_CURRENT) milliamp_return = MIN_EL_CURRENT;
 
     if (m_disabled) {
-        el_integral = 0.0;
+        last_pv = pv;
+        min_pv = 0.0;
+        max_pv = 0.0;
+        last_delta_pv = 0.0;
+        I_term = 0.0;
         milliamp_return = 0;
     }
 
+
+    SET_FLOAT(error_el_ch, error_pv);
+    SET_FLOAT(p_el_ch, P_term);
+    SET_FLOAT(i_el_ch, I_term);
+    SET_FLOAT(d_el_ch, D_term);
+    SET_FLOAT(el_integral_ch, I_step);
     return milliamp_return;
 }
 
 static int16_t calculate_rw_current(float v_req_az, int m_disabled)
 {
-    static float az_integral = 0.0;
     static int first_time = 1;
 
     static channel_t *error_az_ch = NULL;
     static channel_t *p_az_ch = NULL;
     static channel_t *i_az_ch = NULL;
+    static channel_t *d_az_ch = NULL;
+    static channel_t *az_integral_ch = NULL;
 
     int i_point;
-    float p_az = 0.0, i_az = 0.0;       //control loop gains
-    float error_az = 0.0, P_term_az = 0.0, I_term_az = 0.0; //intermediate control loop results
+    float K_p = 0.0;        //!< Proportional gain
+    float T_i = 0.0;        //!< Integral time constant
+    float T_d = 0.0;        //!< Derivative time constant
+
+    float error_pv = 0.0;
+    float P_term = 0.0;
+    float I_step = 0.0; //intermediate control loop results
+    float D_term = 0.0;
+
+    static float I_term = 0.0;
+
+    static float last_pv = 0.0; /// Three-point median filter terms
+    static float last_delta_pv = 0.0;
+    static float max_pv = 0.0;
+    static float min_pv = 0.0;
+
+    float pv = ACSData.ifel_gy;
+    float delta_pv;
+    float median_delta_pv;
+
     int16_t milliamp_return;
 
     if (first_time) {
@@ -1872,45 +1966,82 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
         error_az_ch = channels_find_by_name("error_az");
         p_az_ch = channels_find_by_name("p_term_az");
         i_az_ch = channels_find_by_name("i_term_az");
+        d_az_ch = channels_find_by_name("d_term_az");
+        az_integral_ch = channels_find_by_name("az_integral_step");
     }
 
-    p_az = CommandData.azi_gain.P;
-    i_az = CommandData.azi_gain.I;
+    K_p = CommandData.azi_gain.P;
+    T_i = CommandData.azi_gain.I;
+    T_d = CommandData.azi_gain.D;
 
     i_point = GETREADINDEX(point_index);
-    error_az = v_req_az - PointingData[i_point].v_az;
-    SET_FLOAT(error_az_ch, error_az);
+    error_pv = v_req_az - PointingData[i_point].v_az;
 
-    P_term_az = p_az * error_az;
-    SET_FLOAT(p_az_ch, P_term_az);
+    /**
+     * The P term is the P gain times the error
+     */
+    P_term = K_p*error_pv;
 
-    if ((p_az == 0.0) || (i_az == 0.0)) {
-        az_integral = 0.0;
-    }
-    else {
-        az_integral = (1.0 - INTEGRAL_CUTOFF) * az_integral + INTEGRAL_CUTOFF * error_az;
+    /**
+     * The I gain K_i = K_p / T_i where T_i is measured in seconds and therefore is
+     * multiplied by the sample rate of the motors.  We implement a "bump-less"
+     * transfer here by accumulating the I_term_el
+     */
+    I_step = error_pv * K_p / (T_i * MOTORSR);
+    if (fabsf(I_step) > MAX_DI) {
+        I_step = copysignf(MAX_DI, I_step);
     }
 
-    I_term_az = az_integral * i_az;
-    if (I_term_az > 32767.0) {
-        I_term_az = 32767.0;
-        az_integral = az_integral * 0.9;
+    /**
+     * Our integral term exists to remove residual DC offset from the Proportional response,
+     * thus we want to exclude the "integral wind-up" phenomenon where the overshoot in current
+     * is a result of accumulating excessively large I terms.
+     */
+    I_term += I_step;
+    if (fabsf(I_term) > MAX_I) {
+        I_term = copysignf(MAX_I, I_term);
     }
-    if (I_term_az < -32767.0) {
-        I_term_az = -32767.0;
-        az_integral = az_integral * 0.9;
-    }
-    SET_FLOAT(i_az_ch, I_term_az);
 
-    milliamp_return = P_term_az + I_term_az;
+    /**
+     * The derivative term is calculated based on the change in the process value (our measured speed).
+     * This can be excessively noisey, so we implement a three-point median filter to remove spikes
+     */
+    delta_pv = last_pv - pv;
+    if (delta_pv > max_pv) median_delta_pv = max_pv;
+    else if (delta_pv < min_pv) median_delta_pv = min_pv;
+    else median_delta_pv = delta_pv;
+    /// Store the limits for next cycle
+    if (delta_pv > last_delta_pv) {
+        max_pv = delta_pv;
+        min_pv = last_delta_pv;
+    } else {
+        min_pv = delta_pv;
+        max_pv = last_delta_pv;
+    }
+    last_delta_pv = delta_pv;
+    last_pv = pv;
+
+    D_term = K_p * T_d * MOTORSR * median_delta_pv;
+
+    milliamp_return = P_term + I_term + D_term;
 
     if (milliamp_return > MAX_RW_CURRENT) milliamp_return = MAX_RW_CURRENT;
     if (milliamp_return < MIN_RW_CURRENT) milliamp_return = MIN_RW_CURRENT;
 
     if (m_disabled) {
-        az_integral = 0.0;
+        last_pv = pv;
+        min_pv = 0.0;
+        max_pv = 0.0;
+        last_delta_pv = 0.0;
+        I_term = 0.0;
         milliamp_return = 0;
     }
+
+    SET_FLOAT(error_az_ch, error_pv);
+    SET_FLOAT(p_az_ch, P_term);
+    SET_FLOAT(i_az_ch, I_term);
+    SET_FLOAT(d_az_ch, D_term);
+    SET_FLOAT(az_integral_ch, I_step);
     return milliamp_return;
 
 }
@@ -1966,12 +2097,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int g_rw_piv, u
         i_frict = 0.0;
     }
     else {
-        if (I_req > 0.0) {
-            i_frict = frict_off_piv;
-        }
-        else {
-            i_frict = -frict_off_piv;
-        }
+        i_frict = copysign(frict_off_piv, I_req);
     }
 
     a += (i_frict - buf_frictPiv[ib_last]);

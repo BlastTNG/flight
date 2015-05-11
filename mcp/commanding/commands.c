@@ -1200,20 +1200,23 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     /*************************************
      ********* Pointing Motor Gains ******/
     case el_gain:   //ele gains
-      CommandData.ele_gain.P = ivalues[0];
-      CommandData.ele_gain.I = ivalues[1];
-      CommandData.ele_gain.PT = ivalues[2];
+      CommandData.ele_gain.P = rvalues[0];
+      CommandData.ele_gain.I = rvalues[1];
+      CommandData.ele_gain.D = rvalues[2];
+      CommandData.ele_gain.PT = rvalues[3];
       break;
     case az_gain:   //az gains
-      CommandData.azi_gain.P = ivalues[0];
-      CommandData.azi_gain.I = ivalues[1];
-      CommandData.azi_gain.PT = ivalues[2];
+      CommandData.azi_gain.P = rvalues[0];
+      CommandData.azi_gain.I = rvalues[1];
+      CommandData.azi_gain.D = rvalues[2];
+      CommandData.azi_gain.PT = rvalues[3];
       break;
     case pivot_gain:   //pivot gains
       CommandData.pivot_gain.SP = rvalues[0];
-      CommandData.pivot_gain.PE = ivalues[1];
-      CommandData.pivot_gain.PV = ivalues[2];
-      CommandData.pivot_gain.F = rvalues[3];
+      CommandData.pivot_gain.PE = rvalues[1];
+      CommandData.pivot_gain.PV = rvalues[2];
+      CommandData.pivot_gain.IV = rvalues[3];
+      CommandData.pivot_gain.F = rvalues[4];
       break;
 
      /*************************************

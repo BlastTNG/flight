@@ -59,19 +59,21 @@
 #define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
 
 struct GainStruct {
-  unsigned short int P;
-  unsigned short int I;
-  unsigned short int D;
-  unsigned short int SP;
-  unsigned short int PT; // position velocity gain
+  float P;
+  float I;
+  float D;
+  float SP;
+  float PT; // position velocity gain
+  float friction;
 };
 
 // used for pivot loop gains
 struct PivGainStruct { 
-  unsigned short int PV; // prop to RW velocity
-  unsigned short int PE; // prop to velocity error
-  double SP; // RW velocity Set Point 
-  double F; // Current offset to overcome static friction. 
+    float PV; // prop to RW velocity
+    float IV; // prop to RW velocity
+    float PE; // prop to velocity error
+    double SP; // RW velocity Set Point
+    double F; // Current offset to overcome static friction.
 };
 
 #define LS_OPEN        0x0001
