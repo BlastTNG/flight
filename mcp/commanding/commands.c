@@ -1856,8 +1856,9 @@ void InitCommandData()
 
   CommandData.az_accel = 0.4; 
 
-  CommandData.ele_gain.I = 200; /* was 8000 */
-  CommandData.ele_gain.P = 200; /* was 1200 */
+  CommandData.ele_gain.I = 0.014;
+  CommandData.ele_gain.P = 23.9;
+  CommandData.ele_gain.D = 0;
   CommandData.ele_gain.PT = 200;
 
   CommandData.azi_gain.P = 200;
