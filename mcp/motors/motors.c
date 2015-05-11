@@ -357,13 +357,13 @@ void write_motor_channels_5hz(void)
     /**           Elevation Drive Motors              **/
 
     /* proportional term for el motor */
-    SET_UINT16(gPElAddr, CommandData.ele_gain.P);
+    SET_FLOAT(gPElAddr, CommandData.ele_gain.P);
     /* integral term for el_motor */
-    SET_UINT16(gIElAddr, CommandData.ele_gain.I);
+    SET_FLOAT(gIElAddr, CommandData.ele_gain.I);
     /* derivative term for el_motor */
-    SET_UINT16(gDElAddr, CommandData.ele_gain.D);
+    SET_FLOAT(gDElAddr, CommandData.ele_gain.D);
     /* pointing gain term for elevation drive */
-    SET_UINT16(gPtElAddr, CommandData.ele_gain.PT);
+    SET_FLOAT(gPtElAddr, CommandData.ele_gain.PT);
     //TODO:Figure out what to do about the Pointing gain term
 
     /***************************************************/
@@ -371,20 +371,20 @@ void write_motor_channels_5hz(void)
 
     //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
     /* p term for az motor */
-    SET_UINT16(gPAzAddr, CommandData.azi_gain.P);
+    SET_FLOAT(gPAzAddr, CommandData.azi_gain.P);
     /* I term for az motor */
-    SET_UINT16(gIAzAddr, CommandData.azi_gain.I);
+    SET_FLOAT(gIAzAddr, CommandData.azi_gain.I);
     /* D term for az motor */
-    SET_UINT16(gDAzAddr, CommandData.azi_gain.D);
+    SET_FLOAT(gDAzAddr, CommandData.azi_gain.D);
     /* pointing gain term for az drive */
-    SET_UINT16(gPtAzAddr, CommandData.azi_gain.PT);
+    SET_FLOAT(gPtAzAddr, CommandData.azi_gain.PT);
 
     /* p term to rw vel for pivot motor */
-    SET_UINT16(gPVPivAddr, CommandData.pivot_gain.PV);
+    SET_FLOAT(gPVPivAddr, CommandData.pivot_gain.PV);
     /* I term to rw vel for pivot motor */
-    SET_UINT16(gIVPivAddr, CommandData.pivot_gain.IV);
+    SET_FLOAT(gIVPivAddr, CommandData.pivot_gain.IV);
     /* p term to vel error for pivot motor */
-    SET_UINT16(gPEPivAddr, CommandData.pivot_gain.PE);
+    SET_FLOAT(gPEPivAddr, CommandData.pivot_gain.PE);
     /* setpoint for reaction wheel */
     SET_FLOAT(setRWAddr, CommandData.pivot_gain.SP);
     /* Pivot current offset to compensate for static friction. */
