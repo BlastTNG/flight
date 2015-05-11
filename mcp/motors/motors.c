@@ -1954,7 +1954,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     static float max_pv = 0.0;
     static float min_pv = 0.0;
 
-    float pv = ACSData.ifel_gy;
+    float pv;
     float delta_pv;
     float median_delta_pv;
 
@@ -1975,7 +1975,8 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     T_d = CommandData.azi_gain.D;
 
     i_point = GETREADINDEX(point_index);
-    error_pv = v_req_az - PointingData[i_point].v_az;
+    pv = PointingData[i_point].v_az;
+    error_pv = pv - v_req_az;
 
     /**
      * The P term is the P gain times the error
