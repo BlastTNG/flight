@@ -324,7 +324,7 @@ void write_motor_channels_5hz(void)
 
         gPAzAddr = channels_find_by_name("g_p_az");
         gIAzAddr = channels_find_by_name("g_i_az");
-        gDAzAddr = channels_find_by_name("g_i_az");
+        gDAzAddr = channels_find_by_name("g_d_az");
         gPtAzAddr = channels_find_by_name("g_pt_az");
 
         gPVPivAddr = channels_find_by_name("g_pv_piv");
