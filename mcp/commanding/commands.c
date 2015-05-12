@@ -1867,6 +1867,7 @@ void InitCommandData()
 
   CommandData.pivot_gain.SP = 30; // dps
   CommandData.pivot_gain.PV = 400;
+  CommandData.pivot_gain.IV = 10000;
   CommandData.pivot_gain.PE = 0;
   CommandData.pivot_gain.F = 0.3;
 
