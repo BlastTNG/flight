@@ -2048,13 +2048,13 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     } else if (milliamp_return < last_milliamp - max_delta_mA) {
         milliamp_return = last_milliamp - max_delta_mA;
     }
-    last_milliamp = milliamp_return;
 
     if (m_disabled) {
         last_pv = pv;
         I_term = 0.0;
         milliamp_return = 0;
     }
+    last_milliamp = milliamp_return;
 
     SET_FLOAT(error_az_ch, error_pv);
     SET_FLOAT(p_az_ch, P_term);
@@ -2160,7 +2160,6 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int disabled)
     } else if (milliamp_return < last_milliamp - max_delta_mA) {
         milliamp_return = last_milliamp - max_delta_mA;
     }
-    last_milliamp = milliamp_return;
 
     if (disabled) { // Don't attempt to send current to the motors if we are disabled.
         milliamp_return = 0.0;
@@ -2170,6 +2169,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int disabled)
         friction_out[1] = 0.0;
         I_term = 0;
     }
+    last_milliamp = milliamp_return;
 
     SET_FLOAT(pRWTermPivAddr, P_rw_term);
     SET_FLOAT(IRWTermPivAddr, I_term);
