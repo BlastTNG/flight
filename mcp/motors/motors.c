@@ -218,9 +218,9 @@ static double get_az_vel(void)
     static double last_vel = 0;
     double dvel;
     int i_point;
-    double vel_offset;
+
     double az, az_dest;
-    double max_dv = 20;
+    double max_dv = 0.1; //TODO: Put max acceleration into commanddata
     double dx;
 
     i_point = GETREADINDEX(point_index);
@@ -240,15 +240,14 @@ static double get_az_vel(void)
             vel = sqrt(dx);
         }
         vel *= (double) CommandData.azi_gain.PT * (15.0 / 10000.0);
-        //vel = -(az - az_dest) * 0.36;
     }
-
-    vel_offset =
-            -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy) * sin(PointingData[i_point].el * M_PI / 180.0)
-            -(PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy) * cos(PointingData[i_point].el * M_PI / 180.0);
-
-    vel -= vel_offset;
-    /* Limit Maximim speed */
+//TODO: Investigate whether we want this term
+//    vel_offset =
+//            -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy) * sin(PointingData[i_point].el * M_PI / 180.0)
+//            -(PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy) * cos(PointingData[i_point].el * M_PI / 180.0);
+//
+//    vel -= vel_offset;
+    /* Limit Maximum speed */
     if (vel > MAX_V_AZ)
         vel = MAX_V_AZ;
     if (vel < -MAX_V_AZ)
@@ -1960,6 +1959,8 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     float pv;
 
     int16_t milliamp_return;
+    static int16_t last_milliamp = 0;
+    static const int16_t max_delta_mA = 5;
 
     if (first_time) {
         first_time = 0;
@@ -2037,6 +2038,18 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     if (milliamp_return > MAX_RW_CURRENT) milliamp_return = MAX_RW_CURRENT;
     if (milliamp_return < MIN_RW_CURRENT) milliamp_return = MIN_RW_CURRENT;
 
+    /**
+     * Limit our change in current output to be 5 mA/cycle or 10A/s
+     * NB: This needs to be disabled for feedback tuning using standard oscillation
+     * methods
+     */
+    if (milliamp_return > last_milliamp + max_delta_mA) {
+        milliamp_return = last_milliamp + max_delta_mA;
+    } else if (milliamp_return < last_milliamp - max_delta_mA) {
+        milliamp_return = last_milliamp - max_delta_mA;
+    }
+    last_milliamp = milliamp_return;
+
     if (m_disabled) {
         last_pv = pv;
         I_term = 0.0;
@@ -2073,6 +2086,8 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int disabled)
     static double friction_out[2] = {0.0};
 
     double milliamp_return = 0.0;
+    static int16_t last_milliamp = 0;
+    static const int16_t max_delta_mA = 5;
     int i_point;
 
     double err_rw;
@@ -2134,6 +2149,18 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int disabled)
 
     if (milliamp_return > MAX_PIV_CURRENT) milliamp_return = MAX_PIV_CURRENT;
     if (milliamp_return < MIN_PIV_CURRENT) milliamp_return = MIN_PIV_CURRENT;
+
+    /**
+     * Limit our change in current output to be 5 mA/cycle or 10A/s
+     * NB: This needs to be disabled for feedback tuning using standard oscillation
+     * methods
+     */
+    if (milliamp_return > last_milliamp + max_delta_mA) {
+        milliamp_return = last_milliamp + max_delta_mA;
+    } else if (milliamp_return < last_milliamp - max_delta_mA) {
+        milliamp_return = last_milliamp - max_delta_mA;
+    }
+    last_milliamp = milliamp_return;
 
     if (disabled) { // Don't attempt to send current to the motors if we are disabled.
         milliamp_return = 0.0;
