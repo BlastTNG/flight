@@ -239,8 +239,8 @@ static double get_az_vel(void)
     }
 
     vel_offset =
-            -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy) * cos(PointingData[i_point].el * M_PI / 180.0)
-            -(PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy) * sin(PointingData[i_point].el * M_PI / 180.0);
+            -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy) * sin(PointingData[i_point].el * M_PI / 180.0)
+            -(PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy) * cos(PointingData[i_point].el * M_PI / 180.0);
 
     vel -= vel_offset;
     /* Limit Maximim speed */
