@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 /* BLASTBus frame sample rate */
-#define SR (100.16)
+#define SR (100)
 
 /**
  * Scaling factors for each motor.  These are hard-wired based on the encoder/resolver

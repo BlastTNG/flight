@@ -877,7 +877,7 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
   double new_offset, daz;
 
   el *= M_PI / 180.0; // want el in radians
-  gy_az = -(ifroll_gy + offset_ifroll_gy) * sin(el) + -(ifyaw_gy + offset_ifyaw_gy) * cos(el);
+  gy_az = (ifroll_gy + offset_ifroll_gy) * sin(el) + (ifyaw_gy + offset_ifyaw_gy) * cos(el);
 
   s->angle += gy_az / SR;
   s->variance += GYRO_VAR;
