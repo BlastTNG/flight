@@ -2103,7 +2103,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int disabled)
      * multiplied by the sample rate of the motors.  We implement a "bump-less"
      * transfer here by accumulating the I_term_el
      */
-    I_step = err_rw * P_rw_term / (CommandData.pivot_gain.IV * MOTORSR);
+    I_step = P_rw_term / (CommandData.pivot_gain.IV * MOTORSR);
     if (fabsf(I_step) > MAX_DI) {
         I_step = copysignf(MAX_DI, I_step);
     }
