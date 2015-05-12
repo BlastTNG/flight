@@ -64,6 +64,9 @@ struct AxesModeStruct axes_mode = {
 
 #define INTEGRAL_LENGTH  5.0  //length of the integral time constant in seconds
 #define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
+
+#define LPFILTER_POLES 5
+#define LPFILTER_GAIN  7.796778047e+02
 #define EL_BORDER 1.0
 #define AZ_BORDER 1.0
 #define MIN_SCAN 0.2
@@ -1948,7 +1951,8 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     float D_term = 0.0;
 
     static float I_term = 0.0;
-
+    static float lpfilter_in[LPFILTER_POLES+1] = { 0.0 };
+    static float lpfilter_out[LPFILTER_POLES+1] = { 0.0 };
     static float last_pv = 0.0; /// Three-point median filter terms
     static float last_delta_pv = 0.0;
     static float max_pv = 0.0;
@@ -2005,24 +2009,28 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
 
     /**
      * The derivative term is calculated based on the change in the process value (our measured speed).
-     * This can be excessively noisey, so we implement a three-point median filter to remove spikes
+     * This can be excessively noisey, so we implement an IIR lowpass with a corner frequency at 10Hz
      */
-    delta_pv = last_pv - pv;
-    if (delta_pv > max_pv) median_delta_pv = max_pv;
-    else if (delta_pv < min_pv) median_delta_pv = min_pv;
-    else median_delta_pv = delta_pv;
-    /// Store the limits for next cycle
-    if (delta_pv > last_delta_pv) {
-        max_pv = delta_pv;
-        min_pv = last_delta_pv;
-    } else {
-        min_pv = delta_pv;
-        max_pv = last_delta_pv;
-    }
-    last_delta_pv = delta_pv;
-    last_pv = pv;
+    lpfilter_in[0] = lpfilter_in[1];
+    lpfilter_in[1] = lpfilter_in[2];
+    lpfilter_in[2] = lpfilter_in[3];
+    lpfilter_in[3] = lpfilter_in[4];
+    lpfilter_in[4] = lpfilter_in[5];
+    lpfilter_in[5] = pv / LPFILTER_GAIN;
+    
+    lpfilter_out[0] = lpfilter_out[1];
+    lpfilter_out[1] = lpfilter_out[2];
+    lpfilter_out[2] = lpfilter_out[3];
+    lpfilter_out[3] = lpfilter_out[4];
+    lpfilter_out[4] = lpfilter_out[5];
+    lpfilter_out[5] =    (lpfilter_in[0] + lpfilter_in[5]) +
+                     5 * (lpfilter_in[1] + lpfilter_in[4]) +
+                    10 * (lpfilter_in[2] + lpfilter_in[3]) +
+        (  0.3599282451 * lpfilter_out[0]) + ( -2.1651329097 * lpfilter_out[1]) +
+        (  5.2536151704 * lpfilter_out[2]) + ( -6.4348670903 * lpfilter_out[3]) +
+        (  3.9845431196 * lpfilter_out[4]);
 
-    D_term = K_p * T_d * MOTORSR * median_delta_pv;
+    D_term = K_p * T_d * MOTORSR * lpfilter_out[LPFILTER_POLES];
 
     milliamp_return = P_term + I_term + D_term;
 
