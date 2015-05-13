@@ -1978,7 +1978,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
 
     i_point = GETREADINDEX(point_index);
     pv = PointingData[i_point].v_az;
-    error_pv = pv - v_req_az;
+    error_pv = -(pv - v_req_az); // Negative here as the RW counter-rotates
 
     /**
      * The P term is the P gain times the error
