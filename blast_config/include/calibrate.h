@@ -28,8 +28,10 @@ extern "C" {
  * Scaling factors for each motor.  These are hard-wired based on the encoder/resolver
  */
 #define RW_ENCODER_COUNTS (1 << 21)
+#define RW_COUNTS_PER_REV (1 << 13)
 #define PIV_RESOLVER_COUNTS (1 << 14)
 #define EL_ENCODER_COUNTS 655360 /* This is (1 << 19) / 0.8 to correct for the gearbox */
+#define EL_COUNTS_PER_REV (1 << 13)
 
 #define RW_ENCODER_SCALING (360.0 / RW_ENCODER_COUNTS)
 #define EL_ENCODER_SCALING (360.0 / EL_ENCODER_COUNTS)

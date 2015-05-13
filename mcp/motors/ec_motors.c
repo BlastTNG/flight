@@ -447,7 +447,7 @@ static void rw_init_encoder(void)
 {
     if (rw_index) {
         ec_SDOwrite32(rw_index, ECAT_ENCODER_WRAP, RW_ENCODER_COUNTS);
-        ec_SDOwrite32(rw_index, ECAT_COUNTS_PER_REV, 8192);
+        ec_SDOwrite32(rw_index, ECAT_COUNTS_PER_REV, RW_COUNTS_PER_REV);
     }
 }
 
@@ -455,7 +455,7 @@ static void el_init_encoder(void)
 {
     if (el_index) {
         ec_SDOwrite32(el_index, ECAT_ENCODER_WRAP, EL_ENCODER_COUNTS);
-        ec_SDOwrite32(el_index, ECAT_COUNTS_PER_REV, 8192);
+        ec_SDOwrite32(el_index, ECAT_COUNTS_PER_REV, EL_COUNTS_PER_REV);
     }
 }
 
@@ -464,7 +464,7 @@ static void piv_init_resolver(void)
     if (piv_index) {
         ec_SDOwrite32(piv_index, ECAT_ENCODER_WRAP, PIV_RESOLVER_COUNTS);
         ec_SDOwrite32(piv_index, ECAT_COUNTS_PER_REV, PIV_RESOLVER_COUNTS);
-        ec_SDOwrite32(piv_index, 0x2383, 34, 1);
+        ec_SDOwrite16(piv_index, ECAT_RESOLVER_CYCLES_PER_REV, 1);
     }
 }
 
@@ -873,9 +873,13 @@ static void* motor_control(void* arg)
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        len = 2;
-        int16_t state = ECAT_DRIVE_STATE_PROG_CURRENT;
-        ec_SDOwrite(i, ECAT_DRIVE_STATE, false, len, &state, EC_TIMEOUTTXM);
+        ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
+        int16_t current;
+        int len = 2;
+        ec_SDOread(i, 0x2110, 0, false, &len, &current, EC_TIMEOUTTXM);
+        bprintf(info, "Motor controller %d Peak current limit %d", i, current);
+        ec_SDOread(i, 0x2111, 0, false, &len, &current, EC_TIMEOUTTXM);
+        bprintf(info, "Motor controller %d Continuous current limit %d", i, current);
     }
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
