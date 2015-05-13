@@ -1143,7 +1143,7 @@ void Pointing(void)
     RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
     RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
 
-    PointingData[point_index].v_az = RG.ifyaw_gy * cos_e - RG.ifroll_gy * sin_e;
+    PointingData[point_index].v_az = RG.ifyaw_gy * cos_e + RG.ifroll_gy * sin_e;
     /*************************************/
     /** Record history for gyro offsets **/
     RecordHistory(i_point_read);
