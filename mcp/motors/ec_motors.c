@@ -391,10 +391,6 @@ void piv_quick_stop(void)
 void rw_init_current_limit(void)
 {
     if (rw_index) {
-        ec_SDOwrite16(rw_index, 0x21C2, 0, 200);    // Set max current for wake and wiggle
-        ec_SDOwrite16(rw_index, 0x21C3, 0, 800);    // Wiggle for 150ms if needed
-        ec_SDOwrite16(rw_index, 0x21C4, 0, 0);      // Default wiggle mode
-
         ec_SDOwrite16(rw_index, 0x2110, 0, 3600);   // 36 Amps peak current limit
         ec_SDOwrite16(rw_index, 0x2111, 0, 1200);   // 12 Amps continuous current limit
     }
@@ -402,15 +398,15 @@ void rw_init_current_limit(void)
 void el_init_current_limit(void)
 {
     if (el_index) {
-        ec_SDOwrite16(el_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
-        ec_SDOwrite16(el_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+        ec_SDOwrite16(el_index, 0x2110, 0, 3600);   // 36 Amps peak current limit
+        ec_SDOwrite16(el_index, 0x2111, 0, 1200);    // 12 Amps continuous current limit
     }
 }
 void piv_init_current_limit(void)
 {
     if (piv_index) {
-        ec_SDOwrite16(piv_index, 0x2110, 0, 2000);   // 20 Amps peak current limit
-        ec_SDOwrite16(piv_index, 0x2111, 0, 600);    // 6 Amps continuous current limit
+        ec_SDOwrite16(piv_index, 0x2110, 0, 3000);   // 30 Amps peak current limit
+        ec_SDOwrite16(piv_index, 0x2111, 0, 1500);   // 15 Amps continuous current limit
     }
 }
 
