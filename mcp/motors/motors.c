@@ -239,7 +239,7 @@ static double get_az_vel(void)
         else {
             vel = sqrt(dx);
         }
-        vel *= (double) CommandData.azi_gain.PT * (15.0 / 10000.0);
+        vel *= (double) CommandData.azi_gain.PT / MOTORSR;
     }
 //TODO: Investigate whether we want this term
 //    vel_offset =
