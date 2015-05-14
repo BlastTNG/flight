@@ -67,7 +67,7 @@ struct AxesModeStruct axes_mode = {
 
 #define LPFILTER_POLES 5
 #define LPFILTER_GAIN  1.099763251e+09
-static const float lpfilter_coefs[LPFILTER_POLES] = { 0.903328285, -4.60847636, 9.40530799, -9.59849709, 4.89833715 };
+static const double lpfilter_coefs[LPFILTER_POLES] = { 0.903328285, -4.60847636, 9.40530799, -9.59849709, 4.89833715 };
 
 #define EL_BORDER 1.0
 #define AZ_BORDER 1.0
@@ -1831,8 +1831,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
 
     static float I_term = 0.0;
 
-    static float lpfilter_in[LPFILTER_POLES+1] = { 0.0 };
-    static float lpfilter_out[LPFILTER_POLES+1] = { 0.0 };
+    static double lpfilter_in[LPFILTER_POLES+1] = { 0.0 };
+    static double lpfilter_out[LPFILTER_POLES+1] = { 0.0 };
     static float last_pv = 0.0;
 
     float pv = ACSData.ifel_gy;
