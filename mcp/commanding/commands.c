@@ -1155,6 +1155,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case ra_dec_set:
       SetRaDec(rvalues[0], rvalues[1]);
       break;
+    case pos_set:
+      set_position(rvalues[0], rvalues[1]);
+      break;
     case autotrim_to_sc:
       CommandData.autotrim_thresh = rvalues[0];
       CommandData.autotrim_time = ivalues[1];
