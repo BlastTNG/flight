@@ -66,8 +66,8 @@ struct AxesModeStruct axes_mode = {
 #define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
 
 #define LPFILTER_POLES 5
-#define LPFILTER_GAIN  1.672358808e+4
-static const float lpfilter_coefs[LPFILTER_POLES] = { 0.3599282451, -2.1651329097, 5.2536151704, -6.4348670903, 3.9845431196 };
+#define LPFILTER_GAIN  1.099763251e+09
+static const float lpfilter_coefs[LPFILTER_POLES] = { 0.903328285, -4.60847636, 9.40530799, -9.59849709, 4.89833715 };
 
 #define EL_BORDER 1.0
 #define AZ_BORDER 1.0
