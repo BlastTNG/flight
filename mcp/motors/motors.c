@@ -137,7 +137,7 @@ static double get_elev_vel(void)
     static double last_vel = 0;
     double dvel;
     int i_point, i_elev;
-    double max_dv = 1.6;
+    double max_dv = 0.1;
     double el_for_limit, el, el_dest;
     double dy;
 
@@ -157,7 +157,7 @@ static double get_elev_vel(void)
         else {
             vel = sqrt(dy);
         }
-        vel *= (double) CommandData.ele_gain.PT / 1000.0;
+        vel *= (double) CommandData.ele_gain.PT / MOTORSR;
         //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
     }
     else if (axes_mode.el_mode == AXIS_LOCK) {
@@ -166,7 +166,7 @@ static double get_elev_vel(void)
     }
 
     /* correct offset and convert to Gyro Units */
-    vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
+//    vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
 
     if (CommandData.use_elenc) {
         el_for_limit = el_get_position_degrees() + CommandData.enc_el_trim;
