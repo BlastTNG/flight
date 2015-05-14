@@ -1495,8 +1495,8 @@ void SetRaDec(double ra, double dec)
 // called from the command thread in command.h
 void set_position(double m_lat, double m_lon)
 {
-    PointingData[0].lat=PointingData[1].lat=PointingData[2].lat=m_lat;
-    PointingData[0].lon=PointingData[1].lon=PointingData[2].lon=m_lon;
+    SIPData.GPSpos.lat = m_lat;
+    SIPData.GPSpos.lon = m_lon;
 }
 
 void SetTrimToSC(int which)
