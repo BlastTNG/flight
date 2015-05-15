@@ -147,7 +147,9 @@ static void defricher_file_close_all(channel_t *m_channel_list)
 
     for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
         defricher_cache_node_t *node = (defricher_cache_node_t*)channel->var;
-        if (node && node->magic == BLAST_MAGIC32 && node->output.fp)
+        if (node &&
+                node->magic == BLAST_MAGIC32 &&
+                node->output.fp)
         {
             if (fclose(node->output.fp))
                 defricher_strerr("Could not close %s", node->output.name?node->output.name:"UNK");

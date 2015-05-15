@@ -127,8 +127,8 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
     channel_count++; // Add one extra channel to allow for the NULL terminating field
 
     new_pkt = balloc(err, sizeof(channel_header_t) + sizeof(struct channel_packed) * channel_count);
-
     if (!new_pkt) return NULL;
+    memset(new_pkt, 0, sizeof(channel_header_t) + sizeof(struct channel_packed) * channel_count);
 
     new_pkt->magic = BLAST_MAGIC32;
     new_pkt->version = BLAST_TNG_CH_VERSION;
@@ -138,7 +138,7 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
     /**
      * Copy over the data values one at a time from the aligned to the packed structure
      */
-    for (size_t i = 0; i < channel_count; i++) {
+    for (size_t i = 0; i <= channel_count; i++) {
         memcpy(new_pkt->data[i].field, m_channel_list[i].field, FIELD_LEN);
         new_pkt->data[i].m_c2e = m_channel_list[i].m_c2e;
         new_pkt->data[i].b_e2e = m_channel_list[i].b_e2e;
@@ -170,8 +170,8 @@ derived_header_t *channels_create_derived_map(derived_tng_t *m_derived)
     channel_count++; // Add one extra channel to allow for the NULL terminating field
 
     new_pkt = balloc(err, sizeof(derived_header_t) + sizeof(derived_tng_t) * channel_count);
-
     if (!new_pkt) return NULL;
+    memset(new_pkt, 0, sizeof(derived_header_t) + sizeof(derived_tng_t) * channel_count);
 
     new_pkt->magic = BLAST_MAGIC32;
     new_pkt->version = BLAST_TNG_CH_VERSION | 0x20; // 0x20 marks the packet as a derived packet
@@ -224,12 +224,12 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
 
     *m_channel_list = balloc(err, sizeof(channel_t) * m_map->length);
     if (!(*m_channel_list)) return -1;
-
+    memset(*m_channel_list, 0, sizeof(channel_t) * m_map->length);
 
     /**
      * Copy over the data values one at a time from the packed to the aligned structure
      */
-    for (size_t channel_count = 0; channel_count < m_map->length; channel_count++) {
+    for (size_t channel_count = 0; channel_count <= m_map->length; channel_count++) {
         memcpy((*m_channel_list)[channel_count].field, m_map->data[channel_count].field, FIELD_LEN);
         (*m_channel_list)[channel_count].m_c2e = m_map->data[channel_count].m_c2e;
         (*m_channel_list)[channel_count].b_e2e = m_map->data[channel_count].b_e2e;
