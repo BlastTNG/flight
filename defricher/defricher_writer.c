@@ -23,8 +23,6 @@
  * Created on: Apr 3, 2015 by Seth Hillbrand
  */
 
-
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -35,6 +33,7 @@
 #include <getdata.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <channels_tng.h>
 #include <channel_macros.h>

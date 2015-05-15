@@ -32,6 +32,13 @@
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
+#ifndef __bswap_constant_32
+    /* Swap bytes in 32 bit value.  */
+    #define __bswap_constant_32(x) \
+    ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |		      \
+    (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
+#endif
+
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 # define tole(x) (x)
 # define tobe(x) __bswap_constant_32(x)
@@ -83,7 +90,9 @@
 #define always_inline                   inline  __attribute__((always_inline))
 #define __deprecated                    __attribute__((deprecated))
 #define __packed                        __attribute__((packed))
-#define __weak                          __attribute__((weak))
+#ifndef __weak
+    #define __weak                          __attribute__((weak))
+#endif
 
 /*
  * From the GCC manual:
@@ -95,7 +104,9 @@
  * would be.
  * [...]
  */
-#define __pure                          __attribute__((pure))
+#ifndef __pure
+    #define __pure                          __attribute__((pure))
+#endif
 #define __aligned(x)                    __attribute__((aligned(x)))
 #define __printf(a, b)                  __attribute__((format(printf, a, b)))
 #define __scanf(a, b)                   __attribute__((format(scanf, a, b)))

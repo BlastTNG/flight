@@ -56,7 +56,7 @@ on big endian machines, or a byte-by-byte read if the endianess is unknown.
 
 -----------------------------------------------------------------------------*/
 
-#include <byteswap.h>
+//#include <byteswap.h>
 #include <endian.h>
 
 #include "PMurHash.h"

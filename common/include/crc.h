@@ -1,12 +1,11 @@
 /*
  * crc32.h
- * See linux/lib/crc32.c for license and changes
  */
 #ifndef _CRC32_H
 #define _CRC32_H
 
 #include <stdint.h>
-#include <endian.h>
+#include <portable_endian.h>
 #define CRCPOLY_LE 0xedb88320
 #define CRCPOLY_BE 0x04c11db7
 

@@ -41,6 +41,10 @@
 #include "defricher_utils.h"
 #include "defricher_writer.h"
 
+#ifndef HOST_NAME_MAX
+    #define HOST_NAME_MAX 255
+#endif
+
 static struct mosquitto *mosq;
 pthread_t netread_thread;
 

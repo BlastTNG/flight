@@ -16,8 +16,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <endian.h>
 
+#include "portable_endian.h"
 #include "blast_compiler.h"
 #include "crc.h"
 #include "crc32table.h"

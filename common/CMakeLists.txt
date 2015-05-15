@@ -22,6 +22,7 @@ set(MCP_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/lut.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/sip.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/sys.h
    PARENT_SCOPE
@@ -45,6 +46,7 @@ set(DEFRICHER_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h
    PARENT_SCOPE
 )
 

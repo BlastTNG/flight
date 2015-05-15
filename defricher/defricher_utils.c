@@ -24,15 +24,20 @@
  */
 
 
-#include <stdio.h>
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <limits.h>
+
+#if defined(__APPLE__)
+#include <sys/syslimits.h>
+#endif
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <blast.h>
 #include "defricher_utils.h"
@@ -133,10 +138,12 @@ int defricher_mkdir_file(const char *m_filename, bool m_file_appended)
     }
     else
     {
-        len += strlen(get_current_dir_name()) + 1; /* The additional character here is for the '/' */
+        char    cwd[PATH_MAX];
+        getcwd(cwd, PATH_MAX);
+        len += strlen(cwd) + 1; /* The additional character here is for the '/' */
         if (len > PATH_MAX) len = PATH_MAX;
 
-        snprintf(directory_name,len+1,"%s/%s",get_current_dir_name(),m_filename);
+        snprintf(directory_name,len+1,"%s/%s",cwd,m_filename);
     }
 
 
