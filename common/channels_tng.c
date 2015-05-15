@@ -61,25 +61,30 @@ static void *channel_ptr[SRC_END][RATE_END] = {{0}};
 
 static inline size_t channel_size(channel_t *m_channel)
 {
+    size_t retsize = 0;
     switch (m_channel->type) {
         case TYPE_INT8:
         case TYPE_UINT8:
-            return 1;
+            retsize = 1;
+            break;
         case TYPE_INT16:
         case TYPE_UINT16:
-            return 2;
+            retsize = 2;
+            break;
         case TYPE_INT32:
         case TYPE_UINT32:
         case TYPE_FLOAT:
-            return 4;
+            retsize = 4;
+            break;
         case TYPE_INT64:
         case TYPE_UINT64:
         case TYPE_DOUBLE:
-            return 8;
+            retsize = 8;
+            break;
         default:
-            return 0;
+            bprintf(fatal, "Invalid Channel size!");
     }
-    return 0;
+    return retsize;
 }
 static guint channel_hash(gconstpointer m_data)
 {
@@ -138,7 +143,7 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
     /**
      * Copy over the data values one at a time from the aligned to the packed structure
      */
-    for (size_t i = 0; i <= channel_count; i++) {
+    for (size_t i = 0; i < channel_count; i++) {
         memcpy(new_pkt->data[i].field, m_channel_list[i].field, FIELD_LEN);
         new_pkt->data[i].m_c2e = m_channel_list[i].m_c2e;
         new_pkt->data[i].b_e2e = m_channel_list[i].b_e2e;
@@ -229,7 +234,7 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
     /**
      * Copy over the data values one at a time from the packed to the aligned structure
      */
-    for (size_t channel_count = 0; channel_count <= m_map->length; channel_count++) {
+    for (size_t channel_count = 0; channel_count < m_map->length; channel_count++) {
         memcpy((*m_channel_list)[channel_count].field, m_map->data[channel_count].field, FIELD_LEN);
         (*m_channel_list)[channel_count].m_c2e = m_map->data[channel_count].m_c2e;
         (*m_channel_list)[channel_count].b_e2e = m_map->data[channel_count].b_e2e;
@@ -381,3 +386,4 @@ int channels_initialize(const channel_t * const m_channel_list)
     bprintf(startup, "Successfully initialized Channels data structures");
     return 0;
 }
+
