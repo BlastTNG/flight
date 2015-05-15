@@ -166,10 +166,10 @@ static double get_elev_vel(void)
     }
 
     /* correct offset and convert to Gyro Units */
-//    vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
+    vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
 
     if (CommandData.use_elenc) {
-        el_for_limit = el_get_position_degrees() + CommandData.enc_el_trim;
+        el_for_limit = wrap_to(el_get_position_degrees() + CommandData.enc_el_trim, 360.0);
     }
     else {
         el_for_limit = PointingData[i_point].el;
@@ -215,6 +215,7 @@ static double get_elev_vel(void)
 static double get_az_vel(void)
 {
     double vel = 0.0;
+    double vel_offset = 0.0;
     static double last_vel = 0;
     double dvel;
     int i_point;
@@ -241,12 +242,12 @@ static double get_az_vel(void)
         }
         vel *= (double) CommandData.azi_gain.PT / MOTORSR;
     }
-//TODO: Investigate whether we want this term
-//    vel_offset =
-//            -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy) * sin(PointingData[i_point].el * M_PI / 180.0)
-//            -(PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy) * cos(PointingData[i_point].el * M_PI / 180.0);
-//
-//    vel -= vel_offset;
+
+    vel_offset =
+            -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy) * sin(PointingData[i_point].el * M_PI / 180.0)
+            -(PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy) * cos(PointingData[i_point].el * M_PI / 180.0);
+
+    vel -= vel_offset;
     /* Limit Maximum speed */
     if (vel > MAX_V_AZ)
         vel = MAX_V_AZ;
