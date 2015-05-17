@@ -85,6 +85,7 @@ struct ri_struct {
   struct timeval last;  // Last time written to dirfile
   int lw;               // Total number of samples written previously
   int wrote;                // Current number of samples written
+  bool new_channels;        // Have we received a new channels structure?
   bool channels_ready;      // Is the channels structure initialized?
   bool dirfile_ready;       // Is the dirfile initialized and ready for writing
   bool symlink_updated;     // Is the symbolic link current with the new dirfile?
@@ -96,10 +97,6 @@ struct ri_struct {
 /* interthread communication */
 extern struct rc_struct rc;
 extern struct ri_struct ri;
-
-extern channel_t *channels;
-extern derived_tng_t *derived_channels;
-
 
 extern sigset_t signals;
 

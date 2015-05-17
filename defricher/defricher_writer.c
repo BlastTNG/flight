@@ -47,6 +47,10 @@
 extern struct ri_struct ri;
 pthread_t write_thread;
 
+channel_t *channels = NULL;
+channel_t *new_channels = NULL;
+derived_tng_t *derived_channels = NULL;
+
 static int dirfile_create_new = 0;
 static int dirfile_update_derived = 0;
 static int dirfile_ready = 0;
@@ -142,19 +146,24 @@ static void defricher_update_current_link(const char *m_name)
         defricher_strerr("Could not create symlink from %s to %s", m_name, rc.symlink_name);
 }
 
-static void defricher_file_close_all(channel_t *m_channel_list)
+static void defricher_free_channels_list (channel_t *m_channel_list)
 {
+    if (!m_channel_list) return;
 
     for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
         defricher_cache_node_t *node = (defricher_cache_node_t*)channel->var;
-        if (node &&
-                node->magic == BLAST_MAGIC32 &&
-                node->output.fp)
+        if (    node &&
+                node->magic == BLAST_MAGIC32)
         {
-            if (fclose(node->output.fp))
-                defricher_strerr("Could not close %s", node->output.name?node->output.name:"UNK");
-            node->output.fp = NULL;
+            if (node->output.fp) {
+                if (fclose(node->output.fp))
+                    defricher_strerr("Could not close %s", node->output.name?node->output.name:"UNK");
+                node->output.fp = NULL;
+            }
+            free(node);
+            channel->var = NULL;
         }
+
     }
 }
 
@@ -246,6 +255,28 @@ static inline int defricher_get_rate(const E_RATE m_rate)
     return rate;
 }
 
+static void defricher_transfer_channel_list(channel_t *m_channel_list)
+{
+    for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
+        gd_type_t type;
+        defricher_cache_node_t *node = balloc(fatal, sizeof(defricher_cache_node_t));
+        node->magic = BLAST_MAGIC32;
+        node->raw_data = channel->var;
+        node->output.name = channel->field;
+        node->output.desc = NULL;
+        node->output.lastval = 0;
+        node->output.offset = 0;
+
+        type = defricher_get_gd_type(channel->type);
+        node->output.element_size = GD_SIZE(type);
+        node->output.is_float = type & GD_IEEE754;
+        node->output.is_signed = type & GD_SIGNED;
+
+        node->output.rate = defricher_get_rate(channel->rate);
+        channel->var = node;
+    }
+}
+
 static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_channel_list)
 {
     DIRFILE *new_file;
@@ -255,7 +286,6 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     char *upper_field;
 
     defricher_info("Intializing %s", m_name);
-    defricher_file_close_all(m_channel_list);
     if (defricher_mkdir_file(m_name, true) < 0)
     {
         defricher_strerr("Could not make directory for %s", m_name);
@@ -269,34 +299,17 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
         b = 0.0;
 
         gd_alter_endianness(new_file, GD_BIG_ENDIAN, 0, 0);
-//        for (int rate = 0; rate < RATE_END; rate++) {
-//            char *tmp_string;
-//            uint32_t spf = defricher_get_rate(rate);
-//            blast_tmp_sprintf(tmp_string, "DEFRICHER_FRAMECOUNT_%s", RATE_LOOKUP_TABLE[rate].text);
-//            gd_add_raw(new_file, tmp_string, GD_UINT32, spf, 0);
-//        }
+
         for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
 
-            defricher_cache_node_t *node = balloc(fatal, sizeof(defricher_cache_node_t));
-            node->magic = BLAST_MAGIC32;
-            node->raw_data = channel->var;
-            node->output.name = channel->field;
-            node->output.desc = NULL;
-            node->output.lastval = 0;
-            node->output.offset = 0;
+            defricher_cache_node_t *node = (defricher_cache_node_t*)channel->var;
 
             type = defricher_get_gd_type(channel->type);
-            node->output.element_size = GD_SIZE(type);
-            node->output.is_float = type & GD_IEEE754;
-            node->output.is_signed = type & GD_SIGNED;
-
-            node->output.rate = defricher_get_rate(channel->rate);
 
             if (gd_add_raw(new_file, node->output.name, type, node->output.rate, 0))
             {
                 gd_error_string(new_file, error_str, 2048);
                 defricher_err( "Could not add %s: %s", node->output.name, error_str);
-                bfree(info, node);
             }
             else
             {
@@ -311,8 +324,6 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
                     gd_add_phase(new_file, upper_field, node->output.name, 0, 0);
                 else
                     gd_add_lincom(new_file, upper_field, 1, (const char **)&(node->output.name), &m, &b, 0);
-
-                channel->var = node;
             }
         }
 
@@ -328,15 +339,6 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     }
 
     return new_file;
-}
-
-static void defricher_write_local(E_RATE m_rate)
-{
-    static uint32_t frame_count[RATE_END] = {0};
-
-    frame_count[m_rate]++;
-
-
 }
 
 //TODO: Add FIFO buffering
@@ -381,6 +383,24 @@ static void *defricher_write_loop(void *m_arg)
 
     while (!ri.writer_done)
     {
+        if (ri.new_channels) {
+            if (channels_initialize(new_channels) < 0) {
+                defricher_err("Could not initialize channels");
+                ri.new_channels = false;
+                free(new_channels);
+                new_channels = NULL;
+            } else {
+                defricher_free_channels_list(channels);
+                ri.new_channels = false;
+                free(channels);
+                channels = new_channels;
+                new_channels = NULL;
+                defricher_transfer_channel_list(channels);
+                ri.channels_ready = true;
+                dirfile_create_new = 1;
+            }
+
+        }
         if (dirfile_create_new) {
             dirfile_ready = 0;
             dirfile_name = rc.output_dirfile;

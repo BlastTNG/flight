@@ -26,6 +26,10 @@
 #ifndef DEFRICHER_WRITER_H_
 #define DEFRICHER_WRITER_H_
 
+extern channel_t *channels;
+extern channel_t *new_channels;
+extern derived_tng_t *derived_channels;
+
 int defricher_writer_init(void);
 int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_rate);
 void defricher_request_new_dirfile(void);

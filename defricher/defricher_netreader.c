@@ -105,19 +105,10 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
             if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {
                 if (((channel_header_t*)message->payload)->crc != last_crc) {
                     defricher_info( "Received updated Channels.  Ready to initialize new DIRFILE!");
-                    if (channels_read_map(message->payload, message->payloadlen, &channels) > 0 ) {
+                    if (channels_read_map(message->payload, message->payloadlen, &new_channels) > 0 ) {
                         defricher_startup("Ready to init channels");
-                        if (channels_initialize(channels) < 0) {
-                            defricher_err("Could not initialize channels");
-                        } else {
-                            defricher_startup("Channels initialized");
-                            ri.channels_ready = true;
-                        }
-                    }
-
-                    if (ri.channels_ready) {
+                        ri.new_channels = true;
                         last_crc = ((channel_header_t*)message->payload)->crc;
-                        defricher_request_new_dirfile();
                     }
                 }
             }
