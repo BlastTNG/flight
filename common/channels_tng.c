@@ -319,6 +319,7 @@ int channels_initialize(const channel_t * const m_channel_list)
 {
     const channel_t *channel;
 
+    if (frame_table) g_hash_table_destroy(frame_table);
     frame_table = g_hash_table_new(channel_hash, g_str_equal);
 
     if (frame_table == NULL) return -1;
@@ -360,8 +361,9 @@ int channels_initialize(const channel_t * const m_channel_list)
                     8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
 
             if (frame_size[src][rate]) {
-                channel_data[src][rate] = malloc(frame_size[src][rate]);
-                memset(channel_data[src][rate], 0, frame_size[src][rate]);
+                /// Ensure that we can dereference the data without knowing its type by keeping an extra 8 bytes allocated at the end
+                channel_data[src][rate] = malloc(frame_size[src][rate] +  sizeof(uint64_t));
+                memset(channel_data[src][rate], 0, frame_size[src][rate] +  sizeof(uint64_t));
                 bprintf(startup, "Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
                         (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                         (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
