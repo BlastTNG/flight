@@ -307,7 +307,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
             
             if (gd_add_raw(new_file, node->output.name, type, node->output.rate, 0))
             {
-                gd_error_string(new_file, tmp_str, 2048);
+                gd_error_string(new_file, tmp_str, 512);
                 defricher_err( "Could not add %s: %s", node->output.name, tmp_str);
             }
             else
@@ -331,8 +331,8 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     }
     else
     {
-        gd_error_string(new_file, error_str, 2048);
-        defricher_fatal("Could not open %s as DIRFILE: %s", m_name, error_str);
+        gd_error_string(new_file, tmp_str, 512);
+        defricher_fatal("Could not open %s as DIRFILE: %s", m_name, tmp_str);
         gd_close(new_file);
         return NULL;
     }
