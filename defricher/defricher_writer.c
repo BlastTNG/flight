@@ -456,6 +456,20 @@ void defricher_request_updated_derived(void)
  */
 int defricher_writer_init(void)
 {
+    size_t stack_size;
+    pthread_attr_t attr;
+
+    pthread_attr_init(&attr);
+    pthread_attr_getstacksize(&attr, &stack_size);
+
+    /**
+     * GetData requires a rather large stack, on top of our own usage, so we set a
+     * minimum of 2MB here to guard against smashing
+     */
+    if (stack_size < (1<<21)) {
+        stack_size = (1<<21);
+        pthread_attr_setstacksize(&attr, stack_size);
+    }
 
     pthread_create(&write_thread, NULL, &defricher_write_loop, NULL);
 
