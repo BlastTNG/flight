@@ -291,7 +291,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
         defricher_strerr("Could not make directory for %s", m_name);
         return false;
     }
-    defricher_info("2");
+
     new_file = gd_open(m_name, GD_CREAT|GD_RDWR|GD_PRETTY_PRINT|GD_VERBOSE);
     if (gd_error(new_file) == GD_E_OK)
     {
@@ -300,18 +300,14 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
 
         gd_alter_endianness(new_file, GD_BIG_ENDIAN, 0, 0);
         
-        defricher_info("3");
         for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
             
-            defricher_info("4.%d", (channel - m_channel_list));
             defricher_cache_node_t *node = (defricher_cache_node_t*)channel->var;
 
             type = defricher_get_gd_type(channel->type);
             
-            defricher_info("5.%d, %p, %s, %d, %d", (channel - m_channel_list), new_file, node->output.name, type, node->output.rate);
             if (gd_add_raw(new_file, node->output.name, type, node->output.rate, 0))
             {
-                defricher_info("7.%d", (channel - m_channel_list));
                 gd_error_string(new_file, error_str, 2048);
                 defricher_err( "Could not add %s: %s", node->output.name, error_str);
             }
@@ -342,7 +338,6 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
         gd_close(new_file);
         return NULL;
     }
-    defricher_info("5");
 
     return new_file;
 }
@@ -471,7 +466,7 @@ int defricher_writer_init(void)
         pthread_attr_setstacksize(&attr, stack_size);
     }
 
-    pthread_create(&write_thread, NULL, &defricher_write_loop, NULL);
+    pthread_create(&write_thread, &attr, &defricher_write_loop, NULL);
 
     return 0;
 }
