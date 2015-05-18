@@ -36,6 +36,8 @@
 #include <wordexp.h>    /* POSIX-shell-like word expansion (wordexp) */
 #include <errno.h>
 #include <stdio.h>
+#include <execinfo.h>
+#include <signal.h>
 
 #include <glib.h>
 #include <mosquitto.h>
@@ -76,6 +78,18 @@ void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
 }
 
 
+void segv_handler(int sig) {
+    void *array[10];
+    size_t size;
+    
+    // get void*'s for all entries on the stack
+    size = backtrace(array, 10);
+    
+    // print out all the frames to stderr
+    fprintf(stderr, "Error: signal %d:\n", sig);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    exit(1);
+}
 
 /// TODO: Test ability to write to output location on startup
 
@@ -229,6 +243,8 @@ int main(int argc, char** argv)
     gettimeofday(&ri.last, &rc.tz);
 
     /* set up signal masks */
+//    signal(SIGBUS, segv_handler);
+//    signal(SIGILL, segv_handler);
 //    sigemptyset(&signals);
 //    sigaddset(&signals, SIGHUP);
 //    sigaddset(&signals, SIGINT);
