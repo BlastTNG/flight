@@ -34,6 +34,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include <channels_tng.h>
 #include <channel_macros.h>
@@ -186,6 +187,29 @@ static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_li
 
             if (!outfile_node->output.fp) {
                 defricher_err("Could not open %s", filename);
+                switch(errno) {
+                    case ELOOP:
+                        defricher_err("Too many loops in the directory %s.  Please remove the directory and try again.", outfile_node->output.name);
+                        break;
+                    case EPERM:
+                    case EACCES:
+                        defricher_err("Could not create %s.  Please check that you have permission to write to the parent directory.", outfile_node->output.name);
+                        break;
+                    case EMFILE:
+                        defricher_err("Too many open files.  Typically this happens when your system limit is too low.");
+                        defricher_err("\tOn Linux and Mac, you can check the number of open files you allow by typing 'ulimit -n' in a terminal.");
+                        defricher_err("\tAs a general rule of thumb, you should allocate at least 65536.");
+                        defricher_err("\tTo do this on Linux, you can put `* soft nofiles 65536` and `* hard nofiles 65536` in /etc/security/limits.conf");
+                        defricher_err("\tTo do this on Mac, you can put `limit maxfiles 65536` in /etc/launchd.conf");
+                        defricher_err("\tOn both systems, you can then reboot for the changes to take effect");
+                        break;
+                    case ENOSPC:
+                        defricher_err("No more space on device.  Please clear additional storage space and try again.");
+                        break;
+                    default:
+                        defricher_strerr("Unhandled error while opened files.");
+                        break;
+                }
                 return -1;
             }
             outfile_node->output.offset = 0;
@@ -410,11 +434,15 @@ static void *defricher_write_loop(void *m_arg)
                 sleep(1);
                 continue;
             }
-            defricher_update_cache_fp(dirfile, channels);
-            dirfile_create_new = 0;
-            ri.dirfile_ready = true;
-            ri.symlink_updated = false;
-            dirfile_frames_written = 0;
+            if (defricher_update_cache_fp(dirfile, channels) < 0) {
+                defricher_err("Could not open all files for writing.  Please report this error to Seth (seth.hillbrand@gmail.com)");
+                ri.writer_done = true;
+            } else {
+                dirfile_create_new = 0;
+                ri.dirfile_ready = true;
+                ri.symlink_updated = false;
+                dirfile_frames_written = 0;
+            }
         }
 
         /// We wait until a frame is written to the dirfile before updating the link (for KST)
