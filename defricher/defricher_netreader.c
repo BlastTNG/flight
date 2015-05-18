@@ -93,6 +93,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
     char **topics;
     int count;
     static uint32_t last_crc = 0;
+    static uint32_t last_derived_crc = 0;
 
     if(message->payloadlen){
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
@@ -113,10 +114,11 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                 }
             }
             if ( count == 3 && topics[0] && strcmp(topics[0], "derived") == 0) {
-                if (((derived_header_t*)message->payload)->crc != last_crc) {
+                if (((derived_header_t*)message->payload)->crc != last_derived_crc) {
                     defricher_info( "Received updated Derived Channels.");
                     if (channels_read_derived_map(message->payload, message->payloadlen, &derived_channels) > 0 ) {
                         defricher_request_updated_derived();
+                        last_derived_crc = ((derived_header_t*)message->payload)->crc;
                     }
                 }
             }
