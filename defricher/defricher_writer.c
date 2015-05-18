@@ -281,9 +281,8 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
 {
     DIRFILE *new_file;
     gd_type_t type;
-    char error_str[2048];
+    char tmp_str[512];
     double m,b;
-    char *upper_field;
 
     defricher_info("Intializing %s", m_name);
     if (defricher_mkdir_file(m_name, true) < 0)
@@ -308,23 +307,22 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
             
             if (gd_add_raw(new_file, node->output.name, type, node->output.rate, 0))
             {
-                gd_error_string(new_file, error_str, 2048);
-                defricher_err( "Could not add %s: %s", node->output.name, error_str);
+                gd_error_string(new_file, tmp_str, 2048);
+                defricher_err( "Could not add %s: %s", node->output.name, tmp_str);
             }
             else
             {
-                defricher_info("6.%d", (channel - m_channel_list));
-                blast_tmp_sprintf(upper_field, "%s", node->output.name);
+                snprintf(tmp_str, 128, "%s", node->output.name);
                 m = channel->m_c2e;
                 b = channel->b_e2e;
 
                 /// By default we set the converted field to upper case
-                for (int i = 0; upper_field[i]; i++) upper_field[i] = toupper(upper_field[i]);
+                for (int i = 0; tmp_str[i]; i++) tmp_str[i] = toupper(tmp_str[i]);
                 /// If our scale/offset are unity/zero respectively, tell defile to use the easier zero-phase
                 if (fabs(m - 1.0) <= DBL_EPSILON && fabs(b - 0.0) <= DBL_EPSILON)
-                    gd_add_phase(new_file, upper_field, node->output.name, 0, 0);
+                    gd_add_phase(new_file, tmp_str, node->output.name, 0, 0);
                 else
-                    gd_add_lincom(new_file, upper_field, 1, (const char **)&(node->output.name), &m, &b, 0);
+                    gd_add_lincom(new_file, tmp_str, 1, (const char **)&(node->output.name), &m, &b, 0);
             }
         }
 
