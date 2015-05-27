@@ -774,20 +774,19 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
   double w1, w2;
   double new_offset = 0;
  
-  //  if (i%500==1) bprintf(info,"EvolveElSolution: #1 Initial angle %f, new angle %f",s->angle, new_angle);
   s->angle += (gyro + gy_off) / SR;
-  s->variance += GYRO_VAR;
+  s->variance += GYRO_VAR; ///TODO: The El solution is not necessarily only one gyro
 
   s->gy_int += gyro / SR; // in degrees
 
-  //  if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, gyro %f, gy_off %f, varience %f, gy_int %f",s->angle, gyro, gy_off, s->varience, s->gy_int);
   if (new_reading) {
     w1 = 1.0 / (s->variance);
     w2 = s->samp_weight;
 
+    UnwindDiff(s->angle, &new_angle);
     s->angle = (w1 * s->angle + new_angle * w2) / (w1 + w2);
     s->variance = 1.0 / (w1 + w2);
-    //    if (i%500==1) bprintf(info,"EvolveElSolution: #2 Angle %f, w1 %f, w2 %f, varience %f",s->angle, w1, w2,s->varience);
+    NormalizeAngle(&(s->angle));
 
     if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       /** calculate offset **/
@@ -880,7 +879,7 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
   gy_az = (ifroll_gy + offset_ifroll_gy) * sin(el) + (ifyaw_gy + offset_ifyaw_gy) * cos(el);
 
   s->angle += gy_az / SR;
-  s->variance += GYRO_VAR;
+  s->variance += GYRO_VAR; ///TODO: The Az solution is not necessarily only one gyro
 
   s->ifroll_gy_int += ifroll_gy / SR; // in degrees
   s->ifyaw_gy_int += ifyaw_gy / SR; // in degrees
