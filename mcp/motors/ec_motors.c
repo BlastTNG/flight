@@ -931,8 +931,8 @@ static void* motor_control(void* arg)
 void initialize_motors(void)
 {
   memset(ElevMotorData, 0, sizeof(ElevMotorData));
-  memset(ElevMotorData, 0, sizeof(RWMotorData));
-  memset(ElevMotorData, 0, sizeof(PivotMotorData));
+  memset(RWMotorData, 0, sizeof(RWMotorData));
+  memset(PivotMotorData, 0, sizeof(PivotMotorData));
 
   pthread_create(&motor_ctl_id, NULL, &motor_control, NULL);
   pthread_detach(motor_ctl_id);
