@@ -792,7 +792,7 @@ static void read_motor_data()
     RWMotorData[motor_i].fault_reg = rw_get_latched();
     RWMotorData[motor_i].status = rw_get_status_register();
     RWMotorData[motor_i].position = rw_get_position();
-    RWMotorData[motor_i].load_position = rw_get_position();
+    RWMotorData[motor_i].motor_position = rw_get_position();
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
     RWMotorData[motor_i].load_state = rw_get_load_state();
@@ -804,6 +804,7 @@ static void read_motor_data()
     ElevMotorData[motor_i].fault_reg = el_get_latched();
     ElevMotorData[motor_i].status = el_get_status_register();
     ElevMotorData[motor_i].position = el_get_position();
+    ElevMotorData[motor_i].motor_position = el_get_motor_position();
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
     ElevMotorData[motor_i].load_state = el_get_load_state();

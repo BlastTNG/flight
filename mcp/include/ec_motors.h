@@ -136,6 +136,7 @@ typedef enum {
                                     /* Bit 4 - Encoder Transmission delay too long */
 
 #define ECAT_MOTOR_POSITION 0x2240, 0 /* Encoder position in counts INT32 */
+#define ECAT_LOAD_POSITION 0x2242, 0 /* Load Encoder position in counts INT32 */
 #define ECAT_ACTUAL_POSITION 0x6063, 0  /* Encoder position used for loops in counts INT32 */
 #define ECAT_DRIVE_TEMP 0x2202, 0 /* A/D Reading in degrees C INT16 */
 

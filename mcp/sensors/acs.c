@@ -420,6 +420,7 @@ void store_100hz_acs(void)
     static channel_t *vel_el_addr;
     static channel_t *encstatus_el_addr;
     static channel_t *pos_el_addr;
+    static channel_t *pos_motor_el_addr;
     static channel_t *vel_piv_addr;
     static channel_t *pos_piv_addr;
 
@@ -441,6 +442,7 @@ void store_100hz_acs(void)
         vel_el_addr = channels_find_by_name("mc_el_vel");
         encstatus_el_addr = channels_find_by_name("mc_el_biss_status");
         pos_el_addr = channels_find_by_name("mc_el_pos");
+        pos_motor_el_addr = channels_find_by_name("mc_el_motor_pos");
 
         vel_piv_addr = channels_find_by_name("mc_piv_vel");
         pos_piv_addr = channels_find_by_name("mc_piv_pos");
@@ -460,6 +462,7 @@ void store_100hz_acs(void)
     SET_INT32(vel_el_addr, ElevMotorData[i_motors].velocity);
     SET_INT32(encstatus_el_addr, ElevMotorData[i_motors].load_state);
     SET_INT32(pos_el_addr, ElevMotorData[i_motors].position);
+    SET_INT32(pos_motor_el_addr, ElevMotorData[i_motors].motor_position);
     SET_INT32(vel_piv_addr, PivotMotorData[i_motors].velocity);
     SET_INT32(pos_piv_addr, PivotMotorData[i_motors].position);
 }

@@ -755,7 +755,8 @@ channel_t channel_list[] =
     { "mc_rw_vel",               RW_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_rw_pos",               RW_ENCODER_SCALING,        0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0 },
     { "mc_el_vel",               EL_MOTOR_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_el_pos",               EL_LOAD_ENCODER_SCALING,        0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0 },
+    { "mc_el_pos",               EL_LOAD_ENCODER_SCALING,   0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0 },
+    { "mc_el_motor_pos",         EL_MOTOR_ENCODER_SCALING,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0 },
     { "mc_piv_vel",              PIV_RESOLVER_SCALING * 0.1,0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "mc_piv_pos",              PIV_RESOLVER_SCALING,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0 },
 
