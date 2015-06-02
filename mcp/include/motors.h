@@ -62,10 +62,11 @@
 typedef struct
 {
     int32_t velocity;             // in 0.1 counts per second
-    int32_t enc_velocity;         // in 0.1 counts per second
     int16_t temp;                 // drive temperature in degrees Celsius
     double current;               // drive current read from controller
-    int32_t position;             // Resolver position (if available)
+    int32_t position;             // Internal position
+    int32_t load_position;        // Load position (if available)
+    uint32_t load_state;          // BiSS state bits for load encoder on El
     uint32_t status;              // drive status
     uint32_t fault_reg;           // drive fault register
     uint16_t drive_info;          // motorinfo struct

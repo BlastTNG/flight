@@ -416,13 +416,11 @@ void store_100hz_acs(void)
     static channel_t *sigmaEncAddr;
 
     static channel_t *vel_rw_addr;
-    static channel_t *encvel_rw_addr;
     static channel_t *pos_rw_addr;
     static channel_t *vel_el_addr;
-    static channel_t *encvel_el_addr;
+    static channel_t *encstatus_el_addr;
     static channel_t *pos_el_addr;
     static channel_t *vel_piv_addr;
-    static channel_t *encvel_piv_addr;
     static channel_t *pos_piv_addr;
 
     static int firsttime = 1;
@@ -438,15 +436,13 @@ void store_100hz_acs(void)
         sigmaEncAddr = channels_find_by_name("sigma_enc");
 
         vel_rw_addr = channels_find_by_name("mc_rw_vel");
-        encvel_rw_addr = channels_find_by_name("mc_rw_encvel");
         pos_rw_addr = channels_find_by_name("mc_rw_pos");
 
         vel_el_addr = channels_find_by_name("mc_el_vel");
-        encvel_el_addr = channels_find_by_name("mc_el_encvel");
+        encstatus_el_addr = channels_find_by_name("mc_el_biss_status");
         pos_el_addr = channels_find_by_name("mc_el_pos");
 
         vel_piv_addr = channels_find_by_name("mc_piv_vel");
-        encvel_piv_addr = channels_find_by_name("mc_piv_encvel");
         pos_piv_addr = channels_find_by_name("mc_piv_pos");
 
     }
@@ -460,13 +456,11 @@ void store_100hz_acs(void)
     SET_INT16(sigmaEncAddr, (unsigned int) (PointingData[i_point].enc_sigma * DEG2I));
 
     SET_INT32(vel_rw_addr, RWMotorData[i_motors].velocity);
-    SET_INT32(encvel_rw_addr, RWMotorData[i_motors].enc_velocity);
     SET_INT32(pos_rw_addr, RWMotorData[i_motors].position);
     SET_INT32(vel_el_addr, ElevMotorData[i_motors].velocity);
-    SET_INT32(encvel_el_addr, ElevMotorData[i_motors].enc_velocity);
+    SET_INT32(encstatus_el_addr, ElevMotorData[i_motors].load_state);
     SET_INT32(pos_el_addr, ElevMotorData[i_motors].position);
     SET_INT32(vel_piv_addr, PivotMotorData[i_motors].velocity);
-    SET_INT32(encvel_piv_addr, PivotMotorData[i_motors].enc_velocity);
     SET_INT32(pos_piv_addr, PivotMotorData[i_motors].position);
 }
 

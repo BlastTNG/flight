@@ -30,11 +30,15 @@ extern "C" {
 #define RW_ENCODER_COUNTS (1 << 21)
 #define RW_COUNTS_PER_REV (1 << 13)
 #define PIV_RESOLVER_COUNTS (1 << 14)
-#define EL_ENCODER_COUNTS 655360 /* This is (1 << 19) / 0.8 to correct for the gearbox */
-#define EL_COUNTS_PER_REV (1 << 13)
+
+#define EL_LOAD_ENCODER_COUNTS (1 << 23) /* This is the External, absolute encoder mounted on the inner frame */
+#define EL_LOAD_COUNTS_PER_REV (1 << 23)
+#define EL_MOTOR_ENCODER_COUNTS 655360 /* This is (1 << 19) / 0.8 to correct for the gearbox */
+#define EL_MOTOR_COUNTS_PER_REV (1 << 13)
 
 #define RW_ENCODER_SCALING (360.0 / RW_ENCODER_COUNTS)
-#define EL_ENCODER_SCALING (360.0 / EL_ENCODER_COUNTS)
+#define EL_MOTOR_ENCODER_SCALING (360.0 / EL_MOTOR_ENCODER_COUNTS)
+#define EL_LOAD_ENCODER_SCALING (360.0 / EL_MOTOR_ENCODER_COUNTS)
 #define PIV_RESOLVER_SCALING (360.0 / PIV_RESOLVER_COUNTS)
 
 /* Gains and offsets for ideal analog cards: cal = (counts + B)*M */

@@ -753,14 +753,14 @@ channel_t channel_list[] =
 
     /** Motor Channels */
     { "mc_rw_vel",               RW_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_rw_pos",               RW_ENCODER_SCALING,        0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_el_vel",               EL_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_el_pos",               EL_ENCODER_SCALING,        0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_rw_pos",               RW_ENCODER_SCALING,        0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0 },
+    { "mc_el_vel",               EL_MOTOR_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_el_pos",               EL_LOAD_ENCODER_SCALING,        0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0 },
     { "mc_piv_vel",              PIV_RESOLVER_SCALING * 0.1,0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_piv_pos",              PIV_RESOLVER_SCALING,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_rw_encvel",            RW_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_el_encvel",            EL_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "mc_piv_encvel",           PIV_RESOLVER_SCALING * 0.1,0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
+    { "mc_piv_pos",              PIV_RESOLVER_SCALING,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0 },
+
+    { "mc_el_biss_status",       1.0,  0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
+
     {"control_word_read_el",     1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},
     {"control_word_read_rw",     1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},
     {"control_word_read_piv",     1.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0},

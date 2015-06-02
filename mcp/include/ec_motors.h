@@ -128,8 +128,15 @@ typedef enum {
 #  define ECAT_DRIVE_STATE_PROG_CURRENT 1
 #  define ECAT_DRIVE_STATE_PROG_VELOCITY 11
 
+#define ECAT_LOAD_STATUS 0x2225, 0  /* Status bits for the load encoder */
+                                    /* Bit 0 - CRC Error on data */
+                                    /* Bit 1 - Encoder failed to transmit data to amp */
+                                    /* Bit 2 - Error bit on encoder stream active */
+                                    /* Bit 3 - Warning bit on encoder stream active */
+                                    /* Bit 4 - Encoder Transmission delay too long */
+
 #define ECAT_MOTOR_POSITION 0x2240, 0 /* Encoder position in counts INT32 */
-#define ECAT_MOTOR_ENC_WRAP_POS 0x2220, 0 /* Position value at which the motor encoder position will wrap. INT32 */
+#define ECAT_ACTUAL_POSITION 0x6063, 0  /* Encoder position used for loops in counts INT32 */
 #define ECAT_DRIVE_TEMP 0x2202, 0 /* A/D Reading in degrees C INT16 */
 
 #define ECAT_DRIVE_STATUS 0x1002, 0 /* Drive status bitmap UINT32 */
@@ -212,6 +219,7 @@ typedef enum {
 
 double rw_get_position_degrees(void);
 double el_get_position_degrees(void);
+double el_get_motor_position_degrees(void);
 double piv_get_position_degrees(void);
 double rw_get_velocity_dps(void);
 double el_get_velocity_dps(void);
@@ -228,13 +236,14 @@ int16_t el_get_net_status(void);
 int16_t piv_get_net_status(void);
 int32_t rw_get_position(void);
 int32_t el_get_position(void);
+int32_t el_get_motor_position(void);
 int32_t piv_get_position(void);
 int32_t rw_get_velocity(void);
 int32_t el_get_velocity(void);
 int32_t piv_get_velocity(void);
-int32_t rw_get_enc_velocity(void);
-int32_t el_get_enc_velocity(void);
-int32_t piv_get_enc_velocity(void);
+uint32_t rw_get_load_state(void);
+uint32_t el_get_load_state(void);
+uint32_t piv_get_load_state(void);
 int16_t rw_get_current(void);
 int16_t el_get_current(void);
 int16_t piv_get_current(void);
