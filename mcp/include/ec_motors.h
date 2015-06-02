@@ -109,6 +109,7 @@ typedef enum {
 
 #define ECAT_ENCODER_WRAP 0x2220, 0 /* Encoder wrap position INT32 */
 #define ECAT_LOAD_WRAP 0x2221, 0 /* Encoder Load wrap position INT32 */
+#define ECAT_LOAD_DIR 0x2383, 31 /* Load Encoder direction (0 or 1) UINT16 */
 
 #define ECAT_CURRENT_LOOP_CP 0x2380, 1 /* Proportional Gain UINT16 */
 #define ECAT_CURRENT_LOOP_CI 0x2380, 2 /* Integral Gain UINT16 */

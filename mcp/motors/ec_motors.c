@@ -476,6 +476,8 @@ static void el_init_encoder(void)
     if (el_index) {
         ec_SDOwrite32(el_index, ECAT_ENCODER_WRAP, EL_MOTOR_ENCODER_COUNTS);
         ec_SDOwrite32(el_index, ECAT_COUNTS_PER_REV, EL_MOTOR_COUNTS_PER_REV);
+        ec_SDOwrite32(el_index, ECAT_LOAD_WRAP, EL_LOAD_ENCODER_COUNTS);
+        ec_SDOwrite16(el_index, ECAT_LOAD_DIR, 1); //The load encoder runs in the opposite direction of the motor
     }
 }
 
