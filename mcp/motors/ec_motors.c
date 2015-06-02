@@ -393,6 +393,22 @@ void piv_quick_stop(void)
 }
 
 /**
+ * Sets 'Reset Fault' flag for each motor
+ */
+void rw_reset_fault(void)
+{
+    *control_word[rw_index] |= ECAT_CTL_RESET_FAULT;
+}
+void el_reset_fault(void)
+{
+    *control_word[el_index] |= ECAT_CTL_RESET_FAULT;
+}
+void piv_reset_fault(void)
+{
+    *control_word[piv_index] |= ECAT_CTL_RESET_FAULT;
+}
+
+/**
  * Sets the current limits for each motor.
  * TODO: Update the current limits for each motor controller/motor pair
  */
@@ -901,7 +917,6 @@ static void* motor_control(void* arg)
             bprintf(err, "error while sleeping, code %d (%s)\n", ret, strerror(-ret));
             break;
         }
-
         ec_send_processdata();
         wkc = ec_receive_processdata(EC_TIMEOUTRET);
         if (wkc < expectedWKC) bprintf(none, "Possible missing data in communicating with Motor Controllers");

@@ -270,6 +270,10 @@ void piv_disable(void);
 void rw_quick_stop(void);
 void el_quick_stop(void);
 void piv_quick_stop(void);
+void rw_reset_fault(void);
+void el_reset_fault(void);
+void piv_reset_fault(void);
 
 void initialize_motors(void);
+
 #endif /* INCLUDE_EC_MOTORS_H_ */

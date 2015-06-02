@@ -36,6 +36,7 @@
 #include <conversions.h>
 #include <pointing.h>
 #include <blast_sip_interface.h>
+#include <ec_motors.h>
 
 #include "command_list.h"
 #include "command_struct.h"
@@ -220,13 +221,13 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.force_el = 1;
       break;
     case reset_rw:
-      CommandData.reset_rw=1;
+      rw_reset_fault();
       break;
     case reset_piv:
-      CommandData.reset_piv=1;
+      piv_reset_fault();
       break;
     case reset_elev:
-      CommandData.reset_elev=1;
+      el_reset_fault();
       break;
     case restore_piv:
       CommandData.restore_piv=1;
