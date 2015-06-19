@@ -1,0 +1,12 @@
+if [ -f a.out  ]
+then
+rm a.out
+fi
+
+gcc -std=gnu99 generator.c xsc_protocol.c
+
+if [ -f a.out  ]
+then
+./a.out
+fi
+

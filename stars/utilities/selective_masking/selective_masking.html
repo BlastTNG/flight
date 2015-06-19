@@ -1,0 +1,261 @@
+<html>
+<head>
+<title>STARS Selective Masking Utility</title>
+<style type="text/css">
+
+body
+{
+    margin: auto;
+    width: 1024px;
+    background-color: white;
+}
+div.main
+{
+    margin: auto;
+    width: 800px;
+    border: 1px solid black;
+    border-top: 0px;
+    background-color: #F8F8F8;
+    padding-top: 10px;
+}
+h2
+{
+    text-align: center;
+}
+
+span.clickable
+{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1
+}
+
+</style>
+<script type="text/javascript">
+
+image_width = 1536;
+image_height = 1024;
+cell_size = 32;
+block_size = 128;
+num_blocks_x = image_width / block_size;
+num_blocks_y = image_height / block_size;
+bits_per_word = 32;
+num_fields = Math.ceil(num_blocks_x*num_blocks_y/bits_per_word)
+
+function set_element(element, text)
+{
+    if (document.all) {
+        element.innerText = text;
+    } else {
+        element.textContent = text;
+    }
+}
+
+function add_to_element(element, text)
+{
+    if (document.all) {
+        element.innerText += text;
+    } else {
+        element.textContent += text;
+    }
+}
+
+function set_element_by_name(id, text)
+{
+    set_element(document.getElementById(id), text);
+}
+
+function add_to_element_by_name(id, text)
+{
+    add_to_element(document.getElementById(id), text);
+}
+
+function add_br(id)
+{
+    element = document.getElementById(id);
+    element.appendChild(document.createElement("br"));
+}
+
+function create_break_element()
+{
+    element = document.createElement("div");
+    element.style.height = "0";
+    element.style.clear = "both";
+    return element;
+}
+
+function update_block(i, j)
+{
+    index = j*num_blocks_x+i;
+    values[index] = (1 - values[index]);
+    update();
+}
+
+function draw_boxes()
+{
+    boxes = document.getElementById("boxes");
+    set_element(boxes, "");
+    boxes.style["padding-left"] = "10px";
+    block_physical_size = block_size/4;
+    for (j=num_blocks_y-1; j>=0; j--) {
+        for (i=0; i<num_blocks_x; i++) {
+            newbox = document.createElement("div");
+            index = j*num_blocks_x+i;
+            if (values[index] == 0) {
+                newbox.style["background-color"] = "#AAFFAA";
+            } else {
+                newbox.style["background-color"] = "#FF8888";
+            }
+            newbox.style["width"] = block_physical_size-2;
+            newbox.style["height"] = block_physical_size-2;
+            newbox.style["border"] = "1px solid gray";
+            newbox.style["position"] = "relative";
+            newbox.style["float"] = "left";
+            newlink = document.createElement("a");
+            newlink.setAttribute("href", "javascript:update_block("+i+","+j+");");
+            newspan= document.createElement("span");
+            newspan.setAttribute("class", "clickable");
+            newlink.appendChild(newspan);
+            newbox.appendChild(newlink);
+            boxes.appendChild(newbox);
+        }
+        boxes.appendChild(create_break_element());
+    }
+    boxes.appendChild(create_break_element());
+}
+
+function update_results()
+{
+    fields = [];
+    for (field_num=0; field_num<num_fields; field_num++) {
+        fields.push(0);
+    }
+    for (n=0; n<num_blocks_x*num_blocks_y; n++) {
+        field_num = Math.floor(n/bits_per_word);
+        field_bit = n - field_num*bits_per_word;
+        if (values[n] == 1) {
+            fields[field_num] += Math.pow(2, field_bit);
+        }
+    }
+    for (field_num=0; field_num<num_fields; field_num++) {
+        document.getElementById("field"+field_num).value = fields[field_num];
+    }
+
+    ebexcmd_s = "./webexcmd xsc_selective_mask 2 1";
+    for (field_num=0; field_num<num_fields; field_num++) {
+        val = fields[field_num];
+        if (val >= Math.pow(2, 31)) {
+            val = val - Math.pow(2, 32);
+        }
+        ebexcmd_s += " " + val;
+    }
+    set_element_by_name("result_ebexcmd", ebexcmd_s);
+
+    set_element_by_name("result_settings", "");
+    add_to_element_by_name("result_settings", "imaging.selective_mask.enabled = true");
+    //add_br("result_settings");
+    add_to_element_by_name("result_settings", "\n");
+    for (field_num=0; field_num<num_fields; field_num++) {
+        add_to_element_by_name("result_settings", "imaging.selective_mask.field" + field_num + " = " + fields[field_num]);
+        add_to_element_by_name("result_settings", "\n");
+    }
+
+}
+
+function update_from_fields()
+{
+    s = "";
+    for (j=0; j<num_blocks_y; j++) {
+        for (i=0; i<num_blocks_x; i++) {
+            n = j*num_blocks_x+i;
+            field_num = Math.floor(n/bits_per_word);
+            field_bit = n - field_num*bits_per_word;
+            field_value = document.getElementById("field"+field_num).value;
+            value = (field_value >> field_bit) & 1;
+            values[n] = value;
+        }
+    }
+    update();
+}
+
+function update()
+{
+    update_results();
+    draw_boxes();
+}
+
+function print_values()
+{
+    s = "";
+    for (i=0; i<values.length; i++) {
+        s += values[i] + " ";
+    }
+    set_element_by_name("scratch", s);
+}
+
+function init_fields()
+{
+    fields = document.getElementById("fields");
+    for (i=0; i<num_fields; i++) {
+        newdiv = document.createElement("div");
+        newdiv.style["float"] = "left";
+        newtext = document.createElement("div");
+        newtext.style["text-align"] = "right";
+        set_element(newtext, "field"+i);
+        newdiv.appendChild(newtext)
+        newfield = document.createElement("input");
+        newfield.id = "field"+i;
+        newfield.style["text-align"] = "right";
+        newfield.type = "text";
+        newfield.size = "10";
+        newfield.value = "0";
+        newfield.setAttribute("onChange", "javascript: update_from_fields();");
+        newdiv.appendChild(newfield)
+        fields.appendChild(newdiv);
+    }
+    fields.appendChild(create_break_element());
+}
+
+function init()
+{
+    values = []
+    for (j=0; j<num_blocks_y; j++) {
+        for (i=0; i<num_blocks_x; i++) {
+            values.push(0); // 1 means masked, 0 means not masked
+        }
+    }
+    draw_boxes();
+    init_fields();
+}
+
+</script>
+</head>
+<body>
+<div class="main">
+
+<h2>STARS Selective Masking Utility</h1>
+
+<div id="boxes"></div>
+
+<div id="result" style="margin: 10px;">
+Result:
+<form id="fields"></form>
+<div id="result_ebexcmd" style="margin-left: 20px;"></div>
+<pre>
+<div id="result_settings" style="margin-left: 20px;"></div>
+</pre>
+</div>
+
+<div id="scratch">
+</div>
+
+</div>
+</body>
+<script type="text/javascript">
+init();
+</script>
+</html>
+

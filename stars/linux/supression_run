@@ -1,0 +1,1 @@
+bash -c "/bin/true; bin/Debug/stars" >logfile 2>&1

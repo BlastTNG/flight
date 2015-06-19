@@ -1,0 +1,143 @@
+# flight.txt contains all the settings, set to their flight values
+# custom.txt contains temporary/local settings that override those in flight.txt
+#     for flight, custom.txt should only contain:
+#         main.which_sensor
+#         solver.filters.horizontal.roll_limit.enabled
+#         solver.filters.horizontal.roll_limit.min_degrees
+#         solver.filters.horizontal.roll_limit.max_degrees
+#         solver.pattern_matcher.iplatescale_min
+#         solver.pattern_matcher.iplatescale_max
+#         imaging.autofocus.focus_search_min
+#         imaging.autofocus.focus_search_max
+
+
+
+[main]
+
+which_sensor = (sensor name)
+parse_custom_settings = true
+update_frequency = 60.0
+display_frequency = 20.0
+display_enabled = true
+display_fullscreen = true
+display_image_brightness = 1.0
+output_dir = E:\data
+network_reset_on_lull_enabled = true
+network_device_name = *VEN_8086*DEV_103*
+
+
+
+[imaging]
+
+camera.device = camera_windows
+camera.enabled = true
+
+camera_real.internal_triggering = false
+camera_real.internal_exposure_time = 0.500
+camera_real.internal_period = 10.0
+
+camera_filesystem.startup_delay = 1.5
+camera_filesystem.loading_period = 20
+camera_filesystem.dirname = ../../practice_images
+camera_filesystem.load_single_image = false
+camera_filesystem.single_image_filename = test.fits
+camera_filesystem.stack_parts = true
+camera_filesystem.flip_vertically = false
+camera_filesystem.repeat = false
+camera_filesystem.resave_images = false
+camera_filesystem.quit_after_one = false
+camera_filesystem.quit_after_one_delay = 1.0
+
+image_client.enabled = true
+
+lens.enabled = true
+lens.init_on_startup = false
+
+autofocus.focus_search_min = 2300
+autofocus.focus_search_max = 3300
+autofocus.focus_search_step = 10
+
+brightness_simulator.allow_enable = false
+brightness_simulator.enabled = false
+brightness_simulator.level_kepsa = 0.0
+brightness_simulator.gain_db = 0.0
+brightness_simulator.actual_exposure = 0.120
+brightness_simulator.simulated_exposure = 0.120
+
+selective_mask.enabled = true
+selective_mask.field0 = 16781313
+selective_mask.field1 = 268501008
+selective_mask.field2 = 1048832
+
+
+
+[solver]
+
+general.enabled = true
+general.timeout = 20
+general.debug_timing = false
+general.saturation_limit = 1.0
+
+blob_finder.snr_threshold = 0.3
+blob_finder.max_num_blobs = 10
+blob_finder.robust_mode_enabled = false
+blob_finder.fitting_method = none
+blob_finder.cell_size = 128
+blob_finder.max_num_blobs_per_cell = 2
+blob_finder.motion_psf.enabled = false
+blob_finder.motion_psf.summation_mode = false
+blob_finder.bypass_with_blobs.enabled = false
+blob_finder.badpixfilename = settings/badpixels_ISC.cam
+
+pattern_matcher.enabled = true
+pattern_matcher.display_names = true
+pattern_matcher.catalog = catalogs/combo_top3_top10
+pattern_matcher.match_tolerance_px = 6.0
+pattern_matcher.iplatescale_min = 9.42
+pattern_matcher.iplatescale_max = 9.58
+pattern_matcher.platescale_always_fixed = false
+pattern_matcher.iplatescale_fixed = 9.500
+
+pattern_matcher.precession_from = none
+pattern_matcher.precession_manual_epoch = 2000.0
+
+refraction.enabled = false
+refraction.pressure_mbar = 1011.0
+refraction.temperature = 297.6
+
+
+
+[solver.filters]
+
+horizontal.location_limit.enabled = false
+horizontal.location_limit.radius_degrees = 20.0
+horizontal.location_limit.az_degrees = 180.0
+horizontal.location_limit.el_degrees = 40.0
+
+horizontal.roll_limit.enabled = false
+horizontal.roll_limit.min_degrees = -180
+horizontal.roll_limit.max_degrees = 180
+
+horizontal.elevation_limit.enabled = true
+horizontal.elevation_limit.min_degrees = 13
+horizontal.elevation_limit.max_degrees = 70
+
+equatorial.location_limit.enabled = false
+equatorial.location_limit.radius_degrees = 20
+equatorial.location_limit.ra_degrees = 0.0
+equatorial.location_limit.dec_degrees = -50.0
+
+equatorial.roll_limit.enabled = false
+equatorial.roll_limit.min_degrees = -180
+equatorial.roll_limit.max_degrees = 180
+
+horizontal_source.fcp.enabled = true
+horizontal_source.fits.enabled = false
+horizontal_source.settings.enabled = false
+horizontal_source.settings.lat_degrees = 0
+horizontal_source.settings.lst_hours = 0
+
+matching.pointing_error_threshold_arcsec = 10.0
+matching.fit_error_threshold_px = 2000.0
+matching.num_matched = 8
+

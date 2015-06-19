@@ -1,0 +1,12 @@
+if [ -f ../bin/Debug/stars  ]
+then
+rm ../bin/Debug/stars
+fi
+
+codeblocks --build --target="Debug" ../stars.cbp 2>/dev/null
+
+if [ -f ../bin/Debug/stars  ]
+then
+../bin/Debug/stars
+fi
+

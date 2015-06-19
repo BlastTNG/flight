@@ -1,0 +1,397 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Optimized|Win32">
+      <Configuration>Optimized</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{76475286-ACA4-4F57-9A82-0310B8708B9F}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>stars</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalIncludeDirectories>E:\Program Files\Diamond Systems\DSCUD 6.02\include;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\include;E:\Program Files\QImaging\SDK\Headers;E:\Program Files\Redlake\MegaPlus Lib;E:\Program Files\Measurement Computing\DAQ\C;E:\Documents and Settings\Submm\Desktop\stars\stars;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a\include;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0;E:\Documents and Settings\Submm\Desktop\stars\stars\windows\stars;E:\Include;C:\Program Files\levmar\levmar-2.5;C:\cfitsio;C:\Program Files\gsl-1.13\include;C:\Program Files\GnuWin32\include;C:\SDL-1.2.14\include;C:\SDL-1.2.12\include;C:\Program Files\boost\boost_1_44;C:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;C:\Program Files\Redlake\MegaPlus Lib;C:\Program Files\Measurement Computing\DAQ\CWin;C:\Program Files %28x86%29\levmar\levmar-2.5;C:\Program Files %28x86%29\cfitsio;C:\Program Files %28x86%29\GnuWin32\include;C:\Program Files %28x86%29\SDL-1.2.15\include;C:\Program Files %28x86%29\boost\boost_1_44;C:\Program Files %28x86%29\National Instruments\NI-IMAQ\Include;C:\Program Files %28x86%29\Redlake\MegaPlus Lib;C:\Users\Public\Documents\Measurement Computing\DAQ\C;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>E:\Program Files\Diamond Systems\DSCUD 6.02\lib;E:\Program Files\QImaging\SDK\libs;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\lib\x86;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\lib\msvc;E:\Program Files\Measurement Computing\DAQ\C;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\lib;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src\libtiff;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Program Files\Redlake\MegaPlus Lib;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\lib;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0\stage\lib;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cbw32.lib;megapluslib.lib;niimaq1394.lib;SDL.lib;SDLmain.lib;opengl32.lib;glu32.lib;cfitsio.lib;libtiff.lib;dscud.lib;QCamDriver.lib;QCaptureImport.lib;levmar.lib;QCaptureCore.lib;blas.lib;lapack.lib;libf2c.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalIncludeDirectories>E:\Program Files\Diamond Systems\DSCUD 6.02\include;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\include;E:\Program Files\QImaging\SDK\Headers;E:\Program Files\Redlake\MegaPlus Lib;E:\Program Files\Measurement Computing\DAQ\C;E:\Documents and Settings\Submm\Desktop\stars\stars;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a\include;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0;E:\Documents and Settings\Submm\Desktop\stars\stars\windows\stars;E:\Include;C:\Program Files\levmar\levmar-2.5;C:\cfitsio;C:\Program Files\gsl-1.13\include;C:\Program Files\GnuWin32\include;C:\SDL-1.2.14\include;C:\SDL-1.2.12\include;C:\Program Files\boost\boost_1_44;C:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;C:\Program Files\Redlake\MegaPlus Lib;C:\Program Files\Measurement Computing\DAQ\CWin;C:\Program Files %28x86%29\levmar\levmar-2.5;C:\Program Files %28x86%29\cfitsio;C:\Program Files %28x86%29\GnuWin32\include;C:\Program Files %28x86%29\SDL-1.2.15\include;C:\Program Files %28x86%29\boost\boost_1_44;C:\Program Files %28x86%29\National Instruments\NI-IMAQ\Include;C:\Program Files %28x86%29\Redlake\MegaPlus Lib;C:\Users\Public\Documents\Measurement Computing\DAQ\C;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>E:\Program Files\Diamond Systems\DSCUD 6.02\lib;E:\Program Files\QImaging\SDK\libs;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\lib\x86;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\lib\msvc;E:\Program Files\Measurement Computing\DAQ\C;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\lib;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src\libtiff;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Program Files\Redlake\MegaPlus Lib;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\lib;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0\stage\lib;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cbw32.lib;megapluslib.lib;niimaq1394.lib;SDL.lib;SDLmain.lib;opengl32.lib;glu32.lib;cfitsio.lib;libtiff.lib;dscud.lib;QCamDriver.lib;QCaptureImport.lib;levmar.lib;QCaptureCore.lib;blas.lib;lapack.lib;libf2c.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>E:\Include;E:\Documents and Settings\Submm\Desktop\stars\stars\code;E:\Program Files\Measurement Computing\DAQ;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a\include;E:\Documents and Settings\Submm\Desktop\stars\stars;E:\Program Files\QImaging\SDK\Headers;E:\Program Files\Diamond Systems\DSCUD 6.02\include;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK\DistFile;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src\libtiff;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\include;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <OmitFramePointers>true</OmitFramePointers>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>E:\Program Files\Redlake\MegaPlus Lib;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0\libs;E:\Program Files\Measurement Computing\DAQ\C;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK\DistFile;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\lib\msvc;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src\libtiff;E:\Program Files\Diamond Systems\DSCUD 6.02\lib;E:\Program Files\QImaging\SDK\libs;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0\stage\lib;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msvcrt.lib;msvcmrt.lib;opengl32.lib;QCamDriver.lib;glu32.lib;levmar.lib;SDL.lib;libtiff.lib;cfitsio.lib;dscud.lib;blas.lib;lapack.lib;libf2c.lib;cbw32.lib;megapluslib.lib;niimaq1394.lib;SDLmain.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\code\cataloging\abstract_catalog_manager.cpp" />
+    <ClCompile Include="..\..\code\displaying\autofocus.cpp" />
+    <ClCompile Include="..\..\code\displaying\base_set.cpp" />
+    <ClCompile Include="..\..\code\displaying\blob.cpp" />
+    <ClCompile Include="..\..\code\displaying\block.cpp" />
+    <ClCompile Include="..\..\code\displaying\camera.cpp" />
+    <ClCompile Include="..\..\code\displaying\color.cpp" />
+    <ClCompile Include="..\..\code\displaying\dynamic_value.cpp" />
+    <ClCompile Include="..\..\code\displaying\glfont2\glfont2.cpp" />
+    <ClCompile Include="..\..\code\displaying\housekeeping.cpp" />
+    <ClCompile Include="..\..\code\displaying\image.cpp" />
+    <ClCompile Include="..\..\code\displaying\lens.cpp" />
+    <ClCompile Include="..\..\code\displaying\manager.cpp" />
+    <ClCompile Include="..\..\code\displaying\name.cpp" />
+    <ClCompile Include="..\..\code\displaying\quit_box.cpp" />
+    <ClCompile Include="..\..\code\displaying\solving_filters.cpp" />
+    <ClCompile Include="..\..\code\displaying\texture.cpp" />
+    <ClCompile Include="..\..\code\displaying\textures.cpp" />
+    <ClCompile Include="..\..\code\displaying\visual.cpp" />
+    <ClCompile Include="..\..\code\housekeeping\disk.cpp" />
+    <ClCompile Include="..\..\code\housekeeping\housekeeper.cpp" />
+    <ClCompile Include="..\..\code\housekeeping\measurement.cpp" />
+    <ClCompile Include="..\..\code\imaging\abstract_camera.cpp" />
+    <ClCompile Include="..\..\code\imaging\autofocuser.cpp" />
+    <ClCompile Include="..\..\code\imaging\camera_empty.cpp" />
+    <ClCompile Include="..\..\code\imaging\camera_filesystem.cpp" />
+    <ClCompile Include="..\..\code\imaging\camera_windows.cpp" />
+    <ClCompile Include="..\..\code\imaging\fake_sky.cpp" />
+    <ClCompile Include="..\..\code\imaging\lens.cpp" />
+    <ClCompile Include="..\..\code\logging\logger.cpp" />
+    <ClCompile Include="..\..\code\main.cpp" />
+    <ClCompile Include="..\..\code\networking\connection.cpp" />
+    <ClCompile Include="..\..\code\networking\image_client.cpp" />
+    <ClCompile Include="..\..\code\networking\loading.cpp" />
+    <ClCompile Include="..\..\code\networking\network_manager.cpp" />
+    <ClCompile Include="..\..\code\networking\server.cpp" />
+    <ClCompile Include="..\..\code\networking\unloading.cpp" />
+    <ClCompile Include="..\..\code\networking\xsc_protocol\xsc_channels.c" />
+    <ClCompile Include="..\..\code\networking\xsc_protocol\xsc_protocol.c" />
+    <ClCompile Include="..\..\code\parameters\general.cpp" />
+    <ClCompile Include="..\..\code\parameters\group.cpp" />
+    <ClCompile Include="..\..\code\parameters\housekeeping.cpp" />
+    <ClCompile Include="..\..\code\parameters\manager.cpp" />
+    <ClCompile Include="..\..\code\shared\autofocus\datapoints.cpp" />
+    <ClCompile Include="..\..\code\shared\autofocus\latest_image.cpp" />
+    <ClCompile Include="..\..\code\shared\autofocus\requests.cpp" />
+    <ClCompile Include="..\..\code\shared\autofocus\results.cpp" />
+    <ClCompile Include="..\..\code\shared\camera\requests.cpp" />
+    <ClCompile Include="..\..\code\shared\camera\results.cpp" />
+    <ClCompile Include="..\..\code\shared\general\main_settings.cpp" />
+    <ClCompile Include="..\..\code\shared\general\network_reset.cpp" />
+    <ClCompile Include="..\..\code\shared\general\shutdown.cpp" />
+    <ClCompile Include="..\..\code\shared\image\blobs.cpp" />
+    <ClCompile Include="..\..\code\shared\image\leveled.cpp" />
+    <ClCompile Include="..\..\code\shared\image\matching.cpp" />
+    <ClCompile Include="..\..\code\shared\image\matching_progress.cpp" />
+    <ClCompile Include="..\..\code\shared\image\raw.cpp" />
+    <ClCompile Include="..\..\code\shared\image\solution_summary.cpp" />
+    <ClCompile Include="..\..\code\shared\image\stats.cpp" />
+    <ClCompile Include="..\..\code\shared\image\status.cpp" />
+    <ClCompile Include="..\..\code\shared\lens\requests.cpp" />
+    <ClCompile Include="..\..\code\shared\lens\results.cpp" />
+    <ClCompile Include="..\..\code\shared\network\client.cpp" />
+    <ClCompile Include="..\..\code\shared\network\image_client_settings.cpp" />
+    <ClCompile Include="..\..\code\shared\network\packets.cpp" />
+    <ClCompile Include="..\..\code\shared\result.cpp" />
+    <ClCompile Include="..\..\code\shared\simulations\brightness.cpp" />
+    <ClCompile Include="..\..\code\shared\solving\filters.cpp" />
+    <ClCompile Include="..\..\code\shared\solving\mask.cpp" />
+    <ClCompile Include="..\..\code\shared\solving\motion_psf.cpp" />
+    <ClCompile Include="..\..\code\shared\solving\settings.cpp" />
+    <ClCompile Include="..\..\code\shared\update.cpp" />
+    <ClCompile Include="..\..\code\solving\attitude.cpp" />
+    <ClCompile Include="..\..\code\solving\autofocus_helper.cpp" />
+    <ClCompile Include="..\..\code\solving\blob.cpp" />
+    <ClCompile Include="..\..\code\solving\finding\badpix.cpp" />
+    <ClCompile Include="..\..\code\solving\finding\estimator.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\finder.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\fitter.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\leveler.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\pedestal_fitter.cpp" />
+    <ClCompile Include="..\..\code\solving\finding\smoother.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\matching\catalog_manager.cpp" />
+    <ClCompile Include="..\..\code\solving\matching\fluxer.cpp" />
+    <ClCompile Include="..\..\code\solving\matching\matcher.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\matching\solution_fitter.cpp" />
+    <ClCompile Include="..\..\code\solving\refitting\refitter.cpp" />
+    <ClCompile Include="..\..\code\solving\refitting\shape_fitter.cpp" />
+    <ClCompile Include="..\..\code\solving\solution.cpp" />
+    <ClCompile Include="..\..\code\solving\solver.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\star.cpp" />
+    <ClCompile Include="..\..\code\solving\statistician.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\update.cpp" />
+    <ClCompile Include="..\..\code\star_camera.cpp" />
+    <ClCompile Include="..\..\code\tools\angles.cpp" />
+    <ClCompile Include="..\..\code\tools\ccd_projection.cpp" />
+    <ClCompile Include="..\..\code\tools\correlate.cpp" />
+    <ClCompile Include="..\..\code\tools\math.cpp" />
+    <ClCompile Include="..\..\code\tools\psf.cpp" />
+    <ClCompile Include="..\..\code\tools\refraction.cpp" />
+    <ClCompile Include="..\..\code\tools\slalib.cpp" />
+    <ClCompile Include="..\..\code\tools\stocc\mersenne.cpp" />
+    <ClCompile Include="..\..\code\tools\stocc\mother.cpp" />
+    <ClCompile Include="..\..\code\tools\stocc\stoc1.cpp" />
+    <ClCompile Include="..\..\code\tools\stocc\stoc2.cpp" />
+    <ClCompile Include="..\..\code\tools\stocc\userintf.cpp" />
+    <ClCompile Include="..\..\code\tools\timing.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\code\cataloging\abstract_catalog_manager.h" />
+    <ClInclude Include="..\..\code\displaying\autofocus.h" />
+    <ClInclude Include="..\..\code\displaying\base_set.h" />
+    <ClInclude Include="..\..\code\displaying\blob.h" />
+    <ClInclude Include="..\..\code\displaying\block.h" />
+    <ClInclude Include="..\..\code\displaying\camera.h" />
+    <ClInclude Include="..\..\code\displaying\color.h" />
+    <ClInclude Include="..\..\code\displaying\dynamic_value.h" />
+    <ClInclude Include="..\..\code\displaying\glfont2\glfont2.h" />
+    <ClInclude Include="..\..\code\displaying\glhelper.h" />
+    <ClInclude Include="..\..\code\displaying\housekeeping.h" />
+    <ClInclude Include="..\..\code\displaying\image.h" />
+    <ClInclude Include="..\..\code\displaying\lens.h" />
+    <ClInclude Include="..\..\code\displaying\manager.h" />
+    <ClInclude Include="..\..\code\displaying\name.h" />
+    <ClInclude Include="..\..\code\displaying\quit_box.h" />
+    <ClInclude Include="..\..\code\displaying\solving_filters.h" />
+    <ClInclude Include="..\..\code\displaying\texture.h" />
+    <ClInclude Include="..\..\code\displaying\textures.h" />
+    <ClInclude Include="..\..\code\displaying\utilities.h" />
+    <ClInclude Include="..\..\code\displaying\visual.h" />
+    <ClInclude Include="..\..\code\housekeeping\housekeeper.h" />
+    <ClInclude Include="..\..\code\housekeeping\logger.h" />
+    <ClInclude Include="..\..\code\housekeeping\measurement.h" />
+    <ClInclude Include="..\..\code\imaging\abstract_camera.h" />
+    <ClInclude Include="..\..\code\imaging\autofocuser.h" />
+    <ClInclude Include="..\..\code\imaging\camera_empty.h" />
+    <ClInclude Include="..\..\code\imaging\camera_filesystem.h" />
+    <ClInclude Include="..\..\code\imaging\camera_windows.h" />
+    <ClInclude Include="..\..\code\imaging\commands.h" />
+    <ClInclude Include="..\..\code\imaging\fake_sky.h" />
+    <ClInclude Include="..\..\code\imaging\lens.h" />
+    <ClInclude Include="..\..\code\imaging\logger_camera.h" />
+    <ClInclude Include="..\..\code\imaging\logger_lens.h" />
+    <ClInclude Include="..\..\code\logger_main.h" />
+    <ClInclude Include="..\..\code\logging\logger.h" />
+    <ClInclude Include="..\..\code\networking\connection.h" />
+    <ClInclude Include="..\..\code\networking\ebex_images.h" />
+    <ClInclude Include="..\..\code\networking\image_client.h" />
+    <ClInclude Include="..\..\code\networking\network_manager.h" />
+    <ClInclude Include="..\..\code\networking\server.h" />
+    <ClInclude Include="..\..\code\networking\xsc_protocol\xsc_channels.h" />
+    <ClInclude Include="..\..\code\networking\xsc_protocol\xsc_protocol.h" />
+    <ClInclude Include="..\..\code\parameters\general.h" />
+    <ClInclude Include="..\..\code\parameters\group.h" />
+    <ClInclude Include="..\..\code\parameters\housekeeping.h" />
+    <ClInclude Include="..\..\code\parameters\manager.h" />
+    <ClInclude Include="..\..\code\preprocessor.h" />
+    <ClInclude Include="..\..\code\shared\autofocus\datapoints.h" />
+    <ClInclude Include="..\..\code\shared\autofocus\latest_image.h" />
+    <ClInclude Include="..\..\code\shared\autofocus\requests.h" />
+    <ClInclude Include="..\..\code\shared\autofocus\results.h" />
+    <ClInclude Include="..\..\code\shared\camera\requests.h" />
+    <ClInclude Include="..\..\code\shared\camera\results.h" />
+    <ClInclude Include="..\..\code\shared\circular_buffer.h" />
+    <ClInclude Include="..\..\code\shared\general\main_settings.h" />
+    <ClInclude Include="..\..\code\shared\general\network_reset.h" />
+    <ClInclude Include="..\..\code\shared\general\quit.h" />
+    <ClInclude Include="..\..\code\shared\general\shutdown.h" />
+    <ClInclude Include="..\..\code\shared\housekeeping\housekeeper.h" />
+    <ClInclude Include="..\..\code\shared\housekeeping\measurement.h" />
+    <ClInclude Include="..\..\code\shared\image\blobs.h" />
+    <ClInclude Include="..\..\code\shared\image\leveled.h" />
+    <ClInclude Include="..\..\code\shared\image\matching.h" />
+    <ClInclude Include="..\..\code\shared\image\matching_progress.h" />
+    <ClInclude Include="..\..\code\shared\image\raw.h" />
+    <ClInclude Include="..\..\code\shared\image\solution_summary.h" />
+    <ClInclude Include="..\..\code\shared\image\stats.h" />
+    <ClInclude Include="..\..\code\shared\image\status.h" />
+    <ClInclude Include="..\..\code\shared\lens\requests.h" />
+    <ClInclude Include="..\..\code\shared\lens\results.h" />
+    <ClInclude Include="..\..\code\shared\network\client.h" />
+    <ClInclude Include="..\..\code\shared\network\image_client_settings.h" />
+    <ClInclude Include="..\..\code\shared\network\packets.h" />
+    <ClInclude Include="..\..\code\shared\request.h" />
+    <ClInclude Include="..\..\code\shared\result.h" />
+    <ClInclude Include="..\..\code\shared\simulations\brightness.h" />
+    <ClInclude Include="..\..\code\shared\solving\filters.h" />
+    <ClInclude Include="..\..\code\shared\solving\mask.h" />
+    <ClInclude Include="..\..\code\shared\solving\motion_psf.h" />
+    <ClInclude Include="..\..\code\shared\solving\settings.h" />
+    <ClInclude Include="..\..\code\shared\thread_names.h" />
+    <ClInclude Include="..\..\code\shared\update.h" />
+    <ClInclude Include="..\..\code\solving\attitude.h" />
+    <ClInclude Include="..\..\code\solving\autofocus_helper.h" />
+    <ClInclude Include="..\..\code\solving\base_set.h" />
+    <ClInclude Include="..\..\code\solving\blob.h" />
+    <ClInclude Include="..\..\code\solving\finding\badpix.h" />
+    <ClInclude Include="..\..\code\solving\finding\estimator.h" />
+    <ClInclude Include="..\..\code\solving\finding\finder.h" />
+    <ClInclude Include="..\..\code\solving\finding\fitter.h" />
+    <ClInclude Include="..\..\code\solving\finding\leveler.h" />
+    <ClInclude Include="..\..\code\solving\finding\psf_maker.h" />
+    <ClInclude Include="..\..\code\solving\finding\smoother.h" />
+    <ClInclude Include="..\..\code\solving\logger.h" />
+    <ClInclude Include="..\..\code\solving\matching\catalog_manager.h" />
+    <ClInclude Include="..\..\code\solving\matching\fluxer.h" />
+    <ClInclude Include="..\..\code\solving\matching\matcher.h" />
+    <ClInclude Include="..\..\code\solving\matching\solution_fitter.h" />
+    <ClInclude Include="..\..\code\solving\refitting\refitter.h" />
+    <ClInclude Include="..\..\code\solving\refitting\shape_fitter.h" />
+    <ClInclude Include="..\..\code\solving\solution.h" />
+    <ClInclude Include="..\..\code\solving\solver.h" />
+    <ClInclude Include="..\..\code\solving\star.h" />
+    <ClInclude Include="..\..\code\solving\statistician.h" />
+    <ClInclude Include="..\..\code\solving\update.h" />
+    <ClInclude Include="..\..\code\star_camera.h" />
+    <ClInclude Include="..\..\code\tools\angles.h" />
+    <ClInclude Include="..\..\code\tools\ccd_projection.h" />
+    <ClInclude Include="..\..\code\tools\correlate.h" />
+    <ClInclude Include="..\..\code\tools\math.h" />
+    <ClInclude Include="..\..\code\tools\psf.h" />
+    <ClInclude Include="..\..\code\tools\refraction.h" />
+    <ClInclude Include="..\..\code\tools\slalib.h" />
+    <ClInclude Include="..\..\code\tools\stocc\randomc.h" />
+    <ClInclude Include="..\..\code\tools\stocc\stocc.h" />
+    <ClInclude Include="..\..\code\tools\timing.h" />
+    <ClInclude Include="..\..\code\tools\windows_header.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

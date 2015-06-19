@@ -1,0 +1,58 @@
+ === Dependency Installation Instructions ===
+
+  * install boost
+    * windows:
+      * use boost-pro installer, boost 1.44 works, probably other versions work as well
+        * install the multithreaded libraries for visual studio 2010
+  * install IDE
+    * windows:
+      * install Visual Studio 2010, probably other versions work as well
+  * install levmar and lapack
+    * windows:
+      * download godzilla:/data/ebex/stars_utilities/for_install/Program_Files.tar.gz
+      * copy levmar and lapack to "C:\Program Files"
+      * open a command prompt and create a VC environment
+        * run "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat"
+      * edit and run Makefile.vc in "C:\Program Files (x86)\levmar\levmar-2.5"
+        * LAPACKLIBS_PATH="C:\Program Files (x86)\lapack\lib"
+        * LAPACKLIBS=lapack.lib blas.lib libf2c.lib
+        * nmake /f Makefile.vc
+    * linux:
+      * install with package manager liblapack-dev
+      * install with package manager libf2c2-dev
+      * download and make levmar-2.5
+      * copy liblevmar.a to /usr/lib
+  * install SDL
+    * windows:
+      * download version 1.2.15 Visual C++ development library
+      * put in "C:\Program Files (x86)"
+      * copy SDL.dll to system32 (windows xp) or system (windows 7)
+  * install libtiff
+    * windows:
+      * the setup program will install it to "C:\Program Files (x86)\GnuWin32"
+      * copy libtiff3.dll, jpeg62.dll and zlib1.dll to system32 (windows xp) or system (windows 7)
+  * install cfitsio
+    * windows
+      * download cfitsiodll_3280_vcc.zip from http://heasarc.gsfc.nasa.gov/fitsio/
+      * unzip into "C:\Program Files (x86)\cfitsio"
+      * copy cfitsio.dll to system32 (windows xp) or system (windows 7)
+  * install windows only libraries:
+      * install the mccdaq libraries if in windows
+        * download MCC DAQ CD from www.mccdaq.com/software.aspx and install
+      * install redlake megaplus
+        * download and install "MegaPlusLib SDK v.1.30.zip"
+          * from ftp://ftp.piacton.com/Public/Software/MegaPlus/
+          * or godzilla:/data/ebex/stars_utilities/for_install/megaplus_libraries_and_programs.zip
+      * install national instruments imaq ieee1394
+        * windows xp x86, or other 32-bit windows operating systems
+          * ni.com -> search "Vision Acquisition Software" -> first link -> resources tab -> ... Download
+            * version 8.2 works on Windows XP x86
+            * version DOES NOT 2011.09 work on Windows 7 x64
+              * legacy 1394 IMAQ is no longer supported, and will not work on x64
+            * use serial number M63X10560
+        * windows 7 x64, or other 64-bit windows operating systems
+          * make sure preprocessor.h specifies not to use the windows camera
+          * trick visual studio into loading a lib called niimaq1394.lib
+            * copy SDL.lib to stars/code/imaging/niimaq1394.lib
+
+

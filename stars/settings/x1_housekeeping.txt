@@ -1,0 +1,25 @@
+[channel1]
+name = plate
+type = temperature
+resistor_value = 9224
+
+[channel2]
+name = vessel
+type = temperature
+resistor_value = 9231
+
+[channel3]
+name = comp
+type = temperature
+resistor_value = 9242
+
+[channel4]
+name = lens
+type = temperature
+resistor_value = 9231
+
+[channel5]
+name = press
+type = pressure
+voltage = 5
+

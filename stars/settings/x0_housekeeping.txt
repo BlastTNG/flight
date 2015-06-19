@@ -1,0 +1,25 @@
+[channel1]
+name = dcdc
+type = temperature
+resistor_value = 11518
+
+[channel2]
+name = comp
+type = temperature
+resistor_value = 11480
+
+[channel4]
+name = lens
+type = temperature
+resistor_value = 11488
+
+[channel5]
+name = flange
+type = temperature
+resistor_value = 11498
+
+[channel6]
+name = press
+type = pressure
+voltage = 5
+
