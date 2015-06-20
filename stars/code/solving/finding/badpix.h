@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "code/solving/finding/estimator.h"
+#include "estimator.h"
 
 
 namespace Shared

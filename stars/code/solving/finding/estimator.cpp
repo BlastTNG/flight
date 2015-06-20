@@ -144,8 +144,8 @@ void Estimator::calculate_basic_flux_and_base(Shared::Image::Raw& image, Blob& b
 
     double approximate_size = max(blob.approximate_size, 4.0);
     blob_width_squared = pow(approximate_size*1.5, 2.);
-    //hw = int(round(approximate_size*3.0));
-	hw = round(approximate_size*3.0);
+    hw = int(round(approximate_size*3.0));
+	
     umin = max(blob.u-hw, 0);
     umax = min(blob.u+hw, image.width);
     vmin = max(blob.v-hw, 0);

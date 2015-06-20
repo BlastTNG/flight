@@ -535,7 +535,7 @@ void CameraWindows::process_requests()
     if (shared_requests.set_gain.counter != shared_results.set_gain.counter) {
         shared_results.set_gain.counter = shared_requests.set_gain.counter;
         if (shared_requests.set_gain.value >= gain_min && shared_requests.set_gain.value <= gain_max) {
-            float gainval = float(shared_requests.set_gain.value);
+            unsigned long gainval = unsigned long(shared_requests.set_gain.value);
             logger.log(format("setting gain to %f") % gainval);
             QCam_SetParam( &settings, qprmNormalizedGain, gainval );
 			QCam_SendSettingsToCam(camhandle, &settings);

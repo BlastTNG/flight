@@ -6,15 +6,4 @@
 
 #include "math.h"
 
-#ifdef _MSC_VER
-int round(double value)
-{
-    if (value > 0) {
-        return int(floor(value+0.5));
-    }
-    else if (value < 0) {
-        return int(ceil(value-0.5));
-    }
-    return 0;
-}
-#endif
+

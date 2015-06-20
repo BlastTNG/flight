@@ -63,7 +63,7 @@ int Badpix::load_badpix(std::string fname) {
   {
    numbadpix = 0;   
   
-	while( getline(badfile,thisline) != NULL ) {
+	while( getline(badfile,thisline) ) {
    	 count = sscanf(thisline.c_str(),"%i %i",&x, &y);
     if( count == 2 ) { // If we read in a coordinate pair
         if( x <= image_width){
@@ -131,7 +131,7 @@ void Badpix::calc_mapstat(Shared::Image::Raw& image) {
 
 int Badpix::get_mapmean(Shared::Image::Raw& image) {
   calc_mapstat(image);
-  mapmeans = round(mapmean);
+  mapmeans = int(round(mapmean));
   return mapmeans;
 }
 

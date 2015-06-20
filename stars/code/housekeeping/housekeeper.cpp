@@ -4,15 +4,8 @@
  *  Software package, originally created for EBEX by Daniel Chapman.
  */
 
-#ifdef _MSC_VER
-    #define HAVEDAQ 1
-#else
-    #define HAVEDAQ 0
-#endif
 #include "housekeeper.h"
-#if HAVEDAQ
-#include "cbw.h"
-#endif
+
 #include <fstream>
 #include <boost/format.hpp>
 #include "../parameters/manager.h"
@@ -26,6 +19,9 @@ using std::string;
 
 Housekeeper::Housekeeper(Parameters::Manager& params)
 {
+	ERRPARAMS errorParams; // structure for returning error code and error string
+	string logerror = "";
+
     disk_space = 0.0;
     disk_space_first_measurement = 0.0;
     disk_time = 0.0;
@@ -33,9 +29,45 @@ Housekeeper::Housekeeper(Parameters::Manager& params)
     for (int channel_num=0; channel_num<16; channel_num++) {
         add_channel(params.housekeeping.map, channel_num);
     }
-    output_dir = params.general.try_get("main.output_dir", string("E:\\data"));	//changed from C: by KNS
+    output_dir = params.general.try_get("main.output_dir", string("C:\\stars_data"));	
     write_temps_counter = 0;
     write_disk_counter = 0;
+
+	if (dscInit(DSC_VERSION) != DE_NONE) {
+		dscGetLastError(&errorParams);
+		logerror += (format("dscInit error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
+		logger.log(logerror);
+		return;
+	}
+
+	dsccb.base_address = 0x300;
+	dsccb.int_level = 3;
+	if (dscInitBoard(DSC_DMM, &dsccb, &dscb) != DE_NONE) {
+		dscGetLastError(&errorParams);
+		logerror += (format("dscInitBoard error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
+		logger.log(logerror);
+		return;
+	}
+
+	dscadsettings.range = RANGE_10;
+	dscadsettings.polarity = BIPOLAR;
+	dscadsettings.gain = GAIN_1;
+	dscadsettings.load_cal = (BYTE)TRUE;
+	dscadsettings.current_channel = 0;
+
+	if (dscADSetSettings(dscb, &dscadsettings) != DE_NONE)
+	{
+		dscGetLastError(&errorParams);
+		logerror += (format("dscADSetSettings error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
+		logger.log(logerror);
+		return;
+	}
+
+
+	dscadscan.low_channel = 0;
+	dscadscan.high_channel = 7;
+	dscadscan.gain = GAIN_1;
+	samples.resize(dscadscan.high_channel - dscadscan.low_channel + 1);
 }
 
 void Housekeeper::add_channel(variables_map map, int channel_num)
@@ -110,26 +142,37 @@ void Housekeeper::update()
     if (last_temps_measurement_timer.time() > 0.5) {
         last_temps_measurement_timer.start();
         #if HAVEDAQ
-            try {
+			try {
+				ERRPARAMS errorParams; // structure for returning error code and error string
                 int status0 = 0;
 				int status1 = 0;
                 int channel = 0;
                 int board_number = 0;
-                int gain = BIP10VOLTS;
                 WORD raw_value = 0;
-                float value = 0;
-                cbErrHandling(DONTPRINT, DONTSTOP);
+                double value = 0;
                 string logdata = "temps";
+				string logerror = "";
+
+				if (dscADScan(dscb, &dscadscan, &samples.front()) != DE_NONE)
+				{
+					dscGetLastError(&errorParams);
+					logerror += (format("dscADScan error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
+					logger.log(logerror);
+					throw std::runtime_error(errorParams.errstring);
+				}
+
                 for (unsigned int i=0; i<measurements.size(); i++) {
                     channel = measurements[i].channel;
-                    status0 = cbAIn(board_number, channel, gain, &raw_value);
-                    status1 = cbToEngUnits(board_number, gain, raw_value, &value);
-					if (status0 == 0 && status1 == 0) {
+					if (dscADCodeToVoltage(dscb, dscadsettings, dscadscan.sample_values[channel], &value) != DE_NONE)  {
+						dscGetLastError(&errorParams);
+						logdata += (format("dscADCodeToVoltage error on channel %d : %s (%s)") % channel % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
+						value = nan("");
+					}
+					else {
 						measurements[i].add_value(double(value));
-                        logdata += (format(" %s %.03d") % measurements[i].name % (double(value))).str();
-					} else {
-                        logdata += (format(" failed %i %i,") % status0 % status1).str();
-                    }
+						logdata += (format(" %s %.03d") % measurements[i].name % (double(value))).str();
+					}
+
                 }
                 if (write_temps_counter == 0) {
                     logger.log(logdata);

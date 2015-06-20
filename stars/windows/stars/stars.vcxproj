@@ -31,6 +31,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -53,17 +54,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\sc\Documents\CodeLibs\levmar-2.6;C:\Users\sc\Documents\CodeLibs\cfitsio_MSVC_32bit_DLL_3370;C:\Users\sc\Documents\CodeLibs\DMM-Universal;C:\Users\sc\Documents\CodeLibs\SDL-1.2.15\include;C:\local\boost_1_58_0;C:\Users\sc\Documents\CodeLibs\libtiff-3.9.5\libtiff;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\sc\Documents\CodeLibs\libtiff-3.9.5\libtiff;C:\Users\sc\Documents\CodeLibs\SDL-1.2.15\lib\x86;$(LibraryPath)</LibraryPath>
+    <OutDir>C:\stars_build\$(Configuration)\</OutDir>
+    <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Optimized|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\sc\Documents\CodeLibs\levmar-2.6;C:\Users\sc\Documents\CodeLibs\cfitsio_MSVC_32bit_DLL_3370;C:\Users\sc\Documents\CodeLibs\DMM-Universal;C:\Users\sc\Documents\CodeLibs\SDL-1.2.15\include;C:\local\boost_1_58_0;C:\Users\sc\Documents\CodeLibs\libtiff-3.9.5\libtiff;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\sc\Documents\CodeLibs\libtiff-3.9.5\libtiff;C:\Users\sc\Documents\CodeLibs\SDL-1.2.15\lib\x86;$(LibraryPath)</LibraryPath>
+    <OutDir>C:\stars_build\$(Configuration)\</OutDir>
+    <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>C:\stars_build\$(Configuration)\</OutDir>
+    <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <IncludePath>C:\Users\sc\Documents\CodeLibs\levmar-2.6;C:\Users\sc\Documents\CodeLibs\cfitsio_MSVC_32bit_DLL_3370;C:\Users\sc\Documents\CodeLibs\DMM-Universal;C:\Users\sc\Documents\CodeLibs\SDL-1.2.15\include;C:\local\boost_1_58_0;C:\Users\sc\Documents\CodeLibs\libtiff-3.9.5\libtiff;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\sc\Documents\CodeLibs\libtiff-3.9.5\libtiff;C:\Users\sc\Documents\CodeLibs\SDL-1.2.15\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -72,11 +81,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
-      <AdditionalIncludeDirectories>E:\Program Files\Diamond Systems\DSCUD 6.02\include;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\include;E:\Program Files\QImaging\SDK\Headers;E:\Program Files\Redlake\MegaPlus Lib;E:\Program Files\Measurement Computing\DAQ\C;E:\Documents and Settings\Submm\Desktop\stars\stars;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a\include;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0;E:\Documents and Settings\Submm\Desktop\stars\stars\windows\stars;E:\Include;C:\Program Files\levmar\levmar-2.5;C:\cfitsio;C:\Program Files\gsl-1.13\include;C:\Program Files\GnuWin32\include;C:\SDL-1.2.14\include;C:\SDL-1.2.12\include;C:\Program Files\boost\boost_1_44;C:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;C:\Program Files\Redlake\MegaPlus Lib;C:\Program Files\Measurement Computing\DAQ\CWin;C:\Program Files %28x86%29\levmar\levmar-2.5;C:\Program Files %28x86%29\cfitsio;C:\Program Files %28x86%29\GnuWin32\include;C:\Program Files %28x86%29\SDL-1.2.15\include;C:\Program Files %28x86%29\boost\boost_1_44;C:\Program Files %28x86%29\National Instruments\NI-IMAQ\Include;C:\Program Files %28x86%29\Redlake\MegaPlus Lib;C:\Users\Public\Documents\Measurement Computing\DAQ\C;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <StructMemberAlignment>Default</StructMemberAlignment>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -91,15 +101,17 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
-      <AdditionalIncludeDirectories>E:\Program Files\Diamond Systems\DSCUD 6.02\include;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\include;E:\Program Files\QImaging\SDK\Headers;E:\Program Files\Redlake\MegaPlus Lib;E:\Program Files\Measurement Computing\DAQ\C;E:\Documents and Settings\Submm\Desktop\stars\stars;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a\include;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0;E:\Documents and Settings\Submm\Desktop\stars\stars\windows\stars;E:\Include;C:\Program Files\levmar\levmar-2.5;C:\cfitsio;C:\Program Files\gsl-1.13\include;C:\Program Files\GnuWin32\include;C:\SDL-1.2.14\include;C:\SDL-1.2.12\include;C:\Program Files\boost\boost_1_44;C:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;C:\Program Files\Redlake\MegaPlus Lib;C:\Program Files\Measurement Computing\DAQ\CWin;C:\Program Files %28x86%29\levmar\levmar-2.5;C:\Program Files %28x86%29\cfitsio;C:\Program Files %28x86%29\GnuWin32\include;C:\Program Files %28x86%29\SDL-1.2.15\include;C:\Program Files %28x86%29\boost\boost_1_44;C:\Program Files %28x86%29\National Instruments\NI-IMAQ\Include;C:\Program Files %28x86%29\Redlake\MegaPlus Lib;C:\Users\Public\Documents\Measurement Computing\DAQ\C;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,9 +131,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>E:\Include;E:\Documents and Settings\Submm\Desktop\stars\stars\code;E:\Program Files\Measurement Computing\DAQ;E:\Documents and Settings\Submm\Desktop\stars\Lapackpp1_1a\Lapackpp1.1a\include;E:\Documents and Settings\Submm\Desktop\stars\stars;E:\Program Files\QImaging\SDK\Headers;E:\Program Files\Diamond Systems\DSCUD 6.02\include;E:\Program Files\National Instruments\NI-IMAQ for IEEE-1394\include;E:\Documents and Settings\Submm\Desktop\stars\levmar-2.6\levmar-2.6;E:\Documents and Settings\Submm\Desktop\stars\MegaPlusLib SDK v.1.30\MegaPlusLib SDK\DistFile;E:\Documents and Settings\Submm\Desktop\stars\cfitsiodll_3360;E:\Documents and Settings\Submm\Desktop\stars\openlogic-libtiff-3.9.5-all-src-1\libtiff-3.9.5-src\libtiff;E:\Documents and Settings\Submm\Desktop\stars\SDL-devel-1.2.15-VC\SDL-1.2.15\include;E:\Documents and Settings\Submm\Desktop\stars\boost_1_55_0\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OmitDefaultLibName>false</OmitDefaultLibName>
       <OmitFramePointers>true</OmitFramePointers>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MinimalRebuild>true</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

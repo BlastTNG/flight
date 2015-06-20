@@ -8,6 +8,7 @@
 #include "../shared/solving/motion_psf.h"
 #include "quick_cout.h"
 #include <cstdio>
+#include <algorithm>
 
 using std::vector;
 using std::min;

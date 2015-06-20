@@ -16,9 +16,7 @@
 #endif
 #include <boost/thread/thread.hpp>
 #include "abstract_camera.h"
-#include "megapluslib.h"
 #include "QCamApi.h"
-#include "niimaq1394.h"
 
 namespace Parameters
 {

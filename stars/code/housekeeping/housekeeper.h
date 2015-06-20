@@ -13,6 +13,16 @@
 #include "../tools/timing.h"
 #include <string>
 
+#ifdef _MSC_VER
+#define HAVEDAQ 1
+#else
+#define HAVEDAQ 0
+#endif
+
+#if HAVEDAQ
+#include "dscud.h"
+#endif
+
 namespace Parameters
 {
     class Manager;
@@ -45,7 +55,14 @@ class Housekeeping::Housekeeper
     unsigned int write_temps_counter;
     unsigned int write_disk_counter;
     std::vector<Measurement> measurements;
-    std::string output_dir;
+	std::string output_dir;
+#if HAVEDAQ
+	DSCB dscb;   // handle used to refer to the DMM board
+	DSCCB dsccb; // structure containing board settings
+	DSCADSETTINGS dscadsettings; // structure containing A/D conversion settings
+	DSCADSCAN dscadscan; // structure containing A/D scan settings
+	std::vector<DSCSAMPLE> samples;  // sample readings
+#endif
 
 };
 

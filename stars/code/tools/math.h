@@ -11,8 +11,11 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#if 0 // Commenting out invalid overload
 #ifdef _MSC_VER
 int round(double value);
-#endif
+#endif  
+#endif // 0
+
 
 #endif
