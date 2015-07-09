@@ -6,3 +6,8 @@
 **.autotools
 **.deps
 **.dirstamp
+**.sdf
+**.obj
+**.fits
+**.suo
+stars/windows/stars

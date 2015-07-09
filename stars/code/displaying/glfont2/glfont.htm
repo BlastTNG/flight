@@ -1,0 +1,422 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Brad Fish's glFont Version 2.0</title>
+<style>
+<!--
+font         { font-family: Verdana; font-size: 10pt }
+body         { font-family: Verdana; font-size: 10pt }
+-->
+</style>
+</head>
+
+<body>
+
+<h1>Brad Fish's glFont Version 2.0</h1>
+
+<h3>glFont and glFont API</h3>
+
+Copyright (c) 1998-2002 Brad Fish<br>
+E-mail: <a href="mailto:bhf5@email.byu.edu">bhf5@email.byu.edu</a><br>
+Web: <a href="http://students.cs.byu.edu/~bfish/"> http://students.cs.byu.edu/~bfish/</a><br>
+<h3>Table of Conents</h3>
+<ol>
+  <li><a href="#Disclaimer">Disclaimer</a></li>
+  <li><a href="#Introduction">Introduction</a></li>
+  <li><a href="#New in glFont 2.0">New in glFont 2.0</a></li>
+  <li><a href="#System Requirements">System Requirements</a></li>
+  <li><a href="#Files You Should Have Received">Files You Should Have Received</a></li>
+  <li><a href="#Distribution">Distribution</a></li>
+  <li><a href="#Terms of Use">Terms of Use</a></li>
+  <li><a href="#Known Issues">Known Issues</a></li>
+  <li><a href="#Bugs, Comments, Suggestions, etc.">Bugs, Comments, Suggestions,
+    etc.</a></li>
+  <li><a href="#glFont 2.0 API">glFont 2.0 API</a></li>
+  <li><a href="#Appendix">Appendix</a></li>
+</ol>
+<h3><a name="Disclaimer">Disclaimer</a></h3>
+<p>Because this is the initial release of glFont 2.0, I am expecting the possibility
+of errors in this document, the glFont builder, and the API.&nbsp; I've done my
+best to eliminate such errors, but you should be aware that this is not perfect
+by any means.</p>
+<h3><a name="Introduction">Introduction</a></h3>
+<p>Thanks for downloading the glFont 2.0!</p>
+<p>glFont is a Win32 program that creates a texture containing a range of
+characters in a specified font, and automatically generates texture coordinates
+for use in OpenGL applications that need to display text.&nbsp; The font type is
+not limited to monospaced fonts; each character is displayed with correct
+spacing and size.</p>
+<p>Text is rendered by texture mapping specific characters onto OpenGL
+quads.&nbsp; It is quite possible and easy to modify the color, size, and
+position of the text quads using standard OpenGL functions.&nbsp; It is also
+quite possible to load as many different fonts as you wish, and use them
+whenever you please.</p>
+<p>I first released glFont back in 1998, and was one of the first Windows
+TrueType bitmap font generators.&nbsp; It has been nearly four years since the
+initial release of glFont, and I still receive e-mails about it on almost a
+weekly basis.&nbsp; It has helped hundreds of people find a fast, efficient, and
+easy solution to outputting text in OpenGL programs.&nbsp; It's always fun
+stumbling across OpenGL projects on the internet and seeing glFont in action.</p>
+<h3><a name="New in glFont 2.0">New in glFont 2.0</a></h3>
+<p>I am pleased to release this new version of glFont.&nbsp; It has been
+something I've wanted to do for some time now.&nbsp; Version 2.0 includes many
+enhancements from version 1.0, including:</p>
+<ul>
+  <li>Font antialiasing in the glFont builder</li>
+  <li>Enhanced C++
+API</li>
+  <li>C++ wide character support</li>
+</ul>
+<p><b>NOTE:</b> The files create by the glFont 1.0 builder and the glFont 1.0
+API are not compatible with glFont 2.0.&nbsp; The structure of the file remains
+largely the same, but the dx and dy calculations are different and will render
+your 1.0 API fonts and code unusable.&nbsp; However, I don't see any reason why
+anyone would want to continue using the old 1.0 API.&nbsp; Please modify your
+code to work with the 2.0 API (don't worry, it's easy).</p>
+<h3><a name="System Requirements">System Requirements</a></h3>
+<p>The glFont builder tool requires a Windows OS with Unicode capabilities and
+GDI+.&nbsp; The latest GDI+ runtime distributable can be found at this link: <a href="http://www.microsoft.com/msdownload/platformsdk/sdkupdate/psdkredist.htm">http://www.microsoft.com/msdownload/platformsdk/sdkupdate/psdkredist.htm</a>.&nbsp;
+Just place the gdiplus.dll in the same directory as the glFont executable.</p>
+<p>The glFont 2.0 API requires a competent C++ compiler, and uses the Standard
+Template Library.&nbsp; It has been tested with Microsoft Visual C++ version 6.0
+and 7.0 (native Win32, none of that .NET stuff), and with GNU g++ 2.96 packaged
+with the RedHat Linux 7.2 distribution.</p>
+<h3><a name="Files You Should Have Received">Files You Should Have Received</a></h3>
+<p>The following files should be contained in the ZIP you downloaded.&nbsp; If
+not, please contact me, and let me know where you downloaded it from.</p>
+<p>glfont.exe -- The glFont builder<br>
+glfont.exe.manifest -- Makes the glFont builder use cool new common controls
+under Windows XP<br>
+glfont2.h -- The glFont Version 2.0 API header<br>
+glfont2.cpp -- The glFont Version 2.0 API implementation<br>
+glfont.html -- Introduction, documentation, licensing and terms of use</p>
+<h3><a name="Distribution">Distribution</a></h3>
+<p>You may distribute glFont as long as it is the original, unmodified ZIP,
+available from my web site, containing the files above, unaltered.</p>
+<p>If you wish to distribute a modified version of the glFont API, please get in
+touch with me first so that I can post it at the official glFont website, the
+reason being that others may find your modifications useful, and having them all
+at the official site will help reduce confusion.</p>
+<p>The newest version of glFont is always available at the following URL: <a href="http://students.cs.byu.edu/~bfish/glfont.php">
+http://students.cs.byu.edu/~bfish/glfont.php</a>.</p>
+<h3><a name="Terms of Use">Terms of Use</a></h3>
+<p>You may use the source to the glFont API in any program you wish, commercial
+and non-commercial, as long as credit is given to myself (in the accompanying
+program documentation, or in the program itself), including my e-mail address
+and a link to my web page.&nbsp; You may modify the API source to fit your
+specific needs if you wish, but the same terms apply--you must provide original
+credit to myself.</p>
+<p>glFont has been a great help to many, many people.&nbsp; I frequently receive
+compliments and success stories from individuals all over the world who have
+used glFont in their programs and found it to be an excellent solution.&nbsp;
+glFont 2.0 provides many enhancements, but just like the original glFont, I am
+allowing it to be used without cost because I think it can benefit many in the
+OpenGL community.&nbsp; Through abiding by these terms and providing credit
+where due, you help others learn about glFont and give them the same opportunity
+to use it.</p>
+<p>The source to the glFont builder is available for purchase; contact me if you
+are interested.</p>
+<h3><a name="Known Issues">Known Issues</a></h3>
+<p>The glFont builder tool can only run on on a GDI+ enabled Windows operating
+system.&nbsp; This should include everything from Windows ME up, although you
+may have to download the GDI+ runtime distributable.&nbsp; See <a href="#System Requirements">System Requirements</a>.</p>
+<p>The glFont builder tool only works with TrueType fonts.&nbsp; If you select a
+raster or bitmapped font, it won't display.&nbsp; Fix: don't select a raster or
+bitmapped font.&nbsp; Why would you want to, anyway?</p>
+<h3><a name="Bugs, Comments, Suggestions, etc.">Bugs, Comments, Suggestions,
+etc.</a></h3>
+<p>Please <a href="mailto:bhf5@email.byu.edu">let me know</a> immediately about
+any bugs.&nbsp; If you have comments or suggestions, please drop me a line as
+well.&nbsp; I am definitely anticipating that there will be some bugs, although
+I've done my best to test it thoroughly.&nbsp; Most of the problems will most
+likely be compiler issues.</p>
+<h3><a name="glFont 2.0 API">glFont 2.0 API</a></h3>
+
+<p>The glFont 2.0 API consists of two files: glfont2.h and glfont2.cpp, and is
+written in standard C++ .&nbsp; These files must obviously
+be included in your project or makefile so that they can be compiled and linked
+into your program. </p>
+
+<p>The glFont API uses std::pair and std::basic_string, so make sure you have
+&lt;utility&gt; and &lt;string&gt; included in your source file before you
+include glfont2.h.&nbsp; glFont also depends on OpenGL, of course, so also make
+sure &lt;GL/gl.h&gt; is included. </p>
+
+<h4><a name="glFont Initialization">glFont Initialization</a> </h4>
+<p>glfont2.h defines the glfont namespace which includes a single class, GLFont,
+which replaces the GLFONT structure in the old 1.0 C API.&nbsp; glfont::GLFont
+contains everything needed to create and display a glFont in a C++
+program.&nbsp; The GLFont class constructor takes no parameters, so the first
+step is to create a GLFont object somewhere.&nbsp; You will then call Create and
+give it the file name of the .glf file to load as well as the texture name to
+use.</p>
+<pre>#include &lt;string&gt;
+#include &lt;utility&gt;</pre>
+<pre>#ifdef _WIN32
+#include &lt;windows.h&gt;
+#endif
+#include &lt;GL/gl.h&gt;
+#include &lt;GL/glu.h&gt;</pre>
+<pre>#include &quot;glfont2.h&quot;
+using namespace glfont;</pre>
+<pre>//glFont
+GLFont myfont;</pre>
+<pre>//Out OpenGL initialization function
+bool TestBedInit (void)
+{
+	//Initialize OpenGL
+	//Texture mapping and blending must be enabled for glFont to work
+	glClearColor(0.0, 0.0, 0.0, 1.0);	
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);</pre>
+<pre>	//Create our glFont from verdana.glf, using texture 1
+	if (!myfont.Create(&quot;verdana.glf&quot;, 1))
+		return false;</pre>
+<pre>	//Return successfully
+	return true;
+}</pre>
+<h4><a name="Drawing Text">Drawing Text</a></h4>
+<p>Text output is accomplished via a call to one of the many versions of the
+GLFont object's DrawString method.&nbsp; DrawString is actually implemented
+using templates, so it accepts both character arrays and STL strings.&nbsp; In
+fact, any of the the DrawString variations will accept char[], wchar_t[],
+std::string, and std::wstring.&nbsp; This leaves it open to you to decided in
+what format you would like to store your text, as well as maintaining
+performance, since the compiler will create specialized versions of this method
+depending on what you use--no conversions or casts necessary.&nbsp; Yes, this
+means that glFont can display wide character strings, as long as your glFont
+includes the characters you wish to display in it's character interval.&nbsp; If
+DrawString encounters a character outside of the interval, it just skips
+it.&nbsp;</p>
+<p>Once you have initialized your GLFont object with an actual font created by
+the glFont builder, you're almost ready to display some text.&nbsp; Before you
+call the DrawString variations, you should call the Begin method of your GLFont
+object.&nbsp; Currently, this simply binds the glFont texture.&nbsp; You can do
+this yourself if you wish.&nbsp; If you don't call Begin (or take care yourself)
+you might end up using a different texture.&nbsp; Not a good idea.</p>
+<pre>void TestBedRender (void)
+{
+	float top_color[3] = {1.0F, 1.0F, 1.0F};
+	float bottom_color[3] = {0.0F, 0.0F, 1.0F};</pre>
+<pre>	//Clear back buffer
+	glClear(GL_COLOR_BUFFER_BIT);</pre>
+<pre>	//Draw some stuff
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();</pre>
+<pre>	//Draw a string
+	glColor3f(0.0F, 0.0F, 1.0F);
+	myfont.Begin();
+	myfont.DrawString(&quot;Hello World!&quot;, 2.0F, 0.0F, 480.0F);
+	myfont.DrawString(L&quot;Hello World!&quot;, 2.0F, 0.0F,
+		400.0F, top_color, bottom_color);
+	myfont.DrawString(std::string(&quot;Hello World!&quot;), 0.0F, 320.0F);
+	myfont.DrawString(std::wstring(L&quot;Hello World!&quot;), 0.0F, 280.F,
+		top_color, bottom_color);
+	glTranslatef(0.0F, 200.F, 0.0F);
+	glRotatef(15.0F, 0.0F, 0.0F, 1.0F);
+	myfont.DrawString(&quot;Hello World!&quot;, 2.0F, 0.0F, 0.F,
+		top_color, bottom_color);
+}</pre>
+<p>You'll notice that I've thrown in there some char[], wchar_t[], std::string,
+and std::wstring strings in there.&nbsp; They all work great.&nbsp; Like the
+original API, standard OpenGL calls can be used to set the color, size, and
+position of text output with glFont.&nbsp; However, the new API makes it easier
+for you to use color and position the text without having to use OpenGL
+calls.&nbsp; DrawString by default displays the text at it's native size,
+meaning that if a character is 10 pixels wide in the glFont texture, it will be
+10 units wide when displayed (of course the units are relative to the the size
+of your OpenGL viewport and projection setup).&nbsp; There is a variation of
+DrawString which takes a scaling factor.&nbsp; A scaling factor of 2.0F will
+double the size of the text.&nbsp; There are also variations for setting a top
+and bottom color for the text, creating a nice gradient look.&nbsp; There are
+lots of things you can do with it, and of course you can always extend it
+yourself.&nbsp; The new API has no equivalent to the old glFontEnd
+function.&nbsp; When you're done you're done.</p>
+<p>Drawing text with glFont is as simple as that.</p>
+<h4><a name="Reference">Reference</a></h4>
+<p>The following is a reference of all the methods of the GLFont class.</p>
+<p><b><a name="GLFont Constructor">GLFont Constructor</a></b></p>
+<pre>	//Constructor
+	GLFont ();</pre>
+<p>The constructor of the GLFont class simply initializes the object to a safe
+state.&nbsp; If you attempt to draw text using a GLFont object that hasn't been
+created with the Create method, nothing will happen.</p>
+<p><b><a name="GLFont Destructor">GLFont Destructor</a></b></p>
+<pre>	//Destructor
+	~GLFont ();</pre>
+<p>The GLFont destructor destroys the glFont and frees any allocated memory.</p>
+<p><b><a name="Create Method">Create Method</a></b></p>
+<pre>	//Creates the glFont
+	bool Create (const char *file_name, int tex);
+	bool Create (const std::string &amp;file_name, int tex);</pre>
+<p>The Create method creates the glFont by loading the font texture and
+character information from the specified file, and associating it with the
+specified OpenGL texture.&nbsp; It returns true if the creation was successful,
+and false if not.</p>
+<p><b><a name="Destroy Method">Destroy Method</a></b></p>
+<pre>	//Destroys the glFont
+	void Destroy (void);</pre>
+<p>The Destroy method destroys the font by freeing any used memory and restoring
+the GLFont object back to an uninitialized state.&nbsp; You may call Destroy on
+a GLFont object and then call Create again on that same object.</p>
+<p><b><a name="Texture Size Retrieval Methods">Texture Size Retrieval Methods</a></b></p>
+<pre>	//Texture size retrieval methods
+	void GetTexSize (std::pair&lt;int, int&gt; *size);
+	int GetTexWidth (void);
+	int GetTexHeight (void);</pre>
+<p>These methods return the size of the glFont texture, in pixels.&nbsp; The
+first method takes the address of a std::pair&lt;int, int&gt; object and places
+the width in the size-&gt;first member, and the height in the size-&gt;second
+member.</p>
+<p>The next two functions simply return the width and height, respectively.</p>
+<p><b><a name="Character Interval Retrieval Methods">Character Interval
+Retrieval Methods</a></b></p>
+<pre>	//Character interval retrieval methods
+	void GetCharInterval (std::pair&lt;int, int&gt; *interval);
+	int GetStartChar (void);
+	int GetEndChar (void);</pre>
+<p>These methods return the character interval (the starting and ending
+character codes of the font).&nbsp; They behave like the texture functions
+above.&nbsp; The starting character is placed in interval-&gt;first, the ending
+character in interval-&gt;second.</p>
+<p><b><a name="Character Size Retrieval Methods">Character Size Retrieval
+Methods</a></b></p>
+<pre>	//Character size retrieval methods
+	void GetCharSize (int c, std::pair&lt;int, int&gt; *size);
+	int GetCharWidth (int c);
+	int GetCharHeight (int c);</pre>
+<p>These methods return the size in pixels of individual characters in the
+font.&nbsp; They take an integer identifying the character and otherwise behave
+exactly like the methods above.</p>
+<p><b><a name="String Size Calculation">String Size Calculation</a></b></p>
+<pre>	template&lt;class T&gt; void GetStringSize (const T *text,
+		std::pair&lt;int, int&gt; *size);
+	template&lt;class T&gt; void GetStringSize (const std::basic_string&lt;T&gt; &amp;text,
+		std::pair&lt;int, int&gt; *size);</pre>
+<p>These methods calculate the size in pixels of the given string.&nbsp; The
+std::pair size is used as above.</p>
+<p><b><a name="Begin Method">Begin Method</a></b></p>
+<pre>	//Begins text output with this font
+	void Begin (void);</pre>
+<p>Begins drawing text with this font by binding to the glFont texture.</p>
+<p><b><a name="DrawString Methods">DrawString Methods</a></b></p>
+<pre>	template&lt;class T&gt; void DrawString (const T *text, float x,
+		float y);
+	template&lt;class T&gt; void DrawString (const std::basic_string&lt;T&gt; &amp;text,
+		float x, float y);</pre>
+<p>Draws the specified string at position (x, y) using the natural character
+size.</p>
+<pre>	template&lt;class T&gt; void DrawString (const T *text, float scalar,
+		float x, float y);
+	template&lt;class T&gt; void DrawString (const std::basic_string&lt;T&gt; &amp;text,
+		float scalar, float x, float y);</pre>
+<p>Draws the specified string at position (x, y) using the scaling factor
+scalar.</p>
+<pre>	template&lt;class T&gt; void DrawString (const T *text, float x,
+		float y, const float *top_color, const float *bottom_color);
+	template&lt;class T&gt; void DrawString (const std::basic_string&lt;T&gt; &amp;text,
+		float x, float y, const float *top_color, const float *bottom_color);</pre>
+<p>Draws the specified string at position (x, y) using the specified colors for
+the top and bottom of the font, creating a nice blending gradient look.&nbsp;
+The color should point to an array of three floats, like in the glColor3fv call.</p>
+<pre>	template&lt;class T&gt; void DrawString (const T *text, float scalar,
+		float x, float y, const float *top_color, const float *bottom_color);
+	template&lt;class T&gt; void DrawString (const std::basic_string&lt;T&gt; &amp;text,
+		float scalar, float x, float y, const float *top_color,
+		const float *bottom_color);</pre>
+<p>Combines the scaling and color functionality.&nbsp; Should be pretty straight
+forward.</p>
+<h4><a name="Conclusion">Conclusion</a></h4>
+<p>As you can see, there's lots you can do with it.&nbsp; I hope it makes it a
+lot easier for people to use text in their OpenGL programs.&nbsp; You should be
+able to write additional functions to do things like center text, or even layer
+another texture on top.&nbsp; There's lots more I could have included, but I
+want to release this as soon as possible.</p>
+<h3><a name="Appendix">Appendix</a></h3>
+<p>Here is the entire file of the code I used to develop the API.&nbsp; It
+contains all of the non-OS specific OpenGL initialization and rendering
+code.&nbsp; Should be useful.</p>
+<pre>//STL headers
+#include &lt;string&gt;
+#include &lt;utility&gt;</pre>
+<pre>//OpenGL support
+#ifdef _WIN32
+#include &lt;windows.h&gt;
+#endif
+#include &lt;gl/gl.h&gt;
+#include &lt;gl/glu.h&gt;</pre>
+<pre>//glFont headers
+#include &quot;glfont2.h&quot;
+using namespace glfont;</pre>
+<pre>//Header for this file
+#include &quot;testbed.h&quot;</pre>
+<pre>//glFont
+GLFont myfont;</pre>
+<pre>//*********************************************************
+//Functions
+//*********************************************************
+bool TestBedInit (void)
+{
+	//Initialize OpenGL
+	glClearColor(0.0, 0.0, 0.0, 1.0);	
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);</pre>
+<pre>	//Try and load our font
+	if (!myfont.Create(&quot;verdana.glf&quot;, 1))
+		return false;</pre>
+<pre>	//Return successfully
+	return true;
+}
+//*********************************************************
+void TestBedShutdown (void)
+{
+	//Destroy our font
+	myfont.Destroy();
+}
+//*********************************************************
+void TestBedViewport (int width, int height)
+{
+	//Initialize the viewport
+	glViewport(0, 0, width, height);</pre>
+<pre>	//Initialize OpenGL projection matrix
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0.0, 640.0, 0.0, 480.0);
+}
+//*********************************************************
+void TestBedRender (void)
+{
+	float top_color[3] = {1.0F, 1.0F, 1.0F};
+	float bottom_color[3] = {0.0F, 0.0F, 1.0F};</pre>
+<pre>	//Clear back buffer
+	glClear(GL_COLOR_BUFFER_BIT);</pre>
+<pre>	//Initialize modelview matrix
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();</pre>
+<pre>	//Draw some strings
+	glColor3f(0.0F, 0.0F, 1.0F);
+	myfont.Begin();
+	myfont.DrawString(&quot;Hello World!&quot;, 2.0F, 0.0F, 480.0F);
+	myfont.DrawString(L&quot;Hello World!&quot;, 2.0F, 0.0F,
+		400.0F, top_color, bottom_color);
+	myfont.DrawString(std::string(&quot;Hello World!&quot;), 0.0F, 320.0F);
+	myfont.DrawString(std::wstring(L&quot;Hello World!&quot;), 0.0F, 280.F,
+		top_color, bottom_color);
+	glTranslatef(0.0F, 200.F, 0.0F);
+	glRotatef(15.0F, 0.0F, 0.0F, 1.0F);
+	myfont.DrawString(&quot;Hello World!&quot;, 2.0F, 0.0F, 0.F,
+		top_color, bottom_color);
+}
+//*********************************************************</pre>
+<pre>//End of file</pre>
+<h4>The End</h4>
+<p><a href="mailto:bhf5@email.byu.edu">mailto:bhf5@email.byu.edu</a></p>
+
+</body>
+
+</html>

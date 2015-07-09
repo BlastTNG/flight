@@ -15,7 +15,7 @@ $(BLAST_CONFIG_OBJS): %.o: $(addprefix $(CONFIG_DIR)/,%.c)
 	
 myclean: clean
 	-$(RM) $(BLAST_CONFIG_OBJS) $(BLAST_COMMON_OBJS) $(USER_C_DEPS)
-	-@echo ' '
+	-@echo 'Cleaning objects '
 	
 upload_uei1: uei
 	-@scp uei root@uei1:/tmp/

@@ -1,0 +1,2740 @@
+# depslib dependency file v1.0
+1341003372 source:/home/acs/svn/acs/stars/code/cataloging/abstract_catalog_manager.cpp
+	"abstract_catalog_manager.h"
+	<cstdio>
+	<string>
+	<boost/lexical_cast.hpp>
+	<boost/date_time/posix_time/posix_time.hpp>
+	"../tools/slalib.h"
+	"../tools/angles.h"
+	"../tools/ccd_projection.h"
+	"../shared/solving/settings.h"
+	"../parameters/manager.h"
+	"../shared/general/quit.h"
+	"../shared/image/raw.h"
+	"../logging/logger.h"
+
+1335450696 /home/acs/svn/acs/stars/code/cataloging/abstract_catalog_manager.h
+	<vector>
+	<boost/filesystem/fstream.hpp>
+	"../solving/solution.h"
+	"../solving/star.h"
+	"../solving/blob.h"
+	"../shared/solving/filters.h"
+	"../shared/solving/settings.h"
+
+1339040889 /home/acs/svn/acs/stars/code/solving/solution.h
+	<vector>
+	"blob.h"
+	"star.h"
+	"attitude.h"
+
+1344059364 /home/acs/svn/acs/stars/code/solving/blob.h
+	<string>
+
+1330718807 /home/acs/svn/acs/stars/code/solving/star.h
+	<string>
+
+1345473609 /home/acs/svn/acs/stars/code/solving/attitude.h
+
+1345544457 /home/acs/svn/acs/stars/code/shared/solving/filters.h
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+	"../../tools/angles.h"
+
+1337208403 /home/acs/svn/acs/stars/code/shared/circular_buffer.h
+	"thread_names.h"
+
+1345884962 /home/acs/svn/acs/stars/code/shared/thread_names.h
+
+1342502485 /home/acs/svn/acs/stars/code/tools/timing.h
+	"windows_header.h"
+	<sys/time.h>
+	<boost/thread/thread_time.hpp>
+	<limits>
+	<string>
+
+1330718807 /home/acs/svn/acs/stars/code/tools/windows_header.h
+	<windows.h>
+
+1341003283 /home/acs/svn/acs/stars/code/tools/angles.h
+	<math.h>
+
+1345130695 /home/acs/svn/acs/stars/code/shared/solving/settings.h
+	<string>
+	"../circular_buffer.h"
+	"../../networking/xsc_protocol/xsc_protocol.h"
+
+1345853178 /home/acs/svn/acs/stars/code/networking/xsc_protocol/xsc_protocol.h
+	"xsc_channels.h"
+
+1345453511 /home/acs/svn/acs/stars/code/networking/xsc_protocol/xsc_channels.h
+	<stdbool.h>
+
+1330718807 /home/acs/svn/acs/stars/code/tools/slalib.h
+	<math.h>
+	<ctype.h>
+	<string.h>
+
+1330718807 /home/acs/svn/acs/stars/code/tools/ccd_projection.h
+
+1344482713 /home/acs/svn/acs/stars/code/parameters/manager.h
+	<string>
+	"general.h"
+	"housekeeping.h"
+
+1344482237 /home/acs/svn/acs/stars/code/parameters/general.h
+	"group.h"
+	<string>
+
+1330718808 /home/acs/svn/acs/stars/code/parameters/group.h
+	<string>
+	<boost/program_options.hpp>
+	<typeinfo>
+	"../logger_main.h"
+
+1330718810 /home/acs/svn/acs/stars/code/logger_main.h
+	"logging/logger.h"
+
+1335450695 /home/acs/svn/acs/stars/code/logging/logger.h
+	<string>
+	<boost/format.hpp>
+
+1330718808 /home/acs/svn/acs/stars/code/parameters/housekeeping.h
+	"group.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/general/quit.h
+
+1345884583 /home/acs/svn/acs/stars/code/shared/image/raw.h
+	<string>
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+	"../solving/filters.h"
+
+1344070926 source:/home/acs/svn/acs/stars/code/displaying/autofocus.cpp
+	"autofocus.h"
+	<windows.h>
+	<boost/format.hpp>
+	<limits>
+	"GL/gl.h"
+	"GL/glu.h"
+	"glhelper.h"
+	"block.h"
+	<math.h>
+	"../shared/autofocus/results.h"
+	"../shared/autofocus/requests.h"
+	"../shared/autofocus/datapoints.h"
+	"../tools/quick_cout.h"
+
+1344070948 /home/acs/svn/acs/stars/code/displaying/autofocus.h
+	"block.h"
+	"../shared/autofocus/datapoints.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/block.h
+	<string>
+	"dynamic_value.h"
+	"utilities.h"
+	"textures.h"
+	"color.h"
+	"../tools/timing.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/dynamic_value.h
+	<string>
+	"color.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/color.h
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/utilities.h
+	<windows.h>
+	"GL/gl.h"
+
+1344483280 /home/acs/svn/acs/stars/code/displaying/textures.h
+	"texture.h"
+	"glfont2/glfont2.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/texture.h
+	<string>
+	"utilities.h"
+	"GL/glu.h"
+
+1340833767 /home/acs/svn/acs/stars/code/displaying/glfont2/glfont2.h
+
+1342514255 /home/acs/svn/acs/stars/code/shared/autofocus/datapoints.h
+	<vector>
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/glhelper.h
+	<windows.h>
+	"GL/gl.h"
+	"GL/glu.h"
+
+1335450696 /home/acs/svn/acs/stars/code/shared/autofocus/results.h
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1340821195 /home/acs/svn/acs/stars/code/shared/autofocus/requests.h
+	"../circular_buffer.h"
+	"../request.h"
+	"../../networking/xsc_protocol/xsc_protocol.h"
+
+1340919880 /home/acs/svn/acs/stars/code/shared/request.h
+
+1336409764 /home/acs/svn/acs/stars/code/tools/quick_cout.h
+	<cstdio>
+	<iostream>
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/base_set.cpp
+	"base_set.h"
+	"blob.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/base_set.h
+	<math.h>
+	<vector>
+	"../tools/timing.h"
+	"../solving/base_set.h"
+
+1330718807 /home/acs/svn/acs/stars/code/solving/base_set.h
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/blob.h
+	<string>
+	"utilities.h"
+	"../tools/timing.h"
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/blob.cpp
+	"blob.h"
+	<cstdlib>
+	<string>
+	<time.h>
+	"glhelper.h"
+	<math.h>
+
+1344575282 source:/home/acs/svn/acs/stars/code/displaying/block.cpp
+	"block.h"
+	<windows.h>
+	<boost/lexical_cast.hpp>
+	"GL/glext.h"
+	"color.h"
+	"glhelper.h"
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/camera.cpp
+	"camera.h"
+	<windows.h>
+	"GL/gl.h"
+	"GL/glu.h"
+	"block.h"
+	"dynamic_value.h"
+	"../shared/camera/requests.h"
+	"../shared/camera/results.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/camera.h
+	"block.h"
+	"dynamic_value.h"
+
+1335450696 /home/acs/svn/acs/stars/code/shared/camera/requests.h
+	"../circular_buffer.h"
+	"../request.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/camera/results.h
+	"../circular_buffer.h"
+	"../result.h"
+	"requests.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/result.h
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/color.cpp
+	"color.h"
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/dynamic_value.cpp
+	"dynamic_value.h"
+	<boost/format.hpp>
+	<iomanip>
+
+1340833849 source:/home/acs/svn/acs/stars/code/displaying/glfont2/glfont2.cpp
+	<string>
+	<utility>
+	<iostream>
+	<fstream>
+	<windows.h>
+	<windows.h>
+	<GL/gl.h>
+	"glfont2.h"
+
+1345889708 source:/home/acs/svn/acs/stars/code/displaying/housekeeping.cpp
+	"housekeeping.h"
+	<windows.h>
+	<string>
+	<math.h>
+	<limits>
+	"GL/gl.h"
+	"GL/glu.h"
+	"../shared/housekeeping/housekeeper.h"
+	"../tools/timing.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/housekeeping.h
+	<vector>
+	"block.h"
+	"dynamic_value.h"
+	"utilities.h"
+	"../tools/timing.h"
+
+1345889548 /home/acs/svn/acs/stars/code/shared/housekeeping/housekeeper.h
+	<vector>
+	"../circular_buffer.h"
+	"measurement.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/housekeeping/measurement.h
+	<string>
+
+1345475194 source:/home/acs/svn/acs/stars/code/displaying/image.cpp
+	"image.h"
+	<string>
+	<boost/format.hpp>
+	"../tools/angles.h"
+	"../shared/image/blobs.h"
+	"../shared/image/status.h"
+	"../shared/image/stats.h"
+	"../shared/image/solution_summary.h"
+
+1345474935 /home/acs/svn/acs/stars/code/displaying/image.h
+	"block.h"
+
+1344765372 /home/acs/svn/acs/stars/code/shared/image/status.h
+	<string>
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1340649696 /home/acs/svn/acs/stars/code/shared/image/stats.h
+	"../circular_buffer.h"
+
+1339169742 /home/acs/svn/acs/stars/code/shared/image/solution_summary.h
+	"../circular_buffer.h"
+	<vector>
+	<string>
+	"../../solving/attitude.h"
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/lens.cpp
+	"lens.h"
+	<windows.h>
+	<cstdio>
+	<string>
+	<math.h>
+	<boost/format.hpp>
+	"GL/gl.h"
+	"GL/glu.h"
+	"../shared/lens/requests.h"
+	"../shared/lens/results.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/lens.h
+	"block.h"
+	"dynamic_value.h"
+
+1338828916 /home/acs/svn/acs/stars/code/shared/lens/requests.h
+	"../circular_buffer.h"
+	"../request.h"
+	"../../imaging/commands.h"
+
+1341522613 /home/acs/svn/acs/stars/code/imaging/commands.h
+
+1336702818 /home/acs/svn/acs/stars/code/shared/lens/results.h
+	"../circular_buffer.h"
+	<string>
+	"../../imaging/commands.h"
+	"../../tools/timing.h"
+	"requests.h"
+
+1346029070 source:/home/acs/svn/acs/stars/code/displaying/manager.cpp
+	"manager.h"
+	"../parameters/manager.h"
+	"../shared/general/main_settings.h"
+	"../shared/general/quit.h"
+	"../logger_main.h"
+	"../preprocessor.h"
+	"../tools/quick_cout.h"
+
+1345540681 /home/acs/svn/acs/stars/code/displaying/manager.h
+	<windows.h>
+	"SDL.h"
+	"SDL/SDL.h"
+	"GL/gl.h"
+	"GL/glu.h"
+	"utilities.h"
+	"housekeeping.h"
+	"textures.h"
+	"texture.h"
+	"visual.h"
+	"autofocus.h"
+	"solving_filters.h"
+	"name.h"
+	"camera.h"
+	"image.h"
+	"lens.h"
+	"quit_box.h"
+
+1344482885 /home/acs/svn/acs/stars/code/displaying/visual.h
+	<stdio.h>
+	<string>
+	<math.h>
+	"texture.h"
+	"block.h"
+	"base_set.h"
+	"blob.h"
+	"utilities.h"
+	"../tools/timing.h"
+
+1341982755 /home/acs/svn/acs/stars/code/displaying/name.h
+	"block.h"
+	"../tools/timing.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/quit_box.h
+	"block.h"
+
+1345445653 /home/acs/svn/acs/stars/code/shared/general/main_settings.h
+	"../circular_buffer.h"
+
+1340679340 /home/acs/svn/acs/stars/code/preprocessor.h
+
+1345626135 source:/home/acs/svn/acs/stars/code/displaying/name.cpp
+	"name.h"
+	"../tools/math.h"
+	"../shared/network/packets.h"
+	"../shared/general/network_reset.h"
+	"../tools/quick_cout.h"
+
+1341105675 /home/acs/svn/acs/stars/code/shared/network/packets.h
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/network.cpp
+	"network.h"
+	"../shared/network/packets.h"
+	"../shared/network/client.h"
+	"../shared/camera/results.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/network.h
+	"block.h"
+	"dynamic_value.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/network/client.h
+	"../circular_buffer.h"
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/quit_box.cpp
+	"quit_box.h"
+	"glhelper.h"
+
+1344129528 source:/home/acs/svn/acs/stars/code/displaying/texture.cpp
+	"texture.h"
+	<windows.h>
+	<cstdlib>
+	"math.h"
+	<tiffio.h>
+	"GL/gl.h"
+	"glhelper.h"
+	"../logger_main.h"
+
+1344483692 source:/home/acs/svn/acs/stars/code/displaying/textures.cpp
+	"textures.h"
+	<boost/filesystem/operations.hpp>
+	"../parameters/manager.h"
+
+1344483043 source:/home/acs/svn/acs/stars/code/displaying/visual.cpp
+	"visual.h"
+	<math.h>
+	<boost/filesystem/operations.hpp>
+	"../parameters/manager.h"
+	"../shared/general/main_settings.h"
+	"../shared/image/blobs.h"
+	"../shared/image/leveled.h"
+	"../shared/image/matching.h"
+	"../shared/image/matching_progress.h"
+	"../shared/image/status.h"
+	"../shared/image/solution_summary.h"
+	"../shared/solving/mask.h"
+	"../logger_main.h"
+
+1342243579 /home/acs/svn/acs/stars/code/shared/image/blobs.h
+	<vector>
+	"../circular_buffer.h"
+	"../../solving/blob.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/image/leveled.h
+	"../circular_buffer.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/image/matching.h
+	<vector>
+	"../circular_buffer.h"
+	"../../solving/base_set.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/image/matching_progress.h
+	"../circular_buffer.h"
+
+1330718808 /home/acs/svn/acs/stars/code/shared/solving/mask.h
+	"../circular_buffer.h"
+	<boost/cstdint.hpp>
+
+1330718807 source:/home/acs/svn/acs/stars/code/housekeeping/disk.cpp
+	"housekeeper.h"
+	<boost/filesystem.hpp>
+	<limits>
+	"logger.h"
+
+1330718807 /home/acs/svn/acs/stars/code/housekeeping/housekeeper.h
+	<boost/program_options.hpp>
+	"measurement.h"
+	"../tools/timing.h"
+	<string>
+
+1330718807 /home/acs/svn/acs/stars/code/housekeeping/measurement.h
+	<string>
+
+1330718807 /home/acs/svn/acs/stars/code/housekeeping/logger.h
+	"../logging/logger.h"
+
+1345889736 source:/home/acs/svn/acs/stars/code/housekeeping/housekeeper.cpp
+	"housekeeper.h"
+	"cbw.h"
+	<fstream>
+	<boost/format.hpp>
+	"../parameters/manager.h"
+	"../shared/housekeeping/housekeeper.h"
+	"logger.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/housekeeping/measurement.cpp
+	"measurement.h"
+
+1346029003 source:/home/acs/svn/acs/stars/code/imaging/abstract_camera.cpp
+	"abstract_camera.h"
+	<wtypes.h>
+	<boost/format.hpp>
+	<boost/filesystem/fstream.hpp>
+	<fitsio.h>
+	<string.h>
+	<limits>
+	"../shared/update.h"
+	"../shared/image/raw.h"
+	"../shared/image/status.h"
+	"../shared/autofocus/latest_image.h"
+	"../shared/lens/requests.h"
+	"../shared/lens/results.h"
+	"../shared/solving/filters.h"
+	"../shared/network/client.h"
+	"../shared/camera/results.h"
+	"../shared/simulations/brightness.h"
+	"../shared/housekeeping/housekeeper.h"
+	"../parameters/manager.h"
+	"logger_camera.h"
+	"../tools/quick_cout.h"
+
+1345890416 /home/acs/svn/acs/stars/code/imaging/abstract_camera.h
+	<string>
+	<boost/date_time/posix_time/posix_time.hpp>
+	"fake_sky.h"
+	"../tools/timing.h"
+
+1342233543 /home/acs/svn/acs/stars/code/imaging/fake_sky.h
+	"../tools/stocc/stocc.h"
+
+1330718807 /home/acs/svn/acs/stars/code/tools/stocc/stocc.h
+	<math.h>
+	"randomc.h"
+	"stocR.h"
+
+1330718807 /home/acs/svn/acs/stars/code/tools/stocc/randomc.h
+	<inttypes.h>
+
+1337208403 /home/acs/svn/acs/stars/code/shared/update.h
+	"thread_names.h"
+
+1342503360 /home/acs/svn/acs/stars/code/shared/autofocus/latest_image.h
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1340907611 /home/acs/svn/acs/stars/code/shared/simulations/brightness.h
+	"../circular_buffer.h"
+
+1330718810 /home/acs/svn/acs/stars/code/imaging/logger_camera.h
+	"../logging/logger.h"
+
+1343331373 source:/home/acs/svn/acs/stars/code/imaging/autofocuser.cpp
+	"autofocuser.h"
+	<limits>
+	"logger_lens.h"
+	"commands.h"
+	"../tools/math.h"
+	"../shared/autofocus/datapoints.h"
+	"../shared/autofocus/requests.h"
+	"../shared/autofocus/latest_image.h"
+	"../shared/autofocus/results.h"
+	"../shared/lens/requests.h"
+
+1342511676 /home/acs/svn/acs/stars/code/imaging/autofocuser.h
+	"../tools/timing.h"
+
+1330718810 /home/acs/svn/acs/stars/code/imaging/logger_lens.h
+	"../logging/logger.h"
+
+1342001135 /home/acs/svn/acs/stars/code/tools/math.h
+	<math.h>
+
+1335450696 source:/home/acs/svn/acs/stars/code/imaging/camera_empty.cpp
+	"../preprocessor.h"
+	"camera_empty.h"
+	"../shared/general/quit.h"
+
+1337208403 /home/acs/svn/acs/stars/code/imaging/camera_empty.h
+	"../preprocessor.h"
+	<boost/thread/thread.hpp>
+	"abstract_camera.h"
+
+1345890715 source:/home/acs/svn/acs/stars/code/imaging/camera_filesystem.cpp
+	"camera_filesystem.h"
+	<boost/algorithm/string/predicate.hpp>
+	<boost/algorithm/string.hpp>
+	<boost/filesystem/path.hpp>
+	<boost/filesystem/operations.hpp>
+	"../parameters/manager.h"
+	"../shared/image/raw.h"
+	"../shared/general/quit.h"
+	"logger_camera.h"
+	"../tools/quick_cout.h"
+
+1337208403 /home/acs/svn/acs/stars/code/imaging/camera_filesystem.h
+	"abstract_camera.h"
+	<string>
+	<vector>
+	<fitsio.h>
+	<boost/thread/thread.hpp>
+	<boost/filesystem/path.hpp>
+	"../tools/timing.h"
+
+1345890804 source:/home/acs/svn/acs/stars/code/imaging/camera_windows.cpp
+	"../preprocessor.h"
+	"camera_windows.h"
+	"../parameters/manager.h"
+	"../shared/image/raw.h"
+	"../shared/camera/results.h"
+	"../shared/camera/requests.h"
+	"../shared/general/quit.h"
+	"logger_camera.h"
+
+1337208403 /home/acs/svn/acs/stars/code/imaging/camera_windows.h
+	"../preprocessor.h"
+	<windows.h>
+	<boost/thread/thread.hpp>
+	"abstract_camera.h"
+	"megapluslib.h"
+	"QCamApi.h"
+	"niimaq1394.h"
+
+1330718810 /home/acs/svn/acs/stars/code/imaging/QCamApi.h
+
+1342233780 source:/home/acs/svn/acs/stars/code/imaging/fake_sky.cpp
+	"fake_sky.h"
+	<time.h>
+	"../shared/simulations/brightness.h"
+	"../tools/stats.h"
+	"../tools/quick_cout.h"
+
+1342260383 source:/home/acs/svn/acs/stars/code/imaging/lens.cpp
+	"lens.h"
+	<boost/format.hpp>
+	<boost/algorithm/string.hpp>
+	<sstream>
+	<vector>
+	"../parameters/manager.h"
+	"../shared/update.h"
+	"../shared/lens/requests.h"
+	"../shared/lens/results.h"
+	"../shared/general/quit.h"
+	"logger_lens.h"
+
+1342260253 /home/acs/svn/acs/stars/code/imaging/lens.h
+	<boost/asio.hpp>
+	<vector>
+	<string>
+	<boost/thread/thread.hpp>
+	"autofocuser.h"
+	"commands.h"
+	"../tools/timing.h"
+
+1335450695 source:/home/acs/svn/acs/stars/code/logging/logger.cpp
+	"logger.h"
+	<fstream>
+	<boost/date_time/posix_time/posix_time.hpp>
+	<boost/format.hpp>
+	<boost/filesystem/fstream.hpp>
+	"../parameters/manager.h"
+	"../tools/timing.h"
+
+1345889758 source:/home/acs/svn/acs/stars/code/main.cpp
+	<string.h>
+	<boost/date_time/posix_time/posix_time.hpp>
+	<signal.h>
+	"star_camera.h"
+	"parameters/manager.h"
+	"shared/shared_list.h"
+	"tools/timing.h"
+	"logging/logger.h"
+	"solving/logger.h"
+	"housekeeping/logger.h"
+	"imaging/logger_lens.h"
+	"imaging/logger_camera.h"
+	"networking/logger.h"
+	"logger_main.h"
+
+1339732476 /home/acs/svn/acs/stars/code/star_camera.h
+	"tools/timing.h"
+	"imaging/lens.h"
+	"solving/solver.h"
+
+1338828916 /home/acs/svn/acs/stars/code/solving/solver.h
+	<boost/thread/thread.hpp>
+	"finding/finder.h"
+	"matching/matcher.h"
+	"refitting/refitter.h"
+	"statistician.h"
+	"autofocus_helper.h"
+
+1345449717 /home/acs/svn/acs/stars/code/solving/finding/finder.h
+	<vector>
+	"estimator.h"
+	"leveler.h"
+	"smoother.h"
+	"fitter.h"
+	"pedestal_fitter.h"
+	"../../shared/image/raw.h"
+
+1335450695 /home/acs/svn/acs/stars/code/solving/finding/estimator.h
+
+1330718807 /home/acs/svn/acs/stars/code/solving/finding/leveler.h
+
+1336409763 /home/acs/svn/acs/stars/code/solving/finding/smoother.h
+
+1335450695 /home/acs/svn/acs/stars/code/solving/finding/fitter.h
+	"../blob.h"
+
+1335450695 /home/acs/svn/acs/stars/code/solving/finding/pedestal_fitter.h
+	<vector>
+
+1341002006 /home/acs/svn/acs/stars/code/solving/matching/matcher.h
+	<math.h>
+	<vector>
+	<boost/math/distributions.hpp>
+	"../../tools/slalib.h"
+	"fluxer.h"
+	"catalog_manager.h"
+	"solution_fitter.h"
+	"../solution.h"
+	"../base_set.h"
+
+1330718807 /home/acs/svn/acs/stars/code/solving/matching/fluxer.h
+	<vector>
+
+1330718807 /home/acs/svn/acs/stars/code/solving/matching/catalog_manager.h
+	<string>
+	"../../cataloging/abstract_catalog_manager.h"
+
+1345473615 /home/acs/svn/acs/stars/code/solving/matching/solution_fitter.h
+	<vector>
+	"../solution.h"
+	"../star.h"
+	"../blob.h"
+	"../../shared/image/raw.h"
+
+1335450695 /home/acs/svn/acs/stars/code/solving/refitting/refitter.h
+	"shape_fitter.h"
+
+1335450695 /home/acs/svn/acs/stars/code/solving/refitting/shape_fitter.h
+	<vector>
+	"../blob.h"
+
+1345210142 /home/acs/svn/acs/stars/code/solving/statistician.h
+	<vector>
+	<algorithm>
+	<math.h>
+	"../shared/image/raw.h"
+
+1335450695 /home/acs/svn/acs/stars/code/solving/autofocus_helper.h
+	<vector>
+	"../shared/autofocus/datapoints.h"
+
+1345852234 /home/acs/svn/acs/stars/code/shared/shared_list.h
+	"thread_names.h"
+	"housekeeping/housekeeper.h"
+	"image/blobs.h"
+	"image/leveled.h"
+	"image/matching.h"
+	"image/matching_progress.h"
+	"image/raw.h"
+	"image/solution_summary.h"
+	"image/stats.h"
+	"image/status.h"
+	"lens/requests.h"
+	"lens/results.h"
+	"network/packets.h"
+	"network/client.h"
+	"network/image_client_settings.h"
+	"camera/requests.h"
+	"camera/results.h"
+	"simulations/brightness.h"
+	"solving/settings.h"
+	"solving/filters.h"
+	"solving/mask.h"
+	"solving/motion_psf.h"
+	"autofocus/datapoints.h"
+	"autofocus/requests.h"
+	"autofocus/results.h"
+	"autofocus/latest_image.h"
+	"general/shutdown.h"
+	"general/network_reset.h"
+	"general/main_settings.h"
+	"general/quit.h"
+
+1342087545 /home/acs/svn/acs/stars/code/shared/solving/motion_psf.h
+	"../circular_buffer.h"
+	<vector>
+
+1340821195 /home/acs/svn/acs/stars/code/shared/general/shutdown.h
+	"../circular_buffer.h"
+
+1330718807 /home/acs/svn/acs/stars/code/solving/logger.h
+	"../logging/logger.h"
+
+1345538881 source:/home/acs/svn/acs/stars/code/networking/connection.cpp
+	"connection.h"
+	<boost/bind.hpp>
+	<string>
+	"../tools/angles.h"
+	"../imaging/commands.h"
+	"../shared/update.h"
+	"../shared/network/packets.h"
+	"../tools/quick_cout.h"
+
+1345469215 /home/acs/svn/acs/stars/code/networking/connection.h
+	<boost/shared_ptr.hpp>
+	<boost/enable_shared_from_this.hpp>
+	<boost/asio.hpp>
+	<boost/date_time/posix_time/posix_time.hpp>
+	"../tools/timing.h"
+	"xsc_protocol/xsc_protocol.h"
+
+1345889634 source:/home/acs/svn/acs/stars/code/networking/loading.cpp
+	"connection.h"
+	"logger.h"
+	"../shared/update.h"
+	"../shared/camera/results.h"
+	"../shared/housekeeping/housekeeper.h"
+	"../shared/lens/results.h"
+	"../shared/image/blobs.h"
+	"../shared/image/stats.h"
+	"../shared/image/status.h"
+	"../shared/image/solution_summary.h"
+
+1345959697 source:/home/acs/svn/acs/stars/code/networking/network_manager.cpp
+	"network_manager.h"
+	<cstdlib>
+	<boost/bind.hpp>
+	"server.h"
+	"image_client.h"
+	"logger.h"
+	"../shared/general/network_reset.h"
+	"../shared/network/packets.h"
+	"../shared/general/quit.h"
+	"../shared/update.h"
+	"../tools/timing.h"
+	"../tools/quick_cout.h"
+
+1345861245 /home/acs/svn/acs/stars/code/networking/network_manager.h
+	<boost/thread/thread.hpp>
+	"../tools/timing.h"
+
+1345892763 /home/acs/svn/acs/stars/code/networking/server.h
+	<boost/asio.hpp>
+	"connection.h"
+
+1345892770 source:/home/acs/svn/acs/stars/code/networking/server.cpp
+	"server.h"
+	<boost/bind.hpp>
+
+1345885290 source:/home/acs/svn/acs/stars/code/networking/unloading.cpp
+	"connection.h"
+	<boost/bind.hpp>
+	<boost/format.hpp>
+	"logger.h"
+	"../tools/angles.h"
+	"../shared/lens/requests.h"
+	"../shared/lens/results.h"
+	"../imaging/commands.h"
+	"../shared/solving/filters.h"
+	"../shared/solving/settings.h"
+	"../shared/solving/mask.h"
+	"../shared/solving/motion_psf.h"
+	"../shared/network/packets.h"
+	"../shared/network/client.h"
+	"../shared/network/image_client_settings.h"
+	"../shared/camera/requests.h"
+	"../shared/camera/results.h"
+	"../shared/housekeeping/housekeeper.h"
+	"../shared/autofocus/requests.h"
+	"../shared/simulations/brightness.h"
+	"../shared/general/main_settings.h"
+	"../shared/general/shutdown.h"
+	"../shared/general/network_reset.h"
+	"../shared/general/quit.h"
+	"../tools/quick_cout.h"
+
+1345853178 source:/home/acs/svn/acs/stars/code/networking/xsc_protocol/xsc_protocol.c
+	"xsc_protocol.h"
+	<string.h>
+
+1345852202 source:/home/acs/svn/acs/stars/code/parameters/general.cpp
+	"general.h"
+	<fstream>
+	<boost/filesystem/operations.hpp>
+	"../logger_main.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/parameters/group.cpp
+	"group.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/parameters/housekeeping.cpp
+	"housekeeping.h"
+	<fstream>
+	<string>
+	<boost/format.hpp>
+	"../logger_main.h"
+
+1344482719 source:/home/acs/svn/acs/stars/code/parameters/manager.cpp
+	"manager.h"
+	<boost/filesystem/operations.hpp>
+
+1342520579 source:/home/acs/svn/acs/stars/code/shared/autofocus/datapoints.cpp
+	"datapoints.h"
+	<limits>
+	"../../logging/logger.h"
+
+1342503363 source:/home/acs/svn/acs/stars/code/shared/autofocus/latest_image.cpp
+	"latest_image.h"
+
+1340821195 source:/home/acs/svn/acs/stars/code/shared/autofocus/requests.cpp
+	"requests.h"
+	"../../parameters/manager.h"
+
+1335450696 source:/home/acs/svn/acs/stars/code/shared/autofocus/results.cpp
+	"results.h"
+
+1337208403 source:/home/acs/svn/acs/stars/code/shared/camera/requests.cpp
+	"requests.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/camera/results.cpp
+	"results.h"
+
+1345541267 source:/home/acs/svn/acs/stars/code/shared/general/main_settings.cpp
+	"main_settings.h"
+	"../../parameters/manager.h"
+
+1340821195 source:/home/acs/svn/acs/stars/code/shared/general/shutdown.cpp
+	"shutdown.h"
+
+1342243594 source:/home/acs/svn/acs/stars/code/shared/image/blobs.cpp
+	"blobs.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/image/leveled.cpp
+	"leveled.h"
+	<cstring>
+	"../../parameters/manager.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/image/matching.cpp
+	"matching.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/image/matching_progress.cpp
+	"matching_progress.h"
+
+1341531858 source:/home/acs/svn/acs/stars/code/shared/image/raw.cpp
+	"raw.h"
+	<cstring>
+	"../../parameters/manager.h"
+
+1339169742 source:/home/acs/svn/acs/stars/code/shared/image/solution_summary.cpp
+	"solution_summary.h"
+	"../../solving/solution.h"
+
+1340649696 source:/home/acs/svn/acs/stars/code/shared/image/stats.cpp
+	"stats.h"
+
+1344765606 source:/home/acs/svn/acs/stars/code/shared/image/status.cpp
+	"status.h"
+	"raw.h"
+	"../../logging/logger.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/lens/requests.cpp
+	"requests.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/lens/results.cpp
+	"results.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/network/client.cpp
+	"client.h"
+
+1341105680 source:/home/acs/svn/acs/stars/code/shared/network/packets.cpp
+	"packets.h"
+
+1340919897 source:/home/acs/svn/acs/stars/code/shared/request.cpp
+	"request.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/result.cpp
+	"result.h"
+
+1340907617 source:/home/acs/svn/acs/stars/code/shared/simulations/brightness.cpp
+	"brightness.h"
+	"../../tools/math.h"
+	"../../parameters/manager.h"
+	"../../networking/xsc_protocol/xsc_protocol.h"
+
+1345629419 source:/home/acs/svn/acs/stars/code/shared/solving/filters.cpp
+	"filters.h"
+	<boost/algorithm/string.hpp>
+	"settings.h"
+	"../../parameters/manager.h"
+	"../../tools/angles.h"
+	"../../solving/solution.h"
+	"../../logging/logger.h"
+
+1330718808 source:/home/acs/svn/acs/stars/code/shared/solving/mask.cpp
+	"mask.h"
+	<math.h>
+	<boost/format.hpp>
+	"../../parameters/manager.h"
+
+1342087566 source:/home/acs/svn/acs/stars/code/shared/solving/motion_psf.cpp
+	"motion_psf.h"
+	"../../tools/angles.h"
+	"../../parameters/manager.h"
+	"../image/raw.h"
+
+1345132998 source:/home/acs/svn/acs/stars/code/shared/solving/settings.cpp
+	"settings.h"
+	<boost/algorithm/string.hpp>
+	<boost/filesystem/operations.hpp>
+	"../../parameters/manager.h"
+	"../../tools/angles.h"
+
+1345889586 source:/home/acs/svn/acs/stars/code/shared/update.cpp
+	"update.h"
+	"shared_list.h"
+
+1339040889 source:/home/acs/svn/acs/stars/code/solving/attitude.cpp
+	"attitude.h"
+	"../tools/angles.h"
+
+1340649696 source:/home/acs/svn/acs/stars/code/solving/autofocus_helper.cpp
+	"autofocus_helper.h"
+	"blob.h"
+	"solution.h"
+	"../shared/image/raw.h"
+	"../shared/image/stats.h"
+	"../shared/autofocus/datapoints.h"
+	"../shared/autofocus/results.h"
+	"../tools/timing.h"
+	"../tools/correlate.h"
+	"../parameters/manager.h"
+
+1336409764 /home/acs/svn/acs/stars/code/tools/correlate.h
+
+1335450695 source:/home/acs/svn/acs/stars/code/solving/blob.cpp
+	"blob.h"
+	<boost/format.hpp>
+	"../logging/logger.h"
+
+1344059548 source:/home/acs/svn/acs/stars/code/solving/finding/estimator.cpp
+	"estimator.h"
+	<windows.h>
+	<list>
+	<vector>
+	<limits>
+	<algorithm>
+	"../blob.h"
+	"../../tools/math.h"
+	"../../shared/image/raw.h"
+	"../../shared/solving/settings.h"
+	"../logger.h"
+
+1345800569 source:/home/acs/svn/acs/stars/code/solving/finding/finder.cpp
+	"finder.h"
+	<cstdio>
+	<limits>
+	<algorithm>
+	<boost/math/special_functions/erf.hpp>
+	"../../tools/math.h"
+	"../../shared/image/blobs.h"
+	"../../shared/image/raw.h"
+	"../../shared/solving/settings.h"
+	"../../shared/solving/mask.h"
+	"../../shared/solving/motion_psf.h"
+	"../update.h"
+	"../../parameters/manager.h"
+	"../logger.h"
+	"../../tools/quick_cout.h"
+
+1330718807 /home/acs/svn/acs/stars/code/solving/update.h
+
+1340649696 source:/home/acs/svn/acs/stars/code/solving/finding/fitter.cpp
+	"fitter.h"
+	<levmar.h>
+	"../../shared/solving/settings.h"
+	"../../shared/image/raw.h"
+
+1259749415 /home/acs/projects/libraries/levmar/levmar-2.5/levmar.h
+
+1336409763 source:/home/acs/svn/acs/stars/code/solving/finding/leveler.cpp
+	"leveler.h"
+	"../../shared/image/raw.h"
+	"../../tools/math.h"
+	"../../parameters/manager.h"
+	"../logger.h"
+
+1335450695 source:/home/acs/svn/acs/stars/code/solving/finding/pedestal_fitter.cpp
+	"pedestal_fitter.h"
+	<levmar.h>
+	"../blob.h"
+	"../../shared/image/raw.h"
+	"../../tools/timing.h"
+	"../../tools/quick_cout.h"
+
+1341531676 source:/home/acs/svn/acs/stars/code/solving/finding/smoother.cpp
+	"smoother.h"
+	<math.h>
+	"../update.h"
+	"../../shared/image/raw.h"
+	"../../shared/solving/motion_psf.h"
+	"../../parameters/manager.h"
+	"../../tools/correlate.h"
+	"../../tools/psf.h"
+	"../../tools/quick_cout.h"
+
+1341531138 /home/acs/svn/acs/stars/code/tools/psf.h
+	<vector>
+	<math.h>
+
+1330718807 source:/home/acs/svn/acs/stars/code/solving/matching/catalog_manager.cpp
+	"catalog_manager.h"
+	"../update.h"
+	"../logger.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/solving/matching/fluxer.cpp
+	"fluxer.h"
+	<levmar.h>
+	<cstdlib>
+	<cmath>
+	"../../tools/timing.h"
+	"../solution.h"
+	"../blob.h"
+	"../star.h"
+	"../logger.h"
+	"../../tools/quick_cout.h"
+
+1343811268 source:/home/acs/svn/acs/stars/code/solving/matching/matcher.cpp
+	"matcher.h"
+	"../update.h"
+	"../../tools/angles.h"
+	"../../tools/ccd_projection.h"
+	"../../shared/general/quit.h"
+	"../../shared/image/blobs.h"
+	"../../shared/image/matching.h"
+	"../../shared/image/matching_progress.h"
+	"../../shared/image/raw.h"
+	"../../shared/image/solution_summary.h"
+	"../../shared/image/status.h"
+	"../../shared/solving/settings.h"
+	"../../parameters/manager.h"
+	"../logger.h"
+
+1345536052 source:/home/acs/svn/acs/stars/code/solving/matching/solution_fitter.cpp
+	"solution_fitter.h"
+	<levmar.h>
+	<cstdlib>
+	<limits>
+	"../../tools/angles.h"
+	"../../tools/slalib.h"
+	"../../shared/solving/settings.h"
+	"../../tools/ccd_projection.h"
+	"../logger.h"
+	"../../tools/quick_cout.h"
+
+1336409763 source:/home/acs/svn/acs/stars/code/solving/refitting/refitter.cpp
+	"refitter.h"
+	"../solution.h"
+	"../../shared/image/raw.h"
+	"../../tools/quick_cout.h"
+
+1335450695 source:/home/acs/svn/acs/stars/code/solving/refitting/shape_fitter.cpp
+	"shape_fitter.h"
+	<levmar.h>
+	<cmath>
+	<cstdlib>
+	"../../shared/image/raw.h"
+	"../../tools/quick_cout.h"
+	"../../shared/solving/settings.h"
+
+1336702818 source:/home/acs/svn/acs/stars/code/solving/solution.cpp
+	"solution.h"
+	"../tools/angles.h"
+	<boost/format.hpp>
+	"../shared/image/raw.h"
+	"../logging/logger.h"
+
+1345134313 source:/home/acs/svn/acs/stars/code/solving/solver.cpp
+	"solver.h"
+	"logger.h"
+	<cstdio>
+	"../tools/math.h"
+	<vector>
+	<algorithm>
+	<cstring>
+	<boost/bind.hpp>
+	"update.h"
+	"../shared/image/raw.h"
+	"../shared/image/blobs.h"
+	"../shared/image/solution_summary.h"
+	"../shared/image/stats.h"
+	"../shared/image/status.h"
+	"../shared/general/quit.h"
+	"../shared/solving/settings.h"
+	"../parameters/manager.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/solving/star.cpp
+	"star.h"
+	<math.h>
+	<boost/format.hpp>
+	"../tools/angles.h"
+	"../logging/logger.h"
+
+1345642517 source:/home/acs/svn/acs/stars/code/solving/statistician.cpp
+	"statistician.h"
+	<boost/format.hpp>
+	"../shared/image/stats.h"
+	"../shared/image/leveled.h"
+	"../shared/general/main_settings.h"
+	"../tools/stats.h"
+	"logger.h"
+
+1330718807 /home/acs/svn/acs/stars/code/tools/stats.h
+	<cmath>
+	<vector>
+
+1344765451 source:/home/acs/svn/acs/stars/code/solving/update.cpp
+	"update.h"
+	"../shared/update.h"
+	"../shared/image/status.h"
+	"../shared/solving/settings.h"
+	"../shared/general/quit.h"
+	"logger.h"
+
+1345540667 source:/home/acs/svn/acs/stars/code/star_camera.cpp
+	"star_camera.h"
+	<string>
+	"preprocessor.h"
+	"imaging/camera_empty.h"
+	"imaging/camera_windows.h"
+	"imaging/camera_filesystem.h"
+	"parameters/manager.h"
+	"networking/network_manager.h"
+	"displaying/manager.h"
+	"housekeeping/housekeeper.h"
+	"logger_main.h"
+	"tools/quick_cout.h"
+	"shared/update.h"
+	"shared/general/main_settings.h"
+	"shared/general/shutdown.h"
+	"shared/general/quit.h"
+
+1341003272 source:/home/acs/svn/acs/stars/code/tools/angles.cpp
+	"angles.h"
+	<math.h>
+	"slalib.h"
+
+1335450696 source:/home/acs/svn/acs/stars/code/tools/blob_shape.cpp
+	"math.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/ccd_projection.cpp
+	"ccd_projection.h"
+	"slalib.h"
+	"refraction.h"
+	"../shared/solving/filters.h"
+	"../shared/solving/settings.h"
+
+1330718807 /home/acs/svn/acs/stars/code/tools/refraction.h
+
+1336409764 source:/home/acs/svn/acs/stars/code/tools/correlate.cpp
+	"correlate.h"
+	<algorithm>
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/math.cpp
+	"math.h"
+
+1342073547 source:/home/acs/svn/acs/stars/code/tools/psf.cpp
+	"psf.h"
+	"../shared/solving/motion_psf.h"
+	"quick_cout.h"
+	<cstdio>
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/refraction.cpp
+	"refraction.h"
+	<math.h>
+	"angles.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/slalib.cpp
+	"slalib.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/stocc/mersenne.cpp
+	"randomc.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/stocc/mother.cpp
+	"randomc.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/stocc/stoc1.cpp
+	"stocc.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/stocc/stoc2.cpp
+	"stocc.h"
+
+1330718807 source:/home/acs/svn/acs/stars/code/tools/stocc/userintf.cpp
+	<stdio.h>
+	<stdlib.h>
+	<conio.h>
+
+1342502501 source:/home/acs/svn/acs/stars/code/tools/timing.cpp
+	"timing.h"
+	<boost/format.hpp>
+
+1345887174 /home/acs/svn/acs/stars/code/networking/logger.h
+	"../logging/logger.h"
+
+1341978584 source:/home/acs/svn/acs/stars/code/displaying/solving_filters.cpp
+	"solving_filters.h"
+	"../tools/angles.h"
+	"../shared/solving/filters.h"
+
+1341978584 /home/acs/svn/acs/stars/code/displaying/solving_filters.h
+	"block.h"
+
+1341986279 /home/acs/svn/acs/stars/code/shared/general/network_reset.h
+	<string>
+	"../circular_buffer.h"
+
+1346064746 source:/home/acs/svn/acs/stars/code/shared/general/network_reset.cpp
+	"network_reset.h"
+	"../../parameters/manager.h"
+
+1344832579 /home/acs/svn/acs/channels/channels.h
+	<stdio.h>
+	<time.h>
+	<conversions.h>
+
+1345639934 source:/home/acs/svn/acs/stars/code/networking/xsc_protocol/xsc_channels.c
+	<string.h>
+	"xsc_channels.h"
+
+1345927879 source:/home/acs/svn/acs/stars/code/networking/image_client.cpp
+	"image_client.h"
+	<boost/bind.hpp>
+	"ebex_images.h"
+	"logger.h"
+	"../shared/general/quit.h"
+	"../shared/image/raw.h"
+	"../shared/network/image_client_settings.h"
+	"../shared/update.h"
+	"../tools/quick_cout.h"
+
+1345887442 /home/acs/svn/acs/stars/code/networking/image_client.h
+	<string>
+	<boost/asio.hpp>
+	"ebex_images.h"
+
+1345849178 /home/acs/svn/acs/stars/code/networking/ebex_images.h
+	<stdbool.h>
+	<stdint.h>
+
+1345842061 source:/home/acs/svn/acs/stars/code/ebex_utilities/ebex_crc.c
+	<stdint.h>
+	<stddef.h>
+	<ebex_crc.h>
+
+1345715305 /home/acs/svn/acs/stars/code/ebex_utilities/include/ebex_crc.h
+	<stdint.h>
+
+1345885710 /home/acs/svn/acs/stars/code/shared/network/image_client_settings.h
+	"../circular_buffer.h"
+
+1345852684 source:/home/acs/svn/acs/stars/code/shared/network/image_client_settings.cpp
+	"image_client_settings.h"
+	"../../parameters/manager.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/cataloging/abstract_catalog_manager.cpp
+	"abstract_catalog_manager.h"
+	<cstdio>
+	<string>
+	<boost/lexical_cast.hpp>
+	<boost/date_time/posix_time/posix_time.hpp>
+	"../tools/slalib.h"
+	"../tools/angles.h"
+	"../tools/ccd_projection.h"
+	"../shared/solving/settings.h"
+	"../parameters/manager.h"
+	"../shared/general/quit.h"
+	"../shared/image/raw.h"
+	"../logging/logger.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/cataloging/abstract_catalog_manager.h
+	<vector>
+	<boost/filesystem/fstream.hpp>
+	"../solving/solution.h"
+	"../solving/star.h"
+	"../solving/blob.h"
+	"../shared/solving/filters.h"
+	"../shared/solving/settings.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/solving/solution.h
+	<vector>
+	"blob.h"
+	"star.h"
+	"attitude.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/solving/blob.h
+	<string>
+
+1362599895 /data/home/chappy/svn/acs/stars/code/solving/star.h
+	<string>
+
+1362599895 /data/home/chappy/svn/acs/stars/code/solving/attitude.h
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/solving/filters.h
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+	"../../tools/angles.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/circular_buffer.h
+	"thread_names.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/thread_names.h
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/timing.h
+	"windows_header.h"
+	<sys/time.h>
+	<boost/thread/thread_time.hpp>
+	<limits>
+	<string>
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/windows_header.h
+	<windows.h>
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/angles.h
+	<math.h>
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/solving/settings.h
+	<string>
+	"../circular_buffer.h"
+	"../../networking/xsc_protocol/xsc_protocol.h"
+
+1362599882 /data/home/chappy/svn/acs/stars/code/networking/xsc_protocol/xsc_protocol.h
+	"xsc_channels.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/networking/xsc_protocol/xsc_channels.h
+	<stdbool.h>
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/slalib.h
+	<math.h>
+	<ctype.h>
+	<string.h>
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/ccd_projection.h
+
+1362599896 /data/home/chappy/svn/acs/stars/code/parameters/manager.h
+	<string>
+	"general.h"
+	"housekeeping.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/parameters/general.h
+	"group.h"
+	<string>
+
+1362599896 /data/home/chappy/svn/acs/stars/code/parameters/group.h
+	<string>
+	<boost/program_options.hpp>
+	<typeinfo>
+	"../logger_main.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/logger_main.h
+	"logging/logger.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/logging/logger.h
+	<string>
+	<boost/format.hpp>
+
+1362599896 /data/home/chappy/svn/acs/stars/code/parameters/housekeeping.h
+	"group.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/general/quit.h
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/image/raw.h
+	<string>
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+	"../solving/filters.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/autofocus.cpp
+	"autofocus.h"
+	<windows.h>
+	<boost/format.hpp>
+	<limits>
+	"GL/gl.h"
+	"GL/glu.h"
+	"glhelper.h"
+	"block.h"
+	<math.h>
+	"../shared/autofocus/results.h"
+	"../shared/autofocus/requests.h"
+	"../shared/autofocus/datapoints.h"
+	"../tools/quick_cout.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/displaying/autofocus.h
+	"block.h"
+	"../shared/autofocus/datapoints.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/block.h
+	<string>
+	"dynamic_value.h"
+	"utilities.h"
+	"textures.h"
+	"color.h"
+	"../tools/timing.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/displaying/dynamic_value.h
+	<string>
+	"color.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/displaying/color.h
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/utilities.h
+	<windows.h>
+	"GL/gl.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/textures.h
+	"texture.h"
+	"glfont2/glfont2.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/texture.h
+	<string>
+	"utilities.h"
+	"GL/glu.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/displaying/glfont2/glfont2.h
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/autofocus/datapoints.h
+	<vector>
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/displaying/glhelper.h
+	<windows.h>
+	"GL/gl.h"
+	"GL/glu.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/autofocus/results.h
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/autofocus/requests.h
+	"../circular_buffer.h"
+	"../request.h"
+	"../../networking/xsc_protocol/xsc_protocol.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/request.h
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/quick_cout.h
+	<cstdio>
+	<iostream>
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/base_set.cpp
+	"base_set.h"
+	"blob.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/base_set.h
+	<math.h>
+	<vector>
+	"../tools/timing.h"
+	"../solving/base_set.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/base_set.h
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/blob.h
+	<string>
+	"utilities.h"
+	"../tools/timing.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/blob.cpp
+	"blob.h"
+	<cstdlib>
+	<string>
+	<time.h>
+	"glhelper.h"
+	<math.h>
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/block.cpp
+	"block.h"
+	<windows.h>
+	<boost/lexical_cast.hpp>
+	"GL/glext.h"
+	"color.h"
+	"glhelper.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/camera.cpp
+	"camera.h"
+	<windows.h>
+	"GL/gl.h"
+	"GL/glu.h"
+	"block.h"
+	"dynamic_value.h"
+	"../shared/camera/requests.h"
+	"../shared/camera/results.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/camera.h
+	"block.h"
+	"dynamic_value.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/camera/requests.h
+	"../circular_buffer.h"
+	"../request.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/camera/results.h
+	"../circular_buffer.h"
+	"../result.h"
+	"requests.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/result.h
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/color.cpp
+	"color.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/dynamic_value.cpp
+	"dynamic_value.h"
+	<boost/format.hpp>
+	<iomanip>
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/glfont2/glfont2.cpp
+	<string>
+	<utility>
+	<iostream>
+	<fstream>
+	<windows.h>
+	<windows.h>
+	<GL/gl.h>
+	"glfont2.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/housekeeping.cpp
+	"housekeeping.h"
+	<windows.h>
+	<string>
+	<math.h>
+	<limits>
+	"GL/gl.h"
+	"GL/glu.h"
+	"../shared/housekeeping/housekeeper.h"
+	"../tools/timing.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/housekeeping.h
+	<vector>
+	"block.h"
+	"dynamic_value.h"
+	"utilities.h"
+	"../tools/timing.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/housekeeping/housekeeper.h
+	<vector>
+	"../circular_buffer.h"
+	"measurement.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/housekeeping/measurement.h
+	<string>
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/image.cpp
+	"image.h"
+	<string>
+	<boost/format.hpp>
+	"../tools/angles.h"
+	"../shared/image/blobs.h"
+	"../shared/image/status.h"
+	"../shared/image/stats.h"
+	"../shared/image/solution_summary.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/image.h
+	"block.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/image/blobs.h
+	<vector>
+	"../circular_buffer.h"
+	"../../solving/blob.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/image/status.h
+	<string>
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/image/stats.h
+	"../circular_buffer.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/image/solution_summary.h
+	"../circular_buffer.h"
+	<vector>
+	<string>
+	"../../solving/attitude.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/lens.cpp
+	"lens.h"
+	<windows.h>
+	<cstdio>
+	<string>
+	<math.h>
+	<boost/format.hpp>
+	"GL/gl.h"
+	"GL/glu.h"
+	"../shared/lens/requests.h"
+	"../shared/lens/results.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/lens.h
+	"block.h"
+	"dynamic_value.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/lens/requests.h
+	"../circular_buffer.h"
+	"../request.h"
+	"../../imaging/commands.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/commands.h
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/lens/results.h
+	"../circular_buffer.h"
+	<string>
+	"../../imaging/commands.h"
+	"../../tools/timing.h"
+	"requests.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/manager.cpp
+	"manager.h"
+	"../parameters/manager.h"
+	"../shared/general/main_settings.h"
+	"../shared/general/quit.h"
+	"../logger_main.h"
+	"../preprocessor.h"
+	"../tools/quick_cout.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/manager.h
+	<windows.h>
+	"SDL.h"
+	"SDL/SDL.h"
+	"GL/gl.h"
+	"GL/glu.h"
+	"utilities.h"
+	"housekeeping.h"
+	"textures.h"
+	"texture.h"
+	"visual.h"
+	"autofocus.h"
+	"solving_filters.h"
+	"name.h"
+	"camera.h"
+	"image.h"
+	"lens.h"
+	"quit_box.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/displaying/visual.h
+	<stdio.h>
+	<string>
+	<math.h>
+	"texture.h"
+	"block.h"
+	"base_set.h"
+	"blob.h"
+	"utilities.h"
+	"../tools/timing.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/solving_filters.h
+	"block.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/name.h
+	"block.h"
+	"../tools/timing.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/displaying/quit_box.h
+	"block.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/general/main_settings.h
+	"../circular_buffer.h"
+
+1365369021 /data/home/chappy/svn/acs/stars/code/preprocessor.h
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/name.cpp
+	"name.h"
+	"../tools/math.h"
+	"../shared/network/packets.h"
+	"../shared/general/network_reset.h"
+	"../tools/quick_cout.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/math.h
+	<math.h>
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/network/packets.h
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/general/network_reset.h
+	<string>
+	"../circular_buffer.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/network.cpp
+	"network.h"
+	"../shared/network/packets.h"
+	"../shared/network/client.h"
+	"../shared/camera/results.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/displaying/network.h
+	"block.h"
+	"dynamic_value.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/network/client.h
+	"../circular_buffer.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/quit_box.cpp
+	"quit_box.h"
+	"glhelper.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/solving_filters.cpp
+	"solving_filters.h"
+	"../tools/angles.h"
+	"../shared/solving/filters.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/texture.cpp
+	"texture.h"
+	<windows.h>
+	<cstdlib>
+	"math.h"
+	<tiffio.h>
+	"GL/gl.h"
+	"glhelper.h"
+	"../logger_main.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/displaying/textures.cpp
+	"textures.h"
+	<boost/filesystem/operations.hpp>
+	"../parameters/manager.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/displaying/visual.cpp
+	"visual.h"
+	<math.h>
+	<boost/filesystem/operations.hpp>
+	"../parameters/manager.h"
+	"../shared/general/main_settings.h"
+	"../shared/image/blobs.h"
+	"../shared/image/leveled.h"
+	"../shared/image/matching.h"
+	"../shared/image/matching_progress.h"
+	"../shared/image/status.h"
+	"../shared/image/solution_summary.h"
+	"../shared/solving/mask.h"
+	"../logger_main.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/image/leveled.h
+	"../circular_buffer.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/image/matching.h
+	<vector>
+	"../circular_buffer.h"
+	"../../solving/base_set.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/image/matching_progress.h
+	"../circular_buffer.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/solving/mask.h
+	"../circular_buffer.h"
+	<boost/cstdint.hpp>
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/housekeeping/disk.cpp
+	"housekeeper.h"
+	<boost/filesystem.hpp>
+	<limits>
+	"logger.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/housekeeping/housekeeper.h
+	<boost/program_options.hpp>
+	"measurement.h"
+	"../tools/timing.h"
+	<string>
+
+1362599895 /data/home/chappy/svn/acs/stars/code/housekeeping/measurement.h
+	<string>
+
+1362599895 /data/home/chappy/svn/acs/stars/code/housekeeping/logger.h
+	"../logging/logger.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/housekeeping/housekeeper.cpp
+	"housekeeper.h"
+	"cbw.h"
+	<fstream>
+	<boost/format.hpp>
+	"../parameters/manager.h"
+	"../shared/housekeeping/housekeeper.h"
+	"logger.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/housekeeping/measurement.cpp
+	"measurement.h"
+
+1362599897 source:/data/home/chappy/svn/acs/stars/code/imaging/abstract_camera.cpp
+	"abstract_camera.h"
+	<wtypes.h>
+	<boost/format.hpp>
+	<boost/filesystem/fstream.hpp>
+	<fitsio.h>
+	<string.h>
+	<limits>
+	"../shared/update.h"
+	"../shared/image/raw.h"
+	"../shared/image/status.h"
+	"../shared/autofocus/latest_image.h"
+	"../shared/lens/requests.h"
+	"../shared/lens/results.h"
+	"../shared/solving/filters.h"
+	"../shared/network/client.h"
+	"../shared/camera/results.h"
+	"../shared/simulations/brightness.h"
+	"../shared/housekeeping/housekeeper.h"
+	"../parameters/manager.h"
+	"logger_camera.h"
+	"../tools/quick_cout.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/abstract_camera.h
+	<string>
+	<boost/date_time/posix_time/posix_time.hpp>
+	"fake_sky.h"
+	"../tools/timing.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/fake_sky.h
+	"../tools/stocc/stocc.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/stocc/stocc.h
+	<math.h>
+	"randomc.h"
+	"stocR.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/stocc/randomc.h
+	<inttypes.h>
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/update.h
+	"thread_names.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/autofocus/latest_image.h
+	"../circular_buffer.h"
+	"../../tools/timing.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/simulations/brightness.h
+	"../circular_buffer.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/logger_camera.h
+	"../logging/logger.h"
+
+1362599897 source:/data/home/chappy/svn/acs/stars/code/imaging/autofocuser.cpp
+	"autofocuser.h"
+	<limits>
+	"logger_lens.h"
+	"commands.h"
+	"../tools/math.h"
+	"../shared/autofocus/datapoints.h"
+	"../shared/autofocus/requests.h"
+	"../shared/autofocus/latest_image.h"
+	"../shared/autofocus/results.h"
+	"../shared/lens/requests.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/autofocuser.h
+	"../tools/timing.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/logger_lens.h
+	"../logging/logger.h"
+
+1362599897 source:/data/home/chappy/svn/acs/stars/code/imaging/camera_empty.cpp
+	"../preprocessor.h"
+	"camera_empty.h"
+	"../shared/general/quit.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/camera_empty.h
+	"../preprocessor.h"
+	<boost/thread/thread.hpp>
+	"abstract_camera.h"
+
+1365384157 source:/data/home/chappy/svn/acs/stars/code/imaging/camera_filesystem.cpp
+	"camera_filesystem.h"
+	<boost/algorithm/string/predicate.hpp>
+	<boost/algorithm/string.hpp>
+	<boost/filesystem/path.hpp>
+	<boost/filesystem/operations.hpp>
+	"../parameters/manager.h"
+	"../shared/image/raw.h"
+	"../shared/general/quit.h"
+	"logger_camera.h"
+	"../tools/quick_cout.h"
+
+1365383855 /data/home/chappy/svn/acs/stars/code/imaging/camera_filesystem.h
+	"abstract_camera.h"
+	<string>
+	<vector>
+	<fitsio.h>
+	<boost/thread/thread.hpp>
+	<boost/filesystem/path.hpp>
+	"../tools/timing.h"
+
+1362599897 source:/data/home/chappy/svn/acs/stars/code/imaging/camera_windows.cpp
+	"../preprocessor.h"
+	"camera_windows.h"
+	"../parameters/manager.h"
+	"../shared/image/raw.h"
+	"../shared/camera/results.h"
+	"../shared/camera/requests.h"
+	"../shared/general/quit.h"
+	"logger_camera.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/camera_windows.h
+	"../preprocessor.h"
+	<windows.h>
+	<boost/thread/thread.hpp>
+	"abstract_camera.h"
+	"megapluslib.h"
+	"QCamApi.h"
+	"niimaq1394.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/QCamApi.h
+
+1362599897 source:/data/home/chappy/svn/acs/stars/code/imaging/fake_sky.cpp
+	"fake_sky.h"
+	<time.h>
+	"../shared/simulations/brightness.h"
+	"../tools/stats.h"
+	"../tools/quick_cout.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/stats.h
+	<cmath>
+	<vector>
+
+1362599897 source:/data/home/chappy/svn/acs/stars/code/imaging/lens.cpp
+	"lens.h"
+	<boost/format.hpp>
+	<boost/algorithm/string.hpp>
+	<sstream>
+	<vector>
+	"../parameters/manager.h"
+	"../shared/update.h"
+	"../shared/lens/requests.h"
+	"../shared/lens/results.h"
+	"../shared/general/quit.h"
+	"logger_lens.h"
+
+1362599897 /data/home/chappy/svn/acs/stars/code/imaging/lens.h
+	<boost/asio.hpp>
+	<vector>
+	<string>
+	<boost/thread/thread.hpp>
+	"autofocuser.h"
+	"commands.h"
+	"../tools/timing.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/logging/logger.cpp
+	"logger.h"
+	<fstream>
+	<boost/date_time/posix_time/posix_time.hpp>
+	<boost/format.hpp>
+	<boost/filesystem/fstream.hpp>
+	"../parameters/manager.h"
+	"../tools/timing.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/main.cpp
+	<string.h>
+	<boost/date_time/posix_time/posix_time.hpp>
+	<signal.h>
+	"star_camera.h"
+	"parameters/manager.h"
+	"shared/shared_list.h"
+	"tools/timing.h"
+	"logging/logger.h"
+	"solving/logger.h"
+	"housekeeping/logger.h"
+	"imaging/logger_lens.h"
+	"imaging/logger_camera.h"
+	"networking/logger.h"
+	"logger_main.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/star_camera.h
+	"tools/timing.h"
+	"imaging/lens.h"
+	"solving/solver.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/solving/solver.h
+	<boost/thread/thread.hpp>
+	"finding/finder.h"
+	"matching/matcher.h"
+	"refitting/refitter.h"
+	"statistician.h"
+	"autofocus_helper.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/finding/finder.h
+	<vector>
+	"estimator.h"
+	"leveler.h"
+	"smoother.h"
+	"fitter.h"
+	"pedestal_fitter.h"
+	"../../shared/image/raw.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/finding/estimator.h
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/finding/leveler.h
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/finding/smoother.h
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/finding/fitter.h
+	"../blob.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/finding/pedestal_fitter.h
+	<vector>
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/matching/matcher.h
+	<math.h>
+	<vector>
+	<boost/math/distributions.hpp>
+	"../../tools/slalib.h"
+	"fluxer.h"
+	"catalog_manager.h"
+	"solution_fitter.h"
+	"../solution.h"
+	"../base_set.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/matching/fluxer.h
+	<vector>
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/matching/catalog_manager.h
+	<string>
+	"../../cataloging/abstract_catalog_manager.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/matching/solution_fitter.h
+	<vector>
+	"../solution.h"
+	"../star.h"
+	"../blob.h"
+	"../../shared/image/raw.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/refitting/refitter.h
+	"shape_fitter.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/refitting/shape_fitter.h
+	<vector>
+	"../blob.h"
+
+1362599894 /data/home/chappy/svn/acs/stars/code/solving/statistician.h
+	<vector>
+	<algorithm>
+	<math.h>
+	"../shared/image/raw.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/solving/autofocus_helper.h
+	<vector>
+	"../shared/autofocus/datapoints.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/shared_list.h
+	"thread_names.h"
+	"housekeeping/housekeeper.h"
+	"image/blobs.h"
+	"image/leveled.h"
+	"image/matching.h"
+	"image/matching_progress.h"
+	"image/raw.h"
+	"image/solution_summary.h"
+	"image/stats.h"
+	"image/status.h"
+	"lens/requests.h"
+	"lens/results.h"
+	"network/packets.h"
+	"network/client.h"
+	"network/image_client_settings.h"
+	"camera/requests.h"
+	"camera/results.h"
+	"simulations/brightness.h"
+	"solving/settings.h"
+	"solving/filters.h"
+	"solving/mask.h"
+	"solving/motion_psf.h"
+	"autofocus/datapoints.h"
+	"autofocus/requests.h"
+	"autofocus/results.h"
+	"autofocus/latest_image.h"
+	"general/shutdown.h"
+	"general/network_reset.h"
+	"general/main_settings.h"
+	"general/quit.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/network/image_client_settings.h
+	"../circular_buffer.h"
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/solving/motion_psf.h
+	"../circular_buffer.h"
+	<vector>
+
+1362599896 /data/home/chappy/svn/acs/stars/code/shared/general/shutdown.h
+	"../circular_buffer.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/solving/logger.h
+	"../logging/logger.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/networking/logger.h
+	"../logging/logger.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/networking/connection.cpp
+	"connection.h"
+	<boost/bind.hpp>
+	<string>
+	"../tools/angles.h"
+	"../imaging/commands.h"
+	"../shared/update.h"
+	"../shared/network/packets.h"
+	"../tools/quick_cout.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/networking/connection.h
+	<boost/shared_ptr.hpp>
+	<boost/enable_shared_from_this.hpp>
+	<boost/asio.hpp>
+	<boost/date_time/posix_time/posix_time.hpp>
+	"../tools/timing.h"
+	"xsc_protocol/xsc_protocol.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/networking/image_client.cpp
+	"image_client.h"
+	<boost/bind.hpp>
+	"ebex_images.h"
+	"logger.h"
+	"../shared/general/quit.h"
+	"../shared/image/raw.h"
+	"../shared/network/image_client_settings.h"
+	"../shared/update.h"
+	"../tools/quick_cout.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/networking/image_client.h
+	<string>
+	<boost/asio.hpp>
+	"ebex_images.h"
+
+1362599882 /data/home/chappy/svn/acs/stars/code/networking/ebex_images.h
+	<stdbool.h>
+	<stdint.h>
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/networking/loading.cpp
+	"connection.h"
+	"logger.h"
+	"../shared/update.h"
+	"../shared/camera/results.h"
+	"../shared/housekeeping/housekeeper.h"
+	"../shared/lens/results.h"
+	"../shared/image/blobs.h"
+	"../shared/image/stats.h"
+	"../shared/image/status.h"
+	"../shared/image/solution_summary.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/networking/network_manager.cpp
+	"network_manager.h"
+	<cstdlib>
+	<boost/bind.hpp>
+	<limits>
+	"server.h"
+	"image_client.h"
+	"logger.h"
+	"../shared/general/network_reset.h"
+	"../shared/network/packets.h"
+	"../shared/general/quit.h"
+	"../shared/update.h"
+	"../tools/timing.h"
+	"../tools/quick_cout.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/networking/network_manager.h
+	<boost/thread/thread.hpp>
+	"../tools/timing.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/networking/server.h
+	<boost/asio.hpp>
+	"connection.h"
+
+1365369317 source:/data/home/chappy/svn/acs/stars/code/networking/server.cpp
+	"server.h"
+	<boost/bind.hpp>
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/networking/unloading.cpp
+	"connection.h"
+	<boost/bind.hpp>
+	<boost/format.hpp>
+	"logger.h"
+	"../tools/angles.h"
+	"../shared/lens/requests.h"
+	"../shared/lens/results.h"
+	"../imaging/commands.h"
+	"../shared/solving/filters.h"
+	"../shared/solving/settings.h"
+	"../shared/solving/mask.h"
+	"../shared/solving/motion_psf.h"
+	"../shared/network/packets.h"
+	"../shared/network/client.h"
+	"../shared/network/image_client_settings.h"
+	"../shared/camera/requests.h"
+	"../shared/camera/results.h"
+	"../shared/housekeeping/housekeeper.h"
+	"../shared/autofocus/requests.h"
+	"../shared/simulations/brightness.h"
+	"../shared/general/main_settings.h"
+	"../shared/general/shutdown.h"
+	"../shared/general/network_reset.h"
+	"../shared/general/quit.h"
+	"../tools/quick_cout.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/networking/xsc_protocol/xsc_channels.c
+	<string.h>
+	"xsc_channels.h"
+
+1362599882 source:/data/home/chappy/svn/acs/stars/code/networking/xsc_protocol/xsc_protocol.c
+	"xsc_protocol.h"
+	<string.h>
+
+1365382782 source:/data/home/chappy/svn/acs/stars/code/parameters/general.cpp
+	"general.h"
+	<fstream>
+	<boost/filesystem/operations.hpp>
+	"../logger_main.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/parameters/group.cpp
+	"group.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/parameters/housekeeping.cpp
+	"housekeeping.h"
+	<fstream>
+	<string>
+	<boost/format.hpp>
+	"../logger_main.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/parameters/manager.cpp
+	"manager.h"
+	<boost/filesystem/operations.hpp>
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/autofocus/datapoints.cpp
+	"datapoints.h"
+	<limits>
+	"../../logging/logger.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/autofocus/latest_image.cpp
+	"latest_image.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/autofocus/requests.cpp
+	"requests.h"
+	"../../parameters/manager.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/autofocus/results.cpp
+	"results.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/camera/requests.cpp
+	"requests.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/camera/results.cpp
+	"results.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/general/main_settings.cpp
+	"main_settings.h"
+	"../../parameters/manager.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/general/network_reset.cpp
+	"network_reset.h"
+	"../../parameters/manager.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/general/shutdown.cpp
+	"shutdown.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/image/blobs.cpp
+	"blobs.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/image/leveled.cpp
+	"leveled.h"
+	<cstring>
+	"../../parameters/manager.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/image/matching.cpp
+	"matching.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/image/matching_progress.cpp
+	"matching_progress.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/image/raw.cpp
+	"raw.h"
+	<cstring>
+	"../../parameters/manager.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/image/solution_summary.cpp
+	"solution_summary.h"
+	"../../solving/solution.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/image/stats.cpp
+	"stats.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/image/status.cpp
+	"status.h"
+	"raw.h"
+	"../../logging/logger.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/lens/requests.cpp
+	"requests.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/lens/results.cpp
+	"results.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/network/client.cpp
+	"client.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/network/image_client_settings.cpp
+	"image_client_settings.h"
+	"../../parameters/manager.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/network/packets.cpp
+	"packets.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/result.cpp
+	"result.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/simulations/brightness.cpp
+	"brightness.h"
+	"../../tools/math.h"
+	"../../parameters/manager.h"
+	"../../networking/xsc_protocol/xsc_protocol.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/solving/filters.cpp
+	"filters.h"
+	<boost/algorithm/string.hpp>
+	"settings.h"
+	"../../parameters/manager.h"
+	"../../tools/angles.h"
+	"../../solving/solution.h"
+	"../../logging/logger.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/solving/mask.cpp
+	"mask.h"
+	<math.h>
+	<boost/format.hpp>
+	"../../parameters/manager.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/solving/motion_psf.cpp
+	"motion_psf.h"
+	"../../tools/angles.h"
+	"../../parameters/manager.h"
+	"../image/raw.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/solving/settings.cpp
+	"settings.h"
+	<boost/algorithm/string.hpp>
+	<boost/filesystem/operations.hpp>
+	"../../parameters/manager.h"
+	"../../tools/angles.h"
+
+1362599896 source:/data/home/chappy/svn/acs/stars/code/shared/update.cpp
+	"update.h"
+	"shared_list.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/solving/attitude.cpp
+	"attitude.h"
+	"../tools/angles.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/autofocus_helper.cpp
+	"autofocus_helper.h"
+	"blob.h"
+	"solution.h"
+	"../shared/image/raw.h"
+	"../shared/image/stats.h"
+	"../shared/autofocus/datapoints.h"
+	"../shared/autofocus/results.h"
+	"../tools/timing.h"
+	"../tools/correlate.h"
+	"../parameters/manager.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/correlate.h
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/solving/blob.cpp
+	"blob.h"
+	<boost/format.hpp>
+	"../logging/logger.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/finding/estimator.cpp
+	"estimator.h"
+	<windows.h>
+	<list>
+	<vector>
+	<limits>
+	<algorithm>
+	"../blob.h"
+	"../../tools/math.h"
+	"../../shared/image/raw.h"
+	"../../shared/solving/settings.h"
+	"../logger.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/finding/finder.cpp
+	"finder.h"
+	<cstdio>
+	<limits>
+	<algorithm>
+	<boost/math/special_functions/erf.hpp>
+	"../../tools/math.h"
+	"../../shared/image/blobs.h"
+	"../../shared/image/raw.h"
+	"../../shared/solving/settings.h"
+	"../../shared/solving/mask.h"
+	"../../shared/solving/motion_psf.h"
+	"../update.h"
+	"../../parameters/manager.h"
+	"../logger.h"
+	"../../tools/quick_cout.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/solving/update.h
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/finding/fitter.cpp
+	"fitter.h"
+	<levmar.h>
+	"../../shared/solving/settings.h"
+	"../../shared/image/raw.h"
+
+1259749415 /home/chappy/projects/libraries/levmar/levmar-2.5/levmar.h
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/finding/leveler.cpp
+	"leveler.h"
+	"../../shared/image/raw.h"
+	"../../tools/math.h"
+	"../../parameters/manager.h"
+	"../logger.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/finding/pedestal_fitter.cpp
+	"pedestal_fitter.h"
+	<levmar.h>
+	"../blob.h"
+	"../../shared/image/raw.h"
+	"../../tools/timing.h"
+	"../../tools/quick_cout.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/finding/smoother.cpp
+	"smoother.h"
+	<math.h>
+	"../update.h"
+	"../../shared/image/raw.h"
+	"../../shared/solving/motion_psf.h"
+	"../../parameters/manager.h"
+	"../../tools/correlate.h"
+	"../../tools/psf.h"
+	"../../tools/quick_cout.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/psf.h
+	<vector>
+	<math.h>
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/matching/catalog_manager.cpp
+	"catalog_manager.h"
+	"../update.h"
+	"../logger.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/matching/fluxer.cpp
+	"fluxer.h"
+	<levmar.h>
+	<cstdlib>
+	<cmath>
+	"../../tools/timing.h"
+	"../solution.h"
+	"../blob.h"
+	"../star.h"
+	"../logger.h"
+	"../../tools/quick_cout.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/matching/matcher.cpp
+	"matcher.h"
+	"../update.h"
+	"../../tools/angles.h"
+	"../../tools/ccd_projection.h"
+	"../../shared/general/quit.h"
+	"../../shared/image/blobs.h"
+	"../../shared/image/matching.h"
+	"../../shared/image/matching_progress.h"
+	"../../shared/image/raw.h"
+	"../../shared/image/solution_summary.h"
+	"../../shared/image/status.h"
+	"../../shared/solving/settings.h"
+	"../../parameters/manager.h"
+	"../logger.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/matching/solution_fitter.cpp
+	"solution_fitter.h"
+	<levmar.h>
+	<cstdlib>
+	<limits>
+	"../../tools/angles.h"
+	"../../tools/slalib.h"
+	"../../shared/solving/settings.h"
+	"../../tools/ccd_projection.h"
+	"../logger.h"
+	"../../tools/quick_cout.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/refitting/refitter.cpp
+	"refitter.h"
+	"../solution.h"
+	"../../shared/image/raw.h"
+	"../../tools/quick_cout.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/refitting/shape_fitter.cpp
+	"shape_fitter.h"
+	<levmar.h>
+	<cmath>
+	<cstdlib>
+	"../../shared/image/raw.h"
+	"../../tools/quick_cout.h"
+	"../../shared/solving/settings.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/solving/solution.cpp
+	"solution.h"
+	"../tools/angles.h"
+	<boost/format.hpp>
+	"../shared/image/raw.h"
+	"../logging/logger.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/solver.cpp
+	"solver.h"
+	"logger.h"
+	<cstdio>
+	"../tools/math.h"
+	<vector>
+	<algorithm>
+	<cstring>
+	<boost/bind.hpp>
+	"update.h"
+	"../shared/image/raw.h"
+	"../shared/image/blobs.h"
+	"../shared/image/solution_summary.h"
+	"../shared/image/stats.h"
+	"../shared/image/status.h"
+	"../shared/general/quit.h"
+	"../shared/solving/settings.h"
+	"../parameters/manager.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/star.cpp
+	"star.h"
+	<math.h>
+	<boost/format.hpp>
+	"../tools/angles.h"
+	"../logging/logger.h"
+
+1362599894 source:/data/home/chappy/svn/acs/stars/code/solving/statistician.cpp
+	"statistician.h"
+	<boost/format.hpp>
+	"../shared/image/stats.h"
+	"../shared/image/leveled.h"
+	"../shared/general/main_settings.h"
+	"../tools/stats.h"
+	"logger.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/solving/update.cpp
+	"update.h"
+	"../shared/update.h"
+	"../shared/image/status.h"
+	"../shared/solving/settings.h"
+	"../shared/general/quit.h"
+	"logger.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/star_camera.cpp
+	"star_camera.h"
+	<string>
+	"preprocessor.h"
+	"imaging/camera_empty.h"
+	"imaging/camera_windows.h"
+	"imaging/camera_filesystem.h"
+	"parameters/manager.h"
+	"networking/network_manager.h"
+	"displaying/manager.h"
+	"housekeeping/housekeeper.h"
+	"logger_main.h"
+	"tools/quick_cout.h"
+	"shared/update.h"
+	"shared/general/main_settings.h"
+	"shared/general/shutdown.h"
+	"shared/general/quit.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/angles.cpp
+	"angles.h"
+	<math.h>
+	"slalib.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/blob_shape.cpp
+	"math.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/ccd_projection.cpp
+	"ccd_projection.h"
+	"slalib.h"
+	"refraction.h"
+	"../shared/solving/filters.h"
+	"../shared/solving/settings.h"
+
+1362599895 /data/home/chappy/svn/acs/stars/code/tools/refraction.h
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/correlate.cpp
+	"correlate.h"
+	<algorithm>
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/math.cpp
+	"math.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/psf.cpp
+	"psf.h"
+	"../shared/solving/motion_psf.h"
+	"quick_cout.h"
+	<cstdio>
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/refraction.cpp
+	"refraction.h"
+	<math.h>
+	"angles.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/slalib.cpp
+	"slalib.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/stocc/mersenne.cpp
+	"randomc.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/stocc/mother.cpp
+	"randomc.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/stocc/stoc1.cpp
+	"stocc.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/stocc/stoc2.cpp
+	"stocc.h"
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/stocc/userintf.cpp
+	<stdio.h>
+	<stdlib.h>
+	<conio.h>
+
+1362599895 source:/data/home/chappy/svn/acs/stars/code/tools/timing.cpp
+	"timing.h"
+	<boost/format.hpp>
+
+1362599894 source:/data/home/chappy/svn/acs/fcp/sensors/xsc_protocol/xsc_channels.c
+	<string.h>
+	"xsc_channels.h"
+
+1362599894 /data/home/chappy/svn/acs/fcp/sensors/xsc_protocol/xsc_channels.h
+	<stdbool.h>
+
+1362599882 source:/data/home/chappy/svn/acs/fcp/sensors/xsc_protocol/xsc_protocol.c
+	"xsc_protocol.h"
+	<string.h>
+
+1362599882 /data/home/chappy/svn/acs/fcp/sensors/xsc_protocol/xsc_protocol.h
+	"xsc_channels.h"
+

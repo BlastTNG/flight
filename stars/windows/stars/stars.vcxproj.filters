@@ -1,0 +1,846 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\tools">
+      <UniqueIdentifier>{d0574bad-b6cc-4f19-846f-ed3bb7a8986a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tools">
+      <UniqueIdentifier>{00892c16-c992-46c5-b7d3-e35515148ae2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\displaying">
+      <UniqueIdentifier>{4aa442ea-e7e6-4670-aadf-c8f1a599126c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\displaying">
+      <UniqueIdentifier>{e32909c1-1c9c-4f94-97d6-e35e44c8b83f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\displaying\glfont2">
+      <UniqueIdentifier>{944e60ed-7d43-4196-af09-39f4b2d69399}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\displaying\glfont2">
+      <UniqueIdentifier>{756c9d33-ad4e-41e0-9ee9-8f6ecba97ae4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\imaging">
+      <UniqueIdentifier>{911ed74c-b3e7-4971-a546-09c7baa39e2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\solving">
+      <UniqueIdentifier>{0bd6d89c-fbe4-4dd3-8ab5-0167eac085cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\solving">
+      <UniqueIdentifier>{a913881a-fa30-4404-bb3e-59bc2b58eada}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\cataloging">
+      <UniqueIdentifier>{1ce117b9-fc08-4efe-804d-01749b6a055f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cataloging">
+      <UniqueIdentifier>{b6ddce00-8465-42a7-a65c-6c5152f1dc23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\networking">
+      <UniqueIdentifier>{73479fa3-ae38-4dcc-ac97-acd17977adb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\networking">
+      <UniqueIdentifier>{ea4cddc6-8e31-48e9-9380-f8259a7010b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\housekeeping">
+      <UniqueIdentifier>{1468941c-6237-44cd-a428-50d66749bc85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\housekeeping">
+      <UniqueIdentifier>{42b208b0-067b-4e47-9d77-8be3c36394fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared">
+      <UniqueIdentifier>{ecd2fc01-2ebd-4c76-b36b-93168b241b6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared">
+      <UniqueIdentifier>{87ddabf8-c5b7-4376-9e67-a97be8d34b43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\image">
+      <UniqueIdentifier>{398155a6-d1a3-4104-9dfd-35dc74591a41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\solving">
+      <UniqueIdentifier>{7f8ac6ca-5040-4ceb-9819-6856c2296f1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\image">
+      <UniqueIdentifier>{054b82a8-f279-483f-9e0c-9d1cf320c139}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\solving">
+      <UniqueIdentifier>{15f38b63-5064-41d5-935a-5cfacbec4dc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\parameters">
+      <UniqueIdentifier>{92aa6fa4-e0e2-432b-8bad-b646cfbe2a6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\parameters">
+      <UniqueIdentifier>{85e2b37f-a5de-4506-9d96-e378aa9856e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\general">
+      <UniqueIdentifier>{24e9ad85-3e28-4646-870e-7a30ae40c6e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\housekeeping">
+      <UniqueIdentifier>{a8e71c00-7e64-4369-bff3-b64060c549b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\lens">
+      <UniqueIdentifier>{c4078e26-be21-4822-8dac-d33439a18918}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\network">
+      <UniqueIdentifier>{5a7f342c-b03c-432a-8e4f-bb008b568c4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\lens">
+      <UniqueIdentifier>{0697db53-bae7-4675-acd7-cd1b2df7e54c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\network">
+      <UniqueIdentifier>{14d0ed63-a6ae-449c-a592-6bacfda1de1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\simulations">
+      <UniqueIdentifier>{06672777-288e-4adf-b55e-f2ae9148f193}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\simulations">
+      <UniqueIdentifier>{f8df4927-fac6-44fa-aad1-cc7428055cb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\solving\finding">
+      <UniqueIdentifier>{45f08c69-701c-44d5-82c8-05f2371a1183}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\solving\finding">
+      <UniqueIdentifier>{ead47fdb-1021-4fc6-8dda-587d7b386b79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\solving\matching">
+      <UniqueIdentifier>{1c01162f-179f-48eb-bfac-fe6a3ed3eee3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\solving\matching">
+      <UniqueIdentifier>{dcc608bb-6d6b-481d-9c83-86333cda7fb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tools\stocc">
+      <UniqueIdentifier>{b8416038-ef02-41ca-97e5-6fad859b5722}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\tools\stocc">
+      <UniqueIdentifier>{9351d1a9-529b-468c-ac45-aa27c010b246}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\camera">
+      <UniqueIdentifier>{cbb541fd-20f6-49ab-81a2-5f1747ff584f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\camera">
+      <UniqueIdentifier>{1c3787f9-954e-4383-9cef-823d76cc226a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\imaging">
+      <UniqueIdentifier>{9048f341-6aa1-4185-aa41-e4b9c42b8954}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\logging">
+      <UniqueIdentifier>{2913ac29-0bc6-439c-b5ad-4ee44c285cc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\logging">
+      <UniqueIdentifier>{d0e47073-97df-45e5-89ce-481ba2ee08dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\solving\refitting">
+      <UniqueIdentifier>{606e1061-53d8-4e06-9f11-0b24bb627134}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\solving\refitting">
+      <UniqueIdentifier>{fa0754ff-517c-4389-99a6-17d87296d716}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\autofocus">
+      <UniqueIdentifier>{0eca542a-9f0f-4443-bd43-917b980e493a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\autofocus">
+      <UniqueIdentifier>{178e4b5b-1bd9-43b0-9324-c0eb08508b4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\general">
+      <UniqueIdentifier>{0a9f4790-83b3-4db6-808a-bb94fd055727}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\networking\xsc_protocol">
+      <UniqueIdentifier>{55098bf3-db80-4343-aa23-7035a880299b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\networking\xsc_protocol">
+      <UniqueIdentifier>{e463ac84-55de-4785-bf74-559f0f4aa0fc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\code\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\star_camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\timing.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\angles.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\glfont2\glfont2.cpp">
+      <Filter>Source Files\displaying\glfont2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\math.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\slalib.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\networking\connection.cpp">
+      <Filter>Source Files\networking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\networking\network_manager.cpp">
+      <Filter>Source Files\networking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\networking\server.cpp">
+      <Filter>Source Files\networking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\housekeeping\housekeeper.cpp">
+      <Filter>Source Files\housekeeping</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\image\blobs.cpp">
+      <Filter>Source Files\shared\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\image\matching.cpp">
+      <Filter>Source Files\shared\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\image\matching_progress.cpp">
+      <Filter>Source Files\shared\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\image\raw.cpp">
+      <Filter>Source Files\shared\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\image\stats.cpp">
+      <Filter>Source Files\shared\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\image\status.cpp">
+      <Filter>Source Files\shared\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\solving\filters.cpp">
+      <Filter>Source Files\shared\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\solving\settings.cpp">
+      <Filter>Source Files\shared\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\solution.cpp">
+      <Filter>Source Files\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\solver.cpp">
+      <Filter>Source Files\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\star.cpp">
+      <Filter>Source Files\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\statistician.cpp">
+      <Filter>Source Files\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\update.cpp">
+      <Filter>Source Files\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\blob.cpp">
+      <Filter>Source Files\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\parameters\general.cpp">
+      <Filter>Source Files\parameters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\parameters\group.cpp">
+      <Filter>Source Files\parameters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\parameters\housekeeping.cpp">
+      <Filter>Source Files\parameters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\parameters\manager.cpp">
+      <Filter>Source Files\parameters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\base_set.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\blob.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\block.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\camera.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\color.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\dynamic_value.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\housekeeping.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\image.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\lens.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\manager.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\texture.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\textures.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\visual.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\housekeeping\disk.cpp">
+      <Filter>Source Files\housekeeping</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\lens\requests.cpp">
+      <Filter>Source Files\shared\lens</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\network\packets.cpp">
+      <Filter>Source Files\shared\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\simulations\brightness.cpp">
+      <Filter>Source Files\shared\simulations</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\estimator.cpp">
+      <Filter>Source Files\solving\finding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\finder.cpp">
+      <Filter>Source Files\solving\finding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\leveler.cpp">
+      <Filter>Source Files\solving\finding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\smoother.cpp">
+      <Filter>Source Files\solving\finding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\matching\fluxer.cpp">
+      <Filter>Source Files\solving\matching</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\matching\matcher.cpp">
+      <Filter>Source Files\solving\matching</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\housekeeping\measurement.cpp">
+      <Filter>Source Files\housekeeping</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\image\leveled.cpp">
+      <Filter>Source Files\shared\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\stocc\userintf.cpp">
+      <Filter>Source Files\tools\stocc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\stocc\stoc2.cpp">
+      <Filter>Source Files\tools\stocc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\stocc\stoc1.cpp">
+      <Filter>Source Files\tools\stocc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\stocc\mersenne.cpp">
+      <Filter>Source Files\tools\stocc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\stocc\mother.cpp">
+      <Filter>Source Files\tools\stocc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\fitter.cpp">
+      <Filter>Source Files\solving\finding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\network\client.cpp">
+      <Filter>Source Files\shared\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\refraction.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\matching\solution_fitter.cpp">
+      <Filter>Source Files\solving\matching</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\lens\results.cpp">
+      <Filter>Source Files\shared\lens</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\solving\mask.cpp">
+      <Filter>Source Files\shared\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\quit_box.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\camera\results.cpp">
+      <Filter>Source Files\shared\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\camera\requests.cpp">
+      <Filter>Source Files\shared\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\result.cpp">
+      <Filter>Source Files\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\imaging\camera_windows.cpp">
+      <Filter>Source Files\imaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\imaging\fake_sky.cpp">
+      <Filter>Source Files\imaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\imaging\lens.cpp">
+      <Filter>Source Files\imaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\matching\catalog_manager.cpp">
+      <Filter>Source Files\solving\matching</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\imaging\abstract_camera.cpp">
+      <Filter>Source Files\imaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\logging\logger.cpp">
+      <Filter>Source Files\logging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\cataloging\abstract_catalog_manager.cpp">
+      <Filter>Source Files\cataloging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\ccd_projection.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\pedestal_fitter.cpp">
+      <Filter>Source Files\solving\finding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\refitting\refitter.cpp">
+      <Filter>Source Files\solving\refitting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\imaging\camera_empty.cpp">
+      <Filter>Source Files\imaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\refitting\shape_fitter.cpp">
+      <Filter>Source Files\solving\refitting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\autofocus\datapoints.cpp">
+      <Filter>Source Files\shared\autofocus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\autofocus\results.cpp">
+      <Filter>Source Files\shared\autofocus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\autofocus\latest_image.cpp">
+      <Filter>Source Files\shared\autofocus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\autofocus\requests.cpp">
+      <Filter>Source Files\shared\autofocus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\imaging\camera_filesystem.cpp">
+      <Filter>Source Files\imaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\autofocus.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\imaging\autofocuser.cpp">
+      <Filter>Source Files\imaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\autofocus_helper.cpp">
+      <Filter>Source Files\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\name.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\networking\unloading.cpp">
+      <Filter>Source Files\networking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\psf.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\tools\correlate.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\solving\motion_psf.cpp">
+      <Filter>Source Files\shared\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\general\shutdown.cpp">
+      <Filter>Source Files\shared\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\image\solution_summary.cpp">
+      <Filter>Source Files\shared\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\update.cpp">
+      <Filter>Source Files\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\networking\xsc_protocol\xsc_protocol.c">
+      <Filter>Source Files\networking\xsc_protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\general\main_settings.cpp">
+      <Filter>Source Files\shared\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\networking\loading.cpp">
+      <Filter>Source Files\networking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\attitude.cpp">
+      <Filter>Source Files\solving</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\displaying\solving_filters.cpp">
+      <Filter>Source Files\displaying</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\general\network_reset.cpp">
+      <Filter>Source Files\shared\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\networking\xsc_protocol\xsc_channels.c">
+      <Filter>Source Files\networking\xsc_protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\networking\image_client.cpp">
+      <Filter>Source Files\networking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\shared\network\image_client_settings.cpp">
+      <Filter>Source Files\shared\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\solving\finding\badpix.cpp">
+      <Filter>Source Files\solving\finding</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\code\star_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\timing.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\angles.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\glfont2\glfont2.h">
+      <Filter>Header Files\displaying\glfont2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\math.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\slalib.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\camera_windows.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\networking\connection.h">
+      <Filter>Header Files\networking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\networking\network_manager.h">
+      <Filter>Header Files\networking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\networking\server.h">
+      <Filter>Header Files\networking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\windows_header.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\housekeeping\housekeeper.h">
+      <Filter>Header Files\housekeeping</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\circular_buffer.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\image\blobs.h">
+      <Filter>Header Files\shared\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\image\matching.h">
+      <Filter>Header Files\shared\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\image\matching_progress.h">
+      <Filter>Header Files\shared\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\image\raw.h">
+      <Filter>Header Files\shared\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\image\stats.h">
+      <Filter>Header Files\shared\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\image\status.h">
+      <Filter>Header Files\shared\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\solving\filters.h">
+      <Filter>Header Files\shared\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\solving\settings.h">
+      <Filter>Header Files\shared\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\star.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\statistician.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\update.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\base_set.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\blob.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\solution.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\solver.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\parameters\general.h">
+      <Filter>Header Files\parameters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\parameters\group.h">
+      <Filter>Header Files\parameters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\parameters\housekeeping.h">
+      <Filter>Header Files\parameters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\parameters\manager.h">
+      <Filter>Header Files\parameters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\blob.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\block.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\camera.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\color.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\dynamic_value.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\housekeeping.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\image.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\lens.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\manager.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\texture.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\textures.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\utilities.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\visual.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\base_set.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\general\quit.h">
+      <Filter>Header Files\shared\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\housekeeping\housekeeper.h">
+      <Filter>Header Files\shared\housekeeping</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\housekeeping\measurement.h">
+      <Filter>Header Files\shared\housekeeping</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\lens\requests.h">
+      <Filter>Header Files\shared\lens</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\network\packets.h">
+      <Filter>Header Files\shared\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\simulations\brightness.h">
+      <Filter>Header Files\shared\simulations</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\finding\psf_maker.h">
+      <Filter>Header Files\solving\finding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\finding\smoother.h">
+      <Filter>Header Files\solving\finding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\finding\estimator.h">
+      <Filter>Header Files\solving\finding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\finding\finder.h">
+      <Filter>Header Files\solving\finding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\finding\leveler.h">
+      <Filter>Header Files\solving\finding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\matching\matcher.h">
+      <Filter>Header Files\solving\matching</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\matching\fluxer.h">
+      <Filter>Header Files\solving\matching</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\housekeeping\measurement.h">
+      <Filter>Header Files\housekeeping</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\fake_sky.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\image\leveled.h">
+      <Filter>Header Files\shared\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\stocc\randomc.h">
+      <Filter>Header Files\tools\stocc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\stocc\stocc.h">
+      <Filter>Header Files\tools\stocc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\finding\fitter.h">
+      <Filter>Header Files\solving\finding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\network\client.h">
+      <Filter>Header Files\shared\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\refraction.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\matching\solution_fitter.h">
+      <Filter>Header Files\solving\matching</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\lens\results.h">
+      <Filter>Header Files\shared\lens</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\lens.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\glhelper.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\solving\mask.h">
+      <Filter>Header Files\shared\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\quit_box.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\commands.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\camera\requests.h">
+      <Filter>Header Files\shared\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\camera\results.h">
+      <Filter>Header Files\shared\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\result.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\request.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\matching\catalog_manager.h">
+      <Filter>Header Files\solving\matching</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\abstract_camera.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\logging\logger.h">
+      <Filter>Header Files\logging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\housekeeping\logger.h">
+      <Filter>Header Files\housekeeping</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\logger_lens.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\logger.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\cataloging\abstract_catalog_manager.h">
+      <Filter>Header Files\cataloging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\logger_main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\logger_camera.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\ccd_projection.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\refitting\refitter.h">
+      <Filter>Header Files\solving\refitting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\preprocessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\camera_empty.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\refitting\shape_fitter.h">
+      <Filter>Header Files\solving\refitting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\autofocus\datapoints.h">
+      <Filter>Header Files\shared\autofocus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\autofocus\latest_image.h">
+      <Filter>Header Files\shared\autofocus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\autofocus\requests.h">
+      <Filter>Header Files\shared\autofocus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\autofocus\results.h">
+      <Filter>Header Files\shared\autofocus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\camera_filesystem.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\autofocus.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\imaging\autofocuser.h">
+      <Filter>Header Files\imaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\autofocus_helper.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\correlate.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\name.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\tools\psf.h">
+      <Filter>Header Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\solving\motion_psf.h">
+      <Filter>Header Files\shared\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\general\shutdown.h">
+      <Filter>Header Files\shared\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\image\solution_summary.h">
+      <Filter>Header Files\shared\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\update.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\thread_names.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\networking\xsc_protocol\xsc_channels.h">
+      <Filter>Header Files\networking\xsc_protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\networking\xsc_protocol\xsc_protocol.h">
+      <Filter>Header Files\networking\xsc_protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\general\main_settings.h">
+      <Filter>Header Files\shared\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\attitude.h">
+      <Filter>Header Files\solving</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\displaying\solving_filters.h">
+      <Filter>Header Files\displaying</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\general\network_reset.h">
+      <Filter>Header Files\shared\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\networking\image_client.h">
+      <Filter>Header Files\networking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\networking\ebex_images.h">
+      <Filter>Header Files\networking</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\shared\network\image_client_settings.h">
+      <Filter>Header Files\shared\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\solving\finding\badpix.h">
+      <Filter>Header Files\solving\finding</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

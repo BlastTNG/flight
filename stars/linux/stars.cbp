@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="stars" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/stars" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="bin" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-Wno-unknown-pragmas" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/esc" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-O2" />
+			<Add option="-Wall" />
+			<Add option="-DBOOST_FILESYSTEM_VERSION=2" />
+			<Add directory="/home/chappy/projects/libraries/levmar/levmar-2.5" />
+			<Add directory="/usr/lib/stlsoft-1.9.108/include" />
+			<Add directory="/home/acs/projects/libraries/levmar/levmar-2.5" />
+		</Compiler>
+		<Linker>
+			<Add library="/usr/lib/i386-linux-gnu/libm.so" />
+			<Add library="/usr/lib/libboost_system.so" />
+			<Add library="/usr/lib/libboost_thread.so" />
+			<Add library="/usr/lib/libboost_filesystem.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libSDL.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libcfitsio.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libGL.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libGLU.so" />
+			<Add library="/usr/lib/libgsl.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libpng.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libdc1394.so" />
+			<Add library="/usr/lib/libboost_program_options.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libtiff.so" />
+			<Add library="/usr/lib/liblevmar.a" />
+			<Add library="/usr/lib/liblapack.so" />
+			<Add library="/usr/lib/libblas.so" />
+		</Linker>
+		<Unit filename="../code/cataloging/abstract_catalog_manager.cpp" />
+		<Unit filename="../code/cataloging/abstract_catalog_manager.h" />
+		<Unit filename="../code/displaying/autofocus.cpp" />
+		<Unit filename="../code/displaying/autofocus.h" />
+		<Unit filename="../code/displaying/base_set.cpp" />
+		<Unit filename="../code/displaying/base_set.h" />
+		<Unit filename="../code/displaying/blob.cpp" />
+		<Unit filename="../code/displaying/blob.h" />
+		<Unit filename="../code/displaying/block.cpp" />
+		<Unit filename="../code/displaying/block.h" />
+		<Unit filename="../code/displaying/camera.cpp" />
+		<Unit filename="../code/displaying/camera.h" />
+		<Unit filename="../code/displaying/color.cpp" />
+		<Unit filename="../code/displaying/color.h" />
+		<Unit filename="../code/displaying/dynamic_value.cpp" />
+		<Unit filename="../code/displaying/dynamic_value.h" />
+		<Unit filename="../code/displaying/glfont2/glfont2.cpp" />
+		<Unit filename="../code/displaying/glfont2/glfont2.h" />
+		<Unit filename="../code/displaying/glhelper.h" />
+		<Unit filename="../code/displaying/housekeeping.cpp" />
+		<Unit filename="../code/displaying/housekeeping.h" />
+		<Unit filename="../code/displaying/image.cpp" />
+		<Unit filename="../code/displaying/image.h" />
+		<Unit filename="../code/displaying/lens.cpp" />
+		<Unit filename="../code/displaying/lens.h" />
+		<Unit filename="../code/displaying/manager.cpp" />
+		<Unit filename="../code/displaying/manager.h" />
+		<Unit filename="../code/displaying/name.cpp" />
+		<Unit filename="../code/displaying/name.h" />
+		<Unit filename="../code/displaying/network.cpp" />
+		<Unit filename="../code/displaying/network.h" />
+		<Unit filename="../code/displaying/quit_box.cpp" />
+		<Unit filename="../code/displaying/quit_box.h" />
+		<Unit filename="../code/displaying/solving_filters.cpp" />
+		<Unit filename="../code/displaying/solving_filters.h" />
+		<Unit filename="../code/displaying/texture.cpp" />
+		<Unit filename="../code/displaying/texture.h" />
+		<Unit filename="../code/displaying/textures.cpp" />
+		<Unit filename="../code/displaying/textures.h" />
+		<Unit filename="../code/displaying/utilities.h" />
+		<Unit filename="../code/displaying/visual.cpp" />
+		<Unit filename="../code/displaying/visual.h" />
+		<Unit filename="../code/housekeeping/disk.cpp" />
+		<Unit filename="../code/housekeeping/housekeeper.cpp" />
+		<Unit filename="../code/housekeeping/housekeeper.h" />
+		<Unit filename="../code/housekeeping/logger.h" />
+		<Unit filename="../code/housekeeping/measurement.cpp" />
+		<Unit filename="../code/housekeeping/measurement.h" />
+		<Unit filename="../code/imaging/abstract_camera.cpp" />
+		<Unit filename="../code/imaging/abstract_camera.h" />
+		<Unit filename="../code/imaging/autofocuser.cpp" />
+		<Unit filename="../code/imaging/autofocuser.h" />
+		<Unit filename="../code/imaging/camera_empty.cpp" />
+		<Unit filename="../code/imaging/camera_empty.h" />
+		<Unit filename="../code/imaging/camera_filesystem.cpp" />
+		<Unit filename="../code/imaging/camera_filesystem.h" />
+		<Unit filename="../code/imaging/camera_windows.cpp" />
+		<Unit filename="../code/imaging/camera_windows.h" />
+		<Unit filename="../code/imaging/commands.h" />
+		<Unit filename="../code/imaging/fake_sky.cpp" />
+		<Unit filename="../code/imaging/fake_sky.h" />
+		<Unit filename="../code/imaging/lens.cpp" />
+		<Unit filename="../code/imaging/lens.h" />
+		<Unit filename="../code/imaging/logger_camera.h" />
+		<Unit filename="../code/imaging/logger_lens.h" />
+		<Unit filename="../code/logger_main.h" />
+		<Unit filename="../code/logging/logger.cpp" />
+		<Unit filename="../code/logging/logger.h" />
+		<Unit filename="../code/main.cpp" />
+		<Unit filename="../code/networking/xsc_protocol/xsc_channels.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../code/networking/xsc_protocol/xsc_channels.h" />
+		<Unit filename="../code/networking/xsc_protocol/xsc_protocol.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../code/networking/xsc_protocol/xsc_protocol.h" />
+		<Unit filename="../code/networking/connection.cpp" />
+		<Unit filename="../code/networking/connection.h" />
+		<Unit filename="../code/networking/image_client.cpp" />
+		<Unit filename="../code/networking/image_client.h" />
+		<Unit filename="../code/networking/loading.cpp" />
+		<Unit filename="../code/networking/network_manager.cpp" />
+		<Unit filename="../code/networking/network_manager.h" />
+		<Unit filename="../code/networking/server.cpp" />
+		<Unit filename="../code/networking/server.h" />
+		<Unit filename="../code/networking/unloading.cpp" />
+		<Unit filename="../code/parameters/general.cpp" />
+		<Unit filename="../code/parameters/general.h" />
+		<Unit filename="../code/parameters/group.cpp" />
+		<Unit filename="../code/parameters/group.h" />
+		<Unit filename="../code/parameters/housekeeping.cpp" />
+		<Unit filename="../code/parameters/housekeeping.h" />
+		<Unit filename="../code/parameters/manager.cpp" />
+		<Unit filename="../code/parameters/manager.h" />
+		<Unit filename="../code/preprocessor.h" />
+		<Unit filename="../code/shared/autofocus/datapoints.cpp" />
+		<Unit filename="../code/shared/autofocus/datapoints.h" />
+		<Unit filename="../code/shared/autofocus/latest_image.cpp" />
+		<Unit filename="../code/shared/autofocus/latest_image.h" />
+		<Unit filename="../code/shared/autofocus/requests.cpp" />
+		<Unit filename="../code/shared/autofocus/requests.h" />
+		<Unit filename="../code/shared/autofocus/results.cpp" />
+		<Unit filename="../code/shared/autofocus/results.h" />
+		<Unit filename="../code/shared/camera/requests.cpp" />
+		<Unit filename="../code/shared/camera/requests.h" />
+		<Unit filename="../code/shared/camera/results.cpp" />
+		<Unit filename="../code/shared/camera/results.h" />
+		<Unit filename="../code/shared/circular_buffer.h" />
+		<Unit filename="../code/shared/general/main_settings.cpp" />
+		<Unit filename="../code/shared/general/main_settings.h" />
+		<Unit filename="../code/shared/general/network_reset.cpp" />
+		<Unit filename="../code/shared/general/network_reset.h" />
+		<Unit filename="../code/shared/general/quit.h" />
+		<Unit filename="../code/shared/general/shutdown.cpp" />
+		<Unit filename="../code/shared/general/shutdown.h" />
+		<Unit filename="../code/shared/housekeeping/housekeeper.h" />
+		<Unit filename="../code/shared/housekeeping/measurement.h" />
+		<Unit filename="../code/shared/image/blobs.cpp" />
+		<Unit filename="../code/shared/image/blobs.h" />
+		<Unit filename="../code/shared/image/leveled.cpp" />
+		<Unit filename="../code/shared/image/leveled.h" />
+		<Unit filename="../code/shared/image/matching.cpp" />
+		<Unit filename="../code/shared/image/matching.h" />
+		<Unit filename="../code/shared/image/matching_progress.cpp" />
+		<Unit filename="../code/shared/image/matching_progress.h" />
+		<Unit filename="../code/shared/image/raw.cpp" />
+		<Unit filename="../code/shared/image/raw.h" />
+		<Unit filename="../code/shared/image/solution_summary.cpp" />
+		<Unit filename="../code/shared/image/solution_summary.h" />
+		<Unit filename="../code/shared/image/stats.cpp" />
+		<Unit filename="../code/shared/image/stats.h" />
+		<Unit filename="../code/shared/image/status.cpp" />
+		<Unit filename="../code/shared/image/status.h" />
+		<Unit filename="../code/shared/lens/requests.cpp" />
+		<Unit filename="../code/shared/lens/requests.h" />
+		<Unit filename="../code/shared/lens/results.cpp" />
+		<Unit filename="../code/shared/lens/results.h" />
+		<Unit filename="../code/shared/network/client.cpp" />
+		<Unit filename="../code/shared/network/client.h" />
+		<Unit filename="../code/shared/network/image_client_settings.cpp" />
+		<Unit filename="../code/shared/network/image_client_settings.h" />
+		<Unit filename="../code/shared/network/packets.cpp" />
+		<Unit filename="../code/shared/network/packets.h" />
+		<Unit filename="../code/shared/request.h" />
+		<Unit filename="../code/shared/result.cpp" />
+		<Unit filename="../code/shared/result.h" />
+		<Unit filename="../code/shared/simulations/brightness.cpp" />
+		<Unit filename="../code/shared/simulations/brightness.h" />
+		<Unit filename="../code/shared/solving/filters.cpp" />
+		<Unit filename="../code/shared/solving/filters.h" />
+		<Unit filename="../code/shared/solving/mask.cpp" />
+		<Unit filename="../code/shared/solving/mask.h" />
+		<Unit filename="../code/shared/solving/motion_psf.cpp" />
+		<Unit filename="../code/shared/solving/motion_psf.h" />
+		<Unit filename="../code/shared/solving/settings.cpp" />
+		<Unit filename="../code/shared/solving/settings.h" />
+		<Unit filename="../code/shared/update.cpp" />
+		<Unit filename="../code/shared/update.h" />
+		<Unit filename="../code/solving/attitude.cpp" />
+		<Unit filename="../code/solving/attitude.h" />
+		<Unit filename="../code/solving/autofocus_helper.cpp" />
+		<Unit filename="../code/solving/autofocus_helper.h" />
+		<Unit filename="../code/solving/base_set.h" />
+		<Unit filename="../code/solving/blob.cpp" />
+		<Unit filename="../code/solving/blob.h" />
+		<Unit filename="../code/solving/finding/estimator.cpp" />
+		<Unit filename="../code/solving/finding/estimator.h" />
+		<Unit filename="../code/solving/finding/finder.cpp" />
+		<Unit filename="../code/solving/finding/finder.h" />
+		<Unit filename="../code/solving/finding/fitter.cpp" />
+		<Unit filename="../code/solving/finding/fitter.h" />
+		<Unit filename="../code/solving/finding/leveler.cpp" />
+		<Unit filename="../code/solving/finding/leveler.h" />
+		<Unit filename="../code/solving/finding/pedestal_fitter.cpp" />
+		<Unit filename="../code/solving/finding/pedestal_fitter.h" />
+		<Unit filename="../code/solving/finding/smoother.cpp" />
+		<Unit filename="../code/solving/finding/smoother.h" />
+		<Unit filename="../code/solving/logger.h" />
+		<Unit filename="../code/solving/matching/catalog_manager.cpp" />
+		<Unit filename="../code/solving/matching/catalog_manager.h" />
+		<Unit filename="../code/solving/matching/fluxer.cpp" />
+		<Unit filename="../code/solving/matching/fluxer.h" />
+		<Unit filename="../code/solving/matching/matcher.cpp" />
+		<Unit filename="../code/solving/matching/matcher.h" />
+		<Unit filename="../code/solving/matching/solution_fitter.cpp" />
+		<Unit filename="../code/solving/matching/solution_fitter.h" />
+		<Unit filename="../code/solving/refitting/refitter.cpp" />
+		<Unit filename="../code/solving/refitting/refitter.h" />
+		<Unit filename="../code/solving/refitting/shape_fitter.cpp" />
+		<Unit filename="../code/solving/refitting/shape_fitter.h" />
+		<Unit filename="../code/solving/solution.cpp" />
+		<Unit filename="../code/solving/solution.h" />
+		<Unit filename="../code/solving/solver.cpp" />
+		<Unit filename="../code/solving/solver.h" />
+		<Unit filename="../code/solving/star.cpp" />
+		<Unit filename="../code/solving/star.h" />
+		<Unit filename="../code/solving/statistician.cpp" />
+		<Unit filename="../code/solving/statistician.h" />
+		<Unit filename="../code/solving/update.cpp" />
+		<Unit filename="../code/solving/update.h" />
+		<Unit filename="../code/star_camera.cpp" />
+		<Unit filename="../code/star_camera.h" />
+		<Unit filename="../code/tools/angles.cpp" />
+		<Unit filename="../code/tools/angles.h" />
+		<Unit filename="../code/tools/blob_shape.cpp" />
+		<Unit filename="../code/tools/ccd_projection.cpp" />
+		<Unit filename="../code/tools/ccd_projection.h" />
+		<Unit filename="../code/tools/correlate.cpp" />
+		<Unit filename="../code/tools/math.cpp" />
+		<Unit filename="../code/tools/math.h" />
+		<Unit filename="../code/tools/psf.cpp" />
+		<Unit filename="../code/tools/psf.h" />
+		<Unit filename="../code/tools/quick_cout.h" />
+		<Unit filename="../code/tools/refraction.cpp" />
+		<Unit filename="../code/tools/refraction.h" />
+		<Unit filename="../code/tools/slalib.cpp" />
+		<Unit filename="../code/tools/slalib.h" />
+		<Unit filename="../code/tools/stats.h" />
+		<Unit filename="../code/tools/stocc/mersenne.cpp" />
+		<Unit filename="../code/tools/stocc/mother.cpp" />
+		<Unit filename="../code/tools/stocc/stoc1.cpp" />
+		<Unit filename="../code/tools/stocc/stoc2.cpp" />
+		<Unit filename="../code/tools/stocc/stocc.h" />
+		<Unit filename="../code/tools/stocc/userintf.cpp" />
+		<Unit filename="../code/tools/timing.cpp" />
+		<Unit filename="../code/tools/timing.h" />
+		<Unit filename="../code/tools/windows_header.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
