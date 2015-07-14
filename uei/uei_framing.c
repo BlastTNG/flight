@@ -25,6 +25,8 @@
  */
 
 #include <stdio.h>
+#include <error.h>
+#include <ctype.h>
 
 #include <native/task.h>
 #include <native/event.h>
@@ -33,15 +35,26 @@
 #include <mosquitto.h>
 
 #include <channels_tng.h>
+#include <lookup.h>
 
 extern int stop;
 
-static struct mosquitto *mosq = NULL;
+static E_SRC uei_which = 0;
 
-void uei_message_handle_frame(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
+static const char server[2][] = {
+        "fc1",
+        "fc2"
+};
+
+static struct mosquitto *mosq[2] = {
+        NULL,
+        NULL
+};
+
+void message_handle_frame(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
 {
-	RATE_lookup_t *rate;
-	SRC_lookup_t *src;
+    RATE_LOOKUP_T *rate;
+	SRC_LOOKUP_T *src;
 
 	if (!m_fc || !m_rate) {
 		printf("Err in pointers\n");
@@ -52,7 +65,7 @@ void uei_message_handle_frame(const char *m_fc, const char *m_rate, const void *
 		return;
 	}
 
-	for (rate = RATE_lookup_table; rate->position < RATE_END; rate++) {
+	for (rate = RATE_LOOKUP_TABLE; rate->position < RATE_END; rate++) {
 		if (strcmp(rate->text, m_rate) == 0) break;
 	}
 	if (rate->position == RATE_END) {
@@ -60,7 +73,7 @@ void uei_message_handle_frame(const char *m_fc, const char *m_rate, const void *
 		return;
 	}
 
-	for (src = SRC_lookup_table; src->position < SRC_END; src++) {
+	for (src = SRC_LOOKUP_TABLE; src->position < SRC_END; src++) {
 		if (strncmp(src->text, m_fc, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
 	}
 	if (src->position == SRC_END) {
@@ -80,7 +93,7 @@ void uei_message_callback(struct mosquitto *mosq, void *userdata, const struct m
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
 
         	if ( count == 3 && strcmp(topics[1], "frames") == 0) {
-        		uei_message_handle_frame(topics[0], topics[2], message->payload, message->payloadlen);
+        		message_handle_frame(topics[0], topics[2], message->payload, message->payloadlen);
 			}
 
         	mosquitto_sub_topic_tokens_free(&topics, count);
@@ -90,7 +103,7 @@ void uei_message_callback(struct mosquitto *mosq, void *userdata, const struct m
     fflush(stdout);
 }
 
-void uei_connect_callback(struct mosquitto *mosq, void *userdata, int result)
+void frame_connect_callback(struct mosquitto *mosq, void *userdata, int result)
 {
     if(!result){
         /* Subscribe to broker information topics on successful connect. */
@@ -100,7 +113,7 @@ void uei_connect_callback(struct mosquitto *mosq, void *userdata, int result)
     }
 }
 
-void uei_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count, const int *granted_qos)
+void frame_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count, const int *granted_qos)
 {
     int i;
 
@@ -111,7 +124,7 @@ void uei_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int
     printf("\n");
 }
 
-void uei_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
+void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
 {
     if (level & ( MOSQ_LOG_ERR | MOSQ_LOG_WARNING ))
         printf("%s\n", str);
@@ -119,34 +132,30 @@ void uei_log_callback(struct mosquitto *mosq, void *userdata, int level, const c
 
 int uei_framing_init(void)
 {
-    const char *id = "uei1";
-    const char *host = "fc1";
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
 
-    channels_initialize(NULL);
-
     mosquitto_lib_init();
-    mosq = mosquitto_new(id, clean_session, NULL);
-    if (!mosq) {
-		perror("mosquitto_new() failed");
-        return -1;
+    for (int hostnum = 0; hostnum < 2; hostnum++) {
+        mosq[hostnum] = mosquitto_new(SRC_LOOKUP_TABLE[uei_which].text, clean_session, server[hostnum]);
+        if (!mosq[hostnum]) {
+            error(0, errno, "mosquitto_new() failed for %s", server[hostnum]);
+            continue;
+        }
+
+        mosquitto_log_callback_set(mosq[hostnum], frame_log_callback);
+        mosquitto_connect_callback_set(mosq[hostnum], frame_connect_callback);
+        mosquitto_message_callback_set(mosq[hostnum], uei_message_callback);
+        mosquitto_subscribe_callback_set(mosq[hostnum], frame_subscribe_callback);
+
+        if (mosquitto_connect_async(mosq[hostnum], server[hostnum], port, keepalive)) {
+            error(0, errno, "Unable to connect to %s", server[hostnum]);
+            continue;
+        }
+
+        mosquitto_loop_start(mosq[hostnum]);
     }
-    mosquitto_log_callback_set(mosq, uei_log_callback);
-
-    mosquitto_connect_callback_set(mosq, uei_connect_callback);
-    mosquitto_message_callback_set(mosq, uei_message_callback);
-    mosquitto_subscribe_callback_set(mosq, uei_subscribe_callback);
-
-    if (mosquitto_connect(mosq, host, port, keepalive)) {
-        fprintf(stderr, "Unable to connect.\n");
-        return -1;
-    }
-
-    mosquitto_subscribe(mosq, NULL, "fc1/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "fc2/frames/#", 2);
-    mosquitto_subscribe(mosq, NULL, "uei_if/frames/#", 2);
 
     return 0;
 }
@@ -156,13 +165,28 @@ void uei_framing_routine(void *m_arg)
 {
     int ret;
     int counter_100hz = 1;
-    int counter_5hz=40;
-    int counter_1hz=200;
+    int counter_5hz=39;
+    int counter_1hz=199;
+
+    char *topic_1hz;
+    char *topic_5hz;
+    char *topic_100hz;
+    char *topic_200hz;
+
+    SRC_LOOKUP_T source = *(SRC_LOOKUP_T*)m_arg;
+    char src_name[BLAST_LOOKUP_TABLE_TEXT_SIZE] = {'\0'};
 
     RT_TIMER_INFO timer_info;
     long long task_period;
 
     printf("Starting Framing task\n");
+
+    for (int i = 0; i <= strlen(source.text); i++) src_name[i] = tolower(source.text[i]);
+
+    asprintf(&topic_1hz, "%s/frames/1HZ", src_name);
+    asprintf(&topic_5hz, "%s/frames/5HZ", src_name);
+    asprintf(&topic_100hz, "%s/frames/100HZ", src_name);
+    asprintf(&topic_200hz, "%s/frames/200HZ", src_name);
 
     rt_timer_inquire(&timer_info);
     if (timer_info.period == TM_ONESHOT)
@@ -198,45 +222,59 @@ void uei_framing_routine(void *m_arg)
                     strerror(-ret));
             break;
         }
-        if (frame_size[SRC_OF_UEI][RATE_200HZ]) {
-        	mosquitto_publish(mosq, NULL, "uei_of/frames/200HZ",
-        			frame_size[SRC_OF_UEI][RATE_200HZ], channel_data[SRC_OF_UEI][RATE_200HZ],0, false);
+        if (frame_size[source.position][RATE_200HZ]) {
+        	mosquitto_publish(mosq[0], NULL, topic_200hz,
+        			frame_size[source.position][RATE_200HZ], channel_data[source.position][RATE_200HZ],0, false);
         }
 
         if (!counter_100hz--) {
         	counter_100hz = 1;
-            if (frame_size[SRC_OF_UEI][RATE_100HZ]) {
-            	mosquitto_publish(mosq, NULL, "uei_of/frames/100HZ",
-            			frame_size[SRC_OF_UEI][RATE_100HZ], channel_data[SRC_OF_UEI][RATE_100HZ],0, false);
+            if (frame_size[source.position][RATE_100HZ]) {
+            	mosquitto_publish(mosq, NULL, topic_100hz,
+            			frame_size[source.position][RATE_100HZ], channel_data[source.position][RATE_100HZ],0, false);
             }
         }
         if (!counter_5hz--) {
-        	counter_5hz = 40;
-        	if (frame_size[SRC_OF_UEI][RATE_5HZ]) {
-        		mosquitto_publish(mosq, NULL, "uei_of/frames/5HZ",
-        				frame_size[SRC_OF_UEI][RATE_5HZ], channel_data[SRC_OF_UEI][RATE_5HZ], 0, false);
+        	counter_5hz = 39;
+        	if (frame_size[source.position][RATE_5HZ]) {
+        		mosquitto_publish(mosq, NULL, topic_5hz,
+        				frame_size[source.position][RATE_5HZ], channel_data[source.position][RATE_5HZ], 0, false);
         	}
         }
         if (!counter_1hz--) {
-        	counter_1hz = 200;
-        	if (frame_size[SRC_OF_UEI][RATE_5HZ]) {
-        		mosquitto_publish(mosq, NULL, "uei_of/frames/1HZ",
-        				frame_size[SRC_OF_UEI][RATE_1HZ], channel_data[SRC_OF_UEI][RATE_1HZ], 0, false);
+        	counter_1hz = 199;
+        	if (frame_size[source.position][RATE_5HZ]) {
+        		mosquitto_publish(mosq, NULL, topic_1hz,
+        				frame_size[source.position][RATE_1HZ], channel_data[source.position][RATE_1HZ], 0, false);
         	}
         }
-
-        if ((ret = mosquitto_loop(mosq, 0, 100)) != MOSQ_ERR_SUCCESS) {
-            printf("Received %d from mosquitto_loop\n", ret);
-        }
     }
-    //switch to secondary mode
-    ret = rt_task_set_mode(T_PRIMARY, 0, NULL);
+}
 
-    if (ret)
-    {
-        printf("error while rt_task_set_mode, code %d\n", ret);
+void uei_store_analog32_data(uei_channel_map_t *m_map, uint32_t *m_data) {
+
+    for (int i = 0; m_map[i].channel_num > -1; i++) {
+        if (m_map[i].channel) SET_UINT32(m_map[i].channel, m_data[i]);
     }
-    mosquitto_destroy(mosq);
+}
+
+void uei_store_analog16_data(uei_channel_map_t *m_map, uint16_t *m_data) {
+
+    for (int i = 0; m_map[i].channel_num > -1; i++) {
+        if (m_map[i].channel) SET_UINT16(m_map[i].channel, m_data[i]);
+    }
+}
+
+
+void uei_framing_deinit(void) {
+
+    mosquitto_disconnect(mosq[0]);
+    mosquitto_loop_stop(mosq[0], false);
+    mosquitto_disconnect(mosq[1]);
+    mosquitto_loop_stop(mosq[1], false);
+
+    mosquitto_destroy(mosq[0]);
+    mosquitto_destroy(mosq[1]);
+
     mosquitto_lib_cleanup();
-
 }

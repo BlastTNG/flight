@@ -27,9 +27,22 @@
 #ifndef UEI_FRAMING_H_
 #define UEI_FRAMING_H_
 
+#include <channels_tng.h>
+
+typedef struct
+{
+    channel_t   *channel;
+    char        name[FIELD_LEN];
+    int         channel_num;
+    union {
+        int     gain;
+    };
+} uei_channel_map_t;
 
 int uei_framing_init(void);
+void uei_framing_deinit(void);
 void uei_framing_routine(void *m_arg);
-
+void uei_store_analog32_data(uei_channel_map_t *m_map, uint32_t *m_data);
+void uei_store_analog16_data(uei_channel_map_t *m_map, uint16_t *m_data);
 
 #endif /* UEI_FRAMING_H_ */
