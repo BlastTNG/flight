@@ -12,9 +12,10 @@ BLAST_CONFIG_OBJS = $(patsubst %.c,%.o,$(CONFIG_SOURCES))
 USER_OBJS += $(BLAST_COMMON_OBJS) $(BLAST_CONFIG_OBJS)
 
 USER_C_DEPS += $(patsubst %.o,%.d,$(BLAST_COMMON_OBJS) $(BLAST_CONFIG_OBJS))
+UEIPAC = $(shell echo $$UEIPACROOT)
 
 BLAST_FLAGS = -std=gnu99 -D__BLAST__ \
-    -I/home/seth/uei/ueipac-2.5.9/include -I$(COMMON_DIR) -I$(CONFIG_DIR) \
+    -I$(UEIPAC)/dinclude -I$(COMMON_DIR) -I$(CONFIG_DIR) \
     $(shell pkg-config --cflags glib-2.0) \
     -Wall -fmessage-length=0
 
@@ -24,8 +25,8 @@ else
     BLAST_FLAGS += -O2 -g
 endif
 
-BLAST_FLAGS += $(shell xeno-config --posix-cflags)
-LIBS += $(shell xeno-config --posix-ldflags)
+BLAST_FLAGS += $(shell $(UEIPACROOT)/bin/xeno-config --posix-cflags)
+LIBS += $(shell $(UEIPACROOT)/bin/xeno-config --posix-ldflags)
 
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(strip $(USER_C_DEPS)),)

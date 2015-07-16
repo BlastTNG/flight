@@ -90,6 +90,7 @@ channel_t channel_list[] =
     { "td_d03_hwp",           CRYO_D_M,         CRYO_D_B, TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_V_V, 0 },
 
 
+    { "uei_if_ts",            0,                0,          TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_NONE, 0},
     { "uei_if_2.5V",          UEI_VOLT_M,       UEI_VOLT_B, TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
     { "uei_if_2.5Vnic",       UEI_VOLT_M,       UEI_VOLT_B, TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
     { "uei_if_3.3V",          UEI_VOLT_M,       UEI_VOLT_B, TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_V_V, 0 },
@@ -104,6 +105,7 @@ channel_t channel_list[] =
     { "uei_if_temp1",         UEI_TEMP_M,       UEI_TEMP_B, TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
     { "uei_if_temp2",         UEI_TEMP_M,       UEI_TEMP_B, TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
 
+    { "uei_of_ts",            0,                0,          TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_NONE, 0},
     { "uei_of_2.5V",          UEI_VOLT_M,       UEI_VOLT_B, TYPE_UINT32, RATE_5HZ, SRC_OF_UEI, U_V_V, 0 },
     { "uei_of_2.5Vnic",       UEI_VOLT_M,       UEI_VOLT_B, TYPE_UINT32, RATE_5HZ, SRC_OF_UEI, U_V_V, 0 },
     { "uei_of_3.3V",          UEI_VOLT_M,       UEI_VOLT_B, TYPE_UINT32, RATE_5HZ, SRC_OF_UEI, U_V_V, 0 },

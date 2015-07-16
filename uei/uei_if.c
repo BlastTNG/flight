@@ -42,6 +42,7 @@
 #include <mosquitto.h>
 
 #include <channels_tng.h>
+#include "uei_framing.h"
 
 extern channel_t channel_list[]; //tx_struct_tng.c
 
@@ -269,8 +270,10 @@ void uei_if_sample_cards(void* arg)
 
 //        DqRtDmapReadScaledData(uei_handle, dmap_id, IF_AI201_LAYER, dbuffer, num_samples);
         DqRtDmapReadRawData16(uei_handle, dmap_id, IF_AI201_LAYER, u16buffer, num_samples);
+        uei_store_analog16_data(if_ai201_map, u16buffer);
 
         DqRtDmapReadRawData32(uei_handle, dmap_id, IF_DNRP_LAYER, u32buffer, num_samples);
+        uei_store_analog32_data(if_internal_sensors, u32buffer);
     }
 }
 
@@ -285,7 +288,7 @@ int main(void)
 
     if (uei_if_initialize() < 0)
         exit(1);
-    if (framing_init() < 0)
+    if (uei_framing_init(SRC_IF_UEI) < 0)
         exit(1);
 
     printf("Initialized!\n");
@@ -294,7 +297,7 @@ int main(void)
 
     // Create our Tasks
 
-    ret = rt_task_create(&mosq_task, "mosq_monitor", 0, 40, T_JOINABLE);
+    ret = rt_task_create(&mosq_task, "mosq_publish", 0, 40, T_JOINABLE);
     if (ret) {
         perror("failed to create Mosquitto task");
         exit(1);
