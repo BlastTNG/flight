@@ -70,11 +70,33 @@ typedef struct channel channel_t;
             u32_a *outfloat = (u32_a*)&(out); \
             *outfloat = htobe32(*infloat);          \
     }
+
+# ifndef htobe16
+#   define htobe16(x)  __bswap_16 (x)
+# endif
+# ifndef htobe32
+#   define htobe32(x)  __bswap_32 (x)
+# endif
+# ifndef htobe64
+#   define htobe64(x)  __bswap_64 (x)
+# endif
+
 # else
 #   define beftoh(x) (x)
 #   define bedtoh(x) (x)
 #   define htobef(in,out) ((out)=(in))
 #   define htobed(in,out) ((out)=(in))
+
+# ifndef htobe16
+#   define htobe16(x)  (x)
+# endif
+# ifndef htobe32
+#   define htobe32(x)  (x)
+# endif
+# ifndef htobe64
+#   define htobe64(x)  (x)
+# endif
+
 # endif
 
 /**

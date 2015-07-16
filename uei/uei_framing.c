@@ -31,17 +31,18 @@
 #include <native/task.h>
 #include <native/event.h>
 #include <native/timer.h>
-
 #include <mosquitto.h>
 
 #include <channels_tng.h>
 #include <lookup.h>
 
+#include "uei_framing.h"
+
 extern int stop;
 
 static E_SRC uei_which = 0;
 
-static const char server[2][] = {
+static char server[2][4] = {
         "fc1",
         "fc2"
 };
@@ -130,11 +131,12 @@ void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const
         printf("%s\n", str);
 }
 
-int uei_framing_init(void)
+int uei_framing_init(int m_which)
 {
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
+    uei_which = m_which;
 
     mosquitto_lib_init();
     for (int hostnum = 0; hostnum < 2; hostnum++) {
@@ -225,27 +227,35 @@ void uei_framing_routine(void *m_arg)
         if (frame_size[source.position][RATE_200HZ]) {
         	mosquitto_publish(mosq[0], NULL, topic_200hz,
         			frame_size[source.position][RATE_200HZ], channel_data[source.position][RATE_200HZ],0, false);
+            mosquitto_publish(mosq[1], NULL, topic_200hz,
+                    frame_size[source.position][RATE_200HZ], channel_data[source.position][RATE_200HZ],0, false);
         }
 
         if (!counter_100hz--) {
         	counter_100hz = 1;
             if (frame_size[source.position][RATE_100HZ]) {
-            	mosquitto_publish(mosq, NULL, topic_100hz,
+            	mosquitto_publish(mosq[0], NULL, topic_100hz,
             			frame_size[source.position][RATE_100HZ], channel_data[source.position][RATE_100HZ],0, false);
+                mosquitto_publish(mosq[1], NULL, topic_100hz,
+                        frame_size[source.position][RATE_100HZ], channel_data[source.position][RATE_100HZ],0, false);
             }
         }
         if (!counter_5hz--) {
         	counter_5hz = 39;
         	if (frame_size[source.position][RATE_5HZ]) {
-        		mosquitto_publish(mosq, NULL, topic_5hz,
+        		mosquitto_publish(mosq[0], NULL, topic_5hz,
         				frame_size[source.position][RATE_5HZ], channel_data[source.position][RATE_5HZ], 0, false);
+                mosquitto_publish(mosq[1], NULL, topic_5hz,
+                        frame_size[source.position][RATE_5HZ], channel_data[source.position][RATE_5HZ], 0, false);
         	}
         }
         if (!counter_1hz--) {
         	counter_1hz = 199;
         	if (frame_size[source.position][RATE_5HZ]) {
-        		mosquitto_publish(mosq, NULL, topic_1hz,
+        		mosquitto_publish(mosq[0], NULL, topic_1hz,
         				frame_size[source.position][RATE_1HZ], channel_data[source.position][RATE_1HZ], 0, false);
+                mosquitto_publish(mosq[1], NULL, topic_1hz,
+                        frame_size[source.position][RATE_1HZ], channel_data[source.position][RATE_1HZ], 0, false);
         	}
         }
     }

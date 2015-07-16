@@ -60,7 +60,7 @@ static inline void uei_fir100_put(uei_fir_t* f, float input) {
   f->history[(f->last_index++) & 15] = input;
 }
 
-float uei_fir100_get(uei_fir_t* f) {
+static inline float uei_fir100_get(uei_fir_t* f) {
   double acc = 0.0;
   int index = f->last_index, i;
 

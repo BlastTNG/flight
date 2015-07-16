@@ -39,7 +39,7 @@ typedef struct
     };
 } uei_channel_map_t;
 
-int uei_framing_init(void);
+int uei_framing_init(int m_which);
 void uei_framing_deinit(void);
 void uei_framing_routine(void *m_arg);
 void uei_store_analog32_data(uei_channel_map_t *m_map, uint32_t *m_data);
