@@ -197,7 +197,7 @@ int main(int argc, char* argv[]){
 	int depth = 16384;
 	
 	#ifdef _MSC_VER
-        std::string stars_absolute_dir = "C:/stars/";
+        std::string stars_absolute_dir = "C:/stars_data/";
     #else
         std::string stars_absolute_dir = "../../";
     #endif

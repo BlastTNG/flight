@@ -79,13 +79,13 @@ void Visual::init(std::string title, Textures& textures_)
     using namespace boost::filesystem;
     Block::init(title, textures_);
     loading_screen.init(display_enabled);
-    loading_screen.load_tiff(system_complete(stars_dir + "code/resources/edge2.tiff").string());
+    loading_screen.load_tiff(system_complete(stars_dir + "resources/edge2.tiff").string());
     flash.init(display_enabled);
-    flash.load_tiff(system_complete(stars_dir + "code/resources/flash.tiff").string());
+    flash.load_tiff(system_complete(stars_dir + "resources/flash.tiff").string());
     mask.init(display_enabled);
-    mask.load_tiff(system_complete(stars_dir + "code/resources/mask.tiff").string());
+    mask.load_tiff(system_complete(stars_dir + "resources/mask.tiff").string());
     white.init(display_enabled);
-    white.load_tiff(system_complete(stars_dir + "code/resources/white.tiff").string());
+    white.load_tiff(system_complete(stars_dir + "resources/white.tiff").string());
     rendered_image.init(display_enabled);
     canvas.init(display_enabled);
 }

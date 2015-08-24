@@ -57,7 +57,7 @@ AbstractCamera::AbstractCamera(Parameters::Manager& params)
     internal_triggering = params.general.try_get("imaging.camera_real.internal_triggering", false);
     internal_exposure_time = params.general.try_get("imaging.camera_real.internal_exposure_time", 0.120);
     internal_period = params.general.try_get("imaging.camera_real.internal_period", 20.0);
-    output_dir = params.general.try_get("main.output_dir", string("E:\\data"));		//changed from C: to E: KNS
+    output_dir = params.general.try_get("main.output_dir", string("C:\\stars_data\\output"));
 
     camera_ready = false;
     check_camera_ready_period = 120.0;

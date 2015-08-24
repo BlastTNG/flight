@@ -101,7 +101,7 @@ bool mark_as_special(vector<Star>& stars)
 
 AbstractCatalogManager::AbstractCatalogManager(Parameters::Manager& params, bool enabled,
     string catalog_path_, Logging::Logger& logger_)
-{
+{ 
     image_width = params.general.image_width;
     image_height = params.general.image_height;
     mag_limit = numeric_limits<double>::infinity();
@@ -115,7 +115,7 @@ void AbstractCatalogManager::init()
 {
     Tools::Timer timer;
     timer.start();
-    if (shared_settings.enabled) {
+    if (shared_settings.enabled) { 
         logger->log(format("loading catalog %s")%catalog_path);
         regions.reserve(422); // 422 is for combo_9p0_8p0 and combo_top3_top10
         if (exists(catalog_path)) {

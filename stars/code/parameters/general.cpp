@@ -173,6 +173,7 @@ void General::load(int argc, char* argv[])
 
     if (parse_custom_settings) {
         std::ifstream infile0(system_complete(stars_dir + "settings/custom.txt").string().c_str());
+		 logger.log(format("%s") % system_complete(stars_dir + "settings/custom.txt").string().c_str());
         try {
             store(parse_config_file(infile0, options), map);
         } catch(std::exception& e) {
@@ -182,8 +183,12 @@ void General::load(int argc, char* argv[])
     }
 
     std::ifstream infile1(system_complete(stars_dir + "settings/flight.txt").string().c_str());
+	if (!infile1) {
+		logger.log("Could not open flight.txt");
+	}
+	else
     try {
-        store(parse_config_file(infile1, options), map);
+		store(parse_config_file(infile1, options), map);
     } catch(std::exception& e) {
         logger.log(format("Caught exception parsing config file: %s") % e.what());
     }

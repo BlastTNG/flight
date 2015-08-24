@@ -29,11 +29,11 @@ Textures::~Textures()
 void Textures::init()
 {
     using namespace boost::filesystem;
-	//textures[basic_drawing].init(display_enabled);
+	textures[basic_drawing].init(display_enabled);
     textures[font_texture].init(display_enabled);
     //textures[drawing_3d].init(display_enabled);
     if (display_enabled) {
-        font.Create(system_complete(stars_dir + "code/displaying/glfont2/fonts/arial24_with_degrees.glf").string(), get(font_texture));
+        font.Create(system_complete(stars_dir + "resources/fonts/arial24_with_degrees.glf").string(), get(font_texture));
     }
 }
 
