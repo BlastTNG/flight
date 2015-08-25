@@ -35,89 +35,80 @@ CameraWindows::CameraWindows(Parameters::Manager& params): AbstractCamera(params
 
 bool CameraWindows::init_camera()
 {
-    using namespace Shared::Image;
+	using namespace Shared::Image;
 	using std::string;
-   // int camerror;
-	
+	// int camerror;
+
 	DSCCB dsccb;		   //struct w/ info for board init
 	DSCB dscb;			   //board reference
 	BYTE dscbresult;	   //variable for error handling
-    ERRPARAMS errparams;   //variable that spits out daq errors
-//    char errorString[500]; //error string for display
-//    char errorPrint[500];  //error string for printing
-  	BYTE port;				//, bit;
-	//BYTE digital_value;
-	port = 1;
-	//BYTE boardtype;
-	
-		if( dscInit( DSC_VERSION ) != DE_NONE )
+	ERRPARAMS errparams;   //variable that spits out daq errors
+	static const BYTE port = 0;				//, bit;
+
+	if (dscInit(DSC_VERSION) != DE_NONE)
 	{
 		dscGetLastError(&errparams);
-		logger.log(format( "Error initializing driver %s\n") % errparams.errstring );
+		logger.log(format("Error initializing driver %s\n") % errparams.errstring);
 		Sleep(300);
 		return false;
 	}
- 
-		logger.log(format("initialized driver..."));
-  
-		dsccb.base_address = 0x300;
-		dsccb.int_level = 7;
 
-			if ((dscbresult = dscInitBoard(DSC_DMM, &dsccb, &dscb)) != DE_NONE)
-		{
-        dscGetLastError(&errparams);
-        logger.log(format("Talking to DMM-XT failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
-        return false;
-        }
-		logger.log(format("DAQ is a-go"));
+	logger.log(format("initialized driver..."));
 
-		logger.log(format("Power cycling the camera..."));
-		logger.log(format("Lowering pins on the DIO... "));
-			if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
-    {
-        dscGetLastError(&errparams);
+	dsccb.base_address = 0x300;
+	dsccb.int_level = 7;
+
+	if ((dscbresult = dscInitBoard(DSC_DMM, &dsccb, &dscb)) != DE_NONE)
+	{
+		dscGetLastError(&errparams);
+		logger.log(format("Talking to DMM-XT failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
+		return false;
+	}
+	logger.log(format("DAQ is a-go"));
+
+	logger.log(format("Power cycling the camera..."));
+	logger.log(format("Lowering pins on the DIO... "));
+	if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
+	{
+		dscGetLastError(&errparams);
 		logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
- //       return dscbresult;
-        }
-		Sleep(500);
-		logger.log(format("Raising Data 1 on the DIO... "));	//camera on/off
-			if ((dscbresult = dscDIOSetBit(dscb, port, 1)) != DE_NONE)
-    {
-        dscGetLastError(&errparams);
+		//       return dscbresult;
+	}
+	Sleep(500);
+	logger.log(format("Raising Bit 3 on the DIO... "));	//camera on/off
+	if ((dscbresult = dscDIOSetBit(dscb, port, 4)) != DE_NONE)
+	{
+		dscGetLastError(&errparams);
 		logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
-  //      return false;
-        }
-		Sleep(500);
-		logger.log(format("Lowering pins on the DIO... "));
-			if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
-    {
-        dscGetLastError(&errparams);
+		//      return false;
+	}
+	Sleep(500);
+	logger.log(format("Lowering pins on the DIO... "));
+	if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
+	{
+		dscGetLastError(&errparams);
 		logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
-        return false;
-        }
-		 Sleep(3000); 
-		// Initialize the camera driver
-		logger.log(format("Inside init_camera driver..."));
- 
-		camerror = QCam_LoadDriver();
-	//camerror = MP_InitSys(0);
-		if (camerror!= qerrSuccess) {
-	/*if (camerror < 0) {*/
-		logger.log(format("error: could not initialize camera system: "));	//%s
-		/*% string(MP_GetErrMsg(camerror)));*/
-        QCam_ReleaseDriver();
-	/*	MP_CloseSys();*/
-        return false;
-    }
-		unsigned long listlen = sizeof(camlist)/sizeof(camlist[0]);
-		camerror = QCam_ListCameras( camlist, &listlen );
-		if( camerror != qerrSuccess) {
-		 logger.log(format("error opening camera"));
-			QCam_ReleaseDriver();
-        return false;
+		return false;
+	}
+	Sleep(3000);
+	// Initialize the camera driver
+	logger.log(format("Inside init_camera driver..."));
+
+	camerror = QCam_LoadDriver();
+	if (camerror != qerrSuccess) {
+		logger.log(format("error: could not initialize camera system: "));
+		QCam_ReleaseDriver();
+		return false;
+	}
+	unsigned long listlen = sizeof(camlist) / sizeof(camlist[0]);
+	camerror = QCam_ListCameras(camlist, &listlen);
+	if (camerror != qerrSuccess) {
+		logger.log(format("error opening camera"));
+		QCam_ReleaseDriver();
+		return false;
 	}
 
-	if (listlen == 0) {		
+	if (listlen == 0) {
 		//QCam_ReleaseDriver();
 		//logger.log(format("releasing driver"));
 		logger.log(format("Power cycling the DIO, again..."));
@@ -125,187 +116,192 @@ bool CameraWindows::init_camera()
 		logger.log(format("releasing driver"));
 		QCam_ReleaseDriver();
 
-    if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
-    {
-        dscGetLastError(&errparams);
-        logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
-//        return dscbresult;
-        }
-    Sleep(500);
-    logger.log(format("Raising Data 1 on the DIO..."));
-    if ((dscbresult = dscDIOSetBit(dscb, port, 1)) != DE_NONE)
-    {
-        dscGetLastError(&errparams);
-        logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
-//        return dscbresult;
-        }
-    Sleep(500);
-    logger.log(format("Lowering pins on the DIO..."));
-			
-    if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
-    {
-        dscGetLastError(&errparams);
-        logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
-//        return dscbresult;
+		if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
+		{
+			dscGetLastError(&errparams);
+			logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
+			//        return dscbresult;
+		}
+		Sleep(500);
+		logger.log(format("Raising Bit 3 on the DIO..."));
+		if ((dscbresult = dscDIOSetBit(dscb, port, 4)) != DE_NONE)
+		{
+			dscGetLastError(&errparams);
+			logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
+			//        return dscbresult;
+		}
+		Sleep(500);
+		logger.log(format("Lowering pins on the DIO..."));
+
+		if ((dscbresult = dscDIOOutputByte(dscb, port, 0x0)) != DE_NONE)
+		{
+			dscGetLastError(&errparams);
+			logger.log(format("failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
+			//        return dscbresult;
 		}
 
-    Sleep(5000);
-	
-    camerror = QCam_LoadDriver();
-		if (camerror!= qerrSuccess) {
-	      logger.log(format("error: could not initialize camera system: "));	//%s
-		  QCam_ReleaseDriver();
-		//return false;
-		}
+		Sleep(5000);
 
-	listlen = sizeof(camlist)/sizeof(camlist[0]);
-	camerror = QCam_ListCameras( camlist, &listlen );
-		if( camerror != qerrSuccess) {
-		 logger.log(format("error opening camera"));
+		camerror = QCam_LoadDriver();
+		if (camerror != qerrSuccess) {
+			logger.log(format("error: could not initialize camera system: "));	//%s
 			QCam_ReleaseDriver();
-        return false;
+			return false;
+		}
+
+		listlen = sizeof(camlist) / sizeof(camlist[0]);
+		if (listlen == 0){
+			logger.log(format("error: No cameras found in system!"));
+			QCam_ReleaseDriver();
+			return false;
+		}
+		camerror = QCam_ListCameras(camlist, &listlen);
+		if (camerror != qerrSuccess) {
+			logger.log(format("error opening camera"));
+			QCam_ReleaseDriver();
+			return false;
+		}
 	}
-		}
-		if( (listlen > 0) && (camlist[0].isOpen == false) ) {
-		camerror = QCam_OpenCamera( camlist[0].cameraId, &camhandle );
-		}
-		//camerror = QCam_OpenCamera(1, &camhandle);
+	if ((listlen > 0) && (camlist[0].isOpen == false)) {
+		camerror = QCam_OpenCamera(camlist[0].cameraId, &camhandle);
+	}
+	//camerror = QCam_OpenCamera(1, &camhandle);
 	if (camerror != qerrSuccess) {
 		logger.log(format("error opening camera head"));
 		QCam_ReleaseDriver();
 		return false;
 	}
 	/*	camerror = MP_OpenCamera(1, &camhandle);
-    if (camerror < 0) {
-        logger.log(format("error opening camera head: %s") % string(MP_GetErrMsg(camerror)));
-        MP_CloseSys();
-        return false;*/
-    //}
-    logger.log(format("camera head successfully opened"));
-    session_id = 0;
-   
+	if (camerror < 0) {
+	logger.log(format("error opening camera head: %s") % string(MP_GetErrMsg(camerror)));
+	MP_CloseSys();
+	return false;*/
+	//}
+	logger.log(format("camera head successfully opened"));
+	session_id = 0;
+
 	camerror = QCam_GetInfo(camhandle, qinfUniqueId, &session_id);
-		if (camerror != qerrSuccess) {
-			logger.log(format("couldn't open camera handle"));
-			QCam_ReleaseDriver();
-			return false;
-		}
+	if (camerror != qerrSuccess) {
+		logger.log(format("couldn't open camera handle"));
+		QCam_ReleaseDriver();
+		return false;
+	}
 
 	//camerror = MP_GetCam1394Sid(camhandle, &session_id);
- //   if (camerror < 0) {
- //       logger.log(format("couldn't open camera handle: %s") % string(MP_GetErrMsg(camerror)));
- //       MP_CloseSys();
- //       return false;
- //   }
-    logger.log(format("got session_id %d") % session_id);
- //   /*MP_SetTriggerState(camhandle, 1);*/
+	//   if (camerror < 0) {
+	//       logger.log(format("couldn't open camera handle: %s") % string(MP_GetErrMsg(camerror)));
+	//       MP_CloseSys();
+	//       return false;
+	//   }
+	logger.log(format("got session_id %d") % session_id);
+	//   /*MP_SetTriggerState(camhandle, 1);*/
 
-    //FWWindowType window = {image_width, 0, 0, image_height};
-    /*QCam_ReadDefaultSettings( camhandle, &settings );        
-    QCam_SendSettingsToCam( camhandle, &settings );*/
-	
-	settings.size = sizeof(settings); 
-    QCam_ReadDefaultSettings( camhandle, &settings );
-	QCam_SetParam( &settings, qprmImageFormat, qfmtMono16); 
-    QCam_SendSettingsToCam( camhandle, &settings );
-	
+	//FWWindowType window = {image_width, 0, 0, image_height};
+	/*QCam_ReadDefaultSettings( camhandle, &settings );
+	QCam_SendSettingsToCam( camhandle, &settings );*/
+
+	settings.size = sizeof(settings);
+	QCam_ReadDefaultSettings(camhandle, &settings);
+	QCam_SetParam(&settings, qprmImageFormat, qfmtMono16);
+	QCam_SendSettingsToCam(camhandle, &settings);
+
 	unsigned long xpix, ypix, bpp;
- 	QCam_GetInfo( camhandle, qinfCcdWidth,  &xpix );
-	QCam_GetInfo( camhandle, qinfCcdHeight, &ypix );
-	QCam_GetInfo( camhandle, qinfBitDepth, &bpp );
-	
+	QCam_GetInfo(camhandle, qinfCcdWidth, &xpix);
+	QCam_GetInfo(camhandle, qinfCcdHeight, &ypix);
+	QCam_GetInfo(camhandle, qinfBitDepth, &bpp);
+
 	//QCam_SetParam( &settings, qprmImageFormat, qfmtMono16);
 	//unsigned long 	xpix = width, ypix = height;
-	FrameSize=xpix*ypix*2;
-        
+	FrameSize = xpix*ypix * 2;
+
 	// Allocate memory for the frame buffers 
 	frameBuf1 = new unsigned char[FrameSize];
-	  
+
 	frame.pBuffer = frameBuf1; //new unsigned char[FrameSize];
 	frame.bufferSize = FrameSize;
 	frame.width = xpix;
 	frame.height = ypix;
 	QCam_qcShutterControl(0);
-	QCam_SetParam( &settings, qprmTriggerDelay, unsigned long(int(internal_period*1000000000)));
-	QCam_SetParam( &settings, qprmExposure, unsigned long(int(internal_exposure_time*1000000.0)));
-	QCam_SetParam( &settings, qprmCoolerActive, 1 );
-	QCam_SetParam( &settings, qprmHighSensitivityMode, 0 );
-	QCam_SetParam( &settings, qprmBlackoutMode, 0 );
-	
+	QCam_SetParam(&settings, qprmTriggerDelay, unsigned long(int(internal_period * 1000000000)));
+	QCam_SetParam(&settings, qprmExposure, unsigned long(int(internal_exposure_time*1000000.0)));
+	QCam_SetParam(&settings, qprmCoolerActive, 1);
+	QCam_SetParam(&settings, qprmHighSensitivityMode, 0);
+	QCam_SetParam(&settings, qprmBlackoutMode, 0);
+
 	QCam_SendSettingsToCam(camhandle, &settings);
 
 	//MP_SetMechShutter(camhandle, 0, 1, 0);
- //   MP_SetBitWindow(camhandle, 12, 0);  //set the bit depth
- //   MP_SetFWFormat(camhandle, window, FW_COLORFMT_MONO16); //set the image transfer format
- //   MP_SetTriggerState(camhandle, 1);
- //   //MP_SetTriggerMode(camhandle, 1, 0);
- //   MP_SetMode6Interval(camhandle, float(int(internal_period*1000.0)));
- //   MP_SetTriggerPolarity(camhandle, 0);
- //   MP_SetTriggerSource(camhandle, 0);
- //   MP_SetTriggerIntTime(camhandle, float(int(internal_exposure_time*1000.0)));
+	//   MP_SetBitWindow(camhandle, 12, 0);  //set the bit depth
+	//   MP_SetFWFormat(camhandle, window, FW_COLORFMT_MONO16); //set the image transfer format
+	//   MP_SetTriggerState(camhandle, 1);
+	//   //MP_SetTriggerMode(camhandle, 1, 0);
+	//   MP_SetMode6Interval(camhandle, float(int(internal_period*1000.0)));
+	//   MP_SetTriggerPolarity(camhandle, 0);
+	//   MP_SetTriggerSource(camhandle, 0);
+	//   MP_SetTriggerIntTime(camhandle, float(int(internal_exposure_time*1000.0)));
 
-    //int width, height, bpp;
+	//int width, height, bpp;
 	/*unsigned long width, height, bpp;
- 	QCam_GetInfo( camhandle, qinfCcdWidth,  &width );
+	QCam_GetInfo( camhandle, qinfCcdWidth,  &width );
 	QCam_GetInfo( camhandle, qinfCcdHeight, &height );
 	QCam_GetInfo( camhandle, qinfBitDepth, &bpp );*/
- //	  imaq1394GetAttribute (session_id, IMG1394_ATTR_IMAGE_WIDTH, &width);
- //   imaq1394GetAttribute (session_id, IMG1394_ATTR_IMAGE_HEIGHT, &height);
- //   imaq1394GetAttribute (session_id, IMG1394_ATTR_BYTES_PER_PIXEL, &bpp);
+	//	  imaq1394GetAttribute (session_id, IMG1394_ATTR_IMAGE_WIDTH, &width);
+	//   imaq1394GetAttribute (session_id, IMG1394_ATTR_IMAGE_HEIGHT, &height);
+	//   imaq1394GetAttribute (session_id, IMG1394_ATTR_BYTES_PER_PIXEL, &bpp);
 
- //   unsigned long newgain = 500000;		//set the gain manually
+	//   unsigned long newgain = 500000;		//set the gain manually
 	//QCam_SetParam( &settings, qprmNormalizedGain, newgain);
 	//QCam_SendSettingsToCam(camhandle, &settings);
 	init_gain();
 
 
 
-//    Rect rectangle = {0, 0, 0, 0};
-//    rectangle.width = unsigned long(image_width);
-//    rectangle.height = unsigned long(image_height);
-////    IMG_ERR imaq_error;
-//    char error_message[256];
-//    for (int i=0; i<256; i++) {
-//        error_message[i] = '\0';
- //   }
+	//    Rect rectangle = {0, 0, 0, 0};
+	//    rectangle.width = unsigned long(image_width);
+	//    rectangle.height = unsigned long(image_height);
+	////    IMG_ERR imaq_error;
+	//    char error_message[256];
+	//    for (int i=0; i<256; i++) {
+	//        error_message[i] = '\0';
+	//   }
 
 
 	unsigned long trigger_mode;
-    //int trigger_mode = 0;
-    int count = 0;
+	//int trigger_mode = 0;
+	int count = 0;
 	unsigned long last_remote_buffer_counter;
 
- ////   MP_GetTriggerMode(camhandle, &trigger_mode, &count);
+	////   MP_GetTriggerMode(camhandle, &trigger_mode, &count);
 	//QCam_GetParam( &settings, qprmTriggerType, &trigger_mode );
 	//
- //   imaq_error = imaq1394ConfigureAcquisition(session_id, 1, 2, rectangle);
- //   if (imaq_error == IMG1394_ERR_GOOD) {
- //       logger.log("configure acquisition succcess");
- //   }
- //   else {
- //       imaq1394ShowError(imaq_error, error_message, 256);
- //       logger.log(format("configure acqusition error: %d = %s")
- //           % imaq_error % error_message);
- //   }
+	//   imaq_error = imaq1394ConfigureAcquisition(session_id, 1, 2, rectangle);
+	//   if (imaq_error == IMG1394_ERR_GOOD) {
+	//       logger.log("configure acquisition succcess");
+	//   }
+	//   else {
+	//       imaq1394ShowError(imaq_error, error_message, 256);
+	//       logger.log(format("configure acqusition error: %d = %s")
+	//           % imaq_error % error_message);
+	//   }
 
- //   imaq_error = imaq1394StartAcquisition(session_id);
- //   if (imaq_error == IMG1394_ERR_GOOD) {
- //       logger.log("start acquisition succcess");
- //   }
- //   else {
- //       imaq1394ShowError(imaq_error, error_message, 256);
- //       logger.log(format("start acqusition error: %d = %s")
- //           % imaq_error % error_message);
- //   }
+	//   imaq_error = imaq1394StartAcquisition(session_id);
+	//   if (imaq_error == IMG1394_ERR_GOOD) {
+	//       logger.log("start acquisition succcess");
+	//   }
+	//   else {
+	//       imaq1394ShowError(imaq_error, error_message, 256);
+	//       logger.log(format("start acqusition error: %d = %s")
+	//           % imaq_error % error_message);
+	//   }
 
-    //imaq1394GetAttribute(session_id, IMG1394_ATTR_LAST_TRANSFERRED_BUFFER_NUM, &last_remote_buffer_counter);
- //   MP_GetTriggerMode(camhandle, &trigger_mode, &count);
+	//imaq1394GetAttribute(session_id, IMG1394_ATTR_LAST_TRANSFERRED_BUFFER_NUM, &last_remote_buffer_counter);
+	//   MP_GetTriggerMode(camhandle, &trigger_mode, &count);
 	QCam_GetParam(&settings, qprmFrameBufferLength, &last_remote_buffer_counter);
 	//QCam_GetInfo( &settings, qinfImageSize, &last_remote_buffer_counter);
-	QCam_GetParam( &settings, qprmTriggerType, &trigger_mode );
-    set_trigger_mode();
+	QCam_GetParam(&settings, qprmTriggerType, &trigger_mode);
+	set_trigger_mode();
 
-    return true;
+	return true;
 }
 
 void CameraWindows::clean_up_camera()
