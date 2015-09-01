@@ -100,7 +100,6 @@ void handler(int sig)
 
 static void uei_if_cleanup(void)
 {
-    int ret;
 
     if (uei_handle) {
 
@@ -116,7 +115,7 @@ static void uei_if_cleanup(void)
 static int uei_if_set_channel_map(void)
 {
     uei_channel_map_t *cur_channel = NULL;
-    int entry;
+    uint32_t entry;
     int ret;
 
     /**
@@ -277,11 +276,13 @@ void uei_if_sample_cards(void* arg)
     }
 }
 
+
 int main(void)
 {
     int ret;
     struct timespec next;
     long long periodns;
+    struct timeval tv1, tv2;
 
     RT_TASK sample_task;
     RT_TASK mosq_task;
@@ -293,7 +294,7 @@ int main(void)
 
     printf("Initialized!\n");
 
-    atexit(uei_cleanup);
+    atexit(uei_if_cleanup);
 
     // Create our Tasks
 
@@ -303,14 +304,21 @@ int main(void)
         exit(1);
     }
 
-    ret = rt_task_start(&mosq_task, &uei_framing_routine, &SRC_LOOKUP_TABLE[SRC_IF_UEI]);
+    ret = rt_task_start(&mosq_task, &uei_framing_loop, &SRC_LOOKUP_TABLE[SRC_IF_UEI]);
     if (ret) {
         perror("failed to start frame handling routine");
         exit(1);
     }
 
+    gettimeofday(&tv1, NULL);
+    clock_gettime(CLOCK_MONOTONIC, &next);
+
     while (!stop) {
-        usleep(100000);
+
+
+        timespec_add_ns(&next, periodns);
+        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next, NULL);
+
     }
 
     rt_task_join(&mosq_task);

@@ -206,7 +206,7 @@ int main(void)
         exit(1);
     }
 
-    ret = rt_task_start(&mosq_task, &uei_framing_routine, NULL);
+    ret = rt_task_start(&mosq_task, &uei_framing_loop, NULL);
     if (ret) {
     	perror("failed to start frame handling routine");
         exit(1);
