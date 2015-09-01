@@ -736,18 +736,15 @@ channel_t channel_list[] =
 
     #endif
 
-    #ifndef BOLOTEST
     { "ifyaw_1_gy",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
     { "ifroll_1_gy",          1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
     { "ifyaw_2_gy",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
     { "ifel_1_gy",            1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
     { "ifel_2_gy",            1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
     { "ifroll_2_gy",          1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
-    #endif
     { "az",                   LI2DEG,   0.0,            TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0 },
     { "el",                   LI2DEG,   0.0,            TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0 },
 
-    #ifndef BOLOTEST
     { "heat_gy",              1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "uei_if_framenum",      1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
     { "uei_of_framenum",      1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_OF_UEI, U_NONE, 0 },
@@ -755,14 +752,14 @@ channel_t channel_list[] =
     { "ifel_gy",              1.0,      0.0,            TYPE_FLOAT, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "ifroll_gy",            1.0,      0.0,            TYPE_FLOAT, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
     { "ifyaw_gy",             1.0,      0.0,            TYPE_FLOAT, RATE_100HZ, SRC_FC, U_V_DPS, 0 },
-    { "trigger_isc",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "trigger_osc",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+
     { "vel_req_el",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
     { "vel_req_az",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0 },
 
-    { "pulse_sc",             1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0 },
+    { "trigger_isc",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "trigger_osc",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "pulse_sc",             1.0,      0.0,            TYPE_UINT8, RATE_200HZ, SRC_FC, U_NONE, 0 },
 
-    #endif
     { "dig43_das",            1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "chopper",              CAL16(1.0, 0.0),          TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_V_V, 0 },
 
