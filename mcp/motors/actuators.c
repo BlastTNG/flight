@@ -1230,7 +1230,6 @@ void StoreActBus(void)
     static channel_t* iLockHoldAddr;
 
     static channel_t* posShutterAddr;
-    static channel_t* outShutterAddr;
     static channel_t* stepShutterAddr;
     static channel_t* stepSlowShutterAddr;
 
@@ -1319,7 +1318,6 @@ void StoreActBus(void)
         iLockHoldAddr = channels_find_by_name("i_hold_lock");
 
         posShutterAddr = channels_find_by_name("pos_shutter");
-        outShutterAddr = channels_find_by_name("out_shutter");
         stepShutterAddr = channels_find_by_name("steps_shutter");
         stepSlowShutterAddr = channels_find_by_name("steps_slow_shutter");
 
@@ -1387,7 +1385,6 @@ void StoreActBus(void)
     SET_UINT16(stepShutterAddr, CommandData.actbus.shutter_step);
     SET_UINT16(stepSlowShutterAddr, CommandData.actbus.shutter_step_slow);
     SET_UINT16(posShutterAddr, (shutter_data.in & SHUTTER_CLOSED_BIT));
-    SET_UINT16(outShutterAddr, shutter_data.pos);
 
     SET_UINT16(gPrimeSfAddr, CommandData.actbus.g_primary * 100.);
     SET_UINT16(gSecondSfAddr, CommandData.actbus.g_secondary * 100.);
