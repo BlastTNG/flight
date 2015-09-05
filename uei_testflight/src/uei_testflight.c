@@ -23,6 +23,9 @@
  * Created on: Aug 28, 2015 by Seth Hillbrand
  */
 
+#define _GNU_SOURCE 1
+#include <features.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -33,6 +36,7 @@
 #include <sys/time.h>
 #include <sched.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <PDNA.h>
 
@@ -41,13 +45,13 @@
 // which is dumped to a file when the program terminates
 #define CIRCULAR_BUFFER_SIZE  10000
 
-#define BASE_SLOT    14
-#define IRIG650_SLOT 6
-#define AI225_SLOT   5
-#define DO432_SLOT   4
-#define SL508_SLOT   3
-#define DI448_SLOT   2
-#define AI201_SLOT   1
+#define BASE_SLOT    6
+#define IRIG650_SLOT 5
+#define AI225_SLOT   4
+#define DO432_SLOT   3
+#define SL508_SLOT   2
+#define DI448_SLOT   1
+#define AI201_SLOT   0
 
 static bool stop = 0;
 static double frequency = 1.0;
@@ -79,11 +83,10 @@ void *async_thread(void* m_args) {
 
     int size;
     pDQEVENT pEvent;
-    pEV650_ID pEv650;
     pDQRDCFG cube_config;
 
     FILE *fp;
-    char filename = "/data/async.dat";
+    char *filename = "/data/async.dat";
 
     uint32_t error_mask = 0;
     struct timespec timespec;
@@ -91,8 +94,9 @@ void *async_thread(void* m_args) {
 
     fp = fopen(filename, "a");
 
+    printf("Starting ASYNC thread\n");
     clock_gettime(CLOCK_MONOTONIC, &timespec);
-    fprintf(fp, "%ld.%ld:\tRestart ASYNC Stream\n", (long) timespec.tv_sec, (long) timespec.tv_nsec);
+    fprintf(fp, "%ld.%ld: Restart ASYNC Stream\n", (long) timespec.tv_sec, (long) timespec.tv_nsec);
 
     DqRtAsyncOpenIOM(hd, &async_hd, DQ_UDP_DAQ_PORT_ASYNC, 500, 0, &cube_config);
 
@@ -115,25 +119,28 @@ void *async_thread(void* m_args) {
         pEvent = NULL;
         ret = DqCmdReceiveEvent(async_hd, 0, 1000 * 1000, &pEvent, &size);
         if ((ret < 0) && (ret != DQ_TIMEOUT_ERROR)) {
-            fprintf(fp, "%d:\tERR: %s\n", (int) time(NULL), DqTranslateError(ret));
+            fprintf(fp, "%ld.%ld: ERR: %s\n", (long) timespec.tv_sec, (long) timespec.tv_nsec, DqTranslateError(ret));
         }
+        if (ret == DQ_TIMEOUT_ERROR) printf("Timeout!\n");
         if (ret >= 0) {
-            clock_gettime(CLOCK_REALTIME, &timespec);
+            clock_gettime(CLOCK_MONOTONIC, &timespec);
+//            printf("%ld.%ld: ret=%d, size=%d, Received event 0x%04X from %u\n",
+//                    (long) timespec.tv_sec, (long) timespec.tv_nsec, ret, size, pEvent->event, pEvent->dev);
             switch (pEvent->dev) {
                 case IRIG650_SLOT:
                 {
                     pEV650_ID pEv650 = (pEV650_ID) pEvent->data;
                     switch (pEvent->event) {
                         case EV650_ERROR:
-                            fpritnf(fp, "%ld.%ld:%u\tError Event:", (long) timespec.tv_sec, (long) timespec.tv_nsec,
+                            fprintf(fp, "%ld.%ld:%u\tError Event:", (long) timespec.tv_sec, (long) timespec.tv_nsec,
                                     pEv650->tstamp);
-                            fpritnf(fp, "\t%08X,%08X,%08X,%08X\n", pEv650->data[0], pEv650->data[1], pEv650->data[2],
+                            fprintf(fp, "\t%08X,%08X,%08X,%08X\n", pEv650->data[0], pEv650->data[1], pEv650->data[2],
                                     pEv650->data[3]);
                             received_error = true;
                             break;
 
                         case EV650_PPS_CLK:
-                            fpritnf(fp, "%ld.%ld:%u\tPPS Event\n", (long) timespec.tv_sec, (long) timespec.tv_nsec,
+                            fprintf(fp, "%ld.%ld:%u\tPPS Event\n", (long) timespec.tv_sec, (long) timespec.tv_nsec,
                                     pEv650->tstamp);
 
                             /**
@@ -147,7 +154,7 @@ void *async_thread(void* m_args) {
                             break;
 
                         case EV650_GPSRX:
-                            fpritnf(fp, "%ld.%ld:%u\tGPS Event\n", (long) timespec.tv_sec, (long) timespec.tv_nsec,
+                            fprintf(fp, "%ld.%ld:%u\tGPS Event\n", (long) timespec.tv_sec, (long) timespec.tv_nsec,
                                     pEv650->tstamp);
                             gps_has_data = true;
 
@@ -159,17 +166,16 @@ void *async_thread(void* m_args) {
             }
         }
     }
+    return NULL;
 }
 
 int main(int argc, char* argv[]) {
-    int i, dev, ch, count = 0;
+    int i, count = 0;
     int ret;
     int dmapid;
     DQRDCFG *DQRdCfg = NULL;
 
-    struct sched_param schedp;
-    struct timeval tv1, tv2;
-    double duration;
+    struct timeval tv1;
     struct timespec next;
     long long periodns;
 
@@ -177,8 +183,6 @@ int main(int argc, char* argv[]) {
     size_t num_channels[15] = { 0 };
 
     uint32 timekeeper_mode, timekeeper_flags;
-    uint32 timecode_mode, timecode_output;
-    uint32 tdMode, tdInput;
     uint32 status;
 
     uint32 chentry;
@@ -186,18 +190,23 @@ int main(int argc, char* argv[]) {
     FILE *gps_fp;
     FILE *analog_fp;
 
+    pthread_t async_t;
+
     gps_fp = fopen("/data/gps.dat", "a");
     analog_fp = fopen("/data/analog.dat", "a");
 
     signal(SIGINT, sighandler);
 
-    // Configure this process to run with the real-time scheduler
-    memset(&schedp, 0, sizeof(schedp));
-    schedp.sched_priority = 80;
-    sched_setscheduler(0, SCHED_FIFO, &schedp);
-
     DqInitDAQLib();
     DqOpenIOM("127.0.0.1", DQ_UDP_DAQ_PORT, 1000, &hd, &DQRdCfg);
+
+    for (i = 0; i < DQ_MAXDEVN; i++)
+    {
+        if (DQRdCfg->devmod[i])
+        {
+            printf("Model: %x Option: %x Dev: %d\n", DQRdCfg->devmod[i], DQRdCfg->option[i], i);
+        }
+    }
 
     /**
      * Get the PPS source from the GPS module
@@ -215,6 +224,9 @@ int main(int argc, char* argv[]) {
      */
 
     ret = DqAdv650EnableGPSTracking(hd, IRIG650_SLOT, true, &status);
+
+    pthread_create(&async_t, NULL, async_thread, NULL);
+    pthread_detach(async_t);
 
     /**
      * Single buffer mode
@@ -239,7 +251,7 @@ int main(int argc, char* argv[]) {
     num_channels[AI201_SLOT]++;
 
     for (i = 0; i < 24; i++) {
-        chentry = i | DQ_LNCL_GAIN(0);
+        chentry = i | DQ_AI201_GAIN_1;
         DqRtDmapAddChannel(hd, dmapid, AI201_SLOT, DQ_SS0IN, &chentry, 1);
         num_channels[AI201_SLOT]++;
     }
@@ -254,7 +266,8 @@ int main(int argc, char* argv[]) {
     num_channels[DI448_SLOT]++;
 
     for (i = DQL_CHAN448_CHSE(2); i < DQL_CHAN448_CHSE(48); i++) {
-        DqRtDmapAddChannel(hd, dmapid, DI448_SLOT, DQ_SS0IN, i, 1);
+        chentry = i;
+        DqRtDmapAddChannel(hd, dmapid, DI448_SLOT, DQ_SS0IN, &chentry, 1);
         num_channels[DI448_SLOT]++;
     }
 
@@ -266,7 +279,8 @@ int main(int argc, char* argv[]) {
     num_channels[DO432_SLOT]++;
 
     for (i = 32; i < 64; i++) {
-        DqRtDmapAddChannel(hd, dmapid, DO432_SLOT, DQ_SS0IN, i, 1);
+        chentry = i;
+        DqRtDmapAddChannel(hd, dmapid, DO432_SLOT, DQ_SS0IN, &chentry, 1);
         num_channels[DO432_SLOT]++;
     }
 
@@ -278,52 +292,78 @@ int main(int argc, char* argv[]) {
     num_channels[AI225_SLOT]++;
 
     for (i = 0; i < 25; i++) {
-        DqRtDmapAddChannel(hd, dmapid, AI225_SLOT, DQ_SS0IN, i, 1);
+        chentry = i;
+        DqRtDmapAddChannel(hd, dmapid, AI225_SLOT, DQ_SS0IN, &chentry, 1);
         num_channels[AI225_SLOT]++;
     }
-
-    /**
-     * Allocate and clear the buffer for reading the input dmap
-     */
-    input_buffer = (double*) malloc(num_channels * sizeof(double));
-    memset(input_buffer, 0, num_channels * sizeof(double));
 
     // Start the layers
     DqRtDmapStart(hd, dmapid);
 
     gettimeofday(&tv1, NULL);
     clock_gettime(CLOCK_MONOTONIC, &next);
-    while (!stop) {
-        DqRtDmapRefresh(hd, dmapid);
 
+    fprintf(gps_fp, "%ld.%ld:\tRestart GPS Stream\n", (long) next.tv_sec, (long) next.tv_nsec);
+    fprintf(analog_fp, "%ld.%ld:\tRestart Analog Stream\n", (long) next.tv_sec, (long) next.tv_nsec);
+
+    printf("Starting loop\n");
+
+    while (!stop) {
+        printf("Refresh DMAP\n");
+        DqRtDmapRefresh(hd, dmapid);
         // read inputs retrieved by the last refresh
         for (i = 0; i < 15; i++) {
             if (num_channels[i] <= 0) continue;
 
+            printf("Reading scaled data\n");
             DqRtDmapReadScaledData(hd, dmapid, i, input_buffer, num_channels[i]);
 
-            fprintf(analog_fp, "Layer %d, ", i);
+            fprintf(analog_fp, "Layer %d, %ld.%ld, ", i, (long) next.tv_sec, (long) next.tv_nsec);
             for (int j = 0; j < num_channels[i]; j++) {
-                fprintf("%0.8f, ", input_buffer[j]);
+                fprintf(analog_fp, "%0.8f, ", input_buffer[j]);
             }
             fprintf(analog_fp, "\n");
 
         }
 
+        {
+            uint32_t diag_channels[13] = { 0, 1, 2, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15 };
+            DqAdvDnxpRead(hd, BASE_SLOT, 13, diag_channels, NULL, input_buffer);
+            fprintf(analog_fp, "Diag Layer, %ld.%ld, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f, %0.8f\n",
+                    (long) next.tv_sec, (long) next.tv_nsec,
+                    input_buffer[0], input_buffer[1], input_buffer[2], input_buffer[3],
+                    input_buffer[4], input_buffer[5], input_buffer[6], input_buffer[7],
+                    input_buffer[8], input_buffer[9], input_buffer[10], input_buffer[11], input_buffer[12]);
+        }
+
+
         if (gps_has_data) {
-            char data[256] = 0;
+            char data[256] = {0};
+            int ret_size = 0;
+            uint32_t gps_status = 0;
+            uint32_t status = 0;
+            uint32_t time = 0;
+            uint32_t date = 0;
+
+            printf("Getting GPS data\n");
+
             gps_has_data = false;
+            do {
+                ret_size = 0;
+                DqAdv650ReadGPS(hd, IRIG650_SLOT, 0, 255, data, &ret_size);
+                data[ret_size] = 0; data[255] = 0;
+                if (ret_size > 0 )
+                    fprintf(gps_fp, "%ld.%ld: %s\n", (long) next.tv_sec, (long) next.tv_nsec, data);
+            } while (ret_size > 0);
+
+            DqAdv650GetGPSStatus(hd, IRIG650_SLOT, 0, &gps_status, &status, &time, &date);
+            fprintf(gps_fp, "%ld.%ld: %08X, %08X, %08X, %08X\n",
+                    (long) next.tv_sec, (long) next.tv_nsec, gps_status, status, time, date);
         }
 
         count++;
 
-        // print status once a second
-        if (count && (0 == (count % (int) frequency))) {
-            gettimeofday(&tv2, NULL);
-            duration = ((tv2.tv_sec - tv1.tv_sec) + (tv2.tv_usec - tv1.tv_usec) / 1000000.0);
-            printf("Acquired %d scans in %fs (%f scans/s)\n", count, duration, count / duration);
-        }
-
+        printf("Looping for %d\n", count);
         timespec_add_ns(&next, periodns);
         clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next, NULL);
     }
