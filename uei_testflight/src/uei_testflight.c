@@ -65,8 +65,8 @@ static layers_t layers[7] = {
         {.serial =   64693 }, /** DIO-448 **/
         {.serial =   90721 }, /** SL-508 **/
         {.serial =   94276 }, /** DIO-432 **/
-        {.serial =  121256 }, /** AI-225 **/
-        {.serial =  118317 }, /** IRIG-650 **/
+        {.serial =  106472 }, /** AI-225 **/
+        {.serial =  118319 }, /** IRIG-650 **/
         {.serial =  119384 }  /** PWR Diag **/
 };
 
@@ -133,7 +133,92 @@ void *async_thread(void* m_args) {
     return NULL;
 }
 
+void decode_NMEA(char *buffer, FILE *fp)
+{
+    struct timespec next;
 
+    clock_gettime(CLOCK_MONOTONIC, &next);
+    switch (minmea_sentence_id(buffer, false)) {
+        case MINMEA_SENTENCE_RMC: {
+            struct minmea_sentence_rmc frame;
+            if (minmea_parse_rmc(&frame, buffer)) {
+                fprintf(fp, "$RMC: %ld.%ld\t coordinates and speed: (%f,%f) %f\n",
+                        (long) next.tv_sec, (long) next.tv_nsec,
+                        minmea_tocoord(&frame.latitude),
+                        minmea_tocoord(&frame.longitude),
+                        minmea_tofloat(&frame.speed)
+                        );
+            }else {
+                fprintf(fp, "$RMC sentence is not parsed\n");
+            }
+        } break;
+
+        case MINMEA_SENTENCE_GGA: {
+            struct minmea_sentence_gga frame;
+            if (minmea_parse_gga(&frame, buffer)) {
+                fprintf(fp, "$GGA: %ld.%ld\t fix quality: %d\t Altitude: %0.8f\t Time: %02d:%02d:%02d.%06d\n",
+                        (long) next.tv_sec, (long) next.tv_nsec,
+                        frame.fix_quality,
+                        minmea_tofloat(&frame.altitude),
+                        frame.time.hours, frame.time.minutes, frame.time.seconds, frame.time.microseconds);
+            }
+            else {
+                fprintf(fp, "$GGA sentence is not parsed\n");
+            }
+        } break;
+
+        case MINMEA_SENTENCE_GST: {
+            struct minmea_sentence_gst frame;
+            if (minmea_parse_gst(&frame, buffer)) {
+                fprintf(fp, "$GST: %ld.%ld\t floating point degree latitude, longitude and altitude error deviation: (%f,%f,%f)\n",
+                        (long) next.tv_sec, (long) next.tv_nsec,
+                        minmea_tofloat(&frame.latitude_error_deviation),
+                        minmea_tofloat(&frame.longitude_error_deviation),
+                        minmea_tofloat(&frame.altitude_error_deviation));
+            }
+            else {
+                fprintf(fp, "$GST sentence is not parsed\n");
+            }
+        } break;
+
+        case MINMEA_SENTENCE_GSV: {
+            struct minmea_sentence_gsv frame;
+            if (minmea_parse_gsv(&frame, buffer)) {
+                if (frame.msg_nr == frame.total_msgs)
+                    fprintf(fp, "$GSV: %ld.%ld\t satellites in view: %d\n",
+                        (long) next.tv_sec, (long) next.tv_nsec, frame.total_sats);
+            }
+            else {
+                fprintf(fp, "$GSV sentence is not parsed\n");
+            }
+        } break;
+
+        case MINMEA_SENTENCE_GSA: {
+            struct minmea_sentence_gsa frame;
+            if (minmea_parse_gsa(&frame, buffer)) {
+                fprintf(fp, "$GSA: %ld.%ld\t Fix quality:\t %f, %f, %f\n",
+                        (long) next.tv_sec, (long) next.tv_nsec,
+                        minmea_tofloat(&frame.pdop),
+                        minmea_tofloat(&frame.hdop),
+                        minmea_tofloat(&frame.vdop));
+            }
+            else {
+                fprintf(fp, "$GSA sentence not parsed\n");
+            }
+        } break;
+
+        case MINMEA_INVALID: {
+            fprintf(fp, "$xxxxx sentence is not valid:\n\t%s\n", buffer);
+        } break;
+
+        default: {
+            buffer[6] = '\0';
+            fprintf(fp, "%s sentence is not parsed\n", buffer);
+        } break;
+
+    }
+
+}
 
 void* read_GPS_serial_line(void *arg)
 {
@@ -221,88 +306,7 @@ void* read_GPS_serial_line(void *arg)
 
         *bufp = '\0';
 
-        if (success) {
-
-            switch (minmea_sentence_id(buffer, false)) {
-                case MINMEA_SENTENCE_RMC: {
-                    struct minmea_sentence_rmc frame;
-                    if (minmea_parse_rmc(&frame, buffer)) {
-                        fprintf(fp, "$RMC: %ld.%ld\t coordinates and speed: (%f,%f) %f\n",
-                                (long) next.tv_sec, (long) next.tv_nsec,
-                                minmea_tocoord(&frame.latitude),
-                                minmea_tocoord(&frame.longitude),
-                                minmea_tofloat(&frame.speed)
-                                );
-                    }else {
-                        fprintf(fp, "$RMC sentence is not parsed\n");
-                    }
-                } break;
-
-                case MINMEA_SENTENCE_GGA: {
-                    struct minmea_sentence_gga frame;
-                    if (minmea_parse_gga(&frame, buffer)) {
-                        fprintf(fp, "$GGA: %ld.%ld\t fix quality: %d\t Altitude: %0.8f\t Time: %02d:%02d:%02d.%06d\n",
-                                (long) next.tv_sec, (long) next.tv_nsec,
-                                frame.fix_quality,
-                                minmea_tofloat(&frame.altitude),
-                                frame.time.hours, frame.time.minutes, frame.time.seconds, frame.time.microseconds);
-                    }
-                    else {
-                        fprintf(fp, "$GGA sentence is not parsed\n");
-                    }
-                } break;
-
-                case MINMEA_SENTENCE_GST: {
-                    struct minmea_sentence_gst frame;
-                    if (minmea_parse_gst(&frame, buffer)) {
-                        fprintf(fp, "$GST: %ld.%ld\t floating point degree latitude, longitude and altitude error deviation: (%f,%f,%f)\n",
-                                (long) next.tv_sec, (long) next.tv_nsec,
-                                minmea_tofloat(&frame.latitude_error_deviation),
-                                minmea_tofloat(&frame.longitude_error_deviation),
-                                minmea_tofloat(&frame.altitude_error_deviation));
-                    }
-                    else {
-                        fprintf(fp, "$GST sentence is not parsed\n");
-                    }
-                } break;
-
-                case MINMEA_SENTENCE_GSV: {
-                    struct minmea_sentence_gsv frame;
-                    if (minmea_parse_gsv(&frame, buffer)) {
-                        if (frame.msg_nr == frame.total_msgs)
-                            fprintf(fp, "$GSV: %ld.%ld\t satellites in view: %d\n",
-                                (long) next.tv_sec, (long) next.tv_nsec, frame.total_sats);
-                    }
-                    else {
-                        fprintf(fp, "$GSV sentence is not parsed\n");
-                    }
-                } break;
-
-                case MINMEA_SENTENCE_GSA: {
-                    struct minmea_sentence_gsa frame;
-                    if (minmea_parse_gsa(&frame, buffer)) {
-                        fprintf(fp, "$GSA: %ld.%ld\t Fix quality:\t %f, %f, %f\n",
-                                (long) next.tv_sec, (long) next.tv_nsec,
-                                minmea_tofloat(&frame.pdop),
-                                minmea_tofloat(&frame.hdop),
-                                minmea_tofloat(&frame.vdop));
-                    }
-                    else {
-                        fprintf(fp, "$GSA sentence not parsed\n");
-                    }
-                } break;
-
-                case MINMEA_INVALID: {
-                    fprintf(fp, "$xxxxx sentence is not valid:\n\t%s\n", buffer);
-                } break;
-
-                default: {
-                    buffer[6] = '\0';
-                    fprintf(fp, "%s sentence is not parsed\n", buffer);
-                } break;
-
-            }
-        }
+        if (success) decode_NMEA(buffer, fp);
 
         if (!has_more) {
             timespec_add_ns(&next, periodns);
@@ -341,6 +345,7 @@ int get_status(FILE *m_fp)
 int read_GPS_IRIG(FILE *m_fp)
 {
     char data[256] = {0};
+    char *bufp = data;
     int ret_size = 0;
     uint32_t gps_status = 0;
     uint32_t status = 0;
@@ -348,17 +353,28 @@ int read_GPS_IRIG(FILE *m_fp)
     uint32_t date_val = 0;
     int ret = DQ_SUCCESS;
     struct timespec cur_time;
+    int received = 0;
 
     clock_gettime(CLOCK_MONOTONIC, &cur_time);
     do {
         ret_size = 0;
-        ret = DqAdv650ReadGPS(hd, IRIG650_SLOT, 0, 255, data, &ret_size);
+        ret = DqAdv650ReadGPS(hd, IRIG650_SLOT, 0, 1, bufp, &ret_size);
         if (ret < 0) {
             printf("Error %d in DqAdv650ReadGPS\n", ret);
         }
-        data[ret_size] = 0; data[255] = 0;
-        if (ret_size > 0 )
-            fprintf(m_fp, "%ld.%ld: %s\n", (long) cur_time.tv_sec, (long) cur_time.tv_nsec, data);
+
+        received += ret_size;
+        if (data[0] != '$') received = 0;
+
+        bufp = data + received;
+        if ((received > 4) &&
+                (*(bufp - 1) == 0x0D))
+        {
+            *(bufp - 1) = 0;
+            decode_NMEA(data, m_fp);
+            bufp = data;
+        }
+
     } while (ret_size > 0);
 
     ret = DqAdv650GetGPSStatus(hd, IRIG650_SLOT, 0, &gps_status, &status, &time_val, &date_val);
@@ -421,7 +437,11 @@ int main(int argc, char* argv[]) {
     for (i = 0; i < 7; i++)
     {
         uint32_t devn;
-        DqGetDevnBySerial(hd, layers[i].serial, &devn, NULL, NULL, NULL);
+        ret = DqGetDevnBySerial(hd, layers[i].serial, &devn, NULL, NULL, NULL);
+        if (ret < 0) {
+            printf("Error %d getting device number\n", ret);
+            goto finish_up;
+        }
         layers[i].devn = (int)devn;
 
         if (DQRdCfg->devmod[layers[i].devn])
@@ -495,7 +515,7 @@ int main(int argc, char* argv[]) {
      * TTL1 outputs the IRIG PPS
      */
     ret = DqAdv650AssignTTLOutputs(hd, IRIG650_SLOT, CT650_OUT_TTLEN0, 0,
-    CT650_OUT_CFG_SRC_1GPS, CT650_OUT_CFG_SRC_1PPS, 0, 0);
+    CT650_OUT_CFG_SRC_1GPS, CT650_OUT_CFG_SRC_1PPS, CT650_OUT_CFG_SRC_0, CT650_OUT_CFG_SRC_0);
     if (ret < 0) {
         printf("Error %d in DqAdv650AssignTTLOutputs\n", ret);
     }
@@ -668,6 +688,7 @@ int main(int argc, char* argv[]) {
 
     DqRtDmapClose(hd, dmapid);
 
+    finish_up:
     DqCloseIOM(hd);
     DqCleanUpDAQLib();
 
