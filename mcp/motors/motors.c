@@ -2067,14 +2067,15 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
 }
 
 
-/************************************************************************/
-/*                                                                      */
-/*     GetIPivot: get the current request for the pivot in DAC units    */
-/*       Proportional to the reaction wheel speed error                 */
-/*                                                                      */
-/************************************************************************/
-//TODO: Change GetIPivot to return units of 0.01A for motor controller
-static double calculate_piv_current(float m_az_req_vel, unsigned int disabled)
+
+/**
+ * Calculate the current required by the pivot given a requested azimuthal
+ * velocity.
+ * @param m_az_req_vel Requested azimuth scan speed in degrees/second
+ * @param m_disabled TRUE/FALSE.  If TRUE, set requested current to 0
+ * @return Returns the desired pivot current in 0.01A (units of motor controller)
+ */
+static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
 {
     static channel_t* pRWTermPivAddr;
     static channel_t* IRWTermPivAddr;
@@ -2162,7 +2163,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int disabled)
         milliamp_return = last_milliamp - max_delta_mA;
     }
 
-    if (disabled) { // Don't attempt to send current to the motors if we are disabled.
+    if (m_disabled) { // Don't attempt to send current to the motors if we are m_disabled.
         milliamp_return = 0.0;
         friction_in[0] = 0.0;
         friction_in[1] = 0.0;
