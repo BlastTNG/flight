@@ -27,6 +27,8 @@
 #define DSP1760_H_
 #include <stdint.h>
 
+#define GYRO_VAR (0.7E-6)
+
 bool initialize_dsp1760_interface(void);
 
 float dsp1760_getval(int m_box, int m_gyro);

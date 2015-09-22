@@ -42,6 +42,7 @@
 #include "tx.h"
 #include "fir.h"
 
+#include <dsp1760.h>
 #include <angles.h>
 #include <xsc_network.h>
 #include <conversions.h>
@@ -642,7 +643,7 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
       //i_point = GETREADINDEX(point_index);
       ra = to_hours(xsc_server_data[which].channels[xN_image_eq_ra].value_double);
       dec = to_degrees(xsc_server_data[which].channels[xN_image_eq_dec].value_double);
-//      blast_dbg("xsc%i solution is ra, dec: %f, %f (deg)\n", which, to_degrees(from_hours(ra)), dec);
+      blast_dbg("xsc%i solution is ra, dec: %f, %f (deg)\n", which, to_degrees(from_hours(ra)), dec);
 
       equatorial_to_horizontal(ra, dec, ACSData.last_trigger_lst[which], ACSData.last_trigger_lat[which], &new_az, &new_el);
 

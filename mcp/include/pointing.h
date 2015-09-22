@@ -26,8 +26,6 @@
 #ifndef INCLUDE_POINTING_H_
 #define INCLUDE_POINTING_H_
 
-///TODO: Move Gyro Defs to gyro header file
-#define GYRO_VAR (2.0E-6)
 #define GY_HISTORY_AGE_CS 4400
 
 //TODO: Characterize Magnetometer
