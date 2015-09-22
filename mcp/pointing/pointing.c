@@ -274,45 +274,6 @@ static int MagConvert(double *mag_az)
   return (1);
 }
 
-/*
-static int fakeDGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll) {
-  static int i = 0;
-  if (i++>100) {
-    i = 0;
-    *dgps_az = 180.0 + (double)random()/(double)RAND_MAX*2.0;
-    *dgps_roll = 0;
-    *dgps_pitch = 0;
-    return (1);
-  }
-  return (0);
-}
-*/
-
-static int DGPSConvert(double *dgps_az, double *dgps_pitch, double *dgps_roll)
-{
-  static int last_i_dgpsatt = 0;
-  int i_dgpsatt;
-//TODO:Re-enable DGPSConvert
-//  i_dgpsatt = GETREADINDEX(dgpsatt_index);
-//  *dgps_az = DGPSAtt[i_dgpsatt].az;
-//  NormalizeAngle(dgps_az);
-//
-//  *dgps_pitch = DGPSAtt[i_dgpsatt].pitch;
-//  NormalizeAngle(dgps_pitch);
-//
-//  *dgps_roll = DGPSAtt[i_dgpsatt].roll;
-//  NormalizeAngle(dgps_roll);
-//
-//  if (i_dgpsatt != last_i_dgpsatt) {
-//    last_i_dgpsatt = i_dgpsatt;
-//    if (DGPSAtt[i_dgpsatt].att_ok == 1) {
-//      return (1);
-//    }
-//  }
-  /* *dgps_az = 0; */
-  return(0);
-}
-
 // PSSConvert versions added 12 June 2010 -GST
 // PSS1 for Lupus, PSS2 for Vela, PSS3 and PSS4 TBD
 #define  PSS_L  10.     // 10 mm = effective length of active area
@@ -935,24 +896,19 @@ void Pointing(void)
   double ra, dec, az, el;
   static int j=0;
 
-  int mag_ok, dgps_ok;
+  int mag_ok;
   int pss_ok;
-  static unsigned dgps_since_ok = 500;
   static unsigned pss_since_ok = 500;
   double mag_az;
   double pss_az = 0;
   double pss_el = 0;
-  double dgps_az=0, dgps_pitch, dgps_roll;
   double clin_elev;
-  static int no_dgps_pos = 0, last_i_dgpspos = 0, using_sip_gps = -1;
   static double last_good_lat=0, last_good_lon=0, last_good_alt = 0;
-  static int since_last_good_dgps_pos=5;
   static int i_at_float = 0;
   double trim_change;
 
   static int firsttime = 1;
 
-  int i_dgpspos, dgpspos_ok = 0;
   int i_point_read;
 
   static struct LutType elClinLut = {"/data/etc/blast/clin_elev.lut",0,NULL,NULL,0};
@@ -1030,18 +986,7 @@ void Pointing(void)
     0, 0, // n_solutions, since_last
     NULL, NULL
   };
-  static struct AzSolutionStruct DGPSAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
-    1.0 / M2DV(20), //sample weight
-    M2DV(30), // systemamatic varience
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
+
   static struct AzSolutionStruct PSSAz =  {0.0, // starting angle
     360.0 * 360.0, // starting varience
     1.0 / M2DV(30), //sample weight
@@ -1086,7 +1031,6 @@ void Pointing(void)
         EncEl.trim = CommandData.enc_el_trim;
         NullAz.trim = CommandData.null_az_trim;
         MagAz.trim = CommandData.mag_az_trim;
-        DGPSAz.trim = CommandData.dgps_az_trim;
         PSSAz.trim = CommandData.pss_az_trim;
 
         ClinEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
@@ -1104,11 +1048,6 @@ void Pointing(void)
         initFir(MagAz.fs2, FIR_LENGTH);
         initFir(MagAz.fs3, FIR_LENGTH);
 
-        DGPSAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        DGPSAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        initFir(DGPSAz.fs2, GPS_FIR_LENGTH);
-        initFir(DGPSAz.fs3, GPS_FIR_LENGTH);
-
         PSSAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         PSSAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         initFir(PSSAz.fs2, FIR_LENGTH);
@@ -1120,13 +1059,11 @@ void Pointing(void)
         /* Load lat/lon from disk */
         last_good_lon = PointingData[0].lon = PointingData[1].lon = PointingData[2].lon = CommandData.lon;
         last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat = CommandData.lat;
-        last_i_dgpspos = GETREADINDEX(dgpspos_index);
     }
 
     if (elClinLut.n == 0)
         LutInit(&elClinLut);
 
-    i_dgpspos = GETREADINDEX(dgpspos_index);
     i_point_read = GETREADINDEX(point_index);
 
     // Make aristotle correct
@@ -1150,38 +1087,11 @@ void Pointing(void)
     PointingData[point_index].t = mcp_systime(NULL); // CPU time
 
     /************************************************/
-    /** Set the official Lat and Long: prefer dgps **/
-    if ((i_dgpspos != last_i_dgpspos) && (DGPSPos[i_dgpspos].n_sat > 0)) { // there has been a new solution
-        if (using_sip_gps != 0)
-            blast_info("Pointing: Using dGPS for positional data");
-        last_i_dgpspos = i_dgpspos;
-        // check for spikes or crazy steps...
-        dgpspos_ok = ((fabs(last_good_lat - DGPSPos[i_dgpspos].lat) < 0.5) && (fabs(last_good_lon - DGPSPos[i_dgpspos].lon) < 0.5))
-                || (since_last_good_dgps_pos >= 5); // 5 in a row = ok...
+    /** Set the official Lat and Lon **/
+    last_good_lat = SIPData.GPSpos.lat;
+    last_good_lon = SIPData.GPSpos.lon;
+    last_good_alt = SIPData.GPSpos.alt;
 
-        if (dgpspos_ok) {
-            last_good_lat = DGPSPos[i_dgpspos].lat;
-            last_good_lon = DGPSPos[i_dgpspos].lon;
-            last_good_alt = DGPSPos[i_dgpspos].alt;
-            using_sip_gps = 0;
-            no_dgps_pos = 0;
-            since_last_good_dgps_pos = 0;
-        }
-        else {
-            since_last_good_dgps_pos++;
-        }
-    }
-    else {
-        no_dgps_pos++;
-        if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
-            if (using_sip_gps != 1)
-                blast_info("Pointing: Using SIP for positional data");
-            last_good_lat = SIPData.GPSpos.lat;
-            last_good_lon = SIPData.GPSpos.lon;
-            last_good_alt = SIPData.GPSpos.alt;
-            using_sip_gps = 1;
-        }
-    }
     PointingData[point_index].lat = last_good_lat;
     PointingData[point_index].lon = last_good_lon;
     PointingData[point_index].alt = last_good_alt;
@@ -1279,14 +1189,6 @@ void Pointing(void)
         pss_since_ok++;
     }
     PointingData[point_index].pss_ok = pss_ok;
-    dgps_ok = DGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
-    //dgps_ok = fakeDGPSConvert(&dgps_az, &dgps_pitch, &dgps_roll);
-    if (dgps_ok) {
-        dgps_since_ok = 0;
-    }
-    else {
-        dgps_since_ok++;
-    }
 
     /** evolve solutions **/
     EvolveAzSolution(&NullAz,
@@ -1300,13 +1202,6 @@ void Pointing(void)
         RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
         PointingData[point_index].el,
         mag_az, mag_ok);
-
-    /** DGPS Az **/
-    EvolveAzSolution(&DGPSAz,
-        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-        PointingData[point_index].el,
-        dgps_az, dgps_ok);
 
     /** PSS **/
     EvolveAzSolution(&PSSAz,
@@ -1329,9 +1224,6 @@ void Pointing(void)
     if (CommandData.use_pss) {
         AddAzSolution(&AzAtt, &PSSAz, 1);
     }
-    if (CommandData.use_gps) {
-        AddAzSolution(&AzAtt, &DGPSAz, 1);
-    }
     if (CommandData.use_isc) {
         AddAzSolution(&AzAtt, &ISCAz, 0);
     }
@@ -1341,9 +1233,6 @@ void Pointing(void)
 
     PointingData[point_index].offset_ifrollmag_gy = MagAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyawmag_gy = MagAz.offset_ifyaw_gy;
-
-    PointingData[point_index].offset_ifrolldgps_gy = DGPSAz.offset_ifroll_gy;
-    PointingData[point_index].offset_ifyawdgps_gy = DGPSAz.offset_ifyaw_gy;
 
     PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
@@ -1374,10 +1263,6 @@ void Pointing(void)
 
     PointingData[point_index].mag_az = MagAz.angle;
     PointingData[point_index].mag_sigma = sqrt(MagAz.variance + MagAz.sys_var);
-    PointingData[point_index].dgps_az = DGPSAz.angle;
-    PointingData[point_index].dgps_pitch = dgps_pitch;
-    PointingData[point_index].dgps_roll = dgps_roll;
-    PointingData[point_index].dgps_sigma = sqrt(DGPSAz.variance + DGPSAz.sys_var);
 
     // Added 22 June 2010 GT
     PointingData[point_index].pss_az = PSSAz.angle;
@@ -1408,7 +1293,6 @@ void Pointing(void)
         EncEl.trim = 0.0;
         NullAz.trim = 0.0;
         MagAz.trim = 0.0;
-        DGPSAz.trim = 0.0;
         PSSAz.trim = 0.0;
         NewAzEl.fresh = 0;
     }
@@ -1442,15 +1326,6 @@ void Pointing(void)
             trim_change = -NewAzEl.rate;
         MagAz.trim += trim_change;
 
-        if (dgps_since_ok < 500) {
-            trim_change = (NewAzEl.az - DGPSAz.angle) - DGPSAz.trim;
-            if (trim_change > NewAzEl.rate)
-                trim_change = NewAzEl.rate;
-            else if (trim_change < -NewAzEl.rate)
-                trim_change = -NewAzEl.rate;
-            DGPSAz.trim += trim_change;
-        }
-
         if (pss_since_ok < 500) {
             trim_change = (NewAzEl.az - PSSAz.angle) - PSSAz.trim;
             if (trim_change > NewAzEl.rate)
@@ -1469,7 +1344,6 @@ void Pointing(void)
     CommandData.enc_el_trim = EncEl.trim;
     CommandData.null_az_trim = NullAz.trim;
     CommandData.mag_az_trim = MagAz.trim;
-    CommandData.dgps_az_trim = DGPSAz.trim;
     CommandData.pss_az_trim = PSSAz.trim;
     j++;
 

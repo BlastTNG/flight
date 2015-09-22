@@ -124,13 +124,6 @@ struct PointingDataStruct {
   double offset_ifrollmag_gy;
   double offset_ifyawmag_gy;
 
-  double dgps_az; // degrees
-  double dgps_pitch; // degrees
-  double dgps_roll; // degrees
-  double dgps_sigma; // degrees
-  double offset_ifrolldgps_gy;
-  double offset_ifyawdgps_gy;
-
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
 
@@ -215,20 +208,6 @@ struct AxesModeStruct {
   double el_dith;
   unsigned int i_dith;
 };
-
-extern struct DGPSPosStruct DGPSPos[3];
-extern int dgpspos_index;
-
-extern struct DGPSAttStruct DGPSAtt[3];
-extern int dgpsatt_index;
-
-extern time_t DGPSTime;
-
-extern struct DGPSAttStruct csbf_gps_att[3];
-extern int csbf_dgpsatt_index;
-
-extern struct DGPSPosStruct csbf_gps_pos[3];
-extern int csbf_dgpspos_index;
 
 extern time_t csbf_gps_time;
 

@@ -287,7 +287,6 @@ struct CommandDataStruct {
   unsigned char use_isc;
   unsigned char use_osc;
   unsigned char use_mag;
-  unsigned char use_gps;
 
   unsigned short fast_offset_gy;
   unsigned int slew_veto;
@@ -298,7 +297,6 @@ struct CommandDataStruct {
   double enc_el_trim;
   double null_az_trim;
   double mag_az_trim;
-  double dgps_az_trim;
   double pss_az_trim;
 
   int autotrim_enable;

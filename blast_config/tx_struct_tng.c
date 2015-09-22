@@ -124,7 +124,6 @@ channel_t channel_list[] =
     { "time",                 1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "time_usec",            1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "time_sip",             1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "time_dgps",            1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "lst",                  1.0 / 3600.0,     0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "ra_isc",               LI2H,             0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "dec_isc",              LI2DEG / 2.,      -90., TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
@@ -220,15 +219,7 @@ channel_t channel_list[] =
 
     { "lat_sip",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_LA_DEG, 0 },
     { "lon_sip",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_LO_DEG, 0 },
-    { "lat_dgps",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_LA_DEG, 0 },
-    { "lon_dgps",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_LO_DEG, 0 },
-    { "alt_dgps",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_ALT_M, 0 },
-    { "speed_dgps",           1. / 100,         0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_KPH, 0 },
-    { "dir_dgps",             I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
-    { "climb_dgps",           1. / 100,         0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_MPS, 0 },
-    { "att_ok_dgps",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
-    { "n_sat_dgps",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "df_n_flc",             1. / 250,         0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_GB, 0 },
     { "mode_p",               1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "x_p",                  I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -272,8 +263,7 @@ channel_t channel_list[] =
     { "offset_ifel_gy",       1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "offset_ifroll_gy",     1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "offset_ifyaw_gy",      1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
-    { "az_dgps",              I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
-    { "sigma_dgps",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+
     { "lvdt_high_act",        1.0,              -5000.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "az_isc",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "el_isc",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -392,8 +382,7 @@ channel_t channel_list[] =
     { "trim_enc",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "trim_null",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "trim_mag",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "trim_dgps",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "az_raw_dgps",          I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
+
     { "gain_bal",             1 / 1000.,        0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "el_clin",              I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "h_p",                  I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 }, // scan height
@@ -458,8 +447,6 @@ channel_t channel_list[] =
 
     { "offset_ifrollmag_gy",  1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "offset_ifyawmag_gy",   1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
-    { "offset_ifrollgps_gy",  1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
-    { "offset_ifyawdgps_gy",  1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "offset_ifrollpss_gy",  1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "offset_ifyawpss_gy",   1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0 },
     { "next_i_hwpr_p",        1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -521,8 +508,6 @@ channel_t channel_list[] =
     { "pos_hwpr",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "enc_hwpr",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "mode_bal",             1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "pitch_raw_dgps",       I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_P_DEG, 0 },
-    { "roll_raw_dgps",        I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_P_DEG, 0 },
     { "step_start_bias",      0.5,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "step_end_bias",        0.5,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "step_n_bias",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },

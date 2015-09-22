@@ -244,9 +244,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case mag_veto:
       CommandData.use_mag = 0;
       break;
-    case gps_veto:
-      CommandData.use_gps = 0;
-      break;
     case elenc_veto:
       CommandData.use_elenc = 0;
       break;
@@ -265,9 +262,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case mag_allow:
       CommandData.use_mag = 1;
-      break;
-    case gps_allow:
-      CommandData.use_gps = 1;
       break;
     case elenc_allow:
       CommandData.use_elenc = 1;
@@ -1888,7 +1882,6 @@ void InitCommandData()
   CommandData.use_isc = 1;
   CommandData.use_osc = 1;
   CommandData.use_mag = 1;
-  CommandData.use_gps = 0;
   CommandData.lat_range = 1;
   CommandData.sucks = 1;
   CommandData.uplink_sched=0;
@@ -1897,7 +1890,6 @@ void InitCommandData()
   CommandData.enc_el_trim = 0;
   CommandData.null_az_trim = 0;
   CommandData.mag_az_trim = 0;
-  CommandData.dgps_az_trim = 0;
   CommandData.pss_az_trim = 0;
 
   CommandData.autotrim_enable = 0;

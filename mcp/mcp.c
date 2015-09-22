@@ -84,7 +84,6 @@ extern derived_tng_t derived_list[];
 
 void Pointing();
 void WatchPort(void*);
-void WatchDGPS(void);
 void IntegratingStarCamera(void);
 void ActuatorBus(void);
 void WatchFIFO(void*);          //commands.c
@@ -396,7 +395,6 @@ int main(int argc, char *argv[])
 #endif
 
 //  pthread_t compression_id;
-//  pthread_t dgps_id;
 //  pthread_t isc_id;
 //  pthread_t osc_id;
   pthread_t chatter_id;
@@ -496,7 +494,7 @@ int main(int argc, char *argv[])
 #endif
 
   initialize_CPU_sensors();
-//  pthread_create(&dgps_id, NULL, (void*)&WatchDGPS, NULL);
+
 //  if (use_starcams) {
 //    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
 //    pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);

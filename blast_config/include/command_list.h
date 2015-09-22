@@ -70,7 +70,7 @@ enum singleCommand {
   charcoal_off,     charcoal_on,        hs_charcoal_off,  hwpr_panic,
   hs_charcoal_on,   isc_discard_images, el_off,           el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
-  fixed,            isc_full_screen,    gps_allow,        gps_veto,
+  fixed,            isc_full_screen,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   isc_abort,        isc_allow,          isc_pause,        isc_reconnect,
   isc_run,          isc_shutdown,       isc_veto,         level_off,

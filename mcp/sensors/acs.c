@@ -782,8 +782,6 @@ void store_5hz_acs(void)
     static channel_t* OffsetIFyawGYAddr;
     static channel_t* OffsetIFrollMagGYAddr;
     static channel_t* OffsetIFyawMagGYAddr;
-    static channel_t* OffsetIFrollDGPSGYAddr;
-    static channel_t* OffsetIFyawDGPSGYAddr;
     static channel_t* OffsetIFrollPSSGYAddr;
     static channel_t* OffsetIFyawPSSGYAddr;
     static channel_t* raAddr;
@@ -809,8 +807,6 @@ void store_5hz_acs(void)
     static channel_t* calDPss4Addr;
     static channel_t* calIMinPssAddr;
     static channel_t* sigmaMagAddr;
-    static channel_t* dgpsAzAddr;
-    static channel_t* dgpsSigmaAddr;
     static channel_t* sigmaPssAddr;
     static channel_t* azrawPss1Addr;
     static channel_t* azrawPss2Addr;
@@ -832,27 +828,12 @@ void store_5hz_acs(void)
     static channel_t* elLutClinAddr;
     static channel_t* sigmaClinAddr;
 
-    /** dgps fields **/
-    static channel_t* dgpsTimeAddr;
-    static channel_t* dgpsLatAddr;
-    static channel_t* dgpsLonAddr;
-    static channel_t* dgpsAltAddr;
-    static channel_t* dgpsSpeedAddr;
-    static channel_t* dgpsDirAddr;
-    static channel_t* dgpsClimbAddr;
-    static channel_t* dgpsAttOkAddr;
-    static channel_t* dgpsAzRawAddr;
-    static channel_t* dgpsPitchRawAddr;
-    static channel_t* dgpsRollRawAddr;
-    static channel_t* dgpsNSatAddr;
-
     /* trim fields */
     static channel_t *trimClinAddr;
     static channel_t *trimEncAddr;
     static channel_t *trimNullAddr;
     static channel_t *trimMagAddr;
     static channel_t *trimPssAddr;
-    static channel_t *dgpsTrimAddr;
 
     static channel_t *threshAtrimAddr;
     static channel_t *timeAtrimAddr;
@@ -865,7 +846,6 @@ void store_5hz_acs(void)
 
 
     int i_point;
-    int i_dgps;
     int sensor_veto;
 
     /******** Obtain correct indexes the first time here ***********/
@@ -893,8 +873,7 @@ void store_5hz_acs(void)
 
         OffsetIFrollMagGYAddr = channels_find_by_name("offset_ifrollmag_gy");
         OffsetIFyawMagGYAddr = channels_find_by_name("offset_ifyawmag_gy");
-        OffsetIFrollDGPSGYAddr = channels_find_by_name("offset_ifrollgps_gy");
-        OffsetIFyawDGPSGYAddr = channels_find_by_name("offset_ifyawdgps_gy");
+
         OffsetIFrollPSSGYAddr = channels_find_by_name("offset_ifrollpss_gy");
         OffsetIFyawPSSGYAddr = channels_find_by_name("offset_ifyawpss_gy");
 
@@ -922,8 +901,6 @@ void store_5hz_acs(void)
         calDPss4Addr = channels_find_by_name("cal_d_pss4");
         calIMinPssAddr = channels_find_by_name("cal_imin_pss");
         sigmaMagAddr = channels_find_by_name("sigma_mag");
-        dgpsAzAddr = channels_find_by_name("az_dgps");
-        dgpsSigmaAddr = channels_find_by_name("sigma_dgps");
         azSunAddr = channels_find_by_name("az_sun");
         elSunAddr = channels_find_by_name("el_sun");
         sigmaPssAddr = channels_find_by_name("sigma_pss");
@@ -973,19 +950,6 @@ void store_5hz_acs(void)
 
         vetoSensorAddr = channels_find_by_name("veto_sensor");
 
-        dgpsTimeAddr = channels_find_by_name("time_dgps");
-        dgpsLatAddr = channels_find_by_name("lat_dgps");
-        dgpsLonAddr = channels_find_by_name("lon_dgps");
-        dgpsAltAddr = channels_find_by_name("alt_dgps");
-        dgpsSpeedAddr = channels_find_by_name("speed_dgps");
-        dgpsDirAddr = channels_find_by_name("dir_dgps");
-        dgpsClimbAddr = channels_find_by_name("climb_dgps");
-        dgpsNSatAddr = channels_find_by_name("n_sat_dgps");
-        dgpsAttOkAddr = channels_find_by_name("att_ok_dgps");
-        dgpsAzRawAddr = channels_find_by_name("az_raw_dgps");
-        dgpsPitchRawAddr = channels_find_by_name("pitch_raw_dgps");
-        dgpsRollRawAddr = channels_find_by_name("roll_raw_dgps");
-
         lstSchedAddr = channels_find_by_name("lst_sched");
 
         trimClinAddr = channels_find_by_name("trim_clin");
@@ -993,7 +957,6 @@ void store_5hz_acs(void)
         trimNullAddr = channels_find_by_name("trim_null");
         trimMagAddr = channels_find_by_name("trim_mag");
         trimPssAddr = channels_find_by_name("trim_pss");
-        dgpsTrimAddr = channels_find_by_name("trim_dgps");
 
         threshAtrimAddr = channels_find_by_name("thresh_atrim");
         timeAtrimAddr = channels_find_by_name("time_atrim");
@@ -1042,8 +1005,6 @@ void store_5hz_acs(void)
 
     SET_VALUE(OffsetIFrollMagGYAddr, (signed int) (PointingData[i_point].offset_ifrollmag_gy * 32768.));
     SET_VALUE(OffsetIFyawMagGYAddr, (signed int) (PointingData[i_point].offset_ifyawmag_gy * 32768.));
-    SET_VALUE(OffsetIFrollDGPSGYAddr, (signed int) (PointingData[i_point].offset_ifrolldgps_gy * 32768.));
-    SET_VALUE(OffsetIFyawDGPSGYAddr, (signed int) (PointingData[i_point].offset_ifyawdgps_gy * 32768.));
     SET_VALUE(OffsetIFrollPSSGYAddr, (signed int) (PointingData[i_point].offset_ifrollpss_gy * 32768.));
     SET_VALUE(OffsetIFyawPSSGYAddr, (signed int) (PointingData[i_point].offset_ifyawpss_gy * 32768.));
 
@@ -1080,11 +1041,6 @@ void store_5hz_acs(void)
     SET_VALUE(sigmaPssAddr, (unsigned int) (PointingData[i_point].pss_sigma * DEG2I));
     SET_VALUE(trimPssAddr, CommandData.pss_az_trim * DEG2I);
 
-    SET_VALUE(dgpsAzAddr, (unsigned int) ((PointingData[i_point].dgps_az + CommandData.dgps_az_trim) * DEG2I));
-    SET_VALUE(dgpsSigmaAddr,
-            (((unsigned int) (PointingData[i_point].dgps_sigma * DEG2I)) > 65535) ? 65535 :
-                    ((unsigned int) (PointingData[i_point].dgps_sigma * DEG2I)));
-    SET_VALUE(dgpsTrimAddr, CommandData.dgps_az_trim * DEG2I);
     SET_VALUE(azSunAddr, (unsigned int) (PointingData[i_point].sun_az * DEG2I));
     SET_VALUE(elSunAddr, (int) (PointingData[i_point].sun_el * DEG2I));
 
@@ -1145,7 +1101,7 @@ void store_5hz_acs(void)
     SET_VALUE(dec4PAddr, (int) (CommandData.pointing_mode.dec[3] * DEG2I));
 
     sensor_veto = /* 1st bit used to be sun */((!CommandData.use_isc) << 1) | ((!CommandData.use_elenc) << 2) | ((!CommandData.use_mag) << 3)
-            | ((!CommandData.use_gps) << 4) | ((!CommandData.use_elclin) << 5) | ((!CommandData.use_osc) << 6) | ((CommandData.disable_el) << 10)
+            | ((!CommandData.use_elclin) << 5) | ((!CommandData.use_osc) << 6) | ((CommandData.disable_el) << 10)
             | ((CommandData.disable_az) << 11) | ((CommandData.force_el) << 12) | ((!CommandData.use_pss) << 13);
 
     if (PointingData[i_point].t >= CommandData.pointing_mode.t)
@@ -1155,28 +1111,6 @@ void store_5hz_acs(void)
     sensor_veto |= (CommandData.el_autogyro << 9);
 
     SET_VALUE(vetoSensorAddr, sensor_veto);
-
-    /************* dgps fields *************/
-    SET_VALUE(dgpsTimeAddr, DGPSTime);
-
-    /** Pos fields **/
-    i_dgps = GETREADINDEX(dgpspos_index);
-    SET_VALUE(dgpsLatAddr, (int) (DGPSPos[i_dgps].lat * DEG2I));
-    SET_VALUE(dgpsLonAddr, (int) (DGPSPos[i_dgps].lon * DEG2I));
-    SET_VALUE(dgpsAltAddr, DGPSPos[i_dgps].alt);
-    SET_VALUE(dgpsSpeedAddr, DGPSPos[i_dgps].speed * 100);
-    SET_VALUE(dgpsDirAddr, (unsigned int) DGPSPos[i_dgps].direction * DEG2I);
-    SET_VALUE(dgpsClimbAddr, DGPSPos[i_dgps].climb * 100);
-    SET_VALUE(dgpsNSatAddr, DGPSPos[i_dgps].n_sat);
-
-    SET_VALUE(lstSchedAddr, sched_lst);
-
-    /** Att fields **/
-    i_dgps = GETREADINDEX(dgpsatt_index);
-    SET_VALUE(dgpsAzRawAddr, DGPSAtt[i_dgps].az * DEG2I);
-    SET_VALUE(dgpsPitchRawAddr, DGPSAtt[i_dgps].pitch * DEG2I);
-    SET_VALUE(dgpsRollRawAddr, DGPSAtt[i_dgps].roll * DEG2I);
-    SET_VALUE(dgpsAttOkAddr, DGPSAtt[i_dgps].att_ok);
 
 
 }

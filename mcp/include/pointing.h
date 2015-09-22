@@ -45,20 +45,8 @@
 
 #define FIR_LENGTH (60*30 * SR)
 #define GPS_FIR_LENGTH (60*30 * 1)
-//#define FIR_LENGTH (30 * SR)
-//#define GPS_FIR_LENGTH (30 * 1)
 
 /* Calibrations of the az of each sensor  */
-/*#define MAG_ALIGNMENT   183.   //(4.2681)
-#define PSS1_ALIGNMENT     43. // 343 + 60
-#define PSS2_ALIGNMENT    120. // 135 -15
-#define SSS_ALIGNMENT     -15.*/
-//#define MAG_ALIGNMENT    -258.   //(4.2681)
-//#define PSS1_ALIGNMENT      -153.8 // 343 + 60
-//#define PSS2_ALIGNMENT      -226.3 // 135 -15
-//#define SSS_ALIGNMENT   -90.
-//#define DGPS_ALIGNMENT    3.65
-
 #define MAG_ALIGNMENT     -28.0
 #define PSS_ALIGNMENT     0.0
 #define PSS1_ALIGNMENT    (PSS_ALIGNMENT - 50.0)
