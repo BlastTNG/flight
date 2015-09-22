@@ -194,11 +194,11 @@ void WriteAux(void)
         InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
     }
     if (InCharge != incharge && InCharge) {
-        bprintf(info, "System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
+        blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
         CommandData.actbus.force_repoll = 1;
     }
     else if (InCharge != incharge) {
-        bprintf(info, "System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
+        blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
     }
 
     if (CommandData.Cryo.heliumLevel)

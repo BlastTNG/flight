@@ -56,7 +56,7 @@ void nameThread(const char* name)
   new_node->name[TID_NAME_LEN] = '\0';
   new_node->next = threadNames;
   threadNames = new_node;
-  //bprintf(startup, "New thread (tid %d)", new_node->tid);
+  //blast_startup("New thread (tid %d)", new_node->tid);
 }
 
 off_t openMCElog(const char *file)

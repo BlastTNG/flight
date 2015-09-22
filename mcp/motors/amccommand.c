@@ -243,8 +243,8 @@ void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHead
   commbegin=*command;
   if(command == NULL)
     {
-      bprintf(err,"AmcComm: Malloc allocation of the command string failed.");
-      bprintf(err,"AmcComm:Aborting before we get a segmentation fault...");
+      blast_err("AmcComm: Malloc allocation of the command string failed.");
+      blast_err("AmcComm:Aborting before we get a segmentation fault...");
       return;
     }
 
@@ -290,7 +290,7 @@ void MakeSCHeadStruct(struct DriveIPVStruct *ValuesSend,struct SerialCommandHead
       
       // For debugging purposes:  Print out the int value of every byte in the 
       // command.
-      //  bprintf(info,"Command is:  ");
+      //  blast_info("Command is:  ");
     }
   *command=commbegin;
 for(i=0;i<*commsize;i++)
@@ -383,7 +383,7 @@ int send_amccmd(int index,int offset,int value,int nwords,enum CmdorQuery type, 
 	//     bprintf(info)
 	sprintf(fouts+2*i,"%2x",((unsigned char) (*(command+i))));
       }
-    bprintf(info,"%sComm send_amccmd: Command being sent: %s",amcinfo->motorstr,fouts);
+    blast_info("%sComm send_amccmd: Command being sent: %s",amcinfo->motorstr,fouts);
   }
   flushAMC(amcinfo);
   n = write(amcinfo->fd, command, l);
@@ -581,7 +581,7 @@ int check_amcready(enum CheckType check, struct MotorInfoStruct* amcinfo, unsign
       if (FD_ISSET(amcinfo->fd, &output))
 	m|=1;
     }
-       //      bprintf(info, "%sComm: checksum returns %i.",m);
+       //      blast_info("%sComm: checksum returns %i.",m);
     amcinfo->err &= ~0x0001;
     return m;
    }
@@ -668,7 +668,7 @@ int readAMCResp(int seq, unsigned char *outs, int *l, struct MotorInfoStruct* am
     j++;
   } // while(done==0)
 
-  if(i==0) bprintf(warning,"%sComm read_line: Read 0 characters!!!",amcinfo->motorstr);
+  if(i==0) blast_warn("%sComm read_line: Read 0 characters!!!",amcinfo->motorstr);
   *l = i;
   amcinfo->err &= ~0x0004;
   amcinfo->err &= ~0x0010;
@@ -853,7 +853,7 @@ int enableAMC(struct MotorInfoStruct* amcinfo)
   if(n==1) 
     {
       amcinfo->disabled=0;
-      //      bprintf(info,"%sComm enableAMC: AMC controller is enabled.,",amcinfo->motorstr);
+      //      blast_info("%sComm enableAMC: AMC controller is enabled.,",amcinfo->motorstr);
     }
   n=1;
   return n;
@@ -915,7 +915,7 @@ void resetAMC(char *address, struct MotorInfoStruct* amcinfo)
 void restoreAMC(struct MotorInfoStruct* amcinfo)
 {
   int count,n;
-  bprintf(info,"%sComm restoreAMC: Attempting to restore the RS232 serial parameters.",amcinfo->motorstr);
+  blast_info("%sComm restoreAMC: Attempting to restore the RS232 serial parameters.",amcinfo->motorstr);
   amcinfo->init=2;
   amcinfo->disabled=2;
 
@@ -923,11 +923,11 @@ void restoreAMC(struct MotorInfoStruct* amcinfo)
   n = check_amcready(resp,amcinfo,SELECT_RMUS_OUT);
   if (n < 0)
     {
-      bprintf(err,"%sComm restoreAMC: Communication error.",amcinfo->motorstr);
+      blast_err("%sComm restoreAMC: Communication error.",amcinfo->motorstr);
     }  
   n=checkAMCResp(count,amcinfo);
   if(n==1) 
     {
-      bprintf(info,"%sComm restoreAMC: Restoration was successful,",amcinfo->motorstr);
+      blast_info("%sComm restoreAMC: Restoration was successful,",amcinfo->motorstr);
     }
 }

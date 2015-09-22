@@ -47,11 +47,11 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
     SRC_LOOKUP_T *src;
 
     if (!m_fc || !m_rate) {
-        bprintf(err, "Err in pointers\n");
+        blast_err("Err in pointers\n");
         return;
     }
     if (!m_len) {
-        bprintf(warning, "Zero-length string for frame\n");
+        blast_warn("Zero-length string for frame\n");
         return;
     }
 
@@ -59,7 +59,7 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
         if (strcmp(rate->text, m_rate) == 0) break;
     }
     if (rate->position == RATE_END) {
-        bprintf(warning, "Did not recognize rate %s!\n", m_rate);
+        blast_warn("Did not recognize rate %s!\n", m_rate);
         return;
     }
 
@@ -108,16 +108,16 @@ static void frame_subscribe_callback(struct mosquitto *mosq, void *userdata, int
 {
     int i;
 
-    bprintf(info, "Subscribed (mid: %d): %d", mid, granted_qos[0]);
+    blast_info("Subscribed (mid: %d): %d", mid, granted_qos[0]);
     for(i=1; i<qos_count; i++){
-        bprintf(info, "\t %d", granted_qos[i]);
+        blast_info("\t %d", granted_qos[i]);
     }
 }
 
 static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
 {
     if (level & ( MOSQ_LOG_ERR | MOSQ_LOG_WARNING ))
-        bprintf(info, "%s\n", str);
+        blast_info("%s\n", str);
 }
 
 
@@ -142,7 +142,7 @@ static void *framing_routine(void *m_arg)
                                     .tv_nsec = 5000000}; /// 200HZ interval
 
     nameThread("framing");
-    bprintf(startup, "Starting Framing task\n");
+    blast_startup("Starting Framing task\n");
 
     clock_gettime(CLOCK_REALTIME, &ts);
 
@@ -159,7 +159,7 @@ static void *framing_routine(void *m_arg)
 
         if (ret && ret != -EINTR)
         {
-            bprintf(err, "error while sleeping, code %d (%s)\n", ret, strerror(-ret));
+            blast_err("error while sleeping, code %d (%s)\n", ret, strerror(-ret));
             break;
         }
         if (frame_size[SRC_FC][RATE_200HZ]) {
@@ -200,26 +200,26 @@ static void *framing_routine(void *m_arg)
         if ((ret = mosquitto_loop(mosq, 0, 1)) != MOSQ_ERR_SUCCESS) {
             switch(ret) {
                 case MOSQ_ERR_INVAL:
-                    bprintf(err, "Invalid Parameters for mosquitto_loop");
+                    blast_err("Invalid Parameters for mosquitto_loop");
                     break;
                 case MOSQ_ERR_NOMEM:
-                    bprintf(err, "Out of memory in mosquitto loop");
+                    blast_err("Out of memory in mosquitto loop");
                     break;
                 case MOSQ_ERR_NO_CONN:
-                    bprintf(err, "Not connected");
+                    blast_err("Not connected");
                     //TODO: Implement state loop for mosquitto
                     break;
                 case MOSQ_ERR_CONN_LOST:
-                    bprintf(err, "Lost connection with mosquitto server");
+                    blast_err("Lost connection with mosquitto server");
                     break;
                 case MOSQ_ERR_PROTOCOL:
-                    bprintf(err, "Protocol error communicating with mosquitto server");
+                    blast_err("Protocol error communicating with mosquitto server");
                     break;
                 case MOSQ_ERR_ERRNO:
                     berror(err, "System error in mosquitto comms");
                     break;
                 default:
-                    bprintf(err, "Received %d from mosquitto_loop", ret);
+                    blast_err("Received %d from mosquitto_loop", ret);
             }
 
         }
@@ -270,14 +270,14 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
      * Set up the channels and derived packages for subscribers
      */
     if (!(channels_pkg = channels_create_map(channel_list))) {
-        bprintf(err, "Exiting framing routine because we cannot get the channel list");
+        blast_err("Exiting framing routine because we cannot get the channel list");
         return -1;
     }
     mosquitto_publish(mosq, NULL, "channels/fc/1",
             sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
     bfree(err, channels_pkg);
 
-    if (!(derived_pkg = channels_create_derived_map(m_derived))) bprintf(warning, "Failed sending derived packages");
+    if (!(derived_pkg = channels_create_derived_map(m_derived))) blast_warn("Failed sending derived packages");
     else {
         mosquitto_publish(mosq, NULL, "derived/fc/1",
                 sizeof(derived_header_t) + derived_pkg->length * sizeof(derived_tng_t), derived_pkg, 1, true);

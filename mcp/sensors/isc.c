@@ -144,18 +144,18 @@ static int ISCInit(int which)
     return -1;
   }
 
-  bprintf(info, "Connected in %s mode\n",
+  blast_info("Connected in %s mode\n",
       (InCharge) ? "active" : "passive");
   CommandData.ISCState[which].shutdown = 0;
 
   which ? (EthernetOsc = 0) : (EthernetIsc = 0);
 
   if (WHICH)
-    bprintf(info, "%iSC (i): Lowered write_ISC_pointing semaphore on connect\n",
+    blast_info("%iSC (i): Lowered write_ISC_pointing semaphore on connect\n",
         which);
   write_ISC_pointing[which] = 0;
   if (WHICH)
-    bprintf(info, "%iSC (i): Raised ISC_link_ok\n", which);
+    blast_info("%iSC (i): Raised ISC_link_ok\n", which);
   ISC_link_ok[which] = 1;
 
   ISCSentState[which] = CommandData.ISCState[which];
@@ -197,7 +197,7 @@ void IntegratingStarCamera(void* parameter)
   int n, save_image_state = 0;
 
   nameThread(isc_which[which].who);
-  bprintf(startup, "Startup\n");
+  blast_startup("Startup\n");
 
   for (;;) {
     which ? (EthernetOsc = 3) : (EthernetIsc = 3);
@@ -247,7 +247,7 @@ void IntegratingStarCamera(void* parameter)
           berror(err, "recv()");
           break;
         } else if (n < sizeof(struct ISCSolutionStruct)) {
-          bprintf(err, "Expected %i but received %i bytes.\n",
+          blast_err("Expected %i but received %i bytes.\n",
               (int) sizeof(struct ISCSolutionStruct), n);
           break;
         }
@@ -265,33 +265,32 @@ void IntegratingStarCamera(void* parameter)
 #endif
         /* Flag link as good, if necesary */
         if (!ISC_link_ok[which]) {
-          bprintf(info, "Network link OK.\n");
+          blast_info("Network link OK.\n");
           ISC_link_ok[which] = 1;
         }
 
         /* Wait for acknowledgement from camera before sening trigger */
         if (waiting_for_ACK) {
           if (WHICH)
-            bprintf(info, "%iSC (i): Was waiting for ACK, flag was: %i (%i)\n",
+            blast_info("%iSC (i): Was waiting for ACK, flag was: %i (%i)\n",
                 which, ISCSolution[which][iscwrite_index[which]].flag,
                 ISCSolution[which][iscwrite_index[which]].framenum);
           if (ISCSolution[which][iscwrite_index[which]].flag == 0) {
             if (WHICH)
-              bprintf(info, "%iSC (i): Raise write_ISC_trigger semaphore\n",
+              blast_info("%iSC (i): Raise write_ISC_trigger semaphore\n",
                   which);
             if (WHICH)
-              bprintf(info, "%iSC (i): Stopped waiting for ACK\n", which);
+              blast_info("%iSC (i): Stopped waiting for ACK\n", which);
             write_ISC_trigger[which] = 1;
             waiting_for_ACK = 0;
           }
         } else {
           if (WHICH)
-            bprintf(info,
-                "%iSC (i): Wasn't waiting for ACK, flag was: %i (%i)\n",
+            blast_info(                "%iSC (i): Wasn't waiting for ACK, flag was: %i (%i)\n",
                 which, ISCSolution[which][iscwrite_index[which]].flag,
                 ISCSolution[which][iscwrite_index[which]].framenum);
           if (WHICH)
-            bprintf(info, "%iSC (i): Raising start_ISC_cycle semaphore\n",
+            blast_info("%iSC (i): Raising start_ISC_cycle semaphore\n",
                 which);
           start_ISC_cycle[which] = 1;
         }
@@ -338,13 +337,12 @@ void IntegratingStarCamera(void* parameter)
             berror(err, "send()");
             break;
           } else if (n < sizeof(struct ISCStatusStruct)) {
-            bprintf(err, "Expected %i but sent %i bytes.\n",
+            blast_err("Expected %i but sent %i bytes.\n",
                 (int) sizeof(struct ISCStatusStruct), n);
             break;
           }
           if (WHICH)
-            bprintf(info,
-                "%iSC (i): Lower write_ISC_pointing semaphore --------------\n",
+            blast_info(                "%iSC (i): Lower write_ISC_pointing semaphore --------------\n",
                 which);
           write_ISC_pointing[which] = 0;
 #ifdef USE_ISC_LOG

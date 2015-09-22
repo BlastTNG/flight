@@ -156,7 +156,7 @@ void xsc_network_loop(int which)
         }
 
         if (connected) {
-            bprintf(info, "Connected to %s", addresses[which]);
+            blast_info("Connected to %s", addresses[which]);
             write_timer = 0;
             while(1)
             {
@@ -180,12 +180,12 @@ void xsc_network_loop(int which)
                             xsc_server_read_index[which] = next_read_index;
                             //xsc_print_received(which);
                         } else {
-                            bprintf(info, "received packet with incorrect xsc_protocol_version: %u\n",
+                            blast_info("received packet with incorrect xsc_protocol_version: %u\n",
                                 xsc_mserver_data[xsc_server_write_index[which]][which].xsc_protocol_version);
                         }
                     }
                     else {
-                        bprintf(info, "Connection to %s dropped after failed receive (%i bytes recieved instead of %zu)",
+                        blast_info("Connection to %s dropped after failed receive (%i bytes recieved instead of %zu)",
                             addresses[which], bytes_received, sizeof(xsc_mserver_data[xsc_server_write_index[which]][which]));
                     	close (socketd);
                     	socketd = -1;
@@ -210,7 +210,7 @@ void xsc_network_loop(int which)
                             xsc_set_client_data(which);
                         }
                         else {
-                            bprintf(info, "Connection to %s dropped after failed send (%i bytes sent instead of %zu)",
+                            blast_info("Connection to %s dropped after failed send (%i bytes sent instead of %zu)",
                                 addresses[which], bytes_sent, sizeof(xsc_mserver_data[xsc_server_write_index[which]][which]));
                             connected = false;
                             close (socketd);

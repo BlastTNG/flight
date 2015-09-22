@@ -56,7 +56,7 @@ static void *data_in_thread(void *dummy)
 	hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
 
 	if ((ret = getaddrinfo(NULL, FLC_DATA_PORT, &hints, &ai_other)) != 0) {
-		bprintf(tfatal, "getaddrinfo: %s\n", gai_strerror(ret));
+		blast_tfatal("getaddrinfo: %s\n", gai_strerror(ret));
 	}
 
   // loop through getaddrinfo results
@@ -107,7 +107,7 @@ static void *data_out_thread(void *v_other)
 	hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV;//numbers, don't do lookup
 
 	if ((ret = getaddrinfo(other, FLC_DATA_PORT, &hints, &ai_other)) != 0) {
-		bprintf(tfatal, "getaddrinfo: %s\n", gai_strerror(ret));
+		blast_tfatal("getaddrinfo: %s\n", gai_strerror(ret));
 	}
 
   // loop through getaddrinfo results

@@ -115,7 +115,7 @@ static void *blast_comms_monitor(void *m_arg __attribute__((unused)))
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 
         if (ret && ret != -EINTR) {
-            bprintf(err, "error while sleeping, code %d (%s)\n", ret, strerror(-ret));
+            blast_err("error while sleeping, code %d (%s)\n", ret, strerror(-ret));
             break;
         }
         if (comms_net_async_poll(comms_ctx, 0) < 0) {

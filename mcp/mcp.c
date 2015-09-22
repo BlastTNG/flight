@@ -157,13 +157,13 @@ static void Chatter(void* arg)
 
   nameThread("Chat");
 
-  bprintf(startup, "Thread startup\n");
+  blast_startup("Thread startup\n");
 
   fd = open("/data/etc/blast/mcp.log", O_RDONLY|O_NONBLOCK);
 
   if (fd == -1)
   {
-    bprintf(tfatal, "Failed to open /data/etc/blast/mcp.log for reading (%d)\n", errno);
+    blast_tfatal("Failed to open /data/etc/blast/mcp.log for reading (%d)\n", errno);
   }
 
   if (fpos == -1) {
@@ -173,10 +173,10 @@ static void Chatter(void* arg)
       {
 	if (lseek(fd, 0, SEEK_SET) == -1)
 	{
-	  bprintf(tfatal, "Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
+	  blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
 	}
       } else {
-	bprintf(tfatal, "Failed to seek /data/etc/blast/mcp.log (%d)\n", errno);
+	blast_tfatal("Failed to seek /data/etc/blast/mcp.log (%d)\n", errno);
       }
     }
   } else {
@@ -184,7 +184,7 @@ static void Chatter(void* arg)
     {
       if (lseek(fd, 0, SEEK_END) == -1)
       {
-	bprintf(tfatal, "Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
+	blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
       }
     }
   }
@@ -202,7 +202,7 @@ static void Chatter(void* arg)
       ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * 20 * sizeof(char));
       if (ch_got == -1)
       {
-        bprintf(tfatal, "Error reading from /data/etc/blast/mcp.log (%d)\n", errno);
+        blast_tfatal("Error reading from /data/etc/blast/mcp.log (%d)\n", errno);
       }
       if (ch_got < (2 * 20 * sizeof(char)))
       {
@@ -302,7 +302,7 @@ static void Chatter(void* arg)
 //       * any data -- an indication that we aren't receiving FSYNCs from the
 //       * BLASTBus anymore */
 //      if (InCharge && (++Death > 25)) {
-//        bprintf(err, "Death is reaping the watchdog tickle.");
+//        blast_err("Death is reaping the watchdog tickle.");
 //        pthread_cancel(watchdog_id);
 //      }
 //      usleep(10000); // 100 Hz
@@ -328,7 +328,7 @@ static int AmISouth(int *not_cryo_corner)
     berror(err, "System: Unable to get hostname");
   } else if (buffer[0] == 'p') {
     *not_cryo_corner = 0;
-    bprintf(info, "System: Cryo Corner Mode Activated\n");
+    blast_info("System: Cryo Corner Mode Activated\n");
   }
 
   return (buffer[0] == 's') ? 1 : 0;
@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
   buos_use_func(mputs);
 
 #if (TEMPORAL_OFFSET > 0)
-  bprintf(warning, "System: TEMPORAL OFFSET = %i\n", TEMPORAL_OFFSET);
+  blast_warn("System: TEMPORAL OFFSET = %i\n", TEMPORAL_OFFSET);
 #endif
 
   bputs(startup, "System: Startup");
@@ -457,7 +457,7 @@ int main(int argc, char *argv[])
   InitCommandData();
   pthread_mutex_init(&mutex, NULL);
 
-  bprintf(info, "Commands: MCP Command List Version: %s", command_list_serial);
+  blast_info("Commands: MCP Command List Version: %s", command_list_serial);
   initialize_blast_comms();
   initialize_sip_interface();
   initialize_dsp1760_interface();
@@ -518,7 +518,7 @@ int main(int argc, char *argv[])
 
       if (ret && ret != -EINTR)
       {
-          bprintf(err, "error while sleeping, code %d (%s)\n", ret, strerror(-ret));
+          blast_err("error while sleeping, code %d (%s)\n", ret, strerror(-ret));
           break;
       }
 

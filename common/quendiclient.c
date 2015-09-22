@@ -52,7 +52,7 @@ int GetServerResponse(int sock, char* buffer)
       berror(fatal, "Read error");
 
     if (n == 0 && errno != EAGAIN) {
-      bprintf(err, "Unexpected server disconnect.\n");
+      blast_err("Unexpected server disconnect.\n");
       return -3;
     }
 
@@ -84,7 +84,7 @@ int GetServerResponse(int sock, char* buffer)
 //  printf("--> %s\n", cbuf);
 
   if (n == 0)
-    bprintf(fatal, "Indecypherable server response: %s\n", cbuf);
+    blast_fatal("Indecypherable server response: %s\n", cbuf);
 
   if (buffer != NULL)
     strcpy(buffer, cbuf + 4);
@@ -142,7 +142,7 @@ int OpenDataPort(int csock, const struct sockaddr_in *rc_addr, int* dsock)
         berror(fatal, "d-Connect failed");
       break;
     default:
-      bprintf(fatal, "Unexpected response from server after OPEN: %i\n", n);
+      blast_fatal("Unexpected response from server after OPEN: %i\n", n);
       return -1;
   }
 
@@ -152,7 +152,7 @@ int OpenDataPort(int csock, const struct sockaddr_in *rc_addr, int* dsock)
     case QUENYA_RESPONSE_PORT_OPENED:
       break;
     default:
-      bprintf(err, "Unexpected response from server after OPEN/2: %i\n", n);
+      blast_err("Unexpected response from server after OPEN/2: %i\n", n);
       return -1;
   }
 
@@ -175,7 +175,7 @@ const char* ResolveHost(const char* host, struct sockaddr_in* addr, int forced)
 
   if (the_host == NULL) {
     if (forced)
-      bprintf(fatal, "host lookup failed: %s\n", hstrerror(h_errno));
+      blast_fatal("host lookup failed: %s\n", hstrerror(h_errno));
 
     return hstrerror(h_errno);
   }

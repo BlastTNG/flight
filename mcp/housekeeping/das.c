@@ -113,11 +113,11 @@ static int CalLamp (int index)
       pulse_cnt = CommandData.Cryo.calib_pulse;
       elapsed=0;
       hwpr_calpulse_flag=0;
-      bprintf(info,"CalLamp: Hey! Got a hwpr_calpulse_flag! pulse_cnt = %i, elapsed = %i",pulse_cnt, elapsed);
+      blast_info("CalLamp: Hey! Got a hwpr_calpulse_flag! pulse_cnt = %i, elapsed = %i",pulse_cnt, elapsed);
     } else if ((CommandData.Cryo.calib_period > 0 && elapsed >= CommandData.Cryo.calib_period) || last_mode != repeat) {
       elapsed = 0;
       pulse_cnt = CommandData.Cryo.calib_pulse;
-      bprintf(info,"CalLamp: We haven't had a pulse in a while!  Let's send one! pulse_cnt = %i, elapsed = %i",pulse_cnt, elapsed);
+      blast_info("CalLamp: We haven't had a pulse in a while!  Let's send one! pulse_cnt = %i, elapsed = %i",pulse_cnt, elapsed);
     } else if (index == 0) elapsed++;  //period measured in slow frames
     last_mode = repeat;
   } else if (CommandData.Cryo.calibrator == pulse) {
@@ -278,7 +278,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
 
         if (t_lhe > T_LHE_MAX) {
             if (cycle_state != CRYO_CYCLE_OUT)
-                bprintf(info, "Auto Cycle: LHe is DRY!\n");
+                blast_info("Auto Cycle: LHe is DRY!\n");
             heat_char = 0;
             heat_hs = 1;
             SET_VALUE(stateCycleAddr, CRYO_CYCLE_OUT);
@@ -289,7 +289,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
                 SET_VALUE(stateCycleAddr, CRYO_CYCLE_HS_OFF);
                 SET_VALUE(startCycleAddr, mcp_systime(NULL));
                 heat_char = heat_hs = 0;
-                bprintf(info, "Auto Cycle: Turning charcoal heatswitch off.");
+                blast_info("Auto Cycle: Turning charcoal heatswitch off.");
             }
             else {
                 heat_char = 0;
@@ -301,7 +301,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
                 SET_VALUE(stateCycleAddr, CRYO_CYCLE_ON);
                 heat_char = 1;
                 heat_hs = 0;
-                bprintf(info, "Auto Cycle: Turning charcoal heat on.");
+                blast_info("Auto Cycle: Turning charcoal heat on.");
             }
             else {
                 heat_char = heat_hs = 0;
@@ -314,13 +314,13 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
                 SET_VALUE(stateCycleAddr, CRYO_CYCLE_SETTLE);
                 heat_char = 0;
                 heat_hs = 0;
-                bprintf(info, "Auto Cycle: Charcoal heat off");
+                blast_info("Auto Cycle: Charcoal heat off");
             }
             else if (t_he4pot > CommandData.Cryo.cycle_pot_max) {
                 SET_VALUE(stateCycleAddr, CRYO_CYCLE_COOL);
                 heat_char = 0;
                 heat_hs = 1;
-                bprintf(info, "Auto Cycle: Pot out. Charcoal heat off, heatswitch on.");
+                blast_info("Auto Cycle: Pot out. Charcoal heat off, heatswitch on.");
             }
             else {
                 heat_char = 1;
@@ -335,8 +335,8 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
                 heat_char = 0;
                 heat_hs = 1;
                 if ((mcp_systime(NULL) - start_time) > overall_settle_timeout * 60)
-                    bprintf(warning, "Auto Cycle: aborting settle on overall timeout");
-                bprintf(info, "Auto Cycle: Charcoal heatswitch on");
+                    blast_warn("Auto Cycle: aborting settle on overall timeout");
+                blast_info("Auto Cycle: Charcoal heatswitch on");
             }
             else {
                 heat_char = heat_hs = 0;
@@ -348,7 +348,7 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
                 heat_char = 0;
                 heat_hs = 1;
                 *force_cycle = 0; // clear any pending cycle commands...
-                bprintf(info, "Auto Cycle: Fridge is now cold!.");
+                blast_info("Auto Cycle: Fridge is now cold!.");
             }
             else {
                 heat_char = 0;
@@ -360,11 +360,11 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
                 SET_VALUE(stateCycleAddr, CRYO_CYCLE_COLD);
                 heat_char = 0;
                 heat_hs = 1;
-                bprintf(info, "Auto Cycle: Activated.");
+                blast_info("Auto Cycle: Activated.");
             }
         }
         else {
-            bprintf(err, "Auto Cycle: cycle_state: %i unknown!", cycle_state);
+            blast_err("Auto Cycle: cycle_state: %i unknown!", cycle_state);
             SET_VALUE(stateCycleAddr, CRYO_CYCLE_COLD);
             heat_char = 0;
             heat_hs = 1;

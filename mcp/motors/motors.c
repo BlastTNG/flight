@@ -201,7 +201,7 @@ static double get_elev_vel(void)
         vel = last_vel - max_dv;
     last_vel = vel;
 
-    //bprintf(info, "GetVEl: vel=%f", vel);
+    //blast_info("GetVEl: vel=%f", vel);
     return vel;
 }
 
@@ -374,7 +374,7 @@ void write_motor_channels_5hz(void)
     /***************************************************/
     /**            Azimuth Drive Motors              **/
 
-    //  bprintf(info,"Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
+    //  blast_info("Motors: pivFrictOff= %f, CommandData.pivot_gain.F = %f",pivFrictOff,CommandData.pivot_gain.F);
     /* p term for az motor */
     SET_FLOAT(gPAzAddr, CommandData.azi_gain.P);
     /* I term for az motor */
@@ -481,28 +481,28 @@ static void calculate_el_dither(unsigned int m_inc)
 
     if (m_inc) {
         (axes_mode.i_dith)++;
-        bprintf(info, "GetElDither: Incrementing axes_mode.i_dith to %i", axes_mode.i_dith);
+        blast_info("GetElDither: Incrementing axes_mode.i_dith to %i", axes_mode.i_dith);
     }
     if (CommandData.pointing_mode.n_dith <= 0) {
         axes_mode.el_dith = 0.0;
-        if (m_inc) bprintf(info, "No dither: axes_mode.el_dith = %f", axes_mode.el_dith);
+        if (m_inc) blast_info("No dither: axes_mode.el_dith = %f", axes_mode.el_dith);
     }
     else {
-        //    bprintf(info,"GetElDither: CommandData.pointing_mode.n_dith = %i",CommandData.pointing_mode.n_dith);
+        //    blast_info("GetElDither: CommandData.pointing_mode.n_dith = %i",CommandData.pointing_mode.n_dith);
 
         axes_mode.i_dith %= (CommandData.pointing_mode.n_dith);
-        //bprintf(info,"GetElDither: axes_mode.i_dith is now %i",axes_mode.i_dith);
+        //blast_info("GetElDither: axes_mode.i_dith is now %i",axes_mode.i_dith);
         axes_mode.el_dith =
                 2.0 * (CommandData.pointing_mode.del) * ((double) axes_mode.i_dith) / ((double) (CommandData.pointing_mode.n_dith));
-        //bprintf(info,"GetElDither: axes_mode.el_dith is finally %i",axes_mode.i_dith);
+        //blast_info("GetElDither: axes_mode.el_dith is finally %i",axes_mode.i_dith);
 
     }
 
-    if (m_inc) bprintf(info, "***Dither Time!!!***  El Dither = %f", axes_mode.el_dith);
+    if (m_inc) blast_info("***Dither Time!!!***  El Dither = %f", axes_mode.el_dith);
 
     if (axes_mode.el_dith > CommandData.pointing_mode.del) {
         axes_mode.el_dith += (-2.0) * CommandData.pointing_mode.del;
-        if (m_inc) bprintf(info, "GetElDither: Wrapping dither... axes_mode.el_dith=%f", axes_mode.el_dith);
+        if (m_inc) blast_info("GetElDither: Wrapping dither... axes_mode.el_dith=%f", axes_mode.el_dith);
     }
 
 }
@@ -512,27 +512,27 @@ static void initialize_el_dither()
     static int j = 0;
     if (CommandData.pointing_mode.next_i_dith >= 0) {
         axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
-        //    bprintf(info,"InitElDither:%i nid = %i, next_dith=%i,  axes_mode.i_dith = %i",j,CommandData.pointing_mode.next_i_dith,CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);
+        //    blast_info("InitElDither:%i nid = %i, next_dith=%i,  axes_mode.i_dith = %i",j,CommandData.pointing_mode.next_i_dith,CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);
         CommandData.pointing_mode.next_i_dith = -1;
     }
     else {
         CommandData.pointing_mode.next_i_dith = -1;
-        //    bprintf(info,"InitElDither:%i CommandData.pointing_mode.next_i_dith =%i, so axes_mode.i_dith = %i",j,CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);
+        //    blast_info("InitElDither:%i CommandData.pointing_mode.next_i_dith =%i, so axes_mode.i_dith = %i",j,CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);
     }
 
     if (CommandData.pointing_mode.next_i_hwpr >= 0 && CommandData.pointing_mode.next_i_hwpr < 4) {
         CommandData.hwpr.i_pos = CommandData.pointing_mode.next_i_hwpr;
         CommandData.hwpr.mode = HWPR_GOTO_I;
         CommandData.hwpr.is_new = 1;
-        //    bprintf(info,"InitElDither:%i Sending HWPR to index = %i",j,CommandData.pointing_mode.next_i_hwpr);
+        //    blast_info("InitElDither:%i Sending HWPR to index = %i",j,CommandData.pointing_mode.next_i_hwpr);
         CommandData.pointing_mode.next_i_hwpr = -1;
     }
     else {
-        //    bprintf(info,"InitElDither:%i CommandData.pointing_mode.next_i_hwpr =%i, so we will do nothing",j,CommandData.pointing_mode.next_i_hwpr);
+        //    blast_info("InitElDither:%i CommandData.pointing_mode.next_i_hwpr =%i, so we will do nothing",j,CommandData.pointing_mode.next_i_hwpr);
         CommandData.pointing_mode.next_i_hwpr = -1;
     }
 
-    //  bprintf(info,"InitElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
+    //  blast_info("InitElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
     j++;
     calculate_el_dither(NO_DITH_INC);
     return;
@@ -691,7 +691,7 @@ static void do_el_scan_mode(void)
     bottom = CommandData.pointing_mode.Y - h / 2;
 
     if (first_time)
-        bprintf(info, "Starting an elevation scan! h = %f, top=%f , bottom=%f", h, top, bottom);
+        blast_info("Starting an elevation scan! h = %f, top=%f , bottom=%f", h, top, bottom);
     first_time = 0;
 
     //  SetSafeDAz(left, &az); // Don't think I need this because I should be staying constant in az. Test!
@@ -1054,19 +1054,19 @@ static void do_mode_new_cap(void)
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
-        //    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
+        //    blast_info("Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
         targ_el += CommandData.pointing_mode.del * el_next_dir;
         axes_mode.el_dir = el_next_dir;
-        //    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
+        //    blast_info("Az Step: Next Step targ_el = %f",targ_el);
         if (targ_el >= r) {
             targ_el = r;
             el_next_dir = -1;
-            bprintf(info, "Approaching the top: next targ_el = %f, r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, r, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Approaching the top: next targ_el = %f, r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, r, el_next_dir, axes_mode.el_dir, v_el);
         }
         else if (targ_el <= -r) {
             targ_el = -r;
             el_next_dir = 1;
-            bprintf(info, "Approaching the bottom: next targ_el = %f, -r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, (-1.0) * r, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Approaching the bottom: next targ_el = %f, -r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, (-1.0) * r, el_next_dir, axes_mode.el_dir, v_el);
         }
     }
 
@@ -1113,7 +1113,7 @@ static void do_mode_new_cap(void)
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
         n_scan += 1;
 
-        bprintf(info, "Sending signal to rotate HWPR. n_scan = %i", n_scan);
+        blast_info("Sending signal to rotate HWPR. n_scan = %i", n_scan);
 
         /* Set flags to rotate the HWPR */
         CommandData.hwpr.mode = HWPR_STEP;
@@ -1121,7 +1121,7 @@ static void do_mode_new_cap(void)
 
         if (n_scan % 4 == 0 && n_scan != 0) {
             calculate_el_dither(DITH_INC);
-            bprintf(info, "We're dithering! El Dither = %f", axes_mode.el_dith);
+            blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
 
     }
@@ -1258,11 +1258,11 @@ static void do_mode_el_box(void)
     if (targ_az>w*0.5) { // If the target az for the next step is outside the az box range
       targ_az = w*0.5;
       az_next_dir=-1;
-      bprintf(info,"Approaching the top %i: next targ_az = %f, h*0.5 = %f, az_next_dir = %i,axes_mode.az_dir=%i,  v_az = %f",j,targ_az,h*0.5,az_next_dir,axes_mode.az_dir,v_az);
+      blast_info("Approaching the top %i: next targ_az = %f, h*0.5 = %f, az_next_dir = %i,axes_mode.az_dir=%i,  v_az = %f",j,targ_az,h*0.5,az_next_dir,axes_mode.az_dir,v_az);
     } else if (targ_az<-w*0.5) {
       targ_az = -w*0.5;
       az_next_dir = 1;
-      bprintf(info,"Approaching the bottom %i: next targ_az = %f, h*0.5 = %f,az_next_dir = %i,axes_mode.az_dir=%i, v_az = %f",j,targ_az,h*0.5,az_next_dir,axes_mode.az_dir,v_az);
+      blast_info("Approaching the bottom %i: next targ_az = %f, h*0.5 = %f,az_next_dir = %i,axes_mode.az_dir=%i, v_az = %f",j,targ_az,h*0.5,az_next_dir,axes_mode.az_dir,v_az);
     }
   }
   /* check for out of range in az */
@@ -1272,7 +1272,7 @@ static void do_mode_el_box(void)
     axes_mode.el_vel = 0.0;
     axes_mode.az_mode = AXIS_POSITION;
     axes_mode.az_vel = 0.0;
-    bprintf(info,"%i: az_vel=%f",j,axes_mode.az_vel);
+    blast_info("%i: az_vel=%f",j,axes_mode.az_vel);
 
     axes_mode.az_dest = left;
     axes_mode.az_dir = -1;
@@ -1298,7 +1298,7 @@ static void do_mode_el_box(void)
        (CommandData.pointing_mode.nw == 0) ) {
 
     n_scan +=1;
-    bprintf(info,"DoElBoxMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
+    blast_info("DoElBoxMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
 
     /* Set flags to rotate the HWPR */
     CommandData.hwpr.mode = HWPR_STEP;
@@ -1306,7 +1306,7 @@ static void do_mode_el_box(void)
 
     //    if(n_scan % 4 == 0 && n_scan != 0) {
     //      GetElDither(DITH_INC);
-    //      bprintf(info,"We're dithering! El Dither = %f", axes_mode.el_dith);
+    //      blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
     //    }
 
   }
@@ -1380,7 +1380,7 @@ static void do_mode_new_box(void)
     if (bottom < MIN_EL)
         bottom = MIN_EL;
 
-    //  if (j%JJLIM == 0) bprintf(info,"cel =%f, el = %f,axes_mode.el_dith = %f, w=%f, h=%f, bottom = %f, top = %f, left = %f, right = %f",cel, el,axes_mode.el_dith, w, h, bottom , top, left, right);
+    //  if (j%JJLIM == 0) blast_info("cel =%f, el = %f,axes_mode.el_dith = %f, w=%f, h=%f, bottom = %f, top = %f, left = %f, right = %f",cel, el,axes_mode.el_dith, w, h, bottom , top, left, right);
 
     new = 0;
 
@@ -1449,19 +1449,19 @@ static void do_mode_new_box(void)
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
-        //    bprintf(info,"Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
+        //    blast_info("Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
         targ_el += CommandData.pointing_mode.del * el_next_dir; // This is actually the next target el....
-        //    bprintf(info,"Az Step: Next Step targ_el = %f",targ_el);
+        //    blast_info("Az Step: Next Step targ_el = %f",targ_el);
         axes_mode.el_dir = el_next_dir;
         if (targ_el > h * 0.5) { // If the target el for the next step is outside the el box range
             targ_el = h * 0.5;
             el_next_dir = -1;
-            bprintf(info, "Approaching the top: next targ_el = %f, h*0.5 = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Approaching the top: next targ_el = %f, h*0.5 = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
         }
         else if (targ_el < -h * 0.5) {
             targ_el = -h * 0.5;
             el_next_dir = 1;
-            bprintf(info, "Approaching the bottom: next targ_el = %f, h*0.5 = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Approaching the bottom: next targ_el = %f, h*0.5 = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
         }
     }
     /* check for out of range in el */
@@ -1495,7 +1495,7 @@ static void do_mode_new_box(void)
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
 
         n_scan += 1;
-        bprintf(info, "DoNewBoxMode: Sending signal to rotate HWPR. n_scan = %i", n_scan);
+        blast_info("DoNewBoxMode: Sending signal to rotate HWPR. n_scan = %i", n_scan);
 
         /* Set flags to rotate the HWPR */
         CommandData.hwpr.mode = HWPR_STEP;
@@ -1503,7 +1503,7 @@ static void do_mode_new_box(void)
 
         if (n_scan % 4 == 0 && n_scan != 0) {
             calculate_el_dither(DITH_INC);
-            bprintf(info, "We're dithering! El Dither = %f", axes_mode.el_dith);
+            blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
 
     }
@@ -1671,19 +1671,19 @@ void do_mode_quad(void) // aka radbox
         // set v for this step
         v_el = (targ_el + bottom - el) / t;
         // set targ_el for the next step
-        //    bprintf(info,"Az Step:targ_el = %f, bottom = %f, el = %f,el-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,bottom,el,el-bottom,el_next_dir,axes_mode.el_dir,v_el);
+        //    blast_info("Az Step:targ_el = %f, bottom = %f, el = %f,el-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,bottom,el,el-bottom,el_next_dir,axes_mode.el_dir,v_el);
         targ_el += CommandData.pointing_mode.del * el_next_dir;
         axes_mode.el_dir = el_next_dir;
         if (targ_el > top - bottom) {
             targ_el = top - bottom;
             el_next_dir = -1;
-            bprintf(info, "Approaching the top: next targ_el = %f, top-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, top
+            blast_info("Approaching the top: next targ_el = %f, top-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, top
                     - bottom, el_next_dir, axes_mode.el_dir, v_el);
         }
         else if (targ_el < 0) {
             targ_el = 0;
             el_next_dir = 1;
-            bprintf(info, "Approaching the bottom: next targ_el = %f, top-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, top
+            blast_info("Approaching the bottom: next targ_el = %f, top-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, top
                     - bottom, el_next_dir, axes_mode.el_dir, v_el);
         }
     }
@@ -1691,7 +1691,7 @@ void do_mode_quad(void) // aka radbox
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
 
         n_scan += 1;
-        bprintf(info, "Sending signal to rotate HWPR. n_scan = %i", n_scan);
+        blast_info("Sending signal to rotate HWPR. n_scan = %i", n_scan);
 
         /* Set flags to rotate the HWPR */
         CommandData.hwpr.mode = HWPR_STEP;
@@ -1699,7 +1699,7 @@ void do_mode_quad(void) // aka radbox
 
         if (n_scan % 4 == 0 && n_scan != 0) {
             calculate_el_dither(DITH_INC);
-            bprintf(info, "We're dithering! El Dither = %f", axes_mode.el_dith);
+            blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
 
     }
@@ -1777,7 +1777,7 @@ void update_axes_mode(void)
 //      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
       break;
     default:
-      bprintf(warning, "Pointing: Unknown Elevation Pointing Mode %d: "
+      blast_warn("Pointing: Unknown Elevation Pointing Mode %d: "
           "stopping\n", CommandData.pointing_mode.mode);
       CommandData.pointing_mode.mode = P_DRIFT;
       CommandData.pointing_mode.X = 0;
@@ -1801,7 +1801,7 @@ void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int
   char message[BUOS_MAX];
   va_list argptr;
 
-  //  bprintf(info,"DEBUG: verb_level_req = %i, verb_level_comp = %i",verb_level_req,verb_level_comp);
+  //  blast_info("DEBUG: verb_level_req = %i, verb_level_comp = %i",verb_level_req,verb_level_comp);
   if(verb_level_req >= verb_level_comp) {
     va_start(argptr, fmt);
     vsnprintf(message, BUOS_MAX, fmt, argptr);

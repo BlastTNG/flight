@@ -45,15 +45,15 @@ void updateSlowDL() {
           size += 4;
           break;
         default:
-          bprintf(fatal, "%c: unknown var type in slow dl field %s", 
+          blast_fatal("%c: unknown var type in slow dl field %s", 
                   slowDLList[i_ch].type, slowDLList[i_ch].name);
           break;
       }
       if (size>255) {
-        bprintf(fatal, "slow downlink structure too large (%d > 255)", size);
+        blast_fatal("slow downlink structure too large (%d > 255)", size);
       }
     }
-    bprintf(info, "slow downlink packet %d/255", size);
+    blast_info("slow downlink packet %d/255", size);
     first_time = 0;
   }
 

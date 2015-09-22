@@ -122,7 +122,7 @@ typedef struct channel channel_t;
 ({                                                  \
     channel_t *_ch = channel;                       \
     if (!_ch)                                       \
-        bprintf(fatal, #channel " is NULL!  Fix!"); \
+        blast_fatal(#channel " is NULL!  Fix!"); \
     switch (_ch->type)   {                          \
         case TYPE_INT8:                             \
             (out) = *(int8_t*)_ch->var;             \
@@ -156,7 +156,7 @@ typedef struct channel channel_t;
             break;                                  \
         default:                                    \
             out = (typeof(out))-1.0;                \
-            bprintf(err, "Invalid type %d", _ch->type);  \
+            blast_err("Invalid type %d", _ch->type);  \
     }                                       \
 })
 
@@ -218,7 +218,7 @@ typedef struct channel channel_t;
             htobed(in, _ch->var);           \
             break;                          \
         default:                            \
-            bprintf(err, "Invalid type %d", _ch->type);  \
+            blast_err("Invalid type %d", _ch->type);  \
     }                                   \
 })
 #endif /* CHANNEL_MACROS_H_ */

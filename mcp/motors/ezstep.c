@@ -130,7 +130,7 @@ static char* stepName(struct ezbus* bus, char who)
     }
   }
   if (bus->chatter >= EZ_CHAT_ERR)
-    bprintf(err, "EZ-Stepper: stepName(): Unexpected Trap!\n");
+    blast_err("EZ-Stepper: stepName(): Unexpected Trap!\n");
   sprintf(hidden_buffer, "Invalid Stepper");
   return hidden_buffer;
 }
@@ -224,7 +224,7 @@ int EZBus_Add(struct ezbus* bus, char who, const char* name)
   int iwho = iWho(who);
   if (iwho >= EZ_BUS_NACT) {
     if (bus->chatter >= EZ_CHAT_ERR) 
-      bprintf(err, "%sFailed to add stepper \'%c\'\n", bus->name, who);
+      blast_err("%sFailed to add stepper \'%c\'\n", bus->name, who);
     return EZ_ERR_BAD_WHO;
   }
   bus->stepper[iwho].status |= EZ_STEP_USED;
@@ -243,7 +243,7 @@ int EZBus_Take(struct ezbus* bus, char who)
 
   if (bus->seized != who) {
     if (bus->chatter >= EZ_CHAT_SEIZE) 
-      bprintf(info, "%sBus seized by %s.\n", bus->name, stepName(bus,who));
+      blast_info("%sBus seized by %s.\n", bus->name, stepName(bus,who));
     bus->seized = who;
   }
 
@@ -254,7 +254,7 @@ int EZBus_Release(struct ezbus* bus, char who)
 {
   if (bus->seized == who) {
     if (bus->chatter >= EZ_CHAT_SEIZE)
-      bprintf(info, "%sBus released by %s.\n", bus->name, stepName(bus,who));
+      blast_info("%sBus released by %s.\n", bus->name, stepName(bus,who));
     bus->seized = -1;
   }
   return EZ_ERR_OK;
@@ -302,7 +302,7 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
   buffer[len - 1] = chk;
   if (bus->chatter >= EZ_CHAT_BUS) {
     hex_buffer = malloc(3*len+1);
-    bprintf(info, "%sRequest=%s (%s)", bus->name, 
+    blast_info("%sRequest=%s (%s)", bus->name, 
 	HexDump((unsigned char *)buffer, hex_buffer, len), what);
     free(hex_buffer);
   }
@@ -317,10 +317,10 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
   // Was there a serial error?  If so increment err_count.
   if((retval & EZ_ERR_MASK) > 0) {
     bus->err_count++;
-    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Send: Serial error madness! err_count=%i",bus->err_count);
+    if(bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Send: Serial error madness! err_count=%i",bus->err_count);
   } else {
     bus->err_count = 0;
-    //if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Send: No serial error! Resetting error count to 0.");
+    //if(bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Send: No serial error! Resetting error count to 0.");
   }
 
   return (bus->error=retval);
@@ -388,7 +388,7 @@ int EZBus_Recv(struct ezbus* bus)
                     if (byte == 0x00) {
                         /*
                          if (bus->chatter >= EZ_CHAT_ERR)
-                         bprintf(warning, "%sdisregarding unexpected word of 0x00",
+                         blast_warn("%sdisregarding unexpected word of 0x00",
                          bus->name);
                          */
                         break;
@@ -396,7 +396,7 @@ int EZBus_Recv(struct ezbus* bus)
                     state++;
                     if (byte != 0xFF) { /* RS-485 turnaround */
                         if (bus->chatter >= EZ_CHAT_ERR)
-                            bprintf(warning, "%sRS-485 turnaround not found in response", bus->name);
+                            blast_warn("%sRS-485 turnaround not found in response", bus->name);
                         had_errors++;
                     }
                     else
@@ -406,7 +406,7 @@ int EZBus_Recv(struct ezbus* bus)
                     if (byte != 0x02) { /* STX */
                         had_errors++;
                         if (bus->chatter >= EZ_CHAT_ERR)
-                            bprintf(warning, "%sStart byte not found in response", bus->name);
+                            blast_warn("%sStart byte not found in response", bus->name);
                     }
                     else
                         break;
@@ -415,11 +415,11 @@ int EZBus_Recv(struct ezbus* bus)
                     if (byte != 0x30) { /* Recipient address (should be '0') */
                         had_errors++;
                         if (bus->chatter >= EZ_CHAT_ERR)
-                            bprintf(warning, "%sFound misaddressed response", bus->name);
+                            blast_warn("%sFound misaddressed response", bus->name);
                     }
                     if (had_errors > 1) {
                         if (bus->chatter >= EZ_CHAT_ERR)
-                            bprintf(err, "%sToo many errors parsing response, aborting.", bus->name);
+                            blast_err("%sToo many errors parsing response, aborting.", bus->name);
                         retval |= EZ_ERR_RESPONSE;
                         state = EZ_BUS_RECV_ABORT;
                     }
@@ -430,7 +430,7 @@ int EZBus_Recv(struct ezbus* bus)
                         retval |= byte & (EZ_ERROR | EZ_READY);
                     else {
                         if (bus->chatter >= EZ_CHAT_ERR)
-                            bprintf(err, "%sStatus byte malfomed in response, aborting.", bus->name);
+                            blast_err("%sStatus byte malfomed in response, aborting.", bus->name);
                         retval |= EZ_ERR_RESPONSE;
                         state = EZ_BUS_RECV_ABORT;
                     }
@@ -447,13 +447,13 @@ int EZBus_Recv(struct ezbus* bus)
                      * we've added the turnaround byte into the checksum */
                     if (checksum != 0xff) {
                         if (bus->chatter >= EZ_CHAT_ERR)
-                            bprintf(err, "%sChecksum error in response (%02x).", bus->name, checksum);
+                            blast_err("%sChecksum error in response (%02x).", bus->name, checksum);
                         retval |= EZ_ERR_RESPONSE;
                     }
                     break;
                 case 6: /* End of string check */
                     if (bus->chatter >= EZ_CHAT_ERR)
-                        bprintf(err, "%sMalformed footer in response string, aborting.", bus->name);
+                        blast_err("%sMalformed footer in response string, aborting.", bus->name);
                     retval |= EZ_ERR_RESPONSE;
                     state = EZ_BUS_RECV_ABORT;
                 case EZ_BUS_RECV_ABORT: /* General abort: flush input */
@@ -469,7 +469,7 @@ int EZBus_Recv(struct ezbus* bus)
         size_t len;
         len = strlen(full_response);
         hex_buffer = malloc(3 * len + 1);
-        bprintf(info, "%sResponse=%s (%s) Status=%x\n", bus->name, HexDump((unsigned char *) full_response, hex_buffer, len), bus->buffer, retval
+        blast_info("%sResponse=%s (%s) Status=%x\n", bus->name, HexDump((unsigned char *) full_response, hex_buffer, len), bus->buffer, retval
                 & 0xff);
         free(hex_buffer);
     }
@@ -478,11 +478,11 @@ int EZBus_Recv(struct ezbus* bus)
     if ((retval & EZ_ERR_MASK) > 0) {
         bus->err_count++;
         if (bus->chatter >= EZ_CHAT_BUS)
-            bprintf(err, "EZBus_Recv: Serial error madness! err_count=%i", bus->err_count);
+            blast_err("EZBus_Recv: Serial error madness! err_count=%i", bus->err_count);
     }
     else {
         bus->err_count = 0;
-        //if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Recv: No serial error! Resetting error count to 0.");
+        //if(bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Recv: No serial error! Resetting error count to 0.");
     }
 
     return (bus->error = retval);
@@ -514,7 +514,7 @@ int EZBus_CommRetry(struct ezbus* bus, char who, const char* what, int retries)
     {
       //communication error
       if (bus->chatter >= EZ_CHAT_ERR) 
-	bprintf(warning, "%sTimeout waiting for response from %s (%s)\n.", 
+	blast_warn("%sTimeout waiting for response from %s (%s)\n.", 
 	    bus->name, stepName(bus,who), what);
 
       EZBus_ForceRepoll(bus, who);
@@ -523,42 +523,42 @@ int EZBus_CommRetry(struct ezbus* bus, char who, const char* what, int retries)
       switch (retval & EZ_ERROR) {
 	case EZ_SERR_INIT:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: initialisation error (on %s).\n", 
+	    blast_warn("%s%s: initialisation error (on %s).\n", 
 		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_BADCMD:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: bad command (on %s).\n", 
+	    blast_warn("%s%s: bad command (on %s).\n", 
 		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_BADOP:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: bad operand (on %s).\n", 
+	    blast_warn("%s%s: bad operand (on %s).\n", 
 		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_COMM:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: communications error (on %s).\n", 
+	    blast_warn("%s%s: communications error (on %s).\n", 
 		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_NOINIT:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: not initialied (on %s).\n", 
+	    blast_warn("%s%s: not initialied (on %s).\n", 
 		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_OVER:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: overload (on %s).\n", bus->name, 
+	    blast_warn("%s%s: overload (on %s).\n", bus->name, 
 		stepName(bus,who), what);
 	  break;
 	case EZ_SERR_NOMOVE:
 	  if (bus->chatter >= EZ_CHAT_ERR)
-	    bprintf(warning, "%s%s: move not allowed (on %s).\n", 
+	    blast_warn("%s%s: move not allowed (on %s).\n", 
 		bus->name, stepName(bus,who), what);
 	  break;
 	case EZ_SERR_BUSY:
 	  if (bus->chatter >= EZ_CHAT_ERR && !overflown) {
-	    bprintf(warning, "%s%s: command overflow (on %s).\n", 
+	    blast_warn("%s%s: command overflow (on %s).\n", 
 		bus->name, stepName(bus,who), what);
 	    overflown = 1;
 	  }
@@ -573,10 +573,10 @@ int EZBus_CommRetry(struct ezbus* bus, char who, const char* what, int retries)
   // Was there a serial error?  If so increment err_count.
   if((retval & EZ_ERR_MASK) > 0) {
     bus->err_count++;
-    if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Comm: Serial error madness! err_count=%i",bus->err_count);
+    if(bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Comm: Serial error madness! err_count=%i",bus->err_count);
   } else {
     bus->err_count = 0;
-    //if(bus->chatter >= EZ_CHAT_BUS) bprintf(err,"EZBus_Comm: No serial error! Resetting error count to 0.");
+    //if(bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Comm: No serial error! Resetting error count to 0.");
   }
 
   return (bus->error=retval);
@@ -617,7 +617,7 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*,char) )
   int retval = EZ_ERR_OK;
 
   if (bus->chatter >= EZ_CHAT_ACT) {
-      bprintf(info, "%sPolling EZStepper Bus.", bus->name);
+      blast_info("%sPolling EZStepper Bus.", bus->name);
   }
 
   for (i = whoLoopMin(EZ_WHO_ALL); i <= whoLoopMax(EZ_WHO_ALL); ++i) {
@@ -628,34 +628,34 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*,char) )
     EZBus_Send(bus, i, "&");
     if ((result = EZBus_Recv(bus)) & (EZ_ERR_TIMEOUT | EZ_ERR_OOD)) {
       if (bus->chatter >= EZ_CHAT_ACT)
-	bprintf(warning, "%sNo response from %s, will repoll later.", 
+	blast_warn("%sNo response from %s, will repoll later.", 
 	    bus->name, stepName(bus,i));
       bus->stepper[iWho(i)].status &= ~EZ_STEP_OK;
       retval |= result;	  //include in retval results from Recv
       retval |= EZ_ERR_POLL;
     } else if (!strncmp(bus->buffer, "EZStepper AllMotion", 19)) {
       if (bus->chatter >= EZ_CHAT_ACT)
-	bprintf(info, "%sFound EZStepper device %s at address %c (0x%x).\n", 
+	blast_info("%sFound EZStepper device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR17EN AllMotion", 18)) {
       if (bus->chatter >= EZ_CHAT_ACT)
-	bprintf(info, "%sFound type 17EN device %s at address %c (0x%x).\n", 
+	blast_info("%sFound type 17EN device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR23 All Motion", 17)) {
       if (bus->chatter >= EZ_CHAT_ACT)
-	bprintf(info, "%sFound type 23 device %s at address %c (0x%x).\n", 
+	blast_info("%sFound type 23 device %s at address %c (0x%x).\n", 
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else if (!strncmp(bus->buffer, "EZHR-17 All Motion", 18)) {
       if (bus->chatter >= EZ_CHAT_ACT)
-        bprintf(info, "%sFound type 17 device %s at address %c (0x%x). \n",
+        blast_info("%sFound type 17 device %s at address %c (0x%x). \n",
 	    bus->name, stepName(bus,i), i, i);
       bus->stepper[iWho(i)].status |= EZ_STEP_OK;
     } else {
       if (bus->chatter >= EZ_CHAT_ERR)
-	bprintf(warning, "%sUnrecognised response from %s, "
+	blast_warn("%sUnrecognised response from %s, "
 	    "will repoll later.\n", bus->name, stepName(bus,i));
       bus->stepper[iWho(i)].status &= ~EZ_STEP_OK;
       retval |= EZ_ERR_POLL;

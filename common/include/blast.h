@@ -104,6 +104,10 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
         do {                                                                \
             bprintf(startup, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
+#define blast_sched(fmt,...) \
+        do {                                                                \
+            bprintf(sched, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
+        }while(0)
 #define blast_mem(fmt,...) \
         do {                                                                \
             bprintf(mem, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \

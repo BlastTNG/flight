@@ -106,7 +106,7 @@ int stop_proc(struct mcp_proc *p, int stop_now, int infd_closed,
 
   /* last check */
   if (waitpid(p->pid, &status, WNOHANG) == 0) {
-    bprintf(err, "Process %i zombified.", p->pid);
+    blast_err("Process %i zombified.", p->pid);
     status = -1;
   } else {
 JOINED:
@@ -115,7 +115,7 @@ JOINED:
         int ret = WEXITSTATUS(status);
         bprintf(ret ? warning : info, "Process exit status: %i", ret);
       } else if (WIFSIGNALED(status)) {
-        bprintf(err, "Process terminated on signal: %i", WTERMSIG(status));
+        blast_err("Process terminated on signal: %i", WTERMSIG(status));
       }
     }
   }
@@ -218,7 +218,7 @@ struct mcp_proc *start_proc(const char *path, char *argv[], int timeout,
     /* this is slowish */
     for (i = 1; argv[i]; ++i)
       sprintf(cmd + strlen(cmd), " %s", argv[i]);
-    bprintf(info, "Running %s", cmd);
+    blast_info("Running %s", cmd);
   }
 
   /* plumbing.  If a corresponding return location isn't given, attach to

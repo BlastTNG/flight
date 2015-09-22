@@ -160,7 +160,7 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
   if (dest < 0)
     dest = 0;
 
-  bprintf(info, "Move %c to %i at speed %i and wait", 
+  blast_info("Move %c to %i at speed %i and wait", 
       (is_y) ? 'Y' : 'X', dest, vel);
   EZBus_GotoVel(bus, who, dest, vel);
 
@@ -180,7 +180,7 @@ void Raster(struct ezbus *bus, int start, int end, int is_y, int y,
 {
   int x;
   int step = (start > end) ? -ss : ss;
-  bprintf(info, "Raster %i %i %i\n", start, end, step); 
+  blast_info("Raster %i %i %i\n", start, end, step); 
   for (x = start; x != end + step; x += step) {
     if (step < 0) {
       if (x < end)
@@ -220,13 +220,13 @@ void ControlXYStage(struct ezbus* bus)
     /* GOTO */
     } else if (CommandData.xystage.mode == XYSTAGE_GOTO) {
       if (CommandData.xystage.xvel > 0) {
-	bprintf(info, "Move X to %i at speed %i",
+	blast_info("Move X to %i at speed %i",
 	    CommandData.xystage.x1, CommandData.xystage.xvel);
 	EZBus_GotoVel(bus, STAGEX_ID, CommandData.xystage.x1, 
 	    CommandData.xystage.xvel);
       }
       if (CommandData.xystage.yvel > 0) {
-	bprintf(info, "Move Y to %i at speed %i",
+	blast_info("Move Y to %i at speed %i",
 	    CommandData.xystage.y1, CommandData.xystage.yvel);
 	EZBus_GotoVel(bus, STAGEY_ID, CommandData.xystage.y1,
 	    CommandData.xystage.yvel);
@@ -234,13 +234,13 @@ void ControlXYStage(struct ezbus* bus)
     /* JUMP */
     } else if (CommandData.xystage.mode == XYSTAGE_JUMP) {
       if (CommandData.xystage.xvel > 0 && CommandData.xystage.x1 != 0) {
-	bprintf(info, "Jump X by %i at speed %i",
+	blast_info("Jump X by %i at speed %i",
 	    CommandData.xystage.x1, CommandData.xystage.xvel);
 	EZBus_RelMoveVel(bus, STAGEX_ID, CommandData.xystage.x1,
 	    CommandData.xystage.xvel);
       }
       if (CommandData.xystage.yvel > 0 && CommandData.xystage.y1 != 0) {
-	bprintf(info, "Jump Y by %i at speed %i",
+	blast_info("Jump Y by %i at speed %i",
 	    CommandData.xystage.y1, CommandData.xystage.yvel);
 	EZBus_RelMoveVel(bus, STAGEY_ID, CommandData.xystage.y1,
 	    CommandData.xystage.yvel);
@@ -303,14 +303,14 @@ void StageBus(void)
   bputs(startup, "startup.");
   while (!InCharge) {
     if (first_time) {
-      bprintf(info,"Not in charge.  Waiting.");
+      blast_info("Not in charge.  Waiting.");
       first_time = 0;
     }
     usleep(500000);
   }
   while (1) {
     if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) == EZ_ERR_OK) {
-      bprintf(info, "Connected to %s on attempt %lu.", STAGE_BUS_TTY, conn_attempt);
+      blast_info("Connected to %s on attempt %lu.", STAGE_BUS_TTY, conn_attempt);
       break;
     }
     conn_attempt++;
@@ -342,12 +342,12 @@ void StageBus(void)
 
     /* Repoll bus if necessary */
     if (CommandData.xystage.force_repoll) {
-      bprintf(info,"XYBus: repolling");      
+      blast_info("XYBus: repolling");      
       EZBus_ForceRepoll(&bus, STAGEX_ID);
       EZBus_ForceRepoll(&bus, STAGEY_ID);
       poll_timeout = POLL_TIMEOUT;
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
-      bprintf(info,"all_ok = %i",all_ok);
+      blast_info("all_ok = %i",all_ok);
       CommandData.xystage.force_repoll = 0;
     }
 

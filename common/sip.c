@@ -165,7 +165,7 @@ static void SendRequest (int req, char tty_fd)
   buffer[2] = 0x03;
   
 #ifdef VERBOSE_SIP_CHATTER
-  bprintf(info,"sending to SIP %02x %02x %02x\n",
+  blast_info("sending to SIP %02x %02x %02x\n",
       buffer[0],buffer[1],buffer[2]);
 #endif
 
@@ -209,29 +209,28 @@ static void SetParametersFifo(enum multiCommand command, unsigned short *dataq,
 
   char** dataqc = (char**) dataq;
   /* compute renormalised values - SIPSS FIFO version */
-  bprintf(info, "Multiword Command: %s (%d)\n", MName(command), command);
+  blast_info("Multiword Command: %s (%d)\n", MName(command), command);
 
   for (i = dataqind = 0; i < mcommands[index].numparams; ++i) {
     type = mcommands[index].params[i].type;
     if (type == 'i')  /* 15 bit unsigned integer */ {
       ivalues[i] = atoi(dataqc[dataqind++]);
-      bprintf(info, "param%02i: integer: %i\n", i, ivalues[i]);
+      blast_info("param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'l')  /* 30 bit unsigned integer */ {
       ivalues[i] = atoi(dataqc[dataqind++]);
-      bprintf(info, "param%02i: long   : %i\n", i, ivalues[i]);
+      blast_info("param%02i: long   : %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 15 bit floating point */ {
       rvalues[i] = atof(dataqc[dataqind++]);
-      bprintf(info, "param%02i: float  : %f\n", i, rvalues[i]);
+      blast_info("param%02i: float  : %f\n", i, rvalues[i]);
     } else if (type == 'd') { /* 30 bit floating point */
       rvalues[i] = atof(dataqc[dataqind++]);
-      bprintf(info, "param%02i: double : %f\n", i, rvalues[i]);
+      blast_info("param%02i: double : %f\n", i, rvalues[i]);
     } else if (type == 's') { /* string */
       strncpy(svalues[i], dataqc[dataqind++], CMD_STRING_LEN - 1);
       svalues[i][CMD_STRING_LEN - 1] = 0;
-      bprintf(info, "param%02i: string: %s\n", i, svalues[i]);
+      blast_info("param%02i: string: %s\n", i, svalues[i]);
     } else
-      bprintf(err,
-          "Unknown parameter type ('%c') param%02i: ignored", type,
+      blast_err(          "Unknown parameter type ('%c') param%02i: ignored", type,
           i);
   }
 
@@ -252,30 +251,29 @@ static void SetParameters(enum multiCommand command, unsigned short *dataq,
     type = mcommands[index].params[i].type;
     if (type == 'i')  /* 16 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
-      bprintf(info, "param%02i: integer: %i\n", i, ivalues[i]);
+      blast_info("param%02i: integer: %i\n", i, ivalues[i]);
     } else if (type == 'l')  /* 32 bit unsigned integer */ {
       ivalues[i] = dataq[dataqind++] + mcommands[index].params[i].min;
       ivalues[i] += (dataq[dataqind++] << 16);
-      bprintf(info, "param%02i: long   : %i\n", i, ivalues[i]);
+      blast_info("param%02i: long   : %i\n", i, ivalues[i]);
     } else if (type == 'f')  /* 16 bit floating point */ {
       rvalues[i] = (float)dataq[dataqind++] * (mcommands[index].params[i].max
           - min) / USHRT_MAX + min;
-      bprintf(info, "param%02i: float  : %f\n", i, rvalues[i]);
+      blast_info("param%02i: float  : %f\n", i, rvalues[i]);
     } else if (type == 'd') { /* 32 bit floating point */
       rvalues[i] = (float)((unsigned)dataq[dataqind++] << 16); /* upper 16 bits */
       rvalues[i] += (float)dataq[dataqind++];             /* lower 16 bits */
       rvalues[i] = rvalues[i] * (mcommands[index].params[i].max - min) /
         UINT_MAX + min;
-      bprintf(info, "param%02i: double : %f\n", i, rvalues[i]);
+      blast_info("param%02i: double : %f\n", i, rvalues[i]);
     } else if (type == 's') { /* string of 7-bit characters */
       int j;
       for (j = 0; j < mcommands[index].params[i].max; ++j)
         svalues[i][j] = ((j % 2) ? dataq[dataqind++] : dataq[dataqind] >> 8)
           & 0x7f;
-      bprintf(info, "param%02i: string: %s\n", i, svalues[i]);
+      blast_info("param%02i: string: %s\n", i, svalues[i]);
     } else
-      bprintf(err,
-          "Unknown parameter type ('%c') param%02i: ignored", type,
+      blast_err(          "Unknown parameter type ('%c') param%02i: ignored", type,
           i);
   }
 }
@@ -308,32 +306,31 @@ void ScheduledCommand(struct ScheduleEvent *event)
     int i;
     int index = MIndex(event->command);
 
-    bprintf(info, "Executing Scheduled Command: %s (%i)\n",
+    blast_info("Executing Scheduled Command: %s (%i)\n",
         MName(event->command), event->command);
     for (i = 0; i < mcommands[index].numparams; ++i) {
       int type = mcommands[index].params[i].type;
       if (type == 'i') /* 15 bit unsigned integer */
-        bprintf(info, "param%02i: integer: %i\n", i,
+        blast_info("param%02i: integer: %i\n", i,
             event->ivalues[i]);
       else if (type == 'l') /* 30 bit unsigned integer */
-        bprintf(info, "param%02i: long   : %i\n", i,
+        blast_info("param%02i: long   : %i\n", i,
             event->ivalues[i]);
       else if (type == 'f') /* 15 bit floating point */
-        bprintf(info, "param%02i: float  : %f\n", i,
+        blast_info("param%02i: float  : %f\n", i,
             event->rvalues[i]);
       else if (type == 'd') /* 30 bit floating point */
-        bprintf(info, "param%02i: double : %f\n", i,
+        blast_info("param%02i: double : %f\n", i,
             event->rvalues[i]);
       else
-        bprintf(err,
-            "Unknown parameter type ('%c') param%02i: ignored", type,
+        blast_err(            "Unknown parameter type ('%c') param%02i: ignored", type,
             i);
     }
     MultiCommand(event->command, event->rvalues, event->ivalues, event->svalues,
         1);
 
   } else {
-    bprintf(info, "Executing Scheduled Command: %s (%i)\n",
+    blast_info("Executing Scheduled Command: %s (%i)\n",
         SName(event->command), event->command);
     SingleCommand(event->command, 1);
   }
@@ -447,7 +444,7 @@ void WatchFIFO (void* void_other_ip)
       command[index++] = buf[0];
     } while (buf[0] != '\n');
     command[index - 1] = command[index] = 0;
-    //bprintf(info, "Command received: %s\n", command);
+    //blast_info("Command received: %s\n", command);
     
 #ifndef TEST_RUN
     if (void_other_ip != NULL) {
@@ -500,7 +497,7 @@ void WatchFIFO (void* void_other_ip)
         pbuf[pindex++] = command[index];
       }
     } while (command[index++] != 0);
-    //bprintf(info, "%i parameters found.\n", mcommand_count);
+    //blast_info("%i parameters found.\n", mcommand_count);
 
     pthread_mutex_lock(&mutex);
 
@@ -583,7 +580,7 @@ void ProcessUplinkSched(unsigned char *extdat) {
   i_chunk = extdat[EXT_ICHUNK];
   nchunk_in = extdat[EXT_NCHUNK];
 
-  bprintf(info,"slot: %d chunk: %d nchunk: %d", slot_in, i_chunk, nchunk_in);
+  blast_info("slot: %d chunk: %d nchunk: %d", slot_in, i_chunk, nchunk_in);
 
   nsched[i_chunk] = extdat[EXT_NSCHED];
   
@@ -627,14 +624,14 @@ void ProcessUplinkSched(unsigned char *extdat) {
         if (entry<library.n) {
           fprintf(fp, "%s %d %.6g %s", library.cmd[entry], (int)day , hour, library.params[entry]);
         } else {
-          bprintf(warning, "entry %d not in library\n", entry);
+          blast_warn("entry %d not in library\n", entry);
         }
       }
     }
     fclose(fp);
   }
   
-  bprintf(warning, "finished extended command\n"
+  blast_warn("finished extended command\n"
                    "  slot %d chunk %d n chunk %d nsched %d route %x chunks_received: %lx\n", 
                    extdat[EXT_SLOT], extdat[EXT_ICHUNK], extdat[EXT_NCHUNK], extdat[EXT_NSCHED], extdat[EXT_ROUTE], chunks_received);
 }
@@ -671,7 +668,7 @@ void WatchPort (void* parameter)
   char tname[6];
   sprintf(tname, "COMM%1d", port+1);
   nameThread(tname);
-  //bprintf(startup, "WatchPort startup\n");
+  //blast_startup("WatchPort startup\n");
 
   tty_fd = sip_setserial(COMM[port]);
 
@@ -684,21 +681,21 @@ void WatchPort (void* parameter)
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_POSITION, tty_fd);
 #ifdef SIP_CHATTER
-        bprintf(info, "Request SIP Position\n");
+        blast_info("Request SIP Position\n");
 #endif
         pthread_mutex_unlock(&mutex);
       } else if (timer == 1700) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_TIME, tty_fd);
 #ifdef SIP_CHATTER
-        bprintf(info, "Request SIP Time\n");
+        blast_info("Request SIP Time\n");
 #endif
         pthread_mutex_unlock(&mutex);	
       } else if (timer > 2500) {
         pthread_mutex_lock(&mutex);
         SendRequest (REQ_ALTITUDE, tty_fd);
 #ifdef SIP_CHATTER
-        bprintf(info, "Request SIP Altitude\n");
+        blast_info("Request SIP Altitude\n");
 #endif
         pthread_mutex_unlock(&mutex);
         timer = 0;
@@ -706,7 +703,7 @@ void WatchPort (void* parameter)
       usleep(10000); /* sleep for 10ms */
     }
 #ifdef VERBOSE_SIP_CHATTER
-    bprintf(info, "read SIP byte %02x\n", buf);
+    blast_info("read SIP byte %02x\n", buf);
 #endif
 
     /* Take control of memory */
@@ -730,30 +727,30 @@ void WatchPort (void* parameter)
         if (buf == 0x13) { /* Send data request */
           readstage = 3;
 #ifdef SIP_CHATTER
-          bprintf(info, "Data request\n");
+          blast_info("Data request\n");
 #endif
         } else if (buf == 0x14) { /* Command */
           readstage = 2;
 #ifdef SIP_CHATTER
-          bprintf(info, "Command\n");
+          blast_info("Command\n");
 #endif
         } else if (buf == 0x10) { /* GPS Position */
           readstage = 4;
 #ifdef SIP_CHATTER
-          bprintf(info, "GPS Position\n");
+          blast_info("GPS Position\n");
 #endif
         } else if (buf == 0x11) { /* GPS Time */
           readstage = 5;
 #ifdef SIP_CHATTER
-          bprintf(info, "GPS Time\n");
+          blast_info("GPS Time\n");
 #endif
         } else if (buf == 0x12) { /* MKS Altitude */
           readstage = 6;
 #ifdef SIP_CHATTER
-          bprintf(info, "MKS Altitude\n");
+          blast_info("MKS Altitude\n");
 #endif
         } else {
-          bprintf(warning, "Bad packet received: "
+          blast_warn("Bad packet received: "
               "Unrecognised Packet Type: %02X\n", buf);
           readstage = 0;
         }
@@ -785,7 +782,7 @@ void WatchPort (void* parameter)
 
             if ((indata[1] & 0xE0) == 0xA0) {
               /*** Single command ***/
-              //bprintf(info, "Single command received\n");
+              //blast_info("Single command received\n");
               //FIXME: this limits # single commands to 255. use indata[1] too
               SingleCommand(indata[0], 0);
               mcommand = -1;
@@ -795,7 +792,7 @@ void WatchPort (void* parameter)
               mcommand = indata[0];
               mcommand_count = 0;
               dataqsize = DataQSize(MIndex(mcommand));
-              bprintf(info, "UNSUPPORTED: Multi word command %s (%d) started\n",
+              blast_info("UNSUPPORTED: Multi word command %s (%d) started\n",
                   MName(mcommand), mcommand);
 
               /* The time of sending, a "unique" number shared by the first */
@@ -806,13 +803,13 @@ void WatchPort (void* parameter)
               /*** Parameter values in multi-command ***/
               indatadumper = (unsigned short *) indata;
               mcommand_data[mcommand_count] = *indatadumper;
-              bprintf(info, "Multi word command continues...\n");
+              blast_info("Multi word command continues...\n");
               mcommand_count++;
             } else if (((indata[1] & 0xE0) == 0xC0) && (mcommand == indata[0])
                 && ((indata[1] & 0x1F) == mcommand_time) &&
                 (mcommand_count == dataqsize)) {
               /*** End of multi-command ***/
-              bprintf(info, "Multi word command ends \n");
+              blast_info("Multi word command ends \n");
               SetParameters(mcommand, (unsigned short*)mcommand_data, rvalues,
                   ivalues, svalues);
               MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
@@ -822,7 +819,7 @@ void WatchPort (void* parameter)
             } else {
               mcommand = -1;
               mcommand_count = 0;
-              bprintf(warning, "Command packet discarded: Bad Encoding: %04X\n",
+              blast_warn("Command packet discarded: Bad Encoding: %04X\n",
                   indata[1]);
               mcommand_time = 0;
             }
@@ -834,7 +831,7 @@ void WatchPort (void* parameter)
         if (buf == 0x03) {
           SendDownData(tty_fd);
         } else {
-          bprintf(warning, "Bad encoding: Bad packet terminator: %02X\n", buf);
+          blast_warn("Bad encoding: Bad packet terminator: %02X\n", buf);
         }
         break;
       case 4: /* waiting for GPS position datum */
@@ -847,7 +844,7 @@ void WatchPort (void* parameter)
           if (buf == 0x03) {
             GPSPosition((unsigned char *) indata);
           } else {
-            bprintf(warning, "Bad encoding in GPS Position: "
+            blast_warn("Bad encoding in GPS Position: "
                 "Bad packet terminator: %02X\n", buf);
           }
         }
@@ -862,7 +859,7 @@ void WatchPort (void* parameter)
           if (buf == 0x03) {
             GPSTime((unsigned char *) indata);
           } else {
-            bprintf(warning, "Bad encoding in GPS Time: "
+            blast_warn("Bad encoding in GPS Time: "
                 "Bad packet terminator: %02X\n", buf);
           }
         }
@@ -877,7 +874,7 @@ void WatchPort (void* parameter)
           if (buf == 0x03) {
             MKSAltitude((unsigned char *) indata);
           } else {
-            bprintf(warning, "Bad encoding in MKS Altitude: "
+            blast_warn("Bad encoding in MKS Altitude: "
                 "Bad packet terminator: %02X\n", buf);
           }
         }
@@ -890,19 +887,18 @@ void WatchPort (void* parameter)
           if (buf == 0x03) {
             if (extdat[0] == sched_packet) {
               if (extdat[EXT_ROUTE] == route[port]) {
-                bprintf(info, "Schedule file uplink packet detected\n");
+                blast_info("Schedule file uplink packet detected\n");
                 ProcessUplinkSched(extdat);
               } else {
-                bprintf(info,
-                    "Schedule file uplink packet bad route %d != %d\n",
+                blast_info(                    "Schedule file uplink packet bad route %d != %d\n",
                     extdat[EXT_ROUTE], route[port]);
               }		
             } else {
               if (MIndex(extdat[0])<0) {
-                bprintf(warning, "ignoring unknown extended command (%d)",
+                blast_warn("ignoring unknown extended command (%d)",
                     extdat[0]);
               } else {
-                bprintf(info, "extended command %s (%d)", MName(extdat[0]),
+                blast_info("extended command %s (%d)", MName(extdat[0]),
                     extdat[0]);
                 SetParameters(extdat[0], (unsigned short*)(extdat+2), rvalues,
                     ivalues, svalues);
@@ -910,7 +906,7 @@ void WatchPort (void* parameter)
               }
             }
           } else {
-            bprintf(warning, "Bad encoding in extended command: "
+            blast_warn("Bad encoding in extended command: "
                 "Bad packet terminator: %02X\n", buf);
           }
           bytecount = 0;

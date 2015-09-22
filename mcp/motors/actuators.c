@@ -198,12 +198,12 @@ void ReadDR()
       } else if (n_read != sizeof(int)) {
 	//short read
 	read_fail = 1;
-	bprintf(err, "act.dr read(): wrong number of bytes");
+	blast_err("act.dr read(): wrong number of bytes");
 	break;
       } else if (!encOK(act_data[i].dr)) {
 	//data not reasonable
 	read_fail = 1;
-	bprintf(err, "act.dr read(): bad encoder data");
+	blast_err("act.dr read(): bad encoder data");
 	break;
       }
     }
@@ -212,7 +212,7 @@ void ReadDR()
   }
 
   if (read_fail) {
-    bprintf(info, "Read of act.dr failed. Using default value %d", DEFAULT_DR);
+    blast_info("Read of act.dr failed. Using default value %d", DEFAULT_DR);
     for (i=0; i<3; i++) act_data[i].dr = DEFAULT_DR;
   }
 }
@@ -238,7 +238,7 @@ static int CheckMove(int goal0, int goal1, int goal2)
   else if (goal2 < minE)
     minE = goal2;
 
-  bprintf(info, "%d %d %d | %d %d | %d %d | %d %d", goal0, goal1, goal2, 
+  blast_info("%d %d %d | %d %d | %d %d | %d %d", goal0, goal1, goal2, 
       minE, maxE, lvdt_low, lvdt_high, maxE - minE, lvdt_delta);
 
   if (minE < lvdt_low || maxE > lvdt_high || maxE - minE > lvdt_delta) {
@@ -271,7 +271,7 @@ void actEncTrim(int *trim)
   int i;
   char buffer[EZ_BUS_BUF_LEN];
 
-  bprintf(info, "trim enc and dr to (%d, %d, %d)", trim[0], trim[1], trim[2]);
+  blast_info("trim enc and dr to (%d, %d, %d)", trim[0], trim[1], trim[2]);
 
   for (i=0; i<3; i++) {
     /* set the dr */
@@ -415,7 +415,7 @@ static void DoActuators(void)
       /* Fallthough */
     case ACTBUS_FM_THERMO:
     case ACTBUS_FM_FOCUS:
-      bprintf(info, "changing focus %g to %d", focus, CommandData.actbus.focus);
+      blast_info("changing focus %g to %d", focus, CommandData.actbus.focus);
       delta = CommandData.actbus.focus - focus;
       CommandData.actbus.goal[0] = act_data[0].enc + delta;
       CommandData.actbus.goal[1] = act_data[1].enc + delta;
@@ -430,7 +430,7 @@ static void DoActuators(void)
     case ACTBUS_FM_SLEEP:
 	break;
     default:
-	bprintf(err, "Unknown Focus Mode (%i), sleeping", 
+	blast_err("Unknown Focus Mode (%i), sleeping", 
 	    CommandData.actbus.focus_mode);
 	CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   }
@@ -461,7 +461,7 @@ static int InitialiseActuator(struct ezbus* thebus, char who)
 
   for (i=0; i<3; i++) {
     if (id[i] == who) {	  //only operate on actautors
-      //bprintf(info, "Initialising %s...", name[i]);
+      //blast_info("Initialising %s...", name[i]);
       ReadDR();	  //inefficient, 
 
       /* Set the encoder */
@@ -469,7 +469,7 @@ static int InitialiseActuator(struct ezbus* thebus, char who)
 	    EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].dr))
 	  == EZ_ERR_OK ) return 1;
       else {
-	bprintf(warning, "Initialising %s failed...", name[i]);
+	blast_warn("Initialising %s failed...", name[i]);
 	return 0;
       }
     }
@@ -612,7 +612,7 @@ static void CloseSlowShutter()
   else
     ;
 
-  //bprintf(info, "%d %d %d", shutter_data.in, shutter_data.in & SHUTTER_CLOSED_BIT,
+  //blast_info("%d %d %d", shutter_data.in, shutter_data.in & SHUTTER_CLOSED_BIT,
   //        SHUTTER_CLOSED_BIT);
   
   // This code does the old style clsing of the shutter:
@@ -920,7 +920,7 @@ static void DoLock(void)
                 || (CommandData.actbus.lock_goal & LS_DRIVE_FORCE)) {
             lock_data.state &= ~LS_DRIVE_MASK | LS_DRIVE_UNK;
             CommandData.actbus.lock_goal &= ~LS_DRIVE_FORCE;
-            bprintf(warning, "Reset lock motor state.");
+            blast_warn("Reset lock motor state.");
         }
 
         SetLockState(0);
@@ -979,7 +979,7 @@ static void DoLock(void)
             action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
         }
         else {
-            bprintf(warning, "Unhandled lock goal (%x) ignored.", CommandData.actbus.lock_goal);
+            blast_warn("Unhandled lock goal (%x) ignored.", CommandData.actbus.lock_goal);
             CommandData.actbus.lock_goal = LS_DRIVE_OFF;
         }
 
@@ -1451,7 +1451,7 @@ void ActuatorBus(void)
 
   while (!InCharge) {
     if (first_time) {
-      bprintf(info,"Not in charge.  Waiting.");
+      blast_info("Not in charge.  Waiting.");
       first_time = 0;
     }
     usleep(1000000);
@@ -1468,14 +1468,14 @@ void ActuatorBus(void)
   first_time = 1;
   while (!is_init) {
     if (first_time) {
-      bprintf(info,"In Charge! Attempting to initalize.");
+      blast_info("In Charge! Attempting to initalize.");
       first_time = 0;
     }
     if (EZBus_Init(&bus, ACT_BUS, "", ACTBUS_CHATTER) == EZ_ERR_OK)
       is_init = 1;
     usleep(10000);
     if (is_init) {
-      bprintf(info,"Bus initialized on %ith attempt",j);
+      blast_info("Bus initialized on %ith attempt",j);
     }
     j++;
   }
@@ -1515,7 +1515,7 @@ void ActuatorBus(void)
     for (i=0; i<NACT; i++)
       if (CommandData.actbus.caddr[my_cindex] == id[i]) caddr_match = 1;
     if (caddr_match) {
-      bprintf(info, "Sending command %s to Act %c\n",
+      blast_info("Sending command %s to Act %c\n",
 	      CommandData.actbus.command[my_cindex], 
 	      CommandData.actbus.caddr[my_cindex]);
       //increase print level for uplinked manual commands

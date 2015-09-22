@@ -114,7 +114,7 @@ char* GetSpecFile(char* buffer, const char* chunk, const char *spec_file)
   if (spec_file != NULL) {
     /* check for buffer overrun */
     if (strlen(spec_file) >= 200)
-      bprintf(fatal, "specification file path too long\n");
+      blast_fatal("specification file path too long\n");
     strcpy(buffer, spec_file);
   } else {
     /* if the chunk is 923488378.x000, the spec file will be 923488378.x.spec */
@@ -132,7 +132,7 @@ char* GetSpecFile(char* buffer, const char* chunk, const char *spec_file)
 
     /* check for buffer overrun */
     if (ptr - buffer > 190)
-      bprintf(fatal, "specification file path too long\n");
+      blast_fatal("specification file path too long\n");
     strcpy(ptr, ".spec");
   }
 
@@ -142,7 +142,7 @@ char* GetSpecFile(char* buffer, const char* chunk, const char *spec_file)
 
   /* the stat worked.  Now is this a regular file? */
   if (!S_ISREG(stat_buf.st_mode))
-    bprintf(fatal, "spec file `%s' is not a regular file\n", buffer);
+    blast_fatal("spec file `%s' is not a regular file\n", buffer);
 
   return buffer;
 }
@@ -266,7 +266,7 @@ long int SetStartChunk(long int framenum, char* chunk, int sufflen)
     if ((new_chunk = GetNextChunk(chunk, sufflen)) == 0) {
 #ifdef __DEFILE__
       /* no new chunk -- complain and exit */
-      bprintf(fatal, "source file is smaller than destination.\n"
+      blast_fatal("source file is smaller than destination.\n"
           "cannot resume.\n");
 #else
       /* start at end of last chunk */
@@ -298,7 +298,7 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
       /* new frame total */
       n = chunk_stat.st_size / DiskFrameSize;
       if (n < *chunk_total)
-        bprintf(err, "chunk `%s' has shrunk.", chunk);
+        blast_err("chunk `%s' has shrunk.", chunk);
 
       /* Don't read the last frame in the file */
       if (n - 75 > *chunk_total) {
@@ -331,7 +331,7 @@ int StreamToNextChunk(int keepalive, char* chunk, int sufflen, int *chunk_total,
         }
 
         if (fgets(gpb, FR_PATH_MAX, curfile) == NULL)
-	  bprintf(fatal, "Failed to read curfile");
+	  blast_fatal("Failed to read curfile");
 
         fclose(curfile);
 

@@ -139,7 +139,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
 #endif
 
   if (!scheduled)
-    bprintf(info, "Commands: Single command: %d (%s)\n", command,
+    blast_info("Commands: Single command: %d (%s)\n", command,
         SName(command));
 
 //   Update CommandData structure with new info
@@ -670,7 +670,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.pointing_mode.h = 0;
       CommandData.pointing_mode.vaz = 0;
       CommandData.pointing_mode.del = 0;
-      bprintf(info, "Commands: Lock at : %g\n", CommandData.pointing_mode.Y);
+      blast_info("Commands: Lock at : %g\n", CommandData.pointing_mode.Y);
       break;
     case repoll:
       CommandData.actbus.force_repoll = 1;
@@ -878,7 +878,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case reap_south:
       if ((command == reap_north && !SouthIAm) || 
 	  (command == reap_south && SouthIAm)) {
-	bprintf(err, "Commands: Reaping the watchdog tickle on command in 1 second.");
+	blast_err("Commands: Reaping the watchdog tickle on command in 1 second.");
         sleep(1);
 	pthread_cancel(watchdog_id);
       }
@@ -910,7 +910,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
   if (!scheduled) {
       //TODO:RE-enable doing_schedule
 //    if (doing_schedule)
-//      bprintf(info, "Scheduler: *** Out of schedule file mode ***");
+//      blast_info("Scheduler: *** Out of schedule file mode ***");
     CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
   } else
     CommandData.pointing_mode.t = PointingData[i_point].t;
@@ -964,19 +964,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.mode = P_AZ_SCAN;
       CommandData.pointing_mode.X = rvalues[0];   //az
       CommandData.pointing_mode.Y = rvalues[1];   //el
-      bprintf(info,"Scan center: %f, %f", CommandData.pointing_mode.X,CommandData.pointing_mode.Y);
+      blast_info("Scan center: %f, %f", CommandData.pointing_mode.X,CommandData.pointing_mode.Y);
       CommandData.pointing_mode.w = rvalues[2];   //width
       CommandData.pointing_mode.vaz = rvalues[3];  //az scan speed
       CommandData.pointing_mode.del = 0.0;
       CommandData.pointing_mode.h = 0;
       break;
     case el_scan:
-      //      bprintf(info,"Commands: El scan not enabled yet!");     
+      //      blast_info("Commands: El scan not enabled yet!");     
       CommandData.pointing_mode.nw = CommandData.slew_veto;
       CommandData.pointing_mode.mode = P_EL_SCAN;
       CommandData.pointing_mode.X = rvalues[0];   //az
       CommandData.pointing_mode.Y = rvalues[1];   //el
-      //      bprintf(info,"Scan center: %f, %f", CommandData.pointing_mode.X,CommandData.pointing_mode.Y);
+      //      blast_info("Scan center: %f, %f", CommandData.pointing_mode.X,CommandData.pointing_mode.Y);
       CommandData.pointing_mode.h = rvalues[2];   //height
       CommandData.pointing_mode.vel = rvalues[3];  //az scan speed
       CommandData.pointing_mode.vaz = 0.0;
@@ -1140,7 +1140,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case az_scan_accel:
       CommandData.az_accel = rvalues[0];
       if (CommandData.az_accel < 0.005) {
-	bprintf(warning,"Attempt to set az_accel to %f, that is too low! Setting %f instead",rvalues[0],CommandData.az_accel);
+	blast_warn("Attempt to set az_accel to %f, that is too low! Setting %f instead",rvalues[0],CommandData.az_accel);
       }
       break;
     case set_scan_params:
@@ -1178,7 +1178,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case slew_veto:
       CommandData.slew_veto = rvalues[0] * SR;
-            bprintf(info,"CommandData.slew_veto = %i, CommandData.pointing_mode.nw = %i", CommandData.slew_veto, CommandData.pointing_mode.nw);
+            blast_info("CommandData.slew_veto = %i, CommandData.pointing_mode.nw = %i", CommandData.slew_veto, CommandData.pointing_mode.nw);
       if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto;      
       break;
     case mag_cal:
@@ -1247,7 +1247,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.h = 0;
       CommandData.pointing_mode.vaz = 0;
       CommandData.pointing_mode.del = 0;
-      bprintf(info, "Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
+      blast_info("Commands: Lock Mode: %g\n", CommandData.pointing_mode.Y);
       break;
     case lock_vel:
       CommandData.actbus.lock_vel = ivalues[0];
@@ -1472,9 +1472,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      }
       break;
     case params_test: //Do nothing, with lots of parameters
-      bprintf(info, "Integer params 'i': %d 'l' %d", ivalues[0], ivalues[1]);
-      bprintf(info, "Float params 'f': %g 'd' %g", rvalues[2], rvalues[3]);
-      bprintf(info, "String param 's': %s", svalues[4]);
+      blast_info("Integer params 'i': %d 'l' %d", ivalues[0], ivalues[1]);
+      blast_info("Float params 'f': %g 'd' %g", rvalues[2], rvalues[3]);
+      blast_info("String param 's': %s", svalues[4]);
       CommandData.plover = ivalues[0];
       break;
     case plugh: //A hollow voice says "Plugh".
@@ -1819,7 +1819,7 @@ void InitCommandData()
 
   /* return if we succesfully read the previous status */
   if (n_read != sizeof(struct CommandDataStruct))
-    bprintf(warning, "Commands: prev_status: Wanted %i bytes but got %i.\n",
+    blast_warn("Commands: prev_status: Wanted %i bytes but got %i.\n",
         (int) sizeof(struct CommandDataStruct), n_read);
   else if (extra > 0)
     bputs(warning, "Commands: prev_status: Extra bytes found.\n");

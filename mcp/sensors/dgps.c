@@ -239,7 +239,7 @@ void WatchDGPS()
     
     if (fp == NULL) {
       if (!serial_error) {
-        bprintf(info, "error opening gps serial port.  Will silently try again every 1s.");
+        blast_info("error opening gps serial port.  Will silently try again every 1s.");
         serial_error = 1;
       }
       sleep(1);

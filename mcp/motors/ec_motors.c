@@ -515,7 +515,7 @@ static int find_controllers(void)
         berror(err, "No motor controller slaves found on the network!");
         goto find_err;
     }
-    bprintf(startup, "ec_config returns %d slaves found", ret_config);
+    blast_startup("ec_config returns %d slaves found", ret_config);
 
     if (ret_config < 3) controller_state = ECAT_MOTOR_FOUND_PARTIAL;
     else controller_state = ECAT_MOTOR_FOUND;
@@ -523,11 +523,11 @@ static int find_controllers(void)
     /* wait for all slaves to reach SAFE_OP state */
     if (ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 3) != EC_STATE_SAFE_OP) {
         controller_state = ECAT_MOTOR_RUNNING_PARTIAL;
-        bprintf(err, "Not all slaves reached safe operational state.");
+        blast_err("Not all slaves reached safe operational state.");
         ec_readstate();
         for (int i = 1; i <= ec_slavecount; i++) {
             if (ec_slave[i].state != EC_STATE_SAFE_OP) {
-                bprintf(err, "Slave %d State=%2x StatusCode=%4x : %s", i, ec_slave[i].state,
+                blast_err("Slave %d State=%2x StatusCode=%4x : %s", i, ec_slave[i].state,
                         ec_slave[i].ALstatuscode, ec_ALstatuscode2string(ec_slave[i].ALstatuscode));
             }
         }
@@ -549,8 +549,8 @@ static int find_controllers(void)
             ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
             size = 2;
             ec_SDOread(i, 0x21C0, 1, false, &size, &phasing,EC_TIMEOUTRXM);
-            bprintf(startup, "Reaction Wheel Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
-            bprintf(startup, "RW phasing state: %d", phasing);
+            blast_startup("Reaction Wheel Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            blast_startup("RW phasing state: %d", phasing);
             rw_index = i;
         }
         else if (ec_slave[i].aliasadr == PIV_ADDR) {
@@ -560,8 +560,8 @@ static int find_controllers(void)
             ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
             size = 2;
             ec_SDOread(i, 0x21C0, 1, false, &size, &phasing,EC_TIMEOUTRXM);
-            bprintf(startup, "Pivot Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
-            bprintf(startup, "Piv phasing state: %d", phasing);
+            blast_startup("Pivot Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            blast_startup("Piv phasing state: %d", phasing);
             piv_index = i;
         }
         else if (ec_slave[i].aliasadr == EL_ADDR) {
@@ -571,12 +571,12 @@ static int find_controllers(void)
             ec_SDOread(i, 0x2384, 1, false, &size, &serial,EC_TIMEOUTRXM);
             size = 2;
             ec_SDOread(i, 0x21C0, 1, false, &size, &phasing,EC_TIMEOUTRXM);
-            bprintf(startup, "Elevation Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
-            bprintf(startup, "EL phasing state: %d", phasing);
+            blast_startup("Elevation Motor Controller %d: %s: SN: %d", ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            blast_startup("EL phasing state: %d", phasing);
             el_index = i;
         }
         else {
-            bprintf(warning, "Got unknown MC %s at position %d with alias %d", ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
+            blast_warn("Got unknown MC %s at position %d with alias %d", ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
         }
     }
     return ec_slavecount;
@@ -601,11 +601,11 @@ static int motor_pdo_init(int m_slave)
     pdo_mapping_t map;
 
     if (ec_slave[m_slave].state != EC_STATE_SAFE_OP && ec_slave[m_slave].state != EC_STATE_PRE_OP) {
-        bprintf(err, "Motor Controller %d (%s) is not in pre-operational state!  Cannot configure.", m_slave, ec_slave[m_slave].name);
+        blast_err("Motor Controller %d (%s) is not in pre-operational state!  Cannot configure.", m_slave, ec_slave[m_slave].name);
         return -1;
     }
 
-    bprintf(startup, "Configuring PDO Mappings for controller %d (%s)", m_slave, ec_slave[m_slave].name);
+    blast_startup("Configuring PDO Mappings for controller %d (%s)", m_slave, ec_slave[m_slave].name);
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -794,7 +794,7 @@ static int motor_set_operational()
      */
     for (int i = 1; i <= ec_slavecount; i++) {
         if (ec_slave[i].state != EC_STATE_OPERATIONAL) {
-            bprintf(err, "Slave %d State=%2x StatusCode=%4x : %s", i, ec_slave[i].state,
+            blast_err("Slave %d State=%2x StatusCode=%4x : %s", i, ec_slave[i].state,
                     ec_slave[i].ALstatuscode, ec_ALstatuscode2string(ec_slave[i].ALstatuscode));
         }
     }
@@ -852,7 +852,7 @@ static void* motor_control(void* arg)
                                     .tv_nsec = 2000000}; /// 500HZ interval
 
     nameThread("Motors");
-    bprintf(startup, "Starting Motor Control");
+    blast_startup("Starting Motor Control");
 
     //TODO: setup state machine for looping in motors
     find_controllers();
@@ -899,9 +899,9 @@ static void* motor_control(void* arg)
         int16_t current;
         int len = 2;
         ec_SDOread(i, 0x2110, 0, false, &len, &current, EC_TIMEOUTTXM);
-        bprintf(info, "Motor controller %d Peak current limit %d", i, current);
+        blast_info("Motor controller %d Peak current limit %d", i, current);
         ec_SDOread(i, 0x2111, 0, false, &len, &current, EC_TIMEOUTTXM);
-        bprintf(info, "Motor controller %d Continuous current limit %d", i, current);
+        blast_info("Motor controller %d Continuous current limit %d", i, current);
     }
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
@@ -916,7 +916,7 @@ static void* motor_control(void* arg)
 
         if (ret && ret != -EINTR)
         {
-            bprintf(err, "error while sleeping, code %d (%s)\n", ret, strerror(-ret));
+            blast_err("error while sleeping, code %d (%s)\n", ret, strerror(-ret));
             break;
         }
         ec_send_processdata();

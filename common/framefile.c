@@ -73,7 +73,7 @@ static void OpenNextChunk(void)
   sprintf(framefile.name, RAWDIR "/%lu.%c%03X%c", framefile.time,
       framefile.type, ++framefile.chunk, '\0');
 
-  bprintf(info, "Writing to %s\n", framefile.name);
+  blast_info("Writing to %s\n", framefile.name);
 
   if ((framefile.fd = creat(framefile.name, 0644)) == -1)
     berror(err, "Error opening chunk");
@@ -200,7 +200,7 @@ void FrameFileWriter(void)
 #ifdef __MCP__
     //Stop writing framefile with less than 200MB of disk space
     if (CommandData.df < 50 && CommandData.df > 0)
-      bprintf(tfatal, "Insufficient disk space (%d) to write frame file, exiting", CommandData.df);
+      blast_tfatal("Insufficient disk space (%d) to write frame file, exiting", CommandData.df);
 #endif
     write_len = 0;
     b_write_to = framefile.b_write_to;

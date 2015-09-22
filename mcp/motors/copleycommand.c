@@ -274,7 +274,7 @@ int check_copleyready(enum CheckType check, struct MotorInfoStruct* copleyinfo)
   timeout.tv_usec=SELECT_COP_MUS_OUT;
   FD_ZERO(&input);
   FD_ZERO(&output);
-  //  bprintf(info,"%sComm check_copleyready: File descriptor is %i",copleyinfo->motorstr,copleyinfo->fd);
+  //  blast_info("%sComm check_copleyready: File descriptor is %i",copleyinfo->motorstr,copleyinfo->fd);
   switch(check){
   case resp:
     FD_SET(copleyinfo->fd, &input);
@@ -347,7 +347,7 @@ int ping_copley(struct MotorInfoStruct* copleyinfo)
 
   n = check_copleyready(comm,copleyinfo);
   if(n >= 0) {
-    //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
+    //      blast_info("copleyComm configure_copley: Ready to send command!");
     send_copleycmd("g r0xa0\r",copleyinfo);
   } else {
     bprintfverb(err,copleyinfo->verbose,MC_VERBOSE,"%sComm ping_copley: Serial port is not ready to command.",copleyinfo->motorstr);
@@ -497,14 +497,14 @@ long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
   long int val;
   memset(outs,'\0',255);
   if (copleyinfo->closing==1) {
-    //      bprintf(info,"%sComm queryCopleyInd: We are closing so I'm returning 42",copleyinfo->motorstr);
+    //      blast_info("%sComm queryCopleyInd: We are closing so I'm returning 42",copleyinfo->motorstr);
     return 42;// Don't query the serial port if we are 
     // closing the connection to the controller.
   }
   n = check_copleyready(comm,copleyinfo);
   
   if (n >= 0) {
-    //      bprintf(info,"copleyComm configure_copley: Ready to send command!");
+    //      blast_info("copleyComm configure_copley: Ready to send command!");
     m = strnlen(ind,254);
     if (m != 0 && m!= 254) {
       strncpy(cmd, "g r",3);
@@ -524,14 +524,14 @@ long int queryCopleyInd(char ind[],struct MotorInfoStruct* copleyinfo)
   n = readCopleyResp(outs,&l,copleyinfo);
   if (n == 0)
     {
-      //      bprintf(info,"queryCopleyInd n=%i",n);
+      //      blast_info("queryCopleyInd n=%i",n);
       //      n = read(copleyinfo->fd,outs,254);
       outs[l] = '\0';
       copyouts(outs, outs_noCR);
-      //             bprintf(info,"copleyComm queryCopleyInd: First character= %c\n",outs[0]);
+      //             blast_info("copleyComm queryCopleyInd: First character= %c\n",outs[0]);
       if (outs[0]== 'v')	{
         val=atoi(outs+2);
-	//	  bprintf(warning,"copleyComm queryCopleyInd: Value= %ld",vel);
+	//	  blast_warn("copleyComm queryCopleyInd: Value= %ld",vel);
 	copleyinfo->err_count=0;
 	return val;        
       }
@@ -576,7 +576,7 @@ int readCopleyResp(char *outs,int *l,struct MotorInfoStruct* copleyinfo)
   while(done==0){
     if(check_copleyready(resp,copleyinfo) >= 0){
       n = read(copleyinfo->fd,outs,1);
-      //      bprintf(info,"Sweetness and light! n=%i, outs[i]=%c",n,*outs);
+      //      blast_info("Sweetness and light! n=%i, outs[i]=%c",n,*outs);
       if((*outs)=='\r'|| (*outs)=='\n' || i>=254) done=1;
       outs+=n;
       i+=n;

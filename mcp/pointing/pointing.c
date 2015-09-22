@@ -675,9 +675,9 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
 
   if (XSCHasNewSolution(which)) {
     xsc_pointing_state[which].last_solution_stars_counter = xsc_server_data[which].channels[xN_image_ctr_stars].value_int;
-    bprintf(info," xsc%i: received new solution", which);
+    blast_info(" xsc%i: received new solution", which);
     if (ACSData.last_trigger_age_cs[which] < GY_HISTORY_AGE_CS) {
-        bprintf(info," xsc%i: new solution young enough to accept", which);
+        blast_info(" xsc%i: new solution young enough to accept", which);
       //i_point = GETREADINDEX(point_index);
       ra = to_hours(xsc_server_data[which].channels[xN_image_eq_ra].value_double);
       dec = to_degrees(xsc_server_data[which].channels[xN_image_eq_dec].value_double);
@@ -685,7 +685,7 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
 
       equatorial_to_horizontal(ra, dec, ACSData.last_trigger_lst[which], ACSData.last_trigger_lat[which], &new_az, &new_el);
 
-      bprintf(info,"converted xsc%i solution to az el %f, %f\n", which, new_az, new_el);
+      blast_info("converted xsc%i solution to az el %f, %f\n", which, new_az, new_el);
       xsc_pointing_state[which].az = new_az;
       xsc_pointing_state[which].el = new_el;
 
@@ -1153,7 +1153,7 @@ void Pointing(void)
     /** Set the official Lat and Long: prefer dgps **/
     if ((i_dgpspos != last_i_dgpspos) && (DGPSPos[i_dgpspos].n_sat > 0)) { // there has been a new solution
         if (using_sip_gps != 0)
-            bprintf(info, "Pointing: Using dGPS for positional data");
+            blast_info("Pointing: Using dGPS for positional data");
         last_i_dgpspos = i_dgpspos;
         // check for spikes or crazy steps...
         dgpspos_ok = ((fabs(last_good_lat - DGPSPos[i_dgpspos].lat) < 0.5) && (fabs(last_good_lon - DGPSPos[i_dgpspos].lon) < 0.5))
@@ -1175,7 +1175,7 @@ void Pointing(void)
         no_dgps_pos++;
         if (no_dgps_pos > 3000) { // no dgps for 30 seconds - revert to sip
             if (using_sip_gps != 1)
-                bprintf(info, "Pointing: Using SIP for positional data");
+                blast_info("Pointing: Using SIP for positional data");
             last_good_lat = SIPData.GPSpos.lat;
             last_good_lon = SIPData.GPSpos.lon;
             last_good_alt = SIPData.GPSpos.alt;
@@ -1319,7 +1319,7 @@ void Pointing(void)
         CommandData.fast_offset_gy--;
     }
 
-    //bprintf(info, "off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.offset_gy, ClinEl.offset_gy);
+    //blast_info("off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.offset_gy, ClinEl.offset_gy);
 
     AddAzSolution(&AzAtt, &NullAz, 1);
     /** add az solutions **/
@@ -1348,7 +1348,7 @@ void Pointing(void)
     PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
 
-    //if(j==500) bprintf(info, "Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
+    //if(j==500) blast_info("Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
     PointingData[point_index].az = AzAtt.az;
     if (CommandData.az_autogyro) {
         PointingData[point_index].offset_ifroll_gy = AzAtt.offset_ifroll_gy;
@@ -1366,7 +1366,7 @@ void Pointing(void)
     PointingData[point_index].ra = ra;
     PointingData[point_index].dec = dec;
     /** record solutions in pointing data **/
-    //  if (j%500==0) bprintf(info,"Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
+    //  if (j%500==0) blast_info("Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
     PointingData[point_index].enc_el = EncEl.angle;
     PointingData[point_index].enc_sigma = sqrt(EncEl.variance + EncEl.sys_var);
     PointingData[point_index].clin_el = ClinEl.angle;
@@ -1528,7 +1528,7 @@ void InitializePointingData()
     xsc_pointing_state[which].exposure_time_cs = 300;
     xsc_pointing_state[which].predicted_motion_px = 0.0;
   }
-  bprintf(info, "InitializePointingData, xsc.az is %f\n", xsc_pointing_state[1].az);
+  blast_info("InitializePointingData, xsc.az is %f\n", xsc_pointing_state[1].az);
 }
 
 void AutoTrimToSC()

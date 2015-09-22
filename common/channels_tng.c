@@ -82,7 +82,7 @@ static inline size_t channel_size(channel_t *m_channel)
             retsize = 8;
             break;
         default:
-            bprintf(fatal, "Invalid Channel size!");
+            blast_fatal("Invalid Channel size!");
     }
     return retsize;
 }
@@ -107,13 +107,13 @@ static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_us
      */
     if (channel->source < SRC_END && channel->rate < RATE_END) {
         if (!channel_ptr[channel->source][channel->rate]) {
-            bprintf(fatal, "Invalid Channel setup");
+            blast_fatal("Invalid Channel setup");
         }
         channel->var = channel_ptr[channel->source][channel->rate];
         channel_ptr[channel->source][channel->rate] += channel_size(channel);
     }
     else {
-        bprintf(fatal, "Could not map %d and %d to source and rate!", channel->source, channel->rate);
+        blast_fatal("Could not map %d and %d to source and rate!", channel->source, channel->rate);
     }
 }
 
@@ -206,23 +206,23 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
     uint32_t crcval = m_map->crc;
 
     if (m_map->version != BLAST_TNG_CH_VERSION ) {
-        bprintf(err, "Unknown derived channels version %d", m_map->version);
+        blast_err("Unknown derived channels version %d", m_map->version);
         return -1;
     }
 
     if (m_len < sizeof(channel_header_t)) {
-        bprintf(err, "Invalid size %zu for channel packet", m_len);
+        blast_err("Invalid size %zu for channel packet", m_len);
         return -1;
     }
 
     if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed)) {
-        bprintf(err, "Length of data packet %zu does not match header data %zu", m_len, sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed));
+        blast_err("Length of data packet %zu does not match header data %zu", m_len, sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed));
         return -1;
     }
 
     m_map->crc = 0;
     if (crcval != PMurHash32(BLAST_MAGIC32, m_map, m_len)) {
-        bprintf(err, "CRC match failed!");
+        blast_err("CRC match failed!");
         return -1;
     }
     m_map->crc = crcval;
@@ -261,23 +261,23 @@ int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng
     uint32_t crcval = m_map->crc;
 
     if (m_map->version != (BLAST_TNG_CH_VERSION | 0x20)) {  // 0x20 marks the packet as a derived packet
-        bprintf(err, "Unknown channels version %d", m_map->version);
+        blast_err("Unknown channels version %d", m_map->version);
         return -1;
     }
 
     if (m_len < sizeof(derived_header_t)) {
-        bprintf(err, "Invalid size %zu for derived packet", m_len);
+        blast_err("Invalid size %zu for derived packet", m_len);
         return -1;
     }
 
     if (m_len != sizeof(derived_header_t) + m_map->length * sizeof(derived_tng_t)) {
-        bprintf(err, "Length of data packet %zu does not match header data %zu", m_len, sizeof(derived_header_t) + m_map->length * sizeof(derived_tng_t));
+        blast_err("Length of data packet %zu does not match header data %zu", m_len, sizeof(derived_header_t) + m_map->length * sizeof(derived_tng_t));
         return -1;
     }
 
     m_map->crc = 0;
     if (crcval != PMurHash32(BLAST_MAGIC32, m_map, m_len)) {
-        bprintf(err, "CRC match failed!");
+        blast_err("CRC match failed!");
         return -1;
     }
     m_map->crc = crcval;
@@ -295,14 +295,14 @@ channel_t *channels_find_by_name(const char *m_name)
 {
     channel_t *retval = (channel_t*)g_hash_table_lookup(frame_table, m_name);
 
-    if (!retval) bprintf(err,"Could not find %s!\n", m_name);
+    if (!retval) blast_err("Could not find %s!\n", m_name);
     return retval;
 }
 
 int channels_store_data(E_SRC m_src, E_RATE m_rate, const void *m_data, size_t m_len)
 {
 	if (m_len != frame_size[m_src][m_rate]) {
-		bprintf(err, "Size mismatch storing data for %s:%s! Got %zu bytes, expected %zu",
+		blast_err("Size mismatch storing data for %s:%s! Got %zu bytes, expected %zu",
 		        SRC_LOOKUP_TABLE[m_src].text, RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_src][m_rate] );
 		return -1;
 	}
@@ -344,7 +344,7 @@ int channels_initialize(const channel_t * const m_channel_list)
             channel_count[channel->source][channel->rate][channel->type]++;
         }
         else {
-            bprintf(fatal, "Could not map %d and %d to rate and type!", channel->rate, channel->type);
+            blast_fatal("Could not map %d and %d to rate and type!", channel->rate, channel->type);
             return 1;
         }
     }
@@ -364,7 +364,7 @@ int channels_initialize(const channel_t * const m_channel_list)
                 /// Ensure that we can dereference the data without knowing its type by keeping an extra 8 bytes allocated at the end
                 channel_data[src][rate] = malloc(frame_size[src][rate] +  sizeof(uint64_t));
                 memset(channel_data[src][rate], 0, frame_size[src][rate] +  sizeof(uint64_t));
-                bprintf(startup, "Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
+                blast_startup("Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
                         (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                         (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
                         (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
@@ -385,7 +385,7 @@ int channels_initialize(const channel_t * const m_channel_list)
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
 
 
-    bprintf(startup, "Successfully initialized Channels data structures");
+    blast_startup("Successfully initialized Channels data structures");
     return 0;
 }
 

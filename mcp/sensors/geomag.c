@@ -2159,7 +2159,7 @@ bool MagModelInit(const char *m_filename)
 	WMM_SetDefaults(&Ellip, MagneticModel, &Geoid); /* Set default values and constants */
 	if ( WMM_readMagneticModel(mag_model, MagneticModel) && WMM_InitializeGeoid(GEOMAG_GEOID, &Geoid))
 	{
-		bprintf(startup, "Successfully initialized Magnetic Model");
+		blast_startup("Successfully initialized Magnetic Model");
 		return true;
 	}
 	else return false;

@@ -162,7 +162,7 @@ void ChargeController(void)
 
 void startChrgCtrl()
 {  
-  bprintf(info, "startChrgCtrl: creating charge controller serial thread");
+  blast_info("startChrgCtrl: creating charge controller serial thread");
   pthread_create(&chrgctrlcomm2_id, NULL, chrgctrlComm, (void*)1);
   pthread_create(&chrgctrlcomm1_id, NULL, chrgctrlComm, (void*)0);
 }
@@ -198,7 +198,7 @@ void* chrgctrlComm(void* cc)
   sprintf(tname, "ChrgC%1d", i_cc);
   nameThread(tname);
 
-  bprintf(info, "starting controller #%d on port %s", i_cc, COMM[i_cc]);
+  blast_info("starting controller #%d on port %s", i_cc, COMM[i_cc]);
 
 /*Relics from the test program -- have no use in mcp  
   const int nfaults = 11;   // number of faults conditions
@@ -313,7 +313,7 @@ void* chrgctrlComm(void* cc)
     usleep(20000);
   }
 
-  bprintf(info, "I am in charge and attempting to connect to charge controller.");
+  blast_info("I am in charge and attempting to connect to charge controller.");
 
   /* try to open serial port */
 
@@ -330,7 +330,7 @@ void* chrgctrlComm(void* cc)
     if (chrgctrlinfo[i_cc].open == 1) {
 
 //  #ifdef CHRGCTRL_VERBOSE
-      bprintf(info, "Opened the serial port on attempt number %i", n_conn); 
+      blast_info("Opened the serial port on attempt number %i", n_conn); 
 //  #endif
 
     }
@@ -352,7 +352,7 @@ void* chrgctrlComm(void* cc)
       close_chrgctrl(i_cc);
      
       if (n_reconn == 0) {
-        bprintf(info,"Error occurred: attempting to re-open serial port.");
+        blast_info("Error occurred: attempting to re-open serial port.");
       }
 
       while (chrgctrlinfo[i_cc].open == 0) {
@@ -361,7 +361,7 @@ void* chrgctrlComm(void* cc)
 
         #ifdef CHRGCTRL_VERBOSE
         if (n_reconn == 10) { 
-	  bprintf(err,"Failed to re-open charge controller #%d after 10 attempts.", i_cc);
+	  blast_err("Failed to re-open charge controller #%d after 10 attempts.", i_cc);
 	}
         #endif
 
@@ -370,7 +370,7 @@ void* chrgctrlComm(void* cc)
         if (chrgctrlinfo[i_cc].open == 1) { // reset succeeded
 
           #ifdef CHRGCTRL_VERBOSE
-            bprintf(info, "Re-opened charge controller #%d on attempt %i.", i_cc, n_reconn);
+            blast_info("Re-opened charge controller #%d on attempt %i.", i_cc, n_reconn);
           #endif
 	  chrgctrlinfo[i_cc].reset = chrgctrlinfo[i_cc].err = 0;       
 
@@ -441,43 +441,43 @@ void* chrgctrlComm(void* cc)
           switch (data_lengths[query_no]) {
 
 	    case COMMS_FAILURE: 
-	      bprintf(err, "Charge controller produced no data. Q%d", query_no);
+	      blast_err("Charge controller produced no data. Q%d", query_no);
               break;
 
 	    case ILLEGAL_FUNCTION:
-              bprintf(err, "Invalid MODBUS function code in query packet. Q%d", query_no);
+              blast_err("Invalid MODBUS function code in query packet. Q%d", query_no);
               break;
 
 	    case ILLEGAL_DATA_ADDRESS: 
-              bprintf(err, "Invalid MODBUS register address in query packet. Q%d", query_no);
+              blast_err("Invalid MODBUS register address in query packet. Q%d", query_no);
               break;
 
 	    case ILLEGAL_DATA_VALUE:
-              bprintf(err, "Invalid data value in MODBUS query packet. Q%d", query_no);
+              blast_err("Invalid data value in MODBUS query packet. Q%d", query_no);
               break;
 
        	    case SLAVE_DEVICE_FAILURE:
-	      bprintf(err, "Unrecoverable MODBUS device error during request. Q%d", query_no);
+	      blast_err("Unrecoverable MODBUS device error during request. Q%d", query_no);
               break;
 
   	    case ACKNOWLEDGE:
-              bprintf(err, "Charge controller is still processing request. Q%d", query_no);
+              blast_err("Charge controller is still processing request. Q%d", query_no);
               break;
 
 	    case SLAVE_DEVICE_BUSY:
-              bprintf(err, "Charge controller is busy: try query again. Q%d", query_no);
+              blast_err("Charge controller is busy: try query again. Q%d", query_no);
               break;
 
 	    case MEMORY_PARITY_ERROR: 
-	      bprintf(err, "Charge controller detected memory parity error. Q%d", query_no);
+	      blast_err("Charge controller detected memory parity error. Q%d", query_no);
               break;
 
 	    case PORT_FAILURE:
-              bprintf(err,"Error in reading from or writing to charge controller. Q%d", query_no);
+              blast_err("Error in reading from or writing to charge controller. Q%d", query_no);
               break;
 
  	    default:
-              bprintf(err, "An unknown charge controller error occurred. Q%d", query_no);  
+              blast_err("An unknown charge controller error occurred. Q%d", query_no);  
 	  }
   #endif
           chrgctrlinfo[i_cc].err = 1;
@@ -499,7 +499,7 @@ void* chrgctrlComm(void* cc)
         continue; // go back up to top of infinite loop
       } else if (n_reconn > 0) {
 
-        bprintf(info, "Re-established communication with charge controller");
+        blast_info("Re-established communication with charge controller");
         n_reconn = 0; // managed this query cycle w/o errors; reset for the next one 
       }
     
@@ -682,19 +682,19 @@ void close_chrgctrl(int i_cc)
 {
 
   #ifdef CHRGCTRL_VERBOSE
-    bprintf(info, "close_chrgctrl: closing connection to charge controller.");
+    blast_info("close_chrgctrl: closing connection to charge controller.");
   #endif
 
   if (chrgctrlinfo[i_cc].open == 0) {
   
     #ifdef CHRGCTRL_VERBOSE
-      bprintf(info, "close_chrgctrl: charge controller is already closed!");
+      blast_info("close_chrgctrl: charge controller is already closed!");
     #endif
 
   } else {
   
     #ifdef CHRGCTRL_VERBOSE
-      bprintf(info, "close_chrgctrl: closing serial port.");
+      blast_info("close_chrgctrl: closing serial port.");
     #endif
 
       if (chrgctrlinfo[i_cc].fd >= 0) {
@@ -703,7 +703,7 @@ void close_chrgctrl(int i_cc)
     chrgctrlinfo[i_cc].open = 0;
     
     #ifdef CHRGCTRL_VERBOSE
-      bprintf(info, "close_chrgctrl: connection to port is now closed.");
+      blast_info("close_chrgctrl: connection to port is now closed.");
     #endif
   }    
 }
@@ -768,7 +768,7 @@ int query_chrgctrl(int dev_addr, unsigned int start_addr, unsigned int count,
   tcflush(fd, TCIOFLUSH);
 
   #ifdef CHRGCTRL_VERBOSE
-    bprintf(info, "query_chrgctrl: sending MODBUS query packet.");
+    blast_info("query_chrgctrl: sending MODBUS query packet.");
   #endif
 
   write_num = write(fd, packet, string_length);
@@ -818,7 +818,7 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
   FD_SET(fd, &rfds);
 
   #ifdef CHRGCTRL_VERBOSE
-    bprintf(info, "response_chrgctrl: waiting for response...");
+    blast_info("response_chrgctrl: waiting for response...");
   #endif
 
   /* wait for a response */
@@ -889,7 +889,7 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
   //    count = sprintf(&(frame[index]), "%.2x", data[j]);
   //  }
 
-    //    bprintf(info, "[%s]", frame);
+    //    blast_info("[%s]", frame);
 
 
     /*#ifdef CHRGCTRL_VERBOSE

@@ -62,7 +62,7 @@ int udp_bind_port(int port, int bcast)
   /* fill res */
   r = getaddrinfo(NULL, service, &hints, &res);
   if (r) {
-    bprintf(err, "Service look-up failed for udp/%i: %s\n", port,
+    blast_err("Service look-up failed for udp/%i: %s\n", port,
         gai_strerror(r));
     return -1;
   }
@@ -85,7 +85,7 @@ int udp_bind_port(int port, int bcast)
 
         /* success */
 #if 0
-        bprintf(info, bcast ? "Bound to udp/%i (broadcast enabled)" :
+        blast_info(bcast ? "Bound to udp/%i (broadcast enabled)" :
             "Bound to udp/%i", port);
 #endif
         freeaddrinfo(res);
