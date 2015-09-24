@@ -361,7 +361,7 @@ void ecx_close(ecx_contextt *context)
 
 /** Read one byte from slave EEPROM via cache.
  *  If the cache location is empty then a read request is made to the slave.
- *  Depending on the slave capabillities the request is 4 or 8 bytes.
+ *  Depending on the slave capabilities the request is 4 or 8 bytes.
  *  @param[in]  context        = context struct
  *  @param[in] slave   = slave number
  *  @param[in] address = eeprom address in bytes (slave uses words)

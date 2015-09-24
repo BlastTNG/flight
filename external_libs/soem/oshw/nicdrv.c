@@ -49,7 +49,7 @@
  * There can be multiple packets "on the wire" before they return.
  * To combine the received packets with the original send packets a buffer
  * system is installed. The identifier is put in the index item of the
- * EtherCAT header. The index is stored and compared when a frame is recieved.
+ * EtherCAT header. The index is stored and compared when a frame is received.
  * If there is a match the packet can be combined with the transmit packet
  * and returned to the higher level function.
  *
@@ -443,10 +443,10 @@ int ecx_inframe(ecx_portt *port, int idx, int stacknumber)
             ecp =(ec_comt*)(&(*stack->tempbuf)[ETH_HEADERSIZE]); 
             l = etohs(ecp->elength) & 0x0fff;
             idxf = ecp->index;
-            /* found index equals reqested index ? */
+            /* found index equals requested index ? */
             if (idxf == idx) 
             {
-               /* yes, put it in the buffer array (strip ethernet header) */
+               /* yes, put it in the buffer array (strip Ethernet header) */
                memcpy(rxbuf, &(*stack->tempbuf)[ETH_HEADERSIZE], (*stack->txbuflength)[idx] - ETH_HEADERSIZE);
                /* return WKC */
                rval = ((*rxbuf)[l] + ((uint16)((*rxbuf)[l + 1]) << 8));
@@ -461,7 +461,7 @@ int ecx_inframe(ecx_portt *port, int idx, int stacknumber)
                if (idxf < EC_MAXBUF) 
                {
                   rxbuf = &(*stack->rxbuf)[idxf];
-                  /* put it in the buffer array (strip ethernet header) */
+                  /* put it in the buffer array (strip Ethernet header) */
                   memcpy(rxbuf, &(*stack->tempbuf)[ETH_HEADERSIZE], (*stack->txbuflength)[idxf] - ETH_HEADERSIZE);
                   /* mark as received */
                   (*stack->rxbufstat)[idxf] = EC_BUF_RCVD;
@@ -469,7 +469,7 @@ int ecx_inframe(ecx_portt *port, int idx, int stacknumber)
                }
                else 
                {
-                  /* strange things happend */
+                  /* strange things happened */
                }
             }
          }
@@ -521,10 +521,10 @@ static int ecx_waitinframe_red(ecx_portt *port, int idx, osal_timert *timer)
    /* only do redundant functions when in redundant mode */
    if (port->redstate != ECT_RED_NONE)
    {
-      /* primrx if the reveived MAC source on primary socket */
+      /* primrx if the received MAC source on primary socket */
       primrx = 0;
       if (wkc > EC_NOFRAME) primrx = port->rxsa[idx];
-      /* secrx if the reveived MAC source on psecondary socket */
+      /* secrx if the received MAC source on secondary socket */
       secrx = 0;
       if (wkc2 > EC_NOFRAME) secrx = port->redport->rxsa[idx];
       
@@ -593,7 +593,7 @@ int ecx_waitinframe(ecx_portt *port, int idx, int timeout)
    return wkc;
 }
 
-/** Blocking send and recieve frame function. Used for non processdata frames.
+/** Blocking send and receive frame function. Used for non processdata frames.
  * A datagram is build into a frame and transmitted via this function. It waits
  * for an answer and returns the workcounter. The function retries if time is
  * left and the result is WKC=0 or no frame received.

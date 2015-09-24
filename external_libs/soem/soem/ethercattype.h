@@ -43,7 +43,7 @@
  * \brief   
  * General typedefs and defines for EtherCAT.
  *
- * Defines that could need optimalisation for specific applications
+ * Defines that could need optimization for specific applications
  * are the EC_TIMEOUTxxx. Assumptions for the standard settings are a
  * standard linux PC or laptop and a wired connection to maximal 100 slaves.
  * For use with wireless connections or lots of slaves the timouts need
