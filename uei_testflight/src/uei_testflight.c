@@ -142,11 +142,12 @@ void decode_NMEA(char *buffer, FILE *fp)
         case MINMEA_SENTENCE_RMC: {
             struct minmea_sentence_rmc frame;
             if (minmea_parse_rmc(&frame, buffer)) {
-                fprintf(fp, "$RMC: %ld.%ld\t coordinates and speed: (%f,%f) %f\n",
+                fprintf(fp, "$RMC: %ld.%ld\t coordinates and speed: (%f,%f) %f\tDate: %d/%d/%d\n",
                         (long) next.tv_sec, (long) next.tv_nsec,
                         minmea_tocoord(&frame.latitude),
                         minmea_tocoord(&frame.longitude),
-                        minmea_tofloat(&frame.speed)
+                        minmea_tofloat(&frame.speed),
+                        frame.date.day, frame.date.month, frame.date.year
                         );
             }else {
                 fprintf(fp, "$RMC sentence is not parsed\n");
@@ -400,6 +401,8 @@ int main(int argc, char* argv[]) {
     long long periodns;
 
     uint32_t input32[64];
+    uint32_t evt_chan = CT650_EVENT_CH0;
+    EV650_CFG event;
 
     double input_buffer[64];
     size_t num_channels[15] = { 0 };
@@ -498,27 +501,51 @@ int main(int argc, char* argv[]) {
     /**
      * Configure the IRIG PPS Clock event
      */
-    memset(&event_cfg, 0, sizeof(event_cfg));
-    event_cfg.event_cfg = CT650_EVT_CFG_EN|CT650_EVT_CFG_EV1IRQ|CT650_EVT_CFG_EV0IRQ|
-                          CT650_EVT_CFG_RPT|
-                          CT650_EVT_CFG_EDGE|
-                          CT650_EVT_PPS;
-
-    ret = DqAdv650SetEvents(hd, IRIG650_SLOT, CT650_EVENT_CH0, UINT32_MAX, &event_cfg, NULL);
-    if (ret < 0) {
-        printf("Error %d in DqAdv650ConfigEvents (PPS CLK): Errno: %d\n", ret, errno);
-    }
+//    memset(&event_cfg, 0, sizeof(event_cfg));
+//    event_cfg.event_cfg = CT650_EVT_CFG_EN|CT650_EVT_CFG_EV1IRQ|CT650_EVT_CFG_EV0IRQ|
+//                          CT650_EVT_CFG_RPT|
+//                          CT650_EVT_CFG_EDGE|
+//                          CT650_EVT_PPS;
+//
+//    ret = DqAdv650SetEvents(hd, IRIG650_SLOT, CT650_EVENT_CH0, UINT32_MAX, &event_cfg, NULL);
+//    if (ret < 0) {
+//        printf("Error %d in DqAdv650ConfigEvents (PPS CLK): Errno: %d\n", ret, errno);
+//    }
 
     /**
      * Single buffer mode
      * TTL0 outputs the GPS PPS
      * TTL1 outputs the IRIG PPS
      */
-    ret = DqAdv650AssignTTLOutputs(hd, IRIG650_SLOT, CT650_OUT_TTLEN0, 0,
-    CT650_OUT_CFG_SRC_1GPS, CT650_OUT_CFG_SRC_1PPS, CT650_OUT_CFG_SRC_0, CT650_OUT_CFG_SRC_0);
+    ret = DqAdv650AssignTTLOutputs(hd, IRIG650_SLOT,
+            CT650_OUT_TTLEN1|CT650_OUT_TTLEN0,         // mode = enable both TTL drivers/buffers for sharper edges
+            0,                                         // when 0, use external TTL0..3 to debug
+            CT650_OUT_CFG_SRC_1GPS,                    // pulse(s) from event2 when it happens (used for trigger)
+            CT650_OUT_CFG_SRC_1PPS,
+            CT650_OUT_CFG_EVENT0,                      // pulse(s) from event1 (used for timestamp)
+            CT650_OUT_CFG_SRC_1PPS);
+//                    DqAdv650AssignTTLOutputs(hd, IRIG650_SLOT, CT650_OUT_TTLEN0, 0,
+//    CT650_OUT_CFG_SRC_1GPS, CT650_OUT_CFG_SRC_1PPS, CT650_OUT_CFG_SRC_0, CT650_OUT_CFG_SRC_0);
     if (ret < 0) {
         printf("Error %d in DqAdv650AssignTTLOutputs\n", ret);
     }
+
+    // Configure PLL and event module to output 100kHz timetamp clock to
+        event.event_cfg =       CT650_EVT_CFG_EN            // Enable
+                                |CT650_EVT_CFG_RPT          // 1 - repeat
+                                |CT650_EVT_CFG_EVTPL(0xd)   // pulse length 0xD ns
+                                |00 << 18                   // Internal counter source selector: 00 - 66/100MHz
+                                |(CT650_EVT_PPS<<12)        // IRSRC = 20<<12 = 1PPS
+                                |CT650_EVT_CFG_EDGE         // 1 - rising edge, 0 - falling edge
+                                |CT650_EVT_CFG_ESRC_DPLL    // Event sources and internal counter reset source (ESRC)
+                                |0;
+#define TS_CLOCKRATE  100000    // timestamp rate used to program IRIG-650 PLL
+        event.event_prm = TS_CLOCKRATE; // TS clock frequenecy
+        event.event_sub0_dly = 0;
+        event.event_sub1_dly = 0;
+        event.event_val = 0;
+
+        DqAdv650SetEvents(hd, IRIG650_SLOT, evt_chan, 0, &event, NULL);
 
     /**
      * Enable the IRIG-650 card
