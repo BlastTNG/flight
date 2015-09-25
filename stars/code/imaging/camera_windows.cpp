@@ -302,11 +302,9 @@ void CameraWindows::read_image_if_available()
 					logger.log("downloading complete");
 					int k, kp = 0;
 					for (int j = 0; j < shared_image.height; j++) {
-						for (int i = 0; i < shared_image.width; i++) {
-							k = j*shared_image.width + i;
-							kp = (image_height - 1 - j)*shared_image.width + i;
-							buffers[num_buffers_filled][k] = ((unsigned short*)intermediate_buffer)[kp];
-						}
+						k = j*shared_image.width;
+						kp = (image_height - 1 - j)*shared_image.width;
+						memcpy(&(buffers[num_buffers_filled][k]), &(intermediate_buffer[kp]), 2 * shared_image.width);
 					}
 					num_buffers_filled++;
 				}
