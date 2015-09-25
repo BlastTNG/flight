@@ -52,10 +52,10 @@ class Imaging::CameraWindows: public Imaging::AbstractCamera
 	QCam_CamListItem camlist[10];  // List of connected cameras		//Added by KNS to list cameras
 	QCam_Handle camhandle;
 	QCam_Settings settings;
-    unsigned long session_id;		//changed from int to unsigned long
+    unsigned long session_id;		
 	unsigned char *frameBuf1;
     QCam_Frame frame;
-	unsigned long FrameSize;		//Added intermediate buffer by KNS	
+	unsigned long FrameSize;	
 
     double gain_min;
     double gain_max;
