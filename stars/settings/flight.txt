@@ -9,6 +9,8 @@
 #         solver.pattern_matcher.iplatescale_max
 #         imaging.autofocus.focus_search_min
 #         imaging.autofocus.focus_search_max
+#         imaging.camera_real.image_width
+#         imaging.camera_real.image_height
 
 
 
@@ -35,7 +37,8 @@ camera.enabled = true
 camera_real.internal_triggering = false
 camera_real.internal_exposure_time = 0.500
 camera_real.internal_period = 10.0
-
+camera_real.image_width = 1392
+camera_real.image_heigh = 1040
 camera_filesystem.startup_delay = 1.5
 camera_filesystem.loading_period = 20
 camera_filesystem.dirname = ../../practice_images

@@ -20,7 +20,7 @@ namespace Parameters
 class Parameters::Manager
 {
   public:
-    Manager(int width, int height, int depth, std::string stars_absolute_dir);
+    Manager(std::string stars_absolute_dir);
     void load(int argc, char* argv[]);
 
     std::string stars_dir;

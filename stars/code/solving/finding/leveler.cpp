@@ -14,8 +14,8 @@ using namespace Solving::Finding;
 
 Leveler::Leveler(Parameters::Manager& params)
 {
-    image_width = params.general.image_width;
-    image_height = params.general.image_height;
+	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
     int max_coarse4_width = int(floor(image_width/4.0));
     int max_coarse4_height = int(floor(image_height/4.0));
     coarse4 = new unsigned short[max_coarse4_width*max_coarse4_height];

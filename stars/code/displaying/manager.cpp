@@ -188,9 +188,9 @@ void DisplayManager::draw()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glPushMatrix();
-    glTranslatef(resolution.w/2.0, resolution.h/2.0, 0.0);
-    glScalef(current_zoom_magnitude, current_zoom_magnitude, 1.0);
-    glTranslatef(-current_zoom_x, -current_zoom_y, 0.0);
+    glTranslated(resolution.w/2.0, resolution.h/2.0, 0.0);
+    glScaled(current_zoom_magnitude, current_zoom_magnitude, 1.0);
+    glTranslated(-current_zoom_x, -current_zoom_y, 0.0);
 
     if (shared_main_settings.display_image_only) {
         double padding = 2.0;

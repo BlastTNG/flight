@@ -189,19 +189,13 @@ int main(int argc, char* argv[]){
     Tools::Timer age;
     age.start();
     boost::posix_time::ptime birthtime = boost::posix_time::microsec_clock::local_time();
-    //int width = 1536;		//dimensions of practice images
-    //int height = 1024;
-    //int depth = 4096;
-	int width = 1392;		//new dimensions for QCam
-	int height = 1040;
-	int depth = 16384;
 	
 	#ifdef _MSC_VER
         std::string stars_absolute_dir = "C:/stars_data/";
     #else
         std::string stars_absolute_dir = "../../";
     #endif
-    Parameters::Manager params(width, height, depth, stars_absolute_dir);
+    Parameters::Manager params(stars_absolute_dir);
     params.load(argc, argv);
     init_loggers(params, birthtime, age);
     params.load(argc, argv);

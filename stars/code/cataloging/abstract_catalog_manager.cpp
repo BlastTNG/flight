@@ -102,8 +102,8 @@ bool mark_as_special(vector<Star>& stars)
 AbstractCatalogManager::AbstractCatalogManager(Parameters::Manager& params, bool enabled,
     string catalog_path_, Logging::Logger& logger_)
 { 
-    image_width = params.general.image_width;
-    image_height = params.general.image_height;
+	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
     mag_limit = numeric_limits<double>::infinity();
     catalog_path = fs::path(catalog_path_);
     logger = &logger_;

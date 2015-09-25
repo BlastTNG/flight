@@ -27,13 +27,19 @@ Mask::Mask()
 
 void Mask::init(Parameters::Manager& params)
 {
+	int image_height;
+	int image_width;
+
     enabled = params.general.try_get("imaging.selective_mask.enabled", false);
     for (int i=0; i<num_fields; i++) {
         fields[i] = params.general.try_get((boost::format("imaging.selective_mask.field%d")%i).str(),
             (unsigned int) 0);
     }
-    num_blocks_x = params.general.image_width / block_size;
-    num_blocks_y = params.general.image_height / block_size;
+	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
+
+    num_blocks_x = image_width / block_size;
+    num_blocks_y = image_height / block_size;
 }
 
 Mask& Mask::operator=(const Mask &rhs)

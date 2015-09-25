@@ -13,13 +13,10 @@ using namespace Parameters;
 using namespace boost::program_options;
 using Main::logger;
 
-General::General(int width, int height, int depth, std::string stars_absolute_dir)
+General::General(std::string stars_absolute_dir)
 {
     using std::string;
 
-    image_width = width;
-    image_height = height;
-    image_depth = depth;
     stars_dir = stars_absolute_dir;
 
     options.add_options()

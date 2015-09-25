@@ -23,8 +23,8 @@ using std::vector;
 
 Smoother::Smoother(Parameters::Manager& params)
 {
-    image_width = params.general.image_width;
-    image_height = params.general.image_height;
+	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
     scratch = new double[image_width*image_height];
 }
 

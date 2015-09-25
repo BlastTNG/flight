@@ -346,7 +346,8 @@ void CameraWindows::init_gain()
 {
 	unsigned long minval = 0;
 	unsigned long maxval= 0;
-    if (QCam_GetParamMin( &settings, qprmNormalizedGain, &minval ) && QCam_GetParamMax( &settings, qprmNormalizedGain, &maxval ) == 0) {
+	if ((QCam_GetParamMin(&settings, qprmNormalizedGain, &minval) == qerrSuccess)
+		&& (QCam_GetParamMax( &settings, qprmNormalizedGain, &maxval ) == qerrSuccess)) {
 
         logger.log(format("got gain properties, range is %u to %u") % minval % maxval);				
         gain_min = double(maxval);

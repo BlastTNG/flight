@@ -9,9 +9,9 @@
 
 using namespace Parameters;
 
-Manager::Manager(int width, int height, int depth, std::string stars_absolute_dir):
+Manager::Manager(std::string stars_absolute_dir):
     stars_dir(stars_absolute_dir),
-    general(width, height, depth, stars_absolute_dir)
+    general(stars_absolute_dir)
 {
 }
 

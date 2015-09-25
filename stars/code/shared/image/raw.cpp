@@ -42,10 +42,11 @@ Raw::Raw()
 
 void Raw::init(Parameters::Manager& params)
 {
-    width = params.general.image_width;
-    height = params.general.image_height;
-    depth = params.general.image_depth;
-    single_depth = params.general.image_depth;
+	width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
+	depth = params.general.try_get("imaging.camera_real.image_depth", params.general.image_depth);
+
+    single_depth = depth;
     pixels = new unsigned short[width*height];
     for (unsigned int i=0; i<max_num_exposures; i++) {
         separate_buffers[i] = new unsigned short[width*height];

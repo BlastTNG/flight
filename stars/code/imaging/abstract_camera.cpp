@@ -51,8 +51,9 @@ using Cameraing::logger;
 
 AbstractCamera::AbstractCamera(Parameters::Manager& params)
 {
-    image_width = params.general.image_width;
-    image_height = params.general.image_height;
+	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
+
     enabled = params.general.try_get("imaging.camera.enabled", true);
     internal_triggering = params.general.try_get("imaging.camera_real.internal_triggering", false);
     internal_exposure_time = params.general.try_get("imaging.camera_real.internal_exposure_time", 0.120);

@@ -24,8 +24,8 @@ Filters::Filters()
 
 void Filters::init(Parameters::Manager& params)
 {
-    image_width = params.general.image_width;
-    image_height = params.general.image_height;
+	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
 
     double angle = 0;
     horizontal_from_settings.enabled = params.general.try_get("solver.filters.horizontal_source.settings.enabled", false);

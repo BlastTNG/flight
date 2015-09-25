@@ -36,8 +36,8 @@ using std::min;
 Finder::Finder(Parameters::Manager& params):
     smoother(params), leveler(params), badpix(params)
 {
-    image_width = params.general.image_width;
-    image_height = params.general.image_height;
+	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
     pixels_smoothed = new double[image_width*image_height];
     pixels_leveled = new unsigned short[image_width*image_height];
     bypass_blobs_enabled = params.general.try_get("solver.blob_finder.bypass_with_blobs.enabled", false);

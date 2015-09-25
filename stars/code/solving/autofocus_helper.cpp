@@ -44,8 +44,8 @@ AutofocusDatapoint& AutofocusDatapoint::operator=(const AutofocusDatapoint &rhs)
 AutofocusHelper::AutofocusHelper(Parameters::Manager& params)
 {
     datapoints.clear();
-    image_width = params.general.image_width;
-    image_height = params.general.image_height;
+	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
+	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
     scratch = new double[image_width*image_height];
 }
 
