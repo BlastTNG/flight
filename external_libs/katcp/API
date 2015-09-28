@@ -1,0 +1,76 @@
+
+To use higher-level api include <katcp.h> and link against -lkatcp. 
+You might also need to include <katcl.h>, particularly for lower
+layer work.
+
+You may need to set the include search path with -I and library
+search path with -L
+
+The CMAKE only generates a static library (.a), but shared
+libraries could also be built (but do remember the -fPIC
+compiler flag)
+
+The katcp API has several "layers"
+
+ - A top level where the service main loop is implemented 
+   inside an API function. An example which uses this
+   API can be found in ../examples/server-example.c code. 
+   The tcpborphserver and kcs source tree also use this
+   api.
+
+   At this level, the user only provides function and sensor
+   callbacks. The mainloop is implemented by the library,
+   as is the logic to handle network connections.
+
+   The API consists of the following functions:
+   
+   * A user of this API initialises the system using 
+     startup_katcp. 
+   
+   * Command callbacks are registered using the 
+     register_katcp call. 
+     
+   * To register sensors, use one of the 
+     register_*_sensor_katcp functions. 
+   
+   * After all callbacks are registered, the main loop is started with
+     functions such as run_server_katcp, run_multi_server_katcp and run_client_katcp.
+   
+   * After the main loop completes, final clean ups are done
+     by invoking the shutdown_katcp function.
+
+   Inside a command function (the one passed to
+   register_katcp), users can call arg_*_katcp
+   to access parameters and append_*_katcp, send_katcp
+   and log_message_katcp to generate output. 
+
+   Internally the katcp library implements these 
+   functions in loop.c and netc.c.
+
+ - An intermediate level, where the user implements his
+   or her own main loop (probably using some select
+   variant), but still uses a katcp_dispatch structure
+   to register functions, dispatch them, etc. The
+   internals of a command function remain similar to
+   the higher level case (arg_*_katcp, append_*_katcp, etc).
+
+   This logic is implemented inside dispatch.c, but loop.c
+   may be helpful as a starting point for a users own 
+   main loop.
+
+   This layer is likely to be the least stable.
+
+ - A lower level where only the protocol parsing logic of
+   the library is used. Here the programmer implements
+   his or her own main loop and dispatch logic. The functions
+   used to parse the protocol are defined in line.c and parse and
+   are distinguished by a *_katcl (*not* a *_katcp) suffix. Thus
+   it is probably sufficient to include only katcl.h. kcpcmd 
+   and the much simpler kcpmsg use this layer. 
+
+In addition, there is work underway to develop a duplex
+routine, where clients can issue and respond to katcp requests, 
+this is still incomplete and makes reasonably large changes
+to the library internals. The lowest layer and the command 
+registration of the top layer should remain reasonably consistent,
+but sensor handling may end up changing. 
