@@ -43,7 +43,7 @@ CameraFilesystem::CameraFilesystem(Parameters::Manager& params): AbstractCamera(
     filesets(new std::vector<Fileset>),
     fileset_index(0),
     resave_images(params.general.try_get("imaging.camera_filesystem.resave_images", false)),
-    output_dir(params.general.try_get("main.output_dir", string("C:\\stars_data\\output"))),		//changed from C:\\data by KNS
+    output_dir(params.general.try_get("main.output_dir", string("D:\\stars_data\\output"))),		
     flip_vertically(params.general.try_get("imaging.camera_filesystem.flip_vertically", false)),
     temp_pixels(new unsigned short[shared_image.width*shared_image.height]),
     first_run(true),
