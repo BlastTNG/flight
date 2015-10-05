@@ -62,6 +62,7 @@ bool CameraWindows::init_camera()
 	{
 		dscGetLastError(&errparams);
 		logger.log(format("Talking to DMM-XT failed: %s (%s)\n") % dscGetErrorString(dscbresult) % errparams.errstring);
+		dscFree();
 		return false;
 	}
 	logger.log(format("DAQ is a-go"));
