@@ -11,16 +11,11 @@
 #include <boost/program_options.hpp>
 #include "measurement.h"
 #include "../tools/timing.h"
+#include "../star_camera.h"
 #include <string>
 
-#ifdef _MSC_VER
-#define HAVEDAQ 1
-#else
-#define HAVEDAQ 0
-#endif
-
 #if HAVEDAQ
-#include "dscud.h"
+#include "../dmm.h"
 #endif
 
 namespace Parameters
@@ -37,7 +32,7 @@ namespace Housekeeping
 class Housekeeping::Housekeeper
 {
   public:
-    Housekeeper(Parameters::Manager& params);
+    Housekeeper(Parameters::Manager& params, dmm *card);
     void add_channel(variables_map map, int channel_num);
     void update_shared();
     void get_disk();
@@ -56,14 +51,8 @@ class Housekeeping::Housekeeper
     unsigned int write_disk_counter;
     std::vector<Measurement> measurements;
 	std::string output_dir;
-#if HAVEDAQ
-	DSCB dscb;   // handle used to refer to the DMM board
-	DSCCB dsccb; // structure containing board settings
-	DSCADSETTINGS dscadsettings; // structure containing A/D conversion settings
-	DSCADSCAN dscadscan; // structure containing A/D scan settings
-	std::vector<DSCSAMPLE> samples;  // sample readings
-#endif
-
+	
+	dmm *ad_card;
 };
 
 #endif

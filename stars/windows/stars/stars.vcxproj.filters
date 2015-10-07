@@ -486,6 +486,9 @@
     <ClCompile Include="..\..\code\solving\finding\badpix.cpp">
       <Filter>Source Files\solving\finding</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\code\dmm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\code\star_camera.h">
@@ -841,6 +844,9 @@
     </ClInclude>
     <ClInclude Include="..\..\code\solving\finding\badpix.h">
       <Filter>Header Files\solving\finding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\dmm.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

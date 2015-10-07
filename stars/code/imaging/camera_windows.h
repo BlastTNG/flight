@@ -16,7 +16,15 @@
 #endif
 #include <boost/thread/thread.hpp>
 #include "abstract_camera.h"
-#include "QCamApi.h"
+#include <QCamAPI.h>
+#include <QCamImgfnc.h>
+// QCamAPI.h is idiotic and defines types with a macro.  This breaks lots of stuff
+#undef uint32_t
+#undef uint16_t
+#undef uint8_t
+#include <cstdint>
+
+#include "../dmm.h"
 
 namespace Parameters
 {
@@ -31,7 +39,7 @@ namespace Imaging
 class Imaging::CameraWindows: public Imaging::AbstractCamera
 {
   public:
-    CameraWindows(Parameters::Manager& params);
+    CameraWindows(Parameters::Manager& params, dmm *card);
 
     bool init_camera();
     void clean_up_camera();
@@ -51,14 +59,14 @@ class Imaging::CameraWindows: public Imaging::AbstractCamera
     QCam_Err camerror;
 	QCam_CamListItem camlist[10];  // List of connected cameras		//Added by KNS to list cameras
 	QCam_Handle camhandle;
-	QCam_Settings settings;
-    unsigned long session_id;		
+	QCam_SettingsEx settings;
 	unsigned char *frameBuf1;
     QCam_Frame frame;
 	unsigned long FrameSize;	
 
     double gain_min;
     double gain_max;
+	dmm *io_card;
 
     // thread belongs to derived class to prevent pure virtual function call
     boost::thread thread;
