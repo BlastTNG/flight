@@ -79,8 +79,10 @@ bool CameraWindows::init_camera()
 
 	QCam_CreateCameraSettingsStruct(&settings);
 	QCam_InitializeCameraSettings(camhandle, &settings);
-	QCam_ReadSettingsFromCam(camhandle, (QCam_Settings*)&settings);
-
+	//QCam_ReadSettingsFromCam(camhandle, (QCam_Settings*)&settings);
+	
+	QCam_ReadDefaultSettings(camhandle, (QCam_Settings*)&settings);
+	
 	QCam_SetParam((QCam_Settings*)&settings, qprmImageFormat, qfmtMono16);
 	QCam_SendSettingsToCam(camhandle, (QCam_Settings*)&settings);
 
@@ -93,23 +95,24 @@ bool CameraWindows::init_camera()
 		FrameSize = QCam_CalcImageSize(qfmtMono16, xpix, ypix);
 
 		// Allocate memory for the frame buffers 
-		{
-			std::size_t sz;
-			void *p;
-			std::align(8, FrameSize, p, sz);
-			frameBuf1 = reinterpret_cast<unsigned char*>(p);
-		}
-		frame.pBuffer = frameBuf1;
+
+		frame.pBuffer = new byte[FrameSize];
+		frameBuf1 = (byte*)frame.pBuffer;
 		frame.bufferSize = FrameSize;
 		frame.width = xpix;
 		frame.height = ypix;
 	}
 
-	QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, 0); // unsigned long(int(internal_period * 1000000000)));
-	QCam_SetParam((QCam_Settings*)&settings, qprmExposure, 100000); // unsigned long(int(internal_exposure_time*1000000.0)));
 	QCam_SetParam((QCam_Settings*)&settings, qprmCoolerActive, 1);
 	QCam_SetParam((QCam_Settings*)&settings, qprmHighSensitivityMode, 0);
 	QCam_SetParam((QCam_Settings*)&settings, qprmBlackoutMode, 0);
+	QCam_SetParam((QCam_Settings*)&settings, qprmDoPostProcessing, 0);
+
+	//Set the ROI to our display size
+	QCam_SetParam((QCam_Settings*)&settings, qprmRoiX, 0);
+	QCam_SetParam((QCam_Settings*)&settings, qprmRoiY, 0);
+	QCam_SetParam((QCam_Settings*)&settings, qprmRoiWidth, frame.width);
+	QCam_SetParam((QCam_Settings*)&settings, qprmRoiHeight, frame.height);
 
 	QCam_SendSettingsToCam(camhandle, (QCam_Settings*)&settings);
 
@@ -155,9 +158,9 @@ void CameraWindows::set_trigger_mode()
     int polarity = 0;
 
     if (internal_triggering) {
-        trigger_mode = qcTriggerSoftware;
-		QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, 0); // unsigned long(mode6interval));
-		QCam_SetParam((QCam_Settings*)&settings, qprmExposure, 100000); // unsigned long(internal_exposure_time*1000000.0));
+        trigger_mode = qcTriggerFreerun;
+		QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, unsigned long(mode6interval));
+		QCam_SetParam((QCam_Settings*)&settings, qprmExposure, unsigned long(internal_exposure_time*1000000.0));
     } else {
         trigger_mode = qcTriggerStrobeHi;
     }
@@ -175,7 +178,7 @@ void CameraWindows::set_trigger_mode()
 
 void CameraWindows::read_image_if_available()
 {
-	unsigned long remote_buffer_counter;
+	
 
 		boost::posix_time::ptime timestamp = boost::posix_time::microsec_clock::local_time();
 		shared_image.age.start();
@@ -185,32 +188,9 @@ void CameraWindows::read_image_if_available()
 		series_age_timer.start();
 		
 		logger.log(format("image found with buffer %d") % frame.bufferSize);
-		last_remote_buffer_counter = remote_buffer_counter;
-
-		{
-			unsigned long setting;
-
-			QCam_GetParam((QCam_Settings*)&settings, qprmTriggerType, &setting);
-			logger.log(format("Trigger type %d") % setting);
-
-			QCam_GetParam((QCam_Settings*)&settings, qprmExposure, &setting);
-			logger.log(format("Exposure %d") % setting);
-
-			QCam_GetParam((QCam_Settings*)&settings, qprmBinning, &setting);
-			logger.log(format("Binning %d") % setting);
-
-			QCam_GetParam((QCam_Settings*)&settings, qprmReadoutSpeed, &setting);
-			logger.log(format("Readoutspeed %d") % setting);
-
-			QCam_GetParam((QCam_Settings*)&settings, qprmTriggerDelay, &setting);
-			logger.log(format("Trigger delay %d") % setting);
-
-			QCam_GetParam((QCam_Settings*)&settings, qprmReadoutPort, &setting);
-			logger.log(format("Readout port %d") % setting);
-
-
-		}
+		
 		QCam_SetStreaming(camhandle, 1);
+		
 		camerror = QCam_GrabFrame(camhandle, &frame);
 		intermediate_buffer = (unsigned short*)frameBuf1;
 
@@ -265,7 +245,7 @@ void CameraWindows::init_gain()
 	if ((QCam_GetParamMin((QCam_Settings*)&settings, qprmNormalizedGain, &minval) == qerrSuccess)
 		&& (QCam_GetParamMax((QCam_Settings*)&settings, qprmNormalizedGain, &maxval) == qerrSuccess)) {
 
-        logger.log(format("got gain properties, range is %u to %u") % minval % maxval);				
+        logger.log(format("got gain properties, range is %f to %f") % ((float)minval / 1000000.0) % ((float)maxval / 1000000.0));				
         gain_min = double(maxval);
         gain_max = double(minval);
 	}
@@ -309,7 +289,7 @@ void CameraWindows::thread_function()
     DWORD thread_priority;
 	//int wait_time = 30;				//time between taking pictures, in seconds
     thread_priority = GetThreadPriority(GetCurrentThread());
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     thread_priority = GetThreadPriority(GetCurrentThread());
     logger.log(format("main has thread priority %i")%thread_priority);
     #endif

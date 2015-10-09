@@ -92,6 +92,7 @@ int Texture::bind_blank(int new_size, bool black)
         //0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
         0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		}
+		else logger.log(format("Could not bind image of size %d > max %d") % new_size % maxval);
 	free(data);
     if (!glGetError()) return 1;
     return 0;
@@ -99,19 +100,19 @@ int Texture::bind_blank(int new_size, bool black)
 
 void Texture::bind_data(char* data, int width, int height)
 {
+	GLenum error;
    	size_to_at_least(max(width, height));
 	glBindTexture(GL_TEXTURE_2D, id); // Bind 1
+	if ((error = glGetError()) != GL_NO_ERROR) logger.log(format("glBindTexture failed: %s") % error);
+
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,
         //GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
         GL_RGBA, GL_UNSIGNED_BYTE, data);
-	//if (!glGetError()) {
-	GLenum error;
-		error = glGetError();
-	if (error == 0) {							//added by KNS to check errors
-        used_width = double(width) / double(size);
-        used_height = double(height) / double(size);
-    }
-	logger.log(format("GL failed: %s") % error);
+	if ((error = glGetError())) logger.log(format("glTexSubImage failed for %d x %d: %s") %width % height % error);
+	
+	used_width = double(width) / double(size);
+	used_height = double(height) / double(size);
+    
     glBindTexture(GL_TEXTURE_2D, 0); // unBind 1
 }
 
