@@ -10,6 +10,7 @@
 #include "tools/timing.h"
 #include "imaging/lens.h"
 #include "solving/solver.h"
+#include "dmm.h"
 
 namespace Parameters
 {
@@ -37,6 +38,7 @@ class StarCamera
     void update_framerate();
     void set_thread_priority();
     void update_main();
+	void initialize_ADCard();
     void run(Parameters::Manager& params);
 
     enum InputDeviceType {
@@ -56,6 +58,8 @@ class StarCamera
     Tools::Timer framerate_timer;
     unsigned int framerate_counter;
     InputDeviceType input_device;
+
+	dmm io_card;
 };
 
 #endif

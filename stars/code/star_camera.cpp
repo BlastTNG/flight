@@ -46,7 +46,7 @@ void StarCamera::pick_camera(Parameters::Manager& params)
     switch (input_device) {
         case input_device_camera_windows:
             #if PREPROCESSOR_USING_CAMERA
-            camera = new Imaging::CameraWindows(params);
+            camera = new Imaging::CameraWindows(params, &io_card);
             #endif
             break;
         case input_device_camera_filesystem:
@@ -99,8 +99,11 @@ void StarCamera::run(Parameters::Manager& params)
 {
     Displaying::DisplayManager display_manager(params);
     display_manager.draw();
+
+	io_card.dmm_initialize();
+
     pick_camera(params);
-    Housekeeping::Housekeeper housekeeper(params);
+    Housekeeping::Housekeeper housekeeper(params, &io_card);
     Networking::NetworkManager network_manager;
 
     //set_thread_priority();

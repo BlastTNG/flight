@@ -12,17 +12,15 @@
 #include "../shared/housekeeping/housekeeper.h"
 #include "logger.h"
 
+
 using namespace Housekeeping;
 using std::string;
 
 #define shared_housekeeper (*(Shared::Housekeeping::housekeeper_for_camera.w))
 
-Housekeeper::Housekeeper(Parameters::Manager& params)
+Housekeeper::Housekeeper(Parameters::Manager& params, dmm *card)
 {
-	ERRPARAMS errorParams; // structure for returning error code and error string
-	string logerror = "";
-
-    disk_space = 0.0;
+	disk_space = 0.0;
     disk_space_first_measurement = 0.0;
     disk_time = 0.0;
     disk_time_valid = false;
@@ -32,42 +30,8 @@ Housekeeper::Housekeeper(Parameters::Manager& params)
     output_dir = params.general.try_get("main.output_dir", string("C:\\stars_data"));	
     write_temps_counter = 0;
     write_disk_counter = 0;
-
-	if (dscInit(DSC_VERSION) != DE_NONE) {
-		dscGetLastError(&errorParams);
-		logerror += (format("dscInit error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
-		logger.log(logerror);
-		return;
-	}
-
-	dsccb.base_address = 0x300;
-	dsccb.int_level = 3;
-	if (dscInitBoard(DSC_DMM, &dsccb, &dscb) != DE_NONE) {
-		dscGetLastError(&errorParams);
-		logerror += (format("dscInitBoard error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
-		logger.log(logerror);
-		return;
-	}
-
-	dscadsettings.range = RANGE_10;
-	dscadsettings.polarity = BIPOLAR;
-	dscadsettings.gain = GAIN_1;
-	dscadsettings.load_cal = (BYTE)TRUE;
-	dscadsettings.current_channel = 0;
-
-	if (dscADSetSettings(dscb, &dscadsettings) != DE_NONE)
-	{
-		dscGetLastError(&errorParams);
-		logerror += (format("dscADSetSettings error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
-		logger.log(logerror);
-		return;
-	}
-
-
-	dscadscan.low_channel = 0;
-	dscadscan.high_channel = 7;
-	dscadscan.gain = GAIN_1;
-	samples.resize(dscadscan.high_channel - dscadscan.low_channel + 1);
+	
+	ad_card = card;
 }
 
 void Housekeeper::add_channel(variables_map map, int channel_num)
@@ -143,36 +107,17 @@ void Housekeeper::update()
         last_temps_measurement_timer.start();
         #if HAVEDAQ
 			try {
-				ERRPARAMS errorParams; // structure for returning error code and error string
-                int status0 = 0;
-				int status1 = 0;
-                int channel = 0;
-                int board_number = 0;
-                WORD raw_value = 0;
-                double value = 0;
+				double values[16] = { 0.0 };
+				int channel;
                 string logdata = "temps";
 				string logerror = "";
 
-				if (dscADScan(dscb, &dscadscan, &samples.front()) != DE_NONE)
-				{
-					dscGetLastError(&errorParams);
-					logerror += (format("dscADScan error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
-					logger.log(logerror);
-					throw std::runtime_error(errorParams.errstring);
-				}
+				ad_card->dmm_scan(values);
 
                 for (unsigned int i=0; i<measurements.size(); i++) {
                     channel = measurements[i].channel;
-					if (dscADCodeToVoltage(dscb, dscadsettings, dscadscan.sample_values[channel], &value) != DE_NONE)  {
-						dscGetLastError(&errorParams);
-						logdata += (format("dscADCodeToVoltage error on channel %d : %s (%s)") % channel % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
-						value = nan("");
-					}
-					else {
-						measurements[i].add_value(double(value));
-						logdata += (format(" %s %.03d") % measurements[i].name % (double(value))).str();
-					}
-
+					measurements[i].add_value(values[i]);
+					logdata += (format(" %s %.03d") % measurements[i].name % values[i]).str();
                 }
                 if (write_temps_counter == 0) {
                     logger.log(logdata);

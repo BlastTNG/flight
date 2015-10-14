@@ -209,7 +209,7 @@ void AbstractCamera::save_image(unsigned short* pixels, int buffer_num, bool mul
     long naxes[2] = {shared_image.width, shared_image.height};
     int unknown = -1;
     if (!fs::exists(output_dir)) {
-        output_dir = "";
+        output_dir = "D:/";
     }
     fs::path images_dir = fs::path(output_dir) / "images";
     if (!fs::exists(images_dir)) {
