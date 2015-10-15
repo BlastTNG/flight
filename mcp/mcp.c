@@ -389,6 +389,9 @@ int main(int argc, char *argv[])
   struct timespec ts;
   struct timespec interval_ts = { .tv_sec = 0,
                                   .tv_nsec = 5000000}; /// 200HZ interval
+  struct tm start_time;
+  time_t start_time_s;
+  char log_file_name[PATH_MAX];
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -413,15 +416,14 @@ int main(int argc, char *argv[])
 
   umask(0);  /* clear umask */
 
-  if ((logfile = fopen("/data/etc/blast/mcp.log", "a")) == NULL) {
-    berror(err, "System: Can't open log file");
-    fstats.st_size = -1;
-  } else {
-    if (fstat(fileno(logfile), &fstats) < 0)
-      fstats.st_size = -1;
-    fputs("!!!!!! LOG RESTART !!!!!!\n", logfile);
-  }
+  start_time_s = time(&start_time_s);
+  gmtime_r(&start_time_s, &start_time);
 
+  snprintf(log_file_name, PATH_MAX, "/data/etc/blast/mcp_%02d-%02d-%02d_%02d:%02d",
+          start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
+          start_time.tm_hour, start_time.tm_min);
+
+  openMCElog(log_file_name);
 
   /* register the output function */
   nameThread("Dummy"); //insert dummy sentinel node first
