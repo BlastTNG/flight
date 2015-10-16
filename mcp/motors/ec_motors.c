@@ -924,6 +924,10 @@ static void* motor_control(void* arg)
         wkc = ec_receive_processdata(EC_TIMEOUTRET);
         if (wkc < expectedWKC) bprintf(none, "Possible missing data in communicating with Motor Controllers");
         read_motor_data();
+
+        while (ec_iserror()) {
+            blast_err("%s", ec_elist2string());
+        }
     }
 
     return 0;
