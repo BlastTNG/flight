@@ -91,6 +91,7 @@ static int motors_exit = false;
  * the next PDO cycle (0.5ms)
  */
 static int32_t dummy_var = 0;
+static int32_t dummy_write_var = 0;
 
 /// Read words
 static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
@@ -107,8 +108,8 @@ static uint16_t *control_word_read[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)
 static uint16_t *network_status[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
 
 /// Write words
-static uint16_t *control_word[N_MCs] = { (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var, (uint16_t*)&dummy_var };
-static int16_t *target_current[N_MCs] = { (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var, (int16_t*)&dummy_var };
+static uint16_t *control_word[N_MCs] = { (uint16_t*)&dummy_write_var, (uint16_t*)&dummy_write_var, (uint16_t*)&dummy_write_var, (uint16_t*)&dummy_write_var };
+static int16_t *target_current[N_MCs] = { (int16_t*)&dummy_write_var, (int16_t*)&dummy_write_var, (int16_t*)&dummy_write_var, (int16_t*)&dummy_write_var };
 
 /**
  * This set of functions return the latched faults of each motor controller
