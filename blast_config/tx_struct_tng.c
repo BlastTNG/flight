@@ -621,6 +621,8 @@ channel_t channel_list[] =
     { "el_raw_enc",           I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_P_DEG, 0 },
     { "el_enc",               I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_P_DEG, 0 },
     { "sigma_enc",            I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "el_motor_enc",         I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_P_DEG, 0 },
+    { "sigma_motor_enc",      I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "chatter",              1.0,              0.0, TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0 },
 
     { "focpos_sbsc",          1.0 / 10.0,       0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },

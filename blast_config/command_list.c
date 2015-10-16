@@ -122,6 +122,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
   {COMMAND(elenc_veto), "veto elevation encoder", GR_VETO},
   {COMMAND(elenc_allow), "un-veto elevation encoder", GR_VETO},
+  {COMMAND(elmotenc_veto), "veto elevation motor encoder", GR_VETO},
+  {COMMAND(elmotenc_allow), "un-veto elevation motor encoder", GR_VETO},
   {COMMAND(isc_veto), "veto integrating star camera", GR_VETO},
   {COMMAND(isc_allow), "un-veto integrating star camera", GR_VETO},
   {COMMAND(osc_veto), "veto other star camera", GR_VETO},

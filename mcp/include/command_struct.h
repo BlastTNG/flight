@@ -282,6 +282,7 @@ struct CommandDataStruct {
   unsigned int gymask;
 
   unsigned char use_elenc;
+  unsigned char use_elmotenc;
   unsigned char use_elclin;
   unsigned char use_pss;
   unsigned char use_isc;
@@ -295,6 +296,7 @@ struct CommandDataStruct {
 
   double clin_el_trim;
   double enc_el_trim;
+  double enc_motor_el_trim;
   double null_az_trim;
   double mag_az_trim;
   double pss_az_trim;

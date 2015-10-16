@@ -250,6 +250,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case elclin_veto:
       CommandData.use_elclin = 0;
       break;
+    case elmotenc_veto:
+      CommandData.use_elmotenc = 0;
+      break;
+
 
     case pss_allow:
       CommandData.use_pss = 1;
@@ -265,6 +269,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case elenc_allow:
       CommandData.use_elenc = 1;
+      break;
+    case elmotenc_allow:
+      CommandData.use_elmotenc = 1;
       break;
     case elclin_allow:
       CommandData.use_elclin = 1;
