@@ -1208,7 +1208,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ele_gain.P = rvalues[0];
       if (rvalues[1] <= 0.005) {
           blast_err("You tried to set the Elevation Motor time constant to less than 5ms!  This is invalid, so we will assume you wanted a really long time.");
-          CommandData.ele_gain.I = 100.0;
+          CommandData.ele_gain.I = 1000.0;
       } else {
           CommandData.ele_gain.I = rvalues[1];
       }
@@ -1219,7 +1219,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.azi_gain.P = rvalues[0];
       if (rvalues[1] <= 0.005) {
             blast_err("You tried to set the Azimuth Motor time constant to less than 5ms!  This is invalid, so we will assume you wanted a really long time.");
-            CommandData.azi_gain.I = 100.0;
+            CommandData.azi_gain.I = 1000.0;
         } else {
             CommandData.azi_gain.I = rvalues[1];
         }
@@ -1871,7 +1871,7 @@ void InitCommandData()
 
   CommandData.az_accel = 0.4; 
 
-  CommandData.ele_gain.I = 0.014;
+  CommandData.ele_gain.I = 200;
   CommandData.ele_gain.P = 23.9;
   CommandData.ele_gain.D = 0;
   CommandData.ele_gain.PT = 200;
