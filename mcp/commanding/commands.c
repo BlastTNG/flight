@@ -1206,13 +1206,23 @@ void MultiCommand(enum multiCommand command, double *rvalues,
      ********* Pointing Motor Gains ******/
     case el_gain:   //ele gains
       CommandData.ele_gain.P = rvalues[0];
-      CommandData.ele_gain.I = rvalues[1];
+      if (rvalues[1] <= 0.005) {
+          blast_err("You tried to set the Elevation Motor time constant to less than 5ms!  This is invalid, so we will assume you wanted a really long time.");
+          CommandData.ele_gain.I = 100.0;
+      } else {
+          CommandData.ele_gain.I = rvalues[1];
+      }
       CommandData.ele_gain.D = rvalues[2];
       CommandData.ele_gain.PT = rvalues[3];
       break;
     case az_gain:   //az gains
       CommandData.azi_gain.P = rvalues[0];
-      CommandData.azi_gain.I = rvalues[1];
+      if (rvalues[1] <= 0.005) {
+            blast_err("You tried to set the Azimuth Motor time constant to less than 5ms!  This is invalid, so we will assume you wanted a really long time.");
+            CommandData.azi_gain.I = 100.0;
+        } else {
+            CommandData.azi_gain.I = rvalues[1];
+        }
       CommandData.azi_gain.D = rvalues[2];
       CommandData.azi_gain.PT = rvalues[3];
       break;
