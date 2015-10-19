@@ -55,7 +55,7 @@
 #define ECAT_TXPDO_MAPPING 0x1a00
 #define ECAT_RXPDO_MAPPING 0x1600
 
-#define ECAT_DC_CYCLE_NS 500000 /* Distributed Clock Cycle in nanoseconds */
+#define ECAT_DC_CYCLE_NS 1000000 /* Distributed Clock Cycle in nanoseconds */
 
 typedef union {
     uint32_t val;
@@ -80,13 +80,33 @@ static inline void map_pdo(pdo_mapping_t *m_map, uint16_t m_index, uint8_t m_sub
     m_map->size = m_bits;
 }
 
+/**
+ * Take a defined Object Index/Subindex and return just the index
+ * @param m_index
+ * @param m_subindex
+ */
+static inline uint16_t object_index(uint16_t m_index, uint8_t m_subindex)
+{
+    return m_index;
+}
+
+/**
+ * Take a defined Object Index/Subindex and return just the subindex
+ * @param m_index
+ * @param m_subindex
+ */
+static inline uint8_t object_subindex(uint16_t m_index, uint8_t m_subindex)
+{
+    return m_subindex;
+}
+
 typedef enum {
-    ECAT_MOTOR_COLD,
-    ECAT_MOTOR_INIT,
-    ECAT_MOTOR_FOUND_PARTIAL,
-    ECAT_MOTOR_FOUND,
-    ECAT_MOTOR_RUNNING_PARTIAL,
-    ECAT_MOTOR_RUNNING
+    ECAT_MOTOR_COLD,           //!< ECAT_MOTOR_COLD
+    ECAT_MOTOR_INIT,           //!< ECAT_MOTOR_INIT
+    ECAT_MOTOR_FOUND_PARTIAL,  //!< ECAT_MOTOR_FOUND_PARTIAL
+    ECAT_MOTOR_FOUND,          //!< ECAT_MOTOR_FOUND
+    ECAT_MOTOR_RUNNING_PARTIAL,//!< ECAT_MOTOR_RUNNING_PARTIAL
+    ECAT_MOTOR_RUNNING         //!< ECAT_MOTOR_RUNNING
 } ec_motor_state_t;
 
 

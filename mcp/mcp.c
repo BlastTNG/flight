@@ -99,8 +99,6 @@ void updateSlowDL(); // common/slowdl.c
 
 void InitSched();
 
-static FILE* logfile = NULL;
-
 //#ifndef BOLOTEST
 //struct frameBuffer {
 //  int i_in;
