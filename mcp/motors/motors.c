@@ -274,6 +274,7 @@ void write_motor_channels_5hz(void)
     static channel_t* gIElAddr;
     static channel_t* gDElAddr;
     static channel_t* gPtElAddr;
+    static channel_t* gDBElAddr;
 
     static channel_t* gPAzAddr;
     static channel_t* gIAzAddr;
@@ -321,6 +322,7 @@ void write_motor_channels_5hz(void)
         gIElAddr = channels_find_by_name("g_i_el");
         gDElAddr = channels_find_by_name("g_d_el");
         gPtElAddr = channels_find_by_name("g_pt_el");
+        gDBElAddr = channels_find_by_name("g_db_el");
 
         gPAzAddr = channels_find_by_name("g_p_az");
         gIAzAddr = channels_find_by_name("g_i_az");
@@ -370,6 +372,8 @@ void write_motor_channels_5hz(void)
     /* pointing gain term for elevation drive */
     SET_FLOAT(gPtElAddr, CommandData.ele_gain.PT);
     //TODO:Figure out what to do about the Pointing gain term
+    /* deadband for the el_motor integral term*/
+    SET_FLOAT(gDBElAddr, CommandData.ele_gain.DB);
 
     /***************************************************/
     /**            Azimuth Drive Motors              **/
@@ -1824,6 +1828,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     float K_p = 0.0;        //!< Proportional gain
     float T_i = 0.0;        //!< Integral time constant
     float T_d = 0.0;        //!< Derivative time constant
+	float I_db = 0.0;       //!< I_step deadband current
 
     float error_pv = 0.0;
     float P_term = 0.0;
@@ -1853,6 +1858,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     K_p = CommandData.ele_gain.P;
     T_i = CommandData.ele_gain.I;
     T_d = CommandData.ele_gain.D;
+    I_db = CommandData.ele_gain.DB; 
 
     /** 
      * The elevation error is the difference between the requested El velocity and
@@ -1868,12 +1874,20 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     /**
      * The I gain K_i = K_p / T_i where T_i is measured in seconds and therefore is
      * multiplied by the sample rate of the motors.  We implement a "bump-less"
-     * transfer here by accumulating the I_term_el
+     * transfer here by accumulating the I_term_el.  
      */
     I_step = error_pv * K_p / (T_i * MOTORSR);
+
+	/**
+	 * Check whether I_step is within the commanded deadband range.
+	 */
+	 
+    if (fabsf(I_step) < I_db) I_step = 0;
+    
     if (fabsf(I_step) > MAX_DI) {
         I_step = copysignf(MAX_DI, I_step);
     }
+
     
     /**
      * Our integral term exists to remove residual DC offset from the Proportional response,
