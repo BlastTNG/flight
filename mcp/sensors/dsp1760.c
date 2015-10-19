@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include <blast.h>
+#include <crc.h>
 #include <blast_comms.h>
 #include <comms_serial.h>
 #include <conversions.h>
@@ -105,9 +106,12 @@ static dsp_storage_t    gyro_data[2] = {{0}};
 ///TODO: Change gyros to output degrees
 static void dsp1760_newvals(dsp_storage_t *m_gyro)
 {
-    m_gyro->gyro_input[0][m_gyro->index] = to_degrees(m_gyro->packet.x) * DSP1760_1000HZ / DSP1760_GAIN;
-    m_gyro->gyro_input[1][m_gyro->index] = to_degrees(m_gyro->packet.y) * DSP1760_1000HZ / DSP1760_GAIN;
-    m_gyro->gyro_input[2][m_gyro->index] = to_degrees(m_gyro->packet.z) * DSP1760_1000HZ / DSP1760_GAIN;
+    if (m_gyro->packet.status & DSP1760_STATUS_MASK_GY1)
+        m_gyro->gyro_input[0][m_gyro->index] = to_degrees(m_gyro->packet.x) * DSP1760_1000HZ / DSP1760_GAIN;
+    if (m_gyro->packet.status & DSP1760_STATUS_MASK_GY2)
+        m_gyro->gyro_input[1][m_gyro->index] = to_degrees(m_gyro->packet.y) * DSP1760_1000HZ / DSP1760_GAIN;
+    if (m_gyro->packet.status & DSP1760_STATUS_MASK_GY3)
+        m_gyro->gyro_input[2][m_gyro->index] = to_degrees(m_gyro->packet.z) * DSP1760_1000HZ / DSP1760_GAIN;
 
     if (++(m_gyro->index) > DSP1760_NPOLES) m_gyro->index = 0;
 }
@@ -229,9 +233,30 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
                  break;
              }
              if (gyro->bpos == 36) {
+                 uint32_t crc_calc = 0xFFFFFFFF;
+                 bool invalid_data = false;
+
+                 crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
+                 if(crc_calc) {
+                     blast_warn("Received invalid CRC from Gyro %d", gyro->which);
+                     invalid_data = true;
+                 }
+
                  pkt->x_raw = ntohl(pkt->x_raw);
+                 if (isnanf(pkt->x)) {
+                     blast_warn("Received NaN from Gyro %d(X)", gyro->which);
+                     pkt->status &= (~DSP1760_STATUS_MASK_GY1);
+                 }
                  pkt->y_raw = ntohl(pkt->y_raw);
+                 if (isnanf(pkt->y)) {
+                     blast_warn("Received NaN from Gyro %d(Y)", gyro->which);
+                     pkt->status &= (~DSP1760_STATUS_MASK_GY2);
+                 }
                  pkt->z_raw = ntohl(pkt->z_raw);
+                 if (isnanf(pkt->z)) {
+                     blast_warn("Received NaN from Gyro %d(Z)", gyro->which);
+                     pkt->status &= (~DSP1760_STATUS_MASK_GY3);
+                 }
                  pkt->temp = ntohs(pkt->temp);
                  pkt->crc = ntohl(pkt->crc);
                  if (pkt->sequence != (++gyro->seq_number & 0x7F)) {
@@ -254,7 +279,7 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
                  gyro->bpos = 0;
                  //TODO: Add CRC Checking
 
-                 dsp1760_newvals(gyro);
+                 if (!invalid_data) dsp1760_newvals(gyro);
              }
          }
          else {
