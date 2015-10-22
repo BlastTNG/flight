@@ -666,10 +666,10 @@ static int motor_pdo_init(int m_slave)
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 1, map.val)) blast_err("Failed mapping!");
 
     map_pdo(&map, ECAT_CURRENT_ACTUAL, 16); // Measured current output
-    ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 2, map.val);
+    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 2, map.val)) blast_err("Failed mapping!");
 
     map_pdo(&map, ECAT_NET_STATUS, 16); // Network status
-    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 2, map.val)) blast_err("Failed mapping!");
+    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 3, map.val)) blast_err("Failed mapping!");
 
     if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 3)) blast_err("Failed mapping!"); /// Set the 0x1a03 map to contain 2 elements
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 4, ECAT_TXPDO_MAPPING + 3)) blast_err("Failed mapping!"); /// Set the 0x1a03 map to the fourth PDO
