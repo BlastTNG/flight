@@ -635,13 +635,11 @@ static int motor_pdo_init(int m_slave)
     /**
      * Second map (0x1a01 register)
      */
-    map_pdo(&map, ECAT_LOAD_STATUS, 32);    // Load Encoder Status bits for data stream
-    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
     map_pdo(&map, ECAT_ACTUAL_POSITION, 32); // Actual Position (load for El, duplicates ECAT_MOTOR_POSITION for others)
-    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val)) blast_err("Failed mapping!");
+    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2)) blast_err("Failed mapping!"); /// Set the 0x1a01 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 1)) blast_err("Failed mapping!"); /// Set the 0x1a01 map to contain 1 element
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) blast_err("Failed mapping!"); /// Set the 0x1a01 map to the second PDO
 
     /**
@@ -668,10 +666,8 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_CURRENT_ACTUAL, 16); // Measured current output
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 2, map.val)) blast_err("Failed mapping!");
 
-    map_pdo(&map, ECAT_NET_STATUS, 16); // Network status
-    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 3, map.val)) blast_err("Failed mapping!");
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 3)) blast_err("Failed mapping!"); /// Set the 0x1a03 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 2)) blast_err("Failed mapping!"); /// Set the 0x1a03 map to contain 2 elements
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 4, ECAT_TXPDO_MAPPING + 3)) blast_err("Failed mapping!"); /// Set the 0x1a03 map to the fourth PDO
 
     if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 4)) blast_err("Failed mapping!"); /// There are four maps in the TX PDOs
@@ -699,8 +695,8 @@ static int motor_pdo_init(int m_slave)
 
     ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 1); /// There is on map in the RX PDOs
 
-    ec_SDOwrite32(m_slave, 0x2420, 1, 0);
-//    ec_SDOwrite32(m_slave, 0x1010, 1, 0x65766173);
+    ec_SDOwrite32(m_slave, 0x2420, 0, 8);
+    ec_SDOwrite32(m_slave, 0x1010, 1, 0x65766173);
 
     return 0;
 }
@@ -779,7 +775,7 @@ static void motor_configure_timing(void)
         else {
             ec_dcsync0(i, false, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
         }
-        ec_SDOwrite32(i, 0x1C32, 1, 2);
+        ec_SDOwrite16(i, 0x1C32, 1, 0);
     }
 }
 
