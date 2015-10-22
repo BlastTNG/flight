@@ -63,6 +63,7 @@ struct GainStruct {
   float I;
   float D;
   float SP;
+  float DB; // Deadband the integral term
   float PT; // position velocity gain
   float friction;
 };
