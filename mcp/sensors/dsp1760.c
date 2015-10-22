@@ -259,12 +259,21 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
                  }
                  pkt->temp = ntohs(pkt->temp);
                  pkt->crc = ntohl(pkt->crc);
+
                  if (pkt->sequence != (++gyro->seq_number & 0x7F)) {
                      blast_warn("Expected Sequence %d but received %d from gyro %d", gyro->seq_number, pkt->sequence, gyro->which);
                      gyro->seq_error_count++;
                  }
                  gyro->packet_count++;
-                 gyro->seq_number = pkt->sequence;
+
+                 if (!invalid_data) {
+                      /***
+                       * Here, we reset the current sequence number but only if we received a valid packet from
+                       * the gyroscopes.  This allows us to reset the sequence numbering if we miss many packets
+                       * but doesn't screw up the sequence if we receive a malformed packet.
+                       */
+                     gyro->seq_number = pkt->sequence;
+                  }
 
                  /// Status is 1 if OK, 0 if faulty
                  gyro->gyro_invalid_packet_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
