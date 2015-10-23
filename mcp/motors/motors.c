@@ -2148,6 +2148,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (fabsf(I_term) > MAX_I) {
         I_term = copysignf(MAX_I, I_term);
     }
+    milliamp_return = P_rw_term + P_vel_term + I_term;
 
     // Calculate static friction offset term
     if (fabs(milliamp_return) < 100) {
@@ -2161,7 +2162,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     friction_out[0] = friction_out[1];
     friction_out[1] += (friction_in[1] - 0.951209595 * friction_in[0]);
 
-    milliamp_return = P_rw_term + P_vel_term + I_term + friction_out[1];
+    milliamp_return += friction_out[1];
 
     if (milliamp_return > MAX_PIV_CURRENT) milliamp_return = MAX_PIV_CURRENT;
     if (milliamp_return < MIN_PIV_CURRENT) milliamp_return = MIN_PIV_CURRENT;
