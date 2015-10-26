@@ -2151,7 +2151,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     milliamp_return = P_rw_term + P_vel_term + I_term;
 
     // Calculate static friction offset term
-    if (fabs(milliamp_return) < 100) {
+    if (fabs(milliamp_return) < 3) {
         friction = 0.0;
     }
     else {
