@@ -2157,10 +2157,18 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     else {
         friction = copysign(CommandData.pivot_gain.F, milliamp_return);
     }
+    /**
+     * This is a simple Butterworth low-pass filter with 200Hz input and -3dB frequency
+     * at 0.1Hz (637.62, 0.996863).  Additional terms (if we want to adjust:
+     * 0.2 Hz (319.31, 0.993737)
+     * 0.5 Hz (128.32, 0.984414)
+     * 1 Hz (64.6567, 0.969067)
+     * 1.5 Hz (43.4335, 0.95395)
+     */
     friction_in[0] = friction_in[1];
-    friction_in[1] = friction / 1.0250052;
+    friction_in[1] = friction / 637.62;
     friction_out[0] = friction_out[1];
-    friction_out[1] = friction_in[0] + friction_in[1] - 0.951209595 * friction_out[0];
+    friction_out[1] = friction_in[0] + friction_in[1] + 0.996863 * friction_out[0];
 
     milliamp_return += friction_out[1];
 
