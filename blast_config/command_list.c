@@ -538,7 +538,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"V_err Gain (prop)", 0, CMD_I_MAX, 'f', "G_PE_PIV"},
       {"V_RW Gain (prop)", 0, CMD_I_MAX, 'f', "G_PV_PIV"},
       {"V_RW Integral time", 0, 200, 'f', "G_IV_PIV"},
-      {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
+      {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_PIV"},
     }
   },
   {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 5,
