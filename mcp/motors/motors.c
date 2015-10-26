@@ -2158,9 +2158,9 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
         friction = copysign(CommandData.pivot_gain.F, milliamp_return);
     }
     friction_in[0] = friction_in[1];
-    friction_in[1] = friction * 1.0250052;
+    friction_in[1] = friction / 1.0250052;
     friction_out[0] = friction_out[1];
-    friction_out[1] += (friction_in[1] - 0.951209595 * friction_in[0]);
+    friction_out[1] = friction_in[0] + friction_in[1] - 0.951209595 * friction_out[0];
 
     milliamp_return += friction_out[1];
 
