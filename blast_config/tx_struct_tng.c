@@ -806,7 +806,6 @@ channel_t channel_list[] =
     { "g_p_az",               1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_i_az",               1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_d_az",               1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "g_db_az",              1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_pe_piv",             1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_pv_piv",             1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "g_iv_piv",             1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0 },

@@ -1226,7 +1226,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         }
       CommandData.azi_gain.D = rvalues[2];
       CommandData.azi_gain.PT = rvalues[3];
-      CommandData.azi_gain.DB = rvalues[4];      
       break;
     case pivot_gain:   //pivot gains
       CommandData.pivot_gain.SP = rvalues[0];

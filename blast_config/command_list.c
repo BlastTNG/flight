@@ -384,13 +384,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Set rate (deg/s)", 0, 30, 'f', "RATE_ATRIM"}
     }
   },
-  {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 5,
+  {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 4,
     {
       {"Proportional Gain", 0, CMD_I_MAX, 'f', "g_p_az"},
       {"Integral Time",     0, 200, 'f', "g_i_az"},
       {"Derivative Time",     0, 200, 'f', "g_d_az"},
       {"Pointing Gain", 0, CMD_I_MAX, 'f', "g_pt_az"},
-      {"Integral Term Deadband  (mA)",     0, 500, 'f', "G_DB_AZ"}      
     }
   },
   {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_GAIN, 1,
