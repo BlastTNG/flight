@@ -53,7 +53,7 @@ void Logger::init(Parameters::Manager& params, boost::posix_time::ptime& birthti
     *age = age_;
 
     string output_dir;
-    output_dir = params.general.try_get("main.output_dir", string("C:\\stars_data\\output"));		
+    output_dir = params.general.try_get("main.output_dir", string("D:\\"));		
     string dirname = (boost::format("%04d-%02d-%02d")
             % birthtime.date().year()
             % int(birthtime.date().month())
