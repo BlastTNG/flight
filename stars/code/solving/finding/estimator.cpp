@@ -145,7 +145,6 @@ void Estimator::calculate_basic_flux_and_base(Shared::Image::Raw& image, Blob& b
     double approximate_size = max(blob.approximate_size, 4.0);
     blob_width_squared = pow(approximate_size*1.5, 2.);
     hw = int(round(approximate_size*3.0));
-	
     umin = max(blob.u-hw, 0);
     umax = min(blob.u+hw, image.width);
     vmin = max(blob.v-hw, 0);
@@ -157,8 +156,8 @@ void Estimator::calculate_basic_flux_and_base(Shared::Image::Raw& image, Blob& b
     int flux_counter = 0;
     bool saturated = false;
     double peak = 0.0;
-    for (int u=umin; u<=umax; u++) {
-        for (int v=vmin; v<=vmax; v++) {
+    for (int u=umin; u<umax; u++) {
+        for (int v=vmin; v<vmax; v++) {
             if (image.pixels[v*image.width+u] >= (image.depth-1)) {
                 saturated = true;
             }
