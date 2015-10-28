@@ -178,7 +178,7 @@ void Visual::update()
 void Visual::draw3d(Position& pos, Size& scaling)
 {
     glBindTexture(GL_TEXTURE_2D, textures->get(Textures::drawing_3d)); // Bind 0
-
+	glDisable(GL_TEXTURE_2D);
     glPushMatrix();
     glViewport(pos.x*scaling.w, pos.y*scaling.h,
         width()*scaling.w, height()*scaling.h);
@@ -202,6 +202,7 @@ void Visual::draw3d(Position& pos, Size& scaling)
     glEnd();
 
     glPopMatrix();
+	glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0); // unBind 0
 
 }
@@ -274,6 +275,7 @@ void Visual::draw_blob_stripe(double intercept)
 {
     if (intercept < shared_status.width + shared_status.height) {
         glLineWidth(8.0);
+		glDisable(GL_TEXTURE_2D);
         glPushMatrix();
         glColor4f(0.3, 0.0, 1.0, 0.7);
         glBegin(GL_LINES);
@@ -298,6 +300,7 @@ void Visual::draw_blob_stripe(double intercept)
         }
         glEnd();
         glPopMatrix();
+		glEnable(GL_TEXTURE_2D);
         glLineWidth(2.0);
     }
 }
@@ -349,6 +352,7 @@ void Visual::draw_blobs(double age, double stripe_progress)
 void Visual::draw_base_sets(double stripe_progress)
 {
     using namespace Shared::Image;
+	glDisable(GL_TEXTURE_2D);
     glPushMatrix();
     glBindTexture(GL_TEXTURE_2D, textures->get(Textures::basic_drawing)); // Bind 3
     glScalef(width()/image_size.w, height()/image_size.h, 1);
@@ -362,6 +366,7 @@ void Visual::draw_base_sets(double stripe_progress)
     }
     glBindTexture(GL_TEXTURE_2D, 0); // unBind 3
     glPopMatrix();
+	glEnable(GL_TEXTURE_2D);
 }
 
 void Visual::draw(Position &pos, double flip_scaling)

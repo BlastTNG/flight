@@ -44,24 +44,27 @@ void Blob::draw(Size& size_, double global_age, double intercept, bool matched, 
         double age = timer.time();
         double scaling = 1.2;
         double angle = 0;
-
+		glDisable(GL_TEXTURE_2D);
         if (matched) {
             if (named) {
-                GL::Color4f(1.0, 0.8, 0.3, 1.0);
+				GL::Color4f(1.0, 0.8, 0.3, 1.0);
             } else {
                 GL::Color4f(1.0, 0.0, 0.3, 1.0);
             }
         } else {
             scaling = age*30.0 * exp(-age*11.0) + 1.0;
             angle = birth_angle + rotation_speed*global_age;
-            angle = fmod(angle, 360.);
+			angle = fmod(angle, 360.);
             GL::Color4f(0.75, 0.75, 1.0, 1.0);
         }
 
         glPushMatrix();
+		glLineWidth(2.0);
         glTranslatef((GLfloat) x, (GLfloat) y, 0);
         glRotatef((GLfloat) angle, 0, 0, 1);
         glScalef((GLfloat) scaling, (GLfloat) scaling, 1);
+		glColor3f(0.75f, 0.75f, 1.0f);
+		
         glBegin(GL_LINE_LOOP);
             glVertex2d(-halfsize, -halfsize);
             glVertex2d(-halfsize, halfsize);
@@ -69,6 +72,7 @@ void Blob::draw(Size& size_, double global_age, double intercept, bool matched, 
             glVertex2d(halfsize, -halfsize);
         glEnd();
         glPopMatrix();
+		glEnable(GL_TEXTURE_2D);
     }
 }
 

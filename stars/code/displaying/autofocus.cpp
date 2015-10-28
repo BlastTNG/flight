@@ -179,6 +179,7 @@ void Autofocus::draw(Position &position)
     double plot_height = height() - 2.0*plot_padding - 2.0*text_height;
     double plot_offset = 2.0 / plot_height;
 
+	glDisable(GL_TEXTURE_2D);
     glPushMatrix();
     glTranslatef((GLfloat) plot_padding, (GLfloat) (text_height+plot_padding), 0.0f);
     GL::Color4f(1.0, 1.0, 1.0, 1.0);
@@ -217,6 +218,7 @@ void Autofocus::draw(Position &position)
     }
 
     glPopMatrix();
+	glEnable(GL_TEXTURE_2D);
 
     Position text_pos;
     std::string focus_str;

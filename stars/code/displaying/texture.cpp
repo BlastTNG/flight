@@ -90,7 +90,7 @@ int Texture::bind_blank(int new_size, bool black)
 		if (new_size <= maxval) {						//added by KNS
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, new_size, new_size,
         //0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
-        0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, data);
 		}
 		else logger.log(format("Could not bind image of size %d > max %d") % new_size % maxval);
 	free(data);
@@ -107,7 +107,7 @@ void Texture::bind_data(char* data, int width, int height)
 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,
         //GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
-        GL_RGBA, GL_UNSIGNED_BYTE, data);
+        GL_BGRA_EXT, GL_UNSIGNED_BYTE, data);
 	if ((error = glGetError())) logger.log(format("glTexSubImage failed for %d x %d: %s") %width % height % error);
 	
 	used_width = double(width) / double(size);
