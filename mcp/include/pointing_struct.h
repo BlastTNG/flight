@@ -60,6 +60,7 @@ struct ACSDataStruct {
   double pss2_i3;   //counts
   double pss2_i4;   //counts
   double enc_elev;  // degrees
+  double enc_motor_elev;  // degrees
   double clin_elev; // counts
   double ifel_gy;   // deg/s
   double ifyaw_gy;  // deg/s
@@ -154,6 +155,8 @@ struct PointingDataStruct {
 
   double enc_el;
   double enc_sigma;
+  double enc_motor_el;
+  double enc_motor_sigma;
 
   double clin_el;
   double clin_el_lut;

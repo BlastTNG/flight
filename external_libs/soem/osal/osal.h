@@ -26,8 +26,12 @@
 
 /* General types */
 typedef uint8_t             boolean;
+#ifndef TRUE
 #define TRUE                1
+#endif
+#ifndef FALSE
 #define FALSE               0
+#endif
 typedef int8_t              int8;
 typedef int16_t             int16;
 typedef int32_t             int32;

@@ -92,6 +92,7 @@ derived_tng_t derived_list[] = {
   COMMENT("Pointing Stuff"),
   LINCOM("X_H_P", "x_p", 0.0003662109375, 0),
 
+  BITWORD("VETO_EL_MOTOR_ENC","veto_sensor",0,1),
   BITWORD("VETO_ISC","veto_sensor",1,1),
   BITWORD("VETO_EL_ENC","veto_sensor",2,1),
   BITWORD("VETO_MAG","veto_sensor",3,1),

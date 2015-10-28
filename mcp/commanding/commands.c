@@ -250,6 +250,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case elclin_veto:
       CommandData.use_elclin = 0;
       break;
+    case elmotenc_veto:
+      CommandData.use_elmotenc = 0;
+      break;
+
 
     case pss_allow:
       CommandData.use_pss = 1;
@@ -265,6 +269,9 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
     case elenc_allow:
       CommandData.use_elenc = 1;
+      break;
+    case elmotenc_allow:
+      CommandData.use_elmotenc = 1;
       break;
     case elclin_allow:
       CommandData.use_elclin = 1;
@@ -1199,13 +1206,24 @@ void MultiCommand(enum multiCommand command, double *rvalues,
      ********* Pointing Motor Gains ******/
     case el_gain:   //ele gains
       CommandData.ele_gain.P = rvalues[0];
-      CommandData.ele_gain.I = rvalues[1];
+      if (rvalues[1] <= 0.005) {
+          blast_err("You tried to set the Elevation Motor time constant to less than 5ms!  This is invalid, so we will assume you wanted a really long time.");
+          CommandData.ele_gain.I = 1000.0;
+      } else {
+          CommandData.ele_gain.I = rvalues[1];
+      }
       CommandData.ele_gain.D = rvalues[2];
       CommandData.ele_gain.PT = rvalues[3];
+      CommandData.ele_gain.DB = rvalues[4];      
       break;
     case az_gain:   //az gains
       CommandData.azi_gain.P = rvalues[0];
-      CommandData.azi_gain.I = rvalues[1];
+      if (rvalues[1] <= 0.005) {
+            blast_err("You tried to set the Azimuth Motor time constant to less than 5ms!  This is invalid, so we will assume you wanted a really long time.");
+            CommandData.azi_gain.I = 1000.0;
+        } else {
+            CommandData.azi_gain.I = rvalues[1];
+        }
       CommandData.azi_gain.D = rvalues[2];
       CommandData.azi_gain.PT = rvalues[3];
       break;
@@ -1854,10 +1872,11 @@ void InitCommandData()
 
   CommandData.az_accel = 0.4; 
 
-  CommandData.ele_gain.I = 0.014;
+  CommandData.ele_gain.I = 200;
   CommandData.ele_gain.P = 23.9;
   CommandData.ele_gain.D = 0;
   CommandData.ele_gain.PT = 200;
+  CommandData.ele_gain.DB = 0; 
 
   CommandData.azi_gain.P = 200;
   CommandData.azi_gain.I = 200;

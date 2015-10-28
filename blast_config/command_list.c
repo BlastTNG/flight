@@ -122,6 +122,8 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
   {COMMAND(elenc_veto), "veto elevation encoder", GR_VETO},
   {COMMAND(elenc_allow), "un-veto elevation encoder", GR_VETO},
+  {COMMAND(elmotenc_veto), "veto elevation motor encoder", GR_VETO},
+  {COMMAND(elmotenc_allow), "un-veto elevation motor encoder", GR_VETO},
   {COMMAND(isc_veto), "veto integrating star camera", GR_VETO},
   {COMMAND(isc_allow), "un-veto integrating star camera", GR_VETO},
   {COMMAND(osc_veto), "veto other star camera", GR_VETO},
@@ -387,7 +389,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Proportional Gain", 0, CMD_I_MAX, 'f', "g_p_az"},
       {"Integral Time",     0, 200, 'f', "g_i_az"},
       {"Derivative Time",     0, 200, 'f', "g_d_az"},
-      {"Pointing Gain", 0, CMD_I_MAX, 'f', "g_pt_az"}
+      {"Pointing Gain", 0, CMD_I_MAX, 'f', "g_pt_az"},
     }
   },
   {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_GAIN, 1,
@@ -535,15 +537,16 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"V_err Gain (prop)", 0, CMD_I_MAX, 'f', "G_PE_PIV"},
       {"V_RW Gain (prop)", 0, CMD_I_MAX, 'f', "G_PV_PIV"},
       {"V_RW Integral time", 0, 200, 'f', "G_IV_PIV"},
-      {"Static Friction offset",   0, 2, 'f', "FRICT_OFF_PIV"},
+      {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_PIV"},
     }
   },
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 4,
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 5,
     {
       {"Proportional Gain", 0, CMD_I_MAX, 'f', "G_P_EL"},
       {"Integral Time",     0, 200, 'f', "G_I_EL"},
       {"Derivative Time",   0, 200, 'f', "G_D_EL"},
-      {"Pointing Gain",     0, CMD_I_MAX, 'f', "G_PT_EL"}
+      {"Pointing Gain",     0, CMD_I_MAX, 'f', "G_PT_EL"},
+      {"Integral Term Deadband  (mA)",     0, 500, 'f', "G_DB_EL"}
     }
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,

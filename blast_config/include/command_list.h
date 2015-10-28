@@ -22,7 +22,7 @@
 
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 225        /* total number of single word cmds */
+#define N_SCOMMANDS 227        /* total number of single word cmds */
 #define N_MCOMMANDS 125        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
@@ -70,7 +70,7 @@ enum singleCommand {
   charcoal_off,     charcoal_on,        hs_charcoal_off,  hwpr_panic,
   hs_charcoal_on,   isc_discard_images, el_off,           el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
-  fixed,            isc_full_screen,
+  fixed,            isc_full_screen,    elmotenc_allow,   elmotenc_veto,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   isc_abort,        isc_allow,          isc_pause,        isc_reconnect,
   isc_run,          isc_shutdown,       isc_veto,         level_off,

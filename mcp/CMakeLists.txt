@@ -187,14 +187,23 @@ add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
 
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
+define_file_basename_for_sources(pointing)
 add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
+define_file_basename_for_sources(motors)
 add_library (sensors OBJECT ${SENSOR_SRCS} ${SENSOR_HEADERS})
+define_file_basename_for_sources(sensors)
 add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
+define_file_basename_for_sources(commanding)
 add_library (mcp_comms OBJECT ${MCP_COMMS_SRCS} ${MCP_COMMS_HEADERS})
+define_file_basename_for_sources(mcp_comms)
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
+define_file_basename_for_sources(housekeeping)
 add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
+define_file_basename_for_sources(framing)
 add_library (blast_common OBJECT ${MCP_COMMON_SRCS} ${MCP_COMMON_HEADERS})
+define_file_basename_for_sources(blast_common)
 add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
+define_file_basename_for_sources(blast_comms)
 
 # add mcp objects
 add_library(mcp_obj OBJECT 

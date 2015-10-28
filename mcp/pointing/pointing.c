@@ -929,6 +929,18 @@ void Pointing(void)
     0, 0, // n_solutions, since_last
     NULL // firstruct					
   };
+  static struct ElSolutionStruct EncMotEl = {0.0, // starting angle
+    360.0 * 360.0, // starting variance
+    1.0 / M2DV(60), //sample weight
+    M2DV(20), // systematic variance
+    0.0, // trim
+    0.0, // last input
+    0.0, // gy integral
+    OFFSET_GY_IFEL, // gy offset
+    0.0001, // filter constant
+    0, 0, // n_solutions, since_last
+    NULL // firstruct					
+  };
   static struct ElSolutionStruct ClinEl = {0.0, // starting angle
     360.0 * 360.0, // starting variance
     1.0 / M2DV(60), //sample weight
@@ -1030,6 +1042,7 @@ void Pointing(void)
         firsttime = 0;
         ClinEl.trim = CommandData.clin_el_trim;
         EncEl.trim = CommandData.enc_el_trim;
+        EncMotEl.trim = CommandData.enc_motor_el_trim;
         NullAz.trim = CommandData.null_az_trim;
         MagAz.trim = CommandData.mag_az_trim;
         PSSAz.trim = CommandData.pss_az_trim;
@@ -1038,6 +1051,8 @@ void Pointing(void)
         initFir(ClinEl.fs, FIR_LENGTH);
         EncEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         initFir(EncEl.fs, FIR_LENGTH);
+        EncMotEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(EncMotEl.fs, FIR_LENGTH);
 
         NullAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         NullAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
@@ -1152,9 +1167,15 @@ void Pointing(void)
     EvolveElSolution(&EncEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             ACSData.enc_elev, 1);
+    EvolveElSolution(&EncMotEl, RG.ifel_gy,
+            PointingData[i_point_read].offset_ifel_gy,
+            ACSData.enc_motor_elev, 1);
 
     if (CommandData.use_elenc) {
         AddElSolution(&ElAtt, &EncEl, 1);
+    }
+    if (CommandData.use_elmotenc) {
+        AddElSolution(&ElAtt, &EncMotEl, 1);
     }
 
     if (CommandData.use_elclin) {
@@ -1259,6 +1280,8 @@ void Pointing(void)
     //  if (j%500==0) blast_info("Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
     PointingData[point_index].enc_el = EncEl.angle;
     PointingData[point_index].enc_sigma = sqrt(EncEl.variance + EncEl.sys_var);
+    PointingData[point_index].enc_motor_el = EncMotEl.angle;
+    PointingData[point_index].enc_motor_sigma = sqrt(EncMotEl.variance + EncMotEl.sys_var);
     PointingData[point_index].clin_el = ClinEl.angle;
     PointingData[point_index].clin_sigma = sqrt(ClinEl.variance + ClinEl.sys_var);
 
@@ -1292,6 +1315,7 @@ void Pointing(void)
     if (NewAzEl.fresh == -1) {
         ClinEl.trim = 0.0;
         EncEl.trim = 0.0;
+        EncMotEl.trim = 0.0;
         NullAz.trim = 0.0;
         MagAz.trim = 0.0;
         PSSAz.trim = 0.0;
@@ -1312,6 +1336,13 @@ void Pointing(void)
         else if (trim_change < -NewAzEl.rate)
             trim_change = -NewAzEl.rate;
         EncEl.trim += trim_change;
+
+        trim_change = (NewAzEl.el - EncMotEl.angle) - EncMotEl.trim;
+        if (trim_change > NewAzEl.rate)
+            trim_change = NewAzEl.rate;
+        else if (trim_change < -NewAzEl.rate)
+            trim_change = -NewAzEl.rate;
+        EncMotEl.trim += trim_change;
 
         trim_change = (NewAzEl.az - NullAz.angle) - NullAz.trim;
         if (trim_change > NewAzEl.rate)
@@ -1343,6 +1374,7 @@ void Pointing(void)
 
     CommandData.clin_el_trim = ClinEl.trim;
     CommandData.enc_el_trim = EncEl.trim;
+    CommandData.enc_motor_el_trim = EncMotEl.trim;
     CommandData.null_az_trim = NullAz.trim;
     CommandData.mag_az_trim = MagAz.trim;
     CommandData.pss_az_trim = PSSAz.trim;
