@@ -201,8 +201,7 @@ void comms_net_async_ctx_free(comms_net_async_ctx_t *m_ctx)
 }
 
 /**
- * Resizes the asynchronous handler array.  This can resize up or down in value.  If #m_size is zero, then
- * the polling sockets and asynchronous handlers are freed.
+ * Resizes the asynchronous handler array.  This can resize up or down in value.
  * @param m_ctx Pointer to the polling context
  * @param m_size Number of asynchronous handlers (and sockets) to allocate in the context
  * @return NETSOCK_OK on success, NETSOCK_ERR on failure
@@ -217,8 +216,9 @@ static int comms_net_async_ctx_resize(comms_net_async_ctx_t *m_ctx, size_t m_siz
 	{
 		if (!m_size)
 		{
-			BLAST_SAFE_FREE(m_ctx->async_handlers);
-			BLAST_SAFE_FREE(m_ctx->pollfds);
+			blast_err("Tried to resize async context to zero!  You really want comms_net_async_ctx_free()");
+			log_leave("Invalid m_size");
+			return NETSOCK_ERR;
 		}
 		else
 		{
