@@ -4,6 +4,7 @@ set(HOUSEKEEPING_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/computer_sensors.c
     ${CMAKE_CURRENT_SOURCE_DIR}/flcdataswap.c
     ${CMAKE_CURRENT_SOURCE_DIR}/therm_heater.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/watchdog.c
     PARENT_SCOPE
 )
 set(HOUSEKEEPING_HEADERS
@@ -11,5 +12,6 @@ set(HOUSEKEEPING_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/computer_sensors.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/flcdataswap.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/therm_heater.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/watchdog.h
    PARENT_SCOPE
 )

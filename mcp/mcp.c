@@ -63,6 +63,7 @@
 #include <framing.h>
 #include <hwpr.h>
 #include <motors.h>
+#include <watchdog.h>
 #include <xsc_network.h>
 
 /* Define global variables */
@@ -342,6 +343,7 @@ static void mcp_100hz_routines(void)
 }
 static void mcp_5hz_routines(void)
 {
+    watchdog_ping();
     read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
@@ -496,6 +498,8 @@ int main(int argc, char *argv[])
 //  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
 //  start_flc_data_swapper(flc_ip[SouthIAm]);
+
+  initialize_watchdog(2);
 
   clock_gettime(CLOCK_REALTIME, &ts);
   while (1) {
