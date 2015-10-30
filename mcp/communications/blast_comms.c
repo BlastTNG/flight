@@ -100,7 +100,6 @@ bool initialize_blast_comms(void)
 
 static void *blast_comms_monitor(void *m_arg __attribute__((unused)))
 {
-    int ret;
     struct timespec ts;
     struct timespec interval_ts = { .tv_sec = 0,
                                     .tv_nsec = 1000000}; /// 1000HZ interval
@@ -110,6 +109,7 @@ static void *blast_comms_monitor(void *m_arg __attribute__((unused)))
     clock_gettime(CLOCK_REALTIME, &ts);
 
     do {
+        int ret;
         /// Set our wakeup time
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);

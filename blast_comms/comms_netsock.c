@@ -346,17 +346,17 @@ comms_socket_t *comms_sock_new(void)
 	sock->fd = INVALID_SOCK;
 	sock->last_errno = -1;
 	sock->is_socket = true;
-	sock->in_buffer = comms_netbuf_new();
+	sock->in_buffer = netbuf_new(1, 4*1024*1024);
 	if (!sock->in_buffer)
 	{
 		BLAST_SAFE_FREE(sock);
 		blast_err("Could not allocate in_buffer");
 		return NULL;
 	}
-	sock->out_buffer = comms_netbuf_new();
+	sock->out_buffer = netbuf_new(1, 1024*1024);
 	if (!sock->out_buffer)
 	{
-		comms_netbuf_free(sock->in_buffer);
+		netbuf_free(sock->in_buffer);
 		BLAST_SAFE_FREE(sock);
 		log_leave("Could not allocate out_buffer");
 		return NULL;
@@ -383,8 +383,8 @@ void comms_sock_reset(comms_socket_t **m_sock)
 	(*m_sock)->fd = INVALID_SOCK;
 	(*m_sock)->last_errno = -1;
 	(*m_sock)->is_socket = true;
-	comms_netbuf_reinit((*m_sock)->in_buffer);
-	comms_netbuf_reinit((*m_sock)->out_buffer);
+	netbuf_reinit((*m_sock)->in_buffer);
+	netbuf_reinit((*m_sock)->out_buffer);
 	(*m_sock)->can_read = false;
 	(*m_sock)->can_write = false;
 	(*m_sock)->have_exception = false;
@@ -490,16 +490,27 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 		 */
 		if (retval > 0)
 		{
-			comms_netbuf_add(sock->in_buffer, buffer, retval);
+		    size_t written = netbuf_write(sock->in_buffer, buffer, retval);
+		    size_t to_write = retval - written;
 			if (sock->callbacks && sock->callbacks->data)
 			{
-				retval = sock->callbacks->data(	comms_netbuf_get_head(sock->in_buffer),
-												comms_netbuf_remaining(sock->in_buffer),
-												sock->callbacks->priv);
+			    void *data;
+			    size_t len = netbuf_peek(sock->in_buffer, &data);
 
-				if (retval > 0) comms_netbuf_eat(sock->in_buffer, retval);
+			    if (len) {
+                    retval = sock->callbacks->data(	data, len,
+                                                    sock->callbacks->priv);
 
-				if (comms_netbuf_remaining(sock->in_buffer) > 0) comms_net_async_add_events(m_handle, POLLIN);
+                    if (retval > 0) netbuf_eat(sock->in_buffer, retval);
+
+                    if (netbuf_bytes_available(sock->in_buffer)) comms_net_async_add_events(m_handle, POLLIN);
+                    free(data);
+			    }
+			}
+			/// If we didn't get everything in, try one more time
+			if (to_write) {
+			    if (netbuf_write(sock->in_buffer, buffer + written, to_write))
+			        blast_warn("Discarding data due to overfull in_buffer on %s", sock->host?sock->host:"(NULL)");
 			}
 		}
 	}
@@ -507,9 +518,14 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 	{
 		if (sock->callbacks && sock->callbacks->finished)
 		{
-			sock->callbacks->finished(	comms_netbuf_get_head(sock->in_buffer),
-										comms_netbuf_remaining(sock->in_buffer),
-										sock->callbacks->priv);
+            void *data;
+            size_t len = netbuf_peek(sock->in_buffer, &data);
+
+            if (len) {
+                sock->callbacks->finished( data, len, sock->callbacks->priv);
+                netbuf_eat(sock->in_buffer, len);
+                free(data);
+            }
 		}
 		log_leave();
 		return NETSOCK_OK;
@@ -534,7 +550,7 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 		sock->can_write = true;
 		comms_net_async_del_events(m_handle, POLLOUT);
 
-		if (comms_netbuf_remaining(sock->out_buffer))
+		if (netbuf_bytes_available(sock->out_buffer))
 		{
 			comms_sock_flush(sock);
 		}
@@ -569,8 +585,8 @@ void comms_sock_free(comms_socket_t *m_sock)
 	}
 
 	comms_sock_close(m_sock);
-	comms_netbuf_free(m_sock->in_buffer);
-	comms_netbuf_free(m_sock->out_buffer);
+	netbuf_free(m_sock->in_buffer);
+	netbuf_free(m_sock->out_buffer);
 	BLAST_SAFE_FREE(m_sock->host);
 	BLAST_SAFE_FREE(m_sock);
 	log_leave("Freed");
@@ -685,9 +701,9 @@ int comms_sock_write(comms_socket_t *m_sock, const void *m_buf, size_t m_len)
 {
 	if (m_len)
 	{
-		if (comms_netbuf_add(m_sock->out_buffer, m_buf, m_len) < 0)
+		if (!netbuf_write(m_sock->out_buffer, m_buf, m_len))
 		{
-			blast_err("Could not buffer data!");
+			blast_err("Could not buffer data on %s", m_sock->host?m_sock->host:"(NULL)");
 			return NETSOCK_ERR;
 		}
 		return comms_sock_flush(m_sock);
@@ -712,7 +728,7 @@ int comms_sock_flush(comms_socket_t *m_sock)
 	}
 
 
-	len = comms_netbuf_remaining(m_sock->out_buffer);
+	len = netbuf_bytes_available(m_sock->out_buffer);
 	if (m_sock->poll_handle && len > 0)
 	{
 		if (!__sync_lock_test_and_set(&m_sock->can_write, false))
@@ -722,22 +738,28 @@ int comms_sock_flush(comms_socket_t *m_sock)
 			return NETSOCK_AGAIN;
 		}
 
-		retval = comms_sock_raw_write(m_sock, comms_netbuf_get_head(m_sock->out_buffer), len);
-		if (retval < 0)
-		{
-			comms_sock_close(m_sock);
-			blast_err("Could not write socket: %s", strerror(m_sock->last_errno));
-			log_leave();
-			return NETSOCK_ERR;
-		}
-		comms_netbuf_eat(m_sock->out_buffer, retval);
+        void *data;
+        len = netbuf_peek(m_sock->out_buffer, &data);
+
+        if (len) {
+            retval = comms_sock_raw_write(m_sock, data, len);
+            free(data);
+            if (retval < 0)
+            {
+                comms_sock_close(m_sock);
+                blast_err("Could not write socket: %s", strerror(m_sock->last_errno));
+                log_leave();
+                return NETSOCK_ERR;
+            }
+            netbuf_eat(m_sock->out_buffer, retval);
+        }
 	}
 
 	/**
 	 * If we have data left to write to the socket, then we force the POLLOUT event to allow
 	 * our async handler to catch and process the data in the next poll call.
 	 */
-	len = comms_netbuf_remaining(m_sock->out_buffer);
+	len = netbuf_bytes_available(m_sock->out_buffer);
 	if (m_sock->poll_handle && len > 0)
 	{
 		comms_net_async_add_events(m_sock->poll_handle, POLLOUT);

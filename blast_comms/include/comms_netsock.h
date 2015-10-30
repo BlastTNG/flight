@@ -62,8 +62,8 @@ typedef struct comms_socket
     int udp;
 
     e_comms_socket_state state;
-    comms_netbuf_t *out_buffer;
-    comms_netbuf_t *in_buffer;
+    netbuf_t *out_buffer;
+    netbuf_t *in_buffer;
 
     void *priv_data;
 

@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <glib.h>
 
 #include <pointing_struct.h>
 #include <blast.h>
@@ -40,6 +41,99 @@
 #include "blast_sip_interface_internal.h"
 
 
+static gint sip_segment_compare (gconstpointer  a, gconstpointer  b) {
+    blast_seg_pkt_hdr_t *seg_a = (blast_seg_pkt_hdr_t *)a;
+    blast_seg_pkt_hdr_t *seg_b = (blast_seg_pkt_hdr_t *)b;
+
+    if (seg_a->seg_id == seg_b->seg_id)
+        return (seg_a->seg_num > seg_b->seg_num) - (seg_a->seg_num < seg_b->seg_num);
+    else
+        return (seg_a->seg_id > seg_b->seg_id) - (seg_a->seg_id < seg_b->seg_id);
+}
+
+/**
+ * Removes all elements from the segment linked list with a given id
+ * @param m_list Pinter to the Linked List of packet fragments
+ * @param m_id Packet segment group id
+ */
+static inline void sip_segment_remove_id(GList *m_list, uint8_t m_id) {
+    GList *iter = m_list;
+    while (iter) {
+        GList *next = iter->next;
+        blast_seg_pkt_hdr_t *segment = (blast_seg_pkt_hdr_t*)(iter->data);
+        if (segment->seg_id == m_id) {
+            free(iter->data);
+            m_list = g_list_delete_link(m_list, iter);
+        }
+        iter = next;
+    }
+}
+
+/**
+ * Iterates through the linked list of segments building a full packet if available
+ * @param m_list Linked List of packet fragments
+ * @return NULL if no complete packet found.  Pointer to a newly allocated, full BLAST
+ *          packet if available.  Must be freed by calling function
+ */
+static blast_master_packet_t *sip_segment_get_complete_packet(GList *m_list)
+{
+    GList *iter = m_list;
+    uint8_t id = 0;
+    size_t pkt_count;
+    uint8_t *p;
+    blast_master_packet_t *retval = NULL;
+    bool found_packet = false;
+
+    if (!m_list)
+        return NULL;
+
+    while (1) {
+        /**
+         * This is our reset condition that finds new packets
+         */
+        if (id != ((blast_seg_pkt_hdr_t*) (iter->data))->seg_id) {
+            BLAST_SAFE_FREE(retval);
+            id = ((blast_seg_pkt_hdr_t*) (iter->data))->seg_id;
+            pkt_count = BLAST_MASTER_PACKET_SEGMENT_COUNT((blast_seg_pkt_hdr_t*) (iter->data));
+
+            /**
+             * If we might have enough data in the list, optimistically allocate the packet and begin filling it.
+             * We allocate more memory than we will need, allowing us to avoid unnecessary logical gymnastics to get
+             * the exact byte count.  Instead, since we expect a certain number of packets than can be no more than
+             * 255 bytes, we simply allocate this amount as the extra bytes are trivial.
+             */
+            if (pkt_count < g_list_length(m_list))
+                break;
+            p = calloc(pkt_count, 255);
+            retval = (blast_master_packet_t*) p;
+            memcpy(p, iter->data, sizeof(blast_master_packet_t));
+            p += sizeof(blast_master_packet_t);
+        }
+
+        memcpy(p, BLAST_SEGMENT_PACKET_PAYLOAD(iter->data), 255 - sizeof(blast_seg_pkt_hdr_t));
+        p += (255 - sizeof(blast_seg_pkt_hdr_t));
+        if (--pkt_count <= 0) {  /// This is our success condition
+            found_packet = true;
+            break;
+        }
+
+        iter = iter->next;
+        /// This is our failure condition
+        if (!iter)
+            break;
+    }
+
+    /**
+     * If we have successfully extracted a full packet, it is stored in *p and we remove all of its
+     * elements from our list
+     */
+    if (found_packet)
+        sip_segment_remove_id(m_list, id);
+    else
+        BLAST_SAFE_FREE(retval);
+
+    return retval;
+}
 
 /**
  * Initialize the SIP monitoring/communication system.  Opens both COMM ports and connects them to the
@@ -274,12 +368,14 @@ static ssize_t SIP_RECV_MSG_CMD_CALLBACK (const uint8_t* m_data, size_t m_len)
 {
 	sip_science_cmd_t *cmd_pkt = (sip_science_cmd_t*)m_data;
 	blast_master_packet_t *header;
-	static comms_netbuf_t *buffer = NULL;
+	bool free_header = false;
+	static GList *upload_llist = NULL;
 	ssize_t consumed = 0;
 
 	blast_dbg("Received command packet with %u bytes over SIP connection", (unsigned) cmd_pkt->length);
 
-	if (!buffer) buffer = comms_netbuf_new();
+	if (!upload_llist) upload_llist = g_list_alloc();
+
 	/**
 	 * m_len counts the packet + sip_header (2 bytes) + length byte + terminating byte
 	 * cmd_pkt->length counts just the packet data
@@ -301,49 +397,54 @@ static ssize_t SIP_RECV_MSG_CMD_CALLBACK (const uint8_t* m_data, size_t m_len)
 		return 1;
 	}
 
-	/**
-	 * Place the packet data in our netbuffer.  We don't yet know whether we have full packets or not, so the full SIP
-	 * packet content gets buffered, which we then use for determining whether we have the full BLAST packet (which may
-	 * be larger).
-	 *
-	 * If we are still waiting for more data, consume the SIP packet out of the serial queue and await the next packet, which
-	 * should contain further segments for the full BLAST packet
-	 */
-	comms_netbuf_add(buffer, cmd_pkt->data, cmd_pkt->length);
-	consumed = cmd_pkt->length + 4; /// This represents the start byte, id byte, length byte and end byte (plus data length)
-
-	header = (blast_master_packet_t*)comms_netbuf_get_head(buffer);
-	while (header->magic != BLAST_MAGIC8
-			|| header->version != 1
-			|| header->length > 255)
+	header = (blast_master_packet_t*)(cmd_pkt->data);
+	if (header->magic != BLAST_MAGIC8
+			|| header->version != 2)
 	{
-		if (!comms_netbuf_eat(buffer, 1))
-		{
-			blast_warn("Reached end of SIP command buffer without EBEX start byte");
-			return consumed;
-		}
-		header = (blast_master_packet_t*)comms_netbuf_get_head(buffer);
+	    blast_warn("Received invalid packet over SIP.  Magic byte 0x%02X and version %d", header->magic, header->version);
+	    /// Consume 1 byte here to revert to searching for the SIP start byte.
+	    return 1;
 	}
-	if (comms_netbuf_remaining(buffer) < BLAST_MASTER_PACKET_FULL_LENGTH(header))
-		return consumed;
 
+	/**
+	 * If we have a multiple-packet chunk, add it to the linked list of chunks.
+	 */
+
+	if (header->multi_packet) {
+	    blast_seg_pkt_hdr_t *segment = calloc(1,255);
+	    memcpy(segment, header, cmd_pkt->length);
+	    /// The only packet that _could_ be smaller than 255 in a segmented packet is the last one.
+	    /// We place the smaller length in the cmd_pkt header to note this for rebuilding.
+	    if (cmd_pkt->length < 255) segment->header.length = cmd_pkt->length;
+	    g_list_insert_sorted(upload_llist, segment, sip_segment_compare);
+
+	    /**
+	     * Since we just received a new multi-packet, it is a good time to check for the full packet in our
+	     * linked list.
+	     */
+
+	    if ((header = sip_segment_get_complete_packet(upload_llist)) != NULL) {
+	        free_header = true;
+	    }
+
+	}
 
 	/**
 	 * If the CRC doesn't match, we abort now and consume the first byte of the payload.  This allows us to re-try the
-	 * buffered payload, looking for the next EBEX start byte.  However, note that this will not occur until we receive
+	 * buffered payload, looking for the next BLAST start byte.  However, note that this will not occur until we receive
 	 * further command data over the SIP
 	 */
 	if (crc32(BLAST_MAGIC32, BLAST_MASTER_PACKET_PAYLOAD(header), header->length) !=
 			BLAST_MASTER_PACKET_CRC(header))
 	{
-		blast_err("Mismatched CRC in uplink packet");
-		comms_netbuf_eat(buffer, 1);
+		blast_err("Mismatched CRC in uplink packet 0x%08X", BLAST_MASTER_PACKET_CRC(header));
+		if (free_header) free(header);
 		return consumed;
 	}
 
 
 	//TODO: Add packet processing
-//	comms_netbuf_eat(buffer, ebex_process_packet(header));
+//	netbuf_eat(buffer, ebex_process_packet(header));
 
 	return consumed;
 }
