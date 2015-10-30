@@ -337,6 +337,8 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
+
+    framing_publish_200hz();
 }
 static void mcp_100hz_routines(void)
 {
@@ -350,6 +352,8 @@ static void mcp_100hz_routines(void)
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();
+
+    framing_publish_100hz();
 }
 static void mcp_5hz_routines(void)
 {
@@ -367,6 +371,8 @@ static void mcp_5hz_routines(void)
 //    ControlPower();
 //    VideoTx();
 //    cameraFields();
+
+    framing_publish_5hz();
 }
 static void mcp_1hz_routines(void)
 {
@@ -374,6 +380,7 @@ static void mcp_1hz_routines(void)
     blast_store_disk_space();
     xsc_write_data(0);
     xsc_write_data(1);
+    framing_publish_1hz();
 }
 
 int main(int argc, char *argv[])
@@ -383,7 +390,6 @@ int main(int argc, char *argv[])
 //  pthread_t abus_id;
   int use_starcams = 1;
 
-  int ret;
   int counter_100hz = 0;
   int counter_5hz=0;
   int counter_1hz=0;
@@ -507,6 +513,7 @@ int main(int argc, char *argv[])
 
   clock_gettime(CLOCK_REALTIME, &ts);
   while (1) {
+      int ret;
       /// Set our wakeup time
       ts = timespec_add(ts, interval_ts);
       ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
@@ -530,6 +537,8 @@ int main(int argc, char *argv[])
           mcp_100hz_routines();
       }
       mcp_200hz_routines();
+
+      framing_push();
 
   }
   return(0);
