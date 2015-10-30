@@ -100,19 +100,6 @@ void updateSlowDL(); // common/slowdl.c
 
 void InitSched();
 
-//#ifndef BOLOTEST
-//struct frameBuffer {
-//  int i_in;
-//  int i_out;
-//  unsigned short *framelist[BI0_FRAME_BUFLEN];
-//  unsigned short** slow_data_list[BI0_FRAME_BUFLEN];
-//};
-//
-//static struct frameBuffer bi0_buffer;
-//struct frameBuffer hiGain_buffer;
-//
-//#endif
-
 time_t biphase_timer;
 int biphase_is_on = 0;
 
@@ -347,8 +334,6 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-//    ControlGyroHeat();
-//    write_motor_channels_100hz();
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();
@@ -386,8 +371,6 @@ static void mcp_1hz_routines(void)
 int main(int argc, char *argv[])
 {
   pthread_t CommandDatacomm1;
-//  pthread_t disk_id;
-//  pthread_t abus_id;
   int use_starcams = 1;
 
   int counter_100hz = 0;
@@ -421,6 +404,10 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
+  if(geteuid() != 0) {
+      fprintf(stderr, "Sorry!  MCP needs to be run with root privileges.  Try `sudo ./mcp`");
+      exit(0);
+  }
   umask(0);  /* clear umask */
 
   start_time_s = time(&start_time_s);
@@ -478,7 +465,6 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
-//  InitialiseFrameFile(argv[1][0]);
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
 //  signal(SIGHUP, CloseBBC);
