@@ -243,6 +243,7 @@ static void *blast_comms_network_monitor(void *m_arg __attribute__((unused)))
 	comms_socket_t *new_cmd = NULL;
 	int fd = 0;
 
+	nameThread("CmdNetMon");
 	pthread_cleanup_push(blast_comms_monitor_cleanup, cmd_sock);
 	if (!(cmd_sock = comms_sock_new()))
 	{
