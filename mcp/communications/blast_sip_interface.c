@@ -94,7 +94,7 @@ static blast_master_packet_t *sip_segment_get_complete_packet(GList *m_list)
         if (id != ((blast_seg_pkt_hdr_t*) (iter->data))->seg_id) {
             BLAST_SAFE_FREE(retval);
             id = ((blast_seg_pkt_hdr_t*) (iter->data))->seg_id;
-            pkt_count = BLAST_MASTER_PACKET_SEGMENT_COUNT((blast_seg_pkt_hdr_t*) (iter->data));
+            pkt_count = BLAST_SEGMENT_PACKET_COUNT((blast_seg_pkt_hdr_t*) (iter->data));
 
             /**
              * If we might have enough data in the list, optimistically allocate the packet and begin filling it.
@@ -186,7 +186,6 @@ bool initialize_sip_interface(void)
 		comms_serial_setspeed(sip_comm2, B1200);
 		if (comms_serial_connect(sip_comm2, SIP_PORT_2) != NETSOCK_OK)
 		{
-			bfree(err, sip_comm2->sock.callbacks);
 			comms_serial_free(sip_comm2);
 			sip_comm2 = NULL;
 		}
