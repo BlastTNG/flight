@@ -274,14 +274,12 @@ static void *blast_comms_network_monitor(void *m_arg __attribute__((unused)))
 			default:
 				new_cmd = comms_sock_new();
 				new_cmd->host = bstrdup(err, cmd_sock->host);
-				new_cmd->callbacks = balloc(err, sizeof(netsock_callbacks_t));
-				BLAST_ZERO_P(new_cmd->callbacks);
 
-				new_cmd->callbacks->priv = new_cmd;
-				new_cmd->callbacks->connected = blast_comms_net_new_connection;
-				new_cmd->callbacks->data = blast_comms_net_process_data;
-				new_cmd->callbacks->finished = blast_comms_net_cleanup;
-				new_cmd->callbacks->error = blast_comms_net_error;
+				new_cmd->callbacks.priv = new_cmd;
+				new_cmd->callbacks.connected = blast_comms_net_new_connection;
+				new_cmd->callbacks.data = blast_comms_net_process_data;
+				new_cmd->callbacks.finished = blast_comms_net_cleanup;
+				new_cmd->callbacks.error = blast_comms_net_error;
 
 				new_cmd->fd = fd;
 				new_cmd->state = NETSOCK_STATE_CONNECTING;
@@ -351,7 +349,6 @@ static int blast_comms_net_cleanup(const void *m_data, size_t m_len, void *m_use
 
 	if (consumed < m_len) blast_err("Did not receive full packet from %s", socket->host);
 
-	BLAST_SAFE_FREE(socket->callbacks);
 	comms_sock_free(socket);
 	socket = NULL;
 

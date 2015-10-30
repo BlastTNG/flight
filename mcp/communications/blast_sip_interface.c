@@ -157,17 +157,14 @@ bool initialize_sip_interface(void)
 
 	if (sip_comm1)
 	{
-		sip_comm1->sock->callbacks = balloc(err, sizeof(netsock_callbacks_t));
-		BLAST_ZERO_P(sip_comm1->sock->callbacks);
-		sip_comm1->sock->callbacks->data = blast_sip_process_data;
-		sip_comm1->sock->callbacks->error = blast_sip_handle_error;
-		sip_comm1->sock->callbacks->finished = blast_sip_handle_finished;
-		sip_comm1->sock->callbacks->priv = sip_comm1;
+		sip_comm1->sock->callbacks.data = blast_sip_process_data;
+		sip_comm1->sock->callbacks.error = blast_sip_handle_error;
+		sip_comm1->sock->callbacks.finished = blast_sip_handle_finished;
+		sip_comm1->sock->callbacks.priv = sip_comm1;
 
 		comms_serial_setspeed(sip_comm1, B1200);
 		if (comms_serial_connect(sip_comm1, SIP_PORT_1) != NETSOCK_OK)
 		{
-			bfree(err, sip_comm1->sock->callbacks);
 			comms_serial_free(sip_comm1);
 			sip_comm1 = NULL;
 		}
@@ -181,17 +178,15 @@ bool initialize_sip_interface(void)
 	}
 	if (sip_comm2)
 	{
-		sip_comm2->sock->callbacks = balloc(err, sizeof(netsock_callbacks_t));
-		BLAST_ZERO_P(sip_comm2->sock->callbacks);
-		sip_comm2->sock->callbacks->data = blast_sip_process_data;
-		sip_comm2->sock->callbacks->error = blast_sip_handle_error;
-		sip_comm2->sock->callbacks->finished = blast_sip_handle_finished;
-		sip_comm2->sock->callbacks->priv = sip_comm2;
+		sip_comm2->sock->callbacks.data = blast_sip_process_data;
+		sip_comm2->sock->callbacks.error = blast_sip_handle_error;
+		sip_comm2->sock->callbacks.finished = blast_sip_handle_finished;
+		sip_comm2->sock->callbacks.priv = sip_comm2;
 
 		comms_serial_setspeed(sip_comm2, B1200);
 		if (comms_serial_connect(sip_comm2, SIP_PORT_2) != NETSOCK_OK)
 		{
-			bfree(err, sip_comm2->sock->callbacks);
+			bfree(err, sip_comm2->sock.callbacks);
 			comms_serial_free(sip_comm2);
 			sip_comm2 = NULL;
 		}
@@ -515,7 +510,6 @@ static int blast_sip_handle_finished (const void *m_data, size_t m_len, void *m_
 
 	if (m_data) blast_sip_process_data(m_data, m_len, m_userdata);
 
-	if (port->sock) BLAST_SAFE_FREE(port->sock->callbacks);
 	comms_sock_free(port->sock);
 	port->sock = NULL;
 

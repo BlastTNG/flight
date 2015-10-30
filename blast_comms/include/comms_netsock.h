@@ -41,7 +41,7 @@
 typedef struct comms_socket
 {
     comms_net_async_handle_t *poll_handle;
-    netsock_callbacks_t *callbacks;
+    netsock_callbacks_t callbacks;
     socket_t fd;
 
     char *host;

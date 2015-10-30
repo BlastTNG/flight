@@ -62,17 +62,14 @@ void initialize_csbf_gps_monitor(void)
 	if (csbf_gps_comm) comms_serial_free(csbf_gps_comm);
 	csbf_gps_comm = comms_serial_new(NULL);
 
-	csbf_gps_comm->sock->callbacks = balloc(err, sizeof(netsock_callbacks_t));
-	BLAST_ZERO_P(csbf_gps_comm->sock->callbacks);
-	csbf_gps_comm->sock->callbacks->data = csbf_gps_process_data;
-	csbf_gps_comm->sock->callbacks->error = csbf_gps_handle_error;
-	csbf_gps_comm->sock->callbacks->finished = csbf_gps_handle_finished;
-	csbf_gps_comm->sock->callbacks->priv = NULL;
+	csbf_gps_comm->sock->callbacks.data = csbf_gps_process_data;
+	csbf_gps_comm->sock->callbacks.error = csbf_gps_handle_error;
+	csbf_gps_comm->sock->callbacks.finished = csbf_gps_handle_finished;
+	csbf_gps_comm->sock->callbacks.priv = NULL;
 	comms_serial_setspeed(csbf_gps_comm, B19200);
 	if (comms_serial_connect(csbf_gps_comm, CSBFGPSCOM) != NETSOCK_OK || !blast_comms_add_port(csbf_gps_comm))
 	{
 		blast_err("Failed to open CSBF GPS!");
-		bfree(err, csbf_gps_comm->sock->callbacks);
 		comms_serial_free(csbf_gps_comm);
 		csbf_gps_comm = NULL;
 	}
@@ -227,7 +224,6 @@ static int csbf_gps_handle_finished (const void *m_data __attribute__((unused)),
 {
 	blast_err("Got closed socket on %s!  That shouldn't happen.  BIG ALL CAPS: REPORT THIS ERROR!!!!", CSBFGPSCOM);
 
-	if (csbf_gps_comm && csbf_gps_comm->sock) BLAST_SAFE_FREE(csbf_gps_comm->sock->callbacks);
 	comms_serial_free(csbf_gps_comm);
 	csbf_gps_comm = NULL;
 

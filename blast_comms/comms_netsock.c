@@ -332,9 +332,8 @@ comms_socket_t *comms_sock_new(void)
 {
 	comms_socket_t *sock;
 
-	sock = (comms_socket_t *)malloc(sizeof(struct comms_socket));
+	sock = (comms_socket_t *)calloc(1,sizeof(struct comms_socket));
 	if (!sock) return NULL;
-	BLAST_ZERO_P(sock);
 
 	log_enter();
 
@@ -388,7 +387,7 @@ void comms_sock_reset(comms_socket_t **m_sock)
 	(*m_sock)->can_read = false;
 	(*m_sock)->can_write = false;
 	(*m_sock)->have_exception = false;
-	(*m_sock)->callbacks = NULL;
+	BLAST_ZERO((*m_sock)->callbacks);
 	(*m_sock)->poll_handle = comms_sock_get_poll_handle(*m_sock);
 	(*m_sock)->state = NETSOCK_STATE_NONE;
 	(*m_sock)->flags = 0;
@@ -410,7 +409,7 @@ static inline bool comms_sock_is_open(comms_socket_t *s)
  * @param m_handle Pointer to the asynchronous handler
  * @param m_fd File descriptor for the network socket
  * @param m_events Received events flags
- * @param m_sock Pointer to the EBEX socket structure
+ * @param m_sock Pointer to the comms_socket structure
  * @return NETSOCK_OK on success, NETSOCK_ERR on failure
  */
 static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, uint16_t m_events, void *m_sock)
@@ -441,9 +440,9 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 				getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void *) &sock->last_errno, &errlen);
 
 			comms_sock_close(sock);
-			if (sock->callbacks && sock->callbacks->connected)
+			if (sock->callbacks.connected)
 			{
-				sock->callbacks->connected(NETSOCK_ERR, sock->last_errno, sock->callbacks->priv);
+				sock->callbacks.connected(NETSOCK_ERR, sock->last_errno, sock->callbacks.priv);
 			}
 			log_leave();
 			return NETSOCK_ERR;
@@ -470,9 +469,9 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 			{
 				comms_net_async_del_events(m_handle, POLLIN|POLLERR);
 			}
-			if (sock->callbacks && sock->callbacks->error)
+			if (sock->callbacks.error)
 			{
-				sock->callbacks->error(sock->last_errno, sock->callbacks->priv);
+				sock->callbacks.error(sock->last_errno, sock->callbacks.priv);
 			}
 		}
 
@@ -492,14 +491,14 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 		{
 		    size_t written = netbuf_write(sock->in_buffer, buffer, retval);
 		    size_t to_write = retval - written;
-			if (sock->callbacks && sock->callbacks->data)
+			if (sock->callbacks.data)
 			{
 			    void *data;
 			    size_t len = netbuf_peek(sock->in_buffer, &data);
 
 			    if (len) {
-                    retval = sock->callbacks->data(	data, len,
-                                                    sock->callbacks->priv);
+                    retval = sock->callbacks.data(	data, len,
+                                                    sock->callbacks.priv);
 
                     if (retval > 0) netbuf_eat(sock->in_buffer, retval);
 
@@ -516,13 +515,13 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 	}
 	if (m_events & POLLHUP)
 	{
-		if (sock->callbacks && sock->callbacks->finished)
+		if (sock->callbacks.finished)
 		{
             void *data;
             size_t len = netbuf_peek(sock->in_buffer, &data);
 
             if (len) {
-                sock->callbacks->finished( data, len, sock->callbacks->priv);
+                sock->callbacks.finished( data, len, sock->callbacks.priv);
                 netbuf_eat(sock->in_buffer, len);
                 free(data);
             }
@@ -538,9 +537,9 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 			comms_net_async_set_events(m_handle, POLLPRI | POLLIN | POLLOUT);
 			fcntl(sock->fd, F_SETFL, 0);
 
-			if (sock->callbacks && sock->callbacks->connected)
+			if (sock->callbacks.connected)
 			{
-				sock->callbacks->connected(NETSOCK_OK, 0, sock->callbacks->priv);
+				sock->callbacks.connected(NETSOCK_OK, 0, sock->callbacks.priv);
 			}
 
 			log_leave();
@@ -554,9 +553,9 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 		{
 			comms_sock_flush(sock);
 		}
-		else if (sock->callbacks && sock->callbacks->control)
+		else if (sock->callbacks.control)
 		{
-			sock->callbacks->control(NETSOCK_WRITABLE, sock->callbacks->priv);
+			sock->callbacks.control(NETSOCK_WRITABLE, sock->callbacks.priv);
 		}
 	}
 
