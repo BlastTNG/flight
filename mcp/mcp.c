@@ -63,11 +63,12 @@
 #include <framing.h>
 #include <hwpr.h>
 #include <motors.h>
+#include <xsc_network.h>
 
 /* Define global variables */
 int StartupVeto = 20;
 //flc_ip[0] = south, flc_ip[1] = north, so that flc_ip[SouthIAm] gives other flc
-char* flc_ip[2] = {"192.168.1.6", "192.168.1.5"};
+char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
 int bbc_fp = -1;
 unsigned int debug = 0;
@@ -371,6 +372,8 @@ static void mcp_1hz_routines(void)
 {
     blast_store_cpu_health();
     blast_store_disk_space();
+    xsc_write_data(0);
+    xsc_write_data(1);
 }
 
 int main(int argc, char *argv[])
@@ -442,13 +445,6 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not South.\n");
 
-
-//#ifndef BOLOTEST
-//  /* Watchdog */
-//  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
-//#endif
-
-
   //populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
@@ -495,11 +491,12 @@ int main(int argc, char *argv[])
 
   initialize_CPU_sensors();
 
-//  if (use_starcams) {
-//    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
-//    pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
-//  }
-//
+  if (use_starcams) {
+      xsc_networking_init(0);
+      xsc_networking_init(1);
+  }
+
+
 //  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
 
 //  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
