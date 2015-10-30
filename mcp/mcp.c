@@ -204,28 +204,7 @@ static void Chatter(void* arg)
 #endif
 
 
-//#ifndef BOLOTEST
-//static void WatchDog (void)
-//{
-//  nameThread("WDog");
-//  bputs(startup, "Startup\n");
-//
-//  /* Allow other threads to kill this one at any time */
-//  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-//
-//  if (ioperm(0x378, 0x0F, 1) != 0)
-//    berror(tfatal, "Error setting watchdog permissions");
-//  ioperm(0x80, 1, 1);
-//
-//  for (;;) {
-//    outb(0xAA, 0x378);
-//    usleep(10000);
-//    outb(0x55, 0x378);
-//    usleep(10000);
-//  }
-//}
-//
-//
+
 //void ClearBuffer(struct frameBuffer *buffer) {
 //  buffer->i_out = buffer->i_in;
 //}
