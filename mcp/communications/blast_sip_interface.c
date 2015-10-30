@@ -410,7 +410,7 @@ static ssize_t SIP_RECV_MSG_CMD_CALLBACK (const uint8_t* m_data, size_t m_len)
 	    /// The only packet that _could_ be smaller than 255 in a segmented packet is the last one.
 	    /// We place the smaller length in the cmd_pkt header to note this for rebuilding.
 	    if (cmd_pkt->length < 255) segment->header.length = cmd_pkt->length;
-	    g_list_insert_sorted(upload_llist, segment, sip_segment_compare);
+	    upload_llist = g_list_insert_sorted(upload_llist, segment, sip_segment_compare);
 
 	    /**
 	     * Since we just received a new multi-packet, it is a good time to check for the full packet in our
