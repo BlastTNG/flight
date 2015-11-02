@@ -507,8 +507,6 @@ int main(int argc, char *argv[])
       }
       mcp_200hz_routines();
 
-      framing_push();
-
   }
   return(0);
 }

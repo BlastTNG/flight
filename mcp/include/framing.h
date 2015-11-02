@@ -30,7 +30,6 @@
 
 int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
 void framing_shutdown(void);
-void framing_push(void);
 
 void framing_publish_200hz(void);
 void framing_publish_100hz(void);
