@@ -286,7 +286,6 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
 
                  pkt->raw_data[0] = '\0';
                  gyro->bpos = 0;
-                 //TODO: Add CRC Checking
 
                  if (!invalid_data) dsp1760_newvals(gyro);
              }
