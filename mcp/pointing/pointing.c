@@ -83,9 +83,9 @@ struct AzAttStruct {
 
 struct ElSolutionStruct {
   double angle;    // solution's current angle
-  double variance; // solution's current sample varience
+  double variance; // solution's current sample variance
   double samp_weight; // sample weight per sample
-  double sys_var;  // sytematic varience - can't do better than this
+  double sys_var;  // sytematic variance - can't do better than this
   double trim; // externally set trim to solution
   double last_input; // last good data point
   double gy_int; // integral of the gyro since the last solution
@@ -98,9 +98,9 @@ struct ElSolutionStruct {
 
 struct AzSolutionStruct {
   double angle;    // solution's current angle
-  double variance; // solution's current sample varience
+  double variance; // solution's current sample variance
   double samp_weight; // sample weight per sample
-  double sys_var;  // sytematic varience - can't do better than this
+  double sys_var;  // sytematic variance - can't do better than this
   double trim; // externally set trim to solution
   double last_input; // last good data point
   double ifroll_gy_int; // integral of the gyro since the last solution
@@ -956,7 +956,7 @@ void Pointing(void)
   static struct ElSolutionStruct ISCEl = {0.0, // starting angle
     719.9 * 719.9, // starting variance
     1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systemamatic variance
+    M2DV(0.2), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, // gy integral
@@ -965,9 +965,9 @@ void Pointing(void)
     0, 0 // n_solutions, since_last
   };
   static struct ElSolutionStruct OSCEl = {0.0, // starting angle
-    719.9 * 719.9, // starting varience
+    719.9 * 719.9, // starting variance
     1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systemamatic varience
+    M2DV(0.2), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, // gy integral
@@ -976,9 +976,9 @@ void Pointing(void)
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct NullAz = {91.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(6), //sample weight
-    M2DV(6000), // systemamatic varience
+    M2DV(6000), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -988,9 +988,9 @@ void Pointing(void)
     NULL, NULL
   };
   static struct AzSolutionStruct MagAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(120.0), //sample weight
-    M2DV(90), // systemamatic varience
+    M2DV(90), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1001,9 +1001,9 @@ void Pointing(void)
   };
 
   static struct AzSolutionStruct PSSAz =  {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(30), //sample weight
-    M2DV(60), // systemamatic varience
+    M2DV(60), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1014,9 +1014,9 @@ void Pointing(void)
     };
   //TODO:Replace ISC/OSC Az Solutions with XSC
   static struct AzSolutionStruct ISCAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(0.3), //sample weight
-    M2DV(0.2), // systemamatic varience
+    M2DV(0.2), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1026,9 +1026,9 @@ void Pointing(void)
     NULL, NULL
   };
   static struct AzSolutionStruct OSCAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(0.3), //sample weight
-    M2DV(0.2), // systemamatic varience
+    M2DV(0.2), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
