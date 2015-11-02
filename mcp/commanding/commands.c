@@ -129,6 +129,25 @@ double LockPosition (double elevation)
   return (lock_positions[i_min_err] + LOCK_OFFSET);
 }
 
+static bool xsc_command_applies_to(int which_to_check, int which)
+{
+    if (which_to_check == 0 || which_to_check == 1) {
+        if (which == 2 || which == which_to_check) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void xsc_activate_command(int which, int command_index)
+{
+    if (command_index < xC_num_command_admins) {
+        CommandData.XSC[which].net.command_admins[command_index].is_new_countdown = CommandData.XSC[which].is_new_window_period_cs;
+        CommandData.XSC[which].net.command_admins[command_index].counter++;
+    } else {
+        blast_warn("Warning: xsc_activate_command called with invalid index");
+    }
+}
 
 
 void SingleCommand (enum singleCommand command, int scheduled)
@@ -235,10 +254,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case pss_veto:
       CommandData.use_pss = 0;
       break;
-    case isc_veto:
+    case xsc0_veto:
       CommandData.use_isc = 0;
       break;
-    case osc_veto:
+    case xsc1_veto:
       CommandData.use_osc = 0;
       break;
     case mag_veto:
@@ -258,10 +277,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
     case pss_allow:
       CommandData.use_pss = 1;
       break;
-    case isc_allow:
+    case xsc0_allow:
       CommandData.use_isc = 1;
       break;
-    case osc_allow:
+    case xsc1_allow:
       CommandData.use_osc = 1;
       break;
     case mag_allow:
@@ -277,27 +296,27 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.use_elclin = 1;
       break;
 
-    case isc_off:
+    case xsc0_off:
       CommandData.power.isc.set_count = 0;
       CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
       break;
-    case isc_on:
+    case xsc0_on:
       CommandData.power.isc.rst_count = 0;
       CommandData.power.isc.set_count = LATCH_PULSE_LEN;
       break;
-    case isc_cycle:
+    case xsc0_cycle:
       CommandData.power.isc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
       break;
-    case osc_off:
+    case xsc1_off:
       CommandData.power.osc.set_count = 0;
       CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
       break;
-    case osc_on:
+    case xsc1_on:
       CommandData.power.osc.rst_count = 0;
       CommandData.power.osc.set_count = LATCH_PULSE_LEN;
       break;
-    case osc_cycle:
+    case xsc1_cycle:
       CommandData.power.osc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
       CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
       break;
@@ -720,116 +739,6 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
 #ifndef BOLOTEST
-    //*************************************
-    //******** ISC Commanding  ************
-    case isc_run:
-      CommandData.ISCState[0].pause = 0;
-      break;
-    case isc_shutdown:
-      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_HALT;
-      break;
-    case isc_reboot:
-      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_REBOOT;
-      break;
-    case isc_cam_cycle:
-      CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_CAMCYCLE;
-      break;
-    case isc_pause:
-      CommandData.ISCState[0].pause = 1;
-      break;
-    case isc_abort:
-      CommandData.ISCState[0].abort = 1;
-      break;
-    case isc_reconnect:
-      CommandData.ISCControl[0].reconnect = 1;
-      break;
-    case isc_save_images:
-      CommandData.ISCState[0].save = 1;
-      break;
-    case isc_discard_images:
-      CommandData.ISCState[0].save = 0;
-      break;
-    case isc_full_screen:
-      CommandData.ISCState[0].display_mode = full;
-      break;
-    case isc_trig_int:
-      CommandData.ISCState[0].triggertype = ISC_TRIGGER_INT;
-      break;
-    case isc_trig_ext:
-      CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
-      break;
-    case isc_auto_focus:
-      CommandData.ISCControl[0].autofocus = 10;
-      break;
-    case isc_eye_on:
-      CommandData.ISCState[0].eyeOn = 1;
-      break;
-    case isc_eye_off:
-      CommandData.ISCState[0].eyeOn = 0;
-      break;
-    case isc_no_pyramid:
-      CommandData.ISCState[0].useLost = 0;
-      break;
-    case isc_use_pyramid:
-      CommandData.ISCState[0].useLost = 1;
-      break;
-
-    //*************************************
-    //******** OSC Commanding  ************
-      break;
-    case osc_run:
-      CommandData.ISCState[1].pause = 0;
-      break;
-    case osc_shutdown:
-      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_HALT;
-      break;
-    case osc_reboot:
-      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_REBOOT;
-      break;
-    case osc_cam_cycle:
-      CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_CAMCYCLE;
-      break;
-    case osc_pause:
-      CommandData.ISCState[1].pause = 1;
-      break;
-    case osc_abort:
-      CommandData.ISCState[1].abort = 1;
-      break;
-    case osc_reconnect:
-      CommandData.ISCControl[1].reconnect = 1;
-      break;
-    case osc_save_images:
-      CommandData.ISCState[1].save = 1;
-      break;
-    case osc_discard_images:
-      CommandData.ISCState[1].save = 0;
-      break;
-    case osc_full_screen:
-      CommandData.ISCState[1].display_mode = full;
-      break;
-    case osc_trig_int:
-      CommandData.ISCState[1].triggertype = ISC_TRIGGER_INT;
-      break;
-    case osc_trig_ext:
-      CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
-      break;
-    case osc_auto_focus:
-      CommandData.ISCControl[1].autofocus = 10;
-      break;
-    case osc_eye_on:
-      CommandData.ISCState[1].eyeOn = 1;
-      break;
-    case osc_eye_off:
-      CommandData.ISCState[1].eyeOn = 0;
-      break;
-    case osc_no_pyramid:
-      CommandData.ISCState[1].useLost = 0;
-      break;
-    case osc_use_pyramid:
-      CommandData.ISCState[1].useLost = 1;
-      break;
-
-
     case blast_rocks:
       CommandData.sucks = 0;
       CommandData.uplink_sched = 0;
@@ -1557,136 +1466,513 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
 #ifndef BOLOTEST
-      /*************************************
-      ******** ISC Commanding  ************/
-    case isc_set_focus:
-      CommandData.ISCState[0].focus_pos = ivalues[0];
-      break;
-    case isc_foc_off:
-      CommandData.ISCState[0].focusOffset = ivalues[0];
-      break;
-    case isc_set_aperture:
-      CommandData.ISCState[0].ap_pos = ivalues[0];
-      break;
-    case isc_pixel_centre:
-      CommandData.ISCState[0].roi_x = ivalues[0];
-      CommandData.ISCState[0].roi_y = ivalues[1];
-      CommandData.ISCState[0].display_mode = roi;
-      break;
-    case isc_blob_centre:
-      CommandData.ISCState[0].blob_num = ivalues[0];
-      CommandData.ISCState[0].display_mode = blob;
-      break;
-    case isc_offset:
-      CommandData.ISCState[0].azBDA = rvalues[0] * DEG2RAD;
-      CommandData.ISCState[0].elBDA = rvalues[1] * DEG2RAD;
-      break;
-    case isc_integrate:
-      i = (int)(rvalues[0]/10. + 0.5) ;
-      if (i % 2) i++;
-      CommandData.ISCControl[0].fast_pulse_width = i;
-      i = (int)(rvalues[1]/10. + 0.5) ;
-      if (i % 2) i++;
-      CommandData.ISCControl[0].pulse_width = i;
-      break;
-    case isc_det_set:
-      CommandData.ISCState[0].grid = ivalues[0];
-      CommandData.ISCState[0].sn_threshold = rvalues[1];
-      CommandData.ISCState[0].mult_dist = ivalues[2];
-      break;
-    case isc_blobs:
-      CommandData.ISCState[0].minBlobMatch = ivalues[0];
-      CommandData.ISCState[0].maxBlobMatch = ivalues[1];
-      break;
-    case isc_catalogue:
-      CommandData.ISCState[0].mag_limit = rvalues[0];
-      CommandData.ISCState[0].norm_radius = rvalues[1] * DEG2RAD;
-      CommandData.ISCState[0].lost_radius = rvalues[2] * DEG2RAD;
-      break;
-    case isc_tolerances:
-      CommandData.ISCState[0].tolerance = 
-	(rvalues[0] / 3600. * DEG2RAD);
-      CommandData.ISCState[0].match_tol = (rvalues[1] / 100);
-      CommandData.ISCState[0].quit_tol = (rvalues[2] / 100);
-      CommandData.ISCState[0].rot_tol = (rvalues[3] * DEG2RAD);
-      break;
-    case isc_hold_current:
-      CommandData.ISCState[0].hold_current = ivalues[0];
-      break;
-    case isc_save_period:
-      CommandData.ISCControl[0].save_period = ivalues[0] * 100;
-      break;
-    case isc_gain:
-      CommandData.ISCState[0].gain = rvalues[0];
-      CommandData.ISCState[0].offset = ivalues[1];
-      break;
+      /***************************************/
+      /********* XSC Commanding  *************/
+
+
+
+case xsc_is_new_window_period:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].is_new_window_period_cs = ivalues[1];
+              }
+          }
+          break;
+      }
+
+case xsc_offset:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].cross_el_trim = from_degrees(rvalues[1]);
+                  CommandData.XSC[which].el_trim = from_degrees(rvalues[2]);
+              }
+          }
+          break;
+      }
+
+case xsc_heaters_off:
+      {
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].heaters.mode = xsc_heater_off;
+              }
+          }
+          break;
+      }
+
+case xsc_heaters_on:
+      {
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].heaters.mode = xsc_heater_on;
+              }
+          }
+          break;
+      }
+
+case xsc_heaters_auto:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].heaters.mode = xsc_heater_auto;
+                  CommandData.XSC[which].heaters.setpoint = rvalues[1];
+              }
+          }
+          break;
+      }
+
+case xsc_exposure_timing:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].trigger.exposure_time_cs = ivalues[1];
+              }
+              CommandData.XSC[which].trigger.grace_period_cs = (int) round(rvalues[2]*100.0);
+              CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs = ivalues[3];
+          }
+          break;
+      }
+
+case xsc_multi_trigger:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              CommandData.XSC[which].trigger.num_triggers = ivalues[0];
+              CommandData.XSC[which].trigger.multi_trigger_time_between_triggers_cs = ivalues[1];
+              CommandData.XSC[which].net.multi_triggering_readout_delay = rvalues[2];
+              xsc_activate_command(which, xC_multi_triggering);
+          }
+          break;
+      }
+
+case xsc_trigger_threshold:
+      {
+
+          int which = 0;
+          for (which=0; which<2; which++) {
+              CommandData.XSC[which].trigger.threshold.enabled = (ivalues[0] != 0);
+              CommandData.XSC[which].trigger.threshold.blob_streaking_px = rvalues[1];
+          }
+          break;
+      }
+
+case xsc_scan_force_trigger:
+      {
+
+          int which = 0;
+          for (which=0; which<2; which++) {
+              CommandData.XSC[which].trigger.scan_force_trigger_enabled = (ivalues[0] != 0);
+          }
+          break;
+      }
+
+case xsc_quit:
+      {
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  xsc_activate_command(which, xC_quit);
+              }
+          }
+          break;
+      }
+
+case xsc_shutdown:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.shutdown.shutdown_now = true;
+                  CommandData.XSC[which].net.shutdown.include_restart = (ivalues[1] != 0);
+                  xsc_activate_command(which, xC_shutdown);
+              }
+          }
+          break;
+      }
+
+case xsc_network_reset:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.network_reset.reset_now = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.network_reset.reset_on_lull_enabled = (ivalues[2] != 0);
+                  CommandData.XSC[which].net.network_reset.reset_on_lull_delay = rvalues[3];
+                  xsc_activate_command(which, xC_network_reset);
+              }
+          }
+          break;
+      }
+
+case xsc_main_settings:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.main_settings.display_frequency = rvalues[1];
+                  CommandData.XSC[which].net.main_settings.display_fullscreen = (ivalues[2] != 0);
+                  CommandData.XSC[which].net.main_settings.display_image_only = (ivalues[3] != 0);
+                  CommandData.XSC[which].net.main_settings.display_solving_filters = (ivalues[4] != 0);
+                  CommandData.XSC[which].net.main_settings.display_image_brightness = rvalues[5];
+                  xsc_activate_command(which, xC_main_settings);
+              }
+          }
+          break;
+      }
+
+case xsc_display_zoom:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.main_settings.display_zoom_x = ivalues[1];
+                  CommandData.XSC[which].net.main_settings.display_zoom_y = ivalues[2];
+                  CommandData.XSC[which].net.main_settings.display_zoom_magnitude = rvalues[3];
+                  xsc_activate_command(which, xC_display_zoom);
+              }
+          }
+          break;
+      }
+
+case xsc_image_client:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.image_client_enabled = (ivalues[1] != 0);
+                  xsc_activate_command(which, xC_image_client);
+              }
+          }
+          break;
+      }
+
+case xsc_init_focus:
+      {
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  xsc_activate_command(which, xC_init_focus);
+              }
+          }
+          break;
+      }
+
+case xsc_set_focus:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.set_focus_value = ivalues[1];
+                  xsc_activate_command(which, xC_set_focus);
+              }
+          }
+          break;
+      }
+
+case xsc_set_focus_incremental:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.set_focus_incremental_value = ivalues[1];
+                  xsc_activate_command(which, xC_set_focus_incremental);
+              }
+          }
+          break;
+      }
+
+case xsc_run_autofocus:
+      {
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  xsc_activate_command(which, xC_run_autofocus);
+              }
+          }
+          break;
+      }
+
+case xsc_set_autofocus_range:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.autofocus_search_min = ivalues[1];
+                  CommandData.XSC[which].net.autofocus_search_max = ivalues[2];
+                  CommandData.XSC[which].net.autofocus_search_step = ivalues[3];
+                  xsc_activate_command(which, xC_set_autofocus_range);
+              }
+          }
+          break;
+      }
+
+case xsc_abort_autofocus:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.abort_autofocus_still_use_solution = (ivalues[1] != 0);
+                  xsc_activate_command(which, xC_abort_autofocus);
+              }
+          }
+          break;
+      }
+
+case xsc_autofocus_display_mode:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  if (ivalues[1] >= xC_autofocus_display_mode_auto && ivalues[1] <= xC_autofocus_display_mode_off) {
+                      CommandData.XSC[which].net.autofocus_display_mode = ivalues[1];
+                      xsc_activate_command(which, xC_autofocus_display_mode);
+                  } else {
+                      blast_warn("warning: command xsc_autofocus_display_mode: display mode out of range");
+                  }
+              }
+          }
+          break;
+      }
+
+case xsc_init_aperture:
+      {
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  xsc_activate_command(which, xC_init_aperture);
+              }
+          }
+          break;
+      }
+
+case xsc_set_aperture:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.set_aperture_value = ivalues[1];
+                  xsc_activate_command(which, xC_set_aperture);
+              }
+          }
+          break;
+      }
+
+case xsc_get_gain:
+      {
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  xsc_activate_command(which, xC_get_gain);
+              }
+          }
+          break;
+      }
+
+case xsc_set_gain:
+      {
+
+          for (unsigned int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.set_gain_value = rvalues[1];
+                  xsc_activate_command(which, xC_set_gain);
+              }
+          }
+          break;
+      }
+
+case xsc_fake_sky_brightness:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.brightness.counter++;
+                  CommandData.XSC[which].net.brightness.enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.brightness.level_kepsa = rvalues[2];
+                  CommandData.XSC[which].net.brightness.gain_db = rvalues[3];
+                  CommandData.XSC[which].net.brightness.actual_exposure = rvalues[4];
+                  CommandData.XSC[which].net.brightness.simulated_exposure = rvalues[5];
+                  xsc_activate_command(which, xC_brightness);
+              }
+          }
+          break;
+      }
+
+case xsc_solver_general:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.solver.timeout = rvalues[2];
+                  xsc_activate_command(which, xC_solver_general);
+              }
+          }
+          break;
+      }
+
+case xsc_solver_abort:
+      {
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  xsc_activate_command(which, xC_solver_abort);
+              }
+          }
+          break;
+      }
+
+case xsc_selective_mask:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.mask.enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.solver.mask.field0 = (unsigned int )ivalues[2];
+                  CommandData.XSC[which].net.solver.mask.field1 = (unsigned int )ivalues[3];
+                  CommandData.XSC[which].net.solver.mask.field2 = (unsigned int )ivalues[4];
+                  xsc_activate_command(which, xC_solver_mask);
+              }
+          }
+          break;
+      }
+
+case xsc_blob_finding:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.snr_threshold = rvalues[1];
+                  CommandData.XSC[which].net.solver.max_num_blobs = ivalues[2];
+                  CommandData.XSC[which].net.solver.robust_mode_enabled = (ivalues[3] != 0);
+                  if (ivalues[4] >= xC_solver_fitting_method_none && ivalues[4] <= xC_solver_fitting_method_double_gaussian)
+                      CommandData.XSC[which].net.solver.fitting_method = ivalues[4];
+                  else {
+                      blast_warn("warning: command xsc_blob_finder: fitting_method out of range.  Defaulting to 'none'");
+                      CommandData.XSC[which].net.solver.fitting_method = xC_solver_fitting_method_none;
+                  }
+                  xsc_activate_command(which, xC_solver_blob_finder);
+              }
+          }
+          break;
+      }
+
+case xsc_blob_cells:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.cell_size = pow(2, ivalues[1]);;
+                  CommandData.XSC[which].net.solver.max_num_blobs_per_cell = ivalues[2];;
+                  xsc_activate_command(which, xC_solver_blob_cells);
+              }
+          }
+          break;
+      }
+
+case xsc_motion_psf:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.motion_psf.enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.solver.motion_psf.hroll = from_degrees(rvalues[2]);
+                  CommandData.XSC[which].net.solver.motion_psf.iplatescale = from_arcsec(rvalues[3]);
+                  xsc_activate_command(which, xC_motion_psf);
+              }
+          }
+          break;
+      }
+
+case xsc_pattern_matching:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.pattern_matcher_enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.solver.display_star_names = (ivalues[2] != 0);
+                  CommandData.XSC[which].net.solver.match_tolerance_px = rvalues[3];
+                  CommandData.XSC[which].net.solver.iplatescale_min = from_arcsec(rvalues[4]);
+                  CommandData.XSC[which].net.solver.iplatescale_max = from_arcsec(rvalues[5]);
+                  CommandData.XSC[which].net.solver.platescale_always_fixed = (ivalues[6] != 0);
+                  CommandData.XSC[which].net.solver.iplatescale_fixed = from_arcsec(rvalues[7]);
+                  xsc_activate_command(which, xC_solver_pattern_matcher);
+              }
+          }
+          break;
+      }
+
+case xsc_filter_hor_location:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.filters.hor_location_limit_enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.solver.filters.hor_location_limit_radius = from_degrees(rvalues[2]);
+                  xsc_activate_command(which, xC_solver_filter_hor_location);
+              }
+          }
+          break;
+      }
+
+case xsc_filter_hor_roll:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.filters.hor_roll_limit_enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.solver.filters.hor_roll_limit_min = from_degrees(rvalues[2]);
+                  CommandData.XSC[which].net.solver.filters.hor_roll_limit_max = from_degrees(rvalues[3]);
+                  xsc_activate_command(which, xC_solver_filter_hor_roll);
+              }
+          }
+          break;
+      }
+
+case xsc_filter_el:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.filters.hor_el_limit_enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.solver.filters.hor_el_limit_min = from_degrees(rvalues[2]);
+                  CommandData.XSC[which].net.solver.filters.hor_el_limit_max = from_degrees(rvalues[3]);
+                  xsc_activate_command(which, xC_solver_filter_hor_el);
+              }
+          }
+          break;
+      }
+
+case xsc_filter_eq_location:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.filters.eq_location_limit_enabled = (ivalues[1] != 0);
+                  CommandData.XSC[which].net.solver.filters.eq_location_limit_radius = from_degrees(rvalues[2]);
+                  xsc_activate_command(which, xC_solver_filter_eq_location);
+              }
+          }
+          break;
+      }
+
+case xsc_filter_matching:
+      {
+
+          for (int which=0; which<2; which++) {
+              if (xsc_command_applies_to(which, ivalues[0])) {
+                  CommandData.XSC[which].net.solver.filters.matching_pointing_error_threshold = from_arcsec(rvalues[1]);
+                  CommandData.XSC[which].net.solver.filters.matching_fit_error_threshold_px = rvalues[2];
+                  CommandData.XSC[which].net.solver.filters.matching_num_matched = (unsigned int) ivalues[3];
+                  xsc_activate_command(which, xC_solver_filter_matching);
+              }
+          }
+          break;
+      }
+
     case isc_max_age:
       CommandData.ISCControl[0].max_age = ivalues[0]/10; //convert from ms to frames
       break;
 
-     /*************************************
-      ******** OSC Commanding  ************/
-    case osc_set_focus:
-      CommandData.ISCState[1].focus_pos = ivalues[0];
-      break;
-    case osc_foc_off:
-      CommandData.ISCState[1].focusOffset = ivalues[0];
-      break;
-    case osc_set_aperture:
-      CommandData.ISCState[1].ap_pos = ivalues[0];
-      break;
-    case osc_pixel_centre:
-      CommandData.ISCState[1].roi_x = ivalues[0];
-      CommandData.ISCState[1].roi_y = ivalues[1];
-      CommandData.ISCState[1].display_mode = roi;
-      break;
-    case osc_blob_centre:
-      CommandData.ISCState[1].blob_num = ivalues[0];
-      CommandData.ISCState[1].display_mode = blob;
-      break;
-    case osc_offset:
-      CommandData.ISCState[1].azBDA = rvalues[0] * DEG2RAD;
-      CommandData.ISCState[1].elBDA = rvalues[1] * DEG2RAD;
-      break;
-    case osc_integrate:
-      i = (int)(rvalues[0]/10. + 0.5) ;
-      if (i % 2) i++;
-      CommandData.ISCControl[1].fast_pulse_width = i;
-      i = (int)(rvalues[1]/10. + 0.5) ;
-      if (i % 2) i++;
-      CommandData.ISCControl[1].pulse_width = i;
-      break;
-    case osc_det_set:
-      CommandData.ISCState[1].grid = ivalues[0];
-      CommandData.ISCState[1].sn_threshold = rvalues[1];
-      CommandData.ISCState[1].mult_dist = ivalues[2];
-      break;
-    case osc_blobs:
-      CommandData.ISCState[1].minBlobMatch = ivalues[0];
-      CommandData.ISCState[1].maxBlobMatch = ivalues[1];
-      break;
-    case osc_catalogue:
-      CommandData.ISCState[1].mag_limit = rvalues[0];
-      CommandData.ISCState[1].norm_radius = rvalues[1] * DEG2RAD;
-      CommandData.ISCState[1].lost_radius = rvalues[2] * DEG2RAD;
-      break;
-    case osc_tolerances:
-      CommandData.ISCState[1].tolerance = 
-	(rvalues[0] / 3600. * DEG2RAD);
-      CommandData.ISCState[1].match_tol = (rvalues[1] / 100);
-      CommandData.ISCState[1].quit_tol = (rvalues[2] / 100);
-      CommandData.ISCState[1].rot_tol = (rvalues[3] * DEG2RAD);
-      break;
-    case osc_hold_current:
-      CommandData.ISCState[1].hold_current = ivalues[0];
-      break;
-    case osc_save_period:
-      CommandData.ISCControl[1].save_period = ivalues[0] * 100;
-      break;
-    case osc_gain:
-      CommandData.ISCState[1].gain = rvalues[0];
-      CommandData.ISCState[1].offset = ivalues[1];
-      break;
     case osc_max_age:
       CommandData.ISCControl[1].max_age = ivalues[0]/10; //convert from ms to frames
       break;
