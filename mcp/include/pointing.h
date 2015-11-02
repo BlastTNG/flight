@@ -58,5 +58,6 @@ void set_position(double m_lat, double m_lon);
 void SetRaDec(double ra, double dec);
 void SetSafeDAz(double ref, double *A);
 void UnwindDiff(double ref, double *A);
+void trim_xsc(int);
 
 #endif /* INCLUDE_POINTING_H_ */

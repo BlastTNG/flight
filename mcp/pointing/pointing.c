@@ -1472,30 +1472,21 @@ void AutoTrimToSC()
 
 }
 
-//TODO:Rename TrimOSCToISC for XSC
-void TrimOSCToISC()
+/**
+ * Trims one star camera offset relative to the other.
+ * @param m_source Which camera should be used as the zero point for offset
+ */
+void trim_xsc(int m_source)
 {
     int i_point;
+    int dest = (m_source == 0);
     double delta_az;
     double delta_el;
     i_point = GETREADINDEX(point_index);
-    delta_az = PointingData[i_point].xsc_az[1] - PointingData[i_point].xsc_az[0];
-    delta_el = PointingData[i_point].xsc_el[1] - PointingData[i_point].xsc_el[0];
-    CommandData.ISCState[1].azBDA -= DEG2RAD*(delta_az*cos(PointingData[i_point].el*M_PI / 180.0));
-    CommandData.ISCState[1].elBDA -= DEG2RAD*(delta_el);
-
-}
-
-void TrimISCToOSC()
-{
-    int i_point;
-    double delta_az;
-    double delta_el;
-    i_point = GETREADINDEX(point_index);
-    delta_az = PointingData[i_point].xsc_az[0] - PointingData[i_point].xsc_az[1];
-    delta_el = PointingData[i_point].xsc_el[0] - PointingData[i_point].xsc_el[1];
-    CommandData.ISCState[0].azBDA -= DEG2RAD*(delta_az*cos(PointingData[i_point].el*M_PI / 180.0));
-    CommandData.ISCState[0].elBDA -= DEG2RAD*(delta_el);
+    delta_az = PointingData[i_point].xsc_az[dest] - PointingData[i_point].xsc_az[m_source];
+    delta_el = PointingData[i_point].xsc_el[dest] - PointingData[i_point].xsc_el[m_source];
+    CommandData.ISCState[dest].azBDA -= DEG2RAD*(delta_az*cos(PointingData[i_point].el*M_PI / 180.0));
+    CommandData.ISCState[dest].elBDA -= DEG2RAD*(delta_el);
 
 }
 
