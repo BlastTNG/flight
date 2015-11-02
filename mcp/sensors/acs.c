@@ -1107,8 +1107,8 @@ void store_5hz_acs(void)
     SET_VALUE(ra4PAddr, (int) (CommandData.pointing_mode.ra[3] * H2I));
     SET_VALUE(dec4PAddr, (int) (CommandData.pointing_mode.dec[3] * DEG2I));
 
-    sensor_veto = ((!CommandData.use_elmotenc)) | ((!CommandData.use_isc) << 1) | ((!CommandData.use_elenc) << 2) | ((!CommandData.use_mag) << 3)
-            | ((!CommandData.use_elclin) << 5) | ((!CommandData.use_osc) << 6) | ((CommandData.disable_el) << 10)
+    sensor_veto = ((!CommandData.use_elmotenc)) | ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2) | ((!CommandData.use_mag) << 3)
+            | ((!CommandData.use_elclin) << 5) | ((!CommandData.use_xsc1) << 6) | ((CommandData.disable_el) << 10)
             | ((CommandData.disable_az) << 11) | ((CommandData.force_el) << 12) | ((!CommandData.use_pss) << 13);
 
     if (PointingData[i_point].t >= CommandData.pointing_mode.t)

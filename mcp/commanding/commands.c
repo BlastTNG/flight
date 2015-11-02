@@ -255,10 +255,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.use_pss = 0;
       break;
     case xsc0_veto:
-      CommandData.use_isc = 0;
+      CommandData.use_xsc0 = 0;
       break;
     case xsc1_veto:
-      CommandData.use_osc = 0;
+      CommandData.use_xsc1 = 0;
       break;
     case mag_veto:
       CommandData.use_mag = 0;
@@ -278,10 +278,10 @@ void SingleCommand (enum singleCommand command, int scheduled)
       CommandData.use_pss = 1;
       break;
     case xsc0_allow:
-      CommandData.use_isc = 1;
+      CommandData.use_xsc0 = 1;
       break;
     case xsc1_allow:
-      CommandData.use_osc = 1;
+      CommandData.use_xsc1 = 1;
       break;
     case mag_allow:
       CommandData.use_mag = 1;
@@ -297,28 +297,28 @@ void SingleCommand (enum singleCommand command, int scheduled)
       break;
 
     case xsc0_off:
-      CommandData.power.isc.set_count = 0;
-      CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.xsc0.set_count = 0;
+      CommandData.power.xsc0.rst_count = LATCH_PULSE_LEN;
       break;
     case xsc0_on:
-      CommandData.power.isc.rst_count = 0;
-      CommandData.power.isc.set_count = LATCH_PULSE_LEN;
+      CommandData.power.xsc0.rst_count = 0;
+      CommandData.power.xsc0.set_count = LATCH_PULSE_LEN;
       break;
     case xsc0_cycle:
-      CommandData.power.isc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.power.isc.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.xsc0.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.xsc0.rst_count = LATCH_PULSE_LEN;
       break;
     case xsc1_off:
-      CommandData.power.osc.set_count = 0;
-      CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.xsc1.set_count = 0;
+      CommandData.power.xsc1.rst_count = LATCH_PULSE_LEN;
       break;
     case xsc1_on:
-      CommandData.power.osc.rst_count = 0;
-      CommandData.power.osc.set_count = LATCH_PULSE_LEN;
+      CommandData.power.xsc1.rst_count = 0;
+      CommandData.power.xsc1.set_count = LATCH_PULSE_LEN;
       break;
     case xsc1_cycle:
-      CommandData.power.osc.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-      CommandData.power.osc.rst_count = LATCH_PULSE_LEN;
+      CommandData.power.xsc1.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
+      CommandData.power.xsc1.rst_count = LATCH_PULSE_LEN;
       break;
     case rw_off:
       CommandData.power.rw.set_count = 0;
@@ -2063,10 +2063,10 @@ void InitCommandData()
   CommandData.power.sc_tx.set_count = 0;
   CommandData.power.das.rst_count = 0;
   CommandData.power.das.set_count = 0;
-  CommandData.power.isc.rst_count = 0;
-  CommandData.power.isc.set_count = 0;
-  CommandData.power.osc.rst_count = 0;
-  CommandData.power.osc.set_count = 0;
+  CommandData.power.xsc0.rst_count = 0;
+  CommandData.power.xsc0.set_count = 0;
+  CommandData.power.xsc1.rst_count = 0;
+  CommandData.power.xsc1.set_count = 0;
   CommandData.power.rw.rst_count = 0;
   CommandData.power.rw.set_count = 0;
   CommandData.power.piv.rst_count = 0;
@@ -2184,8 +2184,8 @@ void InitCommandData()
   CommandData.use_elenc = 1;
   CommandData.use_elclin = 1;
   CommandData.use_pss = 1;
-  CommandData.use_isc = 1;
-  CommandData.use_osc = 1;
+  CommandData.use_xsc0 = 1;
+  CommandData.use_xsc1 = 1;
   CommandData.use_mag = 1;
   CommandData.lat_range = 1;
   CommandData.sucks = 1;

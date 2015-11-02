@@ -1181,11 +1181,11 @@ void Pointing(void)
     if (CommandData.use_elclin) {
         AddElSolution(&ElAtt, &ClinEl, 1);
     }
-    if (CommandData.use_isc) {
+    if (CommandData.use_xsc0) {
         AddElSolution(&ElAtt, &ISCEl, 0);
     }
 
-    if (CommandData.use_osc) {
+    if (CommandData.use_xsc1) {
         AddElSolution(&ElAtt, &OSCEl, 0);
     }
 
@@ -1246,10 +1246,10 @@ void Pointing(void)
     if (CommandData.use_pss) {
         AddAzSolution(&AzAtt, &PSSAz, 1);
     }
-    if (CommandData.use_isc) {
+    if (CommandData.use_xsc0) {
         AddAzSolution(&AzAtt, &ISCAz, 0);
     }
-    if (CommandData.use_osc) {
+    if (CommandData.use_xsc1) {
         AddAzSolution(&AzAtt, &OSCAz, 0);
     }
 
