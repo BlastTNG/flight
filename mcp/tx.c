@@ -69,8 +69,6 @@ extern struct chat_buf chatter_buffer;  /* mcp.c */
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors();
-void ControlGyroHeat();
-void CameraTrigger(int which);
 void ControlPower(void);
 void VideoTx(void);
 
@@ -78,9 +76,6 @@ void VideoTx(void);
 void BiasControl();
 void CryoControl(int index);
 void PhaseControl(void);
-
-/* in sbsc.cpp */
-void cameraFields();        
 
 /* in sched.c */
 void DoSched();

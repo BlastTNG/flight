@@ -45,8 +45,6 @@ extern short int InCharge; /* tx.c */
 #define BAL_VALV     0x02  /* ACS2 Group 2 Bit 2 */
 #define BAL_HEAT     0x04  /* ACS2 Group 2 Bit 3 - DAC */
 
-#define SBSC_HEAT    0x01  /* ACS1_D Spare-0 */
-
 #define PUMP_MAX 26214      /*  3.97*2.0V   */
 #define PUMP_MIN  3277      /*  3.97*0.25V   */
 
@@ -95,17 +93,6 @@ static int ControlPumpHeat(int bits_bal)
 
 }
 
-
-
-
-/*********************/
-/* ISC Pulsing stuff */
-void CameraTrigger(int which)
-{
-
-
-  //TODO: Add Camera Triggering
-}
 
 /*****************************************************************/
 /*                                                               */
