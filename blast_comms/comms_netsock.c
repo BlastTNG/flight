@@ -702,6 +702,8 @@ int comms_sock_write(comms_socket_t *m_sock, const void *m_buf, size_t m_len)
 {
 	if (m_len)
 	{
+	    if (!m_sock) return NETSOCK_ERR;
+
 	    if (m_sock->state != NETSOCK_STATE_CONNECTING && m_sock->state != NETSOCK_STATE_CONNECTED)
 	    {
 	        blast_err("Can not write to socket %s in state %d", m_sock->host?m_sock->host:"(Unknown host)", m_sock->state);
