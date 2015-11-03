@@ -1094,6 +1094,8 @@ void Pointing(void)
         initFir(EncEl.fs, FIR_LENGTH);
         EncMotEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         initFir(EncMotEl.fs, FIR_LENGTH);
+        MagEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(MagEl.fs, FIR_LENGTH);
 
         NullAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         NullAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
