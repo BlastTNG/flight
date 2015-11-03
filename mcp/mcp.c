@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
   }
 
   if(geteuid() != 0) {
-      fprintf(stderr, "Sorry!  MCP needs to be run with root privileges.  Try `sudo ./mcp`");
+      fprintf(stderr, "Sorry!  MCP needs to be run with root privileges.  Try `sudo ./mcp`\n");
       exit(0);
   }
   umask(0);  /* clear umask */
