@@ -174,33 +174,28 @@ void SetSafeDAz(double ref, double *A)
 /*             to convert mag_x and mag_y to mag_az                     */
 /*                                                                      */
 /************************************************************************/
-static int MagConvert(double *mag_az, double *m_el)
-{
-    MAGtype_MagneticModel * MagneticModels[1], *TimedMagneticModel;
-    MAGtype_Ellipsoid Ellip;
-    MAGtype_CoordSpherical CoordSpherical;
-    MAGtype_CoordGeodetic CoordGeodetic;
-    MAGtype_Date UserDate;
-    MAGtype_GeoMagneticElements GeoMagneticElements;
-    MAGtype_Geoid Geoid;
+static int MagConvert(double *mag_az, double *m_el) {
+    static MAGtype_MagneticModel * MagneticModels[1], *TimedMagneticModel;
+    static MAGtype_Ellipsoid Ellip;
+    static MAGtype_Geoid Geoid;
 
-  float year;
-  double mvx, mvy, mvz;
-  double raw_mag_az, raw_mag_pitch;
-  static double dip;
-  static double dec=0;
-  time_t t;
-  struct tm now;
-  int i_point_read;
-  static time_t oldt;
-  static int firsttime = 1;
-  double magx_m, magx_b, magy_m, magy_b;
-  int epochs = 1;
-  int NumTerms, nMax = 0;
+    float year;
+    double mvx, mvy, mvz;
+    double raw_mag_az, raw_mag_pitch;
+    static double dip;
+    static double dec = 0;
+    time_t t;
+    struct tm now;
+    int i_point_read;
+    static time_t oldt;
+    static int firsttime = 1;
+    double magx_m, magx_b, magy_m, magy_b;
+    int epochs = 1;
+    int NumTerms, nMax = 0;
 
-  i_point_read = GETREADINDEX(point_index);
+    i_point_read = GETREADINDEX(point_index);
 
-  /******** Obtain correct indexes the first time here ***********/
+    /******** Obtain correct indexes the first time here ***********/
     if (firsttime) {
 
         if (!MAG_robustReadMagModels("/data/etc/blast/WMM.COF", &MagneticModels, epochs)) {
@@ -225,82 +220,81 @@ static int MagConvert(double *mag_az, double *m_el)
         firsttime = 0;
     }
 
-  /* Every 10 s, get new data from the magnetic model.
-   *
-   * dec = magnetic declination (field direction in az)
-   * dip = magnetic inclination (field direction in ele)
-   * ti  = intensity of the field in nT
-   * gv  = modified form of dec used in polar regions -- haven't researched
-   *       this one
-   *
-   * The year must be between 2015.0 and 2020.0 with current model data
-   *
-   * The functions called are in 'geomag.c' (Adam. H) */
-  if ((t = PointingData[i_point_read].t) > oldt + 10) {
-    oldt = t;
+    /* Every 10 s, get new data from the magnetic model.
+     *
+     * dec = magnetic declination (field direction in az)
+     * dip = magnetic inclination (field direction in ele)
+     *
+     * The year must be between 2015.0 and 2020.0 with current model data
+     *
+     * The functions called are in 'geomag2015.c' */
+    if ((t = PointingData[i_point_read].t) > oldt + 10) {
 
-    gmtime_r(&t, &now);
-    year = 1900 + now.tm_year + now.tm_yday / 365.25;
-    UserDate.DecimalYear = year;
+        MAGtype_CoordSpherical CoordSpherical;
+        MAGtype_CoordGeodetic CoordGeodetic;
+        MAGtype_Date UserDate;
+        MAGtype_GeoMagneticElements GeoMagneticElements;
+        oldt = t;
 
-    Geoid.UseGeoid = 1;
-    CoordGeodetic.HeightAboveGeoid = PointingData[i_point_read].alt / 1000.0;
-    CoordGeodetic.phi = PointingData[i_point_read].lat;
-    CoordGeodetic.lambda = -PointingData[i_point_read].lon;
-    MAG_ConvertGeoidToEllipsoidHeight(&CoordGeodetic, &Geoid);
+        gmtime_r(&t, &now);
+        year = 1900 + now.tm_year + now.tm_yday / 365.25;
+        UserDate.DecimalYear = year;
 
-    MAG_GeodeticToSpherical(Ellip, CoordGeodetic, &CoordSpherical); /*Convert from geodetic to Spherical Equations: 17-18, WMM Technical report*/
-    MAG_TimelyModifyMagneticModel(UserDate, MagneticModels[0], TimedMagneticModel); /* Time adjust the coefficients, Equation 19, WMM Technical report */
-    MAG_Geomag(Ellip, CoordSpherical, CoordGeodetic, TimedMagneticModel, &GeoMagneticElements); /* Computes the geoMagnetic field elements and their time change*/
+        Geoid.UseGeoid = 1;
+        CoordGeodetic.HeightAboveGeoid = PointingData[i_point_read].alt / 1000.0;
+        CoordGeodetic.phi = PointingData[i_point_read].lat;
+        CoordGeodetic.lambda = -PointingData[i_point_read].lon;
+        MAG_ConvertGeoidToEllipsoidHeight(&CoordGeodetic, &Geoid);
 
-    dec = GeoMagneticElements.Decl;
-    dip = GeoMagneticElements.Incl;
-    PointingData[point_index].mag_strength = GeoMagneticElements.H;
+        MAG_GeodeticToSpherical(Ellip, CoordGeodetic, &CoordSpherical); /*Convert from geodetic to Spherical Equations: 17-18, WMM Technical report*/
+        MAG_TimelyModifyMagneticModel(UserDate, MagneticModels[0], TimedMagneticModel); /* Time adjust the coefficients, Equation 19, WMM Technical report */
+        MAG_Geomag(Ellip, CoordSpherical, CoordGeodetic, TimedMagneticModel, &GeoMagneticElements); /* Computes the geoMagnetic field elements and their time change*/
 
-  }
+        dec = GeoMagneticElements.Decl;
+        dip = GeoMagneticElements.Incl;
+        PointingData[point_index].mag_strength = GeoMagneticElements.H;
 
-  /* The dec is the correction to the azimuth of the magnetic field. */
-  /* If negative is west and positive is east, then: */
-  /* */
-  /*   true bearing = magnetic bearing + dec */
-  /* */
-  /* Thus, depending on the sign convention, you have to either add or */
-  /* subtract dec from az to get the true bearing. (Adam H.) */
+    }
 
-  mvx = (ACSData.mag_x-MAGX_B)/MAGX_M;
-  mvy = (ACSData.mag_y-MAGY_B)/MAGY_M;
-  
-  magx_m = 1.0/((double)(CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
-  magy_m = -1.0/((double)(CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
-  
-  magx_b = (CommandData.cal_xmax_mag + CommandData.cal_xmin_mag)*0.5;
-  magy_b = (CommandData.cal_ymax_mag + CommandData.cal_ymin_mag)*0.5;
-  
-  mvx = magx_m*(ACSData.mag_x - magx_b);
-  mvy = magy_m*(ACSData.mag_y - magy_b);
-  mvz = MAGZ_M*(ACSData.mag_z - MAGZ_B);
+    /* The dec is the correction to the azimuth of the magnetic field. */
+    /* If negative is west and positive is east, then: */
+    /* */
+    /*   true bearing = magnetic bearing + dec */
+    /* */
+    /* Thus, depending on the sign convention, you have to either add or */
+    /* subtract dec from az to get the true bearing. (Adam H.) */
 
+    mvx = (ACSData.mag_x - MAGX_B) / MAGX_M;
+    mvy = (ACSData.mag_y - MAGY_B) / MAGY_M;
 
-  raw_mag_az = (-1.0)*(180.0 / M_PI) * atan2(mvy, mvx);
-  raw_mag_pitch = (180.0/M_PI) * atan2(mvz,sqrt(mvx*mvx + mvy*mvy));
-  *mag_az = raw_mag_az + dec + MAG_ALIGNMENT;
-  *m_el = raw_mag_pitch + dip;
+    magx_m = 1.0 / ((double) (CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
+    magy_m = -1.0 / ((double) (CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
 
+    magx_b = (CommandData.cal_xmax_mag + CommandData.cal_xmin_mag) * 0.5;
+    magy_b = (CommandData.cal_ymax_mag + CommandData.cal_ymin_mag) * 0.5;
+
+    mvx = magx_m * (ACSData.mag_x - magx_b);
+    mvy = magy_m * (ACSData.mag_y - magy_b);
+    mvz = MAGZ_M * (ACSData.mag_z - MAGZ_B);
+
+    raw_mag_az = (-1.0) * (180.0 / M_PI) * atan2(mvy, mvx);
+    raw_mag_pitch = (180.0 / M_PI) * atan2(mvz, sqrt(mvx * mvx + mvy * mvy));
+    *mag_az = raw_mag_az + dec + MAG_ALIGNMENT;
+    *m_el = raw_mag_pitch + dip;
 
 #if 0
 #warning THE MAGNETIC MODEL HAS BEEN DISABLED
-  dec = 0; // disable mag model.
+    dec = 0; // disable mag model.
 #endif
 
-  NormalizeAngle(mag_az);
+    NormalizeAngle(mag_az);
 
-  NormalizeAngle(&dec);
+    NormalizeAngle(&dec);
 
-  PointingData[point_index].mag_model_dec = dec;
-  PointingData[point_index].mag_model_dip = dip;
+    PointingData[point_index].mag_model_dec = dec;
+    PointingData[point_index].mag_model_dip = dip;
 
-
-  return (1);
+    return (1);
 }
 
 // PSSConvert versions added 12 June 2010 -GST
