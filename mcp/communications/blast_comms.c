@@ -350,9 +350,6 @@ static int blast_comms_net_cleanup(const void *m_data, size_t m_len, void *m_use
 
 	if (consumed < m_len) blast_err("Did not receive full packet from %s", socket->host);
 
-	comms_sock_free(socket);
-	socket = NULL;
-
 	return consumed;
 }
 

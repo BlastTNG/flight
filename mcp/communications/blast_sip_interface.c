@@ -197,8 +197,8 @@ bool initialize_sip_interface(void)
 		}
 	}
 
-	if (!(blast_comms_add_port(sip_comm1) /** N.B. This is a binary OR, not a boolean.  Do not change unless fully refactoring! */
-			| blast_comms_add_port(sip_comm2)))
+	if ((!blast_comms_add_port(sip_comm1))
+			&& (!blast_comms_add_port(sip_comm2)))
 	{
 		blast_err("Could not add either comm port to our monitor");
 		return false;
@@ -508,9 +508,6 @@ static int blast_sip_handle_finished (const void *m_data, size_t m_len, void *m_
 		blast_err("Got closed socket on unknown SIP port!");
 
 	if (m_data) blast_sip_process_data(m_data, m_len, m_userdata);
-
-	comms_sock_free(port->sock);
-	port->sock = NULL;
 
 	return 0;
 }
