@@ -800,6 +800,8 @@ void store_5hz_acs(void)
     static channel_t* azMagAddr;
     static channel_t* azRawMagAddr;
     static channel_t* declinationMagAddr;
+    static channel_t* elMagAddr;
+    static channel_t* dipMagAddr;
     static channel_t* calXMaxMagAddr;
     static channel_t* calXMinMagAddr;
     static channel_t* calYMaxMagAddr;
@@ -894,6 +896,10 @@ void store_5hz_acs(void)
         azMagAddr = channels_find_by_name("az_mag");
         azRawMagAddr = channels_find_by_name("az_raw_mag");
         declinationMagAddr = channels_find_by_name("declination_mag");
+
+        elMagAddr = channels_find_by_name("el_mag");
+        dipMagAddr = channels_find_by_name("dip_mag");
+
         calXMaxMagAddr = channels_find_by_name("cal_xmax_mag");
         calXMinMagAddr = channels_find_by_name("cal_xmin_mag");
         calYMaxMagAddr = channels_find_by_name("cal_ymax_mag");
@@ -1024,8 +1030,10 @@ void store_5hz_acs(void)
 
     SET_VALUE(azMagAddr, (unsigned int) ((PointingData[i_point].mag_az + CommandData.mag_az_trim) * DEG2I));
     SET_VALUE(azRawMagAddr, (unsigned int) ((PointingData[i_point].mag_az_raw) * DEG2I));
-//    SET_VALUE(pitchMagAddr, (unsigned int) (PointingData[i_point].mag_el * DEG2I));
     SET_VALUE(declinationMagAddr, (unsigned int) (PointingData[i_point].mag_model_dec * DEG2I));
+
+    SET_VALUE(elMagAddr, (unsigned int) (PointingData[i_point].mag_el * DEG2I));
+    SET_VALUE(dipMagAddr, (unsigned int) (PointingData[i_point].mag_model_dip * DEG2I));
 
     SET_VALUE(calXMaxMagAddr, (unsigned int) (CommandData.cal_xmax_mag));
     SET_VALUE(calXMinMagAddr, (unsigned int) (CommandData.cal_xmin_mag));

@@ -43,6 +43,8 @@
 #include "fir.h"
 
 #include <dsp1760.h>
+#include <EGM9615.h>
+#include <geomag2015.h>
 #include <angles.h>
 #include <xsc_network.h>
 #include <conversions.h>
@@ -58,11 +60,6 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-
-/* Functions in the file 'geomag.c' */
-void MagModelInit(int maxdeg, const char* wmmFile);
-void GetMagModel(float alt, float glat, float glon, float time,
-    float *dec, float *dip, float *ti, float *gv);
 
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
@@ -140,8 +137,6 @@ static struct {
 
 static double sun_az, sun_el; // set in SSConvert and used in UnwindDiff
 
-void SunPos(double tt, double *ra, double *dec); // in starpos.c
-
 #define M2DV(x) ((x / 60.0) * (x / 60.0))
 
 // limit to 0 to 360.0
@@ -179,12 +174,20 @@ void SetSafeDAz(double ref, double *A)
 /*             to convert mag_x and mag_y to mag_az                     */
 /*                                                                      */
 /************************************************************************/
-static int MagConvert(double *mag_az)
+static int MagConvert(double *mag_az, double *m_el)
 {
+    MAGtype_MagneticModel * MagneticModels[1], *TimedMagneticModel;
+    MAGtype_Ellipsoid Ellip;
+    MAGtype_CoordSpherical CoordSpherical;
+    MAGtype_CoordGeodetic CoordGeodetic;
+    MAGtype_Date UserDate;
+    MAGtype_GeoMagneticElements GeoMagneticElements;
+    MAGtype_Geoid Geoid;
+
   float year;
   double mvx, mvy, mvz;
   double raw_mag_az, raw_mag_pitch;
-  static float fdec, dip, ti, gv;
+  static double dip;
   static double dec=0;
   time_t t;
   struct tm now;
@@ -192,22 +195,37 @@ static int MagConvert(double *mag_az)
   static time_t oldt;
   static int firsttime = 1;
   double magx_m, magx_b, magy_m, magy_b;
+  int epochs = 1;
+  int NumTerms, nMax = 0;
 
   i_point_read = GETREADINDEX(point_index);
 
   /******** Obtain correct indexes the first time here ***********/
-  if (firsttime) {
-    /* Initialise magnetic model reader: I'm not sure what the '12' is, but */
-    /* I think it has something to do with the accuracy of the modelling -- */
-    /* probably shouldn't change this value.  (Adam H.) */
-      //TODO:Re-enable Magmodel
-//    MagModelInit(12, "/data/etc/blast/WMM.COF");
+    if (firsttime) {
 
-    oldt = 1;
-    firsttime = 0;
-  }
+        if (!MAG_robustReadMagModels("/data/etc/blast/WMM.COF", &MagneticModels, epochs)) {
+            blast_err("/data/etc/blast/WMM.COF not found. Be sure to `make install` mcp.");
+            return 0;
+        }
+        if (nMax < MagneticModels[0]->nMax) nMax = MagneticModels[0]->nMax;
+        NumTerms = ((nMax + 1) * (nMax + 2) / 2);
+        TimedMagneticModel = MAG_AllocateModelMemory(NumTerms); /* For storing the time modified WMM Model parameters */
+        if (MagneticModels[0] == NULL || TimedMagneticModel == NULL) {
+            blast_err("Could not allocate memory for magnetic model!");
+            return 0;
+        }
+        MAG_SetDefaults(&Ellip, &Geoid); /* Set default values and constants */
+        /* Check for Geographic Poles */
 
-  /* Every 300 s = 5 min, get new data from the magnetic model.
+        /* Set EGM96 Geoid parameters */
+        Geoid.GeoidHeightBuffer = GeoidHeightBuffer;
+        Geoid.Geoid_Initialized = 1;
+
+        oldt = 1;
+        firsttime = 0;
+    }
+
+  /* Every 10 s, get new data from the magnetic model.
    *
    * dec = magnetic declination (field direction in az)
    * dip = magnetic inclination (field direction in ele)
@@ -215,19 +233,29 @@ static int MagConvert(double *mag_az)
    * gv  = modified form of dec used in polar regions -- haven't researched
    *       this one
    *
-   * The year must be between 2010.0 and 2015.0 with current model data
+   * The year must be between 2015.0 and 2020.0 with current model data
    *
    * The functions called are in 'geomag.c' (Adam. H) */
   if ((t = PointingData[i_point_read].t) > oldt + 10) {
     oldt = t;
+
     gmtime_r(&t, &now);
     year = 1900 + now.tm_year + now.tm_yday / 365.25;
+    UserDate.DecimalYear = year;
 
-//    GetMagModel(PointingData[i_point_read].alt / 1000.0,
-//        PointingData[i_point_read].lat, -PointingData[i_point_read].lon,
-//        year, &fdec, &dip, &ti, &gv);
+    Geoid.UseGeoid = 1;
+    CoordGeodetic.HeightAboveGeoid = PointingData[i_point_read].alt / 1000.0;
+    CoordGeodetic.phi = PointingData[i_point_read].lat;
+    CoordGeodetic.lambda = -PointingData[i_point_read].lon;
+    MAG_ConvertGeoidToEllipsoidHeight(&CoordGeodetic, &Geoid);
 
-    dec = fdec;
+    MAG_GeodeticToSpherical(Ellip, CoordGeodetic, &CoordSpherical); /*Convert from geodetic to Spherical Equations: 17-18, WMM Technical report*/
+    MAG_TimelyModifyMagneticModel(UserDate, MagneticModels[0], TimedMagneticModel); /* Time adjust the coefficients, Equation 19, WMM Technical report */
+    MAG_Geomag(Ellip, CoordSpherical, CoordGeodetic, TimedMagneticModel, &GeoMagneticElements); /* Computes the geoMagnetic field elements and their time change*/
+
+    dec = GeoMagneticElements.Decl;
+    dip = GeoMagneticElements.Incl;
+    PointingData[point_index].mag_strength = GeoMagneticElements.H;
 
   }
 
@@ -255,8 +283,8 @@ static int MagConvert(double *mag_az)
 
   raw_mag_az = (-1.0)*(180.0 / M_PI) * atan2(mvy, mvx);
   raw_mag_pitch = (180.0/M_PI) * atan2(mvz,sqrt(mvx*mvx + mvy*mvy));
-  *mag_az = raw_mag_az;
-//  ACSData.mag_pitch = raw_mag_pitch+(double)dip;
+  *mag_az = raw_mag_az + dec + MAG_ALIGNMENT;
+  *m_el = raw_mag_pitch + dip;
 
 
 #if 0
@@ -264,13 +292,13 @@ static int MagConvert(double *mag_az)
   dec = 0; // disable mag model.
 #endif
 
-  *mag_az += dec + MAG_ALIGNMENT;
-
   NormalizeAngle(mag_az);
 
   NormalizeAngle(&dec);
 
   PointingData[point_index].mag_model_dec = dec;
+  PointingData[point_index].mag_model_dip = dip;
+
 
   return (1);
 }
@@ -885,6 +913,7 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 
 void AutoTrimToSC();    //defined below
 
+///TODO: Split up Pointing() in manageable chunks for each sensor
 /*****************************************************************
   do sensor selection;
   update the pointing;
@@ -901,6 +930,7 @@ void Pointing(void)
   int pss_ok;
   static unsigned pss_since_ok = 500;
   double mag_az;
+  double mag_el;
   double pss_az = 0;
   double pss_el = 0;
   double clin_elev;
@@ -968,6 +998,17 @@ void Pointing(void)
     719.9 * 719.9, // starting variance
     1.0 / M2DV(0.2), //sample weight
     M2DV(0.2), // systematic variance
+    0.0, // trim
+    0.0, // last input
+    0.0, // gy integral
+    OFFSET_GY_IFEL, // gy offset
+    0.0001, // filter constant
+    0, 0 // n_solutions, since_last
+  };
+  static struct ElSolutionStruct MagEl = {0.0, // starting angle
+    360.0 * 360.0, // starting variance
+    1.0 / M2DV(120.0), //sample weight
+    M2DV(90.0), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, // gy integral
@@ -1140,6 +1181,14 @@ void Pointing(void)
     PointingData[point_index].lst = to_seconds(time_lst_unix(PointingData[point_index].t, from_degrees(PointingData[point_index].lon)));
 
 
+    /**
+     * Get the Magnetometer Data
+     */
+    mag_ok = MagConvert(&mag_az, &mag_el);
+
+    PointingData[point_index].mag_az = mag_az;
+    PointingData[point_index].mag_el = mag_el;
+
     /*************************************/
     /**      do ISC Solution            **/
     EvolveXSCSolution(&ISCEl, &ISCAz,
@@ -1161,6 +1210,7 @@ void Pointing(void)
     clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
     PointingData[i_point_read].clin_el_lut = clin_elev;
 
+    ///TODO: Only set "new solution" when we really have new data
     EvolveElSolution(&ClinEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             clin_elev, 1);
@@ -1170,6 +1220,9 @@ void Pointing(void)
     EvolveElSolution(&EncMotEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             ACSData.enc_motor_elev, 1);
+    EvolveElSolution(&MagEl, RG.ifel_gy,
+            PointingData[i_point_read].offset_ifel_gy,
+            mag_el, mag_ok);
 
     if (CommandData.use_elenc) {
         AddElSolution(&ElAtt, &EncEl, 1);
@@ -1189,6 +1242,8 @@ void Pointing(void)
         AddElSolution(&ElAtt, &OSCEl, 0);
     }
 
+    //TODO: Add magnetometer to veto el list
+
     if (CommandData.el_autogyro)
         PointingData[point_index].offset_ifel_gy = ElAtt.offset_gy;
     else
@@ -1199,9 +1254,6 @@ void Pointing(void)
     /*******************************/
     /**      do az solution      **/
     /** Convert Sensors **/
-    mag_ok = MagConvert(&mag_az);
-
-    PointingData[point_index].mag_az = mag_az;
 
     pss_ok = PSSConvert(&pss_az, &pss_el);
     if (pss_ok) {
@@ -1286,6 +1338,7 @@ void Pointing(void)
     PointingData[point_index].clin_sigma = sqrt(ClinEl.variance + ClinEl.sys_var);
 
     PointingData[point_index].mag_az = MagAz.angle;
+    PointingData[point_index].mag_el = MagEl.angle;
     PointingData[point_index].mag_sigma = sqrt(MagAz.variance + MagAz.sys_var);
 
     // Added 22 June 2010 GT

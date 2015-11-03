@@ -757,10 +757,12 @@ channel_t channel_list[] =
     { "az_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
     { "az_raw_mag",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
     { "pitch_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "el_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
 
     { "sigma_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
     { "declination_mag",      I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 }, // magnetic declination
+    { "dip_mag",              I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
 
     { "cal_xmax_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "cal_xmin_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
