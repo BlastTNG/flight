@@ -314,11 +314,6 @@ static int dsp1760_handle_finished (const void *m_data, size_t m_len, void *m_us
     else
         blast_err("Got closed socket on unknown gyro port!");
 
-    if (port && port->sock){
-        comms_sock_free(port->sock);
-        port->sock = NULL;
-    }
-
     return 0;
 }
 

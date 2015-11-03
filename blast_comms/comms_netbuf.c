@@ -365,20 +365,37 @@ void netbuf_consumer_free(netbuf_t* p)
 }
 
 // Returns the end of the buffer (buf + number_of_bytes_copied).
-static inline char* copy_netbuf_into_new_buf(buf_snapshot_t s,
-                                           char* restrict buf)
-{
-    if(wraps_around(s))
-    {
+static inline char* copy_netbuf_into_new_buf(buf_snapshot_t s, char* restrict buf) {
+    if (wraps_around(s)) {
         buf = offset_memcpy(buf, s.begin, s.bufend - s.begin);
         buf = offset_memcpy(buf, s.buffer, s.end - s.buffer);
     }
-    else
-    {
+    else {
         buf = offset_memcpy(buf, s.begin, s.end - s.begin);
     }
 
     return buf;
+}
+
+
+// Returns the number of bytes copied
+static inline size_t copy_netbuf_data(buf_snapshot_t s, char* restrict buf) {
+    size_t retval = 0;
+
+    if (wraps_around(s)) {
+        buf = offset_memcpy(buf, s.begin, s.bufend - s.begin);
+        retval = s.bufend - s.begin;
+        if (s.end - s.buffer > s.elem_size) {
+            buf = offset_memcpy(buf, s.buffer, s.end - s.buffer - s.elem_size);
+            retval += (s.end - s.buffer - s.elem_size);
+        }
+    }
+    else {
+        buf = offset_memcpy(buf, s.begin, s.end - s.begin - s.elem_size);
+        retval = s.end - s.begin - s.elem_size;
+    }
+
+    return retval;
 }
 
 // Resizes the buffer to make room for at least 'new_size' elements, returning
@@ -790,11 +807,11 @@ size_t netbuf_peek_noalloc(netbuf_t *m_buf, void *m_target, size_t m_size)
 
 size_t netbuf_peek(netbuf_t *m_buf, void **m_target)
 {
-    void *last_target;
+    size_t retval;
 
     pthread_mutex_lock(&m_buf->begin_lock);
     buf_snapshot_t s = make_snapshot(m_buf);
-    size_t bytes_used = bytes_in_use(s);
+    size_t bytes_used = bytes_in_use(s); /// Add the sentinel element back here
 
     if (unlikely(bytes_used == 0)) {
         pthread_mutex_unlock(&m_buf->begin_lock);
@@ -804,11 +821,11 @@ size_t netbuf_peek(netbuf_t *m_buf, void **m_target)
 
     check_invariants(m_buf);
     *m_target = malloc(bytes_used);
-    last_target = copy_netbuf_into_new_buf(s, *m_target);
+    retval = copy_netbuf_data(s, *m_target);
 
     pthread_mutex_unlock(&m_buf->begin_lock);
 
-    return ((char*)last_target - (char*)*m_target);
+    return retval;
 
 }
 

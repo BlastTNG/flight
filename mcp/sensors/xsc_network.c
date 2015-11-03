@@ -83,6 +83,22 @@ static void xsc_net_error(int m_code, void *m_userdata)
     return;
 }
 
+/**
+ * Currently unused function to process errors received on the Network socket
+ * @param m_code
+ * @param m_userdata
+ */
+static void xsc_net_connected(int m_code, int m_errcode, void *m_priv)
+{
+    comms_socket_t *sock = (comms_socket_t*)m_priv;
+    if (m_code == NETSOCK_OK) {
+        blast_info("XSC Network successfully connected to %s", sock->host?sock->host:"(Unknown SC)");
+    } else {
+        blast_warn("Received Error %d from XSC connecting to %s", m_errcode, sock->host?sock->host:"(UNK)");
+    }
+    return;
+}
+
 void xsc_networking_init(int which)
 {
     for (unsigned int i=0; i<3; i++) {
@@ -97,6 +113,7 @@ void xsc_networking_init(int which)
     comms_sock_connect(xsc_sock[which], addresses[which], port);
 
     xsc_sock[which]->callbacks.priv = xsc_sock[which];
+    xsc_sock[which]->callbacks.connected = xsc_net_connected;
     xsc_sock[which]->callbacks.data = xsc_process_packet;
     xsc_sock[which]->callbacks.finished = xsc_net_cleanup;
     xsc_sock[which]->callbacks.error = xsc_net_error;
@@ -132,7 +149,8 @@ void xsc_write_data(int which)
     xsc_client_data.xsc_protocol_version = XSC_PROTOCOL_VERSION;
 
 
-    comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data));
+    if (comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data)) != NETSOCK_OK)
+        comms_sock_reconnect(xsc_sock[which]);
 }
 
 

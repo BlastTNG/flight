@@ -261,7 +261,7 @@ static int comms_net_async_ctx_resize(comms_net_async_ctx_t *m_ctx, size_t m_siz
  * @param m_async Pointer to the asynchronous handler to add to #m_ctx
  * @return NETSOCK_ERR on failure NETSOCK_OK on success
  */
-int comms_net_async_ctx_add(comms_net_async_ctx_t *m_ctx, comms_net_async_handle_t *m_handle)
+static int comms_net_async_ctx_add(comms_net_async_ctx_t *m_ctx, comms_net_async_handle_t *m_handle)
 {
 	socket_t fd;
 
@@ -346,56 +346,62 @@ void comms_net_async_handler_disconnect_ctx(comms_net_async_handle_t *m_handle)
 		return;
 	}
 
-	handler_context = m_handle->ctx;
-	if (!handler_context)
-	{
-		log_leave("Handle not currently connected to context.");
-		return;
-	}
+    handler_context = m_handle->ctx;
+    if (!handler_context)
+    {
+        log_leave("Handle not currently connected to context.");
+        return;
+    }
 
 
-	if (handler_context->num_handlers <= m_handle->index || handler_context->async_handlers[m_handle->index] != m_handle)
-	{
-		/**
-		 * In the case that a user passes
-		 */
-		blast_err("Mis-formed context/handle pairing.  Attempting to clean.  You may have leaked memory.");
-		m_handle->ctx = NULL;
-		for (fd_index = 0; fd_index < handler_context->num_handlers; fd_index++)
-		{
-			if (handler_context->async_handlers[fd_index] == m_handle)
-			{
-				m_handle->index = fd_index;
-				m_handle->ctx = handler_context;
-			}
-		}
+    if (!pthread_mutex_lock(&handler_context->mutex))
+    {
 
-		if (!m_handle->ctx)
-		{
-			blast_err("No match found in context handler");
-			log_leave();
-			return;
-		}
-	}
+        if (handler_context->num_handlers <= m_handle->index || handler_context->async_handlers[m_handle->index] != m_handle)
+        {
+            /**
+             * In the case that a user passes
+             */
+            blast_err("Mis-formed context/handle pairing.  Attempting to clean.  You may have leaked memory.");
+            m_handle->ctx = NULL;
+            for (fd_index = 0; fd_index < handler_context->num_handlers; fd_index++)
+            {
+                if (handler_context->async_handlers[fd_index] == m_handle)
+                {
+                    m_handle->index = fd_index;
+                    m_handle->ctx = handler_context;
+                }
+            }
 
-	fd_index = m_handle->index;
+            if (!m_handle->ctx)
+            {
+                blast_err("No match found in context handler");
+                pthread_mutex_unlock(&handler_context->mutex);
+                log_leave();
+                return;
+            }
+        }
 
-	m_handle->fd = handler_context->pollfds[fd_index].fd;
-	m_handle->ctx = NULL;
-	handler_context->num_fds--;
+        fd_index = m_handle->index;
 
-	/**
-	 * If we have removed a socket from the middle of the pollfds array, take the last socket (and its handler) in the array and move
-	 * it into the now empty slot.
-	 */
-	if (handler_context->num_fds > 0 && handler_context->num_fds != fd_index)
-	{
-		handler_context->pollfds[fd_index] = handler_context->pollfds[handler_context->num_fds];
-		handler_context->async_handlers[fd_index] = handler_context->async_handlers[handler_context->num_fds];
-		handler_context->async_handlers[fd_index]->index = fd_index;
-	}
+        m_handle->fd = handler_context->pollfds[fd_index].fd;
+        m_handle->ctx = NULL;
+        handler_context->num_fds--;
 
-	log_leave("Success %p ctx now has %d fds", handler_context, handler_context->num_fds);
+        /**
+         * If we have removed a socket from the middle of the pollfds array, take the last socket (and its handler) in the array and move
+         * it into the now empty slot.
+         */
+        if (handler_context->num_fds > 0 && handler_context->num_fds != fd_index)
+        {
+            handler_context->pollfds[fd_index] = handler_context->pollfds[handler_context->num_fds];
+            handler_context->async_handlers[fd_index] = handler_context->async_handlers[handler_context->num_fds];
+            handler_context->async_handlers[fd_index]->index = fd_index;
+        }
+
+        log_leave("Success %p ctx now has %d fds", handler_context, handler_context->num_fds);
+        pthread_mutex_unlock(&handler_context->mutex);
+    }
 }
 
 /**

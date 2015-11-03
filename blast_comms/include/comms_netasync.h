@@ -85,7 +85,6 @@ void comms_net_async_set_sock(comms_net_async_handle_t *p, socket_t fd);
 void comms_net_async_set_callback(comms_net_async_handle_t *p, comms_net_async_callback_t cb, void *userdata);
 comms_net_async_ctx_t *comms_net_async_ctx_new(size_t chunk_size);
 void comms_net_async_ctx_free(comms_net_async_ctx_t *ctx);
-int comms_net_async_ctx_add(comms_net_async_ctx_t *ctx, comms_net_async_handle_t *p);
 int comms_net_async_ctx_add_sock(comms_net_async_ctx_t *m_ctx, struct comms_socket *m_sock);
 void comms_net_async_handler_disconnect_ctx(comms_net_async_handle_t *p);
 int comms_net_async_poll(comms_net_async_ctx_t *ctx, int timeout);
