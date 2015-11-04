@@ -383,15 +383,14 @@ static inline size_t copy_netbuf_data(buf_snapshot_t s, char* restrict buf) {
     size_t retval = 0;
 
     if (wraps_around(s)) {
-        buf = offset_memcpy(buf, s.begin, s.bufend - s.begin);
-        retval = s.bufend - s.begin;
-        if (s.end - s.buffer > s.elem_size) {
-            buf = offset_memcpy(buf, s.buffer, s.end - s.buffer - s.elem_size);
-            retval += (s.end - s.buffer - s.elem_size);
-        }
+        buf = offset_memcpy(buf, s.begin + s.elem_size, s.bufend - s.begin - s.elem_size);
+        retval = s.bufend - s.begin - s.elem_size;
+
+        buf = offset_memcpy(buf, s.buffer, s.end - s.buffer);
+        retval += (s.end - s.buffer - s.elem_size);
     }
     else {
-        buf = offset_memcpy(buf, s.begin, s.end - s.begin - s.elem_size);
+        buf = offset_memcpy(buf, s.begin + s.elem_size, s.end - s.begin - s.elem_size);
         retval = s.end - s.begin - s.elem_size;
     }
 
@@ -792,14 +791,14 @@ size_t netbuf_peek_noalloc(netbuf_t *m_buf, void *m_target, size_t m_size)
 
     if(wraps_around(s) && (bytes_to_copy > (s.bufend - s.begin)))
     {
-        dest = offset_memcpy(dest, s.begin, s.bufend - s.begin);
+        dest = offset_memcpy(dest, s.begin + s.elem_size, s.bufend - s.begin - s.elem_size);
         bytes_to_copy -= (s.bufend - s.begin);
 
         memcpy(dest, s.buffer, bytes_to_copy);
     }
     else
     {
-        memcpy(dest, s.begin, bytes_to_copy);
+        memcpy(dest, s.begin + s.elem_size, bytes_to_copy);
     }
 
     return bytes_to_copy;
@@ -820,7 +819,7 @@ size_t netbuf_peek(netbuf_t *m_buf, void **m_target)
     }
 
     check_invariants(m_buf);
-    *m_target = malloc(bytes_used);
+    *m_target = calloc(bytes_used, 1);
     retval = copy_netbuf_data(s, *m_target);
 
     pthread_mutex_unlock(&m_buf->begin_lock);
@@ -880,6 +879,7 @@ void netbuf_eat(netbuf_t *m_buf, size_t m_len)
         s.begin = rev_wrap_ptr_if_necessary(s.buffer, s.begin, s.bufend);
     }
 
+    m_buf->begin = s.begin;
     check_invariants(m_buf);
 
     trim_buffer(m_buf, s); // Unlocks begin_lock
