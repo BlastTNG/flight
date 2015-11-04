@@ -48,7 +48,6 @@
 #include "starpos.h"
 #include "channels_tng.h"
 #include "tx.h"
-#include "flcdataswap.h"
 #include "lut.h"
 
 #include <acs.h>
@@ -58,6 +57,7 @@
 #include <blast_sip_interface.h>
 #include <blast_time.h>
 #include <computer_sensors.h>
+#include <data_sharing.h>
 #include <dsp1760.h>
 #include <ec_motors.h>
 #include <framing.h>
@@ -488,8 +488,7 @@ int main(int argc, char *argv[])
 //  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 //  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-//  start_flc_data_swapper(flc_ip[SouthIAm]);
-
+  initialize_data_sharing();
   initialize_watchdog(2);
 
   clock_gettime(CLOCK_REALTIME, &ts);
