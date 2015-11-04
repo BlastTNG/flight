@@ -282,6 +282,12 @@ static void Chatter(void* arg)
 //
 //#endif
 
+static void close_mcp(int m_code)
+{
+    fprintf(stderr, "Closing MCP with signal %d\n", m_code);
+    watchdog_close();
+
+}
 
 /* Polarity crisis: am I north or south? */
 static int AmISouth(int *not_cryo_corner)
@@ -352,7 +358,7 @@ static void mcp_1hz_routines(void)
 int main(int argc, char *argv[])
 {
   pthread_t CommandDatacomm1;
-  int use_starcams = 1;
+  int use_starcams = 0;
 
   int counter_100hz = 0;
   int counter_5hz=0;
@@ -360,9 +366,6 @@ int main(int argc, char *argv[])
   struct timespec ts;
   struct timespec interval_ts = { .tv_sec = 0,
                                   .tv_nsec = 5000000}; /// 200HZ interval
-  struct tm start_time;
-  time_t start_time_s;
-  char log_file_name[PATH_MAX];
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -391,14 +394,23 @@ int main(int argc, char *argv[])
   }
   umask(0);  /* clear umask */
 
-  start_time_s = time(&start_time_s);
-  gmtime_r(&start_time_s, &start_time);
+  /**
+   * Begin logging
+   */
+  {
+      struct tm start_time;
+      time_t start_time_s;
+      char log_file_name[PATH_MAX];
 
-  snprintf(log_file_name, PATH_MAX, "/data/etc/blast/mcp_%02d-%02d-%02d_%02d:%02d",
-          start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
-          start_time.tm_hour, start_time.tm_min);
+      start_time_s = time(&start_time_s);
+      gmtime_r(&start_time_s, &start_time);
 
-  openMCElog(log_file_name);
+      snprintf(log_file_name, PATH_MAX, "/data/etc/blast/mcp_%02d-%02d-%02d_%02d:%02d.log",
+              start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
+              start_time.tm_hour, start_time.tm_min);
+
+      openMCElog(log_file_name);
+  }
 
   /* register the output function */
   nameThread("Dummy"); //insert dummy sentinel node first
@@ -427,7 +439,7 @@ int main(int argc, char *argv[])
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
   initialize_blast_comms();
-  initialize_sip_interface();
+//  initialize_sip_interface();
   initialize_dsp1760_interface();
 
 #ifdef USE_FIFO_CMD
@@ -448,10 +460,10 @@ int main(int argc, char *argv[])
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
-//  signal(SIGHUP, CloseBBC);
-//  signal(SIGINT, CloseBBC);
-//  signal(SIGTERM, CloseBBC);
-//  signal(SIGPIPE, SIG_IGN);
+  signal(SIGHUP, close_mcp);
+  signal(SIGINT, close_mcp);
+  signal(SIGTERM, close_mcp);
+  signal(SIGPIPE, SIG_IGN);
 
 
 #ifndef BOLOTEST

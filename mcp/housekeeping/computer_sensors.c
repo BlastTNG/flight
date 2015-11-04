@@ -34,39 +34,55 @@
 #include <command_struct.h>
 #include <tx.h>
 #include <channels_tng.h>
+#include "computer_sensors.h"
 
-#define CH_TEMP_MB1 0
-#define CH_TEMP_MB2 2
-#define CH_TEMP_CPU 0
+#define CH_TEMP_CPU0 1
+#define CH_TEMP_CPU1 2
 
-double sensors_temp_mb1 = 0.0;
-double sensors_temp_mb2 = 0.0;
-double sensors_temp_cpu = 0.0;
+#define CH_VOLT_12V  0
+#define CH_VOLT_5V   1
+#define CH_VOLT_BATT 2
+#define CH_VOLT_CURRENT 5
+
+#define CHIP_IMANAGER 0
+#define CHIP_CPU 1
+
+computer_sensors_t computer_sensors;
 
 static const sensors_chip_name *chip[2] = {NULL};
 
 void blast_store_cpu_health(void)
 {
-    int err;
-    if (!chip[0]) return;
+    int sensor_err;
 
-    if((err = sensors_get_value(chip[1], CH_TEMP_CPU, &sensors_temp_cpu)))
-    {
-        blast_err("Could not get temp CPU %s", sensors_strerror(err));
+    if (chip[0]) {
+        if((sensor_err = sensors_get_value(chip[CHIP_CPU], CH_TEMP_CPU0, &computer_sensors.core0_temp)))
+        {
+            blast_err("Could not get temp CPU0 %s", sensors_strerror(sensor_err));
+        }
+        if((sensor_err = sensors_get_value(chip[CHIP_CPU], CH_TEMP_CPU1, &computer_sensors.core1_temp)))
+        {
+            blast_err("Could not get temp CPU1 %s", sensors_strerror(sensor_err));
+        }
     }
-
-    if((err = sensors_get_value(chip[0], CH_TEMP_MB1, &sensors_temp_mb1)))
-    {
-        blast_err("Could not get temp MB1 %s", sensors_strerror(err));
+    if (chip[1]) {
+        if((sensor_err = sensors_get_value(chip[CHIP_IMANAGER], CH_VOLT_12V, &computer_sensors.volt_12V)))
+        {
+            blast_err("Could not get 12V %s", sensors_strerror(sensor_err));
+        }
+        if((sensor_err = sensors_get_value(chip[CHIP_IMANAGER], CH_VOLT_5V, &computer_sensors.volt_5V)))
+        {
+            blast_err("Could not get 5V %s", sensors_strerror(sensor_err));
+        }
+        if((sensor_err = sensors_get_value(chip[CHIP_IMANAGER], CH_VOLT_BATT, &computer_sensors.volt_battery)))
+        {
+            blast_err("Could not get battery voltage %s", sensors_strerror(sensor_err));
+        }
+        if((sensor_err = sensors_get_value(chip[CHIP_IMANAGER], CH_VOLT_CURRENT, &computer_sensors.curr_input)))
+        {
+            blast_err("Could not get current %s", sensors_strerror(sensor_err));
+        }
     }
-
-    if((err = sensors_get_value(chip[0], CH_TEMP_MB2, &sensors_temp_mb2)))
-    {
-        blast_err("Could not get temp MB2 %s", sensors_strerror(err));
-    }
-    CommandData.temp1 = sensors_temp_cpu * 10.0;
-    CommandData.temp2 = sensors_temp_mb1 * 10.0;
-    CommandData.temp3 = sensors_temp_mb2 * 10.0;
 }
 
 void blast_store_disk_space(void)
@@ -85,20 +101,31 @@ void blast_store_disk_space(void)
 
 void initialize_CPU_sensors(void)
 {
-    int err;
+    int sensor_err;
     int nr = 0;
+    const sensors_chip_name *new_chip;
 
-    if ((err = sensors_init(NULL)))
+    if ((sensor_err = sensors_init(NULL)))
     {
         blast_err("Could not initialize CPU sensors system");
         return;
     }
 
-    chip[0] = sensors_get_detected_chips(NULL, &nr);
-    chip[1] = sensors_get_detected_chips(NULL, &nr);
-    if (!chip[0])
+    new_chip = sensors_get_detected_chips(NULL, &nr);
+    while (new_chip && nr < 3) {
+        new_chip = sensors_get_detected_chips(NULL, &nr);
+        if (new_chip) {
+            if (!strncmp(new_chip->prefix, "coretemp", 8)){
+                chip[CHIP_CPU] = new_chip;
+            } else if (!strncmp(new_chip->prefix, "imanager", 8)) {
+                chip[CHIP_IMANAGER] = new_chip;
+            }
+        }
+    }
+
+    if (!chip[CHIP_CPU] && !chip[CHIP_IMANAGER])
     {
-        blast_err("Could not get sensors chip!");
+        blast_err("Could not get sensors chips!");
         sensors_cleanup();
         return;
     }

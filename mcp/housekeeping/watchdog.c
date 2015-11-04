@@ -55,8 +55,10 @@ void watchdog_ping()
  */
 void watchdog_close(void)
 {
-    write(watchdog_fd, &watchdog_magic, 1);
-    close(watchdog_fd);
+    if (watchdog_fd != -1) {
+        write(watchdog_fd, &watchdog_magic, 1);
+        close(watchdog_fd);
+    }
     watchdog_fd = -1;
 }
 

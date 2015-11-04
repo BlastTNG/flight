@@ -26,6 +26,17 @@
 #ifndef INCLUDE_COMPUTER_SENSORS_H_
 #define INCLUDE_COMPUTER_SENSORS_H_
 
+typedef struct {
+    double core0_temp;
+    double core1_temp;
+    double volt_12V;
+    double volt_5V;
+    double volt_battery;
+    double curr_input;
+    double disk_free;
+} computer_sensors_t;
+
+extern computer_sensors_t computer_sensors;
 
 void initialize_CPU_sensors(void);
 void blast_store_cpu_health(void);

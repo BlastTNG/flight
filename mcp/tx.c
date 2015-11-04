@@ -41,6 +41,7 @@
 
 #include <conversions.h>
 #include <blast_sip_interface.h>
+#include <computer_sensors.h>
 
 #include "channels_tng.h"
 #include "pointing_struct.h"
@@ -98,8 +99,7 @@ void WriteAux(void)
     static channel_t* timeUSecAddr;
     static channel_t* rateTdrssAddr;
     static channel_t* rateIridiumAddr;
-    static channel_t* tChipFlcAddr;
-    static channel_t* tMbFlcAddr;
+
     static channel_t* statusMCCAddr;
     static channel_t* ploverAddr;
     static channel_t* he4LevOldAddr;
@@ -108,21 +108,29 @@ void WriteAux(void)
     static channel_t* partsSchedAddr;
     static channel_t* upslotSchedAddr;
 
-    static channel_t* timeMeFlcAddr;
-    static channel_t* dfMeFlcAddr;
-    static channel_t* timeoutMeAddr;
-    static channel_t* tCpuMeFlcAddr;
-    static channel_t* lastMeCmdAddr;
-    static channel_t* countMeCmdAddr;
+    static channel_t* tcpu0_flc_addr[2];
+    static channel_t* tcpu1_flc_addr[2];
+    static channel_t* v12_flc_addr[2];
+    static channel_t* v5_flc_addr[2];
+    static channel_t* vbatt_flc_addr[2];
+    static channel_t* icurr_flc_addr[2];
 
-    static channel_t* timeOtherFlcAddr;
-    static channel_t* dfOtherFlcAddr;
-    static channel_t* timeoutOtherAddr;
-    static channel_t* tCpuOtherFlcAddr;
-    static channel_t* lastOtherCmdAddr;
-    static channel_t* countOtherCmdAddr;
+    static channel_t* time_flc_addr[2];
+    static channel_t* df_flc_addr[2];
+    static channel_t* timeout_addr[2];
+    static channel_t* last_cmd_addr[2];
+    static channel_t* count_cmd_addr[2];
 
-    struct flc_data otherData, *myData;
+    const char which_flc[2] = {'n', 's'};
+
+#define ASSIGN_BOTH_FLC(_ch,_str) \
+    ({ \
+        char buf[128];\
+        snprintf(buf, 127,  _str  "_%c", which_flc[SouthIAm]); \
+        _ch[0] = channels_find_by_name(buf); \
+        snprintf(buf, 127, _str  "_%c", which_flc[!SouthIAm]); \
+        _ch[1] = channels_find_by_name(buf); \
+    })
 
     static int incharge = -1;
     time_t t;
@@ -134,15 +142,12 @@ void WriteAux(void)
 
     static int firsttime = 1;
     if (firsttime) {
-        char buf[128];
         firsttime = 0;
         statusMCCAddr = channels_find_by_name("status_mcc");
 
         he4LevOldAddr = channels_find_by_name("he4_lev_old");
         he4LevReadAddr = channels_find_by_name("he4_lev");
 
-        tChipFlcAddr = channels_find_by_name("t_chip_flc");
-        tMbFlcAddr = channels_find_by_name("t_mb_flc");
         timeAddr = channels_find_by_name("time");
         timeUSecAddr = channels_find_by_name("time_usec");
         rateTdrssAddr = channels_find_by_name("rate_tdrss");
@@ -153,34 +158,20 @@ void WriteAux(void)
         partsSchedAddr = channels_find_by_name("parts_sched");
         upslotSchedAddr = channels_find_by_name("upslot_sched");
 
-        sprintf(buf, "time_%c_flc", (SouthIAm) ? 's' : 'n');
-        timeMeFlcAddr = channels_find_by_name(buf);
-        sprintf(buf, "df_%c_flc", (SouthIAm) ? 's' : 'n');
-        dfMeFlcAddr = channels_find_by_name(buf);
-        sprintf(buf, "timeout_%c", (SouthIAm) ? 's' : 'n');
-        timeoutMeAddr = channels_find_by_name(buf);
-        sprintf(buf, "t_cpu_%c_flc", (SouthIAm) ? 's' : 'n');
-        tCpuMeFlcAddr = channels_find_by_name(buf);
-        sprintf(buf, "last_%c_cmd", (SouthIAm) ? 's' : 'n');
-        lastMeCmdAddr = channels_find_by_name(buf);
-        sprintf(buf, "count_%c_cmd", (SouthIAm) ? 's' : 'n');
-        countMeCmdAddr = channels_find_by_name(buf);
+        ASSIGN_BOTH_FLC(tcpu0_flc_addr, "t_cpu0_flc");
+        ASSIGN_BOTH_FLC(tcpu1_flc_addr, "t_cpu1_flc");
+        ASSIGN_BOTH_FLC(v12_flc_addr, "v_12v_flc");
+        ASSIGN_BOTH_FLC(v5_flc_addr, "v_5v_flc");
+        ASSIGN_BOTH_FLC(vbatt_flc_addr, "v_batt_flc");
+        ASSIGN_BOTH_FLC(icurr_flc_addr, "i_flc");
 
-        sprintf(buf, "time_%c_flc", (!SouthIAm) ? 's' : 'n');
-        timeOtherFlcAddr = channels_find_by_name(buf);
-        sprintf(buf, "df_%c_flc", (!SouthIAm) ? 's' : 'n');
-        dfOtherFlcAddr = channels_find_by_name(buf);
-        sprintf(buf, "timeout_%c", (!SouthIAm) ? 's' : 'n');
-        timeoutOtherAddr = channels_find_by_name(buf);
-        sprintf(buf, "t_cpu_%c_flc", (!SouthIAm) ? 's' : 'n');
-        tCpuOtherFlcAddr = channels_find_by_name(buf);
-        sprintf(buf, "last_%c_cmd", (!SouthIAm) ? 's' : 'n');
-        lastOtherCmdAddr = channels_find_by_name(buf);
-        sprintf(buf, "count_%c_cmd", (!SouthIAm) ? 's' : 'n');
-        countOtherCmdAddr = channels_find_by_name(buf);
+        ASSIGN_BOTH_FLC(last_cmd_addr, "last_cmd");
+        ASSIGN_BOTH_FLC(count_cmd_addr, "count_cmd");
+        ASSIGN_BOTH_FLC(df_flc_addr, "df_flc");
+        ASSIGN_BOTH_FLC(time_flc_addr, "time_flc");
+        ASSIGN_BOTH_FLC(timeout_addr, "timeout");
+
     }
-
-    myData = get_flc_out_data();
 
     if (StartupVeto > 0) {
         InCharge = 0;
@@ -208,16 +199,16 @@ void WriteAux(void)
     SET_VALUE(timeAddr, tv.tv_sec + TEMPORAL_OFFSET);
     SET_VALUE(timeUSecAddr, tv.tv_usec);
 
-    SET_VALUE(timeMeFlcAddr, tv.tv_sec + TEMPORAL_OFFSET);
-    myData->time = tv.tv_sec + TEMPORAL_OFFSET;
+    SET_VALUE(time_flc_addr[0], tv.tv_sec + TEMPORAL_OFFSET);
 
-    SET_VALUE(tChipFlcAddr, CommandData.temp1);
-    SET_VALUE(tMbFlcAddr, CommandData.temp3);
-    SET_VALUE(tCpuMeFlcAddr, CommandData.temp2);
-    myData->t_cpu = CommandData.temp2;
+    SET_VALUE(tcpu0_flc_addr[0], computer_sensors.core0_temp);
+    SET_VALUE(tcpu1_flc_addr[0], computer_sensors.core1_temp);
+    SET_VALUE(icurr_flc_addr[0], computer_sensors.curr_input);
+    SET_VALUE(v12_flc_addr[0], computer_sensors.volt_12V);
+    SET_VALUE(v5_flc_addr[0], computer_sensors.volt_5V);
+    SET_VALUE(vbatt_flc_addr[0], computer_sensors.volt_battery);
 
-    SET_VALUE(dfMeFlcAddr, CommandData.df);
-    myData->df = CommandData.df;
+    SET_VALUE(df_flc_addr[0], computer_sensors.disk_free);
 
     SET_VALUE(partsSchedAddr, CommandData.parts_sched & 0xffffff);
     SET_VALUE(upslotSchedAddr, CommandData.upslot_sched);
@@ -231,12 +222,10 @@ void WriteAux(void)
 #endif
 
     if (CommandData.pointing_mode.t > t) {
-        SET_VALUE(timeoutMeAddr, CommandData.pointing_mode.t - t);
-        myData->timeout = CommandData.pointing_mode.t - t;
+        SET_VALUE(timeout_addr[0], CommandData.pointing_mode.t - t);
     }
     else {
-        SET_VALUE(timeoutMeAddr, 0);
-        myData->timeout = 0;
+        SET_VALUE(timeout_addr[0], 0);
     }
 
     SET_VALUE(ploverAddr, CommandData.plover);
@@ -262,18 +251,17 @@ void WriteAux(void)
 
     SET_VALUE(statusMCCAddr, mccstatus);
 
-    SET_VALUE(lastMeCmdAddr, CommandData.last_command);
-    SET_VALUE(countMeCmdAddr, CommandData.command_count);
-    myData->last_command = CommandData.last_command;
-    myData->command_count = CommandData.command_count;
+    SET_VALUE(last_cmd_addr[0], CommandData.last_command);
+    SET_VALUE(count_cmd_addr[0], CommandData.command_count);
 
-    swap_flc_data(&otherData);
-    SET_VALUE(timeOtherFlcAddr, otherData.time);
-    SET_VALUE(dfOtherFlcAddr, otherData.df);
-    SET_VALUE(timeoutOtherAddr, otherData.timeout);
-    SET_VALUE(tCpuOtherFlcAddr, otherData.t_cpu);
-    SET_VALUE(lastOtherCmdAddr, otherData.last_command);
-    SET_VALUE(countOtherCmdAddr, otherData.command_count);
+    ///TODO:Add in data sharing
+//    swap_flc_data(&otherData);
+//    SET_VALUE(timeOtherFlcAddr, otherData.time);
+//    SET_VALUE(dfOtherFlcAddr, otherData.df);
+//    SET_VALUE(timeoutOtherAddr, otherData.timeout);
+//    SET_VALUE(tCpuOtherFlcAddr, otherData.t_cpu);
+//    SET_VALUE(lastOtherCmdAddr, otherData.last_command);
+//    SET_VALUE(countOtherCmdAddr, otherData.command_count);
 }
 
 void WriteChatter(void)
