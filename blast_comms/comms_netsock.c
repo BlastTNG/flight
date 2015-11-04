@@ -57,11 +57,10 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 static int comms_sock_get_addrinfo(const char *m_hostname, uint32_t m_port, bool m_udp, struct addrinfo **m_ai)
 {
 	char *service = NULL;
-	struct addrinfo request;
+	struct addrinfo request = {0};
 	int retval = 0;
 
 	log_enter();
-	BLAST_ZERO(request);
 
 	if (!m_udp)
 	{

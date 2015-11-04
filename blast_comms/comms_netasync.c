@@ -49,11 +49,9 @@ comms_net_async_handle_t *comms_net_async_handler_new(socket_t m_fd, uint16_t m_
 	comms_net_async_handle_t *handle = NULL;
 	log_enter();
 
-	handle = balloc(err, sizeof(struct comms_net_async_handle));
+	handle = calloc(sizeof(struct comms_net_async_handle), 1);
 	if (handle)
 	{
-		BLAST_ZERO_P(handle);
-
 		handle->fd = m_fd;
 		handle->events = m_events;
 		handle->process = m_process;
@@ -155,10 +153,9 @@ comms_net_async_ctx_t *comms_net_async_ctx_new(size_t m_step_size)
 	comms_net_async_ctx_t *ctx;
 	log_enter();
 
-	ctx = (comms_net_async_ctx_t*) balloc(err,sizeof(comms_net_async_ctx_t));
+	ctx = (comms_net_async_ctx_t*) calloc(sizeof(comms_net_async_ctx_t), 1);
 	if (ctx)
 	{
-		BLAST_ZERO_P(ctx);
 		ctx->step_size = m_step_size ? m_step_size : BLAST_NET_DEFAULT_CTX_STEP;
 		pthread_mutex_init(&ctx->mutex, NULL);
 	}
