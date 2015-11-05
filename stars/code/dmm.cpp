@@ -39,12 +39,13 @@ void dmm::dmm_initialize()
 			return;
 		}
 	}
-	initialized = true;
 
 	if (dscInitBoard(DSC_DMM, &dsccb, &dscb) != DE_NONE) {
 		dscGetLastError(&errorParams);
 		logerror = (format("dscInitBoard error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
 		logger.log(logerror);
+		dscFree();
+		initialized = false;
 		return;
 	}
 
@@ -71,6 +72,8 @@ void dmm::dmm_scan(double *values)
 	ERRPARAMS errorParams; // structure for returning error code and error string
 	string logerror = "";
 	DSCSAMPLE buf[16];
+	
+	if (!initialized) return;
 
 	if (dscADScan(dscb, &dscadscan, buf) != DE_NONE)
 	{
@@ -97,6 +100,12 @@ void dmm::cycle_camera(void)
 	static const BYTE port = 0;
 	static const BYTE bit = 2;
 
+	if (!initialized)
+	{
+		logger.log("Not cycling camera because DMM board not initialized\n");
+		return;
+	}
+
 	logger.log(format("Power cycling the camera..."));
 	if ((dscbresult = dscDIOClearBit(dscb, port, bit)) != DE_NONE)
 	{
@@ -121,6 +130,9 @@ void dmm::heat_camera(bool enable)
 	BYTE dscbresult;	   //variable for error handling
 	static const BYTE port = 0;
 	static const BYTE bit = 1;
+
+	if (!initialized) return;
+
 	if (enable)
 	{
 		if ((dscbresult = dscDIOSetBit(dscb, port, bit)) != DE_NONE)
