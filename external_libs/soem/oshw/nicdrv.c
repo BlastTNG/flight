@@ -130,7 +130,7 @@ int ecx_setupnic(ecx_portt *port, const char *ifname, int secondary)
    int r, rval, ifindex;
    struct timeval timeout;
    struct ifreq ifr;
-   struct sockaddr_ll sll;
+   struct sockaddr_ll sll = {0};
    uint16_t mac[3];
    int *psock;
 

@@ -44,12 +44,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 
-  {COMMAND(isc_off), "turn off the ISC", GR_ISC_MODE | GR_POWER | CONFIRM},
-  {COMMAND(isc_on), "turn on the ISC", GR_ISC_MODE | GR_POWER},
-  {COMMAND(isc_cycle), "power cycle the ISC", GR_ISC_MODE | GR_POWER | CONFIRM},
-  {COMMAND(osc_off), "turn off the OSC", GR_OSC_MODE | GR_POWER | CONFIRM},
-  {COMMAND(osc_on), "turn on the OSC", GR_OSC_MODE | GR_POWER},
-  {COMMAND(osc_cycle), "power cycle the OSC", GR_OSC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(xsc0_off), "turn off XSC0", GR_ISC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(xsc0_on), "turn on XSC0", GR_ISC_MODE | GR_POWER},
+  {COMMAND(xsc0_cycle), "power cycle XSC0", GR_ISC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(xsc1_off), "turn off XSC1", GR_OSC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(xsc1_on), "turn on XSC1", GR_OSC_MODE | GR_POWER},
+  {COMMAND(xsc1_cycle), "power cycle XSC1", GR_OSC_MODE | GR_POWER | CONFIRM},
   {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER},
   {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER},
   {COMMAND(gybox_cycle), "power cycle the digital gyros' box", GR_POWER},
@@ -124,10 +124,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(elenc_allow), "un-veto elevation encoder", GR_VETO},
   {COMMAND(elmotenc_veto), "veto elevation motor encoder", GR_VETO},
   {COMMAND(elmotenc_allow), "un-veto elevation motor encoder", GR_VETO},
-  {COMMAND(isc_veto), "veto integrating star camera", GR_VETO},
-  {COMMAND(isc_allow), "un-veto integrating star camera", GR_VETO},
-  {COMMAND(osc_veto), "veto other star camera", GR_VETO},
-  {COMMAND(osc_allow), "un-veto other star-cam", GR_VETO},
+  {COMMAND(xsc0_veto), "veto star camera 0", GR_VETO},
+  {COMMAND(xsc0_allow), "un-veto star camera 0", GR_VETO},
+  {COMMAND(xsc1_veto), "veto star camera 1", GR_VETO},
+  {COMMAND(xsc1_allow), "un-veto star camera 1", GR_VETO},
   {COMMAND(mag_veto), "veto magnotometer", GR_VETO},
   {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
   {COMMAND(pss_veto), "veto pss sensor", GR_VETO},
@@ -249,67 +249,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hwpr_pot_is_dead), "don't use the potentiometer when stepping the hwpr", GR_HWPR},
   {COMMAND(hwpr_pot_is_alive), "use the potentiometer when stepping the hwpr", GR_HWPR},
 
-  {COMMAND(isc_abort), "abort current solution attempt", GR_ISC_MODE},
-  {COMMAND(isc_auto_focus), "autofocus camera", GR_ISC_MODE},
-  {COMMAND(isc_cam_cycle), "cycle star camera CCD power", GR_ISC_MODE},
-  {COMMAND(isc_discard_images), "turn off saving of images", GR_ISC_MODE},
-  {COMMAND(isc_pause), "pause image capture", GR_ISC_MODE},
-  {COMMAND(isc_reboot), "ask for software reboot of ISC computer",
-    GR_ISC_MODE | CONFIRM},
-  {COMMAND(isc_run), "start automatic image capture (normal mode)",
-    GR_ISC_MODE},
-  {COMMAND(isc_save_images), "turn on saving of images", GR_ISC_MODE},
-  {COMMAND(isc_shutdown), "ask for shutdown of ISC computer", GR_ISC_MODE |
-    CONFIRM},
-
-  {COMMAND(isc_eye_on), "turn on ISC eViL eYe", GR_ISC_HOUSE},
-  {COMMAND(isc_eye_off), "turn off ISC eViL eYe", GR_ISC_HOUSE},
-  {COMMAND(isc_full_screen), "show full screen", GR_ISC_HOUSE},
-  {COMMAND(isc_reconnect),
-    "tell mcp to try and establish a new connection with ISC", GR_ISC_HOUSE},
-  {COMMAND(isc_trig_ext), "tell ISC to use external negative pulse triggers",
-    GR_ISC_HOUSE},
-  {COMMAND(isc_trig_int), "tell ISC to use internal (software) triggers",
-    GR_ISC_HOUSE},
-  {COMMAND(isc_use_pyramid), "tell ISC to use the pyramid solution finder",
-    GR_ISC_PARAM},
-  {COMMAND(isc_no_pyramid), "tell ISC not to use the pyramid solution finder",
-    GR_ISC_PARAM},
-
-
-  {COMMAND(osc_abort), "abort current solution attempt", GR_OSC_MODE},
-  {COMMAND(osc_auto_focus), "autofocus camera", GR_OSC_MODE},
-  {COMMAND(osc_cam_cycle), "cycle star camera CCD power", GR_OSC_MODE},
-  {COMMAND(osc_discard_images), "turn off saving of images", GR_OSC_MODE},
-  {COMMAND(osc_pause), "pause image capture", GR_OSC_MODE},
-  {COMMAND(osc_reboot), "ask for software reboot of OSC computer",
-    GR_OSC_MODE | CONFIRM},
-  {COMMAND(osc_run), "start automatic image capture (normal mode)",
-    GR_OSC_MODE},
-  {COMMAND(osc_save_images), "turn on saving of images", GR_OSC_MODE},
-  {COMMAND(osc_shutdown), "ask for shutdown of OSC computer", GR_OSC_MODE |
-    CONFIRM},
-
-  {COMMAND(osc_eye_on), "turn on OSC eViL eYe", GR_OSC_HOUSE},
-  {COMMAND(osc_eye_off), "turn off OSC eViL eYe", GR_OSC_HOUSE},
-  {COMMAND(osc_full_screen), "show full screen", GR_OSC_HOUSE},
-  {COMMAND(osc_reconnect),
-    "tell mcp to try and establish a new connection with OSC", GR_OSC_HOUSE},
-  {COMMAND(osc_trig_ext), "tell OSC to use external negative pulse triggers",
-    GR_OSC_HOUSE},
-  {COMMAND(osc_trig_int), "tell OSC to use internal (software) triggers",
-    GR_OSC_HOUSE},
-  {COMMAND(osc_use_pyramid), "tell OSC to use the pyramid solution finder",
-    GR_OSC_PARAM},
-  {COMMAND(osc_no_pyramid), "tell OSC not to use the pyramid solution finder",
-    GR_OSC_PARAM},
-  //SBSC commands
-  {COMMAND(cam_cycle), "power cycle the SBSC camera", GR_SBSC},
-  {COMMAND(cam_expose), "Start cam exposure (in triggered mode)", GR_SBSC},
-  {COMMAND(cam_autofocus), "Camera autofocus mode", GR_SBSC},
-  {COMMAND(cam_settrig_ext), "Set external cam trigger mode", GR_SBSC},
-  {COMMAND(cam_force_lens), "Forced mode for cam lens moves", GR_SBSC},
-  {COMMAND(cam_unforce_lens), "Normal mode for cam lens moves", GR_SBSC},
   //Shutter commands
   {COMMAND(shutter_init), "Initialize shutter move parameters", GR_SHUTTER},
   {COMMAND(shutter_close), "Close shutter and keep it closed", GR_SHUTTER},
@@ -330,11 +269,6 @@ struct scom scommands[N_SCOMMANDS] = {
  * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
-  {COMMAND(dac2_level), "*UNUSED* DAC2 output level. Does nothing", GR_MISC, 1,
-    {
-      {"Level", 0, 32767, 'i', "dac2_ampl"}
-    }
-  },
 
   {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
     GR_TELEM, 1,
@@ -577,7 +511,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     GR_STAGE | GR_ACT | GR_LOCK | GR_HWPR, 2,
     {
       {"Address (1-3,5,8,13,33)", 1, 0x2F, 'i', "1.0"},
-      {"Command", 0, 32, 's', ""},
+      {"Command", 0, 32, 's', "NONE"},
     }
   },
   {COMMAND(lock_vel), "set the lock motor velocity and acceleration", GR_LOCK,
@@ -711,10 +645,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
     "DEPRECATED - repeatedly cycle the hwpr through a number of positions",
     GR_HWPR, 4,
     {
-      {"Number of step positions", 0, MAX_15BIT, 'i', ""},
-      {"Number of times to step", 0, MAX_15BIT, 'i', ""},
-      {"Time between steps (s)", 0, MAX_15BIT, 'i', ""},
-      {"Step size (encoder ticks)", -MAX_15BIT/2, MAX_15BIT/2, 'i', ""},
+      {"Number of step positions", 0, MAX_15BIT, 'i', "NONE"},
+      {"Number of times to step", 0, MAX_15BIT, 'i', "NONE"},
+      {"Time between steps (s)", 0, MAX_15BIT, 'i', "NONE"},
+      {"Step size (encoder ticks)", -MAX_15BIT/2, MAX_15BIT/2, 'i', "NONE"},
     }
   },
   {COMMAND(hwpr_define_pos), 
@@ -892,7 +826,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
       {"Max Pulse Delay (0=never pulse) (s)",  0, 32767, 'i', "PERIOD_CAL"},
-      {"Always Pulse before HWP move (0=no,1=yes)",  0, 1, 'i', ""}
+      {"Always Pulse before HWP move (0=no,1=yes)",  0, 1, 'i', "NONE"}
     }
   },
 
@@ -916,96 +850,345 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  /***************************************/
-  /********* ISC Commanding **************/
-  {COMMAND(isc_offset), "set offset of ISC to primary beam",
-    GR_TRIM | GR_ISC_PARAM, 2,
-    {
-      {"X Offset (deg)", -5., 5, 'f', "X_OFF_ISC"},
-      {"Y Offset (deg)", -5., 5, 'f', "Y_OFF_ISC"}
-    }
-  },
-  {COMMAND(isc_set_focus), "step focus position (relative)", GR_ISC_PARAM, 1,
-    {
-      {"Focus Position Step", -1000, 1000, 'i', "FOCUS_ISC"}
-    }
-  },
-  {COMMAND(isc_foc_off), "set focus offset relative to the home position",
-    GR_ISC_PARAM, 1,
-    {
-      {"Focus Offset", -500, 2500, 'i', "FOC_OFF_ISC"}
-    }
-  },
-  {COMMAND(isc_set_aperture), "set the f-stop", GR_ISC_PARAM, 1,
-    {
-      {"Aperture Position", 0, AP_RANGE, 'i', "APERT_ISC"}
-    }
-  },
-  {COMMAND(isc_save_period), "set the time between automatically saved images",
-    GR_ISC_HOUSE, 1,
-    {
-      {"Period (s):", 0, 1000, 'i', "SAVE_PRD_ISC"}
-    }
-  },
-  {COMMAND(isc_pixel_centre), "centre display on pixel", GR_ISC_HOUSE, 2,
-    {
-      {"Pixel X", 0, ISC_CCD_X_PIXELS - 1, 'i', "NONE"},
-      {"Pixel Y", 0, ISC_CCD_Y_PIXELS - 1, 'i', "NONE"}
-    }
-  },
-  {COMMAND(isc_blob_centre), "centre display on blob", GR_ISC_HOUSE, 1,
-    {
-      {"Blob #", 0, MAX_ISC_BLOBS, 'i', "NONE"}
-    }
-  },
-  {COMMAND(isc_integrate), "set camera integration times", GR_ISC_PARAM, 2,
-    {
-      {"fast integration time (ms)", 0, 1572.864, 'f', "FPULSE_ISC"},
-      {"slow integration time (ms)", 0, 1572.864, 'f', "SPULSE_ISC"}
-    }
-  },
-  {COMMAND(isc_det_set), "set detection parameters", GR_ISC_PARAM, 3,
-    {
-      {"Search Grid (px/side)",     0, ISC_CCD_Y_PIXELS, 'i', "GRID_ISC"},
-      {"S/N Threshold",           0.1,       3276.7, 'f', "THRESH_ISC"},
-      {"Exclusion Distance (px)",   0, ISC_CCD_Y_PIXELS, 'i', "MDIST_ISC"}
-    }
-  },
-  {COMMAND(isc_blobs), "number of blobs used in solution",
-    GR_ISC_PARAM, 2,
-    {
-      {"Min Blobs", 0, MAX_ISC_BLOBS, 'i', "MINBLOBS_ISC"},
-      {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "MAXBLOBS_ISC"}
-    }
-  },
-  {COMMAND(isc_catalogue), "set catalogue retreival parameters",
-    GR_ISC_PARAM, 3,
-    {
-      {"Magnitude Limit",            0, 12, 'f', "MAGLIMIT_ISC"},
-      {"Normal Search Radius (deg)", 0, 50, 'f', "NRAD_ISC"},
-      {"Lost Search Radius (deg)",   0, 50, 'f', "LRAD_ISC"}
-    }
-  },
-  {COMMAND(isc_tolerances), "set pointing solution tolerances", GR_ISC_PARAM, 4,
-    {
-      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "TOL_ISC"},
-      {"Match Tolerance (%)",       0,  100, 'f', "MTOL_ISC"},
-      {"Quit Tolerance (%)",        0,  100, 'f', "QTOL_ISC"},
-      {"Rot. Tolerance (deg)",      0,   90, 'f', "RTOL_ISC"}
-    }
-  },
-  {COMMAND(isc_hold_current), "set ISC stepper motor hold current",
-    GR_ISC_HOUSE, 1,
-    {
-      {"Level (%)", 0, 50, 'i', "I_HOLD_ISC"}
-    }
-  },
-  {COMMAND(isc_gain), "set CCD preamp gain and offset", GR_ISC_PARAM, 2,
-    {
-      {"Gain", 0.1, 100, 'f', "GAIN_ISC"},
-      {"Offset", -4096, 4096, 'i', "OFFSET_ISC"}
-    }
-  },
+//  <!-- XSC general -->
+
+    {COMMAND(xsc_offset), "set offset of star camera to primary beam", GR_POINT|GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"cross_el_offset (deg) [enter the approximation delta_az*cos(el)]", 0, 360, 'f', "ISC_X_OFF"},
+            {"el_offset (deg)", 0, 360, 'f',"ISC_Y_OFF"},
+        },
+    },
+
+
+    {COMMAND(xsc_is_new_window_period), "xsc is_new window period", GR_ISC_HOUSE, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"is_new window period", 1, 200, 'l', "NONE"},
+        },
+    },
+
+
+
+////  <!-- XSC heaters -->
+
+    {COMMAND(xsc_heaters_off), "xsc heater off", GR_ISC_HOUSE, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_heaters_on), "xsc heater on", GR_ISC_HOUSE, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_heaters_auto), "xsc heater auto", GR_ISC_HOUSE, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"setpoint (C)", -100, 200, 'f', "NONE"},
+        },
+    },
+
+
+
+////  <!-- XSC exposure -->
+
+    {COMMAND(xsc_exposure_timing), "xsc exposure time", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"exposure time_cs (cs) [default: 12]", 1, 100, 'l', "NONE"},
+            {"grace period (s) (disregards which) [default: 10.0]", 1.0, 100.0, 'f', "NONE"},
+            {"post trigger counter_fcp share delay (cs) (disregards which) [default: 200]", 1, 1000, 'l', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_multi_trigger), "xsc trigger timing", GR_ISC_PARAM, 0,
+        {
+            {"num triggers [default: 1]", 0, 16, 'i', "NONE"},
+            {"time between triggers (cs) [default: 19]", 1, 100, 'l', "NONE"},
+            {"stars readout delay (s) [default: 1.0]", 0.1, 10.0, 'f', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_trigger_threshold), "xsc trigger threshold", GR_ISC_PARAM, 0,
+        {
+            {"enabled", 'i', 0, 1, "NONE"},
+            {"first exposure blob streaking (px)", 1.0, 20.0, 'f'},
+        },
+    },
+
+
+    {COMMAND(xsc_scan_force_trigger), "xsc enable forcing triggers during snaps for cmb scans", GR_ISC_PARAM, 0,
+        {
+            {"enabled", 'i', 0, 1, "NONE"},
+        },
+    },
+
+
+
+////  <!-- XSC main -->
+
+    {COMMAND(xsc_quit), "xsc quit", GR_ISC_HOUSE|CONFIRM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_shutdown), "xsc shutdown", GR_ISC_HOUSE|CONFIRM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"include_restart", 0, 1, 'i', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_network_reset), "xsc network reset", GR_ISC_HOUSE|CONFIRM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"reset_now", 0, 1, 'i', "NONE"},
+            {"reset_on_lull_enabled", 0, 1, 'i', "NONE"},
+            {"reset_on_lull_delay", 0.0, 10.0, 'f', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_main_settings), "xsc main settings", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"display_frequency [default: 20.0]", 1.0, 30.0, 'f', "NONE"},
+            {"display_fullscreen [default: 1]", 0, 1, 'i', "NONE"},
+            {"display_image_only [default: 0]", 0, 1, 'i', "NONE"},
+            {"display_solving_filters [default: 0]]", 0, 1, 'i', "NONE"},
+            {"display_image_brightness [default: 1.0]", 0.5, 4.0, 'f', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_display_zoom), "xsc display zoom", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"center x display pixel [default: 320]", 0, 1000, 'i', "NONE"},
+            {"center y display pixel [default: 240]", 0, 1000, 'i', "NONE"},
+            {"zoom [default: 1.0]", 1.0, 4.0, 'f', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_image_client), "xsc image client", GR_ISC_HOUSE, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 'i', 0, 1, "NONE"},
+        },
+    },
+
+
+
+////  <!-- XSC imaging (lens, camera, fake sky, masking) -->
+
+    {COMMAND(xsc_init_focus), "xsc init focus", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_set_focus), "xsc set focus", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"position", 1, 10000, 'l', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_set_focus_incremental), "xsc set focus incremental", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"relative position", -10000, 10000, 'l', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_run_autofocus), "xsc run autofocus", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_set_autofocus_range), "xsc set autofocus range", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"focus_search_min", 1, 10000, 'l', "NONE"},
+            {"focus_search_max", 2, 10000, 'l', "NONE"},
+            {"focus_search_step", 2, 1000, 'l', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_abort_autofocus), "xsc abort autofocus", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"still_use_solution", 0, 1, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_autofocus_display_mode), "xsc autofocus display mode", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"mode (0=auto, 1=on, 2=off)", 0, 2, 'i', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_init_aperture), "xsc init aperture", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_set_aperture), "xsc set aperture", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"position", 0, 10000, 'i', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_get_gain), "xsc get gain", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_set_gain), "xsc set gain", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"position", 0.5, 10.0, 'f', "NONE"},
+        },
+    },
+
+
+    {COMMAND(xsc_fake_sky_brightness), "xsc fake sky brightness", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 0, 1, 'i', "NONE"},
+            {"level_kepsa",0.0, 10000.0, 'f', "NONE"},
+            {"gain_db",-50, 10, 'f', "NONE"},
+            {"actual exposure time (s)", 0.01, 10.0, 'f', "NONE"},
+            {"simulated exposure time (s)", 0.01, 10.0, 'f', "NONE"},
+        },
+    },
+
+
+
+////  <!-- XSC solver -->
+
+    {COMMAND(xsc_solver_general), "xsc solver general", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 'i', 0, 1, "NONE"},
+            {"timeout", 'f', 1.0, 120.0, "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_solver_abort), "xsc solver abort", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_selective_mask), "xsc selective mask", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 0, 1, 'i', "NONE"},
+            {"field0", 0, CMD_L_MAX, 'l', "NONE"},
+            {"field1", 0, CMD_L_MAX, 'l', "NONE"},
+            {"field2", 0, CMD_L_MAX, 'l', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_blob_finding), "", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"snr_threshold", 1.0, 10.0, 'f', "NONE"},
+            {"max_num_blobs", 4, 40, 'i', "NONE"},
+            {"robust_mode_enabled", 0, 1, 'i', "NONE"},
+            {"fitting_method (0=none, 1=gaussian, 2=double-gaussian", 0, 3 , 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_blob_cells), "", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"cell_size_power (power of 2) [default: 7]", 1, 14, 'i', "NONE"},
+            {"max_num_blobs_per_cell [default: 2]", 1, 4, 'i', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_motion_psf), "", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 'i', 0, 1, "NONE"},
+            {"horizontal roll (degrees)", -90.0, 90.0, 'f', "NONE"},
+            {"iplatescale (arcsec/px)", 6.0, 7.0, 'f', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_pattern_matching), "", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"pattern_matcher_enabled", 0, 1, 'i', "NONE"},
+            {"display_star_names", 0, 1, 'i', "NONE"},
+            {"match_tolerance_px", 0.5, 10.0, 'f', "NONE"},
+            {"iplatescale_min (arcsec/px)", 6.0, 7.0,  'f', "NONE"},
+            {"iplatescale_max (arcsec/px)", 6.0, 7.0, 'f', "NONE"},
+            {"platescale_always_fixed", 0, 1, 'i', "NONE"},
+            {"iplatescale_fixed (arcsec/px)", 6.0, 7.0, 'f', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_filter_hor_location), "xsc solver: filter on horizontal location (with guess provided by mcp)", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 0, 1, 'i', "NONE"},
+            {"radius", 0, 120.0, 'f', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_filter_hor_roll), "xsc solver: filter on horizontal roll", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 0, 1, 'i', "NONE"},
+            {"min_degrees", -90.0, 90.0, 'f', "NONE"},
+            {"max_degrees", -90.0, 90.0,  'f', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_filter_el), "xsc solver: filter on elevation", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 0, 1, 'i', "NONE"},
+            {"min_degrees", 'f', -90.0, 90.0, "NONE"},
+            {"max_degrees", 'f', -90.0, 90.0, "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_filter_eq_location), "xsc solver: filter on equatorial location (with guess provided by mcp)", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"enabled", 0, 1, 'i', "NONE"},
+            {"radius", 0.0, 180.0, 'f', "NONE"},
+        },
+    },
+
+    {COMMAND(xsc_filter_matching), "xsc solver: matching requirements", GR_ISC_PARAM, 0,
+        {
+            {"which", 0, 2, 'i', "NONE"},
+            {"pointing_error_threshold (arcsec) [default: 10.0]", 0.1, 200.0, 'f', "NONE"},
+            {"fit_error_threshold (px) [default: 2000.0]", 0.1, 2000.0, 'f', "NONE"},
+            {"num_matched [default: 4]", 3, 20, 'i', "NONE"},
+        },
+    },
 
   {COMMAND(isc_max_age), "set maximum delay between trigger and solution (ms)", GR_ISC_PARAM, 1,
     {
@@ -1013,158 +1196,9 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
-  /***************************************/
-  /********* OSC Commanding **************/
-  {COMMAND(osc_offset), "set offset of OSC to primary beam",
-    GR_TRIM | GR_OSC_PARAM, 2,
-    {
-      {"X Offset (deg)", -5., 5, 'f', "X_OFF_OSC"},
-      {"Y Offset (deg)", -5., 5, 'f', "Y_OFF_OSC"}
-    }
-  },
-  {COMMAND(osc_set_focus), "step focus position (relative)", GR_OSC_PARAM, 1,
-    {
-      {"Focus position step", -1000, 1000, 'i', "FOCUS_OSC"}
-    }
-  },
-  {COMMAND(osc_foc_off), "set focus offset relative to the home position",
-    GR_OSC_PARAM, 1,
-    {
-      {"Focus Offset", -500, 2500, 'i', "FOC_OFF_OSC"}
-    }
-  },
-  {COMMAND(osc_set_aperture), "set the f-stop", GR_OSC_PARAM, 1,
-    {
-      {"Aperture Position", 0, AP_RANGE, 'i', "APERT_OSC"}
-    }
-  },
-  {COMMAND(osc_save_period), "set the time between automatically saved images",
-    GR_OSC_HOUSE, 1,
-    {
-      {"Period (s):", 0, 1000, 'i', "SAVE_PRD_OSC"}
-    }
-  },
-  {COMMAND(osc_pixel_centre), "centre display on pixel", GR_OSC_HOUSE, 2,
-    {
-      {"Pixel X", 0, OSC_CCD_X_PIXELS - 1, 'i', "NONE"},
-      {"Pixel Y", 0, OSC_CCD_Y_PIXELS - 1, 'i', "NONE"}
-    }
-  },
-  {COMMAND(osc_blob_centre), "centre display on blob", GR_OSC_HOUSE, 1,
-    {
-      {"Blob #", 0, MAX_ISC_BLOBS, 'i', "NONE"}
-    }
-  },
-  {COMMAND(osc_integrate), "set camera integration times", GR_OSC_PARAM, 2,
-    {
-      {"fast integration time (ms)", 0, 1572.864, 'f', "FPULSE_OSC"},
-      {"slow integration time (ms)", 0, 1572.864, 'f', "SPULSE_OSC"}
-    }
-  },
-  {COMMAND(osc_det_set), "set detection parameters", GR_OSC_PARAM, 3,
-    {
-      {"Search Grid (px/side)",     0, OSC_CCD_Y_PIXELS, 'i', "GRID_OSC"},
-      {"S/N Threshold",           0.1,       3276.7, 'f', "THRESH_OSC"},
-      {"Exclusion Distance (px)",   0, OSC_CCD_Y_PIXELS, 'i', "MDIST_OSC"}
-    }
-  },
-  {COMMAND(osc_blobs), "number of blobs used in solution",
-    GR_OSC_PARAM, 2,
-    {
-      {"Min Blobs", 0, MAX_ISC_BLOBS, 'i', "MINBLOBS_OSC"},
-      {"Max Blobs", 0, MAX_ISC_BLOBS, 'i', "MAXBLOBS_OSC"}
-    }
-  },
-  {COMMAND(osc_catalogue), "set catalogue retreival parameters",
-    GR_OSC_PARAM, 3,
-    {
-      {"Magnitude Limit",            0, 12, 'f', "MAGLIMIT_OSC"},
-      {"Normal Search Radius (deg)", 0, 50, 'f', "NRAD_OSC"},
-      {"Lost Search Radius (deg)",   0, 50, 'f', "LRAD_OSC"}
-    }
-  },
-  {COMMAND(osc_tolerances), "set pointing solution tolerances", GR_OSC_PARAM, 4,
-    {
-      {"Assoc. Tolerance (arcsec)", 0, 1000, 'f', "TOL_OSC"},
-      {"Match Tolerance (%)",       0,  100, 'f', "MTOL_OSC"},
-      {"Quit Tolerance (%)",        0,  100, 'f', "QTOL_OSC"},
-      {"Rot. Tolerance (deg)",      0,   90, 'f', "RTOL_OSC"}
-    }
-  },
-  {COMMAND(osc_hold_current), "set OSC stepper motor hold current",
-    GR_OSC_HOUSE, 1,
-    {
-      {"Level (%)", 0, 50, 'i', "I_HOLD_OSC"}
-    }
-  },
-  {COMMAND(osc_gain), "set CCD preamp gain and offset", GR_OSC_PARAM, 2,
-    {
-      {"Gain", 0.1, 100, 'f', "GAIN_OSC"},
-      {"Offset", -4096, 4096, 'i', "OFFSET_OSC"}
-    }
-  },
   {COMMAND(osc_max_age), "set maximum delay between trigger and solution (ms)", GR_OSC_PARAM, 1,
     {
       {"Max Age", 0, MAX_15BIT, 'i', "MAX_AGE_OSC"},
-    }
-  },
-  //SBSC commands
-  {COMMAND(cam_any), "Execute arbitrary starcam command", GR_SBSC, 1,
-    {
-      {"Command String", 0, 32, 's', ""}
-    }
-  },
-  {COMMAND(cam_trig_delay), "Set trigger delay time", GR_SBSC, 1,
-    {
-      {"Delay (s)", 0, 100, 'f', "DELAY_SBSC"}
-    }
-  },
-  {COMMAND(cam_settrig_timed), "Use timed exposure mode", GR_SBSC, 1,
-    {
-      {"Exposure Interval (ms)", 0, MAX_15BIT, 'i', "SC_EXP_INT"}
-    }
-  },
-  {COMMAND(cam_exp_params), "set starcam exposure commands", GR_SBSC, 1,
-    {
-      {"Exposure duration (ms)", 40, MAX_15BIT, 'i', "EXP_TIME_SBSC"}
-    }
-  },
-  {COMMAND(cam_focus_params), "set camera autofocus params", GR_SBSC, 2,
-    {
-      {"Resolution (number total positions)", 0, MAX_15BIT, 'i', "FOC_RES_SBSC"},
-      {"Range (inverse fraction of total range)", 0, MAX_15BIT, 'i', ""} 
-    }
-  },
-  {COMMAND(cam_bad_pix), "Indicate pixel to ignore", GR_SBSC, 3,
-    {
-      {"Camera ID (0 or 1)", 0, 1, 'i', ""},
-      //1530 = CAM_WIDTH, 1020 = CAM_HEIGHT (sbsc_protocol.h)
-      {"x (0=left)", 0, 1530, 'i', ""},
-      {"y (0=top)", 0, 1020, 'i', ""}
-    }
-  },
-  {COMMAND(cam_blob_params), "set blob finder params", GR_SBSC, 4,
-    {
-      {"Max number of blobs", 1, MAX_15BIT, 'i', "MAXBLOB_SBSC"},
-      {"Search grid size (pix)", 1, 1530 , 'i', "GRID_SBSC"},
-      {"Threshold (# sigma)", 0, 100, 'f', "THRESH_SBSC"},
-      {"Min blob separation ^2 (pix^2)", 1, 1530 , 'i', "MDIST_SBSC"}
-    }
-  },
-  {COMMAND(cam_lens_any), "execute lens command directly", GR_SBSC, 1,
-    {
-      {"Lens command string", 0, 32, 's', ""}
-    }
-  },
-  {COMMAND(cam_lens_move), "move camera lens", GR_SBSC, 1,
-    {
-      //total range on Sigma EX 120-300mm is about 3270
-      {"New position (ticks)", -10000, 10000, 'i', ""}
-    }
-  },
-  {COMMAND(cam_lens_params), "set starcam lens params", GR_SBSC, 1,
-    {
-      {"Allowed move error (ticks)", 0, MAX_15BIT, 'i', "MOVE_TOL_SBSC"}
     }
   },
   {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
@@ -1187,11 +1221,11 @@ struct mcom mcommands[N_MCOMMANDS] = {
   },
   {COMMAND(params_test), "Do nothing, with all paramter types", GR_MISC, 5,
     {
-      {"i", 0, CMD_I_MAX, 'i', ""},
-      {"l", 0, CMD_L_MAX, 'l', ""},
-      {"f (-100 to +100)", -100, 100, 'f', ""},
-      {"d (-100 to +100)", -100, 100, 'd', ""},
-      {"s", 0, 32, 's', ""}
+      {"i", 0, CMD_I_MAX, 'i', "NONE"},
+      {"l", 0, CMD_L_MAX, 'l', "NONE"},
+      {"f (-100 to +100)", -100, 100, 'f', "NONE"},
+      {"d (-100 to +100)", -100, 100, 'd', "NONE"},
+      {"s", 0, 32, 's', "NONE"}
     }
   },
   {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,

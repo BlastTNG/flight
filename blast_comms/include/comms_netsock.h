@@ -29,6 +29,7 @@
 #define BLAST_NETSOCK_H_
 #include <stdbool.h>
 #include <netinet/in.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <comms_netbuf.h>
@@ -41,7 +42,7 @@
 typedef struct comms_socket
 {
     comms_net_async_handle_t *poll_handle;
-    netsock_callbacks_t *callbacks;
+    netsock_callbacks_t callbacks;
     socket_t fd;
 
     char *host;
@@ -62,8 +63,8 @@ typedef struct comms_socket
     int udp;
 
     e_comms_socket_state state;
-    comms_netbuf_t *out_buffer;
-    comms_netbuf_t *in_buffer;
+    netbuf_t *out_buffer;
+    netbuf_t *in_buffer;
 
     void *priv_data;
 
@@ -78,6 +79,7 @@ int comms_sock_write(comms_socket_t *m_sock, const void *m_buf, size_t m_len);
 int comms_sock_flush(comms_socket_t *m_sock);
 int comms_sock_connect(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port);
 int comms_sock_connect_udp(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port);
+int comms_sock_reconnect(comms_socket_t *m_sock);
 int comms_sock_listen(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port);
 int comms_sock_listen_udp(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port);
 socket_t comms_sock_accept(comms_socket_t *m_socket);

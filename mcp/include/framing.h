@@ -1,7 +1,7 @@
 /* 
  * framing.h: 
  *
- * This software is copyright (C) 2013-2014 Seth Hillbrand
+ * This software is copyright (C) 2013-2015 Seth Hillbrand
  *
  * This file is part of mcp, created for the BLASTPol Project.
  *
@@ -30,5 +30,10 @@
 
 int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
 void framing_shutdown(void);
+
+void framing_publish_200hz(void);
+void framing_publish_100hz(void);
+void framing_publish_5hz(void);
+void framing_publish_1hz(void);
 
 #endif /* INCLUDE_FRAMING_H_ */

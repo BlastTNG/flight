@@ -122,6 +122,7 @@ struct PointingDataStruct {
   double mag_model_dec; // degrees
   double mag_model_dip; // degrees
   double mag_sigma; // degrees
+  double mag_strength; // nanoTesla
   double offset_ifrollmag_gy;
   double offset_ifyawmag_gy;
 

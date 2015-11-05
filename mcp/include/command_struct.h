@@ -247,8 +247,8 @@ struct CommandDataStruct {
   struct {
     struct latch_pulse sc_tx;
     struct latch_pulse das;
-    struct latch_pulse isc;
-    struct latch_pulse osc;
+    struct latch_pulse xsc0;
+    struct latch_pulse xsc1;
     struct latch_pulse rw;
     struct latch_pulse piv;
     struct latch_pulse elmot;
@@ -286,8 +286,8 @@ struct CommandDataStruct {
   unsigned char use_elmotenc;
   unsigned char use_elclin;
   unsigned char use_pss;
-  unsigned char use_isc;
-  unsigned char use_osc;
+  unsigned char use_xsc0;
+  unsigned char use_xsc1;
   unsigned char use_mag;
 
   unsigned short fast_offset_gy;

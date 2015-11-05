@@ -50,10 +50,12 @@ typedef struct blast_master_packet
 } __attribute__((packed)) blast_master_packet_t; /** 4 bytes */
 
 
-typedef struct blast_int_pkt_hdr
+typedef struct blast_seg_pkt_hdr
 {
-    uint32_t                seg_length:8;   /**< seg_length length in bytes of an integer segment of data */
-} __attribute__((packed)) blast_int_pkt_hdr_t;
+    blast_master_packet_t   header;
+    uint8_t                 seg_id;     /**< seg_id sequential id to group the segments */
+    uint8_t                 seg_num;    /**< seg_num ordering number of multi-segment data */
+} __attribute__((packed)) blast_seg_pkt_hdr_t;
 
 typedef struct
 {
@@ -79,10 +81,13 @@ typedef struct blast_file_pkt_header
     char                    filename[1];    /**< filename Pointer to the name of the file found in the packet */
 }__attribute__((packed)) blast_file_pkt_header_t;
 
-#define BLAST_MASTER_PACKET_FULL_LENGTH(_ptr) (sizeof(blast_master_packet_t) + (_ptr)->length + sizeof(uint32_t))
+#define BLAST_MASTER_PACKET_FULL_LENGTH(_ptr) (sizeof(blast_master_packet_t) + (_ptr)->length + 4)
 #define BLAST_MASTER_PACKET_PAYLOAD(_ptr) ((uint8_t*)(((blast_master_packet_t*)(_ptr))+1))
 #define BLAST_MASTER_PACKET_CRC(_ptr) (*(uint32_t*)(&BLAST_MASTER_PACKET_PAYLOAD(_ptr)[(_ptr)->length]))
 #define BLAST_MASTER_PACKET_ACK(_ptr) (*(uint32_t*)(&BLAST_MASTER_PACKET_PAYLOAD(_ptr)[(_ptr)->length + 4]))
-#define BLAST_MASTER_PACKET_SEGMENT_LENGTH(_ptr) ((_ptr)->length - sizeof(blast_seg_data_hdr_t))
+#define BLAST_SEGMENT_PACKET_COUNT(_ptr) \
+    (((_ptr)->header.length + 4 - (255 - sizeof(blast_seg_pkt_hdr_t) -1)) / (255 - sizeof(blast_seg_pkt_hdr_t)))
+#define BLAST_SEGMENT_PACKET_PAYLOAD(_ptr) ((uint8_t*)(((blast_seg_pkt_hdr_t*)(_ptr))+1))
+
 
 #endif /* INCLUDE_BLAST_PACKET_FORMAT_H_ */

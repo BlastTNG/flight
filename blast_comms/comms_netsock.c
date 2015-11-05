@@ -40,9 +40,9 @@
 
 static int comms_sock_raw_read(comms_socket_t *m_sock, void *m_buf, size_t m_len);
 static int comms_sock_raw_write(comms_socket_t *m_sock, const void *m_buf, size_t m_len);
-static int comms_sock_get_addrinfo(const char *m_hostname, uint32_t m_port, bool m_tcp, struct addrinfo **m_ai);
+static int comms_sock_get_addrinfo(const char *m_hostname, uint32_t m_port, bool m_udp, struct addrinfo **m_ai);
 static socket_t comms_sock_bind(const char *m_hostname, uint32_t m_port, bool m_tcp);
-static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, bool m_tcp);
+static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, bool m_udp);
 static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, uint16_t m_events, void *m_sock);
 
 /**
@@ -50,19 +50,19 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
  * connection
  * @param m_hostname Destination hostname in either DNS or xx.xx.xx.xx format
  * @param m_port Port number for the service
+ * @param m_udp True if the port is a UDP port
  * @param m_ai Double pointer that will be allocated by by getaddrinfo()
  * @return return code from getaddrinfo
  */
-static int comms_sock_get_addrinfo(const char *m_hostname, uint32_t m_port, bool m_tcp, struct addrinfo **m_ai)
+static int comms_sock_get_addrinfo(const char *m_hostname, uint32_t m_port, bool m_udp, struct addrinfo **m_ai)
 {
 	char *service = NULL;
-	struct addrinfo request;
+	struct addrinfo request = {0};
 	int retval = 0;
 
 	log_enter();
-	BLAST_ZERO(request);
 
-	if (m_tcp)
+	if (!m_udp)
 	{
 		request.ai_protocol = IPPROTO_TCP;
 		request.ai_socktype = SOCK_STREAM;
@@ -92,7 +92,7 @@ static int comms_sock_get_addrinfo(const char *m_hostname, uint32_t m_port, bool
  * @param m_port
  * @return
  */
-static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, bool m_tcp)
+static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, bool m_udp)
 {
 	socket_t sock = -1;
 	int retval;
@@ -101,7 +101,7 @@ static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, b
 
 	log_enter();
 
-	retval = comms_sock_get_addrinfo(m_hostname, m_port, m_tcp, &addrinfo_group);
+	retval = comms_sock_get_addrinfo(m_hostname, m_port, m_udp, &addrinfo_group);
 	if (retval != 0)
 	{
 		blast_err("Failed to resolve hostname %s (%s)", m_hostname, gai_strerror(retval));
@@ -121,7 +121,7 @@ static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, b
 
 		fcntl(sock, F_SETFL, O_NONBLOCK);
 
-		if (m_tcp) connect(sock, ai->ai_addr, ai->ai_addrlen);
+		if (!m_udp) connect(sock, ai->ai_addr, ai->ai_addrlen);
 		break;
 	}
 
@@ -135,10 +135,10 @@ static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, b
  * Binds a socket structure to a specific host:port combination.
  * @param m_hostname
  * @param m_port Port number to connect
- * @param m_tcp If true, build a stream-based tcp connection
+ * @param m_udp If false, build a stream-based tcp connection
  * @return
  */
-static socket_t comms_sock_bind(const char *m_hostname, uint32_t m_port, bool m_tcp)
+static socket_t comms_sock_bind(const char *m_hostname, uint32_t m_port, bool m_udp)
 {
 	socket_t sock = -1;
 	int retval;
@@ -148,7 +148,7 @@ static socket_t comms_sock_bind(const char *m_hostname, uint32_t m_port, bool m_
 
 	log_enter();
 
-	retval = comms_sock_get_addrinfo(m_hostname, m_port, m_tcp, &addrinfo_group);
+	retval = comms_sock_get_addrinfo(m_hostname, m_port, m_udp, &addrinfo_group);
 	if (retval != 0)
 	{
 		blast_err("Failed to resolve hostname %s (%s)", m_hostname, gai_strerror(retval));
@@ -229,7 +229,7 @@ int comms_sock_set_buffer(comms_socket_t *m_socket, int m_size)
 	return NETSOCK_OK;
 }
 
-static int comms_sock_listen_generic(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port, bool m_tcp)
+static int comms_sock_listen_generic(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port, bool m_udp)
 {
 	socket_t fd;
 
@@ -245,7 +245,7 @@ static int comms_sock_listen_generic(comms_socket_t *m_socket, const char *m_hos
 
 	m_socket->port = m_port;
 
-	if ((fd = comms_sock_bind(m_socket->host, m_port, m_tcp)) == NETSOCK_ERR)
+	if ((fd = comms_sock_bind(m_socket->host, m_port, m_udp)) == NETSOCK_ERR)
 	{
 		BLAST_SAFE_FREE(m_socket->host);
 		return NETSOCK_ERR;
@@ -271,7 +271,7 @@ static int comms_sock_listen_generic(comms_socket_t *m_socket, const char *m_hos
  */
 int comms_sock_listen(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port)
 {
-	return comms_sock_listen_generic(m_socket, m_hostname, m_port, true);
+	return comms_sock_listen_generic(m_socket, m_hostname, m_port, false);
 }
 
 /**
@@ -283,7 +283,7 @@ int comms_sock_listen(comms_socket_t *m_socket, const char *m_hostname, uint32_t
  */
 int comms_sock_listen_udp(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port)
 {
-	return comms_sock_listen_generic(m_socket, m_hostname, m_port, false);
+	return comms_sock_listen_generic(m_socket, m_hostname, m_port, true);
 }
 
 /**
@@ -332,9 +332,8 @@ comms_socket_t *comms_sock_new(void)
 {
 	comms_socket_t *sock;
 
-	sock = (comms_socket_t *)malloc(sizeof(struct comms_socket));
+	sock = (comms_socket_t *)calloc(1,sizeof(struct comms_socket));
 	if (!sock) return NULL;
-	BLAST_ZERO_P(sock);
 
 	log_enter();
 
@@ -346,17 +345,17 @@ comms_socket_t *comms_sock_new(void)
 	sock->fd = INVALID_SOCK;
 	sock->last_errno = -1;
 	sock->is_socket = true;
-	sock->in_buffer = comms_netbuf_new();
+	sock->in_buffer = netbuf_new(1, 4*1024*1024);
 	if (!sock->in_buffer)
 	{
 		BLAST_SAFE_FREE(sock);
 		blast_err("Could not allocate in_buffer");
 		return NULL;
 	}
-	sock->out_buffer = comms_netbuf_new();
+	sock->out_buffer = netbuf_new(1, 1024*1024);
 	if (!sock->out_buffer)
 	{
-		comms_netbuf_free(sock->in_buffer);
+		netbuf_free(sock->in_buffer);
 		BLAST_SAFE_FREE(sock);
 		log_leave("Could not allocate out_buffer");
 		return NULL;
@@ -383,12 +382,12 @@ void comms_sock_reset(comms_socket_t **m_sock)
 	(*m_sock)->fd = INVALID_SOCK;
 	(*m_sock)->last_errno = -1;
 	(*m_sock)->is_socket = true;
-	comms_netbuf_reinit((*m_sock)->in_buffer);
-	comms_netbuf_reinit((*m_sock)->out_buffer);
+	netbuf_reinit((*m_sock)->in_buffer);
+	netbuf_reinit((*m_sock)->out_buffer);
 	(*m_sock)->can_read = false;
 	(*m_sock)->can_write = false;
 	(*m_sock)->have_exception = false;
-	(*m_sock)->callbacks = NULL;
+	BLAST_ZERO((*m_sock)->callbacks);
 	(*m_sock)->poll_handle = comms_sock_get_poll_handle(*m_sock);
 	(*m_sock)->state = NETSOCK_STATE_NONE;
 	(*m_sock)->flags = 0;
@@ -410,7 +409,7 @@ static inline bool comms_sock_is_open(comms_socket_t *s)
  * @param m_handle Pointer to the asynchronous handler
  * @param m_fd File descriptor for the network socket
  * @param m_events Received events flags
- * @param m_sock Pointer to the EBEX socket structure
+ * @param m_sock Pointer to the comms_socket structure
  * @return NETSOCK_OK on success, NETSOCK_ERR on failure
  */
 static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, uint16_t m_events, void *m_sock)
@@ -441,9 +440,9 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 				getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void *) &sock->last_errno, &errlen);
 
 			comms_sock_close(sock);
-			if (sock->callbacks && sock->callbacks->connected)
+			if (sock->callbacks.connected)
 			{
-				sock->callbacks->connected(NETSOCK_ERR, sock->last_errno, sock->callbacks->priv);
+				sock->callbacks.connected(NETSOCK_ERR, sock->last_errno, sock->callbacks.priv);
 			}
 			log_leave();
 			return NETSOCK_ERR;
@@ -470,9 +469,9 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 			{
 				comms_net_async_del_events(m_handle, POLLIN|POLLERR);
 			}
-			if (sock->callbacks && sock->callbacks->error)
+			if (sock->callbacks.error)
 			{
-				sock->callbacks->error(sock->last_errno, sock->callbacks->priv);
+				sock->callbacks.error(sock->last_errno, sock->callbacks.priv);
 			}
 		}
 
@@ -490,26 +489,43 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 		 */
 		if (retval > 0)
 		{
-			comms_netbuf_add(sock->in_buffer, buffer, retval);
-			if (sock->callbacks && sock->callbacks->data)
+		    size_t written = netbuf_write(sock->in_buffer, buffer, retval);
+		    size_t to_write = retval - written;
+			if (sock->callbacks.data)
 			{
-				retval = sock->callbacks->data(	comms_netbuf_get_head(sock->in_buffer),
-												comms_netbuf_remaining(sock->in_buffer),
-												sock->callbacks->priv);
+			    void *data;
+			    size_t len = netbuf_peek(sock->in_buffer, &data);
 
-				if (retval > 0) comms_netbuf_eat(sock->in_buffer, retval);
+			    if (len) {
+                    retval = sock->callbacks.data(	data, len,
+                                                    sock->callbacks.priv);
 
-				if (comms_netbuf_remaining(sock->in_buffer) > 0) comms_net_async_add_events(m_handle, POLLIN);
+                    if (retval > 0) netbuf_eat(sock->in_buffer, retval);
+
+                    if (netbuf_bytes_available(sock->in_buffer)) comms_net_async_add_events(m_handle, POLLIN);
+                    free(data);
+			    }
+			}
+			/// If we didn't get everything in, try one more time
+			if (to_write) {
+			    if (netbuf_write(sock->in_buffer, buffer + written, to_write))
+			        blast_warn("Discarding data due to overfull in_buffer on %s", sock->host?sock->host:"(NULL)");
 			}
 		}
 	}
 	if (m_events & POLLHUP)
 	{
-		if (sock->callbacks && sock->callbacks->finished)
+		if (sock->callbacks.finished)
 		{
-			sock->callbacks->finished(	comms_netbuf_get_head(sock->in_buffer),
-										comms_netbuf_remaining(sock->in_buffer),
-										sock->callbacks->priv);
+            void *data;
+            size_t len = netbuf_peek(sock->in_buffer, &data);
+
+            if (len) {
+                sock->callbacks.finished( data, len, sock->callbacks.priv);
+                if (sock->in_buffer) netbuf_eat(sock->in_buffer, len);
+                free(data);
+            }
+            sock->state = NETSOCK_STATE_CLOSED;
 		}
 		log_leave();
 		return NETSOCK_OK;
@@ -522,9 +538,9 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 			comms_net_async_set_events(m_handle, POLLPRI | POLLIN | POLLOUT);
 			fcntl(sock->fd, F_SETFL, 0);
 
-			if (sock->callbacks && sock->callbacks->connected)
+			if (sock->callbacks.connected)
 			{
-				sock->callbacks->connected(NETSOCK_OK, 0, sock->callbacks->priv);
+				sock->callbacks.connected(NETSOCK_OK, 0, sock->callbacks.priv);
 			}
 
 			log_leave();
@@ -534,13 +550,13 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
 		sock->can_write = true;
 		comms_net_async_del_events(m_handle, POLLOUT);
 
-		if (comms_netbuf_remaining(sock->out_buffer))
+		if (netbuf_bytes_available(sock->out_buffer))
 		{
 			comms_sock_flush(sock);
 		}
-		else if (sock->callbacks && sock->callbacks->control)
+		else if (sock->callbacks.control)
 		{
-			sock->callbacks->control(NETSOCK_WRITABLE, sock->callbacks->priv);
+			sock->callbacks.control(NETSOCK_WRITABLE, sock->callbacks.priv);
 		}
 	}
 
@@ -569,8 +585,8 @@ void comms_sock_free(comms_socket_t *m_sock)
 	}
 
 	comms_sock_close(m_sock);
-	comms_netbuf_free(m_sock->in_buffer);
-	comms_netbuf_free(m_sock->out_buffer);
+	netbuf_free(m_sock->in_buffer);
+	netbuf_free(m_sock->out_buffer);
 	BLAST_SAFE_FREE(m_sock->host);
 	BLAST_SAFE_FREE(m_sock);
 	log_leave("Freed");
@@ -685,12 +701,19 @@ int comms_sock_write(comms_socket_t *m_sock, const void *m_buf, size_t m_len)
 {
 	if (m_len)
 	{
-		if (comms_netbuf_add(m_sock->out_buffer, m_buf, m_len) < 0)
+	    if (!m_sock) return NETSOCK_ERR;
+
+	    if (m_sock->state != NETSOCK_STATE_CONNECTING && m_sock->state != NETSOCK_STATE_CONNECTED)
+	    {
+	        blast_err("Can not write to socket %s in state %d", m_sock->host?m_sock->host:"(Unknown host)", m_sock->state);
+	        return NETSOCK_ERR;
+	    }
+		if (!netbuf_write(m_sock->out_buffer, m_buf, m_len))
 		{
-			blast_err("Could not buffer data!");
+			blast_err("Could not buffer data on %s", m_sock->host?m_sock->host:"(NULL)");
 			return NETSOCK_ERR;
 		}
-		return comms_sock_flush(m_sock);
+		if (m_sock->state == NETSOCK_STATE_CONNECTED) return comms_sock_flush(m_sock);
 	}
 
 	return NETSOCK_OK;
@@ -705,14 +728,14 @@ int comms_sock_flush(comms_socket_t *m_sock)
 
 	if (!comms_sock_is_open(m_sock))
 	{
-		blast_err("Could not write to closed socket");
+		blast_err("Could not write to closed socket %s", m_sock->host?m_sock->host:"(Unknown host)");
 
 		log_leave();
 		return NETSOCK_ERR;
 	}
 
 
-	len = comms_netbuf_remaining(m_sock->out_buffer);
+	len = netbuf_bytes_available(m_sock->out_buffer);
 	if (m_sock->poll_handle && len > 0)
 	{
 		if (!__sync_lock_test_and_set(&m_sock->can_write, false))
@@ -722,22 +745,28 @@ int comms_sock_flush(comms_socket_t *m_sock)
 			return NETSOCK_AGAIN;
 		}
 
-		retval = comms_sock_raw_write(m_sock, comms_netbuf_get_head(m_sock->out_buffer), len);
-		if (retval < 0)
-		{
-			comms_sock_close(m_sock);
-			blast_err("Could not write socket: %s", strerror(m_sock->last_errno));
-			log_leave();
-			return NETSOCK_ERR;
-		}
-		comms_netbuf_eat(m_sock->out_buffer, retval);
+        void *data;
+        len = netbuf_peek(m_sock->out_buffer, &data);
+
+        if (len) {
+            retval = comms_sock_raw_write(m_sock, data, len);
+            free(data);
+            if (retval < 0)
+            {
+                comms_sock_close(m_sock);
+                blast_err("Could not write socket: %s", strerror(m_sock->last_errno));
+                log_leave();
+                return NETSOCK_ERR;
+            }
+            netbuf_eat(m_sock->out_buffer, retval);
+        }
 	}
 
 	/**
 	 * If we have data left to write to the socket, then we force the POLLOUT event to allow
 	 * our async handler to catch and process the data in the next poll call.
 	 */
-	len = comms_netbuf_remaining(m_sock->out_buffer);
+	len = netbuf_bytes_available(m_sock->out_buffer);
 	if (m_sock->poll_handle && len > 0)
 	{
 		comms_net_async_add_events(m_sock->poll_handle, POLLOUT);
@@ -749,14 +778,14 @@ int comms_sock_flush(comms_socket_t *m_sock)
 	return NETSOCK_OK;
 }
 
-static int comms_sock_connect_generic(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port, bool m_tcp)
+static int comms_sock_connect_generic(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port, bool m_udp)
 {
 	socket_t fd;
 	log_enter();
 
 	if (!m_sock || m_sock->state != NETSOCK_STATE_NONE)
 		return NETSOCK_ERR;
-	fd = comms_sock_connect_fd(m_hostname, m_port, m_tcp);
+	fd = comms_sock_connect_fd(m_hostname, m_port, m_udp);
 
 	if (fd == INVALID_SOCK)
 		return NETSOCK_ERR;
@@ -765,6 +794,7 @@ static int comms_sock_connect_generic(comms_socket_t *m_sock, const char *m_host
 	BLAST_SAFE_FREE(m_sock->host);
 	m_sock->host = strdup(m_hostname);
 	m_sock->port = m_port;
+	m_sock->udp = m_udp;
 
 	m_sock->state = NETSOCK_STATE_CONNECTING;
 
@@ -773,14 +803,42 @@ static int comms_sock_connect_generic(comms_socket_t *m_sock, const char *m_host
 	return NETSOCK_OK;
 }
 
+int comms_sock_reconnect(comms_socket_t *m_sock)
+{
+    socket_t fd;
+
+    if (!m_sock)
+        return NETSOCK_ERR;
+    if (m_sock->state != NETSOCK_STATE_CLOSED && m_sock->state != NETSOCK_STATE_ERROR) {
+        blast_err("Could not reconnect socket (%s) in state %d", m_sock->host?m_sock->host:"unknown host", m_sock->state);
+    }
+    if (!m_sock->host) {
+        blast_err("Could not reconnect socket without host");
+        return NETSOCK_ERR;
+    }
+
+    fd = comms_sock_connect_fd(m_sock->host, m_sock->port, m_sock->udp);
+
+    if (fd == INVALID_SOCK)
+        return NETSOCK_ERR;
+    comms_sock_set_fd(m_sock, fd);
+
+    m_sock->state = NETSOCK_STATE_CONNECTING;
+
+    comms_net_async_set_events(comms_sock_get_poll_handle(m_sock), POLLOUT);
+    log_leave();
+    return NETSOCK_OK;
+
+}
+
 int comms_sock_connect(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port)
 {
-	return comms_sock_connect_generic(m_sock, m_hostname, m_port, true);
+	return comms_sock_connect_generic(m_sock, m_hostname, m_port, false);
 }
 
 int comms_sock_connect_udp(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port)
 {
-	return comms_sock_connect_generic(m_sock, m_hostname, m_port, false);
+	return comms_sock_connect_generic(m_sock, m_hostname, m_port, true);
 }
 
 /**
@@ -799,7 +857,7 @@ int comms_sock_multicast_listen(comms_socket_t *m_sock, const char *m_hostname, 
 
 	if (!m_sock || m_sock->state != NETSOCK_STATE_NONE)
 		return NETSOCK_ERR;
-	fd = comms_sock_bind("0.0.0.0", m_port, false);
+	fd = comms_sock_bind("0.0.0.0", m_port, true);
 	if (fd == INVALID_SOCK)
 		return NETSOCK_ERR;
 

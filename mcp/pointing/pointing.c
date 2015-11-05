@@ -43,6 +43,8 @@
 #include "fir.h"
 
 #include <dsp1760.h>
+#include <EGM9615.h>
+#include <geomag2015.h>
 #include <angles.h>
 #include <xsc_network.h>
 #include <conversions.h>
@@ -58,11 +60,6 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-
-/* Functions in the file 'geomag.c' */
-void MagModelInit(int maxdeg, const char* wmmFile);
-void GetMagModel(float alt, float glat, float glon, float time,
-    float *dec, float *dip, float *ti, float *gv);
 
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
@@ -83,9 +80,9 @@ struct AzAttStruct {
 
 struct ElSolutionStruct {
   double angle;    // solution's current angle
-  double variance; // solution's current sample varience
+  double variance; // solution's current sample variance
   double samp_weight; // sample weight per sample
-  double sys_var;  // sytematic varience - can't do better than this
+  double sys_var;  // sytematic variance - can't do better than this
   double trim; // externally set trim to solution
   double last_input; // last good data point
   double gy_int; // integral of the gyro since the last solution
@@ -98,9 +95,9 @@ struct ElSolutionStruct {
 
 struct AzSolutionStruct {
   double angle;    // solution's current angle
-  double variance; // solution's current sample varience
+  double variance; // solution's current sample variance
   double samp_weight; // sample weight per sample
-  double sys_var;  // sytematic varience - can't do better than this
+  double sys_var;  // sytematic variance - can't do better than this
   double trim; // externally set trim to solution
   double last_input; // last good data point
   double ifroll_gy_int; // integral of the gyro since the last solution
@@ -140,8 +137,6 @@ static struct {
 
 static double sun_az, sun_el; // set in SSConvert and used in UnwindDiff
 
-void SunPos(double tt, double *ra, double *dec); // in starpos.c
-
 #define M2DV(x) ((x / 60.0) * (x / 60.0))
 
 // limit to 0 to 360.0
@@ -179,100 +174,127 @@ void SetSafeDAz(double ref, double *A)
 /*             to convert mag_x and mag_y to mag_az                     */
 /*                                                                      */
 /************************************************************************/
-static int MagConvert(double *mag_az)
-{
-  float year;
-  double mvx, mvy, mvz;
-  double raw_mag_az, raw_mag_pitch;
-  static float fdec, dip, ti, gv;
-  static double dec=0;
-  time_t t;
-  struct tm now;
-  int i_point_read;
-  static time_t oldt;
-  static int firsttime = 1;
-  double magx_m, magx_b, magy_m, magy_b;
+static int MagConvert(double *mag_az, double *m_el) {
+    static MAGtype_MagneticModel * MagneticModels[1], *TimedMagneticModel;
+    static MAGtype_Ellipsoid Ellip;
+    static MAGtype_Geoid Geoid;
 
-  i_point_read = GETREADINDEX(point_index);
+    float year;
+    double mvx, mvy, mvz;
+    double raw_mag_az, raw_mag_pitch;
+    static double dip;
+    static double dec = 0;
+    time_t t;
+    struct tm now;
+    int i_point_read;
+    static time_t oldt;
+    static int firsttime = 1;
+    double magx_m, magx_b, magy_m, magy_b;
+    int epochs = 1;
+    int NumTerms, nMax = 0;
 
-  /******** Obtain correct indexes the first time here ***********/
-  if (firsttime) {
-    /* Initialise magnetic model reader: I'm not sure what the '12' is, but */
-    /* I think it has something to do with the accuracy of the modelling -- */
-    /* probably shouldn't change this value.  (Adam H.) */
-      //TODO:Re-enable Magmodel
-//    MagModelInit(12, "/data/etc/blast/WMM.COF");
+    i_point_read = GETREADINDEX(point_index);
 
-    oldt = 1;
-    firsttime = 0;
-  }
+    /******** Obtain correct indexes the first time here ***********/
+    if (firsttime) {
 
-  /* Every 300 s = 5 min, get new data from the magnetic model.
-   *
-   * dec = magnetic declination (field direction in az)
-   * dip = magnetic inclination (field direction in ele)
-   * ti  = intensity of the field in nT
-   * gv  = modified form of dec used in polar regions -- haven't researched
-   *       this one
-   *
-   * The year must be between 2010.0 and 2015.0 with current model data
-   *
-   * The functions called are in 'geomag.c' (Adam. H) */
-  if ((t = PointingData[i_point_read].t) > oldt + 10) {
-    oldt = t;
-    gmtime_r(&t, &now);
-    year = 1900 + now.tm_year + now.tm_yday / 365.25;
+        if (!MAG_robustReadMagModels("/data/etc/blast/WMM.COF", &MagneticModels, epochs)) {
+            blast_err("/data/etc/blast/WMM.COF not found. Be sure to `make install` mcp.");
+            return 0;
+        }
+        if (nMax < MagneticModels[0]->nMax) nMax = MagneticModels[0]->nMax;
+        NumTerms = ((nMax + 1) * (nMax + 2) / 2);
+        TimedMagneticModel = MAG_AllocateModelMemory(NumTerms); /* For storing the time modified WMM Model parameters */
+        if (MagneticModels[0] == NULL || TimedMagneticModel == NULL) {
+            blast_err("Could not allocate memory for magnetic model!");
+            return 0;
+        }
+        MAG_SetDefaults(&Ellip, &Geoid); /* Set default values and constants */
+        /* Check for Geographic Poles */
 
-//    GetMagModel(PointingData[i_point_read].alt / 1000.0,
-//        PointingData[i_point_read].lat, -PointingData[i_point_read].lon,
-//        year, &fdec, &dip, &ti, &gv);
+        /* Set EGM96 Geoid parameters */
+        Geoid.GeoidHeightBuffer = GeoidHeightBuffer;
+        Geoid.Geoid_Initialized = 1;
 
-    dec = fdec;
+        oldt = 1;
+        firsttime = 0;
+    }
 
-  }
+    /* Every 10 s, get new data from the magnetic model.
+     *
+     * dec = magnetic declination (field direction in az)
+     * dip = magnetic inclination (field direction in ele)
+     *
+     * The year must be between 2015.0 and 2020.0 with current model data
+     *
+     * The functions called are in 'geomag2015.c' */
+    if ((t = PointingData[i_point_read].t) > oldt + 10) {
 
-  /* The dec is the correction to the azimuth of the magnetic field. */
-  /* If negative is west and positive is east, then: */
-  /* */
-  /*   true bearing = magnetic bearing + dec */
-  /* */
-  /* Thus, depending on the sign convention, you have to either add or */
-  /* subtract dec from az to get the true bearing. (Adam H.) */
+        MAGtype_CoordSpherical CoordSpherical;
+        MAGtype_CoordGeodetic CoordGeodetic;
+        MAGtype_Date UserDate;
+        MAGtype_GeoMagneticElements GeoMagneticElements;
+        oldt = t;
 
-  mvx = (ACSData.mag_x-MAGX_B)/MAGX_M;
-  mvy = (ACSData.mag_y-MAGY_B)/MAGY_M;
-  
-  magx_m = 1.0/((double)(CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
-  magy_m = -1.0/((double)(CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
-  
-  magx_b = (CommandData.cal_xmax_mag + CommandData.cal_xmin_mag)*0.5;
-  magy_b = (CommandData.cal_ymax_mag + CommandData.cal_ymin_mag)*0.5;
-  
-  mvx = magx_m*(ACSData.mag_x - magx_b);
-  mvy = magy_m*(ACSData.mag_y - magy_b);
-  mvz = MAGZ_M*(ACSData.mag_z - MAGZ_B);
+        gmtime_r(&t, &now);
+        year = 1900 + now.tm_year + now.tm_yday / 365.25;
+        UserDate.DecimalYear = year;
 
+        Geoid.UseGeoid = 1;
+        CoordGeodetic.HeightAboveGeoid = PointingData[i_point_read].alt / 1000.0;
+        CoordGeodetic.phi = PointingData[i_point_read].lat;
+        CoordGeodetic.lambda = -PointingData[i_point_read].lon;
+        MAG_ConvertGeoidToEllipsoidHeight(&CoordGeodetic, &Geoid);
 
-  raw_mag_az = (-1.0)*(180.0 / M_PI) * atan2(mvy, mvx);
-  raw_mag_pitch = (180.0/M_PI) * atan2(mvz,sqrt(mvx*mvx + mvy*mvy));
-  *mag_az = raw_mag_az;
-//  ACSData.mag_pitch = raw_mag_pitch+(double)dip;
+        MAG_GeodeticToSpherical(Ellip, CoordGeodetic, &CoordSpherical); /*Convert from geodetic to Spherical Equations: 17-18, WMM Technical report*/
+        MAG_TimelyModifyMagneticModel(UserDate, MagneticModels[0], TimedMagneticModel); /* Time adjust the coefficients, Equation 19, WMM Technical report */
+        MAG_Geomag(Ellip, CoordSpherical, CoordGeodetic, TimedMagneticModel, &GeoMagneticElements); /* Computes the geoMagnetic field elements and their time change*/
 
+        dec = GeoMagneticElements.Decl;
+        dip = GeoMagneticElements.Incl;
+        PointingData[point_index].mag_strength = GeoMagneticElements.H;
+
+    }
+
+    /* The dec is the correction to the azimuth of the magnetic field. */
+    /* If negative is west and positive is east, then: */
+    /* */
+    /*   true bearing = magnetic bearing + dec */
+    /* */
+    /* Thus, depending on the sign convention, you have to either add or */
+    /* subtract dec from az to get the true bearing. (Adam H.) */
+
+    mvx = (ACSData.mag_x - MAGX_B) / MAGX_M;
+    mvy = (ACSData.mag_y - MAGY_B) / MAGY_M;
+
+    magx_m = 1.0 / ((double) (CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
+    magy_m = -1.0 / ((double) (CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
+
+    magx_b = (CommandData.cal_xmax_mag + CommandData.cal_xmin_mag) * 0.5;
+    magy_b = (CommandData.cal_ymax_mag + CommandData.cal_ymin_mag) * 0.5;
+
+    mvx = magx_m * (ACSData.mag_x - magx_b);
+    mvy = magy_m * (ACSData.mag_y - magy_b);
+    mvz = MAGZ_M * (ACSData.mag_z - MAGZ_B);
+
+    raw_mag_az = (-1.0) * (180.0 / M_PI) * atan2(mvy, mvx);
+    raw_mag_pitch = (180.0 / M_PI) * atan2(mvz, sqrt(mvx * mvx + mvy * mvy));
+    *mag_az = raw_mag_az + dec + MAG_ALIGNMENT;
+    *m_el = raw_mag_pitch + dip;
 
 #if 0
 #warning THE MAGNETIC MODEL HAS BEEN DISABLED
-  dec = 0; // disable mag model.
+    dec = 0; // disable mag model.
 #endif
 
-  *mag_az += dec + MAG_ALIGNMENT;
+    NormalizeAngle(mag_az);
 
-  NormalizeAngle(mag_az);
+    NormalizeAngle(&dec);
 
-  NormalizeAngle(&dec);
+    PointingData[point_index].mag_model_dec = dec;
+    PointingData[point_index].mag_model_dip = dip;
 
-  PointingData[point_index].mag_model_dec = dec;
-
-  return (1);
+    return (1);
 }
 
 // PSSConvert versions added 12 June 2010 -GST
@@ -581,27 +603,27 @@ int possible_solution(double az, double el, int i_point) {
 
 static bool XSCHasNewSolution(int which)
 {
-    if (!xsc_server_data[which].channels[xN_image_eq_valid].value_bool) {
+    if (!xsc_server_data(which).channels[xN_image_eq_valid].value_bool) {
         // The latest solution isn't good
         return false;
     }
-    if (xsc_server_data[which].channels[xN_image_ctr_stars].value_int == xsc_pointing_state[which].last_solution_stars_counter) {
+    if (xsc_server_data(which).channels[xN_image_ctr_stars].value_int == xsc_pointing_state[which].last_solution_stars_counter) {
         // The solution is old
         return false;
     }
-    if (xsc_server_data[which].channels[xN_image_ctr_stars].value_int < 0 || ACSData.last_trigger_counter_stars[which] < 0) {
+    if (xsc_server_data(which).channels[xN_image_ctr_stars].value_int < 0 || ACSData.last_trigger_counter_stars[which] < 0) {
         // One or both of the stars counters were not yet running at the time of the trigger
         return false;
     }
-    if (xsc_server_data[which].channels[xN_image_ctr_fcp].value_int < 0 ||  ACSData.last_trigger_counter_fcp[which] < 0) {
+    if (xsc_server_data(which).channels[xN_image_ctr_fcp].value_int < 0 ||  ACSData.last_trigger_counter_fcp[which] < 0) {
         // One or both of the fcp counters were not yet running at the time of the trigger
         return false;
     }
-    if (xsc_server_data[which].channels[xN_image_ctr_stars].value_int != ACSData.last_trigger_counter_stars[which]) {
+    if (xsc_server_data(which).channels[xN_image_ctr_stars].value_int != ACSData.last_trigger_counter_stars[which]) {
         // The stars counters were misaligned at the time of the trigger
         return false;
     }
-    if (xsc_server_data[which].channels[xN_image_ctr_fcp].value_int != ACSData.last_trigger_counter_fcp[which]) {
+    if (xsc_server_data(which).channels[xN_image_ctr_fcp].value_int != ACSData.last_trigger_counter_fcp[which]) {
         // The fcp counters were misaligned at the time of the trigger
         return false;
     }
@@ -636,13 +658,13 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
   a->variance += GYRO_VAR;
 
   if (XSCHasNewSolution(which)) {
-    xsc_pointing_state[which].last_solution_stars_counter = xsc_server_data[which].channels[xN_image_ctr_stars].value_int;
+    xsc_pointing_state[which].last_solution_stars_counter = xsc_server_data(which).channels[xN_image_ctr_stars].value_int;
     blast_info(" xsc%i: received new solution", which);
     if (ACSData.last_trigger_age_cs[which] < GY_HISTORY_AGE_CS) {
         blast_info(" xsc%i: new solution young enough to accept", which);
       //i_point = GETREADINDEX(point_index);
-      ra = to_hours(xsc_server_data[which].channels[xN_image_eq_ra].value_double);
-      dec = to_degrees(xsc_server_data[which].channels[xN_image_eq_dec].value_double);
+      ra = to_hours(xsc_server_data(which).channels[xN_image_eq_ra].value_double);
+      dec = to_degrees(xsc_server_data(which).channels[xN_image_eq_dec].value_double);
       blast_dbg("xsc%i solution is ra, dec: %f, %f (deg)\n", which, to_degrees(from_hours(ra)), dec);
 
       equatorial_to_horizontal(ra, dec, ACSData.last_trigger_lst[which], ACSData.last_trigger_lat[which], &new_az, &new_el);
@@ -653,7 +675,7 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
 
       //bprintf(loglevel_info, "Pointing: Solution from XSC%i: Ra = %f hours\n", which, ra);
       //bprintf(loglevel_info, "Pointing: Solution from XSC%i: Dec = %f degrees\n", which, dec);
-      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: sigma = %f rad\n", which, xsc_server_data[which].sigma);
+      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: sigma = %f rad\n", which, xsc_server_data(which).sigma);
       //bprintf(loglevel_info, "Pointing: Solution from XSC%i: az = %f degrees\n", which, new_az);
       //bprintf(loglevel_info, "Pointing: Solution from XSC%i: el = %f degrees\n", which, new_el);
 
@@ -685,10 +707,10 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
       //bprintf(loglevel_info, "CHAPPY: Az averaging old: %f,  and new: %f\n", a->angle, new_az);
 
       w1 = 1.0 / (e->variance);
-      if (xsc_server_data[which].channels[xN_image_eq_sigma_pointing].value_double > M_PI) {
+      if (xsc_server_data(which).channels[xN_image_eq_sigma_pointing].value_double > M_PI) {
         w2 = 0.0;
       } else {
-        w2 = 10.0 * xsc_server_data[which].channels[xN_image_eq_sigma_pointing].value_double
+        w2 = 10.0 * xsc_server_data(which).channels[xN_image_eq_sigma_pointing].value_double
           * (180.0 / M_PI); //e->samp_weight;
         if (w2 > 0.0)
           w2 = 1.0 / (w2 * w2);
@@ -696,7 +718,7 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
           w2 = 0.0; // shouldn't happen
       }
       //bprintf(loglevel_info,"POINTING: ESC%i_SIGMA and SC weight w2:  %f %f\n", which,
-        //xsc_server_data[which].sigma,w2);
+        //xsc_server_data(which).sigma,w2);
 
       UnwindDiff(e->angle, &new_el);
       UnwindDiff(a->angle, &new_az);
@@ -885,6 +907,7 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 
 void AutoTrimToSC();    //defined below
 
+///TODO: Split up Pointing() in manageable chunks for each sensor
 /*****************************************************************
   do sensor selection;
   update the pointing;
@@ -901,6 +924,7 @@ void Pointing(void)
   int pss_ok;
   static unsigned pss_since_ok = 500;
   double mag_az;
+  double mag_el;
   double pss_az = 0;
   double pss_el = 0;
   double clin_elev;
@@ -956,7 +980,7 @@ void Pointing(void)
   static struct ElSolutionStruct ISCEl = {0.0, // starting angle
     719.9 * 719.9, // starting variance
     1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systemamatic variance
+    M2DV(0.2), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, // gy integral
@@ -965,9 +989,20 @@ void Pointing(void)
     0, 0 // n_solutions, since_last
   };
   static struct ElSolutionStruct OSCEl = {0.0, // starting angle
-    719.9 * 719.9, // starting varience
+    719.9 * 719.9, // starting variance
     1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systemamatic varience
+    M2DV(0.2), // systematic variance
+    0.0, // trim
+    0.0, // last input
+    0.0, // gy integral
+    OFFSET_GY_IFEL, // gy offset
+    0.0001, // filter constant
+    0, 0 // n_solutions, since_last
+  };
+  static struct ElSolutionStruct MagEl = {0.0, // starting angle
+    360.0 * 360.0, // starting variance
+    1.0 / M2DV(120.0), //sample weight
+    M2DV(90.0), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, // gy integral
@@ -976,9 +1011,9 @@ void Pointing(void)
     0, 0 // n_solutions, since_last
   };
   static struct AzSolutionStruct NullAz = {91.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(6), //sample weight
-    M2DV(6000), // systemamatic varience
+    M2DV(6000), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -988,9 +1023,9 @@ void Pointing(void)
     NULL, NULL
   };
   static struct AzSolutionStruct MagAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(120.0), //sample weight
-    M2DV(90), // systemamatic varience
+    M2DV(90), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1001,9 +1036,9 @@ void Pointing(void)
   };
 
   static struct AzSolutionStruct PSSAz =  {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(30), //sample weight
-    M2DV(60), // systemamatic varience
+    M2DV(60), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1014,9 +1049,9 @@ void Pointing(void)
     };
   //TODO:Replace ISC/OSC Az Solutions with XSC
   static struct AzSolutionStruct ISCAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(0.3), //sample weight
-    M2DV(0.2), // systemamatic varience
+    M2DV(0.2), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1026,9 +1061,9 @@ void Pointing(void)
     NULL, NULL
   };
   static struct AzSolutionStruct OSCAz = {0.0, // starting angle
-    360.0 * 360.0, // starting varience
+    360.0 * 360.0, // starting variance
     1.0 / M2DV(0.3), //sample weight
-    M2DV(0.2), // systemamatic varience
+    M2DV(0.2), // systematic variance
     0.0, // trim
     0.0, // last input
     0.0, 0.0, // gy integrals
@@ -1053,6 +1088,8 @@ void Pointing(void)
         initFir(EncEl.fs, FIR_LENGTH);
         EncMotEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         initFir(EncMotEl.fs, FIR_LENGTH);
+        MagEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        initFir(MagEl.fs, FIR_LENGTH);
 
         NullAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         NullAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
@@ -1140,6 +1177,14 @@ void Pointing(void)
     PointingData[point_index].lst = to_seconds(time_lst_unix(PointingData[point_index].t, from_degrees(PointingData[point_index].lon)));
 
 
+    /**
+     * Get the Magnetometer Data
+     */
+    mag_ok = MagConvert(&mag_az, &mag_el);
+
+    PointingData[point_index].mag_az = mag_az;
+    PointingData[point_index].mag_el = mag_el;
+
     /*************************************/
     /**      do ISC Solution            **/
     EvolveXSCSolution(&ISCEl, &ISCAz,
@@ -1161,6 +1206,7 @@ void Pointing(void)
     clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
     PointingData[i_point_read].clin_el_lut = clin_elev;
 
+    ///TODO: Only set "new solution" when we really have new data
     EvolveElSolution(&ClinEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             clin_elev, 1);
@@ -1170,6 +1216,9 @@ void Pointing(void)
     EvolveElSolution(&EncMotEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             ACSData.enc_motor_elev, 1);
+    EvolveElSolution(&MagEl, RG.ifel_gy,
+            PointingData[i_point_read].offset_ifel_gy,
+            mag_el, mag_ok);
 
     if (CommandData.use_elenc) {
         AddElSolution(&ElAtt, &EncEl, 1);
@@ -1181,13 +1230,15 @@ void Pointing(void)
     if (CommandData.use_elclin) {
         AddElSolution(&ElAtt, &ClinEl, 1);
     }
-    if (CommandData.use_isc) {
+    if (CommandData.use_xsc0) {
         AddElSolution(&ElAtt, &ISCEl, 0);
     }
 
-    if (CommandData.use_osc) {
+    if (CommandData.use_xsc1) {
         AddElSolution(&ElAtt, &OSCEl, 0);
     }
+
+    //TODO: Add magnetometer to veto el list
 
     if (CommandData.el_autogyro)
         PointingData[point_index].offset_ifel_gy = ElAtt.offset_gy;
@@ -1199,9 +1250,6 @@ void Pointing(void)
     /*******************************/
     /**      do az solution      **/
     /** Convert Sensors **/
-    mag_ok = MagConvert(&mag_az);
-
-    PointingData[point_index].mag_az = mag_az;
 
     pss_ok = PSSConvert(&pss_az, &pss_el);
     if (pss_ok) {
@@ -1246,10 +1294,10 @@ void Pointing(void)
     if (CommandData.use_pss) {
         AddAzSolution(&AzAtt, &PSSAz, 1);
     }
-    if (CommandData.use_isc) {
+    if (CommandData.use_xsc0) {
         AddAzSolution(&AzAtt, &ISCAz, 0);
     }
-    if (CommandData.use_osc) {
+    if (CommandData.use_xsc1) {
         AddAzSolution(&AzAtt, &OSCAz, 0);
     }
 
@@ -1286,6 +1334,7 @@ void Pointing(void)
     PointingData[point_index].clin_sigma = sqrt(ClinEl.variance + ClinEl.sys_var);
 
     PointingData[point_index].mag_az = MagAz.angle;
+    PointingData[point_index].mag_el = MagEl.angle;
     PointingData[point_index].mag_sigma = sqrt(MagAz.variance + MagAz.sys_var);
 
     // Added 22 June 2010 GT
@@ -1472,30 +1521,21 @@ void AutoTrimToSC()
 
 }
 
-//TODO:Rename TrimOSCToISC for XSC
-void TrimOSCToISC()
+/**
+ * Trims one star camera offset relative to the other.
+ * @param m_source Which camera should be used as the zero point for offset
+ */
+void trim_xsc(int m_source)
 {
     int i_point;
+    int dest = (m_source == 0);
     double delta_az;
     double delta_el;
     i_point = GETREADINDEX(point_index);
-    delta_az = PointingData[i_point].xsc_az[1] - PointingData[i_point].xsc_az[0];
-    delta_el = PointingData[i_point].xsc_el[1] - PointingData[i_point].xsc_el[0];
-    CommandData.ISCState[1].azBDA -= DEG2RAD*(delta_az*cos(PointingData[i_point].el*M_PI / 180.0));
-    CommandData.ISCState[1].elBDA -= DEG2RAD*(delta_el);
-
-}
-
-void TrimISCToOSC()
-{
-    int i_point;
-    double delta_az;
-    double delta_el;
-    i_point = GETREADINDEX(point_index);
-    delta_az = PointingData[i_point].xsc_az[0] - PointingData[i_point].xsc_az[1];
-    delta_el = PointingData[i_point].xsc_el[0] - PointingData[i_point].xsc_el[1];
-    CommandData.ISCState[0].azBDA -= DEG2RAD*(delta_az*cos(PointingData[i_point].el*M_PI / 180.0));
-    CommandData.ISCState[0].elBDA -= DEG2RAD*(delta_el);
+    delta_az = PointingData[i_point].xsc_az[dest] - PointingData[i_point].xsc_az[m_source];
+    delta_el = PointingData[i_point].xsc_el[dest] - PointingData[i_point].xsc_el[m_source];
+    CommandData.ISCState[dest].azBDA -= DEG2RAD*(delta_az*cos(PointingData[i_point].el*M_PI / 180.0));
+    CommandData.ISCState[dest].elBDA -= DEG2RAD*(delta_el);
 
 }
 

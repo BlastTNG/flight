@@ -178,6 +178,8 @@ typedef struct sip_science_cmd
 		uint8_t                 data[1];
 	};
 } __attribute__((packed)) sip_science_cmd_t;
+#define SIP_SCIENCE_CMD_LEN(_p)((sip_science_cmd_t*)(_p)->length + 4) /* 4 bytes here for the start, id, length and end bytes */
+
 
 static comms_serial_t *sip_comm1 = NULL;
 static comms_serial_t *sip_comm2 = NULL;

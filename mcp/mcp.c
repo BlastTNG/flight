@@ -48,7 +48,6 @@
 #include "starpos.h"
 #include "channels_tng.h"
 #include "tx.h"
-#include "flcdataswap.h"
 #include "lut.h"
 
 #include <acs.h>
@@ -58,16 +57,19 @@
 #include <blast_sip_interface.h>
 #include <blast_time.h>
 #include <computer_sensors.h>
+#include <data_sharing.h>
 #include <dsp1760.h>
 #include <ec_motors.h>
 #include <framing.h>
 #include <hwpr.h>
 #include <motors.h>
+#include <watchdog.h>
+#include <xsc_network.h>
 
 /* Define global variables */
 int StartupVeto = 20;
 //flc_ip[0] = south, flc_ip[1] = north, so that flc_ip[SouthIAm] gives other flc
-char* flc_ip[2] = {"192.168.1.6", "192.168.1.5"};
+char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
 int bbc_fp = -1;
 unsigned int debug = 0;
@@ -98,19 +100,6 @@ void ShutdownFrameFile();
 void updateSlowDL(); // common/slowdl.c
 
 void InitSched();
-
-//#ifndef BOLOTEST
-//struct frameBuffer {
-//  int i_in;
-//  int i_out;
-//  unsigned short *framelist[BI0_FRAME_BUFLEN];
-//  unsigned short** slow_data_list[BI0_FRAME_BUFLEN];
-//};
-//
-//static struct frameBuffer bi0_buffer;
-//struct frameBuffer hiGain_buffer;
-//
-//#endif
 
 time_t biphase_timer;
 int biphase_is_on = 0;
@@ -215,28 +204,7 @@ static void Chatter(void* arg)
 #endif
 
 
-//#ifndef BOLOTEST
-//static void WatchDog (void)
-//{
-//  nameThread("WDog");
-//  bputs(startup, "Startup\n");
-//
-//  /* Allow other threads to kill this one at any time */
-//  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-//
-//  if (ioperm(0x378, 0x0F, 1) != 0)
-//    berror(tfatal, "Error setting watchdog permissions");
-//  ioperm(0x80, 1, 1);
-//
-//  for (;;) {
-//    outb(0xAA, 0x378);
-//    usleep(10000);
-//    outb(0x55, 0x378);
-//    usleep(10000);
-//  }
-//}
-//
-//
+
 //void ClearBuffer(struct frameBuffer *buffer) {
 //  buffer->i_out = buffer->i_in;
 //}
@@ -314,6 +282,12 @@ static void Chatter(void* arg)
 //
 //#endif
 
+static void close_mcp(int m_code)
+{
+    fprintf(stderr, "Closing MCP with signal %d\n", m_code);
+    watchdog_close();
+
+}
 
 /* Polarity crisis: am I north or south? */
 static int AmISouth(int *not_cryo_corner)
@@ -336,6 +310,8 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
+
+    framing_publish_200hz();
 }
 static void mcp_100hz_routines(void)
 {
@@ -344,14 +320,15 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-//    ControlGyroHeat();
-//    write_motor_channels_100hz();
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();
+
+    framing_publish_100hz();
 }
 static void mcp_5hz_routines(void)
 {
+    watchdog_ping();
     read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
@@ -366,30 +343,29 @@ static void mcp_5hz_routines(void)
 //    ControlPower();
 //    VideoTx();
 //    cameraFields();
+
+    framing_publish_5hz();
 }
 static void mcp_1hz_routines(void)
 {
     blast_store_cpu_health();
     blast_store_disk_space();
+    xsc_write_data(0);
+    xsc_write_data(1);
+    framing_publish_1hz();
 }
 
 int main(int argc, char *argv[])
 {
   pthread_t CommandDatacomm1;
-//  pthread_t disk_id;
-//  pthread_t abus_id;
-  int use_starcams = 1;
+  int use_starcams = 0;
 
-  int ret;
   int counter_100hz = 0;
   int counter_5hz=0;
   int counter_1hz=0;
   struct timespec ts;
   struct timespec interval_ts = { .tv_sec = 0,
                                   .tv_nsec = 5000000}; /// 200HZ interval
-  struct tm start_time;
-  time_t start_time_s;
-  char log_file_name[PATH_MAX];
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -412,16 +388,29 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
+  if(geteuid() != 0) {
+      fprintf(stderr, "Sorry!  MCP needs to be run with root privileges.  Try `sudo ./mcp`\n");
+      exit(0);
+  }
   umask(0);  /* clear umask */
 
-  start_time_s = time(&start_time_s);
-  gmtime_r(&start_time_s, &start_time);
+  /**
+   * Begin logging
+   */
+  {
+      struct tm start_time;
+      time_t start_time_s;
+      char log_file_name[PATH_MAX];
 
-  snprintf(log_file_name, PATH_MAX, "/data/etc/blast/mcp_%02d-%02d-%02d_%02d:%02d",
-          start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
-          start_time.tm_hour, start_time.tm_min);
+      start_time_s = time(&start_time_s);
+      gmtime_r(&start_time_s, &start_time);
 
-  openMCElog(log_file_name);
+      snprintf(log_file_name, PATH_MAX, "/data/etc/blast/mcp_%02d-%02d-%02d_%02d:%02d.log",
+              start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
+              start_time.tm_hour, start_time.tm_min);
+
+      openMCElog(log_file_name);
+  }
 
   /* register the output function */
   nameThread("Dummy"); //insert dummy sentinel node first
@@ -442,13 +431,6 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not South.\n");
 
-
-//#ifndef BOLOTEST
-//  /* Watchdog */
-//  pthread_create(&watchdog_id, NULL, (void*)&WatchDog, NULL);
-//#endif
-
-
   //populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
@@ -457,7 +439,7 @@ int main(int argc, char *argv[])
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
   initialize_blast_comms();
-  initialize_sip_interface();
+//  initialize_sip_interface();
   initialize_dsp1760_interface();
 
 #ifdef USE_FIFO_CMD
@@ -476,13 +458,12 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
-//  InitialiseFrameFile(argv[1][0]);
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
-//  signal(SIGHUP, CloseBBC);
-//  signal(SIGINT, CloseBBC);
-//  signal(SIGTERM, CloseBBC);
-//  signal(SIGPIPE, SIG_IGN);
+  signal(SIGHUP, close_mcp);
+  signal(SIGINT, close_mcp);
+  signal(SIGTERM, close_mcp);
+  signal(SIGPIPE, SIG_IGN);
 
 
 #ifndef BOLOTEST
@@ -495,21 +476,24 @@ int main(int argc, char *argv[])
 
   initialize_CPU_sensors();
 
-//  if (use_starcams) {
-//    pthread_create(&isc_id, NULL, (void*)&IntegratingStarCamera, (void*)0);
-//    pthread_create(&osc_id, NULL, (void*)&IntegratingStarCamera, (void*)1);
-//  }
-//
+  if (use_starcams) {
+      xsc_networking_init(0);
+      xsc_networking_init(1);
+  }
+
+
 //  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
 
 //  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 //  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
 //  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
 
-//  start_flc_data_swapper(flc_ip[SouthIAm]);
+  initialize_data_sharing();
+  initialize_watchdog(2);
 
   clock_gettime(CLOCK_REALTIME, &ts);
   while (1) {
+      int ret;
       /// Set our wakeup time
       ts = timespec_add(ts, interval_ts);
       ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);

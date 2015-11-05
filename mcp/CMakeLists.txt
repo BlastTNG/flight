@@ -139,6 +139,9 @@ set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 
+set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
+FILE(GLOB etc_files "${ETC_DIR}/*.txt" "${ETC_DIR}/*.sch" "${ETC_DIR}/*.library" "${ETC_DIR}/*.lut" "${ETC_DIR}/WMM.COF")
+
 include_directories (
     "${PROJECT_SOURCE_DIR}/include"
     "${CONFIG_DIR}/include"
@@ -239,3 +242,5 @@ target_link_libraries(mcp
     mosquitto m)
 
 install(TARGETS mcp DESTINATION bin)
+install(DIRECTORY DESTINATION "/data/etc")
+install(FILES ${etc_files} DESTINATION "/data/etc/blast")

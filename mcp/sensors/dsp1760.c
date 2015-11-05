@@ -286,7 +286,6 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
 
                  pkt->raw_data[0] = '\0';
                  gyro->bpos = 0;
-                 //TODO: Add CRC Checking
 
                  if (!invalid_data) dsp1760_newvals(gyro);
              }
@@ -315,12 +314,6 @@ static int dsp1760_handle_finished (const void *m_data, size_t m_len, void *m_us
     else
         blast_err("Got closed socket on unknown gyro port!");
 
-    if (port && port->sock){
-        BLAST_SAFE_FREE(port->sock->callbacks);
-        comms_sock_free(port->sock);
-        port->sock = NULL;
-    }
-
     return 0;
 }
 
@@ -345,15 +338,12 @@ bool initialize_dsp1760_interface(void)
 
     for (int i = 0; i < 2; i++) {
         if (gyro_comm[i]) {
-            gyro_comm[i]->sock->callbacks = balloc(err, sizeof(netsock_callbacks_t));
-            BLAST_ZERO_P(gyro_comm[i]->sock->callbacks);
-            gyro_comm[i]->sock->callbacks->data = dsp1760_process_data;
-            gyro_comm[i]->sock->callbacks->error = dsp1760_handle_error;
-            gyro_comm[i]->sock->callbacks->finished = dsp1760_handle_finished;
-            gyro_comm[i]->sock->callbacks->priv = gyro_comm[i];
+            gyro_comm[i]->sock->callbacks.data = dsp1760_process_data;
+            gyro_comm[i]->sock->callbacks.error = dsp1760_handle_error;
+            gyro_comm[i]->sock->callbacks.finished = dsp1760_handle_finished;
+            gyro_comm[i]->sock->callbacks.priv = gyro_comm[i];
 
             if (comms_serial_connect(gyro_comm[i], gyro_port[i]) != NETSOCK_OK) {
-                bfree(err, gyro_comm[i]->sock->callbacks);
                 bfree(err, gyro_comm[i]->sock->priv_data);
                 comms_serial_free(gyro_comm[i]);
                 gyro_comm[i] = NULL;
@@ -367,7 +357,6 @@ bool initialize_dsp1760_interface(void)
         if (!gyro_comm[i] || !(blast_comms_add_port(gyro_comm[i]))) {
             blast_err("Could not add gyro port %d to our comm monitor", i + 1);
             if (gyro_comm[i]) {
-                bfree(err, gyro_comm[i]->sock->callbacks);
                 bfree(err, gyro_comm[i]->sock->priv_data);
                 comms_serial_free(gyro_comm[i]);
                 gyro_comm[i] = NULL;

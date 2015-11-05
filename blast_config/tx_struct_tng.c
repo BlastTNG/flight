@@ -128,9 +128,7 @@ channel_t channel_list[] =
     { "ra_isc",               LI2H,             0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "dec_isc",              LI2DEG / 2.,      -90., TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "parts_sched",          1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "time_n_flc",           1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "framenum_isc",         1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
-    { "time_s_flc",           1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "lat",                  LI2DEG,           0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "lon",                  LI2DEG,           0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
     { "state_isc",            1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
@@ -201,7 +199,6 @@ channel_t channel_list[] =
 
     { "status_eth",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
-    { "timeout_n",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "az_sun",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
     { "lvdt_low_act",         1.0,              -5000.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "status_mcc",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 }, //south_i_am, at_float, schedule, slot_sched
@@ -220,7 +217,6 @@ channel_t channel_list[] =
     { "lat_sip",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_LA_DEG, 0 },
     { "lon_sip",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_LO_DEG, 0 },
 
-    { "df_n_flc",             1. / 250,         0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_GB, 0 },
     { "mode_p",               1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "x_p",                  I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "y_p",                  I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -285,8 +281,7 @@ channel_t channel_list[] =
 
     { "offset_isc",           1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "bbc_fifo_size",        1. / 624,         0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "t_cpu_n_flc",          0.01,             0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
-    { "t_mb_flc",             0.01,             0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
+
     { "mks_hi_sip",           0.003256,         -0.226858, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "mks_med_sip",          0.032614,         -0.072580, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "blob_idx_osc",         1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
@@ -639,13 +634,41 @@ channel_t channel_list[] =
     { "t_set_sbsc",           (100.0 / 32768.0),0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
 
     { "pot_hwpr",             1.0 / 65535.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_NONE, 0 },
-    { "last_n_cmd",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "count_n_cmd",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "last_s_cmd",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "count_s_cmd",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "df_s_flc",             1.0 / 250.0,      0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_GB, 0 },
+
+    /// Shared Variables
+    { "t_cpu0_flc_s",          1.0,             0.0, TYPE_INT16, RATE_1HZ, SRC_FC, U_T_C, 0 },
+    { "t_cpu0_flc_n",         1.0,              0.0, TYPE_INT16, RATE_1HZ, SRC_FC, U_T_C, 0 },
+
+    { "t_cpu1_flc_s",          1.0,             0.0, TYPE_INT16, RATE_1HZ, SRC_FC, U_T_C, 0 },
+    { "t_cpu1_flc_n",         1.0,              0.0, TYPE_INT16, RATE_1HZ, SRC_FC, U_T_C, 0 },
+
+    { "v_12v_flc_s",          0.01,             0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0 },
+    { "v_12v_flc_n",          0.01,             0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0 },
+
+    { "v_5v_flc_s",           0.01,             0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0 },
+    { "v_5v_flc_n",           0.01,             0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0 },
+
+    { "v_batt_flc_s",         0.01,             0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0 },
+    { "v_batt_flc_n",         0.01,             0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0 },
+
+    { "i_flc_s",              0.01,             0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_I_A, 0 },
+    { "i_flc_n",              0.01,             0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_I_A, 0 },
+
+    { "last_cmd_s",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "last_cmd_n",           1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+
+    { "count_cmd_s",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "count_cmd_n",          1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+
+    { "df_flc_s",             1.0 / 250.0,      0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_GB, 0 },
+    { "df_flc_n",             1.0 / 250.0,      0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_GB, 0 },
+
+    { "time_flc_s",           1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
+    { "time_flc_n",           1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0 },
+
     { "timeout_s",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
-    { "t_cpu_s_flc",          0.01,             0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0 },
+    { "timeout_n",            1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+
     { "t_start_cycle",        4.0 / 65536.0,    0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_K, 0 },
     { "t_pot_max_cycle",      10.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_K, 0 },
     { "t_char_max_cycle",     70.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_T_K, 0 },
@@ -757,10 +780,12 @@ channel_t channel_list[] =
     { "az_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
     { "az_raw_mag",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
     { "pitch_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
+    { "el_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
 
     { "sigma_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
 
     { "declination_mag",      I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 }, // magnetic declination
+    { "dip_mag",              I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0 },
 
     { "cal_xmax_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
     { "cal_xmin_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0 },
