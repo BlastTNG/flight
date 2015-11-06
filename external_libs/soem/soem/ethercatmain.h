@@ -28,14 +28,14 @@
  * This exception does not invalidate any other reasons why a work based on
  * this file might be covered by the GNU General Public License.
  *
- * The EtherCAT Technology, the trade name and logo “EtherCAT” are the intellectual
+ * The EtherCAT Technology, the trade name and logo ï¿½EtherCATï¿½ are the intellectual
  * property of, and protected by Beckhoff Automation GmbH. You can use SOEM for
  * the sole purpose of creating, using and/or selling or otherwise distributing
  * an EtherCAT network master provided that an EtherCAT Master License is obtained
  * from Beckhoff Automation GmbH.
  *
  * In case you did not receive a copy of the EtherCAT Master License along with
- * SOEM write to Beckhoff Automation GmbH, Eiserstraße 5, D-33415 Verl, Germany
+ * SOEM write to Beckhoff Automation GmbH, Eiserstraï¿½e 5, D-33415 Verl, Germany
  * (www.beckhoff.com).
  */
 
@@ -58,7 +58,7 @@ extern "C"
 /** max. length of readable name in slavelist and Object Description List */
 #define EC_MAXNAME        40
 /** max. number of slaves in array */
-#define EC_MAXSLAVE       200
+#define EC_MAXSLAVE       4
 /** max. number of groups */
 #define EC_MAXGROUP       2
 /** max. number of IO segments per group */
