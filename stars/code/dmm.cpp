@@ -63,8 +63,13 @@ void dmm::dmm_initialize()
 		dscGetLastError(&errorParams);
 		logerror += (format("dscADSetSettings error: %s (%s)") % dscGetErrorString(errorParams.ErrCode) % errorParams.errstring).str();
 		logger.log(logerror);
+		dscFreeBoard(dscb);
+		dscFree();
+		initialized = false;
 		return;
 	}
+
+	initialized = true;
 }
 
 void dmm::dmm_scan(double *values)

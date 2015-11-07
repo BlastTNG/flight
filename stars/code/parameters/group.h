@@ -27,7 +27,8 @@ class Parameters::Group
   public:
     void load(std::string filename);
     double try_get(std::string name, double default_value);
-    template <class T> T try_get(std::string name, T default_value);
+	template <class T> T try_get(std::string name, T default_value);
+	template <class T> void try_set(std::string name, T value);
     boost::program_options::variables_map map;
   protected:
     boost::program_options::options_description options;
@@ -37,17 +38,36 @@ class Parameters::Group
 template <typename T>
 T Parameters::Group::try_get(std::string name, T default_value)
 {
-    T value = default_value;
-    try {
-        if (map.count(name)) {
-            value = map[name].as<typeof(default_value)>();
-        } else {
-            Main::logger.log(format("failed to set parameter %s: not found in map") % name);
-        }
-    } catch(std::exception& e) {
-        Main::logger.log(format("failed to set parameter %s: %s") % name % e.what());
-    }
-    return value;
+	T value = default_value;
+	try {
+		if (map.count(name)) {
+			value = map[name].as<typeof(default_value)>();
+		}
+		else {
+			Main::logger.log(format("failed to set parameter %s: not found in map") % name);
+		}
+	}
+	catch (std::exception& e) {
+		Main::logger.log(format("failed to set parameter %s: %s") % name % e.what());
+	}
+	return value;
+}
+
+template <typename T>
+void Parameters::Group::try_set(std::string name, T value)
+{
+	try {
+		if (map.count(name)) {
+			map[name].value() = boost::any(value);
+		}
+		else {
+			Main::logger.log(format("failed to set parameter %s: not found in map") % name);
+		}
+	}
+	catch (std::exception& e) {
+		Main::logger.log(format("failed to set parameter %s: %s") % name % e.what());
+	}
+	return value;
 }
 
 #endif

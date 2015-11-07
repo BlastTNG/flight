@@ -63,6 +63,7 @@ class Imaging::CameraWindows: public Imaging::AbstractCamera
 	unsigned char *frameBuf1;
     QCam_Frame frame;
 	unsigned long FrameSize;	
+	unsigned short FrameNumber;
 
     double gain_min;
     double gain_max;

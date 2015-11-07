@@ -16,11 +16,10 @@ double Group::try_get(std::string name, double default_value)
         if (map.count(name)) {
             value = double(map[name].as<float>());
         } else {
-            logger.log(format("failed to set parameter %s: not found in map") % name);
+            logger.log(format("failed to get parameter %s: not found in map") % name);
         }
     } catch(std::exception& e) {
-        logger.log(format("failed to set parameter %s: %s") % name % e.what());
+        logger.log(format("failed to get parameter %s: %s") % name % e.what());
     }
     return value;
 }
-

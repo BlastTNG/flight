@@ -79,12 +79,9 @@ bool CameraWindows::init_camera()
 
 	QCam_CreateCameraSettingsStruct(&settings);
 	QCam_InitializeCameraSettings(camhandle, &settings);
-	//QCam_ReadSettingsFromCam(camhandle, (QCam_Settings*)&settings);
-	
 	QCam_ReadDefaultSettings(camhandle, (QCam_Settings*)&settings);
 	
 	QCam_SetParam((QCam_Settings*)&settings, qprmImageFormat, qfmtMono16);
-	QCam_SendSettingsToCam(camhandle, (QCam_Settings*)&settings);
 
 	{
 		unsigned long xpix, ypix, bpp;
@@ -107,6 +104,7 @@ bool CameraWindows::init_camera()
 	QCam_SetParam((QCam_Settings*)&settings, qprmHighSensitivityMode, 0);
 	QCam_SetParam((QCam_Settings*)&settings, qprmBlackoutMode, 0);
 	QCam_SetParam((QCam_Settings*)&settings, qprmDoPostProcessing, 0);
+	QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, 0);
 
 	//Set the ROI to our display size
 	QCam_SetParam((QCam_Settings*)&settings, qprmRoiX, 0);
@@ -114,21 +112,29 @@ bool CameraWindows::init_camera()
 	QCam_SetParam((QCam_Settings*)&settings, qprmRoiWidth, frame.width);
 	QCam_SetParam((QCam_Settings*)&settings, qprmRoiHeight, frame.height);
 
-	QCam_SendSettingsToCam(camhandle, (QCam_Settings*)&settings);
-
+	camerror = QCam_SendSettingsToCam(camhandle, (QCam_Settings*)&settings);
+	if (camerror != qerrSuccess) {
+		logger.log(format("error sending camera settings: %d") % camerror);
+	}
 	init_gain();
 
 	set_trigger_mode();
 
+	QCam_SetStreaming(camhandle, 1);
+	logger.log(format("Setting streaming on handle %u\n") % camhandle);
 	return true;
 }
 
 void CameraWindows::clean_up_camera()
 {
 	if (camera_ready) {
-		QCam_ReleaseCameraSettingsStruct(&settings);
+		logger.log(format("Releasing streaming on handle %u\n") % camhandle);
 		QCam_SetStreaming(camhandle, 0);
+		logger.log("Releasing settings\n");
+		QCam_ReleaseCameraSettingsStruct(&settings);
+		logger.log("Closing Camera\n");
 		QCam_CloseCamera(camhandle);
+		logger.log("Releasing driver\n");
 		QCam_ReleaseDriver();
 	}
 }
@@ -160,26 +166,40 @@ void CameraWindows::set_trigger_mode()
     if (internal_triggering) {
         trigger_mode = qcTriggerFreerun;
 		QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, unsigned long(mode6interval));
-		QCam_SetParam((QCam_Settings*)&settings, qprmExposure, unsigned long(internal_exposure_time*1000000.0));
     } else {
-        trigger_mode = qcTriggerStrobeHi;
+		trigger_mode = qcTriggerEdgeLow;
+		QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, 0);
     }
+
+	//camerror = QCam_SetParam((QCam_Settings*)&settings, qprmExposure, unsigned long(internal_exposure_time*1000000.0));
 	
+	camerror = QCam_SetParam64((QCam_Settings*)&settings, qprm64Exposure, unsigned long(internal_exposure_time*1000000000.0));
+	logger.log(format("set exposure time %fs (%d)") % internal_exposure_time % camerror);
 	camerror = QCam_SetParam((QCam_Settings*)&settings, qprmTriggerType, trigger_mode);
 
-	QCam_SendSettingsToCam(camhandle, (QCam_Settings*)&settings);
+	camerror = QCam_SendSettingsToCam(camhandle, (QCam_Settings*)&settings);
 	
     if (camerror == qerrSuccess) {
         logger.log(format("set trigger mode %d") % trigger_mode);
-    }
+	}
+	else {
+		logger.log(format("Error %d setting trigger") % camerror);
+	}
 	
     get_trigger_mode();
 }
 
 void CameraWindows::read_image_if_available()
 {
+		
 	
+	logger.log("Grabbing\n");
+	camerror = QCam_GrabFrame(camhandle, &frame);
+	logger.log(format("Done grabbing (%d) frame with timestamp %u\n") % camerror % frame.timeStamp);
+	
+	if (Shared::General::quit) return;
 
+	
 		boost::posix_time::ptime timestamp = boost::posix_time::microsec_clock::local_time();
 		shared_image.age.start();
 
@@ -187,11 +207,8 @@ void CameraWindows::read_image_if_available()
 		Tools::Timer series_age_timer;
 		series_age_timer.start();
 		
-		logger.log(format("image found with buffer %d") % frame.bufferSize);
-		
-		QCam_SetStreaming(camhandle, 1);
-		
-		camerror = QCam_GrabFrame(camhandle, &frame);
+		logger.log(format("image found with number %u") % frame.frameNumber);
+			
 		intermediate_buffer = (unsigned short*)frameBuf1;
 
 		if (camerror == qerrSuccess) {
@@ -204,7 +221,10 @@ void CameraWindows::read_image_if_available()
 			}
 			num_buffers_filled++;
 		}
-		else logger.log(format("Could not download image from camera: %d") % camerror);
+		else {
+			logger.log(format("Could not download image from camera: %d\n") % camerror);
+			return;
+		}
 		
 		if (num_buffers_filled > 0) {
 			bool multiple_triggers = false;
@@ -288,9 +308,9 @@ void CameraWindows::thread_function()
     #ifdef WIN32
     DWORD thread_priority;
 	//int wait_time = 30;				//time between taking pictures, in seconds
-    thread_priority = GetThreadPriority(GetCurrentThread());
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
-    thread_priority = GetThreadPriority(GetCurrentThread());
+    //thread_priority = GetThreadPriority(GetCurrentThread());
+    //SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+    //thread_priority = GetThreadPriority(GetCurrentThread());
     logger.log(format("main has thread priority %i")%thread_priority);
     #endif
 
@@ -303,20 +323,24 @@ void CameraWindows::thread_function()
                     shared_results.connected = true;
                     Shared::Camera::results_for_main.share();
                 }
-            }
+			}
+			usleep(int(internal_period * 1000000));
             if (camera_ready) {
+				logger.log("Camera is ready, trying to read image");
                 read_image_if_available();
                 process_requests();
             }
         }
-		usleep(int(internal_period*1000000));
 		last_remote_buffer_counter++;
     }
+	logger.log("Cleaning up camera");
     clean_up_camera();
 }
 
 void CameraWindows::wait_for_quit()
 {
+	logger.log("Abort QCam\n");
+	QCam_Abort(camhandle);
     thread.join();
 }
 
