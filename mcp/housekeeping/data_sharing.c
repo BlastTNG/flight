@@ -46,6 +46,13 @@ typedef struct
 	uint32_t crc;
 } __attribute__((packed)) sharing_packet_t;
 
+typedef enum
+{
+    type_frame_data,
+    type_command_data,
+    type_ethercat_data
+};
+
 static data_sharing_t received_data = {0};
 static comms_socket_t *sharing_sock = NULL;
 
@@ -72,7 +79,7 @@ void data_sharing_send_data(const data_sharing_t *m_data)
     sharing_packet_t packet =
         {
                 .header.length = sizeof(data_sharing_t),
-                .header.type = 0,
+                .header.type = type_frame_data,
                 .header.version = 1,
                 .header.magic = BLAST_MAGIC8,
         };
@@ -97,7 +104,7 @@ void data_sharing_request_commanddata(void)
 	} __attribute__((packed))  packet =
 	    {
 	            .header.length = 0,
-	            .header.type = 1,
+	            .header.type = type_command_data,
 	            .header.version = 1,
 	            .header.magic = BLAST_MAGIC8,
 	            .crc = BLAST_MAGIC32
@@ -116,7 +123,7 @@ void data_sharing_send_commanddata(void)
 	} __attribute__((packed)) packet =
         {
                 .header.length = sizeof(struct CommandDataStruct),
-                .header.type = 1,
+                .header.type = type_command_data,
                 .header.version = 1,
                 .header.magic = BLAST_MAGIC8,
         };
@@ -181,16 +188,17 @@ static int data_sharing_process_packet(const void *m_data, size_t m_len, void *m
 	 */
 	switch (header->type)
 	{
-		case 0:
+		case type_frame_data:
 			sharing_packet = (data_sharing_t*)BLAST_MASTER_PACKET_PAYLOAD(header);
 			memcpy(&received_data, sharing_packet, sizeof(received_data));
 			break;
-		case 1:
+		case type_command_data:
 			if (header->length == sizeof(struct CommandDataStruct))
 				memcpy(&CommandData, BLAST_MASTER_PACKET_PAYLOAD(header), sizeof(CommandData));
 			else if (header->length == 0)
 				data_sharing_send_commanddata();
 			break;
+		case type_ethercat_data:
 	}
 
 	consumed += BLAST_MASTER_PACKET_FULL_LENGTH(header);
