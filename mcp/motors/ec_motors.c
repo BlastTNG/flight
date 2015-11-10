@@ -93,7 +93,7 @@ static ec_motor_state_t controller_state = ECAT_MOTOR_COLD;
 /**
  * Memory mapping for the PDO variables
  */
-static char io_map[16384];
+static char io_map[1024];
 
 static int motors_exit = false;
 
