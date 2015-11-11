@@ -77,6 +77,8 @@ struct channel {
     E_SRC source;               /// Source of the data channel (who writes)
     char quantity[UNITS_LEN];   /// eg, "Temperature" or "Angular Velocity"
     char units[UNITS_LEN];      /// eg, "K" or "^o/s"
+    uint8_t board;              /// If the source is a UEI, which board is it? Otherwise, 0
+    uint8_t chan;               /// If the source is a UEI, which channel on the board?
     void *var;                  /// Pointer to the variable in the current frame
 } __attribute__((aligned));
 
