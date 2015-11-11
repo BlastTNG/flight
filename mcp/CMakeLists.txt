@@ -103,8 +103,8 @@ ENDIF()
 include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
 
 # Find glib    
-pkg_check_modules(PC_SENSORS  sensors)
-set(GLIB_SENSORS ${PC_SENSORS_CFLAGS_OTHER})
+pkg_check_modules(PC_SENSORS QUIET sensors)
+set(SENSORS_DEFINITIONS ${PC_SENSORS_CFLAGS_OTHER})
 
 find_path(SENSORS_INCLUDE_DIR NAMES sensors.h
           HINTS ${PC_SENSORS_INCLUDEDIR} ${PC_SENSORS_INCLUDE_DIRS}
@@ -120,11 +120,34 @@ ENDIF()
 include_directories(${SENSORS_INCLUDE_DIR})
 
 # Find mosquitto    
-ExternalProject_add(MOSQ
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libmosquitto-1.4.1
-    URL ${PROJECT_SOURCE_DIR}/../external_libs/mosquitto
-    CMAKE_ARGS -DWITH_TLS:BOOL=OFF -DWITH_SOCKS:BOOL=OFF -DWITH_SRV:BOOL=OFF
-    )
+pkg_check_modules(PC_MOSQ QUIET mosquitto)
+set(MOSQ_DEFINITIONS ${PC_MOSQ_CFLAGS_OTHER})
+
+find_path(MOSQ_INCLUDE_DIR NAMES mosquitto.h
+          HINTS ${PC_MOSQ_INCLUDEDIR} ${PC_MOSQ_INCLUDE_DIRS}
+          PATH_SUFFIXES mosquitto REQUIRED)
+find_library(MOSQ_LIBRARY NAMES mosquitto libmosquitto
+            HINTS ${PC_MOSQ_LIBDIR} ${PC_MOSQ_LIBRARY_DIRS} REQUIRED)
+IF(NOT MOSQ_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find mosquitto.h.  Is libmosquitto-dev installed?")
+ENDIF()
+IF(NOT MOSQ_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libmosquitto.  Is libmosquitto1 installed?")
+ENDIF()
+include_directories(${MOSQ_INCLUDE_DIR})
+
+
+# add soem library
+set(ECAT_LIBRARY ${PROJECT_BINARY_DIR}/soem/libethercat.a)
+ExternalProject_Add(soem 
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/soem 
+    BINARY_DIR ${PROJECT_BINARY_DIR}/soem 
+    URL ${PROJECT_SOURCE_DIR}/../external_libs/soem
+    INSTALL_COMMAND "")
+
+include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem 
+    ${PROJECT_SOURCE_DIR}/../external_libs/soem/osal
+    ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
 
 # configure a header file to pass some of the CMake settings to the source code
 configure_file (
@@ -148,18 +171,6 @@ include_directories (
     "${COMMON_DIR}/include"
     "${COMMS_DIR}/include"
     )
-
-# add soem library
-set(ECAT_LIBRARY ${PROJECT_BINARY_DIR}/soem/libethercat.a)
-ExternalProject_Add(soem 
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/soem 
-    BINARY_DIR ${PROJECT_BINARY_DIR}/soem 
-    URL ${PROJECT_SOURCE_DIR}/../external_libs/soem
-    INSTALL_COMMAND "")
-
-include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem 
-    ${PROJECT_SOURCE_DIR}/../external_libs/soem/osal
-    ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
 
 # add commanding objects
 add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
@@ -215,6 +226,7 @@ add_library(mcp_obj OBJECT
     ${PROJECT_SOURCE_DIR}/include/mcp.h
     ${PROJECT_SOURCE_DIR}/include/tx.h
     )
+define_file_basename_for_sources(mcp_obj)
             
 add_executable (mcp 
     $<TARGET_OBJECTS:housekeeping>
