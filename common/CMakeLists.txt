@@ -8,7 +8,6 @@ set(MCP_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sip.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/sys.c
     PARENT_SCOPE
 )
 set(MCP_COMMON_HEADERS
@@ -24,7 +23,6 @@ set(MCP_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/sip.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/include/sys.h
    PARENT_SCOPE
 )
 

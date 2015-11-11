@@ -44,7 +44,6 @@
 #include "command_common.h"
 #include "command_struct.h"
 #include "mcp.h"
-#include "sys.h"
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
@@ -413,7 +412,6 @@ void WatchFIFO (void* void_other_ip)
   char *mcommand_data[DATA_Q_SIZE];
 
   int i;
-  int send_to_other;
   char other_ip[100] = "@localhost";
 
   if (void_other_ip)
@@ -446,39 +444,6 @@ void WatchFIFO (void* void_other_ip)
     command[index - 1] = command[index] = 0;
     //blast_info("Command received: %s\n", command);
     
-#ifndef TEST_RUN
-    if (void_other_ip != NULL) {
-      // if the command has an _ prepended, then it came from the other computer
-      // and should not be sent back.
-      if (command[0] == '_') {
-        for (i=1; i<index; i++) {
-          command[i-1] = command[i];
-        }
-        send_to_other = 0;
-      } else {
-        send_to_other = 1;
-      }
-      
-      if (send_to_other) {
-        char arg_command[100] = "_";
-        char *ptr = arg_command;
-        char *argv[16] = { "/usr/local/bin/spidercmd", other_ip, arg_command };
-        int argc = 3;
-        strcpy(arg_command + 1, command);
-        for (ptr = arg_command; *ptr; ++ptr) {
-          if (*ptr == ' ') {
-            *ptr = 0;
-            if (*(ptr + 1) != ' ' && *(ptr + 1))
-              argv[argc++] = ptr + 1;
-          }
-        }
-        argv[argc] = 0;
-
-        exec_and_wait(err, none, argv[0], argv, 100, 1, NULL);
-      }    
-    }
-#endif
-
     index = -1;
     while((command[++index] != ' ') && command[index]);
     command[index++] = 0;

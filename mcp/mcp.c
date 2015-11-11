@@ -45,7 +45,6 @@
 #include "crc.h"
 #include "mcp.h"
 #include "pointing_struct.h"
-#include "starpos.h"
 #include "channels_tng.h"
 #include "tx.h"
 #include "lut.h"
