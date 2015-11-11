@@ -149,6 +149,16 @@ include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/osal
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
 
+# add our version of libphenom
+ExternalProject_Add(phenom
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/phenom
+  PATCH_COMMAND ./autogen.sh
+  CONFIGURE_COMMAND ./configure --disable-shared --enable-silent-rules
+  GIT_REPOSITORY https://github.com/sethhillbrand/libphenom.git
+  BUILD_IN_SOURCE 1
+  BUILD_COMMAND make libphenom.la
+  INSTALL_COMMAND "")
+  
 # configure a header file to pass some of the CMake settings to the source code
 configure_file (
   "${PROJECT_SOURCE_DIR}/mcp_config.h.in"
