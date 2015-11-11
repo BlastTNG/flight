@@ -51,7 +51,7 @@ typedef enum
     type_frame_data,
     type_command_data,
     type_ethercat_data
-};
+} e_sharing_type;
 
 static data_sharing_t received_data = {0};
 static comms_socket_t *sharing_sock = NULL;
@@ -199,6 +199,7 @@ static int data_sharing_process_packet(const void *m_data, size_t m_len, void *m
 				data_sharing_send_commanddata();
 			break;
 		case type_ethercat_data:
+		    break;
 	}
 
 	consumed += BLAST_MASTER_PACKET_FULL_LENGTH(header);
