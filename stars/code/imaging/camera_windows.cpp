@@ -39,6 +39,8 @@ bool CameraWindows::init_camera()
 	using std::string;
 	unsigned long listlen = 0;
 	
+	isCapturing = false;
+
 	camerror = QCam_LoadDriver();
 	if (camerror != qerrSuccess) {
 		logger.log(format("error: could not initialize camera system: %d") % camerror);
@@ -194,7 +196,9 @@ void CameraWindows::read_image_if_available()
 		
 	
 	logger.log("Grabbing\n");
+	isCapturing = true;
 	camerror = QCam_GrabFrame(camhandle, &frame);
+	isCapturing = false;
 	logger.log(format("Done grabbing (%d) frame with timestamp %u\n") % camerror % frame.timeStamp);
 	
 	if (Shared::General::quit) return;
@@ -340,7 +344,7 @@ void CameraWindows::thread_function()
 void CameraWindows::wait_for_quit()
 {
 	logger.log("Abort QCam\n");
-	QCam_Abort(camhandle);
+	if (isCapturing) QCam_Abort(camhandle);
     thread.join();
 }
 

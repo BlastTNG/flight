@@ -57,13 +57,14 @@ class Imaging::CameraWindows: public Imaging::AbstractCamera
 
   private:
     QCam_Err camerror;
-	QCam_CamListItem camlist[10];  // List of connected cameras		//Added by KNS to list cameras
+	QCam_CamListItem camlist[2];  // List of connected cameras	
 	QCam_Handle camhandle;
 	QCam_SettingsEx settings;
 	unsigned char *frameBuf1;
     QCam_Frame frame;
 	unsigned long FrameSize;	
 	unsigned short FrameNumber;
+	bool isCapturing;
 
     double gain_min;
     double gain_max;
