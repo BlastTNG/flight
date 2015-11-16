@@ -124,6 +124,7 @@ void xsc_networking_init(int which)
 
 void xsc_write_data(int which)
 {
+    int retval;
     XSCClientData xsc_client_data;
     int pointing_read_index = GETREADINDEX(point_index);
 
@@ -148,8 +149,8 @@ void xsc_write_data(int which)
 
     xsc_client_data.xsc_protocol_version = XSC_PROTOCOL_VERSION;
 
-
-    if (comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data)) != NETSOCK_OK)
+    retval = comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data));
+    if ( retval == NETSOCK_ERR)
         comms_sock_reconnect(xsc_sock[which]);
 }
 
