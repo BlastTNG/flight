@@ -106,7 +106,7 @@ void Fluxer::fit(Solution& solution, vector<Blob>& blobs, vector<Star>& stars, b
 
     // params[0] is in ADU / (electrons / m^s / s)
     // s = [(ADU/e) * m^2 * s] / (ADU/e) / (m^2)
-    double gain = 0.04096;
+	double gain = 0.2048; //Previous value: 0.04096  11-17-15: Adjusting to match observed offset
     double aperture = 0.009696;
 
     solution.measured_exposure = params[0] / gain / aperture;
