@@ -236,16 +236,16 @@ void AbstractCamera::save_image(unsigned short* pixels, int buffer_num, bool mul
     fits_create_file(&fptr, filename.c_str(), &status);
     fits_create_img(fptr, SHORT_IMG, naxis, naxes, &status);
     fits_update_key(fptr, TSTRING, (char *)"WHICH", (char *)shared_image.which_sensor.c_str(), (char *)"", &status);
-    fits_update_key(fptr, TINT, (char *)"COUNTER_STARS", &shared_image.counter_stars, (char *)"", &status);
-    fits_update_key(fptr, TINT, (char *)"COUNTER_FCP", &shared_image.counter_fcp, (char *)"", &status);
+    fits_update_key(fptr, TINT, (char *)"CT_STARS", &shared_image.counter_stars, (char *)"", &status);
+    fits_update_key(fptr, TINT, (char *)"CT_MCP", &shared_image.counter_fcp, (char *)"", &status);
     if (shared_image.filters.horizontal_known()) {
         double lat = to_degrees(shared_image.filters.lat());
         double lst = to_hours(shared_image.filters.lst());
-        fits_update_key(fptr, TDOUBLE, (char *)"APPROX_LAT", &lat, (char *)"DEGREES", &status);
-        fits_update_key(fptr, TDOUBLE, (char *)"APPROX_LST", &lst, (char *)"HOURS", &status);
+        fits_update_key(fptr, TDOUBLE, (char *)"APRX_LAT", &lat, (char *)"DEGREES", &status);
+        fits_update_key(fptr, TDOUBLE, (char *)"APRX_LST", &lst, (char *)"HOURS", &status);
     } else {
-        fits_update_key(fptr, TINT, (char *)"APPROX_LAT", &unknown, (char *)"UNKNOWN", &status);
-        fits_update_key(fptr, TINT, (char *)"APPROX_LST", &unknown, (char *)"UNKNOWN", &status);
+        fits_update_key(fptr, TINT, (char *)"APRX_LAT", &unknown, (char *)"UNKNOWN", &status);
+        fits_update_key(fptr, TINT, (char *)"APRX_LST", &unknown, (char *)"UNKNOWN", &status);
     }
 
     if (shared_image.focus_known) {
