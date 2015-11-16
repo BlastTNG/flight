@@ -41,7 +41,7 @@ static int xsc_process_packet(const void *m_data, size_t m_len, void *m_userdata
 {
     comms_socket_t *sock = (comms_socket_t*) m_userdata;
     int which = (intptr_t) sock->priv_data;
-    XSCServerData *data = (XSCServerData*) m_userdata;
+    XSCServerData *data = (XSCServerData*) m_data;
     int array_index = xsc_server_index[which];
 
     if (data->xsc_protocol_version == XSC_PROTOCOL_VERSION) {
