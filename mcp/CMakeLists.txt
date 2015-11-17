@@ -152,8 +152,9 @@ include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem
 # add our version of libphenom
 ExternalProject_Add(phenom
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/phenom
+  UPDATE_COMMAND git pull
   PATCH_COMMAND ./autogen.sh
-  CONFIGURE_COMMAND ./configure --disable-shared --enable-silent-rules
+  CONFIGURE_COMMAND ./configure -q --disable-shared --enable-silent-rules
   GIT_REPOSITORY https://github.com/sethhillbrand/libphenom.git
   BUILD_IN_SOURCE 1
   BUILD_COMMAND make libphenom.la

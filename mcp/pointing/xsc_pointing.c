@@ -126,7 +126,7 @@ static void xsc_motion_psf_initiate(unsigned int* motion_psf_index)
 
     for (int which=0; which<2; which++) {
         CommandData.XSC[which].net.solver.motion_psf.counter_fcp = xsc_pointing_state[which].counter_fcp;
-        CommandData.XSC[which].net.solver.motion_psf.counter_stars = xsc_server_data(which).channels[xN_ctr_stars].value_int;
+        CommandData.XSC[which].net.solver.motion_psf.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;
         CommandData.XSC[which].net.solver.motion_psf.el = from_degrees(PointingData[i_point].el);
         for (unsigned int i=0; i<XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
             CommandData.XSC[which].net.solver.motion_psf.timesteps[i].exposure_num = -1;
@@ -211,7 +211,7 @@ void xsc_control_triggers()
             /// Fall through
         case xsc_trigger_in_hard_grace_period:
             state_counter++;
-            //blast_info("CHAPPY DEBUG: in grace period with counter %i", state_counter);
+//            blast_dbg("In hard grace period with counter %i", state_counter);
             if (state_counter > 60) {
                 state_counter = 0;
                 trigger_state = xsc_trigger_in_grace_period;
@@ -220,7 +220,7 @@ void xsc_control_triggers()
 
         case xsc_trigger_in_grace_period:
             state_counter++;
-            //blast_info("CHAPPY DEBUG: in grace period with counter %i", state_counter);
+//            blast_dbg("In grace period with counter %i", state_counter);
             if (state_counter > grace_period_cs || xsc_scan_force_grace_period()) {
                 xsc_pointing_state[0].last_trigger.forced_grace_period = xsc_scan_force_grace_period();
                 state_counter = 0;
@@ -233,7 +233,7 @@ void xsc_control_triggers()
 
         case xsc_trigger_waiting_to_send_trigger:
             state_counter++;
-            //blast_info("CHAPPY DEBUG: in waiting_to_send with counter %i", state_counter);
+            blast_dbg("In waiting_to_send with counter %i", state_counter);
             if (xsc_trigger_thresholds_satisfied() || (multi_trigger_counter > 0) || xsc_scan_force_trigger_threshold()) {
                 xsc_pointing_state[0].last_trigger.forced_trigger_threshold = xsc_scan_force_trigger_threshold();
                 if (!scan_bypass_last_trigger_on_next_trigger) {
@@ -246,7 +246,7 @@ void xsc_control_triggers()
                     ///TODO: Pulse here XSC
                     if (!scan_bypass_last_trigger_on_next_trigger) {
                         xsc_pointing_state[which].last_trigger.counter_fcp = xsc_pointing_state[which].counter_fcp;
-                        xsc_pointing_state[which].last_trigger.counter_stars = xsc_server_data(which).channels[xN_ctr_stars].value_int;
+                        xsc_pointing_state[which].last_trigger.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;
                         xsc_pointing_state[which].last_trigger.lat = PointingData[i_point].lat;
                         xsc_pointing_state[which].last_trigger.lst = PointingData[i_point].lst;
                     }
@@ -266,7 +266,7 @@ void xsc_control_triggers()
 
         case xsc_trigger_sending_triggers:
             state_counter++;
-            //blast_info("CHAPPY DEBUG: in sending_triggers with counter %i", state_counter);
+            blast_dbg("In sending_triggers with counter %i, counter_fcp: %d", state_counter, xsc_pointing_state[0].counter_fcp);
             if (state_counter >= max_exposure_time_used_cs) {
                 state_counter = 0;
                 multi_trigger_counter = (multi_trigger_counter+1) % num_triggers;
@@ -289,7 +289,7 @@ void xsc_control_triggers()
 
         case xsc_trigger_readout_period:
             state_counter++;
-            //blast_info("CHAPPY DEBUG: in readout with counter %i", state_counter);
+            blast_dbg("In readout with counter %i", state_counter);
             if (state_counter >= (multi_trigger_time_between_triggers_cs-1)) {
                 state_counter = 0;
                 trigger_state = xsc_trigger_waiting_to_send_trigger;
@@ -297,6 +297,7 @@ void xsc_control_triggers()
             break;
 
         default:
+            blast_dbg("In default with counter %i", state_counter);
             state_counter = 0;
             trigger_state = xsc_trigger_first_time;
             break;
@@ -305,7 +306,7 @@ void xsc_control_triggers()
 
 static double xsc_get_temperature(int which)
 {
-    return xsc_server_data(which).channels[xN_hk_temp_lens].value_double;
+    return XSC_SERVER_DATA(which).channels.hk_temp_lens;
 }
 
 void xsc_control_heaters(void)

@@ -103,7 +103,7 @@ void xsc_networking_init(int which)
 {
     for (unsigned int i=0; i<3; i++) {
         xsc_clear_server_data(&xsc_mserver_data[which][i]);
-        xsc_init_server_data(&xsc_mserver_data[which][i], &xsc_channel_infos);
+        xsc_init_server_data(&xsc_mserver_data[which][i]);
     }
 
     xsc_sock[which] = comms_sock_new();
@@ -136,7 +136,8 @@ void xsc_write_data(int which)
     xsc_client_data.solver.filters.hor_location_limit_el = from_degrees(PointingData[pointing_read_index].estimated_xsc_el_deg[which]);
     xsc_client_data.solver.filters.eq_location_limit_ra = from_hours(PointingData[pointing_read_index].estimated_xsc_ra_hours[which]);
     xsc_client_data.solver.filters.eq_location_limit_dec = from_degrees(PointingData[pointing_read_index].estimated_xsc_dec_deg[which]);
-    xsc_client_data.in_charge = InCharge;
+    ///TODO: Adjust fcp<->stars in charge flag
+    xsc_client_data.in_charge = 1;
 
     if (xsc_pointing_state[which].last_trigger.age_of_end_of_trigger_cs >
             CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs) {

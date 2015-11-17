@@ -603,30 +603,37 @@ int possible_solution(double az, double el, int i_point) {
 
 static bool XSCHasNewSolution(int which)
 {
-    if (!xsc_server_data(which).channels[xN_image_eq_valid].value_bool) {
+    if (!XSC_SERVER_DATA(which).channels.image_eq_valid) {
+//        blast_dbg("Bad Solution");
         // The latest solution isn't good
         return false;
     }
-    if (xsc_server_data(which).channels[xN_image_ctr_stars].value_int == xsc_pointing_state[which].last_solution_stars_counter) {
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter) {
+        blast_dbg("Old Solution");
         // The solution is old
         return false;
     }
-    if (xsc_server_data(which).channels[xN_image_ctr_stars].value_int < 0 || ACSData.last_trigger_counter_stars[which] < 0) {
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || ACSData.last_trigger_counter_stars[which] < 0) {
+        blast_dbg("No stars counter");
         // One or both of the stars counters were not yet running at the time of the trigger
         return false;
     }
-    if (xsc_server_data(which).channels[xN_image_ctr_fcp].value_int < 0 ||  ACSData.last_trigger_counter_fcp[which] < 0) {
+    if (XSC_SERVER_DATA(which).channels.image_ctr_fcp < 0 ||  ACSData.last_trigger_counter_fcp[which] < 0) {
+        blast_dbg("No mcp counter");
         // One or both of the fcp counters were not yet running at the time of the trigger
         return false;
     }
-    if (xsc_server_data(which).channels[xN_image_ctr_stars].value_int != ACSData.last_trigger_counter_stars[which]) {
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars != ACSData.last_trigger_counter_stars[which]) {
+        blast_dbg("Misaligned stars counter");
         // The stars counters were misaligned at the time of the trigger
         return false;
     }
-    if (xsc_server_data(which).channels[xN_image_ctr_fcp].value_int != ACSData.last_trigger_counter_fcp[which]) {
+    if (XSC_SERVER_DATA(which).channels.image_ctr_fcp != ACSData.last_trigger_counter_fcp[which]) {
+        blast_dbg("Misaligned fcp counters");
         // The fcp counters were misaligned at the time of the trigger
         return false;
     }
+
     return true;
 }
 
@@ -658,13 +665,12 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
   a->variance += GYRO_VAR;
 
   if (XSCHasNewSolution(which)) {
-    xsc_pointing_state[which].last_solution_stars_counter = xsc_server_data(which).channels[xN_image_ctr_stars].value_int;
+    xsc_pointing_state[which].last_solution_stars_counter = XSC_SERVER_DATA(which).channels.image_ctr_stars;
     blast_info(" xsc%i: received new solution", which);
     if (ACSData.last_trigger_age_cs[which] < GY_HISTORY_AGE_CS) {
         blast_info(" xsc%i: new solution young enough to accept", which);
       //i_point = GETREADINDEX(point_index);
-      ra = to_hours(xsc_server_data(which).channels[xN_image_eq_ra].value_double);
-      dec = to_degrees(xsc_server_data(which).channels[xN_image_eq_dec].value_double);
+      ra = to_hours(XSC_SERVER_DATA(which).channels.image_eq_ra);      dec = to_degrees(XSC_SERVER_DATA(which).channels.image_eq_dec);
       blast_dbg("xsc%i solution is ra, dec: %f, %f (deg)\n", which, to_degrees(from_hours(ra)), dec);
 
       equatorial_to_horizontal(ra, dec, ACSData.last_trigger_lst[which], ACSData.last_trigger_lat[which], &new_az, &new_el);
@@ -675,7 +681,7 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
 
       //bprintf(loglevel_info, "Pointing: Solution from XSC%i: Ra = %f hours\n", which, ra);
       //bprintf(loglevel_info, "Pointing: Solution from XSC%i: Dec = %f degrees\n", which, dec);
-      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: sigma = %f rad\n", which, xsc_server_data(which).sigma);
+      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: sigma = %f rad\n", which, XSC_SERVER_DATA(which).sigma);
       //bprintf(loglevel_info, "Pointing: Solution from XSC%i: az = %f degrees\n", which, new_az);
       //bprintf(loglevel_info, "Pointing: Solution from XSC%i: el = %f degrees\n", which, new_el);
 
@@ -707,18 +713,17 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e,
       //bprintf(loglevel_info, "CHAPPY: Az averaging old: %f,  and new: %f\n", a->angle, new_az);
 
       w1 = 1.0 / (e->variance);
-      if (xsc_server_data(which).channels[xN_image_eq_sigma_pointing].value_double > M_PI) {
+      if (XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing > M_PI) {
         w2 = 0.0;
       } else {
-        w2 = 10.0 * xsc_server_data(which).channels[xN_image_eq_sigma_pointing].value_double
-          * (180.0 / M_PI); //e->samp_weight;
+        w2 = 10.0 * XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing * (180.0 / M_PI); //e->samp_weight;
         if (w2 > 0.0)
           w2 = 1.0 / (w2 * w2);
         else
           w2 = 0.0; // shouldn't happen
       }
       //bprintf(loglevel_info,"POINTING: ESC%i_SIGMA and SC weight w2:  %f %f\n", which,
-        //xsc_server_data(which).sigma,w2);
+        //XSC_SERVER_DATA(which).sigma,w2);
 
       UnwindDiff(e->angle, &new_el);
       UnwindDiff(a->angle, &new_az);

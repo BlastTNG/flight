@@ -5,7 +5,6 @@ set(SENSOR_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/dgps.c 
     ${CMAKE_CURRENT_SOURCE_DIR}/dsp1760.c
     ${CMAKE_CURRENT_SOURCE_DIR}/geomag2015.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/xsc_channels.c
     ${CMAKE_CURRENT_SOURCE_DIR}/xsc_network.c
     ${CMAKE_CURRENT_SOURCE_DIR}/xsc_protocol.c
     PARENT_SCOPE
@@ -16,7 +15,6 @@ set(SENSOR_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/dsp1760.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/EGM9615.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/geomag2015.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_channels.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_network.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_protocol.h
    PARENT_SCOPE

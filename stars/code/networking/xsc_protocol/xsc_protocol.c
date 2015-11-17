@@ -221,7 +221,6 @@ void xsc_zero_command_admins(xsc_command_admin_t* admins)
 
 void xsc_init_server_data(XSCServerData* server_data)
 {
-    unsigned int i=0;
     memset(server_data, 0, sizeof(XSCServerData));
     server_data->channels.ctr_stars = -1;
     server_data->channels.image_ctr_fcp = -1;

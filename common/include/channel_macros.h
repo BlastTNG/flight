@@ -182,16 +182,17 @@ typedef struct channel channel_t;
 #define SET_VALUE(channel,in)               \
 ({                                          \
     channel_t *_ch = channel;               \
-    uint32_t in32u = (in);                  \
-    int32_t in32i = (in);                   \
-    uint16_t in16u = (in);                  \
-    int16_t in16i = (in);                   \
+    typeof(in) _in = (in);                  \
+    uint32_t in32u = (uint32_t)_in;         \
+    int32_t in32i = (int32_t)_in;           \
+    uint16_t in16u = (uint16_t)_in;         \
+    int16_t in16i = (int16_t)_in;           \
     switch (_ch->type)   {                  \
         case TYPE_INT8:                     \
-            *(int8_t*)_ch->var = (in);      \
+            *(int8_t*)_ch->var = (_in);     \
             break;                          \
         case TYPE_UINT8:                    \
-            *(uint8_t*)_ch->var = (in);     \
+            *(uint8_t*)_ch->var = (_in);    \
             break;                          \
         case TYPE_INT16:                    \
             *(uint16_t*)_ch->var = htobe16(in16i);     \
@@ -212,10 +213,10 @@ typedef struct channel channel_t;
             *(uint64_t*)_ch->var = htobe64(in);    \
             break;                          \
         case TYPE_FLOAT:                    \
-            htobef(in, _ch->var);           \
+            htobef(_in, _ch->var);          \
             break;                          \
         case TYPE_DOUBLE:                   \
-            htobed(in, _ch->var);           \
+            htobed(_in, _ch->var);          \
             break;                          \
         default:                            \
             blast_err("Invalid type %d", _ch->type);  \

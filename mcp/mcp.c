@@ -323,6 +323,8 @@ static void mcp_100hz_routines(void)
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();
+    store_100hz_xsc(0);
+    store_100hz_xsc(1);
     xsc_control_triggers();
 
     framing_publish_100hz();
@@ -351,6 +353,8 @@ static void mcp_1hz_routines(void)
 {
     blast_store_cpu_health();
     blast_store_disk_space();
+    store_1hz_xsc(0);
+    store_1hz_xsc(1);
     xsc_write_data(0);
     xsc_write_data(1);
     framing_publish_1hz();

@@ -38,6 +38,8 @@
 #include <pointing_struct.h>
 #include <dsp1760.h>
 
+#include "xsc_network.h"
+
 static const float gy_inv[64][3][6] =
         {
 
@@ -474,277 +476,304 @@ void store_100hz_acs(void)
     SET_INT32(pos_piv_addr, PivotMotorData[i_motors].position);
 }
 
-//static channel_t* GetSCNiosAddr(char* field, int which)
-//{
-//  char buffer[FIELD_LEN];
-//  sprintf(buffer, "%s_%s", field, which ? "osc" : "isc");
-//
-//  return channels_find_by_name(buffer);
-//}
-
-//TODO: Update StoreStarCameraData for XSC
-static void StoreStarCameraData(int index, int which)
+static inline channel_t* get_xsc_channel(const char *m_field, int m_which)
 {
-//    static int firsttime[2] = { 1, 1 };
-//    static int blob_index[2] = { 0, 0 };
-//    static int blob_data[2][15][4];
-//
-//    int i, i_isc = 0;
-//
-//    /** isc fields **/
-//    static channel_t* Blob0XAddr[2];
-//    static channel_t* Blob1XAddr[2];
-//    static channel_t* Blob2XAddr[2];
-//    static channel_t* Blob0YAddr[2];
-//    static channel_t* Blob1YAddr[2];
-//    static channel_t* Blob2YAddr[2];
-//    static channel_t* Blob0FAddr[2];
-//    static channel_t* Blob1FAddr[2];
-//    static channel_t* Blob2FAddr[2];
-//    static channel_t* Blob0SAddr[2];
-//    static channel_t* Blob1SAddr[2];
-//    static channel_t* Blob2SAddr[2];
-//    static channel_t* ErrorAddr[2];
-//    static channel_t* MapmeanAddr[2];
-//    static channel_t* FramenumAddr[2];
-//    static channel_t* RdSigmaAddr[2];
-//    static channel_t* RaAddr[2];
-//    static channel_t* DecAddr[2];
-//    static channel_t* HxFlagAddr[2];
-//    static channel_t* McpnumAddr[2];
-//    static channel_t* ApertAddr[2];
-//    static channel_t* MdistAddr[2];
-//    static channel_t* NblobsAddr[2];
-//    static channel_t* FocusAddr[2];
-//    static channel_t* FocOffAddr[2];
-//    static channel_t* ThreshAddr[2];
-//    static channel_t* GridAddr[2];
-//    static channel_t* StateAddr[2];
-//    static channel_t* MinblobsAddr[2];
-//    static channel_t* MaxblobsAddr[2];
-//    static channel_t* MaglimitAddr[2];
-//    static channel_t* NradAddr[2];
-//    static channel_t* LradAddr[2];
-//    static channel_t* TolAddr[2];
-//    static channel_t* MtolAddr[2];
-//    static channel_t* QtolAddr[2];
-//    static channel_t* RtolAddr[2];
-//    static channel_t* FpulseAddr[2];
-//    static channel_t* SpulseAddr[2];
-//    static channel_t* XOffAddr[2];
-//    static channel_t* YOffAddr[2];
-//    static channel_t* IHoldAddr[2];
-//    static channel_t* SavePrdAddr[2];
-//    static channel_t* Temp1Addr[2];
-//    static channel_t* Temp2Addr[2];
-//    static channel_t* Temp3Addr[2];
-//    static channel_t* Temp4Addr[2];
-//    static channel_t* PressureAddr[2];
-//    static channel_t* GainAddr[2];
-//    static channel_t* OffsetAddr[2];
-//    static channel_t* ExposureAddr[2];
-//    static channel_t* TrigTypeAddr[2];
-//    static channel_t* RealTrigAddr[2];
-//    static channel_t* BlobIdxAddr[2];
-//    static channel_t* FieldrotAddr[2];
-//    static channel_t* DiskfreeAddr[2];
-//    static channel_t* MaxslewAddr[2];
-//    static channel_t* MaxAgeAddr[2];
-//    static channel_t* AgeAddr[2];
-//    static channel_t* PosFocusAddr[2];
-//
-//    if (firsttime[which]) {
-//        firsttime[which] = 0;
-//        Blob0XAddr[which] = GetSCNiosAddr("blob00_x", which);
-//        Blob1XAddr[which] = GetSCNiosAddr("blob01_x", which);
-//        Blob2XAddr[which] = GetSCNiosAddr("blob02_x", which);
-//        Blob0YAddr[which] = GetSCNiosAddr("blob00_y", which);
-//        Blob1YAddr[which] = GetSCNiosAddr("blob01_y", which);
-//        Blob2YAddr[which] = GetSCNiosAddr("blob02_y", which);
-//        Blob0FAddr[which] = GetSCNiosAddr("blob00_f", which);
-//        Blob1FAddr[which] = GetSCNiosAddr("blob01_f", which);
-//        Blob2FAddr[which] = GetSCNiosAddr("blob02_f", which);
-//        Blob0SAddr[which] = GetSCNiosAddr("blob00_s", which);
-//        Blob1SAddr[which] = GetSCNiosAddr("blob01_s", which);
-//        Blob2SAddr[which] = GetSCNiosAddr("blob02_s", which);
-//        ErrorAddr[which] = GetSCNiosAddr("error", which);
-//        MapmeanAddr[which] = GetSCNiosAddr("mapmean", which);
-//        RdSigmaAddr[which] = GetSCNiosAddr("rd_sigma", which);
-//        FramenumAddr[which] = GetSCNiosAddr("framenum", which);
-//        RaAddr[which] = GetSCNiosAddr("ra", which);
-//        DecAddr[which] = GetSCNiosAddr("dec", which);
-//        NblobsAddr[which] = GetSCNiosAddr("nblobs", which);
-//        HxFlagAddr[which] = GetSCNiosAddr("hx_flag", which);
-//        McpnumAddr[which] = GetSCNiosAddr("mcpnum", which);
-//
-//        StateAddr[which] = GetSCNiosAddr("state", which);
-//        FocusAddr[which] = GetSCNiosAddr("focus", which);
-//        FocOffAddr[which] = GetSCNiosAddr("foc_off", which);
-//        ApertAddr[which] = GetSCNiosAddr("apert", which);
-//        ThreshAddr[which] = GetSCNiosAddr("thresh", which);
-//        GridAddr[which] = GetSCNiosAddr("grid", which);
-//        MdistAddr[which] = GetSCNiosAddr("mdist", which);
-//        MinblobsAddr[which] = GetSCNiosAddr("minblobs", which);
-//        MaxblobsAddr[which] = GetSCNiosAddr("maxblobs", which);
-//        MaglimitAddr[which] = GetSCNiosAddr("maglimit", which);
-//        NradAddr[which] = GetSCNiosAddr("nrad", which);
-//        LradAddr[which] = GetSCNiosAddr("lrad", which);
-//        TolAddr[which] = GetSCNiosAddr("tol", which);
-//        MtolAddr[which] = GetSCNiosAddr("mtol", which);
-//        QtolAddr[which] = GetSCNiosAddr("qtol", which);
-//        RtolAddr[which] = GetSCNiosAddr("rtol", which);
-//        FpulseAddr[which] = GetSCNiosAddr("fpulse", which);
-//        SpulseAddr[which] = GetSCNiosAddr("spulse", which);
-//        XOffAddr[which] = GetSCNiosAddr("x_off", which);
-//        YOffAddr[which] = GetSCNiosAddr("y_off", which);
-//        IHoldAddr[which] = GetSCNiosAddr("i_hold", which);
-//        SavePrdAddr[which] = GetSCNiosAddr("save_prd", which);
-//        PressureAddr[which] = GetSCNiosAddr("pressure1", which);
-//        GainAddr[which] = GetSCNiosAddr("gain", which);
-//        OffsetAddr[which] = GetSCNiosAddr("offset", which);
-//        ExposureAddr[which] = GetSCNiosAddr("exposure", which);
-//        TrigTypeAddr[which] = GetSCNiosAddr("trig_type", which);
-//        FieldrotAddr[which] = GetSCNiosAddr("fieldrot", which);
-//        RealTrigAddr[which] = GetSCNiosAddr("real_trig", which);
-//        BlobIdxAddr[which] = GetSCNiosAddr("blob_idx", which);
-//        DiskfreeAddr[which] = GetSCNiosAddr("diskfree", which);
-//        MaxslewAddr[which] = GetSCNiosAddr("maxslew", which);
-//        MaxAgeAddr[which] = GetSCNiosAddr("max_age", which);
-//        AgeAddr[which] = GetSCNiosAddr("age", which);
-//        PosFocusAddr[which] = GetSCNiosAddr("pos_focus", which);
-//
-//        Temp1Addr[0] = channels_find_by_name("t_flange_isc");
-//        Temp2Addr[0] = channels_find_by_name("t_heat_isc");
-//        Temp3Addr[0] = channels_find_by_name("t_lens_isc");
-//        Temp4Addr[0] = channels_find_by_name("t_comp_isc");
-//        Temp1Addr[1] = channels_find_by_name("t_flange_osc");
-//        Temp2Addr[1] = channels_find_by_name("t_heat_osc");
-//        Temp3Addr[1] = channels_find_by_name("t_lens_osc");
-//        Temp4Addr[1] = channels_find_by_name("t_comp_osc");
-//    }
-
-//    /** Increment isc index -- this only happens once per slow frame */
-//    if (index == 0)
-//        if (((iscread_index[which] + 1) % 5) != iscwrite_index[which]) {
-//            iscread_index[which] = (iscread_index[which] + 1) % 5;
-//            /* reset blob multiplexing if this is a pointing packet */
-//            if (ISCSolution[which][iscread_index[which]].flag == 1)
-//                blob_index[which] = 0;
-//        }
-//
-//    i_isc = iscread_index[which];
-//
-//    /*** State Info ***/
-//    SET_VALUE(StateAddr[which], (unsigned int)
-//            (ISCSentState[which].save * 0x0001
-//            + ISCSentState[which].pause * 0x0002
-//            + ISCSentState[which].abort * 0x0004
-//            + ISCSentState[which].autofocus * 0x0008
-//            + ISCSentState[which].shutdown * 0x0010 /* 2 bits */
-//            + ISCSentState[which].eyeOn * 0x0040
-//            + ISCSolution[which][i_isc].heaterOn * 0x0080
-//            + ISCSentState[which].useLost * 0x0100
-//            + ISCSolution[which][i_isc].autofocusOn * 0x0200));
-//    SET_VALUE(FocusAddr[which], (unsigned int) ISCSentState[which].focus_pos);
-//    SET_VALUE(FocOffAddr[which], (unsigned int) ISCSentState[which].focusOffset);
-//    SET_VALUE(ApertAddr[which], (unsigned int) ISCSentState[which].ap_pos);
-//    SET_VALUE(ThreshAddr[which], (unsigned int) (ISCSentState[which].sn_threshold * 10.));
-//    SET_VALUE(GridAddr[which], (unsigned int) ISCSentState[which].grid);
-//    SET_VALUE(MdistAddr[which], (unsigned int) ISCSentState[which].mult_dist);
-//    SET_VALUE(MinblobsAddr[which], (unsigned int) ISCSentState[which].minBlobMatch);
-//    SET_VALUE(MaxblobsAddr[which], (unsigned int) ISCSentState[which].maxBlobMatch);
-//    SET_VALUE(MaglimitAddr[which], (unsigned int) (ISCSentState[which].mag_limit * 1000.));
-//    SET_VALUE(NradAddr[which], (unsigned int) (ISCSentState[which].norm_radius * RAD2I));
-//    SET_VALUE(LradAddr[which], (unsigned int) (ISCSentState[which].lost_radius * RAD2I));
-//    SET_VALUE(TolAddr[which], (unsigned int) (ISCSentState[which].tolerance * RAD2ARCSEC));
-//    SET_VALUE(MtolAddr[which], (unsigned int) (ISCSentState[which].match_tol * 65535.));
-//    SET_VALUE(QtolAddr[which], (unsigned int) (ISCSentState[which].quit_tol * 65535.));
-//    SET_VALUE(RtolAddr[which], (unsigned int) (ISCSentState[which].rot_tol * RAD2I));
-//    SET_VALUE(XOffAddr[which], (unsigned int) (ISCSentState[which].azBDA * RAD2I));
-//    SET_VALUE(YOffAddr[which], (unsigned int) (ISCSentState[which].elBDA * RAD2I));
-//    SET_VALUE(IHoldAddr[which], (unsigned int) (ISCSentState[which].hold_current));
-//    SET_VALUE(Temp1Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp1 * 100.));
-//    SET_VALUE(Temp2Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp2 * 100.));
-//    SET_VALUE(Temp3Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp3 * 100.));
-//    SET_VALUE(Temp4Addr[which], (unsigned int) (ISCSolution[which][i_isc].temp4 * 100.));
-//    SET_VALUE(PressureAddr[which], (unsigned int) (ISCSolution[which][i_isc].pressure1 * 2000.));
-//    SET_VALUE(GainAddr[which], (unsigned int) (ISCSentState[which].gain * 655.36));
-//    SET_VALUE(OffsetAddr[which], ISCSentState[which].offset);
-//    SET_VALUE(ExposureAddr[which], ISCSentState[which].exposure / 100);
-//    SET_VALUE(TrigTypeAddr[which], ISCSentState[which].triggertype);
-//    SET_VALUE(MaxslewAddr[which], (unsigned int) ISCSentState[which].maxSlew / RAD2I);
-//
-//    SET_VALUE(FpulseAddr[which], (unsigned int) (CommandData.ISCControl[which].fast_pulse_width));
-//    SET_VALUE(SpulseAddr[which], (unsigned int) (CommandData.ISCControl[which].pulse_width));
-//    SET_VALUE(MaxAgeAddr[which], (unsigned int) (CommandData.ISCControl[which].max_age * 10));
-//    SET_VALUE(AgeAddr[which], (unsigned int) (CommandData.ISCControl[which].age * 10));
-//    SET_VALUE(SavePrdAddr[which], (unsigned int) (CommandData.ISCControl[which].save_period));
-//
-//    /* The handshake flag -- for handshakes, we only write this. */
-//    SET_VALUE(HxFlagAddr[which], (unsigned int) ISCSolution[which][i_isc].flag);
-//
-//    /*** Blobs ***/
-//    /* Save current blob data if the current frame is a pointing solution;
-//     * we only do this once per slow frame */
-//    if (index == 0 && ISCSolution[which][i_isc].flag)
-//        for (i = 0; i < 15; ++i) {
-//            blob_data[which][i][0] = (int) (ISCSolution[which][i_isc].blob_x[i] * 40.);
-//            blob_data[which][i][1] = (int) (ISCSolution[which][i_isc].blob_y[i] * 40.);
-//            blob_data[which][i][2] = ISCSolution[which][i_isc].blob_flux[i];
-//            blob_data[which][i][3] = (int) (ISCSolution[which][i_isc].blob_sn[i] * 65.536);
-//        }
-//
-//    if (index == 0) {
-//        /* When we're writing a handshake packet, these blobs are still from the
-//         * previous pointing packet */
-//        SET_VALUE(Blob0XAddr[which], blob_data[which][blob_index[which] * 3 + 0][0]);
-//        SET_VALUE(Blob1XAddr[which], blob_data[which][blob_index[which] * 3 + 1][0]);
-//        SET_VALUE(Blob2XAddr[which], blob_data[which][blob_index[which] * 3 + 2][0]);
-//
-//        SET_VALUE(Blob0YAddr[which], blob_data[which][blob_index[which] * 3 + 0][1]);
-//        SET_VALUE(Blob1YAddr[which], blob_data[which][blob_index[which] * 3 + 1][1]);
-//        SET_VALUE(Blob2YAddr[which], blob_data[which][blob_index[which] * 3 + 2][1]);
-//
-//        SET_VALUE(Blob0FAddr[which], blob_data[which][blob_index[which] * 3 + 0][2]);
-//        SET_VALUE(Blob1FAddr[which], blob_data[which][blob_index[which] * 3 + 1][2]);
-//        SET_VALUE(Blob2FAddr[which], blob_data[which][blob_index[which] * 3 + 2][2]);
-//
-//        SET_VALUE(Blob0SAddr[which], blob_data[which][blob_index[which] * 3 + 0][3]);
-//        SET_VALUE(Blob1SAddr[which], blob_data[which][blob_index[which] * 3 + 1][3]);
-//        SET_VALUE(Blob2SAddr[which], blob_data[which][blob_index[which] * 3 + 2][3]);
-//
-//        SET_VALUE(BlobIdxAddr[which], blob_index[which]);
-//
-//        /* increment blob index once per slow frame */
-//        blob_index[which] = (blob_index[which] + 1) % 5;
-//    }
-//
-//    if (!ISCSolution[which][i_isc].flag)
-//        return;
-//
-//    /* Everything after this happens only for pointing packets */
-//
-//    /*** Solution Info ***/
-//    SET_VALUE(FramenumAddr[which], (unsigned int) ISCSolution[which][i_isc].framenum);
-//    SET_VALUE(RaAddr[which], (unsigned int) (ISCSolution[which][i_isc].ra * RAD2LI));
-//    SET_VALUE(DecAddr[which], (unsigned int) ((ISCSolution[which][i_isc].dec + M_PI / 2) * 2. * RAD2LI));
-//    SET_VALUE(NblobsAddr[which], (unsigned int) ISCSolution[which][i_isc].n_blobs);
-//
-//    if (ISCSolution[which][i_isc].sigma * RAD2ARCSEC > 65535)
-//        SET_VALUE(RdSigmaAddr[which], 65535);
-//    else
-//        SET_VALUE(RdSigmaAddr[which], (unsigned int) (ISCSolution[which][i_isc].sigma * RAD2ARCSEC));
-//
-//    SET_VALUE(FieldrotAddr[which], (unsigned int) (ISCSolution[which][i_isc].rot * RAD2I));
-//
-//    SET_VALUE(McpnumAddr[which], (unsigned int) ISCSolution[which][i_isc].MCPFrameNum);
-//    SET_VALUE(RealTrigAddr[which], (unsigned int) ISCSolution[which][i_isc].triggertype);
-//    SET_VALUE(ErrorAddr[which], (unsigned int) ISCSolution[which][i_isc].cameraerr);
-//    SET_VALUE(MapmeanAddr[which], (unsigned int) ISCSolution[which][i_isc].mapMean);
-//    SET_VALUE(DiskfreeAddr[which], (unsigned int) ISCSolution[which][i_isc].diskspace / 5);
-//    SET_VALUE(PosFocusAddr[which], ISCSolution[which][i_isc].current_focus_pos);
+  char buffer[FIELD_LEN];
+  const char prefix[2][3] = {"x0", "x1"};
+  sprintf(buffer, "%s_%s", prefix[m_which], m_field);
+  return channels_find_by_name(buffer);
 }
 
+void store_1hz_xsc(int m_which)
+{
+    static bool firsttime[2] = {true, true};
+
+    static channel_t* address_xN_last_trig_motion_caz_px[2];
+    static channel_t* address_xN_last_trig_motion_el_px[2];
+    static channel_t* address_xN_last_trig_motion_px[2];
+    static channel_t* address_xN_trigreq_meas_azvel[2];
+    static channel_t* address_xN_trigreq_req_azvel[2];
+    static channel_t* address_xN_trigreq_meas_totvel[2];
+    static channel_t* address_xN_trigreq_meas_azacc[2];
+    static channel_t* address_xN_point_az_raw[2];
+    static channel_t* address_xN_point_az[2];
+    static channel_t* address_xN_point_el_raw[2];
+    static channel_t* address_xN_point_el[2];
+    static channel_t* address_xN_point_sigma[2];
+    static channel_t* address_xN_point_az_trim[2];
+    static channel_t* address_xN_point_el_trim[2];
+    static channel_t* address_xN_cd_robust_mode[2];
+    static channel_t* address_xN_cd_motion_psf[2];
+//    static channel_t* address_xN_num_images_saved[2];
+
+    static channel_t* address_xN_last_trig_lat;
+    static channel_t* address_xN_last_trig_lst;
+
+    static channel_t *address_xN_hk_temp_lens[2];
+    static channel_t *address_xN_hk_temp_comp[2];
+    static channel_t *address_xN_hk_temp_plate[2];
+    static channel_t *address_xN_hk_temp_flange[2];
+    static channel_t *address_xN_hk_pressure[2];
+    static channel_t *address_xN_hk_disk[2];
+
+    static channel_t *address_xN_image_eq_valid[2];
+    static channel_t *address_xN_cam_gain_valid[2];
+    static channel_t *address_xN_image_hor_valid[2];
+    static channel_t *address_xN_image_afocus_metric_valid[2];
+
+    static channel_t *address_xN_stars_run_time[2];
+    static channel_t *address_xN_cam_gain_db[2];
+    static channel_t *address_xN_lens_focus[2];
+    static channel_t *address_xN_lens_aperture[2];
+
+    static channel_t *address_xN_image_num_exposures[2];
+    static channel_t *address_xN_image_stats_mean[2];
+    static channel_t *address_xN_image_stats_noise[2];
+    static channel_t *address_xN_image_stats_gaindb[2];
+    static channel_t *address_xN_image_stats_num_px_sat[2];
+    static channel_t *address_xN_image_stats_frac_px_sat[2];
+    static channel_t *address_xN_image_afocus_metric[2];
+
+    static channel_t *address_xN_image_eq_iplate[2];
+    static channel_t *address_xN_image_hor_iplate[2];
+
+    static channel_t *address_xN_image_eq_ra[2];
+    static channel_t *address_xN_image_eq_dec[2];
+    static channel_t *address_xN_image_eq_roll[2];
+    static channel_t *address_xN_image_eq_sigma_ra[2];
+    static channel_t *address_xN_image_eq_sigma_dec[2];
+    static channel_t *address_xN_image_eq_sigma_roll[2];
+    static channel_t *address_xN_image_eq_sigma_pointing[2];
+    static channel_t *address_xN_image_hor_az[2];
+    static channel_t *address_xN_image_hor_el[2];
+    static channel_t *address_xN_image_hor_roll[2];
+    static channel_t *address_xN_image_hor_sigma_az[2];
+    static channel_t *address_xN_image_hor_sigma_el[2];
+    static channel_t *address_xN_image_hor_sigma_roll[2];
+    static channel_t *address_xN_image_hor_sigma_pointing[2];
+
+    static channel_t *address_xN_image_num_blobs[2];
+
+    int i_point = GETREADINDEX(point_index);
+
+    if (firsttime[m_which]) {
+        firsttime[m_which] = false;
+
+        address_xN_image_num_blobs[m_which] = get_xsc_channel("image_num_blobs", m_which);
+
+        address_xN_hk_temp_lens[m_which] = get_xsc_channel("hk_temp_lens", m_which);
+        address_xN_hk_temp_comp[m_which] = get_xsc_channel("hk_temp_comp", m_which);
+        address_xN_hk_temp_plate[m_which] = get_xsc_channel("hk_temp_plate", m_which);
+        address_xN_hk_temp_flange[m_which] = get_xsc_channel("hk_temp_flange", m_which);
+        address_xN_hk_pressure[m_which] = get_xsc_channel("hk_pressure", m_which);
+        address_xN_hk_disk[m_which] = get_xsc_channel("hk_disk", m_which);
+
+        address_xN_image_eq_valid[m_which] = get_xsc_channel("image_eq_valid", m_which);
+        address_xN_cam_gain_valid[m_which] = get_xsc_channel("cam_gain_valid", m_which);
+        address_xN_image_hor_valid[m_which] = get_xsc_channel("image_hor_valid", m_which);
+        address_xN_image_afocus_metric_valid[m_which] = get_xsc_channel("image_afocus_metric_valid", m_which);
+
+        address_xN_stars_run_time[m_which] = get_xsc_channel("stars_run_time", m_which);
+        address_xN_cam_gain_db[m_which] = get_xsc_channel("cam_gain_db", m_which);
+        address_xN_lens_focus[m_which] = get_xsc_channel("lens_focus", m_which);
+        address_xN_lens_aperture[m_which] = get_xsc_channel("lens_aperture", m_which);
+
+        address_xN_image_num_exposures[m_which] = get_xsc_channel("image_num_exposures", m_which);
+        address_xN_image_stats_mean[m_which] = get_xsc_channel("image_stats_mean", m_which);
+        address_xN_image_stats_noise[m_which] = get_xsc_channel("image_stats_noise", m_which);
+        address_xN_image_stats_gaindb[m_which] = get_xsc_channel("image_stats_gaindb", m_which);
+        address_xN_image_stats_num_px_sat[m_which] = get_xsc_channel("image_stats_num_px_sat", m_which);
+        address_xN_image_stats_frac_px_sat[m_which] = get_xsc_channel("image_stats_frac_px_sat", m_which);
+        address_xN_image_afocus_metric[m_which] = get_xsc_channel("image_afocus_metric", m_which);
+
+        address_xN_image_eq_iplate[m_which] = get_xsc_channel("image_eq_iplate", m_which);
+        address_xN_image_hor_iplate[m_which] = get_xsc_channel("image_hor_iplate", m_which);
+
+        address_xN_image_eq_ra[m_which] = get_xsc_channel("image_eq_ra", m_which);
+        address_xN_image_eq_dec[m_which] = get_xsc_channel("image_eq_dec", m_which);
+        address_xN_image_eq_roll[m_which] = get_xsc_channel("image_eq_roll", m_which);
+        address_xN_image_eq_sigma_ra[m_which] = get_xsc_channel("image_eq_sigma_ra", m_which);
+        address_xN_image_eq_sigma_dec[m_which] = get_xsc_channel("image_eq_sigma_dec", m_which);
+        address_xN_image_eq_sigma_roll[m_which] = get_xsc_channel("image_eq_sigma_roll", m_which);
+        address_xN_image_eq_sigma_pointing[m_which] = get_xsc_channel("image_eq_sigma_pointing", m_which);
+        address_xN_image_hor_az[m_which] = get_xsc_channel("image_hor_az", m_which);
+        address_xN_image_hor_el[m_which] = get_xsc_channel("image_hor_el", m_which);
+        address_xN_image_hor_roll[m_which] = get_xsc_channel("image_hor_roll", m_which);
+        address_xN_image_hor_sigma_az[m_which] = get_xsc_channel("image_hor_sigma_az", m_which);
+        address_xN_image_hor_sigma_el[m_which] = get_xsc_channel("image_hor_sigma_el", m_which);
+        address_xN_image_hor_sigma_roll[m_which] = get_xsc_channel("image_hor_sigma_roll", m_which);
+        address_xN_image_hor_sigma_pointing[m_which] = get_xsc_channel("image_hor_sigma_pointing", m_which);
+
+        address_xN_last_trig_motion_caz_px[m_which]  = get_xsc_channel("last_trig_motion_caz_px"     , m_which);
+        address_xN_last_trig_motion_el_px[m_which]  = get_xsc_channel("last_trig_motion_el_px"     , m_which);
+        address_xN_last_trig_motion_px[m_which]  = get_xsc_channel("last_trig_motion_px"     , m_which);
+        address_xN_trigreq_meas_azvel[m_which]   = get_xsc_channel("trigreq_meas_azvel"      , m_which);
+        address_xN_trigreq_req_azvel[m_which]    = get_xsc_channel("trigreq_req_azvel"       , m_which);
+        address_xN_trigreq_meas_totvel[m_which]  = get_xsc_channel("trigreq_meas_totvel"     , m_which);
+        address_xN_trigreq_meas_azacc[m_which]   = get_xsc_channel("trigreq_meas_azacc"      , m_which);
+        address_xN_point_az_raw[m_which]  = get_xsc_channel("point_az_raw"    , m_which);
+        address_xN_point_az[m_which]      = get_xsc_channel("point_az"        , m_which);
+        address_xN_point_el_raw[m_which]  = get_xsc_channel("point_el_raw"    , m_which);
+        address_xN_point_el[m_which]      = get_xsc_channel("point_el"        , m_which);
+        address_xN_point_sigma[m_which]   = get_xsc_channel("point_sigma"     , m_which);
+        address_xN_point_az_trim[m_which] = get_xsc_channel("point_az_trim"   , m_which);
+        address_xN_point_el_trim[m_which] = get_xsc_channel("point_el_trim"   , m_which);
+        address_xN_cd_robust_mode[m_which] = get_xsc_channel("cd_robust_mode"   , m_which);
+        address_xN_cd_motion_psf[m_which] = get_xsc_channel("cd_motion_psf"   , m_which);
+//        address_xN_num_images_saved[m_which] = get_xsc_channel("num_images_saved"   , m_which);
+        if (m_which == 0) {
+            address_xN_last_trig_lat                = get_xsc_channel("last_trig_lat"        , 0);
+            address_xN_last_trig_lst                = get_xsc_channel("last_trig_lst"        , 0);
+        }
+    }
+
+    SET_VALUE(address_xN_image_num_blobs[m_which], (XSC_SERVER_DATA(m_which).channels.image_num_blobs_found << 6) |
+            (XSC_SERVER_DATA(m_which).channels.image_num_blobs_matched & 0b111111));
+
+    SET_VALUE(address_xN_hk_temp_lens[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_lens);
+    SET_VALUE(address_xN_hk_temp_comp[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_comp);
+    SET_VALUE(address_xN_hk_temp_plate[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_plate);
+    SET_VALUE(address_xN_hk_temp_flange[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_flange);
+    SET_VALUE(address_xN_hk_pressure[m_which], XSC_SERVER_DATA(m_which).channels.hk_pressure);
+    SET_VALUE(address_xN_hk_disk[m_which], XSC_SERVER_DATA(m_which).channels.hk_disk);
+
+    SET_VALUE(address_xN_image_eq_valid[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_valid);
+    SET_VALUE(address_xN_cam_gain_valid[m_which], XSC_SERVER_DATA(m_which).channels.cam_gain_valid);
+    SET_VALUE(address_xN_image_hor_valid[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_valid);
+    SET_VALUE(address_xN_image_afocus_metric_valid[m_which], XSC_SERVER_DATA(m_which).channels.image_afocus_metric_valid);
+
+    SET_VALUE(address_xN_stars_run_time[m_which], XSC_SERVER_DATA(m_which).channels.stars_run_time);
+    SET_VALUE(address_xN_cam_gain_db[m_which], XSC_SERVER_DATA(m_which).channels.cam_gain_db);
+    SET_VALUE(address_xN_lens_focus[m_which], XSC_SERVER_DATA(m_which).channels.lens_focus);
+    SET_VALUE(address_xN_lens_aperture[m_which], XSC_SERVER_DATA(m_which).channels.lens_aperture);
+
+    SET_VALUE(address_xN_image_num_exposures[m_which], XSC_SERVER_DATA(m_which).channels.image_num_exposures);
+    SET_VALUE(address_xN_image_stats_mean[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_mean);
+    SET_VALUE(address_xN_image_stats_noise[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_noise);
+    SET_VALUE(address_xN_image_stats_gaindb[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_gaindb);
+    SET_VALUE(address_xN_image_stats_num_px_sat[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_num_px_sat);
+    SET_VALUE(address_xN_image_stats_frac_px_sat[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_frac_px_sat);
+    SET_VALUE(address_xN_image_afocus_metric[m_which], XSC_SERVER_DATA(m_which).channels.image_afocus_metric);
+
+    SET_VALUE(address_xN_image_eq_iplate[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_iplate);
+    SET_VALUE(address_xN_image_hor_iplate[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_iplate);
+
+    SET_VALUE(address_xN_image_eq_ra[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_ra);
+    SET_VALUE(address_xN_image_eq_dec[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_dec);
+    SET_VALUE(address_xN_image_eq_roll[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_roll);
+    SET_VALUE(address_xN_image_eq_sigma_ra[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_sigma_ra);
+    SET_VALUE(address_xN_image_eq_sigma_dec[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_sigma_dec);
+    SET_VALUE(address_xN_image_eq_sigma_roll[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_sigma_roll);
+    SET_VALUE(address_xN_image_eq_sigma_pointing[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_sigma_pointing);
+    SET_VALUE(address_xN_image_hor_az[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_az);
+    SET_VALUE(address_xN_image_hor_el[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_el);
+    SET_VALUE(address_xN_image_hor_roll[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_roll);
+    SET_VALUE(address_xN_image_hor_sigma_az[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_sigma_az);
+    SET_VALUE(address_xN_image_hor_sigma_el[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_sigma_el);
+    SET_VALUE(address_xN_image_hor_sigma_roll[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_sigma_roll);
+    SET_VALUE(address_xN_image_hor_sigma_pointing[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_sigma_pointing);
+
+    SET_VALUE(address_xN_last_trig_motion_caz_px[m_which], TX_CONVERT(VELOCITY, xsc_pointing_state[m_which].last_trigger.motion_caz_px));
+    SET_VALUE(address_xN_last_trig_motion_el_px[m_which], TX_CONVERT(VELOCITY, xsc_pointing_state[m_which].last_trigger.motion_el_px));
+    double motion_px = sqrt(pow(xsc_pointing_state[m_which].last_trigger.motion_caz_px, 2.0) + pow(xsc_pointing_state[m_which].last_trigger.motion_el_px, 2.0));
+    SET_VALUE(address_xN_last_trig_motion_px[m_which], TX_CONVERT(VELOCITY, motion_px));
+    SET_VALUE(address_xN_trigreq_meas_azvel[m_which]   , 0);
+    SET_VALUE(address_xN_trigreq_req_azvel[m_which]    , 0);
+    SET_VALUE(address_xN_trigreq_meas_totvel[m_which]  , 0);
+    SET_VALUE(address_xN_trigreq_meas_azacc[m_which]   , 0);
+    SET_VALUE(address_xN_point_az[m_which]     , TX_CONVERT(ANGLE_DEGREES, PointingData[i_point].xsc_az[m_which]));
+    SET_VALUE(address_xN_point_el[m_which]     , TX_CONVERT(ANGLE_DEGREES, PointingData[i_point].xsc_el[m_which]));
+    SET_VALUE(address_xN_point_sigma[m_which]  , TX_CONVERT(ANGLE_DEGREES, PointingData[i_point].xsc_sigma[m_which]));
+    SET_VALUE(address_xN_point_az_raw[m_which] , TX_CONVERT(ANGLE_DEGREES, xsc_pointing_state[m_which].az));
+    SET_VALUE(address_xN_point_el_raw[m_which] , TX_CONVERT(ANGLE_DEGREES, xsc_pointing_state[m_which].el));
+    SET_VALUE(address_xN_point_az_trim[m_which], TX_CONVERT(ANGLE, CommandData.XSC[m_which].cross_el_trim));
+    SET_VALUE(address_xN_point_el_trim[m_which], TX_CONVERT(ANGLE, CommandData.XSC[m_which].el_trim));
+    SET_VALUE(address_xN_cd_robust_mode[m_which], CommandData.XSC[m_which].net.solver.robust_mode_enabled);
+    SET_VALUE(address_xN_cd_motion_psf[m_which], CommandData.XSC[m_which].net.solver.motion_psf.enabled);
+    ///TODO: Re-add local image saving
+//    SET_VALUE(address_xN_num_images_saved[m_which], images_num_saved[m_which]);
+    if (m_which == 0) {
+        SET_VALUE(address_xN_last_trig_lat       , xsc_pointing_state[m_which].last_trigger.lat*DEG2LI);
+        SET_VALUE(address_xN_last_trig_lst       , xsc_pointing_state[m_which].last_trigger.lst);
+    }
+}
+
+void store_100hz_xsc(int which)
+{
+    static bool firsttime[2] = {true, true};
+    static int last_blob_counter_stars[2] = {-1, -1};
+    static int last_blob_i[2] = {1000, 1000};
+    static int intermediate_frame_counter[2] = {0, 0};
+
+    static channel_t* address_xN_ctr_stars[2];
+    static channel_t* address_xN_image_ctr_fcp[2];
+    static channel_t* address_xN_image_ctr_stars[2];
+
+    static channel_t* address_xN_ctr_fcp;
+    static channel_t* address_xN_last_trig_age_cs;
+    static channel_t* address_xN_last_trig_ctr_fcp;
+    static channel_t* address_xN_last_trig_ctr_stars[2];
+    static channel_t* address_xN_predicted_motion_px;
+    static channel_t* address_xN_image_blobn_x[2];
+    static channel_t* address_xN_image_blobn_y[2];
+    static channel_t* address_xN_image_blobn_flux[2];
+    static channel_t* address_xN_image_blobn_peak_to_flux[2];
+
+    if (firsttime[which]) {
+        firsttime[which] = false;
+
+        if (which == 0) {
+            address_xN_ctr_fcp                      = get_xsc_channel("ctr_fcp"              , 0);
+            address_xN_last_trig_age_cs             = get_xsc_channel("last_trig_age_cs"     , 0);
+            address_xN_last_trig_ctr_fcp            = get_xsc_channel("last_trig_ctr_fcp"    , 0);
+            address_xN_predicted_motion_px          = get_xsc_channel("predicted_motion_px"     , which);
+        }
+        address_xN_ctr_stars[which]                 = get_xsc_channel("ctr_stars", which);
+        address_xN_image_ctr_stars[which]           = get_xsc_channel("image_ctr_stars", which);
+        address_xN_image_ctr_fcp[which]             = get_xsc_channel("image_ctr_fcp", which);
+        address_xN_last_trig_ctr_stars[which]       = get_xsc_channel("last_trig_ctr_stars"     , which);
+        address_xN_image_blobn_x[which]             = get_xsc_channel("image_blobn_x"   , which);
+        address_xN_image_blobn_y[which]             = get_xsc_channel("image_blobn_y"   , which);
+        address_xN_image_blobn_flux[which]          = get_xsc_channel("image_blobn_flux"   , which);
+        address_xN_image_blobn_peak_to_flux[which]  = get_xsc_channel("image_blobn_peak_to_flux"   , which);
+    }
+
+    if (which == 0) {
+        SET_VALUE(address_xN_ctr_fcp             , xsc_pointing_state[which].counter_fcp);
+        SET_VALUE(address_xN_last_trig_age_cs    , xsc_pointing_state[which].last_trigger.age_cs);
+        SET_VALUE(address_xN_last_trig_ctr_fcp   , xsc_pointing_state[which].last_trigger.counter_fcp);
+        SET_VALUE(address_xN_predicted_motion_px, TX_CONVERT(VELOCITY, xsc_pointing_state[0].predicted_motion_px));
+    }
+
+
+    SET_INT32(address_xN_ctr_stars[which], XSC_SERVER_DATA(which).channels.ctr_stars);
+    SET_INT32(address_xN_image_ctr_stars[which], XSC_SERVER_DATA(which).channels.image_ctr_stars);
+    SET_INT32(address_xN_image_ctr_fcp[which], XSC_SERVER_DATA(which).channels.image_ctr_fcp);
+    SET_VALUE(address_xN_last_trig_ctr_stars[which], xsc_pointing_state[which].last_trigger.counter_stars);
+
+    if (XSC_SERVER_DATA(which).blobs.counter_stars != last_blob_counter_stars[which] &&
+        XSC_SERVER_DATA(which).blobs.counter_stars > 0)
+    {
+        last_blob_counter_stars[which] = XSC_SERVER_DATA(which).blobs.counter_stars;
+        last_blob_i[which] = 0;
+    }
+    if (intermediate_frame_counter[which] == 0) {
+        if (last_blob_i[which] < XSC_SERVER_DATA(which).blobs.num_blobs) {
+            SET_VALUE(address_xN_image_blobn_x[which], TX_CONVERT(BLOB_POS, XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].x));
+            SET_VALUE(address_xN_image_blobn_y[which], TX_CONVERT(BLOB_POS, XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].y));
+            SET_VALUE(address_xN_image_blobn_flux[which], XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].flux);
+            SET_VALUE(address_xN_image_blobn_peak_to_flux[which], TX_CONVERT(0_TO_10, XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].peak_to_flux));
+            last_blob_i[which]++;
+        } else if (last_blob_i[which] == XSC_SERVER_DATA(which).blobs.num_blobs) {
+            SET_VALUE(address_xN_image_blobn_x[which], 0);
+            SET_VALUE(address_xN_image_blobn_y[which], 0);
+            SET_VALUE(address_xN_image_blobn_flux[which], 0);
+            SET_VALUE(address_xN_image_blobn_peak_to_flux[which], 0);
+        }
+    }
+
+    intermediate_frame_counter[which] = (intermediate_frame_counter[which]+1) % 3;
+}
 
 void store_5hz_acs(void)
 {
@@ -976,9 +1005,6 @@ void store_5hz_acs(void)
         rateAtrimAddr = channels_find_by_name("rate_atrim");
 
     }
-
-    StoreStarCameraData(0, 0); /* write ISC data */
-    StoreStarCameraData(0, 1); /* write OSC data */
 
     i_point = GETREADINDEX(point_index);
 
