@@ -1,8 +1,23 @@
+/*
+ *  © 2013 Columbia University.  All Rights Reserved.
+ *  This file is part of STARS, the Star Tracking Attitude Reconstruction
+ *  Software package, originally created for EBEX by Daniel Chapman.
+ */
+
 #pragma once
 #ifndef XSC_PROTOCOL_H
 #define XSC_PROTOCOL_H
 
-#include "xsc_channels.h"
+#include <stdint.h>
+#ifdef _MSC_VER
+    #ifndef __cplusplus
+        typedef int bool;
+        #define true 1
+        #define false 0
+    #endif
+#else
+    #include <stdbool.h>
+#endif
 
 #define XSC_BLOBS_ARRAY_SIZE 20
 #define XSC_MOTION_PSF_MAX_NUM_TIMESTEPS 156
@@ -26,9 +41,64 @@ typedef struct XSCImageBlobs
     XSCImageBlob blobs[XSC_BLOBS_ARRAY_SIZE];
 } XSCImageBlobs;
 
+
+typedef struct
+{
+    int32_t image_ctr_stars;
+    int32_t image_ctr_fcp;
+    int32_t ctr_stars;
+
+    uint32_t stars_run_time;
+
+    uint16_t hk_temp_lens;
+    uint16_t hk_temp_comp;
+    uint16_t hk_temp_plate;
+    uint16_t hk_temp_flange;
+    uint16_t hk_pressure;
+    uint32_t hk_disk;
+
+    uint8_t cam_gain_valid;
+    float   cam_gain_db;
+
+    uint16_t lens_focus;
+    uint16_t lens_aperture;
+
+    uint16_t image_num_exposures;
+    uint16_t image_stats_mean;
+    uint16_t image_stats_noise;
+    double image_stats_gaindb;
+    int32_t image_stats_num_px_sat;
+    double image_stats_frac_px_sat;
+    double image_afocus_metric;
+
+    uint8_t image_afocus_metric_valid;
+    uint8_t image_eq_valid;
+    uint8_t image_hor_valid;
+
+    double image_eq_ra;
+    double image_eq_dec;
+    double image_eq_roll;
+    double image_eq_sigma_ra;
+    double image_eq_sigma_dec;
+    double image_eq_sigma_roll;
+    double image_eq_sigma_pointing;
+    double image_eq_iplate;
+
+    double image_hor_az;
+    double image_hor_el;
+    double image_hor_roll;
+    double image_hor_sigma_az;
+    double image_hor_sigma_el;
+    double image_hor_sigma_roll;
+    double image_hor_sigma_pointing;
+    double image_hor_iplate;
+    uint16_t image_num_blobs_found;
+    uint16_t image_num_blobs_matched;
+} xsc_channels_t;
+
 typedef struct XSCServerData
 {
-    XSCChannel channels[xN_num_channels];
+    xsc_channels_t channels;
     XSCImageBlobs blobs;
     unsigned int xsc_protocol_version;
 }
@@ -266,7 +336,7 @@ void xsc_clear_server_data(XSCServerData* server_data);
 void xsc_clear_client_data(XSCClientData* client_data);
 void xsc_decrement_is_new_countdowns(XSCClientData* client_data);
 void xsc_zero_command_admins(xsc_command_admin_t* admins);
-void xsc_init_server_data(XSCServerData* server_data, XSCChannelInfos* xsc_channel_infos);
+void xsc_init_server_data(XSCServerData* server_data);
 
 #pragma pack(pop)
 

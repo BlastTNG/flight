@@ -46,7 +46,7 @@ typedef struct
 {
     int32_t image_ctr_stars;
     int32_t image_ctr_fcp;
-    int32_t ctr_stars = 0;
+    int32_t ctr_stars;
 
     uint32_t stars_run_time;
 
