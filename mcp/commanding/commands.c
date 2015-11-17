@@ -2172,8 +2172,9 @@ void InitCommandData()
   CommandData.pivot_gain.PE = 0;
   CommandData.pivot_gain.F = 0.3;
 
+  ///TODO: Re-enable El prior to flight
   CommandData.disable_az = 1; 
-  CommandData.disable_el = 0;
+  CommandData.disable_el = 1;
 
   CommandData.verbose_rw = 0;
   CommandData.verbose_el = 0;
