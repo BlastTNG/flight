@@ -491,10 +491,6 @@ void store_1hz_xsc(int m_which)
     static channel_t* address_xN_last_trig_motion_caz_px[2];
     static channel_t* address_xN_last_trig_motion_el_px[2];
     static channel_t* address_xN_last_trig_motion_px[2];
-    static channel_t* address_xN_trigreq_meas_azvel[2];
-    static channel_t* address_xN_trigreq_req_azvel[2];
-    static channel_t* address_xN_trigreq_meas_totvel[2];
-    static channel_t* address_xN_trigreq_meas_azacc[2];
     static channel_t* address_xN_point_az_raw[2];
     static channel_t* address_xN_point_az[2];
     static channel_t* address_xN_point_el_raw[2];
@@ -607,10 +603,6 @@ void store_1hz_xsc(int m_which)
         address_xN_last_trig_motion_caz_px[m_which]  = get_xsc_channel("last_trig_motion_caz_px"     , m_which);
         address_xN_last_trig_motion_el_px[m_which]  = get_xsc_channel("last_trig_motion_el_px"     , m_which);
         address_xN_last_trig_motion_px[m_which]  = get_xsc_channel("last_trig_motion_px"     , m_which);
-        address_xN_trigreq_meas_azvel[m_which]   = get_xsc_channel("trigreq_meas_azvel"      , m_which);
-        address_xN_trigreq_req_azvel[m_which]    = get_xsc_channel("trigreq_req_azvel"       , m_which);
-        address_xN_trigreq_meas_totvel[m_which]  = get_xsc_channel("trigreq_meas_totvel"     , m_which);
-        address_xN_trigreq_meas_azacc[m_which]   = get_xsc_channel("trigreq_meas_azacc"      , m_which);
         address_xN_point_az_raw[m_which]  = get_xsc_channel("point_az_raw"    , m_which);
         address_xN_point_az[m_which]      = get_xsc_channel("point_az"        , m_which);
         address_xN_point_el_raw[m_which]  = get_xsc_channel("point_el_raw"    , m_which);
@@ -677,10 +669,6 @@ void store_1hz_xsc(int m_which)
     SET_VALUE(address_xN_last_trig_motion_el_px[m_which], TX_CONVERT(VELOCITY, xsc_pointing_state[m_which].last_trigger.motion_el_px));
     double motion_px = sqrt(pow(xsc_pointing_state[m_which].last_trigger.motion_caz_px, 2.0) + pow(xsc_pointing_state[m_which].last_trigger.motion_el_px, 2.0));
     SET_VALUE(address_xN_last_trig_motion_px[m_which], TX_CONVERT(VELOCITY, motion_px));
-    SET_VALUE(address_xN_trigreq_meas_azvel[m_which]   , 0);
-    SET_VALUE(address_xN_trigreq_req_azvel[m_which]    , 0);
-    SET_VALUE(address_xN_trigreq_meas_totvel[m_which]  , 0);
-    SET_VALUE(address_xN_trigreq_meas_azacc[m_which]   , 0);
     SET_VALUE(address_xN_point_az[m_which]     , TX_CONVERT(ANGLE_DEGREES, PointingData[i_point].xsc_az[m_which]));
     SET_VALUE(address_xN_point_el[m_which]     , TX_CONVERT(ANGLE_DEGREES, PointingData[i_point].xsc_el[m_which]));
     SET_VALUE(address_xN_point_sigma[m_which]  , TX_CONVERT(ANGLE_DEGREES, PointingData[i_point].xsc_sigma[m_which]));
