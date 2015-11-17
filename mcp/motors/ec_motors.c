@@ -902,7 +902,7 @@ void mc_readPDOassign(int Slave) {
             len = sizeof(pdo_map);
             /* read SDO that is mapped in PDO */
             wkc = ec_SDOread(Slave, idx, (uint8) subidxloop, FALSE, &len, &pdo_map, EC_TIMEOUTRXM);
-            blast_info("0x%04X:%02d maps to 0x%04X:%02d with %d bits", idx, subidxloop, pdo_map.index, pdo_map.subindex, pdo_map.size);
+            //blast_info("0x%04X:%02d maps to 0x%04X:%02d with %d bits", idx, subidxloop, pdo_map.index, pdo_map.subindex, pdo_map.size);
 
             channel = malloc(sizeof(pdo_channel_map_t));
             channel->index = pdo_map.index;
@@ -970,12 +970,6 @@ static void* motor_control(void* arg)
 
     for (int i = 1; i <= ec_slavecount; i++) {
         ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
-        int16_t current;
-        int len = 2;
-        ec_SDOread(i, 0x2110, 0, false, &len, &current, EC_TIMEOUTTXM);
-        blast_info("Motor controller %d Peak current limit %d", i, current);
-        ec_SDOread(i, 0x2111, 0, false, &len, &current, EC_TIMEOUTTXM);
-        blast_info("Motor controller %d Continuous current limit %d", i, current);
     }
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
