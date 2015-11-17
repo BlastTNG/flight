@@ -219,12 +219,13 @@ void xsc_zero_command_admins(xsc_command_admin_t* admins)
     }
 }
 
-void xsc_init_server_data(XSCServerData* server_data, XSCChannelInfos* xsc_channel_infos)
+void xsc_init_server_data(XSCServerData* server_data)
 {
     unsigned int i=0;
-    for (i=0; i < xN_num_channels; i++) {
-        server_data->channels[i] = xsc_channel_infos->infos[i].initial_value;
-    }
+    memset(server_data, 0, sizeof(XSCServerData));
+    server_data->channels.ctr_stars = -1;
+    server_data->channels.image_ctr_fcp = -1;
+    server_data->channels.image_ctr_stars = -1;
 }
 
 

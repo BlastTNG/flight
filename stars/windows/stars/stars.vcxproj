@@ -199,7 +199,6 @@
     <ClCompile Include="..\..\code\networking\network_manager.cpp" />
     <ClCompile Include="..\..\code\networking\server.cpp" />
     <ClCompile Include="..\..\code\networking\unloading.cpp" />
-    <ClCompile Include="..\..\code\networking\xsc_protocol\xsc_channels.c" />
     <ClCompile Include="..\..\code\networking\xsc_protocol\xsc_protocol.c" />
     <ClCompile Include="..\..\code\parameters\general.cpp" />
     <ClCompile Include="..\..\code\parameters\group.cpp" />
@@ -337,7 +336,6 @@
     <ClInclude Include="..\..\code\networking\image_client.h" />
     <ClInclude Include="..\..\code\networking\network_manager.h" />
     <ClInclude Include="..\..\code\networking\server.h" />
-    <ClInclude Include="..\..\code\networking\xsc_protocol\xsc_channels.h" />
     <ClInclude Include="..\..\code\networking\xsc_protocol\xsc_protocol.h" />
     <ClInclude Include="..\..\code\parameters\general.h" />
     <ClInclude Include="..\..\code\parameters\group.h" />

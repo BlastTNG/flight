@@ -30,9 +30,7 @@ Connection::Connection(boost::asio::io_service& io_service):
 
 void Connection::start()
 {
-    XSCChannelInfos xsc_channel_infos;
     xsc_clear_server_data(&server_data);
-    xsc_init_channels(&xsc_channel_infos);
     xsc_init_server_data(&server_data, &xsc_channel_infos);
     xsc_clear_client_data(&client_data);
     xsc_zero_command_admins(local_command_admins);

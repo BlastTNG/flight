@@ -474,9 +474,6 @@
     <ClCompile Include="..\..\code\shared\general\network_reset.cpp">
       <Filter>Source Files\shared\general</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\code\networking\xsc_protocol\xsc_channels.c">
-      <Filter>Source Files\networking\xsc_protocol</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\code\networking\image_client.cpp">
       <Filter>Source Files\networking</Filter>
     </ClCompile>
@@ -814,9 +811,6 @@
     </ClInclude>
     <ClInclude Include="..\..\code\shared\thread_names.h">
       <Filter>Header Files\shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\code\networking\xsc_protocol\xsc_channels.h">
-      <Filter>Header Files\networking\xsc_protocol</Filter>
     </ClInclude>
     <ClInclude Include="..\..\code\networking\xsc_protocol\xsc_protocol.h">
       <Filter>Header Files\networking\xsc_protocol</Filter>
