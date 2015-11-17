@@ -16,7 +16,6 @@ AC_MSG_CHECKING([for shared code repository])
 if test -d ../common/; then
   AC_MSG_RESULT([found])
   REMOTEPROJ=common
-  MAKEFILE_UPDATE="include ../common/Makefile.update"
   SHARED_CPPFLAGS="-I\${top_srcdir}/../common/include"
 else
   AC_MSG_RESULT([not found])
@@ -27,7 +26,6 @@ else
 fi
 AC_SUBST(SHARED_CPPFLAGS)
 AC_SUBST(REMOTEPROJ)
-AC_SUBST(MAKEFILE_UPDATE)
 
 dnl blast config repo
 AC_MSG_CHECKING([for BLAST config repository])

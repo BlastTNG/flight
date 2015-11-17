@@ -40,4 +40,3 @@ endif
 		chmod 666 $(DESTDIR)$(dataetcdir)/cmddefs.txt; \
 	fi
 
-@MAKEFILE_UPDATE@
