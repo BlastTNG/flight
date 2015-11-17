@@ -601,6 +601,7 @@ void comms_sock_close(comms_socket_t *m_sock)
 		if (close(m_sock->fd) == -1) m_sock->last_errno = errno;
 
 		m_sock->fd = INVALID_SOCK;
+		m_sock->state = NETSOCK_STATE_CLOSED;
 	}
 	if (m_sock->poll_handle)
 	{

@@ -149,9 +149,18 @@ void xsc_write_data(int which)
 
     xsc_client_data.xsc_protocol_version = XSC_PROTOCOL_VERSION;
 
-    retval = comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data));
-    if ( retval == NETSOCK_ERR)
-        comms_sock_reconnect(xsc_sock[which]);
+    switch (xsc_sock[which]->state) {
+        case NETSOCK_STATE_CONNECTED:
+            retval = comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data));
+            if ( retval == NETSOCK_ERR) comms_sock_close(xsc_sock[which]);
+            break;
+        case NETSOCK_STATE_CLOSED:
+            comms_sock_reconnect(xsc_sock[which]);
+            break;
+        default:
+            break;
+    }
+
 }
 
 
