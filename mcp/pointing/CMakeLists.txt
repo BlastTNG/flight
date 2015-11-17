@@ -7,6 +7,7 @@ set(POINTING_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/time_julian.c
     ${CMAKE_CURRENT_SOURCE_DIR}/time_nutation.c
     ${CMAKE_CURRENT_SOURCE_DIR}/utilities_pointing.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/xsc_pointing.c
     PARENT_SCOPE
 )
 set(POINTING_HEADERS
@@ -18,5 +19,6 @@ set(POINTING_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/time_julian.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/time_nutation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/utilities_pointing.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_pointing.h
    PARENT_SCOPE
 )

@@ -248,6 +248,7 @@ typedef enum
 } elevation_pointing_state_enabled_t;
 
 
+//TODO:Evaluate snap mode
 extern bool scan_entered_snap_mode;
 extern bool scan_leaving_snap_mode;
 extern bool scan_bypass_last_trigger_on_next_trigger;

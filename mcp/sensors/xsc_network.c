@@ -124,7 +124,6 @@ void xsc_networking_init(int which)
 
 void xsc_write_data(int which)
 {
-    int retval;
     XSCClientData xsc_client_data;
     int pointing_read_index = GETREADINDEX(point_index);
 
@@ -151,10 +150,14 @@ void xsc_write_data(int which)
 
     switch (xsc_sock[which]->state) {
         case NETSOCK_STATE_CONNECTED:
-            retval = comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data));
-            if ( retval == NETSOCK_ERR) comms_sock_close(xsc_sock[which]);
+            comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data));
             break;
         case NETSOCK_STATE_CLOSED:
+            comms_sock_reconnect(xsc_sock[which]);
+            break;
+        case NETSOCK_STATE_EOS:
+        case NETSOCK_STATE_ERROR:
+            comms_sock_close(xsc_sock[which]);
             comms_sock_reconnect(xsc_sock[which]);
             break;
         default:

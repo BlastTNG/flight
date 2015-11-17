@@ -64,6 +64,7 @@
 #include <motors.h>
 #include <watchdog.h>
 #include <xsc_network.h>
+#include <xsc_pointing.h>
 
 /* Define global variables */
 int StartupVeto = 20;
@@ -322,6 +323,7 @@ static void mcp_100hz_routines(void)
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();
+    xsc_control_triggers();
 
     framing_publish_100hz();
 }

@@ -2405,6 +2405,25 @@ void InitCommandData()
   CommandData.ISCControl[1].pulse_width = 18; /* 180.00 msec */
   CommandData.ISCControl[1].fast_pulse_width = 8; /* 80.00 msec */
 
+  for (int which=0; which<2; which++) {
+      CommandData.XSC[which].heaters.mode = xsc_heater_auto;
+      CommandData.XSC[which].heaters.setpoint = 10.0;
+
+      CommandData.XSC[which].trigger.exposure_time_cs = 12;
+      CommandData.XSC[which].trigger.grace_period_cs = 2400;
+      CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs = 200;
+
+      CommandData.XSC[which].trigger.num_triggers = 1;
+      CommandData.XSC[which].trigger.multi_trigger_time_between_triggers_cs = 18;
+
+      CommandData.XSC[which].trigger.threshold.enabled = true;
+      CommandData.XSC[which].trigger.threshold.blob_streaking_px = 2.0;
+
+      CommandData.XSC[which].trigger.scan_force_trigger_enabled = true;
+
+      xsc_clear_client_data(&CommandData.XSC[which].net);
+  }
+
   CommandData.temp1 = 0;
   CommandData.temp2 = 0;
   CommandData.temp3 = 0;
