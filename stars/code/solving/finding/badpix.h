@@ -38,14 +38,10 @@ class Solving::Finding::Badpix
 	Badpix(Parameters::Manager& params);
     ~Badpix();
     int load_badpix( std::string fname);// Load bad pixel map from file
-	void fix_badpix(Shared::Image::Raw& image, int val);	 // set bad pixels to val
+	void fix_badpix(Shared::Image::Raw& image);	 // set bad pixels to map mean
    	std::string badpixlist;
- 	void calc_mapstat(Shared::Image::Raw& image);
-	int get_mapmean(Shared::Image::Raw& image);
-	//double get_mapmean(Shared::Image::Raw& image);
 	int *satcol;
 	int satval;
-	//unsigned short satval;
 	double mapmean; 
 	int mapmeans;
 
@@ -56,10 +52,8 @@ class Solving::Finding::Badpix
 	} ;
 
   private:
-	//unsigned int *badpixels;  // array of indices of bad pixels in CCD frames
-	//std::vector<badpixels> badpair;
 	std::vector<badpixels> badpairs;
-	unsigned int numbadpix;   // # of bad pixels 
+	unsigned int numbadpix;   
 	int image_width;
     int image_height;
   };
