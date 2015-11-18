@@ -11,9 +11,7 @@
 #include <stdlib.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem.hpp>					/*added by KNS*/
-#include <boost/filesystem/path.hpp>			/*added by KNS*/
-#include <boost/typeof/std/iterator.hpp>		/*added by KNS*/
+#include <boost/filesystem.hpp>					
 #include "../tools/slalib.h"
 #include "../tools/angles.h"
 #include "../tools/ccd_projection.h"
@@ -192,7 +190,7 @@ vector<Solution> AbstractCatalogManager::load_triplets_from_file(vector<Blob>& b
 
     RawTriplet triplet;
 
-    ifstream infile(filename.string().c_str(), ios::in | ios::binary);	//changed from file_string KNS
+    ifstream infile(filename.string().c_str(), ios::in | ios::binary);	
     if (infile.is_open()) {
         while (infile.read((char*) &triplet, sizeof(triplet))) {
 
@@ -340,7 +338,7 @@ vector<Solution> AbstractCatalogManager::load_pairs_from_file(vector<Blob>& base
 
     double epoch = get_epoch();
 
-    ifstream infile(filename.string().c_str(), ios::in | ios::binary);	//changed from file_string KNS
+    ifstream infile(filename.string().c_str(), ios::in | ios::binary);	
     if (infile.is_open()) {
 
         RawPair pair;
@@ -542,7 +540,7 @@ void AbstractCatalogManager::get_star_name(int id, string& name, double& mag)
     unsigned int aborting_loop_counter = 0;
 
     fs::path filename = catalog_path / "lists" / "stars.txt";
-    ifstream infile(filename.string().c_str());			//changed from file_string to string KNS
+    ifstream infile(filename.string().c_str());			
     std::stringstream ss(std::stringstream::in | std::stringstream::out);
     if (infile.is_open()) {
         while (infile.good() && counter<max_line_reads && !aborting_loop) {
