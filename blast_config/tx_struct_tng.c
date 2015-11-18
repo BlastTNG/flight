@@ -265,9 +265,6 @@ channel_t channel_list[] =
     {"x1_image_hor_sigma_roll",    CONVERSIONS_WIDE_ANGLE_M,            CONVERSIONS_WIDE_ANGLE_B, TYPE_UINT32, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x1_image_hor_sigma_pointing",CONVERSIONS_WIDE_ANGLE_M,            CONVERSIONS_WIDE_ANGLE_B, TYPE_UINT32, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
 
-    {"x1_image_num_blobs",   1.0,            0.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
-
-
 
     { "time",                 1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "time_usec",            1.0,              0.0, TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
@@ -1004,14 +1001,14 @@ channel_t channel_list[] =
     { "t_mc_piv",             1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_T_C, 0, 0, 0 },
 
     /** Calculated P/I and Error (diff btw commanded/actual velocity) terms from control loop */
-    { "p_term_el",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "i_term_el",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "d_term_el",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "p_term_el",            0.01,             0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "i_term_el",            0.01,             0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "d_term_el",            0.01,             0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "error_el",             1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "el_integral_step",     1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "p_term_az",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "i_term_az",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "d_term_az",            1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "p_term_az",            0.01,             0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "i_term_az",            0.01,             0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "d_term_az",            0.01,             0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "error_az",             1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "az_integral_step",     1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "p_rw_term_piv",        1.0,              0.0,    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
