@@ -246,9 +246,7 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
 	//bad pixel removal goes here
 	timer.start();
 	if(!done()) {
-		//badpix.load_badpix(badpixlist);
-		badpix.fix_badpix(image, (satval + 1));			
-		badpix.fix_badpix(image, badpix.get_mapmean(image));      // set the noisies
+		badpix.fix_badpix(image);			
 	}
 	                          	
 	logger.log(format("finder: fixing bad pixels took %s s")%timer.time());
