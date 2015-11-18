@@ -103,8 +103,8 @@ bool CameraWindows::init_camera()
 	}
 
 	QCam_SetParam((QCam_Settings*)&settings, qprmCoolerActive, 1);
-	QCam_SetParam((QCam_Settings*)&settings, qprmHighSensitivityMode, 0);
-	QCam_SetParam((QCam_Settings*)&settings, qprmBlackoutMode, 0);
+	QCam_SetParam((QCam_Settings*)&settings, qprmHighSensitivityMode, 1);
+	QCam_SetParam((QCam_Settings*)&settings, qprmBlackoutMode, 1);
 	QCam_SetParam((QCam_Settings*)&settings, qprmDoPostProcessing, 0);
 	QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, 0);
 
@@ -169,7 +169,7 @@ void CameraWindows::set_trigger_mode()
         trigger_mode = qcTriggerFreerun;
 		QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, unsigned long(mode6interval));
     } else {
-		trigger_mode = qcTriggerEdgeLow;
+		trigger_mode = qcTriggerStrobeLow;
 		QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, 0);
     }
 
@@ -328,12 +328,16 @@ void CameraWindows::thread_function()
                     Shared::Camera::results_for_main.share();
                 }
 			}
-			usleep(int(internal_period * 1000000));
             if (camera_ready) {
 				logger.log("Camera is ready, trying to read image");
                 read_image_if_available();
                 process_requests();
             }
+			if (internal_triggering) {
+				for (int i = 1; (!Shared::General::quit) && i < 100; i++) {
+					usleep(int(internal_period * 10000));
+				}
+			}
         }
 		last_remote_buffer_counter++;
     }
@@ -345,6 +349,7 @@ void CameraWindows::wait_for_quit()
 {
 	logger.log("Abort QCam\n");
 	if (isCapturing) QCam_Abort(camhandle);
+	thread.interrupt();
     thread.join();
 }
 
