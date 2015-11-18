@@ -150,8 +150,12 @@ void AbstractCamera::fill_general_admin()
     shared_image.to_be_solved = false;
     if (shared_status.stage == Status::empty || shared_status.stage == Status::done) {
         shared_image.to_be_solved = true;
-    }
-    logger.log(format("image set to_be_solved: %i") %  shared_image.to_be_solved);
+		logger.log("Image will be solved");
+	}
+	else {
+		logger.log(format("Image will not be solved because stage is %d\n") % shared_status.stage );
+	}
+    
     shared_autofocus.counter_stars = shared_image.counter_stars;
     if (shared_brightness.allow_enable && shared_brightness.enabled) {
         logger.log("adding fake sky brightness to image");
