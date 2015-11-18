@@ -746,7 +746,7 @@ void store_100hz_xsc(int which)
         last_blob_i[which] = 0;
     }
     if (intermediate_frame_counter[which] == 0) {
-        if (last_blob_i[which] < XSC_SERVER_DATA(which).blobs.num_blobs) {
+        if (last_blob_i[which] < XSC_SERVER_DATA(which).blobs.num_blobs && last_blob_i[which] < XSC_BLOBS_ARRAY_SIZE) {
             SET_VALUE(address_xN_image_blobn_x[which], TX_CONVERT(BLOB_POS, XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].x));
             SET_VALUE(address_xN_image_blobn_y[which], TX_CONVERT(BLOB_POS, XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].y));
             SET_VALUE(address_xN_image_blobn_flux[which], XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].flux);
