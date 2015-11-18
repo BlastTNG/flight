@@ -1531,7 +1531,7 @@ case xsc_exposure_timing:
               if (xsc_command_applies_to(which, ivalues[0])) {
                   CommandData.XSC[which].trigger.exposure_time_cs = ivalues[1];
               }
-              CommandData.XSC[which].trigger.grace_period_cs = (int) round(rvalues[2]*100.0);
+              CommandData.XSC[which].trigger.grace_period_cs = ivalues[2];
               CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs = ivalues[3];
           }
           break;
@@ -1543,7 +1543,6 @@ case xsc_multi_trigger:
           for (unsigned int which=0; which<2; which++) {
               CommandData.XSC[which].trigger.num_triggers = ivalues[0];
               CommandData.XSC[which].trigger.multi_trigger_time_between_triggers_cs = ivalues[1];
-              CommandData.XSC[which].net.multi_triggering_readout_delay = rvalues[2];
               xsc_activate_command(which, xC_multi_triggering);
           }
           break;
@@ -1966,14 +1965,6 @@ case xsc_filter_matching:
           }
           break;
       }
-
-    case isc_max_age:
-      CommandData.ISCControl[0].max_age = ivalues[0]/10; //convert from ms to frames
-      break;
-
-    case osc_max_age:
-      CommandData.ISCControl[1].max_age = ivalues[0]/10; //convert from ms to frames
-      break;
 
 #endif
     default:
@@ -2411,7 +2402,7 @@ void InitCommandData()
       CommandData.XSC[which].heaters.setpoint = 10.0;
 
       CommandData.XSC[which].trigger.exposure_time_cs = 12;
-      CommandData.XSC[which].trigger.grace_period_cs = 2400;
+      CommandData.XSC[which].trigger.grace_period_cs = 4500;
       CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs = 200;
 
       CommandData.XSC[which].trigger.num_triggers = 1;

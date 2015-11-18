@@ -26,9 +26,11 @@
 
 
 #include <time.h>
-#include <stdio.h>
 
 #include <blast.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "channels_tng.h"
 #include "tx.h"
@@ -54,10 +56,28 @@ typedef enum xsc_trigger_state_t
     xsc_trigger_readout_period
 } xsc_trigger_state_t;
 
+const char *xsc_trigger_file[2] = {  "/sys/class/gpio/gpio504/value",
+                                "/sys/class/gpio/gpio505/value"};
+
+static void xsc_trigger(int m_which, int m_value)
+{
+    const char val[2] = {'0', '1'};
+    static int fd[2] = {-1, -1};
+
+    if (fd[m_which] < 0) {
+        if ((fd[m_which] = open (xsc_trigger_file[m_which], O_WRONLY)) < 0) {
+            blast_strerror("Could not open %s for writing", xsc_trigger_file[m_which]);
+            return;
+        }
+    }
+
+    write(fd[m_which], &val[m_value], 1);
+}
+
 static void calculate_predicted_motion_px(double exposure_time)
 {
     int i_point = GETREADINDEX(point_index);
-    double standard_iplatescale = 6.640;
+    double standard_iplatescale = 6.680;
     double predicted_motion_deg = 0.0;
     predicted_motion_deg += PointingData[i_point].gy_total_vel * exposure_time;
     predicted_motion_deg += 0.5 * PointingData[i_point].gy_total_accel * exposure_time * exposure_time;
@@ -165,8 +185,6 @@ void xsc_control_triggers()
 
     static xsc_trigger_state_t trigger_state = xsc_trigger_first_time;
     static int max_exposure_time_used_cs = -1;
-    static int pulse_index = 1; // initialized to 1 greater than last_index in DSP
-    int pulse_request = 0;
     int exposure_time_cs[2];
     int grace_period_cs = 300;
 
@@ -242,8 +260,7 @@ void xsc_control_triggers()
                 }
                 max_exposure_time_used_cs = max(exposure_time_cs[0], exposure_time_cs[1]);
                 for (int which=0; which<2; which++) {
-                    pulse_request = (pulse_index<<14) + exposure_time_cs[which];
-                    ///TODO: Pulse here XSC
+                    xsc_trigger(which, 1);
                     if (!scan_bypass_last_trigger_on_next_trigger) {
                         xsc_pointing_state[which].last_trigger.counter_fcp = xsc_pointing_state[which].counter_fcp;
                         xsc_pointing_state[which].last_trigger.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;
@@ -251,7 +268,6 @@ void xsc_control_triggers()
                         xsc_pointing_state[which].last_trigger.lst = PointingData[i_point].lst;
                     }
                 }
-                pulse_index = (pulse_index+1)%4;
                 if (multi_trigger_counter == 0) {
                     recording_motion_psf = true;
                     xsc_motion_psf_initiate(&motion_psf_index);
@@ -267,6 +283,9 @@ void xsc_control_triggers()
         case xsc_trigger_sending_triggers:
             state_counter++;
             blast_dbg("In sending_triggers with counter %i, counter_fcp: %d", state_counter, xsc_pointing_state[0].counter_fcp);
+            for (int which = 0; which < 2; which++) {
+                if (state_counter >= exposure_time_cs[which]) xsc_trigger(which, 0);
+            }
             if (state_counter >= max_exposure_time_used_cs) {
                 state_counter = 0;
                 multi_trigger_counter = (multi_trigger_counter+1) % num_triggers;

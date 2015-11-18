@@ -852,50 +852,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
 //  <!-- XSC general -->
 
-    {COMMAND(xsc_offset), "set offset of star camera to primary beam", GR_POINT|GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"cross_el_offset (deg) [enter the approximation delta_az*cos(el)]", 0, 360, 'f', "ISC_X_OFF"},
-            {"el_offset (deg)", 0, 360, 'f',"ISC_Y_OFF"},
-        },
-    },
 
-
-    {COMMAND(xsc_is_new_window_period), "xsc is_new window period", GR_ISC_HOUSE, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"is_new window period", 1, 200, 'l', "NONE"},
-        },
-    },
-
-
-
-////  <!-- XSC heaters -->
-
-    {COMMAND(xsc_heaters_off), "xsc heater off", GR_ISC_HOUSE, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_heaters_on), "xsc heater on", GR_ISC_HOUSE, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_heaters_auto), "xsc heater auto", GR_ISC_HOUSE, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"setpoint (C)", -100, 200, 'f', "NONE"},
-        },
-    },
 
 
 
 ////  <!-- XSC exposure -->
 
-    {COMMAND(xsc_exposure_timing), "xsc exposure time", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_exposure_timing), "xsc exposure time", GR_ISC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"exposure time_cs (cs) [default: 12]", 1, 100, 'l', "NONE"},
@@ -905,7 +868,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     },
 
 
-    {COMMAND(xsc_multi_trigger), "xsc trigger timing", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_multi_trigger), "xsc trigger timing", GR_ISC_PARAM, 3,
         {
             {"num triggers [default: 1]", 0, 16, 'i', "NONE"},
             {"time between triggers (cs) [default: 19]", 1, 100, 'l', "NONE"},
@@ -913,51 +876,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
         },
     },
 
-
-    {COMMAND(xsc_trigger_threshold), "xsc trigger threshold", GR_ISC_PARAM, 0,
-        {
-            {"enabled", 'i', 0, 1, "NONE"},
-            {"first exposure blob streaking (px)", 1.0, 20.0, 'f'},
-        },
-    },
-
-
-    {COMMAND(xsc_scan_force_trigger), "xsc enable forcing triggers during snaps for cmb scans", GR_ISC_PARAM, 0,
-        {
-            {"enabled", 'i', 0, 1, "NONE"},
-        },
-    },
-
-
-
 ////  <!-- XSC main -->
 
-    {COMMAND(xsc_quit), "xsc quit", GR_ISC_HOUSE|CONFIRM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-        },
-    },
 
-
-    {COMMAND(xsc_shutdown), "xsc shutdown", GR_ISC_HOUSE|CONFIRM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"include_restart", 0, 1, 'i', "NONE"},
-        },
-    },
-
-
-    {COMMAND(xsc_network_reset), "xsc network reset", GR_ISC_HOUSE|CONFIRM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"reset_now", 0, 1, 'i', "NONE"},
-            {"reset_on_lull_enabled", 0, 1, 'i', "NONE"},
-            {"reset_on_lull_delay", 0.0, 10.0, 'f', "NONE"},
-        },
-    },
-
-
-    {COMMAND(xsc_main_settings), "xsc main settings", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_main_settings), "xsc main settings", GR_ISC_PARAM, 6,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"display_frequency [default: 20.0]", 1.0, 30.0, 'f', "NONE"},
@@ -969,7 +891,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     },
 
 
-    {COMMAND(xsc_display_zoom), "xsc display zoom", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_display_zoom), "xsc display zoom", GR_ISC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"center x display pixel [default: 320]", 0, 1000, 'i', "NONE"},
@@ -979,44 +901,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
     },
 
 
-    {COMMAND(xsc_image_client), "xsc image client", GR_ISC_HOUSE, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"enabled", 'i', 0, 1, "NONE"},
-        },
-    },
-
-
-
 ////  <!-- XSC imaging (lens, camera, fake sky, masking) -->
 
-    {COMMAND(xsc_init_focus), "xsc init focus", GR_ISC_PARAM, 0,
+
+
+    {COMMAND(xsc_run_autofocus), "xsc run autofocus", GR_ISC_PARAM, 1,
         {
             {"which", 0, 2, 'i', "NONE"},
         },
     },
 
-    {COMMAND(xsc_set_focus), "xsc set focus", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"position", 1, 10000, 'l', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_set_focus_incremental), "xsc set focus incremental", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"relative position", -10000, 10000, 'l', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_run_autofocus), "xsc run autofocus", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_set_autofocus_range), "xsc set autofocus range", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_set_autofocus_range), "xsc set autofocus range", GR_ISC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"focus_search_min", 1, 10000, 'l', "NONE"},
@@ -1025,34 +920,19 @@ struct mcom mcommands[N_MCOMMANDS] = {
         },
     },
 
-    {COMMAND(xsc_abort_autofocus), "xsc abort autofocus", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_abort_autofocus), "xsc abort autofocus", GR_ISC_PARAM, 2,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"still_use_solution", 0, 1, 'i', "NONE"},
         },
     },
 
-    {COMMAND(xsc_autofocus_display_mode), "xsc autofocus display mode", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_autofocus_display_mode), "xsc autofocus display mode", GR_ISC_PARAM, 2,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"mode (0=auto, 1=on, 2=off)", 0, 2, 'i', "NONE"},
         },
     },
-
-
-    {COMMAND(xsc_init_aperture), "xsc init aperture", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_set_aperture), "xsc set aperture", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"position", 0, 10000, 'i', "NONE"},
-        },
-    },
-
 
     {COMMAND(xsc_get_gain), "xsc get gain", GR_ISC_PARAM, 0,
         {
@@ -1081,126 +961,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
 
 
-////  <!-- XSC solver -->
-
-    {COMMAND(xsc_solver_general), "xsc solver general", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"enabled", 'i', 0, 1, "NONE"},
-            {"timeout", 'f', 1.0, 120.0, "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_solver_abort), "xsc solver abort", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_selective_mask), "xsc selective mask", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"enabled", 0, 1, 'i', "NONE"},
-            {"field0", 0, CMD_L_MAX, 'l', "NONE"},
-            {"field1", 0, CMD_L_MAX, 'l', "NONE"},
-            {"field2", 0, CMD_L_MAX, 'l', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_blob_finding), "", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"snr_threshold", 1.0, 10.0, 'f', "NONE"},
-            {"max_num_blobs", 4, 40, 'i', "NONE"},
-            {"robust_mode_enabled", 0, 1, 'i', "NONE"},
-            {"fitting_method (0=none, 1=gaussian, 2=double-gaussian", 0, 3 , 'i', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_blob_cells), "", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"cell_size_power (power of 2) [default: 7]", 1, 14, 'i', "NONE"},
-            {"max_num_blobs_per_cell [default: 2]", 1, 4, 'i', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_motion_psf), "", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"enabled", 'i', 0, 1, "NONE"},
-            {"horizontal roll (degrees)", -90.0, 90.0, 'f', "NONE"},
-            {"iplatescale (arcsec/px)", 6.0, 7.0, 'f', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_pattern_matching), "", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"pattern_matcher_enabled", 0, 1, 'i', "NONE"},
-            {"display_star_names", 0, 1, 'i', "NONE"},
-            {"match_tolerance_px", 0.5, 10.0, 'f', "NONE"},
-            {"iplatescale_min (arcsec/px)", 6.0, 7.0,  'f', "NONE"},
-            {"iplatescale_max (arcsec/px)", 6.0, 7.0, 'f', "NONE"},
-            {"platescale_always_fixed", 0, 1, 'i', "NONE"},
-            {"iplatescale_fixed (arcsec/px)", 6.0, 7.0, 'f', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_filter_hor_location), "xsc solver: filter on horizontal location (with guess provided by mcp)", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"enabled", 0, 1, 'i', "NONE"},
-            {"radius", 0, 120.0, 'f', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_filter_hor_roll), "xsc solver: filter on horizontal roll", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"enabled", 0, 1, 'i', "NONE"},
-            {"min_degrees", -90.0, 90.0, 'f', "NONE"},
-            {"max_degrees", -90.0, 90.0,  'f', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_filter_el), "xsc solver: filter on elevation", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"enabled", 0, 1, 'i', "NONE"},
-            {"min_degrees", 'f', -90.0, 90.0, "NONE"},
-            {"max_degrees", 'f', -90.0, 90.0, "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_filter_eq_location), "xsc solver: filter on equatorial location (with guess provided by mcp)", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"enabled", 0, 1, 'i', "NONE"},
-            {"radius", 0.0, 180.0, 'f', "NONE"},
-        },
-    },
-
-    {COMMAND(xsc_filter_matching), "xsc solver: matching requirements", GR_ISC_PARAM, 0,
-        {
-            {"which", 0, 2, 'i', "NONE"},
-            {"pointing_error_threshold (arcsec) [default: 10.0]", 0.1, 200.0, 'f', "NONE"},
-            {"fit_error_threshold (px) [default: 2000.0]", 0.1, 2000.0, 'f', "NONE"},
-            {"num_matched [default: 4]", 3, 20, 'i', "NONE"},
-        },
-    },
-
-  {COMMAND(isc_max_age), "set maximum delay between trigger and solution (ms)", GR_ISC_PARAM, 1,
-    {
-      {"Max Age", 0, MAX_15BIT, 'i', "MAX_AGE_ISC"},
-    }
-  },
-
-  {COMMAND(osc_max_age), "set maximum delay between trigger and solution (ms)", GR_OSC_PARAM, 1,
-    {
-      {"Max Age", 0, MAX_15BIT, 'i', "MAX_AGE_OSC"},
-    }
-  },
   {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
    {
      {"Reaction Wheel", 0, 5, 'i', "VERBOSE_RW"},
@@ -1232,6 +992,191 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Plover", 0, CMD_I_MAX, 'i', "PLOVER"}
     }
+  },
+  {COMMAND(xsc_is_new_window_period), "Set the time over which commands are valid (in centi-seconds)", GR_XSC, 2,
+      {
+              {"Which", 0, 2, 'i', "NONE"},
+              {"Window period", 0, 2000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_offset), "Trim the star camera", GR_XSC, 3,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Cross-El trim", -180, 180, 'd', "NONE"},
+              {"El trim", -180, 180, 'd', "NONE"},
+      }
+  },
+
+  ////  <!-- XSC heaters -->
+
+  {COMMAND(xsc_heaters_off), "Turn off the XSC heater", GR_XSC, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_heaters_on), "Turn on the XSC heater", GR_XSC, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_heaters_auto), "Allow XSC to control its heater", GR_XSC, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_trigger_threshold), "Allow XSC to trigger based on predicted px streaking", GR_XSC, 3,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Enabled", 0, 1, 'i', "NONE"},
+              {"Blob streaking limit (pixels", 0, 100, 'f', "NONE"},
+      }
+  },
+  {COMMAND(xsc_scan_force_trigger), "Force XSC to trigger on turnaround (ignore speed)", GR_XSC, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Force the trigger on scan limits", 0, 1, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_quit), "Quit XSC", GR_XSC, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_shutdown), "Shutdown the XSC computer", GR_XSC, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Restart?", 0, 1, 'i', "NONE"}
+      }
+  },
+
+  {COMMAND(xsc_image_client), "Enable or disable sending images to mcp", GR_XSC, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Image client enabled", 0, 1, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_init_focus), "Initialize the focus motor", GR_XSC, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_set_focus), "Set the absolute focus position", GR_XSC, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Absolute focus position", 0, 10000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_set_focus_incremental), "Command an incremental step to the focus motor", GR_XSC, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Incremental focus steps", -10000, 10000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_init_aperture), "Initialize the aperture motor", GR_XSC, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_set_aperture), "Set the absolute aperture position", GR_XSC, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Absolute aperture position", 0, 10000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_solver_general), "Solver parameter settings", GR_XSC, 3,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Enable the solver", 0, 1, 'i', "NONE"},
+              {"Set the solver timeout period (s)", 5, 600, 'f', "NONE"},
+      }
+  },
+  {COMMAND(xsc_solver_abort), "Abort the solving the current image", GR_XSC, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"}
+      }
+  },
+  {COMMAND(xsc_selective_mask), "Set the XSC selective mask", GR_XSC, 6,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Enable selective masking", 0, 1, 'i', "NONE"},
+              {"Mask field 1", 0, CMD_L_MAX, 'i', "NONE"},
+              {"Mask field 2", 0, CMD_L_MAX, 'i', "NONE"},
+              {"Mask field 3", 0, CMD_L_MAX, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_blob_finding), "XSC blob finder settings", GR_XSC, 6,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"SNR Threshhold", 0.01, 10, 'f', "NONE"},
+              {"Max num blobs", 3, 100, 'i', "NONE"},
+              {"Enable Robust mode", 0, 1, 'i', "NONE"},
+              {"Fitting method (0= none, 1=gaussian, 2=double gaussian)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_blob_cells), "XSC blob cell settings", GR_XSC, 3,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Cell size (pixels, power of 2)", 4, 512, 'i', "NONE"},
+              {"Max num blobs per cell (default 2)", 1, 10, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_motion_psf), "XSC Motion PSF Settings", GR_XSC, 4,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Motion PSF Enabled", 0, 1, 'i', "NONE"},
+              {"Horizontal Roll (degrees)", -90.0, 90.0, 'f', "NONE"},
+              {"Platescale (\"/px)", 6.0, 7.0, 'f', "NONE"},
+      }
+  },
+  {COMMAND(xsc_pattern_matching), "XSC pattern matching settings", GR_XSC, 8,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Pattern match enable", 0, 1, 'i', "NONE"},
+              {"Display Star names", 0, 1, 'i', "NONE"},
+              {"Match Tolerance (pixels)", 0.01, 10, 'f', "NONE"},
+              {"Platescale min (\"/px)", 6.0, 7.0, 'f', "NONE"},
+              {"Platescale max (\"/px)", 6.0, 7.0, 'f', "NONE"},
+              {"Use fixed Platescale", 0, 1, 'i', "NONE"},
+              {"Fixed Platescale (\"/px)", 6.0, 7.0, 'f', "NONE"},
+      }
+  },
+  {COMMAND(xsc_filter_hor_location), "XSC Horizontal Location Filter", GR_XSC, 3,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Horizontal Limit Enabled", 0, 1, 'i', "NONE"},
+              {"Horizontal Radius (degrees)", 0.0, 90.0, 'f', "NONE"},
+      }
+  },
+  {COMMAND(xsc_filter_eq_location), "XSC Equatorial Location Filter", GR_XSC, 3,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Equatorial Limit Enabled", 0, 1, 'i', "NONE"},
+              {"Equatorial Radius (degrees)", 0.0, 90.0, 'f', "NONE"},
+      }
+  },
+  {COMMAND(xsc_filter_hor_roll), "XSC Horizontal Roll Limit", GR_XSC, 4,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Horizontal Roll Limit", 0, 1, 'i', "NONE"},
+              {"Minimum Horizontal Roll (degrees)", -90.0, 90.0, 'f', "NONE"},
+              {"Maximum Horizontal Roll (degrees)", -90.0, 90.0, 'f', "NONE"},
+      }
+  },
+  {COMMAND(xsc_filter_el), "XSC Elevation Limit", GR_XSC, 4,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Elevation Limit", 0, 1, 'i', "NONE"},
+              {"Minimum Elevation (degrees)", -90.0, 90.0, 'f', "NONE"},
+              {"Maximum Elevation (degrees)", -90.0, 90.0, 'f', "NONE"},
+      }
+  },
+  {COMMAND(xsc_filter_matching), "XSC Matching Filter", GR_XSC, 4,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Pointing Error threshold (arc seconds)", 0.01, 120, 'f', "NONE"},
+              {"Pixel Error threshold (pixels)", 0.01, 20, 'f', "NONE"},
+              {"Minimum stars matched", 4, 30, 'i', "NONE"},
+      }
   }
 };
 

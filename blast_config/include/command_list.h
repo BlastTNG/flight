@@ -23,7 +23,7 @@
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
 #define N_SCOMMANDS 227        /* total number of single word cmds */
-#define N_MCOMMANDS 125        /* total number of multiword commands */
+#define N_MCOMMANDS 124        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)    //deprecated. Probably want CMD_I_MAX instead
@@ -156,7 +156,7 @@ enum multiCommand {
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
-  isc_max_age,	     osc_max_age,	    balance_tset,
+  balance_tset,
   motors_verbose,    bias_step,         phase_step,       hwpr_set_backlash,
   hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
