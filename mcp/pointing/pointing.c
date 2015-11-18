@@ -609,27 +609,27 @@ static bool XSCHasNewSolution(int which)
         return false;
     }
     if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter) {
-        blast_dbg("Old Solution");
+//        blast_dbg("Old Solution");
         // The solution is old
         return false;
     }
     if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || ACSData.last_trigger_counter_stars[which] < 0) {
-        blast_dbg("No stars counter");
+//        blast_dbg("No stars counter");
         // One or both of the stars counters were not yet running at the time of the trigger
         return false;
     }
     if (XSC_SERVER_DATA(which).channels.image_ctr_fcp < 0 ||  ACSData.last_trigger_counter_fcp[which] < 0) {
-        blast_dbg("No mcp counter");
+//        blast_dbg("No mcp counter");
         // One or both of the fcp counters were not yet running at the time of the trigger
         return false;
     }
     if (XSC_SERVER_DATA(which).channels.image_ctr_stars != ACSData.last_trigger_counter_stars[which]) {
-        blast_dbg("Misaligned stars counter");
+//        blast_dbg("Misaligned stars counter");
         // The stars counters were misaligned at the time of the trigger
         return false;
     }
     if (XSC_SERVER_DATA(which).channels.image_ctr_fcp != ACSData.last_trigger_counter_fcp[which]) {
-        blast_dbg("Misaligned fcp counters");
+//        blast_dbg("Misaligned fcp counters");
         // The fcp counters were misaligned at the time of the trigger
         return false;
     }
