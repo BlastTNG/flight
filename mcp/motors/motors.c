@@ -374,6 +374,8 @@ void write_motor_channels_5hz(void)
     //TODO:Figure out what to do about the Pointing gain term
     /* deadband for the el_motor integral term*/
     SET_FLOAT(gDBElAddr, CommandData.ele_gain.DB);
+    /* Elevation current offset to compensate for static friction. */
+    SET_FLOAT(frictOffPivAddr, CommandData.ele_gain.F);
 
     /***************************************************/
     /**            Azimuth Drive Motors              **/
@@ -1824,6 +1826,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     static channel_t *i_el_ch = NULL;
     static channel_t *d_el_ch = NULL;
     static channel_t *el_integral_ch = NULL;
+    static channel_t* frictTermElAddr;
+    static channel_t* frictTermUnfiltElAddr; 
 
     float K_p = 0.0;        //!< Proportional gain
     float T_i = 0.0;        //!< Integral time constant
@@ -1834,6 +1838,10 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     float P_term = 0.0;
     float I_step = 0.0; //intermediate control loop results
     float D_term = 0.0;
+
+    double friction = 0.0;
+    static double friction_in[2] = {0.0};
+    static double friction_out[2] = {0.0};
 
     static float I_term = 0.0;
 
@@ -1853,6 +1861,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
         i_el_ch = channels_find_by_name("i_term_el");
         d_el_ch = channels_find_by_name("d_term_el");
         el_integral_ch = channels_find_by_name("el_integral_step");
+        frictTermElAddr = channels_find_by_name("frict_term_el");
+        frictTermUnfiltElAddr = channels_find_by_name("frict_term_uf_el");
     }
 
     K_p = CommandData.ele_gain.P;
@@ -1929,6 +1939,28 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
 
     milliamp_return = P_term + I_term + D_term;
 
+    // Calculate static friction offset term
+    if (fabs(milliamp_return) < 3) {
+        friction = 0.0;
+    }
+    else {
+        friction = copysign(CommandData.ele_gain.F, milliamp_return);
+    }
+    /**
+     * This is a simple Butterworth low-pass filter with 200Hz input and -3dB frequency
+     * at 0.1Hz (637.62, 0.996863).  Additional terms (if we want to adjust:
+     * 0.2 Hz (319.31, 0.993737)
+     * 0.5 Hz (128.32, 0.984414)
+     * 1 Hz (64.6567, 0.969067)
+     * 1.5 Hz (43.4335, 0.95395)
+     */
+    friction_in[0] = friction_in[1];
+    friction_in[1] = friction / 637.62;
+    friction_out[0] = friction_out[1];
+    friction_out[1] = friction_in[0] + friction_in[1] + 0.996863 * friction_out[0];
+
+    milliamp_return += friction_out[1];
+
     if (milliamp_return > MAX_EL_CURRENT) milliamp_return = MAX_EL_CURRENT;
     if (milliamp_return < MIN_EL_CURRENT) milliamp_return = MIN_EL_CURRENT;
 
@@ -1944,6 +1976,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     SET_FLOAT(i_el_ch, I_term);
     SET_FLOAT(d_el_ch, D_term);
     SET_FLOAT(el_integral_ch, I_step);
+    SET_FLOAT(frictTermElAddr, friction_out[1]);
+    SET_FLOAT(frictTermUnfiltElAddr, friction);
     return milliamp_return;
 }
 

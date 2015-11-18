@@ -474,13 +474,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_PIV"},
     }
   },
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 5,
+  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 6,
     {
       {"Proportional Gain", 0, CMD_I_MAX, 'f', "G_P_EL"},
       {"Integral Time",     0, 200, 'f', "G_I_EL"},
       {"Derivative Time",   0, 200, 'f', "G_D_EL"},
       {"Pointing Gain",     0, CMD_I_MAX, 'f', "G_PT_EL"},
-      {"Integral Term Deadband  (mA)",     0, 500, 'f', "G_DB_EL"}
+      {"Integral Term Deadband  (mA)",     0, 500, 'f', "G_DB_EL"},
+      {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_EL"},
     }
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,

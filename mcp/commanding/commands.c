@@ -1122,6 +1122,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.ele_gain.D = rvalues[2];
       CommandData.ele_gain.PT = rvalues[3];
       CommandData.ele_gain.DB = rvalues[4];      
+      CommandData.ele_gain.F = rvalues[5]; 
       break;
     case az_gain:   //az gains
       CommandData.azi_gain.P = rvalues[0];
@@ -2152,6 +2153,7 @@ void InitCommandData()
   CommandData.ele_gain.D = 0;
   CommandData.ele_gain.PT = 200;
   CommandData.ele_gain.DB = 0; 
+  CommandData.ele_gain.F = 0; 
 
   CommandData.azi_gain.P = 200;
   CommandData.azi_gain.I = 200;

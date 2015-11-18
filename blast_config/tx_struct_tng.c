@@ -986,6 +986,9 @@ channel_t channel_list[] =
     { "frict_off_piv",        1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "frict_term_piv",       1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "frict_term_uf_piv",    1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 }, // For debugging remove later
+    { "frict_off_el",        1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "frict_term_el",       1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "frict_term_uf_el",    1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 }, // For debugging remove later
 
     /** Motor Controller State and Status Registers */
     { "status_rw",            1.0,              0.0, TYPE_UINT32, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },

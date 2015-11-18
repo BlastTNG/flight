@@ -65,7 +65,7 @@ struct GainStruct {
   float SP;
   float DB; // Deadband the integral term
   float PT; // position velocity gain
-  float friction;
+  float F; // Current offset to overcome static friction.
 };
 
 // used for pivot loop gains
