@@ -45,7 +45,7 @@ static int xsc_process_packet(const void *m_data, size_t m_len, void *m_userdata
     int array_index = xsc_server_index[which];
 
     if (data->xsc_protocol_version == XSC_PROTOCOL_VERSION) {
-        memcpy(&xsc_mserver_data[which][array_index], m_userdata, sizeof(XSCServerData));
+        memcpy(&xsc_mserver_data[which][array_index], m_data, sizeof(XSCServerData));
         xsc_server_index[which] = INC_INDEX(xsc_server_index[which]);
     }
     else {
