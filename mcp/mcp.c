@@ -349,17 +349,14 @@ static void mcp_5hz_routines(void)
 
     framing_publish_5hz();
 }
-static void mcp_2hz_routines(void)
-{
-    xsc_write_data(0);
-    xsc_write_data(1);
-}
 static void mcp_1hz_routines(void)
 {
     blast_store_cpu_health();
     blast_store_disk_space();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
+    xsc_write_data(0);
+    xsc_write_data(1);
     framing_publish_1hz();
 }
 
@@ -368,11 +365,12 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm1;
   int use_starcams = 0;
 
-  int counter_100hz = 1;
-  int counter_5hz=1;
-  int counter_2hz=1;
-  int counter_1hz=1;
+  int counter_100hz = 0;
+  int counter_5hz=0;
+  int counter_1hz=0;
   struct timespec ts;
+  struct timespec interval_ts = { .tv_sec = 0,
+                                  .tv_nsec = 5000000}; /// 200HZ interval
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
@@ -499,14 +497,8 @@ int main(int argc, char *argv[])
   initialize_watchdog(2);
 
   clock_gettime(CLOCK_REALTIME, &ts);
-#define MCP_FREQ 200
-#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
-#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
-
   while (1) {
       int ret;
-      struct timespec interval_ts = { .tv_sec = 0,
-                                      .tv_nsec = MCP_NS_PERIOD}; /// 200HZ interval
       /// Set our wakeup time
       ts = timespec_add(ts, interval_ts);
       ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
@@ -517,20 +509,16 @@ int main(int argc, char *argv[])
           break;
       }
 
-      if (!--counter_1hz) {
-          counter_1hz = HZ_COUNTER(1);
+      if (!counter_1hz--) {
+          counter_1hz = 199;
           mcp_1hz_routines();
       }
-      if (!--counter_2hz) {
-          counter_1hz = HZ_COUNTER(2);
-          mcp_2hz_routines();
-      }
-      if (!--counter_5hz) {
-          counter_1hz = HZ_COUNTER(5);
+      if (!counter_5hz--) {
+          counter_5hz = 39;
           mcp_5hz_routines();
       }
-      if (!--counter_100hz) {
-          counter_1hz = HZ_COUNTER(100);
+      if (!counter_100hz--) {
+          counter_100hz = 1;
           mcp_100hz_routines();
       }
       mcp_200hz_routines();
