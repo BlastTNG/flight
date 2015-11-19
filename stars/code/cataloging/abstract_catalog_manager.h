@@ -9,6 +9,7 @@
 #define CATALOGING__ABSTRACT_CATALOG_MANAGER_H
 
 #include <vector>
+#include <array>
 #include <boost/filesystem/fstream.hpp>
 #include "../solving/solution.h"
 #include "../solving/star.h"
@@ -77,6 +78,7 @@ class Cataloging::AbstractCatalogManager
     int image_width;
     int image_height;
     fs::path catalog_path;
+	std::vector<std::pair<double, std::string>> star_names;
     std::vector<Region> regions;
     double mag_limit;
 

@@ -74,34 +74,11 @@ Region::Region()
 {
 }
 
-bool mark_as_special(vector<Star>& stars)
-{
-    vector<int> sids;
-    sids.push_back(43635);
-    sids.push_back(43627);
-    sids.push_back(46351);
-
-    int num_matches = 0;
-    for (unsigned int i=0; i<stars.size(); i++) {
-        for (unsigned int j=0; j<sids.size(); j++) {
-            if (sids[j] == stars[i].id) {
-                num_matches++;
-            }
-        }
-    }
-    if (num_matches == 3) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
 AbstractCatalogManager::AbstractCatalogManager(Parameters::Manager& params, bool enabled,
     string catalog_path_, Logging::Logger& logger_)
 { 
-	image_width = params.general.try_get("imaging.camera_real.image_width", params.general.image_width);
-	image_height = params.general.try_get("imaging.camera_real.image_height", params.general.image_height);
+	image_width = params.general.image_width;
+	image_height = params.general.image_height;
     mag_limit = numeric_limits<double>::infinity();
     catalog_path = fs::path(catalog_path_);
     logger = &logger_;
@@ -111,9 +88,14 @@ AbstractCatalogManager::~AbstractCatalogManager() {}
 
 void AbstractCatalogManager::init()
 {
-    Tools::Timer timer;
-    timer.start();
+	Tools::Timer timer;
+	string line;
+	int max_line_reads = 200000;
+	int counter = 0;
+
     if (shared_settings.enabled) { 
+
+		timer.start();
         logger->log(format("loading catalog %s")%catalog_path);
         regions.reserve(422); // 422 is for combo_9p0_8p0 and combo_top3_top10
         if (exists(catalog_path)) {
@@ -123,6 +105,31 @@ void AbstractCatalogManager::init()
             logger->log(format("catalog %s does not exist")%catalog_path);
         }
         logger->log(format("loading catalog took %.3f s")%timer.time());
+
+		timer.reset();
+		timer.start();
+		
+		if (star_names.size() == 0) {
+			fs::path filename = catalog_path / "lists" / "stars.txt";
+			ifstream infile(filename.string().c_str());
+			std::stringstream ss(std::stringstream::in | std::stringstream::out);
+			if (infile.is_open()) {
+				double in0;
+				std::string in1;
+				while (infile.good() && counter < max_line_reads) {
+					getline(infile, line);
+					ss.clear();
+					ss.str("");
+					ss << line;
+					ss >> in0 >> in1;
+					if (!ss.fail()) {
+						star_names.push_back(std::make_pair(in0, in1));
+					}
+				}
+				infile.close();
+			}
+			logger->log(format("cat: loading star name took %f s") % timer.time());
+		}
     }
 }
 
@@ -511,7 +518,7 @@ void AbstractCatalogManager::fill_stars_in_fov(Solution& solution, Shared::Image
     double star_dec = 0.0;
     for (unsigned int i=0; i<nearby_stars.size(); i++) {
         distance  = great_circle(solution.equatorial.ra, solution.equatorial.dec, nearby_stars[i].ra, nearby_stars[i].dec);
-        if (distance < from_degrees(2.5)) {
+        if (distance < from_degrees(3.2)) {
             Tools::get_refraction_corrected_equatorial(nearby_stars[i].ra, nearby_stars[i].dec,
                 shared_settings.refraction, image.filters, star_ra, star_dec);
             Tools::ccd_projection(star_ra, star_dec, solution.equatorial.ra, solution.equatorial.dec,
@@ -526,53 +533,11 @@ void AbstractCatalogManager::fill_stars_in_fov(Solution& solution, Shared::Image
 
 void AbstractCatalogManager::get_star_name(int id, string& name, double& mag)
 {
-    Tools::Timer timer;
-    timer.start();
 
-    string line;
-    int max_line_reads = 200000;
-    int counter = 0;
-    int in0 = 0;
-    double in1, in2, in3;
-    string in4;
-    unsigned int pos_of_first_space = 0;
-    bool aborting_loop = false;
-    unsigned int aborting_loop_counter = 0;
-
-    fs::path filename = catalog_path / "lists" / "stars.txt";
-    ifstream infile(filename.string().c_str());			
-    std::stringstream ss(std::stringstream::in | std::stringstream::out);
-    if (infile.is_open()) {
-        while (infile.good() && counter<max_line_reads && !aborting_loop) {
-            if (aborting_loop_counter == 0) {
-                aborting_loop_counter = 1000;
-                if (abort()) {
-                    aborting_loop = true;
-                }
-            }
-            aborting_loop_counter--;
-
-            getline(infile, line);
-            pos_of_first_space = line.find(' ');
-            if (pos_of_first_space != string::npos) {
-                // find + atoi are much faster than stringstream
-                in0 = atoi( (line.substr(0, pos_of_first_space)).c_str() );
-                if (in0 == id) {
-                    ss.clear();
-                    ss.str("");
-                    ss << line;
-                    ss >> in0 >> in1 >> in2 >> in3 >> in4;
-                    if (!ss.fail()) {
-                        name = in4.substr(0, 16);
-                        mag = in3;
-                        counter = max_line_reads;
-                    }
-                }
-            }
-        }
-        infile.close();
-    }
-    logger->log(format("cat: loading star name took %f s") % timer.time());
+	if ((int)star_names.size() >= id) {
+		name = star_names[id].second;
+		mag = star_names[id].first;
+	}
 }
 
 bool AbstractCatalogManager::abort()
