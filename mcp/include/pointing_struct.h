@@ -65,7 +65,7 @@ struct ACSDataStruct {
   double ifel_gy;   // deg/s
   double ifyaw_gy;  // deg/s
   double ifroll_gy; // deg/s
-  int    last_trigger_counter_fcp[2];
+  int    last_trigger_counter_mcp[2];
   int    last_trigger_counter_stars[2];
   int    last_trigger_age_cs[2];
   double last_trigger_lat[2];

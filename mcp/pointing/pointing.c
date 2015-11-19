@@ -618,7 +618,7 @@ static bool XSCHasNewSolution(int which)
         // One or both of the stars counters were not yet running at the time of the trigger
         return false;
     }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_fcp < 0 ||  ACSData.last_trigger_counter_fcp[which] < 0) {
+    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0 ||  ACSData.last_trigger_counter_mcp[which] < 0) {
 //        blast_dbg("No mcp counter");
         // One or both of the fcp counters were not yet running at the time of the trigger
         return false;
@@ -628,8 +628,8 @@ static bool XSCHasNewSolution(int which)
         // The stars counters were misaligned at the time of the trigger
         return false;
     }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_fcp != ACSData.last_trigger_counter_fcp[which]) {
-//        blast_dbg("Misaligned fcp counters");
+    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp != ACSData.last_trigger_counter_mcp[which]) {
+//        blast_dbg("Misaligned mcp counters");
         // The fcp counters were misaligned at the time of the trigger
         return false;
     }
@@ -637,118 +637,118 @@ static bool XSCHasNewSolution(int which)
     return true;
 }
 
-static void EvolveXSCSolution(struct ElSolutionStruct *e,
-    struct AzSolutionStruct *a, double gy1, double gy1_off, double gy2,
-    double gy2_off, double gy3, double gy3_off, double old_el, int which)
-{
+static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a, double gy1, double gy1_off,
+        double gy2, double gy2_off, double gy3, double gy3_off, double old_el, int which) {
 
-  //int i_point;
-  double gy_az;
-  double new_az, new_el, ra, dec;
+    //int i_point;
+    double gy_az;
+    double new_az, new_el, ra, dec;
 
-  // When we get a new frame, use these to correct for history
-  double gy_el_delta = 0;
-  double gy_az_delta = 0;
-  int i, j;
+    // When we get a new frame, use these to correct for history
+    double gy_el_delta = 0;
+    double gy_az_delta = 0;
+    int i, j;
 
-  double w1, w2;
+    double w1, w2;
 
-  double el_frame = from_degrees(old_el + 22.0);
+    double el_frame = from_degrees(old_el + 22.0);
 
-  // evolve el
-  e->angle += (gy1 + gy1_off) / SR;
-  e->variance += GYRO_VAR;
+    // evolve el
+    e->angle += (gy1 + gy1_off) / SR;
+    e->variance += GYRO_VAR;
 
-  // evolve az
-  gy_az = (gy2 + gy2_off) * sin(el_frame) + (gy3 + gy3_off) * cos(el_frame);
-  a->angle += gy_az / SR;
-  a->variance += GYRO_VAR;
+    // evolve az
+    gy_az = (gy2 + gy2_off) * sin(el_frame) + (gy3 + gy3_off) * cos(el_frame);
+    a->angle += gy_az / SR;
+    a->variance += GYRO_VAR;
 
-  if (XSCHasNewSolution(which)) {
-    xsc_pointing_state[which].last_solution_stars_counter = XSC_SERVER_DATA(which).channels.image_ctr_stars;
-    blast_info(" xsc%i: received new solution", which);
-    if (ACSData.last_trigger_age_cs[which] < GY_HISTORY_AGE_CS) {
-        blast_info(" xsc%i: new solution young enough to accept", which);
-      //i_point = GETREADINDEX(point_index);
-      ra = to_hours(XSC_SERVER_DATA(which).channels.image_eq_ra);      dec = to_degrees(XSC_SERVER_DATA(which).channels.image_eq_dec);
-      blast_dbg("xsc%i solution is ra, dec: %f, %f (deg)\n", which, to_degrees(from_hours(ra)), dec);
+    if (XSCHasNewSolution(which)) {
+        xsc_pointing_state[which].last_solution_stars_counter = XSC_SERVER_DATA(which).channels.image_ctr_stars;
+        blast_info(" xsc%i: received new solution", which);
+        if (ACSData.last_trigger_age_cs[which] < GY_HISTORY_AGE_CS) {
+            blast_info(" xsc%i: new solution young enough to accept", which);
+            //i_point = GETREADINDEX(point_index);
+            ra = to_hours(XSC_SERVER_DATA(which).channels.image_eq_ra);
+            dec = to_degrees(XSC_SERVER_DATA(which).channels.image_eq_dec);
+            blast_dbg("xsc%i solution is ra, dec: %f, %f (deg)\n", which, to_degrees(from_hours(ra)), dec);
 
-      equatorial_to_horizontal(ra, dec, ACSData.last_trigger_lst[which], ACSData.last_trigger_lat[which], &new_az, &new_el);
+            equatorial_to_horizontal(ra, dec, ACSData.last_trigger_lst[which], ACSData.last_trigger_lat[which], &new_az, &new_el);
 
-      blast_info("converted xsc%i solution to az el %f, %f\n", which, new_az, new_el);
-      xsc_pointing_state[which].az = new_az;
-      xsc_pointing_state[which].el = new_el;
+            blast_info("converted xsc%i solution to az el %f, %f\n", which, new_az, new_el);
+            xsc_pointing_state[which].az = new_az;
+            xsc_pointing_state[which].el = new_el;
 
-      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: Ra = %f hours\n", which, ra);
-      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: Dec = %f degrees\n", which, dec);
-      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: sigma = %f rad\n", which, XSC_SERVER_DATA(which).sigma);
-      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: az = %f degrees\n", which, new_az);
-      //bprintf(loglevel_info, "Pointing: Solution from XSC%i: el = %f degrees\n", which, new_el);
+            //bprintf(loglevel_info, "Pointing: Solution from XSC%i: Ra = %f hours\n", which, ra);
+            //bprintf(loglevel_info, "Pointing: Solution from XSC%i: Dec = %f degrees\n", which, dec);
+            //bprintf(loglevel_info, "Pointing: Solution from XSC%i: sigma = %f rad\n", which, XSC_SERVER_DATA(which).sigma);
+            //bprintf(loglevel_info, "Pointing: Solution from XSC%i: az = %f degrees\n", which, new_az);
+            //bprintf(loglevel_info, "Pointing: Solution from XSC%i: el = %f degrees\n", which, new_el);
 
-      /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
+            /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
 
-      new_az += to_degrees(approximate_az_from_cross_el(CommandData.XSC[which].cross_el_trim, from_degrees(old_el)));
-      new_el += to_degrees(CommandData.XSC[which].el_trim);
+            new_az += to_degrees(approximate_az_from_cross_el(CommandData.XSC[which].cross_el_trim, from_degrees(old_el)));
+            new_el += to_degrees(CommandData.XSC[which].el_trim);
 
-      // This solution is xsc_pointing_data.age_last_stars_solution old: how much have we moved?
-      gy_el_delta = 0;
-      gy_az_delta = 0;
-      for (i = 0; i < ACSData.last_trigger_age_cs[which]; i++) {
-        j = hs.i_history - i;
-        if (j < 0)
-          j += GY_HISTORY_AGE_CS;
+            // This solution is xsc_pointing_data.age_last_stars_solution old: how much have we moved?
+            gy_el_delta = 0;
+            gy_az_delta = 0;
+            for (i = 0; i < ACSData.last_trigger_age_cs[which]; i++) {
+                j = hs.i_history - i;
+                if (j < 0)
+                j += GY_HISTORY_AGE_CS;
 
-        gy_el_delta += (hs.ifel_gy_history[j] + gy1_off) * (1.0 / SR);
-        //TODO: Double-check these static offsets
-        gy_az_delta += ((hs.ifyaw_gy_history[j] + gy2_off) * sin(hs.elev_history[j] + 22.0*M_PI/180.0)
-        + (hs.ifroll_gy_history[j] + gy3_off) * cos(hs.elev_history[j] + 22.0*M_PI/180.0))
-        * (1.0 / SR);
-      }
+                gy_el_delta += (hs.ifel_gy_history[j] + gy1_off) * (1.0 / SR);
+                //TODO: Double-check these static offsets
+                gy_az_delta += ((hs.ifyaw_gy_history[j] + gy2_off) * sin(hs.elev_history[j] + 22.0*M_PI/180.0)
+                        + (hs.ifroll_gy_history[j] + gy3_off) * cos(hs.elev_history[j] + 22.0*M_PI/180.0))
+                * (1.0 / SR);
+            }
 
-      // Evolve el solution
-      e->angle -= gy_el_delta; // rewind to when the frame was grabbed
-      a->angle -= gy_az_delta; // rewind to when the frame was grabbed
+            // Evolve el solution
+            e->angle -= gy_el_delta;// rewind to when the frame was grabbed
+            a->angle -= gy_az_delta;// rewind to when the frame was grabbed
 
-      //bprintf(loglevel_info,"POINTING: Rewinded old SC AZ EL is %f %f\n",a->angle, e->angle);
-      //bprintf(loglevel_info, "CHAPPY: Az averaging old: %f,  and new: %f\n", a->angle, new_az);
+            //bprintf(loglevel_info,"POINTING: Rewinded old SC AZ EL is %f %f\n",a->angle, e->angle);
+            //bprintf(loglevel_info, "CHAPPY: Az averaging old: %f,  and new: %f\n", a->angle, new_az);
 
-      w1 = 1.0 / (e->variance);
-      if (XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing > M_PI) {
-        w2 = 0.0;
-      } else {
-        w2 = 10.0 * XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing * (180.0 / M_PI); //e->samp_weight;
-        if (w2 > 0.0)
-          w2 = 1.0 / (w2 * w2);
-        else
-          w2 = 0.0; // shouldn't happen
-      }
-      //bprintf(loglevel_info,"POINTING: ESC%i_SIGMA and SC weight w2:  %f %f\n", which,
-        //XSC_SERVER_DATA(which).sigma,w2);
+            w1 = 1.0 / (e->variance);
+            if (XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing > M_PI) {
+                w2 = 0.0;
+            }
+            else {
+                w2 = 10.0 * XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing * (180.0 / M_PI); //e->samp_weight;
+                if (w2 > 0.0)
+                w2 = 1.0 / (w2 * w2);
+                else
+                w2 = 0.0;// shouldn't happen
+            }
+            //bprintf(loglevel_info,"POINTING: ESC%i_SIGMA and SC weight w2:  %f %f\n", which,
+            //XSC_SERVER_DATA(which).sigma,w2);
 
-      UnwindDiff(e->angle, &new_el);
-      UnwindDiff(a->angle, &new_az);
+            UnwindDiff(e->angle, &new_el);
+            UnwindDiff(a->angle, &new_az);
 
-      e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);
-      //bprintf(loglevel_info,"POINTING: Rewinded averaged SC  EL is %f\n", e->angle);
-      e->variance = 1.0 / (w1 + w2);
-      e->angle += gy_el_delta; // add back to now
-      e->angle = normalize_angle_360(e->angle);
+            e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);
+            //bprintf(loglevel_info,"POINTING: Rewinded averaged SC  EL is %f\n", e->angle);
+            e->variance = 1.0 / (w1 + w2);
+            e->angle += gy_el_delta;// add back to now
+            e->angle = normalize_angle_360(e->angle);
 
-      // evolve az solution
-      w1 = 1.0 / (a->variance);
-      // w2 already set
+            // evolve az solution
+            w1 = 1.0 / (a->variance);
+            // w2 already set
 
-      a->angle = (w1 * a->angle + new_az * w2) / (w1 + w2);
-      //bprintf(loglevel_info,"POINTING: Rewinded averaged SC AZ is %f\n", a->angle);
-      a->variance = 1.0 / (w1 + w2);
-      a->angle += gy_az_delta; // add back to now
-      a->angle = normalize_angle_360(a->angle);
+            a->angle = (w1 * a->angle + new_az * w2) / (w1 + w2);
+            //bprintf(loglevel_info,"POINTING: Rewinded averaged SC AZ is %f\n", a->angle);
+            a->variance = 1.0 / (w1 + w2);
+            a->angle += gy_az_delta;// add back to now
+            a->angle = normalize_angle_360(a->angle);
 
-      //bprintf(loglevel_info, "CHAPPY: Az result is: %f\n", a->angle);
-      //bprintf(loglevel_info,"POINTING: Evolved SC AZ EL is %f %f\n",a->angle, e->angle);
+            //bprintf(loglevel_info, "CHAPPY: Az result is: %f\n", a->angle);
+            //bprintf(loglevel_info,"POINTING: Evolved SC AZ EL is %f %f\n",a->angle, e->angle);
 
+        }
     }
-  }
 }
 
 /* Gyro noise: 7' / rt(hour) */
@@ -911,6 +911,25 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 }
 
 void AutoTrimToSC();    //defined below
+
+
+static void xsc_calculate_full_pointing_estimated_location(int which)
+{
+    int pointing_read_index = GETREADINDEX(point_index);
+    double az = from_degrees(PointingData[pointing_read_index].az);
+    double el = from_degrees(PointingData[pointing_read_index].el);
+    double xsc_az = az - approximate_az_from_cross_el(CommandData.XSC[which].cross_el_trim, el);
+    double xsc_el = el - CommandData.XSC[which].el_trim;
+    double xsc_ra_hours = 0.0;
+    double xsc_dec_deg = 0.0;
+    horizontal_to_equatorial(to_degrees(xsc_az), to_degrees(xsc_el), PointingData[pointing_read_index].lst, PointingData[pointing_read_index].lat, &xsc_ra_hours, &xsc_dec_deg);
+
+    PointingData[point_index].estimated_xsc_az_deg[which] = to_degrees(xsc_az);
+    PointingData[point_index].estimated_xsc_el_deg[which] = to_degrees(xsc_el);
+    PointingData[point_index].estimated_xsc_ra_hours[which] = xsc_ra_hours;
+    PointingData[point_index].estimated_xsc_dec_deg[which] = xsc_dec_deg;
+}
+
 
 ///TODO: Split up Pointing() in manageable chunks for each sensor
 /*****************************************************************
@@ -1361,6 +1380,8 @@ void Pointing(void)
     PointingData[point_index].offset_ifroll_gy_xsc[1] = OSCAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyaw_gy_xsc[1] = OSCAz.offset_ifyaw_gy;
 
+    xsc_calculate_full_pointing_estimated_location(0);
+    xsc_calculate_full_pointing_estimated_location(1);
     /********************/
     /* Set Manual Trims */
     if (CommandData.autotrim_enable)

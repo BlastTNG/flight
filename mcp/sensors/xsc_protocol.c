@@ -1,5 +1,6 @@
 #include "xsc_protocol.h"
 #include <string.h>
+#include <stdbool.h>
 
 #if defined(_MSC_VER) && _MSC_VER >= 1400
 #pragma warning(push)
@@ -211,7 +212,7 @@ void xsc_init_server_data(XSCServerData* server_data)
 {
     memset(server_data, 0, sizeof(XSCServerData));
     server_data->channels.ctr_stars = -1;
-    server_data->channels.image_ctr_fcp = -1;
+    server_data->channels.image_ctr_mcp = -1;
     server_data->channels.image_ctr_stars = -1;
 }
 

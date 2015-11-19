@@ -694,12 +694,12 @@ void store_100hz_xsc(int which)
     static int intermediate_frame_counter[2] = {0, 0};
 
     static channel_t* address_xN_ctr_stars[2];
-    static channel_t* address_xN_image_ctr_fcp[2];
+    static channel_t* address_xN_image_ctr_mcp[2];
     static channel_t* address_xN_image_ctr_stars[2];
 
-    static channel_t* address_xN_ctr_fcp;
+    static channel_t* address_xN_ctr_mcp;
     static channel_t* address_xN_last_trig_age_cs;
-    static channel_t* address_xN_last_trig_ctr_fcp;
+    static channel_t* address_xN_last_trig_ctr_mcp;
     static channel_t* address_xN_last_trig_ctr_stars[2];
     static channel_t* address_xN_predicted_motion_px;
     static channel_t* address_xN_image_blobn_x[2];
@@ -711,14 +711,14 @@ void store_100hz_xsc(int which)
         firsttime[which] = false;
 
         if (which == 0) {
-            address_xN_ctr_fcp                      = get_xsc_channel("ctr_fcp"              , 0);
+            address_xN_ctr_mcp                      = get_xsc_channel("ctr_mcp"              , 0);
             address_xN_last_trig_age_cs             = get_xsc_channel("last_trig_age_cs"     , 0);
-            address_xN_last_trig_ctr_fcp            = get_xsc_channel("last_trig_ctr_fcp"    , 0);
+            address_xN_last_trig_ctr_mcp            = get_xsc_channel("last_trig_ctr_mcp"    , 0);
             address_xN_predicted_motion_px          = get_xsc_channel("predicted_motion_px"     , which);
         }
         address_xN_ctr_stars[which]                 = get_xsc_channel("ctr_stars", which);
         address_xN_image_ctr_stars[which]           = get_xsc_channel("image_ctr_stars", which);
-        address_xN_image_ctr_fcp[which]             = get_xsc_channel("image_ctr_fcp", which);
+        address_xN_image_ctr_mcp[which]             = get_xsc_channel("image_ctr_mcp", which);
         address_xN_last_trig_ctr_stars[which]       = get_xsc_channel("last_trig_ctr_stars"     , which);
         address_xN_image_blobn_x[which]             = get_xsc_channel("image_blobn_x"   , which);
         address_xN_image_blobn_y[which]             = get_xsc_channel("image_blobn_y"   , which);
@@ -727,16 +727,16 @@ void store_100hz_xsc(int which)
     }
 
     if (which == 0) {
-        SET_VALUE(address_xN_ctr_fcp             , xsc_pointing_state[which].counter_fcp);
+        SET_VALUE(address_xN_ctr_mcp             , xsc_pointing_state[which].counter_fcp);
         SET_VALUE(address_xN_last_trig_age_cs    , xsc_pointing_state[which].last_trigger.age_cs);
-        SET_VALUE(address_xN_last_trig_ctr_fcp   , xsc_pointing_state[which].last_trigger.counter_fcp);
+        SET_VALUE(address_xN_last_trig_ctr_mcp   , xsc_pointing_state[which].last_trigger.counter_fcp);
         SET_VALUE(address_xN_predicted_motion_px, TX_CONVERT(VELOCITY, xsc_pointing_state[0].predicted_motion_px));
     }
 
 
     SET_INT32(address_xN_ctr_stars[which], XSC_SERVER_DATA(which).channels.ctr_stars);
     SET_INT32(address_xN_image_ctr_stars[which], XSC_SERVER_DATA(which).channels.image_ctr_stars);
-    SET_INT32(address_xN_image_ctr_fcp[which], XSC_SERVER_DATA(which).channels.image_ctr_fcp);
+    SET_INT32(address_xN_image_ctr_mcp[which], XSC_SERVER_DATA(which).channels.image_ctr_mcp);
     SET_VALUE(address_xN_last_trig_ctr_stars[which], xsc_pointing_state[which].last_trigger.counter_stars);
 
     if (XSC_SERVER_DATA(which).blobs.counter_stars != last_blob_counter_stars[which] &&
