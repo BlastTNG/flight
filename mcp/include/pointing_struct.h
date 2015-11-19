@@ -231,7 +231,7 @@ struct XSCLastTriggerState
 
 struct XSCPointingState {
     struct XSCLastTriggerState last_trigger;
-    int counter_fcp;                      // the current counter_fcp, passed to the star camera after some delay
+    int counter_mcp;                      // the current counter_fcp, passed to the star camera after some delay
     int last_counter_fcp;                 // the last counter_fcp, passed to the star camera before the delay that allows for the current counter
     int last_solution_stars_counter;      // stars counter of last solution used in pointing solution
     double az; // XSC Az

@@ -727,7 +727,7 @@ void store_100hz_xsc(int which)
     }
 
     if (which == 0) {
-        SET_VALUE(address_xN_ctr_mcp             , xsc_pointing_state[which].counter_fcp);
+        SET_VALUE(address_xN_ctr_mcp             , xsc_pointing_state[which].counter_mcp);
         SET_VALUE(address_xN_last_trig_age_cs    , xsc_pointing_state[which].last_trigger.age_cs);
         SET_VALUE(address_xN_last_trig_ctr_mcp   , xsc_pointing_state[which].last_trigger.counter_fcp);
         SET_VALUE(address_xN_predicted_motion_px, TX_CONVERT(VELOCITY, xsc_pointing_state[0].predicted_motion_px));

@@ -63,7 +63,7 @@
 
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
-struct XSCPointingState xsc_pointing_state[2] = {{.counter_fcp = 0}};
+struct XSCPointingState xsc_pointing_state[2] = {{.counter_mcp = 0}};
 
 struct ElAttStruct {
   double el;
@@ -1502,7 +1502,7 @@ void InitializePointingData()
     xsc_pointing_state[which].last_trigger.motion_el_px = 0.0;
     xsc_pointing_state[which].last_trigger.lat = 0.0;
     xsc_pointing_state[which].last_trigger.lst = 0;
-    xsc_pointing_state[which].counter_fcp = -1;
+    xsc_pointing_state[which].counter_mcp = -1;
     xsc_pointing_state[which].last_counter_fcp = -1;
     xsc_pointing_state[which].last_solution_stars_counter = -1;
     xsc_pointing_state[which].az = 0.0;

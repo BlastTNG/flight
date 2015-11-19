@@ -141,7 +141,7 @@ void xsc_write_data(int which)
 
     if (xsc_pointing_state[which].last_trigger.age_of_end_of_trigger_cs >
             CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs) {
-        xsc_client_data.counter_fcp = xsc_pointing_state[which].counter_fcp;
+        xsc_client_data.counter_fcp = xsc_pointing_state[which].counter_mcp;
     } else {
         xsc_client_data.counter_fcp = xsc_pointing_state[which].last_counter_fcp;
     }
