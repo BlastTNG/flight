@@ -194,6 +194,7 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
   if (m_rc->output_dirfile)
     m_rc->output_dirfile = resolve_output_dirfile(m_rc->output_dirfile, m_rc->dest_dir);
 
+  g_option_context_free(context);
 }
 
 

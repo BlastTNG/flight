@@ -473,6 +473,10 @@ static void *defricher_write_loop(void *m_arg)
             dirfile_name = rc.output_dirfile;
             rc.output_dirfile = defricher_get_new_dirfilename();
             BLAST_SAFE_FREE(dirfile_name);
+
+            if (dirfile) gd_close(dirfile);
+            dirfile = NULL;
+
             if (!(dirfile = defricher_init_new_dirfile(rc.output_dirfile, channels))) {
                 defricher_err( "Not creating new DIRFILE %s", rc.output_dirfile);
                 sleep(1);
@@ -510,6 +514,12 @@ static void *defricher_write_loop(void *m_arg)
         }
         usleep(100);
     }
+
+    if (dirfile) gd_close(dirfile);
+    defricher_free_channels_list(channels);
+    if (channels) free(channels);
+    if (derived_channels) free(derived_channels);
+    if (packet_queue) g_async_queue_unref(packet_queue);
 
     return NULL;
 }
