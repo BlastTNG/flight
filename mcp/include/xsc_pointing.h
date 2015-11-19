@@ -28,7 +28,7 @@
 #ifndef INCLUDE_XSC_POINTING_H_
 #define INCLUDE_XSC_POINTING_H_
 
-void xsc_control_triggers();
-
+void xsc_control_triggers(void);
+void xsc_control_heaters(void);
 
 #endif /* INCLUDE_XSC_POINTING_H_ */
