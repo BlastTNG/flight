@@ -148,9 +148,12 @@ channel_t channel_list[] =
     {"x1_cd_robust_mode",1.0, 0.0, TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x1_cd_motion_psf",1.0, 0.0, TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
 
-    {"x0_ctr_fcp",1.0, 0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
+    {"x1_heater", 1.0, 0.0, TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
+    {"x0_heater", 1.0, 0.0, TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
+
+    {"x0_ctr_mcp",1.0, 0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_last_trig_age_cs",1.0, 0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x0_last_trig_ctr_fcp",1.0, 0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
+    {"x0_last_trig_ctr_mcp",1.0, 0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_predicted_motion_px",CONVERSIONS_VELOCITY_M, CONVERSIONS_VELOCITY_B, TYPE_UINT16, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_last_trig_ctr_stars",1.0, 0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_image_blobn_x",CONVERSIONS_BLOB_POS_M, CONVERSIONS_BLOB_POS_B, TYPE_UINT16, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
@@ -171,7 +174,7 @@ channel_t channel_list[] =
 
     {"x0_ctr_stars",               1.0,            0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_image_ctr_stars",         1.0,            0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x0_image_ctr_fcp",           1.0,            0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
+    {"x0_image_ctr_mcp",           1.0,            0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
 
     {"x0_hk_temp_lens",    CONVERSIONS_TEMPERATURE_M,  CONVERSIONS_TEMPERATURE_B,  TYPE_UINT16, RATE_1HZ, SRC_FC, U_T_C, 0, 0, 0},
     {"x0_hk_temp_comp",    CONVERSIONS_TEMPERATURE_M,  CONVERSIONS_TEMPERATURE_B,  TYPE_UINT16, RATE_1HZ, SRC_FC, U_T_C, 0, 0, 0},
@@ -220,7 +223,7 @@ channel_t channel_list[] =
 
     {"x1_ctr_stars",               1.0,            0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x1_image_ctr_stars",         1.0,            0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x1_image_ctr_fcp",           1.0,            0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
+    {"x1_image_ctr_mcp",           1.0,            0.0, TYPE_INT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0},
 
     {"x1_hk_temp_lens",    CONVERSIONS_TEMPERATURE_M,  CONVERSIONS_TEMPERATURE_B,  TYPE_UINT16, RATE_1HZ, SRC_FC, U_T_C, 0, 0, 0},
     {"x1_hk_temp_comp",    CONVERSIONS_TEMPERATURE_M,  CONVERSIONS_TEMPERATURE_B,  TYPE_UINT16, RATE_1HZ, SRC_FC, U_T_C, 0, 0, 0},
