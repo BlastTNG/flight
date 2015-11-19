@@ -187,6 +187,7 @@ static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_li
 
             if (!outfile_node->output.fp) {
                 defricher_err("Could not open %s", filename);
+                free(filename);
                 switch(errno) {
                     case ELOOP:
                         defricher_err("Too many loops in the directory %s.  Please remove the directory and try again.", outfile_node->output.name);
@@ -212,6 +213,7 @@ static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_li
                 }
                 return -1;
             }
+            free(filename);
             outfile_node->output.offset = 0;
         }
     }
