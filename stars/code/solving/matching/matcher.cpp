@@ -105,13 +105,15 @@ vector<Star> Matcher::match_stars_to_blob(Solution& solution, Blob& blob, vector
     double distance = 0.0;
     double width = image_width;
     double height = image_height;
+	double hyp = sqrt(width*width + height*height) * solution.equatorial.iplatescale;
     double tolerance_squared = pow(shared_settings.match_tolerance_px, 2.0);
     double distance_squared = numeric_limits<double>::infinity();
     double best_distance_squared = numeric_limits<double>::infinity();
     unsigned int best_i = -1;
     for (unsigned int i=0; i<stars.size(); i++) {
         distance = great_circle(solution.equatorial.ra, solution.equatorial.dec, stars[i].ra, stars[i].dec);
-        if (distance < from_degrees(2.5)) {
+		
+        if (distance < from_arcsec(hyp)) {
             Tools::get_refraction_corrected_equatorial(stars[i].ra, stars[i].dec,
                 shared_settings.refraction, image.filters, star_ra, star_dec);
             Tools::ccd_projection(star_ra, star_dec, solution.equatorial.ra, solution.equatorial.dec,
@@ -182,11 +184,6 @@ void Matcher::calculate_pvalue(Solution& solution)
 
 bool Matcher::get_next_base_set(BaseSet& base_set, int num_blobs, bool reset)
 {
-    //  This is the process to check all triangles:
-    //      (int dj = 1; dj <= n-2;        dj++)
-    //      (int dk = 1; dk <= n-1-dj;     dk++)
-    //      (int i  = 0; i  <= n-1-dj-dk;  i++ )
-
     if (reset) {
         base_set_counter = 0;
         shared_matching.counter_stars = shared_status.counter_stars;
@@ -202,11 +199,9 @@ bool Matcher::get_next_base_set(BaseSet& base_set, int num_blobs, bool reset)
     int n = std::min(7, num_blobs);
 
     unsigned int j, k;
-    for (int          dj = 1;     dj <= n-2;        dj++) {
-        for (int      dk = 1;     dk <= n-1-dj;     dk++) {
-            for (int  i  = 0;     i  <= n-1-dj-dk;  i++ ) {
-                j = i + dj;
-                k = j + dk;
+    for (int i = 0; i < n - 2; i++) {
+        for (int j = i + 1; j < n - 1; j++) {
+			for (int k = j + 1; k < n; k++) {
                 if (counter == base_set_counter) {
                     base_set.ids[0] = i;
                     base_set.ids[1] = j;
@@ -221,9 +216,8 @@ bool Matcher::get_next_base_set(BaseSet& base_set, int num_blobs, bool reset)
     }
 
     n = num_blobs;
-    for (int    dj = 1;   dj <= n-1;     dj++) {
-        for (int   i=0;    i <= n-1-dj;   i++) {
-            j = i + dj;
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = i + 1; j < n; j++) {
             if (counter == base_set_counter) {
                 base_set.ids[0] = i;
                 base_set.ids[1] = j;
