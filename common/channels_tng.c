@@ -227,9 +227,8 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
     }
     m_map->crc = crcval;
 
-    *m_channel_list = balloc(err, sizeof(channel_t) * m_map->length);
+    *m_channel_list = calloc(m_map->length, sizeof(channel_t));
     if (!(*m_channel_list)) return -1;
-    memset(*m_channel_list, 0, sizeof(channel_t) * m_map->length);
 
     /**
      * Copy over the data values one at a time from the packed to the aligned structure
@@ -362,9 +361,8 @@ int channels_initialize(const channel_t * const m_channel_list)
 
             if (frame_size[src][rate]) {
                 /// Ensure that we can dereference the data without knowing its type by keeping an extra 8 bytes allocated at the end
-                channel_data[src][rate] = malloc(frame_size[src][rate] +  sizeof(uint64_t));
-                memset(channel_data[src][rate], 0, frame_size[src][rate] +  sizeof(uint64_t));
-                blast_startup("Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
+                channel_data[src][rate] = calloc(1,frame_size[src][rate] +  sizeof(uint64_t));
+                blast_mem("Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
                         (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                         (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
                         (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
