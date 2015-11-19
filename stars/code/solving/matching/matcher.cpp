@@ -113,7 +113,7 @@ vector<Star> Matcher::match_stars_to_blob(Solution& solution, Blob& blob, vector
     for (unsigned int i=0; i<stars.size(); i++) {
         distance = great_circle(solution.equatorial.ra, solution.equatorial.dec, stars[i].ra, stars[i].dec);
 		
-        if (distance < from_arcsec(hyp)) {
+        if (distance < hyp) {
             Tools::get_refraction_corrected_equatorial(stars[i].ra, stars[i].dec,
                 shared_settings.refraction, image.filters, star_ra, star_dec);
             Tools::ccd_projection(star_ra, star_dec, solution.equatorial.ra, solution.equatorial.dec,
@@ -198,7 +198,6 @@ bool Matcher::get_next_base_set(BaseSet& base_set, int num_blobs, bool reset)
     int counter = 0;
     int n = std::min(7, num_blobs);
 
-    unsigned int j, k;
     for (int i = 0; i < n - 2; i++) {
         for (int j = i + 1; j < n - 1; j++) {
 			for (int k = j + 1; k < n; k++) {

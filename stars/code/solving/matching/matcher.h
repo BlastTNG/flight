@@ -62,7 +62,7 @@ class Solving::Matching::Matcher
     Solving::Matching::CatalogManager catalog_manager;
     PatternMatching::SolutionFitter solution_fitter;
     Fluxer fluxer;
-    int image_width, image_height;
+    int image_width, image_height, image_hyp;
     int result_update_success_counter, result_update_failure_counter;
     int base_set_counter;
 };
