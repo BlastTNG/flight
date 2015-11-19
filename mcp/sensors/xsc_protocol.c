@@ -189,18 +189,12 @@ void xsc_clear_client_data(XSCClientData* client_data)
     client_data->xsc_protocol_version = 0;
 }
 
-static void decrement_is_new_countdown(unsigned int* countdown)
-{
-    if (*countdown > 0) {
-        (*countdown)--;
-    }
-}
-
 void xsc_decrement_is_new_countdowns(XSCClientData* client_data)
 {
     unsigned int i=0;
     for (i=0; i<xC_num_command_admins; i++) {
-        decrement_is_new_countdown(&client_data->command_admins[i].is_new_countdown);
+        if (client_data->command_admins[i].is_new_countdown)
+            client_data->command_admins[i].is_new_countdown--;
     }
 }
 
