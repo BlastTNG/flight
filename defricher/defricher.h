@@ -39,10 +39,6 @@
 #endif
 #endif
 
-/* upped from 50 to 200 to handle high latencies of rsyncing frame files */
-#define INPUT_BUF_SIZE 200 /* Frames are big (~1 kb) and we take a big
-                           * performance hit if we read more than 64k at a
-                           * time, so we keep this small */
 
 #if FIELD_LEN < 6
 #  define FIELD_MAX 6
@@ -87,7 +83,6 @@ struct ri_struct {
   int wrote;                // Current number of samples written
   bool new_channels;        // Have we received a new channels structure?
   bool channels_ready;      // Is the channels structure initialized?
-  bool dirfile_ready;       // Is the dirfile initialized and ready for writing
   bool symlink_updated;     // Is the symbolic link current with the new dirfile?
   bool writer_done;
   bool tty;              // Boolean is there a message for output?

@@ -26,12 +26,15 @@
 #ifndef DEFRICHER_WRITER_H_
 #define DEFRICHER_WRITER_H_
 
+#include <stdint.h>
+#include <glib.h>
+
 extern channel_t *channels;
 extern channel_t *new_channels;
 extern derived_tng_t *derived_channels;
 
-int defricher_writer_init(void);
-int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_rate);
+pthread_t defricher_writer_init(void);
+void defricher_queue_packet(uint16_t m_source, uint16_t m_rate);
 void defricher_request_new_dirfile(void);
 void defricher_request_updated_derived(void);
 

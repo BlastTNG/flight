@@ -68,8 +68,9 @@ static GOptionEntry cmdline_options[] =
 struct ri_struct ri;
 struct rc_struct rc;
 
-static const double TC = 0.7;
-sigset_t signals;
+static const double TC = 1.7;
+static pthread_t writer_thread;
+static pthread_t reader_thread;
 
 void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
                 const gchar* message, gpointer user_data)
@@ -77,6 +78,11 @@ void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
     printf("%s\n", message);
 }
 
+void shutdown_defricher(int sig) {
+    fprintf(stderr, "Shutting down Defricher on signal %d", sig);
+    ri.writer_done = true;
+    ri.reader_done = true;
+}
 
 void segv_handler(int sig) {
     void *array[10];
@@ -243,19 +249,15 @@ int main(int argc, char** argv)
     gettimeofday(&ri.last, &rc.tz);
 
     /* set up signal masks */
-//    signal(SIGBUS, segv_handler);
-//    signal(SIGILL, segv_handler);
-//    sigemptyset(&signals);
-//    sigaddset(&signals, SIGHUP);
-//    sigaddset(&signals, SIGINT);
-//    sigaddset(&signals, SIGTERM);
-//
-//    /* block signals */
-//    pthread_sigmask(SIG_BLOCK, &signals, NULL);
+    signal(SIGBUS, segv_handler);
+    signal(SIGILL, segv_handler);
+
+    signal(SIGINT, shutdown_defricher);
+    signal(SIGQUIT, shutdown_defricher);
 
     /* Spawn client/reader and writer */
-    defricher_writer_init();
-    netreader_init(rc.source);
+    writer_thread = defricher_writer_init();
+    reader_thread = netreader_init(rc.source);
 
     /* Main status loop -- if we're in silent mode we skip this entirely and
      * just wait for the read and write threads to exit */
@@ -264,7 +266,7 @@ int main(int argc, char** argv)
             if (!ri.tty) {
                 gettimeofday(&now, &rc.tz);
                 delta = (now.tv_sec - ri.last.tv_sec) + (now.tv_usec - ri.last.tv_usec) / 1000000.;
-                nf = (ri.wrote - ri.lw) / 20.;
+                nf = (ri.wrote - ri.lw);
                 ri.last = now;
                 ri.lw = ri.wrote;
                 fr = nf / TC + fr * (1 - delta / TC);
@@ -279,8 +281,8 @@ int main(int argc, char** argv)
             }
             usleep(500000);
         } while (!ri.writer_done);
-//    pthread_join(read_thread, NULL);
-//    pthread_join(write_thread, NULL);
+    pthread_join(reader_thread, NULL);
+    pthread_join(writer_thread, NULL);
     if (!rc.silent) {
             bprintf(info, "%s R:[%i] W:[%i] %.*f Hz", rc.output_dirfile, ri.read, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
     }

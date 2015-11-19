@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
+#include <glib.h>
 
 #include <channels_tng.h>
 #include <channel_macros.h>
@@ -46,15 +47,24 @@
 #include "defricher_data.h"
 
 extern struct ri_struct ri;
-pthread_t write_thread;
 
 channel_t *channels = NULL;
 channel_t *new_channels = NULL;
 derived_tng_t *derived_channels = NULL;
 
+static GAsyncQueue *packet_queue = NULL;
+typedef union {
+    gpointer ptr;
+    struct {
+        uint16_t source;
+        uint16_t rate;
+    };
+} queue_data_t;
+
+static int dirfile_offset = -1;
 static int dirfile_create_new = 0;
 static int dirfile_update_derived = 0;
-static int dirfile_ready = 0;
+static bool dirfile_ready = false;
 static int dirfile_frames_written = 0;
 
 static void defricher_add_derived(DIRFILE *m_file, derived_tng_t *m_derived)
@@ -124,12 +134,11 @@ static void defricher_add_derived(DIRFILE *m_file, derived_tng_t *m_derived)
 //TODO: Fix get_new_dirfilename to take options into account
 static char *defricher_get_new_dirfilename(void)
 {
-    static char *filename = NULL;
+    char *filename = NULL;
     static time_t start_time = 0;
     static uint32_t chunk = 0;
 
     if (!start_time) start_time = time(NULL);
-    BLAST_SAFE_FREE(filename);
     if (asprintf(&filename, "%s/%lu_%03X.dirfile", rc.dest_dir, start_time, chunk++) < 0)
     {
         defricher_fatal("Could not allocate memory for filename!");
@@ -171,7 +180,7 @@ static void defricher_free_channels_list (channel_t *m_channel_list)
 
 static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_list)
 {
-    const char *filename;
+    char *filename;
     char error_str[2048];
 
     for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
@@ -353,6 +362,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
         }
 
         gd_reference(new_file, "mcp_200hz_framecount");
+        gd_alter_frameoffset(new_file, dirfile_offset, GD_ALL_FRAGMENTS, 0);
         gd_metaflush(new_file);
     }
     else
@@ -366,8 +376,38 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     return new_file;
 }
 
-//TODO: Add FIFO buffering
-int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_rate)
+void defricher_queue_packet(uint16_t m_source, uint16_t m_rate)
+{
+    queue_data_t new_pkt = {.ptr = 0};
+
+    if (dirfile_offset < 0) {
+        if ((m_source == SRC_FC) && (m_rate == RATE_1HZ)) {
+            channel_t *frame_offset = channels_find_by_name("mcp_1hz_framecount");
+            if (frame_offset) {
+                defricher_cache_node_t *outfile_node = frame_offset->var;
+                dirfile_offset = __bswap_32(*outfile_node->_32bit_data);
+                defricher_info("Setting offset to %d", dirfile_offset);
+            }
+            else {
+                defricher_err("Missing \"mcp_1hz_framecount\" channel.  Please report this!");
+                dirfile_offset = 0;
+            }
+        } else {
+            /**
+             * We are looking for the 1Hz packet to mark the start of a new frame.  Until we receive
+             * it, we discard the extra sub-frames.
+             */
+            return;
+        }
+    }
+    new_pkt.source = m_source;
+    new_pkt.rate = m_rate;
+
+    g_async_queue_push(packet_queue, new_pkt.ptr);
+}
+
+
+static int defricher_write_packet(uint16_t m_source, uint16_t m_rate)
 {
     static int have_warned = 1;
 
@@ -376,18 +416,18 @@ int defricher_write_packet(channel_t *m_channel_list, E_SRC m_source, E_RATE m_r
         return -1;
     }
 
-    if (!ri.dirfile_ready) {
+    if (!dirfile_ready) {
         if (!have_warned) defricher_info("Discarding frame due to DIRFILE not being ready for writing");
         have_warned = 1;
         return -1;
     }
 
-    ri.wrote ++;
+    if (m_source == SRC_FC && m_rate == RATE_200HZ) ri.wrote ++;
     have_warned = 0;
-    for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
+    for (channel_t *channel = channels; channel->field[0]; channel++) {
         if (channel->source != m_source || channel->rate != m_rate) continue;
         defricher_cache_node_t *outfile_node = channel->var;
-        if (outfile_node && outfile_node->magic == BLAST_MAGIC32 ) {
+        if (outfile_node && outfile_node->magic == BLAST_MAGIC32 && outfile_node->output.fp ) {
             if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
                 defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
@@ -409,6 +449,7 @@ static void *defricher_write_loop(void *m_arg)
     while (!ri.writer_done)
     {
         if (ri.new_channels) {
+            ri.channels_ready = false;
             if (channels_initialize(new_channels) < 0) {
                 defricher_err("Could not initialize channels");
                 ri.new_channels = false;
@@ -423,11 +464,12 @@ static void *defricher_write_loop(void *m_arg)
                 defricher_transfer_channel_list(channels);
                 ri.channels_ready = true;
                 dirfile_create_new = 1;
+                dirfile_offset = -1;
+                dirfile_ready = false;
             }
 
         }
-        if (dirfile_create_new) {
-            dirfile_ready = 0;
+        if (dirfile_create_new && dirfile_offset >= 0) {
             dirfile_name = rc.output_dirfile;
             rc.output_dirfile = defricher_get_new_dirfilename();
             BLAST_SAFE_FREE(dirfile_name);
@@ -441,7 +483,7 @@ static void *defricher_write_loop(void *m_arg)
                 ri.writer_done = true;
             } else {
                 dirfile_create_new = 0;
-                ri.dirfile_ready = true;
+                dirfile_ready = true;
                 ri.symlink_updated = false;
                 dirfile_frames_written = 0;
             }
@@ -453,9 +495,18 @@ static void *defricher_write_loop(void *m_arg)
             ri.symlink_updated = true;
         }
 
-        if (ri.dirfile_ready && dirfile_update_derived) {
+        if (dirfile_ready && dirfile_update_derived) {
             defricher_add_derived(dirfile, derived_channels);
             dirfile_update_derived = 0;
+        }
+
+        while(g_async_queue_length(packet_queue)) {
+            queue_data_t pkt;
+
+            if ((pkt.ptr = g_async_queue_pop(packet_queue))) {
+                defricher_write_packet(pkt.source, pkt.rate);
+            }
+
         }
         usleep(100);
     }
@@ -477,10 +528,11 @@ void defricher_request_updated_derived(void)
  * Initializes the Defricher writing variables and loop
  * @return
  */
-int defricher_writer_init(void)
+pthread_t defricher_writer_init(void)
 {
     size_t stack_size;
     pthread_attr_t attr;
+    pthread_t write_thread;
 
     pthread_attr_init(&attr);
     pthread_attr_getstacksize(&attr, &stack_size);
@@ -494,7 +546,8 @@ int defricher_writer_init(void)
         pthread_attr_setstacksize(&attr, stack_size);
     }
 
-    pthread_create(&write_thread, &attr, &defricher_write_loop, NULL);
-
+    packet_queue = g_async_queue_new();
+    if (!pthread_create(&write_thread, &attr, &defricher_write_loop, NULL))
+        return write_thread;
     return 0;
 }

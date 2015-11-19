@@ -46,7 +46,6 @@
 #endif
 
 static struct mosquitto *mosq;
-pthread_t netread_thread;
 
 static char client_id[HOST_NAME_MAX+1] = {0};
 static char remote_host[HOST_NAME_MAX+1] = {0};
@@ -85,7 +84,7 @@ static void frame_handle_data(const char *m_src, const char *m_rate, const void 
     }
 
     channels_store_data(src->position, rate->position, m_data, m_len);
-    defricher_write_packet(channels, src->position, rate->position);
+    defricher_queue_packet(src->position, rate->position);
 }
 
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
@@ -139,20 +138,12 @@ static void frame_connect_callback(struct mosquitto *mosq, void *userdata, int r
     }
 }
 
-static void frame_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count, const int *granted_qos)
-{
-    int i;
-
-    defricher_info( "Subscribed (mid: %d): %d", mid, granted_qos[0]);
-    for(i=1; i<qos_count; i++){
-        defricher_info( "\t %d", granted_qos[i]);
-    }
-}
-
 static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
 {
-    if (level & ( MOSQ_LOG_ERR | MOSQ_LOG_WARNING ))
-        defricher_info( "%s\n", str);
+    if (level & MOSQ_LOG_ERR)
+        defricher_err( "%s\n", str);
+    else if (level & MOSQ_LOG_WARNING)
+        defricher_warn( "%s\n", str);
 }
 
 
@@ -207,28 +198,28 @@ static void *netreader_routine(void *m_arg)
  * Initializes the mosquitto library and associated framing routines.
  * @return
  */
-int netreader_init(const char *m_host)
+pthread_t netreader_init(const char *m_host)
 {
-    bool clean_session = false;
+    pthread_t netread_thread;
 
     gethostname(client_id, HOST_NAME_MAX);
     strncpy(remote_host, m_host, HOST_NAME_MAX);
 
     mosquitto_lib_init();
-    mosq = mosquitto_new(client_id, clean_session, NULL);
+    mosq = mosquitto_new(client_id, false, NULL);
     if (!mosq) {
         defricher_strerr("mosquitto_new() failed");
-        return -1;
+        return 0;
     }
     mosquitto_log_callback_set(mosq, frame_log_callback);
 
     mosquitto_connect_callback_set(mosq, frame_connect_callback);
     mosquitto_message_callback_set(mosq, frame_message_callback);
-    mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
+//    mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
 
     if (mosquitto_connect(mosq, remote_host, port, keepalive)) {
         defricher_strerr("Unable to connect.\n");
-        return -1;
+        return 0;
     }
 
     mosquitto_subscribe(mosq, NULL, "frames/#", 2);
@@ -236,7 +227,8 @@ int netreader_init(const char *m_host)
     mosquitto_subscribe(mosq, NULL, "derived/#", 2);
 
 
-    pthread_create(&netread_thread, NULL, &netreader_routine, NULL);
+    if (!pthread_create(&netread_thread, NULL, &netreader_routine, NULL))
+            return netread_thread;
     return 0;
 }
 
