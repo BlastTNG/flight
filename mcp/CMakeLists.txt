@@ -54,7 +54,8 @@ add_definitions(-D_GNU_SOURCE)
 find_package(PkgConfig)
 
 # Find Threading lib
-find_package (Threads)
+find_package (Threads REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # Find ExternalProject module
 include (ExternalProject)
@@ -136,6 +137,22 @@ IF(NOT MOSQ_LIBRARY)
 ENDIF()
 include_directories(${MOSQ_INCLUDE_DIR})
 
+# Find Concurrency Kit    
+pkg_check_modules(PC_CK QUIET ck)
+set(CK_DEFINITIONS ${PC_CK_CFLAGS_OTHER})
+
+find_path(CK_INCLUDE_DIR NAMES ck_cc.h
+          HINTS ${PC_CK_INCLUDEDIR} ${PC_CK_INCLUDE_DIRS})
+find_library(CK_LIBRARY NAMES ck libck
+            HINTS ${PC_CK_LIBDIR} ${PC_CK_LIBRARY_DIRS} REQUIRED)
+IF(NOT CK_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find ck_cc.  Is libck-dev installed?")
+ENDIF()
+IF(NOT CK_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libck.  Is the libck package installed?")
+ENDIF()
+include_directories(${CK_INCLUDE_DIR})
+
 
 # add soem library
 set(ECAT_LIBRARY ${PROJECT_BINARY_DIR}/soem/libethercat.a)
@@ -150,7 +167,7 @@ include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
 
 # add our version of libphenom
-ExternalProject_Add(phenom
+ExternalProject_Add(phenomproj
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/phenom
   UPDATE_COMMAND git pull
   PATCH_COMMAND ./autogen.sh
@@ -159,7 +176,10 @@ ExternalProject_Add(phenom
   BUILD_IN_SOURCE 1
   BUILD_COMMAND make libphenom.la
   INSTALL_COMMAND "")
-  
+
+set(PH_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/.libs/libphenom.a)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/include")
+
 # configure a header file to pass some of the CMake settings to the source code
 configure_file (
   "${PROJECT_SOURCE_DIR}/mcp_config.h.in"
@@ -227,6 +247,7 @@ add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
 define_file_basename_for_sources(framing)
 add_library (blast_common OBJECT ${MCP_COMMON_SRCS} ${MCP_COMMON_HEADERS})
 define_file_basename_for_sources(blast_common)
+add_dependencies(blast_common phenomproj)
 add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
 define_file_basename_for_sources(blast_comms)
 
@@ -252,7 +273,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:mcp_obj>
     ) 
 
-add_dependencies(mcp soem)
+add_dependencies(mcp soem phenomproj)
 
 define_file_basename_for_sources(mcp)
 
@@ -260,8 +281,11 @@ target_link_libraries(mcp
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} 
     ${GLIB_LIBRARY} 
     ${ECAT_LIBRARY}
+    ${CK_LIBRARY}
+    ${PH_LIBRARY}
     ${SENSORS_LIBRARY}
-    ${CMAKE_THREAD_LIBS_INIT} 
+    ${CMAKE_THREAD_LIBS_INIT}
+    ssl crypto 
     mosquitto m)
 
 install(TARGETS mcp DESTINATION bin)

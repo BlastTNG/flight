@@ -20,6 +20,12 @@
  *
  */
 
+#include "phenom/defs.h"
+#include "phenom/configuration.h"
+#include "phenom/job.h"
+#include "phenom/log.h"
+#include "phenom/sysutil.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,38 +77,20 @@ int StartupVeto = 20;
 //flc_ip[0] = south, flc_ip[1] = north, so that flc_ip[SouthIAm] gives other flc
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
-int bbc_fp = -1;
-unsigned int debug = 0;
+
 short int SouthIAm;
 short int InCharge = 0;
 short int InChargeSet=0;
 struct ACSDataStruct ACSData;
 
-pthread_t watchdog_id;
+bool shutdown_mcp = false;
 
-extern pthread_mutex_t mutex;  //commands.c
 extern channel_t channel_list[]; //tx_struct_tng.c
 extern derived_tng_t derived_list[];
 
 void Pointing();
-void WatchPort(void*);
-void IntegratingStarCamera(void);
-void ActuatorBus(void);
 void WatchFIFO(void*);          //commands.c
-void FrameFileWriter(void);
-void CompressionWriter(void);
-void StageBus(void);
 
-void InitialiseFrameFile(char);
-void pushDiskFrame(unsigned short *RxFrame);
-void ShutdownFrameFile();
-
-void updateSlowDL(); // common/slowdl.c
-
-void InitSched();
-
-time_t biphase_timer;
-int biphase_is_on = 0;
 
 struct chat_buf chatter_buffer;
 
@@ -128,80 +116,73 @@ time_t mcp_systime(time_t *t) {
   return the_time;
 }
 
-#ifndef BOLOTEST
-
-
-
-static void Chatter(void* arg)
-{
-  int fd;
-  char ch;
-  ssize_t ch_got;
-  off_t fpos;
-
-  fpos = *(off_t*)arg;
-
-  nameThread("Chat");
-
-  blast_startup("Thread startup\n");
-
-  fd = open("/data/etc/blast/mcp.log", O_RDONLY|O_NONBLOCK);
-
-  if (fd == -1)
-  {
-    blast_tfatal("Failed to open /data/etc/blast/mcp.log for reading (%d)\n", errno);
-  }
-
-  if (fpos == -1) {
-    if (lseek(fd, -500, SEEK_END) == -1)
-    {
-      if (errno == EINVAL)
-      {
-	if (lseek(fd, 0, SEEK_SET) == -1)
-	{
-	  blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
-	}
-      } else {
-	blast_tfatal("Failed to seek /data/etc/blast/mcp.log (%d)\n", errno);
-      }
-    }
-  } else {
-    if (lseek(fd, fpos, SEEK_SET) == -1)
-    {
-      if (lseek(fd, 0, SEEK_END) == -1)
-      {
-	blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
-      }
-    }
-  }
-
-  while (read(fd, &ch, 1) == 1 && ch != '\n'); /* Find start of next message */
-
-  chatter_buffer.reading = chatter_buffer.writing = 0;
-      /* decimal 22 is "Synchronous Idle" in ascii */
-  memset(chatter_buffer.msg, 22, sizeof(char) * 20 * 2 * 4);
-
-  while (1)
-  {
-    if (chatter_buffer.writing != ((chatter_buffer.reading - 1) & 0x3))
-    {
-      ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * 20 * sizeof(char));
-      if (ch_got == -1)
-      {
-        blast_tfatal("Error reading from /data/etc/blast/mcp.log (%d)\n", errno);
-      }
-      if (ch_got < (2 * 20 * sizeof(char)))
-      {
-        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, (2 * 20 * sizeof(char)) - ch_got);
-      }
-      chatter_buffer.writing = ((chatter_buffer.writing + 1) & 0x3);
-    }
-    usleep(100000);
-  }
-}
-
-
-#endif
+//static void Chatter(void* arg)
+//{
+//  int fd;
+//  char ch;
+//  ssize_t ch_got;
+//  off_t fpos;
+//
+//  fpos = *(off_t*)arg;
+//
+//  nameThread("Chat");
+//
+//  blast_startup("Thread startup\n");
+//
+//  fd = open("/data/etc/blast/mcp.log", O_RDONLY|O_NONBLOCK);
+//
+//  if (fd == -1)
+//  {
+//    blast_tfatal("Failed to open /data/etc/blast/mcp.log for reading (%d)\n", errno);
+//  }
+//
+//  if (fpos == -1) {
+//    if (lseek(fd, -500, SEEK_END) == -1)
+//    {
+//      if (errno == EINVAL)
+//      {
+//	if (lseek(fd, 0, SEEK_SET) == -1)
+//	{
+//	  blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
+//	}
+//      } else {
+//	blast_tfatal("Failed to seek /data/etc/blast/mcp.log (%d)\n", errno);
+//      }
+//    }
+//  } else {
+//    if (lseek(fd, fpos, SEEK_SET) == -1)
+//    {
+//      if (lseek(fd, 0, SEEK_END) == -1)
+//      {
+//	blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
+//      }
+//    }
+//  }
+//
+//  while (read(fd, &ch, 1) == 1 && ch != '\n'); /* Find start of next message */
+//
+//  chatter_buffer.reading = chatter_buffer.writing = 0;
+//      /* decimal 22 is "Synchronous Idle" in ascii */
+//  memset(chatter_buffer.msg, 22, sizeof(char) * 20 * 2 * 4);
+//
+//  while (1)
+//  {
+//    if (chatter_buffer.writing != ((chatter_buffer.reading - 1) & 0x3))
+//    {
+//      ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * 20 * sizeof(char));
+//      if (ch_got == -1)
+//      {
+//        blast_tfatal("Error reading from /data/etc/blast/mcp.log (%d)\n", errno);
+//      }
+//      if (ch_got < (2 * 20 * sizeof(char)))
+//      {
+//        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, (2 * 20 * sizeof(char)) - ch_got);
+//      }
+//      chatter_buffer.writing = ((chatter_buffer.writing + 1) & 0x3);
+//    }
+//    usleep(100000);
+//  }
+//}
 
 
 
@@ -285,8 +266,9 @@ static void Chatter(void* arg)
 static void close_mcp(int m_code)
 {
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
+    shutdown_mcp = true;
     watchdog_close();
-
+    ph_sched_stop();
 }
 
 /* Polarity crisis: am I north or south? */
@@ -367,26 +349,70 @@ static void mcp_1hz_routines(void)
     framing_publish_1hz();
 }
 
+static void *mcp_main_loop(void *m_arg)
+{
+#define MCP_FREQ 200
+#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
+#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
+
+    int counter_100hz = 1;
+    int counter_5hz=1;
+    int counter_2hz=1;
+    int counter_1hz=1;
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    nameThread("Main");
+
+    while (!shutdown_mcp) {
+        int ret;
+        const struct timespec interval_ts = { .tv_sec = 0,
+                                        .tv_nsec = MCP_NS_PERIOD}; /// 200HZ interval
+        /// Set our wakeup time
+        ts = timespec_add(ts, interval_ts);
+        ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+        if (ret == EINTR) {
+            blast_info("Exiting MCP!");
+            break;
+        }
+
+        if (ret)
+        {
+            blast_err("error while sleeping, code %d (%s)\n", ret, strerror(ret));
+            break;
+        }
+
+        if (!--counter_1hz) {
+            counter_1hz = HZ_COUNTER(1);
+            mcp_1hz_routines();
+        }
+        if (!--counter_2hz) {
+            counter_2hz = HZ_COUNTER(2);
+            mcp_2hz_routines();
+        }
+        if (!--counter_5hz) {
+            counter_5hz = HZ_COUNTER(5);
+            mcp_5hz_routines();
+        }
+        if (!--counter_100hz) {
+            counter_100hz = HZ_COUNTER(100);
+            mcp_100hz_routines();
+        }
+        mcp_200hz_routines();
+
+    }
+
+    return NULL;
+}
+
 int main(int argc, char *argv[])
 {
+  ph_thread_t *main_thread;
   pthread_t CommandDatacomm1;
   int use_starcams = 0;
-
-  int counter_100hz = 1;
-  int counter_5hz=1;
-  int counter_2hz=1;
-  int counter_1hz=1;
-  struct timespec ts;
 
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
 #endif
-
-//  pthread_t compression_id;
-//  pthread_t isc_id;
-//  pthread_t osc_id;
-  pthread_t chatter_id;
-  struct stat fstats;
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -404,6 +430,9 @@ int main(int argc, char *argv[])
       exit(0);
   }
   umask(0);  /* clear umask */
+
+  ph_library_init();
+  ph_nbio_init(0);
 
   /**
    * Begin logging
@@ -425,7 +454,8 @@ int main(int argc, char *argv[])
 
   /* register the output function */
   nameThread("Dummy"); //insert dummy sentinel node first
-  nameThread("Main");
+  nameThread("Scheduling");
+
   buos_use_func(mputs);
 
 #if (TEMPORAL_OFFSET > 0)
@@ -446,7 +476,6 @@ int main(int argc, char *argv[])
   channels_initialize(channel_list);
 
   InitCommandData();
-  pthread_mutex_init(&mutex, NULL);
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
   initialize_blast_comms();
@@ -476,14 +505,8 @@ int main(int argc, char *argv[])
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
 
-
-#ifndef BOLOTEST
-  pthread_create(&chatter_id, NULL, (void*)&Chatter, (void*)&(fstats.st_size));
-
 //  InitSched();
   initialize_motors();
-
-#endif
 
   initialize_CPU_sensors();
 
@@ -502,47 +525,11 @@ int main(int argc, char *argv[])
   initialize_data_sharing();
   initialize_watchdog(2);
 
-  clock_gettime(CLOCK_REALTIME, &ts);
-#define MCP_FREQ 200
-#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
-#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
+  main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 
-  while (1) {
-      int ret;
-      const struct timespec interval_ts = { .tv_sec = 0,
-                                      .tv_nsec = MCP_NS_PERIOD}; /// 200HZ interval
-      /// Set our wakeup time
-      ts = timespec_add(ts, interval_ts);
-      ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
-      if (ret == EINTR) {
-          blast_info("Exiting MCP!");
-          break;
-      }
+  ph_sched_run();
 
-      if (ret)
-      {
-          blast_err("error while sleeping, code %d (%s)\n", ret, strerror(ret));
-          break;
-      }
+  ph_thread_join(main_thread, NULL);
 
-      if (!--counter_1hz) {
-          counter_1hz = HZ_COUNTER(1);
-          mcp_1hz_routines();
-      }
-      if (!--counter_2hz) {
-          counter_2hz = HZ_COUNTER(2);
-          mcp_2hz_routines();
-      }
-      if (!--counter_5hz) {
-          counter_5hz = HZ_COUNTER(5);
-          mcp_5hz_routines();
-      }
-      if (!--counter_100hz) {
-          counter_100hz = HZ_COUNTER(100);
-          mcp_100hz_routines();
-      }
-      mcp_200hz_routines();
-
-  }
   return(0);
 }

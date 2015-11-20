@@ -1,8 +1,10 @@
+#include "phenom/defs.h"
+#include "phenom/listener.h"
+#include "phenom/socket.h"
+#include "phenom/memory.h"
+
 #include "xsc_network.h"
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -25,107 +27,84 @@ XSCServerData xsc_mserver_data[2][3];
 
 int xsc_server_index[2] = {0, 0};
 
-static char addresses[2][16] = {"192.168.1.7", "192.168.1.8"};
-static int port = 2017;
-static comms_socket_t *xsc_sock[2] = {NULL, NULL};
+static const char addresses[2][16] = {"192.168.1.7", "192.168.1.8"};
+static const uint16_t port = 2017;
+static const uint32_t min_backoff_sec = 5;
+static const uint32_t max_backoff_sec = 30;
 extern short int InCharge;
 
+typedef struct {
+  int which;
+  bool connected;
+  bool have_warned_version;
+  uint32_t backoff_sec;
+  struct timeval timeout;
+  ph_job_t connect_job;
+  ph_sock_t *sock;
+} xsc_state_t;
+
+static xsc_state_t state[2];
+
 /**
- * Handles the incoming XSC data packet
- * @param m_data Pointer to the data queue
- * @param m_len length in bytes of the data queue
- * @param m_userdata unused
- * @return Number of bytes processed (that should be removed from the queue)
+ * Process an incoming XSC packet or event.  If we have an error, we'll disable
+ * the socket and schedule a reconnection attempt.  Otherwise, read and store the
+ * camera data.
+ *
+ * @param m_sock Unused
+ * @param m_why Flag indicating why the routine was called
+ * @param m_data Pointer to our state data
  */
-static int xsc_process_packet(const void *m_data, size_t m_len, void *m_userdata __attribute__((unused)))
+static void xsc_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
-    comms_socket_t *sock = (comms_socket_t*) m_userdata;
-    int which = (intptr_t) sock->priv_data;
-    XSCServerData *data = (XSCServerData*) m_data;
-    int array_index = xsc_server_index[which];
+    ph_buf_t *buf;
+    XSCServerData *data;
+    xsc_state_t *state = (xsc_state_t*) m_data;
+    int array_index = xsc_server_index[state->which];
+
+    /**
+     * If we have an error, or do not receive data from the star camera in the expected
+     * amount of time, we tear down the socket and schedule a reconnection attempt.
+     */
+    if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
+      blast_err("disconnecting XSC%d due to connection issue", state->which);
+      ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
+      state->connected = false;
+      ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
+      return;
+    }
+
+    buf = ph_sock_read_bytes_exact(m_sock, sizeof(XSCServerData));
+    if (!buf) return; /// We do not have enough data
+
+    data = (XSCServerData*)ph_buf_mem(buf);
 
     if (data->xsc_protocol_version == XSC_PROTOCOL_VERSION) {
-        memcpy(&xsc_mserver_data[which][array_index], m_data, sizeof(XSCServerData));
-        xsc_server_index[which] = INC_INDEX(xsc_server_index[which]);
+        memcpy(&xsc_mserver_data[state->which][array_index], data, sizeof(XSCServerData));
+        xsc_server_index[state->which] = INC_INDEX(xsc_server_index[state->which]);
+        state->have_warned_version = false;
     }
     else {
-        blast_info("received packet with incorrect xsc_protocol_version: %u\n",
-                data->xsc_protocol_version);
+        if (!state->have_warned_version) {
+            blast_info("received packet with incorrect xsc_protocol_version: %u\n",
+                    data->xsc_protocol_version);
+            state->have_warned_version = true;
+        }
     }
 
-    return sizeof(XSCServerData);
+    ph_buf_delref(buf);
 }
 
 /**
- * Handles the network command hangup.
- * @param m_data Pointer to the data queue
- * @param m_len length in bytes of the data queue
- * @param m_userdata socket pointer
- * @return Number of bytes processed (that should be removed from the queue)
+ * Write data into the XSC sock buffer, if we are connected to the camera.
+ *
+ * @param which 0/1 for XSC0/XSC1
  */
-static int xsc_net_cleanup(const void *m_data, size_t m_len, void *m_userdata )
-{
-    comms_socket_t *sock = (comms_socket_t*)m_userdata;
-    blast_warn("Received hangup from XSC Connection %s", sock->host?sock->host:"(UNK)");
-
-    return 0;
-}
-
-/**
- * Currently unused function to process errors received on the Network socket
- * @param m_code
- * @param m_userdata
- */
-static void xsc_net_error(int m_code, void *m_userdata)
-{
-    comms_socket_t *sock = (comms_socket_t*)m_userdata;
-    blast_warn("Receive Error %d from XSC Connection %s", m_code, sock->host?sock->host:"(UNK)");
-    return;
-}
-
-/**
- * Currently unused function to process errors received on the Network socket
- * @param m_code
- * @param m_userdata
- */
-static void xsc_net_connected(int m_code, int m_errcode, void *m_priv)
-{
-    comms_socket_t *sock = (comms_socket_t*)m_priv;
-    if (m_code == NETSOCK_OK) {
-        blast_info("XSC Network successfully connected to %s", sock->host?sock->host:"(Unknown SC)");
-    } else {
-        blast_warn("Received Error %d from XSC connecting to %s", m_errcode, sock->host?sock->host:"(UNK)");
-    }
-    return;
-}
-
-void xsc_networking_init(int which)
-{
-    for (unsigned int i=0; i<3; i++) {
-        xsc_clear_server_data(&xsc_mserver_data[which][i]);
-        xsc_init_server_data(&xsc_mserver_data[which][i]);
-    }
-
-    xsc_sock[which] = comms_sock_new();
-
-    xsc_sock[which]->priv_data = (void*)((intptr_t)which);
-
-    comms_sock_connect(xsc_sock[which], addresses[which], port);
-
-    xsc_sock[which]->callbacks.priv = xsc_sock[which];
-    xsc_sock[which]->callbacks.connected = xsc_net_connected;
-    xsc_sock[which]->callbacks.data = xsc_process_packet;
-    xsc_sock[which]->callbacks.finished = xsc_net_cleanup;
-    xsc_sock[which]->callbacks.error = xsc_net_error;
-
-    blast_comms_add_socket(xsc_sock[which]);
-
-}
-
 void xsc_write_data(int which)
 {
     XSCClientData xsc_client_data;
     int pointing_read_index = GETREADINDEX(point_index);
+
+    if (!state[which].connected) return;
 
     memcpy(&xsc_client_data, &CommandData.XSC[which].net, sizeof(XSCClientData));
 
@@ -149,22 +128,103 @@ void xsc_write_data(int which)
 
     xsc_client_data.xsc_protocol_version = XSC_PROTOCOL_VERSION;
 
-    switch (xsc_sock[which]->state) {
-        case NETSOCK_STATE_CONNECTED:
-            comms_sock_write(xsc_sock[which], &xsc_client_data, sizeof(xsc_client_data));
-            break;
-        case NETSOCK_STATE_CLOSED:
-            comms_sock_reconnect(xsc_sock[which]);
-            break;
-        case NETSOCK_STATE_EOS:
-        case NETSOCK_STATE_ERROR:
-            comms_sock_close(xsc_sock[which]);
-            comms_sock_reconnect(xsc_sock[which]);
-            break;
-        default:
-            break;
-    }
+    ph_stm_write(state[which].sock->stream, &xsc_client_data, sizeof(xsc_client_data), NULL);
 
 }
 
+/**
+ * Handle a connection callback from @connect_xsc.  The connection may succeed or fail.
+ * If it fails, we increase the backoff time and reschedule another attempt.
+ *
+ * @param m_sock Pointer to the new sock that is created on a successful connection
+ * @param m_status Status of the connection
+ * @param m_errcode If the status indicates an error, this value is the errno
+ * @param m_addr Unused
+ * @param m_elapsed Unused
+ * @param m_data Pointer to our XSC State variable
+ */
+static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_sockaddr_t *m_addr,
+                      struct timeval *m_elapsed, void *m_data)
+{
+    ph_unused_parameter(m_elapsed);
+    ph_unused_parameter(m_addr);
+    xsc_state_t *state = (xsc_state_t*) m_data;
+
+    switch (m_status) {
+        case PH_SOCK_CONNECT_GAI_ERR:
+            blast_err("resolve %s:%d failed %s", addresses[state->which], port, gai_strerror(m_errcode));
+
+            if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
+            ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
+            return;
+
+        case PH_SOCK_CONNECT_ERRNO:
+            blast_err("connect %s:%d failed: `Error %d: %s`", addresses[state->which], port, m_errcode, strerror(m_errcode));
+
+            if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
+            ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
+            return;
+    }
+
+    blast_info("Connected to XSC%d at %s", state->which, addresses[state->which]);
+
+    /// If we had an old socket from an invalid connection, free the reference here
+    if (state->sock) ph_sock_free(state->sock);
+
+    state->sock = m_sock;
+    state->connected = true;
+    state->backoff_sec = min_backoff_sec;
+    m_sock->callback = xsc_process_packet;
+    m_sock->job.data = state;
+    ph_sock_enable(state->sock, true);
+
+}
+
+/**
+ * Handles the connection job.  Formatted this way to allow us to schedule
+ * a future timeout in the PH_JOB infrastructure
+ *
+ * @param m_job Unused
+ * @param m_why Unused
+ * @param m_data Pointer to the XSC State variable
+ */
+static void connect_xsc(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
+{
+    ph_unused_parameter(m_job);
+    ph_unused_parameter(m_why);
+    xsc_state_t *state = (xsc_state_t*)m_data;
+
+    blast_info("Connecting to %s", addresses[state->which]);
+    ph_sock_resolve_and_connect(addresses[state->which], port,
+        &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM,
+        connected, m_data);
+}
+
+/**
+ * Initialize the star camera I/O routine.  The state variable tracks each
+ * camera connection and is passed to the connect job.
+ *
+ * @param m_which 0,1 for XSC0 or XSC1
+ */
+void xsc_networking_init(int m_which)
+{
+    blast_dbg("XSC Init for %d", m_which);
+    for (unsigned int i=0; i<3; i++) {
+        xsc_clear_server_data(&xsc_mserver_data[m_which][i]);
+        xsc_init_server_data(&xsc_mserver_data[m_which][i]);
+    }
+
+    state[m_which].connected = false;
+    state[m_which].have_warned_version = false;
+    state[m_which].which = m_which;
+    state[m_which].backoff_sec = min_backoff_sec;
+    state[m_which].timeout.tv_sec = 5;
+    state[m_which].timeout.tv_usec = 0;
+    ph_job_init(&(state[m_which].connect_job));
+    state[m_which].connect_job.callback = connect_xsc;
+    state[m_which].connect_job.data = &state[m_which];
+
+    ph_job_dispatch_now(&(state[m_which].connect_job));
+
+}
 
