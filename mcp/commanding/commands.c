@@ -77,7 +77,6 @@ int LoadUplinkFile(int slot); /*sched.c */
 
 extern int doing_schedule; /* sched.c */
 
-extern pthread_t watchdog_id;  /* mcp.c */
 extern short int SouthIAm;
 pthread_mutex_t mutex;
 
@@ -788,7 +787,7 @@ void SingleCommand (enum singleCommand command, int scheduled)
 	  (command == reap_south && SouthIAm)) {
 	blast_err("Commands: Reaping the watchdog tickle on command in 1 second.");
         sleep(1);
-	pthread_cancel(watchdog_id);
+        //TODO: Enable Watchdog reap
       }
       break;
     case north_halt:
