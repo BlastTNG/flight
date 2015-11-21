@@ -332,8 +332,8 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
 
     timer.start();
     if (!done()) {
-        crop_vector(blobs, shared_settings.max_num_blobs);
-        sort(blobs.begin(), blobs.end(), Blob::sort_by_flux_confidence);
+		sort(blobs.begin(), blobs.end(), Blob::sort_by_flux_confidence);
+		crop_vector(blobs, shared_settings.max_num_blobs);
         for (unsigned int i=0; i<blobs.size(); i++) {
             blobs[i].id = i;
             blobs[i].image_noise = noise;
