@@ -35,7 +35,6 @@
 
 #include "blast.h"
 #include "mcp.h"
-#include "pointing.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
 #include "lut.h"
@@ -60,6 +59,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
+#include "pointing.h"
 
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
@@ -541,27 +541,25 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 ////////////////NNG//////////////////
 
 
-//make history 30s long so that nobody ever exceeds it (with sc_max_age)
-#define GY_HISTORY 3000
 static void RecordHistory(int index)
 {
   /*****************************************/
   /*   Allocate Memory                     */
   if (hs.ifel_gy_history == NULL) {
-    hs.ifel_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.ifel_gy_history, 0, GY_HISTORY * sizeof(double));
-    hs.ifroll_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.ifroll_gy_history, 0, GY_HISTORY * sizeof(double));
-    hs.ifyaw_gy_history = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.ifyaw_gy_history, 0, GY_HISTORY * sizeof(double));
-    hs.elev_history  = (double *)balloc(fatal, GY_HISTORY * sizeof(double));
-    memset(hs.elev_history, 0, GY_HISTORY * sizeof(double));
+    hs.ifel_gy_history = (double *)balloc(fatal, GY_HISTORY_AGE_CS * sizeof(double));
+    memset(hs.ifel_gy_history, 0, GY_HISTORY_AGE_CS * sizeof(double));
+    hs.ifroll_gy_history = (double *)balloc(fatal, GY_HISTORY_AGE_CS * sizeof(double));
+    memset(hs.ifroll_gy_history, 0, GY_HISTORY_AGE_CS * sizeof(double));
+    hs.ifyaw_gy_history = (double *)balloc(fatal, GY_HISTORY_AGE_CS * sizeof(double));
+    memset(hs.ifyaw_gy_history, 0, GY_HISTORY_AGE_CS * sizeof(double));
+    hs.elev_history  = (double *)balloc(fatal, GY_HISTORY_AGE_CS * sizeof(double));
+    memset(hs.elev_history, 0, GY_HISTORY_AGE_CS * sizeof(double));
   }
 
   /*****************************************/
   /* record history                        */
   hs.i_history++;
-  if (hs.i_history >= GY_HISTORY)
+  if (hs.i_history >= GY_HISTORY_AGE_CS)
     hs.i_history = 0;
 
   hs.ifel_gy_history[hs.i_history] = RG.ifel_gy;
@@ -657,16 +655,10 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
     e->angle += (gy1 + gy1_off) / SR;
     e->variance += GYRO_VAR;
 
-    if (isnan(gy1_off)) blast_dbg("Gy1_off NaN");
-    if (isnan(gy2_off)) blast_dbg("Gy2_off NaN");
-    if (isnan(gy3_off)) blast_dbg("Gy3_off NaN");
-    if (isnan(old_el)) blast_dbg("OldEl NaN");
-    if (isnan(a->angle)) blast_dbg("a->angle NaN");
     // evolve az
     gy_az = (gy2 + gy2_off) * sin(el_frame) + (gy3 + gy3_off) * cos(el_frame);
     a->angle += gy_az / SR;
     a->variance += GYRO_VAR;
-    if (isnan(a->angle)) blast_dbg("a->angle NaN at point 2");
 
     if (XSCHasNewSolution(which)) {
         xsc_pointing_state[which].last_solution_stars_counter = XSC_SERVER_DATA(which).channels.image_ctr_stars;
@@ -706,10 +698,6 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
                 gy_az_delta += ((hs.ifyaw_gy_history[j] + gy2_off) * sin(hs.elev_history[j])
                         + (hs.ifroll_gy_history[j] + gy3_off) * cos(hs.elev_history[j]))
                 * (1.0 / SR);
-                if (isnan(gy_az_delta)){
-                    blast_dbg("Gy_az_delta nan");
-                    blast_dbg("%f\t%f\t%f", hs.ifyaw_gy_history[j], hs.ifroll_gy_history[j], hs.elev_history[j]);
-                }
             }
 
             // Evolve el solution
