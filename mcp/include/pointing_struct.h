@@ -65,11 +65,6 @@ struct ACSDataStruct {
   double ifel_gy;   // deg/s
   double ifyaw_gy;  // deg/s
   double ifroll_gy; // deg/s
-  int    last_trigger_counter_mcp[2];
-  int    last_trigger_counter_stars[2];
-  int    last_trigger_age_cs[2];
-  double last_trigger_lat[2];
-  time_t last_trigger_lst[2];
   int mcp_frame;
   time_t t;
 };
@@ -217,7 +212,7 @@ extern time_t csbf_gps_time;
 
 struct XSCLastTriggerState
 {
-    int counter_fcp;                           // fcp counter at the time of last trigger
+    int counter_mcp;                           // fcp counter at the time of last trigger
     int counter_stars;                         // stars counter at the time of last trigger
     int age_cs;                                // centiseconds since last trigger was sent
     int age_of_end_of_trigger_cs;              // centiseconds since the end of the last trigger
@@ -231,8 +226,8 @@ struct XSCLastTriggerState
 
 struct XSCPointingState {
     struct XSCLastTriggerState last_trigger;
-    int counter_mcp;                      // the current counter_fcp, passed to the star camera after some delay
-    int last_counter_fcp;                 // the last counter_fcp, passed to the star camera before the delay that allows for the current counter
+    int counter_mcp;                      // the current counter_mcp, passed to the star camera after some delay
+    int last_counter_mcp;                 // the last counter_mcp, passed to the star camera before the delay that allows for the current counter
     int last_solution_stars_counter;      // stars counter of last solution used in pointing solution
     double az; // XSC Az
     double el; // XSC El

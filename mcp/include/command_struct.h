@@ -200,7 +200,7 @@ typedef struct XSCTrigger
 {
     int exposure_time_cs;
     int grace_period_cs;
-    int post_trigger_counter_fcp_share_delay_cs; // should probably be less than grace period
+    int post_trigger_counter_mcp_share_delay_cs; // should probably be less than grace period
 
     int num_triggers;
     int multi_trigger_time_between_triggers_cs;

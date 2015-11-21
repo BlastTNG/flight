@@ -218,7 +218,7 @@ XSCMotionPSFTimestep;
 typedef struct
 {
     bool enabled;
-    int counter_fcp;
+    int counter_mcp;
     int counter_stars;
     double hroll;
     double el;
@@ -302,7 +302,7 @@ typedef struct XSCHorizontal
 typedef struct XSCClientData
 {
     bool in_charge;
-    int counter_fcp;
+    int counter_mcp;
 
     int quit_counter;
     XSCShutdown       shutdown;

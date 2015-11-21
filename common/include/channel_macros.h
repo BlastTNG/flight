@@ -176,6 +176,14 @@ typedef struct channel channel_t;
 #define SET_FLOAT(_ch,_val) htobef(_val,*(uint32_t*)((_ch)->var))
 #define SET_DOUBLE(_ch,_val) htobed(_val,*(uint64_t*)((_ch)->var))
 
+#define SET_SCALED_VALUE(_channel,_val)         \
+({                                              \
+    channel_t *ch = (_channel);                 \
+    double new_val = (_val) - ch->b_e2e;        \
+    new_val = new_val / ch->m_c2e;              \
+    SET_VALUE(ch,new_val);                      \
+})
+
 /**
  * Provides a type-agnostic value setting function
  */

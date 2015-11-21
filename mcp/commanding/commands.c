@@ -1531,8 +1531,8 @@ case xsc_exposure_timing:
               if (xsc_command_applies_to(which, ivalues[0])) {
                   CommandData.XSC[which].trigger.exposure_time_cs = ivalues[1];
               }
-              CommandData.XSC[which].trigger.grace_period_cs = ivalues[2];
-              CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs = ivalues[3];
+              CommandData.XSC[which].trigger.grace_period_cs = rvalues[2]*100.0;
+              CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs = ivalues[3];
           }
           break;
       }
@@ -2404,7 +2404,7 @@ void InitCommandData()
 
       CommandData.XSC[which].trigger.exposure_time_cs = 12;
       CommandData.XSC[which].trigger.grace_period_cs = 4500;
-      CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs = 200;
+      CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs = 200;
 
       CommandData.XSC[which].trigger.num_triggers = 1;
       CommandData.XSC[which].trigger.multi_trigger_time_between_triggers_cs = 18;

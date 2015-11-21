@@ -145,7 +145,7 @@ static void xsc_motion_psf_initiate(unsigned int* motion_psf_index)
     *motion_psf_index = 0;
 
     for (int which=0; which<2; which++) {
-        CommandData.XSC[which].net.solver.motion_psf.counter_fcp = xsc_pointing_state[which].counter_mcp;
+        CommandData.XSC[which].net.solver.motion_psf.counter_mcp = xsc_pointing_state[which].counter_mcp;
         CommandData.XSC[which].net.solver.motion_psf.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;
         CommandData.XSC[which].net.solver.motion_psf.el = from_degrees(PointingData[i_point].el);
         for (unsigned int i=0; i<XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
@@ -262,7 +262,7 @@ void xsc_control_triggers()
                 for (int which=0; which<2; which++) {
                     xsc_trigger(which, 1);
                     if (!scan_bypass_last_trigger_on_next_trigger) {
-                        xsc_pointing_state[which].last_trigger.counter_fcp = xsc_pointing_state[which].counter_mcp;
+                        xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
                         xsc_pointing_state[which].last_trigger.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;
                         xsc_pointing_state[which].last_trigger.lat = PointingData[i_point].lat;
                         xsc_pointing_state[which].last_trigger.lst = PointingData[i_point].lst;
@@ -296,8 +296,8 @@ void xsc_control_triggers()
                     trigger_state = xsc_trigger_in_hard_grace_period;
                     xsc_pointing_state[0].last_trigger.age_of_end_of_trigger_cs = 0;
                     xsc_pointing_state[1].last_trigger.age_of_end_of_trigger_cs = 0;
-                    xsc_pointing_state[0].last_counter_fcp = xsc_pointing_state[0].counter_mcp;
-                    xsc_pointing_state[1].last_counter_fcp = xsc_pointing_state[1].counter_mcp;
+                    xsc_pointing_state[0].last_counter_mcp = xsc_pointing_state[0].counter_mcp;
+                    xsc_pointing_state[1].last_counter_mcp = xsc_pointing_state[1].counter_mcp;
                     xsc_pointing_state[0].counter_mcp++;
                     xsc_pointing_state[1].counter_mcp = xsc_pointing_state[0].counter_mcp;
                     recording_motion_psf = false;

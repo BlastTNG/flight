@@ -123,7 +123,7 @@ void xsc_clear_motion_psf(XSCMotionPSF* motion_psf)
 {
     unsigned int i = 0;
     motion_psf->enabled = false;
-    motion_psf->counter_fcp = -1;
+    motion_psf->counter_mcp = -1;
     motion_psf->counter_stars = -1;
     motion_psf->hroll = 0.0;
     motion_psf->iplatescale = 4.60573E-5;
@@ -161,7 +161,7 @@ void xsc_clear_solver(XSCSolver* solver)
 void xsc_clear_client_data(XSCClientData* client_data)
 {
     client_data->in_charge = false;
-    client_data->counter_fcp = -1;
+    client_data->counter_mcp = -1;
 
     client_data->quit_counter = 0;
     xsc_clear_shutdown(&client_data->shutdown);

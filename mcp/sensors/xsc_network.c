@@ -68,6 +68,7 @@ static void xsc_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_dat
     if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
       blast_err("disconnecting XSC%d due to connection issue", state->which);
       ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
+      ph_sock_enable(m_sock, 0);
       state->connected = false;
       ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
       return;
@@ -119,10 +120,10 @@ void xsc_write_data(int which)
     xsc_client_data.in_charge = 1;
 
     if (xsc_pointing_state[which].last_trigger.age_of_end_of_trigger_cs >
-            CommandData.XSC[which].trigger.post_trigger_counter_fcp_share_delay_cs) {
-        xsc_client_data.counter_fcp = xsc_pointing_state[which].counter_mcp;
+            CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs) {
+        xsc_client_data.counter_mcp = xsc_pointing_state[which].counter_mcp;
     } else {
-        xsc_client_data.counter_fcp = xsc_pointing_state[which].last_counter_fcp;
+        xsc_client_data.counter_mcp = xsc_pointing_state[which].last_counter_mcp;
     }
     // note: everything that must be valid, and doesn't come from CommandData.XSC.net, must be set here or it will be overwritten by CommandData.XSC.net
 
