@@ -977,12 +977,6 @@ void store_5hz_acs(void)
     static channel_t* PssOkAddr;
     static channel_t* azSunAddr;
     static channel_t* elSunAddr;
-    static channel_t* azIscAddr;
-    static channel_t* elIscAddr;
-    static channel_t* sigmaIscAddr;
-    static channel_t* azOscAddr;
-    static channel_t* elOscAddr;
-    static channel_t* sigmaOscAddr;
     static channel_t* elClinAddr;
     static channel_t* elLutClinAddr;
     static channel_t* sigmaClinAddr;
@@ -1082,12 +1076,6 @@ void store_5hz_acs(void)
         hwprCalAddr = channels_find_by_name("hwpr_cal");
         modeCalAddr = channels_find_by_name("mode_cal");
         periodCalAddr = channels_find_by_name("period_cal");
-        azIscAddr = channels_find_by_name("az_isc");
-        elIscAddr = channels_find_by_name("el_isc");
-        sigmaIscAddr = channels_find_by_name("sigma_isc");
-        azOscAddr = channels_find_by_name("az_osc");
-        elOscAddr = channels_find_by_name("el_osc");
-        sigmaOscAddr = channels_find_by_name("sigma_osc");
         elClinAddr = channels_find_by_name("el_clin");
         elLutClinAddr = channels_find_by_name("el_lut_clin");
         sigmaClinAddr = channels_find_by_name("sigma_clin");
@@ -1213,14 +1201,6 @@ void store_5hz_acs(void)
     SET_VALUE(modeCalAddr, CommandData.Cryo.calibrator);
     SET_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
     SET_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
-
-    SET_VALUE(azIscAddr, (unsigned int) (PointingData[i_point].xsc_az[0] * DEG2I));
-    SET_VALUE(elIscAddr, (unsigned int) (PointingData[i_point].xsc_el[0] * DEG2I));
-    SET_VALUE(sigmaIscAddr, (unsigned int) (PointingData[i_point].xsc_sigma[0] * DEG2I));
-
-    SET_VALUE(azOscAddr, (unsigned int) (PointingData[i_point].xsc_az[1] * DEG2I));
-    SET_VALUE(elOscAddr, (unsigned int) (PointingData[i_point].xsc_el[1] * DEG2I));
-    SET_VALUE(sigmaOscAddr, (unsigned int) (PointingData[i_point].xsc_sigma[1] * DEG2I));
 
     SET_VALUE(trimEncAddr, CommandData.enc_el_trim * DEG2I);
 
