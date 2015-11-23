@@ -926,6 +926,13 @@ static void xsc_calculate_full_pointing_estimated_location(int which)
 }
 
 
+
+static inline double exponential_moving_average(double m_running_avg, double m_newval, double m_halflife)
+{
+    double alpha = 2.0 / (1.0 + 2.8854 * m_halflife);
+    return alpha * m_newval + (1.0 - alpha) * m_running_avg;
+}
+
 ///TODO: Split up Pointing() in manageable chunks for each sensor
 /*****************************************************************
   do sensor selection;
@@ -948,6 +955,7 @@ void Pointing(void)
   double pss_el = 0;
   double clin_elev;
   static double last_good_lat=0, last_good_lon=0, last_good_alt = 0;
+  static double last_gy_total_vel = 0.0;
   static int i_at_float = 0;
   double trim_change;
 
@@ -1152,6 +1160,13 @@ void Pointing(void)
     RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
 
     PointingData[point_index].v_az = RG.ifyaw_gy * cos_e + RG.ifroll_gy * sin_e;
+    PointingData[point_index].gy_az = PointingData[point_index].v_az;
+    PointingData[point_index].gy_el = RG.ifel_gy;
+    PointingData[point_index].gy_total_vel = sqrt( pow( (RG.ifel_gy), 2) + pow( PointingData[point_index].gy_az*cos_e, 2) );
+    double current_gy_total_accel = (PointingData[point_index].gy_total_vel - last_gy_total_vel)*SR;
+    last_gy_total_vel = PointingData[point_index].gy_total_vel;
+    PointingData[point_index].gy_total_accel = exponential_moving_average(PointingData[i_point_read].gy_total_accel, current_gy_total_accel, 15.0);
+
     /*************************************/
     /** Record history for gyro offsets **/
     RecordHistory(i_point_read);
