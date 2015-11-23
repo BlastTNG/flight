@@ -548,8 +548,6 @@ void store_100hz_acs(void)
     static channel_t *elMotEncAddr;
     static channel_t *sigmaMotEncAddr;
 
-    static channel_t *isc_ra_addr;
-    static channel_t *isc_dec_addr;
     static channel_t *vel_rw_addr;
     static channel_t *pos_rw_addr;
     static channel_t *vel_el_addr;
@@ -1023,12 +1021,12 @@ void store_5hz_acs(void)
         mksHiSipAddr = channels_find_by_name("mks_hi_sip");
 
         OffsetIFelGYAddr = channels_find_by_name("offset_ifel_gy");
-        OffsetIFelGYiscAddr = channels_find_by_name("off_ifel_gy_isc");
-        OffsetIFrollGYiscAddr = channels_find_by_name("off_ifroll_gy_isc");
-        OffsetIFyawGYiscAddr = channels_find_by_name("off_ifyaw_gy_isc");
-        OffsetIFelGYoscAddr = channels_find_by_name("off_ifel_gy_osc");
-        OffsetIFrollGYoscAddr = channels_find_by_name("off_ifroll_gy_osc");
-        OffsetIFyawGYoscAddr = channels_find_by_name("off_ifyaw_gy_osc");
+        OffsetIFelGYiscAddr = channels_find_by_name("off_ifel_gy_xsc0");
+        OffsetIFrollGYiscAddr = channels_find_by_name("off_ifroll_gy_xsc0");
+        OffsetIFyawGYiscAddr = channels_find_by_name("off_ifyaw_gy_xsc0");
+        OffsetIFelGYoscAddr = channels_find_by_name("off_ifel_gy_xsc1");
+        OffsetIFrollGYoscAddr = channels_find_by_name("off_ifroll_gy_xsc1");
+        OffsetIFyawGYoscAddr = channels_find_by_name("off_ifyaw_gy_xsc1");
         OffsetIFrollGYAddr = channels_find_by_name("offset_ifroll_gy");
         OffsetIFyawGYAddr = channels_find_by_name("offset_ifyaw_gy");
 

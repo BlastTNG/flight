@@ -107,38 +107,8 @@ derived_tng_t derived_list[] = {
   BITWORD("FORCE_EL","veto_sensor",12,1),
   BITWORD("VETO_PSS","veto_sensor",13,1),
 
-  /* ISC and OSC */
-  COMMENT("Star Camera State"),
-
-    BITWORD("SAVE_IMAGES_ISC","state_isc",0,1),
-    BITWORD( "PAUSE_ISC","state_isc",1,1),
-    BITWORD("ABORT_ISC","state_isc",2,1),
-    BITWORD( "AUTOFOCUS_REQ_ISC","state_isc",3,1),
-    BITWORD("SHUTDOWN_ISC","state_isc",4,1),
-    BITWORD("REBOOT_ISC","state_isc",5,1),
-    BITWORD("EYE_ON_ISC","state_isc",6,1),
-    BITWORD("HEATER_ON_ISC","state_isc",7,1),
-    BITWORD("USE_LOST_ISC","state_isc",8,1),
-    BITWORD("AUTOFOCUS_ISC","state_isc",9,1),
-
-  BITWORD("SENT_TRIG_ISC", "trigger_isc", 0, 14),
-
-  BITWORD("SAVE_IMAGES_OSC","state_osc",0,1),
-  BITWORD("PAUSE_OSC","state_osc",0,1),
-  BITWORD("ABORT_OSC","state_osc",0,1),
-  BITWORD("AUTOFOCUS_REQ_OSC","state_osc",0,1),
-  BITWORD("SHUTDOWN_OSC","state_osc",0,1),
-  BITWORD("REBOOT_OSC","state_osc",0,1),
-  BITWORD("EYE_ON_OSC","state_osc",0,1),
-  BITWORD("HEATER_ON_OSC","state_osc",0,1),
-  BITWORD("USE_LOST_OSC","state_osc",0,1),
-  BITWORD("AUTOFOCUS_OSC","state_osc",0,1),
-
-  BITWORD("SENT_TRIG_OSC", "trigger_osc", 0, 14),
-
-  BITWORD("PULSE_ISC","pulse_sc",0,1),
-  BITWORD("PULSE_OSC","pulse_sc",1,1),
-  BITWORD("PULSE_SBSC","pulse_sc",2,1),
+  BITWORD("PULSE_XSC0","pulse_sc",0,1),
+  BITWORD("PULSE_XSC1","pulse_sc",1,1),
 
   COMMENT("ACS Digital Signals"),
 
