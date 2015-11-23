@@ -682,7 +682,11 @@ channel_t channel_list[] =
     { "lvdt_1_act",           1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "lvdt_2_act",           1.0,              0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
-    { "az_gy",                1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+    { "gy_az_vel",            1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+    { "gy_el_vel",            1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+    { "gy_total_vel",         1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+    { "gy_total_accel",       1.0,              0.0, TYPE_FLOAT, RATE_5HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+
     { "offset_0_act",         1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "offset_1_act",         1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "offset_2_act",         1.0,              0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },

@@ -2026,7 +2026,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     T_d = CommandData.azi_gain.D;
 
     i_point = GETREADINDEX(point_index);
-    pv = PointingData[i_point].v_az;
+    pv = PointingData[i_point].gy_az;
     error_pv = pv - v_req_az;
 
     /**
@@ -2159,7 +2159,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     i_point = GETREADINDEX(point_index);
 
     err_rw = rw_get_velocity_dps() - CommandData.pivot_gain.SP;
-    err_vel = m_az_req_vel - PointingData[i_point].v_az;
+    err_vel = m_az_req_vel - PointingData[i_point].gy_az;
     P_rw_term = -CommandData.pivot_gain.PV * err_rw;
     P_vel_term = CommandData.pivot_gain.PE * err_vel;
 

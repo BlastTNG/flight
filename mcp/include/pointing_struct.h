@@ -101,7 +101,7 @@ struct PointingDataStruct {
 
   double lat;       // degrees
   double lon;       // degrees
-  double v_az;
+
   int longitude_octave_since_launch;
   double alt;       // m
   int at_float;

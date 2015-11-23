@@ -1159,8 +1159,7 @@ void Pointing(void)
     RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
     RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
 
-    PointingData[point_index].v_az = RG.ifyaw_gy * cos_e + RG.ifroll_gy * sin_e;
-    PointingData[point_index].gy_az = PointingData[point_index].v_az;
+    PointingData[point_index].gy_az = RG.ifyaw_gy * cos_e + RG.ifroll_gy * sin_e;
     PointingData[point_index].gy_el = RG.ifel_gy;
     PointingData[point_index].gy_total_vel = sqrt( pow( (RG.ifel_gy), 2) + pow( PointingData[point_index].gy_az*cos_e, 2) );
     double current_gy_total_accel = (PointingData[point_index].gy_total_vel - last_gy_total_vel)*SR;

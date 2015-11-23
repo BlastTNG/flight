@@ -925,7 +925,11 @@ void store_5hz_acs(void)
     static channel_t* vetoSensorAddr;
 
     /** derived pointing data */
-    static channel_t *azGyAddr;
+    static channel_t *gy_azvel_addr;
+    static channel_t *gy_elvel_addr;
+    static channel_t *gy_totalvel_addr;
+    static channel_t *gy_totalaccel_addr;
+
     static channel_t* OffsetIFelGYAddr;
     static channel_t* OffsetIFelGYiscAddr;
     static channel_t* OffsetIFrollGYiscAddr;
@@ -1040,7 +1044,11 @@ void store_5hz_acs(void)
         altAddr = channels_find_by_name("alt");
         lonAddr = channels_find_by_name("lon");
         lstAddr = channels_find_by_name("lst");
-        azGyAddr = channels_find_by_name("az_gy");
+        gy_azvel_addr = channels_find_by_name("gy_az_vel");
+        gy_elvel_addr = channels_find_by_name("gy_el_vel");
+        gy_totalvel_addr = channels_find_by_name("gy_total_vel");
+        gy_totalaccel_addr = channels_find_by_name("gy_total_accel");
+
         azMagAddr = channels_find_by_name("az_mag");
         azRawMagAddr = channels_find_by_name("az_raw_mag");
         declinationMagAddr = channels_find_by_name("declination_mag");
@@ -1229,7 +1237,10 @@ void store_5hz_acs(void)
     SET_VALUE(timeAtrimAddr, CommandData.autotrim_time);
     SET_VALUE(rateAtrimAddr, CommandData.autotrim_rate * 65536.0 / 30.0);
 
-    SET_FLOAT(azGyAddr, (float) (PointingData[i_point].v_az));
+    SET_FLOAT(gy_azvel_addr, (float) (PointingData[i_point].gy_az));
+    SET_FLOAT(gy_elvel_addr, (float) (PointingData[i_point].gy_el));
+    SET_FLOAT(gy_totalvel_addr, (float) (PointingData[i_point].gy_total_vel));
+    SET_FLOAT(gy_totalaccel_addr, (float) (PointingData[i_point].gy_total_accel));
 
     /************* Pointing mode fields *************/
     SET_VALUE(slewVetoAddr, (int) (CommandData.pointing_mode.nw) / 4.);
