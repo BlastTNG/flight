@@ -180,6 +180,25 @@ ExternalProject_Add(phenomproj
 set(PH_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/.libs/libphenom.a)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/include")
 
+
+# Find libusb    
+pkg_check_modules(PC_USB QUIET libusb-1.0)
+set(USB_DEFINITIONS ${PC_USB_CFLAGS_OTHER})
+
+find_path(USB_INCLUDE_DIR libusb-1.0/libusb.h
+          HINTS ${PC_USB_INCLUDEDIR} ${PC_USB_INCLUDE_DIRS}
+          REQUIRED)
+
+find_library(USB_LIBRARY NAMES usb-1.0 libusb-1.0
+            HINTS ${PC_USB_LIBDIR} ${PC_USB_LIBRARY_DIRS} REQUIRED)
+IF(NOT USB_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find libusb.h.  Is libusb-1.0-0-dev installed?")
+ENDIF()
+IF(NOT USB_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libusb-1.0.  Please install this using apt-get.")
+ENDIF()
+include_directories(${USB_INCLUDE_DIR})
+
 # configure a header file to pass some of the CMake settings to the source code
 configure_file (
   "${PROJECT_SOURCE_DIR}/mcp_config.h.in"
@@ -192,6 +211,7 @@ include_directories ("${PROJECT_BINARY_DIR}")
 set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
+set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../external_libs/mpsse")
 
 set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
 FILE(GLOB etc_files "${ETC_DIR}/*.txt" "${ETC_DIR}/*.sch" "${ETC_DIR}/*.library" "${ETC_DIR}/*.lut" "${ETC_DIR}/WMM.COF")
@@ -201,6 +221,7 @@ include_directories (
     "${CONFIG_DIR}/include"
     "${COMMON_DIR}/include"
     "${COMMS_DIR}/include"
+    "${MPSSE_DIR}"
     )
 
 # add commanding objects
@@ -231,6 +252,9 @@ add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 # add asynchronous communication objects
 add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
 
+# add MPSSE Files
+add_subdirectory(${MPSSE_DIR} "${PROJECT_BINARY_DIR}/mpsse")
+
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 define_file_basename_for_sources(pointing)
 add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
@@ -250,6 +274,8 @@ define_file_basename_for_sources(blast_common)
 add_dependencies(blast_common phenomproj)
 add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
 define_file_basename_for_sources(blast_comms)
+add_library (mpsse OBJECT ${MPSSE_SRCS} ${MPSSE_HEADERS})
+define_file_basename_for_sources(mpsse)
 
 # add mcp objects
 add_library(mcp_obj OBJECT 
@@ -284,6 +310,7 @@ target_link_libraries(mcp
     ${CK_LIBRARY}
     ${PH_LIBRARY}
     ${SENSORS_LIBRARY}
+    ${USB_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ssl crypto 
     mosquitto m)

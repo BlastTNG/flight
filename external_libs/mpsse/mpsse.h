@@ -21,8 +21,23 @@
 #ifndef MPSSE_H_
 #define MPSSE_H_
 
+#include <stdint.h>
 #include <stdbool.h>
-#include "helper/binarybuffer.h"
+#include "binarybuffer.h"
+
+/* general failures
+ * error codes < 100
+ */
+#define ERROR_OK                        (0)
+#define ERROR_NO_CONFIG_FILE            (-2)
+#define ERROR_BUF_TOO_SMALL             (-3)
+/* see "Error:" log entry for meaningful message to the user. The caller should
+ * make no assumptions about what went wrong and try to handle the problem.
+ */
+#define ERROR_FAIL                      (-4)
+#define ERROR_WAIT                      (-5)
+
+#define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 
 /* Mode flags */
 #define POS_EDGE_OUT 0x00

@@ -1,0 +1,12 @@
+set(MPSSE_SRCS
+    ${MPSSE_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/mpsse.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/binarybuffer.c
+    PARENT_SCOPE
+)
+set(MPSSE_HEADERS
+   ${MPSSE_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/mpsse.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/binarybuffer.h
+   PARENT_SCOPE
+)
