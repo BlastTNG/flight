@@ -239,12 +239,12 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
         LutInit(&ROXLut);
     }
 
-    SET_VALUE(tStartCycleAddr, CommandData.Cryo.cycle_start_temp * 65536.0 / 4.0);
-    SET_VALUE(tPotMaxCycleAddr, CommandData.Cryo.cycle_pot_max * 65536.0 / 10.0);
-    SET_VALUE(tCharMaxCycleAddr, CommandData.Cryo.cycle_charcoal_max * 65536.0 / 70.0);
-    SET_VALUE(tCharSetCycleAddr, CommandData.Cryo.cycle_charcoal_settle * 65536.0 / 70.0);
-    SET_VALUE(timeCharCycleAddr, CommandData.Cryo.cycle_charcoal_timeout * 65536.0 / 120.0);
-    SET_VALUE(timeSetCycleAddr, CommandData.Cryo.cycle_settle_timeout * 65536.0 / 120.0);
+    SET_SCALED_VALUE(tStartCycleAddr, CommandData.Cryo.cycle_start_temp);
+    SET_SCALED_VALUE(tPotMaxCycleAddr, CommandData.Cryo.cycle_pot_max);
+    SET_SCALED_VALUE(tCharMaxCycleAddr, CommandData.Cryo.cycle_charcoal_max);
+    SET_SCALED_VALUE(tCharSetCycleAddr, CommandData.Cryo.cycle_charcoal_settle);
+    SET_SCALED_VALUE(timeCharCycleAddr, CommandData.Cryo.cycle_charcoal_timeout);
+    SET_SCALED_VALUE(timeSetCycleAddr, CommandData.Cryo.cycle_settle_timeout);
 
     overall_settle_timeout = CommandData.Cryo.cycle_charcoal_timeout + CommandData.Cryo.cycle_settle_timeout + 2;
     t_he3fridge_cold = CommandData.Cryo.cycle_start_temp - 0.025;

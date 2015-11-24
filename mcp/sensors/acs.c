@@ -587,13 +587,13 @@ void store_100hz_acs(void)
     i_point = GETREADINDEX(point_index);
     i_motors = GETREADINDEX(motor_index);
 
-    SET_INT32(azAddr, (unsigned int) (PointingData[i_point].az * DEG2LI));
-    SET_INT32(elAddr, (unsigned int) (PointingData[i_point].el * DEG2LI));
+    SET_INT32(azAddr, PointingData[i_point].az);
+    SET_INT32(elAddr, PointingData[i_point].el);
 
-    SET_INT16(elEncAddr, (unsigned int) ((PointingData[i_point].enc_el + CommandData.enc_el_trim) * DEG2I));
-    SET_INT16(sigmaEncAddr, (unsigned int) (PointingData[i_point].enc_sigma * DEG2I));
-    SET_INT16(elMotEncAddr, (unsigned int) ((PointingData[i_point].enc_motor_el + CommandData.enc_el_trim) * DEG2I));
-    SET_INT16(sigmaMotEncAddr, (unsigned int) (PointingData[i_point].enc_motor_sigma * DEG2I));
+    SET_INT16(elEncAddr, (PointingData[i_point].enc_el + CommandData.enc_el_trim));
+    SET_INT16(sigmaEncAddr, PointingData[i_point].enc_sigma);
+    SET_INT16(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_el_trim));
+    SET_INT16(sigmaMotEncAddr, PointingData[i_point].enc_motor_sigma);
 
     SET_INT32(vel_rw_addr, RWMotorData[i_motors].velocity);
     SET_INT32(pos_rw_addr, RWMotorData[i_motors].position);
@@ -1122,98 +1122,99 @@ void store_5hz_acs(void)
     i_point = GETREADINDEX(point_index);
 
     /********* PSS data *************/
-    SET_VALUE(azrawPss1Addr, PointingData[i_point].pss1_azraw * DEG2I);
-    SET_VALUE(azrawPss2Addr, PointingData[i_point].pss2_azraw * DEG2I);
-    SET_VALUE(elrawPss1Addr, PointingData[i_point].pss1_elraw * DEG2I);
-    SET_VALUE(elrawPss2Addr, PointingData[i_point].pss2_elraw * DEG2I);
-    SET_VALUE(snrPss1Addr, PointingData[i_point].pss1_snr * 1000.);
-    SET_VALUE(snrPss2Addr, PointingData[i_point].pss2_snr * 1000.);
-    SET_VALUE(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim) * DEG2I);
-    SET_VALUE(PssOkAddr, PointingData[i_point].pss_ok);
+    SET_SCALED_VALUE(azrawPss1Addr, PointingData[i_point].pss1_azraw);
+    SET_SCALED_VALUE(azrawPss2Addr, PointingData[i_point].pss2_azraw);
+    SET_SCALED_VALUE(elrawPss1Addr, PointingData[i_point].pss1_elraw);
+    SET_SCALED_VALUE(elrawPss2Addr, PointingData[i_point].pss2_elraw);
+    SET_SCALED_VALUE(snrPss1Addr, PointingData[i_point].pss1_snr);
+    SET_SCALED_VALUE(snrPss2Addr, PointingData[i_point].pss2_snr);
+    ///TODO: Why are we manually adding the trim here?
+    SET_SCALED_VALUE(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim));
+    SET_SCALED_VALUE(PssOkAddr, PointingData[i_point].pss_ok);
     /********** SIP GPS Data **********/
-    SET_VALUE(latSipAddr, (int) (SIPData.GPSpos.lat * DEG2I));
-    SET_VALUE(lonSipAddr, (int) (SIPData.GPSpos.lon * DEG2I));
-    SET_VALUE(altSipAddr, (int) (SIPData.GPSpos.alt));
-    SET_VALUE(timeSipAddr, SIPData.GPStime.UTC);
+    SET_SCALED_VALUE(latSipAddr, SIPData.GPSpos.lat);
+    SET_SCALED_VALUE(lonSipAddr, SIPData.GPSpos.lon);
+    SET_SCALED_VALUE(altSipAddr, SIPData.GPSpos.alt);
+    SET_SCALED_VALUE(timeSipAddr, SIPData.GPStime.UTC);
 
     /********** SIP MKS Altitude ************/
-    SET_VALUE(mksLoSipAddr, (int) (SIPData.MKSalt.lo));
-    SET_VALUE(mksMedSipAddr, (int) (SIPData.MKSalt.med));
-    SET_VALUE(mksHiSipAddr, (int) (SIPData.MKSalt.hi));
+    SET_SCALED_VALUE(mksLoSipAddr, SIPData.MKSalt.lo);
+    SET_SCALED_VALUE(mksMedSipAddr, SIPData.MKSalt.med);
+    SET_SCALED_VALUE(mksHiSipAddr, SIPData.MKSalt.hi);
 
     /************* processed pointing data *************/
-    SET_VALUE(raAddr, (unsigned int) (PointingData[i_point].ra * H2LI));
-    SET_VALUE(decAddr, (unsigned int) (PointingData[i_point].dec * DEG2LI));
+    SET_SCALED_VALUE(raAddr, PointingData[i_point].ra);
+    SET_SCALED_VALUE(decAddr, PointingData[i_point].dec);
 
-    SET_VALUE(OffsetIFelGYAddr, (signed int) (PointingData[i_point].offset_ifel_gy * 32768.));
-    SET_VALUE(OffsetIFelGYiscAddr, (signed int) (PointingData[i_point].offset_ifel_gy_xsc[0] * 32768.));
-    SET_VALUE(OffsetIFrollGYiscAddr, (signed int) (PointingData[i_point].offset_ifroll_gy_xsc[0] * 32768.));
-    SET_VALUE(OffsetIFyawGYiscAddr, (signed int) (PointingData[i_point].offset_ifyaw_gy_xsc[0] * 32768.));
-    SET_VALUE(OffsetIFelGYoscAddr, (signed int) (PointingData[i_point].offset_ifel_gy_xsc[1] * 32768.));
-    SET_VALUE(OffsetIFrollGYoscAddr, (signed int) (PointingData[i_point].offset_ifroll_gy_xsc[1] * 32768.));
-    SET_VALUE(OffsetIFyawGYoscAddr, (signed int) (PointingData[i_point].offset_ifyaw_gy_xsc[1] * 32768.));
-    SET_VALUE(OffsetIFrollGYAddr, (signed int) (PointingData[i_point].offset_ifroll_gy * 32768.));
-    SET_VALUE(OffsetIFyawGYAddr, (signed int) (PointingData[i_point].offset_ifyaw_gy * 32768.));
+    SET_SCALED_VALUE(OffsetIFelGYAddr, PointingData[i_point].offset_ifel_gy);
+    SET_SCALED_VALUE(OffsetIFelGYiscAddr, PointingData[i_point].offset_ifel_gy_xsc[0]);
+    SET_SCALED_VALUE(OffsetIFrollGYiscAddr, PointingData[i_point].offset_ifroll_gy_xsc[0]);
+    SET_SCALED_VALUE(OffsetIFyawGYiscAddr, PointingData[i_point].offset_ifyaw_gy_xsc[0]);
+    SET_SCALED_VALUE(OffsetIFelGYoscAddr, PointingData[i_point].offset_ifel_gy_xsc[1];
+    SET_SCALED_VALUE(OffsetIFrollGYoscAddr, PointingData[i_point].offset_ifroll_gy_xsc[1];
+    SET_SCALED_VALUE(OffsetIFyawGYoscAddr, PointingData[i_point].offset_ifyaw_gy_xsc[1]);
+    SET_SCALED_VALUE(OffsetIFrollGYAddr, PointingData[i_point].offset_ifroll_gy);
+    SET_SCALED_VALUE(OffsetIFyawGYAddr, PointingData[i_point].offset_ifyaw_gy);
 
-    SET_VALUE(OffsetIFrollMagGYAddr, (signed int) (PointingData[i_point].offset_ifrollmag_gy * 32768.));
-    SET_VALUE(OffsetIFyawMagGYAddr, (signed int) (PointingData[i_point].offset_ifyawmag_gy * 32768.));
-    SET_VALUE(OffsetIFrollPSSGYAddr, (signed int) (PointingData[i_point].offset_ifrollpss_gy * 32768.));
-    SET_VALUE(OffsetIFyawPSSGYAddr, (signed int) (PointingData[i_point].offset_ifyawpss_gy * 32768.));
+    SET_SCALED_VALUE(OffsetIFrollMagGYAddr, PointingData[i_point].offset_ifrollmag_gy);
+    SET_SCALED_VALUE(OffsetIFyawMagGYAddr, PointingData[i_point].offset_ifyawmag_gy);
+    SET_SCALED_VALUE(OffsetIFrollPSSGYAddr, PointingData[i_point].offset_ifrollpss_gy);
+    SET_SCALED_VALUE(OffsetIFyawPSSGYAddr, PointingData[i_point].offset_ifyawpss_gy);
 
-    SET_VALUE(latAddr, (unsigned int) (PointingData[i_point].lat * DEG2LI));
-    SET_VALUE(lonAddr, (unsigned int) (PointingData[i_point].lon * DEG2LI));
-    SET_VALUE(altAddr, (unsigned int) (PointingData[i_point].alt));
+    SET_SCALED_VALUE(latAddr, PointingData[i_point].lat);
+    SET_SCALED_VALUE(lonAddr, PointingData[i_point].lon);
+    SET_SCALED_VALUE(altAddr, PointingData[i_point].alt);
 
-//    SET_VALUE(mcpFrameAddr, PointingData[i_point].mcp_frame);
-    SET_VALUE(lstAddr, PointingData[i_point].lst);
+//    SET_SCALED_VALUE(mcpFrameAddr, PointingData[i_point].mcp_frame);
+    SET_SCALED_VALUE(lstAddr, PointingData[i_point].lst);
 
-    SET_VALUE(azMagAddr, (unsigned int) ((PointingData[i_point].mag_az + CommandData.mag_az_trim) * DEG2I));
-    SET_VALUE(azRawMagAddr, (unsigned int) ((PointingData[i_point].mag_az_raw) * DEG2I));
-    SET_VALUE(declinationMagAddr, (unsigned int) (PointingData[i_point].mag_model_dec * DEG2I));
+    SET_SCALED_VALUE(azMagAddr, (PointingData[i_point].mag_az + CommandData.mag_az_trim));
+    SET_SCALED_VALUE(azRawMagAddr, (PointingData[i_point].mag_az_raw));
+    SET_SCALED_VALUE(declinationMagAddr, PointingData[i_point].mag_model_dec);
 
-    SET_VALUE(elMagAddr, (unsigned int) (PointingData[i_point].mag_el * DEG2I));
-    SET_VALUE(dipMagAddr, (unsigned int) (PointingData[i_point].mag_model_dip * DEG2I));
+    SET_SCALED_VALUE(elMagAddr, PointingData[i_point].mag_el);
+    SET_SCALED_VALUE(dipMagAddr, PointingData[i_point].mag_model_dip);
 
-    SET_VALUE(calXMaxMagAddr, (unsigned int) (CommandData.cal_xmax_mag));
-    SET_VALUE(calXMinMagAddr, (unsigned int) (CommandData.cal_xmin_mag));
-    SET_VALUE(calYMaxMagAddr, (unsigned int) (CommandData.cal_ymax_mag));
-    SET_VALUE(calYMinMagAddr, (unsigned int) (CommandData.cal_ymin_mag));
+    SET_SCALED_VALUE(calXMaxMagAddr, CommandData.cal_xmax_mag));
+    SET_SCALED_VALUE(calXMinMagAddr, CommandData.cal_xmin_mag));
+    SET_SCALED_VALUE(calYMaxMagAddr, CommandData.cal_ymax_mag));
+    SET_SCALED_VALUE(calYMinMagAddr, CommandData.cal_ymin_mag));
 
-    SET_VALUE(calOffPss1Addr, (unsigned int) (CommandData.cal_off_pss1 * 65536.0 / 40.0));
-    SET_VALUE(calOffPss2Addr, (unsigned int) (CommandData.cal_off_pss2 * 65536.0 / 40.0));
-    SET_VALUE(calOffPss3Addr, (unsigned int) (CommandData.cal_off_pss3 * 65536.0 / 40.0));
-    SET_VALUE(calOffPss4Addr, (unsigned int) (CommandData.cal_off_pss4 * 65536.0 / 40.0));
-    SET_VALUE(calDPss1Addr, (unsigned int) (CommandData.cal_d_pss1 * 65536.0 / 4.0));
-    SET_VALUE(calDPss2Addr, (unsigned int) (CommandData.cal_d_pss2 * 65536.0 / 4.0));
-    SET_VALUE(calDPss3Addr, (unsigned int) (CommandData.cal_d_pss3 * 65536.0 / 4.0));
-    SET_VALUE(calDPss4Addr, (unsigned int) (CommandData.cal_d_pss4 * 65536.0 / 4.0));
-    SET_VALUE(calIMinPssAddr, (unsigned int) (CommandData.cal_imin_pss * 65536.0 / 40.0));
+    SET_SCALED_VALUE(calOffPss1Addr, CommandData.cal_off_pss1);
+    SET_SCALED_VALUE(calOffPss2Addr, CommandData.cal_off_pss2);
+    SET_SCALED_VALUE(calOffPss3Addr, CommandData.cal_off_pss3);
+    SET_SCALED_VALUE(calOffPss4Addr, CommandData.cal_off_pss4);
+    SET_SCALED_VALUE(calDPss1Addr, CommandData.cal_d_pss1);
+    SET_SCALED_VALUE(calDPss2Addr, CommandData.cal_d_pss2);
+    SET_SCALED_VALUE(calDPss3Addr, CommandData.cal_d_pss3);
+    SET_SCALED_VALUE(calDPss4Addr, CommandData.cal_d_pss4);
+    SET_SCALED_VALUE(calIMinPssAddr, CommandData.cal_imin_pss);
 
-    SET_VALUE(sigmaMagAddr, (unsigned int) (PointingData[i_point].mag_sigma * DEG2I));
-    SET_VALUE(trimMagAddr, CommandData.mag_az_trim * DEG2I);
+    SET_SCALED_VALUE(sigmaMagAddr, PointingData[i_point].mag_sigma);
+    SET_SCALED_VALUE(trimMagAddr, CommandData.mag_az_trim;
 
-    SET_VALUE(sigmaPssAddr, (unsigned int) (PointingData[i_point].pss_sigma * DEG2I));
-    SET_VALUE(trimPssAddr, CommandData.pss_az_trim * DEG2I);
+    SET_SCALED_VALUE(sigmaPssAddr, PointingData[i_point].pss_sigma);
+    SET_SCALED_VALUE(trimPssAddr, CommandData.pss_az_trim;
 
-    SET_VALUE(azSunAddr, (unsigned int) (PointingData[i_point].sun_az * DEG2I));
-    SET_VALUE(elSunAddr, (int) (PointingData[i_point].sun_el * DEG2I));
+    SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
+    SET_SCALED_VALUE(elSunAddr, (PointingData[i_point].sun_el);
 
-    SET_VALUE(modeCalAddr, CommandData.Cryo.calibrator);
-    SET_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
-    SET_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
+    SET_SCALED_VALUE(modeCalAddr, CommandData.Cryo.calibrator);
+    SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
+    SET_SCALED_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
 
-    SET_VALUE(trimEncAddr, CommandData.enc_el_trim * DEG2I);
+    SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim;
 
-    SET_VALUE(elClinAddr, (unsigned int) ((PointingData[i_point].clin_el_lut + CommandData.clin_el_trim) * DEG2I));
-    SET_VALUE(elLutClinAddr, (unsigned int) (PointingData[i_point].clin_el * DEG2I));
-    SET_VALUE(sigmaClinAddr, (unsigned int) (PointingData[i_point].clin_sigma * DEG2I));
-    SET_VALUE(trimClinAddr, CommandData.clin_el_trim * DEG2I);
+    SET_SCALED_VALUE(elClinAddr, (PointingData[i_point].clin_el_lut + CommandData.clin_el_trim));
+    SET_SCALED_VALUE(elLutClinAddr, PointingData[i_point].clin_el);
+    SET_SCALED_VALUE(sigmaClinAddr, PointingData[i_point].clin_sigma);
+    SET_SCALED_VALUE(trimClinAddr, CommandData.clin_el_trim;
 
-    SET_VALUE(trimNullAddr, CommandData.null_az_trim * DEG2I);
+    SET_SCALED_VALUE(trimNullAddr, CommandData.null_az_trim;
 
-    SET_VALUE(threshAtrimAddr, CommandData.autotrim_thresh * 65536.0 / 10.0);
-    SET_VALUE(timeAtrimAddr, CommandData.autotrim_time);
-    SET_VALUE(rateAtrimAddr, CommandData.autotrim_rate * 65536.0 / 30.0);
+    SET_SCALED_VALUE(threshAtrimAddr, CommandData.autotrim_thresh);
+    SET_SCALED_VALUE(timeAtrimAddr, CommandData.autotrim_time);
+    SET_SCALED_VALUE(rateAtrimAddr, CommandData.autotrim_rate);
 
     SET_FLOAT(gy_azvel_addr, (float) (PointingData[i_point].gy_az));
     SET_FLOAT(gy_elvel_addr, (float) (PointingData[i_point].gy_el));
@@ -1221,33 +1222,33 @@ void store_5hz_acs(void)
     SET_FLOAT(gy_totalaccel_addr, (float) (PointingData[i_point].gy_total_accel));
 
     /************* Pointing mode fields *************/
-    SET_VALUE(slewVetoAddr, (int) (CommandData.pointing_mode.nw) / 4.);
-    SET_VALUE(svetoLenAddr, (int) (CommandData.slew_veto) / 4.);
-    SET_VALUE(nextIHwprPAddr, (int) (CommandData.pointing_mode.next_i_hwpr));
-    SET_VALUE(nextIDithPAddr, (int) (CommandData.pointing_mode.next_i_dith));
-    SET_VALUE(nDithPAddr, (int) (CommandData.pointing_mode.n_dith));
-    SET_VALUE(modePAddr, (int) (CommandData.pointing_mode.mode));
+    SET_SCALED_VALUE(slewVetoAddr, (CommandData.pointing_mode.nw));
+    SET_SCALED_VALUE(svetoLenAddr, (CommandData.slew_veto));
+    SET_SCALED_VALUE(nextIHwprPAddr, (CommandData.pointing_mode.next_i_hwpr));
+    SET_SCALED_VALUE(nextIDithPAddr, (CommandData.pointing_mode.next_i_dith));
+    SET_SCALED_VALUE(nDithPAddr, (CommandData.pointing_mode.n_dith));
+    SET_SCALED_VALUE(modePAddr, (CommandData.pointing_mode.mode));
     if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) || (CommandData.pointing_mode.mode == P_AZ_SCAN)
             || (CommandData.pointing_mode.mode == P_EL_SCAN))
-        SET_VALUE(xPAddr, (int) (CommandData.pointing_mode.X * DEG2I));
+        SET_SCALED_VALUE(xPAddr, (CommandData.pointing_mode.X);
     else
-        SET_VALUE(xPAddr, (int) (CommandData.pointing_mode.X * H2I));
+        SET_SCALED_VALUE(xPAddr, (CommandData.pointing_mode.X);
 
-    SET_VALUE(yPAddr, (int) (CommandData.pointing_mode.Y * DEG2I));
-    SET_VALUE(velAzPAddr, (int) (CommandData.pointing_mode.vaz * VEL2I));
-    SET_VALUE(velElPAddr, (int) (CommandData.pointing_mode.vel * VEL2I));
-    SET_VALUE(delPAddr, (int) (CommandData.pointing_mode.del * VEL2I));
-    SET_VALUE(dazPAddr, (int) (CommandData.pointing_mode.daz * VEL2I));
-    SET_VALUE(wPAddr, (int) (CommandData.pointing_mode.w * DEG2I));
-    SET_VALUE(hPAddr, (int) (CommandData.pointing_mode.h * DEG2I));
-    SET_VALUE(ra1PAddr, (int) (CommandData.pointing_mode.ra[0] * H2I));
-    SET_VALUE(dec1PAddr, (int) (CommandData.pointing_mode.dec[0] * DEG2I));
-    SET_VALUE(ra2PAddr, (int) (CommandData.pointing_mode.ra[1] * H2I));
-    SET_VALUE(dec2PAddr, (int) (CommandData.pointing_mode.dec[1] * DEG2I));
-    SET_VALUE(ra3PAddr, (int) (CommandData.pointing_mode.ra[2] * H2I));
-    SET_VALUE(dec3PAddr, (int) (CommandData.pointing_mode.dec[2] * DEG2I));
-    SET_VALUE(ra4PAddr, (int) (CommandData.pointing_mode.ra[3] * H2I));
-    SET_VALUE(dec4PAddr, (int) (CommandData.pointing_mode.dec[3] * DEG2I));
+    SET_SCALED_VALUE(yPAddr, (CommandData.pointing_mode.Y);
+    SET_SCALED_VALUE(velAzPAddr, (CommandData.pointing_mode.vaz);
+    SET_SCALED_VALUE(velElPAddr, (CommandData.pointing_mode.vel);
+    SET_SCALED_VALUE(delPAddr, (CommandData.pointing_mode.del);
+    SET_SCALED_VALUE(dazPAddr, (CommandData.pointing_mode.daz);
+    SET_SCALED_VALUE(wPAddr, (CommandData.pointing_mode.w);
+    SET_SCALED_VALUE(hPAddr, (CommandData.pointing_mode.h);
+    SET_SCALED_VALUE(ra1PAddr, (CommandData.pointing_mode.ra[0]);
+    SET_SCALED_VALUE(dec1PAddr, (CommandData.pointing_mode.dec[0]);
+    SET_SCALED_VALUE(ra2PAddr, (CommandData.pointing_mode.ra[1]);
+    SET_SCALED_VALUE(dec2PAddr, (CommandData.pointing_mode.dec[1]);
+    SET_SCALED_VALUE(ra3PAddr, (CommandData.pointing_mode.ra[2]);
+    SET_SCALED_VALUE(dec3PAddr, (CommandData.pointing_mode.dec[2]);
+    SET_SCALED_VALUE(ra4PAddr, (CommandData.pointing_mode.ra[3]);
+    SET_SCALED_VALUE(dec4PAddr, (CommandData.pointing_mode.dec[3]);
 
     sensor_veto = ((!CommandData.use_elmotenc)) | ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2) | ((!CommandData.use_mag) << 3)
             | ((!CommandData.use_elclin) << 5) | ((!CommandData.use_xsc1) << 6) | ((CommandData.disable_el) << 10)
@@ -1259,7 +1260,7 @@ void store_5hz_acs(void)
     sensor_veto |= (CommandData.az_autogyro << 8);
     sensor_veto |= (CommandData.el_autogyro << 9);
 
-    SET_VALUE(vetoSensorAddr, sensor_veto);
+    SET_SCALED_VALUE(vetoSensorAddr, sensor_veto);
 
 
 }

@@ -112,16 +112,16 @@ void store_axes_mode_data(void)
     }
 
     /* scan modes */
-    SET_VALUE(modeAzMcAddr, axes_mode.az_mode);
-    SET_VALUE(modeElMcAddr, axes_mode.el_mode);
-    SET_VALUE(dirAzMcAddr, axes_mode.az_dir);
-    SET_VALUE(dirElMcAddr, axes_mode.el_dir);
-    SET_VALUE(dithElAddr, axes_mode.el_dith * 32767.0 * 2.0);
-    SET_VALUE(destAzMcAddr, axes_mode.az_dest * DEG2I);
-    SET_VALUE(destElMcAddr, axes_mode.el_dest * DEG2I);
-    SET_VALUE(velAzMcAddr, axes_mode.az_vel * 6000.);
-    SET_VALUE(velElMcAddr, axes_mode.el_vel * 6000.);
-    SET_VALUE(iDithMcAddr, axes_mode.i_dith);
+    SET_SCALED_VALUE(modeAzMcAddr, axes_mode.az_mode);
+    SET_SCALED_VALUE(modeElMcAddr, axes_mode.el_mode);
+    SET_SCALED_VALUE(dirAzMcAddr, axes_mode.az_dir);
+    SET_SCALED_VALUE(dirElMcAddr, axes_mode.el_dir);
+    SET_SCALED_VALUE(dithElAddr, axes_mode.el_dith);
+    SET_SCALED_VALUE(destAzMcAddr, axes_mode.az_dest);
+    SET_SCALED_VALUE(destElMcAddr, axes_mode.el_dest);
+    SET_SCALED_VALUE(velAzMcAddr, axes_mode.az_vel);
+    SET_SCALED_VALUE(velElMcAddr, axes_mode.el_vel);
+    SET_SCALED_VALUE(iDithMcAddr, axes_mode.i_dith);
 }
 
 /************************************************************************/
