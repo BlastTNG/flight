@@ -31,6 +31,8 @@
 #include <stdint.h>
 #include <sys/queue.h>
 
+#define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
+
 /** @file
  * Support functions to access arbitrary bits in a byte array
  */

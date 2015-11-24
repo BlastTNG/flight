@@ -37,8 +37,6 @@
 #define ERROR_FAIL                      (-4)
 #define ERROR_WAIT                      (-5)
 
-#define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
-
 /* Mode flags */
 #define POS_EDGE_OUT 0x00
 #define NEG_EDGE_OUT 0x01

@@ -357,7 +357,6 @@ int bit_copy_queued(struct bit_copy_queue *q, uint8_t *dst, unsigned dst_offset,
 void bit_copy_execute(struct bit_copy_queue *q)
 {
 	struct bit_copy_queue_entry *qe;
-	struct bit_copy_queue_entry *tmp;
 	TAILQ_FOREACH(qe, q, list) {
 		bit_copy(qe->dst, qe->dst_offset, qe->src, qe->src_offset, qe->bit_count);
 		TAILQ_REMOVE(q, qe, list);
@@ -368,7 +367,6 @@ void bit_copy_execute(struct bit_copy_queue *q)
 void bit_copy_discard(struct bit_copy_queue *q)
 {
 	struct bit_copy_queue_entry *qe;
-	struct bit_copy_queue_entry *tmp;
 	while (q->tqh_first) {
 	    qe = q->tqh_first;
 	    TAILQ_REMOVE(q, qe, list);
