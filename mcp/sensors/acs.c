@@ -28,6 +28,7 @@
 
 #include <blast.h>
 
+#include <channel_macros.h>
 #include <blast_sip_interface.h>
 #include <conversions.h>
 #include <channels_tng.h>
@@ -1150,8 +1151,8 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(OffsetIFelGYiscAddr, PointingData[i_point].offset_ifel_gy_xsc[0]);
     SET_SCALED_VALUE(OffsetIFrollGYiscAddr, PointingData[i_point].offset_ifroll_gy_xsc[0]);
     SET_SCALED_VALUE(OffsetIFyawGYiscAddr, PointingData[i_point].offset_ifyaw_gy_xsc[0]);
-    SET_SCALED_VALUE(OffsetIFelGYoscAddr, PointingData[i_point].offset_ifel_gy_xsc[1];
-    SET_SCALED_VALUE(OffsetIFrollGYoscAddr, PointingData[i_point].offset_ifroll_gy_xsc[1];
+    SET_SCALED_VALUE(OffsetIFelGYoscAddr, PointingData[i_point].offset_ifel_gy_xsc[1]);
+    SET_SCALED_VALUE(OffsetIFrollGYoscAddr, PointingData[i_point].offset_ifroll_gy_xsc[1]);
     SET_SCALED_VALUE(OffsetIFyawGYoscAddr, PointingData[i_point].offset_ifyaw_gy_xsc[1]);
     SET_SCALED_VALUE(OffsetIFrollGYAddr, PointingData[i_point].offset_ifroll_gy);
     SET_SCALED_VALUE(OffsetIFyawGYAddr, PointingData[i_point].offset_ifyaw_gy);
@@ -1175,10 +1176,10 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(elMagAddr, PointingData[i_point].mag_el);
     SET_SCALED_VALUE(dipMagAddr, PointingData[i_point].mag_model_dip);
 
-    SET_SCALED_VALUE(calXMaxMagAddr, CommandData.cal_xmax_mag));
-    SET_SCALED_VALUE(calXMinMagAddr, CommandData.cal_xmin_mag));
-    SET_SCALED_VALUE(calYMaxMagAddr, CommandData.cal_ymax_mag));
-    SET_SCALED_VALUE(calYMinMagAddr, CommandData.cal_ymin_mag));
+    SET_SCALED_VALUE(calXMaxMagAddr, CommandData.cal_xmax_mag);
+    SET_SCALED_VALUE(calXMinMagAddr, CommandData.cal_xmin_mag);
+    SET_SCALED_VALUE(calYMaxMagAddr, CommandData.cal_ymax_mag);
+    SET_SCALED_VALUE(calYMinMagAddr, CommandData.cal_ymin_mag);
 
     SET_SCALED_VALUE(calOffPss1Addr, CommandData.cal_off_pss1);
     SET_SCALED_VALUE(calOffPss2Addr, CommandData.cal_off_pss2);
@@ -1191,26 +1192,26 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(calIMinPssAddr, CommandData.cal_imin_pss);
 
     SET_SCALED_VALUE(sigmaMagAddr, PointingData[i_point].mag_sigma);
-    SET_SCALED_VALUE(trimMagAddr, CommandData.mag_az_trim;
+    SET_SCALED_VALUE(trimMagAddr, CommandData.mag_az_trim);
 
     SET_SCALED_VALUE(sigmaPssAddr, PointingData[i_point].pss_sigma);
-    SET_SCALED_VALUE(trimPssAddr, CommandData.pss_az_trim;
+    SET_SCALED_VALUE(trimPssAddr, CommandData.pss_az_trim);
 
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
-    SET_SCALED_VALUE(elSunAddr, (PointingData[i_point].sun_el);
+    SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
 
     SET_SCALED_VALUE(modeCalAddr, CommandData.Cryo.calibrator);
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
     SET_SCALED_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
 
-    SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim;
+    SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim);
 
     SET_SCALED_VALUE(elClinAddr, (PointingData[i_point].clin_el_lut + CommandData.clin_el_trim));
     SET_SCALED_VALUE(elLutClinAddr, PointingData[i_point].clin_el);
     SET_SCALED_VALUE(sigmaClinAddr, PointingData[i_point].clin_sigma);
-    SET_SCALED_VALUE(trimClinAddr, CommandData.clin_el_trim;
+    SET_SCALED_VALUE(trimClinAddr, CommandData.clin_el_trim);
 
-    SET_SCALED_VALUE(trimNullAddr, CommandData.null_az_trim;
+    SET_SCALED_VALUE(trimNullAddr, CommandData.null_az_trim);
 
     SET_SCALED_VALUE(threshAtrimAddr, CommandData.autotrim_thresh);
     SET_SCALED_VALUE(timeAtrimAddr, CommandData.autotrim_time);
@@ -1230,25 +1231,25 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(modePAddr, (CommandData.pointing_mode.mode));
     if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) || (CommandData.pointing_mode.mode == P_AZ_SCAN)
             || (CommandData.pointing_mode.mode == P_EL_SCAN))
-        SET_SCALED_VALUE(xPAddr, (CommandData.pointing_mode.X);
+        SET_SCALED_VALUE(xPAddr, CommandData.pointing_mode.X);
     else
-        SET_SCALED_VALUE(xPAddr, (CommandData.pointing_mode.X);
+        SET_SCALED_VALUE(xPAddr, CommandData.pointing_mode.X);
 
-    SET_SCALED_VALUE(yPAddr, (CommandData.pointing_mode.Y);
-    SET_SCALED_VALUE(velAzPAddr, (CommandData.pointing_mode.vaz);
-    SET_SCALED_VALUE(velElPAddr, (CommandData.pointing_mode.vel);
-    SET_SCALED_VALUE(delPAddr, (CommandData.pointing_mode.del);
-    SET_SCALED_VALUE(dazPAddr, (CommandData.pointing_mode.daz);
-    SET_SCALED_VALUE(wPAddr, (CommandData.pointing_mode.w);
-    SET_SCALED_VALUE(hPAddr, (CommandData.pointing_mode.h);
-    SET_SCALED_VALUE(ra1PAddr, (CommandData.pointing_mode.ra[0]);
-    SET_SCALED_VALUE(dec1PAddr, (CommandData.pointing_mode.dec[0]);
-    SET_SCALED_VALUE(ra2PAddr, (CommandData.pointing_mode.ra[1]);
-    SET_SCALED_VALUE(dec2PAddr, (CommandData.pointing_mode.dec[1]);
-    SET_SCALED_VALUE(ra3PAddr, (CommandData.pointing_mode.ra[2]);
-    SET_SCALED_VALUE(dec3PAddr, (CommandData.pointing_mode.dec[2]);
-    SET_SCALED_VALUE(ra4PAddr, (CommandData.pointing_mode.ra[3]);
-    SET_SCALED_VALUE(dec4PAddr, (CommandData.pointing_mode.dec[3]);
+    SET_SCALED_VALUE(yPAddr, CommandData.pointing_mode.Y);
+    SET_SCALED_VALUE(velAzPAddr, CommandData.pointing_mode.vaz);
+    SET_SCALED_VALUE(velElPAddr, CommandData.pointing_mode.vel);
+    SET_SCALED_VALUE(delPAddr, CommandData.pointing_mode.del);
+    SET_SCALED_VALUE(dazPAddr, CommandData.pointing_mode.daz);
+    SET_SCALED_VALUE(wPAddr, CommandData.pointing_mode.w);
+    SET_SCALED_VALUE(hPAddr, CommandData.pointing_mode.h);
+    SET_SCALED_VALUE(ra1PAddr, CommandData.pointing_mode.ra[0]);
+    SET_SCALED_VALUE(dec1PAddr, CommandData.pointing_mode.dec[0]);
+    SET_SCALED_VALUE(ra2PAddr, CommandData.pointing_mode.ra[1]);
+    SET_SCALED_VALUE(dec2PAddr, CommandData.pointing_mode.dec[1]);
+    SET_SCALED_VALUE(ra3PAddr, CommandData.pointing_mode.ra[2]);
+    SET_SCALED_VALUE(dec3PAddr, CommandData.pointing_mode.dec[2]);
+    SET_SCALED_VALUE(ra4PAddr, CommandData.pointing_mode.ra[3]);
+    SET_SCALED_VALUE(dec4PAddr, CommandData.pointing_mode.dec[3]);
 
     sensor_veto = ((!CommandData.use_elmotenc)) | ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2) | ((!CommandData.use_mag) << 3)
             | ((!CommandData.use_elclin) << 5) | ((!CommandData.use_xsc1) << 6) | ((CommandData.disable_el) << 10)
