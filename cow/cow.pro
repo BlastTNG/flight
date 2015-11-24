@@ -17,7 +17,7 @@ log.files = data/prev_status data/log.txt
 QT += gui 
 QMAKE_INSTALL_FILE = install -m 666 -p 
 INSTALLS += target log 
-INCLUDEPATH += ../common/include/
+INCLUDEPATH += ../common/include/ /usr/local/include
 
 HEADERS += \ 
 src/cow.h \ 
