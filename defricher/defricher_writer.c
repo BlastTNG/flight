@@ -56,8 +56,9 @@ static GAsyncQueue *packet_queue = NULL;
 typedef union {
     gpointer ptr;
     struct {
-        uint16_t source;
-        uint16_t rate;
+        uint8_t source;
+        uint8_t rate;
+        uint16_t _dummy;
     };
 } queue_data_t;
 
@@ -378,7 +379,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
 
 void defricher_queue_packet(uint16_t m_source, uint16_t m_rate)
 {
-    queue_data_t new_pkt = {.ptr = 0};
+    queue_data_t new_pkt = {._dummy = (1<<15)};//Set this bit to avoid glib assertions
 
     if (dirfile_offset < 0) {
         if ((m_source == SRC_FC) && (m_rate == RATE_1HZ)) {
