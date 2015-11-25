@@ -556,5 +556,8 @@ derived_tng_t derived_list[] = {
   LINCOM("Vr_OPTBOX_FILT", "tr_optbox_filt" , 2.7351E-9, -5.8625),
    UNITS("Vr_OPTBOX_FILT", "RMS Voltage", "V"),
 
+   BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
+   BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),
+
   END_OF_DERIVED_CHANNELS
 };

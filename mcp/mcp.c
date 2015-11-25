@@ -49,6 +49,7 @@
 #include "command_list.h"
 #include "command_struct.h"
 #include "crc.h"
+#include "magnetometer.h"
 #include "mcp.h"
 #include "pointing_struct.h"
 #include "channels_tng.h"
@@ -514,7 +515,7 @@ int main(int argc, char *argv[])
       xsc_networking_init(0);
       xsc_networking_init(1);
   }
-
+  initialize_magnetometer();
 
 //  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
 

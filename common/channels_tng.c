@@ -387,3 +387,16 @@ int channels_initialize(const channel_t * const m_channel_list)
     return 0;
 }
 
+/**
+ * Returns the number of channels registered to a specific source
+ */
+	size_t channels_get_count_by_source(E_SRC m_src)
+{
+	size_t retval = 0;
+	for (E_RATE rate = 0; rate < RATE_END; rate++ ) {
+		for (E_TYPE type = 0; type < TYPE_END; type++ ) {
+			retval += channel_count[m_src][rate][type];
+		}
+	}
+	return retval;
+}

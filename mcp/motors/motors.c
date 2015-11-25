@@ -76,6 +76,8 @@ static const double lpfilter_coefs[LPFILTER_POLES] = { 0.903328285, -4.60847636,
 static double az_accel = 0.1;
 static int last_mode = -1;
 
+extern bool scan_entered_snap_mode;
+extern bool scan_leaving_snap_mode;
 /**
  * Writes the axes mode data to the frame
  */
@@ -1057,6 +1059,7 @@ static void do_mode_new_cap(void)
     }
 
     if (new_step) {
+        scan_entered_snap_mode = true;
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
@@ -1256,6 +1259,7 @@ static void do_mode_el_box(void)
   }
 
   if (new_step) {
+      scan_entered_snap_mode = true;
     // set v for this step
     v_az = (targ_az - (az-caz))/t;
     // set targ_az for the next step
@@ -1452,6 +1456,8 @@ static void do_mode_new_box(void)
     }
 
     if (new_step) {
+        scan_entered_snap_mode = true;
+//        blast_dbg("Scan Entered snap mode!");
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
@@ -1674,6 +1680,8 @@ void do_mode_quad(void) // aka radbox
     }
 
     if (new_step) {
+
+        scan_entered_snap_mode = true;
         // set v for this step
         v_el = (targ_el + bottom - el) / t;
         // set targ_el for the next step

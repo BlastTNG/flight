@@ -419,21 +419,6 @@ void read_5hz_acs(void)
  */
 void read_100hz_acs(void)
 {
-    static channel_t* xMagAddr;
-    static channel_t* yMagAddr;
-    static channel_t* zMagAddr;
-
-    static int firsttime = 1;
-    if (firsttime) {
-      firsttime = 0;
-        xMagAddr = channels_find_by_name("x_mag");
-        yMagAddr = channels_find_by_name("y_mag");
-        zMagAddr = channels_find_by_name("z_mag");
-    }
-
-    ACSData.mag_x = GET_UINT16(xMagAddr);
-    ACSData.mag_y = GET_UINT16(yMagAddr);
-    ACSData.mag_z = GET_UINT16(zMagAddr);
 
     ACSData.enc_elev = el_get_position_degrees();
 	ACSData.enc_motor_elev = el_get_motor_position_degrees();
@@ -588,13 +573,13 @@ void store_100hz_acs(void)
     i_point = GETREADINDEX(point_index);
     i_motors = GETREADINDEX(motor_index);
 
-    SET_INT32(azAddr, PointingData[i_point].az);
-    SET_INT32(elAddr, PointingData[i_point].el);
+    SET_SCALED_VALUE(azAddr, PointingData[i_point].az);
+    SET_SCALED_VALUE(elAddr, PointingData[i_point].el);
 
-    SET_INT16(elEncAddr, (PointingData[i_point].enc_el + CommandData.enc_el_trim));
-    SET_INT16(sigmaEncAddr, PointingData[i_point].enc_sigma);
-    SET_INT16(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_el_trim));
-    SET_INT16(sigmaMotEncAddr, PointingData[i_point].enc_motor_sigma);
+    SET_SCALED_VALUE(elEncAddr, (PointingData[i_point].enc_el + CommandData.enc_el_trim));
+    SET_SCALED_VALUE(sigmaEncAddr, PointingData[i_point].enc_sigma);
+    SET_SCALED_VALUE(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_el_trim));
+    SET_SCALED_VALUE(sigmaMotEncAddr, PointingData[i_point].enc_motor_sigma);
 
     SET_INT32(vel_rw_addr, RWMotorData[i_motors].velocity);
     SET_INT32(pos_rw_addr, RWMotorData[i_motors].position);
@@ -1046,7 +1031,7 @@ void store_5hz_acs(void)
         azRawMagAddr = channels_find_by_name("az_raw_mag");
         declinationMagAddr = channels_find_by_name("declination_mag");
 
-        elMagAddr = channels_find_by_name("el_mag");
+        elMagAddr = channels_find_by_name("pitch_mag");
         dipMagAddr = channels_find_by_name("dip_mag");
 
         calXMaxMagAddr = channels_find_by_name("cal_xmax_mag");
@@ -1231,9 +1216,9 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(modePAddr, (CommandData.pointing_mode.mode));
     if ((CommandData.pointing_mode.mode == P_AZEL_GOTO) || (CommandData.pointing_mode.mode == P_AZ_SCAN)
             || (CommandData.pointing_mode.mode == P_EL_SCAN))
-        SET_SCALED_VALUE(xPAddr, CommandData.pointing_mode.X);
+    	SET_VALUE(xPAddr, (int) (CommandData.pointing_mode.X * DEG2I));
     else
-        SET_SCALED_VALUE(xPAddr, CommandData.pointing_mode.X);
+    	SET_VALUE(xPAddr, (int) (CommandData.pointing_mode.X * H2I));
 
     SET_SCALED_VALUE(yPAddr, CommandData.pointing_mode.Y);
     SET_SCALED_VALUE(velAzPAddr, CommandData.pointing_mode.vaz);
@@ -1251,9 +1236,12 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(ra4PAddr, CommandData.pointing_mode.ra[3]);
     SET_SCALED_VALUE(dec4PAddr, CommandData.pointing_mode.dec[3]);
 
-    sensor_veto = ((!CommandData.use_elmotenc)) | ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2) | ((!CommandData.use_mag) << 3)
-            | ((!CommandData.use_elclin) << 5) | ((!CommandData.use_xsc1) << 6) | ((CommandData.disable_el) << 10)
-            | ((CommandData.disable_az) << 11) | ((CommandData.force_el) << 12) | ((!CommandData.use_pss) << 13);
+    sensor_veto = ((!CommandData.use_elmotenc))
+    		| ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2)
+			| ((!CommandData.use_mag) << 3)  | ((!CommandData.use_elclin) << 5)
+			| ((!CommandData.use_xsc1) << 6) | ((CommandData.disable_el) << 10)
+            | ((CommandData.disable_az) << 11) | ((CommandData.force_el) << 12)
+			| ((!CommandData.use_pss) << 13);
 
     if (PointingData[i_point].t >= CommandData.pointing_mode.t)
         sensor_veto |= (1 << 7);
@@ -1261,7 +1249,7 @@ void store_5hz_acs(void)
     sensor_veto |= (CommandData.az_autogyro << 8);
     sensor_veto |= (CommandData.el_autogyro << 9);
 
-    SET_SCALED_VALUE(vetoSensorAddr, sensor_veto);
+    SET_UINT16(vetoSensorAddr, sensor_veto);
 
 
 }

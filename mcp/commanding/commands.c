@@ -1541,8 +1541,8 @@ case xsc_multi_trigger:
       {
 
           for (unsigned int which=0; which<2; which++) {
-              CommandData.XSC[which].trigger.num_triggers = ivalues[0];
-              CommandData.XSC[which].trigger.multi_trigger_time_between_triggers_cs = ivalues[1];
+              CommandData.XSC[which].trigger.num_triggers = ivalues[1];
+              CommandData.XSC[which].trigger.multi_trigger_time_between_triggers_cs = ivalues[2];
               xsc_activate_command(which, xC_multi_triggering);
           }
           break;
@@ -1553,8 +1553,8 @@ case xsc_trigger_threshold:
 
           int which = 0;
           for (which=0; which<2; which++) {
-              CommandData.XSC[which].trigger.threshold.enabled = (ivalues[0] != 0);
-              CommandData.XSC[which].trigger.threshold.blob_streaking_px = rvalues[1];
+              CommandData.XSC[which].trigger.threshold.enabled = (ivalues[1] != 0);
+              CommandData.XSC[which].trigger.threshold.blob_streaking_px = rvalues[2];
           }
           break;
       }
@@ -1564,7 +1564,7 @@ case xsc_scan_force_trigger:
 
           int which = 0;
           for (which=0; which<2; which++) {
-              CommandData.XSC[which].trigger.scan_force_trigger_enabled = (ivalues[0] != 0);
+              CommandData.XSC[which].trigger.scan_force_trigger_enabled = (ivalues[1] != 0);
           }
           break;
       }

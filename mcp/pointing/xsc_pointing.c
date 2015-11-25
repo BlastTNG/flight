@@ -102,7 +102,8 @@ static bool xsc_scan_force_grace_period()
     if (!CommandData.XSC[0].trigger.scan_force_trigger_enabled) {
         return false;
     }
-    //blast_info("in xsc_scan_force_grace_period(): scan_entered_snap_mode is %d\n", scan_entered_snap_mode);
+    if (scan_entered_snap_mode) blast_info("in xsc_scan_force_grace_period(): scan_entered_snap_mode is %d", scan_entered_snap_mode);
+
     return scan_entered_snap_mode;
 }
 
@@ -111,7 +112,10 @@ static bool xsc_scan_force_trigger_threshold()
     if (!CommandData.XSC[0].trigger.scan_force_trigger_enabled) {
         return false;
     }
-    //blast_info("in xsc_scan_force_trigger_threshold(): scan_leaving_snap_mode is %d\n", scan_leaving_snap_mode);
+//	if (xsc_pointing_state[0].predicted_motion_px < CommandData.XSC[0].trigger.threshold.blob_streaking_px) {
+//	        return true;
+//	    }
+    if (scan_leaving_snap_mode) blast_info("in xsc_scan_force_trigger_threshold(): scan_leaving_snap_mode is %d\n", scan_leaving_snap_mode);
     return scan_leaving_snap_mode;
 }
 
@@ -193,9 +197,14 @@ void xsc_control_triggers()
     static int multi_trigger_counter = 0;
     static bool recording_motion_psf = false;
     static unsigned int motion_psf_index = 0;
-
+    static channel_t *xsc_trigger_channel = NULL;
+    static int trigger = 0;
 
     int i_point = GETREADINDEX(point_index);
+
+    if (!xsc_trigger_channel) {
+    	xsc_trigger_channel = channels_find_by_name("trigger_xsc");
+    }
 
     grace_period_cs                        = CommandData.XSC[0].trigger.grace_period_cs;
     num_triggers                           = CommandData.XSC[0].trigger.num_triggers;
@@ -260,6 +269,7 @@ void xsc_control_triggers()
                 }
                 max_exposure_time_used_cs = max(exposure_time_cs[0], exposure_time_cs[1]);
                 for (int which=0; which<2; which++) {
+                	trigger |= (1 << which);
                     xsc_trigger(which, 1);
                     if (!scan_bypass_last_trigger_on_next_trigger) {
                         xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
@@ -284,7 +294,10 @@ void xsc_control_triggers()
             if (!state_counter++)
                 blast_dbg("Sending trigger with MCP Counter: %d", xsc_pointing_state[0].counter_mcp);
             for (int which = 0; which < 2; which++) {
-                if (state_counter >= exposure_time_cs[which]) xsc_trigger(which, 0);
+                if (state_counter >= exposure_time_cs[which]) {
+                	trigger &= (~(1<<which));
+                	xsc_trigger(which, 0);
+                }
             }
             if (state_counter >= max_exposure_time_used_cs) {
                 state_counter = 0;
@@ -321,6 +334,8 @@ void xsc_control_triggers()
             trigger_state = xsc_trigger_first_time;
             break;
     }
+
+    SET_VALUE(xsc_trigger_channel, trigger);
 }
 
 static double xsc_get_temperature(int which)

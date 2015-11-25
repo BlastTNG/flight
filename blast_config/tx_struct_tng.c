@@ -33,7 +33,7 @@
 /* Analog channel calibrations */
 /* 16-bit channels with analog preamps. To Volts */
 #define CAL16(m,b) ((m)*M_16PRE),               ((b) + B_16PRE*(m)*M_16PRE)
-/* bare thermomtstor. To Volts. Use LUT for temperature conversion */
+/* bare thermistor. To Volts. Use LUT for temperature conversion */
 #define CAL16T(m,b) ((m)*M_16T), ((b) + B_16T*(m)*M_16T)
 /* AD590 conversion. To Celsius */
 #define CAL_AD590(m,b) ((m)*M_16_AD590),        ((b)+B_16_AD590*(m)*M_16_AD590-273.15)
@@ -770,30 +770,28 @@ channel_t channel_list[] =
     { "vel_req_el",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
     { "vel_req_az",           1.0,      0.0,            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
 
-    { "trigger_xsc0",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "trigger_xsc1",          1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "trigger_xsc",          1.0,      0.0,            TYPE_UINT8, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
     { "dig43_das",            1.0,      0.0,            TYPE_UINT16, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "chopper",              CAL16(1.0, 0.0),          TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_V_V, 0, 0, 0 },
 
-    { "x_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0, 0, 0 },
-    { "y_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0, 0, 0 },
-    { "z_mag",                1.0,              0,                 TYPE_UINT16, RATE_100HZ, SRC_IF_UEI, U_NONE, 0, 0, 0 },
+    { "x_mag",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "y_mag",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "z_mag",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
     { "az_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
     { "az_raw_mag",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
-    { "pitch_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "el_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
+    { "pitch_mag",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
 
     { "sigma_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
-    { "declination_mag",      I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 }, // magnetic declination
-    { "dip_mag",              I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
+    { "declination_mag",      I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 }, // magnetic declination
+    { "dip_mag",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
 
-    { "cal_xmax_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "cal_xmin_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "cal_ymax_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "cal_ymin_mag",         1, 0.0,           TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "cal_xmax_mag",         1, 0.0,           TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "cal_xmin_mag",         1, 0.0,           TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "cal_ymax_mag",         1, 0.0,           TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "cal_ymin_mag",         1, 0.0,           TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
 
     /** Motor Channels */

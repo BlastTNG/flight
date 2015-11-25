@@ -253,7 +253,6 @@ static int MagConvert(double *mag_az, double *m_el) {
         dec = GeoMagneticElements.Decl;
         dip = GeoMagneticElements.Incl;
         PointingData[point_index].mag_strength = GeoMagneticElements.H;
-
     }
 
     /* The dec is the correction to the azimuth of the magnetic field. */
@@ -267,14 +266,15 @@ static int MagConvert(double *mag_az, double *m_el) {
     mvx = (ACSData.mag_x - MAGX_B) / MAGX_M;
     mvy = (ACSData.mag_y - MAGY_B) / MAGY_M;
 
-    magx_m = 1.0 / ((double) (CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
-    magy_m = -1.0 / ((double) (CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
+    //TODO: Reset calibration values to Reasonable for gauss
+//    magx_m = 1.0 / ((double) (CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
+//    magy_m = -1.0 / ((double) (CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
+//
+//    magx_b = (CommandData.cal_xmax_mag + CommandData.cal_xmin_mag) * 0.5;
+//    magy_b = (CommandData.cal_ymax_mag + CommandData.cal_ymin_mag) * 0.5;
 
-    magx_b = (CommandData.cal_xmax_mag + CommandData.cal_xmin_mag) * 0.5;
-    magy_b = (CommandData.cal_ymax_mag + CommandData.cal_ymin_mag) * 0.5;
-
-    mvx = magx_m * (ACSData.mag_x - magx_b);
-    mvy = magy_m * (ACSData.mag_y - magy_b);
+//    mvx = magx_m * (ACSData.mag_x - magx_b);
+//    mvy = magy_m * (ACSData.mag_y - magy_b);
     mvz = MAGZ_M * (ACSData.mag_z - MAGZ_B);
 
     raw_mag_az = (-1.0) * (180.0 / M_PI) * atan2(mvy, mvx);
@@ -288,7 +288,6 @@ static int MagConvert(double *mag_az, double *m_el) {
 #endif
 
     NormalizeAngle(mag_az);
-
     NormalizeAngle(&dec);
 
     PointingData[point_index].mag_model_dec = dec;
@@ -1215,8 +1214,8 @@ void Pointing(void)
      */
     mag_ok = MagConvert(&mag_az, &mag_el);
 
-    PointingData[point_index].mag_az = mag_az;
-    PointingData[point_index].mag_el = mag_el;
+    PointingData[point_index].mag_az_raw = mag_az;
+    PointingData[point_index].mag_el_raw = mag_el;
 
     /*************************************/
     /**      do ISC Solution            **/
