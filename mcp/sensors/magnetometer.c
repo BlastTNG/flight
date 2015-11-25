@@ -16,10 +16,35 @@ extern struct ACSDataStruct ACSData;
 
 ph_serial_t	*mag_comm = NULL;
 
+typedef enum {
+	MAG_WE_BIN = 0,
+	MAG_BIN,
+	MAG_WE_RATE,
+	MAG_RATE,
+	MAG_CONT,
+	MAG_READ,
+	MAG_END
+} e_mag_state;
+
+typedef struct {
+	char cmd[16];
+	char resp[16];
+} mag_state_cmd_t;
+
+static mag_state_cmd_t state_cmd[MAG_END] = {
+		[MAG_WE_BIN] = { "*99WE\r", "OK" },
+		[MAG_BIN] = { "*99B\r", "BINARY_ON" },
+		[MAG_WE_RATE] = { "*99WE\r", "OK" },
+		[MAG_RATE] = { "*99R=100\r", "OK" },
+		[MAG_CONT] = { "*99C\r" },
+};
+
 static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
 {
     ph_unused_parameter(why);
     ph_unused_parameter(m_data);
+    mag_state_cmd_t *state = (mag_state_cmd_t*)m_data;
+    int which_state = state - state_cmd;
 
     typedef struct {
     	int16_t mag_x;
@@ -29,7 +54,8 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
     mag_data_t *mag_reading;
 
     ph_buf_t *buf;
-//    char *bufp;
+    char *bufp;
+
     static channel_t *mag_x_channel = NULL;
     static channel_t *mag_y_channel = NULL;
     static channel_t *mag_z_channel = NULL;
@@ -43,6 +69,22 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
     	return;
     }
 
+    /**
+     * Handle the initial handshaking and setup with the magnetometer
+     */
+    if (which_state < MAG_READ) {
+    	bufp = (char*) ph_buf_mem(buf);
+    	if (!strncmp(bufp, state_cmd[which_state].resp, sizeof(state_cmd->resp))) {
+    		serial->job.data = ++state;
+    	}
+		if (*state->cmd)ph_stm_write(serial->stream, state->cmd, strlen(state->cmd), NULL);
+		ph_buf_delref(buf);
+		return;
+    }
+
+    /**
+     * We expect 2 bytes per reading plus 1 byte for the <CR>
+     */
     if (ph_buf_len(buf) != 7) {
     	ph_buf_delref(buf);
     	return;
@@ -64,7 +106,7 @@ void initialize_magnetometer(void)
 	int retval = 0;
 
     if (mag_comm) ph_serial_free(mag_comm);
-    mag_comm = ph_serial_open(MAGCOM, NULL, NULL);
+    mag_comm = ph_serial_open(MAGCOM, NULL, state_cmd);
     if (!mag_comm) {
     	blast_err("Could not open Magnetometer port %s", MAGCOM);
     	return;
@@ -73,7 +115,7 @@ void initialize_magnetometer(void)
 
     ph_serial_setspeed(mag_comm, B9600);
     ph_serial_enable(mag_comm, true);
-    retval = ph_stm_printf(mag_comm->stream, "*99C\r");
+    retval = ph_stm_printf(mag_comm->stream, state_cmd[0].cmd);
 
-    blast_startup("Initialized magnetometer: %d", retval);
+    blast_startup("Initialized Magnetometer: %d", retval);
 }
