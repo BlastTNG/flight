@@ -120,6 +120,27 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
         blast_info("%s\n", str);
 }
 
+void uei_publish_1hz(void)
+{
+    static uint32_t uei_of_1hz_framenum = 0;
+    static channel_t *uei_of_1hz_framenum_addr = NULL;
+    static char frame_name[32];
+    if (uei_of_1hz_framenum_addr == NULL) {
+        uei_of_1hz_framenum_addr = channels_find_by_name("uei_of_1hz_framecount");
+        snprintf(frame_name, 32, "frames/of_uei/dummy/1Hz");
+    }
+
+    if (frame_stop) return;
+
+    uei_of_1hz_framenum++;
+    SET_UINT32(uei_of_1hz_framenum_addr, uei_of_1hz_framenum);
+    if (frame_size[SRC_OF_UEI][RATE_1HZ]) {
+        mosquitto_publish(mosq, NULL, frame_name,
+                frame_size[SRC_OF_UEI][RATE_1HZ], channel_data[SRC_OF_UEI][RATE_1HZ], 0, false);
+    }
+
+}
+
 void framing_publish_1hz(void)
 {
     static uint32_t mcp_1hz_framenum = 0;

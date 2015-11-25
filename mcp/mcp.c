@@ -58,6 +58,7 @@
 
 #include <acs.h>
 #include <actuators.h>
+#include <bias_tone.h>
 #include <blast.h>
 #include <blast_comms.h>
 #include <blast_sip_interface.h>
@@ -69,6 +70,7 @@
 #include <framing.h>
 #include <hwpr.h>
 #include <motors.h>
+#include <uei.h>
 #include <watchdog.h>
 #include <xsc_network.h>
 #include <xsc_pointing.h>
@@ -85,9 +87,6 @@ short int InChargeSet=0;
 struct ACSDataStruct ACSData;
 
 bool shutdown_mcp = false;
-
-extern channel_t channel_list[]; //tx_struct_tng.c
-extern derived_tng_t derived_list[];
 
 void Pointing();
 void WatchFIFO(void*);          //commands.c
@@ -269,6 +268,7 @@ static void close_mcp(int m_code)
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
     shutdown_mcp = true;
     watchdog_close();
+    shutdown_ao_driver();
     ph_sched_stop();
 }
 
@@ -345,9 +345,11 @@ static void mcp_1hz_routines(void)
 {
     blast_store_cpu_health();
     blast_store_disk_space();
+    uei_1hz_loop();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
     framing_publish_1hz();
+    uei_publish_1hz();
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -407,7 +409,9 @@ static void *mcp_main_loop(void *m_arg)
 
 int main(int argc, char *argv[])
 {
-  ph_thread_t *main_thread;
+  ph_thread_t *main_thread = NULL;
+  ph_thread_t *uei_thread = NULL;
+  ph_thread_t *ao_thread = NULL;
   pthread_t CommandDatacomm1;
   int use_starcams = 0;
 
@@ -525,11 +529,15 @@ int main(int argc, char *argv[])
 
   initialize_data_sharing();
   initialize_watchdog(2);
-
+  if (!initialize_uei_of_channels())
+	  uei_thread = ph_thread_spawn(uei_loop, NULL);
+  initialize_ao_driver();
+  ao_thread = ph_thread_spawn(ao_play_sine_wave, NULL);
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 
   ph_sched_run();
 
+//  if (uei_thread) ph_thread_join(uei_thread, NULL);
   ph_thread_join(main_thread, NULL);
 
   return(0);

@@ -116,6 +116,8 @@ typedef struct {
 
 extern void *channel_data[SRC_END][RATE_END];
 extern size_t frame_size[SRC_END][RATE_END];
+extern channel_t channel_list[];
+extern derived_tng_t derived_list[];
 
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);

@@ -189,7 +189,7 @@ static int MagConvert(double *mag_az, double *m_el) {
     int i_point_read;
     static time_t oldt;
     static int firsttime = 1;
-    double magx_m, magx_b, magy_m, magy_b;
+//    double magx_m, magx_b, magy_m, magy_b;
     int epochs = 1;
     int NumTerms, nMax = 0;
 

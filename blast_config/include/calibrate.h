@@ -167,16 +167,16 @@ extern "C" {
  * UEI internal monitoring channels
  */
 #define UEI_VOLT_M (0.000000149*23.1)   /// 149 nV * 23.1V scaler
-#define UEI_VOLT_B -8388608.0           /// 2^23 (24-bit ADC)
+#define UEI_VOLT_B (-8388608.0 * UEI_VOLT_M)           /// 2^23 (24-bit ADC)
 
 #define UEI_TEMP_M (0.000000149*339)    /// 149 nV * 339V scaler
-#define UEI_TEMP_B -8388608.0           /// 2^23 (24-bit ADC)
+#define UEI_TEMP_B (-8388608.0 * UEI_TEMP_M)          /// 2^23 (24-bit ADC)
 
 #define UEI_INTVOLT_M (0.000000149*45.3)   /// 149 nV * 45.3V scaler
-#define UEI_INTVOLT_B -8388608.0           /// 2^23 (24-bit ADC)
+#define UEI_INTVOLT_B (-8388608.0 * UEI_INTVOLT_M)          /// 2^23 (24-bit ADC)
 
 #define UEI_CURRENT_M (0.000000149*12)     /// 149 nV * 12V scaler
-#define UEI_CURRENT_B -8388608.0           /// 2^23 (24-bit ADC)
+#define UEI_CURRENT_B (-8388608.0 * UEI_CURRENT_M)          /// 2^23 (24-bit ADC)
 
 // convert mag readings to sine and cosine
 // calibrated in Palestine, July 11, 2010

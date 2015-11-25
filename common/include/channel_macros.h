@@ -178,10 +178,10 @@ typedef struct channel channel_t;
 
 #define SET_SCALED_VALUE(_channel,_val)         \
 ({                                              \
-    channel_t *ch = (_channel);                 \
-    double new_val = (_val) - ch->b_e2e;        \
-    new_val = new_val / ch->m_c2e;              \
-    SET_VALUE(ch,new_val);                      \
+    channel_t *__ch = (_channel);               \
+    double _new_val = (_val) - __ch->b_e2e;     \
+    _new_val = _new_val / __ch->m_c2e;          \
+    SET_VALUE(__ch,_new_val);                	\
 })
 
 /**

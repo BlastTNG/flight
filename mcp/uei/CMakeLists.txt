@@ -1,0 +1,12 @@
+set(UEI_SRCS
+    ${UEI_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/uei_of.c   
+    ${CMAKE_CURRENT_SOURCE_DIR}/bias_tone.c    
+    PARENT_SCOPE
+)
+set(UEI_HEADERS
+    ${UEI_HEADERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/bias_tone.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/uei.h
+    PARENT_SCOPE
+)

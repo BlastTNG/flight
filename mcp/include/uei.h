@@ -1,7 +1,8 @@
-/* 
- * framing.h: 
+/*
+ * uei.h:
  *
- * This software is copyright (C) 2013-2015 Seth Hillbrand
+ * This software is copyright
+ *  (C) 2013-2015 University of Pennsylvania
  *
  * This file is part of mcp, created for the BLASTPol Project.
  *
@@ -17,24 +18,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 59 Temple Place, Suite 330, Boston,          MA  02111-1307  USA
  *
  * History:
- * Created on: Mar 31, 2015 by Seth Hillbrand
+ * Created on: Nov 25, 2015 by vagrant
  */
 
-#ifndef INCLUDE_FRAMING_H_
-#define INCLUDE_FRAMING_H_
+#ifndef INCLUDE_UEI_H_
+#define INCLUDE_UEI_H_
 
-#include <channel_macros.h>
+void uei_1hz_loop(void);
+void *uei_loop(void *m_arg);
+int initialize_uei_of_channels (void);
 
-int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
-void framing_shutdown(void);
-
-void framing_publish_200hz(void);
-void framing_publish_100hz(void);
-void framing_publish_5hz(void);
-void framing_publish_1hz(void);
-
-void uei_publish_1hz(void);
-#endif /* INCLUDE_FRAMING_H_ */
+#endif /* INCLUDE_UEI_H_ */

@@ -50,6 +50,17 @@ typedef union
 
 #define TIME_T_MAX      (time_t)((1UL << ((sizeof(time_t) << 3) - 1)) - 1)
 
+// Add specified amount of ns to timespec
+static inline void timespec_add_ns(struct timespec *m_time, unsigned int m_ns)
+{
+    m_ns += m_time->tv_nsec;
+    while (m_ns >= NSEC_PER_SEC)
+    {
+        m_ns -= NSEC_PER_SEC;
+        m_time->tv_sec++;
+    }
+    m_time->tv_nsec = m_ns;
+}
 
 static inline int timespec_equal(const struct timespec *a,
                                  const struct timespec *b)

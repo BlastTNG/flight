@@ -63,6 +63,18 @@ include (ExternalProject)
 # Used to check contents of header files
 include (CheckLibraryExists)
 
+# Find UEI Library
+
+find_path(UEI_INCLUDE_DIR powerdna.h REQUIRED)
+find_library(UEI_LIBRARY NAMES powerdna libpowerdna REQUIRED)
+IF(NOT UEI_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find powerdna.h.  You must install the UEI sdk.")
+ENDIF()
+IF(NOT UEI_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libpowerdna.  You must install the UEI sdk.")
+ENDIF()
+include_directories(${UEI_INCLUDE_DIR})
+
 # Find gsl    
 pkg_check_modules(PC_GSL QUIET gsl)
 set(GSL_DEFINITIONS ${PC_GSL_CFLAGS_OTHER})
@@ -181,6 +193,25 @@ set(PH_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/.libs/libphenom
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/include")
 
 
+# Find libao    
+pkg_check_modules(PC_AO QUIET ao)
+set(AO_DEFINITIONS ${PC_AO_CFLAGS_OTHER})
+
+find_path(AO_INCLUDE_DIR ao/ao.h
+          HINTS ${PC_AO_INCLUDEDIR} ${PC_AO_INCLUDE_DIRS}
+          REQUIRED)
+
+find_library(AO_LIBRARY NAMES ao libao
+            HINTS ${PC_AO_LIBDIR} ${PC_AO_LIBRARY_DIRS} REQUIRED)
+IF(NOT AO_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find ao.h.  Is libao-dev installed?")
+ENDIF()
+IF(NOT AO_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libao4.  Please install this using apt-get.")
+ENDIF()
+include_directories(${AO_INCLUDE_DIR})
+
+
 # Find libusb    
 pkg_check_modules(PC_USB QUIET libusb-1.0)
 set(USB_DEFINITIONS ${PC_USB_CFLAGS_OTHER})
@@ -246,6 +277,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/housekeeping")
 # add data frame objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/framing")
 
+# add uei objects
+add_subdirectory("${PROJECT_SOURCE_DIR}/uei")
+
 # add common objects
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 
@@ -277,6 +311,9 @@ define_file_basename_for_sources(blast_comms)
 add_library (mpsse OBJECT ${MPSSE_SRCS} ${MPSSE_HEADERS})
 define_file_basename_for_sources(mpsse)
 
+add_library (uei OBJECT ${UEI_SRCS} ${UEI_HEADERS})
+define_file_basename_for_sources(uei)
+
 # add mcp objects
 add_library(mcp_obj OBJECT 
     mcp.c 
@@ -296,6 +333,8 @@ add_executable (mcp
     $<TARGET_OBJECTS:framing>
     $<TARGET_OBJECTS:blast_common>
     $<TARGET_OBJECTS:blast_comms>
+    $<TARGET_OBJECTS:mpsse>
+    $<TARGET_OBJECTS:uei>
     $<TARGET_OBJECTS:mcp_obj>
     ) 
 
@@ -304,6 +343,7 @@ add_dependencies(mcp soem phenomproj)
 define_file_basename_for_sources(mcp)
 
 target_link_libraries(mcp 
+	${AO_LIBRARY}
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} 
     ${GLIB_LIBRARY} 
     ${ECAT_LIBRARY}
@@ -311,6 +351,7 @@ target_link_libraries(mcp
     ${PH_LIBRARY}
     ${SENSORS_LIBRARY}
     ${USB_LIBRARY}
+    ${UEI_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ssl crypto 
     mosquitto m)

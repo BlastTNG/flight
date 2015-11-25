@@ -24,14 +24,14 @@
 #define MCP_H
 
 #include <pthread.h>
+#include <stdbool.h>
 #include "channels_tng.h"
 #include "calibrate.h"
 #include "blast.h"
 
 extern time_t mcp_systime(time_t *t);
 extern struct frameBuffer hiGain_buffer;
-
-extern int BLASTBusUseful;
+extern bool shutdown_mcp;
 
 //TODO: Move to buffer header file
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
