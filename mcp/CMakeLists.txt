@@ -193,23 +193,23 @@ set(PH_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/.libs/libphenom
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/include")
 
 
-# Find libao    
-pkg_check_modules(PC_AO QUIET ao)
-set(AO_DEFINITIONS ${PC_AO_CFLAGS_OTHER})
+# Find portaudio    
+pkg_check_modules(PC_PORTAUDIO QUIET portaudio)
+set(PORTAUDIO_DEFINITIONS ${PC_PORTAUDIO_CFLAGS_OTHER})
 
-find_path(AO_INCLUDE_DIR ao/ao.h
-          HINTS ${PC_AO_INCLUDEDIR} ${PC_AO_INCLUDE_DIRS}
+find_path(PORTAUDIO_INCLUDE_DIR portaudio.h
+          HINTS ${PC_PORTAUDIO_INCLUDEDIR} ${PC_PORTAUDIO_INCLUDE_DIRS}
           REQUIRED)
 
-find_library(AO_LIBRARY NAMES ao libao
-            HINTS ${PC_AO_LIBDIR} ${PC_AO_LIBRARY_DIRS} REQUIRED)
-IF(NOT AO_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find ao.h.  Is libao-dev installed?")
+find_library(PORTAUDIO_LIBRARY NAMES portaudio libportaudio
+            HINTS ${PC_PORTAUDIO_LIBDIR} ${PC_PORTAUDIO_LIBRARY_DIRS} REQUIRED)
+IF(NOT PORTAUDIO_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find portaudio.h.  Is portaudio19-dev installed?")
 ENDIF()
-IF(NOT AO_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libao4.  Please install this using apt-get.")
+IF(NOT PORTAUDIO_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libportaudio2.  Please install this using apt-get.")
 ENDIF()
-include_directories(${AO_INCLUDE_DIR})
+include_directories(${PORTAUDIO_INCLUDE_DIR})
 
 
 # Find libusb    
@@ -343,7 +343,7 @@ add_dependencies(mcp soem phenomproj)
 define_file_basename_for_sources(mcp)
 
 target_link_libraries(mcp 
-	${AO_LIBRARY}
+	${PORTAUDIO_LIBRARY}
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} 
     ${GLIB_LIBRARY} 
     ${ECAT_LIBRARY}

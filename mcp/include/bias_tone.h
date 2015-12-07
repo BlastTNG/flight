@@ -27,9 +27,9 @@
 #ifndef INCLUDE_BIAS_TONE_H_
 #define INCLUDE_BIAS_TONE_H_
 
-int initialize_ao_driver(void);
+int initialize_bias_tone(void);
 void *ao_play_sine_wave(void*);
-void shutdown_ao_driver(void);
+void shutdown_bias_tone(void);
 
 
 #endif /* INCLUDE_BIAS_TONE_H_ */

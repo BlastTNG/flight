@@ -268,7 +268,7 @@ static void close_mcp(int m_code)
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
     shutdown_mcp = true;
     watchdog_close();
-    shutdown_ao_driver();
+    shutdown_bias_tone();
     ph_sched_stop();
 }
 
@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *uei_thread = NULL;
-  ph_thread_t *ao_thread = NULL;
+
   pthread_t CommandDatacomm1;
   int use_starcams = 0;
 
@@ -531,8 +531,8 @@ int main(int argc, char *argv[])
   initialize_watchdog(2);
   if (!initialize_uei_of_channels())
 	  uei_thread = ph_thread_spawn(uei_loop, NULL);
-  initialize_ao_driver();
-  ao_thread = ph_thread_spawn(ao_play_sine_wave, NULL);
+  initialize_bias_tone();
+
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 
   ph_sched_run();

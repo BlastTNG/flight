@@ -25,7 +25,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <ao/ao.h>
+#include <portaudio.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -33,115 +33,96 @@
 #include "blast.h"
 #include "blast_time.h"
 
-#define BUF_SIZE 4096
+#define SAMPLE_RATE   (44100)
+#define FRAMES_PER_BUFFER  (512)
 
-static ao_device *device;
-static ao_sample_format format;
+#define TABLE_SIZE   (441) /* 2 x 200Hz cycles at 44100Hz sample rate */
 
-char *buffer;
+static float sine[TABLE_SIZE];
+static int sine_index = 0;
+
 static bool ao_closing = false;
+static PaStream *bias_stream = NULL;
 
-int initialize_ao_driver(void)
-{
-	int sample;
-	float freq = 200.0;
-	int i;
-	int default_driver;
-	int buf_size;
-
-	ao_initialize();
-	default_driver = ao_default_driver_id();
-
-    memset(&format, 0, sizeof(format));
-	format.bits = 16;
-	format.channels = 2;
-	format.rate = 44100;
-	format.byte_format = AO_FMT_LITTLE;
-
-	/* -- Open driver -- */
-	device = ao_open_live(default_driver, &format, NULL);
-	if (device == NULL) {
-		fprintf(stderr, "Error opening device.\n");
-		return -1;
-	}
-
-	/**
-	 * Buffer 1 second worth of Sine wave data
-	 */
-	buf_size = (int) format.bits/8 * format.channels * format.rate;
-	buffer = calloc(buf_size,
-			sizeof(char));
-
-	for (i = 0; i < format.rate; i++) {
-		sample = (int)(0.55 * INT16_MAX *
-			sin(2 * M_PI * freq * ((float) i/format.rate)));
-
-		/**
-		 * Technically we don't need both channels but output them anyway
-		 */
-		buffer[4*i] = buffer[4*i+2] = sample & 0xff;
-		buffer[4*i+1] = buffer[4*i+3] = (sample >> 8) & 0xff;
-	}
-	return 0;
-}
-
-void *ao_play_sine_wave(void *arg)
+static int bias_tone_callback( const void *inputBuffer, void *outputBuffer,
+                            unsigned long framesPerBuffer,
+                            const PaStreamCallbackTimeInfo* timeInfo,
+                            PaStreamCallbackFlags statusFlags,
+                            void *userData )
 {
 
-    static struct timespec prev_ts = {0,0};
-    static int buffer_offset = 0;
-    struct timespec ts;
-    double delta_t;
-    int buffer_size = (int) format.bits/8 * format.channels * format.rate;
+    float *out = (float*)outputBuffer;
+    unsigned long i;
 
-    blast_dbg("Playing Sine wave on %p", device);
-    if (!device) return NULL;
+    (void) timeInfo; /* Prevent unused variable warnings. */
+    (void) statusFlags;
+    (void) inputBuffer;
 
-    while (!ao_closing) {
-    clock_gettime(CLOCK_REALTIME, &ts);
+    for( i=0; i<framesPerBuffer; i++ )
+    {
+        *out++ = sine[sine_index];  /* left */
+        *out++ = sine[sine_index];  /* right */
 
-    if (buffer_offset >= buffer_size) buffer_offset = 0;
-
-    delta_t = ts.tv_sec - prev_ts.tv_sec + (double) (ts.tv_nsec - prev_ts.tv_nsec)/ (NSEC_PER_SEC);
-    /**
-     * First buffer any whole multiple of seconds of audio data, wrapping the buffer as needed
-     */
-    if (delta_t > 2.0) delta_t = 2.0;
-    while (delta_t > 1.0) {
-    	ao_play(device, buffer + buffer_offset, buffer_size - buffer_offset);
-    	if (buffer_offset) ao_play(device, buffer, buffer_offset);
-
-    	delta_t -= 1.0;
+        if (++ sine_index == TABLE_SIZE) sine_index = 0;
     }
 
-    /**
-     * After wrapping the buffer, play the fraction of a whole second of data remaining, filling the
-     * audio buffer as much as we can.
-     */
-    if (delta_t > 1.0 / (double)format.rate) {
-    	int samples_to_play = (int)(delta_t * buffer_size);
-    	int samples_to_end = min(samples_to_play, buffer_size - buffer_offset);
-    	ao_play(device, buffer + buffer_offset, samples_to_end);
-    	samples_to_play -= samples_to_end;
-    	if (samples_to_play) {
-    		buffer_offset = 0;
-    		ao_play(device, buffer, samples_to_play);
-    	}
-    	buffer_offset += samples_to_play;
-    }
+    if (ao_closing) return paAbort;
 
-	prev_ts.tv_sec = ts.tv_sec;
-	prev_ts.tv_nsec = ts.tv_nsec;
-	clock_gettime(CLOCK_REALTIME, &ts);
-	blast_info("Took %f seconds to execute", ts.tv_sec - prev_ts.tv_sec + (double)(ts.tv_nsec - prev_ts.tv_nsec)/(NSEC_PER_SEC));
-    }
-
-    return NULL;
+    return paContinue;
 }
 
-void shutdown_ao_driver(void)
+int initialize_bias_tone(void)
+{
+    PaStreamParameters outputParameters;
+
+	int retval;
+
+    /* initialise sinusoidal wavetable */
+    for(int i=0; i<TABLE_SIZE; i++ )
+    {
+        sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 4.0); // There are two full waves in the TABLE_SIZE
+    }
+
+    retval = Pa_Initialize();
+    if( retval != paNoError ) goto init_err;
+
+    outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
+    if (outputParameters.device == paNoDevice) {
+      fprintf(stderr,"Error: No default output device.\n");
+      goto init_err;
+    }
+    outputParameters.channelCount = 2;       /* stereo output */
+    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+    outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultHighOutputLatency;
+    outputParameters.hostApiSpecificStreamInfo = NULL;
+
+    retval = Pa_OpenStream(
+              &bias_stream,
+              NULL, /* no input */
+              &outputParameters,
+              SAMPLE_RATE,
+              FRAMES_PER_BUFFER,
+              paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+              bias_tone_callback,
+              NULL );
+    if( retval != paNoError ) goto init_err;
+
+    retval = Pa_StartStream( bias_stream );
+    if( retval != paNoError ) goto init_err;
+
+    return retval;
+
+init_err:
+    Pa_Terminate();
+    blast_err("An error occurred while initializing the portaudio stream: %s", Pa_GetErrorText( retval ) );
+    return retval;
+}
+
+
+void shutdown_bias_tone(void)
 {
 	ao_closing=true;
-	ao_close(device);
-	ao_shutdown();
+	Pa_AbortStream(bias_stream);
+    Pa_Terminate();
+
 }
