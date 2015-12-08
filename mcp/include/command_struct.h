@@ -306,7 +306,7 @@ struct CommandDataStruct {
   double autotrim_thresh;    //in sc sigma
   double autotrim_rate;      //degrees/s
   time_t autotrim_time;      //in seconds
-  time_t autotrim_isc_last_bad;
+  time_t autotrim_xsc0_last_bad;
   time_t autotrim_osc_last_bad;
 
   double cal_xmax_mag;

@@ -1070,8 +1070,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.autotrim_thresh = rvalues[0];
       CommandData.autotrim_time = ivalues[1];
       CommandData.autotrim_rate = rvalues[2];
-      CommandData.autotrim_isc_last_bad = mcp_systime(NULL);
-      CommandData.autotrim_osc_last_bad = CommandData.autotrim_isc_last_bad;
+      CommandData.autotrim_xsc0_last_bad = mcp_systime(NULL);
+      CommandData.autotrim_osc_last_bad = CommandData.autotrim_xsc0_last_bad;
       CommandData.autotrim_enable = 1;
       break;
     case az_gyro_offset:
@@ -2093,8 +2093,8 @@ void InitCommandData()
   CommandData.fast_offset_gy = 0;
 
   /* force autotrim to reset its wait time on restart */
-  CommandData.autotrim_isc_last_bad = mcp_systime(NULL);
-  CommandData.autotrim_osc_last_bad = CommandData.autotrim_isc_last_bad;
+  CommandData.autotrim_xsc0_last_bad = mcp_systime(NULL);
+  CommandData.autotrim_osc_last_bad = CommandData.autotrim_xsc0_last_bad;
 
   CommandData.reset_rw = 0;
   CommandData.reset_piv = 0;

@@ -111,14 +111,6 @@ struct AzSolutionStruct {
   struct FirStruct *fs3;
 };
 
-static struct HistoryStruct {
-  double *elev_history;
-  double *ifel_gy_history;
-  double *ifroll_gy_history;
-  double *ifyaw_gy_history;
-  int i_history;  // points to last valid point.  Not thread safe.
-} hs = {NULL, NULL, NULL, NULL, 0};
-
 static struct {
   double az;
   double el;
@@ -126,12 +118,25 @@ static struct {
   double rate;
 } NewAzEl = {0.0, 0.0, 0, 360.0};
 
-// gyros, with earth's rotation removed
-static struct {
-  double ifel_gy;
-  double ifroll_gy;
-  double ifyaw_gy;
-} RG;
+typedef struct {
+  double *elev_history;
+  double *ifel_gy_history;
+  double *ifel_gy_offset;
+  double *ifroll_gy_history;
+  double *ifroll_gy_offset;
+  double *ifyaw_gy_history;
+  double *ifyaw_gy_offset;
+  int i_history;
+} gyro_history_t;
+
+typedef struct {
+    double ifel_gy;
+    double ifel_gy_offset;
+    double ifroll_gy;
+    double ifroll_gy_offset;
+    double ifyaw_gy;
+    double ifyaw_gy_offset;
+} gyro_reading_t;
 
 #define MAX_SUN_EL 5.0
 
@@ -543,26 +548,38 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
  * previous point in history.  This is mostly useful for high-latency sensors such as the
  * star cameras.
  */
-static void record_gyro_history(void)
+static void record_gyro_history(int m_index, gyro_history_t *m_gyhist, gyro_reading_t *m_newgy)
 {
     /*****************************************/
     /*   Allocate Memory                     */
-    if (hs.ifel_gy_history == NULL) {
-        hs.ifel_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
-        hs.ifroll_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
-        hs.ifyaw_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
-        hs.elev_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+    if (m_gyhist->ifel_gy_history == NULL) {
+        m_gyhist->ifel_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+        m_gyhist->ifel_gy_offset = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+
+        m_gyhist->ifroll_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+        m_gyhist->ifroll_gy_offset = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+
+        m_gyhist->ifyaw_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));;
+        m_gyhist->ifyaw_gy_offset = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+
+        m_gyhist->elev_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
     }
 
     /*****************************************/
     /* record history                        */
-    if (hs.i_history >= GY_HISTORY_AGE_CS) hs.i_history = 0;
+    if (m_gyhist->i_history >= GY_HISTORY_AGE_CS) m_gyhist->i_history = 0;
 
-    hs.ifel_gy_history[hs.i_history] = RG.ifel_gy;
-    hs.ifroll_gy_history[hs.i_history] = RG.ifroll_gy;
-    hs.ifyaw_gy_history[hs.i_history] = RG.ifyaw_gy;
-    hs.elev_history[hs.i_history] = PointingData[index].el * M_PI / 180.0;
-    hs.i_history++;
+    m_gyhist->ifel_gy_history[m_gyhist->i_history] = m_newgy->ifel_gy;
+    m_gyhist->ifel_gy_offset[m_gyhist->i_history] = m_newgy->ifel_gy_offset;
+
+    m_gyhist->ifroll_gy_history[m_gyhist->i_history] = m_newgy->ifroll_gy;
+    m_gyhist->ifroll_gy_offset[m_gyhist->i_history] = m_newgy->ifroll_gy_offset;
+
+    m_gyhist->ifyaw_gy_history[m_gyhist->i_history] = m_newgy->ifyaw_gy;
+    m_gyhist->ifyaw_gy_offset[m_gyhist->i_history] = m_newgy->ifyaw_gy_offset;
+
+    m_gyhist->elev_history[m_gyhist->i_history] =  from_degrees(PointingData[m_index].el);
+    m_gyhist->i_history++;
 }
 
 int possible_solution(double az, double el, int i_point) {
@@ -632,8 +649,8 @@ static bool XSCHasNewSolution(int which)
     return true;
 }
 
-static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a, double gy1, double gy1_off,
-        double gy2, double gy2_off, double gy3, double gy3_off, double old_el, int which) {
+static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a, gyro_reading_t *m_rg, gyro_history_t *m_hs,
+                              double old_el, int which) {
 
     //int i_point;
     double gy_az;
@@ -649,13 +666,14 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
     double el_frame = from_degrees(old_el);
 
     // evolve el
-    e->angle += (gy1 + gy1_off) / SR;
+    e->angle += (m_rg->ifel_gy + m_rg->ifel_gy_offset) / SR;
     e->variance += GYRO_VAR;
 
     // evolve az
-    gy_az = (gy2 + gy2_off) * sin(el_frame) + (gy3 + gy3_off) * cos(el_frame);
+    gy_az = (m_rg->ifroll_gy + m_rg->ifroll_gy_offset) * cos(el_frame)
+            + (m_rg->ifyaw_gy + m_rg->ifyaw_gy_offset) * sin(el_frame);
     a->angle += gy_az / SR;
-    a->variance += GYRO_VAR;
+    a->variance += (2 * GYRO_VAR); // This is twice the variance because we are using 2 gyros -SNH
 
     if (XSCHasNewSolution(which)) {
         xsc_pointing_state[which].last_solution_stars_counter = XSC_SERVER_DATA(which).channels.image_ctr_stars;
@@ -686,15 +704,12 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
             gy_el_delta = 0;
             gy_az_delta = 0;
             for (i = 0; i < xsc_pointing_state[which].last_trigger.age_cs; i++) {
-                j = hs.i_history - i;
-                if (j < 0)
-                j += GY_HISTORY_AGE_CS;
+                j = m_hs->i_history - i;
+                if (j < 0) j += GY_HISTORY_AGE_CS;
 
-                gy_el_delta += (hs.ifel_gy_history[j] + gy1_off) * (1.0 / SR);
-                //TODO: Double-check these static offsets
-                gy_az_delta += ((hs.ifyaw_gy_history[j] + gy2_off) * sin(hs.elev_history[j])
-                        + (hs.ifroll_gy_history[j] + gy3_off) * cos(hs.elev_history[j]))
-                * (1.0 / SR);
+                gy_el_delta += (m_hs->ifel_gy_history[j] + m_hs->ifel_gy_offset[j]) / SR;
+                gy_az_delta += ((m_hs->ifyaw_gy_history[j]  + m_hs->ifyaw_gy_offset[j])  * sin(m_hs->elev_history[j])
+                              + (m_hs->ifroll_gy_history[j] + m_hs->ifroll_gy_offset[j]) * cos(m_hs->elev_history[j])) / SR;
             }
 
             // Evolve el solution
@@ -1097,6 +1112,9 @@ void Pointing(void)
     NULL, NULL
   };
 
+  static gyro_history_t hs = {NULL};
+  static gyro_reading_t RG = {0.0};
+
     if (firsttime) {
         firsttime = 0;
         ClinEl.trim = CommandData.clin_el_trim;
@@ -1153,8 +1171,11 @@ void Pointing(void)
     PointingData[point_index].ifroll_earth_gy = R * (cos_e * sin_l - cos_l * sin_e * cos_a);
     PointingData[point_index].ifyaw_earth_gy = R * (sin_e * sin_l + cos_l * cos_e * cos_a);
     RG.ifel_gy = ACSData.ifel_gy - PointingData[point_index].ifel_earth_gy;
+    RG.ifel_gy_offset = PointingData[i_point_read].offset_ifel_gy;
     RG.ifroll_gy = ACSData.ifroll_gy - PointingData[point_index].ifroll_earth_gy;
+    RG.ifroll_gy_offset = PointingData[i_point_read].offset_ifroll_gy;
     RG.ifyaw_gy = ACSData.ifyaw_gy - PointingData[point_index].ifyaw_earth_gy;
+    RG.ifyaw_gy_offset = PointingData[i_point_read].offset_ifyaw_gy;
 
     PointingData[point_index].gy_az = RG.ifyaw_gy * cos_e + RG.ifroll_gy * sin_e;
     PointingData[point_index].gy_el = RG.ifel_gy;
@@ -1165,7 +1186,7 @@ void Pointing(void)
 
     /*************************************/
     /** Record history for gyro offsets **/
-    record_gyro_history();
+    record_gyro_history(point_index, &hs, &RG);
 
     PointingData[point_index].t = mcp_systime(NULL); // CPU time
 
@@ -1217,19 +1238,11 @@ void Pointing(void)
 
     /*************************************/
     /**      do ISC Solution            **/
-    EvolveXSCSolution(&ISCEl, &ISCAz,
-        RG.ifel_gy,   PointingData[i_point_read].offset_ifel_gy,
-        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-        PointingData[point_index].el, 0);
+    EvolveXSCSolution(&ISCEl, &ISCAz, &RG, &hs, PointingData[i_point_read].el, 0);
 
     /*************************************/
     /**      do OSC Solution            **/
-    EvolveXSCSolution(&OSCEl, &OSCAz,
-        RG.ifel_gy,   PointingData[i_point_read].offset_ifel_gy,
-        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
-        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
-        PointingData[point_index].el, 1);
+    EvolveXSCSolution(&OSCEl, &OSCAz, &RG, &hs, PointingData[i_point_read].el, 1);
 
     /*************************************/
     /**      do elevation solution      **/
@@ -1528,13 +1541,13 @@ void AutoTrimToSC()
     time_t t = mcp_systime(NULL);
 
     if (PointingData[i_point].xsc_sigma[0] > CommandData.autotrim_thresh) {
-        CommandData.autotrim_isc_last_bad = t;
+        CommandData.autotrim_xsc0_last_bad = t;
     }
     if (PointingData[i_point].xsc_sigma[1] > CommandData.autotrim_thresh) {
         CommandData.autotrim_osc_last_bad = t;
     }
 
-    if (t - CommandData.autotrim_isc_last_bad > CommandData.autotrim_time)
+    if (t - CommandData.autotrim_xsc0_last_bad > CommandData.autotrim_time)
         isc_good = 1;
     if (t - CommandData.autotrim_osc_last_bad > CommandData.autotrim_time)
         osc_good = 1;
