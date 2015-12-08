@@ -537,34 +537,32 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   return 1;
 
 }
-////////////////NNG//////////////////
 
-
-static void RecordHistory(int index)
+/**
+ * Store the gyro data samples in a ring buffer, allowing us to "rewind" our Az/El data to
+ * previous point in history.  This is mostly useful for high-latency sensors such as the
+ * star cameras.
+ */
+static void record_gyro_history(void)
 {
-  /*****************************************/
-  /*   Allocate Memory                     */
-  if (hs.ifel_gy_history == NULL) {
-    hs.ifel_gy_history = (double *)balloc(fatal, GY_HISTORY_AGE_CS * sizeof(double));
-    memset(hs.ifel_gy_history, 0, GY_HISTORY_AGE_CS * sizeof(double));
-    hs.ifroll_gy_history = (double *)balloc(fatal, GY_HISTORY_AGE_CS * sizeof(double));
-    memset(hs.ifroll_gy_history, 0, GY_HISTORY_AGE_CS * sizeof(double));
-    hs.ifyaw_gy_history = (double *)balloc(fatal, GY_HISTORY_AGE_CS * sizeof(double));
-    memset(hs.ifyaw_gy_history, 0, GY_HISTORY_AGE_CS * sizeof(double));
-    hs.elev_history  = (double *)balloc(fatal, GY_HISTORY_AGE_CS * sizeof(double));
-    memset(hs.elev_history, 0, GY_HISTORY_AGE_CS * sizeof(double));
-  }
+    /*****************************************/
+    /*   Allocate Memory                     */
+    if (hs.ifel_gy_history == NULL) {
+        hs.ifel_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+        hs.ifroll_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+        hs.ifyaw_gy_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+        hs.elev_history = (double *) calloc(GY_HISTORY_AGE_CS, sizeof(double));
+    }
 
-  /*****************************************/
-  /* record history                        */
-  hs.i_history++;
-  if (hs.i_history >= GY_HISTORY_AGE_CS)
-    hs.i_history = 0;
+    /*****************************************/
+    /* record history                        */
+    if (hs.i_history >= GY_HISTORY_AGE_CS) hs.i_history = 0;
 
-  hs.ifel_gy_history[hs.i_history] = RG.ifel_gy;
-  hs.ifroll_gy_history[hs.i_history] = RG.ifroll_gy;
-  hs.ifyaw_gy_history[hs.i_history] = RG.ifyaw_gy;
-  hs.elev_history[hs.i_history] = PointingData[index].el * M_PI / 180.0;
+    hs.ifel_gy_history[hs.i_history] = RG.ifel_gy;
+    hs.ifroll_gy_history[hs.i_history] = RG.ifroll_gy;
+    hs.ifyaw_gy_history[hs.i_history] = RG.ifyaw_gy;
+    hs.elev_history[hs.i_history] = PointingData[index].el * M_PI / 180.0;
+    hs.i_history++;
 }
 
 int possible_solution(double az, double el, int i_point) {
@@ -1167,7 +1165,7 @@ void Pointing(void)
 
     /*************************************/
     /** Record history for gyro offsets **/
-    RecordHistory(i_point_read);
+    record_gyro_history();
 
     PointingData[point_index].t = mcp_systime(NULL); // CPU time
 
