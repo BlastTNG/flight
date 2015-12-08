@@ -19,6 +19,9 @@ QMAKE_INSTALL_FILE = install -m 666 -p
 INSTALLS += target log 
 INCLUDEPATH += ../common/include/ /usr/local/include
 
+CONFIG += link_pkgconfig
+PKGCONFIG += getdata
+
 HEADERS += \ 
 src/cow.h \ 
 ../common/include/netcmd.h \ 
