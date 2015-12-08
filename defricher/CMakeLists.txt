@@ -80,11 +80,21 @@ ENDIF()
 include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
 
 # Find mosquitto    
-ExternalProject_add(MOSQ
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libmosquitto-1.4.1
-    URL ${PROJECT_SOURCE_DIR}/../external_libs/mosquitto
-    CMAKE_ARGS -DWITH_TLS:BOOL=OFF -DWITH_SOCKS:BOOL=OFF -DWITH_SRV:BOOL=OFF
-    )
+pkg_check_modules(PC_MOSQ QUIET mosquitto)
+set(MOSQ_DEFINITIONS ${PC_MOSQ_CFLAGS_OTHER})
+
+find_path(MOSQ_INCLUDE_DIR NAMES mosquitto.h
+          HINTS ${PC_MOSQ_INCLUDEDIR} ${PC_MOSQ_INCLUDE_DIRS}
+          PATH_SUFFIXES mosquitto REQUIRED)
+find_library(MOSQ_LIBRARY NAMES mosquitto libmosquitto
+            HINTS ${PC_MOSQ_LIBDIR} ${PC_MOSQ_LIBRARY_DIRS} REQUIRED)
+IF(NOT MOSQ_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find mosquitto.h.  Is libmosquitto-dev installed?")
+ENDIF()
+IF(NOT MOSQ_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libmosquitto.  Is libmosquitto1 installed?")
+ENDIF()
+include_directories(${MOSQ_INCLUDE_DIR})
 
 # Find getdata    
 pkg_check_modules(PC_GD QUIET getdata)
@@ -143,8 +153,9 @@ define_file_basename_for_sources(defricher)
 
 target_link_libraries(defricher  
     ${GLIB_LIBRARY}  
-    ${GD_LIBRARY} 
+    ${GD_LIBRARY}
+    ${MOSQ_LIBRARY} 
     ${CMAKE_THREAD_LIBS_INIT} 
-    mosquitto m)
+    m)
 
 install(TARGETS defricher DESTINATION bin)
