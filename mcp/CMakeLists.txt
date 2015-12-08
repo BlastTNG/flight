@@ -344,7 +344,8 @@ define_file_basename_for_sources(mcp)
 
 target_link_libraries(mcp 
 	${PORTAUDIO_LIBRARY}
-    ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} 
+    ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}
+    ${MOSQ_LIBRARY}  
     ${GLIB_LIBRARY} 
     ${ECAT_LIBRARY}
     ${CK_LIBRARY}
@@ -354,7 +355,7 @@ target_link_libraries(mcp
     ${UEI_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ssl crypto 
-    mosquitto m)
+    m)
 
 install(TARGETS mcp DESTINATION bin)
 install(DIRECTORY DESTINATION "/data/etc")

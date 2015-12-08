@@ -110,6 +110,7 @@ int initialize_uei_of_channels (void)
 	for (channel_t *ch = channel_list; ch->field[0]; ch++) {
 		if ((ch->source != SRC_OF_UEI) || ch->board == 14) continue;
 		chentry = ch->chan;
+		blast_dbg("Adding %s to %d:%d", ch->field, ch->board, ch->chan);
 		uei_of_channels[ch->board][num_of_channels[ch->board]++] = ch;
 		DqRtDmapAddChannel(hd_of, dmapid_of, ch->board, DQ_SS0IN, &chentry, 1);
 	}
