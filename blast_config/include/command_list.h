@@ -30,33 +30,45 @@
 #define CMD_I_MAX USHRT_MAX
 #define CMD_L_MAX UINT_MAX
 
-#define N_GROUPS 25
+#define N_GROUPS 31
 
-#define GR_POINT        0x00000001
-#define GR_BAL          0x00000002
-#define GR_HWPR         0x00000004
-#define GR_TRIM         0x00000008
-#define GR_ELECT        0x00000010
-#define GR_BIAS         0x00000020
-#define GR_VETO         0x00000040
-#define GR_ACT          0x00000080
-#define GR_XSC          0x00000100
-#define GR_GAIN         0x00000200
-#define GR_FOCUS        0x00000400
-#define GR_CRYO_HEAT    0x00000800
-#define GR_POWER        0x00001000
-#define GR_LOCK         0x00002000
-#define GR_CRYO_CONTROL 0x00004000
-#define GR_TELEM        0x00008000
-#define GR_ISC_HOUSE    0x00010000
-#define GR_OSC_HOUSE    0x00020000
-#define GR_STAGE        0x00040000
-#define GR_ISC_MODE     0x00080000
-#define GR_OSC_MODE     0x00100000
-#define GR_MISC         0x00200000
-#define GR_ISC_PARAM    0x00400000
-#define GR_OSC_PARAM    0x00800000
-#define GR_SHUTTER      0x01000000
+#define GRPOS_POINT 0
+#define GRPOS_BAL   1
+#define GRPOS_HWPR  2
+#define GRPOS_TRIM  3
+#define GRPOS_ELECT 4
+#define GRPOS_BIAS  5
+#define GRPOS_VETO  6
+#define GRPOS_ACT   7
+#define GRPOS_XSC_HOUSE 8
+#define GRPOS_XSC_MODE  9
+#define GRPOS_XSC_PARAM 10
+#define GRPOS_MOTOR  11
+#define GRPOS_CRYO  12
+#define GRPOS_POWER 13
+#define GRPOS_LOCK  14
+#define GRPOS_TELEM 15
+#define GRPOS_MISC  16
+#define GRPOS_FOCUS 17
+
+#define GR_POINT        (1 << GRPOS_POINT)
+#define GR_BAL          (1 << GRPOS_BAL)
+#define GR_HWPR         (1 << GRPOS_HWPR)
+#define GR_TRIM         (1 << GRPOS_TRIM)
+#define GR_ELECT        (1 << GRPOS_ELECT)
+#define GR_BIAS         (1 << GRPOS_BIAS)
+#define GR_VETO         (1 << GRPOS_VETO)
+#define GR_ACT          (1 << GRPOS_ACT)
+#define GR_XSC_HOUSE    (1 << GRPOS_XSC_HOUSE)
+#define GR_XSC_MODE     (1 << GRPOS_XSC_MODE)
+#define GR_XSC_PARAM    (1 << GRPOS_XSC_PARAM)
+#define GR_MOTOR        (1 << GRPOS_MOTOR)
+#define GR_CRYO         (1 << GRPOS_CRYO)
+#define GR_POWER        (1 << GRPOS_POWER)
+#define GR_LOCK         (1 << GRPOS_LOCK)
+#define GR_TELEM        (1 << GRPOS_TELEM)
+#define GR_MISC         (1 << GRPOS_MISC)
+#define GR_FOCUS        (1 << GRPOS_FOCUS)
 //reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;

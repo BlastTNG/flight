@@ -26,15 +26,21 @@
 const char *command_list_serial = "$Revision: 5.2 $";
 
 const char *GroupNames[N_GROUPS] = {
-  "Pointing Modes",        "Balance",          "Waveplate Rotator",
-  "Pointing Sensor Trims", "Aux. Electronics", "Bias",
-  "Pointing Sensor Vetos", "Actuators",        "SBSC",
-  "Pointing Motor Gains",  "Secondary Focus",  "Cryo Heat",
-  "Subsystem Power",       "Lock Motor",       "Cryo Control",
-  "Telemetry",             "ISC Housekeeping", "OSC Housekeeping",
-  "X-Y Stage",             "ISC Modes",        "OSC Modes",
-  "Miscellaneous",         "ISC Parameters",   "OSC Parameters",
-  "Shutter"
+                                    [GRPOS_POINT] = "Pointing Modes",
+                                    [GRPOS_BAL] = "Balance",
+                                    [GRPOS_HWPR] =  "Waveplate Rotator",
+                                    [GRPOS_TRIM] = "Pointing Sensor Trims",
+                                    [GRPOS_ELECT] = "Aux. Electronics",
+                                    [GRPOS_BIAS] = "Bias",
+                                    [GRPOS_VETO] = "Pointing Sensor Vetos",
+                                    [GRPOS_ACT] = "Actuators",
+                                    [GRPOS_MOTOR] =  "Pointing Motors",
+                                    [GRPOS_CRYO] = "Cryo Control",
+                                    [GRPOS_POWER] = "Subsystem Power",
+                                    [GRPOS_LOCK] = "Lock Motor",
+                                    [GRPOS_TELEM] =  "Telemetry",
+                                    [GRPOS_MISC] = "Miscellaneous",
+
   };
 
 //echoes as string; makes enum name the command name string
@@ -44,12 +50,12 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 
-  {COMMAND(xsc0_off), "turn off XSC0", GR_ISC_MODE | GR_POWER | CONFIRM},
-  {COMMAND(xsc0_on), "turn on XSC0", GR_ISC_MODE | GR_POWER},
-  {COMMAND(xsc0_cycle), "power cycle XSC0", GR_ISC_MODE | GR_POWER | CONFIRM},
-  {COMMAND(xsc1_off), "turn off XSC1", GR_OSC_MODE | GR_POWER | CONFIRM},
-  {COMMAND(xsc1_on), "turn on XSC1", GR_OSC_MODE | GR_POWER},
-  {COMMAND(xsc1_cycle), "power cycle XSC1", GR_OSC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(xsc0_off), "turn off XSC0", GR_XSC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(xsc0_on), "turn on XSC0", GR_XSC_MODE | GR_POWER},
+  {COMMAND(xsc0_cycle), "power cycle XSC0", GR_XSC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(xsc1_off), "turn off XSC1", GR_XSC_MODE | GR_POWER | CONFIRM},
+  {COMMAND(xsc1_on), "turn on XSC1", GR_XSC_MODE | GR_POWER},
+  {COMMAND(xsc1_cycle), "power cycle XSC1", GR_XSC_MODE | GR_POWER | CONFIRM},
   {COMMAND(gybox_off), "turn off the digital gyros' box", GR_POWER},
   {COMMAND(gybox_on), "turn on the digital gyros' box", GR_POWER},
   {COMMAND(gybox_cycle), "power cycle the digital gyros' box", GR_POWER},
@@ -107,16 +113,16 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(charge_cycle), "power cycle the charge controller", 
     GR_POWER | CONFIRM},
 
-  {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_GAIN},
-  {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_GAIN},
-  {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_GAIN},
-  {COMMAND(restore_piv), "restore the serial settings for the pivot controller", GR_GAIN},
-  {COMMAND(az_off), "disable az motors' gains", GR_GAIN},
-  {COMMAND(az_on), "enable az motors' gains", GR_GAIN},
-  {COMMAND(el_off), "disable el motor gains", GR_GAIN},
-  {COMMAND(el_on), "enable el motor gains", GR_GAIN},
+  {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_MOTOR},
+  {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_MOTOR},
+  {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_MOTOR},
+  {COMMAND(restore_piv), "restore the serial settings for the pivot controller", GR_MOTOR},
+  {COMMAND(az_off), "disable az motors' gains", GR_MOTOR},
+  {COMMAND(az_on), "enable az motors' gains", GR_MOTOR},
+  {COMMAND(el_off), "disable el motor gains", GR_MOTOR},
+  {COMMAND(el_on), "enable el motor gains", GR_MOTOR},
   {COMMAND(force_el_on), "force enable el motors despite the pin being in",
-    CONFIRM | GR_GAIN},
+    CONFIRM | GR_MOTOR},
 
   {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
@@ -157,51 +163,51 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
   {COMMAND(auto_jfetheat), "automatically reguate jfet heater level",
-    GR_CRYO_HEAT},
+    GR_CRYO},
   {COMMAND(charcoal_on), "charcoal heater on, helium fridge autocycle off",
-    GR_CRYO_HEAT},
+    GR_CRYO},
   {COMMAND(charcoal_off), "charcoal heater off, helium fridge autocycle off",
-    GR_CRYO_HEAT},
+    GR_CRYO},
   {COMMAND(hs_charcoal_on), "charcoal heat switch on, fridge autocycle off",
-    GR_CRYO_HEAT},
+    GR_CRYO},
   {COMMAND(hs_charcoal_off), "charcoal heat switch off, fridge autocycle off",
-    GR_CRYO_HEAT},
+    GR_CRYO},
   {COMMAND(auto_cycle), "activate helium fridge autocycle system",
-    GR_CRYO_HEAT},
+    GR_CRYO},
   {COMMAND(fridge_cycle),
-    "manually cycle helium fridge now, fridge autocycle on", GR_CRYO_HEAT},
+    "manually cycle helium fridge now, fridge autocycle on", GR_CRYO},
   {COMMAND(jfet_on), "manually turn JFET heater on, auto control off",
-    GR_CRYO_HEAT},
+    GR_CRYO},
   {COMMAND(jfet_off), "manually turn JFET heater off, auto control off",
-    GR_CRYO_HEAT},
-  {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO_HEAT},
-  {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO_HEAT},
-  {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO_HEAT},
-  {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO_HEAT},
+    GR_CRYO},
+  {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO},
+  {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO},
+  {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO},
+  {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO},
 
-  {COMMAND(cal_on), "calibrator on", GR_CRYO_HEAT},
-  {COMMAND(cal_off), "calibrator off", GR_CRYO_HEAT},
+  {COMMAND(cal_on), "calibrator on", GR_CRYO},
+  {COMMAND(cal_off), "calibrator off", GR_CRYO},
 
-  {COMMAND(level_on), "helium level sensor on", GR_CRYO_CONTROL},
-  {COMMAND(level_off), "helium level sensor off", GR_CRYO_CONTROL},
-  {COMMAND(level_pulse), "helium level sensor pulse", GR_CRYO_CONTROL},
-  {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO_CONTROL | GR_HWPR},
-  {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO_CONTROL | GR_HWPR},
-  {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO_CONTROL | GR_HWPR},
-  {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO_CONTROL},
-  {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO_CONTROL},
+  {COMMAND(level_on), "helium level sensor on", GR_CRYO},
+  {COMMAND(level_off), "helium level sensor off", GR_CRYO},
+  {COMMAND(level_pulse), "helium level sensor pulse", GR_CRYO},
+  {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO | GR_HWPR},
+  {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO | GR_HWPR},
+  {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
+  {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
+  {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
   {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
-    GR_CRYO_CONTROL},
+    GR_CRYO},
   {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
-    GR_CRYO_CONTROL},
-  {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO_CONTROL},
-  {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO_CONTROL},
-  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO_CONTROL | CONFIRM},
-  {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO_CONTROL},
+    GR_CRYO},
+  {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO},
+  {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO},
+  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
+  {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO},
   {COMMAND(pot_valve_open), "set He4 pot valve direction open",
-    GR_CRYO_CONTROL},
+    GR_CRYO},
   {COMMAND(pot_valve_close), "set He4 pot valve direction close",
-    GR_CRYO_CONTROL},
+    GR_CRYO},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -223,7 +229,7 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_MISC | CONFIRM},
   {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", 
     GR_MISC | CONFIRM},
-  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_STAGE},
+  {COMMAND(xy_panic), "stop XY stage motors immediately", 0},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
   {COMMAND(balance_off),  "Turn off the balance pumps", GR_BAL},
@@ -236,7 +242,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(lock_off), "turn off the lock motor", GR_LOCK},
   {COMMAND(lock45), "Lock the inner frame at 45 degrees", GR_LOCK},
   {COMMAND(repoll), "force repoll of the stepper busses (act, lock, HWPR, XY)",
-    GR_STAGE | GR_LOCK | GR_ACT | GR_HWPR},
+    GR_LOCK | GR_ACT | GR_HWPR},
   {COMMAND(autofocus_veto), "veto the secondary actuator system temperature"
     " correction mode", GR_FOCUS},
   {COMMAND(autofocus_allow), "allow the secondary actuator system temperature"
@@ -250,13 +256,13 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hwpr_pot_is_alive), "use the potentiometer when stepping the hwpr", GR_HWPR},
 
   //Shutter commands
-  {COMMAND(shutter_init), "Initialize shutter move parameters", GR_SHUTTER},
-  {COMMAND(shutter_close), "Close shutter and keep it closed", GR_SHUTTER},
-  {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_SHUTTER},
-  {COMMAND(shutter_open), "Open shutter", GR_SHUTTER},
-  {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_SHUTTER},
-  {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_SHUTTER},
-  {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_SHUTTER},
+  {COMMAND(shutter_init), "Initialize shutter move parameters", GR_MISC},
+  {COMMAND(shutter_close), "Close shutter and keep it closed", GR_MISC},
+  {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_MISC},
+  {COMMAND(shutter_open), "Open shutter", GR_MISC},
+  {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
+  {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
+  {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 
 };
@@ -318,7 +324,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Set rate (deg/s)", 0, 30, 'f', "RATE_ATRIM"}
     }
   },
-  {COMMAND(az_gain), "az reaction wheel gains", GR_GAIN, 4,
+  {COMMAND(az_gain), "az reaction wheel gains", GR_MOTOR, 4,
     {
       {"Proportional Gain", 0, CMD_I_MAX, 'f', "g_p_az"},
       {"Integral Time",     0, 200, 'f', "g_i_az"},
@@ -326,7 +332,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Pointing Gain", 0, CMD_I_MAX, 'f', "g_pt_az"},
     }
   },
-  {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_GAIN, 1,
+  {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_MOTOR, 1,
     {
       {"Az Acceleration", 0.1, 2.0, 'f', "accel_az"}
     }
@@ -465,7 +471,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Current Longitude (deg)", 0, 360, 'f', "LON"}
     }
   },
-  {COMMAND(pivot_gain), "pivot gains", GR_GAIN, 5,
+  {COMMAND(pivot_gain), "pivot gains", GR_MOTOR, 5,
     {
       {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
       {"V_err Gain (prop)", 0, CMD_L_MAX, 'f', "G_PE_PIV"},
@@ -474,7 +480,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_PIV"},
     }
   },
-  {COMMAND(el_gain), "elevation motor gains", GR_GAIN, 6,
+  {COMMAND(el_gain), "elevation motor gains", GR_MOTOR, 6,
     {
       {"Proportional Gain", 0, CMD_L_MAX, 'f', "G_P_EL"},
       {"Integral Time",     0, 200, 'f', "G_I_EL"},
@@ -509,7 +515,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_STAGE | GR_ACT | GR_LOCK | GR_HWPR, 2,
+    GR_ACT | GR_LOCK | GR_HWPR, 2,
     {
       {"Address (1-3,5,8,13,33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', "NONE"},
@@ -686,7 +692,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /* XY Stage */
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
-    GR_STAGE, 4,
+    GR_MISC, 4,
     {
       {"X destination", 0, 80000, 'l', "X_STAGE"},
       {"Y destination", 0, 80000, 'l', "Y_STAGE"},
@@ -695,7 +701,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
   {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
-    GR_STAGE, 4,
+    GR_MISC, 4,
     {
       {"X delta", -80000, 80000, 'l', "0"},
       {"Y delta", -80000, 80000, 'l', "0"},
@@ -703,21 +709,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
     }
   },
-  {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_STAGE, 3,
+  {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_MISC, 3,
     {
       {"X center", 0, 80000, 'l', "X_STAGE"},
       {"delta X", 0, 80000, 'l', "NONE"},
       {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
     }
   },
-  {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_STAGE, 3,
+  {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_MISC, 3,
     {
       {"Y center", 0, 80000, 'l', "Y_STAGE"},
       {"delta Y", 0, 80000, 'l', "NONE"},
       {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"},
     }
   },
-  {COMMAND(xy_raster), "raster the X-Y translation stage", GR_STAGE, 7,
+  {COMMAND(xy_raster), "raster the X-Y translation stage", GR_MISC, 7,
     {
       {"X center", 0, 80000, 'l', "X_STAGE"},
       {"X Width", 0, 40000, 'i', "NONE"},
@@ -818,12 +824,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*********** Cal Lamp  *****************/
-  {COMMAND(cal_pulse), "calibrator single pulse", GR_CRYO_HEAT, 1,
+  {COMMAND(cal_pulse), "calibrator single pulse", GR_CRYO, 1,
     {
       {"Pulse Length (ms)", 0, 8000, 'i', "PULSE_CAL"}
     }
   },
-  {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO_HEAT, 3,
+  {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO, 3,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
       {"Max Pulse Delay (0=never pulse) (s)",  0, 32767, 'i', "PERIOD_CAL"},
@@ -833,14 +839,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /********* Cryo heat   *****************/
-  {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO_HEAT, 2,
+  {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO, 2,
     {
       {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
       {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
     }
   },
 
-  {COMMAND(fridge_cycle_params), "Fridge cycle parameters", GR_CRYO_HEAT, 6,
+  {COMMAND(fridge_cycle_params), "Fridge cycle parameters", GR_CRYO, 6,
     {
       {"300mK_strap Start Temp (K)", 0, 4., 'f', "T_START_CYCLE"},
       {"Pot Max Temp (K)", 0, 10., 'f', "T_POT_MAX_CYCLE"},
@@ -859,7 +865,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
 ////  <!-- XSC exposure -->
 
-    {COMMAND(xsc_exposure_timing), "xsc exposure time", GR_ISC_PARAM, 4,
+    {COMMAND(xsc_exposure_timing), "xsc exposure time", GR_XSC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"exposure time_cs (cs) [default: 12]", 1, 100, 'l', "NONE"},
@@ -869,7 +875,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     },
 
 
-    {COMMAND(xsc_multi_trigger), "xsc trigger timing", GR_ISC_PARAM, 3,
+    {COMMAND(xsc_multi_trigger), "xsc trigger timing", GR_XSC_PARAM, 3,
         {
             {"num triggers [default: 1]", 0, 16, 'i', "NONE"},
             {"time between triggers (cs) [default: 19]", 1, 100, 'l', "NONE"},
@@ -880,7 +886,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
 ////  <!-- XSC main -->
 
 
-    {COMMAND(xsc_main_settings), "xsc main settings", GR_ISC_PARAM, 6,
+    {COMMAND(xsc_main_settings), "xsc main settings", GR_XSC_PARAM, 6,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"display_frequency [default: 20.0]", 1.0, 30.0, 'f', "NONE"},
@@ -892,7 +898,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     },
 
 
-    {COMMAND(xsc_display_zoom), "xsc display zoom", GR_ISC_PARAM, 4,
+    {COMMAND(xsc_display_zoom), "xsc display zoom", GR_XSC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"center x display pixel [default: 320]", 0, 1000, 'i', "NONE"},
@@ -906,13 +912,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
 
 
-    {COMMAND(xsc_run_autofocus), "xsc run autofocus", GR_ISC_PARAM, 1,
+    {COMMAND(xsc_run_autofocus), "xsc run autofocus", GR_XSC_PARAM, 1,
         {
             {"which", 0, 2, 'i', "NONE"},
         },
     },
 
-    {COMMAND(xsc_set_autofocus_range), "xsc set autofocus range", GR_ISC_PARAM, 4,
+    {COMMAND(xsc_set_autofocus_range), "xsc set autofocus range", GR_XSC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"focus_search_min", 1, 10000, 'l', "NONE"},
@@ -921,27 +927,27 @@ struct mcom mcommands[N_MCOMMANDS] = {
         },
     },
 
-    {COMMAND(xsc_abort_autofocus), "xsc abort autofocus", GR_ISC_PARAM, 2,
+    {COMMAND(xsc_abort_autofocus), "xsc abort autofocus", GR_XSC_PARAM, 2,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"still_use_solution", 0, 1, 'i', "NONE"},
         },
     },
 
-    {COMMAND(xsc_autofocus_display_mode), "xsc autofocus display mode", GR_ISC_PARAM, 2,
+    {COMMAND(xsc_autofocus_display_mode), "xsc autofocus display mode", GR_XSC_PARAM, 2,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"mode (0=auto, 1=on, 2=off)", 0, 2, 'i', "NONE"},
         },
     },
 
-    {COMMAND(xsc_get_gain), "xsc get gain", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_get_gain), "xsc get gain", GR_XSC_PARAM, 0,
         {
             {"which", 0, 2, 'i', "NONE"},
         },
     },
 
-    {COMMAND(xsc_set_gain), "xsc set gain", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_set_gain), "xsc set gain", GR_XSC_PARAM, 0,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"position", 0.5, 10.0, 'f', "NONE"},
@@ -949,7 +955,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     },
 
 
-    {COMMAND(xsc_fake_sky_brightness), "xsc fake sky brightness", GR_ISC_PARAM, 0,
+    {COMMAND(xsc_fake_sky_brightness), "xsc fake sky brightness", GR_XSC_PARAM, 0,
         {
             {"which", 0, 2, 'i', "NONE"},
             {"enabled", 0, 1, 'i', "NONE"},
@@ -970,12 +976,12 @@ struct mcom mcommands[N_MCOMMANDS] = {
    }
   },
   {COMMAND(shutter_step), "set number of shutter steps to close (default 4224)", 
-    GR_SHUTTER, 1,
+    GR_MISC, 1,
     {
       {"Steps", 1, 5000, 'i', "STEPS_SHUTTER"},
     }
   },
-  {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_SHUTTER, 1,
+  {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_MISC, 1,
     {
       {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
     }
@@ -994,13 +1000,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Plover", 0, CMD_I_MAX, 'i', "PLOVER"}
     }
   },
-  {COMMAND(xsc_is_new_window_period), "Set the time over which commands are valid (in centi-seconds)", GR_XSC, 2,
+  {COMMAND(xsc_is_new_window_period), "Set the time over which commands are valid (in centi-seconds)", GR_XSC_PARAM, 2,
       {
               {"Which", 0, 2, 'i', "NONE"},
               {"Window period", 0, 2000, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_offset), "Trim the star camera", GR_XSC, 3,
+  {COMMAND(xsc_offset), "Trim the star camera", GR_XSC_PARAM|GR_TRIM, 3,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Cross-El trim", -180, 180, 'd', "NONE"},
@@ -1010,93 +1016,93 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   ////  <!-- XSC heaters -->
 
-  {COMMAND(xsc_heaters_off), "Turn off the XSC heater", GR_XSC, 1,
+  {COMMAND(xsc_heaters_off), "Turn off the XSC heater", GR_XSC_HOUSE, 1,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_heaters_on), "Turn on the XSC heater", GR_XSC, 1,
+  {COMMAND(xsc_heaters_on), "Turn on the XSC heater", GR_XSC_HOUSE, 1,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_heaters_auto), "Allow XSC to control its heater", GR_XSC, 1,
+  {COMMAND(xsc_heaters_auto), "Allow XSC to control its heater", GR_XSC_HOUSE, 1,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_trigger_threshold), "Allow XSC to trigger based on predicted px streaking", GR_XSC, 3,
+  {COMMAND(xsc_trigger_threshold), "Allow XSC to trigger based on predicted px streaking", GR_XSC_PARAM, 3,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Enabled", 0, 1, 'i', "NONE"},
               {"Blob streaking limit (pixels", 0, 100, 'f', "NONE"},
       }
   },
-  {COMMAND(xsc_scan_force_trigger), "Force XSC to trigger on turnaround (ignore speed)", GR_XSC, 2,
+  {COMMAND(xsc_scan_force_trigger), "Force XSC to trigger on turnaround (ignore speed)", GR_XSC_PARAM, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Force the trigger on scan limits", 0, 1, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_quit), "Quit XSC", GR_XSC, 1,
+  {COMMAND(xsc_quit), "Quit XSC", GR_XSC_HOUSE|CONFIRM, 1,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_shutdown), "Shutdown the XSC computer", GR_XSC, 2,
+  {COMMAND(xsc_shutdown), "Shutdown the XSC computer", GR_XSC_HOUSE|CONFIRM, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Restart?", 0, 1, 'i', "NONE"}
       }
   },
 
-  {COMMAND(xsc_image_client), "Enable or disable sending images to mcp", GR_XSC, 2,
+  {COMMAND(xsc_image_client), "Enable or disable sending images to mcp", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Image client enabled", 0, 1, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_init_focus), "Initialize the focus motor", GR_XSC, 1,
+  {COMMAND(xsc_init_focus), "Initialize the focus motor", GR_XSC_MODE, 1,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_set_focus), "Set the absolute focus position", GR_XSC, 2,
+  {COMMAND(xsc_set_focus), "Set the absolute focus position", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Absolute focus position", 0, 10000, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_set_focus_incremental), "Command an incremental step to the focus motor", GR_XSC, 2,
+  {COMMAND(xsc_set_focus_incremental), "Command an incremental step to the focus motor", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Incremental focus steps", -10000, 10000, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_init_aperture), "Initialize the aperture motor", GR_XSC, 1,
+  {COMMAND(xsc_init_aperture), "Initialize the aperture motor", GR_XSC_MODE, 1,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_set_aperture), "Set the absolute aperture position", GR_XSC, 2,
+  {COMMAND(xsc_set_aperture), "Set the absolute aperture position", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Absolute aperture position", 0, 10000, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_solver_general), "Solver parameter settings", GR_XSC, 3,
+  {COMMAND(xsc_solver_general), "Solver parameter settings", GR_XSC_PARAM, 3,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Enable the solver", 0, 1, 'i', "NONE"},
               {"Set the solver timeout period (s)", 5, 600, 'f', "NONE"},
       }
   },
-  {COMMAND(xsc_solver_abort), "Abort the solving the current image", GR_XSC, 1,
+  {COMMAND(xsc_solver_abort), "Abort the solving the current image", GR_XSC_MODE, 1,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"}
       }
   },
-  {COMMAND(xsc_selective_mask), "Set the XSC selective mask", GR_XSC, 6,
+  {COMMAND(xsc_selective_mask), "Set the XSC selective mask", GR_XSC_PARAM, 6,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Enable selective masking", 0, 1, 'i', "NONE"},
@@ -1105,7 +1111,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
               {"Mask field 3", 0, CMD_L_MAX, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_blob_finding), "XSC blob finder settings", GR_XSC, 6,
+  {COMMAND(xsc_blob_finding), "XSC blob finder settings", GR_XSC_PARAM, 6,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"SNR Threshhold", 0.01, 10, 'f', "NONE"},
@@ -1114,14 +1120,14 @@ struct mcom mcommands[N_MCOMMANDS] = {
               {"Fitting method (0= none, 1=gaussian, 2=double gaussian)", 0, 2, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_blob_cells), "XSC blob cell settings", GR_XSC, 3,
+  {COMMAND(xsc_blob_cells), "XSC blob cell settings", GR_XSC_PARAM, 3,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Cell size (pixels, power of 2)", 4, 512, 'i', "NONE"},
               {"Max num blobs per cell (default 2)", 1, 10, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_motion_psf), "XSC Motion PSF Settings", GR_XSC, 4,
+  {COMMAND(xsc_motion_psf), "XSC Motion PSF Settings", GR_XSC_PARAM, 4,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Motion PSF Enabled", 0, 1, 'i', "NONE"},
@@ -1129,7 +1135,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
               {"Platescale (\"/px)", 6.0, 7.0, 'f', "NONE"},
       }
   },
-  {COMMAND(xsc_pattern_matching), "XSC pattern matching settings", GR_XSC, 8,
+  {COMMAND(xsc_pattern_matching), "XSC pattern matching settings", GR_XSC_PARAM, 8,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Pattern match enable", 0, 1, 'i', "NONE"},
@@ -1141,21 +1147,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
               {"Fixed Platescale (\"/px)", 6.0, 7.0, 'f', "NONE"},
       }
   },
-  {COMMAND(xsc_filter_hor_location), "XSC Horizontal Location Filter", GR_XSC, 3,
+  {COMMAND(xsc_filter_hor_location), "XSC Horizontal Location Filter", GR_XSC_PARAM, 3,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Horizontal Limit Enabled", 0, 1, 'i', "NONE"},
               {"Horizontal Radius (degrees)", 0.0, 90.0, 'f', "NONE"},
       }
   },
-  {COMMAND(xsc_filter_eq_location), "XSC Equatorial Location Filter", GR_XSC, 3,
+  {COMMAND(xsc_filter_eq_location), "XSC Equatorial Location Filter", GR_XSC_PARAM, 3,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Equatorial Limit Enabled", 0, 1, 'i', "NONE"},
               {"Equatorial Radius (degrees)", 0.0, 90.0, 'f', "NONE"},
       }
   },
-  {COMMAND(xsc_filter_hor_roll), "XSC Horizontal Roll Limit", GR_XSC, 4,
+  {COMMAND(xsc_filter_hor_roll), "XSC Horizontal Roll Limit", GR_XSC_PARAM, 4,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Horizontal Roll Limit", 0, 1, 'i', "NONE"},
@@ -1163,7 +1169,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
               {"Maximum Horizontal Roll (degrees)", -90.0, 90.0, 'f', "NONE"},
       }
   },
-  {COMMAND(xsc_filter_el), "XSC Elevation Limit", GR_XSC, 4,
+  {COMMAND(xsc_filter_el), "XSC Elevation Limit", GR_XSC_PARAM, 4,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Elevation Limit", 0, 1, 'i', "NONE"},
@@ -1171,7 +1177,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
               {"Maximum Elevation (degrees)", -90.0, 90.0, 'f', "NONE"},
       }
   },
-  {COMMAND(xsc_filter_matching), "XSC Matching Filter", GR_XSC, 4,
+  {COMMAND(xsc_filter_matching), "XSC Matching Filter", GR_XSC_PARAM, 4,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Pointing Error threshold (arc seconds)", 0.01, 120, 'f', "NONE"},
