@@ -451,15 +451,14 @@ static void *defricher_write_loop(void *m_arg)
     {
         if (ri.new_channels) {
             ri.channels_ready = false;
+            ri.new_channels = false;
             if (channels_initialize(new_channels) < 0) {
                 defricher_err("Could not initialize channels");
-                ri.new_channels = false;
                 free(new_channels);
                 new_channels = NULL;
             } else {
                 defricher_free_channels_list(channels);
-                ri.new_channels = false;
-                free(channels);
+                if (channels) free(channels);
                 channels = new_channels;
                 new_channels = NULL;
                 defricher_transfer_channel_list(channels);

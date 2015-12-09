@@ -103,7 +103,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                 }
             }
             if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {
-                if (((channel_header_t*)message->payload)->crc != last_crc) {
+                if (((channel_header_t*)message->payload)->crc != last_crc && !ri.new_channels) {
                     defricher_info( "Received updated Channels.  Ready to initialize new DIRFILE!");
                     if (channels_read_map(message->payload, message->payloadlen, &new_channels) > 0 ) {
                         defricher_startup("Ready to init channels");
