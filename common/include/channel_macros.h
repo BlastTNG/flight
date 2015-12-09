@@ -41,7 +41,7 @@ typedef struct channel channel_t;
 # ifndef _BSD_SOURCE
 #   define _BSD_SOURCE             /* Define this for endian-conversion macros */
 # endif
-#include <endian.h>
+#include <portable_endian.h>
 
 # if __BYTE_ORDER == __LITTLE_ENDIAN
 #   define beftoh(x) ({                             \

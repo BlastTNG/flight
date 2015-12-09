@@ -27,7 +27,7 @@
 #ifndef BLAST_COMPILER_H_
 #define BLAST_COMPILER_H_
 
-#include <endian.h>
+#include <portable_endian.h>
 
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)

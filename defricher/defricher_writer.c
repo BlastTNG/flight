@@ -386,7 +386,7 @@ void defricher_queue_packet(uint16_t m_source, uint16_t m_rate)
             channel_t *frame_offset = channels_find_by_name("mcp_1hz_framecount");
             if (frame_offset) {
                 defricher_cache_node_t *outfile_node = frame_offset->var;
-                dirfile_offset = __bswap_32(*outfile_node->_32bit_data);
+                dirfile_offset = be32toh(*outfile_node->_32bit_data);
                 defricher_info("Setting offset to %d", dirfile_offset);
             }
             else {
