@@ -28,7 +28,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <phenom/thread.h>
 
 #include "mputs.h"
 
