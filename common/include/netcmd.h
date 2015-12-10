@@ -29,6 +29,7 @@
 #endif
 #endif
 #include <sys/types.h>
+#include <stdint.h>
 
 /*
  * Definition of command structures (formerly in command_list.h)
@@ -92,8 +93,8 @@ struct mcom {
 #define CMD_LIMT 8
 #define CMD_SENT 9
 
-extern unsigned short client_n_scommands;
-extern unsigned short client_n_mcommands;
+extern uint16_t  client_n_scommands;
+extern uint16_t  client_n_mcommands;
 extern struct scom *client_scommands;
 extern struct mcom *client_mcommands;
 extern char client_command_list_serial[1024];

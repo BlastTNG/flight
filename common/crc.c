@@ -16,6 +16,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "portable_endian.h"
 #include "blast_compiler.h"
@@ -42,15 +43,15 @@ crc32_body(uint32_t crc, unsigned char const *buf, size_t len, const uint32_t (*
     const uint32_t *b;
     size_t    rem_len;
     size_t i;
-    const uint32_t *t0=tab[0], *t1=tab[1], *t2=tab[2], *t3=tab[3];
+    const uint32_t *t0 = tab[0], *t1 = tab[1], *t2 = tab[2], *t3 = tab[3];
     const uint32_t *t4 = tab[4], *t5 = tab[5], *t6 = tab[6], *t7 = tab[7];
     uint32_t q;
 
     /* Align it */
-    if (unlikely(((long)buf & 3) && len)) {
+    if (unlikely(((intptr_t)buf & 3) && len)) {
         do {
             DO_CRC(*buf++);
-        } while ((--len) && (((long)buf)&3));
+        } while ((--len) && (((intptr_t)buf) & 3));
     }
 
     rem_len = len & 7;
@@ -115,7 +116,6 @@ static inline uint32_t __pure crc32_be_generic(uint32_t crc, unsigned char const
                       size_t len, const uint32_t (*tab)[256],
                       uint32_t polynomial)
 {
-
     crc = (uint32_t) htobe32(crc);
     crc = crc32_body(crc, p, len, tab);
     crc = be32toh((uint32_t)crc);
@@ -758,8 +758,6 @@ static struct crc_test {
     {0xb18a0319, 0x00000026, 0x000007db, 0x1cf98dcc, 0x8fa9ad6a, 0x9dc0bb48},
 };
 
-#include <sys/time.h>
-
 static int crc32_test(void)
 {
     int i;
@@ -767,7 +765,7 @@ static int crc32_test(void)
     int bytes = 0;
     struct timespec start, stop;
     uint64_t nsec;
-    unsigned long flags;
+    uint32_t flags;
 
     /* keep static to prevent cache warming code from
      * getting eliminated by the compiler */
@@ -808,10 +806,9 @@ static int crc32_test(void)
 
     if (errors)
         pr_warn("crc32: %d self tests failed\n", errors);
-    else {
+    else
         pr_info("crc32: self tests passed, processed %d bytes in %lld nsec\n",
             bytes, nsec);
-    }
 
     return 0;
 }

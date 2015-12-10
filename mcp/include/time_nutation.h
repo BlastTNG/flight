@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef BLAST_NUTATION_H_
-#define BLAST_NUTATION_H_
+#ifndef INCLUDE_TIME_NUTATION_H_
+#define INCLUDE_TIME_NUTATION_H_
 
 #include "time_julian.h"
 

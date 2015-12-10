@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef MCP_H
-#define MCP_H
+#ifndef INCLUDE_MCP_H
+#define INCLUDE_MCP_H
 
 #include <pthread.h>
 #include <stdbool.h>
@@ -33,12 +33,9 @@ extern time_t mcp_systime(time_t *t);
 extern struct frameBuffer hiGain_buffer;
 extern bool shutdown_mcp;
 
-//TODO: Move to buffer header file
+// TODO(seth): Move to buffer header file
 #define GETREADINDEX(i) ((i+2) % 3)  /* i - 1 modulo 3 */
 #define INC_INDEX(i) ((i + 1) %3)    /* i + 1 modulo 3 */
-
-
-//#define USE_FIFO_CMD
 
 struct chat_buf {
   char msg[4][2 * 20]; /* 4 buffers of FAST_PER_SLOW BLASTbus words of characters */
@@ -55,11 +52,9 @@ struct chat_buf {
 
 #define USE_FIFO_CMD
 
-//preserve use of FIFO or SIP, not both
+// preserve use of FIFO or SIP, not both
 #ifndef USE_FIFO_CMD
 #define USE_SIP_CMD
 #endif
-
-//#define USE_XY_THREAD
 
 #endif

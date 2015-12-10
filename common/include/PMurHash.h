@@ -30,10 +30,10 @@
 #if !defined(MH_UINT32)
   #include  <limits.h>
   #if   (USHRT_MAX == 0xffffffffUL)
-    #define MH_UINT32 unsigned short
-  #elif (UINT_MAX == 0xffffffffUL)
+    #define MH_UINT32 uint16_t
+  #elif(UINT_MAX == 0xffffffffUL)
     #define MH_UINT32 unsigned int
-  #elif (ULONG_MAX == 0xffffffffUL)
+  #elif(ULONG_MAX == 0xffffffffUL)
     #define MH_UINT32 unsigned long
   #endif
 #endif

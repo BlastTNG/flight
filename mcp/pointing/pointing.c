@@ -21,6 +21,8 @@
  *
  */
 
+#include "pointing.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -33,6 +35,13 @@
 #include <ctype.h>
 #include <pthread.h>
 
+// Include gsl package for the old sun sensor
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_multifit_nlin.h>
+#include <gsl/gsl_matrix.h>
+
 #include "blast.h"
 #include "mcp.h"
 #include "pointing_struct.h"
@@ -41,25 +50,16 @@
 #include "tx.h"
 #include "fir.h"
 
-#include <dsp1760.h>
-#include <EGM9615.h>
-#include <geomag2015.h>
-#include <angles.h>
-#include <xsc_network.h>
-#include <conversions.h>
-#include <time_lst.h>
-#include <utilities_pointing.h>
-#include <blast_sip_interface.h>
+#include "dsp1760.h"
+#include "EGM9615.h"
+#include "geomag2015.h"
+#include "angles.h"
+#include "xsc_network.h"
+#include "conversions.h"
+#include "time_lst.h"
+#include "utilities_pointing.h"
+#include "blast_sip_interface.h"
 
-// Include gsl package for the old sun sensor
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit_nlin.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
-
-#include "pointing.h"
 
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
@@ -202,7 +202,6 @@ static int MagConvert(double *mag_az, double *m_el) {
 
     /******** Obtain correct indexes the first time here ***********/
     if (firsttime) {
-
         if (!MAG_robustReadMagModels("/data/etc/blast/WMM.COF", &MagneticModels, epochs)) {
             blast_err("/data/etc/blast/WMM.COF not found. Be sure to `make install` mcp.");
             return 0;
@@ -234,7 +233,6 @@ static int MagConvert(double *mag_az, double *m_el) {
      *
      * The functions called are in 'geomag2015.c' */
     if ((t = PointingData[i_point_read].t) > oldt + 10) {
-
         MAGtype_CoordSpherical CoordSpherical;
         MAGtype_CoordGeodetic CoordGeodetic;
         MAGtype_Date UserDate;
@@ -251,9 +249,12 @@ static int MagConvert(double *mag_az, double *m_el) {
         CoordGeodetic.lambda = -PointingData[i_point_read].lon;
         MAG_ConvertGeoidToEllipsoidHeight(&CoordGeodetic, &Geoid);
 
-        MAG_GeodeticToSpherical(Ellip, CoordGeodetic, &CoordSpherical); /*Convert from geodetic to Spherical Equations: 17-18, WMM Technical report*/
-        MAG_TimelyModifyMagneticModel(UserDate, MagneticModels[0], TimedMagneticModel); /* Time adjust the coefficients, Equation 19, WMM Technical report */
-        MAG_Geomag(Ellip, CoordSpherical, CoordGeodetic, TimedMagneticModel, &GeoMagneticElements); /* Computes the geoMagnetic field elements and their time change*/
+        /*Convert from geodetic to Spherical Equations: 17-18, WMM Technical report*/
+        MAG_GeodeticToSpherical(Ellip, CoordGeodetic, &CoordSpherical);
+        /* Time adjust the coefficients, Equation 19, WMM Technical report */
+        MAG_TimelyModifyMagneticModel(UserDate, MagneticModels[0], TimedMagneticModel);
+        /* Computes the geoMagnetic field elements and their time change*/
+        MAG_Geomag(Ellip, CoordSpherical, CoordGeodetic, TimedMagneticModel, &GeoMagneticElements);
 
         dec = GeoMagneticElements.Decl;
         dip = GeoMagneticElements.Incl;
@@ -271,7 +272,7 @@ static int MagConvert(double *mag_az, double *m_el) {
     mvx = (ACSData.mag_x - MAGX_B) / MAGX_M;
     mvy = (ACSData.mag_y - MAGY_B) / MAGY_M;
 
-    //TODO: Reset calibration values to Reasonable for gauss
+    // TODO(seth): Reset calibration values to Reasonable for gauss
 //    magx_m = 1.0 / ((double) (CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
 //    magy_m = -1.0 / ((double) (CommandData.cal_ymax_mag - CommandData.cal_ymin_mag));
 //
@@ -306,8 +307,8 @@ static int MagConvert(double *mag_az, double *m_el) {
 #define  PSS_L  10.     // 10 mm = effective length of active area
 #define  PSS1_D  10.     // 10 mm = Distance between pinhole and sensor
 #define  PSS2_D  10.     // 10 mm = Distance between pinhole and sensor
-#define  PSS3_D 10.5    // 
-#define  PSS4_D 10.34   //
+#define  PSS3_D 10.5
+#define  PSS4_D 10.34
 #define  PSS_IMAX  8192.  // Maximum current (place holder for now)
 #define  PSS_XSTRETCH  1.  // 0.995
 #define  PSS_YSTRETCH  1.  // 1.008
@@ -324,9 +325,8 @@ static int MagConvert(double *mag_az, double *m_el) {
 #define  PSS3_PSI   0
 #define  PSS4_PSI   0
 
-//TODO: Separate Sun Az calc
 static int PSSConvert(double *azraw_pss, double *elraw_pss) {
-//TODO:Reenable PSSConvert
+// TODO(seth): Reenable PSSConvert
     int     i_point;
     double  sun_ra, sun_dec;
 //  double        az[4];
@@ -383,19 +383,19 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 //
 //  if (fabs(itot[0]) < pss_imin) {
 //    	PointingData[point_index].pss1_snr = 1.;  // 1.
-//	weight[0] = 0.0;
+//    weight[0] = 0.0;
 //  }
 //  if (fabs(itot[1]) < pss_imin) {
 //    	PointingData[point_index].pss2_snr = 1.;  // 1.
-//	weight[1] = 0.0;
+//    weight[1] = 0.0;
 //  }
 ////  if (fabs(itot[2]) < pss_imin) {
 ////    	PointingData[point_index].pss3_snr = 1.;  // 1.
-////	weight[2] = 0.0;
+////    weight[2] = 0.0;
 ////  }
 ////  if (fabs(itot[3]) < pss_imin) {
 ////    	PointingData[point_index].pss4_snr = 1.;  // 1.
-////	weight[3] = 0.0;
+////    weight[3] = 0.0;
 ////  }
 //
 //  // Define pss_d (distance to pinhole)
@@ -415,20 +415,20 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 //
 //  // Then spot is at the edge of the sensor
 //  if ((fabs(x[0]) > 4.) | (fabs(y[0]) > 4.)) {
-//	PointingData[point_index].pss1_snr = 0.1;  // 0.1
-//	weight[0]=0.0;
+//    PointingData[point_index].pss1_snr = 0.1;  // 0.1
+//    weight[0]=0.0;
 //  }
 //  if ((fabs(x[1]) > 4.) | (fabs(y[1]) > 4.)) {
-//	PointingData[point_index].pss2_snr = 0.1;  // 0.1
-//	weight[1]=0.0;
+//    PointingData[point_index].pss2_snr = 0.1;  // 0.1
+//    weight[1]=0.0;
 //  }
 ////  if ((fabs(x[2]) > 4.) | (fabs(y[2]) > 4.)) {
-////	PointingData[point_index].pss3_snr = 0.1;  // 0.1
-////	weight[2]=0.0;
+////    PointingData[point_index].pss3_snr = 0.1;  // 0.1
+////    weight[2]=0.0;
 ////  }
 ////  if ((fabs(x[3]) > 4.) | (fabs(y[3]) > 4.)) {
-////	PointingData[point_index].pss4_snr = 0.1;  // 0.1
-////	weight[3]=0.0;
+////    PointingData[point_index].pss4_snr = 0.1;  // 0.1
+////    weight[3]=0.0;
 ////  }
 
     /* get current sun az, el */
@@ -470,35 +470,41 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 //
 //  //TODO: Remove GSL nonsense.  Replace with calculation
 //  for (i=0; i<4; i++) {
-//  	rot[i] = gsl_matrix_alloc(3,3);
-//  	rxalpha[i] = gsl_matrix_alloc(3,3);
-//  	rzpsi[i] = gsl_matrix_alloc(3,3);
+//  	rot[i] = gsl_matrix_alloc(3, 3);
+//  	rxalpha[i] = gsl_matrix_alloc(3, 3);
+//  	rzpsi[i] = gsl_matrix_alloc(3, 3);
 //
-//	gsl_matrix_set(rxalpha[i], 0, 0, 1.); gsl_matrix_set(rxalpha[i], 0, 1, 0.);             gsl_matrix_set(rxalpha[i], 0, 2, 0.);
-//	gsl_matrix_set(rxalpha[i], 1, 0, 0.); gsl_matrix_set(rxalpha[i], 1, 1, cos(-alpha[i])); gsl_matrix_set(rxalpha[i], 1, 2, -sin(-alpha[i]));
-//	gsl_matrix_set(rxalpha[i], 2, 0, 0.); gsl_matrix_set(rxalpha[i], 2, 1, sin(-alpha[i])); gsl_matrix_set(rxalpha[i], 2, 2, cos(-alpha[i]));
+//    gsl_matrix_set(rxalpha[i], 0, 0, 1.); gsl_matrix_set(rxalpha[i], 0, 1, 0.);
+//  gsl_matrix_set(rxalpha[i], 0, 2, 0.);
+//    gsl_matrix_set(rxalpha[i], 1, 0, 0.); gsl_matrix_set(rxalpha[i], 1, 1, cos(-alpha[i]));
+//  gsl_matrix_set(rxalpha[i], 1, 2, -sin(-alpha[i]));
+//    gsl_matrix_set(rxalpha[i], 2, 0, 0.); gsl_matrix_set(rxalpha[i], 2, 1, sin(-alpha[i]));
+//  gsl_matrix_set(rxalpha[i], 2, 2, cos(-alpha[i]));
 //
-//	gsl_matrix_set(rzpsi[i], 0, 0, cos(psi[i]));  gsl_matrix_set(rzpsi[i], 0, 1, -sin(psi[i])); gsl_matrix_set(rzpsi[i], 0, 2, 0.);
-//	gsl_matrix_set(rzpsi[i], 1, 0, sin(psi[i]));  gsl_matrix_set(rzpsi[i], 1, 1, cos(psi[i]));  gsl_matrix_set(rzpsi[i], 1, 2, 0.);
-//	gsl_matrix_set(rzpsi[i], 2, 0, 0.);           gsl_matrix_set(rzpsi[i], 2, 1, 0.);           gsl_matrix_set(rzpsi[i], 2, 2, 1.);
+//    gsl_matrix_set(rzpsi[i], 0, 0, cos(psi[i]));  gsl_matrix_set(rzpsi[i], 0, 1, -sin(psi[i]));
+//    gsl_matrix_set(rzpsi[i], 0, 2, 0.);
+//    gsl_matrix_set(rzpsi[i], 1, 0, sin(psi[i]));  gsl_matrix_set(rzpsi[i], 1, 1, cos(psi[i]));
+//    gsl_matrix_set(rzpsi[i], 1, 2, 0.);
+//    gsl_matrix_set(rzpsi[i], 2, 0, 0.);           gsl_matrix_set(rzpsi[i], 2, 1, 0.);
+//    gsl_matrix_set(rzpsi[i], 2, 2, 1.);
 //
-//	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
+//    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
 //                 1.0, rxalpha[i], rzpsi[i],
 //                 0.0, rot[i]);
 //
-//	// identity is the inverse of the rotation matrix
-//	u2[i][0] = gsl_matrix_get(rot[i], 0, 0)*usun[i][0]
+//    // identity is the inverse of the rotation matrix
+//    u2[i][0] = gsl_matrix_get(rot[i], 0, 0)*usun[i][0]
 //        	 + gsl_matrix_get(rot[i], 0, 1)*usun[i][1]
 //        	 + gsl_matrix_get(rot[i], 0, 2)*usun[i][2];
-//	u2[i][1] = gsl_matrix_get(rot[i], 1, 0)*usun[i][0]
+//    u2[i][1] = gsl_matrix_get(rot[i], 1, 0)*usun[i][0]
 //        	 + gsl_matrix_get(rot[i], 1, 1)*usun[i][1]
 //        	 + gsl_matrix_get(rot[i], 1, 2)*usun[i][2];
-//	u2[i][2] = gsl_matrix_get(rot[i], 2, 0)*usun[i][0]
+//    u2[i][2] = gsl_matrix_get(rot[i], 2, 0)*usun[i][0]
 //        	 + gsl_matrix_get(rot[i], 2, 1)*usun[i][1]
 //        	 + gsl_matrix_get(rot[i], 2, 2)*usun[i][2];
 //
-//	// az is "az_rel_sun"
-//	az[i] = atan(u2[i][0]/u2[i][2]);                // az is in radians
+//    // az is "az_rel_sun"
+//    az[i] = atan(u2[i][0]/u2[i][2]);                // az is in radians
 //  	azraw[i] = sun_az + (180./M_PI)*(az[i] - beta[i]);
 //  	elraw[i] = (180./M_PI)*atan(u2[i][1]/sqrt(u2[i][0]*u2[i][0]+u2[i][2]*u2[i][2]));
 //  }
@@ -540,7 +546,6 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 //  PointingData[point_index].pss_elraw = *elraw_pss;
 
   return 1;
-
 }
 
 /**
@@ -584,27 +589,27 @@ static void record_gyro_history(int m_index, gyro_history_t *m_gyhist, gyro_read
 
 int possible_solution(double az, double el, int i_point) {
   double mag_az, enc_el, d_az;
-  
+
   // test for insanity
   if (!finite(az)) return(0);
   if (!finite(el)) return(0);
   if (el > 70.0) return (0);
   if (el < 0.0) return(0);
 
-  mag_az = PointingData[i_point].mag_az; 
+  mag_az = PointingData[i_point].mag_az;
 
   if (CommandData.use_elenc) {
     enc_el = ACSData.enc_elev;
     if (el - enc_el > 5.0) return (0);
     if (enc_el - el > 5.0) return (0);
   }
-  
+
   if (CommandData.use_mag) {
     d_az = az - mag_az;
 
     if (d_az > 180.0) d_az -= 360;
     if (d_az < -180.0) d_az += 360;
-  
+
     if (d_az > 30.0) return (0);
     if (d_az < -30.0) return (0);
   }
@@ -621,38 +626,34 @@ static bool XSCHasNewSolution(int which)
         return false;
     }
     if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter) {
-//        blast_dbg("Old Solution");
         // The solution is old
         return false;
     }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || xsc_pointing_state[which].last_solution_stars_counter < 0) {
-//        blast_dbg("No stars counter");
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 ||
+            xsc_pointing_state[which].last_solution_stars_counter < 0) {
         // One or both of the stars counters were not yet running at the time of the trigger
         return false;
     }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0 ||  xsc_pointing_state[which].last_trigger.counter_mcp < 0) {
-//        blast_dbg("No mcp counter");
-        // One or both of the fcp counters were not yet running at the time of the trigger
+    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0 ||
+            xsc_pointing_state[which].last_trigger.counter_mcp < 0) {
+        // One or both of the mcp counters were not yet running at the time of the trigger
         return false;
     }
     if (XSC_SERVER_DATA(which).channels.image_ctr_stars != xsc_pointing_state[which].last_trigger.counter_stars) {
-//        blast_dbg("Misaligned stars counter");
         // The stars counters were misaligned at the time of the trigger
         return false;
     }
     if (XSC_SERVER_DATA(which).channels.image_ctr_mcp != xsc_pointing_state[which].last_trigger.counter_mcp) {
-//        blast_dbg("Misaligned mcp counters");
-        // The fcp counters were misaligned at the time of the trigger
+        // The mcp counters were misaligned at the time of the trigger
         return false;
     }
 
     return true;
 }
 
-static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a, gyro_reading_t *m_rg, gyro_history_t *m_hs,
-                              double old_el, int which) {
-
-    //int i_point;
+static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a, gyro_reading_t *m_rg,
+                              gyro_history_t *m_hs, double old_el, int which)
+{
     double gy_az;
     double new_az, new_el, ra, dec;
 
@@ -680,12 +681,12 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
         blast_info(" xsc%i: received new solution", which);
         if (xsc_pointing_state[which].last_trigger.age_cs < GY_HISTORY_AGE_CS) {
             blast_info(" xsc%i: new solution young enough to accept", which);
-            //i_point = GETREADINDEX(point_index);
             ra = to_hours(XSC_SERVER_DATA(which).channels.image_eq_ra);
             dec = to_degrees(XSC_SERVER_DATA(which).channels.image_eq_dec);
             blast_dbg("xsc%i solution is ra, dec: %f, %f (deg)\n", which, to_degrees(from_hours(ra)), dec);
 
-            equatorial_to_horizontal(ra, dec, xsc_pointing_state[which].last_trigger.lst, xsc_pointing_state[which].last_trigger.lat, &new_az, &new_el);
+            equatorial_to_horizontal(ra, dec, xsc_pointing_state[which].last_trigger.lst,
+                                     xsc_pointing_state[which].last_trigger.lat, &new_az, &new_el);
 
             xsc_pointing_state[which].az = new_az;
             xsc_pointing_state[which].el = new_el;
@@ -697,7 +698,8 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
 
             /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
 
-            new_az += to_degrees(approximate_az_from_cross_el(CommandData.XSC[which].cross_el_trim, from_degrees(old_el)));
+            new_az += to_degrees(approximate_az_from_cross_el(CommandData.XSC[which].cross_el_trim,
+                                                              from_degrees(old_el)));
             new_el += to_degrees(CommandData.XSC[which].el_trim);
 
             // This solution is xsc_pointing_data.age_last_stars_solution old: how much have we moved?
@@ -708,29 +710,30 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
                 if (j < 0) j += GY_HISTORY_AGE_CS;
 
                 gy_el_delta += (m_hs->ifel_gy_history[j] + m_hs->ifel_gy_offset[j]) / SR;
-                gy_az_delta += ((m_hs->ifyaw_gy_history[j]  + m_hs->ifyaw_gy_offset[j])  * sin(m_hs->elev_history[j])
-                              + (m_hs->ifroll_gy_history[j] + m_hs->ifroll_gy_offset[j]) * cos(m_hs->elev_history[j])) / SR;
+                gy_az_delta += ((m_hs->ifyaw_gy_history[j]  + m_hs->ifyaw_gy_offset[j])
+                                    * sin(m_hs->elev_history[j])
+                              + (m_hs->ifroll_gy_history[j] + m_hs->ifroll_gy_offset[j])
+                                      * cos(m_hs->elev_history[j])) / SR;
             }
 
             // Evolve el solution
             e->angle -= gy_el_delta;// rewind to when the frame was grabbed
             a->angle -= gy_az_delta;// rewind to when the frame was grabbed
 
-            blast_dbg("Rewinded old SC AZ EL is %f %f\n",a->angle, e->angle);
+            blast_dbg("Rewinded old SC AZ EL is %f %f\n", a->angle, e->angle);
             blast_dbg(" Az averaging old: %f,  and new: %f\n", a->angle, new_az);
 
             w1 = 1.0 / (e->variance);
             if (XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing > M_PI) {
                 w2 = 0.0;
-            }
-            else {
-                w2 = 10.0 * XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing * (180.0 / M_PI); //e->samp_weight;
+            } else {
+                w2 = 10.0 * XSC_SERVER_DATA(which).channels.image_eq_sigma_pointing * (180.0 / M_PI);
                 if (w2 > 0.0)
                 w2 = 1.0 / (w2 * w2);
                 else
                 w2 = 0.0;// shouldn't happen
             }
-//            blast_dbg("ESC%i_SIGMA and SC weight w2:  %f %f\n", which, XSC_SERVER_DATA(which).sigma,w2);
+//            blast_dbg("ESC%i_SIGMA and SC weight w2:  %f %f\n", which, XSC_SERVER_DATA(which).sigma, w2);
 
             UnwindDiff(e->angle, &new_el);
             UnwindDiff(a->angle, &new_az);
@@ -752,8 +755,7 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
             a->angle = normalize_angle_360(a->angle);
 
             blast_dbg(" Az result is: %f\n", a->angle);
-            blast_dbg("Evolved SC AZ EL is %f %f\n",a->angle, e->angle);
-
+            blast_dbg("Evolved SC AZ EL is %f %f\n", a->angle, e->angle);
         }
     }
 }
@@ -766,12 +768,12 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
     double gyro, double gy_off,
     double new_angle, int new_reading)
 {
-  static int i=0;
+  static int i = 0;
   double w1, w2;
   double new_offset = 0;
- 
+
   s->angle += (gyro + gy_off) / SR;
-  s->variance += GYRO_VAR; ///TODO: The El solution is not necessarily only one gyro
+  s->variance += GYRO_VAR;
 
   s->gy_int += gyro / SR; // in degrees
 
@@ -789,15 +791,13 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
         new_offset = ((new_angle - s->last_input) - s->gy_int) /
           ((1.0/SR) * (double)s->since_last);
-	
+
         if (fabs(new_offset) > 500.0)
           new_offset = 0; // 5 deg step is bunk!
-	
-	
         s->offset_gy = filter(new_offset, s->fs);
       }
       s->since_last = 0;
-      if (s->n_solutions<10000) {
+      if (s->n_solutions < 10000) {
         s->n_solutions++;
       }
     }
@@ -875,7 +875,7 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
   gy_az = (ifroll_gy + offset_ifroll_gy) * sin(el) + (ifyaw_gy + offset_ifyaw_gy) * cos(el);
 
   s->angle += gy_az / SR;
-  s->variance += GYRO_VAR; ///TODO: The Az solution is not necessarily only one gyro
+  s->variance += (2 * GYRO_VAR);
 
   s->ifroll_gy_int += ifroll_gy / SR; // in degrees
   s->ifyaw_gy_int += ifyaw_gy / SR; // in degrees
@@ -891,22 +891,20 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 
     if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
-	
 	daz = remainder(new_angle - s->last_input, 360.0);
-	
+
 	/* Do Gyro_IFroll */
 	new_offset = -(daz * cos(el) + s->ifroll_gy_int) /
 	  ((1.0/SR) * (double)s->since_last);
 	s->offset_ifroll_gy = filter(new_offset, s->fs2);;
-	
+
 	/* Do Gyro_IFyaw */
 	new_offset = -(daz * sin(el) + s->ifyaw_gy_int) /
 	  ((1.0/SR) * (double)s->since_last);
 	s->offset_ifyaw_gy = filter(new_offset, s->fs3);;
-	
       }
       s->since_last = 0;
-      if (s->n_solutions<10000) {
+      if (s->n_solutions < 10000) {
         s->n_solutions++;
       }
     }
@@ -917,9 +915,6 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
   s->since_last++;
 }
 
-void AutoTrimToSC();    //defined below
-
-
 static void xsc_calculate_full_pointing_estimated_location(int which)
 {
     int pointing_read_index = GETREADINDEX(point_index);
@@ -929,7 +924,9 @@ static void xsc_calculate_full_pointing_estimated_location(int which)
     double xsc_el = el - CommandData.XSC[which].el_trim;
     double xsc_ra_hours = 0.0;
     double xsc_dec_deg = 0.0;
-    horizontal_to_equatorial(to_degrees(xsc_az), to_degrees(xsc_el), PointingData[pointing_read_index].lst, PointingData[pointing_read_index].lat, &xsc_ra_hours, &xsc_dec_deg);
+    horizontal_to_equatorial(to_degrees(xsc_az), to_degrees(xsc_el),
+                             PointingData[pointing_read_index].lst,
+                             PointingData[pointing_read_index].lat, &xsc_ra_hours, &xsc_dec_deg);
 
     PointingData[point_index].estimated_xsc_az_deg[which] = to_degrees(xsc_az);
     PointingData[point_index].estimated_xsc_el_deg[which] = to_degrees(xsc_el);
@@ -937,7 +934,38 @@ static void xsc_calculate_full_pointing_estimated_location(int which)
     PointingData[point_index].estimated_xsc_dec_deg[which] = xsc_dec_deg;
 }
 
+static void AutoTrimToSC()
+{
+    int i_point = GETREADINDEX(point_index);
+    int isc_good = 0, osc_good = 0;
+    static int which = 0;
+    time_t t = mcp_systime(NULL);
 
+    if (PointingData[i_point].xsc_sigma[0] > CommandData.autotrim_thresh) {
+        CommandData.autotrim_xsc0_last_bad = t;
+    }
+    if (PointingData[i_point].xsc_sigma[1] > CommandData.autotrim_thresh) {
+        CommandData.autotrim_osc_last_bad = t;
+    }
+
+    if (t - CommandData.autotrim_xsc0_last_bad > CommandData.autotrim_time)
+        isc_good = 1;
+    if (t - CommandData.autotrim_osc_last_bad > CommandData.autotrim_time)
+        osc_good = 1;
+
+    // sticky choice
+    if (isc_good && !osc_good && which == 1)
+        which = 0;
+    if (osc_good && !isc_good && which == 0)
+        which = 1;
+
+    if (isc_good || osc_good) {
+        NewAzEl.az = PointingData[i_point].xsc_az[which];
+        NewAzEl.el = PointingData[i_point].xsc_el[which];
+        NewAzEl.rate = CommandData.autotrim_rate / SR;
+        NewAzEl.fresh = 1;
+    }
+}
 
 static inline double exponential_moving_average(double m_running_avg, double m_newval, double m_halflife)
 {
@@ -945,7 +973,7 @@ static inline double exponential_moving_average(double m_running_avg, double m_n
     return alpha * m_newval + (1.0 - alpha) * m_running_avg;
 }
 
-///TODO: Split up Pointing() in manageable chunks for each sensor
+// TODO(seth): Split up Pointing() in manageable chunks for each sensor
 /*****************************************************************
   do sensor selection;
   update the pointing;
@@ -953,164 +981,118 @@ static inline double exponential_moving_average(double m_running_avg, double m_n
 /* Elevation encoder uncertainty: */
 void Pointing(void)
 {
-  double R, cos_e, cos_l, cos_a;
-  double sin_e, sin_l, sin_a;
-  double ra, dec, az, el;
-  static int j=0;
+    double R, cos_e, cos_l, cos_a;
+    double sin_e, sin_l, sin_a;
+    double ra, dec, az, el;
+    static int j = 0;
 
-  int mag_ok;
-  int pss_ok;
-  static unsigned pss_since_ok = 500;
-  double mag_az;
-  double mag_el;
-  double pss_az = 0;
-  double pss_el = 0;
-  double clin_elev;
-  static double last_good_lat=0, last_good_lon=0, last_good_alt = 0;
-  static double last_gy_total_vel = 0.0;
-  static int i_at_float = 0;
-  double trim_change;
+    int mag_ok;
+    int pss_ok;
+    static unsigned pss_since_ok = 500;
+    double mag_az;
+    double mag_el;
+    double pss_az = 0;
+    double pss_el = 0;
+    double clin_elev;
+    static double last_good_lat = 0, last_good_lon = 0, last_good_alt = 0;
+    static double last_gy_total_vel = 0.0;
+    static int i_at_float = 0;
+    double trim_change;
 
-  static int firsttime = 1;
+    static int firsttime = 1;
 
-  int i_point_read;
+    int i_point_read;
 
-  static struct LutType elClinLut = {"/data/etc/blast/clin_elev.lut",0,NULL,NULL,0};
+    static struct LutType elClinLut = { "/data/etc/blast/clin_elev.lut", 0, NULL, NULL, 0 };
 
-  struct ElAttStruct ElAtt = {0.0, 0.0, 0.0};
-  struct AzAttStruct AzAtt = {0.0, 0.0, 0.0, 0.0};
+    struct ElAttStruct ElAtt = { 0.0, 0.0, 0.0 };
+    struct AzAttStruct AzAtt = { 0.0, 0.0, 0.0, 0.0 };
 
-  static struct ElSolutionStruct EncEl = {0.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(60), //sample weight
-    M2DV(20), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL // firstruct					
-  };
-  static struct ElSolutionStruct EncMotEl = {0.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(60), //sample weight
-    M2DV(20), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL // firstruct					
-  };
-  static struct ElSolutionStruct ClinEl = {0.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(60), //sample weight
-    M2DV(60), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL // firstruct					
-  };
-  static struct ElSolutionStruct ISCEl = {0.0, // starting angle
-    719.9 * 719.9, // starting variance
-    1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0 // n_solutions, since_last
-  };
-  static struct ElSolutionStruct OSCEl = {0.0, // starting angle
-    719.9 * 719.9, // starting variance
-    1.0 / M2DV(0.2), //sample weight
-    M2DV(0.2), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0 // n_solutions, since_last
-  };
-  static struct ElSolutionStruct MagEl = {0.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(120.0), //sample weight
-    M2DV(90.0), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, // gy integral
-    OFFSET_GY_IFEL, // gy offset
-    0.0001, // filter constant
-    0, 0 // n_solutions, since_last
-  };
-  static struct AzSolutionStruct NullAz = {91.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(6), //sample weight
-    M2DV(6000), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
-  static struct AzSolutionStruct MagAz = {0.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(120.0), //sample weight
-    M2DV(90), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
-
-  static struct AzSolutionStruct PSSAz =  {0.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(30), //sample weight
-    M2DV(60), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
+    static struct ElSolutionStruct EncEl = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(60),
+        .sys_var = M2DV(20), // systematic variance
+        .offset_gy = OFFSET_GY_IFEL, // gy offset
+        .FC = 0.0001, // filter constant
     };
-  //TODO:Replace ISC/OSC Az Solutions with XSC
-  static struct AzSolutionStruct ISCAz = {0.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(0.3), //sample weight
-    M2DV(0.2), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
-  static struct AzSolutionStruct OSCAz = {0.0, // starting angle
-    360.0 * 360.0, // starting variance
-    1.0 / M2DV(0.3), //sample weight
-    M2DV(0.2), // systematic variance
-    0.0, // trim
-    0.0, // last input
-    0.0, 0.0, // gy integrals
-    OFFSET_GY_IFROLL, OFFSET_GY_IFYAW, // gy offsets
-    0.0001, // filter constant
-    0, 0, // n_solutions, since_last
-    NULL, NULL
-  };
+    static struct ElSolutionStruct EncMotEl = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(60),
+        .sys_var = M2DV(20), // systematic variance
+        .offset_gy = OFFSET_GY_IFEL, // gy offset
+        .FC = 0.0001, // filter constant
+    };
+    static struct ElSolutionStruct ClinEl = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(60),
+        .sys_var = M2DV(20), // systematic variance
+        .offset_gy = OFFSET_GY_IFEL, // gy offset
+        .FC = 0.0001, // filter constant
+    };
+    static struct ElSolutionStruct ISCEl = {
+        .variance = 719.9 * 719.9, // starting variance
+        .samp_weight = 1.0 / M2DV(0.2),
+        .sys_var = M2DV(0.2), // systematic variance
+        .offset_gy = OFFSET_GY_IFEL, // gy offset
+        .FC = 0.0001, // filter constant
+    };
+    static struct ElSolutionStruct OSCEl = {
+        .variance = 719.9 * 719.9, // starting variance
+        .samp_weight = 1.0 / M2DV(0.2),
+        .sys_var = M2DV(0.2), // systematic variance
+        .offset_gy = OFFSET_GY_IFEL, // gy offset
+        .FC = 0.0001, // filter constant
+    };
+    static struct ElSolutionStruct MagEl = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(120),
+        .sys_var = M2DV(90), // systematic variance
+        .offset_gy = OFFSET_GY_IFEL, // gy offset
+        .FC = 0.0001, // filter constant
+    };
+    static struct AzSolutionStruct NullAz = {
+        .angle = 91.0,
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(6),
+        .sys_var = M2DV(6000), // systematic variance
+        .offset_ifroll_gy = OFFSET_GY_IFROLL,
+        .offset_ifyaw_gy = OFFSET_GY_IFYAW,
+        .FC = 0.0001, // filter constant
+    };
+    static struct AzSolutionStruct MagAz = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(120),
+        .sys_var = M2DV(90), // systematic variance
+        .offset_ifroll_gy = OFFSET_GY_IFROLL,
+        .offset_ifyaw_gy = OFFSET_GY_IFYAW,
+        .FC = 0.0001, // filter constant
+    };
+
+    static struct AzSolutionStruct PSSAz =  {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(30),
+        .sys_var = M2DV(60), // systematic variance
+        .offset_ifroll_gy = OFFSET_GY_IFROLL,
+        .offset_ifyaw_gy = OFFSET_GY_IFYAW,
+        .FC = 0.0001, // filter constant
+    };
+    // TODO(seth): Replace ISC/OSC Az Solutions with XSC
+    static struct AzSolutionStruct ISCAz = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(0.3),
+        .sys_var = M2DV(0.2), // systematic variance
+        .offset_ifroll_gy = OFFSET_GY_IFROLL,
+        .offset_ifyaw_gy = OFFSET_GY_IFYAW,
+        .FC = 0.0001, // filter constant
+    };
+    static struct AzSolutionStruct OSCAz = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(0.3),
+        .sys_var = M2DV(0.2), // systematic variance
+        .offset_ifroll_gy = OFFSET_GY_IFROLL,
+        .offset_ifyaw_gy = OFFSET_GY_IFYAW,
+        .FC = 0.0001, // filter constant
+    };
 
   static gyro_history_t hs = {NULL};
   static gyro_reading_t RG = {0.0};
@@ -1179,10 +1161,12 @@ void Pointing(void)
 
     PointingData[point_index].gy_az = RG.ifyaw_gy * cos_e + RG.ifroll_gy * sin_e;
     PointingData[point_index].gy_el = RG.ifel_gy;
-    PointingData[point_index].gy_total_vel = sqrt( pow( (RG.ifel_gy), 2) + pow( PointingData[point_index].gy_az*cos_e, 2) );
+    PointingData[point_index].gy_total_vel = sqrt(pow((RG.ifel_gy), 2) +
+                                                  pow(PointingData[point_index].gy_az*cos_e, 2));
     double current_gy_total_accel = (PointingData[point_index].gy_total_vel - last_gy_total_vel)*SR;
     last_gy_total_vel = PointingData[point_index].gy_total_vel;
-    PointingData[point_index].gy_total_accel = exponential_moving_average(PointingData[i_point_read].gy_total_accel, current_gy_total_accel, 15.0);
+    PointingData[point_index].gy_total_accel = exponential_moving_average(PointingData[i_point_read].gy_total_accel,
+                                                                          current_gy_total_accel, 15.0);
 
     /*************************************/
     /** Record history for gyro offsets **/
@@ -1204,13 +1188,11 @@ void Pointing(void)
     if (PointingData[point_index].alt < FLOAT_ALT) {
         PointingData[point_index].at_float = 0;
         i_at_float = 0;
-    }
-    else {
+    } else {
         i_at_float++;
         if (i_at_float > FRAMES_TO_OK_ATFLOAT) {
             PointingData[point_index].at_float = 1;
-        }
-        else {
+        } else {
             PointingData[point_index].at_float = 0;
         }
     }
@@ -1225,7 +1207,8 @@ void Pointing(void)
     PointingData[point_index].t = mcp_systime(NULL); // for now use CPU time
 
     /** Set LST and local sidereal date **/
-    PointingData[point_index].lst = to_seconds(time_lst_unix(PointingData[point_index].t, from_degrees(PointingData[point_index].lon)));
+    PointingData[point_index].lst = to_seconds(time_lst_unix(PointingData[point_index].t,
+                                                             from_degrees(PointingData[point_index].lon)));
 
 
     /**
@@ -1249,7 +1232,7 @@ void Pointing(void)
     clin_elev = LutCal(&elClinLut, ACSData.clin_elev);
     PointingData[i_point_read].clin_el_lut = clin_elev;
 
-    ///TODO: Only set "new solution" when we really have new data
+    // TODO(seth): Only set "new solution" when we really have new data
     EvolveElSolution(&ClinEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             clin_elev, 1);
@@ -1281,7 +1264,7 @@ void Pointing(void)
         AddElSolution(&ElAtt, &OSCEl, 0);
     }
 
-    //TODO: Add magnetometer to veto el list
+    // TODO(seth): Add magnetometer to veto el list
 
     if (CommandData.el_autogyro)
         PointingData[point_index].offset_ifel_gy = ElAtt.offset_gy;
@@ -1297,8 +1280,7 @@ void Pointing(void)
     pss_ok = PSSConvert(&pss_az, &pss_el);
     if (pss_ok) {
         pss_since_ok = 0;
-    }
-    else {
+    } else {
         pss_since_ok++;
     }
     PointingData[point_index].pss_ok = pss_ok;
@@ -1327,7 +1309,7 @@ void Pointing(void)
         CommandData.fast_offset_gy--;
     }
 
-    //blast_info("off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.offset_gy, ClinEl.offset_gy);
+//    blast_info("off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.offset_gy, ClinEl.offset_gy);
 
     AddAzSolution(&AzAtt, &NullAz, 1);
     /** add az solutions **/
@@ -1350,13 +1332,11 @@ void Pointing(void)
     PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
 
-    //if(j==500) blast_info("Pointing use_mag = %i, use_sun = %i, use_gps = %i, use_isc = %i, use_osc = %i",CommandData.use_mag,CommandData.use_sun, CommandData.use_gps, CommandData.use_isc, CommandData.use_osc);
     PointingData[point_index].az = AzAtt.az;
     if (CommandData.az_autogyro) {
         PointingData[point_index].offset_ifroll_gy = AzAtt.offset_ifroll_gy;
         PointingData[point_index].offset_ifyaw_gy = AzAtt.offset_ifyaw_gy;
-    }
-    else {
+    } else {
         PointingData[point_index].offset_ifroll_gy = CommandData.offset_ifroll_gy;
         PointingData[point_index].offset_ifyaw_gy = CommandData.offset_ifyaw_gy;
     }
@@ -1369,7 +1349,7 @@ void Pointing(void)
     PointingData[point_index].ra = ra;
     PointingData[point_index].dec = dec;
     /** record solutions in pointing data **/
-    //  if (j%500==0) blast_info("Pointing: PointingData.enc_el = %f",PointingData[point_index].enc_el);
+    //  if (j%500==0) blast_info("Pointing: PointingData.enc_el = %f", PointingData[point_index].enc_el);
     PointingData[point_index].enc_el = EncEl.angle;
     PointingData[point_index].enc_sigma = sqrt(EncEl.variance + EncEl.sys_var);
     PointingData[point_index].enc_motor_el = EncMotEl.angle;
@@ -1385,7 +1365,6 @@ void Pointing(void)
     PointingData[point_index].pss_az = PSSAz.angle;
     PointingData[point_index].pss_sigma = sqrt(PSSAz.variance + PSSAz.sys_var);
 
-    //TODO:Replace ISC/OSC Pointing data with XSC
     PointingData[point_index].xsc_az[0] = ISCAz.angle;
     PointingData[point_index].xsc_el[0] = ISCEl.angle;
     PointingData[point_index].xsc_sigma[0] = sqrt(ISCEl.variance + ISCEl.sys_var);
@@ -1509,62 +1488,27 @@ void SetTrimToSC(int which)
   NewAzEl.fresh = 1;
 }
 
-
 void InitializePointingData()
 {
-  int which;
-  for (which=0; which<2; which++) {
-    xsc_pointing_state[which].last_trigger.counter_mcp = 0;
-    xsc_pointing_state[which].last_trigger.counter_stars = -1;
-    xsc_pointing_state[which].last_trigger.age_cs = 100000;
-    xsc_pointing_state[which].last_trigger.age_of_end_of_trigger_cs = 100000;
-    xsc_pointing_state[which].last_trigger.motion_caz_px = 0.0;
-    xsc_pointing_state[which].last_trigger.motion_el_px = 0.0;
-    xsc_pointing_state[which].last_trigger.lat = 0.0;
-    xsc_pointing_state[which].last_trigger.lst = 0;
-    xsc_pointing_state[which].counter_mcp = -1;
-    xsc_pointing_state[which].last_counter_mcp = -1;
-    xsc_pointing_state[which].last_solution_stars_counter = -1;
-    xsc_pointing_state[which].az = 0.0;
-    xsc_pointing_state[which].el = 0.0;
-    xsc_pointing_state[which].exposure_time_cs = 300;
-    xsc_pointing_state[which].predicted_motion_px = 0.0;
-  }
-  blast_info("InitializePointingData, xsc.az is %f\n", xsc_pointing_state[1].az);
-}
-
-void AutoTrimToSC()
-{
-    int i_point = GETREADINDEX(point_index);
-    int isc_good = 0, osc_good = 0;
-    static int which = 0;
-    time_t t = mcp_systime(NULL);
-
-    if (PointingData[i_point].xsc_sigma[0] > CommandData.autotrim_thresh) {
-        CommandData.autotrim_xsc0_last_bad = t;
+    int which;
+    for (which = 0; which < 2; which++) {
+        xsc_pointing_state[which].last_trigger.counter_mcp = 0;
+        xsc_pointing_state[which].last_trigger.counter_stars = -1;
+        xsc_pointing_state[which].last_trigger.age_cs = 100000;
+        xsc_pointing_state[which].last_trigger.age_of_end_of_trigger_cs = 100000;
+        xsc_pointing_state[which].last_trigger.motion_caz_px = 0.0;
+        xsc_pointing_state[which].last_trigger.motion_el_px = 0.0;
+        xsc_pointing_state[which].last_trigger.lat = 0.0;
+        xsc_pointing_state[which].last_trigger.lst = 0;
+        xsc_pointing_state[which].counter_mcp = -1;
+        xsc_pointing_state[which].last_counter_mcp = -1;
+        xsc_pointing_state[which].last_solution_stars_counter = -1;
+        xsc_pointing_state[which].az = 0.0;
+        xsc_pointing_state[which].el = 0.0;
+        xsc_pointing_state[which].exposure_time_cs = 300;
+        xsc_pointing_state[which].predicted_motion_px = 0.0;
     }
-    if (PointingData[i_point].xsc_sigma[1] > CommandData.autotrim_thresh) {
-        CommandData.autotrim_osc_last_bad = t;
-    }
-
-    if (t - CommandData.autotrim_xsc0_last_bad > CommandData.autotrim_time)
-        isc_good = 1;
-    if (t - CommandData.autotrim_osc_last_bad > CommandData.autotrim_time)
-        osc_good = 1;
-
-    //sticky choice
-    if (isc_good && !osc_good && which == 1)
-        which = 0;
-    if (osc_good && !isc_good && which == 0)
-        which = 1;
-
-    if (isc_good || osc_good) {
-        NewAzEl.az = PointingData[i_point].xsc_az[which];
-        NewAzEl.el = PointingData[i_point].xsc_el[which];
-        NewAzEl.rate = CommandData.autotrim_rate / SR;
-        NewAzEl.fresh = 1;
-    }
-
+    blast_info("InitializePointingData, xsc.az is %f\n", xsc_pointing_state[1].az);
 }
 
 /**
@@ -1582,7 +1526,6 @@ void trim_xsc(int m_source)
     delta_el = PointingData[i_point].xsc_el[dest] - PointingData[i_point].xsc_el[m_source];
     CommandData.ISCState[dest].azBDA -= DEG2RAD*(delta_az*cos(PointingData[i_point].el*M_PI / 180.0));
     CommandData.ISCState[dest].elBDA -= DEG2RAD*(delta_el);
-
 }
 
 void AzElTrim(double az, double el)
@@ -1590,7 +1533,7 @@ void AzElTrim(double az, double el)
   NewAzEl.az = az;
   NewAzEl.el = el;
 
-  NewAzEl.rate = 360.0; //allow arbitrary trim changes
+  NewAzEl.rate = 360.0; // allow arbitrary trim changes
   NewAzEl.fresh = 1;
 }
 

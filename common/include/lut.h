@@ -20,6 +20,10 @@
  *
  */
 
+
+#ifndef INCLUDE_LUT_H
+#define INCLUDE_LUT_H
+
 struct LutType {
   char filename[256];
   int n;
@@ -32,3 +36,5 @@ struct LutType {
 double MagLutCal(struct LutType *L, double mag_x, double mag_y, double x);
 double LutCal(struct LutType *L, double x);
 void LutInit(struct LutType *L);
+
+#endif

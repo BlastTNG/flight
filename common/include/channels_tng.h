@@ -24,22 +24,22 @@
  * Created on: Aug 5, 2014 by seth
  */
 
-#ifndef CHANNELS_V2_H_
-#define CHANNELS_V2_H_
+#ifndef INCLUDE_CHANNELS_TNG_H
+#define INCLUDE_CHANNELS_TNG_H
 
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <channel_macros.h>
+#include "channel_macros.h"
 #include "lookup.h"
 
 #define FIELD_LEN 32
 #define UNITS_LEN 48
 #define BLAST_TNG_CH_VERSION 1
 
-#include <derived.h>
+#include "derived.h"
 
-#define _RATES(x,_)	\
+#define _RATES(x, _)	\
 	_(x, 1HZ)					\
 	_(x, 5HZ)					\
 	_(x, 100HZ)					\
@@ -47,7 +47,7 @@
 
 BLAST_LOOKUP_TABLE(RATE, static);
 
-#define _TYPES(x,_)	\
+#define _TYPES(x, _)	\
 	_(x, UINT8)		\
 	_(x, UINT16)	\
 	_(x, UINT32)	\
@@ -60,7 +60,7 @@ BLAST_LOOKUP_TABLE(RATE, static);
 	_(x, DOUBLE)
 BLAST_LOOKUP_TABLE(TYPE, static);
 
-#define _SRCS(x,_)	\
+#define _SRCS(x, _)	\
 	_(x, OF_UEI)    \
 	_(x, IF_UEI)    \
     _(x, FC)        \
@@ -86,7 +86,7 @@ struct channel {
  * These next two structures are packed for network transmission and disk storage.  Do
  * not use them for working with structures
  */
-#pragma pack(push,1)
+#pragma pack(push, 1)
 struct channel_packed {
     char field[FIELD_LEN];      /// name of channel for FileFormats and CalSpecs
     double m_c2e;               /// Conversion from counts to engineering units is
@@ -107,7 +107,7 @@ typedef struct {
 } channel_header_t;
 #pragma pack(pop)
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
 typedef struct {
     uint64_t timestamp;
     uint8_t  source;

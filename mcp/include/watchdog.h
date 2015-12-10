@@ -28,6 +28,6 @@
 
 void watchdog_ping();
 void watchdog_close(void);
-int initialize_watchdog (int m_timeout);
+int initialize_watchdog(int m_timeout);
 
 #endif /* INCLUDE_WATCHDOG_H_ */

@@ -23,12 +23,12 @@
  * Created on: Apr 7, 2015 by Seth Hillbrand
  */
 
-#ifndef INCLUDE_BLAST_PACKET_FORMAT_H_
-#define INCLUDE_BLAST_PACKET_FORMAT_H_
+#ifndef INCLUDE_BLAST_PACKET_FORMAT_H
+#define INCLUDE_BLAST_PACKET_FORMAT_H
 
 #include <lookup.h>
 
-#define _BLAST_PORT_DEFS(x,_)        \
+#define _BLAST_PORT_DEFS(x, _)      \
     _(x, DATA)                      \
     _(x, COMMAND)                   \
     _(x, FILE)                      \
@@ -42,9 +42,9 @@ typedef struct blast_master_packet
     uint8_t             magic;              /**< magic = 0xEB for all packets */
 
     uint32_t            version:2;          /**< version Currently at 1 */
-    uint32_t            qos:1;              /**< qos Quality of service flag.  0 = Expedited packet 1 = Response required */
+    uint32_t            qos:1;              /**< qos Quality of service flag.  1 = Response required */
     uint32_t            has_ack:1;          /**< has_ack The packet has an appended acknowledgment signature */
-    uint32_t            multi_packet:1;     /**< multi_packet 0 = single packet in the payload; 1 = multiple packets of the same type*/
+    uint32_t            multi_packet:1;     /**< multi_packet 0 = single packet in the payload; 1 = multiple packets*/
     uint32_t            type:3;             /**< type The type of data in this payload */
     uint16_t            length;             /**< length Number of bytes in the payload */
 } __attribute__((packed)) blast_master_packet_t; /** 4 bytes */
@@ -60,8 +60,8 @@ typedef struct blast_seg_pkt_hdr
 typedef struct
 {
     uint8_t start_byte;
-    uint8_t link_route;     ///!< link_route los, tdrss or iridium
-    uint8_t link_address;   ///!< link_address either comm1 or comm2
+    uint8_t link_route;     /**< link_route los, tdrss or iridium */
+    uint8_t link_address;   /**!< link_address either comm1 or comm2 */
     uint8_t length;
 } __attribute__((packed)) sip_rts_packet_t;
 

@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef MPUTS_H
-#define MPUTS_H
+#ifndef INCLUDE_MPUTS_H
+#define INCLUDE_MPUTS_H
 
 #include "blast.h"
 #include "stdio.h"

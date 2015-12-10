@@ -31,6 +31,8 @@
  *
  * -dvw */
 
+#include "tx.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,21 +47,20 @@
 
 #include "channels_tng.h"
 #include "pointing_struct.h"
-#include "tx.h"
 #include "command_struct.h"
 #include "mcp.h"
 #include "chrgctrl.h"
 #include "data_sharing.h"
 
-#include <motors.h>
+#include "motors.h"
 
 #define NIOS_BUFFER_SIZE 100
 
-extern short int SouthIAm;
+extern int16_t SouthIAm;
 
 extern int StartupVeto;
 
-extern short int InCharge;
+extern int16_t InCharge;
 
 int EthernetIsc = 3;
 int EthernetOsc = 3;
@@ -124,12 +125,12 @@ void WriteAux(void)
     const char which_flc[2] = {'n', 's'};
     data_sharing_t shared_data[2] = {{0}};
 
-#define ASSIGN_BOTH_FLC(_ch,_str) \
+#define ASSIGN_BOTH_FLC(_ch, _str) \
     ({ \
         char buf[128];\
-        snprintf(buf, 127,  _str  "_%c", which_flc[SouthIAm]); \
+        snprintf(buf, sizeof(buf),  _str  "_%c", which_flc[SouthIAm]); \
         _ch[0] = channels_find_by_name(buf); \
-        snprintf(buf, 127, _str  "_%c", which_flc[!SouthIAm]); \
+        snprintf(buf, sizeof(buf), _str  "_%c", which_flc[!SouthIAm]); \
         _ch[1] = channels_find_by_name(buf); \
     })
 
@@ -139,7 +140,7 @@ void WriteAux(void)
     struct timeval tv;
     struct timezone tz;
 
-    unsigned short mccstatus;
+    uint16_t  mccstatus;
 
     static int firsttime = 1;
     if (firsttime) {
@@ -171,20 +172,17 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(df_flc_addr, "df_flc");
         ASSIGN_BOTH_FLC(time_flc_addr, "time_flc");
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
-
     }
 
     if (StartupVeto > 0) {
         InCharge = 0;
-    }
-    else {
+    } else {
         InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
     }
     if (InCharge != incharge && InCharge) {
         blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
         CommandData.actbus.force_repoll = 1;
-    }
-    else if (InCharge != incharge) {
+    } else if (InCharge != incharge) {
         blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
     }
 
@@ -247,8 +245,7 @@ void WriteAux(void)
     if (CommandData.pointing_mode.t > t) {
         SET_VALUE(timeout_addr[0], CommandData.pointing_mode.t - t);
         shared_data[0].timeout = CommandData.pointing_mode.t - t;
-    }
-    else {
+    } else {
         SET_VALUE(timeout_addr[0], 0);
         shared_data[0].timeout = 0;
     }
@@ -258,20 +255,19 @@ void WriteAux(void)
     SET_VALUE(rateTdrssAddr, CommandData.tdrss_bw);
     SET_VALUE(rateIridiumAddr, CommandData.iridium_bw);
 
-    SET_VALUE(statusEthAddr, //first two bits used to be sun sensor
+    SET_VALUE(statusEthAddr, // first two bits used to be sun sensor
     ((EthernetIsc & 0x3) << 2) + ((EthernetOsc & 0x3) << 4) + ((EthernetSBSC & 0x3) << 6));
 
-    mccstatus = (SouthIAm ? 0x1 : 0x0) +                 //0x01
-            (CommandData.at_float ? 0x2 : 0x0) +     //0x02
-            (CommandData.uplink_sched ? 0x08 : 0x00) + //0x08
-            (CommandData.sucks ? 0x10 : 0x00) +      //0x10
-            //((CommandData.lat_range & 0x3) << 5) +   //0x60
-            ((CommandData.slot_sched & 0xFF) << 8);  //0xFF00
+    mccstatus = (SouthIAm ? 0x1 : 0x0) +                 // 0x01
+            (CommandData.at_float ? 0x2 : 0x0) +     // 0x02
+            (CommandData.uplink_sched ? 0x08 : 0x00) + // 0x08
+            (CommandData.sucks ? 0x10 : 0x00) +      // 0x10
+//            ((CommandData.lat_range & 0x3) << 5) +   // 0x60
+            ((CommandData.slot_sched & 0xFF) << 8);  // 0xFF00
 
     if (CommandData.uplink_sched) {
         mccstatus |= 0x60;
-    }
-    else {
+    } else {
         mccstatus |= ((CommandData.lat_range & 0x3) << 5);
     }
 
@@ -285,8 +281,6 @@ void WriteAux(void)
     shared_data[0].command_count = CommandData.command_count;
     SET_VALUE(count_cmd_addr[1], shared_data[1].command_count);
     data_sharing_send_data(&(shared_data[0]));
-
-
 }
 
 void WriteChatter(void)
@@ -335,13 +329,13 @@ void WriteChatter(void)
 /* power cycle gyros - if masked for 1s                        */
 /*                and- hasn't been power cycled in the last 25s */
 /***************************************************************/
-#define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Slow Frames */ 
+#define MASK_TIMEOUT 5 /* 1 sec -- in 5Hz Slow Frames */
 #define GYRO_PCYCLE_TIMEOUT 125 /* 25 sec */
 void SetGyroMask(void)
 {
     static channel_t* maskGyAddr;
-    unsigned int GyroMask = 0x3f; //all gyros enabled
-    int convert[6] = { 1, 5, 0, 2, 3, 4 }; //order of gyros in power switching
+    unsigned int GyroMask = 0x3f; // all gyros enabled
+    int convert[6] = { 1, 5, 0, 2, 3, 4 }; // order of gyros in power switching
     static int t_mask[6] = { 0, 0, 0, 0, 0, 0 };
     static int wait[6] = { 0, 0, 0, 0, 0, 0 };
     static channel_t* faultGyAddr;
@@ -367,11 +361,9 @@ void SetGyroMask(void)
                     wait[i] = GYRO_PCYCLE_TIMEOUT;
                 }
             }
-        }
-        else if ((CommandData.gymask & (0x01 << i)) == 0) {
+        } else if ((CommandData.gymask & (0x01 << i)) == 0) {
             GyroMask &= ~(0x01 << i);
-        }
-        else {
+        } else {
             GyroMask |= 0x01 << i;
             t_mask[i] = 0;
         }

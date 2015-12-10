@@ -20,8 +20,7 @@
  * !XXX!!XXX!!XXX!!XXX!!XXX!! BIG ALL CAPS WARNING !!XXX!!XXX!!XXX!!XXX!!XXX!!
  */
 
-#include "command_list.h"
-#include "isc_protocol.h"  /* required for constants */
+#include "include/command_list.h"
 
 const char *command_list_serial = "$Revision: 5.2 $";
 
@@ -34,16 +33,18 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_BIAS] = "Bias",
                                     [GRPOS_VETO] = "Pointing Sensor Vetos",
                                     [GRPOS_ACT] = "Actuators",
+                                    [GRPOS_XSC_HOUSE] = "XSC Housekeeping",
+                                    [GRPOS_XSC_MODE] = "XSC Mode Settings",
+                                    [GRPOS_XSC_PARAM] = "XSC Solving Parameters",
                                     [GRPOS_MOTOR] =  "Pointing Motors",
                                     [GRPOS_CRYO] = "Cryo Control",
                                     [GRPOS_POWER] = "Subsystem Power",
                                     [GRPOS_LOCK] = "Lock Motor",
                                     [GRPOS_TELEM] =  "Telemetry",
                                     [GRPOS_MISC] = "Miscellaneous",
-
   };
 
-//echoes as string; makes enum name the command name string
+// echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
 struct scom scommands[N_SCOMMANDS] = {
@@ -77,12 +78,9 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(ifel_2_gy_off), "turn off ifel_2_gy", GR_POWER},
   {COMMAND(ifel_2_gy_on), "turn on ifel_2_gy", GR_POWER},
   {COMMAND(ifel_2_gy_cycle), "power cycle ifel_2_gy", GR_POWER},
-  {COMMAND(actbus_off), "turn off the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
-  {COMMAND(actbus_on), "turn on the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_LOCK | GR_ACT | GR_HWPR},
-  {COMMAND(actbus_cycle), "power cycle the Actuators, Lock, and HWPR", GR_POWER 
-    | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
+  {COMMAND(actbus_off), "turn off the Actuators, Lock, and HWPR", GR_POWER | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
+  {COMMAND(actbus_on), "turn on the Actuators, Lock, and HWPR", GR_POWER | GR_LOCK | GR_ACT | GR_HWPR},
+  {COMMAND(actbus_cycle), "power cycle the Actuators, Lock, and HWPR", GR_POWER | GR_LOCK | GR_ACT | GR_HWPR | CONFIRM},
   {COMMAND(rw_off), "turn off the reaction wheel motor", GR_POWER},
   {COMMAND(rw_on), "turn on the reaction wheel motor", GR_POWER},
   {COMMAND(rw_cycle), "power cycle the reaction wheel motor", GR_POWER},
@@ -110,8 +108,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(rx_amps_on), "receiver amplifiers Make it So!", GR_POWER},
   {COMMAND(charge_off), "turn off the charge controller", GR_POWER | CONFIRM},
   {COMMAND(charge_on), "turn on the charge controller", GR_POWER},
-  {COMMAND(charge_cycle), "power cycle the charge controller", 
-    GR_POWER | CONFIRM},
+  {COMMAND(charge_cycle), "power cycle the charge controller", GR_POWER | CONFIRM},
 
   {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_MOTOR},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_MOTOR},
@@ -121,8 +118,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(az_on), "enable az motors' gains", GR_MOTOR},
   {COMMAND(el_off), "disable el motor gains", GR_MOTOR},
   {COMMAND(el_on), "enable el motor gains", GR_MOTOR},
-  {COMMAND(force_el_on), "force enable el motors despite the pin being in",
-    CONFIRM | GR_MOTOR},
+  {COMMAND(force_el_on), "force enable el motors despite the pin being in", CONFIRM | GR_MOTOR},
 
   {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
@@ -162,24 +158,16 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(fixed), "fixed level bias", GR_BIAS},
   {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
-  {COMMAND(auto_jfetheat), "automatically reguate jfet heater level",
-    GR_CRYO},
-  {COMMAND(charcoal_on), "charcoal heater on, helium fridge autocycle off",
-    GR_CRYO},
-  {COMMAND(charcoal_off), "charcoal heater off, helium fridge autocycle off",
-    GR_CRYO},
-  {COMMAND(hs_charcoal_on), "charcoal heat switch on, fridge autocycle off",
-    GR_CRYO},
-  {COMMAND(hs_charcoal_off), "charcoal heat switch off, fridge autocycle off",
-    GR_CRYO},
-  {COMMAND(auto_cycle), "activate helium fridge autocycle system",
-    GR_CRYO},
+  {COMMAND(auto_jfetheat), "automatically reguate jfet heater level", GR_CRYO},
+  {COMMAND(charcoal_on), "charcoal heater on, helium fridge autocycle off", GR_CRYO},
+  {COMMAND(charcoal_off), "charcoal heater off, helium fridge autocycle off", GR_CRYO},
+  {COMMAND(hs_charcoal_on), "charcoal heat switch on, fridge autocycle off", GR_CRYO},
+  {COMMAND(hs_charcoal_off), "charcoal heat switch off, fridge autocycle off", GR_CRYO},
+  {COMMAND(auto_cycle), "activate helium fridge autocycle system", GR_CRYO},
   {COMMAND(fridge_cycle),
     "manually cycle helium fridge now, fridge autocycle on", GR_CRYO},
-  {COMMAND(jfet_on), "manually turn JFET heater on, auto control off",
-    GR_CRYO},
-  {COMMAND(jfet_off), "manually turn JFET heater off, auto control off",
-    GR_CRYO},
+  {COMMAND(jfet_on), "manually turn JFET heater on, auto control off", GR_CRYO},
+  {COMMAND(jfet_off), "manually turn JFET heater off, auto control off", GR_CRYO},
   {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO},
   {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO},
   {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO},
@@ -225,10 +213,8 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(north_halt), "ask MCP to halt north MCC", GR_MISC | CONFIRM},
   {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
-  {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", 
-    GR_MISC | CONFIRM},
-  {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", 
-    GR_MISC | CONFIRM},
+  {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", GR_MISC | CONFIRM},
+  {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(xy_panic), "stop XY stage motors immediately", 0},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
@@ -255,7 +241,7 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hwpr_pot_is_dead), "don't use the potentiometer when stepping the hwpr", GR_HWPR},
   {COMMAND(hwpr_pot_is_alive), "use the potentiometer when stepping the hwpr", GR_HWPR},
 
-  //Shutter commands
+  // Shutter commands
   {COMMAND(shutter_init), "Initialize shutter move parameters", GR_MISC},
   {COMMAND(shutter_close), "Close shutter and keep it closed", GR_MISC},
   {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_MISC},
@@ -264,7 +250,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
-
 };
 
 /* parameter type:
@@ -275,7 +260,6 @@ struct scom scommands[N_SCOMMANDS] = {
  * s :  parameter is 7-bit character string
  */
 struct mcom mcommands[N_MCOMMANDS] = {
-
   {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
     GR_TELEM, 1,
     {
@@ -377,8 +361,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
        {"Temperature (C)",  -273.4, 40, 'f', "T_BOX_BAL"},
      }
   },
-  {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps",
-    GR_POINT, 7,
+  {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps", GR_POINT, 7,
     {
       {"RA of Centre (h)",          0, 24, 'd', "RA"},
       {"Dec of Centre (deg)",     -90, 90, 'd', "DEC"},
@@ -386,11 +369,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"No. of dither steps",       0,200, 'i', "n_dith"}
+      {"No. of dither steps",       0, 200, 'i', "n_dith"}
     }
   },
-  {COMMAND(el_box), "scan an az/el box centred on RA/Dec with az steps",
-    GR_POINT, 7,
+  {COMMAND(el_box), "scan an az/el box centred on RA/Dec with az steps", GR_POINT, 7,
     {
       {"RA of Centre (h)",          0, 24, 'd', "RA"},
       {"Dec of Centre (deg)",     -90, 90, 'd', "DEC"},
@@ -398,7 +380,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Height (deg on sky)",    0, 45, 'f', "NONE"},
       {"El Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"Az Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"No. of dither steps",       0,200, 'i', "n_dith"}
+      {"No. of dither steps",       0, 200, 'i', "n_dith"}
     }
   },
   {COMMAND(cap), "scan a circle centred on RA/Dec with el steps", GR_POINT, 6,
@@ -408,7 +390,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Radius (deg on sky)",       0, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"No. of dither steps",       0,200, 'i', "n_dith"}
+      {"No. of dither steps",       0, 200, 'i', "n_dith"}
     }
   },
   {COMMAND(drift), "move at constant speed in az and el", GR_POINT, 2,
@@ -417,8 +399,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
     }
   },
-  {COMMAND(quad), "scan a quadrilateral region in RA/Dec (corners must be "
-    "ordered)", GR_POINT, 11,
+  {COMMAND(quad), "scan a quadrilateral region in RA/Dec (corners must be ordered)", GR_POINT, 11,
     {
       {"RA of Corner 1 (h)",        0, 24, 'f', "NONE"},
       {"Dec of Corner 1 (deg)",   -90, 90, 'f', "NONE"},
@@ -430,11 +411,10 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Dec of Corner 4 (deg)",   -90, 90, 'f', "NONE"},
       {"Az Scan Speed (deg az/s)",  0,  2, 'f', "NONE"},
       {"El Step Size (deg on sky)", 0,  1, 'f', "NONE"},
-      {"No. of dither steps",       0,200, 'i', "n_dith"}
+      {"No. of dither steps",       0, 200, 'i', "n_dith"}
     }
   },
-  {COMMAND(vbox), "DEPRECATED - scan an az/el box centred on RA/Dec with el drift",
-    GR_POINT, 6,
+  {COMMAND(vbox), "DEPRECATED - scan an az/el box centred on RA/Dec with el drift", GR_POINT, 6,
     {
       {"RA of Centre (h)",          0, 24, 'f', "NONE"},
       {"Dec of Centre (deg)",     -90, 90, 'f', "NONE"},
@@ -517,7 +497,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
   {COMMAND(general), "send a general command string to the lock or actuators",
     GR_ACT | GR_LOCK | GR_HWPR, 2,
     {
-      {"Address (1-3,5,8,13,33)", 1, 0x2F, 'i', "1.0"},
+      {"Address (1-3, 5, 8, 13, 33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', "NONE"},
     }
   },
@@ -623,7 +603,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Preferred T Second", 0, 2, 'i', "PREF_TS_SF"}
     }
   },
-  {COMMAND(hwpr_vel), "set the waveplate rotator velocity and acceleration", 
+  {COMMAND(hwpr_vel), "set the waveplate rotator velocity and acceleration",
     GR_HWPR, 2,
     {
       {"Velocity", 5, 500000, 'l', "VEL_HWPR"},
@@ -648,7 +628,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"delta", -80000, 80000, 'l', "0"}
     }
   },
-  {COMMAND(hwpr_repeat), 
+  {COMMAND(hwpr_repeat),
     "DEPRECATED - repeatedly cycle the hwpr through a number of positions",
     GR_HWPR, 4,
     {
@@ -658,7 +638,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Step size (encoder ticks)", -MAX_15BIT/2, MAX_15BIT/2, 'i', "NONE"},
     }
   },
-  {COMMAND(hwpr_define_pos), 
+  {COMMAND(hwpr_define_pos),
     "define the four hwpr potentiometer positions to be used for scans",
     GR_HWPR, 4,
     {
@@ -668,21 +648,21 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Position 4", 0.1, 0.9, 'f', "POS3_HWPR"}
     }
   },
-  {COMMAND(hwpr_goto_pot), 
+  {COMMAND(hwpr_goto_pot),
     "Move wave plate rotator to commanded potentiometer value",
     GR_HWPR, 1,
     {
       {"Pot Value ", 0.1, 0.9, 'f', "POT_HWPR"},
     }
   },
-  {COMMAND(hwpr_set_overshoot), 
+  {COMMAND(hwpr_set_overshoot),
     "set the overshoot in encoder counts for backwards hwpr moves",
     GR_HWPR, 1,
     {
       {"overshoot", 0, MAX_15BIT, 'i', "OVERSHOOT_HWPR"},
     }
   },
-  {COMMAND(hwpr_goto_i), 
+  {COMMAND(hwpr_goto_i),
     "goto hwpr position (0-3)",
     GR_HWPR, 1,
     {
@@ -794,7 +774,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"N steps", 1, 32767, 'i', "step_nsteps_bias"},
       {"Time per step (ms)", 10, 32767, 'i', "step_time_bias"},
       {"Cal pulse length (ms)", 0, 32767, 'i', "step_pul_len_bias"},
-      {"Array (250,350,500,0=all)", 0, 32767, 'i', "step_array_bias"},
+      {"Array (250, 350, 500, 0=all)", 0, 32767, 'i', "step_array_bias"},
     }
   },
   {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
@@ -833,7 +813,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
       {"Max Pulse Delay (0=never pulse) (s)",  0, 32767, 'i', "PERIOD_CAL"},
-      {"Always Pulse before HWP move (0=no,1=yes)",  0, 1, 'i', "NONE"}
+      {"Always Pulse before HWP move (0=no, 1=yes)",  0, 1, 'i', "NONE"}
     }
   },
 
@@ -959,60 +939,57 @@ struct mcom mcommands[N_MCOMMANDS] = {
         {
             {"which", 0, 2, 'i', "NONE"},
             {"enabled", 0, 1, 'i', "NONE"},
-            {"level_kepsa",0.0, 10000.0, 'f', "NONE"},
-            {"gain_db",-50, 10, 'f', "NONE"},
+            {"level_kepsa", 0.0, 10000.0, 'f', "NONE"},
+            {"gain_db", -50, 10, 'f', "NONE"},
             {"actual exposure time (s)", 0.01, 10.0, 'f', "NONE"},
             {"simulated exposure time (s)", 0.01, 10.0, 'f', "NONE"},
         },
     },
-
-
-
-  {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
-   {
-     {"Reaction Wheel", 0, 5, 'i', "VERBOSE_RW"},
-     {"Elevation", 0, 5, 'i', "VERBOSE_EL"},
-     {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
-   }
-  },
-  {COMMAND(shutter_step), "set number of shutter steps to close (default 4224)", 
-    GR_MISC, 1,
-    {
-      {"Steps", 1, 5000, 'i', "STEPS_SHUTTER"},
-    }
-  },
-  {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_MISC, 1,
-    {
-      {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
-    }
-  },
-  {COMMAND(params_test), "Do nothing, with all paramter types", GR_MISC, 5,
-    {
-      {"i", 0, CMD_I_MAX, 'i', "NONE"},
-      {"l", 0, CMD_L_MAX, 'l', "NONE"},
-      {"f (-100 to +100)", -100, 100, 'f', "NONE"},
-      {"d (-100 to +100)", -100, 100, 'd', "NONE"},
-      {"s", 0, 32, 's', "NONE"}
-    }
-  },
-  {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
-    {
-      {"Plover", 0, CMD_I_MAX, 'i', "PLOVER"}
-    }
-  },
-  {COMMAND(xsc_is_new_window_period), "Set the time over which commands are valid (in centi-seconds)", GR_XSC_PARAM, 2,
-      {
+    {COMMAND(motors_verbose), "Set verbosity of motor serial threads (0=norm, 1=verbose, 2= superverbose )", GR_MISC, 3,
+        {
+            {"Reaction Wheel", 0, 5, 'i', "VERBOSE_RW"},
+            {"Elevation", 0, 5, 'i', "VERBOSE_EL"},
+            {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
+        }
+    },
+    {COMMAND(shutter_step), "set number of shutter steps to close (default 4224)", GR_MISC, 1,
+        {
+          {"Steps", 1, 5000, 'i', "STEPS_SHUTTER"},
+        }
+    },
+    {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_MISC, 1,
+        {
+          {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
+        }
+    },
+    {COMMAND(params_test), "Do nothing, with all paramter types", GR_MISC, 5,
+        {
+          {"i", 0, CMD_I_MAX, 'i', "NONE"},
+          {"l", 0, CMD_L_MAX, 'l', "NONE"},
+          {"f (-100 to +100)", -100, 100, 'f', "NONE"},
+          {"d (-100 to +100)", -100, 100, 'd', "NONE"},
+          {"s", 0, 32, 's', "NONE"}
+        }
+    },
+    {COMMAND(plugh), "A hollow voice says \"Plugh\".", GR_MISC, 1,
+        {
+          {"Plover", 0, CMD_I_MAX, 'i', "PLOVER"}
+        }
+    },
+    {COMMAND(xsc_is_new_window_period), "Set the time over which commands are valid (in centi-seconds)",
+     GR_XSC_PARAM, 2,
+        {
               {"Which", 0, 2, 'i', "NONE"},
               {"Window period", 0, 2000, 'i', "NONE"},
-      }
-  },
-  {COMMAND(xsc_offset), "Trim the star camera", GR_XSC_PARAM|GR_TRIM, 3,
-      {
+        }
+    },
+    {COMMAND(xsc_offset), "Trim the star camera", GR_XSC_PARAM|GR_TRIM, 3,
+        {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Cross-El trim", -180, 180, 'd', "NONE"},
               {"El trim", -180, 180, 'd', "NONE"},
-      }
-  },
+        }
+    },
 
   ////  <!-- XSC heaters -->
 

@@ -26,7 +26,7 @@
 #ifndef INCLUDE_RADBOX_H_
 #define INCLUDE_RADBOX_H_
 
-void radbox_endpoints( double az[4], double el[4], double el_in, double *az_left,
+void radbox_endpoints(double az[4], double el[4], double el_in, double *az_left,
     double *az_right, double *min_el, double *max_el, double *az_of_bot);
 
 #endif /* INCLUDE_RADBOX_H_ */

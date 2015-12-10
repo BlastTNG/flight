@@ -173,7 +173,7 @@ static int JFETthermostat(void)
     return lasttime;
 }
 
-static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short *force_cycle)
+static void FridgeCycle(int *heatctrl, int *cryostate, int reset, uint16_t  *force_cycle)
 {
     static int firsttime = 1000;
     // Skip first 1000 frames (10 seconds) as startup veto.
@@ -205,10 +205,10 @@ static void FridgeCycle(int *heatctrl, int *cryostate, int reset, unsigned short
     time_t overall_settle_timeout;
 
     time_t start_time, settle_start_time;
-    unsigned short cycle_state;
-    static unsigned short iterator = 1;
-    static unsigned short heat_char = 0;
-    static unsigned short heat_hs = 0;
+    uint16_t  cycle_state;
+    static uint16_t  iterator = 1;
+    static uint16_t  heat_char = 0;
+    static uint16_t  heat_hs = 0;
 
     if (firsttime > 1) {
         firsttime--;

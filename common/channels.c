@@ -88,29 +88,29 @@ struct ChannelStruct* DecomChannels;
 union DerivedUnion* DerivedChannels;
 #endif
 
-unsigned short ccWideFast;
-unsigned short ccNarrowFast;
-unsigned short ccWideSlow;
-unsigned short ccNarrowSlow;
-unsigned short ccSlow;
-unsigned short ccFast;
-unsigned short ccNoBolos;
-unsigned short ccTotal;
-unsigned short ccDecom;
-unsigned short ccDerived;
+uint16_t  ccWideFast;
+uint16_t  ccNarrowFast;
+uint16_t  ccWideSlow;
+uint16_t  ccNarrowSlow;
+uint16_t  ccSlow;
+uint16_t  ccFast;
+uint16_t  ccNoBolos;
+uint16_t  ccTotal;
+uint16_t  ccDecom;
+uint16_t  ccDerived;
 
-unsigned short BiPhaseFrameWords;
-unsigned short BiPhaseFrameSize;
-unsigned short DiskFrameWords;
-unsigned short DiskFrameSize;
-unsigned short TxFrameWords[2];
-unsigned short TxFrameSize[2];
-unsigned short slowsPerBi0Frame;
-unsigned short slowCount[2] = {0, 0};
-unsigned short slowsPerBusFrame[2] = {0, 0};
-unsigned short fastsPerBusFrame[2] = {SLOW_OFFSET, 1};
+uint16_t  BiPhaseFrameWords;
+uint16_t  BiPhaseFrameSize;
+uint16_t  DiskFrameWords;
+uint16_t  DiskFrameSize;
+uint16_t  TxFrameWords[2];
+uint16_t  TxFrameSize[2];
+uint16_t  slowsPerBi0Frame;
+uint16_t  slowCount[2] = {0, 0};
+uint16_t  slowsPerBusFrame[2] = {0, 0};
+uint16_t  fastsPerBusFrame[2] = {SLOW_OFFSET, 1};
 
-unsigned short das_cards = DAS_CARDS;
+uint16_t  das_cards = DAS_CARDS;
 
 #ifndef INPUTTER
 unsigned int NiosSpares[FAST_PER_SLOW * 2];
@@ -124,7 +124,7 @@ struct ChannelStruct *FastChList;
 
 #define BOLO_BUS  0    /* bus on which the bolometers live */
 unsigned int boloIndex[MAX_DAS_CARDS][DAS_CHS][2];
-unsigned short BoloBaseIndex;
+uint16_t  BoloBaseIndex;
 static struct ChannelStruct BoloChannels[MAX_FAST_BOLOS];
 
 #define SPEC_VERSION 13
@@ -163,24 +163,24 @@ void SPECIFICATIONFILEFUNXION(FILE* fp)
   }
 #endif
 
-  if (FREADORWRITE(&das_cards, sizeof(unsigned short), 1, fp) < 1)
+  if (FREADORWRITE(&das_cards, sizeof(uint16_t ), 1, fp) < 1)
     blast_err("FREADORWRITE failed with code %d", ferror(fp));
 
 #ifdef INPUTTER
   n_fast_bolos = das_cards * (DAS_CHS + DAS_CHS / 2);
 #endif
 
-  if (FREADORWRITE(&ccWideSlow, sizeof(unsigned short), 1, fp) < 1)
+  if (FREADORWRITE(&ccWideSlow, sizeof(uint16_t ), 1, fp) < 1)
     blast_err("FREADORWRITE failed with code %d", ferror(fp));
-  if (FREADORWRITE(&ccNarrowSlow, sizeof(unsigned short), 1, fp) < 1)
+  if (FREADORWRITE(&ccNarrowSlow, sizeof(uint16_t ), 1, fp) < 1)
     blast_err("FREADORWRITE failed with code %d", ferror(fp));
-  if (FREADORWRITE(&ccWideFast, sizeof(unsigned short), 1, fp) < 1)
+  if (FREADORWRITE(&ccWideFast, sizeof(uint16_t ), 1, fp) < 1)
     blast_err("FREADORWRITE failed with code %d", ferror(fp));
-  if (FREADORWRITE(&ccNarrowFast, sizeof(unsigned short), 1, fp) < 1)
+  if (FREADORWRITE(&ccNarrowFast, sizeof(uint16_t ), 1, fp) < 1)
     blast_err("FREADORWRITE failed with code %d", ferror(fp));
-  if (FREADORWRITE(&ccDecom, sizeof(unsigned short), 1, fp) < 1)
+  if (FREADORWRITE(&ccDecom, sizeof(uint16_t ), 1, fp) < 1)
     blast_err("FREADORWRITE failed with code %d", ferror(fp));
-  if (FREADORWRITE(&ccDerived, sizeof(unsigned short), 1, fp) < 1)
+  if (FREADORWRITE(&ccDerived, sizeof(uint16_t ), 1, fp) < 1)
     blast_err("FREADORWRITE failed with code %d", ferror(fp));
 
 #ifdef INPUTTER

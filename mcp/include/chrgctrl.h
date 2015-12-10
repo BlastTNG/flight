@@ -72,7 +72,7 @@ struct CCData {
   
   int T_hs;                    // heatsink temperature
 
-  unsigned short fault_field;  // fault bitfield
+  uint16_t  fault_field;  // fault bitfield
   unsigned int alarm_field_hi; // alarm high bitfield
   unsigned int alarm_field_lo; // alarm low bitfield
   unsigned int led_state;      // state of status LEDs on front of unit 

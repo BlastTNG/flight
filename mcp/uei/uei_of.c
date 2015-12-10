@@ -26,6 +26,8 @@
 #include <time.h>
 
 #include <PDNA.h>
+
+#include "phenom/thread.h"
 #include "channels_tng.h"
 #include "blast_time.h"
 #include "mcp.h"
@@ -50,12 +52,13 @@ void *uei_loop(void *m_arg) {
 
     clock_gettime(CLOCK_MONOTONIC, &next);
 
+    ph_thread_set_name("UEIMon");
+
     blast_startup("Starting UEI loop");
 
     while (!shutdown_mcp) {
 		ret = DqRtDmapRefresh(hd_of, dmapid_of);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			blast_err("DqRtDmapRefresh: error %d", ret);
 		}
 
@@ -64,8 +67,7 @@ void *uei_loop(void *m_arg) {
 
 			ret = DqAdvDnxpRead(hd_of, CPU_LAYER, sizeof(diag_channels) / sizeof(uint32_t),
 					diag_channels, raw_diag_data, diag_data);
-			if (ret < 0)
-			{
+			if (ret < 0) {
 				blast_err("Could not read CPU Diagnostics: %s", DqTranslateError(ret));
 			}
 		}
@@ -81,7 +83,7 @@ void *uei_loop(void *m_arg) {
 	return NULL;
 }
 
-int initialize_uei_of_channels (void)
+int initialize_uei_of_channels(void)
 {
 	int ret;
 	static  DQRDCFG *DQRdCfg = NULL;
@@ -154,7 +156,6 @@ static void uei_of_store_hk(void)
 	SET_UINT32(uei_of_i_in_channel, raw_diag_data[DQ_L2_ADC_I_IN]);
 	SET_UINT32(uei_of_temp1_channel, raw_diag_data[DQ_LDIAG_ADC_TEMP1]);
 	SET_UINT32(uei_of_temp2_channel, raw_diag_data[DQ_LDIAG_ADC_TEMP1]);
-
 }
 
 void uei_1hz_loop(void)
@@ -167,9 +168,11 @@ void uei_1hz_loop(void)
 				blast_err("Could not read scaled data from DMAP");
 				continue;
 			}
-			for (int ch = 0; ch < num_of_channels[i]; ch++){
-				if (!uei_of_channels[i][ch]) blast_dbg("no channel here!");
-				else SET_SCALED_VALUE(uei_of_channels[i][ch], data[ch]);
+			for (int ch = 0; ch < num_of_channels[i]; ch++) {
+				if (!uei_of_channels[i][ch])
+				    blast_dbg("no channel here!");
+				else
+				    SET_SCALED_VALUE(uei_of_channels[i][ch], data[ch]);
 			}
 		}
 	}

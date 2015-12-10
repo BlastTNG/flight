@@ -1,3 +1,29 @@
+/**
+ * @file xsc_protocol.c
+ *
+ * @date Nov 23, 2012
+ * @author chappy
+ *
+ * @brief This file is part of FCP, created for the EBEX project
+ *
+ * This software is copyright (C) 2012 Columbia University
+ *
+ * MCP is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * MCP is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MCP; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 #include "xsc_protocol.h"
 #include <string.h>
 #include <stdbool.h>
@@ -29,7 +55,7 @@ void xsc_clear_image_blobs(XSCImageBlobs* blobs)
     unsigned int i = 0;
     blobs->counter_stars = -1;
     blobs->num_blobs = 0;
-    for (i=0; i<XSC_BLOBS_ARRAY_SIZE; i++) {
+    for (i = 0; i < XSC_BLOBS_ARRAY_SIZE; i++) {
         xsc_clear_image_blob(&blobs->blobs[i]);
     }
 }
@@ -127,7 +153,7 @@ void xsc_clear_motion_psf(XSCMotionPSF* motion_psf)
     motion_psf->counter_stars = -1;
     motion_psf->hroll = 0.0;
     motion_psf->iplatescale = 4.60573E-5;
-    for (i=0; i<XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
+    for (i = 0; i < XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
         xsc_clear_motion_psf_timestep(&motion_psf->timesteps[i]);
     }
     motion_psf->timesteps[0].exposure_num = 0;
@@ -192,17 +218,15 @@ void xsc_clear_client_data(XSCClientData* client_data)
 
 void xsc_decrement_is_new_countdowns(XSCClientData* client_data)
 {
-    unsigned int i=0;
-    for (i=0; i<xC_num_command_admins; i++) {
-        if (client_data->command_admins[i].is_new_countdown)
-            client_data->command_admins[i].is_new_countdown--;
+    for (int i = 0; i < xC_num_command_admins; i++) {
+        if (client_data->command_admins[i].is_new_countdown) client_data->command_admins[i].is_new_countdown--;
     }
 }
 
 void xsc_zero_command_admins(xsc_command_admin_t* admins)
 {
-    unsigned int i=0;
-    for (i=0; i<xC_num_command_admins; i++) {
+    unsigned int i = 0;
+    for (i = 0; i < xC_num_command_admins; i++) {
         admins[i].is_new_countdown = 0;
         admins[i].counter = 0;
     }

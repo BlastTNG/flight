@@ -28,7 +28,6 @@
 #define INCLUDE_BIAS_TONE_H_
 
 int initialize_bias_tone(void);
-void *ao_play_sine_wave(void*);
 void shutdown_bias_tone(void);
 
 

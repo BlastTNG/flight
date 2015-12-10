@@ -68,7 +68,7 @@ void watchdog_close(void)
  *          hasn't received a ping
  * @return 0 on success, -1 on failure
  */
-int initialize_watchdog (int m_timeout)
+int initialize_watchdog(int m_timeout)
 {
     if (watchdog_fd > 0) close(watchdog_fd);
 

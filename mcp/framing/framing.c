@@ -39,7 +39,7 @@
 
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
-extern short int SouthIAm;
+extern int16_t SouthIAm;
 
 static void frame_handle_data(const char *m_fc, const char *m_rate, const void *m_data, const int m_len)
 {
@@ -63,7 +63,7 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
         return;
     }
 
-    //TODO:Think about mapping FC1/FC2
+    // TODO(seth): Think about mapping FC1/FC2
     for (src = SRC_LOOKUP_TABLE; src->position < SRC_END; src++) {
         if (strncmp(src->text, m_fc, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
     }
@@ -72,7 +72,6 @@ static void frame_handle_data(const char *m_fc, const char *m_rate, const void *
         return;
     }
     channels_store_data(src->position, rate->position, m_data, m_len);
-
 }
 
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
@@ -80,36 +79,35 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
     char **topics;
     int count;
 
-    if(message->payloadlen){
+    if (message->payloadlen) {
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
-
-            if ( count == 3 && strcmp(topics[1], "frames") == 0) {
+            if (count == 3 && strcmp(topics[1], "frames") == 0) {
                 frame_handle_data(topics[0], topics[2], message->payload, message->payloadlen);
             }
 
             mosquitto_sub_topic_tokens_free(&topics, count);
         }
-
     }
     fflush(stdout);
 }
 
 static void frame_connect_callback(struct mosquitto *mosq, void *userdata, int result)
 {
-    if(!result){
+    if (!result) {
         /* Subscribe to broker information topics on successful connect. */
         mosquitto_subscribe(mosq, NULL, "$SYS/#", 2);
-    }else{
+    } else {
         berror(err, "Connect failed");
     }
 }
 
-static void frame_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count, const int *granted_qos)
+static void frame_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count,
+                                     const int *granted_qos)
 {
     int i;
 
     blast_info("Subscribed (mid: %d): %d", mid, granted_qos[0]);
-    for(i=1; i<qos_count; i++){
+    for (i = 1; i < qos_count; i++) {
         blast_info("\t %d", granted_qos[i]);
     }
 }
@@ -127,7 +125,7 @@ void uei_publish_1hz(void)
     static char frame_name[32];
     if (uei_of_1hz_framenum_addr == NULL) {
         uei_of_1hz_framenum_addr = channels_find_by_name("uei_of_1hz_framecount");
-        snprintf(frame_name, 32, "frames/of_uei/dummy/1Hz");
+        snprintf(frame_name, sizeof(frame_name), "frames/of_uei/dummy/1Hz");
     }
 
     if (frame_stop) return;
@@ -138,7 +136,6 @@ void uei_publish_1hz(void)
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[SRC_OF_UEI][RATE_1HZ], channel_data[SRC_OF_UEI][RATE_1HZ], 0, false);
     }
-
 }
 
 void framing_publish_1hz(void)
@@ -148,7 +145,7 @@ void framing_publish_1hz(void)
     static char frame_name[32];
     if (mcp_1hz_framenum_addr == NULL) {
         mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
-        snprintf(frame_name, 32, "frames/fc/%d/1Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/1Hz", SouthIAm + 1);
     }
 
     if (frame_stop) return;
@@ -159,7 +156,6 @@ void framing_publish_1hz(void)
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[SRC_FC][RATE_1HZ], channel_data[SRC_FC][RATE_1HZ], 0, false);
     }
-
 }
 
 void framing_publish_5hz(void)
@@ -169,7 +165,7 @@ void framing_publish_5hz(void)
     static char frame_name[32];
     if (mcp_5hz_framenum_addr == NULL) {
         mcp_5hz_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
-        snprintf(frame_name, 32, "frames/fc/%d/5Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/5Hz", SouthIAm + 1);
     }
 
     if (frame_stop) return;
@@ -189,7 +185,7 @@ void framing_publish_100hz(void)
     static char frame_name[32];
     if (mcp_100hz_framenum_addr == NULL) {
         mcp_100hz_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
-        snprintf(frame_name, 32, "frames/fc/%d/100Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/100Hz", SouthIAm + 1);
     }
 
     if (frame_stop) return;
@@ -210,7 +206,7 @@ void framing_publish_200hz(void)
 
     if (mcp_200hz_framenum_addr == NULL) {
         mcp_200hz_framenum_addr = channels_find_by_name("mcp_200hz_framecount");
-        snprintf(frame_name, 32, "frames/fc/%d/200Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/200Hz", SouthIAm + 1);
     }
 
     if (frame_stop) return;
@@ -240,8 +236,8 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     int keepalive = 60;
     bool clean_session = true;
 
-    snprintf(id, 4, "fc%d", SouthIAm + 1);
-    snprintf(host, 4, "fc%d", SouthIAm + 1);
+    snprintf(id, sizeof(id), "fc%d", SouthIAm + 1);
+    snprintf(host, sizeof(host), "fc%d", SouthIAm + 1);
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
     if (!mosq) {
@@ -272,14 +268,15 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
 
     mosquitto_subscribe(mosq, NULL, "frames/#", 2);
 
-    snprintf(topic, 64, "channels/fc/%d", SouthIAm + 1);
+    snprintf(topic, sizeof(topic), "channels/fc/%d", SouthIAm + 1);
     mosquitto_publish(mosq, NULL, topic,
             sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
     bfree(err, channels_pkg);
 
-    if (!(derived_pkg = channels_create_derived_map(m_derived))) blast_warn("Failed sending derived packages");
-    else {
-        snprintf(topic, 64, "derived/fc/%d", SouthIAm + 1);
+    if (!(derived_pkg = channels_create_derived_map(m_derived))) {
+        blast_warn("Failed sending derived packages");
+    } else {
+        snprintf(topic, sizeof(topic), "derived/fc/%d", SouthIAm + 1);
         mosquitto_publish(mosq, NULL, topic,
                 sizeof(derived_header_t) + derived_pkg->length * sizeof(derived_tng_t), derived_pkg, 1, true);
         bfree(err, derived_pkg);

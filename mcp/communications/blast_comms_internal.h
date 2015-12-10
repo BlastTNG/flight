@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef BLAST_COMMS_INTERNAL_H_
-#define BLAST_COMMS_INTERNAL_H_
+#ifndef INCLUDE_BLAST_COMMS_INTERNAL_H_
+#define INCLUDE_BLAST_COMMS_INTERNAL_H_
 #include <pthread.h>
 
 #include <comms_serial.h>
@@ -47,17 +47,17 @@ static void *blast_comms_monitor(void *m_arg);
 static void blast_comms_cleanup(void *m_arg);
 
 static void blast_comms_net_new_connection(int m_status, int m_errorcode, void *m_userdata);
-static int blast_comms_net_process_data(const void *m_data, size_t m_len, void *m_userdata );
-static int blast_comms_net_cleanup(const void *m_data, size_t m_len, void *m_userdata );
+static int blast_comms_net_process_data(const void *m_data, size_t m_len, void *m_userdata);
+static int blast_comms_net_cleanup(const void *m_data, size_t m_len, void *m_userdata);
 static void blast_comms_net_error(int m_code, void *m_userdata);
 static void *blast_comms_network_monitor(void *m_arg __attribute__((unused)));
 
 
-//#define _ebex_uplink_types _ebex_port_defs
-//#define _BLAST_UPLINK_FN_DEF(_prefix,_ref) void *_prefix ## _ ## _ref ## _callback(size_t, void *);
-//BLAST_GENERIC_LOOKUP_TABLE(ebex_uplink_type, static,
-//			void *(*process_fn) (size_t, void*);,
-//			_BLAST_FUNCTION_STRUCT_LIST,
-//			_ebex_uplink_types(ebex_uplink_type, _BLAST_UPLINK_FN_DEF )
-//			 );
+//    #define _ebex_uplink_types _ebex_port_defs
+//    #define _BLAST_UPLINK_FN_DEF(_prefix,_ref) void *_prefix ## _ ## _ref ## _callback(size_t, void *);
+//    BLAST_GENERIC_LOOKUP_TABLE(ebex_uplink_type, static,
+//    void *(*process_fn) (size_t, void*);,
+//    _BLAST_FUNCTION_STRUCT_LIST,
+//    _ebex_uplink_types(ebex_uplink_type, _BLAST_UPLINK_FN_DEF )
+//    );
 #endif /* BLAST_COMMS_INTERNAL_H_ */

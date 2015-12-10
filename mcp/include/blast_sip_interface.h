@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef BLAST_SIP_INTERFACE_H_
-#define BLAST_SIP_INTERFACE_H_
+#ifndef INCLUDE_BLAST_SIP_INTERFACE_H_
+#define INCLUDE_BLAST_SIP_INTERFACE_H_
 #include <stdint.h>
 #include <stdbool.h>
 

@@ -3,9 +3,10 @@
 // In case there are jurisdictions that don't support putting things in the public domain you can also consider it to
 // be "dual licensed" under the BSD, MIT and Apache licenses, if you want to. This code is trivial anyway. Consider it
 // an example on how to get the endian conversion functions on different platforms.
+// Copyright 2013 Mathias PanzenbÃ¶ck
 
-#ifndef PORTABLE_ENDIAN_H__
-#define PORTABLE_ENDIAN_H__
+#ifndef INCLUDE_PORTABLE_ENDIAN_H_
+#define INCLUDE_PORTABLE_ENDIAN_H_
 
 #if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 
@@ -41,11 +42,7 @@
 #	define __LITTLE_ENDIAN LITTLE_ENDIAN
 #	define __PDP_ENDIAN    PDP_ENDIAN
 
-#elif defined(__OpenBSD__)
-
-#	include <sys/endian.h>
-
-#elif defined(__NetBSD__) || defined(__FreeBSD__) || defined(__DragonFly__)
+#elif defined(__NetBSD__) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__OpenBSD__)
 
 #	include <sys/endian.h>
 

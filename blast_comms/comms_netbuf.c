@@ -36,7 +36,7 @@
 
 
 #define likely(cond)   __builtin_expect(!!(cond), 1)
-#define unlikely(cond) __builtin_expect(  (cond), 0)
+#define unlikely(cond) __builtin_expect((cond), 0)
 #define DEFAULT_MINCAP  32
 
 static inline __attribute__((pure)) size_t netbuf_elem_size(netbuf_t* p)
@@ -94,7 +94,7 @@ static inline char* wrap_ptr_if_necessary(char* buffer,
                                           char* p,
                                           char* bufend)
 {
-    if(p >= bufend) {
+    if (p >= bufend) {
         size_t diff = p - bufend;
         return buffer + diff;
     } else {
@@ -106,7 +106,7 @@ static inline char* rev_wrap_ptr_if_necessary(char* buffer,
                                               char* p,
                                               char* bufend)
 {
-    if(p < buffer) {
+    if (p < buffer) {
         size_t diff = buffer - p;
         return bufend - diff;
     } else {
@@ -125,14 +125,13 @@ static size_t __attribute__((const)) next_pow2(size_t n)
     if (unlikely(!n)) return 2;
 
     // If when we round up we will overflow our size_t
-    if(unlikely(n >= ((~(size_t)0 >> 1) + 1)))
-        return n;
+    if (unlikely(n >= ((~(size_t )0 >> 1) + 1))) return n;
 
-    // Algorithm idea from:
+    // Algorithm idea from
     // https://groups.google.com/d/msg/comp.lang.python/xNOq4N-RffU/HObqrKz59sQJ
     n--;
 
-    for(size_t shift = 1; shift < (sizeof n)*8; shift <<= 1)
+    for (size_t shift = 1; shift < (sizeof n) * 8; shift <<= 1)
         n |= n >> shift;
 
     n++;
@@ -145,15 +144,12 @@ static size_t __attribute__((const)) next_pow2(size_t n)
 
 static inline void check_invariants(netbuf_t* p)
 {
-    if(p == NULL) return;
+    if (p == NULL) return;
 
-    if(p->buffer == NULL)
-    {
+    if (p->buffer == NULL) {
         assert(p->consumer_refcount == 0);
         return;
-    }
-    else
-    {
+    } else {
         assert(p->consumer_refcount != 0);
     }
 
@@ -165,14 +161,13 @@ static inline void check_invariants(netbuf_t* p)
 
     assert(p->elem_size != 0);
 
-    assert(bytes_in_use(s) <= capacity(s)
-            && "There are more elements in the buffer than its capacity.");
+    assert(bytes_in_use(s) <= capacity(s) && "There are more elements in the buffer than its capacity.");
 
     assert(in_bounds(s.buffer, s.begin, s.bufend));
     assert(in_bounds(s.buffer, s.end, s.bufend));
 
-    if(s.begin == s.end)
-        assert(bytes_in_use(s) == capacity(s));
+    if (s.begin == s.end)
+    assert(bytes_in_use(s) == capacity(s));
 
     assert(in_bounds(DEFAULT_MINCAP*p->elem_size, p->min_cap, p->max_cap));
     assert(in_bounds(p->min_cap, capacity(s) + p->elem_size, p->max_cap));
@@ -195,17 +190,17 @@ static inline void unlock_pipe(netbuf_t* p)
 
 // runs some code while automatically locking and unlocking the pipe. If `break'
 // is used, the pipe will be unlocked before control returns from the macro.
-#define WHILE_LOCKED(stuff) do { \
-    lock_pipe(m_buf);                \
-    do { stuff; } while(0);      \
-    unlock_pipe(m_buf);              \
- } while(0)
+#define WHILE_LOCKED(stuff) do {    \
+    lock_pipe(m_buf);               \
+    do { stuff; } while (0);        \
+    unlock_pipe(m_buf);             \
+    } while (0)
 
 netbuf_t* netbuf_new(size_t elem_size, size_t limit)
 {
     assert(elem_size != 0);
 
-    if(elem_size == 0)
+    if (elem_size == 0)
         return NULL;
 
     netbuf_t* p = malloc(sizeof *p);
@@ -219,7 +214,7 @@ netbuf_t* netbuf_new(size_t elem_size, size_t limit)
     // room for the sentinel element.
     limit = (limit + 1) * elem_size;
 
-    if(unlikely(p == NULL || buf == NULL))
+    if (unlikely(p == NULL || buf == NULL))
         return free(p), free(buf), NULL;
 
     *p = (netbuf_t) {
@@ -298,17 +293,16 @@ void netbuf_free(netbuf_t* p)
         new_consumer_refcount = --p->consumer_refcount;
     pthread_mutex_unlock(&p->end_lock);
 
-    if(unlikely(new_consumer_refcount == 0))
-    {
+    if (unlikely(new_consumer_refcount == 0)) {
         p->buffer = (free(p->buffer), NULL);
 
-        if(likely(new_producer_refcount > 0))
+        if (likely(new_producer_refcount > 0))
             pthread_cond_broadcast(&p->just_popped);
         else
             deallocate(p);
+    } else {
+        if (unlikely(new_producer_refcount == 0)) pthread_cond_broadcast(&p->just_pushed);
     }
-    else if(unlikely(new_producer_refcount == 0))
-        pthread_cond_broadcast(&p->just_pushed);
 }
 
 void netbuf_producer_free(netbuf_t* p)
@@ -320,18 +314,17 @@ void netbuf_producer_free(netbuf_t* p)
         new_producer_refcount = --p->producer_refcount;
     pthread_mutex_unlock(&p->begin_lock);
 
-    if(unlikely(new_producer_refcount == 0))
-    {
+    if (unlikely(new_producer_refcount == 0)) {
         size_t consumer_refcount;
 
         pthread_mutex_lock(&p->end_lock);
-            consumer_refcount = p->consumer_refcount;
+        consumer_refcount = p->consumer_refcount;
         pthread_mutex_unlock(&p->end_lock);
 
         // If there are still consumers, wake them up if they're waiting on
         // input from a producer. Otherwise, since we're the last handle
         // altogether, we can free the pipe.
-        if(likely(consumer_refcount > 0))
+        if (likely(consumer_refcount > 0))
             pthread_cond_broadcast(&p->just_pushed);
         else
             deallocate(p);
@@ -346,18 +339,17 @@ void netbuf_consumer_free(netbuf_t* p)
         new_consumer_refcount = --p->consumer_refcount;
     pthread_mutex_unlock(&p->end_lock);
 
-    if(unlikely(new_consumer_refcount == 0))
-    {
+    if (unlikely(new_consumer_refcount == 0)) {
         size_t producer_refcount;
 
         pthread_mutex_lock(&p->begin_lock);
-            producer_refcount = p->producer_refcount;
+        producer_refcount = p->producer_refcount;
         pthread_mutex_unlock(&p->begin_lock);
 
         // If there are still producers, wake them up if they're waiting on
         // room to free up from a consumer. Otherwise, since we're the last
         // handle altogether, we can free the pipe.
-        if(likely(producer_refcount > 0))
+        if (likely(producer_refcount > 0))
             pthread_cond_broadcast(&p->just_popped);
         else
             deallocate(p);
@@ -369,8 +361,7 @@ static inline char* copy_netbuf_into_new_buf(buf_snapshot_t s, char* restrict bu
     if (wraps_around(s)) {
         buf = offset_memcpy(buf, s.begin, s.bufend - s.begin);
         buf = offset_memcpy(buf, s.buffer, s.end - s.buffer);
-    }
-    else {
+    } else {
         buf = offset_memcpy(buf, s.begin, s.end - s.begin);
     }
 
@@ -388,8 +379,7 @@ static inline size_t copy_netbuf_data(buf_snapshot_t s, char* restrict buf) {
 
         buf = offset_memcpy(buf, s.buffer, s.end - s.buffer);
         retval += (s.end - s.buffer - s.elem_size);
-    }
-    else {
+    } else {
         buf = offset_memcpy(buf, s.begin + s.elem_size, s.end - s.begin - s.elem_size);
         retval = s.end - s.begin - s.elem_size;
     }
@@ -414,11 +404,9 @@ static buf_snapshot_t resize_buffer(netbuf_t* p, size_t new_size)
 
     assert(new_size >= bytes_in_use(make_snapshot(p)));
 
-    if(unlikely(new_size >= max_cap))
-        new_size = max_cap;
+    if (unlikely(new_size >= max_cap)) new_size = max_cap;
 
-    if(new_size <= min_cap)
-        return make_snapshot(p);
+    if (new_size <= min_cap) return make_snapshot(p);
 
     char* new_buf = malloc(new_size + elem_size);
     p->end = copy_netbuf_into_new_buf(make_snapshot(p), new_buf);
@@ -471,26 +459,24 @@ static inline char* process_push(buf_snapshot_t s,
     assert(bytes_to_copy != 0);
 
     // This shouldn't be necessary.
-    //s.end = wrap_ptr_if_necessary(s.buffer, s.end, s.bufend);
+    // s.end = wrap_ptr_if_necessary(s.buffer, s.end, s.bufend);
     assert(s.end != s.bufend);
 
     // If we currently have a nowrap buffer, we may have to wrap the new
     // elements. Copy as many as we can at the end, then start copying into the
     // beginning. This basically reduces the problem to only deal with wrapped
     // buffers, which can be dealt with using a single offset_memcpy.
-    if(!wraps_around(s))
-    {
-        size_t at_end = min(bytes_to_copy, (size_t)(s.bufend - s.end));
+    if (!wraps_around(s)) {
+        size_t at_end = min(bytes_to_copy, (size_t) (s.bufend - s.end));
 
         s.end = offset_memcpy(s.end, elems, at_end);
 
-        elems = (const char*)elems + at_end;
+        elems = (const char*) elems + at_end;
         bytes_to_copy -= at_end;
     }
 
     // Now copy any remaining data...
-    if(unlikely(bytes_to_copy))
-    {
+    if (unlikely(bytes_to_copy)) {
         s.end = wrap_ptr_if_necessary(s.buffer, s.end, s.bufend);
         s.end = offset_memcpy(s.end, elems, bytes_to_copy);
     }
@@ -514,7 +500,7 @@ static inline buf_snapshot_t wait_for_room(netbuf_t* m_buf, size_t* max_cap)
 
     *max_cap = m_buf->max_cap;
 
-    for(; unlikely(bytes_used == *max_cap) && likely(consumer_refcount > 0);
+    for (; unlikely(bytes_used == *max_cap) && likely(consumer_refcount > 0);
           s                 = make_snapshot(m_buf),
           bytes_used        = bytes_in_use(s),
           consumer_refcount = m_buf->consumer_refcount,
@@ -530,7 +516,7 @@ size_t __netbuf_write(netbuf_t* m_buf,
 {
     size_t elem_size = netbuf_elem_size(m_buf);
 
-    if(unlikely(m_count == 0))
+    if (unlikely(m_count == 0))
         return 0;
 
     size_t pushed = 0;
@@ -540,8 +526,7 @@ size_t __netbuf_write(netbuf_t* m_buf,
         size_t max_cap = m_buf->max_cap;
 
         // if no more consumers...
-        if(unlikely(m_buf->consumer_refcount == 0))
-        {
+        if (unlikely(m_buf->consumer_refcount == 0)) {
             pthread_mutex_unlock(&m_buf->end_lock);
             return 0;
         }
@@ -557,7 +542,7 @@ size_t __netbuf_write(netbuf_t* m_buf,
     assert(pushed > 0);
 
     // Signal if we've only pushed one element, broadcast if we've pushed more.
-    if(unlikely(pushed == elem_size))
+    if (unlikely(pushed == elem_size))
         pthread_cond_signal(&m_buf->just_pushed);
     else
         pthread_cond_broadcast(&m_buf->just_pushed);
@@ -578,12 +563,12 @@ void netbuf_debug_int(netbuf_t* p, const char* id)
 {
     char debug_string[1025];
     int len = 0;
-    len = snprintf(debug_string, 1024, "%s: [ ", id);
-    for(int* ptr = (int*)p->buffer; ptr != (int*)p->bufend; ++ptr) {
+    len = snprintf(debug_string, sizeof(debug_string), "%s: [ ", id);
+    for (int* ptr = (int*)p->buffer; ptr != (int*)p->bufend; ++ptr) {
         len += snprintf(debug_string + len, 1024 - len, "%i ", *ptr);
         if (len > 1024) break;
     }
-    if (len <=1024) snprintf(debug_string + len, 1, "]");
+    if (len <=1024) snprintf(debug_string + len, sizeof(debug_string + len), "]");
     blast_dbg("%s", debug_string);
     blast_dbg("begin: %lu    end: %lu\n", p->begin - p->buffer, p->end - p->buffer);
 }
@@ -591,12 +576,12 @@ void netbuf_debug_string(netbuf_t* p, const char* id)
 {
     char debug_string[1025];
     int len = 0;
-    len = snprintf(debug_string, 1024, "%s: [ ", id);
-    for(char* ptr = (char*)p->buffer; ptr != (char*)p->bufend; ++ptr) {
+    len = snprintf(debug_string, sizeof(debug_string), "%s: [ ", id);
+    for (char* ptr = (char*)p->buffer; ptr != (char*)p->bufend; ++ptr) {
         len += snprintf(debug_string + len, 1024 - len, "%c ", *ptr);
         if (len > 1024) break;
     }
-    if (len <=1024) snprintf(debug_string + len, 1, "]");
+    if (len <=1024) snprintf(debug_string + len, sizeof(debug_string + len), "]");
     blast_dbg("%s", debug_string);
     blast_dbg("begin: %lu    end: %lu\n", p->begin - p->buffer, p->end - p->buffer);
 }
@@ -613,7 +598,7 @@ static inline buf_snapshot_t wait_for_elements(netbuf_t* p, bool m_immediate)
 
     if (m_immediate && !bytes_used) return s;
 
-    for(; unlikely(bytes_used == 0) && likely(p->producer_refcount > 0);
+    for (; unlikely(bytes_used == 0) && likely(p->producer_refcount > 0);
           s = make_snapshot(p),
           bytes_used = bytes_in_use(s))
         pthread_cond_wait(&p->just_pushed, &p->begin_lock);
@@ -647,8 +632,7 @@ static inline buf_snapshot_t pop_without_locking(buf_snapshot_t s,
         s.begin = wrap_ptr_if_necessary(s.buffer, s.begin, s.bufend);
     }
 
-    if(unlikely(bytes_to_copy > 0))
-    {
+    if (unlikely(bytes_to_copy > 0)) {
         s.begin += elem_size;
         s.begin = wrap_ptr_if_necessary(s.buffer, s.begin, s.bufend);
 
@@ -677,8 +661,7 @@ static inline void trim_buffer(netbuf_t* p, buf_snapshot_t s)
     size_t cap = capacity(s);
 
     // We have a sane size. We're done here.
-    if(likely(bytes_in_use(s) > cap / 4))
-    {
+    if (likely(bytes_in_use(s) > cap / 4)) {
         pthread_mutex_unlock(&p->begin_lock);
         return;
     }
@@ -699,7 +682,7 @@ static inline void trim_buffer(netbuf_t* p, buf_snapshot_t s)
     // or pop, we only shrink it to bring us up to a 50% efficiency. A common
     // pipe usage pattern is sudden bursts of pushes and pops. This ensures it
     // doesn't get too time-inefficient.
-    if(likely(bytes_in_use(s) <= cap / 4))
+    if (likely(bytes_in_use(s) <= cap / 4))
         resize_buffer(p, cap / 2);
 
     // All done. Unlock the pipe. The reason we don't let the calling function
@@ -714,32 +697,26 @@ static inline void trim_buffer(netbuf_t* p, buf_snapshot_t s)
 //
 // This will behave eagerly, returning as many elements that it can into
 // `target' as it can fill right now.
-static inline size_t __netbuf_pop(netbuf_t* p,
-                                void* restrict target,
-                                size_t requested,
-                                bool m_nowait)
+static inline size_t __netbuf_pop(netbuf_t* p, void* restrict target, size_t requested,
+bool m_nowait)
 {
-    if(unlikely(requested == 0))
-        return 0;
+    if (unlikely(requested == 0)) return 0;
 
     size_t popped = 0;
 
-    { pthread_mutex_lock(&p->begin_lock);
-        buf_snapshot_t s      = wait_for_elements(p, m_nowait);
+    {
+        pthread_mutex_lock(&p->begin_lock);
+        buf_snapshot_t s = wait_for_elements(p, m_nowait);
         size_t bytes_used = bytes_in_use(s);
 
-        if(unlikely(bytes_used == 0))
-        {
+        if (unlikely(bytes_used == 0)) {
             pthread_mutex_unlock(&p->begin_lock);
             return 0;
         }
 
         check_invariants(p);
 
-        s = pop_without_locking(s, target,
-                                popped = min(requested, bytes_used),
-                                &p->begin
-        );
+        s = pop_without_locking(s, target, popped = min(requested, bytes_used), &p->begin);
 
         check_invariants(p);
 
@@ -748,7 +725,7 @@ static inline size_t __netbuf_pop(netbuf_t* p,
 
     assert(popped);
 
-    if(unlikely(popped == netbuf_elem_size(p)))
+    if (unlikely(popped == netbuf_elem_size(p)))
         pthread_cond_signal(&p->just_popped);
     else
         pthread_cond_broadcast(&p->just_popped);
@@ -756,19 +733,19 @@ static inline size_t __netbuf_pop(netbuf_t* p,
     return popped;
 }
 
-static size_t __netbuf_read(netbuf_t *p, void *m_target, size_t m_count, bool m_nonblock) {
-
+static size_t __netbuf_read(netbuf_t *p, void *m_target, size_t m_count, bool m_nonblock)
+{
     size_t elem_size = netbuf_elem_size(p);
-    size_t bytes_left  = m_count*elem_size;
+    size_t bytes_left = m_count * elem_size;
     size_t bytes_popped = 0;
     size_t ret = -1;
 
     do {
         ret = __netbuf_pop(p, m_target, bytes_left, m_nonblock);
-        m_target = (void*)((char*)m_target + ret);
+        m_target = (void*) ((char*) m_target + ret);
         bytes_popped += ret;
-        bytes_left   -= ret;
-    } while(ret && bytes_left);
+        bytes_left -= ret;
+    } while (ret && bytes_left);
 
     return bytes_popped / elem_size;
 }
@@ -787,17 +764,14 @@ size_t netbuf_peek_noalloc(netbuf_t *m_buf, void *m_target, size_t m_size)
 {
     void *dest = m_target;
     buf_snapshot_t s = make_snapshot(m_buf);
-    size_t bytes_to_copy = min (m_size, bytes_in_use(s));
+    size_t bytes_to_copy = min(m_size, bytes_in_use(s));
 
-    if(wraps_around(s) && (bytes_to_copy > (s.bufend - s.begin)))
-    {
+    if (wraps_around(s) && (bytes_to_copy > (s.bufend - s.begin))) {
         dest = offset_memcpy(dest, s.begin + s.elem_size, s.bufend - s.begin - s.elem_size);
         bytes_to_copy -= (s.bufend - s.begin);
 
         memcpy(dest, s.buffer, bytes_to_copy);
-    }
-    else
-    {
+    } else {
         memcpy(dest, s.begin + s.elem_size, bytes_to_copy);
     }
 
@@ -825,26 +799,19 @@ size_t netbuf_peek(netbuf_t *m_buf, void **m_target)
     pthread_mutex_unlock(&m_buf->begin_lock);
 
     return retval;
-
 }
 
 void netbuf_reserve(netbuf_t *m_buf, size_t m_count)
 {
-
     m_count *= netbuf_elem_size(m_buf); // now `count' is in "bytes" instead of "elements".
 
-    if(m_count == 0)
-        m_count = DEFAULT_MINCAP;
+    if (m_count == 0) m_count = DEFAULT_MINCAP;
 
     size_t max_cap = m_buf->max_cap;
 
-    WHILE_LOCKED(
-        if(unlikely(m_count <= bytes_in_use(make_snapshot(m_buf))))
-            break;
+    WHILE_LOCKED(if(unlikely(m_count <= bytes_in_use(make_snapshot(m_buf)))) break;
 
-        m_buf->min_cap = min(m_count, max_cap);
-        resize_buffer(m_buf, m_count);
-    );
+    m_buf->min_cap = min(m_count, max_cap); resize_buffer(m_buf, m_count););
 }
 
 void netbuf_eat(netbuf_t *m_buf, size_t m_len)

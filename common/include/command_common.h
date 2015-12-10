@@ -20,6 +20,9 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  *
  */
+#ifndef INCLUDE_COMMAND_COMMON_H
+#define INCLUDE_COMMAND_COMMON_H
+
 #include "command_list.h"
 
 int SIndex(enum singleCommand command);
@@ -27,3 +30,5 @@ const char* SName(enum singleCommand command);
 int MIndex(enum multiCommand command);
 const char* MName(enum multiCommand command);
 const char* CommandName(int is_multi, int command);
+
+#endif

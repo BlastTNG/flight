@@ -1,12 +1,32 @@
-/*
- *  © 2013 Columbia University.  All Rights Reserved.
- *  This file is part of STARS, the Star Tracking Attitude Reconstruction
- *  Software package, originally created for EBEX by Daniel Chapman.
+/**
+ * @file xsc_protocol.h
+ *
+ * @date Nov 23, 2012
+ * @author chappy
+ *
+ * @brief This file is part of FCP, created for the EBEX project
+ *
+ * This software is copyright (C) 2013 Columbia University
+ *
+ * FCP is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * FCP is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MCP; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
  */
 
 #pragma once
-#ifndef XSC_PROTOCOL_H
-#define XSC_PROTOCOL_H
+#ifndef INCLUDE_XSC_PROTOCOL_H
+#define INCLUDE_XSC_PROTOCOL_H
 
 #include <stdint.h>
 #ifdef _MSC_VER
@@ -109,9 +129,9 @@ XSCServerData;
 
 typedef enum
 {
-    xC_solver_fitting_method_none=0,
-    xC_solver_fitting_method_gaussian=1,
-    xC_solver_fitting_method_double_gaussian=2,
+    xC_solver_fitting_method_none = 0,
+    xC_solver_fitting_method_gaussian = 1,
+    xC_solver_fitting_method_double_gaussian = 2,
 }
 xsc_solver_fitting_method_t;
 
@@ -196,7 +216,6 @@ typedef struct XSCFilters
     double matching_pointing_error_threshold;
     double matching_fit_error_threshold_px;
     unsigned int matching_num_matched;
-
 } XSCFilters;
 
 typedef struct XSCSolverMask

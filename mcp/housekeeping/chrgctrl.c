@@ -66,7 +66,7 @@ static void* chrgctrlComm(void* cc);
 static unsigned int modbus_crc(unsigned char *buf, int start, int cnt);
 
 void nameThread(const char*);	      // in mcp.c
-extern short int InCharge;            // in tx.c
+extern int16_t InCharge;            // in tx.c
 
 //static int nlog = 0;                // counts number of frames printed to chrgctrl.log
 
@@ -792,7 +792,7 @@ int query_chrgctrl(int dev_addr, unsigned int start_addr, unsigned int count,
 
 int response_chrgctrl(int *dest, unsigned char *query, int fd)
 {
-  /*unsigned short crc, crc_calc;*/
+  /*uint16_t  crc, crc_calc;*/
   
   unsigned char data[MAX_RESPONSE_LENGTH];
   int temp;
@@ -902,7 +902,7 @@ int response_chrgctrl(int *dest, unsigned char *query, int fd)
     crc_calc = modbus_crc(data, 0, bytes_received - 2);
 
        last two received bytes are copied into high and low bytes 
-     * of unsigned short int crc 
+     * of uint16_t crc
 
     crc = data[bytes_received - 2];
     crc = (unsigned) crc << 8;

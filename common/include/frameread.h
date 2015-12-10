@@ -46,7 +46,7 @@ typedef uint16_t chunkindex_t;
 #elif SIZEOF_UNSIGNED == 4
 typedef unsigned chunkindex_t;
 #elif SIZEOF_UNSIGNED_SHORT == 4
-typedef unsigned short chunkindex_t;
+typedef uint16_t  chunkindex_t;
 #elif SIZEOF_UNSIGNED_LONG == 4
 typedef unsigned long chunkindex_t;
 #else

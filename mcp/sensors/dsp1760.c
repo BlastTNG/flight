@@ -34,7 +34,7 @@
 #include <dsp1760.h>
 
 static comms_serial_t *gyro_comm[2] = {NULL};
-static const char gyro_port[2][16] = {"/dev/ttyS2","/dev/ttyS3"};
+static const char gyro_port[2][16] = {"/dev/ttyS2", "/dev/ttyS3"};
 
 #define DSP1760_NPOLES 10
 #define DSP1760_GAIN   1.994635168
@@ -102,8 +102,8 @@ static dsp_storage_t    gyro_data[2] = {{0}};
  * so convert here to radians / second instead of radians per 0.001 second
  * @param m_gyro Pointer to the gyro storage
  */
-///TODO: Evaluate whether we want to use delta angle instead!
-///TODO: Change gyros to output degrees
+/// TODO(seth): Evaluate whether we want to use delta angle instead!
+/// TODO(seth): Change gyros to output degrees
 static void dsp1760_newvals(dsp_storage_t *m_gyro)
 {
     if (m_gyro->packet.status & DSP1760_STATUS_MASK_GY1)
@@ -237,7 +237,7 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
                  bool invalid_data = false;
 
                  crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
-                 if(crc_calc) {
+                 if (crc_calc) {
                      blast_warn("Received invalid CRC from Gyro %d", gyro->which);
                      invalid_data = true;
                  }
@@ -261,7 +261,8 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
                  pkt->crc = ntohl(pkt->crc);
 
                  if (pkt->sequence != (++gyro->seq_number & 0x7F)) {
-                     blast_warn("Expected Sequence %d but received %d from gyro %d", gyro->seq_number, pkt->sequence, gyro->which);
+                     blast_warn("Expected Sequence %d but received %d from gyro %d",
+                                gyro->seq_number, pkt->sequence, gyro->which);
                      gyro->seq_error_count++;
                  }
                  gyro->packet_count++;
@@ -289,24 +290,22 @@ static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userda
 
                  if (!invalid_data) dsp1760_newvals(gyro);
              }
-         }
-         else {
+         } else {
              if (buffer[i] == 0xFE)
                  pkt->raw_data[gyro->bpos++] = buffer[i];
          }
      }
 
      return i;
-
 }
 
-static void dsp1760_handle_error (int m_code, void *m_priv)
+static void dsp1760_handle_error(int m_code, void *m_priv)
 {
     comms_serial_t *port = (comms_serial_t*)m_priv;
     blast_err("Got error %d on gyro comm %s: %s", m_code, port->sock->host, strerror(m_code));
 }
 
-static int dsp1760_handle_finished (const void *m_data, size_t m_len, void *m_userdata __attribute__((unused)))
+static int dsp1760_handle_finished(const void *m_data, size_t m_len, void *m_userdata __attribute__((unused)))
 {
     comms_serial_t *port = (comms_serial_t*)m_userdata;
     if (port && port->sock && port->sock->host)
@@ -323,15 +322,13 @@ static int dsp1760_handle_finished (const void *m_data, size_t m_len, void *m_us
  */
 bool initialize_dsp1760_interface(void)
 {
-
     for (int i = 0; i < 2; i++) {
         BLAST_ZERO(gyro_data[i]);
         gyro_data[i].which = i;
         gyro_comm[i] = comms_serial_new(&gyro_data[i]);
     }
 
-    if (!gyro_comm[0] && !gyro_comm[1] )
-    {
+    if (!gyro_comm[0] && !gyro_comm[1]) {
         blast_err("Could not allocate any serial port for gyroscopes");
         return false;
     }

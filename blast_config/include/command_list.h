@@ -11,14 +11,13 @@
  *
  */
 
-#ifndef COMMAND_LIST_H
-#define COMMAND_LIST_H
+#ifndef INCLUDE_COMMAND_LIST_H
+#define INCLUDE_COMMAND_LIST_H
 
 #include <limits.h>
 #include <sys/types.h>
 
 #include "netcmd.h"  /* common parts of command defintions moved here */
-#include "isc_protocol.h"  /* required for constants */
 
 
 /* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
@@ -26,7 +25,7 @@
 #define N_MCOMMANDS 124        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
-#define MAX_15BIT (32767.)    //deprecated. Probably want CMD_I_MAX instead
+#define MAX_15BIT (32767.)    // deprecated. Probably want CMD_I_MAX instead
 #define CMD_I_MAX USHRT_MAX
 #define CMD_L_MAX UINT_MAX
 
@@ -69,7 +68,7 @@
 #define GR_TELEM        (1 << GRPOS_TELEM)
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
-//reserved for CONFIRM  0x80000000
+// reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
 extern const char *GroupNames[N_GROUPS];
@@ -89,11 +88,11 @@ enum singleCommand {
   xsc1_veto,        xsc1_allow,
   level_on,         level_off,
   mag_allow,        mag_veto,
-  pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,       
+  pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,
   pot_valve_open,   ramp,               reset_trims,
   stop,             pss_veto,		    trim_isc_to_osc,
   pss_allow,        trim_osc_to_isc,    autotrim_off,
-  trim_to_isc,      unlock,             lock_off,         
+  trim_to_isc,      unlock,             lock_off,
   force_el_on,      auto_jfetheat,      auto_cycle,
   actbus_cycle,
           hub232_cycle,     das_cycle,
@@ -111,13 +110,13 @@ enum singleCommand {
   rx_amps_off,	    rx_amps_on,
   charge_off,	    charge_on,		charge_cycle,
 
-  ifroll_1_gy_allow,ifroll_1_gy_veto,   ifroll_2_gy_allow,ifroll_2_gy_veto,
+  ifroll_1_gy_allow, ifroll_1_gy_veto,   ifroll_2_gy_allow, ifroll_2_gy_veto,
   ifyaw_1_gy_allow, ifyaw_1_gy_veto,    ifyaw_2_gy_allow, ifyaw_2_gy_veto,
   ifel_1_gy_allow,  ifel_1_gy_veto,	ifel_2_gy_allow,  ifel_2_gy_veto,
   ifroll_1_gy_off,  ifroll_1_gy_on,	ifroll_2_gy_off,  ifroll_2_gy_on,
   ifyaw_1_gy_off,   ifyaw_1_gy_on,	ifyaw_2_gy_off,	  ifyaw_2_gy_on,
   ifel_1_gy_off,    ifel_1_gy_on,	ifel_2_gy_off,	  ifel_2_gy_on,
-  ifroll_1_gy_cycle,ifroll_2_gy_cycle,  ifyaw_1_gy_cycle, ifyaw_2_gy_cycle,
+  ifroll_1_gy_cycle, ifroll_2_gy_cycle,  ifyaw_1_gy_cycle, ifyaw_2_gy_cycle,
   ifel_1_gy_cycle,  ifel_2_gy_cycle,    gybox_off,        gybox_on,
   hub232_off,      hub232_on,
   gybox_cycle,      ln_valve_on,      ln_valve_off,
@@ -134,7 +133,7 @@ enum singleCommand {
   hwpr_enc_off,     hwpr_enc_pulse,     balance_heat_on,  balance_heat_off,
   vtx1_isc,	    vtx1_osc,		vtx2_isc,
   vtx2_osc,	    cam_cycle,
-  cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens, 
+  cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens,
   cam_unforce_lens, hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
@@ -214,8 +213,8 @@ enum multiCommand {
   xsc_filter_eq_location,
   xsc_filter_matching,
 
-  plugh,                //plugh should be at the end of the list
-  sched_packet = 0xff   //not really a command, more of a placeholder
+  plugh,                // plugh should be at the end of the list
+  sched_packet = 0xff   // not really a command, more of a placeholder
 };
 
 extern struct scom scommands[N_SCOMMANDS];

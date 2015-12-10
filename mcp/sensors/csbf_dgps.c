@@ -64,7 +64,6 @@ static bool csbf_gps_verify_checksum(const char *m_buf, size_t m_linelen)
     return true;
 }
 static void process_pashr_pos(const char *m_data) {
-
     unsigned lat_deg;
     char lat_ns;
     unsigned lon_deg;
@@ -102,8 +101,8 @@ static void process_pashr_sa4(const char *m_data) {
     unsigned sat;
     unsigned antenna;
     if (sscanf(m_data, "$PASHR,SA4,"
-            "%u," //Antenna
-            "%u",//Number of Sat
+            "%u," // Antenna
+            "%u",// Number of Sat
     &antenna, &sat) == 2) {
         if (antenna > 0 && antenna < 5) {
             csbf_gps_att[csbf_dgpsatt_index].ant[antenna - 1] = sat;
@@ -114,16 +113,16 @@ static void process_pashr_sa4(const char *m_data) {
 static void process_gppat(const char *m_data) {
     if (sscanf(m_data,
             "$GPPAT,"
-                    "%*f," //UTC hhmmss.ss
-                    "%*f,%*c,"//Latitude ddmm.mmmmm N/S
-                    "%*f,%*c,"//Longitude dddmm.mmmmm E/W
-                    "%*f,"//Altitude
-                    "%lf,"//Heading
-                    "%lf,"//Pitch
-                    "%lf,"//Roll
-                    "%lf,"//MRMS
-                    "%lf,"//BRMS
-                    "%d",//Reset Flag
+                    "%*f,"      // UTC hhmmss.ss
+                    "%*f,%*c,"  // Latitude ddmm.mmmmm N/S
+                    "%*f,%*c,"  // Longitude dddmm.mmmmm E/W
+                    "%*f,"      // Altitude
+                    "%lf,"      // Heading
+                    "%lf,"      // Pitch
+                    "%lf,"      // Roll
+                    "%lf,"      // MRMS
+                    "%lf,"      // BRMS
+                    "%d",       // Reset Flag
             &csbf_gps_att[csbf_dgpsatt_index].az, &csbf_gps_att[csbf_dgpsatt_index].pitch,
             &csbf_gps_att[csbf_dgpsatt_index].roll, &csbf_gps_att[csbf_dgpsatt_index].mrms,
             &csbf_gps_att[csbf_dgpsatt_index].brms, &csbf_gps_att[csbf_dgpsatt_index].att_ok) == 6) {
@@ -200,7 +199,6 @@ static void csbf_gps_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_
 
 void initialize_csbf_gps_monitor(void)
 {
-
     if (csbf_gps_comm) ph_serial_free(csbf_gps_comm);
     csbf_gps_comm = ph_serial_open(CSBFGPSCOM, NULL, NULL);
 
@@ -210,5 +208,4 @@ void initialize_csbf_gps_monitor(void)
     ph_serial_enable(csbf_gps_comm, true);
 
     blast_startup("Initialized csbf gps status monitor");
-
 }

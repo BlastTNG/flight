@@ -25,8 +25,8 @@
  */
 
 
-#ifndef BLAST_NETSOCK_H_
-#define BLAST_NETSOCK_H_
+#ifndef INCLUDE_COMMS_NETSOCK_H
+#define INCLUDE_COMMS_NETSOCK_H
 #include <stdbool.h>
 #include <netinet/in.h>
 #include <time.h>
@@ -46,8 +46,8 @@ typedef struct comms_socket
     socket_t fd;
 
     char *host;
-    unsigned long timeout;
-    unsigned int port;
+    uint32_t timeout;
+    uint32_t port;
 
     struct sockaddr_in addr;
     socklen_t addrlen;
@@ -67,7 +67,6 @@ typedef struct comms_socket
     netbuf_t *in_buffer;
 
     void *priv_data;
-
 } comms_socket_t;
 
 comms_socket_t *comms_sock_new(void);

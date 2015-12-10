@@ -48,9 +48,9 @@ int calendar_to_julian_date(int m_year, int m_month, int m_day, struct julian_da
 	temp_m = (m_month - 14) / 12;
 
 	m_jd->epoch = MJD_EPOCH;
-	m_jd->mjd = (double) ((long)m_day + (1461L * (long)(m_year + 4800L + temp_m)) / 4L
-					+ (367L * (long)(m_month - 2 - temp_m * 12)) / 12L
-					- (3L * (long)((m_year + 4900L + temp_m) / 100L)) / 4L
+	m_jd->mjd = (double) ((int32_t)m_day + (1461L * (int32_t)(m_year + 4800L + temp_m)) / 4L
+					+ (367L * (int32_t)(m_month - 2 - temp_m * 12)) / 12L
+					- (3L * (int32_t)((m_year + 4900L + temp_m) / 100L)) / 4L
 					- 2432076L);
 
 	return 0;

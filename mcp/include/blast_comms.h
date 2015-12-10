@@ -24,14 +24,14 @@
  *
  */
 
-#ifndef BLAST_COMMS_H_
-#define BLAST_COMMS_H_
+#ifndef INCLUDE_BLAST_COMMS_H_
+#define INCLUDE_BLAST_COMMS_H_
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <comms_serial.h>
 #include <comms_common.h>
 #include <comms_netsock.h>
+#include <comms_serial.h>
 
 #define BLAST_CMD_SERVER_PORT 41414
 

@@ -56,34 +56,30 @@ static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, ui
  */
 static int comms_sock_get_addrinfo(const char *m_hostname, uint32_t m_port, bool m_udp, struct addrinfo **m_ai)
 {
-	char *service = NULL;
-	struct addrinfo request = {0};
-	int retval = 0;
+    char *service = NULL;
+    struct addrinfo request = { 0 };
+    int retval = 0;
 
-	log_enter();
+    log_enter();
 
-	if (!m_udp)
-	{
-		request.ai_protocol = IPPROTO_TCP;
-		request.ai_socktype = SOCK_STREAM;
-	}
-	else
-	{
-		request.ai_protocol = IPPROTO_UDP;
-		request.ai_socktype = SOCK_DGRAM;
-	}
+    if (!m_udp) {
+        request.ai_protocol = IPPROTO_TCP;
+        request.ai_socktype = SOCK_STREAM;
+    } else {
+        request.ai_protocol = IPPROTO_UDP;
+        request.ai_socktype = SOCK_DGRAM;
+    }
 
-	request.ai_family = PF_UNSPEC;
-	request.ai_flags = AI_PASSIVE;
-	if (m_port)
-	{
-		blast_tmp_sprintf(service, "%hu", m_port);
-		request.ai_flags = AI_NUMERICSERV;
-	}
-	retval = getaddrinfo(m_hostname, service, &request, m_ai);
-	log_leave();
+    request.ai_family = PF_UNSPEC;
+    request.ai_flags = AI_PASSIVE;
+    if (m_port) {
+        blast_tmp_sprintf(service, "%hu", m_port);
+        request.ai_flags = AI_NUMERICSERV;
+    }
+    retval = getaddrinfo(m_hostname, service, &request, m_ai);
+    log_leave();
 
-	return retval;
+    return retval;
 }
 
 /**
@@ -94,41 +90,38 @@ static int comms_sock_get_addrinfo(const char *m_hostname, uint32_t m_port, bool
  */
 static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, bool m_udp)
 {
-	socket_t sock = -1;
-	int retval;
-	struct addrinfo *addrinfo_group;
-	struct addrinfo *ai;
+    socket_t sock = -1;
+    int retval;
+    struct addrinfo *addrinfo_group;
+    struct addrinfo *ai;
 
-	log_enter();
+    log_enter();
 
-	retval = comms_sock_get_addrinfo(m_hostname, m_port, m_udp, &addrinfo_group);
-	if (retval != 0)
-	{
-		blast_err("Failed to resolve hostname %s (%s)", m_hostname, gai_strerror(retval));
-		log_leave();
-		return NETSOCK_ERR;
-	}
+    retval = comms_sock_get_addrinfo(m_hostname, m_port, m_udp, &addrinfo_group);
+    if (retval != 0) {
+        blast_err("Failed to resolve hostname %s (%s)", m_hostname, gai_strerror(retval));
+        log_leave();
+        return NETSOCK_ERR;
+    }
 
-	for (ai = addrinfo_group; ai != NULL; ai = ai->ai_next)
-	{
-		/* create socket */
-		sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if (sock < 0)
-		{
-			blast_err("Socket create failed: %s", strerror(errno));
-			continue;
-		}
+    for (ai = addrinfo_group; ai != NULL; ai = ai->ai_next) {
+        /* create socket */
+        sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        if (sock < 0) {
+            blast_err("Socket create failed: %s", strerror(errno));
+            continue;
+        }
 
-		fcntl(sock, F_SETFL, O_NONBLOCK);
+        fcntl(sock, F_SETFL, O_NONBLOCK);
 
-		if (!m_udp) connect(sock, ai->ai_addr, ai->ai_addrlen);
-		break;
-	}
+        if (!m_udp) connect(sock, ai->ai_addr, ai->ai_addrlen);
+        break;
+    }
 
-	freeaddrinfo(addrinfo_group);
-	log_leave();
+    freeaddrinfo(addrinfo_group);
+    log_leave();
 
-	return sock;
+    return sock;
 }
 
 /**
@@ -140,57 +133,52 @@ static socket_t comms_sock_connect_fd(const char *m_hostname, uint32_t m_port, b
  */
 static socket_t comms_sock_bind(const char *m_hostname, uint32_t m_port, bool m_udp)
 {
-	socket_t sock = -1;
-	int retval;
-	struct addrinfo *addrinfo_group;
-	struct addrinfo *ai;
-	int sock_opt = 1;
+    socket_t sock = -1;
+    int retval;
+    struct addrinfo *addrinfo_group;
+    struct addrinfo *ai;
+    int sock_opt = 1;
 
-	log_enter();
+    log_enter();
 
-	retval = comms_sock_get_addrinfo(m_hostname, m_port, m_udp, &addrinfo_group);
-	if (retval != 0)
-	{
-		blast_err("Failed to resolve hostname %s (%s)", m_hostname, gai_strerror(retval));
-		log_leave();
-		return NETSOCK_ERR;
-	}
+    retval = comms_sock_get_addrinfo(m_hostname, m_port, m_udp, &addrinfo_group);
+    if (retval != 0) {
+        blast_err("Failed to resolve hostname %s (%s)", m_hostname, gai_strerror(retval));
+        log_leave();
+        return NETSOCK_ERR;
+    }
 
-	for (ai = addrinfo_group; ai != NULL; ai = ai->ai_next)
-	{
-		/* create socket */
-		sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if (sock < 0)
-		{
-			blast_err("Socket create failed: %s", strerror(errno));
-			continue;
-		}
+    for (ai = addrinfo_group; ai != NULL; ai = ai->ai_next) {
+        /* create socket */
+        sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        if (sock < 0) {
+            blast_err("Socket create failed: %s", strerror(errno));
+            continue;
+        }
 
-		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &sock_opt, sizeof(sock_opt)) < 0)
-		{
-			freeaddrinfo(addrinfo_group);
-			close(sock);
-			log_leave();
-			blast_err("Couldn't reuse socket for port %d", m_port);
-			return NETSOCK_ERR;
-		}
+        if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &sock_opt, sizeof(sock_opt)) < 0) {
+            freeaddrinfo(addrinfo_group);
+            close(sock);
+            log_leave();
+            blast_err("Couldn't reuse socket for port %d", m_port);
+            return NETSOCK_ERR;
+        }
 
-		if (bind(sock, ai->ai_addr, ai->ai_addrlen))
-		{
-			freeaddrinfo(addrinfo_group);
-			close(sock);
-			log_leave();
-			blast_err("Couldn't bind to socket for port %d", m_port);
-			return NETSOCK_ERR;
-		}
+        if (bind(sock, ai->ai_addr, ai->ai_addrlen)) {
+            freeaddrinfo(addrinfo_group);
+            close(sock);
+            log_leave();
+            blast_err("Couldn't bind to socket for port %d", m_port);
+            return NETSOCK_ERR;
+        }
 
-		break;
-	}
+        break;
+    }
 
-	freeaddrinfo(addrinfo_group);
-	log_leave();
+    freeaddrinfo(addrinfo_group);
+    log_leave();
 
-	return sock;
+    return sock;
 }
 
 /**
@@ -203,64 +191,56 @@ static socket_t comms_sock_bind(const char *m_hostname, uint32_t m_port, bool m_
  */
 int comms_sock_join_mcast(comms_socket_t *m_socket, in_addr_t m_group)
 {
-	struct ip_mreq multicast_req = {{0},{0}};
+    struct ip_mreq multicast_req = { { 0 }, { 0 } };
 
-	multicast_req.imr_multiaddr.s_addr = m_group;		/// Group membership
-	multicast_req.imr_interface.s_addr = INADDR_ANY;	/// Local interface address (any)
+    multicast_req.imr_multiaddr.s_addr = m_group;		/// Group membership
+    multicast_req.imr_interface.s_addr = INADDR_ANY;	/// Local interface address (any)
 
-	if (setsockopt(m_socket->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast_req, sizeof(multicast_req)))
-	{
-		blast_strerror("Cannot join multicast group!");
-		return NETSOCK_ERR;
-	}
+    if (setsockopt(m_socket->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast_req, sizeof(multicast_req))) {
+        blast_strerror("Cannot join multicast group!");
+        return NETSOCK_ERR;
+    }
 
-	return NETSOCK_OK;
+    return NETSOCK_OK;
 }
 
 int comms_sock_set_buffer(comms_socket_t *m_socket, int m_size)
 {
+    if (setsockopt(m_socket->fd, SOL_SOCKET, SO_RCVBUF, &m_size, sizeof(int))) {
+        blast_strerror("Cannot set socket receive buffer!");
+        return NETSOCK_ERR;
+    }
 
-	if (setsockopt(m_socket->fd, SOL_SOCKET, SO_RCVBUF, &m_size, sizeof(int)))
-	{
-		blast_strerror("Cannot set socket receive buffer!");
-		return NETSOCK_ERR;
-	}
-
-	return NETSOCK_OK;
+    return NETSOCK_OK;
 }
 
 static int comms_sock_listen_generic(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port, bool m_udp)
 {
-	socket_t fd;
+    socket_t fd;
 
-	BLAST_SAFE_FREE(m_socket->host);
-	if (!m_hostname)
-	{
-		m_socket->host = strdup("0.0.0.0");
-	}
-	else
-	{
-		m_socket->host = strdup(m_hostname);
-	}
+    BLAST_SAFE_FREE(m_socket->host);
+    if (!m_hostname) {
+        m_socket->host = strdup("0.0.0.0");
+    } else {
+        m_socket->host = strdup(m_hostname);
+    }
 
-	m_socket->port = m_port;
+    m_socket->port = m_port;
 
-	if ((fd = comms_sock_bind(m_socket->host, m_port, m_udp)) == NETSOCK_ERR)
-	{
-		BLAST_SAFE_FREE(m_socket->host);
-		return NETSOCK_ERR;
-	}
+    if ((fd = comms_sock_bind(m_socket->host, m_port, m_udp)) == NETSOCK_ERR) {
+        BLAST_SAFE_FREE(m_socket->host);
+        return NETSOCK_ERR;
+    }
 
-	comms_sock_set_fd(m_socket, fd);
+    comms_sock_set_fd(m_socket, fd);
 
-	if (listen(fd, 16))
-	{
-		close(fd);
-		BLAST_SAFE_FREE(m_socket->host);
-		return NETSOCK_ERR;
-	}
+    if (listen(fd, 16)) {
+        close(fd);
+        BLAST_SAFE_FREE(m_socket->host);
+        return NETSOCK_ERR;
+    }
 
-	return NETSOCK_OK;
+    return NETSOCK_OK;
 }
 /**
  * Starts listening on a given port.
@@ -271,7 +251,7 @@ static int comms_sock_listen_generic(comms_socket_t *m_socket, const char *m_hos
  */
 int comms_sock_listen(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port)
 {
-	return comms_sock_listen_generic(m_socket, m_hostname, m_port, false);
+    return comms_sock_listen_generic(m_socket, m_hostname, m_port, false);
 }
 
 /**
@@ -283,7 +263,7 @@ int comms_sock_listen(comms_socket_t *m_socket, const char *m_hostname, uint32_t
  */
 int comms_sock_listen_udp(comms_socket_t *m_socket, const char *m_hostname, uint32_t m_port)
 {
-	return comms_sock_listen_generic(m_socket, m_hostname, m_port, true);
+    return comms_sock_listen_generic(m_socket, m_hostname, m_port, true);
 }
 
 /**
@@ -294,35 +274,33 @@ int comms_sock_listen_udp(comms_socket_t *m_socket, const char *m_hostname, uint
  */
 socket_t comms_sock_accept(comms_socket_t *m_socket)
 {
-	socket_t fd = 0;
-	struct sockaddr_in sa;
-	socklen_t sl = sizeof(sa);
+    socket_t fd = 0;
+    struct sockaddr_in sa;
+    socklen_t sl = sizeof(sa);
 
-	if ((fd = accept(m_socket->fd, &sa, &sl)) < 0)
-	{
-		m_socket->last_errno = errno;
-		switch(m_socket->last_errno)
-		{
-			case EAGAIN:
-				return NETSOCK_AGAIN;
-			case EMFILE:
-			case ENFILE:
-				blast_err("WARNING!  File number limitations have been reached! ");
-				return NETSOCK_ERR;
-			default:
-				blast_strerror("Could not accept new connection");
-				return NETSOCK_ERR;
-		}
-	}
+    if ((fd = accept(m_socket->fd, &sa, &sl)) < 0) {
+        m_socket->last_errno = errno;
+        switch (m_socket->last_errno) {
+            case EAGAIN:
+                return NETSOCK_AGAIN;
+            case EMFILE:
+            case ENFILE:
+                blast_err("WARNING!  File number limitations have been reached! ");
+                return NETSOCK_ERR;
+            default:
+                blast_strerror("Could not accept new connection");
+                return NETSOCK_ERR;
+        }
+    }
 
-	fcntl(fd, F_SETFL, O_NONBLOCK);
+    fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	if(m_socket->host) free(m_socket->host);
-	memcpy(&m_socket->addr, &sa, sl);
-	m_socket->host = strdup(inet_ntoa(sa.sin_addr));
+    if (m_socket->host) free(m_socket->host);
+    memcpy(&m_socket->addr, &sa, sl);
+    m_socket->host = strdup(inet_ntoa(sa.sin_addr));
 
-	blast_info("Received connection from %s", m_socket->host);
-	return fd;
+    blast_info("Received connection from %s", m_socket->host);
+    return fd;
 }
 /**
  * Allocates space for a new socket structure
@@ -330,39 +308,37 @@ socket_t comms_sock_accept(comms_socket_t *m_socket)
  */
 comms_socket_t *comms_sock_new(void)
 {
-	comms_socket_t *sock;
+    comms_socket_t *sock;
 
-	sock = (comms_socket_t *)calloc(1,sizeof(struct comms_socket));
-	if (!sock) return NULL;
+    sock = (comms_socket_t *) calloc(1, sizeof(struct comms_socket));
+    if (!sock) return NULL;
 
-	log_enter();
+    log_enter();
 
-	sock->can_read = false;
-	sock->can_write = false;
-	sock->have_exception = false;
-	sock->poll_handle = NULL;
-	sock->state = NETSOCK_STATE_NONE;
-	sock->fd = INVALID_SOCK;
-	sock->last_errno = -1;
-	sock->is_socket = true;
-	sock->in_buffer = netbuf_new(1, 4*1024*1024);
-	if (!sock->in_buffer)
-	{
-		BLAST_SAFE_FREE(sock);
-		blast_err("Could not allocate in_buffer");
-		return NULL;
-	}
-	sock->out_buffer = netbuf_new(1, 1024*1024);
-	if (!sock->out_buffer)
-	{
-		netbuf_free(sock->in_buffer);
-		BLAST_SAFE_FREE(sock);
-		log_leave("Could not allocate out_buffer");
-		return NULL;
-	}
+    sock->can_read = false;
+    sock->can_write = false;
+    sock->have_exception = false;
+    sock->poll_handle = NULL;
+    sock->state = NETSOCK_STATE_NONE;
+    sock->fd = INVALID_SOCK;
+    sock->last_errno = -1;
+    sock->is_socket = true;
+    sock->in_buffer = netbuf_new(1, 4 * 1024 * 1024);
+    if (!sock->in_buffer) {
+        BLAST_SAFE_FREE(sock);
+        blast_err("Could not allocate in_buffer");
+        return NULL;
+    }
+    sock->out_buffer = netbuf_new(1, 1024 * 1024);
+    if (!sock->out_buffer) {
+        netbuf_free(sock->in_buffer);
+        BLAST_SAFE_FREE(sock);
+        log_leave("Could not allocate out_buffer");
+        return NULL;
+    }
 
-	log_leave();
-	return sock;
+    log_leave();
+    return sock;
 }
 
 /**
@@ -371,37 +347,36 @@ comms_socket_t *comms_sock_new(void)
  */
 void comms_sock_reset(comms_socket_t **m_sock)
 {
-	log_enter();
-	if (!(*m_sock))
-	{
-		*m_sock = comms_sock_new();
-		return;
-	}
-	comms_sock_close(*m_sock);
+    log_enter();
+    if (!(*m_sock)) {
+        *m_sock = comms_sock_new();
+        return;
+    }
+    comms_sock_close(*m_sock);
 
-	(*m_sock)->fd = INVALID_SOCK;
-	(*m_sock)->last_errno = -1;
-	(*m_sock)->is_socket = true;
-	netbuf_reinit((*m_sock)->in_buffer);
-	netbuf_reinit((*m_sock)->out_buffer);
-	(*m_sock)->can_read = false;
-	(*m_sock)->can_write = false;
-	(*m_sock)->have_exception = false;
-	BLAST_ZERO((*m_sock)->callbacks);
-	(*m_sock)->poll_handle = comms_sock_get_poll_handle(*m_sock);
-	(*m_sock)->state = NETSOCK_STATE_NONE;
-	(*m_sock)->flags = 0;
-	log_leave();
+    (*m_sock)->fd = INVALID_SOCK;
+    (*m_sock)->last_errno = -1;
+    (*m_sock)->is_socket = true;
+    netbuf_reinit((*m_sock)->in_buffer);
+    netbuf_reinit((*m_sock)->out_buffer);
+    (*m_sock)->can_read = false;
+    (*m_sock)->can_write = false;
+    (*m_sock)->have_exception = false;
+    BLAST_ZERO((*m_sock)->callbacks);
+    (*m_sock)->poll_handle = comms_sock_get_poll_handle(*m_sock);
+    (*m_sock)->state = NETSOCK_STATE_NONE;
+    (*m_sock)->flags = 0;
+    log_leave();
 }
 
 void comms_sock_set_flags(comms_socket_t *m_sock, int m_flags)
 {
-	m_sock->flags = m_flags;
+    m_sock->flags = m_flags;
 }
 
 static inline bool comms_sock_is_open(comms_socket_t *s)
 {
-	return (s->fd != INVALID_SOCK);
+    return (s->fd != INVALID_SOCK);
 }
 
 /**
@@ -414,337 +389,287 @@ static inline bool comms_sock_is_open(comms_socket_t *s)
  */
 static int comms_sock_poll(comms_net_async_handle_t *m_handle, socket_t m_fd, uint16_t m_events, void *m_sock)
 {
-	comms_socket_t *sock = (comms_socket_t*) m_sock;
-	char buffer[COMMS_NETSOCK_BUF_SIZE];
-	int retval = 0;
-	socklen_t errlen = sizeof(sock->last_errno);
+    comms_socket_t *sock = (comms_socket_t*) m_sock;
+    char buffer[COMMS_NETSOCK_BUF_SIZE];
+    int retval = 0;
+    socklen_t errlen = sizeof(sock->last_errno);
 
-	log_enter();
-	if (!comms_sock_is_open(sock))
-	{
-		log_leave();
-		return NETSOCK_ERR;
-	}
+    log_enter();
+    if (!comms_sock_is_open(sock)) {
+        log_leave();
+        return NETSOCK_ERR;
+    }
 
-	if (m_events & POLLERR)
-	{
-		/**
-		 * If we catch an error while connecting, we use getsockopt to try and determine the cause of the error.
-		 * The connected callback in then fired with NETSOCK_ERR
-		 */
-		if (sock->state == NETSOCK_STATE_CONNECTING)
-		{
-			sock->state = NETSOCK_STATE_ERROR;
-			blast_err("Got error while connecting to %s", sock->host);
-			if (sock->is_socket)
-				getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void *) &sock->last_errno, &errlen);
+    if (m_events & POLLERR) {
+        /**
+         * If we catch an error while connecting, we use getsockopt to try and determine the cause of the error.
+         * The connected callback in then fired with NETSOCK_ERR
+         */
+        if (sock->state == NETSOCK_STATE_CONNECTING) {
+            sock->state = NETSOCK_STATE_ERROR;
+            blast_err("Got error while connecting to %s", sock->host);
+            if (sock->is_socket) getsockopt(m_fd, SOL_SOCKET, SO_ERROR, (void *) &sock->last_errno, &errlen);
 
-			comms_sock_close(sock);
-			if (sock->callbacks.connected)
-			{
-				sock->callbacks.connected(NETSOCK_ERR, sock->last_errno, sock->callbacks.priv);
-			}
-			log_leave();
-			return NETSOCK_ERR;
-		}
-		/**
-		 * If we catch an error and we are not trying to connect, then we fall through to the POLLIN handler to
-		 * process the error
-		 */
+            comms_sock_close(sock);
+            if (sock->callbacks.connected) {
+                sock->callbacks.connected(NETSOCK_ERR, sock->last_errno, sock->callbacks.priv);
+            }log_leave();
+            return NETSOCK_ERR;
+        }
+        /**
+         * If we catch an error and we are not trying to connect, then we fall through to the POLLIN handler to
+         * process the error
+         */
 
-		comms_net_async_del_events(m_handle, POLLERR);
-		m_events |= POLLIN;
-	}
-	if (m_events & (POLLIN | POLLPRI))
-	{
-		sock->can_read = true;
-		retval = comms_sock_raw_read(sock, buffer, sizeof(buffer));
-		/**
-		 * Caught an error.  Likely broken pipe.  Errno is stored in the sock struct.
-		 */
-		if (retval < 0)
-		{
-			retval = -1;
-			if (m_handle)
-			{
-				comms_net_async_del_events(m_handle, POLLIN|POLLERR);
-			}
-			if (sock->callbacks.error)
-			{
-				sock->callbacks.error(sock->last_errno, sock->callbacks.priv);
-			}
-		}
+        comms_net_async_del_events(m_handle, POLLERR);
+        m_events |= POLLIN;
+    }
+    if (m_events & (POLLIN | POLLPRI)) {
+        sock->can_read = true;
+        retval = comms_sock_raw_read(sock, buffer, sizeof(buffer));
+        /**
+         * Caught an error.  Likely broken pipe.  Errno is stored in the sock struct.
+         */
+        if (retval < 0) {
+            retval = -1;
+            if (m_handle) {
+                comms_net_async_del_events(m_handle, POLLIN | POLLERR);
+            }
+            if (sock->callbacks.error) {
+                sock->callbacks.error(sock->last_errno, sock->callbacks.priv);
+            }
+        }
 
-		/**
-		 * No more data are available.  This is the EOF condition
-		 */
-		if (retval == 0)
-		{
-			comms_net_async_del_events(m_handle, POLLIN);
-			m_events |= POLLHUP;
-		}
+        /**
+         * No more data are available.  This is the EOF condition
+         */
+        if (retval == 0) {
+            comms_net_async_del_events(m_handle, POLLIN);
+            m_events |= POLLHUP;
+        }
 
-		/**
-		 * Got actual data.  Buffer it and pass on to the user callback function
-		 */
-		if (retval > 0)
-		{
-		    size_t written = netbuf_write(sock->in_buffer, buffer, retval);
-		    size_t to_write = retval - written;
-			if (sock->callbacks.data)
-			{
-			    void *data;
-			    size_t len = netbuf_peek(sock->in_buffer, &data);
+        /**
+         * Got actual data.  Buffer it and pass on to the user callback function
+         */
+        if (retval > 0) {
+            size_t written = netbuf_write(sock->in_buffer, buffer, retval);
+            size_t to_write = retval - written;
+            if (sock->callbacks.data) {
+                void *data;
+                size_t len = netbuf_peek(sock->in_buffer, &data);
 
-			    if (len) {
-                    retval = sock->callbacks.data(	data, len,
-                                                    sock->callbacks.priv);
+                if (len) {
+                    retval = sock->callbacks.data(data, len, sock->callbacks.priv);
 
                     if (retval > 0) netbuf_eat(sock->in_buffer, retval);
 
                     if (netbuf_bytes_available(sock->in_buffer)) comms_net_async_add_events(m_handle, POLLIN);
                     free(data);
-			    }
-			}
-			/// If we didn't get everything in, try one more time
-			if (to_write) {
-			    if (netbuf_write(sock->in_buffer, buffer + written, to_write))
-			        blast_warn("Discarding data due to overfull in_buffer on %s", sock->host?sock->host:"(NULL)");
-			}
-		}
-	}
-	if (m_events & POLLHUP)
-	{
-		if (sock->callbacks.finished)
-		{
+                }
+            }
+            /// If we didn't get everything in, try one more time
+            if (to_write) {
+                if (netbuf_write(sock->in_buffer, buffer + written, to_write)) blast_warn(
+                        "Discarding data due to overfull in_buffer on %s", sock->host ? sock->host : "(NULL)");
+            }
+        }
+    }
+    if (m_events & POLLHUP) {
+        if (sock->callbacks.finished) {
             void *data;
             size_t len = netbuf_peek(sock->in_buffer, &data);
 
             if (len) {
-                sock->callbacks.finished( data, len, sock->callbacks.priv);
+                sock->callbacks.finished(data, len, sock->callbacks.priv);
                 if (sock->in_buffer) netbuf_eat(sock->in_buffer, len);
                 free(data);
             }
             sock->state = NETSOCK_STATE_CLOSED;
-		}
-		log_leave();
-		return NETSOCK_OK;
-	}
-	if (m_events & POLLOUT)
-	{
-		if (sock->state == NETSOCK_STATE_CONNECTING)
-		{
-			sock->state = NETSOCK_STATE_CONNECTED;
-			comms_net_async_set_events(m_handle, POLLPRI | POLLIN | POLLOUT);
-			fcntl(sock->fd, F_SETFL, 0);
+        }log_leave();
+        return NETSOCK_OK;
+    }
+    if (m_events & POLLOUT) {
+        if (sock->state == NETSOCK_STATE_CONNECTING) {
+            sock->state = NETSOCK_STATE_CONNECTED;
+            comms_net_async_set_events(m_handle, POLLPRI | POLLIN | POLLOUT);
+            fcntl(sock->fd, F_SETFL, 0);
 
-			if (sock->callbacks.connected)
-			{
-				sock->callbacks.connected(NETSOCK_OK, 0, sock->callbacks.priv);
-			}
+            if (sock->callbacks.connected) {
+                sock->callbacks.connected(NETSOCK_OK, 0, sock->callbacks.priv);
+            }
 
-			log_leave();
-			return NETSOCK_OK;
-		}
+            log_leave();
+            return NETSOCK_OK;
+        }
 
-		sock->can_write = true;
-		comms_net_async_del_events(m_handle, POLLOUT);
+        sock->can_write = true;
+        comms_net_async_del_events(m_handle, POLLOUT);
 
-		if (netbuf_bytes_available(sock->out_buffer))
-		{
-			comms_sock_flush(sock);
-		}
-		else if (sock->callbacks.control)
-		{
-			sock->callbacks.control(NETSOCK_WRITABLE, sock->callbacks.priv);
-		}
-	}
+        if (netbuf_bytes_available(sock->out_buffer)) {
+            comms_sock_flush(sock);
+        } else if (sock->callbacks.control) {
+            sock->callbacks.control(NETSOCK_WRITABLE, sock->callbacks.priv);
+        }
+    }
 
-	log_leave();
-	return retval;
+    log_leave();
+    return retval;
 }
 
 comms_net_async_handle_t *comms_sock_get_poll_handle(comms_socket_t *m_sock)
 {
-	log_enter();
-	if (!m_sock->poll_handle)
-	{
-		m_sock->poll_handle = comms_net_async_handler_new(m_sock->fd, 0, comms_sock_poll, m_sock);
-	}
-	log_leave();
-	return m_sock->poll_handle;
+    log_enter();
+    if (!m_sock->poll_handle) {
+        m_sock->poll_handle = comms_net_async_handler_new(m_sock->fd, 0, comms_sock_poll, m_sock);
+    }log_leave();
+    return m_sock->poll_handle;
 }
 
 void comms_sock_free(comms_socket_t *m_sock)
 {
-	log_enter();
-	if (!m_sock)
-	{
-		log_leave("No socket");
-		return;
-	}
+    log_enter();
+    if (!m_sock) {
+        log_leave("No socket");
+        return;
+    }
 
-	comms_sock_close(m_sock);
-	netbuf_free(m_sock->in_buffer);
-	netbuf_free(m_sock->out_buffer);
-	BLAST_SAFE_FREE(m_sock->host);
-	BLAST_SAFE_FREE(m_sock);
-	log_leave("Freed");
+    comms_sock_close(m_sock);
+    netbuf_free(m_sock->in_buffer);
+    netbuf_free(m_sock->out_buffer);
+    BLAST_SAFE_FREE(m_sock->host);
+    BLAST_SAFE_FREE(m_sock);
+    log_leave("Freed");
 }
-
 
 void comms_sock_close(comms_socket_t *m_sock)
 {
-	log_enter();
-	if (comms_sock_is_open(m_sock))
-	{
-		if (close(m_sock->fd) == -1) m_sock->last_errno = errno;
+    log_enter();
+    if (comms_sock_is_open(m_sock)) {
+        if (close(m_sock->fd) == -1) m_sock->last_errno = errno;
 
-		m_sock->fd = INVALID_SOCK;
-		m_sock->state = NETSOCK_STATE_CLOSED;
-	}
-	if (m_sock->poll_handle)
-	{
-		comms_net_async_handler_free(m_sock->poll_handle);
-		m_sock->poll_handle = NULL;
-	}
-	log_leave("Closed");
+        m_sock->fd = INVALID_SOCK;
+        m_sock->state = NETSOCK_STATE_CLOSED;
+    }
+    if (m_sock->poll_handle) {
+        comms_net_async_handler_free(m_sock->poll_handle);
+        m_sock->poll_handle = NULL;
+    }log_leave("Closed");
 }
 
 void comms_sock_set_fd(comms_socket_t *m_sock, socket_t m_fd)
 {
-	log_enter();
-	m_sock->fd = m_fd;
-	if (m_sock->poll_handle)
-	{
-		comms_net_async_set_sock(m_sock->poll_handle, m_fd);
-	}
+    log_enter();
+    m_sock->fd = m_fd;
+    if (m_sock->poll_handle) {
+        comms_net_async_set_sock(m_sock->poll_handle, m_fd);
+    }
 
-	log_leave();
+    log_leave();
 }
-
 
 static int comms_sock_raw_read(comms_socket_t *m_sock, void *m_buf, size_t m_len)
 {
-	int retval = NETSOCK_ERR;
+    int retval = NETSOCK_ERR;
 
-	log_enter();
-	if (m_sock->have_exception)
-	{
-		log_leave();
-		return NETSOCK_ERR;
-	}
-	if (m_sock->is_socket)
-	{
-		m_sock->addrlen = sizeof(m_sock->addr);
-		retval = recvfrom(m_sock->fd, m_buf, m_len, 0, &m_sock->addr, &m_sock->addrlen);
-	}
-	else
-	{
-		retval = read(m_sock->fd, m_buf, m_len);
-	}
+    log_enter();
+    if (m_sock->have_exception) {
+        log_leave();
+        return NETSOCK_ERR;
+    }
+    if (m_sock->is_socket) {
+        m_sock->addrlen = sizeof(m_sock->addr);
+        retval = recvfrom(m_sock->fd, m_buf, m_len, 0, &m_sock->addr, &m_sock->addrlen);
+    } else {
+        retval = read(m_sock->fd, m_buf, m_len);
+    }
 
-	m_sock->last_errno = errno;
-	m_sock->can_read = false;
+    m_sock->last_errno = errno;
+    m_sock->can_read = false;
 
-	if (retval < 0)
-	{
-		m_sock->have_exception = true;
-	}
+    if (retval < 0) {
+        m_sock->have_exception = true;
+    }
 
-	log_leave();
-	return retval;
+    log_leave();
+    return retval;
 }
 
 static int comms_sock_raw_write(comms_socket_t *m_sock, const void *m_buf, size_t m_len)
 {
-	ssize_t retval = NETSOCK_ERR;
+    ssize_t retval = NETSOCK_ERR;
 
-	log_enter();
-	if (m_sock->have_exception)
-	{
-		log_leave();
-		return NETSOCK_ERR;
-	}
+    log_enter();
+    if (m_sock->have_exception) {
+        log_leave();
+        return NETSOCK_ERR;
+    }
 
-	if (m_sock->is_socket)
-	{
-		if (m_sock->udp)
-		{
-			retval = sendto(m_sock->fd, m_buf, m_len, m_sock->flags, &m_sock->addr, m_sock->addrlen);
-		}
-		else
-		{
-			/// Cap the maximum we send at any given point to the default segment size for TCP
-			m_len = min(m_len, DEFAULT_MTU);
-			retval = send(m_sock->fd, m_buf, m_len, m_sock->flags);
-		}
-	}
-	else
-		retval = write(m_sock->fd, m_buf, m_len);
+    if (m_sock->is_socket) {
+        if (m_sock->udp) {
+            retval = sendto(m_sock->fd, m_buf, m_len, m_sock->flags, &m_sock->addr, m_sock->addrlen);
+        } else {
+            /// Cap the maximum we send at any given point to the default segment size for TCP
+            m_len = min(m_len, DEFAULT_MTU);
+            retval = send(m_sock->fd, m_buf, m_len, m_sock->flags);
+        }
+    } else {
+        retval = write(m_sock->fd, m_buf, m_len);
+    }
 
-	m_sock->last_errno = errno;
+    m_sock->last_errno = errno;
 
-	if (m_sock->poll_handle)
-	{
-		comms_net_async_add_events(m_sock->poll_handle, POLLOUT);
-	}
-	if (retval < 0)
-	{
-		m_sock->have_exception = true;
-	}
+    if (m_sock->poll_handle) {
+        comms_net_async_add_events(m_sock->poll_handle, POLLOUT);
+    }
+    if (retval < 0) {
+        m_sock->have_exception = true;
+    }
 
-	log_leave();
-	return retval;
+    log_leave();
+    return retval;
 }
 
 int comms_sock_write(comms_socket_t *m_sock, const void *m_buf, size_t m_len)
 {
-	if (m_len)
-	{
-	    if (!m_sock) return NETSOCK_ERR;
+    if (m_len) {
+        if (!m_sock) return NETSOCK_ERR;
 
-	    if (m_sock->state != NETSOCK_STATE_CONNECTING && m_sock->state != NETSOCK_STATE_CONNECTED)
-	    {
-	        blast_err("Can not write to socket %s in state %d", m_sock->host?m_sock->host:"(Unknown host)", m_sock->state);
-	        return NETSOCK_ERR;
-	    }
-		if (!netbuf_write(m_sock->out_buffer, m_buf, m_len))
-		{
-			blast_err("Could not buffer data on %s", m_sock->host?m_sock->host:"(NULL)");
-			return NETSOCK_ERR;
-		}
-		if (m_sock->state == NETSOCK_STATE_CONNECTED) return comms_sock_flush(m_sock);
-	}
+        if (m_sock->state != NETSOCK_STATE_CONNECTING && m_sock->state != NETSOCK_STATE_CONNECTED) {
+            blast_err("Can not write to socket %s in state %d", m_sock->host ? m_sock->host : "(Unknown host)",
+                      m_sock->state);
+            return NETSOCK_ERR;
+        }
+        if (!netbuf_write(m_sock->out_buffer, m_buf, m_len)) {
+            blast_err("Could not buffer data on %s", m_sock->host ? m_sock->host : "(NULL)");
+            return NETSOCK_ERR;
+        }
+        if (m_sock->state == NETSOCK_STATE_CONNECTED) return comms_sock_flush(m_sock);
+    }
 
-	return NETSOCK_OK;
+    return NETSOCK_OK;
 }
 
 int comms_sock_flush(comms_socket_t *m_sock)
 {
-	uint32_t len;
-	int retval;
+    uint32_t len;
+    int retval;
 
-	log_enter();
+    log_enter();
 
-	if (!comms_sock_is_open(m_sock))
-	{
-		blast_err("Could not write to closed socket %s", m_sock->host?m_sock->host:"(Unknown host)");
+    if (!comms_sock_is_open(m_sock)) {
+        blast_err("Could not write to closed socket %s", m_sock->host ? m_sock->host : "(Unknown host)");
 
-		log_leave();
-		return NETSOCK_ERR;
-	}
+        log_leave();
+        return NETSOCK_ERR;
+    }
 
-
-	len = netbuf_bytes_available(m_sock->out_buffer);
-	if (m_sock->poll_handle && len > 0)
-	{
-		if (!__sync_lock_test_and_set(&m_sock->can_write, false))
-		{
-			comms_net_async_add_events(m_sock->poll_handle, POLLOUT);
-			log_leave();
-			return NETSOCK_AGAIN;
-		}
+    len = netbuf_bytes_available(m_sock->out_buffer);
+    if (m_sock->poll_handle && len > 0) {
+        if (!__sync_lock_test_and_set(&m_sock->can_write, false)) {
+            comms_net_async_add_events(m_sock->poll_handle, POLLOUT);
+            log_leave();
+            return NETSOCK_AGAIN;
+        }
 
         void *data;
         len = netbuf_peek(m_sock->out_buffer, &data);
@@ -752,8 +677,7 @@ int comms_sock_flush(comms_socket_t *m_sock)
         if (len) {
             retval = comms_sock_raw_write(m_sock, data, len);
             free(data);
-            if (retval < 0)
-            {
+            if (retval < 0) {
                 comms_sock_close(m_sock);
                 blast_err("Could not write socket: %s", strerror(m_sock->last_errno));
                 log_leave();
@@ -761,57 +685,54 @@ int comms_sock_flush(comms_socket_t *m_sock)
             }
             netbuf_eat(m_sock->out_buffer, retval);
         }
-	}
+    }
 
-	/**
-	 * If we have data left to write to the socket, then we force the POLLOUT event to allow
-	 * our async handler to catch and process the data in the next poll call.
-	 */
-	len = netbuf_bytes_available(m_sock->out_buffer);
-	if (m_sock->poll_handle && len > 0)
-	{
-		comms_net_async_add_events(m_sock->poll_handle, POLLOUT);
-		log_leave();
-		return NETSOCK_AGAIN;
-	}
+    /**
+     * If we have data left to write to the socket, then we force the POLLOUT event to allow
+     * our async handler to catch and process the data in the next poll call.
+     */
+    len = netbuf_bytes_available(m_sock->out_buffer);
+    if (m_sock->poll_handle && len > 0) {
+        comms_net_async_add_events(m_sock->poll_handle, POLLOUT);
+        log_leave();
+        return NETSOCK_AGAIN;
+    }
 
-	log_leave();
-	return NETSOCK_OK;
+    log_leave();
+    return NETSOCK_OK;
 }
 
 static int comms_sock_connect_generic(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port, bool m_udp)
 {
-	socket_t fd;
-	log_enter();
+    socket_t fd;
+    log_enter();
 
-	if (!m_sock || m_sock->state != NETSOCK_STATE_NONE)
-		return NETSOCK_ERR;
-	fd = comms_sock_connect_fd(m_hostname, m_port, m_udp);
+    if (!m_sock || m_sock->state != NETSOCK_STATE_NONE) return NETSOCK_ERR;
+    fd = comms_sock_connect_fd(m_hostname, m_port, m_udp);
 
-	if (fd == INVALID_SOCK)
-		return NETSOCK_ERR;
-	comms_sock_set_fd(m_sock, fd);
+    if (fd == INVALID_SOCK) return NETSOCK_ERR;
+    comms_sock_set_fd(m_sock, fd);
 
-	BLAST_SAFE_FREE(m_sock->host);
-	m_sock->host = strdup(m_hostname);
-	m_sock->port = m_port;
-	m_sock->udp = m_udp;
+    BLAST_SAFE_FREE(m_sock->host);
+    m_sock->host = strdup(m_hostname);
+    m_sock->port = m_port;
+    m_sock->udp = m_udp;
 
-	m_sock->state = NETSOCK_STATE_CONNECTING;
+    m_sock->state = NETSOCK_STATE_CONNECTING;
 
-	comms_net_async_set_events(comms_sock_get_poll_handle(m_sock), POLLOUT);
-	log_leave();
-	return NETSOCK_OK;
+    comms_net_async_set_events(comms_sock_get_poll_handle(m_sock), POLLOUT);
+    log_leave();
+    return NETSOCK_OK;
 }
 
 int comms_sock_reconnect(comms_socket_t *m_sock)
 {
     socket_t fd;
 
-    if (!m_sock)
-        return NETSOCK_ERR;
+    if (!m_sock) return NETSOCK_ERR;
     if (m_sock->state != NETSOCK_STATE_CLOSED && m_sock->state != NETSOCK_STATE_ERROR) {
-        blast_err("Could not reconnect socket (%s) in state %d", m_sock->host?m_sock->host:"unknown host", m_sock->state);
+        blast_err("Could not reconnect socket (%s) in state %d", m_sock->host ? m_sock->host : "unknown host",
+                  m_sock->state);
     }
     if (!m_sock->host) {
         blast_err("Could not reconnect socket without host");
@@ -820,8 +741,7 @@ int comms_sock_reconnect(comms_socket_t *m_sock)
 
     fd = comms_sock_connect_fd(m_sock->host, m_sock->port, m_sock->udp);
 
-    if (fd == INVALID_SOCK)
-        return NETSOCK_ERR;
+    if (fd == INVALID_SOCK) return NETSOCK_ERR;
     comms_sock_set_fd(m_sock, fd);
 
     m_sock->state = NETSOCK_STATE_CONNECTING;
@@ -829,17 +749,16 @@ int comms_sock_reconnect(comms_socket_t *m_sock)
     comms_net_async_set_events(comms_sock_get_poll_handle(m_sock), POLLOUT);
     log_leave();
     return NETSOCK_OK;
-
 }
 
 int comms_sock_connect(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port)
 {
-	return comms_sock_connect_generic(m_sock, m_hostname, m_port, false);
+    return comms_sock_connect_generic(m_sock, m_hostname, m_port, false);
 }
 
 int comms_sock_connect_udp(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port)
 {
-	return comms_sock_connect_generic(m_sock, m_hostname, m_port, true);
+    return comms_sock_connect_generic(m_sock, m_hostname, m_port, true);
 }
 
 /**
@@ -851,40 +770,36 @@ int comms_sock_connect_udp(comms_socket_t *m_sock, const char *m_hostname, uint3
  */
 int comms_sock_multicast_listen(comms_socket_t *m_sock, const char *m_hostname, uint32_t m_port)
 {
-	socket_t fd;
-	in_addr_t group;
-	int loop = 0;
-	log_enter();
+    socket_t fd;
+    in_addr_t group;
+    int loop = 0;
+    log_enter();
 
-	if (!m_sock || m_sock->state != NETSOCK_STATE_NONE)
-		return NETSOCK_ERR;
-	fd = comms_sock_bind("0.0.0.0", m_port, true);
-	if (fd == INVALID_SOCK)
-		return NETSOCK_ERR;
+    if (!m_sock || m_sock->state != NETSOCK_STATE_NONE) return NETSOCK_ERR;
+    fd = comms_sock_bind("0.0.0.0", m_port, true);
+    if (fd == INVALID_SOCK) return NETSOCK_ERR;
 
-	comms_sock_set_fd(m_sock, fd);
-	if ((group = inet_addr(m_hostname)) == INADDR_NONE )
-		return NETSOCK_ERR;
+    comms_sock_set_fd(m_sock, fd);
+    if ((group = inet_addr(m_hostname)) == INADDR_NONE) return NETSOCK_ERR;
 
-	if (comms_sock_join_mcast(m_sock, group) == NETSOCK_ERR)
-		return NETSOCK_ERR;
+    if (comms_sock_join_mcast(m_sock, group) == NETSOCK_ERR) return NETSOCK_ERR;
 
-	setsockopt(m_sock->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
+    setsockopt(m_sock->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
 
-	BLAST_SAFE_FREE(m_sock->host);
+    BLAST_SAFE_FREE(m_sock->host);
 
-	m_sock->addr.sin_family = AF_INET;
-	m_sock->addr.sin_addr.s_addr = group;
-	m_sock->addr.sin_port = htons(m_port);
-	m_sock->addrlen = sizeof(m_sock->addr);
+    m_sock->addr.sin_family = AF_INET;
+    m_sock->addr.sin_addr.s_addr = group;
+    m_sock->addr.sin_port = htons(m_port);
+    m_sock->addrlen = sizeof(m_sock->addr);
 
-	m_sock->host = strdup(m_hostname);
-	m_sock->port = m_port;
-	m_sock->udp = 1;
+    m_sock->host = strdup(m_hostname);
+    m_sock->port = m_port;
+    m_sock->udp = 1;
 
-	m_sock->state = NETSOCK_STATE_CONNECTING;
+    m_sock->state = NETSOCK_STATE_CONNECTING;
 
-	comms_net_async_set_events(comms_sock_get_poll_handle(m_sock), POLLOUT);
-	log_leave();
-	return NETSOCK_OK;
+    comms_net_async_set_events(comms_sock_get_poll_handle(m_sock), POLLOUT);
+    log_leave();
+    return NETSOCK_OK;
 }

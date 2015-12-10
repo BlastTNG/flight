@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef BLAST_JULIAN_H_
-#define BLAST_JULIAN_H_
+#ifndef INCLUDE_TIME_JULIAN_H_
+#define INCLUDE_TIME_JULIAN_H_
 #include <time.h>
 
 /**
@@ -54,7 +54,7 @@ struct julian_date {
 #define JULIAN_MILLENNIA(d1, d2)	\
 	(((d1 - J2000_EPOCH) + d2) / JULIAN_MILLENNIUM_LENGTH)
 
-int calendar_to_julian_date(int year, int month, int day,struct julian_date *jd);
+int calendar_to_julian_date(int year, int month, int day, struct julian_date *jd);
 int julian_to_calendar_date(struct julian_date *m_jd, struct tm *m_time);
 
 #endif /* BLAST_JULIAN_H_ */

@@ -29,6 +29,6 @@
 
 void uei_1hz_loop(void);
 void *uei_loop(void *m_arg);
-int initialize_uei_of_channels (void);
+int initialize_uei_of_channels(void);
 
 #endif /* INCLUDE_UEI_H_ */

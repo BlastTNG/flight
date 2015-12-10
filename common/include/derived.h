@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef DERIVED_H
-#define DERIVED_H
+#ifndef INCLUDE_DERIVED_H
+#define INCLUDE_DERIVED_H
 #include <stdint.h>
 
 #ifndef FIELD_LEN
@@ -21,7 +21,7 @@
 #   define UNITS_LEN 48
 #endif
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
 
 typedef struct {
     char type;
@@ -48,7 +48,7 @@ typedef struct {
       } lincom;
       struct {                      /* 2 FIELD LINCOM */
                                     /* type Should = '2' for lincom2 */
-        char field[FIELD_LEN] ;     /* Derived Channel Name */
+        char field[FIELD_LEN];      /* Derived Channel Name */
         char source[FIELD_LEN];     /* Source Channel Name */
         char source2[FIELD_LEN];    /* Source Channel Name */
         double m_c2e;               /* slope */
@@ -105,18 +105,17 @@ typedef struct {
 #pragma pack(pop)
 
 #define DERIVED_EOC_MARKER '!'
-#define LINCOM(f,s,m,b) {.type = 'c', .lincom = { f , s , m , b }}
-#define LINCOM2(f,s1,m1,b1,s2,m2,b2) {.type = '2', .lincom2 = { f, s1, s2, m1, b1 ,\
-  m2 , b2 }}
-#define LINTERP(f,s,l) {.type = 't', .linterp = { f , s , l }}
-#define BITWORD(f,s,o,l) {.type = 'b', .bitword = { f , s , o, l }}
+#define LINCOM(f, s, m, b) {.type = 'c', .lincom = { f , s , m , b }}
+#define LINCOM2(f, s1, m1, b1, s2, m2, b2) {.type = '2', .lincom2 = { f, s1, s2, m1, b1, m2, b2 }}
+#define LINTERP(f, s, l) {.type = 't', .linterp = { f , s , l }}
+#define BITWORD(f, s, o, l) {.type = 'b', .bitword = { f , s , o, l }}
 #define COMMENT(c) {.type = '#', .comment = { c }}
-#define UNITS(s,q,u) {.type = 'u', .units = { s , q , u}}
-#define PHASE(f,s,p) {.type = 'p', .phase = { f, s, p }}
-#define RECIP(f,s,d) {.type = 'r', .recip = { f, s, d }}
-#define DIVIDE(f,s1,s2) {.type = '/', .math = { f, s1, s2 }}
-#define MULTIPLY(f,s1,s2) {.type = '*', .math = { f, s1, s2 }}
-#define MPLEX(f,s,i,v,m) {.type = 'x', .mplex = { f, s, i, v, m }}
+#define UNITS(s, q, u) {.type = 'u', .units = { s , q , u}}
+#define PHASE(f, s, p) {.type = 'p', .phase = { f, s, p }}
+#define RECIP(f, s, d) {.type = 'r', .recip = { f, s, d }}
+#define DIVIDE(f, s1, s2) {.type = '/', .math = { f, s1, s2 }}
+#define MULTIPLY(f, s1, s2) {.type = '*', .math = { f, s1, s2 }}
+#define MPLEX(f, s, i, v, m) {.type = 'x', .mplex = { f, s, i, v, m }}
 #define END_OF_DERIVED_CHANNELS {.type = DERIVED_EOC_MARKER}
 
 #endif

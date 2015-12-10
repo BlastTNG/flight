@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef BLAST_H
-#define BLAST_H
+#ifndef INCLUDE_BLAST_H
+#define INCLUDE_BLAST_H
 
 #include <stdlib.h>     /* free() */
 #include <stdarg.h>     /* ANSI C variable arguments (va_list, va_start, va_end) */
@@ -39,8 +39,8 @@ typedef enum {none, info, warning, err, tfatal, fatal, startup, sched, mem}
 
 void bputs_stdio(buos_t l, const char* s);
 void bputs_syslog(buos_t l, const char* s);
-void bprintf(buos_t, const char*, ...) __attribute__((format(printf,2,3)));
-void berror(buos_t, const char*, ...) __attribute__((format(printf,2,3)));
+void bprintf(buos_t, const char*, ...) __attribute__((format(printf, 2, 3)));
+void berror(buos_t, const char*, ...) __attribute__((format(printf, 2, 3)));
 void bputs(buos_t, const char*);
 void buos_use_func(void (*puts_func)(buos_t, const char*));
 void buos_use_stdio(void);
@@ -55,65 +55,67 @@ void buos_enable_exit(void);
 #endif
 
 /* BLAMM (BLAST Memory Manager) definitions */
-void *_balloc(buos_t, size_t, const char*, int, const char*) __attribute__ ((__malloc__));
+void *_balloc(buos_t, size_t, const char*, int, const char*) __attribute__((malloc));
 void _bfree(buos_t, void*, const char*, int, const char*);
-void _basprintf(buos_t, char**, const char*, const char*, int, const char*, ...) __attribute__((format(printf,3,7),noinline));
+void _basprintf(buos_t, char**, const char*, const char*, int, const char*, ...)
+                                 __attribute__((format(printf, 3, 7), noinline));
 void *_reballoc(buos_t, void*, size_t, const char*, int, const char*);
-char *_bstrdup(buos_t, const char*, const char*, int, const char*) __attribute__ ((__malloc__));
-char *_bstrndup(buos_t, const char*, size_t n, const char*, int, const char*) __attribute__ ((__malloc__));
-void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_line, const char *m_file) __attribute__ ((__malloc__));
+char *_bstrdup(buos_t, const char*, const char*, int, const char*) __attribute__((malloc));
+char *_bstrndup(buos_t, const char*, size_t n, const char*, int, const char*) __attribute__((malloc));
+void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_line, const char *m_file)
+                                                                                 __attribute__((malloc));
 
-#define balloc(lvl, size) _balloc( lvl, size, __FUNCTION__ , __LINE__ , __FILENAME__ )
-#define bfree(lvl, ptr) _bfree( lvl, ptr, __FUNCTION__ , __LINE__ , __FILENAME__ )
+#define balloc(lvl, size) _balloc(lvl, size, __FUNCTION__ , __LINE__ , __FILENAME__ )
+#define bfree(lvl, ptr) _bfree(lvl, ptr, __FUNCTION__ , __LINE__ , __FILENAME__ )
 #define reballoc(lvl, ptr, newsize) _reballoc(lvl, ptr, newsize, __FUNCTION__ , __LINE__ , __FILENAME__)
-#define bstrdup(lvl,ptr) _bstrdup( lvl , ptr , __FUNCTION__ , __LINE__ , __FILENAME__)
-#define bstrndup(lvl, ptr, len) _bstrndup( lvl , ptr, len , __FUNCTION__ , __LINE__ , __FILENAME__)
+#define bstrdup(lvl, ptr) _bstrdup(lvl , ptr , __FUNCTION__ , __LINE__ , __FILENAME__)
+#define bstrndup(lvl, ptr, len) _bstrndup(lvl , ptr, len , __FUNCTION__ , __LINE__ , __FILENAME__)
 #define basprintf(lvl, ptr, fmt, ...) _basprintf(lvl, ptr, fmt, __FUNCTION__ , __LINE__ , __FILENAME__, ##__VA_ARGS__)
-#define memdup(level,ptr,size) _memdup( level, ptr, size, __FUNCTION__ , __LINE__ , __FILENAME__)
+#define memdup(level, ptr, size) _memdup(level, ptr, size, __FUNCTION__ , __LINE__ , __FILENAME__)
 
 /** Free memory space */
-#define BLAST_SAFE_FREE(_ptr) do { if (_ptr) {bfree(mem,_ptr); (_ptr)=NULL;} } while(0)
+#define BLAST_SAFE_FREE(_ptr) do { if (_ptr) {bfree(mem, _ptr); (_ptr) = NULL;} } while (0)
 
 /** Zero an element */
 #define BLAST_ZERO(x) memset((void*)&(x), 0, sizeof(x))
 
 /** Zero dereferenced pointer */
-#define BLAST_ZERO_P(x) do { if (x) memset((void*)(x), 0, sizeof(*(x))); } while(0)
+#define BLAST_ZERO_P(x) do { if (x) memset((void*)(x), 0, sizeof(*(x))); } while (0)
 
-#define blast_fatal(fmt,...) \
+#define blast_fatal(fmt, ...) \
     do {                                                                \
         bprintf(fatal, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
-#define blast_tfatal(fmt,...) \
+#define blast_tfatal(fmt, ...) \
     do {                                                                \
         bprintf(tfatal, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
-#define blast_err(fmt,...) \
+#define blast_err(fmt, ...) \
     do {                                                                \
         bprintf(err, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
-#define blast_info(fmt,...) \
+#define blast_info(fmt, ...) \
     do {                                                                \
         bprintf(info, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
-#define blast_warn(fmt,...) \
+#define blast_warn(fmt, ...) \
     do {                                                                \
         bprintf(warning, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
-#define blast_startup(fmt,...) \
+#define blast_startup(fmt, ...) \
         do {                                                                \
             bprintf(startup, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
-#define blast_sched(fmt,...) \
+#define blast_sched(fmt, ...) \
         do {                                                                \
             bprintf(sched, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
-#define blast_mem(fmt,...) \
+#define blast_mem(fmt, ...) \
         do {                                                                \
             bprintf(mem, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
 #ifndef NDEBUG
-#define blast_dbg(fmt,...) \
+#define blast_dbg(fmt, ...) \
         do {                                                                \
             bprintf(info, "%s:%d (%s):" fmt, __FILENAME__, __LINE__, __func__, ##__VA_ARGS__); \
         }while(0)
@@ -125,7 +127,7 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
 /**
  * Prints the error message followed by an explanation of the errno code
  */
-#define blast_strerror(fmt,...) \
+#define blast_strerror(fmt, ...) \
     do {                                                        \
         blast_err(fmt ":%s", ##__VA_ARGS__, strerror(errno));    \
     } while (0)
@@ -135,7 +137,7 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
  * when the function exits, so do not call free or any variant on the pointer
  */
 #define blast_tmp_sprintf(ptr, format, ...)                 \
-    do{                                                     \
+    do {                                                    \
         int bytes;                                          \
                                                             \
         bytes = snprintf(NULL, 0, format, ##__VA_ARGS__)+1; \
@@ -143,7 +145,7 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
         if (bytes > 4000 * (int)sizeof(char))               \
         {                                                   \
             bputs(err, "Out of stack space.");              \
-            bytes=4000 * sizeof(char);                      \
+            bytes = 4000 * sizeof(char);                    \
         }                                                   \
         ptr = alloca(bytes * sizeof(char));                 \
         snprintf(ptr, bytes, format, ##__VA_ARGS__);        \
@@ -152,17 +154,17 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
 
 /** Min/Max common use */
 #undef max
-#define max(a,b) ((a) >= (b) ? (a) : (b))
+#define max(a, b) ((a) >= (b) ? (a) : (b))
 #undef min
-#define min(a,b) ((a) <= (b) ? (a) : (b))
+#define min(a, b) ((a) <= (b) ? (a) : (b))
 
-#define min_safe(x,y) ({                    \
+#define min_safe(x, y) ({                   \
     typeof(x) _min1 = (x);                  \
     typeof(y) _min2 = (y);                  \
     (void) (&_min1 == &_min2);              \
     _min1 < _min2 ? _min1 : _min2; })
 
-#define max_safe(x,y) ({                    \
+#define max_safe(x, y) ({                   \
     typeof(x) _max1 = (x);                  \
     typeof(y) _max2 = (y);                  \
     (void) (&_max1 == &_max2);              \

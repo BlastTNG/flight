@@ -1,8 +1,7 @@
 set(SENSOR_SRCS
     ${SENSOR_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/acs.c    
-    ${CMAKE_CURRENT_SOURCE_DIR}/csbf_dgps.c    
-    ${CMAKE_CURRENT_SOURCE_DIR}/dgps.c 
+    ${CMAKE_CURRENT_SOURCE_DIR}/csbf_dgps.c
     ${CMAKE_CURRENT_SOURCE_DIR}/dsp1760.c
     ${CMAKE_CURRENT_SOURCE_DIR}/geomag2015.c
     ${CMAKE_CURRENT_SOURCE_DIR}/magnetometer.c

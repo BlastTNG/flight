@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef BLAST_SIP_INTERFACE_INTERNAL_H_
-#define BLAST_SIP_INTERFACE_INTERNAL_H_
+#ifndef INCLUDE_BLAST_SIP_INTERFACE_INTERNAL_H_
+#define INCLUDE_BLAST_SIP_INTERFACE_INTERNAL_H_
 #include <pthread.h>
 #include <termios.h>
 #include <endian.h>
@@ -47,138 +47,139 @@
  *
  * Note: Implementing big endian compatibility is straight-forward if you want to do it.  See swab(3).
  */
-#if	__BYTE_ORDER == __BIG_ENDIAN
-#	error This code will not work on a big endian system
+#if    __BYTE_ORDER == __BIG_ENDIAN
+#    error This code will not work on a big endian system
 #endif
 
 #define SIP_PORT_1 "/dev/ttyS0"
 #define SIP_PORT_2 "/dev/ttyS1"
 
-#define SUN_JAN_6_1980 315982800L 	/**< Number of seconds from the start of the UNIX epoch to Jan 6, 1980 */
-#define SEC_IN_WEEK  604800L		/**< Number of seconds in a week */
+#define SUN_JAN_6_1980 315982800L     /**< Number of seconds from the start of the UNIX epoch to Jan 6, 1980 */
+#define SEC_IN_WEEK  604800L        /**< Number of seconds in a week */
 
 #define REQ_POSITION    0x50
 #define REQ_TIME        0x51
 #define REQ_ALTITUDE    0x52
 
-#define _SIP_RECV_MSGS(x,_)		\
-	_(x, GPS_DATA)				\
-	_(x, GPS_TIME)				\
-	_(x, MKS_DATA)				\
-	_(x, READY)					\
-	_(x, CMD)
+#define _SIP_RECV_MSGS(x, _)        \
+    _(x, GPS_DATA)                \
+    _(x, GPS_TIME)                \
+    _(x, MKS_DATA)                \
+    _(x, READY)                    \
+    _(x, CMD)
 
 static ssize_t SIP_RECV_MSG_GPS_DATA_CALLBACK(const uint8_t* m_data, size_t m_len);
-static ssize_t SIP_RECV_MSG_GPS_TIME_CALLBACK (const uint8_t* m_data, size_t m_len);
-static ssize_t SIP_RECV_MSG_MKS_DATA_CALLBACK (const uint8_t* m_data, size_t m_len);
-static ssize_t SIP_RECV_MSG_READY_CALLBACK (const uint8_t* m_data, size_t m_len);
-static ssize_t SIP_RECV_MSG_CMD_CALLBACK (const uint8_t* m_data, size_t m_len);
+static ssize_t SIP_RECV_MSG_GPS_TIME_CALLBACK(const uint8_t* m_data, size_t m_len);
+static ssize_t SIP_RECV_MSG_MKS_DATA_CALLBACK(const uint8_t* m_data, size_t m_len);
+static ssize_t SIP_RECV_MSG_READY_CALLBACK(const uint8_t* m_data, size_t m_len);
+static ssize_t SIP_RECV_MSG_CMD_CALLBACK(const uint8_t* m_data, size_t m_len);
 
 static int blast_sip_process_data(const void *m_data, size_t m_len, void *m_userdata __attribute__((unused)));
-static void blast_sip_handle_error (int m_code, void *m_priv);
-static int blast_sip_handle_finished (const void *m_data, size_t m_len, void *m_priv);
+static void blast_sip_handle_error(int m_code, void *m_priv);
+static int blast_sip_handle_finished(const void *m_data, size_t m_len, void *m_priv);
 
 BLAST_GENERIC_LOOKUP_TABLE(SIP_RECV_MSG, static,
-			ssize_t (*process_msg) (const uint8_t *, size_t);,
-			_BLAST_FUNCTION_STRUCT_LIST,
-			 );
-//@TODO:Evaluate where to put sip control (if needed)
-//BLAST_GENERIC_LOOKUP_TABLE(sip_ctrl_command, static,
-//			ssize_t (*process_ctrl) (ebex_link_ctrl_pkt_t *);,
-//			_BLAST_FUNCTION_STRUCT_LIST,
-//			 );
+            ssize_t (*process_msg)(const uint8_t *, size_t); ,
+            _BLAST_FUNCTION_STRUCT_LIST);
+// @TODO:Evaluate where to put sip control (if needed)
+// BLAST_GENERIC_LOOKUP_TABLE(sip_ctrl_command, static,
+//          ssize_t (*process_ctrl) (ebex_link_ctrl_pkt_t *);,
+//          BLAST_FUNCTION_STRUCT_LIST,
+//          );
 
-#define _SIP_CMD_PKT_TYPES(x,_)	\
-	_(x,CTRL)					\
-	_(x,CMD)					\
-	_(x,FILE)
+#define _SIP_CMD_PKT_TYPES(x, _)    \
+    _(x, CTRL)                    \
+    _(x, CMD)                    \
+    _(x, FILE)
 BLAST_LOOKUP_TABLE(SIP_CMD_PKT_TYPE, static);
 
-#define _SIP_CMD_SOURCES(x,_)	\
-	_(x,LOS)					\
-	_(x,TDRSS)					\
-	_(x,IRIDIUM)
+#define _SIP_CMD_SOURCES(x, _)    \
+    _(x, LOS)                    \
+    _(x, TDRSS)                    \
+    _(x, IRIDIUM)
 BLAST_LOOKUP_TABLE(SIP_CMD_SOURCE, static);
 
-#define _SIP_CTRL_REFS(x,_)     \
-	_(x,LOS)                    \
-	_(x,TDRSS_HGA)              \
-	_(x,TDRSS)                  \
-	_(x,IRIDIUM)                \
-	_(x,SLOW)
+#define _SIP_CTRL_REFS(x, _)     \
+    _(x, LOS)                    \
+    _(x, TDRSS_HGA)              \
+    _(x, TDRSS)                  \
+    _(x, IRIDIUM)                \
+    _(x, SLOW)
 BLAST_LOOKUP_TABLE(SIP_CTRL_REF, static);
 
 typedef enum sip_send_msg
 {
-	sip_send_msg_gps_pos		= 0x50,
-	sip_send_msg_gps_time,
-	sip_send_msg_mks_alt,
-	sip_send_msg_data
+    sip_send_msg_gps_pos        = 0x50,
+    sip_send_msg_gps_time,
+    sip_send_msg_mks_alt,
+    sip_send_msg_data
 } e_sip_send_msg;
 
 typedef enum sip_gps_sat_status
 {
-	sip_gps_sat_nominal	= 0,
-	sip_gps_sat_no_time,
-	sip_gps_sat_wait_for_almanac,
-	sip_gps_sat_PDOP_too_high,
-	sip_gps_sat_zero_sat,
-	sip_gps_sat_one_sat,
-	sip_gps_sat_two_sat,
-	sip_gps_sat_three_sat,
-	sip_gps_sat_zero_useable_sat,
-	sip_gps_sat_one_usable_sat,
-	sip_gps_sat_two_usable_sat,
-	sip_gps_sat_three_usable_sat,
+    sip_gps_sat_nominal    = 0,
+    sip_gps_sat_no_time,
+    sip_gps_sat_wait_for_almanac,
+    sip_gps_sat_PDOP_too_high,
+    sip_gps_sat_zero_sat,
+    sip_gps_sat_one_sat,
+    sip_gps_sat_two_sat,
+    sip_gps_sat_three_sat,
+    sip_gps_sat_zero_useable_sat,
+    sip_gps_sat_one_usable_sat,
+    sip_gps_sat_two_usable_sat,
+    sip_gps_sat_three_usable_sat,
 } e_sip_gps_sat_status;
 
 typedef struct sip_std_hdr
 {
-	uint8_t		start_byte;
-	uint8_t		id_byte;
+    uint8_t        start_byte;
+    uint8_t        id_byte;
 } __attribute__((packed)) sip_std_hdr_t;
 
 typedef struct sip_gps_pos
 {
-	sip_std_hdr_t			header;
-	float					longitude;
-	float					latitude;
-	float					altitude;
-	uint8_t					num_sats;
-	e_sip_gps_sat_status	sat_status:8;
-	uint8_t					end_byte;
+    sip_std_hdr_t            header;
+    float                    longitude;
+    float                    latitude;
+    float                    altitude;
+    uint8_t                    num_sats;
+    e_sip_gps_sat_status    sat_status:8;
+    uint8_t                    end_byte;
 } __attribute__((packed)) sip_gps_pos_t;
 
 typedef struct sip_gps_time
 {
-	sip_std_hdr_t			header;
-	float		week_sec;
-	uint16_t	week_num;
-	float		utc_offset;
-	float		midnight_sec;
-	uint8_t		end_byte;
+    sip_std_hdr_t            header;
+    float        week_sec;
+    uint16_t    week_num;
+    float        utc_offset;
+    float        midnight_sec;
+    uint8_t        end_byte;
 } __attribute__((packed)) sip_gps_time_t;
 
 typedef struct sip_mks_altitude
 {
-	sip_std_hdr_t			header;
-	uint16_t	mks_hi;
-	uint16_t	mks_med;
-	uint16_t	mks_lo;
-	uint8_t		end_byte;
+    sip_std_hdr_t            header;
+    uint16_t    mks_hi;
+    uint16_t    mks_med;
+    uint16_t    mks_lo;
+    uint8_t     end_byte;
 } __attribute__((packed)) sip_mks_altitude_t;
 
 typedef struct sip_science_cmd
 {
-	sip_std_hdr_t               header;
-	uint8_t                     length;
-	union
-	{
-		blast_master_packet_t   blast_header;
-		uint8_t                 data[1];
-	};
+    sip_std_hdr_t               header;
+    uint8_t                     length;
+    union
+    {
+        blast_master_packet_t   blast_header;
+        uint8_t                 data[1];
+    };
 } __attribute__((packed)) sip_science_cmd_t;
-#define SIP_SCIENCE_CMD_LEN(_p)((sip_science_cmd_t*)(_p)->length + 4) /* 4 bytes here for the start, id, length and end bytes */
+
+/* 4 bytes here for the start, id, length and end bytes */
+#define SIP_SCIENCE_CMD_LEN(_p)((sip_science_cmd_t*)(_p)->length + 4)
 
 
 static comms_serial_t *sip_comm1 = NULL;

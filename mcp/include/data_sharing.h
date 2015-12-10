@@ -25,9 +25,10 @@
  *
  */
 
-#ifndef DATA_SHARING_H_
-#define DATA_SHARING_H_
+#ifndef INCLUDE_DATA_SHARING_H_
+#define INCLUDE_DATA_SHARING_H_
 
+#include <phenom/socket.h>
 #include <stdint.h>
 typedef struct
 {
@@ -48,6 +49,6 @@ void initialize_data_sharing(void);
 void data_sharing_send_data(const data_sharing_t*);
 void data_sharing_get_data(data_sharing_t*);
 void data_sharing_request_commanddata(void);
-void data_sharing_send_commanddata(void);
+void data_sharing_send_commanddata(ph_sock_t *m_sock);
 
 #endif /* DATA_SHARING_H_ */

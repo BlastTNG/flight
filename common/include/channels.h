@@ -52,7 +52,7 @@ extern "C" {
 #define MAX_FAST_BOLOS (MAX_DAS_CARDS * (DAS_CHS + DAS_CHS / 2))
 
 
-  extern unsigned short das_cards; /* number of DAS cards -- defaults to
+  extern uint16_t  das_cards; /* number of DAS cards -- defaults to
                                       DAS_CARDS */
 
 /* number of channels below the first slow channel */
@@ -76,7 +76,7 @@ extern "C" {
     char addr;      /* BlastBus address: 0 to 63 */
     double m_c2e;   /* Conversion from counts to enginering units is */
     double b_e2e;   /*   e = c * m_c2e + b_e2e */
-    char type;      /* 's' = short, signed o'u' = unsigned short 'i' = 'S'
+    char type;      /* 's' = short, signed o'u' = uint16_t  'i' = 'S'
                        = signed 32 bit int, 'U' = unsigned 32 bit int */
     char quantity[UNITS_LEN]; /* eg, "Temperature" or "Angular Velocity" */
     char units[UNITS_LEN]; /* eg, "K" or "^o/s" */
@@ -106,26 +106,26 @@ extern "C" {
   extern struct ChannelStruct** SlowChList;
   extern struct ChannelStruct* FastChList;
 
-  extern unsigned short ccWideFast;
-  extern unsigned short ccNarrowFast;
-  extern unsigned short ccWideSlow;
-  extern unsigned short ccNarrowSlow;
-  extern unsigned short ccFast;
-  extern unsigned short ccDecom;
-  extern unsigned short ccDerived;
-  extern unsigned short ccTotal;
+  extern uint16_t  ccWideFast;
+  extern uint16_t  ccNarrowFast;
+  extern uint16_t  ccWideSlow;
+  extern uint16_t  ccNarrowSlow;
+  extern uint16_t  ccFast;
+  extern uint16_t  ccDecom;
+  extern uint16_t  ccDerived;
+  extern uint16_t  ccTotal;
 
-  extern unsigned short BoloBaseIndex;
+  extern uint16_t  BoloBaseIndex;
 
 #if (defined __MCP__ || defined __DECOMD__)
-  extern unsigned short BiPhaseFrameWords;
-  extern unsigned short BiPhaseFrameSize;
+  extern uint16_t  BiPhaseFrameWords;
+  extern uint16_t  BiPhaseFrameSize;
 #endif
-  extern unsigned short DiskFrameWords;
-  extern unsigned short DiskFrameSize;
-  extern unsigned short slowsPerBi0Frame;
-  extern unsigned short TxFrameWords[2];
-  extern unsigned short TxFrameSize[2];
+  extern uint16_t  DiskFrameWords;
+  extern uint16_t  DiskFrameSize;
+  extern uint16_t  slowsPerBi0Frame;
+  extern uint16_t  TxFrameWords[2];
+  extern uint16_t  TxFrameSize[2];
   extern unsigned int NiosSpares[FAST_PER_SLOW * 2];
   extern unsigned int BBCSpares[FAST_PER_SLOW * 2];
 

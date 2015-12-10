@@ -28,7 +28,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/select.h>
 #include <sys/time.h>
 #include <errno.h>
 #include <math.h>
@@ -44,7 +43,7 @@
 
 void nameThread(const char*);		/* mcp.c */
 double LockPosition(double elevation);	/* commands.c */
-extern short int InCharge;		/* tx.c */
+extern int16_t InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
 #define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
@@ -55,16 +54,16 @@ extern short int InCharge;		/* tx.c */
 #define SHUTTERNUM 5
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
 				 "Lock Motor", HWPR_NAME, "Shutter"};
-static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3, 
+static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 			     EZ_WHO_S5, HWPR_ADDR, EZ_WHO_S8};
 #define ID_ALL_ACT  EZ_WHO_G1_4
-//set microstep resolution
+// set microstep resolution
 #define LOCK_PREAMBLE "j256"
 #define SHUTTER_PREAMBLE "j64"
-//set encoder/microstep ratio (aE25600), coarse correction band (aC50),
-//fine correction tolerance (ac%d), stall retries (au5), 
-//enable encoder feedback mode (n8)
-//NB: this is a printf template now, requires a move tolerance (ac) to be set
+// set encoder/microstep ratio (aE25600), coarse correction band (aC50),
+// fine correction tolerance (ac%d), stall retries (au5),
+// enable encoder feedback mode (n8)
+// NB: this is a printf template now, requires a move tolerance (ac) to be set
 #define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 static struct ezbus bus;
 
@@ -79,13 +78,13 @@ static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 int lock_timeout = -1;
 
-#define LOCK_MIN_POT 300      //actual min stop: ~120 (fully extended)
-#define LOCK_MAX_POT 16368    //max stop at saturation: 16368 (fully retracted)
+#define LOCK_MIN_POT 300      // actual min stop: ~120 (fully extended)
+#define LOCK_MAX_POT 16368    // max stop at saturation: 16368 (fully retracted)
 #define LOCK_POT_RANGE 300
 
 static struct lock_struct {
-  int pos;		  //raw step count
-  unsigned short adc[4];  //ADC readout (including pot)
+  int pos;		  // raw step count
+  uint16_t  adc[4];  // ADC readout (including pot)
   unsigned int state;
 } lock_data = { .state = LS_DRIVE_UNK };
 
@@ -95,9 +94,9 @@ static struct lock_struct {
 #define  SHUTTER_TIMEOUT 3000         /* 30 seconds */
 #define  SHUTTER_CLOSED_BIT 0x04      // /7?4 returns 15 when shutter is closed and
                                       // returns 11 when shutter is not closed
-//#define  SHUTTER_OPEN 7               // The choice of 7 is arbitrary
+// #define  SHUTTER_OPEN 7               // The choice of 7 is arbitrary
 #define SHUTTER_SLEEP 100000 /* 100 milliseconds */
-//#define  SHUTTER_SLEEP 50000
+// #define  SHUTTER_SLEEP 50000
 #define  SHUTTER_IS_CLOSED 2
 #define  SHUTTER_IS_UNK    1
 #define  SHUTTER_IS_OPEN   0
@@ -115,17 +114,17 @@ static struct shutter_struct {
 } shutter_data = { .state = SHUTTER_UNK };
 
 /* Secondary actuator data and parameters */
-#define LVDT_FILT_LEN 25      //5s @ 5Hz
-#define DEFAULT_DR    32768   //value to use if reading file fails
-#define MIN_ENC	      1000    //minimum acceptable encoder vlaue, load dr below
-#define ACTBUS_TRIM_WAIT  3*LVDT_FILT_LEN //thrice LVDT_FILT_LEN
-					  //wait between trims, and after moves
+#define LVDT_FILT_LEN 25      // 5s @ 5Hz
+#define DEFAULT_DR    32768   // value to use if reading file fails
+#define MIN_ENC	      1000    // minimum acceptable encoder vlaue, load dr below
+#define ACTBUS_TRIM_WAIT  3*LVDT_FILT_LEN // thrice LVDT_FILT_LEN
+					  // wait between trims, and after moves
 
 static struct act_struct {
-  int pos;	//raw step count
-  int enc;	//encoder reading
-  int lvdt;	//lvdt-inferred position of this motor
-  int dr;	//dead reckoning (best-guess absolute position)
+  int pos;	// raw step count
+  int enc;	// encoder reading
+  int lvdt;	// lvdt-inferred position of this motor
+  int dr;	// dead reckoning (best-guess absolute position)
 } act_data[3];
 
 static unsigned int actbus_flags = 0;
@@ -151,109 +150,109 @@ static double correction = 0;     /* set in fc thread, read in ab thread */
 /*    Actuator Logic: servo focus based on thermal model/commands       */
 /*                                                                      */
 /************************************************************************/
-//simple check for encoder in a well-initialized state
+// simple check for encoder in a well-initialized state
 static inline int encOK(int enc)
 {
   return (enc > MIN_ENC);
 }
 
-//write DR to disk
+// write DR to disk
 static void WriteDR()
 {
-  int fp, n, i;
+    int fp, n, i;
 
-  /** write the default file */
-  fp = open("/data/etc/blast/act.dr", O_WRONLY|O_CREAT|O_TRUNC, 00666);
-  if (fp < 0) {
-    berror(err, "act.dr open()");
-    return;
-  }
-  for (i=0; i<3; i++) {
-    if ((n = write(fp, &act_data[i].dr, sizeof(int))) < 0) {
-      berror(err, "act.dr write()");
-      return;
+    /** write the default file */
+    fp = open("/data/etc/blast/act.dr", O_WRONLY | O_CREAT | O_TRUNC, 00666);
+    if (fp < 0) {
+        berror(err, "act.dr open()");
+        return;
     }
-  }
-  if ((n = close(fp)) < 0) {
-    berror(err, "act.dr close()");
-    return;
-  }
+    for (i = 0; i < 3; i++) {
+        if ((n = write(fp, &act_data[i].dr, sizeof(int))) < 0) {
+            berror(err, "act.dr write()");
+            return;
+        }
+    }
+    if ((n = close(fp)) < 0) {
+        berror(err, "act.dr close()");
+        return;
+    }
 }
 
-//on initialization, or bad enc detection, read DR from disk
+// on initialization, or bad enc detection, read DR from disk
 void ReadDR()
 {
-  int fp, n_read = 0, read_fail = 0, i;
+    int fp, n_read = 0, read_fail = 0, i;
 
-  if ((fp = open("/data/etc/blast/act.dr", O_RDONLY)) < 0) {
-    read_fail = 1;
-    berror(err, "Unable to open act.dr file for reading");
-  } else {
-    for (i=0; i<3; i++) {
-      if ((n_read = read(fp, &act_data[i].dr, sizeof(int))) < 0) {
-	//read failed
-	read_fail = 1;
-	berror(err, "act.dr read()");
-	break;
-      } else if (n_read != sizeof(int)) {
-	//short read
-	read_fail = 1;
-	blast_err("act.dr read(): wrong number of bytes");
-	break;
-      } else if (!encOK(act_data[i].dr)) {
-	//data not reasonable
-	read_fail = 1;
-	blast_err("act.dr read(): bad encoder data");
-	break;
-      }
+    if ((fp = open("/data/etc/blast/act.dr", O_RDONLY)) < 0) {
+        read_fail = 1;
+        berror(err, "Unable to open act.dr file for reading");
+    } else {
+        for (i = 0; i < 3; i++) {
+            if ((n_read = read(fp, &act_data[i].dr, sizeof(int))) < 0) {
+                // read failed
+                read_fail = 1;
+                berror(err, "act.dr read()");
+                break;
+            } else if (n_read != sizeof(int)) {
+                // short read
+                read_fail = 1;
+                blast_err("act.dr read(): wrong number of bytes");
+                break;
+            } else if (!encOK(act_data[i].dr)) {
+                // data not reasonable
+                read_fail = 1;
+                blast_err("act.dr read(): bad encoder data");
+                break;
+            }
+        }
+        if (close(fp) < 0) berror(err, "act.dr close()");
     }
-    if (close(fp) < 0)
-      berror(err, "act.dr close()");
-  }
 
-  if (read_fail) {
-    blast_info("Read of act.dr failed. Using default value %d", DEFAULT_DR);
-    for (i=0; i<3; i++) act_data[i].dr = DEFAULT_DR;
-  }
+    if (read_fail) {
+        blast_info("Read of act.dr failed. Using default value %d", DEFAULT_DR);
+        for (i = 0; i < 3; i++)
+            act_data[i].dr = DEFAULT_DR;
+    }
 }
 
 static int CheckMove(int goal0, int goal1, int goal2)
 {
-  int maxE, minE;
+    int maxE, minE;
 
-  int lvdt_low = CommandData.actbus.lvdt_low;
-  int lvdt_high = CommandData.actbus.lvdt_high;
-  int lvdt_delta = CommandData.actbus.lvdt_delta;
+    int lvdt_low = CommandData.actbus.lvdt_low;
+    int lvdt_high = CommandData.actbus.lvdt_high;
+    int lvdt_delta = CommandData.actbus.lvdt_delta;
 
-  if (goal0 < goal1) {
-   maxE = goal1;
-   minE = goal0;
-  } else {
-   maxE = goal0;
-   minE = goal1;
-  }
+    if (goal0 < goal1) {
+        maxE = goal1;
+        minE = goal0;
+    } else {
+        maxE = goal0;
+        minE = goal1;
+    }
 
-  if (goal2 > maxE)
-    maxE = goal2;
-  else if (goal2 < minE)
-    minE = goal2;
+    if (goal2 > maxE)
+        maxE = goal2;
+    else if (goal2 < minE) minE = goal2;
 
-  blast_info("%d %d %d | %d %d | %d %d | %d %d", goal0, goal1, goal2, 
-      minE, maxE, lvdt_low, lvdt_high, maxE - minE, lvdt_delta);
+    blast_info("%d %d %d | %d %d | %d %d | %d %d",
+               goal0, goal1, goal2, minE, maxE, lvdt_low, lvdt_high, maxE - minE, lvdt_delta);
 
-  if (minE < lvdt_low || maxE > lvdt_high || maxE - minE > lvdt_delta) {
-    bputs(warning, "Move Out of Range.");
-    actbus_flags |= ACT_FL_BAD_MOVE;
-  } else
-    actbus_flags &= ~ACT_FL_BAD_MOVE;
+    if (minE < lvdt_low || maxE > lvdt_high || maxE - minE > lvdt_delta) {
+        bputs(warning, "Move Out of Range.");
+        actbus_flags |= ACT_FL_BAD_MOVE;
+    } else {
+        actbus_flags &= ~ACT_FL_BAD_MOVE;
+    }
 
-  return actbus_flags & ACT_FL_BAD_MOVE;
+    return actbus_flags & ACT_FL_BAD_MOVE;
 }
 
 static char preamble_buf[EZ_BUS_BUF_LEN];
-static inline char* actPreamble(unsigned short tol)
+static inline char* actPreamble(uint16_t tol)
 {
-  sprintf(preamble_buf, ACT_PREAMBLE, tol);
+  snprintf(preamble_buf, sizeof(preamble_buf), ACT_PREAMBLE, tol);
   return preamble_buf;
 }
 
@@ -265,68 +264,70 @@ static void ReadActuator(int num)
   EZBus_ReadInt(&bus, id[num], "?8", &act_data[num].enc);
 }
 
-//Set both dead reckoning and encoder to trim value, dump dr to disk
+// Set both dead reckoning and encoder to trim value, dump dr to disk
 void actEncTrim(int *trim)
 {
-  int i;
-  char buffer[EZ_BUS_BUF_LEN];
+    int i;
+    char buffer[EZ_BUS_BUF_LEN];
 
-  blast_info("trim enc and dr to (%d, %d, %d)", trim[0], trim[1], trim[2]);
+    blast_info("trim enc and dr to (%d, %d, %d)", trim[0], trim[1], trim[2]);
 
-  for (i=0; i<3; i++) {
-    /* set the dr */
-    act_data[i].dr = trim[i];
-    /* Set the encoder */
-    EZBus_Comm(&bus, id[i], 
-	EZBus_StrComm(&bus, id[i], buffer, "z%iR", act_data[i].dr));
-  }
+    for (i = 0; i < 3; i++) {
+        /* set the dr */
+        act_data[i].dr = trim[i];
+        /* Set the encoder */
+        EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], sizeof(buffer), buffer, "z%iR", act_data[i].dr));
+    }
 
-  WriteDR();
+    WriteDR();
 }
 
-//check encoders for sane values, and update if not good
+// check encoders for sane values, and update if not good
 void CheckEncoders()
 {
-  int i, do_trim = 0, trim[3];
+    int i, do_trim = 0, trim[3];
 
-  //check busy state of actuators, update flag
-  for (i=0; i<3; i++) {
-    if (EZBus_IsBusy(&bus, id[i])) {
-      act_trim_wait = ACTBUS_TRIM_WAIT;
-      actbus_flags |= ACT_FL_BUSY(i);
-      actbus_flags |= ACT_FL_TRIM_WAIT;
+    // check busy state of actuators, update flag
+    for (i = 0; i < 3; i++) {
+        if (EZBus_IsBusy(&bus, id[i])) {
+            act_trim_wait = ACTBUS_TRIM_WAIT;
+            actbus_flags |= ACT_FL_BUSY(i);
+            actbus_flags |= ACT_FL_TRIM_WAIT;
+        } else {
+            actbus_flags &= ~ACT_FL_BUSY(i);
+        }
     }
-    else actbus_flags &= ~ACT_FL_BUSY(i);
-  }
 
-  //read encoders, and check if values need updating
-  for (i = 0; i < 3; ++i) {
-    ReadActuator(i);
-    //for bad encoders, prepare to do a trim
-    if (!encOK(act_data[i].enc)) do_trim = 1;
-    //for bad DR, reload from file
-    if (!encOK(act_data[i].dr)) ReadDR();
-    trim[i] = act_data[i].dr;
-  }
+    // read encoders, and check if values need updating
+    for (i = 0; i < 3; ++i) {
+        ReadActuator(i);
+        // for bad encoders, prepare to do a trim
+        if (!encOK(act_data[i].enc)) do_trim = 1;
+        // for bad DR, reload from file
+        if (!encOK(act_data[i].dr)) ReadDR();
+        trim[i] = act_data[i].dr;
+    }
 
-  //if busy, or waiting, do not trim
-  if (actbus_flags & (ACT_FL_BUSY_MASK | ACT_FL_TRIM_WAIT)) return;
-  else if (do_trim) {
-    actEncTrim(trim);
-    act_trim_flag_wait = act_trim_wait = ACTBUS_TRIM_WAIT;
-    actbus_flags |= ACT_FL_TRIMMED | ACT_FL_TRIM_WAIT;
-  }
+    // if busy, or waiting, do not trim
+    if (actbus_flags & (ACT_FL_BUSY_MASK | ACT_FL_TRIM_WAIT))
+        return;
+    else if (do_trim) {
+        actEncTrim(trim);
+        act_trim_flag_wait = act_trim_wait = ACTBUS_TRIM_WAIT;
+        actbus_flags |= ACT_FL_TRIMMED | ACT_FL_TRIM_WAIT;
+    }
 }
 
-//before moving, update dead reckoning to new goal
+// before moving, update dead reckoning to new goal
 static void UpdateDR(int* goal)
 {
-  int i;
-  for (i=0; i<3; i++) act_data[i].dr = goal[i];
-  WriteDR();
+    int i;
+    for (i = 0; i < 3; i++)
+        act_data[i].dr = goal[i];
+    WriteDR();
 }
 
-//NB has less checks than servoing used to, but I don't see how they were useful
+// NB has less checks than servoing used to, but I don't see how they were useful
 static void ServoActuators(int* goal)
 {
   int i;
@@ -342,14 +343,14 @@ static void ServoActuators(int* goal)
 
   UpdateDR(goal);
 
-  //stop any current action
+  // stop any current action
   EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
 
   for (i = 0; i < 3; ++i) {
-    //send command to each actuator, but don't run yet
-    EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], buf, "A%d", goal[i]));
+    // send command to each actuator, but don't run yet
+    EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], sizeof(buf), buf, "A%d", goal[i]));
   }
-  EZBus_Comm(&bus, ID_ALL_ACT, "R");	  //run all act commands at once
+  EZBus_Comm(&bus, ID_ALL_ACT, "R");	  // run all act commands at once
 
   EZBus_Release(&bus, ID_ALL_ACT);
 }
@@ -400,7 +401,7 @@ static void DoActuators(void)
   EZBus_SetIHold(&bus, ID_ALL_ACT, CommandData.actbus.act_hold_i);
   EZBus_SetPreamble(&bus, ID_ALL_ACT, actPreamble(CommandData.actbus.act_tol));
 
-  switch(CommandData.actbus.focus_mode) {
+  switch (CommandData.actbus.focus_mode) {
     case ACTBUS_FM_PANIC:
       bputs(warning, "Actuator Panic");
       EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
@@ -430,7 +431,7 @@ static void DoActuators(void)
     case ACTBUS_FM_SLEEP:
 	break;
     default:
-	blast_err("Unknown Focus Mode (%i), sleeping", 
+	blast_err("Unknown Focus Mode (%i), sleeping",
 	    CommandData.actbus.focus_mode);
 	CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
   }
@@ -442,7 +443,7 @@ static void DoActuators(void)
   focus = (act_data[0].enc + act_data[1].enc + act_data[2].enc)/3.0;
 }
 
-//adjust focus offset so that new gains don't change focus thermal correction
+// adjust focus offset so that new gains don't change focus thermal correction
 void RecalcOffset(double new_gp, double new_gs)
 {
   if (t_primary < 0 || t_secondary < 0)
@@ -453,28 +454,27 @@ void RecalcOffset(double new_gp, double new_gs)
     (t_secondary - T_SECONDARY_FOCUS) ) / ACTENC_TO_UM;
 }
 
-
 static int InitialiseActuator(struct ezbus* thebus, char who)
 {
-  char buffer[EZ_BUS_BUF_LEN];
-  int i;
+    char buffer[EZ_BUS_BUF_LEN];
+    int i;
 
-  for (i=0; i<3; i++) {
-    if (id[i] == who) {	  //only operate on actautors
-      //blast_info("Initialising %s...", name[i]);
-      ReadDR();	  //inefficient, 
+    for (i = 0; i < 3; i++) {
+        if (id[i] == who) {	  // only operate on actautors
+            // blast_info("Initialising %s...", name[i]);
+            ReadDR();	  // inefficient,
 
-      /* Set the encoder */
-      if ( EZBus_Comm(thebus, who, 
-	    EZBus_StrComm(thebus, who, buffer, "z%iR", act_data[i].dr))
-	  == EZ_ERR_OK ) return 1;
-      else {
-	blast_warn("Initialising %s failed...", name[i]);
-	return 0;
-      }
+            /* Set the encoder */
+            if (EZBus_Comm(thebus, who,
+                           EZBus_StrComm(thebus, who, sizeof(buffer), buffer, "z%iR", act_data[i].dr)) == EZ_ERR_OK) {
+                return 1;
+            } else {
+                blast_warn("Initialising %s failed...", name[i]);
+                return 0;
+            }
+        }
     }
-  }
-  return 1;
+    return 1;
 }
 
 
@@ -499,25 +499,25 @@ static void InitializeShutter()
   // Set move current and speed
   bputs(info, "InitializeShutter:...");
   if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100h50R") != EZ_ERR_OK)
-  //if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100v10h50R") != EZ_ERR_OK)
+  // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100v10h50R") != EZ_ERR_OK)
     bputs(info, "InitializeShutter: Error initializing shutter");
   CommandData.actbus.shutter_step = 4224;
   CommandData.actbus.shutter_step_slow = 300;
-  //CommandData.actbus.shutter_move_i = 100;
-  //CommandData.actbus.shutter_move_i = 50;
-  //CommandData.actbus.shutter_vel = 20;
-  //CommandData.actbus.shutter_acc = 1;
+  // CommandData.actbus.shutter_move_i = 100;
+  // CommandData.actbus.shutter_move_i = 50;
+  // CommandData.actbus.shutter_vel = 20;
+  // CommandData.actbus.shutter_acc = 1;
   // Set microstepping on j64N1
   // Wait 2 seconds M2000
   // Set hold current to 50 h50
   // Set position to 5000 z5000
   // Move to activate limit switch D424
   // Set position to 0 z0
-  //EZBus_Comm(&bus, id[SHUTTERNUM], "j64h50R");
-  //EZBus_SetIMove(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_move_i);
-  //EZBus_SetIHold(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_hold_i);
-  //EZBus_SetVel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_vel);
-  //EZBus_SetAccel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_acc);
+  // EZBus_Comm(&bus, id[SHUTTERNUM], "j64h50R");
+  // EZBus_SetIMove(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_move_i);
+  // EZBus_SetIHold(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_hold_i);
+  // EZBus_SetVel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_vel);
+  // EZBus_SetAccel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_acc);
 }
 
 
@@ -526,7 +526,7 @@ static void InitializeShutter()
 
 static void ResetShutter()
 {
-  //if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0M2000h50z5000D424z0R") != EZ_ERR_OK)
+  // if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0M2000h50z5000D424z0R") != EZ_ERR_OK)
   if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0M2000h50z5000P424z0R") != EZ_ERR_OK)
     bputs(info, "ResetShutter: Error resetting shutter");
 }
@@ -534,7 +534,6 @@ static void ResetShutter()
 
 static void OpenCloseShutter()
 {
-
   char    cmd[80];
 
   bputs(info, "OpenCloseShutter...");
@@ -546,16 +545,15 @@ static void OpenCloseShutter()
 
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
     bputs(info, "OpenCloseShutter: doing action");
-    //if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0z5000h50V10000D424P4224R") != EZ_ERR_OK)
-    sprintf(cmd, "h0z5000h50V10000P424D%dR", CommandData.actbus.shutter_step);
+    // if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0z5000h50V10000D424P4224R") != EZ_ERR_OK)
+    snprintf(cmd, sizeof(cmd), "h0z5000h50V10000P424D%dR", CommandData.actbus.shutter_step);
     if (EZBus_Comm(&bus, id[SHUTTERNUM], cmd) != EZ_ERR_OK) {
        bputs(warning, "OpenCloseShutter: EZ Bus error");
        usleep(20*SHUTTER_SLEEP);
     }
-  }
-  else
+  } else {
     bputs(info, "OpenCloseShutter: Shutter is already closed");
-
+  }
 }
 
 
@@ -573,13 +571,13 @@ static void CloseShutter()
   else
     ;
 
-  // This code does new style closing of the shutter:
+  // This code does new style closing of the shutter
   // If the shutter is not closed, then turn of the shutter (it will fall
   // open), drive against limit switch then close quickly.
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
     bputs(info, "CloseShutter: closing shutter...");
     usleep(SHUTTER_SLEEP);
-    sprintf(cmd, "z0V10000h0M2000h50P424z5000D%dR", CommandData.actbus.shutter_step);
+    snprintf(cmd, sizeof(cmd), "z0V10000h0M2000h50P424z5000D%dR", CommandData.actbus.shutter_step);
     if (EZBus_Comm(&bus, id[SHUTTERNUM], cmd) != EZ_ERR_OK)
       bputs(warning, "CloseShutter: EZ Bus error");
     usleep(SHUTTER_SLEEP);
@@ -587,15 +585,13 @@ static void CloseShutter()
     usleep(5000000);   // Wait 5 seconds
     EZBus_Stop(&bus, id[SHUTTERNUM]);
     bputs(info, "end wait");
-  }
-  else {  // Shutter is closed according to opto switch
+  } else {  // Shutter is closed according to opto switch
     shutter_data.state = SHUTTER_CLOSED;
-    //bputs(info, "CloseShutter: shutter is closed");
+    // bputs(info, "CloseShutter: shutter is closed");
   }
 
   if (shutter_timeout >= SHUTTER_CLOSE_TIMEOUT)
     bputs(warning, "CloseShutter: Closing shutter timed out");
-
 }
 
 
@@ -612,14 +608,13 @@ static void CloseSlowShutter()
   else
     ;
 
-  //blast_info("%d %d %d", shutter_data.in, shutter_data.in & SHUTTER_CLOSED_BIT,
+  // blast_info("%d %d %d", shutter_data.in, shutter_data.in & SHUTTER_CLOSED_BIT,
   //        SHUTTER_CLOSED_BIT);
-  
-  // This code does the old style clsing of the shutter:
+
+  // This code does the old style clsing of the shutter
   // Close shutter a little, check the opto, close the shutter a little,
   // check the opto... until shutter is closed
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
-
     bputs(info, "CloseSlowShutter: Closing shutter...");
 
     while (((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) &
@@ -629,56 +624,52 @@ static void CloseSlowShutter()
           bputs(warning, "CloseShutter: 2. Error polling opto switch");
         usleep(SHUTTER_SLEEP);
         if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
-          //if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64z0h50V1000P300R") != EZ_ERR_OK)
-          sprintf(cmd, "j64z5000h50V1000D%dR", CommandData.actbus.shutter_step_slow);
+          // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64z0h50V1000P300R") != EZ_ERR_OK)
+          snprintf(cmd, sizeof(cmd), "j64z5000h50V1000D%dR", CommandData.actbus.shutter_step_slow);
           if (EZBus_Comm(&bus, id[SHUTTERNUM], cmd) != EZ_ERR_OK)
             bputs(warning, "CloseShutter: EZ Bus error");
         }
       }
       shutter_timeout += SHUTTER_SLEEP;
     }
-  }
-  else {  // Shutter is closed according to opto switch
+  } else {  // Shutter is closed according to opto switch
     shutter_data.state = SHUTTER_CLOSED;
-    //bputs(info, "CloseShutter: shutter is closed");
+    // bputs(info, "CloseShutter: shutter is closed");
   }
 
   if (shutter_timeout >= SHUTTER_CLOSE_SLOW_TIMEOUT)
     bputs(warning, "CloseSlowShutter: Closing shutter timed out");
-
 }
 
 
 static void OpenShutter()
 {
   char  cmd[80];
-  //EZBus_Comm(&bus, id[SHUTTERNUM], "z5000V10000D4224R");
-  sprintf(cmd, "z0V10000P%dR", CommandData.actbus.shutter_step);
+  // EZBus_Comm(&bus, id[SHUTTERNUM], "z5000V10000D4224R");
+  snprintf(cmd, sizeof(cmd), "z0V10000P%dR", CommandData.actbus.shutter_step);
   EZBus_Comm(&bus, id[SHUTTERNUM], cmd);
 }
 
 
 static void GetShutterData(int *position)
 {
-
   *position = SHUTTER_IS_UNK;
 
   // This position is only where the step controller thinks the shutter
   // is.  There is no direct feedback from the shutter other than the
   // limit switch.
   if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
-    if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.in) != EZ_ERR_OK)
+    if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.in) != EZ_ERR_OK) {
       bputs(warning, "GetShutterData: EZBus is busy.");
-    else {
+    } else {
       if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT)
         *position = SHUTTER_IS_CLOSED;
     }
   }
-  
+
   // NEED TO CHECK SIGN OF THIS!!
   if (CommandData.actbus.shutter_out < 15000)
     *position = SHUTTER_IS_OPEN;
-
 }
 
 
@@ -698,7 +689,7 @@ static void DoShutter(void)
   static int  shutter_pos;
 
   if (shutter_data.state == SHUTTER_UNK) {
-    //bputs(info, "Initializing shutter...");
+    // bputs(info, "Initializing shutter...");
     EZBus_Take(&bus, id[SHUTTERNUM]);
     EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
     InitializeShutter();
@@ -718,17 +709,17 @@ static void DoShutter(void)
       break;
     case  SHUTTER_CLOSED:
       action = SHUTTER_DO_CLOSE;
-      //shutter_data.state = SHUTTER_CLOSED;
-      //CommandData.actbus.shutter_goal = SHUTTER_NOP;
+      // shutter_data.state = SHUTTER_CLOSED;
+      // CommandData.actbus.shutter_goal = SHUTTER_NOP;
       break;
     case  SHUTTER_CLOSED_SLOW:
       action = SHUTTER_DO_CLOSE_SLOW;
       break;
     case  SHUTTER_CLOSED2:
       action = SHUTTER_DO_OPEN_CLOSE;
-      //CommandData.actbus.shutter_goal = SHUTTER_CLOSED;
+      // CommandData.actbus.shutter_goal = SHUTTER_CLOSED;
       CommandData.actbus.shutter_goal = SHUTTER_NOP;
-      break; 
+      break;
     case  SHUTTER_INIT:
       action = SHUTTER_DO_INIT;
       shutter_data.state = SHUTTER_OPEN;
@@ -744,11 +735,11 @@ static void DoShutter(void)
       shutter_data.state = SHUTTER_OPEN;
       CommandData.actbus.shutter_goal = SHUTTER_NOP;
       break;
-      //case  SHUTTER_NOP:
-      //action = SHUTTER_DO_NOP;
-      //break;
+      // case  SHUTTER_NOP:
+      // action = SHUTTER_DO_NOP;
+      // break;
   }
-    
+
   /* Figure out what to do... */
   switch (action) {
     case SHUTTER_DO_OFF:
@@ -759,11 +750,11 @@ static void DoShutter(void)
       EZBus_Release(&bus, id[SHUTTERNUM]);
       break;
     case SHUTTER_DO_CLOSE:
-      //shutter_timeout = DRIVE_TIMEOUT;
-      //bputs(warning, "1. Closing shutter.");
+      // shutter_timeout = DRIVE_TIMEOUT;
+      // bputs(warning, "1. Closing shutter.");
       if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
         EZBus_Take(&bus, id[SHUTTERNUM]);
-        //EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
+        // EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
         CloseShutter();
         EZBus_Release(&bus, id[SHUTTERNUM]);
       }
@@ -771,23 +762,23 @@ static void DoShutter(void)
     case SHUTTER_DO_CLOSE_SLOW:
       if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
           EZBus_Take(&bus, id[SHUTTERNUM]);
-          //EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
+          // EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
           CloseSlowShutter();
           EZBus_Release(&bus, id[SHUTTERNUM]);
       }
       break;
     case SHUTTER_DO_OPEN_CLOSE:
-      //if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
+      // if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
         EZBus_Take(&bus, id[SHUTTERNUM]);
-        //EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
+        // EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
         OpenCloseShutter();
         EZBus_Release(&bus, id[SHUTTERNUM]);
-	//}
-	//else
-        //bputs(warning, "EZBus busy --- not calling OpenCloseShutter");
+	// }
+	// else
+        // bputs(warning, "EZBus busy --- not calling OpenCloseShutter");
       break;
     case SHUTTER_DO_OPEN:
-      //shutter_timeout = DRIVE_TIMEOUT;
+      // shutter_timeout = DRIVE_TIMEOUT;
       bputs(warning, "Opening shutter.");
       EZBus_Take(&bus, id[SHUTTERNUM]);
       EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
@@ -795,7 +786,7 @@ static void DoShutter(void)
       EZBus_Release(&bus, id[SHUTTERNUM]);
       break;
     case SHUTTER_DO_INIT:
-      //shutter_timeout = DRIVE_TIMEOUT;
+      // shutter_timeout = DRIVE_TIMEOUT;
       bputs(warning, "Intializing shutter.  Shutter will open.");
       EZBus_Take(&bus, id[SHUTTERNUM]);
       EZBus_Stop(&bus, id[SHUTTERNUM]);  /* stop current action first */
@@ -803,7 +794,7 @@ static void DoShutter(void)
       EZBus_Release(&bus, id[SHUTTERNUM]);
       break;
     case SHUTTER_DO_RESET:
-      //shutter_timeout = DRIVE_TIMEOUT;
+      // shutter_timeout = DRIVE_TIMEOUT;
       bputs(warning, "Resetting shutter.  Shutter will open.");
       EZBus_Take(&bus, id[SHUTTERNUM]);
       EZBus_Stop(&bus, id[SHUTTERNUM]);  /* stop current action first */
@@ -815,7 +806,6 @@ static void DoShutter(void)
   }
 
   action = SHUTTER_EXIT;
-
 }
 
 
@@ -826,17 +816,14 @@ static void DoShutter(void)
 /************************************************************************/
 static void GetLockData()
 {
-  static int counter = 0;
-  //when lock motor not active, take data more slowly
-  if (EZBus_IsTaken(&bus, id[LOCKNUM]) != EZ_ERR_OK
-      && counter++ < LOCK_MOTOR_DATA_TIMER)
-    return;
-  counter = 0;
+    static int counter = 0;
+    // when lock motor not active, take data more slowly
+    if (EZBus_IsTaken(&bus, id[LOCKNUM]) != EZ_ERR_OK && counter++ < LOCK_MOTOR_DATA_TIMER) return;
+    counter = 0;
 
-  EZBus_ReadInt(&bus, id[LOCKNUM], "?0", &lock_data.pos);
-  EZBus_Comm(&bus, id[LOCKNUM], "?aa");
-  sscanf(bus.buffer, "%hi,%hi,%hi,%hi", &lock_data.adc[0], &lock_data.adc[1],
-      &lock_data.adc[2], &lock_data.adc[3]);
+    EZBus_ReadInt(&bus, id[LOCKNUM], "?0", &lock_data.pos);
+    EZBus_Comm(&bus, id[LOCKNUM], "?aa");
+    sscanf(bus.buffer, "%hi,%hi,%hi,%hi", &lock_data.adc[0], &lock_data.adc[1], &lock_data.adc[2], &lock_data.adc[3]);
 }
 
 /* The NiC MCC does this via the BlastBus to give it a chance to know what's
@@ -844,61 +831,60 @@ static void GetLockData()
  * (since all these fields are slow). */
 static void SetLockState(int nic)
 {
-  static int firsttime = 1;
-  int pot;
-  unsigned int state;
-  int i_point;
+    static int firsttime = 1;
+    int pot;
+    unsigned int state;
+    int i_point;
 
-  static channel_t* potLockAddr;
-  static channel_t* stateLockAddr;
+    static channel_t* potLockAddr;
+    static channel_t* stateLockAddr;
 
-  if (firsttime) {
-    firsttime = 0;
-    potLockAddr = channels_find_by_name("pot_lock");
-    stateLockAddr = channels_find_by_name("state_lock");
-  }
+    if (firsttime) {
+        firsttime = 0;
+        potLockAddr = channels_find_by_name("pot_lock");
+        stateLockAddr = channels_find_by_name("state_lock");
+    }
 
-  //get lock data
-  if (nic) {
-    //use bbus when nic
-    pot = GET_UINT16(potLockAddr);
-    state = GET_UINT16(stateLockAddr);
-    lock_data.adc[1] = pot;
-  } else {
-    //otherwise (in charge) use lock_data
-    pot = lock_data.adc[1];
-    state = lock_data.state;
-  }
+    // get lock data
+    if (nic) {
+        // use bbus when nic
+        pot = GET_UINT16(potLockAddr);
+        state = GET_UINT16(stateLockAddr);
+        lock_data.adc[1] = pot;
+    } else {
+        // otherwise (in charge) use lock_data
+        pot = lock_data.adc[1];
+        state = lock_data.state;
+    }
 
-  //update the NIC on pot state
+    // update the NIC on pot state
 
-  //set the EZBus move parameters
-  EZBus_SetVel(&bus, id[LOCKNUM], CommandData.actbus.lock_vel);
-  EZBus_SetAccel(&bus, id[LOCKNUM], CommandData.actbus.lock_acc);
-  EZBus_SetIMove(&bus, id[LOCKNUM], CommandData.actbus.lock_move_i);
-  EZBus_SetIHold(&bus, id[LOCKNUM], CommandData.actbus.lock_hold_i);
+    // set the EZBus move parameters
+    EZBus_SetVel(&bus, id[LOCKNUM], CommandData.actbus.lock_vel);
+    EZBus_SetAccel(&bus, id[LOCKNUM], CommandData.actbus.lock_acc);
+    EZBus_SetIMove(&bus, id[LOCKNUM], CommandData.actbus.lock_move_i);
+    EZBus_SetIHold(&bus, id[LOCKNUM], CommandData.actbus.lock_hold_i);
 
-  state &= LS_DRIVE_MASK; /* zero everything but drive info */
+    state &= LS_DRIVE_MASK; /* zero everything but drive info */
 
-  if (pot <= LOCK_MIN_POT)
-    state |= LS_CLOSED;
-  else if (pot >= LOCK_MAX_POT) {
-    state |= LS_OPEN;
-  } else if ((pot < LOCK_MIN_POT + LOCK_POT_RANGE)
-      || (pot > LOCK_MAX_POT - LOCK_POT_RANGE))
-    state |= lock_data.state & (LS_OPEN | LS_CLOSED);
+    if (pot <= LOCK_MIN_POT)
+        state |= LS_CLOSED;
+    else if (pot >= LOCK_MAX_POT) {
+        state |= LS_OPEN;
+    } else if ((pot < LOCK_MIN_POT + LOCK_POT_RANGE) || (pot > LOCK_MAX_POT - LOCK_POT_RANGE)) {
+        state |= lock_data.state & (LS_OPEN | LS_CLOSED);
+    }
 
-  i_point = GETREADINDEX(point_index);
-  if (fabs(PointingData[i_point].enc_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5)
-    state |= LS_EL_OK;
+    i_point = GETREADINDEX(point_index);
+    if (fabs(PointingData[i_point].enc_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5) state |= LS_EL_OK;
 
-  /* Assume the pin is out unless we're all the way closed */
-  if (state & LS_CLOSED)
-    CommandData.pin_is_in = 1;
-  else
-    CommandData.pin_is_in = 0;
+    /* Assume the pin is out unless we're all the way closed */
+    if (state & LS_CLOSED)
+        CommandData.pin_is_in = 1;
+    else
+        CommandData.pin_is_in = 0;
 
-  lock_data.state = state;
+    lock_data.state = state;
 }
 
 #define SEND_SLEEP 100000 /* 100 milliseconds */
@@ -916,8 +902,9 @@ static void DoLock(void)
         GetLockData();
 
         /* Fix weird states */
-        if (((lock_data.state & (LS_DRIVE_EXT | LS_DRIVE_RET | LS_DRIVE_UNK)) && (lock_data.state & LS_DRIVE_OFF))
-                || (CommandData.actbus.lock_goal & LS_DRIVE_FORCE)) {
+        if (((lock_data.state & (LS_DRIVE_EXT | LS_DRIVE_RET | LS_DRIVE_UNK)) &&
+                (lock_data.state & LS_DRIVE_OFF)) ||
+                (CommandData.actbus.lock_goal & LS_DRIVE_FORCE)) {
             lock_data.state &= ~LS_DRIVE_MASK | LS_DRIVE_UNK;
             CommandData.actbus.lock_goal &= ~LS_DRIVE_FORCE;
             blast_warn("Reset lock motor state.");
@@ -942,8 +929,7 @@ static void DoLock(void)
                 action = LA_RETRACT;
             else
                 action = LA_STOP;
-        }
-        else if ((CommandData.actbus.lock_goal & 0x7) == (LS_CLOSED | LS_DRIVE_OFF)) {
+        } else if ((CommandData.actbus.lock_goal & 0x7) == (LS_CLOSED | LS_DRIVE_OFF)) {
             /* oX -.         oUE -(stp)-.              CRe -(stp)-+
              * oR -+-(stp) - oF  -(---)-+- oFE -(ret)- oRE -(---)-+- CFe ->
              * oU -'         oXE -(stp)-'              CUe -(stp)-+
@@ -953,8 +939,7 @@ static void DoLock(void)
                 action = LA_EXIT;
             else if (lock_data.state & LS_CLOSED)
                 action = LA_STOP;
-            else if ((lock_data.state & LS_EL_OK)
-                        || (CommandData.actbus.lock_goal & LS_IGNORE_EL)) { /* el in range */
+            else if ((lock_data.state & LS_EL_OK) || (CommandData.actbus.lock_goal & LS_IGNORE_EL)) { /* el in range */
                 if ((lock_data.state & (LS_OPEN | LS_DRIVE_STP)) == (LS_OPEN | LS_DRIVE_STP))
                     action = LA_WAIT;
                 else if (lock_data.state & LS_DRIVE_EXT)
@@ -965,20 +950,17 @@ static void DoLock(void)
                     action = LA_EXTEND;
                 else
                     action = LA_STOP;
-            }
-            else { /* el out of range */
+            } else { /* el out of range */
                 action = (lock_data.state & LS_DRIVE_OFF) ? LA_WAIT : LA_STOP;
             }
-        }
-        else if ((CommandData.actbus.lock_goal & 0x7) == LS_DRIVE_OFF) {
+        } else if ((CommandData.actbus.lock_goal & 0x7) == LS_DRIVE_OFF) {
             /* ocXe -.
              * ocRe -+-(stp)- ocFe ->
              * ocUe -+
              * ocSe -'
              */
             action = (lock_data.state & LS_DRIVE_OFF) ? LA_EXIT : LA_STOP;
-        }
-        else {
+        } else {
             blast_warn("Unhandled lock goal (%x) ignored.", CommandData.actbus.lock_goal);
             CommandData.actbus.lock_goal = LS_DRIVE_OFF;
         }
@@ -1027,12 +1009,11 @@ static void DoLock(void)
                 break;
         }
 
-        //quit if timeout
+        // quit if timeout
         if (lock_timeout == 0) {
             lock_timeout = -1;
             action = LA_EXIT;
         }
-
     } while (action != LA_EXIT);
 }
 
@@ -1041,11 +1022,11 @@ static void DoLock(void)
 /*    Frame Logic: Write data to the frame, called from main thread     */
 /*                                                                      */
 /************************************************************************/
-#define N_FILT_TEMP 2	    //number of temperatures to filter
-#define TEMP_FILT_LEN 300   //60s @ 5Hz
+#define N_FILT_TEMP 2	    // number of temperatures to filter
+#define TEMP_FILT_LEN 300   // 60s @ 5Hz
 static double filterTemp(int num, double data)
 {
-    static double temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = { }; //init to 0
+    static double temp_buf[N_FILT_TEMP][TEMP_FILT_LEN] = { }; // init to 0
     static double temp_sum[N_FILT_TEMP] = { };
     static int ibuf[N_FILT_TEMP] = { };
 
@@ -1102,8 +1083,7 @@ void SecondaryMirror(void)
             t_primary = filterTemp(0, t_primary1);
         else
             t_primary = filterTemp(0, t_primary2);
-    }
-    else {
+    } else {
         if (t_primary1 >= 0 && CommandData.actbus.tc_prefp == 1)
             t_primary = filterTemp(0, t_primary1);
         else if (t_primary2 >= 0 && CommandData.actbus.tc_prefp == 2)
@@ -1121,8 +1101,7 @@ void SecondaryMirror(void)
             t_secondary = filterTemp(1, t_secondary1);
         else
             t_secondary = filterTemp(1, t_secondary2);
-    }
-    else {
+    } else {
         if (t_secondary1 >= 0 && CommandData.actbus.tc_prefs == 1)
             t_secondary = filterTemp(1, t_secondary1);
         else if (t_secondary2 >= 0 && CommandData.actbus.tc_prefs == 2)
@@ -1135,8 +1114,7 @@ void SecondaryMirror(void)
         if (CommandData.actbus.tc_mode == TC_MODE_ENABLED)
             bputs(info, "Thermal Compensation: Autoveto raised.");
         CommandData.actbus.tc_mode = TC_MODE_AUTOVETO;
-    }
-    else if (CommandData.actbus.tc_mode == TC_MODE_AUTOVETO) {
+    } else if (CommandData.actbus.tc_mode == TC_MODE_AUTOVETO) {
         bputs(info, "Thermal Compensation: Autoveto lowered.");
         CommandData.actbus.tc_mode = TC_MODE_ENABLED;
     }
@@ -1150,7 +1128,7 @@ void SecondaryMirror(void)
     /* re-adjust */
     correction_temp += focus - POSITION_FOCUS - CommandData.actbus.sf_offset;
 
-    correction = correction_temp;  //slightly more thread safe
+    correction = correction_temp;  // slightly more thread safe
 
     if (CommandData.actbus.sf_time < CommandData.actbus.tc_wait)
         CommandData.actbus.sf_time++;
@@ -1165,14 +1143,14 @@ void SecondaryMirror(void)
 static char name_buffer[100];
 static inline channel_t* GetActNiosAddr(int i, const char* field)
 {
-  sprintf(name_buffer, "%s_%i_act", field, i);
+  snprintf(name_buffer, sizeof(name_buffer), "%s_%i_act", field, i);
 
   return channels_find_by_name(name_buffer);
 }
 
 static int filterLVDT(int num, int data)
 {
-  static int lvdt_buf[3][LVDT_FILT_LEN] = {}; //init to 0
+  static int lvdt_buf[3][LVDT_FILT_LEN] = {}; // init to 0
   static int lvdt_sum[3] = {0, 0, 0};
   static int ibuf = 0;
 
@@ -1182,10 +1160,10 @@ static int filterLVDT(int num, int data)
   return (int)((double)lvdt_sum[num]/LVDT_FILT_LEN + 0.5);
 }
 
-//handle counters in a well-timed frame synchronous manner
+// handle counters in a well-timed frame synchronous manner
 void UpdateActFlags()
 {
-  //count down timeout on ACT_FL_TRIMMED indicator flag
+  // count down timeout on ACT_FL_TRIMMED indicator flag
   if (act_trim_flag_wait > 0) {
     act_trim_flag_wait--;
     actbus_flags |= ACT_FL_TRIMMED;
@@ -1193,17 +1171,17 @@ void UpdateActFlags()
     actbus_flags &= ~ACT_FL_TRIMMED;
   }
 
-  //Check if waiting before trimming again
+  // Check if waiting before trimming again
   if (act_trim_wait > 0) {
     act_trim_wait--;
     actbus_flags |= ACT_FL_TRIM_WAIT;
+  } else {
+      actbus_flags &= ~ACT_FL_TRIM_WAIT;
   }
-  else actbus_flags &= ~ACT_FL_TRIM_WAIT;
 
   if (poll_timeout > 0) poll_timeout--;
 
   if (lock_timeout > 0) lock_timeout--;
-
 }
 
 void StoreActBus(void)
@@ -1326,7 +1304,7 @@ void StoreActBus(void)
 
     UpdateActFlags();
 
-    //filter the LVDTs, scale into encoder units, rotate to motor positions
+    // filter the LVDTs, scale into encoder units, rotate to motor positions
     lvdt_filt[0] = filterLVDT(0, GET_UINT16(lvdt63ActAddr));
     lvdt_filt[1] = filterLVDT(1, GET_UINT16(lvdt64ActAddr));
     lvdt_filt[2] = filterLVDT(2, GET_UINT16(lvdt65ActAddr));
@@ -1340,10 +1318,10 @@ void StoreActBus(void)
     if (CommandData.actbus.off) {
         if (CommandData.actbus.off > 0)
             CommandData.actbus.off--;
-        actbus_reset = 0;   //turn actbus off
-    }
-    else
+        actbus_reset = 0;   // turn actbus off
+    } else {
         actbus_reset = 1;
+    }
     SET_UINT16(busResetActAddr, actbus_reset);
 
     SET_UINT16(pinInLockAddr, CommandData.pin_is_in);
@@ -1404,171 +1382,166 @@ void StoreActBus(void)
 /*    Act Thread: initialize bus and command lock/secondary steppers    */
 /*                                                                      */
 /************************************************************************/
-//for NICC to get DR from bus and save to disk
+// for NICC to get DR from bus and save to disk
 void SyncDR()
 {
-  int i;
-  static int firsttime = 1;
-  static channel_t* drActAddr[3];
-  static channel_t* offsetActAddr[3];
-  short dr;
-  unsigned short offset;
+    int i;
+    static int firsttime = 1;
+    static channel_t* drActAddr[3];
+    static channel_t* offsetActAddr[3];
+    int32_t dr;
+    uint16_t  offset;
 
-  if (firsttime) {
-    firsttime = 0;
-    drActAddr[0] = channels_find_by_name("dr_0_act");
-    drActAddr[1] = channels_find_by_name("dr_1_act");
-    drActAddr[2] = channels_find_by_name("dr_2_act");
-    offsetActAddr[0] = channels_find_by_name("offset_0_act");
-    offsetActAddr[1] = channels_find_by_name("offset_1_act");
-    offsetActAddr[2] = channels_find_by_name("offset_2_act");
-  }
+    if (firsttime) {
+        firsttime = 0;
+        drActAddr[0] = channels_find_by_name("dr_0_act");
+        drActAddr[1] = channels_find_by_name("dr_1_act");
+        drActAddr[2] = channels_find_by_name("dr_2_act");
+        offsetActAddr[0] = channels_find_by_name("offset_0_act");
+        offsetActAddr[1] = channels_find_by_name("offset_1_act");
+        offsetActAddr[2] = channels_find_by_name("offset_2_act");
+    }
 
-  //get dead reckoning data
-  for (i=0; i<3; i++) {
-    dr = GET_UINT16(drActAddr[i]);
-    offset = GET_UINT16(offsetActAddr[i]);
-    act_data[i].dr = dr + offset;
-  }
+    // get dead reckoning data
+    for (i = 0; i < 3; i++) {
+        dr = GET_UINT16(drActAddr[i]);
+        offset = GET_UINT16(offsetActAddr[i]);
+        act_data[i].dr = dr + offset;
+    }
 
-  WriteDR();
+    WriteDR();
 }
 
 void ActuatorBus(void)
 {
-  int all_ok = 0;
-  int i;
-  int j=0; // Used for debugging print statements.  Delete later.
-  int my_cindex = 0;
-  int caddr_match = 0;
-  int is_init = 0;
-  int first_time=1;
-  int sf_ok;
+    int all_ok = 0;
+    int i;
+    int j = 0; // Used for debugging print statements.  Delete later.
+    int my_cindex = 0;
+    int caddr_match = 0;
+    int is_init = 0;
+    int first_time = 1;
+    int sf_ok;
 
+    nameThread("ActBus");
+    bputs(startup, "ActuatorBus startup.");
 
-  nameThread("ActBus");
-  bputs(startup, "ActuatorBus startup.");
+    while (!InCharge) {
+        if (first_time) {
+            blast_info("Not in charge.  Waiting.");
+            first_time = 0;
+        }
+        usleep(1000000);
+        CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control */
 
-  while (!InCharge) {
-    if (first_time) {
-      blast_info("Not in charge.  Waiting.");
-      first_time = 0;
+        SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+        SyncDR(); /* get encoder absolute state from the ICC */
+
+        CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
+        CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
     }
-    usleep(1000000);
-    CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining
-                                              control */
-
-    SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-    SyncDR();	     /* get encoder absolute state from the ICC */
-
-    CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
-    CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing 
-                                                twice if we switch to ICC */
-  }
-  first_time = 1;
-  while (!is_init) {
-    if (first_time) {
-      blast_info("In Charge! Attempting to initalize.");
-      first_time = 0;
-    }
-    if (EZBus_Init(&bus, ACT_BUS, "", ACTBUS_CHATTER) == EZ_ERR_OK)
-      is_init = 1;
-    usleep(10000);
-    if (is_init) {
-      blast_info("Bus initialized on %ith attempt",j);
-    }
-    j++;
-  }
-
-  for (i=0; i<NACT; i++) {
-    EZBus_Add(&bus, id[i], name[i]);
-    if (i == LOCKNUM) EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
-    else if (i == SHUTTERNUM) EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
-    else if (id[i] == HWPR_ADDR) EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
-    else 
-      EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
-  }
-
-  all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
-
-  for (;;) {
-    /* Repoll bus if necessary */
-    if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
-      for (i=0; i<NACT; i++)
-	EZBus_ForceRepoll(&bus, id[i]);
-      poll_timeout = 0;
-      all_ok = 0;
-      CommandData.actbus.force_repoll = 0;
-    }
-    
-    if (poll_timeout <= 0 && !all_ok && actbus_reset) {
-      //suppress non-error messages during repoll
-      bus.chatter = EZ_CHAT_ERR;
-      all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
-      bus.chatter = ACTBUS_CHATTER;
-      poll_timeout = POLL_TIMEOUT;
-    }    
-
-    /* Send the uplinked command, if any */
-    my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-    caddr_match = 0;
-    for (i=0; i<NACT; i++)
-      if (CommandData.actbus.caddr[my_cindex] == id[i]) caddr_match = 1;
-    if (caddr_match) {
-      blast_info("Sending command %s to Act %c\n",
-	      CommandData.actbus.command[my_cindex], 
-	      CommandData.actbus.caddr[my_cindex]);
-      //increase print level for uplinked manual commands
-      bus.chatter = EZ_CHAT_BUS;
-      EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex],
-		 CommandData.actbus.command[my_cindex]);
-      CommandData.actbus.caddr[my_cindex] = 0;
-      bus.chatter = ACTBUS_CHATTER;
-    }
-    
-    if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
-      // DoLock temporarily disabled.  7/18/2012
-      DoLock(); 
-      actuators_init |= 0x1 << LOCKNUM;
-    } else {
-      EZBus_ForceRepoll(&bus, id[LOCKNUM]);
-      all_ok = 0;
-      actuators_init &= ~(0x1 << LOCKNUM);
+    first_time = 1;
+    while (!is_init) {
+        if (first_time) {
+            blast_info("In Charge! Attempting to initalize.");
+            first_time = 0;
+        }
+        if (EZBus_Init(&bus, ACT_BUS, "", ACTBUS_CHATTER) == EZ_ERR_OK) is_init = 1;
+        usleep(10000);
+        if (is_init) {
+            blast_info("Bus initialized on %ith attempt", j);
+        }
+        j++;
     }
 
-    if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
-
-      DoShutter(); 
-      actuators_init |= 0x1 << SHUTTERNUM;
-    } else {
-      EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
-      all_ok = 0;
-      actuators_init &= ~(0x1 << SHUTTERNUM);
-    }
-    
-    sf_ok = 1;
-    for (i=0; i<3; i++) {
-      if (EZBus_IsUsable(&bus, id[i])) {
-	actuators_init |= 0x1 << i;
-      } else {
-	EZBus_ForceRepoll(&bus, id[i]);
-	all_ok = 0;
-	sf_ok = 0;
-	actuators_init &= ~(0x1 << i);
-      }
-    }
-    if (sf_ok) DoActuators();
-
-    if (EZBus_IsUsable(&bus, HWPR_ADDR)) {
-     DoHWPR(&bus);
-     actuators_init |= 0x1 << HWPRNUM;
-    } else {
-      EZBus_ForceRepoll(&bus, HWPR_ADDR);
-      all_ok = 0;
-     actuators_init &= ~(0x1 << HWPRNUM);
+    for (i = 0; i < NACT; i++) {
+        EZBus_Add(&bus, id[i], name[i]);
+        if (i == LOCKNUM)
+            EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
+        else if (i == SHUTTERNUM)
+            EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
+        else if (id[i] == HWPR_ADDR)
+            EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
+        else
+            EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
     }
 
-    usleep(10000);
-    
-  }
+    all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+
+    for (;;) {
+        /* Repoll bus if necessary */
+        if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
+            for (i = 0; i < NACT; i++)
+                EZBus_ForceRepoll(&bus, id[i]);
+            poll_timeout = 0;
+            all_ok = 0;
+            CommandData.actbus.force_repoll = 0;
+        }
+
+        if (poll_timeout <= 0 && !all_ok && actbus_reset) {
+            // suppress non-error messages during repoll
+            bus.chatter = EZ_CHAT_ERR;
+            all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+            bus.chatter = ACTBUS_CHATTER;
+            poll_timeout = POLL_TIMEOUT;
+        }
+
+        /* Send the uplinked command, if any */
+        my_cindex = GETREADINDEX(CommandData.actbus.cindex);
+        caddr_match = 0;
+        for (i = 0; i < NACT; i++)
+            if (CommandData.actbus.caddr[my_cindex] == id[i]) caddr_match = 1;
+        if (caddr_match) {
+            blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
+                       CommandData.actbus.caddr[my_cindex]);
+            // increase print level for uplinked manual commands
+            bus.chatter = EZ_CHAT_BUS;
+            EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex], CommandData.actbus.command[my_cindex]);
+            CommandData.actbus.caddr[my_cindex] = 0;
+            bus.chatter = ACTBUS_CHATTER;
+        }
+
+        if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
+            // DoLock temporarily disabled.  7/18/2012
+            DoLock();
+            actuators_init |= 0x1 << LOCKNUM;
+        } else {
+            EZBus_ForceRepoll(&bus, id[LOCKNUM]);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << LOCKNUM);
+        }
+
+        if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
+            DoShutter();
+            actuators_init |= 0x1 << SHUTTERNUM;
+        } else {
+            EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << SHUTTERNUM);
+        }
+
+        sf_ok = 1;
+        for (i = 0; i < 3; i++) {
+            if (EZBus_IsUsable(&bus, id[i])) {
+                actuators_init |= 0x1 << i;
+            } else {
+                EZBus_ForceRepoll(&bus, id[i]);
+                all_ok = 0;
+                sf_ok = 0;
+                actuators_init &= ~(0x1 << i);
+            }
+        }
+        if (sf_ok) DoActuators();
+
+        if (EZBus_IsUsable(&bus, HWPR_ADDR)) {
+            DoHWPR(&bus);
+            actuators_init |= 0x1 << HWPRNUM;
+        } else {
+            EZBus_ForceRepoll(&bus, HWPR_ADDR);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << HWPRNUM);
+        }
+
+        usleep(10000);
+    }
 }

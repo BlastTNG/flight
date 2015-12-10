@@ -23,8 +23,8 @@
  * Created on: Dec 18, 2014 by seth
  */
 
-#ifndef DSP1760_H_
-#define DSP1760_H_
+#ifndef INCLUDE_DSP1760_H_
+#define INCLUDE_DSP1760_H_
 #include <stdint.h>
 
 #define GYRO_VAR (0.7E-6)

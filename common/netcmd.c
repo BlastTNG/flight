@@ -43,8 +43,8 @@
 
 #include "netcmd.h"
 
-unsigned short client_n_scommands = 0;
-unsigned short client_n_mcommands = 0;
+uint16_t  client_n_scommands = 0;
+uint16_t  client_n_mcommands = 0;
 struct scom *client_scommands;
 struct mcom *client_mcommands;
 char client_command_list_serial[1024];

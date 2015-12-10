@@ -25,8 +25,8 @@
  */
 
 
-#ifndef COMMS_COMMON_H_
-#define COMMS_COMMON_H_
+#ifndef INCLUDE_COMMS_COMMON_H
+#define INCLUDE_COMMS_COMMON_H
 #include <stdio.h>
 #include <stdlib.h>
 

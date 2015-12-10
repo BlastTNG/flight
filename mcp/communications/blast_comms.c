@@ -58,23 +58,20 @@
 
 static void blast_comms_cleanup(void *m_arg)
 {
-	blast_comms_list_t *ports = NULL;
-	blast_comms_list_t *next_ptr = NULL;
+    blast_comms_list_t *ports = NULL;
+    blast_comms_list_t *next_ptr = NULL;
 
-	if (comms_ctx)
-	{
-		comms_net_async_ctx_free(comms_ctx);
-		comms_ctx = NULL;
-	}
+    if (comms_ctx) {
+        comms_net_async_ctx_free(comms_ctx);
+        comms_ctx = NULL;
+    }
 
-	for (ports = (blast_comms_list_t*)m_arg; ports; ports=next_ptr)
-	{
-		next_ptr = ports->next;
-		comms_serial_free(ports->tty);
-		bfree(err, ports);
-		ports = NULL;
-	}
-
+    for (ports = (blast_comms_list_t*) m_arg; ports; ports = next_ptr) {
+        next_ptr = ports->next;
+        comms_serial_free(ports->tty);
+        bfree(err, ports);
+        ports = NULL;
+    }
 }
 
 bool initialize_blast_comms(void)
@@ -84,11 +81,10 @@ bool initialize_blast_comms(void)
 
 	while (comms_ports) pthread_yield();
 
-	if (!(comms_ctx = comms_net_async_ctx_new(4)))
-	{
-		blast_tfatal("Could not get async context for comm port monitoring!");
-		return NULL;
-	}
+    if (!(comms_ctx = comms_net_async_ctx_new(4))) {
+        blast_tfatal("Could not get async context for comm port monitoring!");
+        return NULL;
+    }
 
 	if ((pthread_create(&comms_thread, NULL, blast_comms_monitor, NULL) == 0) &&
 			(pthread_detach(comms_thread) == 0))
@@ -121,7 +117,6 @@ static void *blast_comms_monitor(void *m_arg __attribute__((unused)))
         if (comms_net_async_poll(comms_ctx, 0) < 0) {
             blast_err("Received error while polling COMM ports context");
         }
-
     } while (1);
 
     pthread_cleanup_pop(1);
@@ -136,11 +131,10 @@ static void *blast_comms_monitor(void *m_arg __attribute__((unused)))
  */
 bool blast_comms_add_socket(comms_socket_t *m_sock)
 {
-	if (comms_net_async_ctx_add_sock(comms_ctx, m_sock) != NETSOCK_OK)
-	{
-		blast_err("Could not add %s to async comms monitor", m_sock->host);
-		return false;
-	}
+    if (comms_net_async_ctx_add_sock(comms_ctx, m_sock) != NETSOCK_OK) {
+        blast_err("Could not add %s to async comms monitor", m_sock->host);
+        return false;
+    }
 
 	blast_dbg("Added '%s' to async comms monitor", m_sock->host);
 	return true;
@@ -157,51 +151,45 @@ bool blast_comms_add_port(comms_serial_t *m_tty)
 	blast_comms_list_t *port = NULL;
 	blast_comms_list_t *iter = NULL;
 
-	if (!comms_ctx)
-	{
-		blast_err("BLAST Communication thread not initialized");
-		return false;
-	}
-	if (!m_tty)
-	{
-		blast_err("Passed NULL port to add");
-		return false;
-	}
-	if (m_tty->sock->fd == INVALID_SOCK)
-	{
-		blast_err("Passed closed socket to monitor");
-		return false;
-	}
+    if (!comms_ctx) {
+        blast_err("BLAST Communication thread not initialized");
+        return false;
+    }
+    if (!m_tty) {
+        blast_err("Passed NULL port to add");
+        return false;
+    }
+    if (m_tty->sock->fd == INVALID_SOCK) {
+        blast_err("Passed closed socket to monitor");
+        return false;
+    }
 
-	if (!(port = (blast_comms_list_t*) balloc(err, sizeof(blast_comms_list_t)))) return false;
+    if (!(port = (blast_comms_list_t*) balloc(err, sizeof(blast_comms_list_t)))) return false;
 
-	port->tty = m_tty;
-	port->next = NULL;
+    port->tty = m_tty;
+    port->next = NULL;
 
-	if (!comms_ports)
-	{
-		blast_startup("Initializing new communication ports list");
-		comms_ports = port;
-	}
-	else
-	{
-		for(iter = comms_ports; iter->next; iter=iter->next)
-			;/**Do Nothing */
-		iter->next = port;
-	}
-	if (comms_net_async_ctx_add_sock(comms_ctx, m_tty->sock) == NETSOCK_OK)
-	{
-		blast_dbg("Added '%s' to async comms monitor", port->tty->sock->host);
-		return true;
-	}
+    if (!comms_ports) {
+        blast_startup("Initializing new communication ports list");
+        comms_ports = port;
+    } else {
+        for (iter = comms_ports; iter->next; iter = iter->next)
+            ;/**Do Nothing */
+        iter->next = port;
+    }
+    if (comms_net_async_ctx_add_sock(comms_ctx, m_tty->sock) == NETSOCK_OK) {
+        blast_dbg("Added '%s' to async comms monitor", port->tty->sock->host);
+        return true;
+    }
 
-	blast_err("Could not add '%s' to async comms monitor", port->tty->sock->host);
-	bfree(err, port);
-	if (comms_ports == port) comms_ports = NULL;
-	else if (iter && iter->next == port) iter->next = NULL;
+    blast_err("Could not add '%s' to async comms monitor", port->tty->sock->host);
+    bfree(err, port);
+    if (comms_ports == port)
+        comms_ports = NULL;
+    else if (iter && iter->next == port) iter->next = NULL;
 
-	port=NULL;
-	return false;
+    port = NULL;
+    return false;
 }
 
 static void blast_comms_monitor_cleanup(void *m_arg)
@@ -218,17 +206,16 @@ static void blast_comms_monitor_cleanup(void *m_arg)
  */
 bool blast_comms_init_cmd_server(void)
 {
-	if (network_monitor_thread != (pthread_t)-1)
-	{
-		pthread_cancel(network_monitor_thread);
-	}
+    if (network_monitor_thread != (pthread_t) -1) {
+        pthread_cancel(network_monitor_thread);
+    }
 
-	while(network_monitor_thread != (pthread_t)-1) usleep(10);
+    while (network_monitor_thread != (pthread_t) -1)
+        usleep(10);
 
-	pthread_create(&network_monitor_thread, NULL, blast_comms_network_monitor, NULL);
-	pthread_detach(network_monitor_thread);
-	return true;
-
+    pthread_create(&network_monitor_thread, NULL, blast_comms_network_monitor, NULL);
+    pthread_detach(network_monitor_thread);
+    return true;
 }
 
 /**
@@ -244,60 +231,56 @@ static void *blast_comms_network_monitor(void *m_arg __attribute__((unused)))
 	int fd = 0;
 
 	nameThread("CmdNetMon");
-	pthread_cleanup_push(blast_comms_monitor_cleanup, cmd_sock);
-	if (!(cmd_sock = comms_sock_new()))
-	{
-		blast_startup("Error allocating space for a new socket!");
-		return NULL;
-	}
+    pthread_cleanup_push(blast_comms_monitor_cleanup, cmd_sock)
+        ;
+        if (!(cmd_sock = comms_sock_new())) {
+            blast_startup("Error allocating space for a new socket!");
+            return NULL;
+        }
 
-	if (comms_sock_listen(cmd_sock, NULL, BLAST_CMD_SERVER_PORT) != NETSOCK_OK)
-	{
-		blast_startup("Could not begin listening on command socket");
-		comms_sock_free(cmd_sock);
-		return NULL;
-	}
+        if (comms_sock_listen(cmd_sock, NULL, BLAST_CMD_SERVER_PORT) != NETSOCK_OK) {
+            blast_startup("Could not begin listening on command socket");
+            comms_sock_free(cmd_sock);
+            return NULL;
+        }
 
-	blast_startup("Initialized Network Command Monitor");
-	while(fd >= 0)
-	{
-		fd = comms_sock_accept(cmd_sock);
-		switch(fd)
-		{
-			case NETSOCK_ERR:
-				break;
-			case NETSOCK_AGAIN:
-				usleep(100);
-				fd = 0;
-				break;
-			case NETSOCK_OK:
-				break;
-			default:
-				new_cmd = comms_sock_new();
-				new_cmd->host = bstrdup(err, cmd_sock->host);
+        blast_startup("Initialized Network Command Monitor");
+        while (fd >= 0) {
+            fd = comms_sock_accept(cmd_sock);
+            switch (fd) {
+                case NETSOCK_ERR:
+                    break;
+                case NETSOCK_AGAIN:
+                    usleep(100);
+                    fd = 0;
+                    break;
+                case NETSOCK_OK:
+                    break;
+                default:
+                    new_cmd = comms_sock_new();
+                    new_cmd->host = bstrdup(err, cmd_sock->host);
 
-				new_cmd->callbacks.priv = new_cmd;
-				new_cmd->callbacks.connected = blast_comms_net_new_connection;
-				new_cmd->callbacks.data = blast_comms_net_process_data;
-				new_cmd->callbacks.finished = blast_comms_net_cleanup;
-				new_cmd->callbacks.error = blast_comms_net_error;
+                    new_cmd->callbacks.priv = new_cmd;
+                    new_cmd->callbacks.connected = blast_comms_net_new_connection;
+                    new_cmd->callbacks.data = blast_comms_net_process_data;
+                    new_cmd->callbacks.finished = blast_comms_net_cleanup;
+                    new_cmd->callbacks.error = blast_comms_net_error;
 
-				new_cmd->fd = fd;
-				new_cmd->state = NETSOCK_STATE_CONNECTING;
-				if (comms_net_async_ctx_add_sock(comms_ctx, new_cmd) == NETSOCK_OK)
-				{
-					blast_dbg("Added '%s' to async comms monitor", new_cmd->host);
-				}
-				comms_net_async_set_events(comms_sock_get_poll_handle(new_cmd), POLLOUT);
-				fd = 0;
-				break;
-		}
-	}
+                    new_cmd->fd = fd;
+                    new_cmd->state = NETSOCK_STATE_CONNECTING;
+                    if (comms_net_async_ctx_add_sock(comms_ctx, new_cmd) == NETSOCK_OK) {
+                        blast_dbg("Added '%s' to async comms monitor", new_cmd->host);
+                    }
+                    comms_net_async_set_events(comms_sock_get_poll_handle(new_cmd), POLLOUT);
+                    fd = 0;
+                    break;
+            }
+        }
 
-	pthread_cleanup_pop(1);
+        pthread_cleanup_pop(1);
 
-	blast_err("Exiting BLAST Commanding network monitor");
-	return NULL;
+    blast_err("Exiting BLAST Commanding network monitor");
+    return NULL;
 }
 
 /**
@@ -310,15 +293,11 @@ static void blast_comms_net_new_connection(int m_status, int m_errorcode, void *
 {
 	comms_socket_t *socket = (comms_socket_t*)m_userdata;
 
-	if (m_status == NETSOCK_OK)
-	{
-		blast_info("New connection from %s OK", socket->host);
-	}
-	else
-	{
-		blast_err("Could not connect to client %s: %s", socket->host, strerror(m_errorcode));
-	}
-
+    if (m_status == NETSOCK_OK) {
+        blast_info("New connection from %s OK", socket->host);
+    } else {
+        blast_err("Could not connect to client %s: %s", socket->host, strerror(m_errorcode));
+    }
 }
 
 /**
@@ -362,7 +341,6 @@ static void blast_comms_net_error(int m_code, void *m_userdata)
 {
     comms_socket_t *socket = (comms_socket_t*)m_userdata;
 	blast_err("Got error %d on %s", m_code, socket->host);
-	return;
 }
 
 

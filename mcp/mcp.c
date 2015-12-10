@@ -20,12 +20,6 @@
  *
  */
 
-#include "phenom/defs.h"
-#include "phenom/configuration.h"
-#include "phenom/job.h"
-#include "phenom/log.h"
-#include "phenom/sysutil.h"
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +39,11 @@
 #include <sys/time.h>
 #include <sys/syscall.h>
 
-#include <mputs.h>
+#include "phenom/job.h"
+#include "phenom/log.h"
+#include "phenom/sysutil.h"
+
+#include "mputs.h"
 #include "command_list.h"
 #include "command_struct.h"
 #include "crc.h"
@@ -56,40 +54,39 @@
 #include "tx.h"
 #include "lut.h"
 
-#include <acs.h>
-#include <actuators.h>
-#include <bias_tone.h>
-#include <blast.h>
-#include <blast_comms.h>
-#include <blast_sip_interface.h>
-#include <blast_time.h>
-#include <computer_sensors.h>
-#include <data_sharing.h>
-#include <dsp1760.h>
-#include <ec_motors.h>
-#include <framing.h>
-#include <hwpr.h>
-#include <motors.h>
-#include <uei.h>
-#include <watchdog.h>
-#include <xsc_network.h>
-#include <xsc_pointing.h>
+#include "acs.h"
+#include "actuators.h"
+#include "bias_tone.h"
+#include "blast.h"
+#include "blast_comms.h"
+#include "blast_sip_interface.h"
+#include "blast_time.h"
+#include "computer_sensors.h"
+#include "data_sharing.h"
+#include "dsp1760.h"
+#include "ec_motors.h"
+#include "framing.h"
+#include "hwpr.h"
+#include "motors.h"
+#include "uei.h"
+#include "watchdog.h"
+#include "xsc_network.h"
+#include "xsc_pointing.h"
 
 /* Define global variables */
 int StartupVeto = 20;
-//flc_ip[0] = south, flc_ip[1] = north, so that flc_ip[SouthIAm] gives other flc
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
 
-short int SouthIAm;
-short int InCharge = 0;
-short int InChargeSet=0;
+int16_t SouthIAm;
+int16_t InCharge = 0;
+int16_t InChargeSet = 0;
 struct ACSDataStruct ACSData;
 
 bool shutdown_mcp = false;
 
 void Pointing();
-void WatchFIFO(void*);          //commands.c
+void WatchFIFO(void*);          // commands.c
 
 
 struct chat_buf chatter_buffer;
@@ -116,8 +113,8 @@ time_t mcp_systime(time_t *t) {
   return the_time;
 }
 
-//static void Chatter(void* arg)
-//{
+// static void Chatter(void* arg)
+// {
 //  int fd;
 //  char ch;
 //  ssize_t ch_got;
@@ -141,12 +138,12 @@ time_t mcp_systime(time_t *t) {
 //    {
 //      if (errno == EINVAL)
 //      {
-//	if (lseek(fd, 0, SEEK_SET) == -1)
-//	{
-//	  blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
-//	}
+//  if (lseek(fd, 0, SEEK_SET) == -1)
+//  {
+//    blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
+//  }
 //      } else {
-//	blast_tfatal("Failed to seek /data/etc/blast/mcp.log (%d)\n", errno);
+//  blast_tfatal("Failed to seek /data/etc/blast/mcp.log (%d)\n", errno);
 //      }
 //    }
 //  } else {
@@ -154,7 +151,7 @@ time_t mcp_systime(time_t *t) {
 //    {
 //      if (lseek(fd, 0, SEEK_END) == -1)
 //      {
-//	blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
+//  blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
 //      }
 //    }
 //  }
@@ -182,16 +179,16 @@ time_t mcp_systime(time_t *t) {
 //    }
 //    usleep(100000);
 //  }
-//}
+// }
 
 
 
-//void ClearBuffer(struct frameBuffer *buffer) {
+// void ClearBuffer(struct frameBuffer *buffer) {
 //  buffer->i_out = buffer->i_in;
-//}
+// }
 //
-//unsigned short *PopFrameBufferAndSlow(struct frameBuffer *buffer, unsigned short ***slow) {
-//  unsigned short *frame;
+// uint16_t  *PopFrameBufferAndSlow(struct frameBuffer *buffer, uint16_t  ***slow) {
+//  uint16_t  *frame;
 //  int i_out = buffer->i_out;
 //
 //  if (buffer->i_in == i_out) { // no data
@@ -207,10 +204,10 @@ time_t mcp_systime(time_t *t) {
 //  }
 //  buffer->i_out = i_out;
 //  return (frame);
-//}
+// }
 //
-//unsigned short *PopFrameBuffer(struct frameBuffer *buffer) {
-//  unsigned short *frame;
+// uint16_t  *PopFrameBuffer(struct frameBuffer *buffer) {
+//  uint16_t  *frame;
 //  int i_out = buffer->i_out;
 //
 //  if (buffer->i_in == i_out) { // no data
@@ -223,14 +220,14 @@ time_t mcp_systime(time_t *t) {
 //  }
 //  buffer->i_out = i_out;
 //  return (frame);
-//}
+// }
 //
-//#endif
+// #endif
 
-//#ifndef BOLOTEST
-//static void BiPhaseWriter(void)
-//{
-//  unsigned short *frame;
+// #ifndef BOLOTEST
+// static void BiPhaseWriter(void)
+// {
+//  uint16_t  *frame;
 //
 //  nameThread("Bi0");
 //  bputs(startup, "Startup\n");
@@ -259,9 +256,9 @@ time_t mcp_systime(time_t *t) {
 //      }
 //    }
 //  }
-//}
+// }
 //
-//#endif
+// #endif
 
 static void close_mcp(int m_code)
 {
@@ -359,9 +356,9 @@ static void *mcp_main_loop(void *m_arg)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
     int counter_100hz = 1;
-    int counter_5hz=1;
-    int counter_2hz=1;
-    int counter_1hz=1;
+    int counter_5hz = 1;
+    int counter_2hz = 1;
+    int counter_1hz = 1;
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
@@ -378,8 +375,7 @@ static void *mcp_main_loop(void *m_arg)
             break;
         }
 
-        if (ret)
-        {
+        if (ret) {
             blast_err("error while sleeping, code %d (%s)\n", ret, strerror(ret));
             break;
         }
@@ -401,7 +397,6 @@ static void *mcp_main_loop(void *m_arg)
             mcp_100hz_routines();
         }
         mcp_200hz_routines();
-
     }
 
     return NULL;
@@ -430,7 +425,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if(geteuid() != 0) {
+  if (geteuid() != 0) {
       fprintf(stderr, "Sorry!  MCP needs to be run with root privileges.  Try `sudo ./mcp`\n");
       exit(0);
   }
@@ -458,7 +453,7 @@ int main(int argc, char *argv[])
   }
 
   /* register the output function */
-  nameThread("Dummy"); //insert dummy sentinel node first
+  nameThread("Dummy"); // insert dummy sentinel node first
   nameThread("Scheduling");
 
   buos_use_func(mputs);
@@ -477,7 +472,7 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not South.\n");
 
-  //populate nios addresses, based off of tx_struct, derived
+  // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
   InitCommandData();

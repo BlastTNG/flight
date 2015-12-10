@@ -24,8 +24,8 @@
  * Created on: Aug 19, 2014 by seth
  */
 
-#ifndef CHANNEL_MACROS_H_
-#define CHANNEL_MACROS_H_
+#ifndef INCLUDE_CHANNEL_MACROS_H_
+#define INCLUDE_CHANNEL_MACROS_H_
 
 #include <stdint.h>
 

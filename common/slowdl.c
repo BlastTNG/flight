@@ -77,7 +77,7 @@ void updateSlowDL() {
 void fillDLData(unsigned char *b, int len) {
   int i_r;
   int i_ch;
-  unsigned short *u;
+  uint16_t  *u;
   unsigned *U;
   double x;
   unsigned char *b_end;
@@ -135,8 +135,8 @@ void fillDLData(unsigned char *b, int len) {
         break;
       case 's':
       case 'u':
-        u = (unsigned short *)b;
-        *u = (unsigned short)(0xffff & slowDLList[i_ch].iX[i_r]);
+        u = (uint16_t  *)b;
+        *u = (uint16_t )(0xffff & slowDLList[i_ch].iX[i_r]);
         b+=2;
         break;
       case 'S':

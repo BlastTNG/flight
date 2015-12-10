@@ -28,7 +28,7 @@
 
 #include <stdint.h>
 
-#define MAP(_index,_subindex,_map){\
+#define MAP(_index, _subindex, _map) {\
     _map.index = _index;\
     _map.subindex = _subindex;\
 }
@@ -213,7 +213,7 @@ typedef enum {
 #  define ECAT_FAULT_CANT_CONTROL_CURRENT   (1<<15)
 #  define ECAT_FAULT_WIRING_DISCONNECT      (1<<16)
 
-#define ECAT_CTL_STATUS 0x6041,0 /* Status word for Motor controller */
+#define ECAT_CTL_STATUS 0x6041, 0 /* Status word for Motor controller */
 #  define ECAT_CTL_STATUS_READY             (1<<0)
 #  define ECAT_CTL_STATUS_ON                (1<<1)
 #  define ECAT_CTL_STATUS_OP_ENABLED        (1<<2)
@@ -229,7 +229,7 @@ typedef enum {
 #  define ECAT_CTL_STATUS_MOVING            (1<<14)
 #  define ECAT_CTL_STATUS_HOME_CAP          (1<<15)
 
-#define ECAT_CTL_WORD 0x6040,0 /* Control work for motor controller */
+#define ECAT_CTL_WORD 0x6040, 0 /* Control work for motor controller */
 #  define ECAT_CTL_ON                       (1<<0)
 #  define ECAT_CTL_ENABLE_VOLTAGE           (1<<1)
 #  define ECAT_CTL_QUICK_STOP               (1<<2) /* Clear to enable quick stop */
@@ -237,7 +237,7 @@ typedef enum {
 #  define ECAT_CTL_RESET_FAULT              (1<<7)
 #  define ECAT_CTL_HALT                     (1<<8)
 
-#define ECAT_NET_STATUS 0x21B4,0 /* Motor controller network status */
+#define ECAT_NET_STATUS 0x21B4, 0 /* Motor controller network status */
 
 double rw_get_position_degrees(void);
 double el_get_position_degrees(void);

@@ -25,8 +25,8 @@
  */
 
 
-#ifndef BLAST_NETASYNC_H_
-#define BLAST_NETASYNC_H_
+#ifndef INCLUDE_COMMS_NETASYNC_H
+#define INCLUDE_COMMS_NETASYNC_H
 
 #include <poll.h>
 #include <stdint.h>
@@ -50,7 +50,8 @@ struct comms_socket;
  * @param m_priv Arbitrary data pointer
  * @return
  */
-typedef int (*comms_net_async_callback_t)(struct comms_net_async_handle *m_handle, socket_t m_socket, uint16_t m_events, void *m_priv);
+typedef int (*comms_net_async_callback_t)(struct comms_net_async_handle *m_handle,
+                                          socket_t m_socket, uint16_t m_events, void *m_priv);
 
 typedef struct comms_net_async_handle
 {
@@ -75,7 +76,8 @@ typedef struct comms_net_async_ctx
     size_t step_size;
 } comms_net_async_ctx_t;
 
-comms_net_async_handle_t *comms_net_async_handler_new(socket_t fd, uint16_t events, comms_net_async_callback_t cb, void *userdata);
+comms_net_async_handle_t *comms_net_async_handler_new(socket_t fd, uint16_t events,
+                                                      comms_net_async_callback_t cb, void *userdata);
 void comms_net_async_handler_free(comms_net_async_handle_t *p);
 void comms_net_async_set_events(comms_net_async_handle_t *p, uint16_t events);
 void comms_net_async_add_events(comms_net_async_handle_t *p, uint16_t events);

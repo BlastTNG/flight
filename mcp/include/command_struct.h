@@ -20,10 +20,11 @@
  *
  */
 
-#ifndef COMMAND_STRUCT_H
-#define COMMAND_STRUCT_H
+#ifndef INCLUDE_COMMAND_STRUCT_H
+#define INCLUDE_COMMAND_STRUCT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <time.h>
 
 #include <xsc_protocol.h>
@@ -69,7 +70,7 @@ struct GainStruct {
 };
 
 // used for pivot loop gains
-struct PivGainStruct { 
+struct PivGainStruct {
     float PV; // prop to RW velocity
     float IV; // prop to RW velocity
     float PE; // prop to velocity error
@@ -80,11 +81,11 @@ struct PivGainStruct {
 #define LS_OPEN        0x0001
 #define LS_CLOSED      0x0002
 #define LS_DRIVE_OFF   0x0004
-#define LS_POT_RAIL    0x0008  //now defunct
+#define LS_POT_RAIL    0x0008  // now defunct
 #define LS_DRIVE_EXT   0x0010
 #define LS_DRIVE_RET   0x0020
 #define LS_DRIVE_STP   0x0040
-#define LS_DRIVE_JIG   0x0080  //now defunct
+#define LS_DRIVE_JIG   0x0080  // now defunct
 #define LS_DRIVE_UNK   0x0100
 #define LS_EL_OK       0x0200
 #define LS_IGNORE_EL   0x0400
@@ -107,7 +108,7 @@ struct PivGainStruct {
 #define ACTBUS_FM_FOCUS  2
 #define ACTBUS_FM_OFFSET 3
 #define ACTBUS_FM_THERMO 4
-#define ACTBUS_FM_NOW    5  //unused
+#define ACTBUS_FM_NOW    5  // unused
 #define ACTBUS_FM_DELTA  6
 #define ACTBUS_FM_PANIC  7
 #define ACTBUS_FM_DELFOC 8
@@ -122,7 +123,6 @@ struct PivGainStruct {
 #define XYSTAGE_JUMP   2
 #define XYSTAGE_SCAN   3
 #define XYSTAGE_RASTER 4
-
 #define HWPR_PANIC	0
 #define HWPR_SLEEP	1
 #define HWPR_GOTO	2
@@ -153,7 +153,7 @@ struct PointingModeStruct {
   time_t t;
   double ra[4]; // the RAs for radbox (ie, quad)
   double dec[4]; // the decs for radbox (ie, quad)
-  unsigned int n_dith; // Elevation dither step 
+  uint32_t n_dith; // Elevation dither step
   int next_i_dith; // Dither starting index for next scan
   int next_i_hwpr; // HWPR pos for next scan
   double vel; // Elevation scan velocity
@@ -169,13 +169,13 @@ struct latch_pulse {
 enum calmode { on, off, pulse, repeat };
 
 struct Step {
-  unsigned short do_step;
-  unsigned short start;
-  unsigned short end;
-  unsigned short nsteps;
-  unsigned short arr_ind; // only used for bias
-  unsigned short dt;
-  unsigned short pulse_len;  // only used for bias
+  uint16_t do_step;
+  uint16_t start;
+  uint16_t end;
+  uint16_t nsteps;
+  uint16_t arr_ind; // only used for bias
+  uint16_t dt;
+  uint16_t pulse_len;  // only used for bias
 };
 
 typedef enum
@@ -207,7 +207,6 @@ typedef struct XSCTrigger
 
     XSCTriggerThreshold threshold;
     bool scan_force_trigger_enabled;
-
 } XSCTrigger;
 
 typedef struct XSCCommandStruct
@@ -218,32 +217,31 @@ typedef struct XSCCommandStruct
     XSCClientData net;
     double cross_el_trim;
     double el_trim;
-
 } XSCCommandStruct;
 
 
 struct CommandDataStruct {
-  unsigned short command_count;
-  unsigned short last_command;
+  uint16_t command_count;
+  uint16_t last_command;
 
-  //TODO: Insert these into "Scheduler struct"
-  unsigned short int timeout;
-  unsigned short int slot_sched; // what slot to use
-  unsigned short int upslot_sched; // slot being uplinked
-  unsigned int parts_sched; // bitfield up pulinked parts
-  unsigned short int uplink_sched; // use uplink sched
-  unsigned short int sucks;
-  unsigned short int lat_range;
-  unsigned short int at_float;
-  unsigned int tdrss_bw;
-  unsigned int iridium_bw;
-  
+  // TODO(seth): Insert these into "Scheduler struct"
+  uint16_t timeout;
+  uint16_t slot_sched; // what slot to use
+  uint16_t upslot_sched; // slot being uplinked
+  uint32_t parts_sched; // bitfield up pulinked parts
+  uint16_t uplink_sched; // use uplink sched
+  uint16_t sucks;
+  uint16_t lat_range;
+  uint16_t at_float;
+  uint32_t tdrss_bw;
+  uint32_t iridium_bw;
+
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
   struct PivGainStruct pivot_gain;
-  
+
   struct {
     struct latch_pulse sc_tx;
     struct latch_pulse das;
@@ -263,24 +261,24 @@ struct CommandDataStruct {
     int hub232_off;
   } power;
 
-  unsigned short disable_az;
-  unsigned short disable_el;
-  unsigned short force_el;
+  uint16_t disable_az;
+  uint16_t disable_el;
+  uint16_t force_el;
 
-  unsigned short reset_rw;
-  unsigned short reset_piv;
-  unsigned short reset_elev;
-  unsigned short restore_piv;
+  uint16_t reset_rw;
+  uint16_t reset_piv;
+  uint16_t reset_elev;
+  uint16_t restore_piv;
 
-  unsigned short verbose_rw;
-  unsigned short verbose_el;
-  unsigned short verbose_piv;
+  uint16_t verbose_rw;
+  uint16_t verbose_el;
+  uint16_t verbose_piv;
   int az_autogyro;
   int el_autogyro;
   double offset_ifel_gy;
   double offset_ifroll_gy;
   double offset_ifyaw_gy;
-  unsigned int gymask;
+  uint32_t gymask;
 
   unsigned char use_elenc;
   unsigned char use_elmotenc;
@@ -290,8 +288,8 @@ struct CommandDataStruct {
   unsigned char use_xsc1;
   unsigned char use_mag;
 
-  unsigned short fast_offset_gy;
-  unsigned int slew_veto;
+  uint16_t fast_offset_gy;
+  uint32_t slew_veto;
 
   double az_accel;
 
@@ -303,9 +301,9 @@ struct CommandDataStruct {
   double pss_az_trim;
 
   int autotrim_enable;
-  double autotrim_thresh;    //in sc sigma
-  double autotrim_rate;      //degrees/s
-  time_t autotrim_time;      //in seconds
+  double autotrim_thresh;    // in sc sigma
+  double autotrim_rate;      // degrees/s
+  time_t autotrim_time;      // in seconds
   time_t autotrim_xsc0_last_bad;
   time_t autotrim_osc_last_bad;
 
@@ -313,7 +311,7 @@ struct CommandDataStruct {
   double cal_xmin_mag;
   double cal_ymax_mag;
   double cal_ymin_mag;
-  
+
   double cal_off_pss1;
   double cal_off_pss2;
   double cal_off_pss3;
@@ -323,51 +321,50 @@ struct CommandDataStruct {
   double cal_d_pss2;
   double cal_d_pss3;
   double cal_d_pss4;
-  
+
   double cal_imin_pss;
   struct {
     int biasRamp;
-    unsigned short bias[5];
+    uint16_t bias[5];
     unsigned char setLevel[5];
     struct Step biasStep;
   } Bias;
-  
-  ///TODO: Remove Cryo cmd
+
+  // TODO(seth): Move Cryo cmd
   struct {
-    unsigned short charcoalHeater;
-    unsigned short hsCharcoal;
-    unsigned short fridgeCycle;
-    unsigned short force_cycle;
+    uint16_t charcoalHeater;
+    uint16_t hsCharcoal;
+    uint16_t fridgeCycle;
+    uint16_t force_cycle;
 
     double cycle_start_temp;
     double cycle_pot_max;
     double cycle_charcoal_max;
     double cycle_charcoal_settle;
-    //timeouts in minutes (NB: time will probably be in seconds)
+    // timeouts in minutes (NB: time will probably be in seconds)
     double cycle_charcoal_timeout;
     double cycle_settle_timeout;
 
-    unsigned short BDAHeat;
-    unsigned short hsPot;
-    short heliumLevel;
+    uint16_t BDAHeat;
+    uint16_t hsPot;
+    int16_t heliumLevel;
     int he4_lev_old;
-    short hwprPos;
+    int16_t hwprPos;
     int hwpr_pos_old;
 
-    unsigned short JFETHeat;
-    unsigned short autoJFETheat;
+    uint16_t JFETHeat;
+    uint16_t autoJFETheat;
     double JFETSetOn, JFETSetOff;
 
     enum calmode calibrator;
-    unsigned short calib_pulse, calib_period;
+    uint16_t calib_pulse, calib_period;
     int calib_repeats;
-    int calib_hwpr; 
+    int calib_hwpr;
 
-    unsigned short potvalve_open, potvalve_on, potvalve_close;
-    unsigned short lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
+    uint16_t potvalve_open, potvalve_on, potvalve_close;
+    uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   } Cryo;
 
-  ///TODO: Remove pump cmd
   struct {
     enum {bal_rest, bal_manual, bal_auto} mode;
     double level;
@@ -381,10 +378,8 @@ struct CommandDataStruct {
     // heating card parameters
     double heat_on;
     double heat_tset;
-
   } pumps;
 
-  ///TODO: Remove actbus cmd
   struct {
     int off;
     int force_repoll;
@@ -411,7 +406,7 @@ struct CommandDataStruct {
     int act_acc;
     int act_hold_i;
     int act_move_i;
-    unsigned short act_tol;
+    uint16_t act_tol;
 
     /* low-level actuator servo */
     int focus_mode;
@@ -430,15 +425,14 @@ struct CommandDataStruct {
     int lock_hold_i;
     int lock_move_i;
 
-    unsigned int lock_goal;
+    uint32_t lock_goal;
 
     /* shutter control */
     int shutter_step;
     int shutter_step_slow;
     int shutter_out;
 
-    unsigned int  shutter_goal;
-
+    uint32_t  shutter_goal;
   } actbus;
 
   struct {
@@ -453,18 +447,13 @@ struct CommandDataStruct {
     double pot_targ;
   } hwpr;
 
-  struct {
-    int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;
-    int force_repoll;
-  } xystage;
-
   int pin_is_in;
 
   /* sensors output: read in mcp:SensorReader() */
-  unsigned short temp1, temp2, temp3;
-  unsigned short df;
+  uint16_t temp1, temp2, temp3;
+  uint16_t df;
 
-  unsigned short plover;
+  uint16_t plover;
 
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
   double lat;
@@ -480,8 +469,8 @@ struct CommandDataStruct {
     int autofocus;
     int save_period;
     int auto_save;
-    int max_age;    //maximum allowed time between trigger and solution
-    int age;	    //last measured time between trigger and solution
+    int max_age;    // maximum allowed time between trigger and solution
+    int age;	    // last measured time between trigger and solution
   } ISCControl[2];
 
   struct XSCCommandStruct XSC[2];
@@ -494,5 +483,5 @@ int MIndex(enum multiCommand);
 
 extern struct CommandDataStruct CommandData;
 
-#endif   //COMMAND_STRUCT_H
+#endif   // COMMAND_STRUCT_H
 

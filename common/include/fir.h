@@ -20,6 +20,10 @@
  *
  */
 
+
+#ifndef INCLUDE_FIR_H
+#define INCLUDE_FIR_H
+
 #define NSTAGE 8
 
 struct FirStruct {
@@ -32,3 +36,5 @@ struct FirStruct {
 
 void initFir(struct FirStruct *fs, int ns);
 double filter(double x, struct FirStruct *fs);
+
+#endif

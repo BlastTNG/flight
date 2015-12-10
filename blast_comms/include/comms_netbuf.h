@@ -25,8 +25,8 @@
  */
 
 
-#ifndef COMMS_NET_BUFFER_H_
-#define COMMS_NET_BUFFER_H_
+#ifndef INCLUDE_COMMS_NETBUF_H
+#define INCLUDE_COMMS_NETBUF_H
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -67,19 +67,19 @@ static inline size_t netbuf_bytes_available(netbuf_t *m_buffer)
         - m_buffer->elem_size;
 }
 
-netbuf_t* __attribute__((__malloc__,warn_unused_result)) netbuf_new(size_t elem_size, size_t limit);
-netbuf_t* __attribute__((nonnull,warn_unused_result)) netbuf_producer_new(netbuf_t*);
-netbuf_t* __attribute__((nonnull,warn_unused_result)) netbuf_consumer_new(netbuf_t*);
+netbuf_t* __attribute__((__malloc__, warn_unused_result)) netbuf_new(size_t elem_size, size_t limit);
+netbuf_t* __attribute__((nonnull, warn_unused_result)) netbuf_producer_new(netbuf_t*);
+netbuf_t* __attribute__((nonnull, warn_unused_result)) netbuf_consumer_new(netbuf_t*);
 void netbuf_free(netbuf_t*);
 void netbuf_producer_free(netbuf_t*);
 void netbuf_consumer_free(netbuf_t*);
 void netbuf_reinit(netbuf_t *m_buf);
 
-size_t __attribute__((nonnull,warn_unused_result)) netbuf_write(netbuf_t*, const void* elems, size_t count);
-size_t __attribute__((nonnull,warn_unused_result)) netbuf_read(netbuf_t*, void* target, size_t count);
-size_t __attribute__((nonnull,warn_unused_result)) netbuf_read_wait(netbuf_t*, void* target, size_t count);
-size_t __attribute__((nonnull,warn_unused_result)) netbuf_peek(netbuf_t*, void**);
-size_t __attribute__((nonnull,warn_unused_result)) netbuf_peek_noalloc(netbuf_t*, void*, size_t);
+size_t __attribute__((nonnull, warn_unused_result)) netbuf_write(netbuf_t*, const void* elems, size_t count);
+size_t __attribute__((nonnull, warn_unused_result)) netbuf_read(netbuf_t*, void* target, size_t count);
+size_t __attribute__((nonnull, warn_unused_result)) netbuf_read_wait(netbuf_t*, void* target, size_t count);
+size_t __attribute__((nonnull, warn_unused_result)) netbuf_peek(netbuf_t*, void**);
+size_t __attribute__((nonnull, warn_unused_result)) netbuf_peek_noalloc(netbuf_t*, void*, size_t);
 void __attribute__((nonnull)) netbuf_reserve(netbuf_t*, size_t count);
 void __attribute__((nonnull)) netbuf_eat(netbuf_t *m_buf, size_t m_len);
 

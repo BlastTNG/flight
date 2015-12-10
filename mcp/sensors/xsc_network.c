@@ -1,7 +1,28 @@
-#include "phenom/defs.h"
-#include "phenom/listener.h"
-#include "phenom/socket.h"
-#include "phenom/memory.h"
+/**
+ * @file xsc_network.c
+ *
+ * @date Sep 23, 2015
+ * @author seth
+ *
+ * @brief This file is part of MCP, created for the BLASTPol project
+ *
+ * This software is copyright (C) 2011-2015 University of Pennsylvania
+ *
+ * MCP is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * MCP is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MCP; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
 
 #include "xsc_network.h"
 
@@ -13,7 +34,12 @@
 #include <fcntl.h>
 #include <math.h>
 
-#include <conversions.h>
+#include "phenom/defs.h"
+#include "phenom/listener.h"
+#include "phenom/socket.h"
+#include "phenom/memory.h"
+
+#include "conversions.h"
 #include "blast.h"
 #include "blast_comms.h"
 #include "mcp.h"
@@ -31,7 +57,7 @@ static const char addresses[2][16] = {"192.168.1.7", "192.168.1.8"};
 static const uint16_t port = 2017;
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
-extern short int InCharge;
+extern int16_t InCharge;
 
 typedef struct {
   int which;
@@ -83,8 +109,7 @@ static void xsc_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_dat
         memcpy(&xsc_mserver_data[state->which][array_index], data, sizeof(XSCServerData));
         xsc_server_index[state->which] = INC_INDEX(xsc_server_index[state->which]);
         state->have_warned_version = false;
-    }
-    else {
+    } else {
         if (!state->have_warned_version) {
             blast_info("received packet with incorrect xsc_protocol_version: %u\n",
                     data->xsc_protocol_version);
@@ -112,11 +137,15 @@ void xsc_write_data(int which)
     xsc_client_data.horizontal.valid = true;
     xsc_client_data.horizontal.lat = from_degrees(PointingData[pointing_read_index].lat);
     xsc_client_data.horizontal.lst = from_seconds(PointingData[pointing_read_index].lst);
-    xsc_client_data.solver.filters.hor_location_limit_az = from_degrees(PointingData[pointing_read_index].estimated_xsc_az_deg[which]);
-    xsc_client_data.solver.filters.hor_location_limit_el = from_degrees(PointingData[pointing_read_index].estimated_xsc_el_deg[which]);
-    xsc_client_data.solver.filters.eq_location_limit_ra = from_hours(PointingData[pointing_read_index].estimated_xsc_ra_hours[which]);
-    xsc_client_data.solver.filters.eq_location_limit_dec = from_degrees(PointingData[pointing_read_index].estimated_xsc_dec_deg[which]);
-    ///TODO: Adjust fcp<->stars in charge flag
+    xsc_client_data.solver.filters.hor_location_limit_az =
+            from_degrees(PointingData[pointing_read_index].estimated_xsc_az_deg[which]);
+    xsc_client_data.solver.filters.hor_location_limit_el =
+            from_degrees(PointingData[pointing_read_index].estimated_xsc_el_deg[which]);
+    xsc_client_data.solver.filters.eq_location_limit_ra =
+            from_hours(PointingData[pointing_read_index].estimated_xsc_ra_hours[which]);
+    xsc_client_data.solver.filters.eq_location_limit_dec =
+            from_degrees(PointingData[pointing_read_index].estimated_xsc_dec_deg[which]);
+    // TODO(seth): Adjust fcp<->stars in charge flag
     xsc_client_data.in_charge = 1;
 
     if (xsc_pointing_state[which].last_trigger.age_of_end_of_trigger_cs >
@@ -125,12 +154,14 @@ void xsc_write_data(int which)
     } else {
         xsc_client_data.counter_mcp = xsc_pointing_state[which].last_counter_mcp;
     }
-    // note: everything that must be valid, and doesn't come from CommandData.XSC.net, must be set here or it will be overwritten by CommandData.XSC.net
+    /**
+     * note: everything that must be valid, and doesn't come from CommandData.XSC.net,
+     * must be set here or it will be overwritten by CommandData.XSC.net
+     */
 
     xsc_client_data.xsc_protocol_version = XSC_PROTOCOL_VERSION;
 
     ph_stm_write(state[which].sock->stream, &xsc_client_data, sizeof(xsc_client_data), NULL);
-
 }
 
 /**
@@ -160,7 +191,8 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
             return;
 
         case PH_SOCK_CONNECT_ERRNO:
-            blast_err("connect %s:%d failed: `Error %d: %s`", addresses[state->which], port, m_errcode, strerror(m_errcode));
+            blast_err("connect %s:%d failed: `Error %d: %s`",
+                      addresses[state->which], port, m_errcode, strerror(m_errcode));
 
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
@@ -178,7 +210,6 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     m_sock->callback = xsc_process_packet;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
-
 }
 
 /**
@@ -210,7 +241,7 @@ static void connect_xsc(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 void xsc_networking_init(int m_which)
 {
     blast_dbg("XSC Init for %d", m_which);
-    for (unsigned int i=0; i<3; i++) {
+    for (unsigned int i = 0; i < 3; i++) {
         xsc_clear_server_data(&xsc_mserver_data[m_which][i]);
         xsc_init_server_data(&xsc_mserver_data[m_which][i]);
     }
@@ -226,6 +257,5 @@ void xsc_networking_init(int m_which)
     state[m_which].connect_job.data = &state[m_which];
 
     ph_job_dispatch_now(&(state[m_which].connect_job));
-
 }
 

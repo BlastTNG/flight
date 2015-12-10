@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef COMMS_SERIAL_H_
-#define COMMS_SERIAL_H_
+#ifndef INCLUDE_COMMS_SERIAL_H_
+#define INCLUDE_COMMS_SERIAL_H_
 #include <stdbool.h>
 #include <stddef.h>
 #include <termios.h>

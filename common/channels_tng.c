@@ -111,8 +111,7 @@ static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_us
         }
         channel->var = channel_ptr[channel->source][channel->rate];
         channel_ptr[channel->source][channel->rate] += channel_size(channel);
-    }
-    else {
+    } else {
         blast_fatal("Could not map %d and %d to source and rate!", channel->source, channel->rate);
     }
 }
@@ -128,7 +127,8 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
     channel_header_t *new_pkt = NULL;
     size_t channel_count;
 
-    for (channel_count = 0; m_channel_list[channel_count].field[0]; channel_count++);
+    for (channel_count = 0; m_channel_list[channel_count].field[0]; channel_count++)
+        continue;
     channel_count++; // Add one extra channel to allow for the NULL terminating field
 
     new_pkt = balloc(err, sizeof(channel_header_t) + sizeof(struct channel_packed) * channel_count);
@@ -154,7 +154,8 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
         memcpy(new_pkt->data[i].units, m_channel_list[i].units, UNITS_LEN);
     }
 
-    new_pkt->crc = PMurHash32(BLAST_MAGIC32, new_pkt, sizeof(channel_header_t) + sizeof(struct channel_packed) * channel_count);
+    new_pkt->crc = PMurHash32(BLAST_MAGIC32, new_pkt, sizeof(channel_header_t) +
+                              sizeof(struct channel_packed) * channel_count);
 
     return new_pkt;
 }
@@ -171,7 +172,8 @@ derived_header_t *channels_create_derived_map(derived_tng_t *m_derived)
     derived_header_t *new_pkt = NULL;
     size_t channel_count;
 
-    for (channel_count = 0; m_derived[channel_count].type != DERIVED_EOC_MARKER; channel_count++);
+    for (channel_count = 0; m_derived[channel_count].type != DERIVED_EOC_MARKER; channel_count++)
+        continue;
     channel_count++; // Add one extra channel to allow for the NULL terminating field
 
     new_pkt = balloc(err, sizeof(derived_header_t) + sizeof(derived_tng_t) * channel_count);
@@ -186,7 +188,7 @@ derived_header_t *channels_create_derived_map(derived_tng_t *m_derived)
     /**
      * Copy over the data values.  Union structure is already packed.
      */
-    memcpy (new_pkt->data, m_derived, channel_count * sizeof(derived_tng_t));
+    memcpy(new_pkt->data, m_derived, channel_count * sizeof(derived_tng_t));
 
 
     new_pkt->crc = PMurHash32(BLAST_MAGIC32, new_pkt, sizeof(derived_header_t) + sizeof(derived_tng_t) * channel_count);
@@ -205,7 +207,7 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
 {
     uint32_t crcval = m_map->crc;
 
-    if (m_map->version != BLAST_TNG_CH_VERSION ) {
+    if (m_map->version != BLAST_TNG_CH_VERSION) {
         blast_err("Unknown derived channels version %d", m_map->version);
         return -1;
     }
@@ -216,7 +218,8 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
     }
 
     if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed)) {
-        blast_err("Length of data packet %zu does not match header data %zu", m_len, sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed));
+        blast_err("Length of data packet %zu does not match header data %zu",
+                  m_len, sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed));
         return -1;
     }
 
@@ -270,7 +273,8 @@ int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng
     }
 
     if (m_len != sizeof(derived_header_t) + m_map->length * sizeof(derived_tng_t)) {
-        blast_err("Length of data packet %zu does not match header data %zu", m_len, sizeof(derived_header_t) + m_map->length * sizeof(derived_tng_t));
+        blast_err("Length of data packet %zu does not match header data %zu",
+                  m_len, sizeof(derived_header_t) + m_map->length * sizeof(derived_tng_t));
         return -1;
     }
 
@@ -302,7 +306,7 @@ int channels_store_data(E_SRC m_src, E_RATE m_rate, const void *m_data, size_t m
 {
 	if (m_len != frame_size[m_src][m_rate]) {
 		blast_err("Size mismatch storing data for %s:%s! Got %zu bytes, expected %zu",
-		        SRC_LOOKUP_TABLE[m_src].text, RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_src][m_rate] );
+		        SRC_LOOKUP_TABLE[m_src].text, RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_src][m_rate]);
 		return -1;
 	}
 
@@ -341,8 +345,7 @@ int channels_initialize(const channel_t * const m_channel_list)
         g_hash_table_insert(frame_table, (gpointer)channel->field, (gpointer)channel);
         if (channel->rate < RATE_END && channel->type < TYPE_END) {
             channel_count[channel->source][channel->rate][channel->type]++;
-        }
-        else {
+        } else {
             blast_fatal("Could not map %d and %d to rate and type!", channel->rate, channel->type);
             return 1;
         }
@@ -356,21 +359,27 @@ int channels_initialize(const channel_t * const m_channel_list)
         for (int rate = 0; rate < RATE_END; rate++) {
             frame_size[src][rate] = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                     2 * (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
-                    4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
-                    8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]);
+                    4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32] +
+                            channel_count[src][rate][TYPE_FLOAT]) +
+                    8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64] +
+                            channel_count[src][rate][TYPE_DOUBLE]);
 
             if (frame_size[src][rate]) {
-                /// Ensure that we can dereference the data without knowing its type by keeping an extra 8 bytes allocated at the end
-                channel_data[src][rate] = calloc(1,frame_size[src][rate] +  sizeof(uint64_t));
+                /**
+                 * Ensure that we can dereference the data without knowing its type by
+                 * keeping an extra 8 bytes allocated at the end
+                 */
+                channel_data[src][rate] = calloc(1, frame_size[src][rate] + sizeof(uint64_t));
                 blast_mem("Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
                         (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                         (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
-                        (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32]+channel_count[src][rate][TYPE_FLOAT]) +
-                        (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64]+channel_count[src][rate][TYPE_DOUBLE]),
+                        (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32] +
+                                channel_count[src][rate][TYPE_FLOAT]) +
+                        (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64] +
+                                channel_count[src][rate][TYPE_DOUBLE]),
                         SRC_LOOKUP_TABLE[src].text,
                         RATE_LOOKUP_TABLE[rate].text);
-            }
-            else {
+            } else {
                 channel_data[src][rate] = NULL;
             }
             channel_ptr[src][rate] = channel_data[src][rate];
@@ -393,8 +402,8 @@ int channels_initialize(const channel_t * const m_channel_list)
 	size_t channels_get_count_by_source(E_SRC m_src)
 {
 	size_t retval = 0;
-	for (E_RATE rate = 0; rate < RATE_END; rate++ ) {
-		for (E_TYPE type = 0; type < TYPE_END; type++ ) {
+	for (E_RATE rate = 0; rate < RATE_END; rate++) {
+		for (E_TYPE type = 0; type < TYPE_END; type++) {
 			retval += channel_count[m_src][rate][type];
 		}
 	}

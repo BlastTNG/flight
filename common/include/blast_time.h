@@ -23,8 +23,8 @@
  * Created on: Mar 31, 2015 by Seth Hillbrand
  */
 
-#ifndef INCLUDE_BLAST_TIME_H_
-#define INCLUDE_BLAST_TIME_H_
+#ifndef INCLUDE_BLAST_TIME_H
+#define INCLUDE_BLAST_TIME_H
 
 #include <time.h>
 #include <stdint.h>
@@ -34,9 +34,9 @@ typedef union
     uint64_t    qword;
     struct
     {
-        uint32_t    seconds;                /**< seconds - Number of seconds since the epoch */
-        uint32_t    nanoseconds;            /**< nanoseconds - Number of nanoseconds since the last second */
-    } timespec;                             /**< timespec - Because the system standard timespec might not be 32/32 bits */
+        uint32_t    seconds;        /**< seconds - Number of seconds since the epoch */
+        uint32_t    nanoseconds;    /**< nanoseconds - Number of nanoseconds since the last second */
+    } timespec;                     /**< timespec - Because the system standard timespec might not be 32/32 bits */
 } __attribute__((packed)) blast_time_t;
 
 /* Parameters used to convert the timespec values: */
@@ -54,8 +54,7 @@ typedef union
 static inline void timespec_add_ns(struct timespec *m_time, unsigned int m_ns)
 {
     m_ns += m_time->tv_nsec;
-    while (m_ns >= NSEC_PER_SEC)
-    {
+    while (m_ns >= NSEC_PER_SEC) {
         m_ns -= NSEC_PER_SEC;
         m_time->tv_sec++;
     }

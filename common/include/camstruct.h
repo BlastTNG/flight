@@ -25,7 +25,7 @@ struct StarcamReturn {
 	timeval imagestarttime;         //time set immediately after exposure started
 	string camID;                   //some number to uniquely identify camera
 	double ccdtemperature;          //CCD temperature measured by camera's sensor
-	unsigned short cputemperature;  //cpu temperature measured by sensors
+	uint16_t  cputemperature;  //cpu temperature measured by sensors
 	double focusposition;		//focus position
 	
 	//blob info (on 15 brightest blobs)

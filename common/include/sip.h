@@ -24,7 +24,8 @@
 
 
 
-//int sip_setserial(const char *input_tty);
+#ifndef INCLUDE_SIP_H
+#define INCLUDE_SIP_H
 
 /**********************************************/
 /*  SIPDataStruct                             */
@@ -63,3 +64,5 @@ struct SIPDataStruct {
 };
 
 extern struct SIPDataStruct SIPData;
+
+#endif

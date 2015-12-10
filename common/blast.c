@@ -65,119 +65,119 @@ void bputs_stdio(buos_t l, const char* s)
 
 void bputs_syslog(buos_t l, const char* s)
 {
-  int level = LOG_INFO;
+    int level = LOG_INFO;
 
-  switch(l) {
-    case none:
-      return;
-    case info:
-      level = LOG_INFO;
-      break;
-    case warning:
-      level = LOG_WARNING;
-      break;
-    case err:
-      level = LOG_ERR;
-      break;
-    case tfatal:
-      level = LOG_CRIT;
-      break;
-    case fatal:
-      level = LOG_ALERT;
-      break;
-    case startup:
-      level = LOG_NOTICE;
-      break;
-    case mem:
-    case sched:
-      level = LOG_DEBUG;
-      break;
-  }
+    switch (l) {
+        case none:
+            return;
+        case info:
+            level = LOG_INFO;
+            break;
+        case warning:
+            level = LOG_WARNING;
+            break;
+        case err:
+            level = LOG_ERR;
+            break;
+        case tfatal:
+            level = LOG_CRIT;
+            break;
+        case fatal:
+            level = LOG_ALERT;
+            break;
+        case startup:
+            level = LOG_NOTICE;
+            break;
+        case mem:
+        case sched:
+            level = LOG_DEBUG;
+            break;
+    }
 
-  if (l != mem || __buos_allow_mem)
-    syslog(level, "%s", s);
+    if (l != mem || __buos_allow_mem) syslog(level, "%s", s);
 
-  if (!__buos_disable_exit) {
-    if (l == fatal)
-      exit(1);
-    else if (l == tfatal)
-      pthread_exit(NULL);
-  }
+    if (!__buos_disable_exit) {
+        if (l == fatal)
+            exit(1);
+        else if (l == tfatal) pthread_exit(NULL);
+    }
 }
 
 void bputs(buos_t l, const char* s)
 {
-  if (__buos_real_bputs)
-    (*__buos_real_bputs)(l, s);
-  else
-    bputs_stdio(l, s);
+    if (__buos_real_bputs)
+        (*__buos_real_bputs)(l, s);
+    else
+        bputs_stdio(l, s);
 }
 
-void bprintf(buos_t l, const char* fmt, ...) {
-  char message[BUOS_MAX];
-  va_list argptr;
+void bprintf(buos_t l, const char* fmt, ...)
+{
+    char message[BUOS_MAX];
+    va_list argptr;
 
-  va_start(argptr, fmt);
-  vsnprintf(message, BUOS_MAX, fmt, argptr);
-  va_end(argptr);
+    va_start(argptr, fmt);
+    vsnprintf(message, BUOS_MAX, fmt, argptr);
+    va_end(argptr);
 
-  bputs(l, message);
+    bputs(l, message);
 }
 
-void berror(buos_t l, const char* fmt, ...) {
-  char message[BUOS_MAX];
-  va_list argptr;
-  int error = errno;
+void berror(buos_t l, const char* fmt, ...)
+{
+    char message[BUOS_MAX];
+    va_list argptr;
+    int error = errno;
 
-  va_start(argptr, fmt);
-  vsnprintf(message, BUOS_MAX, fmt, argptr);
-  va_end(argptr);
+    va_start(argptr, fmt);
+    vsnprintf(message, BUOS_MAX, fmt, argptr);
+    va_end(argptr);
 
-  /* add a colon */
-  strncat(message, ": ", BUOS_MAX - strlen(message));
+    /* add a colon */
+    strncat(message, ": ", BUOS_MAX - strlen(message));
 
-  message[BUOS_MAX - 1] = '\0';
-  /* copy error message into remainder of string -- Note: sterror is reentrant
-   * despite what strerror(3) insinuates (and strerror_r is horribly b0rked) */
-  strcat(message, strerror(error));
-  message[BUOS_MAX - 1] = '\0';
+    message[BUOS_MAX - 1] = '\0';
+    /* copy error message into remainder of string -- Note: sterror is reentrant
+     * despite what strerror(3) insinuates (and strerror_r is horribly b0rked) */
+    strncat(message, strerror(error), BUOS_MAX - strlen(message));
+    message[BUOS_MAX - 1] = '\0';
 
-  bputs(l, message);
+    bputs(l, message);
 }
 
 void buos_allow_mem(void)
 {
-  __buos_allow_mem = 1;
+    __buos_allow_mem = 1;
 }
 
 void buos_disallow_mem(void)
 {
-  __buos_allow_mem = 0;
+    __buos_allow_mem = 0;
 }
 
 void buos_disable_exit(void)
 {
-  __buos_disable_exit = 1;
+    __buos_disable_exit = 1;
 }
 
 void buos_enable_exit(void)
 {
-  __buos_disable_exit = 0;
+    __buos_disable_exit = 0;
 }
 
 void buos_use_func(void (*puts_func)(buos_t, const char*))
 {
-  __buos_real_bputs = puts_func;
+    __buos_real_bputs = puts_func;
 }
 
 void buos_use_syslog(void)
 {
-  __buos_real_bputs = bputs_syslog;
+    __buos_real_bputs = bputs_syslog;
 }
 
 void buos_use_stdio(void)
 {
-  __buos_real_bputs = bputs_stdio;
+    __buos_real_bputs = bputs_stdio;
 }
 
 /* BLAMM (BLAST Memory Manager) definitions */
@@ -237,8 +237,7 @@ void _basprintf(buos_t l, char **m_dest, const char *m_fmt, const char *m_fn, in
     retval = vasprintf(m_dest, m_fmt, argptr);
     va_end(argptr);
 
-    if (retval < 0)
-    {
+    if (retval < 0) {
         berror(l, "%s:%d (%s): Unable to create string with format '%s'", m_fn, m_line, m_file, m_fmt);
         *m_dest = NULL;
     }
@@ -266,7 +265,7 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
 {
     void *dest;
 
-    dest = _balloc(l,n, m_func, m_line, m_file);
+    dest = _balloc(l, n, m_func, m_line, m_file);
     if (dest == NULL)
         bprintf(l, "Previous balloc error originated from _memdup");
     else

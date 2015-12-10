@@ -20,6 +20,8 @@
  *
  */
 
+#include "motors.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -27,24 +29,20 @@
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 #include "channels_tng.h"
 #include "tx.h"
 #include "pointing_struct.h"
 #include "command_struct.h"
 #include "mcp.h"
-#include "copleycommand.h"
-#include "amccommand.h"
 #include "motordefs.h"
 
-#include <angles.h>
-#include <conversions.h>
-#include <mputs.h>
-#include <pointing.h>
-#include <radbox.h>
-#include <motors.h>
-#include <ec_motors.h>
+#include "angles.h"
+#include "conversions.h"
+#include "mputs.h"
+#include "pointing.h"
+#include "radbox.h"
+#include "ec_motors.h"
 
 motor_data_t RWMotorData[3] = {{0}};
 motor_data_t ElevMotorData[3] = {{0}};
@@ -57,17 +55,18 @@ struct AxesModeStruct axes_mode = {
   .i_dith = 0
 }; /* low level velocity mode */
 
-//motor control parameters
+// motor control parameters
 #define MOTORSR 200.0
 #define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps
 #define MAX_I  200.0 // Maximum accumulated integral in milliamps
 
-#define INTEGRAL_LENGTH  5.0  //length of the integral time constant in seconds
+#define INTEGRAL_LENGTH  5.0  // length of the integral time constant in seconds
 #define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
 
 #define LPFILTER_POLES 5
 #define LPFILTER_GAIN  1.099763251e+09
-static const double lpfilter_coefs[LPFILTER_POLES] = { 0.903328285, -4.60847636, 9.40530799, -9.59849709, 4.89833715 };
+static const double lpfilter_coefs[LPFILTER_POLES] = { 0.903328285, -4.60847636,
+                                                       9.40530799, -9.59849709, 4.89833715 };
 
 #define EL_BORDER 1.0
 #define AZ_BORDER 1.0
@@ -83,7 +82,6 @@ extern bool scan_leaving_snap_mode;
  */
 void store_axes_mode_data(void)
 {
-
     /* low level scan mode diagnostics */
     static channel_t *modeAzMcAddr;
     static channel_t *modeElMcAddr;
@@ -148,21 +146,18 @@ static double get_elev_vel(void)
 
     if (axes_mode.el_mode == AXIS_VEL) {
         vel = axes_mode.el_vel;
-    }
-    else if (axes_mode.el_mode == AXIS_POSITION) {
+    } else if (axes_mode.el_mode == AXIS_POSITION) {
         el = PointingData[i_point].el;
         el_dest = axes_mode.el_dest;
         dy = el_dest - el;
         if (dy < 0) {
             vel = -sqrt(-dy);
-        }
-        else {
+        } else {
             vel = sqrt(dy);
         }
         vel *= (double) CommandData.ele_gain.PT / MOTORSR;
         //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
-    }
-    else if (axes_mode.el_mode == AXIS_LOCK) {
+    } else if (axes_mode.el_mode == AXIS_LOCK) {
         /* for the lock, only use the elevation encoder */
         vel = (axes_mode.el_dest - ElevMotorData[i_elev].position) * 0.64;
     }
@@ -172,8 +167,7 @@ static double get_elev_vel(void)
 
     if (CommandData.use_elenc) {
         el_for_limit = wrap_to(el_get_position_degrees() + CommandData.enc_el_trim, 360.0);
-    }
-    else {
+    } else {
         el_for_limit = PointingData[i_point].el;
     }
 
@@ -186,7 +180,6 @@ static double get_elev_vel(void)
         if (vel >= 0) { // if we are going up
             vel = (MAX_EL - el_for_limit) * 0.36; // go to the stop
         }
-        //vel = -0.2; // go down
     }
 
     /* Limit Maximim speed to 0.5 dps*/
@@ -203,7 +196,7 @@ static double get_elev_vel(void)
         vel = last_vel - max_dv;
     last_vel = vel;
 
-    //blast_info("GetVEl: vel=%f", vel);
+    // blast_info("GetVEl: vel=%f", vel);
     return vel;
 }
 
@@ -223,31 +216,31 @@ static double get_az_vel(void)
     int i_point;
 
     double az, az_dest;
-    double max_dv = 0.1; //TODO: Put max acceleration into commanddata
+    double max_dv = 0.1; // TODO(seth): Put max acceleration into commanddata
     double dx;
 
     i_point = GETREADINDEX(point_index);
 
     if (axes_mode.az_mode == AXIS_VEL) {
         vel = axes_mode.az_vel;
-    }
-    else if (axes_mode.az_mode == AXIS_POSITION) {
+    } else if (axes_mode.az_mode == AXIS_POSITION) {
         az = PointingData[i_point].az;
         az_dest = axes_mode.az_dest;
         SetSafeDAz(az, &az_dest);
         dx = az_dest - az;
         if (dx < 0) {
             vel = -sqrt(-dx);
-        }
-        else {
+        } else {
             vel = sqrt(dx);
         }
         vel *= (double) CommandData.azi_gain.PT / MOTORSR;
     }
 
     vel_offset =
-            -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy) * sin(PointingData[i_point].el * M_PI / 180.0)
-            -(PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy) * cos(PointingData[i_point].el * M_PI / 180.0);
+            -(PointingData[i_point].offset_ifroll_gy - PointingData[i_point].ifroll_earth_gy)
+                * sin(from_degrees(PointingData[i_point].el))
+            -(PointingData[i_point].offset_ifyaw_gy - PointingData[i_point].ifyaw_earth_gy)
+                * cos(from_degrees(PointingData[i_point].el));
 
     vel -= vel_offset;
     /* Limit Maximum speed */
@@ -359,7 +352,6 @@ void write_motor_channels_5hz(void)
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
         net_status_piv_addr = channels_find_by_name("network_status_piv");
-
     }
 
     /***************************************************/
@@ -373,7 +365,6 @@ void write_motor_channels_5hz(void)
     SET_FLOAT(gDElAddr, CommandData.ele_gain.D);
     /* pointing gain term for elevation drive */
     SET_FLOAT(gPtElAddr, CommandData.ele_gain.PT);
-    //TODO:Figure out what to do about the Pointing gain term
     /* deadband for the el_motor integral term*/
     SET_FLOAT(gDBElAddr, CommandData.ele_gain.DB);
     /* Elevation current offset to compensate for static friction. */
@@ -429,7 +420,6 @@ void write_motor_channels_5hz(void)
     SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].state);
     SET_UINT16(net_status_piv_addr, PivotMotorData[i_motors].net_status);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);
-
 }
 
 void write_motor_channels_200hz(void)
@@ -454,7 +444,6 @@ void write_motor_channels_200hz(void)
         el_current_read = channels_find_by_name("mc_el_i_read");
         rw_current_read = channels_find_by_name("mc_rw_i_read");
         piv_current_read = channels_find_by_name("mc_piv_i_read");
-
     }
 
     /***************************************************/
@@ -475,7 +464,6 @@ void write_motor_channels_200hz(void)
     SET_INT16(el_current_read, ElevMotorData[i_motors].current * 100.0);
     SET_INT16(rw_current_read, RWMotorData[i_motors].current * 100.0);
     SET_INT16(piv_current_read, PivotMotorData[i_motors].current * 100.0);
-
 }
 
 /***************************************************************/
@@ -494,16 +482,10 @@ static void calculate_el_dither(unsigned int m_inc)
     if (CommandData.pointing_mode.n_dith <= 0) {
         axes_mode.el_dith = 0.0;
         if (m_inc) blast_info("No dither: axes_mode.el_dith = %f", axes_mode.el_dith);
-    }
-    else {
-        //    blast_info("GetElDither: CommandData.pointing_mode.n_dith = %i",CommandData.pointing_mode.n_dith);
-
+    } else {
         axes_mode.i_dith %= (CommandData.pointing_mode.n_dith);
-        //blast_info("GetElDither: axes_mode.i_dith is now %i",axes_mode.i_dith);
-        axes_mode.el_dith =
-                2.0 * (CommandData.pointing_mode.del) * ((double) axes_mode.i_dith) / ((double) (CommandData.pointing_mode.n_dith));
-        //blast_info("GetElDither: axes_mode.el_dith is finally %i",axes_mode.i_dith);
-
+        axes_mode.el_dith = 2.0 * (CommandData.pointing_mode.del) *
+                ((double) axes_mode.i_dith) / ((double) (CommandData.pointing_mode.n_dith));
     }
 
     if (m_inc) blast_info("***Dither Time!!!***  El Dither = %f", axes_mode.el_dith);
@@ -512,38 +494,26 @@ static void calculate_el_dither(unsigned int m_inc)
         axes_mode.el_dith += (-2.0) * CommandData.pointing_mode.del;
         if (m_inc) blast_info("GetElDither: Wrapping dither... axes_mode.el_dith=%f", axes_mode.el_dith);
     }
-
 }
 
 static void initialize_el_dither()
 {
-    static int j = 0;
     if (CommandData.pointing_mode.next_i_dith >= 0) {
         axes_mode.i_dith = CommandData.pointing_mode.next_i_dith;
-        //    blast_info("InitElDither:%i nid = %i, next_dith=%i,  axes_mode.i_dith = %i",j,CommandData.pointing_mode.next_i_dith,CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);
         CommandData.pointing_mode.next_i_dith = -1;
-    }
-    else {
+    } else {
         CommandData.pointing_mode.next_i_dith = -1;
-        //    blast_info("InitElDither:%i CommandData.pointing_mode.next_i_dith =%i, so axes_mode.i_dith = %i",j,CommandData.pointing_mode.next_i_dith,axes_mode.i_dith);
     }
 
     if (CommandData.pointing_mode.next_i_hwpr >= 0 && CommandData.pointing_mode.next_i_hwpr < 4) {
         CommandData.hwpr.i_pos = CommandData.pointing_mode.next_i_hwpr;
         CommandData.hwpr.mode = HWPR_GOTO_I;
         CommandData.hwpr.is_new = 1;
-        //    blast_info("InitElDither:%i Sending HWPR to index = %i",j,CommandData.pointing_mode.next_i_hwpr);
+        CommandData.pointing_mode.next_i_hwpr = -1;
+    } else {
         CommandData.pointing_mode.next_i_hwpr = -1;
     }
-    else {
-        //    blast_info("InitElDither:%i CommandData.pointing_mode.next_i_hwpr =%i, so we will do nothing",j,CommandData.pointing_mode.next_i_hwpr);
-        CommandData.pointing_mode.next_i_hwpr = -1;
-    }
-
-    //  blast_info("InitElDither: axes_mode.el_dith = %f",axes_mode.el_dith);
-    j++;
     calculate_el_dither(NO_DITH_INC);
-    return;
 }
 
 /****************************************************************/
@@ -551,83 +521,51 @@ static void initialize_el_dither()
 /*   Do scan modes                                              */
 /*                                                              */
 /****************************************************************/
-static void calculate_az_mode_vel(double m_az, double m_leftbound, double m_rightbound, double m_vel, double m_az_drift_vel)
+static void calculate_az_mode_vel(double m_az, double m_leftbound, double m_rightbound, double m_vel,
+                                  double m_az_drift_vel)
 {
-    if (axes_mode.az_vel < -m_vel + m_az_drift_vel)
-        axes_mode.az_vel = -m_vel + m_az_drift_vel;
-    if (axes_mode.az_vel > m_vel + m_az_drift_vel)
-        axes_mode.az_vel = m_vel + m_az_drift_vel;
+    if (axes_mode.az_vel < -m_vel + m_az_drift_vel) axes_mode.az_vel = -m_vel + m_az_drift_vel;
+    if (axes_mode.az_vel > m_vel + m_az_drift_vel) axes_mode.az_vel = m_vel + m_az_drift_vel;
 
-    ///TODO: Update AzScanMode with XSC data
+    /// TODO(seth): Update AzScanMode with XSC data
     if (m_az < m_leftbound) {
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
         axes_mode.az_mode = AXIS_VEL;
-        if (axes_mode.az_vel < m_vel + m_az_drift_vel)
-            axes_mode.az_vel += az_accel;
-    }
-    else if (m_az > m_rightbound) {
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+        if (axes_mode.az_vel < m_vel + m_az_drift_vel) axes_mode.az_vel += az_accel;
+    } else if (m_az > m_rightbound) {
         axes_mode.az_mode = AXIS_VEL;
-        if (axes_mode.az_vel > -m_vel + m_az_drift_vel)
-            axes_mode.az_vel -= az_accel;
-    }
-    else {
+        if (axes_mode.az_vel > -m_vel + m_az_drift_vel) axes_mode.az_vel -= az_accel;
+    } else {
         axes_mode.az_mode = AXIS_VEL;
         if (axes_mode.az_vel > 0) {
             axes_mode.az_vel = m_vel + m_az_drift_vel;
-//        if (az > right - 2.0*m_vel) /* within 2 sec of turnaround */
-//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-//        else
-//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-        }
-        else {
+        } else {
             axes_mode.az_vel = -m_vel + m_az_drift_vel;
-//        if (az < left + 2.0*m_vel) /* within 2 sec of turnaround */
-//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-//        else
-//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
         }
     }
 }
 
 static void calculate_el_mode_vel(double m_el, double m_botbound, double m_topbound, double m_el_vel, double m_el_drift)
 {
-//    double before_trig;
     double el_accel = EL_ACCEL / SR;
     if (axes_mode.el_vel < -m_el_vel + m_el_drift)
         axes_mode.el_vel = -m_el_vel + m_el_drift;
     if (axes_mode.el_vel > m_el_vel + m_el_drift)
         axes_mode.el_vel = m_el_vel + m_el_drift;
 
-    //TODO: Update ElScanMode with XSC routines
     if (m_el < m_botbound) {
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
         axes_mode.el_mode = AXIS_VEL;
         if (axes_mode.el_vel < m_el_vel + m_el_drift)
             axes_mode.el_vel += el_accel;
-    }
-    else if (m_el > m_topbound) {
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
+    } else if (m_el > m_topbound) {
         axes_mode.el_mode = AXIS_VEL;
         if (axes_mode.el_vel > -m_el_vel + m_el_drift)
             axes_mode.el_vel -= el_accel;
-    }
-    else {
+    } else {
         axes_mode.el_mode = AXIS_VEL;
         if (axes_mode.el_vel > 0) {
             axes_mode.el_vel = m_el_vel + m_el_drift;
-//            if (el > top - 2.0 * v) { /* within 2 sec of turnaround */
-//              isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-//            }
-//        else
-//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-        }
-        else {
+        } else {
             axes_mode.el_vel = -m_el_vel + m_el_drift;
-//        if (el < bottom + 2.0*v) /* within 2 sec of turnaround */
-//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-//        else
-//          isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
         }
     }
 }
@@ -653,28 +591,22 @@ static void do_az_scan_mode(void)
 
     v = CommandData.pointing_mode.vaz;
 
-    //TODO: Update DoAzScanMode with XSC Routine
     if (last_x != CommandData.pointing_mode.X || last_w != w) {
         if (az < left) {
             axes_mode.az_mode = AXIS_POSITION;
             axes_mode.az_dest = left;
             axes_mode.az_vel = 0.0;
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-        }
-        else if (az > right) {
+        } else if (az > right) {
             axes_mode.az_mode = AXIS_POSITION;
             axes_mode.az_dest = right;
             axes_mode.az_vel = 0.0;
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-        }
-        else {
+        } else {
             // once we are within the new az/w range, we can mark this as 'last'.
             last_x = CommandData.pointing_mode.X;
             last_w = w;
             calculate_az_mode_vel(az, left, right, v, 0);
         }
-    }
-    else {
+    } else {
         calculate_az_mode_vel(az, left, right, v, 0);
     }
 }
@@ -702,32 +634,24 @@ static void do_el_scan_mode(void)
         blast_info("Starting an elevation scan! h = %f, top=%f , bottom=%f", h, top, bottom);
     first_time = 0;
 
-    //  SetSafeDAz(left, &az); // Don't think I need this because I should be staying constant in az. Test!
-
     v = CommandData.pointing_mode.vel;
 
-    //TODO: Update do_el_scan_mode with XSC Routines
     if (last_y != CommandData.pointing_mode.Y || last_h != h) {
         if (el < bottom) {
             axes_mode.el_mode = AXIS_POSITION;
             axes_mode.el_dest = bottom;
             axes_mode.el_vel = 0.0;
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-        }
-        else if (el > top) {
+        } else if (el > top) {
             axes_mode.el_mode = AXIS_POSITION;
             axes_mode.el_dest = top;
             axes_mode.el_vel = 0.0;
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-        }
-        else {
+        } else {
             // once we are within the new az/w range, we can mark this as 'last'.
             last_y = CommandData.pointing_mode.Y;
             last_h = h;
             calculate_el_mode_vel(el, bottom, top, v, 0);
         }
-    }
-    else {
+    } else {
         calculate_el_mode_vel(el, bottom, top, v, 0);
     }
 }
@@ -754,8 +678,10 @@ static void do_mode_vcap(void)
         el = -10; /* very bad situation - don't know how this can happen */
 
     /* get raster center and sky drift speed */
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst, PointingData[i_point].lat, &caz, &cel);
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst + 1.0, PointingData[i_point].lat, &az2, &el2);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+                             lst, PointingData[i_point].lat, &caz, &cel);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+                             lst + 1.0, PointingData[i_point].lat, &az2, &el2);
     daz_dt = drem(az2 - caz, 360.0);
     del_dt = el2 - cel;
     SetSafeDAz(az, &caz);
@@ -783,8 +709,7 @@ static void do_mode_vcap(void)
         axes_mode.el_dest = el1;
         axes_mode.el_dir = -1;
         return;
-    }
-    else if (el < el2 - EL_BORDER) {
+    } else if (el < el2 - EL_BORDER) {
         axes_mode.az_mode = AXIS_POSITION;
         axes_mode.az_dest = caz;
         axes_mode.az_vel = 0.0;
@@ -793,11 +718,9 @@ static void do_mode_vcap(void)
         axes_mode.el_dest = el2;
         axes_mode.el_dir = 1;
         return;
-    }
-    else if (el > el1) { /* turn around */
+    } else if (el > el1) { /* turn around */
         axes_mode.el_dir = -1;
-    }
-    else if (el < el2) { /* turn around */
+    } else if (el < el2) { /* turn around */
         axes_mode.el_dir = 1;
     }
     v_el = CommandData.pointing_mode.del * axes_mode.el_dir;
@@ -811,8 +734,7 @@ static void do_mode_vcap(void)
     x2 = r * r - y * y;
     if (x2 < 0) {
         xw = 0.0;
-    }
-    else {
+    } else {
         xw = sqrt(x2);
     }
     if (xw < MIN_SCAN)
@@ -847,8 +769,10 @@ static void do_mode_velocity_box(void)
         el = -10; /* very bad situation - dont know how this can happen */
 
     /* get raster center and sky drift speed */
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst, PointingData[i_point].lat, &caz, &cel);
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst + 1.0, PointingData[i_point].lat, &az2, &el2);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+                             lst, PointingData[i_point].lat, &caz, &cel);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+                             lst + 1.0, PointingData[i_point].lat, &az2, &el2);
     daz_dt = drem(az2 - caz, 360.0);
     del_dt = el2 - cel;
     SetSafeDAz(az, &caz);
@@ -876,8 +800,7 @@ static void do_mode_velocity_box(void)
         axes_mode.el_dest = el1;
         axes_mode.el_dir = -1;
         return;
-    }
-    else if (el < el2 - EL_BORDER) {
+    } else if (el < el2 - EL_BORDER) {
         axes_mode.az_mode = AXIS_POSITION;
         axes_mode.az_dest = caz;
         axes_mode.az_vel = 0.0;
@@ -886,11 +809,9 @@ static void do_mode_velocity_box(void)
         axes_mode.el_dest = el2;
         axes_mode.el_dir = 1;
         return;
-    }
-    else if (el > el1) { /* turn around */
+    } else if (el > el1) { /* turn around */
         axes_mode.el_dir = -1;
-    }
-    else if (el < el2) { /* turn around */
+    } else if (el < el2) { /* turn around */
         axes_mode.el_dir = 1;
     }
     v_el = CommandData.pointing_mode.del * axes_mode.el_dir;
@@ -922,7 +843,8 @@ static void do_mode_RAdec_goto(void)
 
     az = PointingData[i_point].az;
 
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst, PointingData[i_point].lat, &caz, &cel);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+                             lst, PointingData[i_point].lat, &caz, &cel);
     SetSafeDAz(az, &caz);
 
     axes_mode.az_mode = AXIS_POSITION;
@@ -931,8 +853,6 @@ static void do_mode_RAdec_goto(void)
     axes_mode.el_mode = AXIS_POSITION;
     axes_mode.el_dest = cel;
     axes_mode.el_vel = 0.0;
-    //TODO:Update DoRADecGotoMode with XSC
-//  isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
 }
 
 static void do_mode_new_cap(void)
@@ -964,8 +884,10 @@ static void do_mode_new_cap(void)
     v_az = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
 
     /* get raster center and sky drift speed */
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst, PointingData[i_point].lat, &caz, &cel);
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst + 1.0, PointingData[i_point].lat, &az2, &el2);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+                             lst, PointingData[i_point].lat, &caz, &cel);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
+                             lst + 1.0, PointingData[i_point].lat, &az2, &el2);
 
     /* add in elevation dither */
     cel += axes_mode.el_dith;
@@ -980,7 +902,9 @@ static void do_mode_new_cap(void)
     bottom = cel - r;
 
     /* If a new command, reset to bottom row */
-    if ((CommandData.pointing_mode.X != last_X) || (CommandData.pointing_mode.Y != last_Y) || (CommandData.pointing_mode.w != last_w)
+    if ((CommandData.pointing_mode.X != last_X)
+            || (CommandData.pointing_mode.Y != last_Y)
+            || (CommandData.pointing_mode.w != last_w)
             || (last_mode != P_CAP)) {
         initialize_el_dither();
         if ((fabs(az - (caz)) < 0.1) && (fabs(el - (bottom)) < 0.05)) {
@@ -988,8 +912,7 @@ static void do_mode_new_cap(void)
             last_Y = CommandData.pointing_mode.Y;
             last_w = CommandData.pointing_mode.w;
             n_scan = 0;
-        }
-        else {
+        } else {
             last_w = 0; // remember we are moving...
             axes_mode.az_mode = AXIS_POSITION;
             axes_mode.az_dest = caz;
@@ -1000,18 +923,15 @@ static void do_mode_new_cap(void)
             v_el = 0.0;
             targ_el = -r;
             el_next_dir = 1;
-            //TODO:Update DoNewCapMode with XSC Routine
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
             return;
         }
     }
     /** Get x limits at the next elevation row **/
-    y = targ_el; //el - cel + CommandData.pointing_mode.del*el_dir;
+    y = targ_el; // el - cel + CommandData.pointing_mode.del*el_dir;
     x2 = r * r - y * y;
     if (x2 < 0) {
         xw = 0.0;
-    }
-    else {
+    } else {
         xw = sqrt(x2);
     }
     if (xw < MIN_SCAN * 0.5)
@@ -1025,8 +945,7 @@ static void do_mode_new_cap(void)
     x2 = r * r - y * y;
     if (x2 < 0) {
         xw = 0.0;
-    }
-    else {
+    } else {
         xw = sqrt(x2);
     }
     if (xw < MIN_SCAN * 0.5)
@@ -1048,8 +967,7 @@ static void do_mode_new_cap(void)
             new_step = 1;
         }
         axes_mode.az_dir = 1;
-    }
-    else if (az > right) {
+    } else if (az > right) {
         if (axes_mode.az_dir > 0) {
             az_distance = right - next_left;
             t = az_distance / v_az + 2.0 * v_az / (az_accel * SR);
@@ -1063,19 +981,21 @@ static void do_mode_new_cap(void)
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
-        //    blast_info("Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
         targ_el += CommandData.pointing_mode.del * el_next_dir;
         axes_mode.el_dir = el_next_dir;
         //    blast_info("Az Step: Next Step targ_el = %f",targ_el);
         if (targ_el >= r) {
             targ_el = r;
             el_next_dir = -1;
-            blast_info("Approaching the top: next targ_el = %f, r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, r, el_next_dir, axes_mode.el_dir, v_el);
-        }
-        else if (targ_el <= -r) {
+            blast_info("Approaching the top: next targ_el = %f, r = %f,"
+                        "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
+                       targ_el, r, el_next_dir, axes_mode.el_dir, v_el);
+        } else if (targ_el <= -r) {
             targ_el = -r;
             el_next_dir = 1;
-            blast_info("Approaching the bottom: next targ_el = %f, -r = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, (-1.0) * r, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Approaching the bottom: next targ_el = %f, -r = %f,"
+                        "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
+                    targ_el, (-1.0) * r, el_next_dir, axes_mode.el_dir, v_el);
         }
     }
 
@@ -1094,20 +1014,19 @@ static void do_mode_new_cap(void)
         axes_mode.el_mode = AXIS_POSITION;
         axes_mode.el_vel = 0.0;
         axes_mode.el_dest = el1;
-        //axes_mode.el_dir = -1;
+        // axes_mode.el_dir = -1;
         if (v_el > 0) {
             v_el = -v_el;
         }
         return;
-    }
-    else if (el < el2 - EL_BORDER) {
+    } else if (el < el2 - EL_BORDER) {
         axes_mode.az_mode = AXIS_POSITION;
         axes_mode.az_dest = caz;
         axes_mode.az_vel = 0.0;
         axes_mode.el_mode = AXIS_POSITION;
         axes_mode.el_vel = 0.0;
         axes_mode.el_dest = el2;
-        //axes_mode.el_dir = 1;
+        // axes_mode.el_dir = 1;
         if (v_el < 0) {
             v_el = -v_el;
         }
@@ -1132,206 +1051,195 @@ static void do_mode_new_cap(void)
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
-
     }
 
     el_dir_last = axes_mode.el_dir;
 
     axes_mode.el_mode = AXIS_VEL;
     axes_mode.el_vel = v_el + del_dt;
-
 }
 
 static void do_mode_el_box(void)
 {
-  double caz, cel, w, h;
-  double bottom, top, left, right;
-  double az, az2, el, el2;
-  double daz_dt, del_dt;
-  double lst;
-  double v_el, t=1;
-  int i_point;
-  int new_step = 0;
-  int new = 0;
-  int turn_az = 0;
-  static int j = 0;
+    double caz, cel, w, h;
+    double bottom, top, left, right;
+    double az, az2, el, el2;
+    double daz_dt, del_dt;
+    double lst;
+    double v_el, t = 1;
+    int i_point;
+    int new_step = 0;
+    int new = 0;
+    int turn_az = 0;
+    static int j = 0;
 
-  static double last_X=0, last_Y=0, last_w=0, last_h = 0;
-  static double v_az = 0;
-  static double targ_az=0.0;
+    static double last_X = 0, last_Y = 0, last_w = 0, last_h = 0;
+    static double v_az = 0;
+    static double targ_az = 0.0;
 
-  // Stuff for hwpr rotation triggering
-  static int az_dir_last = 0; 
-  static int n_scan = 0;
-  static int az_next_dir = 0.0;
+    // Stuff for hwpr rotation triggering
+    static int az_dir_last = 0;
+    static int n_scan = 0;
+    static int az_next_dir = 0.0;
 
-  i_point = GETREADINDEX(point_index);
-  lst = PointingData[i_point].lst;
-  az = PointingData[i_point].az;
-  el = PointingData[i_point].el;
+    i_point = GETREADINDEX(point_index);
+    lst = PointingData[i_point].lst;
+    az = PointingData[i_point].az;
+    el = PointingData[i_point].el;
 
-  v_el = fabs(CommandData.pointing_mode.vel);
+    v_el = fabs(CommandData.pointing_mode.vel);
 
-  /* get raster center and sky drift speed */
-  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst, PointingData[i_point].lat,
-      &caz, &cel);
-  equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y,
-      lst + 1.0, PointingData[i_point].lat,
-      &az2, &el2);
-  /* sky drift terms */
-  daz_dt = drem(az2 - caz, 360.0);
-  del_dt = el2 - cel;
+    /* get raster center and sky drift speed */
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst, PointingData[i_point].lat,
+                             &caz, &cel);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst + 1.0,
+                             PointingData[i_point].lat, &az2, &el2);
+    /* sky drift terms */
+    daz_dt = drem(az2 - caz, 360.0);
+    del_dt = el2 - cel;
 
-  SetSafeDAz(az, &caz);
+    SetSafeDAz(az, &caz);
 
-  w = CommandData.pointing_mode.w/cos(el * M_PI / 180.0);
-  h = CommandData.pointing_mode.h;
-  bottom = cel - h*0.5;
-  top = cel + h*0.5;
-  left = caz - w*0.5;
-  right = caz + w*0.5;
+    w = CommandData.pointing_mode.w / cos(el * M_PI / 180.0);
+    h = CommandData.pointing_mode.h;
+    bottom = cel - h * 0.5;
+    top = cel + h * 0.5;
+    left = caz - w * 0.5;
+    right = caz + w * 0.5;
 
-  if (top > MAX_EL)
-    top = MAX_EL;
-  if (bottom < MIN_EL)
-    bottom = MIN_EL;
-  new = 0;
+    if (top > MAX_EL) top = MAX_EL;
+    if (bottom < MIN_EL) bottom = MIN_EL;
+    new = 0;
 
-  /* If a new command, reset to bottom row */
-  if ((CommandData.pointing_mode.X != last_X) ||
-      (CommandData.pointing_mode.Y != last_Y) ||
-      (CommandData.pointing_mode.w != last_w) ||
-      (CommandData.pointing_mode.h != last_h) ||
-      (last_mode != P_EL_BOX)) {
-    initialize_el_dither();
-    new = 1;
-  }
-  if (el < bottom - 0.5) new = 1;
-  if (el > top + 0.5) new = 1;
-  if (az < left - 2.0) new = 1;
-  if (az > right + 2.0) new = 1;
-
-  /* If a new command, reset to bottom row */
-  if (new) {
-    n_scan = 0;
-    if ( (fabs(az - left) < 0.1) &&
-        (fabs(el - bottom) < 0.05)) {
-      last_X = CommandData.pointing_mode.X;
-      last_Y = CommandData.pointing_mode.Y;
-      last_w = CommandData.pointing_mode.w;
-      last_h = CommandData.pointing_mode.h;
-    } else {
-      last_w = 0; // remember we are moving...
-      axes_mode.az_mode = AXIS_POSITION;
-      axes_mode.az_dest = left;
-      axes_mode.az_vel = 0.0;
-      axes_mode.el_mode = AXIS_POSITION;
-      axes_mode.el_dest = bottom;
-      axes_mode.el_vel = 0.0;
-      v_az = 0.0;
-      targ_az = -w*0.5;
-      az_next_dir = 1;
-      //TODO:Update ElBoxMode with XSC Routine
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
-      return;
+    /* If a new command, reset to bottom row */
+    if ((CommandData.pointing_mode.X != last_X) || (CommandData.pointing_mode.Y != last_Y)
+        || (CommandData.pointing_mode.w != last_w) || (CommandData.pointing_mode.h != last_h)
+        || (last_mode != P_EL_BOX)) {
+        initialize_el_dither();
+        new = 1;
     }
-  }
-  /* set az v */
+    if (el < bottom - 0.5) new = 1;
+    if (el > top + 0.5) new = 1;
+    if (az < left - 2.0) new = 1;
+    if (az > right + 2.0) new = 1;
 
-  v_el = CommandData.pointing_mode.vel;
-  calculate_el_mode_vel(el, bottom, top, v_el, del_dt);
-
-  /** set Az V **/
-  new_step = 0;
-  if (el<bottom) {
-    if (axes_mode.el_dir < 0) {
-      t = h/v_el + 2.0*v_el/(EL_ACCEL * SR);
-      new_step = 1;
+    /* If a new command, reset to bottom row */
+    if (new) {
+        n_scan = 0;
+        if ((fabs(az - left) < 0.1) && (fabs(el - bottom) < 0.05)) {
+            last_X = CommandData.pointing_mode.X;
+            last_Y = CommandData.pointing_mode.Y;
+            last_w = CommandData.pointing_mode.w;
+            last_h = CommandData.pointing_mode.h;
+        } else {
+            last_w = 0; // remember we are moving...
+            axes_mode.az_mode = AXIS_POSITION;
+            axes_mode.az_dest = left;
+            axes_mode.az_vel = 0.0;
+            axes_mode.el_mode = AXIS_POSITION;
+            axes_mode.el_dest = bottom;
+            axes_mode.el_vel = 0.0;
+            v_az = 0.0;
+            targ_az = -w * 0.5;
+            az_next_dir = 1;
+            return;
+        }
     }
-    axes_mode.el_dir = 1;
-  } else if (el>top) {
-    if (axes_mode.el_dir > 0) {
-      t = h/v_el + 2.0*v_el/(EL_ACCEL * SR);
-      new_step = 1;
+    /* set az v */
+
+    v_el = CommandData.pointing_mode.vel;
+    calculate_el_mode_vel(el, bottom, top, v_el, del_dt);
+
+    /** set Az V **/
+    new_step = 0;
+    if (el < bottom) {
+        if (axes_mode.el_dir < 0) {
+            t = h / v_el + 2.0 * v_el / (EL_ACCEL * SR);
+            new_step = 1;
+        }
+        axes_mode.el_dir = 1;
+    } else if (el > top) {
+        if (axes_mode.el_dir > 0) {
+            t = h / v_el + 2.0 * v_el / (EL_ACCEL * SR);
+            new_step = 1;
+        }
+        axes_mode.el_dir = -1;
     }
-    axes_mode.el_dir = -1;
-  }
 
-  if (new_step) {
-      scan_entered_snap_mode = true;
-    // set v for this step
-    v_az = (targ_az - (az-caz))/t;
-    // set targ_az for the next step
-    targ_az += CommandData.pointing_mode.daz*az_next_dir; // This is actually the next target az....
-    axes_mode.az_dir = az_next_dir;
-    if (targ_az>w*0.5) { // If the target az for the next step is outside the az box range
-      targ_az = w*0.5;
-      az_next_dir=-1;
-      blast_info("Approaching the top %i: next targ_az = %f, h*0.5 = %f, az_next_dir = %i,axes_mode.az_dir=%i,  v_az = %f",j,targ_az,h*0.5,az_next_dir,axes_mode.az_dir,v_az);
-    } else if (targ_az<-w*0.5) {
-      targ_az = -w*0.5;
-      az_next_dir = 1;
-      blast_info("Approaching the bottom %i: next targ_az = %f, h*0.5 = %f,az_next_dir = %i,axes_mode.az_dir=%i, v_az = %f",j,targ_az,h*0.5,az_next_dir,axes_mode.az_dir,v_az);
+    if (new_step) {
+        scan_entered_snap_mode = true;
+        // set v for this step
+        v_az = (targ_az - (az - caz)) / t;
+        // set targ_az for the next step
+        targ_az += CommandData.pointing_mode.daz * az_next_dir; // This is actually the next target az....
+        axes_mode.az_dir = az_next_dir;
+        if (targ_az > w * 0.5) { // If the target az for the next step is outside the az box range
+            targ_az = w * 0.5;
+            az_next_dir = -1;
+            blast_info(
+                    "Approaching the top %i: next targ_az = %f, h*0.5 = %f,"
+                    "az_next_dir = %i,axes_mode.az_dir=%i,  v_az = %f",
+                    j, targ_az, h * 0.5, az_next_dir, axes_mode.az_dir, v_az);
+        } else if (targ_az < -w * 0.5) {
+            targ_az = -w * 0.5;
+            az_next_dir = 1;
+            blast_info(
+                    "Approaching the bottom %i: next targ_az = %f, h*0.5 = %f,"
+                    "az_next_dir = %i,axes_mode.az_dir=%i, v_az = %f",
+                    j, targ_az, h * 0.5, az_next_dir, axes_mode.az_dir, v_az);
+        }
     }
-  }
-  /* check for out of range in az */
-  if (az > right + AZ_BORDER) {
-    axes_mode.el_mode = AXIS_POSITION;
-    axes_mode.el_dest = cel;
-    axes_mode.el_vel = 0.0;
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_vel = 0.0;
-    blast_info("%i: az_vel=%f",j,axes_mode.az_vel);
+    /* check for out of range in az */
+    if (az > right + AZ_BORDER) {
+        axes_mode.el_mode = AXIS_POSITION;
+        axes_mode.el_dest = cel;
+        axes_mode.el_vel = 0.0;
+        axes_mode.az_mode = AXIS_POSITION;
+        axes_mode.az_vel = 0.0;
+        blast_info("%i: az_vel=%f", j, axes_mode.az_vel);
 
-    axes_mode.az_dest = left;
-    axes_mode.az_dir = -1;
-    if (v_az > 0) {
-      v_az = -v_az;
+        axes_mode.az_dest = left;
+        axes_mode.az_dir = -1;
+        if (v_az > 0) {
+            v_az = -v_az;
+        }
+        return;
+    } else if (az < left - AZ_BORDER) {
+        axes_mode.el_mode = AXIS_POSITION;
+        axes_mode.el_dest = cel;
+        axes_mode.el_vel = 0.0;
+        axes_mode.az_mode = AXIS_POSITION;
+        axes_mode.az_vel = 0.0;
+        axes_mode.az_dest = bottom;
+        axes_mode.az_dir = 1;
+        if (v_az < 0) {
+            v_az = -v_az;
+        }
+        return;
     }
-    return;
-  } else if (az < left - AZ_BORDER) {
-    axes_mode.el_mode = AXIS_POSITION;
-    axes_mode.el_dest = cel;
-    axes_mode.el_vel = 0.0;
-    axes_mode.az_mode = AXIS_POSITION;
-    axes_mode.az_vel = 0.0;
-    axes_mode.az_dest = bottom;
-    axes_mode.az_dir = 1;
-    if (v_az < 0) {
-      v_az = -v_az;
+
+    if (((axes_mode.az_dir - az_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
+        n_scan += 1;
+        blast_info("DoElBoxMode: Sending signal to rotate HWPR. n_scan = %i", n_scan);
+
+        /* Set flags to rotate the HWPR */
+        CommandData.hwpr.mode = HWPR_STEP;
+        CommandData.hwpr.is_new = HWPR_STEP;
+
+        //    if(n_scan % 4 == 0 && n_scan != 0) {
+        //      GetElDither(DITH_INC);
+        //      blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
+        //    }
     }
-    return;
-  }
 
-  if ( ((axes_mode.az_dir - az_dir_last)== 2) &&
-       (CommandData.pointing_mode.nw == 0) ) {
+    az_dir_last = axes_mode.az_dir;
 
-    n_scan +=1;
-    blast_info("DoElBoxMode: Sending signal to rotate HWPR. n_scan = %i",n_scan);
+    if (!turn_az) {
+        axes_mode.az_mode = AXIS_VEL;
+        axes_mode.az_vel = v_az + daz_dt;
+    }
 
-    /* Set flags to rotate the HWPR */
-    CommandData.hwpr.mode = HWPR_STEP;
-    CommandData.hwpr.is_new = HWPR_STEP;
-
-    //    if(n_scan % 4 == 0 && n_scan != 0) {
-    //      GetElDither(DITH_INC);
-    //      blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
-    //    }
-
-  }
-
-  az_dir_last = axes_mode.az_dir;
-
-  if(!turn_az) {
-    axes_mode.az_mode = AXIS_VEL;
-    axes_mode.az_vel = v_az + daz_dt;
-  }
-
-  j++;
-
-  return;
-
+    j++;
 }
 
 static void do_mode_new_box(void)
@@ -1364,8 +1272,10 @@ static void do_mode_new_box(void)
     v_az = fabs(CommandData.pointing_mode.vaz / cos(el * M_PI / 180.0));
 
     /* get raster center and sky drift speed */
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst, PointingData[i_point].lat, &caz, &cel);
-    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst + 1.0, PointingData[i_point].lat, &az2, &el2);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst, PointingData[i_point].lat,
+                             &caz, &cel);
+    equatorial_to_horizontal(CommandData.pointing_mode.X, CommandData.pointing_mode.Y, lst + 1.0,
+                             PointingData[i_point].lat, &az2, &el2);
 
     /* add the elevation dither term */
     cel += axes_mode.el_dith;
@@ -1385,29 +1295,20 @@ static void do_mode_new_box(void)
     right = caz + w * 0.5;
     j++;
 
-    if (top > MAX_EL)
-        top = MAX_EL;
-    if (bottom < MIN_EL)
-        bottom = MIN_EL;
-
-    //  if (j%JJLIM == 0) blast_info("cel =%f, el = %f,axes_mode.el_dith = %f, w=%f, h=%f, bottom = %f, top = %f, left = %f, right = %f",cel, el,axes_mode.el_dith, w, h, bottom , top, left, right);
-
+    if (top > MAX_EL) top = MAX_EL;
+    if (bottom < MIN_EL) bottom = MIN_EL;
     new = 0;
 
     /* If a new command, reset to bottom row */
-    if ((CommandData.pointing_mode.X != last_X) || (CommandData.pointing_mode.Y != last_Y) || (CommandData.pointing_mode.w != last_w)
-            || (CommandData.pointing_mode.h != last_h) || (last_mode != P_BOX)) {
+    if ((CommandData.pointing_mode.X != last_X) || (CommandData.pointing_mode.Y != last_Y)
+        || (CommandData.pointing_mode.w != last_w) || (CommandData.pointing_mode.h != last_h) || (last_mode != P_BOX)) {
         new = 1;
         initialize_el_dither();
     }
-    if (el < bottom - 0.5)
-        new = 1;
-    if (el > top + 0.5)
-        new = 1;
-    if (az < left - 2.0)
-        new = 1;
-    if (az > right + 2.0)
-        new = 1;
+    if (el < bottom - 0.5) new = 1;
+    if (el > top + 0.5) new = 1;
+    if (az < left - 2.0) new = 1;
+    if (az > right + 2.0) new = 1;
 
     /* If a new command, reset to bottom row */
     if (new) {
@@ -1417,8 +1318,7 @@ static void do_mode_new_box(void)
             last_Y = CommandData.pointing_mode.Y;
             last_w = CommandData.pointing_mode.w;
             last_h = CommandData.pointing_mode.h;
-        }
-        else {
+        } else {
             last_w = 0; // remember we are moving...
             axes_mode.az_mode = AXIS_POSITION;
             axes_mode.az_dest = left;
@@ -1429,8 +1329,6 @@ static void do_mode_new_box(void)
             v_el = 0.0;
             targ_el = -h * 0.5;
             el_next_dir = 1;
-            //TODO:Update DoNewBoxMode with XSC Routine
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
             return;
         }
     }
@@ -1446,8 +1344,7 @@ static void do_mode_new_box(void)
             new_step = 1;
         }
         axes_mode.az_dir = 1;
-    }
-    else if (az > right) {
+    } else if (az > right) {
         if (axes_mode.az_dir > 0) {
             t = w / v_az + 2.0 * v_az / (az_accel * SR);
             new_step = 1;
@@ -1460,20 +1357,27 @@ static void do_mode_new_box(void)
 //        blast_dbg("Scan Entered snap mode!");
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
-        // set targ_el for the next step
-        //    blast_info("Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
+//         set targ_el for the next step
+//            blast_info("Az Step:targ_el = %f, el = %f, cel = %f,el-cel = %f, "
+//                "el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",
+//                targ_el,el,cel,el-cel,el_next_dir,axes_mode.el_dir,v_el);
         targ_el += CommandData.pointing_mode.del * el_next_dir; // This is actually the next target el....
         //    blast_info("Az Step: Next Step targ_el = %f",targ_el);
         axes_mode.el_dir = el_next_dir;
         if (targ_el > h * 0.5) { // If the target el for the next step is outside the el box range
             targ_el = h * 0.5;
             el_next_dir = -1;
-            blast_info("Approaching the top: next targ_el = %f, h*0.5 = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
-        }
-        else if (targ_el < -h * 0.5) {
+            blast_info(
+                    "Approaching the top: next targ_el = %f, h*0.5 = %f, "
+                    "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
+                    targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
+        } else if (targ_el < -h * 0.5) {
             targ_el = -h * 0.5;
             el_next_dir = 1;
-            blast_info("Approaching the bottom: next targ_el = %f, h*0.5 = %f,el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f", targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info(
+                    "Approaching the bottom: next targ_el = %f, h*0.5 = %f,"
+                    "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
+                    targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
         }
     }
     /* check for out of range in el */
@@ -1489,8 +1393,7 @@ static void do_mode_new_box(void)
             v_el = -v_el;
         }
         return;
-    }
-    else if (el < bottom - EL_BORDER) {
+    } else if (el < bottom - EL_BORDER) {
         axes_mode.az_mode = AXIS_POSITION;
         axes_mode.az_dest = caz;
         axes_mode.az_vel = 0.0;
@@ -1505,7 +1408,6 @@ static void do_mode_new_box(void)
     }
 
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
-
         n_scan += 1;
         blast_info("DoNewBoxMode: Sending signal to rotate HWPR. n_scan = %i", n_scan);
 
@@ -1517,7 +1419,6 @@ static void do_mode_new_box(void)
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
-
     }
 
     el_dir_last = axes_mode.el_dir;
@@ -1527,7 +1428,6 @@ static void do_mode_new_box(void)
         axes_mode.el_vel = v_el + del_dt;
     }
     j++;
-    return;
 }
 
 void do_mode_quad(void) // aka radbox
@@ -1542,8 +1442,6 @@ void do_mode_quad(void) // aka radbox
     double c_az[4], c_el[4]; // corner az and corner el
     double az_of_bot;
     int new;
-
-    //int i_top, i_bot, new;
 
     static double last_ra[4] = { 0, 0, 0, 0 }, last_dec[4] = { 0, 0, 0, 0 };
     static double v_el = 0;
@@ -1562,12 +1460,14 @@ void do_mode_quad(void) // aka radbox
 
     /* convert ra/decs to az/el */
     for (i = 0; i < 4; i++) {
-        equatorial_to_horizontal(CommandData.pointing_mode.ra[i], CommandData.pointing_mode.dec[i], lst, lat, c_az + i, c_el + i);
+        equatorial_to_horizontal(CommandData.pointing_mode.ra[i], CommandData.pointing_mode.dec[i], lst, lat, c_az + i,
+                                 c_el + i);
         *(c_el + i) += axes_mode.el_dith;
     }
 
     /* get sky drift speed */
-    equatorial_to_horizontal(CommandData.pointing_mode.ra[0], CommandData.pointing_mode.dec[0], lst + 1.0, lat, &az2, &el2);
+    equatorial_to_horizontal(CommandData.pointing_mode.ra[0], CommandData.pointing_mode.dec[0], lst + 1.0, lat, &az2,
+                             &el2);
 
     el2 += axes_mode.el_dith;
 
@@ -1596,20 +1496,14 @@ void do_mode_quad(void) // aka radbox
         el_next_dir = 1;
     }
 
-    if (el < bottom - 1.0)
-        new = 1;
-    if (el > top + 1.0)
-        new = 1;
-    if (az < left - 6.0)
-        new = 1;
-    if (az > right + 6.0)
-        new = 1;
+    if (el < bottom - 1.0) new = 1;
+    if (el > top + 1.0) new = 1;
+    if (az < left - 6.0) new = 1;
+    if (az > right + 6.0) new = 1;
 
     for (i = 0; i < 4; i++) {
-        if (CommandData.pointing_mode.ra[i] != last_ra[i])
-            new = 1;
-        if (CommandData.pointing_mode.dec[i] != last_dec[i])
-            new = 1;
+        if (CommandData.pointing_mode.ra[i] != last_ra[i]) new = 1;
+        if (CommandData.pointing_mode.dec[i] != last_dec[i]) new = 1;
     }
 
     if (new) {
@@ -1620,8 +1514,7 @@ void do_mode_quad(void) // aka radbox
                 last_ra[i] = CommandData.pointing_mode.ra[i];
                 last_dec[i] = CommandData.pointing_mode.dec[i];
             }
-        }
-        else {
+        } else {
             last_dec[0] = -99.9745; // remember it is new....
             axes_mode.az_mode = AXIS_POSITION;
             axes_mode.az_dest = az_of_bot;
@@ -1632,8 +1525,6 @@ void do_mode_quad(void) // aka radbox
             v_el = 0.0;
             targ_el = 0.0;
             el_next_dir = 1;
-            //TODO:Update DoQuadMode with XSC Routine
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 1;
             return;
         }
     }
@@ -1665,45 +1556,42 @@ void do_mode_quad(void) // aka radbox
     if ((axes_mode.az_vel < 0) && (axes_mode.az_dir >= 0)) { // turn around
         axes_mode.az_dir = -1;
         az_distance = az - next_left;
-        if (az_distance < MIN_SCAN)
-            az_distance = MIN_SCAN;
+        if (az_distance < MIN_SCAN) az_distance = MIN_SCAN;
         t = az_distance / v_az + 2.0 * v_az / (az_accel * SR);
         new_step = 1;
-    }
-    else if ((axes_mode.az_vel > 0) && (axes_mode.az_dir <= 0)) { // turn around
+    } else if ((axes_mode.az_vel > 0) && (axes_mode.az_dir <= 0)) { // turn around
         axes_mode.az_dir = 1;
         az_distance = next_right - az;
-        if (az_distance < MIN_SCAN)
-            az_distance = MIN_SCAN;
+        if (az_distance < MIN_SCAN) az_distance = MIN_SCAN;
         t = az_distance / v_az + 2.0 * v_az / (az_accel * SR);
         new_step = 1;
     }
 
     if (new_step) {
-
         scan_entered_snap_mode = true;
         // set v for this step
         v_el = (targ_el + bottom - el) / t;
         // set targ_el for the next step
-        //    blast_info("Az Step:targ_el = %f, bottom = %f, el = %f,el-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el (target)= %f",targ_el,bottom,el,el-bottom,el_next_dir,axes_mode.el_dir,v_el);
         targ_el += CommandData.pointing_mode.del * el_next_dir;
         axes_mode.el_dir = el_next_dir;
         if (targ_el > top - bottom) {
             targ_el = top - bottom;
             el_next_dir = -1;
-            blast_info("Approaching the top: next targ_el = %f, top-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, top
-                    - bottom, el_next_dir, axes_mode.el_dir, v_el);
-        }
-        else if (targ_el < 0) {
+            blast_info(
+                    "Approaching the top: next targ_el = %f, top-bottom = %f, "
+                    "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
+                    targ_el, top - bottom, el_next_dir, axes_mode.el_dir, v_el);
+        } else if (targ_el < 0) {
             targ_el = 0;
             el_next_dir = 1;
-            blast_info("Approaching the bottom: next targ_el = %f, top-bottom = %f, el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f", targ_el, top
-                    - bottom, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info(
+                    "Approaching the bottom: next targ_el = %f, top-bottom = %f, "
+                    "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
+                    targ_el, top - bottom, el_next_dir, axes_mode.el_dir, v_el);
         }
     }
 
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
-
         n_scan += 1;
         blast_info("Sending signal to rotate HWPR. n_scan = %i", n_scan);
 
@@ -1715,14 +1603,12 @@ void do_mode_quad(void) // aka radbox
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
-
     }
 
     el_dir_last = axes_mode.el_dir;
 
     axes_mode.el_mode = AXIS_VEL;
     axes_mode.el_vel = v_el + del_dt;
-
 }
 
 /******************************************************************
@@ -1733,96 +1619,73 @@ void do_mode_quad(void) // aka radbox
  ******************************************************************/
 void update_axes_mode(void)
 {
-  az_accel = CommandData.az_accel/SR;
-  switch (CommandData.pointing_mode.mode) {
-    case P_DRIFT:
-      axes_mode.el_mode = AXIS_VEL;
-      axes_mode.el_vel = CommandData.pointing_mode.del;
-      axes_mode.az_mode = AXIS_VEL;
-      axes_mode.az_vel = CommandData.pointing_mode.vaz;
-      //Todo:Update UpdateAxesMode with XSC
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast =
-//        (sqrt(CommandData.pointing_mode.vaz * CommandData.pointing_mode.vaz
-//              + CommandData.pointing_mode.del * CommandData.pointing_mode.del)
-//         > MAX_ISC_SLOW_PULSE_SPEED) ? 1 : 0;
-      break;
-    case P_AZEL_GOTO:
-      axes_mode.el_mode = AXIS_POSITION;
-      axes_mode.el_dest = CommandData.pointing_mode.Y;
-      axes_mode.el_vel = 0.0;
-      axes_mode.az_mode = AXIS_POSITION;
-      axes_mode.az_dest = CommandData.pointing_mode.X;
-      axes_mode.az_vel = 0.0;
+    az_accel = CommandData.az_accel / SR;
+    switch (CommandData.pointing_mode.mode) {
+        case P_DRIFT:
+            axes_mode.el_mode = AXIS_VEL;
+            axes_mode.el_vel = CommandData.pointing_mode.del;
+            axes_mode.az_mode = AXIS_VEL;
+            axes_mode.az_vel = CommandData.pointing_mode.vaz;
+            break;
+        case P_AZEL_GOTO:
+            axes_mode.el_mode = AXIS_POSITION;
+            axes_mode.el_dest = CommandData.pointing_mode.Y;
+            axes_mode.el_vel = 0.0;
+            axes_mode.az_mode = AXIS_POSITION;
+            axes_mode.az_dest = CommandData.pointing_mode.X;
+            axes_mode.az_vel = 0.0;
+            break;
+        case P_AZ_SCAN:
+            do_az_scan_mode();
+            break;
+        case P_EL_SCAN:
+            do_el_scan_mode();
+            break;
+        case P_VCAP:
+            do_mode_vcap();
+            break;
+        case P_VBOX:
+            do_mode_velocity_box();
+            break;
+        case P_BOX:
+            do_mode_new_box();
+            break;
+        case P_EL_BOX:
+            do_mode_el_box();
+            break;
+        case P_CAP:
+            do_mode_new_cap();
+            break;
+        case P_RADEC_GOTO:
+            do_mode_RAdec_goto();
+            break;
+        case P_QUAD: // aka radbox
+            do_mode_quad();
+            break;
+        case P_LOCK:
+            axes_mode.el_mode = AXIS_LOCK;
+            axes_mode.el_dest = CommandData.pointing_mode.Y;
+            axes_mode.el_vel = 0.0;
+            axes_mode.az_mode = AXIS_VEL;
+            axes_mode.az_vel = 0.0;
+            break;
+        default:
+            blast_warn("Pointing: Unknown Elevation Pointing Mode %d: " "stopping\n", CommandData.pointing_mode.mode);
+            CommandData.pointing_mode.mode = P_DRIFT;
+            CommandData.pointing_mode.X = 0;
+            CommandData.pointing_mode.Y = 0;
+            CommandData.pointing_mode.vaz = 0.0;
+            CommandData.pointing_mode.del = 0.0;
+            CommandData.pointing_mode.w = 0;
+            CommandData.pointing_mode.h = 0;
+            axes_mode.el_mode = AXIS_VEL;
+            axes_mode.el_vel = 0.0;
+            axes_mode.az_mode = AXIS_VEL;
+            axes_mode.az_vel = 0.0;
 //      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      break;
-    case P_AZ_SCAN:
-      do_az_scan_mode();
-      break;
-    case P_EL_SCAN:
-      do_el_scan_mode();
-      break;
-    case P_VCAP:
-      do_mode_vcap();
-      break;
-    case P_VBOX:
-      do_mode_velocity_box();
-      break;
-    case P_BOX:
-      do_mode_new_box();
-      break;
-    case P_EL_BOX:
-      do_mode_el_box();
-      break;
-    case P_CAP:
-      do_mode_new_cap();
-      break;
-    case P_RADEC_GOTO:
-      do_mode_RAdec_goto();
-      break;
-    case P_QUAD: // aka radbox
-      do_mode_quad();
-      break;
-    case P_LOCK:
-      axes_mode.el_mode = AXIS_LOCK;
-      axes_mode.el_dest = CommandData.pointing_mode.Y;
-      axes_mode.el_vel = 0.0;
-      axes_mode.az_mode = AXIS_VEL;
-      axes_mode.az_vel = 0.0;
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      break;
-    default:
-      blast_warn("Pointing: Unknown Elevation Pointing Mode %d: "
-          "stopping\n", CommandData.pointing_mode.mode);
-      CommandData.pointing_mode.mode = P_DRIFT;
-      CommandData.pointing_mode.X = 0;
-      CommandData.pointing_mode.Y = 0;
-      CommandData.pointing_mode.vaz = 0.0;
-      CommandData.pointing_mode.del = 0.0;
-      CommandData.pointing_mode.w = 0;
-      CommandData.pointing_mode.h = 0;
-      axes_mode.el_mode = AXIS_VEL;
-      axes_mode.el_vel = 0.0;
-      axes_mode.az_mode = AXIS_VEL;
-      axes_mode.az_vel = 0.0;
-//      isc_pulses[0].is_fast = isc_pulses[1].is_fast = 0;
-      break;
-  }
-  last_mode = CommandData.pointing_mode.mode;
-}
-
-// Only prints if verb_level_req >= verb_level_comp
-void bprintfverb(buos_t l, unsigned short int verb_level_req, unsigned short int verb_level_comp, const char* fmt, ...) {
-  char message[BUOS_MAX];
-  va_list argptr;
-
-  //  blast_info("DEBUG: verb_level_req = %i, verb_level_comp = %i",verb_level_req,verb_level_comp);
-  if(verb_level_req >= verb_level_comp) {
-    va_start(argptr, fmt);
-    vsnprintf(message, BUOS_MAX, fmt, argptr);
-    va_end(argptr);   
-
-    bputs(l,message);
-  }                                                                                                    
+            break;
+    }
+    last_mode = CommandData.pointing_mode.mode;
 }
 
 static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
@@ -1835,26 +1698,26 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     static channel_t *d_el_ch = NULL;
     static channel_t *el_integral_ch = NULL;
     static channel_t* frictTermElAddr;
-    static channel_t* frictTermUnfiltElAddr; 
+    static channel_t* frictTermUnfiltElAddr;
 
     float K_p = 0.0;        //!< Proportional gain
     float T_i = 0.0;        //!< Integral time constant
     float T_d = 0.0;        //!< Derivative time constant
-	float I_db = 0.0;       //!< I_step deadband current
+    float I_db = 0.0;       //!< I_step deadband current
 
     float error_pv = 0.0;
     float P_term = 0.0;
-    float I_step = 0.0; //intermediate control loop results
+    float I_step = 0.0; // intermediate control loop results
     float D_term = 0.0;
 
     double friction = 0.0;
-    static double friction_in[2] = {0.0};
-    static double friction_out[2] = {0.0};
+    static double friction_in[2] = { 0.0 };
+    static double friction_out[2] = { 0.0 };
 
     static float I_term = 0.0;
 
-    static double lpfilter_in[LPFILTER_POLES+1] = { 0.0 };
-    static double lpfilter_out[LPFILTER_POLES+1] = { 0.0 };
+    static double lpfilter_in[LPFILTER_POLES + 1] = { 0.0 };
+    static double lpfilter_out[LPFILTER_POLES + 1] = { 0.0 };
     static float last_pv = 0.0;
 
     float pv = ACSData.ifel_gy;
@@ -1876,7 +1739,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     K_p = CommandData.ele_gain.P;
     T_i = CommandData.ele_gain.I;
     T_d = CommandData.ele_gain.D;
-    I_db = CommandData.ele_gain.DB; 
+    I_db = CommandData.ele_gain.DB;
 
     /** 
      * The elevation error is the difference between the requested El velocity and
@@ -1887,7 +1750,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     /**
      * The P term is the P gain times the error
      */
-    P_term = K_p*error_pv;
+    P_term = K_p * error_pv;
 
     /**
      * The I gain K_i = K_p / T_i where T_i is measured in seconds and therefore is
@@ -1896,17 +1759,16 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
      */
     I_step = error_pv * K_p / (T_i * MOTORSR);
 
-	/**
-	 * Check whether I_step is within the commanded deadband range.
-	 */
-	 
+    /**
+     * Check whether I_step is within the commanded deadband range.
+     */
+
     if (fabsf(I_step) < I_db) I_step = 0;
-    
+
     if (fabsf(I_step) > MAX_DI) {
         I_step = copysignf(MAX_DI, I_step);
     }
 
-    
     /**
      * Our integral term exists to remove residual DC offset from the Proportional response,
      * thus we want to exclude the "integral wind-up" phenomenon where the overshoot in current
@@ -1934,14 +1796,10 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     lpfilter_out[2] = lpfilter_out[3];
     lpfilter_out[3] = lpfilter_out[4];
     lpfilter_out[4] = lpfilter_out[5];
-    lpfilter_out[5] =    (lpfilter_in[0] + lpfilter_in[5]) +
-                     5 * (lpfilter_in[1] + lpfilter_in[4]) +
-                    10 * (lpfilter_in[2] + lpfilter_in[3]) +
-                         (lpfilter_coefs[0] * lpfilter_out[0]) +
-                         (lpfilter_coefs[1] * lpfilter_out[1]) +
-                         (lpfilter_coefs[2] * lpfilter_out[2]) +
-                         (lpfilter_coefs[3] * lpfilter_out[3]) +
-                         (lpfilter_coefs[4] * lpfilter_out[4]);
+    lpfilter_out[5] = (lpfilter_in[0] + lpfilter_in[5]) + 5 * (lpfilter_in[1] + lpfilter_in[4])
+                      + 10 * (lpfilter_in[2] + lpfilter_in[3]) + (lpfilter_coefs[0] * lpfilter_out[0])
+                      + (lpfilter_coefs[1] * lpfilter_out[1]) + (lpfilter_coefs[2] * lpfilter_out[2])
+                      + (lpfilter_coefs[3] * lpfilter_out[3]) + (lpfilter_coefs[4] * lpfilter_out[4]);
 
     D_term = K_p * T_d * MOTORSR * lpfilter_out[LPFILTER_POLES];
 
@@ -1950,8 +1808,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     // Calculate static friction offset term
     if (fabs(milliamp_return) < 3) {
         friction = 0.0;
-    }
-    else {
+    } else {
         friction = copysign(CommandData.ele_gain.F, milliamp_return);
     }
     /**
@@ -1977,7 +1834,6 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
         I_term = 0.0;
         milliamp_return = 0;
     }
-
 
     SET_FLOAT(error_el_ch, error_pv);
     SET_FLOAT(p_el_ch, P_term);
@@ -2006,7 +1862,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
 
     float error_pv = 0.0;
     float P_term = 0.0;
-    float I_step = 0.0; //intermediate control loop results
+    float I_step = 0.0; // intermediate control loop results
     float D_term = 0.0;
 
     static float I_term = 0.0;
@@ -2073,7 +1929,7 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     lpfilter_in[4] = lpfilter_in[5];
     lpfilter_in[5] = (pv - last_pv) / LPFILTER_GAIN;
     last_pv = pv;
-    
+
     lpfilter_out[0] = lpfilter_out[1];
     lpfilter_out[1] = lpfilter_out[2];
     lpfilter_out[2] = lpfilter_out[3];
@@ -2119,7 +1975,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     SET_FLOAT(d_az_ch, D_term);
     SET_FLOAT(az_integral_ch, I_step);
     return milliamp_return;
-
 }
 
 
@@ -2195,8 +2050,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     // Calculate static friction offset term
     if (fabs(milliamp_return) < 3) {
         friction = 0.0;
-    }
-    else {
+    } else {
         friction = copysign(CommandData.pivot_gain.F, milliamp_return);
     }
     /**
@@ -2284,7 +2138,7 @@ void command_motors(void)
 
     v_req_el = GET_FLOAT(velReqElAddr);
 
-    //TODO: limits in dps: revisit these
+    // TODO(seth): limits in dps: revisit these
     if ((v_req_el < -10.0) || (v_req_el > 10.0))
         v_req_el = 0; // no really really crazy values!
 
@@ -2308,5 +2162,4 @@ void command_motors(void)
     rw_current = calculate_rw_current(v_req_az, CommandData.disable_az);
     SET_INT16(rw_current_addr, rw_current);
     rw_set_current(rw_current);
-
 }

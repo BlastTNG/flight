@@ -49,8 +49,7 @@ comms_serial_t *comms_serial_new(void *m_data)
 	memset(serial, 0, sizeof(comms_serial_t));
 
 	serial->sock = comms_sock_new();
-	if (!serial->sock)
-	{
+	if (!serial->sock) {
 		log_leave("Could not register serial socket");
 		return NULL;
 	}
@@ -74,41 +73,32 @@ comms_serial_t *comms_serial_new(void *m_data)
  */
 void comms_serial_reset(comms_serial_t **m_serial)
 {
-	log_enter();
-	if (!(*m_serial))
-	{
-		*m_serial = comms_serial_new(NULL);
-	}
-	else
-	{
-		if (!pthread_mutex_lock(&(*m_serial)->mutex))
-		{
-			comms_sock_reset(&(*m_serial)->sock);
-			(*m_serial)->sock->is_socket = false;
-			pthread_mutex_unlock(&(*m_serial)->mutex);
-		}
-	}
-	log_leave();
+    log_enter();
+    if (!(*m_serial)) {
+        *m_serial = comms_serial_new(NULL);
+    } else {
+        if (!pthread_mutex_lock(&(*m_serial)->mutex)) {
+            comms_sock_reset(&(*m_serial)->sock);
+            (*m_serial)->sock->is_socket = false;
+            pthread_mutex_unlock(&(*m_serial)->mutex);
+        }
+    } log_leave();
 }
 
 void comms_serial_close(comms_serial_t *m_serial)
 {
-	if (m_serial && m_serial->sock)
-	{
-		if (!pthread_mutex_lock(&m_serial->mutex))
-		{
-			comms_sock_close(m_serial->sock);
-			pthread_mutex_unlock(&m_serial->mutex);
-		}
-	}
-
+    if (m_serial && m_serial->sock) {
+        if (!pthread_mutex_lock(&m_serial->mutex)) {
+            comms_sock_close(m_serial->sock);
+            pthread_mutex_unlock(&m_serial->mutex);
+        }
+    }
 }
 
 void comms_serial_free(void *m_serial)
 {
     /// This will close and free the socket and its buffers
-    if(m_serial)
-    {
+    if (m_serial) {
         comms_serial_close(m_serial);
         free(m_serial);
     }
@@ -116,17 +106,15 @@ void comms_serial_free(void *m_serial)
 
 bool comms_serial_setspeed(comms_serial_t *m_serial, speed_t m_speed)
 {
-	if (cfsetospeed(&m_serial->term, m_speed) || cfsetispeed(&m_serial->term, m_speed))
-	{
-		blast_err("Could not set speed to %d", (int)m_speed);
-		return false;
-	}
+    if (cfsetospeed(&m_serial->term, m_speed) || cfsetispeed(&m_serial->term, m_speed)) {
+        blast_err("Could not set speed to %d", (int) m_speed);
+        return false;
+    }
 
-	if (m_serial->sock->fd != INVALID_SOCK)
-	{
-		tcsetattr(m_serial->sock->fd, TCSANOW, &m_serial->term);
-	}
-	return true;
+    if (m_serial->sock->fd != INVALID_SOCK) {
+        tcsetattr(m_serial->sock->fd, TCSANOW, &m_serial->term);
+    }
+    return true;
 }
 
 int comms_serial_set_baud_base(comms_serial_t *m_serial, int m_base)
@@ -144,39 +132,33 @@ int comms_serial_set_baud_base(comms_serial_t *m_serial, int m_base)
         return -1;
     }
     return 0;
-
 }
 
 int comms_serial_set_baud_divisor(comms_serial_t *m_serial, int m_speed)
 {
     // default baud was not found, so try to set a custom divisor
     struct serial_struct ss;
-    if (ioctl (m_serial->sock->fd, TIOCGSERIAL, &ss) != 0)
-      {
-        blast_strerror ("TIOCGSERIAL failed");
+    if (ioctl(m_serial->sock->fd, TIOCGSERIAL, &ss) != 0) {
+        blast_strerror("TIOCGSERIAL failed");
         return -1;
-      }
+    }
 
     ss.flags = (ss.flags & ~ASYNC_SPD_MASK) | ASYNC_SPD_CUST;
     ss.custom_divisor = (ss.baud_base + (m_speed / 2)) / m_speed;
 
-    if (m_speed > 115200)
-      ss.custom_divisor |= (1 << 15); // Set the High-speed bit
+    if (m_speed > 115200) ss.custom_divisor |= (1 << 15); // Set the High-speed bit
     /**
      * It is debatable whether this next line is required.  Generally, we need frob config
      * bits to get 921600 (despite the SMSC manual's directions).  But it doesn't seem to hurt so we
      * keep it here for completeness.
      */
-    if (m_speed > 460800)
-      ss.custom_divisor |= (1 << 14); // Set the Enhanced Freq low bit
+    if (m_speed > 460800) ss.custom_divisor |= (1 << 14); // Set the Enhanced Freq low bit
 
-    if (ioctl (m_serial->sock->fd, TIOCSSERIAL, &ss))
-      {
+    if (ioctl(m_serial->sock->fd, TIOCSSERIAL, &ss)) {
         blast_strerror("Count not set divisor to %d", m_speed);
         return -1;
-      }
+    }
     return 0;
-
 }
 /**
  * Buffer data for asynchronous writing to the serial device
@@ -187,27 +169,21 @@ int comms_serial_set_baud_divisor(comms_serial_t *m_serial, int m_speed)
  */
 int comms_serial_write(comms_serial_t *m_serial, const void *m_buf, size_t m_len)
 {
-	int retval;
+    int retval;
 
-	if (m_serial && m_serial->sock)
-	{
-		if (!pthread_mutex_lock(&m_serial->mutex))
-		{
-			retval = comms_sock_write(m_serial->sock, m_buf, m_len);
-			pthread_mutex_unlock(&m_serial->mutex);
-			if (retval != NETSOCK_ERR) return NETSOCK_OK;
-		}
-		else
-		{
-			blast_err("Could not lock mutex!");
-			return NETSOCK_ERR;
-		}
-	}
-	else
-	{
-		blast_err("Attempted to write to NULL Socket for serial port");
-	}
-	return NETSOCK_ERR;
+    if (m_serial && m_serial->sock) {
+        if (!pthread_mutex_lock(&m_serial->mutex)) {
+            retval = comms_sock_write(m_serial->sock, m_buf, m_len);
+            pthread_mutex_unlock(&m_serial->mutex);
+            if (retval != NETSOCK_ERR) return NETSOCK_OK;
+        } else {
+            blast_err("Could not lock mutex!");
+            return NETSOCK_ERR;
+        }
+    } else {
+        blast_err("Attempted to write to NULL Socket for serial port");
+    }
+    return NETSOCK_ERR;
 }
 
 /**
@@ -218,46 +194,41 @@ int comms_serial_write(comms_serial_t *m_serial, const void *m_buf, size_t m_len
  */
 int comms_serial_connect(comms_serial_t *m_serial, const char *m_terminal)
 {
-	log_enter();
+    log_enter();
 
-	if (!m_terminal)
-	{
-		blast_err("Passed NULL pointer to terminal name");
-		log_leave("NULL");
-		return NETSOCK_ERR;
-	}
+    if (!m_terminal) {
+        blast_err("Passed NULL pointer to terminal name");
+        log_leave("NULL");
+        return NETSOCK_ERR;
+    }
 
-	if (m_serial->sock->fd != INVALID_SOCK) comms_serial_close(m_serial);
+    if (m_serial->sock->fd != INVALID_SOCK) comms_serial_close(m_serial);
 
-	if ((m_serial->sock->fd = open (m_terminal, O_NOCTTY | O_RDWR | O_NONBLOCK)) == INVALID_SOCK)
-	{
-		blast_strerror("Could not open terminal '%s'", m_terminal);
-		log_leave("Open Error");
-		return NETSOCK_ERR;
-	}
+    if ((m_serial->sock->fd = open(m_terminal, O_NOCTTY | O_RDWR | O_NONBLOCK)) == INVALID_SOCK) {
+        blast_strerror("Could not open terminal '%s'", m_terminal);
+        log_leave("Open Error");
+        return NETSOCK_ERR;
+    }
 
-	if (!m_serial->sock->host)
-	{
-		blast_info("Successfully opened %s for serial communication", m_terminal);
-		m_serial->sock->host = bstrdup(err, m_terminal);
-	}
-	else if (strcmp(m_serial->sock->host, m_terminal))
-	{
-		blast_info("Successfully opened %s for serial communication", m_terminal);
-		bfree(err,m_serial->sock->host);
-		m_serial->sock->host = bstrdup(err, m_terminal);
-	}
+    if (!m_serial->sock->host) {
+        blast_info("Successfully opened %s for serial communication", m_terminal);
+        m_serial->sock->host = bstrdup(err, m_terminal);
+    } else if (strcmp(m_serial->sock->host, m_terminal)) {
+        blast_info("Successfully opened %s for serial communication", m_terminal);
+        bfree(err, m_serial->sock->host);
+        m_serial->sock->host = bstrdup(err, m_terminal);
+    }
 
-	m_serial->sock->state = NETSOCK_STATE_CONNECTING;
+    m_serial->sock->state = NETSOCK_STATE_CONNECTING;
 
-	tcsetattr(m_serial->sock->fd, TCSANOW, &m_serial->term);
+    tcsetattr(m_serial->sock->fd, TCSANOW, &m_serial->term);
 
-	comms_net_async_set_events(comms_sock_get_poll_handle(m_serial->sock), POLLOUT);
+    comms_net_async_set_events(comms_sock_get_poll_handle(m_serial->sock), POLLOUT);
 
-	m_serial->sock->can_write = true;
+    m_serial->sock->can_write = true;
 
-	log_leave();
-	return NETSOCK_OK;
+    log_leave();
+    return NETSOCK_OK;
 }
 
 /**
@@ -269,38 +240,35 @@ int comms_serial_connect(comms_serial_t *m_serial, const char *m_terminal)
  */
 int comms_fifo_connect(comms_serial_t *m_serial, const char *m_fifo, int m_flags)
 {
-	log_enter();
+    log_enter();
 
-	if (!m_fifo)
-	{
-		blast_err("Passed NULL pointer to FIFO name");
-		log_leave("NULL");
-		return NETSOCK_ERR;
-	}
-	if (!m_serial)
-	{
-		blast_err("Passed NULL pointer to serial device");
-		log_leave("NULL");
-		return NETSOCK_ERR;
-	}
+    if (!m_fifo) {
+        blast_err("Passed NULL pointer to FIFO name");
+        log_leave("NULL");
+        return NETSOCK_ERR;
+    }
+    if (!m_serial) {
+        blast_err("Passed NULL pointer to serial device");
+        log_leave("NULL");
+        return NETSOCK_ERR;
+    }
 
-	if (m_serial->sock->fd != INVALID_SOCK) comms_serial_close(m_serial);
+    if (m_serial->sock->fd != INVALID_SOCK) comms_serial_close(m_serial);
 
-	if ((m_serial->sock->fd = open (m_fifo, m_flags|O_NONBLOCK)) == INVALID_SOCK)
-	{
-		blast_err("Could not open FIFO '%s'", m_fifo);
-		blast_strerror("\t");
-		log_leave("Open Error");
-		return NETSOCK_ERR;
-	}
+    if ((m_serial->sock->fd = open(m_fifo, m_flags | O_NONBLOCK)) == INVALID_SOCK) {
+        blast_err("Could not open FIFO '%s'", m_fifo);
+        blast_strerror("\t");
+        log_leave("Open Error");
+        return NETSOCK_ERR;
+    }
 
-	m_serial->sock->host = bstrdup(err, m_fifo);
-	m_serial->sock->state = NETSOCK_STATE_CONNECTING;
+    m_serial->sock->host = bstrdup(err, m_fifo);
+    m_serial->sock->state = NETSOCK_STATE_CONNECTING;
 
-	comms_net_async_set_events(comms_sock_get_poll_handle(m_serial->sock), POLLOUT);
+    comms_net_async_set_events(comms_sock_get_poll_handle(m_serial->sock), POLLOUT);
 
-	blast_info("Successfully opened %s for FIFO communication", m_fifo);
+    blast_info("Successfully opened %s for FIFO communication", m_fifo);
 
-	log_leave();
-	return NETSOCK_OK;
+    log_leave();
+    return NETSOCK_OK;
 }

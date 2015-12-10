@@ -28,7 +28,7 @@
 
 #define GY_HISTORY_AGE_CS 4400
 
-//TODO: Characterize Magnetometer
+// TODO(anyone): Characterize Magnetometer
 #define MAGX_B 0.0
 #define MAGX_M 1.0
 #define MAGY_B 0.0

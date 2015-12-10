@@ -19,18 +19,18 @@
  */
 
 
-/* An ISC/OSC handshaking debugging macro should be set to 0 for flight */
-#define WHICH (0)
+#ifndef INCLUDE_TX_H
+#define INCLUDE_TX_H
 
 #include "channels_tng.h"
 #include "calibrate.h"
-#include "channels_tng.h"
 
 extern int mcp_initial_controls;
 
-void UpdateBBCFrame(unsigned short*);
 double ReadCalData(channel_t *m_ch);
 void StoreData(void);
 void WriteAux(void);
 void WriteChatter(void);
 void SetGyroMask(void);
+
+#endif

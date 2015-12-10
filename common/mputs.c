@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <phenom/thread.h>
 
 #include "mputs.h"
 
@@ -56,7 +57,6 @@ void nameThread(const char* name)
   new_node->name[TID_NAME_LEN] = '\0';
   new_node->next = threadNames;
   threadNames = new_node;
-  //blast_startup("New thread (tid %d)", new_node->tid);
 }
 
 off_t openMCElog(const char *file)
@@ -81,17 +81,16 @@ off_t openMCElog(const char *file)
 static char failed_lookup_buffer[TID_NAME_LEN+1];
 static char* threadNameLookup(int tid)
 {
-  struct tid_name* p;
-  for(p = threadNames; p != NULL; p = p->next)
-    if (p->tid == tid)
-      return p->name;
+    struct tid_name* p;
+    for (p = threadNames; p != NULL; p = p->next)
+        if (p->tid == tid) return p->name;
 
-  //not found, just print tid
-  snprintf(failed_lookup_buffer, TID_NAME_LEN, "%u", (unsigned)tid);
-  failed_lookup_buffer[TID_NAME_LEN] = '\0';
-  return failed_lookup_buffer;
+    // not found, just print tid
+    snprintf(failed_lookup_buffer, TID_NAME_LEN, "%u", (unsigned) tid);
+    failed_lookup_buffer[TID_NAME_LEN] = '\0';
+    return failed_lookup_buffer;
 }
-  
+
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -111,127 +110,68 @@ static char* threadNameLookup(int tid)
 void mputs(buos_t flag, const char* message) {
   char buffer[MPRINT_BUFFER_SIZE];
   struct timeval t;
-  struct timezone tz; /* We never use this, but gettimeofday won't let us
-                         give it a NULL -- also it's obsolete under linux */
   struct tm now;
-  char local[1024];
-  char *bufstart, *bufptr, *lastchr, *firstchr;
-  int len;
-  char marker[4];
+  static const char marker[mem + 1] = {
+                                          [err] = '*',
+                                          [fatal] = '!',
+                                          [info] = '-',
+                                          [sched] = '#',
+                                          [startup] = '>',
+                                          [tfatal] = '$',
+                                          [warning] = '=',
+                                          [mem] = 'm',
+                                          [none] = '?'
+  };
   int tid = syscall(SYS_gettid);
   int i;
 
+  if (flag == none) return;
+
   /* time */
-  gettimeofday(&t, &tz);
+  gettimeofday(&t, NULL);
   t.tv_sec += TEMPORAL_OFFSET;
+  gmtime_r(&t.tv_sec, &now);
 
-  switch(flag) {
-    case err:
-      strcpy(marker, "* ");
-      break;
-    case fatal:
-      strcpy(marker, "! ");
-      break;
-    case info:
-      strcpy(marker, "- ");
-      break;
-    case sched:
-      strcpy(marker, "# ");
-      break;
-    case startup:
-      strcpy(marker, "> ");
-      break;
-    case tfatal:
-      strcpy(marker, "$ ");
-      break;
-    case warning:
-      strcpy(marker, "= ");
-      break;
-    case mem:
-      return;  /* don't record mem messages at all */
-      strcpy(marker, "m ");
-      break;
-    case none:
-        return;
-    default:
-      strcpy(marker, "? ");
-      break;
-  }
-  strcpy(buffer, marker);
-
-  /* we need a writable copy of the string */
-  strncpy(local, message, 1023);
-  local[1023] = '\0';
-
-  for(bufstart = buffer; *bufstart != '\0' && bufstart < buffer
-      + 1024; ++bufstart);
+  snprintf(buffer, sizeof(buffer),
+           "%c %04d-%02d-%02d "         // marker, Year-Month-Day
+           "%02d:%02d:%02d.%03d %c "    // Hours:Minutes:Seconds, Marker
+           TID_NAME_FMT ": "            // Thread name
+           "%s\n",                      // Message
+           marker[flag], now.tm_yday, now.tm_mon + 1, now.tm_mday,
+           now.tm_hour, now.tm_min, now.tm_sec, (int)(t.tv_usec/1000), marker[flag],
+           threadNameLookup(tid),
+           message);
 
 
-  strftime(bufstart, 1023, "%F %T", gmtime_r(&t.tv_sec, &now));
+    for (i = 0; i < n_logfiles; ++i) {
+        fputs(buffer, logfiles[i]);
+        fflush(logfiles[i]);
+    }
+    if (n_logfiles == 0 || flag != mem) {
+        fputs(buffer, stdout);
+        fflush(stdout);
+    }
 
-  for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
-
-  sprintf(bufstart, ".%03li ", t.tv_usec/1000);
-  strcat(buffer, marker);
-
-  for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
-
-  sprintf(bufstart, TID_NAME_FMT ": ", threadNameLookup(tid));
-
-  for(;*bufstart != '\0' && bufstart < buffer + 1024; ++bufstart);
-
-    /* output the formatted string line by line */
-    for (firstchr = bufptr = local; *bufptr != '\0' &&
-        bufptr < local + 1023; ++bufptr) {
-
-      /* writeout the string when we find a newline or the EOS */
-      if (*bufptr == '\n' || *(bufptr + 1) == '\0') {
-        lastchr = (*bufptr == '\n') ? bufptr : bufptr + 1;
-        *lastchr = '\0';
-
-        /* compute length of string to writeout */
-        len = lastchr - firstchr + 1;
-        if (len > MAX_MPRINT_STRING - 1)
-          len = MAX_MPRINT_STRING - 1;
-
-        /* append string part and a newline to preamble */
-        strncpy(bufstart, firstchr, len);
-        *(bufstart + len + 1) = '\0';
-        strcat(bufstart, "\n");
+    if (flag == fatal) {
         for (i = 0; i < n_logfiles; ++i) {
-          fputs(buffer, logfiles[i]);
-          fflush(logfiles[i]);
+            fputs("!! Last error is FATAL.  Cannot continue.\n", logfiles[i]);
+            fflush(logfiles[i]);
         }
-        if (n_logfiles == 0 || flag != mem) {
-          fputs(buffer, stdout);
-          fflush(stdout);
+        fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
+        fflush(stdout);
+
+        exit(1);
+    }
+
+    if (flag == tfatal) {
+        for (i = 0; i < n_logfiles; ++i) {
+            fprintf(logfiles[i], "$$ Last error is THREAD FATAL. Thread [" TID_NAME_FMT " (%5i)] exits.\n",
+                    threadNameLookup(tid), tid);
+            fflush(logfiles[i]);
         }
+        printf("$$ Last error is THREAD FATAL.  Thread [" TID_NAME_FMT " (%5i)] exits.\n", threadNameLookup(tid), tid);
+        fflush(stdout);
 
-        firstchr = bufptr + 1;
-      }
+        pthread_exit(NULL);
     }
-
-  if (flag == fatal) {
-    for (i = 0; i < n_logfiles; ++i) {
-      fputs("!! Last error is FATAL.  Cannot continue.\n", logfiles[i]);
-      fflush(logfiles[i]);
-    }
-    fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
-    fflush(stdout);
-
-    exit(1);
-  }
-
-  if (flag == tfatal) {
-    for (i = 0; i < n_logfiles; ++i) {
-      fprintf(logfiles[i], "$$ Last error is THREAD FATAL. Thread [" 
-          TID_NAME_FMT " (%5i)] exits.\n", threadNameLookup(tid), tid);
-      fflush(logfiles[i]);
-    }
-    printf("$$ Last error is THREAD FATAL.  Thread [" 
-          TID_NAME_FMT " (%5i)] exits.\n", threadNameLookup(tid), tid);
-    fflush(stdout);
-
-    pthread_exit(NULL);
-  }
 }

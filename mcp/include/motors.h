@@ -58,7 +58,7 @@
 /*  - Written to struct in ec_motors.c        */
 /*  - Written to the frame in the main thread */
 /*  USE A CIRCULAR BUFFER !!!                 */
-///TODO: Add State/Desired State here
+// TODO(seth): Add State/Desired State here
 typedef struct
 {
     int32_t velocity;             // in 0.1 counts per second

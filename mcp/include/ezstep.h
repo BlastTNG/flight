@@ -11,9 +11,10 @@
  *
  */
 
-#ifndef EZSTEP_H
-#define EZSTEP_H
+#ifndef INCLUDE_EZSTEP_H
+#define INCLUDE_EZSTEP_H
 
+#include <stdint.h>
 /* Errors:
  * EZStep functions will return a 2-byte error code. The LSB contains data 
  * returned by the device itself, as per EZ_ERROR mask, EZ_READY, EZ_STATUS.
@@ -37,21 +38,21 @@
 #define EZ_SERR_NOMOVE 11 /* Move Not allowed */
 #define EZ_SERR_BUSY   15 /* Command overflow */
 
-#define EZ_ERR_OK	  0x0000  //everything is okay
-#define EZ_ERR_OOD	  0x0100  //unexpected out of data
-#define EZ_ERR_TIMEOUT	  0x0200  //timeout
-#define EZ_ERR_TTY	  0x0400  //serial error (open or write, so far)
-#define EZ_ERR_BAD_WHO	  0x0800  //bad 'who' value. NOT always checked
-#define	EZ_ERR_BUSY	  0x1000  //bus busy (as per Take/Release)
-#define	EZ_ERR_RESPONSE	  0x2000  //malformed response from device/bad checksum
-#define EZ_ERR_POLL	  0x4000  //not all polled steppers found
+#define EZ_ERR_OK	    0x0000  // everything is okay
+#define EZ_ERR_OOD	    0x0100  // unexpected out of data
+#define EZ_ERR_TIMEOUT	0x0200  // timeout
+#define EZ_ERR_TTY	    0x0400  // serial error (open or write, so far)
+#define EZ_ERR_BAD_WHO	0x0800  // bad 'who' value. NOT always checked
+#define	EZ_ERR_BUSY	    0x1000  // bus busy (as per Take/Release)
+#define	EZ_ERR_RESPONSE	0x2000  // malformed response from device/bad checksum
+#define EZ_ERR_POLL	    0x4000  // not all polled steppers found
 
 /* Who:
  * EZStep functions that need to address a stepper (or multiple steppers) use an
  * address 'who', which is an ASCII character between '1' and '_'.
  * To address single motors, it is also possible to use an integer from 1 to 16
  */
-//single steppers (NB: in ASCII, these are consecutive)
+// single steppers (NB: in ASCII, these are consecutive)
 #define	EZ_WHO_S1     '1'
 #define	EZ_WHO_S2     '2'
 #define	EZ_WHO_S3     '3'
@@ -68,7 +69,7 @@
 #define	EZ_WHO_S14    '>'
 #define	EZ_WHO_S15    '?'
 #define	EZ_WHO_S16    '@'
-//groups of 2
+// groups of 2
 #define	EZ_WHO_G1_2   'A'
 #define	EZ_WHO_G3_4   'C'
 #define	EZ_WHO_G5_6   'E'
@@ -77,23 +78,23 @@
 #define	EZ_WHO_G11_12 'K'
 #define	EZ_WHO_G13_14 'M'
 #define	EZ_WHO_G15_16 'O'
-//groups of 4
+// groups of 4
 #define	EZ_WHO_G1_4   'Q'
 #define	EZ_WHO_G5_8   'U'
 #define	EZ_WHO_G9_12  'Y'
 #define	EZ_WHO_G13_16 ']'
-//all steppers
+// all steppers
 #define	EZ_WHO_ALL    '_'
 
 /* Chatter:
  * The verbosity level of the EZStep library.
  * The levels are cumultive, printing everything from all lower levels
  */
-#define	EZ_CHAT_NONE	0   //print absolutely nothing
-#define	EZ_CHAT_ERR	1   //print only errors and warnings
-#define	EZ_CHAT_ACT	2   //also print bus actions
-#define	EZ_CHAT_SEIZE	3   //indicate when the bus is seized
-#define EZ_CHAT_BUS	4   //also print all bus chatter
+#define	EZ_CHAT_NONE	0   // print absolutely nothing
+#define	EZ_CHAT_ERR	    1   // print only errors and warnings
+#define	EZ_CHAT_ACT	    2   // also print bus actions
+#define	EZ_CHAT_SEIZE	3   // indicate when the bus is seized
+#define EZ_CHAT_BUS	    4   // also print all bus chatter
 
 /* Status:
  * The status of each stepper is by its status bitfield
@@ -115,27 +116,27 @@
 #define EZ_ERR_MASK     0x0600    // EZ_ERR_TIMEOUT and EZ_ERR_TTY
 
 struct ezstep {
-  unsigned short status;        //status field for each stepper
-  char name[EZ_BUS_NAME_LEN];   //name of the stepper
-  //parameters for the EZBus move commands
-  int vel;			//velocity (steps/s)
-  int acc;			//acceleration (steps/s/s)
-  int ihold;			//hold current (0-50, % of max)
-  int imove;			//move current (0-100, % of max)
-  char preamble[EZ_BUS_BUF_LEN];//command preamble. Set resolution, etc.
+  uint16_t  status;                 // status field for each stepper
+  char name[EZ_BUS_NAME_LEN];       // name of the stepper
+
+  // parameters for the EZBus move commands
+  int vel;			                // velocity (steps/s)
+  int acc;			                // acceleration (steps/s/s)
+  int ihold;			            // hold current (0-50, % of max)
+  int imove;			            // move current (0-100, % of max)
+  char preamble[EZ_BUS_BUF_LEN];    // command preamble. Set resolution, etc.
 };
 
 struct ezbus {
   struct ezstep stepper[EZ_BUS_NACT];
-  int fd;			//file descriptor for bus serial port
-  char name[EZ_BUS_NAME_LEN];	//named prefix to bus-related messages
-  char buffer[EZ_BUS_BUF_LEN];  //buffer for responses
-  int seized;			//thread-unsafe concurrency for bus
-  int chatter;			//verbosity of ezstep functions
-  //TODO (BLAST-Pol OK) expose errors to user. Per-stepper basis? Autocycle?
-  int error;			//most recent error code
-  int err_count;		//number of errors since we last successfully communicated 
-                                //with ezbus 
+  int fd;			            // file descriptor for bus serial port
+  char name[EZ_BUS_NAME_LEN];	// named prefix to bus-related messages
+  char buffer[EZ_BUS_BUF_LEN];  // buffer for responses
+  int seized;			        // thread-unsafe concurrency for bus
+  int chatter;			        // verbosity of ezstep functions
+  int error;			        // most recent error code
+  int err_count;		        // number of errors since we last successfully communicated
+                                // with ezbus
 };
 
 /* initialize a struct ezbus. Needed for all other EZbus funuctions
@@ -144,7 +145,7 @@ struct ezbus {
  * name: bus name. prepended to messages
  * inhibit_chatter: chatter level
  */
-int EZBus_Init(struct ezbus* bus,const char *tty,const char* name,int chatter);
+int EZBus_Init(struct ezbus* bus, const char *tty, const char* name, int chatter);
 
 /* Attempt to reset the serial connection to the stepper.
  * Closes and re-opens the port, attempt to reinitialize.
@@ -201,7 +202,7 @@ int EZBus_Poll(struct ezbus* bus);
 /* Same as EZBus_Poll, except will call function init for each newfound stepper
  * init should return 0 on failure, take pointer to struct ezbus and who char
  */
-int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*,char) );
+int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*, char));
 
 /* checks stepper status to see if stepper is usable
  * NB: returns boolean values and not an error code
@@ -251,8 +252,8 @@ int EZBus_Stop(struct ezbus* bus, char who);
  * prepends correct preamble parameters for the stepper 
  * Will return empty string for stepper groups
  */
-char* __attribute__((format(printf,4,5))) EZBus_StrComm(struct ezbus* bus,
-    char who, char* buffer, const char* fmt, ...);
+char* __attribute__((format(printf, 5, 6))) EZBus_StrComm(struct ezbus* bus,
+    char who, size_t len, char* buffer, const char* fmt, ...);
 
 /* Generic function for sending movement commands. 
  * This will loop properly over stepper groups.

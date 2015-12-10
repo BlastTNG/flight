@@ -43,7 +43,6 @@
 
 static const float gy_inv[64][3][6] =
         {
-
         /* mask = 000000 (0) */
         { { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
@@ -363,9 +362,8 @@ static const float gy_inv[64][3][6] =
         { { 5.000000e-01, 5.000000e-01, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
           { 0.000000e+00, 0.000000e+00, 5.000000e-01, 5.000000e-01, 0.000000e+00, 0.000000e+00 },
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 5.000000e-01, 5.000000e-01 } }
-
         };
-//TODO: Extern sched_lst after enabling sched.c
+// TODO(seth): Extern sched_lst after enabling sched.c
 unsigned int sched_lst; /* sched_lst */
 
 /**
@@ -374,7 +372,6 @@ unsigned int sched_lst; /* sched_lst */
  */
 void read_5hz_acs(void)
 {
-
   static channel_t* elRawIfClinAddr;
   static channel_t* v11PssAddr;
   static channel_t* v21PssAddr;
@@ -409,7 +406,7 @@ void read_5hz_acs(void)
   ACSData.pss2_i3 = GET_UINT16(v32PssAddr);
   ACSData.pss2_i4 = GET_UINT16(v42PssAddr);
 
-  ///TODO: Add PSS3-8 read functions
+  /// TODO(seth): Add PSS3-8 read functions
 
   ACSData.clin_elev = GET_UINT16(elRawIfClinAddr);
 }
@@ -419,10 +416,8 @@ void read_5hz_acs(void)
  */
 void read_100hz_acs(void)
 {
-
     ACSData.enc_elev = el_get_position_degrees();
 	ACSData.enc_motor_elev = el_get_motor_position_degrees();
-
 }
 
 /**
@@ -430,7 +425,6 @@ void read_100hz_acs(void)
  */
 void store_200hz_acs(void)
 {
-
     float ifel_gy1;
     float ifroll_gy1;
     float ifyaw_gy1;
@@ -478,23 +472,26 @@ void store_200hz_acs(void)
 
     gymask = GET_UINT16(mask_gy_addr);
 
-    ifel_gy1 = dsp1760_getval(0,0);
-    ifroll_gy1 = dsp1760_getval(0,1);
-    ifyaw_gy1 = dsp1760_getval(0,2);
+    ifel_gy1 = dsp1760_getval(0, 0);
+    ifroll_gy1 = dsp1760_getval(0, 1);
+    ifyaw_gy1 = dsp1760_getval(0, 2);
     SET_FLOAT(ifElgy1Addr, ifel_gy1);
     SET_FLOAT(ifRollgy1Addr, ifroll_gy1);
     SET_FLOAT(ifYawgy1Addr, ifyaw_gy1);
 
-    ifel_gy2 = dsp1760_getval(1,0);
-    ifroll_gy2 = dsp1760_getval(1,1);
-    ifyaw_gy2 = dsp1760_getval(1,2);
+    ifel_gy2 = dsp1760_getval(1, 0);
+    ifroll_gy2 = dsp1760_getval(1, 1);
+    ifyaw_gy2 = dsp1760_getval(1, 2);
     SET_FLOAT(ifElgy2Addr, ifel_gy2);
     SET_FLOAT(ifRollgy2Addr, ifroll_gy2);
     SET_FLOAT(ifYawgy2Addr, ifyaw_gy2);
 
-    gy_ifroll= gy_inv[gymask][0][0]*ifroll_gy1 + gy_inv[gymask][0][1]*ifroll_gy2 + gy_inv[gymask][0][2]*ifyaw_gy1 + gy_inv[gymask][0][3]*ifyaw_gy2 + gy_inv[gymask][0][4]*ifel_gy1 + gy_inv[gymask][0][5]*ifel_gy2;
-    gy_ifyaw = gy_inv[gymask][1][0]*ifroll_gy1 + gy_inv[gymask][1][1]*ifroll_gy2 + gy_inv[gymask][1][2]*ifyaw_gy1 + gy_inv[gymask][1][3]*ifyaw_gy2 + gy_inv[gymask][1][4]*ifel_gy1 + gy_inv[gymask][1][5]*ifel_gy2;
-    gy_ifel  = gy_inv[gymask][2][0]*ifroll_gy1 + gy_inv[gymask][2][1]*ifroll_gy2 + gy_inv[gymask][2][2]*ifyaw_gy1 + gy_inv[gymask][2][3]*ifyaw_gy2 + gy_inv[gymask][2][4]*ifel_gy1 + gy_inv[gymask][2][5]*ifel_gy2;
+    gy_ifroll= gy_inv[gymask][0][0]*ifroll_gy1 + gy_inv[gymask][0][1]*ifroll_gy2 + gy_inv[gymask][0][2]*ifyaw_gy1
+             + gy_inv[gymask][0][3]*ifyaw_gy2 + gy_inv[gymask][0][4]*ifel_gy1 + gy_inv[gymask][0][5]*ifel_gy2;
+    gy_ifyaw = gy_inv[gymask][1][0]*ifroll_gy1 + gy_inv[gymask][1][1]*ifroll_gy2 + gy_inv[gymask][1][2]*ifyaw_gy1
+             + gy_inv[gymask][1][3]*ifyaw_gy2 + gy_inv[gymask][1][4]*ifel_gy1 + gy_inv[gymask][1][5]*ifel_gy2;
+    gy_ifel  = gy_inv[gymask][2][0]*ifroll_gy1 + gy_inv[gymask][2][1]*ifroll_gy2 + gy_inv[gymask][2][2]*ifyaw_gy1
+             + gy_inv[gymask][2][3]*ifyaw_gy2 + gy_inv[gymask][2][4]*ifel_gy1 + gy_inv[gymask][2][5]*ifel_gy2;
     SET_FLOAT(ifel_gy_addr, gy_ifel);
     SET_FLOAT(ifroll_gy_addr, gy_ifroll);
     SET_FLOAT(ifyaw_gy_addr, gy_ifyaw);
@@ -510,16 +507,19 @@ void store_200hz_acs(void)
     for (int box = 0; box < 2; box++) {
         for (int gyro = 0; gyro < 3; gyro++) {
             uint32_t gyro_valid = dsp1760_get_valid_packet_count(box, gyro);
-            if (gyro_valid == gyro_valid_count[box][gyro]) gyro_valid_set[box][gyro]++;
-            else gyro_valid_set[box][gyro] = 0;
+            if (gyro_valid == gyro_valid_count[box][gyro])
+                gyro_valid_set[box][gyro]++;
+            else
+                gyro_valid_set[box][gyro] = 0;
 
-            if (gyro_valid_set[box][gyro] > 1) gyfault |= (1 << (gyro * 2 + box));
-            else gyfault &= ~(1 << (gyro * 2 + box));
+            if (gyro_valid_set[box][gyro] > 1)
+                gyfault |= (1 << (gyro * 2 + box));
+            else
+                gyfault &= ~(1 << (gyro * 2 + box));
         }
     }
 
     SET_UINT16(fault_gy_addr, gyfault);
-
 }
 
 /**
@@ -568,7 +568,6 @@ void store_100hz_acs(void)
 
         vel_piv_addr = channels_find_by_name("mc_piv_vel");
         pos_piv_addr = channels_find_by_name("mc_piv_pos");
-
     }
     i_point = GETREADINDEX(point_index);
     i_motors = GETREADINDEX(motor_index);
@@ -595,7 +594,7 @@ static inline channel_t* get_xsc_channel(const char *m_field, int m_which)
 {
   char buffer[FIELD_LEN];
   const char prefix[2][3] = {"x0", "x1"};
-  sprintf(buffer, "%s_%s", prefix[m_which], m_field);
+  snprintf(buffer, sizeof(buffer), "%s_%s", prefix[m_which], m_field);
   return channels_find_by_name(buffer);
 }
 
@@ -734,8 +733,9 @@ void store_1hz_xsc(int m_which)
         }
     }
 
-    SET_SCALED_VALUE(address_xN_image_num_blobs[m_which], (XSC_SERVER_DATA(m_which).channels.image_num_blobs_found << 6) |
-            (XSC_SERVER_DATA(m_which).channels.image_num_blobs_matched & 0b111111));
+    SET_SCALED_VALUE(address_xN_image_num_blobs[m_which],
+                     (XSC_SERVER_DATA(m_which).channels.image_num_blobs_found << 6) |
+                     (XSC_SERVER_DATA(m_which).channels.image_num_blobs_matched & 0b111111));
 
     SET_SCALED_VALUE(address_xN_hk_temp_lens[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_lens);
     SET_SCALED_VALUE(address_xN_hk_temp_comp[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_comp);
@@ -747,7 +747,8 @@ void store_1hz_xsc(int m_which)
     SET_SCALED_VALUE(address_xN_image_eq_valid[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_valid);
     SET_SCALED_VALUE(address_xN_cam_gain_valid[m_which], XSC_SERVER_DATA(m_which).channels.cam_gain_valid);
     SET_SCALED_VALUE(address_xN_image_hor_valid[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_valid);
-    SET_SCALED_VALUE(address_xN_image_afocus_metric_valid[m_which], XSC_SERVER_DATA(m_which).channels.image_afocus_metric_valid);
+    SET_SCALED_VALUE(address_xN_image_afocus_metric_valid[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_afocus_metric_valid);
 
     SET_SCALED_VALUE(address_xN_stars_run_time[m_which], XSC_SERVER_DATA(m_which).channels.stars_run_time);
     SET_SCALED_VALUE(address_xN_cam_gain_db[m_which], XSC_SERVER_DATA(m_which).channels.cam_gain_db);
@@ -758,8 +759,10 @@ void store_1hz_xsc(int m_which)
     SET_SCALED_VALUE(address_xN_image_stats_mean[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_mean);
     SET_SCALED_VALUE(address_xN_image_stats_noise[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_noise);
     SET_SCALED_VALUE(address_xN_image_stats_gaindb[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_gaindb);
-    SET_SCALED_VALUE(address_xN_image_stats_num_px_sat[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_num_px_sat);
-    SET_SCALED_VALUE(address_xN_image_stats_frac_px_sat[m_which], XSC_SERVER_DATA(m_which).channels.image_stats_frac_px_sat);
+    SET_SCALED_VALUE(address_xN_image_stats_num_px_sat[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_stats_num_px_sat);
+    SET_SCALED_VALUE(address_xN_image_stats_frac_px_sat[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_stats_frac_px_sat);
     SET_SCALED_VALUE(address_xN_image_afocus_metric[m_which], XSC_SERVER_DATA(m_which).channels.image_afocus_metric);
 
     SET_SCALED_VALUE(address_xN_image_eq_iplate[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_iplate);
@@ -771,18 +774,22 @@ void store_1hz_xsc(int m_which)
     SET_SCALED_VALUE(address_xN_image_eq_sigma_ra[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_sigma_ra);
     SET_SCALED_VALUE(address_xN_image_eq_sigma_dec[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_sigma_dec);
     SET_SCALED_VALUE(address_xN_image_eq_sigma_roll[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_sigma_roll);
-    SET_SCALED_VALUE(address_xN_image_eq_sigma_pointing[m_which], XSC_SERVER_DATA(m_which).channels.image_eq_sigma_pointing);
+    SET_SCALED_VALUE(address_xN_image_eq_sigma_pointing[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_eq_sigma_pointing);
     SET_SCALED_VALUE(address_xN_image_hor_az[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_az);
     SET_SCALED_VALUE(address_xN_image_hor_el[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_el);
     SET_SCALED_VALUE(address_xN_image_hor_roll[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_roll);
     SET_SCALED_VALUE(address_xN_image_hor_sigma_az[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_sigma_az);
     SET_SCALED_VALUE(address_xN_image_hor_sigma_el[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_sigma_el);
     SET_SCALED_VALUE(address_xN_image_hor_sigma_roll[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_sigma_roll);
-    SET_SCALED_VALUE(address_xN_image_hor_sigma_pointing[m_which], XSC_SERVER_DATA(m_which).channels.image_hor_sigma_pointing);
+    SET_SCALED_VALUE(address_xN_image_hor_sigma_pointing[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_hor_sigma_pointing);
 
-    SET_SCALED_VALUE(address_xN_last_trig_motion_caz_px[m_which], xsc_pointing_state[m_which].last_trigger.motion_caz_px);
+    SET_SCALED_VALUE(address_xN_last_trig_motion_caz_px[m_which],
+                     xsc_pointing_state[m_which].last_trigger.motion_caz_px);
     SET_SCALED_VALUE(address_xN_last_trig_motion_el_px[m_which], xsc_pointing_state[m_which].last_trigger.motion_el_px);
-    double motion_px = sqrt(pow(xsc_pointing_state[m_which].last_trigger.motion_caz_px, 2.0) + pow(xsc_pointing_state[m_which].last_trigger.motion_el_px, 2.0));
+    double motion_px = sqrt(pow(xsc_pointing_state[m_which].last_trigger.motion_caz_px, 2.0) +
+                            pow(xsc_pointing_state[m_which].last_trigger.motion_el_px, 2.0));
     SET_SCALED_VALUE(address_xN_last_trig_motion_px[m_which], motion_px);
     SET_SCALED_VALUE(address_xN_point_az[m_which]     , PointingData[i_point].xsc_az[m_which]);
     SET_SCALED_VALUE(address_xN_point_el[m_which]     , PointingData[i_point].xsc_el[m_which]);
@@ -793,7 +800,7 @@ void store_1hz_xsc(int m_which)
     SET_SCALED_VALUE(address_xN_point_el_trim[m_which], CommandData.XSC[m_which].el_trim);
     SET_SCALED_VALUE(address_xN_cd_robust_mode[m_which], CommandData.XSC[m_which].net.solver.robust_mode_enabled);
     SET_SCALED_VALUE(address_xN_cd_motion_psf[m_which], CommandData.XSC[m_which].net.solver.motion_psf.enabled);
-    ///TODO: Re-add local image saving
+    /// TODO(seth): Re-add local image saving
 //    SET_SCALED_VALUE(address_xN_num_images_saved[m_which], images_num_saved[m_which]);
     if (m_which == 0) {
         SET_SCALED_VALUE(address_xN_last_trig_lat       , xsc_pointing_state[m_which].last_trigger.lat*DEG2LI);
@@ -826,25 +833,25 @@ void store_100hz_xsc(int which)
         firsttime[which] = false;
 
         if (which == 0) {
-            address_xN_ctr_mcp                      = get_xsc_channel("ctr_mcp"              , 0);
-            address_xN_last_trig_age_cs             = get_xsc_channel("last_trig_age_cs"     , 0);
-            address_xN_last_trig_ctr_mcp            = get_xsc_channel("last_trig_ctr_mcp"    , 0);
-            address_xN_predicted_motion_px          = get_xsc_channel("predicted_motion_px"     , which);
+            address_xN_ctr_mcp                     = get_xsc_channel("ctr_mcp", 0);
+            address_xN_last_trig_age_cs            = get_xsc_channel("last_trig_age_cs", 0);
+            address_xN_last_trig_ctr_mcp           = get_xsc_channel("last_trig_ctr_mcp", 0);
+            address_xN_predicted_motion_px         = get_xsc_channel("predicted_motion_px", which);
         }
-        address_xN_ctr_stars[which]                 = get_xsc_channel("ctr_stars", which);
-        address_xN_image_ctr_stars[which]           = get_xsc_channel("image_ctr_stars", which);
-        address_xN_image_ctr_mcp[which]             = get_xsc_channel("image_ctr_mcp", which);
-        address_xN_last_trig_ctr_stars[which]       = get_xsc_channel("last_trig_ctr_stars"     , which);
-        address_xN_image_blobn_x[which]             = get_xsc_channel("image_blobn_x"   , which);
-        address_xN_image_blobn_y[which]             = get_xsc_channel("image_blobn_y"   , which);
-        address_xN_image_blobn_flux[which]          = get_xsc_channel("image_blobn_flux"   , which);
-        address_xN_image_blobn_peak_to_flux[which]  = get_xsc_channel("image_blobn_peak_to_flux"   , which);
+        address_xN_ctr_stars[which]                = get_xsc_channel("ctr_stars", which);
+        address_xN_image_ctr_stars[which]          = get_xsc_channel("image_ctr_stars", which);
+        address_xN_image_ctr_mcp[which]            = get_xsc_channel("image_ctr_mcp", which);
+        address_xN_last_trig_ctr_stars[which]      = get_xsc_channel("last_trig_ctr_stars", which);
+        address_xN_image_blobn_x[which]            = get_xsc_channel("image_blobn_x", which);
+        address_xN_image_blobn_y[which]            = get_xsc_channel("image_blobn_y", which);
+        address_xN_image_blobn_flux[which]         = get_xsc_channel("image_blobn_flux", which);
+        address_xN_image_blobn_peak_to_flux[which] = get_xsc_channel("image_blobn_peak_to_flux", which);
     }
 
     if (which == 0) {
-        SET_SCALED_VALUE(address_xN_ctr_mcp             , xsc_pointing_state[which].counter_mcp);
-        SET_SCALED_VALUE(address_xN_last_trig_age_cs    , xsc_pointing_state[which].last_trigger.age_cs);
-        SET_SCALED_VALUE(address_xN_last_trig_ctr_mcp   , xsc_pointing_state[which].last_trigger.counter_mcp);
+        SET_SCALED_VALUE(address_xN_ctr_mcp, xsc_pointing_state[which].counter_mcp);
+        SET_SCALED_VALUE(address_xN_last_trig_age_cs, xsc_pointing_state[which].last_trigger.age_cs);
+        SET_SCALED_VALUE(address_xN_last_trig_ctr_mcp, xsc_pointing_state[which].last_trigger.counter_mcp);
         SET_SCALED_VALUE(address_xN_predicted_motion_px, xsc_pointing_state[0].predicted_motion_px);
     }
 
@@ -852,20 +859,25 @@ void store_100hz_xsc(int which)
     SET_INT32(address_xN_ctr_stars[which], XSC_SERVER_DATA(which).channels.ctr_stars);
     SET_INT32(address_xN_image_ctr_stars[which], XSC_SERVER_DATA(which).channels.image_ctr_stars);
     SET_INT32(address_xN_image_ctr_mcp[which], XSC_SERVER_DATA(which).channels.image_ctr_mcp);
-    SET_SCALED_VALUE(address_xN_last_trig_ctr_stars[which], xsc_pointing_state[which].last_trigger.counter_stars);
+    SET_SCALED_VALUE(address_xN_last_trig_ctr_stars[which],
+                     xsc_pointing_state[which].last_trigger.counter_stars);
 
     if (XSC_SERVER_DATA(which).blobs.counter_stars != last_blob_counter_stars[which] &&
-        XSC_SERVER_DATA(which).blobs.counter_stars > 0)
-    {
+        XSC_SERVER_DATA(which).blobs.counter_stars > 0) {
         last_blob_counter_stars[which] = XSC_SERVER_DATA(which).blobs.counter_stars;
         last_blob_i[which] = 0;
     }
     if (intermediate_frame_counter[which] == 0) {
-        if (last_blob_i[which] < XSC_SERVER_DATA(which).blobs.num_blobs && last_blob_i[which] < XSC_BLOBS_ARRAY_SIZE) {
-            SET_SCALED_VALUE(address_xN_image_blobn_x[which], XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].x);
-            SET_SCALED_VALUE(address_xN_image_blobn_y[which], XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].y);
-            SET_SCALED_VALUE(address_xN_image_blobn_flux[which], XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].flux);
-            SET_SCALED_VALUE(address_xN_image_blobn_peak_to_flux[which], XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].peak_to_flux);
+        if (last_blob_i[which] < XSC_SERVER_DATA(which).blobs.num_blobs
+                && last_blob_i[which] < XSC_BLOBS_ARRAY_SIZE) {
+            SET_SCALED_VALUE(address_xN_image_blobn_x[which],
+                             XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].x);
+            SET_SCALED_VALUE(address_xN_image_blobn_y[which],
+                             XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].y);
+            SET_SCALED_VALUE(address_xN_image_blobn_flux[which],
+                             XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].flux);
+            SET_SCALED_VALUE(address_xN_image_blobn_peak_to_flux[which],
+                             XSC_SERVER_DATA(which).blobs.blobs[last_blob_i[which]].peak_to_flux);
             last_blob_i[which]++;
         } else if (last_blob_i[which] == XSC_SERVER_DATA(which).blobs.num_blobs) {
             SET_SCALED_VALUE(address_xN_image_blobn_x[which], 0);
@@ -1102,7 +1114,6 @@ void store_5hz_acs(void)
         threshAtrimAddr = channels_find_by_name("thresh_atrim");
         timeAtrimAddr = channels_find_by_name("time_atrim");
         rateAtrimAddr = channels_find_by_name("rate_atrim");
-
     }
 
     i_point = GETREADINDEX(point_index);
@@ -1114,7 +1125,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(elrawPss2Addr, PointingData[i_point].pss2_elraw);
     SET_SCALED_VALUE(snrPss1Addr, PointingData[i_point].pss1_snr);
     SET_SCALED_VALUE(snrPss2Addr, PointingData[i_point].pss2_snr);
-    ///TODO: Why are we manually adding the trim here?
+    // TODO(seth): Why are we manually adding the trim here?
     SET_SCALED_VALUE(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim));
     SET_SCALED_VALUE(PssOkAddr, PointingData[i_point].pss_ok);
     /********** SIP GPS Data **********/
@@ -1153,6 +1164,8 @@ void store_5hz_acs(void)
 
 //    SET_SCALED_VALUE(mcpFrameAddr, PointingData[i_point].mcp_frame);
     SET_SCALED_VALUE(lstAddr, PointingData[i_point].lst);
+    // TODO(seth): Update LST Schedule channel
+    SET_SCALED_VALUE(lstSchedAddr, 0);
 
     SET_SCALED_VALUE(azMagAddr, (PointingData[i_point].mag_az + CommandData.mag_az_trim));
     SET_SCALED_VALUE(azRawMagAddr, (PointingData[i_point].mag_az_raw));
@@ -1250,6 +1263,4 @@ void store_5hz_acs(void)
     sensor_veto |= (CommandData.el_autogyro << 9);
 
     SET_UINT16(vetoSensorAddr, sensor_veto);
-
-
 }

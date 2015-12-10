@@ -62,7 +62,7 @@
 #define STAGEYNUM 1
 #define POLL_TIMEOUT 1500 /* 15 seconds */
 
-extern short int InCharge; /* tx.c */
+extern int16_t InCharge; /* tx.c */
 void nameThread(const char*);	/* mcp.c */
 
 static struct stage_struct {
