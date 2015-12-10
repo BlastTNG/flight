@@ -432,18 +432,22 @@ void SendCommandList(int sock)
 
 void SendGroupNames(int sock)
 {
-  unsigned short i;
   char output[4096];
-
-  i = N_GROUPS;
-  if (send(sock, &i, sizeof(i), MSG_NOSIGNAL) < 1)
-    return;
+  int i;
+  uint16_t num_groups = 0;
 
   output[0] = '\0';
-  for (i=0; i<N_GROUPS; ++i) {
-    strncat(output, GroupNames[i], 127);
-    strcat(output, "\n");
-  }
+    for (i = 0; i < N_GROUPS && GroupNames[i]; ++i) {
+        if (GroupNames[i]) {
+            num_groups++;
+            strncat(output, GroupNames[i], 127);
+            strcat(output, "\n");
+        }
+    }
+
+  if (send(sock, &num_groups, sizeof(num_groups), MSG_NOSIGNAL) < 1)
+    return;
+
   send(sock, output, strlen(output), MSG_NOSIGNAL);
 }
 

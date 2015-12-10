@@ -185,10 +185,11 @@ void CommandGroupList(void)
   NetCmdGetCmdList();
 
   printf("Valid (and ordered) group names:\n");
+  printf("#\tName\n");
 
   for (i = 0; i < N_GROUPS; i++)
   {
-    printf("%s\n", GroupNames[i]);
+    if (GroupNames[i]) printf("%d:\t%s\n", i, GroupNames[i]);
   }
 
   exit(1);
