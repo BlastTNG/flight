@@ -23,17 +23,20 @@
  * Created on: Apr 7, 2015 by Seth Hillbrand
  */
 
+#include "dsp1760.h"
+
 #include <sys/io.h>
 #include <string.h>
 
-#include <blast.h>
-#include <crc.h>
-#include <blast_comms.h>
-#include <comms_serial.h>
-#include <conversions.h>
-#include <dsp1760.h>
+#include "phenom/listener.h"
+#include "phenom/serial.h"
+#include "phenom/log.h"
 
-static comms_serial_t *gyro_comm[2] = {NULL};
+#include "blast.h"
+#include "crc.h"
+#include "conversions.h"
+
+static ph_serial_t *gyro_comm[2] = {NULL};
 static const char gyro_port[2][16] = {"/dev/ttyS2", "/dev/ttyS3"};
 
 #define DSP1760_NPOLES 10
@@ -41,8 +44,6 @@ static const char gyro_port[2][16] = {"/dev/ttyS2", "/dev/ttyS3"};
 #define DSP1760_STATUS_MASK_GY1 0x01
 #define DSP1760_STATUS_MASK_GY2 0x02
 #define DSP1760_STATUS_MASK_GY3 0x04
-
-#define DSP1760_DATA_HEADER 0xFE81FF55
 
 #define DSP1760_1000HZ 1000.0
 typedef union
@@ -86,10 +87,9 @@ typedef struct
     uint8_t         gyro_invalid_packet_count[3];
     uint32_t        packet_count;
     uint32_t        gyro_valid_packet_count[3];
-    uint8_t         bpos;
     uint8_t         index;
+    int16_t         temp;
     float           gyro_input[3][DSP1760_NPOLES+1];
-    dsp1760_std_t   packet;
 } dsp_storage_t;
 
 /// Two sets of 3 gyroscopes with 10 pole filters (5 sample delay)
@@ -104,14 +104,14 @@ static dsp_storage_t    gyro_data[2] = {{0}};
  */
 /// TODO(seth): Evaluate whether we want to use delta angle instead!
 /// TODO(seth): Change gyros to output degrees
-static void dsp1760_newvals(dsp_storage_t *m_gyro)
+static void dsp1760_newvals(dsp1760_std_t *m_packet, dsp_storage_t *m_gyro)
 {
-    if (m_gyro->packet.status & DSP1760_STATUS_MASK_GY1)
-        m_gyro->gyro_input[0][m_gyro->index] = to_degrees(m_gyro->packet.x) * DSP1760_1000HZ / DSP1760_GAIN;
-    if (m_gyro->packet.status & DSP1760_STATUS_MASK_GY2)
-        m_gyro->gyro_input[1][m_gyro->index] = to_degrees(m_gyro->packet.y) * DSP1760_1000HZ / DSP1760_GAIN;
-    if (m_gyro->packet.status & DSP1760_STATUS_MASK_GY3)
-        m_gyro->gyro_input[2][m_gyro->index] = to_degrees(m_gyro->packet.z) * DSP1760_1000HZ / DSP1760_GAIN;
+    if (m_packet->status & DSP1760_STATUS_MASK_GY1)
+        m_gyro->gyro_input[0][m_gyro->index] = to_degrees(m_packet->x) * DSP1760_1000HZ / DSP1760_GAIN;
+    if (m_packet->status & DSP1760_STATUS_MASK_GY2)
+        m_gyro->gyro_input[1][m_gyro->index] = to_degrees(m_packet->y) * DSP1760_1000HZ / DSP1760_GAIN;
+    if (m_packet->status & DSP1760_STATUS_MASK_GY3)
+        m_gyro->gyro_input[2][m_gyro->index] = to_degrees(m_packet->z) * DSP1760_1000HZ / DSP1760_GAIN;
 
     if (++(m_gyro->index) > DSP1760_NPOLES) m_gyro->index = 0;
 }
@@ -167,10 +167,14 @@ uint32_t dsp1760_get_valid_packet_count(int m_box, int m_gyro)
 }
 int16_t dsp1760_get_temp(int m_box)
 {
-    return gyro_data[m_box].packet.temp;
+    return gyro_data[m_box].temp;
 }
 
-static int activate_921k_clock(comms_serial_t *m_serial)
+/**
+ *
+ * @param m_serial
+ */
+static int activate_921k_clock(uint8_t m_serial)
 {
 #define SMSC_BASE_ADDR 0x4E
 #define SMSC_IO_ADDR (SMSC_BASE_ADDR + 1)
@@ -180,19 +184,18 @@ static int activate_921k_clock(comms_serial_t *m_serial)
 
 #define SP1_ADDR 0x04
 #define SP2_ADDR 0x05
-
+    const int sp_addr[2] = {SP1_ADDR, SP2_ADDR};
     int reg_val = 0;
 
+    if (m_serial > 1) {
+        blast_err("Invalid serial port for 921k!");
+        return -1;
+    }
     ioperm(SMSC_BASE_ADDR, 0xFF, 1);        // Allow us to frob bits.  We need the full chip (0xFF)
 
     outb(SMSC_ENTER_CFG, SMSC_BASE_ADDR);   // Put the SMSC Chip into config mode
     outb(SMSC_LDNUM_ADDR, SMSC_BASE_ADDR);
-    if (strstr(m_serial->sock->host, "ttyS3"))
-        outb(SP2_ADDR, SMSC_IO_ADDR);       // Specify that we want to configure the second port (ttyS3)
-    else if (strstr(m_serial->sock->host, "ttyS2"))
-        outb(SP1_ADDR, SMSC_IO_ADDR);       // Specify that we want to configure the first port (ttyS2)
-    else
-        blast_err("Don't know how to configure %s!  This probably won't work", m_serial->sock->host);
+    outb(sp_addr[m_serial], SMSC_IO_ADDR);
 
     outb(0xF0, SMSC_BASE_ADDR);             // Read from the SP options register
     reg_val = inb(SMSC_IO_ADDR);
@@ -203,117 +206,111 @@ static int activate_921k_clock(comms_serial_t *m_serial)
 
     outb(SMSC_ENTER_RUN, SMSC_BASE_ADDR);   // Leave Config Mode
     ioperm(SMSC_BASE_ADDR, 0xFF, 0);        // Remove the bit access again
-
-    return comms_serial_set_baud_base(m_serial, 921600);
+    return 0;
 }
 
 
 /**
  * Handles the data inflow from the gyroscopes
- * @param m_data Pointer to the next byte in the gyro data stream
- * @param m_len length of data queued
- * @param m_userdata Pointer to the gyro processing buffer
+ * @param m_serial Pointer to serial stream
+ * @param m_why Reason process data was called
+ * @param m_userdata Pointer to the state storage
  * @return Number of bytes consumed by processing
  */
-static int dsp1760_process_data(const void *m_data, size_t m_len, void *m_userdata __attribute__((unused)))
+static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void *m_userdata)
 {
-    dsp_storage_t *gyro = ((comms_serial_t*)m_userdata)->sock->priv_data;
-    dsp1760_std_t *pkt = &gyro->packet;
-    const uint8_t *buffer = m_data;
+    dsp_storage_t *gyro = (dsp_storage_t *) m_userdata;
 
-     int i;
+    dsp1760_std_t *pkt;
+    uint32_t crc_calc = 0xFFFFFFFF;
+    bool invalid_data = false;
 
-     for (i = 0; i < m_len; i++) {
-         if (pkt->raw_data[0] == 0xFE) {
-             pkt->raw_data[gyro->bpos++] = buffer[i];
-             if ((gyro->bpos == 4) && (ntohl(pkt->header) != DSP1760_DATA_HEADER /*0xFE81FF55*/)) {
-                 pkt->raw_data[0] = '\0';
-                 gyro->bpos = 0;
-                 gyro->header_error_count++;
-                 break;
-             }
-             if (gyro->bpos == 36) {
-                 uint32_t crc_calc = 0xFFFFFFFF;
-                 bool invalid_data = false;
+    const char header[4] = { 0xFE, 0x81, 0xFF, 0x55 };
+    ph_buf_t *buf;
 
-                 crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
-                 if (crc_calc) {
-                     blast_warn("Received invalid CRC from Gyro %d", gyro->which);
-                     invalid_data = true;
-                 }
+    if (!(m_why & PH_IOMASK_READ)) return;
 
-                 pkt->x_raw = ntohl(pkt->x_raw);
-                 if (isnanf(pkt->x)) {
-                     blast_warn("Received NaN from Gyro %d(X)", gyro->which);
-                     pkt->status &= (~DSP1760_STATUS_MASK_GY1);
-                 }
-                 pkt->y_raw = ntohl(pkt->y_raw);
-                 if (isnanf(pkt->y)) {
-                     blast_warn("Received NaN from Gyro %d(Y)", gyro->which);
-                     pkt->status &= (~DSP1760_STATUS_MASK_GY2);
-                 }
-                 pkt->z_raw = ntohl(pkt->z_raw);
-                 if (isnanf(pkt->z)) {
-                     blast_warn("Received NaN from Gyro %d(Z)", gyro->which);
-                     pkt->status &= (~DSP1760_STATUS_MASK_GY3);
-                 }
-                 pkt->temp = ntohs(pkt->temp);
-                 pkt->crc = ntohl(pkt->crc);
+    if (!ph_bufq_discard_until(m_serial->rbuf, header, 4)) return;
 
-                 if (pkt->sequence != (++gyro->seq_number & 0x7F)) {
-                     blast_warn("Expected Sequence %d but received %d from gyro %d",
-                                gyro->seq_number, pkt->sequence, gyro->which);
-                     gyro->seq_error_count++;
-                 }
-                 gyro->packet_count++;
+    if (!(buf = ph_serial_read_bytes_exact(m_serial, sizeof(dsp1760_std_t)))) return;
+    pkt = (dsp1760_std_t*) ph_buf_mem(buf);
 
-                 if (!invalid_data) {
-                      /***
-                       * Here, we reset the current sequence number but only if we received a valid packet from
-                       * the gyroscopes.  This allows us to reset the sequence numbering if we miss many packets
-                       * but doesn't screw up the sequence if we receive a malformed packet.
-                       */
-                     gyro->seq_number = pkt->sequence;
-                  }
+    crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
+    if (crc_calc) {
+        blast_warn("Received invalid CRC from Gyro %d", gyro->which);
+        invalid_data = true;
+    }
 
-                 /// Status is 1 if OK, 0 if faulty
-                 gyro->gyro_invalid_packet_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
-                 gyro->gyro_invalid_packet_count[1] += (!(pkt->status & DSP1760_STATUS_MASK_GY2));
-                 gyro->gyro_invalid_packet_count[2] += (!(pkt->status & DSP1760_STATUS_MASK_GY3));
+    pkt->x_raw = ntohl(pkt->x_raw);
+    if (isnanf(pkt->x)) {
+        blast_warn("Received NaN from Gyro %d(X)", gyro->which);
+        pkt->status &= (~DSP1760_STATUS_MASK_GY1);
+    }
+    pkt->y_raw = ntohl(pkt->y_raw);
+    if (isnanf(pkt->y)) {
+        blast_warn("Received NaN from Gyro %d(Y)", gyro->which);
+        pkt->status &= (~DSP1760_STATUS_MASK_GY2);
+    }
+    pkt->z_raw = ntohl(pkt->z_raw);
+    if (isnanf(pkt->z)) {
+        blast_warn("Received NaN from Gyro %d(Z)", gyro->which);
+        pkt->status &= (~DSP1760_STATUS_MASK_GY3);
+    }
+    pkt->temp = ntohs(pkt->temp);
 
-                 gyro->gyro_valid_packet_count[0] += (pkt->status & DSP1760_STATUS_MASK_GY1);
-                 gyro->gyro_valid_packet_count[1] += (pkt->status & DSP1760_STATUS_MASK_GY2);
-                 gyro->gyro_valid_packet_count[2] += (pkt->status & DSP1760_STATUS_MASK_GY3);
+    if (pkt->sequence != (++gyro->seq_number & 0x7F)) {
+        blast_warn("Expected Sequence %d but received %d from gyro %d", gyro->seq_number, pkt->sequence,
+                   gyro->which);
+        gyro->seq_error_count++;
+    }
+    gyro->packet_count++;
 
-                 pkt->raw_data[0] = '\0';
-                 gyro->bpos = 0;
+    if (!invalid_data) {
+        /***
+         * Here, we reset the current sequence number but only if we received a valid packet from
+         * the gyroscopes.  This allows us to reset the sequence numbering if we miss many packets
+         * but doesn't screw up the sequence if we receive a malformed packet.
+         */
+        gyro->seq_number = pkt->sequence;
+    }
 
-                 if (!invalid_data) dsp1760_newvals(gyro);
-             }
-         } else {
-             if (buffer[i] == 0xFE)
-                 pkt->raw_data[gyro->bpos++] = buffer[i];
-         }
-     }
+    /// Status is 1 if OK, 0 if faulty
+    gyro->gyro_invalid_packet_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
+    gyro->gyro_invalid_packet_count[1] += (!(pkt->status & DSP1760_STATUS_MASK_GY2));
+    gyro->gyro_invalid_packet_count[2] += (!(pkt->status & DSP1760_STATUS_MASK_GY3));
 
-     return i;
+    gyro->gyro_valid_packet_count[0] += (pkt->status & DSP1760_STATUS_MASK_GY1);
+    gyro->gyro_valid_packet_count[1] += (pkt->status & DSP1760_STATUS_MASK_GY2);
+    gyro->gyro_valid_packet_count[2] += (pkt->status & DSP1760_STATUS_MASK_GY3);
+
+    if (!invalid_data) dsp1760_newvals(pkt, gyro);
+
+    ph_buf_delref(buf);
 }
 
-static void dsp1760_handle_error(int m_code, void *m_priv)
+/**
+ * Clears, queues for closing and resets the gyrobox
+ * @param m_gyrobox why gyrobox should be reset?
+ */
+void dsp1760_reset_gyro(int m_gyrobox)
 {
-    comms_serial_t *port = (comms_serial_t*)m_priv;
-    blast_err("Got error %d on gyro comm %s: %s", m_code, port->sock->host, strerror(m_code));
-}
+    struct termios term = {0};
+    if (gyro_comm[m_gyrobox]) ph_serial_free(gyro_comm[m_gyrobox]);
 
-static int dsp1760_handle_finished(const void *m_data, size_t m_len, void *m_userdata __attribute__((unused)))
-{
-    comms_serial_t *port = (comms_serial_t*)m_userdata;
-    if (port && port->sock && port->sock->host)
-        blast_err("Got closed socket on %s!  That shouldn't happen", port->sock->host);
-    else
-        blast_err("Got closed socket on unknown gyro port!");
+    term.c_cflag = CS8 | B38400 | CLOCAL | CREAD;
 
-    return 0;
+    BLAST_ZERO(gyro_data[m_gyrobox]);
+    gyro_data[m_gyrobox].which = m_gyrobox;
+    gyro_comm[m_gyrobox] = ph_serial_open(gyro_port[m_gyrobox], &term, &gyro_data[m_gyrobox]);
+
+    activate_921k_clock(m_gyrobox);
+    if (ph_serial_set_baud_base(gyro_comm[m_gyrobox], 921600)) blast_strerror("Error setting base");
+    if (ph_serial_set_baud_divisor(gyro_comm[m_gyrobox], 921600)) blast_strerror("Error setting divisor");
+
+    gyro_comm[m_gyrobox]->callback = dsp1760_process_data;
+    gyro_comm[m_gyrobox]->timeout_duration.tv_sec = 1;
+
+    ph_serial_enable(gyro_comm[m_gyrobox], true);
 }
 
 /**
@@ -323,42 +320,7 @@ static int dsp1760_handle_finished(const void *m_data, size_t m_len, void *m_use
 bool initialize_dsp1760_interface(void)
 {
     for (int i = 0; i < 2; i++) {
-        BLAST_ZERO(gyro_data[i]);
-        gyro_data[i].which = i;
-        gyro_comm[i] = comms_serial_new(&gyro_data[i]);
-    }
-
-    if (!gyro_comm[0] && !gyro_comm[1]) {
-        blast_err("Could not allocate any serial port for gyroscopes");
-        return false;
-    }
-
-    for (int i = 0; i < 2; i++) {
-        if (gyro_comm[i]) {
-            gyro_comm[i]->sock->callbacks.data = dsp1760_process_data;
-            gyro_comm[i]->sock->callbacks.error = dsp1760_handle_error;
-            gyro_comm[i]->sock->callbacks.finished = dsp1760_handle_finished;
-            gyro_comm[i]->sock->callbacks.priv = gyro_comm[i];
-
-            if (comms_serial_connect(gyro_comm[i], gyro_port[i]) != NETSOCK_OK) {
-                bfree(err, gyro_comm[i]->sock->priv_data);
-                comms_serial_free(gyro_comm[i]);
-                gyro_comm[i] = NULL;
-            }
-
-            comms_serial_setspeed(gyro_comm[i], B38400);
-            activate_921k_clock(gyro_comm[i]);
-            comms_serial_set_baud_divisor(gyro_comm[i], 921600);
-        }
-
-        if (!gyro_comm[i] || !(blast_comms_add_port(gyro_comm[i]))) {
-            blast_err("Could not add gyro port %d to our comm monitor", i + 1);
-            if (gyro_comm[i]) {
-                bfree(err, gyro_comm[i]->sock->priv_data);
-                comms_serial_free(gyro_comm[i]);
-                gyro_comm[i] = NULL;
-            }
-        }
+        dsp1760_reset_gyro(i);
     }
 
     blast_startup("Initialized gyroscope interface");

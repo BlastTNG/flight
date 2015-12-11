@@ -25,11 +25,13 @@
 
 #ifndef INCLUDE_DSP1760_H_
 #define INCLUDE_DSP1760_H_
+#include <stdbool.h>
 #include <stdint.h>
 
 #define GYRO_VAR (0.7E-6)
 
 bool initialize_dsp1760_interface(void);
+void dsp1760_reset_gyro(int m_gyrobox);
 
 float dsp1760_getval(int m_box, int m_gyro);
 uint8_t dsp1760_get_header_error_count(int m_box);
