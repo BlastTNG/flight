@@ -45,7 +45,7 @@ static bool bias_closing = false;
 static PaStream *bias_stream = NULL;
 
 static int bias_tone_callback(const void *m_input, void *m_output,
-                            uint32_t m_frames_per_buffer,
+                            uint64_t m_frames_per_buffer,
                             const PaStreamCallbackTimeInfo* m_time_info,
                             PaStreamCallbackFlags m_status,
                             void *m_userdata )
@@ -59,7 +59,7 @@ static int bias_tone_callback(const void *m_input, void *m_output,
 
     for (int i = 0; i < m_frames_per_buffer; i++) {
         *out++ = sine[sine_index]; /* left */
-        *out++ = sine[sine_index]; /* right */
+        *out++ = -sine[sine_index]; /* right */
 
         if (++sine_index == TABLE_SIZE) sine_index = 0;
     }
