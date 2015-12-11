@@ -59,6 +59,7 @@
 #include "time_lst.h"
 #include "utilities_pointing.h"
 #include "blast_sip_interface.h"
+#include "magnetometer.h"
 
 
 int point_index = 0;

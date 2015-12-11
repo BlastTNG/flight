@@ -28,12 +28,6 @@
 
 #define GY_HISTORY_AGE_CS 4400
 
-// TODO(anyone): Characterize Magnetometer
-#define MAGX_B 0.0
-#define MAGX_M 1.0
-#define MAGY_B 0.0
-#define MAGY_M 1.0
-
 #define FLOAT_ALT 30480
 #define FRAMES_TO_OK_ATFLOAT 100
 
@@ -45,7 +39,6 @@
 #define GPS_FIR_LENGTH (60*30 * 1)
 
 /* Calibrations of the az of each sensor  */
-#define MAG_ALIGNMENT     -28.0
 #define PSS_ALIGNMENT     0.0
 #define PSS1_ALIGNMENT    (PSS_ALIGNMENT - 50.0)
 #define PSS2_ALIGNMENT    (PSS_ALIGNMENT - 85.0 + 3.9)

@@ -29,4 +29,29 @@
 
 void initialize_magnetometer(void);
 
+// TODO(anyone): Characterize Magnetometer
+#define MAGX_B 0.0
+#define MAGX_M 1.0
+#define MAGY_B 0.0
+#define MAGY_M 1.0
+
+/* Magnetometer Az Calibration */
+#define MAG_ALIGNMENT     -28.0
+
+// convert mag readings to sine and cosine
+// calibrated in Palestine, July 11, 2010
+// Best fit to mag_x and mag_y
+// y = -3000*sin(x-19)+33050 : mag_x
+// y = 3000*cos(x-19)+33310 : mag_y
+// x is dgps theta in degrees.
+// The defines for x and y are no longer used.
+// #define MAGX_M (-1.0/1290.0)
+// #define MAGX_B (33500/1290.0)
+// #define MAGY_M (-1.0/1290.0)
+// #define MAGY_B (33400.0/1290.0)
+#define MAGZ_M (-1/1290.0)
+#define MAGZ_B (32768.0)
+
+#define FAST_MAG
+
 #endif /* INCLUDE_MAGNETOMETER_H_ */
