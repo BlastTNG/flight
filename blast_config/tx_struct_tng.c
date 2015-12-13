@@ -769,6 +769,10 @@ channel_t channel_list[] =
     { "y_mag",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "z_mag",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
+    { "ifel_earth_gy",        0.1 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+    { "ifroll_earth_gy",      0.1 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+    { "ifyaw_earth_gy",       0.1 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+
     { "az_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
     { "az_raw_mag",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
     { "pitch_mag",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
