@@ -220,72 +220,80 @@ static int activate_921k_clock(uint8_t m_serial)
 static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void *m_userdata)
 {
     dsp_storage_t *gyro = (dsp_storage_t *) m_userdata;
-
     dsp1760_std_t *pkt;
-    uint32_t crc_calc = 0xFFFFFFFF;
-    bool invalid_data = false;
 
     const char header[4] = { 0xFE, 0x81, 0xFF, 0x55 };
-    ph_buf_t *buf;
+    if (m_why & PH_IOMASK_ERR) {
+        blast_err("Error reading gyroscope box %d: %s", gyro->which, strerror(ph_stm_errno(m_serial->stream)));
+    }
 
     if (!(m_why & PH_IOMASK_READ)) return;
 
-    if (!ph_bufq_discard_until(m_serial->rbuf, header, 4)) return;
+    /// We loop here to catch multiple packets that may have been delivered since we last read
+    while (ph_bufq_discard_until(m_serial->rbuf, header, 4)) {
+        ph_buf_t *buf;
+        bool invalid_data = false;
+        uint32_t crc_calc = 0xFFFFFFFF;
 
-    if (!(buf = ph_serial_read_bytes_exact(m_serial, sizeof(dsp1760_std_t)))) return;
-    pkt = (dsp1760_std_t*) ph_buf_mem(buf);
+        if (!(buf = ph_serial_read_bytes_exact(m_serial, sizeof(dsp1760_std_t)))) return;
+        pkt = (dsp1760_std_t*) ph_buf_mem(buf);
 
-    crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
-    if (crc_calc) {
-        blast_warn("Received invalid CRC from Gyro %d", gyro->which);
-        invalid_data = true;
+        crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
+        if (crc_calc) {
+            blast_warn("Received invalid CRC from Gyro %d", gyro->which);
+            gyro->crc_error_count++;
+            invalid_data = true;
+        }
+
+        pkt->x_raw = ntohl(pkt->x_raw);
+        if (isnanf(pkt->x)) {
+            blast_warn("Received NaN from Gyro %d(X)", gyro->which);
+            pkt->status &= (~DSP1760_STATUS_MASK_GY1);
+            invalid_data = true;
+        }
+        pkt->y_raw = ntohl(pkt->y_raw);
+        if (isnanf(pkt->y)) {
+            blast_warn("Received NaN from Gyro %d(Y)", gyro->which);
+            pkt->status &= (~DSP1760_STATUS_MASK_GY2);
+            invalid_data = true;
+        }
+        pkt->z_raw = ntohl(pkt->z_raw);
+        if (isnanf(pkt->z)) {
+            blast_warn("Received NaN from Gyro %d(Z)", gyro->which);
+            pkt->status &= (~DSP1760_STATUS_MASK_GY3);
+            invalid_data = true;
+        }
+        pkt->temp = ntohs(pkt->temp);
+
+        if (pkt->sequence != (++gyro->seq_number & 0x7F)) {
+            blast_warn("Expected Sequence %d but received %d from gyro %d", gyro->seq_number, pkt->sequence,
+                       gyro->which);
+            gyro->seq_error_count++;
+        }
+        gyro->packet_count++;
+
+        if (!invalid_data) {
+            /***
+             * Here, we reset the current sequence number but only if we received a valid packet from
+             * the gyroscopes.  This allows us to reset the sequence numbering if we miss many packets
+             * but doesn't screw up the sequence if we receive a malformed packet.
+             */
+            gyro->seq_number = pkt->sequence;
+        }
+
+        /// Status is 1 if OK, 0 if faulty
+        gyro->gyro_invalid_packet_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
+        gyro->gyro_invalid_packet_count[1] += (!(pkt->status & DSP1760_STATUS_MASK_GY2));
+        gyro->gyro_invalid_packet_count[2] += (!(pkt->status & DSP1760_STATUS_MASK_GY3));
+
+        gyro->gyro_valid_packet_count[0] += (pkt->status & DSP1760_STATUS_MASK_GY1);
+        gyro->gyro_valid_packet_count[1] += (pkt->status & DSP1760_STATUS_MASK_GY2);
+        gyro->gyro_valid_packet_count[2] += (pkt->status & DSP1760_STATUS_MASK_GY3);
+
+        if (!invalid_data) dsp1760_newvals(pkt, gyro);
+
+        ph_buf_delref(buf);
     }
-
-    pkt->x_raw = ntohl(pkt->x_raw);
-    if (isnanf(pkt->x)) {
-        blast_warn("Received NaN from Gyro %d(X)", gyro->which);
-        pkt->status &= (~DSP1760_STATUS_MASK_GY1);
-    }
-    pkt->y_raw = ntohl(pkt->y_raw);
-    if (isnanf(pkt->y)) {
-        blast_warn("Received NaN from Gyro %d(Y)", gyro->which);
-        pkt->status &= (~DSP1760_STATUS_MASK_GY2);
-    }
-    pkt->z_raw = ntohl(pkt->z_raw);
-    if (isnanf(pkt->z)) {
-        blast_warn("Received NaN from Gyro %d(Z)", gyro->which);
-        pkt->status &= (~DSP1760_STATUS_MASK_GY3);
-    }
-    pkt->temp = ntohs(pkt->temp);
-
-    if (pkt->sequence != (++gyro->seq_number & 0x7F)) {
-        blast_warn("Expected Sequence %d but received %d from gyro %d", gyro->seq_number, pkt->sequence,
-                   gyro->which);
-        gyro->seq_error_count++;
-    }
-    gyro->packet_count++;
-
-    if (!invalid_data) {
-        /***
-         * Here, we reset the current sequence number but only if we received a valid packet from
-         * the gyroscopes.  This allows us to reset the sequence numbering if we miss many packets
-         * but doesn't screw up the sequence if we receive a malformed packet.
-         */
-        gyro->seq_number = pkt->sequence;
-    }
-
-    /// Status is 1 if OK, 0 if faulty
-    gyro->gyro_invalid_packet_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
-    gyro->gyro_invalid_packet_count[1] += (!(pkt->status & DSP1760_STATUS_MASK_GY2));
-    gyro->gyro_invalid_packet_count[2] += (!(pkt->status & DSP1760_STATUS_MASK_GY3));
-
-    gyro->gyro_valid_packet_count[0] += (pkt->status & DSP1760_STATUS_MASK_GY1);
-    gyro->gyro_valid_packet_count[1] += (pkt->status & DSP1760_STATUS_MASK_GY2);
-    gyro->gyro_valid_packet_count[2] += (pkt->status & DSP1760_STATUS_MASK_GY3);
-
-    if (!invalid_data) dsp1760_newvals(pkt, gyro);
-
-    ph_buf_delref(buf);
 }
 
 /**
