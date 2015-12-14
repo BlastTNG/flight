@@ -160,21 +160,25 @@ static void uei_of_store_hk(void)
 
 void uei_1hz_loop(void)
 {
-	int ret;
-	double data[48];
-	for (int i = 0; i < 6; i++) {
-		if (num_of_channels[i]) {
-			if ((ret = DqRtDmapReadScaledData(hd_of, dmapid_of, i, data, num_of_channels[i])) < 0) {
-				blast_err("Could not read scaled data from DMAP");
-				continue;
-			}
-			for (int ch = 0; ch < num_of_channels[i]; ch++) {
-				if (!uei_of_channels[i][ch])
-				    blast_dbg("no channel here!");
-				else
-				    SET_SCALED_VALUE(uei_of_channels[i][ch], data[ch]);
-			}
-		}
-	}
-	uei_of_store_hk();
+    uei_of_store_hk();
+}
+
+void uei_100hz_loop(void)
+{
+    int ret;
+    double data[48];
+    for (int i = 0; i < 6; i++) {
+        if (num_of_channels[i]) {
+            if ((ret = DqRtDmapReadScaledData(hd_of, dmapid_of, i, data, num_of_channels[i])) < 0) {
+                blast_err("Could not read scaled data from DMAP");
+                continue;
+            }
+            for (int ch = 0; ch < num_of_channels[i]; ch++) {
+                if (!uei_of_channels[i][ch])
+                    blast_dbg("no channel here!");
+                else
+                    SET_SCALED_VALUE(uei_of_channels[i][ch], data[ch]);
+            }
+        }
+    }
 }

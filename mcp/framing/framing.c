@@ -138,6 +138,26 @@ void uei_publish_1hz(void)
     }
 }
 
+void uei_publish_100hz(void)
+{
+    static uint32_t uei_of_100hz_framenum = 0;
+    static channel_t *uei_of_100hz_framenum_addr = NULL;
+    static char frame_name[32];
+    if (uei_of_100hz_framenum_addr == NULL) {
+        uei_of_100hz_framenum_addr = channels_find_by_name("uei_of_100hz_framecount");
+        snprintf(frame_name, sizeof(frame_name), "frames/of_uei/dummy/100Hz");
+    }
+
+    if (frame_stop) return;
+
+    uei_of_100hz_framenum++;
+    SET_UINT32(uei_of_100hz_framenum_addr, uei_of_100hz_framenum);
+    if (frame_size[SRC_OF_UEI][RATE_100HZ]) {
+        mosquitto_publish(mosq, NULL, frame_name,
+                frame_size[SRC_OF_UEI][RATE_100HZ], channel_data[SRC_OF_UEI][RATE_100HZ], 0, false);
+    }
+}
+
 void framing_publish_1hz(void)
 {
     static uint32_t mcp_1hz_framenum = 0;

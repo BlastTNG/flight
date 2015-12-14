@@ -37,4 +37,5 @@ void framing_publish_5hz(void);
 void framing_publish_1hz(void);
 
 void uei_publish_1hz(void);
+void uei_publish_100hz(void);
 #endif /* INCLUDE_FRAMING_H_ */

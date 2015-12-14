@@ -303,14 +303,15 @@ static void mcp_100hz_routines(void)
 //    CryoControl(index);
 //    BiasControl();
     WriteChatter();
+    uei_100hz_loop();
 
-    xsc_control_heaters();
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
+    uei_publish_100hz();
     framing_publish_100hz();
 }
 static void mcp_5hz_routines(void)
@@ -342,10 +343,11 @@ static void mcp_1hz_routines(void)
 {
     blast_store_cpu_health();
     blast_store_disk_space();
-    uei_1hz_loop();
+    xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
     framing_publish_1hz();
+    uei_1hz_loop();
     uei_publish_1hz();
 }
 

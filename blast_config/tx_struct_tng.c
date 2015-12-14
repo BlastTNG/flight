@@ -91,6 +91,17 @@ channel_t channel_list[] =
     { "td_lhe_filter",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 9, 0 },
     { "td_hwp",           SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 3, 0 },
 
+    { "225_ch0",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 0, 0 },
+    { "225_ch1",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 1, 0 },
+    { "225_ch2",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 2, 0 },
+    { "225_ch3",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 3, 0 },
+    { "225_ch4",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 4, 0 },
+    { "225_ch5",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 5, 0 },
+    { "225_ch6",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 6, 0 },
+    { "225_ch7",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 7, 0 },
+    { "225_ch8",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 8, 0 },
+    { "225_ch9",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 9, 0 },
+    { "225_ch24",          1.25 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 24, 0 },
 
     { "uei_if_ts",            0,                0,          TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_NONE, 0, 255, 0 },
     { "uei_if_2_5V",          UEI_VOLT_M,       UEI_VOLT_B, TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_V_V, 14, 0, 0 },
