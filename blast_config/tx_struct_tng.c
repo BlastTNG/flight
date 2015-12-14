@@ -758,6 +758,15 @@ channel_t channel_list[] =
     { "ifel_1_gy",            SCALE(CONVERT_UNITY),            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
     { "ifel_2_gy",            SCALE(CONVERT_UNITY),            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
     { "ifroll_2_gy",          SCALE(CONVERT_UNITY),            TYPE_FLOAT, RATE_200HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
+
+    { "good_pktcnt_yaw_1_gy",  SCALE(CONVERT_UNITY),           TYPE_UINT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "good_pktcnt_roll_1_gy", SCALE(CONVERT_UNITY),           TYPE_UINT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "good_pktcnt_el_1_gy",   SCALE(CONVERT_UNITY),           TYPE_UINT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
+
+    { "good_pktcnt_yaw_2_gy",  SCALE(CONVERT_UNITY),           TYPE_UINT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "good_pktcnt_roll_2_gy", SCALE(CONVERT_UNITY),           TYPE_UINT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "good_pktcnt_el_2_gy",   SCALE(CONVERT_UNITY),           TYPE_UINT32, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
+
     { "az",                   LI2DEG,   0.0,            TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0, 0, 0 },
     { "el",                   LI2DEG,   0.0,            TYPE_UINT32, RATE_200HZ, SRC_FC, U_P_DEG, 0, 0, 0 },
 

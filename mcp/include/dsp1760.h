@@ -34,7 +34,6 @@ bool initialize_dsp1760_interface(void);
 void dsp1760_reset_gyro(int m_gyrobox);
 
 float dsp1760_getval(int m_box, int m_gyro);
-uint8_t dsp1760_get_header_error_count(int m_box);
 uint8_t dsp1760_get_seq_error_count(int m_box);
 uint8_t dsp1760_get_crc_error_count(int m_box);
 uint8_t dsp1760_get_seq_number(int m_box);

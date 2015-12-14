@@ -80,7 +80,6 @@ typedef union
 typedef struct
 {
     int             which;
-    uint8_t         header_error_count;
     uint8_t         seq_error_count;
     uint8_t         crc_error_count;
     uint8_t         seq_number;
@@ -137,10 +136,7 @@ float dsp1760_getval(int m_box, int m_gyro)
     }
     return sum;
 }
-uint8_t dsp1760_get_header_error_count(int m_box)
-{
-    return gyro_data[m_box].header_error_count;
-}
+
 uint8_t dsp1760_get_seq_error_count(int m_box)
 {
     return gyro_data[m_box].seq_error_count;
@@ -223,9 +219,6 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
     dsp1760_std_t *pkt;
 
     const char header[4] = { 0xFE, 0x81, 0xFF, 0x55 };
-    if (m_why & PH_IOMASK_ERR) {
-        blast_err("Error reading gyroscope box %d: %s", gyro->which, strerror(ph_stm_errno(m_serial->stream)));
-    }
 
     if (!(m_why & PH_IOMASK_READ)) return;
 
@@ -306,6 +299,7 @@ void dsp1760_reset_gyro(int m_gyrobox)
     if (gyro_comm[m_gyrobox]) ph_serial_free(gyro_comm[m_gyrobox]);
 
     term.c_cflag = CS8 | B38400 | CLOCAL | CREAD;
+    term.c_iflag = IGNPAR | IGNBRK;
 
     BLAST_ZERO(gyro_data[m_gyrobox]);
     gyro_data[m_gyrobox].which = m_gyrobox;
@@ -316,7 +310,8 @@ void dsp1760_reset_gyro(int m_gyrobox)
     if (ph_serial_set_baud_divisor(gyro_comm[m_gyrobox], 921600)) blast_strerror("Error setting divisor");
 
     gyro_comm[m_gyrobox]->callback = dsp1760_process_data;
-    gyro_comm[m_gyrobox]->timeout_duration.tv_sec = 1;
+    gyro_comm[m_gyrobox]->timeout_duration.tv_sec = 0;
+    gyro_comm[m_gyrobox]->timeout_duration.tv_usec = 10000;
 
     ph_serial_enable(gyro_comm[m_gyrobox], true);
 }

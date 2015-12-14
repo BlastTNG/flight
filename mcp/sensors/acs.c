@@ -450,6 +450,7 @@ void store_200hz_acs(void)
     uint16_t gyfault = 0;
     static channel_t* mask_gy_addr;
     static channel_t* fault_gy_addr;
+    static channel_t* gyro_valid_addr[2][3];
     static uint32_t gyro_valid_count[2][3] = {{0}};
     static uint32_t gyro_valid_set[2][3] = {{0}};
 
@@ -465,6 +466,13 @@ void store_200hz_acs(void)
       ifElgy2Addr = channels_find_by_name("ifel_2_gy");
       ifRollgy2Addr = channels_find_by_name("ifroll_2_gy");
       ifYawgy2Addr = channels_find_by_name("ifyaw_2_gy");
+
+      gyro_valid_addr[0][0] = channels_find_by_name("good_pktcnt_yaw_1_gy");
+      gyro_valid_addr[0][1] = channels_find_by_name("good_pktcnt_roll_1_gy");
+      gyro_valid_addr[0][2] = channels_find_by_name("good_pktcnt_el_1_gy");
+      gyro_valid_addr[1][0] = channels_find_by_name("good_pktcnt_yaw_2_gy");
+      gyro_valid_addr[1][1] = channels_find_by_name("good_pktcnt_roll_2_gy");
+      gyro_valid_addr[1][2] = channels_find_by_name("good_pktcnt_el_2_gy");
 
       mask_gy_addr = channels_find_by_name("mask_gy");
       fault_gy_addr = channels_find_by_name("fault_gy");
@@ -511,6 +519,9 @@ void store_200hz_acs(void)
                 gyro_valid_set[box][gyro]++;
             else
                 gyro_valid_set[box][gyro] = 0;
+
+            gyro_valid_count[box][gyro] = gyro_valid;
+            SET_UINT32(gyro_valid_addr[box][gyro], gyro_valid_count[box][gyro]);
 
             if (gyro_valid_set[box][gyro] > 1)
                 gyfault |= (1 << (gyro * 2 + box));
