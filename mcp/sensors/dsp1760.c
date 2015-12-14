@@ -39,6 +39,9 @@
 static ph_serial_t *gyro_comm[2] = {NULL};
 static const char gyro_port[2][16] = {"/dev/ttyS2", "/dev/ttyS3"};
 
+static const uint32_t min_backoff_sec = 1;
+static const uint32_t max_backoff_sec = 60;
+
 #define DSP1760_NPOLES 10
 #define DSP1760_GAIN   1.994635168
 #define DSP1760_STATUS_MASK_GY1 0x01
@@ -80,6 +83,10 @@ typedef union
 typedef struct
 {
     int             which;
+    uint32_t        backoff_sec;
+    ph_job_t        connect_job;
+    bool            want_reset;
+
     uint8_t         seq_error_count;
     uint8_t         crc_error_count;
     uint8_t         seq_number;
@@ -205,6 +212,22 @@ static int activate_921k_clock(uint8_t m_serial)
     return 0;
 }
 
+/**
+ * Disconnect the serial port and set it to reconnect in the future.  This function will also
+ * adjust the backoff time doubling our wait time to the specified maximum
+ * @param m_serial Pointer to the serial device
+ * @param gyro Pointer to the gyro being reset
+ */
+static inline void dsp1760_disconnect(ph_serial_t *m_serial, dsp_storage_t *gyro)
+{
+    blast_info("Will attempt to reconnect to Gyro box %d in %d seconds", gyro->which, gyro->backoff_sec);
+    ph_serial_enable(m_serial, false);
+    ph_serial_free(m_serial);
+    gyro_comm[gyro->which] = NULL;
+    ph_job_set_timer_in_ms(&gyro->connect_job, gyro->backoff_sec * 1000);
+    if (gyro->backoff_sec < max_backoff_sec) gyro->backoff_sec *= 2;
+    if (gyro->backoff_sec > max_backoff_sec) gyro->backoff_sec = max_backoff_sec;
+}
 
 /**
  * Handles the data inflow from the gyroscopes
@@ -217,8 +240,19 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
 {
     dsp_storage_t *gyro = (dsp_storage_t *) m_userdata;
     dsp1760_std_t *pkt;
-
     const char header[4] = { 0xFE, 0x81, 0xFF, 0x55 };
+
+    if ((m_why & (PH_IOMASK_ERR)) && m_serial->conn->last_err != 0) {
+        blast_err("Disconnecting Gyro Box %d due to Error %d", gyro->which, m_serial->conn->last_err);
+        dsp1760_disconnect(m_serial, gyro);
+        return;
+    }
+
+    if (m_why & PH_IOMASK_TIME && !(m_why & PH_IOMASK_READ)) {
+        blast_err("Timeout on Gyro box %d", gyro->which);
+        dsp1760_disconnect(m_serial, gyro);
+        return;
+    }
 
     if (!(m_why & PH_IOMASK_READ)) return;
 
@@ -228,7 +262,9 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         bool invalid_data = false;
         uint32_t crc_calc = 0xFFFFFFFF;
 
-        if (!(buf = ph_serial_read_bytes_exact(m_serial, sizeof(dsp1760_std_t)))) return;
+        if (!(buf = ph_serial_read_bytes_exact(m_serial, sizeof(dsp1760_std_t)))) {
+            return;
+        }
         pkt = (dsp1760_std_t*) ph_buf_mem(buf);
 
         crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
@@ -270,8 +306,11 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
              * Here, we reset the current sequence number but only if we received a valid packet from
              * the gyroscopes.  This allows us to reset the sequence numbering if we miss many packets
              * but doesn't screw up the sequence if we receive a malformed packet.
+             *
+             * Additionally, we reset the "back-off" timer that controls our reconnect speed
              */
             gyro->seq_number = pkt->sequence;
+            gyro->backoff_sec = min_backoff_sec;
         }
 
         /// Status is 1 if OK, 0 if faulty
@@ -287,33 +326,45 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
 
         ph_buf_delref(buf);
     }
+
+    /// If we have accumulated the equivalent of 2
+    if (ph_bufq_len(m_serial->rbuf) > 2 * sizeof(dsp1760_std_t)) {
+        blast_err("Disconnecting Gyro Box %d garbage in stream (multiple-access?)", gyro->which);
+        dsp1760_disconnect(m_serial, gyro);
+    }
+}
+
+static void dsp1760_connect_gyro(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
+{
+    struct termios term = {0};
+    dsp_storage_t *data = (dsp_storage_t*)m_data;
+    int gyrobox = data->which;
+
+    if (gyro_comm[gyrobox]) ph_serial_free(gyro_comm[gyrobox]);
+
+    term.c_cflag = CS8 | B38400 | CLOCAL | CREAD;
+    term.c_iflag = IGNPAR | IGNBRK;
+
+    gyro_comm[gyrobox] = ph_serial_open(gyro_port[gyrobox], &term, &gyro_data[gyrobox]);
+
+    activate_921k_clock(gyrobox);
+    if (ph_serial_set_baud_base(gyro_comm[gyrobox], 921600)) blast_strerror("Error setting base");
+    if (ph_serial_set_baud_divisor(gyro_comm[gyrobox], 921600)) blast_strerror("Error setting divisor");
+
+    gyro_comm[gyrobox]->callback = dsp1760_process_data;
+    gyro_comm[gyrobox]->timeout_duration.tv_sec = 1;
+    gyro_comm[gyrobox]->timeout_duration.tv_usec = 0;
+
+    ph_serial_enable(gyro_comm[gyrobox], true);
 }
 
 /**
  * Clears, queues for closing and resets the gyrobox
  * @param m_gyrobox why gyrobox should be reset?
  */
-void dsp1760_reset_gyro(int m_gyrobox)
+void dsp1760_reset_gyro(int m_which)
 {
-    struct termios term = {0};
-    if (gyro_comm[m_gyrobox]) ph_serial_free(gyro_comm[m_gyrobox]);
-
-    term.c_cflag = CS8 | B38400 | CLOCAL | CREAD;
-    term.c_iflag = IGNPAR | IGNBRK;
-
-    BLAST_ZERO(gyro_data[m_gyrobox]);
-    gyro_data[m_gyrobox].which = m_gyrobox;
-    gyro_comm[m_gyrobox] = ph_serial_open(gyro_port[m_gyrobox], &term, &gyro_data[m_gyrobox]);
-
-    activate_921k_clock(m_gyrobox);
-    if (ph_serial_set_baud_base(gyro_comm[m_gyrobox], 921600)) blast_strerror("Error setting base");
-    if (ph_serial_set_baud_divisor(gyro_comm[m_gyrobox], 921600)) blast_strerror("Error setting divisor");
-
-    gyro_comm[m_gyrobox]->callback = dsp1760_process_data;
-    gyro_comm[m_gyrobox]->timeout_duration.tv_sec = 0;
-    gyro_comm[m_gyrobox]->timeout_duration.tv_usec = 10000;
-
-    ph_serial_enable(gyro_comm[m_gyrobox], true);
+    gyro_data[m_which].want_reset = true;
 }
 
 /**
@@ -323,7 +374,14 @@ void dsp1760_reset_gyro(int m_gyrobox)
 bool initialize_dsp1760_interface(void)
 {
     for (int i = 0; i < 2; i++) {
-        dsp1760_reset_gyro(i);
+        BLAST_ZERO(gyro_data[i]);
+        gyro_data[i].which = i;
+        gyro_data[i].backoff_sec = min_backoff_sec;
+        ph_job_init(&(gyro_data[i].connect_job));
+        gyro_data[i].connect_job.callback = dsp1760_connect_gyro;
+        gyro_data[i].connect_job.data = &gyro_data[i];
+
+        ph_job_dispatch_now(&(gyro_data[i].connect_job));
     }
 
     blast_startup("Initialized gyroscope interface");
