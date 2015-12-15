@@ -137,19 +137,14 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
  * when the function exits, so do not call free or any variant on the pointer
  */
 #define blast_tmp_sprintf(ptr, format, ...)                 \
-    do {                                                    \
+    ({                                                      \
         int bytes;                                          \
                                                             \
         bytes = snprintf(NULL, 0, format, ##__VA_ARGS__)+1; \
-                                                            \
-        if (bytes > 4000 * (int)sizeof(char))               \
-        {                                                   \
-            bputs(err, "Out of stack space.");              \
-            bytes = 4000 * sizeof(char);                    \
-        }                                                   \
         ptr = alloca(bytes * sizeof(char));                 \
         snprintf(ptr, bytes, format, ##__VA_ARGS__);        \
-    }while(0)
+        bytes;                                              \
+    })
 #endif
 
 /** Min/Max common use */

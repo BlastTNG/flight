@@ -30,6 +30,7 @@
 #include <pthread.h>
 
 #include "mputs.h"
+#include "crc.h"
 
 /* multilog! */
 #define MAX_LOGFILES 10
@@ -104,10 +105,16 @@ static char* threadNameLookup(int tid)
  *
  *     buos_use_func(mputs);
  *
- * to your initialisation code.
+ * to your initialization code.
  */
 void mputs(buos_t flag, const char* message) {
-  char buffer[MPRINT_BUFFER_SIZE];
+  char *buffer;
+  static struct timeval last_time = {0};
+  static uint32_t last_crc = 0;
+  static int repeat_count = 0;
+  static buos_t last_flag = 0;
+  uint32_t crc;
+
   struct timeval t;
   struct tm now;
   static const char marker[mem + 1] = {
@@ -131,7 +138,7 @@ void mputs(buos_t flag, const char* message) {
   t.tv_sec += TEMPORAL_OFFSET;
   gmtime_r(&t.tv_sec, &now);
 
-  snprintf(buffer, sizeof(buffer),
+  blast_tmp_sprintf(buffer,
            "%c %04d-%02d-%02d "         // marker, Year-Month-Day
            "%02d:%02d:%02d.%03d %c "    // Hours:Minutes:Seconds, Marker
            TID_NAME_FMT ": "            // Thread name
@@ -141,36 +148,66 @@ void mputs(buos_t flag, const char* message) {
            threadNameLookup(tid),
            message);
 
+    crc = crc32(BLAST_MAGIC32, message, strlen(message));
 
-    for (i = 0; i < n_logfiles; ++i) {
-        fputs(buffer, logfiles[i]);
-        fflush(logfiles[i]);
-    }
-    if (n_logfiles == 0 || flag != mem) {
-        fputs(buffer, stdout);
-        fflush(stdout);
-    }
-
-    if (flag == fatal) {
+    if (crc != last_crc || t.tv_sec - last_time.tv_sec > 10) {
         for (i = 0; i < n_logfiles; ++i) {
-            fputs("!! Last error is FATAL.  Cannot continue.\n", logfiles[i]);
+            if (repeat_count) {
+                fprintf(logfiles[i],
+                        "%c %04d-%02d-%02d "         // marker, Year-Month-Day
+                        "%02d:%02d:%02d.%03d %c "    // Hours:Minutes:Seconds, Marker
+                        TID_NAME_FMT ": "            // Thread name
+                        "Last message repeats %d times\n",
+                        marker[last_flag], now.tm_yday, now.tm_mon + 1, now.tm_mday,
+                        now.tm_hour, now.tm_min, now.tm_sec, (int)(t.tv_usec/1000), marker[flag],
+                        "LOG", repeat_count);
+            }
+            fputs(buffer, logfiles[i]);
             fflush(logfiles[i]);
         }
-        fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
-        fflush(stdout);
-
-        exit(1);
-    }
-
-    if (flag == tfatal) {
-        for (i = 0; i < n_logfiles; ++i) {
-            fprintf(logfiles[i], "$$ Last error is THREAD FATAL. Thread [" TID_NAME_FMT " (%5i)] exits.\n",
-                    threadNameLookup(tid), tid);
-            fflush(logfiles[i]);
+        if (n_logfiles == 0 || flag != mem) {
+            if (repeat_count) {
+                fprintf(stdout,
+                        "%c %04d-%02d-%02d "         // marker, Year-Month-Day
+                        "%02d:%02d:%02d.%03d %c "    // Hours:Minutes:Seconds, Marker
+                        TID_NAME_FMT ": "            // Thread name
+                        "Last message repeats %d times\n",
+                        marker[last_flag], now.tm_yday, now.tm_mon + 1, now.tm_mday,
+                        now.tm_hour, now.tm_min, now.tm_sec, (int)(t.tv_usec/1000), marker[flag],
+                        "", repeat_count);
+            }
+            fputs(buffer, stdout);
+            fflush(stdout);
         }
-        printf("$$ Last error is THREAD FATAL.  Thread [" TID_NAME_FMT " (%5i)] exits.\n", threadNameLookup(tid), tid);
-        fflush(stdout);
+        repeat_count = 0;
 
-        pthread_exit(NULL);
+        if (flag == fatal) {
+            for (i = 0; i < n_logfiles; ++i) {
+                fputs("!! Last error is FATAL.  Cannot continue.\n", logfiles[i]);
+                fflush(logfiles[i]);
+            }
+            fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
+            fflush(stdout);
+
+            exit(1);
+        }
+
+        if (flag == tfatal) {
+            for (i = 0; i < n_logfiles; ++i) {
+                fprintf(logfiles[i], "$$ Last error is THREAD FATAL. Thread [" TID_NAME_FMT " (%5i)] exits.\n",
+                        threadNameLookup(tid), tid);
+                fflush(logfiles[i]);
+            }
+            printf("$$ Last error is THREAD FATAL.  Thread [" TID_NAME_FMT " (%5i)] exits.\n", threadNameLookup(tid),
+                   tid);
+            fflush(stdout);
+
+            pthread_exit(NULL);
+        }
+    } else {
+        repeat_count++;
     }
+    last_crc = crc;
+    last_time.tv_sec = t.tv_sec;
+    last_flag = flag;
 }
