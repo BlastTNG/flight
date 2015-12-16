@@ -59,6 +59,39 @@ typedef enum xsc_trigger_state_t
 const char *xsc_trigger_file[2] = {  "/sys/class/gpio/gpio504/value",
                                 "/sys/class/gpio/gpio505/value"};
 
+/**
+ * Resets the GPIO state to our expected direction and pin enable.  This should
+ * be taken care of by udev but there is a chance that something changes on the fly.
+ * @return -1 if we cannot open the expected gpiochip, 0 otherwise
+ */
+static inline int xsc_initialize_gpio(void)
+{
+    int fd;
+    const char *gpio_name[2] = { "504", "505"};
+    const char *gpio_chip = "/sys/class/gpio/gpiochip504";
+    const char *gpio_direction[2] = { "/sys/class/gpio/gpio504/direction",
+                                      "/sys/class/gpio/gpio505/direction"};
+
+    if ((fd = open(gpio_chip, O_WRONLY)) < 0) {
+        blast_strerror("Could not open %s for writing", gpio_chip);
+        return -1;
+    }
+    write(fd, gpio_name[0], 4);
+    fsync(fd);
+    write(fd, gpio_name[1], 4);
+    close(fd);
+
+    for (int i = 0; i < 2; i++) {
+        if ((fd = open(gpio_direction[i], O_WRONLY)) < 0) {
+            blast_strerror("Could not open %s for writing", gpio_direction[i]);
+            continue;
+        }
+        write(fd, "out", 4);
+        close(fd);
+    }
+    return 0;
+}
+
 static void xsc_trigger(int m_which, int m_value)
 {
     const char val[2] = {'0', '1'};
@@ -71,7 +104,12 @@ static void xsc_trigger(int m_which, int m_value)
         }
     }
 
-    write(fd[m_which], &val[m_value], 1);
+    if (write(fd[m_which], &val[m_value], 1) < 0) {
+        (void)close(fd[m_which]);
+        fd[m_which] = -1;
+        blast_strerror("Could not write trigger %d to XSC%d", m_value, m_which);
+        xsc_initialize_gpio();
+    }
 }
 
 static void calculate_predicted_motion_px(double exposure_time)
