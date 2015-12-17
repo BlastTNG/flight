@@ -1104,14 +1104,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
               {"Max num blobs per cell (default 2)", 1, 10, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_motion_psf), "XSC Motion PSF Settings", GR_XSC_PARAM, 4,
-      {
-              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
-              {"Motion PSF Enabled", 0, 1, 'i', "NONE"},
-              {"Horizontal Roll (degrees)", -90.0, 90.0, 'f', "NONE"},
-              {"Platescale (\"/px)", 6.0, 7.0, 'f', "NONE"},
-      }
-  },
   {COMMAND(xsc_pattern_matching), "XSC pattern matching settings", GR_XSC_PARAM, 8,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},

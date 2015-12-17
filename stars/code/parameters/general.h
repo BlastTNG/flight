@@ -20,7 +20,6 @@ class Parameters::General: public Group
 {
   public:
     General( std::string stars_absolute_dir);
-    void add_motion_psf();
     void add_bypass_with_blobs();
     void load(int argc, char* argv[]);
 

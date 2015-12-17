@@ -25,7 +25,6 @@ class Blobs
     void init(Parameters::Manager& params);
 
     int counter_stars;
-    bool motion_psf_used;
     std::vector< ::Solving::Blob > blobs;
 };
 

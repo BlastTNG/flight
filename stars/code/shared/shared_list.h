@@ -29,7 +29,6 @@
 #include "solving/settings.h"
 #include "solving/filters.h"
 #include "solving/mask.h"
-#include "solving/motion_psf.h"
 #include "autofocus/datapoints.h"
 #include "autofocus/requests.h"
 #include "autofocus/results.h"

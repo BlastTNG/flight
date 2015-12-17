@@ -125,9 +125,6 @@ channel_t channel_list[] =
     { "uei_of_temp1",         UEI_TEMP_M,       UEI_TEMP_B, TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 14, 0, 0 },
     { "uei_of_temp2",         UEI_TEMP_M,       UEI_TEMP_B, TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 14, 0, 0 },
 
-    {"x0_last_trig_motion_caz_px", SCALE(CONVERT_VEL), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x0_last_trig_motion_el_px", SCALE(CONVERT_VEL), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x0_last_trig_motion_px", SCALE(CONVERT_VEL), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_point_az_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_point_az", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_point_el_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
@@ -136,11 +133,7 @@ channel_t channel_list[] =
     {"x0_point_az_trim", SCALE(CONVERT_ANGLE), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_point_el_trim", SCALE(CONVERT_ANGLE), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_cd_robust_mode", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x0_cd_motion_psf", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
 
-    {"x1_last_trig_motion_caz_px", CONVERT_VEL_M, CONVERT_VEL_B, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x1_last_trig_motion_el_px", CONVERT_VEL_M, CONVERT_VEL_B, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x1_last_trig_motion_px", CONVERT_VEL_M, CONVERT_VEL_B, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x1_point_az_raw", CONVERT_ANGLE_DEG_M, CONVERT_ANGLE_DEG_B, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x1_point_az", CONVERT_ANGLE_DEG_M, CONVERT_ANGLE_DEG_B, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x1_point_el_raw", CONVERT_ANGLE_DEG_M, CONVERT_ANGLE_DEG_B, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
@@ -149,7 +142,6 @@ channel_t channel_list[] =
     {"x1_point_az_trim", CONVERT_ANGLE_M, CONVERT_ANGLE_B, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x1_point_el_trim", CONVERT_ANGLE_M, CONVERT_ANGLE_B, TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x1_cd_robust_mode", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
-    {"x1_cd_motion_psf", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
 
     {"x1_heater", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},
     {"x0_heater", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0},

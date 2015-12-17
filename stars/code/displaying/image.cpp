@@ -153,10 +153,6 @@ void Image::update()
                 stage.known = false;
         }
     }
-    if (shared_blobs.motion_psf_used) {
-        string motion_psf_symbol = "~ ";
-        stage.value = motion_psf_symbol.append(stage.value);
-    }
 
     mean.known = false;
     noise.known = false;

@@ -1759,19 +1759,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             }
             break;
         }
-        case xsc_motion_psf:
-        {
-            for (int which = 0; which < 2; which++) {
-                if (xsc_command_applies_to(which, ivalues[0])) {
-                    CommandData.XSC[which].net.solver.motion_psf.enabled = (ivalues[1] != 0);
-                    CommandData.XSC[which].net.solver.motion_psf.hroll = from_degrees(rvalues[2]);
-                    CommandData.XSC[which].net.solver.motion_psf.iplatescale = from_arcsec(rvalues[3]);
-                    xsc_activate_command(which, xC_motion_psf);
-                }
-            }
-            break;
-        }
-
         case xsc_pattern_matching:
         {
             for (int which = 0; which < 2; which++) {

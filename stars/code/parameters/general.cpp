@@ -115,27 +115,8 @@ General::General(std::string stars_absolute_dir)
         ("solver.filters.matching.fit_error_threshold_px", value<float>(), "")
         ("solver.filters.matching.num_matched", value<unsigned int>(), "")
     ;
-    add_motion_psf();
     add_bypass_with_blobs();
 
-}
-
-void General::add_motion_psf()
-{
-    options.add_options()
-        ("solver.blob_finder.motion_psf.enabled", value<bool>(), "")
-        ("solver.blob_finder.motion_psf.summation_mode", value<bool>(), "")
-        ("solver.blob_finder.motion_psf.num_timesteps", value<unsigned int>(), "")
-        ("solver.blob_finder.motion_psf.hroll_deg", value<float>(), "")
-        ("solver.blob_finder.motion_psf.iplatescale_arcsec", value<float>(), "")
-    ;
-    for (unsigned int i=0; i<max_exposure_time_cs; i++) {
-        options.add_options()
-            ((boost::format("solver.blob_finder.motion_psf.exposure_num_t%d") %i).str().c_str(), value<int>(), "")
-            ((boost::format("solver.blob_finder.motion_psf.gy_az_deg_t%d")        %i).str().c_str(), value<float>(), "")
-            ((boost::format("solver.blob_finder.motion_psf.gy_el_deg_t%d")        %i).str().c_str(), value<float>(), "")
-        ;
-    }
 }
 
 void General::add_bypass_with_blobs()

@@ -20,7 +20,6 @@
 #endif
 
 #define XSC_BLOBS_ARRAY_SIZE 20
-#define XSC_MOTION_PSF_MAX_NUM_TIMESTEPS 156
 
 #pragma pack(push, 4)
 
@@ -135,7 +134,6 @@ enum
     xC_display_zoom,
     xC_image_client,
     xC_multi_triggering,
-    xC_motion_psf,
     xC_flush_birger,
     xC_init_focus,
     xC_get_focus,
@@ -207,25 +205,6 @@ typedef struct XSCSolverMask
     unsigned int field2;
 } XSCSolverMask;
 
-typedef struct
-{
-    int exposure_num;
-    float gy_az;
-    float gy_el;
-}
-XSCMotionPSFTimestep;
-
-typedef struct
-{
-    bool enabled;
-    int counter_fcp;
-    int counter_stars;
-    double hroll;
-    double el;
-    double iplatescale;
-    XSCMotionPSFTimestep timesteps[XSC_MOTION_PSF_MAX_NUM_TIMESTEPS];
-}
-XSCMotionPSF;
 
 typedef struct XSCSolver
 {
@@ -249,7 +228,6 @@ typedef struct XSCSolver
     double iplatescale_fixed;
 
     XSCFilters filters;
-    XSCMotionPSF motion_psf;
 }
 XSCSolver;
 

@@ -54,7 +54,6 @@ class Networking::Connection: public boost::enable_shared_from_this<Connection>
     void unload_client_data_autofocus();
     void unload_client_data_solver();
     void unload_client_data_solver_filters();
-    void unload_client_data_motion_psf();
     void unload_main_and_display_settings();
     void unload_client_data();
     void read_client_data();

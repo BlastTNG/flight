@@ -25,13 +25,15 @@
  */
 
 
+#include "xsc_network.h"
 #include <time.h>
-
-#include <blast.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "blast.h"
+#include "fifo.h"
+#include "framing.h"
 #include "channels_tng.h"
 #include "tx.h"
 #include "commands.h"
@@ -40,15 +42,15 @@
 #include "mcp.h"
 #include "pointing_struct.h"
 #include "angles.h"
-#include "xsc_network.h"
 
 bool scan_entered_snap_mode;
 bool scan_leaving_snap_mode;
-bool scan_bypass_last_trigger_on_next_trigger;
+
+static int32_t loop_counter = 0;
+static fifo_t *trigger_fifo[2] = {NULL};
 
 typedef enum xsc_trigger_state_t
 {
-    xsc_trigger_first_time,
     xsc_trigger_waiting_to_send_trigger,
     xsc_trigger_sending_triggers,
     xsc_trigger_in_grace_period,
@@ -92,6 +94,13 @@ static inline int xsc_initialize_gpio(void)
     return 0;
 }
 
+/**
+ * Sets or resets the trigger value for each camera.  We have hard-wired the cameras to GPIO
+ * pins 0 and 1 for XSC0 and XSC1.  Setting the value high results in ~3.1V differential on the
+ * GPIO pin.
+ * @param m_which Which GPIO pin
+ * @param m_value Value (0 or 1) for the pin
+ */
 static void xsc_trigger(int m_which, int m_value)
 {
     const char val[2] = {'0', '1'};
@@ -110,6 +119,27 @@ static void xsc_trigger(int m_which, int m_value)
         blast_strerror("Could not write trigger %d to XSC%d", m_value, m_which);
         xsc_initialize_gpio();
     }
+}
+
+xsc_last_trigger_state_t *xsc_get_trigger_data(int m_which)
+{
+    xsc_last_trigger_state_t *last = fifo_pop(trigger_fifo[m_which]);
+    return last;
+}
+
+static inline void xsc_store_trigger_data(int m_which, const xsc_last_trigger_state_t *m_state)
+{
+    if (!(trigger_fifo[m_which])) trigger_fifo[m_which] = fifo_new();
+    xsc_last_trigger_state_t *stored = malloc(sizeof(xsc_last_trigger_state_t));
+    memcpy(stored, m_state, sizeof(*m_state));
+    if (!fifo_push(trigger_fifo[m_which], stored)) {
+        free(stored);
+    }
+}
+
+int32_t xsc_get_loop_counter(void)
+{
+    return loop_counter;
 }
 
 static void calculate_predicted_motion_px(double exposure_time)
@@ -153,80 +183,11 @@ static bool xsc_scan_force_trigger_threshold()
     return scan_leaving_snap_mode;
 }
 
-static void xsc_motion_psf_record_timestep(int index, xsc_trigger_state_t trigger_state, int state_counter,
-                                           int* exposure_time_cs, int multi_trigger_counter)
-{
-    int i_point = GETREADINDEX(point_index);
-
-    if (index < XSC_MOTION_PSF_MAX_NUM_TIMESTEPS) {
-        for (int which = 0; which < 2; which++) {
-            if (trigger_state == xsc_trigger_sending_triggers && state_counter < exposure_time_cs[which]) {
-                CommandData.XSC[which].net.solver.motion_psf.timesteps[index].exposure_num = multi_trigger_counter;
-            }
-            CommandData.XSC[which].net.solver.motion_psf.timesteps[index].gy_az = from_degrees(
-                    PointingData[i_point].gy_az);
-            CommandData.XSC[which].net.solver.motion_psf.timesteps[index].gy_el = from_degrees(
-                    PointingData[i_point].gy_el);
-        }
-        if (false) {
-            for (int which = 0; which < 1; which++) {
-                blast_info("CHAPPY DEBUG: x%i: recording timestep %i with exposure_num %i, gys %f %f (deg/s)", which,
-                           index, CommandData.XSC[which].net.solver.motion_psf.timesteps[index].exposure_num,
-                           to_degrees(CommandData.XSC[which].net.solver.motion_psf.timesteps[index].gy_az),
-                           to_degrees(CommandData.XSC[which].net.solver.motion_psf.timesteps[index].gy_el));
-            }
-        }
-    }
-}
-
-static void xsc_motion_psf_initiate(unsigned int* motion_psf_index)
-{
-    int i_point = GETREADINDEX(point_index);
-
-    *motion_psf_index = 0;
-
-    for (int which = 0; which < 2; which++) {
-        CommandData.XSC[which].net.solver.motion_psf.counter_mcp = xsc_pointing_state[which].counter_mcp;
-        CommandData.XSC[which].net.solver.motion_psf.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;
-        CommandData.XSC[which].net.solver.motion_psf.el = from_degrees(PointingData[i_point].el);
-        for (unsigned int i = 0; i < XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
-            CommandData.XSC[which].net.solver.motion_psf.timesteps[i].exposure_num = -1;
-        }
-    }
-}
-
-static void xsc_motion_psf_finalize()
-{
-    for (int which = 0; which < 2; which++) {
-        if (CommandData.XSC[which].net.solver.motion_psf.enabled) {
-            xsc_activate_command(which, xC_motion_psf);
-        }
-        double first_exposure_motion_caz_px = 0.0;
-        double first_exposure_motion_el_px = 0.0;
-        double cos_el = cos(CommandData.XSC[which].net.solver.motion_psf.el);
-        double platescale = 1.0 / CommandData.XSC[which].net.solver.motion_psf.iplatescale;
-        for (unsigned int i = 0; i < XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
-            if (CommandData.XSC[which].net.solver.motion_psf.timesteps[i].exposure_num == 0) {
-                first_exposure_motion_caz_px += CommandData.XSC[which].net.solver.motion_psf.timesteps[i].gy_az
-                        * platescale * 0.00998 * cos_el;
-                first_exposure_motion_el_px += CommandData.XSC[which].net.solver.motion_psf.timesteps[i].gy_el
-                        * platescale * 0.00998;
-            }
-        }
-        if (false) {
-            blast_info("CHAPPY DEBUG: x%i: motion_psf: first_exposure motion_caz %f and motion_y %f (px)", which,
-                       first_exposure_motion_caz_px, first_exposure_motion_el_px);
-        }
-        xsc_pointing_state[which].last_trigger.motion_caz_px = first_exposure_motion_caz_px;
-        xsc_pointing_state[which].last_trigger.motion_el_px = first_exposure_motion_el_px;
-    }
-}
-
 void xsc_control_triggers()
 {
     static int state_counter = 0;
 
-    static xsc_trigger_state_t trigger_state = xsc_trigger_first_time;
+    static xsc_trigger_state_t trigger_state = xsc_trigger_in_hard_grace_period;
     static int max_exposure_time_used_cs = -1;
     int exposure_time_cs[2];
     int grace_period_cs = 300;
@@ -234,10 +195,8 @@ void xsc_control_triggers()
     int num_triggers = 1;
     int multi_trigger_time_between_triggers_cs = 18;
     static int multi_trigger_counter = 0;
-    static bool recording_motion_psf = false;
-    static unsigned int motion_psf_index = 0;
     static channel_t *xsc_trigger_channel = NULL;
-    static int trigger = 0;
+    static uint8_t trigger = 0;
 
     int i_point = GETREADINDEX(point_index);
 
@@ -257,27 +216,14 @@ void xsc_control_triggers()
     limit_value_to_ints(&exposure_time_cs[1], 1, 500);
     limit_value_to_ints(&num_triggers, 1, INT32_MAX);
 
-    if (recording_motion_psf) {
-        xsc_motion_psf_record_timestep(motion_psf_index, trigger_state,
-                                       state_counter, exposure_time_cs, multi_trigger_counter);
-        motion_psf_index++;
-    }
+    loop_counter++;
+
     double max_exposure_time_to_use = ((double) max(exposure_time_cs[0], exposure_time_cs[1]))/100.0;
     calculate_predicted_motion_px(max_exposure_time_to_use);
 
-    xsc_pointing_state[0].last_trigger.age_cs++;
-    xsc_pointing_state[1].last_trigger.age_cs++;
-    xsc_pointing_state[0].last_trigger.age_of_end_of_trigger_cs++;
-    xsc_pointing_state[1].last_trigger.age_of_end_of_trigger_cs++;
+    state_counter++;
     switch (trigger_state) {
-        case xsc_trigger_first_time:
-
-            state_counter = 0;
-            trigger_state = xsc_trigger_in_grace_period;
-            /// Fall through
         case xsc_trigger_in_hard_grace_period:
-            state_counter++;
-//            blast_dbg("In hard grace period with counter %i", state_counter);
             if (state_counter > 60) {
                 state_counter = 0;
                 trigger_state = xsc_trigger_in_grace_period;
@@ -285,8 +231,6 @@ void xsc_control_triggers()
             break;
 
         case xsc_trigger_in_grace_period:
-            state_counter++;
-//            blast_dbg("In grace period with counter %i", state_counter);
             if (state_counter > grace_period_cs || xsc_scan_force_grace_period()) {
                 xsc_pointing_state[0].last_trigger.forced_grace_period = xsc_scan_force_grace_period();
                 state_counter = 0;
@@ -298,31 +242,27 @@ void xsc_control_triggers()
             break;
 
         case xsc_trigger_waiting_to_send_trigger:
-
-            if (!state_counter++) blast_dbg("Waiting to send trigger");
+            // TODO(seth): Remove multiple trigger mode from STARS
+            if (state_counter == 1) blast_dbg("Waiting to send trigger");
             if (xsc_trigger_thresholds_satisfied()
                     || (multi_trigger_counter > 0)
                     || xsc_scan_force_trigger_threshold()) {
                 xsc_pointing_state[0].last_trigger.forced_trigger_threshold = xsc_scan_force_trigger_threshold();
-                if (!scan_bypass_last_trigger_on_next_trigger) {
-                    xsc_pointing_state[0].last_trigger.age_cs = 0;
-                    xsc_pointing_state[1].last_trigger.age_cs = 0;
-                }
+
                 max_exposure_time_used_cs = max(exposure_time_cs[0], exposure_time_cs[1]);
+                blast_dbg("Sending trigger with MCP Counter: %d", xsc_pointing_state[0].counter_mcp);
                 for (int which = 0; which < 2; which++) {
                 	trigger |= (1 << which);
                     xsc_trigger(which, 1);
-                    if (!scan_bypass_last_trigger_on_next_trigger) {
-                        xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
-                        xsc_pointing_state[which].last_trigger.counter_stars =
-                                XSC_SERVER_DATA(which).channels.ctr_stars;
-                        xsc_pointing_state[which].last_trigger.lat = PointingData[i_point].lat;
-                        xsc_pointing_state[which].last_trigger.lst = PointingData[i_point].lst;
-                    }
-                }
-                if (multi_trigger_counter == 0) {
-                    recording_motion_psf = true;
-                    xsc_motion_psf_initiate(&motion_psf_index);
+
+                    xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
+                    xsc_pointing_state[which].last_trigger.counter_stars =
+                            XSC_SERVER_DATA(which).channels.ctr_stars;
+                    xsc_pointing_state[which].last_trigger.lat = PointingData[i_point].lat;
+                    xsc_pointing_state[which].last_trigger.lst = PointingData[i_point].lst;
+                    xsc_pointing_state[which].last_trigger.trigger_time = get_100hz_framenum();
+                    xsc_pointing_state[which].last_trigger_time = get_100hz_framenum();
+                    xsc_store_trigger_data(which, &(xsc_pointing_state[which].last_trigger));
                 }
 
                 state_counter = 0;
@@ -333,8 +273,6 @@ void xsc_control_triggers()
             break;
 
         case xsc_trigger_sending_triggers:
-            if (!state_counter++)
-                blast_dbg("Sending trigger with MCP Counter: %d", xsc_pointing_state[0].counter_mcp);
             for (int which = 0; which < 2; which++) {
                 if (state_counter >= exposure_time_cs[which]) {
                     trigger &= (~(1 << which));
@@ -347,23 +285,16 @@ void xsc_control_triggers()
                 if (multi_trigger_counter > 0) {
                     trigger_state = xsc_trigger_readout_period;
                 } else {
-                    scan_bypass_last_trigger_on_next_trigger = false;
                     trigger_state = xsc_trigger_in_hard_grace_period;
-                    xsc_pointing_state[0].last_trigger.age_of_end_of_trigger_cs = 0;
-                    xsc_pointing_state[1].last_trigger.age_of_end_of_trigger_cs = 0;
                     xsc_pointing_state[0].last_counter_mcp = xsc_pointing_state[0].counter_mcp;
                     xsc_pointing_state[1].last_counter_mcp = xsc_pointing_state[1].counter_mcp;
                     xsc_pointing_state[0].counter_mcp++;
                     xsc_pointing_state[1].counter_mcp = xsc_pointing_state[0].counter_mcp;
-                    recording_motion_psf = false;
-                    xsc_motion_psf_finalize();
                 }
             }
             break;
 
         case xsc_trigger_readout_period:
-            state_counter++;
-            blast_dbg("In readout with counter %i", state_counter);
             if (state_counter >= (multi_trigger_time_between_triggers_cs-1)) {
                 state_counter = 0;
                 trigger_state = xsc_trigger_waiting_to_send_trigger;
@@ -371,13 +302,13 @@ void xsc_control_triggers()
             break;
 
         default:
-            blast_dbg("In default with counter %i", state_counter);
             state_counter = 0;
-            trigger_state = xsc_trigger_first_time;
+            trigger_state = xsc_trigger_in_hard_grace_period;
             break;
     }
 
-    SET_VALUE(xsc_trigger_channel, trigger);
+    trigger = (trigger_state << 2) | (trigger & 0b11);
+    SET_UINT8(xsc_trigger_channel, trigger);
 }
 
 static double xsc_get_temperature(int which)

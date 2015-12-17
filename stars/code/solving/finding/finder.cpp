@@ -14,7 +14,6 @@
 #include "../../shared/image/raw.h"
 #include "../../shared/solving/settings.h"
 #include "../../shared/solving/mask.h"
-#include "../../shared/solving/motion_psf.h"
 #include "../update.h"
 #include "../../parameters/manager.h"
 #include "../../parameters/housekeeping.h"
@@ -30,7 +29,6 @@ using std::min;
 
 #define shared_settings (*(Shared::Solving::settings.r))
 #define shared_mask (*(Shared::Solving::mask_network_for_solver.r))
-#define shared_motion_psf (*(Shared::Solving::motion_psf_network_for_solver.r))
 #define shared_blobs (*(Shared::Image::blobs_solver_for_main.w))
 
 Finder::Finder(Parameters::Manager& params):
@@ -241,8 +239,6 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
         return bypass_blobs;
     }
 
-    shared_blobs.motion_psf_used = false;
-
 	//bad pixel removal goes here
 	timer.start();
 	if(!done()) {
@@ -257,7 +253,7 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
     }
     logger.log(format("finder: leveling took %s s")%timer.time());
 
-    if (!done() && !shared_motion_psf.valid(image)) {
+    if (!done()) {
         timer.start();
         halfwidth = 1;
         sigma = 1.0;
@@ -267,7 +263,7 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
         logger.log(format("finder: finding possible small blobs took %s s")%timer.time());
     }
 
-    if (!done() && shared_settings.robust_mode_enabled && !shared_motion_psf.valid(image)) {
+    if (!done() && shared_settings.robust_mode_enabled) {
 
         timer.start();
         halfwidth = 5;
@@ -283,7 +279,7 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
         logger.log(format("finder: finding possible large blobs took %s s")%timer.time());
     }
 
-    if (!done() && !shared_motion_psf.valid(image)) {
+    if (!done()) {
 
         timer.start();
         if (!done()) {
@@ -299,23 +295,6 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
         }
         logger.log(format("finder: fitting pedestals took %s s")%timer.time());
 
-    }
-
-    if (shared_motion_psf.enabled && !shared_motion_psf.valid(image)) {
-        logger.log("finder: motion_psf is enabled but not valid, waiting for data or timeout");
-        while (!done() && !shared_motion_psf.valid(image) && image.age.time() < 10.0) {
-            usleep(100000);
-        }
-    }
-
-    if (shared_motion_psf.valid(image)) {
-        blobs.clear();
-        shared_blobs.motion_psf_used = true;
-        timer.start();
-        smoother.smooth_with_motion_psf(image, pixels_smoothed);
-        possible_blobs = search_for_peaks(1, noise);
-        blobs.insert(blobs.end(), possible_blobs.begin(), possible_blobs.end());
-        logger.log(format("finder: finding motion psf blobs took %s s")%timer.time());
     }
 
     timer.start();

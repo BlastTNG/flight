@@ -28,7 +28,12 @@
 #ifndef INCLUDE_XSC_POINTING_H_
 #define INCLUDE_XSC_POINTING_H_
 
+#include <stdint.h>
+#include "pointing_struct.h"
+
 void xsc_control_triggers(void);
 void xsc_control_heaters(void);
+int32_t xsc_get_loop_counter(void);
+xsc_last_trigger_state_t *xsc_get_trigger_data(int);
 
 #endif /* INCLUDE_XSC_POINTING_H_ */

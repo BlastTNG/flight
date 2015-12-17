@@ -42,6 +42,7 @@
 #include "conversions.h"
 #include "blast.h"
 #include "blast_comms.h"
+#include "framing.h"
 #include "mcp.h"
 #include "angles.h"
 #include "command_struct.h"
@@ -148,8 +149,13 @@ void xsc_write_data(int which)
     // TODO(seth): Adjust fcp<->stars in charge flag
     xsc_client_data.in_charge = 1;
 
-    if (xsc_pointing_state[which].last_trigger.age_of_end_of_trigger_cs >
-            CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs) {
+    /**
+     * Pause here to allow STARS to get the new image from the camera.  MCP will increment
+     * its counter immediately after lowering the trigger.  We give STARS that much time again
+     * (exposure_time_cs) to allow the camera to retrieve and stamp the new image.
+     */
+    if (get_100hz_framenum() > xsc_pointing_state[which].exposure_time_cs +
+            xsc_pointing_state[which].last_trigger_time) {
         xsc_client_data.counter_mcp = xsc_pointing_state[which].counter_mcp;
     } else {
         xsc_client_data.counter_mcp = xsc_pointing_state[which].last_counter_mcp;

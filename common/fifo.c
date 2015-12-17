@@ -25,6 +25,7 @@
  */
 
 #include <sched.h>
+#include <stdbool.h>
 
 #include <blast.h>
 #include <atomic.h>
@@ -40,17 +41,16 @@ typedef struct __attribute__((packed)) fifo_element
  * @param m_fifo Pointer to the queue
  * @param m_data Pointer to the data to add
  */
-void fifo_push(fifo_t *m_fifo, void *m_data)
+bool fifo_push(fifo_t *m_fifo, void *m_data)
 {
     fifo_node_t *new_node = malloc(sizeof(fifo_node_t));
     fifo_element_t push_struct[2];
 
-    if (!m_fifo || !m_data) return;
+    if (!m_fifo || !m_data) return false;
 
     new_node->next = END_FIFO(m_fifo);
     new_node->data = m_data;
-    while(1)
-    {
+    while (1) {
         push_struct[0].node = m_fifo->tail;
         push_struct[0].count = m_fifo->push_count;
         push_struct[1].node = m_fifo->tail->next;
@@ -73,6 +73,7 @@ void fifo_push(fifo_t *m_fifo, void *m_data)
      */
     push_struct[1].node = new_node;
     CAS2(&m_fifo->tail, push_struct[0], push_struct[1]);
+    return true;
 }
 
 /**
@@ -87,22 +88,18 @@ void *fifo_pop(fifo_t *m_fifo)
 
     if (!m_fifo) return NULL;
 
-    while(1)
-    {
+    while (1) {
         pop_struct[0].node = m_fifo->head;
         pop_struct[0].count = m_fifo->pop_count;
         pop_struct[1].node = m_fifo->head->next;
         pop_struct[1].count = m_fifo->pop_count + 1;
-        if (pop_struct[0].node == m_fifo->tail)
-        {
-            if (pop_struct[1].node == END_FIFO(m_fifo)) return NULL;  /** If our queue is empty, exit */
+        if (pop_struct[0].node == m_fifo->tail) {
+            if (pop_struct[1].node == END_FIFO(m_fifo)) return NULL; /** If our queue is empty, exit */
 
             pop_struct[0].count = m_fifo->push_count;
             pop_struct[1].count = m_fifo->push_count + 1;
             CAS2(&m_fifo->tail, pop_struct[0], pop_struct[1]);
-        }
-        else if (pop_struct[1].node != END_FIFO(m_fifo))
-        {
+        } else if (pop_struct[1].node != END_FIFO(m_fifo)) {
             /**
              * Extract the data from our new dummy node
              */
@@ -128,16 +125,11 @@ fifo_t *fifo_new()
     fifo_t *new_fifo = NULL;
     fifo_node_t *new_node = NULL;
 
-    if ((new_node = malloc(sizeof(fifo_node_t)))
-            && (new_fifo = malloc(sizeof(fifo_t))))
-    {
-        e_memset(new_fifo, 0, sizeof(*(new_fifo)));
-        e_memset(new_node, 0, sizeof(*(new_node)));
+    if ((new_node = calloc(1, sizeof(fifo_node_t)))
+            && (new_fifo = calloc(1, sizeof(fifo_t)))) {
         new_fifo->head = new_fifo->tail = (fifo_node_t*) new_node;
-    }
-    else
-    {
-        if(new_node) free(new_node);
+    } else {
+        if (new_node) free(new_node);
     }
     return new_fifo;
 }
@@ -148,21 +140,17 @@ fifo_t *fifo_new()
  * @param m_fifo Pointer to the FIFO data structure
  * @param m_free Pointer to the free()-equivalent function
  */
-void fifo_free(fifo_t *m_fifo, void (*m_free)(void*) )
+void fifo_free(fifo_t *m_fifo, void (*m_free)(void*))
 {
     void *m_data = NULL;
 
-    if (m_fifo)
-    {
-        while ((m_data = fifo_pop(m_fifo)))
-        {
+    if (m_fifo) {
+        while ((m_data = fifo_pop(m_fifo))) {
             if (m_free) m_free(m_data);
         }
-        if (m_fifo->head)
-        {
+        if (m_fifo->head) {
             if (m_free) free(m_fifo->head);
         }
         free(m_fifo);
     }
-
 }

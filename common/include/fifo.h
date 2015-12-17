@@ -25,10 +25,11 @@
  */
 
 
-#ifndef BLAST_FIFO_H_
-#define BLAST_FIFO_H_
+#ifndef INCLUDE_FIFO_H_
+#define INCLUDE_FIFO_H_
 #include <unistd.h>
 #include <atomic.h>
+#include <stdbool.h>
 
 typedef struct fifo_node
 {
@@ -44,7 +45,7 @@ typedef struct fifo
     intptr_t        push_count;
 } __attribute__((packed, aligned(ALIGN_SIZE))) fifo_t;
 
-void fifo_push(fifo_t *m_fifo, void *m_data);
+bool fifo_push(fifo_t *m_fifo, void *m_data);
 void *fifo_pop(fifo_t *m_fifo);
 fifo_t *fifo_new();
 void fifo_free(fifo_t *m_fifo, void (*m_free)(void*) );

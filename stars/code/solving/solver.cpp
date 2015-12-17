@@ -57,7 +57,6 @@ void Solver::solve()
         Shared::Image::solution_summary_for_main.share();
         shared_stats.clear(working_image->counter_stars);
         Shared::Image::stats_solver_for_main.share();
-        shared_blobs.motion_psf_used = false;
         Shared::Image::blobs_solver_for_main.share();
         update_shared();
     }

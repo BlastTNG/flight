@@ -35,7 +35,7 @@ if (USE_CLANG)
     SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 endif(USE_CLANG)
 
-SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99")
+SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99 -mcx16")
 SET (CMAKE_C_FLAGS_DEBUG            "-g")
 SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELEASE          "-O3 -DNDEBUG")

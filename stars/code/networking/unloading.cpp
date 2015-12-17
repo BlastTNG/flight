@@ -15,7 +15,6 @@
 #include "../shared/solving/filters.h"
 #include "../shared/solving/settings.h"
 #include "../shared/solving/mask.h"
-#include "../shared/solving/motion_psf.h"
 #include "../shared/network/packets.h"
 #include "../shared/network/client.h"
 #include "../shared/network/image_client_settings.h"
@@ -41,7 +40,6 @@
 #define shared_filters (*(Shared::Solving::filters_net_to_main.w))
 #define shared_solving_settings (*(Shared::Solving::settings.w))
 #define shared_mask (*(Shared::Solving::mask_network_for_solver.w))
-#define shared_motion_psf (*(Shared::Solving::motion_psf_network_for_solver.w))
 #define shared_autofocus_requests (*(Shared::Autofocus::requests_network_to_main.w))
 #define shared_brightness (*(Shared::Simulations::brightness.w))
 #define shared_shutdown (*(Shared::General::shutdown_for_main.w))
@@ -266,36 +264,6 @@ void Connection::unload_client_data_solver_filters()
     }
 }
 
-void Connection::unload_client_data_motion_psf()
-{
-    if (check_command(xC_motion_psf)) {
-        shared_motion_psf.enabled = client_data.solver.motion_psf.enabled;
-        shared_motion_psf.counter_fcp = client_data.solver.motion_psf.counter_fcp;
-        shared_motion_psf.counter_stars = client_data.solver.motion_psf.counter_stars;
-        shared_motion_psf.hroll = client_data.solver.motion_psf.hroll;
-        shared_motion_psf.el = client_data.solver.motion_psf.el;
-        shared_motion_psf.platescale = 1.0 / client_data.solver.motion_psf.iplatescale;
-
-        unsigned int last_used_index = 0;
-        for (unsigned int i=0; i<XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
-            if (client_data.solver.motion_psf.timesteps[i].exposure_num > -1) {
-                last_used_index = i;
-            }
-        }
-
-        shared_motion_psf.timesteps.clear();
-        for (unsigned int i=0; i<=last_used_index && i<XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
-            Shared::Solving::MotionPSFTimestep timestep;
-            timestep.exposure_num = client_data.solver.motion_psf.timesteps[i].exposure_num;
-            timestep.gy_az = client_data.solver.motion_psf.timesteps[i].gy_az;
-            timestep.gy_el = client_data.solver.motion_psf.timesteps[i].gy_el;
-            shared_motion_psf.timesteps.push_back(timestep);
-        }
-
-        Shared::Solving::motion_psf_network_for_solver.share();
-    }
-}
-
 void Connection::unload_main_and_display_settings()
 {
     bool passed_something = false;
@@ -354,7 +322,6 @@ void Connection::unload_client_data()
 
     unload_client_data_solver();
     unload_client_data_solver_filters();
-    unload_client_data_motion_psf();
 
     if (check_command(xC_network_reset)) {
         if (client_data.network_reset.reset_now) {

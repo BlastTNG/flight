@@ -54,7 +54,9 @@
 #include "EGM9615.h"
 #include "geomag2015.h"
 #include "angles.h"
+#include "framing.h"
 #include "xsc_network.h"
+#include "xsc_pointing.h"
 #include "conversions.h"
 #include "time_lst.h"
 #include "utilities_pointing.h"
@@ -619,51 +621,34 @@ int possible_solution(double az, double el, int i_point) {
   return(1);
 }
 
-static bool XSCHasNewSolution(int which)
+static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
 {
-    if (!XSC_SERVER_DATA(which).channels.image_eq_valid) {
-//        blast_dbg("Bad Solution");
-        // The latest solution isn't good
-        return false;
-    }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter) {
-        // The solution is old
-        return false;
-    }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 ||
-            xsc_pointing_state[which].last_solution_stars_counter < 0) {
-        // One or both of the stars counters were not yet running at the time of the trigger
-        return false;
-    }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0 ||
-            xsc_pointing_state[which].last_trigger.counter_mcp < 0) {
-        // One or both of the mcp counters were not yet running at the time of the trigger
-        return false;
-    }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars != xsc_pointing_state[which].last_trigger.counter_stars) {
-        // The stars counters were misaligned at the time of the trigger
-        return false;
-    }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp != xsc_pointing_state[which].last_trigger.counter_mcp) {
-        // The mcp counters were misaligned at the time of the trigger
-        return false;
-    }
+    xsc_last_trigger_state_t *trig_state = NULL;
+    // The latest solution isn't good
+    if (!XSC_SERVER_DATA(which).channels.image_eq_valid) return NULL;
+    // The camera system has just started
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0)
+        return NULL;
+    // The solution has already been processed
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter)
+        return NULL;
 
-    return true;
+    while ((trig_state = xsc_get_trigger_data(which))) {
+        // Here the camera is processing a newer image than MCP has as its oldest trigger
+        if (XSC_SERVER_DATA(which).channels.image_ctr_mcp > trig_state->counter_mcp) {
+            free(trig_state);
+            continue;
+        }
+    }
+    return trig_state;
 }
 
 static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a, gyro_reading_t *m_rg,
                               gyro_history_t *m_hs, double old_el, int which)
 {
+    xsc_last_trigger_state_t *trig_state = NULL;
     double gy_az;
     double new_az, new_el, ra, dec;
-
-    // When we get a new frame, use these to correct for history
-    double gy_el_delta = 0;
-    double gy_az_delta = 0;
-    int i, j;
-
-    double w1, w2;
 
     double el_frame = from_degrees(old_el);
 
@@ -677,25 +662,29 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
     a->angle += gy_az / SR;
     a->variance += (2 * GYRO_VAR); // This is twice the variance because we are using 2 gyros -SNH
 
-    if (XSCHasNewSolution(which)) {
+    if ((trig_state = XSCHasNewSolution(which))) {
+        double w1, w2;
+        int delta_100hz = get_100hz_framenum() - trig_state->trigger_time;
+
+        // When we get a new frame, use these to correct for history
+        double gy_el_delta = 0;
+        double gy_az_delta = 0;
+
         xsc_pointing_state[which].last_solution_stars_counter = XSC_SERVER_DATA(which).channels.image_ctr_stars;
         blast_info(" xsc%i: received new solution", which);
-        if (xsc_pointing_state[which].last_trigger.age_cs < GY_HISTORY_AGE_CS) {
+        if (delta_100hz < GY_HISTORY_AGE_CS) {
             blast_info(" xsc%i: new solution young enough to accept", which);
             ra = to_hours(XSC_SERVER_DATA(which).channels.image_eq_ra);
             dec = to_degrees(XSC_SERVER_DATA(which).channels.image_eq_dec);
-            blast_dbg("xsc%i solution is ra, dec: %f, %f (deg)\n", which, to_degrees(from_hours(ra)), dec);
 
-            equatorial_to_horizontal(ra, dec, xsc_pointing_state[which].last_trigger.lst,
-                                     xsc_pointing_state[which].last_trigger.lat, &new_az, &new_el);
+            equatorial_to_horizontal(ra, dec, trig_state->lst,
+                                     trig_state->lat, &new_az, &new_el);
 
             xsc_pointing_state[which].az = new_az;
             xsc_pointing_state[which].el = new_el;
 
-            blast_dbg("Solution from XSC%i: Ra = %f degrees\n", which, to_degrees(from_hours(ra)));
-            blast_dbg("Solution from XSC%i: Dec = %f degrees\n", which, dec);
-            blast_dbg("Solution from XSC%i: az = %f degrees\n", which, new_az);
-            blast_dbg("Solution from XSC%i: el = %f degrees\n", which, new_el);
+            blast_dbg("Solution from XSC%i: Ra:%f, Dec:%f", which, to_degrees(from_hours(ra)), dec);
+            blast_dbg("Solution from XSC%i: az:%f, el:%f", which, new_az, new_el);
 
             /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
 
@@ -706,8 +695,8 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
             // This solution is xsc_pointing_data.age_last_stars_solution old: how much have we moved?
             gy_el_delta = 0;
             gy_az_delta = 0;
-            for (i = 0; i < xsc_pointing_state[which].last_trigger.age_cs; i++) {
-                j = m_hs->i_history - i;
+            for (int i = 0; i < delta_100hz; i++) {
+                int j = m_hs->i_history - i;
                 if (j < 0) j += GY_HISTORY_AGE_CS;
 
                 gy_el_delta += (m_hs->ifel_gy_history[j] + m_hs->ifel_gy_offset[j]) / SR;
@@ -721,7 +710,6 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
             e->angle -= gy_el_delta;// rewind to when the frame was grabbed
             a->angle -= gy_az_delta;// rewind to when the frame was grabbed
 
-            blast_dbg("Rewinded old SC AZ EL is %f %f\n", a->angle, e->angle);
             blast_dbg(" Az averaging old: %f,  and new: %f\n", a->angle, new_az);
 
             w1 = 1.0 / (e->variance);
@@ -734,13 +722,14 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
                 else
                 w2 = 0.0;// shouldn't happen
             }
-//            blast_dbg("ESC%i_SIGMA and SC weight w2:  %f %f\n", which, XSC_SERVER_DATA(which).sigma, w2);
 
             UnwindDiff(e->angle, &new_el);
             UnwindDiff(a->angle, &new_az);
 
             e->angle = (w1 * e->angle + new_el * w2) / (w1 + w2);
-            blast_dbg("Rewinded averaged SC  EL is %f\n", e->angle);
+
+            blast_dbg("Rewound old SC AZ EL is %f %f\n", a->angle, e->angle);
+
             e->variance = 1.0 / (w1 + w2);
             e->angle += gy_el_delta;// add back to now
             e->angle = normalize_angle_360(e->angle);
@@ -758,6 +747,7 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
             blast_dbg(" Az result is: %f\n", a->angle);
             blast_dbg("Evolved SC AZ EL is %f %f\n", a->angle, e->angle);
         }
+        free(trig_state);
     }
 }
 
@@ -1204,7 +1194,6 @@ void Pointing(void)
 
     /*****************************/
     /** set time related things **/
-    PointingData[point_index].mcp_frame = ACSData.mcp_frame;
     PointingData[point_index].t = mcp_systime(NULL); // for now use CPU time
 
     /** Set LST and local sidereal date **/
@@ -1495,10 +1484,6 @@ void InitializePointingData()
     for (which = 0; which < 2; which++) {
         xsc_pointing_state[which].last_trigger.counter_mcp = 0;
         xsc_pointing_state[which].last_trigger.counter_stars = -1;
-        xsc_pointing_state[which].last_trigger.age_cs = 100000;
-        xsc_pointing_state[which].last_trigger.age_of_end_of_trigger_cs = 100000;
-        xsc_pointing_state[which].last_trigger.motion_caz_px = 0.0;
-        xsc_pointing_state[which].last_trigger.motion_el_px = 0.0;
         xsc_pointing_state[which].last_trigger.lat = 0.0;
         xsc_pointing_state[which].last_trigger.lst = 0;
         xsc_pointing_state[which].counter_mcp = -1;

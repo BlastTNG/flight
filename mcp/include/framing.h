@@ -26,7 +26,8 @@
 #ifndef INCLUDE_FRAMING_H_
 #define INCLUDE_FRAMING_H_
 
-#include <channel_macros.h>
+#include "channel_macros.h"
+#include "derived.h"
 
 int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
 void framing_shutdown(void);

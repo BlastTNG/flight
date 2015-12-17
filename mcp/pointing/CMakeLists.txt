@@ -14,6 +14,7 @@ set(POINTING_HEADERS
    ${POINTING_HEADERS}
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/angles.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/pointing.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/pointing_struct.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/radbox.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/time_lst.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/time_julian.h

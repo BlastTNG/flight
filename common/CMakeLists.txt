@@ -4,6 +4,7 @@ set(MCP_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/fir.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/fifo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lut.c
     ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
@@ -18,6 +19,7 @@ set(MCP_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/crc.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/fir.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/fifo.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/lut.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h

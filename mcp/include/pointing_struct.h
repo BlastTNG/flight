@@ -37,6 +37,9 @@
     -index = INC_INDEX(index) can be used to increment the write index.
 */
 
+#ifndef INCLUDE_POINTING_STRUCT_H
+#define INCLUDE_POINTING_STRUCT_H
+
 #include <math.h>
 #include <time.h>
 #include <stdbool.h>
@@ -51,21 +54,20 @@ struct ACSDataStruct {
   double mag_x;     // counts;
   double mag_y;     // counts;
   double mag_z;     // counts;
-  double pss1_i1;   //counts
-  double pss1_i2;   //counts
-  double pss1_i3;   //counts
-  double pss1_i4;   //counts
-  double pss2_i1;   //counts
-  double pss2_i2;   //counts
-  double pss2_i3;   //counts
-  double pss2_i4;   //counts
+  double pss1_i1;   // counts
+  double pss1_i2;   // counts
+  double pss1_i3;   // counts
+  double pss1_i4;   // counts
+  double pss2_i1;   // counts
+  double pss2_i2;   // counts
+  double pss2_i3;   // counts
+  double pss2_i4;   // counts
   double enc_elev;  // degrees
   double enc_motor_elev;  // degrees
   double clin_elev; // counts
   double ifel_gy;   // deg/s
   double ifyaw_gy;  // deg/s
   double ifroll_gy; // deg/s
-  int mcp_frame;
   time_t t;
 };
 
@@ -105,7 +107,6 @@ struct PointingDataStruct {
   int longitude_octave_since_launch;
   double alt;       // m
   int at_float;
-  int mcp_frame;
   time_t t;
   time_t lst;
   time_t unix_lsd;  // local sidereal date in seconds
@@ -128,11 +129,11 @@ struct PointingDataStruct {
   double pss_az;
   double pss_el;
 
-  double pss1_azraw; //degrees
-  double pss1_elraw; //degrees
+  double pss1_azraw; // degrees
+  double pss1_elraw; // degrees
   double pss1_snr;
-  double pss2_azraw; //degrees
-  double pss2_elraw; //degrees
+  double pss2_azraw; // degrees
+  double pss2_elraw; // degrees
   double pss2_snr;
   double pss_sigma;
   double offset_ifrollpss_gy;
@@ -177,7 +178,7 @@ struct DGPSAttStruct {
   double mrms;
   double brms;
   unsigned int ant[4];
-  int att_ok; 
+  int att_ok;
 };
 
 /**********************************************/
@@ -185,7 +186,7 @@ struct DGPSAttStruct {
 /*  Purpose: Store dgps position info         */
 /*   Source: dgps thread: dgps.c              */
 /*     Used: Main thread;                     */
-struct DGPSPosStruct{
+struct DGPSPosStruct {
   double lat; //
   double lon; //
   double alt; //
@@ -210,30 +211,29 @@ struct AxesModeStruct {
 
 extern time_t csbf_gps_time;
 
-struct XSCLastTriggerState
+typedef struct XSCLastTriggerState
 {
-    int counter_mcp;                           // fcp counter at the time of last trigger
-    int counter_stars;                         // stars counter at the time of last trigger
-    int age_cs;                                // centiseconds since last trigger was sent
-    int age_of_end_of_trigger_cs;              // centiseconds since the end of the last trigger
-    double motion_caz_px;
-    double motion_el_px;
+    int counter_mcp;                        // mcp counter at the time of last trigger
+    int counter_stars;                      // stars counter at the time of last trigger
     double lat;
     time_t lst;
+    int trigger_time;                       // Time of the last trigger, measured in loops through xsc_control_triggers
     bool forced_grace_period;
     bool forced_trigger_threshold;
-};
+} xsc_last_trigger_state_t;
 
-struct XSCPointingState {
+typedef struct XSCPointingState {
     struct XSCLastTriggerState last_trigger;
-    int counter_mcp;                      // the current counter_mcp, passed to the star camera after some delay
-    int last_counter_mcp;                 // the last counter_mcp, passed to the star camera before the delay that allows for the current counter
-    int last_solution_stars_counter;      // stars counter of last solution used in pointing solution
-    double az; // XSC Az
-    double el; // XSC El
+    int counter_mcp;                        // the current counter_mcp, passed to the star camera after some delay
+    int last_counter_mcp;                   // the previous counter_mcp passed to the star camera
+    int last_solution_stars_counter;        // stars counter of last solution used in pointing solution
+    double az;                              // XSC Az
+    double el;                              // XSC El
+    int last_trigger_time;
     int exposure_time_cs;
     double predicted_motion_px;
-};
+} xsc_pointing_state_t;
+
 extern struct XSCPointingState xsc_pointing_state[2];
 
 typedef enum
@@ -242,8 +242,7 @@ typedef enum
     EL_INHIBIT
 } elevation_pointing_state_enabled_t;
 
-
-//TODO:Evaluate snap mode
 extern bool scan_entered_snap_mode;
 extern bool scan_leaving_snap_mode;
-extern bool scan_bypass_last_trigger_on_next_trigger;
+
+#endif

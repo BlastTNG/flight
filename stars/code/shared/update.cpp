@@ -180,9 +180,6 @@ void Shared::update(ThreadNames::Name thread_name)
     Solving::mask_solver_for_main, thread_name);
     Solving::mask_solver_for_main.update(thread_name);
 
-    Solving::motion_psf_network_for_solver.retry_share(thread_name);
-    Solving::motion_psf_network_for_solver.update(thread_name);
-
     Solving::settings.retry_share(thread_name);
     Solving::settings.update(thread_name);
 

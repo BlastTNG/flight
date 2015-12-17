@@ -35,7 +35,6 @@ class Solving::Finding::Smoother
     Smoother(Parameters::Manager& params);
     ~Smoother();
     void make_smooth(Shared::Image::Raw& image, double *pixels_smoothed, int halfwidth, double sigma);
-    void smooth_with_motion_psf(Shared::Image::Raw& image, double *pixels_smoothed);
 
   private:
     int image_width;

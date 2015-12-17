@@ -615,9 +615,6 @@ void store_1hz_xsc(int m_which)
 {
     static bool firsttime[2] = {true, true};
 
-    static channel_t* address_xN_last_trig_motion_caz_px[2];
-    static channel_t* address_xN_last_trig_motion_el_px[2];
-    static channel_t* address_xN_last_trig_motion_px[2];
     static channel_t* address_xN_point_az_raw[2];
     static channel_t* address_xN_point_az[2];
     static channel_t* address_xN_point_el_raw[2];
@@ -626,7 +623,6 @@ void store_1hz_xsc(int m_which)
     static channel_t* address_xN_point_az_trim[2];
     static channel_t* address_xN_point_el_trim[2];
     static channel_t* address_xN_cd_robust_mode[2];
-    static channel_t* address_xN_cd_motion_psf[2];
 //    static channel_t* address_xN_num_images_saved[2];
 
     static channel_t* address_xN_last_trig_lat;
@@ -727,9 +723,6 @@ void store_1hz_xsc(int m_which)
         address_xN_image_hor_sigma_roll[m_which] = get_xsc_channel("image_hor_sigma_roll", m_which);
         address_xN_image_hor_sigma_pointing[m_which] = get_xsc_channel("image_hor_sigma_pointing", m_which);
 
-        address_xN_last_trig_motion_caz_px[m_which]  = get_xsc_channel("last_trig_motion_caz_px"     , m_which);
-        address_xN_last_trig_motion_el_px[m_which]  = get_xsc_channel("last_trig_motion_el_px"     , m_which);
-        address_xN_last_trig_motion_px[m_which]  = get_xsc_channel("last_trig_motion_px"     , m_which);
         address_xN_point_az_raw[m_which]  = get_xsc_channel("point_az_raw"    , m_which);
         address_xN_point_az[m_which]      = get_xsc_channel("point_az"        , m_which);
         address_xN_point_el_raw[m_which]  = get_xsc_channel("point_el_raw"    , m_which);
@@ -738,7 +731,6 @@ void store_1hz_xsc(int m_which)
         address_xN_point_az_trim[m_which] = get_xsc_channel("point_az_trim"   , m_which);
         address_xN_point_el_trim[m_which] = get_xsc_channel("point_el_trim"   , m_which);
         address_xN_cd_robust_mode[m_which] = get_xsc_channel("cd_robust_mode"   , m_which);
-        address_xN_cd_motion_psf[m_which] = get_xsc_channel("cd_motion_psf"   , m_which);
 //        address_xN_num_images_saved[m_which] = get_xsc_channel("num_images_saved"   , m_which);
         if (m_which == 0) {
             address_xN_last_trig_lat                = get_xsc_channel("last_trig_lat"        , 0);
@@ -798,12 +790,6 @@ void store_1hz_xsc(int m_which)
     SET_SCALED_VALUE(address_xN_image_hor_sigma_pointing[m_which],
                      XSC_SERVER_DATA(m_which).channels.image_hor_sigma_pointing);
 
-    SET_SCALED_VALUE(address_xN_last_trig_motion_caz_px[m_which],
-                     xsc_pointing_state[m_which].last_trigger.motion_caz_px);
-    SET_SCALED_VALUE(address_xN_last_trig_motion_el_px[m_which], xsc_pointing_state[m_which].last_trigger.motion_el_px);
-    double motion_px = sqrt(pow(xsc_pointing_state[m_which].last_trigger.motion_caz_px, 2.0) +
-                            pow(xsc_pointing_state[m_which].last_trigger.motion_el_px, 2.0));
-    SET_SCALED_VALUE(address_xN_last_trig_motion_px[m_which], motion_px);
     SET_SCALED_VALUE(address_xN_point_az[m_which]     , PointingData[i_point].xsc_az[m_which]);
     SET_SCALED_VALUE(address_xN_point_el[m_which]     , PointingData[i_point].xsc_el[m_which]);
     SET_SCALED_VALUE(address_xN_point_sigma[m_which]  , PointingData[i_point].xsc_sigma[m_which]);
@@ -812,7 +798,7 @@ void store_1hz_xsc(int m_which)
     SET_SCALED_VALUE(address_xN_point_az_trim[m_which], CommandData.XSC[m_which].cross_el_trim);
     SET_SCALED_VALUE(address_xN_point_el_trim[m_which], CommandData.XSC[m_which].el_trim);
     SET_SCALED_VALUE(address_xN_cd_robust_mode[m_which], CommandData.XSC[m_which].net.solver.robust_mode_enabled);
-    SET_SCALED_VALUE(address_xN_cd_motion_psf[m_which], CommandData.XSC[m_which].net.solver.motion_psf.enabled);
+
     /// TODO(seth): Re-add local image saving
 //    SET_SCALED_VALUE(address_xN_num_images_saved[m_which], images_num_saved[m_which]);
     if (m_which == 0) {
@@ -863,7 +849,7 @@ void store_100hz_xsc(int which)
 
     if (which == 0) {
         SET_SCALED_VALUE(address_xN_ctr_mcp, xsc_pointing_state[which].counter_mcp);
-        SET_SCALED_VALUE(address_xN_last_trig_age_cs, xsc_pointing_state[which].last_trigger.age_cs);
+        SET_SCALED_VALUE(address_xN_last_trig_age_cs, xsc_pointing_state[which].last_trigger.trigger_time);
         SET_SCALED_VALUE(address_xN_last_trig_ctr_mcp, xsc_pointing_state[which].last_trigger.counter_mcp);
         SET_SCALED_VALUE(address_xN_predicted_motion_px, xsc_pointing_state[0].predicted_motion_px);
     }

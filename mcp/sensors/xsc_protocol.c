@@ -138,27 +138,6 @@ void xsc_clear_main_settings(XSCMainSettings* main_settings)
     main_settings->display_zoom_magnitude = 1.0;
 }
 
-void xsc_clear_motion_psf_timestep(XSCMotionPSFTimestep* timestep)
-{
-    timestep->exposure_num = -1;
-    timestep->gy_az = 0.0;
-    timestep->gy_el = 0.0;
-}
-
-void xsc_clear_motion_psf(XSCMotionPSF* motion_psf)
-{
-    unsigned int i = 0;
-    motion_psf->enabled = false;
-    motion_psf->counter_mcp = -1;
-    motion_psf->counter_stars = -1;
-    motion_psf->hroll = 0.0;
-    motion_psf->iplatescale = 4.60573E-5;
-    for (i = 0; i < XSC_MOTION_PSF_MAX_NUM_TIMESTEPS; i++) {
-        xsc_clear_motion_psf_timestep(&motion_psf->timesteps[i]);
-    }
-    motion_psf->timesteps[0].exposure_num = 0;
-}
-
 void xsc_clear_solver(XSCSolver* solver)
 {
     solver->enabled = true;
@@ -181,7 +160,6 @@ void xsc_clear_solver(XSCSolver* solver)
     solver->iplatescale_fixed = 4.60573E-5;
 
     xsc_clear_filters(&solver->filters);
-    xsc_clear_motion_psf(&solver->motion_psf);
 }
 
 void xsc_clear_client_data(XSCClientData* client_data)

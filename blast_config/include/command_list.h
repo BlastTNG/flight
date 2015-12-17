@@ -205,7 +205,6 @@ enum multiCommand {
   xsc_selective_mask,
   xsc_blob_finding,
   xsc_blob_cells,
-  xsc_motion_psf,
   xsc_pattern_matching,
   xsc_filter_hor_location,
   xsc_filter_hor_roll,

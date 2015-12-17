@@ -551,6 +551,7 @@ derived_tng_t derived_list[] = {
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),
+    BITWORD("TRIGGER_STATE_XSC", "trigger_xsc", 2, 6),
 
   END_OF_DERIVED_CHANNELS
 };

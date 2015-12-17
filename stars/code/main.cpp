@@ -94,7 +94,6 @@ CBufP  <Solving::Filters>              Solving::filters_net_to_main            (
 CBuf   <Solving::Filters>              Solving::filters_main_to_camera         (main,        camera);
 CBufP  <Solving::Mask>                 Solving::mask_network_for_solver        (net_client,  solver);
 CBuf   <Solving::Mask>                 Solving::mask_solver_for_main           (solver,      main);
-CBuf   <Solving::MotionPSF>            Solving::motion_psf_network_for_solver  (net_client,  solver);
 CBuf   <Solving::Settings>             Solving::settings                       (net_client,  solver);
 bool General::quit;
 }
@@ -118,7 +117,6 @@ void init_shared_objects(Parameters::Manager& params)
     Shared::Solving::filters_main_to_camera.init(params);
     Shared::Solving::mask_network_for_solver.init(params);
     Shared::Solving::mask_solver_for_main.init(params);
-    Shared::Solving::motion_psf_network_for_solver.init(params);
     Shared::Simulations::brightness.init(params);
     Shared::Image::raw_from_camera.init(params);
     Shared::Image::raw_for_image_client1.init(params);
