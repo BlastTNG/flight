@@ -36,8 +36,6 @@
 #include "channels_tng.h"
 #include "pointing_struct.h"
 
-extern struct ACSDataStruct ACSData;
-
 #define MAGCOM "/dev/ttyUSB0"
 
 ph_serial_t	*mag_comm = NULL;

@@ -366,6 +366,8 @@ static const float gy_inv[64][3][6] =
 // TODO(seth): Extern sched_lst after enabling sched.c
 unsigned int sched_lst; /* sched_lst */
 
+struct ACSDataStruct ACSData;
+
 /**
  * Reads the 5Hz data from the most recent frame received from UEIs and stores
  * it into the ACSData structure for use in pointing
