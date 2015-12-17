@@ -48,6 +48,39 @@ static int32_t mcp_1hz_framenum = -1;
 static int32_t uei_of_100hz_framenum = -1;
 static int32_t uei_of_1hz_framenum = -1;
 
+/**
+ * Returns the current MCP framenumber of the 200Hz Frames
+ * @return -1 before initialization, framenumber after
+ */
+int32_t get_200hz_framenum(void)
+{
+    return mcp_200hz_framenum;
+}
+/**
+ * Returns the current MCP framenumber of the 100Hz frames
+ * @return -1 before initialization, framenumber after
+ */
+int32_t get_100hz_framenum(void)
+{
+    return mcp_100hz_framenum;
+}
+/**
+ * Returns the current MCP framenumber of the 5Hz frames
+ * @return -1 before initialization, framenumber after
+ */
+int32_t get_5hz_framenum(void)
+{
+    return mcp_5hz_framenum;
+}
+/**
+ * Returns the current MCP framenumber of the 1Hz frames
+ * @return -1 before initialization, framenumber after
+ */
+int32_t get_1hz_framenum(void)
+{
+    return mcp_1hz_framenum;
+}
+
 static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
 {
     if (level & ( MOSQ_LOG_ERR | MOSQ_LOG_WARNING ))
