@@ -345,9 +345,8 @@ static void dsp1760_connect_gyro(ph_job_t *m_job, ph_iomask_t m_why, void *m_dat
     term.c_cflag = CS8 | B38400 | CLOCAL | CREAD;
     term.c_iflag = IGNPAR | IGNBRK;
 
-    gyro_comm[gyrobox] = ph_serial_open(gyro_port[gyrobox], &term, &gyro_data[gyrobox]);
+    gyro_comm[gyrobox] = ph_serial_open(gyro_port[gyrobox], &term, data);
 
-    activate_921k_clock(gyrobox);
     if (ph_serial_set_baud_base(gyro_comm[gyrobox], 921600)) blast_strerror("Error setting base");
     if (ph_serial_set_baud_divisor(gyro_comm[gyrobox], 921600)) blast_strerror("Error setting divisor");
 
@@ -374,6 +373,7 @@ void dsp1760_reset_gyro(int m_which)
 bool initialize_dsp1760_interface(void)
 {
     for (int i = 0; i < 2; i++) {
+        activate_921k_clock(i);
         BLAST_ZERO(gyro_data[i]);
         gyro_data[i].which = i;
         gyro_data[i].backoff_sec = min_backoff_sec;
