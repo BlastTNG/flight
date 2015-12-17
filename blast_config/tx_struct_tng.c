@@ -888,13 +888,13 @@ channel_t channel_list[] =
     { "i_rw_term_piv",        SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "p_err_term_piv",       SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
-    { "uei_of_1hz_framecount",   SCALE(CONVERT_UNITY), TYPE_UINT32,    RATE_1HZ,   SRC_OF_UEI, U_NONE, 0, 0, 0 },
-    { "uei_of_100hz_framecount", SCALE(CONVERT_UNITY), TYPE_UINT32,    RATE_100HZ, SRC_OF_UEI, U_NONE, 0, 0, 0 },
+    { "uei_of_1hz_framecount",   SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_1HZ,   SRC_OF_UEI, U_NONE, 0, 0, 0 },
+    { "uei_of_100hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, SRC_OF_UEI, U_NONE, 0, 0, 0 },
 
-    { "mcp_1hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_1HZ,   SRC_FC, U_NONE, 0, 0, 0 },
-    { "mcp_5hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ,   SRC_FC, U_NONE, 0, 0, 0 },
-    { "mcp_100hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "mcp_200hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "mcp_1hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ,   SRC_FC, U_NONE, 0, 0, 0 },
+    { "mcp_5hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_5HZ,   SRC_FC, U_NONE, 0, 0, 0 },
+    { "mcp_100hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "mcp_200hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { {0} }
   };
 
