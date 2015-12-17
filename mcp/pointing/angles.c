@@ -110,8 +110,6 @@ double normalize_angle_180(double m_angle)
 void equatorial_to_horizontal(double ra_hours, double dec_deg, time_t lst_s, double lat_deg,
                               double* az_deg, double* el_deg)
 {
-    double az = 0.0;
-    double el = 0.0;
     double ha = from_seconds(lst_s) - from_hours(ra_hours);
 
     double sh, ch, sd, cd, sp, cp, x, y, z, r, a;
