@@ -1,0 +1,2 @@
+SUBSYSTEM=="tty", ACTION=="add", ATTR{port}=="0x210", SYMLINK+="ttyGYRO0"
+SUBSYSTEM=="tty", ACTION=="add", ATTR{port}=="0x200", SYMLINK+="ttyGYRO1"
