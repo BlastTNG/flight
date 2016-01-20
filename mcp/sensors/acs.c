@@ -254,9 +254,9 @@ static const float gy_inv[64][3][6] =
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 1.000000e+00 } },
 
         /* mask = 101010 (42) */
-        { { 0.000000e+00, 0.72055111, 0.000000e+00, 0.000000e+00, 0.000000e+00, -0.69340183 },
-          { 0.000000e+00, 0.000000e+00, 0.000000e+00, -1.000000e+00, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, -0.72055111, 0.000000e+00, 0.000000e+00, 0.000000e+00, -0.69340183 } },
+        { { 0.000000e+00, -0.99026805, 0.000000e+00, 0.13917325, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00,  0.13917325, 0.000000e+00, 0.99026805, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, -1.000000 } },
 
         /* mask = 101011 (43) */
         { { 5.000000e-01, 5.000000e-01, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
@@ -482,16 +482,16 @@ void store_200hz_acs(void)
 
     gymask = GET_UINT16(mask_gy_addr);
 
-    ifel_gy1 = dsp1760_getval(0, 0);
+    ifyaw_gy1 = dsp1760_getval(0, 0);
     ifroll_gy1 = dsp1760_getval(0, 1);
-    ifyaw_gy1 = dsp1760_getval(0, 2);
+    ifel_gy1 = dsp1760_getval(0, 2);
     SET_FLOAT(ifElgy1Addr, ifel_gy1);
     SET_FLOAT(ifRollgy1Addr, ifroll_gy1);
     SET_FLOAT(ifYawgy1Addr, ifyaw_gy1);
 
-    ifel_gy2 = dsp1760_getval(1, 0);
+    ifyaw_gy2 = dsp1760_getval(1, 0);
     ifroll_gy2 = dsp1760_getval(1, 1);
-    ifyaw_gy2 = dsp1760_getval(1, 2);
+    ifel_gy2 = dsp1760_getval(1, 2);
     SET_FLOAT(ifElgy2Addr, ifel_gy2);
     SET_FLOAT(ifRollgy2Addr, ifroll_gy2);
     SET_FLOAT(ifYawgy2Addr, ifyaw_gy2);
