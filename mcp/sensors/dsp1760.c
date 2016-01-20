@@ -37,7 +37,7 @@
 #include "conversions.h"
 
 static ph_serial_t *gyro_comm[2] = {NULL};
-static const char gyro_port[2][16] = {"/dev/ttyS2", "/dev/ttyS3"};
+static const char gyro_port[2][16] = {"/dev/ttyGYRO0", "/dev/ttyGYRO1"};
 
 static const uint32_t min_backoff_sec = 1;
 static const uint32_t max_backoff_sec = 60;
