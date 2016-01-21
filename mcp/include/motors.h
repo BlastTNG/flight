@@ -28,8 +28,8 @@
 
 #include <stdint.h>
 
-#define MIN_EL 19.5
-#define MAX_EL 55
+#define MIN_EL 0.5
+#define MAX_EL 95
 
 #define MAX_V_AZ 2.0 // was 2000 in gyro units
 #define MAX_V_EL 0.5 // was 0.5
