@@ -1,4 +1,3 @@
-
 /* mcp: the BLAST master control program
  *
  * This software is copyright (C) 2002-2006 University of Toronto
@@ -634,11 +633,11 @@ static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
         return NULL;
 
     while ((trig_state = xsc_get_trigger_data(which))) {
-        // Here the camera is processing a newer image than MCP has as its oldest trigger
-        if (XSC_SERVER_DATA(which).channels.image_ctr_mcp > trig_state->counter_mcp) {
-            free(trig_state);
-            continue;
-        }
+        if (XSC_SERVER_DATA(which).channels.image_ctr_mcp == trig_state->counter_mcp)
+            break;
+
+        blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
+        free(trig_state);
     }
     return trig_state;
 }
