@@ -2283,6 +2283,8 @@ void InitCommandData()
         CommandData.XSC[which].trigger.threshold.blob_streaking_px = 2.0;
 
         CommandData.XSC[which].trigger.scan_force_trigger_enabled = true;
+        CommandData.XSC[which].el_trim = 0.0;
+        CommandData.XSC[which].cross_el_trim = 0.0;
 
         xsc_clear_client_data(&CommandData.XSC[which].net);
     }
