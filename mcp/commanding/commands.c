@@ -910,6 +910,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.pointing_mode.del = rvalues[4];  // el drift speed
       CommandData.pointing_mode.h = 0;
       break;
+    case cur_mode:
+      CommandData.pointing_mode.mode = P_CURRENT;
+      CommandData.pointing_mode.X = rvalues[0];  // pivot current
+      CommandData.pointing_mode.Y = rvalues[1];  // rw current
+      CommandData.pointing_mode.w = rvalues[2];  // el current
+      break;
     case cap:
 
       if ((CommandData.pointing_mode.mode != P_CAP) ||
@@ -1102,8 +1108,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
      ********* Pointing Motor Gains ******/
     case el_gain:   // ele gains
       CommandData.ele_gain.P = rvalues[0];
-      if (rvalues[1] <= 0.005) {
-          blast_err("You tried to set the Elevation Motor time constant to less than 5ms!"
+      if (rvalues[1] <= 0.0005) {
+          blast_err("You tried to set the Elevation Motor time constant to less than 0.5ms!"
                   "  This is invalid, so we will assume you wanted a really long time.");
           CommandData.ele_gain.I = 1000.0;
       } else {
@@ -1116,8 +1122,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case az_gain:   // az gains
       CommandData.azi_gain.P = rvalues[0];
-      if (rvalues[1] <= 0.005) {
-            blast_err("You tried to set the Azimuth Motor time constant to less than 5ms!"
+      if (rvalues[1] <= 0.0005) {
+            blast_err("You tried to set the Azimuth Motor time constant to less than 0.5ms!"
                     "  This is invalid, so we will assume you wanted a really long time.");
             CommandData.azi_gain.I = 1000.0;
         } else {

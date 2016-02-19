@@ -49,6 +49,7 @@
 #define P_QUAD      10
 #define P_EL_SCAN   11
 #define P_EL_BOX    12
+#define P_CURRENT   13
 
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 

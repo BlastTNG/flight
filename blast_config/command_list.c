@@ -399,6 +399,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
     }
   },
+  {COMMAND(cur_mode), "drive motors at constant current", GR_POINT, 3,
+    {
+      {"Pivot Current (Amps)", -20.0, 20.0, 'f', "0.0"},
+      {"RW Current (Amps)", -20.0, 20.0, 'f', "0.0"},
+      {"Elevation Current (Amps)", -20.0, 20.0, 'f', "0.0"}
+    }
+  },
   {COMMAND(quad), "scan a quadrilateral region in RA/Dec (corners must be ordered)", GR_POINT, 11,
     {
       {"RA of Corner 1 (h)",        0, 24, 'f', "NONE"},

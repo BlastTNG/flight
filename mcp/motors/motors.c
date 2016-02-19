@@ -1669,6 +1669,12 @@ void update_axes_mode(void)
             axes_mode.az_mode = AXIS_VEL;
             axes_mode.az_vel = 0.0;
             break;
+        case P_CURRENT:
+            axes_mode.el_mode = AXIS_VEL;
+            axes_mode.el_vel = 0.0;
+            axes_mode.az_mode = AXIS_VEL;
+            axes_mode.az_vel = 0.0;
+            break;
         default:
             blast_warn("Pointing: Unknown Elevation Pointing Mode %d: " "stopping\n", CommandData.pointing_mode.mode);
             CommandData.pointing_mode.mode = P_DRIFT;
@@ -1720,7 +1726,9 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     static double lpfilter_out[LPFILTER_POLES + 1] = { 0.0 };
     static float last_pv = 0.0;
 
-    float pv = ACSData.ifel_gy;
+    int i_point_read = GETREADINDEX(point_index);
+
+    float pv = ACSData.ifel_gy - PointingData[i_point_read].ifel_earth_gy;
 
     int16_t milliamp_return;
 
@@ -1833,6 +1841,10 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
         last_pv = pv;
         I_term = 0.0;
         milliamp_return = 0;
+    } else if (CommandData.pointing_mode.mode == P_CURRENT) {
+        last_pv = pv;
+        I_term = 0.0;
+        milliamp_return = CommandData.pointing_mode.w * 100.0;
     }
 
     SET_FLOAT(error_el_ch, error_pv);
@@ -1966,6 +1978,10 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
         last_pv = pv;
         I_term = 0.0;
         milliamp_return = 0;
+    } else if (CommandData.pointing_mode.mode == P_CURRENT) {
+        last_pv = pv;
+        I_term = 0.0;
+        milliamp_return = CommandData.pointing_mode.Y * 100.0;
     }
     last_milliamp = milliamp_return;
 
@@ -2089,6 +2105,13 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
         friction_out[0] = 0.0;
         friction_out[1] = 0.0;
         I_term = 0;
+    } else if (CommandData.pointing_mode.mode == P_CURRENT) {
+        I_term = 0.0;
+        friction_in[0] = 0.0;
+        friction_in[1] = 0.0;
+        friction_out[0] = 0.0;
+        friction_out[1] = 0.0;
+        milliamp_return = CommandData.pointing_mode.X * 100.0;
     }
     last_milliamp = milliamp_return;
 

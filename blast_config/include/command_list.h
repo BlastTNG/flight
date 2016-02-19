@@ -148,7 +148,7 @@ enum multiCommand {
   balance_manual,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
   bias_level_x,      fridge_cycle_params,  box,
-  cal_pulse,         cal_repeat,        cap,
+  cal_pulse,         cal_repeat,        cap,              cur_mode,
   az_el_trim,        drift,             el_gain,
   inner_level,       hwpr_jump,         hwpr_goto_i,
   autotrim_to_sc,
