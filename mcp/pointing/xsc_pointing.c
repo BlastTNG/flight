@@ -70,7 +70,7 @@ static inline int xsc_initialize_gpio(void)
 {
     int fd;
     const char *gpio_name[2] = { "504", "505"};
-    const char *gpio_chip = "/sys/class/gpio/gpiochip504";
+    const char *gpio_chip = "/sys/class/gpio/export";
     const char *gpio_direction[2] = { "/sys/class/gpio/gpio504/direction",
                                       "/sys/class/gpio/gpio505/direction"};
 
