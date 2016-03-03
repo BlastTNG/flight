@@ -193,23 +193,23 @@ set(PH_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/.libs/libphenom
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/include")
 
 
-# Find portaudio    
-pkg_check_modules(PC_PORTAUDIO QUIET portaudio)
-set(PORTAUDIO_DEFINITIONS ${PC_PORTAUDIO_CFLAGS_OTHER})
+# Find alsa
+pkg_check_modules(PC_ALSA QUIET alsa)
+set(ALSA_DEFINITIONS ${PC_ALSA_CFLAGS_OTHER})
 
-find_path(PORTAUDIO_INCLUDE_DIR portaudio.h
-          HINTS ${PC_PORTAUDIO_INCLUDEDIR} ${PC_PORTAUDIO_INCLUDE_DIRS}
+find_path(ALSA_INCLUDE_DIR asoundlib.h
+          HINTS ${PC_ALSA_INCLUDEDIR} ${PC_ALSA_INCLUDE_DIRS}
           REQUIRED)
 
-find_library(PORTAUDIO_LIBRARY NAMES portaudio libportaudio
-            HINTS ${PC_PORTAUDIO_LIBDIR} ${PC_PORTAUDIO_LIBRARY_DIRS} REQUIRED)
-IF(NOT PORTAUDIO_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find portaudio.h.  Is portaudio19-dev installed?")
+find_library(ALSA_LIBRARY NAMES asound
+            HINTS ${PC_ALSA_LIBDIR} ${PC_ALSA_LIBRARY_DIRS} REQUIRED)
+IF(NOT ALSA_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find asoundlib.h.  Is libasound2-dev installed?")
 ENDIF()
-IF(NOT PORTAUDIO_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libportaudio2.  Please install this using apt-get.")
+IF(NOT ALSA_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libasound2.  Please install this using apt-get.")
 ENDIF()
-include_directories(${PORTAUDIO_INCLUDE_DIR})
+include_directories(${ALSA_INCLUDE_DIR})
 
 
 # Find libusb    
@@ -343,7 +343,7 @@ add_dependencies(mcp soem phenomproj)
 define_file_basename_for_sources(mcp)
 
 target_link_libraries(mcp 
-	${PORTAUDIO_LIBRARY}
+	${ALSA_LIBRARY}
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}
     ${MOSQ_LIBRARY}  
     ${GLIB_LIBRARY} 
