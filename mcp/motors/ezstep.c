@@ -354,8 +354,6 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
 
 int EZBus_Recv(struct ezbus* bus)
 {
-    int fd;
-
     unsigned char byte;
     unsigned char checksum = 0;
     char full_response[EZ_BUS_BUF_LEN];
@@ -366,11 +364,11 @@ int EZBus_Recv(struct ezbus* bus)
 
     // TODO(seth): Fix EZBus_Recv
 
-    if (fd == -1) {
+    if (bus->fd == -1) {
         // on error, don't return immediately, allow response to be terminated
         if (bus->chatter >= EZ_CHAT_ERR) berror(err, "%sError waiting for input on bus", bus->name);
         retval |= EZ_ERR_TTY;
-    } else if (!fd) { /* Timeout */
+    } else if (!bus->fd) { /* Timeout */
         retval |= EZ_ERR_TIMEOUT;
     } else {
         int state = 0;

@@ -53,6 +53,12 @@
 
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
 
+#define XYSTAGE_PANIC  0
+#define XYSTAGE_GOTO   1
+#define XYSTAGE_JUMP   2
+#define XYSTAGE_SCAN   3
+#define XYSTAGE_RASTER 4
+
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
 /* time (slow frames) to keep power off when power cycling devices */
@@ -449,6 +455,11 @@ struct CommandDataStruct {
   } hwpr;
 
   int pin_is_in;
+
+  struct {
+    int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;
+    int force_repoll;
+  } xystage;
 
   /* sensors output: read in mcp:SensorReader() */
   uint16_t temp1, temp2, temp3;

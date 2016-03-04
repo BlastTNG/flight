@@ -20,10 +20,6 @@
  *
  */
 
-#include "mcp.h"
-
-#ifdef USE_XY_THREAD
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -32,7 +28,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/select.h>
 #include <errno.h>
 #include <math.h>
 
@@ -40,14 +35,12 @@
 #include "pointing_struct.h"
 #include "tx.h"
 #include "ezstep.h"
+#include "mcp.h"
 
-#ifdef USE_XY_STAGE
-#  error Both USE_XY_STAGE and USE_XY_THREAD defined.
-#endif
+
 
 /* EZBus setup parameters */
-#define STAGE_BUS_TTY "/dev/ttySI4"
-//#define STAGE_BUS_TTY "/dev/ttyXYSTAGE"
+#define STAGE_BUS_TTY "/dev/ttyXYSTAGE"
 #define STAGE_BUS_CHATTER EZ_CHAT_ACT
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
@@ -160,7 +153,7 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
   if (dest < 0)
     dest = 0;
 
-  blast_info("Move %c to %i at speed %i and wait", 
+  blast_info("Move %c to %i at speed %i and wait",
       (is_y) ? 'Y' : 'X', dest, vel);
   EZBus_GotoVel(bus, who, dest, vel);
 
@@ -175,18 +168,19 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
   } while (now != dest);
 }
 
-void Raster(struct ezbus *bus, int start, int end, int is_y, int y, 
+void Raster(struct ezbus *bus, int start, int end, int is_y, int y,
     int ymin, int ymax, int xvel, int yvel, int ss)
 {
   int x;
   int step = (start > end) ? -ss : ss;
-  blast_info("Raster %i %i %i\n", start, end, step); 
+  blast_info("Raster %i %i %i\n", start, end, step);
   for (x = start; x != end + step; x += step) {
     if (step < 0) {
       if (x < end)
         x = end;
-    } else if (x > end)
+    } else if (x > end) {
       x = end;
+    }
     GoWait(bus, x, (is_y)?yvel:xvel, is_y);
     if (y == ymin)
       y = ymax;
@@ -202,7 +196,7 @@ void ControlXYStage(struct ezbus* bus)
 
   /* Send the uplinked command, if any */
   my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-  if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID 
+  if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID
       || CommandData.actbus.caddr[my_cindex] == STAGEY_ID) {
     EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
 	CommandData.actbus.command[my_cindex]);
@@ -222,7 +216,7 @@ void ControlXYStage(struct ezbus* bus)
       if (CommandData.xystage.xvel > 0) {
 	blast_info("Move X to %i at speed %i",
 	    CommandData.xystage.x1, CommandData.xystage.xvel);
-	EZBus_GotoVel(bus, STAGEX_ID, CommandData.xystage.x1, 
+	EZBus_GotoVel(bus, STAGEX_ID, CommandData.xystage.x1,
 	    CommandData.xystage.xvel);
       }
       if (CommandData.xystage.yvel > 0) {
@@ -276,7 +270,7 @@ void ControlXYStage(struct ezbus* bus)
 	GoWait(bus, ycent - ysize, yvel, 1);
 	Raster(bus, xcent, xcent + xsize, 0, ycent + ysize, ycent - ysize,
 	    ycent + ysize, xvel, yvel, step);
-	Raster(bus, ycent + ysize, ycent - ysize, 1, xcent + xsize, 
+	Raster(bus, ycent + ysize, ycent - ysize, 1, xcent + xsize,
 	    xcent - xsize, xcent + xsize, xvel, yvel, step);
 	Raster(bus, xcent - xsize, xcent, 0, ycent - ysize, ycent - ysize,
 	    ycent + ysize, xvel, yvel, step);
@@ -287,15 +281,14 @@ void ControlXYStage(struct ezbus* bus)
     if (CommandData.xystage.mode != XYSTAGE_PANIC)
       CommandData.xystage.is_new = 0;
   }
-
 }
 
 void StageBus(void)
 {
   int poll_timeout = POLL_TIMEOUT;
   int all_ok = 0;
-  unsigned long conn_attempt = 1;
-  int first_time=1;
+  unsigned conn_attempt = 1;
+  int first_time = 1;
   struct ezbus bus;
   int chat_temp;
 
@@ -310,7 +303,7 @@ void StageBus(void)
   }
   while (1) {
     if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) == EZ_ERR_OK) {
-      blast_info("Connected to %s on attempt %lu.", STAGE_BUS_TTY, conn_attempt);
+      blast_info("Connected to %s on attempt %u.", STAGE_BUS_TTY, conn_attempt);
       break;
     }
     conn_attempt++;
@@ -342,12 +335,12 @@ void StageBus(void)
 
     /* Repoll bus if necessary */
     if (CommandData.xystage.force_repoll) {
-      blast_info("XYBus: repolling");      
+      blast_info("XYBus: repolling");
       EZBus_ForceRepoll(&bus, STAGEX_ID);
       EZBus_ForceRepoll(&bus, STAGEY_ID);
       poll_timeout = POLL_TIMEOUT;
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
-      blast_info("all_ok = %i",all_ok);
+      blast_info("all_ok = %i", all_ok);
       CommandData.xystage.force_repoll = 0;
     }
 
@@ -357,8 +350,9 @@ void StageBus(void)
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
       bus.chatter = chat_temp;
       poll_timeout = POLL_TIMEOUT;
-    } else if (poll_timeout > 0)
+    } else if (poll_timeout > 0) {
       poll_timeout--;
+    }
 
     ControlXYStage(&bus);
 
@@ -367,4 +361,3 @@ void StageBus(void)
     usleep(10000);
   }
 }
-#endif

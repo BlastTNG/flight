@@ -5,6 +5,7 @@ set(MOTOR_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/actuators.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ezstep.c
     ${CMAKE_CURRENT_SOURCE_DIR}/hwpr.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/xystage.c
     PARENT_SCOPE
 )
 set(MOTOR_HEADERS
