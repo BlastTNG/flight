@@ -29,8 +29,9 @@
 #include <string.h>
 
 #include "phenom/listener.h"
-#include "phenom/serial.h"
 #include "phenom/log.h"
+#include "phenom/serial.h"
+#include "phenom/thread.h"
 
 #include "blast.h"
 #include "crc.h"
@@ -39,6 +40,7 @@
 static ph_serial_t *gyro_comm[2] = {NULL};
 // ttyGYRO0 -> COMM3, ttyGRYO1 -> COMM4
 static const char gyro_port[2][16] = {"/dev/ttyGYRO0", "/dev/ttyGYRO1"};
+static ph_thread_pool_t *gyro_pool = NULL;
 
 static const uint32_t min_backoff_sec = 1;
 static const uint32_t max_backoff_sec = 60;
@@ -373,16 +375,22 @@ void dsp1760_reset_gyro(int m_which)
  */
 bool initialize_dsp1760_interface(void)
 {
+    /// Define a separate job pool for the gyro read.
+//    gyro_pool = ph_thread_pool_define("gyro_read", 4, 1);
+
     for (int i = 0; i < 2; i++) {
         activate_921k_clock(i);
         BLAST_ZERO(gyro_data[i]);
         gyro_data[i].which = i;
         gyro_data[i].backoff_sec = min_backoff_sec;
+
         ph_job_init(&(gyro_data[i].connect_job));
         gyro_data[i].connect_job.callback = dsp1760_connect_gyro;
-        gyro_data[i].connect_job.data = &gyro_data[i];
+        gyro_data[i].connect_job.data = &(gyro_data[i]);
+//        ph_job_set_pool(&(gyro_data[i].connect_job), gyro_pool);
 
-        ph_job_dispatch_now(&(gyro_data[i].connect_job));
+        // Set the dispatch to 500ms and 1000ms respectively for the gyro connect
+        ph_job_set_timer_in_ms(&(gyro_data[i].connect_job), 500 * (i+1));
     }
 
     blast_startup("Initialized gyroscope interface");
