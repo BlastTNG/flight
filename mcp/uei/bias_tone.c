@@ -41,7 +41,7 @@ static unsigned int rate = 44100;                       /* stream rate */
 static unsigned int channels = 2;                       /* count of channels */
 static unsigned int buffer_time = 500000;               /* ring buffer length in us */
 static unsigned int period_time = 100000;               /* period time in us */
-static double freq = 200;                               /* sinusoidal wave frequency in Hz */
+static double freq = 20;                                /* sinusoidal wave frequency in Hz */
 static snd_pcm_t *handle;
 static int resample = 1;                                /* enable alsa-lib resampling */
 
@@ -309,6 +309,8 @@ int initialize_bias_tone(void)
         blast_err("Unable to register async handler");
         goto init_err;
     }
+    blast_startup("Registered ASync sound handler");
+
     for (int count = 0; count < 2; count++) {
         generate_sine(data.areas, 0, period_size, &data.phase);
         err = snd_pcm_writei(handle, data.samples, period_size);
@@ -321,6 +323,8 @@ int initialize_bias_tone(void)
             goto init_err;
         }
     }
+    blast_startup("Generated Sine Wave");
+
     if (snd_pcm_state(handle) == SND_PCM_STATE_PREPARED) {
         err = snd_pcm_start(handle);
         if (err < 0) {
