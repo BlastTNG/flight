@@ -31,15 +31,23 @@
 #include "channels_tng.h"
 #include "blast_time.h"
 #include "mcp.h"
+#include "fir.h"
 
 static channel_t *uei_of_channels[6][48] = {{NULL}};
 static uint32_t num_of_channels[6] = {0};
 
-static double frequency = 100.0;
+static double frequency = 1000.0;
 static int hd_of = 0;
 static int dmapid_of = 0;
-static double diag_data[14] = {0.0};
-static uint32_t raw_diag_data[14] = {0};
+static double diag_data[28] = {0.0};
+
+
+static int uei_index = 0;
+static int bias_ch = 0;
+static double bias_data[50] = {0.0};
+static struct FirStruct uei_input[50] = {{{0.0}}};
+
+static uint32_t raw_diag_data[28] = {0};
 #define CPU_LAYER 5
 
 void *uei_loop(void *m_arg) {
@@ -56,21 +64,32 @@ void *uei_loop(void *m_arg) {
 
     blast_startup("Starting UEI loop");
 
+    sleep(1);
     while (!shutdown_mcp) {
 		ret = DqRtDmapRefresh(hd_of, dmapid_of);
 		if (ret < 0) {
 			blast_err("DqRtDmapRefresh: error %d", ret);
 		}
 
-		if (--countdown <= 0) {
-			countdown = (int)frequency;
+        if ((ret = DqRtDmapReadScaledData(hd_of, dmapid_of, 2, bias_data, num_of_channels[2])) < 0) {
+            blast_err("Could not read scaled data from DMAP");
+            continue;
+        }
 
-			ret = DqAdvDnxpRead(hd_of, CPU_LAYER, sizeof(diag_channels) / sizeof(uint32_t),
-					diag_channels, raw_diag_data, diag_data);
-			if (ret < 0) {
-				blast_err("Could not read CPU Diagnostics: %s", DqTranslateError(ret));
-			}
-		}
+        for (int i = 0; i < num_of_channels[2]; i++) {
+            filter(bias_data[i] * bias_data[bias_ch], &uei_input[i]);
+        }
+
+        if (--countdown <= 0) {
+            countdown = (int) frequency;
+            blast_info("Input: %f %f", bias_data[10], bias_data[11]);
+//
+//            ret = DqAdvDnxpRead(hd_of, CPU_LAYER, sizeof(diag_channels) / sizeof(uint32_t), diag_channels,
+//                                raw_diag_data, diag_data);
+//            if (ret < 0) {
+//                blast_err("Could not read CPU Diagnostics: %s", DqTranslateError(ret));
+//            }
+        }
 		timespec_add_ns(&next, periodns);
 		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next, NULL);
 	}
@@ -100,6 +119,25 @@ int initialize_uei_of_channels(void)
         return -1;
     }
 
+    for (int layer = 0; layer < 7; layer++) {
+        int moredata;
+        char info_str[DQ_MAX_PKT_SIZE];
+        if (DqCmdGetCapabilities(hd_of, layer, &moredata, info_str) == DQ_SUCCESS) {
+            blast_info("Layer %d: %s", layer, info_str);
+        }
+        if (DqAcbIsSupported(hd_of, layer, DQ_SS0IN, &moredata) == DQ_SUCCESS) {
+            blast_info("Layer %d %s Acb", layer, moredata?"supports":"DOES NOT SUPPORT");
+        }
+        if (DqDmapIsSupported(hd_of, layer, DQ_SS0IN, &moredata) == DQ_SUCCESS) {
+            blast_info("Layer %d %s DMAP", layer, moredata?"supports":"DOES NOT SUPPORT");
+        }
+        if (DqVmapIsSupported(hd_of, layer, DQ_SS0IN, &moredata) == DQ_SUCCESS) {
+            blast_info("Layer %d %s VMAP", layer, moredata?"supports":"DOES NOT SUPPORT");
+        }
+        if (DqMsgIsSupported(hd_of, layer, DQ_SS0IN, &moredata) == DQ_SUCCESS) {
+            blast_info("Layer %d %s MSG", layer, moredata?"supports":"DOES NOT SUPPORT");
+        }
+    }
 	if ((ret = DqRtDmapInit(hd_of, &dmapid_of, 2 * frequency)) < 0) {
 		blast_err("Could not initialize DMAP: %d", ret);
 		DqCloseIOM(hd_of);
@@ -110,13 +148,15 @@ int initialize_uei_of_channels(void)
 	 * Add all channels except those read out through the diagnostic interface
 	 */
 	for (channel_t *ch = channel_list; ch->field[0]; ch++) {
-		if ((ch->source != SRC_OF_UEI) || ch->board == 14) continue;
-		chentry = ch->chan;
-		blast_dbg("Adding %s to %d:%d", ch->field, ch->board, ch->chan);
+		if ((ch->source != SRC_OF_UEI) || ch->board >= 14) continue;
+		chentry = ch->chan | DQ_LNCL_GAIN(0) | DQ_LNCL_DIFF;
+		if (ch->board == 2 && ch->chan == 24) bias_ch = num_of_channels[ch->board];
 		uei_of_channels[ch->board][num_of_channels[ch->board]++] = ch;
 		DqRtDmapAddChannel(hd_of, dmapid_of, ch->board, DQ_SS0IN, &chentry, 1);
 	}
-
+	for (int i = 0; i < num_of_channels[2]; i++) {
+	    initFir(&uei_input[i], frequency);
+	}
     // Start the layers
     DqRtDmapStart(hd_of, dmapid_of);
 
@@ -158,6 +198,11 @@ static void uei_of_store_hk(void)
 	SET_UINT32(uei_of_temp2_channel, raw_diag_data[DQ_LDIAG_ADC_TEMP1]);
 }
 
+double uei_getval(int m_ch)
+{
+    return uei_input[m_ch].out;
+}
+
 void uei_1hz_loop(void)
 {
     uei_of_store_hk();
@@ -165,19 +210,29 @@ void uei_1hz_loop(void)
 
 void uei_100hz_loop(void)
 {
+    static channel_t *uei_of_ch_lock[25] = {NULL};
+
+    if (!uei_of_ch_lock[0]) {
+        for (int i = 0; i < 11; i++) {
+            char channel_name[NAME_MAX];
+            snprintf(channel_name, sizeof(channel_name), "225_ch%d_lock", i);
+            uei_of_ch_lock[i] = channels_find_by_name(channel_name);
+        }
+        uei_of_ch_lock[11] = channels_find_by_name("225_ch24_lock");
+    }
+
+    for (int i = 0; i <= 11; i++) {
+        SET_SCALED_VALUE(uei_of_ch_lock[i], uei_getval(i));
+    }
+
     int ret;
-    double data[48];
     for (int i = 0; i < 6; i++) {
         if (num_of_channels[i]) {
-            if ((ret = DqRtDmapReadScaledData(hd_of, dmapid_of, i, data, num_of_channels[i])) < 0) {
-                blast_err("Could not read scaled data from DMAP");
-                continue;
-            }
             for (int ch = 0; ch < num_of_channels[i]; ch++) {
                 if (!uei_of_channels[i][ch])
                     blast_dbg("no channel here!");
                 else
-                    SET_SCALED_VALUE(uei_of_channels[i][ch], data[ch]);
+                    SET_SCALED_VALUE(uei_of_channels[i][ch], bias_data[ch]);
             }
         }
     }
