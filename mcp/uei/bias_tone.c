@@ -105,9 +105,11 @@ static void generate_sine(const snd_pcm_channel_area_t *areas,
                 if (to_unsigned)
                         res ^= 1U << (format_bits - 1);
                 for (chn = 0; chn < channels; chn++) {
-                        for (i = 0; i < bps; i++)
+                        for (i = 0; i < bps; i++) {
                                 *(samples[chn] + i) = (res >>  i * 8) & 0xff;
+                        }
                         samples[chn] += steps[chn];
+                        res = -res;
                 }
                 phase += step;
                 if (phase >= max_phase)
