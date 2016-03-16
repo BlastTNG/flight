@@ -177,7 +177,7 @@ void WriteAux(void)
     if (StartupVeto > 0) {
         InCharge = 0;
     } else {
-        InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
+        InCharge = (SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
     }
     if (InCharge != incharge && InCharge) {
         blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
