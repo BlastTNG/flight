@@ -504,62 +504,6 @@ void mpsse_clock_data(struct mpsse_ctx *ctx, const uint8_t *out, unsigned out_of
 	}
 }
 
-void mpsse_clock_tms_cs_out(struct mpsse_ctx *ctx, const uint8_t *out, unsigned out_offset,
-	unsigned length, bool tdi, uint8_t mode)
-{
-	mpsse_clock_tms_cs(ctx, out, out_offset, 0, 0, length, tdi, mode);
-}
-
-void mpsse_clock_tms_cs(struct mpsse_ctx *ctx, const uint8_t *out, unsigned out_offset, uint8_t *in,
-	unsigned in_offset, unsigned length, bool tdi, uint8_t mode)
-{
-	DEBUG_IO("%sout %d bits, tdi=%d", in ? "in" : "", length, tdi);
-	assert(out);
-
-	if (ctx->retval != ERROR_OK) {
-		DEBUG_IO("Ignoring command due to previous error");
-		return;
-	}
-
-	mode |= 0x42;
-	if (in)
-		mode |= 0x20;
-
-	while (length > 0) {
-		/* Guarantee buffer space enough for a minimum size transfer */
-		if (buffer_write_space(ctx) < 3 || (in && buffer_read_space(ctx) < 1))
-			ctx->retval = mpsse_flush(ctx);
-
-		/* Byte transfer */
-		unsigned this_bits = length;
-		/* MPSSE command limit */
-		/* NOTE: there's a report of an FT2232 bug in this area, where shifting
-		 * exactly 7 bits can make problems with TMS signaling for the last
-		 * clock cycle:
-		 *
-		 * http://developer.intra2net.com/mailarchive/html/libftdi/2009/msg00292.html
-		 */
-		if (this_bits > 7)
-			this_bits = 7;
-
-		if (this_bits > 0) {
-			buffer_write_byte(ctx, mode);
-			buffer_write_byte(ctx, this_bits - 1);
-			uint8_t data = 0;
-			/* TODO: Fix MSB first, if allowed in MPSSE */
-			bit_copy(&data, 0, out, out_offset, this_bits);
-			out_offset += this_bits;
-			buffer_write_byte(ctx, data | (tdi ? 0x80 : 0x00));
-			if (in)
-				in_offset += buffer_add_read(ctx,
-						in,
-						in_offset,
-						this_bits,
-						8 - this_bits);
-			length -= this_bits;
-		}
-	}
-}
 
 void mpsse_set_data_bits_low_byte(struct mpsse_ctx *ctx, uint8_t data, uint8_t dir)
 {
