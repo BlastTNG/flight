@@ -101,6 +101,7 @@ channel_t channel_list[] =
     { "225_ch7",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 7, 0 },
     { "225_ch8",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 8, 0 },
     { "225_ch9",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 9, 0 },
+    { "225_ch10",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 9, 0 },
     { "225_ch24",         2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 24, 0 },
 
     { "225_ch0_lock",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 16, 0, 0 },
@@ -113,6 +114,7 @@ channel_t channel_list[] =
     { "225_ch7_lock",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 16, 7, 0 },
     { "225_ch8_lock",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 16, 8, 0 },
     { "225_ch9_lock",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 16, 9, 0 },
+    { "225_ch10_lock",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 16, 9, 0 },
     { "225_ch24_lock",         2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 16, 24, 0 },
 
     { "uei_if_ts",            0,                0,          TYPE_UINT32, RATE_5HZ, SRC_IF_UEI, U_NONE, 0, 255, 0 },
