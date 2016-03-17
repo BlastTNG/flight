@@ -74,9 +74,7 @@
 #include "xsc_pointing.h"
 
 /* Define global variables */
-int StartupVeto = 20;
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
-
 
 int16_t SouthIAm;
 int16_t InCharge = 0;
@@ -86,7 +84,9 @@ bool shutdown_mcp = false;
 
 void Pointing();
 void WatchFIFO(void*);          // commands.c
-
+#ifdef USE_XY_THREAD
+void StageBus(void);
+#endif
 
 struct chat_buf chatter_buffer;
 
@@ -414,6 +414,9 @@ int main(int argc, char *argv[])
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
 #endif
+#ifdef USE_XY_THREAD /* Define should be set in mcp.h */
+  pthread_t xy_id;
+#endif
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -488,6 +491,9 @@ int main(int argc, char *argv[])
 #else
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
+#endif
+#ifdef USE_XY_THREAD
+  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
 
 #ifndef BOLOTEST
