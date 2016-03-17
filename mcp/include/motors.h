@@ -28,6 +28,8 @@
 
 #include <stdint.h>
 
+// TODO(laura): These elevation limits are only for testing.
+// They will need to changed back once we have sun shields and an IF baffle.
 #define MIN_EL 0.5
 #define MAX_EL 95
 
