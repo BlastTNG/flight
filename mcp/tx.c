@@ -179,7 +179,6 @@ void WriteAux(void)
         CommandData.actbus.force_repoll = 1;
     } else if (InCharge != incharge) {
         blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
-        InCharge, incharge, GET_UINT16(statusMCCAddr));
     }
 
     if (CommandData.Cryo.heliumLevel)
