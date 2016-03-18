@@ -42,7 +42,7 @@ static unsigned int channels = 2;                       /* count of channels */
 static unsigned int buffer_time = 500000;               /* ring buffer length in us */
 static unsigned int period_time = 100000;               /* period time in us */
 static double freq = 20;                                /* sinusoidal wave frequency in Hz */
-static snd_pcm_t *handle;
+static snd_pcm_t *handle = NULL;
 static int resample = 1;                                /* enable alsa-lib resampling */
 
 static snd_pcm_sframes_t buffer_size;
@@ -121,113 +121,113 @@ static int set_hwparams(snd_pcm_t *handle)
 {
     unsigned int rrate;
     snd_pcm_uframes_t size;
-    int err, dir;
+    int retval, dir = 0;
     snd_pcm_hw_params_t *hw_params;
     snd_pcm_hw_params_alloca(&hw_params);
 
     /* choose all parameters */
-    err = snd_pcm_hw_params_any(handle, hw_params);
-    if (err < 0) {
-        blast_err("Broken configuration for playback: no configurations available: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_any(handle, hw_params);
+    if (retval < 0) {
+        blast_err("Broken configuration for playback: no configurations available: %s", snd_strerror(retval));
+        return retval;
     }
     /* set hardware resampling */
-    err = snd_pcm_hw_params_set_rate_resample(handle, hw_params, resample);
-    if (err < 0) {
-        blast_err("Resampling setup failed for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_set_rate_resample(handle, hw_params, resample);
+    if (retval < 0) {
+        blast_err("Resampling setup failed for playback: %s", snd_strerror(retval));
+        return retval;
     }
     /* set the interleaved read/write format */
-    err = snd_pcm_hw_params_set_access(handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED);
-    if (err < 0) {
-        blast_err("Access type not available for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_set_access(handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED);
+    if (retval < 0) {
+        blast_err("Access type not available for playback: %s", snd_strerror(retval));
+        return retval;
     }
     /* set the sample format */
-    err = snd_pcm_hw_params_set_format(handle, hw_params, format);
-    if (err < 0) {
-        blast_err("Sample format not available for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_set_format(handle, hw_params, format);
+    if (retval < 0) {
+        blast_err("Sample format not available for playback: %s", snd_strerror(retval));
+        return retval;
     }
     /* set the count of channels */
-    err = snd_pcm_hw_params_set_channels(handle, hw_params, channels);
-    if (err < 0) {
-        blast_err("Channels count (%i) not available for playbacks: %s", channels, snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_set_channels(handle, hw_params, channels);
+    if (retval < 0) {
+        blast_err("Channels count (%i) not available for playbacks: %s", channels, snd_strerror(retval));
+        return retval;
     }
     /* set the stream rate */
     rrate = rate;
-    err = snd_pcm_hw_params_set_rate_near(handle, hw_params, &rrate, 0);
-    if (err < 0) {
-        blast_err("Rate %iHz not available for playback: %s", rate, snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_set_rate_near(handle, hw_params, &rrate, 0);
+    if (retval < 0) {
+        blast_err("Rate %iHz not available for playback: %s", rate, snd_strerror(retval));
+        return retval;
     }
     if (rrate != rate) {
-        blast_err("Rate doesn't match (requested %iHz, get %iHz)", rate, err);
+        blast_err("Rate doesn't match (requested %iHz, get %iHz)", rate, retval);
         return -EINVAL;
     }
     /* set the buffer time */
-    err = snd_pcm_hw_params_set_buffer_time_near(handle, hw_params, &buffer_time, &dir);
-    if (err < 0) {
-        blast_err("Unable to set buffer time %i for playback: %s", buffer_time, snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_set_buffer_time_near(handle, hw_params, &buffer_time, &dir);
+    if (retval < 0) {
+        blast_err("Unable to set buffer time %i for playback: %s", buffer_time, snd_strerror(retval));
+        return retval;
     }
-    err = snd_pcm_hw_params_get_buffer_size(hw_params, &size);
-    if (err < 0) {
-        blast_err("Unable to get buffer size for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_get_buffer_size(hw_params, &size);
+    if (retval < 0) {
+        blast_err("Unable to get buffer size for playback: %s", snd_strerror(retval));
+        return retval;
     }
     buffer_size = size;
     /* set the period time */
-    err = snd_pcm_hw_params_set_period_time_near(handle, hw_params, &period_time, &dir);
-    if (err < 0) {
-        blast_err("Unable to set period time %i for playback: %s", period_time, snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_set_period_time_near(handle, hw_params, &period_time, &dir);
+    if (retval < 0) {
+        blast_err("Unable to set period time %i for playback: %s", period_time, snd_strerror(retval));
+        return retval;
     }
-    err = snd_pcm_hw_params_get_period_size(hw_params, &size, &dir);
-    if (err < 0) {
-        blast_err("Unable to get period size for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params_get_period_size(hw_params, &size, &dir);
+    if (retval < 0) {
+        blast_err("Unable to get period size for playback: %s", snd_strerror(retval));
+        return retval;
     }
     period_size = size;
     /* write the parameters to device */
-    err = snd_pcm_hw_params(handle, hw_params);
-    if (err < 0) {
-        blast_err("Unable to set hw params for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_hw_params(handle, hw_params);
+    if (retval < 0) {
+        blast_err("Unable to set hw params for playback: %s", snd_strerror(retval));
+        return retval;
     }
     return 0;
 }
 static int set_swparams(snd_pcm_t *handle)
 {
     snd_pcm_sw_params_t *swparams;
-    int err;
+    int retval;
 
     snd_pcm_sw_params_alloca(&swparams);
     /* get the current swparams */
-    err = snd_pcm_sw_params_current(handle, swparams);
-    if (err < 0) {
-        blast_err("Unable to determine current swparams for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_sw_params_current(handle, swparams);
+    if (retval < 0) {
+        blast_err("Unable to determine current swparams for playback: %s", snd_strerror(retval));
+        return retval;
     }
     /* start the transfer when the buffer is almost full:  (buffer_size / avail_min) * avail_min */
-    err = snd_pcm_sw_params_set_start_threshold(handle, swparams, (buffer_size / period_size) * period_size);
-    if (err < 0) {
-        blast_err("Unable to set start threshold mode for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_sw_params_set_start_threshold(handle, swparams, (buffer_size / period_size) * period_size);
+    if (retval < 0) {
+        blast_err("Unable to set start threshold mode for playback: %s", snd_strerror(retval));
+        return retval;
     }
     /* allow the transfer when at least period_size samples can be processed */
-    err = snd_pcm_sw_params_set_avail_min(handle, swparams, buffer_size);
-    if (err < 0) {
-        blast_err("Unable to set avail min for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_sw_params_set_avail_min(handle, swparams, buffer_size);
+    if (retval < 0) {
+        blast_err("Unable to set avail min for playback: %s", snd_strerror(retval));
+        return retval;
     }
 
     /* write the parameters to the playback device */
-    err = snd_pcm_sw_params(handle, swparams);
-    if (err < 0) {
-        blast_err("Unable to set sw params for playback: %s", snd_strerror(err));
-        return err;
+    retval = snd_pcm_sw_params(handle, swparams);
+    if (retval < 0) {
+        blast_err("Unable to set sw params for playback: %s", snd_strerror(retval));
+        return retval;
     }
     return 0;
 }
@@ -239,18 +239,18 @@ static void bias_tone_callback(snd_async_handler_t *ahandler)
     int16_t *samples = data->samples;
     snd_pcm_channel_area_t *areas = data->areas;
     snd_pcm_sframes_t avail;
-    int err;
+    int retval;
 
     avail = snd_pcm_avail_update(handle);
     while (avail >= period_size) {
         generate_sine(areas, 0, period_size, &data->phase);
-        err = snd_pcm_writei(handle, samples, period_size);
-        if (err < 0) {
-            blast_err("Write error: %s", snd_strerror(err));
+        retval = snd_pcm_writei(handle, samples, period_size);
+        if (retval < 0) {
+            blast_err("Write error: %s", snd_strerror(retval));
             return;
         }
-        if (err != period_size) {
-            blast_err("Write error: written %i expected %li", err, period_size);
+        if (retval != period_size) {
+            blast_err("Write error: written %i expected %li", retval, period_size);
         }
         avail = snd_pcm_avail_update(handle);
     }
@@ -260,31 +260,32 @@ void shutdown_bias_tone(void)
 {
     BLAST_SAFE_FREE(data.areas);
     BLAST_SAFE_FREE(data.samples);
-    snd_pcm_close(handle);
+    if (handle) snd_pcm_close(handle);
+    handle = NULL;
 }
 
 int initialize_bias_tone(void)
 {
-    int err;
+    int retval;
 
-    err = snd_output_stdio_attach(&output, stdout, 0);
-    if (err < 0) {
-        blast_err("Output failed: %s", snd_strerror(err));
+    retval = snd_output_stdio_attach(&output, stdout, 0);
+    if (retval < 0) {
+        blast_err("Output failed: %s", snd_strerror(retval));
         return -1;
     }
     blast_startup("Playback device is %s", device);
     blast_startup("Sine wave rate is %.4fHz", freq);
-    if ((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
-        blast_err("Playback open error: %s", snd_strerror(err));
+    if ((retval = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
+        blast_err("Playback open error: %s", snd_strerror(retval));
         goto init_err;
     }
 
-    if ((err = set_hwparams(handle)) < 0) {
-        blast_err("Setting of sound hardware params failed: %s", snd_strerror(err));
+    if ((retval = set_hwparams(handle)) < 0) {
+        blast_err("Setting of sound hardware params failed: %s", snd_strerror(retval));
         goto init_err;
     }
-    if ((err = set_swparams(handle)) < 0) {
-        blast_err("Setting of software params failed: %s", snd_strerror(err));
+    if ((retval = set_swparams(handle)) < 0) {
+        blast_err("Setting of software params failed: %s", snd_strerror(retval));
         goto init_err;
     }
 
@@ -304,8 +305,8 @@ int initialize_bias_tone(void)
     }
 
     data.phase = 0;
-    err = snd_async_add_pcm_handler(&ahandler, handle, bias_tone_callback, &data);
-    if (err < 0) {
+    retval = snd_async_add_pcm_handler(&ahandler, handle, bias_tone_callback, &data);
+    if (retval < 0) {
         blast_err("Unable to register async handler");
         goto init_err;
     }
@@ -313,22 +314,22 @@ int initialize_bias_tone(void)
 
     for (int count = 0; count < 2; count++) {
         generate_sine(data.areas, 0, period_size, &data.phase);
-        err = snd_pcm_writei(handle, data.samples, period_size);
-        if (err < 0) {
-            blast_err("Initial write error: %s", snd_strerror(err));
+        retval = snd_pcm_writei(handle, data.samples, period_size);
+        if (retval < 0) {
+            blast_err("Initial write error: %s", snd_strerror(retval));
             goto init_err;
         }
-        if (err != period_size) {
-            blast_err("Initial write error: written %i expected %li", err, period_size);
+        if (retval != period_size) {
+            blast_err("Initial write error: written %i expected %li", retval, period_size);
             goto init_err;
         }
     }
     blast_startup("Generated Sine Wave");
 
     if (snd_pcm_state(handle) == SND_PCM_STATE_PREPARED) {
-        err = snd_pcm_start(handle);
-        if (err < 0) {
-            blast_err("Start error: %s", snd_strerror(err));
+        retval = snd_pcm_start(handle);
+        if (retval < 0) {
+            blast_err("Start error: %s", snd_strerror(retval));
             goto init_err;
         }
     }
