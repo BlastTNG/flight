@@ -58,8 +58,6 @@
 
 extern int16_t SouthIAm;
 
-extern int StartupVeto;
-
 extern int16_t InCharge;
 
 int EthernetIsc = 3;
@@ -174,11 +172,8 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
     }
 
-    if (StartupVeto > 0) {
-        InCharge = 0;
-    } else {
-        InCharge = (SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
-    }
+    InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
+
     if (InCharge != incharge && InCharge) {
         blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
         CommandData.actbus.force_repoll = 1;
