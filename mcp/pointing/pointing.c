@@ -784,7 +784,7 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
 
         if (fabs(new_offset) > 500.0)
           new_offset = 0; // 5 deg step is bunk!
-        s->offset_gy = filter(new_offset, s->fs);
+        s->offset_gy = fir_filter(new_offset, s->fs);
       }
       s->since_last = 0;
       if (s->n_solutions < 10000) {
@@ -886,12 +886,12 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 	/* Do Gyro_IFroll */
 	new_offset = -(daz * cos(el) + s->ifroll_gy_int) /
 	  ((1.0/SR) * (double)s->since_last);
-	s->offset_ifroll_gy = filter(new_offset, s->fs2);;
+	s->offset_ifroll_gy = fir_filter(new_offset, s->fs2);;
 
 	/* Do Gyro_IFyaw */
 	new_offset = -(daz * sin(el) + s->ifyaw_gy_int) /
 	  ((1.0/SR) * (double)s->since_last);
-	s->offset_ifyaw_gy = filter(new_offset, s->fs3);;
+	s->offset_ifyaw_gy = fir_filter(new_offset, s->fs3);;
       }
       s->since_last = 0;
       if (s->n_solutions < 10000) {
@@ -1097,28 +1097,28 @@ void Pointing(void)
         PSSAz.trim = CommandData.pss_az_trim;
 
         ClinEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        initFir(ClinEl.fs, FIR_LENGTH);
+        init_fir(ClinEl.fs, FIR_LENGTH, 0, 0);
         EncEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        initFir(EncEl.fs, FIR_LENGTH);
+        init_fir(EncEl.fs, FIR_LENGTH, 0, 0);
         EncMotEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        initFir(EncMotEl.fs, FIR_LENGTH);
+        init_fir(EncMotEl.fs, FIR_LENGTH, 0, 0);
         MagEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        initFir(MagEl.fs, FIR_LENGTH);
+        init_fir(MagEl.fs, FIR_LENGTH, 0, 0);
 
         NullAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         NullAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        initFir(NullAz.fs2, (int) (10)); // not used
-        initFir(NullAz.fs3, (int) (10)); // not used
+        init_fir(NullAz.fs2, (int) (10), 0, 0); // not used
+        init_fir(NullAz.fs3, (int) (10), 0, 0); // not used
 
         MagAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         MagAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        initFir(MagAz.fs2, FIR_LENGTH);
-        initFir(MagAz.fs3, FIR_LENGTH);
+        init_fir(MagAz.fs2, FIR_LENGTH, 0, 0);
+        init_fir(MagAz.fs3, FIR_LENGTH, 0, 0);
 
         PSSAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         PSSAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        initFir(PSSAz.fs2, FIR_LENGTH);
-        initFir(PSSAz.fs3, FIR_LENGTH);
+        init_fir(PSSAz.fs2, FIR_LENGTH, 0, 0);
+        init_fir(PSSAz.fs3, FIR_LENGTH, 0, 0);
 
         // the first t about to be read needs to be set
         PointingData[GETREADINDEX(point_index)].t = mcp_systime(NULL); // CPU time

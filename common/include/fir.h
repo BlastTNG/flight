@@ -25,16 +25,26 @@
 #define INCLUDE_FIR_H
 
 #define NSTAGE 8
+typedef enum {
+    wind_oldblast = 0,
+    wind_blackman,
+    wind_gauss,
+    wind_lanczos,
+    wind_hamming,
+    wind_hann,
+    wind_rect
+} e_windows;
 
-struct FirStruct {
+typedef struct FirStruct {
   int i_w[NSTAGE];
   int ns;
   double *w;
   double sum[NSTAGE];
   double out;
-};
+} fir_t;
 
-void initFir(struct FirStruct *fs, int ns);
-double filter(double x, struct FirStruct *fs);
+void init_fir(fir_t *fs, int N, int window, double alpha);
+void deinit_fir(fir_t *fs);
+double fir_filter(double x, fir_t *fs);
 
 #endif
