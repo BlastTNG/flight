@@ -33,7 +33,7 @@
 #define HWPR_REV_PER_MOTREV (24./100.)
 
 #define HWPR_NAME "HWPR Motor"
-#define HWPR_ADDR EZ_WHO_S13
+#define HWPR_ADDR 13
 #define HWPR_PREAMBLE "aE64000"
 
 #define HWPR_CHECK_NONE 0
