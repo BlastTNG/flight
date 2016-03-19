@@ -291,7 +291,7 @@ int16_t rw_get_current(void)
 }
 int16_t el_get_current(void)
 {
-    return *motor_current[el_index];
+    return *motor_current[el_index]*EL_MOTOR_CURRENT_SCALING;
 }
 int16_t piv_get_current(void)
 {
@@ -359,7 +359,7 @@ void rw_set_current(int16_t m_cur)
 }
 void el_set_current(int16_t m_cur)
 {
-    *target_current[el_index] = m_cur;
+    *target_current[el_index] = m_cur*EL_MOTOR_CURRENT_SCALING;
 }
 void piv_set_current(int16_t m_cur)
 {

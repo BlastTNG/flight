@@ -689,6 +689,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case repoll:
             CommandData.actbus.force_repoll = 1;
             CommandData.hwpr.force_repoll = 1;
+#ifdef USE_XY_THREAD
+            CommandData.xystage.force_repoll = 1;
+#endif
             break;
 
             // Shutter
