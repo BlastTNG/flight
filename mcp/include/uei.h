@@ -29,7 +29,16 @@
 
 void uei_100hz_loop(void);
 void uei_1hz_loop(void);
-void *uei_loop(void *m_arg);
+
+void *uei_hwmon_loop(void *m_arg);
+
+int uei_508_read_bytes(int m_port, char *m_buf, size_t m_bytes);
+int uei_508_read_record(int m_port, char *m_buf, size_t m_buflen, const char *m_delim, uint32_t m_delimlen);
+int uei_508_write(int m_port, const char *m_buf, uint32_t m_len);
+void *uei_508_loop(void *m_arg);
+
+void *uei_225_loop(void *m_arg);
+
 int initialize_uei_of_channels(void);
 
 #endif /* INCLUDE_UEI_H_ */

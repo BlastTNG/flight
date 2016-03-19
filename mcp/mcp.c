@@ -72,6 +72,7 @@
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
+#include "xystage.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -436,7 +437,7 @@ int main(int argc, char *argv[])
   umask(0);  /* clear umask */
 
   ph_library_init();
-  ph_nbio_init(0);
+  ph_nbio_init(4);
 
   /**
    * Begin logging
@@ -532,11 +533,11 @@ int main(int argc, char *argv[])
   initialize_data_sharing();
   initialize_watchdog(2);
   if (!initialize_uei_of_channels())
-      uei_thread = ph_thread_spawn(uei_loop, NULL);
+      uei_thread = ph_thread_spawn(uei_508_loop, NULL);
   initialize_bias_tone();
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
-
+  ph_thread_t *xy_thread = ph_thread_spawn(StageBus, NULL);
   ph_sched_run();
 
 //  if (uei_thread) ph_thread_join(uei_thread, NULL);

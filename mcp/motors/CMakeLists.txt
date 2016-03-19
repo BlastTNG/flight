@@ -14,5 +14,6 @@ set(MOTOR_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/motors.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/hwpr.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/ezstep.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/xystage.h
    PARENT_SCOPE
 )

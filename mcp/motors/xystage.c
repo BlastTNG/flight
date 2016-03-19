@@ -31,6 +31,8 @@
 #include <errno.h>
 #include <math.h>
 
+#include "phenom/sysutil.h"
+
 #include "command_struct.h"
 #include "pointing_struct.h"
 #include "tx.h"
@@ -40,12 +42,12 @@
 
 
 /* EZBus setup parameters */
-#define STAGE_BUS_TTY "/dev/ttyXYSTAGE"
-#define STAGE_BUS_CHATTER EZ_CHAT_ACT
+#define STAGE_BUS_TTY 0
+#define STAGE_BUS_CHATTER EZ_CHAT_BUS
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
-#define STAGEX_ID EZ_WHO_S6
-#define STAGEY_ID EZ_WHO_S7
+#define STAGEX_ID 6
+#define STAGEY_ID 7
 
 #define STAGE_BUS_ACCEL 2
 #define STAGE_BUS_IHOLD 20
@@ -53,7 +55,7 @@
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1
-#define POLL_TIMEOUT 1500 /* 15 seconds */
+#define POLL_TIMEOUT 500 /* 15 seconds */
 
 extern int16_t InCharge; /* tx.c */
 void nameThread(const char*);	/* mcp.c */
@@ -292,6 +294,7 @@ void StageBus(void)
   struct ezbus bus;
   int chat_temp;
 
+  ph_library_init();
   nameThread("XYBus");
   bputs(startup, "startup.");
   while (!InCharge) {
@@ -303,7 +306,7 @@ void StageBus(void)
   }
   while (1) {
     if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) == EZ_ERR_OK) {
-      blast_info("Connected to %s on attempt %u.", STAGE_BUS_TTY, conn_attempt);
+      blast_info("Connected to port %d on attempt %u.", STAGE_BUS_TTY, conn_attempt);
       break;
     }
     conn_attempt++;
@@ -346,7 +349,7 @@ void StageBus(void)
 
     if (poll_timeout == 0 && !all_ok) {
       chat_temp = bus.chatter;
-      bus.chatter = EZ_CHAT_NONE;
+      // bus.chatter = EZ_CHAT_NONE;
       all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
       bus.chatter = chat_temp;
       poll_timeout = POLL_TIMEOUT;
