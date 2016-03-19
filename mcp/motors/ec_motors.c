@@ -47,6 +47,7 @@
 
 #include <blast_time.h>
 #include <calibrate.h>
+#include <command_struct.h>
 #include <ec_motors.h>
 #include <motors.h>
 #include <mcp.h>
@@ -965,6 +966,15 @@ static void* motor_control(void* arg)
         ec_SDOread(i, ECAT_CTL_WORD, false, &len, control_word[i], EC_TIMEOUTRXM);
     }
 
+    if (CommandData.disable_az) {
+        rw_disable();
+        piv_disable();
+    }
+    if (CommandData.disable_el) {
+        el_disable();
+    }
+
+
     /// Set the default current limits
     rw_init_current_limit();
     el_init_current_limit();
@@ -997,6 +1007,19 @@ static void* motor_control(void* arg)
         /// Set our wakeup time
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+        if (CommandData.disable_az) {
+            rw_disable();
+            piv_disable();
+        } else {
+            rw_enable();
+            piv_enable();
+        }
+        if (CommandData.disable_el) {
+            el_disable();
+        } else {
+            el_enable();
+        }
 
         if (ret && ret != -EINTR) {
             blast_err("error while sleeping, code %d (%s)\n", ret, strerror(-ret));
