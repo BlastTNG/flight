@@ -128,7 +128,7 @@ void mputs(buos_t flag, const char* message) {
                                           [startup] = '>',
                                           [tfatal] = '$',
                                           [warning] = '=',
-                                          [mem] = 'm',
+                                          [mem] = '@',
                                           [none] = '?'
   };
   int tid = syscall(SYS_gettid);
@@ -137,7 +137,7 @@ void mputs(buos_t flag, const char* message) {
   /// Set this here to ensure it is correct when we write.
   logfiles[0] = stdout;
 
-  if (flag == none) return;
+  if (flag == none || flag == mem) return;
 
   /* time */
   gettimeofday(&t, NULL);
