@@ -98,6 +98,7 @@ typedef struct
     uint32_t        gyro_valid_packet_count[3];
     uint8_t         index;
     int16_t         temp;
+    dsp1760_std_t   last_pkt;
     float           gyro_input[3][DSP1760_NPOLES+1];
 } dsp_storage_t;
 
@@ -269,24 +270,12 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
             return;
         }
         pkt = (dsp1760_std_t*) ph_buf_mem(buf);
+        gyro->packet_count++;
 
         crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
         if (crc_calc) {
-            blast_warn("Received invalid CRC from Gyro %d", gyro->which);
-            blast_info("Buffer size %u", (unsigned)ph_bufq_len(m_serial->rbuf));
-
             gyro->crc_error_count++;
             invalid_data = true;
-            {
-                char namebuf[32];
-                int fd;
-                ph_stream_t *stm;
-                snprintf(namebuf, sizeof(namebuf), "/tmp/gyro%d_crc_XXXXXX", gyro->which);
-                fd = ph_mkostemp(namebuf, 0);
-                stm = ph_stm_fd_open(fd, 0, PH_STM_BUFSIZE);
-                ph_stm_write(stm, pkt->raw_data, sizeof(dsp1760_std_t), NULL);
-                ph_stm_close(stm);
-            }
         }
 
         pkt->x_raw = ntohl(pkt->x_raw);
@@ -309,24 +298,10 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         }
         pkt->temp = ntohs(pkt->temp);
 
-        if (!invalid_data && pkt->sequence != (++gyro->seq_number & 0x7F)) {
-            blast_warn("Expected Sequence %d but received %d from gyro %d", gyro->seq_number, pkt->sequence,
-                       gyro->which);
-            blast_info("Buffer size %u", (unsigned)ph_bufq_len(m_serial->rbuf));
+        if (!invalid_data && gyro->packet_count > 1 &&
+                pkt->sequence != (++gyro->seq_number & 0x7F)) {
             gyro->seq_error_count++;
-            {
-                char namebuf[32];
-                int fd;
-                ph_stream_t *stm;
-                snprintf(namebuf, sizeof(namebuf), "/tmp/gyro%d_seq_XXXXXX", gyro->which);
-
-                fd = ph_mkostemp(namebuf, 0);
-                stm = ph_stm_fd_open(fd, 0, PH_STM_BUFSIZE);
-                ph_stm_write(stm, pkt->raw_data, sizeof(dsp1760_std_t), NULL);
-                ph_stm_close(stm);
-            }
         }
-        gyro->packet_count++;
 
         if (!invalid_data) {
             /***
@@ -351,21 +326,12 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
 
         if (!invalid_data) dsp1760_newvals(pkt, gyro);
 
+        memcpy(gyro->last_pkt.raw_data, pkt->raw_data, sizeof(dsp1760_std_t));
         ph_buf_delref(buf);
     }
 
     /// If we have accumulated the equivalent of 2
-    if (ph_bufq_len(m_serial->rbuf) > 10 * sizeof(dsp1760_std_t) || gyro->want_reset) {
-        char namebuf[32];
-        int fd;
-        ph_stream_t *stm;
-        snprintf(namebuf, sizeof(namebuf), "/tmp/gyro%d_over_XXXXXX", gyro->which);
-
-        fd = ph_mkostemp(namebuf, 0);
-        stm = ph_stm_fd_open(fd, 0, PH_STM_BUFSIZE);
-        ph_bufq_stm_write(m_serial->rbuf, stm, NULL);
-        ph_stm_close(stm);
-
+    if (ph_bufq_len(m_serial->rbuf) > 2 * sizeof(dsp1760_std_t) || gyro->want_reset) {
         if (gyro->want_reset) {
             blast_info("Resetting Gyro Box %d due to user command", gyro->which);
         } else {
