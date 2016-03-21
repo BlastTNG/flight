@@ -1731,6 +1731,9 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     float pv = ACSData.ifel_gy - PointingData[i_point_read].ifel_earth_gy;
 
     int16_t milliamp_return;
+    static int16_t last_milliamp = 0;
+
+    static const int16_t max_delta_mA = 5; /* Limit current increase to 5 mA/cycle or 10 A/s */
 
     if (first_time) {
         first_time = 0;
@@ -1837,6 +1840,17 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     if (milliamp_return > MAX_EL_CURRENT) milliamp_return = MAX_EL_CURRENT;
     if (milliamp_return < MIN_EL_CURRENT) milliamp_return = MIN_EL_CURRENT;
 
+    /**
+     * Limit our change in current output to be 5 mA/cycle or 10A/s
+     * NB: This needs to be disabled for feedback tuning using standard oscillation
+     * methods
+     */
+    if (milliamp_return > last_milliamp + max_delta_mA) {
+        milliamp_return = last_milliamp + max_delta_mA;
+    } else if (milliamp_return < last_milliamp - max_delta_mA) {
+        milliamp_return = last_milliamp - max_delta_mA;
+    }
+
     if (m_disabled) {
         last_pv = pv;
         I_term = 0.0;
@@ -1854,6 +1868,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     SET_FLOAT(el_integral_ch, I_step);
     SET_FLOAT(frictTermElAddr, friction_out[1]);
     SET_FLOAT(frictTermUnfiltElAddr, friction);
+    last_milliamp = milliamp_return;
     return milliamp_return;
 }
 

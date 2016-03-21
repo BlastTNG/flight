@@ -34,8 +34,8 @@ extern "C" {
 #define EL_LOAD_ENCODER_COUNTS (1 << 26) /* This is the External, absolute encoder mounted on the inner frame */
 #define EL_LOAD_COUNTS_PER_REV (1 << 26)
 //#define EL_MOTOR_ENCODER_COUNTS 655360 /* This is (1 << 19) / 0.8 to correct for the gearbox */
-#define EL_MOTOR_ENCODER_COUNTS (1 << 13) /* No gearbox */
-#define EL_MOTOR_COUNTS_PER_REV (1 << 13)
+#define EL_MOTOR_ENCODER_COUNTS (1 << 19) /* No gearbox */
+#define EL_MOTOR_COUNTS_PER_REV (1 << 19)
 
 #define RW_ENCODER_SCALING (360.0 / RW_ENCODER_COUNTS)
 #define EL_MOTOR_ENCODER_SCALING ((-1.0)*360.0 / EL_MOTOR_ENCODER_COUNTS)
