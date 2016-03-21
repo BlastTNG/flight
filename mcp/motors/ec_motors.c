@@ -969,9 +969,14 @@ static void* motor_control(void* arg)
     if (CommandData.disable_az) {
         rw_disable();
         piv_disable();
+    } else {
+        rw_enable();
+        piv_enable();
     }
     if (CommandData.disable_el) {
         el_disable();
+    } else {
+        el_enable();
     }
 
 
