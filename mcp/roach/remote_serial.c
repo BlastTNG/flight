@@ -31,8 +31,6 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
-int xsc_server_index[2] = {0, 0};
-
 static const char addresses[4][16] = {"192.168.40.1", "192.168.40.2", "192.168.40.3", "192.168.40.4"};
 static const uint16_t port = 30001;
 static const uint32_t min_backoff_sec = 5;
@@ -40,38 +38,38 @@ static const uint32_t max_backoff_sec = 30;
 extern int16_t InCharge;
 
 typedef struct {
-  int port;
-  bool connected;
-  bool have_warned_version;
-  uint32_t backoff_sec;
-  struct timeval timeout;
-  ph_job_t connect_job;
-  ph_sock_t *sock;
+    int which;
+    int port;
+    bool connected;
+    bool have_warned_version;
+    uint32_t backoff_sec;
+    struct timeval timeout;
+    ph_job_t connect_job;
+    ph_sock_t *sock;
+    ph_bufq_t *input_buffer;
 } remote_serial_t;
 
 
 /**
- * Process an incoming XSC packet or event.  If we have an error, we'll disable
- * the socket and schedule a reconnection attempt.  Otherwise, read and store the
- * camera data.
+ * Process an incoming packet or event.  If we have an error, we'll disable
+ * the socket and schedule a reconnection attempt.  Otherwise, read and store the serial string.
  *
  * @param m_sock Unused
  * @param m_why Flag indicating why the routine was called
  * @param m_data Pointer to our state data
  */
-static void xsc_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
+static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
     ph_buf_t *buf;
-    XSCServerData *data;
     remote_serial_t *state = (remote_serial_t*) m_data;
-
+    size_t buflen;
 
     /**
      * If we have an error, or do not receive data from the star camera in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
-    if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
-      blast_err("disconnecting XSC%d due to connection issue", state->which);
+    if (m_why & PH_IOMASK_ERR) {
+      blast_err("disconnecting RemoteSerial %d:%d due to connection issue", state->which, state->port);
       ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
       ph_sock_enable(m_sock, 0);
       state->connected = false;
@@ -79,31 +77,68 @@ static void xsc_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_dat
       return;
     }
 
-    buf = ph_sock_read_bytes_exact(m_sock, sizeof(XSCServerData));
-    if (!buf) return; /// We do not have enough data
+    /**
+     * If we timeout, send a CR to keep the socket alive
+     */
+    if (m_why & PH_IOMASK_TIME) ph_stm_printf(m_sock->stream, "\r");
 
-
-    ph_buf_delref(buf);
+    buflen = ph_bufq_len(m_sock->rbuf);
+    if (buflen) {
+        buf = ph_sock_read_bytes_exact(m_sock, buflen);
+        ph_bufq_append(state->input_buffer, ph_buf_mem(buf), ph_buf_len(buf), NULL);
+        ph_buf_delref(buf);
+    }
 }
 
 /**
- * Write data into the XSC sock buffer, if we are connected to the camera.
+ * Write data into the remote serial sock buffer and flush to network
  *
- * @param which 0/1 for XSC0/XSC1
  */
-void xsc_write_data(remote_serial_t *m_serial)
+int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t m_len)
 {
-    XSCClientData xsc_client_data;
-    int pointing_read_index = GETREADINDEX(point_index);
+    uint64_t written;
+    if (!m_serial->connected) return -1;
 
-    if (!m_serial->connected) return;
-
-
-    ph_stm_write(m_serial->sock->stream, &xsc_client_data, sizeof(xsc_client_data), NULL);
+    ph_stm_write(m_serial->sock->stream, m_data, m_len, &written);
+    ph_stm_flush(m_serial->sock->stream);
+    return (int)written;
 }
 
 /**
- * Handle a connection callback from @connect_xsc.  The connection may succeed or fail.
+ * Read data from the remote serial input buffer
+ *
+ */
+int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t m_size)
+{
+    ph_buf_t *buf;
+    int written = 0;
+    if (!m_serial->connected) return -1;
+
+    buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
+    if (buf) {
+        memcpy(m_buffer, ph_buf_mem(buf), m_size);
+        ph_buf_delref(buf);
+        written = m_size;
+    }
+    return written;
+}
+
+int remote_serial_flush(remote_serial_t *m_serial)
+{
+    ph_buf_t *buf;
+
+    if (!m_serial->connected) return -1;
+
+    buf = ph_bufq_consume_bytes(m_serial->input_buffer, ph_bufq_len(m_serial->input_buffer));
+    ph_buf_delref(buf);
+
+    buf = ph_bufq_consume_bytes(m_serial->sock->rbuf, ph_bufq_len(m_serial->input_buffer));
+    ph_buf_delref(buf);
+
+    return 0;
+}
+/**
+ * Handle a connection callback.  The connection may succeed or fail.
  * If it fails, we increase the backoff time and reschedule another attempt.
  *
  * @param m_sock Pointer to the new sock that is created on a successful connection
@@ -111,7 +146,7 @@ void xsc_write_data(remote_serial_t *m_serial)
  * @param m_errcode If the status indicates an error, this value is the errno
  * @param m_addr Unused
  * @param m_elapsed Unused
- * @param m_data Pointer to our XSC State variable
+ * @param m_data Pointer to our Remote Serial State variable
  */
 static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_sockaddr_t *m_addr,
                       struct timeval *m_elapsed, void *m_data)
@@ -137,7 +172,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
             return;
     }
 
-    blast_info("Connected to XSC%d at %s", state->which, addresses[state->which]);
+    blast_info("Connected to ROACH%d at %s", state->which, addresses[state->which]);
 
     /// If we had an old socket from an invalid connection, free the reference here
     if (state->sock) ph_sock_free(state->sock);
@@ -145,7 +180,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     state->sock = m_sock;
     state->connected = true;
     state->backoff_sec = min_backoff_sec;
-    m_sock->callback = xsc_process_packet;
+    m_sock->callback = remote_serial_process_packet;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
 }
@@ -156,7 +191,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
  *
  * @param m_job Unused
  * @param m_why Unused
- * @param m_data Pointer to the XSC State variable
+ * @param m_data Pointer to the Remote Serial State variable
  */
 static void connect_remote_serial(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 {
@@ -176,11 +211,11 @@ static void connect_remote_serial(ph_job_t *m_job, ph_iomask_t m_why, void *m_da
  *
  * @param m_which 0,1,2,3 for ROACH0, ROACH1, ROACH2 or ROACH3
  */
-remote_serial_t *remote_serial_init(const char *m_address, int m_port)
+remote_serial_t *remote_serial_init(int *m_which, int m_port)
 {
     remote_serial_t *new_port = calloc(1, sizeof(remote_serial_t));
 
-    blast_dbg("Remote Serial Init for %s", m_address);
+    blast_dbg("Remote Serial Init for %s", addresses[m_which]);
 
     new_port->connected = false;
     new_port->have_warned_version = false;
@@ -193,4 +228,6 @@ remote_serial_t *remote_serial_init(const char *m_address, int m_port)
     new_port->connect_job.data = new_port;
 
     ph_job_dispatch_now(&(new_port->connect_job));
+
+    return new_port;
 }
