@@ -271,12 +271,6 @@ derived_tng_t derived_list[] = {
     BITWORD("BUSY_2_ACT", "flags_act", 4, 1),
     BITWORD("BAD_MOVE_ACT", "flags_act", 5, 1),
 
-    BITWORD("BISS_CRC_ERR_EL", "mc_el_biss_status", 0, 1),
-    BITWORD("BISS_NO_DATA_EL", "mc_el_biss_status", 1, 1),
-    BITWORD("BISS_ERR_BIT_EL", "mc_el_biss_status", 2, 1),
-    BITWORD("BISS_WARN_BIT_EL", "mc_el_biss_status", 3, 1),
-    BITWORD("BISS_ENC_DELAY_EL", "mc_el_biss_status", 4, 1),
-
     BITWORD("LATCHED_DATA_CRC_EL", "latched_fault_el", 0, 1),
     BITWORD("LATCHED_AMP_INT_EL", "latched_fault_el", 1, 1),
     BITWORD("LATCHED_SHORT_CIRC_EL", "latched_fault_el", 2, 1),

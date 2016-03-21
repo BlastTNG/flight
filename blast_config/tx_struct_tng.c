@@ -91,7 +91,7 @@ channel_t channel_list[] =
     { "td_lhe_filter",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 9, 0 },
     { "td_hwp",           SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 3, 0 },
 
-    { "225_ch0",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 0, 0 },
+    { "225_ch0",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_200HZ, SRC_OF_UEI, U_V_V, 2, 0, 0 },
     { "225_ch1",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 1, 0 },
     { "225_ch2",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 2, 0 },
     { "225_ch3",          2.5 / UINT32_MAX,  -1.25, TYPE_UINT32, RATE_100HZ, SRC_OF_UEI, U_V_V, 2, 3, 0 },
@@ -823,8 +823,6 @@ channel_t channel_list[] =
     { "mc_piv_vel",          PIV_RESOLVER_SCALING * 0.1, 0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_V_DPS, 0, 0, 0 },
     { "mc_piv_pos",          PIV_RESOLVER_SCALING,      0.0, TYPE_INT32, RATE_100HZ, SRC_FC, U_D_DEG, 0, 0, 0 },
 
-    { "mc_el_biss_status",   SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
-
     {"control_word_read_el", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     {"control_word_read_rw", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     {"control_word_read_piv", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
@@ -896,6 +894,7 @@ channel_t channel_list[] =
 
     { "uei_of_1hz_framecount",   SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_1HZ,   SRC_OF_UEI, U_NONE, 0, 0, 0 },
     { "uei_of_100hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, SRC_OF_UEI, U_NONE, 0, 0, 0 },
+    { "uei_of_200hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, SRC_OF_UEI, U_NONE, 0, 0, 0 },
 
     { "mcp_1hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ,   SRC_FC, U_NONE, 0, 0, 0 },
     { "mcp_5hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_5HZ,   SRC_FC, U_NONE, 0, 0, 0 },

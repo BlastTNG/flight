@@ -110,8 +110,6 @@ static int32_t dummy_write_var = 0;
 /// Read words
 static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
 static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
-static uint32_t *enc_state[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
-                                      (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
 static int32_t *actual_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var, &dummy_var };
 static int16_t *motor_current[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var,
                                          (int16_t*) &dummy_var, (int16_t*) &dummy_var };
@@ -126,9 +124,6 @@ static uint32_t *latched_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*)
                                              (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
 static uint16_t *control_word_read[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
                                               (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
-static uint16_t *network_status[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
-                                           (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
-
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var,
                                          (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var };
@@ -168,24 +163,6 @@ int16_t piv_get_ctl_word(void)
 {
     return *control_word_read[piv_index];
 }
-
-/**
- * This set of functions returns the networks status word of each motor controller
- * @return uint16 network status word bitmap
- */
-uint16_t rw_get_net_status(void)
-{
-    return *network_status[rw_index];
-}
-int16_t el_get_net_status(void)
-{
-    return *network_status[el_index];
-}
-int16_t piv_get_net_status(void)
-{
-    return *network_status[piv_index];
-}
-
 
 /**
  * This set of functions return the absolute position read by each motor controller
@@ -263,23 +240,6 @@ int32_t el_get_velocity(void)
 int32_t piv_get_velocity(void)
 {
     return *motor_velocity[piv_index];
-}
-
-/**
- * This set of functions return the state bits of the external encoder if it exists
- * @return int32 value of the velocity in counts per second
- */
-uint32_t rw_get_load_state(void)
-{
-    return *enc_state[rw_index];
-}
-uint32_t el_get_load_state(void)
-{
-    return *enc_state[el_index];
-}
-uint32_t piv_get_load_state(void)
-{
-    return *enc_state[piv_index];
 }
 
 /**
@@ -750,14 +710,12 @@ static void map_index_vars(int m_index)
 
     PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
     PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
-    PDO_SEARCH_LIST(ECAT_LOAD_STATUS, enc_state);
     PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
     PDO_SEARCH_LIST(ECAT_DRIVE_STATUS, status_register);
     PDO_SEARCH_LIST(ECAT_CTL_STATUS, status_word);
     PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
     PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
     PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
-    PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status);
 #undef PDO_SEARCH_LIST
 
     // TODO(seth): Add dynamic mapping to outputs
@@ -851,9 +809,7 @@ static void read_motor_data()
     RWMotorData[motor_i].motor_position = rw_get_position();
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
-    RWMotorData[motor_i].load_state = rw_get_load_state();
     RWMotorData[motor_i].state = rw_get_ctl_word();
-    RWMotorData[motor_i].net_status = rw_get_net_status();
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     ElevMotorData[motor_i].drive_info = el_get_status_word();
@@ -863,9 +819,7 @@ static void read_motor_data()
     ElevMotorData[motor_i].motor_position = el_get_motor_position();
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
-    ElevMotorData[motor_i].load_state = el_get_load_state();
     ElevMotorData[motor_i].state = el_get_ctl_word();
-    ElevMotorData[motor_i].net_status = el_get_net_status();
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
@@ -874,9 +828,7 @@ static void read_motor_data()
     PivotMotorData[motor_i].position = piv_get_position();
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
-    PivotMotorData[motor_i].load_state = piv_get_load_state();
     PivotMotorData[motor_i].state = piv_get_ctl_word();
-    PivotMotorData[motor_i].net_status = piv_get_net_status();
 
     motor_index = INC_INDEX(motor_index);
 }
