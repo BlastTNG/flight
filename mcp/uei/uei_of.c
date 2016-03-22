@@ -38,7 +38,7 @@
 static channel_t *uei_of_channels[6][48] = {{NULL}};
 static uint32_t num_of_channels[6] = {0};
 
-static double frequency = 200.0;
+static double frequency = 1000.0;
 static int hd_of = 0;
 static int hd_225 = 0;
 static int hd_508 = 0;
@@ -360,14 +360,15 @@ int initialize_uei_of_channels(void)
         goto uei_init_err;
     }
 
+    hd_225 = hd_of;
     if ((ret = DqRtDmapInit(hd_225, &dmapid_225, frequency)) < 0) {
         blast_err("Could not initialize DMAP: %s", DqTranslateError(ret));
     }
 
-    hd_508 = hd_of;
-    if ((ret = DqRtVmapInit(hd_508, &vmapid_508, 0.1)) < 0) {
-        blast_err("Could not initialize VMAP: %s", DqTranslateError(ret));
-    }
+//    hd_508 = hd_of;
+//    if ((ret = DqRtVmapInit(hd_508, &vmapid_508, 0.1)) < 0) {
+//        blast_err("Could not initialize VMAP: %s", DqTranslateError(ret));
+//    }
 
     return 0;
 uei_init_err:
