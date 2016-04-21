@@ -202,6 +202,60 @@ void framing_publish_200hz(void)
     }
 }
 
+
+static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
+{
+    RATE_LOOKUP_T *rate;
+    SRC_LOOKUP_T *src;
+
+    if (!m_src || !m_rate) {
+        blast_err("Err in pointers");
+        return;
+    }
+    if (!m_len) {
+        blast_warn("Zero-length string for frame");
+        return;
+    }
+
+    for (rate = RATE_LOOKUP_TABLE; rate->position < RATE_END; rate++) {
+        if (strncasecmp(rate->text, m_rate, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
+    }
+    if (rate->position == RATE_END) {
+        blast_err("Did not recognize rate %s!", m_rate);
+        return;
+    }
+
+    // TODO(laura) Think about mapping FC1/FC2
+    for (src = SRC_LOOKUP_TABLE; src->position < SRC_END; src++) {
+        if (strncasecmp(src->text, m_src, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
+    }
+    if (src->position == SRC_END) {
+        blast_err("Did not recognize source %s", m_src);
+        return;
+    }
+
+    if (src->position == SRC_IF_UEI || src->position == SRC_OF_UEI)
+        channels_store_data(src->position, rate->position, m_data, m_len);
+}
+
+static void framing_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
+{
+    char **topics;
+    int count;
+    static uint32_t last_crc = 0;
+    static uint32_t last_derived_crc = 0;
+
+    if (message->payloadlen) {
+        if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
+            if (count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
+                framing_handle_data(topics[1], topics[3], message->payload, message->payloadlen);
+            }
+            mosquitto_sub_topic_tokens_free(&topics, count);
+        }
+    }
+    fflush(stdout);
+}
+
 /**
  * Initializes the mosquitto library and associated framing routines.
  * @return
@@ -228,6 +282,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
         return -1;
     }
     mosquitto_log_callback_set(mosq, frame_log_callback);
+    mosquitto_message_callback_set(mosq, framing_message_callback);
 
     if (mosquitto_connect_async(mosq, host, port, keepalive)) {
         fprintf(stderr, "Unable to connect.\n");
@@ -241,6 +296,9 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
         blast_err("Exiting framing routine because we cannot get the channel list");
         return -1;
     }
+
+    mosquitto_subscribe(mosq, NULL, "frames/of_uei/#", 2);
+    mosquitto_subscribe(mosq, NULL, "frames/if_uei/#", 2);
 
     mosquitto_reconnect_delay_set(mosq, 1, 10, 1);
     mosquitto_loop_start(mosq);
