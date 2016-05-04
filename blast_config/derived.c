@@ -180,6 +180,7 @@ derived_tng_t derived_list[] = {
     BITWORD("C_A_ADC_MAX_IN_CC2", "alarm_hi_cc2", 2, 1),
     BITWORD("C_A_RESET_CC2", "alarm_hi_cc2", 3, 1),
 
+    BITWORD("DO_UEI_OF_TEST", "uei_of_dig_out", 0, 0),
 
       #endif
 

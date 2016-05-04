@@ -37,7 +37,7 @@ int uei_508_read_record(int m_port, char *m_buf, size_t m_buflen, const char *m_
 int uei_508_write(int m_port, const char *m_buf, uint32_t m_len);
 void *uei_508_loop(void *m_arg);
 
-void *uei_225_loop(void *m_arg);
+void *uei_dmap_update_loop(void *m_arg);
 
 int initialize_uei_of_channels(void);
 

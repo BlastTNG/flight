@@ -31,19 +31,21 @@
 #include "phenom/buffer.h"
 
 #include "channels_tng.h"
+#include "command_struct.h"
 #include "blast_time.h"
 #include "mcp.h"
-#include "fir.h"
+
+#define MAX_UEI_OF_CHANNELS (48 + 24 + 32) /* DIO448 + AI225 + AI201 Change when adding cards! */
 
 static channel_t *uei_of_channels[6][48] = {{NULL}};
 static uint32_t num_of_channels[6] = {0};
 
-static double frequency = 1000.0;
-static int hd_of = 0;
-static int hd_225 = 0;
-static int hd_508 = 0;
+static double frequency = 200.0;
+static int hd_of = 0;       // Base UEI handle
+static int hd_dmap = 0;     // DMAP UEI handle
+static int hd_508 = 0;      // Serial card UEI handle
 
-static int dmapid_225 = 0;
+static int dmapid = 0;
 static int vmapid_508 = 0;
 
 #define CFG_508(OPER, MODE, BAUD, WIDTH, STOP, PARITY, ERROR) \
@@ -56,12 +58,9 @@ static int vmapid_508 = 0;
 #define CFG_232(_BAUD) CFG_508(DQ_SL501_OPER_NORM, DQ_SL501_MODE_232, _BAUD, \
     DQ_SL501_WIDTH_8, DQ_SL501_STOP_1, DQ_SL501_PARITY_NONE, 0)
 
+static double raw_dmap_input[MAX_UEI_OF_CHANNELS] = {0};
+
 static double diag_data[28] = {0.0};
-
-static int bias_ch = 0;
-static double bias_data[50] = {0.0};
-static struct FirStruct uei_input[50] = {{{0.0}}};
-
 static uint32_t raw_diag_data[28] = {0};
 
 static ph_bufq_t *SL508_write_buffer[8] = {NULL};
@@ -199,56 +198,61 @@ void *uei_508_loop(void *m_arg)
     return NULL;
 }
 
-void *uei_225_loop(void *m_arg) {
+void *uei_dmap_update_loop(void *m_arg) {
 	int ret;
     uint32_t chentry;
 	struct timespec next;
 	uint64_t periodns = ((double)(NSEC_PER_SEC) / frequency);
 
-    ph_thread_set_name("UEI225");
-    blast_startup("Starting UEI 225 loop");
+    ph_thread_set_name("OF_DMP");
+    blast_startup("Starting UEI OF DMap loop");
 
     /**
      * Add all channels except those read out through the diagnostic interface
      */
     for (channel_t *ch = channel_list; ch->field[0]; ch++) {
-        if ((ch->source != SRC_OF_UEI) || ch->board != 2) continue;
+        /**
+         * Only select out frame UEI channels and ignore any listing board numbers
+         * larger than number of slots available on UEI
+         */
+        if ((ch->source != SRC_OF_UEI) || ch->board > 5) continue;
         chentry = ch->chan | DQ_LNCL_GAIN(0) | DQ_LNCL_DIFF;
-        if (ch->board == 2 && ch->chan == 24) bias_ch = num_of_channels[ch->board];
         uei_of_channels[ch->board][num_of_channels[ch->board]++] = ch;
-        DqRtDmapAddChannel(hd_225, dmapid_225, ch->board, DQ_SS0IN, &chentry, 1);
-    }
-    for (int i = 0; i < num_of_channels[2]; i++) {
-        init_fir(&uei_input[i], frequency/2, 0, 0);
+        DqRtDmapAddChannel(hd_dmap, dmapid, ch->board, DQ_SS0IN, &chentry, 1);
     }
 
+    /**
+     * Add the Digital output channel to the DMAP.  WARNING! This is hard-coded
+     * and will need to be changed if the physical order of the UEI boards
+     * change!
+     */
+    DqRtDmapAddChannel(hd_dmap, dmapid, 3, DQ_SS0OUT, 0, 0);
+
     // Start the layers
-    DqRtDmapStart(hd_225, dmapid_225);
+    DqRtDmapStart(hd_dmap, dmapid);
 
     clock_gettime(CLOCK_MONOTONIC, &next);
 
     while (!shutdown_mcp) {
-		ret = DqRtDmapRefresh(hd_225, dmapid_225);
+        DqRtDmapWriteRawData32(hd_dmap, dmapid, 3, &(CommandData.uei_command.uei_of_dio_432_out), 1);
+
+		ret = DqRtDmapRefresh(hd_dmap, dmapid);
 		if (ret < 0) {
 			blast_err("DqRtDmapRefresh: error %d", ret);
 		}
 
-        if ((ret = DqRtDmapReadScaledData(hd_225, dmapid_225, 2, bias_data, num_of_channels[2])) < 0) {
+        if ((ret = DqRtDmapReadScaledData(hd_dmap, dmapid, 2, raw_dmap_input, num_of_channels[2])) < 0) {
             blast_err("Could not read scaled data from DMAP");
             continue;
-        }
-
-        for (int i = 0; i < num_of_channels[2]; i++) {
-            fir_filter(bias_data[i] * bias_data[bias_ch], &uei_input[i]);
         }
 
 		timespec_add_ns(&next, periodns);
 		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next, NULL);
 	}
 
-    DqRtDmapStop(hd_225, dmapid_225);
-    DqRtDmapClose(hd_225, dmapid_225);
-	DqCloseIOM(hd_225);
+    DqRtDmapStop(hd_dmap, dmapid);
+    DqRtDmapClose(hd_dmap, dmapid);
+	DqCloseIOM(hd_dmap);
 
 	return NULL;
 }
@@ -288,11 +292,6 @@ static void uei_of_store_hk(void)
 	SET_UINT32(uei_of_temp2_channel, raw_diag_data[DQ_LDIAG_ADC_TEMP1]);
 }
 
-double uei_getval(int m_ch)
-{
-    return uei_input[m_ch].out;
-}
-
 void uei_1hz_loop(void)
 {
     uei_of_store_hk();
@@ -300,29 +299,12 @@ void uei_1hz_loop(void)
 
 void uei_100hz_loop(void)
 {
-    static channel_t *uei_of_ch_lock[25] = {NULL};
-
-    if (!uei_of_ch_lock[0]) {
-        for (int i = 0; i < 11; i++) {
-            char channel_name[NAME_MAX];
-            snprintf(channel_name, sizeof(channel_name), "225_ch%d_lock", i);
-            uei_of_ch_lock[i] = channels_find_by_name(channel_name);
-        }
-        uei_of_ch_lock[11] = channels_find_by_name("225_ch24_lock");
-    }
-
-    for (int i = 0; i <= 11; i++) {
-        SET_SCALED_VALUE(uei_of_ch_lock[i], uei_getval(i));
-    }
-
     for (int i = 0; i < 6; i++) {
-        if (num_of_channels[i]) {
-            for (int ch = 0; ch < num_of_channels[i]; ch++) {
-                if (!uei_of_channels[i][ch])
-                    blast_dbg("no channel here!");
-                else
-                    SET_SCALED_VALUE(uei_of_channels[i][ch], bias_data[ch]);
-            }
+        for (int ch = 0; ch < num_of_channels[i]; ch++) {
+            if (!uei_of_channels[i][ch])
+                blast_dbg("no channel here!");
+            else
+                SET_SCALED_VALUE(uei_of_channels[i][ch], raw_dmap_input[ch]);
         }
     }
 }
@@ -349,10 +331,9 @@ int initialize_uei_of_channels(void)
         goto uei_init_err;
     }
 
-    if ((ret = DqAddIOMPort(hd_of, &hd_225, DQ_UDP_DAQ_PORT + 1, 1000)) < 0) {
-        blast_err("Error %d adding 225 port", ret);
-        DqCloseIOM(hd_of);
-        return -1;
+    if ((ret = DqAddIOMPort(hd_of, &hd_dmap, DQ_UDP_DAQ_PORT + 1, 1000)) < 0) {
+        blast_err("Error %d adding DMAP port", ret);
+        goto uei_init_err;
     }
 
     if ((ret = DqAddIOMPort(hd_of, &hd_508, DQ_UDP_DAQ_PORT + 2, 1000)) < 0) {
@@ -360,8 +341,7 @@ int initialize_uei_of_channels(void)
         goto uei_init_err;
     }
 
-    hd_225 = hd_of;
-    if ((ret = DqRtDmapInit(hd_225, &dmapid_225, frequency)) < 0) {
+    if ((ret = DqRtDmapInit(hd_dmap, &dmapid, frequency)) < 0) {
         blast_err("Could not initialize DMAP: %s", DqTranslateError(ret));
     }
 
@@ -372,8 +352,8 @@ int initialize_uei_of_channels(void)
 
     return 0;
 uei_init_err:
-    if (hd_225)DqCloseIOM(hd_225);
-    hd_225 = 0;
+    if (hd_dmap)DqCloseIOM(hd_dmap);
+    hd_dmap = 0;
     if (hd_508)DqCloseIOM(hd_508);
     hd_508 = 0;
     if (hd_of)DqCloseIOM(hd_of);
