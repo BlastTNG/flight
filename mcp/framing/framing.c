@@ -233,9 +233,6 @@ static void framing_handle_data(const char *m_src, const char *m_rate, const voi
         blast_err("Did not recognize source %s", m_src);
         return;
     }
-
-    if (src->position == SRC_IF_UEI || src->position == SRC_OF_UEI)
-        channels_store_data(src->position, rate->position, m_data, m_len);
 }
 
 static void framing_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
@@ -296,9 +293,6 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
         blast_err("Exiting framing routine because we cannot get the channel list");
         return -1;
     }
-
-    mosquitto_subscribe(mosq, NULL, "frames/of_uei/#", 2);
-    mosquitto_subscribe(mosq, NULL, "frames/if_uei/#", 2);
 
     mosquitto_reconnect_delay_set(mosq, 1, 10, 1);
     mosquitto_loop_start(mosq);
