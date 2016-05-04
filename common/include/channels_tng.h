@@ -43,7 +43,8 @@
 	_(x, 1HZ)					\
 	_(x, 5HZ)					\
 	_(x, 100HZ)					\
-	_(x, 200HZ)
+	_(x, 200HZ)                 \
+	_(x, 244HZ)
 
 BLAST_LOOKUP_TABLE(RATE, static);
 
