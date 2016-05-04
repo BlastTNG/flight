@@ -481,8 +481,7 @@ static void piv_init_resolver(void)
  */
 static int find_controllers(void)
 {
-    /// TODO: Update find_controllers to utilize specific adapter for motor controllers (control via system)
-    char name[16] = "eth1";
+    char name[16] = "eth0";
     int ret_init;
     int ret_config;
 
@@ -912,10 +911,8 @@ static void* motor_control(void* arg)
      * Get the current value of each RX word to avoid stomping on the current state
      */
     for (int i = 1; i <= ec_slavecount; i++) {
-        len = 4;
-        ec_SDOread(i, ECAT_CURRENT_LOOP_CMD, false, &len, target_current[i], EC_TIMEOUTRXM);
-        len = 2;
-        ec_SDOread(i, ECAT_CTL_WORD, false, &len, control_word[i], EC_TIMEOUTRXM);
+        target_current[i] = 0;
+        control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
     }
 
     if (CommandData.disable_az) {
