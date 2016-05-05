@@ -226,6 +226,10 @@ typedef struct XSCCommandStruct
     double el_trim;
 } XSCCommandStruct;
 
+typedef struct
+{
+    uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
+} uei_commands_t;
 
 struct CommandDataStruct {
   uint16_t command_count;
@@ -244,6 +248,8 @@ struct CommandDataStruct {
   uint32_t iridium_bw;
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
+
+  uei_commands_t uei_command;
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
