@@ -245,7 +245,7 @@ void *uei_dmap_update_loop(void *m_arg) {
 
 		for (int i = 0; i < 6; i++) {
 		    if (num_of_channels[i]) {
-                if ((ret = DqRtDmapReadScaledData(hd_dmap, dmapid, 2, raw_dmap_input[i], num_of_channels[i])) < 0) {
+                if ((ret = DqRtDmapReadScaledData(hd_dmap, dmapid, i, raw_dmap_input[i], num_of_channels[i])) < 0) {
                     blast_err("Could not read scaled data from DMAP");
                     continue;
                 }
