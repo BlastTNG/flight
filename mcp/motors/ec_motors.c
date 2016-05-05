@@ -911,8 +911,8 @@ static void* motor_control(void* arg)
      * Get the current value of each RX word to avoid stomping on the current state
      */
     for (int i = 1; i <= ec_slavecount; i++) {
-        target_current[i] = 0;
-        control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+        *target_current[i] = 0;
+        *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
     }
 
     if (CommandData.disable_az) {
