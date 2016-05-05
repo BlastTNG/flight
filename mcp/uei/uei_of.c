@@ -331,17 +331,17 @@ int initialize_uei_of_channels(void)
         goto uei_init_err;
     }
 
-    if ((ret = DqAddIOMPort(hd_of, &hd_dmap, DQ_UDP_DAQ_PORT + 1, 1000)) < 0) {
+    if ((ret = DqAddIOMPort(hd_of, &hd_dmap, DQ_UDP_DAQ_PORT, 1000)) < 0) {
         blast_err("Error %d adding DMAP port", ret);
         goto uei_init_err;
     }
 
-    if ((ret = DqAddIOMPort(hd_of, &hd_508, DQ_UDP_DAQ_PORT + 2, 1000)) < 0) {
+    if ((ret = DqAddIOMPort(hd_of, &hd_508, DQ_UDP_DAQ_PORT, 1000)) < 0) {
         blast_err("Error %d adding 508 port", ret);
         goto uei_init_err;
     }
 
-    if ((ret = DqRtDmapInit(hd_dmap, &dmapid, frequency)) < 0) {
+    if ((ret = DqRtDmapInit(hd_of, &dmapid, frequency)) < 0) {
         blast_err("Could not initialize DMAP: %s", DqTranslateError(ret));
     }
 
