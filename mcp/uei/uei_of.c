@@ -213,7 +213,12 @@ void *uei_dmap_update_loop(void *m_arg) {
          * larger than number of slots available on UEI
          */
         if ((ch->source != SRC_OF_UEI) || ch->board > 5) continue;
-        chentry = ch->chan | DQ_LNCL_GAIN(0) | DQ_LNCL_DIFF;
+
+        if (ch->board == 2) {
+            chentry = ch->chan | DQ_LNCL_GAIN(0) | DQ_LNCL_DIFF;
+        } else {
+            chentry = ch->chan | DQ_LNCL_GAIN(0);
+        }
         uei_of_channels[ch->board][num_of_channels[ch->board]++] = ch;
         DqRtDmapAddChannel(hd_dmap, dmapid, ch->board, DQ_SS0IN, &chentry, 1);
     }
