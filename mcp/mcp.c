@@ -408,6 +408,7 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *uei_thread = NULL;
+  ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
   int use_starcams = 0;
@@ -528,7 +529,7 @@ int main(int argc, char *argv[])
 
 //  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 //  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
-//  pthread_create(&abus_id, NULL, (void*)&ActuatorBus, NULL);
+//  act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
   initialize_watchdog(2);
@@ -537,7 +538,9 @@ int main(int argc, char *argv[])
   initialize_bias_tone();
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
+#ifdef USE_XY_THREAD
   ph_thread_t *xy_thread = ph_thread_spawn(StageBus, NULL);
+#endif
   ph_sched_run();
 
 //  if (uei_thread) ph_thread_join(uei_thread, NULL);
