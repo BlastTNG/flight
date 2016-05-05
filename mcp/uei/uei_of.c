@@ -35,11 +35,6 @@
 #include "blast_time.h"
 #include "mcp.h"
 
-#define MAX_UEI_OF_CHANNELS (48 + 24 + 32) /* DIO448 + AI225 + AI201 Change when adding cards! */
-
-static channel_t *uei_of_channels[6][48] = {{NULL}};
-static uint32_t num_of_channels[6] = {0};
-
 static double frequency = 200.0;
 static int hd_of = 0;       // Base UEI handle
 static int hd_dmap = 0;     // DMAP UEI handle
@@ -58,7 +53,9 @@ static int vmapid_508 = 0;
 #define CFG_232(_BAUD) CFG_508(DQ_SL501_OPER_NORM, DQ_SL501_MODE_232, _BAUD, \
     DQ_SL501_WIDTH_8, DQ_SL501_STOP_1, DQ_SL501_PARITY_NONE, 0)
 
-static double raw_dmap_input[MAX_UEI_OF_CHANNELS] = {0};
+static channel_t *uei_of_channels[6][48] = {{NULL}};
+static uint32_t num_of_channels[6] = {0};
+static double raw_dmap_input[6][48] = {{0}};
 
 static double diag_data[28] = {0.0};
 static uint32_t raw_diag_data[28] = {0};
@@ -241,10 +238,14 @@ void *uei_dmap_update_loop(void *m_arg) {
 			blast_err("DqRtDmapRefresh: error %d", ret);
 		}
 
-        if ((ret = DqRtDmapReadScaledData(hd_dmap, dmapid, 2, raw_dmap_input, num_of_channels[2])) < 0) {
-            blast_err("Could not read scaled data from DMAP");
-            continue;
-        }
+		for (int i = 0; i < 6; i++) {
+		    if (num_of_channels[i]) {
+                if ((ret = DqRtDmapReadScaledData(hd_dmap, dmapid, 2, raw_dmap_input[i], num_of_channels[i])) < 0) {
+                    blast_err("Could not read scaled data from DMAP");
+                    continue;
+                }
+		    }
+		}
 
 		timespec_add_ns(&next, periodns);
 		clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next, NULL);
@@ -304,7 +305,7 @@ void uei_100hz_loop(void)
             if (!uei_of_channels[i][ch])
                 blast_dbg("no channel here!");
             else
-                SET_SCALED_VALUE(uei_of_channels[i][ch], raw_dmap_input[ch]);
+                SET_SCALED_VALUE(uei_of_channels[i][ch], raw_dmap_input[i][ch]);
         }
     }
 }
