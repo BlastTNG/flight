@@ -533,8 +533,8 @@ int main(int argc, char *argv[])
 
   initialize_data_sharing();
   initialize_watchdog(2);
-//  if (!initialize_uei_of_channels())
-//      uei_thread = ph_thread_spawn(uei_dmap_update_loop, NULL);
+  if (!initialize_uei_of_channels())
+      uei_thread = ph_thread_spawn(uei_dmap_update_loop, NULL);
   initialize_bias_tone();
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);

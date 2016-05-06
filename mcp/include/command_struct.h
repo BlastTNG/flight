@@ -59,6 +59,32 @@
 #define XYSTAGE_SCAN   3
 #define XYSTAGE_RASTER 4
 
+// Defines the bits responsible for each of the heaters in
+// CommandData.uei_command.uei_of_dio_432_out.
+// TODO(laura): These are for BLASTPol (taken from das.c). Get updated list from Jeff.
+// TODO(laura): move this to a separate cryo control program modeled on das.c
+#define HEAT_HELIUM_LEVEL    0x01
+#define HEAT_CHARCOAL        0x02
+#define HEAT_POT_HS          0x04
+#define HEAT_CHARCOAL_HS     0x08
+#define HEAT_JFET            0x10
+#define HEAT_BDA             0x20
+#define HEAT_CALIBRATOR      0x40
+#define HEAT_HWPR_POS        0x80
+
+#define LS_CLOSED      0x0002
+#define LS_DRIVE_OFF   0x0004
+#define LS_POT_RAIL    0x0008  // now defunct
+#define LS_DRIVE_EXT   0x0010
+#define LS_DRIVE_RET   0x0020
+#define LS_DRIVE_STP   0x0040
+#define LS_DRIVE_JIG   0x0080  // now defunct
+#define LS_DRIVE_UNK   0x0100
+#define LS_EL_OK       0x0200
+#define LS_IGNORE_EL   0x0400
+#define LS_DRIVE_FORCE 0x0800
+#define LS_DRIVE_MASK  0x09F4
+
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
 /* time (slow frames) to keep power off when power cycling devices */
