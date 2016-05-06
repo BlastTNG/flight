@@ -1,7 +1,7 @@
-/* 
- * framing.h: 
+/*
+ * remote_serial.h
  *
- * This software is copyright (C) 2013-2015 Seth Hillbrand
+ * This software is copyright (C) 2013-2014 University of Pennsylvania
  *
  * This file is part of mcp, created for the BLASTPol Project.
  *
@@ -20,29 +20,19 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * History:
- * Created on: Mar 31, 2015 by Seth Hillbrand
+ * Created on: Dec 20, 2015 by seth
  */
 
-#ifndef INCLUDE_FRAMING_H_
-#define INCLUDE_FRAMING_H_
+#ifndef INCLUDE_REMOTE_SERIAL_H_
+#define INCLUDE_REMOTE_SERIAL_H_
+#include <stddef.h>
+#include <stdint.h>
 
-#include "channel_macros.h"
-#include "derived.h"
+typedef struct remote_serial remote_serial_t;
 
-int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
-void framing_shutdown(void);
+int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t m_len);
+int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t m_size);
+int remote_serial_flush(remote_serial_t *m_serial);
+remote_serial_t *remote_serial_init(int m_which, int m_port);
 
-int32_t get_200hz_framenum(void);
-int32_t get_100hz_framenum(void);
-int32_t get_5hz_framenum(void);
-int32_t get_1hz_framenum(void);
-
-void framing_publish_244hz(void);
-void framing_publish_200hz(void);
-void framing_publish_100hz(void);
-void framing_publish_5hz(void);
-void framing_publish_1hz(void);
-
-void uei_publish_1hz(void);
-void uei_publish_100hz(void);
-#endif /* INCLUDE_FRAMING_H_ */
+#endif /* INCLUDE_REMOTE_SERIAL_H_ */

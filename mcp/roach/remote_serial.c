@@ -23,21 +23,23 @@
  *      Author: seth
  */
 
+#include <remote_serial.h>
 
+#include <unistd.h>
 
-
+#include <blast.h>
 #include "phenom/defs.h"
 #include "phenom/listener.h"
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
-static const char addresses[4][16] = {"192.168.40.1", "192.168.40.2", "192.168.40.3", "192.168.40.4"};
-static const uint16_t port = 30001;
+static const char addresses[4][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63", "192.168.40.64"};
+static const uint16_t port = 10001;
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 extern int16_t InCharge;
 
-typedef struct {
+typedef struct remote_serial {
     int which;
     int port;
     bool connected;
@@ -48,7 +50,6 @@ typedef struct {
     ph_sock_t *sock;
     ph_bufq_t *input_buffer;
 } remote_serial_t;
-
 
 /**
  * Process an incoming packet or event.  If we have an error, we'll disable
@@ -78,9 +79,9 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
     }
 
     /**
-     * If we timeout, send a CR to keep the socket alive
+     * If we timeout, send a newline to keep the socket alive
      */
-    if (m_why & PH_IOMASK_TIME) ph_stm_printf(m_sock->stream, "\r");
+    if (m_why & PH_IOMASK_TIME) ph_stm_printf(m_sock->stream, "\n");
 
     buflen = ph_bufq_len(m_sock->rbuf);
     if (buflen) {
@@ -97,7 +98,16 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
 int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t m_len)
 {
     uint64_t written;
-    if (!m_serial->connected) return -1;
+    if (!InCharge) return -2;
+    if (!m_serial->connected) {
+        m_serial->timeout.tv_sec = 5;
+        ph_job_dispatch_now(&m_serial->connect_job);
+    }
+
+    if (!m_serial->connected) {
+        blast_err("Could not connect to %s:%d", addresses[m_serial->which], m_serial->port);
+        return -1;
+    }
 
     ph_stm_write(m_serial->sock->stream, m_data, m_len, &written);
     ph_stm_flush(m_serial->sock->stream);
@@ -111,16 +121,21 @@ int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t 
 int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t m_size)
 {
     ph_buf_t *buf;
-    int written = 0;
+    int retval = -1;
+    if (!InCharge) return -2;
     if (!m_serial->connected) return -1;
 
-    buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
-    if (buf) {
-        memcpy(m_buffer, ph_buf_mem(buf), m_size);
-        ph_buf_delref(buf);
-        written = m_size;
+    while (m_serial->connected) {
+        buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
+        if (buf) {
+            memcpy(m_buffer, ph_buf_mem(buf), m_size);
+            ph_buf_delref(buf);
+            retval = m_size;
+            break;
+        }
+        usleep(1000);
     }
-    return written;
+    return retval;
 }
 
 int remote_serial_flush(remote_serial_t *m_serial)
@@ -180,6 +195,8 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     state->sock = m_sock;
     state->connected = true;
     state->backoff_sec = min_backoff_sec;
+    state->timeout.tv_sec = 1;
+    state->timeout.tv_usec = 0;
     m_sock->callback = remote_serial_process_packet;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
@@ -206,12 +223,12 @@ static void connect_remote_serial(ph_job_t *m_job, ph_iomask_t m_why, void *m_da
 }
 
 /**
- * Initialize the star camera I/O routine.  The state variable tracks each
+ * Initialize the remote serial I/O routine.  The state variable tracks each
  * camera connection and is passed to the connect job.
  *
  * @param m_which 0,1,2,3 for ROACH0, ROACH1, ROACH2 or ROACH3
  */
-remote_serial_t *remote_serial_init(int *m_which, int m_port)
+remote_serial_t *remote_serial_init(int m_which, int m_port)
 {
     remote_serial_t *new_port = calloc(1, sizeof(remote_serial_t));
 
