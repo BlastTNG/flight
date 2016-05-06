@@ -63,33 +63,39 @@
 
 #define SCALE(_type)  _type ## _M, _type ## _B
 // TODO(seth): Unify the _M, _B scale factor offset terms in a single location
+
+// UEI card device numbers
+#define ID_OFUEI_225 2
+#define ID_OFUEI_201 0
+#define ID_OFUEI_CPU 14
+
 channel_t channel_list[] =
   {
-    { "tr_he3_fridge",   SCALE(CRYO_HE3_FRIDGE), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_m5",           SCALE(CRYO_M5), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_m4",           SCALE(CRYO_M4), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_hwpr",         SCALE(CRYO_HWPR), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_horn_500",     SCALE(CRYO_HORN_500), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_horn_350",     SCALE(CRYO_HORN_350), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_horn_250",     SCALE(CRYO_HORN_250), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_300mk_strap",  SCALE(CRYO_300MK_STRAP), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_he4_pot",      SCALE(CRYO_HE4_POT), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
-    { "tr_optbox_filt",  SCALE(CRYO_OPTBOX_FILT), TYPE_UINT32, RATE_100HZ, SRC_IF_UEI, U_R_O, 0, 0, 0 },
+    { "tr_fpa_1k_a",     SCALE(CRYO_M5), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_R_O, ID_OFUEI_225, 0, 0 },
+    { "tr_fpa",          SCALE(CRYO_M4), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_R_O, ID_OFUEI_225, 1, 0 },
+    { "tr_1k_plate",     SCALE(CRYO_HWPR), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_R_O, ID_OFUEI_225, 2, 0 },
+    { "tr_300mk_strap",  SCALE(CRYO_300MK_STRAP), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_R_O, ID_OFUEI_225, 3, 0 },
+    { "tr_fpa_1k_b",     SCALE(CRYO_HORN_250), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_R_O, ID_OFUEI_225, 4, 0 },
+    { "tr_he4_pot",      SCALE(CRYO_HE4_POT), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_R_O, ID_OFUEI_225, 5, 0 },
+    { "tr_he3_fridge",   SCALE(CRYO_HE3_FRIDGE), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_R_O, ID_OFUEI_225, 6, 0 },
+    { "tr_cold_short",   SCALE(CRYO_HORN_500), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_R_O, ID_OFUEI_225, 7, 0 },
 
-    { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 10, 0 },
-    { "td_3he_fridge",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 8, 0 },
-    { "td_pumped_pot",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 1, 0 },
-    { "td_vcs1_filt",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 7, 0 },
-    { "td_250ppa",        SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 6, 0 },
-    { "td_vcs1_hx",       SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 13, 0 },
-    { "td_vcs2_hx",       SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 16, 0 },
-    { "td_m3",            SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 5, 0 },
-    { "td_vcs2",          SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 11, 0 },
-    { "td_vcs1",          SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 12, 0 },
-    { "td_m4",            SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 4, 0 },
-    { "td_ob_filter",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 2, 0 },
-    { "td_lhe_filter",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 9, 0 },
-    { "td_hwp",           SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, 0, 3, 0 },
+    { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 8, 0 },
+    { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 9, 0 },
+    { "td_250fpa",        SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 10, 0 },
+    { "td_hwp",           SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 11, 0 },
+    { "td_vcs1_hx",       SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 12, 0 },
+    { "td_1k_fridge",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 13, 0 },
+    { "td_4k_plate",      SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 14, 0 },
+    { "td_vcs1_filt",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 15, 0 },
+    { "td_m3",            SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 16, 0 },
+    { "td_charcoal",      SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 17, 0 },
+    { "td_ob_filter",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 18, 0 },
+    { "td_vcs2_plate",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 19, 0 },
+    { "td_m4",            SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 20, 0 },
+    { "td_4k_filt",       SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 21, 0 },
+    { "td_vcs2_hx",       SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 22, 0 },
+    { "td_vcs1_plate",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, SRC_OF_UEI, U_V_V, ID_OFUEI_201, 23, 0 },
 
     /* Digital Output of the UEI OF 432 card.  See derived.c for mapping */
     { "uei_of_dig_out",       0,                0,          TYPE_UINT32, RATE_200HZ, SRC_OF_UEI, U_NONE, 16, 255, 0 },

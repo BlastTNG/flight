@@ -1968,6 +1968,7 @@ void InitCommandData()
     CommandData.Cryo.lvalve_close = 0;
     CommandData.Cryo.lnvalve_on = 0;
 
+    CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
     CommandData.fast_offset_gy = 0;
 
