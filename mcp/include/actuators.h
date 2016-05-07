@@ -28,6 +28,6 @@
 
 void StoreActBus(void);
 void SecondaryMirror(void);
-
+void *ActuatorBus(void *param);
 
 #endif /* INCLUDE_ACTUATORS_H_ */
