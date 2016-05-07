@@ -1,8 +1,26 @@
 /*
  * valon.h
  *
- *  Created on: Mar 7, 2016
- *      Author: seth
+ * This software is copyright (C) 2013-2014 University of Pennsylvania
+ *
+ * This file is part of mcp, created for the BLASTPol Project.
+ *
+ * mcp is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * mcp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * History:
+ * Created on: Mar 20, 2016 by seth
  */
 
 #ifndef INCLUDE_VALON_H_
@@ -101,11 +119,6 @@ typedef struct
     uint16_t max;
 } vco_range_t;
 
-/**
- * Constructor.
- * @param[in] port The filename of the serial port device node.
- **/
-ValonSynth(const char *port);
 
 /**
  * \name Methods relating to output frequency
@@ -117,15 +130,7 @@ ValonSynth(const char *port);
  * @param[in] synth The synthesizer to be read.
  * @return Frequency in MHz.
  **/
-float get_frequency(enum Synthesizer synth);
-
-/**
- * Read the current settings from the synthesizer.
- * @param[in] synth The synthesizer to be read.
- * @param[out] frequency Receives the frequency in MHz.
- * @return True on succesful completion.
- **/
-bool get_frequency(enum Synthesizer synth, float *frequency);
+float get_frequency(remote_serial_t *m_serial, enum Synthesizer synth);
 
 /**
  * Set the synthesizer to the desired frequency, or best approximation based
@@ -135,8 +140,8 @@ bool get_frequency(enum Synthesizer synth, float *frequency);
  *                      determined by the minimum and maximum VCO frequency.
  * @param[in] chan_spacing The "resolution" of the synthesizer.
  **/
-bool set_frequency(enum Synthesizer synth, float frequency,
-                   float chan_spacing = 10.0f);
+bool set_frequency(remote_serial_t *m_serial, enum Synthesizer synth, float frequency,
+                   float chan_spacing);
 
 /**
  * \}
@@ -149,7 +154,7 @@ bool set_frequency(enum Synthesizer synth, float frequency,
  * channels.
  * @return The reference frequency in Hz.
  **/
-uint32_t get_reference();
+uint32_t get_reference(remote_serial_t *m_serial);
 
 
 /**
@@ -159,7 +164,7 @@ uint32_t get_reference();
  * @param reference The new reference frequency in Hz.
  * @return True on successful completion.
  **/
-bool set_reference(uint32_t reference);
+bool set_reference(remote_serial_t *m_serial, uint32_t reference);
 
 /**
  * \}
@@ -173,16 +178,7 @@ bool set_reference(uint32_t reference);
  * @param synth The synthesizer to be read.
  * @return The RF level in dbm.
  **/
-int32_t get_rf_level(enum Synthesizer synth);
-
-/**
- * Get the synthesizer RF output level. The output can be set to four
- * different levels, -4dBm, -1dBm, 2dBm, and 5dBm.
- * @param synth The synthesizer to be read.
- * @param[out] rf_level The RF level in dbm.
- * @return True on successful completion.
- **/
-bool get_rf_level(enum Synthesizer synth, int32_t &rf_level);
+int32_t get_rf_level(remote_serial_t *m_serial, enum Synthesizer synth);
 
 /**
  * Set the synthesizer RF output level. The output can be set to four
@@ -191,7 +187,7 @@ bool get_rf_level(enum Synthesizer synth, int32_t &rf_level);
  * @param rf_level The RF level in dbm.
  * @return True on successful completion.
  **/
-bool set_rf_level(enum Synthesizer synth, int32_t rf_level);
+bool set_rf_level(remote_serial_t *m_serial, enum Synthesizer synth, int32_t rf_level);
 
 /**
  * \}
@@ -208,7 +204,7 @@ bool set_rf_level(enum Synthesizer synth, int32_t rf_level);
  * @param[out] opts Receives the options.
  * @return True on successful completion.
  **/
-bool get_options(enum Synthesizer synth, struct options &opts);
+bool get_options(remote_serial_t *m_serial, enum Synthesizer synth, options_t *opts);
 
 /**
  * Set the options for a synthesizer.
@@ -216,7 +212,7 @@ bool get_options(enum Synthesizer synth, struct options &opts);
  * @param[in] opts Structure holding the new options.
  * @return True on successful completion.
  **/
-bool set_options(enum Synthesizer synth, const struct options &opts);
+bool set_options(remote_serial_t *m_serial, enum Synthesizer synth, const options_t *opts);
 
 /**
  * \}
@@ -228,22 +224,14 @@ bool set_options(enum Synthesizer synth, const struct options &opts);
  * Read the current reference source.
  * @return True if external, false if internal.
  **/
-bool get_ref_select();
-
-/**
- * Read the current reference source.
- * @param[out] e_not_i Receives the refernce source. True if external,
- *                     false if internal.
- * @return True on successful completion.
- **/
-bool get_ref_select(bool &e_not_i);
+bool get_ref_select(remote_serial_t *m_serial);
 
 /**
  * Set the reference source.
  * @param[in] e_not_i True for external, false for internal.
  * @return True on successful completion.
  **/
-bool set_ref_select(bool e_not_i);
+bool set_ref_select(remote_serial_t *m_serial, bool e_not_i);
 
 /**
  * \}
@@ -257,7 +245,7 @@ bool set_ref_select(bool e_not_i);
  * @param[out] vcor Receives the current VCO extent.
  * @return True on successful completion.
  **/
-bool get_vco_range(enum Synthesizer synth, vco_range *vcor);
+bool get_vco_range(remote_serial_t *m_serial, enum Synthesizer synth, vco_range_t *vcor);
 
 /**
  * Set the range of the VCO. This affects the allowable frequency range of
@@ -266,7 +254,7 @@ bool get_vco_range(enum Synthesizer synth, vco_range *vcor);
  * @param[in] vcor The extent to set.
  * @return True on successful completion.
  **/
-bool set_vco_range(enum Synthesizer synth, const vco_range *vcor);
+bool set_vco_range(remote_serial_t *m_serial, enum Synthesizer synth, const vco_range_t *vcor);
 
 /**
  * \}
@@ -279,7 +267,7 @@ bool set_vco_range(enum Synthesizer synth, const vco_range *vcor);
  * @param[in] synth The synthesizer to be read.
  * @return True if the synthesizer is phase locked.
  **/
-bool get_phase_lock(enum Synthesizer synth);
+bool get_phase_lock(remote_serial_t *m_serial, enum Synthesizer synth);
 
 
 /**
@@ -295,7 +283,7 @@ bool get_phase_lock(enum Synthesizer synth);
  *                   allocated and large enough to accept the label.
  * @return True on successful completion.
  **/
-bool get_label(enum Synthesizer synth, char *label);
+bool get_label(remote_serial_t *m_serial, enum Synthesizer synth, char *label);
 
 /**
  * Set the label of the specified synthesizer.
@@ -303,7 +291,7 @@ bool get_label(enum Synthesizer synth, char *label);
  * @param[in] label The new label.
  * @return True on successful completion.
  **/
-bool set_label(enum Synthesizer synth, const char *label);
+bool set_label(remote_serial_t *m_serial, enum Synthesizer synth, const char *label);
 
 /**
  * \}
@@ -314,53 +302,8 @@ bool set_label(enum Synthesizer synth, const char *label);
  * memory.
  * @return True on successful completion.
  **/
-bool flash();
+bool flash(remote_serial_t *m_serial);
 
-private:
-
-
-    Serial s;
-};
-
-inline float
-ValonSynth::get_frequency(enum ValonSynth::Synthesizer synth)
-{
-    float frequency;
-    get_frequency(synth, frequency);
-    return frequency;
-}
-
-inline uint32_t
-ValonSynth::get_reference()
-{
-    uint32_t frequency;
-    get_reference(frequency);
-    return frequency;
-}
-
-inline int32_t
-ValonSynth::get_rf_level(enum ValonSynth::Synthesizer synth)
-{
-    int32_t rf_level;
-    get_rf_level(synth, rf_level);
-    return rf_level;
-}
-
-inline bool
-ValonSynth::get_ref_select()
-{
-    bool e_not_i;
-    get_ref_select(e_not_i);
-    return e_not_i;
-}
-
-inline bool
-ValonSynth::get_phase_lock(enum ValonSynth::Synthesizer synth)
-{
-    bool locked;
-    get_phase_lock(synth, locked);
-    return locked;
-}
 
 
 #endif /* INCLUDE_VALON_H_ */

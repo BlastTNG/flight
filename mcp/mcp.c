@@ -68,6 +68,7 @@
 #include "framing.h"
 #include "hwpr.h"
 #include "motors.h"
+#include "roach.h"
 #include "uei.h"
 #include "watchdog.h"
 #include "xsc_network.h"
@@ -285,6 +286,13 @@ static int AmISouth(int *not_cryo_corner)
   return (buffer[0] == 's') ? 1 : 0;
 }
 
+static void mcp_244hz_routines(void)
+{
+//    write_roach_channels_244hz();
+
+    framing_publish_244hz();
+}
+
 static void mcp_200hz_routines(void)
 {
     store_200hz_acs();
@@ -353,10 +361,12 @@ static void mcp_1hz_routines(void)
 
 static void *mcp_main_loop(void *m_arg)
 {
-#define MCP_FREQ 200
+#define MCP_FREQ 24400
 #define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
+    int counter_244hz = 1;
+    int counter_200hz = 1;
     int counter_100hz = 1;
     int counter_5hz = 1;
     int counter_2hz = 1;
@@ -398,7 +408,14 @@ static void *mcp_main_loop(void *m_arg)
             counter_100hz = HZ_COUNTER(100);
             mcp_100hz_routines();
         }
-        mcp_200hz_routines();
+        if (!--counter_200hz) {
+            counter_200hz = HZ_COUNTER(200);
+            mcp_200hz_routines();
+        }
+        if (!--counter_244hz) {
+            counter_244hz = HZ_COUNTER(244);
+            mcp_244hz_routines();
+        }
     }
 
     return NULL;

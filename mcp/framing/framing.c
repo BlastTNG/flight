@@ -41,6 +41,7 @@ static int frame_stop;
 static struct mosquitto *mosq = NULL;
 extern int16_t SouthIAm;
 
+static int32_t mcp_244hz_framenum = -1;
 static int32_t mcp_200hz_framenum = -1;
 static int32_t mcp_100hz_framenum = -1;
 static int32_t mcp_5hz_framenum = -1;
@@ -199,6 +200,26 @@ void framing_publish_200hz(void)
     if (frame_size[SRC_FC][RATE_200HZ]) {
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[SRC_FC][RATE_200HZ], channel_data[SRC_FC][RATE_200HZ], 0, false);
+    }
+}
+
+void framing_publish_244hz(void)
+{
+    static channel_t *mcp_244hz_framenum_addr = NULL;
+    static char frame_name[32];
+
+    if (mcp_244hz_framenum_addr == NULL) {
+        mcp_244hz_framenum_addr = channels_find_by_name("mcp_244hz_framecount");
+        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/244Hz", SouthIAm + 1);
+    }
+
+    if (frame_stop) return;
+
+    mcp_244hz_framenum++;
+    SET_INT32(mcp_244hz_framenum_addr, mcp_244hz_framenum);
+    if (frame_size[SRC_FC][RATE_244HZ]) {
+        mosquitto_publish(mosq, NULL, frame_name,
+                frame_size[SRC_FC][RATE_244HZ], channel_data[SRC_FC][RATE_244HZ], 0, false);
     }
 }
 

@@ -280,6 +280,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/framing")
 # add uei objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/uei")
 
+# add roach objects
+add_subdirectory("${PROJECT_SOURCE_DIR}/roach")
+
 # add common objects
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 
@@ -314,6 +317,9 @@ define_file_basename_for_sources(mpsse)
 add_library (uei OBJECT ${UEI_SRCS} ${UEI_HEADERS})
 define_file_basename_for_sources(uei)
 
+add_library (roach OBJECT ${ROACH_SRCS} ${ROACH_HEADERS})
+define_file_basename_for_sources(roach)
+
 # add mcp objects
 add_library(mcp_obj OBJECT 
     mcp.c 
@@ -335,6 +341,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:blast_comms>
     $<TARGET_OBJECTS:mpsse>
     $<TARGET_OBJECTS:uei>
+    $<TARGET_OBJECTS:roach>
     $<TARGET_OBJECTS:mcp_obj>
     ) 
 
@@ -359,10 +366,11 @@ target_link_libraries(mcp
 
 set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
-		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${UEI_SRCS} 
+		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${UEI_SRCS}  ${ROACH_SRCS} 
 		mcp.c tx.c
 		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
 		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${UEI_HEADERS}
+		${ROACH_HEADERS}
 	    ${PROJECT_SOURCE_DIR}/include/mcp.h
 	    ${PROJECT_SOURCE_DIR}/include/tx.h
 	)
