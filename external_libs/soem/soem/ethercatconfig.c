@@ -971,38 +971,12 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
                      EndAddr = etohs(context->slavelist[slave].SM[SMc].StartAddr) + SMlength;               
                   }   
 
-                  /* bit oriented slave */
-                  if (!context->slavelist[slave].Obytes)
-                  {   
-                     context->slavelist[slave].FMMU[FMMUc].LogStart = htoel(LogAddr);
-                     context->slavelist[slave].FMMU[FMMUc].LogStartbit = BitPos;
-                     BitPos += context->slavelist[slave].Obits - 1;
-                     if (BitPos > 7)
-                     {
-                        LogAddr++;
-                        BitPos -= 8;
-                     }   
-                     FMMUsize = LogAddr - etohl(context->slavelist[slave].FMMU[FMMUc].LogStart) + 1;
-                     context->slavelist[slave].FMMU[FMMUc].LogLength = htoes(FMMUsize);
-                     context->slavelist[slave].FMMU[FMMUc].LogEndbit = BitPos;
-                     BitPos ++;
-                     if (BitPos > 7)
-                     {
-                        LogAddr++;
-                        BitPos -= 8;
-                     }   
-                  }
                   /* byte oriented slave */
-                  else
                   {
-                     if (BitPos)
-                     {
-                        LogAddr++;
-                        BitPos = 0;
-                     }   
                      context->slavelist[slave].FMMU[FMMUc].LogStart = htoel(LogAddr);
-                     context->slavelist[slave].FMMU[FMMUc].LogStartbit = BitPos;
-                     BitPos = 7;
+                     context->slavelist[slave].FMMU[FMMUc].LogStartbit = 0;
+
+                     /** TODO (seth): Static packet sizing with 8 bytes per slave */
                      FMMUsize = ByteCount;
                      if ((FMMUsize + FMMUdone)> (int)context->slavelist[slave].Obytes)
                      {
@@ -1010,8 +984,7 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
                      }
                      LogAddr += FMMUsize;
                      context->slavelist[slave].FMMU[FMMUc].LogLength = htoes(FMMUsize);
-                     context->slavelist[slave].FMMU[FMMUc].LogEndbit = BitPos;
-                     BitPos = 0;
+                     context->slavelist[slave].FMMU[FMMUc].LogEndbit = 7;
                   }
                   FMMUdone += FMMUsize;
                   context->slavelist[slave].FMMU[FMMUc].PhysStartBit = 0;
@@ -1053,25 +1026,7 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
             }
          }   
       }
-      if (BitPos)
-      {
-         LogAddr++;
-         oLogAddr = LogAddr;
-         BitPos = 0;
-         if ((segmentsize + 1) > (EC_MAXLRWDATA - EC_FIRSTDCDATAGRAM))
-         {
-            context->grouplist[group].IOsegment[currentsegment] = segmentsize;
-            if (currentsegment < (EC_MAXIOSEGMENTS - 1))
-            {
-               currentsegment++;
-               segmentsize = 1;   
-            }
-         }
-         else
-         {
-            segmentsize += 1;
-         }
-      }   
+
       context->grouplist[group].outputs = pIOmap;
       context->grouplist[group].Obytes = LogAddr;
       context->grouplist[group].nsegments = currentsegment + 1;

@@ -750,6 +750,10 @@ static void motor_configure_timing(void)
         } else {
             ec_dcsync0(i, false, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
         }
+        /**
+         * Set the SYNC Manager mode to free-running so that we get data from the drive as soon as
+         * available.  Otherwise, the data will be held until the SYNC0 time updates
+         */
         ec_SDOwrite16(i, 0x1C32, 1, 0);
     }
 }
@@ -908,7 +912,7 @@ static void* motor_control(void* arg)
     map_motor_vars();
 
     /**
-     * Get the current value of each RX word to avoid stomping on the current state
+     * Set the initial values of both commands to "safe" default values
      */
     for (int i = 1; i <= ec_slavecount; i++) {
         *target_current[i] = 0;
