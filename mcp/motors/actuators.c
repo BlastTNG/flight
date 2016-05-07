@@ -47,15 +47,16 @@ extern int16_t InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
 #define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
-#define ACT_BUS 1
+#define ACT_BUS "/dev/ttyACT"
 #define NACT 6
 #define LOCKNUM 3
 #define HWPRNUM 4
 #define SHUTTERNUM 5
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
 				 "Lock Motor", HWPR_NAME, "Shutter"};
-static const int id[NACT] = {0, 1, 2, 5, HWPR_ADDR, 8};
-
+static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
+			     EZ_WHO_S5, EZ_WHO_S13, EZ_WHO_S8};
+#define ID_ALL_ACT  EZ_WHO_G1_4
 // set microstep resolution
 #define LOCK_PREAMBLE "j256"
 #define SHUTTER_PREAMBLE "j64"
@@ -338,21 +339,20 @@ static void ServoActuators(int* goal)
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
     return;
 
-  for (i = 0; i < NACT; i++)
-      EZBus_Take(&bus, id[i]);
+  EZBus_Take(&bus, ID_ALL_ACT);
 
   UpdateDR(goal);
 
   // stop any current action
-  for (i = 0; i < NACT; i++)
-      EZBus_Stop(&bus, id[i]);
+  EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
 
   for (i = 0; i < 3; ++i) {
     // send command to each actuator, but don't run yet
     EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], sizeof(buf), buf, "A%d", goal[i]));
   }
-  for (i = 0; i < NACT; i++)
-      EZBus_Comm(&bus, id[i], "R");	  // run all act commands at once
+  EZBus_Comm(&bus, ID_ALL_ACT, "R");	  // run all act commands at once
+
+  EZBus_Release(&bus, ID_ALL_ACT);
 }
 
 static void DeltaActuators(void)
@@ -395,21 +395,17 @@ static void DoActuators(void)
 {
   int delta;
 
-  for (int i = 0; i < NACT; i++) {
-      EZBus_SetVel(&bus, id[i], CommandData.actbus.act_vel);
-      EZBus_SetAccel(&bus, id[i], CommandData.actbus.act_acc);
-      EZBus_SetIMove(&bus, id[i], CommandData.actbus.act_move_i);
-      EZBus_SetIHold(&bus, id[i], CommandData.actbus.act_hold_i);
-      EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
-  }
+  EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
+  EZBus_SetAccel(&bus, ID_ALL_ACT, CommandData.actbus.act_acc);
+  EZBus_SetIMove(&bus, ID_ALL_ACT, CommandData.actbus.act_move_i);
+  EZBus_SetIHold(&bus, ID_ALL_ACT, CommandData.actbus.act_hold_i);
+  EZBus_SetPreamble(&bus, ID_ALL_ACT, actPreamble(CommandData.actbus.act_tol));
 
   switch (CommandData.actbus.focus_mode) {
     case ACTBUS_FM_PANIC:
       bputs(warning, "Actuator Panic");
-      for (int i = 0; i < NACT; i++) {
-          EZBus_Stop(&bus, id[i]); /* terminate all strings */
-          EZBus_Comm(&bus, id[i], "n0R");	/* also stop fine correction */
-      }
+      EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
+      EZBus_Comm(&bus, ID_ALL_ACT, "n0R");	/* also stop fine correction */
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
     case ACTBUS_FM_DELTA:
@@ -458,7 +454,7 @@ void RecalcOffset(double new_gp, double new_gs)
     (t_secondary - T_SECONDARY_FOCUS) ) / ACTENC_TO_UM;
 }
 
-static int InitialiseActuator(struct ezbus* thebus, uint8_t who)
+static int InitialiseActuator(struct ezbus* thebus, char who)
 {
     char buffer[EZ_BUS_BUF_LEN];
     int i;
@@ -1416,7 +1412,7 @@ void SyncDR()
     WriteDR();
 }
 
-void ActuatorBus(void)
+void *ActuatorBus(void *param)
 {
     int all_ok = 0;
     int i;
@@ -1458,7 +1454,12 @@ void ActuatorBus(void)
         j++;
     }
 
+    blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPR_ADDR);
+    blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
+              LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
+        blast_info("Actuator %i, id[i] =%i", i, id[i]);
+        blast_info("name[i] = %s", name[i]);
         EZBus_Add(&bus, id[i], name[i]);
         if (i == LOCKNUM)
             EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
