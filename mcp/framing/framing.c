@@ -47,6 +47,7 @@ static int32_t mcp_100hz_framenum = -1;
 static int32_t mcp_5hz_framenum = -1;
 static int32_t mcp_1hz_framenum = -1;
 static int32_t uei_of_100hz_framenum = -1;
+static int32_t uei_of_200hz_framenum = -1;
 static int32_t uei_of_1hz_framenum = -1;
 
 /**
@@ -123,6 +124,25 @@ void uei_publish_100hz(void)
     if (frame_size[SRC_OF_UEI][RATE_100HZ]) {
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[SRC_OF_UEI][RATE_100HZ], channel_data[SRC_OF_UEI][RATE_100HZ], 0, false);
+    }
+}
+
+void uei_publish_200hz(void)
+{
+    static channel_t *uei_of_200hz_framenum_addr = NULL;
+    static char frame_name[32];
+    if (uei_of_200hz_framenum_addr == NULL) {
+        uei_of_200hz_framenum_addr = channels_find_by_name("uei_of_200hz_framecount");
+        snprintf(frame_name, sizeof(frame_name), "frames/of_uei/dummy/200Hz");
+    }
+
+    if (frame_stop) return;
+
+    uei_of_200hz_framenum++;
+    SET_INT32(uei_of_200hz_framenum_addr, uei_of_200hz_framenum);
+    if (frame_size[SRC_OF_UEI][RATE_200HZ]) {
+        mosquitto_publish(mosq, NULL, frame_name,
+                frame_size[SRC_OF_UEI][RATE_200HZ], channel_data[SRC_OF_UEI][RATE_200HZ], 0, false);
     }
 }
 

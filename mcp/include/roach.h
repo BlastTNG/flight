@@ -1,7 +1,7 @@
-/* 
- * actuators.h: 
+/*
+ * roach.h
  *
- * This software is copyright (C) 2013-2014 Seth Hillbrand
+ * This software is copyright (C) 2013-2014 University of Pennsylvania
  *
  * This file is part of mcp, created for the BLASTPol Project.
  *
@@ -19,15 +19,16 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * History:
- * Created on: Apr 16, 2015 by Seth Hillbrand
+ *  Created on: Apr 26, 2016
+ *      Author: seth
  */
 
-#ifndef INCLUDE_ACTUATORS_H_
-#define INCLUDE_ACTUATORS_H_
+#ifndef INCLUDE_ROACH_H_
+#define INCLUDE_ROACH_H_
 
-void StoreActBus(void);
-void SecondaryMirror(void);
-void *ActuatorBus(void *param);
+#include <stddef.h>
+#include <stdint.h>
 
-#endif /* INCLUDE_ACTUATORS_H_ */
+void write_roach_channels_244hz(void);
+
+#endif /* INCLUDE_ROACH_H_ */
