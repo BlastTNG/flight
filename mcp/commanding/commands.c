@@ -40,6 +40,7 @@
 
 #include "command_list.h"
 #include "command_struct.h"
+#include "framing.h"
 #include "mcp.h"
 #include "tx.h"
 #include "pointing_struct.h"
@@ -106,6 +107,8 @@ static void WritePrevStatus()
     berror(err, "mcp.prev_status close()");
     return;
   }
+
+  framing_publish_command_data(&CommandData);
 }
 
 /* calculate the nearest lockable elevation */

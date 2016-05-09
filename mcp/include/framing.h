@@ -26,6 +26,7 @@
 #ifndef INCLUDE_FRAMING_H_
 #define INCLUDE_FRAMING_H_
 
+#include "command_struct.h"
 #include "channel_macros.h"
 #include "derived.h"
 
@@ -42,6 +43,8 @@ void framing_publish_200hz(void);
 void framing_publish_100hz(void);
 void framing_publish_5hz(void);
 void framing_publish_1hz(void);
+
+void framing_publish_command_data(struct CommandDataStruct *m_commanddata);
 
 void uei_publish_1hz(void);
 void uei_publish_100hz(void);

@@ -34,12 +34,15 @@
 #include <blast.h>
 #include <blast_time.h>
 #include <channels_tng.h>
+#include <command_struct.h>
 #include <derived.h>
 #include <mputs.h>
 
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
+static struct mosquitto *mosq_other = NULL;
 extern int16_t SouthIAm;
+extern int16_t InCharge;
 
 static int32_t mcp_244hz_framenum = -1;
 static int32_t mcp_200hz_framenum = -1;
@@ -243,6 +246,13 @@ void framing_publish_244hz(void)
     }
 }
 
+/**
+ * Publish updated CommandData
+ */
+void framing_publish_command_data(struct CommandDataStruct *m_commanddata)
+{
+    mosquitto_publish(mosq, NULL, "commanddata", sizeof(struct CommandDataStruct), m_commanddata, 1, 1);
+}
 
 static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
@@ -280,8 +290,6 @@ static void framing_message_callback(struct mosquitto *mosq, void *userdata, con
 {
     char **topics;
     int count;
-    static uint32_t last_crc = 0;
-    static uint32_t last_derived_crc = 0;
 
     if (message->payloadlen) {
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
@@ -291,9 +299,70 @@ static void framing_message_callback(struct mosquitto *mosq, void *userdata, con
             mosquitto_sub_topic_tokens_free(&topics, count);
         }
     }
-    fflush(stdout);
 }
 
+/**
+ * Received data from "other" flight computer including CommandData struct,
+ * EtherCAT state, Flight computer temps, etc.
+ * @param mosq Pointer to mosq connection to other flight computer
+ * @param userdata
+ * @param message
+ */
+static void framing_shared_data_callback(struct mosquitto *mosq, void *userdata,
+                                         const struct mosquitto_message *message)
+{
+    char **topics;
+    int count;
+
+    if (message->payloadlen > 0) {
+        if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
+            if (topics[0] && strcmp(topics[0], "commanddata") == 0) {
+                if (!InCharge && (sizeof(CommandData) == message->payloadlen)) {
+                    memcpy(&CommandData, message->payload, message->payloadlen);
+                }
+            }
+            mosquitto_sub_topic_tokens_free(&topics, count);
+        }
+    }
+}
+
+static void framing_shared_connect_callback(struct mosquitto *m_mosq, void *obj, int rc)
+{
+    if (rc == MOSQ_ERR_SUCCESS) {
+        mosquitto_subscribe(m_mosq, NULL, "commanddata", 1);
+    }
+}
+
+int framing_shared_data_init(void)
+{
+    char id[4] = "fcX";
+    char host[4] = "fcX";
+
+    int port = 1883;
+    int keepalive = 60;
+    bool clean_session = true;
+
+    snprintf(id, sizeof(id), "fc%d", SouthIAm + 1);
+    snprintf(host, sizeof(host), "fc%d", (SouthIAm + 2) % 2 + 1);
+
+    mosq_other = mosquitto_new(id, clean_session, NULL);
+    if (!mosq_other) {
+        blast_err("mosquitto_new() failed creating other");
+        return -1;
+    }
+    mosquitto_log_callback_set(mosq_other, frame_log_callback);
+    mosquitto_message_callback_set(mosq_other, framing_shared_data_callback);
+    mosquitto_connect_callback_set(mosq_other, framing_shared_connect_callback);
+
+    if (mosquitto_connect_async(mosq_other, host, port, keepalive)) {
+        fprintf(stderr, "Unable to connect.\n");
+        return -1;
+    }
+
+    mosquitto_reconnect_delay_set(mosq_other, 1, 10, 1);
+    mosquitto_loop_start(mosq_other);
+    return 0;
+}
 /**
  * Initializes the mosquitto library and associated framing routines.
  * @return
