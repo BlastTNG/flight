@@ -35,6 +35,7 @@
 #include <blast_time.h>
 #include <channels_tng.h>
 #include <command_struct.h>
+#include <crc.h>
 #include <derived.h>
 #include <mputs.h>
 
@@ -313,12 +314,26 @@ static void framing_shared_data_callback(struct mosquitto *mosq, void *userdata,
 {
     char **topics;
     int count;
+    static int has_warned = 0;
 
     if (message->payloadlen > 0) {
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
             if (topics[0] && strcmp(topics[0], "commanddata") == 0) {
                 if (!InCharge && (sizeof(CommandData) == message->payloadlen)) {
-                    memcpy(&CommandData, message->payload, message->payloadlen);
+                    struct CommandDataStruct temp_command_data = {0};
+                    uint32_t prev_crc;
+
+                    memcpy(&temp_command_data, message->payload, message->payloadlen);
+                    prev_crc = temp_command_data.checksum;
+                    temp_command_data.checksum = 0;
+                    if (prev_crc == crc32_le(0, (uint8_t*)&temp_command_data, sizeof(temp_command_data))) {
+                        has_warned = 0;
+                        memcpy(&CommandData, &temp_command_data, sizeof(CommandData));
+                    } else if (!has_warned) {
+                        has_warned = 1;
+                        blast_err("Received invalid CommandData from in charge flight computer!"
+                                " Please check that both FCs are running the same mcp");
+                    }
                 }
             }
             mosquitto_sub_topic_tokens_free(&topics, count);

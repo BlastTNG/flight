@@ -518,6 +518,8 @@ struct CommandDataStruct {
   } ISCControl[2];
 
   struct XSCCommandStruct XSC[2];
+
+  uint32_t checksum;
 };
 
 void InitCommandData();
