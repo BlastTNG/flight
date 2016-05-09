@@ -102,11 +102,10 @@ static inline uint8_t object_subindex(uint16_t m_index, uint8_t m_subindex)
 
 typedef enum {
     ECAT_MOTOR_COLD,           //!< ECAT_MOTOR_COLD
-    ECAT_MOTOR_INIT,           //!< ECAT_MOTOR_INIT
-    ECAT_MOTOR_FOUND_PARTIAL,  //!< ECAT_MOTOR_FOUND_PARTIAL
     ECAT_MOTOR_FOUND,          //!< ECAT_MOTOR_FOUND
-    ECAT_MOTOR_RUNNING_PARTIAL,//!< ECAT_MOTOR_RUNNING_PARTIAL
-    ECAT_MOTOR_RUNNING         //!< ECAT_MOTOR_RUNNING
+    ECAT_MOTOR_MAPPED,         //!< ECAT_MOTOR_MAPPED
+    ECAT_MOTOR_RUNNING,        //!< ECAT_MOTOR_RUNNING
+    ECAT_MOTOR_LOST,
 } ec_motor_state_t;
 
 
@@ -289,6 +288,6 @@ void rw_reset_fault(void);
 void el_reset_fault(void);
 void piv_reset_fault(void);
 
-void initialize_motors(void);
+int initialize_motors(void);
 
 #endif /* INCLUDE_EC_MOTORS_H_ */

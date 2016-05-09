@@ -74,7 +74,7 @@ typedef struct {
     uint8_t     subindex;
     int         offset;
 } pdo_channel_map_t;
-static GSList *pdo_list;
+static GSList *pdo_list[4] = {NULL};
 
 
 /**
@@ -85,11 +85,6 @@ static int piv_index = 0;
 static int el_index = 0;
 
 /**
- * Ethercat driver status
- */
-static ec_motor_state_t controller_state = ECAT_MOTOR_COLD;
-
-/**
  * Memory mapping for the PDO variables
  */
 static char io_map[1024];
@@ -97,6 +92,11 @@ static char io_map[1024];
 static int motors_exit = false;
 
 #define N_MCs 4
+
+/**
+ * Ethercat driver status
+ */
+static ec_motor_state_t controller_state[N_MCs] = {ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD};
 
 /**
  * The following pointers reference data points read from/written to
@@ -481,18 +481,9 @@ static void piv_init_resolver(void)
  */
 static int find_controllers(void)
 {
-    char name[16] = "eth0";
     int ret_init;
     int ret_config;
 
-    if (controller_state == ECAT_MOTOR_COLD) {
-        if (!(ret_init = ec_init(name))) {
-            berror(err, "Could not initialize %s", name);
-            goto find_err;
-        }
-    }
-
-    controller_state = ECAT_MOTOR_INIT;
     ret_config = ec_config(false, &io_map);
     if (ret_config <= 0) {
         berror(err, "No motor controller slaves found on the network!");
@@ -674,8 +665,8 @@ static int motor_pdo_init(int m_slave)
 
     ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 1); /// There is on map in the RX PDOs
 
-    ec_SDOwrite32(m_slave, 0x2420, 0, 8);
-    ec_SDOwrite32(m_slave, 0x1010, 1, 0x65766173);
+    ec_SDOwrite32(m_slave, 0x2420, 0, 8);           // MISC settings for aborting trajectory, saving PDO map
+    ec_SDOwrite32(m_slave, 0x1010, 1, 0x65766173);  // Save all objects (the 0x65766173 is hex for 'save')
 
     return 0;
 }
@@ -836,7 +827,7 @@ static void read_motor_data()
     motor_index = INC_INDEX(motor_index);
 }
 
-void mc_readPDOassign(int Slave) {
+void mc_readPDOassign(int m_slave) {
     uint16 idxloop, nidx, subidxloop, rdat, idx, subidx;
     uint8 subcnt;
     int wkc = 0;
@@ -846,7 +837,7 @@ void mc_readPDOassign(int Slave) {
     len = sizeof(rdat);
     rdat = 0;
     /* read PDO assign subindex 0 ( = number of PDO's) */
-    wkc = ec_SDOread(Slave, ECAT_TXPDO_ASSIGNMENT, 0x00, FALSE, &len, &rdat, EC_TIMEOUTRXM);
+    wkc = ec_SDOread(m_slave, ECAT_TXPDO_ASSIGNMENT, 0x00, FALSE, &len, &rdat, EC_TIMEOUTRXM);
     rdat = etohs(rdat);
     /* positive result from slave ? */
     if ((wkc <= 0) || (rdat <= 0))  return;
@@ -858,7 +849,7 @@ void mc_readPDOassign(int Slave) {
         len = sizeof(rdat);
         rdat = 0;
         /* read PDO assign */
-        wkc = ec_SDOread(Slave, ECAT_TXPDO_ASSIGNMENT, (uint8) idxloop, FALSE, &len, &rdat, EC_TIMEOUTRXM);
+        wkc = ec_SDOread(m_slave, ECAT_TXPDO_ASSIGNMENT, (uint8) idxloop, FALSE, &len, &rdat, EC_TIMEOUTRXM);
         /* result is index of PDO */
         idx = etohl(rdat);
         if (idx <= 0) continue;
@@ -866,7 +857,7 @@ void mc_readPDOassign(int Slave) {
         len = sizeof(subcnt);
         subcnt = 0;
         /* read number of subindexes of PDO */
-        wkc = ec_SDOread(Slave, idx, 0x00, FALSE, &len, &subcnt, EC_TIMEOUTRXM);
+        wkc = ec_SDOread(m_slave, idx, 0x00, FALSE, &len, &subcnt, EC_TIMEOUTRXM);
         subidx = subcnt;
         /* for each subindex */
         for (subidxloop = 1; subidxloop <= subidx; subidxloop++) {
@@ -874,7 +865,7 @@ void mc_readPDOassign(int Slave) {
             pdo_mapping_t pdo_map = { 0 };
             len = sizeof(pdo_map);
             /* read SDO that is mapped in PDO */
-            wkc = ec_SDOread(Slave, idx, (uint8) subidxloop, FALSE, &len, &pdo_map, EC_TIMEOUTRXM);
+            wkc = ec_SDOread(m_slave, idx, (uint8) subidxloop, FALSE, &len, &pdo_map, EC_TIMEOUTRXM);
 
             channel = malloc(sizeof(pdo_channel_map_t));
             channel->index = pdo_map.index;
@@ -900,6 +891,9 @@ static void* motor_control(void* arg)
     blast_startup("Starting Motor Control");
 
     ph_thread_set_name("Motors");
+
+    ret = ec_config(false, &io_map);
+
     // TODO(seth): setup state machine for looping in motors
     find_controllers();
 
@@ -996,15 +990,23 @@ static void* motor_control(void* arg)
     return 0;
 }
 
-
 /* opens communications with motor controllers */
-void initialize_motors(void)
+int initialize_motors(void)
 {
-  memset(ElevMotorData, 0, sizeof(ElevMotorData));
-  memset(RWMotorData, 0, sizeof(RWMotorData));
-  memset(PivotMotorData, 0, sizeof(PivotMotorData));
+    char name[16] = "eth0";
+    int ret;
 
-  motor_ctl_id =  ph_thread_spawn(motor_control, NULL);
+    memset(ElevMotorData, 0, sizeof(ElevMotorData));
+    memset(RWMotorData, 0, sizeof(RWMotorData));
+    memset(PivotMotorData, 0, sizeof(PivotMotorData));
+
+    if (!(ret = ec_init(name))) {
+        berror(err, "Could not initialize %s", name);
+        return -1;
+    }
+
+    motor_ctl_id =  ph_thread_spawn(motor_control, NULL);
+    return 0;
 }
 
 void shutdown_motors(void)

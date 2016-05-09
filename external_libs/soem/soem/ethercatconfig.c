@@ -1071,64 +1071,19 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
                   ByteCount += SMlength;
                   BitCount += SMlength * 8;
                   EndAddr = etohs(context->slavelist[slave].SM[SMc].StartAddr) + SMlength;
-                  while ( (BitCount < context->slavelist[slave].Ibits) && (SMc < (EC_MAXSM - 1)) ) /* more SM for input */
+
+                  context->slavelist[slave].FMMU[FMMUc].LogStart = htoel(LogAddr);
+                  context->slavelist[slave].FMMU[FMMUc].LogStartbit = 0;
+
+                  FMMUsize = ByteCount;
+                  if ((FMMUsize + FMMUdone)> (int)context->slavelist[slave].Ibytes)
                   {
-                     SMc++;
-                     while ( (SMc < (EC_MAXSM - 1)) && (context->slavelist[slave].SMtype[SMc] != 4)) SMc++;
-                     /* if addresses from more SM connect use one FMMU otherwise break up in mutiple FMMU */
-                     if ( etohs(context->slavelist[slave].SM[SMc].StartAddr) > EndAddr ) 
-                     {
-                        break;
-                     }
-                     EC_PRINT("      SM%d\n", SMc);
-                     SMlength = etohs(context->slavelist[slave].SM[SMc].SMlength);
-                     ByteCount += SMlength;
-                     BitCount += SMlength * 8;
-                     EndAddr = etohs(context->slavelist[slave].SM[SMc].StartAddr) + SMlength;               
-                  }   
-   
-                  /* bit oriented slave */
-                  if (!context->slavelist[slave].Ibytes)
-                  {   
-                     context->slavelist[slave].FMMU[FMMUc].LogStart = htoel(LogAddr);
-                     context->slavelist[slave].FMMU[FMMUc].LogStartbit = BitPos;
-                     BitPos += context->slavelist[slave].Ibits - 1;
-                     if (BitPos > 7)
-                     {
-                        LogAddr++;
-                        BitPos -= 8;
-                     }   
-                     FMMUsize = LogAddr - etohl(context->slavelist[slave].FMMU[FMMUc].LogStart) + 1;
-                     context->slavelist[slave].FMMU[FMMUc].LogLength = htoes(FMMUsize);
-                     context->slavelist[slave].FMMU[FMMUc].LogEndbit = BitPos;
-                     BitPos ++;
-                     if (BitPos > 7)
-                     {
-                        LogAddr++;
-                        BitPos -= 8;
-                     }   
+                     FMMUsize = context->slavelist[slave].Ibytes - FMMUdone;
                   }
-                  /* byte oriented slave */
-                  else
-                  {
-                     if (BitPos)
-                     {
-                        LogAddr++;
-                        BitPos = 0;
-                     }   
-                     context->slavelist[slave].FMMU[FMMUc].LogStart = htoel(LogAddr);
-                     context->slavelist[slave].FMMU[FMMUc].LogStartbit = BitPos;
-                     BitPos = 7;
-                     FMMUsize = ByteCount;
-                     if ((FMMUsize + FMMUdone)> (int)context->slavelist[slave].Ibytes)
-                     {
-                        FMMUsize = context->slavelist[slave].Ibytes - FMMUdone;
-                     }
-                     LogAddr += FMMUsize;
-                     context->slavelist[slave].FMMU[FMMUc].LogLength = htoes(FMMUsize);
-                     context->slavelist[slave].FMMU[FMMUc].LogEndbit = BitPos;
-                     BitPos = 0;
-                  }
+                  LogAddr += FMMUsize;
+                  context->slavelist[slave].FMMU[FMMUc].LogLength = htoes(FMMUsize);
+                  context->slavelist[slave].FMMU[FMMUc].LogEndbit = 7;
+
                   FMMUdone += FMMUsize;
                   if (context->slavelist[slave].FMMU[FMMUc].LogLength)
                   {   
