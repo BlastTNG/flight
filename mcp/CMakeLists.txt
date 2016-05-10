@@ -211,6 +211,24 @@ IF(NOT ALSA_LIBRARY)
 ENDIF()
 include_directories(${ALSA_INCLUDE_DIR})
 
+# Find libmodbux
+pkg_check_modules(PC_MODBUS QUIET libmodbus)
+set(MODBUS_DEFINITIONS ${PC_MODBUS_CFLAGS_OTHER})
+
+find_path(MODBUS_INCLUDE_DIR modbus.h
+          HINTS ${PC_MODBUS_INCLUDEDIR} ${PC_MODBUS_INCLUDE_DIRS}
+          REQUIRED)
+
+find_library(MODBUS_LIBRARY NAMES libmodbus modbus
+            HINTS ${PC_MODBUS_LIBDIR} ${PC_MODBUS_LIBRARY_DIRS} REQUIRED)
+IF(NOT MODBUS_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find modbus.h.  Is libmodbus-dev installed?")
+ENDIF()
+IF(NOT MODBUS_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libmodbus.  Please install this using apt-get.")
+ENDIF()
+include_directories(${MODBUS_INCLUDE_DIR})
+
 
 # Find libusb    
 pkg_check_modules(PC_USB QUIET libusb-1.0)
@@ -351,6 +369,7 @@ define_file_basename_for_sources(mcp)
 
 target_link_libraries(mcp 
 	${ALSA_LIBRARY}
+	${MODBUS_LIBRARY}
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}
     ${MOSQ_LIBRARY}  
     ${GLIB_LIBRARY} 
