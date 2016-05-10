@@ -68,7 +68,7 @@
 #include "framing.h"
 #include "hwpr.h"
 #include "motors.h"
-#include "roach.h"
+// #include "roach.h"
 #include "uei.h"
 #include "watchdog.h"
 #include "xsc_network.h"

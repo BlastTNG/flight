@@ -406,18 +406,18 @@ struct CommandDataStruct {
 
   struct {
     enum {bal_rest, bal_manual, bal_auto} mode;
-    double level;
+    enum {pos, neg} bal_move_type;
+    uint32_t pos;
+    uint16_t vel;
+    double i_hold;
+    double i_move;
 
     // servo parameters
-    double level_on_bal;
-    double level_off_bal;
-    double level_target_bal;
+    double i_el_on_bal;
+    double i_el_off_bal;
+    double i_el_target_bal;
     double gain_bal;
-
-    // heating card parameters
-    double heat_on;
-    double heat_tset;
-  } pumps;
+  } balance;
 
   struct {
     int off;
