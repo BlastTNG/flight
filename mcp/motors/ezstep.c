@@ -375,7 +375,7 @@ int EZBus_Read(int m_port, char *m_buf, size_t m_bytes)
 // TODO(laura): Consider adding back some of the response string recovery logic from BLASTPol
 int EZBus_Recv(struct ezbus* bus)
 {
-	char full_response[EZ_BUS_BUF_LEN];
+	char full_response[EZ_BUS_BUF_LEN] = {0};
 	char* fullptr = full_response;
 	char* endptr = full_response;
     int retval = EZ_ERR_OK;

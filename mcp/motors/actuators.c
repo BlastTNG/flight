@@ -48,17 +48,19 @@ extern int16_t InCharge;		/* tx.c */
 /* actuator bus setup paramters */
 #define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
-#define NACT 6
-#define LOCKNUM 3
-#define HWPRNUM 4
-#define SHUTTERNUM 5
+#define NACT 7
+#define LOCKNUM 5
+#define BALANCENUM 4
+#define HWPRNUM 6
+#define SHUTTERNUM 7
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
-				 "Lock Motor", HWPR_NAME, "Shutter"};
+				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter"};
 static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
-			     EZ_WHO_S5, EZ_WHO_S13, EZ_WHO_S8};
+			     EZ_WHO_S4, EZ_WHO_S5, EZ_WHO_S6, EZ_WHO_S7};
 #define ID_ALL_ACT  EZ_WHO_G1_4
 // set microstep resolution
 #define LOCK_PREAMBLE "j256"
+#define BALANCE_PREAMBLE "j256"
 #define SHUTTER_PREAMBLE "j64"
 // set encoder/microstep ratio (aE25600), coarse correction band (aC50),
 // fine correction tolerance (ac%d), stall retries (au5),
@@ -1015,6 +1017,11 @@ static void DoLock(void)
             action = LA_EXIT;
         }
     } while (action != LA_EXIT);
+}
+
+static void DoBalance(void)
+{
+    static int firsttime = 1;
 }
 
 /************************************************************************/

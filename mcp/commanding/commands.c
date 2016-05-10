@@ -1316,17 +1316,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       /*************************************
       ********* Balance System  ***********/
     case balance_gain:
-      CommandData.pumps.level_on_bal = rvalues[0] * 1990.13;  // 1990.13 DAC/Amp
-      CommandData.pumps.level_off_bal = rvalues[1] * 1990.13;
-      CommandData.pumps.level_target_bal = rvalues[2] * 1990.13;
-      CommandData.pumps.gain_bal = rvalues[3];
+      CommandData.balance.i_el_on_bal = rvalues[0];
+      CommandData.balance.i_el_off_bal = rvalues[1];
+      CommandData.balance.i_el_target_bal = rvalues[2];
+      CommandData.balance.gain_bal = rvalues[3];
       break;
     case balance_manual:
-      CommandData.pumps.level = rvalues[0];
-      CommandData.pumps.mode = bal_manual;
+//      CommandData.pumps.level = rvalues[0];
+//      CommandData.pumps.mode = bal_manual;
       break;
     case balance_tset:
-      CommandData.pumps.heat_tset = rvalues[0];
+//      CommandData.pumps.heat_tset = rvalues[0];
       break;
 
       /*************************************
@@ -2117,13 +2117,13 @@ void InitCommandData()
     CommandData.offset_ifyaw_gy = 0;
     CommandData.gymask = 0x3f;
 
-    CommandData.pumps.level_on_bal = 2.0 * 1990.13;
-    CommandData.pumps.level_off_bal = 0.5 * 1900.13;
-    CommandData.pumps.level_target_bal = 0.0 * 1990.13;
-    CommandData.pumps.gain_bal = 0.2;
-    CommandData.pumps.mode = bal_auto;
-    CommandData.pumps.heat_on = 1;
-    CommandData.pumps.heat_tset = 5;
+//    CommandData.pumps.level_on_bal = 2.0 * 1990.13;
+//    CommandData.pumps.level_off_bal = 0.5 * 1900.13;
+//    CommandData.pumps.level_target_bal = 0.0 * 1990.13;
+//    CommandData.pumps.gain_bal = 0.2;
+//    CommandData.pumps.mode = bal_auto;
+//    CommandData.pumps.heat_on = 1;
+//    CommandData.pumps.heat_tset = 5;
 
     CommandData.Bias.bias[0] = 12470;   // 500um
     CommandData.Bias.bias[1] = 11690;   // 350um
