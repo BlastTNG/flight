@@ -1,6 +1,7 @@
 set(HOUSEKEEPING_SRCS
     ${HOUSEKEEPING_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/auxiliary.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/chrgctrl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/computer_sensors.c
     ${CMAKE_CURRENT_SOURCE_DIR}/data_sharing.c
     ${CMAKE_CURRENT_SOURCE_DIR}/therm_heater.c
@@ -10,6 +11,7 @@ set(HOUSEKEEPING_SRCS
 set(HOUSEKEEPING_HEADERS
    ${HOUSEKEEPING_HEADERS}
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/computer_sensors.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/chrgctrl.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/data_sharing.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/therm_heater.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/watchdog.h

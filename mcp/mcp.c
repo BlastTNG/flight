@@ -43,6 +43,7 @@
 #include "phenom/log.h"
 #include "phenom/sysutil.h"
 
+#include "chrgctrl.h"
 #include "mputs.h"
 #include "command_list.h"
 #include "command_struct.h"
@@ -354,6 +355,7 @@ static void mcp_1hz_routines(void)
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
+    store_charge_controller_data();
     framing_publish_1hz();
     uei_1hz_loop();
     uei_publish_1hz();
@@ -553,6 +555,7 @@ int main(int argc, char *argv[])
 //  if (!initialize_uei_of_channels())
 //      uei_thread = ph_thread_spawn(uei_dmap_update_loop, NULL);
   initialize_bias_tone();
+  startChrgCtrl(0);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 #ifdef USE_XY_THREAD

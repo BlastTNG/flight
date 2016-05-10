@@ -516,16 +516,16 @@ channel_t channel_list[] =
 
 
 
-    { "v_batt_cc1",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_V_V, 0, 0, 0 },
-    { "v_arr_cc1",            1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_V_V, 0, 0, 0 },
-    { "i_batt_cc1",           1 / 400.0,        -32000.0 / 400.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0, 0, 0 },
-    { "i_arr_cc1",            1 / 400.0,        -32000.0 / 400.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0, 0, 0 },
-    { "t_hs_cc1",             SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0, 0, 0 },
-    { "fault_cc1",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "alarm_hi_cc1",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "alarm_lo_cc1",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "v_targ_cc1",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_V_V, 0, 0, 0 },
-    { "state_cc1",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "v_batt_cc1",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0, 0, 0 },
+    { "v_arr_cc1",            1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0, 0, 0 },
+    { "i_batt_cc1",           1 / 400.0,        -32000.0 / 400.0, TYPE_UINT16, RATE_1HZ, SRC_IF_UEI, U_I_A, 0, 0, 0 },
+    { "i_arr_cc1",            1 / 400.0,        -32000.0 / 400.0, TYPE_UINT16, RATE_1HZ, SRC_IF_UEI, U_I_A, 0, 0, 0 },
+    { "t_hs_cc1",             SCALE(CONVERT_UNITY), TYPE_INT16, RATE_1HZ, SRC_IF_UEI, U_T_C, 0, 0, 0 },
+    { "fault_cc1",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "alarm_hi_cc1",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "alarm_lo_cc1",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "v_targ_cc1",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0, 0, 0 },
+    { "state_cc1",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
 
     { "lvdt_0_act",           SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
@@ -680,17 +680,17 @@ channel_t channel_list[] =
     { "time_atrim",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "rate_atrim",           30.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
-    { "v_batt_cc2",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_V_V, 0, 0, 0 },
-    { "v_arr_cc2",            1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_V_V, 0, 0, 0 },
-    { "i_batt_cc2",           1 / 400.0,        -32000.0 / 400.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0, 0, 0 },
-    { "i_arr_cc2",            1 / 400.0,        -32000.0 / 400.0, TYPE_UINT16, RATE_5HZ, SRC_IF_UEI, U_I_A, 0, 0, 0 },
-    { "t_hs_cc2",             SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, SRC_IF_UEI, U_T_C, 0, 0, 0 },
-    { "fault_cc2",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "alarm_hi_cc2",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "alarm_lo_cc2",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "v_targ_cc2",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_5HZ, SRC_FC, U_V_V, 0, 0, 0 },
-    { "state_cc2",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
-    { "led_cc2",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "v_batt_cc2",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0, 0, 0 },
+    { "v_arr_cc2",            1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0, 0, 0 },
+    { "i_batt_cc2",           1 / 400.0,        -32000.0 / 400.0, TYPE_UINT16, RATE_1HZ, SRC_IF_UEI, U_I_A, 0, 0, 0 },
+    { "i_arr_cc2",            1 / 400.0,        -32000.0 / 400.0, TYPE_UINT16, RATE_1HZ, SRC_IF_UEI, U_I_A, 0, 0, 0 },
+    { "t_hs_cc2",             SCALE(CONVERT_UNITY), TYPE_INT16, RATE_1HZ, SRC_IF_UEI, U_T_C, 0, 0, 0 },
+    { "fault_cc2",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "alarm_hi_cc2",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "alarm_lo_cc2",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "v_targ_cc2",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, SRC_FC, U_V_V, 0, 0, 0 },
+    { "state_cc2",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "led_cc2",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
     #ifndef BOLOTEST
 
