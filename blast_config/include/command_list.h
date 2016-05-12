@@ -213,14 +213,17 @@ enum multiCommand {
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
 
-extern struct scom scommands[xyzzy + 1];
+#define N_SCOMMANDS (xyzzy + 1)
+#define N_MCOMMANDS (plugh + 2)
+
+extern struct scom scommands[N_SCOMMANDS];
 
 /* parameter type:
  * i :  parameter is 15 bit unnormalised integer
  * f :  parameter is 15 bit renormalised floating point
  * l :  parameter is 30 bit renormalised floating point
  */
-extern struct mcom mcommands[plugh + 2];
+extern struct mcom mcommands[N_MCOMMANDS];
 
 /* validator function for mcommands */
 extern int mcom_validate(enum multiCommand cmd, const int *ivalues,
