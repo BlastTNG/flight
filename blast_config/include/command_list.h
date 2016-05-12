@@ -20,9 +20,6 @@
 #include "netcmd.h"  /* common parts of command defintions moved here */
 
 
-/* WARNING: if either N_xCOMMANDS exceeds 254, commanding will break */
-#define N_SCOMMANDS 227        /* total number of single word cmds */
-#define N_MCOMMANDS 124        /* total number of multiword commands */
 #define DATA_Q_SIZE (2 * MAX_N_PARAMS)  /* maximum size of the data queue */
 
 #define MAX_15BIT (32767.)    // deprecated. Probably want CMD_I_MAX instead
@@ -216,14 +213,14 @@ enum multiCommand {
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
 
-extern struct scom scommands[N_SCOMMANDS];
+extern struct scom scommands[xyzzy + 1];
 
 /* parameter type:
  * i :  parameter is 15 bit unnormalised integer
  * f :  parameter is 15 bit renormalised floating point
  * l :  parameter is 30 bit renormalised floating point
  */
-extern struct mcom mcommands[N_MCOMMANDS];
+extern struct mcom mcommands[plugh + 2];
 
 /* validator function for mcommands */
 extern int mcom_validate(enum multiCommand cmd, const int *ivalues,
