@@ -80,7 +80,7 @@ extern struct file_info {
   void* buffer_end;  /* end of frame buffer */
 } framefile;
 
-#define FRAME_SYNC_WORD 0xEB90
+#define FRAME_SYNC_WORD 0xEB90146F
 
 unsigned short FrameBuf[BI0_FRAME_SIZE+3];
 unsigned short AntiFrameBuf[BI0_FRAME_SIZE+3];
