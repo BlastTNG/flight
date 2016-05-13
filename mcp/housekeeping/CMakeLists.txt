@@ -6,6 +6,7 @@ set(HOUSEKEEPING_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/data_sharing.c
     ${CMAKE_CURRENT_SOURCE_DIR}/therm_heater.c
     ${CMAKE_CURRENT_SOURCE_DIR}/watchdog.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/cryostat.c
     PARENT_SCOPE
 )
 set(HOUSEKEEPING_HEADERS
@@ -15,5 +16,6 @@ set(HOUSEKEEPING_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/data_sharing.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/therm_heater.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/watchdog.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/cryostat.h
    PARENT_SCOPE
 )
