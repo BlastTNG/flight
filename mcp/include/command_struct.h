@@ -257,6 +257,40 @@ typedef struct
     uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
 } uei_commands_t;
 
+typedef struct {
+  uint16_t charcoalHeater;
+  uint16_t hsCharcoal;
+  uint16_t fridgeCycle;
+  uint16_t force_cycle;
+
+  double cycle_start_temp;
+  double cycle_pot_max;
+  double cycle_charcoal_max;
+  double cycle_charcoal_settle;
+  // timeouts in minutes (NB: time will probably be in seconds)
+  double cycle_charcoal_timeout;
+  double cycle_settle_timeout;
+
+  uint16_t BDAHeat;
+  uint16_t hsPot;
+  int16_t heliumLevel;
+  int he4_lev_old;
+  int16_t hwprPos;
+  int hwpr_pos_old;
+
+  uint16_t JFETHeat;
+  uint16_t autoJFETheat;
+  double JFETSetOn, JFETSetOff;
+
+  enum calmode calibrator;
+  uint16_t calib_pulse, calib_period;
+  int calib_repeats;
+  int calib_hwpr;
+
+  uint16_t potvalve_open, potvalve_on, potvalve_close;
+  uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
+} cryo_cmds_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -369,40 +403,7 @@ struct CommandDataStruct {
     struct Step biasStep;
   } Bias;
 
-  // TODO(seth): Move Cryo cmd
-  struct {
-    uint16_t charcoalHeater;
-    uint16_t hsCharcoal;
-    uint16_t fridgeCycle;
-    uint16_t force_cycle;
-
-    double cycle_start_temp;
-    double cycle_pot_max;
-    double cycle_charcoal_max;
-    double cycle_charcoal_settle;
-    // timeouts in minutes (NB: time will probably be in seconds)
-    double cycle_charcoal_timeout;
-    double cycle_settle_timeout;
-
-    uint16_t BDAHeat;
-    uint16_t hsPot;
-    int16_t heliumLevel;
-    int he4_lev_old;
-    int16_t hwprPos;
-    int hwpr_pos_old;
-
-    uint16_t JFETHeat;
-    uint16_t autoJFETheat;
-    double JFETSetOn, JFETSetOff;
-
-    enum calmode calibrator;
-    uint16_t calib_pulse, calib_period;
-    int calib_repeats;
-    int calib_hwpr;
-
-    uint16_t potvalve_open, potvalve_on, potvalve_close;
-    uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
-  } Cryo;
+  cryo_cmds_t Cryo;
 
   struct {
     enum {bal_rest, bal_manual, bal_auto} mode;
