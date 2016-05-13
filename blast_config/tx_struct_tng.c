@@ -3,6 +3,7 @@
  *
  * This software is copyright 
  *  (C) 2013-2014 California State University,  Sacramento
+ *  (C) 2014-2016 University of Pennsylvania
  *
  * This file is part of mcp, created for the BLASTPol Project.
  *
