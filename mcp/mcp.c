@@ -43,6 +43,7 @@
 #include "phenom/log.h"
 #include "phenom/sysutil.h"
 
+#include "cryostat.h"
 #include "chrgctrl.h"
 #include "mputs.h"
 #include "command_list.h"
@@ -309,7 +310,7 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-//    CryoControl(index);
+    cryo_control();
 //    BiasControl();
     WriteChatter();
     uei_100hz_loop();
