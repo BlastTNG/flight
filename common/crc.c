@@ -2,6 +2,7 @@
  * Adapted from Linux kernel libs/crc32.c.  See copyright notices in
  * the file LICENSES
  *
+ *
  * Modifications are copyright
  *  (C) 2013-2014 California State University, Sacramento
  *
@@ -22,6 +23,7 @@
 #include "blast_compiler.h"
 #include "crc.h"
 #include "crc32table.h"
+#include "crc16table.h"
 
 /* implements slicing-by-4 or slicing-by-8 algorithm */
 static inline uint32_t
@@ -125,6 +127,16 @@ uint32_t __pure crc32_be(uint32_t crc, unsigned char const *p, size_t len)
 {
     return crc32_be_generic(crc, p, len,
             (const uint32_t (*)[256])crc32table_be, CRCPOLY_BE);
+}
+
+uint16_t __pure crc16(uint16_t crc, void const *p, size_t len)
+{
+    uint8_t *b = (uint8_t *) p;
+
+    while (len--) {
+        crc = (crc << 8) ^ crc16_ccitt_table[((crc >> 8) ^ *b++) & 0xff];
+    }
+    return crc;
 }
 
 #ifdef CRC32_SELFTEST

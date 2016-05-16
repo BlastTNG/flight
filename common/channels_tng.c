@@ -367,9 +367,10 @@ int channels_initialize(const channel_t * const m_channel_list)
             if (frame_size[src][rate]) {
                 /**
                  * Ensure that we can dereference the data without knowing its type by
-                 * keeping an extra 8 bytes allocated at the end
+                 * taking at least 8 bytes
                  */
-                channel_data[src][rate] = calloc(1, frame_size[src][rate] + sizeof(uint64_t));
+                size_t allocated_size = MAX(frame_size[src][rate], sizeof(uint64_t));
+                channel_data[src][rate] = calloc(1, allocated_size);
                 blast_mem("Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
                         (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
                         (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
