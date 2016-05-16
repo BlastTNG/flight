@@ -2,7 +2,7 @@
 #include <sys/ioctl.h>
 #include "bbc_pci.h"
 #include "decom_pci.h"
-#include "channels.h"
+#include "channels_tng.h"
 #include "crc.h"
 
 #define FRAME_SYNC_WORD 0xEB90
@@ -10,8 +10,8 @@
 
 extern int decom;
 
-extern unsigned short FrameBuf[BI0_FRAME_SIZE+3];
-extern unsigned short AntiFrameBuf[BI0_FRAME_SIZE+3];
+extern uint32_t FrameBuf[BI0_FRAME_SIZE+3];
+extern uint32_t AntiFrameBuf[BI0_FRAME_SIZE+3];
 extern int du; // num_unlocked: info only
 extern int wfifo_size; // write fifo size: info only
 extern int status; // unlocked, searching. or locked.
@@ -26,17 +26,15 @@ void pushDiskFrame(unsigned short *RxFrame);
 
 void ReadDecom (void)
 {
-  unsigned short buf;
+  uint32_t buf;
   int i_word = 0;
   int read_data = 0;
-  unsigned short crc_pos;
-  unsigned short crc_neg;
-  unsigned short crc_buf;
+  uint32_t crc_buf;
 
   for (;;) {
-    while ((read(decom, &buf, sizeof(unsigned short))) > 0) {
+    while ((read(decom, &buf, sizeof(unsigned int))) > 0) {
 #ifdef DEBUG
-      fwrite(&buf, sizeof(unsigned short), 1, dump);
+      fwrite(&buf, sizeof(uint32_t), 1, dump);
 #endif
       read_data = 1;
       FrameBuf[i_word] = buf;
@@ -44,10 +42,10 @@ void ReadDecom (void)
       if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
         du = ioctl(decom, DECOM_IOC_NUM_UNLOCKED);
         wfifo_size = ioctl(decom, DECOM_IOC_FIONREAD);
-        if ((buf != FRAME_SYNC_WORD) && ((~buf & 0xffff) != FRAME_SYNC_WORD)) {
+        if ((buf != FRAME_SYNC_WORD) && ((~buf & 0xffffffff) != FRAME_SYNC_WORD)) { /* wait for frame sync word */
           status = 0;
           i_word = 0;
-        } else {
+        } else { /* We have found the sync word */
           if (status < 2) {
             status++;
           } else {
@@ -86,13 +84,15 @@ void ReadDecom (void)
         if (i_word - 1 == BiPhaseFrameWords) {
           FrameBuf[0] = AntiFrameBuf[0] = 0xEB90;
 
-          crc_pos = CalculateCRC(CRC_SEED, FrameBuf, BiPhaseFrameWords);
-          crc_neg = CalculateCRC(CRC_SEED, AntiFrameBuf, BiPhaseFrameWords);
+	  uint32_t crc_pos = 0xFFFFFFFF;
+	  uint32_t crc_neg = 0xFFFFFFFF;
+	  crc_pos = crc32_be(crc_pos, (uint8_t*)FrameBuf, BiPhaseFrameWords);
+	  crc_neg = crc32_be(crc_neg, (uint8_t*)AntiFrameBuf, BiPhaseFrameWords);
 	  crc_buf = buf;
           if (buf == crc_pos) {
             crc_ok = 1;
             polarity = 1;
-          } else if ((unsigned short)~buf == crc_neg) {
+          } else if ((uint32_t)~buf == crc_neg) {
             polarity = 0;
             crc_ok = 1;
           } else {
