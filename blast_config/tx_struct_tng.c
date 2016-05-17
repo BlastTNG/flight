@@ -873,6 +873,9 @@ channel_t channel_list[] =
     { "i_rw_term_piv",        SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "p_err_term_piv",       SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
+    /* housekeeping cryo channels */
+    { "dio_heaters",          SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
+
     { "uei_of_1hz_framecount",   SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_1HZ,   SRC_OF_UEI, U_NONE, 0, 0, 0 },
     { "uei_of_100hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, SRC_OF_UEI, U_NONE, 0, 0, 0 },
     { "uei_of_200hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, SRC_OF_UEI, U_NONE, 0, 0, 0 },

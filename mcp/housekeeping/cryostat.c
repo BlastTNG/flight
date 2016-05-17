@@ -38,10 +38,38 @@
 #include "lut.h"
 #include "tx.h"
 #include "command_struct.h"
+
+/* Heater control bits (BIAS_D G4) */
+#define HEAT_HELIUM_LEVEL    0x0001
+#define HEAT_CHARCOAL        0x0002
+#define HEAT_POT_HS          0x0004
+#define HEAT_CHARCOAL_HS     0x0008
+#define HEAT_UNDEF           0x0010
+#define HEAT_BDA             0x0020
+#define HEAT_CALIBRATOR      0x0040
+#define HEAT_HWPR_POS        0x0080
+
+uint16_t heatctrl;
+
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
 void cryo_control(void)
 {
-    uint16_t heatctrl = 0;
+    heatctrl = 0;
+    if (CommandData.Cryo.charcoalHeater)
+        heatctrl |= HEAT_CHARCOAL;
+}
+
+void store_100hz_cryo(void)
+{
+    static int firsttime = 1;
+
+    static channel_t* heaterAddr;
+
+    if (firsttime) {
+        heaterAddr = channels_find_by_name("dio_heaters");
+        firsttime = 0;
+    }
+    SET_UINT16(heaterAddr, heatctrl);
 }
