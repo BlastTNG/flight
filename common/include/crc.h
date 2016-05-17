@@ -29,6 +29,7 @@
 
 #include <stdint.h>
 #include <portable_endian.h>
+#include <blast_compiler.h>
 #define CRCPOLY_LE 0xedb88320
 #define CRCPOLY_BE 0x04c11db7
 
