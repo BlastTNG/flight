@@ -71,7 +71,6 @@
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
-#include "uei.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
@@ -314,7 +313,6 @@ static void mcp_100hz_routines(void)
     cryo_control();
 //    BiasControl();
     WriteChatter();
-    uei_100hz_loop();
 
     store_100hz_xsc(0);
     store_100hz_xsc(1);
@@ -322,7 +320,6 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
-    uei_publish_100hz();
     framing_publish_100hz();
 }
 static void mcp_5hz_routines(void)
@@ -359,8 +356,6 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    uei_1hz_loop();
-    uei_publish_1hz();
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -428,7 +423,6 @@ static void *mcp_main_loop(void *m_arg)
 int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
-  ph_thread_t *uei_thread = NULL;
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -554,8 +548,6 @@ int main(int argc, char *argv[])
 
   initialize_data_sharing();
   initialize_watchdog(2);
-//  if (!initialize_uei_of_channels())
-//      uei_thread = ph_thread_spawn(uei_dmap_update_loop, NULL);
   initialize_bias_tone();
   startChrgCtrl(0);
 
@@ -565,7 +557,6 @@ int main(int argc, char *argv[])
 #endif
   ph_sched_run();
 
-//  if (uei_thread) ph_thread_join(uei_thread, NULL);
   ph_thread_join(main_thread, NULL);
 
   return(0);
