@@ -49,7 +49,7 @@
 #define HEAT_CALIBRATOR      0x0040
 #define HEAT_HWPR_POS        0x0080
 
-uint16_t heatctrl;
+static uint16_t heatctrl;
 
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
