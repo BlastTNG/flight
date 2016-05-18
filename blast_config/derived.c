@@ -1,6 +1,6 @@
 /* derived.c: a list of derived channels
  *
- * This software is copyright (C) 2002-20010 University of Toronto
+ * This software is copyright (C) 2002-2010 University of Toronto
  *
  * This file is part of the BLAST flight code licensed under the GNU
  * General Public License.
@@ -471,6 +471,7 @@ derived_tng_t derived_list[] = {
     BITWORD("READ_AFTER_HWPR", "stat_control_hwpr", 8, 2),
 
     /* CRYO */
+    /*BITWORD("","dio_heaters",0,1) */
     BITWORD("POT_VALVE", "cryostate", 4, 1),
     BITWORD("POT_DIREC", "cryostate", 5, 1),
     BITWORD("LHE_VALVE", "cryostate", 6, 1),
