@@ -84,12 +84,16 @@ typedef struct {
     bool have_warned_version;
     uint32_t backoff_sec;
     struct timeval timeout;
-    int trans_id;
-    GSequence *trans_seq;
-    uint16_t num_channels;
     ph_job_t connect_job;
     ph_sock_t *sock;
+    void *conn_data;
 } labjack_state_t;
+
+typedef struct {
+    int trans_id;
+    uint16_t num_channels;
+    uint16_t data[];
+} labjack_data_t;
 
 typedef struct {
     int trans_id;
@@ -99,20 +103,22 @@ typedef struct {
     void (*handle_success)(labjack_state_t*, ph_buf_t*);
 } labjack_trans_t;
 
+#define LABJACK_CMD 0
+#define LABJACK_STREAM 1
+
 /** First index is for the labjack, second for cmd/data ports */
 static labjack_state_t state[2][2] = {
-        {
-                {
-                        .address = "labjack1",
-                        .port = cmd_port
-                }
-        },
-        {
-                {
-                        .address = "labjack1",
-                        .port = data_port
-                }
-        },
+        { [LABJACK_CMD] =
+            {
+                    .address = "labjack1",
+                    .port = cmd_port
+            },
+          [LABJACK_STREAM] =
+            {
+                  .address = "labjack1",
+                  .port = data_port
+            }
+        }
 };
 
 
@@ -192,7 +198,7 @@ static void labjack_process_cmd_resp(ph_sock_t *m_sock, ph_iomask_t m_why, void 
         ph_buf_delref(buf);
         return;
     }
-    transaction = g_sequence_lookup(state->trans_seq, &data->trans_id, labjack_compare_trans, NULL);
+    transaction = g_sequence_lookup(state->conn_data, &data->trans_id, labjack_compare_trans, NULL);
 
     transaction->handle_success(state, data_buf);
 
@@ -212,10 +218,11 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
 {
     ph_buf_t *buf;
     labjack_state_t *state = (labjack_state_t*) m_data;
-    labjack_data_pkt_t *data;
+    labjack_data_pkt_t *data_pkt;
+    labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
 
     /**
-     * If we have an error, or do not receive data from the star camera in the expected
+     * If we have an error, or do not receive data from the LabJack in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
     if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
@@ -227,24 +234,24 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
       return;
     }
 
-    buf = ph_sock_read_bytes_exact(m_sock, sizeof(labjack_data_header_t) + state->num_channels * 2);
+    buf = ph_sock_read_bytes_exact(m_sock, sizeof(labjack_data_header_t) + state_data->num_channels * 2);
     if (!buf) return; /// We do not have enough data
 
-    data = (labjack_data_pkt_t*)ph_buf_mem(buf);
+    data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
 
-    if (data->header.trans_id != ++(state->trans_id)) {
+    if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
         blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
-                state->trans_id, state->trans_id, state->address);
+                   state_data->trans_id, state_data->trans_id, state->address);
     }
-    state->trans_id = data->header.trans_id;
+    state_data->trans_id = data_pkt->header.resp.trans_id;
 
-    if (data->header.type != STREAM_TYPE) {
-        blast_warn("Unknown packet type %d received from LabJack at %s", data->header.type, state->address);
+    if (data_pkt->header.resp.type != STREAM_TYPE) {
+        blast_warn("Unknown packet type %d received from LabJack at %s", data_pkt->header.resp.type, state->address);
         ph_buf_delref(buf);
         return;
     }
 
-    switch(data->header.status) {
+    switch(data_pkt->header.status) {
     case STREAM_STATUS_AUTO_RECOVER_ACTIVE:
     case STREAM_STATUS_AUTO_RECOVER_END:
     case STREAM_STATUS_AUTO_RECOVER_END_OVERFLOW:
@@ -253,6 +260,7 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
         break;
     }
 
+    memcpy(state_data->data, data_pkt->data, state_data->num_channels * sizeof(uint16_t));
 
     ph_buf_delref(buf);
 }
@@ -330,7 +338,7 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
  *
  * @param m_which
  */
-void labjack_networking_init(int m_which)
+void labjack_networking_init(int m_which, size_t m_numchannels)
 {
     blast_dbg("Labjack Init for %d", m_which);
 
@@ -343,7 +351,13 @@ void labjack_networking_init(int m_which)
         ph_job_init(&(state[m_which][i].connect_job));
         state[m_which][i].connect_job.callback = connect_lj;
         state[m_which][i].connect_job.data = &state[m_which][i];
-        state[m_which][i].trans_seq = g_sequence_new(free);
+        if (i == LABJACK_CMD) {
+            state[m_which][i].conn_data = g_sequence_new(free);
+        } else if (i == LABJACK_STREAM) {
+            labjack_data_t *data_state = calloc(1, sizeof(labjack_data_t) + m_numchannels * sizeof(uint16_t));
+            data_state->num_channels = m_numchannels;
+            state[m_which][i].conn_data = data_state;
+        }
 
         ph_job_dispatch_now(&(state[m_which][i].connect_job));
     }
