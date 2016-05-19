@@ -73,3 +73,36 @@ void store_100hz_cryo(void)
     }
     SET_UINT16(heaterAddr, heatctrl);
 }
+/*
+void autocycle(void)
+{
+    static channel_t* tfpa250;
+    static channel_t* tfpa350;
+    static channel_t* tfpa500;
+    
+    static int firsttime = 1;
+    double t250, t350, t500;
+    double tcrit;
+    
+    if (firsttime) {
+        tfpa250 = channels_find_by_name("PLACEHOLDER_250um");
+        tfpa350 = channels_find_by_name("PLACEHOLDER_350um");
+        tfpa500 = channels_find_by_name("PLACEHOLDER_500um");
+        firsttime = 0;
+    }
+    
+    t250 = GET_SCALED_VAL(tfpa250);
+    t350 = GET_SCALED_VAL(tfpa350);
+    t500 = GET_SCALED_VAL(tfpa500);
+    if (t250 > tcrit) {
+        goto fridge_auto_cycle;
+    }
+    if (t350 > tcrit) {
+        goto fridge_auto_cycle;
+    }
+    if (t500 > tcrit) {
+        goto fridge_auto_cycle;
+    }
+fridge_auto_cycle:
+}
+*/

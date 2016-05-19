@@ -9,5 +9,6 @@
 #define INCLUDE_CRYOSTAT_H
 void cryo_control(void);
 void store_100hz_cryo(void);
+void autocycle(void);
 
 #endif /* cryostat_h */

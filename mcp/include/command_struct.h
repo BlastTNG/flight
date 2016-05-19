@@ -63,14 +63,14 @@
 // CommandData.uei_command.uei_of_dio_432_out.
 // TODO(laura): These are for BLASTPol (taken from das.c). Get updated list from Jeff.
 // TODO(laura): move this to a separate cryo control program modeled on das.c
-#define HEAT_HELIUM_LEVEL    0x01
-#define HEAT_CHARCOAL        0x02
-#define HEAT_POT_HS          0x04
-#define HEAT_CHARCOAL_HS     0x08
-#define HEAT_JFET            0x10
-#define HEAT_BDA             0x20
-#define HEAT_CALIBRATOR      0x40
-#define HEAT_HWPR_POS        0x80
+#define HEAT_HELIUM_LEVEL    0x0001
+#define HEAT_CHARCOAL        0x0002
+#define HEAT_POT_HS          0x0004
+#define HEAT_CHARCOAL_HS     0x0008
+#define HEAT_JFET            0x0010
+#define HEAT_BDA             0x0020
+#define HEAT_CALIBRATOR      0x0040
+#define HEAT_HWPR_POS        0x0080
 
 #define LS_CLOSED      0x0002
 #define LS_DRIVE_OFF   0x0004
