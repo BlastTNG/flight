@@ -239,8 +239,7 @@ void slinger_cache_stream_data_known(slinger_time_t *m_time, slinger_cache_node_
 			if (periodic->priority == UINT8_MAX) return;
 
 			if (periodic->downlink.value != temp_val
-					|| (periodic->timeout &&
-						(periodic->last_sent + periodic->timeout < time(NULL))))
+                    || (periodic->timeout && (periodic->last_sent + periodic->timeout < time(NULL))))
 			{
 				BLAST_SWAP(periodic->downlink.value, temp_val);
 				periodic->downlink.time.qword = data_time.qword;
@@ -257,8 +256,9 @@ void slinger_cache_stream_data_known(slinger_time_t *m_time, slinger_cache_node_
 				else
 				{
 					/**
-					 * If we cannot cache the packet for any reason, we re-set the value to its previous value.  We will re-try in the
-					 * next frame.  Our index will be off by the fastsamp difference but we won't miss the value change completely.
+					 * If we cannot cache the packet for any reason, we re-set the value to its previous value.
+					 * We will re-try in the next frame.  Our index will be off by the fastsamp difference but
+					 * we won't miss the value change completely.
 					 */
 					periodic->downlink.value = temp_val;
 				}

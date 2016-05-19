@@ -26,10 +26,9 @@
 
 #include <stdint.h>
 
-#include <channels.h>
+#include <channels_tng.h>
 #include <blast.h>
 
-#include <ebex_common.h>
 #include <slinger_frame.h>
 #include <slinger_data.h>
 #include <slinger_time.h>
@@ -58,21 +57,18 @@ static int can1_timesource_ch = 0;
 /**
  * Get the approximate rate of a NIOS channel
  * @param m_channel Name of channel to lookup
- * @return 0 on failure, 100 for fast channels, 5 for slow channels
+ * @return 0 on failure, E_RATE otherwise
  */
-uint32_t slinger_get_channel_rate(const char *m_channel)
+uint32_t slinger_get_channel_rate(const char *m_name)
 {
-	const struct NiosStruct *nios = NULL;
-	nios = get_NIOS_address_nonfatal(m_channel);
-	if (nios == NULL)
+	const channel_t channel = channels_find_by_name(m_name);
+	if (!channel)
 	{
-		blast_err("Could not match a data field to '%s'", (char*)m_channel);
+		blast_err("Could not match a data field to '%s'", (char*)m_name);
 		return 0;
 	}
-	if (BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].index == NOT_MULTIPLEXED)
-		return 100;
-	else
-		return 5;
+	return channel.rate;
+
 }
 
 /**
@@ -131,36 +127,9 @@ void initialize_slinger_frame_lookup(void)
 {
 	const struct NiosStruct *nios = NULL;
 
-	slinger_frame_lookup = (slinger_frame_data_t*)balloc(loglevel_fatal, FAST_PER_SLOW * DiskFrameWords * sizeof(slinger_frame_data_t));
-	e_memset(slinger_frame_lookup, 0, FAST_PER_SLOW * DiskFrameWords * sizeof(slinger_frame_data_t));
+	slinger_frame_lookup = (slinger_frame_data_t*)balloc(fatal, FAST_PER_SLOW * DiskFrameWords * sizeof(slinger_frame_data_t));
+	memset(slinger_frame_lookup, 0, FAST_PER_SLOW * DiskFrameWords * sizeof(slinger_frame_data_t));
 
-	nios = GetNiosAddr("times1_a");
-	times1_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel;
-	nios = GetNiosAddr("times2_a");
-	times2_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel;
-	nios = GetNiosAddr("times3_a");
-	times3_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel;
-	nios = GetNiosAddr("times4_a");
-	times4_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel;
-
-	nios = GetNiosAddr("times1_b");
-	times1b_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel;
-	nios = GetNiosAddr("times2_b");
-	times2b_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel;
-	nios = GetNiosAddr("times3_b");
-	times3b_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel;
-	nios = GetNiosAddr("times4_b");
-	times4b_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel;
-
-	nios = GetNiosAddr("can_timestamp1");
-	can1_timestamp_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel + SLOW_OFFSET;
-	can1_timestamp_index = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].index;
-	nios = GetNiosAddr("can_timeperiod1");
-	can1_timeperiod_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel + SLOW_OFFSET;
-	can1_timeperiod_index = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].index;
-	nios = GetNiosAddr("can_timesrc_id1");
-	can1_timesource_ch = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].channel + SLOW_OFFSET;
-	can1_timesource_index = BiPhaseLookup[BI0_MAGIC(nios->bbcAddr)].index;
 }
 
 /**
