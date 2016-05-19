@@ -291,6 +291,13 @@ typedef struct {
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
 } cryo_cmds_t;
 
+typedef struct slinger_commanding
+{
+    unsigned int downlink_rate_bps;
+    bool highrate_active;
+    bool biphase_active;
+} slinger_commanding_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -519,6 +526,8 @@ struct CommandDataStruct {
   } ISCControl[2];
 
   struct XSCCommandStruct XSC[2];
+
+  slinger_commanding_t packet_slinger;
 
   uint32_t checksum;
 };

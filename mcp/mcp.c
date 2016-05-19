@@ -43,6 +43,7 @@
 #include "phenom/log.h"
 #include "phenom/sysutil.h"
 
+#include "cryostat.h"
 #include "chrgctrl.h"
 #include "mputs.h"
 #include "command_list.h"
@@ -70,7 +71,6 @@
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
-#include "uei.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
@@ -272,19 +272,20 @@ static void close_mcp(int m_code)
 }
 
 /* Polarity crisis: am I north or south? */
+/* Right now fc1 == south */
 static int AmISouth(int *not_cryo_corner)
 {
-  char buffer[2];
-  *not_cryo_corner = 1;
+    char buffer[4];
+    *not_cryo_corner = 1;
 
-  if (gethostname(buffer, 1) == -1 && errno != ENAMETOOLONG) {
-    berror(err, "System: Unable to get hostname");
-  } else if (buffer[0] == 'p') {
-    *not_cryo_corner = 0;
-    blast_info("System: Cryo Corner Mode Activated\n");
-  }
+    if (gethostname(buffer, 3) == -1 && errno != ENAMETOOLONG) {
+      berror(err, "System: Unable to get hostname");
+    } else if (buffer[0] == 'p') {
+      *not_cryo_corner = 0;
+      blast_info("System: Cryo Corner Mode Activated\n");
+    }
 
-  return (buffer[0] == 's') ? 1 : 0;
+    return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '1')) ? 1 : 0;
 }
 
 static void mcp_244hz_routines(void)
@@ -309,10 +310,9 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-//    CryoControl(index);
+    cryo_control();
 //    BiasControl();
     WriteChatter();
-    uei_100hz_loop();
 
     store_100hz_xsc(0);
     store_100hz_xsc(1);
@@ -320,7 +320,6 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
-    uei_publish_100hz();
     framing_publish_100hz();
 }
 static void mcp_5hz_routines(void)
@@ -357,8 +356,6 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    uei_1hz_loop();
-    uei_publish_1hz();
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -426,7 +423,6 @@ static void *mcp_main_loop(void *m_arg)
 int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
-  ph_thread_t *uei_thread = NULL;
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -552,8 +548,6 @@ int main(int argc, char *argv[])
 
   initialize_data_sharing();
   initialize_watchdog(2);
-//  if (!initialize_uei_of_channels())
-//      uei_thread = ph_thread_spawn(uei_dmap_update_loop, NULL);
   initialize_bias_tone();
   startChrgCtrl(0);
 
@@ -563,7 +557,6 @@ int main(int argc, char *argv[])
 #endif
   ph_sched_run();
 
-//  if (uei_thread) ph_thread_join(uei_thread, NULL);
   ph_thread_join(main_thread, NULL);
 
   return(0);
