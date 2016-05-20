@@ -80,6 +80,7 @@ void store_100hz_cryo(void)
     static channel_t* tfpa350_Addr;
     static channel_t* tfpa500_Addr;
     static channel_t* tcharcoal_Addr;
+    static channel_t* tcharcoalhs_Addr;
     
     static int firsttime = 1;
     static int iterator = 0;
@@ -91,7 +92,8 @@ void store_100hz_cryo(void)
         tfpa250_Addr = channels_find_by_name("PLACEHOLDER_250um");  these three are ROX
         tfpa350_Addr = channels_find_by_name("PLACEHOLDER_350um");
         tfpa500_Addr = channels_find_by_name("PLACEHOLDER_500um");
-        tcharcoal_Addr = channels_find_by_name("PLACEHOLDER_CHARCOAL") diode
+        tcharcoal_Addr = channels_find_by_name("PLACEHOLDER_CHARCOAL"); diodes
+        tcharcoalhs_Addr = channels_find_by_name("PLACEHOLDER_CHAROALHS");
         firsttime = 0;
     }
     
