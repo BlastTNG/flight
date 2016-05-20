@@ -50,8 +50,9 @@
 #define STREAM_STATUS_AUTO_RECOVER_END_OVERFLOW 2943
 #define STREAM_STATUS_BURST_COMPLETE 2944
 
-static const uint16_t cmd_port = 502;
-static const uint16_t data_port = 702;
+#define LJ_CMD_PORT 502
+#define LJ_DATA_PORT 702
+
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 
@@ -111,16 +112,33 @@ static labjack_state_t state[2][2] = {
         { [LABJACK_CMD] =
             {
                     .address = "labjack1",
-                    .port = cmd_port
+                    .port = LJ_CMD_PORT
             },
           [LABJACK_STREAM] =
             {
                   .address = "labjack1",
-                  .port = data_port
+                  .port = LJ_DATA_PORT
             }
         }
 };
 
+uint16_t labjack_get_value(int m_labjack, int m_channel)
+{
+    labjack_data_t *state_data = (labjack_data_t*)state[m_labjack][LABJACK_STREAM].conn_data;
+    if (m_channel > state_data->num_channels) {
+        blast_err("Invalid channel %d requested from '%s'", m_channel, state[m_labjack][LABJACK_STREAM].address);
+        return 0;
+    }
+    return state_data->data[m_channel];
+}
+
+static gint labjack_compare_trans(gconstpointer m_p1, gconstpointer m_p2, gpointer m_data)
+{
+    gint16 a, b;
+    a = GPOINTER_TO_INT(m_p1);
+    b = GPOINTER_TO_INT(m_p2);
+    return (a > b ? 1 : a == b ? 0 : 1);
+}
 
 static void init_labjack_commands(labjack_state_t *m_state)
 {
@@ -308,7 +326,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     state->sock = m_sock;
     state->connected = true;
     state->backoff_sec = min_backoff_sec;
-    m_sock->callback = (state->port == cmd_port)?labjack_process_cmd_resp:labjack_process_stream;
+    m_sock->callback = (state->port == LJ_CMD_PORT)?labjack_process_cmd_resp:labjack_process_stream;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
 }
