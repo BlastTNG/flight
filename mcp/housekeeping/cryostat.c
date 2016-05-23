@@ -110,6 +110,24 @@ void read_thermometers(void) {
         rox_he4_pot_Addr = channels_find_by_name("tr_he4_pot");
         rox_he3_fridge_Addr = channels_find_by_name("tr_he3_fridge");
         rox_cold_short_Addr = channels_find_by_name("tr_cold_short");
+        // rox channel pointers defined above
         firsttime_therm = 0;
+        // diode channel pointers defined below
+        diode_charcoal_hs_Addr = channels_find_by_name("td_charcoal_hs");
+        diode_vcs2_filt_Addr = channels_find_by_name("td_vcs2_filt");
+        diode_250fpa_Addr = channels_find_by_name("td_250fpa");
+        diode_hwp_Addr = channels_find_by_name("td_hwp");
+        diode_vcs1_hx_Addr = channels_find_by_name("td_vcs1_hx");
+        diode_1k_fridge_Addr = channels_find_by_name("td_1k_fridge");
+        diode_4k_plate_Addr = channels_find_by_name("td_4k_plate");
+        diode_vcs1_filt_Addr = channels_find_by_name("td_vcs1_filt");
+        diode_m3_Addr = channels_find_by_name("td_m3");
+        diode_charcoal_Addr = channels_find_by_name("td_charcoal");
+        diode_ob_filter_Addr = channels_find_by_name("td_ob_filter");
+        diode_vcs2_plate_Addr = channels_find_by_name("td_vcs2_plate");
+        diode_m4_Addr = channels_find_by_name("td_m4");
+        diode_4k_filt_Addr = channels_find_by_name("td_4k_filt");
+        diode_vcs2_hx_Addr = channels_find_by_name("td_vcs2_hx");
+        diode_vcs1_plate_Addr = channels_find_by_name("td_vcs1_plate");
     }
 }
