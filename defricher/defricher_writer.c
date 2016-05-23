@@ -382,7 +382,7 @@ void defricher_queue_packet(uint16_t m_source, uint16_t m_rate)
     queue_data_t new_pkt = {._dummy = (1<<15)};//Set this bit to avoid glib assertions
 
     if (dirfile_offset < 0) {
-        if ((m_source == SRC_FC) && (m_rate == RATE_1HZ)) {
+        if (m_rate == RATE_1HZ) {
             channel_t *frame_offset = channels_find_by_name("mcp_1hz_framecount");
             if (frame_offset) {
                 defricher_cache_node_t *outfile_node = frame_offset->var;
@@ -423,7 +423,7 @@ static int defricher_write_packet(uint16_t m_source, uint16_t m_rate)
         return -1;
     }
 
-    if (m_source == SRC_FC && m_rate == RATE_200HZ) ri.wrote ++;
+    if (m_rate == RATE_200HZ) ri.wrote ++;
     have_warned = 0;
     for (channel_t *channel = channels; channel->field[0]; channel++) {
         if (channel->source != m_source || channel->rate != m_rate) continue;

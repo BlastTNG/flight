@@ -75,7 +75,6 @@ void store_100hz_cryo(void)
     SET_UINT16(heaterAddr, heatctrl);
 }
 void read_thermometers(void) {
-    static int labjack = 0;
     static channel_t* rox_fpa_1k_a_Addr;
     static channel_t* rox_fpa_Addr;
     static channel_t* rox_1k_plate_Addr;
@@ -101,7 +100,7 @@ void read_thermometers(void) {
     static channel_t* diode_4k_filt_Addr;
     static channel_t* diode_vcs2_hx_Addr;
     static channel_t* diode_vcs1_plate_Addr;
-    if (firsttime_therm = 1) {
+    if (firsttime_therm == 1) {
         rox_fpa_1k_a_Addr = channels_find_by_name("tr_fpa_1k_a");
         rox_fpa_Addr = channels_find_by_name("tr_fpa");
         rox_1k_plate_Addr = channels_find_by_name("tr_1k_plate");
@@ -130,4 +129,6 @@ void read_thermometers(void) {
         diode_vcs2_hx_Addr = channels_find_by_name("td_vcs2_hx");
         diode_vcs1_plate_Addr = channels_find_by_name("td_vcs1_plate");
     }
+
+    SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO, 0));
 }
