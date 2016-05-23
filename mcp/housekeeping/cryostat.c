@@ -76,7 +76,7 @@ void store_100hz_cryo(void)
 }
 void read_thermometers(void) {
     static int labjack = 0;
-    static channel_t* rox_fpa_1k_a_Addr;
+    static channel_t* rox_fpa_1k_a_Addr;// list of all the thermometers we have as of now
     static channel_t* rox_fpa_Addr;
     static channel_t* rox_1k_plate_Addr;
     static channel_t* rox_300mk_strap_Addr;
