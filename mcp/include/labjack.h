@@ -29,6 +29,9 @@
 
 #include <stdint.h>
 
+#define LABJACK_CRYO 0
+
+
 void labjack_networking_init(int m_which, size_t m_numchannels);
 uint16_t labjack_get_value(int m_labjack, int m_channel);
 
