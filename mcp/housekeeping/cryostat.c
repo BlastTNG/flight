@@ -38,6 +38,7 @@
 #include "lut.h"
 #include "tx.h"
 #include "command_struct.h"
+#include "labjack.h"
 
 /* Heater control bits (BIAS_D G4) */
 #define HEAT_HELIUM_LEVEL    0x0001
@@ -72,4 +73,43 @@ void store_100hz_cryo(void)
         firsttime = 0;
     }
     SET_UINT16(heaterAddr, heatctrl);
+}
+void read_thermometers(void) {
+    static int labjack = 0;
+    static channel_t* rox_fpa_1k_a_Addr;
+    static channel_t* rox_fpa_Addr;
+    static channel_t* rox_1k_plate_Addr;
+    static channel_t* rox_300mk_strap_Addr;
+    static channel_t* rox_fpa_1k_b_Addr;
+    static channel_t* rox_he4_pot_Addr;
+    static channel_t* rox_he3_fridge_Addr;
+    static channel_t* rox_cold_short_Addr;
+    static int firsttime_therm = 1;
+    static channel_t* diode_charcoal_hs_Addr; // provisional names until we figure out where all thermometers are
+    static channel_t* diode_vcs2_filt_Addr;
+    static channel_t* diode_250fpa_Addr;
+    static channel_t* diode_hwp_Addr;
+    static channel_t* diode_vcs1_hx_Addr;
+    static channel_t* diode_1k_fridge_Addr;
+    static channel_t* diode_4k_plate_Addr;
+    static channel_t* diode_vcs1_filt_Addr;
+    static channel_t* diode_m3_Addr;
+    static channel_t* diode_charcoal_Addr;
+    static channel_t* diode_ob_filter_Addr;
+    static channel_t* diode_vcs2_plate_Addr;
+    static channel_t* diode_m4_Addr;
+    static channel_t* diode_4k_filt_Addr;
+    static channel_t* diode_vcs2_hx_Addr;
+    static channel_t* diode_vcs1_plate_Addr;
+    if (firsttime_therm = 1) {
+        rox_fpa_1k_a_Addr = channels_find_by_name("tr_fpa_1k_a");
+        rox_fpa_Addr = channels_find_by_name("tr_fpa");
+        rox_1k_plate_Addr = channels_find_by_name("tr_1k_plate");
+        rox_300mk_strap_Addr = channels_find_by_name("tr_300mk_strap");
+        rox_fpa_1k_b_Addr = channels_find_by_name("tr_fpa_1k_b");
+        rox_he4_pot_Addr = channels_find_by_name("tr_he4_pot");
+        rox_he3_fridge_Addr = channels_find_by_name("tr_he3_fridge");
+        rox_cold_short_Addr = channels_find_by_name("tr_cold_short");
+        firsttime_therm = 0;
+    }
 }

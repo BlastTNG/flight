@@ -25,6 +25,7 @@
  */
 
 
+#include <stdint.h>
 #include <glib.h>
 
 #include "phenom/defs.h"
@@ -34,18 +35,18 @@
 
 #include "blast.h"
 
-//Target types for stream configuration
-#define STREAM_TARGET_ETHERNET 0x01  //Ethernet
-#define STREAM_TARGET_USB 0x02  //USB
-#define STREAM_TARGET_CR 0x10  //Command/Response
+// Target types for stream configuration
+#define STREAM_TARGET_ETHERNET 0x01  // Ethernet
+#define STREAM_TARGET_USB 0x02  // USB
+#define STREAM_TARGET_CR 0x10  // Command/Response
 
-//Max samples per packet
+// Max samples per packet
 #define STREAM_MAX_SAMPLES_PER_PACKET_TCP 512
 #define STREAM_TYPE 16
 
-//Stream response statuses
+// Stream response statuses
 #define STREAM_STATUS_AUTO_RECOVER_ACTIVE 2940
-#define STREAM_STATUS_AUTO_RECOVER_END 2941  //Additional Info. = # scans skipped
+#define STREAM_STATUS_AUTO_RECOVER_END 2941  // Additional Info. = # scans skipped
 #define STREAM_STATUS_SCAN_OVERLAP 2942
 #define STREAM_STATUS_AUTO_RECOVER_END_OVERFLOW 2943
 #define STREAM_STATUS_BURST_COMPLETE 2944
@@ -142,9 +143,9 @@ static gint labjack_compare_trans(gconstpointer m_p1, gconstpointer m_p2, gpoint
 
 static void init_labjack_commands(labjack_state_t *m_state)
 {
-    //Configure stream
+    // Configure stream
     enum {NUM_ADDRESSES = 2};
-    float scanRate = 1000.0f; //Scans per second. Samples per second = scanRate * numAddresses
+    float scanRate = 1000.0f; // Scans per second. Samples per second = scanRate * numAddresses
     unsigned int numAddresses = NUM_ADDRESSES;
     unsigned int samplesPerPacket = STREAM_MAX_SAMPLES_PER_PACKET_TCP;
     float settling = 10.0; // 10 microseconds
@@ -153,20 +154,18 @@ static void init_labjack_commands(labjack_state_t *m_state)
     unsigned int autoTarget = STREAM_TARGET_ETHERNET;
     unsigned int numScans = 0; // 0 = Run continuously.
     unsigned int scanListAddresses[NUM_ADDRESSES] = {0};
-    unsigned short nChanList[NUM_ADDRESSES] = {0};
+    uint16_t nChanList[NUM_ADDRESSES] = {0};
     float rangeList[NUM_ADDRESSES] = {0.0};
     unsigned int gainList[NUM_ADDRESSES]; // Based off rangeList
 
-    //Using a loop to add Modbus addresses for AIN0 - AIN(NUM_ADDRESSES-1) to the
-    //stream scan and configure the analog input settings.
-    for(int i = 0; i < numAddresses; i++)
-    {
-        scanListAddresses[i] = i * 2; //AIN(i) (Modbus address i*2)
+    // Using a loop to add Modbus addresses for AIN0 - AIN(NUM_ADDRESSES-1) to the
+    // stream scan and configure the analog input settings.
+    for (int i = 0; i < numAddresses; i++) {
+        scanListAddresses[i] = i * 2; // AIN(i) (Modbus address i*2)
         nChanList[i] = 199; // Negative channel is 199 (single ended)
         rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
         gainList[i] = 0; // gain index 0 = +/-10V
     }
-
 }
 
 
@@ -269,7 +268,7 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
         return;
     }
 
-    switch(data_pkt->header.status) {
+    switch (data_pkt->header.status) {
     case STREAM_STATUS_AUTO_RECOVER_ACTIVE:
     case STREAM_STATUS_AUTO_RECOVER_END:
     case STREAM_STATUS_AUTO_RECOVER_END_OVERFLOW:
