@@ -72,16 +72,15 @@
 
 channel_t channel_list[] =
   {
-    { "tr_fpa_1k_a",     SCALE(CRYO_M5), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-      // TODO(Ian): may also need renaming, unsure.
-    { "tr_fpa",          SCALE(CRYO_M4), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
+    { "tr_fpa_1k",     SCALE(CRYO_M5), TYPE_UINT32, RATE_1HZ, U_R_O, 0 }, // change these scales at some point
+    { "tr_250_fpa",          SCALE(CRYO_M4), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
     { "tr_1k_plate",     SCALE(CRYO_HWPR), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
     { "tr_300mk_strap",  SCALE(CRYO_300MK_STRAP), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-    { "tr_fpa_1k_b",     SCALE(CRYO_HORN_250), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
+    { "tr_350_fpa",     SCALE(CRYO_HORN_250), TYPE_UINT32, RATE_1HZ, U_R_O, 0 }, // on 250 1k stage currently
     { "tr_he4_pot",      SCALE(CRYO_HE4_POT), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
     { "tr_he3_fridge",   SCALE(CRYO_HE3_FRIDGE), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-    { "tr_cold_short",   SCALE(CRYO_HORN_500), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-      // TODO(Ian): rename these appropriately for new thermometer placement
+    { "tr_500_fpa",   SCALE(CRYO_HORN_500), TYPE_UINT32, RATE_1HZ, U_R_O, 0 }, // mapped to a resistor currently
+
     { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
     { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
     { "td_250fpa",        SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
