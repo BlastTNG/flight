@@ -38,6 +38,8 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
+#include "blast.h"
+#include "crc.h"
 #include "roach.h"
 
 static int roach_fft_shift = 255;
@@ -253,6 +255,127 @@ static int roach_return_shift(roach_state_t *m_roach, uint32_t m_chan)
 
 
 }
+
+static int roach_save_1d(const char *m_filename, double *m_data, size_t m_len)
+{
+    uint32_t channel_crc;
+    FILE *fp;
+
+    channel_crc = crc32(BLAST_MAGIC32, m_data, sizeof(double) * m_len);
+    fp = fopen(m_filename, "w");
+    fwrite(&m_len, sizeof(size_t), 1, fp);
+    fwrite(m_data, sizeof(double), m_len, fp);
+    fwrite(&channel_crc, sizeof(channel_crc), 1, fp);
+    fclose(fp);
+    return 0;
+}
+
+static ssize_t roach_load_1d(const char *m_filename, double **m_data)
+{
+    size_t len;
+    FILE *fp;
+    struct stat fp_stat;
+    uint32_t channel_crc;
+
+    if (stat(m_filename, &fp_stat)) {
+        blast_err("Could not get file data for %s: %s", m_filename, strerror(errno));
+        return -1;
+    }
+    if (!(fp = fopen(m_filename, "r"))) {
+        blast_err("Could not open %s for reading: %s", m_filename, strerror(errno));
+        return -1;
+    }
+    if (fread(&len, sizeof(len), 1, fp) != 1) {
+        blast_err("Could not read data length from %s: %s", m_filename, strerror(errno));
+        fclose(fp);
+        return -1;
+    }
+    if ((len * sizeof(double)) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
+        blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu",
+                  (len * sizeof(double)) + sizeof(channel_crc) + sizeof(len), fp_stat.st_size);
+        fclose(fp);
+        return -1;
+    }
+
+    *m_data = calloc(len, sizeof(double));
+    fread(*m_data, sizeof(double), len, fp);
+    fread(&channel_crc, sizeof(channel_crc), 1, fp);
+    fclose(fp);
+
+    if (channel_crc != crc32(BLAST_MAGIC32, *m_data, sizeof(double) * len)) {
+        free(*m_data);
+        *m_data = NULL;
+        blast_err("Mismatched CRC for '%s'.  File corrupted?");
+        len = -1;
+    }
+    return len;
+}
+
+
+static int roach_save_3d(const char *m_filename, size_t m_len, double m_data[3][m_len])
+{
+    uint32_t channel_crc;
+    FILE *fp;
+
+    channel_crc = crc32(BLAST_MAGIC32, m_data[0], sizeof(double) * m_len);
+    channel_crc = crc32(channel_crc, m_data[1], sizeof(double) * m_len);
+    channel_crc = crc32(channel_crc, m_data[2], sizeof(double) * m_len);
+    fp = fopen(m_filename, "w");
+    fwrite(&m_len, sizeof(size_t), 1, fp);
+    fwrite(m_data[0], sizeof(double), m_len, fp);
+    fwrite(&channel_crc, sizeof(channel_crc), 1, fp);
+    fclose(fp);
+    return 0;
+}
+
+static ssize_t roach_load_3d(const char *m_filename, double ***m_data)
+{
+    size_t len;
+    FILE *fp;
+    struct stat fp_stat;
+    uint32_t channel_crc;
+
+    if (stat(m_filename, &fp_stat)) {
+        blast_err("Could not get file data for %s: %s", m_filename, strerror(errno));
+        return -1;
+    }
+    if (!(fp = fopen(m_filename, "r"))) {
+        blast_err("Could not open %s for reading: %s", m_filename, strerror(errno));
+        return -1;
+    }
+    if (fread(&len, sizeof(len), 1, fp) != 1) {
+        blast_err("Could not read data length from %s: %s", m_filename, strerror(errno));
+        fclose(fp);
+        return -1;
+    }
+    if ((3 * len * sizeof(double)) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
+        blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu",
+                  (3 * len * sizeof(double)) + sizeof(channel_crc) + sizeof(len), fp_stat.st_size);
+        fclose(fp);
+        return -1;
+    }
+
+    *m_data = calloc(3, sizeof(double*));
+    (*m_data)[0] = calloc(len, sizeof(double));
+    (*m_data)[1] = calloc(len, sizeof(double));
+    (*m_data)[2] = calloc(len, sizeof(double));
+    fread((*m_data)[0], sizeof(double), len, fp);
+    fread((*m_data)[1], sizeof(double), len, fp);
+    fread((*m_data)[2], sizeof(double), len, fp);
+    fclose(fp);
+
+    channel_crc = crc32(BLAST_MAGIC32, (*m_data)[0], sizeof(double) * len);
+    channel_crc = crc32(channel_crc, (*m_data)[1], sizeof(double) * len);
+    if (channel_crc != crc32(channel_crc, (*m_data)[2], sizeof(double) * len)) {
+        free(*m_data);
+        *m_data = NULL;
+        blast_err("Mismatched CRC for '%s'.  File corrupted?");
+        len = -1;
+    }
+    return len;
+}
+
+
 /**
  * If we have an error, we'll disable the socket and schedule a reconnection attempt.
  *
