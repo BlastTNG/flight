@@ -298,6 +298,11 @@ typedef struct slinger_commanding
     bool biphase_active;
 } slinger_commanding_t;
 
+typedef struct roach
+{
+    unsigned int desired_state;
+} roach_status_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -315,6 +320,8 @@ struct CommandDataStruct {
   uint32_t iridium_bw;
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
+
+  roach_status_t roach[4];
 
   uei_commands_t uei_command;
 
