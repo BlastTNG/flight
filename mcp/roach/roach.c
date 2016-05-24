@@ -375,23 +375,21 @@ static ssize_t roach_load_1d(const char *m_filename, void **m_data, size_t m_ele
 }
 
 
-static int roach_save_3d(const char *m_filename, size_t m_len, double *m_data)
+static int roach_save_2d(const char *m_filename, size_t m_len, double *m_data)
 {
     uint32_t channel_crc;
     FILE *fp;
 
-    channel_crc = crc32(BLAST_MAGIC32, m_data[0], sizeof(double) * m_len);
-    channel_crc = crc32(channel_crc, m_data[1], sizeof(double) * m_len);
-    channel_crc = crc32(channel_crc, m_data[2], sizeof(double) * m_len);
+    channel_crc = crc32(BLAST_MAGIC32, m_data, sizeof(double) * 2 * m_len);
     fp = fopen(m_filename, "w");
     fwrite(&m_len, sizeof(size_t), 1, fp);
-    fwrite(m_data, sizeof(double), m_len, fp);
+    fwrite(m_data, sizeof(double), 2 * m_len, fp);
     fwrite(&channel_crc, sizeof(channel_crc), 1, fp);
     fclose(fp);
     return 0;
 }
 
-static ssize_t roach_load_3d(const char *m_filename, double **m_data)
+static ssize_t roach_load_2d(const char *m_filename, double **m_data)
 {
     size_t len;
     FILE *fp;
@@ -411,21 +409,19 @@ static ssize_t roach_load_3d(const char *m_filename, double **m_data)
         fclose(fp);
         return -1;
     }
-    if ((3 * len * sizeof(double)) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
+    if ((2 * len * sizeof(double)) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
         blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu", m_filename,
-                  (size_t)(3 * len * sizeof(double)) + sizeof(channel_crc) + sizeof(len),
+                  (size_t)(2 * len * sizeof(double)) + sizeof(channel_crc) + sizeof(len),
                   (size_t)fp_stat.st_size);
         fclose(fp);
         return -1;
     }
 
-    *m_data = calloc(3 * len, sizeof(double));
-    fread(*m_data, sizeof(double), len, fp);
-    fread((*m_data) + len, sizeof(double), len, fp);
-    fread((*m_data) + (2 * len), sizeof(double), len, fp);
+    *m_data = calloc(2 * len, sizeof(double));
+    fread(*m_data, sizeof(double), 2 * len, fp);
     fclose(fp);
 
-    if (channel_crc != crc32(BLAST_MAGIC32, *m_data, sizeof(double) * 3 * len)) {
+    if (channel_crc != crc32(BLAST_MAGIC32, *m_data, sizeof(double) * 2 * len)) {
         free(*m_data);
         *m_data = NULL;
         blast_err("Mismatched CRC for '%s'.  File corrupted?", m_filename);
@@ -434,23 +430,57 @@ static ssize_t roach_load_3d(const char *m_filename, double **m_data)
     return len;
 }
 
-static void roach_caclulate_amps(roach_state_t *m_roach, double **m_amps)
+static void roach_caclulate_amps(roach_state_t *m_roach, double **m_mags,
+                                 double **m_avgs, double **m_offsets, double **m_amps)
 {
     double *tmp_data;
     int *channels;
-    if (roach_load_3d(m_roach->vna_path, &tmp_data) <= 0) {
+    ssize_t chan_len;
+    ssize_t vna_len;
+
+    double *Is;
+    double *Qs;
+
+    if ((vna_len = roach_load_2d(m_roach->vna_path, &tmp_data)) <= 0) {
         blast_err("Could not VNA data from %s", m_roach->vna_path);
         *m_amps = NULL;
         return;
     }
-    if (roach_load_1d(m_roach->channels_path, &channels, sizeof(int)) <= 0) {
+
+    Is = tmp_data;
+    Qs = Is + vna_len;
+
+    if ((chan_len = roach_load_1d(m_roach->channels_path, &channels, sizeof(int))) <= 0) {
         blast_err("Could not load channels data from %s", m_roach->channels_path);
         free(tmp_data);
         *m_amps = NULL;
         return;
     }
 
+    double *chan_mags = calloc(vna_len, sizeof(double));
+    double *chan_avgs = calloc(chan_len, sizeof(double));
+    double *offsets = calloc(chan_len, sizeof(double));
+    double *amps = calloc(chan_len, sizeof(double));
+    int sweep_len = vna_len / chan_len;
 
+    for (int chan = 0; chan < chan_len; chan++) {
+        double total_mag = 0.0;
+        double total_offset = 0.0;
+        for (int offset = 0; offset < sweep_len; offset++) {
+            int i = offset + chan * sweep_len;
+            chan_mags[i]= (10.0 * log10(sqrt(pow(Is[i], 2.0) + pow(Qs[i], 2.0))));
+            total_mag += chan_mags[i];
+            if (offset < (sweep_len / 2 - 1) || offset > (sweep_len / 2 + 1)) total_offset += chan_mags[i];
+        }
+        chan_avgs[chan] = total_mag / sweep_len;
+        offsets[chan] = chan_avgs[chan] - total_offset / (sweep_len - 3);
+        amps[chan] = 2.0 - sqrt(pow10(offsets[chan]/10.0));
+    }
+
+    *m_amps = amps;
+    *m_avgs = chan_avgs;
+    *m_mags = chan_mags;
+    *m_offsets = offsets;
 }
 
 /**
