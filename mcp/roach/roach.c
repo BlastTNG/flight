@@ -53,6 +53,7 @@ static double fpga_samp_freq = 256.0e6;
 static int dds_shift = 304; // This varies b/t fpg/bof files
 static int f_base = 300;
 static int fft_len = 1024;
+static size_t lut_buffer_len = (1 << 21);
 
 typedef enum {
     ROACH_STATUS_BOOT,
@@ -64,9 +65,9 @@ typedef enum {
 } e_roach_status;
 
 typedef enum {
+    ROACH_UPLOAD_RESULT_WORKING = 0,
     ROACH_UPLOAD_RESULT_TIMEOUT,
     ROACH_UPLOAD_RESULT_ERROR,
-    ROACH_UPLOAD_RESULT_WORKING,
     ROACH_UPLOAD_RESULT_SUCCESS
 } e_roach_upload_result;
 
@@ -97,6 +98,8 @@ typedef struct {
     int ms_cmd_timeout;
 
     double dac_freq_res;
+    double *freq_residuals;
+
     roach_lut_t DDS;
     roach_lut_t DAC;
     roach_lut_t LUT;
@@ -108,7 +111,7 @@ typedef struct {
 } roach_state_t;
 
 typedef struct {
-    char *firmware_file;
+    const char *firmware_file;
     uint16_t port;
     struct timeval timeout;
     int result;
@@ -229,7 +232,7 @@ static inline int roach_fft_bin_index(double *m_freqs, int m_index, size_t m_fft
     return (int)lround(m_freqs[m_index] / m_samp_freq * m_fft_len);
 }
 static int roach_freq_comb(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen,
-                            int m_samp_freq, bool m_random_phase, bool m_DAQ_LUT, double *m_amplitudes,
+                            int m_samp_freq, bool m_random_phase, bool m_DAQ_LUT,
                             double *m_I, double *m_Q)
 {
     size_t comb_fft_len;
@@ -273,7 +276,7 @@ static int roach_freq_comb(roach_state_t *m_roach, double *m_freqs, size_t m_fre
 }
 
 
-static inline size_t roach_get_max_index (complex double *m_vals, size_t m_len)
+static inline size_t roach_get_max_index(complex double *m_vals, size_t m_len)
 {
     int retval = 0;
     double max_val = 0.0;
@@ -313,7 +316,7 @@ static int roach_return_shift(roach_state_t *m_roach, uint32_t m_chan)
         }
         fftw_execute(shift_plan);
         if (roach_get_max_index(dds_spec, n) == dds_index) {
-            blast_info ("Found LUT shift of %d for %s", i, m_roach->address);
+            blast_info("Found LUT shift of %d for %s", i, m_roach->address);
             retval = i;
             break;
         }
@@ -427,6 +430,7 @@ static ssize_t roach_load_2d(const char *m_filename, double **m_data)
 
     *m_data = calloc(2 * len, sizeof(double));
     fread(*m_data, sizeof(double), 2 * len, fp);
+    fread(&channel_crc, sizeof(channel_crc), 1, fp);
     fclose(fp);
 
     if (channel_crc != crc32(BLAST_MAGIC32, *m_data, sizeof(double) * 2 * len)) {
@@ -491,6 +495,64 @@ static void roach_caclulate_amps(roach_state_t *m_roach, double **m_mags,
     *m_offsets = offsets;
 }
 
+static void roach_select_bins(roach_state_t *m_roach, double *m_freqs)
+{
+    int bins[fft_len];;
+    double bin_freqs[fft_len];
+    int last_bin = -1;
+    int ch = 0;
+
+    for (int i = 0; i < fft_len; i++) {
+        bins[i] = roach_fft_bin_index(m_freqs, i, fft_len, dac_samp_freq);
+        bin_freqs[i] = bins[i] * dac_samp_freq / fft_len;
+        m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / m_roach->dac_freq_res)
+                                        * m_roach->dac_freq_res;
+    }
+    for (int i = 0; i < fft_len; i++) {
+        if (bins[i] == last_bin) continue;
+        roach_write_int(m_roach, "bins", bins[i], 0);
+        roach_write_int(m_roach, "load_bins", 2 * ch + 1, 0);
+        roach_write_int(m_roach, "load_bins", 0, 0);
+        ch++;
+    }
+    /**
+     * Fill any remaining channelizer addresses with '0'
+     */
+    for (int i = ch; i < fft_len; i++) {
+        roach_write_int(m_roach, "bins", 0, 0);
+        roach_write_int(m_roach, "load_bins", 2 * ch + 1, 0);
+        roach_write_int(m_roach, "load_bins", 0, 0);
+        ch++;
+    }
+}
+
+void roach_define_DDS_LUT(roach_state_t *m_roach, double *m_freqs)
+{
+    roach_select_bins(m_roach, m_freqs);
+
+    if (m_roach->DDS.len > 0 && m_roach->DDS.len != lut_buffer_len) {
+        free(m_roach->DDS.I);
+        free(m_roach->DDS.Q);
+        m_roach->DDS.len = 0;
+    }
+    if (m_roach->DDS.len == 0) {
+        m_roach->DDS.I = calloc(lut_buffer_len, sizeof(double));
+        m_roach->DDS.Q = calloc(lut_buffer_len, sizeof(double));
+        m_roach->DDS.len = lut_buffer_len;
+    }
+
+    for (int i = 0; i < fft_len; i++) {
+        double I[fft_len];
+        double Q[fft_len];
+        roach_freq_comb(m_roach, &m_roach->freq_residuals[i], 1,
+                        fpga_samp_freq / (fft_len / 2), false, false,
+                        I, Q);
+        for (int j = i, k = 1; j < fft_len * fft_len; j += fft_len, k++) {
+            m_roach->DDS.I[j] = I[k];
+            m_roach->DDS.Q[j] = Q[k];
+        }
+    }
+}
 /**
  * If we have an error, we'll disable the socket and schedule a reconnection attempt.
  *
@@ -500,7 +562,6 @@ static void roach_caclulate_amps(roach_state_t *m_roach, double **m_mags,
  */
 static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
-    ph_buf_t *buf;
     firmware_state_t *state = (firmware_state_t*) m_data;
 
     /**
@@ -521,11 +582,10 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
     ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
     ph_sock_enable(m_sock, 0);
     ph_sock_free(m_sock);
-    return;
 }
 
 /**
- * Handle a connection callback from @connect_lj.  The connection may succeed or fail.
+ * Handle a connection callback.  The connection may succeed or fail.
  * If it fails, we increase the backoff time and reschedule another attempt.
  *
  * @param m_sock Pointer to the new sock that is created on a successful connection
@@ -533,7 +593,7 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
  * @param m_errcode If the status indicates an error, this value is the errno
  * @param m_addr Unused
  * @param m_elapsed Unused
- * @param m_data Pointer to our LabJack State variable
+ * @param m_data Pointer to our ROACH firmware upload state variable
  */
 static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_sockaddr_t *m_addr,
                       struct timeval *m_elapsed, void *m_data)
@@ -584,25 +644,35 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     }
 }
 
-/**
- * Handles the connection job.  Formatted this way to allow us to schedule
- * a future timeout in the PH_JOB infrastructure
- *
- * @param m_job Unused
- * @param m_why Unused
- * @param m_data Pointer to the labjack State variable
- */
-static void connect_roach_firmware(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
+int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 {
-    ph_unused_parameter(m_job);
-    ph_unused_parameter(m_why);
-    firmware_state_t *state = (firmware_state_t*)m_data;
+    firmware_state_t state = {
+                              .firmware_file = m_filename,
+                              .port = (uint16_t) (drand48() * 500.0 + 5000),
+                              .timeout.tv_sec = 5,
+                              .timeout.tv_usec = 0,
+                              .roach = m_roach
+    };
 
-    blast_info("Connecting to %s", state->roach->address);
-    ph_sock_resolve_and_connect(state->roach->address, state->port,
-        &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, m_data);
+    int retval = send_rpc_katcl(m_roach->rpc_conn, m_roach->ms_cmd_timeout,
+                       KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
+                       KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
+                       NULL);
+    if (retval != KATCP_RESULT_OK) {
+        blast_err("Could not request upload port for ROACH firmware on %s!", m_roach->address);
+        return -1;
+    }
+    ph_sock_resolve_and_connect(state.roach->address, state.port,
+        &state.timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, &state);
+
+    while (state.result == ROACH_UPLOAD_RESULT_WORKING) {
+        usleep(1000);
+    }
+
+    if (state.result != ROACH_UPLOAD_RESULT_SUCCESS) return -1;
+
+    return 0;
 }
-
 int init_roach(void)
 {
     return 0;
