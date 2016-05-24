@@ -253,7 +253,7 @@ _STL_HEADERS = frozenset([
 _CPP_HEADERS = frozenset([
     'algo.h', 'builtinbuf.h', 'bvector.h', 'cassert', 'cctype',
     'cerrno', 'cfloat', 'ciso646', 'climits', 'clocale', 'cmath',
-    'complex', 'complex.h', 'csetjmp', 'csignal', 'cstdarg', 'cstddef',
+    'complex', 'csetjmp', 'csignal', 'cstdarg', 'cstddef',
     'cstdio', 'cstdlib', 'cstring', 'ctime', 'cwchar', 'cwctype',
     'defalloc.h', 'deque.h', 'editbuf.h', 'exception', 'fstream',
     'fstream.h', 'hashtable.h', 'heap.h', 'indstream.h', 'iomanip',
