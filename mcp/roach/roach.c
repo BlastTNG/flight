@@ -375,7 +375,7 @@ static ssize_t roach_load_1d(const char *m_filename, void **m_data, size_t m_ele
 }
 
 
-static int roach_save_3d(const char *m_filename, size_t m_len, double m_data[3][m_len])
+static int roach_save_3d(const char *m_filename, size_t m_len, double *m_data)
 {
     uint32_t channel_crc;
     FILE *fp;
@@ -385,7 +385,7 @@ static int roach_save_3d(const char *m_filename, size_t m_len, double m_data[3][
     channel_crc = crc32(channel_crc, m_data[2], sizeof(double) * m_len);
     fp = fopen(m_filename, "w");
     fwrite(&m_len, sizeof(size_t), 1, fp);
-    fwrite(m_data[0], sizeof(double), m_len, fp);
+    fwrite(m_data, sizeof(double), m_len, fp);
     fwrite(&channel_crc, sizeof(channel_crc), 1, fp);
     fclose(fp);
     return 0;
@@ -425,9 +425,7 @@ static ssize_t roach_load_3d(const char *m_filename, double **m_data)
     fread((*m_data) + (2 * len), sizeof(double), len, fp);
     fclose(fp);
 
-    channel_crc = crc32(BLAST_MAGIC32, (*m_data), sizeof(double) * 3 * len);
-    channel_crc = crc32(channel_crc, (*m_data)[1], sizeof(double) * len);
-    if (channel_crc != crc32(channel_crc, (*m_data)[2], sizeof(double) * len)) {
+    if (channel_crc != crc32(BLAST_MAGIC32, *m_data, sizeof(double) * 3 * len)) {
         free(*m_data);
         *m_data = NULL;
         blast_err("Mismatched CRC for '%s'.  File corrupted?", m_filename);
@@ -438,7 +436,7 @@ static ssize_t roach_load_3d(const char *m_filename, double **m_data)
 
 static void roach_caclulate_amps(roach_state_t *m_roach, double **m_amps)
 {
-    double **tmp_data;
+    double *tmp_data;
     int *channels;
     if (roach_load_3d(m_roach->vna_path, &tmp_data) <= 0) {
         blast_err("Could not VNA data from %s", m_roach->vna_path);
@@ -447,8 +445,11 @@ static void roach_caclulate_amps(roach_state_t *m_roach, double **m_amps)
     }
     if (roach_load_1d(m_roach->channels_path, &channels, sizeof(int)) <= 0) {
         blast_err("Could not load channels data from %s", m_roach->channels_path);
-        free(*)
+        free(tmp_data);
+        *m_amps = NULL;
+        return;
     }
+
 
 }
 
