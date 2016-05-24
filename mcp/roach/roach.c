@@ -23,15 +23,20 @@
  *      Author: seth
  */
 
-#include <stdint.h>
 #include <complex.h>
+#include <fcntl.h>
 #include <math.h>
+#include <stdint.h>
+#include <sys/stat.h>
 
 // N.B. fftw3.h needs to be AFTER complex.h
 #include <fftw3.h>
 
-#include <katcp.h>
-#include <katcl.h>
+// N.B. "I" is a terrible definition as many headers (OpenSSL!) use it.  We'll expand to _Complex_I
+#undef I
+
+#include "katcp.h"
+#include "katcl.h"
 
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -59,21 +64,21 @@ typedef enum {
 } e_roach_status;
 
 typedef struct {
-    int32_t II;
-    int32_t QQ;
+    int32_t I;
+    int32_t Q;
 } __attribute__((packed)) udp_element_t;
 
 typedef struct {
-    udp_header_t header;
     udp_element_t data[1024];
-    uint64_t timestamp;
-    uint32_t checksum;
+    uint32_t cycle_count;
+    uint32_t pps_count:24;
+    uint32_t pkt_count:8;
 } __attribute__((packed)) udp_packet_t;
 
 typedef struct {
     size_t len;
-    double *II;
-    double *QQ;
+    double *I;
+    double *Q;
 } roach_lut_t;
 
 typedef struct {
@@ -88,6 +93,9 @@ typedef struct {
     roach_lut_t DDS;
     roach_lut_t DAC;
     roach_lut_t LUT;
+
+    char *vna_path;
+    char *channels_path;
 
     struct katcl_line *rpc_conn;
 } roach_state_t;
@@ -116,9 +124,9 @@ static void roach_buffer_ntohs(uint16_t *m_buffer, size_t m_len)
     }
 }
 
-static int roach_write_int(roach_state_t *m_roach, const char *m_register, unsigned long m_val, unsigned long m_offset)
+static int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_val, uint32_t m_offset)
 {
-    unsigned long sendval = htonl(m_val);
+    uint32_t sendval = htonl(m_val);
     return send_rpc_katcl(m_roach->rpc_conn, m_roach->ms_cmd_timeout,
                    KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?write",
                    KATCP_FLAG_STRING, m_register,
@@ -161,10 +169,11 @@ static int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *
     return 0;
 }
 
-static int roach_reset_dac(roach_state_t *m_roach,)
+static int roach_reset_dac(roach_state_t *m_roach)
 {
     roach_write_int(m_roach, "dac_reset", 1, 0);
     roach_write_int(m_roach, "dac_reset", 0, 0);
+    return 0;
 }
 
 static int roach_read_mixer_snaps(roach_state_t *m_roach, uint32_t m_shift, uint32_t m_chan,
@@ -181,18 +190,18 @@ static int roach_read_mixer_snaps(roach_state_t *m_roach, uint32_t m_shift, uint
     if (roach_write_int(m_roach, "mixerout_ctrl", 1, 0)) return -1;
 
     temp_data = calloc(sizeof(int16_t), buffer_len);
-    if (roach_read_data(m_roach, temp_data, "rawfftbin_bram", 0, buffer_len * sizeof(uint16_t))) {
+    if (roach_read_data(m_roach, (uint8_t*)temp_data, "rawfftbin_bram", 0, buffer_len * sizeof(uint16_t))) {
         free(temp_data);
         return -1;
     }
-    roach_buffer_ntohs(temp_data, buffer_len);
+    roach_buffer_ntohs((uint16_t*)temp_data, buffer_len);
     for (size_t i = 0; i < buffer_len; i++) {
         m_mixer_in[i] = temp_data[i] / ((float)(1<<15));
     }
 
     if (m_mixer_out) {
-        if (roach_read_data(m_roach, temp_data, "mixerout_bram", 0, buffer_len)) return -1;
-        roach_buffer_ntohs(temp_data, buffer_len / 2);
+        if (roach_read_data(m_roach, (uint8_t*)temp_data, "mixerout_bram", 0, buffer_len)) return -1;
+        roach_buffer_ntohs((uint16_t*)temp_data, buffer_len / 2);
         for (size_t i = 0; i < buffer_len / 2; i++) {
             m_mixer_out[i] = temp_data[i] / ((double)(1<<14));
         }
@@ -203,8 +212,8 @@ static int roach_read_mixer_snaps(roach_state_t *m_roach, uint32_t m_shift, uint
 static void roach_init_LUT(roach_state_t * m_roach, size_t m_len)
 {
     m_roach->LUT.len = m_len;
-    m_roach->LUT.II = calloc(m_len, sizeof(double));
-    m_roach->LUT.QQ = calloc(m_len, sizeof(double));
+    m_roach->LUT.I = calloc(m_len, sizeof(double));
+    m_roach->LUT.Q = calloc(m_len, sizeof(double));
 }
 
 static inline int roach_fft_bin_index(double *m_freqs, int m_index, size_t m_fft_len, double m_samp_freq)
@@ -216,6 +225,7 @@ static int roach_freq_comb(roach_state_t *m_roach, double *m_freqs, size_t m_fre
                             double *m_I, double *m_Q)
 {
     size_t comb_fft_len;
+    fftw_plan comb_plan;
 
     for (size_t i = 0; i < m_freqlen; i++) {
         m_freqs[i] = round(m_freqs[i] / m_roach->dac_freq_res) * m_roach->dac_freq_res;
@@ -227,22 +237,26 @@ static int roach_freq_comb(roach_state_t *m_roach, double *m_freqs, size_t m_fre
         comb_fft_len = m_roach->LUT.len / fft_len;
     }
 
-    double complex *spec = fftw_malloc(comb_fft_len * sizeof(double complex));
-    double complex *wave = fftw_malloc(comb_fft_len * sizeof(double complex));
+    complex double *spec = (complex double*)fftw_malloc(comb_fft_len * sizeof(complex double));
+    complex double *wave = (complex double*)fftw_malloc(comb_fft_len * sizeof(complex double));
     double max_val = 0.0;
 
 
     srand48(time(NULL));
     for (size_t i = 0; i < comb_fft_len; i++) {
-        spec[roach_fft_bin_index(i)] = cexp(I * drand48() * 2.0 * M_PI);
+        spec[roach_fft_bin_index(m_freqs, i, comb_fft_len, m_samp_freq)] =
+                cexp(_Complex_I * drand48() * 2.0 * M_PI);
     }
-    fftw_execute(fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD, FFTW_ESTIMATE));
+    comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_execute(comb_plan);
+    fftw_destroy_plan(comb_plan);
+
     for (size_t i = 0; i < comb_fft_len; i++) {
         if (cabs(spec[i]) > max_val) max_val = cabs(spec[i]);
     }
     for (size_t i = 0; i < comb_fft_len; i++) {
-        m_I[i] = creal(wave) / max_val * ((1<<15)-1);
-        m_Q[i] = cimag(wave) / max_val * ((1<<15)-1);
+        m_I[i] = creal(wave[i]) / max_val * ((1<<15)-1);
+        m_Q[i] = cimag(wave[i]) / max_val * ((1<<15)-1);
     }
 
     fftw_free(spec);
@@ -250,27 +264,76 @@ static int roach_freq_comb(roach_state_t *m_roach, double *m_freqs, size_t m_fre
     return 0;
 }
 
-static int roach_return_shift(roach_state_t *m_roach, uint32_t m_chan)
+
+static inline size_t roach_get_max_index (complex double *m_vals, size_t m_len)
 {
-
-
+    int retval = 0;
+    double max_val = 0.0;
+    for (size_t i = 0; i < m_len; i++) {
+        if (cabs(m_vals[i]) > max_val) {
+            max_val = cabs(m_vals[i]);
+            retval = i;
+        }
+    }
+    return retval;
 }
 
-static int roach_save_1d(const char *m_filename, double *m_data, size_t m_len)
+static int roach_return_shift(roach_state_t *m_roach, uint32_t m_chan)
+{
+    int n = 1024;
+    int istride = 1024;
+    int ostride = 1;
+    int retval = 0;
+    size_t dds_index = 0;
+
+    complex double *dds_spec = (complex double*)fftw_malloc(n * sizeof(complex double));
+    double *mixer_snaps = (double *)fftw_malloc((1<<17) * sizeof(double));
+    double *dds_in = (double *)fftw_malloc((1<<14) * sizeof(double));
+
+    fftw_plan shift_plan = fftw_plan_many_dft_r2c(1, &n, 1, m_roach->DDS.I, &n, istride, 0,
+                                                dds_spec, &n, ostride, 0, FFTW_ESTIMATE);
+    fftw_execute(shift_plan);
+    fftw_destroy_plan(shift_plan);
+
+    dds_index = roach_get_max_index(dds_spec, n);
+
+    shift_plan = fftw_plan_dft_r2c_1d(n, dds_in, dds_spec, FFTW_ESTIMATE);
+    for (int i = 0; i < 512; i++) {
+        roach_read_mixer_snaps(m_roach, i, m_chan, mixer_snaps, NULL);
+        for (size_t j = 2, k = 0; j < (1<<14); j += 8, k++) {
+            dds_in[k] = (mixer_snaps[j] > INT16_MAX) ? mixer_snaps[j] - UINT16_MAX : mixer_snaps[j];
+        }
+        fftw_execute(shift_plan);
+        if (roach_get_max_index(dds_spec, n) == dds_index) {
+            blast_info ("Found LUT shift of %d for %s", i, m_roach->address);
+            retval = i;
+            break;
+        }
+    }
+
+    fftw_destroy_plan(shift_plan);
+    fftw_free(dds_spec);
+    fftw_free(mixer_snaps);
+    fftw_free(dds_in);
+
+    return retval;
+}
+
+static int roach_save_1d(const char *m_filename, void *m_data, size_t m_element_size, size_t m_len)
 {
     uint32_t channel_crc;
     FILE *fp;
 
-    channel_crc = crc32(BLAST_MAGIC32, m_data, sizeof(double) * m_len);
+    channel_crc = crc32(BLAST_MAGIC32, m_data, m_element_size * m_len);
     fp = fopen(m_filename, "w");
     fwrite(&m_len, sizeof(size_t), 1, fp);
-    fwrite(m_data, sizeof(double), m_len, fp);
+    fwrite(m_data, m_element_size, m_len, fp);
     fwrite(&channel_crc, sizeof(channel_crc), 1, fp);
     fclose(fp);
     return 0;
 }
 
-static ssize_t roach_load_1d(const char *m_filename, double **m_data)
+static ssize_t roach_load_1d(const char *m_filename, void **m_data, size_t m_element_size)
 {
     size_t len;
     FILE *fp;
@@ -290,22 +353,22 @@ static ssize_t roach_load_1d(const char *m_filename, double **m_data)
         fclose(fp);
         return -1;
     }
-    if ((len * sizeof(double)) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
-        blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu",
-                  (len * sizeof(double)) + sizeof(channel_crc) + sizeof(len), fp_stat.st_size);
+    if ((len * m_element_size) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
+        blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu", m_filename,
+                  (len * m_element_size) + sizeof(channel_crc) + sizeof(len), fp_stat.st_size);
         fclose(fp);
         return -1;
     }
 
-    *m_data = calloc(len, sizeof(double));
-    fread(*m_data, sizeof(double), len, fp);
+    *m_data = calloc(len, m_element_size);
+    fread(*m_data, m_element_size, len, fp);
     fread(&channel_crc, sizeof(channel_crc), 1, fp);
     fclose(fp);
 
-    if (channel_crc != crc32(BLAST_MAGIC32, *m_data, sizeof(double) * len)) {
+    if (channel_crc != crc32(BLAST_MAGIC32, *m_data, m_element_size * len)) {
         free(*m_data);
         *m_data = NULL;
-        blast_err("Mismatched CRC for '%s'.  File corrupted?");
+        blast_err("Mismatched CRC for '%s'.  File corrupted?", m_filename);
         len = -1;
     }
     return len;
@@ -328,7 +391,7 @@ static int roach_save_3d(const char *m_filename, size_t m_len, double m_data[3][
     return 0;
 }
 
-static ssize_t roach_load_3d(const char *m_filename, double ***m_data)
+static ssize_t roach_load_3d(const char *m_filename, double **m_data)
 {
     size_t len;
     FILE *fp;
@@ -349,32 +412,45 @@ static ssize_t roach_load_3d(const char *m_filename, double ***m_data)
         return -1;
     }
     if ((3 * len * sizeof(double)) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
-        blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu",
-                  (3 * len * sizeof(double)) + sizeof(channel_crc) + sizeof(len), fp_stat.st_size);
+        blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu", m_filename,
+                  (size_t)(3 * len * sizeof(double)) + sizeof(channel_crc) + sizeof(len),
+                  (size_t)fp_stat.st_size);
         fclose(fp);
         return -1;
     }
 
-    *m_data = calloc(3, sizeof(double*));
-    (*m_data)[0] = calloc(len, sizeof(double));
-    (*m_data)[1] = calloc(len, sizeof(double));
-    (*m_data)[2] = calloc(len, sizeof(double));
-    fread((*m_data)[0], sizeof(double), len, fp);
-    fread((*m_data)[1], sizeof(double), len, fp);
-    fread((*m_data)[2], sizeof(double), len, fp);
+    *m_data = calloc(3 * len, sizeof(double));
+    fread(*m_data, sizeof(double), len, fp);
+    fread((*m_data) + len, sizeof(double), len, fp);
+    fread((*m_data) + (2 * len), sizeof(double), len, fp);
     fclose(fp);
 
-    channel_crc = crc32(BLAST_MAGIC32, (*m_data)[0], sizeof(double) * len);
+    channel_crc = crc32(BLAST_MAGIC32, (*m_data), sizeof(double) * 3 * len);
     channel_crc = crc32(channel_crc, (*m_data)[1], sizeof(double) * len);
     if (channel_crc != crc32(channel_crc, (*m_data)[2], sizeof(double) * len)) {
         free(*m_data);
         *m_data = NULL;
-        blast_err("Mismatched CRC for '%s'.  File corrupted?");
+        blast_err("Mismatched CRC for '%s'.  File corrupted?", m_filename);
         len = -1;
     }
     return len;
 }
 
+static void roach_caclulate_amps(roach_state_t *m_roach, double **m_amps)
+{
+    double **tmp_data;
+    int *channels;
+    if (roach_load_3d(m_roach->vna_path, &tmp_data) <= 0) {
+        blast_err("Could not VNA data from %s", m_roach->vna_path);
+        *m_amps = NULL;
+        return;
+    }
+    if (roach_load_1d(m_roach->channels_path, &channels, sizeof(int)) <= 0) {
+        blast_err("Could not load channels data from %s", m_roach->channels_path);
+        free(*)
+    }
+
+}
 
 /**
  * If we have an error, we'll disable the socket and schedule a reconnection attempt.
@@ -383,7 +459,7 @@ static ssize_t roach_load_3d(const char *m_filename, double ***m_data)
  * @param m_why Flag indicating why the routine was called
  * @param m_data Pointer to our state data
  */
-static void firmware_upload_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
+static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
     ph_buf_t *buf;
     firmware_state_t *state = (firmware_state_t*) m_data;
@@ -393,16 +469,12 @@ static void firmware_upload_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why,
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
     if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
-      blast_err("disconnecting from firmware upload at %s due to connection issue", state->address);
+      blast_err("disconnecting from firmware upload at %s due to connection issue", state->roach->address);
       ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
       ph_sock_enable(m_sock, 0);
-
-
       return;
     }
 
-    buf = ph_sock_read_bytes_exact(m_sock, sizeof(labjack_data_header_t) + state_data->num_channels * 2);
-    if (!buf) return; /// We do not have enough data
 
     ph_buf_delref(buf);
 }
@@ -444,11 +516,27 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     if (state->sock) ph_sock_free(state->sock);
 
     state->sock = m_sock;
-    state->connected = true;
-    state->backoff_sec = min_backoff_sec;
-    m_sock->callback = (state->port == cmd_port)?labjack_process_cmd_resp:labjack_process_stream;
+    m_sock->callback = firmware_upload_process_return;
+    m_sock->timeout_duration.tv_sec = 30; // TODO(sam): Is 30s long enough to wait before re-trying?
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
+
+    /**
+     * We have enabled the socket and now we buffer the firmware file into the network
+     */
+    {
+        size_t number_bytes;
+        ph_stream_t *firmware_stm = ph_stm_file_open(state->firmware_file, O_RDONLY, 0);
+        if (!ph_stm_copy(firmware_stm, m_sock->stream, PH_STREAM_READ_ALL, NULL, &number_bytes)) {
+            blast_err("Error getting data from %s: %s", state->firmware_file,
+                      strerror(ph_stm_errno(firmware_stm)));
+            ph_sock_shutdown(state->sock, PH_SOCK_SHUT_RDWR);
+            ph_sock_enable(state->sock, false);
+        } else {
+            blast_info("Loading %s with %zu bytes", state->firmware_file, number_bytes);
+        }
+        ph_stm_close(firmware_stm);
+    }
 }
 
 /**
@@ -470,7 +558,7 @@ static void connect_roach_firmware(ph_job_t *m_job, ph_iomask_t m_why, void *m_d
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, m_data);
 }
 
-int init_roach(void) {
-
-    katcp_
+int init_roach(void)
+{
+    return 0;
 }
