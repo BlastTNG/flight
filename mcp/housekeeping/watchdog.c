@@ -45,7 +45,9 @@ static int watchdog_fd = -1;
 void watchdog_ping()
 {
     int dummy;
-    ioctl(watchdog_fd, WDIOC_KEEPALIVE, &dummy);
+    if (watchdog_fd != -1) {
+        ioctl(watchdog_fd, WDIOC_KEEPALIVE, &dummy);
+    }
 }
 
 /**
