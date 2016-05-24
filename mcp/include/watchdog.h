@@ -27,6 +27,7 @@
 
 
 void watchdog_ping();
+int watchdog_get_tickle(void);
 void watchdog_close(void);
 int initialize_watchdog(int m_timeout);
 
