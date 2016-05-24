@@ -75,6 +75,7 @@ void store_100hz_cryo(void)
     SET_UINT16(heaterAddr, heatctrl);
 }
 void read_thermometers(void) {
+    static int firsttime_therm = 1;
     static channel_t* rox_fpa_1k_Addr;
     static channel_t* rox_250_fpa_Addr;
     static channel_t* rox_1k_plate_Addr;
@@ -83,7 +84,6 @@ void read_thermometers(void) {
     static channel_t* rox_he4_pot_Addr;
     static channel_t* rox_he3_fridge_Addr;
     static channel_t* rox_500_fpa_Addr;
-    static int firsttime_therm = 1;
     static channel_t* diode_charcoal_hs_Addr; // provisional names until we figure out where all thermometers are
     static channel_t* diode_vcs2_filt_Addr;
     static channel_t* diode_250fpa_Addr;
@@ -110,7 +110,6 @@ void read_thermometers(void) {
         rox_he3_fridge_Addr = channels_find_by_name("tr_he3_fridge");
         rox_500_fpa_Addr = channels_find_by_name("tr_500_fpa");
         // rox channel pointers defined above
-        firsttime_therm = 0;
         // diode channel pointers defined below
         diode_charcoal_hs_Addr = channels_find_by_name("td_charcoal_hs");
         diode_vcs2_filt_Addr = channels_find_by_name("td_vcs2_filt");
@@ -128,7 +127,33 @@ void read_thermometers(void) {
         diode_4k_filt_Addr = channels_find_by_name("td_4k_filt");
         diode_vcs2_hx_Addr = channels_find_by_name("td_vcs2_hx");
         diode_vcs1_plate_Addr = channels_find_by_name("td_vcs1_plate");
+        firsttime_therm = 0;
     }
 
+    // these labjack channels need to all be changed once set up
     SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_250fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_hwp_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_vcs1_hx_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_1k_fridge_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_4k_plate_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_vcs1_filt_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_m3_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_charcoal_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_ob_filter_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_vcs2_plate_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_m4_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_4k_filt_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_vcs2_hx_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    // above are the diodes, below, the ROXes
+    SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
 }
