@@ -63,6 +63,13 @@ typedef enum {
     ROACH_STATUS_STREAMING,
 } e_roach_status;
 
+typedef enum {
+    ROACH_UPLOAD_RESULT_TIMEOUT,
+    ROACH_UPLOAD_RESULT_ERROR,
+    ROACH_UPLOAD_RESULT_WORKING,
+    ROACH_UPLOAD_RESULT_SUCCESS
+} e_roach_upload_result;
+
 typedef struct {
     int32_t I;
     int32_t Q;
@@ -104,6 +111,7 @@ typedef struct {
     char *firmware_file;
     uint16_t port;
     struct timeval timeout;
+    int result;
     roach_state_t *roach;
     ph_sock_t *sock;
 } firmware_state_t;
@@ -450,7 +458,7 @@ static void roach_caclulate_amps(roach_state_t *m_roach, double **m_mags,
     Is = tmp_data;
     Qs = Is + vna_len;
 
-    if ((chan_len = roach_load_1d(m_roach->channels_path, &channels, sizeof(int))) <= 0) {
+    if ((chan_len = roach_load_1d(m_roach->channels_path, (void**)&channels, sizeof(int))) <= 0) {
         blast_err("Could not load channels data from %s", m_roach->channels_path);
         free(tmp_data);
         *m_amps = NULL;
@@ -499,15 +507,21 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
      * If we have an error, or do not receive data from the LabJack in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
-    if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
-      blast_err("disconnecting from firmware upload at %s due to connection issue", state->roach->address);
-      ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
-      ph_sock_enable(m_sock, 0);
-      return;
+    if (m_why & (PH_IOMASK_ERR)) {
+        blast_err("disconnecting from firmware upload at %s due to connection issue", state->roach->address);
+        state->result = ROACH_UPLOAD_RESULT_ERROR;
+    } else if (m_why & PH_IOMASK_TIME) {
+        blast_err("Timeout uploading firmware to %s", state->roach->address);
+        state->result = ROACH_UPLOAD_RESULT_TIMEOUT;
+    } else if (m_why & PH_IOMASK_WRITE) {
+        blast_info("Successfully uploaded firmware to %s", state->roach->address);
+        state->result = ROACH_UPLOAD_RESULT_SUCCESS;
     }
 
-
-    ph_buf_delref(buf);
+    ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
+    ph_sock_enable(m_sock, 0);
+    ph_sock_free(m_sock);
+    return;
 }
 
 /**
