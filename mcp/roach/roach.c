@@ -90,6 +90,12 @@ typedef struct {
 } roach_lut_t;
 
 typedef struct {
+    size_t len;
+    uint16_t *I;
+    uint16_t *Q;
+} roach_uint16_lut_t;
+
+typedef struct {
     int status;
     int has_error;
     const char *last_err;
@@ -103,7 +109,7 @@ typedef struct {
 
     roach_lut_t DDS;
     roach_lut_t DAC;
-    roach_lut_t LUT;
+    roach_uint16_lut_t LUT;
 
     char *vna_path;
     char *channels_path;
@@ -151,7 +157,7 @@ static int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *
                            uint32_t m_offset, uint32_t m_size)
 {
     int retval = send_rpc_katcl(m_roach->rpc_conn, m_roach->ms_cmd_timeout,
-                   KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "read",
+                   KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?read",
                    KATCP_FLAG_STRING, m_register,
                    KATCP_FLAG_ULONG, m_offset,
                    KATCP_FLAG_ULONG | KATCP_FLAG_LAST, m_size,
@@ -576,26 +582,26 @@ void roach_pack_LUTs(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
     roach_define_DDS_LUT(m_roach, m_freqs, m_freqlen);
     roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
-    if (m_roach->LUT.len > 0 && m_roach->LUT.len != 2 * lut_buffer_len) {
-        free(m_roach->LUT.I);
-        free(m_roach->LUT.Q);
-        m_roach->LUT.len = 0;
-    }
-    if (m_roach->LUT.len == 0) {
-        m_roach->LUT.I = calloc(2 * lut_buffer_len, sizeof(double));
-        m_roach->LUT.Q = calloc(2 * lut_buffer_len, sizeof(double));
-        m_roach->LUT.len = lut_buffer_len;
+
+    if (m_roach->LUT.len != 2 * lut_buffer_len) {
+        if (m_roach->LUT.len) {
+            free(m_roach->LUT.I);
+            free(m_roach->LUT.Q);
+        }
+        m_roach->LUT.I = calloc(2 * lut_buffer_len, sizeof(uint16_t));
+        m_roach->LUT.Q = calloc(2 * lut_buffer_len, sizeof(uint16_t));
+        m_roach->LUT.len = 2 * lut_buffer_len;
     }
 
     for (size_t i = 0; i < lut_buffer_len; i += 2) {
-        m_roach->LUT.I[2 * i + 0] = m_roach->DAC.I[i + 1];
-        m_roach->LUT.I[2 * i + 1] = m_roach->DAC.I[i];
-        m_roach->LUT.I[2 * i + 2] = m_roach->DDS.I[i + 1];
-        m_roach->LUT.I[2 * i + 3] = m_roach->DDS.I[i];
-        m_roach->LUT.Q[2 * i + 0] = m_roach->DAC.Q[i + 1];
-        m_roach->LUT.Q[2 * i + 1] = m_roach->DAC.Q[i];
-        m_roach->LUT.Q[2 * i + 2] = m_roach->DDS.Q[i + 1];
-        m_roach->LUT.Q[2 * i + 3] = m_roach->DDS.Q[i];
+        m_roach->LUT.I[2 * i + 0] = htons(m_roach->DAC.I[i + 1]);
+        m_roach->LUT.I[2 * i + 1] = htons(m_roach->DAC.I[i]);
+        m_roach->LUT.I[2 * i + 2] = htons(m_roach->DDS.I[i + 1]);
+        m_roach->LUT.I[2 * i + 3] = htons(m_roach->DDS.I[i]);
+        m_roach->LUT.Q[2 * i + 0] = htons(m_roach->DAC.Q[i + 1]);
+        m_roach->LUT.Q[2 * i + 1] = htons(m_roach->DAC.Q[i]);
+        m_roach->LUT.Q[2 * i + 2] = htons(m_roach->DDS.Q[i + 1]);
+        m_roach->LUT.Q[2 * i + 3] = htons(m_roach->DDS.Q[i]);
     }
 }
 /**
