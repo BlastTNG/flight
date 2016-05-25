@@ -99,6 +99,7 @@ typedef struct {
 
     double dac_freq_res;
     double *freq_residuals;
+    size_t lut_buffer_len;
 
     roach_lut_t DDS;
     roach_lut_t DAC;
@@ -243,9 +244,9 @@ static int roach_freq_comb(roach_state_t *m_roach, double *m_freqs, size_t m_fre
     }
 
     if (m_DAQ_LUT) {
-        comb_fft_len = m_roach->LUT.len;
+        comb_fft_len = m_roach->lut_buffer_len;
     } else {
-        comb_fft_len = m_roach->LUT.len / fft_len;
+        comb_fft_len = m_roach->lut_buffer_len / fft_len;
     }
 
     complex double *spec = (complex double*)fftw_malloc(comb_fft_len * sizeof(complex double));
@@ -254,7 +255,7 @@ static int roach_freq_comb(roach_state_t *m_roach, double *m_freqs, size_t m_fre
 
 
     srand48(time(NULL));
-    for (size_t i = 0; i < comb_fft_len; i++) {
+    for (size_t i = 0; i < m_freqlen; i++) {
         spec[roach_fft_bin_index(m_freqs, i, comb_fft_len, m_samp_freq)] =
                 cexp(_Complex_I * drand48() * 2.0 * M_PI);
     }
@@ -495,20 +496,20 @@ static void roach_caclulate_amps(roach_state_t *m_roach, double **m_mags,
     *m_offsets = offsets;
 }
 
-static void roach_select_bins(roach_state_t *m_roach, double *m_freqs)
+static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
     int bins[fft_len];;
     double bin_freqs[fft_len];
     int last_bin = -1;
     int ch = 0;
 
-    for (int i = 0; i < fft_len; i++) {
+    for (int i = 0; i < m_freqlen; i++) {
         bins[i] = roach_fft_bin_index(m_freqs, i, fft_len, dac_samp_freq);
         bin_freqs[i] = bins[i] * dac_samp_freq / fft_len;
         m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / m_roach->dac_freq_res)
                                         * m_roach->dac_freq_res;
     }
-    for (int i = 0; i < fft_len; i++) {
+    for (int i = 0; i < m_freqlen; i++) {
         if (bins[i] == last_bin) continue;
         roach_write_int(m_roach, "bins", bins[i], 0);
         roach_write_int(m_roach, "load_bins", 2 * ch + 1, 0);
@@ -516,7 +517,7 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs)
         ch++;
     }
     /**
-     * Fill any remaining channelizer addresses with '0'
+     * Fill any remaining of the 1024 channelizer addresses with '0'
      */
     for (int i = ch; i < fft_len; i++) {
         roach_write_int(m_roach, "bins", 0, 0);
@@ -526,9 +527,9 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs)
     }
 }
 
-void roach_define_DDS_LUT(roach_state_t *m_roach, double *m_freqs)
+void roach_define_DDS_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
-    roach_select_bins(m_roach, m_freqs);
+    roach_select_bins(m_roach, m_freqs, m_freqlen);
 
     if (m_roach->DDS.len > 0 && m_roach->DDS.len != lut_buffer_len) {
         free(m_roach->DDS.I);
@@ -551,6 +552,50 @@ void roach_define_DDS_LUT(roach_state_t *m_roach, double *m_freqs)
             m_roach->DDS.I[j] = I[k];
             m_roach->DDS.Q[j] = Q[k];
         }
+    }
+}
+
+static void roach_define_DAC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
+{
+    if (m_roach->DAC.len > 0 && m_roach->DAC.len != lut_buffer_len) {
+        free(m_roach->DAC.I);
+        free(m_roach->DAC.Q);
+        m_roach->DAC.len = 0;
+    }
+    if (m_roach->DAC.len == 0) {
+        m_roach->DAC.I = calloc(lut_buffer_len, sizeof(double));
+        m_roach->DAC.Q = calloc(lut_buffer_len, sizeof(double));
+        m_roach->DAC.len = lut_buffer_len;
+    }
+    roach_freq_comb(m_roach, m_freqs, m_freqlen,
+                    dac_samp_freq, false, false,
+                    m_roach->DAC.I, m_roach->DAC.Q);
+}
+
+void roach_pack_LUTs(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
+{
+    roach_define_DDS_LUT(m_roach, m_freqs, m_freqlen);
+    roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
+    if (m_roach->LUT.len > 0 && m_roach->LUT.len != 2 * lut_buffer_len) {
+        free(m_roach->LUT.I);
+        free(m_roach->LUT.Q);
+        m_roach->LUT.len = 0;
+    }
+    if (m_roach->LUT.len == 0) {
+        m_roach->LUT.I = calloc(2 * lut_buffer_len, sizeof(double));
+        m_roach->LUT.Q = calloc(2 * lut_buffer_len, sizeof(double));
+        m_roach->LUT.len = lut_buffer_len;
+    }
+
+    for (size_t i = 0; i < lut_buffer_len; i += 2) {
+        m_roach->LUT.I[2 * i + 0] = m_roach->DAC.I[i + 1];
+        m_roach->LUT.I[2 * i + 1] = m_roach->DAC.I[i];
+        m_roach->LUT.I[2 * i + 2] = m_roach->DDS.I[i + 1];
+        m_roach->LUT.I[2 * i + 3] = m_roach->DDS.I[i];
+        m_roach->LUT.Q[2 * i + 0] = m_roach->DAC.Q[i + 1];
+        m_roach->LUT.Q[2 * i + 1] = m_roach->DAC.Q[i];
+        m_roach->LUT.Q[2 * i + 2] = m_roach->DDS.Q[i + 1];
+        m_roach->LUT.Q[2 * i + 3] = m_roach->DDS.Q[i];
     }
 }
 /**
