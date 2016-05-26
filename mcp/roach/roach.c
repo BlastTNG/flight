@@ -55,7 +55,7 @@ const char *qdr_ctl[2] = { "qdr0_ctrl",
                            "qdr1_ctrl" };
 const char *qdr_mem[2] = { "qdr0_memory",
                            "qdr1_memory" };
-const size_t cal_data_len[6] = { 32, 8, 256, 256, 256, 256 };
+const size_t cal_data_len[6] = { 128, 32, 1024, 1024, 1024, 1024 };
 const uint32_t cal_data[6][256] = {
                                 { 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
                                   0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
@@ -282,6 +282,38 @@ typedef struct {
 } firmware_state_t;
 
 static ph_thread_t *katcp_thread = NULL;
+
+static inline int roach_get_median_int(const int m_indata[], int m_len)
+{
+    int tmp_begin, tmp_end;
+    int t, x;
+    int buf[m_len];
+
+    memcpy(buf, m_indata, sizeof(m_indata[0]) * m_len);
+    tmp_begin = 0;
+    tmp_end = m_len - 1;
+    while (tmp_begin < tmp_end) {
+        x = buf[m_len / 2];
+        int i = tmp_begin;
+        int j = tmp_end;
+        do {
+            while (buf[i] < x)
+                i++;
+            while (x < buf[j])
+                j--;
+            if (i <= j) {
+                t = buf[i];
+                buf[i] = buf[j];
+                buf[j] = t;
+                i++;
+                j--;
+            }
+        } while (i <= j);
+        if (j < m_len / 2) tmp_begin = i;
+        if (m_len / 2 < i) tmp_end = j;
+    }
+    return buf[m_len / 2];
+}
 
 static void roach_buffer_ntohl(uint32_t *m_buffer, size_t m_len)
 {
@@ -792,7 +824,7 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
     firmware_state_t *state = (firmware_state_t*) m_data;
 
     /**
-     * If we have an error, or do not receive data from the LabJack in the expected
+     * If we have an error, or do not receive data from the Roach in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
     if (m_why & (PH_IOMASK_ERR)) {
@@ -849,7 +881,7 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
 
     state->sock = m_sock;
     m_sock->callback = firmware_upload_process_return;
-    m_sock->timeout_duration.tv_sec = 30; // TODO(sam): Is 30s long enough to wait before re-trying?
+    m_sock->timeout_duration.tv_sec = 30;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
 
@@ -911,7 +943,7 @@ static void qdr_reset(roach_state_t *m_roach, int m_whichqdr)
     roach_write_int(m_roach, qdr_ctl[m_whichqdr], 0, 0);
 }
 
-static void qdr_delay_out_step(roach_state_t *m_roach, int m_whichqdr, uint32_t m_bitmask, int m_step)
+static void qdr_delay_out_step(roach_state_t *m_roach, int m_whichqdr, uint64_t m_bitmask, int m_step)
 {
     if (!m_step) return;
 
@@ -937,7 +969,7 @@ static void qdr_delay_clk_step(roach_state_t *m_roach, int m_whichqdr, int m_ste
     }
 }
 
-static void qdr_delay_in_step(roach_state_t *m_roach, int m_whichqdr, uint32_t m_bitmask, int m_step)
+static void qdr_delay_in_step(roach_state_t *m_roach, int m_whichqdr, uint64_t m_bitmask, int m_step)
 {
     if (!m_step) return;
 
@@ -954,9 +986,9 @@ static void qdr_delay_in_step(roach_state_t *m_roach, int m_whichqdr, uint32_t m
 static uint32_t qdr_delay_clk_get(roach_state_t *m_roach, int m_whichqdr)
 {
     uint32_t data;
-    roach_read_data(m_roach, &data, qdr_ctl[m_whichqdr], 8, sizeof(data));
+    roach_read_data(m_roach, (uint8_t*)&data, qdr_ctl[m_whichqdr], 8, sizeof(data));
     data = ntohl(data);
-    if (data & 0x1f != ((data & 0x3e0) >> 5)) {
+    if ((data & 0x1f) != ((data & 0x3e0) >> 5)) {
         blast_err("Invalid counter values in %s of %s", qdr_ctl[m_whichqdr], m_roach->address);
         return 0;
     }
@@ -975,7 +1007,7 @@ static bool qdr_cal_check(roach_state_t *m_roach, int m_whichqdr)
     uint32_t check_data[256];
 
     for (int i = 0; i < 6; i++) {
-        roach_write_data(m_roach, qdr_mem[m_whichqdr], cal_data[i], cal_data_len[i], 1 << 22);
+        roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22);
         roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i]);
         for (size_t j = 0; j < cal_data_len[i]; j++) {
             if (check_data[j] != cal_data[i][j]) {
@@ -999,7 +1031,7 @@ static bool qdr_cal_check_any_good(roach_state_t *m_roach, int m_whichqdr)
     uint32_t fail_pat = 0;
 
     for (int i = 0; i < 6; i++) {
-        roach_write_data(m_roach, qdr_mem[m_whichqdr], cal_data[i], cal_data_len[i], 1 << 22);
+        roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22);
         roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i]);
         for (size_t j = 0; j < cal_data_len[i]; j++) {
             fail_pat |= (check_data[j] ^ cal_data[i][j]);
@@ -1008,17 +1040,17 @@ static bool qdr_cal_check_any_good(roach_state_t *m_roach, int m_whichqdr)
     return (fail_pat != UINT32_MAX);
 }
 
-static int qdr_apply_cals(roach_state_t *m_roach, int m_whichqdr, int m_indelays[32],
-                          int m_outdelays[32], int m_clkdelay)
+static void qdr_apply_cals(roach_state_t *m_roach, int m_whichqdr, int m_indelays[36],
+                          int m_outdelays[36], int m_clkdelay)
 {
     int max_delay = 0;
-    size_t lendelay = sizeof(m_indelays) / sizeof(m_clkdelay[0]);
+    size_t lendelay = sizeof(m_indelays) / sizeof(m_indelays[0]);
     qdr_delay_clk_step(m_roach, m_whichqdr, m_clkdelay);
 
     for (int i = 0; i < lendelay; i++) if (max_delay < m_indelays[i]) max_delay = m_indelays[i];
 
     for (int step = 0; step < max_delay; step++) {
-        uint32_t mask = 0;
+        uint64_t mask = 0;
         for (int bit = 0; bit < lendelay; bit++) {
             if (step < m_indelays[bit]) mask |= (1 << bit);
         }
@@ -1029,7 +1061,7 @@ static int qdr_apply_cals(roach_state_t *m_roach, int m_whichqdr, int m_indelays
     for (int i = 0; i < lendelay; i++) if (max_delay < m_outdelays[i]) max_delay = m_outdelays[i];
 
     for (int step = 0; step < max_delay; step++) {
-        uint32_t mask = 0;
+        uint64_t mask = 0;
         for (int bit = 0; bit < lendelay; bit++) {
             if (step < m_outdelays[bit]) mask |= (1 << bit);
         }
@@ -1037,8 +1069,7 @@ static int qdr_apply_cals(roach_state_t *m_roach, int m_whichqdr, int m_indelays
     }
 }
 
-static void qdr_find_cal_area(roach_state_t *m_roach, int m_whichqdr, uint32_t m_bitcal,
-                              int *m_max, int *m_begin, int *m_end)
+static void qdr_find_cal_area(uint32_t m_bitcal, int *m_max, int *m_begin, int *m_end)
 {
     int max_so_far = ((m_bitcal & 0b1) << 1) - 1;
     int max_ending_here = max_so_far;
@@ -1059,20 +1090,24 @@ static void qdr_find_cal_area(roach_state_t *m_roach, int m_whichqdr, uint32_t m
             end_index = i;
         }
     }
+    *m_max = max_so_far;
+    *m_begin = begin_index;
+    *m_end = end_index;
 }
 
-static void qdr_find_in_delays(roach_state_t *m_roach, int m_whichqdr, int m_indelays[32])
+static bool qdr_find_in_delays(roach_state_t *m_roach, int m_whichqdr, int m_indelays[32])
 {
     int n_steps = 32;
     int n_bits = 32;
-    uint32_t bitcal[n_bits] = {0};
+    uint32_t bitcal[n_bits];
 
+    memset(bitcal, 0, sizeof(bitcal));
     for (int step = 0; step < n_steps; step++) {
         uint32_t check_data[256];
         uint32_t fail_pat = 0;
 
         for (int i = 0; i < 6; i++) {
-            roach_write_data(m_roach, qdr_mem[m_whichqdr], cal_data[i], cal_data_len[i], 1 << 22);
+            roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22);
             roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i]);
             for (size_t j = 0; j < cal_data_len[i]; j++) {
                 fail_pat |= (check_data[j] ^ cal_data[i][j]);
@@ -1080,33 +1115,72 @@ static void qdr_find_in_delays(roach_state_t *m_roach, int m_whichqdr, int m_ind
         }
 
         for (int bit = 0; bit < n_bits; bit++) {
-            bitcal[bit] |= fail_pat;
+            bitcal[bit] |= (((fail_pat >> bit) & 1) << step);
+        }
+        qdr_delay_in_step(m_roach, m_whichqdr, UINT32_MAX, 1);
+    }
+
+    for (int bit = 0; bit < n_bits; bit++) {
+        if (bitcal[bit] == UINT32_MAX) {
+            blast_err("Calibration failed for bit %d", bit);
+            return false;
         }
     }
 
+    for (int bit = 0; bit < n_bits; bit++) {
+        int max, begin, end;
+        qdr_find_cal_area(bitcal[bit], &max, &begin, &end);
+        if (max < 4) {
+            blast_err("Could not find robust calibration setting for QDR %d on %s", m_whichqdr, m_roach->address);
+            return false;
+        }
+        m_indelays[bit] = (begin + end) / 2;
+    }
+
+    int median_taps = roach_get_median_int(m_indelays, n_bits);
+    m_indelays[32] = median_taps;
+    m_indelays[33] = median_taps;
+    m_indelays[34] = median_taps;
+    m_indelays[35] = median_taps;
+
+    return true;
 }
 
 static bool qdr_cal2(roach_state_t *m_roach, int m_whichqdr)
 {
-    bool cal = false;
     int out_step = 0;
-    int in_delays[32] = {0};
-    int out_delays[32];
+    int in_delays[36] = {0};
+    int out_delays[36];
 
-    for (out_step = 0; out_step < 32; out_step++) {
-        for (int i = 0; i < 32; i++) out_delays[i] = out_step;
+    for (out_step = 0; out_step < 36; out_step++) {
+        for (int i = 0; i < 36; i++) out_delays[i] = out_step;
 
         qdr_apply_cals(m_roach, m_whichqdr, in_delays, out_delays, out_step);
         if (qdr_cal_check_any_good(m_roach, m_whichqdr)) break;
     }
     qdr_apply_cals(m_roach, m_whichqdr, in_delays, out_delays, out_step);
 
-    qdr_find_in_delays(m_roach, m_whichqdr, in_delays);
+    if (!qdr_find_in_delays(m_roach, m_whichqdr, in_delays)) {
+        memset(in_delays, 0, sizeof(in_delays));
+    }
+    blast_info("%s: Using in_delays [\n\t\t%d %d %d %d %d %d %d %d "
+                                    "\n\t\t%d %d %d %d %d %d %d %d "
+                                    "\n\t\t%d %d %d %d %d %d %d %d "
+                                    "\n\t\t%d %d %d %d %d %d %d %d]", m_roach->address,
+                                    in_delays[0], in_delays[1], in_delays[2], in_delays[3],
+                                    in_delays[4], in_delays[5], in_delays[6], in_delays[7],
+                                    in_delays[8], in_delays[9], in_delays[10], in_delays[11],
+                                    in_delays[12], in_delays[13], in_delays[14], in_delays[15],
+                                    in_delays[16], in_delays[17], in_delays[18], in_delays[19],
+                                    in_delays[20], in_delays[21], in_delays[22], in_delays[23],
+                                    in_delays[24], in_delays[25], in_delays[26], in_delays[27],
+                                    in_delays[28], in_delays[29], in_delays[30], in_delays[31]);
+
+
     qdr_apply_cals(m_roach, m_whichqdr, in_delays, out_delays, out_step);
 
     if (qdr_cal_check(m_roach, m_whichqdr)) return true;
 
     blast_err("QDR %s failed for %s", qdr_ctl[m_whichqdr], m_roach->address);
     return false;
-
 }
