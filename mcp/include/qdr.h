@@ -1,5 +1,5 @@
 /*
- * roach.h
+ * qdr.h
  *
  * This software is copyright (C) 2013-2014 University of Pennsylvania
  *
@@ -23,23 +23,16 @@
  *      Author: seth
  */
 
-#ifndef INCLUDE_ROACH_H_
-#define INCLUDE_ROACH_H_
+#ifndef INCLUDE_QDR_H_
+#define INCLUDE_QDR_H_
 
-#include <stddef.h>
+#include <stdbool.h>
 #include <stdint.h>
 
-typedef struct roach_state roach_state_t;
+#include "roach.h"
 
-const char *roach_get_name(roach_state_t *m_roach);
-int roach_write_data(roach_state_t *m_roach, const char *m_register, uint8_t *m_data,
-                            size_t m_len, uint32_t m_offset);
-int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *m_register,
-                           uint32_t m_offset, uint32_t m_size);
-int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_val, uint32_t m_offset);
-int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
+bool qdr_cal2(roach_state_t *m_roach, int m_whichqdr);
+void qdr_reset(roach_state_t *m_roach, int m_whichqdr);
+uint32_t qdr_delay_clk_get(roach_state_t *m_roach, int m_whichqdr);
 
-
-void write_roach_channels_244hz(void);
-
-#endif /* INCLUDE_ROACH_H_ */
+#endif /* INCLUDE_QDR_H_ */
