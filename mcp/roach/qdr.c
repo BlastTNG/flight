@@ -250,7 +250,7 @@ static void qdr_delay_clk_step(roach_state_t *m_roach, int m_whichqdr, int m_ste
 
     for (int i = 0; i < abs(m_step); i++) {
         roach_write_int(m_roach, qdr_ctl[m_whichqdr], 0, 5);
-        roach_write_int(m_roach, qdr_ctl[m_whichqdr], (1 << 8) << 4, 5);
+        roach_write_int(m_roach, qdr_ctl[m_whichqdr], (1 << 8), 5);
     }
 }
 
@@ -264,7 +264,7 @@ static void qdr_delay_in_step(roach_state_t *m_roach, int m_whichqdr, uint64_t m
         roach_write_int(m_roach, qdr_ctl[m_whichqdr], 0, 4);
         roach_write_int(m_roach, qdr_ctl[m_whichqdr], 0, 5);
         roach_write_int(m_roach, qdr_ctl[m_whichqdr], (UINT32_MAX & m_bitmask), 4);
-        roach_write_int(m_roach, qdr_ctl[m_whichqdr], ((0xf) & (m_bitmask >> 32)) << 4, 5);
+        roach_write_int(m_roach, qdr_ctl[m_whichqdr], (0xf) & (m_bitmask >> 32), 5);
     }
 }
 
@@ -438,7 +438,7 @@ bool qdr_cal2(roach_state_t *m_roach, int m_whichqdr)
     int in_delays[36] = {0};
     int out_delays[36];
 
-    for (out_step = 0; out_step < 36; out_step++) {
+    for (out_step = 0; out_step < 32; out_step++) {
         for (int i = 0; i < 36; i++) out_delays[i] = out_step;
 
         qdr_apply_cals(m_roach, m_whichqdr, in_delays, out_delays, out_step);
