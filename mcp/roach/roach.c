@@ -49,7 +49,7 @@
 
 static double dac_samp_freq = 512.0e6;
 static double fpga_samp_freq = 256.0e6;
-static int fft_len = 1024;
+static int fft_len = 1024; /// Refers to the FFT length in firmware NOT software
 
 typedef enum {
     ROACH_STATUS_BOOT,
@@ -564,7 +564,7 @@ void roach_define_DDS_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
         m_roach->DDS.len = m_roach->lut_buffer_len;
     }
 
-    for (int i = 0; i < fft_len; i++) {
+    for (int i = 0; i < m_freqlen; i++) {
         double I[fft_len];
         double Q[fft_len];
         roach_freq_comb(m_roach, &m_roach->freq_residuals[i], 1,
@@ -649,8 +649,6 @@ void roach_vna_sweep(roach_state_t *m_roach, double m_centerfreq, const char *m_
     for (size_t i = 1; i < num_freqs; i++) {
         bb_freqs[i] = bb_freqs[i - 1] + delta_f;
     }
-
-    qsort(bb_freqs, num_freqs, sizeof(double), roach_abs_cmp);
 
     for (size_t i = 0; i < num_freqs; i++) {
         channels[i] = i;
