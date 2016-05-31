@@ -76,6 +76,7 @@ void store_100hz_cryo(void)
 }
 void read_thermometers(void) {
     static int firsttime_therm = 1;
+
     static channel_t* rox_fpa_1k_Addr;
     static channel_t* rox_250_fpa_Addr;
     static channel_t* rox_1k_plate_Addr;
@@ -84,7 +85,8 @@ void read_thermometers(void) {
     static channel_t* rox_he4_pot_Addr;
     static channel_t* rox_he3_fridge_Addr;
     static channel_t* rox_500_fpa_Addr;
-    static channel_t* diode_charcoal_hs_Addr; // provisional names until we figure out where all thermometers are
+
+    static channel_t* diode_charcoal_hs_Addr;
     static channel_t* diode_vcs2_filt_Addr;
     static channel_t* diode_250fpa_Addr;
     static channel_t* diode_hwp_Addr;
