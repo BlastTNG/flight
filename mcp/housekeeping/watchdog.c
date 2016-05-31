@@ -38,6 +38,7 @@
 static const char watchdog_magic = 'V';
 
 static int watchdog_fd = -1;
+static int comms_card_tickle = 1;
 
 /**
  * Resets the watchdog timer.  Should be called liberally relative to the timeout period.
@@ -45,7 +46,18 @@ static int watchdog_fd = -1;
 void watchdog_ping()
 {
     int dummy;
-    ioctl(watchdog_fd, WDIOC_KEEPALIVE, &dummy);
+    if (watchdog_fd != -1) {
+        ioctl(watchdog_fd, WDIOC_KEEPALIVE, &dummy);
+    }
+    comms_card_tickle ^= 1;
+}
+
+/**
+ * Returns the current bit value of the tickle pin for the communication card control
+ */
+int watchdog_get_tickle(void)
+{
+    return comms_card_tickle;
 }
 
 /**

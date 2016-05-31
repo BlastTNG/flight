@@ -157,3 +157,63 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
 }
+
+/*void autocycle(void)
+{
+    static channel_t* tfpa250_Addr; set channel address pointers
+    static channel_t* tfpa350_Addr;
+    static channel_t* tfpa500_Addr;
+    static channel_t* tcharcoal_Addr;
+    static channel_t* tcharcoalhs_Addr;
+    
+    static int firsttime = 1;
+    static int iterator = 0;
+    double t250, t350, t500, tcharcoal;
+    static double tcrit = 0.31;
+    static int trigger = 0;
+    
+    if (firsttime) {
+        tfpa250_Addr = channels_find_by_name("PLACEHOLDER_250um");  these three are ROX
+        tfpa350_Addr = channels_find_by_name("PLACEHOLDER_350um");
+        tfpa500_Addr = channels_find_by_name("PLACEHOLDER_500um");
+        tcharcoal_Addr = channels_find_by_name("PLACEHOLDER_CHARCOAL"); diodes
+        tcharcoalhs_Addr = channels_find_by_name("PLACEHOLDER_CHAROALHS");
+        firsttime = 0;
+    }
+    
+    t250 = GET_SCALED_VAL(tfpa250_Addr);
+    t350 = GET_SCALED_VAL(tfpa350_Addr);
+    t500 = GET_SCALED_VAL(tfpa500_Addr);
+    tcharcoal = GET_SCALED_VAL(tcharcoal_Addr);
+    if (t250 > tcrit) {
+        if (!trigger) {
+            HEAT_CHARCOAL_HS = 0;
+            trigger = 1;
+            goto fridge_auto_cycle;
+        }
+    }
+    if (t350 > tcrit) {
+        if (!trigger) {
+            HEAT_CHARCOAL_HS = 0;
+            trigger = 1;
+            goto fridge_auto_cycle;
+        }
+    }
+    if (t500 > tcrit) {
+        if (!trigger) {
+            HEAT_CHARCOAL_HS = 0;
+            trigger = 1;
+            goto fridge_auto_cycle;
+        }
+    }
+fridge_auto_cycle:
+    if (trigger) {
+        if (!(iterator++ % 199)) { borrowed from das.c, if this command is run at 100hz, this slows it down to 0.5 hz
+            t250 = GET_SCALED_VAL(tfpa250_Addr);
+            t350 = GET_SCALED_VAL(tfpa350_Addr); commented out because current implementation looks only at charcoal temperature
+            t500 = GET_SCALED_VAL(tfpa500_Addr);
+            tcharcoal = GET_SCALED_VAL(tcharcoal_Addr);
+        }
+    }
+}
+*/
