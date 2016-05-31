@@ -55,6 +55,7 @@
 #include "channels_tng.h"
 #include "tx.h"
 #include "lut.h"
+#include "labjack.h"
 
 #include "acs.h"
 #include "actuators.h"
@@ -349,6 +350,7 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
+    read_thermometers();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -424,6 +426,7 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
+    labjack_networking_init(LABJACK_CRYO, 1);
 
   pthread_t CommandDatacomm1;
   int use_starcams = 0;
