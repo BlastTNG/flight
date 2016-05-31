@@ -426,7 +426,6 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
-    labjack_networking_init(LABJACK_CRYO, 1);
 
   pthread_t CommandDatacomm1;
   int use_starcams = 0;
@@ -534,6 +533,7 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
+  labjack_networking_init(LABJACK_CRYO, 8);
 
   initialize_CPU_sensors();
 

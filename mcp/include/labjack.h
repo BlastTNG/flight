@@ -30,6 +30,7 @@
 #include <stdint.h>
 
 #define LABJACK_CRYO 0
+#define labjack1 192.168.40.110
 
 
 void labjack_networking_init(int m_which, size_t m_numchannels);
