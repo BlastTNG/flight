@@ -27,6 +27,7 @@
 
 #include <stdint.h>
 #include <glib.h>
+#include <modbus/modbus.h>
 
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -81,9 +82,19 @@ typedef struct {
 
 typedef struct {
     char address[16];
+    char ip[16];
+    int which;
+
+    ph_thread_t cmd_thread;
+    modbus_t *cmd_mb;
+
     uint16_t port;
     bool connected;
     bool have_warned_version;
+    bool shutdown;
+
+    float DAC[2];
+
     uint32_t backoff_sec;
     struct timeval timeout;
     ph_job_t connect_job;
@@ -105,49 +116,66 @@ typedef struct {
     void (*handle_success)(labjack_state_t*, ph_buf_t*);
 } labjack_trans_t;
 
-#define LABJACK_CMD 0
-#define LABJACK_STREAM 1
 
-/** First index is for the labjack, second for cmd/data ports */
-static labjack_state_t state[2][2] = {
-        { [LABJACK_CMD] =
-            {
-                    .address = "labjack1",
-                    .port = LJ_CMD_PORT
-            },
-          [LABJACK_STREAM] =
-            {
-                  .address = "labjack1",
-                  .port = LJ_DATA_PORT
-            }
-        }
+static labjack_state_t state[2] = {
+    {
+          .address = "labjack1",
+          .port = LJ_DATA_PORT
+    }
 };
 
 uint16_t labjack_get_value(int m_labjack, int m_channel)
 {
-    labjack_data_t *state_data = (labjack_data_t*)state[m_labjack][LABJACK_STREAM].conn_data;
+    labjack_data_t *state_data = (labjack_data_t*)state[m_labjack].conn_data;
     if (m_channel > state_data->num_channels) {
-        blast_err("Invalid channel %d requested from '%s'", m_channel, state[m_labjack][LABJACK_STREAM].address);
+        blast_err("Invalid channel %d requested from '%s'", m_channel, state[m_labjack].address);
         return 0;
     }
     return state_data->data[m_channel];
 }
 
-static gint labjack_compare_trans(gconstpointer m_p1, gconstpointer m_p2, gpointer m_data)
+int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
+                             const uint32_t *m_scan_addresses, const uint16_t *m_chan_list,
+                             const float *m_range_list)
 {
-    gint16 a, b;
-    a = GPOINTER_TO_INT(m_p1);
-    b = GPOINTER_TO_INT(m_p2);
-    return (a > b ? 1 : a == b ? 0 : 1);
+    uint16_t data[2] = {0};
+    unsigned int i = 0;
+    int ret = 0;
+
+    for (i = 0; i < m_numaddresses; i++) {
+        if (m_scan_addresses[i] % 2 != 0 || m_scan_addresses[i] > 508) {
+            blast_err("Invalid AIN address %d\n", m_scan_addresses[i]);
+            return -1;
+        }
+    }
+
+    for (i = 0; i < m_numaddresses; i++) {
+        // Setting AIN range.
+        // Starting address is 40000 (AIN0_RANGE).
+        modbus_set_float(m_range_list[i], data);
+        if ((ret = modbus_write_registers(m_state->cmd_mb, 40000 + m_scan_addresses[i], 2, data)) < 0) {
+            blast_err("Could not set AIN registers!");
+            return ret;
+        }
+
+        // Setting AIN negative channel.
+        // Starting address is 41000 (AIN0_NEGATIVE_CH).
+        if ((ret = modbus_write_register(m_state->cmd_mb, 41000 + m_scan_addresses[i] / 2,
+                                         htons(m_chan_list[i]))) < 0) {
+            blast_err("Could not set negative registers");
+            return ret;
+        }
+    }
+    return 0;
 }
 
 static void init_labjack_commands(labjack_state_t *m_state)
 {
     // Configure stream
-    enum {NUM_ADDRESSES = 2};
+    enum {NUM_ADDRESSES = 7};
     float scanRate = 1000.0f; // Scans per second. Samples per second = scanRate * numAddresses
     unsigned int numAddresses = NUM_ADDRESSES;
-    unsigned int samplesPerPacket = STREAM_MAX_SAMPLES_PER_PACKET_TCP;
+    unsigned int samplesPerPacket = 70;
     float settling = 10.0; // 10 microseconds
     unsigned int resolutionIndex = 0;
     unsigned int bufferSizeBytes = 0;
@@ -160,7 +188,7 @@ static void init_labjack_commands(labjack_state_t *m_state)
 
     // Using a loop to add Modbus addresses for AIN0 - AIN(NUM_ADDRESSES-1) to the
     // stream scan and configure the analog input settings.
-    for (int i = 0; i < numAddresses; i++) {
+    for (int i = 0; i < 2 * numAddresses; i+=2) {
         scanListAddresses[i] = i * 2; // AIN(i) (Modbus address i*2)
         nChanList[i] = 199; // Negative channel is 199 (single ended)
         rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
@@ -168,59 +196,6 @@ static void init_labjack_commands(labjack_state_t *m_state)
     }
 }
 
-
-/**
- * Process an incoming LabJack packet.  If we have an error, we'll disable
- * the socket and schedule a reconnection attempt.  Otherwise, read and store the
- * camera data.
- *
- * @param m_sock Unused
- * @param m_why Flag indicating why the routine was called
- * @param m_data Pointer to our state data
- */
-static void labjack_process_cmd_resp(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
-{
-    ph_buf_t *buf;
-    ph_buf_t *data_buf;
-    labjack_state_t *state = (labjack_state_t*) m_data;
-    labjack_resp_header_t *data;
-    uint16_t len;
-    labjack_trans_t *transaction = NULL;
-
-    /**
-     * If we have an error, or do not receive data from the star camera in the expected
-     * amount of time, we tear down the socket and schedule a reconnection attempt.
-     */
-    if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
-      blast_err("disconnecting LabJack command port at %s due to connection issue", state->address);
-      ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
-      ph_sock_enable(m_sock, 0);
-      state->connected = false;
-      ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
-      return;
-    }
-
-    buf = ph_sock_read_bytes_exact(m_sock, sizeof(labjack_resp_header_t));
-    if (!buf) return; /// We do not have enough data
-
-    data = (labjack_resp_header_t*)ph_buf_mem(buf);
-    data->trans_id = be16toh(data->trans_id);
-    data->length = be16toh(data->length);
-
-    data_buf = ph_sock_read_bytes_exact(m_sock, len - 3);
-    if (!data_buf) {
-        blast_err("Could not read expected %d bytes from LabJack %s", len, state->address);
-        data_buf = ph_sock_read_bytes_exact(m_sock, ph_bufq_len(m_sock->rbuf));
-        ph_buf_delref(data_buf);
-        ph_buf_delref(buf);
-        return;
-    }
-    transaction = g_sequence_lookup(state->conn_data, &data->trans_id, labjack_compare_trans, NULL);
-
-    transaction->handle_success(state, data_buf);
-
-    ph_buf_delref(buf);
-}
 
 /**
  * Process an incoming LabJack packet.  If we have an error, we'll disable
@@ -302,7 +277,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
 
     switch (m_status) {
         case PH_SOCK_CONNECT_GAI_ERR:
-            blast_err("resolve %s:%d failed %s", state->address, state->address, gai_strerror(m_errcode));
+            blast_err("resolve %s:%d failed %s", state->address, state->port, gai_strerror(m_errcode));
 
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
@@ -310,7 +285,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
 
         case PH_SOCK_CONNECT_ERRNO:
             blast_err("connect %s:%d failed: `Error %d: %s`",
-                    state->address, state->address, m_errcode, strerror(m_errcode));
+                    state->address, state->port, m_errcode, strerror(m_errcode));
 
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
@@ -325,7 +300,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     state->sock = m_sock;
     state->connected = true;
     state->backoff_sec = min_backoff_sec;
-    m_sock->callback = (state->port == LJ_CMD_PORT)?labjack_process_cmd_resp:labjack_process_stream;
+    m_sock->callback = labjack_process_stream;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
 }
@@ -349,6 +324,63 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
 }
 
+void *labjack_cmd_thread(void *m_lj) {
+    static int have_warned_connect = 0;
+    labjack_state_t *state = (labjack_state_t*)m_lj;
+
+    char tname[10];
+    snprintf(tname, sizeof(tname), "LJCMD%1d", state->which);
+    ph_thread_set_name(tname);
+    nameThread(tname);
+
+    blast_info("Starting Labjack%02d Commanding at IP %s", state->which, state->address);
+
+    {
+        struct hostent *lj_ent = gethostbyname(state->address);
+        uint32_t hostaddr;
+        if (!lj_ent) {
+            blast_err("Could not resolve %s!", state->address);
+            return NULL;
+        }
+        hostaddr = *(uint32_t*)(lj_ent->h_addr_list[0]);
+
+        snprintf(state->ip, sizeof(state->ip), "%d.%d.%d.%d",
+                 (hostaddr & 0xff), ((hostaddr >> 8) & 0xff),
+                 ((hostaddr >> 16) & 0xff), ((hostaddr >> 24) & 0xff));
+    }
+    while (!state->shutdown) {
+        uint16_t dac_buffer[4];
+        usleep(10000);
+        if (!state->cmd_mb) {
+            state->cmd_mb = modbus_new_tcp(state->ip, 502);
+
+            struct timeval tv;
+            tv.tv_sec = 1;
+            tv.tv_usec = 0;
+            modbus_set_slave(state->cmd_mb, 1);
+            modbus_set_response_timeout(state->cmd_mb, &tv);
+            modbus_set_error_recovery(state->cmd_mb,
+                                      MODBUS_ERROR_RECOVERY_LINK | MODBUS_ERROR_RECOVERY_PROTOCOL);
+
+            if (modbus_connect(state->cmd_mb)) {
+                if (!have_warned_connect) {
+                    blast_err("Could not connect to ModBUS charge controller at %s: %s", state->address,
+                            modbus_strerror(errno));
+                }
+                modbus_free(state->cmd_mb);
+                state->cmd_mb = NULL;
+                have_warned_connect = 1;
+                continue;
+            }
+            have_warned_connect = 0;
+        }
+        modbus_set_float(state->DAC[0], &dac_buffer[0]);
+        modbus_set_float(state->DAC[1], &dac_buffer[2]);
+        modbus_write_registers(state->cmd_mb, 1000, 4, dac_buffer);
+    }
+    return NULL;
+}
+
 /**
  * Initialize the labjack I/O routine.  The state variable tracks each
  * labjack connection and is passed to the connect job.
@@ -359,23 +391,18 @@ void labjack_networking_init(int m_which, size_t m_numchannels)
 {
     blast_dbg("Labjack Init for %d", m_which);
 
-    for (int i = 0; i < 2; i++) {
-        state[m_which][i].connected = false;
-        state[m_which][i].have_warned_version = false;
-        state[m_which][i].backoff_sec = min_backoff_sec;
-        state[m_which][i].timeout.tv_sec = 5;
-        state[m_which][i].timeout.tv_usec = 0;
-        ph_job_init(&(state[m_which][i].connect_job));
-        state[m_which][i].connect_job.callback = connect_lj;
-        state[m_which][i].connect_job.data = &state[m_which][i];
-        if (i == LABJACK_CMD) {
-            state[m_which][i].conn_data = g_sequence_new(free);
-        } else if (i == LABJACK_STREAM) {
-            labjack_data_t *data_state = calloc(1, sizeof(labjack_data_t) + m_numchannels * sizeof(uint16_t));
-            data_state->num_channels = m_numchannels;
-            state[m_which][i].conn_data = data_state;
-        }
 
-        ph_job_dispatch_now(&(state[m_which][i].connect_job));
-    }
+    state[m_which].connected = false;
+    state[m_which].have_warned_version = false;
+    state[m_which].backoff_sec = min_backoff_sec;
+    state[m_which].timeout.tv_sec = 5;
+    state[m_which].timeout.tv_usec = 0;
+    ph_job_init(&(state[m_which].connect_job));
+    state[m_which].connect_job.callback = connect_lj;
+    state[m_which].connect_job.data = &state[m_which];
+    labjack_data_t *data_state = calloc(1, sizeof(labjack_data_t) + m_numchannels * sizeof(uint16_t));
+    data_state->num_channels = m_numchannels;
+    state[m_which].conn_data = data_state;
+
+    ph_job_dispatch_now(&(state[m_which].connect_job));
 }
