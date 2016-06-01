@@ -135,7 +135,7 @@ void read_thermometers(void) {
 
     // these labjack channels need to all be changed once set up
     SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO, 0));
-    /*SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(diode_250fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(diode_hwp_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(diode_vcs1_hx_Addr, labjack_get_value(LABJACK_CRYO, 0));
@@ -158,10 +158,10 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO, 0));
-    SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));*/
+    SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
 }
 
-/* void autocycle(void)
+void autocycle_ian(void)
 {
     static channel_t* tfpa250_Addr; // set channel address pointers
     static channel_t* tfpa350_Addr;
@@ -220,4 +220,4 @@ fridge_auto_cycle:
             GET_VALUE(tcharcoalhs_Addr, tcharcoalhs);
         }
     }
-} */
+}
