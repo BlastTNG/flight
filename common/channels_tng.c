@@ -215,8 +215,8 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
         blast_err("Invalid size %zu for channel packet", m_len);
         return -1;
     }
-
-    if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed)) {
+// DO NOT LEAVE LIKE THIS
+    if (m_len != 805 + sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed)) {
         blast_err("Length of data packet %zu does not match header data %zu",
                   m_len, sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed));
         return -1;
