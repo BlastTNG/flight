@@ -733,8 +733,8 @@ channel_t channel_list[] =
     { "az",                   LI2DEG,   0.0,            TYPE_UINT32, RATE_200HZ, U_P_DEG, 0 },
     { "el",                   LI2DEG,   0.0,            TYPE_UINT32, RATE_200HZ, U_P_DEG, 0 },
 
-    { "uei_if_framenum",      SCALE(CONVERT_UNITY),            TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
-    { "uei_of_framenum",      SCALE(CONVERT_UNITY),            TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
+    //{ "uei_if_framenum",      SCALE(CONVERT_UNITY),            TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
+    //{ "uei_of_framenum",      SCALE(CONVERT_UNITY),            TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
 
     { "ifel_gy",              SCALE(CONVERT_UNITY),            TYPE_FLOAT, RATE_100HZ, U_V_DPS, 0 },
     { "ifroll_gy",            SCALE(CONVERT_UNITY),            TYPE_FLOAT, RATE_100HZ, U_V_DPS, 0 },
@@ -852,9 +852,9 @@ channel_t channel_list[] =
     /* housekeeping cryo channels */
     { "dio_heaters",          SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_100HZ, U_NONE, 0 },
 
-    { "uei_of_1hz_framecount",   SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_1HZ,   U_NONE, 0 },
-    { "uei_of_100hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, U_NONE, 0 },
-    { "uei_of_200hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, U_NONE, 0 },
+    //{ "uei_of_1hz_framecount",   SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_1HZ,   U_NONE, 0 },
+    //{ "uei_of_100hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, U_NONE, 0 },
+    //{ "uei_of_200hz_framecount", SCALE(CONVERT_UNITY), TYPE_INT32,    RATE_100HZ, U_NONE, 0 },
 
     { "mcp_1hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ,   U_NONE, 0 },
     { "mcp_5hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_5HZ,   U_NONE, 0 },
