@@ -1,10 +1,11 @@
 #include <QtGui>
 #include <getdata/dirfile.h>
+#include "StatusNode.h"
 
 #ifndef LEAFNODE_H
 #define LEAFNODE_H
 
-class LeafNode : public QLabel {
+class LeafNode : public StatusNode {
   Q_OBJECT
 public:
   LeafNode(GetData::Dirfile* dirfile, const char* fieldCode);

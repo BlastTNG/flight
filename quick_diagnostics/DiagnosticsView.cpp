@@ -3,43 +3,44 @@
 #include "LeafNode.h"
 
 DiagnosticsView::DiagnosticsView() : QWidget() {
- /*
-    Path Label
-    Detail Label (Later)
-    Stack view
-    Btn for reselecting files, maybe show the name of the current files
-    */
+  pathStack = new QStack<QWidget*>();  
   
-  GetData::Dirfile* dirfile = new GetData::Dirfile("/Users/matthewriley/Documents/BLAST/sample.dirfile", GD_RDONLY);
-  if (dirfile->Error() != GD_E_OK) {
-    // Show a popup explaining the error that occurred while opening the file
-    QMessageBox msgBox;
-    QString errorMsg("Error while opening dirfile: ");
-    msgBox.setText(errorMsg + dirfile->ErrorString());
-    msgBox.exec();
-  }
+  // The main part of the DiagnosticsView is a widget with a stack layout, where each widget in the 
+  // stack is a view of different sensors. Put the main view in a scroll area.
+  stackLayout = new QStackedLayout();
+  QWidget* mainView = new QWidget();
+  mainView->setLayout(stackLayout);
 
-  // TODO: For now, just test that the transitions work
-  LeafNode* labelA = new LeafNode(dirfile, "roach2_kid0025_i");
-  LeafNode* labelB = new LeafNode(dirfile, "roach2_kid0028_q");
+  // Configure the path label / navigator.
+  // When the user requests a view via the navigator, switch to that view
+  pathLabel = new PathLabel();
+  QObject::connect(pathLabel, SIGNAL(viewRequested(QWidget*)), stackLayout, SLOT(setCurrentWidget(QWidget*)));
+ 
+  // Arrange the elements vertically
+  QVBoxLayout* vBox = new QVBoxLayout();
+  vBox->addWidget(pathLabel);
+  vBox->addWidget(mainView); 
+  this->setLayout(vBox);
+}
 
-  ParentNode* a = new ParentNode("parent A", labelA);
-  a->setStyleSheet("QLabel { background-color: green; }");
-  ParentNode* b = new ParentNode("parent B", labelB);
-  b->setStyleSheet("QLabel { background-color: green; }");
-  QGridLayout* grid = new QGridLayout();
-  grid->addWidget(a, 0, 0);
-  grid->addWidget(b, 0, 1);
+void DiagnosticsView::setRoot(ParentNode* root) {
+  pushView(root);
+}
 
-  QWidget* w = new QWidget();
-  w->setLayout(grid);
+void DiagnosticsView::configureParentNode(ParentNode* parent) {
+  // When the parent node is double-clicked, transition to its child view
+  QObject::connect(parent, SIGNAL(selected(ParentNode*)), this, SLOT(pushView(ParentNode*)));
+}
 
-  QStackedLayout* stack = new QStackedLayout();
-  stack->addWidget(w);
-  stack->addWidget(labelA);
-  stack->addWidget(labelB);
-  this->setLayout(stack);
+// Push and display the parent's child view
+void DiagnosticsView::pushView(ParentNode* clickedParent) {
 
-  QObject::connect(a, SIGNAL(selected(QWidget*)), stack, SLOT(setCurrentWidget(QWidget*)));
-  QObject::connect(b, SIGNAL(selected(QWidget*)), stack, SLOT(setCurrentWidget(QWidget*)));
+  QWidget* nextView = clickedParent->getChildView();
+
+  // Update the path navigator
+  pathLabel->pushWidget(clickedParent->text(), nextView);
+
+  // Push the view on to this widget's stack, and display it
+  stackLayout->addWidget(nextView);
+  stackLayout->setCurrentWidget(nextView);
 }

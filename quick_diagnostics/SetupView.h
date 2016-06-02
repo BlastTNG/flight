@@ -11,6 +11,7 @@ class SetupView : public QWidget {
 public:
   SetupView();
   ~SetupView() {};
+  QSettings* settings;
 private:
   QString dirfilePath;
   QString configPath;

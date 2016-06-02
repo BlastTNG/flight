@@ -1,10 +1,12 @@
 #include "SetupView.h"
+#include <stdexcept>
+#include "DiagnosticsView.h"
 using json = nlohmann::json;
 
-QHBoxLayout* generateSelector(SetupView* parent, QString fileExt) {
+QHBoxLayout* generateSelector(QString defaultPath, SetupView* parent, QString fileExt) {
   QFileDialog* dialog = new QFileDialog(parent, "Select " + fileExt, "", "(*." + fileExt + ")");
   QPushButton* btn = new QPushButton("Select " + fileExt);
-  QLabel* pathName = new QLabel("No " + fileExt + " selected");
+  QLabel* pathName = new QLabel(defaultPath);
 
   // Open the dialog when the btn is pressed
   QObject::connect(btn, SIGNAL(clicked()), dialog, SLOT(open()));
@@ -25,11 +27,16 @@ QHBoxLayout* generateSelector(SetupView* parent, QString fileExt) {
 
 SetupView::SetupView() : QWidget() {
 
+  // Attempt to load the paths from settings
+  settings = new QSettings("Quick Diagnostics", "BLAST");
+  dirfilePath = settings->value("dirfile_path", "No dirfile selected").toString(); 
+  configPath = settings->value("config_path", "No .json config selected").toString();
+
   // Layout the widget's components
   QVBoxLayout* vBox = new QVBoxLayout();
   vBox->addWidget(new QLabel("Please select dirfile and json config file:"));
-  vBox->addLayout(generateSelector(this, "dirfile"));
-  vBox->addLayout(generateSelector(this, "json"));
+  vBox->addLayout(generateSelector(dirfilePath, this, "dirfile"));
+  vBox->addLayout(generateSelector(configPath,this,  "json"));
   QPushButton* btn = new QPushButton("Done");
   vBox->addWidget(btn);
   this->setLayout(vBox);
@@ -59,16 +66,19 @@ void SetupView::checkFiles() {
     return;
   }
 
-  // Parse the config file text into a json object
-  // TODO: figure out how to allocate on heap, instead
+  // Parse the config file text into a json object, report errors
+  // TODO: figure out how to allocate the json object on heap, rather than on stack
   QTextStream in(&configFile);
   QString txt = in.readAll();
-  json j = json::parse(txt.toStdString());
-  if (!j.is_structured() || j.is_null()) {
+  json j;
+  try {
+    j = json::parse(txt.toStdString());
+  } catch(std::invalid_argument& e) {
     QMessageBox msgBox;
-    msgBox.setText("Error parsing .json file, Check for syntax errors.");
+    msgBox.setText("Invalid .json file, please reselect");
+    msgBox.setInformativeText(e.what());
     msgBox.exec();
-    return;
+    return;     
   }
 
   emit doneSetup(dirfile, j);
@@ -76,8 +86,10 @@ void SetupView::checkFiles() {
 
 void SetupView::updateDirfilePath(const QString& path) {
   dirfilePath = path;  
+  settings->setValue("dirfile_path", path);
 }
 
 void SetupView::updateConfigPath(const QString& path) {
   configPath = path;
+  settings->setValue("config_path", path);
 }
