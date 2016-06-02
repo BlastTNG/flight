@@ -1,0 +1,42 @@
+Quick Diagnostics
+
+Quick Diagnostics is a GUI that displays sensor diagnostics by reading a DIRFILE being updated in real-time.
+It is based on Owl, with the goal of being able to inspect the status of a large # of sensors all at once.
+
+To build the .app file:
+0. 
+Requires GetData installed (uses the C++ bindings) and qt4 (for qmake and libraries). Can run 'brew install qt4' on a Mac.
+The GetData C++ bindings use the libgetdata++ library (installed in /usr/local/lib on Mac), and a collection of headers
+in ${PREFIX}/include/getdata (/usr/local/include on Mac). The location of the library getdata++ must be specified in LIBS += ... 
+in the .pro file (which is qt's custom build file), and the location of the getdata headers must be on the includes path.
+
+1. Clone and cd to cloned folder.
+2. Run "qmake". qt4 will use the .pro file to generate a Makefile.
+3. Run "make" to build the .app using the generated Makefile.
+4. Run "make clean" to remove the generated moc_* files. 
+
+GUI Guide:
+The GUI organizes groups of detectors using a tree. A parent node displays the cumulative status of its descendents (ex. all roaches).
+A leaf node displays the status of an individual detector, aka the data for one field code in the dirfile. Green means good, red bad.
+The GUI will ask for a .dirfile and a .json file. The .json file determines how the detectors are grouped.
+
+Ex. .json file:
+{
+  "xy stage": {
+    "x motors": {
+      "prefix": "x"
+      "lo": 3,
+      "hi": 5,
+    }
+  },
+  "all roaches": {
+    "roaches": {
+      "prefix": "roach",  
+      "lo": 0.2,
+      "hi": 0.7
+    }
+  }
+}
+
+In the example, there are two parent nodes in the root view, "xy stage" and "all roaches". "all roaches" is the parent node of all of the leaf nodes with the prefix "roach". 
+Each individual roach has its own label, a small box, which is green if the roach's real-time value is between lo and hi, red otherwise. 
