@@ -1,14 +1,33 @@
 #include "ParentNode.h"
 
-ParentNode::ParentNode(QString name, QWidget* childView) : StatusNode(name), childView(childView) {
-  setStyleSheet("border: 2px solid black");
+ParentNode::ParentNode(QString name, NodeGrid* childView) : StatusNode(name), childView(childView) {
+  // To distinguish Parent Nodes, make the text bold
+  setText("<b>" + text() + "</b>");
 }
 
-QWidget* ParentNode::getChildView() {
+void ParentNode::updateStatus() {
+
+  // A parent's status is good if all of its children's statuses are good, otherwise bad
+  const QList<StatusNode*>& children = childView->getChildNodes();
+  bool allGood = true;
+  for (int i = 0; i < children.size(); i++) {
+    StatusNode* n = children.at(i);
+    if (n->getStatus() != GOOD) {
+      allGood = false;  
+      break;
+    }
+  }
+  Status s = allGood ? GOOD : BAD;
+  setStatus(s);
+  updateStyle();
+}
+
+NodeGrid* ParentNode::getChildView() {
   return childView;
 }
 
 // When the label is double-clicked, emit this label's child view
-void ParentNode::mouseDoubleClickEvent(QMouseEvent* evt) {
+// NB: evt is not used
+void ParentNode::mouseDoubleClickEvent(QMouseEvent* /*evt*/) {
   emit selected(this);
 }

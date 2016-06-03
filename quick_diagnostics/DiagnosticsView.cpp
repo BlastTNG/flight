@@ -35,7 +35,7 @@ void DiagnosticsView::configureParentNode(ParentNode* parent) {
 // Push and display the parent's child view
 void DiagnosticsView::pushView(ParentNode* clickedParent) {
 
-  QWidget* nextView = clickedParent->getChildView();
+  NodeGrid* nextView = clickedParent->getChildView();
 
   // Update the path navigator
   pathLabel->pushWidget(clickedParent->text(), nextView);

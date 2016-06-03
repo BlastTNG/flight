@@ -26,7 +26,7 @@ void PathLabel::popWidgets(ParentNode* clickedLabel) {
   emit viewRequested(childView);
 }
 
-void PathLabel::pushWidget(QString name, QWidget* widget) {
+void PathLabel::pushWidget(QString name, NodeGrid* widget) {
   // Add a parent-node to the path, and emit the label when it is double-clicked
   // so that the Diagnostics view and navigator can update
   ParentNode* label = new ParentNode(name, widget);

@@ -10,6 +10,8 @@ class LeafNode : public StatusNode {
 public:
   LeafNode(GetData::Dirfile* dirfile, const char* fieldCode);
   ~LeafNode() {};
+public slots:
+  void updateStatus();
 private:
   const GetData::Dirfile* dirfile; // reference to the dirfile
   const char* fieldCode; // the name of the field in the dirfile to which this leaf-node corresponds

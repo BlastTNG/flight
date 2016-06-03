@@ -1,6 +1,8 @@
 #include "MainWindow.h"
+#include "StatusNode.h"
 #include "ParentNode.h"
 #include "LeafNode.h"
+#include "NodeGrid.h"
 #include <string>
 
 using namespace std;
@@ -37,8 +39,8 @@ bool isLeaf(json obj) {
 /**
   Get a list of leaf nodes, one for every fieldCode with the given prefix in the given dirfile
 */
-QList<QWidget*>* getLeavesForPrefix(GetData::Dirfile* dirfile, string prefix) {
-  QList<QWidget*>* list = new QList<QWidget*>();
+QList<StatusNode*>* getLeavesForPrefix(GetData::Dirfile* dirfile, string prefix) {
+  QList<StatusNode*>* list = new QList<StatusNode*>();
   
   // Get Null-terminated list of fields
   const char** fieldList = dirfile->FieldList();
@@ -55,11 +57,11 @@ QList<QWidget*>* getLeavesForPrefix(GetData::Dirfile* dirfile, string prefix) {
   return list;
 }
 
-QWidget* generateTree(DiagnosticsView* diagView, GetData::Dirfile* dirfile, json config) {
+NodeGrid* generateTree(DiagnosticsView* diagView, GetData::Dirfile* dirfile, json config) {
     
   // Generate a list of widgets by iterating through the json object.
   // These widgets will be the cells of a GridLayout
-  QList<QWidget*> gridCells; 
+  QList<StatusNode*> gridCells; 
   for(json::iterator it = config.begin(); it != config.end(); ++it) {
     json element = *it;
 
@@ -69,13 +71,13 @@ QWidget* generateTree(DiagnosticsView* diagView, GetData::Dirfile* dirfile, json
       string prefix = element["prefix"].get<string>();
 
       // For every field with the prefix, add a leaf-node to the grid for that fieldcode
-      QList<QWidget*>* leaves = getLeavesForPrefix(dirfile, prefix);
+      QList<StatusNode*>* leaves = getLeavesForPrefix(dirfile, prefix);
       gridCells.append(*leaves);
       delete leaves; // delete the list (doesn't delete the elements in the list)
     } 
     // Recursively generate the parent node. TODO: switch from recursion to iteration, don't bust the stack
     else {
-      QWidget* childView = generateTree(diagView, dirfile, it.value());
+      NodeGrid* childView = generateTree(diagView, dirfile, it.value());
       QString name = QString::fromStdString(it.key());
       ParentNode* parent = new ParentNode(name, childView);
       diagView->configureParentNode(parent); // when the parent is double-clicked, transition to its childView
@@ -84,18 +86,14 @@ QWidget* generateTree(DiagnosticsView* diagView, GetData::Dirfile* dirfile, json
   }
 
   // Add all of the gridCells to a grid
-  QGridLayout* grid = new QGridLayout();
+  NodeGrid* nodeGrid = new NodeGrid();
   int numCells = gridCells.size();
   int numCols = sqrt(numCells); // arrange the grid cells in a square formation
   for (int i = 0; i < numCells; ++i) {
-    QWidget* w = gridCells.at(i);
-    grid->addWidget(w, i / numCols, i % numCols);
+    StatusNode* n = gridCells.at(i);
+    nodeGrid->addChildNode(n, i / numCols, i % numCols);
   }
-
-  // Return the grid as a widget
-  QWidget* widget = new QWidget();
-  widget->setLayout(grid);
-  return widget;
+  return nodeGrid;
 }
 
 /**
@@ -103,7 +101,7 @@ QWidget* generateTree(DiagnosticsView* diagView, GetData::Dirfile* dirfile, json
 */
 void MainWindow::generateDiagnostics(GetData::Dirfile* dirfile, json config) {
   DiagnosticsView* diagView = new DiagnosticsView();
-  QWidget* rootView = generateTree(diagView, dirfile, config);
+  NodeGrid* rootView = generateTree(diagView, dirfile, config);
   ParentNode* rootParent = new ParentNode("Root", rootView);
   diagView->setRoot(rootParent); // sets root view to the first diagnostics view
   viewStack->addWidget(diagView);

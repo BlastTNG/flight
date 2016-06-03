@@ -13,7 +13,7 @@ public:
 private:
   QHBoxLayout* layout;
 public slots:
-  void pushWidget(QString name, QWidget* widget);
+  void pushWidget(QString name, NodeGrid* widget);
 private slots:
   void popWidgets(ParentNode* clickedLabel); // pop until the rightmost view is the child view of the clicked label
 signals:

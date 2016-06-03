@@ -1,5 +1,6 @@
 #include <QtGui>
 #include "StatusNode.h"
+#include "NodeGrid.h"
 
 #ifndef PARENTNODE_H
 #define PARENTNODE_H
@@ -7,11 +8,13 @@
 class ParentNode : public StatusNode {
   Q_OBJECT
 public:
-  ParentNode(QString name, QWidget* childView);
+  ParentNode(QString name, NodeGrid* childView);
   ~ParentNode() {};
-  QWidget* getChildView();
+  NodeGrid* getChildView();
 private:
-  QWidget* childView;
+  NodeGrid* childView;
+public slots:
+  void updateStatus();
 signals:
   // Emit itself when selected
   void selected(ParentNode* thisNode);
