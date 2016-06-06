@@ -217,7 +217,7 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
     }
 
     if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed)) {
-        blast_err(" m-Map has length %ud", m_map->length);
+        blast_err(" m-Map has length %u", m_map->length);
         blast_err("struct channelpacked has size %zu", sizeof(struct channel_packed));
         blast_err("channel header has size %zu", sizeof(channel_header_t));
         blast_err("Length of data packet %zu does not match header data %zu",
