@@ -314,9 +314,13 @@ int framing_shared_data_init(void)
         if (ret == MOSQ_ERR_INVAL) {
         	blast_err("Unable to connect to mosquitto server: Invalid Parameters!");
         } else {
-        	blast_strerror("Unable to connect to mosquitto server!");
+        	if (errno == EINPROGRESS) {
+        		/* Do nothing, connection in progress */
+        	} else {
+        		blast_strerror("Unable to connect to mosquitto server!");
+        		return -1;
+        	}
         }
-        return -1;
     }
 
     mosquitto_reconnect_delay_set(mosq_other, 1, 10, 1);
@@ -356,9 +360,13 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
         if (ret == MOSQ_ERR_INVAL) {
         	blast_err("Unable to connect to mosquitto server: Invalid Parameters!");
         } else {
-        	blast_strerror("Unable to connect to mosquitto server!");
+        	if (errno == EINPROGRESS) {
+        		/* Do nothing, connection in progress */
+        	} else {
+        		blast_strerror("Unable to connect to mosquitto server!");
+        		return -1;
+        	}
         }
-        return -1;
     }
 
     /**
