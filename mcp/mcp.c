@@ -286,7 +286,7 @@ static int AmISouth(int *not_cryo_corner)
       blast_info("System: Cryo Corner Mode Activated\n");
     }
 
-    return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '1')) ? 1 : 0;
+    return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
 }
 
 static void mcp_244hz_routines(void)
