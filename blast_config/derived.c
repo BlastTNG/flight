@@ -180,8 +180,6 @@ derived_tng_t derived_list[] = {
     BITWORD("C_A_ADC_MAX_IN_CC2", "alarm_cc2", 18, 1),
     BITWORD("C_A_RESET_CC2", "alarm_cc2", 19, 1),
 
-    BITWORD("DO_UEI_OF_TEST", "uei_of_dig_out", 0, 0),
-
       #endif
 
   /*GONDOLA THERMISTOR CALIBRATION */
