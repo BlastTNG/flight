@@ -293,6 +293,7 @@ int framing_shared_data_init(void)
     char id[4] = "fcX";
     char host[4] = "fcX";
 
+    int ret = 0;
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
@@ -309,8 +310,12 @@ int framing_shared_data_init(void)
     mosquitto_message_callback_set(mosq_other, framing_shared_data_callback);
     mosquitto_connect_callback_set(mosq_other, framing_shared_connect_callback);
 
-    if (mosquitto_connect_async(mosq_other, host, port, keepalive)) {
-        fprintf(stderr, "Unable to connect.\n");
+    if ((ret = mosquitto_connect_async(mosq_other, host, port, keepalive)) != MOSQ_ERR_SUCCESS) {
+        if (ret == MOSQ_ERR_INVAL) {
+        	blast_err("Unable to connect to mosquitto server: Invalid Parameters!");
+        } else {
+        	blast_strerror("Unable to connect to mosquitto server!");
+        }
         return -1;
     }
 
@@ -331,6 +336,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     char host[4] = "fcX";
     char topic[64];
 
+    int ret = 0;
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
@@ -347,7 +353,11 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     mosquitto_message_callback_set(mosq, framing_message_callback);
 
     if (mosquitto_connect_async(mosq, host, port, keepalive)) {
-        fprintf(stderr, "Unable to connect.\n");
+        if (ret == MOSQ_ERR_INVAL) {
+        	blast_err("Unable to connect to mosquitto server: Invalid Parameters!");
+        } else {
+        	blast_strerror("Unable to connect to mosquitto server!");
+        }
         return -1;
     }
 
