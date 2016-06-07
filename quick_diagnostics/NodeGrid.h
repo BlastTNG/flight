@@ -1,5 +1,6 @@
 #include <QtGui>
 #include "StatusNode.h"
+#include "LeafNode.h"
 
 #ifndef NODEGRID_H
 #define NODEGRID_H
@@ -26,6 +27,13 @@ public:
   }
   const QList<StatusNode*>& getChildNodes() {
     return *childNodes;
+  }
+  // Update all of the children of this grid
+  void updateChildren() {
+    for (int i = 0; i < childNodes->size(); ++i) {
+      StatusNode* n = childNodes->at(i);
+      n->updateStatus();
+    }
   }
 private:
   QList<StatusNode*>* childNodes; // List of all of this grid's status nodes

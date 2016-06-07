@@ -2,11 +2,13 @@
 
 const QColor LeafNode::loColor = Qt::blue;
 const QColor LeafNode::hiColor = Qt::red;
+const QColor LeafNode::errorColor = Qt::yellow;
 
 // NB: don't display any text in a leaf node. Instead, display a tooltip on mouseOver
 LeafNode::LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, double hi) : StatusNode(""), dirfile(dirfile), fieldCode(fieldCode), lo(lo), hi(hi) {
   isSelected = false;
   setMouseTracking(true); // if false, only receives mouseMoveEvent when mouse is pressed, see documentation
+  dirfileError = "";
 }
 
 void LeafNode::select() {
@@ -17,6 +19,16 @@ void LeafNode::select() {
 void LeafNode::unselect() {
   isSelected = false;
   update();
+}
+
+QString LeafNode::getDetails() {
+  QString details("<b>Field Code</b> ");
+  details.append(fieldCode);
+  if (isDirfileError) {
+    details.append("<br><b>Dirfile Error</b> ");
+    details.append(dirfileError);
+  } 
+  return details;
 }
 
 // Get val mapped from range currentLo <-> currentHi to the range newLo <-> newHi
@@ -37,24 +49,55 @@ void interpolateColor(QColor& result, float val, float lo, float hi, QColor aC, 
   result = QColor::fromRgb(r, g, b);
 }
 
-// TODO: read the most recent sample from dirfile, update color accordingly
+// Read the most recent data from the dirfile, and update status accordingly
 void LeafNode::updateStatus() {
 
-  float val = rand() / (float) RAND_MAX;
+  // Set this node's value to the first sample of the most recent frame of the dirfile
+  // TODO: might different fields ever have different number of frames? this would make the display out of sync
+  int numFrames = dirfile->NFrames();
+  double buffer[1];
+  dirfile->GetData(fieldCode, numFrames - 1, 0, 0, 1, GetData::Float64, (void*) buffer);
+  if (dirfile->Error() != GD_E_OK) {
+    // Store the error msg so that it can be displayed to the user
+    dirfileError = "<i>(when reading)</i> ";
+    dirfileError.append(dirfile->ErrorString());
+    isDirfileError = true;
+    statusColor = errorColor;
+    return;
+  }
+  double val = buffer[0];
+  //double val = rand() / (double) RAND_MAX; // TODO for testing
+
+  // When done reading the field, flush to close the file descriptor until next read
+  // to prevent having open too many file descriptors
+  dirfile->Flush(fieldCode);
+  if (dirfile->Error() != GD_E_OK) {
+    dirfileError = "<i>(when flushing)</i> ";
+    dirfileError.append(dirfile->ErrorString());
+    isDirfileError = true;
+    statusColor = errorColor;
+    return;
+  }
+
+  // No error encountered
+  isDirfileError = false;
 
   // If val > avg, interpolate between white and hiColor. If val <= avg, interpolate between white and loColor
   // Don't just interpolate between loColor and hiColor b/c it becomes difficult to judge the sensor value from the color
   float avg = (lo + hi) / 2;
   QString style;
   if (val > avg) {
+    if (val > hi) val = hi; // if over hi, just display hiColor
     interpolateColor(statusColor, val, avg, hi, Qt::white, hiColor);    
   } else {
+    if (val < lo) val = lo; // if under lo, just display loColor
     interpolateColor(statusColor, val, lo, avg, loColor, Qt::white);  
   }
   update(); // triggers a repaint event
 }
 
-void LeafNode::paintEvent(QPaintEvent* evt) {
+// Custom paint this node
+void LeafNode::paintEvent(QPaintEvent* /*evt*/) {
   QRect geo = geometry();
   QPainter p(this);
   p.setBrush(statusColor);
@@ -74,12 +117,12 @@ void LeafNode::mouseMoveEvent(QMouseEvent* evt) {
 }
 
 // When the mouse leaves this widget, hide the tooltip
-void LeafNode::leaveEvent(QEvent* evt) {
+void LeafNode::leaveEvent(QEvent* /*evt*/) {
   QToolTip::hideText();
 }
 
 // Emit a clicked signal when this label is pressed
 // NB: evt is not used
 void LeafNode::mousePressEvent(QMouseEvent* /*evt*/) {
-  emit clicked(fieldCode);
+  emit clicked(this);
 }

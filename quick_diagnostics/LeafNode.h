@@ -10,20 +10,25 @@ class LeafNode : public StatusNode {
 public:
   LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, double hi);
   ~LeafNode() {};
-public slots:
   void updateStatus();
+public slots:
   void select();
   void unselect();
+  QString getDetails(); // get the details about this node and its dirfile field
 private:
-  const GetData::Dirfile* dirfile; // reference to the dirfile
+  GetData::Dirfile* dirfile; // reference to the dirfile
   const char* fieldCode; // the name of the field in the dirfile to which this leaf-node corresponds
-  bool isSelected;
+
+  bool isSelected; // true if the user has selected this node, false ow
+  bool isDirfileError; // true if there is/was an error while reading this field from dirfile, false ow
+  QString dirfileError; // get the error msg encountered while reading thsi file from dirfile, if applicable
+
   const double lo, hi; // the lo and hi value for this channel
-  static const QColor hiColor;
+  static const QColor hiColor, errorColor;
   static const QColor loColor;
   QColor statusColor; // this node's current color (reflecting its status)
 signals:
-  void clicked(const char* fieldCode);
+  void clicked(LeafNode* thisLeaf); 
 protected:
   // All overrided from QWidget
   void mousePressEvent(QMouseEvent* evt);

@@ -25,8 +25,14 @@ DiagnosticsView::DiagnosticsView() : QWidget() {
   vBox->addWidget(mainView); 
   this->setLayout(vBox);
 
-  // Init the selected leaf
+  // Init pointers to null
   selectedNode = NULL;
+  currentGrid = NULL;
+
+  // Update the status of the diagnostics view frequently
+  QTimer* timer = new QTimer(this);
+  connect(timer, SIGNAL(timeout()), this, SLOT(updateDisplayedNodes()));
+  timer->start(500); // TODO: make more frequent
 }
 
 void DiagnosticsView::setRoot(ParentNode* root) {
@@ -40,15 +46,15 @@ void DiagnosticsView::configureParentNode(ParentNode* parent) {
 
 void DiagnosticsView::configureLeafNode(LeafNode* leaf) {
   // When a leaf-node is clicked, show its details in the detail label
-  QObject::connect(leaf, SIGNAL(clicked(const char*)), this, SLOT(updateDetailLabel(const char*)));
+  QObject::connect(leaf, SIGNAL(clicked(LeafNode*)), this, SLOT(updateDetailLabel(LeafNode*)));
 }
 
-void DiagnosticsView::updateDetailLabel(const char* fieldCode) {
+void DiagnosticsView::updateDetailLabel(LeafNode* leaf) {
+
   // Use the field-code to get and display more details about the field
-  detailLabel->setText(fieldCode); 
+  detailLabel->setText(leaf->getDetails()); 
 
   // Get the clicked leaf-node, and select it
-  LeafNode* leaf = qobject_cast<LeafNode*>(QObject::sender());  
   if (selectedNode != NULL) {
     selectedNode->unselect();
   }
@@ -56,9 +62,17 @@ void DiagnosticsView::updateDetailLabel(const char* fieldCode) {
   selectedNode = leaf;
 }
 
+void DiagnosticsView::updateDisplayedNodes() {
+  // Update all of the currently displayed nodes
+  if (currentGrid != NULL) {
+    currentGrid->updateChildren(); 
+  }
+}
+
 // Push and display the parent's child view
 void DiagnosticsView::pushView(ParentNode* clickedParent) {
 
+  // Get ref to child view
   NodeGrid* nextView = clickedParent->getChildView();
 
   // Update the path navigator
@@ -67,4 +81,7 @@ void DiagnosticsView::pushView(ParentNode* clickedParent) {
   // Push the view on to this widget's stack, and display it
   stackLayout->addWidget(nextView);
   stackLayout->setCurrentWidget(nextView);
+
+  // Update ref
+  currentGrid = nextView;
 }

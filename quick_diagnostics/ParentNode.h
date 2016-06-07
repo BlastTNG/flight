@@ -11,10 +11,9 @@ public:
   ParentNode(QString name, NodeGrid* childView);
   ~ParentNode() {};
   NodeGrid* getChildView();
+  void updateStatus();
 private:
   NodeGrid* childView;
-public slots:
-  void updateStatus();
 signals:
   // Emit itself when selected
   void selected(ParentNode* thisNode);

@@ -2,6 +2,7 @@
 #include "ParentNode.h"
 #include "LeafNode.h"
 #include "PathLabel.h"
+#include "NodeGrid.h"
 
 #ifndef DIAGNOSTICSVIEW_H
 #define DIAGNOSTICSVIEW_H
@@ -21,9 +22,12 @@ private:
   PathLabel* pathLabel; // describes the path in the diagnostics tree, provides navigation
   QLabel* detailLabel; // when a leaf-node is clicked, display more detailed information about it here
   LeafNode* selectedNode; // the currently selected node
+  NodeGrid* currentGrid; // the currently displayed view
 public slots:
   void pushView(ParentNode* parent); // push this parent's child view  to the stackLayout and pathStack
-  void updateDetailLabel(const char* fieldCode);
+  void updateDetailLabel(LeafNode* leaf);
+private slots:
+  void updateDisplayedNodes(); // use GetData to update the status of all currently displayed nodes
 };
 
 #endif

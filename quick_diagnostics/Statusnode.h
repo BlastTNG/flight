@@ -17,15 +17,9 @@ public:
     palette.setColor(QPalette::Background, Qt::gray);
     setAutoFillBackground(true);
     setPalette(palette);
-
-    // Update the status of the node every 500ms
-    QTimer* timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateStatus()));
-    timer->start(500);
   }
 
   virtual ~StatusNode() {};
-public slots:
   virtual void updateStatus() = 0; // update the node's status
 };
 
