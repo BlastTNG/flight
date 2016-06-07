@@ -6,20 +6,21 @@ ParentNode::ParentNode(QString name, NodeGrid* childView) : StatusNode(name), ch
 }
 
 void ParentNode::updateStatus() {
+  // TODO: it's not really necessary to have the parent node have a color, too
 
   // A parent's status is good if all of its children's statuses are good, otherwise bad
-  const QList<StatusNode*>& children = childView->getChildNodes();
-  bool allGood = true;
-  for (int i = 0; i < children.size(); i++) {
-    StatusNode* n = children.at(i);
-    if (n->getStatus() != GOOD) {
-      allGood = false;  
-      break;
-    }
-  }
-  Status s = allGood ? GOOD : BAD;
-  setStatus(s);
-  updateStyle();
+  /*const QList<StatusNode*>& children = childView->getChildNodes();*/
+  //bool allGood = true;
+  //for (int i = 0; i < children.size(); i++) {
+    //StatusNode* n = children.at(i);
+    //if (n->getStatus() != GOOD) {
+      //allGood = false;  
+      //break;
+    //}
+  //}
+  //Status s = allGood ? GOOD : BAD;
+  //setStatus(s);
+  /*updateStyle();*/
 }
 
 NodeGrid* ParentNode::getChildView() {

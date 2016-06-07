@@ -1,10 +1,21 @@
 {
   "x": {
-    "prefix": "x"
+    "prefix": "x",
+    "lo": 0.0,
+    "hi": 1.0
   },
   "parent": {
     "roaches": {
-      "prefix": "roach"  
+      "prefix": "roach",
+      "lo": 0.0,
+      "hi": 1.0
+    }
+  },
+  "mother": {
+    "all": {
+      "prefix": "",
+      "lo": 0.0,
+      "hi": 1.0
     }
   }
 }

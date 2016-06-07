@@ -14,6 +14,7 @@ public:
   NodeGrid() : QWidget() {
     childNodes = new QList<StatusNode*>();
     gridLayout = new QGridLayout();
+    gridLayout->setSpacing(1);
     setLayout(gridLayout);
   };
   ~NodeGrid() {
