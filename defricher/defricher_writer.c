@@ -284,6 +284,9 @@ static inline int defricher_get_rate(const E_RATE m_rate)
         case RATE_200HZ:
             rate = 200;
             break;
+        case RATE_244HZ:
+            rate = 244;
+            break;
         default:
             defricher_err( "Unknown rate %d", m_rate);
     }
