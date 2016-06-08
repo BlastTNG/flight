@@ -63,14 +63,14 @@
 // CommandData.uei_command.uei_of_dio_432_out.
 // TODO(laura): These are for BLASTPol (taken from das.c). Get updated list from Jeff.
 // TODO(laura): move this to a separate cryo control program modeled on das.c
-#define HEAT_HELIUM_LEVEL    0x01
-#define HEAT_CHARCOAL        0x02
-#define HEAT_POT_HS          0x04
-#define HEAT_CHARCOAL_HS     0x08
-#define HEAT_JFET            0x10
-#define HEAT_BDA             0x20
-#define HEAT_CALIBRATOR      0x40
-#define HEAT_HWPR_POS        0x80
+#define HEAT_HELIUM_LEVEL    0x0001
+#define HEAT_CHARCOAL        0x0002
+#define HEAT_POT_HS          0x0004
+#define HEAT_CHARCOAL_HS     0x0008
+#define HEAT_JFET            0x0010
+#define HEAT_BDA             0x0020
+#define HEAT_CALIBRATOR      0x0040
+#define HEAT_HWPR_POS        0x0080
 
 #define LS_CLOSED      0x0002
 #define LS_DRIVE_OFF   0x0004
@@ -257,6 +257,47 @@ typedef struct
     uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
 } uei_commands_t;
 
+typedef struct {
+  uint16_t charcoalHeater;
+  uint16_t hsCharcoal;
+  uint16_t fridgeCycle;
+  uint16_t force_cycle;
+
+  double cycle_start_temp;
+  double cycle_pot_max;
+  double cycle_charcoal_max;
+  double cycle_charcoal_settle;
+  // timeouts in minutes (NB: time will probably be in seconds)
+  double cycle_charcoal_timeout;
+  double cycle_settle_timeout;
+
+  uint16_t BDAHeat;
+  uint16_t hsPot;
+  int16_t heliumLevel;
+  int he4_lev_old;
+  int16_t hwprPos;
+  int hwpr_pos_old;
+
+  uint16_t JFETHeat;
+  uint16_t autoJFETheat;
+  double JFETSetOn, JFETSetOff;
+
+  enum calmode calibrator;
+  uint16_t calib_pulse, calib_period;
+  int calib_repeats;
+  int calib_hwpr;
+
+  uint16_t potvalve_open, potvalve_on, potvalve_close;
+  uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
+} cryo_cmds_t;
+
+typedef struct slinger_commanding
+{
+    unsigned int downlink_rate_bps;
+    bool highrate_active;
+    bool biphase_active;
+} slinger_commanding_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -369,40 +410,7 @@ struct CommandDataStruct {
     struct Step biasStep;
   } Bias;
 
-  // TODO(seth): Move Cryo cmd
-  struct {
-    uint16_t charcoalHeater;
-    uint16_t hsCharcoal;
-    uint16_t fridgeCycle;
-    uint16_t force_cycle;
-
-    double cycle_start_temp;
-    double cycle_pot_max;
-    double cycle_charcoal_max;
-    double cycle_charcoal_settle;
-    // timeouts in minutes (NB: time will probably be in seconds)
-    double cycle_charcoal_timeout;
-    double cycle_settle_timeout;
-
-    uint16_t BDAHeat;
-    uint16_t hsPot;
-    int16_t heliumLevel;
-    int he4_lev_old;
-    int16_t hwprPos;
-    int hwpr_pos_old;
-
-    uint16_t JFETHeat;
-    uint16_t autoJFETheat;
-    double JFETSetOn, JFETSetOff;
-
-    enum calmode calibrator;
-    uint16_t calib_pulse, calib_period;
-    int calib_repeats;
-    int calib_hwpr;
-
-    uint16_t potvalve_open, potvalve_on, potvalve_close;
-    uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
-  } Cryo;
+  cryo_cmds_t Cryo;
 
   struct {
     enum {bal_rest, bal_manual, bal_auto} mode;
@@ -518,6 +526,10 @@ struct CommandDataStruct {
   } ISCControl[2];
 
   struct XSCCommandStruct XSC[2];
+
+  slinger_commanding_t packet_slinger;
+
+  uint32_t checksum;
 };
 
 void InitCommandData();

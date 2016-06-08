@@ -47,7 +47,7 @@ const char *GroupNames[N_GROUPS] = {
 // echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
-struct scom scommands[N_SCOMMANDS] = {
+struct scom scommands[xyzzy + 1] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 
@@ -259,7 +259,7 @@ struct scom scommands[N_SCOMMANDS] = {
  * d :  parameter is 32 bit renormalised floating point
  * s :  parameter is 7-bit character string
  */
-struct mcom mcommands[N_MCOMMANDS] = {
+struct mcom mcommands[plugh + 2] = {
   {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
     GR_TELEM, 1,
     {

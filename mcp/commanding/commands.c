@@ -34,12 +34,14 @@
 #include <pthread.h>
 
 #include <conversions.h>
+#include <crc.h>
 #include <pointing.h>
 #include <blast_sip_interface.h>
 #include <ec_motors.h>
 
 #include "command_list.h"
 #include "command_struct.h"
+#include "framing.h"
 #include "mcp.h"
 #include "tx.h"
 #include "pointing_struct.h"
@@ -90,6 +92,8 @@ static void WritePrevStatus()
 {
   int fp, n;
 
+  CommandData.checksum = 0;
+  CommandData.checksum = crc32_le(0, (uint8_t*) &CommandData, sizeof(CommandData));
   /** write the default file */
   fp = open(PREV_STATUS_FILE, O_WRONLY|O_CREAT|O_TRUNC, 00666);
   if (fp < 0) {
@@ -106,6 +110,8 @@ static void WritePrevStatus()
     berror(err, "mcp.prev_status close()");
     return;
   }
+
+  framing_publish_command_data(&CommandData);
 }
 
 /* calculate the nearest lockable elevation */
@@ -1882,6 +1888,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 void InitCommandData()
 {
     int fp, n_read = 0, junk, extra = 0;
+    int is_valid = 0;
+    uint32_t prev_crc;
 
     if ((fp = open(PREV_STATUS_FILE, O_RDONLY)) < 0) {
         berror(err, "Commands: Unable to open prev_status file for reading");
@@ -1891,6 +1899,9 @@ void InitCommandData()
         if ((extra = read(fp, &junk, sizeof(junk))) < 0) berror(err, "Commands: extra prev_status read()");
         if (close(fp) < 0) berror(err, "Commands: prev_status close()");
     }
+    prev_crc = CommandData.checksum;
+    CommandData.checksum = 0;
+    is_valid = (prev_crc == crc32_le(0, (uint8_t*)&CommandData, sizeof(CommandData)));
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;
@@ -1990,6 +2001,8 @@ void InitCommandData()
                    (int) sizeof(struct CommandDataStruct), n_read);
     else if (extra > 0)
         bputs(warning, "Commands: prev_status: Extra bytes found.\n");
+    else if (!is_valid)
+        blast_warn("Invalid Checksum on saved data.  Reverting to defaults!");
     else
         return;
 

@@ -29,6 +29,7 @@
 
 #include <stdint.h>
 #include <portable_endian.h>
+#include <blast_compiler.h>
 #define CRCPOLY_LE 0xedb88320
 #define CRCPOLY_BE 0x04c11db7
 
@@ -41,5 +42,6 @@ extern uint32_t  crc32_be(uint32_t crc, unsigned char const *p, size_t len);
 # define crc32(seed, data, length)  crc32_be(seed, (unsigned char const *)(data), length)
 #endif
 
+uint16_t __pure crc16(uint16_t crc, void const *p, size_t len);
 
 #endif /* _LINUX_CRC32_H */

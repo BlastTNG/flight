@@ -34,20 +34,22 @@
 #include <blast.h>
 #include <blast_time.h>
 #include <channels_tng.h>
+#include <command_struct.h>
+#include <crc.h>
 #include <derived.h>
 #include <mputs.h>
 
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
+static struct mosquitto *mosq_other = NULL;
 extern int16_t SouthIAm;
+extern int16_t InCharge;
 
 static int32_t mcp_244hz_framenum = -1;
 static int32_t mcp_200hz_framenum = -1;
 static int32_t mcp_100hz_framenum = -1;
 static int32_t mcp_5hz_framenum = -1;
 static int32_t mcp_1hz_framenum = -1;
-static int32_t uei_of_100hz_framenum = -1;
-static int32_t uei_of_1hz_framenum = -1;
 
 /**
  * Returns the current MCP framenumber of the 200Hz Frames
@@ -86,44 +88,6 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
 {
     if (level & ( MOSQ_LOG_ERR | MOSQ_LOG_WARNING ))
         blast_info("%s\n", str);
-}
-
-void uei_publish_1hz(void)
-{
-    static channel_t *uei_of_1hz_framenum_addr = NULL;
-    static char frame_name[32];
-    if (uei_of_1hz_framenum_addr == NULL) {
-        uei_of_1hz_framenum_addr = channels_find_by_name("uei_of_1hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/of_uei/dummy/1Hz");
-    }
-
-    if (frame_stop) return;
-
-    uei_of_1hz_framenum++;
-    SET_INT32(uei_of_1hz_framenum_addr, uei_of_1hz_framenum);
-    if (frame_size[SRC_OF_UEI][RATE_1HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_OF_UEI][RATE_1HZ], channel_data[SRC_OF_UEI][RATE_1HZ], 0, false);
-    }
-}
-
-void uei_publish_100hz(void)
-{
-    static channel_t *uei_of_100hz_framenum_addr = NULL;
-    static char frame_name[32];
-    if (uei_of_100hz_framenum_addr == NULL) {
-        uei_of_100hz_framenum_addr = channels_find_by_name("uei_of_100hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/of_uei/dummy/100Hz");
-    }
-
-    if (frame_stop) return;
-
-    uei_of_100hz_framenum++;
-    SET_INT32(uei_of_100hz_framenum_addr, uei_of_100hz_framenum);
-    if (frame_size[SRC_OF_UEI][RATE_100HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_OF_UEI][RATE_100HZ], channel_data[SRC_OF_UEI][RATE_100HZ], 0, false);
-    }
 }
 
 void framing_publish_1hz(void)
@@ -223,6 +187,13 @@ void framing_publish_244hz(void)
     }
 }
 
+/**
+ * Publish updated CommandData
+ */
+void framing_publish_command_data(struct CommandDataStruct *m_commanddata)
+{
+    mosquitto_publish(mosq, NULL, "commanddata", sizeof(struct CommandDataStruct), m_commanddata, 1, 1);
+}
 
 static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
@@ -260,8 +231,6 @@ static void framing_message_callback(struct mosquitto *mosq, void *userdata, con
 {
     char **topics;
     int count;
-    static uint32_t last_crc = 0;
-    static uint32_t last_derived_crc = 0;
 
     if (message->payloadlen) {
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
@@ -271,9 +240,84 @@ static void framing_message_callback(struct mosquitto *mosq, void *userdata, con
             mosquitto_sub_topic_tokens_free(&topics, count);
         }
     }
-    fflush(stdout);
 }
 
+/**
+ * Received data from "other" flight computer including CommandData struct,
+ * EtherCAT state, Flight computer temps, etc.
+ * @param mosq Pointer to mosq connection to other flight computer
+ * @param userdata
+ * @param message
+ */
+static void framing_shared_data_callback(struct mosquitto *mosq, void *userdata,
+                                         const struct mosquitto_message *message)
+{
+    char **topics;
+    int count;
+    static int has_warned = 0;
+
+    if (message->payloadlen > 0) {
+        if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
+            if (topics[0] && strcmp(topics[0], "commanddata") == 0) {
+                if (!InCharge && (sizeof(CommandData) == message->payloadlen)) {
+                    struct CommandDataStruct temp_command_data = {0};
+                    uint32_t prev_crc;
+
+                    memcpy(&temp_command_data, message->payload, message->payloadlen);
+                    prev_crc = temp_command_data.checksum;
+                    temp_command_data.checksum = 0;
+                    if (prev_crc == crc32_le(0, (uint8_t*)&temp_command_data, sizeof(temp_command_data))) {
+                        has_warned = 0;
+                        memcpy(&CommandData, &temp_command_data, sizeof(CommandData));
+                    } else if (!has_warned) {
+                        has_warned = 1;
+                        blast_err("Received invalid CommandData from in charge flight computer!"
+                                " Please check that both FCs are running the same mcp");
+                    }
+                }
+            }
+            mosquitto_sub_topic_tokens_free(&topics, count);
+        }
+    }
+}
+
+static void framing_shared_connect_callback(struct mosquitto *m_mosq, void *obj, int rc)
+{
+    if (rc == MOSQ_ERR_SUCCESS) {
+        mosquitto_subscribe(m_mosq, NULL, "commanddata", 1);
+    }
+}
+
+int framing_shared_data_init(void)
+{
+    char id[4] = "fcX";
+    char host[4] = "fcX";
+
+    int port = 1883;
+    int keepalive = 60;
+    bool clean_session = true;
+
+    snprintf(id, sizeof(id), "fc%d", SouthIAm + 1);
+    snprintf(host, sizeof(host), "fc%d", (SouthIAm + 2) % 2 + 1);
+
+    mosq_other = mosquitto_new(id, clean_session, NULL);
+    if (!mosq_other) {
+        blast_err("mosquitto_new() failed creating other");
+        return -1;
+    }
+    mosquitto_log_callback_set(mosq_other, frame_log_callback);
+    mosquitto_message_callback_set(mosq_other, framing_shared_data_callback);
+    mosquitto_connect_callback_set(mosq_other, framing_shared_connect_callback);
+
+    if (mosquitto_connect_async(mosq_other, host, port, keepalive)) {
+        fprintf(stderr, "Unable to connect.\n");
+        return -1;
+    }
+
+    mosquitto_reconnect_delay_set(mosq_other, 1, 10, 1);
+    mosquitto_loop_start(mosq_other);
+    return 0;
+}
 /**
  * Initializes the mosquitto library and associated framing routines.
  * @return
