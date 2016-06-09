@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <glib.h>
 #include <modbus/modbus.h>
+#include <errno.h>
 
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -52,6 +53,21 @@
 #define STREAM_STATUS_SCAN_OVERLAP 2942
 #define STREAM_STATUS_AUTO_RECOVER_END_OVERFLOW 2943
 #define STREAM_STATUS_BURST_COMPLETE 2944
+
+// Stream addresses/starting addresses
+#define STREAM_SCANRATE_HZ_ADDR 4002
+#define STREAM_NUM_ADDRESSES_ADDR 4004
+#define STREAM_SAMPLES_PER_PACKET_ADDR 4006
+#define STREAM_SETTLING_US_ADDR 4008
+#define STREAM_RESOLUTION_INDEX_ADDR 4010
+#define STREAM_BUFFER_SIZE_BYTES_ADDR 4012
+#define STREAM_CLOCK_SOURCE_ADDR 4014
+#define STREAM_AUTO_TARGET_ADDR 4016
+#define STREAM_NUM_SCANS_ADDR 4020
+#define STREAM_EXTERNAL_CLOCK_DIVISOR_ADDR 4022
+#define STREAM_ENABLE_ADDR 4990
+#define STREAM_SCANLIST_ADDRESS_ADDR 4100 // #(0:127)
+#define STREAM_TRIGGER_INDEX_ADDR 4024
 
 #define LJ_CMD_PORT 502
 #define LJ_DATA_PORT 702
@@ -88,13 +104,8 @@ typedef enum {
     LJ_STATE_READY,
     LJ_STATE_RESET,
     LJ_STATE_SHUTDOWN
-} e_ljc_state;
+} e_ljc_state_t;
 
-typedef struct {
-    uint16_t state;
-    uint16_t req_state;
-    uint16_t has_error;
-} labjack_comm_state_t;
 
 typedef struct {
     char address[16];
@@ -109,7 +120,10 @@ typedef struct {
     bool have_warned_version;
     bool shutdown;
 
-    labjack_comm_state_t comm_state;
+// Used for setting up the streaming in the command thread
+    uint16_t comm_stream_state;
+    uint16_t req_comm_stream_state;
+    uint16_t has_comm_stream_error;
 
     float DAC[2];
 
@@ -138,7 +152,8 @@ typedef struct {
 static labjack_state_t state[2] = {
     {
           .address = "labjack1",
-          .port = LJ_DATA_PORT
+          .port = LJ_DATA_PORT,
+          .DAC = {0, 0}
     }
 };
 
@@ -189,6 +204,10 @@ int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
 
 static void init_labjack_stream_commands(labjack_state_t *m_state)
 {
+    static int have_warned_write_reg = 0;
+    int ret = 0;
+    uint16_t data[2] = {0}; // Used to write floats.
+
     // Configure stream
     enum {NUM_ADDRESSES = 7};
     float scanRate = 1000.0f; // Scans per second. Samples per second = scanRate * numAddresses
@@ -211,6 +230,27 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         nChanList[i] = 199; // Negative channel is 199 (single ended)
         rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
         gainList[i] = 0; // gain index 0 = +/-10V
+    }
+
+    // Write to appropriate Modbus registers to setup and start labjack streaming.
+    modbus_set_float(scanRate, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, 4002, 2, data)) < 0) {
+        if (!have_warned_write_reg) {
+           blast_err("Could not set stream scan rate at address: %s",
+                modbus_strerror(errno));
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_ADDRESSES_ADDR, 2, &numAddresses)) < 0) {
+        if (!have_warned_write_reg) {
+           blast_err("Could not set stream number of addresses: %s",
+                modbus_strerror(errno));
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
     }
 }
 
@@ -344,6 +384,7 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 
 void *labjack_cmd_thread(void *m_lj) {
     static int have_warned_connect = 0;
+    static int have_warned_write_reg = 0;
     labjack_state_t *state = (labjack_state_t*)m_lj;
 
     char tname[10];
@@ -352,6 +393,10 @@ void *labjack_cmd_thread(void *m_lj) {
     nameThread(tname);
 
     blast_info("Starting Labjack%02d Commanding at IP %s", state->which, state->address);
+
+	state->req_comm_stream_state = 1;
+	state->comm_stream_state = 0;
+	state->has_comm_stream_error = 0;
 
     {
         struct hostent *lj_ent = gethostbyname(state->address);
@@ -393,10 +438,21 @@ void *labjack_cmd_thread(void *m_lj) {
             }
             have_warned_connect = 0;
         }
+
+    /*  Start streaming */
+    if (state->req_comm_stream_state && !state->comm_stream_state) {
+        init_labjack_stream_commands(state);
+    }
 	/*  Set DAC level */
         modbus_set_float(state->DAC[0], &dac_buffer[0]);
         modbus_set_float(state->DAC[1], &dac_buffer[2]);
-        modbus_write_registers(state->cmd_mb, 1000, 4, dac_buffer);
+        if (modbus_write_registers(state->cmd_mb, 1000, 4, dac_buffer) < 0) {
+            if (!have_warned_write_reg) {
+                blast_err("Could not write DAC Modbus registers: %s", modbus_strerror(errno));
+            }
+            have_warned_write_reg = 0;
+            continue;
+        }
     }
     return NULL;
 }
