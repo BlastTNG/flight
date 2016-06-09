@@ -35,6 +35,7 @@
 #include "phenom/memory.h"
 
 #include "blast.h"
+#include "mcp.h"
 
 // Target types for stream configuration
 #define STREAM_TARGET_ETHERNET 0x01  // Ethernet
@@ -58,6 +59,7 @@
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 
+
 typedef struct {
     uint16_t trans_id;
     uint16_t proto_id;
@@ -80,6 +82,20 @@ typedef struct {
     uint16_t data[];
 } __attribute__((packed)) labjack_data_pkt_t;
 
+// Status of the labjack commanding thread.
+typedef enum {
+    LJ_STATE_DISCONNECT = 0,
+    LJ_STATE_READY,
+    LJ_STATE_RESET,
+    LJ_STATE_SHUTDOWN
+} e_ljc_state;
+
+typedef struct {
+    uint16_t state;
+    uint16_t req_state;
+    uint16_t has_error;
+} labjack_comm_state_t;
+
 typedef struct {
     char address[16];
     char ip[16];
@@ -92,6 +108,8 @@ typedef struct {
     bool connected;
     bool have_warned_version;
     bool shutdown;
+
+    labjack_comm_state_t comm_state;
 
     float DAC[2];
 
@@ -169,7 +187,7 @@ int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
     return 0;
 }
 
-static void init_labjack_commands(labjack_state_t *m_state)
+static void init_labjack_stream_commands(labjack_state_t *m_state)
 {
     // Configure stream
     enum {NUM_ADDRESSES = 7};
@@ -347,6 +365,7 @@ void *labjack_cmd_thread(void *m_lj) {
         snprintf(state->ip, sizeof(state->ip), "%d.%d.%d.%d",
                  (hostaddr & 0xff), ((hostaddr >> 8) & 0xff),
                  ((hostaddr >> 16) & 0xff), ((hostaddr >> 24) & 0xff));
+        blast_info("Labjack%02d address %s corresponds to IP %s", state->which, state->address, state->ip);
     }
     while (!state->shutdown) {
         uint16_t dac_buffer[4];
@@ -374,11 +393,25 @@ void *labjack_cmd_thread(void *m_lj) {
             }
             have_warned_connect = 0;
         }
+	/*  Set DAC level */
         modbus_set_float(state->DAC[0], &dac_buffer[0]);
         modbus_set_float(state->DAC[1], &dac_buffer[2]);
         modbus_write_registers(state->cmd_mb, 1000, 4, dac_buffer);
     }
     return NULL;
+}
+
+/** Create labjack commanding thread.
+  * Called by mcp during startup.
+  */
+
+void initialize_labjack_commands(int m_which)
+{
+    ph_thread_t *ljcomm_thread = NULL;
+
+    blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
+
+    ljcomm_thread = ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
 }
 
 /**

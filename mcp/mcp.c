@@ -535,6 +535,8 @@ int main(int argc, char *argv[])
   initialize_motors();
   labjack_networking_init(LABJACK_CRYO, 1);
 
+  initialize_labjack_commands(LABJACK_CRYO);
+
   initialize_CPU_sensors();
 
   if (use_starcams) {
