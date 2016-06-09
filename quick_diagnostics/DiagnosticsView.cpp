@@ -16,12 +16,12 @@ DiagnosticsView::DiagnosticsView() : QWidget() {
   pathLabel = new PathLabel();
   QObject::connect(pathLabel, SIGNAL(viewRequested(QWidget*)), stackLayout, SLOT(setCurrentWidget(QWidget*)));
 
-  detailLabel = new QLabel("Click a leaf-node to show its details here");
+  detailsView = new DetailsView();
  
   // Arrange the elements vertically
   QVBoxLayout* vBox = new QVBoxLayout();
   vBox->addWidget(pathLabel);
-  vBox->addWidget(detailLabel);
+  vBox->addWidget(detailsView);
   vBox->addWidget(mainView); 
   this->setLayout(vBox);
 
@@ -32,7 +32,7 @@ DiagnosticsView::DiagnosticsView() : QWidget() {
   // Update the status of the diagnostics view frequently
   QTimer* timer = new QTimer(this);
   connect(timer, SIGNAL(timeout()), this, SLOT(updateDisplayedNodes()));
-  timer->start(500); // TODO: make more frequent
+  timer->start(1000); // TODO: put to 500ms
 }
 
 void DiagnosticsView::setRoot(ParentNode* root) {
@@ -51,9 +51,6 @@ void DiagnosticsView::configureLeafNode(LeafNode* leaf) {
 
 void DiagnosticsView::updateDetailLabel(LeafNode* leaf) {
 
-  // Use the field-code to get and display more details about the field
-  detailLabel->setText(leaf->getDetails()); 
-
   // Get the clicked leaf-node, and select it
   if (selectedNode != NULL) {
     selectedNode->unselect();
@@ -66,6 +63,11 @@ void DiagnosticsView::updateDisplayedNodes() {
   // Update all of the currently displayed nodes
   if (currentGrid != NULL) {
     currentGrid->updateChildren(); 
+  }
+
+  // Update the detail label for the selected node
+  if (selectedNode != NULL) {
+    detailsView->updateDetails(selectedNode);
   }
 }
 

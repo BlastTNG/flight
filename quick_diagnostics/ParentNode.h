@@ -1,9 +1,9 @@
+#ifndef PARENTNODE_H
+#define PARENTNODE_H
+
 #include <QtGui>
 #include "StatusNode.h"
 #include "NodeGrid.h"
-
-#ifndef PARENTNODE_H
-#define PARENTNODE_H
 
 class ParentNode : public StatusNode {
   Q_OBJECT

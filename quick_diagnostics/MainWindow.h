@@ -1,12 +1,12 @@
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
 #include <QtGui>
 #include "SetupView.h"
 #include "DiagnosticsView.h"
 #include <getdata/dirfile.h>
 #include "json.hpp"
 using json = nlohmann::json;
-
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
 
 class MainWindow : public QWidget {
   Q_OBJECT

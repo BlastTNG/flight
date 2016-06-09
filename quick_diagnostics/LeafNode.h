@@ -1,20 +1,28 @@
+#ifndef LEAFNODE_H
+#define LEAFNODE_H
+
 #include <QtGui>
 #include <getdata/dirfile.h>
 #include "StatusNode.h"
-
-#ifndef LEAFNODE_H
-#define LEAFNODE_H
 
 class LeafNode : public StatusNode {
   Q_OBJECT
 public:
   LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, double hi);
   ~LeafNode() {};
+
+  // Uses the most recent value in the dirfle to update the status of this node
   void updateStatus();
+
+  // Accessors
+  QString getFieldCode();
+  double getCurrentValue();
+  double getLoValue();
+  double getHiValue();
+  QString getDirfileError();
 public slots:
   void select();
   void unselect();
-  QString getDetails(); // get the details about this node and its dirfile field
 private:
   GetData::Dirfile* dirfile; // reference to the dirfile
   const char* fieldCode; // the name of the field in the dirfile to which this leaf-node corresponds
@@ -23,9 +31,9 @@ private:
   bool isDirfileError; // true if there is/was an error while reading this field from dirfile, false ow
   QString dirfileError; // get the error msg encountered while reading thsi file from dirfile, if applicable
 
+  double currentValue; // the value most recently read from the dirfile
   const double lo, hi; // the lo and hi value for this channel
-  static const QColor hiColor, errorColor;
-  static const QColor loColor;
+  static const QColor loColor, hiColor, errorColor;
   QColor statusColor; // this node's current color (reflecting its status)
 signals:
   void clicked(LeafNode* thisLeaf); 

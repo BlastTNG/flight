@@ -4,6 +4,16 @@
     "lo": 0.0,
     "hi": 1.0
   },
+  "y": {
+    "prefix": "y",
+    "lo": 0.0,
+    "hi": 0.5
+  },
+  "z": {
+    "prefix": "z",
+    "lo": 0.0,
+    "hi": 0.5
+  },
   "parent": {
     "roaches": {
       "prefix": "roach",

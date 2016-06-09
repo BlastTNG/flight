@@ -1,7 +1,7 @@
-#include <QtGui>
-
 #ifndef STATUSNODE_H
 #define STATUSNODE_H
+
+#include <QtGui>
 
 /**
   Simple abstract class for FieldNode and Parentnode.

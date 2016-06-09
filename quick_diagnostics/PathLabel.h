@@ -1,8 +1,8 @@
-#include <QtGui>
-#include "ParentNode.h"
-
 #ifndef PATHLABEL_H
 #define PATHLABEL_H
+
+#include <QtGui>
+#include "ParentNode.h"
 
 class PathLabel : public QWidget {
   Q_OBJECT

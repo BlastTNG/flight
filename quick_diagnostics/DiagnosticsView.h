@@ -1,11 +1,12 @@
+#ifndef DIAGNOSTICSVIEW_H
+#define DIAGNOSTICSVIEW_H
+
 #include <QtGui>
+#include "DetailsView.h"
 #include "ParentNode.h"
 #include "LeafNode.h"
 #include "PathLabel.h"
 #include "NodeGrid.h"
-
-#ifndef DIAGNOSTICSVIEW_H
-#define DIAGNOSTICSVIEW_H
 
 class DiagnosticsView : public QWidget {
   Q_OBJECT
@@ -20,7 +21,7 @@ private:
   QStackedLayout* stackLayout;
   QStack<QWidget*>* pathStack; // stack of the widgets in the stackLayout
   PathLabel* pathLabel; // describes the path in the diagnostics tree, provides navigation
-  QLabel* detailLabel; // when a leaf-node is clicked, display more detailed information about it here
+  DetailsView* detailsView; // when a leaf-node is clicked, display more detailed information about it here
   LeafNode* selectedNode; // the currently selected node
   NodeGrid* currentGrid; // the currently displayed view
 public slots:

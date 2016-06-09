@@ -3,6 +3,7 @@
 #include "ParentNode.h"
 #include "LeafNode.h"
 #include "NodeGrid.h"
+#include "LeafGroup.h"
 #include <string>
 
 using namespace std;
@@ -38,8 +39,8 @@ bool isLeaf(json obj) {
 /**
   Get a list of leaf nodes, one for every fieldCode with the given prefix in the given dirfile
 */
-QList<StatusNode*>* getLeavesForPrefix(DiagnosticsView* diagView, GetData::Dirfile* dirfile, string prefix, double lo, double hi, QLinkedList<const char*>* unusedFields) {
-  QList<StatusNode*>* list = new QList<StatusNode*>();
+QList<LeafNode*>* getLeavesForPrefix(DiagnosticsView* diagView, GetData::Dirfile* dirfile, string prefix, double lo, double hi, QLinkedList<const char*>* unusedFields) {
+  QList<LeafNode*>* list = new QList<LeafNode*>();
   
   // Get Null-terminated list of fields
   const char** fieldList = dirfile->FieldList();
@@ -71,7 +72,8 @@ NodeGrid* generateTree(DiagnosticsView* diagView, GetData::Dirfile* dirfile, jso
     
   // Generate a list of widgets by iterating through the json object.
   // These widgets will be the cells of a GridLayout
-  QList<StatusNode*> gridCells; 
+  QList<LeafGroup*>* leafGroups = new QList<LeafGroup*>();
+  QList<QWidget*>* parents = new QList<QWidget*>();
   for(json::iterator it = config.begin(); it != config.end(); ++it) {
     json element = *it;
 
@@ -81,11 +83,12 @@ NodeGrid* generateTree(DiagnosticsView* diagView, GetData::Dirfile* dirfile, jso
       string prefix = element["prefix"].get<string>();
       double lo = element["lo"].get<double>();
       double hi = element["hi"].get<double>();
-
+      
       // For every field with the prefix, add a leaf-node to the grid for that fieldcode
-      QList<StatusNode*>* leaves = getLeavesForPrefix(diagView, dirfile, prefix, lo, hi, unusedFields);
-      gridCells.append(*leaves);
-      delete leaves; // delete the list (doesn't delete the elements in the list)
+      QList<LeafNode*>* leaves = getLeavesForPrefix(diagView, dirfile, prefix, lo, hi, unusedFields);
+      string groupName = it.key();
+      LeafGroup* group = new LeafGroup(groupName, leaves);
+      leafGroups->append(group);
     } 
 
     // Recursively generate the parent node. TODO: switch from recursion to iteration, don't bust the stack
@@ -94,18 +97,11 @@ NodeGrid* generateTree(DiagnosticsView* diagView, GetData::Dirfile* dirfile, jso
       QString name = QString::fromStdString(it.key());
       ParentNode* parent = new ParentNode(name, childView);
       diagView->configureParentNode(parent); // when the parent is double-clicked, transition to its childView
-      gridCells.append(parent);
+      parents->append(parent);
     }
   }
-
-  // Add all of the gridCells to a grid
-  NodeGrid* nodeGrid = new NodeGrid();
-  int numCells = gridCells.size();
-  int numCols = sqrt(numCells); // arrange the grid cells in a square formation
-  for (int i = 0; i < numCells; ++i) {
-    StatusNode* n = gridCells.at(i);
-    nodeGrid->addChildNode(n, i / numCols, i % numCols);
-  }
+  
+  NodeGrid* nodeGrid = new NodeGrid(parents, leafGroups);
   return nodeGrid;
 }
 

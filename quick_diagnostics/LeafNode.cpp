@@ -7,8 +7,12 @@ const QColor LeafNode::errorColor = Qt::yellow;
 // NB: don't display any text in a leaf node. Instead, display a tooltip on mouseOver
 LeafNode::LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, double hi) : StatusNode(""), dirfile(dirfile), fieldCode(fieldCode), lo(lo), hi(hi) {
   isSelected = false;
-  setMouseTracking(true); // if false, only receives mouseMoveEvent when mouse is pressed, see documentation
-  dirfileError = "";
+  // TODO
+  //setMouseTracking(true); // if false, only receives mouseMoveEvent when mouse is pressed, see documentation
+
+  // Start with a dirfile error b/c we haven't yet read the dirfile for this node
+  isDirfileError = true;
+  dirfileError = "Have not read dirfile yet";
 }
 
 void LeafNode::select() {
@@ -21,14 +25,28 @@ void LeafNode::unselect() {
   update();
 }
 
-QString LeafNode::getDetails() {
-  QString details("<b>Field Code</b> ");
-  details.append(fieldCode);
+QString LeafNode::getFieldCode() {
+  return fieldCode;
+}
+
+double LeafNode::getCurrentValue() {
+  return currentValue;
+}
+
+double LeafNode::getLoValue() {
+  return lo;
+}
+
+double LeafNode::getHiValue() {
+  return hi;
+}
+
+QString LeafNode::getDirfileError() {
   if (isDirfileError) {
-    details.append("<br><b>Dirfile Error</b> ");
-    details.append(dirfileError);
-  } 
-  return details;
+    return dirfileError;
+  } else {
+    return "No error"; 
+  }
 }
 
 // Get val mapped from range currentLo <-> currentHi to the range newLo <-> newHi
@@ -65,11 +83,14 @@ void LeafNode::updateStatus() {
     statusColor = errorColor;
     return;
   }
-  double val = buffer[0];
-  //double val = rand() / (double) RAND_MAX; // TODO for testing
+
+  // Update the current value
+  currentValue = buffer[0];
 
   // When done reading the field, flush to close the file descriptor until next read
   // to prevent having open too many file descriptors
+  // TODO: 
+  /*
   dirfile->Flush(fieldCode);
   if (dirfile->Error() != GD_E_OK) {
     dirfileError = "<i>(when flushing)</i> ";
@@ -77,21 +98,21 @@ void LeafNode::updateStatus() {
     isDirfileError = true;
     statusColor = errorColor;
     return;
-  }
+  }*/
 
   // No error encountered
   isDirfileError = false;
 
   // If val > avg, interpolate between white and hiColor. If val <= avg, interpolate between white and loColor
   // Don't just interpolate between loColor and hiColor b/c it becomes difficult to judge the sensor value from the color
-  float avg = (lo + hi) / 2;
+  float avg = (lo + hi) / 2.0;
   QString style;
-  if (val > avg) {
-    if (val > hi) val = hi; // if over hi, just display hiColor
-    interpolateColor(statusColor, val, avg, hi, Qt::white, hiColor);    
+  if (currentValue > avg) {
+    // if over hi, consider it hi
+    interpolateColor(statusColor, fmin(currentValue, hi), avg, hi, Qt::white, hiColor);    
   } else {
-    if (val < lo) val = lo; // if under lo, just display loColor
-    interpolateColor(statusColor, val, lo, avg, loColor, Qt::white);  
+    // if under lo, conside it lo
+    interpolateColor(statusColor, fmax(currentValue, lo), lo, avg, loColor, Qt::white);  
   }
   update(); // triggers a repaint event
 }
@@ -105,7 +126,7 @@ void LeafNode::paintEvent(QPaintEvent* /*evt*/) {
   
   // If this node is selected, draw a border
   if (isSelected) {
-    QPen pen(Qt::black, 5);
+    QPen pen(Qt::white, 3);
     p.setPen(pen);
     p.drawRect(0, 0, geo.width(), geo.height());
   }
