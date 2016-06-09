@@ -243,7 +243,8 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         have_warned_write_reg = 1;
         return;
     }
-    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_ADDRESSES_ADDR, 2, &numAddresses)) < 0) {
+    unsigned int inv_numAddresses = htonl(numAddresses);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_ADDRESSES_ADDR, 2, &inv_numAddresses)) < 0) {
         if (!have_warned_write_reg) {
            blast_err("Could not set stream number of addresses: %s",
                 modbus_strerror(errno));
@@ -450,7 +451,7 @@ void *labjack_cmd_thread(void *m_lj) {
             if (!have_warned_write_reg) {
                 blast_err("Could not write DAC Modbus registers: %s", modbus_strerror(errno));
             }
-            have_warned_write_reg = 0;
+            have_warned_write_reg = 1;
             continue;
         }
     }
