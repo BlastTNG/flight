@@ -24,8 +24,9 @@ int main(int argc, char** argv) {
       double buffer[1];
       int numFrames = dirfile->NFrames();
       const char* field = fieldStr.c_str();
-      dirfile->GetData(field, numFrames - 1, 0, 0, 1, GetData::Float64, (void*) buffer); 
+      int numSamplesRead = dirfile->GetData(field, numFrames - 1, 0, 0, 1, GetData::Float64, (void*) buffer); 
 
+      printf("Num samples read: %d", numSamplesRead);
       printf("roach2_kid%04d_i: %f\n", i, buffer[0]);
 
       dirfile->Flush(field);

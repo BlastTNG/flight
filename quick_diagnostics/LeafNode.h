@@ -19,7 +19,7 @@ public:
   double getCurrentValue();
   double getLoValue();
   double getHiValue();
-  QString getDirfileError();
+  const QList<QString>& getErrorList();
 public slots:
   void select();
   void unselect();
@@ -27,14 +27,14 @@ private:
   GetData::Dirfile* dirfile; // reference to the dirfile
   const char* fieldCode; // the name of the field in the dirfile to which this leaf-node corresponds
 
-  bool isSelected; // true if the user has selected this node, false ow
-  bool isDirfileError; // true if there is/was an error while reading this field from dirfile, false ow
-  QString dirfileError; // get the error msg encountered while reading thsi file from dirfile, if applicable
+  // list of all of the errors encountered on the most recent read of this node
+  QList<QString>* errorList; 
 
   double currentValue; // the value most recently read from the dirfile
   const double lo, hi; // the lo and hi value for this channel
   static const QColor loColor, hiColor, errorColor;
   QColor statusColor; // this node's current color (reflecting its status)
+  bool isSelected; // true if the user has selected this node, false ow
 signals:
   void clicked(LeafNode* thisLeaf); 
 protected:

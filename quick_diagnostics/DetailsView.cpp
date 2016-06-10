@@ -8,20 +8,37 @@ DetailsView::DetailsView() : QWidget() {
   indexMap->insert("Current Value", 1);
   indexMap->insert("Lo", 2);
   indexMap->insert("Hi", 3);
-  indexMap->insert("Dirfile Error", 4);
+  indexMap->insert("Dirfile Errors", 4);
+
+  setStyleSheet("background-color: gray");
 
   // Create the grid of values from the index map
   layout = new QGridLayout();
+  layout->setSpacing(1);
+  layout->setColumnStretch(0, 1);
+  layout->setColumnStretch(1, 3);
   QMapIterator<QString, int> i(*indexMap);
   valueMap = new QMap<QString, QLabel*>();
   while (i.hasNext()) {
     i.next();
-    layout->addWidget(new QLabel(i.key()), 0, i.value());
-    QLabel* l = new QLabel("");
-    valueMap->insert(i.key(), l);
-    layout->addWidget(l, 1, i.value());
+    QLabel* keyLabel = new QLabel(i.key());
+    keyLabel->setMargin(3);
+    layout->addWidget(keyLabel, i.value(), 0);
+
+    QLabel* valueLabel = new QLabel("");
+    valueLabel->setMargin(3);
+    valueMap->insert(i.key(), valueLabel);
+    layout->addWidget(valueLabel, i.value(), 1);
   }
-  setLayout(layout);
+
+  QVBoxLayout* vBox = new QVBoxLayout();
+  vBox->setSpacing(1);
+  QLabel* nameLabel = new QLabel("Details for Selected Node");
+  nameLabel->setMargin(3);
+  nameLabel->setAlignment(Qt::AlignCenter);
+  vBox->addWidget(nameLabel);
+  vBox->addLayout(layout);
+  setLayout(vBox);
 }
 
 void DetailsView::updateGrid(QString key, QString value) {
@@ -40,5 +57,14 @@ void DetailsView::updateDetails(LeafNode* leaf) {
   updateGrid("Current Value", asString(leaf->getCurrentValue()));
   updateGrid("Lo", asString(leaf->getLoValue()));
   updateGrid("Hi", asString(leaf->getHiValue()));
-  updateGrid("Dirfile Error", leaf->getDirfileError());
+
+  const QList<QString>& errorList = leaf->getErrorList();
+  QString errors;
+  for (int i = 0; i < errorList.size(); ++i) {
+    errors += QString::number(i);
+    errors += ") ";
+    errors += errorList.at(i);
+    errors += "<br>";
+  }
+  updateGrid("Dirfile Errors", errors);
 }

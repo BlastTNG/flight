@@ -1,6 +1,7 @@
 #include "ParentNode.h"
 
 ParentNode::ParentNode(QString name, NodeGrid* childView) : StatusNode(name), childView(childView) {
+  setMargin(3);
 }
 
 void ParentNode::updateStatus() {

@@ -10,7 +10,6 @@ class StatusNode : public QLabel {
   Q_OBJECT
 public:
   StatusNode(QString name) : QLabel(name) {
-    setMinimumSize(5, 5); // all the node to be very small
 
     // Init this node's palette 
     QPalette palette = this->palette();

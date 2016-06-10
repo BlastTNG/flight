@@ -6,8 +6,14 @@ NodeGrid::NodeGrid(QList<QWidget*>* parents, QList<LeafGroup*>* leafGroups) : QW
   QVBoxLayout* layout = new QVBoxLayout();
   layout->setSpacing(5);
   
+  QFont* font = new QFont();
+  font->setPixelSize(20);
+
   // Put all of the parents in a row along the top
   if (!parents->empty()) {
+    QLabel* l = new QLabel("Change view to:");
+    l->setFont(*font);
+    layout->addWidget(l);
     QHBoxLayout* hBox = new QHBoxLayout();
     for (int i = 0; i < parents->size(); ++i) {
       hBox->addWidget(parents->at(i));
@@ -23,8 +29,6 @@ NodeGrid::NodeGrid(QList<QWidget*>* parents, QList<LeafGroup*>* leafGroups) : QW
     LeafGroup* group = leafGroups->at(i);
 
     // Give the group a label
-    QFont* font = new QFont();
-    font->setPixelSize(20);
     QString name(group->groupName.c_str());
     QLabel* nameLabel = new QLabel(name);
     nameLabel->setFont(*font);

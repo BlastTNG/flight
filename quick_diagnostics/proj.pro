@@ -1,6 +1,7 @@
 TEMPLATE = app
-TARGET = proj
-QMAKE_CXXFLAGS += -std=c++11
+TARGET = QuickDiag
+#CONFIG += c++11
+QMAKE_CXXFLAGS += -std=c++11 #-stdlib=libc++
 DEPENDPATH += .
 INCLUDEPATH += . /usr/local/include
 LIBS += -L/usr/local/lib -lgetdata++

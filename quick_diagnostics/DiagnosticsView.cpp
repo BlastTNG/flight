@@ -20,8 +20,9 @@ DiagnosticsView::DiagnosticsView() : QWidget() {
  
   // Arrange the elements vertically
   QVBoxLayout* vBox = new QVBoxLayout();
-  vBox->addWidget(pathLabel);
+  vBox->setSpacing(3);
   vBox->addWidget(detailsView);
+  vBox->addWidget(pathLabel);
   vBox->addWidget(mainView); 
   this->setLayout(vBox);
 

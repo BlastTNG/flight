@@ -6,13 +6,16 @@ const QColor LeafNode::errorColor = Qt::yellow;
 
 // NB: don't display any text in a leaf node. Instead, display a tooltip on mouseOver
 LeafNode::LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, double hi) : StatusNode(""), dirfile(dirfile), fieldCode(fieldCode), lo(lo), hi(hi) {
+  setMinimumSize(5, 5); // allow the node to be very small
+
   isSelected = false;
   // TODO
-  //setMouseTracking(true); // if false, only receives mouseMoveEvent when mouse is pressed, see documentation
+  setMouseTracking(true); // if false, only receives mouseMoveEvent when mouse is pressed, see documentation
 
   // Start with a dirfile error b/c we haven't yet read the dirfile for this node
-  isDirfileError = true;
-  dirfileError = "Have not read dirfile yet";
+  statusColor = errorColor;
+  errorList = new QList<QString>();
+  errorList->append("Have not yet read dirfile");
 }
 
 void LeafNode::select() {
@@ -41,12 +44,8 @@ double LeafNode::getHiValue() {
   return hi;
 }
 
-QString LeafNode::getDirfileError() {
-  if (isDirfileError) {
-    return dirfileError;
-  } else {
-    return "No error"; 
-  }
+const QList<QString>& LeafNode::getErrorList() {
+  return *errorList;
 }
 
 // Get val mapped from range currentLo <-> currentHi to the range newLo <-> newHi
@@ -72,49 +71,62 @@ void LeafNode::updateStatus() {
 
   // Set this node's value to the first sample of the most recent frame of the dirfile
   // TODO: might different fields ever have different number of frames? this would make the display out of sync
+
+  // Recent the error list (those are errors from the last read)
+  while (!errorList->empty()) {
+    errorList->takeFirst();
+  }
+
   int numFrames = dirfile->NFrames();
   double buffer[1];
-  dirfile->GetData(fieldCode, numFrames - 1, 0, 0, 1, GetData::Float64, (void*) buffer);
-  if (dirfile->Error() != GD_E_OK) {
-    // Store the error msg so that it can be displayed to the user
-    dirfileError = "<i>(when reading)</i> ";
-    dirfileError.append(dirfile->ErrorString());
-    isDirfileError = true;
-    statusColor = errorColor;
-    return;
-  }
+  int numSamplesRead = dirfile->GetData(fieldCode, numFrames - 1, 0, 0, 1, GetData::Float64, (void*) buffer);
 
-  // Update the current value
-  currentValue = buffer[0];
+  // Check for dirfile errors
+  if (dirfile->Error() != GD_E_OK) {
+    QString e ("<i>(when reading)</i> ");
+    e += dirfile->ErrorString();
+    errorList->append(e);
+  }
+  // Expected to read 1 sample
+  if (numSamplesRead != 1) {
+    QString e("<i>(when reading)</i> num samples read: ");
+    e += QString::number(numSamplesRead);
+    e += ". Expected 1.";
+    errorList->append(e);
+  }
 
   // When done reading the field, flush to close the file descriptor until next read
-  // to prevent having open too many file descriptors
-  // TODO: 
-  /*
+  // to prevent having open too many file descriptors. Limit is ~1024, typically, I think.
   dirfile->Flush(fieldCode);
   if (dirfile->Error() != GD_E_OK) {
-    dirfileError = "<i>(when flushing)</i> ";
-    dirfileError.append(dirfile->ErrorString());
-    isDirfileError = true;
-    statusColor = errorColor;
-    return;
-  }*/
-
-  // No error encountered
-  isDirfileError = false;
-
-  // If val > avg, interpolate between white and hiColor. If val <= avg, interpolate between white and loColor
-  // Don't just interpolate between loColor and hiColor b/c it becomes difficult to judge the sensor value from the color
-  float avg = (lo + hi) / 2.0;
-  QString style;
-  if (currentValue > avg) {
-    // if over hi, consider it hi
-    interpolateColor(statusColor, fmin(currentValue, hi), avg, hi, Qt::white, hiColor);    
-  } else {
-    // if under lo, conside it lo
-    interpolateColor(statusColor, fmax(currentValue, lo), lo, avg, loColor, Qt::white);  
+    QString e("<i>(when flushing)</i> ");
+    e += dirfile->ErrorString();
+    errorList->append(e);
   }
-  update(); // triggers a repaint event
+
+  // If no error, update the current value
+  if (errorList->empty()) {
+
+    // Update the current value
+    currentValue = buffer[0];
+
+    // If val > avg, interpolate between white and hiColor. If val <= avg, interpolate between white and loColor
+    // Don't just interpolate between loColor and hiColor b/c it becomes difficult to judge the sensor value from the color
+    float avg = (lo + hi) / 2.0;
+    QString style;
+    if (currentValue > avg) {
+      // if over hi, consider it hi
+      interpolateColor(statusColor, fmin(currentValue, hi), avg, hi, Qt::white, hiColor);    
+    } else {
+      // if under lo, conside it lo
+      interpolateColor(statusColor, fmax(currentValue, lo), lo, avg, loColor, Qt::white);  
+    }
+  } else {
+    statusColor = errorColor;  
+  }
+  
+  // Trigger a repaint event, since the status color may have changed
+  update(); 
 }
 
 // Custom paint this node
