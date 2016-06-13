@@ -5,7 +5,7 @@ const QColor LeafNode::hiColor = Qt::red;
 const QColor LeafNode::errorColor = Qt::yellow;
 
 // NB: don't display any text in a leaf node. Instead, display a tooltip on mouseOver
-LeafNode::LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, double hi) : StatusNode(""), dirfile(dirfile), fieldCode(fieldCode), lo(lo), hi(hi) {
+LeafNode::LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, double hi) : QLabel(), dirfile(dirfile), fieldCode(fieldCode), lo(lo), hi(hi) {
   setMinimumSize(5, 5); // allow the node to be very small
 
   isSelected = false;

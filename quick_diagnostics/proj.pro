@@ -7,5 +7,5 @@ INCLUDEPATH += . /usr/local/include
 LIBS += -L/usr/local/lib -lgetdata++
 
 # Input
-HEADERS += MainWindow.h SetupView.h DiagnosticsView.h StatusNode.h  ParentNode.h LeafNode.h PathLabel.h NodeGrid.h DetailsView.h
-SOURCES += main.cpp MainWindow.cpp SetupView.cpp DiagnosticsView.cpp ParentNode.cpp LeafNode.cpp PathLabel.cpp NodeGrid.cpp DetailsView.cpp
+HEADERS += MainWindow.h SetupView.h DiagnosticsView.h LeafNode.h NodeGrid.h DetailsView.h
+SOURCES += main.cpp MainWindow.cpp SetupView.cpp DiagnosticsView.cpp LeafNode.cpp NodeGrid.cpp DetailsView.cpp

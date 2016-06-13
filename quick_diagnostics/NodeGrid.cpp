@@ -1,7 +1,6 @@
 #include "NodeGrid.h"
 
-NodeGrid::NodeGrid(QList<QWidget*>* parents, QList<LeafGroup*>* leafGroups) : QWidget() {
-  childLeaves = new QList<LeafNode*>();
+NodeGrid::NodeGrid(QList<LeafGroup*>* leafGroups) : QWidget() {
   
   QVBoxLayout* layout = new QVBoxLayout();
   layout->setSpacing(5);
@@ -9,22 +8,8 @@ NodeGrid::NodeGrid(QList<QWidget*>* parents, QList<LeafGroup*>* leafGroups) : QW
   QFont* font = new QFont();
   font->setPixelSize(20);
 
-  // Put all of the parents in a row along the top
-  if (!parents->empty()) {
-    QLabel* l = new QLabel("Change view to:");
-    l->setFont(*font);
-    layout->addWidget(l);
-    QHBoxLayout* hBox = new QHBoxLayout();
-    for (int i = 0; i < parents->size(); ++i) {
-      hBox->addWidget(parents->at(i));
-    }
-    QWidget* parentBox = new QWidget();
-    parentBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    parentBox->setLayout(hBox);
-    layout->addWidget(parentBox);
-  }
-
   // Make a grid for each group of leaves
+  childLeaves = new QList<LeafNode*>();
   for (int i = 0; i < leafGroups->size(); ++i) {
     LeafGroup* group = leafGroups->at(i);
 
@@ -36,6 +21,7 @@ NodeGrid::NodeGrid(QList<QWidget*>* parents, QList<LeafGroup*>* leafGroups) : QW
     layout->addWidget(nameLabel);
 
     // Lay out the leaves in a roughly square grid
+    // TODO: let the user specify the layout of the nodes
     QGridLayout* grid = new QGridLayout();
     grid->setSpacing(1);
     QList<LeafNode*>* leaves = group->leaves;
@@ -55,15 +41,10 @@ NodeGrid::~NodeGrid() {
   delete childLeaves;
 }
 
-/*
-const QList<StatusNode*>& NodeGrid::getChildNodes() {
-  return *childNodes;
-} */
-
 // Update all of the children of this grid
 void NodeGrid::updateChildren() {
   for (int i = 0; i < childLeaves->size(); ++i) {
-    StatusNode* n = childLeaves->at(i);
+    LeafNode* n = childLeaves->at(i);
     n->updateStatus();
   }
 }

@@ -1,9 +1,9 @@
 #include "DiagnosticsView.h"
-#include "ParentNode.h"
-#include "LeafNode.h"
 
-DiagnosticsView::DiagnosticsView() : QWidget() {
-  pathStack = new QStack<QWidget*>();  
+DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidget() {
+
+  // Init pointers to null
+  selectedNode = NULL;
   
   // The main part of the DiagnosticsView is a widget with a stack layout, where each widget in the 
   // stack is a view of different sensors. Put the main view in a scroll area.
@@ -11,43 +11,141 @@ DiagnosticsView::DiagnosticsView() : QWidget() {
   QWidget* mainView = new QWidget();
   mainView->setLayout(stackLayout);
 
-  // Configure the path label / navigator.
-  // When the user requests a view via the navigator, switch to that view
-  pathLabel = new PathLabel();
-  QObject::connect(pathLabel, SIGNAL(viewRequested(QWidget*)), stackLayout, SLOT(setCurrentWidget(QWidget*)));
-
   detailsView = new DetailsView();
- 
+
+  // Generate the view map
+  errorList = new QList<QString*>();
+  viewMap = new QMap<QString, NodeGrid*>();
+  generateViewMap(dirfile, config);
+
+  if (viewMap->empty()) {
+    errorList->append(new QString("The .json file doesn't define any valid views"));
+    return;
+  }
+
+  // Create a combo-box of the views in the view map
+  QComboBox* comboBox = new QComboBox();
+  QMapIterator<QString, NodeGrid*> i(*viewMap);
+  while (i.hasNext()) {
+    i.next();
+    comboBox->addItem(i.key());
+  }
+
+  // When the user selects a new view via the combo box, update the main view area
+  QObject::connect(comboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(switchView(const QString&)));
+
   // Arrange the elements vertically
   QVBoxLayout* vBox = new QVBoxLayout();
   vBox->setSpacing(3);
+  vBox->addWidget(comboBox);
   vBox->addWidget(detailsView);
-  vBox->addWidget(pathLabel);
   vBox->addWidget(mainView); 
   this->setLayout(vBox);
 
-  // Init pointers to null
-  selectedNode = NULL;
-  currentGrid = NULL;
-
+  // Set the current view to the first view in the combo box
+  QString viewName = comboBox->itemText(0);
+  NodeGrid* view = viewMap->value(viewName);
+  pushView(view);
+  
   // Update the status of the diagnostics view frequently
   QTimer* timer = new QTimer(this);
   connect(timer, SIGNAL(timeout()), this, SLOT(updateDisplayedNodes()));
   timer->start(1000); // TODO: put to 500ms
 }
 
-void DiagnosticsView::setRoot(ParentNode* root) {
-  pushView(root);
+/*
+  Return whether or not the given json obj is a leaf or not.
+  The node is a leaf if all fields are primitive (that is, no json object is contained within this json object).
+  http://nlohmann.github.io/json/classnlohmann_1_1basic__json_a7c774ef0eceff6d06095f617e2dbd488.html#a7c774ef0eceff6d06095f617e2dbd488
+*/
+bool isLeaf(json obj) {
+  for (json::iterator it = obj.begin(); it != obj.end(); ++it) {
+    json element = *it;
+    if (!element.is_primitive()) return false;
+  }
+  return true;
 }
 
-void DiagnosticsView::configureParentNode(ParentNode* parent) {
-  // When the parent node is double-clicked, transition to its child view
-  QObject::connect(parent, SIGNAL(selected(ParentNode*)), this, SLOT(pushView(ParentNode*)));
+/**
+  Get a list of leaf nodes, one for every fieldCode with the given prefix in the given dirfile
+*/
+QList<LeafNode*>* DiagnosticsView::getLeavesForPrefix(GetData::Dirfile* dirfile, string prefix, double lo, double hi) {
+  QList<LeafNode*>* list = new QList<LeafNode*>();
+  
+  // Get Null-terminated list of fields
+  const char** fieldList = dirfile->FieldList();
+  for (int i = 0; fieldList[i] != NULL; i++) {
+    const char* fieldCode = fieldList[i];  
+  
+    // If the fieldCode has the given prefix:
+    string strField(fieldCode);
+    if (strField.substr(0, prefix.size()).compare(prefix) == 0) {
+
+      // Create a LeafNode for this field
+      LeafNode* leaf = new LeafNode(dirfile, fieldCode, lo, hi);
+      list->append(leaf);
+
+      // When a leaf-node is clicked, show its details in the detail label
+      QObject::connect(leaf, SIGNAL(clicked(LeafNode*)), this, SLOT(updateDetailLabel(LeafNode*)));
+    }
+  }
+  return list;
 }
 
-void DiagnosticsView::configureLeafNode(LeafNode* leaf) {
-  // When a leaf-node is clicked, show its details in the detail label
-  QObject::connect(leaf, SIGNAL(clicked(LeafNode*)), this, SLOT(updateDetailLabel(LeafNode*)));
+/*
+  Generate a node grid
+
+  unusedFields is a ref to a list of all of the fields that have not yet been used in any node 
+*/
+NodeGrid* DiagnosticsView::generateGrid(GetData::Dirfile* dirfile, json config) {
+    
+  // Generate a list of widgets by iterating through the json object.
+  // These widgets will be the cells of a GridLayout
+  QList<LeafGroup*>* leafGroups = new QList<LeafGroup*>();
+  for(json::iterator it = config.begin(); it != config.end(); ++it) {
+    json element = *it;
+
+    // Views cannot be nested in other views
+    if (!isLeaf(element)) {
+      errorList->append(new QString("Views cannot be nested inside of other views"));
+      break;
+    }
+      
+    QString* expStr = new QString("Exception thrown for \"");
+    expStr->append(QString::fromStdString(it.key()));
+    expStr->append("\": ");
+    try {
+      string prefix = element["prefix"].get<string>();
+      double lo = element["lo"].get<double>();
+      double hi = element["hi"].get<double>();
+
+      // For every field with the prefix, add a leaf-node to the grid for that fieldcode
+      QList<LeafNode*>* leaves = getLeavesForPrefix(dirfile, prefix, lo, hi);
+      string groupName = it.key();
+      LeafGroup* group = new LeafGroup(groupName, leaves);
+      leafGroups->append(group);
+    } catch(std::domain_error& e) {
+      expStr->append(e.what());
+      errorList->append(expStr);  
+    } catch(std::out_of_range& e) {
+      expStr->append(e.what());
+      errorList->append(expStr);
+    }
+  }  
+  NodeGrid* nodeGrid = new NodeGrid(leafGroups);
+  return nodeGrid;
+}
+
+void DiagnosticsView::generateViewMap(GetData::Dirfile* dirfile, json config) {
+
+  // Iterate through all of the views defined in the json file, generating them and adding them to the viewMap as we go
+  for(json::iterator it = config.begin(); it != config.end(); ++it) {
+    json element = *it;
+    string key = it.key();
+    QString viewName = QString::fromStdString(key);
+    NodeGrid* view = generateGrid(dirfile, it.value());
+    viewMap->insert(viewName, view);
+  }
 }
 
 void DiagnosticsView::updateDetailLabel(LeafNode* leaf) {
@@ -61,6 +159,7 @@ void DiagnosticsView::updateDetailLabel(LeafNode* leaf) {
 }
 
 void DiagnosticsView::updateDisplayedNodes() {
+
   // Update all of the currently displayed nodes
   if (currentGrid != NULL) {
     currentGrid->updateChildren(); 
@@ -72,14 +171,14 @@ void DiagnosticsView::updateDisplayedNodes() {
   }
 }
 
+// Switch to the view with the given name
+void DiagnosticsView::switchView(const QString& viewName) {
+  NodeGrid* nextView = viewMap->value(viewName, currentGrid); // if the name is not found, default to the current grid (no change)
+  pushView(nextView);
+}
+
 // Push and display the parent's child view
-void DiagnosticsView::pushView(ParentNode* clickedParent) {
-
-  // Get ref to child view
-  NodeGrid* nextView = clickedParent->getChildView();
-
-  // Update the path navigator
-  pathLabel->pushWidget(clickedParent->text(), nextView);
+void DiagnosticsView::pushView(NodeGrid* nextView) {
 
   // Push the view on to this widget's stack, and display it
   stackLayout->addWidget(nextView);

@@ -3,9 +3,8 @@
 
 #include <QtGui>
 #include <getdata/dirfile.h>
-#include "StatusNode.h"
 
-class LeafNode : public StatusNode {
+class LeafNode : public QLabel {
   Q_OBJECT
 public:
   LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, double hi);

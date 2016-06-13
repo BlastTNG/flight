@@ -3,32 +3,35 @@
 
 #include <QtGui>
 #include "DetailsView.h"
-#include "ParentNode.h"
 #include "LeafNode.h"
-#include "PathLabel.h"
 #include "NodeGrid.h"
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 class DiagnosticsView : public QWidget {
   Q_OBJECT
 public:
-  DiagnosticsView();
+  DiagnosticsView(GetData::Dirfile* dirfile, json config);
   ~DiagnosticsView() {};
   void addView(QWidget* view); 
-  void setRoot(ParentNode* rootView);
-  void configureParentNode(ParentNode* parent);
-  void configureLeafNode(LeafNode* node);
+  QList<QString*>* errorList; // list of errors (non-empty if hasErrors is true)
 private:
+  QMap<QString, NodeGrid*>* viewMap; // map from view name to view
   QStackedLayout* stackLayout;
-  QStack<QWidget*>* pathStack; // stack of the widgets in the stackLayout
-  PathLabel* pathLabel; // describes the path in the diagnostics tree, provides navigation
   DetailsView* detailsView; // when a leaf-node is clicked, display more detailed information about it here
   LeafNode* selectedNode; // the currently selected node
   NodeGrid* currentGrid; // the currently displayed view
+
+  NodeGrid* generateGrid(GetData::Dirfile* dirfile, json config);
+  QList<LeafNode*>* getLeavesForPrefix(GetData::Dirfile* dirfile, string prefix, double lo, double hi);
+  void generateViewMap(GetData::Dirfile* dirfile, json config);
 public slots:
-  void pushView(ParentNode* parent); // push this parent's child view  to the stackLayout and pathStack
+  void pushView(NodeGrid* nextView); // push this view to the stackLayout
   void updateDetailLabel(LeafNode* leaf);
 private slots:
   void updateDisplayedNodes(); // use GetData to update the status of all currently displayed nodes
+  void switchView(const QString& viewName); // change what view is displayed
 };
 
 #endif
