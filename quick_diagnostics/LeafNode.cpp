@@ -67,7 +67,7 @@ void interpolateColor(QColor& result, float val, float lo, float hi, QColor aC, 
 }
 
 // Read the most recent data from the dirfile, and update status accordingly
-void LeafNode::updateStatus() {
+void LeafNode::updateStatus(int frameNum) {
 
   // Set this node's value to the first sample of the most recent frame of the dirfile
   // TODO: might different fields ever have different number of frames? this would make the display out of sync
@@ -77,9 +77,8 @@ void LeafNode::updateStatus() {
     errorList->takeFirst();
   }
 
-  int numFrames = dirfile->NFrames();
   double buffer[1];
-  int numSamplesRead = dirfile->GetData(fieldCode, numFrames - 1, 0, 0, 1, GetData::Float64, (void*) buffer);
+  int numSamplesRead = dirfile->GetData(fieldCode, frameNum - 1, 0, 0, 1, GetData::Float64, (void*) buffer);
 
   // Check for dirfile errors
   if (dirfile->Error() != GD_E_OK) {

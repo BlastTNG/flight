@@ -5,6 +5,7 @@
 #include "DetailsView.h"
 #include "LeafNode.h"
 #include "NodeGrid.h"
+#include "UpdateClock.h"
 #include "json.hpp"
 
 using json = nlohmann::json;
@@ -20,8 +21,13 @@ private:
   QMap<QString, NodeGrid*>* viewMap; // map from view name to view
   QStackedLayout* stackLayout;
   DetailsView* detailsView; // when a leaf-node is clicked, display more detailed information about it here
+  UpdateClock* updateClock;
   LeafNode* selectedNode; // the currently selected node
   NodeGrid* currentGrid; // the currently displayed view
+  bool newView; // true if we have switched views and not yet updated the nodes
+
+  GetData::Dirfile& dirfile; // ref to the dirfile
+  int lastNumFrames; // the number of frames that were in the dirfile in the last update
 
   NodeGrid* generateGrid(GetData::Dirfile* dirfile, json config);
   QList<LeafNode*>* getLeavesForPrefix(GetData::Dirfile* dirfile, string prefix, double lo, double hi);

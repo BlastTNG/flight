@@ -11,7 +11,7 @@ public:
   ~LeafNode() {};
 
   // Uses the most recent value in the dirfle to update the status of this node
-  void updateStatus();
+  void updateStatus(int frameNum); // set currentValue to the first sample of the given frameNum
 
   // Accessors
   QString getFieldCode();

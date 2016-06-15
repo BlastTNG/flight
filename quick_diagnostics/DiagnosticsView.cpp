@@ -1,9 +1,10 @@
 #include "DiagnosticsView.h"
 
-DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidget() {
+DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidget(), dirfile(*dirfile) {
 
-  // Init pointers to null
+  // Init 
   selectedNode = NULL;
+  lastNumFrames = -1; // so that displayed nodes always update on first go
   
   // The main part of the DiagnosticsView is a widget with a stack layout, where each widget in the 
   // stack is a view of different sensors. Put the main view in a scroll area.
@@ -30,6 +31,11 @@ DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidg
     i.next();
     comboBox->addItem(i.key());
   }
+  updateClock = new UpdateClock();
+  QHBoxLayout* hBox = new QHBoxLayout();
+  hBox->setSpacing(3);
+  hBox->addWidget(comboBox);
+  hBox->addWidget(updateClock);
 
   // When the user selects a new view via the combo box, update the main view area
   QObject::connect(comboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(switchView(const QString&)));
@@ -37,7 +43,7 @@ DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidg
   // Arrange the elements vertically
   QVBoxLayout* vBox = new QVBoxLayout();
   vBox->setSpacing(3);
-  vBox->addWidget(comboBox);
+  vBox->addLayout(hBox);
   vBox->addWidget(detailsView);
   vBox->addWidget(mainView); 
   this->setLayout(vBox);
@@ -111,10 +117,12 @@ NodeGrid* DiagnosticsView::generateGrid(GetData::Dirfile* dirfile, json config) 
       break;
     }
       
+    // In case an exception is thrown, prepare a string
     QString* expStr = new QString("Exception thrown for \"");
     expStr->append(QString::fromStdString(it.key()));
     expStr->append("\": ");
     try {
+      // Read the .json file (may throw exceptions)
       string prefix = element["prefix"].get<string>();
       double lo = element["lo"].get<double>();
       double hi = element["hi"].get<double>();
@@ -124,6 +132,8 @@ NodeGrid* DiagnosticsView::generateGrid(GetData::Dirfile* dirfile, json config) 
       string groupName = it.key();
       LeafGroup* group = new LeafGroup(groupName, leaves);
       leafGroups->append(group);
+
+      delete expStr;
     } catch(std::domain_error& e) {
       expStr->append(e.what());
       errorList->append(expStr);  
@@ -160,11 +170,31 @@ void DiagnosticsView::updateDetailLabel(LeafNode* leaf) {
 
 void DiagnosticsView::updateDisplayedNodes() {
 
-  // Update all of the currently displayed nodes
-  if (currentGrid != NULL) {
-    currentGrid->updateChildren(); 
+  // Get the number of frames
+  int numFrames = dirfile.NFrames();
+
+  // Report any dirfile errors
+  if (dirfile.Error() != GD_E_OK) {
+    QMessageBox box;
+    QString msg("Dirfile error when reading number of frames: ");
+    msg += dirfile.ErrorString();
+    box.setText(msg);
+    box.exec();
+    return;
   }
 
+  // Read dirfile only if new data was received, or this is the first update of a new view
+  if (lastNumFrames < numFrames || newView) {
+    lastNumFrames = numFrames; 
+    updateClock->updateNumFrames(numFrames);
+    newView = false;
+
+    // Update all of the currently displayed nodes
+    if (currentGrid != NULL) {
+      currentGrid->updateChildren(numFrames); 
+    }
+  }
+  
   // Update the detail label for the selected node
   if (selectedNode != NULL) {
     detailsView->updateDetails(selectedNode);
@@ -186,4 +216,7 @@ void DiagnosticsView::pushView(NodeGrid* nextView) {
 
   // Update ref
   currentGrid = nextView;
+
+  // Set to true so that we update the newly displayed nodes
+  newView = true;
 }

@@ -3,7 +3,7 @@
 #include "DiagnosticsView.h"
 using json = nlohmann::json;
 
-QHBoxLayout* generateSelector(QString defaultPath, SetupView* parent, QString fileExt) {
+void generateSelector(QString defaultPath, SetupView* parent, QString fileExt, int row, QGridLayout* layout) {
   QFileDialog* dialog = new QFileDialog(parent, "Select " + fileExt, "", "(*." + fileExt + ")");
   QPushButton* btn = new QPushButton("Select " + fileExt);
   QLabel* pathName = new QLabel(defaultPath);
@@ -19,10 +19,8 @@ QHBoxLayout* generateSelector(QString defaultPath, SetupView* parent, QString fi
     QObject::connect(dialog, SIGNAL(fileSelected(const QString&)), parent, SLOT(updateConfigPath(const QString&)));
   }
 
-  QHBoxLayout* layout = new QHBoxLayout();
-  layout->addWidget(btn);
-  layout->addWidget(pathName);
-  return layout;
+  layout->addWidget(btn, row, 0);
+  layout->addWidget(pathName, row, 1);
 }
 
 SetupView::SetupView() : QWidget() {
@@ -33,13 +31,17 @@ SetupView::SetupView() : QWidget() {
   configPath = settings->value("config_path", "No .json config selected").toString();
 
   // Layout the widget's components
-  QVBoxLayout* vBox = new QVBoxLayout();
-  vBox->addWidget(new QLabel("Please select dirfile and json config file:"));
-  vBox->addLayout(generateSelector(dirfilePath, this, "dirfile"));
-  vBox->addLayout(generateSelector(configPath,this,  "json"));
+  QGridLayout* layout = new QGridLayout();
+  layout->setSpacing(20);
+  layout->setColumnStretch(0, 1);
+  layout->setColumnStretch(1, 5);
+  layout->setAlignment(Qt::AlignCenter);
+  layout->addWidget(new QLabel("Please select dirfile and json config file:"), 0, 0, 1, 2);
+  generateSelector(dirfilePath, this, "dirfile", 1, layout);
+  generateSelector(configPath,this,  "json", 2, layout);
   QPushButton* btn = new QPushButton("Done");
-  vBox->addWidget(btn);
-  this->setLayout(vBox);
+  layout->addWidget(btn, 3, 0, 1, 2);
+  this->setLayout(layout);
 
   // When the user presses done, emit the two entered file paths
   QObject::connect(btn, SIGNAL(clicked()), this, SLOT(checkFiles()));

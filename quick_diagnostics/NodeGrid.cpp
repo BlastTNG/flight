@@ -42,9 +42,9 @@ NodeGrid::~NodeGrid() {
 }
 
 // Update all of the children of this grid
-void NodeGrid::updateChildren() {
+void NodeGrid::updateChildren(int frameNum) {
   for (int i = 0; i < childLeaves->size(); ++i) {
     LeafNode* n = childLeaves->at(i);
-    n->updateStatus();
+    n->updateStatus(frameNum);
   }
 }

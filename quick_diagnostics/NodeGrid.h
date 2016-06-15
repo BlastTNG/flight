@@ -14,7 +14,7 @@ class NodeGrid : public QWidget {
 public:
   NodeGrid(QList<LeafGroup*>* leafGroups);
   ~NodeGrid();
-  void updateChildren(); // Update all of the children of this grid
+  void updateChildren(int frameNum); // Update all of the children of this grid, to the given frame number
 private:
   QList<LeafNode*>* childLeaves; 
 };
