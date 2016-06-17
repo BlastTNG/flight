@@ -7,6 +7,7 @@
 using namespace std;
 
 MainWindow::MainWindow() : QWidget() {
+
   setupView = new SetupView();
   diagView = NULL;
 

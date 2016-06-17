@@ -32,7 +32,6 @@ private:
   double currentValue; // the value most recently read from the dirfile
   const double lo, hi; // the lo and hi value for this channel
   static const QColor loColor, hiColor, errorColor;
-  QColor statusColor; // this node's current color (reflecting its status)
   bool isSelected; // true if the user has selected this node, false ow
 signals:
   void clicked(LeafNode* thisLeaf); 

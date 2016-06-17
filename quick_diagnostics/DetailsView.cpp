@@ -10,7 +10,7 @@ DetailsView::DetailsView() : QWidget() {
   indexMap->insert("Hi", 3);
   indexMap->insert("Dirfile Errors", 4);
 
-  setStyleSheet("background-color: gray");
+  setStyleSheet("background-color: lightGray");
 
   // Create the grid of values from the index map
   layout = new QGridLayout();
@@ -19,13 +19,17 @@ DetailsView::DetailsView() : QWidget() {
   layout->setColumnStretch(1, 3);
   QMapIterator<QString, int> i(*indexMap);
   valueMap = new QMap<QString, QLabel*>();
+  QFont font;
+  font.setPixelSize(10);
   while (i.hasNext()) {
     i.next();
     QLabel* keyLabel = new QLabel(i.key());
+    keyLabel->setFont(font);
     keyLabel->setMargin(3);
     layout->addWidget(keyLabel, i.value(), 0);
 
     QLabel* valueLabel = new QLabel("");
+    valueLabel->setFont(font);
     valueLabel->setMargin(3);
     valueMap->insert(i.key(), valueLabel);
     layout->addWidget(valueLabel, i.value(), 1);
@@ -34,6 +38,7 @@ DetailsView::DetailsView() : QWidget() {
   QVBoxLayout* vBox = new QVBoxLayout();
   vBox->setSpacing(1);
   QLabel* nameLabel = new QLabel("Details for Selected Node");
+  nameLabel->setFont(font);
   nameLabel->setMargin(3);
   nameLabel->setAlignment(Qt::AlignCenter);
   vBox->addWidget(nameLabel);

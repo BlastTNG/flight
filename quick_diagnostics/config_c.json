@@ -1,1 +1,28 @@
-{}
+{
+  "view_a": {
+    "x": {
+      "prefix": "x",
+      "lo": 0.0,
+      "hi": 1.0
+    },
+    "y": {
+      "prefix": "y",
+      "lo": 0.0,
+      "hi": 1.0
+    }
+  },
+  "z_all": {
+    "all": {
+      "prefix": "",
+      "lo": 0.0,
+      "hi": 1.0
+    }
+  },
+  "view_b": {
+    "roaches": {
+      "prefix": "roach",
+      "lo": 0.0,
+      "hi": 1.0
+    }
+  }
+}

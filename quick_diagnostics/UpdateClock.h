@@ -15,9 +15,9 @@ public:
     frameLabel = new QLabel();
 
     QGridLayout* layout = new QGridLayout();
-    layout->addWidget(new QLabel("Time since new frame(s):"), 0, 0);
+    layout->addWidget(new QLabel("Time since new frame(s)"), 0, 0);
     layout->addWidget(timerLabel, 0, 1);
-    layout->addWidget(new QLabel("Num frames on last read:"), 1, 0);
+    layout->addWidget(new QLabel("Num frames"), 1, 0);
     layout->addWidget(frameLabel, 1, 1);
     setLayout(layout);
 
@@ -34,7 +34,8 @@ public:
     // If the number of frames changed, update the label and recent the timer
     if (numFrames != lastNumFrames) {
       lastNumFrames = numFrames;
-      frameLabel->setText(QString::number(numFrames));
+      QString s;
+      frameLabel->setText(s.sprintf("<b>%7d</b>", numFrames));
       time(&startTime);
     }
   }
@@ -50,7 +51,7 @@ private slots:
     time(&endTime);
     double secsElapsed = difftime(endTime, startTime);
     QString s;
-    timerLabel->setText(s.sprintf("%5.2fs", secsElapsed));
+    timerLabel->setText(s.sprintf("<b>%5.2fs</b>", secsElapsed));
   }
 };
 

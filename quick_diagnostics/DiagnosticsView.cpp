@@ -2,6 +2,8 @@
 
 DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidget(), dirfile(*dirfile) {
 
+  setContentsMargins(0, 0, 0, 0);
+
   // Init 
   selectedNode = NULL;
   lastNumFrames = -1; // so that displayed nodes always update on first go
@@ -13,6 +15,7 @@ DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidg
   mainView->setLayout(stackLayout);
 
   detailsView = new DetailsView();
+  updateClock = new UpdateClock();
 
   // Generate the view map
   errorList = new QList<QString*>();
@@ -31,20 +34,21 @@ DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidg
     i.next();
     comboBox->addItem(i.key());
   }
-  updateClock = new UpdateClock();
-  QHBoxLayout* hBox = new QHBoxLayout();
-  hBox->setSpacing(3);
-  hBox->addWidget(comboBox);
-  hBox->addWidget(updateClock);
 
   // When the user selects a new view via the combo box, update the main view area
   QObject::connect(comboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(switchView(const QString&)));
 
+  QGridLayout* topPanel = new QGridLayout();
+  topPanel->addWidget(comboBox, 0, 0);
+  topPanel->addWidget(updateClock, 1, 0);
+  topPanel->addWidget(detailsView, 0, 1, 2, 1);
+
+
   // Arrange the elements vertically
   QVBoxLayout* vBox = new QVBoxLayout();
+  vBox->setContentsMargins(0, 0, 0, 0);
   vBox->setSpacing(3);
-  vBox->addLayout(hBox);
-  vBox->addWidget(detailsView);
+  vBox->addLayout(topPanel);
   vBox->addWidget(mainView); 
   this->setLayout(vBox);
 

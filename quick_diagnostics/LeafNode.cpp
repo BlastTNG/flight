@@ -9,11 +9,9 @@ LeafNode::LeafNode(GetData::Dirfile* dirfile, const char* fieldCode, double lo, 
   setMinimumSize(5, 5); // allow the node to be very small
 
   isSelected = false;
-  // TODO
   setMouseTracking(true); // if false, only receives mouseMoveEvent when mouse is pressed, see documentation
 
   // Start with a dirfile error b/c we haven't yet read the dirfile for this node
-  statusColor = errorColor;
   errorList = new QList<QString>();
   errorList->append("Have not yet read dirfile");
 }
@@ -69,10 +67,7 @@ void interpolateColor(QColor& result, float val, float lo, float hi, QColor aC, 
 // Read the most recent data from the dirfile, and update status accordingly
 void LeafNode::updateStatus(int frameNum) {
 
-  // Set this node's value to the first sample of the most recent frame of the dirfile
-  // TODO: might different fields ever have different number of frames? this would make the display out of sync
-
-  // Recent the error list (those are errors from the last read)
+  // Reset the error list (those are errors from the last read)
   while (!errorList->empty()) {
     errorList->takeFirst();
   }
@@ -86,6 +81,7 @@ void LeafNode::updateStatus(int frameNum) {
     e += dirfile->ErrorString();
     errorList->append(e);
   }
+
   // Expected to read 1 sample
   if (numSamplesRead != 1) {
     QString e("<i>(when reading)</i> num samples read: ");
@@ -105,25 +101,9 @@ void LeafNode::updateStatus(int frameNum) {
 
   // If no error, update the current value
   if (errorList->empty()) {
-
-    // Update the current value
     currentValue = buffer[0];
+  }   
 
-    // If val > avg, interpolate between white and hiColor. If val <= avg, interpolate between white and loColor
-    // Don't just interpolate between loColor and hiColor b/c it becomes difficult to judge the sensor value from the color
-    float avg = (lo + hi) / 2.0;
-    QString style;
-    if (currentValue > avg) {
-      // if over hi, consider it hi
-      interpolateColor(statusColor, fmin(currentValue, hi), avg, hi, Qt::white, hiColor);    
-    } else {
-      // if under lo, conside it lo
-      interpolateColor(statusColor, fmax(currentValue, lo), lo, avg, loColor, Qt::white);  
-    }
-  } else {
-    statusColor = errorColor;  
-  }
-  
   // Trigger a repaint event, since the status color may have changed
   update(); 
 }
@@ -132,6 +112,22 @@ void LeafNode::updateStatus(int frameNum) {
 void LeafNode::paintEvent(QPaintEvent* /*evt*/) {
   QRect geo = geometry();
   QPainter p(this);
+
+  // Update the status color, and set the brush to that color
+  QColor statusColor;
+  if (errorList->empty()) {
+    // Based on current val's proximity to lo and hi values, interpolate the status color between blue (lo), white (avg), and red (high)
+    float avg = (lo + hi) / 2.0;
+    if (currentValue > avg) {
+      // if over hi, consider it hi
+      interpolateColor(statusColor, fmin(currentValue, hi), avg, hi, Qt::white, hiColor);    
+    } else {
+      // if under lo, conside it lo
+      interpolateColor(statusColor, fmax(currentValue, lo), lo, avg, loColor, Qt::white);  
+    }
+  } else {
+    statusColor = errorColor;
+  }
   p.setBrush(statusColor);
   p.drawRect(0, 0, geo.width(), geo.height());
   
