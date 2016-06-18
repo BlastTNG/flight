@@ -69,8 +69,18 @@
 #define STREAM_SCANLIST_ADDRESS_ADDR 4100 // #(0:127)
 #define STREAM_TRIGGER_INDEX_ADDR 4024
 
+// Modbus addresses to set the ranges and gains of the Analog Inputs
+#define AIN0_RANGE_ADDR 40000 // Setting AIN range for each AIN channel
+                      // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01
+#define AIN0_NEGATIVE_CH_ADDR 41000 // Negative channel is 199 (single ended)
+
+#define LJ_MODBUS_ERROR_INFO_ADDR 55000 // Gives a specific error code
+
 #define LJ_CMD_PORT 502
 #define LJ_DATA_PORT 702
+
+// Maximum number of addresses that can be targeted in stream mode.
+#define MAX_NUM_ADDRESSES 512
 
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
@@ -137,6 +147,7 @@ typedef struct {
 typedef struct {
     int trans_id;
     uint16_t num_channels;
+    uint16_t samp_per_packet;
     uint16_t data[];
 } labjack_data_t;
 
@@ -156,6 +167,23 @@ static labjack_state_t state[2] = {
           .DAC = {0, 0}
     }
 };
+
+// Used to correct for word swap between the mcp convention and the Labjack.
+// float_in: floating point value to be converted to two 16-bit words.
+// data: two element uint16_t array to store the modbus formated data.
+void labjack_set_float(float float_in, uint16_t* data)
+{
+    uint16_t data_swapped[2] = {0};
+	modbus_set_float(float_in, data_swapped);
+	data[1] = data_swapped[0];
+	data[0] = data_swapped[1];
+}
+// Used to package a 32 bit integer into a two element array in modbus format.
+void labjack_set_short(uint32_t short_in, uint16_t* data)
+{
+	data[1] = short_in & 0xff;
+	data[0] = (short_in & 0xff00) >> 16;
+}
 
 uint16_t labjack_get_value(int m_labjack, int m_channel)
 {
@@ -207,52 +235,193 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     static int have_warned_write_reg = 0;
     int ret = 0;
     uint16_t data[2] = {0}; // Used to write floats.
+    uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
+	uint32_t err_info = 0;
+    uint32_t data_inv = 0;
+    labjack_data_t *state_data = (labjack_data_t*)m_state->conn_data;
 
     // Configure stream
-    enum {NUM_ADDRESSES = 7};
-    float scanRate = 1000.0f; // Scans per second. Samples per second = scanRate * numAddresses
-    unsigned int numAddresses = NUM_ADDRESSES;
-    unsigned int samplesPerPacket = 70;
+    float scanRate = 100.0f; // Scans per second. Samples per second = scanRate * numAddresses
+    unsigned int numAddresses = state_data->num_channels;
+    unsigned int samplesPerPacket = state_data->samp_per_packet;
     float settling = 10.0; // 10 microseconds
     unsigned int resolutionIndex = 0;
     unsigned int bufferSizeBytes = 0;
     unsigned int autoTarget = STREAM_TARGET_ETHERNET;
     unsigned int numScans = 0; // 0 = Run continuously.
-    unsigned int scanListAddresses[NUM_ADDRESSES] = {0};
-    uint16_t nChanList[NUM_ADDRESSES] = {0};
-    float rangeList[NUM_ADDRESSES] = {0.0};
-    unsigned int gainList[NUM_ADDRESSES]; // Based off rangeList
+    unsigned int scanListAddresses[MAX_NUM_ADDRESSES] = {0};
+    uint16_t nChanList[MAX_NUM_ADDRESSES] = {0};
+    float rangeList[MAX_NUM_ADDRESSES] = {0.0};
+    unsigned int gainList[MAX_NUM_ADDRESSES]; // Based off rangeList
+
+	// Disable streaming (otherwise we can't set the other streaming registers.
+    labjack_set_short(0, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_ENABLE_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not disable streaming (could be streaming is off already): %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+    }
+    // Write to appropriate Modbus registers to setup and start labjack streaming.
+    labjack_set_float(scanRate, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANRATE_HZ_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not set stream scan rate at address: %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
+    labjack_set_short(numAddresses, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_ADDRESSES_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not set stream number of addresses: %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
+    labjack_set_short(samplesPerPacket, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SAMPLES_PER_PACKET_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not set samples per packet: %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
+    labjack_set_float(settling, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SETTLING_US_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not set stream settling time: %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
+    labjack_set_short(resolutionIndex, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_RESOLUTION_INDEX_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not set stream resolution: %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
+    labjack_set_short(bufferSizeBytes, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_BUFFER_SIZE_BYTES_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not set stream buffer size: %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
+    labjack_set_short(autoTarget, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_AUTO_TARGET_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not set stream auto target: %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
+    labjack_set_short(numScans, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_SCANS_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!have_warned_write_reg) {
+           blast_err("Could not set continuous scanning: %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        }
+        m_state->has_comm_stream_error = 1;
+        have_warned_write_reg = 1;
+        return;
+    }
 
     // Using a loop to add Modbus addresses for AIN0 - AIN(NUM_ADDRESSES-1) to the
     // stream scan and configure the analog input settings.
-    for (int i = 0; i < 2 * numAddresses; i+=2) {
-        scanListAddresses[i] = i * 2; // AIN(i) (Modbus address i*2)
+    for (int i = 0; i < numAddresses; i++) {
+        scanListAddresses[i] = i*2; // AIN(i) (Modbus address i*2)
         nChanList[i] = 199; // Negative channel is 199 (single ended)
         rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
         gainList[i] = 0; // gain index 0 = +/-10V
+	    labjack_set_short(scanListAddresses[i], data);
+        if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANLIST_ADDRESS_ADDR + i*2, 2, data)) < 0) {
+            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+            if (!have_warned_write_reg) {
+                blast_err("Could not set scan address %d: %s. Data sent [0]=%d, [1]=%d",
+                    scanListAddresses[i], modbus_strerror(errno), data[0], data[1]);
+                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+            }
+            m_state->has_comm_stream_error = 1;
+            have_warned_write_reg = 1;
+            return;
+        }
+	    labjack_set_float(rangeList[i], data);
+        if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_RANGE_ADDR + i*2, 2, data)) < 0) {
+            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+            if (!have_warned_write_reg) {
+                blast_err("Could not set %d-th AIN range: %s. Data sent [0]=%d, [1]=%d",
+                    i, modbus_strerror(errno), data[0], data[1]);
+                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+            }
+            m_state->has_comm_stream_error = 1;
+            have_warned_write_reg = 1;
+            return;
+        }
+        if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_NEGATIVE_CH_ADDR + i, 1, nChanList+i)) < 0) {
+            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+            if (!have_warned_write_reg) {
+                blast_err("Could not set %d-th AIN negative channel: %s. Data sent %d",
+                    i, modbus_strerror(errno), nChanList[i]);
+                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+            }
+            m_state->has_comm_stream_error = 1;
+            have_warned_write_reg = 1;
+            return;
+        }
     }
-
-    // Write to appropriate Modbus registers to setup and start labjack streaming.
-    modbus_set_float(scanRate, data);
-    if ((ret = modbus_write_registers(m_state->cmd_mb, 4002, 2, data)) < 0) {
+	// Last step: enable streaming
+    labjack_set_short(1, data);
+    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_ENABLE_ADDR, 2, data)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!have_warned_write_reg) {
-           blast_err("Could not set stream scan rate at address: %s",
-                modbus_strerror(errno));
+           blast_err("Could not enable streaming (could be streaming is off already): %s. Data sent [0]=%d, [1]=%d",
+                modbus_strerror(errno), data[0], data[1]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
         }
         m_state->has_comm_stream_error = 1;
         have_warned_write_reg = 1;
         return;
     }
-    unsigned int inv_numAddresses = htonl(numAddresses);
-    if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_ADDRESSES_ADDR, 2, &inv_numAddresses)) < 0) {
-        if (!have_warned_write_reg) {
-           blast_err("Could not set stream number of addresses: %s",
-                modbus_strerror(errno));
-        }
-        m_state->has_comm_stream_error = 1;
-        have_warned_write_reg = 1;
-        return;
-    }
+	blast_info("Stream configuration commanding completed.");
+	m_state->has_comm_stream_error = 0;
+	have_warned_write_reg = 0;
+	state->comm_stream_state = 1;
 }
 
 
@@ -271,6 +440,7 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
     labjack_state_t *state = (labjack_state_t*) m_data;
     labjack_data_pkt_t *data_pkt;
     labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
+    size_t read_buf_size;
 
     /**
      * If we have an error, or do not receive data from the LabJack in the expected
@@ -284,15 +454,36 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
       ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
       return;
     }
-
-    buf = ph_sock_read_bytes_exact(m_sock, sizeof(labjack_data_header_t) + state_data->num_channels * 2);
+	read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->samp_per_packet * 2;
+    buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
     if (!buf) return; /// We do not have enough data
-
+	blast_info("Read %d bytes", read_buf_size);
     data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
+// Debugging print statements.  Print header
+	uint16_t trans_id, proto_id, length, backlog, status, addl_status;
+	trans_id = ntohs(data_pkt->header.resp.trans_id);
+	proto_id = ntohs(data_pkt->header.resp.proto_id);
+	length = ntohs(data_pkt->header.resp.length);
+	backlog = ntohs(data_pkt->header.backlog);
+	status = ntohs(data_pkt->header.status);
+	addl_status = ntohs(data_pkt->header.addl_status);
+    blast_info("New Packet! trans_id: %d, proto_id: %d, length: %d, unit_id: %d",
+        data_pkt->header.resp.trans_id, data_pkt->header.resp.proto_id,
+        data_pkt->header.resp.length, data_pkt->header.resp.unit_id);
+    blast_info("Or with ntohs(): trans_id: %d, proto_id: %d, length: %d, unit_id: %d",
+        trans_id, proto_id, length, data_pkt->header.resp.unit_id);
+    blast_info("fn_id: %d, type: %d, reserved: %d, backlog: %d, status: %d, addl_status: %d",
+        data_pkt->header.resp.fn_id, data_pkt->header.resp.type,
+        data_pkt->header.reserved, data_pkt->header.backlog,
+        data_pkt->header.status, data_pkt->header.addl_status);
+    blast_info("Or with ntohs fn_id: %d, type: %d, reserved: %d, backlog: %d, status: %d, addl_status: %d",
+        data_pkt->header.resp.fn_id, data_pkt->header.resp.type,
+        data_pkt->header.reserved, backlog,
+        status, addl_status);
 
     if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
         blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
-                   state_data->trans_id, state_data->trans_id, state->address);
+                   state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
     }
     state_data->trans_id = data_pkt->header.resp.trans_id;
 
@@ -477,7 +668,7 @@ void initialize_labjack_commands(int m_which)
  *
  * @param m_which
  */
-void labjack_networking_init(int m_which, size_t m_numchannels)
+void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_samp_per_packet)
 {
     blast_dbg("Labjack Init for %d", m_which);
 
@@ -490,9 +681,11 @@ void labjack_networking_init(int m_which, size_t m_numchannels)
     ph_job_init(&(state[m_which].connect_job));
     state[m_which].connect_job.callback = connect_lj;
     state[m_which].connect_job.data = &state[m_which];
-    labjack_data_t *data_state = calloc(1, sizeof(labjack_data_t) + m_numchannels * sizeof(uint16_t));
+    labjack_data_t *data_state = calloc(1, sizeof(labjack_data_t) +
+        m_numchannels * m_samp_per_packet * sizeof(uint16_t));
     data_state->num_channels = m_numchannels;
+    data_state->samp_per_packet = m_samp_per_packet;
     state[m_which].conn_data = data_state;
 
-    ph_job_dispatch_now(&(state[m_which].connect_job));
+//    ph_job_dispatch_now(&(state[m_which].connect_job));
 }

@@ -533,7 +533,7 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  labjack_networking_init(LABJACK_CRYO, 1);
+  labjack_networking_init(LABJACK_CRYO, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
 
   initialize_labjack_commands(LABJACK_CRYO);
 

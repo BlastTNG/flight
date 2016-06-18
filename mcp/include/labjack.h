@@ -30,8 +30,10 @@
 #include <stdint.h>
 
 #define LABJACK_CRYO 0
+#define LABJACK_CRYO_NCHAN 14 // Number of Channels to stream (14 = all analog input channels)
+#define LABJACK_CRYO_SPP 1 // Number of samples to readout per streaming packet
 
-void labjack_networking_init(int m_which, size_t m_numchannels);
+void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_samp_per_packet);
 uint16_t labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);
 
