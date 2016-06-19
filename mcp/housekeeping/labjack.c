@@ -147,7 +147,7 @@ typedef struct {
 typedef struct {
     int trans_id;
     uint16_t num_channels;
-    uint16_t samp_per_packet;
+    uint16_t scans_per_packet;
     uint16_t data[];
 } labjack_data_t;
 
@@ -241,9 +241,9 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     labjack_data_t *state_data = (labjack_data_t*)m_state->conn_data;
 
     // Configure stream
-    float scanRate = 100.0f; // Scans per second. Samples per second = scanRate * numAddresses
+    float scanRate = 1.0f; // Scans per second. Samples per second = scanRate * numAddresses
     unsigned int numAddresses = state_data->num_channels;
-    unsigned int samplesPerPacket = state_data->samp_per_packet;
+    unsigned int samplesPerPacket = numAddresses*state_data->scans_per_packet;
     float settling = 10.0; // 10 microseconds
     unsigned int resolutionIndex = 0;
     unsigned int bufferSizeBytes = 0;
@@ -278,6 +278,8 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         return;
     }
     labjack_set_short(numAddresses, data);
+    blast_info("Setting number of addressed to read.  numAddresses = %d (%d, %d in Modbus format)",
+        numAddresses, data[0], data[1]);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_ADDRESSES_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!have_warned_write_reg) {
@@ -424,6 +426,59 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
 	state->comm_stream_state = 1;
 }
 
+// Correct for word swaps between mcp and the labjack 
+int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
+{
+    uint16_t data_swapped;
+    static int first_time = 1;
+    static int have_warned = 0;
+
+    int n_data = (n_bytes - 16) / 2;
+
+// TODO(laura): add proper error handling.
+    if (n_bytes < 16) {
+        blast_err("Read only %d bytes!  Aborting", n_bytes);
+        have_warned = 1;
+        return -1;
+    }
+	if (n_bytes % 2) { // We should have an even number of bytes
+        blast_err("Odd number of bytes read!");
+        have_warned = 1;
+        return -1;
+	}
+	data_swapped = ntohs(m_data_pkt->header.resp.trans_id);
+    m_data_pkt->header.resp.trans_id = data_swapped;
+	data_swapped = ntohs(m_data_pkt->header.resp.proto_id);
+    m_data_pkt->header.resp.proto_id = data_swapped;
+	data_swapped = ntohs(m_data_pkt->header.resp.length);
+    m_data_pkt->header.resp.length = data_swapped;
+	data_swapped = ntohs(m_data_pkt->header.backlog);
+    m_data_pkt->header.backlog = data_swapped;
+	data_swapped = ntohs(m_data_pkt->header.status);
+    m_data_pkt->header.status = data_swapped;
+	data_swapped = ntohs(m_data_pkt->header.addl_status);
+    m_data_pkt->header.addl_status = data_swapped;
+
+// Debugging print statements.  Print header
+    blast_info("New Packet! trans_id: %d, proto_id: %d, length: %d, unit_id: %d",
+        m_data_pkt->header.resp.trans_id, m_data_pkt->header.resp.proto_id,
+        m_data_pkt->header.resp.length, m_data_pkt->header.resp.unit_id);
+    blast_info("fn_id: %d, type: %d, reserved: %d, backlog: %d, status: %d, addl_status: %d",
+        m_data_pkt->header.resp.fn_id, m_data_pkt->header.resp.type,
+        m_data_pkt->header.reserved, m_data_pkt->header.backlog,
+        m_data_pkt->header.status, m_data_pkt->header.addl_status);
+
+// Correct the streamed data
+    for (int i = 0; i < n_data; i++) {
+        data_swapped = ntohs(m_data_pkt->data[i]);
+        m_data_pkt->data[i] = data_swapped;
+        blast_info("stream data[%d] = %d", i, m_data_pkt->data[i]); // Debugging purposes
+    }
+
+    first_time = 0;
+    have_warned = 0;
+    return 1;
+}
 
 /**
  * Process an incoming LabJack packet.  If we have an error, we'll disable
@@ -441,6 +496,7 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
     labjack_data_pkt_t *data_pkt;
     labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
     size_t read_buf_size;
+    int ret;
 
     /**
      * If we have an error, or do not receive data from the LabJack in the expected
@@ -454,32 +510,14 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
       ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
       return;
     }
-	read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->samp_per_packet * 2;
+	read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
     buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
     if (!buf) return; /// We do not have enough data
 	blast_info("Read %d bytes", read_buf_size);
     data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
-// Debugging print statements.  Print header
-	uint16_t trans_id, proto_id, length, backlog, status, addl_status;
-	trans_id = ntohs(data_pkt->header.resp.trans_id);
-	proto_id = ntohs(data_pkt->header.resp.proto_id);
-	length = ntohs(data_pkt->header.resp.length);
-	backlog = ntohs(data_pkt->header.backlog);
-	status = ntohs(data_pkt->header.status);
-	addl_status = ntohs(data_pkt->header.addl_status);
-    blast_info("New Packet! trans_id: %d, proto_id: %d, length: %d, unit_id: %d",
-        data_pkt->header.resp.trans_id, data_pkt->header.resp.proto_id,
-        data_pkt->header.resp.length, data_pkt->header.resp.unit_id);
-    blast_info("Or with ntohs(): trans_id: %d, proto_id: %d, length: %d, unit_id: %d",
-        trans_id, proto_id, length, data_pkt->header.resp.unit_id);
-    blast_info("fn_id: %d, type: %d, reserved: %d, backlog: %d, status: %d, addl_status: %d",
-        data_pkt->header.resp.fn_id, data_pkt->header.resp.type,
-        data_pkt->header.reserved, data_pkt->header.backlog,
-        data_pkt->header.status, data_pkt->header.addl_status);
-    blast_info("Or with ntohs fn_id: %d, type: %d, reserved: %d, backlog: %d, status: %d, addl_status: %d",
-        data_pkt->header.resp.fn_id, data_pkt->header.resp.type,
-        data_pkt->header.reserved, backlog,
-        status, addl_status);
+
+    // Correct for the fact that Labjack readout is MSB first.
+	ret = labjack_data_word_swap(data_pkt, read_buf_size);
 
     if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
         blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
@@ -668,7 +706,7 @@ void initialize_labjack_commands(int m_which)
  *
  * @param m_which
  */
-void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_samp_per_packet)
+void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet)
 {
     blast_dbg("Labjack Init for %d", m_which);
 
@@ -682,10 +720,10 @@ void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_samp_pe
     state[m_which].connect_job.callback = connect_lj;
     state[m_which].connect_job.data = &state[m_which];
     labjack_data_t *data_state = calloc(1, sizeof(labjack_data_t) +
-        m_numchannels * m_samp_per_packet * sizeof(uint16_t));
+        m_numchannels * m_scans_per_packet * sizeof(uint16_t));
     data_state->num_channels = m_numchannels;
-    data_state->samp_per_packet = m_samp_per_packet;
+    data_state->scans_per_packet = m_scans_per_packet;
     state[m_which].conn_data = data_state;
 
-//    ph_job_dispatch_now(&(state[m_which].connect_job));
+    ph_job_dispatch_now(&(state[m_which].connect_job));
 }
