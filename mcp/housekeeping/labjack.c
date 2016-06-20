@@ -116,6 +116,35 @@ typedef enum {
     LJ_STATE_SHUTDOWN
 } e_ljc_state_t;
 
+// Calibration structures to convert from AIN digital units to voltages.
+typedef struct
+{
+	float PSlope;
+	float NSlope;
+	float Center;
+	float Offset;
+} labjack_calset_t;
+
+// Stores T7 calibration constants
+typedef struct
+{
+	labjack_calset_t HS[4];
+	labjack_calset_t HR[4];
+
+	struct
+    {
+		float Slope;
+		float Offset;
+	} DAC[2];
+
+	float Temp_Slope;
+	float Temp_Offset;
+
+	float ISource_10u;
+	float ISource_200u;
+
+	float I_Bias;
+} labjack_device_cal_t;
 
 typedef struct {
     char address[16];
@@ -134,8 +163,10 @@ typedef struct {
     uint16_t comm_stream_state;
     uint16_t req_comm_stream_state;
     uint16_t has_comm_stream_error;
+    uint16_t calibration_read;
 
     float DAC[2];
+    float AIN[14]; // Analog input channels read from Labjack
 
     uint32_t backoff_sec;
     struct timeval timeout;
@@ -178,6 +209,19 @@ void labjack_set_float(float float_in, uint16_t* data)
 	data[1] = data_swapped[0];
 	data[0] = data_swapped[1];
 }
+
+// Used to correct for word swap between the mcp convention and the Labjack.
+// float_in: floating point value to be converted to two 16-bit words.
+// data: two element uint16_t array to store the modbus formated data.
+float labjack_get_float(uint16_t* data_in)
+{
+    uint16_t data_swapped[2] = {0};
+    data_swapped[0] = data_in[1];
+    data_swapped[1] = data_in[0];
+	float float_out = modbus_get_float(data_swapped);
+	return float_out;
+}
+
 // Used to package a 32 bit integer into a two element array in modbus format.
 void labjack_set_short(uint32_t short_in, uint16_t* data)
 {
@@ -230,14 +274,165 @@ int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
     return 0;
 }
 
+int labjack_get_volts(const labjack_device_cal_t *devCal, const uint16_t data_raw,
+    unsigned int gainIndex, float *volts)
+{
+    static uint16_t have_warned = 0;
+	if (gainIndex > 3) {
+		if (!have_warned) blast_err("Invalid gainIndex %u\n", gainIndex);
+		have_warned = 1;
+		return -1;
+	}
+
+// if(*volts < devCal->HS[gainIndex].Center) {
+    if (devCal->HS[gainIndex].Center > 0) {
+		*volts = (devCal->HS[gainIndex].Center - data_raw) * devCal->HS[gainIndex].NSlope;
+        blast_info("data_raw = %u, gainIndex = %i, HS.Center = %f,  HS.NSlope = %f, volts = %f",
+            data_raw, gainIndex, devCal->HS[gainIndex].Center, devCal->HS[gainIndex].NSlope, *volts);
+	} else {
+		*volts = (data_raw - devCal->HS[gainIndex].Center) * devCal->HS[gainIndex].PSlope;
+	}
+	have_warned =0;
+	return 0;
+}
+
+// Copied from the T7 example streaming code.
+// Use for now until labjack_get_cal is working.
+void labjack_get_nominal_cal(labjack_state_t *m_state, labjack_device_cal_t *devCal)
+{
+	int i = 0;
+
+	devCal->HS[0].PSlope = 0.000315805780f;
+	devCal->HS[0].NSlope = -0.000315805800f;
+	devCal->HS[0].Center = 33523.0f;
+	devCal->HS[0].Offset = -10.58695652200f;
+	devCal->HS[1].PSlope = 0.0000315805780f;
+	devCal->HS[1].NSlope = -0.0000315805800f;
+	devCal->HS[1].Center = 33523.0f;
+	devCal->HS[1].Offset = -1.058695652200f;
+	devCal->HS[2].PSlope = 0.00000315805780f;
+	devCal->HS[2].NSlope = -0.00000315805800f;
+	devCal->HS[2].Center = 33523.0f;
+	devCal->HS[2].Offset = -0.1058695652200f;
+	devCal->HS[3].PSlope = 0.000000315805780f;
+	devCal->HS[3].NSlope = -0.000000315805800f;
+	devCal->HS[3].Center = 33523.0f;
+	devCal->HS[3].Offset = -0.01058695652200f;
+
+	for(i = 0; i < 4; i++)
+		devCal->HR[i] = devCal->HS[i];
+
+	devCal->DAC[0].Slope = 13200.0f;
+	devCal->DAC[0].Offset = 0.0f;
+	devCal->DAC[1].Slope = 13200.0f;
+	devCal->DAC[1].Offset = 0.0f;
+
+	devCal->Temp_Slope = -92.379f;
+	devCal->Temp_Offset = 465.129f;
+
+	devCal->ISource_10u = 0.000010f;
+	devCal->ISource_200u = 0.000200f;
+
+	devCal->I_Bias = 0;
+    m_state->calibration_read = 1;
+    blast_info("Labjack calibration data read.");
+}
+
+// This isn't working now.  TODO(laura): Fix read from internal FLASH memory.
+int labjack_get_cal(labjack_state_t *m_state, labjack_device_cal_t *devCal)
+{
+	const unsigned int EFAdd_CalValues = 0x3C4000;
+	const int FLASH_PTR_ADDRESS	= 61810;
+
+	// 3 frames	of 13 values, one frame	of 2 values
+	const int FLASH_READ_ADDRESS = 61812;
+	const int FLASH_READ_NUM_REGS[4] = {26, 26, 26, 4};
+    uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
+	static uint16_t have_warned_write_mem = 0;
+	static uint16_t have_warned_read_cal = 0;
+    int ret = 0;
+
+	float calValue = 0.0;
+	int calIndex = 0;
+	uint16_t data[26];
+
+	int i = 0;
+	int j = 0;
+
+	for(i = 0; i < 4; i++) {
+		// Set the pointer. This indicates which part of the memory we want to read
+		blast_info("i = %i, Flash Memory Address = %i", i, EFAdd_CalValues + i * 13 * 4);
+        labjack_set_short(EFAdd_CalValues + i * 13 * 4, data);
+        if ((ret = modbus_write_registers(m_state->cmd_mb, FLASH_PTR_ADDRESS, 2, data)) < 0) {
+            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+            if (!have_warned_write_mem) {
+                blast_err("Could not set memory to read cal info (index = %i): %s. Data sent [0]=%d, [1]=%d",
+                    i, modbus_strerror(errno), data[0], data[1]);
+                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+            }
+            have_warned_write_mem = 1;
+            m_state->calibration_read = 0;
+            return -1;
+        }
+// uint32ToBytes(EFAdd_CalValues + i * 13 * 4, data);
+// if(writeMultipleRegistersTCP(sock, FLASH_PTR_ADDRESS, 2, data) < 0)
+// return -1;
+
+		// Read the calibration constants
+        if ((ret = modbus_read_registers(m_state->cmd_mb, FLASH_READ_ADDRESS, FLASH_READ_NUM_REGS[i], data)) < 0) {
+            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+            if (!have_warned_read_cal) {
+                blast_err("Could not read cal info (index = %i): %s. Data sent [0]=%d, [1]=%d",
+                    i, modbus_strerror(errno), data[0], data[1]);
+                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+            }
+            have_warned_read_cal = 1;
+            m_state->calibration_read = 0;
+            return -1;
+        }
+// if(readMultipleRegistersTCP(sock, FLASH_READ_ADDRESS, FLASH_READ_NUM_REGS[i], data) < 0)
+//     return -1;
+
+		for(j = 0; j < FLASH_READ_NUM_REGS[i]*2; j+=4) {
+			calValue = labjack_get_float(&data[j]);
+			((float *)devCal)[calIndex]	= calValue;
+			blast_info("Dev Cal i=%i, j=%i, data[j] = %u, val=%f", i, j, data[j], calValue);
+			calIndex++;
+		}
+	}
+	blast_info("Successfully read labjack calibration info.");
+    have_warned_read_cal = 0;
+    have_warned_write_mem = 0;
+    m_state->calibration_read = 1;
+	return 0;
+}
+
+/**
+ * Convert data from labjack format to voltages for use by mcp.
+ *
+ * @param m_state: state structure (which contains both the digital data and AIN array)
+ * @param data_raw: Raw digital data
+ */
+void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t *m_labjack_cal,
+    uint32_t *m_gainlist, uint16_t n_data)
+{
+    uint16_t *raw_data = (uint16_t*) m_state->conn_data;
+    int ret;
+    for (int i = 0; i < n_data; i++) {
+        if (raw_data[i] == 0xffff) {
+            blast_err("Labjack channel AIN%d received a dummy sample indicating we received an incomplete scan!", i);
+        } else {
+            ret = labjack_get_volts(m_labjack_cal, raw_data[i], m_gainlist[i], &(m_state->AIN[i]));
+        }
+    }
+}
+
 static void init_labjack_stream_commands(labjack_state_t *m_state)
 {
     static int have_warned_write_reg = 0;
     int ret = 0;
     uint16_t data[2] = {0}; // Used to write floats.
     uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
-	uint32_t err_info = 0;
-    uint32_t data_inv = 0;
     labjack_data_t *state_data = (labjack_data_t*)m_state->conn_data;
 
     // Configure stream
@@ -252,7 +447,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     unsigned int scanListAddresses[MAX_NUM_ADDRESSES] = {0};
     uint16_t nChanList[MAX_NUM_ADDRESSES] = {0};
     float rangeList[MAX_NUM_ADDRESSES] = {0.0};
-    unsigned int gainList[MAX_NUM_ADDRESSES]; // Based off rangeList
+
 
 	// Disable streaming (otherwise we can't set the other streaming registers.
     labjack_set_short(0, data);
@@ -370,7 +565,6 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         scanListAddresses[i] = i*2; // AIN(i) (Modbus address i*2)
         nChanList[i] = 199; // Negative channel is 199 (single ended)
         rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
-        gainList[i] = 0; // gain index 0 = +/-10V
 	    labjack_set_short(scanListAddresses[i], data);
         if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANLIST_ADDRESS_ADDR + i*2, 2, data)) < 0) {
             ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
@@ -426,18 +620,17 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
 	state->comm_stream_state = 1;
 }
 
-// Correct for word swaps between mcp and the labjack 
+// Correct for word swaps between mcp and the labjack
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
 {
     uint16_t data_swapped;
-    static int first_time = 1;
     static int have_warned = 0;
 
     int n_data = (n_bytes - 16) / 2;
 
 // TODO(laura): add proper error handling.
     if (n_bytes < 16) {
-        blast_err("Read only %d bytes!  Aborting", n_bytes);
+        blast_err("Read only %u bytes!  Aborting", (unsigned int) n_bytes);
         have_warned = 1;
         return -1;
     }
@@ -475,7 +668,6 @@ int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
         blast_info("stream data[%d] = %d", i, m_data_pkt->data[i]); // Debugging purposes
     }
 
-    first_time = 0;
     have_warned = 0;
     return 1;
 }
@@ -495,9 +687,19 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
     labjack_state_t *state = (labjack_state_t*) m_data;
     labjack_data_pkt_t *data_pkt;
     labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
+    static uint32_t gainList[MAX_NUM_ADDRESSES];
+    static labjack_device_cal_t labjack_cal;
     size_t read_buf_size;
-    int ret;
+    int ret, i;
 
+	if (!state->calibration_read) {
+    // gain index 0 = +/-10V. Used for conversion to volts.
+        for (i = 0; i < state_data->num_channels; i++) gainList[i] = 0;
+        // For now read nominal calibration data (rather than specific calibration data from the device.
+        // TODO(laura) fix labjack_get_cal and use that instead
+        labjack_get_nominal_cal(state, &labjack_cal);
+//        labjack_get_cal(state, &labjack_cal);
+    }
     /**
      * If we have an error, or do not receive data from the LabJack in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
@@ -513,13 +715,13 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
 	read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
     buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
     if (!buf) return; /// We do not have enough data
-	blast_info("Read %d bytes", read_buf_size);
+	blast_info("Read %u bytes", (unsigned int) read_buf_size);
     data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
 
     // Correct for the fact that Labjack readout is MSB first.
 	ret = labjack_data_word_swap(data_pkt, read_buf_size);
 
-    if (data_pkt->header.resp.trans_id != (state_data->trans_id)++) {
+    if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
         blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
                    state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
     }
@@ -531,6 +733,7 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
         return;
     }
 
+// TODO(laura): Finish adding error handling.
     switch (data_pkt->header.status) {
     case STREAM_STATUS_AUTO_RECOVER_ACTIVE:
     case STREAM_STATUS_AUTO_RECOVER_END:
@@ -542,6 +745,13 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
 
     memcpy(state_data->data, data_pkt->data, state_data->num_channels * sizeof(uint16_t));
 
+    // Convert digital data into voltages.
+    if (state->calibration_read) {
+        blast_info("Calibration read, converting digital data to voltages.");
+        labjack_convert_stream_data(state, &labjack_cal, gainList, state_data->num_channels);
+    } else {
+        blast_info("Calibration not read, will not convert digital data to voltages.");
+    }
     ph_buf_delref(buf);
 }
 
