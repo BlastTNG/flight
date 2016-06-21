@@ -53,10 +53,13 @@ DiagnosticsView::DiagnosticsView(GetData::Dirfile* dirfile, json config) : QWidg
   this->setLayout(vBox);
 
   // Set the current view to the first view in the combo box
-  QString viewName = comboBox->itemText(0);
-  NodeGrid* view = viewMap->value(viewName);
-  pushView(view);
-  
+  currentGrid = NULL;
+  if (!viewMap->empty()) {
+    QString viewName = comboBox->itemText(0);
+    NodeGrid* view = viewMap->value(viewName);
+    pushView(view);
+  }
+    
   // Update the status of the diagnostics view frequently
   QTimer* timer = new QTimer(this);
   connect(timer, SIGNAL(timeout()), this, SLOT(updateDisplayedNodes()));
@@ -100,6 +103,39 @@ QList<LeafNode*>* DiagnosticsView::getLeavesForPrefix(GetData::Dirfile* dirfile,
     }
   }
   return list;
+}
+
+NodeGrid* DiagnosticsView::generateFromGridFormat(GetData::Dirfile* dirfile, json config) {
+
+  string viewName;
+  QList<PositionedLeaf*>* leaves = new QList<PositionedLeaf*>();
+  try {
+
+    // Iterate through the json object, parsing the data into leaves
+    for (json::iterator it = config.begin(); it != config.end(); ++it) {
+      json element = *it;
+
+      string* fieldCode = new string(it.key());
+      double lo = element["lo"].get<double>();
+      double hi = element["hi"].get<double>();
+      LeafNode* n = new LeafNode(dirfile, fieldCode->c_str(), lo, hi);
+
+      // When a leaf-node is clicked, show its details in the detail label
+      QObject::connect(n, SIGNAL(clicked(LeafNode*)), this, SLOT(updateDetailLabel(LeafNode*)));
+
+      int x = element["x"].get<int>();
+      int y = element["y"].get<int>();
+      int w = element["w"].get<int>();
+      int h = element["h"].get<int>();
+      PositionedLeaf* pl = new PositionedLeaf(n, x, y, w, h);
+      leaves->append(pl);
+    }
+
+  } catch(const std::exception& e) {
+    QString* err = new QString(e.what());
+    errorList->append(err);  
+  }
+  return new NodeGrid(leaves);
 }
 
 /*
@@ -157,7 +193,7 @@ void DiagnosticsView::generateViewMap(GetData::Dirfile* dirfile, json config) {
     json element = *it;
     string key = it.key();
     QString viewName = QString::fromStdString(key);
-    NodeGrid* view = generateGrid(dirfile, it.value());
+    NodeGrid* view = generateFromGridFormat(dirfile, it.value());
     viewMap->insert(viewName, view);
   }
 }

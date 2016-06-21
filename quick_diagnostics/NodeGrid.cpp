@@ -1,5 +1,19 @@
 #include "NodeGrid.h"
 
+NodeGrid::NodeGrid(QList<PositionedLeaf*>* leaves) : QWidget() {
+
+  // Create a grid of all of the leaf nodes
+  childLeaves = new QList<LeafNode*>();
+  QGridLayout* grid = new QGridLayout();
+  grid->setSpacing(2);
+  for (int i = 0; i < leaves->size(); ++i) {
+    PositionedLeaf* pl = leaves->at(i);
+    childLeaves->append(pl->leaf);
+    grid->addWidget(pl->leaf, pl->y, pl->x, pl->h, pl->w);
+  }
+  setLayout(grid);
+}
+
 NodeGrid::NodeGrid(QList<LeafGroup*>* leafGroups) : QWidget() {
   
   QVBoxLayout* layout = new QVBoxLayout();

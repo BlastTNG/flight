@@ -29,6 +29,7 @@ private:
   GetData::Dirfile& dirfile; // ref to the dirfile
   int lastNumFrames; // the number of frames that were in the dirfile in the last update
 
+  NodeGrid* generateFromGridFormat(GetData::Dirfile* dirfile, json config);
   NodeGrid* generateGrid(GetData::Dirfile* dirfile, json config);
   QList<LeafNode*>* getLeavesForPrefix(GetData::Dirfile* dirfile, string prefix, double lo, double hi);
   void generateViewMap(GetData::Dirfile* dirfile, json config);
