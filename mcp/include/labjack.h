@@ -36,5 +36,6 @@
 void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
 uint16_t labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);
+void store_labjack_data(void);
 
 #endif /* LABJACK_H_ */

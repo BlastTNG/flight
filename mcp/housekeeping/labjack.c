@@ -82,6 +82,13 @@
 // Maximum number of addresses that can be targeted in stream mode.
 #define MAX_NUM_ADDRESSES 512
 
+// For now we only have one cyro readout Labjack
+// TODO(laura): Integrate PSS and OF Labjacks
+#define NUM_LABJACKS 1
+
+// Max Number of Analog Inputs
+#define NUM_LABJACK_AIN 14
+
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 
@@ -173,6 +180,7 @@ typedef struct {
     ph_job_t connect_job;
     ph_sock_t *sock;
     void *conn_data;
+    char channel_postfix[16];
 } labjack_state_t;
 
 typedef struct {
@@ -191,11 +199,12 @@ typedef struct {
 } labjack_trans_t;
 
 
-static labjack_state_t state[2] = {
+static labjack_state_t state[NUM_LABJACKS] = {
     {
           .address = "labjack1",
           .port = LJ_DATA_PORT,
-          .DAC = {0, 0}
+          .DAC = {0, 0},
+          .channel_postfix = "_cryo_labjack"
     }
 };
 
@@ -936,4 +945,28 @@ void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_p
     state[m_which].conn_data = data_state;
 
     ph_job_dispatch_now(&(state[m_which].connect_job));
+}
+
+void store_labjack_data(void)
+{
+    static channel_t *LabjackCryoAINAddr[NUM_LABJACKS][NUM_LABJACK_AIN];
+	char channel_name[128] = {0};
+	int i, j;
+    static int firsttime = 1;
+
+    if (firsttime) {
+        firsttime = 0;
+        for (i = 0; i < NUM_LABJACKS; i++) {
+            for (j = 0; j < NUM_LABJACK_AIN; j++) {
+                snprintf(channel_name, sizeof(channel_name), "ain%02d%s", j, state[i].channel_postfix);
+                LabjackCryoAINAddr[i][j] = channels_find_by_name(channel_name);
+            }
+        }
+    }
+
+    for (i = 0; i < NUM_LABJACKS; i++) {
+        for (j = 0; j < NUM_LABJACK_AIN; j++) {
+            SET_SCALED_VALUE(LabjackCryoAINAddr[i][j], state[i].AIN[j]);
+        }
+    }
 }
