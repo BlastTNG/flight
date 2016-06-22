@@ -179,7 +179,7 @@ typedef struct {
     struct timeval timeout;
     ph_job_t connect_job;
     ph_sock_t *sock;
-    void *conn_data;
+    void *conn_data; // points to a labjack_data_t structure.
     char channel_postfix[16];
 } labjack_state_t;
 
@@ -425,13 +425,13 @@ int labjack_get_cal(labjack_state_t *m_state, labjack_device_cal_t *devCal)
 void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t *m_labjack_cal,
     uint32_t *m_gainlist, uint16_t n_data)
 {
-    uint16_t *raw_data = (uint16_t*) m_state->conn_data;
+    labjack_data_t *raw_data = (labjack_data_t*) m_state->conn_data;
     int ret;
     for (int i = 0; i < n_data; i++) {
-        if (raw_data[i] == 0xffff) {
+        if (raw_data->data[i] == 0xffff) {
             blast_err("Labjack channel AIN%d received a dummy sample indicating we received an incomplete scan!", i);
         } else {
-            ret = labjack_get_volts(m_labjack_cal, raw_data[i], m_gainlist[i], &(m_state->AIN[i]));
+            ret = labjack_get_volts(m_labjack_cal, raw_data->data[i], m_gainlist[i], &(m_state->AIN[i]));
         }
     }
 }
@@ -729,7 +729,8 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
 
     // Correct for the fact that Labjack readout is MSB first.
 	ret = labjack_data_word_swap(data_pkt, read_buf_size);
-
+    blast_info("data_pkt->data[0],... = %u, %u, %u, %u", data_pkt->data[0], data_pkt->data[1],
+        data_pkt->data[2], data_pkt->data[3]);
     if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
         blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
                    state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
@@ -753,6 +754,8 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
     }
 
     memcpy(state_data->data, data_pkt->data, state_data->num_channels * sizeof(uint16_t));
+    blast_info("state_data->data[0],... = %u, %u, %u, %u", state_data->data[0], state_data->data[1],
+        state_data->data[2], state_data->data[3]);
 
     // Convert digital data into voltages.
     if (state->calibration_read) {
@@ -967,6 +970,7 @@ void store_labjack_data(void)
     for (i = 0; i < NUM_LABJACKS; i++) {
         for (j = 0; j < NUM_LABJACK_AIN; j++) {
             SET_SCALED_VALUE(LabjackCryoAINAddr[i][j], state[i].AIN[j]);
+                blast_info("Writing %f to ain%i", state[i].AIN[j], j);
         }
     }
 }
