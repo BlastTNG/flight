@@ -79,6 +79,10 @@
 #define LJ_CMD_PORT 502
 #define LJ_DATA_PORT 702
 
+// TODO(laura): make this commandable from the call in mcp.c
+#define LJ_STREAM_RATE 10.0 // Streaming Rate (Hz)
+
+
 // Maximum number of addresses that can be targeted in stream mode.
 #define MAX_NUM_ADDRESSES 512
 
@@ -296,8 +300,6 @@ int labjack_get_volts(const labjack_device_cal_t *devCal, const uint16_t data_ra
 // if(*volts < devCal->HS[gainIndex].Center) {
     if (devCal->HS[gainIndex].Center > 0) {
 		*volts = (devCal->HS[gainIndex].Center - data_raw) * devCal->HS[gainIndex].NSlope;
-        blast_info("data_raw = %u, gainIndex = %i, HS.Center = %f,  HS.NSlope = %f, volts = %f",
-            data_raw, gainIndex, devCal->HS[gainIndex].Center, devCal->HS[gainIndex].NSlope, *volts);
 	} else {
 		*volts = (data_raw - devCal->HS[gainIndex].Center) * devCal->HS[gainIndex].PSlope;
 	}
@@ -445,7 +447,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     labjack_data_t *state_data = (labjack_data_t*)m_state->conn_data;
 
     // Configure stream
-    float scanRate = 1.0f; // Scans per second. Samples per second = scanRate * numAddresses
+    float scanRate = LJ_STREAM_RATE; // Scans per second. Samples per second = scanRate * numAddresses
     unsigned int numAddresses = state_data->num_channels;
     unsigned int samplesPerPacket = numAddresses*state_data->scans_per_packet;
     float settling = 10.0; // 10 microseconds
@@ -482,8 +484,6 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         return;
     }
     labjack_set_short(numAddresses, data);
-    blast_info("Setting number of addressed to read.  numAddresses = %d (%d, %d in Modbus format)",
-        numAddresses, data[0], data[1]);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_ADDRESSES_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!have_warned_write_reg) {
@@ -661,20 +661,10 @@ int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
 	data_swapped = ntohs(m_data_pkt->header.addl_status);
     m_data_pkt->header.addl_status = data_swapped;
 
-// Debugging print statements.  Print header
-    blast_info("New Packet! trans_id: %d, proto_id: %d, length: %d, unit_id: %d",
-        m_data_pkt->header.resp.trans_id, m_data_pkt->header.resp.proto_id,
-        m_data_pkt->header.resp.length, m_data_pkt->header.resp.unit_id);
-    blast_info("fn_id: %d, type: %d, reserved: %d, backlog: %d, status: %d, addl_status: %d",
-        m_data_pkt->header.resp.fn_id, m_data_pkt->header.resp.type,
-        m_data_pkt->header.reserved, m_data_pkt->header.backlog,
-        m_data_pkt->header.status, m_data_pkt->header.addl_status);
-
 // Correct the streamed data
     for (int i = 0; i < n_data; i++) {
         data_swapped = ntohs(m_data_pkt->data[i]);
         m_data_pkt->data[i] = data_swapped;
-        blast_info("stream data[%d] = %d", i, m_data_pkt->data[i]); // Debugging purposes
     }
 
     have_warned = 0;
@@ -724,13 +714,10 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
 	read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
     buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
     if (!buf) return; /// We do not have enough data
-	blast_info("Read %u bytes", (unsigned int) read_buf_size);
     data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
 
     // Correct for the fact that Labjack readout is MSB first.
 	ret = labjack_data_word_swap(data_pkt, read_buf_size);
-    blast_info("data_pkt->data[0],... = %u, %u, %u, %u", data_pkt->data[0], data_pkt->data[1],
-        data_pkt->data[2], data_pkt->data[3]);
     if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
         blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
                    state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
@@ -754,15 +741,10 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
     }
 
     memcpy(state_data->data, data_pkt->data, state_data->num_channels * sizeof(uint16_t));
-    blast_info("state_data->data[0],... = %u, %u, %u, %u", state_data->data[0], state_data->data[1],
-        state_data->data[2], state_data->data[3]);
 
     // Convert digital data into voltages.
     if (state->calibration_read) {
-        blast_info("Calibration read, converting digital data to voltages.");
         labjack_convert_stream_data(state, &labjack_cal, gainList, state_data->num_channels);
-    } else {
-        blast_info("Calibration not read, will not convert digital data to voltages.");
     }
     ph_buf_delref(buf);
 }
@@ -970,7 +952,6 @@ void store_labjack_data(void)
     for (i = 0; i < NUM_LABJACKS; i++) {
         for (j = 0; j < NUM_LABJACK_AIN; j++) {
             SET_SCALED_VALUE(LabjackCryoAINAddr[i][j], state[i].AIN[j]);
-                blast_info("Writing %f to ain%i", state[i].AIN[j], j);
         }
     }
 }
