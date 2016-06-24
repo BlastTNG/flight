@@ -33,6 +33,11 @@
 #define LABJACK_CRYO_NCHAN 14 // Number of Channels to stream (14 = all analog input channels)
 #define LABJACK_CRYO_SPP 1 // Number of scans to readout per streaming packet
 
+// These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
+// TODO(ian): Update these for the thermometers and channels we have.
+#define LJ_D_CHARCOAL_HS_IND 0
+#define LJ_R_FPA_1K_IND 2
+
 void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
 uint16_t labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);

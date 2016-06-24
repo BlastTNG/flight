@@ -134,7 +134,9 @@ void read_thermometers(void) {
     }
 
     // these labjack channels need to all be changed once set up
-    SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    // The second argument of labjack_get_value is Index of the AIN used to read out the voltage.
+    // These are defined in labjack.h
+    SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO, LJ_D_CHARCOAL_HS_IND));
     SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(diode_250fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(diode_hwp_Addr, labjack_get_value(LABJACK_CRYO, 0));
@@ -151,7 +153,7 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(diode_vcs2_hx_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO, 0));
     // above are the diodes, below, the ROXes
-    SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO, 0));
+    SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO, LJ_R_FPA_1K_IND));
     SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO, 0));

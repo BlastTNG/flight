@@ -242,14 +242,14 @@ void labjack_set_short(uint32_t short_in, uint16_t* data)
 	data[0] = (short_in & 0xff00) >> 16;
 }
 
-uint16_t labjack_get_value(int m_labjack, int m_channel)
+float labjack_get_value(int m_labjack, int m_channel)
 {
     labjack_data_t *state_data = (labjack_data_t*)state[m_labjack].conn_data;
     if (m_channel > state_data->num_channels) {
         blast_err("Invalid channel %d requested from '%s'", m_channel, state[m_labjack].address);
         return 0;
     }
-    return state_data->data[m_channel];
+    return state[m_labjack].AIN[m_channel];
 }
 
 int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
