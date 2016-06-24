@@ -845,7 +845,7 @@ channel_t channel_list[] =
     { "dio_heaters",          SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_100HZ, U_NONE, 0 },
 
     /** Cyro Labjack Analog Inputs */
-    { "ain00_cryo_labjack",    M_16LJAIN,         0.0,    TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "ain00_cryo_labjack",    M_16LJAIN,         B_16LJAIN,    TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "ain01_cryo_labjack",    M_16LJAIN,         B_16LJAIN,    TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "ain02_cryo_labjack",    M_16LJAIN,         B_16LJAIN,    TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "ain03_cryo_labjack",    M_16LJAIN,         B_16LJAIN,    TYPE_UINT16, RATE_5HZ, U_NONE, 0 },

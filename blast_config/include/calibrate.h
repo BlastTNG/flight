@@ -51,7 +51,7 @@ extern "C" {
 
 /* Gains and offsets for the labjack AIN channels: cal = (counts + B)*M */
 #define M_16LJAIN (10.8/32768.0)
-#define B_16LJAIN (10.8)
+#define B_16LJAIN (-10.8)
 
 /* bare thermometer conversion to Volts. No negative values allowed */
 #define M_16T (4.096/32768.0/2.0)

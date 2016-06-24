@@ -952,6 +952,7 @@ void store_labjack_data(void)
     for (i = 0; i < NUM_LABJACKS; i++) {
         for (j = 0; j < NUM_LABJACK_AIN; j++) {
             SET_SCALED_VALUE(LabjackCryoAINAddr[i][j], state[i].AIN[j]);
+//            blast_info("ain%02d%s = %f", j, state[i].channel_postfix, state[i].AIN[j]);
         }
     }
 }
