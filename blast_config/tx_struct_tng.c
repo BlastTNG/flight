@@ -67,31 +67,31 @@
 
 channel_t channel_list[] =
   {
-    { "tr_fpa_1k",     SCALE(CRYO_M5), TYPE_UINT32, RATE_1HZ, U_R_O, 0 }, // change these scales at some point
-    { "tr_250_fpa",          SCALE(CRYO_M4), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-    { "tr_1k_plate",     SCALE(CRYO_HWPR), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-    { "tr_300mk_strap",  SCALE(CRYO_300MK_STRAP), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-    { "tr_350_fpa",     SCALE(CRYO_HORN_250), TYPE_UINT32, RATE_1HZ, U_R_O, 0 }, // on 250 1k stage currently
-    { "tr_he4_pot",      SCALE(CRYO_HE4_POT), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-    { "tr_he3_fridge",   SCALE(CRYO_HE3_FRIDGE), TYPE_UINT32, RATE_1HZ, U_R_O, 0 },
-    { "tr_500_fpa",   SCALE(CRYO_HORN_500), TYPE_UINT32, RATE_1HZ, U_R_O, 0 }, // mapped to a resistor currently
+    { "tr_fpa_1k",     SCALE(CRYO_M5), TYPE_UINT16, RATE_1HZ, U_R_O, 0 }, // change these scales at some point
+    { "tr_250_fpa",          SCALE(CRYO_M4), TYPE_UINT16, RATE_1HZ, U_R_O, 0 },
+    { "tr_1k_plate",     SCALE(CRYO_HWPR), TYPE_UINT16, RATE_1HZ, U_R_O, 0 },
+    { "tr_300mk_strap",  SCALE(CRYO_300MK_STRAP), TYPE_UINT16, RATE_1HZ, U_R_O, 0 },
+    { "tr_350_fpa",     SCALE(CRYO_HORN_250), TYPE_UINT16, RATE_1HZ, U_R_O, 0 }, // on 250 1k stage currently
+    { "tr_he4_pot",      SCALE(CRYO_HE4_POT), TYPE_UINT16, RATE_1HZ, U_R_O, 0 },
+    { "tr_he3_fridge",   SCALE(CRYO_HE3_FRIDGE), TYPE_UINT16, RATE_1HZ, U_R_O, 0 },
+    { "tr_500_fpa",   SCALE(CRYO_HORN_500), TYPE_UINT16, RATE_1HZ, U_R_O, 0 }, // mapped to a resistor currently
 
-    { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_250fpa",        SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_hwp",           SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_vcs1_hx",       SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_1k_fridge",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_4k_plate",      SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_vcs1_filt",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_m3",            SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_charcoal",      SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_ob_filter",     SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_vcs2_plate",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_m4",            SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_4k_filt",       SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_vcs2_hx",       SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
-    { "td_vcs1_plate",    SCALE(CRYO_D), TYPE_UINT32, RATE_1HZ, U_V_V, 0 },
+    { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_250fpa",        SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_hwp",           SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_vcs1_hx",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_1k_fridge",     SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_4k_plate",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_vcs1_filt",     SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_m3",            SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_charcoal",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_ob_filter",     SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_vcs2_plate",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_m4",            SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_4k_filt",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_vcs2_hx",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "td_vcs1_plate",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     {"x0_point_az_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_point_az", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },

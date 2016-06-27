@@ -136,6 +136,7 @@ void read_thermometers(void) {
     // these labjack channels need to all be changed once set up
     // The second argument of labjack_get_value is Index of the AIN used to read out the voltage.
     // These are defined in labjack.h
+    // we need to
     SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO, LJ_D_CHARCOAL_HS_IND));
     SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO, 0));
     SET_SCALED_VALUE(diode_250fpa_Addr, labjack_get_value(LABJACK_CRYO, 0));
