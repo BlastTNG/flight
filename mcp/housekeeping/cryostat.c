@@ -39,6 +39,7 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "labjack.h"
+#include "blast.h"
 
 /* Heater control bits (BIAS_D G4) */
 #define HEAT_HELIUM_LEVEL    0x0001
