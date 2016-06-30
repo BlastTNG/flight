@@ -488,7 +488,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TD_250FPA_INT", "TD_250FPA", 0.2, 0),
     LINCOM("TD_HWP_INT", "TD_HWP", 0.2, 0),
     LINCOM("TD_VCS1_HX_INT", "TD_VCS1_HX", 0.2, 0),
-    LINCOM("TD_1K_FRIDGE_INT", "TD_1K_FRIDGE", 0.2, 0),
+    LINCOM("TD_1K_FRIDGE_INT", "TD_1K_FRIDGE", 0.125, 0),
     LINCOM("TD_4K_plate_INT", "TD_4K_PLATE", 0.2, 0),
     LINCOM("TD_VCS1_FILT_INT", "TD_VCS1_FILT", 0.2, 0),
     LINCOM("TD_M3_INT", "TD_M3", 0.2, 0),
