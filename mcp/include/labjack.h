@@ -36,7 +36,7 @@
 
 // Define all of the cryo channels here
 // labjack 1
-#define DIODE_VCS2_FILT 11
+#define DIODE_VCS2_FILT 3
 #define DIODE_250FPA 0
 #define DIODE_HWP 9
 #define DIODE_VCS1_HX 6
@@ -44,7 +44,7 @@
 #define DIODE_VCS1_FILT 2
 #define DIODE_M3 8
 #define DIODE_OB_FILTER 5
-#define DIODE_VCS2_PLATE 3
+#define DIODE_VCS2_PLATE 11
 #define DIODE_M4 1
 #define DIODE_4K_FILT 4
 #define DIODE_VCS2_HX 7
