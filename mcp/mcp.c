@@ -534,9 +534,9 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  labjack_networking_init(LABJACK_CRYO, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
 
-  initialize_labjack_commands(LABJACK_CRYO);
+  initialize_labjack_commands(LABJACK_CRYO_1);
 
   initialize_CPU_sensors();
 

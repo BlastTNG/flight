@@ -29,7 +29,8 @@
 
 #include <stdint.h>
 
-#define LABJACK_CRYO 0
+#define LABJACK_CRYO_1 0
+#define LABJACK_CRYO_2 1
 #define LABJACK_CRYO_NCHAN 14 // Number of Channels to stream (14 = all analog input channels)
 #define LABJACK_CRYO_SPP 1 // Number of scans to readout per streaming packet
 
