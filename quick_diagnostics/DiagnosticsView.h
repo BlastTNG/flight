@@ -29,9 +29,10 @@ private:
   GetData::Dirfile& dirfile; // ref to the dirfile
   int lastNumFrames; // the number of frames that were in the dirfile in the last update
 
-  NodeGrid* generateFromGridFormat(GetData::Dirfile* dirfile, json config);
-  NodeGrid* generateGrid(GetData::Dirfile* dirfile, json config);
+  NodeGrid* generateWithManualLayout(GetData::Dirfile* dirfile, json config);
+  NodeGrid* generateWithAutoLayout(GetData::Dirfile* dirfile, json config);
   QList<LeafNode*>* getLeavesForPrefix(GetData::Dirfile* dirfile, string prefix, double lo, double hi);
+  string getViewLayout(json view);
   void generateViewMap(GetData::Dirfile* dirfile, json config);
 public slots:
   void pushView(NodeGrid* nextView); // push this view to the stackLayout

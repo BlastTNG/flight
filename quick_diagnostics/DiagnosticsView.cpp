@@ -105,7 +105,7 @@ QList<LeafNode*>* DiagnosticsView::getLeavesForPrefix(GetData::Dirfile* dirfile,
   return list;
 }
 
-NodeGrid* DiagnosticsView::generateFromGridFormat(GetData::Dirfile* dirfile, json config) {
+NodeGrid* DiagnosticsView::generateWithManualLayout(GetData::Dirfile* dirfile, json config) {
 
   string viewName;
   QList<PositionedLeaf*>* leaves = new QList<PositionedLeaf*>();
@@ -114,6 +114,11 @@ NodeGrid* DiagnosticsView::generateFromGridFormat(GetData::Dirfile* dirfile, jso
     // Iterate through the json object, parsing the data into leaves
     for (json::iterator it = config.begin(); it != config.end(); ++it) {
       json element = *it;
+
+      // Skip primitive elements (specifically, "layout")
+      if (element.is_primitive()) {
+        continue;
+      }
 
       string* fieldCode = new string(it.key());
       double lo = element["lo"].get<double>();
@@ -143,7 +148,7 @@ NodeGrid* DiagnosticsView::generateFromGridFormat(GetData::Dirfile* dirfile, jso
 
   unusedFields is a ref to a list of all of the fields that have not yet been used in any node 
 */
-NodeGrid* DiagnosticsView::generateGrid(GetData::Dirfile* dirfile, json config) {
+NodeGrid* DiagnosticsView::generateWithAutoLayout(GetData::Dirfile* dirfile, json config) {
     
   // Generate a list of widgets by iterating through the json object.
   // These widgets will be the cells of a GridLayout
@@ -156,7 +161,12 @@ NodeGrid* DiagnosticsView::generateGrid(GetData::Dirfile* dirfile, json config) 
       errorList->append(new QString("Views cannot be nested inside of other views"));
       break;
     }
-      
+
+    // Skip primitive elements (specifically, "layout")
+    if (element.is_primitive()) {
+      continue;
+    }
+
     // In case an exception is thrown, prepare a string
     QString* expStr = new QString("Exception thrown for \"");
     expStr->append(QString::fromStdString(it.key()));
@@ -186,6 +196,18 @@ NodeGrid* DiagnosticsView::generateGrid(GetData::Dirfile* dirfile, json config) 
   return nodeGrid;
 }
 
+string DiagnosticsView::getViewLayout(json view) {
+  string layout = "";
+  try {
+    layout = view["layout"].get<string>();
+  } catch(std::domain_error& e) {
+    layout = "error";
+  } catch(std::out_of_range& e) {
+    layout = "error";
+  }
+  return layout;
+}
+
 void DiagnosticsView::generateViewMap(GetData::Dirfile* dirfile, json config) {
 
   // Iterate through all of the views defined in the json file, generating them and adding them to the viewMap as we go
@@ -193,8 +215,23 @@ void DiagnosticsView::generateViewMap(GetData::Dirfile* dirfile, json config) {
     json element = *it;
     string key = it.key();
     QString viewName = QString::fromStdString(key);
-    NodeGrid* view = generateFromGridFormat(dirfile, it.value());
-    viewMap->insert(viewName, view);
+    
+    // Generate the layout based on its desired layout
+    NodeGrid* view;
+    string layout = getViewLayout(it.value());
+    if (layout.compare("manual") == 0) {
+      view = generateWithManualLayout(dirfile, it.value());  
+      viewMap->insert(viewName, view);
+    } 
+    else if (layout.compare("auto") == 0) {
+      view = generateWithAutoLayout(dirfile, it.value());
+      viewMap->insert(viewName, view);
+    }
+    else {
+      QString* s = new QString("Invalid format for view ");
+      s->append(viewName);
+      errorList->append(s); 
+    }
   }
 }
 
