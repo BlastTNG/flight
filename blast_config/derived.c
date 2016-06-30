@@ -483,7 +483,8 @@ derived_tng_t derived_list[] = {
 
   COMMENT("Cryo Table Lookups"),
   COMMENT("Diodes"),
-    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS", LUT_DIR "dt600.txt"),
+    LINCOM("TD_charcoal_hs_int", "TD_CHARCOAL_HS", 0.2, 0),
+    LINTERP("Td_charcoal_hs", "TD_charcoal_hs_int", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_vcs2_filt", "TD_VCS2_FILT", LUT_DIR "dt600.txt"),
     LINTERP("Td_250fpa", "TD_250FPA", LUT_DIR "dt600.txt"),
     LINTERP("Td_hwp", "TD_HWP", LUT_DIR "dt600.txt"),

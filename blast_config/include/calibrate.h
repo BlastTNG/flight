@@ -116,8 +116,8 @@ extern "C" {
 #define CRYO_A2_B (-1.032198E1 )
 /* Cryo Diode Voltage Calibration */
 /* Modified by Jeff @ Penn, October 6 2009 */
-#define CRYO_D_M ( 4.8023774e-09)
-#define CRYO_D_B (-1.0317770e+01)
+#define CRYO_D_M ( 10.8/32768.0)
+#define CRYO_D_B (-10.8)
 /* Cryo ROX resistance calibrations */
 /* Measured May 12 2010 */
 #define CRYO_HE3_FRIDGE_M    (1.1535865e-05)
