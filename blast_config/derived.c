@@ -483,7 +483,7 @@ derived_tng_t derived_list[] = {
 
   COMMENT("Cryo Table Lookups"),
   COMMENT("Diodes"),
-    LINCOM("TD_CHARCOAL_HS_INT", "TD_CHARCOAL_HS", 0.2, 0),
+    LINCOM("TD_CHARCOAL_HS_INT", "TD_CHARCOAL_HS", 0.125, 0),
     LINCOM("TD_VCS2_FILT_INT", "TD_VCS2_FILT", 0.2, 0),
     LINCOM("TD_250FPA_INT", "TD_250FPA", 0.2, 0),
     LINCOM("TD_HWP_INT", "TD_HWP", 0.2, 0),
