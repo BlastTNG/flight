@@ -17,6 +17,7 @@ DetailsView::DetailsView() : QWidget() {
   layout->setSpacing(1);
   layout->setColumnStretch(0, 1);
   layout->setColumnStretch(1, 3);
+  layout->setRowMinimumHeight(4, 40); // give the errors row more space
   QMapIterator<QString, int> i(*indexMap);
   valueMap = new QMap<QString, QLabel*>();
   QFont font;
