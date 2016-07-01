@@ -5,6 +5,10 @@ using json = nlohmann::json;
 
 void generateSelector(QString defaultPath, SetupView* parent, QString fileExt, int row, QGridLayout* layout) {
   QFileDialog* dialog = new QFileDialog(parent, "Select " + fileExt, "", "(*." + fileExt + ")");
+  if (fileExt.toStdString().compare("dirfile") == 0) {
+    dialog->setFileMode(QFileDialog::Directory);
+  }
+
   QPushButton* btn = new QPushButton("Select " + fileExt);
   QLabel* pathName = new QLabel(defaultPath);
 
