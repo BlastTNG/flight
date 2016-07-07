@@ -38,6 +38,7 @@
 #include "mcp.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
+#include "balance.h"
 #include "tx.h"
 #include "hwpr.h"
 
@@ -49,10 +50,11 @@ extern int16_t InCharge;		/* tx.c */
 #define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
 #define NACT 7
-#define LOCKNUM 5
-#define BALANCENUM 4
-#define HWPRNUM 6
-#define SHUTTERNUM 7
+
+/* Index for each stepper for structures, name, id */
+#define LOCKNUM 4
+#define HWPRNUM 5
+#define SHUTTERNUM 6
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
 				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter"};
 static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
@@ -146,6 +148,11 @@ static int act_trim_flag_wait = 0;
 static double t_primary = -1, t_secondary = -1;
 static double focus = -1;	  /* set in ab thread, read in fc thread */
 static double correction = 0;     /* set in fc thread, read in ab thread */
+
+/* Return the appropriate address to send commands to.  Used by balance.c, hwpr.c */
+int GetActAddr(int ind) {
+    return id[ind];
+}
 
 /************************************************************************/
 /*                                                                      */
@@ -1463,14 +1470,19 @@ void *ActuatorBus(void *param)
         blast_info("Actuator %i, id[i] =%i", i, id[i]);
         blast_info("name[i] = %s", name[i]);
         EZBus_Add(&bus, id[i], name[i]);
-        if (i == LOCKNUM)
+        if (i == LOCKNUM) {
+        	blast_info("Setting lock preamble");
             EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
-        else if (i == SHUTTERNUM)
+        } else if (i == SHUTTERNUM) {
+        	blast_info("Setting shutter preamble");
             EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
-        else if (id[i] == HWPR_ADDR)
+        } else if (i == HWPRNUM) {
+        	blast_info("Setting HWPR preamble");
             EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
-        else
+        } else {
+        	blast_info("Setting default actuator preamble");
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
+        }
     }
 
     all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);

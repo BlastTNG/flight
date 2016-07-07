@@ -2174,6 +2174,11 @@ void InitCommandData()
     CommandData.hwpr.move_i = 20;
     CommandData.hwpr.hold_i = 0;
 
+    CommandData.balance.vel = 1600;
+    CommandData.balance.acc = 4;
+    CommandData.balance.move_i = 20;
+    CommandData.balance.hold_i = 0;
+
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */
     CommandData.hwpr.pos[3] = 0.3418;

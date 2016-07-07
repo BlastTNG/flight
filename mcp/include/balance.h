@@ -21,6 +21,9 @@
 #ifndef INCLUDE_BALANCE_H_
 #define INCLUDE_BALANCE_H_
 
+/* Index of the balance motor in the Actbus structures */
+#define BALANCENUM 3
+
 static void DoBalance(void);
 
 #endif /* BALANCE_H_ */

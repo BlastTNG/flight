@@ -32,7 +32,30 @@
 #include "tx.h" /* InCharge */
 #include "balance.h"
 
+typedef struct {
+	uint16_t init;
+	int addr;
+	int ind;
+} balance_state_t;
+
 static void DoBalance(void)
 {
+	static balance_state_t balance_state;
     static int firsttime = 1;
+
+    if (firsttime) {
+        balance_state.init = 0;
+        balance_state.ind = BALANCENUM;
+        balance_state.addr = GetActAddr(balance_state.ind);
+        firsttime = 0;
+    }
+
+    while (!balance_state.init) {
+        usleep(100);
+        /* update the HWPR move parameters */
+//        EZBus_SetVel(bus, BAL_ADDR, CommandData.balance.vel);
+//        EZBus_SetAccel(bus, BAL_ADDR, CommandData.balance.acc);
+//        EZBus_SetIMove(bus, BAL_ADDR, CommandData.balance.move_i);
+//        EZBus_SetIHold(bus, BAL_ADDR, CommandData.balance.hold_i);
+    }
 }
