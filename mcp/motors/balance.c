@@ -38,7 +38,7 @@ typedef struct {
 	int ind;
 } balance_state_t;
 
-static void DoBalance(void)
+void DoBalance(struct ezbus* bus)
 {
 	static balance_state_t balance_state;
     static int firsttime = 1;
@@ -51,11 +51,10 @@ static void DoBalance(void)
     }
 
     while (!balance_state.init) {
-        usleep(100);
         /* update the HWPR move parameters */
-//        EZBus_SetVel(bus, BAL_ADDR, CommandData.balance.vel);
-//        EZBus_SetAccel(bus, BAL_ADDR, CommandData.balance.acc);
-//        EZBus_SetIMove(bus, BAL_ADDR, CommandData.balance.move_i);
-//        EZBus_SetIHold(bus, BAL_ADDR, CommandData.balance.hold_i);
+        EZBus_SetVel(bus, balance_state.addr, CommandData.balance.vel);
+        EZBus_SetAccel(bus, balance_state.addr, CommandData.balance.acc);
+        EZBus_SetIMove(bus, balance_state.addr, CommandData.balance.move_i);
+        EZBus_SetIHold(bus, balance_state.addr, CommandData.balance.hold_i);
     }
 }

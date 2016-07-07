@@ -24,6 +24,9 @@
 /* Index of the balance motor in the Actbus structures */
 #define BALANCENUM 3
 
-static void DoBalance(void);
+// TODO(laura): Change this once we test different acceleration/velocity parameters.
+#define BALANCE_PREAMBLE "j256"
+
+void DoBalance(struct ezbus* bus);
 
 #endif /* BALANCE_H_ */

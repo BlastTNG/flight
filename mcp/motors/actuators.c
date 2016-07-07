@@ -62,7 +62,6 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 #define ID_ALL_ACT  EZ_WHO_G1_4
 // set microstep resolution
 #define LOCK_PREAMBLE "j256"
-#define BALANCE_PREAMBLE "j256"
 #define SHUTTER_PREAMBLE "j64"
 // set encoder/microstep ratio (aE25600), coarse correction band (aC50),
 // fine correction tolerance (ac%d), stall retries (au5),
@@ -1470,17 +1469,15 @@ void *ActuatorBus(void *param)
         blast_info("Actuator %i, id[i] =%i", i, id[i]);
         blast_info("name[i] = %s", name[i]);
         EZBus_Add(&bus, id[i], name[i]);
-        if (i == LOCKNUM) {
-        	blast_info("Setting lock preamble");
+        if (i == BALANCENUM) {
+            EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
+        } else if (i == LOCKNUM) {
             EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
         } else if (i == SHUTTERNUM) {
-        	blast_info("Setting shutter preamble");
             EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
         } else if (i == HWPRNUM) {
-        	blast_info("Setting HWPR preamble");
             EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
         } else {
-        	blast_info("Setting default actuator preamble");
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
         }
     }
@@ -1559,6 +1556,15 @@ void *ActuatorBus(void *param)
             EZBus_ForceRepoll(&bus, HWPR_ADDR);
             all_ok = 0;
             actuators_init &= ~(0x1 << HWPRNUM);
+        }
+
+        if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
+            DoBalance(&bus);
+            actuators_init |= 0x1 << BALANCENUM;
+        } else {
+            EZBus_ForceRepoll(&bus, id[BALANCENUM]);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << BALANCENUM);
         }
 
         usleep(10000);
