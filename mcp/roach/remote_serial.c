@@ -33,6 +33,9 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
+//TODO[Laura/Sam] Because this doesn't compile (isn't used as of 07/06/16)
+#if 0
+
 static const char addresses[4][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63", "192.168.40.64"};
 static const uint16_t port = 10001;
 static const uint32_t min_backoff_sec = 5;
@@ -163,6 +166,8 @@ int remote_serial_flush(remote_serial_t *m_serial)
  * @param m_elapsed Unused
  * @param m_data Pointer to our Remote Serial State variable
  */
+
+
 static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_sockaddr_t *m_addr,
                       struct timeval *m_elapsed, void *m_data)
 {
@@ -210,6 +215,9 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
  * @param m_why Unused
  * @param m_data Pointer to the Remote Serial State variable
  */
+
+//TODO[LAURA/SAM] wrong number of arguments in phenom call
+
 static void connect_remote_serial(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 {
     ph_unused_parameter(m_job);
@@ -248,3 +256,5 @@ remote_serial_t *remote_serial_init(int m_which, int m_port)
 
     return new_port;
 }
+
+#endif
