@@ -1019,11 +1019,6 @@ static void DoLock(void)
     } while (action != LA_EXIT);
 }
 
-static void DoBalance(void)
-{
-    static int firsttime = 1;
-}
-
 /************************************************************************/
 /*                                                                      */
 /*    Frame Logic: Write data to the frame, called from main thread     */
