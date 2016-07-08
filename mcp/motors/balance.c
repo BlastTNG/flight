@@ -50,11 +50,9 @@ void DoBalance(struct ezbus* bus)
         firsttime = 0;
     }
 
-    while (!balance_state.init) {
-        /* update the HWPR move parameters */
-        EZBus_SetVel(bus, balance_state.addr, CommandData.balance.vel);
-        EZBus_SetAccel(bus, balance_state.addr, CommandData.balance.acc);
-        EZBus_SetIMove(bus, balance_state.addr, CommandData.balance.move_i);
-        EZBus_SetIHold(bus, balance_state.addr, CommandData.balance.hold_i);
-    }
+        /* update the Balance move parameters */
+    EZBus_SetVel(bus, balance_state.addr, CommandData.balance.vel);
+    EZBus_SetAccel(bus, balance_state.addr, CommandData.balance.acc);
+    EZBus_SetIMove(bus, balance_state.addr, CommandData.balance.move_i);
+    EZBus_SetIHold(bus, balance_state.addr, CommandData.balance.hold_i);
 }
