@@ -30,6 +30,7 @@
 
 #include "blast.h"
 #include "roach.h"
+#define MS_TIMEOUT 20000
 
 const char *qdr_ctl[2] = { "qdr0_ctrl",
                            "qdr1_ctrl" };
@@ -271,7 +272,7 @@ static void qdr_delay_in_step(roach_state_t *m_roach, int m_whichqdr, uint64_t m
 uint32_t qdr_delay_clk_get(roach_state_t *m_roach, int m_whichqdr)
 {
     uint32_t data;
-    roach_read_data(m_roach, (uint8_t*)&data, qdr_ctl[m_whichqdr], 8, sizeof(data));
+    roach_read_data(m_roach, (uint8_t*)&data, qdr_ctl[m_whichqdr], 8, sizeof(data), MS_TIMEOUT);
     data = ntohl(data);
     if ((data & 0x1f) != ((data & 0x3e0) >> 5)) {
         blast_err("Invalid counter values in %s of %s", qdr_ctl[m_whichqdr], roach_get_name(m_roach));
@@ -292,8 +293,8 @@ static bool qdr_cal_check(roach_state_t *m_roach, int m_whichqdr)
     uint32_t check_data[256];
 
     for (int i = 0; i < 6; i++) {
-        roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22);
-        roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i]);
+        roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22, MS_TIMEOUT);
+        roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i], MS_TIMEOUT);
         for (size_t j = 0; j < cal_data_len[i]; j++) {
             if (check_data[j] != cal_data[i][j]) {
                 blast_err("Calibration check failed for %s on %s", qdr_mem[m_whichqdr], roach_get_name(m_roach));
@@ -316,8 +317,8 @@ static bool qdr_cal_check_any_good(roach_state_t *m_roach, int m_whichqdr)
     uint32_t fail_pat = 0;
 
     for (int i = 0; i < 6; i++) {
-        roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22);
-        roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i]);
+        roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22, MS_TIMEOUT);
+        roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i], MS_TIMEOUT);
         for (size_t j = 0; j < cal_data_len[i]; j++) {
             fail_pat |= (check_data[j] ^ cal_data[i][j]);
         }
@@ -392,8 +393,8 @@ static bool qdr_find_in_delays(roach_state_t *m_roach, int m_whichqdr, int m_ind
         uint32_t fail_pat = 0;
 
         for (int i = 0; i < 6; i++) {
-            roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22);
-            roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i]);
+            roach_write_data(m_roach, qdr_mem[m_whichqdr], (uint8_t*)cal_data[i], cal_data_len[i], 1 << 22, MS_TIMEOUT);
+            roach_read_data(m_roach, (uint8_t*)check_data, qdr_mem[m_whichqdr], 1 << 22, cal_data_len[i], MS_TIMEOUT);
             for (size_t j = 0; j < cal_data_len[i]; j++) {
                 fail_pat |= (check_data[j] ^ cal_data[i][j]);
             }

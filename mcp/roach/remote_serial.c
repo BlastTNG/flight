@@ -33,7 +33,7 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
-//TODO[Laura/Sam] Because this doesn't compile (isn't used as of 07/06/16)
+// TODO(Laura/Sam): Because this doesn't compile (isn't used as of 07/06/16)
 #if 0
 
 static const char addresses[4][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63", "192.168.40.64"};
@@ -216,7 +216,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
  * @param m_data Pointer to the Remote Serial State variable
  */
 
-//TODO[LAURA/SAM] wrong number of arguments in phenom call
+// TODO(LAURA/SAM): wrong number of arguments in phenom call
 
 static void connect_remote_serial(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 {

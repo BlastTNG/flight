@@ -33,9 +33,9 @@ typedef struct roach_state roach_state_t;
 
 const char *roach_get_name(roach_state_t *m_roach);
 int roach_write_data(roach_state_t *m_roach, const char *m_register, uint8_t *m_data,
-                            size_t m_len, uint32_t m_offset);
+                            size_t m_len, uint32_t m_offset, int m_timeout);
 int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *m_register,
-                           uint32_t m_offset, uint32_t m_size);
+                           uint32_t m_offset, uint32_t m_size, int ms_timeout);
 int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_val, uint32_t m_offset);
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 
