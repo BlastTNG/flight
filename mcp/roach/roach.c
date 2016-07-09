@@ -68,6 +68,7 @@
 // Constant firmware parameters COMMON TO ALL ROACHES that won't change after startup
 static double dac_samp_freq = 512.0e6;
 static double fpga_samp_freq = 256.0e6;
+static size_t lut_buffer_len = 1 << 21;
 static int fft_len = 1024;
 static double accum_len = (1 << 19) - 1;
 // Test frequencies for troubleshooting (arbitrary values)
@@ -154,6 +155,10 @@ typedef struct roach_state {
     // Packet link
     ph_sock_t *udp_socket;
 } roach_state_t;
+
+#define NUM_ROACHES 5
+static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
+static roach_state_t roach_state_table[NUM_ROACHES];
 
 typedef struct {
     const char *firmware_file;
@@ -1010,8 +1015,17 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
  * @param m_data Pointer to our ROACH firmware upload state variable
  */
 
+void *roach_cmd_loop(void)
+{
+}
+
 int init_roach(void)
 {
+    memset(roach_state_table, 0, sizeof(roach_state_t) * 5);
+    for (int i = 0; i < NUM_ROACHES; i++) {
+    	asprintf(&roach_state_table[i].address, "roach%d", i + 1);
+    }
+    ph_thread_t *roach_cmd_thread = ph_thread_spawn(roach_cmd_loop, NULL);
     return 0;
 }
 
@@ -1029,7 +1043,6 @@ int example_main(void)
 	roach2.rpc_conn = create_katcl(fd);
 	roach2.address = "192.168.40.52";
 	roach2.port = 7147;
-	// roach2.ms_cmd_timeout = 20000;
 	roach2.lut_buffer_len = 1 << 21;
 	roach2.vna_path = "./iqstream/r2/vna";
 	roach2.targ_path = "./iqstream/r2/targ";
