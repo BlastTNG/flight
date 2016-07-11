@@ -88,7 +88,7 @@
 
 // For now we only have one cyro readout Labjack
 // TODO(laura): Integrate PSS and OF Labjacks
-#define NUM_LABJACKS 1
+#define NUM_LABJACKS 2
 
 // Max Number of Analog Inputs
 #define NUM_LABJACK_AIN 14
@@ -205,10 +205,18 @@ typedef struct {
 
 static labjack_state_t state[NUM_LABJACKS] = {
     {
+          .which = 0,
           .address = "labjack1",
           .port = LJ_DATA_PORT,
           .DAC = {0, 0},
-          .channel_postfix = "_cryo_labjack"
+          .channel_postfix = "_cryo_labjack1"
+    },
+    {
+          .which = 1,
+          .address = "labjack2",
+          .port = LJ_DATA_PORT,
+          .DAC = {0, 0},
+          .channel_postfix = "_cryo_labjack2"
     }
 };
 
