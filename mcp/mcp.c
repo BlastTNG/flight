@@ -522,6 +522,10 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
+blast_info("Initializing ROACHes from MCP...");
+init_roach();
+blast_info("Finished initializing ROACHes...");
+
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
   signal(SIGHUP, close_mcp);
