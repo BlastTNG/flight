@@ -78,8 +78,12 @@ void store_100hz_cryo(void)
 void read_thermometers(void) {
     static int firsttime_therm = 1;
     float test;
-    test = labjack_get_value(LABJACK_CRYO_1, DIODE_CHARCOAL_HS);
-    blast_warn("labjack is %f", test);
+    float test2;
+    test = labjack_get_value(0, 0);
+    blast_warn("labjack1 is %f", test);
+
+    test2 = labjack_get_value(1, 0);
+    blast_warn("labjack2 is %f", test2);
 
     static channel_t* rox_fpa_1k_Addr;
     static channel_t* rox_250_fpa_Addr;
@@ -158,14 +162,14 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(diode_vcs2_hx_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_HX));
     SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
     // above are the diodes, below, the ROXes
-    /* SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_1, LJ_R_FPA_1K_IND));
-    SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_1, 0));
-    SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO_1, 0));
-    SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO_1, 0));
-    SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO_1, 0));
-    SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO_1, 0));
-    SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_1, 0));
-    SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_1, 0)); */
+    /* SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_2, LJ_R_FPA_1K_IND));
+    SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
+    SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
+    SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
+    SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
+    SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
+    SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
+    SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0)); */
 }
 
 void autocycle_ian(void)
