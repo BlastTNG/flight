@@ -257,39 +257,6 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_v
     return roach_write_data(m_roach, m_register, (uint8_t*)&sendval, sizeof(sendval), m_offset, WRITE_INT_TIMEOUT);
 }
 
-
-// Sam version of upload_fpg (uses netcat instead of phenom)
-
-/*int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
-{
-    firmware_state_t state = {
-                              .firmware_file = m_filename,
-                              //.port = (uint16_t) (drand48() * 500.0 + 5000),
-                              .port = (uint16_t) 3000,
-			      .timeout.tv_sec = 5,
-                              .timeout.tv_usec = 0,
-			      .roach = m_roach
-    };
-
-    printf("Getting permission to upload fpg on port 3000...\t");
-    int retval = send_rpc_katcl(m_roach->rpc_conn, m_roach->ms_cmd_timeout,
-                       KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
-                       KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
-                       NULL);
-    
-    if (retval != KATCP_RESULT_OK) {
-        return -1;
-	printf("Failed\n");
-    
-    }
-    printf("Done\n");
-    printf("Uploading fpg through netcat...\t");
-    int status = system("nc -w 2 192.168.40.52 3000 < ./fpgs/roach2_8tap_wide_2016_Jun_25_2016.fpg");
-    printf("Done\n");
-    return 0;
-}*/
-
-
 static void roach_init_LUT(roach_state_t *m_roach, size_t m_len)
 {
     m_roach->LUT.len = m_len;
@@ -922,10 +889,12 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
         blast_err("Timeout uploading firmware to %s", state->roach->address);
         state->result = ROACH_UPLOAD_RESULT_TIMEOUT;
     }
-    blast_info("*******************%i", ph_bufq_len(m_sock->wbuf));
     if (!ph_bufq_len(m_sock->wbuf)) {
         blast_info("Successfully uploaded firmware to %s", state->roach->address);
         state->result = ROACH_UPLOAD_RESULT_SUCCESS;
+    } else {
+        blast_err("Write buffer not empty: %i", ph_bufq_len(m_sock->wbuf));
+        state->result = ROACH_UPLOAD_RESULT_ERROR;
     }
     ph_sock_enable(m_sock, 0);
     ph_sock_free(m_sock);
@@ -937,7 +906,6 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     ph_unused_parameter(m_elapsed);
     ph_unused_parameter(m_addr);
     firmware_state_t *state = (firmware_state_t*) m_data;
-    state->result = ROACH_UPLOAD_RESULT_WORKING;
     switch (m_status) {
         case PH_SOCK_CONNECT_GAI_ERR:
             blast_err("resolve %s:%d failed %s", state->roach->address, state->port, gai_strerror(m_errcode));
@@ -951,6 +919,7 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     /// If we had an old socket from an invalid connection, free the reference here
     if (state->sock) ph_sock_free(state->sock);
     state->sock = m_sock;
+    blast_info("***********************m_sock = %d", m_sock);
     m_sock->callback = firmware_upload_process_return;
     m_sock->timeout_duration.tv_sec = 30;
     m_sock->job.data = state;
@@ -960,6 +929,7 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     {
         size_t number_bytes;
 	ph_stream_t *firmware_stm = ph_stm_file_open(state->firmware_file, O_RDONLY, 0);
+        state->result = ROACH_UPLOAD_RESULT_WORKING;
         if (!ph_stm_copy(firmware_stm, m_sock->stream, PH_STREAM_READ_ALL, NULL, &number_bytes)) {
             blast_err("Error getting data from %s: %s", state->firmware_file,
                       strerror(ph_stm_errno(firmware_stm)));
@@ -972,7 +942,7 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
 	    ph_sock_enable(state->sock, true);
         }
     	blast_info("********************Before stm_close");
-        ph_stm_close(firmware_stm);
+	ph_stm_close(firmware_stm);
     	blast_info("********************After stm_close");
     }
 }
@@ -994,12 +964,18 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         blast_err("Could not request upload port for ROACH firmware on %s!", m_roach->address);
         return -1;
     }
+    /*
+    char *netcat_cmd;
+    blast_info("Uploading fpg through netcat...");
+    asprintf(netcat_cmd, "nc -w 2 %s %u < %s", m_roach->address, state.port, state.firmware_file);
+    int status = system(netcat_cmd);
+    blast_info("Done");
+    */
     blast_info("**************STARTING PH CALL");
     ph_sock_resolve_and_connect(state.roach->address, state.port, 0,
         &state.timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, &state);
     blast_info("*********PAST PH CALL");
     while (state.result == ROACH_UPLOAD_RESULT_WORKING) {
-        blast_info("%d", state.result);
 	usleep(1000);
     }
     if (state.result != ROACH_UPLOAD_RESULT_SUCCESS) return -1;
