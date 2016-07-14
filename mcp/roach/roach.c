@@ -82,6 +82,7 @@ typedef enum {
     ROACH_STATUS_BOOT = 0,
     ROACH_STATUS_CONNECTED,
     ROACH_STATUS_PROGRAMMED,
+    ROACH_STATUS_CALIBRATED,
     ROACH_STATUS_TONE,
     ROACH_STATUS_DDS,
     ROACH_STATUS_STREAMING,
@@ -894,7 +895,7 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
         state->result = ROACH_UPLOAD_RESULT_SUCCESS;
     } else {
         blast_err("Write buffer not empty: %i", ph_bufq_len(m_sock->wbuf));
-        state->result = ROACH_UPLOAD_RESULT_ERROR;
+        return;
     }
     ph_sock_enable(m_sock, 0);
     ph_sock_free(m_sock);
@@ -947,6 +948,7 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     }
 }
 
+/*
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 {
     firmware_state_t state = {
@@ -964,13 +966,34 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         blast_err("Could not request upload port for ROACH firmware on %s!", m_roach->address);
         return -1;
     }
-    /*
     char *netcat_cmd;
     blast_info("Uploading fpg through netcat...");
-    asprintf(netcat_cmd, "nc -w 2 %s %u < %s", m_roach->address, state.port, state.firmware_file);
-    int status = system(netcat_cmd);
-    blast_info("Done");
-    */
+    asprintf(&netcat_cmd, "nc -w 2 %s %u < %s", m_roach->address, state.port, state.firmware_file);
+    int success = system(netcat_cmd);
+    if (system(netcat_cmd) == 0) {
+    	state.result = ROACH_UPLOAD_RESULT_SUCCESS;
+    }
+    return 0;
+}
+*/
+
+int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
+{
+    firmware_state_t state = {
+                              .firmware_file = m_filename,
+                              .port = (uint16_t) (drand48() * 500.0 + 5000),
+                              .timeout.tv_sec = 20,
+                              .timeout.tv_usec = 0,
+                              .roach = m_roach
+    };
+    int retval = send_rpc_katcl(m_roach->rpc_conn, UPLOAD_TIMEOUT,
+                       KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
+                       KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
+                       NULL);
+    if (retval != KATCP_RESULT_OK) {
+        blast_err("Could not request upload port for ROACH firmware on %s!", m_roach->address);
+        return -1;
+    }
     blast_info("**************STARTING PH CALL");
     ph_sock_resolve_and_connect(state.roach->address, state.port, 0,
         &state.timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, &state);
@@ -981,6 +1004,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
     if (state.result != ROACH_UPLOAD_RESULT_SUCCESS) return -1;
     return 0;
 }
+
 /**
  * Handle a connection callback.  The connection may succeed or fail.
  * If it fails, we increase the backoff time and reschedule another attempt.
