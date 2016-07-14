@@ -21,6 +21,8 @@
 #ifndef INCLUDE_BALANCE_H_
 #define INCLUDE_BALANCE_H_
 
+#include "ezstep.h"
+
 /* Index of the balance motor in the Actbus structures */
 #define BALANCENUM 3
 
@@ -28,5 +30,6 @@
 #define BALANCE_PREAMBLE "j256"
 
 void DoBalance(struct ezbus* bus);
+void ControlBalance(void);
 
 #endif /* BALANCE_H_ */

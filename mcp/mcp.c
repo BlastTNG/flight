@@ -60,6 +60,7 @@
 #include "acs.h"
 #include "actuators.h"
 #include "bias_tone.h"
+#include "balance.h"
 #include "blast.h"
 #include "blast_comms.h"
 #include "blast_sip_interface.h"
@@ -332,6 +333,7 @@ static void mcp_5hz_routines(void)
     store_axes_mode_data();
     store_labjack_data();
     WriteAux();
+    ControlBalance();
     StoreActBus();
     SecondaryMirror();
 //    PhaseControl();
