@@ -166,7 +166,6 @@ include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/osal
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
 
-
 # add katcp library
 set(KATCP_LIBRARY ${PROJECT_BINARY_DIR}/katcp/libkatcp.a)
 ExternalProject_Add(katcp 
@@ -176,6 +175,16 @@ ExternalProject_Add(katcp
     INSTALL_COMMAND "")
 
 include_directories(${PROJECT_SOURCE_DIR}/../external_libs/katcp)
+
+# build socat
+ExternalProject_Add(socat
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/socat
+    BINARY_DIR ${PROJECT_BINARY_DIR}/socat
+    URL ${PROJECT_SOURCE_DIR}/../external_libs/socat
+    CONFIGURE_COMMAND ./src/socat/configure 
+    #BUILD_IN_SOURCE 1
+    BUILD_COMMAND make
+    INSTALL_COMMAND "")
 
 # add our version of libphenom
 ExternalProject_Add(phenomproj
@@ -279,6 +288,7 @@ set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../external_libs/mpsse")
+set(SOCAT_DIR "${PROJECT_SOURCE_DIR}/../external_libs/socat")
 
 set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
 FILE(GLOB etc_files "${ETC_DIR}/*.txt" "${ETC_DIR}/*.sch" "${ETC_DIR}/*.library" "${ETC_DIR}/*.lut" "${ETC_DIR}/WMM.COF")
@@ -324,6 +334,9 @@ add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
 
 # add MPSSE Files
 add_subdirectory(${MPSSE_DIR} "${PROJECT_BINARY_DIR}/mpsse")
+
+# add SOCAT Files
+add_subdirectory(${SOCAT_DIR} "${PROJECT_BINARY_DIR}/socat")
 
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 define_file_basename_for_sources(pointing)
