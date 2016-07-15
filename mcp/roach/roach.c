@@ -92,6 +92,7 @@ typedef enum {
 
 typedef enum {
     ROACH_UPLOAD_RESULT_WORKING = 0,
+    ROACH_UPLOAD_CONN_REFUSED,
     ROACH_UPLOAD_RESULT_TIMEOUT,
     ROACH_UPLOAD_RESULT_ERROR,
     ROACH_UPLOAD_RESULT_SUCCESS
@@ -154,7 +155,7 @@ typedef struct roach_state {
     ph_sock_t *udp_socket;
 } roach_state_t;
 
-#define NUM_ROACHES 4
+#define NUM_ROACHES 5
 static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
 static roach_state_t roach_state_table[NUM_ROACHES];
 
@@ -217,8 +218,11 @@ int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *m_regis
         return -1;
     }
     if (retval > 0) {
-        char *ret = arg_string_katcl(m_roach->rpc_conn, 1);
-        blast_err("Could not read data '%s' from %s: ROACH Error '%s'", m_register, m_roach->address, ret?ret:"");
+        char *ret1 = arg_string_katcl(m_roach->rpc_conn, 0);
+	char *ret2 = arg_string_katcl(m_roach->rpc_conn, 1);
+	char *ret3 = arg_string_katcl(m_roach->rpc_conn, 2);
+        blast_err("Could not read data '%s' from %s: ROACH Error '%s %s %s'", m_register, m_roach->address,
+            ret1?ret1:"", ret2?ret2:"", ret3?ret3:"");
 	return -1;
     }
 
@@ -885,6 +889,7 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
      * If we have an error, or do not receive data from the Roach in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
+    blast_info("Upload process return, m_why: %d", m_why);
     if (m_why & (PH_IOMASK_ERR)) {
         blast_err("disconnecting from firmware upload at %s due to connection issue", state->roach->address);
         state->result = ROACH_UPLOAD_RESULT_ERROR;
@@ -912,13 +917,15 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     switch (m_status) {
         case PH_SOCK_CONNECT_GAI_ERR:
             blast_err("resolve %s:%d failed %s", state->roach->address, state->port, gai_strerror(m_errcode));
+            state->result = ROACH_UPLOAD_RESULT_ERROR;
             return;
         case PH_SOCK_CONNECT_ERRNO:
             blast_err("connect %s:%d failed: `Error %d: %s`",
                     state->roach->address, state->port, m_errcode, strerror(m_errcode));
+            state->result = ROACH_UPLOAD_CONN_REFUSED;
             return;
     }
-    blast_info("Connected to ROACH at %s", state->roach->address);
+    blast_info("Connected to ROACH at %s:%u", state->roach->address, state->port);
     /// If we had an old socket from an invalid connection, free the reference here
     if (state->sock) ph_sock_free(state->sock);
     state->sock = m_sock;
@@ -938,6 +945,7 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
             ph_sock_shutdown(state->sock, PH_SOCK_SHUT_RDWR);
             ph_sock_enable(state->sock, false);
             ph_sock_free(state->sock);
+            state->result = ROACH_UPLOAD_RESULT_ERROR;
             return;
         } else {
             blast_info("Loading %s with %zu bytes", state->firmware_file, number_bytes);
@@ -949,6 +957,7 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
 
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 {
+    srand48(time(NULL));
     firmware_state_t state = {
                               .firmware_file = m_filename,
                               .port = (uint16_t) (drand48() * 500.0 + 5000),
@@ -964,10 +973,14 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         blast_err("Could not request upload port for ROACH firmware on %s!", m_roach->address);
         return -1;
     }
-    ph_sock_resolve_and_connect(state.roach->address, state.port, 0,
-        &state.timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, &state);
-    while (state.result == ROACH_UPLOAD_RESULT_WORKING) {
-	usleep(1000);
+    for (int loop = 0; loop < 2; loop++) {
+        ph_sock_resolve_and_connect(state.roach->address, state.port, 0,
+            &state.timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, &state);
+        while (state.result == ROACH_UPLOAD_RESULT_WORKING) {
+            usleep(1000);
+        }
+        if (state.result != ROACH_UPLOAD_CONN_REFUSED) break;
+	usleep(100000);
     }
     if (state.result != ROACH_UPLOAD_RESULT_SUCCESS) return -1;
     return 0;
@@ -1023,6 +1036,7 @@ void *roach_cmd_loop(void)
 				roach_state_table[i].desired_status >= ROACH_STATUS_PROGRAMMED) {
 				blast_info("Uploading firmware to ROACH%d", i + 1);
 				if (roach_upload_fpg(&roach_state_table[i], test_fpg) == 0) {
+				// TODO(Sam/Laura): read ?fpgastatus to verify programmed
 					roach_state_table[i].status = ROACH_STATUS_PROGRAMMED;
 				}
 			}
@@ -1030,6 +1044,7 @@ void *roach_cmd_loop(void)
 				roach_state_table[i].desired_status >=ROACH_STATUS_CALIBRATED) {
 				blast_info("Calibrating QDRs... ");
 				// qdr_cal2(&roach_state_table[i], 0);
+				// system ("python /data/etc/blast/python_calls/cal_roach_qdr.py");
 			}
 		}
 	}
