@@ -218,9 +218,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(xy_panic), "stop XY stage motors immediately", 0},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
-  {COMMAND(balance_off),  "Turn off the balance pumps", GR_BAL},
-  {COMMAND(balance_heat_on),  "Turn on the balance pump heating card", GR_BAL},
-  {COMMAND(balance_heat_off), "Turn off the balance pump heating card", GR_BAL},
+  {COMMAND(balance_off),  "Turn off the balance motor", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -343,23 +341,16 @@ struct mcom mcommands[plugh + 2] = {
       {"El Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
     }
   },
-  {COMMAND(balance_manual), "Manually set balance pump rate", GR_BAL, 1,
+  {COMMAND(balance_manual), "Manually set balance on", GR_BAL, 1,
     {
-      {"level",           -1.0, 1.0, 'f', "NONE"},
+      {"dir",           -1.0, 1.0, 'f', "NONE"},
     }
   },
   {COMMAND(balance_gain), "Set balance system setpoints", GR_BAL, 4,
     {
       {"Pump On Point (A)",  0, 2, 'f', "LEVEL_ON_BAL"},
       {"Pump Off Point (A)", 0, 2, 'f', "LEVEL_OFF_BAL"},
-      {"Target (A)",        -2, 2, 'f', "LEVEL_TARGET_BAL"},
-      {"Gain",            0.01, 10, 'f', "GAIN_BAL"},
     }
-  },
-  {COMMAND(balance_tset), "Set balance pump minumum temperature", GR_BAL, 1,
-     {
-       {"Temperature (C)",  -273.4, 40, 'f', "T_BOX_BAL"},
-     }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps", GR_POINT, 7,
     {

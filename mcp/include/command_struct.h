@@ -300,7 +300,7 @@ typedef struct slinger_commanding
 
 typedef struct {
     enum {bal_rest, bal_manual, bal_auto} mode;
-    enum {pos, neg} bal_move_type;
+    enum {pos = 0, neg} bal_move_type;
     uint32_t pos;
     uint16_t vel;
     double hold_i;
