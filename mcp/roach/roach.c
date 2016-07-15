@@ -48,11 +48,13 @@
 #include <unistd.h>
 #include <fftw3.h>
 // include "portable_endian.h"
+#include "mcp.h"
 #include "katcp.h"
 #include "katcl.h"
 #include "blast.h"
 #include "crc.h"
 #include "netc.h"
+#include "qdr.h"
 #undef I
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -120,6 +122,7 @@ typedef struct {
 } roach_uint16_lut_t;
 
 typedef struct roach_state {
+    int katcp_fd;
     e_roach_status status;
     e_roach_status desired_status;
 
@@ -877,7 +880,6 @@ void get_kid_freqs(roach_state_t *m_roach, const char *m_packetpath)
  */
 static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
-    blast_info("****************Inside fupr");
     firmware_state_t *state = (firmware_state_t*) m_data;
     /**
      * If we have an error, or do not receive data from the Roach in the expected
@@ -920,9 +922,8 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     /// If we had an old socket from an invalid connection, free the reference here
     if (state->sock) ph_sock_free(state->sock);
     state->sock = m_sock;
-    blast_info("***********************m_sock = %d", m_sock);
     m_sock->callback = firmware_upload_process_return;
-    m_sock->timeout_duration.tv_sec = 30;
+    m_sock->timeout_duration.tv_sec = 10;
     m_sock->job.data = state;
     /**
      * We have enabled the socket and now we buffer the firmware file into the network
@@ -942,40 +943,9 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
             blast_info("Loading %s with %zu bytes", state->firmware_file, number_bytes);
 	    ph_sock_enable(state->sock, true);
         }
-    	blast_info("********************Before stm_close");
 	ph_stm_close(firmware_stm);
-    	blast_info("********************After stm_close");
     }
 }
-
-/*
-int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
-{
-    firmware_state_t state = {
-                              .firmware_file = m_filename,
-                              .port = (uint16_t) (drand48() * 500.0 + 5000),
-                              .timeout.tv_sec = 20,
-                              .timeout.tv_usec = 0,
-                              .roach = m_roach
-    };
-    int retval = send_rpc_katcl(m_roach->rpc_conn, UPLOAD_TIMEOUT,
-                       KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
-                       KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
-                       NULL);
-    if (retval != KATCP_RESULT_OK) {
-        blast_err("Could not request upload port for ROACH firmware on %s!", m_roach->address);
-        return -1;
-    }
-    char *netcat_cmd;
-    blast_info("Uploading fpg through netcat...");
-    asprintf(&netcat_cmd, "nc -w 2 %s %u < %s", m_roach->address, state.port, state.firmware_file);
-    int success = system(netcat_cmd);
-    if (system(netcat_cmd) == 0) {
-    	state.result = ROACH_UPLOAD_RESULT_SUCCESS;
-    }
-    return 0;
-}
-*/
 
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 {
@@ -994,10 +964,8 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         blast_err("Could not request upload port for ROACH firmware on %s!", m_roach->address);
         return -1;
     }
-    blast_info("**************STARTING PH CALL");
     ph_sock_resolve_and_connect(state.roach->address, state.port, 0,
         &state.timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, &state);
-    blast_info("*********PAST PH CALL");
     while (state.result == ROACH_UPLOAD_RESULT_WORKING) {
 	usleep(1000);
     }
@@ -1017,39 +985,56 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
  * @param m_data Pointer to our ROACH firmware upload state variable
  */
 
+void shutdown_roaches(void)
+{
+	for (int i = 0; i < NUM_ROACHES; i++) {
+		if (roach_state_table[i].katcp_fd > 0) {
+			destroy_rpc_katcl(roach_state_table[i].katcp_fd);
+			blast_info("Closing KATCP on ROACH%d", i + 1);
+		}
+	}
+}
+
 void *roach_cmd_loop(void)
 {
 	char tname[] = "rchcmd";
 	ph_thread_set_name(tname);
 	nameThread(tname);
 	blast_info("Starting Roach Commanding Thread");
-	int fd[NUM_ROACHES];
 	for (int i = 0; i < NUM_ROACHES; i++) {
 		roach_state_table[i].status = ROACH_STATUS_BOOT;
-		roach_state_table[i].desired_status = ROACH_STATUS_PROGRAMMED;
+		roach_state_table[i].desired_status = ROACH_STATUS_CALIBRATED;
 	}
-	while (1) {
+	while (!shutdown_mcp) {
 		// TODO(SAM/LAURA): Fix Roach 1/Add error handling
-		for (int i = 1; i < NUM_ROACHES; i++) {
+		for (int i = 0; i < NUM_ROACHES; i++) {
 			if (roach_state_table[i].status == ROACH_STATUS_BOOT && roach_state_table[i].desired_status > ROACH_STATUS_BOOT) {
 				blast_info("Attempting to connect to %s", roach_state_table[i].address);
-				fd[i] = net_connect(roach_state_table[i].address, 0, NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS);
-				roach_state_table[i].rpc_conn = create_katcl(fd[i]);
-				if (fd[i] > 0) {
+				roach_state_table[i].katcp_fd = net_connect(roach_state_table[i].address,
+					0, NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS);
+				blast_info("fd:%d ", roach_state_table[i].katcp_fd);
+				roach_state_table[i].rpc_conn = create_katcl(roach_state_table[i].katcp_fd);
+				if (roach_state_table[i].katcp_fd > 0) {
 					roach_state_table[i].status = ROACH_STATUS_CONNECTED;
 				blast_info("KATCP up on ROACH%d", i + 1);
 				}
 			}
 			if (roach_state_table[i].status == ROACH_STATUS_CONNECTED &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_PROGRAMMED) {
-				// roach_upload_fpg(&roach_state_table[i], roach_fpg[i]);
 				blast_info("Uploading firmware to ROACH%d", i + 1);
-				roach_upload_fpg(&roach_state_table[i], test_fpg);
-				blast_info("Uploaded firmware to ROACH%d", i + 1);
+				if (roach_upload_fpg(&roach_state_table[i], test_fpg) == 0) {
+					roach_state_table[i].status = ROACH_STATUS_PROGRAMMED;
+				}
+			}
+			if (roach_state_table[i].status == ROACH_STATUS_PROGRAMMED &&
+				roach_state_table[i].desired_status >=ROACH_STATUS_CALIBRATED) {
+				blast_info("Calibrating QDRs... ");
+				// qdr_cal2(&roach_state_table[i], 0);
 			}
 		}
 	}
 }
+
 int init_roach(void)
 {
     memset(roach_state_table, 0, sizeof(roach_state_t) * 5);

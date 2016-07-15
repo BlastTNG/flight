@@ -41,5 +41,6 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 
 
 void write_roach_channels_244hz(void);
+void shutdown_roaches(void);
 
 #endif /* INCLUDE_ROACH_H_ */

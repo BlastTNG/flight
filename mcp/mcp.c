@@ -268,6 +268,7 @@ static void close_mcp(int m_code)
     shutdown_mcp = true;
     watchdog_close();
     shutdown_bias_tone();
+    shutdown_roaches();
     ph_sched_stop();
 }
 
