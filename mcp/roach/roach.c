@@ -55,6 +55,8 @@
 #include "crc.h"
 #include "netc.h"
 #include "qdr.h"
+#include "remote_serial.h"
+#include "valon.h"
 #undef I
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -62,7 +64,7 @@
 #include "phenom/memory.h"
 
 #undef I
-#define WRITE_INT_TIMEOUT 500
+#define WRITE_INT_TIMEOUT 1000
 #define UPLOAD_TIMEOUT 20000
 #define QDR_TIMEOUT 20000
 #define LUT_BUFFER_LEN 2097152
@@ -78,16 +80,21 @@ size_t freqlen = 2;
 // Firmware image files
 const char roach_fpg[5][11] = {"roach1.fpg", "roach2.fpg", "roach3.fpg", "roach4.fpg", "roach5.fpg"};
 const char test_fpg[] = "/data/etc/blast/roach2_8tap_wide_2016_Jun_25_2016.fpg";
-
+// Destination IP for UDP packets
+static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 42*pow(2, 8) + 1;
 
 typedef enum {
     ROACH_STATUS_BOOT = 0,
     ROACH_STATUS_CONNECTED,
     ROACH_STATUS_PROGRAMMED,
+    ROACH_STATUS_CONFIGURED,
     ROACH_STATUS_CALIBRATED,
     ROACH_STATUS_TONE,
-    ROACH_STATUS_DDS,
     ROACH_STATUS_STREAMING,
+    ROACH_STATUS_VNA,
+    ROACH_STATUS_ARRAY_FREQS,
+    ROACH_STATUS_TARG,
+    ROACH_STATUS_ACQUIRING,
 } e_roach_status;
 
 typedef enum {
@@ -123,6 +130,7 @@ typedef struct {
 } roach_uint16_lut_t;
 
 typedef struct roach_state {
+    int which;
     int katcp_fd;
     e_roach_status status;
     e_roach_status desired_status;
@@ -148,6 +156,7 @@ typedef struct roach_state {
     char *vna_path;
     char *targ_path;
     char *channels_path;
+    uint16_t dest_port;
 
     // PPC link
     struct katcl_line *rpc_conn;
@@ -218,11 +227,9 @@ int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *m_regis
         return -1;
     }
     if (retval > 0) {
-        char *ret1 = arg_string_katcl(m_roach->rpc_conn, 0);
-	char *ret2 = arg_string_katcl(m_roach->rpc_conn, 1);
-	char *ret3 = arg_string_katcl(m_roach->rpc_conn, 2);
-        blast_err("Could not read data '%s' from %s: ROACH Error '%s %s %s'", m_register, m_roach->address,
-            ret1?ret1:"", ret2?ret2:"", ret3?ret3:"");
+        char *ret = arg_string_katcl(m_roach->rpc_conn, 0);
+        blast_err("Could not read data '%s' from %s: ROACH Error '%s'", m_register, m_roach->address,
+            ret?ret:"");
 	return -1;
     }
 
@@ -245,6 +252,7 @@ int roach_read_int(roach_state_t *m_roach, const char *m_register)
   	uint32_t m_data;
 	roach_read_data(m_roach, (uint8_t*) &m_data, m_register, 0, sizeof(m_data), 100);
 	m_data = ntohl(m_data);
+	blast_info("%s = %d", m_register, m_data);
 	return 0;
 }
 
@@ -450,7 +458,7 @@ void roach_pack_LUTs(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
     	roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
 // Commented section below checks to see if space is allocated. Needs error checking.
    /* if (m_roach->LUT.len > 0 && m_roach->LUT.len != LUT_BUFFER_LEN)  {
-    	printf("Attempting to free luts\t");
+    	blast_info("Attempting to free luts\t");
 	free(m_roach->LUT.I);
         free(m_roach->LUT.Q);
     }*/
@@ -483,7 +491,7 @@ void save_luts(roach_state_t *m_roach)
     	fclose(f2);
     	fclose(f3);
     	fclose(f4);
-	printf("LUTs written to disk\n");
+	blast_info("LUTs written to disk\n");
 }
 
 // Useful for error checking LUTs, NOT NEEDED FOR FLIGHT
@@ -506,10 +514,12 @@ void roach_write_QDR(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
     roach_write_int(m_roach, "start_dac", 0, 0);
     if (roach_write_data(m_roach, "qdr0_memory", (uint8_t*)m_roach->LUT.I,
     		m_roach->LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT) < 0) {
-		printf("Could not write to qdr0!");
+		blast_info("Could not write to qdr0!");
 	}
-    roach_write_data(m_roach, "qdr1_memory", (uint8_t*)m_roach->LUT.Q,
-    			m_roach->LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT);
+    if (roach_write_data(m_roach, "qdr1_memory", (uint8_t*)m_roach->LUT.Q,
+    		m_roach->LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT) < 0) {
+		blast_info("Could not write to qdr1!");
+    	}
     sleep(0.3);
     roach_write_int(m_roach, "start_dac", 1, 0);
     roach_write_int(m_roach, "sync_accum_reset", 0, 0);
@@ -518,15 +528,13 @@ void roach_write_QDR(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 
 void roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
-	printf("Allocating memory for LUTs...\n");
+	blast_info("Allocating memory for LUTs, ROACH%d...", m_roach->which);
 	roach_init_DACDDS_LUTs(m_roach, LUT_BUFFER_LEN);
-	printf("Defining DAC LUT...\t");
+	blast_info("Defining DAC LUT, ROACH%d...", m_roach->which);
 	roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
-	printf("Done\n");
-	printf("Defining DDS LUT...\t");
+	blast_info("Defining DDS LUT, ROACH%d...", m_roach->which);
 	roach_define_DDS_LUT(m_roach, m_freqs, m_freqlen);
-	printf("Done\n");
-	printf("Uploading LUTs to QDR RAM...\t");
+	blast_info("Uploading LUTs to QDR RAM on ROACH%d...", m_roach->which);
 	roach_write_QDR(m_roach, m_freqs, m_freqlen);
 }
 
@@ -647,10 +655,10 @@ int fill_packet_buffer(data_packet_t *m_packet, int m_sock_desc)
 	memset(m_packet->rcv_buffer, 0, 8234);
 	buflen = recvfrom(m_sock_desc, m_packet->rcv_buffer, 8234, 0, NULL, NULL);
 	if(buflen < 0) {
-		printf("error in reading recvfrom function\n");
+		blast_info("error in reading recvfrom function\n");
 		return -1;
 	}
-	// printf("Received %d bytes\n", buflen);
+	// blast_info("Received %d bytes\n", buflen);
 	return 0;
 }
 
@@ -678,8 +686,8 @@ void parse_packet(data_packet_t *m_packet)
 		}
 		m_packet->I[i] = (float)(ntohl((data[j] << 24) | (data[j + 1] << 16) | (data[j + 2] << 8) | (data[j + 3])));
 		m_packet->Q[i] = (float)(ntohl((data[k] << 24) | (data[k + 1] << 16) | (data[k + 2] << 8) | (data[k + 3])));
-		// printf("%d\t %d\t %d\t %d\t %d\t\n", i, j, j + 1, j + 2, j + 3);
-		// printf("%d\t %d\t %d\t %d\t %d\t\n", i, k, k + 1, k + 2, k + 3);
+		// blast_info("%d\t %d\t %d\t %d\t %d\t\n", i, j, j + 1, j + 2, j + 3);
+		// blast_info("%d\t %d\t %d\t %d\t %d\t\n", i, k, k + 1, k + 2, k + 3);
 	}
 }
 
@@ -695,7 +703,7 @@ int stream_packets(size_t m_num_packets, int m_socket_desc, int m_chan)
 		blast_info("%d\t", m_chan);
 		blast_info("%f\t%f\t", m_packet.I[m_chan], m_packet.Q[m_chan]);
 		double chan_phase = atan2((double)m_packet.Q[m_chan], (double)m_packet.I[m_chan]);
-		printf("%g\t\n", chan_phase);
+		blast_info("%g\t\n", chan_phase);
 		free(m_packet.I);
 		free(m_packet.Q);
 	}
@@ -756,8 +764,8 @@ void save_packets(size_t m_num_packets, int m_sock_desc, double m_filetag,
 void roach_freq_comb(roach_state_t *m_roach, double m_min_freq, double m_max_freq, size_t m_freqlen)
 {
 	double delta_f = (m_max_freq - m_min_freq) / (m_freqlen - 1);
-	printf("max freq: %0.9g\n", m_max_freq/1.0e6);
-	printf("min freq: %0.9g\n", m_min_freq/1.0e6);
+	blast_info("Max freq: %0.9g\n", m_max_freq/1.0e6);
+	blast_info("Min freq: %0.9g\n", m_min_freq/1.0e6);
 	m_roach->freq_comb = calloc(m_freqlen, sizeof(double));
 	m_roach->freqlen = m_freqlen;
 	/* positive freqs */
@@ -768,10 +776,7 @@ void roach_freq_comb(roach_state_t *m_roach, double m_min_freq, double m_max_fre
 	for (size_t i = 0; i < m_freqlen/2; i++) {
 		m_roach->freq_comb[i + m_freqlen/2] = m_min_freq + i*delta_f;
 	}
-	printf("freqlen: %zd\n", m_roach->freqlen);
-	for (size_t i = 0; i < m_freqlen; i++) {
-		printf("%0.9g\n", m_roach->freq_comb[i]);
-	}
+	blast_info("Number of tones: %zd\n", m_roach->freqlen);
 }
 
 // Valon commands should be switched to C, Beaglebone/Remote Serial
@@ -790,14 +795,14 @@ void sweep_lo(double m_centerfreq, double m_span, double delta_f, int m_sock_des
 		sweep_freqs[i] = sweep_freqs[i - 1] + delta_f;
 	}
 	for (size_t i = 0; i < num_freqs; i++) {
-		snprintf(command, sizeof(command), "python ./python_embed/set_lo.py %g", sweep_freqs[i]/megahertz);
+		snprintf(command, sizeof(command), "python /data/etc/blast/set_lo.py %g", sweep_freqs[i]/megahertz);
 		fflush(stdout);
 		system(command);
-		printf("LO @ %g\n", sweep_freqs[i]);
+		blast_info("LO @ %g\n", sweep_freqs[i]);
 		if (save) {
 			save_packets(1, m_sock_desc, sweep_freqs[i], m_savepath, m_filetag);
 		}
-		snprintf(command, sizeof(command), "python ./python_embed/set_lo.py %g", m_centerfreq/megahertz);
+		snprintf(command, sizeof(command), "python /data/etc/blast/set_lo.py %g", m_centerfreq/megahertz);
 		system(command);
 	}
 	free(sweep_freqs);
@@ -821,13 +826,13 @@ void roach_sweep(roach_state_t *m_roach, double m_min_freq, double m_max_freq,
 			rf_freqs[i] = m_roach->freq_comb[i] + m_centerfreq;
 		}
 		snprintf(fullpath, sizeof(fullpath), "%s/last_bb_freqs.dat", m_savepath);
-		printf("Wrote %s\n", fullpath);
+		blast_info("Wrote %s\n", fullpath);
 		roach_save_1d(fullpath, m_roach->freq_comb, sizeof(*m_roach->freq_comb), m_roach->freqlen);
 		snprintf(fullpath, sizeof(fullpath), "%s/last_rf_freqs.dat", m_savepath);
-		printf("Wrote %s\n", fullpath);
+		blast_info("Wrote %s\n", fullpath);
 		roach_save_1d(fullpath, rf_freqs, sizeof(*rf_freqs), m_roach->freqlen);
 		snprintf(fullpath, sizeof(fullpath), "%s/last_channels.dat", m_savepath);
-		printf("Wrote %s\n", fullpath);
+		blast_info("Wrote %s\n", fullpath);
 		roach_save_1d(fullpath, channels, sizeof(*channels), m_roach->freqlen);
 		if (write) {
 			roach_write_tones(m_roach, m_roach->freq_comb, m_roach->freqlen);
@@ -835,12 +840,12 @@ void roach_sweep(roach_state_t *m_roach, double m_min_freq, double m_max_freq,
 		sweep_lo(m_centerfreq, 5.0e5, 5.0e3, m_sock_desc, 1, m_savepath, m_packetdir);
 	} else {
 		FILE *m_fd;
-		m_fd = fopen("/home/lazarus/sam_git/BLAST_TNG_devel/kid_freqs.dat", "r");
+		m_fd = fopen("/data/etc/blast/kid_freqs.dat", "r");
 		double m_kid_freqs[m_roach->num_kids];
 		size_t i = 0;
 		while(!feof(m_fd)) {
 			fscanf(m_fd, "%lg\n", &m_kid_freqs[i]);
-			printf("%g\n", m_kid_freqs[i]);
+			blast_info("%g\n", m_kid_freqs[i]);
 			// m_roach->kid_freqs[i] = m_kid_freqs[i];
 			i++;
 		}
@@ -852,8 +857,8 @@ void roach_sweep(roach_state_t *m_roach, double m_min_freq, double m_max_freq,
 	}
 	if (plot) {
 		char command[FILENAME_MAX];
-		snprintf(command, sizeof(command), "python -i ./python_embed/plot_sweep.py %s/%s", m_savepath, m_packetdir);
-		printf("%s\n", command);
+		snprintf(command, sizeof(command), "python -i /data/etc/blast/plot_sweep.py %s/%s", m_savepath, m_packetdir);
+		blast_info("%s\n", command);
 		fflush(stdout);
 		system(command);
 	}
@@ -864,13 +869,13 @@ void get_kid_freqs(roach_state_t *m_roach, const char *m_packetpath)
 {
 	// char fullpath[FILENAME_MAX];
 	char command[FILENAME_MAX];
-	snprintf(command, sizeof(command), "python -i ./python_embed/find_kids_blast.py %s", m_packetpath);
-	printf("%s\n", command);
+	snprintf(command, sizeof(command), "python -i /data/etc/blast/find_kids_blast.py %s", m_packetpath);
+	blast_info("%s\n", command);
 	fflush(stdout);
 	system(command);
 	// size_t num_freqs = sizeof(kid_freqs)/sizeof(double);
 	// snprintf(fullpath, sizeof(fullpath), "%s/last_kid_freqs.dat", m_savepath);
-	// printf("Wrote %s\n", fullpath);
+	// blast_info("Wrote %s\n", fullpath);
 	// roach_save_1d(fullpath, kid_freqs, sizeof(*kid_freqs), num_freqs);
 }
 
@@ -889,7 +894,6 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
      * If we have an error, or do not receive data from the Roach in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
-    blast_info("Upload process return, m_why: %d", m_why);
     if (m_why & (PH_IOMASK_ERR)) {
         blast_err("disconnecting from firmware upload at %s due to connection issue", state->roach->address);
         state->result = ROACH_UPLOAD_RESULT_ERROR;
@@ -983,6 +987,15 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 	usleep(100000);
     }
     if (state.result != ROACH_UPLOAD_RESULT_SUCCESS) return -1;
+    /*int katcp_ready = send_rpc_katcl(m_roach->rpc_conn, UPLOAD_TIMEOUT,
+                       KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?fpgastatus",
+                       KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
+                       NULL);
+    while (katcp_ready != KATCP_RESULT_OK) {
+        blast_info("katcp_ready: %d", katcp_ready);
+	blast_err("FPGA not ready for calibration on %s", m_roach->address);
+        usleep(100000);
+    }*/
     return 0;
 }
 
@@ -1016,11 +1029,13 @@ void *roach_cmd_loop(void)
 	blast_info("Starting Roach Commanding Thread");
 	for (int i = 0; i < NUM_ROACHES; i++) {
 		roach_state_table[i].status = ROACH_STATUS_BOOT;
-		roach_state_table[i].desired_status = ROACH_STATUS_CALIBRATED;
+		roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
 	}
 	while (!shutdown_mcp) {
 		// TODO(SAM/LAURA): Fix Roach 1/Add error handling
-		for (int i = 0; i < NUM_ROACHES; i++) {
+		char *cal_command;
+		for (int i = 1; i = 1; i = 1) {
+		// for (int i = 0; i < NUM_ROACHES; i++) {
 			if (roach_state_table[i].status == ROACH_STATUS_BOOT && roach_state_table[i].desired_status > ROACH_STATUS_BOOT) {
 				blast_info("Attempting to connect to %s", roach_state_table[i].address);
 				roach_state_table[i].katcp_fd = net_connect(roach_state_table[i].address,
@@ -1037,15 +1052,77 @@ void *roach_cmd_loop(void)
 				blast_info("Uploading firmware to ROACH%d", i + 1);
 				if (roach_upload_fpg(&roach_state_table[i], test_fpg) == 0) {
 				// TODO(Sam/Laura): read ?fpgastatus to verify programmed
+					sleep(2);
 					roach_state_table[i].status = ROACH_STATUS_PROGRAMMED;
+					roach_state_table[i].desired_status = ROACH_STATUS_CONFIGURED;
 				}
 			}
 			if (roach_state_table[i].status == ROACH_STATUS_PROGRAMMED &&
-				roach_state_table[i].desired_status >=ROACH_STATUS_CALIBRATED) {
+				roach_state_table[i].desired_status >= ROACH_STATUS_CONFIGURED) {
+				blast_info("Configuring Valon and software registers on ROACH%d", i + 1);
+				system("sudo python /data/etc/blast/set_valon.py");
+				roach_write_int(&roach_state_table[i], "dds_shift", 305, 0);/* DDS LUT shift, in clock cycles */
+				roach_read_int(&roach_state_table[i], "dds_shift");
+				roach_write_int(&roach_state_table[i], "fft_shift", 255, 0);/* FFT shift schedule */
+				roach_read_int(&roach_state_table[i], "fft_shift");
+				roach_write_int(&roach_state_table[i], "sync_accum_len", 1048575, 0);/* Number of accumulations */
+				roach_read_int(&roach_state_table[i], "sync_accum_len");
+				roach_write_int(&roach_state_table[i], "tx_destip", dest_ip, 0);/* UDP destination IP */
+				roach_write_int(&roach_state_table[i], "tx_destport", roach_state_table[i].dest_port, 0); /* UDP port */
+				roach_state_table[i].status = ROACH_STATUS_CONFIGURED;
+				roach_state_table[i].desired_status = ROACH_STATUS_CALIBRATED;
+			}
+			if (roach_state_table[i].status == ROACH_STATUS_CONFIGURED &&
+				roach_state_table[i].desired_status >= ROACH_STATUS_CALIBRATED) {
+				roach_write_int(&roach_state_table[i], "dac_reset", 1, 0);
+				// TODO(Sam/Laura): replace with C function?
 				blast_info("Calibrating QDRs... ");
 				// qdr_cal2(&roach_state_table[i], 0);
-				// system ("python /data/etc/blast/python_calls/cal_roach_qdr.py");
+				asprintf(&cal_command, "python /data/etc/blast/cal_roach_qdr.py %s", roach_state_table[i].address);
+				if (system(cal_command) > -1) {
+					blast_info("Calibration completed on ROACH%d", i + 1);
+					roach_write_int(&roach_state_table[i], "tx_rst", 0, 0);
+					roach_write_int(&roach_state_table[i], "tx_rst", 1, 0);
+					roach_write_int(&roach_state_table[i], "tx_rst", 0, 0);
+					roach_write_int(&roach_state_table[i], "pps_start", 1, 0);
+					roach_state_table[i].status = ROACH_STATUS_CALIBRATED;
+					roach_state_table[i].desired_status = ROACH_STATUS_TONE;
+				} else {
+					blast_info("Calibration failed on ROACH%d", i + 1);
+				}
 			}
+			if (roach_state_table[i].status == ROACH_STATUS_CALIBRATED &&
+				roach_state_table[i].desired_status >= ROACH_STATUS_TONE) {
+				// TODO(Sam): Find glitch in freq comb which results in missing channels at accumulator
+				blast_info("Generating frequency comb for ROACH%d", i + 1);
+				roach_freq_comb(&roach_state_table[i], -150.01213e6, 150.021234e6, 80);
+				roach_write_tones(&roach_state_table[i], roach_state_table[i].freq_comb, roach_state_table[i].freqlen);
+				blast_info("Frequency comb written to ROACH%d", i + 1);
+				roach_state_table[i].status = ROACH_STATUS_TONE;
+				roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
+			}
+			/*if (roach_state_table[i].status == ROACH_STATUS_TONE &&
+				roach_state_table[i].desired_status >= ROACH_STATUS_STREAMING) {
+				// TODO(Sam): Streaming starts automatically if write is successful -> 
+				// Find a way to verify that packets are streaming
+			}	
+			if (roach_state_table[i].status == ROACH_STATUS_STREAMING &&
+				roach_state_table[i].desired_status >= ROACH_STATUS_VNA) {
+				blast_info("ROACH%d, starting VNA sweep", i + 1);
+				roach_sweep(&roach_state_table[i], -225.1213e6, 225.21234e6, 80, 750e6, roach_state_table[i].vna_path, "test", sock, 1, 0, 1);
+			}
+			if (roach_state_table[i].status == ROACH_STATUS_VNA &&
+				roach_state_table[i].desired_status >= ROACH_STATUS_ARRAY_FREQS) {
+			
+			}
+			if (roach_state_table[i].status == ROACH_STATUS_ARRAY_FREQS &&
+				roach_state_table[i].desired_status >= ROACH_STATUS_TARG) {
+			
+			}
+			if (roach_state_table[i].status == ROACH_STATUS_ARRAY_FREQS &&
+				roach_state_table[i].desired_status >= ROACH_STATUS_ACQUIRING) {
+			
+			}*/
 		}
 	}
 }
@@ -1055,8 +1132,12 @@ int init_roach(void)
     memset(roach_state_table, 0, sizeof(roach_state_t) * 5);
     for (int i = 0; i < NUM_ROACHES; i++) {
     	 asprintf(&roach_state_table[i].address, "roach%d", i + 1);
-    	 asprintf(&roach_state_table[i].vna_path, "/data/etc/blast/r%d/vna", i + 1);
-    	 asprintf(&roach_state_table[i].targ_path, "/data/etc/blast/r%d/targ", i + 1);
+    	 // asprintf(&roach_state_table[i].vna_path, "/data/etc/blast/r%d/vna", i + 1);
+    	 // asprintf(&roach_state_table[i].targ_path, "/data/etc/blast/r%d/targ", i + 1);
+    	 asprintf(&roach_state_table[i].vna_path, "/home/lazarus/iqstream/r%d/vna", i + 1);
+    	 asprintf(&roach_state_table[i].targ_path, "/home/lazarus/iqstream/r%d/targ", i + 1);
+    	 roach_state_table[i].which = i + 1;
+    	 roach_state_table[i].dest_port = 60000 + i;
 	}
     ph_thread_t *roach_cmd_thread = ph_thread_spawn(roach_cmd_loop, NULL);
     return 0;
