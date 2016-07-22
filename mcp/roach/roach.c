@@ -106,18 +106,6 @@ typedef enum {
 } e_roach_upload_result;
 
 typedef struct {
-    int32_t I;
-    int32_t Q;
-} __attribute__((packed)) udp_element_t;
-
-typedef struct {
-    udp_element_t data[1024];
-    uint32_t cycle_count;
-    uint32_t pps_count:24;
-    uint32_t pkt_count:8;
-} __attribute__((packed)) udp_packet_t;
-
-typedef struct {
     size_t len;
     double *I;
     double *Q;
@@ -164,8 +152,6 @@ typedef struct roach_state {
     ph_sock_t *udp_socket;
 } roach_state_t;
 
-#define NUM_ROACHES 5
-static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
 static roach_state_t roach_state_table[NUM_ROACHES];
 
 typedef struct {
@@ -1034,7 +1020,7 @@ void *roach_cmd_loop(void)
 	while (!shutdown_mcp) {
 		// TODO(SAM/LAURA): Fix Roach 1/Add error handling
 		char *cal_command;
-		for (int i = 1; i = 1; i = 1) {
+		for (int i = 1; i < 2; i++) {
 		// for (int i = 0; i < NUM_ROACHES; i++) {
 			if (roach_state_table[i].status == ROACH_STATUS_BOOT && roach_state_table[i].desired_status > ROACH_STATUS_BOOT) {
 				blast_info("Attempting to connect to %s", roach_state_table[i].address);
