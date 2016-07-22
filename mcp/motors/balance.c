@@ -23,6 +23,7 @@
  * Created on: Apr 27, 2016 by Laura Fissel
  */
 #include <stdlib.h>
+#include <ec_motors.h>
 
 #include "actuators.h"
 #include "mcp.h"
@@ -32,6 +33,7 @@
 #include "pointing_struct.h" /* To access ACSData */
 #include "tx.h" /* InCharge */
 #include "balance.h"
+#include "motors.h"
 
 #define BAL_EL_FILTER_LEN 500 // 100 seconds
 
@@ -55,15 +57,11 @@ static balance_state_t balance_state;
 void ControlBalance(void)
 {
 	double i_el = 0.0;
-	double i_el_avg = 0.0;
+	static double i_el_avg = 0.0;
     static int firsttime = 1;
-    static channel_t* el_current_addr;
+    int i_motors = GETREADINDEX(motor_index);
 
-    if (firsttime) {
-        el_current_addr = channels_find_by_name("mc_el_i_cmd");
-        firsttime = 0;
-    }
-    GET_VALUE(el_current_addr, i_el);
+	i_el = ElevMotorData[i_motors].current;
 
 //   calculate speed and direction
     i_el_avg = i_el / BAL_EL_FILTER_LEN + i_el_avg * (BAL_EL_FILTER_LEN - 1) / BAL_EL_FILTER_LEN;
