@@ -28,8 +28,24 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <glib.h>
+
+typedef struct {
+    int32_t I;
+    int32_t Q;
+} __attribute__((packed)) udp_element_t;
+
+typedef struct {
+    udp_element_t data[1024];
+    uint32_t cycle_count;
+    uint32_t pps_count:24;
+    uint32_t pkt_count:8;
+} __attribute__((packed)) udp_packet_t;
 
 typedef struct roach_state roach_state_t;
+
+#define NUM_ROACHES 5
+static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
 
 const char *roach_get_name(roach_state_t *m_roach);
 int roach_write_data(roach_state_t *m_roach, const char *m_register, uint8_t *m_data,
