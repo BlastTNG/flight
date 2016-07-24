@@ -760,23 +760,27 @@ void save_packets(size_t m_num_packets, int m_sock_desc, double m_filetag,
 	}
 }
 
-// Takes min, max, number of freqs to be written and sorts them in canonical FFT order
-void roach_freq_comb(roach_state_t *m_roach, double m_min_freq, double m_max_freq, size_t m_freqlen)
+void roach_freq_comb(roach_state_t *m_roach)
 {
-	double delta_f = (m_max_freq - m_min_freq) / (m_freqlen - 1);
-	blast_info("Max freq: %0.9g\n", m_max_freq/1.0e6);
-	blast_info("Min freq: %0.9g\n", m_min_freq/1.0e6);
+	size_t m_freqlen = 300;
+	double p_max_freq = 255.021234e6;
+	double p_min_freq = 5.2342e6;
+	double n_max_freq = -5.2342e6+5.0e4;
+	double n_min_freq = -255.021234e6+5.0e4;
 	m_roach->freq_comb = calloc(m_freqlen, sizeof(double));
 	m_roach->freqlen = m_freqlen;
 	/* positive freqs */
+	double p_delta_f = (n_max_freq - n_min_freq) / ((m_freqlen/2) - 1);
 	for (size_t i = m_freqlen/2; i-- > 0;) {
-		m_roach->freq_comb[m_freqlen/2 - (i + 1)] = m_max_freq - i*delta_f;
+		m_roach->freq_comb[m_freqlen/2 - (i + 1)] = p_max_freq - i*p_delta_f;
 	}
 	/* negative freqs */
+	double n_delta_f = (n_max_freq - n_min_freq) / ((m_freqlen/2) - 1);
 	for (size_t i = 0; i < m_freqlen/2; i++) {
-		m_roach->freq_comb[i + m_freqlen/2] = m_min_freq + i*delta_f;
+		m_roach->freq_comb[i + m_freqlen/2] = n_min_freq + i*n_delta_f;
 	}
-	blast_info("Number of tones: %zd\n", m_roach->freqlen);
+	for (size_t i = 0; i < m_freqlen; i++) {
+	}
 }
 
 // Valon commands should be switched to C, Beaglebone/Remote Serial
@@ -809,30 +813,25 @@ void sweep_lo(double m_centerfreq, double m_span, double delta_f, int m_sock_des
 }
 
 // Revisit, may have too many arguments
-void roach_sweep(roach_state_t *m_roach, double m_min_freq, double m_max_freq,
-		size_t m_freqlen, double m_centerfreq, const char *m_savepath,
-			const char *m_packetdir, int m_sock_desc, bool vna, bool write, bool plot)
+void roach_sweep(roach_state_t *m_roach, double m_centerfreq, const char *m_savepath,
+		const char *m_packetdir, int m_sock_desc, bool vna, bool write, bool plot)
 {
 	if (vna) {
 		char fullpath[FILENAME_MAX];
 		double *rf_freqs;
 		int *channels;
-		double delta_f = (m_max_freq - m_min_freq) / (m_freqlen - 1);
-		rf_freqs = calloc(m_freqlen, sizeof(double));
-		channels = calloc(m_freqlen, sizeof(int));
-		roach_freq_comb(m_roach, m_min_freq, m_max_freq, m_freqlen);
+		rf_freqs = calloc(m_roach->freqlen, sizeof(double));
+		channels = calloc(m_roach->freqlen, sizeof(int));
+		roach_freq_comb(m_roach);
 		for (size_t i = 0; i < m_roach->freqlen; i++) {
 			channels[i] = i;
 			rf_freqs[i] = m_roach->freq_comb[i] + m_centerfreq;
 		}
 		snprintf(fullpath, sizeof(fullpath), "%s/last_bb_freqs.dat", m_savepath);
-		blast_info("Wrote %s\n", fullpath);
 		roach_save_1d(fullpath, m_roach->freq_comb, sizeof(*m_roach->freq_comb), m_roach->freqlen);
 		snprintf(fullpath, sizeof(fullpath), "%s/last_rf_freqs.dat", m_savepath);
-		blast_info("Wrote %s\n", fullpath);
 		roach_save_1d(fullpath, rf_freqs, sizeof(*rf_freqs), m_roach->freqlen);
 		snprintf(fullpath, sizeof(fullpath), "%s/last_channels.dat", m_savepath);
-		blast_info("Wrote %s\n", fullpath);
 		roach_save_1d(fullpath, channels, sizeof(*channels), m_roach->freqlen);
 		if (write) {
 			roach_write_tones(m_roach, m_roach->freq_comb, m_roach->freqlen);
@@ -850,6 +849,7 @@ void roach_sweep(roach_state_t *m_roach, double m_min_freq, double m_max_freq,
 			i++;
 		}
 		fclose(m_fd);
+		// reorder frequencies
 		if (write) {
 			roach_write_tones(m_roach, m_kid_freqs, m_roach->num_kids);
 		}
@@ -959,6 +959,22 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status, int m_err
     }
 }
 
+int roach_upload_status(roach_state_t *m_roach)
+{
+    int success_val = send_rpc_katcl(m_roach->rpc_conn, 1000,
+    	KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?fpgastatus",
+	KATCP_FLAG_LAST | KATCP_FLAG_STRING, "",
+	NULL);
+    while (success_val != KATCP_RESULT_OK) {
+    	char *ret = arg_string_katcl(m_roach->rpc_conn, 1);
+	blast_info("**********%s", ret);
+	usleep(1000);
+    }
+    char *ret = arg_string_katcl(m_roach->rpc_conn, 1);
+    blast_info("FPGA %s", ret);
+    return 0;
+}
+
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 {
     srand48(time(NULL));
@@ -987,16 +1003,11 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 	usleep(100000);
     }
     if (state.result != ROACH_UPLOAD_RESULT_SUCCESS) return -1;
-    /*int katcp_ready = send_rpc_katcl(m_roach->rpc_conn, UPLOAD_TIMEOUT,
-                       KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?fpgastatus",
-                       KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
-                       NULL);
-    while (katcp_ready != KATCP_RESULT_OK) {
-        blast_info("katcp_ready: %d", katcp_ready);
-	blast_err("FPGA not ready for calibration on %s", m_roach->address);
-        usleep(100000);
-    }*/
+    if (state.result = ROACH_UPLOAD_RESULT_SUCCESS) {
+	sleep(3);
+	roach_upload_status(m_roach);
     return 0;
+    }
 }
 
 /**
@@ -1051,8 +1062,6 @@ void *roach_cmd_loop(void)
 				roach_state_table[i].desired_status >= ROACH_STATUS_PROGRAMMED) {
 				blast_info("Uploading firmware to ROACH%d", i + 1);
 				if (roach_upload_fpg(&roach_state_table[i], test_fpg) == 0) {
-				// TODO(Sam/Laura): read ?fpgastatus to verify programmed
-					sleep(2);
 					roach_state_table[i].status = ROACH_STATUS_PROGRAMMED;
 					roach_state_table[i].desired_status = ROACH_STATUS_CONFIGURED;
 				}
@@ -1093,9 +1102,8 @@ void *roach_cmd_loop(void)
 			}
 			if (roach_state_table[i].status == ROACH_STATUS_CALIBRATED &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_TONE) {
-				// TODO(Sam): Find glitch in freq comb which results in missing channels at accumulator
 				blast_info("Generating frequency comb for ROACH%d", i + 1);
-				roach_freq_comb(&roach_state_table[i], -150.01213e6, 150.021234e6, 80);
+				roach_freq_comb(&roach_state_table[i]);
 				roach_write_tones(&roach_state_table[i], roach_state_table[i].freq_comb, roach_state_table[i].freqlen);
 				blast_info("Frequency comb written to ROACH%d", i + 1);
 				roach_state_table[i].status = ROACH_STATUS_TONE;
@@ -1143,97 +1151,3 @@ int init_roach(void)
     return 0;
 }
 
-/** MAIN FROM CONSOLE INTERFACE, SPLIT UP **/
-int example_main(void)
-{
-	printf("Setting Valon...\n");
-	system("python ./python_embed/set_valon.py");
-	printf("Done\n");
-	char server[] = "192.168.40.52";
-	int fd;
-	fd = net_connect(server, 0, NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS);
-	roach_state_t roach2;
-	// Populate each roach state with its attributes
-	roach2.rpc_conn = create_katcl(fd);
-	roach2.address = "192.168.40.52";
-	roach2.port = 7147;
-	roach2.vna_path = "./iqstream/r2/vna";
-	roach2.targ_path = "./iqstream/r2/targ";
-	// roach2.num_kids = 273;
-	uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 41*pow(2, 8) + 2;
-	uint16_t dest_port = 60000;
-	/* Set software registers */
-	roach_write_int(&roach2, "dds_shift", 305, 0);	/* DDS LUT shift, in clock cycles */
-	roach_write_int(&roach2, "fft_shift", 255, 0);	/* FFT shift schedule */
-	roach_write_int(&roach2, "sync_accum_len", 1048575, 0); /* Number of accumulations */
-	roach_write_int(&roach2, "tx_destip", dest_ip, 0);		/* UDP destination IP */
-	roach_write_int(&roach2, "tx_destport", dest_port, 0);		/* UDP port */
-	roach_write_int(&roach2, "pps_start", 1, 0);
-	roach_read_int(&roach2, "dds_shift");
-	uint16_t *m_qdr_I = calloc(sizeof(uint16_t), 1<<22);
-	uint16_t *m_qdr_Q = calloc(sizeof(uint16_t), 1<<22);
-	int sock = init_socket();
-	char option;
-    	bool isRunning = true;
-    	while(isRunning == true) {
-        	puts(
-		"\n\n"
-		"\n\n[0]\tUpload fpg to ROACH"
-		"\n\n[1]\tInitialize"
-		"\n\n[2]\tWrite test comb"
-		"\n\n[3]\tVNA Sweep"
-             	"\n\n[4]\tFind KID freqs"
-             	"\n\n[5]\tTarget Sweep"
-             	"\n\n[6]\tStream Packets"
-             	"\n\n[x]\tExit"
-		"\n\n");
-		option = getchar();
-        	switch(option) {
-        	case '0':
-			// roach_upload_fpg(&roach2, roach2_fpg);
-                     	isRunning = false;
-			break;
-		case '1':
-			roach_write_int(&roach2, "dac_reset", 1, 0);
-			printf("Calling Python script to calibrate QDR...\n");
-			system("python ./python_embed/cal_roach_qdr.py");
-			printf("Done\n");
-			roach_write_int(&roach2, "tx_rst", 0, 0);	/* perform only once per fpg upload */
-			roach_write_int(&roach2, "tx_rst", 1, 0);
-			roach_write_int(&roach2, "tx_rst", 0, 0);
-			roach_write_int(&roach2, "pps_start", 1, 0);
-			break;
-		case '2':
-			roach_freq_comb(&roach2, -150.01213e6, 150.021234e6, 80);
-			roach_write_tones(&roach2, roach2.freq_comb, roach2.freqlen);
-			roach_read_QDR(&roach2, m_qdr_I, m_qdr_Q);
-			printf("%u\t%u\n", m_qdr_I[0], m_qdr_Q[0]);
-			// save_packed_luts(&roach2);
-			break;
-		case '3':
-			printf("Starting VNA sweep\n");
-			roach_sweep(&roach2, -225.1213e6, 225.21234e6, 80, 750e6, roach2.vna_path, "test", sock, 1, 0, 1);
-			break;
-		case '4':
-			get_kid_freqs(&roach2, "./iqstream/r2/vna/test");
-			break;
-		case '5':
-			printf("Starting target sweep\n");
-			roach_sweep(&roach2, 750e6, 0, 0, 0, roach2.targ_path, "test", sock, 0, 1, 1);
-			break;
-            	case '6': {
-			int which_chan;
-			printf("\nChannel Number = ? ");
-			scanf("%d", &which_chan);
-			stream_packets(100000, sock, which_chan);
-			break;
-		}
-		case 'x':
-                     	isRunning = false;
-                     	return 0;
-            	default :
-                     	break;
-        }
-    	}
-    	return 0;
-}
