@@ -79,10 +79,10 @@ void read_thermometers(void) {
     static int firsttime_therm = 1;
     float test;
     float test2;
-    test = labjack_get_value(0, 0);
+    test = labjack_get_value(0, 13);
     blast_warn("labjack1 is %f", test);
 
-    test2 = labjack_get_value(1, 0);
+    test2 = labjack_get_value(1, 13);
     blast_warn("labjack2 is %f", test2);
 
     static channel_t* rox_fpa_1k_Addr;
