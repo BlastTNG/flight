@@ -49,10 +49,10 @@
 #define DIODE_4K_FILT 4
 #define DIODE_VCS2_HX 7
 #define DIODE_VCS1_PLATE 10
+#define DIODE_CHARCOAL_HS 13
 // labjack 2
-#define DIODE_CHARCOAL_HS 0
-#define DIODE_CHARCOAL 1
-#define DIODE_4K_PLATE 2
+#define DIODE_CHARCOAL 0
+#define DIODE_4K_PLATE 1
 
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
 // TODO(ian): Update these for the thermometers and channels we have.
