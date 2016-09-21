@@ -88,7 +88,7 @@ OSFILES = Config/Makefile.Linux-2-6-24 Config/config.Linux-2-6-24.h \
 	Config/Makefile.MacOSX-10-5 Config/config.MacOSX-10-5.h \
 	Config/Makefile.DragonFly-2-8-2 Config/config.DragonFly-2-8-2.h
 
-all: progs doc
+all: progs
 
 scmclean: gitclean
 
