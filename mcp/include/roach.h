@@ -29,6 +29,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <glib.h>
+#include <math.h>
+#include "phenom/socket.h"
 
 typedef struct {
     int32_t I;
@@ -42,10 +44,103 @@ typedef struct {
     uint32_t pkt_count:8;
 } __attribute__((packed)) udp_packet_t;
 
-typedef struct roach_state roach_state_t;
+typedef enum {
+    ROACH_STATUS_BOOT = 0,
+    ROACH_STATUS_CONNECTED,
+    ROACH_STATUS_PROGRAMMED,
+    ROACH_STATUS_CONFIGURED,
+    ROACH_STATUS_CALIBRATED,
+    ROACH_STATUS_TONE,
+    ROACH_STATUS_STREAMING,
+    ROACH_STATUS_VNA,
+    ROACH_STATUS_ARRAY_FREQS,
+    ROACH_STATUS_TARG,
+    ROACH_STATUS_ACQUIRING,
+} e_roach_status;
 
-#define NUM_ROACHES 5
-static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
+typedef enum {
+    ROACH_UPLOAD_RESULT_WORKING = 0,
+    ROACH_UPLOAD_CONN_REFUSED,
+    ROACH_UPLOAD_RESULT_TIMEOUT,
+    ROACH_UPLOAD_RESULT_ERROR,
+    ROACH_UPLOAD_RESULT_SUCCESS
+} e_roach_upload_result;
+
+typedef struct {
+    size_t len;
+    double *I;
+    double *Q;
+} roach_lut_t;
+
+typedef struct {
+    size_t len;
+    uint16_t *I;
+    uint16_t *Q;
+} roach_uint16_lut_t;
+
+typedef struct roach_state {
+    int which;
+    int katcp_fd;
+    e_roach_status status;
+    e_roach_status desired_status;
+
+    int has_error;
+    const char *last_err;
+    const char *address;
+    uint16_t port;
+
+    double *freq_residuals;
+
+    double *freq_comb;
+    size_t freqlen;
+    double *kid_freqs;
+    size_t num_kids;
+
+    // First two LUTs are for building
+    roach_lut_t DDS;
+    roach_lut_t DAC;
+    // This LUT is what gets written
+    roach_uint16_lut_t LUT;
+
+    char *vna_path;
+    char *targ_path;
+    char *channels_path;
+    uint16_t dest_port;
+
+    // PPC link
+    struct katcl_line *rpc_conn;
+} roach_state_t;
+
+typedef struct {
+    const char *firmware_file;
+    uint16_t port;
+    struct timeval timeout;
+    e_roach_upload_result result;
+    roach_state_t *roach;
+    ph_sock_t *sock;
+} firmware_state_t;
+
+// Called each time a packet is received
+typedef struct data_packet {
+	unsigned char *rcv_buffer;
+	struct ethhdr *eth;
+	struct iphdr *ip;
+	float *I;
+	float *Q;
+	uint32_t checksum;
+	uint32_t pps_count;
+	uint32_t clock_count;
+	uint32_t packet_count;
+} data_packet_t;
+
+#define NUM_ROACHES 4
+#define NUM_ROACH_UDP_CHANNELS 1024
+
+static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
+
+// Destination IP for UDP packets
+static const char udp_dest[32] = "192.168.42.1";
+static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 42*pow(2, 8) + 1;
 
 const char *roach_get_name(roach_state_t *m_roach);
 int roach_write_data(roach_state_t *m_roach, const char *m_register, uint8_t *m_data,
@@ -55,6 +150,8 @@ int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *m_regis
 int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_val, uint32_t m_offset);
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 
+// Defined in roach_udp.c
+void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t m_numchannels);
 
 void write_roach_channels_244hz(void);
 void shutdown_roaches(void);

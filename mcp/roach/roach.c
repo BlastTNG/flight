@@ -80,104 +80,10 @@ size_t freqlen = 2;
 // Firmware image files
 const char roach_fpg[5][11] = {"roach1.fpg", "roach2.fpg", "roach3.fpg", "roach4.fpg", "roach5.fpg"};
 const char test_fpg[] = "/data/etc/blast/roach2_8tap_wide_2016_Jun_25_2016.fpg";
-// Destination IP for UDP packets
-static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 42*pow(2, 8) + 1;
-
-typedef enum {
-    ROACH_STATUS_BOOT = 0,
-    ROACH_STATUS_CONNECTED,
-    ROACH_STATUS_PROGRAMMED,
-    ROACH_STATUS_CONFIGURED,
-    ROACH_STATUS_CALIBRATED,
-    ROACH_STATUS_TONE,
-    ROACH_STATUS_STREAMING,
-    ROACH_STATUS_VNA,
-    ROACH_STATUS_ARRAY_FREQS,
-    ROACH_STATUS_TARG,
-    ROACH_STATUS_ACQUIRING,
-} e_roach_status;
-
-typedef enum {
-    ROACH_UPLOAD_RESULT_WORKING = 0,
-    ROACH_UPLOAD_CONN_REFUSED,
-    ROACH_UPLOAD_RESULT_TIMEOUT,
-    ROACH_UPLOAD_RESULT_ERROR,
-    ROACH_UPLOAD_RESULT_SUCCESS
-} e_roach_upload_result;
-
-typedef struct {
-    size_t len;
-    double *I;
-    double *Q;
-} roach_lut_t;
-
-typedef struct {
-    size_t len;
-    uint16_t *I;
-    uint16_t *Q;
-} roach_uint16_lut_t;
-
-typedef struct roach_state {
-    int which;
-    int katcp_fd;
-    e_roach_status status;
-    e_roach_status desired_status;
-
-    int has_error;
-    const char *last_err;
-    const char *address;
-    uint16_t port;
-
-    double *freq_residuals;
-
-    double *freq_comb;
-    size_t freqlen;
-    double *kid_freqs;
-    size_t num_kids;
-
-    // First two LUTs are for building
-    roach_lut_t DDS;
-    roach_lut_t DAC;
-    // This LUT is what gets written
-    roach_uint16_lut_t LUT;
-
-    char *vna_path;
-    char *targ_path;
-    char *channels_path;
-    uint16_t dest_port;
-
-    // PPC link
-    struct katcl_line *rpc_conn;
-    // Packet link
-    ph_sock_t *udp_socket;
-} roach_state_t;
 
 static roach_state_t roach_state_table[NUM_ROACHES];
 
-typedef struct {
-    const char *firmware_file;
-    uint16_t port;
-    struct timeval timeout;
-    e_roach_upload_result result;
-    roach_state_t *roach;
-    ph_sock_t *sock;
-} firmware_state_t;
-
 static ph_thread_t *roach_state = NULL;
-
-// Called each time a packet is received
-typedef struct data_packet {
-	unsigned char *rcv_buffer;
-	struct ethhdr *eth;
-	struct iphdr *ip;
-	float *I;
-	float *Q;
-	uint32_t checksum;
-	uint32_t pps_count;
-	uint32_t clock_count;
-	uint32_t packet_count;
-} data_packet_t;
-
 
 static void roach_buffer_ntohs(uint16_t *m_buffer, size_t m_len)
 {
@@ -1123,7 +1029,7 @@ void *roach_cmd_loop(void)
 
 int init_roach(void)
 {
-    memset(roach_state_table, 0, sizeof(roach_state_t) * 5);
+    memset(roach_state_table, 0, sizeof(roach_state_t) * NUM_ROACHES);
     for (int i = 0; i < NUM_ROACHES; i++) {
     	 asprintf(&roach_state_table[i].address, "roach%d", i + 1);
     	 // asprintf(&roach_state_table[i].vna_path, "/data/etc/blast/r%d/vna", i + 1);
@@ -1132,7 +1038,9 @@ int init_roach(void)
     	 asprintf(&roach_state_table[i].targ_path, "/home/lazarus/iqstream/r%d/targ", i + 1);
     	 roach_state_table[i].which = i + 1;
     	 roach_state_table[i].dest_port = 60000 + i;
+	    roach_udp_networking_init(i, &roach_state_table[i], NUM_ROACH_UDP_CHANNELS);
 	}
+
     ph_thread_t *roach_cmd_thread = ph_thread_spawn(roach_cmd_loop, NULL);
     return 0;
 }
