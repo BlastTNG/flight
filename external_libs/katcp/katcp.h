@@ -31,6 +31,12 @@ struct katcp_cmd_map;
 struct katcp_vrbl;
 struct katcp_vrbl_payload;
 
+// TODO(laura/sam): This should be defined in CMakelists.txt,
+// however the definition doesn't seem to be recognized by the compiler
+#ifndef KATCP_PROTOCOL_MAJOR_VERSION
+#define KATCP_PROTOCOL_MAJOR_VERSION 4
+#endif
+
 #define KATCP_CODEBASE_NAME     "Ckatcp" 
 
 #define KATCP_LIBRARY_LABEL     "katcp-library"
