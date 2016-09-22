@@ -139,8 +139,17 @@ typedef struct data_packet {
 static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
 
 // Destination IP for UDP packets
-static const char udp_dest[32] = "192.168.42.1";
-static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 42*pow(2, 8) + 1;
+// This is the destination IP on Lazarus:
+// static const char udp_dest[32] = "192.168.42.1";
+// static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 42*pow(2, 8) + 1;
+
+// Destination IP for fc1
+static const char udp_dest[32] = "192.168.1.3";
+static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 40*pow(2, 8) + 3;
+static const char udp_dest_name[32] = "fc1.blast";
+
+// TODO(laura/sam): Set up either a multicast address or arrange for the switch to mirror
+// the packet broadcast so that both FCs can receive the UDP packets.
 
 const char *roach_get_name(roach_state_t *m_roach);
 int roach_write_data(roach_state_t *m_roach, const char *m_register, uint8_t *m_data,

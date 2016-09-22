@@ -70,6 +70,7 @@ typedef struct {
     bool            opened;
     bool            have_warned;
     bool            want_reset;
+    uint8_t         which;
     uint8_t         seq_error_count;
     uint8_t         crc_error_count;
     uint8_t         seq_number;
@@ -91,11 +92,16 @@ typedef struct {
 roach_handle_data_t roach_udp[NUM_ROACHES];
 
 
-/*void roach_register_callback(int m_roach, roach_callback_t m_callback_fn) {
-    roach_handle_data_t *new_handler = calloc(1, sizeof(roach_handle_data_t));
-    new_handler->roach = m_roach;
-    new_handler->process_data = m_callback_fn;
-}*/
+/**
+ * Called every time we receive a roach udp packet.
+ *
+ */
+static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
+{
+    roach_handle_data_t *roach_udp = (roach_handle_data_t*) m_data;
+    blast_info("roach%i: roach_process_stream called!", roach_udp->which+1);
+}
+
 
 /**
  * Initialize the roach udp packet routine.  The state variable tracks each
@@ -104,7 +110,6 @@ roach_handle_data_t roach_udp[NUM_ROACHES];
  * @param m_which
  */
 
-// TODO(laura): this should be for all roaches, not called from each individual roach
 void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t m_numchannels)
 {
     ph_sockaddr_t addr;
@@ -112,6 +117,8 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
 	ph_result_t test = 0; // Used to test the status of some phenom calls. 0 = OK
 
     roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_which];
+    m_roach_udp->which = m_which;
+
     snprintf(m_roach_udp->address, sizeof(m_roach_udp->address), "roach%i-udp", m_which+1);
 	m_roach_udp->port = m_roach_state->dest_port;
 
@@ -133,9 +140,10 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
 	snprintf(m_roach_udp->listen_ip, sizeof(m_roach_udp->listen_ip), udp_dest);
     blast_info("Will listen on IP %s", m_roach_udp->listen_ip);
 
-    struct hostent *udp_ent = gethostbyaddr(udp_dest, sizeof(udp_dest), AF_INET6);
+//    struct hostent *udp_ent = gethostbyaddr(udp_dest, sizeof(udp_dest), AF_INET6);
+    struct hostent *udp_ent = gethostbyname(udp_dest_name);
     if (!udp_ent) {
-        blast_err("roach%i: Could not resolve broadcast IP %s!", m_which + 1, udp_dest);
+        blast_err("roach%i: Could not resolve broadcast IP %s!", m_which + 1, udp_dest_name);
         return;
     }
 
@@ -151,9 +159,13 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     // Allocate a phenom socket pointer
 	m_roach_udp->udp_socket = ph_sock_new_from_socket(sock, &addr, NULL);
 
-	blast_info("roach%i: Attempted to open UDP socket.", m_which + 1);
+    m_roach_udp->udp_socket->callback = roach_process_stream;
+    m_roach_udp->udp_socket->job.data = m_roach_udp;
 
-//    ph_sock_enable(m_roach_udp->udp_socket, TRUE);
+    m_roach_udp->opened = 1;
+	blast_info("roach%i: Attempting to open UDP socket.", m_which + 1);
+
+    ph_sock_enable(m_roach_udp->udp_socket, TRUE);
 
 /*    roach_udp[m_which].backoff_sec = min_backoff_sec;
     roach_udp[m_which].timeout.tv_sec = 5;

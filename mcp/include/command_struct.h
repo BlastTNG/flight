@@ -298,6 +298,12 @@ typedef struct slinger_commanding
     bool biphase_active;
 } slinger_commanding_t;
 
+typedef struct udp_roach
+{
+    bool store_udp;
+    bool publish_udp;
+} udp_roach_t;
+
 typedef struct roach
 {
     unsigned int desired_state;
@@ -322,6 +328,7 @@ struct CommandDataStruct {
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 
   roach_status_t roach[4];
+  udp_roach_t udp_roach[4];
 
   uei_commands_t uei_command;
 
