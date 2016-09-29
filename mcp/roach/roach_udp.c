@@ -62,6 +62,7 @@
 #include "phenom/listener.h"
 #include "phenom/socket.h"
 #include "phenom/memory.h"
+#include "phenom/string.h"
 
 typedef void (*roach_callback_t)(uint8_t*, size_t);
 
@@ -103,26 +104,32 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
     if (m_why & PH_IOMASK_ERR) {
         if (!roach_udp->have_warned) {
             blast_err("roach%i: IO error. ", roach_udp->which+1);
-            roach_udp->have_warned = 1;
+//            roach_udp->have_warned = 1;
         }
     	return;
     }
     if (m_why & PH_IOMASK_TIME) {
         if (!roach_udp->have_warned) {
             blast_err("roach%i: Timeout. ", roach_udp->which+1);
-            roach_udp->have_warned = 1;
+//            roach_udp->have_warned = 1;
         }
     	return;
     }
     if (m_why & PH_IOMASK_WAKEUP) {
         if (!roach_udp->have_warned) {
             blast_err("roach%i: Triggered by ph_job_wakeup. ", roach_udp->which+1);
-            roach_udp->have_warned = 1;
+//            roach_udp->have_warned = 1;
         }
     	return;
     }
     if (m_why & PH_IOMASK_READ) {
         blast_info("roach%i: There is data to be read! ", roach_udp->which+1);
+    }
+    if (m_why & PH_IOMASK_NONE) {
+        blast_info("roach%i: NBIO is disabled or not applicable! ", roach_udp->which+1);
+    }
+    if (m_why & PH_IOMASK_WRITE) {
+        blast_info("roach%i: Write flag set! ", roach_udp->which+1);
     }
 }
 
@@ -137,8 +144,9 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
 void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t m_numchannels)
 {
     ph_sockaddr_t addr;
-    uint32_t hostaddr, origaddr;
+    uint32_t origaddr;
 	ph_result_t test = 0; // Used to test the status of some phenom calls. 0 = OK
+    ph_string_t sockaddr_str;
 
     roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_which];
     m_roach_udp->which = m_which;
@@ -160,25 +168,40 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     m_roach_udp->opened = false;
     m_roach_udp->have_warned = false;
 
-    // Convert the broadcast ip address into a format that can be used by phenom
-	snprintf(m_roach_udp->listen_ip, sizeof(m_roach_udp->listen_ip), udp_dest);
-    blast_info("Will listen on IP %s", m_roach_udp->listen_ip);
-
 //    struct hostent *udp_ent = gethostbyaddr(udp_dest, sizeof(udp_dest), AF_INET6);
     struct hostent *udp_ent = gethostbyname(udp_dest_name);
     if (!udp_ent) {
         blast_err("roach%i: Could not resolve broadcast IP %s!", m_which + 1, udp_dest_name);
         return;
     }
+    uint32_t destaddr;
+    char destaddr_char[32];
+    destaddr = *(uint32_t*)(udp_ent->h_addr_list[0]);
+
+    snprintf(destaddr_char, sizeof(destaddr_char), "%d.%d.%d.%d",
+                 (destaddr & 0xff), ((destaddr >> 8) & 0xff),
+                 ((destaddr >> 16) & 0xff), ((destaddr >> 24) & 0xff));
+    blast_info("Will listen on address %s corresponds to IP %s", udp_dest_name, destaddr_char);
 
 	test = ph_sockaddr_set_from_hostent(&addr, udp_ent);
     if (test) {
-    	blast_err("roach%i: Could not read hostent for UDP socket! Error = ", m_which + 1);
+    	blast_err("roach%i: Could not read hostent for UDP socket! Error code = %u. %s",
+    	          m_which + 1, test, strerror(errno));
     }
+
+    // test = ph_sockaddr_print(&addr, &sockaddr_str, TRUE);
+	// if (test) {
+	// 	blast_info("roach%i: sockaddr string is %s", m_which+1, sockaddr_str.buf);
+	// } else {
+	//    blast_err("roach%i: Could not parse sockaddr structure. %s", m_which+1, strerror(errno));
+	// }
+
+	ph_sockaddr_set_port(&addr, m_roach_udp->port);
 
     // Open the unix socket file descriptor
     ph_socket_t sock = ph_socket_for_addr(&addr, SOCK_DGRAM, PH_SOCK_NONBLOCK);
-	ph_sockaddr_set_port(&addr, m_roach_udp->port);
+    blast_info("roach%d: Socket file descriptor is %i", m_which+1, (int) sock);
+    if (!sock) blast_err("roach%d: Failed to open Socket. %s", errno);
 
     // Allocate a phenom socket pointer
 	m_roach_udp->udp_socket = ph_sock_new_from_socket(sock, &addr, NULL);
@@ -187,25 +210,6 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     m_roach_udp->udp_socket->job.data = m_roach_udp;
 
     m_roach_udp->opened = 1;
-	blast_info("roach%i: Attempting to open UDP socket.", m_which + 1);
 
     ph_sock_enable(m_roach_udp->udp_socket, TRUE);
-
-/*    roach_udp[m_which].backoff_sec = min_backoff_sec;
-    roach_udp[m_which].timeout.tv_sec = 5;
-    roach_udp[m_which].timeout.tv_usec = 0;
-    ph_job_init(&(roach_udp[m_which].connect_job));
-    roach_udp[m_which].connect_job.callback = connect_roach_udp;
-    roach_udp[m_which].connect_job.data = &roach_udp[m_which];
-    roach_udp[m_which].num_channels = m_numchannels;
-
-    for (int loop = 0; loop < 2; loop++) {
-        ph_sock_resolve_and_connect(state.roach->address, state.port, 0,
-            &state.timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, firmware_upload_connected, &state);
-        while (state.result == ROACH_UPLOAD_RESULT_WORKING) {
-            usleep(1000);
-        }
-        if (state.result != ROACH_UPLOAD_CONN_REFUSED) break;
-	usleep(100000);
-    }*/
 }

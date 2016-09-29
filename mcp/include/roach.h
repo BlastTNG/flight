@@ -144,9 +144,9 @@ static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
 // static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 42*pow(2, 8) + 1;
 
 // Destination IP for fc1
-static const char udp_dest[32] = "192.168.1.3";
+static const char udp_dest[32] = "192.168.40.3";
 static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 40*pow(2, 8) + 3;
-static const char udp_dest_name[32] = "fc1.blast";
+static const char udp_dest_name[32] = "roach-udp-dest";
 
 // TODO(laura/sam): Set up either a multicast address or arrange for the switch to mirror
 // the packet broadcast so that both FCs can receive the UDP packets.

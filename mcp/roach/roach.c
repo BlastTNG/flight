@@ -882,7 +882,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
                        KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
                        NULL);
     if (retval != KATCP_RESULT_OK) {
-        blast_err("Could not request upload port for ROACH firmware on %s!", m_roach->address);
+        blast_err("Could not request upload port for ROACH firmware on %s! retval = %i", m_roach->address, retval);
         return -1;
     }
     for (int loop = 0; loop < 2; loop++) {
