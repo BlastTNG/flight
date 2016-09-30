@@ -104,32 +104,38 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
     if (m_why & PH_IOMASK_ERR) {
         if (!roach_udp->have_warned) {
             blast_err("roach%i: IO error. ", roach_udp->which+1);
-//            roach_udp->have_warned = 1;
+            roach_udp->have_warned = 1;
         }
     	return;
     }
     if (m_why & PH_IOMASK_TIME) {
         if (!roach_udp->have_warned) {
             blast_err("roach%i: Timeout. ", roach_udp->which+1);
-//            roach_udp->have_warned = 1;
+            roach_udp->have_warned = 1;
         }
     	return;
     }
     if (m_why & PH_IOMASK_WAKEUP) {
         if (!roach_udp->have_warned) {
             blast_err("roach%i: Triggered by ph_job_wakeup. ", roach_udp->which+1);
-//            roach_udp->have_warned = 1;
+            roach_udp->have_warned = 1;
         }
     	return;
     }
     if (m_why & PH_IOMASK_READ) {
-        blast_info("roach%i: There is data to be read! ", roach_udp->which+1);
+//        blast_info("roach%i: There is data to be read! ", roach_udp->which+1);
     }
     if (m_why & PH_IOMASK_NONE) {
-        blast_info("roach%i: NBIO is disabled or not applicable! ", roach_udp->which+1);
+        if (!roach_udp->have_warned) {
+            blast_info("roach%i: NBIO is disabled or not applicable! ", roach_udp->which+1);
+            roach_udp->have_warned = 1;
+        }
     }
     if (m_why & PH_IOMASK_WRITE) {
-        blast_info("roach%i: Write flag set! ", roach_udp->which+1);
+        if (!roach_udp->have_warned) {
+            blast_info("roach%i: Write flag set! ", roach_udp->which+1);
+            roach_udp->have_warned = 1;
+        }
     }
 }
 
