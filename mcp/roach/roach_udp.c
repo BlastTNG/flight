@@ -59,6 +59,7 @@
 #include "valon.h"
 #undef I
 #include "phenom/defs.h"
+#include "phenom/buffer.h"
 #include "phenom/listener.h"
 #include "phenom/socket.h"
 #include "phenom/memory.h"
@@ -66,33 +67,43 @@
 
 typedef void (*roach_callback_t)(uint8_t*, size_t);
 
-typedef struct {
-    int roach;
-    bool            opened;
-    bool            have_warned;
-    bool            want_reset;
-    uint8_t         which;
-    uint8_t         seq_error_count;
-    uint8_t         crc_error_count;
-    uint8_t         seq_number;
-    uint16_t        num_channels;
-    uint16_t        roach_invalid_packet_count;
-    uint32_t        roach_packet_count;
-    uint32_t        roach_valid_packet_count;
-    uint8_t         index;
-    uint16_t        port;
-    char            address[16];
-    char            listen_ip[16];
-    char            ip[16];
-    udp_packet_t    last_pkt;
-    ph_sock_t *udp_socket;
-    roach_callback_t process_data;
-    struct timeval  timeout;
-} roach_handle_data_t;
 
-roach_handle_data_t roach_udp[NUM_ROACHES];
+void parse_udp_packet(data_udp_packet_t* m_packet)
+{
+	static int first_time = 1;
+    uint64_t bytes_read = ph_buf_len(m_packet->rcv_buffer);
+    if (bytes_read < ROACH_UDP_DATA_LEN) blast_err("roach%i: Read only %lu bytes.", roach_udp->which+1, bytes_read);
 
 
+// Get a pointer to the start of the raw buffer.
+    uint8_t* buf = ph_buf_mem(m_packet->rcv_buffer);
+
+	m_packet->eth  = (struct ethhdr *)(buf);
+	uint16_t iphdrlen;
+	struct sockaddr_in source, dest;
+	m_packet->ip = (struct iphdr *)(buf + sizeof(struct ethhdr));
+	memset(&source, 0, sizeof(source));
+	source.sin_addr.s_addr = m_packet->ip->saddr;
+	memset(&dest, 0, sizeof(dest));
+	dest.sin_addr.s_addr = m_packet->ip->daddr;
+	if (first_time) {
+		blast_info("Version : %d\n", (unsigned int)m_packet->ip->version);
+		blast_info("Source MAC : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X\n", m_packet->eth->h_source[0],
+		           m_packet->eth->h_source[1], m_packet->eth->h_source[2], m_packet->eth->h_source[3],
+		           m_packet->eth->h_source[4], m_packet->eth->h_source[5]);
+		blast_info("Internet Header Length : %d DWORDS or %d Bytes\n", (unsigned int)m_packet->ip->ihl,
+		           ((unsigned int)(m_packet->ip->ihl))*4);
+		blast_info("TOS : %d\n", (unsigned int)m_packet->ip->tos);
+		blast_info("Total Length : %d Bytes\n", ntohs(m_packet->ip->tot_len));
+		blast_info("ID : %d\n", ntohs(m_packet->ip->id));
+		blast_info("TTL : %d\n", (unsigned int)m_packet->ip->ttl);
+		blast_info("Protocol : %d\n", (unsigned int)m_packet->ip->protocol);
+		blast_info("Header Checksum : %d\n", ntohs(m_packet->ip->check));
+		blast_info("Source IP : %s\n", inet_ntoa(source.sin_addr));
+		blast_info("Dest IP : %s\n\n", inet_ntoa(dest.sin_addr));
+    }
+    first_time = 0;
+}
 /**
  * Called every time we receive a roach udp packet.
  *
@@ -100,36 +111,31 @@ roach_handle_data_t roach_udp[NUM_ROACHES];
 static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
     roach_handle_data_t *roach_udp = (roach_handle_data_t*) m_data;
-    blast_info("roach%i: roach_process_stream called!", roach_udp->which+1);
+// First check for errors...
     if (m_why & PH_IOMASK_ERR) {
         if (!roach_udp->have_warned) {
             blast_err("roach%i: IO error. ", roach_udp->which+1);
             roach_udp->have_warned = 1;
         }
     	return;
-    }
-    if (m_why & PH_IOMASK_TIME) {
+    } else if (m_why & PH_IOMASK_TIME) {
         if (!roach_udp->have_warned) {
             blast_err("roach%i: Timeout. ", roach_udp->which+1);
             roach_udp->have_warned = 1;
         }
     	return;
-    }
-    if (m_why & PH_IOMASK_WAKEUP) {
-        if (!roach_udp->have_warned) {
+    } else if (m_why & PH_IOMASK_WAKEUP) {
+         if (!roach_udp->have_warned) {
             blast_err("roach%i: Triggered by ph_job_wakeup. ", roach_udp->which+1);
             roach_udp->have_warned = 1;
         }
     	return;
-    }
-    if (m_why & PH_IOMASK_READ) {
-//        blast_info("roach%i: There is data to be read! ", roach_udp->which+1);
-    }
-    if (m_why & PH_IOMASK_NONE) {
+    } else if (m_why & PH_IOMASK_NONE) {
         if (!roach_udp->have_warned) {
             blast_info("roach%i: NBIO is disabled or not applicable! ", roach_udp->which+1);
             roach_udp->have_warned = 1;
         }
+    	return;
     }
     if (m_why & PH_IOMASK_WRITE) {
         if (!roach_udp->have_warned) {
@@ -137,9 +143,24 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
             roach_udp->have_warned = 1;
         }
     }
+    if (!(m_why & PH_IOMASK_READ)) {
+        if (!roach_udp->have_warned) {
+            blast_err("roach%i: Triggered but not for reading. m_why = %i. ", roach_udp->which+1, m_why);
+            roach_udp->have_warned = 1;
+        }
+        return;
+    }
+
+// At this point we know that a read callback was triggered.
+
+// Now read from the buffer
+    data_udp_packet_t m_packet;
+    m_packet.rcv_buffer = ph_sock_read_bytes_exact(roach_udp->udp_socket, ROACH_UDP_DATA_LEN);
+
+    parse_udp_packet(&m_packet);
+
+    roach_udp->have_warned = 0;
 }
-
-
 /**
  * Initialize the roach udp packet routine.  The state variable tracks each
  * udp socket and is passed to the connect job.

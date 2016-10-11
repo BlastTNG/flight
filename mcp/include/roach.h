@@ -31,6 +31,7 @@
 #include <glib.h>
 #include <math.h>
 #include "phenom/socket.h"
+#include "phenom/buffer.h"
 
 typedef struct {
     int32_t I;
@@ -133,8 +134,26 @@ typedef struct data_packet {
 	uint32_t packet_count;
 } data_packet_t;
 
+// Called each time a packet is received
+// TODO(laura): This should really be merged with the previous data_packet_t structure
+// definition once we get the packet writing to use the phenom library.
+typedef struct data_udp_packet {
+	ph_buf_t *rcv_buffer;
+	struct ethhdr *eth;
+	struct iphdr *ip;
+	float *I;
+	float *Q;
+	uint32_t checksum;
+	uint32_t pps_count;
+	uint32_t clock_count;
+	uint32_t packet_count;
+} data_udp_packet_t;
+
 #define NUM_ROACHES 4
 #define NUM_ROACH_UDP_CHANNELS 1024
+
+#define ROACH_UDP_LEN 8234
+#define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4
 
 static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
 
@@ -147,6 +166,32 @@ static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
 static const char udp_dest[32] = "192.168.40.3";
 static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 40*pow(2, 8) + 3;
 static const char udp_dest_name[32] = "roach-udp-dest";
+
+typedef struct {
+    int roach;
+    bool            opened;
+    bool            have_warned;
+    bool            want_reset;
+    uint8_t         which;
+    uint8_t         seq_error_count;
+    uint8_t         crc_error_count;
+    uint8_t         seq_number;
+    uint16_t        num_channels;
+    uint16_t        roach_invalid_packet_count;
+    uint32_t        roach_packet_count;
+    uint32_t        roach_valid_packet_count;
+    uint8_t         index;
+    uint16_t        port;
+    char            address[16];
+    char            listen_ip[16];
+    char            ip[16];
+    udp_packet_t    last_pkt;
+    ph_sock_t *udp_socket;
+    struct timeval  timeout;
+} roach_handle_data_t;
+
+roach_handle_data_t roach_udp[NUM_ROACHES];
+
 
 // TODO(laura/sam): Set up either a multicast address or arrange for the switch to mirror
 // the packet broadcast so that both FCs can receive the UDP packets.
