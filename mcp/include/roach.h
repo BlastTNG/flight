@@ -153,7 +153,7 @@ typedef struct data_udp_packet {
 #define NUM_ROACH_UDP_CHANNELS 1024
 
 #define ROACH_UDP_LEN 8234
-#define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4
+#define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
 
 static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
 
