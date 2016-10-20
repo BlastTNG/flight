@@ -187,6 +187,7 @@ typedef struct {
     char            ip[16];
     udp_packet_t    last_pkt;
     ph_sock_t *udp_socket;
+    ph_socket_t udp_socket_fd;
     struct timeval  timeout;
 } roach_handle_data_t;
 

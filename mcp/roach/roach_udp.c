@@ -70,51 +70,35 @@ typedef void (*roach_callback_t)(uint8_t*, size_t);
 
 void parse_udp_packet(data_udp_packet_t* m_packet)
 {
-	static int first_times = 10;
-    uint64_t bytes_read = ph_buf_len(m_packet->rcv_buffer);
-    if (bytes_read < ROACH_UDP_DATA_LEN) blast_err("roach%i: Read only %lu bytes.", roach_udp->which+1, bytes_read);
-
+	static uint64_t i_packet = 0;
 
 // Get a pointer to the start of the raw buffer.
     uint8_t* buf = ph_buf_mem(m_packet->rcv_buffer);
 
-	m_packet->eth  = (struct ethhdr *)(buf);
-	uint16_t iphdrlen;
-	struct sockaddr_in source, dest;
-	m_packet->ip = (struct iphdr *)(buf + sizeof(struct ethhdr));
-	memset(&source, 0, sizeof(source));
-	source.sin_addr.s_addr = m_packet->ip->saddr;
-	memset(&dest, 0, sizeof(dest));
-	dest.sin_addr.s_addr = m_packet->ip->daddr;
-	if (first_times > 0) {
-		blast_info("Version : %d\n", (unsigned int)m_packet->ip->version);
-		blast_info("Dest MAC : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X\n", m_packet->eth->h_dest[0],
-		           m_packet->eth->h_dest[1], m_packet->eth->h_dest[2], m_packet->eth->h_dest[3],
-		           m_packet->eth->h_dest[4], m_packet->eth->h_dest[5]);
-		blast_info("Source MAC : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X\n", m_packet->eth->h_source[0],
-		           m_packet->eth->h_source[1], m_packet->eth->h_source[2], m_packet->eth->h_source[3],
-		           m_packet->eth->h_source[4], m_packet->eth->h_source[5]);
-		blast_info("Internet Header Length : %d DWORDS or %d Bytes\n", (unsigned int)m_packet->ip->ihl,
-		           ((unsigned int)(m_packet->ip->ihl))*4);
-		blast_info("TOS : %d\n", (unsigned int)m_packet->ip->tos);
-		blast_info("Total Length : %d Bytes\n", ntohs(m_packet->ip->tot_len));
-		blast_info("ID : %d\n", ntohs(m_packet->ip->id));
-		blast_info("TTL : %d\n", (unsigned int)m_packet->ip->ttl);
-		blast_info("Protocol : %d\n", (unsigned int)m_packet->ip->protocol);
-		blast_info("Header Checksum : %d\n", ntohs(m_packet->ip->check));
-		blast_info("Source IP : %s\n", inet_ntoa(source.sin_addr));
-		blast_info("Dest IP : %s\n\n", inet_ntoa(dest.sin_addr));
+// Note that we don't get ethernet or IP packet header info if we use SOCK_DGRAM.
+// TODO(laura): is there a way to recover this information using libphenom?
+// Might be useful for error checking.
+
+//  	m_packet->eth  = (struct ethhdr *)(buf);
+// 	uint16_t iphdrlen;
+// 	struct sockaddr_in source, dest;
+// 	m_packet->ip = (struct iphdr *)(buf + sizeof(struct ethhdr));
+// 	memset(&source, 0, sizeof(source));
+// 	source.sin_addr.s_addr = m_packet->ip->saddr;
+// 	memset(&dest, 0, sizeof(dest));
+// 	dest.sin_addr.s_addr = m_packet->ip->daddr;
+
+	if ((i_packet % 6000) == 0) {
+	    for (int i = 8160; i < ROACH_UDP_DATA_LEN; i = i + 8) blast_info("%i: %.2x%.2x %.2x%.2x %.2x%.2x %.2x%.2x",
+	    i, buf[i], buf[i+1], buf[i+2], buf[i+3], buf[i+4], buf[i+5], buf[i+6], buf[i+7]);
     }
 
 	m_packet->I = calloc(1024, sizeof(float));
     m_packet->Q = calloc(1024, sizeof(float));
-//  uint8_t *payload = (uint8_t *)(m_packet->rcv_buffer);
-//  uint8_t *data = (payload + 42);
-	uint8_t *data = (uint8_t *)(m_packet->rcv_buffer);
-	m_packet->checksum = (data[8176] << 24) | (data[8177] << 16) | (data[8178] << 8) | data[8179];
-	m_packet->pps_count = (data[8180] << 24) | (data[8181] << 16) | (data[8182] << 8) | data[8183];
-	m_packet->clock_count = (data[8184] << 24) | (data[8185] << 16) | (data[8186] << 8) | data[8187];
-	m_packet->packet_count = (data[8188] << 24) | (data[8189] << 16) | (data[8190] << 8) | data[8191];
+	m_packet->checksum = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
+	m_packet->pps_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
+	m_packet->clock_count = (buf[8184] << 24) | (buf[8185] << 16) | (buf[8186] << 8) | buf[8187];
+	m_packet->packet_count = (buf[8188] << 24) | (buf[8189] << 16) | (buf[8190] << 8) | buf[8191];
 	// I, Q
 	for (int i = 0;	i < 1024; i += 1) {
 		int j;
@@ -126,21 +110,19 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 			j = 1024*4 + (((i*4) - 1) / 2) - 1;
 			k = 1536*4 + (((i*4) - 1) / 2) - 1;
 		}
-		m_packet->I[i] = (float)(ntohl((data[j] << 24) | (data[j + 1] << 16) | (data[j + 2] << 8) | (data[j + 3])));
-		m_packet->Q[i] = (float)(ntohl((data[k] << 24) | (data[k + 1] << 16) | (data[k + 2] << 8) | (data[k + 3])));
-        if (first_times > 0) {
-             blast_info("i = %i, I = %f, Q = %f", i, m_packet->I[i], m_packet->Q[i]);
+		m_packet->I[i] = (float)(ntohl((buf[j] << 24) | (buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
+		m_packet->Q[i] = (float)(ntohl((buf[k] << 24) | (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
+        if ((i_packet % 6000) == 0) {
+//             blast_info("i = %i, I = %f, Q = %f", i, m_packet->I[i], m_packet->Q[i]);
         }
-
-		// printf("%d\t %d\t %d\t %d\t %d\t\n", i, j, j + 1, j + 2, j + 3);
-		// printf("%d\t %d\t %d\t %d\t %d\t\n", i, k, k + 1, k + 2, k + 3);
 	}
-	if (first_times > 0) {
+	if ((i_packet % 6000) == 0) {
         blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
                 m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
-        first_times--;
 	}
+	i_packet++;
 }
+
 /**
  * Called every time we receive a roach udp packet.
  *
@@ -191,9 +173,18 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
 // At this point we know that a read callback was triggered.
 
 // Now read from the buffer
+//    data_packet_t m_packet;
     data_udp_packet_t m_packet;
+
     m_packet.rcv_buffer = ph_sock_read_bytes_exact(roach_udp->udp_socket, ROACH_UDP_DATA_LEN);
 
+    uint64_t bytes_read = ph_buf_len(m_packet.rcv_buffer);
+    if (bytes_read < ROACH_UDP_DATA_LEN) {
+    	blast_err("roach%i: Read only %lu bytes.", roach_udp->which+1, bytes_read);
+        roach_udp->roach_invalid_packet_count++;
+        roach_udp->roach_packet_count++;
+        return;
+    }
     parse_udp_packet(&m_packet);
 
     roach_udp->have_warned = 0;
@@ -213,6 +204,13 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     ph_string_t sockaddr_str;
 
     roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_which];
+
+    // Initialize counts
+    m_roach_udp->roach_invalid_packet_count = 0;
+    m_roach_udp->roach_packet_count = 0;
+    m_roach_udp->seq_error_count = 0;
+    m_roach_udp->crc_error_count = 0;
+
     m_roach_udp->which = m_which;
 
     snprintf(m_roach_udp->address, sizeof(m_roach_udp->address), "roach%i-udp", m_which+1);
@@ -264,6 +262,7 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
 
     // Open the unix socket file descriptor
     ph_socket_t sock = ph_socket_for_addr(&addr, SOCK_DGRAM, PH_SOCK_NONBLOCK);
+    m_roach_udp->udp_socket_fd = sock;
     blast_info("roach%d: Socket file descriptor is %i", m_which+1, (int) sock);
     if (!sock) blast_err("roach%d: Failed to open Socket. %s", errno);
 
