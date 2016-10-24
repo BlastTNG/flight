@@ -32,6 +32,7 @@
 #include "command_list.h"
 #include "channels_tng.h"
 #include "mcp_sched.h"
+#include "roach.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -327,8 +328,8 @@ struct CommandDataStruct {
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 
-  roach_status_t roach[4];
-  udp_roach_t udp_roach[4];
+  roach_status_t roach[NUM_ROACHES];
+  udp_roach_t udp_roach[NUM_ROACHES];
 
   uei_commands_t uei_command;
 

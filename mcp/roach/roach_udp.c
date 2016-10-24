@@ -57,6 +57,7 @@
 #include "qdr.h"
 #include "remote_serial.h"
 #include "valon.h"
+// #include "command_struct.h"
 #undef I
 #include "phenom/defs.h"
 #include "phenom/buffer.h"
@@ -67,6 +68,35 @@
 
 typedef void (*roach_callback_t)(uint8_t*, size_t);
 
+// TODO(laura/sam): This should be changed to a read checksum once Sam and Adrian
+// incorporate a checksum into the roach packets.
+#define ROACH_CHECKSUM 42
+
+uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_roach_udp)
+{
+    uint16_t retval = 0;
+    if (m_packet->packet_count != (m_roach_udp->seq_number + 1)) {
+        blast_warn("roach%i: Packet sequence number is %i. Last sequence number was =%i!",
+                  m_roach_udp->which+1, m_packet->packet_count, m_roach_udp->seq_number);
+        m_roach_udp->seq_error_count++;
+	    retval |= ROACH_UDP_SEQ_ERR;
+    }
+    if (m_packet->checksum != ROACH_CHECKSUM) {
+        blast_err("roach%i: checksum =%i failed!", m_roach_udp->which, m_packet->checksum);
+        m_roach_udp->crc_error_count++;
+	    retval |= ROACH_UDP_CRC_ERR;
+    }
+    m_roach_udp->seq_number = m_packet->packet_count;
+
+    if (retval > 0) {
+        m_roach_udp->roach_invalid_packet_count++;
+        m_roach_udp->roach_packet_count++;
+    } else {
+        m_roach_udp->roach_valid_packet_count++;
+        m_roach_udp->roach_packet_count++;
+    }
+    return retval;
+}
 
 void parse_udp_packet(data_udp_packet_t* m_packet)
 {
@@ -93,14 +123,12 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 	    i, buf[i], buf[i+1], buf[i+2], buf[i+3], buf[i+4], buf[i+5], buf[i+6], buf[i+7]);
     }
 
-	m_packet->I = calloc(1024, sizeof(float));
-    m_packet->Q = calloc(1024, sizeof(float));
 	m_packet->checksum = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
 	m_packet->pps_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
 	m_packet->clock_count = (buf[8184] << 24) | (buf[8185] << 16) | (buf[8186] << 8) | buf[8187];
 	m_packet->packet_count = (buf[8188] << 24) | (buf[8189] << 16) | (buf[8190] << 8) | buf[8191];
 	// I, Q
-	for (int i = 0;	i < 1024; i += 1) {
+	for (int i = 0;	i < 1016; i += 1) {
 		int j;
 		int k;
 		if ((i % 2) == 0) {
@@ -110,8 +138,8 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 			j = 1024*4 + (((i*4) - 1) / 2) - 1;
 			k = 1536*4 + (((i*4) - 1) / 2) - 1;
 		}
-		m_packet->I[i] = (float)(ntohl((buf[j] << 24) | (buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
-		m_packet->Q[i] = (float)(ntohl((buf[k] << 24) | (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
+		m_packet->I[i] = (float)(int32_t)(ntohl((buf[j] << 24) | (buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
+		m_packet->Q[i] = (float)(int32_t)(ntohl((buf[k] << 24) | (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
         if ((i_packet % 6000) == 0) {
 //             blast_info("i = %i, I = %f, Q = %f", i, m_packet->I[i], m_packet->Q[i]);
         }
@@ -123,49 +151,77 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 	i_packet++;
 }
 
+
+void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_roach_udp)
+{
+    static uint64_t packet_count = 0;
+    data_udp_packet_t* local_packet;
+
+    if (m_roach_udp->first_packet) {
+        blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
+            m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
+    	for (int i = 0; i < 3; i++) {
+            local_packet = &m_roach_udp->last_pkts[i];
+    	    local_packet = balloc(fatal, sizeof(*m_packet) + m_packet->buffer_len);
+        }
+        blast_info("roach%i: Allocated packet structures of size %lu", m_roach_udp->which+1, sizeof(*m_packet));
+        m_roach_udp->first_packet = FALSE;
+    }
+    if (packet_count < 100) {
+        blast_info("roach%i: Write index =%i", m_roach_udp->which+1, m_roach_udp->index);
+    }
+    memcpy(&(m_roach_udp->last_pkts[m_roach_udp->index]), m_packet, sizeof(*m_packet));
+    m_roach_udp->index = INC_INDEX(m_roach_udp->index);
+    if (packet_count < 100) {
+        blast_info("roach%i: After incrementing write index =%i", m_roach_udp->which+1, m_roach_udp->index);
+        blast_info("roach%i: last_packet: checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i ",
+        m_roach_udp->which+1, m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
+    }
+    packet_count++;
+}
 /**
  * Called every time we receive a roach udp packet.
  *
  */
 static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
-    roach_handle_data_t *roach_udp = (roach_handle_data_t*) m_data;
+    roach_handle_data_t *m_roach_udp = (roach_handle_data_t*) m_data;
 // First check for errors...
     if (m_why & PH_IOMASK_ERR) {
-        if (!roach_udp->have_warned) {
-            blast_err("roach%i: IO error. ", roach_udp->which+1);
-            roach_udp->have_warned = 1;
+        if (!m_roach_udp->have_warned) {
+            blast_err("roach%i: IO error. ", m_roach_udp->which+1);
+            m_roach_udp->have_warned = 1;
         }
     	return;
     } else if (m_why & PH_IOMASK_TIME) {
-        if (!roach_udp->have_warned) {
-            blast_err("roach%i: Timeout. ", roach_udp->which+1);
-            roach_udp->have_warned = 1;
+        if (!m_roach_udp->have_warned) {
+            blast_err("roach%i: Timeout. ", m_roach_udp->which+1);
+            m_roach_udp->have_warned = 1;
         }
     	return;
     } else if (m_why & PH_IOMASK_WAKEUP) {
-         if (!roach_udp->have_warned) {
-            blast_err("roach%i: Triggered by ph_job_wakeup. ", roach_udp->which+1);
-            roach_udp->have_warned = 1;
+         if (!m_roach_udp->have_warned) {
+            blast_err("roach%i: Triggered by ph_job_wakeup. ", m_roach_udp->which+1);
+            m_roach_udp->have_warned = 1;
         }
     	return;
     } else if (m_why & PH_IOMASK_NONE) {
-        if (!roach_udp->have_warned) {
-            blast_info("roach%i: NBIO is disabled or not applicable! ", roach_udp->which+1);
-            roach_udp->have_warned = 1;
+        if (!m_roach_udp->have_warned) {
+            blast_info("roach%i: NBIO is disabled or not applicable! ", m_roach_udp->which+1);
+            m_roach_udp->have_warned = 1;
         }
     	return;
     }
     if (m_why & PH_IOMASK_WRITE) {
-        if (!roach_udp->have_warned) {
-            blast_info("roach%i: Write flag set! ", roach_udp->which+1);
-            roach_udp->have_warned = 1;
+        if (!m_roach_udp->have_warned) {
+            blast_info("roach%i: Write flag set! ", m_roach_udp->which+1);
+            m_roach_udp->have_warned = 1;
         }
     }
     if (!(m_why & PH_IOMASK_READ)) {
-        if (!roach_udp->have_warned) {
-            blast_err("roach%i: Triggered but not for reading. m_why = %i. ", roach_udp->which+1, m_why);
-            roach_udp->have_warned = 1;
+        if (!m_roach_udp->have_warned) {
+            blast_err("roach%i: Triggered but not for reading. m_why = %i. ", m_roach_udp->which+1, m_why);
+            m_roach_udp->have_warned = 1;
         }
         return;
     }
@@ -176,18 +232,37 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
 //    data_packet_t m_packet;
     data_udp_packet_t m_packet;
 
-    m_packet.rcv_buffer = ph_sock_read_bytes_exact(roach_udp->udp_socket, ROACH_UDP_DATA_LEN);
+    m_packet.rcv_buffer = ph_sock_read_bytes_exact(m_roach_udp->udp_socket, ROACH_UDP_DATA_LEN);
 
     uint64_t bytes_read = ph_buf_len(m_packet.rcv_buffer);
     if (bytes_read < ROACH_UDP_DATA_LEN) {
-    	blast_err("roach%i: Read only %lu bytes.", roach_udp->which+1, bytes_read);
-        roach_udp->roach_invalid_packet_count++;
-        roach_udp->roach_packet_count++;
+    	blast_err("roach%i: Read only %lu bytes.", m_roach_udp->which+1, bytes_read);
+        m_roach_udp->roach_invalid_packet_count++;
+        m_roach_udp->roach_packet_count++;
         return;
     }
+    m_packet.buffer_len = bytes_read;
     parse_udp_packet(&m_packet);
 
-    roach_udp->have_warned = 0;
+    uint16_t udperr = check_udp_packet(&m_packet, m_roach_udp);
+
+// Store udp packets to the harddrive even if there were errors in the packet format.
+//    if (CommandData.udp_roach[m_roach_udp->which].store_udp) {
+// This is where we will write the packets to the flight harddisks.
+// TODO(laura): Write harddrive storage function.
+//    }
+
+    if (udperr > 0) return;
+
+// The next set of commands are only executed if there were no packet errors.
+//    if (CommandData.udp_roach[m_roach_udp->which].publish_udp) {
+        udp_store_to_structure(&m_packet, m_roach_udp);
+//    }
+
+//    if (CommandData.udp_roach[m_roach_udp->which].publish_udp) {
+//    }
+
+    m_roach_udp->have_warned = 0;
 }
 /**
  * Initialize the roach udp packet routine.  The state variable tracks each
@@ -211,7 +286,9 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     m_roach_udp->seq_error_count = 0;
     m_roach_udp->crc_error_count = 0;
 
+    m_roach_udp->index = 0; // Write index for the udp circular buffer.
     m_roach_udp->which = m_which;
+    m_roach_udp->first_packet = TRUE;
 
     snprintf(m_roach_udp->address, sizeof(m_roach_udp->address), "roach%i-udp", m_which+1);
 	m_roach_udp->port = m_roach_state->dest_port;

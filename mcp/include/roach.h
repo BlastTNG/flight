@@ -33,6 +33,11 @@
 #include "phenom/socket.h"
 #include "phenom/buffer.h"
 
+#define ROACH_UDP_CRC_ERR 0x01
+#define ROACH_UDP_SEQ_ERR 0x02
+
+#define MAX_CHANNELS_PER_ROACH 1016
+
 typedef struct {
     int32_t I;
     int32_t Q;
@@ -138,15 +143,16 @@ typedef struct data_packet {
 // TODO(laura): This should really be merged with the previous data_packet_t structure
 // definition once we get the packet writing to use the phenom library.
 typedef struct data_udp_packet {
-	ph_buf_t *rcv_buffer;
-	struct ethhdr *eth;
-	struct iphdr *ip;
-	float *I;
-	float *Q;
+//  struct ethhdr *eth;
+//  struct iphdr *ip;
+	float I[MAX_CHANNELS_PER_ROACH];
+	float Q[MAX_CHANNELS_PER_ROACH];
+    uint32_t buffer_len;
 	uint32_t checksum;
 	uint32_t pps_count;
 	uint32_t clock_count;
 	uint32_t packet_count;
+	ph_buf_t *rcv_buffer;
 } data_udp_packet_t;
 
 #define NUM_ROACHES 4
@@ -173,11 +179,11 @@ typedef struct {
     bool            have_warned;
     bool            want_reset;
     uint8_t         which;
-    uint8_t         seq_error_count;
-    uint8_t         crc_error_count;
-    uint8_t         seq_number;
+    uint32_t        seq_error_count;
+    uint32_t        crc_error_count;
+    uint32_t        seq_number;
     uint16_t        num_channels;
-    uint16_t        roach_invalid_packet_count;
+    uint32_t        roach_invalid_packet_count;
     uint32_t        roach_packet_count;
     uint32_t        roach_valid_packet_count;
     uint8_t         index;
@@ -185,7 +191,8 @@ typedef struct {
     char            address[16];
     char            listen_ip[16];
     char            ip[16];
-    udp_packet_t    last_pkt;
+    bool            first_packet;
+    data_udp_packet_t last_pkts[3];
     ph_sock_t *udp_socket;
     ph_socket_t udp_socket_fd;
     struct timeval  timeout;

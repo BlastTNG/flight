@@ -642,8 +642,10 @@ void write_packet(data_packet_t *m_packet, FILE *m_fd, int m_sock_desc)
 void save_packets(size_t m_num_packets, int m_sock_desc, double m_filetag,
 				const char *m_savepath, const char *m_pathtag)
 {
+//    uint8_t i_udp_read = 0;
 	char fname[FILENAME_MAX];
 	for (size_t i = 0; i < m_num_packets; i++) {
+//  i_udp_read = GETREADINDEX(roach_udp[i_roach].index);
 		data_packet_t packet;
 		snprintf(fname, sizeof(fname), "%s/%s/p%3g.dat", m_savepath, m_pathtag, m_filetag);
 		FILE *fd = fopen(fname, "w");
@@ -1024,7 +1026,7 @@ void *roach_cmd_loop(void)
 			
 			}*/
 		}
-	}
+	} // while
 }
 
 int init_roach(void)

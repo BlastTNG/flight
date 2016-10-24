@@ -1888,7 +1888,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 void InitCommandData()
 {
     int fp, n_read = 0, junk, extra = 0;
-    int is_valid = 0;
+    int is_valid = 0, i = 0;
     uint32_t prev_crc;
 
     if ((fp = open(PREV_STATUS_FILE, O_RDONLY)) < 0) {
@@ -2116,6 +2116,9 @@ void InitCommandData()
     CommandData.offset_ifroll_gy = 0;
     CommandData.offset_ifyaw_gy = 0;
     CommandData.gymask = 0x3f;
+
+    for (i = 0; i < NUM_ROACHES; i++) CommandData.udp_roach[i].store_udp = 1;
+    for (i = 0; i < NUM_ROACHES; i++) CommandData.udp_roach[i].publish_udp = 1;
 
     CommandData.pumps.level_on_bal = 2.0 * 1990.13;
     CommandData.pumps.level_off_bal = 0.5 * 1900.13;
