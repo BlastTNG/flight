@@ -52,7 +52,8 @@
 #define HEAT_HWPR_POS        0x0080
 
 static uint16_t heatctrl;
-
+static uint16_t dio_on = 1;
+static uint16_t dio_off = 0;
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
@@ -166,6 +167,17 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
     SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
     SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0)); */
+}
+
+void test_dio(void) {
+    static int state_dio = 0;
+    if (!state_dio) {
+        state_dio = labjack_dio(LABJACK_CRYO_1, 2008, 1);
+        blast_warn("state is %d", state_dio);
+    } else {
+        state_dio = labjack_dio(LABJACK_CRYO_1, 2008, 0);
+        blast_warn("state is %d", state_dio);
+    }
 }
 
 void autocycle_ian(void)
