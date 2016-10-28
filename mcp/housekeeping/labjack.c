@@ -69,6 +69,10 @@
 #define STREAM_SCANLIST_ADDRESS_ADDR 4100 // #(0:127)
 #define STREAM_TRIGGER_INDEX_ADDR 4024
 
+
+// DIO addresses
+#define EIO_0 2008
+
 // Modbus addresses to set the ranges and gains of the Analog Inputs
 #define AIN0_RANGE_ADDR 40000 // Setting AIN range for each AIN channel
                       // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01
@@ -448,6 +452,26 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
         }
     }
 }
+
+int labjack_dio(int m_labjack, int address, int command) {
+    int ret = 0;
+    int retprime;
+    uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
+    ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+    if (ret < 0) {
+        blast_warn("Something went wrong");
+        retprime = modbus_read_registers(state[m_labjack].cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (retprime > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        return ret;
+    } else {
+        if (command == 1) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+}
+
 
 static void init_labjack_stream_commands(labjack_state_t *m_state)
 {

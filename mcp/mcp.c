@@ -359,6 +359,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    test_dio();
 }
 
 static void *mcp_main_loop(void *m_arg)
