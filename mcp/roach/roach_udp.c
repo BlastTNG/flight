@@ -118,10 +118,10 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 // 	memset(&dest, 0, sizeof(dest));
 // 	dest.sin_addr.s_addr = m_packet->ip->daddr;
 
-	if ((i_packet % 6000) == 0) {
+	/* if ((i_packet % 6000) == 0) {
 	    for (int i = 8160; i < ROACH_UDP_DATA_LEN; i = i + 8) blast_info("%i: %.2x%.2x %.2x%.2x %.2x%.2x %.2x%.2x",
 	    i, buf[i], buf[i+1], buf[i+2], buf[i+3], buf[i+4], buf[i+5], buf[i+6], buf[i+7]);
-    }
+    	} */
 
 	m_packet->checksum = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
 	m_packet->pps_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
@@ -140,14 +140,14 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 		}
 		m_packet->I[i] = (float)(int32_t)(ntohl((buf[j] << 24) | (buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
 		m_packet->Q[i] = (float)(int32_t)(ntohl((buf[k] << 24) | (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
-        if ((i_packet % 6000) == 0) {
-//             blast_info("i = %i, I = %f, Q = %f", i, m_packet->I[i], m_packet->Q[i]);
-        }
+        /* if ((i_packet % 6000) == 0) {
+             blast_info("i = %i, I = %f, Q = %f", i, m_packet->I[i], m_packet->Q[i]);
+        } */
 	}
-	if ((i_packet % 6000) == 0) {
+	/* if ((i_packet % 6000) == 0) {
         blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
                 m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
-	}
+	} */
 	i_packet++;
 }
 
@@ -158,25 +158,25 @@ void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_
     data_udp_packet_t* local_packet;
 
     if (m_roach_udp->first_packet) {
-        blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
-            m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
+        // blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
+        //  m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
     	for (int i = 0; i < 3; i++) {
             local_packet = &m_roach_udp->last_pkts[i];
     	    local_packet = balloc(fatal, sizeof(*m_packet) + m_packet->buffer_len);
         }
-        blast_info("roach%i: Allocated packet structures of size %lu", m_roach_udp->which+1, sizeof(*m_packet));
+        // blast_info("roach%i: Allocated packet structures of size %lu", m_roach_udp->which+1, sizeof(*m_packet));
         m_roach_udp->first_packet = FALSE;
     }
-    if (packet_count < 100) {
-        blast_info("roach%i: Write index =%i", m_roach_udp->which+1, m_roach_udp->index);
-    }
+    /* if (packet_count < 100) {
+        blast_info("roach%i: Write index = %i", m_roach_udp->which+1, m_roach_udp->index);
+    }*/
     memcpy(&(m_roach_udp->last_pkts[m_roach_udp->index]), m_packet, sizeof(*m_packet));
     m_roach_udp->index = INC_INDEX(m_roach_udp->index);
-    if (packet_count < 100) {
-        blast_info("roach%i: After incrementing write index =%i", m_roach_udp->which+1, m_roach_udp->index);
+    /* if (packet_count < 100) {
+        blast_info("roach%i: After incrementing write index = %i", m_roach_udp->which+1, m_roach_udp->index);
         blast_info("roach%i: last_packet: checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i ",
         m_roach_udp->which+1, m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
-    }
+    }*/
     packet_count++;
 }
 /**

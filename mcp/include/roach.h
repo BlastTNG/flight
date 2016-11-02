@@ -20,7 +20,7 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *  Created on: Apr 26, 2016
- *      Author: seth
+ *      Author: laura, sam, seth
  */
 
 #ifndef INCLUDE_ROACH_H_
@@ -58,6 +58,7 @@ typedef enum {
     ROACH_STATUS_CALIBRATED,
     ROACH_STATUS_TONE,
     ROACH_STATUS_STREAMING,
+    ROACH_STATUS_ATTENUATION,
     ROACH_STATUS_VNA,
     ROACH_STATUS_ARRAY_FREQS,
     ROACH_STATUS_TARG,
@@ -94,11 +95,12 @@ typedef struct roach_state {
     const char *last_err;
     const char *address;
     uint16_t port;
+    bool is_streaming;
 
     double *freq_residuals;
-
     double *freq_comb;
     size_t freqlen;
+    double delta_f;
     double *kid_freqs;
     size_t num_kids;
 
@@ -108,14 +110,23 @@ typedef struct roach_state {
     // This LUT is what gets written
     roach_uint16_lut_t LUT;
 
-    char *vna_path;
-    char *targ_path;
+    char *vna_path_root;
+    char *targ_path_root;
+    char *last_vna_path;
+    char *last_targ_path;
     char *channels_path;
     uint16_t dest_port;
 
     // PPC link
     struct katcl_line *rpc_conn;
 } roach_state_t;
+
+typedef struct bb_state {
+    const char *address;
+    FILE *bb_ssh_pipe;
+    FILE *bb_telnet1_pipe;
+    FILE *bb_telnet2_pipe;
+} bb_state_t;
 
 typedef struct {
     const char *firmware_file;
@@ -162,11 +173,6 @@ typedef struct data_udp_packet {
 #define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
 
 static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
-
-// Destination IP for UDP packets
-// This is the destination IP on Lazarus:
-// static const char udp_dest[32] = "192.168.42.1";
-// static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 42*pow(2, 8) + 1;
 
 // Destination IP for fc1
 static const char udp_dest[32] = "192.168.40.3";
