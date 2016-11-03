@@ -581,6 +581,30 @@ void roach_freq_comb(roach_state_t *m_roach)
 	for (size_t i = 0; i < m_freqlen/2; i++) {
 		m_roach->freq_comb[i + m_freqlen/2] = n_min_freq + i*n_delta_f;
 	}
+	/* char bb_freq_fname[FILENAME_MAX];
+	snprintf(bb_freq_fname, sizeof(bb_freq_fname), "/home/fc1user/sam_tests/bb_freqs.dat");
+	FILE *m_bb_fd = fopen(bb_freq_fname, "w");
+	for (size_t i = 0; i < m_roach->freqlen; i++) {
+		blast_info("delta f = %g, freq = %g\n", m_roach->delta_f, m_roach->freq_comb[i]);
+		fprintf(m_bb_fd, "%.10f\n", (float)m_roach->freq_comb[i]);
+	}*/
+}
+
+/* Save the current list of baseband frequencies */
+void save_bb_freqs(roach_state_t *m_roach)
+{
+	// blast_info("which = %d, freqlen = %zd", m_roach->which, m_roach->freqlen);
+	// for (size_t i = 0; i < m_roach->freqlen; i++) {
+	// 	blast_info("freq res = %g\n", m_roach->freq_residuals[i]);
+	// }
+	char bb_fname[FILENAME_MAX];
+	snprintf(bb_fname, sizeof(bb_fname), "/home/fc1user/sam_tests/bb_freqs.dat");
+	FILE *m_bb_fd = fopen(bb_fname, "w");
+	for (size_t i = 0; i < m_roach->freqlen; i++) {
+		blast_info("delta f = %g, freq = %g\n", m_roach->delta_f, m_roach->freq_comb[i]);
+		fprintf(m_bb_fd, "%.10f\n", (float)m_roach->freq_comb[i]);
+	}
+	blast_info("ROACH%d baseband freqs written to %s", m_roach->which, bb_fname);
 }
 
 void roach_save_sweep_packet(roach_state_t *m_roach, float lo_freq)
@@ -596,14 +620,10 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float lo_freq)
 	snprintf(fname, sizeof(fname), "%s/%f.dat", roach_state_table[m_roach->which - 1].last_vna_path, lo_freq);
 	// snprintf(fname, sizeof(fname), "/home/fc1user/sam_tests/sweeps/%f.dat", lo_freq);
 	FILE *m_fd = fopen(fname, "w");
-	float *I_sum;
-	float *Q_sum;
-	float *I_avg;
-	float *Q_avg;
-	I_sum = calloc((float)MAX_CHANNELS_PER_ROACH, sizeof(float)); // Array to store I values to be summed
-	Q_sum = calloc((float)MAX_CHANNELS_PER_ROACH, sizeof(float)); // Array to store Q values to be summed
-	I_avg = calloc((float)MAX_CHANNELS_PER_ROACH, sizeof(float)); // Array to store averaged I values
-	Q_avg = calloc((float)MAX_CHANNELS_PER_ROACH, sizeof(float)); // Array to store averaged Q values
+	float *I_sum = calloc((float)MAX_CHANNELS_PER_ROACH, sizeof(float)); // Array to store I values to be summed
+	float *Q_sum = calloc((float)MAX_CHANNELS_PER_ROACH, sizeof(float)); // Array to store Q values to be summed
+	float *I_avg = calloc((float)MAX_CHANNELS_PER_ROACH, sizeof(float)); // Array to store averaged I values
+	float *Q_avg = calloc((float)MAX_CHANNELS_PER_ROACH, sizeof(float)); // Array to store averaged Q values
 	while (m_num_received < m_num_to_avg) {
 		if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
 		   m_num_received++;
@@ -642,9 +662,29 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float lo_freq)
 	fputs("python ~/device_control/set_lo.py 750\n", bb_state_table[m_roach->which - 1].bb_ssh_pipe);
 }*/
 
-void roach_do_sweep(roach_state_t *m_roach, bool type)
+int init_beaglebone(int m_roach_index)
+{
+	// memset(bb_state_table, 0, sizeof(bb_state_t) * NUM_ROACHES);
+	asprintf(&bb_state_table[m_roach_index].address, "beaglebone%d", m_roach_index + 1);
+	char ssh_command[FILENAME_MAX];
+	/* Open SSH pipe for access to Beaglebone devices */
+	snprintf(ssh_command, sizeof(ssh_command), "ssh -t -t root@%s", bb_state_table[m_roach_index].address);
+	blast_info("Opening SSH pipe to %s...", bb_state_table[m_roach_index].address);
+	bb_state_table[m_roach_index].bb_ssh_pipe = popen(ssh_command, "w");
+	if (!bb_state_table[m_roach_index].bb_ssh_pipe) {
+		blast_err("Could not open SSH pipe to Beaglebone%d: %s", m_roach_index + 1, strerror(errno));
+		return -1;
+	}
+	// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_valon.py\n");
+	// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_attenuators.py %f\t%f\n", 26., 26.);
+	return 0;
+}
+
+void roach_do_sweep(roach_state_t *m_roach, int type)
 {
 	/*type = {0:VNA, 1:TARG} */
+	/* Open SSH pipe to beaglebone */
+	init_beaglebone(m_roach->which - 1);
 	double m_span;
 	double m_center_freq;
 	double m_freq_step = 2.5e3;
@@ -677,16 +717,7 @@ void roach_do_sweep(roach_state_t *m_roach, bool type)
 		m_center_freq = 750.0e6;
 		blast_info("ROACH%d, VNA sweep will be saved in %s", m_roach->which, m_vna_save_path);
 		snprintf(sweep_freq_fname, sizeof(sweep_freq_fname), "%s/sweep_freqs.dat", m_vna_save_path);
-		/* Save list of current baseband freqs in sweep directory */
-		char bb_freq_fname[FILENAME_MAX];
-		snprintf(bb_freq_fname, sizeof(bb_freq_fname), "%s/bb_freqs.dat", m_vna_save_path);
-		FILE *m_bb_fd = fopen(bb_freq_fname, "w");
-		for (size_t i = 0; i < m_roach->freqlen; i++) {
-			blast_info("delta f = %g, freq = %g\n", m_roach->delta_f, m_roach->freq_comb[i]);
-			fprintf(m_bb_fd, "%.10f\n", (float)m_roach->freq_comb[i]);
-		}
-		fclose(m_bb_fd);
-		blast_info("ROACH%d baseband freqs written to %s", m_roach->which, bb_freq_fname);
+		save_bb_freqs(m_roach);
 	} else {
 		m_span = 100.0e3;
 		m_center_freq = 750.0e6;
@@ -709,6 +740,9 @@ void roach_do_sweep(roach_state_t *m_roach, bool type)
 		m_sweep_freqs[i] = m_sweep_freqs[i - 1] + m_freq_step;
 	}
 	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
+		m_sweep_freqs[i] = round(m_sweep_freqs[i] / m_freq_step) * m_freq_step;
+	}
+	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
 		fprintf(m_sweep_fd, "%.9f\n", (float)m_sweep_freqs[i]);
 	}
 	fclose(m_sweep_fd);
@@ -724,6 +758,7 @@ void roach_do_sweep(roach_state_t *m_roach, bool type)
 	}
 	fputs("python ~/device_control/set_lo.py 750\n", bb_state_table[m_roach->which - 1].bb_ssh_pipe);
 	free(m_sweep_freqs);
+	pclose(bb_state_table[m_roach->which - 1].bb_ssh_pipe);
        /*		FILE *m_fd;
 		m_fd = fopen("/data/etc/blast/kid_freqs.dat", "r");
 		double m_kid_freqs[m_roach->num_kids];
@@ -1009,9 +1044,9 @@ void *roach_cmd_loop(void)
 			if (roach_state_table[i].status == ROACH_STATUS_ATTENUATION &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_VNA) {
 				blast_info("ROACH%d, Waiting for VNA sweep", i + 1);
-				// roach_save_sweep_packet(&roach_state_table[i], 750.);
 				blast_info("ROACH%d, Starting VNA sweep...", i + 1);
-				roach_do_sweep(&roach_state_table[i], 0);
+				save_bb_freqs(&roach_state_table[i]);
+				// roach_do_sweep(&roach_state_table[i], 0);
 				roach_state_table[i].status = ROACH_STATUS_ARRAY_FREQS;
 				roach_state_table[i].desired_status = ROACH_STATUS_TARG;
 			}
@@ -1025,29 +1060,11 @@ void *roach_cmd_loop(void)
 	} // while
 }
 
-int init_beaglebone(void)
-{
-	memset(bb_state_table, 0, sizeof(bb_state_t) * NUM_ROACHES);
-	for (int i = 1; i < 2; i++) {
-    		asprintf(&bb_state_table[i].address, "beaglebone%d", i + 1);
-		char ssh_command[FILENAME_MAX];
-		/* Open SSH pipe for access to Beaglebone devices */
-		snprintf(ssh_command, sizeof(ssh_command), "ssh -t -t root@%s", bb_state_table[i].address);
-		blast_info("Opening SSH pipe to %s...", bb_state_table[i].address);
-		bb_state_table[i].bb_ssh_pipe = popen(ssh_command, "w");
-		if (!bb_state_table[i].bb_ssh_pipe) {
-			blast_err("Could not open SSH pipe to Beaglebone%d: %s", i + 1, strerror(errno));
-			return -1;
-		}
-		// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_valon.py\n");
-		// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_attenuators.py %f\t%f\n", 26., 26.);
-	}
-	return 0;
-}
-
 int init_roach(void)
 {
     memset(roach_state_table, 0, sizeof(roach_state_t) * NUM_ROACHES);
+    /* Initialize Beaglebones */
+    memset(bb_state_table, 0, sizeof(bb_state_t) * NUM_ROACHES);
     for (int i = 0; i < NUM_ROACHES; i++) {
     	 asprintf(&roach_state_table[i].address, "roach%d", i + 1);
     	 asprintf(&roach_state_table[i].vna_path_root, "/home/fc1user/sam_tests/sweeps/roach%d/vna", i + 1);

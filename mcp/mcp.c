@@ -527,9 +527,9 @@ blast_info("Initializing ROACHes from MCP...");
 init_roach();
 blast_info("Finished initializing ROACHes...");
 
-blast_info("Initializing Beaglebones from MCP...");
+/* blast_info("Initializing Beaglebones from MCP...");
 init_beaglebone();
-blast_info("Finished initializing Beaglebones...");
+blast_info("Finished initializing Beaglebones..."); */
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
 
