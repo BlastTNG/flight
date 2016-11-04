@@ -98,10 +98,10 @@ typedef struct roach_state {
     bool is_streaming;
 
     double *freq_residuals;
-    double *freq_comb;
+    double *vna_comb;
     size_t freqlen;
     double delta_f;
-    double *kid_freqs;
+    double *targ_comb;
     size_t num_kids;
 
     // First two LUTs are for building
