@@ -185,6 +185,7 @@ typedef struct {
     bool            have_warned;
     bool            want_reset;
     uint8_t         which;
+    uint8_t         i_which;
     uint32_t        seq_error_count;
     uint32_t        crc_error_count;
     uint32_t        seq_number;
