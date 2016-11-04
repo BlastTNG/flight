@@ -290,8 +290,8 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     m_roach_udp->crc_error_count = 0;
 
     m_roach_udp->index = 0; // Write index for the udp circular buffer.
-    m_roach_udp->which = m_which+1;
-    m_roach_udp->i_which = m_which;
+    m_roach_udp->which = m_which;
+    m_roach_udp->i_which = m_which-1;
     m_roach_udp->first_packet = TRUE;
 
     snprintf(m_roach_udp->address, sizeof(m_roach_udp->address), "roach%i-udp", m_which);

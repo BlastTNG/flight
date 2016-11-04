@@ -1072,10 +1072,9 @@ int init_roach(void)
     	 roach_state_table[i].which = i + 1;
     	 roach_state_table[i].dest_port = 64000 + i;
 	 roach_state_table[i].is_streaming = 0;
-	    roach_udp_networking_init(i, &roach_state_table[i], NUM_ROACH_UDP_CHANNELS);
+	    roach_udp_networking_init(roach_state_table[i].which, &roach_state_table[i], NUM_ROACH_UDP_CHANNELS);
 	}
 
     ph_thread_t *roach_cmd_thread = ph_thread_spawn(roach_cmd_loop, NULL);
     return 0;
 }
-
