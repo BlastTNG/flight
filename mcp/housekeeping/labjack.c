@@ -461,7 +461,21 @@ int labjack_dio(int m_labjack, int address, int command) {
     if (ret < 0) {
         blast_warn("Something went wrong");
         retprime = modbus_read_registers(state[m_labjack].cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
-        if (retprime > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+        if (retprime > 0) {
+            blast_err("Specific labjack error code is: %d, modbus: %s)", err_data[0], modbus_strerror(errno));
+            usleep(1000);
+            ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+            if (ret < 0) {
+                blast_warn("Failed a second time");
+                retprime = modbus_read_registers(state[m_labjack].cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+                if (retprime > 0) {
+                    blast_err("Specific labjack error code is: %d, modbus: %s)", err_data[0], modbus_strerror(errno));
+                    return ret;
+                }
+            }
+        } else  {
+            blast_warn("Was able to write on second attempt");
+        }
         return ret;
     } else {
         if (command == 1) {

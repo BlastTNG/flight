@@ -519,14 +519,14 @@ derived_tng_t derived_list[] = {
 
   COMMENT("ROXes"), // raw calibration only -- warning!
     // change the LINCOMs once we get actual calibration data
-    LINCOM("TR_FPA_1K_INT", "TR_FPA_1K", 0, 0),
-    LINCOM("TR_250_FPA_INT", "TR_250_FPA", 0, 0),
-    LINCOM("TR_1K_PLATE_INT", "TR_1K_PLATE", 0, 0),
-    LINCOM("TR_300MK_STRAP_INT", "TR_300MK_STRAP", 0, 0),
-    LINCOM("TR_350_FPA_INT", "TR_350_FPA", 0, 0),
-    LINCOM("TR_HE4_POT_INT", "TR_HE4_POT", 0, 0),
-    LINCOM("TR_HE3_FRIDGE_INT", "TR_HE3_FRIDGE", 0, 0),
-    LINCOM("TR_500_FPA_INT", "TR_500_FPA", 0, 0),
+    LINCOM("TR_FPA_1K_INT", "TR_FPA_1K", 1, 0),
+    LINCOM("TR_250_FPA_INT", "TR_250_FPA", 1, 0),
+    LINCOM("TR_1K_PLATE_INT", "TR_1K_PLATE", 1, 0),
+    LINCOM("TR_300MK_STRAP_INT", "TR_300MK_STRAP", 1, 0),
+    LINCOM("TR_350_FPA_INT", "TR_350_FPA", 1, 0),
+    LINCOM("TR_HE4_POT_INT", "TR_HE4_POT", 1, 0),
+    LINCOM("TR_HE3_FRIDGE_INT", "TR_HE3_FRIDGE", 1, 0),
+    LINCOM("TR_500_FPA_INT", "TR_500_FPA", 1, 0),
   LINTERP("Tr_fpa_1k", "TR_FPA_1K_INT", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_fpa_1k", "Temperature", "K"),
   LINTERP("Tr_250_fpa", "TR_250_FPA_INT" , LUT_DIR "rox-raw.txt"),
