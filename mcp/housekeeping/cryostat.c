@@ -159,8 +159,8 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(diode_vcs2_hx_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_HX));
     SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
     // above are the diodes, below, the ROXes
-    /* SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_2, LJ_R_FPA_1K_IND));
-    SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
+    SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_FPA_1K));
+    /* SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
     SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
     SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
     SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
@@ -172,11 +172,15 @@ void read_thermometers(void) {
 void test_dio(void) {
     static int state_dio = 0;
     if (!state_dio) {
-        state_dio = labjack_dio(LABJACK_CRYO_1, 2008, 1);
-        blast_warn("state is %d", state_dio);
+        state_dio = labjack_dio(LABJACK_CRYO_2, 2008, 1);
+        if (state_dio < 0) {
+            blast_warn("state is %d", state_dio);
+        }
     } else {
-        state_dio = labjack_dio(LABJACK_CRYO_1, 2008, 0);
-        blast_warn("state is %d", state_dio);
+        state_dio = labjack_dio(LABJACK_CRYO_2, 2008, 0);
+        if (state_dio < 0) {
+            blast_warn("state is %d", state_dio);
+        }
     }
 }
 
