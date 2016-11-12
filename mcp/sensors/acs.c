@@ -982,7 +982,7 @@ void store_5hz_acs(void)
     /* trim fields */
     static channel_t *trimClinAddr;
     static channel_t *trimEncAddr;
-    //static channel_t *trimEncMotorAddr;
+    static channel_t *trimEncMotorAddr;
     static channel_t *trimNullAddr;
     static channel_t *trimMagAddr;
     static channel_t *trimPssAddr;
@@ -1112,7 +1112,7 @@ void store_5hz_acs(void)
 
         trimClinAddr = channels_find_by_name("trim_clin");
         trimEncAddr = channels_find_by_name("trim_enc");
-        //trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
+        trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
         trimNullAddr = channels_find_by_name("trim_null");
         trimMagAddr = channels_find_by_name("trim_mag");
         trimPssAddr = channels_find_by_name("trim_pss");
@@ -1213,7 +1213,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
 
     SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim);
-    //SET_SCALED_VALUE(trimEncMotorAddr, CommandData.enc_motor_el_trim);
+    SET_SCALED_VALUE(trimEncMotorAddr, CommandData.enc_motor_el_trim);
 
     SET_SCALED_VALUE(elClinAddr, (PointingData[i_point].clin_el_lut + CommandData.clin_el_trim));
     SET_SCALED_VALUE(elLutClinAddr, PointingData[i_point].clin_el);
