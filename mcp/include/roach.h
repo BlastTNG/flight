@@ -122,10 +122,10 @@ typedef struct roach_state {
 } roach_state_t;
 
 typedef struct bb_state {
+    ph_sock_t *bb_socket;
+    ph_socket_t udp_socket_fd;
     const char *address;
     FILE *bb_ssh_pipe;
-    FILE *bb_telnet1_pipe;
-    FILE *bb_telnet2_pipe;
 } bb_state_t;
 
 typedef struct {

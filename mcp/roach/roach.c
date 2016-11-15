@@ -70,7 +70,7 @@
 #define LUT_BUFFER_LEN 2097152
 #define FPGA_SAMP_FREQ 256.0e6
 #define DAC_SAMP_FREQ 512.0e6
-#define DAC_FREQ_RES (DAC_SAMP_FREQ / LUT_BUFFER_LEN)
+#define DAC_FREQ_RES (2 * DAC_SAMP_FREQ / LUT_BUFFER_LEN)
 
 // static double DAC_SAMP_FREQ = 512.0e6;
 static int fft_len = 1024;
@@ -79,15 +79,13 @@ static uint32_t accum_len = (1 << 19) - 1;
 double freqs[2] = {10.3285242e6, -70.0832511e6};
 size_t freqlen = 2;
 // FIR: 26th order Hann window coefficients, f_cutoff = 1.5 kHz
-double zeros[27] = {0., 0.00108702, 0.00430752, 0.00950288, 0.01639207,
-0.0245878, 0.03361947, 0.04296151, 0.05206529, 0.06039267,
-0.06744908, 0.07281401, 0.07616698, 0.0773074, 0.07616698,
-0.07281401, 0.06744908, 0.06039267, 0.05206529, 0.04296151,
-0.03361947, 0.0245878, 0.01639207, 0.00950288, 0.00430752,
-0.00108702, 0.};
+double zeros[27] = {0.00089543, 0.00353683, 0.00779173, 0.01344679, 0.02021844, 0.02776711, 0.03571429,
+	0.04366146, 0.05121013, 0.05798178, 0.06363684, 0.06789175, 0.07053314, 0.07142857, 0.07053314,
+	0.06789175, 0.06363684, 0.05798178, 0.05121013, 0.04366146, 0.03571429, 0.02776711, 0.02021844,
+	0.01344679, 0.00779173, 0.00353683, 0.00089543};
 // Firmware image files
 const char roach_fpg[5][11] = {"roach1.fpg", "roach2.fpg", "roach3.fpg", "roach4.fpg", "roach5.fpg"};
-const char test_fpg[] = "/data/etc/blast/blast_varlpf_2016_Oct_18_1740.fpg";
+const char test_fpg[] = "/data/etc/blast/blast_lpf_fft_2016_Nov_14_1207.fpg";
 // const char test_fpg[] = "/data/etc/blast/roach2_8tap_wide_2016_Jun_25_2016.fpg";
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
@@ -304,8 +302,7 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_
 	if (m_freqs[i] < 0 && m_freqs[i]+ 512.0e6 >= 511.5e6) {
 		bins[i] = 1023;
 	}
-
-	m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / DAC_FREQ_RES) * DAC_FREQ_RES;
+	m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / (0.5*DAC_FREQ_RES)) * (0.5*DAC_FREQ_RES);
     }
     for (int ch = 0; ch < m_freqlen; ch++) {
         roach_write_int(m_roach, "bins", bins[ch], 0);
@@ -685,6 +682,25 @@ int init_beaglebone(int m_roach_index)
 	return 0;
 }
 
+/* int phenom_beaglebone(roach_state_t *m_roach)
+{
+	char which_bb[32];
+	snprintf(which_bb, sizeof(which_bb), "beaglebone%d", m_roach->which - 1);
+	// Open phenom socket on port 23
+	ph_result_t test = 0; // Used to test the status of some phenom calls. 0 = OK
+        ph_string_t sockaddr_str;
+        ph_sockaddr_t addr;
+        struct hostent *bb = gethostbyname(which_bb);
+	test = ph_sockaddr_set_from_hostent(&addr, bb);
+	ph_sockaddr_set_port(&addr, 23);
+	ph_socket_t sock = ph_socket_for_addr(&addr, SOCK_DGRAM, PH_SOCK_NONBLOCK);
+        bb_state->bb_socket = sock;
+        // callback function
+	bb_state->bb_socket->callback = bb_process_stream;
+        ph_sock_enable(bb_state->bb_socket, TRUE);
+	return 0;
+} */
+
 void get_targ_freqs(roach_state_t *m_roach)
 {
 	char py_command[FILENAME_MAX];
@@ -1006,9 +1022,9 @@ void *roach_cmd_loop(void)
 			if (roach_state_table[i].status == ROACH_STATUS_PROGRAMMED &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_CONFIGURED) {
 				blast_info("ROACH%d, Configuring software registers...", i + 1);
-				roach_write_int(&roach_state_table[i], "dds_shift", 305, 0);/* DDS LUT shift, in clock cycles */
+				roach_write_int(&roach_state_table[i], "dds_shift", 312, 0);/* DDS LUT shift, in clock cycles */
 				roach_read_int(&roach_state_table[i], "dds_shift");
-				roach_write_int(&roach_state_table[i], "fft_shift", 255, 0);/* FFT shift schedule */
+				roach_write_int(&roach_state_table[i], "fft_shift", 31, 0);/* FFT shift schedule */
 				roach_read_int(&roach_state_table[i], "fft_shift");
 				roach_write_int(&roach_state_table[i], "sync_accum_len", accum_len, 0);/* Number of accumulations */
 				roach_read_int(&roach_state_table[i], "sync_accum_len");
@@ -1023,8 +1039,8 @@ void *roach_cmd_loop(void)
 				roach_write_int(&roach_state_table[i], "dac_reset", 1, 0);
 				blast_info("ROACH%d, Calibrating QDR RAM", i + 1);
 				// qdr_cal2(&roach_state_table[i], 0);
-				asprintf(&cal_command, "python /data/etc/blast/cal_roach_qdr.py %s", roach_state_table[i].address);
-				if (system(cal_command) > -1) {
+				asprintf(&cal_command, "python /data/etc/blast/cal_roach_qdr.py %s | /usr/bin/tee /home/fc1user/test.log",
+														roach_state_table[i].address);							       if (system(cal_command) > -1) {
 					blast_info("ROACH%d, Calibration complete", i + 1);
 					roach_write_int(&roach_state_table[i], "tx_rst", 0, 0);
 					roach_write_int(&roach_state_table[i], "tx_rst", 1, 0);
@@ -1078,6 +1094,7 @@ void *roach_cmd_loop(void)
 				// get_targ_freqs(&roach_state_table[i]);
 				roach_do_sweep(&roach_state_table[i], 1);
 				blast_info("ROACH%d, TARG sweep complete", i + 1);
+				// TODO(Sam): Calculate and store IQ Gradient
 				if (roach_check_streaming(&roach_state_table[i]) == 0) {
 					roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
 					// pclose(bb_state_table[i].bb_ssh_pipe);
