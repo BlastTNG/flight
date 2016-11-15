@@ -511,9 +511,6 @@ struct CommandDataStruct {
   double lat;
   double lon;
 
-  /* Integrating Star Camera Stuff */
-  struct ISCStatusStruct ISCState[2];
-
   struct {
     int pulse_width;
     int fast_pulse_width;
