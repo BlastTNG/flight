@@ -89,7 +89,7 @@ const char test_fpg[] = "/data/etc/blast/blast_lpf_fft_2016_Nov_14_1207.fpg";
 // const char test_fpg[] = "/data/etc/blast/roach2_8tap_wide_2016_Jun_25_2016.fpg";
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
-static ph_thread_t *roach_state = NULL;
+// static ph_thread_t *roach_state = NULL;
 
 static void roach_buffer_ntohs(uint16_t *m_buffer, size_t m_len)
 {
@@ -502,57 +502,57 @@ int set_atten(roach_state_t *m_roach)
 	return 0;
 }
 
-static int roach_save_1d(const char *m_filename, void *m_data, size_t m_element_size, size_t m_len)
-{
-    uint32_t channel_crc;
-    FILE *fp;
-    channel_crc = crc32(BLAST_MAGIC32, m_data, m_element_size * m_len);
-    fp = fopen(m_filename, "w");
-    fwrite(&m_len, sizeof(size_t), 1, fp);
-    fwrite(m_data, m_element_size, m_len, fp);
-    fwrite(&channel_crc, sizeof(channel_crc), 1, fp);
-    fclose(fp);
-    return 0;
-}
+// static int roach_save_1d(const char *m_filename, void *m_data, size_t m_element_size, size_t m_len)
+// {
+//     uint32_t channel_crc;
+//     FILE *fp;
+//     channel_crc = crc32(BLAST_MAGIC32, m_data, m_element_size * m_len);
+//     fp = fopen(m_filename, "w");
+//     fwrite(&m_len, sizeof(size_t), 1, fp);
+//     fwrite(m_data, m_element_size, m_len, fp);
+//     fwrite(&channel_crc, sizeof(channel_crc), 1, fp);
+//     fclose(fp);
+//     return 0;
+// }
 
 // Not currently being used, may change or eliminate
-static ssize_t roach_load_1d(const char *m_filename, void **m_data, size_t m_element_size)
-{
-    size_t len;
-    FILE *fp;
-    struct stat fp_stat;
-    uint32_t channel_crc;
-    if (stat(m_filename, &fp_stat)) {
-        blast_err("Could not get file data for %s: %s", m_filename, strerror(errno));
-        return -1;
-    }
-    if (!(fp = fopen(m_filename, "r"))) {
-        blast_err("Could not open %s for reading: %s", m_filename, strerror(errno));
-        return -1;
-    }
-    if (fread(&len, sizeof(len), 1, fp) != 1) {
-        blast_err("Could not read data length from %s: %s", m_filename, strerror(errno));
-        fclose(fp);
-        return -1;
-    }
-    if ((len * m_element_size) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
-        blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu", m_filename,
-                  (len * m_element_size) + sizeof(channel_crc) + sizeof(len), fp_stat.st_size);
-        fclose(fp);
-        return -1;
-    }
-    *m_data = calloc(len, m_element_size);
-    fread(*m_data, m_element_size, len, fp);
-    fread(&channel_crc, sizeof(channel_crc), 1, fp);
-    fclose(fp);
-    if (channel_crc != crc32(BLAST_MAGIC32, *m_data, m_element_size * len)) {
-        free(*m_data);
-        *m_data = NULL;
-        blast_err("Mismatched CRC for '%s'.  File corrupted?", m_filename);
-        len = -1;
-    }
-    return len;
-}
+// static ssize_t roach_load_1d(const char *m_filename, void **m_data, size_t m_element_size)
+// {
+//     size_t len;
+//     FILE *fp;
+//     struct stat fp_stat;
+//     uint32_t channel_crc;
+//     if (stat(m_filename, &fp_stat)) {
+//         blast_err("Could not get file data for %s: %s", m_filename, strerror(errno));
+//         return -1;
+//     }
+//     if (!(fp = fopen(m_filename, "r"))) {
+//         blast_err("Could not open %s for reading: %s", m_filename, strerror(errno));
+//         return -1;
+//     }
+//     if (fread(&len, sizeof(len), 1, fp) != 1) {
+//         blast_err("Could not read data length from %s: %s", m_filename, strerror(errno));
+//         fclose(fp);
+//         return -1;
+//     }
+//     if ((len * m_element_size) != fp_stat.st_size - (sizeof(channel_crc) + sizeof(len))) {
+//         blast_err("Invalid file '%s'.  Claimed to have %zu bytes but we only see %zu", m_filename,
+//                   (len * m_element_size) + sizeof(channel_crc) + sizeof(len), fp_stat.st_size);
+//         fclose(fp);
+//         return -1;
+//     }
+//     *m_data = calloc(len, m_element_size);
+//     fread(*m_data, m_element_size, len, fp);
+//     fread(&channel_crc, sizeof(channel_crc), 1, fp);
+//     fclose(fp);
+//     if (channel_crc != crc32(BLAST_MAGIC32, *m_data, m_element_size * len)) {
+//         free(*m_data);
+//         *m_data = NULL;
+//         blast_err("Mismatched CRC for '%s'.  File corrupted?", m_filename);
+//         len = -1;
+//     }
+//     return len;
+// }
 
 /* Check if UDP streaming is successful */
 int roach_check_streaming(roach_state_t *m_roach)
@@ -679,7 +679,7 @@ int init_beaglebone(int m_roach_index)
 		blast_err("Could not open SSH pipe to Beaglebone%d: %s", m_roach_index + 1, strerror(errno));
 		return -1;
 	}
-	blast_info("File descriptor returned = %d", fileno(&bb_state_table[m_roach_index].bb_ssh_pipe));
+	blast_info("File descriptor returned = %d", fileno(bb_state_table[m_roach_index].bb_ssh_pipe));
 	// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_valon.py\n");
 	// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_attenuators.py %f\t%f\n", 26., 26.);
 	return 0;
@@ -1001,7 +1001,7 @@ void *roach_cmd_loop(void)
 	while (!shutdown_mcp) {
 		// TODO(SAM/LAURA): Fix Roach 1/Add error handling
 		char *cal_command;
-		for (int i = 1; i < 2; i++) {
+		for (int i = 0; i < 1; i++) {
 		// Check for new roach status commands
 		    if (CommandData.roach[i].change_state) {
                 roach_state_table[i].status = CommandData.roach[i].new_state;
