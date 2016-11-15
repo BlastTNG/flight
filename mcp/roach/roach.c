@@ -58,12 +58,12 @@
 #include "remote_serial.h"
 #include "valon.h"
 #undef I
+#include "command_struct.h"
 #include "phenom/defs.h"
 #include "phenom/listener.h"
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
-#undef I
 #define WRITE_INT_TIMEOUT 1000
 #define UPLOAD_TIMEOUT 20000
 #define QDR_TIMEOUT 20000
@@ -667,16 +667,19 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 int init_beaglebone(int m_roach_index)
 {
 	// memset(bb_state_table, 0, sizeof(bb_state_t) * NUM_ROACHES);
+	// TODO(laura/sam): this doesn't trigger failure when the ssh_command fails.  Fix this!
 	asprintf(&bb_state_table[m_roach_index].address, "beaglebone%d", m_roach_index + 1);
 	char ssh_command[FILENAME_MAX];
 	/* Open SSH pipe for access to Beaglebone devices */
 	snprintf(ssh_command, sizeof(ssh_command), "ssh -t -t root@%s", bb_state_table[m_roach_index].address);
 	blast_info("Opening SSH pipe to %s...", bb_state_table[m_roach_index].address);
+	blast_info("ssh command is: %s", ssh_command);
 	bb_state_table[m_roach_index].bb_ssh_pipe = popen(ssh_command, "w");
-	if (!bb_state_table[m_roach_index].bb_ssh_pipe) {
+	if ((bb_state_table[m_roach_index].bb_ssh_pipe) == NULL) {
 		blast_err("Could not open SSH pipe to Beaglebone%d: %s", m_roach_index + 1, strerror(errno));
 		return -1;
 	}
+	blast_info("File descriptor returned = %d", fileno(&bb_state_table[m_roach_index].bb_ssh_pipe));
 	// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_valon.py\n");
 	// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_attenuators.py %f\t%f\n", 26., 26.);
 	return 0;
@@ -999,6 +1002,11 @@ void *roach_cmd_loop(void)
 		// TODO(SAM/LAURA): Fix Roach 1/Add error handling
 		char *cal_command;
 		for (int i = 1; i < 2; i++) {
+		// Check for new roach status commands
+		    if (CommandData.roach[i].change_state) {
+                roach_state_table[i].status = CommandData.roach[i].new_state;
+                CommandData.roach[i].change_state = 0;
+		    }
 		// for (int i = 0; i < NUM_ROACHES; i++) {
 			if (roach_state_table[i].status == ROACH_STATUS_BOOT && roach_state_table[i].desired_status > ROACH_STATUS_BOOT) {
 				blast_info("Attempting to connect to %s", roach_state_table[i].address);
@@ -1104,6 +1112,11 @@ void *roach_cmd_loop(void)
 			/* if (roach_state_table[i].status == ROACH_STATUS_ARRAY_FREQS &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_ACQUIRING) {
 			}*/
+		// Check for any additional roach commands
+		if (CommandData.roach[i].do_calc_grad) {
+            // TODO(Sam): write gradient calculation function to call
+            CommandData.roach[i].do_calc_grad = 0;
+		}
 		}
 	} // while
 }

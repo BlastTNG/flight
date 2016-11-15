@@ -307,7 +307,9 @@ typedef struct udp_roach
 
 typedef struct roach
 {
-    unsigned int desired_state;
+    unsigned int new_state;
+    unsigned int change_state;
+    unsigned int do_calc_grad;
 } roach_status_t;
 
 struct CommandDataStruct {

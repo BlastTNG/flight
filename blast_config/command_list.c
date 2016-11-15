@@ -31,6 +31,7 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_TRIM] = "Pointing Sensor Trims",
                                     [GRPOS_ELECT] = "Aux. Electronics",
                                     [GRPOS_BIAS] = "Bias",
+                                    [GRPOS_ROACH] = "ROACH Commands",
                                     [GRPOS_VETO] = "Pointing Sensor Vetos",
                                     [GRPOS_ACT] = "Actuators",
                                     [GRPOS_XSC_HOUSE] = "XSC Housekeeping",
@@ -757,6 +758,24 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+// *****************************************
+// ROACH Commands
+// *****************************************
+  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(reset_roach), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(calc_grad_roach), "Force calculation of I,Q gradient", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
   /***************************************/
   /*************** Bias  *****************/
   {COMMAND(bias_level_250), "bias level 250 micron", GR_BIAS, 1,

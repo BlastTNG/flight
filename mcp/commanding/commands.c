@@ -1364,6 +1364,26 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 #endif
 
+// *****************************************
+// ROACH Commands
+// *****************************************
+    case vna_sweep:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_ATTENUATION;
+          CommandData.roach[ivalues[0]-1].change_state = 1;
+      }
+      break;
+    case reset_roach:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_BOOT;
+          CommandData.roach[ivalues[0]-1].change_state = 1;
+      }
+      break;
+    case calc_grad_roach:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_calc_grad = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -1918,6 +1938,12 @@ void InitCommandData()
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
     CommandData.hwpr.repeats = 0;
+
+	for (i = 0; i < NUM_ROACHES; i++) {
+		CommandData.roach[i].do_calc_grad = 0;
+		CommandData.roach[i].new_state = 0;
+		CommandData.roach[i].change_state = 0;
+	}
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;
