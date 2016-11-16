@@ -358,7 +358,7 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     ph_sock_enable(m_roach_udp->udp_socket, TRUE);
 }
 
-void write_roach_channels_244hz(void)
+void write_roach_channels_488hz(void)
 {
     uint8_t i_udp_read;
 	static channel_t *RoachQAddr[NUM_ROACHES][NUM_ROACH_UDP_CHANNELS];
@@ -370,7 +370,8 @@ void write_roach_channels_244hz(void)
 
     if (firsttime) {
         firsttime = 0;
-        for (i = 0; i < NUM_ROACHES; i++) {
+        for (i = 0; i < 1; i++) { // Only write ROACH1 channels for now.
+//        for (i = 0; i < NUM_ROACHES; i++) {
             for (j = 0; j < n_publish_roaches[i]; j++) {
                 snprintf(channel_name_i, sizeof(channel_name_i), "roach%d_kid%04d_i", i+1, j);
                 RoachIAddr[i][j] = channels_find_by_name(channel_name_i);
@@ -379,7 +380,8 @@ void write_roach_channels_244hz(void)
             }
         }
     }
-    for (i = 0; i < NUM_ROACHES; i++) {
+//    for (i = 0; i < NUM_ROACHES; i++) {
+    for (i = 0; i < 1; i++) {
         i_udp_read = GETREADINDEX(roach_udp[i].index);
         data_udp_packet_t* m_packet = &(roach_udp[i].last_pkts[i_udp_read]);
         for (j = 0; j < n_publish_roaches[i]; j++) {

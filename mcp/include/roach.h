@@ -102,6 +102,7 @@ typedef struct roach_state {
     size_t freqlen;
     double delta_f;
     double *targ_comb;
+    double lo_freq_req;
     size_t num_kids;
 
     // First two LUTs are for building

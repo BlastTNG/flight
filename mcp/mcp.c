@@ -269,7 +269,9 @@ static void close_mcp(int m_code)
     shutdown_mcp = true;
     watchdog_close();
     shutdown_bias_tone();
+#ifndef NO_KIDS_ROACH
     shutdown_roaches();
+#endif
     ph_sched_stop();
 }
 
@@ -292,8 +294,9 @@ static int AmISouth(int *not_cryo_corner)
 
 static void mcp_488hz_routines(void)
 {
-//    write_roach_channels_488hz();
-
+#ifndef NO_KIDS_TEST
+    write_roach_channels_488hz();
+#endif
     framing_publish_488hz();
 }
 
@@ -349,6 +352,9 @@ static void mcp_5hz_routines(void)
 //    ControlPower();
 //    VideoTx();
 //    cameraFields();
+#ifndef NO_KIDS_TEST
+    write_roach_channels_5hz();
+#endif
 
     framing_publish_5hz();
 }
@@ -509,6 +515,10 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not South.\n");
 
+#ifdef NO_KIDS_TEST
+    blast_warn("Warning: NO_KIDS_TEST flag is set.  No detector functions will be called!");
+#endif
+
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
@@ -538,9 +548,11 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
+#ifndef NO_KIDS_TEST
 blast_info("Initializing ROACHes from MCP...");
 init_roach();
 blast_info("Finished initializing ROACHes...");
+#endif
 
 /* blast_info("Initializing Beaglebones from MCP...");
 init_beaglebone();

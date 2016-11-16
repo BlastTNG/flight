@@ -35,6 +35,13 @@ if (USE_CLANG)
     SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 endif(USE_CLANG)
 
+option(NO_KIDS_TEST "do not write kids data or call roach fns" OFF)
+
+if (NO_KIDS_TEST)
+    add_definitions(-DNO_KIDS_TEST)
+endif(NO_KIDS_TEST)
+
+
 SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99 -mcx16")
 SET (CMAKE_C_FLAGS_DEBUG            "-O0 -fno-omit-frame-pointer -ggdb")
 SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")

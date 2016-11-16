@@ -820,11 +820,13 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 	blast_info("ROACH%d Starting new sweep...", m_roach->which);
 	/* Sweep and save data */
 	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
+		m_roach->lo_freq_req =  m_sweep_freqs[i]/1.0e6;
 		snprintf(ssh_command, sizeof(ssh_command), "python ~/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
 		fputs(ssh_command, bb_state_table[m_roach->which - 1].bb_ssh_pipe);
 		blast_info("LO @ %g\n", m_sweep_freqs[i]/1.0e6);
 		roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_sweep_save_path);
 	}
+    m_roach->lo_freq_req =  750.0;
 	fputs("python ~/device_control/set_lo.py 750\n", bb_state_table[m_roach->which - 1].bb_ssh_pipe);
 	free(m_sweep_freqs);
 	// pclose(bb_state_table[m_roach->which - 1].bb_ssh_pipe);
@@ -1138,4 +1140,50 @@ int init_roach(void)
 
     ph_thread_t *roach_cmd_thread = ph_thread_spawn(roach_cmd_loop, NULL);
     return 0;
+}
+
+void write_roach_channels_5hz(void)
+{
+    int i;
+    static int firsttime = 1;
+	static channel_t *RoachPktCtAddr[NUM_ROACHES];
+	static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
+	static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
+	static channel_t *RoachStatusAddr[NUM_ROACHES];
+	static channel_t *RoachStateAddr[NUM_ROACHES];
+	static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
+    char channel_name_pkt_ct[128] = {0};
+    char channel_name_valid_pkt_ct[128] = {0};
+    char channel_name_invalid_pkt_ct[128] = {0};
+    char channel_name_roach_status[128] = {0};
+    char channel_name_roach_state[128] = {0};
+    char channel_name_roach_req_lo[128] = {0};
+    if (firsttime) {
+        firsttime = 0;
+        for (i = 0; i < NUM_ROACHES; i++) {
+            snprintf(channel_name_pkt_ct, sizeof(channel_name_pkt_ct), "packet_count_roach%d", i+1);
+            snprintf(channel_name_valid_pkt_ct, sizeof(channel_name_valid_pkt_ct), "packet_count_valid_roach%d", i+1);
+            snprintf(channel_name_invalid_pkt_ct, sizeof(channel_name_invalid_pkt_ct),
+                   	 "packet_count_invalid_roach%d", i+1);
+            snprintf(channel_name_roach_status, sizeof(channel_name_roach_status), "status_roach%d", i+1);
+            snprintf(channel_name_roach_state, sizeof(channel_name_roach_state), "stream_state_roach%d", i+1);
+            snprintf(channel_name_roach_req_lo, sizeof(channel_name_roach_state), "freq_lo_req_roach%d", i+1);
+            RoachPktCtAddr[i] = channels_find_by_name(channel_name_pkt_ct);
+            RoachValidPktCtAddr[i] = channels_find_by_name(channel_name_valid_pkt_ct);
+            RoachInvalidPktCtAddr[i] = channels_find_by_name(channel_name_invalid_pkt_ct);
+            RoachStatusAddr[i] = channels_find_by_name(channel_name_roach_status);
+            RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
+        }
+    }
+    for (i = 0; i < NUM_ROACHES; i++) {
+        SET_UINT32(RoachPktCtAddr[i], roach_udp[i].roach_packet_count);
+        SET_UINT32(RoachValidPktCtAddr[i], roach_udp[i].roach_valid_packet_count);
+        SET_UINT32(RoachInvalidPktCtAddr[i], roach_udp[i].roach_invalid_packet_count);
+        SET_UINT16(RoachStatusAddr[i], roach_state_table[i].status);
+        // TODO(laura/sam): Replace next write with a streaming status bitfield.
+        SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
+// This next statement causes a segfault for some reason.
+// TODO(laura): Fix it!
+//        SET_SCALED_VALUE(RoachReqLOFreqAddr[i], roach_state_table[i].lo_freq_req);
+    }
 }
