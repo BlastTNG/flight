@@ -79,7 +79,7 @@ void read_thermometers(void) {
     static int firsttime_therm = 1;
     float test;
     test = labjack_get_value(LABJACK_CRYO_1, DIODE_CHARCOAL_HS);
-    blast_warn("labjack is %f", test);
+//    blast_warn("labjack is %f", test);
 
     static channel_t* rox_fpa_1k_Addr;
     static channel_t* rox_250_fpa_Addr;
