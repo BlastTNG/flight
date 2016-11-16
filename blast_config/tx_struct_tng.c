@@ -885,6 +885,7 @@ channel_t channel_list[] =
     { "mcp_100hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_100HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "mcp_200hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_200HZ, SRC_FC, U_NONE, 0, 0, 0 },
     { "mcp_244hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_244HZ, SRC_FC, U_NONE, 0, 0, 0 },
+    { "mcp_488hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, SRC_FC, U_NONE, 0, 0, 0 },
 
     /* roach diagnostic channels */
     { "packet_count_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, SRC_FC, U_NONE, 0, 0, 0 },

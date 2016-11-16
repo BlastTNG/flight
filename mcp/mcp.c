@@ -289,6 +289,13 @@ static int AmISouth(int *not_cryo_corner)
     return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
 }
 
+static void mcp_488hz_routines(void)
+{
+//    write_roach_channels_488hz();
+
+    framing_publish_488hz();
+}
+
 static void mcp_244hz_routines(void)
 {
 //    write_roach_channels_244hz();
@@ -365,6 +372,7 @@ static void *mcp_main_loop(void *m_arg)
 #define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
+    int counter_488hz = 1;
     int counter_244hz = 1;
     int counter_200hz = 1;
     int counter_100hz = 1;
@@ -415,6 +423,10 @@ static void *mcp_main_loop(void *m_arg)
         if (!--counter_244hz) {
             counter_244hz = HZ_COUNTER(244);
             mcp_244hz_routines();
+        }
+        if (!--counter_488hz) {
+            counter_488hz = HZ_COUNTER(488);
+            mcp_488hz_routines();
         }
     }
 
