@@ -1911,7 +1911,6 @@ channel_t channel_list[] =
 //    { "roach1_kid1022_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_244HZ, U_NONE, 0 },
 //    { "roach1_kid1023_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_244HZ, U_NONE, 0 },
 //    { "roach1_kid1024_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_244HZ, U_NONE, 0 },
->>>>>>> master
 //
 //    { "roach1_kid0001_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_244HZ, U_NONE, 0 },
 //    { "roach1_kid0002_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_244HZ, U_NONE, 0 },

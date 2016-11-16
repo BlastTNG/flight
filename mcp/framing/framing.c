@@ -217,9 +217,9 @@ void framing_publish_488hz(void)
 
     mcp_488hz_framenum++;
     SET_INT32(mcp_488hz_framenum_addr, mcp_488hz_framenum);
-    if (frame_size[SRC_FC][RATE_488HZ]) {
+    if (frame_size[RATE_488HZ]) {
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_488HZ], channel_data[SRC_FC][RATE_488HZ], 0, false);
+                frame_size[RATE_488HZ], channel_data[RATE_488HZ], 0, false);
     }
 }
 
