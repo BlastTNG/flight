@@ -314,7 +314,6 @@ static void mcp_100hz_routines(void)
     cryo_control();
 //    BiasControl();
     WriteChatter();
-
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
@@ -351,7 +350,6 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    read_thermometers();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -359,6 +357,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    read_thermometers();
 }
 
 static void *mcp_main_loop(void *m_arg)

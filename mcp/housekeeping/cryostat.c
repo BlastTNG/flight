@@ -80,11 +80,11 @@ void read_thermometers(void) {
     static int firsttime_therm = 1;
     float test;
     float test2;
-    test = labjack_get_value(0, 13);
-    blast_warn("labjack1 is %f", test);
+    // test = labjack_get_value(0, 13);
+    // blast_warn("labjack1 is %f", test);
 
-    test2 = labjack_get_value(1, 13);
-    blast_warn("labjack2 is %f", test2);
+    // test2 = labjack_get_value(1, 13);
+    // blast_warn("labjack2 is %f", test2);
 
     static channel_t* rox_fpa_1k_Addr;
     static channel_t* rox_250_fpa_Addr;
@@ -167,21 +167,6 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
     SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
     SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0)); */
-}
-
-void test_dio(void) {
-    static int state_dio = 0;
-    if (!state_dio) {
-        state_dio = labjack_dio(LABJACK_CRYO_2, 2008, 1);
-        if (state_dio < 0) {
-            blast_warn("state is %d", state_dio);
-        }
-    } else {
-        state_dio = labjack_dio(LABJACK_CRYO_2, 2008, 0);
-        if (state_dio < 0) {
-            blast_warn("state is %d", state_dio);
-        }
-    }
 }
 
 void autocycle_ian(void)

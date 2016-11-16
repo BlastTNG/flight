@@ -72,6 +72,9 @@
 
 // DIO addresses
 #define EIO_0 2008
+#define MIO_0 2020
+#define MIO_1 2021
+#define MIO_2 2022
 
 // Modbus addresses to set the ranges and gains of the Analog Inputs
 #define AIN0_RANGE_ADDR 40000 // Setting AIN range for each AIN channel
@@ -454,35 +457,74 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
 }
 
 int labjack_dio(int m_labjack, int address, int command) {
-    int ret = 0;
+    int ret;
     int retprime;
+    static int max_tries = 10;
     uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
     ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
     if (ret < 0) {
-        blast_warn("Something went wrong");
-        retprime = modbus_read_registers(state[m_labjack].cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
-        if (retprime > 0) {
-            blast_err("Specific labjack error code is: %d, modbus: %s)", err_data[0], modbus_strerror(errno));
-            usleep(1000);
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
             ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
-            if (ret < 0) {
-                blast_warn("Failed a second time");
-                retprime = modbus_read_registers(state[m_labjack].cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
-                if (retprime > 0) {
-                    blast_err("Specific labjack error code is: %d, modbus: %s)", err_data[0], modbus_strerror(errno));
-                    return ret;
-                }
+            if (ret > 0) {
+                blast_warn("succeeded on try %d", tries);
+                break;
             }
-        } else  {
-            blast_warn("Was able to write on second attempt");
         }
-        return ret;
+        return command;
     } else {
-        if (command == 1) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return command;
+    }
+}
+
+void labjack_write_mux(int m_labjack, int mux_code) {
+    int zero, one, two;
+    switch (mux_code) {
+        case 0:
+            zero = labjack_dio(m_labjack, MIO_0, 0);
+            one = 2*labjack_dio(m_labjack, MIO_1, 0);
+            two = 4*labjack_dio(m_labjack, MIO_2, 0);
+            break;
+        case 1:
+            zero = labjack_dio(m_labjack, MIO_0, 1);
+            one = 2*labjack_dio(m_labjack, MIO_1, 0);
+            two = 4*labjack_dio(m_labjack, MIO_2, 0);
+            break;
+        case 2:
+            zero = labjack_dio(m_labjack, MIO_0, 0);
+            one = 2*labjack_dio(m_labjack, MIO_1, 1);
+            two = 4*labjack_dio(m_labjack, MIO_2, 0);
+            break;
+        case 3:
+            zero = labjack_dio(m_labjack, MIO_0, 1);
+            one = 2*labjack_dio(m_labjack, MIO_1, 1);
+            two = 4*labjack_dio(m_labjack, MIO_2, 0);
+            break;
+        case 4:
+            zero = labjack_dio(m_labjack, MIO_0, 0);
+            one = 2*labjack_dio(m_labjack, MIO_1, 0);
+            two = 4*labjack_dio(m_labjack, MIO_2, 1);
+            break;
+        case 5:
+            zero = labjack_dio(m_labjack, MIO_0, 1);
+            one = 2*labjack_dio(m_labjack, MIO_1, 0);
+            two = 4*labjack_dio(m_labjack, MIO_2, 1);
+            break;
+        case 6:
+            zero = labjack_dio(m_labjack, MIO_0, 0);
+            one = 2*labjack_dio(m_labjack, MIO_1, 1);
+            two = 4*labjack_dio(m_labjack, MIO_2, 1);
+            break;
+        case 7:
+            zero = labjack_dio(m_labjack, MIO_0, 1);
+            one = 2*labjack_dio(m_labjack, MIO_1, 1);
+            two = 4*labjack_dio(m_labjack, MIO_2, 1);
+            break;
+        default:
+            blast_warn("Please enter Mux code 0-7");
+            break;
     }
 }
 
