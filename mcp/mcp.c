@@ -55,6 +55,7 @@
 #include "channels_tng.h"
 #include "tx.h"
 #include "lut.h"
+#include "labjack.h"
 
 #include "acs.h"
 #include "actuators.h"
@@ -337,6 +338,7 @@ static void mcp_5hz_routines(void)
     store_5hz_acs();
     write_motor_channels_5hz();
     store_axes_mode_data();
+    store_labjack_data();
     WriteAux();
     StoreActBus();
     SecondaryMirror();
@@ -357,6 +359,7 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
+    read_thermometers();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -552,6 +555,9 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  InitSched();
   initialize_motors();
+  labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+
+  initialize_labjack_commands(LABJACK_CRYO_1);
 
   initialize_CPU_sensors();
 

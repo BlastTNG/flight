@@ -52,12 +52,11 @@ static char remote_host[HOST_NAME_MAX+1] = {0};
 static int port = 1883;
 static int keepalive = 15;
 
-static void frame_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
+static void frame_handle_data(const char *m_rate, const void *m_data, const int m_len)
 {
     RATE_LOOKUP_T *rate;
-    SRC_LOOKUP_T *src;
 
-    if (!m_src || !m_rate) {
+    if (!m_rate) {
         defricher_err("Err in pointers");
         return;
     }
@@ -74,17 +73,8 @@ static void frame_handle_data(const char *m_src, const char *m_rate, const void 
         return;
     }
 
-    //TODO:Think about mapping FC1/FC2
-    for (src = SRC_LOOKUP_TABLE; src->position < SRC_END; src++) {
-        if (strncasecmp(src->text, m_src, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
-    }
-    if (src->position == SRC_END) {
-        defricher_err("Did not recognize source %s\n", m_src);
-        return;
-    }
-
-    channels_store_data(src->position, rate->position, m_data, m_len);
-    defricher_queue_packet(src->position, rate->position);
+    channels_store_data(rate->position, m_data, m_len);
+    defricher_queue_packet(rate->position);
 }
 
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
@@ -99,7 +89,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
             if ( count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
                 if (ri.channels_ready) {
                     ri.read ++;
-                    frame_handle_data(topics[1], topics[3], message->payload, message->payloadlen);
+                    frame_handle_data(topics[3], message->payload, message->payloadlen);
                 }
             }
             if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {

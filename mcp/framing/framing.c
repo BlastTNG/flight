@@ -104,9 +104,12 @@ void framing_publish_1hz(void)
 
     mcp_1hz_framenum++;
     SET_INT32(mcp_1hz_framenum_addr, mcp_1hz_framenum);
-    if (frame_size[SRC_FC][RATE_1HZ]) {
+    if (frame_size[RATE_1HZ]) {
+        if (1) {
+            // blast_warn("the size of 1hz data is %zu", sizeof(channel_data[RATE_1HZ]));
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_1HZ], channel_data[SRC_FC][RATE_1HZ], 0, false);
+                          frame_size[RATE_1HZ], channel_data[RATE_1HZ], 0, false);
     }
 }
 
@@ -123,9 +126,12 @@ void framing_publish_5hz(void)
 
     mcp_5hz_framenum++;
     SET_INT32(mcp_5hz_framenum_addr, mcp_5hz_framenum);
-    if (frame_size[SRC_FC][RATE_5HZ]) {
+    if (frame_size[RATE_5HZ]) {
+        if (mcp_5hz_framenum % 5 == 1) {
+            // blast_warn("the size of the 5hz frame is %zu", frame_size[RATE_5HZ]);
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_5HZ], channel_data[SRC_FC][RATE_5HZ], 0, false);
+                frame_size[RATE_5HZ], channel_data[RATE_5HZ], 0, false);
     }
 }
 
@@ -142,9 +148,12 @@ void framing_publish_100hz(void)
 
     mcp_100hz_framenum++;
     SET_INT32(mcp_100hz_framenum_addr, mcp_100hz_framenum);
-    if (frame_size[SRC_FC][RATE_100HZ]) {
+    if (frame_size[RATE_100HZ]) {
+        if (mcp_100hz_framenum % 100 == 1) {
+            // blast_warn("the size of the 100hz data is %zu", frame_size[RATE_100HZ]);
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_100HZ], channel_data[SRC_FC][RATE_100HZ], 0, false);
+                frame_size[RATE_100HZ], channel_data[RATE_100HZ], 0, false);
     }
 }
 
@@ -162,9 +171,12 @@ void framing_publish_200hz(void)
 
     mcp_200hz_framenum++;
     SET_INT32(mcp_200hz_framenum_addr, mcp_200hz_framenum);
-    if (frame_size[SRC_FC][RATE_200HZ]) {
+    if (frame_size[RATE_200HZ]) {
+        if (mcp_200hz_framenum % 200 == 1) {
+            // blast_warn("the size of the 200hz frame is %zu", frame_size[RATE_200HZ]);
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_200HZ], channel_data[SRC_FC][RATE_200HZ], 0, false);
+                frame_size[RATE_200HZ], channel_data[RATE_200HZ], 0, false);
     }
 }
 
@@ -182,9 +194,12 @@ void framing_publish_244hz(void)
 
     mcp_244hz_framenum++;
     SET_INT32(mcp_244hz_framenum_addr, mcp_244hz_framenum);
-    if (frame_size[SRC_FC][RATE_244HZ]) {
+    if (frame_size[RATE_244HZ]) {
+        if ((mcp_244hz_framenum % 244) == 1) {
+           // blast_warn("size of 244hz is %zu", frame_size[RATE_244HZ]);
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_244HZ], channel_data[SRC_FC][RATE_244HZ], 0, false);
+                frame_size[RATE_244HZ], channel_data[RATE_244HZ], 0, false);
     }
 }
 
@@ -219,7 +234,6 @@ void framing_publish_command_data(struct CommandDataStruct *m_commanddata)
 static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
     RATE_LOOKUP_T *rate;
-    SRC_LOOKUP_T *src;
 
     if (!m_src || !m_rate) {
         blast_err("Err in pointers");
@@ -235,15 +249,6 @@ static void framing_handle_data(const char *m_src, const char *m_rate, const voi
     }
     if (rate->position == RATE_END) {
         blast_err("Did not recognize rate %s!", m_rate);
-        return;
-    }
-
-    // TODO(laura) Think about mapping FC1/FC2
-    for (src = SRC_LOOKUP_TABLE; src->position < SRC_END; src++) {
-        if (strncasecmp(src->text, m_src, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
-    }
-    if (src->position == SRC_END) {
-        blast_err("Did not recognize source %s", m_src);
         return;
     }
 }

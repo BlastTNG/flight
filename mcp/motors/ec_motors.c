@@ -481,7 +481,7 @@ static void piv_init_resolver(void)
  */
 static int find_controllers(void)
 {
-    char name[16] = "eth0";
+    char name[16] = "eth1";
     int ret_init;
     int ret_config;
 
