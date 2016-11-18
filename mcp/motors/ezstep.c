@@ -765,7 +765,7 @@ int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble)
     for (i = whoLoopMin(who); i <= whoLoopMax(who); ++i) {
 	    blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
 	               i, iWho(i), preamble, EZ_BUS_BUF_LEN);
-        strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN); // gives a segfault!
+        strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN);
         bus->stepper[iWho(i)].preamble[EZ_BUS_BUF_LEN - 1] = '\0';
     }
     return EZ_ERR_OK;

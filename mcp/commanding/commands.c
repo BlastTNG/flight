@@ -699,7 +699,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.xystage.force_repoll = 1;
 #endif
             break;
-
+// .
             // Shutter
         case shutter_init:
             CommandData.actbus.shutter_goal = SHUTTER_INIT;
@@ -1311,9 +1311,57 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
-
+// .
+    // XY STAGE
+// .
+#ifdef USE_XY_THREAD
+    case xy_goto:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.y1 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = ivalues[3];
+      CommandData.xystage.mode = XYSTAGE_GOTO;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_jump:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.y1 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = ivalues[3];
+      CommandData.xystage.mode = XYSTAGE_JUMP;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_xscan:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.x2 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = 0;
+      CommandData.xystage.mode = XYSTAGE_SCAN;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_yscan:
+      CommandData.xystage.y1 = ivalues[0];
+      CommandData.xystage.y2 = ivalues[1];
+      CommandData.xystage.yvel = ivalues[2];
+      CommandData.xystage.xvel = 0;
+      CommandData.xystage.mode = XYSTAGE_SCAN;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_raster:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.x2 = ivalues[1];
+      CommandData.xystage.y1 = ivalues[2];
+      CommandData.xystage.y2 = ivalues[3];
+      CommandData.xystage.xvel = ivalues[4];
+      CommandData.xystage.yvel = ivalues[5];
+      CommandData.xystage.step = ivalues[6];
+      CommandData.xystage.mode = XYSTAGE_RASTER;
+      CommandData.xystage.is_new = 1;
+      break;
+#endif
+// .
 #ifndef BOLOTEST
-      /*************************************
+     /*************************************
       ********* Balance System  ***********/
     case balance_gain:
       CommandData.pumps.level_on_bal = rvalues[0] * 1990.13;  // 1990.13 DAC/Amp
@@ -2188,6 +2236,18 @@ void InitCommandData()
     CommandData.hwpr.pot_targ = 0.5;
 
     CommandData.pin_is_in = 1;
+
+    // XY STAGE
+    CommandData.xystage.x1 = 0;
+    CommandData.xystage.y1 = 0;
+    CommandData.xystage.x2 = 0;
+    CommandData.xystage.y2 = 0;
+    CommandData.xystage.step = 0;
+    CommandData.xystage.xvel = 0;
+    CommandData.xystage.yvel = 0;
+    CommandData.xystage.is_new = 1;
+    CommandData.xystage.mode = XYSTAGE_GOTO;
+    CommandData.xystage.force_repoll = 0;
 
     CommandData.Cryo.charcoalHeater = 0;
     CommandData.Cryo.hsCharcoal = 1;

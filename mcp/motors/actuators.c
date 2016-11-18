@@ -78,9 +78,9 @@ static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 int lock_timeout = -1;
 
-#define LOCK_MIN_POT 300      // actual min stop: ~120 (fully extended)
+#define LOCK_MIN_POT 5000     // actual min stop: ~2500 (fully extended)
 #define LOCK_MAX_POT 16368    // max stop at saturation: 16368 (fully retracted)
-#define LOCK_POT_RANGE 300
+#define LOCK_POT_RANGE 1000
 
 static struct lock_struct {
   int pos;		  // raw step count
@@ -990,7 +990,7 @@ static void DoLock(void)
                 lock_timeout = DRIVE_TIMEOUT;
                 bputs(info, "Extending lock motor.");
                 EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
-                EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
+                EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
                 usleep(SEND_SLEEP); /* wait for a bit */
                 lock_data.state &= ~LS_DRIVE_MASK;
                 lock_data.state |= LS_DRIVE_EXT;
@@ -999,7 +999,7 @@ static void DoLock(void)
                 lock_timeout = DRIVE_TIMEOUT;
                 bputs(info, "Retracting lock motor.");
                 EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
-                EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
+                EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
                 usleep(SEND_SLEEP); /* wait for a bit */
                 lock_data.state &= ~LS_DRIVE_MASK;
                 lock_data.state |= LS_DRIVE_RET;
