@@ -15,6 +15,7 @@ set(MCP_COMMON_SRCS
 set(MCP_COMMON_HEADERS
    ${MCP_COMMON_HEADERS}
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_packet_format.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h

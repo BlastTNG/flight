@@ -42,7 +42,7 @@ void initialize_bi0_writer(void)
 	size_t max_rate_size = 0;
 
 	for (int rate = RATE_100HZ; rate < RATE_END; rate++) {
-	    if (max_rate_size < frame_size[SRC_FC][rate]) max_rate_size = frame_size[SRC_FC][rate];
+	    if (max_rate_size < frame_size[rate]) max_rate_size = frame_size[rate];
 	}
 	bi0_buffer.i_in = 10; /* preload the fifo */
 	bi0_buffer.i_out = 0;
