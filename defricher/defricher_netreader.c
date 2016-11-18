@@ -196,7 +196,7 @@ pthread_t netreader_init(const char *m_host)
     strncpy(remote_host, m_host, HOST_NAME_MAX);
 
     mosquitto_lib_init();
-    mosq = mosquitto_new(client_id, false, NULL);
+    mosq = mosquitto_new(client_id, true, NULL);
     if (!mosq) {
         defricher_strerr("mosquitto_new() failed");
         return 0;
