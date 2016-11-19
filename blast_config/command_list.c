@@ -343,13 +343,26 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(balance_manual), "Manually set balance on", GR_BAL, 1,
     {
-      {"dir",           -1.0, 1.0, 'f', "NONE"},
+      {"dir (pos=1, neg=-1, off=0)",           -1, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(balance_gain), "Set balance system setpoints", GR_BAL, 4,
+  {COMMAND(balance_vel), "set the waveplate rotator velocity and acceleration",
+    GR_BAL, 2,
     {
-      {"Pump On Point (A)",  0, 2, 'f', "LEVEL_ON_BAL"},
-      {"Pump Off Point (A)", 0, 2, 'f', "LEVEL_OFF_BAL"},
+      {"Velocity", 5, 500000, 'l', "VEL_BAL"},
+      {"Acceleration", 1, 1000, 'i', "ACC_BAL"},
+    }
+  },
+  {COMMAND(balance_i), "set the waveplate rotator currents", GR_BAL, 2,
+    {
+      {"Move current (%)", 0, 100, 'i', "I_MOVE_BAL"},
+      {"Hold current (%)", 0,  50, 'i', "I_HOLD_BAL"},
+    }
+  },
+  {COMMAND(balance_gain), "Set balance system setpoints", GR_BAL, 2,
+    {
+      {"I_El Balance On (A)",  0, 5, 'f', "I_LEVEL_ON_BAL"},
+      {"I_El Balance Off  (A)", 0, 5, 'f', "I_LEVEL_OFF_BAL"},
     }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps", GR_POINT, 7,

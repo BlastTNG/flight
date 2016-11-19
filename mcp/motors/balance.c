@@ -39,7 +39,7 @@
 
 typedef enum
 {
-    negative = 0, positive
+    no_move = 0, positive, negative
 } move_type_t;
 
 typedef struct {
@@ -49,6 +49,7 @@ typedef struct {
     int do_move;
 	int moving;
 	move_type_t dir;
+	double i_el_avg;
 } balance_state_t;
 
 static balance_state_t balance_state;
@@ -57,15 +58,20 @@ static balance_state_t balance_state;
 void ControlBalance(void)
 {
 	double i_el = 0.0;
-	static double i_el_avg = 0.0;
     static int firsttime = 1;
     int i_motors = GETREADINDEX(motor_index);
+
+//  Initialize balance state
+    if (firsttime) {
+        balance_state.i_el_avg = 0.0;
+        firsttime = 0;
+    }
 
 	i_el = ElevMotorData[i_motors].current;
 
 //   calculate speed and direction
-    i_el_avg = i_el / BAL_EL_FILTER_LEN + i_el_avg * (BAL_EL_FILTER_LEN - 1) / BAL_EL_FILTER_LEN;
-    blast_info("i_el = %f, i_el_avg = %f", i_el, i_el_avg);
+    balance_state.i_el_avg = i_el / BAL_EL_FILTER_LEN +
+                           balance_state.i_el_avg * (BAL_EL_FILTER_LEN - 1) / BAL_EL_FILTER_LEN;
 // The balance system should not be on if we are slewing,
 // or if the balance system is commanded off, or if we are doing an El scan.
     if ((CommandData.balance.mode == bal_rest) || (CommandData.pointing_mode.nw > 0) ||
@@ -75,22 +81,22 @@ void ControlBalance(void)
            balance_state.do_move = 0;
            balance_state.dir = CommandData.balance.bal_move_type;
        } else if (CommandData.balance.mode == bal_auto) {
-           if (i_el_avg > 0) {
-               if (i_el_avg > CommandData.balance.i_el_on_bal) {
+           if (balance_state.i_el_avg > 0) {
+               if (balance_state.i_el_avg > CommandData.balance.i_el_on_bal) {
                    blast_info("Setting the balance system to move in the positive direction.");
                    balance_state.do_move = 1;
                    balance_state.do_move = positive;
-               } else if (balance_state.moving && (i_el_avg > CommandData.balance.i_el_off_bal)) {
+               } else if (balance_state.moving && (balance_state.i_el_avg > CommandData.balance.i_el_off_bal)) {
                    blast_info("Still moving and above i_el_off_bal. Keep the balance system going.");
                    balance_state.do_move = 1;
                    balance_state.do_move = positive;
                }
-           } else if (i_el_avg < 0) {
-               if (i_el_avg < (-1.0)*CommandData.balance.i_el_on_bal) {
+           } else if (balance_state.i_el_avg < 0) {
+               if (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_on_bal) {
                    blast_info("Setting the balance system to move in the positive direction.");
                    balance_state.do_move = 1;
                    balance_state.do_move = negative;
-               } else if (balance_state.moving && (i_el_avg < (-1.0)*CommandData.balance.i_el_off_bal)) {
+               } else if (balance_state.moving && (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_off_bal)) {
                    blast_info("Still moving and below -i_el_off_bal. Keep the balance system going.");
                    balance_state.do_move = 1;
                    balance_state.do_move = negative;
@@ -101,6 +107,44 @@ void ControlBalance(void)
        }
 }
 
+void WriteBalance_5Hz(void)
+{
+    static channel_t* velBalAddr;
+    static channel_t* accBalAddr;
+    static channel_t* iMoveBalAddr;
+    static channel_t* iHoldBalAddr;
+    static channel_t* iLevelOnBalAddr;
+    static channel_t* iLevelOffBalAddr;
+    static channel_t* iElReqAvgBalAddr;
+    static channel_t* statusBalAddr;
+    static int firsttime = 1;
+    uint8_t status = 0;
+    if (firsttime) {
+      velBalAddr = channels_find_by_name("vel_bal");
+      accBalAddr = channels_find_by_name("acc_bal");
+      iMoveBalAddr = channels_find_by_name("i_move_bal");
+      iHoldBalAddr = channels_find_by_name("i_hold_bal");
+      iLevelOnBalAddr = channels_find_by_name("i_level_on_bal");
+      iLevelOffBalAddr = channels_find_by_name("i_level_off_bal");
+      iElReqAvgBalAddr = channels_find_by_name("i_el_req_avg_bal");
+      statusBalAddr = channels_find_by_name("status_bal");
+    }
+    SET_UINT16(velBalAddr, CommandData.balance.vel);
+    SET_UINT16(accBalAddr, CommandData.balance.acc);
+    SET_UINT16(iMoveBalAddr, CommandData.balance.move_i);
+    SET_UINT16(iHoldBalAddr, CommandData.balance.hold_i);
+    SET_SCALED_VALUE(iLevelOnBalAddr, CommandData.balance.i_el_on_bal);
+    SET_SCALED_VALUE(iLevelOffBalAddr, CommandData.balance.i_el_off_bal);
+    SET_SCALED_VALUE(iElReqAvgBalAddr, balance_state.i_el_avg);
+    status |= ((0x03) & balance_state.dir);
+    status |= (((0x01) & balance_state.init) << 2);
+    status |= (((0x01) & balance_state.do_move) << 3);
+    status |= (((0x01) & balance_state.moving) << 4);
+    status |= (((0x03) & CommandData.balance.mode) << 5);
+    SET_UINT8(statusBalAddr, status);
+    blast_info("i_el_avg = %f, i_level_on_bal = %f, status = %ui",
+            balance_state.i_el_avg, CommandData.balance.i_el_on_bal, status);
+}
 // Handles stepper communication for the balance motor.
 void DoBalance(struct ezbus* bus)
 {
@@ -132,9 +176,9 @@ void DoBalance(struct ezbus* bus)
     if ((balance_state.do_move) && (!balance_state.moving)) {
         EZBus_Take(bus, balance_state.addr);
         blast_info("Starting the balance system. Direction = %d", balance_state.dir);
-        if (balance_state.dir) { // Positive direction
+        if (balance_state.dir == positive) { // Positive direction
 //            EZBus_Send(bus, balance_state.addr, "P0R");
-        } else {
+        } else if (balance_state.dir == negative) {
 //            EZBus_Send(bus, balance_state.addr, "D0R");
         }
         EZBus_Release(bus, balance_state.addr);
@@ -146,4 +190,6 @@ void DoBalance(struct ezbus* bus)
         EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
     }
+// Write balance data
+    WriteBalance_5Hz();
 }

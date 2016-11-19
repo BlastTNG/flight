@@ -1325,6 +1325,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.balance.bal_move_type = rvalues[0];
       CommandData.balance.mode = bal_manual;
       break;
+    case balance_vel:
+      CommandData.balance.vel = ivalues[0];
+      CommandData.balance.acc = ivalues[1];
+      break;
+    case balance_i:
+      CommandData.balance.move_i = ivalues[0];
+      CommandData.balance.hold_i = ivalues[1];
+      break;
+
 
 
       /*************************************

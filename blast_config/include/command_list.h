@@ -142,7 +142,7 @@ enum singleCommand {
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
-  balance_manual,
+  balance_manual,    balance_vel,       balance_i,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
   bias_level_x,      fridge_cycle_params,  box,
   cal_pulse,         cal_repeat,        cap,              cur_mode,

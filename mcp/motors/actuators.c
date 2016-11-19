@@ -47,7 +47,7 @@ double LockPosition(double elevation);	/* commands.c */
 extern int16_t InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
-#define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
+#define ACTBUS_CHATTER	EZ_CHAT_BUS    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
 #define NACT 7
 

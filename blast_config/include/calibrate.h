@@ -143,6 +143,9 @@ extern "C" {
 /* M3 was not measured (spider cable broken) so is an estimate */
 #define CRYO_M3_M            (1.1319609e-05)
 #define CRYO_M3_B            (-24293.822)
+/* Current ranges +/-15 Amps*/
+#define CUR15_M (15/32768.0)
+#define CUR15_B (0.0)
 
 // Conversion factors for the rotated/calibrated gyros
 // (GY_IFEL, GY_IFYAW, GY_IFROLL).

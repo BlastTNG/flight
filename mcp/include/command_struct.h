@@ -299,18 +299,17 @@ typedef struct slinger_commanding
 } slinger_commanding_t;
 
 typedef struct {
-    enum {bal_rest, bal_manual, bal_auto} mode;
+    enum {bal_rest = 0, bal_manual, bal_auto} mode;
     enum {pos = 0, neg} bal_move_type;
     uint32_t pos;
     uint16_t vel;
-    double hold_i;
-    double move_i;
+    uint16_t hold_i;
+    uint16_t move_i;
     uint16_t acc;
 
     // servo parameters
     double i_el_on_bal;
     double i_el_off_bal;
-    double i_el_target_bal;
     double gain_bal;
 } cmd_balance_t;
 
