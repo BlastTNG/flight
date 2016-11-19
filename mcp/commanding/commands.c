@@ -1933,9 +1933,6 @@ void InitCommandData()
     CommandData.Bias.setLevel[3] = 1;
     CommandData.Bias.setLevel[4] = 1;
 
-    CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
-    CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
-
     CommandData.power.sc_tx.rst_count = 0;
     CommandData.power.sc_tx.set_count = 0;
     CommandData.power.das.rst_count = 0;
@@ -2075,6 +2072,7 @@ void InitCommandData()
 
     CommandData.clin_el_trim = 0;
     CommandData.enc_el_trim = 0;
+    CommandData.enc_motor_el_trim = 0;
     CommandData.null_az_trim = 0;
     CommandData.mag_az_trim = 0;
     CommandData.pss_az_trim = 0;
@@ -2214,77 +2212,15 @@ void InitCommandData()
     CommandData.Cryo.cycle_charcoal_settle = 25.0;
     CommandData.Cryo.cycle_settle_timeout = 40.0;
 
-    CommandData.ISCState[0].useLost = 1;
-    CommandData.ISCState[0].abort = 0;
-    CommandData.ISCState[0].pause = 0;
-    CommandData.ISCState[0].save = 0;
-    CommandData.ISCState[0].eyeOn = 1;
-    CommandData.ISCState[0].hold_current = 50;
-    CommandData.ISCState[0].autofocus = 0;
-    CommandData.ISCState[0].focus_pos = 0;
-    CommandData.ISCState[0].MCPFrameNum = 0;
-    CommandData.ISCState[0].focusOffset = 0;
-    CommandData.ISCState[0].ap_pos = 495;
-    CommandData.ISCState[0].display_mode = full;
-    /* ISC-BDA offsets per Natalie Gandilo on 2012-11-30 */
-    CommandData.ISCState[0].azBDA = 0.2099 * DEG2RAD;
-    CommandData.ISCState[0].elBDA = -0.2330 * DEG2RAD;
     CommandData.ISCControl[0].max_age = 200; /* 2000 ms*/
 
-    CommandData.ISCState[0].brightStarMode = 0;
-    CommandData.ISCState[0].grid = 38;
-    CommandData.ISCState[0].minBlobMatch = 3;
-    CommandData.ISCState[0].maxBlobMatch = 7;
-    CommandData.ISCState[0].sn_threshold = 4.5;
-    CommandData.ISCState[0].mult_dist = 30;
-    CommandData.ISCState[0].mag_limit = 9.5;
-    CommandData.ISCState[0].norm_radius = 3. * DEG2RAD;
-    CommandData.ISCState[0].lost_radius = 6. * DEG2RAD;
-    CommandData.ISCState[0].tolerance = 10. / 3600. * DEG2RAD; /* 10 arcsec */
-    CommandData.ISCState[0].match_tol = 0.5;
-    CommandData.ISCState[0].quit_tol = 1;
-    CommandData.ISCState[0].rot_tol = 10 * DEG2RAD;
-    CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
-    CommandData.ISCState[0].gain = 1;
-    CommandData.ISCState[0].offset = 0;
     CommandData.ISCControl[0].autofocus = 0;
     CommandData.ISCControl[0].save_period = 12000; /* 120 sec */
     CommandData.ISCControl[0].pulse_width = 18; /* 180.00 msec */
     CommandData.ISCControl[0].fast_pulse_width = 8; /* 80.00 msec */
 
-    CommandData.ISCState[1].useLost = 1;
-    CommandData.ISCState[1].abort = 0;
-    CommandData.ISCState[1].pause = 0;
-    CommandData.ISCState[1].save = 0;
-    CommandData.ISCState[1].eyeOn = 1;
-    CommandData.ISCState[1].hold_current = 50;
-    CommandData.ISCState[1].autofocus = 0;
-    CommandData.ISCState[1].focus_pos = 0;
-    CommandData.ISCState[1].MCPFrameNum = 0;
-    CommandData.ISCState[1].focusOffset = 0;
-    CommandData.ISCState[1].ap_pos = 495;
-    CommandData.ISCState[1].display_mode = full;
-    /* ISC-BDA offsets per Natalie Gandilo on 2012-11-30 */
-    CommandData.ISCState[1].azBDA = 0.7422 * DEG2RAD;
-    CommandData.ISCState[1].elBDA = -0.0920 * DEG2RAD;
     CommandData.ISCControl[1].max_age = 200; /* 2000 ms*/
 
-    CommandData.ISCState[1].brightStarMode = 0;
-    CommandData.ISCState[1].grid = 38;
-    CommandData.ISCState[1].minBlobMatch = 3;
-    CommandData.ISCState[1].maxBlobMatch = 7;
-    CommandData.ISCState[1].sn_threshold = 4.5;
-    CommandData.ISCState[1].mult_dist = 30;
-    CommandData.ISCState[1].mag_limit = 9.5;
-    CommandData.ISCState[1].norm_radius = 3. * DEG2RAD;
-    CommandData.ISCState[1].lost_radius = 6. * DEG2RAD;
-    CommandData.ISCState[1].tolerance = 10. / 3600. * DEG2RAD; /* 10 arcsec */
-    CommandData.ISCState[1].match_tol = 0.5;
-    CommandData.ISCState[1].quit_tol = 1;
-    CommandData.ISCState[1].rot_tol = 10 * DEG2RAD;
-    CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
-    CommandData.ISCState[1].gain = 1;
-    CommandData.ISCState[1].offset = 0;
     CommandData.ISCControl[1].autofocus = 0;
     CommandData.ISCControl[1].save_period = 12000; /* 120 sec */
     CommandData.ISCControl[1].pulse_width = 18; /* 180.00 msec */

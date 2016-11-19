@@ -45,6 +45,15 @@
 #define MSB_FIRST 0x00
 #define LSB_FIRST 0x08
 
+/* Shifting commands IN MPSSE Mode*/
+#define MPSSE_WRITE_NEG 0x01   /* Write TDI/DO on negative TCK/SK edge*/
+#define MPSSE_BITMODE   0x02   /* Write bits, not bytes */
+#define MPSSE_READ_NEG  0x04   /* Sample TDO/DI on negative TCK/SK edge */
+#define MPSSE_LSB       0x08   /* LSB first */
+#define MPSSE_DO_WRITE  0x10   /* Write TDI/DO */
+#define MPSSE_DO_READ   0x20   /* Read TDO/DI */
+#define MPSSE_WRITE_TMS 0x40   /* Write TMS/CS */
+
 enum ftdi_chip_type {
 	TYPE_FT2232C,
 	TYPE_FT2232H,
@@ -87,4 +96,8 @@ int mpsse_set_frequency(struct mpsse_ctx *ctx, int frequency);
 int mpsse_flush(struct mpsse_ctx *ctx);
 void mpsse_purge(struct mpsse_ctx *ctx);
 
+/* Biphase specific routines */
+void biphase_write_data(struct mpsse_ctx *ctx, const uint8_t *out, uint32_t out_offset, uint32_t length);
+void mpsse_watchdog_ping(struct mpsse_ctx *ctx, const uint8_t bit);
+int mpsse_watchdog_get_incharge(struct mpsse_ctx *ctx);
 #endif /* MPSSE_H_ */

@@ -359,6 +359,7 @@ channel_t channel_list[] =
     { "dec_4_p",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_clin",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_enc",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "trim_motor_enc",       I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_null",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_mag",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
 
