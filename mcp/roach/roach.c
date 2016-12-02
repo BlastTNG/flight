@@ -64,6 +64,7 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
+#define DDS_SHIFT 305
 #define WRITE_INT_TIMEOUT 1000
 #define UPLOAD_TIMEOUT 20000
 #define QDR_TIMEOUT 20000
@@ -85,7 +86,7 @@ double zeros[27] = {0.00089543, 0.00353683, 0.00779173, 0.01344679, 0.02021844, 
 	0.01344679, 0.00779173, 0.00353683, 0.00089543};
 // Firmware image files
 const char roach_fpg[5][11] = {"roach1.fpg", "roach2.fpg", "roach3.fpg", "roach4.fpg", "roach5.fpg"};
-const char test_fpg[] = "/data/etc/blast/blast_lpf_fft_2016_Nov_14_1207.fpg";
+const char test_fpg[] = "/data/etc/blast/blast_varlpf_2016_Oct_18_1740.fpg";
 // const char test_fpg[] = "/data/etc/blast/roach2_8tap_wide_2016_Jun_25_2016.fpg";
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
@@ -1032,7 +1033,7 @@ void *roach_cmd_loop(void)
 			if (roach_state_table[i].status == ROACH_STATUS_PROGRAMMED &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_CONFIGURED) {
 				blast_info("ROACH%d, Configuring software registers...", i + 1);
-				roach_write_int(&roach_state_table[i], "dds_shift", 312, 0);/* DDS LUT shift, in clock cycles */
+				roach_write_int(&roach_state_table[i], "dds_shift", DDS_SHIFT, 0);/* DDS LUT shift, in clock cycles */
 				roach_read_int(&roach_state_table[i], "dds_shift");
 				roach_write_int(&roach_state_table[i], "fft_shift", 31, 0);/* FFT shift schedule */
 				roach_read_int(&roach_state_table[i], "fft_shift");
