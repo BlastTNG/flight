@@ -1491,7 +1491,7 @@ void InitializePointingData()
         xsc_pointing_state[which].az = 0.0;
         xsc_pointing_state[which].el = 0.0;
         xsc_pointing_state[which].exposure_time_cs = 300;
-        xsc_pointing_state[which].predicted_motion_px = 0.0;
+        xsc_pointing_state[which].predicted_streaking_px = 0.0;
     }
     blast_info("InitializePointingData, xsc.az is %f\n", xsc_pointing_state[1].az);
 }
