@@ -57,8 +57,10 @@ struct AxesModeStruct axes_mode = {
 
 // motor control parameters
 #define MOTORSR 200.0
-#define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps
-#define MAX_I  200.0 // Maximum accumulated integral in milliamps
+#define MAX_DI_EL 20.0 // Maximum integral accumulation per step in milliamps for El motor
+#define MAX_I_EL  800.0 // Maximum accumulated integral in milliamps for El motor
+#define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps for Az motors
+#define MAX_I  400.0 // Maximum accumulated integral in milliamps for Az motors
 
 #define INTEGRAL_LENGTH  5.0  // length of the integral time constant in seconds
 #define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
@@ -1767,8 +1769,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
 
     if (fabsf(I_step) < I_db) I_step = 0;
 
-    if (fabsf(I_step) > MAX_DI) {
-        I_step = copysignf(MAX_DI, I_step);
+    if (fabsf(I_step) > MAX_DI_EL) {
+        I_step = copysignf(MAX_DI_EL, I_step);
     }
 
     /**
@@ -1777,8 +1779,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
      * is a result of accumulating excessively large I terms.
      */
     I_term += I_step;
-    if (fabsf(I_term) > MAX_I) {
-        I_term = copysignf(MAX_I, I_term);
+    if (fabsf(I_term) > MAX_I_EL) {
+        I_term = copysignf(MAX_I_EL, I_term);
     }
 
     /**
