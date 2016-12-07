@@ -53,8 +53,8 @@
  * true elevation */
 // #define LOCK_OFFSET (-0.77) /* Updated by LMF on July 12th, 2012 */
 #define LOCK_OFFSET (0.0)
-#define NUM_LOCK_POS 9
-static const double lock_positions[NUM_LOCK_POS] = {4.8, 14.8, 24.82, 34.81, 44.75, 54.7, 64.7, 75.0, 90.0};
+#define NUM_LOCK_POS 10
+static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34.88, 44.86, 54.83, 64.81, 74.80, 89.78};
 
 /* based on isc_protocol.h */
 #define ISC_SHUTDOWN_NONE     0
@@ -1364,18 +1364,25 @@ void MultiCommand(enum multiCommand command, double *rvalues,
      /*************************************
       ********* Balance System  ***********/
     case balance_gain:
-      CommandData.pumps.level_on_bal = rvalues[0] * 1990.13;  // 1990.13 DAC/Amp
-      CommandData.pumps.level_off_bal = rvalues[1] * 1990.13;
-      CommandData.pumps.level_target_bal = rvalues[2] * 1990.13;
-      CommandData.pumps.gain_bal = rvalues[3];
+      CommandData.balance.i_el_on_bal = rvalues[0];
+      CommandData.balance.i_el_off_bal = rvalues[1];
+//      CommandData.balance.i_el_target_bal = rvalues[2];
+//      CommandData.balance.gain_bal = rvalues[3];
       break;
     case balance_manual:
-      CommandData.pumps.level = rvalues[0];
-      CommandData.pumps.mode = bal_manual;
+      CommandData.balance.bal_move_type = rvalues[0];
+      CommandData.balance.mode = bal_manual;
       break;
-    case balance_tset:
-      CommandData.pumps.heat_tset = rvalues[0];
+    case balance_vel:
+      CommandData.balance.vel = ivalues[0];
+      CommandData.balance.acc = ivalues[1];
       break;
+    case balance_i:
+      CommandData.balance.move_i = ivalues[0];
+      CommandData.balance.hold_i = ivalues[1];
+      break;
+
+
 
       /*************************************
       ************** Misc  ****************/
@@ -2163,13 +2170,9 @@ void InitCommandData()
     CommandData.offset_ifyaw_gy = 0;
     CommandData.gymask = 0x3f;
 
-    CommandData.pumps.level_on_bal = 2.0 * 1990.13;
-    CommandData.pumps.level_off_bal = 0.5 * 1900.13;
-    CommandData.pumps.level_target_bal = 0.0 * 1990.13;
-    CommandData.pumps.gain_bal = 0.2;
-    CommandData.pumps.mode = bal_auto;
-    CommandData.pumps.heat_on = 1;
-    CommandData.pumps.heat_tset = 5;
+    CommandData.balance.i_el_on_bal = 2.5;
+    CommandData.balance.i_el_off_bal = 1.0;
+    CommandData.balance.mode = bal_rest;
 
     CommandData.Bias.bias[0] = 12470;   // 500um
     CommandData.Bias.bias[1] = 11690;   // 350um
@@ -2219,6 +2222,11 @@ void InitCommandData()
     CommandData.hwpr.acc = 4;
     CommandData.hwpr.move_i = 20;
     CommandData.hwpr.hold_i = 0;
+
+    CommandData.balance.vel = 1600;
+    CommandData.balance.acc = 4;
+    CommandData.balance.move_i = 20;
+    CommandData.balance.hold_i = 0;
 
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */

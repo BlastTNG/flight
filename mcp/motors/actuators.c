@@ -38,6 +38,7 @@
 #include "mcp.h"
 #include "command_struct.h"
 #include "pointing_struct.h"
+#include "balance.h"
 #include "tx.h"
 #include "hwpr.h"
 
@@ -48,14 +49,16 @@ extern int16_t InCharge;		/* tx.c */
 /* actuator bus setup paramters */
 #define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
-#define NACT 6
-#define LOCKNUM 3
-#define HWPRNUM 4
-#define SHUTTERNUM 5
+#define NACT 7
+
+/* Index for each stepper for structures, name, id */
+#define LOCKNUM 4
+#define HWPRNUM 5
+#define SHUTTERNUM 6
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
-				 "Lock Motor", HWPR_NAME, "Shutter"};
+				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter"};
 static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
-			     EZ_WHO_S5, EZ_WHO_S13, EZ_WHO_S8};
+			     EZ_WHO_S4, EZ_WHO_S5, EZ_WHO_S6, EZ_WHO_S7};
 #define ID_ALL_ACT  EZ_WHO_G1_4
 // set microstep resolution
 #define LOCK_PREAMBLE "j256"
@@ -78,9 +81,9 @@ static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 int lock_timeout = -1;
 
-#define LOCK_MIN_POT 5000     // actual min stop: ~2500 (fully extended)
+#define LOCK_MIN_POT 3000 // actual min stop: ~2500 (fully extended)
 #define LOCK_MAX_POT 16368    // max stop at saturation: 16368 (fully retracted)
-#define LOCK_POT_RANGE 1000
+#define LOCK_POT_RANGE 500
 
 static struct lock_struct {
   int pos;		  // raw step count
@@ -144,6 +147,11 @@ static int act_trim_flag_wait = 0;
 static double t_primary = -1, t_secondary = -1;
 static double focus = -1;	  /* set in ab thread, read in fc thread */
 static double correction = 0;     /* set in fc thread, read in ab thread */
+
+/* Return the appropriate address to send commands to.  Used by balance.c, hwpr.c */
+int GetActAddr(int ind) {
+    return id[ind];
+}
 
 /************************************************************************/
 /*                                                                      */
@@ -876,7 +884,7 @@ static void SetLockState(int nic)
     }
 
     i_point = GETREADINDEX(point_index);
-    if (fabs(PointingData[i_point].enc_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5) state |= LS_EL_OK;
+    if (fabs(PointingData[i_point].enc_motor_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5) state |= LS_EL_OK;
 
     /* Assume the pin is out unless we're all the way closed */
     if (state & LS_CLOSED)
@@ -1461,14 +1469,17 @@ void *ActuatorBus(void *param)
         blast_info("Actuator %i, id[i] =%i", i, id[i]);
         blast_info("name[i] = %s", name[i]);
         EZBus_Add(&bus, id[i], name[i]);
-        if (i == LOCKNUM)
+        if (i == BALANCENUM) {
+            EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
+        } else if (i == LOCKNUM) {
             EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
-        else if (i == SHUTTERNUM)
+        } else if (i == SHUTTERNUM) {
             EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
-        else if (id[i] == HWPR_ADDR)
+        } else if (i == HWPRNUM) {
             EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
-        else
+        } else {
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
+        }
     }
 
     all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
@@ -1547,6 +1558,16 @@ void *ActuatorBus(void *param)
             actuators_init &= ~(0x1 << HWPRNUM);
         }
 
+/* Commenting out balance system for now (PCA 12/6/16)
+        if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
+            DoBalance(&bus);
+            actuators_init |= 0x1 << BALANCENUM;
+        } else {
+            EZBus_ForceRepoll(&bus, id[BALANCENUM]);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << BALANCENUM);
+        }
+*/
         usleep(10000);
     }
 }

@@ -218,9 +218,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(xy_panic), "stop XY stage motors immediately", 0},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
-  {COMMAND(balance_off),  "Turn off the balance pumps", GR_BAL},
-  {COMMAND(balance_heat_on),  "Turn on the balance pump heating card", GR_BAL},
-  {COMMAND(balance_heat_off), "Turn off the balance pump heating card", GR_BAL},
+  {COMMAND(balance_off),  "Turn off the balance motor", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -343,23 +341,29 @@ struct mcom mcommands[plugh + 2] = {
       {"El Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
     }
   },
-  {COMMAND(balance_manual), "Manually set balance pump rate", GR_BAL, 1,
+  {COMMAND(balance_manual), "Manually set balance on", GR_BAL, 1,
     {
-      {"level",           -1.0, 1.0, 'f', "NONE"},
+      {"dir (pos=1, neg=-1, off=0)",           -1, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(balance_gain), "Set balance system setpoints", GR_BAL, 4,
+  {COMMAND(balance_vel), "set the waveplate rotator velocity and acceleration",
+    GR_BAL, 2,
     {
-      {"Pump On Point (A)",  0, 2, 'f', "LEVEL_ON_BAL"},
-      {"Pump Off Point (A)", 0, 2, 'f', "LEVEL_OFF_BAL"},
-      {"Target (A)",        -2, 2, 'f', "LEVEL_TARGET_BAL"},
-      {"Gain",            0.01, 10, 'f', "GAIN_BAL"},
+      {"Velocity", 5, 500000, 'l', "VEL_BAL"},
+      {"Acceleration", 1, 1000, 'i', "ACC_BAL"},
     }
   },
-  {COMMAND(balance_tset), "Set balance pump minumum temperature", GR_BAL, 1,
-     {
-       {"Temperature (C)",  -273.4, 40, 'f', "T_BOX_BAL"},
-     }
+  {COMMAND(balance_i), "set the waveplate rotator currents", GR_BAL, 2,
+    {
+      {"Move current (%)", 0, 100, 'i', "I_MOVE_BAL"},
+      {"Hold current (%)", 0,  50, 'i', "I_HOLD_BAL"},
+    }
+  },
+  {COMMAND(balance_gain), "Set balance system setpoints", GR_BAL, 2,
+    {
+      {"I_El Balance On (A)",  0, 5, 'f', "I_LEVEL_ON_BAL"},
+      {"I_El Balance Off  (A)", 0, 5, 'f', "I_LEVEL_OFF_BAL"},
+    }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps", GR_POINT, 7,
     {
