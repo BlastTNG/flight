@@ -146,12 +146,13 @@ static void calculate_predicted_motion_px(double exposure_time)
 {
     int i_point = GETREADINDEX(point_index);
     double standard_iplatescale = 6.680;
-    double predicted_motion_deg = 0.0;
-    predicted_motion_deg += PointingData[i_point].gy_total_vel * exposure_time;
-    predicted_motion_deg += 0.5 * PointingData[i_point].gy_total_accel * exposure_time * exposure_time;
+    double predicted_streaking_deg = 0.0;
+    predicted_streaking_deg += PointingData[i_point].gy_total_vel * exposure_time;
+    predicted_streaking_deg += 0.5 * PointingData[i_point].gy_total_accel * exposure_time * exposure_time;
+    predicted_streaking_deg = fabs(predicted_streaking_deg);
     for (unsigned int which = 0; which < 2; which++) {
-        xsc_pointing_state[which].predicted_motion_px =
-                to_arcsec(from_degrees(predicted_motion_deg)) / standard_iplatescale;
+        xsc_pointing_state[which].predicted_streaking_px =
+                to_arcsec(from_degrees(predicted_streaking_deg)) / standard_iplatescale;
     }
 }
 
@@ -160,7 +161,7 @@ static bool xsc_trigger_thresholds_satisfied()
     if (!CommandData.XSC[0].trigger.threshold.enabled) {
         return true;
     }
-    if (xsc_pointing_state[0].predicted_motion_px < CommandData.XSC[0].trigger.threshold.blob_streaking_px) {
+    if (xsc_pointing_state[0].predicted_streaking_px < CommandData.XSC[0].trigger.threshold.blob_streaking_px) {
         return true;
     }
     return false;

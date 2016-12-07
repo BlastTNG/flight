@@ -345,7 +345,8 @@ int channels_initialize(const channel_t * const m_channel_list)
         if (channel->rate < RATE_END && channel->type < TYPE_END) {
             channel_count[channel->rate][channel->type]++;
         } else {
-            blast_fatal("Could not map %d and %d to rate and type!", channel->rate, channel->type);
+            blast_fatal("For channel %s could not map %d and %d to rate and type!",
+                        channel->field, channel->rate, channel->type);
             return 1;
         }
     }
