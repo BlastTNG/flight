@@ -159,7 +159,7 @@ static double get_elev_vel(void)
         //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
     } else if (axes_mode.el_mode == AXIS_LOCK) {
         /* for the lock, only use the elevation encoder */
-        vel = (axes_mode.el_dest - ElevMotorData[i_elev].position) * 0.64;
+        vel = (axes_mode.el_dest - ElevMotorData[i_elev].motor_position * EL_MOTOR_ENCODER_SCALING) * 0.64;
     }
 
     /* correct offset and convert to Gyro Units */

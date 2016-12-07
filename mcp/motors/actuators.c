@@ -47,7 +47,7 @@ double LockPosition(double elevation);	/* commands.c */
 extern int16_t InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
-#define ACTBUS_CHATTER	EZ_CHAT_BUS    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
+#define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
 #define NACT 7
 
@@ -81,9 +81,9 @@ static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 int lock_timeout = -1;
 
-#define LOCK_MIN_POT 300      // actual min stop: ~120 (fully extended)
+#define LOCK_MIN_POT 3000 // actual min stop: ~2500 (fully extended)
 #define LOCK_MAX_POT 16368    // max stop at saturation: 16368 (fully retracted)
-#define LOCK_POT_RANGE 300
+#define LOCK_POT_RANGE 500
 
 static struct lock_struct {
   int pos;		  // raw step count
@@ -884,7 +884,7 @@ static void SetLockState(int nic)
     }
 
     i_point = GETREADINDEX(point_index);
-    if (fabs(PointingData[i_point].enc_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5) state |= LS_EL_OK;
+    if (fabs(PointingData[i_point].enc_motor_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5) state |= LS_EL_OK;
 
     /* Assume the pin is out unless we're all the way closed */
     if (state & LS_CLOSED)
@@ -998,7 +998,7 @@ static void DoLock(void)
                 lock_timeout = DRIVE_TIMEOUT;
                 bputs(info, "Extending lock motor.");
                 EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
-                EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
+                EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
                 usleep(SEND_SLEEP); /* wait for a bit */
                 lock_data.state &= ~LS_DRIVE_MASK;
                 lock_data.state |= LS_DRIVE_EXT;
@@ -1007,7 +1007,7 @@ static void DoLock(void)
                 lock_timeout = DRIVE_TIMEOUT;
                 bputs(info, "Retracting lock motor.");
                 EZBus_Stop(&bus, id[LOCKNUM]); /* stop current action first */
-                EZBus_RelMove(&bus, id[LOCKNUM], INT_MIN);
+                EZBus_RelMove(&bus, id[LOCKNUM], INT_MAX);
                 usleep(SEND_SLEEP); /* wait for a bit */
                 lock_data.state &= ~LS_DRIVE_MASK;
                 lock_data.state |= LS_DRIVE_RET;
@@ -1558,6 +1558,7 @@ void *ActuatorBus(void *param)
             actuators_init &= ~(0x1 << HWPRNUM);
         }
 
+/* Commenting out balance system for now (PCA 12/6/16)
         if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
             DoBalance(&bus);
             actuators_init |= 0x1 << BALANCENUM;
@@ -1566,7 +1567,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << BALANCENUM);
         }
-
+*/
         usleep(10000);
     }
 }

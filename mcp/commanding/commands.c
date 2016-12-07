@@ -53,8 +53,8 @@
  * true elevation */
 // #define LOCK_OFFSET (-0.77) /* Updated by LMF on July 12th, 2012 */
 #define LOCK_OFFSET (0.0)
-#define NUM_LOCK_POS 9
-static const double lock_positions[NUM_LOCK_POS] = {4.8, 14.8, 24.82, 34.81, 44.75, 54.7, 64.7, 75.0, 90.0};
+#define NUM_LOCK_POS 10
+static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34.88, 44.86, 54.83, 64.81, 74.80, 89.78};
 
 /* based on isc_protocol.h */
 #define ISC_SHUTDOWN_NONE     0
