@@ -60,7 +60,7 @@ struct AxesModeStruct axes_mode = {
 #define MAX_DI_EL 20.0 // Maximum integral accumulation per step in milliamps for El motor
 #define MAX_I_EL  800.0 // Maximum accumulated integral in milliamps for El motor
 #define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps for Az motors
-#define MAX_I  400.0 // Maximum accumulated integral in milliamps for Az motors
+#define MAX_I  200.0 // Maximum accumulated integral in milliamps for Az motors
 
 #define INTEGRAL_LENGTH  5.0  // length of the integral time constant in seconds
 #define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
@@ -1844,7 +1844,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
         milliamp_return = last_milliamp - max_delta_mA;
     }
 
-    if (m_disabled) {
+    if (m_disabled || (CommandData.pin_is_in && !CommandData.force_el)) {
         last_pv = pv;
         I_term = 0.0;
         milliamp_return = 0;

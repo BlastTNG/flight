@@ -2044,10 +2044,10 @@ void InitCommandData()
 
     CommandData.az_accel = 0.4;
 
-    CommandData.ele_gain.I = 200;
-    CommandData.ele_gain.P = 23.9;
+    CommandData.ele_gain.I = 1000;
+    CommandData.ele_gain.P = 1.2;
     CommandData.ele_gain.D = 0;
-    CommandData.ele_gain.PT = 200;
+    CommandData.ele_gain.PT = 20;
     CommandData.ele_gain.DB = 0;
     CommandData.ele_gain.F = 0;
 
