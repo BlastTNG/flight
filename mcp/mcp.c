@@ -336,7 +336,7 @@ static void mcp_5hz_routines(void)
     ControlBalance();
     StoreActBus();
     #ifdef USE_XY_THREAD
-    StoreStageBus(1); // TODO(pca): figure out what argument does
+    StoreStageBus(0);
     #endif
     SecondaryMirror();
 //    PhaseControl();

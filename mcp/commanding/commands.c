@@ -803,7 +803,15 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case xyzzy:
             break;
-        default:
+	#ifdef USE_XY_THREAD
+	case xy_panic:
+	    CommandData.xystage.mode = XYSTAGE_PANIC;
+	    CommandData.xystage.is_new = 1;
+	    break;
+	#endif
+
+
+	default:
             bputs(warning, "Commands: ***Invalid Single Word Command***\n");
             return;  // invalid command - no write or update
     }
