@@ -739,6 +739,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.hwpr.mode = HWPR_PANIC;
             CommandData.hwpr.is_new = 1;
             break;
+	case balance_auto:
+	    CommandData.balance.mode = bal_auto;
+	    break;
 
 #ifndef BOLOTEST
         case blast_rocks:
