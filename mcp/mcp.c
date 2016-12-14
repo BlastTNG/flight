@@ -315,7 +315,6 @@ static void mcp_100hz_routines(void)
     cryo_control();
 //    BiasControl();
     WriteChatter();
-
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
@@ -323,6 +322,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
     framing_publish_100hz();
+    // test_dio();
 }
 static void mcp_5hz_routines(void)
 {
@@ -347,8 +347,7 @@ static void mcp_5hz_routines(void)
 //    VideoTx();
 //    cameraFields();
 
-    framing_publish_5hz();
-}
+    framing_publish_5hz();}
 static void mcp_2hz_routines(void)
 {
     xsc_write_data(0);
@@ -540,8 +539,10 @@ int main(int argc, char *argv[])
 //  InitSched();
   initialize_motors();
   labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
+  initialize_labjack_commands(LABJACK_CRYO_2);
 
   initialize_CPU_sensors();
 

@@ -49,10 +49,11 @@
 #define DIODE_4K_FILT 4
 #define DIODE_VCS2_HX 7
 #define DIODE_VCS1_PLATE 10
+#define DIODE_CHARCOAL_HS 13
 // labjack 2
-#define DIODE_CHARCOAL_HS 0
-#define DIODE_CHARCOAL 1
-#define DIODE_4K_PLATE 2
+#define DIODE_CHARCOAL 0
+#define DIODE_4K_PLATE 1
+#define ROX_FPA_1K 2
 
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
 // TODO(ian): Update these for the thermometers and channels we have.
@@ -62,5 +63,5 @@ void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_p
 float labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);
 void store_labjack_data(void);
-
+int labjack_dio(int m_labjack, int address, int command);
 #endif /* LABJACK_H_ */
