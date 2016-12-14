@@ -64,6 +64,4 @@ float labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);
 void store_labjack_data(void);
 int labjack_dio(int m_labjack, int address, int command);
-void labjack_write_mux(int m_labjack, int mux_code);
-
 #endif /* LABJACK_H_ */

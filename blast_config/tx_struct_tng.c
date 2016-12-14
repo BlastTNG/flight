@@ -67,6 +67,7 @@
 
 channel_t channel_list[] =
   {
+    { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "tr_fpa_1k",        SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "tr_250_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "tr_1k_plate",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },

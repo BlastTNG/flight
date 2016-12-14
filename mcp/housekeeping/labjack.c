@@ -479,55 +479,6 @@ int labjack_dio(int m_labjack, int address, int command) {
     }
 }
 
-void labjack_write_mux(int m_labjack, int mux_code) {
-    int zero, one, two;
-    switch (mux_code) {
-        case 0:
-            zero = labjack_dio(m_labjack, MIO_0, 0);
-            one = 2*labjack_dio(m_labjack, MIO_1, 0);
-            two = 4*labjack_dio(m_labjack, MIO_2, 0);
-            break;
-        case 1:
-            zero = labjack_dio(m_labjack, MIO_0, 1);
-            one = 2*labjack_dio(m_labjack, MIO_1, 0);
-            two = 4*labjack_dio(m_labjack, MIO_2, 0);
-            break;
-        case 2:
-            zero = labjack_dio(m_labjack, MIO_0, 0);
-            one = 2*labjack_dio(m_labjack, MIO_1, 1);
-            two = 4*labjack_dio(m_labjack, MIO_2, 0);
-            break;
-        case 3:
-            zero = labjack_dio(m_labjack, MIO_0, 1);
-            one = 2*labjack_dio(m_labjack, MIO_1, 1);
-            two = 4*labjack_dio(m_labjack, MIO_2, 0);
-            break;
-        case 4:
-            zero = labjack_dio(m_labjack, MIO_0, 0);
-            one = 2*labjack_dio(m_labjack, MIO_1, 0);
-            two = 4*labjack_dio(m_labjack, MIO_2, 1);
-            break;
-        case 5:
-            zero = labjack_dio(m_labjack, MIO_0, 1);
-            one = 2*labjack_dio(m_labjack, MIO_1, 0);
-            two = 4*labjack_dio(m_labjack, MIO_2, 1);
-            break;
-        case 6:
-            zero = labjack_dio(m_labjack, MIO_0, 0);
-            one = 2*labjack_dio(m_labjack, MIO_1, 1);
-            two = 4*labjack_dio(m_labjack, MIO_2, 1);
-            break;
-        case 7:
-            zero = labjack_dio(m_labjack, MIO_0, 1);
-            one = 2*labjack_dio(m_labjack, MIO_1, 1);
-            two = 4*labjack_dio(m_labjack, MIO_2, 1);
-            break;
-        default:
-            blast_warn("Please enter Mux code 0-7");
-            break;
-    }
-}
-
 
 static void init_labjack_stream_commands(labjack_state_t *m_state)
 {
