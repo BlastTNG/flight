@@ -860,7 +860,7 @@ struct mcom mcommands[plugh + 2] = {
         {
             {"which", 0, 2, 'i', "NONE"},
             {"exposure time_cs (cs) [default: 12]", 1, 100, 'l', "NONE"},
-            {"grace period (s) (disregards which) [default: 10.0]", 1.0, 100.0, 'f', "NONE"},
+            {"grace period (s) (disregards which) [default: 45.0]", 1.0, 100.0, 'f', "NONE"},
             {"post trigger counter_mcp share delay (cs) (disregards which) [default: 200]", 1, 1000, 'l', "NONE"},
         },
     },

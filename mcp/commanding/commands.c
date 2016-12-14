@@ -1545,7 +1545,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                 if (xsc_command_applies_to(which, ivalues[0])) {
                     CommandData.XSC[which].trigger.exposure_time_cs = ivalues[1];
                 }
-                CommandData.XSC[which].trigger.grace_period_cs = rvalues[2] * 100.0;
+                CommandData.XSC[which].trigger.grace_period_cs = rvalues[2] * 100.0; // Commanded value is in seconds!
                 CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs = ivalues[3];
             }
             break;

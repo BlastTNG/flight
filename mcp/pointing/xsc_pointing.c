@@ -145,14 +145,17 @@ int32_t xsc_get_loop_counter(void)
 static void calculate_predicted_motion_px(double exposure_time)
 {
     int i_point = GETREADINDEX(point_index);
-    double standard_iplatescale = 6.680;
+    const double standard_iplatescale[2] = {6.66, 6.62}; // arcseconds per pixel
     double predicted_streaking_deg = 0.0;
     predicted_streaking_deg += PointingData[i_point].gy_total_vel * exposure_time;
     predicted_streaking_deg += 0.5 * PointingData[i_point].gy_total_accel * exposure_time * exposure_time;
     predicted_streaking_deg = fabs(predicted_streaking_deg);
     for (unsigned int which = 0; which < 2; which++) {
         xsc_pointing_state[which].predicted_streaking_px =
-                to_arcsec(from_degrees(predicted_streaking_deg)) / standard_iplatescale;
+                to_arcsec(from_degrees(predicted_streaking_deg)) / standard_iplatescale[which];
+        if (xsc_pointing_state[which].predicted_streaking_px > 6500.0) {
+            xsc_pointing_state[which].predicted_streaking_px = 6500.0;
+        }
     }
 }
 

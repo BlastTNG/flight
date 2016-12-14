@@ -128,6 +128,7 @@ channel_t channel_list[] =
     {"x1_image_blobn_y", CONVERT_BLOB_POS_M, CONVERT_BLOB_POS_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     {"x1_image_blobn_flux", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     {"x1_image_blobn_peak_to_flux", SCALE(CONVERT_0_TO_10), TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
+    {"x1_predicted_streaking_px", CONVERT_VEL_M, CONVERT_VEL_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
 
 
     {"x0_last_trig_lat", DEG2LI, 0.0, TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
