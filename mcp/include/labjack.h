@@ -53,7 +53,27 @@
 // labjack 2
 #define DIODE_CHARCOAL 0
 #define DIODE_4K_PLATE 1
+#define LEVEL_SENSOR 11
+#define CAL_LAMP 12
+#define LNA_250 13
 #define ROX_FPA_1K 2
+
+// DIO addresses LJ CRYO 1
+#define LEVEL_SENSOR_COMMAND 2008
+#define CHARCOAL_COMMAND 2009
+#define LNA_250_COMMAND 2010
+#define HEATER_1K_COMMAND 2011
+#define HEATER_300MK_COMMAND 2012
+#define CHARCOAL_HS_COMMAND 2013
+#define CALLAMP_COMMAND 2014
+#define LNA_350_COMMAND 2015
+#define LNA_500_COMMAND 2016
+
+// DIO addresses LJ CRYO 2
+#define SWITCH_5V 2000
+#define SWITCH_12V 2001
+#define SWITCH_15V 2002
+#define SWITCH_40V 2003
 
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
 // TODO(ian): Update these for the thermometers and channels we have.
@@ -64,4 +84,6 @@ float labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);
 void store_labjack_data(void);
 int labjack_dio(int m_labjack, int address, int command);
+void heater_write(int m_labjack, int address, int command);
+uint16_t labjack_read_dio(int m_labjack, int address);
 #endif /* LABJACK_H_ */

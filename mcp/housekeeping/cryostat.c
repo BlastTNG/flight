@@ -76,6 +76,17 @@ void store_100hz_cryo(void)
     }
     SET_UINT16(heaterAddr, heatctrl);
 }
+void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
+    static channel_t* reader;
+    static int firsttime = 1;
+    if (firsttime) {
+        firsttime = 0;
+        reader = channels_find_by_name("read_dio");
+    }
+    blast_warn("dio value is %u", labjack_read_dio(LABJACK_CRYO_1, 2000));
+    SET_SCALED_VALUE(reader, labjack_read_dio(LABJACK_CRYO_1, 2000));
+}
+
 void read_thermometers(void) {
     static int firsttime_therm = 1;
     float test;

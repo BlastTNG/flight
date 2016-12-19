@@ -75,7 +75,7 @@ extern const char *GroupNames[N_GROUPS];
 enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
   balance_auto,     balance_off,        cal_off,          cal_on,
-  charcoal_off,     charcoal_on,        hs_charcoal_off,  hwpr_panic,
+  hs_charcoal_off,  hwpr_panic,
   hs_charcoal_on,   el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,
@@ -134,7 +134,12 @@ enum singleCommand {
   cam_unforce_lens, hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
-  lock45,           shutter_close_slow,
+  lock45,           shutter_close_slow, heater_300mk_on,  heater_300mk_off,
+  charcoal_hs_on,   charcoal_hs_off,    callamp_on,       callamp_off,
+  lna350_on, lna350_off, lna250_on, lna250_off, lna500_on, lna500_off,
+  level_sensor_on,  level_sensor_off,   charcoal_on,      charcoal_off,
+  heater_1k_on, heater_1k_off, switch_5V_on, switch_5V_off, switch_12V_on,
+  switch_12V_off, switch_15V_on, switch_15V_off, switch_40V_on, switch_40V_off,
   xyzzy
 };
 
