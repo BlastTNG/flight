@@ -170,28 +170,52 @@ void SingleCommand(enum singleCommand command, int scheduled)
     switch (command) {
 #ifndef BOLOTEST
         case switch_5V_on:
-            heater_write(LABJACK_CRYO_1, SWITCH_5V, 1);
+            heater_write(LABJACK_CRYO_1, SWITCH_5V_OFF, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_5V_ON, 1);
+            usleep(1000000);
+            heater_write(LABJACK_CRYO_1, SWITCH_5V_ON, 0);
             break;
         case switch_5V_off:
-            heater_write(LABJACK_CRYO_1, SWITCH_5V, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_5V_ON, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_5V_OFF, 1);
+            usleep(1000000);
+            heater_write(LABJACK_CRYO_1, SWITCH_5V_OFF, 0);
             break;
         case switch_12V_on:
-            heater_write(LABJACK_CRYO_1, SWITCH_12V, 1);
+            heater_write(LABJACK_CRYO_1, SWITCH_12V_OFF, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_12V_ON, 1);
+            usleep(1000000);
+            heater_write(LABJACK_CRYO_1, SWITCH_12V_ON, 0);
             break;
         case switch_12V_off:
-            heater_write(LABJACK_CRYO_1, SWITCH_12V, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_12V_ON, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_12V_OFF, 1);
+            usleep(1000000);
+            heater_write(LABJACK_CRYO_1, SWITCH_12V_OFF, 0);
             break;
         case switch_15V_on:
-            heater_write(LABJACK_CRYO_1, SWITCH_15V, 1);
+            heater_write(LABJACK_CRYO_1, SWITCH_15V_OFF, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_15V_ON, 1);
+            usleep(1000000);
+            heater_write(LABJACK_CRYO_1, SWITCH_15V_ON, 0);
             break;
         case switch_15V_off:
-            heater_write(LABJACK_CRYO_1, SWITCH_15V, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_15V_ON, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_15V_OFF, 1);
+            usleep(1000000);
+            heater_write(LABJACK_CRYO_1, SWITCH_15V_OFF, 0);
             break;
         case switch_40V_on:
-            heater_write(LABJACK_CRYO_1, SWITCH_40V, 1);
+            heater_write(LABJACK_CRYO_1, SWITCH_40V_OFF, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_40V_ON, 1);
+            usleep(1000000);
+            heater_write(LABJACK_CRYO_1, SWITCH_40V_ON, 0);
             break;
         case switch_40V_off:
-            heater_write(LABJACK_CRYO_1, SWITCH_40V, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_40V_ON, 0);
+            heater_write(LABJACK_CRYO_1, SWITCH_40V_OFF, 1);
+            usleep(1000000);
+            heater_write(LABJACK_CRYO_1, SWITCH_40V_OFF, 0);
             break;
         case heater_300mk_on:
             heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 1);

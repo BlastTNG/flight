@@ -70,10 +70,14 @@
 #define LNA_500_COMMAND 2016
 
 // DIO addresses LJ CRYO 2
-#define SWITCH_5V 2000
-#define SWITCH_12V 2001
-#define SWITCH_15V 2002
-#define SWITCH_40V 2003
+#define SWITCH_5V_ON 2000
+#define SWITCH_5V_OFF 2001
+#define SWITCH_12V_ON 2002
+#define SWITCH_12V_OFF 2003
+#define SWITCH_15V_ON 2004
+#define SWITCH_15V_OFF 2005
+#define SWITCH_40V_ON 2006
+#define SWITCH_40V_OFF 2007
 
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
 // TODO(ian): Update these for the thermometers and channels we have.
