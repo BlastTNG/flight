@@ -70,12 +70,6 @@
 #define STREAM_TRIGGER_INDEX_ADDR 4024
 
 
-// DIO addresses
-#define EIO_0 2008
-#define MIO_0 2020
-#define MIO_1 2021
-#define MIO_2 2022
-
 // Modbus addresses to set the ranges and gains of the Analog Inputs
 #define AIN0_RANGE_ADDR 40000 // Setting AIN range for each AIN channel
                       // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01
@@ -458,7 +452,6 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
 
 int labjack_dio(int m_labjack, int address, int command) {
     int ret;
-    int retprime;
     static int max_tries = 10;
     uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
     ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
@@ -476,6 +469,51 @@ int labjack_dio(int m_labjack, int address, int command) {
         return command;
     } else {
         return command;
+    }
+}
+
+uint16_t labjack_read_dio(int m_labjack, int address) {
+    uint16_t ret[1];
+    int works;
+    uint16_t value;
+    static int max_tries = 10;
+    works = modbus_read_registers(state[m_labjack].cmd_mb, address, 8, ret);
+    value = ret[0];
+    if (works < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, ret);
+            value = ret[0];
+            if (works > 0) {
+                blast_warn("succeeded on try %d", tries);
+                break;
+            }
+        }
+        return value;
+    } else {
+        return value;
+    }
+}
+
+void heater_write(int m_labjack, int address, int command) {
+    int ret;
+    int retprime;
+    static int max_tries = 10;
+    uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
+    ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+    if (ret < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+            if (ret > 0) {
+                blast_warn("succeeded on try %d", tries);
+                break;
+            }
+        }
     }
 }
 

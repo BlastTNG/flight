@@ -46,6 +46,8 @@
 #include "tx.h"
 #include "pointing_struct.h"
 #include "channels_tng.h"
+#include "labjack.h"
+#include "cryostat.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -167,6 +169,84 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case switch_5V_on:
+            heater_write(LABJACK_CRYO_1, SWITCH_5V, 1);
+            break;
+        case switch_5V_off:
+            heater_write(LABJACK_CRYO_1, SWITCH_5V, 0);
+            break;
+        case switch_12V_on:
+            heater_write(LABJACK_CRYO_1, SWITCH_12V, 1);
+            break;
+        case switch_12V_off:
+            heater_write(LABJACK_CRYO_1, SWITCH_12V, 0);
+            break;
+        case switch_15V_on:
+            heater_write(LABJACK_CRYO_1, SWITCH_15V, 1);
+            break;
+        case switch_15V_off:
+            heater_write(LABJACK_CRYO_1, SWITCH_15V, 0);
+            break;
+        case switch_40V_on:
+            heater_write(LABJACK_CRYO_1, SWITCH_40V, 1);
+            break;
+        case switch_40V_off:
+            heater_write(LABJACK_CRYO_1, SWITCH_40V, 0);
+            break;
+        case heater_300mk_on:
+            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 1);
+            break;
+        case heater_300mk_off:
+            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 0);
+            break;
+        case charcoal_hs_on:
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 1);
+            break;
+        case charcoal_hs_off:
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
+            break;
+        case callamp_on:
+            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+            break;
+        case callamp_off:
+            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+            break;
+        case lna350_on:
+            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 1);
+            break;
+        case lna350_off:
+            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 0);
+            break;
+        case lna500_on:
+            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, 1);
+            break;
+        case lna500_off:
+            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, 0);
+            break;
+        case level_sensor_on:
+            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
+            break;
+        case level_sensor_off:
+            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
+            break;
+        case charcoal_on:
+            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 1);
+            break;
+        case charcoal_off:
+            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 0);
+            break;
+        case lna250_on:
+            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, 1);
+            break;
+        case lna250_off:
+            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, 0);
+            break;
+        case heater_1k_on:
+            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, 1);
+            break;
+        case heater_1k_off:
+            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, 0);
+            break;
         case stop:  // Pointing abort
             CommandData.pointing_mode.nw = CommandData.slew_veto;
             CommandData.pointing_mode.mode = P_DRIFT;
@@ -570,14 +650,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case hwpr_enc_pulse:
             CommandData.Cryo.hwprPos = 50;
-            break;
-        case charcoal_on:
-            CommandData.Cryo.charcoalHeater = 1;
-            CommandData.Cryo.fridgeCycle = 0;
-            break;
-        case charcoal_off:
-            CommandData.Cryo.charcoalHeater = 0;
-            CommandData.Cryo.fridgeCycle = 0;
             break;
         case hs_charcoal_on:
             CommandData.Cryo.hsCharcoal = 1;
