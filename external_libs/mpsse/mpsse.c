@@ -775,8 +775,7 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer *transfer)
 	res->transferred += transfer->actual_length;
 
 	DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
-    blast_dbg("transferred %d of %d", res->transferred, ctx->write_count);
-	//DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
+	DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
 
 	if (res->transferred == ctx->write_count) {
 		res->done = true;
@@ -799,8 +798,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 		return retval;
 	}
 
-	DEBUG_IO("write %d%s, read %d", ctx->write_count, ctx->read_count ? "+1" : "",
-			ctx->read_count);
+	DEBUG_IO("write %d%s, read %d", ctx->write_count, ctx->read_count ? "+1" : "", ctx->read_count);
 	assert(ctx->write_count > 0 || ctx->read_count == 0); /* No read data without write data */
 
 
