@@ -53,9 +53,9 @@
 // labjack 2
 #define DIODE_CHARCOAL 0
 #define DIODE_4K_PLATE 1
-#define LEVEL_SENSOR 11
-#define CAL_LAMP 12
-#define LNA_250 13
+#define LEVEL_SENSOR_READ 11
+#define CAL_LAMP_READ 12
+#define HEATER_300MK_READ 13
 #define ROX_FPA_1K 2
 
 // DIO addresses LJ CRYO 1
@@ -78,6 +78,14 @@
 #define SWITCH_15V_OFF 2005
 #define SWITCH_40V_ON 2006
 #define SWITCH_40V_OFF 2007
+
+// Digital reads on LJ CRYO 2
+#define READ_CHARCOAL 2009
+#define READ_250LNA 2010
+#define READ_1K_HEATER 2011
+#define READ_CHARCOAL_HS 2013
+#define READ_350LNA 2015
+#define READ_500LNA 2016
 
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
 // TODO(ian): Update these for the thermometers and channels we have.

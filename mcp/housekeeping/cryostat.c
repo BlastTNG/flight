@@ -83,8 +83,8 @@ void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
         firsttime = 0;
         reader = channels_find_by_name("read_dio");
     }
-    blast_warn("dio value is %u", labjack_read_dio(LABJACK_CRYO_1, 2000));
-    SET_SCALED_VALUE(reader, labjack_read_dio(LABJACK_CRYO_1, 2000));
+    blast_warn("dio value is %u", labjack_read_dio(LABJACK_CRYO_2, 2000));
+    SET_SCALED_VALUE(reader, labjack_read_dio(LABJACK_CRYO_2, 2000));
 }
 
 void read_thermometers(void) {
