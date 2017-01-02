@@ -83,8 +83,8 @@ void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
         firsttime = 0;
         reader = channels_find_by_name("read_dio");
     }
-    blast_warn("dio value is %u", labjack_read_dio(LABJACK_CRYO_2, 2000));
-    SET_SCALED_VALUE(reader, labjack_read_dio(LABJACK_CRYO_2, 2000));
+    // blast_warn("Fio0 on LABJACK 1 value is %u", labjack_read_dio(LABJACK_CRYO_1, 2000));
+    SET_SCALED_VALUE(reader, labjack_read_dio(LABJACK_CRYO_1, 2000));
 }
 
 void read_thermometers(void) {
@@ -169,6 +169,7 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(diode_4k_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_4K_FILT));
     SET_SCALED_VALUE(diode_vcs2_hx_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_HX));
     SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
+    blast_warn("diode value is %f", labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
     // above are the diodes, below, the ROXes
     SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_FPA_1K));
     /* SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
