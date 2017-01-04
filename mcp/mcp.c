@@ -56,6 +56,7 @@
 #include "tx.h"
 #include "lut.h"
 #include "labjack.h"
+#include "multiplexed_labjack.h"
 
 #include "acs.h"
 #include "actuators.h"
@@ -358,6 +359,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    query_time(LABJACK_CRYO_1);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -535,9 +537,13 @@ int main(int argc, char *argv[])
   initialize_motors();
   labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  mult_labjack_networking_init(LABJACK_OF_1, LABJACK_OF_NCHAN, LABJACK_OF_SPP);
+  mult_labjack_networking_init(LABJACK_OF_2, LABJACK_OF_NCHAN, LABJACK_OF_SPP);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);
+  mult_initialize_labjack_commands(LABJACK_OF_1);
+  mult_initialize_labjack_commands(LABJACK_OF_2);
 
   initialize_CPU_sensors();
 

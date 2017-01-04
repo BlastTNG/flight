@@ -42,12 +42,14 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_LOCK] = "Lock Motor",
                                     [GRPOS_TELEM] =  "Telemetry",
                                     [GRPOS_MISC] = "Miscellaneous",
+                                    [GRPOS_LJ] = "Labjack Commands",
   };
 
 // echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
 struct scom scommands[xyzzy + 1] = {
+  {COMMAND(reboot_ljcryo1), "rebooting labjack cryo 1", GR_LJ},
   {COMMAND(heater_300mk_on), "turning on 300mK heater", GR_CRYO},
   {COMMAND(heater_300mk_off), "turning off 300mK heater", GR_CRYO},
   {COMMAND(charcoal_hs_on), "turning on charcoal hs", GR_CRYO},
