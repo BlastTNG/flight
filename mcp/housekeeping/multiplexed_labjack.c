@@ -91,7 +91,7 @@
 #define NUM_MLABJACKS 2
 
 // Max Number of Analog Inputs
-#define NUM_MLABJACK_AIN 84
+#define NUM_MLABJACK_AIN 14
 
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
@@ -140,19 +140,19 @@ typedef struct
 {
     labjack_calset_t HS[4];
     labjack_calset_t HR[4];
-    
+
     struct
     {
         float Slope;
         float Offset;
     } DAC[2];
-    
+
     float Temp_Slope;
     float Temp_Offset;
-    
+
     float ISource_10u;
     float ISource_200u;
-    
+
     float I_Bias;
 } labjack_device_cal_t;
 
@@ -160,25 +160,25 @@ typedef struct {
     char address[16];
     char ip[16];
     int which;
-    
+
     ph_thread_t cmd_thread;
     modbus_t *cmd_mb;
-    
+
     uint16_t port;
     bool connected;
     bool have_warned_version;
     bool shutdown;
-    
+
     // Used for setting up the streaming in the command thread
     uint16_t comm_stream_state;
     uint16_t req_comm_stream_state;
     uint16_t has_comm_stream_error;
     uint16_t have_warned_write_reg;
     uint16_t calibration_read;
-    
+
     float DAC[2];
-    float AIN[84]; // Analog input channels read from Labjack
-    
+    float AIN[14]; // Analog input channels read from Labjack
+
     uint32_t backoff_sec;
     struct timeval timeout;
     ph_job_t connect_job;
@@ -224,7 +224,7 @@ static labjack_state_t mult_state[NUM_MLABJACKS] = {
 // Used to correct for word swap between the mcp convention and the Labjack.
 // float_in: floating point value to be converted to two 16-bit words.
 // data: two element uint16_t array to store the modbus formated data.
-void labjack_set_float(float float_in, uint16_t* data)
+void mult_labjack_set_float(float float_in, uint16_t* data)
 {
     uint16_t data_swapped[2] = {0};
     modbus_set_float(float_in, data_swapped);
@@ -235,7 +235,7 @@ void labjack_set_float(float float_in, uint16_t* data)
 // Used to correct for word swap between the mcp convention and the Labjack.
 // float_in: floating point value to be converted to two 16-bit words.
 // data: two element uint16_t array to store the modbus formated data.
-float labjack_get_float(uint16_t* data_in)
+float mult_labjack_get_float(uint16_t* data_in)
 {
     uint16_t data_swapped[2] = {0};
     data_swapped[0] = data_in[1];
@@ -245,7 +245,7 @@ float labjack_get_float(uint16_t* data_in)
 }
 
 // Used to package a 32 bit integer into a two element array in modbus format.
-void labjack_set_short(uint32_t short_in, uint16_t* data)
+void mult_labjack_set_short(uint32_t short_in, uint16_t* data)
 {
     data[1] = short_in & 0xff;
     data[0] = (short_in & 0xff00) >> 16;
@@ -261,21 +261,21 @@ float mult_labjack_get_value(int m_labjack, int m_channel)
     return mult_state[m_labjack].AIN[m_channel];
 }
 
-int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
+int mult_labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
                              const uint32_t *m_scan_addresses, const uint16_t *m_chan_list,
                              const float *m_range_list)
 {
     uint16_t data[2] = {0};
     unsigned int i = 0;
     int ret = 0;
-    
+
     for (i = 0; i < m_numaddresses; i++) {
         if (m_scan_addresses[i] % 2 != 0 || m_scan_addresses[i] > 508) {
             blast_err("Invalid AIN address %d\n", m_scan_addresses[i]);
             return -1;
         }
     }
-    
+
     for (i = 0; i < m_numaddresses; i++) {
         // Setting AIN range.
         // Starting address is 40000 (AIN0_RANGE).
@@ -284,7 +284,7 @@ int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
             blast_err("Could not set AIN registers!");
             return ret;
         }
-        
+
         // Setting AIN negative channel.
         // Starting address is 41000 (AIN0_NEGATIVE_CH).
         if ((ret = modbus_write_register(m_state->cmd_mb, 41000 + m_scan_addresses[i] / 2,
@@ -296,7 +296,7 @@ int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
     return 0;
 }
 
-int labjack_get_volts(const labjack_device_cal_t *devCal, const uint16_t data_raw,
+int mult_labjack_get_volts(const labjack_device_cal_t *devCal, const uint16_t data_raw,
                       unsigned int gainIndex, float *volts)
 {
     static uint16_t have_warned = 0;
@@ -305,7 +305,7 @@ int labjack_get_volts(const labjack_device_cal_t *devCal, const uint16_t data_ra
         have_warned = 1;
         return -1;
     }
-    
+
     // if(*volts < devCal->HS[gainIndex].Center) {
     if (devCal->HS[gainIndex].Center > 0) {
         *volts = (devCal->HS[gainIndex].Center - data_raw) * devCal->HS[gainIndex].NSlope;
@@ -318,10 +318,10 @@ int labjack_get_volts(const labjack_device_cal_t *devCal, const uint16_t data_ra
 
 // Copied from the T7 example streaming code.
 // Use for now until labjack_get_cal is working.
-void labjack_get_nominal_cal(labjack_state_t *m_state, labjack_device_cal_t *devCal)
+void mult_labjack_get_nominal_cal(labjack_state_t *m_state, labjack_device_cal_t *devCal)
 {
     int i = 0;
-    
+
     devCal->HS[0].PSlope = 0.000315805780f;
     devCal->HS[0].NSlope = -0.000315805800f;
     devCal->HS[0].Center = 33523.0f;
@@ -338,27 +338,27 @@ void labjack_get_nominal_cal(labjack_state_t *m_state, labjack_device_cal_t *dev
     devCal->HS[3].NSlope = -0.000000315805800f;
     devCal->HS[3].Center = 33523.0f;
     devCal->HS[3].Offset = -0.01058695652200f;
-    
-    for(i = 0; i < 4; i++)
+
+    for (i = 0; i < 4; i++)
         devCal->HR[i] = devCal->HS[i];
-    
+
     devCal->DAC[0].Slope = 13200.0f;
     devCal->DAC[0].Offset = 0.0f;
     devCal->DAC[1].Slope = 13200.0f;
     devCal->DAC[1].Offset = 0.0f;
-    
+
     devCal->Temp_Slope = -92.379f;
     devCal->Temp_Offset = 465.129f;
-    
+
     devCal->ISource_10u = 0.000010f;
     devCal->ISource_200u = 0.000200f;
-    
+
     devCal->I_Bias = 0;
     m_state->calibration_read = 1;
     blast_info("Labjack calibration data read.");
 }
 
-void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t *m_labjack_cal,
+void mult_labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t *m_labjack_cal,
                                  uint32_t *m_gainlist, uint16_t n_data)
 {
     labjack_data_t *raw_data = (labjack_data_t*) m_state->conn_data;
@@ -367,7 +367,7 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
         if (raw_data->data[i] == 0xffff) {
             blast_err("Labjack channel AIN%d received a dummy sample indicating we received an incomplete scan!", i);
         } else {
-            ret = labjack_get_volts(m_labjack_cal, raw_data->data[i], m_gainlist[i], &(m_state->AIN[i]));
+            ret = mult_labjack_get_volts(m_labjack_cal, raw_data->data[i], m_gainlist[i], &(m_state->AIN[i]));
         }
     }
 }
@@ -378,7 +378,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     uint16_t data[2] = {0}; // Used to write floats.
     uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
     labjack_data_t *state_data = (labjack_data_t*)m_state->conn_data;
-    
+
     // Configure stream
     float scanRate = LJ_STREAM_RATE; // Scans per second. Samples per second = scanRate * numAddresses
     unsigned int numAddresses = state_data->num_channels;
@@ -391,10 +391,10 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     unsigned int scanListAddresses[MAX_NUM_ADDRESSES] = {0};
     uint16_t nChanList[MAX_NUM_ADDRESSES] = {0};
     float rangeList[MAX_NUM_ADDRESSES] = {0.0};
-    
+
     blast_info("Attempting to set registers for outer frame labjack%02d streaming.", m_state->which);
     // Disable streaming (otherwise we can't set the other streaming registers.
-    labjack_set_short(0, data);
+    mult_labjack_set_short(0, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_ENABLE_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -404,7 +404,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         }
     }
     // Write to appropriate Modbus registers to setup and start labjack streaming.
-    labjack_set_float(scanRate, data);
+    mult_labjack_set_float(scanRate, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANRATE_HZ_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -416,7 +416,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    labjack_set_short(numAddresses, data);
+    mult_labjack_set_short(numAddresses, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_ADDRESSES_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -428,7 +428,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    labjack_set_short(samplesPerPacket, data);
+    mult_labjack_set_short(samplesPerPacket, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SAMPLES_PER_PACKET_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -440,7 +440,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    labjack_set_float(settling, data);
+    mult_labjack_set_float(settling, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SETTLING_US_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -452,7 +452,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    labjack_set_short(resolutionIndex, data);
+    mult_labjack_set_short(resolutionIndex, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_RESOLUTION_INDEX_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -464,7 +464,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    labjack_set_short(bufferSizeBytes, data);
+    mult_labjack_set_short(bufferSizeBytes, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_BUFFER_SIZE_BYTES_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -476,7 +476,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    labjack_set_short(autoTarget, data);
+    mult_labjack_set_short(autoTarget, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_AUTO_TARGET_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -488,7 +488,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    labjack_set_short(numScans, data);
+    mult_labjack_set_short(numScans, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_NUM_SCANS_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -500,16 +500,16 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    
+
     blast_info("Setting Modbus register addresses for outer frame labjack%02d streaming.", m_state->which);
-    
+
     // Using a loop to add Modbus addresses for AIN0 - AIN(NUM_ADDRESSES-1) to the
     // stream scan and configure the analog input settings.
     for (int i = 0; i < numAddresses; i++) {
         scanListAddresses[i] = i*2; // AIN(i) (Modbus address i*2)
         nChanList[i] = 199; // Negative channel is 199 (single ended)
         rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
-        labjack_set_short(scanListAddresses[i], data);
+        mult_labjack_set_short(scanListAddresses[i], data);
         if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANLIST_ADDRESS_ADDR + i*2, 2, data)) < 0) {
             ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
             if (!m_state->have_warned_write_reg) {
@@ -521,7 +521,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
             m_state->have_warned_write_reg = 1;
             return;
         }
-        labjack_set_float(rangeList[i], data);
+        mult_labjack_set_float(rangeList[i], data);
         if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_RANGE_ADDR + i*2, 2, data)) < 0) {
             ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
             if (!m_state->have_warned_write_reg) {
@@ -546,9 +546,9 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         }
     }
     blast_info("Attempting to enable streaming for outer frame labjack%02d.", m_state->which);
-    
+
     // Last step: enable streaming
-    labjack_set_short(1, data);
+    mult_labjack_set_short(1, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_ENABLE_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -566,13 +566,13 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     m_state->comm_stream_state = 1;
 }
 
-int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
+int mult_labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
 {
     uint16_t data_swapped;
     static int have_warned = 0;
-    
+
     int n_data = (n_bytes - 16) / 2;
-    
+
     // TODO(laura): add proper error handling.
     if (n_bytes < 16) {
         blast_err("Read only %u bytes!  Aborting", (unsigned int) n_bytes);
@@ -596,13 +596,13 @@ int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
     m_data_pkt->header.status = data_swapped;
     data_swapped = ntohs(m_data_pkt->header.addl_status);
     m_data_pkt->header.addl_status = data_swapped;
-    
+
     // Correct the streamed data
     for (int i = 0; i < n_data; i++) {
         data_swapped = ntohs(m_data_pkt->data[i]);
         m_data_pkt->data[i] = data_swapped;
     }
-    
+
     have_warned = 0;
     return 1;
 }
@@ -626,13 +626,13 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
     static labjack_device_cal_t labjack_cal;
     size_t read_buf_size;
     int ret, i;
-    
+
     if (!state->calibration_read) { // might need to be mult_state? IAN
         // gain index 0 = +/-10V. Used for conversion to volts.
         for (i = 0; i < state_data->num_channels; i++) gainList[i] = 0;
         // For now read nominal calibration data (rather than specific calibration data from the device.
         // TODO(laura) fix labjack_get_cal and use that instead
-        labjack_get_nominal_cal(state, &labjack_cal);
+        mult_labjack_get_nominal_cal(state, &labjack_cal);
         //        labjack_get_cal(state, &labjack_cal);
     }
     /**
@@ -651,21 +651,21 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
     buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
     if (!buf) return; /// We do not have enough data
     data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
-    
+
     // Correct for the fact that Labjack readout is MSB first.
-    ret = labjack_data_word_swap(data_pkt, read_buf_size);
+    ret = mult_labjack_data_word_swap(data_pkt, read_buf_size);
     if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
         blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
                    state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
     }
     state_data->trans_id = data_pkt->header.resp.trans_id;
-    
+
     if (data_pkt->header.resp.type != STREAM_TYPE) {
         blast_warn("Unknown packet type %d received from LabJack at %s", data_pkt->header.resp.type, state->address);
         ph_buf_delref(buf);
         return;
     }
-    
+
     // TODO(laura): Finish adding error handling.
     switch (data_pkt->header.status) {
         case STREAM_STATUS_AUTO_RECOVER_ACTIVE:
@@ -675,12 +675,12 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
         case STREAM_STATUS_SCAN_OVERLAP:
             break;
     }
-    
+
     memcpy(state_data->data, data_pkt->data, state_data->num_channels * sizeof(uint16_t));
-    
+
     // Convert digital data into voltages.
     if (state->calibration_read) {
-        labjack_convert_stream_data(state, &labjack_cal, gainList, state_data->num_channels);
+        mult_labjack_convert_stream_data(state, &labjack_cal, gainList, state_data->num_channels);
     }
     ph_buf_delref(buf);
 }
@@ -702,29 +702,29 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     ph_unused_parameter(m_elapsed);
     ph_unused_parameter(m_addr);
     labjack_state_t *state = (labjack_state_t*) m_data;
-    
+
     switch (m_status) {
         case PH_SOCK_CONNECT_GAI_ERR:
             blast_err("resolve %s:%d failed %s", state->address, state->port, gai_strerror(m_errcode));
-            
+
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
             return;
-            
+
         case PH_SOCK_CONNECT_ERRNO:
             blast_err("connect %s:%d failed: `Error %d: %s`",
                       state->address, state->port, m_errcode, strerror(m_errcode));
-            
+
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
             return;
     }
-    
+
     blast_info("Connected to LabJack at %s", state->address);
-    
+
     /// If we had an old socket from an invalid connection, free the reference here
     if (state->sock) ph_sock_free(state->sock);
-    
+
     state->sock = m_sock;
     state->connected = true;
     state->backoff_sec = min_backoff_sec;
@@ -746,27 +746,27 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
     ph_unused_parameter(m_job);
     ph_unused_parameter(m_why);
     labjack_state_t *state = (labjack_state_t*)m_data;
-    
+
     blast_info("Connecting to %s", state->address);
     ph_sock_resolve_and_connect(state->address, state->port, 0,
                                 &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
 }
 
-void *labjack_cmd_thread(void *m_lj) {
+void *mult_labjack_cmd_thread(void *m_lj) {
     static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
-    
+
     char tname[10];
     snprintf(tname, sizeof(tname), "LJCMD%1d", m_state->which);
     ph_thread_set_name(tname);
     nameThread(tname);
-    
+
     blast_info("Starting Labjack%02d Commanding at IP %s", m_state->which, m_state->address);
-    
+
     m_state->req_comm_stream_state = 1;
     m_state->comm_stream_state = 0;
     m_state->has_comm_stream_error = 0;
-    
+
     {
         struct hostent *lj_ent = gethostbyname(m_state->address);
         uint32_t hostaddr;
@@ -775,7 +775,7 @@ void *labjack_cmd_thread(void *m_lj) {
             return NULL;
         }
         hostaddr = *(uint32_t*)(lj_ent->h_addr_list[0]);
-        
+
         snprintf(m_state->ip, sizeof(m_state->ip), "%d.%d.%d.%d",
                  (hostaddr & 0xff), ((hostaddr >> 8) & 0xff),
                  ((hostaddr >> 16) & 0xff), ((hostaddr >> 24) & 0xff));
@@ -786,7 +786,7 @@ void *labjack_cmd_thread(void *m_lj) {
         usleep(10000);
         if (!m_state->cmd_mb) {
             m_state->cmd_mb = modbus_new_tcp(m_state->ip, 502);
-            
+
             struct timeval tv;
             tv.tv_sec = 1;
             tv.tv_usec = 0;
@@ -794,7 +794,7 @@ void *labjack_cmd_thread(void *m_lj) {
             modbus_set_response_timeout(m_state->cmd_mb, &tv);
             modbus_set_error_recovery(m_state->cmd_mb,
                                       MODBUS_ERROR_RECOVERY_LINK | MODBUS_ERROR_RECOVERY_PROTOCOL);
-            
+
             if (modbus_connect(m_state->cmd_mb)) {
                 if (!have_warned_connect) {
                     blast_err("Could not connect to ModBUS charge controller at %s: %s", m_state->address,
@@ -807,7 +807,7 @@ void *labjack_cmd_thread(void *m_lj) {
             }
             have_warned_connect = 0;
         }
-        
+
         /*  Start streaming */
         if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
             init_labjack_stream_commands(m_state);
@@ -833,10 +833,10 @@ void *labjack_cmd_thread(void *m_lj) {
 void mult_initialize_labjack_commands(int m_which)
 {
     ph_thread_t *ljcomm_thread = NULL;
-    
+
     blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
-    
-    ljcomm_thread = ph_thread_spawn(labjack_cmd_thread, (void*) &mult_state[m_which]);
+
+    ljcomm_thread = ph_thread_spawn(mult_labjack_cmd_thread, (void*) &mult_state[m_which]);
 }
 
 /**
@@ -848,8 +848,8 @@ void mult_initialize_labjack_commands(int m_which)
 void mult_labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet)
 {
     blast_dbg("Labjack Init for %d", m_which);
-    
-    
+
+
     mult_state[m_which].connected = false;
     mult_state[m_which].have_warned_version = false;
     mult_state[m_which].backoff_sec = min_backoff_sec;
@@ -863,6 +863,6 @@ void mult_labjack_networking_init(int m_which, size_t m_numchannels, size_t m_sc
     data_state->num_channels = m_numchannels;
     data_state->scans_per_packet = m_scans_per_packet;
     mult_state[m_which].conn_data = data_state;
-    
+
     ph_job_dispatch_now(&(mult_state[m_which].connect_job));
 }

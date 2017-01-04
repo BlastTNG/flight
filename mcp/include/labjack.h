@@ -53,6 +53,7 @@
 // labjack 2
 #define DIODE_CHARCOAL 0
 #define DIODE_4K_PLATE 1
+#define BIAS 10
 #define LEVEL_SENSOR_READ 11
 #define CAL_LAMP_READ 12
 #define HEATER_300MK_READ 13
@@ -98,4 +99,6 @@ void store_labjack_data(void);
 int labjack_dio(int m_labjack, int address, int command);
 void heater_write(int m_labjack, int address, int command);
 uint16_t labjack_read_dio(int m_labjack, int address);
+void labjack_reboot(int m_labjack);
+void query_time(int m_labjack);
 #endif /* LABJACK_H_ */

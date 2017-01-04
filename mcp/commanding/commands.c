@@ -169,6 +169,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case reboot_ljcryo1:
+            labjack_reboot(LABJACK_CRYO_1);
+            break;
         case power_box_on:
             heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
             heater_write(LABJACK_CRYO_2, POWER_BOX_ON, 1);

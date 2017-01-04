@@ -68,6 +68,7 @@
 #define STREAM_ENABLE_ADDR 4990
 #define STREAM_SCANLIST_ADDRESS_ADDR 4100 // #(0:127)
 #define STREAM_TRIGGER_INDEX_ADDR 4024
+#define REBOOT_ADDR 61998
 
 
 // Modbus addresses to set the ranges and gains of the Analog Inputs
@@ -450,6 +451,48 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
     }
 }
 
+void labjack_reboot(int m_labjack) {
+    uint16_t data[2] = {0};
+    data[1] = 0x0000;
+    data[0] = 0x4c4a;
+    int ret;
+    static int max_tries = 10;
+    ret = modbus_write_registers(state[m_labjack].cmd_mb, REBOOT_ADDR, 2, data);
+    if (ret < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_write_registers(state[m_labjack].cmd_mb, REBOOT_ADDR, 2, data);
+            if (ret > 0) {
+                break;
+            }
+        }
+    }
+}
+
+void query_time(int m_labjack) {
+    uint16_t data[2] = {0};
+    uint32_t time_up;
+    int ret;
+    static int max_tries = 10;
+    ret = modbus_read_registers(state[m_labjack].cmd_mb, 61522, 2, data);
+    if (ret < 0) {
+        blast_warn("read failed");
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_read_registers(state[m_labjack].cmd_mb, 61522, 2, data);
+            if (ret > 0) {
+                blast_warn("the system has been up for %u", data[1]);
+            }
+        }
+    } else {
+        blast_warn("the system has been up for %u", data[1]);
+    }
+}
+
 int labjack_dio(int m_labjack, int address, int command) {
     int ret;
     static int max_tries = 10;
@@ -477,7 +520,7 @@ uint16_t labjack_read_dio(int m_labjack, int address) {
     int works;
     uint16_t value;
     static int max_tries = 10;
-    works = modbus_read_registers(state[m_labjack].cmd_mb, address, 8, ret);
+    works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, ret);
     value = ret[0];
     if (works < 0) {
         int tries = 1;

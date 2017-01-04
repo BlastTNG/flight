@@ -46,6 +46,7 @@
 #define GRPOS_TELEM 15
 #define GRPOS_MISC  16
 #define GRPOS_FOCUS 17
+#define GRPOS_LJ 18
 
 #define GR_POINT        (1 << GRPOS_POINT)
 #define GR_BAL          (1 << GRPOS_BAL)
@@ -65,6 +66,7 @@
 #define GR_TELEM        (1 << GRPOS_TELEM)
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
+#define GR_LJ           (1 << GRPOS_LJ)
 // reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
@@ -138,7 +140,7 @@ enum singleCommand {
   level_sensor_on,  level_sensor_off,   charcoal_on,      charcoal_off,
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
-  heater_supply_off,
+  heater_supply_off, reboot_ljcryo1,
   xyzzy
 };
 

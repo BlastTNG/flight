@@ -40,6 +40,7 @@
 #include "command_struct.h"
 #include "labjack.h"
 #include "blast.h"
+#include "multiplexed_labjack.h"
 
 /* Heater control bits (BIAS_D G4) */
 #define HEAT_HELIUM_LEVEL    0x0001
@@ -91,11 +92,11 @@ void read_thermometers(void) {
     static int firsttime_therm = 1;
     float test;
     float test2;
-    // test = labjack_get_value(0, 13);
-    // blast_warn("labjack1 is %f", test);
+    // test = mult_labjack_get_value(0, 0);
+    // blast_warn("OF labjack1 is %f", test);
 
-    // test2 = labjack_get_value(1, 13);
-    // blast_warn("labjack2 is %f", test2);
+    // test2 = mult_labjack_get_value(1, 0);
+    // blast_warn("OF labjack2 is %f", test2);
 
     static channel_t* rox_fpa_1k_Addr;
     static channel_t* rox_250_fpa_Addr;
@@ -169,7 +170,6 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(diode_4k_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_4K_FILT));
     SET_SCALED_VALUE(diode_vcs2_hx_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_HX));
     SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
-    blast_warn("diode value is %f", labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
     // above are the diodes, below, the ROXes
     SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_FPA_1K));
     /* SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
