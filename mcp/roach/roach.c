@@ -27,6 +27,7 @@
 #include <complex.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -65,6 +66,7 @@
 #include "phenom/memory.h"
 
 #define DDS_SHIFT 305
+#define FFT_SHIFT 31
 #define WRITE_INT_TIMEOUT 1000
 #define UPLOAD_TIMEOUT 20000
 #define QDR_TIMEOUT 20000
@@ -72,8 +74,8 @@
 #define FPGA_SAMP_FREQ 256.0e6
 #define DAC_SAMP_FREQ 512.0e6
 #define DAC_FREQ_RES (2 * DAC_SAMP_FREQ / LUT_BUFFER_LEN)
+#define TELNET_PORT 23
 
-// static double DAC_SAMP_FREQ = 512.0e6;
 static int fft_len = 1024;
 static uint32_t accum_len = (1 << 19) - 1;
 // Test frequencies for troubleshooting (arbitrary values)
@@ -91,6 +93,8 @@ const char test_fpg[] = "/data/etc/blast/blast_varlpf_2016_Oct_18_1740.fpg";
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
 // static ph_thread_t *roach_state = NULL;
+uint8_t m_buf1[12] = {CMD, WONT, 24, CMD, WONT, 32, CMD, WONT, 35, CMD, WONT, 39};
+uint8_t m_buf2[15] = {CMD, DO, 3, CMD, WONT, 1, CMD, WONT, 31, CMD, DO, 5, CMD, WONT, 33};
 
 static void roach_buffer_ntohs(uint16_t *m_buffer, size_t m_len)
 {
@@ -419,7 +423,7 @@ void roach_write_QDR(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 
 void roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
-	blast_info("ROACH%d, Allocating memory for tone LUTs...", m_roach->which);
+	// blast_info("ROACH%d, Allocating memory for tone LUTs...", m_roach->which);
 	roach_init_DACDDS_LUTs(m_roach, LUT_BUFFER_LEN);
 	// blast_info("Defining DAC LUT, ROACH%d...", m_roach->which);
 	roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
@@ -485,23 +489,23 @@ double roach_read_adc(roach_state_t *m_roach)
 }
 
 /* Adjust attenuators based on ADC rms voltage */
-int set_atten(roach_state_t *m_roach)
-{
-	char ssh_command[FILENAME_MAX];
-	int pre_amp = 20; /* Pre-amp attenuator */
-	int pre_adc = 20; /* Pre-ADC attenuator */
-	// int lower = 0.0;
-	int upper = 0.0;
-	double rms_voltage = roach_read_adc(m_roach);
-	while (rms_voltage < upper) {
-		pre_amp += 1;
-		/* Make sure the order of attenuators is correct here */
-		snprintf(ssh_command, sizeof(ssh_command), "python ~/init_attenuators.py %d %d \n", pre_amp, pre_adc);
-		fputs(ssh_command, bb_state_table[m_roach->which - 1].bb_ssh_pipe);
-		double rms_voltage = roach_read_adc(m_roach);
-	}
-	return 0;
-}
+// int set_atten(roach_state_t *m_roach)
+// {
+// 	char ssh_command[FILENAME_MAX];
+// 	int pre_amp = 20; /* Pre-amp attenuator */
+// 	int pre_adc = 20; /* Pre-ADC attenuator */
+// 	// int lower = 0.0;
+// 	int upper = 0.0;
+// 	double rms_voltage = roach_read_adc(m_roach);
+// 	while (rms_voltage < upper) {
+// 		pre_amp += 1;
+// 		/* Make sure the order of attenuators is correct here */
+// 		snprintf(ssh_command, sizeof(ssh_command), "python ~/init_attenuators.py %d %d \n", pre_amp, pre_adc);
+// 		fputs(ssh_command, bb_state_table[m_roach->which - 1].bb_ssh_pipe);
+// 		double rms_voltage = roach_read_adc(m_roach);
+// 	}
+// 	return 0;
+// }
 
 // static int roach_save_1d(const char *m_filename, void *m_data, size_t m_element_size, size_t m_len)
 // {
@@ -665,45 +669,117 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 	fputs("python ~/device_control/set_lo.py 750\n", bb_state_table[m_roach->which - 1].bb_ssh_pipe);
 }*/
 
-int init_beaglebone(int m_roach_index)
+int bb_read(bb_state_t *m_bb)
 {
-	// memset(bb_state_table, 0, sizeof(bb_state_t) * NUM_ROACHES);
-	// TODO(laura/sam): this doesn't trigger failure when the ssh_command fails.  Fix this!
-	asprintf(&bb_state_table[m_roach_index].address, "beaglebone%d", m_roach_index + 1);
-	char ssh_command[FILENAME_MAX];
-	/* Open SSH pipe for access to Beaglebone devices */
-	snprintf(ssh_command, sizeof(ssh_command), "ssh -t -t root@%s", bb_state_table[m_roach_index].address);
-	blast_info("Opening SSH pipe to %s...", bb_state_table[m_roach_index].address);
-	blast_info("ssh command is: %s", ssh_command);
-	bb_state_table[m_roach_index].bb_ssh_pipe = popen(ssh_command, "w");
-	if ((bb_state_table[m_roach_index].bb_ssh_pipe) == NULL) {
-		blast_err("Could not open SSH pipe to Beaglebone%d: %s", m_roach_index + 1, strerror(errno));
-		return -1;
+	uint8_t m_read_buffer[4096];
+	int bytes_read;
+	int retval = -1;
+	while (ph_bufq_len(m_bb->bb_comm->input_buffer)) {
+		size_t m_size = (size_t)ph_bufq_len(m_bb->bb_comm->input_buffer);
+		bytes_read = remote_serial_read_data(m_bb->bb_comm, m_read_buffer, m_size);
+		for (int i = 0; i < bytes_read; i++) {
+		 	// m_output[i] = (char)m_read_buffer[i];
+			blast_info("Read: %i", m_read_buffer[i]);
+		}
+		retval = bytes_read;
+		// blast_info("BB read = %s", m_output);
 	}
-	blast_info("File descriptor returned = %d", fileno(bb_state_table[m_roach_index].bb_ssh_pipe));
-	// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_valon.py\n");
-	// fprintf(bb_state_table[i].bb_ssh_pipe, "python ~/device_control/init_attenuators.py %f\t%f\n", 26., 26.);
-	return 0;
+	blast_info("Read Retval = %i", retval);
+	return retval;
 }
 
-/* int phenom_beaglebone(roach_state_t *m_roach)
+int bb_simple_read(bb_state_t *m_bb)
 {
-	char which_bb[32];
-	snprintf(which_bb, sizeof(which_bb), "beaglebone%d", m_roach->which - 1);
-	// Open phenom socket on port 23
-	ph_result_t test = 0; // Used to test the status of some phenom calls. 0 = OK
-        ph_string_t sockaddr_str;
-        ph_sockaddr_t addr;
-        struct hostent *bb = gethostbyname(which_bb);
-	test = ph_sockaddr_set_from_hostent(&addr, bb);
-	ph_sockaddr_set_port(&addr, 23);
-	ph_socket_t sock = ph_socket_for_addr(&addr, SOCK_DGRAM, PH_SOCK_NONBLOCK);
-        bb_state->bb_socket = sock;
-        // callback function
-	bb_state->bb_socket->callback = bb_process_stream;
-        ph_sock_enable(bb_state->bb_socket, TRUE);
-	return 0;
-} */
+	uint8_t m_read_buffer[4096];
+	int bytes_read;
+	bytes_read = remote_serial_read_data(m_bb->bb_comm, m_read_buffer, 4096);
+	return bytes_read;
+}
+
+int bb_negotiate(bb_state_t *m_bb, uint8_t *m_buf, int m_size)
+{
+	int retval = -1;
+	int bytes_wrote;
+	blast_info("Size of m_buf = %d", m_size);
+	for (int i = 0; i < m_size; i ++) {
+		blast_info("Sending: %i", m_buf[i]);
+		bytes_wrote = remote_serial_write_data(m_bb->bb_comm, &m_buf[i], 1);
+		if (!bytes_wrote) return retval;
+		if (bytes_wrote) {
+		retval = bytes_wrote;
+	        blast_info("Wrote %i bytes", bytes_wrote);
+		}
+	}
+	usleep(3000);
+	return retval;
+}
+
+/* int bb_negotiate(bb_state_t *m_bb)
+{
+    #define CMD_WINDOW_SIZE 31
+    uint8_t buf[4096];
+    size_t len;
+    int retval = -1;
+    int bytes_wrote;
+    while (ph_bufq_len(m_bb->bb_comm->input_buffer)) {
+    	size_t m_size = (size_t)ph_bufq_len(m_bb->bb_comm->input_buffer);
+	len = remote_serial_read_data(m_bb->bb_comm, buf, m_size);
+    	for (int i = 0; i < len; i++) {
+		blast_info("Read: %i", buf[i]);
+        }
+    }
+    if (buf[1] == DO && buf[2] == CMD_WINDOW_SIZE) {
+        uint8_t tmp1[10] = {255, 251, 31};
+	bytes_wrote = remote_serial_write_data(m_bb->bb_comm, tmp1, 3);
+	if (!bytes_wrote) return retval;
+	if (bytes_wrote) {
+		retval = bytes_wrote;
+	        blast_info("Wrote %i bytes", bytes_wrote);
+	}
+        uint8_t tmp2[10] = {255, 250, 31, 0, 80, 0, 24, 255, 240};
+	bytes_wrote = remote_serial_write_data(m_bb->bb_comm, tmp2, 9);
+	if (!bytes_wrote) return retval;
+	if (bytes_wrote) {
+		retval = bytes_wrote;
+	        blast_info("Wrote %i bytes", bytes_wrote);
+	}
+    }
+    for (size_t i = 0; i < len; i++) {
+        if (buf[i] == DO)
+            buf[i] = WONT;
+        else if (buf[i] == WILL)
+            buf[i] = DO;
+    }
+	bytes_wrote = remote_serial_write_data(m_bb->bb_comm, buf, len);
+	if (!bytes_wrote) return retval;
+	if (bytes_wrote) {
+		retval = bytes_wrote;
+	        blast_info("Wrote %i bytes", bytes_wrote);
+	}
+}*/
+
+int bb_write_string(bb_state_t *m_bb, uint8_t *m_data, size_t m_len)
+{
+	int bytes_wrote;
+	int retval = -1;
+	bytes_wrote = remote_serial_write_data(m_bb->bb_comm, m_data, m_len);
+	if (!bytes_wrote) {
+		return retval;
+	} else { retval = bytes_wrote;
+	        blast_info("Wrote %i bytes", bytes_wrote);
+	        return retval;
+	}
+}
+
+int bb_login(bb_state_t *m_bb)
+{
+	int retval = -1;
+	unsigned char m_login[4096] = "debian\ntemppwd\n\r";
+	if (bb_write_string(m_bb, m_login, sizeof(m_login))) {
+		retval = 1;
+	}
+	return retval;
+}
 
 void get_targ_freqs(roach_state_t *m_roach)
 {
@@ -737,7 +813,6 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 {
 	/*type = {0:VNA, 1:TARG} */
 	/* Open SSH pipe to beaglebone */
-	// init_beaglebone(m_roach->which - 1);
 	double m_span;
 	double m_center_freq;
 	double m_freq_step = 2.5e3;
@@ -804,7 +879,7 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 	double m_min_freq = m_center_freq - (m_span/2);
 	double m_max_freq = m_center_freq + (m_span/2);
 	size_t m_num_sweep_freqs = (m_max_freq - m_min_freq) / m_freq_step;
-	char ssh_command[FILENAME_MAX];
+	uint8_t lo_command[100]; /* BB command */
 	double *m_sweep_freqs = calloc(m_num_sweep_freqs, sizeof(double));
 	m_sweep_freqs[0] = m_min_freq;
 	for (size_t i = 1; i < m_num_sweep_freqs; i++) {
@@ -822,15 +897,16 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 	/* Sweep and save data */
 	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
 		m_roach->lo_freq_req =  m_sweep_freqs[i]/1.0e6;
-		snprintf(ssh_command, sizeof(ssh_command), "python ~/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
-		fputs(ssh_command, bb_state_table[m_roach->which - 1].bb_ssh_pipe);
-		blast_info("LO @ %g\n", m_sweep_freqs[i]/1.0e6);
+		snprintf(lo_command, sizeof(lo_command), "python ~/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
+		// blast_info("Attempting to write lo commmand...");
+	 	// blast_info("Socket connected = %i, Which = %i", m_bb->connected, m_bb->which);
+		// remote_serial_write_data(m_bb, lo_command, sizeof(lo_command));
 		roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_sweep_save_path);
+		// m_read_buffer = ntohs(m_read_buffer);
+		// blast_info("%s", m_read_buffer);
 	}
-    m_roach->lo_freq_req =  750.0;
-	fputs("python ~/device_control/set_lo.py 750\n", bb_state_table[m_roach->which - 1].bb_ssh_pipe);
+        // m_roach->lo_freq_req =  750.0;
 	free(m_sweep_freqs);
-	// pclose(bb_state_table[m_roach->which - 1].bb_ssh_pipe);
 }
 
 /** Phenom/Callback functions to upload firmware**/
@@ -983,10 +1059,9 @@ void shutdown_roaches(void)
 		if (roach_state_table[i].katcp_fd > 0) {
 			destroy_rpc_katcl(roach_state_table[i].katcp_fd);
 			blast_info("Closing KATCP on ROACH%d", i + 1);
-			blast_info("Closing BeagleBone pipe on ROACH%d", i + 1);
-			pclose(bb_state_table[i].bb_ssh_pipe);
-			// pclose(bb_state_table[i].bb_telnet1_pipe);
-			// pclose(bb_state_table[i].bb_telnet2_pipe);
+            		ph_sock_shutdown(bb_state_table[i].bb_comm->sock, PH_SOCK_SHUT_RDWR);
+            		ph_sock_enable(bb_state_table[i].bb_comm->sock, false);
+            		ph_sock_free(bb_state_table[i].bb_comm->sock);
 		}
 	}
 }
@@ -998,6 +1073,8 @@ void *roach_cmd_loop(void)
 	nameThread(tname);
 	blast_info("Starting Roach Commanding Thread");
 	for (int i = 0; i < NUM_ROACHES; i++) {
+		bb_state_table[i].status = BB_STATUS_BOOT;
+		bb_state_table[i].desired_status = BB_STATUS_INIT;
 		roach_state_table[i].status = ROACH_STATUS_BOOT;
 		roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
 	}
@@ -1011,6 +1088,37 @@ void *roach_cmd_loop(void)
                 CommandData.roach[i].change_state = 0;
 		    }
 		// for (int i = 0; i < NUM_ROACHES; i++) {
+			if (bb_state_table[i].status == BB_STATUS_BOOT && bb_state_table[i].desired_status > BB_STATUS_BOOT) {
+				blast_info("Initializing BB%d ...", i + 1);
+				bb_state_table[i].bb_comm = remote_serial_init(i, TELNET_PORT);
+				while (!bb_state_table[i].bb_comm->connected) {
+				usleep(3000);
+			}
+				blast_info("BB%d negotiating ...", i + 1);
+				while (bb_read(&bb_state_table[i]) <= 0) {
+				sleep(3);
+			}
+				bb_negotiate(&bb_state_table[i], m_buf1, 12);
+				while (bb_read(&bb_state_table[i]) <= 0) {
+				sleep(10);
+			}
+				bb_negotiate(&bb_state_table[i], m_buf2, 15);
+				blast_info("Waiting for login...");
+				while (bb_read(&bb_state_table[i]) <= 0) {
+				sleep(10);
+			}
+				blast_info("Should have received login");
+				bb_state_table[i].status = BB_STATUS_INIT;
+				bb_state_table[i].desired_status = BB_STATUS_LOGIN;
+			}
+			if (bb_state_table[i].status == BB_STATUS_INIT && bb_state_table[i].desired_status >= BB_STATUS_LOGIN) {
+				while (bb_read(&bb_state_table[i]) <= 0) {
+				sleep(5);
+			}
+				// bb_login(&bb_state_table[i]);
+				bb_state_table[i].status = BB_STATUS_LOGIN;
+				bb_state_table[i].desired_status = BB_STATUS_RUNNING;
+			}
 			if (roach_state_table[i].status == ROACH_STATUS_BOOT && roach_state_table[i].desired_status > ROACH_STATUS_BOOT) {
 				blast_info("Attempting to connect to %s", roach_state_table[i].address);
 				roach_state_table[i].katcp_fd = net_connect(roach_state_table[i].address,
@@ -1035,7 +1143,7 @@ void *roach_cmd_loop(void)
 				blast_info("ROACH%d, Configuring software registers...", i + 1);
 				roach_write_int(&roach_state_table[i], "dds_shift", DDS_SHIFT, 0);/* DDS LUT shift, in clock cycles */
 				roach_read_int(&roach_state_table[i], "dds_shift");
-				roach_write_int(&roach_state_table[i], "fft_shift", 31, 0);/* FFT shift schedule */
+				roach_write_int(&roach_state_table[i], "fft_shift", FFT_SHIFT, 0);/* FFT shift schedule */
 				roach_read_int(&roach_state_table[i], "fft_shift");
 				roach_write_int(&roach_state_table[i], "sync_accum_len", accum_len, 0);/* Number of accumulations */
 				roach_read_int(&roach_state_table[i], "sync_accum_len");
@@ -1065,10 +1173,10 @@ void *roach_cmd_loop(void)
 			}
 			if (roach_state_table[i].status == ROACH_STATUS_CALIBRATED &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_TONE) {
-				blast_info("ROACH%d, Generating VNA comb", i + 1);
+				blast_info("ROACH%d, Generating search comb...", i + 1);
 				roach_vna_comb(&roach_state_table[i]);
 				roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb, roach_state_table[i].freqlen);
-				blast_info("ROACH%d, VNA comb uploaded", i + 1);
+				blast_info("ROACH%d, Search comb uploaded", i + 1);
 				roach_state_table[i].status = ROACH_STATUS_TONE;
 				roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
 			}
@@ -1083,15 +1191,15 @@ void *roach_cmd_loop(void)
 			}
 			if (roach_state_table[i].status == ROACH_STATUS_STREAMING &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_ATTENUATION) {
-				blast_info("ROACH%d, Setting Attenuators...", i + 1);
-				roach_read_adc(&roach_state_table[i]);
-				set_atten(&roach_state_table[i]); /* Set attenuators based on ADC voltage */
+				// blast_info("ROACH%d, Setting Attenuators...", i + 1);
+				// roach_read_adc(&roach_state_table[i]);
+				// set_atten(&roach_state_table[i]); /* Set attenuators based on ADC voltage */
 				roach_state_table[i].status = ROACH_STATUS_ATTENUATION;
 				roach_state_table[i].desired_status = ROACH_STATUS_VNA;
 			}
 			if (roach_state_table[i].status == ROACH_STATUS_ATTENUATION &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_VNA) {
-				init_beaglebone(i);
+				blast_info("Initializing Beaglebone%d socket...", i + 1);
 				blast_info("ROACH%d, Waiting for VNA sweep", i + 1);
 				blast_info("ROACH%d, Starting VNA sweep...", i + 1);
 				roach_do_sweep(&roach_state_table[i], 0);
@@ -1127,7 +1235,6 @@ void *roach_cmd_loop(void)
 int init_roach(void)
 {
     memset(roach_state_table, 0, sizeof(roach_state_t) * NUM_ROACHES);
-    /* Initialize Beaglebones */
     memset(bb_state_table, 0, sizeof(bb_state_t) * NUM_ROACHES);
     for (int i = 0; i < NUM_ROACHES; i++) {
     	 asprintf(&roach_state_table[i].address, "roach%d", i + 1);

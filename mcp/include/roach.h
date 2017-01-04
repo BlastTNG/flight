@@ -32,6 +32,7 @@
 #include <math.h>
 #include "phenom/socket.h"
 #include "phenom/buffer.h"
+#include "remote_serial.h"
 
 #define ROACH_UDP_CRC_ERR 0x01
 #define ROACH_UDP_SEQ_ERR 0x02
@@ -64,6 +65,13 @@ typedef enum {
     ROACH_STATUS_TARG,
     ROACH_STATUS_ACQUIRING,
 } e_roach_status;
+
+typedef enum {
+    BB_STATUS_BOOT = 0,
+    BB_STATUS_INIT,
+    BB_STATUS_LOGIN,
+    BB_STATUS_RUNNING,
+} e_bb_status;
 
 typedef enum {
     ROACH_UPLOAD_RESULT_WORKING = 0,
@@ -123,10 +131,9 @@ typedef struct roach_state {
 } roach_state_t;
 
 typedef struct bb_state {
-    ph_sock_t *bb_socket;
-    ph_socket_t udp_socket_fd;
-    const char *address;
-    FILE *bb_ssh_pipe;
+    e_bb_status status;
+    e_bb_status desired_status;
+    remote_serial_t *bb_comm;
 } bb_state_t;
 
 typedef struct {
