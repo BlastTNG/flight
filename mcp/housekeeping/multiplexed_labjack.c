@@ -84,14 +84,14 @@
 
 
 // Maximum number of addresses that can be targeted in stream mode.
-#define MAX_NUM_ADDRESSES 512
+#define MAX_NUM_ADDRESSES 2048
 
 // For now we only have one cyro readout Labjack
 // TODO(laura): Integrate PSS and OF Labjacks
-#define NUM_MLABJACKS 2
+#define NUM_MLABJACKS 1
 
 // Max Number of Analog Inputs
-#define NUM_MLABJACK_AIN 14
+#define NUM_MLABJACK_AIN 84
 
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
@@ -177,7 +177,7 @@ typedef struct {
     uint16_t calibration_read;
 
     float DAC[2];
-    float AIN[14]; // Analog input channels read from Labjack
+    float AIN[84]; // Analog input channels read from Labjack
 
     uint32_t backoff_sec;
     struct timeval timeout;
@@ -205,18 +205,10 @@ typedef struct {
 static labjack_state_t mult_state[NUM_MLABJACKS] = {
     {
         .which = 0,
-        .address = "labjack3",
-        .port = LJ_DATA_PORT,
-        .DAC = {0, 0},
-        .channel_postfix = "_of_labjack1",
-        .have_warned_write_reg = 0
-    },
-    {
-        .which = 1,
         .address = "labjack4",
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
-        .channel_postfix = "_of_labjack2",
+        .channel_postfix = "_mult_labjack1",
         .have_warned_write_reg = 0
     }
 };
@@ -261,6 +253,30 @@ float mult_labjack_get_value(int m_labjack, int m_channel)
     return mult_state[m_labjack].AIN[m_channel];
 }
 
+void query_mult(int m_labjack, int m_channel) {
+    uint16_t data[2] = {0};
+    uint32_t time_up;
+    int ret;
+    static int max_tries = 10;
+    ret = modbus_read_registers(mult_state[m_labjack].cmd_mb, m_channel*2, 2, data);
+    if (ret < 0) {
+        blast_warn("read failed");
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_read_registers(mult_state[m_labjack].cmd_mb, m_channel*2, 2, data);
+            if (ret > 0) {
+                time_up = data[1] + (data[0] << 16);
+                blast_warn("the register has value %u for 1, %u for 0", data[1], data[0]);
+            }
+        }
+    } else {
+        time_up = data[1] + (data[0] << 16);
+        blast_warn("the register has value %u for 1, %u for 0", data[1], data[0]);
+    }
+}
+
 int mult_labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
                              const uint32_t *m_scan_addresses, const uint16_t *m_chan_list,
                              const float *m_range_list)
@@ -279,18 +295,34 @@ int mult_labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddres
     for (i = 0; i < m_numaddresses; i++) {
         // Setting AIN range.
         // Starting address is 40000 (AIN0_RANGE).
-        modbus_set_float(m_range_list[i], data);
-        if ((ret = modbus_write_registers(m_state->cmd_mb, 40000 + m_scan_addresses[i], 2, data)) < 0) {
-            blast_err("Could not set AIN registers!");
-            return ret;
-        }
+        if (i < 4) {
+            modbus_set_float(m_range_list[i], data);
+            if ((ret = modbus_write_registers(m_state->cmd_mb, 40000 + m_scan_addresses[i], 2, data)) < 0) {
+                blast_err("Could not set AIN registers!");
+                return ret;
+            }
 
-        // Setting AIN negative channel.
-        // Starting address is 41000 (AIN0_NEGATIVE_CH).
-        if ((ret = modbus_write_register(m_state->cmd_mb, 41000 + m_scan_addresses[i] / 2,
-                                         htons(m_chan_list[i]))) < 0) {
-            blast_err("Could not set negative registers");
-            return ret;
+            // Setting AIN negative channel.
+            // Starting address is 41000 (AIN0_NEGATIVE_CH).
+            if ((ret = modbus_write_register(m_state->cmd_mb, 41000 + m_scan_addresses[i] / 2,
+                                             htons(m_chan_list[i]))) < 0) {
+                blast_err("Could not set negative registers");
+                return ret;
+            }
+        } else {
+            modbus_set_float(m_range_list[i], data);
+            if ((ret = modbus_write_registers(m_state->cmd_mb, 40000 + m_scan_addresses[i] + 88, 2, data)) < 0) {
+                blast_err("Could not set AIN registers!");
+                return ret;
+            }
+
+            // Setting AIN negative channel.
+            // Starting address is 41000 (AIN0_NEGATIVE_CH).
+            if ((ret = modbus_write_register(m_state->cmd_mb, 41000 + m_scan_addresses[i] / 2 + 44,
+                                             htons(m_chan_list[i]))) < 0) {
+                blast_err("Could not set negative registers");
+                return ret;
+            }
         }
     }
     return 0;
@@ -505,50 +537,90 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
 
     // Using a loop to add Modbus addresses for AIN0 - AIN(NUM_ADDRESSES-1) to the
     // stream scan and configure the analog input settings.
-    for (int i = 0; i < numAddresses; i++) {
-        scanListAddresses[i] = i*2; // AIN(i) (Modbus address i*2)
-        nChanList[i] = 199; // Negative channel is 199 (single ended)
-        rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
-        mult_labjack_set_short(scanListAddresses[i], data);
-        if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANLIST_ADDRESS_ADDR + i*2, 2, data)) < 0) {
-            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
-            if (!m_state->have_warned_write_reg) {
-                blast_err("Could not set scan address %d: %s. Data sent [0]=%d, [1]=%d",
-                          scanListAddresses[i], modbus_strerror(errno), data[0], data[1]);
-                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+    for (int i = 0; i < 84; i++) {
+        if ((i == 0 || i == 1 || i == 2 || i == 3)) {
+            scanListAddresses[i] = i*2; // AIN(i) (Modbus address i*2)
+            nChanList[i] = 199; // Negative channel is 199 (single ended)
+            rangeList[i] = 0.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
+            labjack_set_short(scanListAddresses[i], data);
+            if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANLIST_ADDRESS_ADDR + i*2, 2, data)) < 0) {
+                ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+                if (!m_state->have_warned_write_reg) {
+                    blast_err("Could not set scan address %d: %s. Data sent [0]=%d, [1]=%d",
+                              scanListAddresses[i], modbus_strerror(errno), data[0], data[1]);
+                    if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+                }
+                m_state->has_comm_stream_error = 1;
+                m_state->have_warned_write_reg = 1;
+                return;
             }
-            m_state->has_comm_stream_error = 1;
-            m_state->have_warned_write_reg = 1;
-            return;
-        }
-        mult_labjack_set_float(rangeList[i], data);
-        if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_RANGE_ADDR + i*2, 2, data)) < 0) {
-            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
-            if (!m_state->have_warned_write_reg) {
-                blast_err("Could not set %d-th AIN range: %s. Data sent [0]=%d, [1]=%d",
-                          i, modbus_strerror(errno), data[0], data[1]);
-                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+            labjack_set_float(rangeList[i], data);
+            if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_RANGE_ADDR + i*2, 2, data)) < 0) {
+                ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+                if (!m_state->have_warned_write_reg) {
+                    blast_err("Could not set %d-th AIN range: %s. Data sent [0]=%d, [1]=%d",
+                              i, modbus_strerror(errno), data[0], data[1]);
+                    if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+                }
+                m_state->has_comm_stream_error = 1;
+                m_state->have_warned_write_reg = 1;
+                return;
             }
-            m_state->has_comm_stream_error = 1;
-            m_state->have_warned_write_reg = 1;
-            return;
-        }
-        if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_NEGATIVE_CH_ADDR + i, 1, nChanList+i)) < 0) {
-            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
-            if (!m_state->have_warned_write_reg) {
-                blast_err("Could not set %d-th AIN negative channel: %s. Data sent %d",
-                          i, modbus_strerror(errno), nChanList[i]);
-                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+            if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_NEGATIVE_CH_ADDR + i, 1, nChanList+i)) < 0) {
+                ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+                if (!m_state->have_warned_write_reg) {
+                    blast_err("Could not set %d-th AIN negative channel: %s. Data sent %d",
+                              i, modbus_strerror(errno), nChanList[i]);
+                    if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+                }
+                m_state->has_comm_stream_error = 1;
+                m_state->have_warned_write_reg = 1;
+                return;
             }
-            m_state->has_comm_stream_error = 1;
-            m_state->have_warned_write_reg = 1;
-            return;
+        } else {
+            scanListAddresses[i] = (i*2 +88); // AIN(i) (Modbus address i*2 + 88 for multiplexed)
+            nChanList[i] = 199; // Negative channel is 199 (single ended)
+            rangeList[i] = 0.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
+            labjack_set_short(scanListAddresses[i], data);
+            if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANLIST_ADDRESS_ADDR + i*2, 2, data)) < 0) {
+                ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+                if (!m_state->have_warned_write_reg) {
+                    blast_err("Could not set scan address %d: %s. Data sent [0]=%d, [1]=%d",
+                              scanListAddresses[i], modbus_strerror(errno), data[0], data[1]);
+                    if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+                }
+                m_state->has_comm_stream_error = 1;
+                m_state->have_warned_write_reg = 1;
+                return;
+            }
+            labjack_set_float(rangeList[i], data);
+            if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_RANGE_ADDR + i*2 + 88, 2, data)) < 0) {
+                ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+                if (!m_state->have_warned_write_reg) {
+                    blast_err("Could not set %d-th AIN range: %s. Data sent [0]=%d, [1]=%d",
+                              i, modbus_strerror(errno), data[0], data[1]);
+                    if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+                }
+                m_state->has_comm_stream_error = 1;
+                m_state->have_warned_write_reg = 1;
+                return;
+            }
+            if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_NEGATIVE_CH_ADDR +i+44, 1, nChanList+i)) < 0) {
+                ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+                if (!m_state->have_warned_write_reg) {
+                    blast_err("Could not set %d-th AIN negative channel: %s. Data sent %d",
+                              i, modbus_strerror(errno), nChanList[i]);
+                    if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
+                }
+                m_state->has_comm_stream_error = 1;
+                m_state->have_warned_write_reg = 1;
+                return;
+            }
         }
     }
-    blast_info("Attempting to enable streaming for outer frame labjack%02d.", m_state->which);
-
+    blast_info("Attempting to enable streaming for labjack%02d.", m_state->which);
     // Last step: enable streaming
-    mult_labjack_set_short(1, data);
+    labjack_set_short(1, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_ENABLE_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
         if (!m_state->have_warned_write_reg) {
@@ -560,7 +632,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         m_state->have_warned_write_reg = 1;
         return;
     }
-    blast_info("Stream configuration commanding completed for outer frame.");
+    blast_info("Stream configuration commanding completed.");
     m_state->has_comm_stream_error = 0;
     m_state->have_warned_write_reg = 0;
     m_state->comm_stream_state = 1;
