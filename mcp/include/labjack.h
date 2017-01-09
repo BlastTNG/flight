@@ -31,6 +31,8 @@
 
 #define LABJACK_CRYO_1 0
 #define LABJACK_CRYO_2 1
+#define LABJACK_OF_1 2
+#define LABJACK_OF_2 3
 #define LABJACK_CRYO_NCHAN 14 // Number of Channels to stream (14 = all analog input channels)
 #define LABJACK_CRYO_SPP 1 // Number of scans to readout per streaming packet
 
@@ -58,6 +60,14 @@
 #define CAL_LAMP_READ 12
 #define HEATER_300MK_READ 13
 #define ROX_FPA_1K 2
+#define ROX_250_FPA 3
+#define ROX_350_FPA 4
+#define ROX_500_FPA 5
+#define ROX_300MK_STRAP 6
+#define ROX_1K_STRAP 7
+#define ROX_HE3_FRIDGE 8
+#define ROX_HE4_POT 9
+
 
 // DIO addresses LJ CRYO 1
 #define LEVEL_SENSOR_COMMAND 2008
@@ -89,8 +99,6 @@
 #define READ_500LNA 2016
 
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
-// TODO(ian): Update these for the thermometers and channels we have.
-#define LJ_R_FPA_1K_IND 2
 
 void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
 float labjack_get_value(int m_labjack, int m_channel);

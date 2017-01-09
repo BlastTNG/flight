@@ -86,11 +86,11 @@
 
 
 // Maximum number of addresses that can be targeted in stream mode.
-#define MAX_NUM_ADDRESSES 512
+#define MAX_NUM_ADDRESSES 1024
 
 // For now we only have one cyro readout Labjack
 // TODO(laura): Integrate PSS and OF Labjacks
-#define NUM_LABJACKS 2
+#define NUM_LABJACKS 4
 
 // Max Number of Analog Inputs
 #define NUM_LABJACK_AIN 14
@@ -222,6 +222,22 @@ static labjack_state_t state[NUM_LABJACKS] = {
           .DAC = {0, 0},
           .channel_postfix = "_cryo_labjack2",
           .have_warned_write_reg = 0
+    },
+    {
+        .which = 2,
+        .address = "labjack3",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_of_labjack1",
+        .have_warned_write_reg = 0
+    },
+    {
+        .which = 3,
+        .address = "labjack4",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_of_labjack2",
+        .have_warned_write_reg = 0
     }
 };
 
