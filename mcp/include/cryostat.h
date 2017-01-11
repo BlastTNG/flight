@@ -7,6 +7,8 @@
 //
 #ifndef INCLUDE_CRYOSTAT_H
 #define INCLUDE_CRYOSTAT_H
+void cal_command(int length);
+void cal_control(void);
 void cryo_control(void);
 void store_100hz_cryo(void);
 void autocycle(void);

@@ -713,7 +713,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     for (int i = 0; i < numAddresses; i++) {
         scanListAddresses[i] = i*2; // AIN(i) (Modbus address i*2)
         nChanList[i] = 199; // Negative channel is 199 (single ended)
-        rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
+        // rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
 	    labjack_set_short(scanListAddresses[i], data);
         if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_SCANLIST_ADDRESS_ADDR + i*2, 2, data)) < 0) {
             ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
@@ -726,7 +726,26 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
             m_state->have_warned_write_reg = 1;
             return;
         }
-	    labjack_set_float(rangeList[i], data);
+        if ((m_state->which == 1)) {
+            rangeList[0] = 0.0;
+            rangeList[1] = 0.0;
+            rangeList[11] = 0.0;
+            rangeList[12] = 0.0;
+            rangeList[13] = 0.0;
+            rangeList[2] = 1.0;
+            rangeList[3] = 1.0;
+            rangeList[4] = 1.0;
+            rangeList[5] = 1.0;
+            rangeList[6] = 1.0;
+            rangeList[7] = 1.0;
+            rangeList[8] = 1.0;
+            rangeList[9] = 1.0;
+            rangeList[10] = 1.0;
+            labjack_set_float(rangeList[i], data);
+        } else {
+            rangeList[i] = 0.0;
+            labjack_set_float(rangeList[i], data);
+        }
         if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_RANGE_ADDR + i*2, 2, data)) < 0) {
             ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
             if (!m_state->have_warned_write_reg) {
@@ -831,11 +850,31 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
     static uint32_t gainList[MAX_NUM_ADDRESSES];
     static labjack_device_cal_t labjack_cal;
     size_t read_buf_size;
-    int ret, i;
+    int ret, i, state_number;
+    state_number = state->which;
 
 	if (!state->calibration_read) {
     // gain index 0 = +/-10V. Used for conversion to volts.
-        for (i = 0; i < state_data->num_channels; i++) gainList[i] = 0;
+        if (state_number) {
+            gainList[0] = 0;
+            gainList[1] = 0;
+            gainList[11] = 0;
+            gainList[12] = 0;
+            gainList[13] = 0;
+            gainList[2] = 1;
+            gainList[3] = 1;
+            gainList[4] = 1;
+            gainList[5] = 1;
+            gainList[6] = 1;
+            gainList[7] = 1;
+            gainList[8] = 1;
+            gainList[9] = 1;
+            gainList[10] = 1;
+        } else {
+            for (i = 0; i < state_data->num_channels; i++) {
+                gainList[i] = 0;
+            }
+        }
         // For now read nominal calibration data (rather than specific calibration data from the device.
         // TODO(laura) fix labjack_get_cal and use that instead
         labjack_get_nominal_cal(state, &labjack_cal);

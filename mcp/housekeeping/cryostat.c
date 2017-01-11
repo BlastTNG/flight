@@ -55,6 +55,7 @@
 static uint16_t heatctrl;
 static uint16_t dio_on = 1;
 static uint16_t dio_off = 0;
+static int cal_length = 0;
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
@@ -63,6 +64,26 @@ void cryo_control(void)
     heatctrl = 0;
     if (CommandData.Cryo.charcoalHeater)
         heatctrl |= HEAT_CHARCOAL;
+}
+void cal_command(int length) {
+    cal_length = length;
+}
+
+void cal_control(void) {
+    int how_long;
+    static int pulsed = 0;
+    if ((how_long = cal_length) > 0) {
+        if (!pulsed) {
+            pulsed = 1;
+            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+        }
+        cal_length--;
+    } else {
+        if (pulsed) {
+            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+            pulsed = 0;
+        }
+    }
 }
 
 void store_100hz_cryo(void)
@@ -89,33 +110,10 @@ void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
 }
 
 void read_thermometers(void) {
-    static int firsttime_therm = 1;
     float test;
-    float test2;
-    float test3, test4, test5, test6, test7, test8;
-    test = mult_labjack_get_value(0, 4);
-    blast_warn("mult 48 is %f", test);
-
-    test2 = mult_labjack_get_value(0, 5);
-    blast_warn("mult 49 is %f", test2);
-    
-    test3 = mult_labjack_get_value(0, 6);
-    blast_warn("mult 50 is %f", test3);
-
-    test4 = mult_labjack_get_value(0, 7);
-    blast_warn("mult 51 is %f", test4);
-
-    test5 = mult_labjack_get_value(0, 8);
-    blast_warn("mult 52 is %f", test5);
-    
-    test6 = mult_labjack_get_value(0, 9);
-    blast_warn("mult 53 is %f", test6);
-    
-    test7 = mult_labjack_get_value(0, 10);
-    blast_warn("mult 54 is %f", test7);
-    
-    test8 = mult_labjack_get_value(0, 11);
-    blast_warn("mult 55 is %f", test8);
+    test = labjack_get_value(LABJACK_CRYO_2, ROX_FPA_1K);
+    blast_warn("floating value is %f", test);
+    static int firsttime_therm = 1;
     static channel_t* rox_fpa_1k_Addr;
     static channel_t* rox_250_fpa_Addr;
     static channel_t* rox_1k_plate_Addr;
