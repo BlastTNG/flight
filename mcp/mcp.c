@@ -540,12 +540,12 @@ int main(int argc, char *argv[])
   labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  mult_labjack_networking_init(0, 84, 1);
+  // mult_labjack_networking_init(0, 84, 1);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);
   initialize_labjack_commands(LABJACK_OF_1);
-  mult_initialize_labjack_commands(0);
+  // mult_initialize_labjack_commands(0);
 
   initialize_CPU_sensors();
 
