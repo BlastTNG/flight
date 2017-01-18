@@ -35,7 +35,7 @@
 
 /*beaglebone addresses*/
 static const char addresses[4][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63", "192.168.40.64"};
-static const uint16_t port = 23; /* telnet port on bb */
+static const uint16_t port = 12345; /* telnet port on bb */
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 extern int16_t InCharge;
@@ -71,12 +71,12 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
     /**
      * If we timeout, send a newline to keep the socket alive
      */
-    if (m_why & PH_IOMASK_TIME) ph_stm_printf(m_sock->stream, "\n");
+//    if (m_why & PH_IOMASK_TIME) ph_stm_printf(m_sock->stream, "\n");
     buflen = ph_bufq_len(m_sock->rbuf);
     blast_info("Read buffer length = %" PRId64, buflen);
     if (buflen) {
         buf = ph_sock_read_bytes_exact(m_sock, buflen);
-	blast_info("Number of bytes read = %" PRId64, ph_buf_len(buf));
+	blast_info("Number of bytes read = %" PRId64" %.*s", ph_buf_len(buf), ph_buf_len(buf), ph_buf_mem(buf));
 	ph_bufq_append(state->input_buffer, ph_buf_mem(buf), ph_buf_len(buf), NULL);
 	blast_info("Input buffer length = %" PRId64, ph_bufq_len(state->input_buffer));
         ph_buf_delref(buf);
@@ -104,7 +104,6 @@ int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t 
     }
 
     ph_stm_write(m_serial->sock->stream, m_data, m_len, &written);
-    ph_stm_flush(m_serial->sock->stream);
     return (int)written;
 }
 
@@ -116,7 +115,6 @@ int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t
 {
     blast_info("Inside read data");
     ph_buf_t *buf;
-    // buf = ph_buf_new(4192);
     int retval = -1;
     blast_info("InCharge = %i", InCharge);
     blast_info("Connected = %d", m_serial->connected);
@@ -138,20 +136,6 @@ int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t
     return retval;
 }
 
-int remote_serial_flush(remote_serial_t *m_serial)
-{
-    ph_buf_t *buf;
-
-    if (!m_serial->connected) return -1;
-
-    buf = ph_bufq_consume_bytes(m_serial->input_buffer, ph_bufq_len(m_serial->input_buffer));
-    ph_buf_delref(buf);
-
-    buf = ph_bufq_consume_bytes(m_serial->sock->rbuf, ph_bufq_len(m_serial->input_buffer));
-    ph_buf_delref(buf);
-
-    return 0;
-}
 /**
  * Handle a connection callback.  The connection may succeed or fail.
  * If it fails, we increase the backoff time and reschedule another attempt.
@@ -199,6 +183,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     state->backoff_sec = min_backoff_sec;
     state->timeout.tv_sec = 10;
     state->timeout.tv_usec = 0;
+    state->sock->timeout_duration.tv_sec = 1;
     state->input_buffer = ph_bufq_new(4192);
     m_sock->callback = remote_serial_process_packet;
     m_sock->job.data = state;

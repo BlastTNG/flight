@@ -74,8 +74,9 @@
 #define FPGA_SAMP_FREQ 256.0e6
 #define DAC_SAMP_FREQ 512.0e6
 #define DAC_FREQ_RES (2 * DAC_SAMP_FREQ / LUT_BUFFER_LEN)
-#define TELNET_PORT 23
+#define NC_PORT 12345
 
+extern int16_t InCharge;
 static int fft_len = 1024;
 static uint32_t accum_len = (1 << 19) - 1;
 // Test frequencies for troubleshooting (arbitrary values)
@@ -95,6 +96,7 @@ static bb_state_t bb_state_table[NUM_ROACHES];
 // static ph_thread_t *roach_state = NULL;
 uint8_t m_buf1[12] = {CMD, WONT, 24, CMD, WONT, 32, CMD, WONT, 35, CMD, WONT, 39};
 uint8_t m_buf2[15] = {CMD, DO, 3, CMD, WONT, 1, CMD, WONT, 31, CMD, DO, 5, CMD, WONT, 33};
+unsigned char nc_login[4096] = "ls";
 
 static void roach_buffer_ntohs(uint16_t *m_buffer, size_t m_len)
 {
@@ -762,6 +764,8 @@ int bb_write_string(bb_state_t *m_bb, uint8_t *m_data, size_t m_len)
 {
 	int bytes_wrote;
 	int retval = -1;
+	m_data[m_len++] = '\n';
+	m_data[m_len] = 0;
 	bytes_wrote = remote_serial_write_data(m_bb->bb_comm, m_data, m_len);
 	if (!bytes_wrote) {
 		return retval;
@@ -1090,15 +1094,20 @@ void *roach_cmd_loop(void)
 		// for (int i = 0; i < NUM_ROACHES; i++) {
 			if (bb_state_table[i].status == BB_STATUS_BOOT && bb_state_table[i].desired_status > BB_STATUS_BOOT) {
 				blast_info("Initializing BB%d ...", i + 1);
-				bb_state_table[i].bb_comm = remote_serial_init(i, TELNET_PORT);
-				while (!bb_state_table[i].bb_comm->connected) {
+				bb_state_table[i].bb_comm = remote_serial_init(i, NC_PORT);
+				while (!bb_state_table[i].bb_comm->connected || !InCharge) {
 				usleep(3000);
 			}
-				blast_info("BB%d negotiating ...", i + 1);
+				bb_write_string(&bb_state_table[i], nc_login, strlen(nc_login));
+				// blast_info("BB%d negotiating ...", i + 1);
 				while (bb_read(&bb_state_table[i]) <= 0) {
 				sleep(3);
 			}
-				bb_negotiate(&bb_state_table[i], m_buf1, 12);
+				bb_write_string(&bb_state_table[i], nc_login, strlen(nc_login));
+				while (bb_read(&bb_state_table[i]) <= 0) {
+				sleep(3);
+			}
+				/* bb_negotiate(&bb_state_table[i], m_buf1, 12);
 				while (bb_read(&bb_state_table[i]) <= 0) {
 				sleep(10);
 			}
@@ -1108,6 +1117,7 @@ void *roach_cmd_loop(void)
 				sleep(10);
 			}
 				blast_info("Should have received login");
+				*/
 				bb_state_table[i].status = BB_STATUS_INIT;
 				bb_state_table[i].desired_status = BB_STATUS_LOGIN;
 			}
