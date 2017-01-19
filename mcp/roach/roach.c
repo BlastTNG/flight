@@ -94,9 +94,10 @@ const char test_fpg[] = "/data/etc/blast/blast_varlpf_2016_Oct_18_1740.fpg";
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
 // static ph_thread_t *roach_state = NULL;
-uint8_t m_buf1[12] = {CMD, WONT, 24, CMD, WONT, 32, CMD, WONT, 35, CMD, WONT, 39};
-uint8_t m_buf2[15] = {CMD, DO, 3, CMD, WONT, 1, CMD, WONT, 31, CMD, DO, 5, CMD, WONT, 33};
-unsigned char nc_login[4096] = "ls";
+unsigned char py_path[] = "/root/device_control/";
+unsigned char atten_init[] = "python /root/device_control/init_attenuators.py 30 30";
+unsigned char valon_init[] = "python /root/device_control/init_valon.py";
+unsigned char read_valon[] = "python /root/device_control/read_valon.py";
 
 static void roach_buffer_ntohs(uint16_t *m_buffer, size_t m_len)
 {
@@ -671,94 +672,20 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 	fputs("python ~/device_control/set_lo.py 750\n", bb_state_table[m_roach->which - 1].bb_ssh_pipe);
 }*/
 
-int bb_read(bb_state_t *m_bb)
+int bb_read_string(bb_state_t *m_bb)
 {
-	uint8_t m_read_buffer[4096];
+	unsigned char m_read_buffer[4096];
 	int bytes_read;
 	int retval = -1;
 	while (ph_bufq_len(m_bb->bb_comm->input_buffer)) {
 		size_t m_size = (size_t)ph_bufq_len(m_bb->bb_comm->input_buffer);
 		bytes_read = remote_serial_read_data(m_bb->bb_comm, m_read_buffer, m_size);
-		for (int i = 0; i < bytes_read; i++) {
-		 	// m_output[i] = (char)m_read_buffer[i];
-			blast_info("Read: %i", m_read_buffer[i]);
-		}
+		blast_info("BB%d: %s", m_bb->which, m_read_buffer);
 		retval = bytes_read;
-		// blast_info("BB read = %s", m_output);
 	}
-	blast_info("Read Retval = %i", retval);
+	// blast_info("Read Retval = %i", retval);
 	return retval;
 }
-
-int bb_simple_read(bb_state_t *m_bb)
-{
-	uint8_t m_read_buffer[4096];
-	int bytes_read;
-	bytes_read = remote_serial_read_data(m_bb->bb_comm, m_read_buffer, 4096);
-	return bytes_read;
-}
-
-int bb_negotiate(bb_state_t *m_bb, uint8_t *m_buf, int m_size)
-{
-	int retval = -1;
-	int bytes_wrote;
-	blast_info("Size of m_buf = %d", m_size);
-	for (int i = 0; i < m_size; i ++) {
-		blast_info("Sending: %i", m_buf[i]);
-		bytes_wrote = remote_serial_write_data(m_bb->bb_comm, &m_buf[i], 1);
-		if (!bytes_wrote) return retval;
-		if (bytes_wrote) {
-		retval = bytes_wrote;
-	        blast_info("Wrote %i bytes", bytes_wrote);
-		}
-	}
-	usleep(3000);
-	return retval;
-}
-
-/* int bb_negotiate(bb_state_t *m_bb)
-{
-    #define CMD_WINDOW_SIZE 31
-    uint8_t buf[4096];
-    size_t len;
-    int retval = -1;
-    int bytes_wrote;
-    while (ph_bufq_len(m_bb->bb_comm->input_buffer)) {
-    	size_t m_size = (size_t)ph_bufq_len(m_bb->bb_comm->input_buffer);
-	len = remote_serial_read_data(m_bb->bb_comm, buf, m_size);
-    	for (int i = 0; i < len; i++) {
-		blast_info("Read: %i", buf[i]);
-        }
-    }
-    if (buf[1] == DO && buf[2] == CMD_WINDOW_SIZE) {
-        uint8_t tmp1[10] = {255, 251, 31};
-	bytes_wrote = remote_serial_write_data(m_bb->bb_comm, tmp1, 3);
-	if (!bytes_wrote) return retval;
-	if (bytes_wrote) {
-		retval = bytes_wrote;
-	        blast_info("Wrote %i bytes", bytes_wrote);
-	}
-        uint8_t tmp2[10] = {255, 250, 31, 0, 80, 0, 24, 255, 240};
-	bytes_wrote = remote_serial_write_data(m_bb->bb_comm, tmp2, 9);
-	if (!bytes_wrote) return retval;
-	if (bytes_wrote) {
-		retval = bytes_wrote;
-	        blast_info("Wrote %i bytes", bytes_wrote);
-	}
-    }
-    for (size_t i = 0; i < len; i++) {
-        if (buf[i] == DO)
-            buf[i] = WONT;
-        else if (buf[i] == WILL)
-            buf[i] = DO;
-    }
-	bytes_wrote = remote_serial_write_data(m_bb->bb_comm, buf, len);
-	if (!bytes_wrote) return retval;
-	if (bytes_wrote) {
-		retval = bytes_wrote;
-	        blast_info("Wrote %i bytes", bytes_wrote);
-	}
-}*/
 
 int bb_write_string(bb_state_t *m_bb, uint8_t *m_data, size_t m_len)
 {
@@ -770,19 +697,9 @@ int bb_write_string(bb_state_t *m_bb, uint8_t *m_data, size_t m_len)
 	if (!bytes_wrote) {
 		return retval;
 	} else { retval = bytes_wrote;
-	        blast_info("Wrote %i bytes", bytes_wrote);
+	        // blast_info("Wrote %i bytes", bytes_wrote);
 	        return retval;
 	}
-}
-
-int bb_login(bb_state_t *m_bb)
-{
-	int retval = -1;
-	unsigned char m_login[4096] = "debian\ntemppwd\n\r";
-	if (bb_write_string(m_bb, m_login, sizeof(m_login))) {
-		retval = 1;
-	}
-	return retval;
 }
 
 void get_targ_freqs(roach_state_t *m_roach)
@@ -816,7 +733,6 @@ void get_targ_freqs(roach_state_t *m_roach)
 void roach_do_sweep(roach_state_t *m_roach, int type)
 {
 	/*type = {0:VNA, 1:TARG} */
-	/* Open SSH pipe to beaglebone */
 	double m_span;
 	double m_center_freq;
 	double m_freq_step = 2.5e3;
@@ -883,7 +799,7 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 	double m_min_freq = m_center_freq - (m_span/2);
 	double m_max_freq = m_center_freq + (m_span/2);
 	size_t m_num_sweep_freqs = (m_max_freq - m_min_freq) / m_freq_step;
-	uint8_t lo_command[100]; /* BB command */
+	unsigned char *lo_command; /* BB command */
 	double *m_sweep_freqs = calloc(m_num_sweep_freqs, sizeof(double));
 	m_sweep_freqs[0] = m_min_freq;
 	for (size_t i = 1; i < m_num_sweep_freqs; i++) {
@@ -901,15 +817,14 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 	/* Sweep and save data */
 	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
 		m_roach->lo_freq_req =  m_sweep_freqs[i]/1.0e6;
-		snprintf(lo_command, sizeof(lo_command), "python ~/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
-		// blast_info("Attempting to write lo commmand...");
-	 	// blast_info("Socket connected = %i, Which = %i", m_bb->connected, m_bb->which);
-		// remote_serial_write_data(m_bb, lo_command, sizeof(lo_command));
-		roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_sweep_save_path);
-		// m_read_buffer = ntohs(m_read_buffer);
-		// blast_info("%s", m_read_buffer);
+		asprintf(&lo_command, "python /root/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
+		bb_write_string(&bb_state_table[m_roach->which - 1], lo_command, strlen(lo_command));
+		while (bb_read_string(&bb_state_table[m_roach->which -1]) <= 0) {
+				sleep(3);
+		}
+		// roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_sweep_save_path);
 	}
-        // m_roach->lo_freq_req =  750.0;
+        // m_roach->lo_freq_req = 750.0;
 	free(m_sweep_freqs);
 }
 
@@ -1094,41 +1009,27 @@ void *roach_cmd_loop(void)
 		// for (int i = 0; i < NUM_ROACHES; i++) {
 			if (bb_state_table[i].status == BB_STATUS_BOOT && bb_state_table[i].desired_status > BB_STATUS_BOOT) {
 				blast_info("Initializing BB%d ...", i + 1);
+				bb_state_table[i].which = i + 1;
 				bb_state_table[i].bb_comm = remote_serial_init(i, NC_PORT);
 				while (!bb_state_table[i].bb_comm->connected || !InCharge) {
 				usleep(3000);
 			}
-				bb_write_string(&bb_state_table[i], nc_login, strlen(nc_login));
-				// blast_info("BB%d negotiating ...", i + 1);
-				while (bb_read(&bb_state_table[i]) <= 0) {
+				blast_info("BB%d Initialized", i + 1);
+				blast_info("Initializing Valon%d...", i + 1);
+				bb_write_string(&bb_state_table[i], valon_init, strlen(valon_init));
+				bb_write_string(&bb_state_table[i], read_valon, strlen(read_valon));
+				while (bb_read_string(&bb_state_table[i]) <= 0) {
 				sleep(3);
 			}
-				bb_write_string(&bb_state_table[i], nc_login, strlen(nc_login));
-				while (bb_read(&bb_state_table[i]) <= 0) {
+				blast_info("Initializing BB%d RUDATs...", i + 1);
+				bb_write_string(&bb_state_table[i], atten_init, strlen(atten_init));
+				while (bb_read_string(&bb_state_table[i]) <= 0) {
 				sleep(3);
 			}
-				/* bb_negotiate(&bb_state_table[i], m_buf1, 12);
-				while (bb_read(&bb_state_table[i]) <= 0) {
-				sleep(10);
-			}
-				bb_negotiate(&bb_state_table[i], m_buf2, 15);
-				blast_info("Waiting for login...");
-				while (bb_read(&bb_state_table[i]) <= 0) {
-				sleep(10);
-			}
-				blast_info("Should have received login");
-				*/
 				bb_state_table[i].status = BB_STATUS_INIT;
-				bb_state_table[i].desired_status = BB_STATUS_LOGIN;
-			}
-			if (bb_state_table[i].status == BB_STATUS_INIT && bb_state_table[i].desired_status >= BB_STATUS_LOGIN) {
-				while (bb_read(&bb_state_table[i]) <= 0) {
-				sleep(5);
-			}
-				// bb_login(&bb_state_table[i]);
-				bb_state_table[i].status = BB_STATUS_LOGIN;
 				bb_state_table[i].desired_status = BB_STATUS_RUNNING;
 			}
+			// if (bb_state_table[i].status == BB_STATUS_INIT && bb_state_table[i].desired_status >= BB_STATUS_RUNNING) {
 			if (roach_state_table[i].status == ROACH_STATUS_BOOT && roach_state_table[i].desired_status > ROACH_STATUS_BOOT) {
 				blast_info("Attempting to connect to %s", roach_state_table[i].address);
 				roach_state_table[i].katcp_fd = net_connect(roach_state_table[i].address,
@@ -1220,13 +1121,12 @@ void *roach_cmd_loop(void)
 			if (roach_state_table[i].status == ROACH_STATUS_ARRAY_FREQS &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_TARG) {
 				blast_info("ROACH%d, Waiting for TARG sweep", i + 1);
-				// get_targ_freqs(&roach_state_table[i]);
+				get_targ_freqs(&roach_state_table[i]);
 				roach_do_sweep(&roach_state_table[i], 1);
 				blast_info("ROACH%d, TARG sweep complete", i + 1);
 				// TODO(Sam): Calculate and store IQ Gradient
 				if (roach_check_streaming(&roach_state_table[i]) == 0) {
 					roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
-					// pclose(bb_state_table[i].bb_ssh_pipe);
 					roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
 				}
 			}

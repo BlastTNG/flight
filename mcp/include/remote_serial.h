@@ -34,12 +34,6 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
-#define CMD 255
-#define DO 253
-#define DONT 254
-#define WILL 251
-#define WONT 252
-
 typedef struct remote_serial {
     int which;
     int port;

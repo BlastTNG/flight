@@ -50,11 +50,10 @@ extern int16_t InCharge;
  */
 static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
-    blast_info("Inside callback, m_why = %i", m_why);
+    // blast_info("Inside callback, m_why = %i", m_why);
     ph_buf_t *buf;
     remote_serial_t *state = (remote_serial_t*) m_data;
     uint64_t buflen;
-    blast_info("State connected = %i", state->connected);
     /**
      * If we have an error, or do not receive data from the beaglebone in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
@@ -73,12 +72,12 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
      */
 //    if (m_why & PH_IOMASK_TIME) ph_stm_printf(m_sock->stream, "\n");
     buflen = ph_bufq_len(m_sock->rbuf);
-    blast_info("Read buffer length = %" PRId64, buflen);
+    // blast_info("Read buffer length = %" PRId64, buflen);
     if (buflen) {
         buf = ph_sock_read_bytes_exact(m_sock, buflen);
-	blast_info("Number of bytes read = %" PRId64" %.*s", ph_buf_len(buf), ph_buf_len(buf), ph_buf_mem(buf));
+	// blast_info("Number of bytes read = %" PRId64" %.*s", ph_buf_len(buf), ph_buf_len(buf), ph_buf_mem(buf));
 	ph_bufq_append(state->input_buffer, ph_buf_mem(buf), ph_buf_len(buf), NULL);
-	blast_info("Input buffer length = %" PRId64, ph_bufq_len(state->input_buffer));
+	// blast_info("Input buffer length = %" PRId64, ph_bufq_len(state->input_buffer));
         ph_buf_delref(buf);
     }
 }
@@ -89,7 +88,6 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
  */
 int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t m_len)
 {
-    blast_info("Inside write data...");
     uint64_t written;
     if (!InCharge) return -2;
     if (!m_serial->connected) {
@@ -113,19 +111,18 @@ int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t 
  */
 int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t m_size)
 {
-    blast_info("Inside read data");
     ph_buf_t *buf;
     int retval = -1;
-    blast_info("InCharge = %i", InCharge);
-    blast_info("Connected = %d", m_serial->connected);
+    // blast_info("InCharge = %i", InCharge);
+    // blast_info("Connected = %d", m_serial->connected);
     if (!InCharge) return -2;
     if (!m_serial->connected) return -1;
 
     while (m_serial->connected) {
-        blast_info("attempting to read %zd of % " PRId64 " bytes", m_size, ph_bufq_len(m_serial->input_buffer));
+        // blast_info("attempting to read %zd of % " PRId64 " bytes", m_size, ph_bufq_len(m_serial->input_buffer));
 	buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
 	if (buf) {
-    	    blast_info("read data buffer length = %" PRId64, ph_buf_len(buf));
+    	    // blast_info("read data buffer length = %" PRId64, ph_buf_len(buf));
             memcpy(m_buffer, ph_buf_mem(buf), m_size);
 	    ph_buf_delref(buf);
             retval = m_size;
@@ -155,7 +152,6 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     ph_unused_parameter(m_addr);
     remote_serial_t *state = (remote_serial_t*) m_data;
 
-    blast_info("Connect status = %i", m_status);
     switch (m_status) {
         case PH_SOCK_CONNECT_GAI_ERR:
             blast_err("resolve %s:%d failed %s", addresses[state->which], port, gai_strerror(m_errcode));

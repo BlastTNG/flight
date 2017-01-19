@@ -69,7 +69,6 @@ typedef enum {
 typedef enum {
     BB_STATUS_BOOT = 0,
     BB_STATUS_INIT,
-    BB_STATUS_LOGIN,
     BB_STATUS_RUNNING,
 } e_bb_status;
 
@@ -131,6 +130,7 @@ typedef struct roach_state {
 } roach_state_t;
 
 typedef struct bb_state {
+    int which;
     e_bb_status status;
     e_bb_status desired_status;
     remote_serial_t *bb_comm;
