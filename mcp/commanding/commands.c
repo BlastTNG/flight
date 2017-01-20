@@ -48,6 +48,7 @@
 #include "channels_tng.h"
 #include "labjack.h"
 #include "cryostat.h"
+#include "relay_control.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -173,52 +174,28 @@ void SingleCommand(enum singleCommand command, int scheduled)
             labjack_reboot(LABJACK_CRYO_1);
             break;
         case power_box_on:
-            heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
-            heater_write(LABJACK_CRYO_2, POWER_BOX_ON, 1);
-            usleep(900000);
-            heater_write(LABJACK_CRYO_2, POWER_BOX_ON, 0);
+            rec_switch(1);
             break;
         case power_box_off:
-            heater_write(LABJACK_CRYO_2, POWER_BOX_ON, 0);
-            heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, 1);
-            usleep(900000);
-            heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
+            rec_switch(2);
             break;
         case amp_supply_on:
-            heater_write(LABJACK_CRYO_2, AMP_SUPPLY_OFF, 0);
-            heater_write(LABJACK_CRYO_2, AMP_SUPPLY_ON, 1);
-            usleep(900000);
-            heater_write(LABJACK_CRYO_2, AMP_SUPPLY_ON, 0);
+            rec_switch(3);
             break;
         case amp_supply_off:
-            heater_write(LABJACK_CRYO_2, AMP_SUPPLY_ON, 0);
-            heater_write(LABJACK_CRYO_2, AMP_SUPPLY_OFF, 1);
-            usleep(900000);
-            heater_write(LABJACK_CRYO_2, AMP_SUPPLY_OFF, 0);
+            rec_switch(4);
             break;
         case therm_readout_on:
-            heater_write(LABJACK_CRYO_2, THERM_READOUT_OFF, 0);
-            heater_write(LABJACK_CRYO_2, THERM_READOUT_ON, 1);
-            usleep(900000);
-            heater_write(LABJACK_CRYO_2, THERM_READOUT_ON, 0);
+            rec_switch(5);
             break;
         case therm_readout_off:
-            heater_write(LABJACK_CRYO_2, THERM_READOUT_ON, 0);
-            heater_write(LABJACK_CRYO_2, THERM_READOUT_OFF, 1);
-            usleep(900000);
-            heater_write(LABJACK_CRYO_2, THERM_READOUT_OFF, 0);
+            rec_switch(6);
             break;
         case heater_supply_on:
-            heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_OFF, 0);
-            heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_ON, 1);
-            usleep(900000);
-            heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_ON, 0);
+            rec_switch(7);
             break;
         case heater_supply_off:
-            heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_ON, 0);
-            heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_OFF, 1);
-            usleep(900000);
-            heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_OFF, 0);
+            rec_switch(8);
             break;
         case heater_300mk_on:
             heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 1);

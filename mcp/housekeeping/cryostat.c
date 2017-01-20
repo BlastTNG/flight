@@ -138,6 +138,8 @@ void read_thermometers(void) {
     static channel_t* diode_vcs2_hx_Addr;
     static channel_t* diode_vcs1_plate_Addr;
 
+    static channel_t* level_sensor_read_Addr;
+
     if (firsttime_therm == 1) {
         rox_fpa_1k_Addr = channels_find_by_name("tr_fpa_1k");
         rox_250_fpa_Addr = channels_find_by_name("tr_250_fpa");
@@ -166,6 +168,8 @@ void read_thermometers(void) {
         diode_4k_filt_Addr = channels_find_by_name("td_4k_filt");
         diode_vcs2_hx_Addr = channels_find_by_name("td_vcs2_hx");
         diode_vcs1_plate_Addr = channels_find_by_name("td_vcs1_plate");
+        // other channels defined below
+        level_sensor_read_Addr = channels_find_by_name("level_sensor_read");
         firsttime_therm = 0;
     }
 
@@ -195,6 +199,8 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_HE3_FRIDGE));
     SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_500_FPA));
     SET_SCALED_VALUE(rox_bias_Addr, labjack_get_value(LABJACK_CRYO_2, BIAS));
+    // below are the random cryo labjack channels
+    SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
 }
 
 void autocycle_ian(void)

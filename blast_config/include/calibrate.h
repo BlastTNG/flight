@@ -118,28 +118,6 @@ extern "C" {
 /* Modified by Jeff @ Penn, October 6 2009 */
 #define CRYO_D_M ( 10.8/32768.0)
 #define CRYO_D_B (-10.8)
-/* Cryo ROX resistance calibrations */
-/* Measured May 12 2010 */
-#define CRYO_HE3_FRIDGE_M    (1.1535865e-05)
-#define CRYO_HE3_FRIDGE_B    (-24819.549)
-#define CRYO_HE4_POT_M       (1.2435943e-05)
-#define CRYO_HE4_POT_B       (-26763.858)
-#define CRYO_OPTBOX_FILT_M   (1.2072812e-05)
-#define CRYO_OPTBOX_FILT_B   (-25972.241)
-#define CRYO_HWPR_M          (1.1940140e-05)
-#define CRYO_HWPR_B          (-25727.908)
-#define CRYO_300MK_STRAP_M   (1.1863976e-05)
-#define CRYO_300MK_STRAP_B   (-25594.994)
-#define CRYO_HORN_500_M      (1.1861167e-05)
-#define CRYO_HORN_500_B      (-25533.556)
-#define CRYO_HORN_350_M      (1.1676174e-05)
-#define CRYO_HORN_350_B      (-25115.738)
-#define CRYO_HORN_250_M      (1.2107397e-05)
-#define CRYO_HORN_250_B      (-26091.788)
-#define CRYO_M5_M            (1.1516911e-05)
-#define CRYO_M5_B            (-24789.511)
-#define CRYO_M4_M            (1.2124184e-05)
-#define CRYO_M4_B            (-26136.965)
 /* M3 was not measured (spider cable broken) so is an estimate */
 #define CRYO_M3_M            (1.1319609e-05)
 #define CRYO_M3_B            (-24293.822)
