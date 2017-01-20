@@ -95,6 +95,8 @@ channel_t channel_list[] =
     { "td_4k_filt",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "td_vcs2_hx",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "td_vcs1_plate",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    // random cryo labjack AINs
+    { "level_sensor_read", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     // sun sensors first number is which sensor, second is channel number
     { "ss_1_1",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "ss_1_2",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },

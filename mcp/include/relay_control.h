@@ -8,6 +8,7 @@
 #ifndef INCLUDE_RELAY_CONTROL_H
 #define INCLUDE_RELAY_CONTROL_H
 void rec_switch(int which);
+void rec_control(void);
 
 
 #endif /* relay_control_h */
