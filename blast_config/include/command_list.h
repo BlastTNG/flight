@@ -213,6 +213,7 @@ enum multiCommand {
   vna_sweep,
   reset_roach,
   calc_grad_roach,
+  end_sweep,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

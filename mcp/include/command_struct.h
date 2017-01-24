@@ -310,6 +310,7 @@ typedef struct roach
     unsigned int new_state;
     unsigned int change_state;
     unsigned int do_calc_grad;
+    unsigned int do_sweeps;
 } roach_status_t;
 
 struct CommandDataStruct {

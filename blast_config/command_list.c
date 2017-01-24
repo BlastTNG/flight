@@ -761,6 +761,11 @@ struct mcom mcommands[plugh + 2] = {
 // *****************************************
 // ROACH Commands
 // *****************************************
+  {COMMAND(end_sweep), "exit sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
   {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
