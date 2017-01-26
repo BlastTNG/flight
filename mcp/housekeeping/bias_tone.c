@@ -41,7 +41,7 @@ static unsigned int rate = 44100;                       /* stream rate */
 static unsigned int channels = 2;                       /* count of channels */
 static unsigned int buffer_time = 500000;               /* ring buffer length in us */
 static unsigned int period_time = 100000;               /* period time in us */
-static double freq = 20;                                /* sinusoidal wave frequency in Hz */
+static double freq = 200;                                /* sinusoidal wave frequency in Hz */
 static snd_pcm_t *handle = NULL;
 static int resample = 1;                                /* enable alsa-lib resampling */
 
