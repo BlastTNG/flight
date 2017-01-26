@@ -86,11 +86,11 @@
 
 
 // Maximum number of addresses that can be targeted in stream mode.
-#define MAX_NUM_ADDRESSES 1024
+#define MAX_NUM_ADDRESSES 2048
 
 // For now we only have one cyro readout Labjack
 // TODO(laura): Integrate PSS and OF Labjacks
-#define NUM_LABJACKS 4
+#define NUM_LABJACKS 5
 
 // Max Number of Analog Inputs
 #define NUM_LABJACK_AIN 14
@@ -237,6 +237,14 @@ static labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_of_labjack2",
+        .have_warned_write_reg = 0
+    },
+    {
+        .which = 4,
+        .address = "labjack5",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_of_labjack3",
         .have_warned_write_reg = 0
     }
 };
@@ -494,7 +502,6 @@ void query_time(int m_labjack) {
     static int max_tries = 10;
     ret = modbus_read_registers(state[m_labjack].cmd_mb, 61522, 2, data);
     if (ret < 0) {
-        blast_warn("read failed");
         int tries = 1;
         while (tries < max_tries) {
             tries++;
@@ -521,7 +528,6 @@ int labjack_dio(int m_labjack, int address, int command) {
             usleep(100);
             ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
             if (ret > 0) {
-                blast_warn("succeeded on try %d", tries);
                 break;
             }
         }
@@ -546,7 +552,6 @@ uint16_t labjack_read_dio(int m_labjack, int address) {
             works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, ret);
             value = ret[0];
             if (works > 0) {
-                blast_warn("succeeded on try %d", tries);
                 break;
             }
         }
@@ -569,7 +574,6 @@ void heater_write(int m_labjack, int address, int command) {
             usleep(100);
             ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
             if (ret > 0) {
-                blast_warn("succeeded on try %d", tries);
                 break;
             }
         }
@@ -885,7 +889,6 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
             gainList2[11] = 0;
             gainList2[12] = 0;
             gainList2[13] = 0;
-            blast_warn("the state is %d", state_number);
         } else {
             for (i = 0; i < state_data->num_channels; i++) {
                 gainList[i] = 0;

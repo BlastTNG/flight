@@ -255,25 +255,21 @@ float mult_labjack_get_value(int m_labjack, int m_channel)
 
 void query_mult(int m_labjack, int m_channel) {
     uint16_t data[2] = {0};
-    uint32_t time_up;
     int ret;
     static int max_tries = 10;
     ret = modbus_read_registers(mult_state[m_labjack].cmd_mb, m_channel*2, 2, data);
     if (ret < 0) {
-        blast_warn("read failed");
         int tries = 1;
         while (tries < max_tries) {
             tries++;
             usleep(100);
             ret = modbus_read_registers(mult_state[m_labjack].cmd_mb, m_channel*2, 2, data);
             if (ret > 0) {
-                time_up = data[1] + (data[0] << 16);
-                blast_warn("the register has value %u for 1, %u for 0", data[1], data[0]);
+                blast_warn("the system has been up for %d", data[1]);
             }
         }
     } else {
-        time_up = data[1] + (data[0] << 16);
-        blast_warn("the register has value %u for 1, %u for 0", data[1], data[0]);
+        blast_warn("the system has been up for %d", data[1]);
     }
 }
 
