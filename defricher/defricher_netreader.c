@@ -88,7 +88,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
             if ( count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
                 if (ri.channels_ready) {
-                    ri.read ++;
+                    if (!strcasecmp(topics[3], "200HZ")) ri.read ++;
                     frame_handle_data(topics[3], message->payload, message->payloadlen);
                 }
             }
