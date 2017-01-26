@@ -76,7 +76,7 @@ static void data_sharing_process_packet(ph_sock_t *sock, ph_iomask_t why, void *
     }
 
     delim[0] = BLAST_MAGIC8;
-    if (!ph_bufq_discard_until(sock->rbuf, delim, 1, 0)) return;
+    if (!ph_bufq_discard_until(sock->rbuf, delim, 1)) return;
 
     if (!(pkt_buf = ph_bufq_peek_bytes(sock->rbuf, sizeof(blast_master_packet_t)))) return;
     packet = (blast_master_packet_t*)ph_buf_mem(pkt_buf);
