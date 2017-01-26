@@ -97,9 +97,11 @@ typedef struct
     uint32_t        packet_count;
     uint32_t        gyro_valid_packet_count[3];
     uint8_t         index;
+    uint16_t        attempts_since_last_packet;
     int16_t         temp;
     dsp1760_std_t   last_pkt;
     float           gyro_input[3][DSP1760_NPOLES+1];
+    bool            verbose;
 } dsp_storage_t;
 
 /// Two sets of 3 gyroscopes with 10 pole filters (5 sample delay)
@@ -233,6 +235,24 @@ static inline void dsp1760_disconnect(ph_serial_t *m_serial, dsp_storage_t *gyro
     if (gyro->backoff_sec > max_backoff_sec) gyro->backoff_sec = max_backoff_sec;
 }
 
+void print_dsp1760_packet(dsp1760_std_t *m_pkt, int m_which)
+{
+        blast_info("Gyro%i: header= %4x, x_raw=%4x, y_raw=%4x, z_raw=%4x, reserved = %2x%2x%2x%2x%2x%2x",
+                  m_which, (unsigned)m_pkt->header, m_pkt->x_raw, m_pkt->y_raw, m_pkt->z_raw,
+                  (uint16_t)m_pkt->reserved[0], (uint16_t)m_pkt->reserved[2], (uint16_t)m_pkt->reserved[4],
+                  (uint16_t)m_pkt->reserved[6], (uint16_t)m_pkt->reserved[8], (uint16_t)m_pkt->reserved[10]);
+        blast_info("Gyro%i: status=%x, seq=%x, temp=%d, crc=%4x",
+                  m_which, (unsigned)m_pkt->status, (unsigned)m_pkt->sequence, m_pkt->temp, (unsigned)m_pkt->crc);
+        blast_info("Gyro%i: rawdata= %2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x",
+                  m_which, (uint16_t)m_pkt->raw_data[0], (uint16_t)m_pkt->raw_data[2],
+                  (uint16_t)m_pkt->raw_data[4], (uint16_t)m_pkt->raw_data[6], (uint16_t)m_pkt->raw_data[8],
+                  (uint16_t)m_pkt->raw_data[10], (uint16_t)m_pkt->raw_data[12], (uint16_t)m_pkt->raw_data[14],
+                  (uint16_t)m_pkt->raw_data[16], (uint16_t)m_pkt->raw_data[18], (uint16_t)m_pkt->raw_data[20],
+                  (uint16_t)m_pkt->raw_data[22], (uint16_t)m_pkt->raw_data[24], (uint16_t)m_pkt->raw_data[26],
+                  (uint16_t)m_pkt->raw_data[28], (uint16_t)m_pkt->raw_data[30], (uint16_t)m_pkt->raw_data[32],
+                  (uint16_t)m_pkt->raw_data[34]);
+}
+
 /**
  * Handles the data inflow from the gyroscopes
  * @param m_serial Pointer to serial stream
@@ -245,6 +265,11 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
     dsp_storage_t *gyro = (dsp_storage_t *) m_userdata;
     dsp1760_std_t *pkt;
     const char header[4] = { 0xFE, 0x81, 0xFF, 0x55 };
+	unsigned int n_pkts_read = 0;
+	static unsigned int pr_ct = 0;
+    uint64_t buf_len = 0;
+    int i = 0;
+    unsigned char *junk_data;
 
     if ((m_why & (PH_IOMASK_ERR)) && m_serial->conn->last_err != 0) {
         blast_err("Disconnecting Gyro Box %d due to Error %d", gyro->which, m_serial->conn->last_err);
@@ -261,22 +286,46 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
     if (!(m_why & PH_IOMASK_READ)) return;
 
     /// We loop here to catch multiple packets that may have been delivered since we last read
-    while (ph_bufq_discard_until(m_serial->rbuf, header, 4)) {
+    // Won't enter the loop if the header information isn't found in the buffer.
+    gyro->attempts_since_last_packet++;
+    while (ph_bufq_discard_until(m_serial->rbuf, header, 4, gyro->verbose)) {
+//        blast_info("Found header sequence in buffer for gyro box %d", gyro->which);
+        n_pkts_read++;
+        gyro->attempts_since_last_packet = 0;
         ph_buf_t *buf;
         bool invalid_data = false;
         uint32_t crc_calc = 0xFFFFFFFF;
 
         if (!(buf = ph_serial_read_bytes_exact(m_serial, sizeof(dsp1760_std_t)))) {
+//            blast_err("Error could not read %u bytes.", (unsigned int)sizeof(dsp1760_std_t));
             return;
         }
         pkt = (dsp1760_std_t*) ph_buf_mem(buf);
+        junk_data = (unsigned char*) ph_buf_mem(buf);
         gyro->packet_count++;
-
+        if (pr_ct > 0) {
+            blast_info("Copied memory to pkt gyro box %d, ct = %d", gyro->which, gyro->packet_count);
+            print_dsp1760_packet(pkt, gyro->which);
+            for (i = 0; i < sizeof(dsp1760_std_t)/2; i++) {
+                printf("0x%02x ", junk_data[i]);
+    			if (i % 31 == 0) printf("\n");
+            }
+            printf("\n");
+        }
         crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
         if (crc_calc) {
             gyro->crc_error_count++;
             invalid_data = true;
             blast_info("Invalid packet on gyro box %d!", gyro->which);
+	        print_dsp1760_packet(pkt, gyro->which);
+            for (i = 0; i < sizeof(dsp1760_std_t)/2; i++) {
+                printf("0x%02x ", junk_data[i]);
+    			if (i % 31 == 0) printf("\n");
+            }
+            printf("\n");
+
+            // Put gyro in verbose mode to get more data next time
+            gyro->verbose = 1;
         }
 
         pkt->x_raw = ntohl(pkt->x_raw);
@@ -299,9 +348,11 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         }
         pkt->temp = ntohs(pkt->temp);
 
-//        blast_info("Gyro%i: x_raw=%d, y_raw=%d, z_raw=%d, reserved = %8x, status=%x, seq=%x, temp=%d, crc=%4x",
-//                  gyro->which, pkt->x_raw, pkt->y_raw, pkt->z_raw, (unsigned)pkt->reserved,
-//                  (unsigned)pkt->status, (unsigned)pkt->sequence, pkt->temp, (unsigned)pkt->crc);
+		if (invalid_data || pr_ct > 0) {
+            blast_info("Gyro%i: x = %f, y = %f, z = %f, temp = %i",
+            gyro->which, pkt->x, pkt->y, pkt->z, pkt->temp);
+		}
+
         if (!invalid_data && gyro->packet_count > 1 &&
                 pkt->sequence != (++gyro->seq_number & 0x7F)) {
             gyro->seq_error_count++;
@@ -317,7 +368,8 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
              */
             gyro->seq_number = pkt->sequence;
             gyro->backoff_sec = min_backoff_sec;
-        }
+            gyro->verbose = 0;
+            }
 
         /// Status is 1 if OK, 0 if faulty
         gyro->gyro_invalid_packet_count[0] += (!(pkt->status & DSP1760_STATUS_MASK_GY1));
@@ -334,15 +386,42 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         ph_buf_delref(buf);
     }
 
-    /// If we have accumulated the equivalent of 2
+    /// If we have accumulated the equivalent of 2 packet without finding the header sequence
+    if (pr_ct > 0) {
+        blast_info("Gyro%d, ph_bufq_len(m_serial->rbuf) = %lu, npkts_read = %u, read attempts = %u",
+        gyro->which, ph_bufq_len(m_serial->rbuf), n_pkts_read, gyro->attempts_since_last_packet);
+        pr_ct--;
+    }
 
-    if (ph_bufq_len(m_serial->rbuf) > 2 * sizeof(dsp1760_std_t) || gyro->want_reset) {
+    buf_len = ph_bufq_len(m_serial->rbuf);
+	if (buf_len > sizeof(dsp1760_std_t)) {
+        blast_warn("***Gyro%d, buf_len = %lu, npkts_read = %u, read attempts = %u",
+        gyro->which, buf_len, n_pkts_read, gyro->attempts_since_last_packet);
+        gyro->verbose = 1;
+	}
+    if (buf_len > 2 * sizeof(dsp1760_std_t) || gyro->want_reset) {
         if (gyro->want_reset) {
             blast_info("Resetting Gyro Box %d due to user command", gyro->which);
         } else {
-//            blast_info("Buffer length %i, size_of(dsp1760_std_t)=%i",
-//                       ph_bufq_len(m_serial->rbuf), sizeof(dsp1760_std_t));
+            blast_info("Buffer length %lu, size_of(dsp1760_std_t)=%lu, n_pkts_read = %u, read attempts = %u",
+                                   buf_len, sizeof(dsp1760_std_t), n_pkts_read,
+                                   gyro->attempts_since_last_packet);
+            ph_buf_t *buf_junk;
+            if (!(buf_junk = ph_serial_read_bytes_exact(m_serial, buf_len))) {
+                blast_err("Error could not read junk buffer.");
+            } else {
+                junk_data = (unsigned char*) ph_buf_mem(buf_junk);
+                for (i = 0; i < buf_len / 2; i++) {
+                    printf("0x%02x ", junk_data[i]);
+    			    if (i % 31 == 0) printf("\n");
+                }
+                printf("\n");
+            }
+
+            ph_buf_delref(buf_junk);
+
             blast_err("Disconnecting Gyro Box %d garbage in stream (multiple-access?)", gyro->which);
+            pr_ct = 2;
         }
         dsp1760_disconnect(m_serial, gyro);
     } else {
