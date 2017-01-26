@@ -140,6 +140,19 @@ enum singleCommand {
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
   heater_supply_off, reboot_ljcryo1,
+    of_relay_1_on, of_relay_1_off, of_relay_2_on, of_relay_2_off,
+    of_relay_3_on, of_relay_3_off, of_relay_4_on, of_relay_4_off,
+    of_relay_5_on, of_relay_5_off, of_relay_6_on, of_relay_6_off,
+    of_relay_7_on, of_relay_7_off, of_relay_8_on, of_relay_8_off,
+    of_relay_9_on, of_relay_9_off, of_relay_10_on, of_relay_10_off,
+    of_relay_11_on, of_relay_11_off, of_relay_12_on, of_relay_12_off,
+    of_relay_13_on, of_relay_13_off, of_relay_14_on, of_relay_14_off,
+    of_relay_15_on, of_relay_15_off, of_relay_16_on, of_relay_16_off,
+    if_relay_1_on, if_relay_1_off, if_relay_2_on, if_relay_2_off,
+    if_relay_3_on, if_relay_3_off, if_relay_4_on, if_relay_4_off,
+    if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
+    if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
+    if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
   xyzzy
 };
 
