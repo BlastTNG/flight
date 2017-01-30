@@ -86,6 +86,40 @@ void cal_control(void) {
     }
 }
 
+void test_labjacks(int m_which) {
+    float test0, test1, test2, test3, test4;
+    float test5, test6, test7, test8, test9;
+    float test10, test11, test12, test13;
+    test0 = labjack_get_value(m_which, 0);
+    test1 = labjack_get_value(m_which, 1);
+    test2 = labjack_get_value(m_which, 2);
+    test3 = labjack_get_value(m_which, 3);
+    test4 = labjack_get_value(m_which, 4);
+    test5 = labjack_get_value(m_which, 5);
+    test6 = labjack_get_value(m_which, 6);
+    test7 = labjack_get_value(m_which, 7);
+    test8 = labjack_get_value(m_which, 8);
+    test9 = labjack_get_value(m_which, 9);
+    test10 = labjack_get_value(m_which, 10);
+    test11 = labjack_get_value(m_which, 11);
+    test12 = labjack_get_value(m_which, 12);
+    test13 = labjack_get_value(m_which, 13);
+    blast_warn(" AIN 0 is %f", test0);
+    blast_warn(" AIN 1 is %f", test1);
+    blast_warn(" AIN 2 is %f", test2);
+    blast_warn(" AIN 3 is %f", test3);
+    blast_warn(" AIN 4 is %f", test4);
+    blast_warn(" AIN 5 is %f", test5);
+    blast_warn(" AIN 6 is %f", test6);
+    blast_warn(" AIN 7 is %f", test7);
+    blast_warn(" AIN 8 is %f", test8);
+    blast_warn(" AIN 9 is %f", test9);
+    blast_warn(" AIN 10 is %f", test10);
+    blast_warn(" AIN 11 is %f", test11);
+    blast_warn(" AIN 12 is %f", test12);
+    blast_warn(" AIN 13 is %f", test13);
+}
+
 void store_100hz_cryo(void)
 {
     static int firsttime = 1;

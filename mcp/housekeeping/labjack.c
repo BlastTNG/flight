@@ -222,8 +222,7 @@ static labjack_state_t state[NUM_LABJACKS] = {
           .DAC = {0, 0},
           .channel_postfix = "_cryo_labjack2",
           .have_warned_write_reg = 0
-    }
-    /* ,
+    },
     {
         .which = 2,
         .address = "labjack3",
@@ -247,7 +246,7 @@ static labjack_state_t state[NUM_LABJACKS] = {
         .DAC = {0, 0},
         .channel_postfix = "_of_labjack3",
         .have_warned_write_reg = 0
-    } */
+    }
 };
 
 // Used to correct for word swap between the mcp convention and the Labjack.
