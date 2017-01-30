@@ -206,7 +206,7 @@ channel_t channel_list[] =
     {"x0_ctr_mcp", SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
     {"x0_last_trig_age_cs", SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
     {"x0_last_trig_ctr_mcp", SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
-    {"x0_predicted_motion_px", CONVERT_VEL_M, CONVERT_VEL_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
+    {"x0_predicted_streaking_px", CONVERT_VEL_M, CONVERT_VEL_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     {"x0_last_trig_ctr_stars", SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
     {"x0_image_blobn_x", CONVERT_BLOB_POS_M, CONVERT_BLOB_POS_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     {"x0_image_blobn_y", CONVERT_BLOB_POS_M, CONVERT_BLOB_POS_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
@@ -217,6 +217,7 @@ channel_t channel_list[] =
     {"x1_image_blobn_y", CONVERT_BLOB_POS_M, CONVERT_BLOB_POS_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     {"x1_image_blobn_flux", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     {"x1_image_blobn_peak_to_flux", SCALE(CONVERT_0_TO_10), TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
+    {"x1_predicted_streaking_px", CONVERT_VEL_M, CONVERT_VEL_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
 
 
     {"x0_last_trig_lat", DEG2LI, 0.0, TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
@@ -394,9 +395,14 @@ channel_t channel_list[] =
     { "upslot_sched",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "t_chip_flc",           0.01,             0.0, TYPE_UINT16, RATE_5HZ, U_T_C, 0 },
     { "veto_sensor",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    { "level_on_bal",         1. / 1990.13,     0.0, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
-    { "level_off_bal",        1. / 1990.13,     0.0, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
-    { "level_target_bal",     1. / 1990.13,     -5.0, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
+    { "i_level_on_bal",       CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
+    { "i_level_off_bal",      CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
+    { "i_el_req_avg_bal",     CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
+    { "status_bal",           SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
+    { "vel_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "acc_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "i_move_bal",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "i_hold_bal",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     { "alt_sip",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
@@ -448,6 +454,7 @@ channel_t channel_list[] =
     { "dec_4_p",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_clin",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_enc",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "trim_motor_enc",       I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_null",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_mag",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
 

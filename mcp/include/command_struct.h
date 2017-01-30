@@ -298,6 +298,21 @@ typedef struct slinger_commanding
     bool biphase_active;
 } slinger_commanding_t;
 
+typedef struct {
+    enum {bal_rest = 0, bal_manual, bal_auto} mode;
+    enum {pos = 0, neg} bal_move_type;
+    uint32_t pos;
+    uint16_t vel;
+    uint16_t hold_i;
+    uint16_t move_i;
+    uint16_t acc;
+
+    // servo parameters
+    double i_el_on_bal;
+    double i_el_off_bal;
+    double gain_bal;
+} cmd_balance_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -412,20 +427,7 @@ struct CommandDataStruct {
 
   cryo_cmds_t Cryo;
 
-  struct {
-    enum {bal_rest, bal_manual, bal_auto} mode;
-    double level;
-
-    // servo parameters
-    double level_on_bal;
-    double level_off_bal;
-    double level_target_bal;
-    double gain_bal;
-
-    // heating card parameters
-    double heat_on;
-    double heat_tset;
-  } pumps;
+  cmd_balance_t balance;
 
   struct {
     int off;
@@ -510,9 +512,6 @@ struct CommandDataStruct {
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
   double lat;
   double lon;
-
-  /* Integrating Star Camera Stuff */
-  struct ISCStatusStruct ISCState[2];
 
   struct {
     int pulse_width;

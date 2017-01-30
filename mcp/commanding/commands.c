@@ -56,8 +56,8 @@
  * true elevation */
 // #define LOCK_OFFSET (-0.77) /* Updated by LMF on July 12th, 2012 */
 #define LOCK_OFFSET (0.0)
-#define NUM_LOCK_POS 9
-static const double lock_positions[NUM_LOCK_POS] = {4.8, 14.8, 24.82, 34.81, 44.75, 54.7, 64.7, 75.0, 90.0};
+#define NUM_LOCK_POS 10
+static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34.88, 44.86, 54.83, 64.81, 74.80, 89.78};
 
 /* based on isc_protocol.h */
 #define ISC_SHUTDOWN_NONE     0
@@ -903,7 +903,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.xystage.force_repoll = 1;
 #endif
             break;
-
+// .
             // Shutter
         case shutter_init:
             CommandData.actbus.shutter_goal = SHUTTER_INIT;
@@ -1515,23 +1515,78 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
-
+// .
+    // XY STAGE
+// .
+#ifdef USE_XY_THREAD
+    case xy_goto:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.y1 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = ivalues[3];
+      CommandData.xystage.mode = XYSTAGE_GOTO;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_jump:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.y1 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = ivalues[3];
+      CommandData.xystage.mode = XYSTAGE_JUMP;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_xscan:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.x2 = ivalues[1];
+      CommandData.xystage.xvel = ivalues[2];
+      CommandData.xystage.yvel = 0;
+      CommandData.xystage.mode = XYSTAGE_SCAN;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_yscan:
+      CommandData.xystage.y1 = ivalues[0];
+      CommandData.xystage.y2 = ivalues[1];
+      CommandData.xystage.yvel = ivalues[2];
+      CommandData.xystage.xvel = 0;
+      CommandData.xystage.mode = XYSTAGE_SCAN;
+      CommandData.xystage.is_new = 1;
+      break;
+    case xy_raster:
+      CommandData.xystage.x1 = ivalues[0];
+      CommandData.xystage.x2 = ivalues[1];
+      CommandData.xystage.y1 = ivalues[2];
+      CommandData.xystage.y2 = ivalues[3];
+      CommandData.xystage.xvel = ivalues[4];
+      CommandData.xystage.yvel = ivalues[5];
+      CommandData.xystage.step = ivalues[6];
+      CommandData.xystage.mode = XYSTAGE_RASTER;
+      CommandData.xystage.is_new = 1;
+      break;
+#endif
+// .
 #ifndef BOLOTEST
-      /*************************************
+     /*************************************
       ********* Balance System  ***********/
     case balance_gain:
-      CommandData.pumps.level_on_bal = rvalues[0] * 1990.13;  // 1990.13 DAC/Amp
-      CommandData.pumps.level_off_bal = rvalues[1] * 1990.13;
-      CommandData.pumps.level_target_bal = rvalues[2] * 1990.13;
-      CommandData.pumps.gain_bal = rvalues[3];
+      CommandData.balance.i_el_on_bal = rvalues[0];
+      CommandData.balance.i_el_off_bal = rvalues[1];
+//      CommandData.balance.i_el_target_bal = rvalues[2];
+//      CommandData.balance.gain_bal = rvalues[3];
       break;
     case balance_manual:
-      CommandData.pumps.level = rvalues[0];
-      CommandData.pumps.mode = bal_manual;
+      CommandData.balance.bal_move_type = rvalues[0];
+      CommandData.balance.mode = bal_manual;
       break;
-    case balance_tset:
-      CommandData.pumps.heat_tset = rvalues[0];
+    case balance_vel:
+      CommandData.balance.vel = ivalues[0];
+      CommandData.balance.acc = ivalues[1];
       break;
+    case balance_i:
+      CommandData.balance.move_i = ivalues[0];
+      CommandData.balance.hold_i = ivalues[1];
+      break;
+
+
 
       /*************************************
       ************** Misc  ****************/
@@ -1686,7 +1741,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                 if (xsc_command_applies_to(which, ivalues[0])) {
                     CommandData.XSC[which].trigger.exposure_time_cs = ivalues[1];
                 }
-                CommandData.XSC[which].trigger.grace_period_cs = rvalues[2] * 100.0;
+                CommandData.XSC[which].trigger.grace_period_cs = rvalues[2] * 100.0; // Commanded value is in seconds!
                 CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs = ivalues[3];
             }
             break;
@@ -2139,9 +2194,6 @@ void InitCommandData()
     CommandData.Bias.setLevel[3] = 1;
     CommandData.Bias.setLevel[4] = 1;
 
-    CommandData.ISCState[0].shutdown = ISC_SHUTDOWN_NONE;
-    CommandData.ISCState[1].shutdown = ISC_SHUTDOWN_NONE;
-
     CommandData.power.sc_tx.rst_count = 0;
     CommandData.power.sc_tx.set_count = 0;
     CommandData.power.das.rst_count = 0;
@@ -2244,10 +2296,10 @@ void InitCommandData()
 
     CommandData.az_accel = 0.4;
 
-    CommandData.ele_gain.I = 200;
-    CommandData.ele_gain.P = 23.9;
+    CommandData.ele_gain.I = 1000;
+    CommandData.ele_gain.P = 1.2;
     CommandData.ele_gain.D = 0;
-    CommandData.ele_gain.PT = 200;
+    CommandData.ele_gain.PT = 20;
     CommandData.ele_gain.DB = 0;
     CommandData.ele_gain.F = 0;
 
@@ -2281,6 +2333,7 @@ void InitCommandData()
 
     CommandData.clin_el_trim = 0;
     CommandData.enc_el_trim = 0;
+    CommandData.enc_motor_el_trim = 0;
     CommandData.null_az_trim = 0;
     CommandData.mag_az_trim = 0;
     CommandData.pss_az_trim = 0;
@@ -2321,13 +2374,9 @@ void InitCommandData()
     CommandData.offset_ifyaw_gy = 0;
     CommandData.gymask = 0x3f;
 
-    CommandData.pumps.level_on_bal = 2.0 * 1990.13;
-    CommandData.pumps.level_off_bal = 0.5 * 1900.13;
-    CommandData.pumps.level_target_bal = 0.0 * 1990.13;
-    CommandData.pumps.gain_bal = 0.2;
-    CommandData.pumps.mode = bal_auto;
-    CommandData.pumps.heat_on = 1;
-    CommandData.pumps.heat_tset = 5;
+    CommandData.balance.i_el_on_bal = 2.5;
+    CommandData.balance.i_el_off_bal = 1.0;
+    CommandData.balance.mode = bal_rest;
 
     CommandData.Bias.bias[0] = 12470;   // 500um
     CommandData.Bias.bias[1] = 11690;   // 350um
@@ -2378,6 +2427,11 @@ void InitCommandData()
     CommandData.hwpr.move_i = 20;
     CommandData.hwpr.hold_i = 0;
 
+    CommandData.balance.vel = 1600;
+    CommandData.balance.acc = 4;
+    CommandData.balance.move_i = 20;
+    CommandData.balance.hold_i = 0;
+
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */
     CommandData.hwpr.pos[3] = 0.3418;
@@ -2392,6 +2446,18 @@ void InitCommandData()
     CommandData.hwpr.pot_targ = 0.5;
 
     CommandData.pin_is_in = 1;
+
+    // XY STAGE
+    CommandData.xystage.x1 = 0;
+    CommandData.xystage.y1 = 0;
+    CommandData.xystage.x2 = 0;
+    CommandData.xystage.y2 = 0;
+    CommandData.xystage.step = 0;
+    CommandData.xystage.xvel = 0;
+    CommandData.xystage.yvel = 0;
+    CommandData.xystage.is_new = 1;
+    CommandData.xystage.mode = XYSTAGE_GOTO;
+    CommandData.xystage.force_repoll = 0;
 
     CommandData.Cryo.charcoalHeater = 0;
     CommandData.Cryo.hsCharcoal = 1;
@@ -2419,77 +2485,15 @@ void InitCommandData()
     CommandData.Cryo.cycle_charcoal_settle = 25.0;
     CommandData.Cryo.cycle_settle_timeout = 40.0;
 
-    CommandData.ISCState[0].useLost = 1;
-    CommandData.ISCState[0].abort = 0;
-    CommandData.ISCState[0].pause = 0;
-    CommandData.ISCState[0].save = 0;
-    CommandData.ISCState[0].eyeOn = 1;
-    CommandData.ISCState[0].hold_current = 50;
-    CommandData.ISCState[0].autofocus = 0;
-    CommandData.ISCState[0].focus_pos = 0;
-    CommandData.ISCState[0].MCPFrameNum = 0;
-    CommandData.ISCState[0].focusOffset = 0;
-    CommandData.ISCState[0].ap_pos = 495;
-    CommandData.ISCState[0].display_mode = full;
-    /* ISC-BDA offsets per Natalie Gandilo on 2012-11-30 */
-    CommandData.ISCState[0].azBDA = 0.2099 * DEG2RAD;
-    CommandData.ISCState[0].elBDA = -0.2330 * DEG2RAD;
     CommandData.ISCControl[0].max_age = 200; /* 2000 ms*/
 
-    CommandData.ISCState[0].brightStarMode = 0;
-    CommandData.ISCState[0].grid = 38;
-    CommandData.ISCState[0].minBlobMatch = 3;
-    CommandData.ISCState[0].maxBlobMatch = 7;
-    CommandData.ISCState[0].sn_threshold = 4.5;
-    CommandData.ISCState[0].mult_dist = 30;
-    CommandData.ISCState[0].mag_limit = 9.5;
-    CommandData.ISCState[0].norm_radius = 3. * DEG2RAD;
-    CommandData.ISCState[0].lost_radius = 6. * DEG2RAD;
-    CommandData.ISCState[0].tolerance = 10. / 3600. * DEG2RAD; /* 10 arcsec */
-    CommandData.ISCState[0].match_tol = 0.5;
-    CommandData.ISCState[0].quit_tol = 1;
-    CommandData.ISCState[0].rot_tol = 10 * DEG2RAD;
-    CommandData.ISCState[0].triggertype = ISC_TRIGGER_NEG;
-    CommandData.ISCState[0].gain = 1;
-    CommandData.ISCState[0].offset = 0;
     CommandData.ISCControl[0].autofocus = 0;
     CommandData.ISCControl[0].save_period = 12000; /* 120 sec */
     CommandData.ISCControl[0].pulse_width = 18; /* 180.00 msec */
     CommandData.ISCControl[0].fast_pulse_width = 8; /* 80.00 msec */
 
-    CommandData.ISCState[1].useLost = 1;
-    CommandData.ISCState[1].abort = 0;
-    CommandData.ISCState[1].pause = 0;
-    CommandData.ISCState[1].save = 0;
-    CommandData.ISCState[1].eyeOn = 1;
-    CommandData.ISCState[1].hold_current = 50;
-    CommandData.ISCState[1].autofocus = 0;
-    CommandData.ISCState[1].focus_pos = 0;
-    CommandData.ISCState[1].MCPFrameNum = 0;
-    CommandData.ISCState[1].focusOffset = 0;
-    CommandData.ISCState[1].ap_pos = 495;
-    CommandData.ISCState[1].display_mode = full;
-    /* ISC-BDA offsets per Natalie Gandilo on 2012-11-30 */
-    CommandData.ISCState[1].azBDA = 0.7422 * DEG2RAD;
-    CommandData.ISCState[1].elBDA = -0.0920 * DEG2RAD;
     CommandData.ISCControl[1].max_age = 200; /* 2000 ms*/
 
-    CommandData.ISCState[1].brightStarMode = 0;
-    CommandData.ISCState[1].grid = 38;
-    CommandData.ISCState[1].minBlobMatch = 3;
-    CommandData.ISCState[1].maxBlobMatch = 7;
-    CommandData.ISCState[1].sn_threshold = 4.5;
-    CommandData.ISCState[1].mult_dist = 30;
-    CommandData.ISCState[1].mag_limit = 9.5;
-    CommandData.ISCState[1].norm_radius = 3. * DEG2RAD;
-    CommandData.ISCState[1].lost_radius = 6. * DEG2RAD;
-    CommandData.ISCState[1].tolerance = 10. / 3600. * DEG2RAD; /* 10 arcsec */
-    CommandData.ISCState[1].match_tol = 0.5;
-    CommandData.ISCState[1].quit_tol = 1;
-    CommandData.ISCState[1].rot_tol = 10 * DEG2RAD;
-    CommandData.ISCState[1].triggertype = ISC_TRIGGER_NEG;
-    CommandData.ISCState[1].gain = 1;
-    CommandData.ISCState[1].offset = 0;
     CommandData.ISCControl[1].autofocus = 0;
     CommandData.ISCControl[1].save_period = 12000; /* 120 sec */
     CommandData.ISCControl[1].pulse_width = 18; /* 180.00 msec */

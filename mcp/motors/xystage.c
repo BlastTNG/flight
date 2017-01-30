@@ -42,16 +42,17 @@
 
 
 /* EZBus setup parameters */
-#define STAGE_BUS_TTY 0
+#define STAGE_BUS_TTY "/dev/ttystage"
 #define STAGE_BUS_CHATTER EZ_CHAT_BUS
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
-#define STAGEX_ID 6
-#define STAGEY_ID 7
+#define STAGEX_ID EZ_WHO_S6
+#define STAGEY_ID EZ_WHO_S7
 
 #define STAGE_BUS_ACCEL 2
 #define STAGE_BUS_IHOLD 20
 #define STAGE_BUS_IMOVE 30
+#define XYSTAGE_PREAMBLE "j2n2" // set microstep res, use limit switches
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1
@@ -72,6 +73,8 @@ static struct stage_struct {
 static void ReadStage(struct ezbus* bus)
 {
   static int counter = 0;
+  blast_info("X status: %i, Y status: %i",
+	bus->stepper[(STAGEX_ID - 0x31)].status, bus->stepper[(STAGEY_ID - 0x31)].status); // DEBUG
   if (!EZBus_IsUsable(bus, STAGEX_ID) || !EZBus_IsUsable(bus, STAGEY_ID))
     return;
 
@@ -95,6 +98,7 @@ static void ReadStage(struct ezbus* bus)
   else if (counter == 7)
     EZBus_ReadInt(bus, STAGEY_ID, "?4", &stage_data.ylim);
 
+  blast_info("counter = %i", counter); // DEBUG
   counter = (counter + 1) % 8;
 }
 
@@ -147,6 +151,7 @@ void StoreStageBus(int index)
 void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 {
   int now;
+  int count;
   char who = (is_y) ? STAGEY_ID : STAGEX_ID;
 
   if (CommandData.xystage.mode == XYSTAGE_PANIC || vel == 0)
@@ -159,15 +164,22 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
       (is_y) ? 'Y' : 'X', dest, vel);
   EZBus_GotoVel(bus, who, dest, vel);
 
+  count = 0;
   do {
     if (CommandData.xystage.mode == XYSTAGE_PANIC)
       return;
-    usleep(10000);
+    usleep(50000);
 
-    ReadStage(bus);
+//    ReadStage(bus);
+
+    EZBus_ReadInt(bus, STAGEX_ID, "?0", &stage_data.xpos);
+    EZBus_ReadInt(bus, STAGEY_ID, "?0", &stage_data.ypos);
 
     now = (is_y) ? stage_data.ypos : stage_data.xpos;
-  } while (now != dest);
+
+    blast_info("moving... %i -> %i", now, dest); // DEBUG
+    count++;
+    } while ((now != dest)/* && (count < 20)*/);
 }
 
 void Raster(struct ezbus *bus, int start, int end, int is_y, int y,
@@ -316,12 +328,20 @@ void StageBus(void)
   EZBus_Add(&bus, STAGEX_ID, STAGEX_NAME);
   EZBus_Add(&bus, STAGEY_ID, STAGEY_NAME);
 
+  EZBus_Stop(&bus, STAGEX_ID);
+  EZBus_Stop(&bus, STAGEY_ID);
   EZBus_SetAccel(&bus, STAGEX_ID, STAGE_BUS_ACCEL);
   EZBus_SetAccel(&bus, STAGEY_ID, STAGE_BUS_ACCEL);
   EZBus_SetIHold(&bus, STAGEX_ID, STAGE_BUS_IHOLD);
   EZBus_SetIHold(&bus, STAGEY_ID, STAGE_BUS_IHOLD);
   EZBus_SetIMove(&bus, STAGEX_ID, STAGE_BUS_IMOVE);
   EZBus_SetIMove(&bus, STAGEY_ID, STAGE_BUS_IMOVE);
+
+  EZBus_SetPreamble(&bus, STAGEX_ID, XYSTAGE_PREAMBLE);
+  EZBus_SetPreamble(&bus, STAGEY_ID, XYSTAGE_PREAMBLE);
+
+  EZBus_Comm(&bus, STAGEX_ID, "Z500000R"); // home X
+  EZBus_Comm(&bus, STAGEY_ID, "Z500000R"); // home Y
 
   all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
 
@@ -358,9 +378,9 @@ void StageBus(void)
     }
 
     ControlXYStage(&bus);
-
+    // EZBus_Poll(&bus); // DEBUG
     ReadStage(&bus);
 
-    usleep(10000);
+    usleep(50000); // DEBUG
   }
 }

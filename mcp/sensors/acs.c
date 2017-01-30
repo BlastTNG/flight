@@ -149,9 +149,9 @@ static const float gy_inv[64][3][6] =
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 1.000000e+00, 0.000000e+00 } },
 
         /* mask = 010101 (21) */
-        { { 0.996194710, 0.000000e+00, -0.087155559, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
-          { 0.087155559, 0.000000e+00, 0.996194710, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 1.000000e+00, 0.000000e+00 } },
+        { { 0.99782252, 0.000000e+00, -0.080823624, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
+          { 0.080823624, 0.000000e+00, 0.99782252, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.99782252, 0.000000e+00 } },
 
         /* mask = 010110 (22) */
         { { 0.000000e+00, 1.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
@@ -254,9 +254,9 @@ static const float gy_inv[64][3][6] =
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 1.000000e+00 } },
 
         /* mask = 101010 (42) */
-        { { 0.000000e+00, 0.99026805, 0.000000e+00, -0.13917325, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, 0.139173250, 0.000000e+00, 0.99026805, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, -1.000000 } },
+        { { 0.000000e+00, 1.0040662, 0.000000e+00, -0.11044728, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.11044728, 0.000000e+00, 1.0040662, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, -1.0040662 } },
 
         /* mask = 101011 (43) */
         { { 5.000000e-01, 5.000000e-01, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
@@ -359,9 +359,9 @@ static const float gy_inv[64][3][6] =
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 5.000000e-01, 5.000000e-01 } },
 
         /* mask = 111111 (63) */
-        { { 0.498097360, 0.495134020, -0.0435777800, -0.069586625, 0.000000e+00, 0.000000e+00 },
-          { 0.043577780, 0.0695866250, 0.498097360, 0.495134020, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.500000000, -0.500000000 } },
+        { { 0.49891126, 0.50203309, -0.040411812, -0.055223640, 0.000000e+00, 0.000000e+00 },
+          { 0.040411812, 0.055223640, 0.49891126, 0.50203309, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.49891126, -0.50203309 } },
         };
 // TODO(seth): Extern sched_lst after enabling sched.c
 unsigned int sched_lst; /* sched_lst */
@@ -588,7 +588,7 @@ void store_100hz_acs(void)
 
     SET_SCALED_VALUE(elEncAddr, (PointingData[i_point].enc_el + CommandData.enc_el_trim));
     SET_SCALED_VALUE(sigmaEncAddr, PointingData[i_point].enc_sigma);
-    SET_SCALED_VALUE(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_el_trim));
+    SET_SCALED_VALUE(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_motor_el_trim));
     SET_SCALED_VALUE(sigmaMotEncAddr, PointingData[i_point].enc_motor_sigma);
 
     SET_INT32(vel_rw_addr, RWMotorData[i_motors].velocity);
@@ -819,7 +819,7 @@ void store_100hz_xsc(int which)
     static channel_t* address_xN_last_trig_age_cs;
     static channel_t* address_xN_last_trig_ctr_mcp;
     static channel_t* address_xN_last_trig_ctr_stars[2];
-    static channel_t* address_xN_predicted_motion_px;
+    static channel_t* address_xN_predicted_streaking_px[2];
     static channel_t* address_xN_image_blobn_x[2];
     static channel_t* address_xN_image_blobn_y[2];
     static channel_t* address_xN_image_blobn_flux[2];
@@ -832,8 +832,8 @@ void store_100hz_xsc(int which)
             address_xN_ctr_mcp                     = get_xsc_channel("ctr_mcp", 0);
             address_xN_last_trig_age_cs            = get_xsc_channel("last_trig_age_cs", 0);
             address_xN_last_trig_ctr_mcp           = get_xsc_channel("last_trig_ctr_mcp", 0);
-            address_xN_predicted_motion_px         = get_xsc_channel("predicted_motion_px", which);
         }
+        address_xN_predicted_streaking_px[which]   = get_xsc_channel("predicted_streaking_px", which);
         address_xN_ctr_stars[which]                = get_xsc_channel("ctr_stars", which);
         address_xN_image_ctr_stars[which]          = get_xsc_channel("image_ctr_stars", which);
         address_xN_image_ctr_mcp[which]            = get_xsc_channel("image_ctr_mcp", which);
@@ -848,10 +848,10 @@ void store_100hz_xsc(int which)
         SET_SCALED_VALUE(address_xN_ctr_mcp, xsc_pointing_state[which].counter_mcp);
         SET_SCALED_VALUE(address_xN_last_trig_age_cs, xsc_pointing_state[which].last_trigger.trigger_time);
         SET_SCALED_VALUE(address_xN_last_trig_ctr_mcp, xsc_pointing_state[which].last_trigger.counter_mcp);
-        SET_SCALED_VALUE(address_xN_predicted_motion_px, xsc_pointing_state[0].predicted_motion_px);
     }
 
 
+    SET_SCALED_VALUE(address_xN_predicted_streaking_px[which], xsc_pointing_state[which].predicted_streaking_px);
     SET_INT32(address_xN_ctr_stars[which], XSC_SERVER_DATA(which).channels.ctr_stars);
     SET_INT32(address_xN_image_ctr_stars[which], XSC_SERVER_DATA(which).channels.image_ctr_stars);
     SET_INT32(address_xN_image_ctr_mcp[which], XSC_SERVER_DATA(which).channels.image_ctr_mcp);
@@ -982,6 +982,7 @@ void store_5hz_acs(void)
     /* trim fields */
     static channel_t *trimClinAddr;
     static channel_t *trimEncAddr;
+    static channel_t *trimEncMotorAddr;
     static channel_t *trimNullAddr;
     static channel_t *trimMagAddr;
     static channel_t *trimPssAddr;
@@ -1111,6 +1112,7 @@ void store_5hz_acs(void)
 
         trimClinAddr = channels_find_by_name("trim_clin");
         trimEncAddr = channels_find_by_name("trim_enc");
+        trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
         trimNullAddr = channels_find_by_name("trim_null");
         trimMagAddr = channels_find_by_name("trim_mag");
         trimPssAddr = channels_find_by_name("trim_pss");
@@ -1211,6 +1213,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
 
     SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim);
+    SET_SCALED_VALUE(trimEncMotorAddr, CommandData.enc_motor_el_trim);
 
     SET_SCALED_VALUE(elClinAddr, (PointingData[i_point].clin_el_lut + CommandData.clin_el_trim));
     SET_SCALED_VALUE(elLutClinAddr, PointingData[i_point].clin_el);

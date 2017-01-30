@@ -176,9 +176,9 @@ int32_t el_get_position(void)
 {
     return *actual_position[el_index];
 }
-int32_t el_get_motor_position(void)
+int32_t el_get_motor_position(void) // Offsetting motor units to correspond with elevation
 {
-    return *motor_position[el_index];
+    return *motor_position[el_index] + ENC_RAW_EL_OFFSET/EL_MOTOR_ENCODER_SCALING;
 }
 int32_t piv_get_position(void)
 {
@@ -481,7 +481,7 @@ static void piv_init_resolver(void)
  */
 static int find_controllers(void)
 {
-    char name[16] = "eth0";
+    char name[16] = "eth1";
     int ret_init;
     int ret_config;
 

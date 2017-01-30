@@ -61,6 +61,7 @@
 #include "acs.h"
 #include "actuators.h"
 #include "bias_tone.h"
+#include "balance.h"
 #include "blast.h"
 #include "blast_comms.h"
 #include "blast_sip_interface.h"
@@ -333,7 +334,11 @@ static void mcp_5hz_routines(void)
     write_motor_channels_5hz();
     store_axes_mode_data();
     WriteAux();
+    ControlBalance();
     StoreActBus();
+    #ifdef USE_XY_THREAD
+    StoreStageBus(1); // TODO(pca): figure out what argument does
+    #endif
     SecondaryMirror();
 //    PhaseControl();
     StoreHWPRBus();
@@ -440,7 +445,7 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm2;
 #endif
 #ifdef USE_XY_THREAD /* Define should be set in mcp.h */
-  pthread_t xy_id;
+  // pthread_t xy_id;
 #endif
 
   if (argc == 1) {
@@ -518,7 +523,7 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif
 #ifdef USE_XY_THREAD
-  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
+  // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
 
 #ifndef BOLOTEST

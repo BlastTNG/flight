@@ -126,7 +126,7 @@ enum singleCommand {
   reset_rw,         reset_piv,
   reset_elev,         hs_pot_on,
   hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,
-  hwpr_enc_off,     hwpr_enc_pulse,     balance_heat_on,  balance_heat_off,
+  hwpr_enc_off,     hwpr_enc_pulse,
   vtx1_isc,	    vtx1_osc,		vtx2_isc,
   vtx2_osc,	    cam_cycle,
   cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens,
@@ -160,7 +160,7 @@ enum singleCommand {
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
-  balance_manual,
+  balance_manual,    balance_vel,       balance_i,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
   bias_level_x,      fridge_cycle_params,  box,
   cal_pulse,         cal_repeat,        cap,              cur_mode,
@@ -182,7 +182,6 @@ enum multiCommand {
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
-  balance_tset,
   motors_verbose,    bias_step,         phase_step,       hwpr_set_backlash,
   hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
