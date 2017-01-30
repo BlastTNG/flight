@@ -357,7 +357,6 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     rec_control();
-    test_labjacks(4);
     read_thermometers();
     test_read();
     blast_store_cpu_health();
