@@ -269,7 +269,6 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
 	static unsigned int pr_ct = 0;
     uint64_t buf_len = 0;
     int i = 0;
-    unsigned char *junk_data;
 
     if ((m_why & (PH_IOMASK_ERR)) && m_serial->conn->last_err != 0) {
         blast_err("Disconnecting Gyro Box %d due to Error %d", gyro->which, m_serial->conn->last_err);
@@ -288,7 +287,7 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
     /// We loop here to catch multiple packets that may have been delivered since we last read
     // Won't enter the loop if the header information isn't found in the buffer.
     gyro->attempts_since_last_packet++;
-    while (ph_bufq_discard_until(m_serial->rbuf, header, 4, gyro->verbose)) {
+    while (ph_bufq_discard_until(m_serial->rbuf, header, 4)) {
 //        blast_info("Found header sequence in buffer for gyro box %d", gyro->which);
         n_pkts_read++;
         gyro->attempts_since_last_packet = 0;
@@ -301,14 +300,13 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
             return;
         }
         pkt = (dsp1760_std_t*) ph_buf_mem(buf);
-        junk_data = (unsigned char*) ph_buf_mem(buf);
         gyro->packet_count++;
         if (pr_ct > 0) {
             blast_info("Copied memory to pkt gyro box %d, ct = %d", gyro->which, gyro->packet_count);
             print_dsp1760_packet(pkt, gyro->which);
-            for (i = 0; i < sizeof(dsp1760_std_t)/2; i++) {
-                printf("0x%02x ", junk_data[i]);
-    			if (i % 31 == 0) printf("\n");
+            for (i = 0; i < sizeof(dsp1760_std_t); i++) {
+                printf("0x%02x ", pkt->raw_data[i]);
+    			if (i && !(i % sizeof(dsp1760_std_t))) printf("\n");
             }
             printf("\n");
         }
@@ -316,11 +314,12 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         if (crc_calc) {
             gyro->crc_error_count++;
             invalid_data = true;
+//            exit(1);
             blast_info("Invalid packet on gyro box %d!", gyro->which);
 	        print_dsp1760_packet(pkt, gyro->which);
-            for (i = 0; i < sizeof(dsp1760_std_t)/2; i++) {
-                printf("0x%02x ", junk_data[i]);
-    			if (i % 31 == 0) printf("\n");
+            for (i = 0; i < sizeof(dsp1760_std_t); i++) {
+                printf("0x%02x ", pkt->raw_data[i]);
+                if (i && !(i % sizeof(dsp1760_std_t))) printf("\n");
             }
             printf("\n");
 
@@ -410,10 +409,10 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
             if (!(buf_junk = ph_serial_read_bytes_exact(m_serial, buf_len))) {
                 blast_err("Error could not read junk buffer.");
             } else {
-                junk_data = (unsigned char*) ph_buf_mem(buf_junk);
-                for (i = 0; i < buf_len / 2; i++) {
+                char *junk_data = (char*) ph_buf_mem(buf_junk);
+                for (i = 0; i < buf_len; i++) {
+                	if (i && !(i % sizeof(dsp1760_std_t))) puts("");
                     printf("0x%02x ", junk_data[i]);
-    			    if (i % 31 == 0) printf("\n");
                 }
                 printf("\n");
             }
@@ -424,9 +423,6 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
             pr_ct = 2;
         }
         dsp1760_disconnect(m_serial, gyro);
-    } else {
-//            blast_info("OK->Buffer length %i, size_of(dsp1760_std_t)=%i-> OK",
-//                       ph_bufq_len(m_serial->rbuf), sizeof(dsp1760_std_t));
     }
 }
 
@@ -482,8 +478,8 @@ bool initialize_dsp1760_interface(void)
         gyro_data[i].connect_job.data = &(gyro_data[i]);
 //        ph_job_set_pool(&(gyro_data[i].connect_job), gyro_pool);
 
-        // Set the dispatch to 500ms and 1000ms respectively for the gyro connect
-        ph_job_set_timer_in_ms(&(gyro_data[i].connect_job), 500 * (i+1));
+        // Set the dispatch to 5ms and 10ms respectively for the gyro connect
+        ph_job_set_timer_in_ms(&(gyro_data[i].connect_job), 5 * (i + 1));
     }
 
     blast_startup("Initialized gyroscope interface");
