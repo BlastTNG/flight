@@ -1367,6 +1367,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 // *****************************************
 // ROACH Commands
 // *****************************************
+    case load_new_tone_amplitudes:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] > 0) && ivalues[1] <= 2)) {
+          CommandData.roach[ivalues[0]-1].load_amps = ivalues[1];
+      }
+    case set_attens:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].set_rudats = 0;
+      }
     case end_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_sweeps = 0;
@@ -1947,6 +1955,7 @@ void InitCommandData()
     CommandData.hwpr.repeats = 0;
 
 	for (i = 0; i < NUM_ROACHES; i++) {
+		CommandData.roach[i].set_rudats = 0;
 		CommandData.roach[i].do_calc_grad = 0;
 		CommandData.roach[i].do_sweeps = 1;
 		CommandData.roach[i].new_state = 0;
@@ -2025,7 +2034,9 @@ void InitCommandData()
 
     CommandData.slot_sched = 0x100;
     CommandData.parts_sched = 0x0;
-
+    for (i = 0; i < NUM_ROACHES - 1; i++) {
+    	CommandData.roach[i].load_amps = 1;
+	}
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))
         blast_warn("Commands: prev_status: Wanted %i bytes but got %i.\n",

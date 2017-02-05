@@ -100,7 +100,7 @@ typedef struct roach_state {
 
     int has_error;
     const char *last_err;
-    const char *address;
+    char *address;
     uint16_t port;
     bool is_streaming;
 
@@ -108,9 +108,10 @@ typedef struct roach_state {
     double *vna_comb;
     size_t freqlen;
     double delta_f;
-    double *targ_comb;
+    double *targ_tones;
     double lo_freq_req;
     size_t num_kids;
+    double lo_centerfreq;
 
     // First two LUTs are for building
     roach_lut_t DDS;
@@ -120,10 +121,15 @@ typedef struct roach_state {
 
     char *vna_path_root;
     char *targ_path_root;
+    char *grad_path_root;
     char *last_vna_path;
     char *last_targ_path;
+    char *last_grad_path;
     char *channels_path;
     uint16_t dest_port;
+
+    char *default_amps_path;
+    char *new_amps_path;
 
     // PPC link
     struct katcl_line *rpc_conn;
