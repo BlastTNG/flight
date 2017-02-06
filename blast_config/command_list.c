@@ -787,9 +787,10 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(calc_grad_roach), "Force calculation of I,Q gradient", GR_ROACH, 1,
+  {COMMAND(calc_grad_roach), "Force calculation of I,Q gradient", GR_ROACH, 2,
     {
-      {"ROACH no", 1, 5, 'i', "NONE"}
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Choose behavior: 0 = default, 1 = set grads as ref, 2 = use grads as comparison", 0, 2, 'i', "NONE"}
     }
   },
   /***************************************/

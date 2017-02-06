@@ -1395,8 +1395,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case calc_grad_roach:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].do_calc_grad = 1;
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 2)) {
+          CommandData.roach[ivalues[0]-1].do_calc_grad = ivalues[1];
       }
       break;
       /*************************************

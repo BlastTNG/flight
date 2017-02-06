@@ -125,7 +125,13 @@ typedef struct roach_state {
     char *last_vna_path;
     char *last_targ_path;
     char *last_grad_path;
+    char *ref_sweep_path;
+    char *ref_grad_path;
+    char *last_comp_grads;
     char *channels_path;
+    // Python logs (for saving/reading response)
+    char *cal_log;
+    char *find_kids_log;
     uint16_t dest_port;
 
     char *default_amps_path;
