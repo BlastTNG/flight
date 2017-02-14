@@ -175,8 +175,6 @@ static void *netreader_routine(void *m_arg)
                 sleep(1);
                 break;
         }
-
-        fflush(NULL);
     }
 
     mosquitto_destroy(mosq);
