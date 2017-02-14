@@ -281,10 +281,11 @@ int main(int argc, char** argv)
                     ifr = 200;
                 }
 #ifndef DEBUG
-                printf("%s R:[%i] %.*f W:[%i] %.*f Hz\r", rc.output_dirfile, ri.read,
+                printf("%s R:[%i] %.*f W:[%i] %.*f Hz  DIFF:[%d]\r", rc.output_dirfile, ri.read,
                 		(ifr > 100) ? 1 : (ifr > 10) ? 2 : 3, ifr,
                 		ri.wrote,
-                		(ofr > 100) ? 1 : (ofr > 10) ? 2 : 3, ofr);
+                		(ofr > 100) ? 1 : (ofr > 10) ? 2 : 3, ofr),
+                		ri.read - ri.wrote;
                 fflush(stdout);
 #endif
             }
