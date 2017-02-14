@@ -347,7 +347,7 @@ add_executable (mcp
 add_dependencies(mcp soem phenomproj)
 
 define_file_basename_for_sources(mcp)
-
+ 
 target_link_libraries(mcp 
 	${ALSA_LIBRARY}
 	${MODBUS_LIBRARY}
@@ -363,7 +363,8 @@ target_link_libraries(mcp
     ssl crypto 
     m)
 
-set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
+SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${PROJECT_SOURCE_DIR}/.linttemp)
+FOREACH(file ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
 		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} 
 		mcp.c tx.c
@@ -371,14 +372,13 @@ set(check_files ${POINTING_SRCS} ${MOTOR_SRCS}
 		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS}
 		${ROACH_HEADERS}
 	    ${PROJECT_SOURCE_DIR}/include/mcp.h
-	    ${PROJECT_SOURCE_DIR}/include/tx.h
-	)
-list(REMOVE_ITEM check_files ${PROJECT_SOURCE_DIR}/sensors/geomag2015.c ${PROJECT_SOURCE_DIR}/sensors/../include/geomag2015.h ${PROJECT_SOURCE_DIR}/sensors/../include/EGM9615.h)
-string(REGEX REPLACE "[ ]*[a-zA-Z/]*PMurHash.[ch][ ]*" " " check_files "${check_files}")
+	    ${PROJECT_SOURCE_DIR}/include/tx.h)
+	GET_FILENAME_COMPONENT(file ${file} REALPATH)
+	SET(check_files_resolved ${check_files_resolved} ${file})
+ENDFOREACH(file) 
 
 add_custom_command(TARGET mcp PRE_BUILD
-	#COMMAND /bin/echo ${check_files}
-	COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
+	COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files_resolved}
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 	COMMENT "Checking Code Style"
 	VERBATIM

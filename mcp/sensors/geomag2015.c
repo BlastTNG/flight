@@ -80,7 +80,8 @@
  *  Revision Number: $Revision: 1287 $
  *  Last changed by: $Author: awoods $
  *  Last changed on: $Date: 2014-12-09 15:55:09 -0700 (Tue, 09 Dec 2014) $
-
+ *
+ * @nolint
  */
 
 

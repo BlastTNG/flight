@@ -1,10 +1,8 @@
 **~
-**.project
-**.cproject
-**.settings
+.**
+!**/.gitignore
 **.o
 **.autotools
-**.deps
 **.dirstamp
 **.sdf
 **.obj

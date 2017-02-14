@@ -6,6 +6,8 @@
  *
  * This is a portable ANSI C implementation of MurmurHash3_x86_32 (Murmur3A)
  * with support for progressive processing.
+ *
+ * @nolint
  */
 
 /* ------------------------------------------------------------------------- */

@@ -2,10 +2,7 @@
  * This version was further modified by Seth Hillbrand to correctly handle
  * endian-ness on multiple systems including a UEI PPC5200-based machine.
  *
- * I broke some of the platform independence by including byteswap.h and
- * endian.h but this fits the needs of BLAST, which is a mostly linux-based
- * platform.
- *
+ * @nolint
  */
 /*-----------------------------------------------------------------------------
  * MurmurHash3 was written by Austin Appleby, and is placed in the public

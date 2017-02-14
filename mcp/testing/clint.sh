@@ -1,11 +1,18 @@
 #!/bin/sh
-if [ $# -gt 0 ] ; then
-  files="$*"
+if [ -e ".linttemp" ]; then
+  for file in $*; do
+    if [ "$file" -nt ".linttemp" ]; then
+      newer="$newer $file"
+    fi
+  done
 else
-  files=$(find . include -name \*.c -o -name \*.h)
+  newer="$*"
 fi
+
 # Run in parallel
 echo `pwd`
-echo $files | xargs -P 8 -n 8 $PYTHON testing/cpplint.py \
-  --root=include --verbose=2 
-
+echo "$newer"
+if [ -n "$newer" ]; then
+  echo $newer | xargs -P 8 -n 8 $PYTHON testing/cpplint.py \
+    --root=include --verbose=2 && touch .linttemp
+fi

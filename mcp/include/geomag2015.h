@@ -9,7 +9,7 @@
  *      Last changed by: $Author: awoods $
  *      Last changed on: $Date: 2014-12-09 16:43:07 -0700 (Tue, 09 Dec 2014) $
  *
- *
+ *  @nolint
  */
 
 #ifndef INCLUDE_GEOMAG2015_H
