@@ -101,6 +101,8 @@ char atten_init[] = "python /root/device_control/init_attenuators.py 30 30";
 char valon_init[] = "python /root/device_control/init_valon.py";
 char read_valon[] = "python /root/device_control/read_valon.py";
 
+static uint32_t dest_ip = IPv4(192, 168, 40, 3);
+
 void nameThread(const char*);
 
 int roach_qdr_cal(roach_state_t *m_roach)

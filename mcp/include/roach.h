@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <glib.h>
 #include <math.h>
+#include <netinet/in.h>
 #include "phenom/socket.h"
 #include "phenom/buffer.h"
 #include "remote_serial.h"
@@ -191,12 +192,14 @@ typedef struct data_udp_packet {
 
 #define ROACH_UDP_LEN 8234
 #define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
-
+#define IPv4(a, b, c, d) ((uint32_t)(((a) & 0xff) << 24) | \
+                                            (((b) & 0xff) << 16) | \
+                                            (((c) & 0xff) << 8)  | \
+                                            ((d) & 0xff))
 static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
 
 // Destination IP for fc1
 static const char udp_dest[32] = "192.168.40.3";
-static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 40*pow(2, 8) + 3;
 static const char udp_dest_name[32] = "roach-udp-dest";
 
 typedef struct {
