@@ -253,12 +253,12 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     complex double *wave = calloc(comb_fft_len, sizeof(complex double));
     double max_val = 0.0;
     srand48(time(NULL));
-    for (size_t i = 1; i < m_freqlen; i++) {
+    for (size_t i = 0; i < m_freqlen; i++) {
         int bin = roach_fft_bin_index(m_freqs, i, comb_fft_len, m_samp_freq);
         if (bin < 0) {
             bin += comb_fft_len;
         }
-        spec[bin] = m_attens[bin] * cexp(_Complex_I * drand48() * 2.0 * M_PI);
+        spec[bin] = m_attens[i] * cexp(_Complex_I * drand48() * 2.0 * M_PI);
     }
     /*FILE *f1 = fopen("./dac_spec.txt", "w");
      for (size_t i = 0; i < comb_fft_len; i++){
@@ -343,6 +343,7 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_
     int bins[fft_len];
     double bin_freqs[fft_len];
 
+    if (m_roach->freq_residuals) free(m_roach->freq_residuals);
     m_roach->freq_residuals = malloc(m_freqlen * sizeof(size_t));
     for (size_t i = 0; i < m_freqlen; i++) {
 	bins[i] = roach_fft_bin_index(m_freqs, i, fft_len, DAC_SAMP_FREQ);
@@ -1388,6 +1389,7 @@ void *roach_cmd_loop(void)
 			}*/
 		}
 	}
+	return NULL;
 }
 
 int init_roach(void)
@@ -1409,7 +1411,7 @@ int init_roach(void)
 	    roach_udp_networking_init(roach_state_table[i].which, &roach_state_table[i], NUM_ROACH_UDP_CHANNELS);
 	}
 
-    ph_thread_t *roach_cmd_thread = ph_thread_spawn((ph_thread_func)roach_cmd_loop, NULL);
+    ph_thread_spawn((ph_thread_func)roach_cmd_loop, NULL);
     return 0;
 }
 
@@ -1417,39 +1419,52 @@ void write_roach_channels_5hz(void)
 {
     int i;
     static int firsttime = 1;
-	static channel_t *RoachPktCtAddr[NUM_ROACHES];
-	static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
-	static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
-	static channel_t *RoachStatusAddr[NUM_ROACHES];
-	static channel_t *RoachStateAddr[NUM_ROACHES];
-	static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
-    char channel_name_pkt_ct[128] = {0};
-    char channel_name_valid_pkt_ct[128] = {0};
-    char channel_name_invalid_pkt_ct[128] = {0};
-    char channel_name_roach_status[128] = {0};
-    char channel_name_roach_state[128] = {0};
-    char channel_name_roach_req_lo[128] = {0};
+    static channel_t *RoachPktCtAddr[NUM_ROACHES];
+    static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
+    static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
+    static channel_t *RoachStatusAddr[NUM_ROACHES];
+    static channel_t *RoachStateAddr[NUM_ROACHES];
+//  static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
+    char channel_name_pkt_ct[128] = { 0 };
+    char channel_name_valid_pkt_ct[128] = { 0 };
+    char channel_name_invalid_pkt_ct[128] = { 0 };
+    char channel_name_roach_status[128] = { 0 };
+    char channel_name_roach_state[128] = { 0 };
+    char channel_name_roach_req_lo[128] = { 0 };
     if (firsttime) {
         firsttime = 0;
         for (i = 0; i < NUM_ROACHES; i++) {
-            snprintf(channel_name_pkt_ct, sizeof(channel_name_pkt_ct), "packet_count_roach%d", i+1);
-            snprintf(channel_name_valid_pkt_ct, sizeof(channel_name_valid_pkt_ct), "packet_count_valid_roach%d", i+1);
-            snprintf(channel_name_invalid_pkt_ct, sizeof(channel_name_invalid_pkt_ct),
-                   	 "packet_count_invalid_roach%d", i+1);
-            snprintf(channel_name_roach_status, sizeof(channel_name_roach_status), "status_roach%d", i+1);
-            snprintf(channel_name_roach_state, sizeof(channel_name_roach_state), "stream_state_roach%d", i+1);
-            snprintf(channel_name_roach_req_lo, sizeof(channel_name_roach_state), "freq_lo_req_roach%d", i+1);
+            snprintf(channel_name_pkt_ct, sizeof(channel_name_pkt_ct),
+                    "packet_count_roach%d", i + 1);
+            snprintf(channel_name_valid_pkt_ct,
+                    sizeof(channel_name_valid_pkt_ct),
+                    "packet_count_valid_roach%d", i + 1);
+            snprintf(channel_name_invalid_pkt_ct,
+                    sizeof(channel_name_invalid_pkt_ct),
+                    "packet_count_invalid_roach%d", i + 1);
+            snprintf(channel_name_roach_status,
+                    sizeof(channel_name_roach_status), "status_roach%d", i + 1);
+            snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
+                    "stream_state_roach%d", i + 1);
+            snprintf(channel_name_roach_req_lo,
+                    sizeof(channel_name_roach_state), "freq_lo_req_roach%d",
+                    i + 1);
             RoachPktCtAddr[i] = channels_find_by_name(channel_name_pkt_ct);
-            RoachValidPktCtAddr[i] = channels_find_by_name(channel_name_valid_pkt_ct);
-            RoachInvalidPktCtAddr[i] = channels_find_by_name(channel_name_invalid_pkt_ct);
-            RoachStatusAddr[i] = channels_find_by_name(channel_name_roach_status);
+            RoachValidPktCtAddr[i] = channels_find_by_name(
+                    channel_name_valid_pkt_ct);
+            RoachInvalidPktCtAddr[i] = channels_find_by_name(
+                    channel_name_invalid_pkt_ct);
+            RoachStatusAddr[i] = channels_find_by_name(
+                    channel_name_roach_status);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
         }
     }
     for (i = 0; i < NUM_ROACHES; i++) {
         SET_UINT32(RoachPktCtAddr[i], roach_udp[i].roach_packet_count);
-        SET_UINT32(RoachValidPktCtAddr[i], roach_udp[i].roach_valid_packet_count);
-        SET_UINT32(RoachInvalidPktCtAddr[i], roach_udp[i].roach_invalid_packet_count);
+        SET_UINT32(RoachValidPktCtAddr[i],
+                roach_udp[i].roach_valid_packet_count);
+        SET_UINT32(RoachInvalidPktCtAddr[i],
+                roach_udp[i].roach_invalid_packet_count);
         SET_UINT16(RoachStatusAddr[i], roach_state_table[i].status);
         // TODO(laura/sam): Replace next write with a streaming status bitfield.
         SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
