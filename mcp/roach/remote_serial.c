@@ -172,7 +172,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     blast_info("Connected to Beaglebone%d at %s", state->which + 1, addresses[state->which]);
 
     /// If we had an old socket from an invalid connection, free the reference here
-    if (state->sock) ph_sock_free(state->sock);
+    if (state->sock && m_sock != state->sock) ph_sock_free(state->sock);
 
     state->sock = m_sock;
     state->connected = true;
