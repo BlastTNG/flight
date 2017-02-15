@@ -1216,17 +1216,18 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 
 void shutdown_roaches(void)
 {
-	for (int i = 0; i < NUM_ROACHES; i++) {
-		roach_write_int(&roach_state_table[i], "tx_rst", 1, 0);
-		if (roach_state_table[i].katcp_fd > 0) {
-		    roach_read_int(&roach_state_table[i], "tx_rst");
-			destroy_rpc_katcl(roach_state_table[i].rpc_conn);
-			blast_info("Closing KATCP on ROACH%d", i + 1);
-            		ph_sock_shutdown(bb_state_table[i].bb_comm->sock, PH_SOCK_SHUT_RDWR);
-            		ph_sock_enable(bb_state_table[i].bb_comm->sock, false);
-            		ph_sock_free(bb_state_table[i].bb_comm->sock);
-		}
-	}
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        blast_info("Closing KATCP on ROACH%d", i + 1);
+        if (roach_state_table[i].rpc_conn) {
+            roach_write_int(&roach_state_table[i], "tx_rst", 1, 0);
+            roach_read_int(&roach_state_table[i], "tx_rst");
+            destroy_rpc_katcl(roach_state_table[i].rpc_conn);
+        }
+        if (bb_state_table[i].bb_comm) {
+            remote_serial_shutdown(bb_state_table[i].bb_comm);
+            bb_state_table[i].bb_comm = NULL;
+        }
+    }
 }
 
 void *roach_cmd_loop(void)

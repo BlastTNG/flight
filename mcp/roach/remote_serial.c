@@ -210,6 +210,23 @@ static void connect_remote_serial(ph_job_t *m_job, ph_iomask_t m_why, void *m_da
 }
 
 /**
+ * Shutdown the remote serial connection and free the associated memory
+ *
+ * @param m_serial Pointer to the initialized remote serial structure
+ */
+void remote_serial_shutdown(remote_serial_t *m_serial)
+{
+    if (!m_serial) return;
+
+    if (m_serial->sock) {
+        ph_sock_shutdown(m_serial->sock, PH_SOCK_SHUT_RDWR);
+        ph_sock_enable(m_serial->sock, false);
+        ph_sock_free(m_serial->sock);
+    }
+    free(m_serial);
+}
+
+/**
  * Initialize the remote serial I/O routine.  The state variable tracks each
  * beaglebone connection and is passed to the connect job.
  *
