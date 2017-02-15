@@ -170,15 +170,16 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
             "Please report any errors or bugs to <seth.hillbrand@gmail.com>");
     g_option_context_add_main_entries(context, cmdline_options, NULL);
 
+    if (argc < 2) {
+        g_option_context_get_help(context, true, NULL);
+        exit(0);
+    }
+
     if (!g_option_context_parse(context, &argc, &argv, &error)) {
         g_error("option parsing failed: %s\n", error->message);
         exit(1);
     }
 
-    if (argc < 2) {
-        g_option_context_get_help(context, true, NULL);
-        exit(0);
-    }
     /* fix up daemon mode */
     if (m_rc->daemonise) m_rc->persist = m_rc->silent = m_rc->force_stdio = 1;
 

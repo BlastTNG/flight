@@ -66,7 +66,6 @@ static int dirfile_offset = -1;
 static int dirfile_create_new = 0;
 static int dirfile_update_derived = 0;
 static bool dirfile_ready = false;
-static int dirfile_frames_written = 0;
 
 static void defricher_add_derived(DIRFILE *m_file, derived_tng_t *m_derived)
 {
@@ -444,7 +443,6 @@ static int defricher_write_packet(uint16_t m_rate)
         }
     }
 
-    dirfile_frames_written++;
     return 0;
 }
 
@@ -498,12 +496,13 @@ static void *defricher_write_loop(void *m_arg)
                 dirfile_create_new = 0;
                 dirfile_ready = true;
                 ri.symlink_updated = false;
-                dirfile_frames_written = 0;
+                ri.wrote = 0;
+                ri.read = 0;
             }
         }
 
         /// We wait until a frame is written to the dirfile before updating the link (for KST)
-        if (dirfile_frames_written > 400 && !ri.symlink_updated) {
+        if (ri.wrote > 400 && !ri.symlink_updated) {
             defricher_update_current_link(rc.output_dirfile);
             ri.symlink_updated = true;
         }
