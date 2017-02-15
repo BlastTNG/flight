@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <glib.h>
 #include <math.h>
+#include <netinet/in.h>
 #include "phenom/socket.h"
 #include "phenom/buffer.h"
 #include "remote_serial.h"
@@ -40,8 +41,8 @@
 #define MAX_CHANNELS_PER_ROACH 1016
 
 typedef struct {
-    int32_t I;
-    int32_t Q;
+    int32_t Ival;
+    int32_t Qval;
 } __attribute__((packed)) udp_element_t;
 
 typedef struct {
@@ -82,14 +83,14 @@ typedef enum {
 
 typedef struct {
     size_t len;
-    double *I;
-    double *Q;
+    double *Ival;
+    double *Qval;
 } roach_lut_t;
 
 typedef struct {
     size_t len;
-    uint16_t *I;
-    uint16_t *Q;
+    uint16_t *Ival;
+    uint16_t *Qval;
 } roach_uint16_lut_t;
 
 typedef struct roach_state {
@@ -136,8 +137,7 @@ typedef struct roach_state {
     char *find_kids_log;
     uint16_t dest_port;
 
-    char *default_amps_path;
-    char *new_amps_path;
+    char *amps_path[2];
 
     // PPC link
     struct katcl_line *rpc_conn;
@@ -178,8 +178,8 @@ typedef struct data_packet {
 typedef struct data_udp_packet {
 //  struct ethhdr *eth;
 //  struct iphdr *ip;
-	float I[MAX_CHANNELS_PER_ROACH];
-	float Q[MAX_CHANNELS_PER_ROACH];
+	float Ival[MAX_CHANNELS_PER_ROACH];
+	float Qval[MAX_CHANNELS_PER_ROACH];
     uint32_t buffer_len;
 	uint32_t checksum;
 	uint32_t pps_count;
@@ -193,12 +193,14 @@ typedef struct data_udp_packet {
 
 #define ROACH_UDP_LEN 8234
 #define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
-
+#define IPv4(a, b, c, d) ((uint32_t)(((a) & 0xff) << 24) | \
+                                            (((b) & 0xff) << 16) | \
+                                            (((c) & 0xff) << 8)  | \
+                                            ((d) & 0xff))
 static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
 
 // Destination IP for fc1
 static const char udp_dest[32] = "192.168.40.3";
-static uint32_t dest_ip = 192*pow(2, 24) + 168*pow(2, 16) + 40*pow(2, 8) + 3;
 static const char udp_dest_name[32] = "roach-udp-dest";
 
 typedef struct {
