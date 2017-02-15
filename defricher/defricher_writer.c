@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <glib.h>
+#include <bzlib.h>
 
 #include <channels_tng.h>
 #include <channel_macros.h>
@@ -165,7 +166,11 @@ static void defricher_free_channels_list (channel_t *m_channel_list)
         if (    node &&
                 node->magic == BLAST_MAGIC32)
         {
-            if (node->output.fp) {
+            if (rc.bzip_output && node->output.bzfp) {
+            	BZ2_bzclose(node->output.bzfp);
+            	node->output.bzfp = NULL;
+            }
+            if (!rc.bzip_output && node->output.fp) {
                 if (fclose(node->output.fp))
                     defricher_strerr("Could not close %s", node->output.name?node->output.name:"UNK");
                 node->output.fp = NULL;
@@ -192,9 +197,14 @@ static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_li
                 defricher_err("Could not get filename for %s: %s", outfile_node->output.name, error_str);
                 return -1;
             }
-            outfile_node->output.fp = fopen(filename, "w+");
 
-            if (!outfile_node->output.fp) {
+            if (rc.bzip_output)
+            	outfile_node->output.bzfp = BZ2_bzopen(filename, "w+");
+            else
+            	outfile_node->output.fp = fopen(filename, "w+");
+
+            if ((rc.bzip_output && !outfile_node->output.bzfp) ||
+            	(!rc.bzip_output && !outfile_node->output.fp)) {
                 defricher_err("Could not open %s", filename);
                 free(filename);
                 switch(errno) {
@@ -329,7 +339,8 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
         return false;
     }
 
-    new_file = gd_open(m_name, GD_CREAT|GD_RDWR|GD_PRETTY_PRINT|GD_VERBOSE);
+    new_file = gd_open(m_name, GD_CREAT|GD_RDWR|GD_PRETTY_PRINT|
+    							(rc.bzip_output?GD_BZIP2_ENCODED:0)|GD_VERBOSE);
     if (gd_error(new_file) == GD_E_OK)
     {
         m = 1e-5;
@@ -429,8 +440,13 @@ static int defricher_write_packet(uint16_t m_rate)
     for (channel_t *channel = channels; channel->field[0]; channel++) {
         if (channel->rate != m_rate) continue;
         defricher_cache_node_t *outfile_node = channel->var;
-        if (outfile_node && outfile_node->magic == BLAST_MAGIC32 && outfile_node->output.fp ) {
-            if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
+        if (outfile_node && outfile_node->magic == BLAST_MAGIC32 &&
+        		((rc.bzip_output && outfile_node->output.bzfp) ||
+				(!rc.bzip_output && outfile_node->output.fp))) {
+        	if ((rc.bzip_output && BZ2_bzwrite(outfile_node->output.bzfp, outfile_node->raw_data,
+        			outfile_node->output.element_size) != outfile_node->output.element_size) ||
+        		(!rc.bzip_output && fwrite(outfile_node->raw_data, outfile_node->output.element_size,
+            		1, outfile_node->output.fp) != 1)) {
                 defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
             }
@@ -484,7 +500,8 @@ static void *defricher_write_loop(void *m_arg)
                 continue;
             }
             if (defricher_update_cache_fp(dirfile, channels) < 0) {
-                defricher_err("Could not open all files for writing.  Please report this error to Seth (seth.hillbrand@gmail.com)");
+                defricher_err("Could not open all files for writing.  "
+                		"Please report this error to Seth (seth.hillbrand@gmail.com)");
                 ri.writer_done = true;
             } else {
                 dirfile_create_new = 0;

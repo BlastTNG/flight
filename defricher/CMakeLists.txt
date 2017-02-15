@@ -56,6 +56,9 @@ find_package(PkgConfig)
 # Find Threading lib
 find_package (Threads)
 
+# Find BZip2 lib
+find_package (BZip2)
+
 # Find ExternalProject module
 include (ExternalProject)
 
@@ -155,6 +158,7 @@ target_link_libraries(defricher
     ${GLIB_LIBRARY}  
     ${GD_LIBRARY}
     ${MOSQ_LIBRARY} 
+    ${BZIP2_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT} 
     m)
 

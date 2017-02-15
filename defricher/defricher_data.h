@@ -26,7 +26,7 @@
 #ifndef DEFRICHER_DATA_H_
 #define DEFRICHER_DATA_H_
 
-
+#include <bzlib.h>
 #include <stdbool.h>
 #include <time.h>
 
@@ -46,6 +46,7 @@ typedef struct defricher_file_data
     char                    *name;          /**< name Stream name - filename in the DIRFILE */
     char                    *desc;          /**< desc Description of the channel */
     FILE                    *fp;            /**< fp File pointer to write in DIRFILE */
+    BZFILE					*bzfp;			/**< bzfp BZip2 file pointer for raw data */
     off_t                   offset;         /**< offset Current offset (from 0) in the file */
     size_t                  element_size;   /**< element_size Size in bytes of each data value */
     bool                    is_signed;      /**< is_signed if true, the integer is signed */

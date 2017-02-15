@@ -56,6 +56,7 @@ char **remaining_args = NULL;
 static GOptionEntry cmdline_options[] =
 {
         { "autoreconnect", 0, 0, G_OPTION_ARG_NONE, &rc.auto_reconnect, "Automatically reconnect when dropped", NULL},
+		{ "bzip-output", 'b', 0, G_OPTION_ARG_NONE, &rc.bzip_output, "Compress output data streams using BZip2", NULL },
         { "daemonize", 0, 0, G_OPTION_ARG_NONE, &rc.daemonise, "Fork to the background on startup", NULL},
         { "force", 'f', 0, G_OPTION_ARG_NONE, &rc.force_stdio, "Overwrite destination file if exists", NULL},
         { "output-dirfile", 'o', 0, G_OPTION_ARG_STRING, &rc.output_dirfile, "Use NAME as the output Dirfile name", NULL},
