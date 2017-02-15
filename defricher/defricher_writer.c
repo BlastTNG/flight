@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <glib.h>
-#include <bzlib.h>
+#include <zlib.h>
 
 #include <channels_tng.h>
 #include <channel_macros.h>
@@ -166,15 +166,10 @@ static void defricher_free_channels_list (channel_t *m_channel_list)
         if (    node &&
                 node->magic == BLAST_MAGIC32)
         {
-            if (rc.bzip_output && node->output.bzfp) {
-            	BZ2_bzclose(node->output.bzfp);
-            	node->output.bzfp = NULL;
+            if (node->output.gzfp && gzclose(node->output.gzfp)) {
+                defricher_strerr("Could not close %s", node->output.name?node->output.name:"UNK");
             }
-            if (!rc.bzip_output && node->output.fp) {
-                if (fclose(node->output.fp))
-                    defricher_strerr("Could not close %s", node->output.name?node->output.name:"UNK");
-                node->output.fp = NULL;
-            }
+            node->output.gzfp = NULL;
             free(node);
             channel->var = NULL;
         }
@@ -187,6 +182,7 @@ static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_li
 {
     char *filename;
     char error_str[2048];
+    char *mode;
 
     for (channel_t *channel = m_channel_list; channel->field[0]; channel++) {
         defricher_cache_node_t *outfile_node = channel->var;
@@ -198,13 +194,12 @@ static int defricher_update_cache_fp(DIRFILE *m_dirfile, channel_t *m_channel_li
                 return -1;
             }
 
-            if (rc.bzip_output)
-            	outfile_node->output.bzfp = BZ2_bzopen(filename, "w+");
-            else
-            	outfile_node->output.fp = fopen(filename, "w+");
+            if (rc.gzip_output) mode = "wbF";
+            else mode = "wbT";
 
-            if ((rc.bzip_output && !outfile_node->output.bzfp) ||
-            	(!rc.bzip_output && !outfile_node->output.fp)) {
+            outfile_node->output.gzfp = gzopen(filename, mode);
+
+            if (!outfile_node->output.gzfp) {
                 defricher_err("Could not open %s", filename);
                 free(filename);
                 switch(errno) {
@@ -340,7 +335,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     }
 
     new_file = gd_open(m_name, GD_CREAT|GD_RDWR|GD_PRETTY_PRINT|
-    							(rc.bzip_output?GD_BZIP2_ENCODED:0)|GD_VERBOSE);
+    							(rc.gzip_output?GD_GZIP_ENCODED:0)|GD_VERBOSE);
     if (gd_error(new_file) == GD_E_OK)
     {
         m = 1e-5;
@@ -440,13 +435,9 @@ static int defricher_write_packet(uint16_t m_rate)
     for (channel_t *channel = channels; channel->field[0]; channel++) {
         if (channel->rate != m_rate) continue;
         defricher_cache_node_t *outfile_node = channel->var;
-        if (outfile_node && outfile_node->magic == BLAST_MAGIC32 &&
-        		((rc.bzip_output && outfile_node->output.bzfp) ||
-				(!rc.bzip_output && outfile_node->output.fp))) {
-        	if ((rc.bzip_output && BZ2_bzwrite(outfile_node->output.bzfp, outfile_node->raw_data,
-        			outfile_node->output.element_size) != outfile_node->output.element_size) ||
-        		(!rc.bzip_output && fwrite(outfile_node->raw_data, outfile_node->output.element_size,
-            		1, outfile_node->output.fp) != 1)) {
+        if (outfile_node && outfile_node->magic == BLAST_MAGIC32 && outfile_node->output.gzfp) {
+        	if (gzwrite(outfile_node->output.gzfp, outfile_node->raw_data,
+        	                outfile_node->output.element_size) != outfile_node->output.element_size) {
                 defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
             }

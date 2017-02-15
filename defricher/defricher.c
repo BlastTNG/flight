@@ -56,7 +56,7 @@ char **remaining_args = NULL;
 static GOptionEntry cmdline_options[] =
 {
         { "autoreconnect", 0, 0, G_OPTION_ARG_NONE, &rc.auto_reconnect, "Automatically reconnect when dropped", NULL},
-		{ "bzip-output", 'b', 0, G_OPTION_ARG_NONE, &rc.bzip_output, "Compress output data streams using BZip2", NULL },
+		{ "gzip-output", 'g', 0, G_OPTION_ARG_NONE, &rc.gzip_output, "Compress output data streams using GZip", NULL },
         { "daemonize", 0, 0, G_OPTION_ARG_NONE, &rc.daemonise, "Fork to the background on startup", NULL},
         { "force", 'f', 0, G_OPTION_ARG_NONE, &rc.force_stdio, "Overwrite destination file if exists", NULL},
         { "output-dirfile", 'o', 0, G_OPTION_ARG_STRING, &rc.output_dirfile, "Use NAME as the output Dirfile name", NULL},
@@ -164,38 +164,43 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
     GOptionContext *context;
 
     context = g_option_context_new("");
-    g_option_context_set_summary(context, "Converts BLASTPol-TNG framefiles from SOURCE into dirfiles");
-    g_option_context_set_description(context, "Please report any errors or bugs to <seth.hillbrand@gmail.com>");
+    g_option_context_set_summary(context,
+            "Converts BLASTPol-TNG framefiles from SOURCE into dirfiles");
+    g_option_context_set_description(context,
+            "Please report any errors or bugs to <seth.hillbrand@gmail.com>");
     g_option_context_add_main_entries(context, cmdline_options, NULL);
 
-    if (!g_option_context_parse (context, &argc, &argv, &error))
-      {
+    if (!g_option_context_parse(context, &argc, &argv, &error)) {
         g_error("option parsing failed: %s\n", error->message);
-        exit (1);
-      }
+        exit(1);
+    }
 
-  /* fix up daemon mode */
-  if (m_rc->daemonise)
-    m_rc->persist = m_rc->silent = m_rc->force_stdio = 1;
+    if (argc < 2) {
+        g_option_context_get_help(context, true, NULL);
+        exit(0);
+    }
+    /* fix up daemon mode */
+    if (m_rc->daemonise) m_rc->persist = m_rc->silent = m_rc->force_stdio = 1;
 
-  if (remaining_args && remaining_args[0]) {
-      g_debug("Source is %s", remaining_args[0]);
-      free(m_rc->source);
-      asprintf(&(m_rc->source), "%s", remaining_args[0]);
+    if (remaining_args && remaining_args[0]) {
+        g_debug("Source is %s", remaining_args[0]);
+        free(m_rc->source);
+        asprintf(&(m_rc->source), "%s", remaining_args[0]);
 
-      if (remaining_args[1]) {
-          g_debug("Dest is %s", remaining_args[1]);
-          free(m_rc->dest_dir);
-          asprintf(&(m_rc->dest_dir), "%s", remaining_args[1]);
-          if (m_rc->dest_dir[strlen(m_rc->dest_dir) - 1] == '/') m_rc->dest_dir[strlen(m_rc->dest_dir) - 1] = '\0';
-      }
-  }
+        if (remaining_args[1]) {
+            g_debug("Dest is %s", remaining_args[1]);
+            free(m_rc->dest_dir);
+            asprintf(&(m_rc->dest_dir), "%s", remaining_args[1]);
+            if (m_rc->dest_dir[strlen(m_rc->dest_dir) - 1] == '/') m_rc->dest_dir[strlen(
+                    m_rc->dest_dir) - 1] = '\0';
+        }
+    }
 
-  /* Fix up output_dirfile, if present */
-  if (m_rc->output_dirfile)
-    m_rc->output_dirfile = resolve_output_dirfile(m_rc->output_dirfile, m_rc->dest_dir);
+    /* Fix up output_dirfile, if present */
+    if (m_rc->output_dirfile) m_rc->output_dirfile = resolve_output_dirfile(
+            m_rc->output_dirfile, m_rc->dest_dir);
 
-  g_option_context_free(context);
+    g_option_context_free(context);
 }
 
 
