@@ -141,8 +141,8 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 			j = 1024*4 + (((i*4) - 1) / 2) - 1;
 			k = 1536*4 + (((i*4) - 1) / 2) - 1;
 		}
-		m_packet->I[i] = (float)(int32_t)(ntohl((buf[j] << 24) | (buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
-		m_packet->Q[i] = (float)(int32_t)(ntohl((buf[k] << 24) | (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
+		m_packet->Ival[i] = (float)(int32_t)(ntohl((buf[j] << 24) | (buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
+		m_packet->Qval[i] = (float)(int32_t)(ntohl((buf[k] << 24) | (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
         /* if ((i_packet % 6000) == 0) {
              blast_info("i = %i, I = %f, Q = %f", i, m_packet->I[i], m_packet->Q[i]);
         } */
@@ -385,8 +385,8 @@ void write_roach_channels_488hz(void)
         i_udp_read = GETREADINDEX(roach_udp[i].index);
         data_udp_packet_t* m_packet = &(roach_udp[i].last_pkts[i_udp_read]);
         for (j = 0; j < n_publish_roaches[i]; j++) {
-            SET_FLOAT(RoachIAddr[i][j], m_packet->I[j]);
-            SET_FLOAT(RoachQAddr[i][j], m_packet->Q[j]);
+            SET_FLOAT(RoachIAddr[i][j], m_packet->Ival[j]);
+            SET_FLOAT(RoachQAddr[i][j], m_packet->Qval[j]);
         }
     }
 }

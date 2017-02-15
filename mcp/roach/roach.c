@@ -47,6 +47,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <fftw3.h>
 // include "portable_endian.h"
 #include "mcp.h"
@@ -58,7 +59,6 @@
 #include "qdr.h"
 #include "remote_serial.h"
 #include "valon.h"
-#undef I
 #include "command_struct.h"
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -198,18 +198,18 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_v
 static void roach_init_LUT(roach_state_t *m_roach, size_t m_len)
 {
     m_roach->LUT.len = m_len;
-    m_roach->LUT.I = calloc(m_len, sizeof(uint16_t));
-    m_roach->LUT.Q = calloc(m_len, sizeof(uint16_t));
+    m_roach->LUT.Ival = calloc(m_len, sizeof(uint16_t));
+    m_roach->LUT.Qval = calloc(m_len, sizeof(uint16_t));
 }
 
 static void roach_init_DACDDS_LUTs(roach_state_t *m_roach, size_t m_len)
 {
     m_roach->DAC.len = m_len;
-    m_roach->DAC.I = calloc(m_len, sizeof(double));
-    m_roach->DAC.Q = calloc(m_len, sizeof(double));
+    m_roach->DAC.Ival = calloc(m_len, sizeof(double));
+    m_roach->DAC.Qval = calloc(m_len, sizeof(double));
     m_roach->DDS.len = m_len;
-    m_roach->DDS.I = calloc(m_len, sizeof(double));
-    m_roach->DDS.Q = calloc(m_len, sizeof(double));
+    m_roach->DDS.Ival = calloc(m_len, sizeof(double));
+    m_roach->DDS.Qval = calloc(m_len, sizeof(double));
 }
 
 static inline int roach_fft_bin_index(double *m_freqs, size_t m_index, size_t m_fft_len, double m_samp_freq)
@@ -326,17 +326,17 @@ static int roach_dds_comb(roach_state_t *m_roach, double m_freqs, size_t m_freql
 static void roach_define_DAC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
     if (m_roach->DAC.len > 0 && m_roach->DAC.len != LUT_BUFFER_LEN) {
-	free(m_roach->DAC.I);
-        free(m_roach->DAC.Q);
+	free(m_roach->DAC.Ival);
+        free(m_roach->DAC.Qval);
         m_roach->DAC.len = 0;
     }
     if (m_roach->DAC.len == 0) {
-        m_roach->DAC.I = calloc(LUT_BUFFER_LEN, sizeof(double));
-        m_roach->DAC.Q = calloc(LUT_BUFFER_LEN, sizeof(double));
+        m_roach->DAC.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
+        m_roach->DAC.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
         m_roach->DAC.len = LUT_BUFFER_LEN;
     }
     roach_dac_comb(m_roach, m_freqs, m_freqlen,
-                    DAC_SAMP_FREQ, m_roach->DAC.I, m_roach->DAC.Q);
+                    DAC_SAMP_FREQ, m_roach->DAC.Ival, m_roach->DAC.Qval);
 }
 
 static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
@@ -367,29 +367,29 @@ void roach_define_DDS_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
 {
     roach_select_bins(m_roach, m_freqs, m_freqlen);
     if (m_roach->DDS.len > 0 && m_roach->DDS.len != LUT_BUFFER_LEN) {
-        free(m_roach->DDS.I);
-        free(m_roach->DDS.Q);
+        free(m_roach->DDS.Ival);
+        free(m_roach->DDS.Qval);
         m_roach->DDS.len = 0;
     }
     if (m_roach->DDS.len == 0) {
-        m_roach->DDS.I = calloc(LUT_BUFFER_LEN, sizeof(double));
-        m_roach->DDS.Q = calloc(LUT_BUFFER_LEN, sizeof(double));
+        m_roach->DDS.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
+        m_roach->DDS.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
         m_roach->DDS.len = LUT_BUFFER_LEN;
     }
 
     for (size_t i = 0; i < m_freqlen; i++) {
-	double I[2 * fft_len];
-    	double Q[2 * fft_len];
+	double Ival[2 * fft_len];
+    	double Qval[2 * fft_len];
 	int bin = roach_fft_bin_index(m_roach->freq_residuals,
 		i, LUT_BUFFER_LEN / fft_len, FPGA_SAMP_FREQ / (fft_len / 2));
 	if (bin < 0) {
 		bin += 2048;
 	}
 	roach_dds_comb(m_roach, m_roach->freq_residuals[i], m_freqlen,
-                        FPGA_SAMP_FREQ / (fft_len / 2), bin, I, Q);
+                        FPGA_SAMP_FREQ / (fft_len / 2), bin, Ival, Qval);
 	for (int j = i, k = 0; k < 2*fft_len; j += fft_len, k++) {
-		m_roach->DDS.I[j] = I[k];
-        	m_roach->DDS.Q[j] = Q[k];
+		m_roach->DDS.Ival[j] = Ival[k];
+        	m_roach->DDS.Qval[j] = Qval[k];
     	}
     }
 }
@@ -401,19 +401,19 @@ void roach_pack_LUTs(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 // Commented section below checks to see if space is allocated. Needs error checking.
    /* if (m_roach->LUT.len > 0 && m_roach->LUT.len != LUT_BUFFER_LEN)  {
     	blast_info("Attempting to free luts\t");
-	free(m_roach->LUT.I);
-        free(m_roach->LUT.Q);
+	free(m_roach->LUT.Ival);
+        free(m_roach->LUT.Qval);
     }*/
 	roach_init_LUT(m_roach, 2 * LUT_BUFFER_LEN);
 	for (size_t i = 0; i < LUT_BUFFER_LEN; i += 2) {
-        	m_roach->LUT.I[2 * i + 0] = htons(m_roach->DAC.I[i + 1]);
-        	m_roach->LUT.I[2 * i + 1] = htons(m_roach->DAC.I[i]);
-        	m_roach->LUT.I[2 * i + 2] = htons(m_roach->DDS.I[i + 1]);
-		m_roach->LUT.I[2 * i + 3] = htons(m_roach->DDS.I[i]);
-		m_roach->LUT.Q[2 * i + 0] = htons(m_roach->DAC.Q[i + 1]);
-		m_roach->LUT.Q[2 * i + 1] = htons(m_roach->DAC.Q[i]);
-		m_roach->LUT.Q[2 * i + 2] = htons(m_roach->DDS.Q[i + 1]);
-		m_roach->LUT.Q[2 * i + 3] = htons(m_roach->DDS.Q[i]);
+        	m_roach->LUT.Ival[2 * i + 0] = htons(m_roach->DAC.Ival[i + 1]);
+        	m_roach->LUT.Ival[2 * i + 1] = htons(m_roach->DAC.Ival[i]);
+        	m_roach->LUT.Ival[2 * i + 2] = htons(m_roach->DDS.Ival[i + 1]);
+		m_roach->LUT.Ival[2 * i + 3] = htons(m_roach->DDS.Ival[i]);
+		m_roach->LUT.Qval[2 * i + 0] = htons(m_roach->DAC.Qval[i + 1]);
+		m_roach->LUT.Qval[2 * i + 1] = htons(m_roach->DAC.Qval[i]);
+		m_roach->LUT.Qval[2 * i + 2] = htons(m_roach->DDS.Qval[i + 1]);
+		m_roach->LUT.Qval[2 * i + 3] = htons(m_roach->DDS.Qval[i]);
 	}
 }
 
@@ -422,11 +422,11 @@ void roach_write_QDR(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
     roach_write_int(m_roach, "dac_reset", 1, 0);
     roach_write_int(m_roach, "dac_reset", 0, 0);
     roach_write_int(m_roach, "start_dac", 0, 0);
-    if (roach_write_data(m_roach, "qdr0_memory", (uint8_t*)m_roach->LUT.I,
+    if (roach_write_data(m_roach, "qdr0_memory", (uint8_t*)m_roach->LUT.Ival,
     		m_roach->LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT) < 0) {
 		blast_info("Could not write to qdr0!");
 	}
-    if (roach_write_data(m_roach, "qdr1_memory", (uint8_t*)m_roach->LUT.Q,
+    if (roach_write_data(m_roach, "qdr1_memory", (uint8_t*)m_roach->LUT.Qval,
     		m_roach->LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT) < 0) {
 		blast_info("Could not write to qdr1!");
     	}
@@ -673,8 +673,8 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 		   i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
 		   data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
 		   for (size_t chan = 0; chan < m_roach->num_kids; chan ++) {
-			I_sum[chan] +=  m_packet.I[chan];
-			Q_sum[chan] +=  m_packet.Q[chan];
+			I_sum[chan] +=  m_packet.Ival[chan];
+			Q_sum[chan] +=  m_packet.Qval[chan];
 		   }
                 }
 		m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
@@ -962,9 +962,9 @@ void grad_calc(roach_state_t *m_roach)
 	int chan[m_roach->num_kids];
 	float I_grad[m_roach->num_kids];
 	float Q_grad[m_roach->num_kids];
-	float I[m_roach->num_kids][NGRAD_POINTS];
+	float Ival[m_roach->num_kids][NGRAD_POINTS];
 	// float rf_freq[m_roach->num_kids][3];
-	float Q[m_roach->num_kids][NGRAD_POINTS];
+	float Qval[m_roach->num_kids][NGRAD_POINTS];
 	char *read_filename;
 	char *write_filename;
 	char m_time_buffer[4096];
@@ -985,7 +985,7 @@ void grad_calc(roach_state_t *m_roach)
          			free(file_list[i]);
 				FILE* fd = fopen(read_filename, "r");
 				for(int kid = 0; kid < m_roach->num_kids; ++kid) {
-					fscanf(fd, "%d\t%f\t%f\n", &chan[kid], &I[kid][freq_idx], &Q[kid][freq_idx]);
+					fscanf(fd, "%d\t%f\t%f\n", &chan[kid], &Ival[kid][freq_idx], &Qval[kid][freq_idx]);
 				}
 				++freq_idx;
 				printf("Read: %s\n", read_filename);
@@ -1009,9 +1009,9 @@ void grad_calc(roach_state_t *m_roach)
 	}
 	FILE *grads = fopen(write_filename, "w");
 	for (int kid = 0; kid < m_roach->num_kids; ++kid) {
-		// printf("%.10f\t%.10f\t%.10f\n", Q[kid][0], Q[kid][1], Q[kid][2]);
-		I_grad[kid] = (I[kid][NGRAD_POINTS - 1] - I[kid][0]);
-		Q_grad[kid] = (Q[kid][NGRAD_POINTS -1] - Q[kid][0]);
+		// printf("%.10f\t%.10f\t%.10f\n", Qval[kid][0], Qval[kid][1], Qval[kid][2]);
+		I_grad[kid] = (Ival[kid][NGRAD_POINTS - 1] - Ival[kid][0]);
+		Q_grad[kid] = (Qval[kid][NGRAD_POINTS -1] - Qval[kid][0]);
 		fprintf(grads, "%.10f,%.10f\n", I_grad[kid], Q_grad[kid]);
 	}
 	fclose(grads);

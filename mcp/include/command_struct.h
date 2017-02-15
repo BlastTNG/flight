@@ -93,6 +93,8 @@
 
 #define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
 
+/* Need to undef I here in for source files that utilize complex.h */
+#undef I
 struct GainStruct {
   float P;
   float I;

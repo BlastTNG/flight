@@ -41,8 +41,8 @@
 #define MAX_CHANNELS_PER_ROACH 1016
 
 typedef struct {
-    int32_t I;
-    int32_t Q;
+    int32_t Ival;
+    int32_t Qval;
 } __attribute__((packed)) udp_element_t;
 
 typedef struct {
@@ -83,14 +83,14 @@ typedef enum {
 
 typedef struct {
     size_t len;
-    double *I;
-    double *Q;
+    double *Ival;
+    double *Qval;
 } roach_lut_t;
 
 typedef struct {
     size_t len;
-    uint16_t *I;
-    uint16_t *Q;
+    uint16_t *Ival;
+    uint16_t *Qval;
 } roach_uint16_lut_t;
 
 typedef struct roach_state {
@@ -177,8 +177,8 @@ typedef struct data_packet {
 typedef struct data_udp_packet {
 //  struct ethhdr *eth;
 //  struct iphdr *ip;
-	float I[MAX_CHANNELS_PER_ROACH];
-	float Q[MAX_CHANNELS_PER_ROACH];
+	float Ival[MAX_CHANNELS_PER_ROACH];
+	float Qval[MAX_CHANNELS_PER_ROACH];
     uint32_t buffer_len;
 	uint32_t checksum;
 	uint32_t pps_count;
