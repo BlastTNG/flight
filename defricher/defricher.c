@@ -76,7 +76,20 @@ static pthread_t reader_thread;
 void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
                 const gchar* message, gpointer user_data)
 {
+    static char last_msg[1024];
+    static int count = 0;
+    time_t last_out;
+
+    if (!strncmp(last_msg, message, sizeof(last_msg))) {
+        count++;
+        return;
+    }
+    if (count || time(NULL) - last_out > 10) {
+        printf("=== Last message repeats %d times ===\n", count);
+        count = 0;
+    }
     printf("%s\n", message);
+    time(&last_out);
 }
 
 void shutdown_defricher(int sig) {
