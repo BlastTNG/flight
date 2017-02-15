@@ -478,6 +478,8 @@ static void *defricher_write_loop(void *m_arg)
         if (dirfile_create_new && dirfile_offset >= 0) {
             dirfile_name = rc.output_dirfile;
             rc.output_dirfile = defricher_get_new_dirfilename();
+            ri.wrote = 0;
+            ri.read = 0;
             BLAST_SAFE_FREE(dirfile_name);
 
             if (dirfile) gd_close(dirfile);
@@ -496,8 +498,6 @@ static void *defricher_write_loop(void *m_arg)
                 dirfile_create_new = 0;
                 dirfile_ready = true;
                 ri.symlink_updated = false;
-                ri.wrote = 0;
-                ri.read = 0;
             }
         }
 
