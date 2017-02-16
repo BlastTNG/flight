@@ -46,6 +46,7 @@
 #include <blast.h>
 #include <blast_time.h>
 #include <channels_tng.h>
+#include <mputs.h>
 
 #include "defricher.h"
 #include "defricher_writer.h"
@@ -76,24 +77,11 @@ static pthread_t reader_thread;
 void log_handler(const gchar* log_domain, GLogLevelFlags log_level,
                 const gchar* message, gpointer user_data)
 {
-    static char last_msg[1024];
-    static int count = 0;
-    time_t last_out;
-
-    if (!strncmp(last_msg, message, sizeof(last_msg))) {
-        count++;
-        return;
-    }
-    if (count || time(NULL) - last_out > 10) {
-        printf("=== Last message repeats %d times ===\n", count);
-        count = 0;
-    }
-    printf("%s\n", message);
-    time(&last_out);
+    mputs(log_level, message);
 }
 
 void shutdown_defricher(int sig) {
-    fprintf(stderr, "Shutting down Defricher on signal %d", sig);
+    fprintf(stderr, "\nShutting down Defricher on signal %d\n", sig);
     ri.writer_done = true;
     ri.reader_done = true;
 }
@@ -226,6 +214,8 @@ int main(int argc, char** argv)
     double ofr = 200;
     double ifr = 200;
     double nf = 0;
+
+    buos_use_func(mputs);
 
     /* Load the hard-coded defaults if not over-written by command line */
     defricher_defaults(&rc);
