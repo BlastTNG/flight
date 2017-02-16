@@ -94,8 +94,8 @@ double zeros[14] = {0.00089543, 0.00353682, 0.00779173, 0.01344678, 0.02021843, 
 // double zeros[14] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.};
 // Firmware image files
 const char roach_fpg[5][11] = {"roach1.fpg", "roach2.fpg", "roach3.fpg", "roach4.fpg", "roach5.fpg"};
-const char test_fpg[] = "/data/etc/blast/blast_filt_fix_2017_Jan_30_2336.fpg";
-// const char test_fpg[] = "/blast_0209_dds305_2017_Feb_09_1710.fpg";
+// const char test_fpg[] = "/data/etc/blast/blast_filt_fix_2017_Feb_16_0851.fpg";
+const char test_fpg[] = "/data/etc/blast/blast_0209_dds305_2017_Feb_15_1922.fpg";
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
 // static ph_thread_t *roach_state = NULL;
@@ -103,7 +103,7 @@ char atten_init[] = "python /root/device_control/init_attenuators.py 30 30";
 char valon_init[] = "python /root/device_control/init_valon.py";
 char read_valon[] = "python /root/device_control/read_valon.py";
 
-static uint32_t dest_ip = IPv4(192, 168, 40, 3);
+static uint32_t dest_ip = IPv4(192, 168, 40, 4);
 
 void nameThread(const char*);
 
@@ -597,11 +597,13 @@ int set_atten(roach_state_t *m_roach)
 int roach_check_streaming(roach_state_t *m_roach)
 {
 	int m_last_packet_count = roach_udp[m_roach->which - 1].roach_packet_count;
-	while ((roach_state_table[m_roach->which - 1].is_streaming != 1)) {
+	blast_info("m_last_packet_count = % d", m_last_packet_count);
+	while ((m_roach->is_streaming != 1)) {
 		/* Run for 10 seconds and check to see if packet count has incremented */
+		blast_info("roach_packet_count = % d", roach_udp[m_roach->which - 1].roach_packet_count);
 		sleep(10);
 		if (roach_udp[m_roach->which - 1].roach_packet_count > m_last_packet_count) {
-			roach_state_table[m_roach->which - 1].is_streaming = 1;
+			m_roach->is_streaming = 1;
 			return 0;
 		} else { blast_err("Data stream error on ROACH%d", m_roach->which);
 			return -1;
@@ -1304,7 +1306,7 @@ void *roach_cmd_loop(void)
 				roach_read_int(&roach_state_table[i], "sync_accum_len");
 				roach_write_int(&roach_state_table[i], "tx_destip", dest_ip, 0);/* UDP destination IP */
 				roach_write_int(&roach_state_table[i], "tx_destport", roach_state_table[i].dest_port, 0); /* UDP port */
-				load_fir(&roach_state_table[i], zeros);
+				// load_fir(&roach_state_table[i], zeros);
 				roach_state_table[i].status = ROACH_STATUS_CONFIGURED;
 				roach_state_table[i].desired_status = ROACH_STATUS_CALIBRATED;
 			}
@@ -1410,7 +1412,7 @@ int init_roach(void)
 	 roach_state_table[i].which = i + 1;
     	 roach_state_table[i].dest_port = 64000 + i;
 	 roach_state_table[i].is_streaming = 0;
-	    roach_udp_networking_init(roach_state_table[i].which, &roach_state_table[i], NUM_ROACH_UDP_CHANNELS);
+	 roach_udp_networking_init(roach_state_table[i].which, &roach_state_table[i], NUM_ROACH_UDP_CHANNELS);
 	}
 
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, NULL);

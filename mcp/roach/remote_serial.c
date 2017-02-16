@@ -35,7 +35,7 @@
 
 /*beaglebone addresses*/
 static const char addresses[4][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63", "192.168.40.64"};
-static const uint16_t port = 12345; /* telnet port on bb */
+static const uint16_t port = 12346; /* telnet port on bb */
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 extern int16_t InCharge;

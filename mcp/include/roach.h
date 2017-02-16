@@ -199,8 +199,8 @@ typedef struct data_udp_packet {
                                             ((d) & 0xff))
 static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
 
-// Destination IP for fc1
-static const char udp_dest[32] = "192.168.40.3";
+// Destination IP for fc2
+static const char udp_dest[32] = "192.168.40.4";
 static const char udp_dest_name[32] = "roach-udp-dest";
 
 typedef struct {
