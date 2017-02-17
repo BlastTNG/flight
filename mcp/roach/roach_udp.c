@@ -141,11 +141,13 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 			j = 1024*4 + (((i*4) - 1) / 2) - 1;
 			k = 1536*4 + (((i*4) - 1) / 2) - 1;
 		}
-		m_packet->Ival[i] = (float)(int32_t)(ntohl((buf[j] << 24) | (buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
-		m_packet->Qval[i] = (float)(int32_t)(ntohl((buf[k] << 24) | (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
-        /* if ((i_packet % 6000) == 0) {
-             blast_info("i = %i, I = %f, Q = %f", i, m_packet->I[i], m_packet->Q[i]);
-        } */
+		m_packet->Ival[i] = (float)(int32_t)(ntohl((buf[j] << 24) |
+					(buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
+		m_packet->Qval[i] = (float)(int32_t)(ntohl((buf[k] << 24) |
+					(buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
+        /*if ((i == 0) && (i_packet % 60) == 0) {
+             blast_info("i = %i, I = %f, Q = %f", i, m_packet->Ival[i], m_packet->Qval[i]);
+        }*/
 	}
 	/* if ((i_packet % 6000) == 0) {
         blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",

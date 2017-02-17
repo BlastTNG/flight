@@ -66,7 +66,7 @@
 #include "phenom/memory.h"
 
 #define DDS_SHIFT 305 /* Firmware version dependent */
-#define FFT_SHIFT 127 /* Controls FFT overflow behavior */
+#define FFT_SHIFT 255 /* Controls FFT overflow behavior */
 #define WRITE_INT_TIMEOUT 1000 /* KATCP write timeout */
 #define UPLOAD_TIMEOUT 20000 /* KATCP upload timeout */
 #define QDR_TIMEOUT 20000 /* Same as above */
@@ -86,8 +86,8 @@ extern int16_t InCharge;
 static int fft_len = 1024;
 static uint32_t accum_len = (1 << 19) - 1;
 // Test frequencies for troubleshooting (arbitrary values)
-double freqs[1] = {50.0125};
-size_t freqlen = 1;
+double test_freq[] = {20.0125e6};
+
 // 27 Hann window coefficients, f_cutoff = 1.5 kHz
 double zeros[14] = {0.00089543, 0.00353682, 0.00779173, 0.01344678, 0.02021843, 0.0277671, 0.03571428,
 					0.04366146, 0.05121013, 0.05798178, 0.06363685, 0.06789176, 0.07053316, 0.07142859};
@@ -99,7 +99,7 @@ const char test_fpg[] = "/data/etc/blast/blast_0209_dds305_2017_Feb_15_1922.fpg"
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
 // static ph_thread_t *roach_state = NULL;
-char atten_init[] = "python /root/device_control/init_attenuators.py 30 30";
+char atten_init[] = "python /root/device_control/init_attenuators.py 28 0";
 char valon_init[] = "python /root/device_control/init_valon.py";
 char read_valon[] = "python /root/device_control/read_valon.py";
 
@@ -223,11 +223,11 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         size_t m_freqlen, int m_samp_freq, double *m_I, double *m_Q)
 {
     // Unless told otherwise, default attens are loaded
-    double m_attens[m_freqlen];
-    FILE *m_atten_file;
+    // double m_attens[m_freqlen];
+    // FILE *m_atten_file;
     size_t comb_fft_len;
     fftw_plan comb_plan;
-
+    /*
     if (CommandData.roach[m_roach->which - 1].load_amps) {
         char *amps_file = m_roach->amps_path[CommandData.roach[m_roach->which - 1].load_amps - 1];
         blast_info("Amps file = %s", amps_file);
@@ -243,22 +243,27 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         fclose(m_atten_file);
     }
     CommandData.roach[m_roach->which - 1].load_amps = 0;
-
+    */
     for (size_t i = 0; i < m_freqlen; i++) {
         m_freqs[i] = round(m_freqs[i] / DAC_FREQ_RES) * DAC_FREQ_RES;
+	// blast_info("m_freq = %g", m_freqs[i]);
     }
 
     comb_fft_len = LUT_BUFFER_LEN;
     complex double *spec = calloc(comb_fft_len, sizeof(complex double));
     complex double *wave = calloc(comb_fft_len, sizeof(complex double));
+    double alpha;
     double max_val = 0.0;
     srand48(time(NULL));
     for (size_t i = 0; i < m_freqlen; i++) {
         int bin = roach_fft_bin_index(m_freqs, i, comb_fft_len, m_samp_freq);
         if (bin < 0) {
             bin += comb_fft_len;
-        }
-        spec[bin] = m_attens[i] * cexp(_Complex_I * drand48() * 2.0 * M_PI);
+	}
+	alpha = drand48() * 2.0 * M_PI;
+        spec[bin] = cexp(_Complex_I * alpha);
+	// blast_info("bin = %d, r(spec[bin]) = %f, im(spec[bin]) = %f",
+						// bin, creal(spec[bin]), cimag(spec[bin]));
     }
     /*FILE *f1 = fopen("./dac_spec.txt", "w");
      for (size_t i = 0; i < comb_fft_len; i++){
@@ -270,12 +275,12 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     FFTW_ESTIMATE);
     fftw_execute(comb_plan);
     fftw_destroy_plan(comb_plan);
-    /*for (size_t i = 0; i < comb_fft_len; i++) {
-     fprintf(f2,"%f, %f\n", creal(wave[i]), cimag(wave[i]));
-     if (cabs(wave[i]) > max_val) max_val = cabs(wave[i]);
+    for (size_t i = 0; i < comb_fft_len; i++) {
+    	wave[i] /= comb_fft_len;
+    	// fprintf(f2,"%f, %f\n", creal(wave[i]), cimag(wave[i]));
+	if (cabs(wave[i]) > max_val) max_val = cabs(wave[i]);
      }
-
-     fclose(f2);*/
+    // fclose(f2);
     for (size_t i = 0; i < comb_fft_len; i++) {
         m_I[i] = creal(wave[i]) / max_val * ((1 << 15) - 1);
         m_Q[i] = cimag(wave[i]) / max_val * ((1 << 15) - 1);
@@ -298,6 +303,7 @@ static int roach_dds_comb(roach_state_t *m_roach, double m_freqs, size_t m_freql
     	complex double *wave = calloc(comb_fft_len,  sizeof(complex double));
     	double max_val = 0.0;
 	spec[m_bin] = cexp(_Complex_I * 0.);
+	// blast_info("DDS spec = %f, %f", creal(spec[m_bin]), cimag(spec[m_bin]));
 /*	FILE *f3 = fopen("./dds_spec.txt", "w");
 	for (size_t i = 0; i < comb_fft_len; i++){
 	fprintf(f3,"%f, %f\n", creal(spec[i]), cimag(spec[i]));
@@ -351,10 +357,10 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_
 	if (bins[i] < 0) {
 		bins[i] += 1024;
 	}
-	if (m_freqs[i] < 0 && m_freqs[i]+ 512.0e6 >= 511.5e6) {
+	/* if (m_freqs[i] < 0 && m_freqs[i]+ 512.0e6 >= 511.5e6) {
 		bins[i] = 1023;
-	}
-	m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / (0.5*DAC_FREQ_RES)) * (0.5*DAC_FREQ_RES);
+	}*/
+	m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / (DAC_FREQ_RES)) * (DAC_FREQ_RES);
     }
     for (int ch = 0; ch < m_freqlen; ch++) {
         roach_write_int(m_roach, "bins", bins[ch], 0);
@@ -396,8 +402,8 @@ void roach_define_DDS_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
 
 void roach_pack_LUTs(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
-    	roach_define_DDS_LUT(m_roach, m_freqs, m_freqlen);
-    	roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
+    	// roach_define_DDS_LUT(m_roach, m_freqs, m_freqlen);
+    	// roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
 // Commented section below checks to see if space is allocated. Needs error checking.
    /* if (m_roach->LUT.len > 0 && m_roach->LUT.len != LUT_BUFFER_LEN)  {
     	blast_info("Attempting to free luts\t");
@@ -615,10 +621,10 @@ int roach_check_streaming(roach_state_t *m_roach)
 void roach_vna_comb(roach_state_t *m_roach)
 {
 	size_t m_freqlen = 1000;
-	double p_max_freq = 250.021234e6;
-	double p_min_freq = 10.2342e6;
-	double n_max_freq = -10.2342e6+5.0e4;
-	double n_min_freq = -250.021234e6+5.0e4;
+	double p_max_freq = 245.01234e6;
+	double p_min_freq = 10.02342e6;
+	double n_max_freq = -10.02342e6+5.0e4;
+	double n_min_freq = -245.01234e6+5.0e4;
 	m_roach->vna_comb = calloc(m_freqlen, sizeof(double));
 	m_roach->freqlen = m_freqlen;
 	/* positive freqs */
@@ -634,6 +640,9 @@ void roach_vna_comb(roach_state_t *m_roach)
 		m_roach->vna_comb[i + m_freqlen/2] = n_min_freq + i*n_delta_f;
 	}
 	m_roach->num_kids = m_roach->freqlen;
+	/* for (size_t i = 0; i < m_freqlen; i++) {
+		blast_info("vna freq = %g", m_roach->vna_comb[i]);
+	}*/
 }
 
 /* Save the current list of baseband frequencies */
@@ -751,8 +760,9 @@ void get_targ_freqs(roach_state_t *m_roach)
     m_roach->num_kids = m_freqlen;
     m_roach->targ_tones = calloc(m_roach->num_kids, sizeof(double));
     for (size_t j = 0; j < m_roach->num_kids; j++) {
-        m_roach->targ_tones[j] = m_temp_freqs[j];
-        blast_info("KID freq = %lg", m_roach->targ_tones[j]);
+        // m_roach->targ_tones[j] = m_temp_freqs[j];
+        m_roach->targ_tones[j] = 1.0e7;
+	blast_info("KID freq = %lg", m_roach->targ_tones[j]);
     }
 }
 
@@ -799,8 +809,8 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 		blast_info("VNA dir to copy: %s", m_roach->last_vna_path);
 		m_roach->last_targ_path = make_dir(m_roach, m_roach->targ_path_root);
 		blast_info("TARG dir to copy: %s", m_roach->last_targ_path);
-		// m_span = m_roach->delta_f;
-		m_span = 1.0e4;
+		m_span = m_roach->delta_f;
+		// m_span = 1.0e4;
 		blast_info("ROACH%d, VNA sweep will be saved in %s", m_roach->which, m_roach->last_vna_path);
 		blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
 		save_bb_freqs(m_roach);
@@ -844,7 +854,7 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 			blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
 			bb_write_string(&m_bb, (unsigned char*)lo_command, strlen(lo_command));
 			while (bb_read_string(&m_bb) <= 0) {
-				usleep(2000);
+				usleep(500);
 			}
 			if ((type == 0)) {
 				roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_roach->last_vna_path);
