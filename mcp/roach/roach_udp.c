@@ -73,7 +73,7 @@ typedef void (*roach_callback_t)(uint8_t*, size_t);
 #define ROACH_CHECKSUM 42
 
 // number of roach channels that will be published to the server
-const uint16_t n_publish_roaches[5] = {0, 64, 0, 0, 0};
+const uint16_t n_publish_roaches[5] = {1016, 64, 0, 0, 0};
 
 uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_roach_udp)
 {
@@ -371,6 +371,7 @@ void write_roach_channels_488hz(void)
     static int firsttime = 1;
 
     if (firsttime) {
+        blast_info("Starting write_roach_channels_488hz");
         firsttime = 0;
         for (i = 0; i < 1; i++) { // Only write ROACH1 channels for now.
 //        for (i = 0; i < NUM_ROACHES; i++) {
@@ -389,6 +390,9 @@ void write_roach_channels_488hz(void)
         for (j = 0; j < n_publish_roaches[i]; j++) {
             SET_FLOAT(RoachIAddr[i][j], m_packet->Ival[j]);
             SET_FLOAT(RoachQAddr[i][j], m_packet->Qval[j]);
+//            if ((j == 0) && ((roach_udp[i].roach_packet_count % 500) == 0)) {
+//                blast_info("Ival = %f, Qval = %f", m_packet->Ival[j], m_packet->Qval[j]);
+//            }
         }
     }
 }
