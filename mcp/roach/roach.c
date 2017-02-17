@@ -93,13 +93,14 @@ double zeros[14] = {0.00089543, 0.00353682, 0.00779173, 0.01344678, 0.02021843, 
 					0.04366146, 0.05121013, 0.05798178, 0.06363685, 0.06789176, 0.07053316, 0.07142859};
 // double zeros[14] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.};
 // Firmware image files
-const char roach_fpg[5][11] = {"roach1.fpg", "roach2.fpg", "roach3.fpg", "roach4.fpg", "roach5.fpg"};
+const char roach_fpg[5][27] = {"/data/etc/blast/roach1.fpg", "/data/etc/blast/roach2.fpg",
+		"roach3.fpg", "roach4.fpg", "roach5.fpg"};
 // const char test_fpg[] = "/data/etc/blast/blast_filt_fix_2017_Feb_16_0851.fpg";
 const char test_fpg[] = "/data/etc/blast/blast_0209_dds305_2017_Feb_15_1922.fpg";
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
 // static ph_thread_t *roach_state = NULL;
-char atten_init[] = "python /root/device_control/init_attenuators.py 28 0";
+char atten_init[] = "python /root/device_control/init_attenuators.py 28 3";
 char valon_init[] = "python /root/device_control/init_valon.py";
 char read_valon[] = "python /root/device_control/read_valon.py";
 
@@ -809,8 +810,8 @@ void roach_do_sweep(roach_state_t *m_roach, int type)
 		blast_info("VNA dir to copy: %s", m_roach->last_vna_path);
 		m_roach->last_targ_path = make_dir(m_roach, m_roach->targ_path_root);
 		blast_info("TARG dir to copy: %s", m_roach->last_targ_path);
-		m_span = m_roach->delta_f;
-		// m_span = 1.0e4;
+		// m_span = m_roach->delta_f;
+		m_span = 1.0e4;
 		blast_info("ROACH%d, VNA sweep will be saved in %s", m_roach->which, m_roach->last_vna_path);
 		blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
 		save_bb_freqs(m_roach);
@@ -1268,7 +1269,7 @@ void *roach_cmd_loop(void)
 				bb_state_table[i].which = i + 1;
 				bb_state_table[i].bb_comm = remote_serial_init(i, NC2_PORT);
 				while (!bb_state_table[i].bb_comm->connected || !InCharge) {
-				usleep(3000);
+				usleep(2000);
 			}
 				blast_info("BB%d Initialized", i + 1);
 				blast_info("Initializing Valon%d...", i + 1);
@@ -1300,7 +1301,7 @@ void *roach_cmd_loop(void)
 			if (roach_state_table[i].status == ROACH_STATUS_CONNECTED &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_PROGRAMMED) {
 				blast_info("ROACH%d, Firmware uploaded", i + 1);
-				if (roach_upload_fpg(&roach_state_table[i], test_fpg) == 0) {
+				if (roach_upload_fpg(&roach_state_table[i], roach_fpg[i]) == 0) {
 					roach_state_table[i].status = ROACH_STATUS_PROGRAMMED;
 					roach_state_table[i].desired_status = ROACH_STATUS_CONFIGURED;
 				}
@@ -1341,6 +1342,7 @@ void *roach_cmd_loop(void)
 				blast_info("ROACH%d, Generating search comb...", i + 1);
 				roach_vna_comb(&roach_state_table[i]);
 				roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb, roach_state_table[i].freqlen);
+				// roach_write_tones(&roach_state_table[i], test_freq, 1);
 				blast_info("ROACH%d, Search comb uploaded", i + 1);
 				roach_state_table[i].status = ROACH_STATUS_TONE;
 				roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
