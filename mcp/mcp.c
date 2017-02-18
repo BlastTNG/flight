@@ -57,6 +57,7 @@
 #include "lut.h"
 #include "labjack.h"
 #include "multiplexed_labjack.h"
+#include "sensor_updates.h"
 
 #include "acs.h"
 #include "actuators.h"
@@ -329,6 +330,7 @@ static void mcp_100hz_routines(void)
 static void mcp_5hz_routines(void)
 {
     watchdog_ping();
+    update_sun_sensors();
     read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
@@ -356,10 +358,10 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    rec_control();
-    test_labjacks(4);
-    read_thermometers();
-    test_read();
+    // rec_control();
+    // test_labjacks(4);
+    // read_thermometers();
+    // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -544,19 +546,19 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // mult_labjack_networking_init(0, 84, 1);
+  // labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  mult_labjack_networking_init(0, 84, 1);
 
-  initialize_labjack_commands(LABJACK_CRYO_1);
-  initialize_labjack_commands(LABJACK_CRYO_2);
-  initialize_labjack_commands(LABJACK_OF_1);
-  initialize_labjack_commands(LABJACK_OF_2);
-  initialize_labjack_commands(LABJACK_OF_3);
-  // mult_initialize_labjack_commands(0);
+  // initialize_labjack_commands(LABJACK_CRYO_1);
+  // initialize_labjack_commands(LABJACK_CRYO_2);
+  // initialize_labjack_commands(LABJACK_OF_1);
+  // initialize_labjack_commands(LABJACK_OF_2);
+  // initialize_labjack_commands(LABJACK_OF_3);
+  mult_initialize_labjack_commands(0);
 
   initialize_CPU_sensors();
 

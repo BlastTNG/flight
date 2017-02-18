@@ -53,4 +53,6 @@
 #define ss_5_7 42
 #define ss_5_8 43
 
+void update_sun_sensors(void);
+
 #endif /* sensor_updates_h */

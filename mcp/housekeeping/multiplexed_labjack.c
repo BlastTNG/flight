@@ -205,7 +205,7 @@ typedef struct {
 static labjack_state_t mult_state[NUM_MLABJACKS] = {
     {
         .which = 0,
-        .address = "labjack4",
+        .address = "labjack5",
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack1",
