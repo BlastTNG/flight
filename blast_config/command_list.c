@@ -767,7 +767,7 @@ struct mcom mcommands[plugh + 2] = {
       {"FILE[1 = default, 2 = uploaded]", 1, 2, 'i', "NONE"}
     }
   },
-  {COMMAND(set_attens), "Sets RUDAT attenuations", GR_ROACH, 1,
+  {COMMAND(cal_attens), "Calibrate RUDAT attenuations", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
@@ -791,6 +791,21 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Choose behavior: 0 = default, 1 = set grads as ref, 2 = use grads as comparison", 0, 2, 'i', "NONE"}
+    }
+  },
+  {COMMAND(set_find_kids_params), "Set the parameters for the kid finding algorithm", GR_ROACH, 4,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
+      {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
+      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
+      {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
     }
   },
   /***************************************/

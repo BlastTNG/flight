@@ -215,7 +215,9 @@ enum multiCommand {
   calc_grad_roach,
   end_sweep,
   load_new_tone_amplitudes,
+  cal_attens,
   set_attens,
+  set_find_kids_params,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

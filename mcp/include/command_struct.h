@@ -315,7 +315,19 @@ typedef struct roach
     unsigned int do_sweeps;
     unsigned int load_amps;
     unsigned int set_rudats;
+	unsigned int set_attens;
 } roach_status_t;
+
+typedef struct roach_params
+{
+//  Parameters input to find_kids script
+    double smoothing_scale;
+    double peak_threshold;
+    double spacing_threshold;
+//  Set attenuators
+    double in_atten;
+    double out_atten;
+} roach_params_t;
 
 struct CommandDataStruct {
   uint16_t command_count;
@@ -337,6 +349,7 @@ struct CommandDataStruct {
 
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
+  roach_params_t roach_params[NUM_ROACHES];
 
   uei_commands_t uei_command;
 
