@@ -106,9 +106,6 @@ typedef struct roach_state {
     bool is_streaming;
 
     double *freq_residuals;
-    double *vna_comb;
-    size_t freqlen;
-    double delta_f;
     double *targ_tones;
     double lo_freq_req;
     size_t num_kids;
@@ -120,7 +117,21 @@ typedef struct roach_state {
     // This LUT is what gets written
     roach_uint16_lut_t LUT;
 
+    // VNA sweep
+    double *vna_comb;
+    size_t vna_comb_len;
     char *vna_path_root;
+    double p_max_freq;
+    double p_min_freq;
+    double n_max_freq;
+    double n_min_freq;
+    double delta_f;
+    // Detector search params
+    char *search_path; // default = last_vna_path
+    double fk_step_size; // kHz
+    double smoothing_scale; // kHz
+    double spacing_thresh; // kHz
+    double peak_thresh; // dB
     char *targ_path_root;
     char *grad_path_root;
     char *last_vna_path;
@@ -148,6 +159,8 @@ typedef struct bb_state {
     e_bb_status status;
     e_bb_status desired_status;
     remote_serial_t *bb_comm;
+    double out_atten;
+    double in_atten;
 } bb_state_t;
 
 typedef struct {
