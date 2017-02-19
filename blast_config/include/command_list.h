@@ -211,13 +211,14 @@ enum multiCommand {
   xsc_filter_eq_location,
   xsc_filter_matching,
   vna_sweep,
+  targ_sweep,
   reset_roach,
   calc_grad_roach,
   end_sweep,
   load_new_tone_amplitudes,
   cal_attens,
   set_attens,
-  set_find_kids_params,
+  find_kids,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

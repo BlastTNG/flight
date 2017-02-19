@@ -60,18 +60,27 @@ typedef enum {
     ROACH_STATUS_CALIBRATED,
     ROACH_STATUS_TONE,
     ROACH_STATUS_STREAMING,
-    ROACH_STATUS_ATTENUATION,
     ROACH_STATUS_VNA,
     ROACH_STATUS_ARRAY_FREQS,
     ROACH_STATUS_TARG,
+    ROACH_STATUS_GRAD,
     ROACH_STATUS_ACQUIRING,
 } e_roach_status;
 
 typedef enum {
     BB_STATUS_BOOT = 0,
     BB_STATUS_INIT,
-    BB_STATUS_RUNNING,
 } e_bb_status;
+
+typedef enum {
+    RUDAT_STATUS_BOOT = 0,
+    RUDAT_STATUS_HAS_ATTENS,
+} e_rudat_status;
+
+typedef enum {
+    VALON_STATUS_BOOT = 0,
+    VALON_STATUS_HAS_FREQS,
+} e_valon_status;
 
 typedef enum {
     ROACH_UPLOAD_RESULT_WORKING = 0,
@@ -128,10 +137,6 @@ typedef struct roach_state {
     double delta_f;
     // Detector search params
     char *search_path; // default = last_vna_path
-    double fk_step_size; // kHz
-    double smoothing_scale; // kHz
-    double spacing_thresh; // kHz
-    double peak_thresh; // dB
     char *targ_path_root;
     char *grad_path_root;
     char *last_vna_path;
@@ -159,9 +164,19 @@ typedef struct bb_state {
     e_bb_status status;
     e_bb_status desired_status;
     remote_serial_t *bb_comm;
-    double out_atten;
-    double in_atten;
 } bb_state_t;
+
+typedef struct rudat_state {
+    int which;
+    e_rudat_status status;
+    e_rudat_status desired_status;
+} rudat_state_t;
+
+typedef struct valon_state {
+    int which;
+    e_valon_status status;
+    e_valon_status desired_status;
+} valon_state_t;
 
 typedef struct {
     const char *firmware_file;

@@ -782,6 +782,11 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
+  {COMMAND(targ_sweep), "perform a new TARG sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
   {COMMAND(reset_roach), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
@@ -790,10 +795,10 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(calc_grad_roach), "Force calculation of I,Q gradient", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Choose behavior: 0 = default, 1 = set grads as ref, 2 = use grads as comparison", 0, 2, 'i', "NONE"}
+      {"Choose behavior: 1 = set grads as ref, 2 = use grads as comparison", 1, 2, 'i', "NONE"}
     }
   },
-  {COMMAND(set_find_kids_params), "Set the parameters for the kid finding algorithm", GR_ROACH, 4,
+  {COMMAND(find_kids), "Set the parameters for the kid finding algorithm", GR_ROACH, 4,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
