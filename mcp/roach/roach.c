@@ -1600,8 +1600,12 @@ void write_roach_channels_5hz(void)
         SET_UINT16(RoachStatusAddr[i], roach_state_table[i].status);
         // TODO(laura/sam): Replace next write with a streaming status bitfield.
         SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
-// This next statement causes a segfault for some reason.
-// TODO(laura): Fix it!
         SET_SCALED_VALUE(RoachReqLOFreqAddr[i], roach_state_table[i].lo_freq_req);
+        if (i == 0) {
+            blast_info("roach%i packet_count = %i, roach_state_table[i].status = %i",
+                       i+1, roach_udp[i].roach_packet_count, roach_state_table[i].status);
+            blast_info("roach%i lo_freq_req = %f",
+                       i+1, roach_state_table[i].lo_freq_req);
+        }
     }
 }
