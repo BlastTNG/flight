@@ -311,7 +311,7 @@ typedef struct roach
 {
     unsigned int new_state;
     unsigned int change_state;
-    unsigned int do_calc_grad;
+    unsigned int df_calc;
     unsigned int do_sweeps;
     unsigned int load_amps;
     unsigned int set_rudats;

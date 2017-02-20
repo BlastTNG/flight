@@ -128,31 +128,32 @@ typedef struct roach_state {
 
     // VNA sweep
     double *vna_comb;
+    double vna_sweep_span;
     size_t vna_comb_len;
     char *vna_path_root;
     double p_max_freq;
     double p_min_freq;
     double n_max_freq;
     double n_min_freq;
-    double delta_f;
-    // Detector search params
-    char *search_path; // default = last_vna_path
+    // VNA/TARG sweep file paths
     char *targ_path_root;
-    char *grad_path_root;
     char *last_vna_path;
     char *last_targ_path;
-    char *last_grad_path;
-    char *ref_sweep_path;
-    char *ref_grad_path;
-    char *ref_df_path;
-    char *last_comp_grads;
-    char *last_comp_df;
     char *channels_path;
+    // For detector retune decision
+    int has_ref; /* If 1, ref exists */
+    int retune_flag;
+    double ref_grad[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
+    double ref_df[MAX_CHANNELS_PER_ROACH]; // The reference delta f values
+    double comp_df[MAX_CHANNELS_PER_ROACH]; // To be compared to ref_df
+    double df_diff[MAX_CHANNELS_PER_ROACH]; // For each kid, = comp_df - ref_df
+    char *last_cal_path;
+    char *cal_path_root;
     // Python logs (for saving/reading response)
-    char *cal_log;
+    char *qdr_log;
     char *find_kids_log;
     uint16_t dest_port;
-
+    // Path to tone amplitudes file
     char *amps_path[2];
 
     // PPC link

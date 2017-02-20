@@ -1402,8 +1402,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case calc_grad_roach:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 1) && ivalues[1] <= 2)) {
-          CommandData.roach[ivalues[0]-1].do_calc_grad = ivalues[1];
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 1) && ivalues[1] <= 3)) {
+          CommandData.roach[ivalues[0]-1].df_calc = ivalues[1];
       }
       break;
     case set_attens:
@@ -1978,7 +1978,7 @@ void InitCommandData()
 	for (i = 0; i < NUM_ROACHES; i++) {
 		CommandData.roach[i].set_rudats = 0;
 		CommandData.roach[i].set_attens = 0;
-		CommandData.roach[i].do_calc_grad = 1; // Sets reference gradients
+		CommandData.roach[i].df_calc = 0; // Sets reference gradients
 		CommandData.roach[i].do_sweeps = 1;
 		CommandData.roach[i].new_state = 0;
 		CommandData.roach[i].change_state = 0;
