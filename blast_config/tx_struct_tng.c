@@ -970,6 +970,7 @@ channel_t channel_list[] =
     { "df_kid0018_roach1",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     { "df_kid0019_roach1",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     { "df_kid0020_roach1",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
+    { "df_kid0000_roach2",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     { "df_kid0001_roach2",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     { "df_kid0002_roach2",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     { "df_kid0003_roach2",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
