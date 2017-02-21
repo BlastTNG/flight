@@ -1558,7 +1558,7 @@ void *ActuatorBus(void *param)
             actuators_init &= ~(0x1 << HWPRNUM);
         }
 
-/* Commenting out balance system for now (PCA 12/6/16)
+// Commenting out balance system for now (PCA 12/6/16)
         if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
             DoBalance(&bus);
             actuators_init |= 0x1 << BALANCENUM;
@@ -1567,7 +1567,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << BALANCENUM);
         }
-*/
+
         usleep(10000);
     }
 }

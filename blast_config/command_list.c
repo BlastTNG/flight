@@ -346,14 +346,14 @@ struct mcom mcommands[plugh + 2] = {
       {"dir (pos=1, neg=-1, off=0)",           -1, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(balance_vel), "set the waveplate rotator velocity and acceleration",
+  {COMMAND(balance_vel), "set the balance system velocity and acceleration",
     GR_BAL, 2,
     {
       {"Velocity", 5, 500000, 'l', "VEL_BAL"},
       {"Acceleration", 1, 1000, 'i', "ACC_BAL"},
     }
   },
-  {COMMAND(balance_i), "set the waveplate rotator currents", GR_BAL, 2,
+  {COMMAND(balance_i), "set the balance system currents", GR_BAL, 2,
     {
       {"Move current (%)", 0, 100, 'i', "I_MOVE_BAL"},
       {"Hold current (%)", 0,  50, 'i', "I_HOLD_BAL"},

@@ -739,7 +739,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.hwpr.mode = HWPR_PANIC;
             CommandData.hwpr.is_new = 1;
             break;
-
+	case balance_auto:
+	    CommandData.balance.mode = bal_auto;
+	    break;
+	case balance_off:
+	    CommandData.balance.mode = bal_rest;
+	    break;
 #ifndef BOLOTEST
         case blast_rocks:
             CommandData.sucks = 0;
@@ -1389,8 +1394,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.balance.move_i = ivalues[0];
       CommandData.balance.hold_i = ivalues[1];
       break;
-
-
 
       /*************************************
       ************** Misc  ****************/
