@@ -203,7 +203,8 @@ int main(int argc, char** argv)
 {
     struct timeval now;
     double delta;
-    double fr = 200;
+    double ofr = 200;
+    double ifr = 200;
     double nf = 0;
 
     /* Load the hard-coded defaults if not over-written by command line */
@@ -270,13 +271,20 @@ int main(int argc, char** argv)
                 nf = (ri.wrote - ri.lw);
                 ri.last = now;
                 ri.lw = ri.wrote;
-                fr = nf / TC + fr * (1 - delta / TC);
+                ofr = nf / TC + ofr * (1 - delta / TC);
+                nf = (ri.read - ri.lr);
+                ri.lr = ri.read;
+                ifr = nf / TC + ifr * (1 - delta / TC);
                 if (ri.frame_rate_reset) {
                     ri.frame_rate_reset = 0;
-                    fr = 200;
+                    ofr = 200;
+                    ifr = 200;
                 }
 #ifndef DEBUG
-                printf("%s R:[%i] W:[%i] %.*f Hz\r", rc.output_dirfile, ri.read, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
+                printf("%s R:[%i] %.*f W:[%i] %.*f Hz\r", rc.output_dirfile, ri.read,
+                		(ifr > 100) ? 1 : (ifr > 10) ? 2 : 3, ifr,
+                		ri.wrote,
+                		(ofr > 100) ? 1 : (ofr > 10) ? 2 : 3, ofr);
                 fflush(stdout);
 #endif
             }
@@ -285,7 +293,7 @@ int main(int argc, char** argv)
     pthread_join(reader_thread, NULL);
     pthread_join(writer_thread, NULL);
     if (!rc.silent) {
-            bprintf(info, "%s R:[%i] W:[%i] %.*f Hz", rc.output_dirfile, ri.read, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
+            bprintf(info, "%s R:[%i] W:[%i] %.*f Hz", rc.output_dirfile, ri.read, ri.wrote, (ofr > 100) ? 1 : (ofr > 10) ? 2 : 3, ofr);
     }
     return 0;
 }

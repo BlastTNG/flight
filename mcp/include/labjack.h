@@ -31,6 +31,9 @@
 
 #define LABJACK_CRYO_1 0
 #define LABJACK_CRYO_2 1
+#define LABJACK_OF_1 2
+#define LABJACK_OF_2 3
+#define LABJACK_OF_3 4
 #define LABJACK_CRYO_NCHAN 14 // Number of Channels to stream (14 = all analog input channels)
 #define LABJACK_CRYO_SPP 1 // Number of scans to readout per streaming packet
 
@@ -53,15 +56,58 @@
 // labjack 2
 #define DIODE_CHARCOAL 0
 #define DIODE_4K_PLATE 1
+#define BIAS 10
+#define LEVEL_SENSOR_READ 11
+#define CAL_LAMP_READ 12
+#define HEATER_300MK_READ 13
 #define ROX_FPA_1K 2
+#define ROX_250_FPA 3
+#define ROX_350_FPA 4
+#define ROX_500_FPA 5
+#define ROX_300MK_STRAP 6
+#define ROX_1K_STRAP 7
+#define ROX_HE3_FRIDGE 8
+#define ROX_HE4_POT 9
+
+
+// DIO addresses LJ CRYO 1
+#define LEVEL_SENSOR_COMMAND 2008
+#define CHARCOAL_COMMAND 2009
+#define LNA_250_COMMAND 2010
+#define HEATER_1K_COMMAND 2011
+#define HEATER_300MK_COMMAND 2012
+#define CHARCOAL_HS_COMMAND 2013
+#define CALLAMP_COMMAND 2014
+#define LNA_350_COMMAND 2015
+#define LNA_500_COMMAND 2016
+
+// DIO addresses LJ CRYO 2
+#define POWER_BOX_ON 2001
+#define POWER_BOX_OFF 2000
+#define AMP_SUPPLY_ON 2003
+#define AMP_SUPPLY_OFF 2002
+#define THERM_READOUT_ON 2005
+#define THERM_READOUT_OFF 2004
+#define HEATER_SUPPLY_ON 2007
+#define HEATER_SUPPLY_OFF 2006
+
+// Digital reads on LJ CRYO 2
+#define READ_CHARCOAL 2009
+#define READ_250LNA 2010
+#define READ_1K_HEATER 2011
+#define READ_CHARCOAL_HS 2013
+#define READ_350LNA 2015
+#define READ_500LNA 2016
 
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
-// TODO(ian): Update these for the thermometers and channels we have.
-#define LJ_R_FPA_1K_IND 2
 
 void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
 float labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);
 void store_labjack_data(void);
 int labjack_dio(int m_labjack, int address, int command);
+void heater_write(int m_labjack, int address, int command);
+uint16_t labjack_read_dio(int m_labjack, int address);
+void labjack_reboot(int m_labjack);
+void query_time(int m_labjack);
 #endif /* LABJACK_H_ */

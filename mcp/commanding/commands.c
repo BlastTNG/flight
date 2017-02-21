@@ -46,6 +46,9 @@
 #include "tx.h"
 #include "pointing_struct.h"
 #include "channels_tng.h"
+#include "labjack.h"
+#include "cryostat.h"
+#include "relay_control.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -167,6 +170,244 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case reboot_ljcryo1:
+            labjack_reboot(LABJACK_CRYO_1);
+            break;
+        case power_box_on:
+            rec_switch(1);
+            break;
+        case power_box_off:
+            rec_switch(2);
+            break;
+        case amp_supply_on:
+            rec_switch(3);
+            break;
+        case amp_supply_off:
+            rec_switch(4);
+            break;
+        case therm_readout_on:
+            rec_switch(5);
+            break;
+        case therm_readout_off:
+            rec_switch(6);
+            break;
+        case heater_supply_on:
+            rec_switch(7);
+            break;
+        case heater_supply_off:
+            rec_switch(8);
+            break;
+        case heater_300mk_on:
+            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 1);
+            break;
+        case heater_300mk_off:
+            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 0);
+            break;
+        case charcoal_hs_on:
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 1);
+            break;
+        case charcoal_hs_off:
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
+            break;
+        case callamp_on:
+            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+            break;
+        case callamp_off:
+            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+            break;
+        case lna350_on:
+            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 1);
+            break;
+        case lna350_off:
+            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 0);
+            break;
+        case lna500_on:
+            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, 1);
+            break;
+        case lna500_off:
+            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, 0);
+            break;
+        case level_sensor_on:
+            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
+            // probably becomes an on pulse in the future
+            break;
+        case level_sensor_off:
+            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
+            break;
+        case charcoal_on:
+            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 1);
+            break;
+        case charcoal_off:
+            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 0);
+            break;
+        case lna250_on:
+            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, 1);
+            break;
+        case lna250_off:
+            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, 0);
+            break;
+        case heater_1k_on:
+            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, 1);
+            break;
+        case heater_1k_off:
+            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, 0);
+            break;
+        case of_relay_1_on:
+            of_1_4_switch(1);
+            break;
+        case of_relay_1_off:
+            of_1_4_switch(2);
+            break;
+        case of_relay_2_on:
+            of_1_4_switch(3);
+            break;
+        case of_relay_2_off:
+            of_1_4_switch(4);
+            break;
+        case of_relay_3_on:
+            of_1_4_switch(5);
+            break;
+        case of_relay_3_off:
+            of_1_4_switch(6);
+            break;
+        case of_relay_4_on:
+            of_1_4_switch(7);
+            break;
+        case of_relay_4_off:
+            of_1_4_switch(8);
+            break;
+        case of_relay_5_on:
+            of_5_8_switch(1);
+            break;
+        case of_relay_5_off:
+            of_5_8_switch(2);
+            break;
+        case of_relay_6_on:
+            of_5_8_switch(3);
+            break;
+        case of_relay_6_off:
+            of_5_8_switch(4);
+            break;
+        case of_relay_7_on:
+            of_5_8_switch(5);
+            break;
+        case of_relay_7_off:
+            of_5_8_switch(6);
+            break;
+        case of_relay_8_on:
+            of_5_8_switch(7);
+            break;
+        case of_relay_8_off:
+            of_5_8_switch(8);
+            break;
+        case of_relay_9_on:
+            of_9_12_switch(1);
+            break;
+        case of_relay_9_off:
+            of_9_12_switch(2);
+            break;
+        case of_relay_10_on:
+            of_9_12_switch(3);
+            break;
+        case of_relay_10_off:
+            of_9_12_switch(4);
+            break;
+        case of_relay_11_on:
+            of_9_12_switch(5);
+            break;
+        case of_relay_11_off:
+            of_9_12_switch(6);
+            break;
+        case of_relay_12_on:
+            of_9_12_switch(7);
+            break;
+        case of_relay_12_off:
+            of_9_12_switch(8);
+            break;
+        case of_relay_13_on:
+            of_13_16_switch(1);
+            break;
+        case of_relay_13_off:
+            of_13_16_switch(2);
+            break;
+        case of_relay_14_on:
+            of_13_16_switch(3);
+            break;
+        case of_relay_14_off:
+            of_13_16_switch(4);
+            break;
+        case of_relay_15_on:
+            of_13_16_switch(5);
+            break;
+        case of_relay_15_off:
+            of_13_16_switch(6);
+            break;
+        case of_relay_16_on:
+            of_13_16_switch(7);
+            break;
+        case of_relay_16_off:
+            of_13_16_switch(8);
+            break;
+        case if_relay_1_on:
+            if_1_5_switch(1);
+            break;
+        case if_relay_1_off:
+            if_1_5_switch(2);
+            break;
+        case if_relay_2_on:
+            if_1_5_switch(3);
+            break;
+        case if_relay_2_off:
+            if_1_5_switch(4);
+            break;
+        case if_relay_3_on:
+            if_1_5_switch(5);
+            break;
+        case if_relay_3_off:
+            if_1_5_switch(6);
+            break;
+        case if_relay_4_on:
+            if_1_5_switch(7);
+            break;
+        case if_relay_4_off:
+            if_1_5_switch(8);
+            break;
+        case if_relay_5_on:
+            if_1_5_switch(9);
+            break;
+        case if_relay_5_off:
+            if_1_5_switch(10);
+            break;
+        case if_relay_6_on:
+            if_6_10_switch(1);
+            break;
+        case if_relay_6_off:
+            if_6_10_switch(2);
+            break;
+        case if_relay_7_on:
+            if_6_10_switch(3);
+            break;
+        case if_relay_7_off:
+            if_6_10_switch(4);
+            break;
+        case if_relay_8_on:
+            if_6_10_switch(5);
+            break;
+        case if_relay_8_off:
+            if_6_10_switch(6);
+            break;
+        case if_relay_9_on:
+            if_6_10_switch(7);
+            break;
+        case if_relay_9_off:
+            if_6_10_switch(8);
+            break;
+        case if_relay_10_on:
+            if_6_10_switch(9);
+            break;
+        case if_relay_10_off:
+            if_6_10_switch(10);
+            break;
         case stop:  // Pointing abort
             CommandData.pointing_mode.nw = CommandData.slew_veto;
             CommandData.pointing_mode.mode = P_DRIFT;
@@ -552,16 +793,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case fixed:
             CommandData.Bias.biasRamp = 0;
             break;
-
-        case level_on:   // Cryo commanding
-            CommandData.Cryo.heliumLevel = -1;
-            break;
-        case level_off:
-            CommandData.Cryo.heliumLevel = 0;
-            break;
-        case level_pulse:
-            CommandData.Cryo.heliumLevel = 350;   // unit is 100Hz frames
-            break;
         case hwpr_enc_on:
             CommandData.Cryo.hwprPos = -1;
             break;
@@ -570,22 +801,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case hwpr_enc_pulse:
             CommandData.Cryo.hwprPos = 50;
-            break;
-        case charcoal_on:
-            CommandData.Cryo.charcoalHeater = 1;
-            CommandData.Cryo.fridgeCycle = 0;
-            break;
-        case charcoal_off:
-            CommandData.Cryo.charcoalHeater = 0;
-            CommandData.Cryo.fridgeCycle = 0;
-            break;
-        case hs_charcoal_on:
-            CommandData.Cryo.hsCharcoal = 1;
-            CommandData.Cryo.fridgeCycle = 0;
-            break;
-        case hs_charcoal_off:
-            CommandData.Cryo.hsCharcoal = 0;
-            CommandData.Cryo.fridgeCycle = 0;
             break;
         case auto_cycle:
             CommandData.Cryo.fridgeCycle = 1;
@@ -600,14 +815,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case cal_off:
             CommandData.Cryo.calibrator = off;
-            break;
-        case jfet_on:
-            CommandData.Cryo.JFETHeat = 1;
-            CommandData.Cryo.autoJFETheat = 0;
-            break;
-        case jfet_off:
-            CommandData.Cryo.JFETHeat = 0;
-            CommandData.Cryo.autoJFETheat = 0;
             break;
         case hs_pot_on:
             CommandData.Cryo.hsPot = 1;
@@ -654,9 +861,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case ln_valve_off:
             CommandData.Cryo.lnvalve_on = 0;
-            break;
-        case auto_jfetheat:
-            CommandData.Cryo.autoJFETheat = 1;
             break;
 
             // Lock

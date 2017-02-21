@@ -43,8 +43,8 @@
 #include "pointing_struct.h"
 #include "angles.h"
 
-bool scan_entered_snap_mode;
-bool scan_leaving_snap_mode;
+bool scan_entered_snap_mode = false;
+bool scan_leaving_snap_mode = false;
 
 static int32_t loop_counter = 0;
 static fifo_t *trigger_fifo[2] = {NULL};

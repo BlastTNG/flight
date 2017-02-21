@@ -40,6 +40,7 @@
 #include "command_struct.h"
 #include "labjack.h"
 #include "blast.h"
+#include "multiplexed_labjack.h"
 
 /* Heater control bits (BIAS_D G4) */
 #define HEAT_HELIUM_LEVEL    0x0001
@@ -54,6 +55,7 @@
 static uint16_t heatctrl;
 static uint16_t dio_on = 1;
 static uint16_t dio_off = 0;
+static int cal_length = 0;
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
@@ -62,6 +64,60 @@ void cryo_control(void)
     heatctrl = 0;
     if (CommandData.Cryo.charcoalHeater)
         heatctrl |= HEAT_CHARCOAL;
+}
+void cal_command(int length) {
+    cal_length = length;
+}
+
+void cal_control(void) {
+    int how_long;
+    static int pulsed = 0;
+    if ((how_long = cal_length) > 0) {
+        if (!pulsed) {
+            pulsed = 1;
+            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+        }
+        cal_length--;
+    } else {
+        if (pulsed) {
+            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+            pulsed = 0;
+        }
+    }
+}
+
+void test_labjacks(int m_which) {
+    float test0, test1, test2, test3, test4;
+    float test5, test6, test7, test8, test9;
+    float test10, test11, test12, test13;
+    test0 = labjack_get_value(m_which, 0);
+    test1 = labjack_get_value(m_which, 1);
+    test2 = labjack_get_value(m_which, 2);
+    test3 = labjack_get_value(m_which, 3);
+    test4 = labjack_get_value(m_which, 4);
+    test5 = labjack_get_value(m_which, 5);
+    test6 = labjack_get_value(m_which, 6);
+    test7 = labjack_get_value(m_which, 7);
+    test8 = labjack_get_value(m_which, 8);
+    test9 = labjack_get_value(m_which, 9);
+    test10 = labjack_get_value(m_which, 10);
+    test11 = labjack_get_value(m_which, 11);
+    test12 = labjack_get_value(m_which, 12);
+    test13 = labjack_get_value(m_which, 13);
+    blast_warn(" AIN 0 is %f", test0);
+    blast_warn(" AIN 1 is %f", test1);
+    blast_warn(" AIN 2 is %f", test2);
+    blast_warn(" AIN 3 is %f", test3);
+    blast_warn(" AIN 4 is %f", test4);
+    blast_warn(" AIN 5 is %f", test5);
+    blast_warn(" AIN 6 is %f", test6);
+    blast_warn(" AIN 7 is %f", test7);
+    blast_warn(" AIN 8 is %f", test8);
+    blast_warn(" AIN 9 is %f", test9);
+    blast_warn(" AIN 10 is %f", test10);
+    blast_warn(" AIN 11 is %f", test11);
+    blast_warn(" AIN 12 is %f", test12);
+    blast_warn(" AIN 13 is %f", test13);
 }
 
 void store_100hz_cryo(void)
@@ -76,16 +132,19 @@ void store_100hz_cryo(void)
     }
     SET_UINT16(heaterAddr, heatctrl);
 }
+void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
+    static channel_t* reader;
+    static int firsttime = 1;
+    if (firsttime) {
+        firsttime = 0;
+        reader = channels_find_by_name("read_dio");
+    }
+    // blast_warn("Fio0 on LABJACK 1 value is %u", labjack_read_dio(LABJACK_CRYO_1, 2000));
+    SET_SCALED_VALUE(reader, labjack_read_dio(LABJACK_CRYO_1, 2000));
+}
+
 void read_thermometers(void) {
     static int firsttime_therm = 1;
-    float test;
-    float test2;
-    // test = labjack_get_value(0, 13);
-    // blast_warn("labjack1 is %f", test);
-
-    // test2 = labjack_get_value(1, 13);
-    // blast_warn("labjack2 is %f", test2);
-
     static channel_t* rox_fpa_1k_Addr;
     static channel_t* rox_250_fpa_Addr;
     static channel_t* rox_1k_plate_Addr;
@@ -94,6 +153,7 @@ void read_thermometers(void) {
     static channel_t* rox_he4_pot_Addr;
     static channel_t* rox_he3_fridge_Addr;
     static channel_t* rox_500_fpa_Addr;
+    static channel_t* rox_bias_Addr;
 
     static channel_t* diode_charcoal_hs_Addr;
     static channel_t* diode_vcs2_filt_Addr;
@@ -112,6 +172,8 @@ void read_thermometers(void) {
     static channel_t* diode_vcs2_hx_Addr;
     static channel_t* diode_vcs1_plate_Addr;
 
+    static channel_t* level_sensor_read_Addr;
+
     if (firsttime_therm == 1) {
         rox_fpa_1k_Addr = channels_find_by_name("tr_fpa_1k");
         rox_250_fpa_Addr = channels_find_by_name("tr_250_fpa");
@@ -121,6 +183,7 @@ void read_thermometers(void) {
         rox_he4_pot_Addr = channels_find_by_name("tr_he4_pot");
         rox_he3_fridge_Addr = channels_find_by_name("tr_he3_fridge");
         rox_500_fpa_Addr = channels_find_by_name("tr_500_fpa");
+        rox_bias_Addr = channels_find_by_name("rox_bias");
         // rox channel pointers defined above
         // diode channel pointers defined below
         diode_charcoal_hs_Addr = channels_find_by_name("td_charcoal_hs");
@@ -139,6 +202,8 @@ void read_thermometers(void) {
         diode_4k_filt_Addr = channels_find_by_name("td_4k_filt");
         diode_vcs2_hx_Addr = channels_find_by_name("td_vcs2_hx");
         diode_vcs1_plate_Addr = channels_find_by_name("td_vcs1_plate");
+        // other channels defined below
+        level_sensor_read_Addr = channels_find_by_name("level_sensor_read");
         firsttime_therm = 0;
     }
 
@@ -160,13 +225,16 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
     // above are the diodes, below, the ROXes
     SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_FPA_1K));
-    /* SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
-    SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
-    SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
-    SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
-    SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
-    SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_2, 0));
-    SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0)); */
+    SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_250_FPA));
+    SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_1K_STRAP));
+    SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_300MK_STRAP));
+    SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_350_FPA));
+    SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_HE4_POT));
+    SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_HE3_FRIDGE));
+    SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_500_FPA));
+    SET_SCALED_VALUE(rox_bias_Addr, labjack_get_value(LABJACK_CRYO_2, BIAS));
+    // below are the random cryo labjack channels
+    SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
 }
 
 #ifdef USE_XY_THREAD

@@ -56,6 +56,7 @@
 #include "tx.h"
 #include "lut.h"
 #include "labjack.h"
+#include "multiplexed_labjack.h"
 
 #include "acs.h"
 #include "actuators.h"
@@ -305,6 +306,7 @@ static void mcp_200hz_routines(void)
     #ifdef USE_XY_THREAD
     	read_chopper();
     #endif
+    cal_control();
 
     framing_publish_200hz();
 }
@@ -334,7 +336,6 @@ static void mcp_5hz_routines(void)
     store_5hz_acs();
     write_motor_channels_5hz();
     store_axes_mode_data();
-    store_labjack_data();
     WriteAux();
     ControlBalance();
     StoreActBus();
@@ -358,7 +359,9 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
+    rec_control();
     read_thermometers();
+    test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -366,6 +369,8 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    // query_mult(0, 48);
+    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -543,9 +548,17 @@ int main(int argc, char *argv[])
   initialize_motors();
   labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // mult_labjack_networking_init(0, 84, 1);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);
+  initialize_labjack_commands(LABJACK_OF_1);
+  initialize_labjack_commands(LABJACK_OF_2);
+  initialize_labjack_commands(LABJACK_OF_3);
+  // mult_initialize_labjack_commands(0);
 
   initialize_CPU_sensors();
 

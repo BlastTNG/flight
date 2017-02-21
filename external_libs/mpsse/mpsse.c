@@ -489,7 +489,7 @@ void mpsse_clock_data(struct mpsse_ctx *ctx, const uint8_t *out, unsigned out_of
 	while (length > 0) {
 		/* Guarantee buffer space enough for a minimum size transfer */
 		if (buffer_write_space(ctx) + (length < 8) < (out || (!out && !in) ? 4 : 3) || (in && buffer_read_space(ctx) < 1)) {
-            DEBUG_IO("About to flush in mpsse_clock_data, with length still to write in bits =%d", length);
+            DEBUG_IO("About to flush in mpsse_clock_data, buffer has only %d bits lefts but want to write %d bits", buffer_write_space(ctx), length);
             ctx->retval = mpsse_flush(ctx);
         }
 
@@ -775,11 +775,11 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer *transfer)
 	res->transferred += transfer->actual_length;
 
 	DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
-	//DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
+	DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
 
-	if (res->transferred == ctx->write_count)
+	if (res->transferred == ctx->write_count) {
 		res->done = true;
-	else {
+	} else {
 		transfer->length = ctx->write_count - res->transferred;
 		transfer->buffer = ctx->write_buffer + res->transferred;
 		if (libusb_submit_transfer(transfer) != LIBUSB_SUCCESS)
@@ -798,12 +798,13 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 		return retval;
 	}
 
-	DEBUG_IO("write %d%s, read %d", ctx->write_count, ctx->read_count ? "+1" : "",
-			ctx->read_count);
+	DEBUG_IO("write %d%s, read %d", ctx->write_count, ctx->read_count ? "+1" : "", ctx->read_count);
 	assert(ctx->write_count > 0 || ctx->read_count == 0); /* No read data without write data */
+
 
 	if (ctx->write_count == 0)
 		return retval;
+
 
 	struct libusb_transfer *read_transfer = 0;
 	struct transfer_result read_result = { .ctx = ctx, .done = true };
@@ -813,6 +814,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 		/* delay read transaction to ensure the FTDI chip can support us with data
 		   immediately after processing the MPSSE commands in the write transaction */
 	}
+
 
 	struct transfer_result write_result = { .ctx = ctx, .done = false };
 	struct libusb_transfer *write_transfer = libusb_alloc_transfer(0);
@@ -831,10 +833,12 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 	/* Polling loop, more or less taken from libftdi */
 	while (!write_result.done || !read_result.done) {
 		retval = libusb_handle_events(ctx->usb_ctx);
+        blast_dbg("is write_result.done after handl_events? %d", (int) write_result.done);
 		///TODO: Evaluate GDB Keepalive function
 		//keep_alive();
 		if (retval != LIBUSB_SUCCESS && retval != LIBUSB_ERROR_INTERRUPTED) {
 			libusb_cancel_transfer(write_transfer);
+            blast_dbg("Cancelling transfer because retval = %d", retval);
 			if (read_transfer)
 				libusb_cancel_transfer(read_transfer);
 			while (!write_result.done || !read_result.done)
@@ -842,6 +846,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 					break;
 		}
 	}
+
 
 	if (retval != LIBUSB_SUCCESS) {
 		blast_err("libusb_handle_events() failed with %s", libusb_error_name(retval));

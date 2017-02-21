@@ -80,6 +80,7 @@ struct ri_struct {
 
   struct timeval last;  // Last time written to dirfile
   int lw;               // Total number of samples written previously
+  int lr;               // Total number of samples written previously
   int wrote;                // Current number of samples written
   bool new_channels;        // Have we received a new channels structure?
   bool channels_ready;      // Is the channels structure initialized?
