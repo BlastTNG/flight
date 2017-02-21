@@ -171,7 +171,6 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
     EZBus_ReadInt(bus, STAGEY_ID, "?0", &stage_data.ypos);
 
     now = (is_y) ? stage_data.ypos : stage_data.xpos;
-
     } while (now != dest);
 }
 
@@ -214,7 +213,7 @@ void ControlXYStage(struct ezbus* bus)
   if (CommandData.xystage.is_new) {
     /* PANIC! */
     if (CommandData.xystage.mode == XYSTAGE_PANIC) {
-      bputs("XY Stage Panic");
+      bputs(warning, "XY Stage Panic");
       EZBus_Stop(bus, STAGEX_ID);
       EZBus_Stop(bus, STAGEY_ID);
       CommandData.xystage.is_new = 0;

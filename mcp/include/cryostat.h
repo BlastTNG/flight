@@ -12,4 +12,7 @@ void store_100hz_cryo(void);
 void autocycle(void);
 void read_thermometers();
 
+#ifdef USE_XY_THREAD
+	void read_chopper(void);
+#endif
 #endif /* cryostat_h */

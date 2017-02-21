@@ -169,6 +169,26 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, 0)); */
 }
 
+#ifdef USE_XY_THREAD
+void read_chopper(void)
+{
+	/*
+		Code to read in the chopper signal for the xy stage.
+		Included here b/c it's an analog in read through a LabJack.
+	*/	
+
+	static channel_t* stage_chopper_Addr;
+	static int firsttime = 1;
+
+	if (firsttime == 1) {
+		firsttime = 0;
+		stage_chopper_Addr = channels_find_by_name("stage_chopper");
+	}
+
+	SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(LABJACK_CRYO_2, 12)); // labjack 2 channel 12
+}
+#endif
+
 void autocycle_ian(void)
 {
     static channel_t* tfpa250_Addr; // set channel address pointers

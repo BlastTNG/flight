@@ -186,7 +186,9 @@ void DoBalance(struct ezbus* bus)
         balance_state.dir = 0;
         balance_state.do_move = 0;
         firsttime = 0;
-    }
+   	// TODO PCA: add balance preamble j#n2R 
+
+     }
 
         /* update the Balance move parameters */
     EZBus_SetVel(bus, balance_state.addr, CommandData.balance.vel);

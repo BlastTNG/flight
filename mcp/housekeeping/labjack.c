@@ -87,7 +87,7 @@
 #define LJ_DATA_PORT 702
 
 // TODO(laura): make this commandable from the call in mcp.c
-#define LJ_STREAM_RATE 10.0 // Streaming Rate (Hz)
+#define LJ_STREAM_RATE 200.0 // Streaming Rate (Hz) //DEBUG PCA
 
 
 // Maximum number of addresses that can be targeted in stream mode.

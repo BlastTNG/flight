@@ -302,6 +302,9 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
+    #ifdef USE_XY_THREAD
+    	read_chopper();
+    #endif
 
     framing_publish_200hz();
 }
