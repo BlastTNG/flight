@@ -66,8 +66,9 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
-#define DDS_SHIFT 305 /* Firmware version dependent */
-#define FFT_SHIFT 255 /* Controls FFT overflow behavior */
+#define DDS_SHIFT 306 /* Firmware version dependent */
+#define VNA_FFT_SHIFT 15 /* Controls FFT overflow behavior, for VNA SWEEP */
+#define TARG_FFT_SHIFT 31
 #define WRITE_INT_TIMEOUT 1000 /* KATCP write timeout */
 #define UPLOAD_TIMEOUT 20000 /* KATCP upload timeout */
 #define QDR_TIMEOUT 20000 /* Same as above */
@@ -99,7 +100,7 @@ double zeros[14] = {0.00089543, 0.00353682, 0.00779173, 0.01344678, 0.02021843, 
 		0.04366146, 0.05121013, 0.05798178, 0.06363685, 0.06789176, 0.07053316, 0.07142859};
 // double zeros[14] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.};
 // Firmware image files
-const char roach_fpg[5][40] = {"/data/etc/blast/roach1.fpg", "/data/etc/blast/roach2_fir.fpg",
+const char roach_fpg[5][40] = {"/data/etc/blast/blast_0220_306.fpg", "/data/etc/blast/roach1.fpg",
 		"roach3.fpg", "roach4.fpg", "roach5.fpg"};
 // const char test_fpg[] = "/data/etc/blast/blast_filt_fix_2017_Feb_16_0851.fpg";
 // const char test_fpg[] = "/data/etc/blast/blast_0209_dds305_2017_Feb_15_1922.fpg";
@@ -371,7 +372,7 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_
 	/* if (m_freqs[i] < 0 && m_freqs[i]+ 512.0e6 >= 511.5e6) {
 		bins[i] = 1023;
 	}*/
-	m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / (0.5 *DAC_FREQ_RES)) * (0.5*DAC_FREQ_RES);
+	m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / (DAC_FREQ_RES)) * (DAC_FREQ_RES);
     }
     for (int ch = 0; ch < m_freqlen; ch++) {
         roach_write_int(m_roach, "bins", bins[ch], 0);
@@ -843,7 +844,7 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
 			m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
 			bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
 			while (bb_read_string(m_bb) <= 0) {
-				usleep(500);
+				usleep(1000);
 			}
 			if ((type == 0)) {
 				roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_roach->last_vna_path, m_roach->vna_comb_len);
@@ -857,11 +858,12 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
 			break;
 		}
 	}
+	usleep(3000);
 	blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
 	bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
 	// TODO(Sam) Put in error handling
 	while (bb_read_string(m_bb) <= 0) {
-		usleep(500);
+		usleep(1000);
 	}
 	free(m_sweep_freqs);
 	return retval;
@@ -896,6 +898,9 @@ void cal_sweep(roach_state_t *m_roach)
 		}
 	blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
 	bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
+	while (bb_read_string(m_bb) <= 0) {
+		usleep(1000);
+	}
 	m_roach->status = ROACH_STATUS_STREAMING;
 	}
 }
@@ -1276,7 +1281,7 @@ void *roach_cmd_loop(void)
 				blast_info("ROACH%d, Configuring software registers...", i + 1);
 				roach_write_int(&roach_state_table[i], "dds_shift", DDS_SHIFT, 0);/* DDS LUT shift, in clock cycles */
 				roach_read_int(&roach_state_table[i], "dds_shift");
-				roach_write_int(&roach_state_table[i], "fft_shift", FFT_SHIFT, 0);/* FFT shift schedule */
+				roach_write_int(&roach_state_table[i], "fft_shift", VNA_FFT_SHIFT, 0);/* FFT shift schedule */
 				roach_read_int(&roach_state_table[i], "fft_shift");
 				roach_write_int(&roach_state_table[i], "sync_accum_len", accum_len, 0);/* Number of accumulations */
 				roach_read_int(&roach_state_table[i], "sync_accum_len");
@@ -1437,14 +1442,25 @@ int init_roach(void)
 
 void write_roach_channels_5hz(void)
 {
-    int i;
+    int i, j;
     static int firsttime = 1;
+    int n_write_kids_df = 20; // For now only write the delta_freqs for the first 20 KIDs.
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachStatusAddr[NUM_ROACHES];
+    static channel_t *BBStatusAddr[NUM_ROACHES];
+    static channel_t *RudatStatusAddr[NUM_ROACHES];
+    static channel_t *ValonStatusAddr[NUM_ROACHES];
     static channel_t *RoachStateAddr[NUM_ROACHES];
-//  static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
+    static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
+    static channel_t *RoachReadLOFreqAddr[NUM_ROACHES];
+    static channel_t *RoachDfAddr[NUM_ROACHES][MAX_CHANNELS_PER_ROACH];
+    static channel_t *CmdRoachParSmoothAddr[NUM_ROACHES];
+    static channel_t *CmdRoachParPeakThreshAddr[NUM_ROACHES];
+    static channel_t *CmdRoachParSpaceThreshAddr[NUM_ROACHES];
+    static channel_t *CmdRoachParInAttenAddr[NUM_ROACHES];
+    static channel_t *CmdRoachParOutAttenAddr[NUM_ROACHES];
     char channel_name_pkt_ct[128] = { 0 };
     char channel_name_valid_pkt_ct[128] = { 0 };
     char channel_name_invalid_pkt_ct[128] = { 0 };
@@ -1454,6 +1470,13 @@ void write_roach_channels_5hz(void)
     char channel_name_rudat_status[128] = { 0 };
     char channel_name_roach_state[128] = { 0 };
     char channel_name_roach_req_lo[128] = { 0 };
+    char channel_name_roach_df[128] = { 0 };
+    char channel_name_roach_read_lo[128] = { 0 };
+    char channel_name_cmd_roach_par_smooth[128] = { 0 };
+    char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
+    char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
+    char channel_name_cmd_roach_par_in_atten[128] = { 0 };
+    char channel_name_cmd_roach_par_out_atten[128] = { 0 };
     if (firsttime) {
         firsttime = 0;
         for (i = 0; i < NUM_ROACHES; i++) {
@@ -1476,7 +1499,25 @@ void write_roach_channels_5hz(void)
             snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
                     "stream_state_roach%d", i + 1);
             snprintf(channel_name_roach_req_lo,
-                    sizeof(channel_name_roach_state), "freq_lo_req_roach%d",
+                    sizeof(channel_name_roach_req_lo), "freq_lo_req_roach%d",
+                    i + 1);
+            snprintf(channel_name_roach_read_lo,
+                    sizeof(channel_name_roach_read_lo), "freq_lo_req_roach%d",
+                    i + 1);
+            snprintf(channel_name_cmd_roach_par_smooth,
+                    sizeof(channel_name_cmd_roach_par_smooth), "fk_smooth_scale_roach%d",
+                    i + 1);
+            snprintf(channel_name_cmd_roach_par_peak_thresh,
+                    sizeof(channel_name_cmd_roach_par_peak_thresh), "fk_peak_thresh_roach%d",
+                    i + 1);
+            snprintf(channel_name_cmd_roach_par_space_thresh,
+                    sizeof(channel_name_cmd_roach_par_space_thresh), "fk_space_thresh_roach%d",
+                    i + 1);
+            snprintf(channel_name_cmd_roach_par_in_atten,
+                    sizeof(channel_name_cmd_roach_par_in_atten), "atten_in_roach%d",
+                    i + 1);
+            snprintf(channel_name_cmd_roach_par_out_atten,
+                    sizeof(channel_name_cmd_roach_par_out_atten), "atten_out_roach%d",
                     i + 1);
             RoachPktCtAddr[i] = channels_find_by_name(channel_name_pkt_ct);
             RoachValidPktCtAddr[i] = channels_find_by_name(
@@ -1488,6 +1529,21 @@ void write_roach_channels_5hz(void)
             BBStatusAddr[i] = channels_find_by_name(channel_name_bb_status);
             RudatStatusAddr[i] = channels_find_by_name(channel_name_rudat_status);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
+            RoachReqLOFreqAddr[i] = channels_find_by_name(channel_name_roach_req_lo);
+            RoachReadLOFreqAddr[i] = channels_find_by_name(channel_name_roach_read_lo);
+            CmdRoachParSmoothAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_smooth);
+            CmdRoachParPeakThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_peak_thresh);
+            CmdRoachParSpaceThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_space_thresh);
+            CmdRoachParInAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_in_atten);
+            CmdRoachParOutAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_out_atten);
+            for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
+                if (j < n_write_kids_df) {
+                    snprintf(channel_name_roach_df,
+                             sizeof(channel_name_roach_df), "df_kid%04d_roach%d",
+                             j + 1, i + 1);
+                    RoachDfAddr[i][j] = channels_find_by_name(channel_name_roach_df);
+                }
+            }
         }
     }
     for (i = 0; i < NUM_ROACHES; i++) {
@@ -1514,11 +1570,13 @@ void write_roach_channels_5hz(void)
                 SET_SCALED_VALUE(RoachDfAddr[i][j], roach_state_table[i].df_diff[j]);
             }
         }
-//        if (i == 0) {
-//            blast_info("roach%i packet_count = %i, roach_state_table[i].status = %i",
-//                       i+1, roach_udp[i].roach_packet_count, roach_state_table[i].status);
-//            blast_info("roach%i lo_freq_req = %f",
-//                       i+1, roach_state_table[i].lo_freq_req);
+        /*if (i == 0) {
+            blast_info("roach%i, lo_freq_req = %f, lo_centerfreq = %f",
+                       i+1, roach_state_table[i].lo_freq_req, roach_state_table[i].lo_centerfreq);
+            blast_info("roach%i, smoothing_scale = %f, spacing_threshold = %f",
+                       i+1, CommandData.roach_params[i].smoothing_scale, CommandData.roach_params[i].spacing_threshold);
+            blast_info("roach%i, df[0] = %f",
+                       i+1, roach_state_table[i].df_diff[0]);
+        }*/
     }
 }
-
