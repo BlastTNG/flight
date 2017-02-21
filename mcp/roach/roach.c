@@ -1566,14 +1566,15 @@ void write_roach_channels_5hz(void)
                 SET_SCALED_VALUE(RoachDfAddr[i][j], roach_state_table[i].df_diff[j]);
             }
         }
-        if (i == 0) {
-            blast_info("roach%i, lo_freq_req = %f, lo_centerfreq = %f",
-                       i+1, roach_state_table[i].lo_freq_req, roach_state_table[i].lo_centerfreq);
-            blast_info("roach%i, smoothing_scale = %f, spacing_threshold = %f",
-                       i+1, CommandData.roach_params[i].smoothing_scale, CommandData.roach_params[i].spacing_threshold);
-            blast_info("roach%i, df[0] = %f",
-                       i+1, roach_state_table[i].df_diff[0]);
-        }
+//        if (i == 0) {
+//            blast_info("roach%i, lo_freq_req = %f, lo_centerfreq = %f",
+//                       i+1, roach_state_table[i].lo_freq_req, roach_state_table[i].lo_centerfreq);
+//            blast_info("roach%i, smoothing_scale = %f, spacing_threshold = %f",
+//                       i+1, CommandData.roach_params[i].smoothing_scale,
+//                       CommandData.roach_params[i].spacing_threshold);
+//            blast_info("roach%i, df[0] = %f",
+//                       i+1, roach_state_table[i].df_diff[0]);
+//        }
     }
 }
 
