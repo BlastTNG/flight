@@ -1497,7 +1497,7 @@ void write_roach_channels_5hz(void)
                     sizeof(channel_name_roach_req_lo), "freq_lo_req_roach%d",
                     i + 1);
             snprintf(channel_name_roach_read_lo,
-                    sizeof(channel_name_roach_read_lo), "freq_lo_req_roach%d",
+                    sizeof(channel_name_roach_read_lo), "freq_lo_read_roach%d",
                     i + 1);
             snprintf(channel_name_cmd_roach_par_smooth,
                     sizeof(channel_name_cmd_roach_par_smooth), "fk_smooth_scale_roach%d",
@@ -1536,7 +1536,7 @@ void write_roach_channels_5hz(void)
                 if (j < n_write_kids_df) {
                     snprintf(channel_name_roach_df,
                              sizeof(channel_name_roach_df), "df_kid%04d_roach%d",
-                             j + 1, i + 1);
+                             j , i + 1);
                     RoachDfAddr[i][j] = channels_find_by_name(channel_name_roach_df);
                 }
             }
@@ -1566,11 +1566,14 @@ void write_roach_channels_5hz(void)
                 SET_SCALED_VALUE(RoachDfAddr[i][j], roach_state_table[i].df_diff[j]);
             }
         }
-//        if (i == 0) {
-//            blast_info("roach%i packet_count = %i, roach_state_table[i].status = %i",
-//                       i+1, roach_udp[i].roach_packet_count, roach_state_table[i].status);
-//            blast_info("roach%i lo_freq_req = %f",
-//                       i+1, roach_state_table[i].lo_freq_req);
+        if (i == 0) {
+            blast_info("roach%i, lo_freq_req = %f, lo_centerfreq = %f",
+                       i+1, roach_state_table[i].lo_freq_req, roach_state_table[i].lo_centerfreq);
+            blast_info("roach%i, smoothing_scale = %f, spacing_threshold = %f",
+                       i+1, CommandData.roach_params[i].smoothing_scale, CommandData.roach_params[i].spacing_threshold);
+            blast_info("roach%i, df[0] = %f",
+                       i+1, roach_state_table[i].df_diff[0]);
+        }
     }
 }
 
