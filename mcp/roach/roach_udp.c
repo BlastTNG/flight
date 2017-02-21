@@ -376,9 +376,9 @@ void write_roach_channels_488hz(void)
         for (i = 0; i < 1; i++) { // Only write ROACH1 channels for now.
 //        for (i = 0; i < NUM_ROACHES; i++) {
             for (j = 0; j < n_publish_roaches[i]; j++) {
-                snprintf(channel_name_i, sizeof(channel_name_i), "roach%d_kid%04d_i", i+1, j);
+                snprintf(channel_name_i, sizeof(channel_name_i), "i_kid%04d_roach%d", j, i+1);
                 RoachIAddr[i][j] = channels_find_by_name(channel_name_i);
-                snprintf(channel_name_q, sizeof(channel_name_q), "roach%d_kid%04d_q", i+1, j);
+                snprintf(channel_name_q, sizeof(channel_name_q), "q_kid%04d_roach%d", j, i+1);
                 RoachQAddr[i][j] = channels_find_by_name(channel_name_q);
             }
         }
