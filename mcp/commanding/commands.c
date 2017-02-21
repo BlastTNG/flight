@@ -1382,7 +1382,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case vna_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_STREAMING;
+          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_CALIBRATED;
           CommandData.roach[ivalues[0]-1].change_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }

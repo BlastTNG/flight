@@ -665,6 +665,7 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 	float *I_avg = calloc(m_Nfreqs, sizeof(float)); // Array to store averaged I values
 	float *Q_avg = calloc(m_Nfreqs, sizeof(float)); // Array to store averaged Q values
 	while (m_num_received < m_num_to_avg) {
+		usleep(3000);
 		if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
 		   m_num_received++;
 		   i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
@@ -673,7 +674,7 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 			I_sum[chan] +=  m_packet.Ival[chan];
 			Q_sum[chan] +=  m_packet.Qval[chan];
 		   }
-                }
+		}
 		m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
 	}
 	for (size_t chan = 0; chan < m_Nfreqs; chan++) {
@@ -846,7 +847,7 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
 			}
 			if ((type == 0)) {
 				roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_roach->last_vna_path, m_roach->vna_comb_len);
-				usleep(1000);
+				usleep(5000);
 			} else {
 				roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_roach->last_targ_path, m_roach->num_kids);
 			}
@@ -945,6 +946,7 @@ int grad_calc(roach_state_t *m_roach)
 			m_roach->ref_df[kid] = ((Ival[kid][(NGRAD_POINTS - 1) / 2] * m_roach->ref_grad[kid][0]
 						+ Qval[kid][(NGRAD_POINTS - 1) / 2] * m_roach->ref_grad[kid][1])
 						/ (pow(m_roach->ref_grad[kid][0], 2) + pow(m_roach->ref_grad[kid][1], 2)))*LO_STEP;
+			blast_info("R%d chan%d, df = %g", m_roach->which - 1, kid, m_roach->ref_df[kid]);
 		}
 	m_roach->has_ref = 1;
 	blast_info("ROACH%d, stored REF grads & delta F", m_roach->which);
@@ -1435,40 +1437,20 @@ int init_roach(void)
 
 void write_roach_channels_5hz(void)
 {
-    int i, j;
+    int i;
     static int firsttime = 1;
-    int n_write_kids_df = 20; // For now only write the delta_freqs for the first 20 KIDs.
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachStatusAddr[NUM_ROACHES];
-    static channel_t *BBStatusAddr[NUM_ROACHES];
-    static channel_t *RudatStatusAddr[NUM_ROACHES];
-    static channel_t *ValonStatusAddr[NUM_ROACHES];
     static channel_t *RoachStateAddr[NUM_ROACHES];
-    static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
-    static channel_t *RoachReadLOFreqAddr[NUM_ROACHES];
-    static channel_t *RoachDfAddr[NUM_ROACHES][MAX_CHANNELS_PER_ROACH];
-    static channel_t *CmdRoachParSmoothAddr[NUM_ROACHES];
-    static channel_t *CmdRoachParPeakThreshAddr[NUM_ROACHES];
-    static channel_t *CmdRoachParSpaceThreshAddr[NUM_ROACHES];
-    static channel_t *CmdRoachParInAttenAddr[NUM_ROACHES];
-    static channel_t *CmdRoachParOutAttenAddr[NUM_ROACHES];
-
+//  static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
     char channel_name_pkt_ct[128] = { 0 };
     char channel_name_valid_pkt_ct[128] = { 0 };
     char channel_name_invalid_pkt_ct[128] = { 0 };
     char channel_name_roach_status[128] = { 0 };
     char channel_name_roach_state[128] = { 0 };
     char channel_name_roach_req_lo[128] = { 0 };
-    char channel_name_roach_df[128] = { 0 };
-    char channel_name_roach_read_lo[128] = { 0 };
-    char channel_name_cmd_roach_par_smooth[128] = { 0 };
-    char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
-    char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
-    char channel_name_cmd_roach_par_in_atten[128] = { 0 };
-    char channel_name_cmd_roach_par_out_atten[128] = { 0 };
-
     if (firsttime) {
         firsttime = 0;
         for (i = 0; i < NUM_ROACHES; i++) {
@@ -1485,27 +1467,8 @@ void write_roach_channels_5hz(void)
             snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
                     "stream_state_roach%d", i + 1);
             snprintf(channel_name_roach_req_lo,
-                    sizeof(channel_name_roach_req_lo), "freq_lo_req_roach%d",
+                    sizeof(channel_name_roach_state), "freq_lo_req_roach%d",
                     i + 1);
-            snprintf(channel_name_roach_read_lo,
-                    sizeof(channel_name_roach_read_lo), "freq_lo_req_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_smooth,
-                    sizeof(channel_name_cmd_roach_par_smooth), "fk_smooth_scale_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_peak_thresh,
-                    sizeof(channel_name_cmd_roach_par_peak_thresh), "fk_peak_thresh_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_space_thresh,
-                    sizeof(channel_name_cmd_roach_par_space_thresh), "fk_space_thresh_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_in_atten,
-                    sizeof(channel_name_cmd_roach_par_in_atten), "atten_in_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_out_atten,
-                    sizeof(channel_name_cmd_roach_par_out_atten), "atten_out_roach%d",
-                    i + 1);
-
             RoachPktCtAddr[i] = channels_find_by_name(channel_name_pkt_ct);
             RoachValidPktCtAddr[i] = channels_find_by_name(
                     channel_name_valid_pkt_ct);
@@ -1514,21 +1477,6 @@ void write_roach_channels_5hz(void)
             RoachStatusAddr[i] = channels_find_by_name(
                     channel_name_roach_status);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
-            RoachReqLOFreqAddr[i] = channels_find_by_name(channel_name_roach_req_lo);
-            RoachReadLOFreqAddr[i] = channels_find_by_name(channel_name_roach_read_lo);
-            CmdRoachParSmoothAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_smooth);
-            CmdRoachParPeakThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_peak_thresh);
-            CmdRoachParSpaceThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_space_thresh);
-            CmdRoachParInAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_in_atten);
-            CmdRoachParOutAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_out_atten);
-            for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
-                if (j < n_write_kids_df) {
-                    snprintf(channel_name_roach_df,
-                             sizeof(channel_name_roach_df), "df_kid%04d_roach%d",
-                             j + 1, i + 1);
-                    RoachDfAddr[i][j] = channels_find_by_name(channel_name_roach_df);
-                }
-            }
         }
     }
     for (i = 0; i < NUM_ROACHES; i++) {
@@ -1542,6 +1490,6 @@ void write_roach_channels_5hz(void)
         SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
 // This next statement causes a segfault for some reason.
 // TODO(laura): Fix it!
-        SET_SCALED_VALUE(RoachReqLOFreqAddr[i], roach_state_table[i].lo_freq_req);
+//        SET_SCALED_VALUE(RoachReqLOFreqAddr[i], roach_state_table[i].lo_freq_req);
     }
 }
