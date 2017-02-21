@@ -1459,6 +1459,9 @@ void write_roach_channels_5hz(void)
     char channel_name_valid_pkt_ct[128] = { 0 };
     char channel_name_invalid_pkt_ct[128] = { 0 };
     char channel_name_roach_status[128] = { 0 };
+    char channel_name_valon_status[128] = { 0 };
+    char channel_name_bb_status[128] = { 0 };
+    char channel_name_rudat_status[128] = { 0 };
     char channel_name_roach_state[128] = { 0 };
     char channel_name_roach_req_lo[128] = { 0 };
     char channel_name_roach_df[128] = { 0 };
@@ -1482,6 +1485,12 @@ void write_roach_channels_5hz(void)
                     "packet_count_invalid_roach%d", i + 1);
             snprintf(channel_name_roach_status,
                     sizeof(channel_name_roach_status), "status_roach%d", i + 1);
+            snprintf(channel_name_valon_status,
+                    sizeof(channel_name_valon_status), "status_valon_roach%d", i + 1);
+            snprintf(channel_name_bb_status,
+                    sizeof(channel_name_bb_status), "status_bb_roach%d", i + 1);
+            snprintf(channel_name_rudat_status,
+                    sizeof(channel_name_rudat_status), "status_rudat_roach%d", i + 1);
             snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
                     "stream_state_roach%d", i + 1);
             snprintf(channel_name_roach_req_lo,
@@ -1511,8 +1520,10 @@ void write_roach_channels_5hz(void)
                     channel_name_valid_pkt_ct);
             RoachInvalidPktCtAddr[i] = channels_find_by_name(
                     channel_name_invalid_pkt_ct);
-            RoachStatusAddr[i] = channels_find_by_name(
-                    channel_name_roach_status);
+            RoachStatusAddr[i] = channels_find_by_name(channel_name_roach_status);
+            ValonStatusAddr[i] = channels_find_by_name(channel_name_valon_status);
+            BBStatusAddr[i] = channels_find_by_name(channel_name_bb_status);
+            RudatStatusAddr[i] = channels_find_by_name(channel_name_rudat_status);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
             RoachReqLOFreqAddr[i] = channels_find_by_name(channel_name_roach_req_lo);
             RoachReadLOFreqAddr[i] = channels_find_by_name(channel_name_roach_read_lo);
@@ -1538,14 +1549,28 @@ void write_roach_channels_5hz(void)
         SET_UINT32(RoachInvalidPktCtAddr[i],
                 roach_udp[i].roach_invalid_packet_count);
         SET_UINT16(RoachStatusAddr[i], roach_state_table[i].status);
+        SET_UINT16(ValonStatusAddr[i], valon_state_table[i].status);
+        SET_UINT16(RudatStatusAddr[i], rudat_state_table[i].status);
+        SET_UINT16(BBStatusAddr[i], bb_state_table[i].status);
         // TODO(laura/sam): Replace next write with a streaming status bitfield.
         SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
         SET_SCALED_VALUE(RoachReqLOFreqAddr[i], roach_state_table[i].lo_freq_req);
-        if (i == 0) {
-            blast_info("roach%i packet_count = %i, roach_state_table[i].status = %i",
-                       i+1, roach_udp[i].roach_packet_count, roach_state_table[i].status);
-            blast_info("roach%i lo_freq_req = %f",
-                       i+1, roach_state_table[i].lo_freq_req);
+        SET_SCALED_VALUE(RoachReadLOFreqAddr[i], roach_state_table[i].lo_centerfreq);
+        SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
+        SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
+        SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
+        SET_SCALED_VALUE(CmdRoachParInAttenAddr[i], CommandData.roach_params[i].in_atten);
+        SET_SCALED_VALUE(CmdRoachParOutAttenAddr[i], CommandData.roach_params[i].out_atten);
+        for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
+            if (j < n_write_kids_df) {
+                SET_SCALED_VALUE(RoachDfAddr[i][j], roach_state_table[i].df_diff[j]);
+            }
         }
+//        if (i == 0) {
+//            blast_info("roach%i packet_count = %i, roach_state_table[i].status = %i",
+//                       i+1, roach_udp[i].roach_packet_count, roach_state_table[i].status);
+//            blast_info("roach%i lo_freq_req = %f",
+//                       i+1, roach_state_table[i].lo_freq_req);
     }
 }
+
