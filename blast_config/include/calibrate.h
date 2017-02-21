@@ -59,9 +59,9 @@ extern "C" {
 #define M_16LOFREQ (0.001)
 #define B_16LOFREQ (750)
 #define M_16RFREQ (100.0/32768) // kHz
-#define B_16RFREQ (100.0)
-#define M_32RFREQ (10000.0/65536) // kHz
-#define B_32RFREQ (10000.0)
+#define B_16RFREQ (-100.0)
+#define M_32RFREQ (100000.0/(1 << 31)) // kHz
+#define B_32RFREQ (-100000.0)
 #define M_16R_DB (50.0/65536) // kHz
 #define B_16R_DB (0.0)
 
