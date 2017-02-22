@@ -56,10 +56,12 @@
 #include "tx.h"
 #include "lut.h"
 #include "labjack.h"
+#include "multiplexed_labjack.h"
 
 #include "acs.h"
 #include "actuators.h"
 #include "bias_tone.h"
+#include "balance.h"
 #include "blast.h"
 #include "blast_comms.h"
 #include "blast_sip_interface.h"
@@ -312,6 +314,10 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
+    #ifdef USE_XY_THREAD
+    	read_chopper();
+    #endif
+    cal_control();
 
     framing_publish_200hz();
 }
@@ -325,7 +331,6 @@ static void mcp_100hz_routines(void)
     cryo_control();
 //    BiasControl();
     WriteChatter();
-
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
@@ -333,6 +338,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
     framing_publish_100hz();
+    // test_dio();
 }
 static void mcp_5hz_routines(void)
 {
@@ -341,9 +347,12 @@ static void mcp_5hz_routines(void)
     store_5hz_acs();
     write_motor_channels_5hz();
     store_axes_mode_data();
-    store_labjack_data();
     WriteAux();
+    ControlBalance();
     StoreActBus();
+    #ifdef USE_XY_THREAD
+    StoreStageBus(0);
+    #endif
     SecondaryMirror();
 //    PhaseControl();
     StoreHWPRBus();
@@ -356,8 +365,7 @@ static void mcp_5hz_routines(void)
     write_roach_channels_5hz();
 #endif
 
-    framing_publish_5hz();
-}
+    framing_publish_5hz();}
 static void mcp_2hz_routines(void)
 {
     xsc_write_data(0);
@@ -365,7 +373,9 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
+    rec_control();
     read_thermometers();
+    test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -373,6 +383,8 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    // query_mult(0, 48);
+    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -454,7 +466,7 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm2;
 #endif
 #ifdef USE_XY_THREAD /* Define should be set in mcp.h */
-  pthread_t xy_id;
+  // pthread_t xy_id;
 #endif
 
   if (argc == 1) {
@@ -536,7 +548,7 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif
 #ifdef USE_XY_THREAD
-  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
+  // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
 
 #ifndef BOLOTEST
@@ -568,8 +580,18 @@ blast_info("Finished initializing Beaglebones..."); */
 //  InitSched();
   initialize_motors();
   labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // mult_labjack_networking_init(0, 84, 1);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
+  initialize_labjack_commands(LABJACK_CRYO_2);
+  initialize_labjack_commands(LABJACK_OF_1);
+  initialize_labjack_commands(LABJACK_OF_2);
+  initialize_labjack_commands(LABJACK_OF_3);
+  // mult_initialize_labjack_commands(0);
 
   initialize_CPU_sensors();
 

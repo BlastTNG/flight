@@ -276,6 +276,7 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         if (crc_calc) {
             gyro->crc_error_count++;
             invalid_data = true;
+            blast_info("Invalid packet on gyro box %d!", gyro->which);
         }
 
         pkt->x_raw = ntohl(pkt->x_raw);
@@ -298,6 +299,9 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         }
         pkt->temp = ntohs(pkt->temp);
 
+//        blast_info("Gyro%i: x_raw=%d, y_raw=%d, z_raw=%d, reserved = %8x, status=%x, seq=%x, temp=%d, crc=%4x",
+//                  gyro->which, pkt->x_raw, pkt->y_raw, pkt->z_raw, (unsigned)pkt->reserved,
+//                  (unsigned)pkt->status, (unsigned)pkt->sequence, pkt->temp, (unsigned)pkt->crc);
         if (!invalid_data && gyro->packet_count > 1 &&
                 pkt->sequence != (++gyro->seq_number & 0x7F)) {
             gyro->seq_error_count++;
@@ -331,13 +335,19 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
     }
 
     /// If we have accumulated the equivalent of 2
+
     if (ph_bufq_len(m_serial->rbuf) > 2 * sizeof(dsp1760_std_t) || gyro->want_reset) {
         if (gyro->want_reset) {
             blast_info("Resetting Gyro Box %d due to user command", gyro->which);
         } else {
+//            blast_info("Buffer length %i, size_of(dsp1760_std_t)=%i",
+//                       ph_bufq_len(m_serial->rbuf), sizeof(dsp1760_std_t));
             blast_err("Disconnecting Gyro Box %d garbage in stream (multiple-access?)", gyro->which);
         }
         dsp1760_disconnect(m_serial, gyro);
+    } else {
+//            blast_info("OK->Buffer length %i, size_of(dsp1760_std_t)=%i-> OK",
+//                       ph_bufq_len(m_serial->rbuf), sizeof(dsp1760_std_t));
     }
 }
 

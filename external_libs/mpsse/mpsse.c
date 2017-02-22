@@ -81,8 +81,8 @@ struct mpsse_ctx {
 	uint8_t interface;
 	enum ftdi_chip_type type;
 	uint8_t *write_buffer;
-	unsigned write_size;
-	unsigned write_count;
+	unsigned write_size;  // size in bytes
+	unsigned write_count; // size in bytes
 	uint8_t *read_buffer;
 	unsigned read_size;
 	unsigned read_count;
@@ -186,6 +186,8 @@ static bool open_matching_device(struct mpsse_ctx *ctx, const uint16_t *vid, con
 		}
 
 		found = true;
+        blast_info("Succes opening MPSSE device with VID=%04x and PID=%04x", *vid, *pid);
+
 		break;
 	}
 
@@ -306,7 +308,7 @@ struct mpsse_ctx *mpsse_open(const uint16_t *vid, const uint16_t *pid, const cha
 		return 0;
 
 	bit_copy_queue_init(&ctx->read_queue);
-	ctx->read_chunk_size = 16384;
+	ctx->read_chunk_size = 16384; // 2**14, in bytes
 	ctx->read_size = 16384;
 	ctx->write_size = 16384;
 	ctx->read_chunk = malloc(ctx->read_chunk_size);
@@ -427,7 +429,7 @@ static unsigned buffer_read_space(struct mpsse_ctx *ctx)
 
 static void buffer_write_byte(struct mpsse_ctx *ctx, uint8_t data)
 {
-	DEBUG_IO("%02x", data);
+	//DEBUG_IO("About to write: %02x", data);
 	assert(ctx->write_count < ctx->write_size);
 	ctx->write_buffer[ctx->write_count++] = data;
 }
@@ -435,7 +437,8 @@ static void buffer_write_byte(struct mpsse_ctx *ctx, uint8_t data)
 static unsigned buffer_write(struct mpsse_ctx *ctx, const uint8_t *out, unsigned out_offset,
 	unsigned bit_count)
 {
-	DEBUG_IO("%d bits", bit_count);
+	//DEBUG_IO("About to write %d bits starting at %d", bit_count, out_offset);
+	//DEBUG_PRINT_BUF(out, bit_count/8);
 	assert(ctx->write_count + DIV_ROUND_UP(bit_count, 8) <= ctx->write_size);
 	bit_copy(ctx->write_buffer + ctx->write_count, 0, out, out_offset, bit_count);
 	ctx->write_count += DIV_ROUND_UP(bit_count, 8);
@@ -445,7 +448,7 @@ static unsigned buffer_write(struct mpsse_ctx *ctx, const uint8_t *out, unsigned
 static unsigned buffer_add_read(struct mpsse_ctx *ctx, uint8_t *in, unsigned in_offset,
 	unsigned bit_count, unsigned offset)
 {
-	DEBUG_IO("%d bits, offset %d", bit_count, offset);
+	//DEBUG_IO("%d bits, offset %d", bit_count, offset);
 	assert(ctx->read_count + DIV_ROUND_UP(bit_count, 8) <= ctx->read_size);
 	bit_copy_queued(&ctx->read_queue, in, in_offset, ctx->read_buffer + ctx->read_count, offset,
 		bit_count);
@@ -469,7 +472,7 @@ void mpsse_clock_data(struct mpsse_ctx *ctx, const uint8_t *out, unsigned out_of
 	unsigned in_offset, unsigned length, uint8_t mode)
 {
 	/* TODO: Fix MSB first modes */
-	DEBUG_IO("%s%s %d bits", in ? "in" : "", out ? "out" : "", length);
+	DEBUG_IO("Data %s%s, need to write %d bits", in ? "in" : "", out ? "out" : "", length);
 
 	if (ctx->retval != ERROR_OK) {
 		DEBUG_IO("Ignoring command due to previous error");
@@ -482,55 +485,69 @@ void mpsse_clock_data(struct mpsse_ctx *ctx, const uint8_t *out, unsigned out_of
 	if (in)
 		mode |= 0x20;
 
+
 	while (length > 0) {
 		/* Guarantee buffer space enough for a minimum size transfer */
-		if (buffer_write_space(ctx) + (length < 8) < (out || (!out && !in) ? 4 : 3)
-				|| (in && buffer_read_space(ctx) < 1))
-			ctx->retval = mpsse_flush(ctx);
+		if (buffer_write_space(ctx) + (length < 8) < (out || (!out && !in) ? 4 : 3) || (in && buffer_read_space(ctx) < 1)) {
+            DEBUG_IO("About to flush in mpsse_clock_data, buffer has only %d bits lefts but want to write %d bits", buffer_write_space(ctx), length);
+            ctx->retval = mpsse_flush(ctx);
+        }
 
 		if (length < 8) {
 			/* Transfer remaining bits in bit mode */
 			buffer_write_byte(ctx, 0x02 | mode);
 			buffer_write_byte(ctx, length - 1);
-			if (out)
+			if (out) {
 				out_offset += buffer_write(ctx, out, out_offset, length);
-			if (in)
+            }
+			if (in) {
 				in_offset += buffer_add_read(ctx, in, in_offset, length, 8 - length);
-			if (!out && !in)
+            }
+			if (!out && !in) {
 				buffer_write_byte(ctx, 0x00);
+            }
 			length = 0;
 		} else {
 			/* Byte transfer */
 			unsigned this_bytes = length / 8;
 			/* MPSSE command limit */
-			if (this_bytes > 65536)
+			if (this_bytes > 65536) {
 				this_bytes = 65536;
+            }
 			/* Buffer space limit. We already made sure there's space for the minimum
 			 * transfer. */
-			if ((out || (!out && !in)) && this_bytes + 3 > buffer_write_space(ctx))
+			if ((out || (!out && !in)) && this_bytes + 3 > buffer_write_space(ctx)) {
 				this_bytes = buffer_write_space(ctx) - 3;
-			if (in && this_bytes > buffer_read_space(ctx))
+            }
+			if (in && this_bytes > buffer_read_space(ctx)) {
 				this_bytes = buffer_read_space(ctx);
+            }
 
 			if (this_bytes > 0) {
 				buffer_write_byte(ctx, mode);
 				buffer_write_byte(ctx, (this_bytes - 1) & 0xff);
 				buffer_write_byte(ctx, (this_bytes - 1) >> 8);
-				if (out)
+				if (out) {
+		            DEBUG_IO("This is the main writing loop, about to write %d bytes =  %d bits", this_bytes, this_bytes*8);
+	                //DEBUG_PRINT_BUF(out, this_bytes);
 					out_offset += buffer_write(ctx,
 							out,
 							out_offset,
 							this_bytes * 8);
-				if (in)
+                }
+				if (in) {
 					in_offset += buffer_add_read(ctx,
 							in,
 							in_offset,
 							this_bytes * 8,
 							0);
-				if (!out && !in)
+                }
+				if (!out && !in) {
 					for (unsigned n = 0; n < this_bytes; n++)
 						buffer_write_byte(ctx, 0x00);
+                }
 				length -= this_bytes * 8;
+		        DEBUG_IO("After writing %d bits, length in bits still to write is %d", this_bytes*8, length);
 			}
 		}
 	}
@@ -546,8 +563,10 @@ void mpsse_set_data_bits_low_byte(struct mpsse_ctx *ctx, uint8_t data, uint8_t d
 		return;
 	}
 
-	if (buffer_write_space(ctx) < 3)
+	if (buffer_write_space(ctx) < 3) {
+		DEBUG_IO("About to flush in mpsse_set_data_bits_low_byte");
 		ctx->retval = mpsse_flush(ctx);
+    }
 
 	buffer_write_byte(ctx, 0x80);
 	buffer_write_byte(ctx, data);
@@ -563,8 +582,10 @@ void mpsse_set_data_bits_high_byte(struct mpsse_ctx *ctx, uint8_t data, uint8_t 
 		return;
 	}
 
-	if (buffer_write_space(ctx) < 3)
+	if (buffer_write_space(ctx) < 3) {
+		DEBUG_IO("About to flush in mpsse_set_data_bits_high_byte");
 		ctx->retval = mpsse_flush(ctx);
+    }
 
 	buffer_write_byte(ctx, 0x82);
 	buffer_write_byte(ctx, data);
@@ -580,8 +601,10 @@ void mpsse_read_data_bits_low_byte(struct mpsse_ctx *ctx, uint8_t *data)
 		return;
 	}
 
-	if (buffer_write_space(ctx) < 1 || buffer_read_space(ctx) < 1)
+	if (buffer_write_space(ctx) < 1 || buffer_read_space(ctx) < 1) {
+		DEBUG_IO("About to flush in mpsse_read_data_bits_low");
 		ctx->retval = mpsse_flush(ctx);
+    }
 
 	buffer_write_byte(ctx, 0x81);
 	buffer_add_read(ctx, data, 0, 8, 0);
@@ -596,8 +619,10 @@ void mpsse_read_data_bits_high_byte(struct mpsse_ctx *ctx, uint8_t *data)
 		return;
 	}
 
-	if (buffer_write_space(ctx) < 1 || buffer_read_space(ctx) < 1)
+	if (buffer_write_space(ctx) < 1 || buffer_read_space(ctx) < 1) {
+		DEBUG_IO("About to flush in mpsse_read_data_bits_high");
 		ctx->retval = mpsse_flush(ctx);
+    }
 
 	buffer_write_byte(ctx, 0x83);
 	buffer_add_read(ctx, data, 0, 8, 0);
@@ -611,8 +636,10 @@ static void single_byte_boolean_helper(struct mpsse_ctx *ctx, bool var, uint8_t 
 		return;
 	}
 
-	if (buffer_write_space(ctx) < 1)
+	if (buffer_write_space(ctx) < 1) {
+		DEBUG_IO("About to flush in single_byte_boolean_helper");
 		ctx->retval = mpsse_flush(ctx);
+    }
 
 	buffer_write_byte(ctx, var ? val_if_true : val_if_false);
 }
@@ -632,8 +659,10 @@ void mpsse_set_divisor(struct mpsse_ctx *ctx, uint16_t divisor)
 		return;
 	}
 
-	if (buffer_write_space(ctx) < 3)
+	if (buffer_write_space(ctx) < 3) {
+		DEBUG_IO("About to flush in mpsse_set_divisor");
 		ctx->retval = mpsse_flush(ctx);
+    }
 
 	buffer_write_byte(ctx, 0x86);
 	buffer_write_byte(ctx, divisor & 0xff);
@@ -707,7 +736,7 @@ static LIBUSB_CALL void read_cb(struct libusb_transfer *transfer)
 
 	unsigned packet_size = ctx->max_packet_size;
 
-	DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
+	//DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
 
 	/* Strip the two status bytes sent at the beginning of each USB packet
 	 * while copying the chunk buffer to the read buffer */
@@ -746,12 +775,11 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer *transfer)
 	res->transferred += transfer->actual_length;
 
 	DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
-
 	DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
 
-	if (res->transferred == ctx->write_count)
+	if (res->transferred == ctx->write_count) {
 		res->done = true;
-	else {
+	} else {
 		transfer->length = ctx->write_count - res->transferred;
 		transfer->buffer = ctx->write_buffer + res->transferred;
 		if (libusb_submit_transfer(transfer) != LIBUSB_SUCCESS)
@@ -770,12 +798,13 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 		return retval;
 	}
 
-	DEBUG_IO("write %d%s, read %d", ctx->write_count, ctx->read_count ? "+1" : "",
-			ctx->read_count);
+	DEBUG_IO("write %d%s, read %d", ctx->write_count, ctx->read_count ? "+1" : "", ctx->read_count);
 	assert(ctx->write_count > 0 || ctx->read_count == 0); /* No read data without write data */
+
 
 	if (ctx->write_count == 0)
 		return retval;
+
 
 	struct libusb_transfer *read_transfer = 0;
 	struct transfer_result read_result = { .ctx = ctx, .done = true };
@@ -785,6 +814,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 		/* delay read transaction to ensure the FTDI chip can support us with data
 		   immediately after processing the MPSSE commands in the write transaction */
 	}
+
 
 	struct transfer_result write_result = { .ctx = ctx, .done = false };
 	struct libusb_transfer *write_transfer = libusb_alloc_transfer(0);
@@ -803,10 +833,12 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 	/* Polling loop, more or less taken from libftdi */
 	while (!write_result.done || !read_result.done) {
 		retval = libusb_handle_events(ctx->usb_ctx);
+        blast_dbg("is write_result.done after handl_events? %d", (int) write_result.done);
 		///TODO: Evaluate GDB Keepalive function
 		//keep_alive();
 		if (retval != LIBUSB_SUCCESS && retval != LIBUSB_ERROR_INTERRUPTED) {
 			libusb_cancel_transfer(write_transfer);
+            blast_dbg("Cancelling transfer because retval = %d", retval);
 			if (read_transfer)
 				libusb_cancel_transfer(read_transfer);
 			while (!write_result.done || !read_result.done)
@@ -814,6 +846,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 					break;
 		}
 	}
+
 
 	if (retval != LIBUSB_SUCCESS) {
 		blast_err("libusb_handle_events() failed with %s", libusb_error_name(retval));
@@ -858,10 +891,12 @@ int mpsse_flush(struct mpsse_ctx *ctx)
  */
 void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint8_t *out, uint32_t out_offset, uint32_t length)
 {
-	uint8_t bit_doubler_buffer[4096] = {0};
-	unsigned output_length = min(sizeof(bit_doubler_buffer), length);
+	//uint8_t bit_doubler_buffer[4096] = {0};
+	//unsigned output_length = min(sizeof(bit_doubler_buffer), length);
+	unsigned output_length = 2*length;
+	uint8_t bit_doubler_buffer[output_length];
 
-	for (unsigned i = 0; i < output_length; i++) {
+	for (unsigned i = 0; i < length; i++) {
 		bit_doubler_buffer[i * 2] = (uint8_t)(bit_doubler[out[i + out_offset]] & 0xff);
 		bit_doubler_buffer[i * 2 + 1] = (uint8_t)((bit_doubler[out[i + out_offset]] >> 8) & 0xff);
 	}

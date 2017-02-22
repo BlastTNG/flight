@@ -513,6 +513,7 @@ static void *defricher_write_loop(void *m_arg)
 
             if ((pkt.ptr = g_async_queue_pop(packet_queue))) {
                 defricher_write_packet(pkt.rate);
+                usleep(1);
             }
 
         }

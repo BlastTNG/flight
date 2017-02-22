@@ -231,7 +231,7 @@ typedef struct XSCPointingState {
     double el;                              // XSC El
     int last_trigger_time;
     int exposure_time_cs;
-    double predicted_motion_px;
+    double predicted_streaking_px;
 } xsc_pointing_state_t;
 
 extern struct XSCPointingState xsc_pointing_state[2];

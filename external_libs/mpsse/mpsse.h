@@ -54,6 +54,9 @@
 #define MPSSE_DO_READ   0x20   /* Read TDO/DI */
 #define MPSSE_WRITE_TMS 0x40   /* Write TMS/CS */
 
+/*DEBUG FLAG*/
+//#define _DEBUG_JTAG_IO_ 1
+
 enum ftdi_chip_type {
 	TYPE_FT2232C,
 	TYPE_FT2232H,
@@ -97,7 +100,7 @@ int mpsse_flush(struct mpsse_ctx *ctx);
 void mpsse_purge(struct mpsse_ctx *ctx);
 
 /* Biphase specific routines */
-void biphase_write_data(struct mpsse_ctx *ctx, const uint8_t *out, uint32_t out_offset, uint32_t length);
+void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint8_t *out, uint32_t out_offset, uint32_t length);
 void mpsse_watchdog_ping(struct mpsse_ctx *ctx, const uint8_t bit);
 int mpsse_watchdog_get_incharge(struct mpsse_ctx *ctx);
 #endif /* MPSSE_H_ */

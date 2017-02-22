@@ -819,7 +819,7 @@ void store_100hz_xsc(int which)
     static channel_t* address_xN_last_trig_age_cs;
     static channel_t* address_xN_last_trig_ctr_mcp;
     static channel_t* address_xN_last_trig_ctr_stars[2];
-    static channel_t* address_xN_predicted_motion_px;
+    static channel_t* address_xN_predicted_streaking_px[2];
     static channel_t* address_xN_image_blobn_x[2];
     static channel_t* address_xN_image_blobn_y[2];
     static channel_t* address_xN_image_blobn_flux[2];
@@ -832,8 +832,8 @@ void store_100hz_xsc(int which)
             address_xN_ctr_mcp                     = get_xsc_channel("ctr_mcp", 0);
             address_xN_last_trig_age_cs            = get_xsc_channel("last_trig_age_cs", 0);
             address_xN_last_trig_ctr_mcp           = get_xsc_channel("last_trig_ctr_mcp", 0);
-            address_xN_predicted_motion_px         = get_xsc_channel("predicted_motion_px", which);
         }
+        address_xN_predicted_streaking_px[which]   = get_xsc_channel("predicted_streaking_px", which);
         address_xN_ctr_stars[which]                = get_xsc_channel("ctr_stars", which);
         address_xN_image_ctr_stars[which]          = get_xsc_channel("image_ctr_stars", which);
         address_xN_image_ctr_mcp[which]            = get_xsc_channel("image_ctr_mcp", which);
@@ -848,10 +848,10 @@ void store_100hz_xsc(int which)
         SET_SCALED_VALUE(address_xN_ctr_mcp, xsc_pointing_state[which].counter_mcp);
         SET_SCALED_VALUE(address_xN_last_trig_age_cs, xsc_pointing_state[which].last_trigger.trigger_time);
         SET_SCALED_VALUE(address_xN_last_trig_ctr_mcp, xsc_pointing_state[which].last_trigger.counter_mcp);
-        SET_SCALED_VALUE(address_xN_predicted_motion_px, xsc_pointing_state[0].predicted_motion_px);
     }
 
 
+    SET_SCALED_VALUE(address_xN_predicted_streaking_px[which], xsc_pointing_state[which].predicted_streaking_px);
     SET_INT32(address_xN_ctr_stars[which], XSC_SERVER_DATA(which).channels.ctr_stars);
     SET_INT32(address_xN_image_ctr_stars[which], XSC_SERVER_DATA(which).channels.image_ctr_stars);
     SET_INT32(address_xN_image_ctr_mcp[which], XSC_SERVER_DATA(which).channels.image_ctr_mcp);
