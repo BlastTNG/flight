@@ -115,9 +115,9 @@ typedef struct roach_state {
     bool is_streaming;
 
     double *freq_residuals;
-    double *targ_tones;
+    double *targ_tones; // kid frequencies found with get_targ_freqs()
     double lo_freq_req;
-    size_t num_kids;
+    size_t num_kids; // number of current kid frequencies
     double lo_centerfreq;
 
     // First two LUTs are for building
@@ -141,8 +141,10 @@ typedef struct roach_state {
     char *last_targ_path;
     char *channels_path;
     // For detector retune decision
-    int has_ref; /* If 1, ref exists */
-    int retune_flag;
+    int has_ref; /* If 1, ref grads exist */
+    int retune_flag; // 1 if retune is recommended
+    bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range
+
     double ref_grad[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
     double ref_df[MAX_CHANNELS_PER_ROACH]; // The reference delta f values
     double comp_df[MAX_CHANNELS_PER_ROACH]; // To be compared to ref_df
@@ -152,6 +154,7 @@ typedef struct roach_state {
     // Python logs (for saving/reading response)
     char *qdr_log;
     char *find_kids_log;
+    char *opt_tones_log;
     uint16_t dest_port;
     // Path to tone amplitudes file
     char *amps_path[2];

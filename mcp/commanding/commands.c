@@ -1371,10 +1371,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] > 0) && ivalues[1] <= 2)) {
           CommandData.roach[ivalues[0]-1].load_amps = ivalues[1];
       }
+      break;
     case cal_attens:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].set_rudats = 0;
       }
+      break;
     case end_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_sweeps = 0;
@@ -1401,9 +1403,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
       break;
-    case calc_grad_roach:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 1) && ivalues[1] <= 3)) {
+    case df_calc:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 1) && ivalues[1] <= 2)) {
           CommandData.roach[ivalues[0]-1].df_calc = ivalues[1];
+      }
+      break;
+    case auto_retune:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].auto_retune = ivalues[1];
+      }
+      break;
+    case opt_tones:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].opt_tones = ivalues[1];
       }
       break;
     case set_attens:
@@ -1412,6 +1424,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[2];
 	  CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
+      break;
     case find_kids:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
@@ -1979,10 +1992,12 @@ void InitCommandData()
 		CommandData.roach[i].set_rudats = 0;
 		CommandData.roach[i].set_attens = 0;
 		CommandData.roach[i].df_calc = 0; // Sets reference gradients
+		CommandData.roach[i].auto_retune = 0;
 		CommandData.roach[i].do_sweeps = 1;
 		CommandData.roach[i].new_state = 0;
 		CommandData.roach[i].change_state = 0;
 		CommandData.roach[i].find_kids = 0;
+		CommandData.roach[i].opt_tones = 0;
 	}
 
     CommandData.Bias.biasRamp = 0;
