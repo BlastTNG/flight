@@ -192,19 +192,6 @@ typedef struct {
 } firmware_state_t;
 
 // Called each time a packet is received
-typedef struct data_packet {
-	unsigned char *rcv_buffer;
-	struct ethhdr *eth;
-	struct iphdr *ip;
-	float *I;
-	float *Q;
-	uint32_t checksum;
-	uint32_t pps_count;
-	uint32_t clock_count;
-	uint32_t packet_count;
-} data_packet_t;
-
-// Called each time a packet is received
 // TODO(laura): This should really be merged with the previous data_packet_t structure
 // definition once we get the packet writing to use the phenom library.
 typedef struct data_udp_packet {

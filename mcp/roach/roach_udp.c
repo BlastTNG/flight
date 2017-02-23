@@ -101,12 +101,12 @@ uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_ro
     return retval;
 }
 
-void parse_udp_packet(data_udp_packet_t* m_packet)
+void parse_udp_packet(data_udp_packet_t* m_packet, ph_buf_t *m_buffer)
 {
 	static uint64_t i_packet = 0;
 
 // Get a pointer to the start of the raw buffer.
-    uint8_t* buf = ph_buf_mem(m_packet->rcv_buffer);
+    uint8_t* buf = ph_buf_mem(m_buffer);
 
 // Note that we don't get ethernet or IP packet header info if we use SOCK_DGRAM.
 // TODO(laura): is there a way to recover this information using libphenom?
@@ -169,7 +169,7 @@ void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_
             local_packet = &m_roach_udp->last_pkts[i];
     	    local_packet = balloc(fatal, sizeof(*m_packet) + m_packet->buffer_len);
         }
-        // blast_info("roach%i: Allocated packet structures of size %lu", m_roach_udp->which, sizeof(*m_packet));
+        blast_info("roach%i: Allocated packet structures of size %lu", m_roach_udp->which, sizeof(*m_packet));
         m_roach_udp->first_packet = FALSE;
     }
     /* if (packet_count < 100) {
@@ -234,12 +234,12 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
 // At this point we know that a read callback was triggered.
 
 // Now read from the buffer
-//    data_packet_t m_packet;
     data_udp_packet_t m_packet;
 
-    m_packet.rcv_buffer = ph_sock_read_bytes_exact(m_roach_udp->udp_socket, ROACH_UDP_DATA_LEN);
+	ph_buf_t *rcv_buffer;
+    rcv_buffer = ph_sock_read_bytes_exact(m_roach_udp->udp_socket, ROACH_UDP_DATA_LEN);
 
-    uint64_t bytes_read = ph_buf_len(m_packet.rcv_buffer);
+    uint64_t bytes_read = ph_buf_len(rcv_buffer);
     if (bytes_read < ROACH_UDP_DATA_LEN) {
     	blast_err("roach%i: Read only %lu bytes.", m_roach_udp->which, bytes_read);
         m_roach_udp->roach_invalid_packet_count++;
@@ -247,7 +247,8 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
         return;
     }
     m_packet.buffer_len = bytes_read;
-    parse_udp_packet(&m_packet);
+    parse_udp_packet(&m_packet, rcv_buffer);
+    ph_buf_delref(rcv_buffer);
 
     uint16_t udperr = check_udp_packet(&m_packet, m_roach_udp);
 
@@ -259,13 +260,7 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
 
     if (udperr > 0) return;
 
-// The next set of commands are only executed if there were no packet errors.
-//    if (CommandData.udp_roach[m_roach_udp->i_which].publish_udp) {
-        udp_store_to_structure(&m_packet, m_roach_udp);
-//    }
-
-//    if (CommandData.udp_roach[m_roach_udp->i_which].publish_udp) {
-//    }
+    udp_store_to_structure(&m_packet, m_roach_udp);
 
     m_roach_udp->have_warned = 0;
 }
