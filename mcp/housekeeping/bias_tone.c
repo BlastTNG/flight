@@ -44,9 +44,9 @@ static unsigned int channels = 2;                       /* count of channels */
 static unsigned int buffer_time = 500000;               /* ring buffer length in us */
 static unsigned int period_time = 100000;               /* period time in us */
 static double freq = 200;                                /* sinusoidal wave frequency in Hz */
+static int resample = 1;                                /* enable alsa-lib resampling */
 static snd_pcm_t *handle = NULL;
 static snd_mixer_t *handle_mx = NULL;
-static int resample = 1;                                /* enable alsa-lib resampling */
 
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
@@ -120,7 +120,8 @@ static void generate_sine(const snd_pcm_channel_area_t *areas,
         }
         *_phase = phase;
 }
-static int set_mixer_params(snd_mixer_t *handle_mx)
+
+int set_mixer_params(void)
 {
     int64_t min, max;
     snd_mixer_selem_id_t *sid;
@@ -405,7 +406,7 @@ int initialize_bias_tone(void)
     }
     blast_startup("Mixer loaded");
 
-    if ((retval = set_mixer_params(handle_mx)) < 0) {
+    if ((retval = set_mixer_params()) < 0) {
         blast_err("Could not send mixer parameters.: %s", snd_strerror(retval));
         goto init_err;
     }

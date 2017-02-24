@@ -41,6 +41,7 @@
 #include "labjack.h"
 #include "blast.h"
 #include "multiplexed_labjack.h"
+#include "bias_tone.h"
 
 /* Heater control bits (BIAS_D G4) */
 #define HEAT_HELIUM_LEVEL    0x0001
@@ -62,8 +63,23 @@ static int cal_length = 0;
 void cryo_control(void)
 {
     heatctrl = 0;
+    static int16_t last_rox_amp = 0;
+    static int16_t first_time = 1;
+    int retval = 0;
     if (CommandData.Cryo.charcoalHeater)
         heatctrl |= HEAT_CHARCOAL;
+
+// If we have changed the requested amplitude of the rox bias, trigger a set of ALSA
+// commands to change the volume on the sound card.
+    if ((last_rox_amp != CommandData.rox_bias.amp) && (!first_time)) {
+        if (retval = set_mixer_params()) { // defined in bias_tone
+            blast_err("Could not update ROX bias amplitude!");
+        }
+    }
+    last_rox_amp = CommandData.rox_bias.amp;
+    if (first_time) {
+        first_time = 0;
+    }
 }
 void cal_command(int length) {
     cal_length = length;
