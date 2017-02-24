@@ -209,11 +209,8 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case charcoal_hs_off:
             heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
             break;
-        case callamp_on:
-            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
-            break;
-        case callamp_off:
-            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+        case single_cal_pulse:
+            CommandData.Cryo.do_cal_pulse = 1;
             break;
         case lna350_on:
             heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 1);
@@ -233,6 +230,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case level_sensor_off:
             heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
+            break;
+        case level_sensor_pulse:
+            CommandData.Cryo.do_level_pulse = 1;
             break;
         case charcoal_on:
             heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 1);
@@ -1564,6 +1564,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 #endif
 // .
+    /*************************************
+    ********* Cryostat  ***********/
+          
+    case cal_length: //specify length in ms (multiples of 5)
+      CommandData.Cryo.cal_length = (ivalues[0]/5);
+      break;
+    case level_length: // specify length in seconds
+      CommandData.Cryo.level_length = (ivalues[0]*5);
+      break;
+
 #ifndef BOLOTEST
      /*************************************
       ********* Balance System  ***********/
@@ -1585,8 +1595,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.balance.move_i = ivalues[0];
       CommandData.balance.hold_i = ivalues[1];
       break;
-
-
 
       /*************************************
       ************** Misc  ****************/
@@ -1658,10 +1666,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
       /*************************************
       ********** Cal Lamp  ****************/
-    case cal_pulse:
-      CommandData.Cryo.calibrator = pulse;
-      CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-      break;
     case cal_repeat:
       CommandData.Cryo.calibrator = repeat;
       CommandData.Cryo.calib_pulse = ivalues[0] / 10;
@@ -2250,6 +2254,8 @@ void InitCommandData()
 
     CommandData.slot_sched = 0x100;
     CommandData.parts_sched = 0x0;
+    CommandData.Cryo.do_cal_pulse = 0;
+    CommandData.Cryo.do_level_pulse = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))
@@ -2468,15 +2474,12 @@ void InitCommandData()
     CommandData.Cryo.he4_lev_old = 0;
     CommandData.Cryo.hwprPos = 0;
     CommandData.Cryo.hwpr_pos_old = 0;
-    CommandData.Cryo.JFETHeat = 0;
-    CommandData.Cryo.autoJFETheat = 1;
-    CommandData.Cryo.JFETSetOn = 120;
-    CommandData.Cryo.JFETSetOff = 135;
     CommandData.Cryo.calibrator = repeat;
-    CommandData.Cryo.calib_pulse = 30; /* = 300 ms @ 100Hz */
+    CommandData.Cryo.cal_length = 30; /* = 150 ms @ 200Hz */
     CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
     CommandData.Cryo.calib_repeats = -1;  // indefinitely
     CommandData.Cryo.calib_hwpr = 1;  // pulse after every hwpr step
+    CommandDara.Cryo.level_length = 30;
 
     CommandData.Cryo.cycle_start_temp = 0.375;
     CommandData.Cryo.cycle_pot_max = 2.5;

@@ -134,7 +134,7 @@ enum singleCommand {
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
   lock45,           shutter_close_slow, heater_300mk_on,  heater_300mk_off,
-  charcoal_hs_on,   charcoal_hs_off,    callamp_on,       callamp_off,
+  charcoal_hs_on,   charcoal_hs_off,
   lna350_on, lna350_off, lna250_on, lna250_off, lna500_on, lna500_off,
   level_sensor_on,  level_sensor_off,   charcoal_on,      charcoal_off,
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
@@ -153,6 +153,7 @@ enum singleCommand {
     if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
     if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
     if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
+    level_sensor_pulse, single_cal_pulse,
   xyzzy
 };
 
@@ -163,7 +164,7 @@ enum multiCommand {
   balance_manual,    balance_vel,       balance_i,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
   bias_level_x,      fridge_cycle_params,  box,
-  cal_pulse,         cal_repeat,        cap,              cur_mode,
+  cal_repeat,        cap,              cur_mode,
   az_el_trim,        drift,             el_gain,
   inner_level,       hwpr_jump,         hwpr_goto_i,
   autotrim_to_sc,
@@ -225,6 +226,8 @@ enum multiCommand {
   xsc_filter_el,
   xsc_filter_eq_location,
   xsc_filter_matching,
+  cal_length,
+  level_length,
 
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder

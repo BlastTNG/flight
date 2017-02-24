@@ -53,8 +53,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(heater_300mk_off), "turning off 300mK heater", GR_CRYO},
   {COMMAND(charcoal_hs_on), "turning on charcoal hs", GR_CRYO},
   {COMMAND(charcoal_hs_off), "turning off charcoal hs", GR_CRYO},
-  {COMMAND(callamp_on), "turning on cal lamp", GR_CRYO},
-  {COMMAND(callamp_off), "turning off cal lamp", GR_CRYO},
+  {COMMAND(single_cal_pulse), "pulsing the cal lamp", GR_CRYO},
   {COMMAND(lna250_on), "turning on 250 lna", GR_CRYO},
   {COMMAND(lna250_off), "turning off 250 lna", GR_CRYO},
   {COMMAND(lna350_on), "turning on 350 lna", GR_CRYO},
@@ -63,6 +62,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
   {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
+  {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
   {COMMAND(charcoal_on), "turning on charcoal heater", GR_CRYO},
   {COMMAND(charcoal_off), "turning off charcoal heater", GR_CRYO},
   {COMMAND(heater_1k_on), "turning on 1K heater", GR_CRYO},
@@ -884,11 +884,6 @@ struct mcom mcommands[plugh + 2] = {
 
   /***************************************/
   /*********** Cal Lamp  *****************/
-  {COMMAND(cal_pulse), "calibrator single pulse", GR_CRYO, 1,
-    {
-      {"Pulse Length (ms)", 0, 8000, 'i', "PULSE_CAL"}
-    }
-  },
   {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO, 3,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
@@ -896,6 +891,17 @@ struct mcom mcommands[plugh + 2] = {
       {"Always Pulse before HWP move (0=no, 1=yes)",  0, 1, 'i', "NONE"}
     }
   },
+  {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
+      {
+          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
+      }
+  },
+  {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,
+      {
+          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_LEVEL"}
+      }
+  },
+
 
   /***************************************/
   /********* Cryo heat   *****************/

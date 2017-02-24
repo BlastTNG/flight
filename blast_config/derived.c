@@ -507,7 +507,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TD_4K_FILT_INT", "TD_4K_FILT", 0.199656, 0.000034),
     LINCOM("TD_VCS2_HX_INT", "TD_VCS2_HX", 0.199033, -0.000013),
     LINCOM("TD_VCS1_PLATE_INT", "TD_VCS1_PLATE", 0.199517, -0.000026),
-    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS_INT", LUT_DIR "dt670_orig.text"),
+    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS_INT", LUT_DIR "dt-simonchase.txt"),
     LINTERP("Td_vcs2_filt", "TD_VCS2_FILT_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_250fpa", "TD_250FPA_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_hwp", "TD_HWP_INT", LUT_DIR "dt670_orig.text"),
@@ -561,7 +561,7 @@ derived_tng_t derived_list[] = {
     UNITS("Tr_1k_plate", "Temperature", "K"),
     LINTERP("Tr_300mk_strap", "RR_300MK_STRAP", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_300mk_strap", "Temperature", "K"),
-    LINTERP("Tr_350_fpa",   "RR_350_FPA"   , LUT_DIR "rox-raw.txt"),
+    LINTERP("Tr_350_fpa",   "RR_350_FPA"   , LUT_DIR "ROX_Cal_U04486.LUT"),
     UNITS("Tr_350_fpa", "Temperature", "K"),
     LINTERP("Tr_he4_pot",   "RR_HE4_POT"   , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_he4_pot", "Temperature", "K"),
@@ -570,7 +570,7 @@ derived_tng_t derived_list[] = {
     LINTERP("Tr_500_fpa", "RR_500_FPA", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_500_fpa", "Temperature", "K"),
     // cryo labjack stuff below
-    LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 36.207),
+    LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 28.307),
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),

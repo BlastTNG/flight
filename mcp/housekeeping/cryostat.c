@@ -41,43 +41,38 @@
 #include "labjack.h"
 #include "blast.h"
 #include "multiplexed_labjack.h"
+#include "command_struct.h"
 
-/* Heater control bits (BIAS_D G4) */
-#define HEAT_HELIUM_LEVEL    0x0001
-#define HEAT_CHARCOAL        0x0002
-#define HEAT_POT_HS          0x0004
-#define HEAT_CHARCOAL_HS     0x0008
-#define HEAT_UNDEF           0x0010
-#define HEAT_BDA             0x0020
-#define HEAT_CALIBRATOR      0x0040
-#define HEAT_HWPR_POS        0x0080
 
 static uint16_t heatctrl;
 static uint16_t dio_on = 1;
 static uint16_t dio_off = 0;
-static int cal_length = 0;
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
-void cryo_control(void)
-{
-    heatctrl = 0;
-    if (CommandData.Cryo.charcoalHeater)
-        heatctrl |= HEAT_CHARCOAL;
-}
-void cal_command(int length) {
-    cal_length = length;
-}
+// add cryo struct
+// TODO(IAN): add use of InCharge global variable so only incharge comp runs
+// TODO(IAN): write cal_length to the frame, add periodic option
+// write level length, do_cal_pulse, everything!
+typdef struct {
+    uint16_t cal_length;
+    uint16_t level_length;
+} cryo_control_t;
+
+cryo_control_t cryo_state;
 
 void cal_control(void) {
-    int how_long;
+    if (CommandData.Cryo.do_cal_pulse) {
+        cryo_state.cal_length = CommandData.Cryo.cal_length;
+        CommandData.Cryo.do_cal_pulse = 0;
+    }
     static int pulsed = 0;
-    if ((how_long = cal_length) > 0) {
+    if ((cryo_state.cal_length > 0) {
         if (!pulsed) {
             pulsed = 1;
             heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
         }
-        cal_length--;
+        cryo_state.cal_length--;
     } else {
         if (pulsed) {
             heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
@@ -85,6 +80,27 @@ void cal_control(void) {
         }
     }
 }
+
+void level_control(void) {
+    if (CommandData.Cryo.do_level_pulse) {
+        cryo_state.level_length = CommandData.Cryo.level_length;
+        CommandData.Cryo.do_level_pulse = 0;
+    }
+    static int l_pulsed = 0;
+    if ((cryo_state.level_length) > 0) {
+        if (!l_pulsed) {
+            l_pulsed = 1;
+            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
+        }
+        cryo_state.level_lengthaa--;
+    } else {
+        if (l_pulsed) {
+            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
+            l_pulsed = 0;
+        }
+    }
+}
+
 
 void test_labjacks(int m_which) {
     float test0, test1, test2, test3, test4;
@@ -237,6 +253,18 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
 }
 
+void test_cycle(void) {
+    static channel_t* test_channel;
+    static int first_test = 1;
+    float t_test;
+    if (first_test == 1) {
+        first_test = 0;
+        test_channel = channels_find_by_name("Tr_250_fpa");
+    }
+    GET_VALUE(test_channel, t_test);
+    blast_warn("channel is %f", t_test);
+}
+
 void autocycle_ian(void)
 {
     static channel_t* tfpa250_Addr; // set channel address pointers
@@ -251,10 +279,10 @@ void autocycle_ian(void)
     static double tcrit = 0.31;
     static int trigger = 0;
 
-    if (firsttime) {
-        tfpa250_Addr = channels_find_by_name("tr_250_fpa");  // these three are ROX
-        tfpa350_Addr = channels_find_by_name("tr_350_fpa");
-        tfpa500_Addr = channels_find_by_name("tr_500_fpa");
+    if (firsttime == 1) {
+        tfpa250_Addr = channels_find_by_name("Tr_250_fpa");  // these three are ROX
+        tfpa350_Addr = channels_find_by_name("Tr_350_fpa");
+        tfpa500_Addr = channels_find_by_name("Tr_500_fpa");
         tcharcoal_Addr = channels_find_by_name("td_charcoal"); // diodes
         tcharcoalhs_Addr = channels_find_by_name("td_charcoal_hs");
         firsttime = 0;
@@ -267,26 +295,22 @@ void autocycle_ian(void)
     GET_VALUE(tcharcoalhs_Addr, tcharcoalhs);
     if (t250 > tcrit) {
         if (!trigger) {
-            // HEAT_CHARCOAL_HS = 0;
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
             trigger = 1;
-            goto fridge_auto_cycle;
         }
     }
     if (t350 > tcrit) {
         if (!trigger) {
-            // HEAT_CHARCOAL_HS = 0;
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
             trigger = 1;
-            goto fridge_auto_cycle;
         }
     }
     if (t500 > tcrit) {
         if (!trigger) {
-            // HEAT_CHARCOAL_HS = 0;
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
             trigger = 1;
-            goto fridge_auto_cycle;
         }
     }
-fridge_auto_cycle:
     if (trigger) {
         if (!(iterator++ % 199)) { // borrowed from das.c, if this command is run at 100hz, this slows it down to 0.5 hz
             GET_VALUE(tfpa250_Addr, t250);

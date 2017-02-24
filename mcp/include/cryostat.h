@@ -10,7 +10,7 @@
 void cal_command(int length);
 void test_labjacks(int m_which);
 void cal_control(void);
-void cryo_control(void);
+void level_control(void);
 void store_100hz_cryo(void);
 void autocycle(void);
 void read_thermometers();

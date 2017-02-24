@@ -278,14 +278,13 @@ typedef struct {
   int16_t hwprPos;
   int hwpr_pos_old;
 
-  uint16_t JFETHeat;
-  uint16_t autoJFETheat;
-  double JFETSetOn, JFETSetOff;
-
   enum calmode calibrator;
-  uint16_t calib_pulse, calib_period;
+  uint16_t cal_length, calib_period;
   int calib_repeats;
   int calib_hwpr;
+  int do_cal_pulse;
+  int do_level_pulse;
+  uint16_t level_length;
 
   uint16_t potvalve_open, potvalve_on, potvalve_close;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
