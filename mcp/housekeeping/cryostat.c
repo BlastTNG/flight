@@ -41,8 +41,6 @@
 #include "labjack.h"
 #include "blast.h"
 
-static uint16_t dio_on = 1;
-static uint16_t dio_off = 0;
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
@@ -56,11 +54,53 @@ typedef struct {
 } cryo_control_t;
 
 typedef struct {
-    int stuff;
+    uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
+    uint16_t heater_status;
 } heater_control_t;
 
+heater_control_t heater_state;
 cryo_control_t cryo_state;
 
+static void update_heater_values(void) {
+    heater_state.heater_300mk = CommandData.Cryo.heater_300mk;
+    heater_state.charcoal_hs = CommandData.Cryo.charcoal_hs;
+    heater_state.charcoal = CommandData.Cryo.charcoal;
+    heater_state.lna_250 = CommandData.Cryo.lna_250;
+    heater_state.lna_350 = CommandData.Cryo.lna_350;
+    heater_state.lna_500 = CommandData.Cryo.lna_500;
+    heater_state.heater_1k = CommandData.Cryo.heater_1k;
+    heater_state.heater_status = CommandData.Cryo.heater_status;
+}
+
+void heater_control(void) {
+    static int first_heater = 1;
+    static channel_t* heater_status_Addr;
+    if (first_heater == 1) {
+        heater_status_Addr = channels_find_by_name("heater_status");
+    }
+    if (CommandData.Cryo.heater_update == 1) {
+        CommandData.Cryo.heater_update = 0;
+        update_heater_values();
+        heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
+        heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
+        heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
+        heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
+        heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
+        heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
+        heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
+        SET_SCALED_VALUE(heater_status_Addr, CommandData.Cryo.heater_status);
+    }
+}
+/*
+Heater status bits
+1 = heater 300mk
+2 = heater 1k
+4 = lna 250
+8 = lna 350
+16 = lna 500
+32 = charcoal
+64 = charcoal_hs
+*/
 void cal_control(void) {
     if (CommandData.Cryo.do_cal_pulse) {
         cryo_state.cal_length = CommandData.Cryo.cal_length;

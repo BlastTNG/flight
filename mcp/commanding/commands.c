@@ -183,81 +183,103 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case amp_supply_on:
             CommandData.Relays.amp_supply_on = 1;
-            CommandData.Relays.rec_on = 1;
             CommandData.Relays.update_rec = 1;
             break;
         case amp_supply_off:
             CommandData.Relays.amp_supply_off = 1;
-            CommandData.Relays.rec_on = 1;
             CommandData.Relays.update_rec = 1;
             break;
         case therm_readout_on:
             CommandData.Relays.therm_supply_on = 1;
-            CommandData.Relays.rec_on = 1;
             CommandData.Relays.update_rec = 1;
             break;
         case therm_readout_off:
             CommandData.Relays.therm_supply_off = 1;
-            CommandData.Relays.rec_on = 1;
             CommandData.Relays.update_rec = 1;
             break;
         case heater_supply_on:
             CommandData.Relays.heater_supply_on = 1;
-            CommandData.Relays.rec_on = 1;
             CommandData.Relays.update_rec = 1;
             break;
         case heater_supply_off:
             CommandData.Relays.heater_supply_off = 1;
-            CommandData.Relays.rec_on = 1;
             CommandData.Relays.update_rec = 1;
             break;
         case heater_300mk_on:
-            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 1);
+            CommandData.Cryo.heater_300mk = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 1;
             break;
         case heater_300mk_off:
-            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 0);
+            CommandData.Cryo.heater_300mk = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 1;
             break;
         case charcoal_hs_on:
-            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 1);
+            CommandData.Cryo.charcoal_hs = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 64;
             break;
         case charcoal_hs_off:
-            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
+            CommandData.Cryo.charcoal_hs = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 64;
             break;
         case single_cal_pulse:
             CommandData.Cryo.do_cal_pulse = 1;
             break;
         case lna350_on:
-            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 1);
+            CommandData.Cryo.lna_350 = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 8;
             break;
         case lna350_off:
-            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 0);
+            CommandData.Cryo.lna_350 = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 8;
             break;
         case lna500_on:
-            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, 1);
+            CommandData.Cryo.lna_500 = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 16;
             break;
         case lna500_off:
-            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, 0);
+            CommandData.Cryo.lna_500 = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 16;
             break;
         case level_sensor_pulse:
             CommandData.Cryo.do_level_pulse = 1;
             break;
         case charcoal_on:
-            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 1);
+            CommandData.Cryo.charcoal = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 32;
             break;
         case charcoal_off:
-            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 0);
+            CommandData.Cryo.charcoal = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 32;
             break;
         case lna250_on:
-            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, 1);
+            CommandData.Cryo.lna_250 = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 4;
             break;
         case lna250_off:
-            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, 0);
+            CommandData.Cryo.lna_250 = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 4;
             break;
         case heater_1k_on:
-            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, 1);
+            CommandData.Cryo.heater_1k = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 2;
             break;
         case heater_1k_off:
-            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, 0);
+            CommandData.Cryo.heater_1k = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 2;
             break;
         case of_relay_1_on:
             CommandData.Relays.of_1_on = 1;
@@ -2272,6 +2294,7 @@ void InitCommandData()
     CommandData.Relays.update_rec = 0;
     CommandData.Relays.update_of = 0;
     CommandData.Relays.update_if = 0;
+    CommandData.Cryo.heater_status = 2;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))

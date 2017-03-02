@@ -141,17 +141,25 @@ static void rec_update_values(void) {
     rec_state.therm_supply_off = CommandData.Relays.therm_supply_off;
     rec_state.heater_supply_on = CommandData.Relays.heater_supply_on;
     rec_state.heater_supply_off = CommandData.Relays.heater_supply_off;
+    CommandData.Relays.rec_on = 0;
+    CommandData.Relays.rec_off = 0;
+    CommandData.Relays.amp_supply_on = 0;
+    CommandData.Relays.amp_supply_off = 0;
+    CommandData.Relays.therm_supply_on = 0;
+    CommandData.Relays.therm_supply_off = 0;
+    CommandData.Relays.heater_supply_on = 0;
+    CommandData.Relays.heater_supply_off = 0;
 }
 
 static void rec_send_values(void) {
-    heater_write(LABJACK_CRYO_2, POWER_BOX_ON, CommandData.Relays.rec_on);
-    heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, CommandData.Relays.rec_off);
-    heater_write(LABJACK_CRYO_2, AMP_SUPPLY_ON, CommandData.Relays.amp_supply_on);
-    heater_write(LABJACK_CRYO_2, AMP_SUPPLY_OFF, CommandData.Relays.amp_supply_off);
-    heater_write(LABJACK_CRYO_2, THERM_READOUT_ON, CommandData.Relays.therm_supply_on);
-    heater_write(LABJACK_CRYO_2, THERM_READOUT_OFF, CommandData.Relays.therm_supply_off);
-    heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_ON, CommandData.Relays.heater_supply_on);
-    heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_OFF, CommandData.Relays.heater_supply_off);
+    heater_write(LABJACK_CRYO_2, POWER_BOX_ON, rec_state.rec_on);
+    heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, rec_state.rec_off);
+    heater_write(LABJACK_CRYO_2, AMP_SUPPLY_ON, rec_state.amp_supply_on);
+    heater_write(LABJACK_CRYO_2, AMP_SUPPLY_OFF, rec_state.amp_supply_off);
+    heater_write(LABJACK_CRYO_2, THERM_READOUT_ON, rec_state.therm_supply_on);
+    heater_write(LABJACK_CRYO_2, THERM_READOUT_OFF, rec_state.therm_supply_off);
+    heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_ON, rec_state.heater_supply_on);
+    heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_OFF, rec_state.heater_supply_off);
 }
 
 void rec_control(void) {

@@ -268,6 +268,8 @@ typedef struct {
   int do_level_pulse;
   uint16_t level_length;
   uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
+  uint16_t heater_update;
+  uint16_t heater_status;
 } cryo_cmds_t;
 
 typedef struct {
