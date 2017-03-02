@@ -15,5 +15,6 @@ void store_100hz_cryo(void);
 void autocycle(void);
 void read_thermometers();
 void test_read(void);
+void test_frequencies(void);
 
 #endif /* cryostat_h */

@@ -1198,9 +1198,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
     SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
 
-    SET_SCALED_VALUE(modeCalAddr, CommandData.Cryo.calibrator);
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
-    SET_SCALED_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
 
     SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim);
     SET_SCALED_VALUE(trimEncMotorAddr, CommandData.enc_motor_el_trim);

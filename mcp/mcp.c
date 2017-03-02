@@ -312,6 +312,7 @@ static void mcp_100hz_routines(void)
 {
     read_100hz_acs();
     Pointing();
+    test_frequencies();
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();

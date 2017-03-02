@@ -40,24 +40,24 @@
 #include "command_struct.h"
 #include "labjack.h"
 #include "blast.h"
-#include "multiplexed_labjack.h"
-#include "command_struct.h"
 
-
-static uint16_t heatctrl;
 static uint16_t dio_on = 1;
 static uint16_t dio_off = 0;
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
-// add cryo struct
 // TODO(IAN): add use of InCharge global variable so only incharge comp runs
 // TODO(IAN): write cal_length to the frame, add periodic option
 // write level length, do_cal_pulse, everything!
-typdef struct {
+
+typedef struct {
     uint16_t cal_length;
     uint16_t level_length;
 } cryo_control_t;
+
+typedef struct {
+    int stuff;
+} heater_control_t;
 
 cryo_control_t cryo_state;
 
@@ -67,7 +67,7 @@ void cal_control(void) {
         CommandData.Cryo.do_cal_pulse = 0;
     }
     static int pulsed = 0;
-    if ((cryo_state.cal_length > 0) {
+    if (cryo_state.cal_length > 0) {
         if (!pulsed) {
             pulsed = 1;
             heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
@@ -87,18 +87,27 @@ void level_control(void) {
         CommandData.Cryo.do_level_pulse = 0;
     }
     static int l_pulsed = 0;
-    if ((cryo_state.level_length) > 0) {
+    if (cryo_state.level_length > 0) {
         if (!l_pulsed) {
             l_pulsed = 1;
             heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
         }
-        cryo_state.level_lengthaa--;
+        cryo_state.level_length--;
     } else {
         if (l_pulsed) {
             heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
             l_pulsed = 0;
         }
     }
+}
+
+void test_frequencies(void) {
+    static channel_t* test_Addr;
+    static int first_test = 1;
+    if (first_test) {
+        test_Addr = channels_find_by_name("test_values");
+    }
+    SET_SCALED_VALUE(test_Addr, labjack_get_value(0, 0));
 }
 
 
@@ -135,7 +144,7 @@ void test_labjacks(int m_which) {
     blast_warn(" AIN 12 is %f", test12);
     blast_warn(" AIN 13 is %f", test13);
 }
-
+/*
 void store_100hz_cryo(void)
 {
     static int firsttime = 1;
@@ -148,6 +157,7 @@ void store_100hz_cryo(void)
     }
     SET_UINT16(heaterAddr, heatctrl);
 }
+*/
 void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
     static channel_t* reader;
     static int firsttime = 1;
