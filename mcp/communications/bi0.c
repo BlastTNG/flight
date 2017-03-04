@@ -41,23 +41,26 @@ void initialize_bi0_writer(void)
 	int i;
 	size_t max_rate_size = 0;
 
-	for (int rate = RATE_100HZ; rate < RATE_END; rate++) {
-	    if (max_rate_size < frame_size[rate]) max_rate_size = frame_size[rate];
-	}
+	//for (int rate = RATE_100HZ; rate < RATE_END; rate++) {
+	//    if (max_rate_size < frame_size[rate]) max_rate_size = frame_size[rate];
+	//}
+    max_rate_size = frame_size[RATE_100HZ]; // Temporary, for now only implementing biphase on the 100 Hz framerate
 	bi0_buffer.i_in = 10; /* preload the fifo */
 	bi0_buffer.i_out = 0;
 	for (i = 0; i < BI0_FRAME_BUFLEN; i++)
 	{
 		bi0_buffer.framelist[i] = calloc(1, max_rate_size);
+		memset(bi0_buffer.framelist[i], 0, max_rate_size);
 	}
 
 }
 
-void push_bi0_buffer(uint16_t *m_frame)
+void push_bi0_buffer(const void *m_frame)  // what was there before uint16_t *m_frame
 {
 	int i_in;
 
-	i_in = (bi0_buffer.i_in + 1) & BI0_FRAME_BUFMASK;
-	memcpy(bi0_buffer.framelist[i_in], m_frame, bi0_buffer.framesize[i_in]);
+	i_in = (bi0_buffer.i_in + 1) & BI0_FRAME_BUFMASK;    // Does this automatically wrap when i_in becomes greater than the number of frames? I think so from BUFMASK
+    bi0_buffer.framesize[i_in] = frame_size[RATE_100HZ]; // Joy added this, later will have to be modified for any rate
+    memcpy(bi0_buffer.framelist[i_in], m_frame, frame_size[RATE_100HZ]; // Later will have to adapt to various sizes for various frequencies
 	bi0_buffer.i_in = i_in;
 }

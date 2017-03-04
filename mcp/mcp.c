@@ -71,6 +71,7 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "bi0.h"
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
@@ -327,6 +328,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
     framing_publish_100hz();
+    push_bi0_buffer(channel_data[RATE_100HZ]);
     // test_dio();
 }
 static void mcp_5hz_routines(void)
@@ -514,8 +516,9 @@ int main(int argc, char *argv[])
   InitCommandData();
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
+
   initialize_blast_comms();
-//  initialize_sip_interface();
+// initialize_sip_interface();
   initialize_dsp1760_interface();
 
 #ifdef USE_FIFO_CMD
@@ -533,7 +536,7 @@ int main(int argc, char *argv[])
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
   framing_init(channel_list, derived_list);
-
+  initialize_bi0_writer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
