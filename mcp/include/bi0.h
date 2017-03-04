@@ -43,7 +43,8 @@ extern bi0_buffer_t bi0_buffer;
 extern short InCharge;
 extern pthread_t watchdog_id;
 
-void initialize_bi0_writer(void);
+void initialize_biphase_buffer(void);
 void push_bi0_buffer(uint16_t *m_buffer);
+void biphase_writer(void);
 
 #endif /* INCLUDE_BI0_H_ */

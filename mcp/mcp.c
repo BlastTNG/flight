@@ -443,6 +443,7 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  pthread_t biphase_writer_id;
   int use_starcams = 0;
 
 #ifndef USE_FIFO_CMD
@@ -536,7 +537,7 @@ int main(int argc, char *argv[])
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
   framing_init(channel_list, derived_list);
-  initialize_bi0_writer();
+  initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
@@ -574,7 +575,7 @@ int main(int argc, char *argv[])
 //  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
 
 //  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
-//  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
+  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
