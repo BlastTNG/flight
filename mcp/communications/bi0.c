@@ -26,6 +26,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
+#include <pthread.h>
 // #include <packet_slinger.h>
 
 #include <blast.h>
@@ -48,7 +50,7 @@ void initialize_biphase_buffer(void)
     //    if (max_rate_size < frame_size[rate]) max_rate_size = frame_size[rate];
     // }
     max_rate_size = frame_size[RATE_100HZ]; // Temporary, for now only implementing biphase on the 100 Hz framerate
-    bi0_buffer.i_in = 10; /* preload the fifo */
+    bi0_buffer.i_in = 0;
     bi0_buffer.i_out = 0;
     for (i = 0; i < BI0_FRAME_BUFLEN; i++) {
         bi0_buffer.framelist[i] = calloc(1, max_rate_size);
@@ -56,12 +58,10 @@ void initialize_biphase_buffer(void)
     }
 }
 
-void push_bi0_buffer(const void *m_frame)  // what was there before uint16_t *m_frame
+void push_bi0_buffer(const void *m_frame)
 {
     int i_in;
-
     i_in = (bi0_buffer.i_in + 1) & BI0_FRAME_BUFMASK;
-    // Does this automatically wrap when i_in becomes greater than the number of frames? I think so from BUFMASK
     bi0_buffer.framesize[i_in] = frame_size[RATE_100HZ];
     // Joy added this, later will have to be modified for any rate
     memcpy(bi0_buffer.framelist[i_in], m_frame, frame_size[RATE_100HZ]);
@@ -94,9 +94,15 @@ void biphase_writer(void)
     // TODO(Joy): NEED TO CHANGE "direction" to only set the biphase pins to output!!
     uint8_t direction = 0xFF;  // 1=output, 0=input. 0xFF = output for all pins
 
+    // struct timeval begin, end;
+
     nameThread("Biphase");
 
     ctx = mpsse_open(&vid, &pid, description, serial, channel);
+    if (!ctx) {
+        blast_warn("Error Opening mpsse. Stopped Biphase Downlink Thread");
+        pthread_exit(0);
+    }
     mpsse_set_data_bits_low_byte(ctx, initial_value, direction);
     mpsse_set_data_bits_high_byte(ctx, initial_value, direction);
     mpsse_set_frequency(ctx, frequency);
@@ -104,6 +110,8 @@ void biphase_writer(void)
     mpsse_flush(ctx);
     usleep(1000);
 
+    blast_info("frame_size[100Hz] is %zd, biphase frame size is %zd, biphase frame size for data is %zd (bytes)",
+               frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), bi0_frame_bytes);
     while (true) {
         write_frame = bi0_buffer.i_out;
         read_frame = bi0_buffer.i_in;
@@ -112,6 +120,7 @@ void biphase_writer(void)
             continue;
         }
 
+        blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         while (read_frame != write_frame) {
             // Maybe later I'll be smarter and fill a partial frame to fill BI0_FRAME_SIZE
             memcpy(bi0_frame, bi0_buffer.framelist[write_frame], frame_size[RATE_100HZ]);
@@ -124,8 +133,13 @@ void biphase_writer(void)
             bi0_frame[0] = sync_word;
             sync_word = ~sync_word;
 
+            // gettimeofday(&begin, NULL);
             mpsse_biphase_write_data(ctx, bi0_frame, bi0_frame_bytes);
             mpsse_flush(ctx);
+            // gettimeofday(&end, NULL);
+            // blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
+            //            BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
+
             if (ctx->retval != ERROR_OK) {
                 blast_err("Error writing frame to Biphase, discarding.");
             }
