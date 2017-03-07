@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <libusb-1.0/libusb.h>
@@ -68,29 +69,6 @@
 #define SIO_RESET_SIO 0
 #define SIO_RESET_PURGE_RX 1
 #define SIO_RESET_PURGE_TX 2
-
-struct mpsse_ctx {
-	struct libusb_context *usb_ctx;
-	struct libusb_device_handle *usb_dev;
-	unsigned int usb_write_timeout;
-	unsigned int usb_read_timeout;
-	uint8_t in_ep;
-	uint8_t out_ep;
-	uint16_t max_packet_size;
-	uint16_t index;
-	uint8_t interface;
-	enum ftdi_chip_type type;
-	uint8_t *write_buffer;
-	unsigned write_size;  // size in bytes
-	unsigned write_count; // size in bytes
-	uint8_t *read_buffer;
-	unsigned read_size;
-	unsigned read_count;
-	uint8_t *read_chunk;
-	unsigned read_chunk_size;
-	struct bit_copy_queue read_queue;
-	int retval;
-};
 
 static uint16_t bit_doubler[256] = { 0x0000, 0x0003, 0x000C, 0x000F, 0x0030,
 		0x0033, 0x003C, 0x003F, 0x00C0, 0x00C3, 0x00CC, 0x00CF, 0x00F0, 0x00F3,
@@ -889,16 +867,26 @@ int mpsse_flush(struct mpsse_ctx *ctx)
  * @param out_offset Offset in bytes into the output data buffer to begin reading
  * @param length Number of bytes to output
  */
-void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint8_t *out, uint32_t out_offset, uint32_t length)
+void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length)
 {
 	//uint8_t bit_doubler_buffer[4096] = {0};
 	//unsigned output_length = min(sizeof(bit_doubler_buffer), length);
 	unsigned output_length = 2*length;
+    unsigned max_i = (unsigned) floor(length/2.0);
 	uint8_t bit_doubler_buffer[output_length];
+    uint8_t left_out, right_out;
 
-	for (unsigned i = 0; i < length; i++) {
-		bit_doubler_buffer[i * 2] = (uint8_t)(bit_doubler[out[i + out_offset]] & 0xff);
-		bit_doubler_buffer[i * 2 + 1] = (uint8_t)((bit_doubler[out[i + out_offset]] >> 8) & 0xff);
+	//for (unsigned i = 0; i < length; i++) {
+	//	bit_doubler_buffer[i * 2] = (uint8_t)(bit_doubler[out[i]] & 0xff);
+	//	bit_doubler_buffer[i * 2 + 1] = (uint8_t)((bit_doubler[out[i]] >> 8) & 0xff);
+	//}
+	for (unsigned i = 0; i < max_i; i++) {
+        left_out = (uint8_t) out[i] & 0xff;
+        right_out = (uint8_t) ((out[i] >> 8) & 0xff);
+	    bit_doubler_buffer[i * 4] = (uint8_t)(bit_doubler[left_out] & 0xff);
+	    bit_doubler_buffer[i * 4 + 1] = (uint8_t)((bit_doubler[left_out] >> 8) & 0xff);
+	    bit_doubler_buffer[i * 4 + 2] = (uint8_t)(bit_doubler[right_out] & 0xff);
+	    bit_doubler_buffer[i * 4 + 3] = (uint8_t)((bit_doubler[right_out] >> 8) & 0xff);
 	}
 
 	mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, POS_EDGE_OUT | MSB_FIRST);
