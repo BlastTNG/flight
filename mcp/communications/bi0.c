@@ -33,6 +33,7 @@
 #include <blast.h>
 
 #include "bi0.h"
+#include "bbc_pci.h"
 #include "mpsse.h"
 #include "crc.h"
 #include "channels_tng.h"
