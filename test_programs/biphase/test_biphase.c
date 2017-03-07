@@ -40,8 +40,8 @@ void send_biphase_writes() {
 
         uint8_t data = 0x00;
         uint8_t data_to_read = 0x00;
-        //uint8_t dir = 0xFF;  // direction output for all bits
-        uint8_t dir = 0x00;  // direction output for all bits
+        uint8_t dir = 0xFF;  // direction output for all bits
+        // uint8_t dir = 0x00;  // direction input for all bits
         while(true) { 
 
             blast_dbg("== - Begin flushing - ==");
@@ -77,8 +77,7 @@ void send_biphase_writes() {
 
         // Writing an array of data (0xABABABABAB...) through the bipase write functions
 
-        uint8_t *data_to_write = NULL;
-        uint32_t offset = 0;
+        uint16_t *data_to_write = NULL;
         //uint32_t bytes_to_write = 1535; //
         uint32_t bytes_to_write = 625; // That is the correct rate for code running at 100 Hz to write at 1 Mbps
         //uint32_t bytes_to_write = 32; 
@@ -97,8 +96,8 @@ void send_biphase_writes() {
         mpsse_set_data_bits_high_byte(ctx, data, dir);
         data_to_write = malloc(size_of_frame); 
         if (data_to_write) {
-            for (int i = 0; i < size_of_frame; i++) {
-                *(data_to_write+i) = 0xF0;
+            for (int i = 0; i < ((int) size_of_frame/2); i++) {
+                *(data_to_write+i) = 0xF0F0;
             }
         } else {
            mpsse_close(ctx); 
@@ -113,7 +112,7 @@ void send_biphase_writes() {
         while(true) {
             gettimeofday(&begin, NULL);
             blast_dbg("I am about to call mpsse_biphase_write_data, i=%d", i);
-            mpsse_biphase_write_data(ctx, data_to_write, offset, bytes_to_write);
+            mpsse_biphase_write_data(ctx, data_to_write, bytes_to_write);
             //mpsse_clock_data_out(ctx, data_to_write, offset, bytes_to_write*8, NEG_EDGE_OUT | MSB_FIRST);
             blast_dbg("Flushing the buffer");
             mpsse_flush(ctx);
