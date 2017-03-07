@@ -361,9 +361,9 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    rec_control();
-    read_thermometers();
-    test_read();
+    // rec_control();
+    // read_thermometers();
+    // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
