@@ -170,6 +170,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case heaters_off:
+            heater_all_off();
+            break;
         case reboot_ljcryo1:
             labjack_reboot(LABJACK_CRYO_1);
             break;
@@ -283,210 +286,262 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case of_relay_1_on:
             CommandData.Relays.of_1_on = 1;
+            CommandData.Relays.of_status += 1;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_1_off:
             CommandData.Relays.of_1_off = 1;
+            CommandData.Relays.of_status -= 1;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_2_on:
             CommandData.Relays.of_2_on = 1;
+            CommandData.Relays.of_status += 2;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_2_off:
             CommandData.Relays.of_2_off = 1;
+            CommandData.Relays.of_status -= 2;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_3_on:
             CommandData.Relays.of_3_on = 1;
+            CommandData.Relays.of_status += 4;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_3_off:
             CommandData.Relays.of_3_off = 1;
+            CommandData.Relays.of_status -= 4;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_4_on:
             CommandData.Relays.of_4_on = 1;
+            CommandData.Relays.of_status += 8;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_4_off:
             CommandData.Relays.of_4_off = 1;
+            CommandData.Relays.of_status -= 8;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_5_on:
             CommandData.Relays.of_5_on = 1;
+            CommandData.Relays.of_status += 16;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_5_off:
             CommandData.Relays.of_5_off = 1;
+            CommandData.Relays.of_status -= 16;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_6_on:
             CommandData.Relays.of_6_on = 1;
+            CommandData.Relays.of_status += 32;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_6_off:
             CommandData.Relays.of_6_off = 1;
+            CommandData.Relays.of_status -= 32;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_7_on:
             CommandData.Relays.of_7_on = 1;
+            CommandData.Relays.of_status += 64;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_7_off:
             CommandData.Relays.of_7_off = 1;
+            CommandData.Relays.of_status -= 64;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_8_on:
             CommandData.Relays.of_8_on = 1;
+            CommandData.Relays.of_status += 128;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_8_off:
             CommandData.Relays.of_8_off = 1;
+            CommandData.Relays.of_status -= 128;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_9_on:
             CommandData.Relays.of_9_on = 1;
+            CommandData.Relays.of_status += 256;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_9_off:
             CommandData.Relays.of_9_off = 1;
+            CommandData.Relays.of_status -= 256;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_10_on:
             CommandData.Relays.of_10_on = 1;
+            CommandData.Relays.of_status += 512;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_10_off:
             CommandData.Relays.of_10_off = 1;
+            CommandData.Relays.of_status -= 512;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_11_on:
             CommandData.Relays.of_11_on = 1;
+            CommandData.Relays.of_status += 1024;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_11_off:
             CommandData.Relays.of_11_off = 1;
+            CommandData.Relays.of_status -= 1024;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_12_on:
             CommandData.Relays.of_12_on = 1;
+            CommandData.Relays.of_status += 2048;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_12_off:
             CommandData.Relays.of_12_off = 1;
+            CommandData.Relays.of_status -= 2048;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_13_on:
             CommandData.Relays.of_13_on = 1;
+            CommandData.Relays.of_status += 4096;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_13_off:
             CommandData.Relays.of_13_off = 1;
+            CommandData.Relays.of_status -= 4096;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_14_on:
             CommandData.Relays.of_14_on = 1;
+            CommandData.Relays.of_status += 8192;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_14_off:
             CommandData.Relays.of_14_off = 1;
+            CommandData.Relays.of_status -= 8192;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_15_on:
             CommandData.Relays.of_15_on = 1;
+            CommandData.Relays.of_status += 16384;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_15_off:
             CommandData.Relays.of_15_off = 1;
+            CommandData.Relays.of_status -= 16384;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_16_on:
             CommandData.Relays.of_16_on = 1;
+            CommandData.Relays.of_status += 32768;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_16_off:
             CommandData.Relays.of_16_off = 1;
+            CommandData.Relays.of_status -= 32768;
             CommandData.Relays.update_of = 1;
             break;
         case if_relay_1_on:
             CommandData.Relays.of_1_on = 1;
+            CommandData.Relays.if_status += 1;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_1_off:
             CommandData.Relays.if_1_off = 1;
+            CommandData.Relays.if_status -= 1;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_2_on:
             CommandData.Relays.if_2_on = 1;
+            CommandData.Relays.if_status += 2;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_2_off:
             CommandData.Relays.if_2_off = 1;
+            CommandData.Relays.if_status -= 2;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_3_on:
             CommandData.Relays.if_3_on = 1;
+            CommandData.Relays.if_status += 4;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_3_off:
             CommandData.Relays.if_3_off = 1;
+            CommandData.Relays.if_status -= 4;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_4_on:
             CommandData.Relays.if_4_on = 1;
+            CommandData.Relays.if_status += 8;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_4_off:
             CommandData.Relays.if_4_off = 1;
+            CommandData.Relays.if_status -= 8;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_5_on:
             CommandData.Relays.if_5_on = 1;
+            CommandData.Relays.if_status += 16;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_5_off:
             CommandData.Relays.if_5_off = 1;
+            CommandData.Relays.if_status -= 16;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_6_on:
             CommandData.Relays.if_6_on = 1;
+            CommandData.Relays.if_status += 32;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_6_off:
             CommandData.Relays.if_6_off = 1;
+            CommandData.Relays.if_status -= 32;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_7_on:
             CommandData.Relays.if_7_on = 1;
+            CommandData.Relays.if_status += 64;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_7_off:
             CommandData.Relays.if_7_off = 1;
+            CommandData.Relays.if_status -= 64;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_8_on:
             CommandData.Relays.if_8_on = 1;
+            CommandData.Relays.if_status += 128;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_8_off:
             CommandData.Relays.if_8_off = 1;
+            CommandData.Relays.if_status -= 128;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_9_on:
             CommandData.Relays.if_9_on = 1;
+            CommandData.Relays.if_status += 256;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_9_off:
             CommandData.Relays.if_9_off = 1;
+            CommandData.Relays.if_status -= 256;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_10_on:
             CommandData.Relays.if_10_on = 1;
+            CommandData.Relays.if_status += 512;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_10_off:
             CommandData.Relays.if_10_off = 1;
+            CommandData.Relays.if_status -= 512;
             CommandData.Relays.update_if = 1;
             break;
         case stop:  // Pointing abort
@@ -2294,7 +2349,12 @@ void InitCommandData()
     CommandData.Relays.update_rec = 0;
     CommandData.Relays.update_of = 0;
     CommandData.Relays.update_if = 0;
-    CommandData.Cryo.heater_status = 2;
+    CommandData.Cryo.heater_status = 0;
+    CommandData.Relays.labjack[0] = 0;
+    CommandData.Relays.labjack[1] = 0;
+    CommandData.Relays.labjack[2] = 0;
+    CommandData.Relays.labjack[3] = 0;
+    CommandData.Relays.labjack[4] = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))

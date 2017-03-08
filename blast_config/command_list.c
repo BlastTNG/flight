@@ -65,6 +65,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
   {COMMAND(charcoal_on), "turning on charcoal heater", GR_CRYO},
   {COMMAND(charcoal_off), "turning off charcoal heater", GR_CRYO},
+  {COMMAND(heaters_off), "turning off the heater card channels", GR_CRYO},
   {COMMAND(heater_1k_on), "turning on 1K heater", GR_CRYO},
   {COMMAND(heater_1k_off), "turning off 1K heater", GR_CRYO},
   {COMMAND(power_box_on), "turning on the power box", GR_CRYO},

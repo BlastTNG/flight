@@ -10,6 +10,7 @@
 void cal_command(int length);
 void test_labjacks(int m_which);
 void heater_control(void);
+void heater_all_off(void);
 void cal_control(void);
 void level_control(void);
 void store_100hz_cryo(void);

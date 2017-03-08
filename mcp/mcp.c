@@ -302,6 +302,7 @@ static void mcp_244hz_routines(void)
 static void mcp_200hz_routines(void)
 {
     store_200hz_acs();
+    test_frequencies();
     command_motors();
     write_motor_channels_200hz();
     cal_control();
@@ -312,7 +313,6 @@ static void mcp_100hz_routines(void)
 {
     read_100hz_acs();
     Pointing();
-    test_frequencies();
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
@@ -360,11 +360,11 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     rec_control();
-    // of_control();
-    // if_control();
-    heater_control();
+    of_control();
+    if_control();
+    // heater_control();
     // test_labjacks(4);
-    read_thermometers();
+    // read_thermometers();
     // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();

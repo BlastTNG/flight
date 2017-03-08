@@ -41,6 +41,42 @@
 #include "multiplexed_labjack.h"
 #include "relay_control.h"
 
+/*
+sets of bit values for the different channels
+REC:
+rec_on = 1
+amp_supply_on = 2
+therm_supply_on = 4
+heater_supply_on = 8
+OF:
+relay_1 = 1
+relay_2 = 2
+relay_3 = 4
+relay_4 = 8
+relay_5 = 16
+relay_6 = 32
+relay_7 = 64
+relay_8 = 128
+relay_9 = 256
+relay_10 = 512
+relay_11 = 1024
+relay_12 = 2048
+relay_13 = 4096
+relay_14 = 8192
+relay_15 = 16384
+relay_16 = 32768
+IF:
+relay_1 = 1
+relay_2 = 2
+relay_3 = 4
+relay_4 = 8
+relay_5 = 16
+relay_6 = 32
+relay_7 = 64
+relay_8 = 128
+relay_9 = 256
+relay_10 = 512
+*/
 
 typedef struct {
     uint16_t rec_on;
@@ -163,25 +199,27 @@ static void rec_send_values(void) {
 }
 
 void rec_control(void) {
-    static int rec_startup = 1;
-    static int rec_trigger = 0;
-    if (rec_trigger == 1) { // turns off the power pulse after 1 second
-        rec_init();
-        rec_send_values();
-        rec_trigger = 0;
-    } // turns on a power pulse and sets reminder to turn it off
-    if ((rec_state.update_rec = CommandData.Relays.update_rec) == 1) {
-        rec_update_values();
-        rec_trigger = 1;
-        rec_send_values();
-        CommandData.Relays.update_rec = 0;
-    }
-    if (rec_startup == 1) { // initializes the power box to feed power to relays (ONLY REC)
-        heater_write(LABJACK_CRYO_2, POWER_BOX_ON, 1);
-        heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
-        rec_init();
-        rec_startup = 0;
-        rec_trigger = 1;
+    if (CommandData.Relays.labjack[1] == 1) {
+        static int rec_startup = 1;
+        static int rec_trigger = 0;
+        if (rec_trigger == 1) { // turns off the power pulse after 1 second
+            rec_init();
+            rec_trigger = 0;
+            rec_send_values();
+        } // turns on a power pulse and sets reminder to turn it off
+        if ((rec_state.update_rec = CommandData.Relays.update_rec) == 1) {
+            rec_update_values();
+            rec_trigger = 1;
+            rec_send_values();
+            CommandData.Relays.update_rec = 0;
+        }
+        if (rec_startup == 1) { // initializes the power box to feed power to relays (ONLY REC)
+            rec_startup = 0;
+            heater_write(LABJACK_CRYO_2, POWER_BOX_ON, 1);
+            heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
+            rec_init();
+            rec_trigger = 1;
+        }
     }
 }
 
@@ -291,17 +329,19 @@ static void of_send_values(void) {
 }
 
 void of_control(void) {
-    static int of_trigger = 0;
-    if (of_trigger == 1) { // turns off the previous set of pulses
-        of_trigger = 0;
-        of_init();
-        of_send_values();
-    }
-    if ((of_state.update_of = CommandData.Relays.update_of) == 1) {
-        of_update_values();
-        of_trigger = 1;
-        of_send_values();
-        CommandData.Relays.update_of = 0;
+    if (CommandData.Relays.labjack[2] == 1 && CommandData.Relays.labjack[3] == 1) {
+        static int of_trigger = 0;
+        if (of_trigger == 1) { // turns off the previous set of pulses
+            of_trigger = 0;
+            of_init();
+            of_send_values();
+        }
+        if ((of_state.update_of = CommandData.Relays.update_of) == 1) {
+            of_update_values();
+            of_trigger = 1;
+            of_send_values();
+            CommandData.Relays.update_of = 0;
+        }
     }
 }
 
@@ -375,17 +415,19 @@ static void if_send_values(void) {
 }
 
 void if_control(void) {
-    static int if_trigger = 0;
-    if (if_trigger == 1) { // turns off the previous set of pulses
-        if_trigger = 0;
-        if_init();
-        if_send_values();
-    }
-    if ((if_state.update_if = CommandData.Relays.update_if) == 1) {
-        if_update_values();
-        if_trigger = 1;
-        if_send_values();
-        CommandData.Relays.update_if = 0;
+    if (CommandData.Relays.labjack[3] == 1) {
+        static int if_trigger = 0;
+        if (if_trigger == 1) { // turns off the previous set of pulses
+            if_trigger = 0;
+            if_init();
+            if_send_values();
+        }
+        if ((if_state.update_if = CommandData.Relays.update_if) == 1) {
+            if_update_values();
+            if_trigger = 1;
+            if_send_values();
+            CommandData.Relays.update_if = 0;
+        }
     }
 }
 

@@ -72,11 +72,31 @@ static void update_heater_values(void) {
     heater_state.heater_status = CommandData.Cryo.heater_status;
 }
 
+void heater_all_off(void) {
+    CommandData.Cryo.heater_300mk = 0;
+    CommandData.Cryo.charcoal_hs = 0;
+    CommandData.Cryo.charcoal = 0;
+    CommandData.Cryo.lna_250 = 0;
+    CommandData.Cryo.lna_350 = 0;
+    CommandData.Cryo.lna_500 = 0;
+    CommandData.Cryo.heater_1k = 0;
+    CommandData.Cryo.heater_status = 0;
+    update_heater_values();
+    heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
+    heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
+    heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
+    heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
+    heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
+    heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
+    heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
+}
+
 void heater_control(void) {
     static int first_heater = 1;
     static channel_t* heater_status_Addr;
     if (first_heater == 1) {
         heater_status_Addr = channels_find_by_name("heater_status");
+        // read in the heater channels and update accordingly here
     }
     if (CommandData.Cryo.heater_update == 1) {
         CommandData.Cryo.heater_update = 0;
@@ -101,6 +121,13 @@ Heater status bits
 32 = charcoal
 64 = charcoal_hs
 */
+
+void update_heater_status(void) {
+    int stuff;
+    // fill this with the heater status reads
+    // use this to reset CommandData.Cryo.heater_status if messed up
+}
+
 void cal_control(void) {
     if (CommandData.Cryo.do_cal_pulse) {
         cryo_state.cal_length = CommandData.Cryo.cal_length;
@@ -147,7 +174,7 @@ void test_frequencies(void) {
     if (first_test) {
         test_Addr = channels_find_by_name("test_values");
     }
-    SET_SCALED_VALUE(test_Addr, labjack_get_value(0, 0));
+    SET_SCALED_VALUE(test_Addr, labjack_get_value(1, 12));
 }
 
 

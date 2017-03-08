@@ -67,7 +67,7 @@
 
 channel_t channel_list[] =
 {
-    { "test_values",      SCALE(CRYO_D), TYPE_UINT16, RATE_100HZ, U_V_V, 0 },
+    { "test_values",      SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "heater_status",    1,          0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
