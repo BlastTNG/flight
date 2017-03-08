@@ -89,13 +89,14 @@ void biphase_writer(void)
     const char *serial = NULL;
     const char *description = NULL;
     int channel = 0; // IFACE_A
-    int frequency = 1000000;
+    // int frequency = 1000000;
+    int frequency = 500000;
 
     uint8_t initial_value = 0x00;
     // TODO(Joy): NEED TO CHANGE "direction" to only set the biphase pins to output!!
     uint8_t direction = 0xFF;  // 1=output, 0=input. 0xFF = output for all pins
 
-    // struct timeval begin, end;
+    struct timeval begin, end;
 
     nameThread("Biphase");
 
@@ -134,12 +135,12 @@ void biphase_writer(void)
             bi0_frame[0] = sync_word;
             sync_word = ~sync_word;
 
-            // gettimeofday(&begin, NULL);
+            gettimeofday(&begin, NULL);
             mpsse_biphase_write_data(ctx, bi0_frame, bi0_frame_bytes);
             mpsse_flush(ctx);
-            // gettimeofday(&end, NULL);
+            gettimeofday(&end, NULL);
             // blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
-            //            BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
+            //          BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
 
             if (ctx->retval != ERROR_OK) {
                 blast_err("Error writing frame to Biphase, discarding.");
