@@ -81,7 +81,7 @@ void biphase_writer(void)
     uint16_t    read_frame;
     uint16_t    write_frame;
 
-    // size_t slinger_frame_bytes = (BI0_FRAME_SIZE * sizeof(uint16_t)- frame_size[100HZ]);
+    size_t slinger_frame_bytes = (BI0_FRAME_SIZE*sizeof(uint16_t) - frame_size[RATE_100HZ]);
 
     struct mpsse_ctx *ctx;
     const uint16_t vid = 1027;
@@ -126,7 +126,7 @@ void biphase_writer(void)
         while (read_frame != write_frame) {
             // Maybe later I'll be smarter and fill a partial frame to fill BI0_FRAME_SIZE
             memcpy(bi0_frame, bi0_buffer.framelist[write_frame], frame_size[RATE_100HZ]);
-            // memset(&bi0_frame[frame_size[100_HZ]/2], 0xEE, slinger_frame_bytes); // What is that for ?
+            memset(&bi0_frame[(int) (frame_size[RATE_100HZ]/2)], 0xEE, slinger_frame_bytes); // What is that for ?
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
 
             bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
@@ -139,8 +139,8 @@ void biphase_writer(void)
             mpsse_biphase_write_data(ctx, bi0_frame, bi0_frame_bytes);
             mpsse_flush(ctx);
             gettimeofday(&end, NULL);
-            // blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
-            //          BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
+            blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
+                     BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
 
             if (ctx->retval != ERROR_OK) {
                 blast_err("Error writing frame to Biphase, discarding.");
