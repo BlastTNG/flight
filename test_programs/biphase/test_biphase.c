@@ -83,7 +83,7 @@ void send_biphase_writes() {
         //uint32_t bytes_to_write = 32; 
         //uint32_t bytes_to_write = 16000; //
         unsigned size_of_frame = bytes_to_write; //8192; // in bytes
-        int frequency = 1000000;
+        int frequency = 50000;
         int i = 0;
         struct timeval begin, end;
 
@@ -97,7 +97,7 @@ void send_biphase_writes() {
         data_to_write = malloc(size_of_frame); 
         if (data_to_write) {
             for (int i = 0; i < ((int) size_of_frame/2); i++) {
-                *(data_to_write+i) = 0xF0F0;
+                *(data_to_write+i) = 0xFFFF;
             }
         } else {
            mpsse_close(ctx); 
