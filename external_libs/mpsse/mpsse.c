@@ -320,8 +320,9 @@ struct mpsse_ctx *mpsse_open(const uint16_t *vid, const uint16_t *pid, const cha
 		goto error;
 	}
 
+    // Previous value was 255 rather than 2. This sets read timeout
 	reterr = libusb_control_transfer(ctx->usb_dev, FTDI_DEVICE_OUT_REQTYPE,
-			SIO_SET_LATENCY_TIMER_REQUEST, 255, ctx->index, NULL, 0,
+			SIO_SET_LATENCY_TIMER_REQUEST, 2, ctx->index, NULL, 0,
 			ctx->usb_write_timeout);
 	if (reterr < 0) {
 		blast_err("unable to set latency timer: %s", libusb_error_name(reterr));
@@ -752,8 +753,8 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer *transfer)
 
 	res->transferred += transfer->actual_length;
 
-	DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
-	DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
+	// DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
+	// DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
 
 	if (res->transferred == ctx->write_count) {
 		res->done = true;
@@ -796,6 +797,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 
 	struct transfer_result write_result = { .ctx = ctx, .done = false };
 	struct libusb_transfer *write_transfer = libusb_alloc_transfer(0);
+    DEBUG_PRINT_BUF(ctx->write_buffer, ctx->write_count);
 	libusb_fill_bulk_transfer(write_transfer, ctx->usb_dev, ctx->out_ep, ctx->write_buffer,
 		ctx->write_count, write_cb, &write_result, ctx->usb_write_timeout);
 	retval = libusb_submit_transfer(write_transfer);
@@ -889,7 +891,9 @@ void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32
 	    bit_doubler_buffer[i * 4 + 3] = (uint8_t)((bit_doubler[right_out] >> 8) & 0xff);
 	}
 
-	mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, POS_EDGE_OUT | MSB_FIRST);
+    // This somehow seems to be the change that stopped irregular streaming of data
+	// mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, POS_EDGE_OUT | MSB_FIRST);
+	mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, NEG_EDGE_OUT | MSB_FIRST);
 }
 
 /**

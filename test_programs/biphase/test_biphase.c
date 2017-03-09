@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <signal.h>
 #include <sys/time.h>
 
 #include "mpsse.h"
@@ -15,120 +16,77 @@
 void send_biphase_writes();
 void send_bitbang_value();
 
+struct mpsse_ctx *ctx; 
+
 int main() 
 {
     send_biphase_writes();
 }
 
+static void close_mpsse(int m_code)
+{
+    fprintf(stderr, "Closing test_biphase with signal %d\n", m_code);
+    mpsse_purge(ctx); 
+    mpsse_close(ctx); 
+    fprintf(stderr, "Done closing mpsse\n");
+    exit(1);
+}
+
+	
 
 void send_biphase_writes() {
 
-	struct mpsse_ctx *ctx; 
 	const uint16_t vid = 1027;
 	const uint16_t pid = 24593;
 	const char *serial = NULL;
 	const char *description = NULL;
-	//int channel = IFACE_B;
 	int channel = IFACE_A;
-
+    int counter = 0;
 
 	ctx = mpsse_open(&vid, &pid, description, serial, channel);
 
-    if (false) {
+    // Writing an array of data (0xFFFFFFFF...) through the bipase write functions
 
-        // Setting pins high and low manually 
+    uint16_t *data_to_write = NULL;
+    size_t bytes_to_write = 512; 
+    int frequency = 100000;
+    struct timeval begin, end;
 
-        uint8_t data = 0x00;
-        uint8_t data_to_read = 0x00;
-        uint8_t dir = 0xFF;  // direction output for all bits
-        // uint8_t dir = 0x00;  // direction input for all bits
-        while(true) { 
 
-            blast_dbg("== - Begin flushing - ==");
-            mpsse_flush(ctx);
-            blast_dbg("== - Done flushing - ==");
-            data = 0xFF;    // settings all bits to high
-            blast_dbg("== Setting data high ==");
-            mpsse_set_data_bits_low_byte(ctx, data, dir);
-            mpsse_set_data_bits_high_byte(ctx, data, dir);
-            blast_dbg("== - Begin flushing - ==");
-            mpsse_flush(ctx);
-            blast_dbg("== - Done flushing - ==");
-            mpsse_read_data_bits_high_byte(ctx, &data_to_read);
-            blast_dbg("high pins read: %02x", data_to_read);
-            mpsse_read_data_bits_low_byte(ctx, &data_to_read);
-            blast_dbg("low pins read: %02x", data_to_read);
-            usleep(1000000);
-            data = 0x00;   // setting all bits to low
-            blast_dbg("== Setting data low ==");
-            mpsse_set_data_bits_low_byte(ctx, data, dir);
-            mpsse_set_data_bits_high_byte(ctx, data, dir);
-            blast_dbg("== - Begin flushing - ==");
-            mpsse_flush(ctx);
-            blast_dbg("== - Done flushing - ==");
-            mpsse_read_data_bits_high_byte(ctx, &data_to_read);
-            blast_dbg("high pins read: %02x", data_to_read);
-            mpsse_read_data_bits_low_byte(ctx, &data_to_read);
-            blast_dbg("low pins read: %02x", data_to_read);
-            usleep(1000000);
+    uint8_t data = 0x00;
+    uint8_t dir = 0xFF;  // direction output for all bits
+
+    mpsse_set_data_bits_low_byte(ctx, data, dir);
+    mpsse_set_data_bits_high_byte(ctx, data, dir);
+    mpsse_flush(ctx);
+    usleep(1000);
+    mpsse_set_frequency(ctx, frequency);
+    mpsse_flush(ctx);
+    usleep(1000);
+    // mpsse_purge(ctx);
+
+    data_to_write = malloc(bytes_to_write); 
+    if (data_to_write) {
+        for (int i = 0; i < ((int) bytes_to_write/2); i++) {
+            // *(data_to_write+i) = 0x3333;
+            *(data_to_write+i) = 0x5555;
         }
-
     } else {
+       mpsse_close(ctx); 
+       return;
+    }
 
-        // Writing an array of data (0xABABABABAB...) through the bipase write functions
-
-        uint16_t *data_to_write = NULL;
-        //uint32_t bytes_to_write = 1535; //
-        uint32_t bytes_to_write = 625; // That is the correct rate for code running at 100 Hz to write at 1 Mbps
-        //uint32_t bytes_to_write = 32; 
-        //uint32_t bytes_to_write = 16000; //
-        unsigned size_of_frame = bytes_to_write; //8192; // in bytes
-        int frequency = 50000;
-        int i = 0;
-        struct timeval begin, end;
-
-
-        uint8_t data = 0x00;
-        uint8_t dir = 0xFF;  // direction output for all bits
-        //uint8_t dir = 0x00;  // direction input for all bits
-
-        mpsse_set_data_bits_low_byte(ctx, data, dir);
-        mpsse_set_data_bits_high_byte(ctx, data, dir);
-        data_to_write = malloc(size_of_frame); 
-        if (data_to_write) {
-            for (int i = 0; i < ((int) size_of_frame/2); i++) {
-                *(data_to_write+i) = 0xFFFF;
-            }
-        } else {
-           mpsse_close(ctx); 
-        }
-
-        //mpsse_rtck_config(ctx, false);
-        mpsse_set_frequency(ctx, frequency);
+    while(true) {
+        gettimeofday(&begin, NULL);
+        mpsse_biphase_write_data(ctx, data_to_write, bytes_to_write);
         mpsse_flush(ctx);
-        usleep(1000);
-
-        //while(i <= 1) {
-        while(true) {
-            gettimeofday(&begin, NULL);
-            blast_dbg("I am about to call mpsse_biphase_write_data, i=%d", i);
-            mpsse_biphase_write_data(ctx, data_to_write, bytes_to_write);
-            //mpsse_clock_data_out(ctx, data_to_write, offset, bytes_to_write*8, NEG_EDGE_OUT | MSB_FIRST);
-            blast_dbg("Flushing the buffer");
-            mpsse_flush(ctx);
-            i += 1;
-            //offset += bytes_to_write;
-            //if (offset >= size_of_frame) {
-            //    offset = 0;
-            //    i = 0;
-            //}
-            //usleep(4096); //4096 to be exact, because it takes 4096 us to send 512 bytes at 1 Mb/s
-            //usleep(10000); // should write 1.25 KB per 0.01 second at 1 MBps
-            gettimeofday(&end, NULL);
-            blast_dbg("It took %f second to run", (end.tv_usec - begin.tv_usec)/1000000.0);
-        } 
-    }
-    if (ctx) {
-        mpsse_close(ctx);
-    }
+        gettimeofday(&end, NULL);
+        if ((counter % 10) == 0) {
+            blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write*2);
+        }
+        counter += 1;
+        // signal(SIGHUP, close_mpsse);
+        // signal(SIGINT, close_mpsse);
+        // signal(SIGTERM, close_mpsse);
+    } 
 }
