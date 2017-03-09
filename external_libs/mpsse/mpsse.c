@@ -811,7 +811,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 	/* Polling loop, more or less taken from libftdi */
 	while (!write_result.done || !read_result.done) {
 		retval = libusb_handle_events(ctx->usb_ctx);
-        blast_dbg("is write_result.done after handl_events? %d", (int) write_result.done);
+        // blast_dbg("is write_result.done after handl_events? %d", (int) write_result.done);
 		///TODO: Evaluate GDB Keepalive function
 		//keep_alive();
 		if (retval != LIBUSB_SUCCESS && retval != LIBUSB_ERROR_INTERRUPTED) {
