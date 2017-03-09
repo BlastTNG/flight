@@ -55,10 +55,13 @@
 #include "channels_tng.h"
 #include "tx.h"
 #include "lut.h"
+#include "labjack.h"
+#include "multiplexed_labjack.h"
 
 #include "acs.h"
 #include "actuators.h"
 #include "bias_tone.h"
+#include "balance.h"
 #include "blast.h"
 #include "blast_comms.h"
 #include "blast_sip_interface.h"
@@ -71,7 +74,6 @@
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
-#include "uei.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
@@ -286,7 +288,7 @@ static int AmISouth(int *not_cryo_corner)
       blast_info("System: Cryo Corner Mode Activated\n");
     }
 
-    return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '1')) ? 1 : 0;
+    return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
 }
 
 static void mcp_244hz_routines(void)
@@ -301,6 +303,10 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
+    #ifdef USE_XY_THREAD
+    	read_chopper();
+    #endif
+    cal_control();
 
     framing_publish_200hz();
 }
@@ -314,16 +320,14 @@ static void mcp_100hz_routines(void)
     cryo_control();
 //    BiasControl();
     WriteChatter();
-    uei_100hz_loop();
-
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
-    uei_publish_100hz();
     framing_publish_100hz();
+    // test_dio();
 }
 static void mcp_5hz_routines(void)
 {
@@ -333,7 +337,11 @@ static void mcp_5hz_routines(void)
     write_motor_channels_5hz();
     store_axes_mode_data();
     WriteAux();
+    ControlBalance();
     StoreActBus();
+    #ifdef USE_XY_THREAD
+    StoreStageBus(0);
+    #endif
     SecondaryMirror();
 //    PhaseControl();
     StoreHWPRBus();
@@ -343,8 +351,7 @@ static void mcp_5hz_routines(void)
 //    VideoTx();
 //    cameraFields();
 
-    framing_publish_5hz();
-}
+    framing_publish_5hz();}
 static void mcp_2hz_routines(void)
 {
     xsc_write_data(0);
@@ -352,6 +359,9 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
+    // rec_control();
+    // read_thermometers();
+    // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -359,8 +369,8 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    uei_1hz_loop();
-    uei_publish_1hz();
+    // query_mult(0, 48);
+    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -428,7 +438,6 @@ static void *mcp_main_loop(void *m_arg)
 int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
-  ph_thread_t *uei_thread = NULL;
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -438,7 +447,7 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm2;
 #endif
 #ifdef USE_XY_THREAD /* Define should be set in mcp.h */
-  pthread_t xy_id;
+  // pthread_t xy_id;
 #endif
 
   if (argc == 1) {
@@ -516,7 +525,7 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif
 #ifdef USE_XY_THREAD
-  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
+  // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
 
 #ifndef BOLOTEST
@@ -537,6 +546,19 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
+  labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // mult_labjack_networking_init(0, 84, 1);
+
+  initialize_labjack_commands(LABJACK_CRYO_1);
+  initialize_labjack_commands(LABJACK_CRYO_2);
+  initialize_labjack_commands(LABJACK_OF_1);
+  initialize_labjack_commands(LABJACK_OF_2);
+  initialize_labjack_commands(LABJACK_OF_3);
+  // mult_initialize_labjack_commands(0);
 
   initialize_CPU_sensors();
 
@@ -554,8 +576,6 @@ int main(int argc, char *argv[])
 
   initialize_data_sharing();
   initialize_watchdog(2);
-//  if (!initialize_uei_of_channels())
-//      uei_thread = ph_thread_spawn(uei_dmap_update_loop, NULL);
   initialize_bias_tone();
   startChrgCtrl(0);
 
@@ -565,7 +585,6 @@ int main(int argc, char *argv[])
 #endif
   ph_sched_run();
 
-//  if (uei_thread) ph_thread_join(uei_thread, NULL);
   ph_thread_join(main_thread, NULL);
 
   return(0);

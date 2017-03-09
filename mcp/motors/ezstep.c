@@ -375,7 +375,7 @@ int EZBus_Read(int m_port, char *m_buf, size_t m_bytes)
 // TODO(laura): Consider adding back some of the response string recovery logic from BLASTPol
 int EZBus_Recv(struct ezbus* bus)
 {
-	char full_response[EZ_BUS_BUF_LEN];
+	char full_response[EZ_BUS_BUF_LEN] = {0};
 	char* fullptr = full_response;
 	char* endptr = full_response;
     int retval = EZ_ERR_OK;
@@ -448,7 +448,7 @@ int EZBus_Recv(struct ezbus* bus)
 		if (bus->chatter >= EZ_CHAT_BUS) blast_info("Found end-of-text character: %x", delim);
 
 		delim_found = 1; // Signals that we only want to read one more character (CRC)
-
+		if ((int)(endptr - full_response) != (char_count - 1)) state = 1; // If delim is not last char read, we're done.
         if (!state) continue;
 
         // If we have finished reading (state = 1) check for errors
@@ -765,7 +765,7 @@ int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble)
     for (i = whoLoopMin(who); i <= whoLoopMax(who); ++i) {
 	    blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
 	               i, iWho(i), preamble, EZ_BUS_BUF_LEN);
-        strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN); // gives a segfault!
+        strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN);
         bus->stepper[iWho(i)].preamble[EZ_BUS_BUF_LEN - 1] = '\0';
     }
     return EZ_ERR_OK;

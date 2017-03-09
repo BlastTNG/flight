@@ -46,7 +46,4 @@ void framing_publish_1hz(void);
 
 void framing_publish_command_data(struct CommandDataStruct *m_commanddata);
 
-void uei_publish_1hz(void);
-void uei_publish_100hz(void);
-void uei_publish_200hz(void);
 #endif /* INCLUDE_FRAMING_H_ */

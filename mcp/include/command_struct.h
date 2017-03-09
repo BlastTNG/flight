@@ -63,14 +63,14 @@
 // CommandData.uei_command.uei_of_dio_432_out.
 // TODO(laura): These are for BLASTPol (taken from das.c). Get updated list from Jeff.
 // TODO(laura): move this to a separate cryo control program modeled on das.c
-#define HEAT_HELIUM_LEVEL    0x01
-#define HEAT_CHARCOAL        0x02
-#define HEAT_POT_HS          0x04
-#define HEAT_CHARCOAL_HS     0x08
-#define HEAT_JFET            0x10
-#define HEAT_BDA             0x20
-#define HEAT_CALIBRATOR      0x40
-#define HEAT_HWPR_POS        0x80
+#define HEAT_HELIUM_LEVEL    0x0001
+#define HEAT_CHARCOAL        0x0002
+#define HEAT_POT_HS          0x0004
+#define HEAT_CHARCOAL_HS     0x0008
+#define HEAT_JFET            0x0010
+#define HEAT_BDA             0x0020
+#define HEAT_CALIBRATOR      0x0040
+#define HEAT_HWPR_POS        0x0080
 
 #define LS_CLOSED      0x0002
 #define LS_DRIVE_OFF   0x0004
@@ -291,6 +291,28 @@ typedef struct {
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
 } cryo_cmds_t;
 
+typedef struct slinger_commanding
+{
+    unsigned int downlink_rate_bps;
+    bool highrate_active;
+    bool biphase_active;
+} slinger_commanding_t;
+
+typedef struct {
+    enum {bal_rest = 0, bal_manual, bal_auto} mode;
+    enum {pos = 0, neg} bal_move_type;
+    uint32_t pos;
+    uint16_t vel;
+    uint16_t hold_i;
+    uint16_t move_i;
+    uint16_t acc;
+
+    // servo parameters
+    double i_el_on_bal;
+    double i_el_off_bal;
+    double gain_bal;
+} cmd_balance_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -405,20 +427,7 @@ struct CommandDataStruct {
 
   cryo_cmds_t Cryo;
 
-  struct {
-    enum {bal_rest, bal_manual, bal_auto} mode;
-    double level;
-
-    // servo parameters
-    double level_on_bal;
-    double level_off_bal;
-    double level_target_bal;
-    double gain_bal;
-
-    // heating card parameters
-    double heat_on;
-    double heat_tset;
-  } pumps;
+  cmd_balance_t balance;
 
   struct {
     int off;
@@ -504,9 +513,6 @@ struct CommandDataStruct {
   double lat;
   double lon;
 
-  /* Integrating Star Camera Stuff */
-  struct ISCStatusStruct ISCState[2];
-
   struct {
     int pulse_width;
     int fast_pulse_width;
@@ -519,6 +525,8 @@ struct CommandDataStruct {
   } ISCControl[2];
 
   struct XSCCommandStruct XSC[2];
+
+  slinger_commanding_t packet_slinger;
 
   uint32_t checksum;
 };

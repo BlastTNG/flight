@@ -147,6 +147,13 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
     })
 #endif
 
+#define BLAST_SWAP(_x, _y)          \
+    do {                            \
+        typeof(_x) _temp = (_x);    \
+        (_x) = (_y);                \
+        (_y) = _temp;               \
+    } while (0)
+
 /** Min/Max common use */
 #undef max
 #define max(a, b) ((a) >= (b) ? (a) : (b))

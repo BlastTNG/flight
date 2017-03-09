@@ -29,5 +29,6 @@
 void StoreActBus(void);
 void SecondaryMirror(void);
 void *ActuatorBus(void *param);
+int GetActAddr(int ind);
 
 #endif /* INCLUDE_ACTUATORS_H_ */

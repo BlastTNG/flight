@@ -42,16 +42,17 @@
 
 
 /* EZBus setup parameters */
-#define STAGE_BUS_TTY 0
-#define STAGE_BUS_CHATTER EZ_CHAT_BUS
+#define STAGE_BUS_TTY "/dev/ttystage"
+#define STAGE_BUS_CHATTER EZ_CHAT_ACT
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
-#define STAGEX_ID 6
-#define STAGEY_ID 7
+#define STAGEX_ID EZ_WHO_S6
+#define STAGEY_ID EZ_WHO_S7
 
 #define STAGE_BUS_ACCEL 2
 #define STAGE_BUS_IHOLD 20
-#define STAGE_BUS_IMOVE 30
+#define STAGE_BUS_IMOVE 50
+#define XYSTAGE_PREAMBLE "j2n2" // set microstep res, use limit switches
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1
@@ -132,7 +133,7 @@ void StoreStageBus(int index)
 
   SET_VALUE(xStageAddr, stage_data.xpos/2);
   SET_VALUE(yStageAddr, stage_data.ypos/2);
-  if (index == 0) {
+  if (index == 0) {  // writing channels depends on argument in mcp.c
     SET_VALUE(xLimStageAddr, stage_data.xlim);
     SET_VALUE(xStrStageAddr, stage_data.xstr);
     SET_VALUE(xStpStageAddr, stage_data.xstp);
@@ -150,7 +151,7 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
   char who = (is_y) ? STAGEY_ID : STAGEX_ID;
 
   if (CommandData.xystage.mode == XYSTAGE_PANIC || vel == 0)
-    return;
+	return;
 
   if (dest < 0)
     dest = 0;
@@ -164,10 +165,13 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
       return;
     usleep(10000);
 
-    ReadStage(bus);
+//    ReadStage(bus);
+
+    EZBus_ReadInt(bus, STAGEX_ID, "?0", &stage_data.xpos);
+    EZBus_ReadInt(bus, STAGEY_ID, "?0", &stage_data.ypos);
 
     now = (is_y) ? stage_data.ypos : stage_data.xpos;
-  } while (now != dest);
+    } while (now != dest);
 }
 
 void Raster(struct ezbus *bus, int start, int end, int is_y, int y,
@@ -209,7 +213,7 @@ void ControlXYStage(struct ezbus* bus)
   if (CommandData.xystage.is_new) {
     /* PANIC! */
     if (CommandData.xystage.mode == XYSTAGE_PANIC) {
-      bputs(info, "Panic");
+      bputs(warning, "XY Stage Panic");
       EZBus_Stop(bus, STAGEX_ID);
       EZBus_Stop(bus, STAGEY_ID);
       CommandData.xystage.is_new = 0;
@@ -312,10 +316,12 @@ void StageBus(void)
     conn_attempt++;
     sleep(2);
   }
-
+  CommandData.xystage.mode = XYSTAGE_PANIC; // make sure no command executes at startup
   EZBus_Add(&bus, STAGEX_ID, STAGEX_NAME);
   EZBus_Add(&bus, STAGEY_ID, STAGEY_NAME);
 
+  EZBus_Stop(&bus, STAGEX_ID);
+  EZBus_Stop(&bus, STAGEY_ID);
   EZBus_SetAccel(&bus, STAGEX_ID, STAGE_BUS_ACCEL);
   EZBus_SetAccel(&bus, STAGEY_ID, STAGE_BUS_ACCEL);
   EZBus_SetIHold(&bus, STAGEX_ID, STAGE_BUS_IHOLD);
@@ -323,6 +329,11 @@ void StageBus(void)
   EZBus_SetIMove(&bus, STAGEX_ID, STAGE_BUS_IMOVE);
   EZBus_SetIMove(&bus, STAGEY_ID, STAGE_BUS_IMOVE);
 
+  EZBus_SetPreamble(&bus, STAGEX_ID, XYSTAGE_PREAMBLE);
+  EZBus_SetPreamble(&bus, STAGEY_ID, XYSTAGE_PREAMBLE);
+
+  EZBus_Comm(&bus, STAGEX_ID, "z10000R"); // Wake up at position 10000 so we have space to move in either direction.
+  EZBus_Comm(&bus, STAGEY_ID, "z10000R"); // May want to use home command to re-zero on limit switches.
   all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
 
   for (;;) {
@@ -358,7 +369,6 @@ void StageBus(void)
     }
 
     ControlXYStage(&bus);
-
     ReadStage(&bus);
 
     usleep(10000);

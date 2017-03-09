@@ -7,6 +7,7 @@ set(MCP_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/fifo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lut.c
     ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/pq.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sip.c
     PARENT_SCOPE
@@ -14,6 +15,7 @@ set(MCP_COMMON_SRCS
 set(MCP_COMMON_HEADERS
    ${MCP_COMMON_HEADERS}
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_packet_format.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h
@@ -22,6 +24,7 @@ set(MCP_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/fifo.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/lut.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/pq.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/sip.h

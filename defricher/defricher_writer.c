@@ -56,7 +56,6 @@ static GAsyncQueue *packet_queue = NULL;
 typedef union {
     gpointer ptr;
     struct {
-        uint8_t source;
         uint8_t rate;
         uint16_t _dummy;
     };
@@ -285,6 +284,9 @@ static inline int defricher_get_rate(const E_RATE m_rate)
         case RATE_200HZ:
             rate = 200;
             break;
+        case RATE_244HZ:
+            rate = 244;
+            break;
         default:
             defricher_err( "Unknown rate %d", m_rate);
     }
@@ -377,12 +379,12 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     return new_file;
 }
 
-void defricher_queue_packet(uint16_t m_source, uint16_t m_rate)
+void defricher_queue_packet(uint16_t m_rate)
 {
     queue_data_t new_pkt = {._dummy = (1<<15)};//Set this bit to avoid glib assertions
 
     if (dirfile_offset < 0) {
-        if ((m_source == SRC_FC) && (m_rate == RATE_1HZ)) {
+        if (m_rate == RATE_1HZ) {
             channel_t *frame_offset = channels_find_by_name("mcp_1hz_framecount");
             if (frame_offset) {
                 defricher_cache_node_t *outfile_node = frame_offset->var;
@@ -401,14 +403,13 @@ void defricher_queue_packet(uint16_t m_source, uint16_t m_rate)
             return;
         }
     }
-    new_pkt.source = m_source;
     new_pkt.rate = m_rate;
 
     g_async_queue_push(packet_queue, new_pkt.ptr);
 }
 
 
-static int defricher_write_packet(uint16_t m_source, uint16_t m_rate)
+static int defricher_write_packet(uint16_t m_rate)
 {
     static int have_warned = 1;
 
@@ -423,10 +424,10 @@ static int defricher_write_packet(uint16_t m_source, uint16_t m_rate)
         return -1;
     }
 
-    if (m_source == SRC_FC && m_rate == RATE_200HZ) ri.wrote ++;
+    if (m_rate == RATE_200HZ) ri.wrote ++;
     have_warned = 0;
     for (channel_t *channel = channels; channel->field[0]; channel++) {
-        if (channel->source != m_source || channel->rate != m_rate) continue;
+        if (channel->rate != m_rate) continue;
         defricher_cache_node_t *outfile_node = channel->var;
         if (outfile_node && outfile_node->magic == BLAST_MAGIC32 && outfile_node->output.fp ) {
             if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
@@ -508,7 +509,8 @@ static void *defricher_write_loop(void *m_arg)
             queue_data_t pkt;
 
             if ((pkt.ptr = g_async_queue_pop(packet_queue))) {
-                defricher_write_packet(pkt.source, pkt.rate);
+                defricher_write_packet(pkt.rate);
+                usleep(1);
             }
 
         }

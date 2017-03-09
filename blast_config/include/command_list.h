@@ -65,6 +65,7 @@
 #define GR_TELEM        (1 << GRPOS_TELEM)
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
+
 // reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
@@ -75,22 +76,20 @@ extern const char *GroupNames[N_GROUPS];
 enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
   balance_auto,     balance_off,        cal_off,          cal_on,
-  charcoal_off,     charcoal_on,        hs_charcoal_off,  hwpr_panic,
-  hs_charcoal_on,   el_off,             el_on,
+  hwpr_panic,   el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   elmotenc_allow,   elmotenc_veto,
   xsc0_veto,        xsc0_allow,
   xsc1_veto,        xsc1_allow,
-  level_on,         level_off,
   mag_allow,        mag_veto,
   pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,
   pot_valve_open,   ramp,               reset_trims,
   stop,             pss_veto,		    trim_isc_to_osc,
   pss_allow,        trim_osc_to_isc,    autotrim_off,
   trim_to_isc,      unlock,             lock_off,
-  force_el_on,      auto_jfetheat,      auto_cycle,
+  force_el_on,      auto_cycle,
   actbus_cycle,
           hub232_cycle,     das_cycle,
 
@@ -123,18 +122,37 @@ enum singleCommand {
   fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
   repoll,           autofocus_allow,
   autofocus_veto,   north_halt,         south_halt,       actbus_on,
-  actbus_off,       actuator_stop,      level_pulse,      restore_piv,
+  actbus_off,       actuator_stop,      restore_piv,
   reset_rw,         reset_piv,
-  reset_elev,       jfet_on,            jfet_off,         hs_pot_on,
+  reset_elev,         hs_pot_on,
   hs_pot_off,       bda_on,             bda_off,          hwpr_enc_on,
-  hwpr_enc_off,     hwpr_enc_pulse,     balance_heat_on,  balance_heat_off,
+  hwpr_enc_off,     hwpr_enc_pulse,
   vtx1_isc,	    vtx1_osc,		vtx2_isc,
   vtx2_osc,	    cam_cycle,
   cam_expose,	    cam_autofocus,	cam_settrig_ext,  cam_force_lens,
   cam_unforce_lens, hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
-  lock45,           shutter_close_slow,
+  lock45,           shutter_close_slow, heater_300mk_on,  heater_300mk_off,
+  charcoal_hs_on,   charcoal_hs_off,    callamp_on,       callamp_off,
+  lna350_on, lna350_off, lna250_on, lna250_off, lna500_on, lna500_off,
+  level_sensor_on,  level_sensor_off,   charcoal_on,      charcoal_off,
+  heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
+  amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
+  heater_supply_off, reboot_ljcryo1,
+    of_relay_1_on, of_relay_1_off, of_relay_2_on, of_relay_2_off,
+    of_relay_3_on, of_relay_3_off, of_relay_4_on, of_relay_4_off,
+    of_relay_5_on, of_relay_5_off, of_relay_6_on, of_relay_6_off,
+    of_relay_7_on, of_relay_7_off, of_relay_8_on, of_relay_8_off,
+    of_relay_9_on, of_relay_9_off, of_relay_10_on, of_relay_10_off,
+    of_relay_11_on, of_relay_11_off, of_relay_12_on, of_relay_12_off,
+    of_relay_13_on, of_relay_13_off, of_relay_14_on, of_relay_14_off,
+    of_relay_15_on, of_relay_15_off, of_relay_16_on, of_relay_16_off,
+    if_relay_1_on, if_relay_1_off, if_relay_2_on, if_relay_2_off,
+    if_relay_3_on, if_relay_3_off, if_relay_4_on, if_relay_4_off,
+    if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
+    if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
+    if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
   xyzzy
 };
 
@@ -142,7 +160,7 @@ enum singleCommand {
  * order relative to the command definitions in command_list.c */
 enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
-  balance_manual,
+  balance_manual,    balance_vel,       balance_i,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
   bias_level_x,      fridge_cycle_params,  box,
   cal_pulse,         cal_repeat,        cap,              cur_mode,
@@ -164,7 +182,6 @@ enum multiCommand {
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
-  balance_tset,
   motors_verbose,    bias_step,         phase_step,       hwpr_set_backlash,
   hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
