@@ -209,9 +209,9 @@ void rec_control(void) {
         } // turns on a power pulse and sets reminder to turn it off
         if ((rec_state.update_rec = CommandData.Relays.update_rec) == 1) {
             rec_update_values();
-            rec_trigger = 1;
-            rec_send_values();
             CommandData.Relays.update_rec = 0;
+            rec_send_values();
+            rec_trigger = 1;
         }
         if (rec_startup == 1) { // initializes the power box to feed power to relays (ONLY REC)
             rec_startup = 0;

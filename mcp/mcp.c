@@ -302,7 +302,6 @@ static void mcp_244hz_routines(void)
 static void mcp_200hz_routines(void)
 {
     store_200hz_acs();
-    test_frequencies();
     command_motors();
     write_motor_channels_200hz();
     cal_control();
