@@ -69,6 +69,34 @@ void push_bi0_buffer(const void *m_frame)
     bi0_buffer.i_in = i_in;
 }
 
+static void tickle(struct mpsse_ctx *ctx_passed_write) {
+    static int tickled = 0;
+    static uint8_t tickle = 0;
+    if (tickled == 0) {
+        mpsse_watchdog_ping(ctx_passed_write, tickle);
+        tickle = 1;
+        tickled = 1;
+        mpsse_flush(ctx_passed_write);
+    } else {
+        mpsse_watchdog_ping(ctx_passed_write, tickle);
+        tickle = 0;
+        tickled = 0;
+        mpsse_flush(ctx_passed_write);
+    }
+}
+
+static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
+    static int first_call = 1;
+    static int in_charge;
+    if (first_call == 1) {
+        first_call = 0;
+    } else {
+        in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
+        // command data or wherever incharge gets set
+        // also change for fc1 vs fc2
+    }
+}
+
 void biphase_writer(void)
 {
     // TODO(Joy): Verify what error checks are performed in BLAST code
@@ -138,6 +166,7 @@ void biphase_writer(void)
             gettimeofday(&begin, NULL);
             mpsse_biphase_write_data(ctx, bi0_frame, BI0_FRAME_SIZE*sizeof(uint16_t));
             mpsse_flush(ctx);
+            tickle(ctx);
             gettimeofday(&end, NULL);
             blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
                      BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
