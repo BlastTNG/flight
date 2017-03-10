@@ -44,12 +44,12 @@
 		for (int i = 0; i < len; i++) { \
 			buf_string_pos += sprintf(buf_string + buf_string_pos, " %02x", buf[i]); \
 			if (i % 32 == 32 - 1) { \
-				blast_dbg("%s", buf_string); \
+				blast_info("%s", buf_string); \
 				buf_string_pos = 0; \
 			} \
 		} \
 		if (buf_string_pos > 0) \
-			blast_dbg("%s", buf_string);\
+			blast_info("%s", buf_string);\
 	} while (0)
 #else
 #define DEBUG_IO(expr...) do {} while (0)
@@ -871,24 +871,26 @@ int mpsse_flush(struct mpsse_ctx *ctx)
  */
 void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length)
 {
-	//uint8_t bit_doubler_buffer[4096] = {0};
-	//unsigned output_length = min(sizeof(bit_doubler_buffer), length);
-	unsigned output_length = 2*length;
-    unsigned max_i = (unsigned) floor(length/2.0);
+	// unsigned output_length = 2*length;
+	unsigned output_length = length;
 	uint8_t bit_doubler_buffer[output_length];
-    uint8_t left_out, right_out;
+
+    unsigned max_i = (unsigned) floor(length/2.0);
+    uint8_t msbs, lsbs;
 
 	//for (unsigned i = 0; i < length; i++) {
 	//	bit_doubler_buffer[i * 2] = (uint8_t)(bit_doubler[out[i]] & 0xff);
 	//	bit_doubler_buffer[i * 2 + 1] = (uint8_t)((bit_doubler[out[i]] >> 8) & 0xff);
 	//}
 	for (unsigned i = 0; i < max_i; i++) {
-        left_out = (uint8_t) out[i] & 0xff;
-        right_out = (uint8_t) ((out[i] >> 8) & 0xff);
-	    bit_doubler_buffer[i * 4] = (uint8_t)(bit_doubler[left_out] & 0xff);
-	    bit_doubler_buffer[i * 4 + 1] = (uint8_t)((bit_doubler[left_out] >> 8) & 0xff);
-	    bit_doubler_buffer[i * 4 + 2] = (uint8_t)(bit_doubler[right_out] & 0xff);
-	    bit_doubler_buffer[i * 4 + 3] = (uint8_t)((bit_doubler[right_out] >> 8) & 0xff);
+        msbs = (uint8_t) ((out[i] >> 8) & 0xff);
+        lsbs = (uint8_t) out[i] & 0xff;
+	    bit_doubler_buffer[i*2] = msbs;
+	    bit_doubler_buffer[i*2 + 1] = lsbs;
+	    // bit_doubler_buffer[i*4] = (uint8_t)((bit_doubler[msbs] >> 8) & 0xff);
+	    // bit_doubler_buffer[i*4 + 1] = (uint8_t)(bit_doubler[msbs] & 0xff);
+	    // bit_doubler_buffer[i*4 + 2] = (uint8_t)((bit_doubler[lsbs] >> 8) & 0xff);
+	    // bit_doubler_buffer[i*4 + 3] = (uint8_t)(bit_doubler[lsbs] & 0xff);
 	}
 
     // This somehow seems to be the change that stopped irregular streaming of data

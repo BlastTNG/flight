@@ -28,7 +28,6 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include <pthread.h>
-// #include <packet_slinger.h>
 
 #include <blast.h>
 
@@ -76,12 +75,12 @@ void biphase_writer(void)
 
     uint16_t    bi0_frame[BI0_FRAME_SIZE];
     uint16_t    sync_word = 0xEB90;
-    const size_t    bi0_frame_bytes = (BI0_FRAME_SIZE - 1) * 2;
+    const size_t    bi0_frame_bytes = (BI0_FRAME_SIZE) * 2;
 
     uint16_t    read_frame;
     uint16_t    write_frame;
 
-    size_t slinger_frame_bytes = (BI0_FRAME_SIZE*sizeof(uint16_t) - frame_size[RATE_100HZ]);
+    size_t unused_frame_bytes = (BI0_FRAME_SIZE*sizeof(uint16_t) - frame_size[RATE_100HZ]);
 
     struct mpsse_ctx *ctx;
     const uint16_t vid = 1027;
@@ -90,7 +89,7 @@ void biphase_writer(void)
     const char *description = NULL;
     int channel = 0; // IFACE_A
     // int frequency = 1000000;
-    int frequency = 500000;
+    int frequency = 100000;
 
     uint8_t initial_value = 0x00;
     // TODO(Joy): NEED TO CHANGE "direction" to only set the biphase pins to output!!
@@ -106,14 +105,15 @@ void biphase_writer(void)
         pthread_exit(0);
     }
     mpsse_set_data_bits_low_byte(ctx, initial_value, direction);
-    mpsse_set_data_bits_high_byte(ctx, initial_value, direction);
+    // mpsse_set_data_bits_high_byte(ctx, initial_value, direction);
     mpsse_set_frequency(ctx, frequency);
 
     mpsse_flush(ctx);
     usleep(1000);
 
     blast_info("frame_size[100Hz] is %zd, biphase frame size is %zd, biphase frame size for data is %zd (bytes)",
-               frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), bi0_frame_bytes);
+               frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), (bi0_frame_bytes-4));
+
     while (true) {
         write_frame = bi0_buffer.i_out;
         read_frame = bi0_buffer.i_in;
@@ -124,19 +124,19 @@ void biphase_writer(void)
 
         blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         while (read_frame != write_frame) {
-            // Maybe later I'll be smarter and fill a partial frame to fill BI0_FRAME_SIZE
             memcpy(bi0_frame, bi0_buffer.framelist[write_frame], frame_size[RATE_100HZ]);
-            memset(&bi0_frame[(int) (frame_size[RATE_100HZ]/2)], 0xEE, slinger_frame_bytes); // What is that for ?
+            memset(&bi0_frame[(int) (frame_size[RATE_100HZ]/2)], 0xEE, unused_frame_bytes); // Filling
+            // memset(&bi0_frame, 0xFF, BI0_FRAME_SIZE*sizeof(uint16_t)); // TEST
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
 
             bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
-            bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, bi0_frame_bytes);
+            bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, bi0_frame_bytes-2);
 
             bi0_frame[0] = sync_word;
             sync_word = ~sync_word;
 
             gettimeofday(&begin, NULL);
-            mpsse_biphase_write_data(ctx, bi0_frame, bi0_frame_bytes);
+            mpsse_biphase_write_data(ctx, bi0_frame, BI0_FRAME_SIZE*sizeof(uint16_t));
             mpsse_flush(ctx);
             gettimeofday(&end, NULL);
             blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
