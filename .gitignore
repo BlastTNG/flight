@@ -12,3 +12,5 @@
 **.suo
 stars/windows/stars
 decomd/build
+decom/test_decom/test_decom
+decom/test_decom/test_decom_packets
