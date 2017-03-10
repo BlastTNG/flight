@@ -44,7 +44,7 @@
 #include "blast.h"
 #include "decom_pci.h"
 #include "bbc_pci.h"
-#include "channels.h"
+#include "channels_tng.h"
 #include "crc.h"
 
 #define VERSION "1.1.0"
@@ -59,7 +59,7 @@ void InitialiseFrameFile(char type);
 void FrameFileWriter(void);
 void ShutdownFrameFile(void);
 void pushDiskFrame(unsigned short *RxFrame);
-int decom;
+int decom_fp;
 int system_idled = 0;
 int needs_join = 0;
 
@@ -82,8 +82,8 @@ extern struct file_info {
 
 #define FRAME_SYNC_WORD 0xEB90146F
 
-unsigned short FrameBuf[BI0_FRAME_SIZE+3];
-unsigned short AntiFrameBuf[BI0_FRAME_SIZE+3];
+uint16_t out_frame[BI0_FRAME_SIZE+3];
+uint16_t anti_out_frame[BI0_FRAME_SIZE+3];
 int status = 0;
 double fs_bad = 1;
 double dq_bad = 0;
@@ -91,7 +91,7 @@ unsigned short polarity = 1;
 int du = 0;
 int wfifo_size = 0;
 unsigned long frame_counter = 0;
-unsigned short crc_ok = 1;
+uint16_t crc_ok = 1;
 
 #ifdef DEBUG
 FILE* dump = NULL;
@@ -194,15 +194,15 @@ int main(void) {
   buos_use_stdio();
 
   /* Open Decom */
-  if ((decom = open(DEV, O_RDONLY | O_NONBLOCK)) == -1)
+  if ((decom_fp = open(DEV, O_RDONLY | O_NONBLOCK)) == -1)
     berror(fatal, "fatal error opening " DEV);
 
-  /* Initialise Channel Lists */
-  MakeAddressLookups("/data/etc/decomd/Nios.map");
+  // /* Initialise Channel Lists */
+  // MakeAddressLookups("/data/etc/decomd/Nios.map");
 
   /* Initialise Decom */
-  ioctl(decom, DECOM_IOC_RESET);
-  ioctl(decom, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
+  ioctl(decom_fp, DECOM_IOC_RESET);
+  ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
 
   /* Initialise Frame File Writer */
   InitialiseFrameFile(FILE_SUFFIX);
@@ -310,10 +310,10 @@ int main(void) {
 	//disk_free, frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok,
 	//DiskFrameSize, BiPhaseFrameSize);
 #endif
-    sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f %d %d %d\n", 
-	status + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, 
-	disk_free, frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok, 
-	DiskFrameSize, BiPhaseFrameSize);
+    //sprintf(buf, "%1i %1i %3i %5.3f %5.3f %Lu %lu %s %i %f %f %d %d %d\n", 
+	//status + system_idled * 0x4, polarity, du, 1 - fs_bad, dq_bad, 
+	//disk_free, frame_counter, ptr + 1, wfifo_size, dframes, dt, crc_ok, 
+	//DiskFrameSize, BiPhaseFrameSize);
     old_fc = frame_counter;
     then = now;
 
