@@ -18,5 +18,6 @@ void autocycle(void);
 void read_thermometers();
 void test_read(void);
 void test_frequencies(void);
+void tie_up(void);
 
 #endif /* cryostat_h */

@@ -177,6 +177,13 @@ void test_frequencies(void) {
     SET_SCALED_VALUE(test_Addr, labjack_get_value(1, 12));
 }
 
+void tie_up(void) {
+    static int good = 1;
+    while (good) {
+        good = 1;
+    }
+}
+
 
 void test_labjacks(int m_which) {
     float test0, test1, test2, test3, test4;
