@@ -1638,6 +1638,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
 //       need to multiply later instead
+    case set_rox_bias_amp: // Set the amplitude of the rox bias signal
+      CommandData.rox_bias.amp = ivalues[0];
+      break;
     case bias_level_500:     // Set bias 1 (500)
       CommandData.Bias.bias[0] = ivalues[0];
       CommandData.Bias.setLevel[0] = 1;
@@ -2245,6 +2248,8 @@ void InitCommandData()
     CommandData.Cryo.lvalve_open = 0;
     CommandData.Cryo.lvalve_close = 0;
     CommandData.Cryo.lnvalve_on = 0;
+    CommandData.rox_bias.amp = 26;
+    CommandData.rox_bias.status = 0;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
