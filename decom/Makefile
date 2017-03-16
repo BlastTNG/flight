@@ -15,18 +15,16 @@ obj-m := decom_pci.o
 
 else
 # First pass: normal build
-KDIR	:= /lib/modules/$(shell uname -r)/build
-PWD		:= $(shell pwd)
-CC    := gcc -O2 -g
+KVER  	:= $(shell uname -r)
+KDIR	:= /lib/modules/$(KVER)/build
+PWD	:= $(shell pwd)
+CC 	:= gcc -O2 -g
 
-all: decom_pci.ko test_decom test_decom_packets
+all: decom_pci.ko test_decom
 
 decom_pci.ko: decom_pci.c decom_pci.h
 # invoke kernel build system
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-
-test_decom_packets: test_decom_packets.c
-	$(CC) -o test_decom_packets test_decom_packets.c -lm
 
 test_decom: test_decom.c
 	$(CC) -o test_decom test_decom.c -lm
@@ -35,18 +33,8 @@ clean:
 	rm -f .decom* *.ko *.o test_decom decom_pci.mod.c
 
 install: decom_pci.ko
-#	[ -e /dev/decom_pci ] || ( mknod /dev/decom_pci c 251 0 && chmod 777 /dev/decom_pci )
 	install -m 644 decom_pci.h /usr/local/include/decom_pci.h
-	install decom_pci.ko -m 644 /usr/local/lib/decom_pci.ko
-
-
-# svn aliases
-include ../common/Makefile.update
-
-../common/Makefile.update:
-	@echo "ERROR: **************************************************************"
-	@echo "Common build files not found; unable to continue.  Try:"
-	@echo "  ( cd .. && svn co `svn info --non-interactive | awk ' /URL/ { print $$2 } ' | sed -e 's/trunk\/.*/trunk\/common/'` common )"
-	@false
+	install -m 644 -D decom_pci.ko /lib/modules/$(KVER)/misc/decom_pci.ko
+	depmod $(KVER)
 
 endif

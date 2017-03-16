@@ -20,13 +20,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h> 
+#include <sys/ioctl.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <time.h>
 
 #include "decom_pci.h"
 #define DEFAULT_FRAME_FILE  "../bbcpci/frame.dat"
@@ -67,7 +65,7 @@ int main(int argc, char *argv[]) {
   
   receivebuf[0] = DECOM_SYNC;
   for (i = 1; i < framelen; i++) {
-    if (fscanf(f, "%x", receivebuf + i) == EOF) {
+    if (fscanf(f, "%hx", receivebuf + i) == EOF) {
       printf("Bad frame file (%s).  Reached EOF at line %d; was expecting a "
              "frame size of %d.  Exiting.\n", framefile, i, framelen);
       return 0;
