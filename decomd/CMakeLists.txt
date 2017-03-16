@@ -174,7 +174,10 @@ target_link_libraries(decomd
     ${CMAKE_THREAD_LIBS_INIT} 
     m)
 
-set(check_files ${FRAME_SRCS} ${FRAME_HEADERS}
+set(check_files ${FRAME_SRCS} ${COMMS_SRCS}  ${CMD_SRCS}
+                ${COMMS_HEADERS} ${FRAME_HEADERS} ${CMD_HEADERS} 
+
    )
+
 
 install(TARGETS decomd DESTINATION bin)
