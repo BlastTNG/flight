@@ -124,21 +124,42 @@ include_directories ("/usr/include/machine")
 include_directories ("${PROJECT_BINARY_DIR}/include")
 
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
+set(FRAMING_DIR "${PROJECT_SOURCE_DIR}/../mcp/framing")
+set(COMMANDING_DIR "${PROJECT_SOURCE_DIR}/../mcp/commanding")
+set(MCP_DIR "${PROJECT_SOURCE_DIR}/../mcp")
+set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 
 include_directories (
     "${PROJECT_SOURCE_DIR}/include"
     "${COMMON_DIR}/include"
+    "${MCP_DIR}/include"
+    "${CONFIG_DIR}/include"
     )
 
 # add common objects
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 
+# add data frame objects
+add_subdirectory(${FRAMING_DIR} "${PROJECT_BINARY_DIR}/framing")
+
+# add commanding objects
+add_subdirectory(${COMMANDING_DIR} "${PROJECT_BINARY_DIR}/commanding")
+add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
+
 add_library (blast_common OBJECT ${DECOM_COMMON_SRCS} ${DECOM_COMMON_HEADERS})
 define_file_basename_for_sources(blast_common)
+
+add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
+define_file_basename_for_sources(framing)
+
+add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
+define_file_basename_for_sources(commanding)
 
             
 add_executable (decomd 
     $<TARGET_OBJECTS:blast_common>
+    $<TARGET_OBJECTS:framing>
+    $<TARGET_OBJECTS:commanding>
     ${PROJECT_SOURCE_DIR}/decomd.c
     ${PROJECT_SOURCE_DIR}/decom_pci.h
     ${PROJECT_SOURCE_DIR}/readdecom_tng.c
@@ -152,5 +173,8 @@ target_link_libraries(decomd
     ${MOSQ_LIBRARY} 
     ${CMAKE_THREAD_LIBS_INIT} 
     m)
+
+set(check_files ${FRAME_SRCS} ${FRAME_HEADERS}
+   )
 
 install(TARGETS decomd DESTINATION bin)

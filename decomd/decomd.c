@@ -38,7 +38,6 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
-#include <sys/select.h> // This contains macros for __FDELT only on israel
 #include <sys/statvfs.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -47,20 +46,14 @@
 #include "decom_pci.h"
 #include "bbc_pci.h"
 #include "channels_tng.h"
+#include "framing.h"
 #include "crc.h"
 
 #define VERSION "1.1.0"
 
 #define DEV "/dev/decom_pci"
-#define SOCK_PORT 11411
-#define FILE_SUFFIX 'y'
+// #define FILE_SUFFIX 'y'
 
-#define FS_FILTER 0.9
-
-void InitialiseFrameFile(char type);
-void FrameFileWriter(void);
-// void ShutdownFrameFile(void);
-void pushDiskFrame(unsigned short *RxFrame);
 int decom_fp;
 int system_idled = 0;
 int needs_join = 0;
@@ -119,19 +112,62 @@ void SigAction(int signo) {
     }
 }
 
+void daemonize()
+{
+    int pid;
+    FILE* stream;
+    struct sigaction action;
+
+    if ((pid = fork()) != 0) {
+	if (pid == -1) {
+	    berror(fatal, "unable to fork to background");
+	}
+	if ((stream = fopen("/var/run/decomd.pid", "w")) == NULL) {
+	    berror(err, "unable to write PID to disk");
+	}
+	else {
+	    fprintf(stream, "%i\n", pid);
+	    fflush(stream);
+	    fclose(stream);
+	}
+	closelog();
+	printf("PID = %i\n", pid);
+	exit(0);
+    }
+    atexit(CleanUp);
+
+    /* Daemonise */
+    chdir("/");
+    freopen("/dev/null", "r", stdin);
+    freopen("/dev/null", "w", stdout);
+    freopen("/dev/null", "w", stderr);
+    setsid();
+
+    /* set up signal masks */
+    sigemptyset(&signals);
+    sigaddset(&signals, SIGHUP);
+    sigaddset(&signals, SIGINT);
+    sigaddset(&signals, SIGTERM);
+
+    /* set up signal handlers */
+    action.sa_handler = SigAction;
+    action.sa_mask = signals;
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGHUP, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+
+    /* block signals */
+    pthread_sigmask(SIG_BLOCK, &signals, NULL);
+}
+
 int main(void) {
     struct statvfs vfsbuf;
-    char buf[309];
     unsigned long long int disk_free = 0;
-    unsigned long old_fc = 0;
-    // char *ptr;
     struct timeval now;
     struct timeval then;
     struct timezone tz;
     double dt;
-    double dframes;
 
-    struct sigaction action;
 
     buos_use_stdio();
 
@@ -142,16 +178,11 @@ int main(void) {
 
     // /* Initialise Channel Lists */
     // MakeAddressLookups("/data/etc/decomd/Nios.map");
+    framing_init(channel_list, derived_list);
 
     /* Initialise Decom */
     ioctl(decom_fp, DECOM_IOC_RESET);
     ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
-
-    /* Initialise Frame File Writer */
-    // InitialiseFrameFile(FILE_SUFFIX);
-
-    int pid;
-    FILE* stream;
 
     /* set up our outputs */
     openlog("decomd", LOG_PID, LOG_DAEMON);
@@ -159,50 +190,10 @@ int main(void) {
 
     /* Fork to background */
     if (false) {
-      if ((pid = fork()) != 0) {
-	  if (pid == -1) {
-	      berror(fatal, "unable to fork to background");
-	  }
-	  if ((stream = fopen("/var/run/decomd.pid", "w")) == NULL) {
-	      berror(err, "unable to write PID to disk");
-	  }
-	  else {
-	      fprintf(stream, "%i\n", pid);
-	      fflush(stream);
-	      fclose(stream);
-	  }
-	  closelog();
-	  printf("PID = %i\n", pid);
-	  exit(0);
-      }
-      atexit(CleanUp);
-
-      /* Daemonise */
-      chdir("/");
-      freopen("/dev/null", "r", stdin);
-      freopen("/dev/null", "w", stdout);
-      freopen("/dev/null", "w", stderr);
-      setsid();
-
-      /* set up signal masks */
-      sigemptyset(&signals);
-      sigaddset(&signals, SIGHUP);
-      sigaddset(&signals, SIGINT);
-      sigaddset(&signals, SIGTERM);
-
-      /* set up signal handlers */
-      action.sa_handler = SigAction;
-      action.sa_mask = signals;
-      sigaction(SIGTERM, &action, NULL);
-      sigaction(SIGHUP, &action, NULL);
-      sigaction(SIGINT, &action, NULL);
-
-      /* block signals */
-      pthread_sigmask(SIG_BLOCK, &signals, NULL);
+	daemonize();
     }
 
     gettimeofday(&then, &tz);
-    // pthread_create(&framefile_thread, NULL, (void*)&FrameFileWriter, NULL);
     pthread_create(&decom_thread, NULL, (void*)&ReadDecom, NULL);
 
     /* unblock signals */
@@ -223,19 +214,10 @@ int main(void) {
            disk_free = (unsigned long long int)vfsbuf.f_bavail * vfsbuf.f_bsize;
         }
 
-        // for(ptr = framefile.name + strlen(framefile.name); *ptr != '/'; --ptr);
 
-        memset(buf, 0, 309);
         gettimeofday(&now, &tz);
         dt = (now.tv_sec + now.tv_usec / 1000000.) -
           (then.tv_sec + then.tv_usec / 1000000.);
-        dframes = (frame_counter - old_fc) / 100.;
-        fs_bad = fs_bad * FS_FILTER + (1.0 - FS_FILTER) * dframes / dt;
-        if (fs_bad > 1) {
-            fs_bad = 1;
-        }
-
-        old_fc = frame_counter;
         then = now;
 
         usleep(500000);
