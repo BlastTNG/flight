@@ -23,16 +23,6 @@ int main()
     send_biphase_writes();
 }
 
-static void close_mpsse(int m_code)
-{
-    fprintf(stderr, "Closing test_biphase with signal %d\n", m_code);
-    mpsse_purge(ctx); 
-    mpsse_close(ctx); 
-    fprintf(stderr, "Done closing mpsse\n");
-    exit(1);
-}
-
-	
 
 void send_biphase_writes() {
 
@@ -43,7 +33,15 @@ void send_biphase_writes() {
 	int channel = IFACE_A;
     int counter = 0;
 
+    // The first open is a hack to make sure the chip is properly closed and reset
 	ctx = mpsse_open(&vid, &pid, description, serial, channel);
+    usleep(1000);
+    mpsse_reset_purge_close(ctx);
+    usleep(1000);
+   
+    // This is now the real open 
+	ctx = mpsse_open(&vid, &pid, description, serial, channel);
+    usleep(1000);
 
     // Writing an array of data (0xFFFFFFFF...) through the bipase write functions
 
@@ -64,12 +62,13 @@ void send_biphase_writes() {
     mpsse_flush(ctx);
     usleep(1000);
     // mpsse_purge(ctx);
+    // usleep(1000);
 
     data_to_write = malloc(bytes_to_write); 
     if (data_to_write) {
         for (int i = 0; i < ((int) bytes_to_write/2); i++) {
-            // *(data_to_write+i) = 0x3333;
-            *(data_to_write+i) = 0x5555;
+            *(data_to_write+i) = 0xFFFF;
+            // *(data_to_write+i) = 0x5555;
         }
     } else {
        mpsse_close(ctx); 
