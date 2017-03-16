@@ -145,7 +145,6 @@ void biphase_writer(void)
     usleep(1000);
 
     mpsse_set_data_bits_low_byte(ctx, initial_value, direction);
-    // mpsse_set_data_bits_high_byte(ctx, initial_value, direction);
     mpsse_set_frequency(ctx, frequency);
 
     mpsse_flush(ctx);

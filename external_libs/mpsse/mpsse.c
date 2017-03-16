@@ -920,7 +920,10 @@ void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32
 void mpsse_watchdog_ping(struct mpsse_ctx *ctx, const uint8_t bit)
 {
 	uint8_t buf = (bit & 0x1) << 6;
-	mpsse_set_data_bits_low_byte(ctx, buf, 0x80);
+    // CLK, data, WD are bit 0, 1 and 7
+    // 0b10000011 = 0x83 
+    // Note Joy tried from the other end 0b11000001 = 0xC1 and it's wrong
+	mpsse_set_data_bits_low_byte(ctx, buf, 0x83);
 }
 
 /**
