@@ -127,11 +127,23 @@ void biphase_writer(void)
 
     nameThread("Biphase");
 
+    // The first open is hack, to check chip is there + properly reset it
     ctx = mpsse_open(&vid, &pid, description, serial, channel);
     if (!ctx) {
         blast_warn("Error Opening mpsse. Stopped Biphase Downlink Thread");
         pthread_exit(0);
     }
+    mpsse_reset_purge_close(ctx);
+    usleep(1000);
+
+    // This is now the real open
+	ctx = mpsse_open(&vid, &pid, description, serial, channel);
+    if (!ctx) {
+        blast_warn("Error Opening mpsse. Stopped Biphase Downlink Thread");
+        pthread_exit(0);
+    }
+    usleep(1000);
+
     mpsse_set_data_bits_low_byte(ctx, initial_value, direction);
     // mpsse_set_data_bits_high_byte(ctx, initial_value, direction);
     mpsse_set_frequency(ctx, frequency);
@@ -159,6 +171,7 @@ void biphase_writer(void)
 
             bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
             bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, bi0_frame_bytes-2);
+            blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
 
             bi0_frame[0] = sync_word;
             sync_word = ~sync_word;

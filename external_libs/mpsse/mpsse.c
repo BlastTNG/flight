@@ -44,7 +44,7 @@
 		for (int i = 0; i < len; i++) { \
 			buf_string_pos += sprintf(buf_string + buf_string_pos, " %02x", buf[i]); \
 			if (i % 32 == 32 - 1) { \
-				blast_info("%s", buf_string); \
+				blast_dbg("%s", buf_string); \
 				buf_string_pos = 0; \
 			} \
 		} \
@@ -350,8 +350,22 @@ error:
 	return 0;
 }
 
+void mpsse_reset_purge_close(struct mpsse_ctx *ctx)
+{
+    int reterr;
+    reterr = libusb_control_transfer(ctx->usb_dev, FTDI_DEVICE_OUT_REQTYPE, SIO_SET_BITMODE_REQUEST,
+             0x0000, ctx->index, NULL, 0, ctx->usb_write_timeout);
+    if (reterr < 0) {
+        blast_info("error trying to set bitmode to RESET");
+    }
+    mpsse_purge(ctx);
+    mpsse_close(ctx);
+}
+
+
 void mpsse_close(struct mpsse_ctx *ctx)
 {
+
 	if (ctx->usb_dev)
 		libusb_close(ctx->usb_dev);
 	if (ctx->usb_ctx)
