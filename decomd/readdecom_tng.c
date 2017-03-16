@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <sys/ioctl.h>
 #include "bbc_pci.h"
 #include "decom_pci.h"
@@ -46,6 +47,7 @@ void ReadDecom (void)
                   if (status < 2) {
                       status++;
                   } else {
+		      printf("== FRAME START! ==\n== Got sync word %04x ==\n", raw_word_in);
                       if (polarity) {
                           out_frame[BI0_FRAME_SIZE] = crc_ok;
                           out_frame[BI0_FRAME_SIZE + 1] = polarity;
@@ -73,10 +75,13 @@ void ReadDecom (void)
               }
           } else {
               if ((i_word) == (BI0_FRAME_SIZE-1)) {
+		    // printf("== This is the last word: i_word=%zd, and BI0_FRAME_SIZE=%zd\n", i_word, BI0_FRAME_SIZE);
+		    // printf("The last word received (normally the CRC) is %04x\n", raw_word_in); 
                     out_frame[0] = anti_out_frame[0] = 0xEB90;
-  
-                    crc_pos = crc16(CRC16_SEED, (uint8_t*)out_frame, BI0_FRAME_SIZE-1);
-                    crc_neg = crc16(CRC16_SEED, (uint8_t*)anti_out_frame, BI0_FRAME_SIZE-1);
+                    crc_pos = crc16(CRC16_SEED, out_frame, BI0_FRAME_SIZE*sizeof(uint16_t)-2);
+                    crc_neg = crc16(CRC16_SEED, anti_out_frame, BI0_FRAME_SIZE*sizeof(uint16_t)-2);
+		    // printf("The CRC_POS computed is %04x\n", crc_pos);
+		    // printf("The CRC_NEG computed is %04x\n", crc_neg);
                     if (raw_word_in == crc_pos) {
                         crc_ok = 1;
                         polarity = 1;
@@ -86,6 +91,7 @@ void ReadDecom (void)
                     } else {
                         crc_ok = 0;
                     }
+		    printf("Last word of frame, is crc ok? %d\n======================\n", (int) crc_ok);
               }
               if (++i_word >= BI0_FRAME_SIZE) {
                 i_word = 0;
