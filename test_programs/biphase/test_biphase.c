@@ -7,6 +7,7 @@
 
 #include "mpsse.h"
 #include "blast.h"
+#include "crc.h"
 
 #define IFACE_A 0;
 #define IFACE_B 1;
@@ -46,13 +47,15 @@ void send_biphase_writes() {
     // Writing an array of data (0xFFFFFFFF...) through the bipase write functions
 
     uint16_t *data_to_write = NULL;
-    size_t bytes_to_write = 512; 
+    uint16_t *inverse_data_to_write = NULL;
+    size_t bytes_to_write = 1248; 
     int frequency = 100000;
     struct timeval begin, end;
 
 
     uint8_t data = 0x00;
     uint8_t dir = 0xFF;  // direction output for all bits
+    uint16_t crc_calculated;
 
     mpsse_set_data_bits_low_byte(ctx, data, dir);
     mpsse_set_data_bits_high_byte(ctx, data, dir);
@@ -66,21 +69,42 @@ void send_biphase_writes() {
 
     data_to_write = malloc(bytes_to_write); 
     if (data_to_write) {
-        for (int i = 0; i < ((int) bytes_to_write/2); i++) {
+        *data_to_write = 0xEB90;
+        for (int i = 1; i < ((int) bytes_to_write/2); i++) {
             *(data_to_write+i) = 0xFFFF;
-            // *(data_to_write+i) = 0x5555;
+        }
+    } else {
+       mpsse_close(ctx); 
+       return;
+    }
+    inverse_data_to_write = malloc(bytes_to_write); 
+    if (inverse_data_to_write) {
+        *inverse_data_to_write = 0x146F;
+        for (int i = 1; i < ((int) bytes_to_write/2); i++) {
+            *(inverse_data_to_write+i) = 0xFFFF;
+            // *(inverse_data_to_write+i) = 0x5555;
         }
     } else {
        mpsse_close(ctx); 
        return;
     }
 
-    while(true) {
+    int last_word = ((int) bytes_to_write/2) - 1;
+    crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
+    *(data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC
+    *(inverse_data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC
+
+    for (int j=0; j>-1; j++) {
         gettimeofday(&begin, NULL);
-        mpsse_biphase_write_data(ctx, data_to_write, bytes_to_write);
+        if (j%2 == 0) {
+            mpsse_biphase_write_data(ctx, data_to_write, bytes_to_write);
+        } else {
+            mpsse_biphase_write_data(ctx, inverse_data_to_write, bytes_to_write);
+        }
         mpsse_flush(ctx);
         gettimeofday(&end, NULL);
         if ((counter % 10) == 0) {
+            blast_info("The CRC calculated is %04x", crc_calculated);
             blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write*2);
         }
         counter += 1;
