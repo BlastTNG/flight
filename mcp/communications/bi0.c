@@ -119,9 +119,10 @@ void biphase_writer(void)
     // int frequency = 1000000;
     int frequency = 100000;
 
+    // Setting pin direction. CLK, data, WD are output and pins 0, 1 and 7
+    // 1=output, 0=input. 0x83 = 0b11000001 i.e. pin 0, 1 and 7 are output
+    uint8_t direction = 0x83;  
     uint8_t initial_value = 0x00;
-    // TODO(Joy): NEED TO CHANGE "direction" to only set the biphase pins to output!!
-    uint8_t direction = 0xFF;  // 1=output, 0=input. 0xFF = output for all pins
 
     struct timeval begin, end;
 
